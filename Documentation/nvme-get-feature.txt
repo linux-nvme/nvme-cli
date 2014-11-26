@@ -1,0 +1,97 @@
+nvme-get-feature(1)
+===================
+
+NAME
+----
+nvme-get-feature - Gets an NVMe feature, returns applicable results
+
+SYNOPSIS
+--------
+[verse]
+'nvme get-feature' <device> [--namespace-id=<nsid> | -n <nsid>]
+			  [--feature-id=<fid> | -f <fid>] [--cdw11=<cdw11>]
+			  [--data-len=<data-len> | -l <data-len>]
+			  [--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Submits an NVMe Get Feature admin command and returns the applicable
+results. This may be the feature's value, or may also include a feature
+structure if the feature requires it (ex: LBA Range Type).
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned feature's structure (if applicable) may be
+returned in one of several ways depending on the option flags; the
+structure may parsed by the program and printed in a readable format
+if it is a known structure, displayed in hex, or the raw buffer may be
+printed to stdout for another program to parse.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Retrieve the feature for the given nsid. This is optional and
+	most features do not use this value.
+
+-f <fid>::
+--feature-id=<fid>::
+	The feature id to send with the command. Value provided should
+	be in hex.
+
+-l <data-len>::
+--data-len=<data-len>::
+	The data length for the buffer returned for this feature. Most
+	known features do not use this value. The exception is LBA
+	Range Type
+
+--cdw11=<cdw11>::
+	The value for command dword 11, if applicable. Only known feature
+	using this is the interrupt vector configuration feature.
+
+-b::
+--raw-binary::
+	Print the raw feature buffer to stdout if the feature returns
+	a structure.
+
+EXAMPLES
+--------
+* Retrieves the feature for Number of Queues, or feature id 7:
++
+------------
+# nvme get-feature /dev/nvme0 -f 7
+------------
++
+
+* The following retrieves the feature for the LBA Range Type, which
+implicitly requires a buffer and will be printed to the screen in human
+readable format:
++
+------------
+# nvme get-feature /dev/nvme0 -f 3
+------------
++
+
+* Retrieves the feature for the some vendor specific feature and
+specifically requesting a buffer be allocate for this feature, which
+will be displayed to the user in as a hex dump:
++
+------------
+# nvme get-feature /dev/nvme0 -f c0 -l 512
+------------
++
+
+* The following retrieves the feature for the LBA Range Type, which
+implicitly requires a buffer and will be saved to a file in its raw
+format:
++
+------------
+# nvme get-feature /dev/nvme0 -f 3 --raw-binary > lba_range.raw
+------------
++
+It is probably a bad idea to not redirect stdout when using this mode.
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,51 @@
+nvme-fw-log(1)
+==============
+
+NAME
+----
+nvme-fw-log - Send NVMe Firmware log page request, returns result and log
+
+SYNOPSIS
+--------
+[verse]
+'nvme fw-log' <device> [--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Retrieves the NVMe Firmware log page from an NVMe device and provides
+the retuned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned f/w log structure may be returned in one of
+several ways depending on the option flags; the structure may parsed by
+the program and printed in a readable format or the raw buffer may be
+printed to stdout for another program to parse.
+
+OPTIONS
+-------
+-b::
+--raw-binary::
+	Print the raw fw log buffer to stdout.
+
+EXAMPLES
+--------
+* Print the firmware log page in a human readable format:
++
+------------
+# nvme fw-log /dev/nvme0
+------------
++
+
+* Print the log firmware to a file:
++
+------------
+# nvme fw-log /dev/nvme0 --raw-binary > fw_log.raw
+------------
++
+It is probably a bad idea to not redirect stdout when using this mode.
+
+NVME
+----
+Part of the nvme-user suite

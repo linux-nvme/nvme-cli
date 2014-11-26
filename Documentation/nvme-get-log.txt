@@ -1,0 +1,75 @@
+nvme-get-log(1)
+===============
+
+NAME
+----
+nvme-get-log - Retrieves a log page from an NVMe device
+
+SYNOPSIS
+--------
+[verse]
+'nvme get-log' <device> [--log-id=<log-id> | -i <log-id>]
+		      [--log-len=<log-len> | -l <log-len>]
+		      [--namespace-id=<nsid> | -n <nsid>]
+		      [--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Retrieves an arbitrary NVMe log page from an NVMe device and provides
+the retuned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned log structure may be returned in one of several
+ways depending on the option flags; the structure may be displayed in
+hex by the program or the raw buffer may be printed to stdout for another
+program to parse.
+
+OPTIONS
+-------
+-l <log-len>::
+--log-len=<log-len>::
+	Allocates a buffer of <log-len> bytes size and requests this
+	many bytes be returned in the constructed NVMe command. This
+	param is mandatory.
+
+-i <log-id>::
+--log-id=<log-id>::
+	Sets the commands requested log-id to <log-id>. Defaults to 0.
+
+-n <nsid>::
+--namespace-id=<nsid>::
+	Sets the command's nsid value to the given nsid. Defaults to
+	0xffffffff if not given. This option may not affect anything
+	depending on the log page, which may or may not be specific to
+	a namespace.
+
+-b::
+--raw-binary::
+	Print the raw log buffer to stdout.
+
+EXAMPLES
+--------
+* Get 512 bytes from log page 2
++
+------------
+# nvme get-log /dev/nvme0 --log-id=2 --log-len=512
+------------
++
+The above example will get log page 2 (SMART), and request 512
+bytes. On success, the returned log will be dumped in hex and not
+interpreted by the program.
+
+* Have the program return the raw log page in binary:
++
+------------
+# nvme id-ns /dev/nvme0 -log-id=2 --log-len=512 --raw-binary > log_page_2.raw
+# nvme id-ns /dev/nvme0 -i 2 -l 512 -b > log_page_2.raw
+------------
++
+It is not a good idea to not redirect stdout when using this mode.
+
+NVME
+----
+Part of the nvme-user suite

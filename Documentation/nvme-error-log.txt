@@ -1,0 +1,67 @@
+nvme-error-log(1)
+=================
+
+NAME
+----
+nvme-error-log - Send NVME Error log page request, return result and log
+
+SYNOPSIS
+--------
+[verse]
+'nvme error-log' <device>  [--namespace-id=<nsid> | -n <nsid>]
+			 [--log-entries=<entries> | -e <entries>]
+			 [--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Retrieves NVMe Error log page from an NVMe device and provides the
+retuned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned error log structure may be returned in one of
+several ways depending on the option flags; the structure may parsed by
+the program and printed in a readable format or the raw buffer may be
+printed to stdout for another program to parse.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Retrieve the Error Log for the given nsid. This is optional
+	and its success may depend on the device's capabilities to
+	provide this log on a per-namespace basis (see the NVMe Identify
+	Controller for this capability). The defualt nsid to use is
+	0xffffffff for the device global error log.
+
+-e <entries>::
+--log-entries=<entries>::
+	Specifies how many log entries the program should request from
+	the device. This must be at least one, and shouldn't exceed the
+	device's capabilities. Defaults to 64 log entries.
+
+-b::
+--raw-binary::
+	Print the raw error log buffer to stdout.
+
+EXAMPLES
+--------
+* Get the error log and print it in a human readable format:
++
+------------
+# nvme get-error-log /dev/nvme0
+------------
++
+
+* Print the raw output to a file:
++
+------------
+# nvme get-error-log /dev/nvme0 --raw-binary > error_log.raw
+------------
++
+It is probably a bad idea to not redirect stdout when using this mode.
+
+NVME
+----
+Part of the nvme-user suite
