@@ -1,0 +1,87 @@
+nvme-help(1)
+=============
+
+NAME
+----
+nvme-resv-acquire - Acquire an nvme reservation
+
+SYNOPSIS
+--------
+[verse]
+'nvme resv-acquire' <device>
+
+DESCRIPTION
+-----------
+The Reservation Acquire command is used to acquire a reservation on
+a namespace, preempt a reservation held on a namespace, and abort a
+reservation held on a namespace.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Override the nsid field. If using the admin character device,
+	this paramter is required.
+
+-c <crkey>::
+--crkey=<crkey>::
+	Current Reservation Key: The field specifies the current
+	reservation key associated with the host. If the IEKEY bit is
+	set to ‘1’ in the command, then the CRKEY check succeeds
+	regardless of the value in this field.
+
+-p <prkey>::
+--prkey=<prkey>::
+	Preempt Reservation Key: If the Reservation Acquire Action is set
+	to 001b (i.e., Preempt) or 010b (i.e., Preempt and Abort), then
+	this field specifies the reservation key to be unregistered from
+	the namespace. For all other Reservation Acquire Action values,
+	this field is reserved.
+
+-t <rtype>::
+--rtyep=<rtype>::
+	Reservation Type: This field specifies the type of reservation
+	to be created.
++
+[]
+|=================
+|Value|Definition
+|0h|Reserved 
+|1h|Write Exclusive Reservation
+|2h|Exclusive Access Reservation
+|3h|Write Exclusive - Registrants Only Reservation
+|4h|Exclusive Access - Registrants Only Reservation
+|5h|Write Exclusive - All Registrants Reservation
+|6h|Exclusive Access - All Registrants Reservation
+|07h-FFh|Reserved
+|=================
+
+-a <racqa>::
+--racqa=<racqa>::
+	Reservation Acquire Action: This field specifies the action that
+	is performed by the command.
++
+[]
+|=================
+|Value|Definition
+|0|Acquire
+|1|Preempt
+|2|Preempt and Abort
+|3-7|Reserved
+|=================
+
+-i::
+--iekey::
+	Ignore Existing Key: If this bit is set to a '1', then the
+	Current Reservation Key (CRKEY) check is disabled and the command
+	shall succeed regardless of the CRKEY field  value.
++
+Indicator option, defaults to '0'.
+
+EXAMPLES
+--------
+No examples yet
+
+NVME
+----
+Part of the nvme-user suite

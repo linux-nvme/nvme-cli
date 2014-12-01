@@ -1,0 +1,50 @@
+nvme-id-ns(1)
+=============
+
+NAME
+----
+nvme-resv-report - Send NVMe Reservation Report, parse the result
+
+SYNOPSIS
+--------
+[verse]
+'nvme resv-report' <device> [--namespace-id=<nsid> | -n <nsid>]
+			[--numd=<num-dwords> | -d <num-dwords>]
+			[-b | --raw-binary]
+
+DESCRIPTION
+-----------
+The Reservation Report command returns a Reservation Status data structure
+to host memory that describes the registration and reservation status
+of a namespace.
+
+The size of the Reservation Status data structure is a function of the
+number of controllers in the NVM Subsystem that are associated with
+hosts that are registrants of the namespace (i.e., there is a Registered
+Controller data structure for each such controller).
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Retrieve the reservation report structure for the given nsid. This
+	is required for the character devices, or overrides the block nsid
+	if given.
+
+-d <num-dwords>::
+--numd=<num-dwords>::
+	Specify the number of Dwords of the Reservation Status structure
+	to transfer. Defaults to 4k.
+
+-b::
+--raw-binary::
+	Print the raw buffer to stdout. Structure is not parsed by
+	program.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,80 @@
+nvme-help(1)
+=============
+
+NAME
+----
+nvme-resv-release - Release an nvme reservation
+
+SYNOPSIS
+--------
+[verse]
+'nvme resv-release' <device>
+
+DESCRIPTION
+-----------
+The Reservation Release command is used to release or clear a reservation
+held on a namespace.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Override the nsid field. If using the admin character device,
+	this paramter is required.
+
+-c <crkey>::
+--crkey=<crkey>::
+	Current Reservation Key: If the Reservation Register Action is
+	001b (i.e., Unregister Reservation Key) or 010b (i.e., Replace
+	Reservation Key), then this field contains the current reservation
+	key associated with the host. For all other Reservation Register
+	Action values, this field is reserved. The controller ignores
+	the value of this field when the Ignore Existing Key (IEKEY)
+	bit is set to ‘1’.
+
+-t <rtype>::
+--rtyep=<rtype>::
+	Reservation Type: This field specifies the type of reservation
+	to be created.
++
+[]
+|=================
+|Value|Definition
+|0h|Reserved 
+|1h|Write Exclusive Reservation
+|2h|Exclusive Access Reservation
+|3h|Write Exclusive - Registrants Only Reservation
+|4h|Exclusive Access - Registrants Only Reservation
+|5h|Write Exclusive - All Registrants Reservation
+|6h|Exclusive Access - All Registrants Reservation
+|07h-FFh|Reserved
+|=================
+
+-a <rrela>::
+--rrela=<rrela>::
+	Reservation Release Action: This field specifies the registration
+	action that is performed by the command.
++
+[]
+|=================
+|Value|Definition
+|0|Release
+|1|Clear
+|2-7|Reserved
+|=================
+
+-i::
+--iekey::
+	Ignore Existing Key: If this bit is set to a '1', then the
+	Current Reservation Key (CRKEY) check is disabled and the command
+	shall succeed regardless of the CRKEY field value.
++
+Indicator option, defaults to '0'.
+
+EXAMPLES
+--------
+No examples yet
+
+NVME
+----
+Part of the nvme-user suite

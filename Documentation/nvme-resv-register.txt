@@ -1,0 +1,88 @@
+nvme-help(1)
+=============
+
+NAME
+----
+nvme-resv-register - Register an nvme reservation
+
+SYNOPSIS
+--------
+[verse]
+'nvme resv-register' <device>
+
+DESCRIPTION
+-----------
+The Reservation Register command is used to register, unregister, or
+replace a reservation key.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Override the nsid field. If using the admin character device,
+	this paramter is required.
+
+-c <crkey>::
+--crkey=<crkey>::
+	Current Reservation Key: If the Reservation Register Action is
+	001b (i.e., Unregister Reservation Key) or 010b (i.e., Replace
+	Reservation Key), then this field contains the current reservation
+	key associated with the host. For all other Reservation Register
+	Action values, this field is reserved. The controller ignores
+	the value of this field when the Ignore Existing Key (IEKEY)
+	bit is set to ‘1’.
+
+-k <nrkey>::
+--nrkey=<nrkey>::
+	New Reservation Key: If the Reservation Register Action is
+	000b (i.e., Register Reservation Key) or 010b (i.e., Replace
+	Reservation Key), then this field contains the new reservation
+	key associated with the host. For all other Reservation Register
+	Action values, this field is reserved.
+
+-p <cptpl>::
+--cptpl=<cptpl>::
+	Change Persist Through Power Loss State: This field allows the
+	Persist Through Power Loss state associated with the namespace
+	to be modified as a side effect of processing this command.
++
+[]
+|=================
+|Value|Definition
+|0|No change to PTPL state
+|1|Reserved
+|2|Set PTPL state to ‘0’. Reservations are released and registrants
+are cleared on a power on.
+|3|Set PTPL state to ‘1’. Reservations and registrants persist across
+a power loss.
+|=================
+
+-a <rrega>::
+--rrega=<rrega>::
+	Reservation Register Action: This field specifies the registration
+	action that is performed by the command.
++
+[]
+|=================
+|Value|Definition
+|0|Register Reservation Key
+|1|Unregister Reservation Key
+|2|Replace Reservation Key
+|3-7|Reserved
+|=================
+
+-i::
+--iekey::
+	Ignore Existing Key: If this bit is set to a '1', then the
+	Current Reservation Key (CRKEY) check is disabled and the command
+	shall succeed regardless of the CRKEY field value.
++
+Indicator option, defaults to '0'.
+
+EXAMPLES
+--------
+No examples yet
+
+NVME
+----
+Part of the nvme-user suite

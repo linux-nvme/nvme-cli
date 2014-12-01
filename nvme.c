@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,6 +60,10 @@ static const char *devicename;
 	ENTRY(IO_PASSTHRU, "io-passthru", "Submit an arbitrary IO command, return results", io_passthru) \
 	ENTRY(SECURITY_SEND, "security-send", "Submit a Security Send command, return results", sec_send) \
 	ENTRY(SECURITY_RECV, "security-recv", "Submit a Security Receive command, return results", sec_recv) \
+	ENTRY(RESV_ACQUIRE, "resv-acquire", "Submit a Reservation Acquire, return results", resv_acquire) \
+	ENTRY(RESV_REGISTER, "resv-register", "Submit a Reservation Register, return results", resv_register) \
+	ENTRY(RESV_RELEASE, "resv-release", "Submit a Reservation Release, return results", resv_release) \
+	ENTRY(RESV_REPORT, "resv-report", "Submit a Reservation Report, return results", resv_report) \
 	ENTRY(HELP, "help", "Display this help", help)
 
 #define ENTRY(i, n, h, f) \
@@ -124,6 +129,14 @@ static void get_dev(int optind, int argc, char **argv)
 	open_dev((const char *)argv[optind]);
 }
 
+static void get_long(char *optarg, __u64 *val)
+{
+	if (sscanf(optarg, "%lli", val) == 1)
+		return;
+	fprintf(stderr, "bad param for command value:%s\n", optarg);
+	exit(EINVAL);
+}
+
 static void get_int(char *optarg, __u32 *val)
 {
 	if (sscanf(optarg, "%i", val) == 1)
@@ -168,6 +181,28 @@ static void show_error_log(struct nvme_error_log_page *err_log, int entries)
 		printf("vs           : %d\n", err_log[i].vs);
 		printf(".................\n");
 	}
+}
+
+static void show_nvme_resv_report(struct nvme_reservation_status *status)
+{
+	int i, regctl;
+
+	regctl = status->regctl[0] | (status->regctl[1] << 8);
+
+	printf("\nNVME Reservatation status:\n\n");
+	printf("gen       : %d\n", le32toh(status->gen));
+	printf("regctl    : %d\n", regctl);
+	printf("rtype     : %d\n", status->rtype);
+	printf("ptpls     : %d\n", status->ptpls);
+
+	for (i = 0; i < regctl; i++) {
+		printf("regctl[%d] :\n", i);
+		printf("  cntlid  : %x\n", le16toh(status->regctl_ds[i].cntlid));
+		printf("  rcsts   : %x\n", status->regctl_ds[i].rcsts);
+		printf("  hostid  : %llx\n", le64toh(status->regctl_ds[i].hostid));
+		printf("  rkey    : %llx\n", le64toh(status->regctl_ds[i].rkey));
+	}
+	printf("\n");
 }
 
 static char *fw_to_string(__u64 fw)
@@ -1199,6 +1234,299 @@ static int sec_send(int argc, char **argv)
 	else
                 printf("NVME Security Send Command Success:%d\n", cmd.result);
         return err;
+}
+
+static int resv_acquire(int argc, char **argv)
+{
+	struct nvme_passthru_cmd cmd;
+        int err, opt, long_index = 0;
+	unsigned int nsid = 0;
+	unsigned char rtype = 0, racqa = 0, iekey = 0;
+	static struct option opts[] = {
+		{"namespace-id", required_argument, 0, 'n'},
+		{"crkey", required_argument, 0, 'c'},
+		{"prkey", required_argument, 0, 'p'},
+		{"rtype", required_argument, 0, 't'},
+		{"racqa", required_argument, 0, 'a'},
+		{"iekey", no_argument, 0, 'i'},
+		{ 0, 0, 0, 0}
+	};
+	__u64 prkey= 0, crkey = 0, payload[2];
+
+	while ((opt = getopt_long(argc, (char **)argv, "n:c:p:t:a:i", opts,
+							&long_index)) != -1) {
+		switch(opt) {
+		case 'n': get_int(optarg, &nsid); break;
+		case 'c': get_long(optarg, &crkey); break;
+		case 'p': get_long(optarg, &prkey); break;
+		case 't': get_byte(optarg, &rtype); break;
+		case 'a': get_byte(optarg, &racqa); break;
+		case 'i': iekey = 1; break;
+		default:
+			return EINVAL;
+		}
+	}
+	get_dev(optind, argc, argv);
+
+	if (!nsid) {
+		if (!S_ISBLK(nvme_stat.st_mode)) {
+			fprintf(stderr,
+				"%s: non-block device requires namespace-id param\n",
+				devicename);
+			exit(ENOTBLK);
+		}
+		nsid = ioctl(fd, NVME_IOCTL_ID);
+		if (nsid <= 0) {
+			fprintf(stderr,
+				"%s: failed to return namespace id\n",
+				devicename);
+			return errno;
+		}
+	}
+	if (racqa > 7) {
+		fprintf(stderr, "invalid racqa:%d\n", racqa);
+		return EINVAL;
+	}
+
+	payload[0] = crkey;
+	payload[1] = prkey;
+
+	memset(&cmd, 0, sizeof(cmd));
+        cmd.opcode = nvme_cmd_resv_acquire;
+        cmd.nsid = nsid;
+        cmd.cdw10 = rtype << 8 | iekey << 3 | racqa;
+
+        cmd.addr = (__u64)payload;
+        cmd.data_len = sizeof(payload);
+
+        err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+        if (err < 0)
+                return errno;
+        else if (err != 0)
+                fprintf(stderr, "NVME IO command error:%04x\n", err);
+        else
+                printf("NVME Reservation Acquire success\n");
+	return 0;
+}
+
+static int resv_register(int argc, char **argv)
+{
+	struct nvme_passthru_cmd cmd;
+        int err, opt, long_index = 0;
+	unsigned int nsid = 0;
+	unsigned char rrega = 0, iekey = 0, cptpl = 0;
+	static struct option opts[] = {
+		{"namespace-id", required_argument, 0, 'n'},
+		{"crkey", required_argument, 0, 'c'},
+		{"nrkey", required_argument, 0, 'k'},
+		{"rrega", required_argument, 0, 'r'},
+		{"cptpl", required_argument, 0, 'p'},
+		{"iekey", required_argument, 0, 'i'},
+		{ 0, 0, 0, 0}
+	};
+	__u64 nrkey= 0, crkey = 0, payload[2];
+
+	while ((opt = getopt_long(argc, (char **)argv, "n:c:p:t:i:k:", opts,
+							&long_index)) != -1) {
+		switch(opt) {
+		case 'n': get_int(optarg, &nsid); break;
+		case 'c': get_long(optarg, &crkey); break;
+		case 'k': get_long(optarg, &nrkey); break;
+		case 'r': get_byte(optarg, &rrega); break;
+		case 'p': get_byte(optarg, &cptpl); break;
+		case 'i': get_byte(optarg, &iekey); break;
+		default:
+			return EINVAL;
+		}
+	}
+	get_dev(optind, argc, argv);
+
+	if (!nsid) {
+		if (!S_ISBLK(nvme_stat.st_mode)) {
+			fprintf(stderr,
+				"%s: non-block device requires namespace-id param\n",
+				devicename);
+			exit(ENOTBLK);
+		}
+		nsid = ioctl(fd, NVME_IOCTL_ID);
+		if (nsid <= 0) {
+			fprintf(stderr,
+				"%s: failed to return namespace id\n",
+				devicename);
+			return errno;
+		}
+	}
+	if (iekey > 1) {
+		fprintf(stderr, "invalid iekey:%d\n", iekey);
+		return EINVAL;
+	}
+	if (cptpl > 3) {
+		fprintf(stderr, "invalid cptpl:%d\n", cptpl);
+		return EINVAL;
+	}
+
+	payload[0] = crkey;
+	payload[1] = nrkey;
+
+	memset(&cmd, 0, sizeof(cmd));
+        cmd.opcode = nvme_cmd_resv_register;
+        cmd.nsid = nsid;
+	cmd.cdw10 = cptpl << 30 | iekey << 3 | rrega;
+
+        cmd.addr = (__u64)payload;
+        cmd.data_len = sizeof(payload);
+
+        err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+        if (err < 0)
+                return errno;
+        else if (err != 0)
+                fprintf(stderr, "NVME IO command error:%04x\n", err);
+        else
+                printf("NVME Reservation  success\n");
+	return 0;
+}
+
+static int resv_release(int argc, char **argv)
+{
+	struct nvme_passthru_cmd cmd;
+        int err, opt, long_index = 0;
+	unsigned int nsid = 0;
+	unsigned char rtype = 0, rrela = 0, iekey = 0;
+	static struct option opts[] = {
+		{"namespace-id", required_argument, 0, 'n'},
+		{"crkey", required_argument, 0, 'c'},
+		{"rtype", required_argument, 0, 't'},
+		{"rrela", required_argument, 0, 'a'},
+		{"iekey", required_argument, 0, 'i'},
+		{ 0, 0, 0, 0}
+	};
+	__u64 crkey = 0;
+
+	while ((opt = getopt_long(argc, (char **)argv, "n:c:p:t:a:i:", opts,
+							&long_index)) != -1) {
+		switch(opt) {
+		case 'n': get_int(optarg, &nsid); break;
+		case 'c': get_long(optarg, &crkey); break;
+		case 't': get_byte(optarg, &rtype); break;
+		case 'a': get_byte(optarg, &rrela); break;
+		case 'i': get_byte(optarg, &iekey); break;
+		default:
+			return EINVAL;
+		}
+	}
+	get_dev(optind, argc, argv);
+
+	if (!nsid) {
+		if (!S_ISBLK(nvme_stat.st_mode)) {
+			fprintf(stderr,
+				"%s: non-block device requires namespace-id param\n",
+				devicename);
+			exit(ENOTBLK);
+		}
+		nsid = ioctl(fd, NVME_IOCTL_ID);
+		if (nsid <= 0) {
+			fprintf(stderr,
+				"%s: failed to return namespace id\n",
+				devicename);
+			return errno;
+		}
+	}
+	if (iekey > 1) {
+		fprintf(stderr, "invalid iekey:%d\n", iekey);
+		return EINVAL;
+	}
+	if (rrela > 7) {
+		fprintf(stderr, "invalid rrela:%d\n", rrela);
+		return EINVAL;
+	}
+
+	memset(&cmd, 0, sizeof(cmd));
+        cmd.opcode = nvme_cmd_resv_release;
+        cmd.nsid = nsid;
+	cmd.cdw10 = rtype << 8 | iekey << 3 | rrela;
+
+        cmd.addr = (__u64)&crkey;
+        cmd.data_len = sizeof(crkey);
+
+        err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+        if (err < 0)
+                return errno;
+        else if (err != 0)
+                fprintf(stderr, "NVME IO command error:%04x\n", err);
+        else
+                printf("NVME Reservation Register success\n");
+	return 0;
+}
+
+static int resv_report(int argc, char **argv)
+{
+	struct nvme_passthru_cmd cmd;
+        int err, opt, long_index = 0, raw = 0;
+	unsigned int nsid = 0, numd = 0x1000 > 2;
+	struct nvme_reservation_status *status;
+	static struct option opts[] = {
+		{"namespace-id", required_argument, 0, 'n'},
+		{"numd", required_argument, 0, 'd'},
+		{"raw-binary", no_argument, 0, 'b'},
+		{ 0, 0, 0, 0}
+	};
+
+	while ((opt = getopt_long(argc, (char **)argv, "n:d:r", opts,
+							&long_index)) != -1) {
+		switch(opt) {
+		case 'n': get_int(optarg, &nsid); break;
+		case 'd': get_int(optarg, &numd); break;
+		case 'r': raw = 0; break;
+		default:
+			return EINVAL;
+		}
+	}
+	get_dev(optind, argc, argv);
+
+	if (!nsid) {
+		if (!S_ISBLK(nvme_stat.st_mode)) {
+			fprintf(stderr,
+				"%s: non-block device requires namespace-id param\n",
+				devicename);
+			exit(ENOTBLK);
+		}
+		nsid = ioctl(fd, NVME_IOCTL_ID);
+		if (nsid <= 0) {
+			fprintf(stderr,
+				"%s: failed to return namespace id\n",
+				devicename);
+			return errno;
+		}
+	}
+	if (!numd || numd > (0x1000 >> 2))
+		numd = 0x1000 >> 2;
+
+	if (posix_memalign((void **)&status, getpagesize(), numd << 2)) {
+		fprintf(stderr, "No memory for resv report:%d\n", numd << 2);
+		return ENOMEM;
+	}
+
+	memset(&cmd, 0, sizeof(cmd));
+        cmd.opcode = nvme_cmd_resv_report;
+        cmd.nsid = nsid;
+        cmd.cdw10 = numd;
+
+        cmd.addr = (__u64)status;
+        cmd.data_len = numd << 2;
+
+        err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+        if (err < 0)
+                return errno;
+        else if (err != 0)
+                fprintf(stderr, "NVME IO command error:%04x\n", err);
+        else {
+		if (!raw) {
+                	printf("NVME Reservation Report success\n");
+			show_nvme_resv_report(status);
+		} else
+			d_raw(status, numd << 2);
+	}
+	return 0;
 }
 
 static int sec_recv(int argc, char **argv)
