@@ -45,9 +45,9 @@ static const char *devicename;
 
 #define COMMAND_LIST \
 	ENTRY(ID_CTRL, "id-ctrl", "Send NVMe Identify Controller", id_ctrl) \
-	ENTRY(ID_NS, "id-ns", "Send NVMe Identify Namespace, disaply structure", id_ns) \
-	ENTRY(LIST_NS, "list-ns", "Send NVMe Identify List, disaply structure", list_ns) \
-	ENTRY(GET_NS_ID, "get-ns-id", "Retrieve the namespace ID of opend block device", get_ns_id) \
+	ENTRY(ID_NS, "id-ns", "Send NVMe Identify Namespace, display structure", id_ns) \
+	ENTRY(LIST_NS, "list-ns", "Send NVMe Identify List, display structure", list_ns) \
+	ENTRY(GET_NS_ID, "get-ns-id", "Retrieve the namespace ID of opened block device", get_ns_id) \
 	ENTRY(GET_LOG, "get-log", "Generic NVMe get log, returns log in raw format", get_log) \
 	ENTRY(GET_FW_LOG, "fw-log", "Retrieve FW Log, show it", get_fw_log) \
 	ENTRY(GET_SMART_LOG, "smart-log", "Retrieve SMART Log, show it", get_smart_log) \

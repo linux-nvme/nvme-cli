@@ -1,5 +1,5 @@
-nvme-help(1)
-=============
+nvme-security-recv(1)
+=====================
 
 NAME
 ----
