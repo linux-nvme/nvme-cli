@@ -1,0 +1,68 @@
+nvme-help(1)
+=============
+
+NAME
+----
+nvme-security-recv - Security Recv command
+
+SYNOPSIS
+--------
+[verse]
+'nvme security-recv' [<device>] [--size=<size> | -x <size>]
+		    [--secp=<security-protocol> | -p <security-protocol>]
+		    [--spsp=<protocol-specific> | -s <protocol-specific>]
+		    [--tl=<transfer-length> | -t <transfer-length>]
+		    [-b | --raw-binary]
+
+DESCRIPTION
+-----------
+The Security Receive command transfers the status and data result of
+one or more Security Send commands that were previously submitted to
+the controller.
+
+The association between a Security Receive command and previous Security
+Send commands is dependent on the Security Protocol. The format of the
+data to be transferred is dependent on the Security Protocol. Refer to
+SPC-4 for Security Protocol details.
+
+Each Security Receive command returns the appropriate data corresponding
+to a Security Send command as defined by the rules of the Security
+Protocol. The Security Receive command data may not be retained if there
+is a loss of communication between the controller and host, or if a
+controller reset occurs.
+
+OPTIONS
+-------
+-x <size>::
+--size=<size>::
+	Size of buffer to allocate. One success it will be printed
+	to STDOUT.
+
+-p <security-protocol>::
+--secp=<security-protocol>::
+	Security Protocol: This field specifies the security protocol
+	as defined in SPC-4. The controller shall fail the command with
+	Invalid Parameter indicated if a reserved value of the Security
+	Protocol is specified.
+
+-s <security-protocol-specific>::
+--spsp=<security-protocol-specific>::
+	SP Specific: The value of this field is specific to the Security
+	Protocol as defined in SPC-4.
+
+-a <allocation-length>::
+--al=<allocation-length>::
+	Allocation Length: The value of this field is specific to the
+	Security Protocol as defined in SPC-4.
+
+-b::
+--raw-binary::
+	Print the raw buffer to stdout. Defaults to print in hex.
+
+EXAMPLES
+--------
+No Examples
+
+NVME
+----
+Part of the nvme-user suite

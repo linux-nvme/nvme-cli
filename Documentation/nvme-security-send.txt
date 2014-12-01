@@ -1,0 +1,60 @@
+nvme-help(1)
+=============
+
+NAME
+----
+nvme-security-send - Security Send command
+
+SYNOPSIS
+--------
+[verse]
+'nvme security-send' [<device>] [--file=<file> | -f <file>]
+		    [--secp=<security-protocol> | -p <security-protocol>]
+		    [--spsp=<protocol-specific> | -s <protocol-specific>]
+		    [--tl=<transfer-length> | -t <transfer-length>]
+
+DESCRIPTION
+-----------
+The Security Send command is used to transfer security protocol data
+to the controller. The data structure transferred to the controller
+as part of this command contains security protocol specific commands
+to be performed by the controller. The data structure transferred may
+also contain data or parameters associated with the security protocol
+commands. Status and data that is to be returned to the host for the
+security protocol commands submitted by a Security Send command are
+retrieved with the Security Receive command.
+
+The association between a Security Send command and subsequent Security
+Receive command is Security Protocol field dependent as defined in SPC-4.
+
+OPTIONS
+-------
+-f <file>::
+--file=<file>::
+	Path to file used as the security protocol's payload. Required
+	argument.
+
+-p <security-protocol>::
+--secp=<security-protocol>::
+	Security Protocol: This field specifies the security protocol
+	as defined in SPC-4. The controller shall fail the command with
+	Invalid Parameter indicated if a reserved value of the Security
+	Protocol is specified.
+
+-s <security-protocol-specific>::
+--spsp=<security-protocol-specific>::
+	SP Specific: The value of this field is specific to the Security
+	Protocol as defined in SPC-4.
+
+-t <trans-length>::
+--tl=<trans-length>::
+	Transfer Length: The value of this field is specific to the
+	Security Protocol as defined in SPC-4.
+
+EXAMPLES
+--------
+No Examples
+
+NVME
+----
+Part of the nvme-user suite

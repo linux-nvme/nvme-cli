@@ -55,6 +55,19 @@ OPTIONS
 	the secureerase operation. The erase applies to all user data,
 	regardless of location (e.g., within an exposed LBA, within a
 	cache, within deallocated LBAs, etc). Defaults to 0.
++
+[]
+|=================
+|Value|Definition
+|0|No secure erase operation requested
+|1|User Data Erase: All user data shall be erased, contents of the user
+data after the erase is indeterminate (e.g., the user data may be zero
+filled, one filled, etc). The controller may perform a cryptographic
+erase when a User Data Erase is requested if all user data is encrypted.
+|2|Cryptographic Erase: All user data shall be erased
+cryptographically. This is accomplished by deleting the encryption key.
+|3–7|Reserved
+|=================
  
 -p <pil>::
 --pil=<pil>::
@@ -69,6 +82,16 @@ OPTIONS
 	Protection Information: This field specifies whether end-to-end
 	data protection is enabled and the type of protection
 	information. Defaults to 0.
++
+[]
+|=================
+|Value|Definition
+|0|Protection information is not enabled
+|1|Protection information is enabled, Type 1
+|2|Protection information is enabled, Type 2
+|3|Protection information is enabled, Type 3
+|4–7|Reserved
+|=================
 
 -m <ms>::
 --ms=<ms>::

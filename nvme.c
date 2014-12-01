@@ -57,6 +57,8 @@ static const char *devicename;
 	ENTRY(FW_DOWNLOAD, "fw-download", "Download new firmware", fw_download) \
 	ENTRY(ADMIN_PASSTHRU, "admin-passthru", "Submit arbitrary admin command, return results", admin_passthru) \
 	ENTRY(IO_PASSTHRU, "io-passthru", "Submit an arbitrary IO command, return results", io_passthru) \
+	ENTRY(SECURITY_SEND, "security-send", "Submit a Security Send command, return results", sec_send) \
+	ENTRY(SECURITY_RECV, "security-recv", "Submit a Security Receive command, return results", sec_recv) \
 	ENTRY(HELP, "help", "Display this help", help)
 
 #define ENTRY(i, n, h, f) \
@@ -896,7 +898,7 @@ static int fw_download(int argc, char **argv)
 
 	if (fw_fd < 0) {
 		fprintf(stderr, "no firmware file provided\n");
-		exit(EINVAL);
+		return EINVAL;
 	}
 	err = fstat(fw_fd, &sb);
 	if (err < 0) {
@@ -1126,6 +1128,152 @@ static int set_feature(int argc, char **argv)
 	if (buf)
 		free(buf);
 	return err;
+}
+
+static int sec_send(int argc, char **argv)
+{
+	struct stat sb;
+	struct nvme_admin_cmd cmd;
+        int err, sec_fd = -1, opt, long_index = 0;
+	void *sec_buf;
+	unsigned int tl = 0;
+	unsigned short spsp = 0;
+	unsigned char secp = 0;
+	unsigned int sec_size;
+	static struct option opts[] = {
+		{"file", required_argument, 0, 'f'},
+		{"secp", required_argument, 0, 'p'},
+		{"spsp", required_argument, 0, 's'},
+		{"tl", required_argument, 0, 't'},
+		{ 0, 0, 0, 0}
+	};
+
+	while ((opt = getopt_long(argc, (char **)argv, "f:p:s:t:", opts,
+							&long_index)) != -1) {
+		switch(opt) {
+		case 'f':
+			sec_fd = open(optarg, O_RDONLY);
+			break;
+		case 'p':
+			get_short(optarg, &spsp);
+			break;
+		case 's':
+			get_byte(optarg, &secp);
+			break;
+		case 't':
+			get_int(optarg, &tl);
+			break;
+		default:
+			return EINVAL;
+		}
+	}
+	get_dev(optind, argc, argv);
+
+	if (sec_fd < 0) {
+		fprintf(stderr, "no firmware file provided\n");
+		return EINVAL;
+	}
+	err = fstat(sec_fd, &sb);
+	if (err < 0) {
+		perror("fstat");
+		return errno;
+	}
+	sec_size = sb.st_size;
+	if (posix_memalign(&sec_buf, getpagesize(), sec_size)) {
+		fprintf(stderr, "No memory for security size:%d\n", sec_size);
+		return ENOMEM;
+	}
+
+        memset(&cmd, 0, sizeof(cmd));
+        cmd.opcode = nvme_admin_security_send;
+        cmd.cdw10 = secp << 24 | spsp << 8;
+        cmd.cdw11 = tl;
+        cmd.data_len = sec_size;
+        cmd.addr = (__u64)sec_buf;
+
+        err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+        if (err < 0)
+                return errno;
+        else if (err != 0)
+                fprintf(stderr, "NVME Security Send Command Error:%d\n", err);
+	else
+                printf("NVME Security Send Command Success:%d\n", cmd.result);
+        return err;
+}
+
+static int sec_recv(int argc, char **argv)
+{
+	struct nvme_admin_cmd cmd;
+        int err, opt, long_index = 0, raw = 0;
+	void *sec_buf = NULL;
+	unsigned int al = 0;
+	unsigned short spsp = 0;
+	unsigned char secp = 0;
+	unsigned int sec_size = 0;
+	static struct option opts[] = {
+		{"size", required_argument, 0, 'x'},
+		{"file", required_argument, 0, 'f'},
+		{"secp", required_argument, 0, 'p'},
+		{"spsp", required_argument, 0, 's'},
+		{"al", required_argument, 0, 't'},
+		{"raw-binary", no_argument, 0, 'b'},
+		{ 0, 0, 0, 0}
+	};
+
+	while ((opt = getopt_long(argc, (char **)argv, "f:p:s:t:", opts,
+							&long_index)) != -1) {
+		switch(opt) {
+		case 'x':
+			get_int(optarg, &sec_size);
+			break;
+		case 'p':
+			get_short(optarg, &spsp);
+			break;
+		case 's':
+			get_byte(optarg, &secp);
+			break;
+		case 't':
+			get_int(optarg, &al);
+			break;
+		case 'b':
+			raw = 1;
+			break;
+		default:
+			return EINVAL;
+		}
+	}
+	get_dev(optind, argc, argv);
+
+	if (sec_size) {
+		if (posix_memalign(&sec_buf, getpagesize(), sec_size)) {
+			fprintf(stderr, "No memory for security size:%d\n",
+								sec_size);
+			return ENOMEM;
+		}
+	}
+
+        memset(&cmd, 0, sizeof(cmd));
+        cmd.opcode = nvme_admin_security_recv;
+        cmd.cdw10 = secp << 24 | spsp << 8;
+        cmd.cdw11 = al;
+        cmd.data_len = sec_size;
+        cmd.addr = (__u64)sec_buf;
+
+        err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+        if (err < 0)
+                return errno;
+        else if (err != 0)
+                fprintf(stderr, "NVME Security Receivce Command Error:%d\n",
+									err);
+	else {
+		if (!raw) {
+                	printf("NVME Security Receivce Command Success:%d\n",
+							cmd.result);
+			d(sec_buf, sec_size, 16, 1);
+		} else if (sec_size)
+			d_raw((unsigned char *)&sec_buf, sec_size);
+	}
+        return err;
 }
 
 static int io_passthru(int argc, char **argv)
