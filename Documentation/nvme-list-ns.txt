@@ -1,0 +1,38 @@
+nvme-id-ns(1)
+=============
+
+NAME
+----
+nvme-list-ns - Send NVMe Identify List Namespaces, return result and structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme list-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends an identify command for namespace list
+and provides the result and returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+If the starting namespace in the list always begins with 0 unless the
+`'--namespace-id'` option is given to override.
+
+On success, the namespace array is printed for each index and nsid for
+a valid nsid.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Retrieve the identify list structure starting with the given nsid.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

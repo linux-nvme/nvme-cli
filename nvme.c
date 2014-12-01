@@ -46,6 +46,7 @@ static const char *devicename;
 #define COMMAND_LIST \
 	ENTRY(ID_CTRL, "id-ctrl", "Send NVMe Identify Controller", id_ctrl) \
 	ENTRY(ID_NS, "id-ns", "Send NVMe Identify Namespace, disaply structure", id_ns) \
+	ENTRY(LIST_NS, "list-ns", "Send NVMe Identify List, disaply structure", list_ns) \
 	ENTRY(GET_NS_ID, "get-ns-id", "Retrieve the namespace ID of opend block device", get_ns_id) \
 	ENTRY(GET_LOG, "get-log", "Generic NVMe get log, returns log in raw format", get_log) \
 	ENTRY(GET_FW_LOG, "fw-log", "Retrieve FW Log, show it", get_fw_log) \
@@ -694,6 +695,39 @@ static int get_log(int argc, char **argv)
 						nvme_status_to_string(err));
 		return err;
 	}
+}
+
+static int list_ns(int argc, char **argv)
+{
+	int opt, err, i, long_index = 0;
+	unsigned int nsid = 0;
+	static struct option opts[] = {
+		{"namespace-id", required_argument, 0, 'n'},
+		{0, 0, 0, 0 }
+	};
+	__u32 ns_list[1024];
+
+	while ((opt = getopt_long(argc, (char **)argv, "n:", opts,
+							&long_index)) != -1) {
+		switch (opt) {
+		case 'n':
+			get_int(optarg, &nsid);
+			break;
+		default:
+			return EINVAL;
+		}
+	}
+	get_dev(optind, argc, argv);
+	err = identify(nsid, ns_list, 2);
+	if (!err) {
+		for (i = 0; i < 1024; i++)
+			if (ns_list[i])
+				printf("[%4u]:%#x\n", i, ns_list[i]);
+	}
+	else if (err > 0)
+		fprintf(stderr, "NVMe Status: %s NSID:%d\n",
+				nvme_status_to_string(err), nsid);
+	return err;
 }
 
 static int id_ctrl(int argc, char **argv)
@@ -1524,7 +1558,7 @@ static int resv_report(int argc, char **argv)
                 	printf("NVME Reservation Report success\n");
 			show_nvme_resv_report(status);
 		} else
-			d_raw(status, numd << 2);
+			d_raw((unsigned char *)status, numd << 2);
 	}
 	return 0;
 }
