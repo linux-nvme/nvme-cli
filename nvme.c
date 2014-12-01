@@ -871,10 +871,11 @@ static int fw_download(int argc, char **argv)
 	static struct option opts[] = {
 		{"fw", required_argument, 0, 'f'},
 		{"xfer", required_argument, 0, 'x'},
+		{"offset", required_argument, 0, 'o'},
 		{ 0, 0, 0, 0}
 	};
 
-	while ((opt = getopt_long(argc, (char **)argv, "x:f:", opts,
+	while ((opt = getopt_long(argc, (char **)argv, "x:f:o:", opts,
 							&long_index)) != -1) {
 		switch (opt) {
 		case 'f':
@@ -882,6 +883,10 @@ static int fw_download(int argc, char **argv)
 			break;
 		case 'x':
 			get_int(optarg, &xfer_size);
+			break;
+		case 'p':
+			get_int(optarg, &offset);
+			offset <<= 2;
 			break;
 		default:
 			return EINVAL;
@@ -902,11 +907,11 @@ static int fw_download(int argc, char **argv)
 	fw_size = sb.st_size;
 	if (fw_size & 0x3) {
 		fprintf(stderr, "Invalid size:%d for f/w image\n", fw_size);
-		return 1;
+		return EINVAL;
 	} 
 	if (posix_memalign(&fw_buf, getpagesize(), fw_size)) {
 		fprintf(stderr, "No memory for f/w size:%d\n", fw_size);
-		exit(ENOMEM);
+		return ENOMEM;
 	}
 	if (xfer_size % 4096)
 		xfer_size = 4096;

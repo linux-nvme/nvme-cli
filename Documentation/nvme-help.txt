@@ -8,7 +8,7 @@ nvme-help - Help information.
 SYNOPSIS
 --------
 [verse]
-'nvme help' <command>
+'nvme help' [<command>]
 
 DESCRIPTION
 -----------
