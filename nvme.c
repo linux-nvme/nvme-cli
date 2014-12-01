@@ -864,18 +864,20 @@ static int nvme_feature(int opcode, void *buf, int data_len, __u32 fid,
 static int get_feature(int argc, char **argv)
 {
 	int opt, err, long_index = 0;
-	unsigned int f, result, raw = 0, cdw11 = 0, nsid = 0, data_len = 0;
+	unsigned int f, result, raw = 0, cdw10, cdw11 = 0, nsid = 0, data_len = 0;
+	unsigned char sel = 0;
 	void *buf = NULL;
 	static struct option opts[] = {
 		{"namespace-id", required_argument, 0, 'n'},
 		{"feature-id", required_argument, 0, 'f'},
+		{"sel", required_argument, 0, 's'},
 		{"cdw11", required_argument, 0, 0},
 		{"data-len", required_argument, 0, 'l'},
 		{"raw-binary", no_argument, 0, 'b'},
 		{0, 0, 0, 0 }
 	};
 
-	while ((opt = getopt_long(argc, (char **)argv, "n:f:l:b", opts,
+	while ((opt = getopt_long(argc, (char **)argv, "n:f:l:s:b", opts,
 							&long_index)) != -1) {
 		switch (opt) {
 		case 0:
@@ -890,6 +892,9 @@ static int get_feature(int argc, char **argv)
 		case 'l':
 			get_int(optarg, &data_len);
 			break;
+		case 's':
+			get_byte(optarg, &sel);
+			break;
 		case 'b':
 			raw = 1;
 			break;
@@ -898,6 +903,10 @@ static int get_feature(int argc, char **argv)
 		}
 	}
 	get_dev(optind, argc, argv);
+	if (sel > 7) {
+		fprintf(stderr, "invalid 'select' param:%d\n", sel);
+		return EINVAL;
+	}
 	if (!f) {
 		fprintf(stderr, "feature-id required param\n");
 		return EINVAL;
@@ -907,7 +916,8 @@ static int get_feature(int argc, char **argv)
 	if (data_len)
 		buf = malloc(data_len);
 
-	err = nvme_feature(nvme_admin_get_features, buf, data_len, f, nsid,
+	cdw10 = sel << 8 | f;
+	err = nvme_feature(nvme_admin_get_features, buf, data_len, cdw10, nsid,
 							cdw11, &result);
 	if (!err) {
 		printf("get-feature:%d(%s), value:%#08x\n", f,

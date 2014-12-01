@@ -11,6 +11,7 @@ SYNOPSIS
 'nvme get-feature' <device> [--namespace-id=<nsid> | -n <nsid>]
 			  [--feature-id=<fid> | -f <fid>] [--cdw11=<cdw11>]
 			  [--data-len=<data-len> | -l <data-len>]
+			  [--sel=<select> | -s <select>]
 			  [--raw-binary | -b]
 
 DESCRIPTION
@@ -39,6 +40,21 @@ OPTIONS
 --feature-id=<fid>::
 	The feature id to send with the command. Value provided should
 	be in hex.
+
+-s <select>::
+--sel=<select>::
+	Select (SEL): This field specifies which value of the attributes
+	to return in the provided data:
++
+[]
+|==================
+|Select|Description
+|0|Current 
+|1|Default 
+|2|Saved
+|3|Supported capabilities
+|4–7|Reserved
+|==================
 
 -l <data-len>::
 --data-len=<data-len>::
