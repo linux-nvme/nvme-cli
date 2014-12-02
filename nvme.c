@@ -65,6 +65,7 @@ static const char *devicename;
 	ENTRY(RESV_REGISTER, "resv-register", "Submit a Reservation Register, return results", resv_register) \
 	ENTRY(RESV_RELEASE, "resv-release", "Submit a Reservation Release, return results", resv_release) \
 	ENTRY(RESV_REPORT, "resv-report", "Submit a Reservation Report, return results", resv_report) \
+	ENTRY(FLUSH, "flush", "Submit a Flush command, return results", flush) \
 	ENTRY(HELP, "help", "Display this help", help)
 
 #define ENTRY(i, n, h, f) \
@@ -1278,6 +1279,42 @@ static int sec_send(int argc, char **argv)
 	else
                 printf("NVME Security Send Command Success:%d\n", cmd.result);
         return err;
+}
+
+static int flush(int argc, char **argv)
+{
+	struct nvme_passthru_cmd cmd;
+	unsigned int nsid = 0xffffffff;
+        int err, opt, long_index = 0;
+
+	static struct option opts[] = {
+		{"namespace-id", required_argument, 0, 'n'},
+		{ 0, 0, 0, 0}
+	};
+
+	while ((opt = getopt_long(argc, (char **)argv, "n:", opts,
+							&long_index)) != -1) {
+		switch(opt) {
+		case 'n': get_int(optarg, &nsid); break;
+		default:
+			return EINVAL;
+		}
+	}
+	get_dev(optind, argc, argv);
+
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opcode = nvme_cmd_flush;
+	cmd.nsid = nsid;
+
+	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+	if (err < 0)
+		return errno;
+	else if (err != 0)
+		fprintf(stderr, "NVME IO command error:%s(%d)\n",
+				nvme_status_to_string(err), err);
+	else
+		printf("NVMe Flush: success\n");
+	return 0;
 }
 
 static int resv_acquire(int argc, char **argv)
