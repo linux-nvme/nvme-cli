@@ -1,5 +1,5 @@
-nvme-admin-passthru(1)
-======================
+nvme-io-passthru(1)
+===================
 
 NAME
 ----
@@ -25,7 +25,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 Submits an arbitrary NVMe IO command and returns the applicable
-results. This may be the simply the commands result and status, or may
+results. This may be the simply the command's result and status, or may
 also include a buffer if the command returns one. This command does no
 interpretation of the opcodes or options.
 
@@ -53,7 +53,7 @@ OPTIONS
 
 -n <nsid>::
 --namespace-id=<nsid>::
-	The value for the ns-id in the command.
+	The value for the ns-id in the command. Defaults to '0'.
 
 --cdw[2-3,10-15]=<cdw>::
 	Specifies the command dword value for that specified entry in

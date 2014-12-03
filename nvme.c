@@ -1685,19 +1685,11 @@ static int sec_recv(int argc, char **argv)
         return err;
 }
 
-static int io_passthru(int argc, char **argv)
+static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 {
-	fprintf(stderr, "%s: not implemented yet\n", __func__);
-	return 0;
-}
-
-static int admin_passthru(int argc, char **argv)
-{
-	/* We should be able to infer the data direction from the opcode, but
-	 * some vendors don't abide by this in their vendor specific opcodes */
 	int r = 0, w = 0;
 	int opt, err, raw = 0, show = 0, long_index = 0, wfd = STDIN_FILENO;
-	struct nvme_admin_cmd cmd;
+	struct nvme_passthru_cmd cmd;
 	static struct option opts[] = {
 		{"opcode", required_argument, 0, 'o'},
 		{"flags", required_argument, 0, 'f'},
@@ -1797,8 +1789,7 @@ static int admin_passthru(int argc, char **argv)
 		printf("timeout_ms   : %08x\n", cmd.timeout_ms);
 		return 0;
 	}
-
-	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	err = ioctl(fd, ioctl_cmd, &cmd);
 	if (err >= 0) {
 		if (!raw) {
 			printf("NVMe Status:%s Command Result:%08x\n",
@@ -1810,6 +1801,16 @@ static int admin_passthru(int argc, char **argv)
 	} else
 		perror("ioctl");
 	return err;
+}
+
+static int io_passthru(int argc, char **argv)
+{
+	return nvme_passthru(argc, argv, NVME_IOCTL_IO_CMD);
+}
+
+static int admin_passthru(int argc, char **argv)
+{
+	return nvme_passthru(argc, argv, NVME_IOCTL_ADMIN_CMD);
 }
 
 static void usage(char *cmd)
