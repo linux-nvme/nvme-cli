@@ -1,0 +1,44 @@
+nvme-compare(1)
+===============
+
+NAME
+----
+nvme-compare - Send an NVMe Compare command, provide results
+
+SYNOPSIS
+--------
+[verse]
+'nvme-compare' <device> [--start-block=<slba> | -s <slba>]
+			[--block-count=<nlb> | -c <nlb>]
+			[--data-size=<size> | -z <size>]
+			[--ref-tag=<reftag> | -r <reftag>]
+			[--data=<data-file> | -d <data-file>]
+			[--prinfo=<prinfo> | -p <prinfo>]
+			[--app-tag-mask=<appmask> | -m <appmask>]
+			[--app-tag=<apptag> | -a <apptag>]
+			[--limited-retry | -l]
+			[--force-unit-access | -f]
+
+DESCRIPTION
+-----------
+The Compare command reads the logical blocks specified by the command
+from the medium and compares the data read to a comparison data buffer
+transferred as part of the command. If the data read from the controller
+and the comparison data buffer are equivalent with no miscompares,
+then the command completes successfully. If there is any miscompare,
+the command completes with an error of Compare Failure. If metadata is
+provided, then a comparison is also performed for the metadata.
+
+OPTIONS
+-------
+--start-block=<slba>::
+-s <slba>::
+	Start block.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

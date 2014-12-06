@@ -66,6 +66,7 @@ static const char *devicename;
 	ENTRY(RESV_RELEASE, "resv-release", "Submit a Reservation Release, return results", resv_release) \
 	ENTRY(RESV_REPORT, "resv-report", "Submit a Reservation Report, return results", resv_report) \
 	ENTRY(FLUSH, "flush", "Submit a Flush command, return results", flush) \
+	ENTRY(COMPARE, "compare", "Submit a Comapre command, return results", compare) \
 	ENTRY(HELP, "help", "Display this help", help)
 
 #define ENTRY(i, n, h, f) \
@@ -1607,6 +1608,82 @@ static int resv_report(int argc, char **argv)
 		} else
 			d_raw((unsigned char *)status, numd << 2);
 	}
+	return 0;
+}
+
+static int compare(int argc, char **argv)
+{
+	struct nvme_user_io io;
+	void *buffer;
+        int err, opt, dfd = STDIN_FILENO, long_index = 0;
+	unsigned int data_size = 0;
+	__u8 prinfo = 0;
+	static struct option opts[] = {
+		{"start-block", required_argument, 0, 's'},
+		{"block-count", required_argument, 0, 'c'},
+		{"data-size", required_argument, 0, 'z'},
+		{"ref-tag", required_argument, 0, 'r'},
+		{"data", required_argument, 0, 'd'},
+		{"prinfo", required_argument, 0, 'p'},
+		{"app-tag-mask", required_argument, 0, 'm'},
+		{"app-tag", required_argument, 0, 'a'},
+		{"limited-retry", no_argument, 0, 'l'},
+		{"force-unit-access", no_argument, 0, 'f'},
+		{ 0, 0, 0, 0}
+	};
+
+	memset(&io, 0, sizeof(io));
+	while ((opt = getopt_long(argc, (char **)argv, "p:s:c:z:r:d:m:a:lf", opts,
+							&long_index)) != -1) {
+		switch(opt) {
+		case 's': get_long(optarg, &io.slba); break;
+		case 'c': get_short(optarg, &io.nblocks); break;
+		case 'z': get_int(optarg, &data_size); break;
+		case 'r': get_int(optarg, &io.reftag); break;
+		case 'm': get_short(optarg, &io.appmask); break;
+		case 'a': get_short(optarg, &io.apptag); break;
+		case 'p':
+			get_byte(optarg, &prinfo);
+			if (prinfo > 0xf)
+				return EINVAL;
+			io.control |= (prinfo << 10);
+			break;
+		case 'l':
+			io.control |= NVME_RW_LR;
+			break;
+		case 'f':
+			io.control | NVME_RW_FUA;
+			break;
+		case 'd': 
+			dfd = open(optarg, O_RDONLY);
+			if (dfd < 0) {
+				perror(optarg);
+				return EINVAL;
+			}
+			break;
+		default:
+			return EINVAL;
+		}
+	};
+	get_dev(optind, argc, argv);
+
+	if (!data_size)	{
+		fprintf(stderr, "data size not provided\n");
+		return EINVAL;
+	}
+	buffer = malloc(data_size);
+	if (read(dfd, (void *)buffer, data_size) < 0) {
+		fprintf(stderr, "failed to read compare buffer\n");
+		return EINVAL;
+	}
+
+        io.opcode = nvme_cmd_compare;
+	io.addr = (__u64)buffer;
+	err = ioctl(fd, NVME_IOCTL_SUBMIT_IO, &io);
+	if (err < 0)
+		perror("ioctl");
+	else
+		printf("compare:%s(%04x)\n", nvme_status_to_string(err), err);
 	return 0;
 }
 
