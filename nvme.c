@@ -103,7 +103,6 @@ struct command commands[] = {
 static void open_dev(const char *dev)
 {
 	int err;
-	
 	devicename = dev;
 	fd = open(dev, O_RDONLY);
 	if (fd < 0)
@@ -1077,7 +1076,7 @@ static int fw_activate(int argc, char **argv)
 static int format(int argc, char **argv)
 {
 	int opt, err, long_index;
-	unsigned int nsid = -1;
+	unsigned int nsid = 0xffffffff;
 	unsigned char lbaf = 0, ses = 0, pil = 0, pi = 0, ms = 0;
 	struct nvme_admin_cmd cmd;
 	static struct option opts[] = {
@@ -1126,6 +1125,15 @@ static int format(int argc, char **argv)
 		fprintf(stderr, "invalid pi:%d\n", pi);
 		return EINVAL;
 	}
+	if (S_ISBLK(nvme_stat.st_mode)) {
+		nsid = ioctl(fd, NVME_IOCTL_ID);
+		if (nsid <= 0) {
+			fprintf(stderr,
+				"%s: failed to return namespace id\n",
+				devicename);
+			return errno;
+		}
+	}
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opcode = nvme_admin_format_nvm;
@@ -1136,9 +1144,10 @@ static int format(int argc, char **argv)
 	if (err < 0)
 		perror("ioctl");
 	else if (err != 0)
-		fprintf(stderr, "NVME Admin command error:%d\n", err);
+		fprintf(stderr, "NVME Admin command error:%s(%d)\n",
+					nvme_status_to_string(err), err);
 	else {
-		printf("Success formatting namespace:%d\n", nsid);
+		printf("Success formatting namespace:%x\n", nsid);
 		ioctl(fd, BLKRRPART);
 	}
 	return err;
