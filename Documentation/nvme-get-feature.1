@@ -1,0 +1,208 @@
+'\" t
+.\"     Title: nvme-get-feature
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 02/02/2015
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "NVME\-GET\-FEATURE" "1" "02/02/2015" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-get-feature \- Gets an NVMe feature, returns applicable results
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme get\-feature\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                          [\-\-feature\-id=<fid> | \-f <fid>] [\-\-cdw11=<cdw11>]
+                          [\-\-data\-len=<data\-len> | \-l <data\-len>]
+                          [\-\-sel=<select> | \-s <select>]
+                          [\-\-raw\-binary | \-b]
+.fi
+.SH "DESCRIPTION"
+.sp
+Submits an NVMe Get Feature admin command and returns the applicable results\&. This may be the feature\(cqs value, or may also include a feature structure if the feature requires it (ex: LBA Range Type)\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+On success, the returned feature\(cqs structure (if applicable) may be returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format if it is a known structure, displayed in hex, or the raw buffer may be printed to stdout for another program to parse\&.
+.SH "OPTIONS"
+.PP
+\-n <nsid>, \-\-namespace\-id=<nsid>
+.RS 4
+Retrieve the feature for the given nsid\&. This is optional and most features do not use this value\&.
+.RE
+.PP
+\-f <fid>, \-\-feature\-id=<fid>
+.RS 4
+The feature id to send with the command\&. Value provided should be in hex\&.
+.RE
+.PP
+\-s <select>, \-\-sel=<select>
+.RS 4
+Select (SEL): This field specifies which value of the attributes to return in the provided data:
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+Select
+T}:T{
+Description
+T}
+T{
+0
+T}:T{
+Current
+T}
+T{
+1
+T}:T{
+Default
+T}
+T{
+2
+T}:T{
+Saved
+T}
+T{
+3
+T}:T{
+Supported capabilities
+T}
+T{
+4\(en7
+T}:T{
+Reserved
+T}
+.TE
+.sp 1
+.RE
+.PP
+\-l <data\-len>, \-\-data\-len=<data\-len>
+.RS 4
+The data length for the buffer returned for this feature\&. Most known features do not use this value\&. The exception is LBA Range Type
+.RE
+.PP
+\-\-cdw11=<cdw11>
+.RS 4
+The value for command dword 11, if applicable\&. Only known feature using this is the interrupt vector configuration feature\&.
+.RE
+.PP
+\-b, \-\-raw\-binary
+.RS 4
+Print the raw feature buffer to stdout if the feature returns a structure\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieves the feature for Number of Queues, or feature id 7:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme get\-feature /dev/nvme0 \-f 7
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The following retrieves the feature for the LBA Range Type, which implicitly requires a buffer and will be printed to the screen in human readable format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme get\-feature /dev/nvme0 \-f 3
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Retrieves the feature for the some vendor specific feature and specifically requesting a buffer be allocate for this feature, which will be displayed to the user in as a hex dump:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme get\-feature /dev/nvme0 \-f c0 \-l 512
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The following retrieves the feature for the LBA Range Type, which implicitly requires a buffer and will be saved to a file in its raw format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme get\-feature /dev/nvme0 \-f 3 \-\-raw\-binary > lba_range\&.raw
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+It is probably a bad idea to not redirect stdout when using this mode\&.
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

@@ -1,0 +1,199 @@
+'\" t
+.\"     Title: nvme-format
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 02/02/2015
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "NVME\-FORMAT" "1" "02/02/2015" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-format \- Format an NVMe device
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme format\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                    [\-\-lbaf=<lbaf> | \-l <lbaf>]
+                    [\-\-ses=<ses> | \-s <ses>]
+                    [\-\-pil=<pil> | \-p <pil>]
+                    [\-\-pi=<pi> | \-i <pi>]
+                    [\-\-ms=<ms> | \-m <ms>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, send an nvme Format Namespace admin command and provides the results\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. If the character device is given, the namespace identifer will default to 0xffffffff to send the format to all namespace, but can be overridden to any namespace with the \fInamespace\-id\fR option\&. If the block device is given, the namespace identifier will default to the namespace id of the block device given, but can be overriden with the same option\&.
+.sp
+On success, the program will automatically issue BLKRRPART ioctl to force rescanning the namespaces\&. If the driver is recent enough, this will automatically update the physical block size\&. If it is not recent enough, you will need to remove and rescan your device some other way for the new block size to be visible\&.
+.SH "OPTIONS"
+.PP
+\-n <nsid>, \-\-namespace\-id=<nsid>
+.RS 4
+Send the format command for the specified nsid\&. This can be used to override the default value for either character device (0xffffffff) or the block device (result from NVME_IOCTL_ID)\&.
+.RE
+.PP
+\-l <lbaf>, \-\-lbaf=<lbaf>
+.RS 4
+LBA Format: This field specifies the LBA format to apply to the NVM media\&. This corresponds to the LBA formats indicated in the Identify Namespace command\&. Defaults to 0\&.
+.RE
+.PP
+\-s <ses>, \-\-ses=<ses>
+.RS 4
+Secure Erase Settings: This field specifies whether a secure erase should be performed as part of the format and the type of the secureerase operation\&. The erase applies to all user data, regardless of location (e\&.g\&., within an exposed LBA, within a cache, within deallocated LBAs, etc)\&. Defaults to 0\&.
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+Value
+T}:T{
+Definition
+T}
+T{
+0
+T}:T{
+No secure erase operation requested
+T}
+T{
+1
+T}:T{
+User Data Erase: All user data shall be erased, contents of the user data after the erase is indeterminate (e\&.g\&., the user data may be zero filled, one filled, etc)\&. The controller may perform a cryptographic erase when a User Data Erase is requested if all user data is encrypted\&.
+T}
+T{
+2
+T}:T{
+Cryptographic Erase: All user data shall be erased cryptographically\&. This is accomplished by deleting the encryption key\&.
+T}
+T{
+3\(en7
+T}:T{
+Reserved
+T}
+.TE
+.sp 1
+.RE
+.PP
+\-p <pil>, \-\-pil=<pil>
+.RS 4
+Protection Information Location: If set to \(oq1\(cq and protection information is enabled, then protection information is transferred as the first eight bytes of metadata\&. If cleared to \(oq0\(cq and protection information is enabled, then protection information is transferred as the last eight bytes of metadata\&. Defaults to 0\&.
+.RE
+.PP
+\-i <pi>, \-\-pi=<pi>
+.RS 4
+Protection Information: This field specifies whether end\-to\-end data protection is enabled and the type of protection information\&. Defaults to 0\&.
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+Value
+T}:T{
+Definition
+T}
+T{
+0
+T}:T{
+Protection information is not enabled
+T}
+T{
+1
+T}:T{
+Protection information is enabled, Type 1
+T}
+T{
+2
+T}:T{
+Protection information is enabled, Type 2
+T}
+T{
+3
+T}:T{
+Protection information is enabled, Type 3
+T}
+T{
+4\(en7
+T}:T{
+Reserved
+T}
+.TE
+.sp 1
+.RE
+.PP
+\-m <ms>, \-\-ms=<ms>
+.RS 4
+Metadata Settings: This field is set to \(oq1\(cq if the metadata is transferred as part of an extended data LBA\&. This field is cleared to \(oq0\(cq if the metadata is transferred as part of a separate buffer\&. The metadata may include protection information, based on the Protection Information (PI) field\&. Defaults to 0\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Format the device using all defaults:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme format /dev/nvme0n1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Format namespace 1 with user data secure erase settings and protection information:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme format /dev/nvme0 \-\-namespace\-id=1 \-\-ses=1 \-\-pi=1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

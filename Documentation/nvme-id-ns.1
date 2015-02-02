@@ -1,0 +1,209 @@
+'\" t
+.\"     Title: nvme-id-ns
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 02/02/2015
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "NVME\-ID\-NS" "1" "02/02/2015" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-id-ns \- Send NVMe Identify Namespace, return result and structure
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme id\-ns\fR <device> [\-v | \-\-vendor\-specific] [\-b | \-\-raw\-binary]
+                    [\-\-namespace\-id=<nsid> | \-n <nsid>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, sends an identify namespace command and provides the result and returned structure\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. If the character device is given, the \*(Aq\-\-namespace\-id\*(Aq option is mandatory, otherwise it will use the ns\-id of the namespace for the block device you opened\&. For block devices, the ns\-id used can be overridden with the same option\&.
+.sp
+On success, the structure may be returned in one of several ways depending on the option flags; the structure may be parsed by the program or the raw buffer may be printed to stdout\&.
+.SH "OPTIONS"
+.PP
+\-n <nsid>, \-\-namespace\-id=<nsid>
+.RS 4
+Retrieve the identify namespace structure for the given nsid\&. This is required for the character devices, or overrides the block nsid if given\&.
+.RE
+.PP
+\-b, \-\-raw\-binary
+.RS 4
+Print the raw buffer to stdout\&. Structure is not parsed by program\&. This overrides the vendor specific option\&.
+.RE
+.PP
+\-v, \-\-vendor\-specific
+.RS 4
+In addition to parsing known fields, this option will dump the vendor specific region of the structure in hex with ascii interpretation\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program interpret the returned buffer and display the known fields in a human readable format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme id\-ns /dev/nvme0n1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If using the character device or overriding namespace id:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme id\-ns /dev/nvme0 \-n 1
+# nvme id\-ns /dev/nvme0n1 \-n 1
+# nvme id\-ns /dev/nvme0 \-\-namespace\-id=1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+In addition to showing the known fields, have the program to display the vendor unique field:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme id\-ns /dev/nvme0n1 \-\-vendor\-specific
+# nvme id\-ns /dev/nvme0n1 \-v
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The above will dump the \*(Aqvs\*(Aq buffer in hex since it doesn\(cqt know how to interpret it\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Have the program return the raw structure in binary:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme id\-ns /dev/nvme0n1 \-\-raw\-binary > id_ns\&.raw
+# nvme id\-ns /dev/nvme0n1 \-b > id_ns\&.raw
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+It is probably a bad idea to not redirect stdout when using this mode\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Alternatively you may want to send the data to another program that can parse the raw buffer\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme id\-ns /dev/nvme0n1 \-\-raw\-binary | nvme_parse_id_ns
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The parse program in the above example can be a program that shows the structure in a way you like\&. The following program is such an example that will parse it and can accept the output through a pipe,
+\*(Aq|\*(Aq, as shown in the above example, or you can
+\*(Aqcat\*(Aq
+a saved output buffer to it\&.
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/* File: nvme_parse_id_ns\&.c */
+
+#include <linux/nvme\&.h>
+#include <stdio\&.h>
+#include <unistd\&.h>
+
+int main(int argc, char **argv)
+{
+        unsigned char buf[sizeof(struct nvme_id_ns)];
+        struct nvme_id_ns *ns = (struct nvme_id_ns *)buf;
+
+        if (read(STDIN_FILENO, buf, sizeof(buf)))
+                return 1;
+
+        printf("nsze : %#llx\en", ns\->nsze);
+        printf("ncap : %#llx\en", ns\->ncap);
+        return 0;
+}
+.fi
+.if n \{\
+.RE
+.\}
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

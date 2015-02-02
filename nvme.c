@@ -87,6 +87,7 @@ struct command {
 	char *name;
 	char *help;
 	char *path;
+	char *man;
 	int (*fn)(int argc, char **argv);
 };
 
@@ -97,6 +98,7 @@ struct command commands[] = {
 		.help = h, \
 		.fn = f, \
 		.path = "Documentation/nvme-"n".1", \
+		.man = "nvme-"n, \
 	},
 	COMMAND_LIST
 	#undef ENTRY
@@ -1962,7 +1964,7 @@ static void command_help(const char *cmd)
 		c = &commands[i];
 		if (strcmp(c->name, cmd))
 			continue;
-		exit(execlp("man", "man", c->path, (char *)NULL));
+		exit(execlp("man", "man", c->man, (char *)NULL));
 	}
 	fprintf(stderr, "No entry for nvme sub-command %s\n", cmd);
 }

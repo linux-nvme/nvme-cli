@@ -89,8 +89,8 @@ man1: $(DOC_MAN1)
 install: install-man
 
 install-man: man
-	$(INSTALL) -d -m 755 $(DESTDIR)$(man1dir)
-	$(INSTALL) -m 644 $(DOC_MAN1) $(DESTDIR)$(man1dir)
+	$(INSTALL) -d -m 755 /usr/local/man/man1
+	$(INSTALL) -m 644 $(DOC_MAN1) /usr/local/man/man1
 
 docdep_prereqs = \
 	cmd-list.made $(cmds_txt)
@@ -120,7 +120,7 @@ cmd-list.made: cmd-list.perl ../command-list.txt $(MAN1_TXT)
 	date >$@
 
 clean:
-	$(RM) *.xml *.xml+ *.html *.html+ *.1 *.5 *.7
+	$(RM) *.xml *.xml+ *.html *.html+
 	$(RM) *.texi *.texi+ *.texi++ nvme.info nvmeman.info
 	$(RM) *.pdf
 	$(RM) howto-index.txt howto/*.html doc.dep

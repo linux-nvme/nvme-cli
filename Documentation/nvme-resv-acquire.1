@@ -1,0 +1,172 @@
+'\" t
+.\"     Title: nvme-resv-acquire
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 02/02/2015
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "NVME\-RESV\-ACQUIRE" "1" "02/02/2015" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-resv-acquire \- Acquire an nvme reservation
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme resv\-acquire\fR <device>
+.fi
+.SH "DESCRIPTION"
+.sp
+The Reservation Acquire command is used to acquire a reservation on a namespace, preempt a reservation held on a namespace, and abort a reservation held on a namespace\&.
+.SH "OPTIONS"
+.PP
+\-n <nsid>, \-\-namespace\-id=<nsid>
+.RS 4
+Override the nsid field\&. If using the admin character device, this paramter is required\&.
+.RE
+.PP
+\-c <crkey>, \-\-crkey=<crkey>
+.RS 4
+Current Reservation Key: The field specifies the current reservation key associated with the host\&. If the IEKEY bit is set to \(oq1\(cq in the command, then the CRKEY check succeeds regardless of the value in this field\&.
+.RE
+.PP
+\-p <prkey>, \-\-prkey=<prkey>
+.RS 4
+Preempt Reservation Key: If the Reservation Acquire Action is set to 001b (i\&.e\&., Preempt) or 010b (i\&.e\&., Preempt and Abort), then this field specifies the reservation key to be unregistered from the namespace\&. For all other Reservation Acquire Action values, this field is reserved\&.
+.RE
+.PP
+\-t <rtype>, \-\-rtyep=<rtype>
+.RS 4
+Reservation Type: This field specifies the type of reservation to be created\&.
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+Value
+T}:T{
+Definition
+T}
+T{
+0h
+T}:T{
+Reserved
+T}
+T{
+1h
+T}:T{
+Write Exclusive Reservation
+T}
+T{
+2h
+T}:T{
+Exclusive Access Reservation
+T}
+T{
+3h
+T}:T{
+Write Exclusive \- Registrants Only Reservation
+T}
+T{
+4h
+T}:T{
+Exclusive Access \- Registrants Only Reservation
+T}
+T{
+5h
+T}:T{
+Write Exclusive \- All Registrants Reservation
+T}
+T{
+6h
+T}:T{
+Exclusive Access \- All Registrants Reservation
+T}
+T{
+07h\-FFh
+T}:T{
+Reserved
+T}
+.TE
+.sp 1
+.RE
+.PP
+\-a <racqa>, \-\-racqa=<racqa>
+.RS 4
+Reservation Acquire Action: This field specifies the action that is performed by the command\&.
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+Value
+T}:T{
+Definition
+T}
+T{
+0
+T}:T{
+Acquire
+T}
+T{
+1
+T}:T{
+Preempt
+T}
+T{
+2
+T}:T{
+Preempt and Abort
+T}
+T{
+3\-7
+T}:T{
+Reserved
+T}
+.TE
+.sp 1
+.RE
+.PP
+\-i, \-\-iekey
+.RS 4
+Ignore Existing Key: If this bit is set to a
+\fI1\fR, then the Current Reservation Key (CRKEY) check is disabled and the command shall succeed regardless of the CRKEY field value\&.
+.sp
+Indicator option, defaults to
+\fI0\fR\&.
+.RE
+.SH "EXAMPLES"
+.sp
+No examples yet
+.SH "NVME"
+.sp
+Part of the nvme\-user suite
