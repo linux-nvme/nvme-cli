@@ -34,6 +34,7 @@
 #include <linux/fs.h>
 
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -67,6 +68,7 @@ static const char *devicename;
 	ENTRY(RESV_REPORT, "resv-report", "Submit a Reservation Report, return results", resv_report) \
 	ENTRY(FLUSH, "flush", "Submit a Flush command, return results", flush) \
 	ENTRY(COMPARE, "compare", "Submit a Comapre command, return results", compare) \
+	ENTRY(REGISTERS, "show-regs", "Shows the controller registers. Requires admin character device", show_registers) \
 	ENTRY(HELP, "help", "Display this help", help)
 
 #define ENTRY(i, n, h, f) \
@@ -1073,6 +1075,54 @@ static int fw_activate(int argc, char **argv)
 	return err;
 }
 
+static int show_registers(int argc, char **argv)
+{
+	int opt, long_index, pci_fd;
+	char *base, path[512];
+	void *membase;
+	struct nvme_bar *bar;
+	static struct option opts[] = {};
+
+	while ((opt = getopt_long(argc, (char **)argv, "", opts,
+					&long_index)) != -1);
+	get_dev(optind, argc, argv);
+
+	if (!S_ISCHR(nvme_stat.st_mode)) {
+		fprintf(stderr, "%s is not character device\n", devicename);
+		exit(ENODEV);
+	}
+
+	base = basename(devicename);
+	sprintf(path, "/sys/class/misc/%s/device/resource0", base);
+	pci_fd = open(path, O_RDONLY);
+	if (pci_fd < 0) {
+		fprintf(stderr, "%s did not find a pci resource\n", devicename);
+		exit(ENODEV);
+	}
+
+	membase = mmap(0, getpagesize(), PROT_READ, MAP_SHARED, pci_fd, 0);
+	if (!membase) {
+		fprintf(stderr, "%s failed to map\n", devicename);
+		exit(ENODEV);
+	}
+
+	bar = membase;
+	printf("cap     : %"PRIx64"\n", (uint64_t)bar->cap);
+	printf("version : %x\n", bar->vs);
+	printf("intms   : %x\n", bar->intms);
+	printf("intmc   : %x\n", bar->intmc);
+	printf("cc      : %x\n", bar->cc);
+	printf("csts    : %x\n", bar->csts);
+	printf("nssr    : %x\n", bar->nssr);
+	printf("aqa     : %x\n", bar->aqa);
+	printf("asq     : %"PRIx64"\n", (uint64_t)bar->asq);
+	printf("acq     : %"PRIx64"\n", (uint64_t)bar->acq);
+	printf("cmbloc  : %x\n", bar->cmbloc);
+	printf("cmbsz   : %x\n", bar->cmbsz);
+
+	return 0;
+}
+
 static int format(int argc, char **argv)
 {
 	int opt, err, long_index;
@@ -1091,7 +1141,6 @@ static int format(int argc, char **argv)
 
 	while ((opt = getopt_long(argc, (char **)argv, "n:l:s:p:i:m:", opts,
 							&long_index)) != -1) {
-		
 		switch (opt) {
 		case 'n': get_int(optarg, &nsid); break;
 		case 'l': get_byte(optarg, &lbaf); break;
