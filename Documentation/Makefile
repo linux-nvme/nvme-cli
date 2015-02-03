@@ -7,7 +7,7 @@ SP_ARTICLES =
 MAN1_TXT += $(filter-out \
 		$(addsuffix .txt, $(ARTICLES) $(SP_ARTICLES)), \
 		$(wildcard nvme-*.txt))
-
+MAN1_TXT += nvme.txt
 MAN_TXT = $(MAN1_TXT)
 MAN_XML = $(patsubst %.txt,%.xml,$(MAN_TXT))
 

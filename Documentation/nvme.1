@@ -1,0 +1,72 @@
+'\" t
+.\"     Title: nvme
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 02/03/2015
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "NVME" "1" "02/03/2015" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme \- the dumb pci\-e storage utility
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\fR <command> <device> [<args>]
+.fi
+.SH "DESCRIPTION"
+.sp
+NVM\-Express is a fast, scalabale host controller interface designed to address the needs for PCI Express based solida state drives\&.
+.sp
+This \fInvme\fR program is a user space utility to provide standards compliant tooling for NVM\-Express drives\&. It was made specifically for Linux as it relies on the IOCTLs defined by the mailine kernel driver\&.
+.SH "NVME COMMANDS"
+.sp
+The utility has sub\-commands for all admin and io commands defined in the specification and for displaying controller registers\&. There is also an option to submit completely arbitrary commands\&. For a list of commands available, run "nvme help"\&.
+.SH "FURTHER DOCUMENTATION"
+.sp
+See the freely available references on \m[blue]\fBOffical NVM\-Express Site\fR\m[]\&\s-2\u[1]\d\s+2\&.
+.SH "AUTHORS"
+.sp
+This is written and maintained by \m[blue]\fBKeith Busch\fR\m[]\&\s-2\u[2]\d\s+2\&.
+.SH "REPORTING BUGS"
+.sp
+Patches and bugs may be submitted to the \m[blue]\fBLinux NVMe Mailing list\fR\m[]\&\s-2\u[3]\d\s+2\&. While primarily for kernel driver development, we can use it for user space tooling\&.
+.SH "NVME"
+.sp
+Part of the nvme suite
+.SH "NOTES"
+.IP " 1." 4
+Offical NVM-Express Site
+.RS 4
+\%http://nvmexpress.org
+.RE
+.IP " 2." 4
+Keith Busch
+.RS 4
+\%mailto:keith.busch@intel.com
+.RE
+.IP " 3." 4
+Linux NVMe Mailing list
+.RS 4
+\%mailto:linux-nvme@lists.infradead.org
+.RE
