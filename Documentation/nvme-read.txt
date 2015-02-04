@@ -1,0 +1,40 @@
+nvme-compare(1)
+===============
+
+NAME
+----
+nvme-read - Send an NVMe Read command, provide results
+
+SYNOPSIS
+--------
+[verse]
+'nvme-read' <device> [--start-block=<slba> | -s <slba>]
+			[--block-count=<nlb> | -c <nlb>]
+			[--data-size=<size> | -z <size>]
+			[--ref-tag=<reftag> | -r <reftag>]
+			[--data=<data-file> | -d <data-file>]
+			[--prinfo=<prinfo> | -p <prinfo>]
+			[--app-tag-mask=<appmask> | -m <appmask>]
+			[--app-tag=<apptag> | -a <apptag>]
+			[--limited-retry | -l]
+			[--force-unit-access | -f]
+
+DESCRIPTION
+-----------
+The Read command reads the logical blocks specified by the command from
+the medium and copies to the data data buffer provided. Will use stdout
+by default if you don't provide a file.
+
+OPTIONS
+-------
+--start-block=<slba>::
+-s <slba>::
+	Start block.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,40 @@
+nvme-compare(1)
+===============
+
+NAME
+----
+nvme-write - Send an NVMe write command, provide results
+
+SYNOPSIS
+--------
+[verse]
+'nvme-write' <device> [--start-block=<slba> | -s <slba>]
+			[--block-count=<nlb> | -c <nlb>]
+			[--data-size=<size> | -z <size>]
+			[--ref-tag=<reftag> | -r <reftag>]
+			[--data=<data-file> | -d <data-file>]
+			[--prinfo=<prinfo> | -p <prinfo>]
+			[--app-tag-mask=<appmask> | -m <appmask>]
+			[--app-tag=<apptag> | -a <apptag>]
+			[--limited-retry | -l]
+			[--force-unit-access | -f]
+
+DESCRIPTION
+-----------
+The Write command writes the logical blocks specified by the command to
+the medium from the data data buffer provided. Will use stdin by default
+if you don't provide a file.
+
+OPTIONS
+-------
+--start-block=<slba>::
+-s <slba>::
+	Start block.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite
