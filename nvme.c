@@ -68,6 +68,8 @@ static const char *devicename;
 	ENTRY(RESV_REPORT, "resv-report", "Submit a Reservation Report, return results", resv_report) \
 	ENTRY(FLUSH, "flush", "Submit a Flush command, return results", flush) \
 	ENTRY(COMPARE, "compare", "Submit a Comapre command, return results", compare) \
+	ENTRY(READ, "read", "Submit a read command, return results", read_cmd) \
+	ENTRY(WRITE, "write", "Submit a write command, return results", write_cmd) \
 	ENTRY(REGISTERS, "show-regs", "Shows the controller registers. Requires admin character device", show_registers) \
 	ENTRY(HELP, "help", "Display this help", help)
 
@@ -1671,13 +1673,16 @@ static int resv_report(int argc, char **argv)
 	return 0;
 }
 
-static int compare(int argc, char **argv)
+static int submit_io(int opcode, char *command, int argc, char **argv)
 {
 	struct nvme_user_io io;
 	void *buffer;
-        int err, opt, dfd = STDIN_FILENO, long_index = 0;
+        int err, opt, dfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO,
+		long_index = 0;
 	unsigned int data_size = 0;
 	__u8 prinfo = 0;
+
+	/* XXX: metadata ? */
 	static struct option opts[] = {
 		{"start-block", required_argument, 0, 's'},
 		{"block-count", required_argument, 0, 'c'},
@@ -1732,19 +1737,41 @@ static int compare(int argc, char **argv)
 		return EINVAL;
 	}
 	buffer = malloc(data_size);
-	if (read(dfd, (void *)buffer, data_size) < 0) {
-		fprintf(stderr, "failed to read compare buffer\n");
+	if ((opcode & 1) && read(dfd, (void *)buffer, data_size) < 0) {
+		fprintf(stderr, "failed to read buffer from input file\n");
 		return EINVAL;
 	}
 
-        io.opcode = nvme_cmd_compare;
+        io.opcode = opcode;
 	io.addr = (__u64)buffer;
 	err = ioctl(fd, NVME_IOCTL_SUBMIT_IO, &io);
 	if (err < 0)
 		perror("ioctl");
-	else
-		printf("compare:%s(%04x)\n", nvme_status_to_string(err), err);
+	else if (err)
+		printf("%s:%s(%04x)\n", command, nvme_status_to_string(err), err);
+	else {
+		if (!(opcode & 1) && write(dfd, (void *)buffer, data_size) < 0) {
+			fprintf(stderr, "failed to write buffer to output file\n");
+			return EINVAL;
+		} else
+			printf("%s: success\n", command);
+	}
 	return 0;
+}
+
+static int compare(int argc, char **argv)
+{
+	return submit_io(nvme_cmd_compare, "compare", argc, argv); 
+}
+
+static int read_cmd(int argc, char **argv)
+{
+	return submit_io(nvme_cmd_read, "read", argc, argv); 
+}
+
+static int write_cmd(int argc, char **argv)
+{
+	return submit_io(nvme_cmd_write, "write", argc, argv); 
 }
 
 static int sec_recv(int argc, char **argv)
