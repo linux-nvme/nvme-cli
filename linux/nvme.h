@@ -67,11 +67,14 @@ struct nvme_id_ctrl {
 	char			fr[8];
 	__u8			rab;
 	__u8			ieee[3];
-	__u8			mic;
+	__u8			cmic;
 	__u8			mdts;
 	__u16			cntlid;
-	__u32			ver;
-	__u8			rsvd84[172];
+	__le32			ver;
+	__le32			rtd3r;
+	__le32			rtd3e;
+	__le32			oaes;
+	__u8			rsvd96[160];
 	__le16			oacs;
 	__u8			acl;
 	__u8			aerl;
@@ -83,7 +86,13 @@ struct nvme_id_ctrl {
 	__u8			apsta;
 	__le16			wctemp;
 	__le16			cctemp;
-	__u8			rsvd270[242];
+	__le16			mtfa;
+	__le32			hmpre;
+	__le32			hmmin;
+	__u8			tnvmcap[16];
+	__u8			unvmcap[16];
+	__le32			rpmbs;
+	__u8			rsvd316[196];
 	__u8			sqes;
 	__u8			cqes;
 	__u8			rsvd514[2];
@@ -134,7 +143,13 @@ struct nvme_id_ns {
 	__le16			nawun;
 	__le16			nawupf;
 	__le16			nacwu;
-	__u8			rsvd40[80];
+	__le16			nabsn;
+	__le16			nabo;
+	__le16			nabspf;
+	__u16			rsvd46;
+	__u8			nvmcap[16];
+	__u8			rsvd64[40];
+	__u8			nguid[16];
 	__u8			eui64[8];
 	struct nvme_lbaf	lbaf[16];
 	__u8			rsvd192[192];
@@ -585,6 +600,8 @@ struct nvme_bar {
 };
 
 #define nvme_admin_cmd nvme_passthru_cmd
+
+#define NVME_VS(major, minor) (((major) << 16) | ((minor) << 8))
 
 #define NVME_IOCTL_ID		_IO('N', 0x40)
 #define NVME_IOCTL_ADMIN_CMD	_IOWR('N', 0x41, struct nvme_admin_cmd)

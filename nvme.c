@@ -436,8 +436,12 @@ static void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, int vs)
 	printf("rab     : %d\n", ctrl->rab);
 	printf("ieee    : %02x%02x%02x\n",
 		ctrl->ieee[0], ctrl->ieee[1], ctrl->ieee[2]);
-	printf("mic     : %#x\n", ctrl->mic);
+	printf("cmic    : %#x\n", ctrl->cmic);
 	printf("mdts    : %d\n", ctrl->mdts);
+	printf("cntlid  : %x\n", ctrl->cntlid);
+	printf("ver     : %x\n", ctrl->ver);
+	printf("rtd3r   : %x\n", ctrl->rtd3r);
+	printf("rtd3e   : %x\n", ctrl->rtd3e);
 	printf("oacs    : %#x\n", ctrl->oacs);
 	printf("acl     : %d\n", ctrl->acl);
 	printf("aerl    : %d\n", ctrl->aerl);
@@ -445,10 +449,15 @@ static void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, int vs)
 	printf("lpa     : %#x\n", ctrl->lpa);
 	printf("elpe    : %d\n", ctrl->elpe);
 	printf("npss    : %d\n", ctrl->npss);
-	printf("avscc   : %d\n", ctrl->avscc);
-	printf("apsta   : %d\n", ctrl->apsta);
+	printf("avscc   : %#x\n", ctrl->avscc);
+	printf("apsta   : %#x\n", ctrl->apsta);
 	printf("wctemp  : %d\n", ctrl->wctemp);
 	printf("cctemp  : %d\n", ctrl->cctemp);
+	printf("mtfa    : %d\n", ctrl->mtfa);
+	printf("hmmin   : %d\n", ctrl->hmmin);
+	printf("tnvmcap : %.0Lf\n", int128_to_double(ctrl->tnvmcap));
+	printf("unvmcap : %.0Lf\n", int128_to_double(ctrl->unvmcap));
+	printf("rpmbs   : %#x\n", ctrl->rpmbs);
 	printf("sqes    : %#x\n", ctrl->sqes);
 	printf("cqes    : %#x\n", ctrl->cqes);
 	printf("nn      : %d\n", ctrl->nn);
@@ -511,8 +520,19 @@ static void show_nvme_id_ns(struct nvme_id_ns *ns, int id, int vs)
 	printf("nmic    : %#x\n", ns->nmic);
 	printf("rescap  : %#x\n", ns->rescap);
 	printf("fpi     : %#x\n", ns->fpi);
-	printf("nawun   : %#x\n", ns->nawun);
-	printf("nawupf  : %#x\n", ns->nawupf);
+	printf("nawun   : %d\n", ns->nawun);
+	printf("nawupf  : %d\n", ns->nawupf);
+	printf("nacwu   : %d\n", ns->nacwu);
+	printf("nabsn   : %d\n", ns->nabsn);
+	printf("nabo    : %d\n", ns->nabo);
+	printf("nabspf  : %d\n", ns->nabspf);
+	printf("nvmcap  : %.0Lf\n", int128_to_double(ns->nvmcap));
+
+	printf("nguid   : ");
+	for (i = 0; i < 16; i++)
+		printf("%02x", ns->nguid[i]);
+	printf("\n");
+
 	printf("eui64   : ");
 	for (i = 0; i < 8; i++)
 		printf("%02x", ns->eui64[i]);
