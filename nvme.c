@@ -68,8 +68,8 @@ static const char *devicename;
 	ENTRY(RESV_REPORT, "resv-report", "Submit a Reservation Report, return results", resv_report) \
 	ENTRY(FLUSH, "flush", "Submit a Flush command, return results", flush) \
 	ENTRY(COMPARE, "compare", "Submit a Comapre command, return results", compare) \
-	ENTRY(READ, "read", "Submit a read command, return results", read_cmd) \
-	ENTRY(WRITE, "write", "Submit a write command, return results", write_cmd) \
+	ENTRY(READ_CMD, "read", "Submit a read command, return results", read_cmd) \
+	ENTRY(WRITE_CMD, "write", "Submit a write command, return results", write_cmd) \
 	ENTRY(REGISTERS, "show-regs", "Shows the controller registers. Requires admin character device", show_registers) \
 	ENTRY(HELP, "help", "Display this help", help)
 
