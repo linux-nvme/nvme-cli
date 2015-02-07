@@ -1698,7 +1698,7 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 	struct nvme_user_io io;
 	void *buffer;
         int err, opt, dfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO,
-		long_index = 0;
+	  show = 0, dry_run = 0, long_index = 0;
 	unsigned int data_size = 0;
 	__u8 prinfo = 0;
 
@@ -1714,11 +1714,13 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 		{"app-tag", required_argument, 0, 'a'},
 		{"limited-retry", no_argument, 0, 'l'},
 		{"force-unit-access", no_argument, 0, 'f'},
+		{"show-command", no_argument, 0, 'v'},
+		{"dry-run", no_argument, 0, 'w'},
 		{ 0, 0, 0, 0}
 	};
 
 	memset(&io, 0, sizeof(io));
-	while ((opt = getopt_long(argc, (char **)argv, "p:s:c:z:r:d:m:a:lf", opts,
+	while ((opt = getopt_long(argc, (char **)argv, "p:s:c:z:r:d:m:a:lfvw", opts,
 							&long_index)) != -1) {
 		switch(opt) {
 		case 's': get_long(optarg, &io.slba); break;
@@ -1740,12 +1742,17 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 			io.control | NVME_RW_FUA;
 			break;
 		case 'd': 
-			dfd = open(optarg, O_RDONLY);
+		        if (opcode & 1)
+			  dfd = open(optarg, O_RDONLY);		  
+			else
+			  dfd = open(optarg, O_WRONLY | O_CREAT);
 			if (dfd < 0) {
 				perror(optarg);
 				return EINVAL;
 			}
 			break;
+		case 'v': show = 1; break;
+		case 'w': dry_run = 1; break;
 		default:
 			return EINVAL;
 		}
@@ -1764,6 +1771,24 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 
         io.opcode = opcode;
 	io.addr = (__u64)buffer;
+
+	if (show) {
+		printf("opcode       : %02x\n" , io.opcode);
+		printf("flags        : %02x\n" , io.flags);
+		printf("control      : %04x\n" , io.control);
+		printf("nblocks      : %04x\n" , io.nblocks);
+		printf("rsvd         : %04x\n" , io.rsvd);
+		printf("metadata     : %p\n"   , (void *)io.metadata);
+		printf("addr         : %p\n"   , (void *)io.addr);
+		printf("sbla         : %p\n"   , (void *)io.slba);
+		printf("dsmgmt       : %08x\n" , io.dsmgmt);
+		printf("reftag       : %08x\n" , io.reftag);
+		printf("apptag       : %04x\n" , io.apptag);
+		printf("appmask      : %04x\n" , io.appmask);
+		if (dry_run)
+		  goto free_and_return;
+	}
+
 	err = ioctl(fd, NVME_IOCTL_SUBMIT_IO, &io);
 	if (err < 0)
 		perror("ioctl");
@@ -1776,6 +1801,8 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 		} else
 			printf("%s: success\n", command);
 	}
+ free_and_return:
+	free(buffer);
 	return 0;
 }
 

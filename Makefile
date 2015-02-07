@@ -1,4 +1,4 @@
-CFLAGS := -m64 -O2 -g -pthread -D_GNU_SOURCE -D_REENTRANT -Wall
+CFLAGS := -m64 -O2 -g -pthread -D_GNU_SOURCE -D_REENTRANT -Wall -Werror
 LDFLAGS := -m64 -lm
 NVME = nvme
 INSTALL ?= install
@@ -11,7 +11,7 @@ doc: $(NVME)
 all: doc
 
 clean:
-	rm -f $(NVME) *.o
+	rm -f $(NVME) *.o *~
 	$(MAKE) -C Documentation clean
 
 clobber: clean

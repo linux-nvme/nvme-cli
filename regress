@@ -1,0 +1,38 @@
+#!/bin/bash
+
+RAND_BASE=temp.rand
+RAND_WFILE=${RAND_BASE}.write
+RAND_RFILE=${RAND_BASE}.read
+RAND_SIZE=512
+
+green=$(tput bold)$(tput setaf 2)
+red=$(tput bold)$(tput setaf 1)
+rst=$(tput sgr0)
+
+function print_pass_fail {
+    $* > /dev/null 2>&1
+    if (( $? )); then
+        echo ${red}"FAILED!"${rst}
+        echo "Failed running command: "
+        echo  "   $*"
+        exit 1
+    else
+        echo ${green}"PASSED!"${rst}
+    fi
+}
+
+function run_test {
+    LINE="$*"
+    printf  "  %-3s   %-68s : " "RUN" "${LINE::67}"
+    print_pass_fail $*
+}
+
+make clean > /dev/null || exit -1
+make install > /dev/null || exit -1
+
+run_test dd if=/dev/urandom of=${RAND_WFILE} bs=${RAND_SIZE} count=1
+run_test nvme write /dev/nvme0n1 --start-block=0 --block-count=0 --data-size=${RAND_SIZE} --data ${RAND_WFILE}
+run_test nvme read /dev/nvme0n1 --start-block=0 --block-count=0 --data-size=${RAND_SIZE} --data ${RAND_RFILE}
+run_test diff ${RAND_RFILE} ${RAND_WFILE}
+
+rm ${RAND_RFILE} ${RAND_WFILE} > /dev/null
