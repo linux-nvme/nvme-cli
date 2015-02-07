@@ -2,12 +2,12 @@
 .\"     Title: nvme-io-passthru
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 02/02/2015
+.\"      Date: 02/06/2015
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "NVME\-IO\-PASSTHRU" "1" "02/02/2015" "\ \&" "\ \&"
+.TH "NVME\-IO\-PASSTHRU" "1" "02/06/2015" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -101,9 +101,14 @@ The data length for the buffer used for this command\&.
 The metadata length for the buffer used for this command\&.
 .RE
 .PP
-\-s, \-\-show\-cmd, \-\-dry\-run
+\-s, \-\-show\-cmd
 .RS 4
-Do not actually send the command; print out the command that would be sent\&.
+Print out the command to be sent\&.
+.RE
+.PP
+\-d, \-\-dry\-run
+.RS 4
+Do not actually send the command\&.
 .RE
 .PP
 \-b, \-\-raw\-binary
@@ -112,7 +117,7 @@ Print the raw returned buffer to stdout if the command returns data or a structu
 .RE
 .SH "EXAMPLES"
 .sp
-No examples yet\&.
+nvme io\-passthru /dev/nvme0n1 \-\-opcode=2 \-\-namespace\-id=1 \-\-data\-len=4096 \-\-read \-\-cdw10=0 \-\-cdw11=0 \-\-cdw12=0x70000 \-\-raw\-binary
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

@@ -1872,7 +1872,7 @@ static int sec_recv(int argc, char **argv)
 static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 {
 	int r = 0, w = 0;
-	int opt, err, raw = 0, show = 0, long_index = 0, wfd = STDIN_FILENO;
+	int opt, err, raw = 0, show = 0, dry_run = 0, long_index = 0, wfd = STDIN_FILENO;
 	struct nvme_passthru_cmd cmd;
 	static struct option opts[] = {
 		{"opcode", required_argument, 0, 'o'},
@@ -1892,7 +1892,7 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 		{"cdw15", required_argument, 0, '9'},
 		{"raw-binary", no_argument, 0, 'b'},
 		{"show-command", no_argument, 0, 's'},
-		{"dry-run", no_argument, 0, 's'},
+		{"dry-run", no_argument, 0, 'd'},
 		{"read", no_argument, 0, 'r'},
 		{"write", no_argument, 0, 'w'},
 		{"input-file", no_argument, 0, 'i'},
@@ -1900,7 +1900,7 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 	};
 
 	memset(&cmd, 0, sizeof(cmd));
-	while ((opt = getopt_long(argc, (char **)argv, "o:n:f:l:R:m:t:i:bsrw", opts,
+	while ((opt = getopt_long(argc, (char **)argv, "o:n:f:l:R:m:t:i:bsdrw", opts,
 							&long_index)) != -1) {
 		switch (opt) {
 		case '2': get_int(optarg, &cmd.cdw2); break;
@@ -1920,6 +1920,7 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 		case 't': get_int(optarg, &cmd.timeout_ms); break;
 		case 'b': raw = 1; break;
 		case 's': show = 1; break;
+		case 'd': dry_run = 1; break;
 		case 'r': r = 1; break;
 		case 'w': w = 1; break;
 		case 'i':
@@ -1971,7 +1972,8 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 		printf("cdw14        : %08x\n", cmd.cdw14);
 		printf("cdw15        : %08x\n", cmd.cdw15);
 		printf("timeout_ms   : %08x\n", cmd.timeout_ms);
-		return 0;
+		if (dry_run)
+		  return 0;
 	}
 	err = ioctl(fd, ioctl_cmd, &cmd);
 	if (err >= 0) {
