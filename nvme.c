@@ -40,6 +40,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 
 #include "linux/nvme.h"
 
@@ -109,6 +110,14 @@ struct command commands[] = {
 	COMMAND_LIST
 	#undef ENTRY
 };
+
+static unsigned long long elapsed_utime(struct timeval start_time,
+					struct timeval end_time)
+{
+	unsigned long long ret = (end_time.tv_sec - start_time.tv_sec)*1000000 +
+		(end_time.tv_usec - start_time.tv_usec);
+	return ret;
+}
 
 static void open_dev(const char *dev)
 {
@@ -1751,9 +1760,10 @@ static int resv_report(int argc, char **argv)
 static int submit_io(int opcode, char *command, int argc, char **argv)
 {
 	struct nvme_user_io io;
+	struct timeval start_time, end_time;
 	void *buffer;
         int err, opt, dfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO,
-	  show = 0, dry_run = 0, long_index = 0;
+	  show = 0, dry_run = 0, long_index = 0, latency = 0;
 	unsigned int data_size = 0;
 	__u8 prinfo = 0;
 
@@ -1771,11 +1781,12 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 		{"force-unit-access", no_argument, 0, 'f'},
 		{"show-command", no_argument, 0, 'v'},
 		{"dry-run", no_argument, 0, 'w'},
+		{"latency", no_argument, 0, 't'},
 		{ 0, 0, 0, 0}
 	};
 
 	memset(&io, 0, sizeof(io));
-	while ((opt = getopt_long(argc, (char **)argv, "p:s:c:z:r:d:m:a:lfvw", opts,
+	while ((opt = getopt_long(argc, (char **)argv, "p:s:c:z:r:d:m:a:lfvwt", opts,
 							&long_index)) != -1) {
 		switch(opt) {
 		case 's': get_long(optarg, &io.slba); break;
@@ -1808,6 +1819,7 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 			break;
 		case 'v': show = 1; break;
 		case 'w': dry_run = 1; break;
+		case 't': latency = 1; break;
 		default:
 			return EINVAL;
 		}
@@ -1844,7 +1856,12 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 		  goto free_and_return;
 	}
 
+	gettimeofday(&start_time, NULL);
 	err = ioctl(fd, NVME_IOCTL_SUBMIT_IO, &io);
+	gettimeofday(&end_time, NULL);
+	if (latency)
+	  fprintf(stdout, " latency: %s: %llu us\n", 
+		  command, elapsed_utime(start_time, end_time));
 	if (err < 0)
 		perror("ioctl");
 	else if (err)

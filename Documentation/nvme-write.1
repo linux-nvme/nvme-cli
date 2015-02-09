@@ -2,12 +2,12 @@
 .\"     Title: nvme-compare
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 02/04/2015
+.\"      Date: 02/09/2015
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "NVME\-COMPARE" "1" "02/04/2015" "\ \&" "\ \&"
+.TH "NVME\-COMPARE" "1" "02/09/2015" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -41,6 +41,7 @@ nvme-write \- Send an NVMe write command, provide results
                         [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
                         [\-\-app\-tag=<apptag> | \-a <apptag>]
                         [\-\-limited\-retry | \-l]
+                        [\-\-latency | \-t]
                         [\-\-force\-unit\-access | \-f]
 .fi
 .SH "DESCRIPTION"
@@ -51,6 +52,11 @@ The Write command writes the logical blocks specified by the command to the medi
 \-\-start\-block=<slba>, \-s <slba>
 .RS 4
 Start block\&.
+.RE
+.PP
+\-\-latency, \-t
+.RS 4
+Print out the latency the IOCTL took (in us)\&.
 .RE
 .SH "EXAMPLES"
 .sp

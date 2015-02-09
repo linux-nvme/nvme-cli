@@ -17,6 +17,7 @@ SYNOPSIS
 			[--app-tag-mask=<appmask> | -m <appmask>]
 			[--app-tag=<apptag> | -a <apptag>]
 			[--limited-retry | -l]
+			[--latency | -t]
 			[--force-unit-access | -f]
 
 DESCRIPTION
@@ -30,6 +31,10 @@ OPTIONS
 --start-block=<slba>::
 -s <slba>::
 	Start block.
+
+--latency::
+-t::
+	Print out the latency the IOCTL took (in us).
 
 EXAMPLES
 --------
