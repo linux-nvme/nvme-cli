@@ -1760,10 +1760,10 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 {
 	struct nvme_user_io io;
 	struct timeval start_time, end_time;
-	void *buffer;
+	void *buffer, *mbuffer = NULL;
         int err, opt, dfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO,
 	  show = 0, dry_run = 0, long_index = 0, latency = 0;
-	unsigned int data_size = 0;
+	unsigned int data_size = 0, metadata_size = 0;
 	__u8 prinfo = 0;
 
 	/* XXX: metadata ? */
@@ -1771,6 +1771,7 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 		{"start-block", required_argument, 0, 's'},
 		{"block-count", required_argument, 0, 'c'},
 		{"data-size", required_argument, 0, 'z'},
+		{"metadata-size", required_argument, 0, 'y'},
 		{"ref-tag", required_argument, 0, 'r'},
 		{"data", required_argument, 0, 'd'},
 		{"prinfo", required_argument, 0, 'p'},
@@ -1785,12 +1786,13 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 	};
 
 	memset(&io, 0, sizeof(io));
-	while ((opt = getopt_long(argc, (char **)argv, "p:s:c:z:r:d:m:a:lfvwt", opts,
+	while ((opt = getopt_long(argc, (char **)argv, "p:s:c:z:y:r:d:m:a:lfvwt", opts,
 							&long_index)) != -1) {
 		switch(opt) {
 		case 's': get_long(optarg, &io.slba); break;
 		case 'c': get_short(optarg, &io.nblocks); break;
 		case 'z': get_int(optarg, &data_size); break;
+		case 'y': get_int(optarg, &metadata_size); break;
 		case 'r': get_int(optarg, &io.reftag); break;
 		case 'm': get_short(optarg, &io.appmask); break;
 		case 'a': get_short(optarg, &io.apptag); break;
@@ -1810,7 +1812,8 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 		        if (opcode & 1)
 			  dfd = open(optarg, O_RDONLY);		  
 			else
-			  dfd = open(optarg, O_WRONLY | O_CREAT, 660);
+			  dfd = open(optarg, O_WRONLY | O_CREAT, 
+				  S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH);
 			if (dfd < 0) {
 				perror(optarg);
 				return EINVAL;
@@ -1830,14 +1833,21 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 		return EINVAL;
 	}
 	buffer = malloc(data_size);
+	if (metadata_size)
+		mbuffer = malloc(metadata_size);
 	if ((opcode & 1) && read(dfd, (void *)buffer, data_size) < 0) {
-		fprintf(stderr, "failed to read buffer from input file\n");
+		fprintf(stderr, "failed to read data buffer from input file\n");
+		return EINVAL;
+	}
+	if ((opcode & 1) && metadata_size && read(dfd, (void *)mbuffer, metadata_size) < 0) {
+		fprintf(stderr, "failed to read meta-data buffer from input file\n");
 		return EINVAL;
 	}
 
         io.opcode = opcode;
 	io.addr = (__u64)buffer;
-
+	if (metadata_size)
+		io.metadata = (__u64)mbuffer;
 	if (show) {
 		printf("opcode       : %02x\n" , io.opcode);
 		printf("flags        : %02x\n" , io.flags);
@@ -1874,6 +1884,8 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 	}
  free_and_return:
 	free(buffer);
+	if (metadata_size)
+		free(mbuffer);
 	return 0;
 }
 

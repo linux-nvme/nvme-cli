@@ -127,6 +127,7 @@ clean:
 	$(RM) technical/*.html technical/api-index.txt
 	$(RM) $(cmds_txt) *.made
 	$(RM) manpage-base-url.xsl
+	$(RM) *~
 
 %.1 : %.xml
 	$(QUIET_XMLTO)$(RM) $@ && \
