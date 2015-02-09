@@ -11,6 +11,9 @@ endif
 
 default: $(NVME)
 
+nvme: nvme.c
+	$(CC) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME)
+
 doc: $(NVME)
 	$(MAKE) -C Documentation
 
