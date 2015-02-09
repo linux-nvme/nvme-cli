@@ -1,0 +1,28 @@
+nvme-list(1)
+============
+
+NAME
+----
+nvme-list - List all recognized NVMe devices
+
+SYNOPSIS
+--------
+[verse]
+'nvme list' 
+
+DESCRIPTION
+-----------
+Scan the sysfs tree for NVM Express devices and return the /dev node
+for those devices as well as some pertinant information about them.
+
+OPTIONS
+-------
+No options yet.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

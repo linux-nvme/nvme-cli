@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-id-ns
+.\"     Title: nvme-list
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
 .\"      Date: 02/09/2015
@@ -7,7 +7,7 @@
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "02/09/2015" "\ \&" "\ \&"
+.TH "NVME\-LIST" "1" "02/09/2015" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,25 +28,18 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-list-ns \- Send NVMe Identify List Namespaces, return result and structure
+nvme-list \- List all recognized NVMe devices
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme list\-ns\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+\fInvme list\fR
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, sends an identify command for namespace list and provides the result and returned structure\&.
-.sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. If the starting namespace in the list always begins with 0 unless the \*(Aq\-\-namespace\-id\*(Aq option is given to override\&.
-.sp
-On success, the namespace array is printed for each index and nsid for a valid nsid\&.
+Scan the sysfs tree for NVM Express devices and return the /dev node for those devices as well as some pertinant information about them\&.
 .SH "OPTIONS"
-.PP
-\-n <nsid>, \-\-namespace\-id=<nsid>
-.RS 4
-Retrieve the identify list structure starting with the given nsid\&.
-.RE
+.sp
+No options yet\&.
 .SH "EXAMPLES"
 .sp
 No examples yet\&.

@@ -30,6 +30,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef LIBUDEV_EXISTS
+#include <libudev.h>
+#endif
 
 #include <linux/fs.h>
 
@@ -45,6 +48,7 @@ static struct stat nvme_stat;
 static const char *devicename;
 
 #define COMMAND_LIST \
+	ENTRY(LIST, "list", "List all NVMe devices and namespaces on machine", list) \
 	ENTRY(ID_CTRL, "id-ctrl", "Send NVMe Identify Controller", id_ctrl) \
 	ENTRY(ID_NS, "id-ns", "Send NVMe Identify Namespace, display structure", id_ns) \
 	ENTRY(LIST_NS, "list-ns", "Send NVMe Identify List, display structure", list_ns) \
@@ -756,6 +760,57 @@ static int list_ns(int argc, char **argv)
 				nvme_status_to_string(err), nsid);
 	return err;
 }
+
+#ifndef LIBUDEV_EXISTS
+static int list(int argc, char **argv)
+{
+  fprintf(stderr,"nvme-list: libudev not detected, install and rebuild.\n");
+  return -1;
+}
+#endif
+
+#ifdef LIBUDEV_EXISTS
+static int list(int argc, char **argv)
+{
+  struct udev *udev;
+  struct udev_enumerate *enumerate;
+  struct udev_list_entry *devices, *dev_list_entry;
+  struct udev_device *dev;
+  
+  udev = udev_new();
+  if (!udev) {
+    perror("nvme-list: Can not create udev context.");
+    return errno;
+  }
+  
+  enumerate = udev_enumerate_new(udev);
+  udev_enumerate_add_match_subsystem(enumerate, "block");
+  udev_enumerate_scan_devices(enumerate);
+  devices = udev_enumerate_get_list_entry(enumerate);
+  udev_list_entry_foreach(dev_list_entry, devices) {
+
+    const char *path, *node;
+    path = udev_list_entry_get_name(dev_list_entry);
+    dev = udev_device_new_from_syspath(udev, path);
+    node = udev_device_get_devnode(dev);
+    if (strstr(node,"nvme")!=NULL){
+      struct nvme_id_ctrl ctrl;
+
+      open_dev(node);
+      int err = identify(0, &ctrl, 1);
+      if (err > 0)
+	return err;
+      printf("  %s\t: NVM Express - %#x - %s - %x\n", node, 
+	     ctrl.vid, ctrl.mn, ctrl.ver);
+    }
+
+  }
+  udev_enumerate_unref(enumerate);
+  udev_unref(udev);
+
+  return 0;
+}
+#endif
 
 static int id_ctrl(int argc, char **argv)
 {

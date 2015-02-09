@@ -3,6 +3,12 @@ LDFLAGS := -m64 -lm
 NVME = nvme
 INSTALL ?= install
 
+LIBUDEV:=$(shell ld -ludev > /dev/null 2>&1 ; echo $$?)
+ifeq ($(LIBUDEV),0)
+	LDFLAGS += -ludev
+	CFLAGS  += -DLIBUDEV_EXISTS
+endif
+
 default: $(NVME)
 
 doc: $(NVME)
@@ -21,3 +27,6 @@ install: default
 	$(INSTALL) -m 755 nvme /usr/local/bin
 
 .PHONY: default all doc clean clobber install
+
+test:
+	@echo $(LIBUDEV)
