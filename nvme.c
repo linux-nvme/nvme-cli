@@ -1794,13 +1794,13 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 			io.control |= NVME_RW_LR;
 			break;
 		case 'f':
-			io.control | NVME_RW_FUA;
+			io.control |= NVME_RW_FUA;
 			break;
 		case 'd': 
 		        if (opcode & 1)
 			  dfd = open(optarg, O_RDONLY);		  
 			else
-			  dfd = open(optarg, O_WRONLY | O_CREAT);
+			  dfd = open(optarg, O_WRONLY | O_CREAT, 660);
 			if (dfd < 0) {
 				perror(optarg);
 				return EINVAL;
