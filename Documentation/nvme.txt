@@ -37,10 +37,8 @@ This is written and maintained by mailto:keith.busch@intel.com[Keith Busch].
 
 Reporting Bugs
 --------------
-Patches and bugs may be submitted to the
-mailto:linux-nvme@lists.infradead.org[Linux NVMe Mailing list]. While
-primarily for kernel driver development, we can use it for user space
-tooling.
+Patches and issues may be submitted to the official repository at
+https://github.com/linux-nvme/nvme-cli.
 
 NVME
 ----
