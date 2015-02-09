@@ -1,5 +1,5 @@
 CFLAGS := -m64 -O2 -g -pthread -D_GNU_SOURCE -D_REENTRANT -Wall -Werror
-LDFLAGS := -m64 -lm
+LDFLAGS := -lm
 NVME = nvme
 INSTALL ?= install
 
