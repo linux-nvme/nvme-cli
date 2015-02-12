@@ -26,7 +26,7 @@ LIST=false
 RAND_BASE=temp.rand
 RAND_WFILE=${RAND_BASE}.write
 RAND_RFILE=${RAND_BASE}.read
-RAND_SIZE=512
+RAND_SIZE=4k
 
 green=$(tput bold)$(tput setaf 2)
 red=$(tput bold)$(tput setaf 1)
