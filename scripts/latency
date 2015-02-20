@@ -75,7 +75,7 @@ function run_test {
     fi
 }
 
-rm ${OUTPUT} > /dev/null || exit -1
+rm -f ${OUTPUT} > /dev/null || exit -1
 make clean   > /dev/null || exit -1
 make install > /dev/null || exit -1
 
