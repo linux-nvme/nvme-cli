@@ -547,10 +547,10 @@ static int get_smart_log(int argc, char **argv)
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, NULL},
-		{"n",            "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, NULL},
-		{"raw-binary",   "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
-		{"b",            "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
+		{"namespace-id", "NUM", CFG_POSITIVE, &defaults.namespace_id, required_argument, NULL},
+		{"n",            "NUM", CFG_POSITIVE, &defaults.namespace_id, required_argument, NULL},
+		{"raw-binary",   "",    CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
+		{"b",            "",    CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "get_smart_log", command_line_options,
@@ -592,8 +592,8 @@ static int get_error_log(int argc, char **argv)
 		{"n",            "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, NULL},
 		{"log-entries",  "NUM",  CFG_POSITIVE, &defaults.log_entries,  required_argument, NULL},
 		{"e",            "NUM",  CFG_POSITIVE, &defaults.log_entries,  required_argument, NULL},
-		{"raw-binary",   "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
-		{"b",            "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
+		{"raw-binary",   "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
+		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "get_error_log", command_line_options,
@@ -634,8 +634,8 @@ static int get_fw_log(int argc, char **argv)
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"raw-binary", "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
-		{"b",          "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
+		{"raw-binary", "",   CFG_NONE, &defaults.raw_binary,   no_argument,       NULL},
+		{"b",          "",   CFG_NONE, &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "get_fw_log", command_line_options,
@@ -683,8 +683,8 @@ static int get_log(int argc, char **argv)
 		{"i",            "NUM",  CFG_POSITIVE, &defaults.log_id,       required_argument, NULL},
 		{"log-len",      "NUM",  CFG_POSITIVE, &defaults.log_len,      required_argument, NULL},
 		{"l",            "NUM",  CFG_POSITIVE, &defaults.log_len,      required_argument, NULL},
-		{"raw-binary",   "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
-		{"b",            "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
+		{"raw-binary",   "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
+		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "get_log", command_line_options,
@@ -814,10 +814,10 @@ static int id_ctrl(int argc, char **argv)
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"vendor-specific", "NUM",  CFG_POSITIVE, &defaults.vendor_specific, no_argument,       NULL},
-		{"v",               "NUM",  CFG_POSITIVE, &defaults.vendor_specific, no_argument,       NULL},
-		{"raw-binary",      "NUM",  CFG_POSITIVE, &defaults.raw_binary,      no_argument,       NULL},
-		{"b",               "NUM",  CFG_POSITIVE, &defaults.raw_binary,      no_argument,       NULL},
+		{"vendor-specific", "", CFG_NONE, &defaults.vendor_specific, no_argument,       NULL},
+		{"v",               "", CFG_NONE, &defaults.vendor_specific, no_argument,       NULL},
+		{"raw-binary",      "", CFG_NONE, &defaults.raw_binary,      no_argument,       NULL},
+		{"b",               "", CFG_NONE, &defaults.raw_binary,      no_argument,       NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "id_ctrl", command_line_options,
@@ -856,10 +856,10 @@ static int id_ns(int argc, char **argv)
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id",    "NUM",  CFG_POSITIVE, &defaults.namespace_id,    required_argument, NULL},
 		{"n",               "NUM",  CFG_POSITIVE, &defaults.namespace_id,    required_argument, NULL},
-		{"vendor-specific", "NUM",  CFG_POSITIVE, &defaults.vendor_specific, no_argument,       NULL},
-		{"v",               "NUM",  CFG_POSITIVE, &defaults.vendor_specific, no_argument,       NULL},
-		{"raw-binary",      "NUM",  CFG_POSITIVE, &defaults.raw_binary,      no_argument,       NULL},
-		{"b",               "NUM",  CFG_POSITIVE, &defaults.raw_binary,      no_argument,       NULL},
+		{"vendor-specific", "",     CFG_NONE,     &defaults.vendor_specific, no_argument,       NULL},
+		{"v",               "",     CFG_NONE,     &defaults.vendor_specific, no_argument,       NULL},
+		{"raw-binary",      "",     CFG_NONE,     &defaults.raw_binary,      no_argument,       NULL},
+		{"b",               "",     CFG_NONE,     &defaults.raw_binary,      no_argument,       NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "id_ns", command_line_options,
@@ -965,8 +965,8 @@ static int get_feature(int argc, char **argv)
 		{"cdw11",        "NUM",  CFG_POSITIVE, &defaults.cdw11,        required_argument, NULL},
 		{"data-len",     "NUM",  CFG_POSITIVE, &defaults.data_len,     required_argument, NULL},
 		{"l",            "NUM",  CFG_POSITIVE, &defaults.data_len,     required_argument, NULL},
-		{"raw-binary",   "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
-		{"b",            "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
+		{"raw-binary",   "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
+		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "get_feature", command_line_options,
@@ -1491,8 +1491,8 @@ static int resv_acquire(int argc, char **argv)
 		{"t",            "NUM",  CFG_POSITIVE,    &defaults.rtype,        required_argument, NULL},
 		{"racqa",        "NUM",  CFG_POSITIVE,    &defaults.racqa,        required_argument, NULL},
 		{"a",            "NUM",  CFG_POSITIVE,    &defaults.racqa,        required_argument, NULL},
-		{"iekey",        "NUM",  CFG_POSITIVE,    &defaults.iekey,        no_argument,       NULL},
-		{"i",            "NUM",  CFG_POSITIVE,    &defaults.iekey,        no_argument,       NULL},
+		{"iekey",        "",     CFG_NONE,        &defaults.iekey,        no_argument,       NULL},
+		{"i",            "",     CFG_NONE,        &defaults.iekey,        no_argument,       NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "resv_acquire", command_line_options,
@@ -1574,8 +1574,8 @@ static int resv_register(int argc, char **argv)
 		{"r",            "NUM",  CFG_POSITIVE,    &defaults.rrega,        required_argument, NULL},
 		{"cptpl",        "NUM",  CFG_POSITIVE,    &defaults.cptpl,        required_argument, NULL},
 		{"p",            "NUM",  CFG_POSITIVE,    &defaults.cptpl,        required_argument, NULL},
-		{"iekey",        "NUM",  CFG_POSITIVE,    &defaults.iekey,        no_argument,       NULL},
-		{"i",            "NUM",  CFG_POSITIVE,    &defaults.iekey,        no_argument,       NULL},
+		{"iekey",        "",     CFG_NONE,        &defaults.iekey,        no_argument,       NULL},
+		{"i",            "",     CFG_NONE,        &defaults.iekey,        no_argument,       NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "resv_register", command_line_options,
@@ -1725,8 +1725,8 @@ static int resv_report(int argc, char **argv)
 		{"n",            "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, NULL},
 		{"numd",         "NUM",  CFG_POSITIVE, &defaults.numd,         required_argument, NULL},
 		{"d",            "NUM",  CFG_POSITIVE, &defaults.numd,         required_argument, NULL},
-		{"raw-binary",   "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
-		{"b",            "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
+		{"raw-binary",   "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
+		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "resv_report", command_line_options,
@@ -1985,8 +1985,8 @@ static int sec_recv(int argc, char **argv)
 		{"s",          "NUM",  CFG_POSITIVE, &defaults.spsp,       required_argument, NULL},
 		{"al",         "NUM",  CFG_POSITIVE, &defaults.al,         required_argument, NULL},
 		{"t",          "NUM",  CFG_POSITIVE, &defaults.al,         required_argument, NULL},
-		{"raw-binary", "NUM",  CFG_POSITIVE, &defaults.raw_binary, no_argument,       NULL},
-		{"b",          "NUM",  CFG_POSITIVE, &defaults.raw_binary, no_argument,       NULL},
+		{"raw-binary", "",     CFG_NONE,     &defaults.raw_binary, no_argument,       NULL},
+		{"b",          "",     CFG_NONE,     &defaults.raw_binary, no_argument,       NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "sec_recv", command_line_options,
@@ -2104,18 +2104,18 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 		{"8",            "NUM",  CFG_POSITIVE, &defaults.cdw14,        required_argument, NULL},
 		{"cdw15",        "NUM",  CFG_POSITIVE, &defaults.cdw15,        required_argument, NULL},
 		{"9",            "NUM",  CFG_POSITIVE, &defaults.cdw15,        required_argument, NULL},
-		{"input-file",   "FILE", CFG_STRING,   &defaults.input_file,   no_argument,       NULL},
-		{"i",            "FILE", CFG_STRING,   &defaults.input_file,   no_argument,       NULL},
-		{"raw-binary",   "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
-		{"b",            "NUM",  CFG_POSITIVE, &defaults.raw_binary,   no_argument,       NULL},
-		{"show-command", "NUM",  CFG_POSITIVE, &defaults.show_command, no_argument,       NULL},
-		{"s",            "NUM",  CFG_POSITIVE, &defaults.show_command, no_argument,       NULL},
-		{"dry-run",      "NUM",  CFG_POSITIVE, &defaults.dry_run,      no_argument,       NULL},
-		{"d",            "NUM",  CFG_POSITIVE, &defaults.dry_run,      no_argument,       NULL},
-		{"read",         "NUM",  CFG_POSITIVE, &defaults.read,         no_argument,       NULL},
-		{"r",            "NUM",  CFG_POSITIVE, &defaults.read,         no_argument,       NULL},
-		{"write",        "NUM",  CFG_POSITIVE, &defaults.write,        no_argument,       NULL},
-		{"w",            "NUM",  CFG_POSITIVE, &defaults.write,        no_argument,       NULL},
+		{"input-file",   "FILE", CFG_STRING,   &defaults.input_file,   required_argument, NULL},
+		{"i",            "FILE", CFG_STRING,   &defaults.input_file,   required_argument, NULL},
+		{"raw-binary",   "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
+		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
+		{"show-command", "",     CFG_NONE,     &defaults.show_command, no_argument,       NULL},
+		{"s",            "",     CFG_NONE,     &defaults.show_command, no_argument,       NULL},
+		{"dry-run",      "",     CFG_NONE,     &defaults.dry_run,      no_argument,       NULL},
+		{"d",            "",     CFG_NONE,     &defaults.dry_run,      no_argument,       NULL},
+		{"read",         "",     CFG_NONE,     &defaults.read,         no_argument,       NULL},
+		{"r",            "",     CFG_NONE,     &defaults.read,         no_argument,       NULL},
+		{"write",        "",     CFG_NONE,     &defaults.write,        no_argument,       NULL},
+		{"w",            "",     CFG_NONE,     &defaults.write,        no_argument,       NULL},
 		{0}
 	};
 

@@ -85,11 +85,12 @@ if $LIST ; then
     run_test nvme list
 fi
 run_test nvme id-ctrl ${DEVICE}
-run_test nvme id-ns ${DEVICE}
+run_test nvme id-ns -raw-binary ${DEVICE}
 run_test nvme list-ns ${DEVICE}
 run_test nvme get-ns-id ${DEVICE}
 run_test nvme get-log ${DEVICE}  --log-id=2 --log-len=512
 run_test nvme fw-log ${DEVICE}
+run_test nvme fw-log ${DEVICE} -b
 run_test nvme smart-log ${DEVICE}
 run_test nvme error-log ${DEVICE}
 run_test nvme get-feature ${DEVICE} -f 7
@@ -99,7 +100,7 @@ if $WRITE ; then
     run_test dd if=/dev/urandom of=${RAND_WFILE} bs=${RAND_SIZE} count=1
     run_test nvme write ${DEVICE} --start-block=0 --block-count=0 --data-size=${RAND_SIZE} --data ${RAND_WFILE}
 fi
-run_test nvme read ${DEVICE} --start-block=0 --block-count=0 --data-size=${RAND_SIZE} --data ${RAND_RFILE}
+run_test nvme read ${DEVICE} --start-block=0 --block-count=0 --data-size=${RAND_SIZE} --data ${RAND_RFILE} --latency
 if $WRITE ; then
     run_test diff ${RAND_RFILE} ${RAND_WFILE}
     rm ${RAND_WFILE} > /dev/null
