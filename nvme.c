@@ -1227,10 +1227,10 @@ static int format(int argc, char **argv)
 		{"s",            "NUM",  CFG_POSITIVE, &defaults.ses,          required_argument, NULL},
 		{"pi",           "NUM",  CFG_POSITIVE, &defaults.pi,           required_argument, NULL},
 		{"i",            "NUM",  CFG_POSITIVE, &defaults.pi,           required_argument, NULL},
-		{"pil",          "NUM",  CFG_POSITIVE, &defaults.pil,          no_argument,       NULL},
-		{"p",            "NUM",  CFG_POSITIVE, &defaults.pil,          no_argument,       NULL},
-		{"ms",           "NUM",  CFG_POSITIVE, &defaults.ms,           no_argument,       NULL},
-		{"m",            "NUM",  CFG_POSITIVE, &defaults.ms,           no_argument,       NULL},
+		{"pil",          "NUM",  CFG_POSITIVE, &defaults.pil,          required_argument, NULL},
+		{"p",            "NUM",  CFG_POSITIVE, &defaults.pil,          required_argument, NULL},
+		{"ms",           "NUM",  CFG_POSITIVE, &defaults.ms,           required_argument, NULL},
+		{"m",            "NUM",  CFG_POSITIVE, &defaults.ms,           required_argument, NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "format", command_line_options,
