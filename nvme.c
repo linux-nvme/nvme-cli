@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 #ifdef LIBUDEV_EXISTS
 #include <libudev.h>
 #endif
@@ -44,6 +45,7 @@
 
 #include "linux/nvme.h"
 #include "src/argconfig.h"
+#include "src/suffix.h"
 
 static int fd;
 static struct stat nvme_stat;
@@ -749,6 +751,54 @@ static int list_ns(int argc, char **argv)
 	return err;
 }
 
+struct list_item {
+	char                node[1024];      
+	struct nvme_id_ctrl ctrl;
+	int                 nsid;
+	struct nvme_id_ns   ns;
+	unsigned            block;
+};
+
+static void print_list_item(struct list_item list_item)
+{
+
+	double nsze       = list_item.ns.nsze;
+	double nuse       = list_item.ns.nuse;
+	long long int lba = list_item.ns.lbaf[list_item.ns.flbas].ds;
+
+	lba  = (1 << lba);
+	nsze *= lba;
+	nuse *= lba;
+
+	const char *s_suffix = suffix_si_get(&nsze);
+	const char *u_suffix = suffix_si_get(&nuse);
+	const char *l_suffix = suffix_binary_get(&lba);
+	
+	char usage[128];
+	sprintf(usage,"%3.2f %sB / %3.1f %sB", nuse, u_suffix,
+		nsze, s_suffix);
+	char format[128];
+	sprintf(format,"%.0f %sB + %d B", (double)lba, l_suffix,
+		list_item.ns.lbaf[list_item.ns.flbas].ms);
+	char version[128];
+	sprintf(version,"%d.%d", (list_item.ctrl.ver >> 16), 
+		(list_item.ctrl.ver >> 8) & 0xff);
+
+	fprintf(stdout, "%-8s\t%-.20s\t%-8s\t%-8d\t%-.20s\t%-.10s\n", list_item.node,
+		list_item.ctrl.mn, version, list_item.nsid, usage, format);
+}
+
+static void print_list_items(struct list_item *list_items, unsigned len)
+{
+	fprintf(stdout,"%-8s\t%-20s\t%-8s\t%-8s\t%-26s\t%-10s\n",
+		"Node","Vendor","Version","Namepace", "Usage", "Format");
+	fprintf(stdout,"%-8s\t%-20s\t%-8s\t%-8s\t%-26s\t%-10s\n",
+		"----","------","-------","--------","------","-------");
+	for (unsigned i=0 ; i<len ; i++)
+		print_list_item(list_items[i]);
+		
+}
+
 #ifndef LIBUDEV_EXISTS
 static int list(int argc, char **argv)
 {
@@ -758,6 +808,7 @@ static int list(int argc, char **argv)
 #endif
 
 #ifdef LIBUDEV_EXISTS
+#define MAX_LIST_ITEMS 256
 static int list(int argc, char **argv)
 {
 	struct udev *udev;
@@ -765,13 +816,17 @@ static int list(int argc, char **argv)
 	struct udev_list_entry *devices, *dev_list_entry;
 	struct udev_device *dev;
   
+	struct list_item list_items[MAX_LIST_ITEMS];
+	unsigned count=0;
+
 	udev = udev_new();
 	if (!udev) {
-		perror("nvme-list: Can not create udev context.");
+		perror("nvme-list: Cannot create udev context.");
 		return errno;
 	}
   
 	enumerate = udev_enumerate_new(udev);
+	udev_enumerate_add_match_subsystem(enumerate, "char");
 	udev_enumerate_add_match_subsystem(enumerate, "block");
 	udev_enumerate_scan_devices(enumerate);
 	devices = udev_enumerate_get_list_entry(enumerate);
@@ -779,21 +834,30 @@ static int list(int argc, char **argv)
 
 		const char *path, *node;
 		path = udev_list_entry_get_name(dev_list_entry);
-		dev = udev_device_new_from_syspath(udev, path);
+		dev  = udev_device_new_from_syspath(udev, path);
 		node = udev_device_get_devnode(dev);
 		if (strstr(node,"nvme")!=NULL){
-			struct nvme_id_ctrl ctrl;
-			
 			open_dev(node);
-			int err = identify(0, &ctrl, 1);
+			int err = identify(0, &list_items[count].ctrl, 1);
 			if (err > 0)
 				return err;
-			printf("  %s\t: NVM Express - %#x - %s - %x\n", node, 
-			       ctrl.vid, ctrl.mn, ctrl.ver);
+			list_items[count].nsid = ioctl(fd, NVME_IOCTL_ID);
+			err = identify(list_items[count].nsid,
+				       &list_items[count].ns, 0);
+			if (err > 0)
+				return err;
+			strcpy(list_items[count].node, node);
+			list_items[count].block = S_ISBLK(nvme_stat.st_mode);
+			count++;
 		}
 	}
   udev_enumerate_unref(enumerate);
   udev_unref(udev);
+
+  if (count)
+	  print_list_items(list_items, count);
+  else
+	  fprintf(stdout,"No NVMe devices detected.\n");
 
   return 0;
 }
