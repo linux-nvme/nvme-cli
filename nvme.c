@@ -752,7 +752,7 @@ static int list_ns(int argc, char **argv)
 }
 
 struct list_item {
-	char                node[1024];      
+	char                node[1024];
 	struct nvme_id_ctrl ctrl;
 	int                 nsid;
 	struct nvme_id_ns   ns;
@@ -784,7 +784,7 @@ static void print_list_item(struct list_item list_item)
 	sprintf(version,"%d.%d", (list_item.ctrl.ver >> 16), 
 		(list_item.ctrl.ver >> 8) & 0xff);
 
-	fprintf(stdout, "%-8s\t%-.20s\t%-8s\t%-8d\t%-.20s\t%-.10s\n", list_item.node,
+	fprintf(stdout, "%-8s\t%-.20s\t%-8s\t%-8d\t%-26s\t%-.10s\n", list_item.node,
 		list_item.ctrl.mn, version, list_item.nsid, usage, format);
 }
 
