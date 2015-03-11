@@ -1,6 +1,6 @@
 /*
  * nvme.c -- NVM-Express command line utility.
- * 
+ *
  * Copyright (c) 2014, Intel Corporation.
  *
  * Written by Keith Busch <keith.busch@intel.com>
@@ -156,7 +156,7 @@ static void get_dev(int optind, int argc, char **argv)
 static void show_error_log(struct nvme_error_log_page *err_log, int entries)
 {
 	int i;
-	
+
 	printf("Error Log Entries for device:%s entries:%d\n", devicename,
 								entries);
 	printf(".................\n");
@@ -607,7 +607,7 @@ static int get_error_log(int argc, char **argv)
 		return EINVAL;
 	}
 	struct nvme_error_log_page err_log[cfg.log_entries];
-	
+
 	err = nvme_get_log(err_log,
 			   sizeof(err_log), 0x1 | (((sizeof(err_log) / 4) - 1) << 16),
 			   cfg.namespace_id);
@@ -699,12 +699,12 @@ static int get_log(int argc, char **argv)
 	} else {
 		unsigned char log[cfg.log_len];
 
-		err = nvme_get_log(log, cfg.log_len, cfg.log_id | (((cfg.log_len / 4) - 1) << 16), 
+		err = nvme_get_log(log, cfg.log_len, cfg.log_id | (((cfg.log_len / 4) - 1) << 16),
 				   cfg.namespace_id);
 		if (!err) {
 			if (!cfg.raw_binary) {
 				printf("Device:%s log-id:%d namespace-id:%#x",
-				       devicename, cfg.log_id, 
+				       devicename, cfg.log_id,
 				       cfg.namespace_id);
 				d(log, cfg.log_len, 16, 1);
 			} else
@@ -773,7 +773,7 @@ static void print_list_item(struct list_item list_item)
 	const char *s_suffix = suffix_si_get(&nsze);
 	const char *u_suffix = suffix_si_get(&nuse);
 	const char *l_suffix = suffix_binary_get(&lba);
-	
+
 	char usage[128];
 	sprintf(usage,"%3.2f %sB / %3.1f %sB", nuse, u_suffix,
 		nsze, s_suffix);
@@ -781,7 +781,7 @@ static void print_list_item(struct list_item list_item)
 	sprintf(format,"%.0f %sB + %d B", (double)lba, l_suffix,
 		list_item.ns.lbaf[list_item.ns.flbas].ms);
 	char version[128];
-	sprintf(version,"%d.%d", (list_item.ctrl.ver >> 16), 
+	sprintf(version,"%d.%d", (list_item.ctrl.ver >> 16),
 		(list_item.ctrl.ver >> 8) & 0xff);
 
 	fprintf(stdout, "%-8s\t%-.20s\t%-8s\t%-8d\t%-26s\t%-.10s\n", list_item.node,
@@ -796,7 +796,7 @@ static void print_list_items(struct list_item *list_items, unsigned len)
 		"----","------","-------","--------","------","-------");
 	for (unsigned i=0 ; i<len ; i++)
 		print_list_item(list_items[i]);
-		
+
 }
 
 #ifndef LIBUDEV_EXISTS
@@ -815,7 +815,7 @@ static int list(int argc, char **argv)
 	struct udev_enumerate *enumerate;
 	struct udev_list_entry *devices, *dev_list_entry;
 	struct udev_device *dev;
-  
+
 	struct list_item list_items[MAX_LIST_ITEMS];
 	unsigned count=0;
 
@@ -824,7 +824,7 @@ static int list(int argc, char **argv)
 		perror("nvme-list: Cannot create udev context.");
 		return errno;
 	}
-  
+
 	enumerate = udev_enumerate_new(udev);
 	udev_enumerate_add_match_subsystem(enumerate, "char");
 	udev_enumerate_add_match_subsystem(enumerate, "block");
@@ -951,7 +951,7 @@ static int id_ns(int argc, char **argv)
 			show_nvme_id_ns(&ns, cfg.namespace_id, cfg.vendor_specific);
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status: %s NSID:%d\n", nvme_status_to_string(err), 
+		fprintf(stderr, "NVMe Status: %s NSID:%d\n", nvme_status_to_string(err),
 			cfg.namespace_id);
 	return err;
 }
@@ -1051,7 +1051,7 @@ static int get_feature(int argc, char **argv)
 		buf = malloc(cfg.data_len);
 
 	cdw10 = cfg.sel << 8 | cfg.feature_id;
-	err = nvme_feature(nvme_admin_get_features, buf, cfg.data_len, cdw10, 
+	err = nvme_feature(nvme_admin_get_features, buf, cfg.data_len, cdw10,
 			   cfg.namespace_id, cfg.cdw11, &result);
 	if (!err) {
 		printf("get-feature:%d(%s), value:%#08x\n", cfg.feature_id,
@@ -1126,7 +1126,7 @@ static int fw_download(int argc, char **argv)
 	if (fw_size & 0x3) {
 		fprintf(stderr, "Invalid size:%d for f/w image\n", fw_size);
 		return EINVAL;
-	} 
+	}
 	if (posix_memalign(&fw_buf, getpagesize(), fw_size)) {
 		fprintf(stderr, "No memory for f/w size:%d\n", fw_size);
 		return ENOMEM;
@@ -1142,7 +1142,7 @@ static int fw_download(int argc, char **argv)
 		cmd.addr     = (__u64)fw_buf;
 		cmd.data_len = cfg.xfer;
 		cmd.cdw10    = (cfg.xfer >> 2) - 1;
-		cmd.cdw11    = cfg.offset >> 2; 
+		cmd.cdw11    = cfg.offset >> 2;
 
 		err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
 		if (err < 0) {
@@ -1187,7 +1187,7 @@ static int fw_activate(int argc, char **argv)
 	argconfig_parse(argc, argv, "fw_activate", command_line_options,
 			&defaults, &cfg, sizeof(cfg));
 	get_dev(1, argc, argv);
-	
+
 	if (cfg.slot > 7) {
 		fprintf(stderr, "invalid slot:%d\n", cfg.slot);
 		return EINVAL;
@@ -1196,7 +1196,7 @@ static int fw_activate(int argc, char **argv)
 		fprintf(stderr, "invalid action:%d\n", cfg.action);
 		return EINVAL;
 	}
-	
+
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opcode = nvme_admin_activate_fw;
 	cmd.cdw10  = (cfg.action << 3) | cfg.slot;
@@ -1207,7 +1207,7 @@ static int fw_activate(int argc, char **argv)
 	else if (err != 0)
 		fprintf(stderr, "NVME Admin command error:%d\n", err);
 	else
-		printf("Success activating firmware action:%d slot:%d\n", 
+		printf("Success activating firmware action:%d slot:%d\n",
 		       cfg.action, cfg.slot);
 	return err;
 }
@@ -1327,7 +1327,7 @@ static int format(int argc, char **argv)
 	cmd.opcode = nvme_admin_format_nvm;
 	cmd.nsid   = cfg.namespace_id;
 	cmd.cdw10  = (cfg.lbaf << 0) | (cfg.ms << 4) | (cfg.pi << 5) | (cfg.pil << 8) | (cfg.ses << 9);
-	
+
 	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
 	if (err < 0)
 		perror("ioctl");
@@ -1391,7 +1391,7 @@ static int set_feature(int argc, char **argv)
 	if (cfg.data_len)
 		buf = malloc(cfg.data_len);
 
-	err = nvme_feature(nvme_admin_set_features, buf, cfg.data_len, cfg.feature_id, 
+	err = nvme_feature(nvme_admin_set_features, buf, cfg.data_len, cfg.feature_id,
 			   cfg.namespace_id, cfg.value, &result);
 	if (!err) {
 		printf("set-feature:%d(%s), value:%#08x\n", cfg.feature_id,
@@ -1931,9 +1931,9 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 		io.control |= NVME_RW_FUA;
 	if (strlen(cfg.data)){
 		if (opcode & 1)
-			dfd = open(cfg.data, O_RDONLY);		  
+			dfd = open(cfg.data, O_RDONLY);
 		else
-			dfd = open(cfg.data, O_WRONLY | O_CREAT, 
+			dfd = open(cfg.data, O_WRONLY | O_CREAT,
 				   S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH);
 		if (dfd < 0) {
 			perror(cfg.data);
@@ -1983,7 +1983,7 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 	err = ioctl(fd, NVME_IOCTL_SUBMIT_IO, &io);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
-	  fprintf(stdout, " latency: %s: %llu us\n", 
+	  fprintf(stdout, " latency: %s: %llu us\n",
 		  command, elapsed_utime(start_time, end_time));
 	if (err < 0)
 		perror("ioctl");
@@ -2005,17 +2005,17 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 
 static int compare(int argc, char **argv)
 {
-	return submit_io(nvme_cmd_compare, "compare", argc, argv); 
+	return submit_io(nvme_cmd_compare, "compare", argc, argv);
 }
 
 static int read_cmd(int argc, char **argv)
 {
-	return submit_io(nvme_cmd_read, "read", argc, argv); 
+	return submit_io(nvme_cmd_read, "read", argc, argv);
 }
 
 static int write_cmd(int argc, char **argv)
 {
-	return submit_io(nvme_cmd_write, "write", argc, argv); 
+	return submit_io(nvme_cmd_write, "write", argc, argv);
 }
 
 static int sec_recv(int argc, char **argv)
@@ -2112,9 +2112,9 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 		char  *input_file;
 		__u8  raw_binary;
 		__u8  show_command;
-		__u8  dry_run;  
-		__u8  read;     
-		__u8  write;    
+		__u8  dry_run;
+		__u8  read;
+		__u8  write;
 	};
 	struct config cfg;
 
@@ -2186,7 +2186,7 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 	memset(&cmd, 0, sizeof(cmd));
 	argconfig_parse(argc, argv, "nvme_passthrou", command_line_options,
 			&defaults, &cfg, sizeof(cfg));
-	
+
 	cmd.cdw2         = cfg.cdw13;
 	cmd.cdw3         = cfg.cdw13;
 	cmd.cdw10        = cfg.cdw13;
@@ -2203,7 +2203,7 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 	cmd.metadata_len = cfg.metadata_len;
 	cmd.timeout_ms   = cfg.timeout;
 	if (strlen(cfg.input_file)){
-		wfd = open(cfg.input_file, O_RDONLY, 
+		wfd = open(cfg.input_file, O_RDONLY,
 			   S_IRUSR | S_IRGRP | S_IROTH);
 		if (wfd < 0) {
 			perror(cfg.input_file);
