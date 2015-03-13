@@ -775,24 +775,24 @@ static void print_list_item(struct list_item list_item)
 	const char *l_suffix = suffix_binary_get(&lba);
 
 	char usage[128];
-	sprintf(usage,"%3.2f %sB / %3.1f %sB", nuse, u_suffix,
+	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
 		nsze, s_suffix);
 	char format[128];
-	sprintf(format,"%.0f %sB + %d B", (double)lba, l_suffix,
+	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		list_item.ns.lbaf[list_item.ns.flbas].ms);
 	char version[128];
 	sprintf(version,"%d.%d", (list_item.ctrl.ver >> 16),
 		(list_item.ctrl.ver >> 8) & 0xff);
 
-	fprintf(stdout, "%-8s\t%-.20s\t%-8s\t%-8d\t%-26s\t%-.10s\n", list_item.node,
+	fprintf(stdout, "%-8s\t%-.20s\t%-8s\t%-8d\t%-26s\t%-.16s\n", list_item.node,
 		list_item.ctrl.mn, version, list_item.nsid, usage, format);
 }
 
 static void print_list_items(struct list_item *list_items, unsigned len)
 {
-	fprintf(stdout,"%-8s\t%-20s\t%-8s\t%-8s\t%-26s\t%-10s\n",
+	fprintf(stdout,"%-8s\t%-20s\t%-8s\t%-8s\t%-26s\t%-16s\n",
 		"Node","Vendor","Version","Namepace", "Usage", "Format");
-	fprintf(stdout,"%-8s\t%-20s\t%-8s\t%-8s\t%-26s\t%-10s\n",
+	fprintf(stdout,"%-8s\t%-20s\t%-8s\t%-8s\t%-26s\t%-16s\n",
 		"----","------","-------","--------","------","-------");
 	for (unsigned i=0 ; i<len ; i++)
 		print_list_item(list_items[i]);
