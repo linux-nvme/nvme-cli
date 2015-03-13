@@ -751,13 +751,69 @@ static int list_ns(int argc, char **argv)
 	return err;
 }
 
+static char * nvme_char_from_block(char *block)
+{
+    char slen[16];
+    unsigned len;
+    if (strncmp("nvme", block, 4) )
+    {
+        fprintf(stderr,"Device %s is not a nvme device.", block);
+        exit(-1);
+    }
+    sscanf(block,"nvme%d", &len);
+    sprintf(slen,"%d", len);
+    block[4+strlen(slen)] = 0;
+    return block;
+}
+
+static void get_registers(struct nvme_bar *bar, unsigned char_only)
+{
+	int pci_fd;
+	char *base, path[512];
+	void *membase;
+
+	if (char_only && !S_ISCHR(nvme_stat.st_mode)) {
+		fprintf(stderr, "%s is not character device\n", devicename);
+		exit(ENODEV);
+	}
+
+	base = nvme_char_from_block(basename(devicename));
+	sprintf(path, "/sys/class/misc/%s/device/resource0", base);
+	pci_fd = open(path, O_RDONLY);
+	if (pci_fd < 0) {
+		fprintf(stderr, "%s did not find a pci resource\n", devicename);
+		exit(ENODEV);
+	}
+
+	membase = mmap(0, getpagesize(), PROT_READ, MAP_SHARED, pci_fd, 0);
+	if (!membase) {
+		fprintf(stderr, "%s failed to map\n", devicename);
+		exit(ENODEV);
+	}
+    memcpy(bar, membase, sizeof(struct nvme_bar));
+}
+
 struct list_item {
 	char                node[1024];
 	struct nvme_id_ctrl ctrl;
 	int                 nsid;
 	struct nvme_id_ns   ns;
 	unsigned            block;
+	__le32              ver;
 };
+
+  /* For pre NVMe 1.2 devices we must get the version from the BAR, not
+   * the ctrl_id.*/
+static void get_version( struct list_item* list_item)
+{
+    list_item->ver = list_item->ctrl.ver;
+    if (list_item->ctrl.ver)
+        return;
+    struct nvme_bar bar;
+    get_registers(&bar, 0);
+    list_item->ver = bar.vs;
+
+}
 
 static void print_list_item(struct list_item list_item)
 {
@@ -781,8 +837,8 @@ static void print_list_item(struct list_item list_item)
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		list_item.ns.lbaf[list_item.ns.flbas].ms);
 	char version[128];
-	sprintf(version,"%d.%d", (list_item.ctrl.ver >> 16),
-		(list_item.ctrl.ver >> 8) & 0xff);
+	sprintf(version,"%d.%d", (list_item.ver >> 16),
+		(list_item.ver >> 8) & 0xff);
 
 	fprintf(stdout, "%-8s\t%-.20s\t%-8s\t%-8d\t%-26s\t%-.16s\n", list_item.node,
 		list_item.ctrl.mn, version, list_item.nsid, usage, format);
@@ -848,6 +904,7 @@ static int list(int argc, char **argv)
 				return err;
 			strcpy(list_items[count].node, node);
 			list_items[count].block = S_ISBLK(nvme_stat.st_mode);
+            get_version(&list_items[count]);
 			count++;
 		}
 	}
@@ -1214,48 +1271,27 @@ static int fw_activate(int argc, char **argv)
 
 static int show_registers(int argc, char **argv)
 {
-	int opt, long_index, pci_fd;
-	char *base, path[512];
-	void *membase;
-	struct nvme_bar *bar;
+	int opt, long_index;
+	struct nvme_bar bar;
 	static struct option opts[] = {};
 
 	while ((opt = getopt_long(argc, (char **)argv, "", opts,
 					&long_index)) != -1);
 	get_dev(optind, argc, argv);
 
-	if (!S_ISCHR(nvme_stat.st_mode)) {
-		fprintf(stderr, "%s is not character device\n", devicename);
-		exit(ENODEV);
-	}
-
-	base = basename(devicename);
-	sprintf(path, "/sys/class/misc/%s/device/resource0", base);
-	pci_fd = open(path, O_RDONLY);
-	if (pci_fd < 0) {
-		fprintf(stderr, "%s did not find a pci resource\n", devicename);
-		exit(ENODEV);
-	}
-
-	membase = mmap(0, getpagesize(), PROT_READ, MAP_SHARED, pci_fd, 0);
-	if (!membase) {
-		fprintf(stderr, "%s failed to map\n", devicename);
-		exit(ENODEV);
-	}
-
-	bar = membase;
-	printf("cap     : %"PRIx64"\n", (uint64_t)bar->cap);
-	printf("version : %x\n", bar->vs);
-	printf("intms   : %x\n", bar->intms);
-	printf("intmc   : %x\n", bar->intmc);
-	printf("cc      : %x\n", bar->cc);
-	printf("csts    : %x\n", bar->csts);
-	printf("nssr    : %x\n", bar->nssr);
-	printf("aqa     : %x\n", bar->aqa);
-	printf("asq     : %"PRIx64"\n", (uint64_t)bar->asq);
-	printf("acq     : %"PRIx64"\n", (uint64_t)bar->acq);
-	printf("cmbloc  : %x\n", bar->cmbloc);
-	printf("cmbsz   : %x\n", bar->cmbsz);
+	get_registers(&bar, 1);
+	printf("cap     : %"PRIx64"\n", (uint64_t)bar.cap);
+	printf("version : %x\n", bar.vs);
+	printf("intms   : %x\n", bar.intms);
+	printf("intmc   : %x\n", bar.intmc);
+	printf("cc      : %x\n", bar.cc);
+	printf("csts    : %x\n", bar.csts);
+	printf("nssr    : %x\n", bar.nssr);
+	printf("aqa     : %x\n", bar.aqa);
+	printf("asq     : %"PRIx64"\n", (uint64_t)bar.asq);
+	printf("acq     : %"PRIx64"\n", (uint64_t)bar.acq);
+	printf("cmbloc  : %x\n", bar.cmbloc);
+	printf("cmbsz   : %x\n", bar.cmbsz);
 
 	return 0;
 }
