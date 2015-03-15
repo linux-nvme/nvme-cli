@@ -81,12 +81,12 @@ function run_test {
 make clean > /dev/null || exit -1
 make install > /dev/null || exit -1
 
-if $LIST ; then 
+if $LIST ; then
     run_test nvme list
 fi
 run_test nvme id-ctrl ${DEVICE}
 run_test nvme id-ns -raw-binary ${DEVICE}
-run_test nvme list-ns ${DEVICE}
+run_test nvme list-ns -n 1 ${DEVICE}
 run_test nvme get-ns-id ${DEVICE}
 run_test nvme get-log ${DEVICE}  --log-id=2 --log-len=512
 run_test nvme fw-log ${DEVICE}
