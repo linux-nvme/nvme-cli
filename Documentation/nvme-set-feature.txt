@@ -11,6 +11,7 @@ SYNOPSIS
 'nvme set-feature' <device> [--namespace-id=<nsid> | -n <nsid>]
 			  [--feature-id=<fid> | -f <fid>] [--value=<value>]
 			  [--data-len=<data-len> | -l <data-len>]
+			  [--data=<data-file> | -d <data-file>]
 			  [--raw-binary | -b]
 
 DESCRIPTION
@@ -43,8 +44,15 @@ OPTIONS
 -l <data-len>::
 --data-len=<data-len>::
 	The data length for the buffer submitted for this feature. Most
-	known features do not use this value. The exception is LBA
-	Range Type
+	known features do not use this value. The exceptions are LBA
+	Range Type and host identifier.
+
+-d <data-file>::
+--data=<data-file>::
+	The data file for the buffer submitted for this feature. Most
+	known features do not use this value. The exceptions is LBA
+	Range Type and host identifier. This defaults to STDIN so files
+	and echos can be piped.
 
 --value=<value>::
 	The value for command dword 11, the value you want to set the
@@ -75,6 +83,13 @@ will be displayed to the user in as a hex dump:
 +
 ------------
 # nvme set-feature /dev/nvme0 -f c0 -l 512
+------------
++
+
+* Sets the host id to the ascii string.
++
+------------
+# echo "abcdefgh" | nvme set-feature /dev/nvme0 -f 0x81 -l 8
 ------------
 +
 

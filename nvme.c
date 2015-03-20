@@ -802,6 +802,7 @@ struct list_item {
 	__le32              ver;
 };
 
+#ifdef LIBUDEV_EXISTS
   /* For pre NVMe 1.2 devices we must get the version from the BAR, not
    * the ctrl_id.*/
 static void get_version( struct list_item* list_item)
@@ -854,8 +855,7 @@ static void print_list_items(struct list_item *list_items, unsigned len)
 		print_list_item(list_items[i]);
 
 }
-
-#ifndef LIBUDEV_EXISTS
+#else
 static int list(int argc, char **argv)
 {
 	fprintf(stderr,"nvme-list: libudev not detected, install and rebuild.\n");
@@ -1377,14 +1377,15 @@ static int format(int argc, char **argv)
 	return err;
 }
 
-/* FIXME: read a buffer from a file if the feature requires one */
 static int set_feature(int argc, char **argv)
 {
 	int err;
 	unsigned int result;
 	void *buf = NULL;
+	int fd = STDIN_FILENO;
 
 	struct config {
+		char *file;
 		__u32 namespace_id;
 		__u32 feature_id;
 		__u32 value;
@@ -1393,6 +1394,7 @@ static int set_feature(int argc, char **argv)
 	struct config cfg;
 
 	const struct config defaults = {
+		.file         = "",
 		.namespace_id = 0,
 		.feature_id   = 0,
 		.value        = 0,
@@ -1408,6 +1410,8 @@ static int set_feature(int argc, char **argv)
 		{"v",            "NUM",  CFG_POSITIVE, &defaults.value,        required_argument, NULL},
 		{"data-len",     "NUM",  CFG_POSITIVE, &defaults.data_len,     required_argument, NULL},
 		{"l",            "NUM",  CFG_POSITIVE, &defaults.data_len,     required_argument, NULL},
+		{"data",         "FILE", CFG_STRING,   &defaults.file,         required_argument, NULL},
+		{"d",            "FILE", CFG_STRING,   &defaults.file,         required_argument, NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "set_feature", command_line_options,
@@ -1426,6 +1430,19 @@ static int set_feature(int argc, char **argv)
 		cfg.data_len = 4096;
 	if (cfg.data_len)
 		buf = malloc(cfg.data_len);
+	if (buf) {
+		if (strlen(cfg.file)) {
+			fd = open(cfg.file, O_RDONLY);
+			if (fd <= 0) {
+				fprintf(stderr, "no firmware file provided\n");
+				return -EINVAL;
+			}
+		}
+		if (read(fd, (void *)buf, cfg.data_len) < 0) {
+			fprintf(stderr, "failed to read data buffer from input file\n");
+			return EINVAL;
+		}
+	}
 
 	err = nvme_feature(nvme_admin_set_features, buf, cfg.data_len, cfg.feature_id,
 			   cfg.namespace_id, cfg.value, &result);

@@ -2,12 +2,12 @@
 .\"     Title: nvme-set-feature
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 02/02/2015
+.\"      Date: 03/20/2015
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "NVME\-SET\-FEATURE" "1" "02/02/2015" "\ \&" "\ \&"
+.TH "NVME\-SET\-FEATURE" "1" "03/20/2015" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,6 +35,7 @@ nvme-set-feature \- Sets an NVMe feature, returns applicable results
 \fInvme set\-feature\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
                           [\-\-feature\-id=<fid> | \-f <fid>] [\-\-value=<value>]
                           [\-\-data\-len=<data\-len> | \-l <data\-len>]
+                          [\-\-data=<data\-file> | \-d <data\-file>]
                           [\-\-raw\-binary | \-b]
 .fi
 .SH "DESCRIPTION"
@@ -58,7 +59,12 @@ The feature id to send with the command\&. Value provided should be in hex\&.
 .PP
 \-l <data\-len>, \-\-data\-len=<data\-len>
 .RS 4
-The data length for the buffer submitted for this feature\&. Most known features do not use this value\&. The exception is LBA Range Type
+The data length for the buffer submitted for this feature\&. Most known features do not use this value\&. The exceptions are LBA Range Type and host identifier\&.
+.RE
+.PP
+\-d <data\-file>, \-\-data=<data\-file>
+.RS 4
+The data file for the buffer submitted for this feature\&. Most known features do not use this value\&. The exceptions is LBA Range Type and host identifier\&. This defaults to STDIN so files and echos can be piped\&.
 .RE
 .PP
 \-\-value=<value>
@@ -124,6 +130,27 @@ Retrieves the feature for the some vendor specific feature and specifically requ
 .\}
 .nf
 # nvme set\-feature /dev/nvme0 \-f c0 \-l 512
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Sets the host id to the ascii string\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# echo "abcdefgh" | nvme set\-feature /dev/nvme0 \-f 0x81 \-l 8
 .fi
 .if n \{\
 .RE
