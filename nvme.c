@@ -778,8 +778,13 @@ static void get_registers(struct nvme_bar *bar, unsigned char_only)
 	}
 
 	base = nvme_char_from_block(basename(devicename));
-	sprintf(path, "/sys/class/misc/%s/device/resource0", base);
+
+	sprintf(path, "/sys/class/nvme/%s/device/resource0", base);
 	pci_fd = open(path, O_RDONLY);
+	if (pci_fd < 0) {
+		sprintf(path, "/sys/class/misc/%s/device/resource0", base);
+		pci_fd = open(path, O_RDONLY);
+	}
 	if (pci_fd < 0) {
 		fprintf(stderr, "%s did not find a pci resource\n", devicename);
 		exit(ENODEV);
@@ -2382,6 +2387,9 @@ static void handle_internal_command(int argc, char **argv)
 			continue;
 		exit(cmd->fn(argc, argv));
 	}
+	fprintf(stderr, "unknown command '%s'\n", argv[0]);
+	help(1, NULL);
+	exit(1);
 }
 
 int main(int argc, char **argv)
