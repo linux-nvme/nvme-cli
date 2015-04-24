@@ -215,7 +215,7 @@ static void show_fw_log(struct nvme_firmware_log_page *fw_log)
 
 	printf("Firmware Log for device:%s\n", devicename);
 	printf("afi  : %#x\n", fw_log->afi);
-	for (i = 0; i < 8; i++)
+	for (i = 0; i < 7; i++)
 		if (fw_log->frs[i])
 			printf("frs%d : %#016llx (%s)\n", i + 1, fw_log->frs[i],
 						fw_to_string(fw_log->frs[i]));
