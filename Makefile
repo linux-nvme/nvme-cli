@@ -1,4 +1,4 @@
-CFLAGS := -I $(SRC) -m64 -std=c99 -O2 -g -pthread -D_GNU_SOURCE -D_REENTRANT -Wall -Werror
+CFLAGS := -I $(SRC) -m64 -std=gnu99 -O2 -g -pthread -D_GNU_SOURCE -D_REENTRANT -Wall -Werror
 LDFLAGS := -lm
 NVME = nvme
 INSTALL ?= install
