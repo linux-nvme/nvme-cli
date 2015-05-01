@@ -2246,11 +2246,11 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 	argconfig_parse(argc, argv, "nvme_passthrou", command_line_options,
 			&defaults, &cfg, sizeof(cfg));
 
-	cmd.cdw2         = cfg.cdw13;
-	cmd.cdw3         = cfg.cdw13;
-	cmd.cdw10        = cfg.cdw13;
-	cmd.cdw11        = cfg.cdw13;
-	cmd.cdw12        = cfg.cdw13;
+	cmd.cdw2         = cfg.cdw2;
+	cmd.cdw3         = cfg.cdw3;
+	cmd.cdw10        = cfg.cdw10;
+	cmd.cdw11        = cfg.cdw11;
+	cmd.cdw12        = cfg.cdw12;
 	cmd.cdw13        = cfg.cdw13;
 	cmd.cdw14        = cfg.cdw14;
 	cmd.cdw15        = cfg.cdw15;
