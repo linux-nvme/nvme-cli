@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-log
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 02/02/2015
+.\"      Date: 05/08/2015
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-LOG" "1" "02/02/2015" "\ \&" "\ \&"
+.TH "NVME\-GET\-LOG" "1" "05/08/2015" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -104,8 +104,8 @@ Have the program return the raw log page in binary:
 .RS 4
 .\}
 .nf
-# nvme id\-ns /dev/nvme0 \-log\-id=2 \-\-log\-len=512 \-\-raw\-binary > log_page_2\&.raw
-# nvme id\-ns /dev/nvme0 \-i 2 \-l 512 \-b > log_page_2\&.raw
+# nvme get\-log /dev/nvme0 \-log\-id=2 \-\-log\-len=512 \-\-raw\-binary > log_page_2\&.raw
+# nvme get\-log /dev/nvme0 \-i 2 \-l 512 \-b > log_page_2\&.raw
 .fi
 .if n \{\
 .RE

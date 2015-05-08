@@ -2,12 +2,12 @@
 .\"     Title: nvme-error-log
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 02/02/2015
+.\"      Date: 05/08/2015
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "NVME\-ERROR\-LOG" "1" "02/02/2015" "\ \&" "\ \&"
+.TH "NVME\-ERROR\-LOG" "1" "05/08/2015" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -75,7 +75,7 @@ Get the error log and print it in a human readable format:
 .RS 4
 .\}
 .nf
-# nvme get\-error\-log /dev/nvme0
+# nvme error\-log /dev/nvme0
 .fi
 .if n \{\
 .RE
@@ -96,7 +96,7 @@ Print the raw output to a file:
 .RS 4
 .\}
 .nf
-# nvme get\-error\-log /dev/nvme0 \-\-raw\-binary > error_log\&.raw
+# nvme error\-log /dev/nvme0 \-\-raw\-binary > error_log\&.raw
 .fi
 .if n \{\
 .RE

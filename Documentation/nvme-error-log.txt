@@ -50,14 +50,14 @@ EXAMPLES
 * Get the error log and print it in a human readable format:
 +
 ------------
-# nvme get-error-log /dev/nvme0
+# nvme error-log /dev/nvme0
 ------------
 +
 
 * Print the raw output to a file:
 +
 ------------
-# nvme get-error-log /dev/nvme0 --raw-binary > error_log.raw
+# nvme error-log /dev/nvme0 --raw-binary > error_log.raw
 ------------
 +
 It is probably a bad idea to not redirect stdout when using this mode.

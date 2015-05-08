@@ -64,8 +64,8 @@ interpreted by the program.
 * Have the program return the raw log page in binary:
 +
 ------------
-# nvme id-ns /dev/nvme0 -log-id=2 --log-len=512 --raw-binary > log_page_2.raw
-# nvme id-ns /dev/nvme0 -i 2 -l 512 -b > log_page_2.raw
+# nvme get-log /dev/nvme0 -log-id=2 --log-len=512 --raw-binary > log_page_2.raw
+# nvme get-log /dev/nvme0 -i 2 -l 512 -b > log_page_2.raw
 ------------
 +
 It is not a good idea to not redirect stdout when using this mode.
