@@ -1156,7 +1156,7 @@ static int fw_download(int argc, char **argv)
 
 	const struct config defaults = {
 		.fw     = "",
-		.xfer   = 0,
+		.xfer   = 4096,
 		.offset = 0,
 	};
 
@@ -1194,8 +1194,10 @@ static int fw_download(int argc, char **argv)
 		fprintf(stderr, "No memory for f/w size:%d\n", fw_size);
 		return ENOMEM;
 	}
-	if (cfg.xfer % 4096)
+	if (cfg.xfer == 0 || cfg.xfer % 4096)
 		cfg.xfer = 4096;
+	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size)))
+		return EIO;
 
 	while (fw_size > 0) {
 		cfg.xfer = min(cfg.xfer, fw_size);
@@ -1212,7 +1214,8 @@ static int fw_download(int argc, char **argv)
 			perror("ioctl");
 			exit(errno);
 		} else if (err != 0) {
-			fprintf(stderr, "NVME Admin command error:%d\n", err);
+			fprintf(stderr, "NVME Admin command error:%s(%x)\n",
+				nvme_status_to_string(err), err);
 			break;
 		}
 		fw_buf     += cfg.xfer;
