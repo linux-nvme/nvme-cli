@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-id-ns
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 02/02/2015
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 05/11/2015
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "02/02/2015" "\ \&" "\ \&"
+.TH "NVME\-ID\-NS" "1" "05/11/2015" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,12 +51,17 @@ Retrieve the identify namespace structure for the given nsid\&. This is required
 .PP
 \-b, \-\-raw\-binary
 .RS 4
-Print the raw buffer to stdout\&. Structure is not parsed by program\&. This overrides the vendor specific option\&.
+Print the raw buffer to stdout\&. Structure is not parsed by program\&. This overrides the vendor specific and human readable options\&.
 .RE
 .PP
 \-v, \-\-vendor\-specific
 .RS 4
 In addition to parsing known fields, this option will dump the vendor specific region of the structure in hex with ascii interpretation\&.
+.RE
+.PP
+\-H, \-\-human\-readable
+.RS 4
+This option will parse and format many of the bitfields into human\-readable formats\&.
 .RE
 .SH "EXAMPLES"
 .sp
