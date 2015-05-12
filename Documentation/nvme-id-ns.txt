@@ -38,13 +38,19 @@ OPTIONS
 -b::
 --raw-binary::
 	Print the raw buffer to stdout. Structure is not parsed by
-	program. This overrides the vendor specific option.
+	program. This overrides the vendor specific and human readable options.
 
 -v::
 --vendor-specific::
 	In addition to parsing known fields, this option will dump
 	the vendor specific region of the structure in hex with ascii
 	interpretation.
+
+-H::
+--human-readable::
+	This option will parse and format many of the bitfields
+	into human-readable formats.
+
 
 EXAMPLES
 --------
