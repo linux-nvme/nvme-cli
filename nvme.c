@@ -1274,7 +1274,7 @@ static void print_list_item(struct list_item list_item)
 		nsze, s_suffix);
 	char format[128];
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
-		list_item.ns.lbaf[list_item.ns.flbas].ms);
+		list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ms);
 	char version[128];
 	sprintf(version,"%d.%d", (list_item.ver >> 16),
 		(list_item.ver >> 8) & 0xff);
