@@ -2,12 +2,12 @@
 .\"     Title: nvme-admin-passthru
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 02/02/2015
-.\"    Manual: \ \&
-.\"    Source: \ \&
+.\"      Date: 05/29/2015
+.\"    Manual: Git Manual
+.\"    Source: Git
 .\"  Language: English
 .\"
-.TH "NVME\-ADMIN\-PASSTHR" "1" "02/02/2015" "\ \&" "\ \&"
+.TH "NVME\-ADMIN\-PASSTHR" "1" "05/29/2015" "Git" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -110,13 +110,55 @@ Print the raw returned buffer to stdout if the command returns a structure\&.
 .RE
 .SH "EXAMPLES"
 .sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 The following will run the admin command with opcode=6 and cdw10=1, which cooresponds to an identify controller command\&. This example requires the data\-len param be 4096, which is the size of the returned structure\&. The \-r option is used because it is a data\-in command
 .sp
+.if n \{\
+.RS 4
+.\}
+.nf
+
+\&.ft C
 # nvme admin\-passthru /dev/nvme0 \-\-opcode=06 \-\-data\-len=4096 \-\-cdw10=1 \-r
+\&.ft
+
+.fi
+.if n \{\
+.RE
+.\}
+.RE
 .sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 Or if you want to save that structure to a file:
 .sp
+.if n \{\
+.RS 4
+.\}
+.nf
+
+\&.ft C
 # nvme admin\-passthru /dev/nvme0 \-\-opcode=06 \-\-data\-len=4096 \-\-cdw10=1 \-r \-b > id_ns\&.raw
+\&.ft
+
+.fi
+.if n \{\
+.RE
+.\}
+.RE
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

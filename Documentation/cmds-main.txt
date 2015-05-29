@@ -1,0 +1,84 @@
+linknvme:nvme-admin-passthru[1]::
+	Admin Passthrough Comand
+
+linknvme:nvme-compare[1]::
+	IO Compare
+
+linknvme:nvme-error-log[1]::
+	Retrieve error logs
+
+linknvme:nvme-flush[1]::
+	Submit flush
+
+linknvme:nvme-format[1]::
+	Format namespace(s)
+
+linknvme:nvme-fw-activate[1]::
+	F/W Activate
+
+linknvme:nvme-fw-download[1]::
+	F/W Download
+
+linknvme:nvme-fw-log[1]::
+	Retrieve f/w log
+
+linknvme:nvme-get-feature[1]::
+	Get Features
+
+linknvme:nvme-get-log[1]::
+	Generic Get Log
+
+linknvme:nvme-smart-log[1]::
+	Retrieve Smart Log
+
+linknvme:nvme-get-ns-id[1]::
+	Retrieve namespace identifier
+
+linknvme:nvme-help[1]::
+	NVMe CLI Help
+
+linknvme:nvme-id-ctrl[1]::
+	Identify Controller
+
+linknvme:nvme-id-ns[1]::
+	Identify Namespace
+
+linknvme:nvme-io-passthru[1]::
+	IO Passthrough Command
+
+linknvme:nvme-list-ns[1]::
+	List all nvme namespaces
+
+linknvme:nvme-list[1]::
+	List all nvme controllers
+
+linknvme:nvme-read[1]::
+	Issue IO Read Command
+
+linknvme:nvme-write[1]::
+	Issue IO Write Command
+
+linknvme:nvme-resv-acquire[1]::
+	Acquire Namespace Reservation
+
+linknvme:nvme-resv-register[1]::
+	Register Namespace Reservation
+
+linknvme:nvme-resv-release[1]::
+	Release Namespace Reservation
+
+linknvme:nvme-resv-report[1]::
+	Report Reservation Capabilities
+
+linknvme:nvme-security-recv[1]::
+	Security Receive
+
+linknvme:nvme-security-send[1]::
+	Security Send
+
+linknvme:nvme-set-feature[1]::
+	Set Feature
+
+linknvme:nvme-show-regs[1]::
+	Show NVMe Controller Registers
+

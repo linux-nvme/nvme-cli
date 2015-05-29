@@ -93,16 +93,21 @@ OPTIONS
 
 EXAMPLES
 --------
-The following will run the admin command with opcode=6 and cdw10=1, which cooresponds
-to an identify controller command. This example requires the data-len param be 4096, which
-is the size of the returned structure. The -r option is used because it is a data-in command
-
+* The following will run the admin command with opcode=6 and cdw10=1, which
+ cooresponds to an identify controller command. This example requires the
+ data-len param be 4096, which is the size of the returned structure. The -r
+ option is used because it is a data-in command
++
+------------
 # nvme admin-passthru /dev/nvme0 --opcode=06 --data-len=4096 --cdw10=1 -r
+------------
++
 
-Or if you want to save that structure to a file:
-
+* Or if you want to save that structure to a file:
++
+------------
 # nvme admin-passthru /dev/nvme0 --opcode=06 --data-len=4096 --cdw10=1 -r -b > id_ns.raw
-
+------------
 
 NVME
 ----

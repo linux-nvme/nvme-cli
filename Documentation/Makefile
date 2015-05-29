@@ -10,10 +10,14 @@ MAN1_TXT += $(filter-out \
 MAN1_TXT += nvme.txt
 MAN_TXT = $(MAN1_TXT)
 MAN_XML = $(patsubst %.txt,%.xml,$(MAN_TXT))
+MAN_HTML = $(patsubst %.txt,%.html,$(MAN_TXT))
+
+DOC_HTML = $(MAN_HTML) $(OBSOLETE_HTML)
 
 API_DOCS = 
 SP_ARTICLES += $(API_DOCS)
 SP_ARTICLES += $(TECH_DOCS)
+
 
 DOC_MAN1 = $(patsubst %.txt,%.1,$(MAN1_TXT))
 
@@ -28,6 +32,11 @@ XMLTO_EXTRA =
 INSTALL ?= install
 RM ?= rm -f
 MAN_REPO = ../../nvme-manpages
+
+ASCIIDOC_HTML = xhtml11
+ASCIIDOC_CONF = -f asciidoc.conf
+ASCIIDOC_COMMON = $(ASCIIDOC) $(ASCIIDOC_EXTRA) $(ASCIIDOC_CONF)
+TXT_TO_HTML = $(ASCIIDOC_COMMON) -b $(ASCIIDOC_HTML)
 
 MAKEINFO = makeinfo
 INSTALL_INFO = install-info
@@ -81,12 +90,17 @@ else # "make -w"
 NO_SUBDIR = :
 endif
 
-all: man
+all: man html
+
+html: $(DOC_HTML)
 
 man: man1
 man1: $(DOC_MAN1)
 
-install: install-man
+install: install-man install-html
+
+install-html: html
+	'$(SHELL_PATH_SQ)' ./install-webdoc.sh $(DESTDIR)$(htmldir)
 
 install-man: man
 	$(INSTALL) -d -m 755 /usr/local/man/man1
@@ -120,7 +134,7 @@ cmd-list.made: cmd-list.perl ../command-list.txt $(MAN1_TXT)
 	date >$@
 
 clean:
-	$(RM) *.xml *.xml+ *.html *.html+
+	$(RM) *.xml *.xml+ *.html+
 	$(RM) *.texi *.texi+ *.texi++ nvme.info nvmeman.info
 	$(RM) *.pdf
 	$(RM) howto-index.txt howto/*.html doc.dep
@@ -188,7 +202,18 @@ howto-index.txt: howto-index.sh $(wildcard howto/*.txt)
 
 WEBDOC_DEST = /pub/software/scm/nvme/docs
 
+$(MAN_HTML): %.html : %.txt
+	$(QUIET_ASCIIDOC)$(RM) $@+ $@ && \
+	$(TXT_TO_HTML) -d manpage -o $@+ $< && \
+	mv $@+ $@
+
 quick-install: quick-install-man
+
+$(patsubst %,%.html,$(ARTICLES)) : %.html : %.txt
+	$(QUIET_ASCIIDOC)$(TXT_TO_HTML) $*.txt
+
+install-webdoc : html
+	'$(SHELL_PATH_SQ)' ./install-webdoc.sh $(WEBDOC_DEST)
 
 require-manrepo::
 	@if test ! -d $(MAN_REPO); \

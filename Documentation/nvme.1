@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 02/09/2015
-.\"    Manual: \ \&
-.\"    Source: \ \&
+.\"      Date: 05/29/2015
+.\"    Manual: Git Manual
+.\"    Source: Git
 .\"  Language: English
 .\"
-.TH "NVME" "1" "02/09/2015" "\ \&" "\ \&"
+.TH "NVME" "1" "05/29/2015" "Git" "Git Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,6 +42,148 @@ This \fInvme\fR program is a user space utility to provide standards compliant t
 .SH "NVME COMMANDS"
 .sp
 The utility has sub\-commands for all admin and io commands defined in the specification and for displaying controller registers\&. There is also an option to submit completely arbitrary commands\&. For a list of commands available, run "nvme help"\&.
+.SH "NVME CLI SUB-COMMANDS"
+.SS "Main commands"
+.PP
+linknvme:nvme\-admin\-passthru
+.RS 4
+Admin Passthrough Comand
+.RE
+.PP
+linknvme:nvme\-compare
+.RS 4
+IO Compare
+.RE
+.PP
+linknvme:nvme\-error\-log
+.RS 4
+Retrieve error logs
+.RE
+.PP
+linknvme:nvme\-flush
+.RS 4
+Submit flush
+.RE
+.PP
+linknvme:nvme\-format
+.RS 4
+Format namespace(s)
+.RE
+.PP
+linknvme:nvme\-fw\-activate
+.RS 4
+F/W Activate
+.RE
+.PP
+linknvme:nvme\-fw\-download
+.RS 4
+F/W Download
+.RE
+.PP
+linknvme:nvme\-fw\-log
+.RS 4
+Retrieve f/w log
+.RE
+.PP
+linknvme:nvme\-get\-feature
+.RS 4
+Get Features
+.RE
+.PP
+linknvme:nvme\-get\-log
+.RS 4
+Generic Get Log
+.RE
+.PP
+linknvme:nvme\-smart\-log
+.RS 4
+Retrieve Smart Log
+.RE
+.PP
+linknvme:nvme\-get\-ns\-id
+.RS 4
+Retrieve namespace identifier
+.RE
+.PP
+linknvme:nvme\-help
+.RS 4
+NVMe CLI Help
+.RE
+.PP
+linknvme:nvme\-id\-ctrl
+.RS 4
+Identify Controller
+.RE
+.PP
+linknvme:nvme\-id\-ns
+.RS 4
+Identify Namespace
+.RE
+.PP
+linknvme:nvme\-io\-passthru
+.RS 4
+IO Passthrough Command
+.RE
+.PP
+linknvme:nvme\-list\-ns
+.RS 4
+List all nvme namespaces
+.RE
+.PP
+linknvme:nvme\-list
+.RS 4
+List all nvme controllers
+.RE
+.PP
+linknvme:nvme\-read
+.RS 4
+Issue IO Read Command
+.RE
+.PP
+linknvme:nvme\-write
+.RS 4
+Issue IO Write Command
+.RE
+.PP
+linknvme:nvme\-resv\-acquire
+.RS 4
+Acquire Namespace Reservation
+.RE
+.PP
+linknvme:nvme\-resv\-register
+.RS 4
+Register Namespace Reservation
+.RE
+.PP
+linknvme:nvme\-resv\-release
+.RS 4
+Release Namespace Reservation
+.RE
+.PP
+linknvme:nvme\-resv\-report
+.RS 4
+Report Reservation Capabilities
+.RE
+.PP
+linknvme:nvme\-security\-recv
+.RS 4
+Security Receive
+.RE
+.PP
+linknvme:nvme\-security\-send
+.RS 4
+Security Send
+.RE
+.PP
+linknvme:nvme\-set\-feature
+.RS 4
+Set Feature
+.RE
+.PP
+linknvme:nvme\-show\-regs
+.RS 4
+Show NVMe Controller Registers
+.RE
 .SH "FURTHER DOCUMENTATION"
 .sp
 See the freely available references on the \m[blue]\fBOffical NVM\-Express Site\fR\m[]\&\s-2\u[1]\d\s+2\&.
