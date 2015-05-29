@@ -36,7 +36,7 @@ doc: $(NVME)
 all: doc
 
 clean:
-	rm -f $(NVME) *.o *~
+	rm -f $(NVME) *.o *~ a.out
 	$(MAKE) -C Documentation clean
 
 clobber: clean
