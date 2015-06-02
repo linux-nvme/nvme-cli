@@ -26,6 +26,14 @@ specification and for displaying controller registers. There is also an
 option to submit completely arbitrary commands. For a list of commands
 available, run "nvme help".
 
+nvme cli sub-commands
+---------------------
+
+Main commands
+~~~~~~~~~~~~~
+
+include::cmds-main.txt[]
+
 FURTHER DOCUMENTATION
 ---------------------
 See the freely available references on the http://nvmexpress.org[Offical
