@@ -22,6 +22,7 @@
  * This program uses NVMe IOCTLs to run native nvme commands to a device.
  */
 
+#include <endian.h>
 #include <errno.h>
 #include <getopt.h>
 #include <fcntl.h>
@@ -164,12 +165,12 @@ static void show_error_log(struct nvme_error_log_page *err_log, int entries)
 	for (i = 0; i < entries; i++) {
 		printf(" Entry[%2d]   \n", i);
 		printf(".................\n");
-		printf("error_count  : %lld\n", err_log[i].error_count);
+		printf("error_count  : %"PRIu64"\n", (uint64_t)le64toh(err_log[i].error_count));
 		printf("sqid         : %d\n", err_log[i].sqid);
 		printf("cmdid        : %#x\n", err_log[i].cmdid);
 		printf("status_field : %#x\n", err_log[i].status_field);
 		printf("parm_err_loc : %#x\n", err_log[i].parm_error_location);
-		printf("lba          : %#llx\n", err_log[i].lba);
+		printf("lba          : %#"PRIx64"\n",(uint64_t)le64toh(err_log[i].lba));
 		printf("nsid         : %d\n", err_log[i].nsid);
 		printf("vs           : %d\n", err_log[i].vs);
 		printf(".................\n");
@@ -192,8 +193,8 @@ static void show_nvme_resv_report(struct nvme_reservation_status *status)
 		printf("regctl[%d] :\n", i);
 		printf("  cntlid  : %x\n", le16toh(status->regctl_ds[i].cntlid));
 		printf("  rcsts   : %x\n", status->regctl_ds[i].rcsts);
-		printf("  hostid  : %llx\n", le64toh(status->regctl_ds[i].hostid));
-		printf("  rkey    : %llx\n", le64toh(status->regctl_ds[i].rkey));
+		printf("  hostid  : %"PRIx64"\n", (uint64_t)le64toh(status->regctl_ds[i].hostid));
+		printf("  rkey    : %"PRIx64"\n", (uint64_t)le64toh(status->regctl_ds[i].rkey));
 	}
 	printf("\n");
 }
@@ -218,7 +219,7 @@ static void show_fw_log(struct nvme_firmware_log_page *fw_log)
 	printf("afi  : %#x\n", fw_log->afi);
 	for (i = 0; i < 7; i++)
 		if (fw_log->frs[i])
-			printf("frs%d : %#016llx (%s)\n", i + 1, fw_log->frs[i],
+			printf("frs%d : %#016"PRIx64" (%s)\n", i + 1, (uint64_t)fw_log->frs[i],
 						fw_to_string(fw_log->frs[i]));
 }
 
@@ -750,8 +751,8 @@ static void show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 	for (i = 0; i < nr_ranges; i++) {
 		printf("type       : %#x\n", lbrt[i].type);
 		printf("attributes : %#x\n", lbrt[i].attributes);
-		printf("slba       : %#llx", lbrt[i].slba);
-		printf("nlb        : %#llx", lbrt[i].nlb);
+		printf("slba       : %#"PRIx64"\n", (uint64_t)(lbrt[i].slba));
+		printf("nlb        : %#"PRIx64"\n", (uint64_t)(lbrt[i].nlb));
 		printf("guid       : ");
 		for (j = 0; j < 16; j++)
 			printf("%02x", lbrt[i].guid[j]);
@@ -900,9 +901,9 @@ static void show_nvme_id_ns(struct nvme_id_ns *ns, int id, int vs, int human)
 	int i;
 
 	printf("NVME Identify Namespace %d:\n", id);
-	printf("nsze    : %#llx\n", ns->nsze);
-	printf("ncap    : %#llx\n", ns->ncap);
-	printf("nuse    : %#llx\n", ns->nuse);
+	printf("nsze    : %#"PRIx64"\n", (uint64_t)le64toh(ns->nsze));
+	printf("ncap    : %#"PRIx64"\n", (uint64_t)le64toh(ns->ncap));
+	printf("nuse    : %#"PRIx64"\n", (uint64_t)le64toh(ns->nuse));
 	printf("nsfeat  : %#x\n", ns->nsfeat);
 	if (human)
 		show_nvme_id_ns_nsfeat(ns->nsfeat);
