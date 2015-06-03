@@ -97,10 +97,7 @@ html: $(DOC_HTML)
 man: man1
 man1: $(DOC_MAN1)
 
-install: install-man install-html
-
-install-html: html
-	'$(SHELL_PATH_SQ)' ./install-webdoc.sh $(DESTDIR)$(htmldir)
+install: install-man
 
 install-man: man
 	$(INSTALL) -d -m 755 /usr/local/man/man1
