@@ -1003,7 +1003,8 @@ static int get_smart_log(int argc, char **argv)
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status: %s\n", nvme_status_to_string(err));
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
 	return err;
 }
 
@@ -1052,7 +1053,8 @@ static int get_error_log(int argc, char **argv)
 			d_raw((unsigned char *)err_log, sizeof(err_log));
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status: %s\n", nvme_status_to_string(err));
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
 	return err;
 }
 
@@ -1088,7 +1090,8 @@ static int get_fw_log(int argc, char **argv)
 			d_raw((unsigned char *)&fw_log, sizeof(fw_log));
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status: %s\n", nvme_status_to_string(err));
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
 	else
 		perror("fw log");
 	return err;
@@ -1144,8 +1147,8 @@ static int get_log(int argc, char **argv)
 			} else
 				d_raw((unsigned char *)log, cfg.log_len);
 		} else if (err > 0)
-			fprintf(stderr, "NVMe Status: %s\n",
-						nvme_status_to_string(err));
+			fprintf(stderr, "NVMe Status:%s(%x)\n",
+						nvme_status_to_string(err), err);
 		return err;
 	}
 }
@@ -1180,8 +1183,8 @@ static int list_ns(int argc, char **argv)
 				printf("[%4u]:%#x\n", i, ns_list[i]);
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status: %s NSID:%d\n",
-				nvme_status_to_string(err), cfg.namespace_id);
+		fprintf(stderr, "NVMe Status:%s(%x) NSID:%d\n",
+			nvme_status_to_string(err), err, cfg.namespace_id);
 	return err;
 }
 
@@ -1394,7 +1397,8 @@ static int id_ctrl(int argc, char **argv)
 			show_nvme_id_ctrl(&ctrl, cfg.vendor_specific, cfg.human_readable);
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status: %s\n", nvme_status_to_string(err));
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
 
 	return err;
 }
@@ -1452,8 +1456,8 @@ static int id_ns(int argc, char **argv)
 			show_nvme_id_ns(&ns, cfg.namespace_id, cfg.vendor_specific, cfg.human_readable);
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status: %s NSID:%d\n", nvme_status_to_string(err),
-			cfg.namespace_id);
+		fprintf(stderr, "NVMe Status:%s(%x) NSID:%d\n",
+			nvme_status_to_string(err), err, cfg.namespace_id);
 	return err;
 }
 
@@ -1570,7 +1574,8 @@ static int get_feature(int argc, char **argv)
 		}
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status: %s\n", nvme_status_to_string(err));
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
 	if (buf)
 		free(buf);
 	return err;
@@ -1653,7 +1658,7 @@ static int fw_download(int argc, char **argv)
 			exit(errno);
 		} else if (err != 0) {
 			fprintf(stderr, "NVME Admin command error:%s(%x)\n",
-				nvme_status_to_string(err), err);
+					nvme_status_to_string(err), err);
 			break;
 		}
 		fw_buf     += cfg.xfer;
@@ -1709,7 +1714,8 @@ static int fw_activate(int argc, char **argv)
 	if (err < 0)
 		perror("ioctl");
 	else if (err != 0)
-		fprintf(stderr, "NVME Admin command error:%d\n", err);
+		fprintf(stderr, "NVME Admin command error:%s(%x)\n",
+					nvme_status_to_string(err), err);
 	else
 		printf("Success activating firmware action:%d slot:%d\n",
 		       cfg.action, cfg.slot);
@@ -1815,7 +1821,7 @@ static int format(int argc, char **argv)
 	if (err < 0)
 		perror("ioctl");
 	else if (err != 0)
-		fprintf(stderr, "NVME Admin command error:%s(%d)\n",
+		fprintf(stderr, "NVME Admin command error:%s(%x)\n",
 					nvme_status_to_string(err), err);
 	else {
 		printf("Success formatting namespace:%x\n", cfg.namespace_id);
@@ -1905,7 +1911,8 @@ static int set_feature(int argc, char **argv)
 		}
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status: %s\n", nvme_status_to_string(err));
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
 	if (buf)
 		free(buf);
 	return err;
@@ -2013,7 +2020,7 @@ static int flush(int argc, char **argv)
 	if (err < 0)
 		return errno;
 	else if (err != 0)
-		fprintf(stderr, "NVME IO command error:%s(%d)\n",
+		fprintf(stderr, "NVME IO command error:%s(%x)\n",
 				nvme_status_to_string(err), err);
 	else
 		printf("NVMe Flush: success\n");
@@ -2476,15 +2483,15 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 		printf("apptag       : %04x\n" , io.apptag);
 		printf("appmask      : %04x\n" , io.appmask);
 		if (cfg.dry_run)
-		  goto free_and_return;
+			goto free_and_return;
 	}
 
 	gettimeofday(&start_time, NULL);
 	err = ioctl(fd, NVME_IOCTL_SUBMIT_IO, &io);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
-	  fprintf(stdout, " latency: %s: %llu us\n",
-		  command, elapsed_utime(start_time, end_time));
+		fprintf(stdout, " latency: %s: %llu us\n",
+			command, elapsed_utime(start_time, end_time));
 	if (err < 0)
 		perror("ioctl");
 	else if (err)
