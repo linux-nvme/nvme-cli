@@ -1187,17 +1187,16 @@ static int list_ns(int argc, char **argv)
 
 static char * nvme_char_from_block(char *block)
 {
-    char slen[16];
-    unsigned len;
-    if (strncmp("nvme", block, 4) )
-    {
-        fprintf(stderr,"Device %s is not a nvme device.", block);
-        exit(-1);
-    }
-    sscanf(block,"nvme%d", &len);
-    sprintf(slen,"%d", len);
-    block[4+strlen(slen)] = 0;
-    return block;
+	char slen[16];
+	unsigned len;
+	if (strncmp("nvme", block, 4)) {
+		fprintf(stderr,"Device %s is not a nvme device.", block);
+		exit(-1);
+	}
+	sscanf(block,"nvme%d", &len);
+	sprintf(slen,"%d", len);
+	block[4+strlen(slen)] = 0;
+	return block;
 }
 
 static void get_registers(struct nvme_bar *bar, unsigned char_only)
@@ -1229,7 +1228,7 @@ static void get_registers(struct nvme_bar *bar, unsigned char_only)
 		fprintf(stderr, "%s failed to map\n", devicename);
 		exit(ENODEV);
 	}
-    memcpy(bar, membase, sizeof(struct nvme_bar));
+	memcpy(bar, membase, sizeof(struct nvme_bar));
 }
 
 struct list_item {
@@ -1242,17 +1241,17 @@ struct list_item {
 };
 
 #ifdef LIBUDEV_EXISTS
-  /* For pre NVMe 1.2 devices we must get the version from the BAR, not
-   * the ctrl_id.*/
+/* For pre NVMe 1.2 devices we must get the version from the BAR, not the
+ * ctrl_id.*/
 static void get_version( struct list_item* list_item)
 {
-    list_item->ver = list_item->ctrl.ver;
-    if (list_item->ctrl.ver)
-        return;
-    struct nvme_bar bar;
-    get_registers(&bar, 0);
-    list_item->ver = bar.vs;
+	struct nvme_bar bar;
 
+	list_item->ver = list_item->ctrl.ver;
+	if (list_item->ctrl.ver)
+		return;
+	get_registers(&bar, 0);
+	list_item->ver = bar.vs;
 }
 
 static void print_list_item(struct list_item list_item)
@@ -1343,19 +1342,19 @@ static int list(int argc, char **argv)
 				return err;
 			strcpy(list_items[count].node, node);
 			list_items[count].block = S_ISBLK(nvme_stat.st_mode);
-            get_version(&list_items[count]);
+			get_version(&list_items[count]);
 			count++;
 		}
 	}
-  udev_enumerate_unref(enumerate);
-  udev_unref(udev);
+	udev_enumerate_unref(enumerate);
+	udev_unref(udev);
 
-  if (count)
-	  print_list_items(list_items, count);
-  else
-	  fprintf(stdout,"No NVMe devices detected.\n");
+	if (count)
+		print_list_items(list_items, count);
+	else
+		fprintf(stdout,"No NVMe devices detected.\n");
 
-  return 0;
+	return 0;
 }
 #endif
 
@@ -1916,7 +1915,7 @@ static int sec_send(int argc, char **argv)
 {
 	struct stat sb;
 	struct nvme_admin_cmd cmd;
-        int err, sec_fd = -1;
+	int err, sec_fd = -1;
 	void *sec_buf;
 	unsigned int sec_size;
 
@@ -1966,27 +1965,27 @@ static int sec_send(int argc, char **argv)
 		return ENOMEM;
 	}
 
-        memset(&cmd, 0, sizeof(cmd));
-        cmd.opcode   = nvme_admin_security_send;
-        cmd.cdw10    = cfg.secp << 24 | cfg.spsp << 8;
-        cmd.cdw11    = cfg.tl;
-        cmd.data_len = sec_size;
-        cmd.addr     = (__u64)sec_buf;
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opcode   = nvme_admin_security_send;
+	cmd.cdw10    = cfg.secp << 24 | cfg.spsp << 8;
+	cmd.cdw11    = cfg.tl;
+	cmd.data_len = sec_size;
+	cmd.addr     = (__u64)sec_buf;
 
-        err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
-        if (err < 0)
-                return errno;
-        else if (err != 0)
-                fprintf(stderr, "NVME Security Send Command Error:%d\n", err);
+	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	if (err < 0)
+		return errno;
+	else if (err != 0)
+		fprintf(stderr, "NVME Security Send Command Error:%d\n", err);
 	else
-                printf("NVME Security Send Command Success:%d\n", cmd.result);
-        return err;
+		printf("NVME Security Send Command Success:%d\n", cmd.result);
+	return err;
 }
 
 static int flush(int argc, char **argv)
 {
 	struct nvme_passthru_cmd cmd;
-        int err;
+	int err;
 
 	struct config {
 		__u32 namespace_id;
@@ -2024,7 +2023,7 @@ static int flush(int argc, char **argv)
 static int resv_acquire(int argc, char **argv)
 {
 	struct nvme_passthru_cmd cmd;
-        int err;
+	int err;
 	__u64 payload[2];
 
 	struct config {
@@ -2088,26 +2087,26 @@ static int resv_acquire(int argc, char **argv)
 	payload[1] = cfg.prkey;
 
 	memset(&cmd, 0, sizeof(cmd));
-        cmd.opcode   = nvme_cmd_resv_acquire;
-        cmd.nsid     = cfg.namespace_id;
-        cmd.cdw10    = cfg.rtype << 8 | cfg.iekey << 3 | cfg.racqa;
-        cmd.addr     = (__u64)payload;
-        cmd.data_len = sizeof(payload);
+	cmd.opcode   = nvme_cmd_resv_acquire;
+	cmd.nsid     = cfg.namespace_id;
+	cmd.cdw10    = cfg.rtype << 8 | cfg.iekey << 3 | cfg.racqa;
+	cmd.addr     = (__u64)payload;
+	cmd.data_len = sizeof(payload);
 
-        err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
-        if (err < 0)
-                return errno;
-        else if (err != 0)
-                fprintf(stderr, "NVME IO command error:%04x\n", err);
-        else
-                printf("NVME Reservation Acquire success\n");
+	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+	if (err < 0)
+		return errno;
+	else if (err != 0)
+		fprintf(stderr, "NVME IO command error:%04x\n", err);
+	else
+		printf("NVME Reservation Acquire success\n");
 	return 0;
 }
 
 static int resv_register(int argc, char **argv)
 {
 	struct nvme_passthru_cmd cmd;
-        int err;
+	int err;
 	__u64 payload[2];
 
 	struct config {
@@ -2171,26 +2170,26 @@ static int resv_register(int argc, char **argv)
 	payload[1] = cfg.nrkey;
 
 	memset(&cmd, 0, sizeof(cmd));
-        cmd.opcode   = nvme_cmd_resv_register;
-        cmd.nsid     = cfg.namespace_id;
+	cmd.opcode   = nvme_cmd_resv_register;
+	cmd.nsid     = cfg.namespace_id;
 	cmd.cdw10    = cfg.cptpl << 30 | cfg.iekey << 3 | cfg.rrega;
-        cmd.addr     = (__u64)payload;
-        cmd.data_len = sizeof(payload);
+	cmd.addr     = (__u64)payload;
+	cmd.data_len = sizeof(payload);
 
-        err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
-        if (err < 0)
-                return errno;
-        else if (err != 0)
-                fprintf(stderr, "NVME IO command error:%04x\n", err);
-        else
-                printf("NVME Reservation  success\n");
+	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+	if (err < 0)
+		return errno;
+	else if (err != 0)
+		fprintf(stderr, "NVME IO command error:%04x\n", err);
+	else
+		printf("NVME Reservation  success\n");
 	return 0;
 }
 
 static int resv_release(int argc, char **argv)
 {
 	struct nvme_passthru_cmd cmd;
-        int err;
+	int err;
 
 	struct config {
 		__u32 namespace_id;
@@ -2251,26 +2250,26 @@ static int resv_release(int argc, char **argv)
 	}
 
 	memset(&cmd, 0, sizeof(cmd));
-        cmd.opcode   = nvme_cmd_resv_release;
-        cmd.nsid     = cfg.namespace_id;
+	cmd.opcode   = nvme_cmd_resv_release;
+	cmd.nsid     = cfg.namespace_id;
 	cmd.cdw10    = cfg.rtype << 8 | cfg.iekey << 3 | cfg.rrela;
-        cmd.addr     = (__u64)&cfg.crkey;
-        cmd.data_len = sizeof(cfg.crkey);
+	cmd.addr     = (__u64)&cfg.crkey;
+	cmd.data_len = sizeof(cfg.crkey);
 
-        err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
-        if (err < 0)
-                return errno;
-        else if (err != 0)
-                fprintf(stderr, "NVME IO command error:%04x\n", err);
-        else
-                printf("NVME Reservation Register success\n");
+	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+	if (err < 0)
+		return errno;
+	else if (err != 0)
+		fprintf(stderr, "NVME IO command error:%04x\n", err);
+	else
+		printf("NVME Reservation Register success\n");
 	return 0;
 }
 
 static int resv_report(int argc, char **argv)
 {
 	struct nvme_passthru_cmd cmd;
-        int err;
+	int err;
 	struct nvme_reservation_status *status;
 
 	struct config {
@@ -2322,20 +2321,20 @@ static int resv_report(int argc, char **argv)
 	}
 
 	memset(&cmd, 0, sizeof(cmd));
-        cmd.opcode   = nvme_cmd_resv_report;
-        cmd.nsid     = cfg.namespace_id;
-        cmd.cdw10    = cfg.numd;
-        cmd.addr     = (__u64)status;
-        cmd.data_len = cfg.numd << 2;
+	cmd.opcode   = nvme_cmd_resv_report;
+	cmd.nsid     = cfg.namespace_id;
+	cmd.cdw10    = cfg.numd;
+	cmd.addr     = (__u64)status;
+	cmd.data_len = cfg.numd << 2;
 
-        err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
-        if (err < 0)
-                return errno;
-        else if (err != 0)
-                fprintf(stderr, "NVME IO command error:%04x\n", err);
-        else {
+	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+	if (err < 0)
+		return errno;
+	else if (err != 0)
+		fprintf(stderr, "NVME IO command error:%04x\n", err);
+	else {
 		if (!cfg.raw_binary) {
-                	printf("NVME Reservation Report success\n");
+			printf("NVME Reservation Report success\n");
 			show_nvme_resv_report(status);
 		} else
 			d_raw((unsigned char *)status, cfg.numd << 2);
@@ -2348,7 +2347,7 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 	struct nvme_user_io io;
 	struct timeval start_time, end_time;
 	void *buffer, *mbuffer = NULL;
-        int err, dfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
+	int err, dfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
 
 	struct config {
 		__u64 start_block;
@@ -2459,7 +2458,7 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 		return EINVAL;
 	}
 
-        io.opcode = opcode;
+	io.opcode = opcode;
 	io.addr   = (__u64)buffer;
 	if (cfg.metadata_size)
 		io.metadata = (__u64)mbuffer;
@@ -2522,7 +2521,7 @@ static int write_cmd(int argc, char **argv)
 static int sec_recv(int argc, char **argv)
 {
 	struct nvme_admin_cmd cmd;
-        int err;
+	int err;
 	void *sec_buf = NULL;
 
 	struct config {
@@ -2565,28 +2564,28 @@ static int sec_recv(int argc, char **argv)
 			return ENOMEM;
 		}
 	}
-        memset(&cmd, 0, sizeof(cmd));
-        cmd.opcode   = nvme_admin_security_recv;
-        cmd.cdw10    = cfg.secp << 24 | cfg.spsp << 8;
-        cmd.cdw11    = cfg.al;
-        cmd.data_len = cfg.size;
-        cmd.addr     = (__u64)sec_buf;
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opcode   = nvme_admin_security_recv;
+	cmd.cdw10    = cfg.secp << 24 | cfg.spsp << 8;
+	cmd.cdw11    = cfg.al;
+	cmd.data_len = cfg.size;
+	cmd.addr     = (__u64)sec_buf;
 
-        err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
-        if (err < 0)
-                return errno;
-        else if (err != 0)
-                fprintf(stderr, "NVME Security Receivce Command Error:%d\n",
+	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	if (err < 0)
+		return errno;
+	else if (err != 0)
+		fprintf(stderr, "NVME Security Receivce Command Error:%d\n",
 									err);
 	else {
 		if (!cfg.raw_binary) {
-                	printf("NVME Security Receivce Command Success:%d\n",
+			printf("NVME Security Receivce Command Success:%d\n",
 							cmd.result);
 			d(sec_buf, cfg.size, 16, 1);
 		} else if (cfg.size)
 			d_raw((unsigned char *)&sec_buf, cfg.size);
 	}
-        return err;
+	return err;
 }
 
 static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
