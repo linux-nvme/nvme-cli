@@ -49,6 +49,8 @@
 #include "src/argconfig.h"
 #include "src/suffix.h"
 
+#define min(x, y) (x) > (y) ? (y) : (x)
+
 static int fd;
 static struct stat nvme_stat;
 static const char *devicename;
@@ -58,6 +60,7 @@ static const char *devicename;
 	ENTRY(ID_CTRL, "id-ctrl", "Send NVMe Identify Controller", id_ctrl) \
 	ENTRY(ID_NS, "id-ns", "Send NVMe Identify Namespace, display structure", id_ns) \
 	ENTRY(LIST_NS, "list-ns", "Send NVMe Identify List, display structure", list_ns) \
+	ENTRY(LIST_CTRL, "list-ctrl", "Send NVMe Identify Controller List, display structure", list_ctrl) \
 	ENTRY(GET_NS_ID, "get-ns-id", "Retrieve the namespace ID of opened block device", get_ns_id) \
 	ENTRY(GET_LOG, "get-log", "Generic NVMe get log, returns log in raw format", get_log) \
 	ENTRY(GET_FW_LOG, "fw-log", "Retrieve FW Log, show it", get_fw_log) \
@@ -331,7 +334,7 @@ static const char *nvme_status_to_string(__u32 status)
 	}
 }
 
-static int identify(int namespace, void *ptr, int cns)
+static int identify(int namespace, void *ptr, __u32 cns)
 {
 	struct nvme_admin_cmd cmd;
 
@@ -1153,6 +1156,43 @@ static int get_log(int argc, char **argv)
 	}
 }
 
+static int list_ctrl(int argc, char **argv)
+{
+	int err, i;
+	struct nvme_controller_list *cntlist;
+
+	struct config {
+		__u16 cntid;
+	};
+	struct config cfg;
+
+	const struct config defaults = {
+		.cntid = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"cntid", "NUM",  CFG_POSITIVE, &defaults.cntid, required_argument, NULL},
+		{"c",     "NUM",  CFG_POSITIVE, &defaults.cntid, required_argument, NULL},
+		{0}
+	};
+	argconfig_parse(argc, argv, "list_ctrl", command_line_options,
+			&defaults, &cfg, sizeof(cfg));
+	get_dev(1, argc, argv);
+
+	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000))
+		return ENOMEM;
+
+	err = identify(0, cntlist, defaults.cntid << 16 | 0x13);
+	if (!err) {
+		for (i = 0; i < (min(cntlist->num, 2048)); i++)
+			printf("[%4u]:%#x\n", i, cntlist->identifier[i]);
+	}
+	else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x) cntid:%d\n",
+			nvme_status_to_string(err), err, defaults.cntid);
+	return err;
+}
+
 static int list_ns(int argc, char **argv)
 {
 	int err, i;
@@ -1188,7 +1228,7 @@ static int list_ns(int argc, char **argv)
 	return err;
 }
 
-static char * nvme_char_from_block(char *block)
+static char *nvme_char_from_block(char *block)
 {
 	char slen[16];
 	unsigned len;
@@ -1581,7 +1621,6 @@ static int get_feature(int argc, char **argv)
 	return err;
 }
 
-#define min(x, y) x > y ? y : x;
 static int fw_download(int argc, char **argv)
 {
 	int err, fw_fd = -1;
@@ -2756,7 +2795,7 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 		printf("cdw15        : %08x\n", cmd.cdw15);
 		printf("timeout_ms   : %08x\n", cmd.timeout_ms);
 		if (cfg.dry_run)
-		  return 0;
+			return 0;
 	}
 	err = ioctl(fd, ioctl_cmd, &cmd);
 	if (err >= 0) {

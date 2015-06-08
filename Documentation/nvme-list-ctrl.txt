@@ -1,0 +1,38 @@
+nvme-id-ns(1)
+=============
+
+NAME
+----
+nvme-list-ctrl - Send NVMe Identify List Controllers, return result and structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme list-ctrl' <device> [--cntid=<cntid> | -c <cntid>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends an identify command for controller list
+and provides the result and returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+The starting controller in the list always begins with 0 unless the
+`'--cntid'` option is given to override.
+
+On success, the controller array is printed for each index and controller
+identifier.
+
+OPTIONS
+-------
+-c <cntid>::
+--cntid=<cntid>::
+	Retrieve the identify list structure starting with the given controller id.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

@@ -52,6 +52,9 @@ linknvme:nvme-list-ns[1]::
 linknvme:nvme-list[1]::
 	List all nvme controllers
 
+linknvme:nvme-list-ctrl[1]::
+	List controller in NVMe subsystem
+
 linknvme:nvme-read[1]::
 	Issue IO Read Command
 
