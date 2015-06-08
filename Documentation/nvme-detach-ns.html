@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.7" />
-<title>nvme-create-ns(1)</title>
+<title>nvme-detach-ns(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -738,12 +738,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-create-ns(1) Manual Page
+nvme-detach-ns(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-create-ns -
-   Send NVMe Namespace management command to create namespace, returns results.
+<p>nvme-detach-ns -
+   Send NVMe detach namespace, return result.
 </p>
 </div>
 </div>
@@ -752,11 +752,8 @@ nvme-create-ns(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme create-ns</em> &lt;device&gt; [--nsze=&lt;nsze&gt; | -n &lt;nsze&gt;]
-                        [--ncap=&lt;ncap&gt; | -c &lt;ncap&gt;]
-                        [--flbas=&lt;flbas&gt; | -f &lt;flbas&gt;]
-                        [--dps=&lt;dps&gt; | -d &lt;dps&gt;]
-                        [--nmic=&lt;nmic&gt; | -m &lt;nmic&gt;]</pre>
+<pre class="content"><em>nvme detach-ns</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--controllers=&lt;ctrl-list,&gt; | -c &lt;ctrl-list,&gt;</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -764,11 +761,9 @@ nvme-create-ns(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends a namespace management command to create
-the namespace with the requested settings. On success, the namespace
-identifier assigned by the controller is returned.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
+<div class="paragraph"><p>For the NVMe device given, sends the nvme namespace detach command for
+the provided namespace identifier, attaching to the provided list of
+controller identifiers.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -776,58 +771,26 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--s
+-n &lt;nsid&gt;
 </dt>
 <dt class="hdlist1">
---nsze
+--namespace-id=&lt;nsid&gt;
 </dt>
 <dd>
 <p>
-        The namespace size.
+        The namespace identifier to detach.
 </p>
 </dd>
 <dt class="hdlist1">
--c
+-c &lt;ctrl-list,&gt;
 </dt>
 <dt class="hdlist1">
---ncap
+-controllers=&lt;ctrl-list,&gt;
 </dt>
 <dd>
 <p>
-        The namespace capacity.
-</p>
-</dd>
-<dt class="hdlist1">
--f
-</dt>
-<dt class="hdlist1">
---flbas
-</dt>
-<dd>
-<p>
-        The namespace formatted logical block size setting.
-</p>
-</dd>
-<dt class="hdlist1">
--d
-</dt>
-<dt class="hdlist1">
---dps
-</dt>
-<dd>
-<p>
-        The data protection settings.
-</p>
-</dd>
-<dt class="hdlist1">
--m
-</dt>
-<dt class="hdlist1">
---nmic
-</dt>
-<dd>
-<p>
-        Namespace multipath and sharing capabilities.
+        The comma separated list of controller identifiers to detach
+        the namespace from.
 </p>
 </dd>
 </dl></div>
@@ -836,7 +799,7 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No examples provided yet.</p></div>
+<div class="paragraph"><p>No examples yet.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -849,7 +812,7 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-06-08 14:08:41 MDT
+Last updated 2015-06-08 14:06:57 MDT
 </div>
 </div>
 </body>

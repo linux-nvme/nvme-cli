@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-create-ns
+.\"     Title: nvme-attach-ns
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
 .\"      Date: 06/08/2015
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CREATE\-NS" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-ATTACH\-NS" "1" "06/08/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,50 +28,30 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-create-ns \- Send NVMe Namespace management command to create namespace, returns results\&.
+nvme-attach-ns \- Send NVMe attach namespace, return result\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme create\-ns\fR <device> [\-\-nsze=<nsze> | \-n <nsze>]
-                        [\-\-ncap=<ncap> | \-c <ncap>]
-                        [\-\-flbas=<flbas> | \-f <flbas>]
-                        [\-\-dps=<dps> | \-d <dps>]
-                        [\-\-nmic=<nmic> | \-m <nmic>]
+\fInvme attach\-ns\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-controllers=<ctrl\-list,> | \-c <ctrl\-list,>]
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, sends a namespace management command to create the namespace with the requested settings\&. On success, the namespace identifier assigned by the controller is returned\&.
-.sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+For the NVMe device given, sends the nvme namespace attach command for the provided namespace identifier, attaching to the provided list of controller identifiers\&.
 .SH "OPTIONS"
 .PP
-\-s, \-\-nsze
+\-n <nsid>, \-\-namespace\-id=<nsid>
 .RS 4
-The namespace size\&.
+The namespace identifier to attach\&.
 .RE
 .PP
-\-c, \-\-ncap
+\-c <ctrl\-list,>, \-controllers=<ctrl\-list,>
 .RS 4
-The namespace capacity\&.
-.RE
-.PP
-\-f, \-\-flbas
-.RS 4
-The namespace formatted logical block size setting\&.
-.RE
-.PP
-\-d, \-\-dps
-.RS 4
-The data protection settings\&.
-.RE
-.PP
-\-m, \-\-nmic
-.RS 4
-Namespace multipath and sharing capabilities\&.
+The comma separated list of controller identifiers to attach the namesapce too\&.
 .RE
 .SH "EXAMPLES"
 .sp
-No examples provided yet\&.
+No examples yet\&.
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

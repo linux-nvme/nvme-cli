@@ -49,6 +49,12 @@ linknvme:nvme-create-ns[1]::
 linknvme:nvme-delete-ns[1]::
 	Delete existing namespace
 
+linknvme:nvme-attach-ns[1]::
+	Attach namespace
+
+linknvme:nvme-detach-ns[1]::
+	Detach namespace
+
 linknvme:nvme-io-passthru[1]::
 	IO Passthrough Command
 

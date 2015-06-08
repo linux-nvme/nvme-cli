@@ -1,0 +1,37 @@
+nvme-detach-ns(1)
+=================
+
+NAME
+----
+nvme-detach-ns - Send NVMe detach namespace, return result.
+
+SYNOPSIS
+--------
+[verse]
+'nvme detach-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
+			[--controllers=<ctrl-list,> | -c <ctrl-list,>
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends the nvme namespace detach command for
+the provided namespace identifier, attaching to the provided list of
+controller identifiers.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	The namespace identifier to detach.
+
+-c <ctrl-list,>::
+-controllers=<ctrl-list,>::
+	The comma separated list of controller identifiers to detach
+	the namespace from.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

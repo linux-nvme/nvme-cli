@@ -1,0 +1,37 @@
+nvme-attach-ns(1)
+=================
+
+NAME
+----
+nvme-attach-ns - Send NVMe attach namespace, return result.
+
+SYNOPSIS
+--------
+[verse]
+'nvme attach-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
+			[--controllers=<ctrl-list,> | -c <ctrl-list,>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends the nvme namespace attach command for
+the provided namespace identifier, attaching to the provided list of
+controller identifiers.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	The namespace identifier to attach.
+
+-c <ctrl-list,>::
+-controllers=<ctrl-list,>::
+	The comma separated list of controller identifiers to attach
+	the namesapce too.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

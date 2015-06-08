@@ -62,6 +62,8 @@ static const char *devicename;
 	ENTRY(LIST_NS, "list-ns", "Send NVMe Identify List, display structure", list_ns) \
 	ENTRY(CREATE_NS, "create-ns", "Creates a namespace with the provided parameters", create_ns) \
 	ENTRY(DELETE_NS, "delete-ns", "Deletes a namespace from the controller", delete_ns) \
+	ENTRY(ATTACH_NS, "attach-ns", "Attaches a namespace to requested controller(s)", attach_ns) \
+	ENTRY(DETACH_NS, "detach-ns", "Detaches a namespace from requested controller(s)", detach_ns) \
 	ENTRY(LIST_CTRL, "list-ctrl", "Send NVMe Identify Controller List, display structure", list_ctrl) \
 	ENTRY(GET_NS_ID, "get-ns-id", "Retrieve the namespace ID of opened block device", get_ns_id) \
 	ENTRY(GET_LOG, "get-log", "Generic NVMe get log, returns log in raw format", get_log) \
@@ -1270,6 +1272,70 @@ static int delete_ns(int argc, char **argv)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
 	return err;
+}
+
+static int nvme_attach_ns(int argc, char **argv, int attach)
+{
+	struct nvme_controller_list *cntlist;
+	struct nvme_admin_cmd cmd;
+	char *name = commands[attach ? ATTACH_NS : DETACH_NS].name;
+	int err;
+
+	struct config {
+		char *cntlist;
+		__u32	namespace_id;
+	};
+	struct config cfg;
+
+	const struct config defaults = {
+		.cntlist = "",
+		.namespace_id = 0,
+	};
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id",    "NUM",  CFG_POSITIVE, &defaults.namespace_id,    required_argument, NULL},
+		{"n",               "NUM",  CFG_POSITIVE, &defaults.namespace_id,    required_argument, NULL},
+		{"controllers",     "LIST", CFG_STRING, &defaults.cntlist,    required_argument, NULL},
+		{"c",               "LIST", CFG_STRING, &defaults.cntlist,    required_argument, NULL},
+	};
+
+	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000))
+		return ENOMEM;
+	memset(cntlist, 0, sizeof(*cntlist));
+
+	argconfig_parse(argc, argv, name, command_line_options,
+			&defaults, &cfg, sizeof(cfg));
+	if (!cfg.namespace_id) {
+		fprintf(stderr, "%s: namespace-id parameter required\n",
+						name);
+		return EINVAL;
+	}
+	cntlist->num = argconfig_parse_comma_sep_array(cfg.cntlist,
+					(int *)cntlist->identifier, 2047);
+	get_dev(1, argc, argv);
+
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opcode = nvme_admin_ns_attach;
+	cmd.addr = (__u64)cntlist;
+	cmd.data_len = 4096;
+	cmd.cdw10 = attach ? 0 : 1;
+
+	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	if (!err)
+		printf("%s: Success, nsid:%d\n", name, cfg.namespace_id);
+	else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+	return err;
+}
+
+static int attach_ns(int argc, char **argv)
+{
+	return nvme_attach_ns(argc, argv, 1);
+}
+
+static int detach_ns(int argc, char **argv)
+{
+	return nvme_attach_ns(argc, argv, 0);
 }
 
 static int create_ns(int argc, char **argv)
