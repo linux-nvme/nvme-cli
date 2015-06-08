@@ -752,27 +752,27 @@ nvme-id-ns(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme list-ctrl</em> &lt;device&gt; [--cntid=&lt;cntid&gt; | -c &lt;cntid&gt;]</pre>
+<pre class="content"><em>nvme list-ctrl</em> &lt;device&gt; [--cntid=&lt;cntid&gt; | -c &lt;cntid&gt;]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+DESCRIPTION</pre>
 <div class="attribution">
 </div></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_description">DESCRIPTION</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends an identify command for controller list
-and provides the result and returned structure.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
+<div class="listingblock">
+<div class="content">
+<pre><tt>For the NVMe device given, sends an identify command for controller list
+and provides the result and returned structure. This uses either mode
+12h or 13h depending on the requested namespace identifer.
+
+The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 The starting controller in the list always begins with 0 unless the
-<tt>'--cntid'</tt> option is given to override.</p></div>
-<div class="paragraph"><p>On success, the controller array is printed for each index and controller
-identifier.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_options">OPTIONS</h2>
-<div class="sectionbody">
+`'--cntid'` option is given to override.
+
+On success, the controller array is printed for each index and controller
+identifier.
+
+OPTIONS</tt></pre>
+</div></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
 -c &lt;cntid&gt;
@@ -783,6 +783,20 @@ identifier.</p></div>
 <dd>
 <p>
         Retrieve the identify list structure starting with the given controller id.
+</p>
+</dd>
+<dt class="hdlist1">
+-n &lt;nsid&gt;
+</dt>
+<dt class="hdlist1">
+--namespace-id=&lt;nsid&gt;
+</dt>
+<dd>
+<p>
+        If provided, will request the controllers attached to the
+        specified namespace. If no namespace is given, or set to 0, the
+        command requests the controller list for the entire subsystem,
+        whether or not they are attached to namesapce(s).
 </p>
 </dd>
 </dl></div>
@@ -804,7 +818,7 @@ identifier.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-06-08 11:09:39 MDT
+Last updated 2015-06-08 16:59:37 MDT
 </div>
 </div>
 </body>

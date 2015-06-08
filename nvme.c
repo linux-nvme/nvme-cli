@@ -1167,6 +1167,7 @@ static int list_ctrl(int argc, char **argv)
 
 	struct config {
 		__u16 cntid;
+		__u32 namespace_id;
 	};
 	struct config cfg;
 
@@ -1177,6 +1178,8 @@ static int list_ctrl(int argc, char **argv)
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"cntid", "NUM",  CFG_POSITIVE, &defaults.cntid, required_argument, NULL},
 		{"c",     "NUM",  CFG_POSITIVE, &defaults.cntid, required_argument, NULL},
+		{"namespace-id", "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, NULL},
+		{"n",            "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, NULL},
 		{0}
 	};
 	argconfig_parse(argc, argv, "list_ctrl", command_line_options,
@@ -1186,7 +1189,8 @@ static int list_ctrl(int argc, char **argv)
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000))
 		return ENOMEM;
 
-	err = identify(0, cntlist, cfg.cntid << 16 | 0x13);
+	err = identify(cfg.namespace_id, cntlist,
+			cfg.cntid << 16 | cfg.namespace_id ? 0x12 : 0x13);
 	if (!err) {
 		for (i = 0; i < (min(cntlist->num, 2048)); i++)
 			printf("[%4u]:%#x\n", i, cntlist->identifier[i]);

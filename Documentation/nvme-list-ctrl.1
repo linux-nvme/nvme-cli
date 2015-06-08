@@ -33,19 +33,34 @@ nvme-list-ctrl \- Send NVMe Identify List Controllers, return result and structu
 .sp
 .nf
 \fInvme list\-ctrl\fR <device> [\-\-cntid=<cntid> | \-c <cntid>]
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
+DESCRIPTION
 .fi
-.SH "DESCRIPTION"
 .sp
-For the NVMe device given, sends an identify command for controller list and provides the result and returned structure\&.
-.sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. The starting controller in the list always begins with 0 unless the \*(Aq\-\-cntid\*(Aq option is given to override\&.
-.sp
-On success, the controller array is printed for each index and controller identifier\&.
-.SH "OPTIONS"
+.nf
+For the NVMe device given, sends an identify command for controller list
+and provides the result and returned structure\&. This uses either mode
+12h or 13h depending on the requested namespace identifer\&.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+The starting controller in the list always begins with 0 unless the
+`\*(Aq\-\-cntid\*(Aq` option is given to override\&.
+
+On success, the controller array is printed for each index and controller
+identifier\&.
+
+OPTIONS
+.fi
 .PP
 \-c <cntid>, \-\-cntid=<cntid>
 .RS 4
 Retrieve the identify list structure starting with the given controller id\&.
+.RE
+.PP
+\-n <nsid>, \-\-namespace\-id=<nsid>
+.RS 4
+If provided, will request the controllers attached to the specified namespace\&. If no namespace is given, or set to 0, the command requests the controller list for the entire subsystem, whether or not they are attached to namesapce(s)\&.
 .RE
 .SH "EXAMPLES"
 .sp
