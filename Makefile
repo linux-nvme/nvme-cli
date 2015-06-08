@@ -40,6 +40,7 @@ clean:
 	$(MAKE) -C Documentation clean
 
 clobber: clean
+	$(MAKE) -C Documentation clobber
 
 install: default
 	$(MAKE) -C Documentation install

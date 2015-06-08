@@ -61,7 +61,7 @@ static const char *devicename;
 	ENTRY(ID_NS, "id-ns", "Send NVMe Identify Namespace, display structure", id_ns) \
 	ENTRY(LIST_NS, "list-ns", "Send NVMe Identify List, display structure", list_ns) \
 	ENTRY(CREATE_NS, "create-ns", "Creates a namespace with the provided parameters", create_ns) \
-	ENTRY(DELETE_NS, "create-ns", "Deletes a namespace from the controller", delete_ns) \
+	ENTRY(DELETE_NS, "delete-ns", "Deletes a namespace from the controller", delete_ns) \
 	ENTRY(LIST_CTRL, "list-ctrl", "Send NVMe Identify Controller List, display structure", list_ctrl) \
 	ENTRY(GET_NS_ID, "get-ns-id", "Retrieve the namespace ID of opened block device", get_ns_id) \
 	ENTRY(GET_LOG, "get-log", "Generic NVMe get log, returns log in raw format", get_log) \
@@ -1232,7 +1232,44 @@ static int list_ns(int argc, char **argv)
 
 static int delete_ns(int argc, char **argv)
 {
-	return 0;
+	struct nvme_admin_cmd cmd;
+	int err;
+
+	struct config {
+		__u32	namespace_id;
+	};
+	struct config cfg;
+
+	const struct config defaults = {
+		.namespace_id    = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id",    "NUM",  CFG_POSITIVE, &defaults.namespace_id,    required_argument, NULL},
+		{"n",               "NUM",  CFG_POSITIVE, &defaults.namespace_id,    required_argument, NULL},
+	};
+	argconfig_parse(argc, argv, "delete_ns", command_line_options,
+			&defaults, &cfg, sizeof(cfg));
+
+	if (!cfg.namespace_id) {
+		fprintf(stderr, "%s: namespace-id parameter required\n",
+						commands[DELETE_NS].name);
+		return EINVAL;
+	}
+
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opcode = nvme_admin_ns_mgmt;
+	cmd.nsid = cfg.namespace_id;
+	cmd.cdw10 = 1;
+
+	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	if (!err)
+		printf("%s: Success, deleted nsid:%d\n", commands[DELETE_NS].name,
+								cfg.namespace_id);
+	else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+	return err;
 }
 
 static int create_ns(int argc, char **argv)

@@ -43,6 +43,12 @@ linknvme:nvme-id-ctrl[1]::
 linknvme:nvme-id-ns[1]::
 	Identify Namespace
 
+linknvme:nvme-create-ns[1]::
+	Create a new namespace
+
+linknvme:nvme-delete-ns[1]::
+	Delete existing namespace
+
 linknvme:nvme-io-passthru[1]::
 	IO Passthrough Command
 

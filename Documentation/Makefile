@@ -140,6 +140,9 @@ clean:
 	$(RM) manpage-base-url.xsl
 	$(RM) *~
 
+clobber: clean
+	$(RM) *.html *.1
+
 %.1 : %.xml
 	$(QUIET_XMLTO)$(RM) $@ && \
 	$(XMLTO) -m $(MANPAGE_XSL) $(XMLTO_EXTRA) man $<
