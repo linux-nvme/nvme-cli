@@ -1317,6 +1317,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach)
 	cmd.opcode = nvme_admin_ns_attach;
 	cmd.addr = (__u64)cntlist;
 	cmd.data_len = 4096;
+	cmd.nsid = cfg.namespace_id;
 	cmd.cdw10 = attach ? 0 : 1;
 
 	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
