@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-compare
+.\"     Title: nvme-id-ctrl
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
 .\"      Date: 06/08/2015
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-COMPARE" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-CTRL" "1" "06/08/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,40 +28,50 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-write \- Send an NVMe write command, provide results
+nvme-create-ns \- Send NVMe Namespace management command to create namespace, returns results\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\-write\fR <device> [\-\-start\-block=<slba> | \-s <slba>]
-                        [\-\-block\-count=<nlb> | \-c <nlb>]
-                        [\-\-data\-size=<size> | \-z <size>]
-                        [\-\-metadata\-size=<size> | \-y <size>]
-                        [\-\-ref\-tag=<reftag> | \-r <reftag>]
-                        [\-\-data=<data\-file> | \-d <data\-file>]
-                        [\-\-prinfo=<prinfo> | \-p <prinfo>]
-                        [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
-                        [\-\-app\-tag=<apptag> | \-a <apptag>]
-                        [\-\-limited\-retry | \-l]
-                        [\-\-latency | \-t]
-                        [\-\-force\-unit\-access | \-f]
+\fInvme create\-ns\fR <device> [\-\-nsze=<nsze> | \-n <nsze>]
+                        [\-\-ncap=<ncap> | \-c <ncap>]
+                        [\-\-flbas=<flbas> | \-f <flbas>]
+                        [\-\-dps=<dps> | \-d <dps>]
+                        [\-\-nmic=<nmic> | \-m <nmic>]
 .fi
 .SH "DESCRIPTION"
 .sp
-The Write command writes the logical blocks specified by the command to the medium from the data data buffer provided\&. Will use stdin by default if you don\(cqt provide a file\&.
+For the NVMe device given, sends a namespace management command to create the namespace with the requested settings\&. On success, the namespace identifier assigned by the controller is returned\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .SH "OPTIONS"
 .PP
-\-\-start\-block=<slba>, \-s <slba>
+\-s, \-\-nsze
 .RS 4
-Start block\&.
+The namespace size\&.
 .RE
 .PP
-\-\-latency, \-t
+\-c, \-\-ncap
 .RS 4
-Print out the latency the IOCTL took (in us)\&.
+The namespace capacity\&.
+.RE
+.PP
+\-f, \-\-flbas
+.RS 4
+The namespace formatted logical block size setting\&.
+.RE
+.PP
+\-d, \-\-dps
+.RS 4
+The data protection settings\&.
+.RE
+.PP
+\-m, \-\-nmic
+.RS 4
+Namespace multipath and sharing capabilities\&.
 .RE
 .SH "EXAMPLES"
 .sp
-No examples yet\&.
+No examples provided yet\&.
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

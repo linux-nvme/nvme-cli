@@ -60,6 +60,8 @@ static const char *devicename;
 	ENTRY(ID_CTRL, "id-ctrl", "Send NVMe Identify Controller", id_ctrl) \
 	ENTRY(ID_NS, "id-ns", "Send NVMe Identify Namespace, display structure", id_ns) \
 	ENTRY(LIST_NS, "list-ns", "Send NVMe Identify List, display structure", list_ns) \
+	ENTRY(CREATE_NS, "create-ns", "Creates a namespace with the provided parameters", create_ns) \
+	ENTRY(DELETE_NS, "create-ns", "Deletes a namespace from the controller", delete_ns) \
 	ENTRY(LIST_CTRL, "list-ctrl", "Send NVMe Identify Controller List, display structure", list_ctrl) \
 	ENTRY(GET_NS_ID, "get-ns-id", "Retrieve the namespace ID of opened block device", get_ns_id) \
 	ENTRY(GET_LOG, "get-log", "Generic NVMe get log, returns log in raw format", get_log) \
@@ -1182,14 +1184,14 @@ static int list_ctrl(int argc, char **argv)
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000))
 		return ENOMEM;
 
-	err = identify(0, cntlist, defaults.cntid << 16 | 0x13);
+	err = identify(0, cntlist, cfg.cntid << 16 | 0x13);
 	if (!err) {
 		for (i = 0; i < (min(cntlist->num, 2048)); i++)
 			printf("[%4u]:%#x\n", i, cntlist->identifier[i]);
 	}
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x) cntid:%d\n",
-			nvme_status_to_string(err), err, defaults.cntid);
+			nvme_status_to_string(err), err, cfg.cntid);
 	return err;
 }
 
@@ -1225,6 +1227,71 @@ static int list_ns(int argc, char **argv)
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x) NSID:%d\n",
 			nvme_status_to_string(err), err, cfg.namespace_id);
+	return err;
+}
+
+static int delete_ns(int argc, char **argv)
+{
+	return 0;
+}
+
+static int create_ns(int argc, char **argv)
+{
+	struct nvme_admin_cmd cmd;
+	struct nvme_id_ns *ns;
+	int err = 0;
+
+	struct config {
+		__u64	nsze;
+		__u64	ncap;
+		__u8	flbas;
+		__u8	dps;
+		__u8	nmic;
+	};
+	struct config cfg;
+
+	const struct config defaults = {
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"nsze",            "NUM", CFG_POSITIVE, &defaults.nsze,            required_argument, NULL},
+		{"s",               "NUM", CFG_POSITIVE, &defaults.nsze,            required_argument, NULL},
+		{"ncap",            "NUM", CFG_POSITIVE, &defaults.ncap,            required_argument, NULL},
+		{"c",               "NUM", CFG_POSITIVE, &defaults.ncap,            required_argument, NULL},
+		{"flbas",           "NUM", CFG_POSITIVE, &defaults.flbas,           required_argument, NULL},
+		{"f",               "NUM", CFG_POSITIVE, &defaults.flbas,           required_argument, NULL},
+		{"dps",             "NUM", CFG_POSITIVE, &defaults.dps,             required_argument, NULL},
+		{"d",               "NUM", CFG_POSITIVE, &defaults.dps,             required_argument, NULL},
+		{"nmic",            "NUM", CFG_POSITIVE, &defaults.nmic,            required_argument, NULL},
+		{"m",               "NUM", CFG_POSITIVE, &defaults.nmic,            required_argument, NULL},
+		{0}
+	};
+	argconfig_parse(argc, argv, "create_ns", command_line_options,
+			&defaults, &cfg, sizeof(cfg));
+	get_dev(1, argc, argv);
+
+	if (posix_memalign((void *)&ns, getpagesize(), 4096))
+		return -ENOMEM;
+	memset(ns, 0, sizeof(*ns));
+	memset(&cmd, 0, sizeof(cmd));
+
+	ns->nsze  = cfg.nsze;
+	ns->ncap  = cfg.ncap;
+	ns->flbas = cfg.flbas;
+	ns->dps   = cfg.dps;
+	ns->nmic  = cfg.nmic;
+
+	cmd.opcode = nvme_admin_ns_mgmt;
+	cmd.addr = (unsigned long)ns;
+	cmd.data_len = 4096;
+
+	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	if (!err)
+		printf("%s: Success, created nsid:%d\n", commands[CREATE_NS].name,
+								cmd.result);
+	else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
 	return err;
 }
 

@@ -2,12 +2,12 @@
 .\"     Title: nvme-admin-passthru
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 05/29/2015
-.\"    Manual: Git Manual
-.\"    Source: Git
+.\"      Date: 06/08/2015
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ADMIN\-PASSTHR" "1" "05/29/2015" "Git" "Git Manual"
+.TH "NVME\-ADMIN\-PASSTHR" "1" "06/08/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -124,11 +124,7 @@ The following will run the admin command with opcode=6 and cdw10=1, which coores
 .RS 4
 .\}
 .nf
-
-\&.ft C
 # nvme admin\-passthru /dev/nvme0 \-\-opcode=06 \-\-data\-len=4096 \-\-cdw10=1 \-r
-\&.ft
-
 .fi
 .if n \{\
 .RE
@@ -149,11 +145,7 @@ Or if you want to save that structure to a file:
 .RS 4
 .\}
 .nf
-
-\&.ft C
 # nvme admin\-passthru /dev/nvme0 \-\-opcode=06 \-\-data\-len=4096 \-\-cdw10=1 \-r \-b > id_ns\&.raw
-\&.ft
-
 .fi
 .if n \{\
 .RE
