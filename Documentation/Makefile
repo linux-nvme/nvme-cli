@@ -97,6 +97,10 @@ html: $(DOC_HTML)
 man: man1
 man1: $(DOC_MAN1)
 
+install-no-build:
+	$(INSTALL) -d -m 755 /usr/local/man/man1
+	$(INSTALL) -m 644 $(DOC_MAN1) /usr/local/man/man1
+
 install: install-man
 
 install-man: man
