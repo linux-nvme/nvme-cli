@@ -1,2 +1,5 @@
 nvme
 *.xml
+*.xsl
+Documentation/*.xml
+Documentation/*.xsl
