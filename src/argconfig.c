@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <inttypes.h>
 
 #define MAX_HELP_FUNC 20
 static argconfig_help_func *help_funcs[MAX_HELP_FUNC] = {NULL};
@@ -81,7 +82,7 @@ void argconfig_print_help(char *command, const char *program_desc,
                           const struct argconfig_commandline_options * options)
 {
     const struct argconfig_commandline_options *s;
-    const int bufsize = 120;
+    const int bufsize = 0x1000;
     char buf[bufsize];
     int  last_line, nodefault;
 
@@ -102,6 +103,7 @@ void argconfig_print_help(char *command, const char *program_desc,
         }
 
         strcat(buf, "-");
+
         strcat(buf, s->option);
         strcat(buf, " ");
         strcat(buf, s->meta);
@@ -272,6 +274,22 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
                 exit(1);
             }
             *((int *) value_addr) = tmp;
+        } else if (s->config_type == CFG_BYTE) {
+            uint8_t tmp = strtol(optarg, NULL, 0);
+            if (errno || tmp < 0) {
+                fprintf(stderr, "Expected positive argument for '%s' but got '%s'!\n",
+                        long_opts[option_index].name, optarg);
+                exit(1);
+            }
+            *((uint8_t *) value_addr) = tmp;
+        } else if (s->config_type == CFG_SHORT) {
+            uint16_t tmp = strtol(optarg, NULL, 0);
+            if (errno || tmp < 0) {
+                fprintf(stderr, "Expected positive argument for '%s' but got '%s'!\n",
+                        long_opts[option_index].name, optarg);
+                exit(1);
+            }
+            *((uint16_t *) value_addr) = tmp;
         } else if (s->config_type == CFG_POSITIVE) {
             int tmp = strtol(optarg, NULL, 0);
             if (errno || tmp < 0) {
