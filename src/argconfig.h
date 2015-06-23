@@ -91,12 +91,12 @@ extern "C" {
 typedef void argconfig_help_func();
 void argconfig_append_usage(const char *str);
 void argconfig_print_help(char *command, const char *program_desc,
-                       const struct argconfig_commandline_options * options);
-
+                       const struct argconfig_commandline_options * options,
+		       const unsigned int opt_arr_len);
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
                     const struct argconfig_commandline_options *options,
-                    const void *config_default, void *config_out,
-                    size_t config_size);
+		    const unsigned int opt_arr_len, const void *config_default,
+		    void *config_out, size_t config_size);
 int argconfig_parse_subopt_string (char *string, char **options,
                                 size_t max_options);
 unsigned argconfig_parse_comma_sep_array(char *string,int *ret,

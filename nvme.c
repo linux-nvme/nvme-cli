@@ -996,8 +996,12 @@ static int get_smart_log(int argc, char **argv)
 		{"b",            "",    CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "get_smart_log", command_line_options,
+	err = argconfig_parse(argc, argv, "get_smart_log", command_line_options, 4,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	err = nvme_get_log(&smart_log,
@@ -1040,8 +1044,12 @@ static int get_error_log(int argc, char **argv)
 		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "get_error_log", command_line_options,
+	err = argconfig_parse(argc, argv, "get_error_log", command_line_options, 6,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (!cfg.log_entries) {
@@ -1083,8 +1091,12 @@ static int get_fw_log(int argc, char **argv)
 		{"b",          "",   CFG_NONE, &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "get_fw_log", command_line_options,
+	err = argconfig_parse(argc, argv, "get_fw_log", command_line_options, 2,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	err = nvme_get_log(&fw_log,
@@ -1133,8 +1145,12 @@ static int get_log(int argc, char **argv)
 		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "get_log", command_line_options,
+	err = argconfig_parse(argc, argv, "get_log", command_line_options, 8,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (!cfg.log_len) {
@@ -1182,8 +1198,13 @@ static int list_ctrl(int argc, char **argv)
 		{"n",            "NUM", CFG_POSITIVE, &defaults.namespace_id, required_argument, NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "list_ctrl", command_line_options,
+
+	err = argconfig_parse(argc, argv, "list_ctrl", command_line_options, 4,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000))
@@ -1220,8 +1241,12 @@ static int list_ns(int argc, char **argv)
 		{"n",            "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "list_ns", command_line_options,
+	err = argconfig_parse(argc, argv, "list_ns", command_line_options, 2,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	err = identify(cfg.namespace_id, ns_list, 2);
@@ -1254,8 +1279,12 @@ static int delete_ns(int argc, char **argv)
 		{"namespace-id",    "NUM",  CFG_POSITIVE, &defaults.namespace_id,    required_argument, NULL},
 		{"n",               "NUM",  CFG_POSITIVE, &defaults.namespace_id,    required_argument, NULL},
 	};
-	argconfig_parse(argc, argv, "delete_ns", command_line_options,
+
+	err = argconfig_parse(argc, argv, "delete_ns", command_line_options, 2,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
 
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
@@ -1306,8 +1335,12 @@ static int nvme_attach_ns(int argc, char **argv, int attach)
 		return ENOMEM;
 	memset(cntlist, 0, sizeof(*cntlist));
 
-	argconfig_parse(argc, argv, name, command_line_options,
+	err = argconfig_parse(argc, argv, name, command_line_options, 4,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
 						name);
@@ -1315,6 +1348,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach)
 	}
 	cntlist->num = argconfig_parse_comma_sep_array(cfg.cntlist,
 					(int *)cntlist->identifier, 2047);
+
 	get_dev(1, argc, argv);
 
 	memset(&cmd, 0, sizeof(cmd));
@@ -1374,8 +1408,13 @@ static int create_ns(int argc, char **argv)
 		{"m",               "NUM", CFG_BYTE,        &defaults.nmic,  required_argument, NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "create_ns", command_line_options,
+
+	err = argconfig_parse(argc, argv, "create_ns", command_line_options, 10,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (posix_memalign((void *)&ns, getpagesize(), 4096))
@@ -1600,8 +1639,12 @@ static int id_ctrl(int argc, char **argv)
 		{"H",               "", CFG_NONE, &defaults.human_readable,  no_argument, NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "id_ctrl", command_line_options,
+	err = argconfig_parse(argc, argv, "id_ctrl", command_line_options, 6,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	err = identify(0, &ctrl, 1);
@@ -1646,8 +1689,12 @@ static int id_ns(int argc, char **argv)
 		{"H",               "",    CFG_NONE,     &defaults.human_readable,  no_argument,       NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "id_ns", command_line_options,
+	err = argconfig_parse(argc, argv, "id_ns", command_line_options, 8,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (!cfg.namespace_id) {
@@ -1753,8 +1800,12 @@ static int get_feature(int argc, char **argv)
 		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "get_feature", command_line_options,
+	err = argconfig_parse(argc, argv, "get_feature", command_line_options, 11,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (cfg.sel > 7) {
@@ -1826,8 +1877,12 @@ static int fw_download(int argc, char **argv)
 		{"o",      "NUM",  CFG_POSITIVE, &defaults.offset, required_argument, NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "fw_download", command_line_options,
+	err = argconfig_parse(argc, argv, "fw_download", command_line_options, 6,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	fw_fd = open(cfg.fw, O_RDONLY);
@@ -1907,8 +1962,12 @@ static int fw_activate(int argc, char **argv)
 		{"a",      "NUM", CFG_BYTE, &defaults.action, required_argument, NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "fw_activate", command_line_options,
+	err = argconfig_parse(argc, argv, "fw_activate", command_line_options, 4,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (cfg.slot > 7) {
@@ -2000,8 +2059,12 @@ static int format(int argc, char **argv)
 		{"m",            "NUM",  CFG_BYTE,     &defaults.ms,           required_argument, NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "format", command_line_options,
+	err = argconfig_parse(argc, argv, "format", command_line_options, 12,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (cfg.ses > 7) {
@@ -2081,8 +2144,12 @@ static int set_feature(int argc, char **argv)
 		{"d",            "FILE", CFG_STRING,   &defaults.file,         required_argument, NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "set_feature", command_line_options,
+	err = argconfig_parse(argc, argv, "set_feature", command_line_options, 10,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (cfg.value == -1) {
@@ -2166,8 +2233,12 @@ static int sec_send(int argc, char **argv)
 		{"t",          "NUM",   CFG_POSITIVE, &defaults.tl,         required_argument, NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "sec_send", command_line_options,
+	err = argconfig_parse(argc, argv, "sec_send", command_line_options, 8,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	sec_fd = open(cfg.file, O_RDONLY);
@@ -2222,8 +2293,12 @@ static int flush(int argc, char **argv)
 		{"n",            "NUM",  CFG_POSITIVE,    &defaults.namespace_id, required_argument, NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "flush", command_line_options,
+	err = argconfig_parse(argc, argv, "flush", command_line_options, 2,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	memset(&cmd, 0, sizeof(cmd));
@@ -2280,8 +2355,12 @@ static int resv_acquire(int argc, char **argv)
 		{"i",            "",     CFG_NONE,        &defaults.iekey,        no_argument,       NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "resv_acquire", command_line_options,
+	err = argconfig_parse(argc, argv, "resv_acquire", command_line_options, 12,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (!cfg.namespace_id) {
@@ -2363,8 +2442,12 @@ static int resv_register(int argc, char **argv)
 		{"i",            "",     CFG_NONE,        &defaults.iekey,        no_argument,       NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "resv_register", command_line_options,
+	err = argconfig_parse(argc, argv, "resv_register", command_line_options, 12,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (!cfg.namespace_id) {
@@ -2442,8 +2525,12 @@ static int resv_release(int argc, char **argv)
 		{"i",            "NUM",  CFG_BYTE,        &defaults.iekey,        required_argument, NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "resv_release", command_line_options,
+	err = argconfig_parse(argc, argv, "resv_release", command_line_options, 10,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (!cfg.namespace_id) {
@@ -2514,8 +2601,12 @@ static int resv_report(int argc, char **argv)
 		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "resv_report", command_line_options,
+	err = argconfig_parse(argc, argv, "resv_report", command_line_options, 6,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (!cfg.namespace_id) {
@@ -2632,8 +2723,12 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, command, command_line_options,
+	err = argconfig_parse(argc, argv, command, command_line_options, 30,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	memset(&io, 0, sizeof(io));
 
 	io.slba    = cfg.start_block;
@@ -2772,8 +2867,12 @@ static int sec_recv(int argc, char **argv)
 		{"b",          "",     CFG_NONE,     &defaults.raw_binary, no_argument,       NULL},
 		{0}
 	};
-	argconfig_parse(argc, argv, "sec_recv", command_line_options,
+	err = argconfig_parse(argc, argv, "sec_recv", command_line_options, 10,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
+
 	get_dev(1, argc, argv);
 
 	if (cfg.size) {
@@ -2903,8 +3002,11 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 	};
 
 	memset(&cmd, 0, sizeof(cmd));
-	argconfig_parse(argc, argv, "nvme_passthru", command_line_options,
+	err = argconfig_parse(argc, argv, "nvme_passthru", command_line_options, 42,
 			&defaults, &cfg, sizeof(cfg));
+
+	if (err == -1)
+		return err;
 
 	cmd.cdw2         = cfg.cdw2;
 	cmd.cdw3         = cfg.cdw3;
