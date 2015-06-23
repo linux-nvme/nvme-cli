@@ -91,9 +91,9 @@ extern "C" {
 typedef void argconfig_help_func();
 void argconfig_append_usage(const char *str);
 void argconfig_print_help(char *command, const char *program_desc,
-                       const struct argconfig_commandline_options * options,
-		       const unsigned int opt_arr_len);
+			  const char *options_list);
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
+		    const char *options_list,
                     const struct argconfig_commandline_options *options,
 		    const unsigned int opt_arr_len, const void *config_default,
 		    void *config_out, size_t config_size);
@@ -101,17 +101,16 @@ int argconfig_parse_subopt_string (char *string, char **options,
                                 size_t max_options);
 unsigned argconfig_parse_comma_sep_array(char *string,int *ret,
 				      unsigned max_length);
-unsigned argconfig_parse_comma_sep_arrayd(char *string,double *ret,
-				      unsigned max_length);
 void argconfig_register_help_func(argconfig_help_func * f);
 
 void argconfig_print_subopt_help(const struct argconfig_sub_options * options,
                               int indent);
 
-void argconfig_parse_subopt(char * const opts[], const char *module,
-                            const struct argconfig_sub_options *options,
-                            const void *config_default, void *config_out,
-                            size_t config_size);
+int argconfig_parse_subopt(char * const opts[], const char *module,
+			   const char *program_desc, const char *options_list,
+                           const struct argconfig_sub_options *options,
+                           const void *config_default, void *config_out,
+                           size_t config_size);
 
 int argconfig_set_subopt(const char *opt,
                          const struct argconfig_sub_options *options,

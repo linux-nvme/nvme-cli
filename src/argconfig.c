@@ -84,7 +84,9 @@ void argconfig_print_help(char *command, const char *program_desc,
 	print_word_wrapped(program_desc, 0, 0);
 
 	printf("\n\n\033[1mOptions:\n\033[0m");
-	printf("\t%s\n", options_list);
+	printf("\t");
+	print_word_wrapped(options_list, 0, 0);
+	printf("\n");
 }
 
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
@@ -111,12 +113,13 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
     short_opts[short_index++] = '-';
 
     for (s = options; option_index < opt_arr_len; s++) {
-        if (strlen(s->option) == 1) {
+        if ((strlen(s->option) == 1) && (options != NULL)){
             short_opts[short_index++] = s->option[0];
             if (s->argument_type == required_argument) {
                 short_opts[short_index++] = ':';
             }
-        }
+        } else
+		goto err;
 
         long_opts[option_index].name    = s->option;
         long_opts[option_index].has_arg = s->argument_type;
@@ -320,7 +323,7 @@ err:
 
     argconfig_print_help(argv[0], program_desc, options_list);
 
-    return -1;
+    exit(1);
 }
 
 int argconfig_parse_subopt_string(char *string, char **options,
@@ -406,18 +409,18 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
   char *p;
 
   if (!strlen(string) || string == NULL)
-	  return -1;
+	  exit(1);
 
   tmp = malloc(strlen(string) + 1);
   tmp = strtok(string, ",");
 
   if (tmp==NULL)
-	  return -1;
+	  exit(1);
 
   val[ret] = strtol(tmp, &p, 0);
 
   if (*p != 0)
-	  return -1;
+	  exit(1);
 
   ret++;
 
@@ -429,13 +432,13 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
 
 
 	  if (ret >= max_length)
-		  return -1;
+		  exit(1);
 
 
 	  val[ret] = strtol(tmp, &p, 0);
 
 	  if (*p != 0)
-		  return -1;
+		  exit(1);
 
 	  ret++;
     }
@@ -556,7 +559,7 @@ int argconfig_parse_subopt(char * const opts[], const char *module,
 
 err:
     argconfig_print_help(opts[0], program_desc, options_list);
-    return -1;
+    exit(1);
 }
 
 int argconfig_set_subopt(const char *opt,

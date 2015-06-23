@@ -977,6 +977,11 @@ static void show_nvme_id_ns(struct nvme_id_ns *ns, int id, int vs, int human)
 static int get_smart_log(int argc, char **argv)
 {
 	struct nvme_smart_log smart_log;
+	const char *desc = "smart-log: retrieve SMART log for the given "\
+		"device (or optionally, namespace) in either hex-dump "\
+		"(default) or binary format.";
+	const char *options_list = "/dev/nvmeX [ --namespace-id=NUM | -n NU"\
+		"M ][ --raw-binary | -b ]";
 	int err;
 
 	struct config {
@@ -996,11 +1001,9 @@ static int get_smart_log(int argc, char **argv)
 		{"b",            "",    CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "get_smart_log", command_line_options, 4,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 4, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -1021,6 +1024,11 @@ static int get_smart_log(int argc, char **argv)
 
 static int get_error_log(int argc, char **argv)
 {
+	const char *desc = "error-log: retrieve specified number of "\
+		"error log entries from a given device (or "\
+		"namespace) in either hex-dump (default) or binary format.";
+	const char *options_list = "/dev/nvmeX [ --namespace-id=NUM | -n NU"\
+		"M ][ --log-entries=NUM | -e NUM ][ --raw-binary | -b ]";
 	int err;
 
 	struct config {
@@ -1044,16 +1052,14 @@ static int get_error_log(int argc, char **argv)
 		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "get_error_log", command_line_options, 6,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 6, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
 	if (!cfg.log_entries) {
-		fprintf(stderr, "non-zero log-entires is required param\n");
+		fprintf(stderr, "non-zero log-entries is required param\n");
 		return EINVAL;
 	}
 	struct nvme_error_log_page err_log[cfg.log_entries];
@@ -1075,6 +1081,10 @@ static int get_error_log(int argc, char **argv)
 
 static int get_fw_log(int argc, char **argv)
 {
+	const char *desc = "fw-log: retrieve the firmware log for the "\
+		"specified device in either hex-dump (default) or binary "\
+		"format.";
+	const char *options_list = "/dev/nvmeX [ --raw-binary | -b ]";
 	int err;
 	struct nvme_firmware_log_page fw_log;
 
@@ -1091,11 +1101,9 @@ static int get_fw_log(int argc, char **argv)
 		{"b",          "",   CFG_NONE, &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "get_fw_log", command_line_options, 2,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 2, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -1118,6 +1126,12 @@ static int get_fw_log(int argc, char **argv)
 
 static int get_log(int argc, char **argv)
 {
+	const char *desc = "get-log: retrieve desired number of bytes "\
+		"from a given log on a specified device in either "\
+		"hex-dump (default) or binary format";
+	const char *options_list = "/dev/nvmeX [ --namespace-id=NUM | -n NU"\
+		"M ][ --log-id=NUM | -i NUM ][ --log-len=NUM | -l NUM ]"\
+		"[ --raw-binary | -b ]";
 	int err;
 
 	struct config {
@@ -1145,11 +1159,9 @@ static int get_log(int argc, char **argv)
 		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "get_log", command_line_options, 8,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 8, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -1178,6 +1190,10 @@ static int get_log(int argc, char **argv)
 
 static int list_ctrl(int argc, char **argv)
 {
+	const char *desc = "list-ctrl: show controller information for the "\
+		"given device (and optionally, namespace)";
+	const char *options_list = "/dev/nvmeX [ --cntid=NUM | -c NUM ]"\
+		"[ --namespace-id=NUM | -n NUM ]";
 	int err, i;
 	struct nvme_controller_list *cntlist;
 
@@ -1199,11 +1215,8 @@ static int list_ctrl(int argc, char **argv)
 		{0}
 	};
 
-	err = argconfig_parse(argc, argv, "list_ctrl", command_line_options, 4,
-			&defaults, &cfg, sizeof(cfg));
-
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 4, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -1224,6 +1237,10 @@ static int list_ctrl(int argc, char **argv)
 
 static int list_ns(int argc, char **argv)
 {
+	const char *desc = "list-ns: for the specified device, show the "\
+		"namespace list (optionally starting with a given namespace)";
+	const char *options_list = "/dev/nvmeX [ --namespace-id=NUM | -n NU"\
+		"M ]";
 	int err, i;
 	__u32 ns_list[1024];
 
@@ -1241,11 +1258,9 @@ static int list_ns(int argc, char **argv)
 		{"n",            "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "list_ns", command_line_options, 2,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 2, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -1264,6 +1279,14 @@ static int list_ns(int argc, char **argv)
 static int delete_ns(int argc, char **argv)
 {
 	struct nvme_admin_cmd cmd;
+	const char *desc = "delete-ns: delete the given namespace by "\
+		"sending a namespace management command to "\
+		"the given device. All controllers should be detached from "\
+		"the namespace prior to namespace deletion. A namespace ID "\
+		"becomes inactive when that namespace is detached (or, if "\
+		"the namespace is not already inactive, once deleted).";
+	const char *options_list = "/dev/nvmeX [ --namespace-id=NUM | -n NU"\
+			"M ]";
 	int err;
 
 	struct config {
@@ -1280,11 +1303,8 @@ static int delete_ns(int argc, char **argv)
 		{"n",               "NUM",  CFG_POSITIVE, &defaults.namespace_id,    required_argument, NULL},
 	};
 
-	err = argconfig_parse(argc, argv, "delete_ns", command_line_options, 2,
-			&defaults, &cfg, sizeof(cfg));
-
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 2, &defaults, &cfg, sizeof(cfg));
 
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
@@ -1307,11 +1327,15 @@ static int delete_ns(int argc, char **argv)
 	return err;
 }
 
-static int nvme_attach_ns(int argc, char **argv, int attach)
+static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 {
 	struct nvme_controller_list *cntlist;
 	struct nvme_admin_cmd cmd;
 	char *name = commands[attach ? ATTACH_NS : DETACH_NS].name;
+	const char *options_list = "/dev/nvmeX [ --namespace-id=NUM | -n NU"\
+		"M ][ --controllers=/dev/nvmeX,...,/dev/nvmeY | "\
+		"--controllers=/dev/nvmeX | -c /dev/nvmeX | "\
+		"-c /dev/nvmeX,...,/dev/nvmeY ]";
 	int err;
 
 	struct config {
@@ -1335,11 +1359,8 @@ static int nvme_attach_ns(int argc, char **argv, int attach)
 		return ENOMEM;
 	memset(cntlist, 0, sizeof(*cntlist));
 
-	err = argconfig_parse(argc, argv, name, command_line_options, 4,
-			&defaults, &cfg, sizeof(cfg));
-
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 4, &defaults, &cfg, sizeof(cfg));
 
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
@@ -1369,18 +1390,35 @@ static int nvme_attach_ns(int argc, char **argv, int attach)
 
 static int attach_ns(int argc, char **argv)
 {
-	return nvme_attach_ns(argc, argv, 1);
+	const char *desc = "attach-ns: attach the given namespace to the "\
+		"given controller or comma-sep list of controllers. ID of the "\
+		"given namespace becomes active upon attachment to a "\
+		"controller. A namespace must be attached to a controller "\
+		"before IO commands may be directed to that namespace.";
+	return nvme_attach_ns(argc, argv, 1, desc);
 }
 
 static int detach_ns(int argc, char **argv)
 {
-	return nvme_attach_ns(argc, argv, 0);
+	const char *desc = "detach-ns: detach the given namespace from the "\
+		"given controller; de-activates the given namespace's ID. A "\
+		"namespace must be attached to a controller before IO "\
+		"commands may be directed to that namespace.";
+	return nvme_attach_ns(argc, argv, 0, desc);
 }
 
 static int create_ns(int argc, char **argv)
 {
 	struct nvme_admin_cmd cmd;
 	struct nvme_id_ns *ns;
+	const char *desc = "create-ns: send a namespace management command "\
+		"to the specified device to create a namespace with the given "\
+		"parameters. The next available namespace ID is used for the "\
+		"create operation. Note that create-ns does not attach the "\
+		"namespace to a controller, the attach-ns command is needed.";
+	const char *options_list = "/dev/nvmeX [ --nsze=NUM | -s NUM ]"\
+		"[ --ncap=NUM | -c NUM ][ --flbas=NUM | -f NUM]"\
+		"[ --dps=NUM | -d NUM ][ --nmic NUM | -n NUM ]";
 	int err = 0;
 
 	struct config {
@@ -1409,11 +1447,8 @@ static int create_ns(int argc, char **argv)
 		{0}
 	};
 
-	err = argconfig_parse(argc, argv, "create_ns", command_line_options, 10,
-			&defaults, &cfg, sizeof(cfg));
-
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 10, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -1463,7 +1498,7 @@ static void get_registers(struct nvme_bar **bar, unsigned char_only)
 	void *membase;
 
 	if (char_only && !S_ISCHR(nvme_stat.st_mode)) {
-		fprintf(stderr, "%s is not character device\n", devicename);
+		fprintf(stderr, "%s is not a character device\n", devicename);
 		exit(ENODEV);
 	}
 
@@ -1617,6 +1652,13 @@ static int list(int argc, char **argv)
 
 static int id_ctrl(int argc, char **argv)
 {
+	const char *desc = "id-ctrl: send an Identify Controller command to "\
+		"the given device and report information about the specified "\
+		"controller in human-readable or "\
+		"binary format. Can also return binary vendor-specific "\
+		"controller attributes.";
+	const char *options_list = "/dev/nvmeX [ --raw-binary | -b ][ -H"\
+		" | --human-readable ][ --vendor-specific | -v ]";
 	int err;
 	struct nvme_id_ctrl ctrl;
 
@@ -1639,11 +1681,9 @@ static int id_ctrl(int argc, char **argv)
 		{"H",               "", CFG_NONE, &defaults.human_readable,  no_argument, NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "id_ctrl", command_line_options, 6,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 6, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -1663,6 +1703,13 @@ static int id_ctrl(int argc, char **argv)
 
 static int id_ns(int argc, char **argv)
 {
+	const char *desc = "id-ns: send an Identify Namespace command to the "\
+		"given device, returns properties of the specified namespace "\
+		"in either human-readable or binary format. Can also return "\
+		"binary vendor-specific namespace attributes.";
+	const char *options_list = "   /dev/nvmeX [ --namespace-id=NUM | -n NU"\
+		"M ][ --vendor-specific | -v ][ --raw-binary | -b ]"\
+		"[ --human-readable | -H ]";
 	struct nvme_id_ns ns;
 	int err;
 
@@ -1689,11 +1736,9 @@ static int id_ns(int argc, char **argv)
 		{"H",               "",    CFG_NONE,     &defaults.human_readable,  no_argument,       NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "id_ns", command_line_options, 8,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 8, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -1764,6 +1809,18 @@ static int nvme_feature(int opcode, void *buf, int data_len, __u32 fid,
 
 static int get_feature(int argc, char **argv)
 {
+	const char *desc = "get-feature: read operating parameters of the "\
+		"specified controller. Operating parameters are grouped "\
+		"and identified by Feature Identifiers; each Feature "\
+		"Identifier contains one or more attributes that may affect "\
+		"behaviour of the feature. Each Feature has three possible "\
+		"settings: default, saveable, and current. If a Feature is "\
+		"saveable, it may be modified by set-feature. Default values "\
+		"are vendor-specific and not changeable. Use set-feature to "\
+		"change saveable Features.";
+	const char *options_list = "   /dev/nvmeX [ --namespace-id=NUM | -n NU"\
+		"M ][ --feature-id=NUM | -f NUM ][ --sel=NUM | -s NUM ]"\
+		"[ --data-len=NUM | -l NUM ][ --raw-binary | -b ] --cdw11=NUM ";
 	int err;
 	unsigned int result, cdw10 = 0;
 	void *buf = NULL;
@@ -1800,11 +1857,9 @@ static int get_feature(int argc, char **argv)
 		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "get_feature", command_line_options, 11,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 11, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -1849,6 +1904,16 @@ static int get_feature(int argc, char **argv)
 
 static int fw_download(int argc, char **argv)
 {
+	const char *desc = "fw-download: copy all or part of a firmware to "\
+		"a controller for future update. Optionally, specify how "\
+		"many KiB of the firmware to transfer at once (offset will "\
+		"start at 0 and automatically adjust based on xfer size "\
+		"unless fw is split across multiple files). May be submitted "\
+		"while outstanding commands exist on the Admin and IO "\
+		"Submission Queues. Activate downloaded firmware with "\
+		"fw-activate and reset the device to apply the downloaded firmware.";
+	const char *options_list = "/dev/nvmeX [ --fw=FILE | -f FILE ][ "\
+		"--xfer=NUM | -x NUM ][ --offset=NUM | -o NUM ]";
 	int err, fw_fd = -1;
 	unsigned int fw_size;
 	struct stat sb;
@@ -1877,11 +1942,9 @@ static int fw_download(int argc, char **argv)
 		{"o",      "NUM",  CFG_POSITIVE, &defaults.offset, required_argument, NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "fw_download", command_line_options, 6,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 6, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -1941,6 +2004,13 @@ static int fw_download(int argc, char **argv)
 
 static int fw_activate(int argc, char **argv)
 {
+	const char *desc = "fw-activate: verify downloaded firmware image and "\
+		"commit to specific firmware slot. Device is not automatically "\
+		"reset following firmware activation. A reset may be issued "\
+		"with an 'echo 1 > /sys/class/misc/nvmeX/device/reset'. "\
+		"Ensure nvmeX is the device you just activated before reset.";
+	const char *options_list = "/dev/nvmeX [ --slot=NUM | -s NUM ][ "\
+		"--action=NUM | -a NUM ]";
 	int err;
 	struct nvme_admin_cmd cmd;
 
@@ -1962,11 +2032,9 @@ static int fw_activate(int argc, char **argv)
 		{"a",      "NUM", CFG_BYTE, &defaults.action, required_argument, NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "fw_activate", command_line_options, 4,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 4, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -2024,6 +2092,15 @@ static int show_registers(int argc, char **argv)
 
 static int format(int argc, char **argv)
 {
+	const char *desc = "format: re-format a specified namespace on the "\
+		"given device. Can erase all data in namespace (user "\
+		"data erase) or delete data encryption key if specified. "\
+		"Can also be used to change LBAF such that device may "\
+		"disappear from all lists since capacity superficially "\
+		"appears to be 0.";
+	const char *options_list = "/dev/nvmeX [ --namespace-id=NUM | -n NU"\
+		"M ][ --lbaf=NUM |  -l NUM ][ --ses=NUM | -s NUM ][ --pi=NU"\
+		"M | -i NUM ][ --pil=NUM | -p NUM ][ --ms=NUM | -m NUM ]";
 	int err;
 	struct nvme_admin_cmd cmd;
 
@@ -2059,11 +2136,9 @@ static int format(int argc, char **argv)
 		{"m",            "NUM",  CFG_BYTE,     &defaults.ms,           required_argument, NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "format", command_line_options, 12,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 12, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -2109,6 +2184,18 @@ static int format(int argc, char **argv)
 
 static int set_feature(int argc, char **argv)
 {
+	const char *desc = "set-feature: modify the saveable/changeable "\
+		"current operating parameters of the controller. Operating "\
+		"parameters are grouped and identified by Feature "\
+		"Identifiers. Feature settings can be applied to the entire "\
+		"controller and all associated namespaces, or to only a few "\
+		"namespace(s) associated with the controller. Default values "\
+		"for each Feature are vendor-specific and may not be modified."\
+		"Use get-feature to determine which Features are supported by "\
+		"the controller and are saveable/changeable.";
+	const char *options_list = "/dev/nvmeX [ --namespace-id=NUM | -n NU"\
+		"M ][ --feature-id=NUM | -f NUM ][ --value=NUM | -v NUM ]"\
+		"[ --data-len=NUM | -l NUM ][ --data=FILE | -d FILE ]";
 	int err;
 	unsigned int result;
 	void *buf = NULL;
@@ -2144,11 +2231,9 @@ static int set_feature(int argc, char **argv)
 		{"d",            "FILE", CFG_STRING,   &defaults.file,         required_argument, NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "set_feature", command_line_options, 10,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 10, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -2203,6 +2288,14 @@ static int sec_send(int argc, char **argv)
 {
 	struct stat sb;
 	struct nvme_admin_cmd cmd;
+	const char *desc = "security-send: transfer security protocol data to "\
+		"a controller. Security Receives for the same protocol should be "\
+		"performed after Security Sends. The security protocol field "\
+		"associates Security Sends (security-send) and Security Receives "\
+		"(security-recv).";
+	const char *options_list = "/dev/nvmeX [ --file=FILE | -f FILE ][ "\
+		"--secp=NUM | -p NUM ][ --spsp=NUM | -s NUM ][ --tl=NUM | "\
+		"-t NUM ]";
 	int err, sec_fd = -1;
 	void *sec_buf;
 	unsigned int sec_size;
@@ -2233,11 +2326,9 @@ static int sec_send(int argc, char **argv)
 		{"t",          "NUM",   CFG_POSITIVE, &defaults.tl,         required_argument, NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "sec_send", command_line_options, 8,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 8, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -2277,6 +2368,12 @@ static int sec_send(int argc, char **argv)
 static int flush(int argc, char **argv)
 {
 	struct nvme_passthru_cmd cmd;
+	const char *desc = "flush: commit data and metadata associated with "\
+	"given namespaces to nonvolatile media. Applies to all commands "\
+	"finished before the flush was submitted. Additional data may also be "\
+	"flushed by the controller, from any namespace, depending on controller and "\
+	"associated namespace status.";
+	const char *options_list = "/dev/nvmeX [ --namespace-id=NUM | -n NUM ]";
 	int err;
 
 	struct config {
@@ -2293,11 +2390,9 @@ static int flush(int argc, char **argv)
 		{"n",            "NUM",  CFG_POSITIVE,    &defaults.namespace_id, required_argument, NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "flush", command_line_options, 2,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 2, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -2319,6 +2414,15 @@ static int flush(int argc, char **argv)
 static int resv_acquire(int argc, char **argv)
 {
 	struct nvme_passthru_cmd cmd;
+	const char *desc = "resv-acquire: obtain a reservation on a given "\
+		"namespace. Only one reservation is allowed at a time on a "\
+		"given namespace, though multiple controllers may register "\
+		"with that namespace. Namespace reservation will abort with "\
+		"status Reservation Conflict if the given namespace is "\
+		"already reserved.";
+	const char *options_list = "/dev/nvmeX [ --namespace-id=NUM | -n NU"\
+		"M ][ --crkey=NUM | -c NUM ][ --prkey=NUM | -p NUM ][ --rty"\
+		"pe=NUM | -t NUM ][ --racqa=NUM | -a NUM ][ --iekey | -i ]";
 	int err;
 	__u64 payload[2];
 
@@ -2355,11 +2459,9 @@ static int resv_acquire(int argc, char **argv)
 		{"i",            "",     CFG_NONE,        &defaults.iekey,        no_argument,       NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "resv_acquire", command_line_options, 12,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 12, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -2406,6 +2508,12 @@ static int resv_acquire(int argc, char **argv)
 static int resv_register(int argc, char **argv)
 {
 	struct nvme_passthru_cmd cmd;
+	const char *desc = "resv-register: register, de-register, or "\
+		"replace a controller's reservation on a given namespace. "\
+		"Only one reservation at a time is allowed on any namespace.";
+	const char *options_list = "/dev/nvmeX [ --namespace-id=NUM | -n NU"\
+		"M ][ --crkey=NUM | -c NUM ][ --nrkey=NUM | -k NUM ][ --rre"\
+		"ga=NUM | -r NUM ][ --cptpl=NUM | -p NUM ][ --iekey | -i ]";
 	int err;
 	__u64 payload[2];
 
@@ -2442,11 +2550,9 @@ static int resv_register(int argc, char **argv)
 		{"i",            "",     CFG_NONE,        &defaults.iekey,        no_argument,       NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "resv_register", command_line_options, 12,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 12, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -2493,6 +2599,17 @@ static int resv_register(int argc, char **argv)
 static int resv_release(int argc, char **argv)
 {
 	struct nvme_passthru_cmd cmd;
+	const char *desc = "resv-release: releases reservation held on a "\
+		"namespace by the given controller. If rtype != current reser"\
+		"vation type, release fails. If the given controller holds no "\
+		"reservation on the namespace/is not the namespace's current "\
+		"reservation holder, the release command completes with no "\
+		"effect. If the reservation type is not Write Exclusive or "\
+		"Exclusive Access, all registrants on the namespace except "\
+		"the issuing controller are notified.";
+	const char *options_list = "/dev/nvmeX [ --namespace-id=NUM | -n NU"\
+		"M ][ --crkey=NUM | -c NUM ][ --rtype=NUM | -t NUM ][ --rre"\
+		"la=NUM | -a NUM ][ --iekey=NUM | -i NUM ]";
 	int err;
 
 	struct config {
@@ -2525,11 +2642,9 @@ static int resv_release(int argc, char **argv)
 		{"i",            "NUM",  CFG_BYTE,        &defaults.iekey,        required_argument, NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "resv_release", command_line_options, 10,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 10, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -2577,6 +2692,13 @@ static int resv_release(int argc, char **argv)
 static int resv_report(int argc, char **argv)
 {
 	struct nvme_passthru_cmd cmd;
+	const char *desc = "resv-report: returns Reservation Status data "\
+		"structure describing any existing reservations on and the "\
+		"status of a given namespace. Namespace Reservation Status "\
+		"depends on the number of controllers registered for that "\
+		"namespace.";
+	const char *options_list = "/dev/nvmeX [ --namespace-id=NUM | -n NU"\
+		"M ][ --numd=NUM | -d NUM ][ --raw-binary | -b ]";
 	int err;
 	struct nvme_reservation_status *status;
 
@@ -2601,11 +2723,9 @@ static int resv_report(int argc, char **argv)
 		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "resv_report", command_line_options, 6,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 6, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -2654,8 +2774,16 @@ static int resv_report(int argc, char **argv)
 	return 0;
 }
 
-static int submit_io(int opcode, char *command, int argc, char **argv)
+static int submit_io(int opcode, char *command, const char *desc,
+		     int argc, char **argv)
 {
+	const char *options_list = "/dev/nvmeX [ --start-block=NUM | -s N"\
+		"UM ][ --block-count=NUM | -c NUM ][ --data-size=NUM | -z"\
+		"NUM ][ --metadata-size=NUM | -y NUM ][ --ref-tag=NUM | -"\
+		"r NUM ][ --data=FILE | -d FILE ][ --prinfo=NUM | -p NUM ]"\
+		"[ --app-tag-mask=NUM | -m NUM ][ --app-tag=NUM | -a NUM ][ "\
+		"--limited-retry | -l ][ --latency | -t ][ --force-unit-a"\
+		"ccess | -f ]";
 	struct nvme_user_io io;
 	struct timeval start_time, end_time;
 	void *buffer, *mbuffer = NULL;
@@ -2723,11 +2851,8 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 		{0}
 	};
 
-	err = argconfig_parse(argc, argv, command, command_line_options, 30,
-			&defaults, &cfg, sizeof(cfg));
-
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 30, &defaults, &cfg, sizeof(cfg));
 
 	memset(&io, 0, sizeof(io));
 
@@ -2819,23 +2944,40 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 
 static int compare(int argc, char **argv)
 {
-	return submit_io(nvme_cmd_compare, "compare", argc, argv);
+	const char *desc = "compare: diff specified logical blocks on "\
+		"device with specified data buffer; return failure if buffer "\
+		"and block(s) are dissimilar";
+	return submit_io(nvme_cmd_compare, "compare", desc, argc, argv);
 }
 
 static int read_cmd(int argc, char **argv)
 {
-	return submit_io(nvme_cmd_read, "read", argc, argv);
+	const char *desc = "read: copy specified logical blocks on the given "\
+		"device to specified data buffer (default buffer is stdout).";
+	return submit_io(nvme_cmd_read, "read", desc, argc, argv);
 }
 
 static int write_cmd(int argc, char **argv)
 {
-	return submit_io(nvme_cmd_write, "write", argc, argv);
+	const char *desc = "write: copy from provided data buffer (default "\
+		"buffer is stdin) to specified logical blocks on the given "\
+		"device.";
+	return submit_io(nvme_cmd_write, "write", desc, argc, argv);
 }
 
 static int sec_recv(int argc, char **argv)
 {
-	struct nvme_admin_cmd cmd;
+	const char *desc = "security-recv: obtain results of one or more "\
+		"previously submitted security-sends. Results, and association "\
+		"between Security Send and Receive, depend on the security "\
+		"protocol field as they are defined by the security protocol "\
+		"used. A Security Receive must follow a Security Send made with "\
+		"the same security protocol.";
+	const char *options_list = "   /dev/nvmeX [ --size=NUM | -x NUM ][ "\
+		"--secp=NUM | -p NUM ][ --spsp=NUM | -s NUM ][ --al=NUM | -t N"\
+		"UM ][ --raw-binary | -b ]";
 	int err;
+	struct nvme_admin_cmd cmd;
 	void *sec_buf = NULL;
 
 	struct config {
@@ -2867,11 +3009,9 @@ static int sec_recv(int argc, char **argv)
 		{"b",          "",     CFG_NONE,     &defaults.raw_binary, no_argument,       NULL},
 		{0}
 	};
-	err = argconfig_parse(argc, argv, "sec_recv", command_line_options, 10,
-			&defaults, &cfg, sizeof(cfg));
 
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 10, &defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
 
@@ -2893,11 +3033,11 @@ static int sec_recv(int argc, char **argv)
 	if (err < 0)
 		return errno;
 	else if (err != 0)
-		fprintf(stderr, "NVME Security Receivce Command Error:%d\n",
+		fprintf(stderr, "NVME Security Receive Command Error:%d\n",
 									err);
 	else {
 		if (!cfg.raw_binary) {
-			printf("NVME Security Receivce Command Success:%d\n",
+			printf("NVME Security Receive Command Success:%d\n",
 							cmd.result);
 			d(sec_buf, cfg.size, 16, 1);
 		} else if (cfg.size)
@@ -2909,6 +3049,19 @@ static int sec_recv(int argc, char **argv)
 static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 {
 	int err, wfd = STDIN_FILENO;
+	const char *desc = "[io/admin]-passthru: send a user-specified IO or "\
+		"admin command to the specified device via IOCTL passthrough, "\
+		"return results";
+	const char *options_list = "/dev/nvmeX [ --opcode=NUM | -o NUM ]"\
+		"[ --flags=NUM | -f NUM ][ --rsvd=NUM | -R NUM ][ --namesp"\
+		"ace-id=NUM | -n NUM ][ --data-len=NUM | -l NUM ][ --metadata"\
+		"-len=NUM | -m NUM ][ --timeout=NUM | -t NUM ][ --cdw2=NUM"\
+		"|-2 NUM ][ --cdw3=NUM | -3 NUM ][ --cdw10=NUM | -4 NUM ]["\
+		" --cdw11=NUM | -5 NUM ][ --cdw12=NUM | -6 NUM ][ --cdw13 | -"\
+		"7 NUM ][ --cdw14=NUM | -8 NUM ][ --cdw15=NUM | -9 NUM ][ "\
+		"--input-file=FILE | -i FILE ][ --raw-binary | -b ][ --sho"\
+		"w-command | -s ][ --dry-run | -d ][ --read | -r ][ --writ"\
+		"e | -w ]";
 	struct nvme_passthru_cmd cmd;
 
 	struct config {
@@ -3002,11 +3155,8 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 	};
 
 	memset(&cmd, 0, sizeof(cmd));
-	err = argconfig_parse(argc, argv, "nvme_passthru", command_line_options, 42,
-			&defaults, &cfg, sizeof(cfg));
-
-	if (err == -1)
-		return err;
+	argconfig_parse(argc, argv, desc, options_list,
+		command_line_options, 42, &defaults, &cfg, sizeof(cfg));
 
 	cmd.cdw2         = cfg.cdw2;
 	cmd.cdw3         = cfg.cdw3;
@@ -3121,8 +3271,9 @@ static void general_help()
 
 	usage("nvme");
 	printf("\n");
-	printf("The '<device>' may be either an NVMe character device (ex: /dev/nvme0)\n"
-	       "or an nvme block device (ex: /dev/nvme0n1)\n\n");
+	printf("'<device>' / '/dev/nvmeX' may be either an NVMe character "\
+	       "device (ex: /dev/nvme0)\n or an nvme block device (ex: /d"\
+	       "ev/nvme0n1)\n\n");
 	printf("The following are all implemented sub-commands:\n");
 	for (i = 0; i < NUM_COMMANDS; i++)
 		printf("  %-*s %s\n", 15, commands[i].name, commands[i].help);
