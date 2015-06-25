@@ -33,7 +33,8 @@
 #include <getopt.h>
 #include <stdarg.h>
 
-enum argconfig_types {CFG_NONE,
+enum argconfig_types {
+	CFG_NONE,
         CFG_STRING,
         CFG_INT,
         CFG_SIZE,
@@ -71,8 +72,7 @@ struct argconfig_commandline_options {
 };
 
 #define CFG_MAX_SUBOPTS 500
-
-
+#define MAX_HELP_FUNC 20
 
 struct argconfig_sub_options {
     const char *option;

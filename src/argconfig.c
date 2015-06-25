@@ -34,8 +34,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <inttypes.h>
 
-#define MAX_HELP_FUNC 20
 static argconfig_help_func *help_funcs[MAX_HELP_FUNC] = {NULL};
 
 char END_DEFAULT[] = "__end_default__";
@@ -96,12 +96,14 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
                     const void *config_default, void *config_out,
                     size_t config_size)
 {
-    int c;
-    int option_index = 0, short_index = 0;
-    struct option *long_opts;
     char *short_opts;
     char *endptr;
+    struct option *long_opts;
     const struct argconfig_commandline_options *s;
+    int c;
+    int option_index = 0;
+    int short_index = 0;
+    int non_opt_args = 0;
     void *value_addr;
 
     errno = 0;
@@ -113,31 +115,32 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
     short_opts[short_index++] = '-';
 
     for (s = options; option_index < opt_arr_len; s++) {
-        if ((strlen(s->option) == 1) && (options != NULL)){
-            short_opts[short_index++] = s->option[0];
-            if (s->argument_type == required_argument) {
-                short_opts[short_index++] = ':';
-            }
-        } else
-		goto err;
+	if (s->option == NULL) {
+		break;
+	} else if (strlen(s->option) == 1) {
+		short_opts[short_index++] = s->option[0];
 
-        long_opts[option_index].name    = s->option;
-        long_opts[option_index].has_arg = s->argument_type;
+		if (s->argument_type == required_argument) {
+			short_opts[short_index++] = ':';
+		}
 
-        if (s->argument_type == no_argument &&
-            s->default_value != NULL)
-        {
-            value_addr = (void *) ((char *) s->default_value -
-                                   (char *) config_default +
-                                   (char *) config_out);
-            long_opts[option_index].flag    = value_addr;
-            long_opts[option_index].val     = 1;
-        } else {
-            long_opts[option_index].flag    = NULL;
-            long_opts[option_index].val     = 0;
-        }
+	}
 
-        option_index++;
+	long_opts[option_index].name    = s->option;
+	long_opts[option_index].has_arg = s->argument_type;
+
+	if (s->argument_type == no_argument && s->default_value != NULL) {
+		value_addr = (void *) ((char *) s->default_value -
+			(char *) config_default + (char *) config_out);
+
+		long_opts[option_index].flag    = value_addr;
+		long_opts[option_index].val     = 1;
+	} else {
+		long_opts[option_index].flag    = NULL;
+		long_opts[option_index].val     = 0;
+	}
+
+	option_index++;
     }
 
     long_opts[option_index].name = NULL;
@@ -145,16 +148,13 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
     long_opts[option_index].val  = 0;
     short_opts[short_index] = 0;
 
-    int non_opt_args = 0;
-
     while ((c = getopt_long_only(argc, argv, short_opts, long_opts,
                                  &option_index)) != -1)
     {
-        if (c == '?' || c == 'h' || c == ':' ||
-            (c == 0 &&
+        if (c == '?' || c == 'h' || c == ':' || (c == 0 &&
              (!strcmp(long_opts[option_index].name, "h") ||
               !strcmp(long_opts[option_index].name, "help") ||
-              !strcmp(long_opts[option_index].name, "-help"))))
+              !strcmp(long_opts[option_index].name, "-help"))) )
         {
             goto err;
         } else if (c == 1) {
@@ -176,7 +176,6 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
         value_addr = (void *) ((char *) s->default_value -
                                (char *) config_default +
                                (char *) config_out);
-
 
         if (s->config_type == CFG_STRING) {
             *((char **) value_addr) = optarg;
