@@ -1417,7 +1417,7 @@ static char *nvme_char_from_block(char *block)
 	return block;
 }
 
-static void get_registers(struct nvme_bar *bar, unsigned char_only)
+static void get_registers(struct nvme_bar **bar, unsigned char_only)
 {
 	int pci_fd;
 	char *base, path[512];
@@ -1446,7 +1446,7 @@ static void get_registers(struct nvme_bar *bar, unsigned char_only)
 		fprintf(stderr, "%s failed to map\n", devicename);
 		exit(ENODEV);
 	}
-	memcpy(bar, membase, sizeof(struct nvme_bar));
+	*bar = membase;
 }
 
 struct list_item {
@@ -1461,15 +1461,15 @@ struct list_item {
 #ifdef LIBUDEV_EXISTS
 /* For pre NVMe 1.2 devices we must get the version from the BAR, not the
  * ctrl_id.*/
-static void get_version( struct list_item* list_item)
+static void get_version(struct list_item* list_item)
 {
-	struct nvme_bar bar;
+	struct nvme_bar *bar;
 
 	list_item->ver = list_item->ctrl.ver;
 	if (list_item->ctrl.ver)
 		return;
 	get_registers(&bar, 0);
-	list_item->ver = bar.vs;
+	list_item->ver = bar->vs;
 }
 
 static void print_list_item(struct list_item list_item)
@@ -1939,7 +1939,7 @@ static int fw_activate(int argc, char **argv)
 static int show_registers(int argc, char **argv)
 {
 	int opt, long_index;
-	struct nvme_bar bar;
+	struct nvme_bar *bar;
 	static struct option opts[] = {};
 
 	while ((opt = getopt_long(argc, (char **)argv, "", opts,
@@ -1947,18 +1947,18 @@ static int show_registers(int argc, char **argv)
 	get_dev(optind, argc, argv);
 
 	get_registers(&bar, 1);
-	printf("cap     : %"PRIx64"\n", (uint64_t)bar.cap);
-	printf("version : %x\n", bar.vs);
-	printf("intms   : %x\n", bar.intms);
-	printf("intmc   : %x\n", bar.intmc);
-	printf("cc      : %x\n", bar.cc);
-	printf("csts    : %x\n", bar.csts);
-	printf("nssr    : %x\n", bar.nssr);
-	printf("aqa     : %x\n", bar.aqa);
-	printf("asq     : %"PRIx64"\n", (uint64_t)bar.asq);
-	printf("acq     : %"PRIx64"\n", (uint64_t)bar.acq);
-	printf("cmbloc  : %x\n", bar.cmbloc);
-	printf("cmbsz   : %x\n", bar.cmbsz);
+	printf("cap     : %"PRIx64"\n", (uint64_t)bar->cap);
+	printf("version : %x\n", bar->vs);
+	printf("intms   : %x\n", bar->intms);
+	printf("intmc   : %x\n", bar->intmc);
+	printf("cc      : %x\n", bar->cc);
+	printf("csts    : %x\n", bar->csts);
+	printf("nssr    : %x\n", bar->nssr);
+	printf("aqa     : %x\n", bar->aqa);
+	printf("asq     : %"PRIx64"\n", (uint64_t)bar->asq);
+	printf("acq     : %"PRIx64"\n", (uint64_t)bar->acq);
+	printf("cmbloc  : %x\n", bar->cmbloc);
+	printf("cmbsz   : %x\n", bar->cmbsz);
 
 	return 0;
 }
