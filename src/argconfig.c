@@ -170,7 +170,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
     int option_index = 0, short_index = 0;
     int options_count = 0;
     struct option *long_opts;
-    char * short_opts;
+    char * short_opts, *endptr;
     const struct argconfig_commandline_options *s;
     void *value_addr;
 
@@ -253,46 +253,46 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
         if (s->config_type == CFG_STRING) {
             *((char **) value_addr) = optarg;
         } else if (s->config_type == CFG_SIZE) {
-            *((size_t *) value_addr) = strtol(optarg, NULL, 0);
-            if (errno) {
+            *((size_t *) value_addr) = strtol(optarg, &endptr, 0);
+            if (errno || optarg == endptr) {
                 fprintf(stderr, "Expected integer argument for '%s' but got '%s'!\n",
                         long_opts[option_index].name, optarg);
                 exit(1);
             }
         } else if (s->config_type == CFG_INT) {
-            *((int *) value_addr) = strtol(optarg, NULL, 0);
-            if (errno) {
+            *((int *) value_addr) = strtol(optarg, &endptr, 0);
+            if (errno || optarg == endptr) {
                 fprintf(stderr, "Expected integer argument for '%s' but got '%s'!\n",
                         long_opts[option_index].name, optarg);
                 exit(1);
             }
         } else if (s->config_type == CFG_BOOL) {
-            int tmp = strtol(optarg, NULL, 0);
-            if (errno || tmp < 0 || tmp > 1) {
+            int tmp = strtol(optarg, &endptr, 0);
+            if (errno || tmp < 0 || tmp > 1 || optarg == endptr) {
                 fprintf(stderr, "Expected 0 or 1 argument for '%s' but got '%s'!\n",
                         long_opts[option_index].name, optarg);
                 exit(1);
             }
             *((int *) value_addr) = tmp;
         } else if (s->config_type == CFG_BYTE) {
-            uint8_t tmp = strtol(optarg, NULL, 0);
-            if (errno || tmp < 0) {
+            uint8_t tmp = strtol(optarg, &endptr, 0);
+            if (errno || tmp < 0 || optarg == endptr) {
                 fprintf(stderr, "Expected positive argument for '%s' but got '%s'!\n",
                         long_opts[option_index].name, optarg);
                 exit(1);
             }
             *((uint8_t *) value_addr) = tmp;
         } else if (s->config_type == CFG_SHORT) {
-            uint16_t tmp = strtol(optarg, NULL, 0);
-            if (errno || tmp < 0) {
+            uint16_t tmp = strtol(optarg, &endptr, 0);
+            if (errno || tmp < 0 || optarg == endptr) {
                 fprintf(stderr, "Expected positive argument for '%s' but got '%s'!\n",
                         long_opts[option_index].name, optarg);
                 exit(1);
             }
             *((uint16_t *) value_addr) = tmp;
         } else if (s->config_type == CFG_POSITIVE) {
-            int tmp = strtol(optarg, NULL, 0);
-            if (errno || tmp < 0) {
+            int tmp = strtol(optarg, &endptr, 0);
+            if (errno || tmp < 0 || optarg == endptr) {
                 fprintf(stderr, "Expected positive argument for '%s' but got '%s'!\n",
                         long_opts[option_index].name, optarg);
                 exit(1);
@@ -301,8 +301,8 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
         } else if (s->config_type == CFG_INCREMENT) {
             (*((int *) value_addr))++;
         } else if (s->config_type == CFG_LONG) {
-            *((long *) value_addr) = strtol(optarg, NULL, 0);
-            if (errno) {
+            *((long *) value_addr) = strtol(optarg, &endptr, 0);
+            if (errno || optarg == endptr) {
                 fprintf(stderr, "Expected long integer argument for '%s' but got '%s'!\n",
                         long_opts[option_index].name, optarg);
                 exit(1);
@@ -315,8 +315,8 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
                 exit(1);
             }
         } else if (s->config_type == CFG_DOUBLE) {
-            *((double *) value_addr) = strtod(optarg, NULL);
-            if (errno) {
+            *((double *) value_addr) = strtod(optarg, &endptr);
+            if (errno || optarg == endptr) {
                 fprintf(stderr, "Expected float argument for '%s' but got '%s'!\n",
                         long_opts[option_index].name, optarg);
                 exit(1);
