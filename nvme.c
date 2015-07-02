@@ -2568,7 +2568,7 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 	struct nvme_user_io io;
 	struct timeval start_time, end_time;
 	void *buffer, *mbuffer = NULL;
-	int err, dfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
+	int err = 0, dfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
 
 	struct config {
 		__u64 start_block;
@@ -2605,10 +2605,10 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 		{"start-block",       "NUM",  CFG_LONG_SUFFIX, &defaults.start_block,       required_argument, NULL},
 		{"c",                 "NUM",  CFG_SHORT,       &defaults.block_count,       required_argument, NULL},
 		{"block-count",       "NUM",  CFG_SHORT,       &defaults.block_count,       required_argument, NULL},
-		{"z",                 "NUM",  CFG_POSITIVE,    &defaults.data_size,         required_argument, NULL},
-		{"data-size",         "NUM",  CFG_POSITIVE,    &defaults.data_size,         required_argument, NULL},
-		{"y",                 "NUM",  CFG_POSITIVE,    &defaults.metadata_size,     required_argument, NULL},
-		{"metadata-size",     "NUM",  CFG_POSITIVE,    &defaults.metadata_size,     required_argument, NULL},
+		{"z",                 "NUM",  CFG_LONG_SUFFIX, &defaults.data_size,         required_argument, NULL},
+		{"data-size",         "NUM",  CFG_LONG_SUFFIX, &defaults.data_size,         required_argument, NULL},
+		{"y",                 "NUM",  CFG_LONG_SUFFIX, &defaults.metadata_size,     required_argument, NULL},
+		{"metadata-size",     "NUM",  CFG_LONG_SUFFIX, &defaults.metadata_size,     required_argument, NULL},
 		{"r",                 "NUM",  CFG_POSITIVE,    &defaults.ref_tag,           required_argument, NULL},
 		{"ref-tag",           "NUM",  CFG_POSITIVE,    &defaults.ref_tag,           required_argument, NULL},
 		{"d",                 "FILE", CFG_STRING,      &defaults.data,              required_argument, NULL},
@@ -2719,7 +2719,7 @@ static int submit_io(int opcode, char *command, int argc, char **argv)
 	free(buffer);
 	if (cfg.metadata_size)
 		free(mbuffer);
-	return 0;
+    return err;
 }
 
 static int compare(int argc, char **argv)
