@@ -1,8 +1,11 @@
-CFLAGS := -I $(SRC) -m64 -std=gnu99 -O2 -g -pthread -D_GNU_SOURCE -D_REENTRANT -Wall -Werror
-LDFLAGS := -lm
+CFLAGS := -I $(SRC) $(CFLAGS) -m64 -std=gnu99 -O2 -g -pthread -D_GNU_SOURCE -D_REENTRANT -Wall -Werror
+LDFLAGS := $(LDFLAGS) -lm
 NVME = nvme
 INSTALL ?= install
 SRC = ./src
+DESTDIR =
+PREFIX = /usr/local
+SBINDIR = $(PREFIX)/sbin
 LIBUDEV:=$(shell ld -ludev > /dev/null 2>&1 ; echo $$?)
 ifeq ($(LIBUDEV),0)
 	LDFLAGS += -ludev
@@ -42,8 +45,13 @@ clean:
 clobber: clean
 	$(MAKE) -C Documentation clobber
 
-install: default
+install-man:
 	$(MAKE) -C Documentation install-no-build
-	$(INSTALL) -m 755 nvme /usr/local/bin
 
-.PHONY: default all doc clean clobber install
+install-bin: default
+	$(INSTALL) -d $(DESTDIR)$(SBINDIR)
+	$(INSTALL) -m 755 nvme $(DESTDIR)$(SBINDIR)
+
+install: install-bin install-man
+
+.PHONY: default all doc clean clobber install install-bin install-man
