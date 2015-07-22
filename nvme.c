@@ -69,6 +69,7 @@ static const char *devicename;
 	ENTRY(GET_LOG, "get-log", "Generic NVMe get log, returns log in raw format", get_log) \
 	ENTRY(GET_FW_LOG, "fw-log", "Retrieve FW Log, show it", get_fw_log) \
 	ENTRY(GET_SMART_LOG, "smart-log", "Retrieve SMART Log, show it", get_smart_log) \
+	ENTRY(GET_ADDITIONAL_SMART_LOG, "smart-log-add", "Retrieve additional SMART Log, show it", get_additional_smart_log) \
 	ENTRY(GET_ERR_LOG, "error-log", "Retrieve Error Log, show it", get_error_log) \
 	ENTRY(GET_FEATURE, "get-feature", "Get feature and show the resulting value", get_feature) \
 	ENTRY(SET_FEATURE, "set-feature", "Set a feature and show the resulting value", set_feature) \
@@ -242,6 +243,18 @@ static long double int128_to_double(__u8 *data)
 	return result;
 }
 
+static unsigned long int48_to_long(__u8 *data)
+{
+	int i;
+	long result = 0;
+
+	for (i = 0; i < 6; i++) {
+		result *= 256;
+		result += data[5 - i];
+	}
+	return result;
+}
+
 static void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid)
 {
 	/* convert temperature from Kelvin to Celsius */
@@ -274,6 +287,54 @@ static void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid)
 		int128_to_double(smart->media_errors));
 	printf("num_err_log_entries       : %'.0Lf\n",
 		int128_to_double(smart->num_err_log_entries));
+}
+
+static void show_additional_smart_log(struct nvme_additional_smart_log *smart, unsigned int nsid)
+{
+	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n", devicename, nsid);
+	printf("key                               normalized raw\n");
+	printf("program_fail_count              : %3d%%       %lu\n",
+		smart->program_fail_cnt.norm,
+		int48_to_long(smart->program_fail_cnt.raw));
+	printf("erase_fail_count                : %3d%%       %lu\n",
+		smart->erase_fail_cnt.norm,
+		int48_to_long(smart->erase_fail_cnt.raw));
+	printf("wear_leveling                   : %3d%%       min: %u, max: %u, avg: %u\n",
+		smart->wear_leveling_cnt.norm,
+		smart->wear_leveling_cnt.wear_level.min,
+		smart->wear_leveling_cnt.wear_level.max,
+		smart->wear_leveling_cnt.wear_level.avg);
+	printf("end_to_end_error_detection_count: %3d%%       %lu\n",
+		smart->e2e_err_cnt.norm,
+		int48_to_long(smart->e2e_err_cnt.raw));
+	printf("crc_error_count                 : %3d%%       %lu\n",
+		smart->crc_err_cnt.norm,
+		int48_to_long(smart->crc_err_cnt.raw));
+	printf("timed_workload_media_wear       : %3d%%       %.3f%%\n",
+		smart->timed_workload_media_wear.norm,
+		((float)int48_to_long(smart->timed_workload_media_wear.raw)) / 1024);
+	printf("timed_workload_host_reads       : %3d%%       %lu%%\n",
+		smart->timed_workload_host_reads.norm,
+		int48_to_long(smart->timed_workload_host_reads.raw));
+	printf("timed_workload_timer            : %3d%%       %lu min\n",
+		smart->timed_workload_timer.norm,
+		int48_to_long(smart->timed_workload_timer.raw));
+	printf("thermal_throttle_status         : %3d%%       %u%%, cnt: %u\n",
+		smart->thermal_throttle_status.norm,
+		smart->thermal_throttle_status.thermal_throttle.pct,
+		smart->thermal_throttle_status.thermal_throttle.count);
+	printf("retry_buffer_overflow_count     : %3d%%       %lu\n",
+		smart->retry_buffer_overflow_cnt.norm,
+		int48_to_long(smart->retry_buffer_overflow_cnt.raw));
+	printf("pll_lock_loss_count             : %3d%%       %lu\n",
+		smart->pll_lock_loss_cnt.norm,
+		int48_to_long(smart->pll_lock_loss_cnt.raw));
+	printf("nand_bytes_written              : %3d%%       sectors: %lu\n",
+		smart->nand_bytes_written.norm,
+		int48_to_long(smart->nand_bytes_written.raw));
+	printf("host_bytes_written              : %3d%%       sectors: %lu\n",
+		smart->host_bytes_written.norm,
+		int48_to_long(smart->host_bytes_written.raw));
 }
 
 char* nvme_feature_to_string(int feature)
@@ -1006,6 +1067,47 @@ static int get_smart_log(int argc, char **argv)
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_smart_log(&smart_log, cfg.namespace_id);
+		else
+			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
+	}
+	else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+	return err;
+}
+
+static int get_additional_smart_log(int argc, char **argv)
+{
+	struct nvme_additional_smart_log smart_log;
+	int err;
+
+	struct config {
+		__u32 namespace_id;
+		__u8  raw_binary;
+	};
+	struct config cfg;
+
+	const struct config defaults = {
+		.namespace_id = 0xffffffff,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id", "NUM", CFG_POSITIVE, &defaults.namespace_id, required_argument, NULL},
+		{"n",            "NUM", CFG_POSITIVE, &defaults.namespace_id, required_argument, NULL},
+		{"raw-binary",   "",    CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
+		{"b",            "",    CFG_NONE,     &defaults.raw_binary,   no_argument,       NULL},
+		{0}
+	};
+	argconfig_parse(argc, argv, "get_additional_smart_log", command_line_options,
+			&defaults, &cfg, sizeof(cfg));
+	get_dev(1, argc, argv);
+
+	err = nvme_get_log(&smart_log,
+		sizeof(smart_log), 0xCA | (((sizeof(smart_log) / 4) - 1) << 16),
+		cfg.namespace_id);
+	if (!err) {
+		if (!cfg.raw_binary)
+			show_additional_smart_log(&smart_log, cfg.namespace_id);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}
