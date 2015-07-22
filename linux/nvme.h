@@ -196,7 +196,7 @@ enum {
 };
 
 #pragma pack(push,1)
-typedef struct nvme_additional_smart_log_item {
+struct nvme_additional_smart_log_item {
 	__u8			key;
 	__u8			_kp[2];
 	__u8			norm;
@@ -214,23 +214,23 @@ typedef struct nvme_additional_smart_log_item {
 		} thermal_throttle;
 	};
 	__u8			_rp;
-} nasli;
+};
 #pragma pack(pop)
 
 struct nvme_additional_smart_log {
-	nasli			program_fail_cnt;
-	nasli			erase_fail_cnt;
-	nasli			wear_leveling_cnt;
-	nasli			e2e_err_cnt;
-	nasli			crc_err_cnt;
-	nasli			timed_workload_media_wear;
-	nasli			timed_workload_host_reads;
-	nasli			timed_workload_timer;
-	nasli			thermal_throttle_status;
-	nasli			retry_buffer_overflow_cnt;
-	nasli			pll_lock_loss_cnt;
-	nasli			nand_bytes_written;
-	nasli			host_bytes_written;
+	struct nvme_additional_smart_log_item	program_fail_cnt;
+	struct nvme_additional_smart_log_item	erase_fail_cnt;
+	struct nvme_additional_smart_log_item	wear_leveling_cnt;
+	struct nvme_additional_smart_log_item	e2e_err_cnt;
+	struct nvme_additional_smart_log_item	crc_err_cnt;
+	struct nvme_additional_smart_log_item	timed_workload_media_wear;
+	struct nvme_additional_smart_log_item	timed_workload_host_reads;
+	struct nvme_additional_smart_log_item	timed_workload_timer;
+	struct nvme_additional_smart_log_item	thermal_throttle_status;
+	struct nvme_additional_smart_log_item	retry_buffer_overflow_cnt;
+	struct nvme_additional_smart_log_item	pll_lock_loss_cnt;
+	struct nvme_additional_smart_log_item	nand_bytes_written;
+	struct nvme_additional_smart_log_item	host_bytes_written;
 };
 
 struct nvme_lba_range_type {
