@@ -51,6 +51,8 @@
 
 #define min(x, y) (x) > (y) ? (y) : (x)
 
+#define	FORMAT_TIMEOUT	120000	// 120 seconds
+
 static int fd;
 static struct stat nvme_stat;
 static const char *devicename;
@@ -2132,6 +2134,7 @@ static int format(int argc, char **argv)
 	cmd.opcode = nvme_admin_format_nvm;
 	cmd.nsid   = cfg.namespace_id;
 	cmd.cdw10  = (cfg.lbaf << 0) | (cfg.ms << 4) | (cfg.pi << 5) | (cfg.pil << 8) | (cfg.ses << 9);
+	cmd.timeout_ms = FORMAT_TIMEOUT;
 
 	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
 	if (err < 0)
