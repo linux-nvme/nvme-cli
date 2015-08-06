@@ -793,7 +793,7 @@ static void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, int vs, int human)
 	if (human)
 		show_nvme_id_ctrl_nvscc(ctrl->nvscc);
 	printf("acwu    : %d\n", ctrl->acwu);
-	printf("sgls    : %d\n", ctrl->sgls);
+	printf("sgls    : %x\n", ctrl->sgls);
 	if (human)
 		show_nvme_id_ctrl_sgls(ctrl->sgls);
 
