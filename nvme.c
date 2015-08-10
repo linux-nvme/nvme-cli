@@ -2172,8 +2172,12 @@ static int fw_activate(int argc, char **argv)
 	if (err < 0)
 		perror("ioctl");
 	else if (err != 0)
-		fprintf(stderr, "NVME Admin command error:%s(%x)\n",
-					nvme_status_to_string(err), err);
+		if (err == NVME_SC_FIRMWARE_NEEDS_RESET)
+			printf("Success activating firmware action:%d slot:%d, but a conventional reset is required\n",
+			       cfg.action, cfg.slot);
+		else
+			fprintf(stderr, "NVME Admin command error:%s(%x)\n",
+						nvme_status_to_string(err), err);
 	else
 		printf("Success activating firmware action:%d slot:%d\n",
 		       cfg.action, cfg.slot);
