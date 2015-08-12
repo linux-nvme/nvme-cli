@@ -24,11 +24,8 @@ endif
 
 default: $(NVME)
 
-nvme: nvme.c $(NVME_HEADER) argconfig.o suffix.o
-	$(CC) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME) argconfig.o suffix.o
-
-argconfig.o: $(SRC)/argconfig.c $(SRC)/argconfig.h $(SRC)/suffix.h
-	$(CC) -c $(CFLAGS) $(SRC)/argconfig.c
+nvme: nvme.c $(NVME_HEADER) suffix.o
+	$(CC) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME) suffix.o
 
 suffix.o: $(SRC)/suffix.c $(SRC)/suffix.h
 	$(CC) -c $(CFLAGS) $(SRC)/suffix.c
