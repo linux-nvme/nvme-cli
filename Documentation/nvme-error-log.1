@@ -2,12 +2,12 @@
 .\"     Title: nvme-error-log
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ERROR\-LOG" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-ERROR\-LOG" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,19 +28,19 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-error-log \- Send NVME Error log page request, return result and log
+nvme-error-log \- Retrieve specified number of error log entries from a given device (or namespace attached to device)\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme error\-log\fR <device>  [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                         [\-\-log\-entries=<entries> | \-e <entries>]
-                         [\-\-raw\-binary | \-b]
+\fInvme error\-log\fR <device>  [ \-\-namespace\-id=<nsid> | \-n <nsid> ]
+                [ \-\-log\-entries=<num entries> | \-e <num entries> ]
+                           [ \-\-raw\-binary | \-b ]
 .fi
 .SH "DESCRIPTION"
 .sp
 Retrieves NVMe Error log page from an NVMe device and provides the retuned structure\&.
 .sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+The \fI<device>\fR parameter is mandatory and may be either the NVMe character device (ex: \fI/dev/nvme0\fR), or a namespace block device (ex: \fI/dev/nvme0n1\fR)\&.
 .sp
 On success, the returned error log structure may be returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format or the raw buffer may be printed to stdout for another program to parse\&.
 .SH "OPTIONS"
@@ -50,7 +50,7 @@ On success, the returned error log structure may be returned in one of several w
 Retrieve the Error Log for the given nsid\&. This is optional and its success may depend on the device\(cqs capabilities to provide this log on a per\-namespace basis (see the NVMe Identify Controller for this capability)\&. The defualt nsid to use is 0xffffffff for the device global error log\&.
 .RE
 .PP
-\-e <entries>, \-\-log\-entries=<entries>
+\-e <num entries>, \-\-log\-entries=<num entries>
 .RS 4
 Specifies how many log entries the program should request from the device\&. This must be at least one, and shouldn\(cqt exceed the device\(cqs capabilities\&. Defaults to 64 log entries\&.
 .RE

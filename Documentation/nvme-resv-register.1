@@ -2,12 +2,12 @@
 .\"     Title: nvme-resv-register
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RESV\-REGISTER" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-RESV\-REGISTER" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,11 +28,15 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-resv-register \- Register an nvme reservation
+nvme-resv-register \- Register an nvme reservation on a namespace
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme resv\-register\fR <device>
+\fInvme resv\-register\fR <device> [ \-\-namespace\-id=<nsid> | \-n <nsid> ]
+                              [ \-\-crkey=<ck> | \-c <ck> ]
+                              [ \-\-nrkey=<nk> | \-k <nk> ]
+                              [ \-\-rrega=<rr> | \-r <rr> ]
+                              [ \-\-cptpl=<cp> | \-p <cp> ] [ \-\-iekey | \-i ]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -57,6 +61,9 @@ New Reservation Key: If the Reservation Register Action is 000b (i\&.e\&., Regis
 \-p <cptpl>, \-\-cptpl=<cptpl>
 .RS 4
 Change Persist Through Power Loss State: This field allows the Persist Through Power Loss state associated with the namespace to be modified as a side effect of processing this command\&.
+.RE
+.sp
++
 .TS
 allbox tab(:);
 lt lt
@@ -65,35 +72,44 @@ lt lt
 lt lt
 lt lt.
 T{
+.sp
 Value
 T}:T{
+.sp
 Definition
 T}
 T{
+.sp
 0
 T}:T{
+.sp
 No change to PTPL state
 T}
 T{
+.sp
 1
 T}:T{
+.sp
 Reserved
 T}
 T{
+.sp
 2
 T}:T{
+.sp
 Set PTPL state to \(oq0\(cq\&. Reservations are released and registrants are cleared on a power on\&.
 T}
 T{
+.sp
 3
 T}:T{
+.sp
 Set PTPL state to \(oq1\(cq\&. Reservations and registrants persist across a power loss\&.
 T}
 .TE
 .sp 1
-.RE
 .PP
-\-a <rrega>, \-\-rrega=<rrega>
+\-r <rr>, \-\-rrega=<rr>
 .RS 4
 Reservation Register Action: This field specifies the registration action that is performed by the command\&.
 .TS

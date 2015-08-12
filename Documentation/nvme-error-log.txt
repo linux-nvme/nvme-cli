@@ -3,22 +3,23 @@ nvme-error-log(1)
 
 NAME
 ----
-nvme-error-log - Send NVME Error log page request, return result and log
+nvme-error-log - Retrieve specified number of error log entries from a given
+device (or namespace attached to device).
 
 SYNOPSIS
 --------
 [verse]
-'nvme error-log' <device>  [--namespace-id=<nsid> | -n <nsid>]
-			 [--log-entries=<entries> | -e <entries>]
-			 [--raw-binary | -b]
+'nvme error-log' <device>  [ --namespace-id=<nsid> | -n <nsid> ]
+		[ --log-entries=<num entries> | -e <num entries> ]
+			   [ --raw-binary | -b ]
 
 DESCRIPTION
 -----------
 Retrieves NVMe Error log page from an NVMe device and provides the
 retuned structure.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+The '<device>' parameter is mandatory and may be either the NVMe character
+device (ex: '/dev/nvme0'), or a namespace block device (ex: '/dev/nvme0n1').
 
 On success, the returned error log structure may be returned in one of
 several ways depending on the option flags; the structure may parsed by
@@ -35,8 +36,8 @@ OPTIONS
 	Controller for this capability). The defualt nsid to use is
 	0xffffffff for the device global error log.
 
--e <entries>::
---log-entries=<entries>::
+-e <num entries>::
+--log-entries=<num entries>::
 	Specifies how many log entries the program should request from
 	the device. This must be at least one, and shouldn't exceed the
 	device's capabilities. Defaults to 64 log entries.

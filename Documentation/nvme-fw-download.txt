@@ -3,14 +3,15 @@ nvme-fw-download(1)
 
 NAME
 ----
-nvme-fw-download - Download all or a portion of an nvme firmware image.
+nvme-fw-download - copy all or part of a firmware image to the specified controller
+for future update.
 
 SYNOPSIS
 --------
 [verse]
-'nvme fw-download' <device> [--fw=<firmware-file> | -f <firmware-file>]
-		    [--xfer=<transfer-size> | -x <transfer-size>]
-		    [--offset=<offset> | -o <offset>]
+'nvme fw-download' <device> [ --fw=<firmware-file> | -f <firmware-file> ]
+		    [ --xfer=<transfer-size> | -x <transfer-size> ]
+		    [ --offset=<offset> | -o <offset> ]
 
 DESCRIPTION
 -----------
@@ -44,9 +45,10 @@ OPTIONS
 
 -x <transfer-size>::
 --xfer=<transfer-size>::
-	This specifies the size to split each transfer. This is useful if
-	the device has a max transfer size requirement for firmware. It
-	defaults to 4k.
+	This specifies the size of firmware chunk to transfer, if transfer
+	of the entire image at once is not desired and/or possible. This
+	is useful if the device has a max transfer size requirement for
+	firmware. It defaults to 4k.
 
 -o <offset>::
 --offset=<offset>::

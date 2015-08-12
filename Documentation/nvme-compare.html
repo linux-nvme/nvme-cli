@@ -743,7 +743,7 @@ nvme-compare(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-compare -
-   Send an NVMe Compare command, provide results
+   Compare data located on the NVMe storage media to the specified data buffer
 </p>
 </div>
 </div>
@@ -752,16 +752,16 @@ nvme-compare(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme-compare</em> &lt;device&gt; [--start-block=&lt;slba&gt; | -s &lt;slba&gt;]
-                        [--block-count=&lt;nlb&gt; | -c &lt;nlb&gt;]
-                        [--data-size=&lt;size&gt; | -z &lt;size&gt;]
-                        [--ref-tag=&lt;reftag&gt; | -r &lt;reftag&gt;]
-                        [--data=&lt;data-file&gt; | -d &lt;data-file&gt;]
-                        [--prinfo=&lt;prinfo&gt; | -p &lt;prinfo&gt;]
-                        [--app-tag-mask=&lt;appmask&gt; | -m &lt;appmask&gt;]
-                        [--app-tag=&lt;apptag&gt; | -a &lt;apptag&gt;]
-                        [--limited-retry | -l]
-                        [--force-unit-access | -f]</pre>
+<pre class="content"><em>nvme compare</em> &lt;device&gt; [ --start-block=&lt;slba&gt; | -s &lt;slba&gt; ]
+                        [ --block-count=&lt;nlb&gt; | -c &lt;nlb&gt; ]
+                        [ --data-size=&lt;size&gt; | -z &lt;size&gt; ]
+                        [ --ref-tag=&lt;reftag&gt; | -r &lt;reftag&gt; ]
+                        [ --data=&lt;data-file&gt; | -d &lt;data-file&gt; ]
+                        [ --prinfo=&lt;prinfo&gt; | -p &lt;prinfo&gt; ]
+                        [ --app-tag-mask=&lt;appmask&gt; | -m &lt;appmask&gt; ]
+                        [ --app-tag=&lt;apptag&gt; | -a &lt;apptag&gt; ]
+                        [ --limited-retry | -l ]
+                        [ --force-unit-access | -f ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -769,13 +769,16 @@ nvme-compare(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>The Compare command reads the logical blocks specified by the command
-from the medium and compares the data read to a comparison data buffer
-transferred as part of the command. If the data read from the controller
-and the comparison data buffer are equivalent with no miscompares,
-then the command completes successfully. If there is any miscompare,
-the command completes with an error of Compare Failure. If metadata is
-provided, then a comparison is also performed for the metadata.</p></div>
+<div class="paragraph"><p>The Compare command reads the specified logical blocks from the storage
+media, and compares the bytes read to a data buffer populated with
+user-specified data which is transferred as part of the command. If the
+data read from the controller and the comparison data buffer are equivalent
+(with no miscompares), then the command completes successfully. If any
+miscompares occur, a Compare Failure result shall be returned. If metadata is
+provided, a comparison is also performed for the metadata.</p></div>
+<div class="paragraph"><p>The <em>&lt;device&gt;</em> parameter is mandatory and may be either the NVMe character
+device (ex: <em>/dev/nvme0</em>), or a currently existing namespace block device
+(ex: <em>/dev/nvme0n1</em>).</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -790,7 +793,100 @@ provided, then a comparison is also performed for the metadata.</p></div>
 </dt>
 <dd>
 <p>
-        Start block.
+        The start block on the device for comparison to the data buffer
+        (defaults to 0)
+</p>
+</dd>
+<dt class="hdlist1">
+--block-count=&lt;nlb&gt;
+</dt>
+<dt class="hdlist1">
+-b &lt;nlb&gt;
+</dt>
+<dd>
+<p>
+        The number of logical blocks on the device from the start block
+        onward to compare to the data buffer
+</p>
+</dd>
+<dt class="hdlist1">
+--data-size=&lt;size&gt;
+</dt>
+<dt class="hdlist1">
+-z &lt;size&gt;
+</dt>
+<dd>
+<p>
+        Size in bytes of the local data buffer to compare to data on the
+        storage media
+</p>
+</dd>
+<dt class="hdlist1">
+--data=&lt;file&gt;
+</dt>
+<dt class="hdlist1">
+-d &lt;file&gt;
+</dt>
+<dd>
+<p>
+        Local file from which to populate the buffer to compare to data on
+        the storage media
+</p>
+</dd>
+<dt class="hdlist1">
+--prinfo=&lt;prinfo&gt;
+</dt>
+<dt class="hdlist1">
+-p &lt;prinfo&gt; 
+</dt>
+<dd>
+<p>
+        Value for the protection information and check field
+</p>
+</dd>
+<dt class="hdlist1">
+--app-tag-mask=&lt;apptagmask&gt;
+</dt>
+<dt class="hdlist1">
+-m &lt;apptagmask&gt;
+</dt>
+<dd>
+<p>
+        App tag mask. Used for end-to-end t10 information protection.
+</p>
+</dd>
+<dt class="hdlist1">
+--app-tag=&lt;apptag&gt;
+</dt>
+<dt class="hdlist1">
+-a &lt;apptag&gt;
+</dt>
+<dd>
+<p>
+        App tag. Used for end-to-end t10 information protection.
+</p>
+</dd>
+<dt class="hdlist1">
+--limited-retry
+</dt>
+<dt class="hdlist1">
+-l
+</dt>
+<dd>
+<p>
+        Limit the number of attempts to access the storage media, in the case
+        that initial attempts are unsuccessful
+</p>
+</dd>
+<dt class="hdlist1">
+--force-unit-access
+</dt>
+<dt class="hdlist1">
+-f
+</dt>
+<dd>
+<p>
+        Return command result data before command completion value is returned
 </p>
 </dd>
 </dl></div>
@@ -799,7 +895,20 @@ provided, then a comparison is also performed for the metadata.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No examples yet.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+The following will compare 512 bytes of data from a local file called <em>test.txt</em>
+  to 512 bytes of data starting at block 0 on namespace 1 of the storage media,
+  i.e. <em>/dev/nvme0n1</em>. No metadata shall be compared. Retry attempts will be only
+  limited by the NVM Express specification.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><tt># nvme compare /dev/nvme0n1 --start-block=0 --data-size=512 --data=test.txt</tt></pre>
+</div></div>
+</li>
+</ul></div>
 </div>
 </div>
 <div class="sect1">
@@ -812,7 +921,7 @@ provided, then a comparison is also performed for the metadata.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-09 08:30:40 MST
+Last updated 2015-08-12 14:50:36 MDT
 </div>
 </div>
 </body>

@@ -2,12 +2,12 @@
 .\"     Title: nvme-read
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/09/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-READ" "1" "06/09/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-READ" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,36 +32,90 @@ nvme-read \- Send an NVMe Read command, provide results
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\-read\fR <device> [\-\-start\-block=<slba> | \-s <slba>]
-                        [\-\-block\-count=<nlb> | \-c <nlb>]
-                        [\-\-data\-size=<size> | \-z <size>]
-                        [\-\-metadata\-size=<size> | \-y <size>]
-                        [\-\-ref\-tag=<reftag> | \-r <reftag>]
-                        [\-\-data=<data\-file> | \-d <data\-file>]
-                        [\-\-prinfo=<prinfo> | \-p <prinfo>]
-                        [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
-                        [\-\-app\-tag=<apptag> | \-a <apptag>]
-                        [\-\-limited\-retry | \-l]
-                        [\-\-latency | \-t]
-                        [\-\-force\-unit\-access | \-f]
+\fInvme\-read\fR <device> [ \-\-start\-block=<slba> | \-s <slba> ]
+                     [ \-\-block\-count=<nlb> | \-c <nlb> ]
+                     [ \-\-data\-size=<size> | \-z <size> ]
+                     [ \-\-metadata\-size=<size> | \-y <size> ]
+                     [ \-\-ref\-tag=<reftag> | \-r <reftag> ]
+                     [ \-\-data=<data\-file> | \-d <data\-file> ]
+                     [ \-\-app\-tag\-mask=<appmask> | \-m <appmask> ]
+                     [ \-\-app\-tag=<apptag> | \-a <apptag> ]
+                     [ \-\-prinfo=<prinfo> | \-p <prinfo> ]
+                     [ \-\-limited\-retry | \-l ]
+                     [ \-\-latency | \-t ] [ \-\-force\-unit\-access | \-f ]
 .fi
 .SH "DESCRIPTION"
 .sp
-The Read command reads the logical blocks specified by the command from the medium and copies to the data data buffer provided\&. Will use stdout by default if you don\(cqt provide a file\&.
+The Read command copies the specified logical blocks on the given NVMe storage media to the specified data buffer; data buffer defaults to stdout\&.
+.sp
+The \fI<device>\fR parameter is mandatory and may be either the NVMe character device (ex: \fI/dev/nvme0\fR), or a namespace block device (ex: \fI/dev/nvme0n1\fR)\&.
 .SH "OPTIONS"
 .PP
 \-\-start\-block=<slba>, \-s <slba>
 .RS 4
-Start block\&.
+Read will begin at the start block on device
+.RE
+.PP
+\-\-block\-count=<nlb>, \-b <nlb>
+.RS 4
+The number of logical blocks on the device from the start block onward to read
+.RE
+.PP
+\-\-data\-size=<size>, \-z <size>
+.RS 4
+Effectively, size in bytes of data to return
+.RE
+.PP
+\-\-data=<file>, \-d <file>
+.RS 4
+Option specific to
+\fInvme write\fR
+and
+\fIcompare\fR
+commands (file to fill data buffer to be sent to device)
+.RE
+.PP
+\-\-prinfo=<prinfo>, \-p <prinfo>
+.RS 4
+Value for the protection information and check field
+.RE
+.PP
+\-\-app\-tag\-mask=<apptagmask>, \-m <apptagmask>
+.RS 4
+App tag mask\&. Used for end\-to\-end t10 information protection\&.
+.RE
+.PP
+\-\-app\-tag=<apptag>, \-a <apptag>
+.RS 4
+App tag\&. Used for end\-to\-end t10 information protection\&.
+.RE
+.PP
+\-\-limited\-retry, \-l
+.RS 4
+Limit the number of attempts to access the storage media, in the case that initial attempts are unsuccessful
+.RE
+.PP
+\-\-force\-unit\-access, \-f
+.RS 4
+Return command result data before command completion value is returned
 .RE
 .PP
 \-\-latency, \-t
 .RS 4
-Print out the latency the IOCTL took (in us)\&.
+Print IOCTL latency statistics in us
 .RE
 .SH "EXAMPLES"
 .sp
-No examples yet\&.
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+nvme read /dev/nvme0n1 \-\-start\-block=0 \-\-data\-size=512 \-\-metadata\-size=8
+.RE
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

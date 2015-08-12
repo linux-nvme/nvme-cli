@@ -752,7 +752,7 @@ nvme-id-ns(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme list-ns</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
+<pre class="content"><em>nvme list-ns</em> &lt;device&gt; [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -762,8 +762,8 @@ nvme-id-ns(1) Manual Page
 <div class="sectionbody">
 <div class="paragraph"><p>For the NVMe device given, sends an identify command for namespace list
 and provides the result and returned structure.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+<div class="paragraph"><p>The <em>&lt;device&gt;</em> parameter is mandatory and may be either the NVMe character
+device (ex: <em>/dev/nvme0</em>), or a namespace block device (ex: <em>/dev/nvme0n1</em>).
 If the starting namespace in the list always begins with 0 unless the
 <tt>'--namespace-id'</tt> option is given to override.</p></div>
 <div class="paragraph"><p>On success, the namespace array is printed for each index and nsid for
@@ -804,7 +804,7 @@ a valid nsid.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-09 08:30:40 MST
+Last updated 2015-08-12 14:02:13 MDT
 </div>
 </div>
 </body>

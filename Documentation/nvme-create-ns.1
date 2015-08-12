@@ -2,12 +2,12 @@
 .\"     Title: nvme-create-ns
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CREATE\-NS" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-CREATE\-NS" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,46 +28,46 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-create-ns \- Send NVMe Namespace management command to create namespace, returns results\&.
+nvme-create-ns \- Create an NVMe namespace via sending a namespace management command to the specified controller
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme create\-ns\fR <device> [\-\-nsze=<nsze> | \-n <nsze>]
-                        [\-\-ncap=<ncap> | \-c <ncap>]
-                        [\-\-flbas=<flbas> | \-f <flbas>]
-                        [\-\-dps=<dps> | \-d <dps>]
-                        [\-\-nmic=<nmic> | \-m <nmic>]
+\fInvme create\-ns\fR <device> [ \-\-nsze=<nsze> | \-n <nsze> ]
+                          [ \-\-ncap=<ncap> | \-c <ncap> ]
+                          [ \-\-flbas=<flbas> | \-f <flbas> ]
+                          [ \-\-dps=<dps> | \-d <dps> ]
+                          [ \-\-nmic=<nmic> | \-m <nmic> ]
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, sends a namespace management command to create the namespace with the requested settings\&. On success, the namespace identifier assigned by the controller is returned\&.
+Send a namespace management command to the given NVMe device to create a namespace with the specified parameters\&. The next available namespace ID is used for the create operation\&. On success, the namespace identifier assigned by the controller is returned\&. Note that a created namespace is not yet attached to any controller(s); this command should be followed by some desired permutation on the \fInvme attach\-ns\fR command\&. A given namespace must be attached to at least one controller before any commands other than \fIattach\-ns\fR may be directed at that namespace\&.
 .sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+The \fI<device>\fR parameter is mandatory and may be either the NVMe character device (ex: \fI/dev/nvme0\fR), or a currently existing namespace block device (ex: \fI/dev/nvme0n1\fR)\&.
 .SH "OPTIONS"
 .PP
-\-s, \-\-nsze
+\-s <nsze>, \-\-nsze=<nsze>
 .RS 4
-The namespace size\&.
+Namespace size
 .RE
 .PP
-\-c, \-\-ncap
+\-c <ncap>, \-\-ncap=<ncap>
 .RS 4
-The namespace capacity\&.
+Namespace capacity
 .RE
 .PP
-\-f, \-\-flbas
+\-f <flbas>, \-\-flbas=<flbas>
 .RS 4
-The namespace formatted logical block size setting\&.
+Namespace formatted logical block size setting
 .RE
 .PP
-\-d, \-\-dps
+\-d <dps>, \-\-dps=<dps>
 .RS 4
-The data protection settings\&.
+Namespace data protection settings
 .RE
 .PP
 \-m, \-\-nmic
 .RS 4
-Namespace multipath and sharing capabilities\&.
+Namespace multipath and sharing capabilities
 .RE
 .SH "EXAMPLES"
 .sp

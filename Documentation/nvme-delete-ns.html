@@ -743,7 +743,7 @@ nvme-id-ns(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-delete-ns -
-   Send NVMe Namespace Management delete namespace command, return result.
+   delete an already detached namespace via sending a namespace management command to the given device.
 </p>
 </div>
 </div>
@@ -752,7 +752,7 @@ nvme-id-ns(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme id-ns</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
+<pre class="content"><em>nvme id-ns</em> &lt;device&gt; [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -761,7 +761,10 @@ nvme-id-ns(1) Manual Page
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>For the NVMe device given, sends an nvme namespace management command
-to delete the requested namespace and provides the result.</p></div>
+to delete the requested namespace and provides the result. All controllers
+should be detached from the namespace prior to its deletion. A namespace
+ID becomes inactive when that namespace is detached (or, if the namespace
+is not already inactive, once deleted).</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 The <tt>'--namespace-id'</tt> option is mandatory.</p></div>
@@ -779,7 +782,7 @@ The <tt>'--namespace-id'</tt> option is mandatory.</p></div>
 </dt>
 <dd>
 <p>
-        The namespace identifier to delete.
+        Identifier of namespace to delete
 </p>
 </dd>
 </dl></div>
@@ -801,7 +804,7 @@ The <tt>'--namespace-id'</tt> option is mandatory.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-06-08 12:49:30 MDT
+Last updated 2015-08-12 13:10:07 MDT
 </div>
 </div>
 </body>

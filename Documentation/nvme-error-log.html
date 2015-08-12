@@ -743,7 +743,7 @@ nvme-error-log(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-error-log -
-   Send NVME Error log page request, return result and log
+   Retrieve specified number of error log entries from a given device (or namespace attached to device).
 </p>
 </div>
 </div>
@@ -752,9 +752,9 @@ nvme-error-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme error-log</em> &lt;device&gt;  [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                         [--log-entries=&lt;entries&gt; | -e &lt;entries&gt;]
-                         [--raw-binary | -b]</pre>
+<pre class="content"><em>nvme error-log</em> &lt;device&gt;  [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]
+                [ --log-entries=&lt;num entries&gt; | -e &lt;num entries&gt; ]
+                           [ --raw-binary | -b ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -764,8 +764,8 @@ nvme-error-log(1) Manual Page
 <div class="sectionbody">
 <div class="paragraph"><p>Retrieves NVMe Error log page from an NVMe device and provides the
 retuned structure.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
+<div class="paragraph"><p>The <em>&lt;device&gt;</em> parameter is mandatory and may be either the NVMe character
+device (ex: <em>/dev/nvme0</em>), or a namespace block device (ex: <em>/dev/nvme0n1</em>).</p></div>
 <div class="paragraph"><p>On success, the returned error log structure may be returned in one of
 several ways depending on the option flags; the structure may parsed by
 the program and printed in a readable format or the raw buffer may be
@@ -792,10 +792,10 @@ printed to stdout for another program to parse.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
--e &lt;entries&gt;
+-e &lt;num entries&gt;
 </dt>
 <dt class="hdlist1">
---log-entries=&lt;entries&gt;
+--log-entries=&lt;num entries&gt;
 </dt>
 <dd>
 <p>
@@ -854,7 +854,7 @@ Print the raw output to a file:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-05-11 13:55:59 MDT
+Last updated 2015-08-12 15:31:56 MDT
 </div>
 </div>
 </body>

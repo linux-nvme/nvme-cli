@@ -12,8 +12,8 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Retrieves the namespace ID for an NVMe block device. The <device> param
-is mandatory and must be an NVMe block device (ex: /dev/nvme0n1).
+Retrieves the namespace ID for an NVMe block device. The '<device>' param
+is mandatory and must be an NVMe block device (ex: '/dev/nvme0n1').
 
 OPTIONS
 -------

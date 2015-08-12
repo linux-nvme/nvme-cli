@@ -2,12 +2,12 @@
 .\"     Title: nvme-compare
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-COMPARE" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-COMPARE" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,33 +28,97 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-compare \- Send an NVMe Compare command, provide results
+nvme-compare \- Compare data located on the NVMe storage media to the specified data buffer
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\-compare\fR <device> [\-\-start\-block=<slba> | \-s <slba>]
-                        [\-\-block\-count=<nlb> | \-c <nlb>]
-                        [\-\-data\-size=<size> | \-z <size>]
-                        [\-\-ref\-tag=<reftag> | \-r <reftag>]
-                        [\-\-data=<data\-file> | \-d <data\-file>]
-                        [\-\-prinfo=<prinfo> | \-p <prinfo>]
-                        [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
-                        [\-\-app\-tag=<apptag> | \-a <apptag>]
-                        [\-\-limited\-retry | \-l]
-                        [\-\-force\-unit\-access | \-f]
+\fInvme compare\fR <device> [ \-\-start\-block=<slba> | \-s <slba> ]
+                        [ \-\-block\-count=<nlb> | \-c <nlb> ]
+                        [ \-\-data\-size=<size> | \-z <size> ]
+                        [ \-\-ref\-tag=<reftag> | \-r <reftag> ]
+                        [ \-\-data=<data\-file> | \-d <data\-file> ]
+                        [ \-\-prinfo=<prinfo> | \-p <prinfo> ]
+                        [ \-\-app\-tag\-mask=<appmask> | \-m <appmask> ]
+                        [ \-\-app\-tag=<apptag> | \-a <apptag> ]
+                        [ \-\-limited\-retry | \-l ]
+                        [ \-\-force\-unit\-access | \-f ]
 .fi
 .SH "DESCRIPTION"
 .sp
-The Compare command reads the logical blocks specified by the command from the medium and compares the data read to a comparison data buffer transferred as part of the command\&. If the data read from the controller and the comparison data buffer are equivalent with no miscompares, then the command completes successfully\&. If there is any miscompare, the command completes with an error of Compare Failure\&. If metadata is provided, then a comparison is also performed for the metadata\&.
+The Compare command reads the specified logical blocks from the storage media, and compares the bytes read to a data buffer populated with user\-specified data which is transferred as part of the command\&. If the data read from the controller and the comparison data buffer are equivalent (with no miscompares), then the command completes successfully\&. If any miscompares occur, a Compare Failure result shall be returned\&. If metadata is provided, a comparison is also performed for the metadata\&.
+.sp
+The \fI<device>\fR parameter is mandatory and may be either the NVMe character device (ex: \fI/dev/nvme0\fR), or a currently existing namespace block device (ex: \fI/dev/nvme0n1\fR)\&.
 .SH "OPTIONS"
 .PP
 \-\-start\-block=<slba>, \-s <slba>
 .RS 4
-Start block\&.
+The start block on the device for comparison to the data buffer (defaults to 0)
+.RE
+.PP
+\-\-block\-count=<nlb>, \-b <nlb>
+.RS 4
+The number of logical blocks on the device from the start block onward to compare to the data buffer
+.RE
+.PP
+\-\-data\-size=<size>, \-z <size>
+.RS 4
+Size in bytes of the local data buffer to compare to data on the storage media
+.RE
+.PP
+\-\-data=<file>, \-d <file>
+.RS 4
+Local file from which to populate the buffer to compare to data on the storage media
+.RE
+.PP
+\-\-prinfo=<prinfo>, \-p <prinfo>
+.RS 4
+Value for the protection information and check field
+.RE
+.PP
+\-\-app\-tag\-mask=<apptagmask>, \-m <apptagmask>
+.RS 4
+App tag mask\&. Used for end\-to\-end t10 information protection\&.
+.RE
+.PP
+\-\-app\-tag=<apptag>, \-a <apptag>
+.RS 4
+App tag\&. Used for end\-to\-end t10 information protection\&.
+.RE
+.PP
+\-\-limited\-retry, \-l
+.RS 4
+Limit the number of attempts to access the storage media, in the case that initial attempts are unsuccessful
+.RE
+.PP
+\-\-force\-unit\-access, \-f
+.RS 4
+Return command result data before command completion value is returned
 .RE
 .SH "EXAMPLES"
 .sp
-No examples yet\&.
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The following will compare 512 bytes of data from a local file called
+\fItest\&.txt\fR
+to 512 bytes of data starting at block 0 on namespace 1 of the storage media, i\&.e\&.
+\fI/dev/nvme0n1\fR\&. No metadata shall be compared\&. Retry attempts will be only limited by the NVM Express specification\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme compare /dev/nvme0n1 \-\-start\-block=0 \-\-data\-size=512 \-\-data=test\&.txt
+.fi
+.if n \{\
+.RE
+.\}
+.RE
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

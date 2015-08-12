@@ -3,17 +3,16 @@ nvme-fw-activate(1)
 
 NAME
 ----
-nvme-fw-activate - Used to verify and commit a firmware image.
+nvme-fw-activate - Verify downloaded firmware image and commit to specific firmware slot
 
 SYNOPSIS
 --------
 [verse]
-'nvme fw-activate' <device> [--slot=<slot> | -s <slot>]
-		    [--action=<action> | -a <action>]
+'nvme fw-activate' <device> [ --slot=<slot> | -s <slot> ] [ --action=<action> | -a <action> ]
 
 DESCRIPTION
 -----------
-For the NVMe device given, send an nvme Firmware Activate admin command
+For the NVMe device given, send an NVMe Firmware Activate admin command
 and provides the results.
 
 The Firmware Activate command is used to verify that a valid firmware
@@ -27,7 +26,7 @@ data structure as indicated in the Firmware Slot Information log page.
 
 No further action is automatically taken to reset the device, which is
 usually required to complete the activation process. If your kernel and
-driver are recent enough, you can activate the firmware by issuing a
+NVMe driver are recent enough, you can activate the firmware by issuing a
 reset through Linux sysfs, for example:
 
 ------------

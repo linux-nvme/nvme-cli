@@ -8,7 +8,11 @@ nvme-resv-acquire - Acquire an nvme reservation
 SYNOPSIS
 --------
 [verse]
-'nvme resv-acquire' <device>
+'nvme resv-acquire' <device> [ --namespace-id=<nsid> | -n <nsid> ]
+			     [ --crkey=<ck> | -c <ck> ]
+			     [ --prkey=<pk> | -p <pk> ]
+			     [ --rtype=<rk> | -t <rk> ]
+			     [ --racqa=<rq> | -a <rq> ] [ --iekey | -i ]
 
 DESCRIPTION
 -----------
@@ -39,14 +43,19 @@ OPTIONS
 	this field is reserved.
 
 -t <rtype>::
---rtyep=<rtype>::
+--rtype=<rtype>::
 	Reservation Type: This field specifies the type of reservation
 	to be created.
+
+-i::
+--iekey::
+	Ignore any existing Reservation Key on the namespace in question
+
 +
 []
 |=================
 |Value|Definition
-|0h|Reserved 
+|0h|Reserved
 |1h|Write Exclusive Reservation
 |2h|Exclusive Access Reservation
 |3h|Write Exclusive - Registrants Only Reservation

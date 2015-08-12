@@ -3,48 +3,53 @@ nvme-create-ns(1)
 
 NAME
 ----
-nvme-create-ns - Send NVMe Namespace management command to create namespace, returns results.
+nvme-create-ns - Create an NVMe namespace via sending a namespace management command to the specified controller
 
 SYNOPSIS
 --------
 [verse]
-'nvme create-ns' <device> [--nsze=<nsze> | -n <nsze>]
-			[--ncap=<ncap> | -c <ncap>]
-			[--flbas=<flbas> | -f <flbas>]
-			[--dps=<dps> | -d <dps>]
-			[--nmic=<nmic> | -m <nmic>]
+'nvme create-ns' <device> [ --nsze=<nsze> | -n <nsze> ]
+			  [ --ncap=<ncap> | -c <ncap> ]
+			  [ --flbas=<flbas> | -f <flbas> ]
+			  [ --dps=<dps> | -d <dps> ]
+			  [ --nmic=<nmic> | -m <nmic> ]
 
 DESCRIPTION
 -----------
-For the NVMe device given, sends a namespace management command to create
-the namespace with the requested settings. On success, the namespace
-identifier assigned by the controller is returned.
+Send a namespace management command to the given NVMe device to create
+a namespace with the specified parameters. The next available namespace ID
+is used for the create operation. On success, the namespace
+identifier assigned by the controller is returned. Note that a created namespace
+is not yet attached to any controller(s); this command should be followed by
+some desired permutation on the 'nvme attach-ns' command. A given namespace
+must be attached to at least one controller before any commands other than
+'attach-ns' may be directed at that namespace.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+The '<device>' parameter is mandatory and may be either the NVMe character
+device (ex: '/dev/nvme0'), or a currently existing namespace block device
+(ex: '/dev/nvme0n1').
 
 OPTIONS
 -------
--s::
---nsze::
-	The namespace size.
+-s <nsze>::
+--nsze=<nsze>::
+	Namespace size
 
--c::
---ncap::
-	The namespace capacity.
+-c <ncap>::
+--ncap=<ncap>::
+	Namespace capacity
 
--f::
---flbas::
-	The namespace formatted logical block size setting.
+-f <flbas>::
+--flbas=<flbas>::
+	Namespace formatted logical block size setting
 
--d::
---dps::
-	The data protection settings.
+-d <dps>::
+--dps=<dps>::
+	Namespace data protection settings
 
 -m::
 --nmic::
-	Namespace multipath and sharing capabilities.
-
+	Namespace multipath and sharing capabilities
 
 EXAMPLES
 --------

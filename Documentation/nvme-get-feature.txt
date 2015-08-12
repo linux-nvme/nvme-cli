@@ -8,24 +8,33 @@ nvme-get-feature - Gets an NVMe feature, returns applicable results
 SYNOPSIS
 --------
 [verse]
-'nvme get-feature' <device> [--namespace-id=<nsid> | -n <nsid>]
-			  [--feature-id=<fid> | -f <fid>] [--cdw11=<cdw11>]
-			  [--data-len=<data-len> | -l <data-len>]
-			  [--sel=<select> | -s <select>]
-			  [--raw-binary | -b]
+'nvme get-feature' <device> [ --namespace-id=<nsid> | -n <nsid> ]
+			  [ --feature-id=<fid> | -f <fid> ]
+			  [ --cdw11=<cdw11> | -c <cdw11> ]
+			  [ --data-len=<data-len> | -l <data-len> ]
+			  [ --sel=<select> | -s <select> ]
+			  [ --raw-binary | -b ]
 
 DESCRIPTION
 -----------
-Submits an NVMe Get Feature admin command and returns the applicable
-results. This may be the feature's value, or may also include a feature
-structure if the feature requires it (ex: LBA Range Type).
+Submits an NVMe Get Feature admin command on an applicable operating parameter
+of the specified controller and returns result. This may be the feature's
+value, or may also include a feature structure if the feature requires it
+(ex: LBA Range Type).
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+Operating parameters are grouped and identified by
+Feature Identifiers; each Feature Identifier contains one or more attributes
+that may affect behaviour of the Feature. Each Feature has three possible
+settings; default, saveable, and current. If a Feature is saveable, it may
+be modified by 'nvme set-feature'. Default values are vendor-specific and
+not changeable. Use 'nvme set-feature' to change saveable Features.
+
+The '<device>' parameter is mandatory and may be either the NVMe character
+device (ex: '/dev/nvme0'), or a namespace block device (ex: '/dev/nvme0n1').
 
 On success, the returned feature's structure (if applicable) may be
 returned in one of several ways depending on the option flags; the
-structure may parsed by the program and printed in a readable format
+structure may be parsed by the program and printed in a readable format
 if it is a known structure, displayed in hex, or the raw buffer may be
 printed to stdout for another program to parse.
 
@@ -33,13 +42,12 @@ OPTIONS
 -------
 -n <nsid>::
 --namespace-id=<nsid>::
-	Retrieve the feature for the given nsid. This is optional and
-	most features do not use this value.
+	Retrieve the feature for the given nsid. This is optional;
+	most namespaces do not have their own features.
 
 -f <fid>::
 --feature-id=<fid>::
-	The feature id to send with the command. Value provided should
-	be in hex.
+	Hexadecimal feature ID
 
 -s <select>::
 --sel=<select>::
@@ -49,8 +57,8 @@ OPTIONS
 []
 |==================
 |Select|Description
-|0|Current 
-|1|Default 
+|0|Current
+|1|Default
 |2|Saved
 |3|Supported capabilities
 |4–7|Reserved
@@ -73,7 +81,7 @@ OPTIONS
 
 EXAMPLES
 --------
-* Retrieves the feature for Number of Queues, or feature id 7:
+* Retrieves the feature for Number of Queues, or feature ID 7:
 +
 ------------
 # nvme get-feature /dev/nvme0 -f 7

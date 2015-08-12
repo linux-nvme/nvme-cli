@@ -743,7 +743,7 @@ nvme-fw-activate(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-fw-activate -
-   Used to verify and commit a firmware image.
+   Verify downloaded firmware image and commit to specific firmware slot
 </p>
 </div>
 </div>
@@ -752,8 +752,7 @@ nvme-fw-activate(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme fw-activate</em> &lt;device&gt; [--slot=&lt;slot&gt; | -s &lt;slot&gt;]
-                    [--action=&lt;action&gt; | -a &lt;action&gt;]</pre>
+<pre class="content"><em>nvme fw-activate</em> &lt;device&gt; [ --slot=&lt;slot&gt; | -s &lt;slot&gt; ] [ --action=&lt;action&gt; | -a &lt;action&gt; ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -761,7 +760,7 @@ nvme-fw-activate(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, send an nvme Firmware Activate admin command
+<div class="paragraph"><p>For the NVMe device given, send an NVMe Firmware Activate admin command
 and provides the results.</p></div>
 <div class="paragraph"><p>The Firmware Activate command is used to verify that a valid firmware
 image has been downloaded and to commit that revision to a specific
@@ -773,7 +772,7 @@ be determined from the Firmware Revision field of the Identify Controller
 data structure as indicated in the Firmware Slot Information log page.</p></div>
 <div class="paragraph"><p>No further action is automatically taken to reset the device, which is
 usually required to complete the activation process. If your kernel and
-driver are recent enough, you can activate the firmware by issuing a
+NVMe driver are recent enough, you can activate the firmware by issuing a
 reset through Linux sysfs, for example:</p></div>
 <div class="listingblock">
 <div class="content">
@@ -877,7 +876,7 @@ Activate the last downloaded fw to slot 1.
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-09 08:30:40 MST
+Last updated 2015-08-12 13:34:14 MDT
 </div>
 </div>
 </body>

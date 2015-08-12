@@ -3,30 +3,36 @@ nvme-attach-ns(1)
 
 NAME
 ----
-nvme-attach-ns - Send NVMe attach namespace, return result.
+nvme-attach-ns - Attach a given namespace to the provided controller or list of controllers.
 
 SYNOPSIS
 --------
 [verse]
-'nvme attach-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
-			[--controllers=<ctrl-list,> | -c <ctrl-list,>]
+'nvme attach-ns' <device> [ --namespace-id=<nsid> | -n <nsid> ]
+	[ --controllers=<ctrl1,...,ctrln> | -c <ctrl1,...,ctrln> ]
 
 DESCRIPTION
 -----------
 For the NVMe device given, sends the nvme namespace attach command for
-the provided namespace identifier, attaching to the provided list of
-controller identifiers.
+the provided namespace identifier, attaching to the provided controller or
+list of controller identifiers.
+
+The '<device>' parameter is mandatory and may be either the NVMe character
+device (ex: '/dev/nvme0'), or a currently existing namespace block device
+(ex: '/dev/nvme0n1').
 
 OPTIONS
 -------
 -n <nsid>::
 --namespace-id=<nsid>::
-	The namespace identifier to attach.
+	The namespace identifier to attach. This parameter is required.
 
--c <ctrl-list,>::
--controllers=<ctrl-list,>::
-	The comma separated list of controller identifiers to attach
-	the namesapce too.
+-c <ctrl1,ctrl2,...,ctrln>::
+-controllers=<ctrl1,ctrl2,...,ctrln>::
+	The comma-separated list of controller identifiers to which we
+	want to attach the namespace. If a controller is given (e.g.,
+	nvme attach-ns /dev/nvme0 -n 1) a comma-separated list of
+	controllers need not be provided, but not vice versa.
 
 EXAMPLES
 --------

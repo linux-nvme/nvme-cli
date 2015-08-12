@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.7" />
-<title>nvme-fw-download(1)</title>
+<title>nvme-smart-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -738,12 +738,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-fw-download(1) Manual Page
+nvme-smart-log(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-fw-download -
-   copy all or part of a firmware image to the specified controller for future update.
+<p>nvme-smart-log-add -
+   Send NVMe SMART log additional page request, returns result and log
 </p>
 </div>
 </div>
@@ -752,9 +752,8 @@ nvme-fw-download(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme fw-download</em> &lt;device&gt; [ --fw=&lt;firmware-file&gt; | -f &lt;firmware-file&gt; ]
-                    [ --xfer=&lt;transfer-size&gt; | -x &lt;transfer-size&gt; ]
-                    [ --offset=&lt;offset&gt; | -o &lt;offset&gt; ]</pre>
+<pre class="content"><em>nvme smart-log-add</em> &lt;device&gt; [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]
+                        [ --raw-binary | -b ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -762,23 +761,13 @@ nvme-fw-download(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>The Firmware Image Download command is used to download all or a portion
-of the firmware image for a future update to the controller. The Firmware
-Image Download command may be submitted while other commands on the Admin
-Submission Queue or I/O Submission Queues are outstanding. The Firmware
-Image Download command copies the new firmware image (in whole or in part)
-to the controller.</p></div>
-<div class="paragraph"><p>The firmware image may be constructed of multiple pieces that
-are individually downloaded with separate Firmware Image Download
-commands. Each Firmware Image Download command includes a Dword
-Offset and Number of Dwords that specify a Dword range. The host
-software shall ensure that firmware pieces do not have Dword ranges
-that overlap. Firmware portions may be submitted out of order to the
-controller.</p></div>
-<div class="paragraph"><p>The new firmware image is not applied as part of the Firmware Image
-Download command. It is applied following a reset, where the image to
-apply and the firmware slot it should be committed to is specified with
-the Firmware Activate command.</p></div>
+<div class="paragraph"><p>Retrieves an additional NVMe SMART log page from an NVMe device and provides the returned structure.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
+<div class="paragraph"><p>On success, the returned log structure may be returned in one of
+several ways depending on the option flags; the structure may parsed by
+the program and printed in a readable format or the raw buffer may be
+printed to stdout for another program to parse.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -786,44 +775,29 @@ the Firmware Activate command.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--f &lt;firmware-file&gt;
+-n &lt;nsid&gt;
 </dt>
 <dt class="hdlist1">
---fw=&lt;firmeware-file&gt;
+--namespace-id=&lt;nsid&gt;
 </dt>
 <dd>
 <p>
-        Required argument. This specifies the path to the device&#8217;s
-        firmware file on your system that will be read by the program
-        and sent to the device.
+        Retrieve the additional SMART log for the given nsid. This is
+        optional and its success may depend on the device&#8217;s capabilities
+        to provide this log on a per-namespace basis (see the NVMe
+        Identify Controller for this capability). The defualt nsid to
+        use is 0xffffffff for the device global SMART log.
 </p>
 </dd>
 <dt class="hdlist1">
--x &lt;transfer-size&gt;
+-b
 </dt>
 <dt class="hdlist1">
---xfer=&lt;transfer-size&gt;
+--raw-binary
 </dt>
 <dd>
 <p>
-        This specifies the size of firmware chunk to transfer, if transfer
-        of the entire image at once is not desired and/or possible. This
-        is useful if the device has a max transfer size requirement for
-        firmware. It defaults to 4k.
-</p>
-</dd>
-<dt class="hdlist1">
--o &lt;offset&gt;
-</dt>
-<dt class="hdlist1">
---offset=&lt;offset&gt;
-</dt>
-<dd>
-<p>
-        This specifies the starting offset in dwords. This is really only
-        useful if your firmware is split in multiple files; otherwise
-        the offset starts at zero and automatically adjusts based on the
-        <em>xfer</em> size given.
+        Print the raw SMART log buffer to stdout.
 </p>
 </dd>
 </dl></div>
@@ -835,12 +809,22 @@ the Firmware Activate command.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Transfer a firmware size 128KiB at a time:
+Print the SMART log page in a human readable format:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme fw-download /dev/nvme0 --fw=/path/to/nvme.fw --xfer=0x20000</tt></pre>
+<pre><tt># nvme smart-log /dev/nvme0</tt></pre>
 </div></div>
+</li>
+<li>
+<p>
+Print the raw SMART log to a file:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><tt># nvme smart-log /dev/nvme0 --raw-binary &gt; fw_log.raw</tt></pre>
+</div></div>
+<div class="paragraph"><p>It is probably a bad idea to not redirect stdout when using this mode.</p></div>
 </li>
 </ul></div>
 </div>
@@ -855,7 +839,7 @@ Transfer a firmware size 128KiB at a time:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-08-12 15:34:38 MDT
+Last updated 2015-08-12 15:30:49 MDT
 </div>
 </div>
 </body>

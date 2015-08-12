@@ -8,11 +8,12 @@ nvme-set-feature - Sets an NVMe feature, returns applicable results
 SYNOPSIS
 --------
 [verse]
-'nvme set-feature' <device> [--namespace-id=<nsid> | -n <nsid>]
-			  [--feature-id=<fid> | -f <fid>] [--value=<value>]
-			  [--data-len=<data-len> | -l <data-len>]
-			  [--data=<data-file> | -d <data-file>]
-			  [--raw-binary | -b]
+'nvme set-feature' <device> [ --namespace-id=<nsid> | -n <nsid> ]
+			    [ --feature-id=<fid> | -f <fid> ]
+			    [ --value=<value> | -v <value> ]
+			    [ --data-len=<data-len> | -l <data-len> ]
+			    [ --data=<data-file> | -d <data-file> ]
+			    [ --raw-binary | -b ]
 
 DESCRIPTION
 -----------
@@ -54,10 +55,10 @@ OPTIONS
 	Range Type and host identifier. This defaults to STDIN so files
 	and echos can be piped.
 
+-v <value>::
 --value=<value>::
 	The value for command dword 11, the value you want to set the
 	feature to.
-
 
 EXAMPLES
 --------

@@ -752,18 +752,17 @@ nvme-compare(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme-write</em> &lt;device&gt; [--start-block=&lt;slba&gt; | -s &lt;slba&gt;]
-                        [--block-count=&lt;nlb&gt; | -c &lt;nlb&gt;]
-                        [--data-size=&lt;size&gt; | -z &lt;size&gt;]
-                        [--metadata-size=&lt;size&gt; | -y &lt;size&gt;]
-                        [--ref-tag=&lt;reftag&gt; | -r &lt;reftag&gt;]
-                        [--data=&lt;data-file&gt; | -d &lt;data-file&gt;]
-                        [--prinfo=&lt;prinfo&gt; | -p &lt;prinfo&gt;]
-                        [--app-tag-mask=&lt;appmask&gt; | -m &lt;appmask&gt;]
-                        [--app-tag=&lt;apptag&gt; | -a &lt;apptag&gt;]
-                        [--limited-retry | -l]
-                        [--latency | -t]
-                        [--force-unit-access | -f]</pre>
+<pre class="content"><em>nvme write</em> &lt;device&gt; [ --start-block=&lt;slba&gt; | -s &lt;slba&gt; ]
+                      [ --block-count=&lt;nlb&gt; | -c &lt;nlb&gt; ]
+                      [ --data-size=&lt;size&gt; | -z &lt;size&gt; ]
+                      [ --metadata-size=&lt;size&gt; | -y &lt;size&gt; ]
+                      [ --ref-tag=&lt;reftag&gt; | -r &lt;reftag&gt; ]
+                      [ --data=&lt;data-file&gt; | -d &lt;data-file&gt; ]
+                      [ --prinfo=&lt;prinfo&gt; | -p &lt;prinfo&gt; ]
+                      [ --app-tag-mask=&lt;appmask&gt; | -m &lt;appmask&gt; ]
+                      [ --app-tag=&lt;apptag&gt; | -a &lt;apptag&gt; ]
+                      [ --limited-retry | -l ]
+                      [ --latency | -t ] [ --force-unit-access | -f ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -788,7 +787,99 @@ if you don&#8217;t provide a file.</p></div>
 </dt>
 <dd>
 <p>
-        Start block.
+        Write will begin at the start block on device
+</p>
+</dd>
+<dt class="hdlist1">
+--block-count=&lt;nlb&gt;
+</dt>
+<dt class="hdlist1">
+-b &lt;nlb&gt;
+</dt>
+<dd>
+<p>
+        The number of logical blocks on the device from the start block
+        onward to write
+</p>
+</dd>
+<dt class="hdlist1">
+--data-size=&lt;size&gt;
+</dt>
+<dt class="hdlist1">
+-z &lt;size&gt;
+</dt>
+<dd>
+<p>
+        Size in bytes of data buffer to write
+</p>
+</dd>
+<dt class="hdlist1">
+--data=&lt;file&gt;
+</dt>
+<dt class="hdlist1">
+-d &lt;file&gt;
+</dt>
+<dd>
+<p>
+        Option specific to <em>nvme write</em> and <em>compare</em> commands
+        (file to fill data buffer to be sent to device, defaults to
+        stdin)
+</p>
+</dd>
+<dt class="hdlist1">
+--prinfo=&lt;prinfo&gt;
+</dt>
+<dt class="hdlist1">
+-p &lt;prinfo&gt; 
+</dt>
+<dd>
+<p>
+        Value for the protection information and check field
+</p>
+</dd>
+<dt class="hdlist1">
+--app-tag-mask=&lt;apptagmask&gt;
+</dt>
+<dt class="hdlist1">
+-m &lt;apptagmask&gt;
+</dt>
+<dd>
+<p>
+        App tag mask. Used for end-to-end t10 information protection.
+</p>
+</dd>
+<dt class="hdlist1">
+--app-tag=&lt;apptag&gt;
+</dt>
+<dt class="hdlist1">
+-a &lt;apptag&gt;
+</dt>
+<dd>
+<p>
+        App tag. Used for end-to-end t10 information protection.
+</p>
+</dd>
+<dt class="hdlist1">
+--limited-retry
+</dt>
+<dt class="hdlist1">
+-l
+</dt>
+<dd>
+<p>
+        Limit the number of attempts to access the storage media, in the case
+        that initial attempts are unsuccessful
+</p>
+</dd>
+<dt class="hdlist1">
+--force-unit-access
+</dt>
+<dt class="hdlist1">
+-f
+</dt>
+<dd>
+<p>
+        Return command result data before command completion value is returned
 </p>
 </dd>
 <dt class="hdlist1">
@@ -799,7 +890,7 @@ if you don&#8217;t provide a file.</p></div>
 </dt>
 <dd>
 <p>
-        Print out the latency the IOCTL took (in us).
+        Print IOCTL latency statistics in us
 </p>
 </dd>
 </dl></div>
@@ -808,7 +899,13 @@ if you don&#8217;t provide a file.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No examples yet.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+nvme write /dev/nvme0n1 --data=test.txt --data-size=4096 --start-block=0 --force-unit-access
+</p>
+</li>
+</ul></div>
 </div>
 </div>
 <div class="sect1">
@@ -821,7 +918,7 @@ if you don&#8217;t provide a file.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-23 13:29:23 MST
+Last updated 2015-08-12 15:17:38 MDT
 </div>
 </div>
 </body>

@@ -752,11 +752,12 @@ nvme-get-feature(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme get-feature</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                          [--feature-id=&lt;fid&gt; | -f &lt;fid&gt;] [--cdw11=&lt;cdw11&gt;]
-                          [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
-                          [--sel=&lt;select&gt; | -s &lt;select&gt;]
-                          [--raw-binary | -b]</pre>
+<pre class="content"><em>nvme get-feature</em> &lt;device&gt; [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]
+                          [ --feature-id=&lt;fid&gt; | -f &lt;fid&gt; ]
+                          [ --cdw11=&lt;cdw11&gt; | -c &lt;cdw11&gt; ]
+                          [ --data-len=&lt;data-len&gt; | -l &lt;data-len&gt; ]
+                          [ --sel=&lt;select&gt; | -s &lt;select&gt; ]
+                          [ --raw-binary | -b ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -764,14 +765,21 @@ nvme-get-feature(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Submits an NVMe Get Feature admin command and returns the applicable
-results. This may be the feature&#8217;s value, or may also include a feature
-structure if the feature requires it (ex: LBA Range Type).</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
+<div class="paragraph"><p>Submits an NVMe Get Feature admin command on an applicable operating parameter
+of the specified controller and returns result. This may be the feature&#8217;s
+value, or may also include a feature structure if the feature requires it
+(ex: LBA Range Type).</p></div>
+<div class="paragraph"><p>Operating parameters are grouped and identified by
+Feature Identifiers; each Feature Identifier contains one or more attributes
+that may affect behaviour of the Feature. Each Feature has three possible
+settings; default, saveable, and current. If a Feature is saveable, it may
+be modified by <em>nvme set-feature</em>. Default values are vendor-specific and
+not changeable. Use <em>nvme set-feature</em> to change saveable Features.</p></div>
+<div class="paragraph"><p>The <em>&lt;device&gt;</em> parameter is mandatory and may be either the NVMe character
+device (ex: <em>/dev/nvme0</em>), or a namespace block device (ex: <em>/dev/nvme0n1</em>).</p></div>
 <div class="paragraph"><p>On success, the returned feature&#8217;s structure (if applicable) may be
 returned in one of several ways depending on the option flags; the
-structure may parsed by the program and printed in a readable format
+structure may be parsed by the program and printed in a readable format
 if it is a known structure, displayed in hex, or the raw buffer may be
 printed to stdout for another program to parse.</p></div>
 </div>
@@ -788,8 +796,8 @@ printed to stdout for another program to parse.</p></div>
 </dt>
 <dd>
 <p>
-        Retrieve the feature for the given nsid. This is optional and
-        most features do not use this value.
+        Retrieve the feature for the given nsid. This is optional;
+        most namespaces do not have their own features.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -800,8 +808,7 @@ printed to stdout for another program to parse.</p></div>
 </dt>
 <dd>
 <p>
-        The feature id to send with the command. Value provided should
-        be in hex.
+        Hexadecimal feature ID
 </p>
 </dd>
 <dt class="hdlist1">
@@ -894,7 +901,7 @@ cellspacing="0" cellpadding="4">
 <div class="ulist"><ul>
 <li>
 <p>
-Retrieves the feature for Number of Queues, or feature id 7:
+Retrieves the feature for Number of Queues, or feature ID 7:
 </p>
 <div class="listingblock">
 <div class="content">
@@ -948,7 +955,7 @@ format:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-09 08:30:40 MST
+Last updated 2015-08-12 14:53:31 MDT
 </div>
 </div>
 </body>

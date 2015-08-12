@@ -2,12 +2,12 @@
 .\"     Title: nvme-attach-ns
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ATTACH\-NS" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-ATTACH\-NS" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,26 +28,28 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-attach-ns \- Send NVMe attach namespace, return result\&.
+nvme-attach-ns \- Attach a given namespace to the provided controller or list of controllers\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme attach\-ns\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                        [\-\-controllers=<ctrl\-list,> | \-c <ctrl\-list,>]
+\fInvme attach\-ns\fR <device> [ \-\-namespace\-id=<nsid> | \-n <nsid> ]
+        [ \-\-controllers=<ctrl1,\&...,ctrln> | \-c <ctrl1,\&...,ctrln> ]
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, sends the nvme namespace attach command for the provided namespace identifier, attaching to the provided list of controller identifiers\&.
+For the NVMe device given, sends the nvme namespace attach command for the provided namespace identifier, attaching to the provided controller or list of controller identifiers\&.
+.sp
+The \fI<device>\fR parameter is mandatory and may be either the NVMe character device (ex: \fI/dev/nvme0\fR), or a currently existing namespace block device (ex: \fI/dev/nvme0n1\fR)\&.
 .SH "OPTIONS"
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>
 .RS 4
-The namespace identifier to attach\&.
+The namespace identifier to attach\&. This parameter is required\&.
 .RE
 .PP
-\-c <ctrl\-list,>, \-controllers=<ctrl\-list,>
+\-c <ctrl1,ctrl2,\&...,ctrln>, \-controllers=<ctrl1,ctrl2,\&...,ctrln>
 .RS 4
-The comma separated list of controller identifiers to attach the namesapce too\&.
+The comma\-separated list of controller identifiers to which we want to attach the namespace\&. If a controller is given (e\&.g\&., nvme attach\-ns /dev/nvme0 \-n 1) a comma\-separated list of controllers need not be provided, but not vice versa\&.
 .RE
 .SH "EXAMPLES"
 .sp

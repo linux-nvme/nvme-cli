@@ -743,7 +743,7 @@ nvme-flush(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-flush -
-   Flush command.
+   commit data and metadata associated with the given namespace(s) to nonvolatile media
 </p>
 </div>
 </div>
@@ -752,7 +752,7 @@ nvme-flush(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme flush</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
+<pre class="content"><em>nvme flush</em> &lt;device&gt; [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -763,8 +763,11 @@ nvme-flush(1) Manual Page
 <div class="paragraph"><p>The Flush command shall commit data and metadata associated with the
 specified namespace(s) to nonvolatile media. The flush applies to
 all commands completed prior to the submission of the Flush command.
-The controller may also flush additional data and/or metadata from
-any namespace.</p></div>
+Additional data may also be flushed by the controller, from any
+namespace, depending on controller and associated namespace status.</p></div>
+<div class="paragraph"><p>The <em>&lt;device&gt;</em> parameter is mandatory and may be either the NVMe character
+device (ex: <em>/dev/nvme0</em>), or a currently existing namespace block device
+(ex: <em>/dev/nvme0n1</em>).</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -789,12 +792,20 @@ any namespace.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No examples yet.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_nvme">NVME</h2>
-<div class="sectionbody">
+<div class="ulist"><ul>
+<li>
+<p>
+The following will commit data and metadata associated with namespace
+1 to the nonvolatile media /dev/nvme0.
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><tt># nvme flush /dev/nvme0n1
+
+NVME</tt></pre>
+</div></div>
+</li>
+</ul></div>
 <div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
@@ -802,7 +813,7 @@ any namespace.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-09 08:30:40 MST
+Last updated 2015-08-12 13:19:32 MDT
 </div>
 </div>
 </body>

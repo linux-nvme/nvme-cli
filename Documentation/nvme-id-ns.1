@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-ns
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,18 +28,18 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-id-ns \- Send NVMe Identify Namespace, return result and structure
+nvme-id-ns \- Send NVMe Identify Namespace command, return result and structure
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme id\-ns\fR <device> [\-v | \-\-vendor\-specific] [\-b | \-\-raw\-binary]
-                    [\-\-namespace\-id=<nsid> | \-n <nsid>]
+\fInvme id\-ns\fR <device> [ \-v | \-\-vendor\-specific] [ \-b | \-\-raw\-binary ]
+                    [ \-\-namespace\-id=<nsid> | \-n <nsid> ]
 .fi
 .SH "DESCRIPTION"
 .sp
 For the NVMe device given, sends an identify namespace command and provides the result and returned structure\&.
 .sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. If the character device is given, the \*(Aq\-\-namespace\-id\*(Aq option is mandatory, otherwise it will use the ns\-id of the namespace for the block device you opened\&. For block devices, the ns\-id used can be overridden with the same option\&.
+The \fI<device>\fR parameter is mandatory and may be either the NVMe character device (ex: \fI/dev/nvme0\fR), or a namespace block device (ex: \fI/dev/nvme0n1\fR)\&. If a character device is given, the \*(Aq\-\-namespace\-id\*(Aq option is mandatory, otherwise, the ns\-id of the namespace for the provided block device will be used\&. For block devices, the ns\-id used can be overridden with the same option\&.
 .sp
 On success, the structure may be returned in one of several ways depending on the option flags; the structure may be parsed by the program or the raw buffer may be printed to stdout\&.
 .SH "OPTIONS"

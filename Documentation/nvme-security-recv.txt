@@ -3,16 +3,16 @@ nvme-security-recv(1)
 
 NAME
 ----
-nvme-security-recv - Security Recv command
+nvme-security-recv - retrieve results of a previous Security Send command
 
 SYNOPSIS
 --------
 [verse]
-'nvme security-recv' [<device>] [--size=<size> | -x <size>]
-		    [--secp=<security-protocol> | -p <security-protocol>]
-		    [--spsp=<protocol-specific> | -s <protocol-specific>]
-		    [--tl=<transfer-length> | -t <transfer-length>]
-		    [-b | --raw-binary]
+'nvme security-recv' <device> [ --size=<size> | -x <size> ]
+		[ --secp=<security-protocol> | -p <security-protocol> ]
+		[ --spsp=<protocol-specific> | -s <protocol-specific> ]
+		[ --tl=<transfer-length> | -t <transfer-length> ]
+		[ -b | --raw-binary ]
 
 DESCRIPTION
 -----------
@@ -23,7 +23,9 @@ the controller.
 The association between a Security Receive command and previous Security
 Send commands is dependent on the Security Protocol. The format of the
 data to be transferred is dependent on the Security Protocol. Refer to
-SPC-4 for Security Protocol details.
+SPC-4 for Security Protocol details. In human terms, a Security Recv
+may only return results about a Security Send formatted under the same
+security protocol.
 
 Each Security Receive command returns the appropriate data corresponding
 to a Security Send command as defined by the rules of the Security
@@ -35,8 +37,7 @@ OPTIONS
 -------
 -x <size>::
 --size=<size>::
-	Size of buffer to allocate. One success it will be printed
-	to STDOUT.
+	Size of buffer to allocate. On success, output is printed to stdout.
 
 -p <security-protocol>::
 --secp=<security-protocol>::
@@ -57,11 +58,12 @@ OPTIONS
 
 -b::
 --raw-binary::
-	Print the raw buffer to stdout. Defaults to print in hex.
+	Print the raw buffer to stdout (output format defaults to hex
+	dump).
 
 EXAMPLES
 --------
-No Examples
+No examples yet.
 
 NVME
 ----

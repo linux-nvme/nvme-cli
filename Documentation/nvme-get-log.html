@@ -743,7 +743,7 @@ nvme-get-log(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-get-log -
-   Retrieves a log page from an NVMe device
+   Retrieves desired number of bytes from a given NVMe device log
 </p>
 </div>
 </div>
@@ -752,10 +752,10 @@ nvme-get-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme get-log</em> &lt;device&gt; [--log-id=&lt;log-id&gt; | -i &lt;log-id&gt;]
-                      [--log-len=&lt;log-len&gt; | -l &lt;log-len&gt;]
-                      [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                      [--raw-binary | -b]</pre>
+<pre class="content"><em>nvme get-log</em> &lt;device&gt; [ --log-id=&lt;log-id&gt; | -i &lt;log-id&gt; ]
+                        [ --log-len=&lt;log-len&gt; | -l &lt;log-len&gt; ]
+                        [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]
+                        [ --raw-binary | -b ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -764,9 +764,9 @@ nvme-get-log(1) Manual Page
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Retrieves an arbitrary NVMe log page from an NVMe device and provides
-the retuned structure.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
+the returned structure.</p></div>
+<div class="paragraph"><p>The <em>&lt;device&gt;</em> parameter is mandatory and may be either the NVMe character
+device (ex: <em>/dev/nvme0</em>), or a namespace block device (ex: <em>/dev/nvme0n1</em>).</p></div>
 <div class="paragraph"><p>On success, the returned log structure may be returned in one of several
 ways depending on the option flags; the structure may be displayed in
 hex by the program or the raw buffer may be printed to stdout for another
@@ -869,7 +869,7 @@ Have the program return the raw log page in binary:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-05-11 13:55:59 MDT
+Last updated 2015-08-12 14:54:43 MDT
 </div>
 </div>
 </body>
