@@ -2,12 +2,12 @@
 .\"     Title: nvme-security-recv
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SECURITY\-RECV" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-SECURITY\-RECV" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,28 +28,28 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-security-recv \- Security Recv command
+nvme-security-recv \- retrieve results of a previous Security Send command
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme security\-recv\fR [<device>] [\-\-size=<size> | \-x <size>]
-                    [\-\-secp=<security\-protocol> | \-p <security\-protocol>]
-                    [\-\-spsp=<protocol\-specific> | \-s <protocol\-specific>]
-                    [\-\-tl=<transfer\-length> | \-t <transfer\-length>]
-                    [\-b | \-\-raw\-binary]
+\fInvme security\-recv\fR <device> [ \-\-size=<size> | \-x <size> ]
+                [ \-\-secp=<security\-protocol> | \-p <security\-protocol> ]
+                [ \-\-spsp=<protocol\-specific> | \-s <protocol\-specific> ]
+                [ \-\-tl=<transfer\-length> | \-t <transfer\-length> ]
+                [ \-b | \-\-raw\-binary ]
 .fi
 .SH "DESCRIPTION"
 .sp
 The Security Receive command transfers the status and data result of one or more Security Send commands that were previously submitted to the controller\&.
 .sp
-The association between a Security Receive command and previous Security Send commands is dependent on the Security Protocol\&. The format of the data to be transferred is dependent on the Security Protocol\&. Refer to SPC\-4 for Security Protocol details\&.
+The association between a Security Receive command and previous Security Send commands is dependent on the Security Protocol\&. The format of the data to be transferred is dependent on the Security Protocol\&. Refer to SPC\-4 for Security Protocol details\&. In human terms, a Security Recv may only return results about a Security Send formatted under the same security protocol\&.
 .sp
 Each Security Receive command returns the appropriate data corresponding to a Security Send command as defined by the rules of the Security Protocol\&. The Security Receive command data may not be retained if there is a loss of communication between the controller and host, or if a controller reset occurs\&.
 .SH "OPTIONS"
 .PP
 \-x <size>, \-\-size=<size>
 .RS 4
-Size of buffer to allocate\&. One success it will be printed to STDOUT\&.
+Size of buffer to allocate\&. On success, output is printed to stdout\&.
 .RE
 .PP
 \-p <security\-protocol>, \-\-secp=<security\-protocol>
@@ -69,11 +69,11 @@ Allocation Length: The value of this field is specific to the Security Protocol 
 .PP
 \-b, \-\-raw\-binary
 .RS 4
-Print the raw buffer to stdout\&. Defaults to print in hex\&.
+Print the raw buffer to stdout (output format defaults to hex dump)\&.
 .RE
 .SH "EXAMPLES"
 .sp
-No Examples
+No examples yet\&.
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

@@ -28,16 +28,16 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-smart-log \- Send NVMe SMART log page request, returns result and log
+nvme-smart-log-add \- Send NVMe SMART log additional page request, returns result and log
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme smart\-log\fR <device> [ \-\-namespace\-id=<nsid> | \-n <nsid> ]
+\fInvme smart\-log\-add\fR <device> [ \-\-namespace\-id=<nsid> | \-n <nsid> ]
                         [ \-\-raw\-binary | \-b ]
 .fi
 .SH "DESCRIPTION"
 .sp
-Retrieves the NVMe SMART log page from an NVMe device and provides the retuned structure\&.
+Retrieves an additional NVMe SMART log page from an NVMe device and provides the returned structure\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
@@ -46,7 +46,7 @@ On success, the returned log structure may be returned in one of several ways de
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>
 .RS 4
-Retrieve the SMART log for the given nsid\&. This is optional and its success may depend on the device\(cqs capabilities to provide this log on a per\-namespace basis (see the NVMe Identify Controller for this capability)\&. The defualt nsid to use is 0xffffffff for the device global SMART log\&.
+Retrieve the additional SMART log for the given nsid\&. This is optional and its success may depend on the device\(cqs capabilities to provide this log on a per\-namespace basis (see the NVMe Identify Controller for this capability)\&. The defualt nsid to use is 0xffffffff for the device global SMART log\&.
 .RE
 .PP
 \-b, \-\-raw\-binary

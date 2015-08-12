@@ -743,7 +743,7 @@ nvme-format(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-format -
-   Format an NVMe device
+   Re-format a specified namespace on the given NVMe device
 </p>
 </div>
 </div>
@@ -752,12 +752,11 @@ nvme-format(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme format</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                    [--lbaf=&lt;lbaf&gt; | -l &lt;lbaf&gt;]
-                    [--ses=&lt;ses&gt; | -s &lt;ses&gt;]
-                    [--pil=&lt;pil&gt; | -p &lt;pil&gt;]
-                    [--pi=&lt;pi&gt; | -i &lt;pi&gt;]
-                    [--ms=&lt;ms&gt; | -m &lt;ms&gt;]</pre>
+<pre class="content"><em>nvme format</em> &lt;device&gt; [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]
+                       [ --lbaf=&lt;lbaf&gt; | -l &lt;lbaf&gt; ]
+                       [ --ses=&lt;ses&gt; | -s &lt;ses&gt; ]
+                       [ --pil=&lt;pil&gt; | -p &lt;pil&gt; ]
+                       [ --pi=&lt;pi&gt; | -i &lt;pi&gt; ] [ --ms=&lt;ms&gt; | -m &lt;ms&gt; ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -766,19 +765,23 @@ nvme-format(1) Manual Page
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>For the NVMe device given, send an nvme Format Namespace admin command
-and provides the results.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+and return the results. Can erase all data in namespace (user data erase)
+or delete data encryption key if specified. Can also be used to change LBAF;
+if an LBA format that is unsupported is chosen, the device&#8217;s capacity will
+appear to be 0 to the host machine once the new format is visible.</p></div>
+<div class="paragraph"><p>The <em>&lt;device&gt;</em> parameter is mandatory and may be either the NVMe character
+device (ex: <em>/dev/nvme0</em>), or a namespace block device (ex: <em>/dev/nvme0n1</em>).
 If the character device is given, the namespace identifer will default
-to 0xffffffff to send the format to all namespace, but can be overridden
-to any namespace with the <em>namespace-id</em> option. If the block device
-is given, the namespace identifier will default to the namespace id of
-the block device given, but can be overriden with the same option.</p></div>
-<div class="paragraph"><p>On success, the program will automatically issue BLKRRPART ioctl to
-force rescanning the namespaces. If the driver is recent enough, this
-will automatically update the physical block size. If it is not recent
-enough, you will need to remove and rescan your device some other way
-for the new block size to be visible.</p></div>
+to 0xffffffff, sending the format to all namespaces attached to that device,
+but can be overridden to only re-format a specific namespace with the
+<em>namespace-id</em> option. If a block device is given, the namespace
+identifier will default to the namespace id of the provided device, but
+can be overridden with the same option.</p></div>
+<div class="paragraph"><p>On success, the program will automatically issue a BLKRRPART IOCTL to
+force a rescan of the device&#8217;s attached namespaces. If the NVMe driver is
+recent enough, this will automatically update the physical block size.
+If it is not recent enough, you will need to remove and rescan your
+device some other way for the new block size to be visible.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -978,7 +981,7 @@ information:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-09 08:30:40 MST
+Last updated 2015-08-12 14:52:58 MDT
 </div>
 </div>
 </body>

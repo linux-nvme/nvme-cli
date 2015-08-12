@@ -2,12 +2,12 @@
 .\"     Title: nvme-compare
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-COMPARE" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-COMPARE" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,18 +32,17 @@ nvme-write \- Send an NVMe write command, provide results
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\-write\fR <device> [\-\-start\-block=<slba> | \-s <slba>]
-                        [\-\-block\-count=<nlb> | \-c <nlb>]
-                        [\-\-data\-size=<size> | \-z <size>]
-                        [\-\-metadata\-size=<size> | \-y <size>]
-                        [\-\-ref\-tag=<reftag> | \-r <reftag>]
-                        [\-\-data=<data\-file> | \-d <data\-file>]
-                        [\-\-prinfo=<prinfo> | \-p <prinfo>]
-                        [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
-                        [\-\-app\-tag=<apptag> | \-a <apptag>]
-                        [\-\-limited\-retry | \-l]
-                        [\-\-latency | \-t]
-                        [\-\-force\-unit\-access | \-f]
+\fInvme write\fR <device> [ \-\-start\-block=<slba> | \-s <slba> ]
+                      [ \-\-block\-count=<nlb> | \-c <nlb> ]
+                      [ \-\-data\-size=<size> | \-z <size> ]
+                      [ \-\-metadata\-size=<size> | \-y <size> ]
+                      [ \-\-ref\-tag=<reftag> | \-r <reftag> ]
+                      [ \-\-data=<data\-file> | \-d <data\-file> ]
+                      [ \-\-prinfo=<prinfo> | \-p <prinfo> ]
+                      [ \-\-app\-tag\-mask=<appmask> | \-m <appmask> ]
+                      [ \-\-app\-tag=<apptag> | \-a <apptag> ]
+                      [ \-\-limited\-retry | \-l ]
+                      [ \-\-latency | \-t ] [ \-\-force\-unit\-access | \-f ]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -52,16 +51,69 @@ The Write command writes the logical blocks specified by the command to the medi
 .PP
 \-\-start\-block=<slba>, \-s <slba>
 .RS 4
-Start block\&.
+Write will begin at the start block on device
+.RE
+.PP
+\-\-block\-count=<nlb>, \-b <nlb>
+.RS 4
+The number of logical blocks on the device from the start block onward to write
+.RE
+.PP
+\-\-data\-size=<size>, \-z <size>
+.RS 4
+Size in bytes of data buffer to write
+.RE
+.PP
+\-\-data=<file>, \-d <file>
+.RS 4
+Option specific to
+\fInvme write\fR
+and
+\fIcompare\fR
+commands (file to fill data buffer to be sent to device, defaults to stdin)
+.RE
+.PP
+\-\-prinfo=<prinfo>, \-p <prinfo>
+.RS 4
+Value for the protection information and check field
+.RE
+.PP
+\-\-app\-tag\-mask=<apptagmask>, \-m <apptagmask>
+.RS 4
+App tag mask\&. Used for end\-to\-end t10 information protection\&.
+.RE
+.PP
+\-\-app\-tag=<apptag>, \-a <apptag>
+.RS 4
+App tag\&. Used for end\-to\-end t10 information protection\&.
+.RE
+.PP
+\-\-limited\-retry, \-l
+.RS 4
+Limit the number of attempts to access the storage media, in the case that initial attempts are unsuccessful
+.RE
+.PP
+\-\-force\-unit\-access, \-f
+.RS 4
+Return command result data before command completion value is returned
 .RE
 .PP
 \-\-latency, \-t
 .RS 4
-Print out the latency the IOCTL took (in us)\&.
+Print IOCTL latency statistics in us
 .RE
 .SH "EXAMPLES"
 .sp
-No examples yet\&.
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+nvme write /dev/nvme0n1 \-\-data=test\&.txt \-\-data\-size=4096 \-\-start\-block=0 \-\-force\-unit\-access
+.RE
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

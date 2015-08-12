@@ -3,12 +3,16 @@ nvme-resv-register(1)
 
 NAME
 ----
-nvme-resv-register - Register an nvme reservation
+nvme-resv-register - Register an nvme reservation on a namespace
 
 SYNOPSIS
 --------
 [verse]
-'nvme resv-register' <device>
+'nvme resv-register' <device> [ --namespace-id=<nsid> | -n <nsid> ]
+			      [ --crkey=<ck> | -c <ck> ]
+			      [ --nrkey=<nk> | -k <nk> ]
+			      [ --rrega=<rr> | -r <rr> ]
+			      [ --cptpl=<cp> | -p <cp> ] [ --iekey | -i ]
 
 DESCRIPTION
 -----------
@@ -45,6 +49,7 @@ OPTIONS
 	Change Persist Through Power Loss State: This field allows the
 	Persist Through Power Loss state associated with the namespace
 	to be modified as a side effect of processing this command.
+
 +
 []
 |=================
@@ -57,8 +62,8 @@ are cleared on a power on.
 a power loss.
 |=================
 
--a <rrega>::
---rrega=<rrega>::
+-r <rr>::
+--rrega=<rr>::
 	Reservation Register Action: This field specifies the registration
 	action that is performed by the command.
 +

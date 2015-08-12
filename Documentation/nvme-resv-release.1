@@ -2,12 +2,12 @@
 .\"     Title: nvme-resv-release
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RESV\-RELEASE" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-RESV\-RELEASE" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,10 @@ nvme-resv-release \- Release an nvme reservation
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme resv\-release\fR <device>
+\fInvme resv\-release\fR <device> [ \-\-namespace\-id=<nsid> | \-n <nsid> ]
+                             [ \-\-rtype=<rt> | \-t <rt> ]
+                             [ \-\-rrela=<rr> | \-a <rr> ]
+                             [ \-\-crkey=<ck> | \-c <ck> ] [ \-\-iekey | \-i ]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -49,9 +52,12 @@ Override the nsid field\&. If using the admin character device, this paramter is
 Current Reservation Key: If the Reservation Register Action is 001b (i\&.e\&., Unregister Reservation Key) or 010b (i\&.e\&., Replace Reservation Key), then this field contains the current reservation key associated with the host\&. For all other Reservation Register Action values, this field is reserved\&. The controller ignores the value of this field when the Ignore Existing Key (IEKEY) bit is set to \(oq1\(cq\&.
 .RE
 .PP
-\-t <rtype>, \-\-rtyep=<rtype>
+\-t <rtype>, \-\-rtype=<rtype>
 .RS 4
 Reservation Type: This field specifies the type of reservation to be created\&.
+.RE
+.sp
++
 .TS
 allbox tab(:);
 lt lt
@@ -64,53 +70,70 @@ lt lt
 lt lt
 lt lt.
 T{
+.sp
 Value
 T}:T{
+.sp
 Definition
 T}
 T{
+.sp
 0h
 T}:T{
+.sp
 Reserved
 T}
 T{
+.sp
 1h
 T}:T{
+.sp
 Write Exclusive Reservation
 T}
 T{
+.sp
 2h
 T}:T{
+.sp
 Exclusive Access Reservation
 T}
 T{
+.sp
 3h
 T}:T{
+.sp
 Write Exclusive \- Registrants Only Reservation
 T}
 T{
+.sp
 4h
 T}:T{
+.sp
 Exclusive Access \- Registrants Only Reservation
 T}
 T{
+.sp
 5h
 T}:T{
+.sp
 Write Exclusive \- All Registrants Reservation
 T}
 T{
+.sp
 6h
 T}:T{
+.sp
 Exclusive Access \- All Registrants Reservation
 T}
 T{
+.sp
 07h\-FFh
 T}:T{
+.sp
 Reserved
 T}
 .TE
 .sp 1
-.RE
 .PP
 \-a <rrela>, \-\-rrela=<rrela>
 .RS 4

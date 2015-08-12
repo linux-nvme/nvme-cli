@@ -3,41 +3,89 @@ nvme-compare(1)
 
 NAME
 ----
-nvme-compare - Send an NVMe Compare command, provide results
+nvme-compare - Compare data located on the NVMe storage media to the specified data buffer
 
 SYNOPSIS
 --------
 [verse]
-'nvme-compare' <device> [--start-block=<slba> | -s <slba>]
-			[--block-count=<nlb> | -c <nlb>]
-			[--data-size=<size> | -z <size>]
-			[--ref-tag=<reftag> | -r <reftag>]
-			[--data=<data-file> | -d <data-file>]
-			[--prinfo=<prinfo> | -p <prinfo>]
-			[--app-tag-mask=<appmask> | -m <appmask>]
-			[--app-tag=<apptag> | -a <apptag>]
-			[--limited-retry | -l]
-			[--force-unit-access | -f]
+'nvme compare' <device> [ --start-block=<slba> | -s <slba> ]
+			[ --block-count=<nlb> | -c <nlb> ]
+			[ --data-size=<size> | -z <size> ]
+			[ --ref-tag=<reftag> | -r <reftag> ]
+			[ --data=<data-file> | -d <data-file> ]
+			[ --prinfo=<prinfo> | -p <prinfo> ]
+			[ --app-tag-mask=<appmask> | -m <appmask> ]
+			[ --app-tag=<apptag> | -a <apptag> ]
+			[ --limited-retry | -l ]
+			[ --force-unit-access | -f ]
 
 DESCRIPTION
 -----------
-The Compare command reads the logical blocks specified by the command
-from the medium and compares the data read to a comparison data buffer
-transferred as part of the command. If the data read from the controller
-and the comparison data buffer are equivalent with no miscompares,
-then the command completes successfully. If there is any miscompare,
-the command completes with an error of Compare Failure. If metadata is
-provided, then a comparison is also performed for the metadata.
+The Compare command reads the specified logical blocks from the storage
+media, and compares the bytes read to a data buffer populated with
+user-specified data which is transferred as part of the command. If the
+data read from the controller and the comparison data buffer are equivalent
+(with no miscompares), then the command completes successfully. If any
+miscompares occur, a Compare Failure result shall be returned. If metadata is
+provided, a comparison is also performed for the metadata.
+
+The '<device>' parameter is mandatory and may be either the NVMe character
+device (ex: '/dev/nvme0'), or a currently existing namespace block device
+(ex: '/dev/nvme0n1').
 
 OPTIONS
 -------
 --start-block=<slba>::
 -s <slba>::
-	Start block.
+	The start block on the device for comparison to the data buffer
+	(defaults to 0)
+
+--block-count=<nlb>::
+-b <nlb>::
+	The number of logical blocks on the device from the start block
+	onward to compare to the data buffer
+
+--data-size=<size>::
+-z <size>::
+	Size in bytes of the local data buffer to compare to data on the
+	storage media
+
+--data=<file>::
+-d <file>::
+	Local file from which to populate the buffer to compare to data on
+	the storage media
+
+--prinfo=<prinfo>::
+-p <prinfo> ::
+	Value for the protection information and check field
+
+--app-tag-mask=<apptagmask>::
+-m <apptagmask>::
+	App tag mask. Used for end-to-end t10 information protection.
+
+--app-tag=<apptag>::
+-a <apptag>::
+	App tag. Used for end-to-end t10 information protection.
+
+--limited-retry::
+-l::
+	Limit the number of attempts to access the storage media, in the case
+	that initial attempts are unsuccessful
+
+--force-unit-access::
+-f::
+	Return command result data before command completion value is returned
 
 EXAMPLES
 --------
-No examples yet.
+* The following will compare 512 bytes of data from a local file called 'test.txt'
+  to 512 bytes of data starting at block 0 on namespace 1 of the storage media,
+  i.e. '/dev/nvme0n1'. No metadata shall be compared. Retry attempts will be only
+  limited by the NVM Express specification.
++
+------------
+# nvme compare /dev/nvme0n1 --start-block=0 --data-size=512 --data=test.txt
+------------
 
 NVME
 ----

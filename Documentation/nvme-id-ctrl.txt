@@ -3,20 +3,20 @@ nvme-id-ctrl(1)
 
 NAME
 ----
-nvme-id-ctrl - Send NVMe Identify Controller, return result and structure
+nvme-id-ctrl - Send NVMe Identify Controller command to the given device, return results
 
 SYNOPSIS
 --------
 [verse]
-'nvme id-ctrl' <device> [-v | --vendor-specific] [-b | --raw-binary]
+'nvme id-ctrl' <device> [ -v | --vendor-specific ] [ -b | --raw-binary ]
 
 DESCRIPTION
 -----------
 For the NVMe device given, sends an identify controller command and
 provides the result and returned structure.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+The '<device>' parameter is mandatory and may be either the NVMe character
+device (ex: '/dev/nvme0'), or a namespace block device (ex: '/dev/nvme0n1').
 
 On success, the structure may be returned in one of several ways depending
 on the option flags; the structure may be parsed by the program or the

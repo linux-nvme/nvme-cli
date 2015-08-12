@@ -2,12 +2,12 @@
 .\"     Title: nvme-fw-activate
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FW\-ACTIVATE" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-FW\-ACTIVATE" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,20 +28,19 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-fw-activate \- Used to verify and commit a firmware image\&.
+nvme-fw-activate \- Verify downloaded firmware image and commit to specific firmware slot
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme fw\-activate\fR <device> [\-\-slot=<slot> | \-s <slot>]
-                    [\-\-action=<action> | \-a <action>]
+\fInvme fw\-activate\fR <device> [ \-\-slot=<slot> | \-s <slot> ] [ \-\-action=<action> | \-a <action> ]
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, send an nvme Firmware Activate admin command and provides the results\&.
+For the NVMe device given, send an NVMe Firmware Activate admin command and provides the results\&.
 .sp
 The Firmware Activate command is used to verify that a valid firmware image has been downloaded and to commit that revision to a specific firmware slot\&. The host may select the firmware image to activate on the next controller reset (CC\&.EN transitions from \(oq1\(cq to \(oq0\(cq, a PCI function level reset, and/or other Controller or NVM Subsystem Reset) as part of this command\&. The currently executing firmware revision may be determined from the Firmware Revision field of the Identify Controller data structure as indicated in the Firmware Slot Information log page\&.
 .sp
-No further action is automatically taken to reset the device, which is usually required to complete the activation process\&. If your kernel and driver are recent enough, you can activate the firmware by issuing a reset through Linux sysfs, for example:
+No further action is automatically taken to reset the device, which is usually required to complete the activation process\&. If your kernel and NVMe driver are recent enough, you can activate the firmware by issuing a reset through Linux sysfs, for example:
 .sp
 .if n \{\
 .RS 4

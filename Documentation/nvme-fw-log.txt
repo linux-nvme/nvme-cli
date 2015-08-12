@@ -3,12 +3,12 @@ nvme-fw-log(1)
 
 NAME
 ----
-nvme-fw-log - Send NVMe Firmware log page request, returns result and log
+nvme-fw-log - Retrieve and return the firmware log for the specified device
 
 SYNOPSIS
 --------
 [verse]
-'nvme fw-log' <device> [--raw-binary | -b]
+'nvme fw-log' <device> [ --raw-binary | -b ]
 
 DESCRIPTION
 -----------

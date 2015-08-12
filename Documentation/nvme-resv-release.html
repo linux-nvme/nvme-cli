@@ -752,7 +752,10 @@ nvme-resv-release(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme resv-release</em> &lt;device&gt;</pre>
+<pre class="content"><em>nvme resv-release</em> &lt;device&gt; [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]
+                             [ --rtype=&lt;rt&gt; | -t &lt;rt&gt; ]
+                             [ --rrela=&lt;rr&gt; | -a &lt;rr&gt; ]
+                             [ --crkey=&lt;ck&gt; | -c &lt;ck&gt; ] [ --iekey | -i ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -801,13 +804,16 @@ held on a namespace.</p></div>
 -t &lt;rtype&gt;
 </dt>
 <dt class="hdlist1">
---rtyep=&lt;rtype&gt;
+--rtype=&lt;rtype&gt;
 </dt>
 <dd>
 <p>
         Reservation Type: This field specifies the type of reservation
         to be created.
 </p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>+</p></div>
 <div class="tableblock">
 <table rules="all"
 width="100%"
@@ -855,7 +861,7 @@ cellspacing="0" cellpadding="4">
 </tbody>
 </table>
 </div>
-</dd>
+<div class="dlist"><dl>
 <dt class="hdlist1">
 -a &lt;rrela&gt;
 </dt>
@@ -928,7 +934,7 @@ cellspacing="0" cellpadding="4">
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-09 08:30:40 MST
+Last updated 2015-08-12 15:14:46 MDT
 </div>
 </div>
 </body>

@@ -8,8 +8,9 @@ nvme-list-ctrl - Send NVMe Identify List Controllers, return result and structur
 SYNOPSIS
 --------
 [verse]
-'nvme list-ctrl' <device> [--cntid=<cntid> | -c <cntid>]
-			[--namespace-id=<nsid> | -n <nsid>]
+'nvme list-ctrl' <device> [ --controller-id=<cid> | -c <cid> ]
+			[ --namespace-id=<nsid> | -n <nsid> ]
+
 DESCRIPTION
 -----------
 For the NVMe device given, sends an identify command for controller list
@@ -26,9 +27,9 @@ identifier.
 
 OPTIONS
 -------
--c <cntid>::
---cntid=<cntid>::
-	Retrieve the identify list structure starting with the given controller id.
+-c <cid>::
+--controller-id=<cid>::
+	Retrieve identify list structure, starting with the given controller ID
 
 -n <nsid>::
 --namespace-id=<nsid>::

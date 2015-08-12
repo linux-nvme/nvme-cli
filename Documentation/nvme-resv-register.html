@@ -743,7 +743,7 @@ nvme-resv-register(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-resv-register -
-   Register an nvme reservation
+   Register an nvme reservation on a namespace
 </p>
 </div>
 </div>
@@ -752,7 +752,11 @@ nvme-resv-register(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme resv-register</em> &lt;device&gt;</pre>
+<pre class="content"><em>nvme resv-register</em> &lt;device&gt; [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]
+                              [ --crkey=&lt;ck&gt; | -c &lt;ck&gt; ]
+                              [ --nrkey=&lt;nk&gt; | -k &lt;nk&gt; ]
+                              [ --rrega=&lt;rr&gt; | -r &lt;rr&gt; ]
+                              [ --cptpl=&lt;cp&gt; | -p &lt;cp&gt; ] [ --iekey | -i ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -824,6 +828,9 @@ replace a reservation key.</p></div>
         Persist Through Power Loss state associated with the namespace
         to be modified as a side effect of processing this command.
 </p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>+</p></div>
 <div class="tableblock">
 <table rules="all"
 width="100%"
@@ -857,12 +864,12 @@ a power loss.</p></td>
 </tbody>
 </table>
 </div>
-</dd>
+<div class="dlist"><dl>
 <dt class="hdlist1">
--a &lt;rrega&gt;
+-r &lt;rr&gt;
 </dt>
 <dt class="hdlist1">
---rrega=&lt;rrega&gt;
+--rrega=&lt;rr&gt;
 </dt>
 <dd>
 <p>
@@ -934,7 +941,7 @@ cellspacing="0" cellpadding="4">
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-09 08:30:40 MST
+Last updated 2015-08-12 15:06:56 MDT
 </div>
 </div>
 </body>

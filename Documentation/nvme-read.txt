@@ -8,38 +8,75 @@ nvme-read - Send an NVMe Read command, provide results
 SYNOPSIS
 --------
 [verse]
-'nvme-read' <device> [--start-block=<slba> | -s <slba>]
-			[--block-count=<nlb> | -c <nlb>]
-			[--data-size=<size> | -z <size>]
-			[--metadata-size=<size> | -y <size>]
-			[--ref-tag=<reftag> | -r <reftag>]
-			[--data=<data-file> | -d <data-file>]
-			[--prinfo=<prinfo> | -p <prinfo>]
-			[--app-tag-mask=<appmask> | -m <appmask>]
-			[--app-tag=<apptag> | -a <apptag>]
-			[--limited-retry | -l]
-			[--latency | -t]
-			[--force-unit-access | -f]
+'nvme-read' <device> [ --start-block=<slba> | -s <slba> ]
+		     [ --block-count=<nlb> | -c <nlb> ]
+		     [ --data-size=<size> | -z <size> ]
+		     [ --metadata-size=<size> | -y <size> ]
+		     [ --ref-tag=<reftag> | -r <reftag> ]
+		     [ --data=<data-file> | -d <data-file> ]
+		     [ --app-tag-mask=<appmask> | -m <appmask> ]
+		     [ --app-tag=<apptag> | -a <apptag> ]
+		     [ --prinfo=<prinfo> | -p <prinfo> ]
+		     [ --limited-retry | -l ]
+		     [ --latency | -t ] [ --force-unit-access | -f ]
 
 DESCRIPTION
 -----------
-The Read command reads the logical blocks specified by the command from
-the medium and copies to the data data buffer provided. Will use stdout
-by default if you don't provide a file.
+The Read command copies the specified logical blocks on the given NVMe storage
+media to the specified data buffer; data buffer defaults to stdout.
+
+The '<device>' parameter is mandatory and may be either the NVMe character
+device (ex: '/dev/nvme0'), or a namespace block device (ex: '/dev/nvme0n1').
+
 
 OPTIONS
 -------
 --start-block=<slba>::
 -s <slba>::
-	Start block.
+	Read will begin at the start block on device
+
+--block-count=<nlb>::
+-b <nlb>::
+	The number of logical blocks on the device from the start block
+	onward to read
+
+--data-size=<size>::
+-z <size>::
+	Effectively, size in bytes of data to return
+
+--data=<file>::
+-d <file>::
+	Option specific to 'nvme write' and 'compare' commands
+	(file to fill data buffer to be sent to device)
+
+--prinfo=<prinfo>::
+-p <prinfo> ::
+	Value for the protection information and check field
+
+--app-tag-mask=<apptagmask>::
+-m <apptagmask>::
+	App tag mask. Used for end-to-end t10 information protection.
+
+--app-tag=<apptag>::
+-a <apptag>::
+	App tag. Used for end-to-end t10 information protection.
+
+--limited-retry::
+-l::
+	Limit the number of attempts to access the storage media, in the case
+	that initial attempts are unsuccessful
+
+--force-unit-access::
+-f::
+	Return command result data before command completion value is returned
 
 --latency::
 -t::
-	Print out the latency the IOCTL took (in us).
+	Print IOCTL latency statistics in us
 
 EXAMPLES
 --------
-No examples yet.
+* nvme read /dev/nvme0n1 --start-block=0 --data-size=512 --metadata-size=8
 
 NVME
 ----

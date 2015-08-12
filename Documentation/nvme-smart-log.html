@@ -752,8 +752,8 @@ nvme-smart-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme smart-log</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--raw-binary | -b]</pre>
+<pre class="content"><em>nvme smart-log</em> &lt;device&gt; [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]
+                        [ --raw-binary | -b ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -764,7 +764,7 @@ nvme-smart-log(1) Manual Page
 <div class="paragraph"><p>Retrieves the NVMe SMART log page from an NVMe device and provides the retuned structure.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>On success, the returned f/w log structure may be returned in one of
+<div class="paragraph"><p>On success, the returned log structure may be returned in one of
 several ways depending on the option flags; the structure may parsed by
 the program and printed in a readable format or the raw buffer may be
 printed to stdout for another program to parse.</p></div>
@@ -839,7 +839,7 @@ Print the raw SMART log to a file:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-09 08:30:40 MST
+Last updated 2015-08-12 15:30:39 MDT
 </div>
 </div>
 </body>

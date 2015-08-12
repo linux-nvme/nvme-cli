@@ -8,19 +8,25 @@ nvme-io-passthru - Submit an arbitrary io command, return results
 SYNOPSIS
 --------
 [verse]
-'nvme-io-passthru' <device> [--opcode=<opcode> | -o <opcode>]
-		[--flags=<flags> | -f <flags>] [-rsvd=<rsvd> | -R <rsvd>]
-		[--namespace-id=<nsid> | -nsid <nsid>]
-		[--cdw2=<cdw2>] [--cdw3=<cdw3>] [--cdw10=<cdw10>]
-		[--cdw11=<cdw11>] [--cdw12=<cdw12>] [--cdw13=<cdw13>]
-		[--cdw14=<cdw14>] [--cdw15=<cdw15>]
-		[--data-len=<data-len> | -l <data-len>]
-		[--metadata-len=<len> | -m <len>]
-		[--read | -r ] [--write | -w]
-		[--input-file=<file> | -f <file>]
-		[--timeout=<to> | -t <to>]
-		[--show-command | --dry-run | -s]
-		[--raw-binary | -b]
+'nvme-io-passthru' <device> [ --opcode=<opcode> | -o <opcode> ]
+			    [ --flags=<flags> | -f <flags> ]
+			    [ --rsvd=<rsvd> | -R <rsvd> ]
+			    [ --namespace-id=<nsid> | -n <nsid> ]
+			    [ --cdw2=<cdw2> | -2 <cdw2> ]
+			    [ --cdw3=<cdw3> | -3 <cdw3> ]
+			    [ --cdw10=<cdw10> | -4 <cdw10> ]
+			    [ --cdw11=<cdw11> | -5 <cdw11> ]
+			    [ --cdw12=<cdw12> | -6 <cdw12> ]
+			    [ --cdw13=<cdw13> | -7 <cdw13> ]
+			    [ --cdw14=<cdw14> | -8 <cdw14> ]
+			    [ --cdw15=<cdw15> | -9 <cdw15> ]
+			    [ --data-len=<data-len> | -l <data-len> ]
+			    [ --metadata-len=<len> | -m <len> ]
+			    [ --read | -r ] [ --write | -w ]
+			    [ --input-file=<file> | -f <file> ]
+			    [ --timeout=<to> | -t <to> ]
+			    [ --show-command | -s ] [ --dry-run | -d ]
+			    [ --raw-binary | -b ]
 
 DESCRIPTION
 -----------
@@ -29,8 +35,8 @@ results. This may be the simply the command's result and status, or may
 also include a buffer if the command returns one. This command does no
 interpretation of the opcodes or options.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+The '<device>' parameter is mandatory and may be either the NVMe character
+device (ex: '/dev/nvme0'), or a namespace block device (ex: '/dev/nvme0n1').
 
 On success, the returned structure (if applicable) may be returned in
 one of several ways depending on the option flags; the structure may
@@ -56,6 +62,7 @@ OPTIONS
 	The value for the ns-id in the command. Defaults to '0'.
 
 --cdw[2-3,10-15]=<cdw>::
+-[2-9] <cdw>::
 	Specifies the command dword value for that specified entry in
 	the command
 
@@ -63,15 +70,15 @@ OPTIONS
 --read::
 -w::
 --write::
-	Used for the data-direction for the command and required for
-	commands sending/receiving data. Don't use both read and write
-	at the same time.
+	Specify the dataflow direction for the command. Required for
+	commands sending/receiving data. If read and write are appended
+	to the same command, the command will fail.
 
 -i <file>::
 --input-file=<file>::
 	If the command is a data-out (write) command, use this file
 	to fill the buffer sent to the device. If no file is given,
-	assumed to use STDIN.
+	buffer input defaults to stdin.
 
 -l <data-len>::
 --data-len=<data-len>::
@@ -83,11 +90,13 @@ OPTIONS
 
 -s::
 --show-cmd::
-	Print out the command to be sent.
+	Operate in verbose mode, where command would normally be sent
+	silently to the device. Prints command before sending.
 
 -d::
 --dry-run::
-	Do not actually send the command.
+	Operate in verbose mode, but do not actually send the command.
+	Useful for checking structure.
 
 -b::
 --raw-binary::
@@ -97,7 +106,7 @@ OPTIONS
 EXAMPLES
 --------
 
-nvme io-passthru /dev/nvme0n1 --opcode=2 --namespace-id=1 --data-len=4096 --read --cdw10=0 --cdw11=0 --cdw12=0x70000 --raw-binary
+nvme io-passthru /dev/nvme0n1 --opcode=2 --namespace-id=1 --data-len=4096 --raw-binary --read
 
 NVME
 ----

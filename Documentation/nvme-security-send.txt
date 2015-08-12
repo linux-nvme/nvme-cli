@@ -8,10 +8,10 @@ nvme-security-send - Security Send command
 SYNOPSIS
 --------
 [verse]
-'nvme security-send' [<device>] [--file=<file> | -f <file>]
-		    [--secp=<security-protocol> | -p <security-protocol>]
-		    [--spsp=<protocol-specific> | -s <protocol-specific>]
-		    [--tl=<transfer-length> | -t <transfer-length>]
+'nvme security-send' <device> [ --file=<file> | -f <file> ]
+		[ --secp=<security-protocol> | -p <security-protocol> ]
+		[ --spsp=<protocol-specific> | -s <protocol-specific> ]
+		[ --tl=<transfer-length> | -t <transfer-length> ]
 
 DESCRIPTION
 -----------
@@ -53,7 +53,7 @@ OPTIONS
 
 EXAMPLES
 --------
-No Examples
+No examples yet.
 
 NVME
 ----

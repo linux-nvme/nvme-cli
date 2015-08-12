@@ -2,12 +2,12 @@
 .\"     Title: nvme-fw-download
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FW\-DOWNLOAD" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-FW\-DOWNLOAD" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,13 +28,13 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-fw-download \- Download all or a portion of an nvme firmware image\&.
+nvme-fw-download \- copy all or part of a firmware image to the specified controller for future update\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme fw\-download\fR <device> [\-\-fw=<firmware\-file> | \-f <firmware\-file>]
-                    [\-\-xfer=<transfer\-size> | \-x <transfer\-size>]
-                    [\-\-offset=<offset> | \-o <offset>]
+\fInvme fw\-download\fR <device> [ \-\-fw=<firmware\-file> | \-f <firmware\-file> ]
+                    [ \-\-xfer=<transfer\-size> | \-x <transfer\-size> ]
+                    [ \-\-offset=<offset> | \-o <offset> ]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -52,7 +52,7 @@ Required argument\&. This specifies the path to the device\(cqs firmware file on
 .PP
 \-x <transfer\-size>, \-\-xfer=<transfer\-size>
 .RS 4
-This specifies the size to split each transfer\&. This is useful if the device has a max transfer size requirement for firmware\&. It defaults to 4k\&.
+This specifies the size of firmware chunk to transfer, if transfer of the entire image at once is not desired and/or possible\&. This is useful if the device has a max transfer size requirement for firmware\&. It defaults to 4k\&.
 .RE
 .PP
 \-o <offset>, \-\-offset=<offset>

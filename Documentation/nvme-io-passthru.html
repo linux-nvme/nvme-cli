@@ -752,19 +752,25 @@ nvme-io-passthru(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme-io-passthru</em> &lt;device&gt; [--opcode=&lt;opcode&gt; | -o &lt;opcode&gt;]
-                [--flags=&lt;flags&gt; | -f &lt;flags&gt;] [-rsvd=&lt;rsvd&gt; | -R &lt;rsvd&gt;]
-                [--namespace-id=&lt;nsid&gt; | -nsid &lt;nsid&gt;]
-                [--cdw2=&lt;cdw2&gt;] [--cdw3=&lt;cdw3&gt;] [--cdw10=&lt;cdw10&gt;]
-                [--cdw11=&lt;cdw11&gt;] [--cdw12=&lt;cdw12&gt;] [--cdw13=&lt;cdw13&gt;]
-                [--cdw14=&lt;cdw14&gt;] [--cdw15=&lt;cdw15&gt;]
-                [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
-                [--metadata-len=&lt;len&gt; | -m &lt;len&gt;]
-                [--read | -r ] [--write | -w]
-                [--input-file=&lt;file&gt; | -f &lt;file&gt;]
-                [--timeout=&lt;to&gt; | -t &lt;to&gt;]
-                [--show-command | --dry-run | -s]
-                [--raw-binary | -b]</pre>
+<pre class="content"><em>nvme-io-passthru</em> &lt;device&gt; [ --opcode=&lt;opcode&gt; | -o &lt;opcode&gt; ]
+                            [ --flags=&lt;flags&gt; | -f &lt;flags&gt; ]
+                            [ --rsvd=&lt;rsvd&gt; | -R &lt;rsvd&gt; ]
+                            [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]
+                            [ --cdw2=&lt;cdw2&gt; | -2 &lt;cdw2&gt; ]
+                            [ --cdw3=&lt;cdw3&gt; | -3 &lt;cdw3&gt; ]
+                            [ --cdw10=&lt;cdw10&gt; | -4 &lt;cdw10&gt; ]
+                            [ --cdw11=&lt;cdw11&gt; | -5 &lt;cdw11&gt; ]
+                            [ --cdw12=&lt;cdw12&gt; | -6 &lt;cdw12&gt; ]
+                            [ --cdw13=&lt;cdw13&gt; | -7 &lt;cdw13&gt; ]
+                            [ --cdw14=&lt;cdw14&gt; | -8 &lt;cdw14&gt; ]
+                            [ --cdw15=&lt;cdw15&gt; | -9 &lt;cdw15&gt; ]
+                            [ --data-len=&lt;data-len&gt; | -l &lt;data-len&gt; ]
+                            [ --metadata-len=&lt;len&gt; | -m &lt;len&gt; ]
+                            [ --read | -r ] [ --write | -w ]
+                            [ --input-file=&lt;file&gt; | -f &lt;file&gt; ]
+                            [ --timeout=&lt;to&gt; | -t &lt;to&gt; ]
+                            [ --show-command | -s ] [ --dry-run | -d ]
+                            [ --raw-binary | -b ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -776,8 +782,8 @@ nvme-io-passthru(1) Manual Page
 results. This may be the simply the command&#8217;s result and status, or may
 also include a buffer if the command returns one. This command does no
 interpretation of the opcodes or options.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
+<div class="paragraph"><p>The <em>&lt;device&gt;</em> parameter is mandatory and may be either the NVMe character
+device (ex: <em>/dev/nvme0</em>), or a namespace block device (ex: <em>/dev/nvme0n1</em>).</p></div>
 <div class="paragraph"><p>On success, the returned structure (if applicable) may be returned in
 one of several ways depending on the option flags; the structure may
 printed by the program as a hex dump, or may be returned as a raw buffer
@@ -835,6 +841,9 @@ printed to stdout for another program to parse.</p></div>
 <dt class="hdlist1">
 --cdw[2-3,10-15]=&lt;cdw&gt;
 </dt>
+<dt class="hdlist1">
+-[2-9] &lt;cdw&gt;
+</dt>
 <dd>
 <p>
         Specifies the command dword value for that specified entry in
@@ -855,9 +864,9 @@ printed to stdout for another program to parse.</p></div>
 </dt>
 <dd>
 <p>
-        Used for the data-direction for the command and required for
-        commands sending/receiving data. Don&#8217;t use both read and write
-        at the same time.
+        Specify the dataflow direction for the command. Required for
+        commands sending/receiving data. If read and write are appended
+        to the same command, the command will fail.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -870,7 +879,7 @@ printed to stdout for another program to parse.</p></div>
 <p>
         If the command is a data-out (write) command, use this file
         to fill the buffer sent to the device. If no file is given,
-        assumed to use STDIN.
+        buffer input defaults to stdin.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -903,7 +912,8 @@ printed to stdout for another program to parse.</p></div>
 </dt>
 <dd>
 <p>
-        Print out the command to be sent.
+        Operate in verbose mode, where command would normally be sent
+        silently to the device. Prints command before sending.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -914,7 +924,8 @@ printed to stdout for another program to parse.</p></div>
 </dt>
 <dd>
 <p>
-        Do not actually send the command.
+        Operate in verbose mode, but do not actually send the command.
+        Useful for checking structure.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -935,7 +946,7 @@ printed to stdout for another program to parse.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>nvme io-passthru /dev/nvme0n1 --opcode=2 --namespace-id=1 --data-len=4096 --read --cdw10=0 --cdw11=0 --cdw12=0x70000 --raw-binary</p></div>
+<div class="paragraph"><p>nvme io-passthru /dev/nvme0n1 --opcode=2 --namespace-id=1 --data-len=4096 --raw-binary --read</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -948,7 +959,7 @@ printed to stdout for another program to parse.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-09 08:30:40 MST
+Last updated 2015-08-12 14:56:52 MDT
 </div>
 </div>
 </body>

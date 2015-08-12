@@ -752,37 +752,39 @@ nvme-id-ns(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme list-ctrl</em> &lt;device&gt; [--cntid=&lt;cntid&gt; | -c &lt;cntid&gt;]
-                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-DESCRIPTION</pre>
+<pre class="content"><em>nvme list-ctrl</em> &lt;device&gt; [ --controller-id=&lt;cid&gt; | -c &lt;cid&gt; ]
+                        [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]</pre>
 <div class="attribution">
 </div></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>For the NVMe device given, sends an identify command for controller list
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>For the NVMe device given, sends an identify command for controller list
 and provides the result and returned structure. This uses either mode
-12h or 13h depending on the requested namespace identifer.
-
-The &lt;device&gt; parameter is mandatory and may be either the NVMe character
+12h or 13h depending on the requested namespace identifer.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 The starting controller in the list always begins with 0 unless the
-`'--cntid'` option is given to override.
-
-On success, the controller array is printed for each index and controller
-identifier.
-
-OPTIONS</tt></pre>
-</div></div>
+<tt>'--cntid'</tt> option is given to override.</p></div>
+<div class="paragraph"><p>On success, the controller array is printed for each index and controller
+identifier.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">OPTIONS</h2>
+<div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--c &lt;cntid&gt;
+-c &lt;cid&gt;
 </dt>
 <dt class="hdlist1">
---cntid=&lt;cntid&gt;
+--controller-id=&lt;cid&gt;
 </dt>
 <dd>
 <p>
-        Retrieve the identify list structure starting with the given controller id.
+        Retrieve identify list structure, starting with the given controller ID
 </p>
 </dd>
 <dt class="hdlist1">
@@ -818,7 +820,7 @@ OPTIONS</tt></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-06-08 16:59:37 MDT
+Last updated 2015-08-12 15:20:19 MDT
 </div>
 </div>
 </body>

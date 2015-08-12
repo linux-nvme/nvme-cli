@@ -743,7 +743,7 @@ nvme-security-recv(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-security-recv -
-   Security Recv command
+   retrieve results of a previous Security Send command
 </p>
 </div>
 </div>
@@ -752,11 +752,11 @@ nvme-security-recv(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme security-recv</em> [&lt;device&gt;] [--size=&lt;size&gt; | -x &lt;size&gt;]
-                    [--secp=&lt;security-protocol&gt; | -p &lt;security-protocol&gt;]
-                    [--spsp=&lt;protocol-specific&gt; | -s &lt;protocol-specific&gt;]
-                    [--tl=&lt;transfer-length&gt; | -t &lt;transfer-length&gt;]
-                    [-b | --raw-binary]</pre>
+<pre class="content"><em>nvme security-recv</em> &lt;device&gt; [ --size=&lt;size&gt; | -x &lt;size&gt; ]
+                [ --secp=&lt;security-protocol&gt; | -p &lt;security-protocol&gt; ]
+                [ --spsp=&lt;protocol-specific&gt; | -s &lt;protocol-specific&gt; ]
+                [ --tl=&lt;transfer-length&gt; | -t &lt;transfer-length&gt; ]
+                [ -b | --raw-binary ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -770,7 +770,9 @@ the controller.</p></div>
 <div class="paragraph"><p>The association between a Security Receive command and previous Security
 Send commands is dependent on the Security Protocol. The format of the
 data to be transferred is dependent on the Security Protocol. Refer to
-SPC-4 for Security Protocol details.</p></div>
+SPC-4 for Security Protocol details. In human terms, a Security Recv
+may only return results about a Security Send formatted under the same
+security protocol.</p></div>
 <div class="paragraph"><p>Each Security Receive command returns the appropriate data corresponding
 to a Security Send command as defined by the rules of the Security
 Protocol. The Security Receive command data may not be retained if there
@@ -790,8 +792,7 @@ controller reset occurs.</p></div>
 </dt>
 <dd>
 <p>
-        Size of buffer to allocate. One success it will be printed
-        to STDOUT.
+        Size of buffer to allocate. On success, output is printed to stdout.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -840,7 +841,8 @@ controller reset occurs.</p></div>
 </dt>
 <dd>
 <p>
-        Print the raw buffer to stdout. Defaults to print in hex.
+        Print the raw buffer to stdout (output format defaults to hex
+        dump).
 </p>
 </dd>
 </dl></div>
@@ -849,7 +851,7 @@ controller reset occurs.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No Examples</p></div>
+<div class="paragraph"><p>No examples yet.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -862,7 +864,7 @@ controller reset occurs.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-09 08:30:40 MST
+Last updated 2015-08-12 15:36:13 MDT
 </div>
 </div>
 </body>

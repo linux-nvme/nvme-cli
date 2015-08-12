@@ -8,18 +8,17 @@ nvme-write - Send an NVMe write command, provide results
 SYNOPSIS
 --------
 [verse]
-'nvme-write' <device> [--start-block=<slba> | -s <slba>]
-			[--block-count=<nlb> | -c <nlb>]
-			[--data-size=<size> | -z <size>]
-			[--metadata-size=<size> | -y <size>]
-			[--ref-tag=<reftag> | -r <reftag>]
-			[--data=<data-file> | -d <data-file>]
-			[--prinfo=<prinfo> | -p <prinfo>]
-			[--app-tag-mask=<appmask> | -m <appmask>]
-			[--app-tag=<apptag> | -a <apptag>]
-			[--limited-retry | -l]
-			[--latency | -t]
-			[--force-unit-access | -f]
+'nvme write' <device> [ --start-block=<slba> | -s <slba> ]
+		      [ --block-count=<nlb> | -c <nlb> ]
+		      [ --data-size=<size> | -z <size> ]
+		      [ --metadata-size=<size> | -y <size> ]
+		      [ --ref-tag=<reftag> | -r <reftag> ]
+		      [ --data=<data-file> | -d <data-file> ]
+		      [ --prinfo=<prinfo> | -p <prinfo> ]
+		      [ --app-tag-mask=<appmask> | -m <appmask> ]
+		      [ --app-tag=<apptag> | -a <apptag> ]
+		      [ --limited-retry | -l ]
+		      [ --latency | -t ] [ --force-unit-access | -f ]
 
 DESCRIPTION
 -----------
@@ -31,15 +30,51 @@ OPTIONS
 -------
 --start-block=<slba>::
 -s <slba>::
-	Start block.
+	Write will begin at the start block on device
+
+--block-count=<nlb>::
+-b <nlb>::
+	The number of logical blocks on the device from the start block
+	onward to write
+
+--data-size=<size>::
+-z <size>::
+	Size in bytes of data buffer to write
+
+--data=<file>::
+-d <file>::
+	Option specific to 'nvme write' and 'compare' commands
+	(file to fill data buffer to be sent to device, defaults to
+	stdin)
+
+--prinfo=<prinfo>::
+-p <prinfo> ::
+	Value for the protection information and check field
+
+--app-tag-mask=<apptagmask>::
+-m <apptagmask>::
+	App tag mask. Used for end-to-end t10 information protection.
+
+--app-tag=<apptag>::
+-a <apptag>::
+	App tag. Used for end-to-end t10 information protection.
+
+--limited-retry::
+-l::
+	Limit the number of attempts to access the storage media, in the case
+	that initial attempts are unsuccessful
+
+--force-unit-access::
+-f::
+	Return command result data before command completion value is returned
 
 --latency::
 -t::
-	Print out the latency the IOCTL took (in us).
+	Print IOCTL latency statistics in us
 
 EXAMPLES
 --------
-No examples yet.
+* nvme write /dev/nvme0n1 --data=test.txt --data-size=4096 --start-block=0 --force-unit-access
 
 NVME
 ----

@@ -2,12 +2,12 @@
 .\"     Title: nvme-flush
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/09/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FLUSH" "1" "06/09/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-FLUSH" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,15 +28,17 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-flush \- Flush command\&.
+nvme-flush \- commit data and metadata associated with the given namespace(s) to nonvolatile media
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme flush\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+\fInvme flush\fR <device> [ \-\-namespace\-id=<nsid> | \-n <nsid> ]
 .fi
 .SH "DESCRIPTION"
 .sp
-The Flush command shall commit data and metadata associated with the specified namespace(s) to nonvolatile media\&. The flush applies to all commands completed prior to the submission of the Flush command\&. The controller may also flush additional data and/or metadata from any namespace\&.
+The Flush command shall commit data and metadata associated with the specified namespace(s) to nonvolatile media\&. The flush applies to all commands completed prior to the submission of the Flush command\&. Additional data may also be flushed by the controller, from any namespace, depending on controller and associated namespace status\&.
+.sp
+The \fI<device>\fR parameter is mandatory and may be either the NVMe character device (ex: \fI/dev/nvme0\fR), or a currently existing namespace block device (ex: \fI/dev/nvme0n1\fR)\&.
 .SH "OPTIONS"
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>
@@ -45,7 +47,27 @@ Specify the optional namespace id for this command\&. Defaults to 0xffffffff, in
 .RE
 .SH "EXAMPLES"
 .sp
-No examples yet\&.
-.SH "NVME"
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The following will commit data and metadata associated with namespace 1 to the nonvolatile media /dev/nvme0\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme flush /dev/nvme0n1
+
+NVME
+.fi
+.if n \{\
+.RE
+.\}
+.RE
 .sp
 Part of the nvme\-user suite

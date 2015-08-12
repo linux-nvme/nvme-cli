@@ -2,12 +2,12 @@
 .\"     Title: nvme-io-passthru
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-IO\-PASSTHRU" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-IO\-PASSTHRU" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,25 +32,31 @@ nvme-io-passthru \- Submit an arbitrary io command, return results
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\-io\-passthru\fR <device> [\-\-opcode=<opcode> | \-o <opcode>]
-                [\-\-flags=<flags> | \-f <flags>] [\-rsvd=<rsvd> | \-R <rsvd>]
-                [\-\-namespace\-id=<nsid> | \-nsid <nsid>]
-                [\-\-cdw2=<cdw2>] [\-\-cdw3=<cdw3>] [\-\-cdw10=<cdw10>]
-                [\-\-cdw11=<cdw11>] [\-\-cdw12=<cdw12>] [\-\-cdw13=<cdw13>]
-                [\-\-cdw14=<cdw14>] [\-\-cdw15=<cdw15>]
-                [\-\-data\-len=<data\-len> | \-l <data\-len>]
-                [\-\-metadata\-len=<len> | \-m <len>]
-                [\-\-read | \-r ] [\-\-write | \-w]
-                [\-\-input\-file=<file> | \-f <file>]
-                [\-\-timeout=<to> | \-t <to>]
-                [\-\-show\-command | \-\-dry\-run | \-s]
-                [\-\-raw\-binary | \-b]
+\fInvme\-io\-passthru\fR <device> [ \-\-opcode=<opcode> | \-o <opcode> ]
+                            [ \-\-flags=<flags> | \-f <flags> ]
+                            [ \-\-rsvd=<rsvd> | \-R <rsvd> ]
+                            [ \-\-namespace\-id=<nsid> | \-n <nsid> ]
+                            [ \-\-cdw2=<cdw2> | \-2 <cdw2> ]
+                            [ \-\-cdw3=<cdw3> | \-3 <cdw3> ]
+                            [ \-\-cdw10=<cdw10> | \-4 <cdw10> ]
+                            [ \-\-cdw11=<cdw11> | \-5 <cdw11> ]
+                            [ \-\-cdw12=<cdw12> | \-6 <cdw12> ]
+                            [ \-\-cdw13=<cdw13> | \-7 <cdw13> ]
+                            [ \-\-cdw14=<cdw14> | \-8 <cdw14> ]
+                            [ \-\-cdw15=<cdw15> | \-9 <cdw15> ]
+                            [ \-\-data\-len=<data\-len> | \-l <data\-len> ]
+                            [ \-\-metadata\-len=<len> | \-m <len> ]
+                            [ \-\-read | \-r ] [ \-\-write | \-w ]
+                            [ \-\-input\-file=<file> | \-f <file> ]
+                            [ \-\-timeout=<to> | \-t <to> ]
+                            [ \-\-show\-command | \-s ] [ \-\-dry\-run | \-d ]
+                            [ \-\-raw\-binary | \-b ]
 .fi
 .SH "DESCRIPTION"
 .sp
 Submits an arbitrary NVMe IO command and returns the applicable results\&. This may be the simply the command\(cqs result and status, or may also include a buffer if the command returns one\&. This command does no interpretation of the opcodes or options\&.
 .sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+The \fI<device>\fR parameter is mandatory and may be either the NVMe character device (ex: \fI/dev/nvme0\fR), or a namespace block device (ex: \fI/dev/nvme0n1\fR)\&.
 .sp
 On success, the returned structure (if applicable) may be returned in one of several ways depending on the option flags; the structure may printed by the program as a hex dump, or may be returned as a raw buffer printed to stdout for another program to parse\&.
 .SH "OPTIONS"
@@ -76,19 +82,19 @@ The value for the ns\-id in the command\&. Defaults to
 \fI0\fR\&.
 .RE
 .PP
-\-\-cdw[2\-3,10\-15]=<cdw>
+\-\-cdw[2\-3,10\-15]=<cdw>, \-[2\-9] <cdw>
 .RS 4
 Specifies the command dword value for that specified entry in the command
 .RE
 .PP
 \-r, \-\-read, \-w, \-\-write
 .RS 4
-Used for the data\-direction for the command and required for commands sending/receiving data\&. Don\(cqt use both read and write at the same time\&.
+Specify the dataflow direction for the command\&. Required for commands sending/receiving data\&. If read and write are appended to the same command, the command will fail\&.
 .RE
 .PP
 \-i <file>, \-\-input\-file=<file>
 .RS 4
-If the command is a data\-out (write) command, use this file to fill the buffer sent to the device\&. If no file is given, assumed to use STDIN\&.
+If the command is a data\-out (write) command, use this file to fill the buffer sent to the device\&. If no file is given, buffer input defaults to stdin\&.
 .RE
 .PP
 \-l <data\-len>, \-\-data\-len=<data\-len>
@@ -103,12 +109,12 @@ The metadata length for the buffer used for this command\&.
 .PP
 \-s, \-\-show\-cmd
 .RS 4
-Print out the command to be sent\&.
+Operate in verbose mode, where command would normally be sent silently to the device\&. Prints command before sending\&.
 .RE
 .PP
 \-d, \-\-dry\-run
 .RS 4
-Do not actually send the command\&.
+Operate in verbose mode, but do not actually send the command\&. Useful for checking structure\&.
 .RE
 .PP
 \-b, \-\-raw\-binary
@@ -117,7 +123,7 @@ Print the raw returned buffer to stdout if the command returns data or a structu
 .RE
 .SH "EXAMPLES"
 .sp
-nvme io\-passthru /dev/nvme0n1 \-\-opcode=2 \-\-namespace\-id=1 \-\-data\-len=4096 \-\-read \-\-cdw10=0 \-\-cdw11=0 \-\-cdw12=0x70000 \-\-raw\-binary
+nvme io\-passthru /dev/nvme0n1 \-\-opcode=2 \-\-namespace\-id=1 \-\-data\-len=4096 \-\-raw\-binary \-\-read
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

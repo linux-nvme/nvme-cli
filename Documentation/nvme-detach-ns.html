@@ -743,7 +743,7 @@ nvme-detach-ns(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-detach-ns -
-   Send NVMe detach namespace, return result.
+   Detach the given namespace from the specified controller.
 </p>
 </div>
 </div>
@@ -752,8 +752,8 @@ nvme-detach-ns(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme detach-ns</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--controllers=&lt;ctrl-list,&gt; | -c &lt;ctrl-list,&gt;</pre>
+<pre class="content"><em>nvme detach-ns</em> &lt;device&gt; [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]
+        [ --controllers=&lt;ctrl1,&#8230;,ctrln&gt; | -c &lt;ctrl1,&#8230;,ctrln&gt; ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -761,9 +761,9 @@ nvme-detach-ns(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends the nvme namespace detach command for
-the provided namespace identifier, attaching to the provided list of
-controller identifiers.</p></div>
+<div class="paragraph"><p>Detach the given namespace from the specified controller. De-activates the given
+namespace&#8217;s ID. A namespace must be attached to at least one controller before IO
+commands may be directed to that namespace.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -782,10 +782,10 @@ controller identifiers.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
--c &lt;ctrl-list,&gt;
+-c &lt;ctrl1,&#8230;,ctrln&gt;
 </dt>
 <dt class="hdlist1">
--controllers=&lt;ctrl-list,&gt;
+-controllers=&lt;ctrl1,&#8230;,ctrln&gt;
 </dt>
 <dd>
 <p>
@@ -812,7 +812,7 @@ controller identifiers.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-06-08 14:06:57 MDT
+Last updated 2015-08-12 14:51:54 MDT
 </div>
 </div>
 </body>

@@ -3,36 +3,39 @@ nvme-format(1)
 
 NAME
 ----
-nvme-format - Format an NVMe device
+nvme-format - Re-format a specified namespace on the given NVMe device
 
 SYNOPSIS
 --------
 [verse]
-'nvme format' <device> [--namespace-id=<nsid> | -n <nsid>]
-		    [--lbaf=<lbaf> | -l <lbaf>]
-		    [--ses=<ses> | -s <ses>]
-		    [--pil=<pil> | -p <pil>]
-		    [--pi=<pi> | -i <pi>]
-		    [--ms=<ms> | -m <ms>]
+'nvme format' <device> [ --namespace-id=<nsid> | -n <nsid> ]
+		       [ --lbaf=<lbaf> | -l <lbaf> ]
+		       [ --ses=<ses> | -s <ses> ]
+		       [ --pil=<pil> | -p <pil> ]
+		       [ --pi=<pi> | -i <pi> ] [ --ms=<ms> | -m <ms> ]
 
 DESCRIPTION
 -----------
 For the NVMe device given, send an nvme Format Namespace admin command
-and provides the results.
+and return the results. Can erase all data in namespace (user data erase)
+or delete data encryption key if specified. Can also be used to change LBAF;
+if an LBA format that is unsupported is chosen, the device's capacity will
+appear to be 0 to the host machine once the new format is visible.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+The '<device>' parameter is mandatory and may be either the NVMe character
+device (ex: '/dev/nvme0'), or a namespace block device (ex: '/dev/nvme0n1').
 If the character device is given, the namespace identifer will default
-to 0xffffffff to send the format to all namespace, but can be overridden
-to any namespace with the 'namespace-id' option. If the block device
-is given, the namespace identifier will default to the namespace id of
-the block device given, but can be overriden with the same option.
+to 0xffffffff, sending the format to all namespaces attached to that device,
+but can be overridden to only re-format a specific namespace with the
+'namespace-id' option. If a block device is given, the namespace
+identifier will default to the namespace id of the provided device, but
+can be overridden with the same option.
 
-On success, the program will automatically issue BLKRRPART ioctl to
-force rescanning the namespaces. If the driver is recent enough, this
-will automatically update the physical block size. If it is not recent
-enough, you will need to remove and rescan your device some other way
-for the new block size to be visible.
+On success, the program will automatically issue a BLKRRPART IOCTL to
+force a rescan of the device's attached namespaces. If the NVMe driver is
+recent enough, this will automatically update the physical block size.
+If it is not recent enough, you will need to remove and rescan your
+device some other way for the new block size to be visible.
 
 OPTIONS
 -------
@@ -68,7 +71,7 @@ erase when a User Data Erase is requested if all user data is encrypted.
 cryptographically. This is accomplished by deleting the encryption key.
 |3–7|Reserved
 |=================
- 
+
 -p <pil>::
 --pil=<pil>::
 	Protection Information Location: If set to ‘1’ and protection

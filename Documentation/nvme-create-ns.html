@@ -743,7 +743,7 @@ nvme-create-ns(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-create-ns -
-   Send NVMe Namespace management command to create namespace, returns results.
+   Create an NVMe namespace via sending a namespace management command to the specified controller
 </p>
 </div>
 </div>
@@ -752,11 +752,11 @@ nvme-create-ns(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme create-ns</em> &lt;device&gt; [--nsze=&lt;nsze&gt; | -n &lt;nsze&gt;]
-                        [--ncap=&lt;ncap&gt; | -c &lt;ncap&gt;]
-                        [--flbas=&lt;flbas&gt; | -f &lt;flbas&gt;]
-                        [--dps=&lt;dps&gt; | -d &lt;dps&gt;]
-                        [--nmic=&lt;nmic&gt; | -m &lt;nmic&gt;]</pre>
+<pre class="content"><em>nvme create-ns</em> &lt;device&gt; [ --nsze=&lt;nsze&gt; | -n &lt;nsze&gt; ]
+                          [ --ncap=&lt;ncap&gt; | -c &lt;ncap&gt; ]
+                          [ --flbas=&lt;flbas&gt; | -f &lt;flbas&gt; ]
+                          [ --dps=&lt;dps&gt; | -d &lt;dps&gt; ]
+                          [ --nmic=&lt;nmic&gt; | -m &lt;nmic&gt; ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -764,11 +764,17 @@ nvme-create-ns(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends a namespace management command to create
-the namespace with the requested settings. On success, the namespace
-identifier assigned by the controller is returned.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
+<div class="paragraph"><p>Send a namespace management command to the given NVMe device to create
+a namespace with the specified parameters. The next available namespace ID
+is used for the create operation. On success, the namespace
+identifier assigned by the controller is returned. Note that a created namespace
+is not yet attached to any controller(s); this command should be followed by
+some desired permutation on the <em>nvme attach-ns</em> command. A given namespace
+must be attached to at least one controller before any commands other than
+<em>attach-ns</em> may be directed at that namespace.</p></div>
+<div class="paragraph"><p>The <em>&lt;device&gt;</em> parameter is mandatory and may be either the NVMe character
+device (ex: <em>/dev/nvme0</em>), or a currently existing namespace block device
+(ex: <em>/dev/nvme0n1</em>).</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -776,47 +782,47 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--s
+-s &lt;nsze&gt;
 </dt>
 <dt class="hdlist1">
---nsze
+--nsze=&lt;nsze&gt;
 </dt>
 <dd>
 <p>
-        The namespace size.
+        Namespace size
 </p>
 </dd>
 <dt class="hdlist1">
--c
+-c &lt;ncap&gt;
 </dt>
 <dt class="hdlist1">
---ncap
+--ncap=&lt;ncap&gt;
 </dt>
 <dd>
 <p>
-        The namespace capacity.
+        Namespace capacity
 </p>
 </dd>
 <dt class="hdlist1">
--f
+-f &lt;flbas&gt;
 </dt>
 <dt class="hdlist1">
---flbas
+--flbas=&lt;flbas&gt;
 </dt>
 <dd>
 <p>
-        The namespace formatted logical block size setting.
+        Namespace formatted logical block size setting
 </p>
 </dd>
 <dt class="hdlist1">
--d
+-d &lt;dps&gt;
 </dt>
 <dt class="hdlist1">
---dps
+--dps=&lt;dps&gt;
 </dt>
 <dd>
 <p>
-        The data protection settings.
+        Namespace data protection settings
 </p>
 </dd>
 <dt class="hdlist1">
@@ -827,7 +833,7 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 </dt>
 <dd>
 <p>
-        Namespace multipath and sharing capabilities.
+        Namespace multipath and sharing capabilities
 </p>
 </dd>
 </dl></div>
@@ -849,7 +855,7 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-06-08 14:08:41 MDT
+Last updated 2015-08-12 14:51:00 MDT
 </div>
 </div>
 </body>

@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-feature
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 08/12/2015
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-FEATURE" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-FEATURE" "1" "08/12/2015" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,29 +32,32 @@ nvme-get-feature \- Gets an NVMe feature, returns applicable results
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme get\-feature\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                          [\-\-feature\-id=<fid> | \-f <fid>] [\-\-cdw11=<cdw11>]
-                          [\-\-data\-len=<data\-len> | \-l <data\-len>]
-                          [\-\-sel=<select> | \-s <select>]
-                          [\-\-raw\-binary | \-b]
+\fInvme get\-feature\fR <device> [ \-\-namespace\-id=<nsid> | \-n <nsid> ]
+                          [ \-\-feature\-id=<fid> | \-f <fid> ]
+                          [ \-\-cdw11=<cdw11> | \-c <cdw11> ]
+                          [ \-\-data\-len=<data\-len> | \-l <data\-len> ]
+                          [ \-\-sel=<select> | \-s <select> ]
+                          [ \-\-raw\-binary | \-b ]
 .fi
 .SH "DESCRIPTION"
 .sp
-Submits an NVMe Get Feature admin command and returns the applicable results\&. This may be the feature\(cqs value, or may also include a feature structure if the feature requires it (ex: LBA Range Type)\&.
+Submits an NVMe Get Feature admin command on an applicable operating parameter of the specified controller and returns result\&. This may be the feature\(cqs value, or may also include a feature structure if the feature requires it (ex: LBA Range Type)\&.
 .sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+Operating parameters are grouped and identified by Feature Identifiers; each Feature Identifier contains one or more attributes that may affect behaviour of the Feature\&. Each Feature has three possible settings; default, saveable, and current\&. If a Feature is saveable, it may be modified by \fInvme set\-feature\fR\&. Default values are vendor\-specific and not changeable\&. Use \fInvme set\-feature\fR to change saveable Features\&.
 .sp
-On success, the returned feature\(cqs structure (if applicable) may be returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format if it is a known structure, displayed in hex, or the raw buffer may be printed to stdout for another program to parse\&.
+The \fI<device>\fR parameter is mandatory and may be either the NVMe character device (ex: \fI/dev/nvme0\fR), or a namespace block device (ex: \fI/dev/nvme0n1\fR)\&.
+.sp
+On success, the returned feature\(cqs structure (if applicable) may be returned in one of several ways depending on the option flags; the structure may be parsed by the program and printed in a readable format if it is a known structure, displayed in hex, or the raw buffer may be printed to stdout for another program to parse\&.
 .SH "OPTIONS"
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>
 .RS 4
-Retrieve the feature for the given nsid\&. This is optional and most features do not use this value\&.
+Retrieve the feature for the given nsid\&. This is optional; most namespaces do not have their own features\&.
 .RE
 .PP
 \-f <fid>, \-\-feature\-id=<fid>
 .RS 4
-The feature id to send with the command\&. Value provided should be in hex\&.
+Hexadecimal feature ID
 .RE
 .PP
 \-s <select>, \-\-sel=<select>
@@ -126,7 +129,7 @@ Print the raw feature buffer to stdout if the feature returns a structure\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-Retrieves the feature for Number of Queues, or feature id 7:
+Retrieves the feature for Number of Queues, or feature ID 7:
 .sp
 .if n \{\
 .RS 4

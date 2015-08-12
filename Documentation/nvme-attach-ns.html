@@ -743,7 +743,7 @@ nvme-attach-ns(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-attach-ns -
-   Send NVMe attach namespace, return result.
+   Attach a given namespace to the provided controller or list of controllers.
 </p>
 </div>
 </div>
@@ -752,8 +752,8 @@ nvme-attach-ns(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme attach-ns</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--controllers=&lt;ctrl-list,&gt; | -c &lt;ctrl-list,&gt;]</pre>
+<pre class="content"><em>nvme attach-ns</em> &lt;device&gt; [ --namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt; ]
+        [ --controllers=&lt;ctrl1,&#8230;,ctrln&gt; | -c &lt;ctrl1,&#8230;,ctrln&gt; ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -762,8 +762,11 @@ nvme-attach-ns(1) Manual Page
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>For the NVMe device given, sends the nvme namespace attach command for
-the provided namespace identifier, attaching to the provided list of
-controller identifiers.</p></div>
+the provided namespace identifier, attaching to the provided controller or
+list of controller identifiers.</p></div>
+<div class="paragraph"><p>The <em>&lt;device&gt;</em> parameter is mandatory and may be either the NVMe character
+device (ex: <em>/dev/nvme0</em>), or a currently existing namespace block device
+(ex: <em>/dev/nvme0n1</em>).</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -778,19 +781,21 @@ controller identifiers.</p></div>
 </dt>
 <dd>
 <p>
-        The namespace identifier to attach.
+        The namespace identifier to attach. This parameter is required.
 </p>
 </dd>
 <dt class="hdlist1">
--c &lt;ctrl-list,&gt;
+-c &lt;ctrl1,ctrl2,&#8230;,ctrln&gt;
 </dt>
 <dt class="hdlist1">
--controllers=&lt;ctrl-list,&gt;
+-controllers=&lt;ctrl1,ctrl2,&#8230;,ctrln&gt;
 </dt>
 <dd>
 <p>
-        The comma separated list of controller identifiers to attach
-        the namesapce too.
+        The comma-separated list of controller identifiers to which we
+        want to attach the namespace. If a controller is given (e.g.,
+        nvme attach-ns /dev/nvme0 -n 1) a comma-separated list of
+        controllers need not be provided, but not vice versa.
 </p>
 </dd>
 </dl></div>
@@ -812,7 +817,7 @@ controller identifiers.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-06-08 14:07:56 MDT
+Last updated 2015-08-12 14:50:06 MDT
 </div>
 </div>
 </body>
