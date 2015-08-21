@@ -158,9 +158,7 @@ void argconfig_print_help(char *command, const char *program_desc,
     }
 
     /* actually print the contraption we just built */
-    printf(buf);
-
-    putchar('\n');
+    printf("%s\n", buf);
 }
 
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
