@@ -1135,6 +1135,7 @@ static int get_error_log(int argc, char **argv)
 	const char *namespace_id = "desired namespace";
 	const char *log_entries = "number of entries to retrieve";
 	const char *raw_binary = "dump in binary format";
+	struct nvme_id_ctrl ctrl;
 	int err;
 
 	struct config {
@@ -1163,25 +1164,30 @@ static int get_error_log(int argc, char **argv)
 			&defaults, &cfg, sizeof(cfg));
 
 	get_dev(1, argc, argv);
-
 	if (!cfg.log_entries) {
 		fprintf(stderr, "non-zero log-entries is required param\n");
 		return EINVAL;
 	}
-	struct nvme_error_log_page err_log[cfg.log_entries];
-
-	err = nvme_get_log(err_log,
-			   sizeof(err_log), 0x1 | (((sizeof(err_log) / 4) - 1) << 16),
-			   cfg.namespace_id);
-	if (!err) {
-		if (!cfg.raw_binary)
-			show_error_log(err_log, cfg.log_entries);
-		else
-			d_raw((unsigned char *)err_log, sizeof(err_log));
+	err = identify(0, &ctrl, 1);
+	cfg.log_entries = min(cfg.log_entries, ctrl.elpe + 1);
+	if (err) {
+		fprintf(stderr, "could not identify controller\n");
+		return ENODEV;
+	} else {
+		struct nvme_error_log_page err_log[cfg.log_entries];
+		err = nvme_get_log(err_log,
+				   sizeof(err_log), 0x1 | (((sizeof(err_log) / 4) - 1) << 16),
+				   cfg.namespace_id);
+		if (!err) {
+			if (!cfg.raw_binary)
+				show_error_log(err_log, cfg.log_entries);
+			else
+				d_raw((unsigned char *)err_log, sizeof(err_log));
+		}
+		else if (err > 0)
+			fprintf(stderr, "NVMe Status:%s(%x)\n",
+						nvme_status_to_string(err), err);
 	}
-	else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
 	return err;
 }
 
