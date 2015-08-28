@@ -51,8 +51,6 @@
 
 #define min(x, y) (x) > (y) ? (y) : (x)
 
-#define	FORMAT_TIMEOUT	120000	// 120 seconds
-
 static int fd;
 static struct stat nvme_stat;
 static const char *devicename;
@@ -2225,11 +2223,13 @@ static int format(int argc, char **argv)
 	const char *pil = "[0-3]: protection info location";
 	const char *pi = "[0-1]: protection info off/on";
 	const char *ms = "[0-1]: extended format off/on";
+	const char *timeout = "timeout value";
 	int err;
 	struct nvme_admin_cmd cmd;
 
 	struct config {
 		__u32 namespace_id;
+		__u32 timeout;
 		__u8  lbaf;
 		__u8  ses;
 		__u8  pi;
@@ -2240,6 +2240,7 @@ static int format(int argc, char **argv)
 
 	const struct config defaults = {
 		.namespace_id = 0xffffffff,
+		.timeout      = 120000,
 		.lbaf         = 0,
 		.ses          = 0,
 		.pi           = 0,
@@ -2248,6 +2249,8 @@ static int format(int argc, char **argv)
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, namespace_id},
 		{"n",            "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, namespace_id},
+		{"timeout",      "NUM",  CFG_POSITIVE, &defaults.timeout,      required_argument, timeout},
+		{"t",            "NUM",  CFG_POSITIVE, &defaults.timeout,      required_argument, timeout},
 		{"lbaf",         "NUM",  CFG_BYTE,     &defaults.lbaf,         required_argument, lbaf},
 		{"l",            "NUM",  CFG_BYTE,     &defaults.lbaf,         required_argument, lbaf},
 		{"ses",          "NUM",  CFG_BYTE,     &defaults.ses,          required_argument, ses},
@@ -2292,7 +2295,7 @@ static int format(int argc, char **argv)
 	cmd.opcode = nvme_admin_format_nvm;
 	cmd.nsid   = cfg.namespace_id;
 	cmd.cdw10  = (cfg.lbaf << 0) | (cfg.ms << 4) | (cfg.pi << 5) | (cfg.pil << 8) | (cfg.ses << 9);
-	cmd.timeout_ms = FORMAT_TIMEOUT;
+	cmd.timeout_ms = cfg.timeout;
 
 	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
 	if (err < 0)
