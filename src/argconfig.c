@@ -299,13 +299,13 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
             }
             *((uint16_t *) value_addr) = tmp;
         } else if (s->config_type == CFG_POSITIVE) {
-            int tmp = strtol(optarg, &endptr, 0);
+            uint32_t tmp = strtol(optarg, &endptr, 0);
             if (errno || tmp < 0 || optarg == endptr) {
                 fprintf(stderr, "Expected positive argument for '%s' but got '%s'!\n",
                         long_opts[option_index].name, optarg);
                 goto exit;
             }
-            *((int *) value_addr) = tmp;
+            *((uint32_t *) value_addr) = tmp;
         } else if (s->config_type == CFG_INCREMENT) {
             (*((int *) value_addr))++;
         } else if (s->config_type == CFG_LONG) {
