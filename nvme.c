@@ -1444,7 +1444,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 	struct nvme_controller_list *cntlist;
 	struct nvme_admin_cmd cmd;
 	char *name = commands[attach ? ATTACH_NS : DETACH_NS].name;
-	int err;
+	int err, i, list[2048];
 
 	const char *namespace_id = "namespace to attach";
 	const char *cont = "optional comma-sep controllers list";
@@ -1480,7 +1480,9 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 		return EINVAL;
 	}
 	cntlist->num = argconfig_parse_comma_sep_array(cfg.cntlist,
-					(int *)cntlist->identifier, 2047);
+					list, 2047);
+	for (i = 0; i < cntlist->num; i++)
+		cntlist->identifier[i] = htole16((uint16_t)list[i]);
 
 	get_dev(1, argc, argv);
 
