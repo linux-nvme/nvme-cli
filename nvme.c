@@ -1688,16 +1688,17 @@ static void print_list_item(struct list_item list_item)
 	sprintf(version,"%d.%d", (list_item.ver >> 16),
 		(list_item.ver >> 8) & 0xff);
 
-	fprintf(stdout, "%-8s\t%-.20s\t%-8s\t%-8d\t%-26s\t%-.16s\n", list_item.node,
-		list_item.ctrl.mn, version, list_item.nsid, usage, format);
+	fprintf(stdout, "%-16s %-20.20s %-8s %-8d %-26s %-16s %-.8s\n", list_item.node,
+		list_item.ctrl.mn, version, list_item.nsid, usage, format, list_item.ctrl.fr);
 }
 
 static void print_list_items(struct list_item *list_items, unsigned len)
 {
-	fprintf(stdout,"%-8s\t%-20s\t%-8s\t%-8s\t%-26s\t%-16s\n",
-		"Node","Vendor","Version","Namepace", "Usage", "Format");
-	fprintf(stdout,"%-8s\t%-20s\t%-8s\t%-8s\t%-26s\t%-16s\n",
-		"----","------","-------","--------","------","-------");
+	fprintf(stdout,"%-16s %-20s %-8s %-8s %-26s %-16s %-8s\n",
+		"Node","Model","Version","Namepace", "Usage", "Format", "FW Rev");
+	fprintf(stdout,"%-16s %-20s %-8s %-8s %-26s %-16s %-8s\n",
+            "----------------","--------------------","--------","--------",
+            "--------------------------","----------------","--------");
 	for (unsigned i=0 ; i<len ; i++)
 		print_list_item(list_items[i]);
 
