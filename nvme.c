@@ -1423,6 +1423,7 @@ static int delete_ns(int argc, char **argv)
 						commands[DELETE_NS].name);
 		return EINVAL;
 	}
+	get_dev(1, argc, argv);
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opcode = nvme_admin_ns_mgmt;
@@ -1436,6 +1437,8 @@ static int delete_ns(int argc, char **argv)
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
+	else
+		fprintf(stderr, "system error:(%x)\n", err);
 	return err;
 }
 
@@ -1499,6 +1502,8 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
+	else
+		fprintf(stderr, "system error:(%x)\n", err);
 	return err;
 }
 
