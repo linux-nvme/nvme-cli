@@ -1352,12 +1352,14 @@ static int list_ns(int argc, char **argv)
 {
 	const char *desc = "list-ns: for the specified device, show the "\
 		"namespace list (optionally starting with a given namespace)";
-	const char *namespace_id = "namespace to start with";
+	const char *namespace_id = "namespace to start after";
+	const char *all = "show all namespaces in the subsystem, whether attached or inactive";
 	int err, i;
 	__u32 ns_list[1024];
 
 	struct config {
 		__u32 namespace_id;
+		__u8  all;
 	};
 	struct config cfg;
 
@@ -1368,6 +1370,8 @@ static int list_ns(int argc, char **argv)
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, namespace_id},
 		{"n",            "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, namespace_id},
+		{"all",          "",     CFG_NONE,     &defaults.all,          no_argument,       all},
+		{"a",            "",     CFG_NONE,     &defaults.all,          no_argument,       all},
 		{0}
 	};
 
@@ -1376,7 +1380,7 @@ static int list_ns(int argc, char **argv)
 
 	get_dev(1, argc, argv);
 
-	err = identify(cfg.namespace_id, ns_list, 2);
+	err = identify(cfg.namespace_id, ns_list, cfg.all ? 0x10 : 2);
 	if (!err) {
 		for (i = 0; i < 1024; i++)
 			if (ns_list[i])
