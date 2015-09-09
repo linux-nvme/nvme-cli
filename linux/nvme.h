@@ -243,6 +243,19 @@ struct nvme_lba_range_type {
 	__u8			rsvd48[16];
 };
 
+struct nvme_host_mem_buffer {
+	__u32			hsize;
+	__u32			hmdlal;
+	__u32			hmdlau;
+	__u32			hmdlec;
+	__u8			rsvd16[4080];
+};
+
+struct nvme_auto_pst {
+	__u32	data;
+	__u32	rsvd32;
+};
+
 enum {
 	NVME_LBART_TYPE_FS	= 0x01,
 	NVME_LBART_TYPE_RAID	= 0x02,
@@ -406,6 +419,7 @@ enum {
 	NVME_FEAT_WRITE_ATOMIC	= 0x0a,
 	NVME_FEAT_ASYNC_EVENT	= 0x0b,
 	NVME_FEAT_AUTO_PST	= 0x0c,
+	NVME_FEAT_HOST_MEM_BUF	= 0x0d,
 	NVME_FEAT_SW_PROGRESS	= 0x80,
 	NVME_FEAT_HOST_ID	= 0x81,
 	NVME_FEAT_RESV_MASK	= 0x82,
