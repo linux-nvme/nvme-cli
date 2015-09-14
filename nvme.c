@@ -1386,12 +1386,14 @@ static int list_ns(int argc, char **argv)
 {
 	const char *desc = "list-ns: for the specified device, show the "\
 		"namespace list (optionally starting with a given namespace)";
-	const char *namespace_id = "namespace to start with";
+	const char *namespace_id = "namespace to start after";
+	const char *all = "show all namespaces in the subsystem, whether attached or inactive";
 	int err, i;
 	__u32 ns_list[1024];
 
 	struct config {
 		__u32 namespace_id;
+		__u8  all;
 	};
 	struct config cfg;
 
@@ -1402,6 +1404,8 @@ static int list_ns(int argc, char **argv)
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, namespace_id},
 		{"n",            "NUM",  CFG_POSITIVE, &defaults.namespace_id, required_argument, namespace_id},
+		{"all",          "",     CFG_NONE,     &defaults.all,          no_argument,       all},
+		{"a",            "",     CFG_NONE,     &defaults.all,          no_argument,       all},
 		{0}
 	};
 
@@ -1410,7 +1414,7 @@ static int list_ns(int argc, char **argv)
 
 	get_dev(1, argc, argv);
 
-	err = identify(cfg.namespace_id, ns_list, 2);
+	err = identify(cfg.namespace_id, ns_list, cfg.all ? 0x10 : 2);
 	if (!err) {
 		for (i = 0; i < 1024; i++)
 			if (ns_list[i])
@@ -1457,6 +1461,7 @@ static int delete_ns(int argc, char **argv)
 						commands[DELETE_NS].name);
 		return EINVAL;
 	}
+	get_dev(1, argc, argv);
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opcode = nvme_admin_ns_mgmt;
@@ -1470,6 +1475,8 @@ static int delete_ns(int argc, char **argv)
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
+	else
+		fprintf(stderr, "system error:(%x)\n", err);
 	return err;
 }
 
@@ -1533,6 +1540,8 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
+	else
+		fprintf(stderr, "system error:(%x)\n", err);
 	return err;
 }
 
