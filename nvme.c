@@ -744,7 +744,7 @@ static void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, int vs, int human)
 	printf("fr      : %s\n", fr);
 	printf("rab     : %d\n", ctrl->rab);
 	printf("ieee    : %02x%02x%02x\n",
-		ctrl->ieee[0], ctrl->ieee[1], ctrl->ieee[2]);
+		ctrl->ieee[2], ctrl->ieee[1], ctrl->ieee[0]);
 	printf("cmic    : %#x\n", ctrl->cmic);
 	if (human)
 		show_nvme_id_ctrl_cmic(ctrl->cmic);
