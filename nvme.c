@@ -744,7 +744,7 @@ static void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, int vs, int human)
 	printf("fr      : %s\n", fr);
 	printf("rab     : %d\n", ctrl->rab);
 	printf("ieee    : %02x%02x%02x\n",
-		ctrl->ieee[0], ctrl->ieee[1], ctrl->ieee[2]);
+		ctrl->ieee[2], ctrl->ieee[1], ctrl->ieee[0]);
 	printf("cmic    : %#x\n", ctrl->cmic);
 	if (human)
 		show_nvme_id_ctrl_cmic(ctrl->cmic);
@@ -849,13 +849,14 @@ char* nvme_feature_lba_type_to_string(__u8 type)
 static void show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 {
 	int i, j;
-
+	
 	for (i = 0; i <= nr_ranges; i++) {
-		printf("type       : %#x - %s\n", lbrt[i].type, nvme_feature_lba_type_to_string(lbrt[i].type));
-		printf("attributes : %#x\n", lbrt[i].attributes);
-		printf("slba       : %#"PRIx64"\n", (uint64_t)(lbrt[i].slba));
-		printf("nlb        : %#"PRIx64"\n", (uint64_t)(lbrt[i].nlb));
-		printf("guid       : ");
+		printf("\ttype       : %#x - %s\n", lbrt[i].type, nvme_feature_lba_type_to_string(lbrt[i].type));
+		printf("\tattributes : %#x - %s, %s\n", lbrt[i].attributes, (lbrt[i].attributes & 0x0001) ? "LBA range may be overwritten":"LBA range should not be overwritten",
+			((lbrt[i].attributes & 0x0002) >> 1) ? "LBA range should be hidden from the OS/EFI/BIOS":"LBA range should be visible from the OS/EFI/BIOS");
+		printf("\tslba       : %#"PRIx64"\n", (uint64_t)(lbrt[i].slba));
+		printf("\tnlb        : %#"PRIx64"\n", (uint64_t)(lbrt[i].nlb));
+		printf("\tguid       : ");
 		for (j = 0; j < 16; j++)
 			printf("%02x", lbrt[i].guid[j]);
 		printf("\n");
@@ -1290,7 +1291,7 @@ static int get_log(int argc, char **argv)
 	struct config cfg;
 
 	const struct config defaults = {
-		.namespace_id = 0,
+		.namespace_id = 0xffffffff,
 		.log_id       = 0,
 		.log_len      = 0,
 	};
@@ -1322,7 +1323,7 @@ static int get_log(int argc, char **argv)
 				   cfg.namespace_id);
 		if (!err) {
 			if (!cfg.raw_binary) {
-				printf("Device:%s log-id:%d namespace-id:%#x",
+				printf("Device:%s log-id:%d namespace-id:%#x\n",
 				       devicename, cfg.log_id,
 				       cfg.namespace_id);
 				d(log, cfg.log_len, 16, 1);
@@ -2151,7 +2152,7 @@ static int get_feature(int argc, char **argv)
 	struct config cfg;
 
 	const struct config defaults = {
-		.namespace_id = 0,
+		.namespace_id = 1,
 		.feature_id   = 0,
 		.sel          = 0,
 		.cdw11        = 0,
