@@ -90,6 +90,9 @@ else # "make -w"
 NO_SUBDIR = :
 endif
 
+DESTDIR =
+PREFIX := /usr/local
+
 all: man html
 
 html: $(DOC_HTML)
@@ -98,14 +101,14 @@ man: man1
 man1: $(DOC_MAN1)
 
 install-no-build:
-	$(INSTALL) -d -m 755 /usr/local/man/man1
-	$(INSTALL) -m 644 $(DOC_MAN1) /usr/local/man/man1
+	$(INSTALL) -d -m 755 $(DESTDIR)$(PREFIX)/share/man/man1
+	$(INSTALL) -m 644 $(DOC_MAN1) $(DESTDIR)$(PREFIX)/share/man/man1
 
 install: install-man
 
 install-man: man
-	$(INSTALL) -d -m 755 /usr/local/man/man1
-	$(INSTALL) -m 644 $(DOC_MAN1) /usr/local/man/man1
+	$(INSTALL) -d -m 755 $(DESTDIR)$(PREFIX)/share/man/man1
+	$(INSTALL) -m 644 $(DOC_MAN1) $(DESTDIR)$(PREFIX)/share/man/man1
 
 docdep_prereqs = \
 	cmd-list.made $(cmds_txt)
