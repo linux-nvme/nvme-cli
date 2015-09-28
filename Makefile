@@ -4,7 +4,7 @@ NVME = nvme
 INSTALL ?= install
 SRC = ./src
 DESTDIR =
-PREFIX = /usr/local
+PREFIX := /usr/local
 SBINDIR = $(PREFIX)/sbin
 LIBUDEV:=$(shell ld -ludev > /dev/null 2>&1 ; echo $$?)
 ifeq ($(LIBUDEV),0)
