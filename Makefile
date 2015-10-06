@@ -24,7 +24,12 @@ endif
 
 default: $(NVME)
 
-nvme: nvme.c $(NVME_HEADER) argconfig.o suffix.o
+NVME-VERSION-FILE: FORCE
+	@$(SHELL_PATH) ./NVME-VERSION-GEN
+-include NVME-VERSION-FILE
+override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
+
+nvme: nvme.c $(NVME_HEADER) argconfig.o suffix.o NVME-VERSION-FILE
 	$(CC) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME) argconfig.o suffix.o
 
 argconfig.o: $(SRC)/argconfig.c $(SRC)/argconfig.h $(SRC)/suffix.h
@@ -39,7 +44,7 @@ doc: $(NVME)
 all: doc
 
 clean:
-	rm -f $(NVME) *.o *~ a.out
+	rm -f $(NVME) *.o *~ a.out NVME-VERSION-FILE
 	$(MAKE) -C Documentation clean
 
 clobber: clean
@@ -54,4 +59,4 @@ install-bin: default
 
 install: install-bin install-man
 
-.PHONY: default all doc clean clobber install install-bin install-man
+.PHONY: default all doc clean clobber install install-bin install-man FORCE

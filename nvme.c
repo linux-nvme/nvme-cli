@@ -57,6 +57,8 @@ static int fd;
 static struct stat nvme_stat;
 static const char *devicename;
 
+static const char nvme_version_string[] = NVME_VERSION;
+
 #define COMMAND_LIST \
 	ENTRY(LIST, "list", "List all NVMe devices and namespaces on machine", list) \
 	ENTRY(ID_CTRL, "id-ctrl", "Send NVMe Identify Controller", id_ctrl) \
@@ -91,6 +93,7 @@ static const char *devicename;
 	ENTRY(READ_CMD, "read", "Submit a read command, return results", read_cmd) \
 	ENTRY(WRITE_CMD, "write", "Submit a write command, return results", write_cmd) \
 	ENTRY(REGISTERS, "show-regs", "Shows the controller registers. Requires admin character device", show_registers) \
+	ENTRY(VERSION, "version", "Shows the program version", version) \
 	ENTRY(HELP, "help", "Display this help", help)
 
 #define ENTRY(i, n, h, f) \
@@ -3652,6 +3655,7 @@ static void general_help()
 {
 	unsigned i;
 
+	printf("%s\n", nvme_version_string);
 	usage("nvme");
 	printf("\n");
 	printf("'<device>' / '/dev/nvmeX' may be either an NVMe character "\
@@ -3662,6 +3666,12 @@ static void general_help()
 		printf("  %-*s %s\n", 15, commands[i].name, commands[i].help);
 	printf("\n");
 	printf("See 'nvme help <command>' for more information on a specific command.\n");
+}
+
+static int version(int argc, char **argv)
+{
+	printf("nvme version %s\n", nvme_version_string);
+	return 0;
 }
 
 static int help(int argc, char **argv)
@@ -3677,10 +3687,15 @@ static void handle_internal_command(int argc, char **argv)
 {
 	unsigned i;
 	struct command *cmd;
+	char *str = argv[0];
+
+	/* translate --help and --version into commands */
+	while (*str == '-')
+		str++;
 
 	for (i = 0; i < NUM_COMMANDS; i++) {
 		cmd = &commands[i];
-		if (strcmp(argv[0], cmd->name))
+		if (strcmp(str, cmd->name))
 			continue;
 		exit(cmd->fn(argc, argv));
 	}
