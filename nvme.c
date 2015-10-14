@@ -3144,14 +3144,18 @@ static int submit_io(int opcode, char *command, const char *desc,
 	struct nvme_user_io io;
 	struct timeval start_time, end_time;
 	void *buffer, *mbuffer = NULL;
-	int err = 0, dfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
+	int err = 0;
+	int dfd, mfd;
+	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
+	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
 
 	const char *start_block = "64-bit addr of first block to access";
 	const char *block_count = "number of blocks on device to access";
 	const char *data_size = "size of data in bytes";
 	const char *metadata_size = "size of metadata in bytes";
 	const char *ref_tag = "reference tag (for end to end PI)";
-	const char *data = "file";
+	const char *data = "data file";
+	const char *metadata = "metadata file";
 	const char *prinfo = "PI and check field";
 	const char *app_tag_mask = "app tag mask (for end to end PI)";
 	const char *app_tag = "app tag (for end to end PI)";
@@ -3168,6 +3172,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		__u32 metadata_size;
 		__u32 ref_tag;
 		char  *data;
+		char  *metadata;
 		__u8  prinfo;
 		__u8  app_tag_mask;
 		__u32 app_tag;
@@ -3186,6 +3191,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		.metadata_size   = 0,
 		.ref_tag         = 0,
 		.data            = "",
+		.metadata        = "",
 		.prinfo          = 0,
 		.app_tag_mask    = 0,
 		.app_tag         = 0,
@@ -3204,6 +3210,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 		{"r",                 "NUM",  CFG_POSITIVE,    &defaults.ref_tag,           required_argument, ref_tag},
 		{"data",              "FILE", CFG_STRING,      &defaults.data,              required_argument, data},
 		{"d",                 "FILE", CFG_STRING,      &defaults.data,              required_argument, data},
+		{"metadata",          "FILE", CFG_STRING,      &defaults.metadata,          required_argument, metadata},
+		{"M",                 "FILE", CFG_STRING,      &defaults.metadata,          required_argument, metadata},
 		{"prinfo",            "NUM",  CFG_BYTE,        &defaults.prinfo,            required_argument, prinfo},
 		{"p",                 "NUM",  CFG_BYTE,        &defaults.prinfo,            required_argument, prinfo},
 		{"app-tag-mask",      "NUM",  CFG_BYTE,        &defaults.app_tag_mask,      required_argument, app_tag_mask},
@@ -3223,6 +3231,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		{0}
 	};
 
+	dfd = mfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&defaults, &cfg, sizeof(cfg));
 
@@ -3241,12 +3250,16 @@ static int submit_io(int opcode, char *command, const char *desc,
 	if (cfg.force_unit_access)
 		io.control |= NVME_RW_FUA;
 	if (strlen(cfg.data)){
-		if (opcode & 1)
-			dfd = open(cfg.data, O_RDONLY);
-		else
-			dfd = open(cfg.data, O_WRONLY | O_CREAT,
-				   S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP| S_IROTH);
+		dfd = open(cfg.data, flags, mode);
 		if (dfd < 0) {
+			perror(cfg.data);
+			return EINVAL;
+		}
+		mfd = dfd;
+	}
+	if (strlen(cfg.metadata)){
+		mfd = open(cfg.metadata, flags, mode);
+		if (mfd < 0) {
 			perror(cfg.data);
 			return EINVAL;
 		}
@@ -3264,7 +3277,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 		fprintf(stderr, "failed to read data buffer from input file\n");
 		return EINVAL;
 	}
-	if ((opcode & 1) && cfg.metadata_size && read(dfd, (void *)mbuffer, cfg.metadata_size) < 0) {
+	if ((opcode & 1) && cfg.metadata_size &&
+				read(mfd, (void *)mbuffer, cfg.metadata_size) < 0) {
 		fprintf(stderr, "failed to read meta-data buffer from input file\n");
 		return EINVAL;
 	}
@@ -3303,6 +3317,10 @@ static int submit_io(int opcode, char *command, const char *desc,
 	else {
 		if (!(opcode & 1) && write(dfd, (void *)buffer, cfg.data_size) < 0) {
 			fprintf(stderr, "failed to write buffer to output file\n");
+			return EINVAL;
+		} else if (!(opcode & 1) && cfg.metadata_size &&
+				write(mfd, (void *)mbuffer, cfg.metadata_size) < 0) {
+			fprintf(stderr, "failed to write meta-data buffer to output file\n");
 			return EINVAL;
 		} else
 			printf("%s: success\n", command);
