@@ -3,3 +3,4 @@ nvme
 a.out
 *.o
 *~
+NVME-VERSION-FILE
