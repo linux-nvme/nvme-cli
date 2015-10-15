@@ -3323,7 +3323,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 			fprintf(stderr, "failed to write meta-data buffer to output file\n");
 			return EINVAL;
 		} else
-			printf("%s: success\n", command);
+			fprintf(stderr, "%s: Success\n", command);
 	}
  free_and_return:
 	free(buffer);
