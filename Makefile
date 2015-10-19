@@ -7,6 +7,11 @@ DESTDIR =
 PREFIX := /usr/local
 SBINDIR = $(PREFIX)/sbin
 LIBUDEV:=$(shell ld -ludev > /dev/null 2>&1 ; echo $$?)
+
+RPMBUILD = rpmbuild
+TAR = tar
+RM = rm -f
+
 ifeq ($(LIBUDEV),0)
 	LDFLAGS += -ludev
 	CFLAGS  += -DLIBUDEV_EXISTS
@@ -44,7 +49,7 @@ doc: $(NVME)
 all: doc
 
 clean:
-	rm -f $(NVME) *.o *~ a.out NVME-VERSION-FILE
+	rm -f $(NVME) *.o *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version
 	$(MAKE) -C Documentation clean
 
 clobber: clean
@@ -59,4 +64,17 @@ install-bin: default
 
 install: install-bin install-man
 
-.PHONY: default all doc clean clobber install install-bin install-man FORCE
+nvme.spec: nvme.spec.in NVME-VERSION-FILE
+	sed -e 's/@@VERSION@@/$(NVME_VERSION)/g' < $< > $@+
+	mv $@+ $@
+
+dist: nvme.spec
+	git archive --format=tar --prefix=nvme-$(NVME_VERSION)/ HEAD > nvme-$(NVME_VERSION).tar
+	@echo $(NVME_VERSION) > version
+	$(TAR) rf  nvme-$(NVME_VERSION).tar nvme.spec version
+	gzip -f -9 nvme-$(NVME_VERSION).tar
+
+rpm: dist
+	$(RPMBUILD) -ta nvme-$(NVME_VERSION).tar.gz
+
+.PHONY: default all doc clean clobber install install-bin install-man rpm FORCE
