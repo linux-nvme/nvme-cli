@@ -49,7 +49,8 @@ doc: $(NVME)
 all: doc
 
 clean:
-	rm -f $(NVME) *.o *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version
+	rm -f $(NVME) *.o *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
+	rm -rf nvme-*
 	$(MAKE) -C Documentation clean
 
 clobber: clean
@@ -74,7 +75,22 @@ dist: nvme.spec
 	$(TAR) rf  nvme-$(NVME_VERSION).tar nvme.spec version
 	gzip -f -9 nvme-$(NVME_VERSION).tar
 
+control: nvme.control.in NVME-VERSION-FILE
+	sed -e 's/@@VERSION@@/$(NVME_VERSION)/g' < $< > $@+
+	mv $@+ $@
+
+pkg: control
+	mkdir -p nvme-$(NVME_VERSION)$(SBINDIR)
+	mkdir -p nvme-$(NVME_VERSION)$(PREFIX)/share/man/man1
+	mkdir -p nvme-$(NVME_VERSION)/DEBIAN/
+	cp Documentation/*.1 nvme-$(NVME_VERSION)$(PREFIX)/share/man/man1
+	cp nvme nvme-$(NVME_VERSION)$(SBINDIR)
+	cp control nvme-$(NVME_VERSION)/DEBIAN/
+
+deb: $(NVME) pkg
+	dpkg-deb --build nvme-$(NVME_VERSION)
+
 rpm: dist
 	$(RPMBUILD) -ta nvme-$(NVME_VERSION).tar.gz
 
-.PHONY: default all doc clean clobber install install-bin install-man rpm FORCE
+.PHONY: default all doc clean clobber install install-bin install-man rpm deb FORCE

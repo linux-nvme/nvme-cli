@@ -1,0 +1,9 @@
+Package: nvme
+Version: @@VERSION@@
+Section: base
+Priority: optional
+Architecture: i386
+Depends:
+Maintainer: Keith Busch <keith.bsuch@intel.com>
+Description: NVM-Express Command Line Interface
+ The nvme management tool
