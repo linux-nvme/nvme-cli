@@ -429,7 +429,7 @@ static int identify(int namespace, void *ptr, __u32 cns)
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opcode = nvme_admin_identify;
 	cmd.nsid = namespace;
-	cmd.addr = (unsigned long)ptr;
+	cmd.addr = (__u64)((unsigned long)ptr);
 	cmd.data_len = 4096;
 	cmd.cdw10 = cns;
 	return ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
@@ -441,7 +441,7 @@ static int nvme_get_log(void *log_addr, __u32 data_len, __u32 dw10, __u32 nsid)
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opcode = nvme_admin_get_log_page;
-	cmd.addr = (unsigned long)log_addr;
+	cmd.addr = (__u64)((unsigned long)log_addr);
 	cmd.data_len = data_len;
 	cmd.cdw10 = dw10;
 	cmd.nsid = nsid;
@@ -1535,7 +1535,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opcode = nvme_admin_ns_attach;
-	cmd.addr = (__u64)cntlist;
+	cmd.addr = (__u64)((unsigned long)cntlist);
 	cmd.data_len = 4096;
 	cmd.nsid = cfg.namespace_id;
 	cmd.cdw10 = attach ? 0 : 1;
@@ -1743,12 +1743,14 @@ static void print_list_item(struct list_item list_item)
 
 static void print_list_items(struct list_item *list_items, unsigned len)
 {
+	unsigned i;
+
 	fprintf(stdout,"%-16s %-20s %-8s %-8s %-26s %-16s %-8s\n",
 		"Node","Model","Version","Namepace", "Usage", "Format", "FW Rev");
 	fprintf(stdout,"%-16s %-20s %-8s %-8s %-26s %-16s %-8s\n",
             "----------------","--------------------","--------","--------",
             "--------------------------","----------------","--------");
-	for (unsigned i=0 ; i<len ; i++)
+	for (i = 0 ; i < len ; i++)
 		print_list_item(list_items[i]);
 
 }
@@ -2114,7 +2116,7 @@ static int nvme_feature(int opcode, void *buf, int data_len, __u32 fid,
 	cmd.nsid = nsid;
 	cmd.cdw10 = fid;
 	cmd.cdw11 = cdw11;
-	cmd.addr = (__u64)buf;
+	cmd.addr = (__u64)((unsigned long)buf);
 	cmd.data_len = data_len;
 
 	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
@@ -2317,7 +2319,7 @@ static int fw_download(int argc, char **argv)
 
 		memset(&cmd, 0, sizeof(cmd));
 		cmd.opcode   = nvme_admin_download_fw;
-		cmd.addr     = (__u64)fw_buf;
+		cmd.addr     = (__u64)((unsigned long)fw_buf);
 		cmd.data_len = cfg.xfer;
 		cmd.cdw10    = (cfg.xfer >> 2) - 1;
 		cmd.cdw11    = cfg.offset >> 2;
@@ -2707,7 +2709,7 @@ static int sec_send(int argc, char **argv)
 	cmd.cdw10    = cfg.secp << 24 | cfg.spsp << 8;
 	cmd.cdw11    = cfg.tl;
 	cmd.data_len = sec_size;
-	cmd.addr     = (__u64)sec_buf;
+	cmd.addr     = (__u64)((unsigned long)sec_buf);
 
 	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
 	if (err < 0)
@@ -2849,7 +2851,7 @@ static int resv_acquire(int argc, char **argv)
 	cmd.opcode   = nvme_cmd_resv_acquire;
 	cmd.nsid     = cfg.namespace_id;
 	cmd.cdw10    = cfg.rtype << 8 | cfg.iekey << 3 | cfg.racqa;
-	cmd.addr     = (__u64)payload;
+	cmd.addr     = (__u64)((unsigned long)payload);
 	cmd.data_len = sizeof(payload);
 
 	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
@@ -2943,7 +2945,7 @@ static int resv_register(int argc, char **argv)
 	cmd.opcode   = nvme_cmd_resv_register;
 	cmd.nsid     = cfg.namespace_id;
 	cmd.cdw10    = cfg.cptpl << 30 | cfg.iekey << 3 | cfg.rrega;
-	cmd.addr     = (__u64)payload;
+	cmd.addr     = (__u64)((unsigned long)payload);
 	cmd.data_len = sizeof(payload);
 
 	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
@@ -3038,7 +3040,7 @@ static int resv_release(int argc, char **argv)
 	cmd.opcode   = nvme_cmd_resv_release;
 	cmd.nsid     = cfg.namespace_id;
 	cmd.cdw10    = cfg.rtype << 8 | cfg.iekey << 3 | cfg.rrela;
-	cmd.addr     = (__u64)&cfg.crkey;
+	cmd.addr     = (__u64)((unsigned long)&cfg.crkey);
 	cmd.data_len = sizeof(cfg.crkey);
 
 	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
@@ -3120,7 +3122,7 @@ static int resv_report(int argc, char **argv)
 	cmd.opcode   = nvme_cmd_resv_report;
 	cmd.nsid     = cfg.namespace_id;
 	cmd.cdw10    = cfg.numd;
-	cmd.addr     = (__u64)status;
+	cmd.addr     = (__u64)((unsigned long)status);
 	cmd.data_len = cfg.numd << 2;
 
 	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
@@ -3284,22 +3286,22 @@ static int submit_io(int opcode, char *command, const char *desc,
 	}
 
 	io.opcode = opcode;
-	io.addr   = (__u64)buffer;
+	io.addr   = (__u64)((unsigned long)buffer);
 	if (cfg.metadata_size)
-		io.metadata = (__u64)mbuffer;
+		io.metadata = (__u64)((unsigned long)mbuffer);
 	if (cfg.show) {
-		printf("opcode       : %02x\n" , io.opcode);
-		printf("flags        : %02x\n" , io.flags);
-		printf("control      : %04x\n" , io.control);
-		printf("nblocks      : %04x\n" , io.nblocks);
-		printf("rsvd         : %04x\n" , io.rsvd);
-		printf("metadata     : %p\n"   , (void *)io.metadata);
-		printf("addr         : %p\n"   , (void *)io.addr);
-		printf("sbla         : %p\n"   , (void *)io.slba);
-		printf("dsmgmt       : %08x\n" , io.dsmgmt);
-		printf("reftag       : %08x\n" , io.reftag);
-		printf("apptag       : %04x\n" , io.apptag);
-		printf("appmask      : %04x\n" , io.appmask);
+		printf("opcode       : %02x\n", io.opcode);
+		printf("flags        : %02x\n", io.flags);
+		printf("control      : %04x\n", io.control);
+		printf("nblocks      : %04x\n", io.nblocks);
+		printf("rsvd         : %04x\n", io.rsvd);
+		printf("metadata     : %"PRIx64"\n", (uint64_t)io.metadata);
+		printf("addr         : %"PRIx64"\n", (uint64_t)io.addr);
+		printf("sbla         : %"PRIx64"\n", (uint64_t)io.slba);
+		printf("dsmgmt       : %08x\n", io.dsmgmt);
+		printf("reftag       : %08x\n", io.reftag);
+		printf("apptag       : %04x\n", io.apptag);
+		printf("appmask      : %04x\n", io.appmask);
 		if (cfg.dry_run)
 			goto free_and_return;
 	}
@@ -3419,7 +3421,7 @@ static int sec_recv(int argc, char **argv)
 	cmd.cdw10    = cfg.secp << 24 | cfg.spsp << 8;
 	cmd.cdw11    = cfg.al;
 	cmd.data_len = cfg.size;
-	cmd.addr     = (__u64)sec_buf;
+	cmd.addr     = (__u64)((unsigned long)sec_buf);
 
 	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
 	if (err < 0)
@@ -3445,6 +3447,7 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 		"admin command to the specified device via IOCTL passthrough, "\
 		"return results";
 	struct nvme_passthru_cmd cmd;
+	void *data = NULL, *metadata = NULL;
 
 	struct config {
 		__u8  opcode;
@@ -3586,10 +3589,12 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 		}
 	}
 	get_dev(1, argc, argv);
-	if (cmd.metadata_len)
-		cmd.metadata = (__u64)malloc(cmd.metadata_len);
+	if (cmd.metadata_len) {
+		metadata = malloc(cmd.metadata_len);
+		cmd.metadata = (__u64)((unsigned long)metadata);
+	}
 	if (cmd.data_len) {
-		cmd.addr = (__u64)malloc(cmd.data_len);
+		data = malloc(cmd.data_len);
 		if (!cfg.read && !cfg.write) {
 			fprintf(stderr, "data direction not given\n");
 			return EINVAL;
@@ -3599,11 +3604,12 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 			return EINVAL;
 		}
 		if (cfg.write) {
-			if (read(wfd, (void *)cmd.addr, cmd.data_len) < 0) {
+			if (read(wfd, data, cmd.data_len) < 0) {
 				fprintf(stderr, "failed to read write buffer\n");
 				return EINVAL;
 			}
 		}
+		cmd.addr = (__u64)((unsigned long)data);
 	}
 	if (cfg.show_command) {
 		printf("opcode       : %02x\n", cmd.opcode);
@@ -3614,8 +3620,8 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 		printf("cdw3         : %08x\n", cmd.cdw3);
 		printf("data_len     : %08x\n", cmd.data_len);
 		printf("metadata_len : %08x\n", cmd.metadata_len);
-		printf("addr         : %p\n",   (void *)cmd.addr);
-		printf("metadata     : %p\n",   (void *)cmd.metadata);
+		printf("addr         : %"PRIx64"\n", (uint64_t)cmd.addr);
+		printf("metadata     : %"PRIx64"\n", (uint64_t)cmd.metadata);
 		printf("cdw10        : %08x\n", cmd.cdw10);
 		printf("cdw11        : %08x\n", cmd.cdw11);
 		printf("cdw12        : %08x\n", cmd.cdw12);
@@ -3631,10 +3637,10 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 		if (!cfg.raw_binary) {
 			printf("NVMe Status:%s Command Result:%08x\n",
 				nvme_status_to_string(err), cmd.result);
-			if (cmd.addr && cfg.read && !err)
-				d((unsigned char *)cmd.addr, cmd.data_len, 16, 1);
-		} else if (!err && cmd.addr && cfg.read)
-			d_raw((unsigned char *)cmd.addr, cmd.data_len);
+			if (data && cfg.read && !err)
+				d((unsigned char *)data, cmd.data_len, 16, 1);
+		} else if (!err && data && cfg.read)
+			d_raw((unsigned char *)data, cmd.data_len);
 	} else
 		perror("ioctl");
 	return err;

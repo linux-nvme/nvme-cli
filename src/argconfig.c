@@ -47,20 +47,21 @@ char END_DEFAULT[] = "__end_default__";
 static int print_word_wrapped(const char *s, int indent, int start)
 {
     const int width = 76;
-    const char *c;
+    const char *c, *t;
     int next_space = -1;
     int last_line = indent;
 
     for (c = s; *c != 0; c++) {
         if (*c == ' ' || next_space < 0) {
             next_space = 0;
-            for (const char *t = c+1; *t != 0 && *t != ' '; t++)
+            for (t = c+1; *t != 0 && *t != ' '; t++)
                 next_space++;
             if ( ((int)(c-s)+start+next_space) > (last_line-indent+width)) {
+		int i;
                 last_line = (int) (c-s) + start;
 
                 putchar('\n');
-                for (int i = 0; i < indent; i++)
+                for (i = 0; i < indent; i++)
                     putchar(' ');
 
                 start = indent;
@@ -94,6 +95,7 @@ void argconfig_print_help(char *command, const char *program_desc,
     int meta_len = 0;
     int opt_len = 0;
     int next = 0;
+    int i;
 
     printf("\033[1mUsage: nvme %s /dev/nvmeX [OPTIONS] %s\n\n\033[0m", command, append_usage_str);
     print_word_wrapped(program_desc, 0, 0);
@@ -155,7 +157,7 @@ void argconfig_print_help(char *command, const char *program_desc,
 		last_help = (char *)s->help;
     }
 
-    for (int i = 0; i < MAX_HELP_FUNC; i++) {
+    for (i = 0; i < MAX_HELP_FUNC; i++) {
         if (help_funcs[i] == NULL) break;
         putchar('\n');
         help_funcs[i]();
@@ -174,7 +176,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
     char *endptr;
     struct option *long_opts;
     const struct argconfig_commandline_options *s;
-    int c;
+    int c, i;
     int option_index = 0;
     int short_index = 0;
     int options_count = 0;
@@ -393,7 +395,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
     free(short_opts);
     free(long_opts);
 
-    for (int i = optind; i < argc; i++) {
+    for (i = optind; i < argc; i++) {
         argv[non_opt_args + 1] = argv[i];
         non_opt_args++;
     }
@@ -526,7 +528,8 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
 }
 
 void argconfig_register_help_func(argconfig_help_func *f) {
-    for (int i = 0; i < MAX_HELP_FUNC; i++) {
+    int i;
+    for (i = 0; i < MAX_HELP_FUNC; i++) {
         if (help_funcs[i] == NULL) {
             help_funcs[i] = f;
             help_funcs[i+1] = NULL;
@@ -607,11 +610,12 @@ void argconfig_parse_subopt(char * const opts[], const char *module,
     int enddefault = 0;
     int tmp;
     const struct argconfig_sub_options *s;
+    char * const *o;
 
     errno = 0;
     memcpy(config_out, config_default, config_size);
 
-    for (char * const *o = opts; o != NULL && *o != NULL; o += 2) {
+    for (o = opts; o != NULL && *o != NULL; o += 2) {
         if (*o == END_DEFAULT) {
             enddefault = 1;
             continue;
