@@ -7,6 +7,7 @@ DESTDIR =
 PREFIX := /usr/local
 SBINDIR = $(PREFIX)/sbin
 LIBUDEV:=$(shell ld -ludev > /dev/null 2>&1 ; echo $$?)
+LIB_DEPENDS =
 
 RPMBUILD = rpmbuild
 TAR = tar
@@ -15,6 +16,7 @@ RM = rm -f
 ifeq ($(LIBUDEV),0)
 	LDFLAGS += -ludev
 	CFLAGS  += -DLIBUDEV_EXISTS
+	LIB_DEPENDS += udev
 endif
 
 # For the uapi header file we priorize this way:
@@ -49,8 +51,8 @@ doc: $(NVME)
 all: doc
 
 clean:
-	rm -f $(NVME) *.o *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
-	rm -rf nvme-*
+	$(RM) $(NVME) *.o *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
+	$(RM) -r nvme-*
 	$(MAKE) -C Documentation clean
 
 clobber: clean
@@ -78,8 +80,10 @@ dist: nvme.spec
 control: nvme.control.in NVME-VERSION-FILE
 	sed -e 's/@@VERSION@@/$(NVME_VERSION)/g' < $< > $@+
 	mv $@+ $@
+	sed -e 's/@@DEPENDS@@/$(LIB_DEPENDS)/g' < $@ > $@+
+	mv $@+ $@
 
-pkg: control
+pkg: control nvme.control.in
 	mkdir -p nvme-$(NVME_VERSION)$(SBINDIR)
 	mkdir -p nvme-$(NVME_VERSION)$(PREFIX)/share/man/man1
 	mkdir -p nvme-$(NVME_VERSION)/DEBIAN/
@@ -87,7 +91,7 @@ pkg: control
 	cp nvme nvme-$(NVME_VERSION)$(SBINDIR)
 	cp control nvme-$(NVME_VERSION)/DEBIAN/
 
-deb: $(NVME) pkg
+deb: $(NVME) pkg nvme.control.in
 	dpkg-deb --build nvme-$(NVME_VERSION)
 
 rpm: dist
