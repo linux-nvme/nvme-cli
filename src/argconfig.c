@@ -491,13 +491,12 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
   char *p;
 
   if (!strlen(string) || string == NULL)
-	  exit(1);
+	  return 0;
 
-  tmp = malloc(strlen(string) + 1);
   tmp = strtok(string, ",");
+  if (!tmp)
+      return 0;
 
-  if (tmp==NULL)
-	  exit(1);
 
   val[ret] = strtol(tmp, &p, 0);
 
@@ -525,6 +524,40 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
 	  ret++;
     }
 
+}
+
+unsigned argconfig_parse_comma_sep_array_long(char *string, unsigned long long *val,
+				      unsigned max_length)
+{
+  unsigned ret = 0;
+  char *tmp;
+  char *p;
+
+  if (!strlen(string) || string == NULL)
+	  return 0;
+
+  tmp = strtok(string, ",");
+  if (tmp==NULL)
+	  return 0;
+
+  val[ret] = strtoll(tmp, &p, 0);
+  if (*p != 0)
+	  exit(1);
+  ret++;
+  while(1) {
+	  tmp = strtok(NULL, ",");
+
+	  if (tmp == NULL)
+		return ret;
+
+	  if (ret >= max_length)
+		  exit(1);
+
+	  val[ret] = strtoll(tmp, &p, 0);
+	  if (*p != 0)
+		  exit(1);
+	  ret++;
+    }
 }
 
 void argconfig_register_help_func(argconfig_help_func *f) {

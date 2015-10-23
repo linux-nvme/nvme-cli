@@ -52,6 +52,7 @@
 #include "src/suffix.h"
 
 #define min(x, y) (x) > (y) ? (y) : (x)
+#define max(x, y) (x) > (y) ? (x) : (y)
 
 static int fd;
 static struct stat nvme_stat;
@@ -88,6 +89,7 @@ static const char nvme_version_string[] = NVME_VERSION;
 	ENTRY(RESV_REGISTER, "resv-register", "Submit a Reservation Register, return results", resv_register) \
 	ENTRY(RESV_RELEASE, "resv-release", "Submit a Reservation Release, return results", resv_release) \
 	ENTRY(RESV_REPORT, "resv-report", "Submit a Reservation Report, return results", resv_report) \
+	ENTRY(DSM, "dsm", "Submit a Data Set Management command, return results", dsm) \
 	ENTRY(FLUSH, "flush", "Submit a Flush command, return results", flush) \
 	ENTRY(COMPARE, "compare", "Submit a Comapre command, return results", compare) \
 	ENTRY(READ_CMD, "read", "Submit a read command, return results", read_cmd) \
@@ -360,7 +362,7 @@ char* nvme_feature_to_string(int feature)
 	case NVME_FEAT_AUTO_PST:	return "Autonomous Power State Transition";
 	case NVME_FEAT_HOST_MEM_BUF:	return "Host Memory Buffer";
 	case NVME_FEAT_SW_PROGRESS:	return "Software Progress";
-	case NVME_FEAT_HOST_ID:	return "Host Identifier";
+	case NVME_FEAT_HOST_ID:		return "Host Identifier";
 	case NVME_FEAT_RESV_MASK:	return "Reservation Notification Mask";
 	case NVME_FEAT_RESV_PERSIST:	return "Reservation Persistence";
 	default:			return "Unknown";
@@ -2178,8 +2180,8 @@ static int get_feature(int argc, char **argv)
 		{"raw-binary",   "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       raw_binary},
 		{"b",            "",     CFG_NONE,     &defaults.raw_binary,   no_argument,       raw_binary},
 		{"cdw11",        "NUM",  CFG_POSITIVE, &defaults.cdw11,        required_argument, cdw11},
-		{"human-readable",  "",    CFG_NONE,     &defaults.human_readable,  no_argument,       human_readable},		
-		{"H",               "", CFG_NONE, &defaults.human_readable,  no_argument, human_readable},
+		{"human-readable",  "",  CFG_NONE,     &defaults.human_readable,  no_argument,    human_readable},
+		{"H",               "",  CFG_NONE,     &defaults.human_readable,  no_argument, human_readable},
 		{0}
 	};
 
@@ -2719,6 +2721,140 @@ static int sec_send(int argc, char **argv)
 	else
 		printf("NVME Security Send Command Success:%d\n", cmd.result);
 	return err;
+}
+
+static int dsm(int argc, char **argv)
+{
+	struct nvme_passthru_cmd cmd;
+	const char *desc = "dsm: The Dataset Management command is used by the host to "\
+		"indicate attributes for ranges of logical blocks. This includes attributes "\
+		"like frequency that data is read or written, access size, and other "\
+		"information that may be used to optimize performance and reliability.";
+	const char *namespace_id = "name of desired namespace";
+	const char *blocks = "Comma separated list of the number of blocks in each range";
+	const char *starting_blocks = "Comma separated list of the starting block in each range";
+	const char *context_attrs = "Comma separated list of the context attributes in each range";
+	const char *ad = "Attribute Deallocate";
+	const char *idw = "Attribute Integral Dataset for Write";
+	const char *idr = "Attribute Integral Dataset for Read";
+	const char *cdw11 = "All the command command dword 11 attribuets. Use instead of specifying individual attributes";
+
+	int i, err;
+	uint8_t nr, nc, nb, ns;
+	__u32 ctx_attrs[256];
+	__u32 nlbs[256];
+	__u64 slbas[256];
+	void *buffer;
+	struct nvme_dsm_range *dsm;
+
+	struct config {
+		char  *ctx_attrs;
+		char  *blocks;
+		char  *slbas;
+		int  ad;
+		int  idw;
+		int  idr;
+		__u32 cdw11;
+		__u32 namespace_id;
+	};
+	struct config cfg;
+
+	const struct config defaults = {
+		.ctx_attrs = "",
+		.blocks = "",
+		.slbas = "",
+		.namespace_id = 0,
+		.ad = 0,
+		.idw = 0,
+		.idr = 0,
+		.cdw11 = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id", "NUM",  CFG_POSITIVE,  &defaults.namespace_id, required_argument, namespace_id},
+		{"n",            "NUM",  CFG_POSITIVE,  &defaults.namespace_id, required_argument, namespace_id},
+		{"ctx-attrs",    "LIST", CFG_STRING,    &defaults.ctx_attrs,    required_argument, context_attrs},
+		{"a",            "LIST", CFG_STRING,    &defaults.ctx_attrs,    required_argument, context_attrs},
+		{"blocks", 	 "LIST", CFG_STRING,    &defaults.blocks,       required_argument, blocks},
+		{"b", 	         "LIST", CFG_STRING,    &defaults.blocks,       required_argument, blocks},
+		{"slbs", 	 "LIST", CFG_STRING,    &defaults.slbas,        required_argument, starting_blocks},
+		{"s", 	         "LIST", CFG_STRING,    &defaults.slbas,        required_argument, starting_blocks},
+		{"ad", 	         "FLAG", CFG_NONE,      &defaults.ad,           no_argument,       ad},
+		{"d", 	         "FLAG", CFG_NONE,      &defaults.ad,           no_argument,       ad},
+		{"idw", 	 "FLAG", CFG_NONE,      &defaults.idw,          no_argument,       idw},
+		{"w", 	         "FLAG", CFG_NONE,      &defaults.idw,          no_argument,       idw},
+		{"idr", 	 "FLAG", CFG_NONE,      &defaults.idr,          no_argument,       idr},
+		{"r", 	         "FLAG", CFG_NONE,      &defaults.idr,          no_argument,       idr},
+		{"cdw11",        "NUM",  CFG_POSITIVE,  &defaults.namespace_id, required_argument, cdw11},
+		{"c",            "NUM",  CFG_POSITIVE,  &defaults.namespace_id, required_argument, cdw11},
+		{0}
+	};
+
+	memset(ctx_attrs, 0, sizeof(ctx_attrs));
+	memset(slbas, 0, sizeof(slbas));
+	memset(nlbs, 0, sizeof(nlbs));
+
+	argconfig_parse(argc, argv, desc, command_line_options,
+			&defaults, &cfg, sizeof(cfg));
+	get_dev(1, argc, argv);
+
+	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, (int *)ctx_attrs, 256);
+	nb = argconfig_parse_comma_sep_array(cfg.blocks, (int *)nlbs, 256);
+	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, 256);
+	nr = max(nc, max(nb, ns));
+	if (!nr) {
+		fprintf(stderr, "No range definition provided\n");
+		return EINVAL;
+	}
+
+	if (!cfg.namespace_id) {
+		if (!S_ISBLK(nvme_stat.st_mode)) {
+			fprintf(stderr,
+				"%s: non-block device requires namespace-id param\n",
+				devicename);
+			exit(ENOTBLK);
+		}
+		cfg.namespace_id = ioctl(fd, NVME_IOCTL_ID);
+		if (cfg.namespace_id <= 0) {
+			fprintf(stderr,
+				"%s: failed to return namespace id\n",
+				devicename);
+			return errno;
+		}
+	}
+
+	if (!cfg.cdw11)
+		cfg.cdw11 = (cfg.ad << 2) | (cfg.idw << 1) | (cfg.idr << 0);
+
+	buffer = malloc(nr * sizeof (struct nvme_dsm_range));
+	if (!buffer)
+		return ENOMEM;
+
+	dsm = buffer;
+	for (i = 0; i < nr; i++) {
+		dsm[i].cattr = htole32(ctx_attrs[i]);
+		dsm[i].nlb = htole32(nlbs[i]);
+		dsm[i].slba = htole64(slbas[i]);
+	}
+
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.nsid = cfg.namespace_id;
+	cmd.opcode = nvme_cmd_dsm;
+	cmd.addr = (__u64)((unsigned long)buffer);
+	cmd.data_len = nr * sizeof(struct nvme_dsm_range);
+	cmd.cdw10 = nr;
+	cmd.cdw11 = cfg.cdw11;
+
+	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+	if (err < 0) {
+		fprintf(stderr, "error:%x\n", err);
+		return errno;
+	} else if (err != 0)
+		fprintf(stderr, "NVME IO command error:%s(%x)\n",
+				nvme_status_to_string(err), err);
+	else
+		printf("NVMe DSM: success\n");
+	return 0;
 }
 
 static int flush(int argc, char **argv)

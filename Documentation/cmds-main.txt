@@ -10,6 +10,9 @@ linknvme:nvme-error-log[1]::
 linknvme:nvme-flush[1]::
 	Submit flush
 
+linknvme:nvme-dms[1]::
+	Submit Data Set Management
+
 linknvme:nvme-format[1]::
 	Format namespace(s)
 

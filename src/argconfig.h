@@ -103,6 +103,8 @@ int argconfig_parse_subopt_string (char *string, char **options,
                                 size_t max_options);
 unsigned argconfig_parse_comma_sep_array(char *string,int *ret,
 				      unsigned max_length);
+unsigned argconfig_parse_comma_sep_array_long(char *string, unsigned long long *ret,
+				      unsigned max_length);
 void argconfig_register_help_func(argconfig_help_func * f);
 
 void argconfig_print_subopt_help(const struct argconfig_sub_options * options,
