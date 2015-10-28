@@ -2740,7 +2740,7 @@ static int dsm(int argc, char **argv)
 	const char *cdw11 = "All the command command dword 11 attribuets. Use instead of specifying individual attributes";
 
 	int i, err;
-	uint8_t nr, nc, nb, ns;
+	uint16_t nr, nc, nb, ns;
 	__u32 ctx_attrs[256];
 	__u32 nlbs[256];
 	__u64 slbas[256];
@@ -2802,7 +2802,7 @@ static int dsm(int argc, char **argv)
 	nb = argconfig_parse_comma_sep_array(cfg.blocks, (int *)nlbs, 256);
 	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, 256);
 	nr = max(nc, max(nb, ns));
-	if (!nr) {
+	if (!nr || nr > 256) {
 		fprintf(stderr, "No range definition provided\n");
 		return EINVAL;
 	}
@@ -2842,7 +2842,7 @@ static int dsm(int argc, char **argv)
 	cmd.opcode = nvme_cmd_dsm;
 	cmd.addr = (__u64)((unsigned long)buffer);
 	cmd.data_len = nr * sizeof(struct nvme_dsm_range);
-	cmd.cdw10 = nr;
+	cmd.cdw10 = nr - 1;
 	cmd.cdw11 = cfg.cdw11;
 
 	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
