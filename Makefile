@@ -19,16 +19,6 @@ ifeq ($(LIBUDEV),0)
 	LIB_DEPENDS += udev
 endif
 
-# For the uapi header file we priorize this way:
-# 1. Use /usr/src/$(uname -r)/include/uapi/linux/nvme.h
-# 2. Use ./linux/nvme.h
-
-ifneq (,$(wildcard /usr/src/linux-headers-$(shell uname -r)/include/uapi/linux/nvme.h))
-	NVME_HEADER = /usr/src/linux-headers-$(shell uname -r)/include/uapi/linux/nvme.h
-else
-	NVME_HEADER = ./linux/nvme.h
-endif
-
 default: $(NVME)
 
 NVME-VERSION-FILE: FORCE
@@ -36,7 +26,7 @@ NVME-VERSION-FILE: FORCE
 -include NVME-VERSION-FILE
 override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
 
-nvme: nvme.c $(NVME_HEADER) argconfig.o suffix.o NVME-VERSION-FILE
+nvme: nvme.c ./linux/nvme.h argconfig.o suffix.o NVME-VERSION-FILE
 	$(CC) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME) argconfig.o suffix.o
 
 argconfig.o: $(SRC)/argconfig.c $(SRC)/argconfig.h $(SRC)/suffix.h
