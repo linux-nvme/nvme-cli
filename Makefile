@@ -26,14 +26,16 @@ NVME-VERSION-FILE: FORCE
 -include NVME-VERSION-FILE
 override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
 
-nvme: nvme.c ./linux/nvme.h argconfig.o suffix.o NVME-VERSION-FILE
-	$(CC) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME) argconfig.o suffix.o
+nvme: nvme.c ./linux/nvme.h argconfig.o suffix.o common.o NVME-VERSION-FILE
+	$(CC) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME) argconfig.o suffix.o common.o
 
 argconfig.o: $(SRC)/argconfig.c $(SRC)/argconfig.h $(SRC)/suffix.h
 	$(CC) -c $(CFLAGS) $(SRC)/argconfig.c
 
 suffix.o: $(SRC)/suffix.c $(SRC)/suffix.h
 	$(CC) -c $(CFLAGS) $(SRC)/suffix.c
+
+common.o: common.c
 
 doc: $(NVME)
 	$(MAKE) -C Documentation
