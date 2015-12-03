@@ -81,10 +81,19 @@ pkg: control nvme.control.in
 	cp nvme nvme-$(NVME_VERSION)$(SBINDIR)
 	cp control nvme-$(NVME_VERSION)/DEBIAN/
 
-deb: $(NVME) pkg nvme.control.in
+deb:
+	git archive --format=tar --prefix=nvme-cli-$(NVME_VERSION)/ HEAD \
+	  | gzip -9 > ../nvme-cli_$(NVME_VERSION).orig.tar.gz
+	printf '%s\n\n  * Auto-release.\n\n %s\n' \
+          "nvme-cli ($(NVME_VERSION)-1~`lsb_release -sc`) `lsb_release -sc`; urgency=low" \
+          "-- Keith Busch <keith.busch@intel.com>  `git log -1 --format=%aD`" \
+	  > debian/changelog
+	dpkg-buildpackage -uc -us -sa  # from dpkg-dev package
+
+deb-light: $(NVME) pkg nvme.control.in
 	dpkg-deb --build nvme-$(NVME_VERSION)
 
 rpm: dist
 	$(RPMBUILD) -ta nvme-$(NVME_VERSION).tar.gz
 
-.PHONY: default all doc clean clobber install install-bin install-man rpm deb FORCE
+.PHONY: default all doc clean clobber install install-bin install-man rpm deb deb-light FORCE
