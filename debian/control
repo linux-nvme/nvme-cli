@@ -1,0 +1,15 @@
+Source: nvme-cli
+Maintainer: Keith Busch <keith.busch@intel.com>
+Section: admin
+Priority: optional
+Standards-Version: 3.9.4
+Build-Depends: debhelper (>= 9), libudev-dev
+
+Package: nvme-cli
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libudev0 | libudev1
+Description: User space tooling to control NVMe drives.
+ NVMe is a fast, scalable, direct attached storage interface, accessing
+ solid state drivers through PCIe.
+ .
+ The nvme CLI contains core management tools with minimal dependencies.
