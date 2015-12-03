@@ -1,10 +1,10 @@
-CFLAGS := -I $(SRC) $(CFLAGS) -m64 -std=gnu99 -O2 -g -pthread -D_GNU_SOURCE -D_REENTRANT -Wall -Werror
-LDFLAGS := $(LDFLAGS) -lm
+CFLAGS += -std=gnu99 -O2 -g -Wall -Werror
+CPPFLAGS += -I $(SRC) -D_GNU_SOURCE
 NVME = nvme
 INSTALL ?= install
 SRC = ./src
 DESTDIR =
-PREFIX := /usr/local
+PREFIX ?= /usr/local
 SBINDIR = $(PREFIX)/sbin
 LIBUDEV:=$(shell ld -ludev > /dev/null 2>&1 ; echo $$?)
 LIB_DEPENDS =
@@ -27,13 +27,13 @@ NVME-VERSION-FILE: FORCE
 override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
 
 nvme: nvme.c ./linux/nvme.h argconfig.o suffix.o common.o NVME-VERSION-FILE
-	$(CC) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME) argconfig.o suffix.o common.o
+	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME) argconfig.o suffix.o common.o
 
 argconfig.o: $(SRC)/argconfig.c $(SRC)/argconfig.h $(SRC)/suffix.h
-	$(CC) -c $(CFLAGS) $(SRC)/argconfig.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $(SRC)/argconfig.c
 
 suffix.o: $(SRC)/suffix.c $(SRC)/suffix.h
-	$(CC) -c $(CFLAGS) $(SRC)/suffix.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $(SRC)/suffix.c
 
 common.o: common.c
 
