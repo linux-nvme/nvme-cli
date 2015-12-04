@@ -6,7 +6,7 @@ SRC = ./src
 DESTDIR =
 PREFIX ?= /usr/local
 SBINDIR = $(PREFIX)/sbin
-LIBUDEV:=$(shell ld -ludev > /dev/null 2>&1 ; echo $$?)
+LIBUDEV := $(shell ld -o /dev/null -ludev >/dev/null 2>&1; echo $$?)
 LIB_DEPENDS =
 
 RPMBUILD = rpmbuild
@@ -83,12 +83,26 @@ pkg: control nvme.control.in
 	cp nvme nvme-$(NVME_VERSION)$(SBINDIR)
 	cp control nvme-$(NVME_VERSION)/DEBIAN/
 
-deb:
-	git archive --format=tar --prefix=nvme-cli-$(NVME_VERSION)/ HEAD \
-	  | gzip -9 > ../nvme-cli_$(NVME_VERSION).orig.tar.gz
+# Make a reproducible tar.gz in the super-directory. Uses
+# git-restore-mtime if available to adjust timestamps.
+../nvme-cli_$(NVME_VERSION).orig.tar.gz:
+	find . -type f -perm -u+rwx -exec chmod 0755 '{}' +
+	find . -type f -perm -u+rw '!' -perm -u+x -exec chmod 0644 '{}' +
+	if which git-restore-mtime >/dev/null; then git-restore-mtime; fi
+	git ls-files | tar cf ../nvme-cli_$(NVME_VERSION).orig.tar \
+	  --owner=root --group=root \
+	  --transform='s#^#nvme-cli-$(NVME_VERSION)/#' --files-from -
+	touch -d "`git log --format=%ci -1`" ../nvme-cli_$(NVME_VERSION).orig.tar
+	gzip -f -9 ../nvme-cli_$(NVME_VERSION).orig.tar
+
+dist-orig: ../nvme-cli_$(NVME_VERSION).orig.tar.gz
+
+deb: dist-orig
+	# Create a throw-away changelog, which dpkg-buildpackage uses to
+	# determine the package version.
 	printf '%s\n\n  * Auto-release.\n\n %s\n' \
           "nvme-cli ($(NVME_VERSION)-1~`lsb_release -sc`) `lsb_release -sc`; urgency=low" \
-          "-- Keith Busch <keith.busch@intel.com>  `git log -1 --format=%aD`" \
+          "-- Keith Busch <keith.busch@intel.com>  `git log -1 --format=%cD`" \
 	  > debian/changelog
 	dpkg-buildpackage -uc -us -sa  # from dpkg-dev package
 
@@ -98,4 +112,5 @@ deb-light: $(NVME) pkg nvme.control.in
 rpm: dist
 	$(RPMBUILD) -ta nvme-$(NVME_VERSION).tar.gz
 
-.PHONY: default all doc clean clobber install install-bin install-man rpm deb deb-light FORCE
+.PHONY: default doc all clean clobber install-man install-bin install
+.PHONY: dist pkg dist-orig deb deb-light rpm FORCE
