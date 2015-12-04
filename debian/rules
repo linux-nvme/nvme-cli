@@ -3,18 +3,5 @@
 %:
 	dh $@
 
-override_dh_auto_build:
-	# Remove "-lm" from LDFLAGS, because dpkg-shlibdeps says it's
-	# a useless dependency. Add hardening flags to both CFLAGS
-	# (with CPPFLAGS) and LDFLAGS.
-	$(MAKE) DESTDIR=$$(pwd)/debian/nvme-cli \
-	  CFLAGS="-I./src $(shell dpkg-buildflags --get CFLAGS) \
-	          -m64 -std=gnu99 -O2 -g -pthread \
-	          $(shell dpkg-buildflags --get CPPFLAGS) \
-	          -DLIBUDEV_EXISTS -D_GNU_SOURCE -D_REENTRANT -Wall -Werror" \
-	  LDFLAGS="$(shell dpkg-buildflags --get LDFLAGS) -ludev" \
-	  nvme
-
 override_dh_auto_install:
-	# Fix that it installs to /usr instead of /usr/local.
-	$(MAKE) DESTDIR=$$(pwd)/debian/nvme-cli PREFIX=/usr install
+	dh_auto_install -- PREFIX=/usr

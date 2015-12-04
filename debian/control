@@ -10,6 +10,6 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libudev0 | libudev1
 Description: User space tooling to control NVMe drives.
  NVMe is a fast, scalable, direct attached storage interface, accessing
- solid state drivers through PCIe.
+ solid state drives through PCIe.
  .
  The nvme CLI contains core management tools with minimal dependencies.
