@@ -502,15 +502,11 @@ void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 	int human = mode&HUMAN,
 		vs = mode&VS;
 
-	ctrl->sn[sizeof(ctrl->sn)-1] = 0;
-	ctrl->mn[sizeof(ctrl->mn)-1] = 0;
-	ctrl->fr[sizeof(ctrl->fr)-1] = 0;
-
 	printf("vid     : %#x\n", ctrl->vid);
 	printf("ssvid   : %#x\n", ctrl->ssvid);
-	printf("sn      : %s\n", ctrl->sn);
-	printf("mn      : %s\n", ctrl->mn);
-	printf("fr      : %s\n", ctrl->fr);
+	printf("sn      : %-20.20s\n", ctrl->sn);
+	printf("mn      : %-20.20s\n", ctrl->mn);
+	printf("fr      : %-.8s\n", ctrl->fr);
 	printf("rab     : %d\n", ctrl->rab);
 	printf("ieee    : %02x%02x%02x\n",
 		ctrl->ieee[2], ctrl->ieee[1], ctrl->ieee[0]);
