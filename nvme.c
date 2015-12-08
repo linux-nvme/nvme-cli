@@ -254,35 +254,40 @@ static unsigned long int48_to_long(__u8 *data)
 static void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid)
 {
 	/* convert temperature from Kelvin to Celsius */
+	int c;
 	unsigned int temperature = ((smart->temperature[1] << 8) |
 		smart->temperature[0]) - 273;
 
 	printf("Smart Log for NVME device:%s namespace-id:%x\n", devicename, nsid);
-	printf("critical_warning          : %#x\n", smart->critical_warning);
-	printf("temperature               : %u C\n", temperature);
-	printf("available_spare           : %u%%\n", smart->avail_spare);
-	printf("available_spare_threshold : %u%%\n", smart->spare_thresh);
-	printf("percentage_used           : %u%%\n", smart->percent_used);
-	printf("data_units_read           : %'.0Lf\n",
+	printf("critical_warning                    : %#x\n", smart->critical_warning);
+	printf("temperature                         : %u C\n", temperature);
+	printf("available_spare                     : %u%%\n", smart->avail_spare);
+	printf("available_spare_threshold           : %u%%\n", smart->spare_thresh);
+	printf("percentage_used                     : %u%%\n", smart->percent_used);
+	printf("data_units_read                     : %'.0Lf\n",
 		int128_to_double(smart->data_units_read));
-	printf("data_units_written        : %'.0Lf\n",
+	printf("data_units_written                  : %'.0Lf\n",
 		int128_to_double(smart->data_units_written));
-	printf("host_read_commands        : %'.0Lf\n",
+	printf("host_read_commands                  : %'.0Lf\n",
 		int128_to_double(smart->host_reads));
-	printf("host_write_commands       : %'.0Lf\n",
+	printf("host_write_commands                 : %'.0Lf\n",
 		int128_to_double(smart->host_writes));
-	printf("controller_busy_time      : %'.0Lf\n",
+	printf("controller_busy_time                : %'.0Lf\n",
 		int128_to_double(smart->ctrl_busy_time));
-	printf("power_cycles              : %'.0Lf\n",
+	printf("power_cycles                        : %'.0Lf\n",
 		int128_to_double(smart->power_cycles));
-	printf("power_on_hours            : %'.0Lf\n",
+	printf("power_on_hours                      : %'.0Lf\n",
 		int128_to_double(smart->power_on_hours));
-	printf("unsafe_shutdowns          : %'.0Lf\n",
+	printf("unsafe_shutdowns                    : %'.0Lf\n",
 		int128_to_double(smart->unsafe_shutdowns));
-	printf("media_errors              : %'.0Lf\n",
+	printf("media_errors                        : %'.0Lf\n",
 		int128_to_double(smart->media_errors));
-	printf("num_err_log_entries       : %'.0Lf\n",
+	printf("num_err_log_entries                 : %'.0Lf\n",
 		int128_to_double(smart->num_err_log_entries));
+	printf("Critical Composite Temperature Time : %u\n", smart->warning_temp_time);
+	for (c=0; c < 8; c++) {
+	    printf("Temperature Sensor %d                : %u C\n", c+1, smart->temp_sensor[c] ? smart->temp_sensor[c]-273 : 0);
+	}
 }
 
 static void show_additional_smart_log(struct nvme_additional_smart_log *smart, unsigned int nsid)
