@@ -27,22 +27,18 @@
 #include <endian.h>
 #include <errno.h>
 #include <getopt.h>
-#include <fcntl.h>
 #include <inttypes.h>
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <math.h>
-#ifdef LIBUDEV_EXISTS
-#include <libudev.h>
-#endif
 
 #include <linux/fs.h>
 
+#include <unistd.h>
+#include <fcntl.h>
 #include <sys/ioctl.h>
-#include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -62,7 +58,6 @@ static const char *devicename;
 static const char nvme_version_string[] = NVME_VERSION;
 
 #define COMMAND_LIST \
-	ENTRY(LIST, "list", "List all NVMe devices and namespaces on machine", list) \
 	ENTRY(ID_CTRL, "id-ctrl", "Send NVMe Identify Controller", id_ctrl) \
 	ENTRY(ID_NS, "id-ns", "Send NVMe Identify Namespace, display structure", id_ns) \
 	ENTRY(LIST_NS, "list-ns", "Send NVMe Identify List, display structure", list_ns) \
@@ -1053,182 +1048,6 @@ static int create_ns(int argc, char **argv)
 	return err;
 }
 
-static char *nvme_char_from_block(char *block)
-{
-	char slen[16];
-	unsigned len;
-	if (strncmp("nvme", block, 4)) {
-		fprintf(stderr,"Device %s is not a nvme device.", block);
-		exit(-1);
-	}
-	sscanf(block,"nvme%d", &len);
-	sprintf(slen,"%d", len);
-	block[4+strlen(slen)] = 0;
-	return block;
-}
-
-static void get_registers(struct nvme_bar **bar, unsigned char_only)
-{
-	int pci_fd;
-	char *base, path[512];
-	void *membase;
-
-	if (char_only && !S_ISCHR(nvme_stat.st_mode)) {
-		fprintf(stderr, "%s is not a character device\n", devicename);
-		exit(ENODEV);
-	}
-
-	base = nvme_char_from_block(basename(devicename));
-
-	sprintf(path, "/sys/class/nvme/%s/device/resource0", base);
-	pci_fd = open(path, O_RDONLY);
-	if (pci_fd < 0) {
-		sprintf(path, "/sys/class/misc/%s/device/resource0", base);
-		pci_fd = open(path, O_RDONLY);
-	}
-	if (pci_fd < 0) {
-		fprintf(stderr, "%s did not find a pci resource\n", devicename);
-		exit(ENODEV);
-	}
-
-	membase = mmap(0, getpagesize(), PROT_READ, MAP_SHARED, pci_fd, 0);
-	if (!membase) {
-		fprintf(stderr, "%s failed to map\n", devicename);
-		exit(ENODEV);
-	}
-	*bar = membase;
-}
-
-struct list_item {
-	char                node[1024];
-	struct nvme_id_ctrl ctrl;
-	int                 nsid;
-	struct nvme_id_ns   ns;
-	unsigned            block;
-	__le32              ver;
-};
-
-#ifdef LIBUDEV_EXISTS
-/* For pre NVMe 1.2 devices we must get the version from the BAR, not the
- * ctrl_id.*/
-static void get_version(struct list_item* list_item)
-{
-	struct nvme_bar *bar;
-
-	list_item->ver = list_item->ctrl.ver;
-	if (list_item->ctrl.ver)
-		return;
-	get_registers(&bar, 0);
-	list_item->ver = bar->vs;
-}
-
-static void print_list_item(struct list_item list_item)
-{
-
-	double nsze       = list_item.ns.nsze;
-	double nuse       = list_item.ns.nuse;
-	long long int lba = list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ds;
-
-	lba  = (1 << lba);
-	nsze *= lba;
-	nuse *= lba;
-
-	const char *s_suffix = suffix_si_get(&nsze);
-	const char *u_suffix = suffix_si_get(&nuse);
-	const char *l_suffix = suffix_binary_get(&lba);
-
-	char usage[128];
-	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
-		nsze, s_suffix);
-	char format[128];
-	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
-		list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ms);
-	char version[128];
-	sprintf(version,"%d.%d", (list_item.ver >> 16),
-		(list_item.ver >> 8) & 0xff);
-
-	fprintf(stdout, "%-16s %-20.20s %-8s %-8d %-26s %-16s %-.8s\n", list_item.node,
-		list_item.ctrl.mn, version, list_item.nsid, usage, format, list_item.ctrl.fr);
-}
-
-static void print_list_items(struct list_item *list_items, unsigned len)
-{
-	unsigned i;
-
-	fprintf(stdout,"%-16s %-20s %-8s %-8s %-26s %-16s %-8s\n",
-		"Node","Model","Version","Namepace", "Usage", "Format", "FW Rev");
-	fprintf(stdout,"%-16s %-20s %-8s %-8s %-26s %-16s %-8s\n",
-            "----------------","--------------------","--------","--------",
-            "--------------------------","----------------","--------");
-	for (i = 0 ; i < len ; i++)
-		print_list_item(list_items[i]);
-
-}
-#else
-static int list(int argc, char **argv)
-{
-	fprintf(stderr,"nvme-list: libudev not detected, install and rebuild.\n");
-	return -1;
-}
-#endif
-
-#ifdef LIBUDEV_EXISTS
-#define MAX_LIST_ITEMS 256
-static int list(int argc, char **argv)
-{
-	struct udev *udev;
-	struct udev_enumerate *enumerate;
-	struct udev_list_entry *devices, *dev_list_entry;
-	struct udev_device *dev;
-
-	struct list_item list_items[MAX_LIST_ITEMS];
-	unsigned count=0;
-
-	udev = udev_new();
-	if (!udev) {
-		perror("nvme-list: Cannot create udev context.");
-		return errno;
-	}
-
-	enumerate = udev_enumerate_new(udev);
-	udev_enumerate_add_match_subsystem(enumerate, "char");
-	udev_enumerate_add_match_subsystem(enumerate, "block");
-	udev_enumerate_scan_devices(enumerate);
-	devices = udev_enumerate_get_list_entry(enumerate);
-	udev_list_entry_foreach(dev_list_entry, devices) {
-
-		const char *path, *node;
-		path = udev_list_entry_get_name(dev_list_entry);
-		dev  = udev_device_new_from_syspath(udev, path);
-		node = udev_device_get_devnode(dev);
-		if (strstr(node,"nvme")!=NULL){
-			open_dev(node);
-			int err = identify(0, &list_items[count].ctrl, 1);
-			if (err > 0)
-				return err;
-			list_items[count].nsid = ioctl(fd, NVME_IOCTL_ID);
-			err = identify(list_items[count].nsid,
-				       &list_items[count].ns, 0);
-			if (err > 0)
-				return err;
-			strcpy(list_items[count].node, node);
-			list_items[count].block = S_ISBLK(nvme_stat.st_mode);
-			get_version(&list_items[count]);
-			count++;
-		}
-	}
-	udev_enumerate_unref(enumerate);
-	udev_unref(udev);
-
-	if (count)
-		print_list_items(list_items, count);
-	else
-		fprintf(stdout,"No NVMe devices detected.\n");
-
-	return 0;
-}
-#endif
-
 static int id_ctrl(int argc, char **argv)
 {
 	const char *desc = "id-ctrl: send an Identify Controller command to "\
@@ -1843,7 +1662,7 @@ static int show_registers(int argc, char **argv)
 					&long_index)) != -1);
 	get_dev(optind, argc, argv);
 
-	get_registers(&bar, 1);
+	get_registers(devicename, &bar);
 	printf("cap     : %"PRIx64"\n", (uint64_t)bar->cap);
 	printf("version : %x\n", bar->vs);
 	printf("intms   : %x\n", bar->intms);
