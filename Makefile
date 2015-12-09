@@ -6,18 +6,11 @@ SRC = ./src
 DESTDIR =
 PREFIX ?= /usr/local
 SBINDIR = $(PREFIX)/sbin
-LIBUDEV := $(shell ld -o /dev/null -ludev >/dev/null 2>&1; echo $$?)
 LIB_DEPENDS =
 
 RPMBUILD = rpmbuild
 TAR = tar
 RM = rm -f
-
-ifeq ($(LIBUDEV),0)
-	LDFLAGS += -ludev
-	CFLAGS  += -DLIBUDEV_EXISTS
-	LIB_DEPENDS += udev
-endif
 
 default: $(NVME)
 

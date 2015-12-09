@@ -1,9 +1,51 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <inttypes.h>
 
+#include <fcntl.h>
+#include <sys/mman.h>
 #include <endian.h>
+#include <errno.h>
+#include <unistd.h>
 
 #include "common.h"
+
+/* For pre NVMe 1.2 devices we must get the version from the BAR, not the
+ * ctrl_id.*/
+
+/* given a char dev path like "/dev/nvme0" return 0 and a
+ * nvme_bar or else return non zero
+ */
+int get_registers(const char *dev, struct nvme_bar **bar)
+{
+	int pci_fd;
+	char *base, path[512];
+	void *membase;
+
+	base = basename(dev);
+
+	sprintf(path, "/sys/class/nvme/%s/device/resource0", base);
+	pci_fd = open(path, O_RDONLY);
+	if (pci_fd < 0) {
+		sprintf(path, "/sys/class/misc/%s/device/resource0", base);
+		pci_fd = open(path, O_RDONLY);
+	}
+	if (pci_fd < 0) {
+		fprintf(stderr, "did not find a pci resource for: %s\n", dev);
+		return -ENODEV;
+	}
+
+	membase = mmap(0, getpagesize(), PROT_READ, MAP_SHARED, pci_fd, 0);
+	if (!membase) {
+		fprintf(stderr, "failed to map: %s\n", path);
+		return -ENODEV;
+	}
+
+	*bar = membase;
+
+	return EXIT_SUCCESS;
+}
 
 long double int128_to_double(__u8 *data)
 {
@@ -49,6 +91,19 @@ void d(unsigned char *buf, int len, int width, int group)
 				width, ascii);
 	}
 	fprintf(stdout, "\n");
+}
+
+static void show_nvme_id_ctrl_ver(__le32 ver)
+{
+	__u16 major = ver >> 16;
+	__u8 minor = (ver >> 8) & 0xFF;
+	__u8 rsvd = ver & 0xFF;
+
+	printf(" [31:16] : %#x\tMajor Version Number\n", major);
+	printf(" [15:08] : %#x\tMinor Version Number\n", minor);
+	if (rsvd)
+		printf(" [07:00] : %#x\tReserved\n", rsvd);
+	printf("\n");
 }
 
 static void show_nvme_id_ctrl_cmic(__u8 cmic)
@@ -516,6 +571,8 @@ void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 	printf("mdts    : %d\n", ctrl->mdts);
 	printf("cntlid  : %x\n", ctrl->cntlid);
 	printf("ver     : %x\n", ctrl->ver);
+	if (human)
+		show_nvme_id_ctrl_ver(ctrl->ver);
 	printf("rtd3r   : %x\n", ctrl->rtd3r);
 	printf("rtd3e   : %x\n", ctrl->rtd3e);
 	printf("oaes    : %#x\n", ctrl->oaes);

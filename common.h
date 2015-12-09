@@ -17,4 +17,6 @@ long double int128_to_double(__u8 *data);
 void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode);
 void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int flags);
 
+int get_registers(const char *dev, struct nvme_bar **bar);
+
 #endif
