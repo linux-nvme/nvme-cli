@@ -13,6 +13,8 @@ RPMBUILD = rpmbuild
 TAR = tar
 RM = rm -f
 
+AUTHOR=Keith Busch <keith.busch@intel.com>
+
 ifeq ($(LIBUDEV),0)
 	LDFLAGS += -ludev
 	CFLAGS  += -DLIBUDEV_EXISTS
@@ -102,7 +104,7 @@ deb: dist-orig
 	# determine the package version.
 	printf '%s\n\n  * Auto-release.\n\n %s\n' \
           "nvme-cli ($(NVME_VERSION)-1~`lsb_release -sc`) `lsb_release -sc`; urgency=low" \
-          "-- Keith Busch <keith.busch@intel.com>  `git log -1 --format=%cD`" \
+          "-- $(AUTHOR)  `git log -1 --format=%cD`" \
 	  > debian/changelog
 	dpkg-buildpackage -uc -us -sa  # from dpkg-dev package
 
