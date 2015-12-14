@@ -2224,7 +2224,7 @@ static int dsm(int argc, char **argv)
 
 	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, (int *)ctx_attrs, 256);
 	nb = argconfig_parse_comma_sep_array(cfg.blocks, (int *)nlbs, 256);
-	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, 256);
+	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, (unsigned long long *)slbas, 256);
 	nr = max(nc, max(nb, ns));
 	if (!nr || nr > 256) {
 		fprintf(stderr, "No range definition provided\n");
