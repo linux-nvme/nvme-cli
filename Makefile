@@ -99,14 +99,27 @@ pkg: control nvme.control.in
 
 dist-orig: ../nvme-cli_$(NVME_VERSION).orig.tar.gz
 
-deb: dist-orig
-	# Create a throw-away changelog, which dpkg-buildpackage uses to
-	# determine the package version.
+# Create a throw-away changelog, which dpkg-buildpackage uses to
+# determine the package version.
+deb-changelog:
 	printf '%s\n\n  * Auto-release.\n\n %s\n' \
           "nvme-cli ($(NVME_VERSION)-1~`lsb_release -sc`) `lsb_release -sc`; urgency=low" \
           "-- $(AUTHOR)  `git log -1 --format=%cD`" \
 	  > debian/changelog
-	dpkg-buildpackage -uc -us -sa  # from dpkg-dev package
+
+deb: deb-changelog dist-orig
+	dpkg-buildpackage -uc -us -sa
+
+# After this target is build you need to do a debsign and dput on the
+# ../<name>.changes file to upload onto the relevant PPA. For example:
+#
+#  > make AUTHOR='First Last <first.last@company.com>' deb-ppa
+#  > debsign <name>/changes
+#  > dput ppa:<lid>/ppa <name>.changes
+#
+# where lid is your launchpad.net ID.
+deb-ppa: deb-changelog dist-orig
+	debuild -uc -us -S
 
 deb-light: $(NVME) pkg nvme.control.in
 	dpkg-deb --build nvme-$(NVME_VERSION)
