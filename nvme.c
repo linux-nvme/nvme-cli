@@ -52,6 +52,7 @@
 #include "src/argconfig.h"
 #include "src/suffix.h"
 
+#define array_len(x) ((size_t)(sizeof(x) / sizeof(0[x])))
 #define min(x, y) (x) > (y) ? (y) : (x)
 #define max(x, y) (x) > (y) ? (x) : (y)
 
@@ -2165,9 +2166,9 @@ static int dsm(int argc, char **argv)
 
 	int i, err;
 	uint16_t nr, nc, nb, ns;
-	__u32 ctx_attrs[256];
-	__u32 nlbs[256];
-	__u64 slbas[256];
+	int ctx_attrs[256] = {0,};
+	int nlbs[256] = {0,};
+	unsigned long long slbas[256] = {0,};
 	void *buffer;
 	struct nvme_dsm_range *dsm;
 
@@ -2214,17 +2215,13 @@ static int dsm(int argc, char **argv)
 		{0}
 	};
 
-	memset(ctx_attrs, 0, sizeof(ctx_attrs));
-	memset(slbas, 0, sizeof(slbas));
-	memset(nlbs, 0, sizeof(nlbs));
-
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&defaults, &cfg, sizeof(cfg));
 	get_dev(1, argc, argv);
 
-	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, (int *)ctx_attrs, 256);
-	nb = argconfig_parse_comma_sep_array(cfg.blocks, (int *)nlbs, 256);
-	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, (unsigned long long *)slbas, 256);
+	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, ctx_attrs, array_len(ctx_attrs));
+	nb = argconfig_parse_comma_sep_array(cfg.blocks, nlbs, array_len(nlbs));
+	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, array_len(slbas));
 	nr = max(nc, max(nb, ns));
 	if (!nr || nr > 256) {
 		fprintf(stderr, "No range definition provided\n");
@@ -2256,9 +2253,9 @@ static int dsm(int argc, char **argv)
 
 	dsm = buffer;
 	for (i = 0; i < nr; i++) {
-		dsm[i].cattr = htole32(ctx_attrs[i]);
-		dsm[i].nlb = htole32(nlbs[i]);
-		dsm[i].slba = htole64(slbas[i]);
+		dsm[i].cattr = htole32((uint32_t)ctx_attrs[i]);
+		dsm[i].nlb = htole32((uint32_t)nlbs[i]);
+		dsm[i].slba = htole64((uint64_t)slbas[i]);
 	}
 
 	memset(&cmd, 0, sizeof(cmd));
