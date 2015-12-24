@@ -28,6 +28,8 @@ NVME-VERSION-FILE: FORCE
 -include NVME-VERSION-FILE
 override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
 
+NVME_DPKG_VERSION=1~`lsb_release -sc`
+
 nvme: nvme.c ./linux/nvme.h argconfig.o suffix.o common.o NVME-VERSION-FILE
 	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME) argconfig.o suffix.o common.o
 
@@ -103,7 +105,7 @@ dist-orig: ../nvme-cli_$(NVME_VERSION).orig.tar.gz
 # determine the package version.
 deb-changelog:
 	printf '%s\n\n  * Auto-release.\n\n %s\n' \
-          "nvme-cli ($(NVME_VERSION)-1~`lsb_release -sc`) `lsb_release -sc`; urgency=low" \
+          "nvme-cli ($(NVME_VERSION)-$(NVME_DPKG_VERSION)) `lsb_release -sc`; urgency=low" \
           "-- $(AUTHOR)  `git log -1 --format=%cD`" \
 	  > debian/changelog
 
@@ -113,8 +115,9 @@ deb: deb-changelog dist-orig
 # After this target is build you need to do a debsign and dput on the
 # ../<name>.changes file to upload onto the relevant PPA. For example:
 #
-#  > make AUTHOR='First Last <first.last@company.com>' deb-ppa
-#  > debsign <name>/changes
+#  > make AUTHOR='First Last <first.last@company.com>' \
+#        NVME_DPKG_VERSION='0ubuntu1' deb-ppa
+#  > debsign <name>.changes
 #  > dput ppa:<lid>/ppa <name>.changes
 #
 # where lid is your launchpad.net ID.
