@@ -14,11 +14,12 @@ Or find a short summary with:
   # nvme help
 
 ## Distro Support
-### Ubunutu
+### Ubuntu
 
 A Debian based package for nvme-cli is currently maintained as a
-Ubunuta PPA. To install nvme-cli using this approach please perform
-the following steps:
+Ubuntu PPA. Right now there is support for Trusty, Vivid and Wiley. To
+install nvme-cli using this approach please perform the following
+steps:
 1. Add the sbates PPA to your sources. One way to do this is to run
     ```
     sudo add-apt-repository ppa:sbates
@@ -31,6 +32,16 @@ the following steps:
     ```
     sudo apt-get install nvme-cli
     ```
+4. Test the code.
+   ```
+   sudo nvme list
+   ```
+   In the case of no NVMe devices you will see
+   ```
+   No NVMe devices detected.
+   ```
+   otherwise you will see information about each NVMe device installed
+   in the system.
 ### Other Distros
 
 TBD
