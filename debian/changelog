@@ -1,0 +1,5 @@
+nvme-cli (0.2-1) UNRELEASED; urgency=medium
+
+  * Initial release. (Closes: #810033)
+
+ -- Keith Busch <keith.busch@intel.com>  Tue, 05 Jan 2016 14:40:05 -0500

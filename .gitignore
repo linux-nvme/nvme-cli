@@ -5,7 +5,6 @@ a.out
 *~
 NVME-VERSION-FILE
 
-/debian/changelog
 /debian/files
 /debian/nvme-cli.debhelper.log
 /debian/nvme-cli.substvars

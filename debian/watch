@@ -1,0 +1,3 @@
+version=3
+opts="filenamemangle=s/(?:.*?)?v?(\d[\d.]*)\.tar\.gz/nvme-cli-$1.tar.gz/" \
+https://github.com/linux-nvme/nvme-cli/tags (?:.*?/)?v?(\d[\d.]*)\.tar\.gz
