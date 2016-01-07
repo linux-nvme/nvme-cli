@@ -2,8 +2,9 @@ Source: nvme-cli
 Maintainer: Keith Busch <keith.busch@intel.com>
 Section: admin
 Priority: optional
-Standards-Version: 3.9.4
+Standards-Version: 3.9.6
 Build-Depends: debhelper (>= 9), libudev-dev
+Homepage: https://github.com/linux-nvme/nvme-cli
 
 Package: nvme-cli
 Architecture: any
