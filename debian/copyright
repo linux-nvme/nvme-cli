@@ -1,7 +1,11 @@
-Copyright © 2014-2015 Intel Corporation
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Source: https://github.com/linux-nvme/nvme-cli
 
-License:
+Files: *
+Copyright: 014-2015 Intel Corporation
+License: GPL-2
 
-On Debian systems, the complete text of the GNU General Public 2 License
-can be found in ‘/usr/share/common-licenses/GPL-2’ or in the dpkg source
-as the file ‘LICENSE’.
+License: GPL-2
+ On Debian systems, the complete text of the GNU General Public 2 License
+ can be found in ‘/usr/share/common-licenses/GPL-2’ or in the dpkg source
+ as the file ‘LICENSE’.
