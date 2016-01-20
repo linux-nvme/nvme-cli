@@ -16,9 +16,9 @@ RM = rm -f
 AUTHOR=Keith Busch <keith.busch@intel.com>
 
 ifeq ($(LIBUDEV),0)
-	LDFLAGS += -ludev
-	CFLAGS  += -DLIBUDEV_EXISTS
-	LIB_DEPENDS += udev
+	override LDFLAGS += -ludev
+	override CFLAGS  += -DLIBUDEV_EXISTS
+	override LIB_DEPENDS += udev
 endif
 
 default: $(NVME)
