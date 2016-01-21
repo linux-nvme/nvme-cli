@@ -2834,12 +2834,15 @@ static int submit_io(int opcode, char *command, const char *desc,
 		mbuffer = malloc(cfg.metadata_size);
 	if ((opcode & 1) && read(dfd, (void *)buffer, cfg.data_size) < 0) {
 		fprintf(stderr, "failed to read data buffer from input file\n");
+		free(buffer);
 		return EINVAL;
 	}
 	if ((opcode & 1) && cfg.metadata_size &&
 				read(mfd, (void *)mbuffer, cfg.metadata_size) < 0) {
 		fprintf(stderr, "failed to read meta-data buffer from input file\n");
-		return EINVAL;
+		err = EINVAL;
+		goto free_and_return;
+		
 	}
 
 	io.opcode = opcode;
@@ -2876,11 +2879,13 @@ static int submit_io(int opcode, char *command, const char *desc,
 	else {
 		if (!(opcode & 1) && write(dfd, (void *)buffer, cfg.data_size) < 0) {
 			fprintf(stderr, "failed to write buffer to output file\n");
-			return EINVAL;
+			err = EINVAL;
+			goto free_and_return;
 		} else if (!(opcode & 1) && cfg.metadata_size &&
 				write(mfd, (void *)mbuffer, cfg.metadata_size) < 0) {
 			fprintf(stderr, "failed to write meta-data buffer to output file\n");
-			return EINVAL;
+			err = EINVAL;
+			goto free_and_return;
 		} else
 			fprintf(stderr, "%s: Success\n", command);
 	}
