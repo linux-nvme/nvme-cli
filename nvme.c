@@ -2842,7 +2842,6 @@ static int submit_io(int opcode, char *command, const char *desc,
 		fprintf(stderr, "failed to read meta-data buffer from input file\n");
 		err = EINVAL;
 		goto free_and_return;
-		
 	}
 
 	io.opcode = opcode;
@@ -3004,7 +3003,7 @@ static int sec_recv(int argc, char **argv)
 
 static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 {
-	int err, wfd = STDIN_FILENO;
+	int err = 0, wfd = STDIN_FILENO;
 	const char *desc = "[io/admin]-passthru: send a user-specified IO or "\
 		"admin command to the specified device via IOCTL passthrough, "\
 		"return results";
@@ -3159,16 +3158,19 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 		data = malloc(cmd.data_len);
 		if (!cfg.read && !cfg.write) {
 			fprintf(stderr, "data direction not given\n");
-			return EINVAL;
+			err = EINVAL;
+			goto free_and_return;
 		}
 		if (cfg.read && cfg.write) {
 			fprintf(stderr, "command can't be both read and write\n");
-			return EINVAL;
+			err = EINVAL;
+			goto free_and_return;
 		}
 		if (cfg.write) {
 			if (read(wfd, data, cmd.data_len) < 0) {
 				fprintf(stderr, "failed to read write buffer\n");
-				return EINVAL;
+				err = EINVAL;
+				goto free_and_return;
 			}
 		}
 		cmd.addr = (__u64)((unsigned long)data);
@@ -3191,8 +3193,10 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 		printf("cdw14        : %08x\n", cmd.cdw14);
 		printf("cdw15        : %08x\n", cmd.cdw15);
 		printf("timeout_ms   : %08x\n", cmd.timeout_ms);
-		if (cfg.dry_run)
-			return 0;
+		if (cfg.dry_run) {
+			err = 0;
+			goto free_and_return;
+		}
 	}
 	err = ioctl(fd, ioctl_cmd, &cmd);
 	if (err >= 0) {
@@ -3205,6 +3209,10 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 			d_raw((unsigned char *)data, cmd.data_len);
 	} else
 		perror("ioctl");
+	return err;
+free_and_return:
+	free(data);
+	free(metadata);
 	return err;
 }
 
