@@ -496,6 +496,29 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	}
 }
 
+static void print_ps_power_and_scale(__le16 power, __u8 scale)
+{
+	switch (scale & 0x3) {
+	case 0:
+		/* Not reported for this power state */
+		printf("-");
+		break;
+
+	case 1:
+		/* Units of 0.0001W */
+		printf("%01u.%04uW", power / 10000, power % 10000);
+		break;
+
+	case 2:
+		/* Units of 0.01W */
+		printf("%01u.%02uW", power / 100, scale % 100);
+		break;
+
+	default:
+		printf("reserved");
+	}
+}
+
 void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 {
 	int i;
@@ -589,12 +612,17 @@ void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 		if (ctrl->psd[i].flags & NVME_PS_FLAGS_NON_OP_STATE)
 			printf("non-");
 		printf("operational enlat:%d exlat:%d rrt:%d rrl:%d\n"
-			"          rwt:%d rwl:%d idlp:%d ips:%x actp:%x ap flags:%x\n",
+			"          rwt:%d rwl:%d idle_power:",
 			ctrl->psd[i].entry_lat, ctrl->psd[i].exit_lat,
 			ctrl->psd[i].read_tput, ctrl->psd[i].read_lat,
-			ctrl->psd[i].write_tput, ctrl->psd[i].write_lat,
-			ctrl->psd[i].idle_power, ctrl->psd[i].idle_scale,
-			ctrl->psd[i].active_power, ctrl->psd[i].active_work_scale);
+			ctrl->psd[i].write_tput, ctrl->psd[i].write_lat);
+		print_ps_power_and_scale(ctrl->psd[i].idle_power,
+					 ctrl->psd[i].idle_scale);
+		printf(" active_power:");
+		print_ps_power_and_scale(ctrl->psd[i].active_power,
+					 ctrl->psd[i].active_work_scale);
+		printf("\n");
+
 	}
 	if (vs) {
 		printf("vs[]:\n");
