@@ -579,9 +579,17 @@ void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 		show_nvme_id_ctrl_sgls(ctrl->sgls);
 
 	for (i = 0; i <= ctrl->npss; i++) {
-		printf("ps %4d : mp:%d flags:%x enlat:%d exlat:%d rrt:%d rrl:%d\n"
+		printf("ps %4d : mp:", i);
+
+		if (ctrl->psd[i].flags & NVME_PS_FLAGS_MAX_POWER_SCALE)
+			printf("%01u.%04uW ", ctrl->psd[i].max_power / 10000, ctrl->psd[i].max_power % 10000);
+		else
+			printf("%01u.%02uW ", ctrl->psd[i].max_power / 100, ctrl->psd[i].max_power % 100);
+
+		if (ctrl->psd[i].flags & NVME_PS_FLAGS_NON_OP_STATE)
+			printf("non-");
+		printf("operational enlat:%d exlat:%d rrt:%d rrl:%d\n"
 			"          rwt:%d rwl:%d idlp:%d ips:%x actp:%x ap flags:%x\n",
-			i, ctrl->psd[i].max_power, ctrl->psd[i].flags,
 			ctrl->psd[i].entry_lat, ctrl->psd[i].exit_lat,
 			ctrl->psd[i].read_tput, ctrl->psd[i].read_lat,
 			ctrl->psd[i].write_tput, ctrl->psd[i].write_lat,
