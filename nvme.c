@@ -1192,8 +1192,8 @@ static int list(int argc, char **argv)
 	}
 
 	enumerate = udev_enumerate_new(udev);
-	udev_enumerate_add_match_subsystem(enumerate, "char");
 	udev_enumerate_add_match_subsystem(enumerate, "block");
+	udev_enumerate_add_match_property(enumerate, "DEVTYPE", "disk");
 	udev_enumerate_scan_devices(enumerate);
 	devices = udev_enumerate_get_list_entry(enumerate);
 	udev_list_entry_foreach(dev_list_entry, devices) {
