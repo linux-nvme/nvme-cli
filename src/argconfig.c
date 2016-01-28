@@ -426,8 +426,10 @@ int argconfig_parse_subopt_string(char *string, char **options,
     size_t toklen;
     toklen = strcspn(tmp, "=");
 
-    if (!toklen)
-	    return 1;
+    if (!toklen) {
+    	free(tmp);
+	return 1;
+    }
 
     *(o++) = tmp;
     tmp[toklen] = 0;
