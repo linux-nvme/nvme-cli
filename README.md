@@ -14,6 +14,14 @@ Or find a short summary with:
   # nvme help
 
 ## Distro Support
+
+### Fedora
+
+nvme-cli is available in Fedora 23 and up.  Install it with your favorite
+package manager.  For example:
+
+    $ sudo dnf install nvme-cli
+
 ### Ubuntu
 
 A Debian based package for nvme-cli is currently maintained as a
