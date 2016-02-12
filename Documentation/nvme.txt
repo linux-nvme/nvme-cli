@@ -36,7 +36,7 @@ include::cmds-main.txt[]
 
 FURTHER DOCUMENTATION
 ---------------------
-See the freely available references on the http://nvmexpress.org[Offical
+See the freely available references on the http://nvmexpress.org[Official
 NVM-Express Site].
 
 Authors
