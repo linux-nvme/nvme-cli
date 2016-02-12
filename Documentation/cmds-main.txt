@@ -1,5 +1,5 @@
 linknvme:nvme-admin-passthru[1]::
-	Admin Passthrough Comand
+	Admin Passthrough Command
 
 linknvme:nvme-compare[1]::
 	IO Compare
