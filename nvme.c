@@ -48,11 +48,12 @@
 #include <sys/time.h>
 
 #include "common.h"
+#include "nvme-ioctl.h"
 
 #include "src/argconfig.h"
 #include "src/suffix.h"
 
-#define array_len(x) ((size_t)(sizeof(x) / sizeof(0[x])))
+#define array_len(x) ((size_t)(sizeof(x) / sizeof(x[0])))
 #define min(x, y) (x) > (y) ? (y) : (x)
 #define max(x, y) (x) > (y) ? (x) : (y)
 
@@ -419,32 +420,6 @@ static const char *nvme_status_to_string(__u32 status)
 	}
 }
 
-static int identify(int namespace, void *ptr, __u32 cns)
-{
-	struct nvme_admin_cmd cmd;
-
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode = nvme_admin_identify;
-	cmd.nsid = namespace;
-	cmd.addr = (__u64)((unsigned long)ptr);
-	cmd.data_len = 4096;
-	cmd.cdw10 = cns;
-	return ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
-}
-
-static int nvme_get_log(void *log_addr, __u32 data_len, __u32 dw10, __u32 nsid)
-{
-	struct nvme_admin_cmd cmd;
-
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode = nvme_admin_get_log_page;
-	cmd.addr = (__u64)((unsigned long)log_addr);
-	cmd.data_len = data_len;
-	cmd.cdw10 = dw10;
-	cmd.nsid = nsid;
-	return ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
-}
-
 static void d_raw(unsigned char *buf, unsigned len)
 {
 	unsigned i;
@@ -519,9 +494,7 @@ static int get_smart_log(int argc, char **argv)
 
 	get_dev(1, argc, argv);
 
-	err = nvme_get_log(&smart_log,
-		sizeof(smart_log), 0x2 | (((sizeof(smart_log) / 4) - 1) << 16),
-		cfg.namespace_id);
+	err = nvme_smart_log(fd, cfg.namespace_id, &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_smart_log(&smart_log, cfg.namespace_id);
@@ -563,9 +536,7 @@ static int get_additional_smart_log(int argc, char **argv)
 			&defaults, &cfg, sizeof(cfg));
 	get_dev(1, argc, argv);
 
-	err = nvme_get_log(&smart_log,
-		sizeof(smart_log), 0xCA | (((sizeof(smart_log) / 4) - 1) << 16),
-		cfg.namespace_id);
+	err = nvme_intel_smart_log(fd, cfg.namespace_id, &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_additional_smart_log(&smart_log, cfg.namespace_id);
@@ -619,16 +590,16 @@ static int get_error_log(int argc, char **argv)
 		fprintf(stderr, "non-zero log-entries is required param\n");
 		return EINVAL;
 	}
-	err = identify(0, &ctrl, 1);
+
+	err = nvme_identify_ctrl(fd, &ctrl);
 	cfg.log_entries = min(cfg.log_entries, ctrl.elpe + 1);
 	if (err) {
 		fprintf(stderr, "could not identify controller\n");
 		return ENODEV;
 	} else {
 		struct nvme_error_log_page err_log[cfg.log_entries];
-		err = nvme_get_log(err_log,
-				   sizeof(err_log), 0x1 | (((sizeof(err_log) / 4) - 1) << 16),
-				   cfg.namespace_id);
+
+		err = nvme_error_log(fd, cfg.namespace_id, cfg.log_entries, err_log);
 		if (!err) {
 			if (!cfg.raw_binary)
 				show_error_log(err_log, cfg.log_entries);
@@ -670,9 +641,7 @@ static int get_fw_log(int argc, char **argv)
 
 	get_dev(1, argc, argv);
 
-	err = nvme_get_log(&fw_log,
-			sizeof(fw_log), 0x3 | (((sizeof(fw_log) / 4) - 1) << 16),
-			0xffffffff);
+	err = nvme_fw_log(fd, &fw_log);
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_fw_log(&fw_log);
@@ -735,8 +704,7 @@ static int get_log(int argc, char **argv)
 	} else {
 		unsigned char log[cfg.log_len];
 
-		err = nvme_get_log(log, cfg.log_len, cfg.log_id | (((cfg.log_len / 4) - 1) << 16),
-				   cfg.namespace_id);
+		err = nvme_log(fd, cfg.namespace_id, cfg.log_id, cfg.log_len, log);
 		if (!err) {
 			if (!cfg.raw_binary) {
 				printf("Device:%s log-id:%d namespace-id:%#x\n",
@@ -787,8 +755,7 @@ static int list_ctrl(int argc, char **argv)
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000))
 		return ENOMEM;
 
-	err = identify(cfg.namespace_id, cntlist,
-			cfg.cntid << 16 | cfg.namespace_id ? 0x12 : 0x13);
+	err = nvme_identify_ctrl_list(fd, cfg.namespace_id, cfg.cntid, cntlist);
 	if (!err) {
 		for (i = 0; i < (min(cntlist->num, 2048)); i++)
 			printf("[%4u]:%#x\n", i, cntlist->identifier[i]);
@@ -831,7 +798,7 @@ static int list_ns(int argc, char **argv)
 
 	get_dev(1, argc, argv);
 
-	err = identify(cfg.namespace_id, ns_list, cfg.all ? 0x10 : 2);
+	err = nvme_identify_ns_list(fd, cfg.namespace_id, !!cfg.all, ns_list);
 	if (!err) {
 		for (i = 0; i < 1024; i++)
 			if (ns_list[i])
@@ -845,7 +812,6 @@ static int list_ns(int argc, char **argv)
 
 static int delete_ns(int argc, char **argv)
 {
-	struct nvme_admin_cmd cmd;
 	const char *desc = "delete-ns: delete the given namespace by "\
 		"sending a namespace management command to "\
 		"the given device. All controllers should be detached from "\
@@ -880,12 +846,7 @@ static int delete_ns(int argc, char **argv)
 	}
 	get_dev(1, argc, argv);
 
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode = nvme_admin_ns_mgmt;
-	cmd.nsid = cfg.namespace_id;
-	cmd.cdw10 = 1;
-
-	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	err = nvme_ns_delete(fd, cfg.namespace_id);
 	if (!err)
 		printf("%s: Success, deleted nsid:%d\n", commands[DELETE_NS].name,
 								cfg.namespace_id);
@@ -899,10 +860,9 @@ static int delete_ns(int argc, char **argv)
 
 static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 {
-	struct nvme_controller_list *cntlist;
-	struct nvme_admin_cmd cmd;
 	char *name = commands[attach ? ATTACH_NS : DETACH_NS].name;
-	int err, i, list[2048];
+	int err, num, i, list[2048];
+	__u16 ctrlist[2048];
 
 	const char *namespace_id = "namespace to attach";
 	const char *cont = "optional comma-sep controllers list";
@@ -925,33 +885,25 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 		{0}
 	};
 
-	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000))
-		return ENOMEM;
-	memset(cntlist, 0, sizeof(*cntlist));
-
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&defaults, &cfg, sizeof(cfg));
-
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
 						name);
 		return EINVAL;
 	}
-	cntlist->num = argconfig_parse_comma_sep_array(cfg.cntlist,
+	num = argconfig_parse_comma_sep_array(cfg.cntlist,
 					list, 2047);
-	for (i = 0; i < cntlist->num; i++)
-		cntlist->identifier[i] = htole16((uint16_t)list[i]);
+	for (i = 0; i < num; i++)
+		ctrlist[i] = ((uint16_t)list[i]);
 
 	get_dev(1, argc, argv);
 
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode = nvme_admin_ns_attach;
-	cmd.addr = (__u64)((unsigned long)cntlist);
-	cmd.data_len = 4096;
-	cmd.nsid = cfg.namespace_id;
-	cmd.cdw10 = attach ? 0 : 1;
+	if (attach)	
+		err = nvme_ns_attach_ctrls(fd, cfg.namespace_id, num, ctrlist);
+	else
+		err = nvme_ns_detach_ctrls(fd, cfg.namespace_id, num, ctrlist);
 
-	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
 	if (!err)
 		printf("%s: Success, nsid:%d\n", name, cfg.namespace_id);
 	else if (err > 0)
@@ -983,14 +935,13 @@ static int detach_ns(int argc, char **argv)
 
 static int create_ns(int argc, char **argv)
 {
-	struct nvme_admin_cmd cmd;
-	struct nvme_id_ns *ns;
 	const char *desc = "create-ns: send a namespace management command "\
 		"to the specified device to create a namespace with the given "\
 		"parameters. The next available namespace ID is used for the "\
 		"create operation. Note that create-ns does not attach the "\
 		"namespace to a controller, the attach-ns command is needed.";
 	int err = 0;
+	__u32 nsid;
 
 	struct config {
 		__u64	nsze;
@@ -1029,25 +980,10 @@ static int create_ns(int argc, char **argv)
 
 	get_dev(1, argc, argv);
 
-	if (posix_memalign((void *)&ns, getpagesize(), 4096))
-		return -ENOMEM;
-	memset(ns, 0, sizeof(*ns));
-	memset(&cmd, 0, sizeof(cmd));
-
-	ns->nsze  = cfg.nsze;
-	ns->ncap  = cfg.ncap;
-	ns->flbas = cfg.flbas;
-	ns->dps   = cfg.dps;
-	ns->nmic  = cfg.nmic;
-
-	cmd.opcode = nvme_admin_ns_mgmt;
-	cmd.addr = (unsigned long)ns;
-	cmd.data_len = 4096;
-
-	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic, &nsid);
 	if (!err)
 		printf("%s: Success, created nsid:%d\n", commands[CREATE_NS].name,
-								cmd.result);
+								nsid);
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
@@ -1197,19 +1133,19 @@ static int list(int argc, char **argv)
 	udev_enumerate_scan_devices(enumerate);
 	devices = udev_enumerate_get_list_entry(enumerate);
 	udev_list_entry_foreach(dev_list_entry, devices) {
-
+		int err;
 		const char *path, *node;
 		path = udev_list_entry_get_name(dev_list_entry);
 		dev  = udev_device_new_from_syspath(udev, path);
 		node = udev_device_get_devnode(dev);
 		if (strstr(node,"nvme")!=NULL){
 			open_dev(node);
-			int err = identify(0, &list_items[count].ctrl, 1);
+			err = nvme_identify_ctrl(fd, &list_items[count].ctrl);
 			if (err > 0)
 				return err;
-			list_items[count].nsid = ioctl(fd, NVME_IOCTL_ID);
-			err = identify(list_items[count].nsid,
-				       &list_items[count].ns, 0);
+			list_items[count].nsid = nvme_get_nsid(fd);
+			err = nvme_identify_ns(fd, list_items[count].nsid,
+						0, &list_items[count].ns);
 			if (err > 0)
 				return err;
 			strcpy(list_items[count].node, node);
@@ -1274,7 +1210,7 @@ static int id_ctrl(int argc, char **argv)
 
 	get_dev(1, argc, argv);
 
-	err = identify(0, &ctrl, 1);
+	err = nvme_identify_ctrl(fd, &ctrl);
 	if (!err) {
 		if (cfg.raw_binary) {
 			d_raw((unsigned char *)&ctrl, sizeof(ctrl));
@@ -1345,13 +1281,13 @@ static int id_ns(int argc, char **argv)
 				devicename);
 			exit(ENOTBLK);
 		}
-		cfg.namespace_id = ioctl(fd, NVME_IOCTL_ID);
+		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
 			perror(devicename);
 			exit(errno);
 		}
 	}
-	err = identify(cfg.namespace_id, &ns, 0);
+	err = nvme_identify_ns(fd, cfg.namespace_id, 0, &ns);
 	if (!err) {
 		if (cfg.raw_binary)
 			d_raw((unsigned char *)&ns, sizeof(ns));
@@ -1376,7 +1312,7 @@ static int get_ns_id(int argc, char **argv)
 								devicename);
 		exit(ENOTBLK);
 	}
-	nsid = ioctl(fd, NVME_IOCTL_ID);
+	nsid = nvme_get_nsid(fd);
 	if (nsid <= 0) {
 		perror(devicename);
 		exit(errno);
@@ -1532,26 +1468,6 @@ static void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned ch
 	}
 }
 
-static int nvme_feature(int opcode, void *buf, int data_len, __u32 fid,
-					__u32 nsid, __u32 cdw11, __u32 *result)
-{
-	int err;
-	struct nvme_admin_cmd cmd;
-
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode = opcode;
-	cmd.nsid = nsid;
-	cmd.cdw10 = fid;
-	cmd.cdw11 = cdw11;
-	cmd.addr = (__u64)((unsigned long)buf);
-	cmd.data_len = data_len;
-
-	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
-	if (err >= 0 && result)
-			*result = cmd.result;
-	return err;
-}
-
 static int get_feature(int argc, char **argv)
 {
 	const char *desc = "get-feature: read operating parameters of the "\
@@ -1571,7 +1487,7 @@ static int get_feature(int argc, char **argv)
 	const char *cdw11 = "dword 11 for interrupt vector config";
 	const char *human_readable = "show infos in readable format";
 	int err;
-	unsigned int result, cdw10 = 0;
+	__u32 result;
 	void *buf = NULL;
 
 	struct config {
@@ -1643,9 +1559,8 @@ static int get_feature(int argc, char **argv)
 	if (cfg.data_len)
 		buf = malloc(cfg.data_len);
 
-	cdw10 = cfg.sel << 8 | cfg.feature_id;
-	err = nvme_feature(nvme_admin_get_features, buf, cfg.data_len, cdw10,
-			   cfg.namespace_id, cfg.cdw11, &result);
+	err = nvme_get_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.sel, cfg.cdw11,
+			cfg.data_len, buf, &result);
 	if (!err) { 
 		printf("get-feature: 0x%02X (%s), %s value: %#08x\n", cfg.feature_id, 
 				nvme_feature_to_string(cfg.feature_id), nvme_select_to_string(cfg.sel), result); 
@@ -1684,7 +1599,6 @@ static int fw_download(int argc, char **argv)
 	int err, fw_fd = -1;
 	unsigned int fw_size;
 	struct stat sb;
-	struct nvme_admin_cmd cmd;
 	void *fw_buf;
 
 	struct config {
@@ -1744,16 +1658,9 @@ static int fw_download(int argc, char **argv)
 	while (fw_size > 0) {
 		cfg.xfer = min(cfg.xfer, fw_size);
 
-		memset(&cmd, 0, sizeof(cmd));
-		cmd.opcode   = nvme_admin_download_fw;
-		cmd.addr     = (__u64)((unsigned long)fw_buf);
-		cmd.data_len = cfg.xfer;
-		cmd.cdw10    = (cfg.xfer >> 2) - 1;
-		cmd.cdw11    = cfg.offset >> 2;
-
-		err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+		err = nvme_fw_download(fd, cfg.offset, cfg.xfer, fw_buf);
 		if (err < 0) {
-			perror("ioctl");
+			perror("fw-download");
 			exit(errno);
 		} else if (err != 0) {
 			fprintf(stderr, "NVME Admin command error:%s(%x)\n",
@@ -1779,7 +1686,6 @@ static int fw_activate(int argc, char **argv)
 	const char *slot = "firmware slot to activate";
 	const char *action = "[0-2]: replacement action";
 	int err;
-	struct nvme_admin_cmd cmd;
 
 	struct config {
 		__u8 slot;
@@ -1814,13 +1720,9 @@ static int fw_activate(int argc, char **argv)
 		return EINVAL;
 	}
 
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode = nvme_admin_activate_fw;
-	cmd.cdw10  = (cfg.action << 3) | cfg.slot;
-
-	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	err = nvme_fw_activate(fd, cfg.slot, cfg.action);
 	if (err < 0)
-		perror("ioctl");
+		perror("fw-activate");
 	else if (err != 0)
 		if (err == NVME_SC_FIRMWARE_NEEDS_RESET)
 			printf("Success activating firmware action:%d slot:%d, but a conventional reset is required\n",
@@ -1934,7 +1836,7 @@ static int format(int argc, char **argv)
 		return EINVAL;
 	}
 	if (S_ISBLK(nvme_stat.st_mode)) {
-		cfg.namespace_id = ioctl(fd, NVME_IOCTL_ID);
+		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
 			fprintf(stderr,
 				"%s: failed to return namespace id\n",
@@ -1949,9 +1851,10 @@ static int format(int argc, char **argv)
 	cmd.cdw10  = (cfg.lbaf << 0) | (cfg.ms << 4) | (cfg.pi << 5) | (cfg.pil << 8) | (cfg.ses << 9);
 	cmd.timeout_ms = cfg.timeout;
 
-	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	err = nvme_format(fd, cfg.namespace_id, cfg.lbaf, cfg.ses, cfg.pi,
+				cfg.pil, cfg.ms, cfg.timeout);
 	if (err < 0)
-		perror("ioctl");
+		perror("format");
 	else if (err != 0)
 		fprintf(stderr, "NVME Admin command error:%s(%x)\n",
 					nvme_status_to_string(err), err);
@@ -1979,7 +1882,7 @@ static int set_feature(int argc, char **argv)
 	const char *data = "optional file (default stdin)";
 	const char *value = "new value of feature (req'd)";
 	int err;
-	unsigned int result;
+	__u32 result;
 	void *buf = NULL;
 	int fd = STDIN_FILENO;
 
@@ -2045,8 +1948,8 @@ static int set_feature(int argc, char **argv)
 		}
 	}
 
-	err = nvme_feature(nvme_admin_set_features, buf, cfg.data_len, cfg.feature_id,
-			   cfg.namespace_id, cfg.value, &result);
+	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value, 0,
+				cfg.data_len, buf, &result);
 	if (!err) {
 		printf("set-feature:%d(%s), value:%#08x\n", cfg.feature_id,
 			nvme_feature_to_string(cfg.feature_id), result);
@@ -2069,7 +1972,6 @@ static int set_feature(int argc, char **argv)
 static int sec_send(int argc, char **argv)
 {
 	struct stat sb;
-	struct nvme_admin_cmd cmd;
 	const char *desc = "security-send: transfer security protocol data to "\
 		"a controller. Security Receives for the same protocol should be "\
 		"performed after Security Sends. The security protocol field "\
@@ -2082,6 +1984,7 @@ static int sec_send(int argc, char **argv)
 	int err, sec_fd = -1;
 	void *sec_buf;
 	unsigned int sec_size;
+	__u32 result;
 
 	struct config {
 		char  *file;
@@ -2120,37 +2023,34 @@ static int sec_send(int argc, char **argv)
 		fprintf(stderr, "no firmware file provided\n");
 		return EINVAL;
 	}
+
 	err = fstat(sec_fd, &sb);
 	if (err < 0) {
 		perror("fstat");
 		return errno;
 	}
+
 	sec_size = sb.st_size;
 	if (posix_memalign(&sec_buf, getpagesize(), sec_size)) {
 		fprintf(stderr, "No memory for security size:%d\n", sec_size);
 		return ENOMEM;
 	}
 
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode   = nvme_admin_security_send;
-	cmd.cdw10    = cfg.secp << 24 | cfg.spsp << 8;
-	cmd.cdw11    = cfg.tl;
-	cmd.data_len = sec_size;
-	cmd.addr     = (__u64)((unsigned long)sec_buf);
-
-	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	err = nvme_sec_send(fd,
+			0 /* FIXME: add nsid param */,
+			0 /* FIXME: add nssf */,
+			cfg.spsp, cfg.secp, cfg.tl, sec_size, sec_buf, &result);
 	if (err < 0)
 		return errno;
 	else if (err != 0)
 		fprintf(stderr, "NVME Security Send Command Error:%d\n", err);
 	else
-		printf("NVME Security Send Command Success:%d\n", cmd.result);
+		printf("NVME Security Send Command Success:%d\n", result);
 	return err;
 }
 
 static int dsm(int argc, char **argv)
 {
-	struct nvme_passthru_cmd cmd;
 	const char *desc = "dsm: The Dataset Management command is used by the host to "\
 		"indicate attributes for ranges of logical blocks. This includes attributes "\
 		"like frequency that data is read or written, access size, and other "\
@@ -2164,12 +2064,11 @@ static int dsm(int argc, char **argv)
 	const char *idr = "Attribute Integral Dataset for Read";
 	const char *cdw11 = "All the command command dword 11 attribuets. Use instead of specifying individual attributes";
 
-	int i, err;
+	int err;
 	uint16_t nr, nc, nb, ns;
 	int ctx_attrs[256] = {0,};
 	int nlbs[256] = {0,};
 	unsigned long long slbas[256] = {0,};
-	void *buffer;
 	struct nvme_dsm_range *dsm;
 
 	struct config {
@@ -2235,7 +2134,7 @@ static int dsm(int argc, char **argv)
 				devicename);
 			exit(ENOTBLK);
 		}
-		cfg.namespace_id = ioctl(fd, NVME_IOCTL_ID);
+		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
 			fprintf(stderr,
 				"%s: failed to return namespace id\n",
@@ -2247,26 +2146,9 @@ static int dsm(int argc, char **argv)
 	if (!cfg.cdw11)
 		cfg.cdw11 = (cfg.ad << 2) | (cfg.idw << 1) | (cfg.idr << 0);
 
-	buffer = malloc(nr * sizeof (struct nvme_dsm_range));
-	if (!buffer)
-		return ENOMEM;
+	dsm = nvme_setup_dsm_range((__u32 *)ctx_attrs, (__u32 *)nlbs, (__u64 *)slbas, nr);
 
-	dsm = buffer;
-	for (i = 0; i < nr; i++) {
-		dsm[i].cattr = htole32((uint32_t)ctx_attrs[i]);
-		dsm[i].nlb = htole32((uint32_t)nlbs[i]);
-		dsm[i].slba = htole64((uint64_t)slbas[i]);
-	}
-
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.nsid = cfg.namespace_id;
-	cmd.opcode = nvme_cmd_dsm;
-	cmd.addr = (__u64)((unsigned long)buffer);
-	cmd.data_len = nr * sizeof(struct nvme_dsm_range);
-	cmd.cdw10 = nr - 1;
-	cmd.cdw11 = cfg.cdw11;
-
-	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+	err = nvme_dsm(fd, cfg.namespace_id, cfg.cdw11, dsm, nr);
 	if (err < 0) {
 		fprintf(stderr, "error:%x\n", err);
 		return errno;
@@ -2280,7 +2162,6 @@ static int dsm(int argc, char **argv)
 
 static int flush(int argc, char **argv)
 {
-	struct nvme_passthru_cmd cmd;
 	const char *desc = "flush: commit data and metadata associated with "\
 	"given namespaces to nonvolatile media. Applies to all commands "\
 	"finished before the flush was submitted. Additional data may also be "\
@@ -2309,11 +2190,7 @@ static int flush(int argc, char **argv)
 
 	get_dev(1, argc, argv);
 
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode = nvme_cmd_flush;
-	cmd.nsid   = cfg.namespace_id;
-
-	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+	err = nvme_flush(fd, cfg.namespace_id);
 	if (err < 0)
 		return errno;
 	else if (err != 0)
@@ -2326,7 +2203,6 @@ static int flush(int argc, char **argv)
 
 static int resv_acquire(int argc, char **argv)
 {
-	struct nvme_passthru_cmd cmd;
 	const char *desc = "resv-acquire: obtain a reservation on a given "\
 		"namespace. Only one reservation is allowed at a time on a "\
 		"given namespace, though multiple controllers may register "\
@@ -2340,7 +2216,6 @@ static int resv_acquire(int argc, char **argv)
 	const char *racqa = "reservation acquiry action";
 	const char *iekey = "ignore existing res. key";
 	int err;
-	__u64 payload[2];
 
 	struct config {
 		__u32 namespace_id;
@@ -2388,7 +2263,7 @@ static int resv_acquire(int argc, char **argv)
 				devicename);
 			exit(ENOTBLK);
 		}
-		cfg.namespace_id = ioctl(fd, NVME_IOCTL_ID);
+		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
 			fprintf(stderr,
 				"%s: failed to return namespace id\n",
@@ -2401,17 +2276,8 @@ static int resv_acquire(int argc, char **argv)
 		return EINVAL;
 	}
 
-	payload[0] = cfg.crkey;
-	payload[1] = cfg.prkey;
-
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode   = nvme_cmd_resv_acquire;
-	cmd.nsid     = cfg.namespace_id;
-	cmd.cdw10    = cfg.rtype << 8 | cfg.iekey << 3 | cfg.racqa;
-	cmd.addr     = (__u64)((unsigned long)payload);
-	cmd.data_len = sizeof(payload);
-
-	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+	err = nvme_resv_acquire(fd, cfg.namespace_id, cfg.rtype, cfg.racqa,
+				!!cfg.iekey, cfg.crkey, cfg.prkey);
 	if (err < 0)
 		return errno;
 	else if (err != 0)
@@ -2423,7 +2289,6 @@ static int resv_acquire(int argc, char **argv)
 
 static int resv_register(int argc, char **argv)
 {
-	struct nvme_passthru_cmd cmd;
 	const char *desc = "resv-register: register, de-register, or "\
 		"replace a controller's reservation on a given namespace. "\
 		"Only one reservation at a time is allowed on any namespace.";
@@ -2434,7 +2299,6 @@ static int resv_register(int argc, char **argv)
 	const char *rrega = "reservation registration action";
 	const char *cptpl = "change persistence through power loss setting";
 	int err;
-	__u64 payload[2];
 
 	struct config {
 		__u32 namespace_id;
@@ -2482,7 +2346,7 @@ static int resv_register(int argc, char **argv)
 				devicename);
 			exit(ENOTBLK);
 		}
-		cfg.namespace_id = ioctl(fd, NVME_IOCTL_ID);
+		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
 			fprintf(stderr,
 				"%s: failed to return namespace id\n",
@@ -2495,17 +2359,8 @@ static int resv_register(int argc, char **argv)
 		return EINVAL;
 	}
 
-	payload[0] = cfg.crkey;
-	payload[1] = cfg.nrkey;
-
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode   = nvme_cmd_resv_register;
-	cmd.nsid     = cfg.namespace_id;
-	cmd.cdw10    = cfg.cptpl << 30 | cfg.iekey << 3 | cfg.rrega;
-	cmd.addr     = (__u64)((unsigned long)payload);
-	cmd.data_len = sizeof(payload);
-
-	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+	err = nvme_resv_register(fd, cfg.namespace_id, cfg.rrega, cfg.cptpl,
+				!!cfg.iekey, cfg.crkey, cfg.nrkey);
 	if (err < 0)
 		return errno;
 	else if (err != 0)
@@ -2517,7 +2372,6 @@ static int resv_register(int argc, char **argv)
 
 static int resv_release(int argc, char **argv)
 {
-	struct nvme_passthru_cmd cmd;
 	const char *desc = "resv-release: releases reservation held on a "\
 		"namespace by the given controller. If rtype != current reser"\
 		"vation type, release fails. If the given controller holds no "\
@@ -2576,7 +2430,7 @@ static int resv_release(int argc, char **argv)
 				devicename);
 			exit(ENOTBLK);
 		}
-		cfg.namespace_id = ioctl(fd, NVME_IOCTL_ID);
+		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
 			fprintf(stderr,
 				"%s: failed to return namespace id\n",
@@ -2593,14 +2447,8 @@ static int resv_release(int argc, char **argv)
 		return EINVAL;
 	}
 
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode   = nvme_cmd_resv_release;
-	cmd.nsid     = cfg.namespace_id;
-	cmd.cdw10    = cfg.rtype << 8 | cfg.iekey << 3 | cfg.rrela;
-	cmd.addr     = (__u64)((unsigned long)&cfg.crkey);
-	cmd.data_len = sizeof(cfg.crkey);
-
-	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+	err = nvme_resv_release(fd, cfg.namespace_id, cfg.rtype, cfg.rrela,
+				!!cfg.iekey, cfg.crkey);
 	if (err < 0)
 		return errno;
 	else if (err != 0)
@@ -2612,7 +2460,6 @@ static int resv_release(int argc, char **argv)
 
 static int resv_report(int argc, char **argv)
 {
-	struct nvme_passthru_cmd cmd;
 	const char *desc = "resv-report: returns Reservation Status data "\
 		"structure describing any existing reservations on and the "\
 		"status of a given namespace. Namespace Reservation Status "\
@@ -2659,7 +2506,7 @@ static int resv_report(int argc, char **argv)
 				devicename);
 			exit(ENOTBLK);
 		}
-		cfg.namespace_id = ioctl(fd, NVME_IOCTL_ID);
+		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
 			fprintf(stderr,
 				"%s: failed to return namespace id\n",
@@ -2675,14 +2522,7 @@ static int resv_report(int argc, char **argv)
 		return ENOMEM;
 	}
 
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode   = nvme_cmd_resv_report;
-	cmd.nsid     = cfg.namespace_id;
-	cmd.cdw10    = cfg.numd;
-	cmd.addr     = (__u64)((unsigned long)status);
-	cmd.data_len = cfg.numd << 2;
-
-	err = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+	err = nvme_resv_report(fd, cfg.namespace_id, cfg.numd, status);
 	if (err < 0)
 		return errno;
 	else if (err != 0)
@@ -2700,13 +2540,13 @@ static int resv_report(int argc, char **argv)
 static int submit_io(int opcode, char *command, const char *desc,
 		     int argc, char **argv)
 {
-	struct nvme_user_io io;
 	struct timeval start_time, end_time;
 	void *buffer, *mbuffer = NULL;
 	int err = 0;
 	int dfd, mfd;
 	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
 	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
+	__u16 control = 0;
 
 	const char *start_block = "64-bit addr of first block to access";
 	const char *block_count = "number of blocks on device to access";
@@ -2794,20 +2634,13 @@ static int submit_io(int opcode, char *command, const char *desc,
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&defaults, &cfg, sizeof(cfg));
 
-	memset(&io, 0, sizeof(io));
-
-	io.slba    = cfg.start_block;
-	io.nblocks = cfg.block_count;
-	io.reftag  = cfg.ref_tag;
-	io.appmask = cfg.app_tag_mask;
-	io.apptag  = cfg.app_tag;
 	if (cfg.prinfo > 0xf)
 		return EINVAL;
-	io.control |= (cfg.prinfo << 10);
+	control |= (cfg.prinfo << 10);
 	if (cfg.limited_retry)
-		io.control |= NVME_RW_LR;
+		control |= NVME_RW_LR;
 	if (cfg.force_unit_access)
-		io.control |= NVME_RW_FUA;
+		control |= NVME_RW_FUA;
 	if (strlen(cfg.data)){
 		dfd = open(cfg.data, flags, mode);
 		if (dfd < 0) {
@@ -2829,14 +2662,23 @@ static int submit_io(int opcode, char *command, const char *desc,
 		fprintf(stderr, "data size not provided\n");
 		return EINVAL;
 	}
+
 	buffer = malloc(cfg.data_size);
-	if (cfg.metadata_size)
+	if (!buffer)
+		return ENOMEM;
+
+	if (cfg.metadata_size) {
 		mbuffer = malloc(cfg.metadata_size);
+		if (!mbuffer)
+			return ENOMEM;
+	}
+
 	if ((opcode & 1) && read(dfd, (void *)buffer, cfg.data_size) < 0) {
 		fprintf(stderr, "failed to read data buffer from input file\n");
 		free(buffer);
 		return EINVAL;
 	}
+
 	if ((opcode & 1) && cfg.metadata_size &&
 				read(mfd, (void *)mbuffer, cfg.metadata_size) < 0) {
 		fprintf(stderr, "failed to read meta-data buffer from input file\n");
@@ -2844,35 +2686,32 @@ static int submit_io(int opcode, char *command, const char *desc,
 		goto free_and_return;
 	}
 
-	io.opcode = opcode;
-	io.addr   = (__u64)((unsigned long)buffer);
-	if (cfg.metadata_size)
-		io.metadata = (__u64)((unsigned long)mbuffer);
 	if (cfg.show) {
-		printf("opcode       : %02x\n", io.opcode);
-		printf("flags        : %02x\n", io.flags);
-		printf("control      : %04x\n", io.control);
-		printf("nblocks      : %04x\n", io.nblocks);
-		printf("rsvd         : %04x\n", io.rsvd);
-		printf("metadata     : %"PRIx64"\n", (uint64_t)io.metadata);
-		printf("addr         : %"PRIx64"\n", (uint64_t)io.addr);
-		printf("sbla         : %"PRIx64"\n", (uint64_t)io.slba);
-		printf("dsmgmt       : %08x\n", io.dsmgmt);
-		printf("reftag       : %08x\n", io.reftag);
-		printf("apptag       : %04x\n", io.apptag);
-		printf("appmask      : %04x\n", io.appmask);
+		printf("opcode       : %02x\n", opcode);
+		printf("flags        : %02x\n", 0);
+		printf("control      : %04x\n", control);
+		printf("nblocks      : %04x\n", cfg.block_count);
+		printf("rsvd         : %04x\n", 0);
+		printf("metadata     : %"PRIx64"\n", (uint64_t)mbuffer);
+		printf("addr         : %"PRIx64"\n", (uint64_t)buffer);
+		printf("sbla         : %"PRIx64"\n", (uint64_t)cfg.start_block);
+		printf("dsmgmt       : %08x\n", 0);
+		printf("reftag       : %08x\n", cfg.ref_tag);
+		printf("apptag       : %04x\n", cfg.app_tag);
+		printf("appmask      : %04x\n", cfg.app_tag_mask);
 		if (cfg.dry_run)
 			goto free_and_return;
 	}
 
 	gettimeofday(&start_time, NULL);
-	err = ioctl(fd, NVME_IOCTL_SUBMIT_IO, &io);
+	err = nvme_io(fd, opcode, cfg.start_block, cfg.block_count, control, 0,
+			cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask, buffer, mbuffer);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		fprintf(stdout, " latency: %s: %llu us\n",
 			command, elapsed_utime(start_time, end_time));
 	if (err < 0)
-		perror("ioctl");
+		perror("submit-io");
 	else if (err)
 		printf("%s:%s(%04x)\n", command, nvme_status_to_string(err), err);
 	else {
@@ -2932,8 +2771,8 @@ static int sec_recv(int argc, char **argv)
 	const char *al = "allocation length (cf. SPC-4)";
 	const char *raw_binary = "dump output in binary format";
 	int err;
-	struct nvme_admin_cmd cmd;
 	void *sec_buf = NULL;
+	__u32 result;
 
 	struct config {
 		__u32 size;
@@ -2977,14 +2816,11 @@ static int sec_recv(int argc, char **argv)
 			return ENOMEM;
 		}
 	}
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode   = nvme_admin_security_recv;
-	cmd.cdw10    = cfg.secp << 24 | cfg.spsp << 8;
-	cmd.cdw11    = cfg.al;
-	cmd.data_len = cfg.size;
-	cmd.addr     = (__u64)((unsigned long)sec_buf);
 
-	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	err = nvme_sec_recv(fd,
+			0 /* FIXME: namespace_id */,
+			0 /* FIXME: nssf */,
+			cfg.spsp, cfg.secp, cfg.al, cfg.size, sec_buf, &result);
 	if (err < 0)
 		return errno;
 	else if (err != 0)
@@ -2993,7 +2829,7 @@ static int sec_recv(int argc, char **argv)
 	else {
 		if (!cfg.raw_binary) {
 			printf("NVME Security Receive Command Success:%d\n",
-							cmd.result);
+							result);
 			d(sec_buf, cfg.size, 16, 1);
 		} else if (cfg.size)
 			d_raw((unsigned char *)&sec_buf, cfg.size);
@@ -3001,14 +2837,14 @@ static int sec_recv(int argc, char **argv)
 	return err;
 }
 
-static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
+static int passthru(int argc, char **argv, int ioctl_cmd)
 {
 	int err = 0, wfd = STDIN_FILENO;
 	const char *desc = "[io/admin]-passthru: send a user-specified IO or "\
 		"admin command to the specified device via IOCTL passthrough, "\
 		"return results";
-	struct nvme_passthru_cmd cmd;
 	void *data = NULL, *metadata = NULL;
+	__u32 result;
 
 	struct config {
 		__u8  opcode;
@@ -3122,25 +2958,9 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 		{0}
 	};
 
-	memset(&cmd, 0, sizeof(cmd));
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&defaults, &cfg, sizeof(cfg));
 
-	cmd.cdw2         = cfg.cdw2;
-	cmd.cdw3         = cfg.cdw3;
-	cmd.cdw10        = cfg.cdw10;
-	cmd.cdw11        = cfg.cdw11;
-	cmd.cdw12        = cfg.cdw12;
-	cmd.cdw13        = cfg.cdw13;
-	cmd.cdw14        = cfg.cdw14;
-	cmd.cdw15        = cfg.cdw15;
-	cmd.opcode       = cfg.opcode;
-	cmd.flags        = cfg.flags;
-	cmd.rsvd1        = cfg.rsvd;
-	cmd.nsid         = cfg.namespace_id;
-	cmd.data_len     = cfg.data_len;
-	cmd.metadata_len = cfg.metadata_len;
-	cmd.timeout_ms   = cfg.timeout;
 	if (strlen(cfg.input_file)){
 		wfd = open(cfg.input_file, O_RDONLY,
 			   S_IRUSR | S_IRGRP | S_IROTH);
@@ -3149,13 +2969,12 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 			return EINVAL;
 		}
 	}
+
 	get_dev(1, argc, argv);
-	if (cmd.metadata_len) {
-		metadata = malloc(cmd.metadata_len);
-		cmd.metadata = (__u64)((unsigned long)metadata);
-	}
-	if (cmd.data_len) {
-		data = malloc(cmd.data_len);
+	if (cfg.metadata_len)
+		metadata = malloc(cfg.metadata_len);
+	if (cfg.data_len) {
+		data = malloc(cfg.data_len);
 		if (!cfg.read && !cfg.write) {
 			fprintf(stderr, "data direction not given\n");
 			err = EINVAL;
@@ -3167,48 +2986,54 @@ static int nvme_passthru(int argc, char **argv, int ioctl_cmd)
 			goto free_and_return;
 		}
 		if (cfg.write) {
-			if (read(wfd, data, cmd.data_len) < 0) {
+			if (read(wfd, data, cfg.data_len) < 0) {
 				fprintf(stderr, "failed to read write buffer\n");
 				err = EINVAL;
 				goto free_and_return;
 			}
 		}
-		cmd.addr = (__u64)((unsigned long)data);
 	}
+
 	if (cfg.show_command) {
-		printf("opcode       : %02x\n", cmd.opcode);
-		printf("flags        : %02x\n", cmd.flags);
-		printf("rsvd1        : %04x\n", cmd.rsvd1);
-		printf("nsid         : %08x\n", cmd.nsid);
-		printf("cdw2         : %08x\n", cmd.cdw2);
-		printf("cdw3         : %08x\n", cmd.cdw3);
-		printf("data_len     : %08x\n", cmd.data_len);
-		printf("metadata_len : %08x\n", cmd.metadata_len);
-		printf("addr         : %"PRIx64"\n", (uint64_t)cmd.addr);
-		printf("metadata     : %"PRIx64"\n", (uint64_t)cmd.metadata);
-		printf("cdw10        : %08x\n", cmd.cdw10);
-		printf("cdw11        : %08x\n", cmd.cdw11);
-		printf("cdw12        : %08x\n", cmd.cdw12);
-		printf("cdw13        : %08x\n", cmd.cdw13);
-		printf("cdw14        : %08x\n", cmd.cdw14);
-		printf("cdw15        : %08x\n", cmd.cdw15);
-		printf("timeout_ms   : %08x\n", cmd.timeout_ms);
-		if (cfg.dry_run) {
-			err = 0;
+		printf("opcode       : %02x\n", cfg.opcode);
+		printf("flags        : %02x\n", cfg.flags);
+		printf("rsvd1        : %04x\n", cfg.rsvd);
+		printf("nsid         : %08x\n", cfg.namespace_id);
+		printf("cdw2         : %08x\n", cfg.cdw2);
+		printf("cdw3         : %08x\n", cfg.cdw3);
+		printf("data_len     : %08x\n", cfg.data_len);
+		printf("metadata_len : %08x\n", cfg.metadata_len);
+		printf("addr         : %"PRIx64"\n", (uint64_t)data);
+		printf("metadata     : %"PRIx64"\n", (uint64_t)metadata);
+		printf("cdw10        : %08x\n", cfg.cdw10);
+		printf("cdw11        : %08x\n", cfg.cdw11);
+		printf("cdw12        : %08x\n", cfg.cdw12);
+		printf("cdw13        : %08x\n", cfg.cdw13);
+		printf("cdw14        : %08x\n", cfg.cdw14);
+		printf("cdw15        : %08x\n", cfg.cdw15);
+		printf("timeout_ms   : %08x\n", cfg.timeout);
+		if (cfg.dry_run)
 			goto free_and_return;
-		}
 	}
-	err = ioctl(fd, ioctl_cmd, &cmd);
-	if (err >= 0) {
+
+	err = nvme_passthru(fd, ioctl_cmd, cfg.opcode, cfg.flags, cfg.rsvd,
+				cfg.namespace_id, cfg.cdw2, cfg.cdw3, cfg.cdw10,
+				cfg.cdw11, cfg.cdw12, cfg.cdw13, cfg.cdw14, cfg.cdw15,
+				cfg.data_len, data, cfg.metadata_len, metadata,
+				cfg.timeout, &result);
+	if (err < 0)
+		perror("passthru");
+	else if (err)
+		printf("NVMe Status:%s Command Result:%08x\n",
+				nvme_status_to_string(err), result);
+	else  {
 		if (!cfg.raw_binary) {
-			printf("NVMe Status:%s Command Result:%08x\n",
-				nvme_status_to_string(err), cmd.result);
+			printf("NVMe command result:%08x\n", result);
 			if (data && cfg.read && !err)
-				d((unsigned char *)data, cmd.data_len, 16, 1);
-		} else if (!err && data && cfg.read)
-			d_raw((unsigned char *)data, cmd.data_len);
-	} else
-		perror("ioctl");
+				d((unsigned char *)data, cfg.data_len, 16, 1);
+		} else if (data && cfg.read)
+			d_raw((unsigned char *)data, cfg.data_len);
+	}
 	return err;
 free_and_return:
 	free(data);
@@ -3218,12 +3043,12 @@ free_and_return:
 
 static int io_passthru(int argc, char **argv)
 {
-	return nvme_passthru(argc, argv, NVME_IOCTL_IO_CMD);
+	return passthru(argc, argv, NVME_IOCTL_IO_CMD);
 }
 
 static int admin_passthru(int argc, char **argv)
 {
-	return nvme_passthru(argc, argv, NVME_IOCTL_ADMIN_CMD);
+	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD);
 }
 
 static void usage(char *cmd)
