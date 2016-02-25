@@ -3,6 +3,7 @@ nvme
 a.out
 *.o
 *~
+*.swp
 NVME-VERSION-FILE
 
 /debian/files
