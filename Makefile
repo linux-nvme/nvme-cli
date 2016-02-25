@@ -52,7 +52,6 @@ all: doc
 
 clean:
 	$(RM) $(NVME) *.o *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
-	$(RM) -r nvme-*
 	$(MAKE) -C Documentation clean
 
 clobber: clean
