@@ -1125,15 +1125,15 @@ static int get_feature(int argc, char **argv)
 
 	err = nvme_get_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.sel, cfg.cdw11,
 			cfg.data_len, buf, &result);
-	if (!err) { 
-		printf("get-feature: 0x%02X (%s), %s value: %#08x\n", cfg.feature_id, 
+	if (!err) {
+		printf("get-feature: 0x%02X (%s), %s value: %#08x\n", cfg.feature_id,
 				nvme_feature_to_string(cfg.feature_id),
-				nvme_select_to_string(cfg.sel), result); 
+				nvme_select_to_string(cfg.sel), result);
 		if (cfg.human_readable)
 			nvme_feature_show_fields(cfg.feature_id, result, buf);
 		else {
 			if (buf) {
-				if (!cfg.raw_binary) 
+				if (!cfg.raw_binary)
 					d(buf, cfg.data_len, 16, 1);
 				else
 					d_raw(buf, cfg.data_len);
