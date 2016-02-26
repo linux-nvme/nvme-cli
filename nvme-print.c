@@ -807,8 +807,7 @@ void show_intel_smart_log(struct nvme_additional_smart_log *smart, unsigned int 
 
 char *nvme_feature_to_string(int feature)
 {
-	switch (feature)
-	{
+	switch (feature) {
 	case NVME_FEAT_ARBITRATION:	return "Arbitration";
 	case NVME_FEAT_POWER_MGMT:	return "Power Management";
 	case NVME_FEAT_LBA_RANGE:	return "LBA Range Type";
@@ -832,13 +831,12 @@ char *nvme_feature_to_string(int feature)
 
 char* nvme_select_to_string(int sel)
 {
-	switch (sel) 
-	{ 
-	case 0:  return "Current"; 
-	case 1:  return "Default"; 
-	case 2:  return "Saved"; 
-	case 3:  return "Supported capabilities"; 
-	default: return "Reserved"; 
+	switch (sel) {
+	case 0:  return "Current";
+	case 1:  return "Default";
+	case 2:  return "Saved";
+	case 3:  return "Supported capabilities";
+	default: return "Reserved";
 	}
 }
 
@@ -887,8 +885,7 @@ char *nvme_status_to_string(__u32 status)
 
 static char* nvme_feature_lba_type_to_string(__u8 type)
 {
-	switch (type)
-	{
+	switch (type) {
 	case 0:	return "Reserved";
 	case 1:	return "Filesystem";
 	case 2:	return "RAID";
@@ -900,12 +897,12 @@ static char* nvme_feature_lba_type_to_string(__u8 type)
 		else
 			return "Vendor Specific";
 	}
-}		
+}
 
 void show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 {
 	int i, j;
-	
+
 	for (i = 0; i <= nr_ranges; i++) {
 		printf("\ttype       : %#x - %s\n", lbrt[i].type, nvme_feature_lba_type_to_string(lbrt[i].type));
 		printf("\tattributes : %#x - %s, %s\n", lbrt[i].attributes, (lbrt[i].attributes & 0x0001) ? "LBA range may be overwritten":"LBA range should not be overwritten",
@@ -922,8 +919,7 @@ void show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 
 static char *nvme_feature_wl_hints_to_string(__u8 wh)
 {
-	switch (wh)
-	{
+	switch (wh) {
 	case 0:	return "No Workload";
 	case 1:	return "Extended Idle Period with a Burst of Random Writes";
 	case 2:	return "Heavy Sequential Writes";
@@ -933,8 +929,7 @@ static char *nvme_feature_wl_hints_to_string(__u8 wh)
 
 static char *nvme_feature_temp_type_to_string(__u8 type)
 {
-	switch (type)
-	{
+	switch (type) {
 	case 0:	return "Over Temperature Threshold";
 	case 1:	return "Under Temperature Threshold";
 	default:return "Reserved";
@@ -961,7 +956,7 @@ static char *nvme_feature_temp_sel_to_string(__u8 sel)
 static void show_auto_pst(struct nvme_auto_pst *apst)
 {
 	int i;
-		
+
 	fprintf(stdout, "\tAuto PST Entries");
 	fprintf(stdout,"\t.................\n");
 	for (i = 0; i < 32; i++) {
@@ -982,28 +977,27 @@ static void show_host_mem_buffer(struct nvme_host_mem_buffer *hmb)
 }
 
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf)
-{ 
-    __u8 field; 
+{
+	__u8 field;
 	uint64_t ull;
-	
-	switch (fid) 
-	{ 
-	case NVME_FEAT_ARBITRATION: 
+
+	switch (fid) {
+	case NVME_FEAT_ARBITRATION:
 		fprintf(stdout,"\tHigh Priority Weight   (HPW): %u\n", ((result & 0xff000000) >> 24) + 1);
-		fprintf(stdout,"\tMedium Priority Weight (MPW): %u\n", ((result & 0x00ff0000) >> 16) + 1); 
-		fprintf(stdout,"\tLow Priority Weight    (LPW): %u\n", ((result & 0x0000ff00) >> 8) + 1); 
+		fprintf(stdout,"\tMedium Priority Weight (MPW): %u\n", ((result & 0x00ff0000) >> 16) + 1);
+		fprintf(stdout,"\tLow Priority Weight    (LPW): %u\n", ((result & 0x0000ff00) >> 8) + 1);
 		fprintf(stdout,"\tArbitration Burst       (AB): %u\n",  1 << (result & 0x00000007));
-        break; 
-	case NVME_FEAT_POWER_MGMT: 
-		field =  (result & 0x000000E0) >> 5; 
-		fprintf(stdout,"\tWorkload Hint (WH): %u - %s\n",  field, nvme_feature_wl_hints_to_string(field)); 
-		fprintf(stdout,"\tPower State   (PS): %u\n",  result & 0x0000001f); 
-		break; 
-	case NVME_FEAT_LBA_RANGE: 
-		field =  result & 0x0000003f; 
+		break;
+	case NVME_FEAT_POWER_MGMT:
+		field =  (result & 0x000000E0) >> 5;
+		fprintf(stdout,"\tWorkload Hint (WH): %u - %s\n",  field, nvme_feature_wl_hints_to_string(field));
+		fprintf(stdout,"\tPower State   (PS): %u\n",  result & 0x0000001f);
+		break;
+	case NVME_FEAT_LBA_RANGE:
+		field =  result & 0x0000003f;
 		fprintf(stdout,"\tNumber of LBA Ranges (NUM): %u\n",  field+1);
 		show_lba_range((struct nvme_lba_range_type *)buf, field);
-		break;                
+		break;
 	case NVME_FEAT_TEMP_THRESH:
 		field = (result & 0x00300000) >> 20;
 		fprintf(stdout,"\tThreshold Type Select         (THSEL): %u - %s\n", field, nvme_feature_temp_type_to_string(field));
@@ -1012,58 +1006,57 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		fprintf(stdout,"\tTemperature Threshold         (TMPTH): %u C\n", (result & 0x0000ffff) - 273);
 		break;
 	case NVME_FEAT_ERR_RECOVERY:
-		fprintf(stdout,"\tDeallocated or Unwritten Logical Block Error Enable (DULBE): %s\n", ((result & 0x00010000) >> 16) ? "Enabled":"Disabled"); 
-		fprintf(stdout,"\tTime Limited Error Recovery                          (TLER): %u ms\n", (result & 0x0000ffff) * 100);		 
+		fprintf(stdout,"\tDeallocated or Unwritten Logical Block Error Enable (DULBE): %s\n", ((result & 0x00010000) >> 16) ? "Enabled":"Disabled");
+		fprintf(stdout,"\tTime Limited Error Recovery                          (TLER): %u ms\n", (result & 0x0000ffff) * 100);
 		break;
 	case NVME_FEAT_VOLATILE_WC:
-		fprintf(stdout,"\tVolatile Write Cache Enable (WCE): %s\n", (result & 0x00000001) ? "Enabled":"Disabled"); 		 
+		fprintf(stdout,"\tVolatile Write Cache Enable (WCE): %s\n", (result & 0x00000001) ? "Enabled":"Disabled");
 		break;
-	case NVME_FEAT_NUM_QUEUES: 
-		fprintf(stdout,"\tNumber of IO Completion Queues Allocated (NCQA): %u\n", ((result & 0xffff0000) >> 16) + 1); 
-		fprintf(stdout,"\tNumber of IO Submission Queues Allocated (NSQA): %u\n",  (result & 0x0000ffff) + 1); 
-		break; 
-	case NVME_FEAT_IRQ_COALESCE: 
-		fprintf(stdout,"\tAggregation Time     (TIME): %u ms\n", ((result & 0x0000ff00) >> 8) * 100); 
-		fprintf(stdout,"\tAggregation Threshold (THR): %u\n",  (result & 0x000000ff) + 1); 
-		break; 
-	case NVME_FEAT_IRQ_CONFIG: 
-		fprintf(stdout,"\tCoalescing Disable (CD): %s\n", ((result & 0x00010000) >> 16) ? "True":"False"); 
-		fprintf(stdout,"\tInterrupt Vector   (IV): %u\n",  result & 0x0000ffff); 
-		break; 	
-	case NVME_FEAT_WRITE_ATOMIC: 
-		fprintf(stdout,"\tDisable Normal (DN): %s\n", (result & 0x00000001) ? "True":"False"); 
-		break;	
-	case NVME_FEAT_ASYNC_EVENT: 
+	case NVME_FEAT_NUM_QUEUES:
+		fprintf(stdout,"\tNumber of IO Completion Queues Allocated (NCQA): %u\n", ((result & 0xffff0000) >> 16) + 1);
+		fprintf(stdout,"\tNumber of IO Submission Queues Allocated (NSQA): %u\n",  (result & 0x0000ffff) + 1);
+		break;
+	case NVME_FEAT_IRQ_COALESCE:
+		fprintf(stdout,"\tAggregation Time     (TIME): %u ms\n", ((result & 0x0000ff00) >> 8) * 100);
+		fprintf(stdout,"\tAggregation Threshold (THR): %u\n",  (result & 0x000000ff) + 1);
+		break;
+	case NVME_FEAT_IRQ_CONFIG:
+		fprintf(stdout,"\tCoalescing Disable (CD): %s\n", ((result & 0x00010000) >> 16) ? "True":"False");
+		fprintf(stdout,"\tInterrupt Vector   (IV): %u\n",  result & 0x0000ffff);
+		break;
+	case NVME_FEAT_WRITE_ATOMIC:
+		fprintf(stdout,"\tDisable Normal (DN): %s\n", (result & 0x00000001) ? "True":"False");
+		break;
+	case NVME_FEAT_ASYNC_EVENT:
 		fprintf(stdout,"\tFirmware Activation Notices     : %s\n", ((result & 0x00000200) >> 9) ? "Send async event":"Do not send async event");
 	    fprintf(stdout,"\tNamespace Attribute Notices     : %s\n", ((result & 0x00000100) >> 8) ? "Send NameSpace Attribute Changed event":"Do not send NameSpace Attribute Changed event");
-		fprintf(stdout,"\tSMART / Health Critical Warnings: %s\n", (result & 0x000000ff) ? "Send async event":"Do not send async event"); 
-		break;	
-	case NVME_FEAT_AUTO_PST: 
-		fprintf(stdout,"\tAutonomous Power State Transition Enable (APSTE): %s\n", (result & 0x00000001) ? "Enabled":"Disabled"); 
+		fprintf(stdout,"\tSMART / Health Critical Warnings: %s\n", (result & 0x000000ff) ? "Send async event":"Do not send async event");
+		break;
+	case NVME_FEAT_AUTO_PST:
+		fprintf(stdout,"\tAutonomous Power State Transition Enable (APSTE): %s\n", (result & 0x00000001) ? "Enabled":"Disabled");
 		show_auto_pst((struct nvme_auto_pst *)buf);
-		break;	
+		break;
 	case NVME_FEAT_HOST_MEM_BUF:
 		fprintf(stdout,"\tMemory Return       (MR): %s\n", ((result & 0x00000002) >> 1) ? "True":"False");
 		fprintf(stdout,"\tEnable Host Memory (EHM): %s\n", (result & 0x00000001) ? "Enabled":"Disabled");
 		show_host_mem_buffer((struct nvme_host_mem_buffer *)buf);
 		break;
 	case NVME_FEAT_SW_PROGRESS:
-		fprintf(stdout,"\tPre-boot Software Load Count (PBSLC): %u\n", result & 0x000000ff); 
+		fprintf(stdout,"\tPre-boot Software Load Count (PBSLC): %u\n", result & 0x000000ff);
 		break;
 	case NVME_FEAT_HOST_ID:
 		ull =  buf[7]; ull <<= 8; ull |= buf[6]; ull <<= 8; ull |= buf[5]; ull <<= 8;
-		ull |= buf[4]; ull <<= 8; ull |= buf[3]; ull <<= 8; ull |= buf[2]; ull <<= 8; 
+		ull |= buf[4]; ull <<= 8; ull |= buf[3]; ull <<= 8; ull |= buf[2]; ull <<= 8;
 		ull |= buf[1]; ull <<= 8; ull |= buf[0];
 		fprintf(stdout,"\tHost Identifier (HOSTID):  %" PRIu64 "\n", ull);
 		break;
 	case NVME_FEAT_RESV_MASK:
 		fprintf(stdout,"\tMask Reservation Preempted Notification  (RESPRE): %s\n", ((result & 0x00000008) >> 3) ? "True":"False");
 		fprintf(stdout,"\tMask Reservation Released Notification   (RESREL): %s\n", ((result & 0x00000004) >> 2) ? "True":"False");
-		fprintf(stdout,"\tMask Registration Preempted Notification (REGPRE): %s\n", ((result & 0x00000002) >> 1) ? "True":"False");  
+		fprintf(stdout,"\tMask Registration Preempted Notification (REGPRE): %s\n", ((result & 0x00000002) >> 1) ? "True":"False");
 		break;
 	case NVME_FEAT_RESV_PERSIST:
-		fprintf(stdout,"\tPersist Through Power Loss (PTPL): %s\n", (result & 0x00000001) ? "True":"False");  
-		break;	
+		fprintf(stdout,"\tPersist Through Power Loss (PTPL): %s\n", (result & 0x00000001) ? "True":"False");
+		break;
 	}
 }
-
