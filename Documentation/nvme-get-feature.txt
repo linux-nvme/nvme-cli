@@ -94,7 +94,7 @@ specifically requesting a buffer be allocate for this feature, which
 will be displayed to the user in as a hex dump:
 +
 ------------
-# nvme get-feature /dev/nvme0 -f c0 -l 512
+# nvme get-feature /dev/nvme0 -f 0xc0 -l 512
 ------------
 +
 

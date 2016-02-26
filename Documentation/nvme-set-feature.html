@@ -828,7 +828,7 @@ printed to stdout for another program to parse.</p></div>
         The data file for the buffer submitted for this feature. Most
         known features do not use this value. The exceptions is LBA
         Range Type and host identifier. This defaults to STDIN so files
-        and echos can be piped.
+        and echo can be piped.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -875,7 +875,7 @@ will be displayed to the user in as a hex dump:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme set-feature /dev/nvme0 -f c0 -l 512</tt></pre>
+<pre><tt># nvme set-feature /dev/nvme0 -f 0xc0 -l 512</tt></pre>
 </div></div>
 </li>
 <li>
@@ -912,7 +912,7 @@ format:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-03-20 09:11:33 MDT
+Last updated 2016-02-26 08:29:25 MST
 </div>
 </div>
 </body>

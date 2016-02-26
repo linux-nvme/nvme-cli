@@ -52,7 +52,7 @@ OPTIONS
 	The data file for the buffer submitted for this feature. Most
 	known features do not use this value. The exceptions is LBA
 	Range Type and host identifier. This defaults to STDIN so files
-	and echos can be piped.
+	and echo can be piped.
 
 --value=<value>::
 	The value for command dword 11, the value you want to set the
@@ -82,7 +82,7 @@ specifically requesting a buffer be allocate for this feature, which
 will be displayed to the user in as a hex dump:
 +
 ------------
-# nvme set-feature /dev/nvme0 -f c0 -l 512
+# nvme set-feature /dev/nvme0 -f 0xc0 -l 512
 ------------
 +
 

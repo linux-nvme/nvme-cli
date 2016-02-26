@@ -37,7 +37,7 @@ OPTIONS
 
 -H::
 --human-readable::
-	This option will parse and format many of the bitfields
+	This option will parse and format many of the bit fields
 	into human-readable formats.
 
 

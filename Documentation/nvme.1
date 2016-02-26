@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 02/26/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "02/26/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,9 +36,9 @@ nvme \- the dumb pci\-e storage utility
 .fi
 .SH "DESCRIPTION"
 .sp
-NVM\-Express is a fast, scalabale host controller interface designed to address the needs for PCI Express based solida state drives\&.
+NVM\-Express is a fast, scalable host controller interface designed to address the needs for PCI Express based solid state drives\&.
 .sp
-This \fInvme\fR program is a user space utility to provide standards compliant tooling for NVM\-Express drives\&. It was made specifically for Linux as it relies on the IOCTLs defined by the mailine kernel driver\&.
+This \fInvme\fR program is a user space utility to provide standards compliant tooling for NVM\-Express drives\&. It was made specifically for Linux as it relies on the IOCTLs defined by the mainline kernel driver\&.
 .SH "NVME COMMANDS"
 .sp
 The utility has sub\-commands for all admin and io commands defined in the specification and for displaying controller registers\&. There is also an option to submit completely arbitrary commands\&. For a list of commands available, run "nvme help"\&.
@@ -63,6 +63,11 @@ Retrieve error logs
 \fBnvme-flush\fR(1)
 .RS 4
 Submit flush
+.RE
+.PP
+\fBnvme-dms\fR(1)
+.RS 4
+Submit Data Set Management
 .RE
 .PP
 \fBnvme-format\fR(1)

@@ -2,12 +2,12 @@
 .\"     Title: nvme-set-feature
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 02/26/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SET\-FEATURE" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-SET\-FEATURE" "1" "02/26/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -64,7 +64,7 @@ The data length for the buffer submitted for this feature\&. Most known features
 .PP
 \-d <data\-file>, \-\-data=<data\-file>
 .RS 4
-The data file for the buffer submitted for this feature\&. Most known features do not use this value\&. The exceptions is LBA Range Type and host identifier\&. This defaults to STDIN so files and echos can be piped\&.
+The data file for the buffer submitted for this feature\&. Most known features do not use this value\&. The exceptions is LBA Range Type and host identifier\&. This defaults to STDIN so files and echo can be piped\&.
 .RE
 .PP
 \-\-value=<value>
@@ -129,7 +129,7 @@ Retrieves the feature for the some vendor specific feature and specifically requ
 .RS 4
 .\}
 .nf
-# nvme set\-feature /dev/nvme0 \-f c0 \-l 512
+# nvme set\-feature /dev/nvme0 \-f 0xc0 \-l 512
 .fi
 .if n \{\
 .RE

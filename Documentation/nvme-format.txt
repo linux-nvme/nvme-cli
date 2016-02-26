@@ -26,7 +26,7 @@ If the character device is given, the namespace identifer will default
 to 0xffffffff to send the format to all namespace, but can be overridden
 to any namespace with the 'namespace-id' option. If the block device
 is given, the namespace identifier will default to the namespace id of
-the block device given, but can be overriden with the same option.
+the block device given, but can be overridden with the same option.
 
 On success, the program will automatically issue BLKRRPART ioctl to
 force rescanning the namespaces. If the driver is recent enough, this
@@ -52,7 +52,7 @@ OPTIONS
 --ses=<ses>::
 	Secure Erase Settings: This field specifies whether a secure
 	erase should be performed as part of the format and the type of
-	the secureerase operation. The erase applies to all user data,
+	the secure erase operation. The erase applies to all user data,
 	regardless of location (e.g., within an exposed LBA, within a
 	cache, within deallocated LBAs, etc). Defaults to 0.
 +

@@ -13,7 +13,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 Scan the sysfs tree for NVM Express devices and return the /dev node
-for those devices as well as some pertinant information about them.
+for those devices as well as some pertinent information about them.
 
 OPTIONS
 -------

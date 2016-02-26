@@ -70,8 +70,8 @@ OPTIONS
 
 -c <cdw11>::
 --cdw11=<cdw11>::
-	All the command command dword 11 attribuets. Use exclusive from
-	speficying individual attributes
+	All the command command dword 11 attributes. Use exclusive from
+	specifying individual attributes
 
 EXAMPLES
 --------

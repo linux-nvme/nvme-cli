@@ -94,7 +94,7 @@ OPTIONS
 EXAMPLES
 --------
 * The following will run the admin command with opcode=6 and cdw10=1, which
- cooresponds to an identify controller command. This example requires the
+ corresponds to an identify controller command. This example requires the
  data-len param be 4096, which is the size of the returned structure. The -r
  option is used because it is a data-in command
 +
