@@ -72,6 +72,13 @@ temperature                         : 49 C
 available_spare                     : 100%
     ```
    
+### openSUSE Tumbleweed
+
+nvme-cli is available in openSUSE Tumbleweed. You can install it using zypper.
+For example:
+
+    $ sudo zypper install nvme-cli
+
 ### Other Distros
 
 TBD
