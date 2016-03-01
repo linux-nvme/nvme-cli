@@ -51,7 +51,7 @@ steps:
    otherwise you will see information about each NVMe device installed
    in the system.
    
-   ### AlpineLinux
+### AlpineLinux
 
 nvme-cli is tested on AlpineLinux 3.3.  Install it using:
 
