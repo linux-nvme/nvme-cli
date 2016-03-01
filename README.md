@@ -24,6 +24,12 @@ package manager.  For example:
 
 ### Ubuntu
 
+nvme-cli is supported in the Universe package sources for Xenial for
+many architectures. For a complete list try running:
+  ```
+  rmadison nvme-cli
+   nvme-cli | 0.3-1 | xenial/universe | source, amd64, arm64, armhf, i386, powerpc, ppc64el, s390x
+  ```  
 A Debian based package for nvme-cli is currently maintained as a
 Ubuntu PPA. Right now there is support for Trusty, Vivid and Wiley. To
 install nvme-cli using this approach please perform the following
