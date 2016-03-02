@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-zeroes
+.\"     Title: nvme-uncor
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
 .\"      Date: 03/02/2016
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZEROES" "1" "03/02/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-UNCOR" "1" "03/02/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,18 +28,12 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-write-zeroes \- Send an NVMe write zeroes command, return results
+nvme-write-uncor \- Send an NVMe write uncorrectable command, return results
 .SH "SYNOPSIS"
 .sp
 .nf
 \fInvme\-write\-zeroes\fR <device> [\-\-start\-block=<slba> | \-s <slba>]
                         [\-\-block\-count=<nlb> | \-c <nlb>]
-                        [\-\-ref\-tag=<reftag> | \-r <reftag>]
-                        [\-\-prinfo=<prinfo> | \-p <prinfo>]
-                        [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
-                        [\-\-app\-tag=<apptag> | \-a <apptag>]
-                        [\-\-limited\-retry | \-l]
-                        [\-\-force\-unit\-access | \-f]
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
 .fi
 .SH "DESCRIPTION"

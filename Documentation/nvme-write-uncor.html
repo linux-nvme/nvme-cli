@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.7" />
-<title>nvme(1)</title>
+<title>nvme-uncor(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -738,12 +738,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme(1) Manual Page
+nvme-uncor(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme -
-   the dumb pci-e storage utility
+<p>nvme-write-uncor -
+   Send an NVMe write uncorrectable command, return results
 </p>
 </div>
 </div>
@@ -752,7 +752,9 @@ nvme(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> &lt;command&gt; &lt;device&gt; [&lt;args&gt;]</pre>
+<pre class="content"><em>nvme-write-zeroes</em> &lt;device&gt; [--start-block=&lt;slba&gt; | -s &lt;slba&gt;]
+                        [--block-count=&lt;nlb&gt; | -c &lt;nlb&gt;]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -760,351 +762,44 @@ nvme(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>NVM-Express is a fast, scalable host controller interface designed to
-address the needs for PCI Express based solid state drives.</p></div>
-<div class="paragraph"><p>This <em>nvme</em> program is a user space utility to provide standards compliant
-tooling for NVM-Express drives. It was made specifically for Linux as
-it relies on the IOCTLs defined by the mainline kernel driver.</p></div>
+<div class="paragraph"><p>The Write Zeroes command is used to set a range of logical blocks to 0.</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_nvme_commands">NVME COMMANDS</h2>
+<h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>The utility has sub-commands for all admin and io commands defined in the
-specification and for displaying controller registers. There is also an
-option to submit completely arbitrary commands. For a list of commands
-available, run "nvme help".</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_nvme_cli_sub_commands">nvme cli sub-commands</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_main_commands">Main commands</h3>
 <div class="dlist"><dl>
 <dt class="hdlist1">
-<a href="nvme-admin-passthru.html">nvme-admin-passthru(1)</a>
+--start-block=&lt;slba&gt;
 </dt>
-<dd>
-<p>
-        Admin Passthrough Command
-</p>
-</dd>
 <dt class="hdlist1">
-<a href="nvme-compare.html">nvme-compare(1)</a>
+-s &lt;slba&gt;
 </dt>
 <dd>
 <p>
-        IO Compare
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-error-log.html">nvme-error-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve error logs
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-flush.html">nvme-flush(1)</a>
-</dt>
-<dd>
-<p>
-        Submit flush
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-dms.html">nvme-dms(1)</a>
-</dt>
-<dd>
-<p>
-        Submit Data Set Management
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-format.html">nvme-format(1)</a>
-</dt>
-<dd>
-<p>
-        Format namespace(s)
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-fw-activate.html">nvme-fw-activate(1)</a>
-</dt>
-<dd>
-<p>
-        F/W Activate
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-fw-download.html">nvme-fw-download(1)</a>
-</dt>
-<dd>
-<p>
-        F/W Download
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-fw-log.html">nvme-fw-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve f/w log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-get-feature.html">nvme-get-feature(1)</a>
-</dt>
-<dd>
-<p>
-        Get Features
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-get-log.html">nvme-get-log(1)</a>
-</dt>
-<dd>
-<p>
-        Generic Get Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-smart-log.html">nvme-smart-log(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve Smart Log
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-get-ns-id.html">nvme-get-ns-id(1)</a>
-</dt>
-<dd>
-<p>
-        Retrieve namespace identifier
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-help.html">nvme-help(1)</a>
-</dt>
-<dd>
-<p>
-        NVMe CLI Help
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-id-ctrl.html">nvme-id-ctrl(1)</a>
-</dt>
-<dd>
-<p>
-        Identify Controller
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-id-ns.html">nvme-id-ns(1)</a>
-</dt>
-<dd>
-<p>
-        Identify Namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-create-ns.html">nvme-create-ns(1)</a>
-</dt>
-<dd>
-<p>
-        Create a new namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-delete-ns.html">nvme-delete-ns(1)</a>
-</dt>
-<dd>
-<p>
-        Delete existing namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-attach-ns.html">nvme-attach-ns(1)</a>
-</dt>
-<dd>
-<p>
-        Attach namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-detach-ns.html">nvme-detach-ns(1)</a>
-</dt>
-<dd>
-<p>
-        Detach namespace
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-io-passthru.html">nvme-io-passthru(1)</a>
-</dt>
-<dd>
-<p>
-        IO Passthrough Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-list-ns.html">nvme-list-ns(1)</a>
-</dt>
-<dd>
-<p>
-        List all nvme namespaces
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-list.html">nvme-list(1)</a>
-</dt>
-<dd>
-<p>
-        List all nvme controllers
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-list-ctrl.html">nvme-list-ctrl(1)</a>
-</dt>
-<dd>
-<p>
-        List controller in NVMe subsystem
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-read.html">nvme-read(1)</a>
-</dt>
-<dd>
-<p>
-        Issue IO Read Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-write.html">nvme-write(1)</a>
-</dt>
-<dd>
-<p>
-        Issue IO Write Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-write-zeroes.html">nvme-write-zeroes(1)</a>
-</dt>
-<dd>
-<p>
-        Issue IO Write Zeroes Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-write-uncor.html">nvme-write-uncor(1)</a>
-</dt>
-<dd>
-<p>
-        Issue IO Write Uncorrectable Command
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-resv-acquire.html">nvme-resv-acquire(1)</a>
-</dt>
-<dd>
-<p>
-        Acquire Namespace Reservation
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-resv-register.html">nvme-resv-register(1)</a>
-</dt>
-<dd>
-<p>
-        Register Namespace Reservation
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-resv-release.html">nvme-resv-release(1)</a>
-</dt>
-<dd>
-<p>
-        Release Namespace Reservation
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-resv-report.html">nvme-resv-report(1)</a>
-</dt>
-<dd>
-<p>
-        Report Reservation Capabilities
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-security-recv.html">nvme-security-recv(1)</a>
-</dt>
-<dd>
-<p>
-        Security Receive
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-security-send.html">nvme-security-send(1)</a>
-</dt>
-<dd>
-<p>
-        Security Send
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-set-feature.html">nvme-set-feature(1)</a>
-</dt>
-<dd>
-<p>
-        Set Feature
-</p>
-</dd>
-<dt class="hdlist1">
-<a href="nvme-show-regs.html">nvme-show-regs(1)</a>
-</dt>
-<dd>
-<p>
-        Show NVMe Controller Registers
+        Start block.
 </p>
 </dd>
 </dl></div>
 </div>
 </div>
-</div>
 <div class="sect1">
-<h2 id="_further_documentation">FURTHER DOCUMENTATION</h2>
+<h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>See the freely available references on the <a href="http://nvmexpress.org">Official
-NVM-Express Site</a>.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_authors">Authors</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>This is written and maintained by <a href="mailto:keith.busch@intel.com">Keith Busch</a>.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_reporting_bugs">Reporting Bugs</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>Patches and issues may be submitted to the official repository at
-<a href="https://github.com/linux-nvme/nvme-cli">https://github.com/linux-nvme/nvme-cli</a>.</p></div>
+<div class="paragraph"><p>No examples yet.</p></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_nvme">NVME</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Part of the nvme suite</p></div>
+<div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-02 08:25:25 MST
+Last updated 2016-03-02 08:24:54 MST
 </div>
 </div>
 </body>

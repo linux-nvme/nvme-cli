@@ -97,7 +97,8 @@ static const char nvme_version_string[] = NVME_VERSION;
 	ENTRY(COMPARE, "compare", "Submit a Compare command, return results", compare) \
 	ENTRY(READ_CMD, "read", "Submit a read command, return results", read_cmd) \
 	ENTRY(WRITE_CMD, "write", "Submit a write command, return results", write_cmd) \
-	ENTRY(WRITE_ZEROES_CMD, "write-zeroes", "Submit a write command, return results", write_zeroes) \
+	ENTRY(WRITE_ZEROES_CMD, "write-zeroes", "Submit a write zeroes command, return results", write_zeroes) \
+	ENTRY(WRITE_UNCOR_CMD, "write-uncor", "Submit a write uncorrectable command, return results", write_uncor) \
 	ENTRY(REGISTERS, "show-regs", "Shows the controller registers. Requires admin character device", show_registers) \
 	ENTRY(VERSION, "version", "Shows the program version", version) \
 	ENTRY(HELP, "help", "Display this help", help)
@@ -1525,6 +1526,59 @@ static int sec_send(int argc, char **argv)
 		fprintf(stderr, "NVME Security Send Command Error:%d\n", err);
 	else
 		printf("NVME Security Send Command Success:%d\n", result);
+	return err;
+}
+
+static int write_uncor(int argc, char **argv)
+{
+	int err;
+	const char *desc = "The Write Uncorretable command is used to set a "\
+			"range of logical blocks to invalid.";
+	const char *namespace_id = "desired namespace";
+	const char *start_block = "64-bit addr of first block to access";
+	const char *block_count = "number of blocks on device to access";
+
+	struct config {
+		__u64 start_block;
+		__u32 namespace_id;
+		__u16 block_count;
+	};
+
+	struct config cfg = {
+		.start_block     = 0,
+		.namespace_id    = 0,
+		.block_count     = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id",      'n', "NUM",  CFG_POSITIVE,    &cfg.namespace_id,      required_argument, namespace_id},
+		{"start-block",       's', "NUM",  CFG_LONG_SUFFIX, &cfg.start_block,       required_argument, start_block},
+		{"block-count",       'c', "NUM",  CFG_SHORT,       &cfg.block_count,       required_argument, block_count},
+		{0}
+	};
+
+	argconfig_parse(argc, argv, desc, command_line_options,
+			&cfg, sizeof(cfg));
+	get_dev(1, argc, argv);
+
+	if (!cfg.namespace_id) {
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id <= 0) {
+			fprintf(stderr,
+				"%s: failed to return namespace id\n",
+				devicename);
+			return errno;
+		}
+	}
+
+	err = nvme_write_uncorrectable(fd, cfg.namespace_id, cfg.start_block,
+					cfg.block_count);
+	if (err < 0)
+		return errno;
+	else if (err != 0)
+		fprintf(stderr, "NVME Write Uncorrectable Command Error:%d\n", err);
+	else
+		printf("NVME Write Uncorrectable Success\n");
 	return err;
 }
 
