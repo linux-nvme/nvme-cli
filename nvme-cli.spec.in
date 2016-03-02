@@ -1,13 +1,11 @@
-Name: 		nvme
-Version: 	@@VERSION@@
+Name: 		nvme-cli
+Version: 	@VERSION@
 Release: 	1%{?dist}
 Summary:  	Core nvme tools
 License: 	GPL
 Group: 		Development/Tools
 URL: 		https://github.com/linux-nvme/nvme-cli/
-Source: 	nvme-@@VERSION@@.tar.gz
-Provides:	nvme
-BuildRoot:	%{_tmppath}/%{name}-%{version}-root
+Source: 	%{name}-%{version}.tar.bz2
 
 %description
 NVMe is a fast, scalable, direct attached storage interface. The nvme
@@ -17,20 +15,20 @@ cli rpm installs core management tools with minimal dependencies.
 %setup
 
 %build
-make
+%configure
+make %{?_smp_mflags}
 
 %install
-rm -rf $RPM_BUILD_ROOT
-make install PREFIX=%{buildroot}/usr
+rm -rf %{buildroot}
+%makeinstall installdirs
+
+%clean
+rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
-%doc Documentation/nvme*.1
 %{_sbindir}/nvme
 %{_mandir}/man1/nvme*.1*
-
-%clean
-rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Thu Oct 15 2015 Keith Busch <keith.busch@intel.com>

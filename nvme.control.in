@@ -1,5 +1,5 @@
 Package: nvme
-Version: @@VERSION@@
+Version: @VERSION@
 Section: base
 Priority: optional
 Architecture: amd64

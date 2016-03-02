@@ -2,7 +2,7 @@
 #define _NVME_LIB_H
 
 #include <stdbool.h>
-#include "linux/nvme.h"
+#include "nvme-headers.h"
 
 int nvme_get_nsid(int fd);
 
