@@ -43,7 +43,7 @@ nvme-format \- Format an NVMe device
 .sp
 For the NVMe device given, send an nvme Format Namespace admin command and provides the results\&.
 .sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. If the character device is given, the namespace identifer will default to 0xffffffff to send the format to all namespace, but can be overridden to any namespace with the \fInamespace\-id\fR option\&. If the block device is given, the namespace identifier will default to the namespace id of the block device given, but can be overridden with the same option\&.
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. If the character device is given, the namespace identifier will default to 0xffffffff to send the format to all namespace, but can be overridden to any namespace with the \fInamespace\-id\fR option\&. If the block device is given, the namespace identifier will default to the namespace id of the block device given, but can be overridden with the same option\&.
 .sp
 On success, the program will automatically issue BLKRRPART ioctl to force rescanning the namespaces\&. If the driver is recent enough, this will automatically update the physical block size\&. If it is not recent enough, you will need to remove and rescan your device some other way for the new block size to be visible\&.
 .SH "OPTIONS"

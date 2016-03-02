@@ -14,7 +14,7 @@ DESCRIPTION
 -----------
 For the NVMe device given, sends an identify command for controller list
 and provides the result and returned structure. This uses either mode
-12h or 13h depending on the requested namespace identifer.
+12h or 13h depending on the requested namespace identifier.
 
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).

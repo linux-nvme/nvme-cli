@@ -22,7 +22,7 @@ and provides the results.
 
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
-If the character device is given, the namespace identifer will default
+If the character device is given, the namespace identifier will default
 to 0xffffffff to send the format to all namespace, but can be overridden
 to any namespace with the 'namespace-id' option. If the block device
 is given, the namespace identifier will default to the namespace id of
