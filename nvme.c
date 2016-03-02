@@ -177,9 +177,9 @@ static void get_dev(int optind, int argc, char **argv)
 static int get_smart_log(int argc, char **argv)
 {
 	struct nvme_smart_log smart_log;
-	const char *desc = "smart-log: retrieve SMART log for the given "\
-		"device (or optionally, namespace) in either hex-dump "\
-		"(default) or binary format.";
+	const char *desc = "Retrieve SMART log for the given device "\
+			"(or optionally a namespace) in either decoded format "\
+			"(default) or binary.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "output in binary format";
 	int err;
@@ -221,8 +221,8 @@ static int get_additional_smart_log(int argc, char **argv)
 {
 	struct nvme_additional_smart_log smart_log;
 	int err;
-	char *desc = "Get additional smart log (optionally, "\
-		      "for the specified namspace), and show it.";
+	char *desc = "Get Intel vendor specific additional smart log (optionally, "\
+		      "for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
 	struct config {
@@ -258,9 +258,9 @@ static int get_additional_smart_log(int argc, char **argv)
 
 static int get_error_log(int argc, char **argv)
 {
-	const char *desc = "error-log: retrieve specified number of "\
+	const char *desc = "Retrieve specified number of "\
 		"error log entries from a given device (or "\
-		"namespace) in either hex-dump (default) or binary format.";
+		"namespace) in either decoded format (default) or binary.";
 	const char *namespace_id = "desired namespace";
 	const char *log_entries = "number of entries to retrieve";
 	const char *raw_binary = "dump in binary format";
@@ -318,9 +318,8 @@ static int get_error_log(int argc, char **argv)
 
 static int get_fw_log(int argc, char **argv)
 {
-	const char *desc = "fw-log: retrieve the firmware log for the "\
-		"specified device in either hex-dump (default) or binary "\
-		"format.";
+	const char *desc = "Retrieve the firmware log for the "\
+		"specified device in either decoded format (default) or binary.";
 	const char *raw_binary = "use binary output";
 	int err;
 	struct nvme_firmware_log_page fw_log;
@@ -359,7 +358,7 @@ static int get_fw_log(int argc, char **argv)
 
 static int get_log(int argc, char **argv)
 {
-	const char *desc = "get-log: retrieve desired number of bytes "\
+	const char *desc = "Retrieve desired number of bytes "\
 		"from a given log on a specified device in either "\
 		"hex-dump (default) or binary format";
 	const char *namespace_id = "desired namespace";
@@ -418,8 +417,8 @@ static int get_log(int argc, char **argv)
 
 static int list_ctrl(int argc, char **argv)
 {
-	const char *desc = "list-ctrl: show controller information for the "\
-		"given device (and optionally, namespace)";
+	const char *desc = "Show controller list information for the subsystem the "\
+		"given device is part of, or optionally controllers attached to a specific namespace.";
 	const char *controller = "controller to display";
 	const char *namespace_id = "optional namespace attached to controller";
 	int err, i;
@@ -461,9 +460,9 @@ static int list_ctrl(int argc, char **argv)
 
 static int list_ns(int argc, char **argv)
 {
-	const char *desc = "list-ns: for the specified device, show the "\
-		"namespace list (optionally starting with a given namespace)";
-	const char *namespace_id = "namespace to start after";
+	const char *desc = "For the specified device, show the "\
+		"namespace list in a NVMe subsystem, optionally starting with a given namespace";
+	const char *namespace_id = "namespace number returned list should to start after";
 	const char *all = "show all namespaces in the subsystem, whether attached or inactive";
 	int err, i;
 	__u32 ns_list[1024];
@@ -502,12 +501,12 @@ static int list_ns(int argc, char **argv)
 
 static int delete_ns(int argc, char **argv)
 {
-	const char *desc = "delete-ns: delete the given namespace by "\
+	const char *desc = "Delete the given namespace by "\
 		"sending a namespace management command to "\
-		"the given device. All controllers should be detached from "\
+		"the provided device. All controllers should be detached from "\
 		"the namespace prior to namespace deletion. A namespace ID "\
-		"becomes inactive when that namespace is detached (or, if "\
-		"the namespace is not already inactive, once deleted).";
+		"becomes inactive when that namespace is detached or, if "\
+		"the namespace is not already inactive, once deleted.";
 	const char *namespace_id = "namespace to delete";
 	int err;
 
@@ -601,7 +600,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 
 static int attach_ns(int argc, char **argv)
 {
-	const char *desc = "attach-ns: attach the given namespace to the "\
+	const char *desc = "Attach the given namespace to the "\
 		"given controller or comma-sep list of controllers. ID of the "\
 		"given namespace becomes active upon attachment to a "\
 		"controller. A namespace must be attached to a controller "\
@@ -611,7 +610,7 @@ static int attach_ns(int argc, char **argv)
 
 static int detach_ns(int argc, char **argv)
 {
-	const char *desc = "detach-ns: detach the given namespace from the "\
+	const char *desc = "Detach the given namespace from the "\
 		"given controller; de-activates the given namespace's ID. A "\
 		"namespace must be attached to a controller before IO "\
 		"commands may be directed to that namespace.";
@@ -620,7 +619,7 @@ static int detach_ns(int argc, char **argv)
 
 static int create_ns(int argc, char **argv)
 {
-	const char *desc = "create-ns: send a namespace management command "\
+	const char *desc = "Send a namespace management command "\
 		"to the specified device to create a namespace with the given "\
 		"parameters. The next available namespace ID is used for the "\
 		"create operation. Note that create-ns does not attach the "\
@@ -847,11 +846,11 @@ static int list(int argc, char **argv)
 
 static int id_ctrl(int argc, char **argv)
 {
-	const char *desc = "id-ctrl: send an Identify Controller command to "\
+	const char *desc = "Send an Identify Controller command to "\
 		"the given device and report information about the specified "\
 		"controller in human-readable or "\
-		"binary format. Can also return binary vendor-specific "\
-		"controller attributes.";
+		"binary format. May also return vendor-specific "\
+		"controller attributes in hex-dump if requested.";
 	const char *vendor_specific = "dump binary vendor infos";
 	const char *raw_binary = "show infos in binary format";
 	const char *human_readable = "show infos in readable format";
@@ -903,7 +902,7 @@ static int id_ctrl(int argc, char **argv)
 
 static int id_ns(int argc, char **argv)
 {
-	const char *desc = "id-ns: send an Identify Namespace command to the "\
+	const char *desc = "Send an Identify Namespace command to the "\
 		"given device, returns properties of the specified namespace "\
 		"in either human-readable or binary format. Can also return "\
 		"binary vendor-specific namespace attributes.";
@@ -982,7 +981,7 @@ static int get_ns_id(int argc, char **argv)
 
 static int get_feature(int argc, char **argv)
 {
-	const char *desc = "get-feature: read operating parameters of the "\
+	const char *desc = "Read operating parameters of the "\
 		"specified controller. Operating parameters are grouped "\
 		"and identified by Feature Identifiers; each Feature "\
 		"Identifier contains one or more attributes that may affect "\
@@ -1091,14 +1090,14 @@ static int get_feature(int argc, char **argv)
 
 static int fw_download(int argc, char **argv)
 {
-	const char *desc = "fw-download: copy all or part of a firmware to "\
+	const char *desc = "Copy all or part of a firmware image to "\
 		"a controller for future update. Optionally, specify how "\
-		"many KiB of the firmware to transfer at once (offset will "\
+		"many KiB of the firmware to transfer at once. The offset will "\
 		"start at 0 and automatically adjust based on xfer size "\
-		"unless fw is split across multiple files). May be submitted "\
+		"unless fw is split across multiple files. May be submitted "\
 		"while outstanding commands exist on the Admin and IO "\
 		"Submission Queues. Activate downloaded firmware with "\
-		"fw-activate and reset the device to apply the downloaded firmware.";
+		"fw-activate, and then reset the device to apply the downloaded firmware.";
 	const char *fw = "firmware file (required)";
 	const char *xfer = "transfer chunksize limit";
 	const char *offset = "starting dword offset, default 0";
@@ -1180,10 +1179,10 @@ static int fw_download(int argc, char **argv)
 
 static int fw_activate(int argc, char **argv)
 {
-	const char *desc = "fw-activate: verify downloaded firmware image and "\
+	const char *desc = "Verify downloaded firmware image and "\
 		"commit to specific firmware slot. Device is not automatically "\
 		"reset following firmware activation. A reset may be issued "\
-		"with an 'echo 1 > /sys/class/misc/nvmeX/device/reset'. "\
+		"with an 'echo 1 > /sys/class/nvme/nvmeX/reset_controller'. "\
 		"Ensure nvmeX is the device you just activated before reset.";
 	const char *slot = "firmware slot to activate";
 	const char *action = "[0-2]: replacement action";
@@ -1264,14 +1263,12 @@ static int show_registers(int argc, char **argv)
 
 static int format(int argc, char **argv)
 {
-	const char *desc = "format: re-format a specified namespace on the "\
+	const char *desc = "Re-format a specified namespace on the "\
 		"given device. Can erase all data in namespace (user "\
 		"data erase) or delete data encryption key if specified. "\
-		"Can also be used to change LBAF such that device may "\
-		"disappear from all lists since capacity superficially "\
-		"appears to be 0.";
+		"Can also be used to change LBAF to change the namespaces reported physical block format.";
 	const char *namespace_id = "name of desired namespace";
-	const char *lbaf = "LBA format to apply (req'd)";
+	const char *lbaf = "LBA format to apply (required)";
 	const char *ses = "[0-2]: secure erase";
 	const char *pil = "[0-3]: protection info location";
 	const char *pi = "[0-1]: protection info off/on";
@@ -1358,7 +1355,7 @@ static int format(int argc, char **argv)
 
 static int set_feature(int argc, char **argv)
 {
-	const char *desc = "set-feature: modify the saveable/changeable "\
+	const char *desc = "Modify the saveable or changeable "\
 		"current operating parameters of the controller. Operating "\
 		"parameters are grouped and identified by Feature "\
 		"Identifiers. Feature settings can be applied to the entire "\
@@ -1368,14 +1365,14 @@ static int set_feature(int argc, char **argv)
 		"Use get-feature to determine which Features are supported by "\
 		"the controller and are saveable/changeable.";
 	const char *namespace_id = "desired namespace";
-	const char *feature_id = "hex feature name (req'd)";
-	const char *data_len = "buffer len (if) data returned";
-	const char *data = "optional file (default stdin)";
-	const char *value = "new value of feature (req'd)";
+	const char *feature_id = "hex feature name (required)";
+	const char *data_len = "buffer length if data required";
+	const char *data = "optional file for feature data (default stdin)";
+	const char *value = "new value of feature (required)";
 	int err;
 	__u32 result;
 	void *buf = NULL;
-	int fd = STDIN_FILENO;
+	int ffd = STDIN_FILENO;
 
 	struct config {
 		char *file;
@@ -1421,13 +1418,13 @@ static int set_feature(int argc, char **argv)
 		buf = malloc(cfg.data_len);
 	if (buf) {
 		if (strlen(cfg.file)) {
-			fd = open(cfg.file, O_RDONLY);
-			if (fd <= 0) {
+			ffd = open(cfg.file, O_RDONLY);
+			if (ffd <= 0) {
 				fprintf(stderr, "no firmware file provided\n");
 				return -EINVAL;
 			}
 		}
-		if (read(fd, (void *)buf, cfg.data_len) < 0) {
+		if (read(ffd, (void *)buf, cfg.data_len) < 0) {
 			fprintf(stderr, "failed to read data buffer from input file\n");
 			return EINVAL;
 		}
@@ -1435,6 +1432,10 @@ static int set_feature(int argc, char **argv)
 
 	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value, 0,
 				cfg.data_len, buf, &result);
+	if (err < 0) {
+		perror("set-feature");
+		return errno;
+	}
 	if (!err) {
 		printf("set-feature:%d(%s), value:%#08x\n", cfg.feature_id,
 			nvme_feature_to_string(cfg.feature_id), result);
@@ -1457,7 +1458,7 @@ static int set_feature(int argc, char **argv)
 static int sec_send(int argc, char **argv)
 {
 	struct stat sb;
-	const char *desc = "security-send: transfer security protocol data to "\
+	const char *desc = "Transfer security protocol data to "\
 		"a controller. Security Receives for the same protocol should be "\
 		"performed after Security Sends. The security protocol field "\
 		"associates Security Sends (security-send) and Security Receives "\
@@ -1532,10 +1533,10 @@ static int sec_send(int argc, char **argv)
 static int write_uncor(int argc, char **argv)
 {
 	int err;
-	const char *desc = "The Write Uncorretable command is used to set a "\
+	const char *desc = "The Write Uncorrectable command is used to set a "\
 			"range of logical blocks to invalid.";
 	const char *namespace_id = "desired namespace";
-	const char *start_block = "64-bit addr of first block to access";
+	const char *start_block = "64-bit LBA of first block to access";
 	const char *block_count = "number of blocks on device to access";
 
 	struct config {
@@ -1586,12 +1587,12 @@ static int write_zeroes(int argc, char **argv)
 {
 	int err;
 	__u16 control = 0;
-	const char *desc = "write_zeroes: The Write Zeroes command is used to set a "\
+	const char *desc = "The Write Zeroes command is used to set a "\
 			"range of logical blocks to zero.";
 	const char *namespace_id = "desired namespace";
-	const char *start_block = "64-bit addr of first block to access";
+	const char *start_block = "64-bit LBA of first block to access";
 	const char *block_count = "number of blocks on device to access";
-	const char *limited_retry = "limit num. media access attempts";
+	const char *limited_retry = "limit media access attempts";
 	const char *force = "force device to commit data before command completes";
 	const char *prinfo = "PI and check field";
 	const char *ref_tag = "reference tag (for end to end PI)";
@@ -1669,9 +1670,9 @@ static int write_zeroes(int argc, char **argv)
 
 static int dsm(int argc, char **argv)
 {
-	const char *desc = "dsm: The Dataset Management command is used by the host to "\
+	const char *desc = "The Dataset Management command is used by the host to "\
 		"indicate attributes for ranges of logical blocks. This includes attributes "\
-		"like frequency that data is read or written, access size, and other "\
+		"for discarding unused blocks, data read and write frequency, access size, and other "\
 		"information that may be used to optimize performance and reliability.";
 	const char *namespace_id = "name of desired namespace";
 	const char *blocks = "Comma separated list of the number of blocks in each range";
@@ -1680,7 +1681,7 @@ static int dsm(int argc, char **argv)
 	const char *ad = "Attribute Deallocate";
 	const char *idw = "Attribute Integral Dataset for Write";
 	const char *idr = "Attribute Integral Dataset for Read";
-	const char *cdw11 = "All the command command dword 11 attribuets. Use instead of specifying individual attributes";
+	const char *cdw11 = "All the command DWORD 11 attributes. Use instead of specifying individual attributes";
 
 	int err;
 	uint16_t nr, nc, nb, ns;
@@ -1765,7 +1766,7 @@ static int dsm(int argc, char **argv)
 
 static int flush(int argc, char **argv)
 {
-	const char *desc = "flush: commit data and metadata associated with "\
+	const char *desc = "Commit data and metadata associated with "\
 	"given namespaces to nonvolatile media. Applies to all commands "\
 	"finished before the flush was submitted. Additional data may also be "\
 	"flushed by the controller, from any namespace, depending on controller and "\
@@ -1804,7 +1805,7 @@ static int flush(int argc, char **argv)
 
 static int resv_acquire(int argc, char **argv)
 {
-	const char *desc = "resv-acquire: obtain a reservation on a given "\
+	const char *desc = "Obtain a reservation on a given "\
 		"namespace. Only one reservation is allowed at a time on a "\
 		"given namespace, though multiple controllers may register "\
 		"with that namespace. Namespace reservation will abort with "\
@@ -1877,7 +1878,7 @@ static int resv_acquire(int argc, char **argv)
 
 static int resv_register(int argc, char **argv)
 {
-	const char *desc = "resv-register: register, de-register, or "\
+	const char *desc = "Register, de-register, or "\
 		"replace a controller's reservation on a given namespace. "\
 		"Only one reservation at a time is allowed on any namespace.";
 	const char *namespace_id = "name of desired namespace";
@@ -1947,10 +1948,10 @@ static int resv_register(int argc, char **argv)
 
 static int resv_release(int argc, char **argv)
 {
-	const char *desc = "resv-release: releases reservation held on a "\
-		"namespace by the given controller. If rtype != current reser"\
-		"vation type, release fails. If the given controller holds no "\
-		"reservation on the namespace/is not the namespace's current "\
+	const char *desc = "Releases reservation held on a "\
+		"namespace by the given controller. If rtype != current reservation"\
+		"type, release will fails. If the given controller holds no "\
+		"reservation on the namespace or is not the namespace's current "\
 		"reservation holder, the release command completes with no "\
 		"effect. If the reservation type is not Write Exclusive or "\
 		"Exclusive Access, all registrants on the namespace except "\
@@ -2023,7 +2024,7 @@ static int resv_release(int argc, char **argv)
 
 static int resv_report(int argc, char **argv)
 {
-	const char *desc = "resv-report: returns Reservation Status data "\
+	const char *desc = "Returns Reservation Status data "\
 		"structure describing any existing reservations on and the "\
 		"status of a given namespace. Namespace Reservation Status "\
 		"depends on the number of controllers registered for that "\
@@ -2273,7 +2274,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 
 static int compare(int argc, char **argv)
 {
-	const char *desc = "compare: diff specified logical blocks on "\
+	const char *desc = "Compare specified logical blocks on "\
 		"device with specified data buffer; return failure if buffer "\
 		"and block(s) are dissimilar";
 	return submit_io(nvme_cmd_compare, "compare", desc, argc, argv);
@@ -2281,14 +2282,14 @@ static int compare(int argc, char **argv)
 
 static int read_cmd(int argc, char **argv)
 {
-	const char *desc = "read: copy specified logical blocks on the given "\
+	const char *desc = "Copy specified logical blocks on the given "\
 		"device to specified data buffer (default buffer is stdout).";
 	return submit_io(nvme_cmd_read, "read", desc, argc, argv);
 }
 
 static int write_cmd(int argc, char **argv)
 {
-	const char *desc = "write: copy from provided data buffer (default "\
+	const char *desc = "Copy from provided data buffer (default "\
 		"buffer is stdin) to specified logical blocks on the given "\
 		"device.";
 	return submit_io(nvme_cmd_write, "write", desc, argc, argv);
@@ -2296,7 +2297,7 @@ static int write_cmd(int argc, char **argv)
 
 static int sec_recv(int argc, char **argv)
 {
-	const char *desc = "security-recv: obtain results of one or more "\
+	const char *desc = "Obtain results of one or more "\
 		"previously submitted security-sends. Results, and association "\
 		"between Security Send and Receive, depend on the security "\
 		"protocol field as they are defined by the security protocol "\
@@ -2368,13 +2369,10 @@ static int sec_recv(int argc, char **argv)
 	return err;
 }
 
-static int passthru(int argc, char **argv, int ioctl_cmd)
+static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc)
 {
-	int err = 0, wfd = STDIN_FILENO;
-	const char *desc = "[io/admin]-passthru: send a user-specified IO or "\
-		"admin command to the specified device via IOCTL passthrough, "\
-		"return results";
 	void *data = NULL, *metadata = NULL;
+	int err = 0, wfd = STDIN_FILENO;
 	__u32 result;
 
 	struct config {
@@ -2552,17 +2550,21 @@ free_and_return:
 
 static int io_passthru(int argc, char **argv)
 {
-	return passthru(argc, argv, NVME_IOCTL_IO_CMD);
+	const char *desc = "Send a user-defined IO command to the specified "\
+		"device via IOCTL passthrough, return results.";
+	return passthru(argc, argv, NVME_IOCTL_IO_CMD, desc);
 }
 
 static int admin_passthru(int argc, char **argv)
 {
-	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD);
+	const char *desc = "Send a user-defined Admin command to the specified "\
+		"device via IOCTL passthrough, return results.";
+	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD, desc);
 }
 
-static void usage(char *cmd)
+static void usage()
 {
-	fprintf(stdout, "usage: %s <command> [<device>] [<args>]\n", cmd);
+	fprintf(stdout, "usage: nvme <command> [<device>] [<args>]\n");
 }
 
 static void command_help(const char *cmd)
@@ -2582,10 +2584,12 @@ static void command_help(const char *cmd)
 static void general_help()
 {
 	unsigned i;
-	const char *desc =  "'<device>' may be either an NVMe character device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1).\n\n";
+	const char *desc =  "The '<device>' may be either an NVMe character "\
+		"device (ex: /dev/nvme0) or an nvme block device "\
+		"(ex: /dev/nvme0n1).\n\n";
 
-	printf("%s\n", nvme_version_string);
-	usage("nvme");
+	printf("nvme-%s\n", nvme_version_string);
+	usage();
 	printf("\n");
 	print_word_wrapped(desc, 0, 0);
 	printf("The following are all implemented sub-commands:\n");
@@ -2639,7 +2643,7 @@ static void handle_internal_command(int argc, char **argv)
 int main(int argc, char **argv)
 {
 	if (argc < 2) {
-		usage(argv[0]);
+		usage();
 		return 0;
 	}
 	setlocale(LC_ALL, "");

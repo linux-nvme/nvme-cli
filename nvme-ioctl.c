@@ -395,7 +395,7 @@ int nvme_get_feature(int fd, __u32 nsid, __u8 fid, __u8 sel, __u32 cdw11,
 {
 	__u32 cdw10 = fid | sel << 8;
 
-	return nvme_feature(fd, nvme_admin_set_features, nsid, cdw10, cdw11,
+	return nvme_feature(fd, nvme_admin_get_features, nsid, cdw10, cdw11,
 			    data_len, data, result);
 }
 

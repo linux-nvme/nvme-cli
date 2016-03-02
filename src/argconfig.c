@@ -138,7 +138,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	char *endptr;
 	struct option *long_opts;
 	const struct argconfig_commandline_options *s;
-	int c, option_index = 0, short_index = 0, options_count = 0;
+	int i, c, option_index = 0, short_index = 0, options_count = 0, non_opt_args = 0;
 	void *value_addr;
 
 	errno = 0;
@@ -192,6 +192,11 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 
 	while ((c = getopt_long(argc, argv, short_opts, long_opts,
 				&option_index)) != -1) {
+		if (c == 1) {
+			argv[1 + non_opt_args] = optarg;
+			non_opt_args++;
+			continue;
+		}
 		if (c != 0) {
 			if (c == '?' || c == 'h') {
 				argconfig_print_help(program_desc, options);
@@ -201,6 +206,12 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			     option_index++) {
 				if (c == options[option_index].short_option)
 					break;
+			}
+			if (option_index == options_count)
+				continue;
+			if (long_opts[option_index].flag) {
+				*(long_opts[option_index].flag) = 1;
+				continue;
 			}
 		}
 
@@ -345,6 +356,11 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	}
 	free(short_opts);
 	free(long_opts);
+
+	for (i = optind; i < argc; i++) {
+		argv[non_opt_args + 1] = argv[i];
+		non_opt_args++;
+	}
 
 	return 0;
  exit:

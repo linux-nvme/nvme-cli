@@ -528,8 +528,8 @@ static void print_ps_power_and_scale(__le16 power, __u8 scale)
 void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 {
 	int i;
-	int human = mode&HUMAN,
-		vs = mode&VS;
+	int human = mode & HUMAN,
+		vs = mode & VS;
 
 	printf("vid     : %#x\n", ctrl->vid);
 	printf("ssvid   : %#x\n", ctrl->ssvid);
