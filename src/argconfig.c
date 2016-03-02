@@ -44,38 +44,6 @@ static argconfig_help_func *help_funcs[MAX_HELP_FUNC] = { NULL };
 
 char END_DEFAULT[] = "__end_default__";
 
-static int print_word_wrapped(const char *s, int indent, int start)
-{
-	const int width = 76;
-	const char *c, *t;
-	int next_space = -1;
-	int last_line = indent;
-
-	for (c = s; *c != 0; c++) {
-		if (*c == ' ' || next_space < 0) {
-			next_space = 0;
-			for (t = c + 1; *t != 0 && *t != ' '; t++)
-				next_space++;
-			if (((int)(c - s) + start + next_space) >
-			    (last_line - indent + width)) {
-				int i;
-				last_line = (int)(c - s) + start;
-
-				putchar('\n');
-				for (i = 0; i < indent; i++)
-					putchar(' ');
-
-				start = indent;
-				continue;
-			}
-		}
-
-		putchar(*c);
-	}
-
-	return (int)(c - s) + start - last_line + indent;
-}
-
 const char *append_usage_str = "";
 
 void argconfig_append_usage(const char *str)
@@ -83,150 +51,135 @@ void argconfig_append_usage(const char *str)
 	append_usage_str = str;
 }
 
-void argconfig_print_help(char *command, const char *program_desc,
+static void print_word_wrapped(const char *s, int indent, int start)
+{
+	const int width = 76;
+	const char *c, *t;
+	int next_space = -1;
+	int last_line = indent;
+
+	while (start < indent) {
+		putc(' ', stderr);
+		start++;
+	}
+
+	for (c = s; *c != 0; c++) {
+		if (*c == ' ' || next_space < 0) {
+			next_space = 0;
+			for (t = c + 1; *t != 0 && *t != ' '; t++)
+				next_space++;
+
+			if (((int)(c - s) + start + next_space) > (last_line - indent + width)) {
+				int i;
+				last_line = (int) (c-s) + start;
+				putc('\n', stderr);
+				for (i = 0; i < indent; i++)
+					putc(' ', stderr);
+				start = indent;
+				continue;
+			}
+		}
+		putc(*c, stderr);
+	}
+}
+
+static void show_option(const struct argconfig_commandline_options *option)
+{
+	char buffer[0x1000];
+	char *b = buffer;
+
+	b += sprintf(b, "  [ ");
+	if (option->option) {
+		b += sprintf(b, " --%s", option->option);
+		if (option->argument_type == optional_argument)
+			b += sprintf(b, "[=<%s>]", option->meta ? option->meta : "arg");
+		if (option->argument_type == required_argument)
+			b += sprintf(b, "=<%s>", option->meta ? option->meta : "arg");
+		if (option->short_option)
+			b += sprintf(b, ",");
+	}
+	if (option->short_option) {
+		b += sprintf(b, " -%c", option->short_option);
+		if (option->argument_type == optional_argument)
+			b += sprintf(b, " [<%s>]", option->meta ? option->meta : "arg");
+		if (option->argument_type == required_argument)
+			b += sprintf(b, " <%s>", option->meta ? option->meta : "arg");
+	}
+	b += sprintf(b, " ] ");
+
+	fprintf(stderr, "%s", buffer);
+	if (option->help) {
+		print_word_wrapped("--- ", 40, b - buffer);
+		print_word_wrapped(option->help, 44, 44);
+	}
+	fprintf(stderr, "\n");
+}
+
+static void argconfig_print_help(const char *program_desc,
 			  const struct argconfig_commandline_options *options)
 {
 	const struct argconfig_commandline_options *s;
-	const int bufsize = 0x10000;
-	char buf[bufsize];
-	char *buf_end = buf;
-	char *last_help = NULL;
-	int last_len = 0;
-	int last_opt = 0;
-	int meta_len = 0;
-	int opt_len = 0;
-	int next = 0;
-	int i;
 
-	printf("\033[1mUsage: nvme %s /dev/nvmeX [OPTIONS] %s\n\n\033[0m",
-	       command, append_usage_str);
+	printf("\033[1mUsage: %s\033[0m\n\n",
+	       append_usage_str);
+
 	print_word_wrapped(program_desc, 0, 0);
 	printf("\n\n\033[1mOptions:\033[0m\n");
 
-	for (s = options; (s->option != 0) && (s != NULL); s++) {
-		next++;
-
-		meta_len = strlen(s->meta);
-		opt_len = strlen(s->option);
-
-		if (opt_len < 2) {
-			buf_end = stpcpy(buf_end, " -");
-			buf_end = stpcpy(buf_end, s->option);
-
-			if (meta_len > 1) {
-				buf_end = stpcpy(buf_end, " ");
-				buf_end = stpcpy(buf_end, s->meta);
-			}
-		} else {
-			buf_end = stpcpy(buf_end, "  [ --");
-			buf_end = stpcpy(buf_end, s->option);
-
-			if (meta_len > 1) {
-				buf_end = stpcpy(buf_end, "=");
-				buf_end = stpcpy(buf_end, s->meta);
-			}
-
-			last_opt = strlen(s->option);
-			last_len = last_opt + (meta_len * 2);
-		}
-
-		if ((options[next].option == NULL) || (opt_len < 2)) {
-			if (last_len < 10)
-				buf_end = stpcpy(buf_end, " ]\t\t\t");
-			else if (last_len < 18)
-				buf_end = stpcpy(buf_end, " ]\t\t");
-			else
-				buf_end = stpcpy(buf_end, " ]\t");
-		} else
-			buf_end = stpcpy(buf_end, ",");
-
-		/* -b should only be for --raw-binary */
-		if (!strcmp("b", s->option))
-			buf_end = stpcpy(buf_end, "\t");
-
-		if (s->help == NULL) {
-			continue;
-		} else if ((options[next].help == NULL)
-			   && strcmp(s->help, last_help)) {
-			buf_end = stpcpy(buf_end, "--- ");
-			buf_end = stpcpy(buf_end, s->help);
-			buf_end = stpcpy(buf_end, "\n");
-		} else if ((last_help != NULL) && !strcmp(s->help, last_help)) {
-			buf_end = stpcpy(buf_end, "--- ");
-			buf_end = stpcpy(buf_end, s->help);
-			buf_end = stpcpy(buf_end, "\n");
-			last_help = (char *)s->help;
-		} else
-			last_help = (char *)s->help;
-	}
-
-	for (i = 0; i < MAX_HELP_FUNC; i++) {
-		if (help_funcs[i] == NULL)
-			break;
-		putchar('\n');
-		help_funcs[i] ();
-	}
-
-	/* actually print the contraption we just built */
-	printf("%s\n", buf);
+	for (s = options; (s->option != 0) && (s != NULL); s++)
+		show_option(s);
 }
 
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    const struct argconfig_commandline_options *options,
-		    const void *config_default, void *config_out,
-		    size_t config_size)
+		    void *config_out, size_t config_size)
 {
 	char *short_opts;
 	char *endptr;
 	struct option *long_opts;
 	const struct argconfig_commandline_options *s;
-	int c, i;
-	int option_index = 0;
-	int short_index = 0;
-	int options_count = 0;
+	int c, option_index = 0, short_index = 0, options_count = 0;
 	void *value_addr;
 
 	errno = 0;
-
-	memcpy(config_out, config_default, config_size);
-
 	for (s = options; s->option != 0; s++)
 		options_count++;
 
 	long_opts = malloc(sizeof(struct option) * (options_count + 2));
-	short_opts = malloc(sizeof(*short_opts) * (options_count * 2 + 4));
+	short_opts = malloc(sizeof(*short_opts) * (options_count * 3 + 4));
 	short_opts[short_index++] = '-';
 
 	for (s = options; (s->option != 0) && (option_index < options_count);
 	     s++) {
-		if (strlen(s->option) == 1) {
-			short_opts[short_index++] = s->option[0];
-			if (s->argument_type == required_argument) {
+		if (s->short_option != 0) {
+			short_opts[short_index++] = s->short_option;
+			if (s->argument_type == required_argument ||
+			    s->argument_type == optional_argument)
 				short_opts[short_index++] = ':';
+			if (s->argument_type == optional_argument)
+				short_opts[short_index++] = ':';
+		}
+		if (s->option && strlen(s->option)) {
+			long_opts[option_index].name = s->option;
+			long_opts[option_index].has_arg = s->argument_type;
+
+			if (s->argument_type == no_argument
+			    && s->default_value != NULL) {
+				value_addr = (void *)(char *)s->default_value;
+
+				long_opts[option_index].flag = value_addr;
+				long_opts[option_index].val = 1;
+			} else {
+				long_opts[option_index].flag = NULL;
+				long_opts[option_index].val = 0;
 			}
 		}
-
-		long_opts[option_index].name = s->option;
-		long_opts[option_index].has_arg = s->argument_type;
-
-		if (s->argument_type == no_argument && s->default_value != NULL) {
-			value_addr = (void *)((char *)s->default_value -
-					      (char *)config_default +
-					      (char *)config_out);
-
-			long_opts[option_index].flag = value_addr;
-			long_opts[option_index].val = 1;
-		} else {
-			long_opts[option_index].flag = NULL;
-			long_opts[option_index].val = 0;
-		}
-
 		option_index++;
 	}
 
 	long_opts[option_index].name = "help";
 	long_opts[option_index].flag = NULL;
-	long_opts[option_index].val = 0;
+	long_opts[option_index].val = 'h';
 	option_index++;
 
 	long_opts[option_index].name = NULL;
@@ -237,49 +190,22 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	short_opts[short_index++] = 'h';
 	short_opts[short_index] = 0;
 
-	int non_opt_args = 0;
-
-	while ((c = getopt_long_only(argc, argv, short_opts, long_opts,
-				     &option_index)) != -1) {
-		if (c == '?' || c == 'h' || c == ':' || (c == 0 &&
-							 (!strcmp
-							  (long_opts
-							   [option_index].name,
-							   "h")
-							  ||
-							  !strcmp(long_opts
-								  [option_index].
-								  name, "help")
-							  ||
-							  !strcmp(long_opts
-								  [option_index].
-								  name,
-								  "-help")))) {
-			argconfig_print_help(argv[0], program_desc, options);
-			goto exit;
-		} else if (c == 1) {
-			argv[1 + non_opt_args] = optarg;
-			non_opt_args++;
-			continue;
-		} else if (c) {
-			for (option_index = 0;
-			     options[option_index].option[0] != c
-			     || options[option_index].option[1] != 0;
-			     option_index++) ;
-
-			if (long_opts[option_index].flag != NULL)
-				*long_opts[option_index].flag = 1;
+	while ((c = getopt_long(argc, argv, short_opts, long_opts,
+				&option_index)) != -1) {
+		if (c != 0) {
+			if (c == '?' || c == 'h') {
+				argconfig_print_help(program_desc, options);
+				goto exit;
+			}
+			for (option_index = 0; option_index < options_count;
+			     option_index++) {
+				if (c == options[option_index].short_option)
+					break;
+			}
 		}
 
 		s = &options[option_index];
-
-		while (s->default_value == NULL)
-			s++;
-
-		value_addr = (void *)((char *)s->default_value -
-				      (char *)config_default +
-				      (char *)config_out);
-
+		value_addr = (void *)(char *)s->default_value;
 		if (s->config_type == CFG_STRING) {
 			*((char **)value_addr) = optarg;
 		} else if (s->config_type == CFG_SIZE) {
@@ -414,21 +340,13 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 					s->option, optarg);
 				goto exit;
 			}
-
 			*((FILE **) value_addr) = f;
 		}
 	}
-
 	free(short_opts);
 	free(long_opts);
 
-	for (i = optind; i < argc; i++) {
-		argv[non_opt_args + 1] = argv[i];
-		non_opt_args++;
-	}
-
-	return non_opt_args;
-
+	return 0;
  exit:
 	free(short_opts);
 	free(long_opts);
@@ -596,82 +514,9 @@ void argconfig_register_help_func(argconfig_help_func * f)
 	}
 }
 
-void argconfig_print_subopt_help(const struct argconfig_sub_options *options,
-				 int indent)
-{
-	const struct argconfig_sub_options *s;
-	const int bufsize = 120;
-	char buf[bufsize];
-	int last_line, nodefault;
-
-	buf[0] = ' ';
-	buf[1] = ' ';
-	buf[2] = 0;
-
-	for (s = options; s->option != 0; s++) {
-		if (s->option[0] == '=') {
-			const char *c = s->option;
-			while (*c == '=')
-				c++;
-			printf("\n%*s%s", indent, "", c);
-			continue;
-		}
-
-		strcpy(buf, s->option);
-		strcpy(buf, "=");
-		strcpy(buf, s->meta);
-
-		if (s->help == NULL) {
-			strcpy(buf, ", ");
-			continue;
-		}
-
-		printf("%*s%-*s", indent, "", 30 - indent, buf);
-		if (strlen(buf) > 29 - indent)
-			printf("%-31s", "\n");
-
-		last_line =
-		    print_word_wrapped(s->help, 30 - indent, 30 - indent);
-
-		nodefault = 0;
-		if (s->config_type == CFG_STRING) {
-			sprintf(&buf[3], " - default: '%s'",
-				*((char **)s->default_value));
-			nodefault = strlen(*((char **)s->default_value)) == 0;
-		} else if (s->config_type == CFG_INT
-			   || s->config_type == CFG_BOOL) {
-			sprintf(&buf[3], " - default: %d",
-				*((int *)s->default_value));
-		} else if (s->config_type == CFG_LONG) {
-			sprintf(&buf[3], " - default: %ld",
-				*((long *)s->default_value));
-		} else if (s->config_type == CFG_LONG_SUFFIX) {
-			long long val = *((long *)s->default_value);
-			const char *s = suffix_binary_get(&val);
-			sprintf(&buf[3], " - default: %lld%s", val, s);
-		} else if (s->config_type == CFG_SIZE) {
-			sprintf(&buf[3], " - default: %zd",
-				*((size_t *) s->default_value));
-		} else if (s->config_type == CFG_DOUBLE) {
-			sprintf(&buf[3], " - default: %.2f",
-				*((double *)s->default_value));
-		} else {
-			sprintf(&buf[3], " ");
-		}
-
-		if (!nodefault && s->config_type != CFG_NONE)
-			print_word_wrapped(&buf[3], 30, last_line);
-
-		putchar('\n');
-
-		buf[2] = 0;
-	}
-}
-
 void argconfig_parse_subopt(char *const opts[], const char *module,
 			    const struct argconfig_sub_options *options,
-			    const void *config_default, void *config_out,
-			    size_t config_size)
+			    void *config_out, size_t config_size)
 {
 	int enddefault = 0;
 	int tmp;
@@ -679,7 +524,6 @@ void argconfig_parse_subopt(char *const opts[], const char *module,
 	char *const *o;
 
 	errno = 0;
-	memcpy(config_out, config_default, config_size);
 
 	for (o = opts; o != NULL && *o != NULL; o += 2) {
 		if (*o == END_DEFAULT) {
@@ -699,9 +543,7 @@ void argconfig_parse_subopt(char *const opts[], const char *module,
 			continue;
 		}
 
-		void *value_addr = (void *)((char *)s->default_value -
-					    (char *)config_default +
-					    (char *)config_out);
+		void *value_addr = (void *)(char *)s->default_value;
 
 		if (s->config_type == CFG_STRING) {
 			*((char **)value_addr) = o[1];
@@ -772,8 +614,7 @@ void argconfig_parse_subopt(char *const opts[], const char *module,
 
 int argconfig_set_subopt(const char *opt,
 			 const struct argconfig_sub_options *options,
-			 const void *config_default, void *config_out,
-			 va_list argp)
+			 void *config_out, va_list argp)
 {
 	const struct argconfig_sub_options *s;
 	for (s = options; s->option != NULL; s++)
@@ -783,9 +624,7 @@ int argconfig_set_subopt(const char *opt,
 	if (s->option == NULL)
 		return 1;
 
-	void *value_addr = (void *)((char *)s->default_value -
-				    (char *)config_default +
-				    (char *)config_out);
+	void *value_addr = (void *)(char *)s->default_value;
 
 	if (s->config_type == CFG_STRING) {
 		*((char **)value_addr) = va_arg(argp, char *);
@@ -816,8 +655,7 @@ int argconfig_set_subopt(const char *opt,
 
 int argconfig_get_subopt(const char *opt,
 			 const struct argconfig_sub_options *options,
-			 const void *config_default, void *config_out,
-			 va_list argp)
+			 void *config_out, va_list argp)
 {
 	const struct argconfig_sub_options *s;
 	for (s = options; s->option != NULL; s++)
@@ -827,9 +665,7 @@ int argconfig_get_subopt(const char *opt,
 	if (s->option == NULL)
 		return 1;
 
-	void *value_addr = (void *)((char *)s->default_value -
-				    (char *)config_default +
-				    (char *)config_out);
+	void *value_addr = (void *)(char *)s->default_value;
 
 	if (s->config_type == CFG_STRING) {
 		*va_arg(argp, char **) = *((char **)value_addr);

@@ -59,18 +59,12 @@ enum argconfig_types {
 	CFG_FILE_RP,
 };
 
-//Deprecated
-#define NO_DEFAULT     CFG_NONE
-#define DEFAULT_STRING CFG_STRING
-#define DEFAULT_INT    CFG_INT
-#define DEFAULT_SIZE   CFG_SIZE
-#define DEFAULT_DOUBLE CFG_DOUBLE
-
 struct argconfig_commandline_options {
 	const char *option;
+	const char short_option;
 	const char *meta;
 	enum argconfig_types config_type;
-	const void *default_value;
+	void *default_value;
 	int argument_type;
 	const char *help;
 };
@@ -80,6 +74,7 @@ struct argconfig_commandline_options {
 
 struct argconfig_sub_options {
 	const char *option;
+	const char short_option;
 	const char *meta;
 	enum argconfig_types config_type;
 	const void *default_value;
@@ -89,15 +84,12 @@ struct argconfig_sub_options {
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 typedef void argconfig_help_func();
 void argconfig_append_usage(const char *str);
-void argconfig_print_help(char *command, const char *program_desc,
-			  const struct argconfig_commandline_options
-			  *options);
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    const struct argconfig_commandline_options *options,
-		    const void *config_default, void *config_out,
-		    size_t config_size);
+		    void *config_out, size_t config_size);
 int argconfig_parse_subopt_string(char *string, char **options,
 				  size_t max_options);
 unsigned argconfig_parse_comma_sep_array(char *string, int *ret,
@@ -112,17 +104,15 @@ void argconfig_print_subopt_help(const struct argconfig_sub_options
 
 void argconfig_parse_subopt(char *const opts[], const char *module,
 			    const struct argconfig_sub_options *options,
-			    const void *config_default,
 			    void *config_out, size_t config_size);
 
 int argconfig_set_subopt(const char *opt,
 			 const struct argconfig_sub_options *options,
-			 const void *config_default, void *config_out,
-			 va_list arg);
+			 void *config_out, va_list arg);
 int argconfig_get_subopt(const char *opt,
 			 const struct argconfig_sub_options *options,
-			 const void *config_default, void *config_out,
-			 va_list arg);
+			 void *config_out, va_list arg);
+
 #ifdef __cplusplus
 }
 #endif
