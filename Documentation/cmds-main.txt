@@ -76,6 +76,9 @@ linknvme:nvme-read[1]::
 linknvme:nvme-write[1]::
 	Issue IO Write Command
 
+linknvme:nvme-write-zeroes[1]::
+	Issue IO Write Zeroes Command
+
 linknvme:nvme-resv-acquire[1]::
 	Acquire Namespace Reservation
 

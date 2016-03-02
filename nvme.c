@@ -97,6 +97,7 @@ static const char nvme_version_string[] = NVME_VERSION;
 	ENTRY(COMPARE, "compare", "Submit a Compare command, return results", compare) \
 	ENTRY(READ_CMD, "read", "Submit a read command, return results", read_cmd) \
 	ENTRY(WRITE_CMD, "write", "Submit a write command, return results", write_cmd) \
+	ENTRY(WRITE_ZEROES_CMD, "write-zeroes", "Submit a write command, return results", write_zeroes) \
 	ENTRY(REGISTERS, "show-regs", "Shows the controller registers. Requires admin character device", show_registers) \
 	ENTRY(VERSION, "version", "Shows the program version", version) \
 	ENTRY(HELP, "help", "Display this help", help)
@@ -943,12 +944,6 @@ static int id_ns(int argc, char **argv)
 	get_dev(1, argc, argv);
 
 	if (!cfg.namespace_id) {
-		if (!S_ISBLK(nvme_stat.st_mode)) {
-			fprintf(stderr,
-				"%s: non-block device requires namespace-id param\n",
-				devicename);
-			exit(ENOTBLK);
-		}
 		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
 			perror(devicename);
@@ -975,11 +970,6 @@ static int get_ns_id(int argc, char **argv)
 	int nsid;
 
 	open_dev(argv[1]);
-	if (!S_ISBLK(nvme_stat.st_mode)) {
-		fprintf(stderr, "%s: requesting nsid from non-block device\n",
-								devicename);
-		exit(ENOTBLK);
-	}
 	nsid = nvme_get_nsid(fd);
 	if (nsid <= 0) {
 		perror(devicename);
@@ -1538,6 +1528,91 @@ static int sec_send(int argc, char **argv)
 	return err;
 }
 
+static int write_zeroes(int argc, char **argv)
+{
+	int err;
+	__u16 control = 0;
+	const char *desc = "write_zeroes: The Write Zeroes command is used to set a "\
+			"range of logical blocks to zero.";
+	const char *namespace_id = "desired namespace";
+	const char *start_block = "64-bit addr of first block to access";
+	const char *block_count = "number of blocks on device to access";
+	const char *limited_retry = "limit num. media access attempts";
+	const char *force = "force device to commit data before command completes";
+	const char *prinfo = "PI and check field";
+	const char *ref_tag = "reference tag (for end to end PI)";
+	const char *app_tag_mask = "app tag mask (for end to end PI)";
+	const char *app_tag = "app tag (for end to end PI)";
+
+	struct config {
+		__u64 start_block;
+		__u32 namespace_id;
+		__u32 ref_tag;
+		__u32 app_tag;
+		__u16 block_count;
+		__u8  prinfo;
+		__u8  app_tag_mask;
+		__u8  limited_retry;
+		__u8  force_unit_access;
+	};
+
+	struct config cfg = {
+		.start_block     = 0,
+		.block_count     = 0,
+		.prinfo          = 0,
+		.ref_tag         = 0,
+		.app_tag_mask    = 0,
+		.app_tag         = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id",      'n', "NUM",  CFG_POSITIVE,    &cfg.namespace_id,      required_argument, namespace_id},
+		{"start-block",       's', "NUM",  CFG_LONG_SUFFIX, &cfg.start_block,       required_argument, start_block},
+		{"block-count",       'c', "NUM",  CFG_SHORT,       &cfg.block_count,       required_argument, block_count},
+		{"limited-retry",     'l', "",     CFG_NONE,        &cfg.limited_retry,     no_argument,       limited_retry},
+		{"force-unit-access", 'f', "",     CFG_NONE,        &cfg.force_unit_access, no_argument,       force},
+		{"prinfo",            'p', "NUM",  CFG_BYTE,        &cfg.prinfo,            required_argument, prinfo},
+		{"ref-tag",           'r', "NUM",  CFG_POSITIVE,    &cfg.ref_tag,           required_argument, ref_tag},
+		{"app-tag-mask",      'm', "NUM",  CFG_BYTE,        &cfg.app_tag_mask,      required_argument, app_tag_mask},
+		{"app-tag",           'a', "NUM",  CFG_POSITIVE,    &cfg.app_tag,           required_argument, app_tag},
+		{0}
+	};
+
+	argconfig_parse(argc, argv, desc, command_line_options,
+			&cfg, sizeof(cfg));
+
+	get_dev(1, argc, argv);
+
+	if (cfg.prinfo > 0xf)
+		return EINVAL;
+
+	control |= (cfg.prinfo << 10);
+	if (cfg.limited_retry)
+		control |= NVME_RW_LR;
+	if (cfg.force_unit_access)
+		control |= NVME_RW_FUA;
+
+	if (!cfg.namespace_id) {
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id <= 0) {
+			fprintf(stderr,
+				"%s: failed to return namespace id\n",
+				devicename);
+			return errno;
+		}
+	}
+
+	err = nvme_write_zeros(fd, cfg.namespace_id, cfg.start_block, cfg.block_count,
+			control, cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask);
+	if (err < 0)
+		return errno;
+	else if (err != 0)
+		fprintf(stderr, "NVME Write Zeroes Command Error:%d\n", err);
+	else
+		printf("NVME Write Zeroes Success\n");
+	return err;
+}
+
 static int dsm(int argc, char **argv)
 {
 	const char *desc = "dsm: The Dataset Management command is used by the host to "\
@@ -1608,12 +1683,6 @@ static int dsm(int argc, char **argv)
 	}
 
 	if (!cfg.namespace_id) {
-		if (!S_ISBLK(nvme_stat.st_mode)) {
-			fprintf(stderr,
-				"%s: non-block device requires namespace-id param\n",
-				devicename);
-			exit(ENOTBLK);
-		}
 		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
 			fprintf(stderr,
@@ -1728,12 +1797,6 @@ static int resv_acquire(int argc, char **argv)
 	get_dev(1, argc, argv);
 
 	if (!cfg.namespace_id) {
-		if (!S_ISBLK(nvme_stat.st_mode)) {
-			fprintf(stderr,
-				"%s: non-block device requires namespace-id param\n",
-				devicename);
-			exit(ENOTBLK);
-		}
 		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
 			fprintf(stderr,
@@ -1804,12 +1867,6 @@ static int resv_register(int argc, char **argv)
 	get_dev(1, argc, argv);
 
 	if (!cfg.namespace_id) {
-		if (!S_ISBLK(nvme_stat.st_mode)) {
-			fprintf(stderr,
-				"%s: non-block device requires namespace-id param\n",
-				devicename);
-			exit(ENOTBLK);
-		}
 		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
 			fprintf(stderr,
@@ -1882,12 +1939,6 @@ static int resv_release(int argc, char **argv)
 	get_dev(1, argc, argv);
 
 	if (!cfg.namespace_id) {
-		if (!S_ISBLK(nvme_stat.st_mode)) {
-			fprintf(stderr,
-				"%s: non-block device requires namespace-id param\n",
-				devicename);
-			exit(ENOTBLK);
-		}
 		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
 			fprintf(stderr,
@@ -1954,12 +2005,6 @@ static int resv_report(int argc, char **argv)
 	get_dev(1, argc, argv);
 
 	if (!cfg.namespace_id) {
-		if (!S_ISBLK(nvme_stat.st_mode)) {
-			fprintf(stderr,
-				"%s: non-block device requires namespace-id param\n",
-				devicename);
-			exit(ENOTBLK);
-		}
 		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
 			fprintf(stderr,
@@ -2014,7 +2059,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	const char *app_tag = "app tag (for end to end PI)";
 	const char *limited_retry = "limit num. media access attempts";
 	const char *latency = "output latency statistics";
-	const char *force = "return data before command completes";
+	const char *force = "force device to commit data before command completes";
 	const char *show = "show command before sending";
 	const char *dry = "show command instead of sending";
 

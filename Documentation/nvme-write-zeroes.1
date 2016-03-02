@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-write
+.\"     Title: nvme-zeroes
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
 .\"      Date: 03/02/2016
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WRITE" "1" "03/02/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-ZEROES" "1" "03/02/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,37 +28,27 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-write \- Send an NVMe write command, provide results
+nvme-write-zeroes \- Send an NVMe write zeroes command, return results
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\-write\fR <device> [\-\-start\-block=<slba> | \-s <slba>]
+\fInvme\-write\-zeroes\fR <device> [\-\-start\-block=<slba> | \-s <slba>]
                         [\-\-block\-count=<nlb> | \-c <nlb>]
-                        [\-\-data\-size=<size> | \-z <size>]
-                        [\-\-metadata\-size=<size> | \-y <size>]
                         [\-\-ref\-tag=<reftag> | \-r <reftag>]
-                        [\-\-data=<data\-file> | \-d <data\-file>]
-                        [\-\-metadata=<metadata\-file> | \-M <metadata\-file>]
                         [\-\-prinfo=<prinfo> | \-p <prinfo>]
                         [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
                         [\-\-app\-tag=<apptag> | \-a <apptag>]
                         [\-\-limited\-retry | \-l]
-                        [\-\-latency | \-t]
                         [\-\-force\-unit\-access | \-f]
 .fi
 .SH "DESCRIPTION"
 .sp
-The Write command writes the logical blocks specified by the command to the medium from the data data buffer provided\&. Will use stdin by default if you don\(cqt provide a file\&.
+The Write Zeroes command is used to set a range of logical blocks to 0\&.
 .SH "OPTIONS"
 .PP
 \-\-start\-block=<slba>, \-s <slba>
 .RS 4
 Start block\&.
-.RE
-.PP
-\-\-latency, \-t
-.RS 4
-Print out the latency the IOCTL took (in us)\&.
 .RE
 .SH "EXAMPLES"
 .sp

@@ -1,5 +1,6 @@
 #include <endian.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
@@ -22,6 +23,17 @@
 
 int nvme_get_nsid(int fd)
 {
+	static struct stat nvme_stat;
+	int err = fstat(fd, &nvme_stat);
+
+	if (err < 0)
+		return err;
+
+	if (!S_ISBLK(nvme_stat.st_mode)) {
+		fprintf(stderr,
+			"requesting namespace-id from non-block device\n");
+		exit(ENOTBLK);
+	}
 	return ioctl(fd, NVME_IOCTL_ID);
 }
 
