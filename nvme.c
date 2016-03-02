@@ -2483,13 +2483,12 @@ static void command_help(const char *cmd)
 static void general_help()
 {
 	unsigned i;
+	const char *desc =  "'<device>' may be either an NVMe character device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1).\n\n";
 
 	printf("%s\n", nvme_version_string);
 	usage("nvme");
 	printf("\n");
-	printf("'<device>' / '/dev/nvmeX' may be either an NVMe character "\
-	       "device (ex: /dev/nvme0)\n or an nvme block device (ex: /d"\
-	       "ev/nvme0n1)\n\n");
+	print_word_wrapped(desc, 0, 0);
 	printf("The following are all implemented sub-commands:\n");
 	for (i = 0; i < NUM_COMMANDS; i++)
 		printf("  %-*s %s\n", 15, commands[i].name, commands[i].help);

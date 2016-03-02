@@ -51,7 +51,7 @@ void argconfig_append_usage(const char *str)
 	append_usage_str = str;
 }
 
-static void print_word_wrapped(const char *s, int indent, int start)
+void print_word_wrapped(const char *s, int indent, int start)
 {
 	const int width = 76;
 	const char *c, *t;

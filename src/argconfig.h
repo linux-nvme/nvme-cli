@@ -112,7 +112,7 @@ int argconfig_set_subopt(const char *opt,
 int argconfig_get_subopt(const char *opt,
 			 const struct argconfig_sub_options *options,
 			 void *config_out, va_list arg);
-
+void print_word_wrapped(const char *s, int indent, int start);
 #ifdef __cplusplus
 }
 #endif
