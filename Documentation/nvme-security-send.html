@@ -435,7 +435,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -755,7 +755,8 @@ nvme-security-send(1) Manual Page
 <pre class="content"><em>nvme security-send</em> [&lt;device&gt;] [--file=&lt;file&gt; | -f &lt;file&gt;]
                     [--secp=&lt;security-protocol&gt; | -p &lt;security-protocol&gt;]
                     [--spsp=&lt;protocol-specific&gt; | -s &lt;protocol-specific&gt;]
-                    [--tl=&lt;transfer-length&gt; | -t &lt;transfer-length&gt;]</pre>
+                    [--tl=&lt;transfer-length&gt; | -t &lt;transfer-length&gt;]
+                    [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -779,6 +780,17 @@ Receive command is Security Protocol field dependent as defined in SPC-4.</p></d
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
 <div class="dlist"><dl>
+<dt class="hdlist1">
+-n &lt;nsid&gt;
+</dt>
+<dt class="hdlist1">
+--namespace-id=&lt;nsid&gt;
+</dt>
+<dd>
+<p>
+        Target a specific namespace for this security command.
+</p>
+</dd>
 <dt class="hdlist1">
 -f &lt;file&gt;
 </dt>
@@ -848,7 +860,7 @@ Receive command is Security Protocol field dependent as defined in SPC-4.</p></d
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-09 08:30:40 MST
+Last updated 2016-03-03 11:13:55 MST
 </div>
 </div>
 </body>

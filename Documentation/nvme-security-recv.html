@@ -435,7 +435,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -756,6 +756,7 @@ nvme-security-recv(1) Manual Page
                     [--secp=&lt;security-protocol&gt; | -p &lt;security-protocol&gt;]
                     [--spsp=&lt;protocol-specific&gt; | -s &lt;protocol-specific&gt;]
                     [--tl=&lt;transfer-length&gt; | -t &lt;transfer-length&gt;]
+                    [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                     [-b | --raw-binary]</pre>
 <div class="attribution">
 </div></div>
@@ -782,6 +783,17 @@ controller reset occurs.</p></div>
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
 <div class="dlist"><dl>
+<dt class="hdlist1">
+-n &lt;nsid&gt;
+</dt>
+<dt class="hdlist1">
+--namespace-id=&lt;nsid&gt;
+</dt>
+<dd>
+<p>
+        Target a specific namespace for this security command.
+</p>
+</dd>
 <dt class="hdlist1">
 -x &lt;size&gt;
 </dt>
@@ -862,7 +874,7 @@ controller reset occurs.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-09 08:30:40 MST
+Last updated 2016-03-03 11:13:26 MST
 </div>
 </div>
 </body>

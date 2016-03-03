@@ -2,12 +2,12 @@
 .\"     Title: nvme-security-send
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/08/2015
+.\"      Date: 03/03/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SECURITY\-SEND" "1" "06/08/2015" "NVMe" "NVMe Manual"
+.TH "NVME\-SECURITY\-SEND" "1" "03/03/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,6 +36,7 @@ nvme-security-send \- Security Send command
                     [\-\-secp=<security\-protocol> | \-p <security\-protocol>]
                     [\-\-spsp=<protocol\-specific> | \-s <protocol\-specific>]
                     [\-\-tl=<transfer\-length> | \-t <transfer\-length>]
+                    [\-\-namespace\-id=<nsid> | \-n <nsid>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -43,6 +44,11 @@ The Security Send command is used to transfer security protocol data to the cont
 .sp
 The association between a Security Send command and subsequent Security Receive command is Security Protocol field dependent as defined in SPC\-4\&.
 .SH "OPTIONS"
+.PP
+\-n <nsid>, \-\-namespace\-id=<nsid>
+.RS 4
+Target a specific namespace for this security command\&.
+.RE
 .PP
 \-f <file>, \-\-file=<file>
 .RS 4

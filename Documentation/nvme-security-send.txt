@@ -12,6 +12,7 @@ SYNOPSIS
 		    [--secp=<security-protocol> | -p <security-protocol>]
 		    [--spsp=<protocol-specific> | -s <protocol-specific>]
 		    [--tl=<transfer-length> | -t <transfer-length>]
+		    [--namespace-id=<nsid> | -n <nsid>]
 
 DESCRIPTION
 -----------
@@ -29,6 +30,10 @@ Receive command is Security Protocol field dependent as defined in SPC-4.
 
 OPTIONS
 -------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Target a specific namespace for this security command.
+
 -f <file>::
 --file=<file>::
 	Path to file used as the security protocol's payload. Required

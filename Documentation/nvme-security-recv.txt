@@ -12,6 +12,7 @@ SYNOPSIS
 		    [--secp=<security-protocol> | -p <security-protocol>]
 		    [--spsp=<protocol-specific> | -s <protocol-specific>]
 		    [--tl=<transfer-length> | -t <transfer-length>]
+		    [--namespace-id=<nsid> | -n <nsid>]
 		    [-b | --raw-binary]
 
 DESCRIPTION
@@ -33,6 +34,10 @@ controller reset occurs.
 
 OPTIONS
 -------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Target a specific namespace for this security command.
+
 -x <size>::
 --size=<size>::
 	Size of buffer to allocate. One success it will be printed
