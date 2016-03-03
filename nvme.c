@@ -1239,7 +1239,7 @@ static int show_registers(int argc, char **argv)
 
 	while ((opt = getopt_long(argc, (char **)argv, "", NULL,
 					&long_index)) != -1);
-	get_dev(argc, argv);
+	devicename = basename(argv[optind]);
 
 	get_registers(&bar);
 	printf("cap     : ");
