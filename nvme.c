@@ -1026,7 +1026,7 @@ static int get_feature(int argc, char **argv)
 		{"data-len",       'l', "NUM", CFG_POSITIVE, &cfg.data_len,       required_argument, data_len},
 		{"raw-binary",     'b', "FLAG",CFG_NONE,     &cfg.raw_binary,     no_argument,       raw_binary},
 		{"cdw11",          'c', "NUM", CFG_POSITIVE, &cfg.cdw11,          required_argument, cdw11},
-		{"human-readable", 'h', "FLAG",CFG_NONE,     &cfg.human_readable, no_argument,       human_readable},
+		{"human-readable", 'H', "FLAG",CFG_NONE,     &cfg.human_readable, no_argument,       human_readable},
 		{0}
 	};
 
@@ -1404,10 +1404,6 @@ static int set_feature(int argc, char **argv)
 
 	get_dev(1, argc, argv);
 
-	if (cfg.value == -1) {
-		fprintf(stderr, "feature value required param\n");
-		return EINVAL;
-	}
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
 		return EINVAL;
