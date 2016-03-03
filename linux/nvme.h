@@ -69,7 +69,7 @@ struct nvme_id_ctrl {
 	__u8			ieee[3];
 	__u8			cmic;
 	__u8			mdts;
-	__u16			cntlid;
+	__le16			cntlid;
 	__le32			ver;
 	__le32			rtd3r;
 	__le32			rtd3e;
@@ -298,36 +298,6 @@ enum nvme_opcode {
 	nvme_cmd_resv_release	= 0x15,
 };
 
-struct nvme_common_command {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__le32			cdw2[2];
-	__le64			metadata;
-	__le64			prp1;
-	__le64			prp2;
-	__le32			cdw10[6];
-};
-
-struct nvme_rw_command {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__u64			rsvd2;
-	__le64			metadata;
-	__le64			prp1;
-	__le64			prp2;
-	__le64			slba;
-	__le16			length;
-	__le16			control;
-	__le32			dsmgmt;
-	__le32			reftag;
-	__le16			apptag;
-	__le16			appmask;
-};
-
 enum {
 	NVME_RW_LR			= 1 << 15,
 	NVME_RW_FUA			= 1 << 14,
@@ -346,19 +316,6 @@ enum {
 	NVME_RW_DSM_LATENCY_LOW		= 3 << 4,
 	NVME_RW_DSM_SEQ_REQ		= 1 << 6,
 	NVME_RW_DSM_COMPRESSED		= 1 << 7,
-};
-
-struct nvme_dsm_cmd {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__u64			rsvd2[2];
-	__le64			prp1;
-	__le64			prp2;
-	__le32			nr;
-	__le32			attributes;
-	__u32			rsvd12[4];
 };
 
 enum {
@@ -433,117 +390,6 @@ enum {
 	NVME_FWACT_ACTV		= (2 << 3),
 };
 
-struct nvme_identify {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__u64			rsvd2[2];
-	__le64			prp1;
-	__le64			prp2;
-	__le32			cns;
-	__u32			rsvd11[5];
-};
-
-struct nvme_features {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__u64			rsvd2[2];
-	__le64			prp1;
-	__le64			prp2;
-	__le32			fid;
-	__le32			dword11;
-	__u32			rsvd12[4];
-};
-
-struct nvme_create_cq {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__u32			rsvd1[5];
-	__le64			prp1;
-	__u64			rsvd8;
-	__le16			cqid;
-	__le16			qsize;
-	__le16			cq_flags;
-	__le16			irq_vector;
-	__u32			rsvd12[4];
-};
-
-struct nvme_create_sq {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__u32			rsvd1[5];
-	__le64			prp1;
-	__u64			rsvd8;
-	__le16			sqid;
-	__le16			qsize;
-	__le16			sq_flags;
-	__le16			cqid;
-	__u32			rsvd12[4];
-};
-
-struct nvme_delete_queue {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__u32			rsvd1[9];
-	__le16			qid;
-	__u16			rsvd10;
-	__u32			rsvd11[5];
-};
-
-struct nvme_abort_cmd {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__u32			rsvd1[9];
-	__le16			sqid;
-	__u16			cid;
-	__u32			rsvd11[5];
-};
-
-struct nvme_download_firmware {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__u32			rsvd1[5];
-	__le64			prp1;
-	__le64			prp2;
-	__le32			numd;
-	__le32			offset;
-	__u32			rsvd12[4];
-};
-
-struct nvme_format_cmd {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__u64			rsvd2[4];
-	__le32			cdw10;
-	__u32			rsvd11[5];
-};
-
-struct nvme_command {
-	union {
-		struct nvme_common_command common;
-		struct nvme_rw_command rw;
-		struct nvme_identify identify;
-		struct nvme_features features;
-		struct nvme_create_cq create_cq;
-		struct nvme_create_sq create_sq;
-		struct nvme_delete_queue delete_queue;
-		struct nvme_download_firmware dlfw;
-		struct nvme_format_cmd format;
-		struct nvme_dsm_cmd dsm;
-		struct nvme_abort_cmd abort;
-	};
-};
-
 enum {
 	NVME_SC_SUCCESS			= 0x0,
 	NVME_SC_INVALID_OPCODE		= 0x1,
@@ -595,15 +441,6 @@ enum {
 	NVME_SC_COMPARE_FAILED		= 0x285,
 	NVME_SC_ACCESS_DENIED		= 0x286,
 	NVME_SC_DNR			= 0x4000,
-};
-
-struct nvme_completion {
-	__le32	result;		/* Used by admin commands to return data */
-	__u32	rsvd;
-	__le16	sq_head;	/* how much of this queue may be reclaimed */
-	__le16	sq_id;		/* submission queue that generated this entry */
-	__u16	command_id;	/* of the command which completed */
-	__le16	status;		/* did the command fail, and if so, why? */
 };
 
 struct nvme_user_io {

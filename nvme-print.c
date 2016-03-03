@@ -72,11 +72,13 @@ static void show_nvme_id_ctrl_cmic(__u8 cmic)
 	printf("\n");
 }
 
-static void show_nvme_id_ctrl_oaes(__le32 oaes)
+static void show_nvme_id_ctrl_oaes(__le32 ctrl_oaes)
 {
-	__le32 rsvd0 = (oaes & 0xFFFFFE00) >> 9;
-	__le32 nace = (oaes & 0x100) >> 8;
-	__le32 rsvd1 = oaes & 0xFF;
+	__u32 oaes = le32toh(ctrl_oaes);
+	__u32 rsvd0 = (oaes & 0xFFFFFE00) >> 9;
+	__u32 nace = (oaes & 0x100) >> 8;
+	__u32 rsvd1 = oaes & 0xFF;
+
 	if (rsvd0)
 		printf(" [31:9] : %#x\tReserved\n", rsvd0);
 	printf("  [8:8] : %#x\tNamespace Attribute Changed Event %sSupported\n",
@@ -86,13 +88,15 @@ static void show_nvme_id_ctrl_oaes(__le32 oaes)
 	printf("\n");
 }
 
-static void show_nvme_id_ctrl_oacs(__le16 oacs)
+static void show_nvme_id_ctrl_oacs(__le16 ctrl_oacs)
 {
-	__le16 rsvd = (oacs & 0xFFF0) >> 4;
-	__le16 nsm = (oacs & 0x8) >> 3;
-	__le16 fwc = (oacs & 0x4) >> 2;
-	__le16 fmt = (oacs & 0x2) >> 1;
-	__le16 sec = oacs & 0x1;
+	__u16 oacs = le16toh(ctrl_oacs);
+	__u16 rsvd = (oacs & 0xFFF0) >> 4;
+	__u16 nsm = (oacs & 0x8) >> 3;
+	__u16 fwc = (oacs & 0x4) >> 2;
+	__u16 fmt = (oacs & 0x2) >> 1;
+	__u16 sec = oacs & 0x1;
+
 	if (rsvd)
 		printf(" [15:4] : %#x\tReserved\n", rsvd);
 	printf("  [3:3] : %#x\tNS Management and Attachment %sSupported\n",
@@ -158,13 +162,15 @@ static void show_nvme_id_ctrl_apsta(__u8 apsta)
 	printf("\n");
 }
 
-static void show_nvme_id_ctrl_rpmbs(__le32 rpmbs)
+static void show_nvme_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
 {
-	__le32 asz = (rpmbs & 0xFF000000) >> 24;
-	__le32 tsz = (rpmbs & 0xFF0000) >> 16;
-	__le32 rsvd = (rpmbs & 0xFFC0) >> 6;
-	__le32 auth = (rpmbs & 0x38) >> 3;
-	__le32 rpmb = rpmbs & 0x3;
+	__u32 rpmbs = le32toh(ctrl_rpmbs);
+	__u32 asz = (rpmbs & 0xFF000000) >> 24;
+	__u32 tsz = (rpmbs & 0xFF0000) >> 16;
+	__u32 rsvd = (rpmbs & 0xFFC0) >> 6;
+	__u32 auth = (rpmbs & 0x38) >> 3;
+	__u32 rpmb = rpmbs & 0x3;
+
 	printf(" [31:24]: %#x\tAccess Size\n", asz);
 	printf(" [23:16]: %#x\tTotal Size\n", tsz);
 	if (rsvd)
@@ -192,15 +198,17 @@ static void show_nvme_id_ctrl_cqes(__u8 cqes)
 	printf("\n");
 }
 
-static void show_nvme_id_ctrl_oncs(__le16 oncs)
+static void show_nvme_id_ctrl_oncs(__le16 ctrl_oncs)
 {
-	__le16 rsvd = (oncs & 0xFFC0) >> 6;
-	__le16 resv = (oncs & 0x20) >> 5;
-	__le16 save = (oncs & 0x10) >> 4;
-	__le16 wzro = (oncs & 0x8) >> 3;
-	__le16 dsms = (oncs & 0x4) >> 2;
-	__le16 wunc = (oncs & 0x2) >> 1;
-	__le16 cmp = oncs & 0x1;
+	__u16 oncs = le16toh(oncs);
+	__u16 rsvd = (oncs & 0xFFC0) >> 6;
+	__u16 resv = (oncs & 0x20) >> 5;
+	__u16 save = (oncs & 0x10) >> 4;
+	__u16 wzro = (oncs & 0x8) >> 3;
+	__u16 dsms = (oncs & 0x4) >> 2;
+	__u16 wunc = (oncs & 0x2) >> 1;
+	__u16 cmp = oncs & 0x1;
+
 	if (rsvd)
 		printf(" [15:6] : %#x\tReserved\n", rsvd);
 	printf("  [5:5] : %#x\tReservations %sSupported\n",
@@ -218,10 +226,12 @@ static void show_nvme_id_ctrl_oncs(__le16 oncs)
 	printf("\n");
 }
 
-static void show_nvme_id_ctrl_fuses(__le16 fuses)
+static void show_nvme_id_ctrl_fuses(__le16 ctrl_fuses)
 {
-	__le16 rsvd = (fuses & 0xFE) >> 1;
-	__le16 cmpw = fuses & 0x1;
+	__u16 fuses = le16toh(fuses);
+	__u16 rsvd = (fuses & 0xFE) >> 1;
+	__u16 cmpw = fuses & 0x1;
+
 	if (rsvd)
 		printf(" [15:1] : %#x\tReserved\n", rsvd);
 	printf("  [0:0] : %#x\tFused Compare and Write %sSupported\n",
@@ -268,14 +278,16 @@ static void show_nvme_id_ctrl_nvscc(__u8 nvscc)
 	printf("\n");
 }
 
-static void show_nvme_id_ctrl_sgls(__le32 sgls)
+static void show_nvme_id_ctrl_sgls(__le32 ctrl_sgls)
 {
-	__le32 rsvd0 = (sgls & 0xFFF80000) >> 19;
-	__le32 sglltb = (sgls & 0x40000) >> 18;
-	__le32 bacmdb = (sgls & 0x20000) >> 17;
-	__le32 bbs = (sgls & 0x10000) >> 16;
-	__le32 rsvd1 = (sgls & 0xFFFE) >> 1;
-	__le32 sglsp = sgls & 0x1;
+	__u32 sgls = le32toh(ctrl_sgls);
+	__u32 rsvd0 = (sgls & 0xFFF80000) >> 19;
+	__u32 sglltb = (sgls & 0x40000) >> 18;
+	__u32 bacmdb = (sgls & 0x20000) >> 17;
+	__u32 bbs = (sgls & 0x10000) >> 16;
+	__u32 rsvd1 = (sgls & 0xFFFE) >> 1;
+	__u32 sglsp = sgls & 0x1;
+
 	if (rsvd0)
 		printf(" [31:19]: %#x\tReserved\n", rsvd0);
 	if (sglsp || (!sglsp && sglltb))
@@ -464,12 +476,12 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	printf("fpi     : %#x\n", ns->fpi);
 	if (human)
 		show_nvme_id_ns_fpi(ns->fpi);
-	printf("nawun   : %d\n", ns->nawun);
-	printf("nawupf  : %d\n", ns->nawupf);
-	printf("nacwu   : %d\n", ns->nacwu);
-	printf("nabsn   : %d\n", ns->nabsn);
-	printf("nabo    : %d\n", ns->nabo);
-	printf("nabspf  : %d\n", ns->nabspf);
+	printf("nawun   : %d\n", le16toh(ns->nawun));
+	printf("nawupf  : %d\n", le16toh(ns->nawupf));
+	printf("nacwu   : %d\n", le16toh(ns->nacwu));
+	printf("nabsn   : %d\n", le16toh(ns->nabsn));
+	printf("nabo    : %d\n", le16toh(ns->nabo));
+	printf("nabspf  : %d\n", le16toh(ns->nabspf));
 	printf("nvmcap  : %.0Lf\n", int128_to_double(ns->nvmcap));
 
 	printf("nguid   : ");
@@ -486,14 +498,14 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 		if (human)
 			printf("LBA Format %2d : Metadata Size: %-3d bytes - "
 				"Data Size: %-2d bytes - Relative Performance: %#x %s %s\n", i,
-				ns->lbaf[i].ms, 1 << ns->lbaf[i].ds, ns->lbaf[i].rp,
+				le16toh(ns->lbaf[i].ms), 1 << ns->lbaf[i].ds, ns->lbaf[i].rp,
 				ns->lbaf[i].rp == 3 ? "Degraded" :
 				ns->lbaf[i].rp == 2 ? "Good" :
 				ns->lbaf[i].rp == 1 ? "Better" : "Best",
 				i == (ns->flbas & 0xf) ? "(in use)" : "");
 		else
 			printf("lbaf %2d : ms:%-3d ds:%-2d rp:%#x %s\n", i,
-				ns->lbaf[i].ms, ns->lbaf[i].ds, ns->lbaf[i].rp,
+				le16toh(ns->lbaf[i].ms), ns->lbaf[i].ds, ns->lbaf[i].rp,
 				i == (ns->flbas & 0xf) ? "(in use)" : "");
 	}
 	if (vs) {
@@ -502,8 +514,10 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	}
 }
 
-static void print_ps_power_and_scale(__le16 power, __u8 scale)
+static void print_ps_power_and_scale(__le16 ctr_power, __u8 scale)
 {
+	__u16 power = le16toh(ctr_power);
+
 	switch (scale & 0x3) {
 	case 0:
 		/* Not reported for this power state */
@@ -525,14 +539,45 @@ static void print_ps_power_and_scale(__le16 power, __u8 scale)
 	}
 }
 
-void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
+static void show_nvme_id_ctrl_power(struct nvme_id_ctrl *ctrl, unsigned int mode)
 {
 	int i;
-	int human = mode & HUMAN,
-		vs = mode & VS;
 
-	printf("vid     : %#x\n", ctrl->vid);
-	printf("ssvid   : %#x\n", ctrl->ssvid);
+
+	for (i = 0; i <= ctrl->npss; i++) {
+		__u16 max_power = le16toh(ctrl->psd[i].max_power);
+
+		printf("ps %4d : mp:", i);
+
+		if (ctrl->psd[i].flags & NVME_PS_FLAGS_MAX_POWER_SCALE)
+			printf("%01u.%04uW ", max_power / 10000, max_power % 10000);
+		else
+			printf("%01u.%02uW ", max_power / 100, max_power % 100);
+
+		if (ctrl->psd[i].flags & NVME_PS_FLAGS_NON_OP_STATE)
+			printf("non-");
+
+		printf("operational enlat:%d exlat:%d rrt:%d rrl:%d\n"
+			"          rwt:%d rwl:%d idle_power:",
+			le32toh(ctrl->psd[i].entry_lat), le32toh(ctrl->psd[i].exit_lat),
+			ctrl->psd[i].read_tput, ctrl->psd[i].read_lat,
+			ctrl->psd[i].write_tput, ctrl->psd[i].write_lat);
+		print_ps_power_and_scale(ctrl->psd[i].idle_power,
+					 ctrl->psd[i].idle_scale);
+		printf(" active_power:");
+		print_ps_power_and_scale(ctrl->psd[i].active_power,
+					 ctrl->psd[i].active_work_scale);
+		printf("\n");
+
+	}
+}
+
+void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
+{
+	int human = mode & HUMAN, vs = mode & VS;
+
+	printf("vid     : %#x\n", le16toh(ctrl->vid));
+	printf("ssvid   : %#x\n", le16toh(ctrl->ssvid));
 	printf("sn      : %-20.20s\n", ctrl->sn);
 	printf("mn      : %-20.20s\n", ctrl->mn);
 	printf("fr      : %-.8s\n", ctrl->fr);
@@ -543,14 +588,14 @@ void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 	if (human)
 		show_nvme_id_ctrl_cmic(ctrl->cmic);
 	printf("mdts    : %d\n", ctrl->mdts);
-	printf("cntlid  : %x\n", ctrl->cntlid);
-	printf("ver     : %x\n", ctrl->ver);
-	printf("rtd3r   : %x\n", ctrl->rtd3r);
-	printf("rtd3e   : %x\n", ctrl->rtd3e);
-	printf("oaes    : %#x\n", ctrl->oaes);
+	printf("cntlid  : %x\n", le16toh(ctrl->cntlid));
+	printf("ver     : %x\n", le32toh(ctrl->ver));
+	printf("rtd3r   : %x\n", le32toh(ctrl->rtd3r));
+	printf("rtd3e   : %x\n", le32toh(ctrl->rtd3e));
+	printf("oaes    : %#x\n", le32toh(ctrl->oaes));
 	if (human)
 		show_nvme_id_ctrl_oaes(ctrl->oaes);
-	printf("oacs    : %#x\n", ctrl->oacs);
+	printf("oacs    : %#x\n", le16toh(ctrl->oacs));
 	if (human)
 		show_nvme_id_ctrl_oacs(ctrl->oacs);
 	printf("acl     : %d\n", ctrl->acl);
@@ -569,13 +614,14 @@ void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 	printf("apsta   : %#x\n", ctrl->apsta);
 	if (human)
 		show_nvme_id_ctrl_apsta(ctrl->apsta);
-	printf("wctemp  : %d\n", ctrl->wctemp);
-	printf("cctemp  : %d\n", ctrl->cctemp);
-	printf("mtfa    : %d\n", ctrl->mtfa);
-	printf("hmmin   : %d\n", ctrl->hmmin);
+	printf("wctemp  : %d\n", le16toh(ctrl->wctemp));
+	printf("cctemp  : %d\n", le16toh(ctrl->cctemp));
+	printf("mtfa    : %d\n", le16toh(ctrl->mtfa));
+	printf("hmpre   : %d\n", le32toh(ctrl->hmpre));
+	printf("hmmin   : %d\n", le32toh(ctrl->hmmin));
 	printf("tnvmcap : %.0Lf\n", int128_to_double(ctrl->tnvmcap));
 	printf("unvmcap : %.0Lf\n", int128_to_double(ctrl->unvmcap));
-	printf("rpmbs   : %#x\n", ctrl->rpmbs);
+	printf("rpmbs   : %#x\n", le32toh(ctrl->rpmbs));
 	if (human)
 		show_nvme_id_ctrl_rpmbs(ctrl->rpmbs);
 	printf("sqes    : %#x\n", ctrl->sqes);
@@ -584,11 +630,11 @@ void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 	printf("cqes    : %#x\n", ctrl->cqes);
 	if (human)
 		show_nvme_id_ctrl_cqes(ctrl->cqes);
-	printf("nn      : %d\n", ctrl->nn);
-	printf("oncs    : %#x\n", ctrl->oncs);
+	printf("nn      : %d\n", le32toh(ctrl->nn));
+	printf("oncs    : %#x\n", le16toh(ctrl->oncs));
 	if (human)
 		show_nvme_id_ctrl_oncs(ctrl->oncs);
-	printf("fuses   : %#x\n", ctrl->fuses);
+	printf("fuses   : %#x\n", le16toh(ctrl->fuses));
 	if (human)
 		show_nvme_id_ctrl_fuses(ctrl->fuses);
 	printf("fna     : %#x\n", ctrl->fna);
@@ -597,39 +643,17 @@ void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 	printf("vwc     : %#x\n", ctrl->vwc);
 	if (human)
 		show_nvme_id_ctrl_vwc(ctrl->vwc);
-	printf("awun    : %d\n", ctrl->awun);
-	printf("awupf   : %d\n", ctrl->awupf);
+	printf("awun    : %d\n", le16toh(ctrl->awun));
+	printf("awupf   : %d\n", le16toh(ctrl->awupf));
 	printf("nvscc   : %d\n", ctrl->nvscc);
 	if (human)
 		show_nvme_id_ctrl_nvscc(ctrl->nvscc);
-	printf("acwu    : %d\n", ctrl->acwu);
-	printf("sgls    : %x\n", ctrl->sgls);
+	printf("acwu    : %d\n", le16toh(ctrl->acwu));
+	printf("sgls    : %x\n", le32toh(ctrl->sgls));
 	if (human)
 		show_nvme_id_ctrl_sgls(ctrl->sgls);
 
-	for (i = 0; i <= ctrl->npss; i++) {
-		printf("ps %4d : mp:", i);
-
-		if (ctrl->psd[i].flags & NVME_PS_FLAGS_MAX_POWER_SCALE)
-			printf("%01u.%04uW ", ctrl->psd[i].max_power / 10000, ctrl->psd[i].max_power % 10000);
-		else
-			printf("%01u.%02uW ", ctrl->psd[i].max_power / 100, ctrl->psd[i].max_power % 100);
-
-		if (ctrl->psd[i].flags & NVME_PS_FLAGS_NON_OP_STATE)
-			printf("non-");
-		printf("operational enlat:%d exlat:%d rrt:%d rrl:%d\n"
-			"          rwt:%d rwl:%d idle_power:",
-			ctrl->psd[i].entry_lat, ctrl->psd[i].exit_lat,
-			ctrl->psd[i].read_tput, ctrl->psd[i].read_lat,
-			ctrl->psd[i].write_tput, ctrl->psd[i].write_lat);
-		print_ps_power_and_scale(ctrl->psd[i].idle_power,
-					 ctrl->psd[i].idle_scale);
-		printf(" active_power:");
-		print_ps_power_and_scale(ctrl->psd[i].active_power,
-					 ctrl->psd[i].active_work_scale);
-		printf("\n");
-
-	}
+	show_nvme_id_ctrl_power(ctrl, mode);
 	if (vs) {
 		printf("vs[]:\n");
 		d(ctrl->vs, sizeof(ctrl->vs), 16, 1);
@@ -750,10 +774,12 @@ void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 		int128_to_double(smart->media_errors));
 	printf("num_err_log_entries                 : %'.0Lf\n",
 		int128_to_double(smart->num_err_log_entries));
-	printf("Critical Composite Temperature Time : %u\n", smart->warning_temp_time);
+	printf("Warning Temperature Time            : %u\n", le32toh(smart->warning_temp_time));
+	printf("Critical Composite Temperature Time : %u\n", le32toh(smart->critical_comp_time));
 	for (c=0; c < 8; c++) {
-	    printf("Temperature Sensor %d                : %u C\n", c + 1,
-			smart->temp_sensor[c] ? smart->temp_sensor[c] - 273 : 0);
+		__u16 temp = le16toh(smart->temp_sensor[c]);
+		printf("Temperature Sensor %d                : %u C\n", c + 1,
+			temp ? temp - 273 : 0);
 	}
 }
 
@@ -769,9 +795,9 @@ void show_intel_smart_log(struct nvme_additional_smart_log *smart, unsigned int 
 		int48_to_long(smart->erase_fail_cnt.raw));
 	printf("wear_leveling                   : %3d%%       min: %u, max: %u, avg: %u\n",
 		smart->wear_leveling_cnt.norm,
-		smart->wear_leveling_cnt.wear_level.min,
-		smart->wear_leveling_cnt.wear_level.max,
-		smart->wear_leveling_cnt.wear_level.avg);
+		le16toh(smart->wear_leveling_cnt.wear_level.min),
+		le16toh(smart->wear_leveling_cnt.wear_level.max),
+		le16toh(smart->wear_leveling_cnt.wear_level.avg));
 	printf("end_to_end_error_detection_count: %3d%%       %lu\n",
 		smart->e2e_err_cnt.norm,
 		int48_to_long(smart->e2e_err_cnt.raw));
