@@ -118,7 +118,6 @@ enum {
 struct command {
 	char *name;
 	char *help;
-	char *path;
 	char *man;
 	int (*fn)(int argc, char **argv);
 };
@@ -129,7 +128,6 @@ struct command commands[] = {
 		.name = n, \
 		.help = h, \
 		.fn = f, \
-		.path = "Documentation/nvme-"n".1", \
 		.man = "nvme-"n, \
 	},
 	COMMAND_LIST
@@ -165,7 +163,7 @@ static void open_dev(const char *dev)
 	exit(errno);
 }
 
-static void get_dev(int optind, int argc, char **argv)
+static void get_dev(int argc, char **argv)
 {
 	if (optind >= argc) {
 		errno = EINVAL;
@@ -202,7 +200,7 @@ static int get_smart_log(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			(void *)&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	err = nvme_smart_log(fd, cfg.namespace_id, &smart_log);
 	if (!err) {
@@ -241,7 +239,7 @@ static int get_additional_smart_log(int argc, char **argv)
 	};
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	err = nvme_intel_smart_log(fd, cfg.namespace_id, &smart_log);
 	if (!err) {
@@ -288,7 +286,7 @@ static int get_error_log(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 	if (!cfg.log_entries) {
 		fprintf(stderr, "non-zero log-entries is required param\n");
 		return EINVAL;
@@ -339,7 +337,7 @@ static int get_fw_log(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	err = nvme_fw_log(fd, &fw_log);
 	if (!err) {
@@ -391,7 +389,7 @@ static int get_log(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (!cfg.log_len) {
 		fprintf(stderr, "non-zero log-len is required param\n");
@@ -442,7 +440,7 @@ static int list_ctrl(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000))
 		return ENOMEM;
@@ -487,7 +485,7 @@ static int list_ns(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	err = nvme_identify_ns_list(fd, cfg.namespace_id, !!cfg.all, ns_list);
 	if (!err) {
@@ -533,7 +531,7 @@ static int delete_ns(int argc, char **argv)
 						commands[DELETE_NS].name);
 		return EINVAL;
 	}
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	err = nvme_ns_delete(fd, cfg.namespace_id);
 	if (!err)
@@ -583,7 +581,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 	for (i = 0; i < num; i++)
 		ctrlist[i] = ((uint16_t)list[i]);
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (attach)	
 		err = nvme_ns_attach_ctrls(fd, cfg.namespace_id, num, ctrlist);
@@ -658,7 +656,7 @@ static int create_ns(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic, &nsid);
 	if (!err)
@@ -684,19 +682,13 @@ static char *nvme_char_from_block(char *block)
 	return block;
 }
 
-static void get_registers(struct nvme_bar **bar, unsigned char_only)
+static void get_registers(struct nvme_bar **bar)
 {
 	int pci_fd;
 	char *base, path[512];
 	void *membase;
 
-	if (char_only && !S_ISCHR(nvme_stat.st_mode)) {
-		fprintf(stderr, "%s is not a character device\n", devicename);
-		exit(ENODEV);
-	}
-
-	base = nvme_char_from_block(basename(devicename));
-
+	base = nvme_char_from_block((char *)devicename);
 	sprintf(path, "/sys/class/nvme/%s/device/resource0", base);
 	pci_fd = open(path, O_RDONLY);
 	if (pci_fd < 0) {
@@ -704,13 +696,13 @@ static void get_registers(struct nvme_bar **bar, unsigned char_only)
 		pci_fd = open(path, O_RDONLY);
 	}
 	if (pci_fd < 0) {
-		fprintf(stderr, "%s did not find a pci resource\n", devicename);
+		fprintf(stderr, "%s did not find a pci resource\n", base);
 		exit(ENODEV);
 	}
 
 	membase = mmap(0, getpagesize(), PROT_READ, MAP_SHARED, pci_fd, 0);
 	if (!membase) {
-		fprintf(stderr, "%s failed to map\n", devicename);
+		fprintf(stderr, "%s failed to map\n", base);
 		exit(ENODEV);
 	}
 	*bar = membase;
@@ -735,7 +727,7 @@ static void get_version(struct list_item* list_item)
 	list_item->ver = list_item->ctrl.ver;
 	if (list_item->ctrl.ver)
 		return;
-	get_registers(&bar, 0);
+	get_registers(&bar);
 	list_item->ver = bar->vs;
 }
 
@@ -884,7 +876,7 @@ static int id_ctrl(int argc, char **argv)
 	if (cfg.human_readable)
 		flags |= HUMAN;
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	err = nvme_identify_ctrl(fd, &ctrl);
 	if (!err) {
@@ -943,7 +935,7 @@ static int id_ns(int argc, char **argv)
 	if (cfg.human_readable)
 		flags |= HUMAN;
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
@@ -1035,7 +1027,7 @@ static int get_feature(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (cfg.sel > 7) {
 		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
@@ -1129,7 +1121,7 @@ static int fw_download(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	fw_fd = open(cfg.fw, O_RDONLY);
 	cfg.offset <<= 2;
@@ -1208,7 +1200,7 @@ static int fw_activate(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (cfg.slot > 7) {
 		fprintf(stderr, "invalid slot:%d\n", cfg.slot);
@@ -1244,13 +1236,12 @@ static int show_registers(int argc, char **argv)
 {
 	int opt, long_index;
 	struct nvme_bar *bar;
-	static struct option opts[] = {};
 
-	while ((opt = getopt_long(argc, (char **)argv, "", opts,
+	while ((opt = getopt_long(argc, (char **)argv, "", NULL,
 					&long_index)) != -1);
-	get_dev(optind, argc, argv);
+	get_dev(argc, argv);
 
-	get_registers(&bar, 1);
+	get_registers(&bar);
 	printf("cap     : ");
 	print_lo_hi_64((uint32_t *)&bar->cap);
 
@@ -1321,7 +1312,7 @@ static int format(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	/* ses & pi checks set to 7 for forward-compatibility */
 	if (cfg.ses > 7) {
@@ -1423,7 +1414,7 @@ static int set_feature(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
@@ -1519,7 +1510,7 @@ static int sec_send(int argc, char **argv)
 
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	sec_fd = open(cfg.file, O_RDONLY);
 	if (sec_fd < 0) {
@@ -1580,7 +1571,7 @@ static int write_uncor(int argc, char **argv)
 
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
@@ -1656,7 +1647,7 @@ static int write_zeroes(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (cfg.prinfo > 0xf)
 		return EINVAL;
@@ -1746,7 +1737,7 @@ static int dsm(int argc, char **argv)
 
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, ctx_attrs, array_len(ctx_attrs));
 	nb = argconfig_parse_comma_sep_array(cfg.blocks, nlbs, array_len(nlbs));
@@ -1810,7 +1801,7 @@ static int flush(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	err = nvme_flush(fd, cfg.namespace_id);
 	if (err < 0)
@@ -1869,7 +1860,7 @@ static int resv_acquire(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
@@ -1939,7 +1930,7 @@ static int resv_register(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
@@ -2011,7 +2002,7 @@ static int resv_release(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
@@ -2077,7 +2068,7 @@ static int resv_report(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
@@ -2214,7 +2205,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 			return EINVAL;
 		}
 	}
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (!cfg.data_size)	{
 		fprintf(stderr, "data size not provided\n");
@@ -2365,7 +2356,7 @@ static int sec_recv(int argc, char **argv)
 	argconfig_parse(argc, argv, desc, command_line_options,
 			&cfg, sizeof(cfg));
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 
 	if (cfg.size) {
 		if (posix_memalign(&sec_buf, getpagesize(), cfg.size)) {
@@ -2501,7 +2492,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc)
 		}
 	}
 
-	get_dev(1, argc, argv);
+	get_dev(argc, argv);
 	if (cfg.metadata_len)
 		metadata = malloc(cfg.metadata_len);
 	if (cfg.data_len) {
