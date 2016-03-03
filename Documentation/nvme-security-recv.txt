@@ -11,6 +11,7 @@ SYNOPSIS
 'nvme security-recv' [<device>] [--size=<size> | -x <size>]
 		    [--secp=<security-protocol> | -p <security-protocol>]
 		    [--spsp=<protocol-specific> | -s <protocol-specific>]
+		    [--nssf=<nvme-specific> | -N <nvme-specific>]
 		    [--tl=<transfer-length> | -t <transfer-length>]
 		    [--namespace-id=<nsid> | -n <nsid>]
 		    [-b | --raw-binary]
@@ -37,6 +38,12 @@ OPTIONS
 -n <nsid>::
 --namespace-id=<nsid>::
 	Target a specific namespace for this security command.
+
+-N <nssf>::
+--nssf=<nssf>::
+	NVMe Security Specific field. If using security protocol EAh
+	assigned for NVMe use, the NVMe security specific field indicates
+	which reply memory buffer target.
 
 -x <size>::
 --size=<size>::

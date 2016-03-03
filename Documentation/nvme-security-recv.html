@@ -755,6 +755,7 @@ nvme-security-recv(1) Manual Page
 <pre class="content"><em>nvme security-recv</em> [&lt;device&gt;] [--size=&lt;size&gt; | -x &lt;size&gt;]
                     [--secp=&lt;security-protocol&gt; | -p &lt;security-protocol&gt;]
                     [--spsp=&lt;protocol-specific&gt; | -s &lt;protocol-specific&gt;]
+                    [--nssf=&lt;nvme-specific&gt; | -N &lt;nvme-specific&gt;]
                     [--tl=&lt;transfer-length&gt; | -t &lt;transfer-length&gt;]
                     [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                     [-b | --raw-binary]</pre>
@@ -792,6 +793,19 @@ controller reset occurs.</p></div>
 <dd>
 <p>
         Target a specific namespace for this security command.
+</p>
+</dd>
+<dt class="hdlist1">
+-N &lt;nssf&gt;
+</dt>
+<dt class="hdlist1">
+--nssf=&lt;nssf&gt;
+</dt>
+<dd>
+<p>
+        NVMe Security Specific field. If using security protocol EAh
+        assigned for NVMe use, the NVMe security specific field indicates
+        which reply memory buffer target.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -874,7 +888,7 @@ controller reset occurs.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-03 11:13:26 MST
+Last updated 2016-03-03 11:36:23 MST
 </div>
 </div>
 </body>

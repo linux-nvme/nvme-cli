@@ -35,6 +35,7 @@ nvme-security-recv \- Security Recv command
 \fInvme security\-recv\fR [<device>] [\-\-size=<size> | \-x <size>]
                     [\-\-secp=<security\-protocol> | \-p <security\-protocol>]
                     [\-\-spsp=<protocol\-specific> | \-s <protocol\-specific>]
+                    [\-\-nssf=<nvme\-specific> | \-N <nvme\-specific>]
                     [\-\-tl=<transfer\-length> | \-t <transfer\-length>]
                     [\-\-namespace\-id=<nsid> | \-n <nsid>]
                     [\-b | \-\-raw\-binary]
@@ -51,6 +52,11 @@ Each Security Receive command returns the appropriate data corresponding to a Se
 \-n <nsid>, \-\-namespace\-id=<nsid>
 .RS 4
 Target a specific namespace for this security command\&.
+.RE
+.PP
+\-N <nssf>, \-\-nssf=<nssf>
+.RS 4
+NVMe Security Specific field\&. If using security protocol EAh assigned for NVMe use, the NVMe security specific field indicates which reply memory buffer target\&.
 .RE
 .PP
 \-x <size>, \-\-size=<size>

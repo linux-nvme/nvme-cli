@@ -1485,6 +1485,7 @@ static int sec_send(int argc, char **argv)
 	const char *spsp = "security-protocol-specific (cf. SPC-4)";
 	const char *tl = "transfer length (cf. SPC-4)";
 	const char *namespace_id = "desired namespace";
+	const char *nssf = "NVMe Security Specific Field";
 	int err, sec_fd = -1;
 	void *sec_buf;
 	unsigned int sec_size;
@@ -1493,6 +1494,7 @@ static int sec_send(int argc, char **argv)
 	struct config {
 		__u32 namespace_id;
 		char  *file;
+		__u8  nssf;
 		__u8  secp;
 		__u16 spsp;
 		__u32 tl;
@@ -1508,6 +1510,7 @@ static int sec_send(int argc, char **argv)
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
 		{"file",         'f', "FILE", CFG_STRING,   &cfg.file,         required_argument, file},
+		{"nssf",         'N', "NUM",  CFG_BYTE,     &cfg.nssf,         required_argument, nssf},
 		{"secp",         'p', "NUM",  CFG_BYTE,     &cfg.secp,         required_argument, secp},
 		{"spsp",         's', "NUM",  CFG_SHORT,    &cfg.spsp,         required_argument, spsp},
 		{"tl",           't', "NUM",  CFG_POSITIVE, &cfg.tl,           required_argument, tl},
@@ -1536,10 +1539,8 @@ static int sec_send(int argc, char **argv)
 		return ENOMEM;
 	}
 
-	err = nvme_sec_send(fd,
-			cfg.namespace_id,
-			0 /* FIXME: add nssf */,
-			cfg.spsp, cfg.secp, cfg.tl, sec_size, sec_buf, &result);
+	err = nvme_sec_send(fd, cfg.namespace_id, cfg.nssf, cfg.spsp, cfg.secp,
+			cfg.tl, sec_size, sec_buf, &result);
 	if (err < 0)
 		return errno;
 	else if (err != 0)
@@ -2328,6 +2329,7 @@ static int sec_recv(int argc, char **argv)
 	const char *al = "allocation length (cf. SPC-4)";
 	const char *raw_binary = "dump output in binary format";
 	const char *namespace_id = "desired namespace";
+	const char *nssf = "NVMe Security Specific Field";
 	int err;
 	void *sec_buf = NULL;
 	__u32 result;
@@ -2336,6 +2338,7 @@ static int sec_recv(int argc, char **argv)
 		__u32 namespace_id;
 		__u32 size;
 		__u8  secp;
+		__u8  nssf;
 		__u16 spsp;
 		__u32 al;
 		__u8  raw_binary;
@@ -2351,6 +2354,7 @@ static int sec_recv(int argc, char **argv)
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
 		{"size",         'x', "NUM",  CFG_POSITIVE, &cfg.size,         required_argument, size},
+		{"nssf",         'N', "NUM",  CFG_BYTE,     &cfg.nssf,         required_argument, nssf},
 		{"secp",         'p', "NUM",  CFG_BYTE,     &cfg.secp,         required_argument, secp},
 		{"spsp",         's', "NUM",  CFG_SHORT,    &cfg.spsp,         required_argument, spsp},
 		{"al",           't', "NUM",  CFG_POSITIVE, &cfg.al,           required_argument, al},
@@ -2371,10 +2375,8 @@ static int sec_recv(int argc, char **argv)
 		}
 	}
 
-	err = nvme_sec_recv(fd,
-			cfg.namespace_id,
-			0 /* FIXME: nssf */,
-			cfg.spsp, cfg.secp, cfg.al, cfg.size, sec_buf, &result);
+	err = nvme_sec_recv(fd, cfg.namespace_id, cfg.nssf, cfg.spsp,
+			cfg.secp, cfg.al, cfg.size, sec_buf, &result);
 	if (err < 0)
 		return errno;
 	else if (err != 0)

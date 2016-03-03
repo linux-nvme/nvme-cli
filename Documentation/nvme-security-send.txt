@@ -12,6 +12,7 @@ SYNOPSIS
 		    [--secp=<security-protocol> | -p <security-protocol>]
 		    [--spsp=<protocol-specific> | -s <protocol-specific>]
 		    [--tl=<transfer-length> | -t <transfer-length>]
+		    [--nssf=<nvme-specific> | -N <nvme-specific>]
 		    [--namespace-id=<nsid> | -n <nsid>]
 
 DESCRIPTION
@@ -33,6 +34,12 @@ OPTIONS
 -n <nsid>::
 --namespace-id=<nsid>::
 	Target a specific namespace for this security command.
+
+-N <nssf>::
+--nssf=<nssf>::
+	NVMe Security Specific field. If using security protocol EAh
+	assigned for NVMe use, the NVMe security specific field indicates
+	which reply memory buffer target.
 
 -f <file>::
 --file=<file>::

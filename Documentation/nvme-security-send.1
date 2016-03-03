@@ -36,6 +36,7 @@ nvme-security-send \- Security Send command
                     [\-\-secp=<security\-protocol> | \-p <security\-protocol>]
                     [\-\-spsp=<protocol\-specific> | \-s <protocol\-specific>]
                     [\-\-tl=<transfer\-length> | \-t <transfer\-length>]
+                    [\-\-nssf=<nvme\-specific> | \-N <nvme\-specific>]
                     [\-\-namespace\-id=<nsid> | \-n <nsid>]
 .fi
 .SH "DESCRIPTION"
@@ -48,6 +49,11 @@ The association between a Security Send command and subsequent Security Receive 
 \-n <nsid>, \-\-namespace\-id=<nsid>
 .RS 4
 Target a specific namespace for this security command\&.
+.RE
+.PP
+\-N <nssf>, \-\-nssf=<nssf>
+.RS 4
+NVMe Security Specific field\&. If using security protocol EAh assigned for NVMe use, the NVMe security specific field indicates which reply memory buffer target\&.
 .RE
 .PP
 \-f <file>, \-\-file=<file>
