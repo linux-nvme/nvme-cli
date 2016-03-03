@@ -762,7 +762,7 @@ static void print_list_item(struct list_item list_item)
 	sprintf(version,"%d.%d", (list_item.ver >> 16),
 		(list_item.ver >> 8) & 0xff);
 
-	fprintf(stdout, "%-16s %-20.20s %-8s %-8d %-26s %-16s %-.8s\n", list_item.node,
+	printf("%-16s %-20.20s %-8s %-8d %-26s %-16s %-.8s\n", list_item.node,
 		list_item.ctrl.mn, version, list_item.nsid, usage, format, list_item.ctrl.fr);
 }
 
@@ -770,9 +770,9 @@ static void print_list_items(struct list_item *list_items, unsigned len)
 {
 	unsigned i;
 
-	fprintf(stdout,"%-16s %-20s %-8s %-8s %-26s %-16s %-8s\n",
+	printf("%-16s %-20s %-8s %-8s %-26s %-16s %-8s\n",
 		"Node","Model","Version","Namepace", "Usage", "Format", "FW Rev");
-	fprintf(stdout,"%-16s %-20s %-8s %-8s %-26s %-16s %-8s\n",
+	printf("%-16s %-20s %-8s %-8s %-26s %-16s %-8s\n",
             "----------------","--------------------","--------","--------",
             "--------------------------","----------------","--------");
 	for (i = 0 ; i < len ; i++)
@@ -838,7 +838,7 @@ static int list(int argc, char **argv)
 	if (count)
 		print_list_items(list_items, count);
 	else
-		fprintf(stdout,"No NVMe devices detected.\n");
+		printf("No NVMe devices detected.\n");
 
 	return 0;
 }
@@ -926,10 +926,10 @@ static int id_ns(int argc, char **argv)
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id",    'n', "NUM", CFG_POSITIVE, &cfg.namespace_id,    required_argument, namespace_id},
-		{"vendor-specific", 'v', "",    CFG_NONE,     &cfg.vendor_specific, no_argument,       vendor_specific},
-		{"raw-binary",      'b', "",    CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
-		{"human-readable",  'H', "",    CFG_NONE,     &cfg.human_readable,  no_argument,       human_readable},
+		{"namespace-id",    'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id,    required_argument, namespace_id},
+		{"vendor-specific", 'v', "FLAG", CFG_NONE,     &cfg.vendor_specific, no_argument,       vendor_specific},
+		{"raw-binary",      'b', "FLAG", CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
+		{"human-readable",  'H', "FLAG", CFG_NONE,     &cfg.human_readable,  no_argument,       human_readable},
 		{0}
 	};
 
@@ -1044,8 +1044,7 @@ static int get_feature(int argc, char **argv)
 		return EINVAL;
 	}
 	
-	switch (cfg.feature_id)
-	{
+	switch (cfg.feature_id) {
 	case NVME_FEAT_LBA_RANGE:
 		cfg.data_len = 4096;
 		break;
@@ -2251,7 +2250,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 			cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask, buffer, mbuffer);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
-		fprintf(stdout, " latency: %s: %llu us\n",
+		printf(" latency: %s: %llu us\n",
 			command, elapsed_utime(start_time, end_time));
 	if (err < 0)
 		perror("submit-io");
@@ -2569,7 +2568,7 @@ static int admin_passthru(int argc, char **argv)
 
 static void usage()
 {
-	fprintf(stdout, "usage: nvme <command> [<device>] [<args>]\n");
+	printf("usage: nvme <command> [<device>] [<args>]\n");
 }
 
 static void command_help(const char *cmd)

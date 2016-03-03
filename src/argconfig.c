@@ -190,7 +190,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	short_opts[short_index++] = 'h';
 	short_opts[short_index] = 0;
 
-	while ((c = getopt_long(argc, argv, short_opts, long_opts,
+	while ((c = getopt_long_only(argc, argv, short_opts, long_opts,
 				&option_index)) != -1) {
 		if (c == 1) {
 			argv[1 + non_opt_args] = optarg;
