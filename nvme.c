@@ -1235,6 +1235,11 @@ static int fw_activate(int argc, char **argv)
 	return err;
 }
 
+static void print_lo_hi_64(uint32_t *val)
+{
+	printf("%x%08x\n", val[1], val[0]);
+}
+
 static int show_registers(int argc, char **argv)
 {
 	int opt, long_index;
@@ -1246,7 +1251,9 @@ static int show_registers(int argc, char **argv)
 	get_dev(optind, argc, argv);
 
 	get_registers(&bar, 1);
-	printf("cap     : %"PRIx64"\n", (uint64_t)bar->cap);
+	printf("cap     : ");
+	print_lo_hi_64((uint32_t *)&bar->cap);
+
 	printf("version : %x\n", bar->vs);
 	printf("intms   : %x\n", bar->intms);
 	printf("intmc   : %x\n", bar->intmc);
@@ -1254,8 +1261,12 @@ static int show_registers(int argc, char **argv)
 	printf("csts    : %x\n", bar->csts);
 	printf("nssr    : %x\n", bar->nssr);
 	printf("aqa     : %x\n", bar->aqa);
-	printf("asq     : %"PRIx64"\n", (uint64_t)bar->asq);
-	printf("acq     : %"PRIx64"\n", (uint64_t)bar->acq);
+	printf("asq     : ");
+	print_lo_hi_64((uint32_t *)&bar->asq);
+
+	printf("acq     : ");
+	print_lo_hi_64((uint32_t *)&bar->acq);
+
 	printf("cmbloc  : %x\n", bar->cmbloc);
 	printf("cmbsz   : %x\n", bar->cmbsz);
 
