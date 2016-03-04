@@ -1388,7 +1388,8 @@ static int format(int argc, char **argv)
 
 	get_dev(1, argc, argv);
 
-	if (cfg.ses > 2) {
+	/* ses & pi checks set to 7 for forward-compatibility */
+	if (cfg.ses > 7) {
 		fprintf(stderr, "invalid secure erase settings:%d\n", cfg.ses);
 		return EINVAL;
 	}
@@ -1396,7 +1397,7 @@ static int format(int argc, char **argv)
 		fprintf(stderr, "invalid lbaf:%d\n", cfg.lbaf);
 		return EINVAL;
 	}
-	if (cfg.pi > 3) {
+	if (cfg.pi > 7) {
 		fprintf(stderr, "invalid pi:%d\n", cfg.pi);
 		return EINVAL;
 	}
