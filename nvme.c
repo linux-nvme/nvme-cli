@@ -1270,8 +1270,8 @@ static int format(int argc, char **argv)
 	const char *namespace_id = "name of desired namespace";
 	const char *lbaf = "LBA format to apply (required)";
 	const char *ses = "[0-2]: secure erase";
-	const char *pil = "[0-3]: protection info location";
-	const char *pi = "[0-1]: protection info off/on";
+	const char *pil = "[0-1]: protection info location last/first 8 bytes of metadata";
+	const char *pi = "[0-3]: protection info off/Type 1/Type 2/Type 3";
 	const char *ms = "[0-1]: extended format off/on";
 	const char *timeout = "timeout value";
 	int err;
@@ -1311,6 +1311,7 @@ static int format(int argc, char **argv)
 
 	get_dev(1, argc, argv);
 
+	/* ses & pi checks set to 7 for forward-compatibility */
 	if (cfg.ses > 7) {
 		fprintf(stderr, "invalid secure erase settings:%d\n", cfg.ses);
 		return EINVAL;
@@ -1321,6 +1322,14 @@ static int format(int argc, char **argv)
 	}
 	if (cfg.pi > 7) {
 		fprintf(stderr, "invalid pi:%d\n", cfg.pi);
+		return EINVAL;
+	}
+	if (cfg.pil > 1) {
+		fprintf(stderr, "invalid pil:%d\n", cfg.pil);
+		return EINVAL;
+	}
+	if (cfg.ms > 1) {
+		fprintf(stderr, "invalid ms:%d\n", cfg.ms);
 		return EINVAL;
 	}
 	if (S_ISBLK(nvme_stat.st_mode)) {
