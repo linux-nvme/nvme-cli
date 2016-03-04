@@ -1278,7 +1278,6 @@ static int format(int argc, char **argv)
 	const char *ms = "[0-1]: extended format off/on";
 	const char *timeout = "timeout value";
 	int err;
-	struct nvme_admin_cmd cmd;
 
 	struct config {
 		__u32 namespace_id;
@@ -1344,12 +1343,6 @@ static int format(int argc, char **argv)
 			return errno;
 		}
 	}
-
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode = nvme_admin_format_nvm;
-	cmd.nsid   = cfg.namespace_id;
-	cmd.cdw10  = (cfg.lbaf << 0) | (cfg.ms << 4) | (cfg.pi << 5) | (cfg.pil << 8) | (cfg.ses << 9);
-	cmd.timeout_ms = cfg.timeout;
 
 	err = nvme_format(fd, cfg.namespace_id, cfg.lbaf, cfg.ses, cfg.pi,
 				cfg.pil, cfg.ms, cfg.timeout);
