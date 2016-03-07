@@ -2211,8 +2211,10 @@ static int submit_io(int opcode, char *command, const char *desc,
 
 	if (cfg.metadata_size) {
 		mbuffer = malloc(cfg.metadata_size);
-		if (!mbuffer)
+		if (!mbuffer) {
+ 			free(buffer);
 			return ENOMEM;
+		}
 	}
 
 	if ((opcode & 1) && read(dfd, (void *)buffer, cfg.data_size) < 0) {
