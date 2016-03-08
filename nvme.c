@@ -360,7 +360,7 @@ static int get_log(int argc, char **argv)
 		"from a given log on a specified device in either "\
 		"hex-dump (default) or binary format";
 	const char *namespace_id = "desired namespace";
-	const char *log_id = "name of log to retrieve";
+	const char *log_id = "identifier of log to retrieve";
 	const char *log_len = "how many bytes to retrieve";
 	const char *raw_binary = "output in raw format";
 	int err;
@@ -903,7 +903,7 @@ static int id_ns(int argc, char **argv)
 	const char *vendor_specific = "dump binary vendor infos";
 	const char *raw_binary = "show infos in binary format";
 	const char *human_readable = "show infos in readable format";
-	const char *namespace_id = "name of desired namespace";
+	const char *namespace_id = "identifier of desired namespace";
 	struct nvme_id_ns ns;
 	int err;
 	unsigned int flags = 0;
@@ -985,7 +985,7 @@ static int get_feature(int argc, char **argv)
 		"are vendor-specific and not changeable. Use set-feature to "\
 		"change saveable Features.";
 	const char *raw_binary = "show infos in binary format";
-	const char *namespace_id = "name of desired namespace";
+	const char *namespace_id = "identifier of desired namespace";
 	const char *feature_id = "hexadecimal feature name";
 	const char *sel = "[0-3]: curr./default/saved/supp.";
 	const char *data_len = "buffer len (if) data is returned";
@@ -1270,7 +1270,7 @@ static int format(int argc, char **argv)
 		"given device. Can erase all data in namespace (user "\
 		"data erase) or delete data encryption key if specified. "\
 		"Can also be used to change LBAF to change the namespaces reported physical block format.";
-	const char *namespace_id = "name of desired namespace";
+	const char *namespace_id = "identifier of desired namespace";
 	const char *lbaf = "LBA format to apply (required)";
 	const char *ses = "[0-2]: secure erase";
 	const char *pil = "[0-1]: protection info location last/first 8 bytes of metadata";
@@ -1678,7 +1678,7 @@ static int dsm(int argc, char **argv)
 		"indicate attributes for ranges of logical blocks. This includes attributes "\
 		"for discarding unused blocks, data read and write frequency, access size, and other "\
 		"information that may be used to optimize performance and reliability.";
-	const char *namespace_id = "name of desired namespace";
+	const char *namespace_id = "identifier of desired namespace";
 	const char *blocks = "Comma separated list of the number of blocks in each range";
 	const char *starting_blocks = "Comma separated list of the starting block in each range";
 	const char *context_attrs = "Comma separated list of the context attributes in each range";
@@ -1771,11 +1771,11 @@ static int dsm(int argc, char **argv)
 static int flush(int argc, char **argv)
 {
 	const char *desc = "Commit data and metadata associated with "\
-	"given namespaces to nonvolatile media. Applies to all commands "\
-	"finished before the flush was submitted. Additional data may also be "\
-	"flushed by the controller, from any namespace, depending on controller and "\
-	"associated namespace status.";
-	const char *namespace_id = "name of desired namespace";
+		"given namespaces to nonvolatile media. Applies to all commands "\
+		"finished before the flush was submitted. Additional data may also be "\
+		"flushed by the controller, from any namespace, depending on controller and "\
+		"associated namespace status.";
+	const char *namespace_id = "identifier of desired namespace";
 	int err;
 
 	struct config {
@@ -1815,7 +1815,7 @@ static int resv_acquire(int argc, char **argv)
 		"with that namespace. Namespace reservation will abort with "\
 		"status Reservation Conflict if the given namespace is "\
 		"already reserved.";
-	const char *namespace_id = "name of desired namespace";
+	const char *namespace_id = "identifier of desired namespace";
 	const char *crkey = "current reservation key";
 	const char *prkey = "pre-empt reservation key";
 	const char *rtype = "hex reservation type";
@@ -1885,7 +1885,7 @@ static int resv_register(int argc, char **argv)
 	const char *desc = "Register, de-register, or "\
 		"replace a controller's reservation on a given namespace. "\
 		"Only one reservation at a time is allowed on any namespace.";
-	const char *namespace_id = "name of desired namespace";
+	const char *namespace_id = "identifier of desired namespace";
 	const char *crkey = "current reservation key";
 	const char *iekey = "ignore existing res. key";
 	const char *nrkey = "new reservation key";
@@ -2033,7 +2033,7 @@ static int resv_report(int argc, char **argv)
 		"status of a given namespace. Namespace Reservation Status "\
 		"depends on the number of controllers registered for that "\
 		"namespace.";
-	const char *namespace_id = "name of desired namespace";
+	const char *namespace_id = "identifier of desired namespace";
 	const char *numd = "number of dwords to transfer";
 	const char *raw_binary = "dump output in binary format";
 
