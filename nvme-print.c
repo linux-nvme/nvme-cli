@@ -200,7 +200,7 @@ static void show_nvme_id_ctrl_cqes(__u8 cqes)
 
 static void show_nvme_id_ctrl_oncs(__le16 ctrl_oncs)
 {
-	__u16 oncs = le16toh(oncs);
+	__u16 oncs = le16toh(ctrl_oncs);
 	__u16 rsvd = (oncs & 0xFFC0) >> 6;
 	__u16 resv = (oncs & 0x20) >> 5;
 	__u16 save = (oncs & 0x10) >> 4;
@@ -228,7 +228,7 @@ static void show_nvme_id_ctrl_oncs(__le16 ctrl_oncs)
 
 static void show_nvme_id_ctrl_fuses(__le16 ctrl_fuses)
 {
-	__u16 fuses = le16toh(fuses);
+	__u16 fuses = le16toh(ctrl_fuses);
 	__u16 rsvd = (fuses & 0xFE) >> 1;
 	__u16 cmpw = fuses & 0x1;
 
