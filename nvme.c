@@ -701,7 +701,7 @@ static void get_registers(struct nvme_bar **bar)
 	}
 
 	membase = mmap(0, getpagesize(), PROT_READ, MAP_SHARED, pci_fd, 0);
-	if (!membase) {
+	if (membase == MAP_FAILED) {
 		fprintf(stderr, "%s failed to map\n", base);
 		exit(ENODEV);
 	}
