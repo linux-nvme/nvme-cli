@@ -2236,8 +2236,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 		printf("control      : %04x\n", control);
 		printf("nblocks      : %04x\n", cfg.block_count);
 		printf("rsvd         : %04x\n", 0);
-		printf("metadata     : %"PRIx64"\n", (uint64_t)mbuffer);
-		printf("addr         : %"PRIx64"\n", (uint64_t)buffer);
+		printf("metadata     : %"PRIx64"\n", (uint64_t)(uintptr_t)mbuffer);
+		printf("addr         : %"PRIx64"\n", (uint64_t)(uintptr_t)buffer);
 		printf("sbla         : %"PRIx64"\n", (uint64_t)cfg.start_block);
 		printf("dsmgmt       : %08x\n", 0);
 		printf("reftag       : %08x\n", cfg.ref_tag);
@@ -2520,8 +2520,8 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc)
 		printf("cdw3         : %08x\n", cfg.cdw3);
 		printf("data_len     : %08x\n", cfg.data_len);
 		printf("metadata_len : %08x\n", cfg.metadata_len);
-		printf("addr         : %"PRIx64"\n", (uint64_t)data);
-		printf("metadata     : %"PRIx64"\n", (uint64_t)metadata);
+		printf("addr         : %"PRIx64"\n", (uint64_t)(uintptr_t)data);
+		printf("metadata     : %"PRIx64"\n", (uint64_t)(uintptr_t)metadata);
 		printf("cdw10        : %08x\n", cfg.cdw10);
 		printf("cdw11        : %08x\n", cfg.cdw11);
 		printf("cdw12        : %08x\n", cfg.cdw12);

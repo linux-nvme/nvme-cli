@@ -65,8 +65,8 @@ int nvme_passthru(int fd, int ioctl_cmd, __u8 opcode, __u8 flags, __u16 rsvd,
 		.nsid		= nsid,
 		.cdw2		= cdw2,
 		.cdw3		= cdw3,
-		.metadata	= (__u64) metadata,
-		.addr		= (__u64) data,
+		.metadata	= (__u64)(uintptr_t) metadata,
+		.addr		= (__u64)(uintptr_t) data,
 		.metadata_len	= metadata_len,
 		.data_len	= data_len,
 		.cdw10		= cdw10,
@@ -96,8 +96,8 @@ int nvme_io(int fd, __u8 opcode, __u64 slba, __u16 nblocks, __u16 control,
 		.control	= control,
 		.nblocks	= nblocks,
 		.rsvd		= 0,
-		.metadata	= (__u64) metadata,
-		.addr		= (__u64) data,
+		.metadata	= (__u64)(uintptr_t) metadata,
+		.addr		= (__u64)(uintptr_t) data,
 		.slba		= slba,
 		.dsmgmt		= dsmgmt,
 		.reftag		= reftag,
@@ -188,7 +188,7 @@ int nvme_dsm(int fd, __u32 nsid, __u32 cdw11, struct nvme_dsm_range *dsm,
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_dsm,
 		.nsid		= nsid,
-		.addr		= (__u64) dsm,
+		.addr		= (__u64)(uintptr_t) dsm,
 		.data_len	= nr_ranges * sizeof(*dsm),
 		.cdw10		= nr_ranges - 1,
 		.cdw11		= cdw11,
@@ -222,7 +222,7 @@ int nvme_resv_acquire(int fd, __u32 nsid, __u8 rtype, __u8 racqa,
 		.opcode		= nvme_cmd_resv_acquire,
 		.nsid		= nsid,
 		.cdw10		= cdw10,
-		.addr		= (__u64) (payload),
+		.addr		= (__u64)(uintptr_t) (payload),
 		.data_len	= sizeof(payload),
 	};
 
@@ -239,7 +239,7 @@ int nvme_resv_register(int fd, __u32 nsid, __u8 rrega, __u8 cptpl,
 		.opcode		= nvme_cmd_resv_register,
 		.nsid		= nsid,
 		.cdw10		= cdw10,
-		.addr		= (__u64) (payload),
+		.addr		= (__u64)(uintptr_t) (payload),
 		.data_len	= sizeof(payload),
 	};
 
@@ -256,7 +256,7 @@ int nvme_resv_release(int fd, __u32 nsid, __u8 rtype, __u8 rrela,
 		.opcode		= nvme_cmd_resv_register,
 		.nsid		= nsid,
 		.cdw10		= cdw10,
-		.addr		= (__u64) (payload),
+		.addr		= (__u64)(uintptr_t) (payload),
 		.data_len	= sizeof(payload),
 	};
 
@@ -268,7 +268,7 @@ int nvme_resv_report(int fd, __u32 nsid, __u32 numd, void *data)
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_report,
 		.nsid		= nsid,
-		.addr		= (__u64) data,
+		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= numd << 2,
 	};
 
@@ -292,7 +292,7 @@ int nvme_identify(int fd, __u32 nsid, __u32 cdw10, void *data)
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_identify,
 		.nsid		= nsid,
-		.addr		= (__u64) data,
+		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= 0x1000,
 		.cdw10		= cdw10,
 	};
@@ -325,7 +325,7 @@ int nvme_get_log(int fd, __u32 nsid, __u32 cdw10, __u32 data_len, void *data)
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_get_log_page,
 		.nsid		= nsid,
-		.addr		= (__u64) data,
+		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= data_len,
 		.cdw10		= cdw10,
 	};
@@ -370,7 +370,7 @@ int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
 		.nsid		= nsid,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
-		.addr		= (__u64) data,
+		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= data_len,
 	};
 	int err;
@@ -425,7 +425,7 @@ int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas,
 	};
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_ns_mgmt,
-		.addr		= (__u64) ((void *)&ns),
+		.addr		= (__u64)(uintptr_t) ((void *)&ns),
 		.cdw10		= 0,
 		.data_len	= 0x1000,
 	};
@@ -457,7 +457,7 @@ int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist,
 					(struct nvme_controller_list *)buf;
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_ns_attach,
-		.addr		= (__u64) cntlist,
+		.addr		= (__u64)(uintptr_t) cntlist,
 		.cdw10		= attach ? 0 : 1,
 		.data_len	= 0x1000,
 	};
@@ -484,7 +484,7 @@ int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_download_fw,
-		.addr		= (__u64) data,
+		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= data_len,
 		.cdw10		= (data_len >> 2) - 1,
 		.cdw11		= offset >> 2,
@@ -508,7 +508,7 @@ int nvme_sec_send(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_security_send,
-		.addr		= (__u64) data,
+		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= data_len,
 		.nsid		= nsid,
 		.cdw10		= secp << 24 | spsp << 8 | nssf,
@@ -529,7 +529,7 @@ int nvme_sec_recv(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 		.opcode		= nvme_admin_security_recv,
 		.cdw10		= secp << 24 | spsp << 8 | nssf,
 		.cdw11		= al,
-		.addr		= (__u64) data,
+		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= data_len,
 	};
 	int err;
