@@ -85,6 +85,13 @@ For example:
 
     $ sudo zypper install nvme-cli
 
+### Arch Linux
+
+Install from AUR, e.g.:
+```
+$ yaourt -S nvme-cli-git
+```
+
 ### Other Distros
 
 TBD
