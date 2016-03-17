@@ -1,0 +1,32 @@
+nvme-subsystem-reset(1)
+=======================
+
+NAME
+----
+nvme-subsystem-reset - Reset the nvme subsystem.
+
+SYNOPSIS
+--------
+[verse]
+'nvme subsystem-reset' <device>
+
+DESCRIPTION
+-----------
+Requests NVMe subsystem reset. The <device> param is mandatory and must
+be an NVMe character device (ex: /dev/nvme0).
+
+OPTIONS
+-------
+None
+
+EXAMPLES
+--------
+* Resets the subsystem.
++
+------------
+# nvme subsystem-reset /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite

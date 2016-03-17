@@ -21,6 +21,36 @@
 
 #include "nvme-ioctl.h"
 
+int nvme_subsystem_reset(int fd)
+{
+	static struct stat nvme_stat;
+	int err = fstat(fd, &nvme_stat);
+
+	if (err < 0)
+		return err;
+	if (!S_ISCHR(nvme_stat.st_mode)) {
+		fprintf(stderr,
+			"Error: requesting subsystem reset on non-controller handle\n");
+		exit(ENOTBLK);
+	}
+	return ioctl(fd, NVME_IOCTL_SUBSYS_RESET);
+}
+
+int nvme_reset_controller(int fd)
+{
+	static struct stat nvme_stat;
+	int err = fstat(fd, &nvme_stat);
+
+	if (err < 0)
+		return err;
+	if (!S_ISCHR(nvme_stat.st_mode)) {
+		fprintf(stderr,
+			"Error: requesting reset on non-controller handle\n");
+		exit(ENOTBLK);
+	}
+	return ioctl(fd, NVME_IOCTL_RESET);
+}
+
 int nvme_get_nsid(int fd)
 {
 	static struct stat nvme_stat;
@@ -31,7 +61,7 @@ int nvme_get_nsid(int fd)
 
 	if (!S_ISBLK(nvme_stat.st_mode)) {
 		fprintf(stderr,
-			"requesting namespace-id from non-block device\n");
+			"Error: requesting namespace-id from non-block device\n");
 		exit(ENOTBLK);
 	}
 	return ioctl(fd, NVME_IOCTL_ID);

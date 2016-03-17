@@ -1,0 +1,32 @@
+nvme-reset(1)
+=============
+
+NAME
+----
+nvme-reset - Reset the nvme controller.
+
+SYNOPSIS
+--------
+[verse]
+'nvme reset' <device>
+
+DESCRIPTION
+-----------
+Requests NVMe controller reset. The <device> param is mandatory and must
+be an NVMe character device (ex: /dev/nvme0).
+
+OPTIONS
+-------
+None
+
+EXAMPLES
+--------
+* Resets the controller.
++
+------------
+# nvme reset /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite

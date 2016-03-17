@@ -99,6 +99,8 @@ static const char nvme_version_string[] = NVME_VERSION;
 	ENTRY(WRITE_CMD, "write", "Submit a write command, return results", write_cmd) \
 	ENTRY(WRITE_ZEROES_CMD, "write-zeroes", "Submit a write zeroes command, return results", write_zeroes) \
 	ENTRY(WRITE_UNCOR_CMD, "write-uncor", "Submit a write uncorrectable command, return results", write_uncor) \
+	ENTRY(RESET, "reset", "Resets the controller", reset) \
+	ENTRY(SUBSYS_RESET, "subsystem-reset", "Resets the controller", subsystem_reset) \
 	ENTRY(REGISTERS, "show-regs", "Shows the controller registers. Requires admin character device", show_registers) \
 	ENTRY(VERSION, "version", "Shows the program version", version) \
 	ENTRY(HELP, "help", "Display this help", help)
@@ -1225,6 +1227,26 @@ static int fw_activate(int argc, char **argv)
 		printf("Success activating firmware action:%d slot:%d\n",
 		       cfg.action, cfg.slot);
 	return err;
+}
+
+static void clear_args(int argc, char **argv)
+{
+	int opt, long_index;
+	while ((opt = getopt_long(argc, (char **)argv, "", NULL,
+					&long_index)) != -1);
+	get_dev(argc, argv);
+}
+
+static int subsystem_reset(int argc, char **argv)
+{
+	clear_args(argc, argv);
+	return nvme_subsystem_reset(fd);
+}
+
+static int reset(int argc, char **argv)
+{
+	clear_args(argc, argv);
+	return nvme_reset_controller(fd);
 }
 
 static void print_lo_hi_64(uint32_t *val)

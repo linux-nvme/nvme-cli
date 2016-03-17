@@ -112,4 +112,7 @@ int nvme_sec_send(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 int nvme_sec_recv(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 		  __u8 secp, __u32 al, __u32 data_len, void *data, __u32 *result);
 
+int nvme_subsystem_reset(int fd);
+int nvme_reset_controller(int fd);
+
 #endif				/* _NVME_LIB_H */
