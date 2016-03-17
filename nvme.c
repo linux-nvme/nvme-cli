@@ -1059,7 +1059,7 @@ static int get_feature(int argc, char **argv)
 	err = nvme_get_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.sel, cfg.cdw11,
 			cfg.data_len, buf, &result);
 	if (!err) {
-		printf("get-feature: 0x%02X (%s), %s value: %#08x\n", cfg.feature_id,
+		printf("get-feature:0x%02x (%s), %s value: %#08x\n", cfg.feature_id,
 				nvme_feature_to_string(cfg.feature_id),
 				nvme_select_to_string(cfg.sel), result);
 		if (cfg.human_readable)
@@ -1438,7 +1438,7 @@ static int set_feature(int argc, char **argv)
 		return errno;
 	}
 	if (!err) {
-		printf("set-feature:%d(%s), value:%#08x\n", cfg.feature_id,
+		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
 			nvme_feature_to_string(cfg.feature_id), result);
 		if (buf) {
 			if (cfg.feature_id == NVME_FEAT_LBA_RANGE)
