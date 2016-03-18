@@ -2,7 +2,7 @@ Source: nvme-cli
 Maintainer: Breno Leitao <brenohl@br.ibm.com>
 Section: admin
 Priority: optional
-Standards-Version: 3.9.6
+Standards-Version: 3.9.7
 Build-Depends: debhelper (>= 9), libudev-dev
 Homepage: https://github.com/linux-nvme/nvme-cli
 
