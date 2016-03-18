@@ -886,6 +886,7 @@ static int id_ns(int argc, char **argv)
 		"given device, returns properties of the specified namespace "\
 		"in either human-readable or binary format. Can also return "\
 		"binary vendor-specific namespace attributes.";
+	const char *force = "Return this namespace, even if not attaced (1.2 devices only)";
 	const char *vendor_specific = "dump binary vendor infos";
 	const char *raw_binary = "show infos in binary format";
 	const char *human_readable = "show infos in readable format";
@@ -899,6 +900,7 @@ static int id_ns(int argc, char **argv)
 		__u8  vendor_specific;
 		__u8  raw_binary;
 		__u8  human_readable;
+		__u8  force;
 	};
 
 	struct config cfg = {
@@ -907,6 +909,7 @@ static int id_ns(int argc, char **argv)
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id",    'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id,    required_argument, namespace_id},
+		{"force",           'f', "FLAG", CFG_NONE,     &cfg.force,           no_argument,       force},
 		{"vendor-specific", 'v', "FLAG", CFG_NONE,     &cfg.vendor_specific, no_argument,       vendor_specific},
 		{"raw-binary",      'b', "FLAG", CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
 		{"human-readable",  'H', "FLAG", CFG_NONE,     &cfg.human_readable,  no_argument,       human_readable},
@@ -920,7 +923,6 @@ static int id_ns(int argc, char **argv)
 	if (cfg.human_readable)
 		flags |= HUMAN;
 
-
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
@@ -928,7 +930,8 @@ static int id_ns(int argc, char **argv)
 			exit(errno);
 		}
 	}
-	err = nvme_identify_ns(fd, cfg.namespace_id, 0, &ns);
+
+	err = nvme_identify_ns(fd, cfg.namespace_id, cfg.force, &ns);
 	if (!err) {
 		if (cfg.raw_binary)
 			d_raw((unsigned char *)&ns, sizeof(ns));

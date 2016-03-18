@@ -120,6 +120,16 @@ enum {
 	NVME_CTRL_VWC_PRESENT			= 1 << 0,
 };
 
+enum {
+	NVME_ID_CNS_NS			= 0x00,
+	NVME_ID_CNS_CTRL		= 0x01,
+	NVME_ID_CNS_NS_ACTIVE_LIST	= 0x02,
+	NVME_ID_CNS_NS_PRESENT_LIST	= 0x10,
+	NVME_ID_CNS_NS_PRESENT		= 0x11,
+	NVME_ID_CNS_CTRL_NS_LIST	= 0x12,
+	NVME_ID_CNS_CTRL_LIST		= 0x13,
+};
+
 struct nvme_lbaf {
 	__le16			ms;
 	__u8			ds;

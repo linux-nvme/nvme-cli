@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme id-ns' <device> [-v | --vendor-specific] [-b | --raw-binary]
-		    [--namespace-id=<nsid> | -n <nsid>]
+		    [--namespace-id=<nsid> | -n <nsid>] [-f | --force]
 
 DESCRIPTION
 -----------
@@ -34,6 +34,13 @@ OPTIONS
 	Retrieve the identify namespace structure for the given nsid. This
 	is required for the character devices, or overrides the block nsid
 	if given.
+
+-f::
+--force::
+	Request controller return the indentify namespace structure even
+	if the namespace is not attached to the controller. This is valid
+	only for controllers at or newer than revision 1.2. Controllers
+	at revision lower than this may interpret the command incorrectly.
 
 -b::
 --raw-binary::

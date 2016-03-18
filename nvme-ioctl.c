@@ -335,17 +335,23 @@ int nvme_identify_ctrl(int fd, void *data)
 
 int nvme_identify_ns(int fd, __u32 nsid, bool present, void *data)
 {
-	return nvme_identify(fd, nsid, present ? 0x11 : 0, data);
+	int cns = present ? NVME_ID_CNS_NS_PRESENT : NVME_ID_CNS_NS;
+
+	return nvme_identify(fd, nsid, cns, data);
 }
 
 int nvme_identify_ns_list(int fd, __u32 nsid, bool all, void *data)
 {
-	return nvme_identify(fd, nsid, all ? 0x10 : 0x2, data);
+	int cns = all ? NVME_ID_CNS_NS_ACTIVE_LIST : NVME_ID_CNS_NS_PRESENT_LIST;
+
+	return nvme_identify(fd, nsid, cns, data);
 }
 
 int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
 {
-	return nvme_identify(fd, nsid, (cntid << 16) | (nsid ? 0x13 : 0x12), data);
+	int cns = nsid ? NVME_ID_CNS_CTRL_NS_LIST : NVME_ID_CNS_CTRL_LIST;
+
+	return nvme_identify(fd, nsid, (cntid << 16) | cns, data);
 }
 
 int nvme_get_log(int fd, __u32 nsid, __u32 cdw10, __u32 data_len, void *data)
@@ -369,18 +375,18 @@ int nvme_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
 
 int nvme_fw_log(int fd, struct nvme_firmware_log_page *fw_log)
 {
-	return nvme_log(fd, 0xffffffff, 3, sizeof(*fw_log), fw_log);
+	return nvme_log(fd, 0xffffffff, NVME_LOG_FW_SLOT, sizeof(*fw_log), fw_log);
 }
 
 int nvme_error_log(int fd, __u32 nsid, int entries,
 		   struct nvme_error_log_page *err_log)
 {
-	return nvme_log(fd, nsid, 1, entries * sizeof(*err_log), err_log);
+	return nvme_log(fd, nsid, NVME_LOG_ERROR, entries * sizeof(*err_log), err_log);
 }
 
 int nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log *smart_log)
 {
-	return nvme_log(fd, nsid, 2, sizeof(*smart_log), smart_log);
+	return nvme_log(fd, nsid, NVME_LOG_SMART, sizeof(*smart_log), smart_log);
 }
 
 int nvme_intel_smart_log(int fd, __u32 nsid,

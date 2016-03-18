@@ -435,7 +435,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -753,7 +753,7 @@ nvme-id-ns(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme id-ns</em> &lt;device&gt; [-v | --vendor-specific] [-b | --raw-binary]
-                    [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
+                    [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;] [-f | --force]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -789,6 +789,20 @@ raw buffer may be printed to stdout.</p></div>
         Retrieve the identify namespace structure for the given nsid. This
         is required for the character devices, or overrides the block nsid
         if given.
+</p>
+</dd>
+<dt class="hdlist1">
+-f
+</dt>
+<dt class="hdlist1">
+--force
+</dt>
+<dd>
+<p>
+        Request controller return the indentify namespace structure even
+        if the namespace is not attached to the controller. This is valid
+        only for controllers at or newer than revision 1.2. Controllers
+        at revision lower than this may interpret the command incorrectly.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -929,7 +943,7 @@ int main(int argc, char **argv)
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-02-26 08:27:57 MST
+Last updated 2016-03-18 11:56:04 MDT
 </div>
 </div>
 </body>

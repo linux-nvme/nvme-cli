@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-ns
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 02/26/2016
+.\"      Date: 03/18/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "02/26/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "03/18/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,7 +33,7 @@ nvme-id-ns \- Send NVMe Identify Namespace, return result and structure
 .sp
 .nf
 \fInvme id\-ns\fR <device> [\-v | \-\-vendor\-specific] [\-b | \-\-raw\-binary]
-                    [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                    [\-\-namespace\-id=<nsid> | \-n <nsid>] [\-f | \-\-force]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -47,6 +47,11 @@ On success, the structure may be returned in one of several ways depending on th
 \-n <nsid>, \-\-namespace\-id=<nsid>
 .RS 4
 Retrieve the identify namespace structure for the given nsid\&. This is required for the character devices, or overrides the block nsid if given\&.
+.RE
+.PP
+\-f, \-\-force
+.RS 4
+Request controller return the indentify namespace structure even if the namespace is not attached to the controller\&. This is valid only for controllers at or newer than revision 1\&.2\&. Controllers at revision lower than this may interpret the command incorrectly\&.
 .RE
 .PP
 \-b, \-\-raw\-binary
