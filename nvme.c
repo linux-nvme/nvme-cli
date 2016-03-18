@@ -174,6 +174,14 @@ static void get_dev(int argc, char **argv)
 	}
 	open_dev((const char *)argv[optind]);
 }
+
+static void parse_and_open(int argc, char **argv, const char *desc,
+	const struct argconfig_commandline_options *clo, void *cfg, size_t size)
+{
+	argconfig_parse(argc, argv, desc, clo, cfg, size);
+	get_dev(argc, argv);
+}
+
 static int get_smart_log(int argc, char **argv)
 {
 	struct nvme_smart_log smart_log;
@@ -199,10 +207,7 @@ static int get_smart_log(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			(void *)&cfg, sizeof(cfg));
-
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	err = nvme_smart_log(fd, cfg.namespace_id, &smart_log);
 	if (!err) {
@@ -239,10 +244,8 @@ static int get_additional_smart_log(int argc, char **argv)
 		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw},
 		{0}
 	};
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
-	get_dev(argc, argv);
 
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	err = nvme_intel_smart_log(fd, cfg.namespace_id, &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -285,10 +288,8 @@ static int get_error_log(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (!cfg.log_entries) {
 		fprintf(stderr, "non-zero log-entries is required param\n");
 		return EINVAL;
@@ -336,10 +337,8 @@ static int get_fw_log(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	err = nvme_fw_log(fd, &fw_log);
 	if (!err) {
@@ -388,10 +387,8 @@ static int get_log(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (!cfg.log_len) {
 		fprintf(stderr, "non-zero log-len is required param\n");
@@ -439,10 +436,8 @@ static int list_ctrl(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000))
 		return ENOMEM;
@@ -484,10 +479,8 @@ static int list_ns(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	err = nvme_identify_ns_list(fd, cfg.namespace_id, !!cfg.all, ns_list);
 	if (!err) {
@@ -525,15 +518,13 @@ static int delete_ns(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
 						commands[DELETE_NS].name);
 		return EINVAL;
 	}
-	get_dev(argc, argv);
 
 	err = nvme_ns_delete(fd, cfg.namespace_id);
 	if (!err)
@@ -571,8 +562,8 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
+
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
 						name);
@@ -583,7 +574,6 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 	for (i = 0; i < num; i++)
 		ctrlist[i] = ((uint16_t)list[i]);
 
-	get_dev(argc, argv);
 
 	if (attach)	
 		err = nvme_ns_attach_ctrls(fd, cfg.namespace_id, num, ctrlist);
@@ -655,10 +645,8 @@ static int create_ns(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic, &nsid);
 	if (!err)
@@ -872,15 +860,13 @@ static int id_ctrl(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (cfg.vendor_specific)
 		flags |= VS;
 	if (cfg.human_readable)
 		flags |= HUMAN;
 
-	get_dev(argc, argv);
 
 	err = nvme_identify_ctrl(fd, &ctrl);
 	if (!err) {
@@ -931,15 +917,13 @@ static int id_ns(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (cfg.vendor_specific)
 		flags |= VS;
 	if (cfg.human_readable)
 		flags |= HUMAN;
 
-	get_dev(argc, argv);
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
@@ -1028,10 +1012,8 @@ static int get_feature(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (cfg.sel > 7) {
 		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
@@ -1122,10 +1104,8 @@ static int fw_download(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	fw_fd = open(cfg.fw, O_RDONLY);
 	cfg.offset <<= 2;
@@ -1201,10 +1181,8 @@ static int fw_activate(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (cfg.slot > 7) {
 		fprintf(stderr, "invalid slot:%d\n", cfg.slot);
@@ -1332,11 +1310,8 @@ static int format(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
-
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	/* ses & pi checks set to 7 for forward-compatibility */
 	if (cfg.ses > 7) {
 		fprintf(stderr, "invalid secure erase settings:%d\n", cfg.ses);
@@ -1428,10 +1403,7 @@ static int set_feature(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
-
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
@@ -1525,10 +1497,8 @@ static int sec_send(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
-	get_dev(argc, argv);
 
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	sec_fd = open(cfg.file, O_RDONLY);
 	if (sec_fd < 0) {
 		fprintf(stderr, "no firmware file provided\n");
@@ -1586,10 +1556,8 @@ static int write_uncor(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
-	get_dev(argc, argv);
 
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
@@ -1661,10 +1629,8 @@ static int write_zeroes(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (cfg.prinfo > 0xf)
 		return EINVAL;
@@ -1752,10 +1718,8 @@ static int dsm(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
-	get_dev(argc, argv);
 
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, ctx_attrs, array_len(ctx_attrs));
 	nb = argconfig_parse_comma_sep_array(cfg.blocks, nlbs, array_len(nlbs));
 	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, array_len(slbas));
@@ -1815,10 +1779,8 @@ static int flush(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	err = nvme_flush(fd, cfg.namespace_id);
 	if (err < 0)
@@ -1874,10 +1836,8 @@ static int resv_acquire(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
@@ -1944,10 +1904,8 @@ static int resv_register(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
@@ -2016,10 +1974,8 @@ static int resv_release(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
@@ -2082,10 +2038,8 @@ static int resv_report(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
@@ -2197,9 +2151,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 	};
 
 	dfd = mfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (cfg.prinfo > 0xf)
 		return EINVAL;
 	control |= (cfg.prinfo << 10);
@@ -2222,7 +2175,6 @@ static int submit_io(int opcode, char *command, const char *desc,
 			return EINVAL;
 		}
 	}
-	get_dev(argc, argv);
 
 	if (!cfg.data_size)	{
 		fprintf(stderr, "data size not provided\n");
@@ -2372,10 +2324,8 @@ static int sec_recv(int argc, char **argv)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
-	get_dev(argc, argv);
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (cfg.size) {
 		if (posix_memalign(&sec_buf, getpagesize(), cfg.size)) {
@@ -2499,9 +2449,8 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc)
 		{0}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options,
-			&cfg, sizeof(cfg));
 
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (strlen(cfg.input_file)){
 		wfd = open(cfg.input_file, O_RDONLY,
 			   S_IRUSR | S_IRGRP | S_IROTH);
@@ -2511,7 +2460,6 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc)
 		}
 	}
 
-	get_dev(argc, argv);
 	if (cfg.metadata_len)
 		metadata = malloc(cfg.metadata_len);
 	if (cfg.data_len) {
