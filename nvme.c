@@ -246,6 +246,7 @@ static int get_additional_smart_log(int argc, char **argv)
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
 	err = nvme_intel_smart_log(fd, cfg.namespace_id, &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -288,8 +289,8 @@ static int get_error_log(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
 	if (!cfg.log_entries) {
 		fprintf(stderr, "non-zero log-entries is required param\n");
 		return EINVAL;
@@ -336,7 +337,6 @@ static int get_fw_log(int argc, char **argv)
 		{"raw-binary", 'b', "",   CFG_NONE, &cfg.raw_binary,   no_argument,       raw_binary},
 		{0}
 	};
-
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
@@ -387,7 +387,6 @@ static int get_log(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (!cfg.log_len) {
@@ -436,7 +435,6 @@ static int list_ctrl(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000))
@@ -479,7 +477,6 @@ static int list_ns(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	err = nvme_identify_ns_list(fd, cfg.namespace_id, !!cfg.all, ns_list);
@@ -518,8 +515,8 @@ static int delete_ns(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
 						commands[DELETE_NS].name);
@@ -542,7 +539,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 {
 	char *name = commands[attach ? ATTACH_NS : DETACH_NS].name;
 	int err, num, i, list[2048];
-	__u16 ctrlist[2048];
+	__le16 ctrlist[2048];
 
 	const char *namespace_id = "namespace to attach";
 	const char *cont = "optional comma-sep controllers list";
@@ -562,18 +559,18 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
 						name);
 		return EINVAL;
 	}
+
 	num = argconfig_parse_comma_sep_array(cfg.cntlist,
 					list, 2047);
 	for (i = 0; i < num; i++)
-		ctrlist[i] = ((uint16_t)list[i]);
-
+		ctrlist[i] = htole16(((uint16_t)list[i]));
 
 	if (attach)	
 		err = nvme_ns_attach_ctrls(fd, cfg.namespace_id, num, ctrlist);
@@ -644,7 +641,6 @@ static int create_ns(int argc, char **argv)
 		{"nmic",  'm', "NUM", CFG_BYTE,        &cfg.nmic,  required_argument, nmic},
 		{0}
 	};
-
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
@@ -860,8 +856,8 @@ static int id_ctrl(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
 	if (cfg.vendor_specific)
 		flags |= VS;
 	if (cfg.human_readable)
@@ -917,8 +913,8 @@ static int id_ns(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
 	if (cfg.vendor_specific)
 		flags |= VS;
 	if (cfg.human_readable)
@@ -1012,7 +1008,6 @@ static int get_feature(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (cfg.sel > 7) {
@@ -1104,7 +1099,6 @@ static int fw_download(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	fw_fd = open(cfg.fw, O_RDONLY);
@@ -1180,7 +1174,6 @@ static int fw_activate(int argc, char **argv)
 		{"action", 'a', "NUM", CFG_BYTE, &cfg.action, required_argument, action},
 		{0}
 	};
-
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
@@ -1310,8 +1303,8 @@ static int format(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
 	/* ses & pi checks set to 7 for forward-compatibility */
 	if (cfg.ses > 7) {
 		fprintf(stderr, "invalid secure erase settings:%d\n", cfg.ses);
@@ -1497,8 +1490,8 @@ static int sec_send(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
 	sec_fd = open(cfg.file, O_RDONLY);
 	if (sec_fd < 0) {
 		fprintf(stderr, "no firmware file provided\n");
@@ -1556,8 +1549,8 @@ static int write_uncor(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id <= 0) {
@@ -1628,7 +1621,6 @@ static int write_zeroes(int argc, char **argv)
 		{"app-tag",           'a', "NUM",  CFG_POSITIVE,    &cfg.app_tag,           required_argument, app_tag},
 		{0}
 	};
-
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
@@ -1718,8 +1710,8 @@ static int dsm(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
 	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, ctx_attrs, array_len(ctx_attrs));
 	nb = argconfig_parse_comma_sep_array(cfg.blocks, nlbs, array_len(nlbs));
 	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, array_len(slbas));
@@ -1779,7 +1771,6 @@ static int flush(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	err = nvme_flush(fd, cfg.namespace_id);
@@ -1835,7 +1826,6 @@ static int resv_acquire(int argc, char **argv)
 		{"iekey",        'i', "",     CFG_NONE,        &cfg.iekey,        no_argument,       iekey},
 		{0}
 	};
-
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
@@ -1903,7 +1893,6 @@ static int resv_register(int argc, char **argv)
 		{"iekey",        'i', "",     CFG_NONE,        &cfg.iekey,        no_argument,       iekey},
 		{0}
 	};
-
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
@@ -1974,7 +1963,6 @@ static int resv_release(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (!cfg.namespace_id) {
@@ -2037,7 +2025,6 @@ static int resv_report(int argc, char **argv)
 		{"raw-binary",   'b', "",     CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
 		{0}
 	};
-
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
@@ -2150,9 +2137,9 @@ static int submit_io(int opcode, char *command, const char *desc,
 		{0}
 	};
 
-	dfd = mfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	dfd = mfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
 	if (cfg.prinfo > 0xf)
 		return EINVAL;
 	control |= (cfg.prinfo << 10);
@@ -2324,7 +2311,6 @@ static int sec_recv(int argc, char **argv)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	if (cfg.size) {
@@ -2449,8 +2435,8 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc)
 		{0}
 	};
 
-
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
 	if (strlen(cfg.input_file)){
 		wfd = open(cfg.input_file, O_RDONLY,
 			   S_IRUSR | S_IRGRP | S_IROTH);
