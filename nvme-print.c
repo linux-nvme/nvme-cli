@@ -578,9 +578,9 @@ void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 
 	printf("vid     : %#x\n", le16toh(ctrl->vid));
 	printf("ssvid   : %#x\n", le16toh(ctrl->ssvid));
-	printf("sn      : %-20.20s\n", ctrl->sn);
-	printf("mn      : %-40.40s\n", ctrl->mn);
-	printf("fr      : %-.8s\n", ctrl->fr);
+	printf("sn      : %-.*s\n", (int)sizeof(ctrl->sn), ctrl->sn);
+	printf("mn      : %-.*s\n", (int)sizeof(ctrl->mn), ctrl->mn);
+	printf("fr      : %-.*s\n", (int)sizeof(ctrl->fr), ctrl->fr);
 	printf("rab     : %d\n", ctrl->rab);
 	printf("ieee    : %02x%02x%02x\n",
 		ctrl->ieee[2], ctrl->ieee[1], ctrl->ieee[0]);

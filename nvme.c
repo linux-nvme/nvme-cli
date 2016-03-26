@@ -758,19 +758,21 @@ static void print_list_item(struct list_item list_item)
 	sprintf(version,"%d.%d", (list_item.ver >> 16),
 		(list_item.ver >> 8) & 0xff);
 
-	printf("%-16s %-20.20s %-40.40s %-8s %-8d %-26s %-16s %-.8s\n", list_item.node,
-	    list_item.ctrl.sn, list_item.ctrl.mn, version, list_item.nsid, usage, format, list_item.ctrl.fr);
+	printf("%-16s %-*.*s %-*.*s %-8s %-9d %-26s %-16s %-.*s\n", list_item.node,
+            (int)sizeof(list_item.ctrl.sn), (int)sizeof(list_item.ctrl.sn), list_item.ctrl.sn,
+            (int)sizeof(list_item.ctrl.mn), (int)sizeof(list_item.ctrl.mn), list_item.ctrl.mn,
+            version, list_item.nsid, usage, format, (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
 }
 
 static void print_list_items(struct list_item *list_items, unsigned len)
 {
 	unsigned i;
 
-	printf("%-16s %-20s %-40s %-8s %-8s %-26s %-16s %-8s\n",
-	    "Node", "SN", "Model", "Version", "Namepace", "Usage", "Format", "FW Rev");
-	printf("%-16s %-20s %-40s %-8s %-8s %-26s %-16s %-8s\n",
+	printf("%-16s %-20s %-40s %-8s %-9s %-26s %-16s %-8s\n",
+	    "Node", "SN", "Model", "Version", "Namespace", "Usage", "Format", "FW Rev");
+	printf("%-16s %-20s %-40s %-8s %-9s %-26s %-16s %-8s\n",
             "----------------", "--------------------", "----------------------------------------",
-            "--------", "--------", "--------------------------", "----------------", "--------");
+            "--------", "---------", "--------------------------", "----------------", "--------");
 	for (i = 0 ; i < len ; i++)
 		print_list_item(list_items[i]);
 
