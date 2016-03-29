@@ -769,6 +769,19 @@ static int list(int argc, char **argv)
 }
 #endif
 
+static int get_nsid()
+{
+	int nsid = nvme_get_nsid(fd);
+
+	if (nsid <= 0) {
+		fprintf(stderr,
+			"%s: failed to return namespace id\n",
+			devicename);
+		exit(errno);
+	}
+	return nsid;
+}
+
 #ifdef LIBUDEV_EXISTS
 #define MAX_LIST_ITEMS 256
 static int list(int argc, char **argv)
@@ -922,14 +935,8 @@ static int id_ns(int argc, char **argv)
 		flags |= VS;
 	if (cfg.human_readable)
 		flags |= HUMAN;
-
-	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id <= 0) {
-			perror(devicename);
-			exit(errno);
-		}
-	}
+	if (!cfg.namespace_id)
+		cfg.namespace_id = get_nsid();
 
 	err = nvme_identify_ns(fd, cfg.namespace_id, cfg.force, &ns);
 	if (!err) {
@@ -1329,15 +1336,8 @@ static int format(int argc, char **argv)
 		fprintf(stderr, "invalid ms:%d\n", cfg.ms);
 		return EINVAL;
 	}
-	if (S_ISBLK(nvme_stat.st_mode)) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id <= 0) {
-			fprintf(stderr,
-				"%s: failed to return namespace id\n",
-				devicename);
-			return errno;
-		}
-	}
+	if (S_ISBLK(nvme_stat.st_mode))
+		cfg.namespace_id = get_nsid();
 
 	err = nvme_format(fd, cfg.namespace_id, cfg.lbaf, cfg.ses, cfg.pi,
 				cfg.pil, cfg.ms, cfg.timeout);
@@ -1554,15 +1554,8 @@ static int write_uncor(int argc, char **argv)
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
-	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id <= 0) {
-			fprintf(stderr,
-				"%s: failed to return namespace id\n",
-				devicename);
-			return errno;
-		}
-	}
+	if (!cfg.namespace_id)
+		cfg.namespace_id = get_nsid();
 
 	err = nvme_write_uncorrectable(fd, cfg.namespace_id, cfg.start_block,
 					cfg.block_count);
@@ -1635,16 +1628,8 @@ static int write_zeroes(int argc, char **argv)
 		control |= NVME_RW_LR;
 	if (cfg.force_unit_access)
 		control |= NVME_RW_FUA;
-
-	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id <= 0) {
-			fprintf(stderr,
-				"%s: failed to return namespace id\n",
-				devicename);
-			return errno;
-		}
-	}
+	if (!cfg.namespace_id)
+		cfg.namespace_id = get_nsid();
 
 	err = nvme_write_zeros(fd, cfg.namespace_id, cfg.start_block, cfg.block_count,
 			control, cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask);
@@ -1724,16 +1709,8 @@ static int dsm(int argc, char **argv)
 		return EINVAL;
 	}
 
-	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id <= 0) {
-			fprintf(stderr,
-				"%s: failed to return namespace id\n",
-				devicename);
-			return errno;
-		}
-	}
-
+	if (!cfg.namespace_id)
+		cfg.namespace_id = get_nsid();
 	if (!cfg.cdw11)
 		cfg.cdw11 = (cfg.ad << 2) | (cfg.idw << 1) | (cfg.idr << 0);
 
@@ -1832,15 +1809,8 @@ static int resv_acquire(int argc, char **argv)
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
-	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id <= 0) {
-			fprintf(stderr,
-				"%s: failed to return namespace id\n",
-				devicename);
-			return errno;
-		}
-	}
+	if (!cfg.namespace_id)
+		cfg.namespace_id = get_nsid();
 	if (cfg.racqa > 7) {
 		fprintf(stderr, "invalid racqa:%d\n", cfg.racqa);
 		return EINVAL;
@@ -1899,15 +1869,8 @@ static int resv_register(int argc, char **argv)
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
-	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id <= 0) {
-			fprintf(stderr,
-				"%s: failed to return namespace id\n",
-				devicename);
-			return errno;
-		}
-	}
+	if (!cfg.namespace_id)
+		cfg.namespace_id = get_nsid();
 	if (cfg.cptpl > 3) {
 		fprintf(stderr, "invalid cptpl:%d\n", cfg.cptpl);
 		return EINVAL;
@@ -1968,15 +1931,8 @@ static int resv_release(int argc, char **argv)
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
-	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id <= 0) {
-			fprintf(stderr,
-				"%s: failed to return namespace id\n",
-				devicename);
-			return errno;
-		}
-	}
+	if (!cfg.namespace_id)
+		cfg.namespace_id = get_nsid();
 	if (cfg.iekey > 1) {
 		fprintf(stderr, "invalid iekey:%d\n", cfg.iekey);
 		return EINVAL;
@@ -2031,15 +1987,8 @@ static int resv_report(int argc, char **argv)
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
-	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id <= 0) {
-			fprintf(stderr,
-				"%s: failed to return namespace id\n",
-				devicename);
-			return errno;
-		}
-	}
+	if (!cfg.namespace_id)
+		cfg.namespace_id = get_nsid();
 	if (!cfg.numd || cfg.numd > (0x1000 >> 2))
 		cfg.numd = 0x1000 >> 2;
 
