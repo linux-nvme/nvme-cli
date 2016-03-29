@@ -539,7 +539,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 {
 	char *name = commands[attach ? ATTACH_NS : DETACH_NS].name;
 	int err, num, i, list[2048];
-	__le16 ctrlist[2048];
+	__u16 ctrlist[2048];
 
 	const char *namespace_id = "namespace to attach";
 	const char *cont = "optional comma-sep controllers list";
@@ -570,7 +570,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 	num = argconfig_parse_comma_sep_array(cfg.cntlist,
 					list, 2047);
 	for (i = 0; i < num; i++)
-		ctrlist[i] = htole16(((uint16_t)list[i]));
+		ctrlist[i] = (uint16_t)list[i];
 
 	if (attach)	
 		err = nvme_ns_attach_ctrls(fd, cfg.namespace_id, num, ctrlist);

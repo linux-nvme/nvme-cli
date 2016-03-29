@@ -491,6 +491,7 @@ int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist,
 					(struct nvme_controller_list *)buf;
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_ns_attach,
+		.nsid		= nsid,
 		.addr		= (__u64)(uintptr_t) cntlist,
 		.cdw10		= attach ? 0 : 1,
 		.data_len	= 0x1000,
