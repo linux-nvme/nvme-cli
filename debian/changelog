@@ -1,4 +1,11 @@
-nvme-cli (0.2-1) unstable; urgency=medium
+nvme-cli (0.5-1) unstable; urgency=medium
+
+  * New upstream release
+  * Fix version number (Closes: #816438)
+
+ -- Breno Leitao <brenohl@br.ibm.com>  Wed, 02 Mar 2016 15:30:12 -0500
+
+nvme-cli (0.3-1) unstable; urgency=medium
 
   * Initial release. (Closes: #810033)
 
