@@ -807,7 +807,7 @@ void show_intel_smart_log(struct nvme_additional_smart_log *smart, unsigned int 
 	printf("timed_workload_media_wear       : %3d%%       %.3f%%\n",
 		smart->timed_workload_media_wear.norm,
 		((float)int48_to_long(smart->timed_workload_media_wear.raw)) / 1024);
-	printf("timed_workload_host_reads       : %3d%%       %lu%%\n",
+	printf("timed_workload_host_reads       : %3d%%       %lu\n",
 		smart->timed_workload_host_reads.norm,
 		int48_to_long(smart->timed_workload_host_reads.raw));
 	printf("timed_workload_timer            : %3d%%       %lu min\n",
