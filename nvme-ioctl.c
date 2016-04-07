@@ -562,6 +562,7 @@ int nvme_sec_recv(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_security_recv,
+		.nsid		= nsid,
 		.cdw10		= secp << 24 | spsp << 8 | nssf,
 		.cdw11		= al,
 		.addr		= (__u64)(uintptr_t) data,
