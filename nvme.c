@@ -395,7 +395,7 @@ static int get_log(int argc, char **argv)
 	} else {
 		unsigned char log[cfg.log_len];
 
-		err = nvme_log(fd, cfg.namespace_id, cfg.log_id, cfg.log_len, log);
+		err = nvme_get_log(fd, cfg.namespace_id, cfg.log_id, cfg.log_len, log);
 		if (!err) {
 			if (!cfg.raw_binary) {
 				printf("Device:%s log-id:%d namespace-id:%#x\n",
