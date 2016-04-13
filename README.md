@@ -1,17 +1,31 @@
 # nvme-cli
 NVM-Express user space tooling for Linux.
 
-To install, run:
+To build and install:
+```
+$ autogen.sh && ./configure --prefix=$your_prefix
+$ make && make install   # install to $your_prefix
+$ make rpm               # or generate an RPM and install that
+```
 
-  # make && make install
+If libudev headers are not installed (now usually a part of systemd-devel),
+then the "nvme list" command will not list the present devices but the rest 
+of the ioctl commands will work as expected.
 
 If not sure how to use, find the top-level documentation with:
-
-  # man nvme
+    ```
+    $ man nvme
+    ```
 
 Or find a short summary with:
+    ```
+    $ nvme help
+    ```
 
-  # nvme help
+To see what NVME devices are on the system:
+    ```
+    $ sudo nvme list
+    ```
 
 ## Distro Support
 
@@ -46,52 +60,28 @@ steps:
    ```
    sudo apt-get install nvme-cli
    ```
-   4. Test the code.
-   ```
-   sudo nvme list
-   ```
-   In the case of no NVMe devices you will see
-   ```
-   No NVMe devices detected.
-   ```
-   otherwise you will see information about each NVMe device installed
-   in the system.
-   
+ 
 ### AlpineLinux
 
 nvme-cli is tested on AlpineLinux 3.3.  Install it using:
+    ```
+    $ akp update && apk add nvme-cli nvme-cli-doc
+    ```
 
-    # akp update && apk add nvme-cli nvme-cli-doc
-    
-    the "list" command will not work unless you installed udev for some reason.
-    ```
-    # nvme list
-    nvme-list: libudev not detected, install and rebuild.
-    ```
-    
-    if you just use the device you're after, it will work flawless.
-    ```
-    # nvme smart-log /dev/nvme0
-Smart Log for NVME device:/dev/nvme0 namespace-id:ffffffff
-critical_warning                    : 0
-temperature                         : 49 C
-available_spare                     : 100%
-    ```
-   
 ### openSUSE Tumbleweed
 
-nvme-cli is available in openSUSE Tumbleweed. You can install it using zypper.
-For example:
-
+nvme-cli is available in openSUSE Tumbleweed. You can install it using zypper:
+    ```
     $ sudo zypper install nvme-cli
+    ```
 
 ### Arch Linux
 
 Install from AUR, e.g.:
 ```
-$ yaourt -S nvme-cli-git
+    $ yaourt -S nvme-cli-git
 ```
 
 ### Other Distros
 
-TBD
+Please file an issue to track and/or request distro support.
