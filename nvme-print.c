@@ -676,7 +676,7 @@ void show_error_log(struct nvme_error_log_page *err_log, int entries, const char
 		printf("status_field : %#x\n", err_log[i].status_field);
 		printf("parm_err_loc : %#x\n", err_log[i].parm_error_location);
 		printf("lba          : %#"PRIx64"\n",(uint64_t)le64toh(err_log[i].lba));
-		printf("nsid         : %d\n", err_log[i].nsid);
+		printf("nsid         : %#x\n", err_log[i].nsid);
 		printf("vs           : %d\n", err_log[i].vs);
 		printf(".................\n");
 	}
