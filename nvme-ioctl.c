@@ -354,45 +354,40 @@ int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
 	return nvme_identify(fd, nsid, (cntid << 16) | cns, data);
 }
 
-int nvme_get_log(int fd, __u32 nsid, __u32 cdw10, __u32 data_len, void *data)
+int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_get_log_page,
 		.nsid		= nsid,
 		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= data_len,
-		.cdw10		= cdw10,
 	};
+
+	cmd.cdw10 = log_id | ((data_len >> 2) - 1) << 16;
+
 	return nvme_submit_admin_passthru(fd, &cmd);
-}
-
-int nvme_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
-{
-	__u32 cdw10 = log_id | ((data_len >> 2) - 1) << 16;
-
-	return nvme_get_log(fd, nsid, cdw10, data_len, data);
 }
 
 int nvme_fw_log(int fd, struct nvme_firmware_log_page *fw_log)
 {
-	return nvme_log(fd, 0xffffffff, NVME_LOG_FW_SLOT, sizeof(*fw_log), fw_log);
+	return nvme_get_log(fd, 0xffffffff, NVME_LOG_FW_SLOT, sizeof(*fw_log), fw_log);
 }
 
 int nvme_error_log(int fd, __u32 nsid, int entries,
 		   struct nvme_error_log_page *err_log)
 {
-	return nvme_log(fd, nsid, NVME_LOG_ERROR, entries * sizeof(*err_log), err_log);
+	return nvme_get_log(fd, nsid, NVME_LOG_ERROR, entries * sizeof(*err_log), err_log);
 }
 
 int nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log *smart_log)
 {
-	return nvme_log(fd, nsid, NVME_LOG_SMART, sizeof(*smart_log), smart_log);
+	return nvme_get_log(fd, nsid, NVME_LOG_SMART, sizeof(*smart_log), smart_log);
 }
 
 int nvme_intel_smart_log(int fd, __u32 nsid,
 			 struct nvme_additional_smart_log *intel_smart_log)
 {
-	return nvme_log(fd, nsid, 0xca, sizeof(*intel_smart_log),
+	return nvme_get_log(fd, nsid, 0xca, sizeof(*intel_smart_log),
 			intel_smart_log);
 }
 
