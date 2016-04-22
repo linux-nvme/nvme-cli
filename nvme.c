@@ -2042,8 +2042,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 	struct config {
 		__u64 start_block;
 		__u16 block_count;
-		__u32 data_size;
-		__u32 metadata_size;
+		__u64 data_size;
+		__u64 metadata_size;
 		__u32 ref_tag;
 		char  *data;
 		char  *metadata;
