@@ -7,6 +7,8 @@ Group: 		Development/Tools
 URL: 		https://github.com/linux-nvme/nvme-cli/
 Source: 	nvme-@@VERSION@@.tar.gz
 Provides:	nvme
+BuildRequires:  systemd-devel
+Requires:       systemd
 BuildRoot:	%{_tmppath}/%{name}-%{version}-root
 
 %description
