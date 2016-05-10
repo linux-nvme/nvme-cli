@@ -1158,6 +1158,16 @@ static int fw_download(int argc, char **argv)
 	return err;
 }
 
+static char *nvme_fw_status_reset_type(__u32 status)
+{
+	switch (status) {
+	case NVME_SC_FW_NEEDS_CONV_RESET:	return "conventional";
+	case NVME_SC_FW_NEEDS_SUBSYS_RESET:	return "subsystem";
+	case NVME_SC_FW_NEEDS_RESET:		return "any controller";
+	default:				return "unknown";
+	}
+}
+
 static int fw_activate(int argc, char **argv)
 {
 	const char *desc = "Verify downloaded firmware image and "\
@@ -1200,12 +1210,18 @@ static int fw_activate(int argc, char **argv)
 	if (err < 0)
 		perror("fw-activate");
 	else if (err != 0)
-		if (err == NVME_SC_FW_NEEDS_CONV_RESET)
-			printf("Success activating firmware action:%d slot:%d, but a conventional reset is required\n",
-			       cfg.action, cfg.slot);
-		else
+		switch (err) {
+		case NVME_SC_FW_NEEDS_CONV_RESET:
+		case NVME_SC_FW_NEEDS_SUBSYS_RESET:
+		case NVME_SC_FW_NEEDS_RESET:
+			printf("Success activating firmware action:%d slot:%d, but firmware requires %s reset\n",
+			       cfg.action, cfg.slot, nvme_fw_status_reset_type(err));
+			break;
+		default:
 			fprintf(stderr, "NVME Admin command error:%s(%x)\n",
 						nvme_status_to_string(err), err);
+			break;
+		}
 	else
 		printf("Success activating firmware action:%d slot:%d\n",
 		       cfg.action, cfg.slot);
