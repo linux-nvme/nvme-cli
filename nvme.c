@@ -1200,7 +1200,7 @@ static int fw_activate(int argc, char **argv)
 	if (err < 0)
 		perror("fw-activate");
 	else if (err != 0)
-		if (err == NVME_SC_FIRMWARE_NEEDS_RESET)
+		if (err == NVME_SC_FW_NEEDS_CONV_RESET)
 			printf("Success activating firmware action:%d slot:%d, but a conventional reset is required\n",
 			       cfg.action, cfg.slot);
 		else
