@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-admin-passthru
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 02/26/2016
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 05/14/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ADMIN\-PASSTHR" "1" "02/26/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-ADMIN\-PASSTHR" "1" "05/14/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -44,6 +44,7 @@ nvme-admin-passthru \- Submit an arbitrary admin command, return results
                 [\-\-timeout=<to> | \-t <to>]
                 [\-\-show\-command | \-\-dry\-run | \-s]
                 [\-\-raw\-binary | \-b]
+                [\-\-prefill=<prefill> | \-p <prefill>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -107,6 +108,11 @@ Do not actually send the command; print out the command that would be sent\&.
 \-b, \-\-raw\-binary
 .RS 4
 Print the raw returned buffer to stdout if the command returns a structure\&.
+.RE
+.PP
+\-p, \-\-prefill
+.RS 4
+Prefill the buffer with a predetermined byte value\&. Defaults to 0\&. This may be useful if the data you are writing is shorter than the required buffer, and you need to pad it with a known value\&. It may also be useful if you need to confirm if a device is overwriting a buffer for a data\-in command\&.
 .RE
 .SH "EXAMPLES"
 .sp

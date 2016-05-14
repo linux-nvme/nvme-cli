@@ -21,6 +21,7 @@ SYNOPSIS
 		[--timeout=<to> | -t <to>]
 		[--show-command | --dry-run | -s]
 		[--raw-binary | -b]
+		[--prefill=<prefill> | -p <prefill>]
 
 DESCRIPTION
 -----------
@@ -93,6 +94,14 @@ OPTIONS
 --raw-binary::
 	Print the raw returned buffer to stdout if the command returns
 	data or a structure.
+
+-p <prefill>::
+--prefill <prefill>::
+	Prefill the buffer with a predetermined byte value. Defaults to 0.
+	This may be useful if the data you are writing is shorter
+	than the required buffer, and you need to pad it with a known
+	value. It may also be useful if you need to confirm if a device
+	is overwriting a buffer on a data-in command.
 
 EXAMPLES
 --------

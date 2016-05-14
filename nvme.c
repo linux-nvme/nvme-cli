@@ -2335,6 +2335,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc)
 		__u8  dry_run;
 		__u8  read;
 		__u8  write;
+		__u8  prefill;
 	};
 
 	struct config cfg = {
@@ -2354,6 +2355,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc)
 		.cdw14        = 0,
 		.cdw15        = 0,
 		.input_file   = "",
+		.prefill      = 0,
 	};
 
 	const char *opcode = "hex opcode (required)";
@@ -2377,10 +2379,12 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc)
 	const char *dry = "show command instead of sending";
 	const char *re = "set dataflow direction to receive";
 	const char *wr = "set dataflow direction to send";
+	const char *prefill = "prefill buffer with known byte-value, default 0";
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"opcode",       'o', "NUM",  CFG_BYTE,     &cfg.opcode,       required_argument, opcode},
 		{"flags",        'f', "NUM",  CFG_BYTE,     &cfg.flags,        required_argument, flags},
+		{"prefill",      'p', "NUM",  CFG_BYTE,     &cfg.prefill,      required_argument, prefill},
 		{"rsvd",         'R', "NUM",  CFG_SHORT,    &cfg.rsvd,         required_argument, rsvd},
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
 		{"data-len",     'l', "NUM",  CFG_POSITIVE, &cfg.data_len,     required_argument, data_len},
@@ -2418,6 +2422,9 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc)
 		metadata = malloc(cfg.metadata_len);
 	if (cfg.data_len) {
 		data = malloc(cfg.data_len);
+		if (!data)
+			exit(ENOMEM);
+		memset(data, cfg.prefill, cfg.data_len);
 		if (!cfg.read && !cfg.write) {
 			fprintf(stderr, "data direction not given\n");
 			err = EINVAL;
