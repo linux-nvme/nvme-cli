@@ -54,6 +54,9 @@ struct nvme_id_power_state {
 	__u8			rsvd23[9];
 };
 
+/* idle and active power scales occupy the last 2 bits of the field */
+#define POWER_SCALE(s) ((s) >> 6)
+
 enum {
 	NVME_PS_FLAGS_MAX_POWER_SCALE	= 1 << 0,
 	NVME_PS_FLAGS_NON_OP_STATE	= 1 << 1,

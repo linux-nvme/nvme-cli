@@ -563,10 +563,10 @@ static void show_nvme_id_ctrl_power(struct nvme_id_ctrl *ctrl, unsigned int mode
 			ctrl->psd[i].read_tput, ctrl->psd[i].read_lat,
 			ctrl->psd[i].write_tput, ctrl->psd[i].write_lat);
 		print_ps_power_and_scale(ctrl->psd[i].idle_power,
-					 ctrl->psd[i].idle_scale);
+					 POWER_SCALE(ctrl->psd[i].idle_scale));
 		printf(" active_power:");
 		print_ps_power_and_scale(ctrl->psd[i].active_power,
-					 ctrl->psd[i].active_work_scale);
+					 POWER_SCALE(ctrl->psd[i].active_work_scale));
 		printf("\n");
 
 	}
