@@ -1044,8 +1044,11 @@ static int get_feature(int argc, char **argv)
 		break;
 	}
 	
-	if (cfg.data_len)
-		buf = malloc(cfg.data_len);
+	if (cfg.data_len) {
+		if (posix_memalign(&buf, getpagesize(), cfg.data_len))
+			exit(ENOMEM);
+		memset(buf, 0, cfg.data_len);
+	}
 
 	err = nvme_get_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.sel, cfg.cdw11,
 			cfg.data_len, buf, &result);
@@ -1423,8 +1426,12 @@ static int set_feature(int argc, char **argv)
 	}
 	if (cfg.feature_id == NVME_FEAT_LBA_RANGE)
 		cfg.data_len = 4096;
-	if (cfg.data_len)
-		buf = malloc(cfg.data_len);
+	if (cfg.data_len) {
+		if (posix_memalign(&buf, getpagesize(), cfg.data_len))
+			exit(ENOMEM);
+		memset(buf, 0, cfg.data_len);
+	}
+
 	if (buf) {
 		if (strlen(cfg.file)) {
 			ffd = open(cfg.file, O_RDONLY);
@@ -2136,9 +2143,9 @@ static int submit_io(int opcode, char *command, const char *desc,
 		return EINVAL;
 	}
 
-	buffer = malloc(cfg.data_size);
-	if (!buffer)
+	if (posix_memalign(&buffer, getpagesize(), cfg.data_size))
 		return ENOMEM;
+	memset(buffer, 0, cfg.data_size);
 
 	if (cfg.metadata_size) {
 		mbuffer = malloc(cfg.metadata_size);
