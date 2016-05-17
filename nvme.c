@@ -2421,9 +2421,9 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc)
 	if (cfg.metadata_len)
 		metadata = malloc(cfg.metadata_len);
 	if (cfg.data_len) {
-		data = malloc(cfg.data_len);
-		if (!data)
+		if (posix_memalign(&data, getpagesize(), cfg.data_len))
 			exit(ENOMEM);
+
 		memset(data, cfg.prefill, cfg.data_len);
 		if (!cfg.read && !cfg.write) {
 			fprintf(stderr, "data direction not given\n");
