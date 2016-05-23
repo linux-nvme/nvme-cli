@@ -2,6 +2,8 @@ nvme
 *.xml
 a.out
 *.o
+*.lo
+*.la
 *~
 *.swp
 NVME-VERSION-FILE
@@ -10,3 +12,26 @@ NVME-VERSION-FILE
 /debian/nvme-cli.debhelper.log
 /debian/nvme-cli.substvars
 /debian/nvme-cli
+
+# autoconf garbage
+.deps/
+.libs/
+Makefile.in
+aclocal.m4
+autom4te.cache/
+config.h
+config.h.in
+config.log
+config.status
+config.guess
+config.sub
+config/*
+configure
+libibscif.spec
+libtool
+stamp-h1
+missing
+depcomp
+install-sh
+ltmain.sh
+

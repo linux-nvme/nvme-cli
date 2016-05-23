@@ -24,6 +24,12 @@
  * This program uses NVMe IOCTLs to run native nvme commands to a device.
  */
 
+#include "config.h"
+
+#ifdef HAVE_LIBUDEV
+#include <libudev.h>
+#endif
+
 #include <endian.h>
 #include <errno.h>
 #include <getopt.h>
@@ -35,9 +41,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
-#ifdef LIBUDEV_EXISTS
-#include <libudev.h>
-#endif
 
 #include <linux/fs.h>
 
@@ -61,7 +64,7 @@ static int fd;
 static struct stat nvme_stat;
 static const char *devicename;
 
-static const char nvme_version_string[] = NVME_VERSION;
+static const char nvme_version_string[] = PACKAGE_VERSION;
 
 #define COMMAND_LIST \
 	ENTRY(LIST, "list", "List all NVMe devices and namespaces on machine", list) \
@@ -703,7 +706,7 @@ struct list_item {
 	__le32              ver;
 };
 
-#ifdef LIBUDEV_EXISTS
+#ifdef HAVE_LIBUDEV
 /* For pre NVMe 1.2 devices we must get the version from the BAR, not the
  * ctrl_id.*/
 static void get_version(struct list_item* list_item)
@@ -782,7 +785,7 @@ static int get_nsid()
 	return nsid;
 }
 
-#ifdef LIBUDEV_EXISTS
+#ifdef HAVE_LIBUDEV
 #define MAX_LIST_ITEMS 256
 static int list(int argc, char **argv)
 {
