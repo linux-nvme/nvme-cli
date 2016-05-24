@@ -391,3 +391,60 @@ int lnvm_do_get_bbtbl(int fd, int nsid, int lunid, int chid, unsigned int flags)
 
 	return __lnvm_do_get_bbtbl(fd, &nvm_id, ppa, flags);
 }
+
+static int __lnvm_do_set_bbtbl(int fd, struct ppa_addr ppa, __u8 value)
+{
+	int err;
+
+	struct nvme_nvm_setbbtbl cmd = {
+		.opcode		= nvme_nvm_admin_set_bb_tbl,
+		.nsid		= 1,
+		.ppa		= htole64(ppa.ppa),
+		.nlb		= htole16(0),
+		.value		= value,
+	};
+
+	err = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD,
+					(struct nvme_passthru_cmd *)&cmd);
+	if (err > 0) {
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+			nvme_status_to_string(err), err);
+		return err;
+	}
+	return 0;
+}
+
+int lnvm_do_set_bbtbl(int fd, int nsid,
+				int chid, int lunid, int plnid, int blkid,
+				__u8 value)
+{
+	struct nvme_nvm_id nvm_id;
+	struct ppa_addr ppa;
+	int err;
+
+	err = lnvm_get_identity(fd, nsid, &nvm_id);
+	if (err) {
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+			nvme_status_to_string(err), err);
+		return err;
+	}
+
+	if (chid >= nvm_id.groups[0].num_ch ||
+					lunid >= nvm_id.groups[0].num_lun ||
+					plnid >= nvm_id.groups[0].num_pln ||
+					blkid >= nvm_id.groups[0].num_blk) {
+		fprintf(stderr, "Out of bound channel id, LUN id, plane id, or"\
+				"block id\n");
+		return -EINVAL;
+	}
+
+	ppa.ppa = 0;
+	ppa.g.lun = lunid;
+	ppa.g.ch = chid;
+	ppa.g.pl = plnid;
+	ppa.g.blk = blkid;
+
+	ppa = generic_to_dev_addr(&nvm_id.ppaf, ppa);
+
+	return __lnvm_do_set_bbtbl(fd, ppa, value);
+}

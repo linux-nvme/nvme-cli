@@ -41,6 +41,27 @@ struct nvme_nvm_identity {
 	__u32	rsvd11[5];
 };
 
+struct nvme_nvm_setbbtbl {
+	__u8	opcode;
+	__u8	flags;
+	__u16	rsvd1;
+	__u32	nsid;
+	__u32	cdw2;
+	__u32	cdw3;
+	__u64	metadata;
+	__u64	addr;
+	__u32	metadata_len;
+	__u32	data_len;
+	__u64	ppa;
+	__u16	nlb;
+	__u8	value;
+	__u8	rsvd2;
+	__u32	cdw14;
+	__u32	cdw15;
+	__u32	timeout_ms;
+	__u32	result;
+};
+
 struct nvme_nvm_getbbtbl {
 	__u8	opcode;
 	__u8	flags;
@@ -204,5 +225,6 @@ int lnvm_do_remove_tgt(char *);
 int lnvm_do_factory_init(char *, int, int, int);
 int lnvm_do_id_ns(int, int, unsigned int);
 int lnvm_do_get_bbtbl(int, int, int, int, unsigned int);
+int lnvm_do_set_bbtbl(int, int, int, int, int, int, __u8);
 
 #endif

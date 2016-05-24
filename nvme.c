@@ -111,6 +111,7 @@ static const char nvme_version_string[] = NVME_VERSION;
 	ENTRY(LNVM_REMOVE, "lnvm-remove", "Remove target from device", lnvm_remove_tgt) \
 	ENTRY(LNVM_FACTORY, "lnvm-factory", "Reset device to factory state", lnvm_factory_init) \
 	ENTRY(LNVM_BBTBL_GET, "lnvm-diag-bbtbl", "Diagnose bad block table", lnvm_get_bbtbl) \
+	ENTRY(LNVM_BBTBL_SET, "lnvm-diag-set-bbtbl", "Update bad block table", lnvm_set_bbtbl) \
 	ENTRY(VERSION, "version", "Shows the program version", version) \
 	ENTRY(HELP, "help", "Display this help", help)
 
@@ -2778,6 +2779,57 @@ static int lnvm_get_bbtbl(int argc, char **argv)
 	return lnvm_do_get_bbtbl(fd, cfg.namespace_id, cfg.lunid, cfg.chid,
 									flags);
 }
+
+static int lnvm_set_bbtbl(int argc, char **argv)
+{
+	const char *desc = "Update bad block table on a LightNVM compatible"\
+			   " device.";
+	const char *namespace = "(optional) desired namespace";
+	const char *ch = "channel identifier";
+	const char *lun = "lun identifier (within a channel)";
+	const char *pln = "plane identifier (within a lun)";
+	const char *blk = "block identifier (within a plane)";
+	const char *value = "value to update the specific block to.";
+
+	struct config
+	{
+		__u32 namespace_id;
+		__u16 lunid;
+		__u16 chid;
+		__u16 plnid;
+		__u16 blkid;
+		__u16 value;
+	};
+
+	struct config cfg = {
+		.namespace_id = 1,
+		.lunid = 0,
+		.chid = 0,
+		.plnid = 0,
+		.blkid = 0,
+		.value = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
+		{"channel-id",   'c', "NUM",     CFG_SHORT,    &cfg.chid,         required_argument, ch},
+		{"lun-id",       'l', "NUM",     CFG_SHORT,    &cfg.lunid,        required_argument, lun},
+		{"plane-id",     'p', "NUM",     CFG_SHORT,    &cfg.plnid,        required_argument, pln},
+		{"block-id",     'b', "NUM",     CFG_SHORT,    &cfg.blkid,        required_argument, blk},
+		{"value",        'v', "NUM",     CFG_SHORT,    &cfg.value,        required_argument, value},
+		{0}
+	};
+
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	printf("Updating: Ch.: %u LUN: %u Plane: %u Block: %u -> %u\n",
+			cfg.chid, cfg.lunid, cfg.plnid, cfg.blkid, cfg.value);
+
+	return lnvm_do_set_bbtbl(fd, cfg.namespace_id,
+				 cfg.chid, cfg.lunid, cfg.plnid, cfg.blkid,
+				 cfg.value);
+}
+
 
 static void usage()
 {
