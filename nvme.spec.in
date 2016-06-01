@@ -21,13 +21,14 @@ make
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install PREFIX=%{buildroot}/usr
+make install DESTDIR=%{buildroot} PREFIX=/usr
 
 %files
 %defattr(-,root,root)
 %doc Documentation/nvme*.1
 %{_sbindir}/nvme
 %{_mandir}/man1/nvme*.1*
+%{_sysconfdir}/bash_completion.d/nvme
 
 %clean
 rm -rf $RPM_BUILD_ROOT

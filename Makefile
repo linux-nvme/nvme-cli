@@ -5,6 +5,7 @@ INSTALL ?= install
 SRC = ./src
 DESTDIR =
 PREFIX ?= /usr/local
+SYSCONFDIR = /etc
 SBINDIR = $(PREFIX)/sbin
 LIBUDEV := $(shell ld -o /dev/null -ludev >/dev/null 2>&1; echo $$?)
 LIB_DEPENDS =
@@ -64,7 +65,11 @@ install-bin: default
 	$(INSTALL) -d $(DESTDIR)$(SBINDIR)
 	$(INSTALL) -m 755 nvme $(DESTDIR)$(SBINDIR)
 
-install: install-bin install-man
+install-bash-completion:
+	$(INSTALL) -d $(DESTDIR)$(SYSCONFDIR)/bash_completion.d
+	$(INSTALL) -m 644 -T ./completions/bash-nvme-completion.sh $(DESTDIR)$(SYSCONFDIR)/bash_completion.d/nvme
+
+install: install-bin install-man install-bash-completion
 
 nvme.spec: nvme.spec.in NVME-VERSION-FILE
 	sed -e 's/@@VERSION@@/$(NVME_VERSION)/g' < $< > $@+
