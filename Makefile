@@ -31,8 +31,8 @@ override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
 
 NVME_DPKG_VERSION=1~`lsb_release -sc`
 
-nvme: nvme.c ./linux/nvme.h argconfig.o suffix.o nvme-print.o nvme-ioctl.o NVME-VERSION-FILE
-	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME) argconfig.o suffix.o nvme-print.o nvme-ioctl.o
+nvme: nvme.c ./linux/nvme.h argconfig.o suffix.o nvme-print.o nvme-ioctl.o nvme-lightnvm.o NVME-VERSION-FILE
+	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME) argconfig.o suffix.o nvme-print.o nvme-ioctl.o nvme-lightnvm.o
 
 nvme-ioctl.o: nvme-ioctl.c nvme-ioctl.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c nvme-ioctl.c
@@ -45,6 +45,9 @@ suffix.o: $(SRC)/suffix.c $(SRC)/suffix.h
 
 nvme-print.o: nvme-print.c nvme-print.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c nvme-print.c
+
+nvme-lightnvm.o: nvme-lightnvm.h nvme-lightnvm.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c nvme-lightnvm.c
 
 doc: $(NVME)
 	$(MAKE) -C Documentation

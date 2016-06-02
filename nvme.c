@@ -49,6 +49,7 @@
 
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
+#include "nvme-lightnvm.h"
 
 #include "src/argconfig.h"
 #include "src/suffix.h"
@@ -102,6 +103,15 @@ static const char nvme_version_string[] = NVME_VERSION;
 	ENTRY(RESET, "reset", "Resets the controller", reset) \
 	ENTRY(SUBSYS_RESET, "subsystem-reset", "Resets the controller", subsystem_reset) \
 	ENTRY(REGISTERS, "show-regs", "Shows the controller registers. Requires admin character device", show_registers) \
+	ENTRY(LNVM_LIST, "lnvm-list", "List available LightNVM devices", lnvm_list) \
+	ENTRY(LNVM_INFO, "lnvm-info", "List general information and available target engines", lnvm_info) \
+	ENTRY(LNVM_ID_NS, "lnvm-id-ns", "List geometry for LightNVM device", lnvm_id_ns) \
+	ENTRY(LNVM_INIT, "lnvm-init", "Initialize media manager on LightNVM device", lnvm_init) \
+	ENTRY(LNVM_CREATE, "lnvm-create", "Create target on top of a LightNVM device", lnvm_create_tgt) \
+	ENTRY(LNVM_REMOVE, "lnvm-remove", "Remove target from device", lnvm_remove_tgt) \
+	ENTRY(LNVM_FACTORY, "lnvm-factory", "Reset device to factory state", lnvm_factory_init) \
+	ENTRY(LNVM_BBTBL_GET, "lnvm-diag-bbtbl", "Diagnose bad block table", lnvm_get_bbtbl) \
+	ENTRY(LNVM_BBTBL_SET, "lnvm-diag-set-bbtbl", "Update bad block table", lnvm_set_bbtbl) \
 	ENTRY(VERSION, "version", "Shows the program version", version) \
 	ENTRY(HELP, "help", "Display this help", help)
 
@@ -2518,6 +2528,315 @@ static int admin_passthru(int argc, char **argv)
 		"device via IOCTL passthrough, return results.";
 	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD, desc);
 }
+
+static int lnvm_init(int argc, char **argv)
+{
+	const char *desc = "Initialize LightNVM device. A LightNVM/Open-Channel SSD"\
+			   " must have a media manager associated before it can "\
+			   " be exposed to the user. The default is to initialize"
+			   " the general media manager on top of the device.\n\n"
+			   "Example:"
+			   " lnvm-init -d nvme0n1";
+	const char *devname = "identifier of desired device. e.g. nvme0n1.";
+	const char *mmtype = "media manager to initialize on top of device. Default: gennvm.";
+
+	struct config
+	{
+		char *devname;
+		char *mmtype;
+	};
+
+	struct config cfg = {
+		.devname = "",
+		.mmtype = "gennvm",
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"device-name",   'd', "DEVICE", CFG_STRING, &cfg.devname, required_argument, devname},
+		{"mediamgr-name", 'm', "MM",     CFG_STRING, &cfg.mmtype,  no_argument,       mmtype},
+		{0}
+	};
+
+	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	return lnvm_do_init(cfg.devname, cfg.mmtype);
+}
+
+static int lnvm_list(int argc, char **argv)
+{
+	const char *desc = "List all devices registered with LightNVM.";
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{0}
+	};
+
+	argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
+
+	return lnvm_do_list_devices();
+}
+
+static int lnvm_info(int argc, char **argv)
+{
+	const char *desc = "Show general information and registered target types with LightNVM";
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{0}
+	};
+
+	argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
+
+	return lnvm_do_info();
+}
+
+static int lnvm_id_ns(int argc, char **argv)
+{
+	const char *desc = "Send an Identify Geometry command to the "\
+		"given LightNVM device, returns properties of the specified"\
+		"namespace in either human-readable or binary format.";
+	const char *force = "Return this namespace, even if not supported";
+	const char *raw_binary = "show infos in binary format";
+	const char *human_readable = "show infos in readable format";
+	const char *namespace_id = "identifier of desired namespace. default: 1";
+	unsigned int flags = 0;
+
+	struct config {
+		__u32 namespace_id;
+		__u8  raw_binary;
+		__u8  human_readable;
+		__u8  force;
+	};
+
+	struct config cfg = {
+		.namespace_id    = 1,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id",    'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id,    required_argument, namespace_id},
+		{"force",           'f', "FLAG", CFG_NONE,     &cfg.force,           no_argument,       force},
+		{"raw-binary",      'b', "FLAG", CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
+		{"human-readable",  'H', "FLAG", CFG_NONE,     &cfg.human_readable,  no_argument,       human_readable},
+		{0}
+	};
+
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	if (cfg.human_readable)
+		flags |= HUMAN;
+	else if (cfg.raw_binary)
+		flags |= RAW;
+
+	return lnvm_do_id_ns(fd, cfg.namespace_id, flags);
+}
+
+
+static int lnvm_create_tgt(int argc, char **argv)
+{
+	const char *desc = "Instantiate a target on top of a LightNVM enabled device.";
+	const char *devname = "identifier of desired device. e.g. nvme0n1.";
+	const char *tgtname = "target name of the device to initialize. e.g. target0.";
+	const char *tgttype = "identifier of target type. e.g. pblk.";
+	const char *lun_begin = "Define begin of luns to use for target.";
+	const char *lun_end = "Define set of luns to use for target.";
+
+	struct config
+	{
+		char *devname;
+		char *tgtname;
+		char *tgttype;
+		int lun_begin;
+		int lun_end;
+	};
+
+	struct config cfg = {
+		.devname = "",
+		.tgtname = "",
+		.tgttype = "",
+		.lun_begin = 0,
+		.lun_end = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"device-name",   'd', "DEVICE", CFG_STRING,    &cfg.devname,   required_argument, devname},
+		{"target-name",   'n', "TARGET", CFG_STRING,    &cfg.tgtname,   required_argument, tgtname},
+		{"target-type",   't', "TARGETTYPE",  CFG_STRING,    &cfg.tgttype,   required_argument, tgttype},
+		{"lun-begin",     'b', "NUM",    CFG_POSITIVE,  &cfg.tgttype,   no_argument,       lun_begin},
+		{"lun-end",       'e', "NUM",    CFG_POSITIVE,  &cfg.tgttype,   no_argument,       lun_end},
+		{0}
+	};
+
+	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	if (!strlen(cfg.devname)) {
+		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		return -EINVAL;
+	}
+	if (!strlen(cfg.tgtname)) {
+		fprintf(stderr, "target name missing\n");
+		return -EINVAL;
+	}
+	if (!strlen(cfg.tgttype)) {
+		fprintf(stderr, "target type missing\n");
+		return -EINVAL;
+	}
+
+	return lnvm_do_create_tgt(cfg.devname, cfg.tgtname, cfg.tgttype, cfg.lun_begin, cfg.lun_end);
+}
+
+static int lnvm_remove_tgt(int argc, char **argv)
+{
+	const char *desc = "Remove an initialized LightNVM target.";
+	const char *tgtname = "target name of the device to initialize. e.g. target0.";
+
+	struct config
+	{
+		char *tgtname;
+	};
+
+	struct config cfg = {
+		.tgtname = "",
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"target-name",   'n', "TARGET", CFG_STRING,    &cfg.tgtname,   required_argument, tgtname},
+		{0}
+	};
+
+	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	if (!strlen(cfg.tgtname)) {
+		fprintf(stderr, "target name missing\n");
+		return -EINVAL;
+	}
+
+	return lnvm_do_remove_tgt(cfg.tgtname);
+}
+
+static int lnvm_factory_init(int argc, char **argv)
+{
+	const char *desc = "Factory initialize a LightNVM enabled device.";
+	const char *devname = "identifier of desired device. e.g. nvme0n1.";
+	const char *erase_only_marked = "only erase marked blocks. default: all blocks.";
+	const char *host_marks = "remove host side blocks list. default: keep.";
+	const char *bb_marks = "remove grown bad blocks list. default: keep";
+
+	struct config
+	{
+		char *devname;
+		__u8 erase_only_marked;
+		__u8 clear_host_marks;
+		__u8 clear_bb_marks;
+	};
+
+	struct config cfg = {
+		.devname = "",
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"device-name",          'd', "DEVICE", CFG_STRING, &cfg.devname,           required_argument, devname},
+		{"erase-only-marked",    'e', "",       CFG_NONE,   &cfg.erase_only_marked, no_argument,       erase_only_marked},
+		{"clear-host-side-blks", 's', "",       CFG_NONE,   &cfg.clear_host_marks,  no_argument,       host_marks},
+		{"clear-bb-blks",        'b', "",       CFG_NONE,   &cfg.clear_bb_marks,    no_argument,       bb_marks},
+		{0}
+	};
+
+	argconfig_parse(argc, argv, desc, command_line_options, &cfg,
+								sizeof(cfg));
+
+	return lnvm_do_factory_init(cfg.devname, cfg.erase_only_marked,
+				cfg.clear_host_marks, cfg.clear_bb_marks);
+}
+
+static int lnvm_get_bbtbl(int argc, char **argv)
+{
+	const char *desc = "Receive bad block table from a LightNVM compatible"\
+			   " device.";
+	const char *namespace = "(optional) desired namespace";
+	const char *ch = "channel identifier";
+	const char *lun = "lun identifier (within a channel)";
+	const char *raw_binary = "show infos in binary format";
+	unsigned int flags = 0;
+
+	struct config
+	{
+		__u32 namespace_id;
+		__u16 lunid;
+		__u16 chid;
+		__u8  raw_binary;
+	};
+
+	struct config cfg = {
+		.namespace_id = 1,
+		.lunid = 0,
+		.chid = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
+		{"channel-id",   'c', "",     CFG_SHORT,    &cfg.chid,         required_argument, ch},
+		{"lun-id",       'l', "",     CFG_SHORT,    &cfg.lunid,        required_argument, lun},
+		{"raw-binary",   'b', "FLAG", CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
+		{0}
+	};
+
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	if (cfg.raw_binary)
+		flags |= RAW;
+
+	return lnvm_do_get_bbtbl(fd, cfg.namespace_id, cfg.lunid, cfg.chid,
+									flags);
+}
+
+static int lnvm_set_bbtbl(int argc, char **argv)
+{
+	const char *desc = "Update bad block table on a LightNVM compatible"\
+			   " device.";
+	const char *namespace = "(optional) desired namespace";
+	const char *ch = "channel identifier";
+	const char *lun = "lun identifier (within a channel)";
+	const char *pln = "plane identifier (within a lun)";
+	const char *blk = "block identifier (within a plane)";
+	const char *value = "value to update the specific block to.";
+
+	struct config
+	{
+		__u32 namespace_id;
+		__u16 lunid;
+		__u16 chid;
+		__u16 plnid;
+		__u16 blkid;
+		__u16 value;
+	};
+
+	struct config cfg = {
+		.namespace_id = 1,
+		.lunid = 0,
+		.chid = 0,
+		.plnid = 0,
+		.blkid = 0,
+		.value = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
+		{"channel-id",   'c', "NUM",     CFG_SHORT,    &cfg.chid,         required_argument, ch},
+		{"lun-id",       'l', "NUM",     CFG_SHORT,    &cfg.lunid,        required_argument, lun},
+		{"plane-id",     'p', "NUM",     CFG_SHORT,    &cfg.plnid,        required_argument, pln},
+		{"block-id",     'b', "NUM",     CFG_SHORT,    &cfg.blkid,        required_argument, blk},
+		{"value",        'v', "NUM",     CFG_SHORT,    &cfg.value,        required_argument, value},
+		{0}
+	};
+
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	printf("Updating: Ch.: %u LUN: %u Plane: %u Block: %u -> %u\n",
+			cfg.chid, cfg.lunid, cfg.plnid, cfg.blkid, cfg.value);
+
+	return lnvm_do_set_bbtbl(fd, cfg.namespace_id,
+				 cfg.chid, cfg.lunid, cfg.plnid, cfg.blkid,
+				 cfg.value);
+}
+
 
 static void usage()
 {

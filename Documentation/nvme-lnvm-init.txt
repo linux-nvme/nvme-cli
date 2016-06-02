@@ -1,0 +1,44 @@
+nvme-lnvm-init(1)
+=================
+
+NAME
+----
+nvme-lnvm-init - Initialize LightNVM device with media manager
+
+SYNOPSIS
+--------
+[verse]
+'nvme lnvm-init' [--device-name=<DEVICE> | -d <DEVICE>]
+			[--mediamgr-name | -m]
+
+DESCRIPTION
+-----------
+Initialize LightNVM device. A LightNVM/Open-Channel SSD must have a media
+manager associated before it can  be exposed to the user. The default is to
+initialize the general media manager on top of the device.
+
+OPTIONS
+-------
+--device-name=<DEVICE>::
+-d <DEVICE>::
+	Device name to initialize.
+
+--mediamgr-name=<MediaMgr>::
+-m <MediaMgr>::
+	Media Manager name to use for initialization.
+
+EXAMPLES
+--------
+* Initialize nvme0n1
+------------
+# nvme lnvm-init -d nvme0n1
+------------
+
+* Initialize nvme0n1 with gennvm media manager (default media manager)
+------------
+# nvme lnvm-init -d nvme0n1 -m gennvm
+------------
+
+NVME
+----
+Part of the nvme-user suite

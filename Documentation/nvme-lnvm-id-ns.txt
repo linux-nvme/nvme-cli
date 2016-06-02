@@ -1,0 +1,49 @@
+nvme-lnvm-id-ns(1)
+==================
+
+NAME
+----
+nvme-lnvm-id-ns - Identify Geometry for LightNVM NVMe device
+
+SYNOPSIS
+--------
+[verse]
+'nvme lnvm-id-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
+			[--force | -f]
+			[--raw-binary | -b]
+			[--human-readable | -H]
+
+DESCRIPTION
+-----------
+Send an Identify Geometry command to the given LightNVM device, returns
+properties of the specified namespace in either human-readable or binary
+format.
+
+OPTIONS
+-------
+--namespace-id=<nsid>::
+-n <nsid>::
+	Retrieve the geometry from the selected namespace.
+
+--force::
+-f::
+	Try to read the data and assume it is a LightNVM device
+
+--raw-binary::
+-b::
+	Output the raw output
+
+--human-readable::
+-H::
+	Output the status in human readable format
+
+EXAMPLES
+--------
+* Retrieve the geometry from nvme0
+------------
+# nvme lnvm-id-ns /dev/nvme0 -n 1
+------------
+
+NVME
+----
+Part of the nvme-user suite

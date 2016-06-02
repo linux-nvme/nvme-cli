@@ -1,0 +1,54 @@
+nvme-lnvm-factory(1)
+====================
+
+NAME
+----
+nvme-lnvm-factory - Factory reset a LightNVM device
+
+SYNOPSIS
+--------
+[verse]
+'nvme lnvm-factory' [--device-name=<DEVICE> | -d <DEVICE>]
+			[--erase-only-marked | -e]
+			[--clear-host-side-blks | -s]
+			[--clear-bb-blks | -b]
+
+DESCRIPTION
+-----------
+Instantiate a target on top of a LightNVM enabled device. This exposes the
+physical for the user to use.
+
+OPTIONS
+-------
+--device-name=<DEVICE>::
+-d <DEVICE>::
+	Device name to factory initialize
+
+--erase-only-marked::
+-e::
+	Erases only blocks that are marked in the bad block list
+
+--clear-host-side-blks::
+-s::
+	Remove host-side bad block marks. This clear the media manager
+	registration
+
+--clear-bb-blks::
+-b::
+	Removes the grown bad block marks. Allowing them to be rediscovered.
+
+EXAMPLES
+--------
+* Factory reset of device nvme0n1
+------------
+# nvme lnvm-factory -d nvme0n1
+------------
+
+* Complete factory reset of device nvme0n1
+------------
+# nvme lnvm-factory -d nvme0n1 -s -b
+------------
+
+NVME
+----
+Part of the nvme-user suite

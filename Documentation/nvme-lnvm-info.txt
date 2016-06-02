@@ -1,0 +1,27 @@
+nvme-lnvm-info(1)
+=================
+
+NAME
+----
+nvme-lnvm-info - Show general information and registered target types with LightNVM
+
+SYNOPSIS
+--------
+[verse]
+'nvme lnvm-info'
+
+DESCRIPTION
+-----------
+Show general information and registered target types with LightNVM.
+
+OPTIONS
+-------
+No options yet.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite
