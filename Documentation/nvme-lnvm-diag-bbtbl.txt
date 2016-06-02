@@ -1,0 +1,65 @@
+nvme-lnvm-diag-bbtbl(1)
+=======================
+
+NAME
+----
+nvme-lnvm-diag-bbtbl - Diagnose the bad block table
+
+SYNOPSIS
+--------
+[verse]
+'nvme lnvm-diag-bbtbl' [--namespace-id=<NUM> | -n <NUM>]
+			[--channel-id=<CHID> | -c <CHID>]
+			[--lun-id=<LUNID> | -l <LUNID>]
+			[--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Retrieve the bad block table for a given channel and lun.
+
+The statistics will be shown in the default case, and the actual output bad
+block information can be retrieved when --raw-binary is passed.
+
+The raw binary output follows this format:
+
+Channel 0, LUN0 (Dual plane flash)
+
+Byte 0 -> Plane 0, Block 0
+Byte 1 -> Plane 1, Block 0
+Byte 2 -> Plane 0, Block 1
+...
+
+OPTIONS
+-------
+--namespace-id=<NUM>::
+-n <NUM>::
+	Namespace id to use
+
+--channel-id=<NUM>::
+-c::
+	Channel id
+
+--lun-id=<NUM>::
+-l::
+	LUN id
+
+--raw-binary::
+-b::
+	Returns the bad block table in binary form without statistics.
+
+EXAMPLES
+--------
+* Retrieve bad block table statistics for physical device nvme0, channel 0, and
+lun 0:
+------------
+# nvme lnvm-diag-bbtbl /dev/nvme0 -c 0 -n 0
+------------
+
+* Display the bad block table in raw form without statistics for same query:
+------------
+# nvme lnvm-diag-bbtbl /dev/nvme0 -c 0 -n 0 -b | hexdump
+------------
+
+NVME
+----
+Part of the nvme-user suite

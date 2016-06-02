@@ -1,0 +1,27 @@
+nvme-lnvm-list(1)
+=================
+
+NAME
+----
+nvme-lnvm-list - List all recognized LightNVM NVMe devices
+
+SYNOPSIS
+--------
+[verse]
+'nvme lnvm-list' 
+
+DESCRIPTION
+-----------
+List all registered LightNVM devices.
+
+OPTIONS
+-------
+No options yet.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

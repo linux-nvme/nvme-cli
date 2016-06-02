@@ -1,0 +1,32 @@
+nvme-lnvm-remove(1)
+===================
+
+NAME
+----
+nvme-lnvm-remove - Remove an initialized LightNVM target.
+
+SYNOPSIS
+--------
+[verse]
+'nvme lnvm-remove' [--target-name=<TARGET> | -n <TARGET>]
+
+DESCRIPTION
+-----------
+Remove an initialized target.
+
+The target name is the name of which the media is exposed as in
+/dev/<TARGET>
+
+OPTIONS
+-------
+--target-name=<TARGET>::
+-n <TARGET>::
+	Target name of the device to initialize. For example: target0.
+
+EXAMPLES
+--------
+None yet
+
+NVME
+----
+Part of the nvme-user suite

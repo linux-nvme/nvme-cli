@@ -1,0 +1,60 @@
+nvme-lnvm-create(1)
+===================
+
+NAME
+----
+nvme-lnvm-create - Instantiate a target on top of a LightNVM enabled device
+
+SYNOPSIS
+--------
+[verse]
+'nvme lnvm-create' [--device-name=<DEVICE> | -d <DEVICE>]
+			[--target-name=<TARGET> | -n <TARGET>]
+			[--target-type=<TARGETTYPE> | -t <TARGETTYPE>]
+			[--lun-begin <NUM> | -b <NUM>]
+			[--lun-end <NUM> | -e <NUM>]
+
+DESCRIPTION
+-----------
+Instantiate a target on top of a LightNVM enabled device. This exposes the
+physical for the user to use.
+
+The target name is the name of which the media is exposed as in
+/dev/<targetname>
+
+The target type is the target to be instantiated. Typically pblk or rrpc.
+
+LUN begin and end defines the range of LUNs to use for a target instantiation.
+
+OPTIONS
+-------
+--device-name=<DEVICE>::
+-d <DEVICE>::
+	Device name to initialize.
+
+--target-name=<TARGET>::
+-n <TARGET>::
+	Target name of the device to initialize. For example: target0.
+
+--target-type=<TARGETTYPE>::
+-t <TARGETTYPE>::
+	Target type of the device to use. For example: pblk
+
+--lun-begin <NUM>::
+-b <NUM>::
+	Begin LUN id offset to use for target
+
+--lun-end <NUM>::
+-e <NUM>::
+	End LUN id offset to use for target
+
+EXAMPLES
+--------
+* Initialize nvme0n1 with pblk target with 64 LUNs.
+------------
+# nvme lnvm-create -d nvme0n1 -t pblk -n target0 -b 0 -e 63
+------------
+
+NVME
+----
+Part of the nvme-user suite
