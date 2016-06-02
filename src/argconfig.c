@@ -364,7 +364,7 @@ int argconfig_parse_subopt_string(char *string, char **options,
 	char **o = options;
 	char *tmp;
 
-	if (!strlen(string) || string == NULL) {
+	if (!string || !strlen(string)) {
 		*(o++) = NULL;
 		*(o++) = NULL;
 		return 0;
@@ -439,7 +439,7 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
 	char *tmp;
 	char *p;
 
-	if (!strlen(string) || string == NULL)
+	if (!string || !strlen(string))
 		return 0;
 
 	tmp = strtok(string, ",");
@@ -480,7 +480,7 @@ unsigned argconfig_parse_comma_sep_array_long(char *string,
 	char *tmp;
 	char *p;
 
-	if (!strlen(string) || string == NULL)
+	if (!string || !strlen(string))
 		return 0;
 
 	tmp = strtok(string, ",");
