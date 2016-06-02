@@ -165,13 +165,18 @@ static void open_dev(const char *dev)
 	exit(errno);
 }
 
-static void get_dev(int argc, char **argv)
+static void check_arg_dev(int argc, char **argv)
 {
 	if (optind >= argc) {
 		errno = EINVAL;
 		perror(argv[0]);
 		exit(errno);
 	}
+}
+
+static void get_dev(int argc, char **argv)
+{
+	check_arg_dev(argc, argv);
 	open_dev((const char *)argv[optind]);
 }
 
@@ -1263,6 +1268,8 @@ static int show_registers(int argc, char **argv)
 
 	while ((opt = getopt_long(argc, (char **)argv, "", NULL,
 					&long_index)) != -1);
+
+	check_arg_dev(argc, argv);
 	devicename = basename(argv[optind]);
 
 	get_registers(&bar);
