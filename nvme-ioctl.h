@@ -1,8 +1,10 @@
 #ifndef _NVME_LIB_H
 #define _NVME_LIB_H
 
+#include <linux/types.h>
 #include <stdbool.h>
-#include "linux/nvme.h"
+#include "linux/nvme_ioctl.h"
+#include "nvme.h"
 
 int nvme_get_nsid(int fd);
 

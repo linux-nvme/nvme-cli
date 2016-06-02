@@ -1,7 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include "linux/nvme.h"
+#include "nvme.h"
 
 enum {
 	TERSE = 0x1u,	// only show a few useful fields
