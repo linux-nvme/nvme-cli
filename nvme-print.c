@@ -539,7 +539,7 @@ static void print_ps_power_and_scale(__le16 ctr_power, __u8 scale)
 	}
 }
 
-static void show_nvme_id_ctrl_power(struct nvme_id_ctrl *ctrl, unsigned int mode)
+static void show_nvme_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 {
 	int i;
 
@@ -653,7 +653,7 @@ void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 	if (human)
 		show_nvme_id_ctrl_sgls(ctrl->sgls);
 
-	show_nvme_id_ctrl_power(ctrl, mode);
+	show_nvme_id_ctrl_power(ctrl);
 	if (vs) {
 		printf("vs[]:\n");
 		d(ctrl->vs, sizeof(ctrl->vs), 16, 1);
