@@ -2174,8 +2174,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 
 	if ((opcode & 1) && read(dfd, (void *)buffer, cfg.data_size) < 0) {
 		fprintf(stderr, "failed to read data buffer from input file\n");
-		free(buffer);
-		return EINVAL;
+		err = EINVAL;
+		goto free_and_return;
 	}
 
 	if ((opcode & 1) && cfg.metadata_size &&
@@ -2230,7 +2230,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	free(buffer);
 	if (cfg.metadata_size)
 		free(mbuffer);
-    return err;
+	return err;
 }
 
 static int compare(int argc, char **argv)
