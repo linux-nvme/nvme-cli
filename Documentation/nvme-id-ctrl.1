@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-id-ctrl
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 05/16/2016
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 06/06/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-CTRL" "1" "05/16/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-CTRL" "1" "06/06/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,6 +33,7 @@ nvme-id-ctrl \- Send NVMe Identify Controller, return result and structure
 .sp
 .nf
 \fInvme id\-ctrl\fR <device> [\-v | \-\-vendor\-specific] [\-b | \-\-raw\-binary]
+                        [\-o <fmt> | \-\-output\-format=<fmt>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -56,6 +57,14 @@ In addition to parsing known fields, this option will dump the vendor specific r
 \-H, \-\-human\-readable
 .RS 4
 This option will parse and format many of the bit fields into human\-readable formats\&.
+.RE
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR, or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
 .RE
 .SH "EXAMPLES"
 .sp

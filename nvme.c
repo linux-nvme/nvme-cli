@@ -203,6 +203,27 @@ static void parse_and_open(int argc, char **argv, const char *desc,
 	get_dev(argc, argv);
 }
 
+const char *output_format = "Output format: normal|json|binary";
+
+enum {
+	NORMAL,
+	JSON,
+	BINARY,
+};
+
+static int validate_output_format(char *format)
+{
+	if (!format)
+		return -EINVAL;
+	if (!strcmp(format, "normal"))
+		return NORMAL;
+	if (!strcmp(format, "json"))
+		return JSON;
+	if (!strcmp(format, "binary"))
+		return BINARY;
+	return -EINVAL;
+}
+
 static int get_smart_log(int argc, char **argv)
 {
 	struct nvme_smart_log smart_log;
@@ -211,31 +232,42 @@ static int get_smart_log(int argc, char **argv)
 			"(default) or binary.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "output in binary format";
-	int err;
+	int err, fmt;
 
 	struct config {
 		__u32 namespace_id;
 		int   raw_binary;
+		char *output_format;
 	};
 
 	struct config cfg = {
 		.namespace_id = 0xffffffff,
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw},
 		{0}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (cfg.raw_binary)
+		fmt = BINARY;
+
 	err = nvme_smart_log(fd, cfg.namespace_id, &smart_log);
 	if (!err) {
-		if (!cfg.raw_binary)
-			show_smart_log(&smart_log, cfg.namespace_id, devicename);
-		else
+		if (fmt == BINARY)
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
+		else if (fmt == JSON)
+			json_smart_log(&smart_log, cfg.namespace_id, devicename);
+		else
+			show_smart_log(&smart_log, cfg.namespace_id, devicename);
 	}
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
@@ -290,27 +322,36 @@ static int get_error_log(int argc, char **argv)
 	const char *log_entries = "number of entries to retrieve";
 	const char *raw_binary = "dump in binary format";
 	struct nvme_id_ctrl ctrl;
-	int err;
+	int err, fmt;
 
 	struct config {
 		__u32 namespace_id;
 		__u32 log_entries;
 		int   raw_binary;
+		char *output_format;
 	};
 
 	struct config cfg = {
 		.namespace_id = 0xffffffff,
 		.log_entries  = 64,
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
 		{"log-entries",  'e', "NUM",  CFG_POSITIVE, &cfg.log_entries,  required_argument, log_entries},
 		{"raw-binary",   'b', "",     CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{0}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (cfg.raw_binary)
+		fmt = BINARY;
 
 	if (!cfg.log_entries) {
 		fprintf(stderr, "non-zero log-entries is required param\n");
@@ -327,10 +368,12 @@ static int get_error_log(int argc, char **argv)
 
 		err = nvme_error_log(fd, cfg.namespace_id, cfg.log_entries, err_log);
 		if (!err) {
-			if (!cfg.raw_binary)
-				show_error_log(err_log, cfg.log_entries, devicename);
-			else
+			if (fmt == BINARY)
 				d_raw((unsigned char *)err_log, sizeof(err_log));
+			else if (fmt == JSON)
+				json_error_log(err_log, cfg.log_entries, devicename);
+			else
+				show_error_log(err_log, cfg.log_entries, devicename);
 		}
 		else if (err > 0)
 			fprintf(stderr, "NVMe Status:%s(%x)\n",
@@ -344,29 +387,40 @@ static int get_fw_log(int argc, char **argv)
 	const char *desc = "Retrieve the firmware log for the "\
 		"specified device in either decoded format (default) or binary.";
 	const char *raw_binary = "use binary output";
-	int err;
+	int err, fmt;
 	struct nvme_firmware_log_page fw_log;
 
 	struct config {
 		int raw_binary;
+		char *output_format;
 	};
 
 	struct config cfg = {
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"raw-binary", 'b', "",   CFG_NONE, &cfg.raw_binary,   no_argument,       raw_binary},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{0}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (cfg.raw_binary)
+		fmt = BINARY;
+
 	err = nvme_fw_log(fd, &fw_log);
 	if (!err) {
-		if (!cfg.raw_binary)
-			show_fw_log(&fw_log, devicename);
-		else
+		if (fmt == BINARY)
 			d_raw((unsigned char *)&fw_log, sizeof(fw_log));
+		else if (fmt == JSON)
+			json_fw_log(&fw_log, devicename);
+		else
+			show_fw_log(&fw_log, devicename);
 	}
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
@@ -870,7 +924,7 @@ static int id_ctrl(int argc, char **argv)
 	const char *vendor_specific = "dump binary vendor infos";
 	const char *raw_binary = "show infos in binary format";
 	const char *human_readable = "show infos in readable format";
-	int err;
+	int err, fmt;
 	unsigned int flags = 0;
 	struct nvme_id_ctrl ctrl;
 
@@ -878,31 +932,41 @@ static int id_ctrl(int argc, char **argv)
 		int vendor_specific;
 		int raw_binary;
 		int human_readable;
+		char *output_format;
 	};
 
 	struct config cfg = {
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"vendor-specific", 'v', "", CFG_NONE, &cfg.vendor_specific, no_argument, vendor_specific},
 		{"raw-binary",      'b', "", CFG_NONE, &cfg.raw_binary,      no_argument, raw_binary},
 		{"human-readable",  'H', "", CFG_NONE, &cfg.human_readable,  no_argument, human_readable},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{0}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (cfg.raw_binary)
+		fmt = BINARY;
 
 	if (cfg.vendor_specific)
 		flags |= VS;
 	if (cfg.human_readable)
 		flags |= HUMAN;
 
-
 	err = nvme_identify_ctrl(fd, &ctrl);
 	if (!err) {
-		if (cfg.raw_binary) {
+		if (fmt == BINARY)
 			d_raw((unsigned char *)&ctrl, sizeof(ctrl));
-		} else {
+		else if (fmt == JSON)
+			json_nvme_id_ctrl(&ctrl, flags);
+		else {
 			printf("NVME Identify Controller:\n");
 			show_nvme_id_ctrl(&ctrl, flags);
 		}
@@ -926,7 +990,7 @@ static int id_ns(int argc, char **argv)
 	const char *human_readable = "show infos in readable format";
 	const char *namespace_id = "identifier of desired namespace";
 	struct nvme_id_ns ns;
-	int err;
+	int err, fmt;
 	unsigned int flags = 0;
 
 	struct config {
@@ -935,10 +999,12 @@ static int id_ns(int argc, char **argv)
 		int   raw_binary;
 		int   human_readable;
 		int   force;
+		char *output_format;
 	};
 
 	struct config cfg = {
 		.namespace_id    = 0,
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -947,10 +1013,17 @@ static int id_ns(int argc, char **argv)
 		{"vendor-specific", 'v', "FLAG", CFG_NONE,     &cfg.vendor_specific, no_argument,       vendor_specific},
 		{"raw-binary",      'b', "FLAG", CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
 		{"human-readable",  'H', "FLAG", CFG_NONE,     &cfg.human_readable,  no_argument,       human_readable},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{0}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (cfg.raw_binary)
+		fmt = BINARY;
 
 	if (cfg.vendor_specific)
 		flags |= VS;
@@ -961,8 +1034,10 @@ static int id_ns(int argc, char **argv)
 
 	err = nvme_identify_ns(fd, cfg.namespace_id, cfg.force, &ns);
 	if (!err) {
-		if (cfg.raw_binary)
+		if (fmt == BINARY)
 			d_raw((unsigned char *)&ns, sizeof(ns));
+		else if (fmt == JSON)
+			json_nvme_id_ns(&ns, flags);
 		else {
 			printf("NVME Identify Namespace %d:\n", cfg.namespace_id);
 			show_nvme_id_ns(&ns, flags);
@@ -2010,28 +2085,37 @@ static int resv_report(int argc, char **argv)
 	const char *numd = "number of dwords to transfer";
 	const char *raw_binary = "dump output in binary format";
 
-	int err;
+	int err, fmt;
 	struct nvme_reservation_status *status;
 
 	struct config {
 		__u32 namespace_id;
 		__u32 numd;
 		int   raw_binary;
+		char *output_format;
 	};
 
 	struct config cfg = {
 		.namespace_id = 0,
 		.numd         = 0,
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
 		{"numd",         'd', "NUM",  CFG_POSITIVE, &cfg.numd,         required_argument, numd},
 		{"raw-binary",   'b', "",     CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{0}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (cfg.raw_binary)
+		fmt = BINARY;
 
 	if (!cfg.namespace_id)
 		cfg.namespace_id = get_nsid();
@@ -2049,11 +2133,14 @@ static int resv_report(int argc, char **argv)
 	else if (err != 0)
 		fprintf(stderr, "NVME IO command error:%04x\n", err);
 	else {
-		if (!cfg.raw_binary) {
+		if (fmt == BINARY)
+			d_raw((unsigned char *)status, cfg.numd << 2);
+		else if (fmt == JSON)
+			json_nvme_resv_report(status);
+		else {
 			printf("NVME Reservation Report success\n");
 			show_nvme_resv_report(status);
-		} else
-			d_raw((unsigned char *)status, cfg.numd << 2);
+		}
 	}
 	return 0;
 }

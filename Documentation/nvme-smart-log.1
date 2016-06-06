@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-smart-log
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 05/16/2016
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 06/06/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SMART\-LOG" "1" "05/16/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-SMART\-LOG" "1" "06/06/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,6 +34,7 @@ nvme-smart-log \- Send NVMe SMART log page request, returns result and log
 .nf
 \fInvme smart\-log\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-raw\-binary | \-b]
+                        [\-\-output\-format=<fmt> | \-o <fmt>]
 .fi
 .SH "DESCRIPTION"
 .sp

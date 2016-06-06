@@ -11,6 +11,7 @@ SYNOPSIS
 'nvme error-log' <device>  [--namespace-id=<nsid> | -n <nsid>]
 			 [--log-entries=<entries> | -e <entries>]
 			 [--raw-binary | -b]
+			 [--output-format=<fmt> | -o <fmt>]
 
 DESCRIPTION
 -----------
@@ -44,6 +45,12 @@ OPTIONS
 -b::
 --raw-binary::
 	Print the raw error log buffer to stdout.
+
+-o <format>::
+--output-format=<format>::
+              Set the reporting format to 'normal', 'json', or
+              'binary'. Only one output format can be used at a time.
+
 
 EXAMPLES
 --------

@@ -1,8 +1,10 @@
 #include <endian.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "nvme-print.h"
+#include "json.h"
 
 static long double int128_to_double(__u8 *data)
 {
@@ -1103,4 +1105,282 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		printf("\tPersist Through Power Loss (PTPL): %s\n", (result & 0x00000001) ? "True":"False");
 		break;
 	}
+}
+
+void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
+{
+	char nguid_buf[2 * sizeof(ns->nguid) + 1], eui64_buf[2 * sizeof(ns->eui64) + 1];
+	char *nguid = nguid_buf, *eui64 = eui64_buf;
+	struct json_object *root;
+	struct json_array *lbafs;
+	int i;
+
+	long double nvmcap = int128_to_double(ns->nvmcap);
+
+	root = json_create_object();
+
+	json_object_add_value_int(root, "nsze", ns->nsze);
+	json_object_add_value_int(root, "ncap", ns->ncap);
+	json_object_add_value_int(root, "nuse", ns->nuse);
+	json_object_add_value_int(root, "nsfeat", ns->nsfeat);
+	json_object_add_value_int(root, "nlbaf", ns->nlbaf);
+	json_object_add_value_int(root, "flbas", ns->flbas);
+	json_object_add_value_int(root, "mc", ns->mc);
+	json_object_add_value_int(root, "dpc", ns->dpc);
+	json_object_add_value_int(root, "dps", ns->dps);
+	json_object_add_value_int(root, "nmic", ns->nmic);
+	json_object_add_value_int(root, "rescap", ns->rescap);
+	json_object_add_value_int(root, "fpi", ns->fpi);
+	json_object_add_value_int(root, "nawun", ns->nawun);
+	json_object_add_value_int(root, "nawupf", ns->nawupf);
+	json_object_add_value_int(root, "nacwu", ns->nacwu);
+	json_object_add_value_int(root, "nabsn", ns->nabsn);
+	json_object_add_value_int(root, "nabo", ns->nabo);
+	json_object_add_value_int(root, "nabspf", ns->nabspf);
+	json_object_add_value_float(root, "nvmcap", nvmcap);
+
+	memset(eui64, 0, sizeof(eui64_buf));
+	for (i = 0; i < sizeof(ns->eui64); i++)
+		eui64 += sprintf(eui64, "%02x", ns->eui64[i]);
+
+	memset(nguid, 0, sizeof(nguid_buf));
+	for (i = 0; i < sizeof(ns->nguid); i++)
+		nguid += sprintf(nguid, "%02x", ns->nguid[i]);
+
+	json_object_add_value_string(root, "eui64", eui64_buf);
+	json_object_add_value_string(root, "nguid", nguid_buf);
+
+	lbafs = json_create_array();
+	json_object_add_value_array(root, "lbafs", lbafs);
+
+	for (i = 0; i <= ns->nlbaf; i++) {
+		struct json_object *lbaf = json_create_object();
+
+		json_object_add_value_int(lbaf, "ms", ns->lbaf[i].ms);
+		json_object_add_value_int(lbaf, "ds", ns->lbaf[i].ds);
+		json_object_add_value_int(lbaf, "rp", ns->lbaf[i].rp);
+
+		json_array_add_value_object(lbafs, lbaf);
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+}
+
+void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
+{
+	struct json_object *root;
+	struct json_array *psds;
+
+	long double tnvmcap = int128_to_double(ctrl->tnvmcap);
+	long double unvmcap = int128_to_double(ctrl->unvmcap);
+
+	char sn[sizeof(ctrl->sn) + 1], mn[sizeof(ctrl->mn) + 1], fr[sizeof(ctrl->fr) + 1];
+	__u32 ieee = ctrl->ieee[2] << 16 | ctrl->ieee[1] << 8 | ctrl->ieee[0];
+
+	int i;
+
+	sprintf(sn, "%-.*s\n", (int)sizeof(ctrl->sn), ctrl->sn);
+	sprintf(mn, "%-.*s\n", (int)sizeof(ctrl->mn), ctrl->mn);
+	sprintf(fr, "%-.*s\n", (int)sizeof(ctrl->fr), ctrl->fr);
+
+	root = json_create_object();
+
+	json_object_add_value_int(root, "vid", ctrl->vid);
+	json_object_add_value_int(root, "ssvid", ctrl->ssvid);
+	json_object_add_value_int(root, "rab", ctrl->rab);
+	json_object_add_value_int(root, "ieee", ieee);
+	json_object_add_value_int(root, "cmic", ctrl->cmic);
+	json_object_add_value_int(root, "mdts", ctrl->mdts);
+	json_object_add_value_int(root, "cntlid", ctrl->cntlid);
+	json_object_add_value_int(root, "ver", ctrl->ver);
+	json_object_add_value_int(root, "rtd3r", ctrl->rtd3r);
+	json_object_add_value_int(root, "rtd3e", ctrl->rtd3e);
+	json_object_add_value_int(root, "oaes", ctrl->oaes);
+	json_object_add_value_int(root, "oacs", ctrl->oacs);
+	json_object_add_value_int(root, "acl", ctrl->acl);
+	json_object_add_value_int(root, "aerl", ctrl->aerl);
+	json_object_add_value_int(root, "frmw", ctrl->frmw);
+	json_object_add_value_int(root, "lpa", ctrl->lpa);
+	json_object_add_value_int(root, "elpe", ctrl->elpe);
+	json_object_add_value_int(root, "npss", ctrl->npss);
+	json_object_add_value_int(root, "avscc", ctrl->avscc);
+	json_object_add_value_int(root, "apsta", ctrl->apsta);
+	json_object_add_value_int(root, "wctemp", ctrl->wctemp);
+	json_object_add_value_int(root, "cctemp", ctrl->cctemp);
+	json_object_add_value_int(root, "mtfa", ctrl->mtfa);
+	json_object_add_value_int(root, "hmpre", ctrl->hmpre);
+	json_object_add_value_int(root, "hmmin", ctrl->hmmin);
+	json_object_add_value_float(root, "tnvmcap", tnvmcap);
+	json_object_add_value_float(root, "unvmcap", unvmcap);
+	json_object_add_value_int(root, "rpmbs", ctrl->rpmbs);
+	json_object_add_value_int(root, "sqes", ctrl->sqes);
+	json_object_add_value_int(root, "cqes", ctrl->cqes);
+	json_object_add_value_int(root, "nn", ctrl->nn);
+	json_object_add_value_int(root, "oncs", ctrl->oncs);
+	json_object_add_value_int(root, "fuses", ctrl->fuses);
+	json_object_add_value_int(root, "fna", ctrl->fna);
+	json_object_add_value_int(root, "vwc", ctrl->vwc);
+	json_object_add_value_int(root, "awun", ctrl->awun);
+	json_object_add_value_int(root, "awupf", ctrl->awupf);
+	json_object_add_value_int(root, "nvscc", ctrl->nvscc);
+	json_object_add_value_int(root, "acwu", ctrl->acwu);
+	json_object_add_value_int(root, "sgls", ctrl->sgls);
+
+	psds = json_create_array();
+	json_object_add_value_array(root, "psds", psds);
+
+	for (i = 0; i <= ctrl->npss; i++) {
+		struct json_object *psd = json_create_object();
+
+		json_object_add_value_int(psd, "max_power", ctrl->psd[i].max_power);
+		json_object_add_value_int(psd, "flags", ctrl->psd[i].flags);
+		json_object_add_value_int(psd, "entry_lat", ctrl->psd[i].entry_lat);
+		json_object_add_value_int(psd, "exit_lat", ctrl->psd[i].exit_lat);
+		json_object_add_value_int(psd, "read_tput", ctrl->psd[i].read_tput);
+		json_object_add_value_int(psd, "read_lat", ctrl->psd[i].read_lat);
+		json_object_add_value_int(psd, "write_tput", ctrl->psd[i].write_tput);
+		json_object_add_value_int(psd, "write_lat", ctrl->psd[i].write_lat);
+		json_object_add_value_int(psd, "idle_power", ctrl->psd[i].idle_power);
+		json_object_add_value_int(psd, "idle_scale", ctrl->psd[i].idle_scale);
+		json_object_add_value_int(psd, "active_power", ctrl->psd[i].active_power);
+		json_object_add_value_int(psd, "active_work_scale", ctrl->psd[i].active_work_scale);
+
+		json_array_add_value_object(psds, psd);
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+}
+
+void json_error_log(struct nvme_error_log_page *err_log, int entries, const char *devname)
+{
+	struct json_object *root;
+	struct json_array *errors;
+
+	int i;
+
+	root = json_create_object();
+
+	errors = json_create_array();
+	json_object_add_value_array(root, "errors", errors);
+
+	for (i = 0; i < entries; i++) {
+		struct json_object *error = json_create_object();
+
+		json_object_add_value_int(error, "error_count", err_log[i].error_count);
+		json_object_add_value_int(error, "sqid", err_log[i].sqid);
+		json_object_add_value_int(error, "cmdid", err_log[i].cmdid);
+		json_object_add_value_int(error, "status_field", err_log[i].status_field);
+		json_object_add_value_int(error, "parm_error_location", err_log[i].parm_error_location);
+		json_object_add_value_int(error, "lba", err_log[i].lba);
+		json_object_add_value_int(error, "nsid", err_log[i].nsid);
+		json_object_add_value_int(error, "vs", err_log[i].vs);
+
+		json_array_add_value_object(errors, error);
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+}
+
+void json_nvme_resv_report(struct nvme_reservation_status *status)
+{
+	struct json_object *root;
+	struct json_array *rcs;
+	int i, regctl;
+
+	regctl = status->regctl[0] | (status->regctl[1] << 8);
+
+	root = json_create_object();
+
+	json_object_add_value_int(root, "gen", le32toh(status->gen));
+	json_object_add_value_int(root, "regctl", regctl);
+	json_object_add_value_int(root, "rtype", status->rtype);
+	json_object_add_value_int(root, "ptpls", status->ptpls);
+
+	rcs = json_create_array();
+	json_object_add_value_array(root, "regctls", rcs);
+
+	for (i = 0; i < regctl; i++) {
+		struct json_object *rc = json_create_object();
+
+		json_object_add_value_int(rc, "cntlid", le16toh(status->regctl_ds[i].cntlid));
+		json_object_add_value_int(rc, "rcsts", status->regctl_ds[i].rcsts);
+		json_object_add_value_int(rc, "hostid", (uint64_t)le64toh(status->regctl_ds[i].hostid));
+		json_object_add_value_int(rc, "rkey", (uint64_t)le64toh(status->regctl_ds[i].rkey));
+
+		json_array_add_value_object(rcs, rc);
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+}
+
+void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
+{
+	struct json_object *root;
+	struct json_array *frs;
+	int i;
+
+	root = json_create_object();
+
+	json_object_add_value_int(root, "afi", fw_log->afi);
+
+	frs = json_create_array();
+	json_object_add_value_array(root, "frs", frs);
+
+	for (i = 0; i < 7; i++) {
+		struct json_object *fr = json_create_object();
+
+		json_object_add_value_int(fr, "frs", fw_log->frs[i]);
+
+		json_array_add_value_object(frs, fr);
+
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+}
+
+void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname)
+{
+	struct json_object *root;
+
+	unsigned int temperature = ((smart->temperature[1] << 8) |
+		smart->temperature[0]);
+
+	long double data_units_read = int128_to_double(smart->data_units_read);
+	long double data_units_written = int128_to_double(smart->data_units_written);
+	long double host_read_commands = int128_to_double(smart->host_reads);
+	long double host_write_commands = int128_to_double(smart->host_writes);
+	long double controller_busy_time = int128_to_double(smart->ctrl_busy_time);
+	long double power_cycles = int128_to_double(smart->power_cycles);
+	long double power_on_hours = int128_to_double(smart->power_on_hours);
+	long double unsafe_shutdowns = int128_to_double(smart->unsafe_shutdowns);
+	long double media_errors = int128_to_double(smart->media_errors);
+	long double num_err_log_entries = int128_to_double(smart->num_err_log_entries);
+
+	root = json_create_object();
+
+	json_object_add_value_int(root, "critical_warning", smart->critical_warning);
+	json_object_add_value_int(root, "temperature", temperature);
+	json_object_add_value_int(root, "avail_spare", smart->avail_spare);
+	json_object_add_value_int(root, "spare_thresh", smart->spare_thresh);
+	json_object_add_value_int(root, "percent_used", smart->percent_used);
+	json_object_add_value_float(root, "data_units_read", data_units_read);
+	json_object_add_value_float(root, "data_units_written", data_units_written);
+	json_object_add_value_float(root, "host_read_commands", host_read_commands);
+	json_object_add_value_float(root, "host_write_commands", host_write_commands);
+	json_object_add_value_float(root, "controller_busy_time", controller_busy_time);
+	json_object_add_value_float(root, "power_cycles", power_cycles);
+	json_object_add_value_float(root, "power_on_hours", power_on_hours);
+	json_object_add_value_float(root, "unsafe_shutdowns", unsafe_shutdowns);
+	json_object_add_value_float(root, "media_errors", media_errors);
+	json_object_add_value_float(root, "num_err_log_entries", num_err_log_entries);
+	json_object_add_value_int(root, "warning_temp_time", smart->warning_temp_time);
+	json_object_add_value_int(root, "critical_comp_time", smart->critical_comp_time);
+
+	json_print_object(root, NULL);
+	printf("\n");
 }

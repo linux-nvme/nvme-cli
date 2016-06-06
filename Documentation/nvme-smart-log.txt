@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme smart-log' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>]
 
 DESCRIPTION
 -----------

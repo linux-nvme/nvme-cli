@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-error-log
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 05/16/2016
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 06/06/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ERROR\-LOG" "1" "05/16/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-ERROR\-LOG" "1" "06/06/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,6 +35,7 @@ nvme-error-log \- Send NVME Error log page request, return result and log
 \fInvme error\-log\fR <device>  [\-\-namespace\-id=<nsid> | \-n <nsid>]
                          [\-\-log\-entries=<entries> | \-e <entries>]
                          [\-\-raw\-binary | \-b]
+                         [\-\-output\-format=<fmt> | \-o <fmt>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -58,6 +59,14 @@ Specifies how many log entries the program should request from the device\&. Thi
 \-b, \-\-raw\-binary
 .RS 4
 Print the raw error log buffer to stdout\&.
+.RE
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR, or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
 .RE
 .SH "EXAMPLES"
 .sp

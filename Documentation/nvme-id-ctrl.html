@@ -435,7 +435,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -752,7 +752,8 @@ nvme-id-ctrl(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme id-ctrl</em> &lt;device&gt; [-v | --vendor-specific] [-b | --raw-binary]</pre>
+<pre class="content"><em>nvme id-ctrl</em> &lt;device&gt; [-v | --vendor-specific] [-b | --raw-binary]
+                        [-o &lt;fmt&gt; | --output-format=&lt;fmt&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -808,6 +809,18 @@ raw buffer may be printed to stdout.</p></div>
 <p>
         This option will parse and format many of the bit fields
         into human-readable formats.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;format&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;format&gt;
+</dt>
+<dd>
+<p>
+              Set the reporting format to <em>normal</em>, <em>json</em>, or
+              <em>binary</em>. Only one output format can be used at a time.
 </p>
 </dd>
 </dl></div>
@@ -899,7 +912,7 @@ int main(int argc, char **argv)
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-02-26 08:27:44 MST
+Last updated 2016-06-06 15:26:32 MDT
 </div>
 </div>
 </body>

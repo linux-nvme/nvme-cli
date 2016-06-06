@@ -435,7 +435,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -754,7 +754,8 @@ nvme-error-log(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme error-log</em> &lt;device&gt;  [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                          [--log-entries=&lt;entries&gt; | -e &lt;entries&gt;]
-                         [--raw-binary | -b]</pre>
+                         [--raw-binary | -b]
+                         [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -815,6 +816,18 @@ printed to stdout for another program to parse.</p></div>
         Print the raw error log buffer to stdout.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;format&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;format&gt;
+</dt>
+<dd>
+<p>
+              Set the reporting format to <em>normal</em>, <em>json</em>, or
+              <em>binary</em>. Only one output format can be used at a time.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -854,7 +867,7 @@ Print the raw output to a file:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-02-26 08:25:58 MST
+Last updated 2016-06-06 15:26:18 MDT
 </div>
 </div>
 </body>

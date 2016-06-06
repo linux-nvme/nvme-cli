@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-fw-log
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 05/16/2016
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 06/06/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FW\-LOG" "1" "05/16/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-FW\-LOG" "1" "06/06/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,6 +33,7 @@ nvme-fw-log \- Send NVMe Firmware log page request, returns result and log
 .sp
 .nf
 \fInvme fw\-log\fR <device> [\-\-raw\-binary | \-b]
+                        [\-\-output\-format=<fmt> | \-o <fmt>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -46,6 +47,14 @@ On success, the returned f/w log structure may be returned in one of several way
 \-b, \-\-raw\-binary
 .RS 4
 Print the raw fw log buffer to stdout\&.
+.RE
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR, or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
 .RE
 .SH "EXAMPLES"
 .sp
