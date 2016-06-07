@@ -46,6 +46,7 @@ struct config {
 	char *traddr;
 	char *trsvcid;
 	char *raw;
+	char *device;
 } cfg = { 0 };
 
 #define BUF_SIZE		4096
@@ -451,4 +452,117 @@ int connect(const char *desc, int argc, char **argv)
 	if (instance < 0)
 		return instance;
 	return 0;
+}
+
+static int disconnect_subsys(struct udev_enumerate *enumerate, char *nqn)
+{
+	struct udev_list_entry *list_entry;
+	const char *subsysnqn;
+	char *sysfs_path;
+	int ret = 1;
+
+	udev_list_entry_foreach(list_entry, udev_enumerate_get_list_entry(enumerate)) {
+		struct udev_device *device;
+
+		device = udev_device_new_from_syspath(udev_enumerate_get_udev(enumerate),
+						udev_list_entry_get_name(list_entry));
+		if (device != NULL) {
+			subsysnqn = udev_device_get_sysattr_value(device, "subsysnqn");
+			if (subsysnqn && !strcmp(subsysnqn, nqn)) {
+				if (asprintf(&sysfs_path, "%s/delete_controller",
+						udev_device_get_syspath(device)) < 0) {
+					ret = errno;
+					udev_device_unref(device);
+					break;
+				}
+				udev_device_unref(device);
+				ret = remove_ctrl_by_path(sysfs_path);
+				free(sysfs_path);
+				break;
+			}
+			udev_device_unref(device);
+		}
+	}
+
+	return ret;
+}
+
+static int disconnect_by_nqn(char *nqn)
+{
+	struct udev *udev;
+	struct udev_enumerate *udev_enumerate;
+	int ret;
+
+	if (strlen(nqn) > NVMF_NQN_SIZE) {
+		ret = -EINVAL;
+		goto exit;
+	}
+
+	udev = udev_new();
+	if (!udev) {
+		fprintf(stderr, "failed to create udev\n");
+		ret = -ENOMEM;
+		goto exit;
+	}
+
+	udev_enumerate = udev_enumerate_new(udev);
+	if (udev_enumerate == NULL) {
+		ret = -ENOMEM;
+		goto free_udev;
+	}
+
+	udev_enumerate_add_match_subsystem(udev_enumerate, "nvme");
+	udev_enumerate_scan_devices(udev_enumerate);
+	ret = disconnect_subsys(udev_enumerate, nqn);
+	udev_enumerate_unref(udev_enumerate);
+
+free_udev:
+	udev_unref(udev);
+exit:
+	return ret;
+}
+
+static int disconnect_by_device(char *device)
+{
+	int instance;
+	int ret;
+
+	ret = sscanf(device, "nvme%d", &instance);
+	if (ret < 0)
+		return ret;
+
+	return remove_ctrl(instance);
+}
+
+int disconnect(const char *desc, int argc, char **argv)
+{
+	const char *nqn = "nqn name";
+	const char *device = "nvme device";
+	int ret = 0;
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"nqn", 'n', "LIST", CFG_STRING, &cfg.nqn, required_argument, nqn},
+		{"device", 'd', "LIST", CFG_STRING, &cfg.device, required_argument, device},
+		{0},
+	};
+
+	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (!cfg.nqn && !cfg.device) {
+		fprintf(stderr, "need a -n or -d argument\n");
+		return -EINVAL;
+	}
+
+	if (cfg.nqn) {
+		ret = disconnect_by_nqn(cfg.nqn);
+		if (ret)
+			fprintf(stderr, "Failed to disconnect by NQN: %s\n", cfg.nqn);
+	}
+
+	if (cfg.device) {
+		ret = disconnect_by_device(cfg.device);
+		if (ret)
+			fprintf(stderr, "Failed to disconnect by device name: %s\n", cfg.device);
+	}
+
+	return ret;
 }

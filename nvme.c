@@ -116,6 +116,7 @@ static const char nvme_version_string[] = NVME_VERSION;
 	ENTRY(LNVM_BBTBL_SET, "lnvm-diag-set-bbtbl", "Update bad block table", lnvm_set_bbtbl) \
 	ENTRY(DISCOVER, "discover", "Discover NVMeoF subsystems", discover_cmd) \
 	ENTRY(CONNECT, "connect", "Connect to NVMeoF subsystem", connect_cmd) \
+	ENTRY(DISCONNECT, "disconnect", "Disconnect from NVMeoF subsystem", disconnect_cmd) \
 	ENTRY(VERSION, "version", "Shows the program version", version) \
 	ENTRY(HELP, "help", "Display this help", help)
 
@@ -2851,6 +2852,12 @@ static int connect_cmd(int argc, char **argv)
 {
 	const char *desc = "Connect to NVMeoF subsystem";
 	return connect(desc, argc, argv);
+}
+
+static int disconnect_cmd(int argc, char **argv)
+{
+	const char *desc = "Disconnect from NVMeoF subsystem";
+	return disconnect(desc, argc, argv);
 }
 
 static void usage()
