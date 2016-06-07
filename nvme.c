@@ -50,6 +50,7 @@
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
 #include "nvme-lightnvm.h"
+#include "plugin.h"
 
 #include "argconfig.h"
 #include "suffix.h"
@@ -66,96 +67,25 @@ static const char *devicename;
 
 static const char nvme_version_string[] = NVME_VERSION;
 
-struct plugin {
-	char *name;
-	struct command **commands;
-};
-
-struct command {
-	char *name;
-	char *help;
-	int (*fn)(int argc, char **argv, struct command *command, struct plugin *plugin);
-};
-
-#define COMMAND_LIST \
-	ENTRY("list", "List all NVMe devices and namespaces on machine", list) \
-	ENTRY("id-ctrl", "Send NVMe Identify Controller", id_ctrl) \
-	ENTRY("id-ns", "Send NVMe Identify Namespace, display structure", id_ns) \
-	ENTRY("list-ns", "Send NVMe Identify List, display structure", list_ns) \
-	ENTRY("create-ns", "Creates a namespace with the provided parameters", create_ns) \
-	ENTRY("delete-ns", "Deletes a namespace from the controller", delete_ns) \
-	ENTRY("attach-ns", "Attaches a namespace to requested controller(s)", attach_ns) \
-	ENTRY("detach-ns", "Detaches a namespace from requested controller(s)", detach_ns) \
-	ENTRY("list-ctrl", "Send NVMe Identify Controller List, display structure", list_ctrl) \
-	ENTRY("get-ns-id", "Retrieve the namespace ID of opened block device", get_ns_id) \
-	ENTRY("get-log", "Generic NVMe get log, returns log in raw format", get_log) \
-	ENTRY("fw-log", "Retrieve FW Log, show it", get_fw_log) \
-	ENTRY("smart-log", "Retrieve SMART Log, show it", get_smart_log) \
-	ENTRY("smart-log-add", "Retrieve additional SMART Log, show it", get_additional_smart_log) \
-	ENTRY("error-log", "Retrieve Error Log, show it", get_error_log) \
-	ENTRY("get-feature", "Get feature and show the resulting value", get_feature) \
-	ENTRY("set-feature", "Set a feature and show the resulting value", set_feature) \
-	ENTRY("format", "Format namespace with new block format", format) \
-	ENTRY("fw-activate", "Activate new firmware slot", fw_activate) \
-	ENTRY("fw-download", "Download new firmware", fw_download) \
-	ENTRY("admin-passthru", "Submit arbitrary admin command, return results", admin_passthru) \
-	ENTRY("io-passthru", "Submit an arbitrary IO command, return results", io_passthru) \
-	ENTRY("security-send", "Submit a Security Send command, return results", sec_send) \
-	ENTRY("security-recv", "Submit a Security Receive command, return results", sec_recv) \
-	ENTRY("resv-acquire", "Submit a Reservation Acquire, return results", resv_acquire) \
-	ENTRY("resv-register", "Submit a Reservation Register, return results", resv_register) \
-	ENTRY("resv-release", "Submit a Reservation Release, return results", resv_release) \
-	ENTRY("resv-report", "Submit a Reservation Report, return results", resv_report) \
-	ENTRY("dsm", "Submit a Data Set Management command, return results", dsm) \
-	ENTRY("flush", "Submit a Flush command, return results", flush) \
-	ENTRY("compare", "Submit a Compare command, return results", compare) \
-	ENTRY("read", "Submit a read command, return results", read_cmd) \
-	ENTRY("write", "Submit a write command, return results", write_cmd) \
-	ENTRY("write-zeroes", "Submit a write zeroes command, return results", write_zeroes) \
-	ENTRY("write-uncor", "Submit a write uncorrectable command, return results", write_uncor) \
-	ENTRY("reset", "Resets the controller", reset) \
-	ENTRY("subsystem-reset", "Resets the controller", subsystem_reset) \
-	ENTRY("show-regs", "Shows the controller registers. Requires admin character device", show_registers) \
-	ENTRY("lnvm-list", "List available LightNVM devices", lnvm_list) \
-	ENTRY("lnvm-info", "List general information and available target engines", lnvm_info) \
-	ENTRY("lnvm-id-ns", "List geometry for LightNVM device", lnvm_id_ns) \
-	ENTRY("lnvm-init", "Initialize media manager on LightNVM device", lnvm_init) \
-	ENTRY("lnvm-create", "Create target on top of a LightNVM device", lnvm_create_tgt) \
-	ENTRY("lnvm-remove", "Remove target from device", lnvm_remove_tgt) \
-	ENTRY("lnvm-factory", "Reset device to factory state", lnvm_factory_init) \
-	ENTRY("lnvm-diag-bbtbl", "Diagnose bad block table", lnvm_get_bbtbl) \
-	ENTRY("lnvm-diag-set-bbtbl", "Update bad block table", lnvm_set_bbtbl) \
-	ENTRY("discover", "Discover NVMeoF subsystems", discover_cmd) \
-	ENTRY("connect-all", "Discover and Connect to NVMeoF subsystems", connect_all_cmd) \
-	ENTRY("connect", "Connect to NVMeoF subsystem", connect_cmd) \
-	ENTRY("disconnect", "Disconnect from NVMeoF subsystem", disconnect_cmd) \
-	ENTRY("version", "Shows the program version", version) \
-	ENTRY("help", "Display this help", help)
-
-#define ENTRY(n, h, f) \
-static int f(int argc, char **argv, struct command *command, struct plugin *plugin);
-COMMAND_LIST
-#undef ENTRY
-
-#define ENTRY(n, h, f)			\
-static struct command f ## _cmd = {	\
-	.name = n, 			\
-	.help = h, 			\
-	.fn = f, 			\
-};
-COMMAND_LIST
-#undef ENTRY
-
-struct command *commands[] = {
-	#define ENTRY(n, h, f)	&f ## _cmd,
-	COMMAND_LIST
-	#undef ENTRY
-	NULL,
-};
+#define CREATE_CMD
+#include "nvme-builtin.h"
 
 static struct plugin builtin = {
-	.name = "nvme",
 	.commands = commands,
+	.name = NULL,
+	.desc = NULL,
+	.next = NULL,
+	.tail = &builtin,
+};
+
+static struct program nvme = {
+	.name = "nvme",
+	.version = nvme_version_string,
+	.usage = "<command> [<device>] [<args>]",
+	.desc = "The '<device>' may be either an NVMe character "\
+		"device (ex: /dev/nvme0) or an nvme block device "\
+		"(ex: /dev/nvme0n1).",
+	.extensions = &builtin,
 };
 
 static unsigned long long elapsed_utime(struct timeval start_time,
@@ -2958,32 +2888,6 @@ static int disconnect_cmd(int argc, char **argv, struct command *command, struct
 	return disconnect(desc, argc, argv);
 }
 
-static void usage()
-{
-	printf("usage: nvme <command> [<device>] [<args>]\n");
-}
-
-static void general_help(struct plugin *plugin)
-{
-	unsigned i = 0;
-	const char *desc =  "The '<device>' may be either an NVMe character "\
-		"device (ex: /dev/nvme0) or an nvme block device "\
-		"(ex: /dev/nvme0n1).\n\n";
-
-	printf("nvme-%s\n", nvme_version_string);
-	usage();
-	printf("\n");
-	print_word_wrapped(desc, 0, 0);
-	printf("The following are all implemented sub-commands:\n");
-	while (plugin->commands[i]) {
-		printf("  %-*s %s\n", 15, plugin->commands[i]->name,
-					plugin->commands[i]->help);
-		i++;
-	}
-	printf("\n");
-	printf("See 'nvme help <command>' for more information on a specific command.\n");
-}
-
 static int version(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	printf("nvme version %s\n", nvme_version_string);
@@ -2994,8 +2898,10 @@ static int help(int argc, char **argv, struct command *command, struct plugin *p
 {
 	char man[0x100];
 
-	if (argc == 1)
+	if (argc == 1) {
 		general_help(plugin);
+		return 0;
+	}
 
 	sprintf(man, "nvme-%s", argv[1]);
 	if (execlp("man", "man", man, (char *)NULL)) {
@@ -3005,41 +2911,28 @@ static int help(int argc, char **argv, struct command *command, struct plugin *p
 	return 0;
 }
 
-void handle_plugin(int argc, char **argv, struct plugin *plugin)
+void register_extention(struct plugin *plugin)
 {
-	unsigned i = 0;
-	struct command *cmd;
-	char *str = argv[0];
-	char usage[0x100];
+	plugin->parent = &nvme;
 
-	sprintf(usage, "nvme %s <device> [OPTIONS]", str);
-	argconfig_append_usage(usage);
-
-	/* translate --help and --version into commands */
-	while (*str == '-')
-		str++;
-
-	while (plugin->commands[i]) {
-		cmd = plugin->commands[i];
-		i++;
-
-		if (strcmp(str, cmd->name))
-			continue;
-		
-		exit(cmd->fn(argc, argv, cmd, plugin));
-	}
-	fprintf(stderr, "unknown command '%s'\n", argv[0]);
-	general_help(plugin);
-	exit(1);
+	nvme.extensions->tail->next = plugin;
+	nvme.extensions->tail = plugin;
 }
 
 int main(int argc, char **argv)
 {
+	int ret;
+
+	nvme.extensions->parent = &nvme;
 	if (argc < 2) {
-		usage();
+		general_help(&builtin);
 		return 0;
 	}
 	setlocale(LC_ALL, "");
-	handle_plugin(argc - 1, &argv[1], &builtin);
-	return 0;
+
+	ret = handle_plugin(argc - 1, &argv[1], nvme.extensions);
+	if (ret == -1)
+		general_help(&builtin);
+
+	return ret;
 }

@@ -16,6 +16,7 @@
 #define _NVME_H
 
 #include <linux/types.h>
+#include "plugin.h"
 
 /* NQN names in commands fields specified one size */
 #define NVMF_NQN_FIELD_LEN	256
@@ -588,5 +589,7 @@ struct nvmf_disc_rsp_page_hdr {
 };
 
 #define NVME_VS(major, minor) (((major) << 16) | ((minor) << 8))
+
+void register_extension(struct plugin *plugin);
 
 #endif /* _NVME_H */
