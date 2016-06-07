@@ -147,6 +147,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 			continue;
 		}
 		return handle_plugin(argc - 1, &argv[1], extension);
+		extension = extension->next;
 	}
 	return -1;
 }

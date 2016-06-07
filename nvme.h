@@ -592,4 +592,10 @@ struct nvmf_disc_rsp_page_hdr {
 
 void register_extension(struct plugin *plugin);
 
+#include "argconfig.h"
+int parse_and_open(int argc, char **argv, const char *desc,
+	const struct argconfig_commandline_options *clo, void *cfg, size_t size);
+
+extern const char *devicename;
+
 #endif /* _NVME_H */
