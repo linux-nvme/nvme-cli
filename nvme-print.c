@@ -574,7 +574,7 @@ static void show_nvme_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 	}
 }
 
-void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
+void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vendor_show)(__u8 *vs))
 {
 	int human = mode & HUMAN, vs = mode & VS;
 
@@ -656,10 +656,17 @@ void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 		show_nvme_id_ctrl_sgls(ctrl->sgls);
 
 	show_nvme_id_ctrl_power(ctrl);
-	if (vs) {
+	if (vendor_show)
+		vendor_show(ctrl->vs);
+	else if (vs) {
 		printf("vs[]:\n");
 		d(ctrl->vs, sizeof(ctrl->vs), 16, 1);
 	}
+}
+
+void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
+{
+	__show_nvme_id_ctrl(ctrl, mode, NULL);
 }
 
 void show_error_log(struct nvme_error_log_page *err_log, int entries, const char *devname)
