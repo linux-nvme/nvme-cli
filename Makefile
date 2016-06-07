@@ -31,13 +31,16 @@ override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
 
 NVME_DPKG_VERSION=1~`lsb_release -sc`
 
-OBJS := argconfig.o suffix.o nvme-print.o nvme-ioctl.o nvme-lightnvm.o
+OBJS := argconfig.o suffix.o parser.o nvme-print.o nvme-ioctl.o nvme-lightnvm.o
 
 nvme: nvme.c ./linux/nvme.h $(OBJS) NVME-VERSION-FILE
 	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME) $(OBJS)
 
 nvme-ioctl.o: nvme-ioctl.c nvme-ioctl.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c nvme-ioctl.c
+
+parser.o: parser.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c parser.c
 
 argconfig.o: $(SRC)/argconfig.c $(SRC)/argconfig.h $(SRC)/suffix.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $(SRC)/argconfig.c
