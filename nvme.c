@@ -849,7 +849,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 }
 #endif
 
-static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs))
 {
 	const char *desc = "Send an Identify Controller command to "\
 		"the given device and report information about the specified "\
@@ -903,7 +903,7 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 			json_nvme_id_ctrl(&ctrl, flags);
 		else {
 			printf("NVME Identify Controller:\n");
-			show_nvme_id_ctrl(&ctrl, flags);
+			__show_nvme_id_ctrl(&ctrl, flags, vs);
 		}
 	}
 	else if (err > 0)
@@ -911,6 +911,11 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 				nvme_status_to_string(err), err);
 
 	return err;
+}
+
+static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	return __id_ctrl(argc, argv, cmd, plugin, NULL);
 }
 
 static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)

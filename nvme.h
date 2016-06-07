@@ -598,4 +598,6 @@ int parse_and_open(int argc, char **argv, const char *desc,
 
 extern const char *devicename;
 
+int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs));
+
 #endif /* _NVME_H */

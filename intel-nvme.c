@@ -24,6 +24,27 @@ static void init()
 	register_extension(&intel_nvme);
 }
 
+static void intel_id_ctrl(__u8 *vs)
+{
+	char bl[9];
+        char health[21];
+
+	memcpy(bl, &vs[28], sizeof(bl));
+	memcpy(health, &vs[4], sizeof(health));
+
+        bl[sizeof(bl) - 1] = '\0';
+        health[sizeof(health) - 1] = '\0';
+
+	printf("ss      : %d\n", vs[3]);
+	printf("health  : %s\n", health[0] ? health : "healthy");
+	printf("bl      : %s\n", bl);
+}
+
+static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	return __id_ctrl(argc, argv, cmd, plugin, intel_id_ctrl);
+}
+
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_additional_smart_log smart_log;
