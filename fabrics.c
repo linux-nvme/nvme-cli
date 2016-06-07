@@ -36,7 +36,7 @@
 #include "fabrics.h"
 
 #include "linux/nvme.h"
-#include "src/argconfig.h"
+#include "argconfig.h"
 
 #include "common.h"
 

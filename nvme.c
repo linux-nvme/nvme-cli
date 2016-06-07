@@ -51,8 +51,8 @@
 #include "nvme-ioctl.h"
 #include "nvme-lightnvm.h"
 
-#include "src/argconfig.h"
-#include "src/suffix.h"
+#include "argconfig.h"
+#include "suffix.h"
 
 #include "fabrics.h"
 

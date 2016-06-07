@@ -1,8 +1,7 @@
 CFLAGS += -std=gnu99 -O2 -g -Wall -Werror
-CPPFLAGS += -I $(SRC) -D_GNU_SOURCE
+CPPFLAGS += -D_GNU_SOURCE
 NVME = nvme
 INSTALL ?= install
-SRC = ./src
 DESTDIR =
 PREFIX ?= /usr/local
 SYSCONFDIR = /etc
@@ -46,11 +45,11 @@ fabrics.o: fabrics.c
 parser.o: parser.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c parser.c
 
-argconfig.o: $(SRC)/argconfig.c $(SRC)/argconfig.h $(SRC)/suffix.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $(SRC)/argconfig.c
+argconfig.o: argconfig.c argconfig.h suffix.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c argconfig.c
 
-suffix.o: $(SRC)/suffix.c $(SRC)/suffix.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $(SRC)/suffix.c
+suffix.o: suffix.c suffix.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c suffix.c
 
 nvme-print.o: nvme-print.c nvme-print.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c nvme-print.c
