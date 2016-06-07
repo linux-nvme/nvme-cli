@@ -115,6 +115,7 @@ static const char nvme_version_string[] = NVME_VERSION;
 	ENTRY(LNVM_BBTBL_GET, "lnvm-diag-bbtbl", "Diagnose bad block table", lnvm_get_bbtbl) \
 	ENTRY(LNVM_BBTBL_SET, "lnvm-diag-set-bbtbl", "Update bad block table", lnvm_set_bbtbl) \
 	ENTRY(DISCOVER, "discover", "Discover NVMeoF subsystems", discover_cmd) \
+	ENTRY(CONNECT_ALL, "connect-all", "Discover and Connect to NVMeoF subsystems", connect_all_cmd) \
 	ENTRY(CONNECT, "connect", "Connect to NVMeoF subsystem", connect_cmd) \
 	ENTRY(DISCONNECT, "disconnect", "Disconnect from NVMeoF subsystem", disconnect_cmd) \
 	ENTRY(VERSION, "version", "Shows the program version", version) \
@@ -2845,7 +2846,13 @@ static int lnvm_set_bbtbl(int argc, char **argv)
 static int discover_cmd(int argc, char **argv)
 {
 	const char *desc = "Send command to discovery service.";
-	return discover(desc, argc, argv);
+	return discover(desc, argc, argv, false);
+}
+
+static int connect_all_cmd(int argc, char **argv)
+{
+	const char *desc = "Discover NVMeoF subsystems and connect to them";
+	return discover(desc, argc, argv, true);
 }
 
 static int connect_cmd(int argc, char **argv)

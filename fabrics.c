@@ -64,6 +64,8 @@ static const match_table_t opt_tokens = {
 	{ OPT_ERR,		NULL		},
 };
 
+static int do_discover(char *argstr, bool connect);
+
 static int add_ctrl(const char *argstr)
 {
 	substring_t args[MAX_OPT_ARGS];
@@ -358,31 +360,82 @@ static int build_options(char *argstr, int max_len)
 	return 0;
 }
 
-int discover(const char *desc, int argc, char **argv)
+static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 {
-	char argstr[BUF_SIZE];
+	char argstr[BUF_SIZE], *p = argstr;
+	bool discover = false;
+	int len;
+
+	switch (e->nqntype) {
+	case NVME_NQN_DISC:
+		discover = true;
+	case NVME_NQN_NVME:
+		break;
+	default:
+		fprintf(stderr, "skipping unsupported NQNtype %d\n",
+			 e->nqntype);
+		return -EINVAL;
+	}
+
+	len = sprintf(p, "nqn=%s", e->subnqn);
+	if (len < 0)
+		return -EINVAL;
+	p += len;
+
+	switch (e->trtype) {
+	case NVMF_TRTYPE_LOOP: /* loop */
+		len = sprintf(p, ",transport=loop");
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+		/* we can safely ignore the rest of the entries */
+		break;
+	case NVMF_TRTYPE_RDMA:
+		if (e->adrfam != NVMF_ADDR_FAMILY_IP4) {
+			fprintf(stderr, "skipping unsupported adrfam\n");
+			return -EINVAL;
+		}
+
+		len = sprintf(p, ",transport=rdma");
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+
+		len = sprintf(p, ",traddr=%s", e->traddr);
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+
+		len = sprintf(p, ",trsvcid=%s", e->trsvcid);
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+		break;
+	default:
+		fprintf(stderr, "skipping unsupported transport %d\n",
+				 e->trtype);
+		return -EINVAL;
+	}
+
+	if (discover)
+		return do_discover(argstr, true);
+	else
+		return add_ctrl(argstr);
+}
+
+static void connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
+{
+	int i;
+
+	for (i = 0; i < numrec; i++)
+		connect_ctrl(&log->entries[i]);
+}
+
+static int do_discover(char *argstr, bool connect)
+{
 	struct nvmf_disc_rsp_page_hdr *log = NULL;
 	char *dev_name;
 	int instance, numrec = 0, ret;
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"transport", 't', "LIST", CFG_STRING, &cfg.transport, required_argument,
-			"transport type" },
-		{"traddr", 'a', "LIST", CFG_STRING, &cfg.traddr, required_argument,
-			"transport address" },
-		{"trsvcid", 's', "LIST", CFG_STRING, &cfg.trsvcid, required_argument,
-			"transport service id (e.g. IP port)" },
-		{"raw", 'r', "LIST", CFG_STRING, &cfg.raw, required_argument,
-			"raw output file" },
-		{0},
-	};
-
-	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
-
-	cfg.nqn = NVME_DISC_SUBSYS_NAME;
-
-	ret = build_options(argstr, BUF_SIZE);
-	if (ret)
-		return ret;
 
 	instance = add_ctrl(argstr);
 	if (instance < 0)
@@ -396,7 +449,9 @@ int discover(const char *desc, int argc, char **argv)
 
 	switch (ret) {
 	case DISC_OK:
-		if (cfg.raw)
+		if (connect)
+			connect_ctrls(log, numrec);
+		else if (cfg.raw)
 			save_discovery_log(log, numrec);
 		else
 			print_discovery_log(log, numrec);
@@ -419,6 +474,33 @@ int discover(const char *desc, int argc, char **argv)
 	}
 
 	return ret;
+}
+
+int discover(const char *desc, int argc, char **argv, bool connect)
+{
+	char argstr[BUF_SIZE];
+	int ret;
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"transport", 't', "LIST", CFG_STRING, &cfg.transport, required_argument,
+			"transport type" },
+		{"traddr", 'a', "LIST", CFG_STRING, &cfg.traddr, required_argument,
+			"transport address" },
+		{"trsvcid", 's', "LIST", CFG_STRING, &cfg.trsvcid, required_argument,
+			"transport service id (e.g. IP port)" },
+		{"raw", 'r', "LIST", CFG_STRING, &cfg.raw, required_argument,
+			"raw output file" },
+		{0},
+	};
+
+	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	cfg.nqn = NVME_DISC_SUBSYS_NAME;
+
+	ret = build_options(argstr, BUF_SIZE);
+	if (ret)
+		return ret;
+
+	return do_discover(argstr, connect);
 }
 
 int connect(const char *desc, int argc, char **argv)
