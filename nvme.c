@@ -54,6 +54,8 @@
 #include "src/argconfig.h"
 #include "src/suffix.h"
 
+#include "fabrics.h"
+
 #define array_len(x) ((size_t)(sizeof(x) / sizeof(x[0])))
 #define min(x, y) (x) > (y) ? (y) : (x)
 #define max(x, y) (x) > (y) ? (x) : (y)
@@ -112,6 +114,7 @@ static const char nvme_version_string[] = NVME_VERSION;
 	ENTRY(LNVM_FACTORY, "lnvm-factory", "Reset device to factory state", lnvm_factory_init) \
 	ENTRY(LNVM_BBTBL_GET, "lnvm-diag-bbtbl", "Diagnose bad block table", lnvm_get_bbtbl) \
 	ENTRY(LNVM_BBTBL_SET, "lnvm-diag-set-bbtbl", "Update bad block table", lnvm_set_bbtbl) \
+	ENTRY(DISCOVER, "discover", "Discover NVMeoF subsystems", discover_cmd) \
 	ENTRY(VERSION, "version", "Shows the program version", version) \
 	ENTRY(HELP, "help", "Display this help", help)
 
@@ -2837,6 +2840,11 @@ static int lnvm_set_bbtbl(int argc, char **argv)
 				 cfg.value);
 }
 
+static int discover_cmd(int argc, char **argv)
+{
+	const char *desc = "Send command to discovery service.";
+	return discover(desc, argc, argv);
+}
 
 static void usage()
 {
