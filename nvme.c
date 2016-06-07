@@ -215,7 +215,7 @@ static int get_smart_log(int argc, char **argv)
 
 	struct config {
 		__u32 namespace_id;
-		__u8  raw_binary;
+		int   raw_binary;
 	};
 
 	struct config cfg = {
@@ -253,7 +253,7 @@ static int get_additional_smart_log(int argc, char **argv)
 	const char *raw = "dump output in binary format";
 	struct config {
 		__u32 namespace_id;
-		__u8  raw_binary;
+		int   raw_binary;
 	};
 
 	struct config cfg = {
@@ -295,7 +295,7 @@ static int get_error_log(int argc, char **argv)
 	struct config {
 		__u32 namespace_id;
 		__u32 log_entries;
-		__u8  raw_binary;
+		int   raw_binary;
 	};
 
 	struct config cfg = {
@@ -348,7 +348,7 @@ static int get_fw_log(int argc, char **argv)
 	struct nvme_firmware_log_page fw_log;
 
 	struct config {
-		__u8  raw_binary;
+		int raw_binary;
 	};
 
 	struct config cfg = {
@@ -391,7 +391,7 @@ static int get_log(int argc, char **argv)
 		__u32 namespace_id;
 		__u32 log_id;
 		__u32 log_len;
-		__u8  raw_binary;
+		int   raw_binary;
 	};
 
 	struct config cfg = {
@@ -485,7 +485,7 @@ static int list_ns(int argc, char **argv)
 
 	struct config {
 		__u32 namespace_id;
-		__u8  all;
+		int  all;
 	};
 
 	struct config cfg = {
@@ -875,9 +875,9 @@ static int id_ctrl(int argc, char **argv)
 	struct nvme_id_ctrl ctrl;
 
 	struct config {
-		__u8  vendor_specific;
-		__u8  raw_binary;
-		__u8  human_readable;
+		int vendor_specific;
+		int raw_binary;
+		int human_readable;
 	};
 
 	struct config cfg = {
@@ -931,10 +931,10 @@ static int id_ns(int argc, char **argv)
 
 	struct config {
 		__u32 namespace_id;
-		__u8  vendor_specific;
-		__u8  raw_binary;
-		__u8  human_readable;
-		__u8  force;
+		int   vendor_specific;
+		int   raw_binary;
+		int   human_readable;
+		int   force;
 	};
 
 	struct config cfg = {
@@ -1016,8 +1016,8 @@ static int get_feature(int argc, char **argv)
 		__u8  sel;
 		__u32 cdw11;
 		__u32 data_len;
-		__u8  raw_binary;
-		__u8  human_readable;
+		int  raw_binary;
+		int  human_readable;
 	};
 
 	struct config cfg = {
@@ -1638,8 +1638,8 @@ static int write_zeroes(int argc, char **argv)
 		__u16 block_count;
 		__u8  prinfo;
 		__u8  app_tag_mask;
-		__u8  limited_retry;
-		__u8  force_unit_access;
+		int   limited_retry;
+		int   force_unit_access;
 	};
 
 	struct config cfg = {
@@ -1714,9 +1714,9 @@ static int dsm(int argc, char **argv)
 		char  *ctx_attrs;
 		char  *blocks;
 		char  *slbas;
-		int  ad;
-		int  idw;
-		int  idr;
+		int   ad;
+		int   idw;
+		int   idr;
 		__u32 cdw11;
 		__u32 namespace_id;
 	};
@@ -1832,7 +1832,7 @@ static int resv_acquire(int argc, char **argv)
 		__u64 prkey;
 		__u8  rtype;
 		__u8  racqa;
-		__u8  iekey;
+		int   iekey;
 	};
 
 	struct config cfg = {
@@ -1892,7 +1892,7 @@ static int resv_register(int argc, char **argv)
 		__u64 nrkey;
 		__u8  rrega;
 		__u8  cptpl;
-		__u8  iekey;
+		int   iekey;
 	};
 
 	struct config cfg = {
@@ -2016,7 +2016,7 @@ static int resv_report(int argc, char **argv)
 	struct config {
 		__u32 namespace_id;
 		__u32 numd;
-		__u8  raw_binary;
+		int   raw_binary;
 	};
 
 	struct config cfg = {
@@ -2096,11 +2096,11 @@ static int submit_io(int opcode, char *command, const char *desc,
 		__u8  prinfo;
 		__u8  app_tag_mask;
 		__u32 app_tag;
-		__u8  limited_retry;
-		__u8  force_unit_access;
-		__u8  show;
-		__u8  dry_run;
-		__u8  latency;
+		int   limited_retry;
+		int   force_unit_access;
+		int   show;
+		int   dry_run;
+		int   latency;
 	};
 
 	struct config cfg = {
@@ -2288,7 +2288,7 @@ static int sec_recv(int argc, char **argv)
 		__u8  nssf;
 		__u16 spsp;
 		__u32 al;
-		__u8  raw_binary;
+		int   raw_binary;
 	};
 
 	struct config cfg = {
@@ -2360,11 +2360,11 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc)
 		__u32 cdw14;
 		__u32 cdw15;
 		char  *input_file;
-		__u8  raw_binary;
-		__u8  show_command;
-		__u8  dry_run;
-		__u8  read;
-		__u8  write;
+		int   raw_binary;
+		int   show_command;
+		int   dry_run;
+		int   read;
+		int   write;
 		__u8  prefill;
 	};
 
@@ -2607,9 +2607,9 @@ static int lnvm_id_ns(int argc, char **argv)
 
 	struct config {
 		__u32 namespace_id;
-		__u8  raw_binary;
-		__u8  human_readable;
-		__u8  force;
+		int   raw_binary;
+		int   human_readable;
+		int   force;
 	};
 
 	struct config cfg = {
@@ -2728,9 +2728,9 @@ static int lnvm_factory_init(int argc, char **argv)
 	struct config
 	{
 		char *devname;
-		__u8 erase_only_marked;
-		__u8 clear_host_marks;
-		__u8 clear_bb_marks;
+		int  erase_only_marked;
+		int  clear_host_marks;
+		int  clear_bb_marks;
 	};
 
 	struct config cfg = {
@@ -2767,7 +2767,7 @@ static int lnvm_get_bbtbl(int argc, char **argv)
 		__u32 namespace_id;
 		__u16 lunid;
 		__u16 chid;
-		__u8  raw_binary;
+		int   raw_binary;
 	};
 
 	struct config cfg = {
