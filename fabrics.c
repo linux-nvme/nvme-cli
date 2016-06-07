@@ -371,7 +371,7 @@ int discover(const char *desc, int argc, char **argv)
 		{"trsvcid", 's', "LIST", CFG_STRING, &cfg.trsvcid, required_argument,
 			"transport service id (e.g. IP port)" },
 		{"raw", 'r', "LIST", CFG_STRING, &cfg.raw, required_argument,
-			"raw" },
+			"raw output file" },
 		{0},
 	};
 
@@ -418,4 +418,37 @@ int discover(const char *desc, int argc, char **argv)
 	}
 
 	return ret;
+}
+
+int connect(const char *desc, int argc, char **argv)
+{
+	char argstr[BUF_SIZE];
+	int instance, ret;
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"transport", 't', "LIST", CFG_STRING, &cfg.transport, required_argument,
+			"transport type" },
+		{"nqn", 'n', "LIST", CFG_STRING, &cfg.nqn, required_argument,
+			"nqn name" },
+		{"traddr", 'a', "LIST", CFG_STRING, &cfg.traddr, required_argument,
+			"transport address" },
+		{"trsvcid", 's', "LIST", CFG_STRING, &cfg.trsvcid, required_argument,
+			"transport service id (e.g. IP port)" },
+		{0},
+	};
+
+	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	ret = build_options(argstr, BUF_SIZE);
+	if (ret)
+		return ret;
+
+	if (!cfg.nqn) {
+		fprintf(stderr, "need a -n argument\n");
+		return -EINVAL;
+	}
+
+	instance = add_ctrl(argstr);
+	if (instance < 0)
+		return instance;
+	return 0;
 }
