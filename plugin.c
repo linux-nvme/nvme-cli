@@ -1,14 +1,47 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "plugin.h"
 #include "argconfig.h"
+
+static int version(struct plugin *plugin)
+{
+	struct program *prog = plugin->parent;
+
+	if (plugin->name)
+		printf("%s %s version %s\n", prog->name, plugin->name, prog->version);
+	else
+		printf("%s version %s\n", prog->name, prog->version);
+	return 0;
+}
+
+static int help(int argc, char **argv, struct plugin *plugin)
+{
+	char man[0x100];
+
+	if (argc == 1) {
+		general_help(plugin);
+		return 0;
+	}
+
+	sprintf(man, "%s-%s", plugin->name, argv[1]);
+	if (execlp("man", "man", man, (char *)NULL)) {
+		perror(argv[1]);
+		exit(errno);
+	}
+	return 0;
+}
 
 void usage(struct plugin *plugin)
 {
 	struct program *prog = plugin->parent;
 
-	printf("usage: %s %s\n", prog->name, prog->usage);
+	if (plugin->name)
+		printf("usage: %s %s %s\n", prog->name, plugin->name, prog->usage);
+	else
+		printf("usage: %s %s\n", prog->name, prog->usage);
 }
 
 void general_help(struct plugin *plugin)
@@ -36,6 +69,9 @@ void general_help(struct plugin *plugin)
 	for (; plugin->commands[i]; i++)
 		printf("  %-*s %s\n", 15, plugin->commands[i]->name,
 					plugin->commands[i]->help);
+
+	printf("  %-*s %s\n", 15, "version", "Shows the program version");
+	printf("  %-*s %s\n", 15, "help", "Display this help");
 	printf("\n");
 
 	if (plugin->name)
@@ -68,6 +104,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	unsigned i = 0;
 	char *str = argv[0];
 	char use[0x100];
+
 	struct plugin *extension;
 	struct program *prog = plugin->parent;
 
@@ -89,6 +126,10 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	for (; plugin->commands[i]; i++) {
 		struct command *cmd = plugin->commands[i];
 
+		if (!strcmp(str, "help"))
+			return help(argc, argv, plugin);
+		if (!strcmp(str, "version"))
+			return version(plugin);
 		if (strcmp(str, cmd->name))
 			continue;
 

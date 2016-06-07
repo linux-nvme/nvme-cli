@@ -2888,29 +2888,6 @@ static int disconnect_cmd(int argc, char **argv, struct command *command, struct
 	return disconnect(desc, argc, argv);
 }
 
-static int version(int argc, char **argv, struct command *cmd, struct plugin *plugin)
-{
-	printf("nvme version %s\n", nvme_version_string);
-	return 0;
-}
-
-static int help(int argc, char **argv, struct command *command, struct plugin *plugin)
-{
-	char man[0x100];
-
-	if (argc == 1) {
-		general_help(plugin);
-		return 0;
-	}
-
-	sprintf(man, "nvme-%s", argv[1]);
-	if (execlp("man", "man", man, (char *)NULL)) {
-		perror(argv[1]);
-		exit(errno);
-	}
-	return 0;
-}
-
 void register_extention(struct plugin *plugin)
 {
 	plugin->parent = &nvme;

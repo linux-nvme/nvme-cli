@@ -58,8 +58,6 @@ COMMAND_LIST(
 	ENTRY("connect-all", "Discover and Connect to NVMeoF subsystems", connect_all_cmd)
 	ENTRY("connect", "Connect to NVMeoF subsystem", connect_cmd)
 	ENTRY("disconnect", "Disconnect from NVMeoF subsystem", disconnect_cmd)
-	ENTRY("version", "Shows the program version", version)
-	ENTRY("help", "Display this help", help)
 );
 
 #endif
