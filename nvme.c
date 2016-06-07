@@ -66,90 +66,96 @@ static const char *devicename;
 
 static const char nvme_version_string[] = NVME_VERSION;
 
-#define COMMAND_LIST \
-	ENTRY(LIST, "list", "List all NVMe devices and namespaces on machine", list) \
-	ENTRY(ID_CTRL, "id-ctrl", "Send NVMe Identify Controller", id_ctrl) \
-	ENTRY(ID_NS, "id-ns", "Send NVMe Identify Namespace, display structure", id_ns) \
-	ENTRY(LIST_NS, "list-ns", "Send NVMe Identify List, display structure", list_ns) \
-	ENTRY(CREATE_NS, "create-ns", "Creates a namespace with the provided parameters", create_ns) \
-	ENTRY(DELETE_NS, "delete-ns", "Deletes a namespace from the controller", delete_ns) \
-	ENTRY(ATTACH_NS, "attach-ns", "Attaches a namespace to requested controller(s)", attach_ns) \
-	ENTRY(DETACH_NS, "detach-ns", "Detaches a namespace from requested controller(s)", detach_ns) \
-	ENTRY(LIST_CTRL, "list-ctrl", "Send NVMe Identify Controller List, display structure", list_ctrl) \
-	ENTRY(GET_NS_ID, "get-ns-id", "Retrieve the namespace ID of opened block device", get_ns_id) \
-	ENTRY(GET_LOG, "get-log", "Generic NVMe get log, returns log in raw format", get_log) \
-	ENTRY(GET_FW_LOG, "fw-log", "Retrieve FW Log, show it", get_fw_log) \
-	ENTRY(GET_SMART_LOG, "smart-log", "Retrieve SMART Log, show it", get_smart_log) \
-	ENTRY(GET_ADDITIONAL_SMART_LOG, "smart-log-add", "Retrieve additional SMART Log, show it", get_additional_smart_log) \
-	ENTRY(GET_ERR_LOG, "error-log", "Retrieve Error Log, show it", get_error_log) \
-	ENTRY(GET_FEATURE, "get-feature", "Get feature and show the resulting value", get_feature) \
-	ENTRY(SET_FEATURE, "set-feature", "Set a feature and show the resulting value", set_feature) \
-	ENTRY(FORMAT, "format", "Format namespace with new block format", format) \
-	ENTRY(FW_ACTIVATE, "fw-activate", "Activate new firmware slot", fw_activate) \
-	ENTRY(FW_DOWNLOAD, "fw-download", "Download new firmware", fw_download) \
-	ENTRY(ADMIN_PASSTHRU, "admin-passthru", "Submit arbitrary admin command, return results", admin_passthru) \
-	ENTRY(IO_PASSTHRU, "io-passthru", "Submit an arbitrary IO command, return results", io_passthru) \
-	ENTRY(SECURITY_SEND, "security-send", "Submit a Security Send command, return results", sec_send) \
-	ENTRY(SECURITY_RECV, "security-recv", "Submit a Security Receive command, return results", sec_recv) \
-	ENTRY(RESV_ACQUIRE, "resv-acquire", "Submit a Reservation Acquire, return results", resv_acquire) \
-	ENTRY(RESV_REGISTER, "resv-register", "Submit a Reservation Register, return results", resv_register) \
-	ENTRY(RESV_RELEASE, "resv-release", "Submit a Reservation Release, return results", resv_release) \
-	ENTRY(RESV_REPORT, "resv-report", "Submit a Reservation Report, return results", resv_report) \
-	ENTRY(DSM, "dsm", "Submit a Data Set Management command, return results", dsm) \
-	ENTRY(FLUSH, "flush", "Submit a Flush command, return results", flush) \
-	ENTRY(COMPARE, "compare", "Submit a Compare command, return results", compare) \
-	ENTRY(READ_CMD, "read", "Submit a read command, return results", read_cmd) \
-	ENTRY(WRITE_CMD, "write", "Submit a write command, return results", write_cmd) \
-	ENTRY(WRITE_ZEROES_CMD, "write-zeroes", "Submit a write zeroes command, return results", write_zeroes) \
-	ENTRY(WRITE_UNCOR_CMD, "write-uncor", "Submit a write uncorrectable command, return results", write_uncor) \
-	ENTRY(RESET, "reset", "Resets the controller", reset) \
-	ENTRY(SUBSYS_RESET, "subsystem-reset", "Resets the controller", subsystem_reset) \
-	ENTRY(REGISTERS, "show-regs", "Shows the controller registers. Requires admin character device", show_registers) \
-	ENTRY(LNVM_LIST, "lnvm-list", "List available LightNVM devices", lnvm_list) \
-	ENTRY(LNVM_INFO, "lnvm-info", "List general information and available target engines", lnvm_info) \
-	ENTRY(LNVM_ID_NS, "lnvm-id-ns", "List geometry for LightNVM device", lnvm_id_ns) \
-	ENTRY(LNVM_INIT, "lnvm-init", "Initialize media manager on LightNVM device", lnvm_init) \
-	ENTRY(LNVM_CREATE, "lnvm-create", "Create target on top of a LightNVM device", lnvm_create_tgt) \
-	ENTRY(LNVM_REMOVE, "lnvm-remove", "Remove target from device", lnvm_remove_tgt) \
-	ENTRY(LNVM_FACTORY, "lnvm-factory", "Reset device to factory state", lnvm_factory_init) \
-	ENTRY(LNVM_BBTBL_GET, "lnvm-diag-bbtbl", "Diagnose bad block table", lnvm_get_bbtbl) \
-	ENTRY(LNVM_BBTBL_SET, "lnvm-diag-set-bbtbl", "Update bad block table", lnvm_set_bbtbl) \
-	ENTRY(DISCOVER, "discover", "Discover NVMeoF subsystems", discover_cmd) \
-	ENTRY(CONNECT_ALL, "connect-all", "Discover and Connect to NVMeoF subsystems", connect_all_cmd) \
-	ENTRY(CONNECT, "connect", "Connect to NVMeoF subsystem", connect_cmd) \
-	ENTRY(DISCONNECT, "disconnect", "Disconnect from NVMeoF subsystem", disconnect_cmd) \
-	ENTRY(VERSION, "version", "Shows the program version", version) \
-	ENTRY(HELP, "help", "Display this help", help)
-
-#define ENTRY(i, n, h, f) \
-static int f(int argc, char **argv);
-COMMAND_LIST
-#undef ENTRY
-
-enum {
-	#define ENTRY(i, n, h, f) i,
-	COMMAND_LIST
-	#undef ENTRY
-	NUM_COMMANDS
+struct plugin {
+	char *name;
+	struct command **commands;
 };
 
 struct command {
 	char *name;
 	char *help;
-	char *man;
-	int (*fn)(int argc, char **argv);
+	int (*fn)(int argc, char **argv, struct command *command, struct plugin *plugin);
 };
 
-struct command commands[] = {
-	#define ENTRY(i, n, h, f)\
-	{ \
-		.name = n, \
-		.help = h, \
-		.fn = f, \
-		.man = "nvme-"n, \
-	},
+#define COMMAND_LIST \
+	ENTRY("list", "List all NVMe devices and namespaces on machine", list) \
+	ENTRY("id-ctrl", "Send NVMe Identify Controller", id_ctrl) \
+	ENTRY("id-ns", "Send NVMe Identify Namespace, display structure", id_ns) \
+	ENTRY("list-ns", "Send NVMe Identify List, display structure", list_ns) \
+	ENTRY("create-ns", "Creates a namespace with the provided parameters", create_ns) \
+	ENTRY("delete-ns", "Deletes a namespace from the controller", delete_ns) \
+	ENTRY("attach-ns", "Attaches a namespace to requested controller(s)", attach_ns) \
+	ENTRY("detach-ns", "Detaches a namespace from requested controller(s)", detach_ns) \
+	ENTRY("list-ctrl", "Send NVMe Identify Controller List, display structure", list_ctrl) \
+	ENTRY("get-ns-id", "Retrieve the namespace ID of opened block device", get_ns_id) \
+	ENTRY("get-log", "Generic NVMe get log, returns log in raw format", get_log) \
+	ENTRY("fw-log", "Retrieve FW Log, show it", get_fw_log) \
+	ENTRY("smart-log", "Retrieve SMART Log, show it", get_smart_log) \
+	ENTRY("smart-log-add", "Retrieve additional SMART Log, show it", get_additional_smart_log) \
+	ENTRY("error-log", "Retrieve Error Log, show it", get_error_log) \
+	ENTRY("get-feature", "Get feature and show the resulting value", get_feature) \
+	ENTRY("set-feature", "Set a feature and show the resulting value", set_feature) \
+	ENTRY("format", "Format namespace with new block format", format) \
+	ENTRY("fw-activate", "Activate new firmware slot", fw_activate) \
+	ENTRY("fw-download", "Download new firmware", fw_download) \
+	ENTRY("admin-passthru", "Submit arbitrary admin command, return results", admin_passthru) \
+	ENTRY("io-passthru", "Submit an arbitrary IO command, return results", io_passthru) \
+	ENTRY("security-send", "Submit a Security Send command, return results", sec_send) \
+	ENTRY("security-recv", "Submit a Security Receive command, return results", sec_recv) \
+	ENTRY("resv-acquire", "Submit a Reservation Acquire, return results", resv_acquire) \
+	ENTRY("resv-register", "Submit a Reservation Register, return results", resv_register) \
+	ENTRY("resv-release", "Submit a Reservation Release, return results", resv_release) \
+	ENTRY("resv-report", "Submit a Reservation Report, return results", resv_report) \
+	ENTRY("dsm", "Submit a Data Set Management command, return results", dsm) \
+	ENTRY("flush", "Submit a Flush command, return results", flush) \
+	ENTRY("compare", "Submit a Compare command, return results", compare) \
+	ENTRY("read", "Submit a read command, return results", read_cmd) \
+	ENTRY("write", "Submit a write command, return results", write_cmd) \
+	ENTRY("write-zeroes", "Submit a write zeroes command, return results", write_zeroes) \
+	ENTRY("write-uncor", "Submit a write uncorrectable command, return results", write_uncor) \
+	ENTRY("reset", "Resets the controller", reset) \
+	ENTRY("subsystem-reset", "Resets the controller", subsystem_reset) \
+	ENTRY("show-regs", "Shows the controller registers. Requires admin character device", show_registers) \
+	ENTRY("lnvm-list", "List available LightNVM devices", lnvm_list) \
+	ENTRY("lnvm-info", "List general information and available target engines", lnvm_info) \
+	ENTRY("lnvm-id-ns", "List geometry for LightNVM device", lnvm_id_ns) \
+	ENTRY("lnvm-init", "Initialize media manager on LightNVM device", lnvm_init) \
+	ENTRY("lnvm-create", "Create target on top of a LightNVM device", lnvm_create_tgt) \
+	ENTRY("lnvm-remove", "Remove target from device", lnvm_remove_tgt) \
+	ENTRY("lnvm-factory", "Reset device to factory state", lnvm_factory_init) \
+	ENTRY("lnvm-diag-bbtbl", "Diagnose bad block table", lnvm_get_bbtbl) \
+	ENTRY("lnvm-diag-set-bbtbl", "Update bad block table", lnvm_set_bbtbl) \
+	ENTRY("discover", "Discover NVMeoF subsystems", discover_cmd) \
+	ENTRY("connect-all", "Discover and Connect to NVMeoF subsystems", connect_all_cmd) \
+	ENTRY("connect", "Connect to NVMeoF subsystem", connect_cmd) \
+	ENTRY("disconnect", "Disconnect from NVMeoF subsystem", disconnect_cmd) \
+	ENTRY("version", "Shows the program version", version) \
+	ENTRY("help", "Display this help", help)
+
+#define ENTRY(n, h, f) \
+static int f(int argc, char **argv, struct command *command, struct plugin *plugin);
+COMMAND_LIST
+#undef ENTRY
+
+#define ENTRY(n, h, f)			\
+static struct command f ## _cmd = {	\
+	.name = n, 			\
+	.help = h, 			\
+	.fn = f, 			\
+};
+COMMAND_LIST
+#undef ENTRY
+
+struct command *commands[] = {
+	#define ENTRY(n, h, f)	&f ## _cmd,
 	COMMAND_LIST
 	#undef ENTRY
+	NULL,
+};
+
+static struct plugin builtin = {
+	.name = "nvme",
+	.commands = commands,
 };
 
 static unsigned long long elapsed_utime(struct timeval start_time,
@@ -224,7 +230,7 @@ static int validate_output_format(char *format)
 	return -EINVAL;
 }
 
-static int get_smart_log(int argc, char **argv)
+static int get_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_smart_log smart_log;
 	const char *desc = "Retrieve SMART log for the given device "\
@@ -275,7 +281,7 @@ static int get_smart_log(int argc, char **argv)
 	return err;
 }
 
-static int get_additional_smart_log(int argc, char **argv)
+static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_additional_smart_log smart_log;
 	int err;
@@ -313,7 +319,7 @@ static int get_additional_smart_log(int argc, char **argv)
 	return err;
 }
 
-static int get_error_log(int argc, char **argv)
+static int get_error_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve specified number of "\
 		"error log entries from a given device (or "\
@@ -382,7 +388,7 @@ static int get_error_log(int argc, char **argv)
 	return err;
 }
 
-static int get_fw_log(int argc, char **argv)
+static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve the firmware log for the "\
 		"specified device in either decoded format (default) or binary.";
@@ -430,7 +436,7 @@ static int get_fw_log(int argc, char **argv)
 	return err;
 }
 
-static int get_log(int argc, char **argv)
+static int get_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve desired number of bytes "\
 		"from a given log on a specified device in either "\
@@ -486,7 +492,7 @@ static int get_log(int argc, char **argv)
 	}
 }
 
-static int list_ctrl(int argc, char **argv)
+static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Show controller list information for the subsystem the "\
 		"given device is part of, or optionally controllers attached to a specific namespace.";
@@ -528,7 +534,7 @@ static int list_ctrl(int argc, char **argv)
 	return err;
 }
 
-static int list_ns(int argc, char **argv)
+static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "For the specified device, show the "\
 		"namespace list in a NVMe subsystem, optionally starting with a given namespace";
@@ -566,7 +572,7 @@ static int list_ns(int argc, char **argv)
 	return err;
 }
 
-static int delete_ns(int argc, char **argv)
+static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Delete the given namespace by "\
 		"sending a namespace management command to "\
@@ -594,13 +600,13 @@ static int delete_ns(int argc, char **argv)
 
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
-						commands[DELETE_NS].name);
+						cmd->name);
 		return EINVAL;
 	}
 
 	err = nvme_ns_delete(fd, cfg.namespace_id);
 	if (!err)
-		printf("%s: Success, deleted nsid:%d\n", commands[DELETE_NS].name,
+		printf("%s: Success, deleted nsid:%d\n", cmd->name,
 								cfg.namespace_id);
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
@@ -610,9 +616,8 @@ static int delete_ns(int argc, char **argv)
 	return err;
 }
 
-static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
+static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, struct command *cmd)
 {
-	char *name = commands[attach ? ATTACH_NS : DETACH_NS].name;
 	int err, num, i, list[2048];
 	__u16 ctrlist[2048];
 
@@ -638,7 +643,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
-						name);
+						cmd->name);
 		return EINVAL;
 	}
 
@@ -653,7 +658,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 		err = nvme_ns_detach_ctrls(fd, cfg.namespace_id, num, ctrlist);
 
 	if (!err)
-		printf("%s: Success, nsid:%d\n", name, cfg.namespace_id);
+		printf("%s: Success, nsid:%d\n", cmd->name, cfg.namespace_id);
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
@@ -662,26 +667,26 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc)
 	return err;
 }
 
-static int attach_ns(int argc, char **argv)
+static int attach_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Attach the given namespace to the "\
 		"given controller or comma-sep list of controllers. ID of the "\
 		"given namespace becomes active upon attachment to a "\
 		"controller. A namespace must be attached to a controller "\
 		"before IO commands may be directed to that namespace.";
-	return nvme_attach_ns(argc, argv, 1, desc);
+	return nvme_attach_ns(argc, argv, 1, desc, cmd);
 }
 
-static int detach_ns(int argc, char **argv)
+static int detach_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Detach the given namespace from the "\
 		"given controller; de-activates the given namespace's ID. A "\
 		"namespace must be attached to a controller before IO "\
 		"commands may be directed to that namespace.";
-	return nvme_attach_ns(argc, argv, 0, desc);
+	return nvme_attach_ns(argc, argv, 0, desc, cmd);
 }
 
-static int create_ns(int argc, char **argv)
+static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send a namespace management command "\
 		"to the specified device to create a namespace with the given "\
@@ -721,8 +726,7 @@ static int create_ns(int argc, char **argv)
 
 	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic, &nsid);
 	if (!err)
-		printf("%s: Success, created nsid:%d\n", commands[CREATE_NS].name,
-								nsid);
+		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
@@ -837,7 +841,7 @@ static void print_list_items(struct list_item *list_items, unsigned len)
 
 }
 #else
-static int list(int argc, char **argv)
+static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	fprintf(stderr,"nvme-list: libudev not detected, install and rebuild.\n");
 	return -1;
@@ -859,7 +863,7 @@ static int get_nsid()
 
 #ifdef LIBUDEV_EXISTS
 #define MAX_LIST_ITEMS 256
-static int list(int argc, char **argv)
+static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct udev *udev;
 	struct udev_enumerate *enumerate;
@@ -914,7 +918,7 @@ static int list(int argc, char **argv)
 }
 #endif
 
-static int id_ctrl(int argc, char **argv)
+static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send an Identify Controller command to "\
 		"the given device and report information about the specified "\
@@ -978,7 +982,7 @@ static int id_ctrl(int argc, char **argv)
 	return err;
 }
 
-static int id_ns(int argc, char **argv)
+static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send an Identify Namespace command to the "\
 		"given device, returns properties of the specified namespace "\
@@ -1049,7 +1053,7 @@ static int id_ns(int argc, char **argv)
 	return err;
 }
 
-static int get_ns_id(int argc, char **argv)
+static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int nsid;
 
@@ -1063,7 +1067,7 @@ static int get_ns_id(int argc, char **argv)
 	return 0;
 }
 
-static int get_feature(int argc, char **argv)
+static int get_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Read operating parameters of the "\
 		"specified controller. Operating parameters are grouped "\
@@ -1171,7 +1175,7 @@ static int get_feature(int argc, char **argv)
 	return err;
 }
 
-static int fw_download(int argc, char **argv)
+static int fw_download(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Copy all or part of a firmware image to "\
 		"a controller for future update. Optionally, specify how "\
@@ -1267,7 +1271,7 @@ static char *nvme_fw_status_reset_type(__u32 status)
 	}
 }
 
-static int fw_activate(int argc, char **argv)
+static int fw_activate(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Verify downloaded firmware image and "\
 		"commit to specific firmware slot. Device is not automatically "\
@@ -1335,13 +1339,13 @@ static void clear_args(int argc, char **argv)
 	get_dev(argc, argv);
 }
 
-static int subsystem_reset(int argc, char **argv)
+static int subsystem_reset(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	clear_args(argc, argv);
 	return nvme_subsystem_reset(fd);
 }
 
-static int reset(int argc, char **argv)
+static int reset(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	clear_args(argc, argv);
 	return nvme_reset_controller(fd);
@@ -1352,7 +1356,7 @@ static void print_lo_hi_64(uint32_t *val)
 	printf("%x%08x\n", val[1], val[0]);
 }
 
-static int show_registers(int argc, char **argv)
+static int show_registers(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int opt, long_index;
 	struct nvme_bar *bar;
@@ -1386,7 +1390,7 @@ static int show_registers(int argc, char **argv)
 	return 0;
 }
 
-static int format(int argc, char **argv)
+static int format(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Re-format a specified namespace on the "\
 		"given device. Can erase all data in namespace (user "\
@@ -1470,7 +1474,7 @@ static int format(int argc, char **argv)
 	return err;
 }
 
-static int set_feature(int argc, char **argv)
+static int set_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Modify the saveable or changeable "\
 		"current operating parameters of the controller. Operating "\
@@ -1569,7 +1573,7 @@ static int set_feature(int argc, char **argv)
 	return err;
 }
 
-static int sec_send(int argc, char **argv)
+static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct stat sb;
 	const char *desc = "Transfer security protocol data to "\
@@ -1645,7 +1649,7 @@ static int sec_send(int argc, char **argv)
 	return err;
 }
 
-static int write_uncor(int argc, char **argv)
+static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int err;
 	const char *desc = "The Write Uncorrectable command is used to set a "\
@@ -1689,7 +1693,7 @@ static int write_uncor(int argc, char **argv)
 	return err;
 }
 
-static int write_zeroes(int argc, char **argv)
+static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int err;
 	__u16 control = 0;
@@ -1763,7 +1767,7 @@ static int write_zeroes(int argc, char **argv)
 	return err;
 }
 
-static int dsm(int argc, char **argv)
+static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "The Dataset Management command is used by the host to "\
 		"indicate attributes for ranges of logical blocks. This includes attributes "\
@@ -1849,7 +1853,7 @@ static int dsm(int argc, char **argv)
 	return 0;
 }
 
-static int flush(int argc, char **argv)
+static int flush(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Commit data and metadata associated with "\
 		"given namespaces to nonvolatile media. Applies to all commands "\
@@ -1885,7 +1889,7 @@ static int flush(int argc, char **argv)
 	return 0;
 }
 
-static int resv_acquire(int argc, char **argv)
+static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Obtain a reservation on a given "\
 		"namespace. Only one reservation is allowed at a time on a "\
@@ -1948,7 +1952,7 @@ static int resv_acquire(int argc, char **argv)
 	return 0;
 }
 
-static int resv_register(int argc, char **argv)
+static int resv_register(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Register, de-register, or "\
 		"replace a controller's reservation on a given namespace. "\
@@ -2008,7 +2012,7 @@ static int resv_register(int argc, char **argv)
 	return 0;
 }
 
-static int resv_release(int argc, char **argv)
+static int resv_release(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Releases reservation held on a "\
 		"namespace by the given controller. If rtype != current reservation"\
@@ -2074,7 +2078,7 @@ static int resv_release(int argc, char **argv)
 	return 0;
 }
 
-static int resv_report(int argc, char **argv)
+static int resv_report(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Returns Reservation Status data "\
 		"structure describing any existing reservations on and the "\
@@ -2326,7 +2330,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	return err;
 }
 
-static int compare(int argc, char **argv)
+static int compare(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Compare specified logical blocks on "\
 		"device with specified data buffer; return failure if buffer "\
@@ -2334,14 +2338,14 @@ static int compare(int argc, char **argv)
 	return submit_io(nvme_cmd_compare, "compare", desc, argc, argv);
 }
 
-static int read_cmd(int argc, char **argv)
+static int read_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Copy specified logical blocks on the given "\
 		"device to specified data buffer (default buffer is stdout).";
 	return submit_io(nvme_cmd_read, "read", desc, argc, argv);
 }
 
-static int write_cmd(int argc, char **argv)
+static int write_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Copy from provided data buffer (default "\
 		"buffer is stdin) to specified logical blocks on the given "\
@@ -2349,7 +2353,7 @@ static int write_cmd(int argc, char **argv)
 	return submit_io(nvme_cmd_write, "write", desc, argc, argv);
 }
 
-static int sec_recv(int argc, char **argv)
+static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Obtain results of one or more "\
 		"previously submitted security-sends. Results, and association "\
@@ -2424,7 +2428,7 @@ static int sec_recv(int argc, char **argv)
 	return err;
 }
 
-static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc)
+static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, struct command *cmd)
 {
 	void *data = NULL, *metadata = NULL;
 	int err = 0, wfd = STDIN_FILENO;
@@ -2608,21 +2612,21 @@ free_and_return:
 	return err;
 }
 
-static int io_passthru(int argc, char **argv)
+static int io_passthru(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send a user-defined IO command to the specified "\
 		"device via IOCTL passthrough, return results.";
-	return passthru(argc, argv, NVME_IOCTL_IO_CMD, desc);
+	return passthru(argc, argv, NVME_IOCTL_IO_CMD, desc, cmd);
 }
 
-static int admin_passthru(int argc, char **argv)
+static int admin_passthru(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send a user-defined Admin command to the specified "\
 		"device via IOCTL passthrough, return results.";
-	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD, desc);
+	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD, desc, cmd);
 }
 
-static int lnvm_init(int argc, char **argv)
+static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Initialize LightNVM device. A LightNVM/Open-Channel SSD"\
 			   " must have a media manager associated before it can "\
@@ -2655,7 +2659,7 @@ static int lnvm_init(int argc, char **argv)
 	return lnvm_do_init(cfg.devname, cfg.mmtype);
 }
 
-static int lnvm_list(int argc, char **argv)
+static int lnvm_list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "List all devices registered with LightNVM.";
 
@@ -2668,7 +2672,7 @@ static int lnvm_list(int argc, char **argv)
 	return lnvm_do_list_devices();
 }
 
-static int lnvm_info(int argc, char **argv)
+static int lnvm_info(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Show general information and registered target types with LightNVM";
 
@@ -2681,7 +2685,7 @@ static int lnvm_info(int argc, char **argv)
 	return lnvm_do_info();
 }
 
-static int lnvm_id_ns(int argc, char **argv)
+static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send an Identify Geometry command to the "\
 		"given LightNVM device, returns properties of the specified"\
@@ -2722,7 +2726,7 @@ static int lnvm_id_ns(int argc, char **argv)
 }
 
 
-static int lnvm_create_tgt(int argc, char **argv)
+static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Instantiate a target on top of a LightNVM enabled device.";
 	const char *devname = "identifier of desired device. e.g. nvme0n1.";
@@ -2775,7 +2779,7 @@ static int lnvm_create_tgt(int argc, char **argv)
 	return lnvm_do_create_tgt(cfg.devname, cfg.tgtname, cfg.tgttype, cfg.lun_begin, cfg.lun_end);
 }
 
-static int lnvm_remove_tgt(int argc, char **argv)
+static int lnvm_remove_tgt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Remove an initialized LightNVM target.";
 	const char *tgtname = "target name of the device to initialize. e.g. target0.";
@@ -2804,7 +2808,7 @@ static int lnvm_remove_tgt(int argc, char **argv)
 	return lnvm_do_remove_tgt(cfg.tgtname);
 }
 
-static int lnvm_factory_init(int argc, char **argv)
+static int lnvm_factory_init(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Factory initialize a LightNVM enabled device.";
 	const char *devname = "identifier of desired device. e.g. nvme0n1.";
@@ -2839,7 +2843,7 @@ static int lnvm_factory_init(int argc, char **argv)
 				cfg.clear_host_marks, cfg.clear_bb_marks);
 }
 
-static int lnvm_get_bbtbl(int argc, char **argv)
+static int lnvm_get_bbtbl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Receive bad block table from a LightNVM compatible"\
 			   " device.";
@@ -2880,7 +2884,7 @@ static int lnvm_get_bbtbl(int argc, char **argv)
 									flags);
 }
 
-static int lnvm_set_bbtbl(int argc, char **argv)
+static int lnvm_set_bbtbl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Update bad block table on a LightNVM compatible"\
 			   " device.";
@@ -2930,25 +2934,25 @@ static int lnvm_set_bbtbl(int argc, char **argv)
 				 cfg.value);
 }
 
-static int discover_cmd(int argc, char **argv)
+static int discover_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Send command to discovery service.";
 	return discover(desc, argc, argv, false);
 }
 
-static int connect_all_cmd(int argc, char **argv)
+static int connect_all_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Discover NVMeoF subsystems and connect to them";
 	return discover(desc, argc, argv, true);
 }
 
-static int connect_cmd(int argc, char **argv)
+static int connect_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Connect to NVMeoF subsystem";
 	return connect(desc, argc, argv);
 }
 
-static int disconnect_cmd(int argc, char **argv)
+static int disconnect_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Disconnect from NVMeoF subsystem";
 	return disconnect(desc, argc, argv);
@@ -2959,23 +2963,9 @@ static void usage()
 	printf("usage: nvme <command> [<device>] [<args>]\n");
 }
 
-static void command_help(const char *cmd)
+static void general_help(struct plugin *plugin)
 {
-	unsigned i;
-	struct command *c;
-
-	for (i = 0; i < NUM_COMMANDS; i++) {
-		c = &commands[i];
-		if (strcmp(c->name, cmd))
-			continue;
-		exit(execlp("man", "man", c->man, (char *)NULL));
-	}
-	fprintf(stderr, "No entry for nvme sub-command %s\n", cmd);
-}
-
-static void general_help()
-{
-	unsigned i;
+	unsigned i = 0;
 	const char *desc =  "The '<device>' may be either an NVMe character "\
 		"device (ex: /dev/nvme0) or an nvme block device "\
 		"(ex: /dev/nvme0n1).\n\n";
@@ -2985,30 +2975,39 @@ static void general_help()
 	printf("\n");
 	print_word_wrapped(desc, 0, 0);
 	printf("The following are all implemented sub-commands:\n");
-	for (i = 0; i < NUM_COMMANDS; i++)
-		printf("  %-*s %s\n", 15, commands[i].name, commands[i].help);
+	while (plugin->commands[i]) {
+		printf("  %-*s %s\n", 15, plugin->commands[i]->name,
+					plugin->commands[i]->help);
+		i++;
+	}
 	printf("\n");
 	printf("See 'nvme help <command>' for more information on a specific command.\n");
 }
 
-static int version(int argc, char **argv)
+static int version(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	printf("nvme version %s\n", nvme_version_string);
 	return 0;
 }
 
-static int help(int argc, char **argv)
+static int help(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
+	char man[0x100];
+
 	if (argc == 1)
-		general_help();
-	else
-		command_help(argv[1]);
+		general_help(plugin);
+
+	sprintf(man, "nvme-%s", argv[1]);
+	if (execlp("man", "man", man, (char *)NULL)) {
+		perror(argv[1]);
+		exit(errno);
+	}
 	return 0;
 }
 
-static void handle_internal_command(int argc, char **argv)
+void handle_plugin(int argc, char **argv, struct plugin *plugin)
 {
-	unsigned i;
+	unsigned i = 0;
 	struct command *cmd;
 	char *str = argv[0];
 	char usage[0x100];
@@ -3020,15 +3019,17 @@ static void handle_internal_command(int argc, char **argv)
 	while (*str == '-')
 		str++;
 
-	for (i = 0; i < NUM_COMMANDS; i++) {
-		cmd = &commands[i];
+	while (plugin->commands[i]) {
+		cmd = plugin->commands[i];
+		i++;
+
 		if (strcmp(str, cmd->name))
 			continue;
 		
-		exit(cmd->fn(argc, argv));
+		exit(cmd->fn(argc, argv, cmd, plugin));
 	}
 	fprintf(stderr, "unknown command '%s'\n", argv[0]);
-	help(1, NULL);
+	general_help(plugin);
 	exit(1);
 }
 
@@ -3039,6 +3040,6 @@ int main(int argc, char **argv)
 		return 0;
 	}
 	setlocale(LC_ALL, "");
-	handle_internal_command(argc - 1, &argv[1]);
+	handle_plugin(argc - 1, &argv[1], &builtin);
 	return 0;
 }
