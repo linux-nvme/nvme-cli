@@ -142,11 +142,17 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 
 	extension = plugin->next;
 	while (extension) {
-		if (strcmp(str, extension->name)) {
-			extension = extension->next;
-			continue;
+		if (!strcmp(str, extension->name))
+			return handle_plugin(argc - 1, &argv[1], extension);
+
+		/* If the command is executed with the extension name and
+		 * command together ("plugin-command"), run the plug in */
+		if (!strncmp(str, extension->name, strlen(extension->name))) {
+			argv[0] += strlen(extension->name);
+			while (*argv[0] == '-')
+				argv[0]++;
+			return handle_plugin(argc, &argv[0], extension);
 		}
-		return handle_plugin(argc - 1, &argv[1], extension);
 		extension = extension->next;
 	}
 	return -1;
