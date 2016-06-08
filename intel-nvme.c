@@ -175,3 +175,69 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 					nvme_status_to_string(err), err);
 	return err;
 }
+
+struct intel_lat_stats {
+	__u16	maj;
+	__u16	min;
+	__u32	bucket_1[32];
+	__u32	bucket_2[31];
+	__u32	bucket_3[31];
+};
+
+static void show_lat_stats(struct intel_lat_stats *stats, int write)
+{
+	int i;
+
+	printf(" Intel IO %s Command Latency Statistics\n", write ? "Write" : "Read");
+	printf("-------------------------------------\n");
+	printf("Major Revision : %u\n", stats->maj);
+	printf("Minor Revision : %u\n", stats->min);
+
+	printf("\nGroup 1: Range is 0-1ms, step is 32us\n");
+	for (i = 0; i < 32; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_1[i]);
+
+	printf("\nGroup 2: Range is 1-32ms, step is 1ms\n");
+	for (i = 0; i < 31; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_1[i]);
+
+	printf("\nGroup 3: Range is 32-1s, step is 32ms:\n");
+	for (i = 0; i < 31; i++)
+		printf("Bucket %2d: %u\n", i, stats->bucket_1[i]);
+}
+
+static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	struct intel_lat_stats stats;
+	int err, fd;
+
+	char *desc = "Get Intel Latency Statistics log and show it.";
+	const char *raw = "dump output in binary format";
+	const char *write = "Get write statistics (read default)";
+	struct config {
+		int  raw_binary;
+		int  write;
+	};
+
+	struct config cfg = {
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"write",      'w', "", CFG_NONE, &cfg.write,      no_argument, write},
+		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
+		{0}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	err = nvme_get_log(fd, 0xffffffff, write ? 0xc2 : 0xc1, sizeof(stats), &stats);
+	if (!err) {
+		if (!cfg.raw_binary)
+			show_lat_stats(&stats, cfg.write);
+		else
+			d_raw((unsigned char *)&stats, sizeof(stats));
+	} else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+	return err;
+}
