@@ -115,3 +115,63 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 					nvme_status_to_string(err), err);
 	return err;
 }
+
+
+struct intel_temp_stats {
+	__u64	curr;
+	__u64	last_overtemp;
+	__u64	life_overtemp;
+	__u64	highest_temp;
+	__u64	lowest_temp;
+	__u8	rsvd[40];
+	__u64	max_operating_temp;
+	__u64	min_operating_temp;
+	__u64	est_offset;
+};
+
+static void show_temp_stats(struct intel_temp_stats *stats)
+{
+	printf("  Intel Temperature Statistics\n");
+	printf("--------------------------------\n");
+	printf("Current temperature         : %llu\n", stats->curr);
+	printf("Last critical overtemp flag : %llu\n", stats->last_overtemp);
+	printf("Life critical overtemp flag : %llu\n", stats->life_overtemp);
+	printf("Highest temperature         : %llu\n", stats->highest_temp);
+	printf("Lowest temperature          : %llu\n", stats->lowest_temp);
+	printf("Max operating temperature   : %llu\n", stats->max_operating_temp);
+	printf("Min operating temperature   : %llu\n", stats->min_operating_temp);
+	printf("Estimated offset            : %llu\n", stats->est_offset);
+}
+
+static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	struct intel_temp_stats stats;
+	int err, fd;
+
+	char *desc = "Get Intel Marketing Name log and show it.";
+	const char *raw = "dump output in binary format";
+	struct config {
+		int  raw_binary;
+	};
+
+	struct config cfg = {
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
+		{0}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	err = nvme_get_log(fd, 0xffffffff, 0xc5, sizeof(stats), &stats);
+	if (!err) {
+		if (!cfg.raw_binary)
+			show_temp_stats(&stats);
+		else
+			d_raw((unsigned char *)&stats, sizeof(stats));
+	} else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+	return err;
+}
