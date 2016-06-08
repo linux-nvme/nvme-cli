@@ -17,7 +17,7 @@ static struct plugin intel_nvme = {
 	.next = NULL,
 	.commands = commands,
 };
- 
+
 static void init() __attribute__((constructor));
 static void init()
 {
@@ -78,6 +78,39 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}
 	else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+	return err;
+}
+
+static int get_market_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	char log[512];
+	int err, fd;
+
+	char *desc = "Get Intel Marketing Name log and show it.";
+	const char *raw = "dump output in binary format";
+	struct config {
+		int  raw_binary;
+	};
+
+	struct config cfg = {
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
+		{0}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	err = nvme_get_log(fd, 0xffffffff, 0xdd, sizeof(log), log);
+	if (!err) {
+		if (!cfg.raw_binary)
+			printf("Intel Marketing Name Log:\n%s\n", log);
+		else
+			d_raw((unsigned char *)&log, sizeof(log));
+	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
 	return err;
