@@ -95,3 +95,87 @@ $ yaourt -S nvme-cli-git
 ### Other Distros
 
 TBD
+
+## Developers
+
+You may wish to add a new command or possibly an entirely new plug-in
+for some special extension outside the spec.
+
+This project provides macros that help generate the code for you. If
+you're interested in how that works, it is very similar to how trace
+events are created by Linux kernel's 'ftrace' component.
+
+### Add command to existing built-in
+
+The first thing to do is define a new command entry in the command
+list. This is declared in nvme-builtin.h. Simply append a new "ENTRY" into
+the list. The ENTRY takes three arguments: the "name" of the subcommand
+(this is what the user will type at the command line to invoke your
+command), a short help description of what your command does, and the
+name of the function callback that you're going to write.
+
+After the ENTRY is defined, you need to implement the callback. It takes
+four arguments: argc, argv, the command structure associated with the
+callback, and the plug-in structure that contains that command. The
+prototype looks like this:
+
+  ```
+  int f(int argc, char **argv, struct command *cmd, struct plugin *plugin);
+  ```
+
+The argc and argv are adjusted from the command line arguments to start
+after the sub-command. So if the command line is "nvme foo --option=bar",
+the argc is 1 and argv starts at "--option".
+
+You can then define argument parsing for your sub-command's specific
+options then do some command specific action in your callback.
+
+### Add a new plugin
+
+The nvme-cli provides macros to make define a new plug-in simpler. You
+can certainly do all this by hand if you want, but it should be easier
+to get going using the macros. To start, first create a header file
+to define your plugin. This is where you will give your plugin a name,
+description, and define all the sub-commands your plugin implements.
+
+There is a very important order on how to define the plugin. The following
+is a basic example on how to start this:
+
+File: foo-plugin.h
+```
+#undef CMD_INC_FILE
+#define CMD_INC_FILE foo-plugin
+
+#if !defined(FOO) || defined(CMD_HEADER_MULTI_READ)
+#define FOO
+
+#include "cmd.h"
+
+PLUGIN(NAME("foo", "Foo plugin"),
+	COMMAND_LIST(
+		ENTRY("bar", "foo bar", bar)
+		ENTRY("baz", "foo baz", baz)
+		ENTRY("qux", "foo quz", qux)
+	)
+);
+
+#endif
+
+#include "define_cmd.h"
+```
+
+In order to have the compiler generate the plugin through the xmacro
+expansion, you need to include this header in your source file, with
+pre-defining macro directive to create the commands.
+
+To get started from the above example, we just need to define "CREATE_CMD"
+and include the header:
+
+File: foo-plugin.c
+```
+#define CREATE_CMD
+#include "foo-plugin.h"
+```
+
+After that, you just need to implement the functions you defined in each
+ENTRY, then append the object file name to the Makefile's "OBJS".
