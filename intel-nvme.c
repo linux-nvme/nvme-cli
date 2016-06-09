@@ -11,19 +11,6 @@
 #define CREATE_CMD
 #include "intel-nvme.h"
 
-static struct plugin intel_nvme = {
-	.name = "intel",
-	.desc = "Intel vendor specific extensions",
-	.next = NULL,
-	.commands = commands,
-};
-
-static void init() __attribute__((constructor));
-static void init()
-{
-	register_extension(&intel_nvme);
-}
-
 static void intel_id_ctrl(__u8 *vs)
 {
 	char bl[9];

@@ -14,18 +14,6 @@
 #define CREATE_CMD
 #include "lnvm-nvme.h"
 
-static struct plugin lnvm_nvme = {
-	.name = "lnvm",
-	.desc = "LightNVM specific extensions",
-	.commands = commands,
-};
-
-static void init() __attribute__((constructor));
-static void init()
-{
-	register_extension(&lnvm_nvme);
-}
-
 static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Initialize LightNVM device. A LightNVM/Open-Channel SSD"\
