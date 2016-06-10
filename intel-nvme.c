@@ -256,7 +256,7 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 	char *desc = "Get Intel Firmware Log and save it.";
 	char *log = "Log type: 0, 1, or 2 for nlog, event log, and assert log, respectively.";
 	char *file = "Output file; defaults to device name provided";
-	const char *namespace_id = "namespace to delete";
+	const char *namespace_id = "Namespace to get logs from";
 
 	struct config {
 		__u32 namespace_id;
@@ -341,7 +341,7 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 		size -= 0x1000;
 	}
 	err = 0;
-	printf("Successfully wrote nlog to %s\n", cfg.file);
+	printf("Successfully wrote log to %s\n", cfg.file);
  out:
 	if (err > 0) {
 		fprintf(stderr, "NVMe Status:%s(%x)\n",

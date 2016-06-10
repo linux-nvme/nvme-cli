@@ -1,0 +1,53 @@
+nvme-intel-lat-stats(1)
+=======================
+
+NAME
+----
+nvme-intel-lat-stats - Send NVMe Identify Controller, return result and structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme intel lat-stats' <device> [--write | -w] [--raw-binary | -b]
+
+DESCRIPTION
+-----------
+For the NVMe device given, retrieves intel vendor specific latency statistics and
+provides the result and returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the structure may be returned in one of several ways depending
+on the option flags; the structure may be parsed by the program or the
+raw buffer may be printed to stdout.
+
+OPTIONS
+-------
+-b::
+--raw-binary::
+	Print the raw buffer to stdout. Structure is not parsed by
+	program. This overrides the vendor specific and human readable options.
+
+-w::
+--write::
+	Get write statistics. Read statistics are returned by default.
+
+EXAMPLES
+--------
+* Get the read statistics
++
+------------
+# nvme intel lat-stats /dev/nvme0
+------------
++
+
+* Get the write statistics
++
+------------
+# nvme intel lat-stats /dev/nvme0 -w
+------------
+
+NVME
+----
+Part of the nvme-user suite

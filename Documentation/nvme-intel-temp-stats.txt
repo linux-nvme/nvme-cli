@@ -1,0 +1,51 @@
+nvme-intel-temp-stats(1)
+========================
+
+NAME
+----
+nvme-intel-temp-stats - Send NVMe SMART log page request, returns result and log
+
+SYNOPSIS
+--------
+[verse]
+'nvme intel temp-stats' <device> [--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Retrieves the NVMe Intel Additional SMART log page from the device and
+provides the retuned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned smart log structure may be returned in one of
+several ways depending on the option flags; the structure may parsed by
+the program and printed in a readable format or the raw buffer may be
+printed to stdout for another program to parse.
+
+OPTIONS
+-------
+-b::
+--raw-binary::
+	Print the raw temperature stats log buffer to stdout.
+
+EXAMPLES
+--------
+* Print the temperature stats log page in a human readable format:
++
+------------
+# nvme intel temp-stats /dev/nvme0
+------------
++
+
+* Print the raw SMART log to a file:
++
+------------
+# nvme intel temp-stats /dev/nvme0 --raw-binary > temp_stats_log.raw
+------------
++
+It is probably a bad idea to not redirect stdout when using this mode.
+
+NVME
+----
+Part of the nvme-user suite

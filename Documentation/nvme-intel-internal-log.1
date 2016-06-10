@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-smart-log
+.\"     Title: nvme-intel-internal-log
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
 .\"      Date: 06/10/2016
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SMART\-LOG" "1" "06/10/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-INTEL\-INTERNA" "1" "06/10/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,31 +28,36 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-smart-log \- Send NVMe SMART log page request, returns result and log
+nvme-intel-internal-log \- Retrieve Intel device\*(Aqs internal log and save to file\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme smart\-log\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                        [\-\-raw\-binary | \-b]
-                        [\-\-output\-format=<fmt> | \-o <fmt>]
+\*(Aqnvme intel internal\-log \*(Aq <device> [\-\-log=<NUM>, \-l <NUM>]
+                [\-\-namespace\-id=<NUM>, \-n <NUM>]
+                [\-\-output\-file=<FILE>, \-o <FILE>]
 .fi
 .SH "DESCRIPTION"
 .sp
-Retrieves the NVMe SMART log page from an NVMe device and provides the retuned structure\&.
+For the NVMe device given, sends the Intel vendor unique device log request and saves the result to a file\&.
 .sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. If using the character device, the namespace id parameter is mandatory\&.
 .sp
-On success, the returned smart log structure may be returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format or the raw buffer may be printed to stdout for another program to parse\&.
+This will only work on Intel devices supporting this feature which includes (but not limited to) all the Intel DC P3xxx family of controllers\&. Results for any other device are undefined\&.
 .SH "OPTIONS"
 .PP
-\-n <nsid>, \-\-namespace\-id=<nsid>
+\-l <NUM>, \-\-log=<NUM>
 .RS 4
-Retrieve the SMART log for the given nsid\&. This is optional and its success may depend on the device\(cqs capabilities to provide this log on a per\-namespace basis (see the NVMe Identify Controller for this capability)\&. The default nsid to use is 0xffffffff for the device global SMART log\&.
+Log type: 0, 1, or 2 for nlog, event log, and assert log, respectively\&.
 .RE
 .PP
-\-b, \-\-raw\-binary
+\-n <NUM>, \-\-namespace\-id=<NUM>
 .RS 4
-Print the raw SMART log buffer to stdout\&.
+Namespace to use\&.
+.RE
+.PP
+\-o <FILE>, \-\-output\-file=<FILE>
+.RS 4
+Output file; defaults to device name provided
 .RE
 .SH "EXAMPLES"
 .sp
@@ -64,13 +69,13 @@ Print the raw SMART log buffer to stdout\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-Print the SMART log page in a human readable format:
+Gets the nlog from the device and saves to default file:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme smart\-log /dev/nvme0
+# nvme intel internal\-log /dev/nvme0 \-\-namespace\-id=1 \-\-log=0
 .fi
 .if n \{\
 .RE
@@ -85,19 +90,17 @@ Print the SMART log page in a human readable format:
 .sp -1
 .IP \(bu 2.3
 .\}
-Print the raw SMART log to a file:
+Gets the event log from the device and saves to defined file:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme smart\-log /dev/nvme0 \-\-raw\-binary > smart_log\&.raw
+# nvme intel internal\-log /dev/nvme0 \-\-namespace\-id=1 \-\-log=1 \-\-output\-file=MyAwesomeEventLog
 .fi
 .if n \{\
 .RE
 .\}
-.sp
-It is probably a bad idea to not redirect stdout when using this mode\&.
 .RE
 .SH "NVME"
 .sp

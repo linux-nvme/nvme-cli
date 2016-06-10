@@ -1,0 +1,63 @@
+nvme-intel-id-ctrl(1)
+=====================
+
+NAME
+----
+nvme-intel-id-ctrl - Send NVMe Identify Controller, return result and structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme intel id-ctrl' <device> [-v | --vendor-specific] [-b | --raw-binary]
+			[-o <fmt> | --output-format=<fmt>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends an identify controller command and
+provides the result and returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the structure may be returned in one of several ways depending
+on the option flags; the structure may be parsed by the program or the
+raw buffer may be printed to stdout.
+
+If having the program decode the output for readability, this version
+will decode Intel vendor unique portions of the structure.
+
+OPTIONS
+-------
+-b::
+--raw-binary::
+	Print the raw buffer to stdout. Structure is not parsed by
+	program. This overrides the vendor specific and human readable options.
+
+-v::
+--vendor-specific::
+	In addition to parsing known fields, this option will dump
+	the vendor specific region of the structure in hex with ascii
+	interpretation.
+
+-H::
+--human-readable::
+	This option will parse and format many of the bit fields
+	into human-readable formats.
+
+-o <format>::
+--output-format=<format>::
+              Set the reporting format to 'normal', 'json', or
+              'binary'. Only one output format can be used at a time.
+
+EXAMPLES
+--------
+* Has the program interpret the returned buffer and display the known
+fields in a human readable format:
++
+------------
+# nvme intel id-ctrl /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite

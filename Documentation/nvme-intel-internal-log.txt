@@ -1,0 +1,62 @@
+nvme-intel-internal-log(1)
+==========================
+
+NAME
+----
+nvme-intel-internal-log - Retrieve Intel device's internal log and save to file.
+
+SYNOPSIS
+--------
+[verse]
+'nvme intel internal-log ' <device> [--log=<NUM>, -l <NUM>]
+		[--namespace-id=<NUM>, -n <NUM>]
+		[--output-file=<FILE>, -o <FILE>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends the Intel vendor unique device log
+request and saves the result to a file.
+
+The <device> parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1). If using the character device, the namespace id parameter
+is mandatory.
+
+This will only work on Intel devices supporting this feature which
+includes (but not limited to) all the Intel DC P3xxx family of
+controllers. Results for any other device are undefined.
+
+OPTIONS
+-------
+-l <NUM>::
+--log=<NUM>::
+	Log type: 0, 1, or 2 for nlog, event log, and assert log,
+	respectively.
+
+-n <NUM>::
+--namespace-id=<NUM>::
+	Namespace to use.
+
+-o <FILE>::
+--output-file=<FILE>::
+	Output file; defaults to device name provided
+
+
+EXAMPLES
+--------
+* Gets the nlog from the device and saves to default file:
++
+------------
+# nvme intel internal-log /dev/nvme0 --namespace-id=1 --log=0
+------------
++
+
+* Gets the event log from the device and saves to defined file:
++
+------------
+# nvme intel internal-log /dev/nvme0 --namespace-id=1 --log=1 --output-file=MyAwesomeEventLog
+------------
+
+NVME
+----
+Part of the nvme-user suite

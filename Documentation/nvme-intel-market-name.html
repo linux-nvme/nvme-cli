@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.7" />
-<title>nvme-smart-log(1)</title>
+<title>nvme-intel-market-name(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -738,12 +738,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-smart-log(1) Manual Page
+nvme-intel-market-name(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-smart-log -
-   Send NVMe SMART log page request, returns result and log
+<p>nvme-intel-market-name -
+   Send NVMe Identify Controller, return result and structure
 </p>
 </div>
 </div>
@@ -752,9 +752,7 @@ nvme-smart-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme smart-log</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--raw-binary | -b]
-                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]</pre>
+<pre class="content"><em>nvme intel market-name</em> &lt;device&gt; [--raw-binary | -b]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -762,34 +760,20 @@ nvme-smart-log(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Retrieves the NVMe SMART log page from an NVMe device and provides the retuned structure.</p></div>
+<div class="paragraph"><p>For the NVMe device given, retrieves intel vendor specific marketing name
+log page and provides the result and returned structure. The output is
+simply the marketing name used to identify what kind of device it is.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>On success, the returned smart log structure may be returned in one of
-several ways depending on the option flags; the structure may parsed by
-the program and printed in a readable format or the raw buffer may be
-printed to stdout for another program to parse.</p></div>
+<div class="paragraph"><p>On success, the structure may be returned in one of several ways depending
+on the option flags; the structure may be parsed by the program or the
+raw buffer may be printed to stdout.</p></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
 <div class="dlist"><dl>
-<dt class="hdlist1">
--n &lt;nsid&gt;
-</dt>
-<dt class="hdlist1">
---namespace-id=&lt;nsid&gt;
-</dt>
-<dd>
-<p>
-        Retrieve the SMART log for the given nsid. This is optional
-        and its success may depend on the device&#8217;s capabilities to
-        provide this log on a per-namespace basis (see the NVMe Identify
-        Controller for this capability). The default nsid to use is
-        0xffffffff for the device global SMART log.
-</p>
-</dd>
 <dt class="hdlist1">
 -b
 </dt>
@@ -798,7 +782,8 @@ printed to stdout for another program to parse.</p></div>
 </dt>
 <dd>
 <p>
-        Print the raw SMART log buffer to stdout.
+        Print the raw buffer to stdout. Structure is not parsed by
+        program. This overrides the vendor specific and human readable options.
 </p>
 </dd>
 </dl></div>
@@ -810,22 +795,12 @@ printed to stdout for another program to parse.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Print the SMART log page in a human readable format:
+Get the marketing name
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme smart-log /dev/nvme0</tt></pre>
+<pre><tt># nvme intel market-name /dev/nvme0</tt></pre>
 </div></div>
-</li>
-<li>
-<p>
-Print the raw SMART log to a file:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><tt># nvme smart-log /dev/nvme0 --raw-binary &gt; smart_log.raw</tt></pre>
-</div></div>
-<div class="paragraph"><p>It is probably a bad idea to not redirect stdout when using this mode.</p></div>
 </li>
 </ul></div>
 </div>
@@ -840,7 +815,7 @@ Print the raw SMART log to a file:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-06-10 11:14:19 MDT
+Last updated 2016-06-10 11:18:06 MDT
 </div>
 </div>
 </body>

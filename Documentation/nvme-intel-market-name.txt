@@ -1,0 +1,43 @@
+nvme-intel-market-name(1)
+=========================
+
+NAME
+----
+nvme-intel-market-name - Send NVMe Identify Controller, return result and structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme intel market-name' <device> [--raw-binary | -b]
+
+DESCRIPTION
+-----------
+For the NVMe device given, retrieves intel vendor specific marketing name
+log page and provides the result and returned structure. The output is
+simply the marketing name used to identify what kind of device it is.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the structure may be returned in one of several ways depending
+on the option flags; the structure may be parsed by the program or the
+raw buffer may be printed to stdout.
+
+OPTIONS
+-------
+-b::
+--raw-binary::
+	Print the raw buffer to stdout. Structure is not parsed by
+	program. This overrides the vendor specific and human readable options.
+
+EXAMPLES
+--------
+* Get the marketing name
++
+------------
+# nvme intel market-name /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite

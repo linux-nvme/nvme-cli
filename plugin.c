@@ -20,13 +20,17 @@ static int version(struct plugin *plugin)
 static int help(int argc, char **argv, struct plugin *plugin)
 {
 	char man[0x100];
+	struct program *prog = plugin->parent;
 
 	if (argc == 1) {
 		general_help(plugin);
 		return 0;
 	}
 
-	sprintf(man, "%s-%s", plugin->name, argv[1]);
+	if (plugin->name)
+		sprintf(man, "%s-%s-%s", prog->name, plugin->name, argv[1]);
+	else
+		sprintf(man, "%s-%s", prog->name, argv[1]);
 	if (execlp("man", "man", man, (char *)NULL)) {
 		perror(argv[1]);
 		exit(errno);
