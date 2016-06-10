@@ -13,6 +13,7 @@ PLUGIN(NAME("intel", "Intel vendor specific extensions"),
 		ENTRY("market-name", "Retrieve Intel Marketing Name log, show it", get_market_log)
 		ENTRY("temp-stats", "Retrieve Intel Temperature Statistics log, show it", get_temp_stats_log)
 		ENTRY("lat-stats", "Retrieve Intel IO Latancy Statistics log, show it", get_lat_stats_log)
+		ENTRY("internal-log", "Retrieve Intel internal firmware log, save it", get_internal_log)
 	)
 );
 
