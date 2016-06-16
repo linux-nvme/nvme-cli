@@ -27,7 +27,9 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#ifdef LIBUDEV_EXISTS
 #include <libudev.h>
+#endif
 
 #include <linux/types.h>
 
@@ -570,6 +572,7 @@ int connect(const char *desc, int argc, char **argv)
 	return 0;
 }
 
+#ifdef LIBUDEV_EXISTS
 static int disconnect_subsys(struct udev_enumerate *enumerate, char *nqn)
 {
 	struct udev_list_entry *list_entry;
@@ -637,6 +640,13 @@ free_udev:
 exit:
 	return ret;
 }
+#else
+static int disconnect_by_nqn(char *nqn)
+{
+	fprintf(stderr,"libudev not detected, install and rebuild.\n");
+	return -1;
+}
+#endif
 
 static int disconnect_by_device(char *device)
 {
