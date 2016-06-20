@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-write
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 05/14/2016
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 06/20/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WRITE" "1" "05/14/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-WRITE" "1" "06/20/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -54,6 +54,11 @@ The Write command writes the logical blocks specified by the command to the medi
 \-\-start\-block=<slba>, \-s <slba>
 .RS 4
 Start block\&.
+.RE
+.PP
+\-\-block\-count, \-c
+.RS 4
+The number of blocks to transfer\&. This is a zeroes based value to align with the kernel\(cqs use of this field\&. (ie\&. 0 means transfer 1 block)\&.
 .RE
 .PP
 \-\-latency, \-t

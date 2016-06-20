@@ -2097,7 +2097,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	__u16 control = 0;
 
 	const char *start_block = "64-bit addr of first block to access";
-	const char *block_count = "number of blocks on device to access";
+	const char *block_count = "number of blocks (zeroes based) on device to access";
 	const char *data_size = "size of data in bytes";
 	const char *metadata_size = "size of metadata in bytes";
 	const char *ref_tag = "reference tag (for end to end PI)";
