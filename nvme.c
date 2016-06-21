@@ -1277,14 +1277,26 @@ static void clear_args(int argc, char **argv)
 
 static int subsystem_reset(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
+	int err;
 	clear_args(argc, argv);
-	return nvme_subsystem_reset(fd);
+	err = nvme_subsystem_reset(fd);
+	if (err < 0) {
+		perror("Subsystem-reset");
+		return errno;
+	}
+	return err;
 }
 
 static int reset(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
+	int err;
 	clear_args(argc, argv);
-	return nvme_reset_controller(fd);
+	err = nvme_reset_controller(fd);
+	if (err < 0) {
+		perror("Reset");
+		return errno;
+	}
+	return err;
 }
 
 static void print_lo_hi_64(uint32_t *val)
@@ -1592,7 +1604,7 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 			"range of logical blocks to invalid.";
 	const char *namespace_id = "desired namespace";
 	const char *start_block = "64-bit LBA of first block to access";
-	const char *block_count = "number of blocks on device to access";
+	const char *block_count = "number of blocks (zeroes based) on device to access";
 
 	struct config {
 		__u64 start_block;
@@ -1637,7 +1649,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 			"range of logical blocks to zero.";
 	const char *namespace_id = "desired namespace";
 	const char *start_block = "64-bit LBA of first block to access";
-	const char *block_count = "number of blocks on device to access";
+	const char *block_count = "number of blocks (zeroes based) on device to access";
 	const char *limited_retry = "limit media access attempts";
 	const char *force = "force device to commit data before command completes";
 	const char *prinfo = "PI and check field";
