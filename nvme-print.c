@@ -1039,7 +1039,11 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		printf("\tHigh Priority Weight   (HPW): %u\n", ((result & 0xff000000) >> 24) + 1);
 		printf("\tMedium Priority Weight (MPW): %u\n", ((result & 0x00ff0000) >> 16) + 1);
 		printf("\tLow Priority Weight    (LPW): %u\n", ((result & 0x0000ff00) >> 8) + 1);
-		printf("\tArbitration Burst       (AB): %u\n",  1 << (result & 0x00000007));
+		printf("\tArbitration Burst       (AB): ");
+		if ((result & 0x00000007) == 7)
+			printf("No limit\n");
+		else
+			printf("%u\n",  1 << (result & 0x00000007));
 		break;
 	case NVME_FEAT_POWER_MGMT:
 		field = (result & 0x000000E0) >> 5;
