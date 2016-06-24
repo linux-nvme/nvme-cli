@@ -1438,6 +1438,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	const char *data_len = "buffer length if data required";
 	const char *data = "optional file for feature data (default stdin)";
 	const char *value = "new value of feature (required)";
+	const char *save = "specifies that the controller shall save the attribute";
 	int err;
 	__u32 result;
 	void *buf = NULL;
@@ -1449,6 +1450,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		__u32 feature_id;
 		__u32 value;
 		__u32 data_len;
+		bool  save;
 	};
 
 	struct config cfg = {
@@ -1457,6 +1459,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		.feature_id   = 0,
 		.value        = 0,
 		.data_len     = 0,
+		.save         = false,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -1465,6 +1468,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		{"value",        'v', "NUM",  CFG_POSITIVE, &cfg.value,        required_argument, value},
 		{"data-len",     'l', "NUM",  CFG_POSITIVE, &cfg.data_len,     required_argument, data_len},
 		{"data",         'd', "FILE", CFG_STRING,   &cfg.file,         required_argument, data},
+		{"save",         's', "FLAG", CFG_NONE,     &cfg.save,         no_argument, save},
 		{0}
 	};
 
@@ -1496,7 +1500,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		}
 	}
 
-	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value, 0,
+	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value, cfg.save,
 				cfg.data_len, buf, &result);
 	if (err < 0) {
 		perror("set-feature");
