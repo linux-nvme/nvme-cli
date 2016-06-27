@@ -9,31 +9,27 @@ SYNOPSIS
 --------
 [verse]
 'nvme set-feature' <device> [--namespace-id=<nsid> | -n <nsid>]
-			  [--feature-id=<fid> | -f <fid>] [--value=<value>]
+			  [--feature-id=<fid> | -f <fid>] [--value=<value> | -v <value>]
 			  [--data-len=<data-len> | -l <data-len>]
 			  [--data=<data-file> | -d <data-file>]
-			  [--raw-binary | -b]
+			  [--save| -s]
 
 DESCRIPTION
 -----------
-Submits an NVMe Get Feature admin command and returns the applicable
+Submits an NVMe Set Feature admin command and returns the applicable
 results. This may be the feature's value, or may also include a feature
 structure if the feature requires it (ex: LBA Range Type).
 
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 
-On success, the returned feature's structure (if applicable) may be
-returned in one of several ways depending on the option flags; the
-structure may parsed by the program and printed in a readable format
-if it is a known structure, displayed in hex, or the raw buffer may be
-printed to stdout for another program to parse.
+On success, the value sent to the device is displayed
 
 OPTIONS
 -------
 -n <nsid>::
 --namespace-id=<nsid>::
-	Retrieve the feature for the given nsid. This is optional and
+	Sets the feature for the given nsid. This is optional and
 	most features do not use this value.
 
 -f <fid>::
@@ -54,35 +50,21 @@ OPTIONS
 	Range Type and host identifier. This defaults to STDIN so files
 	and echo can be piped.
 
+-v <value>::
 --value=<value>::
 	The value for command dword 11, the value you want to set the
 	feature to.
 
+-s::
+--save::
+	Save the attribute so that it persists through all power states and resets.	
 
 EXAMPLES
 --------
-* Retrieves the feature for Number of Queues, or feature id 7:
+* Sets the Power State (PS) to 1  in feature id 2:
 +
 ------------
-# nvme set-feature /dev/nvme0 -f 7
-------------
-+
-
-* The following retrieves the feature for the LBA Range Type, which
-implicitly requires a buffer and will be printed to the screen in human
-readable format:
-+
-------------
-# nvme set-feature /dev/nvme0 -f 3
-------------
-+
-
-* Retrieves the feature for the some vendor specific feature and
-specifically requesting a buffer be allocate for this feature, which
-will be displayed to the user in as a hex dump:
-+
-------------
-# nvme set-feature /dev/nvme0 -f 0xc0 -l 512
+# nvme set-feature /dev/nvme0 -f 2 /dev/nvme0n1 -v 0x1
 ------------
 +
 
@@ -91,17 +73,6 @@ will be displayed to the user in as a hex dump:
 ------------
 # echo "abcdefgh" | nvme set-feature /dev/nvme0 -f 0x81 -l 8
 ------------
-+
-
-* The following retrieves the feature for the LBA Range Type, which
-implicitly requires a buffer and will be saved to a file in its raw
-format:
-+
-------------
-# nvme set-feature /dev/nvme0 -f 3 --raw-binary > lba_range.raw
-------------
-+
-It is probably a bad idea to not redirect stdout when using this mode.
 
 NVME
 ----

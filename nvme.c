@@ -1450,7 +1450,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		__u32 feature_id;
 		__u32 value;
 		__u32 data_len;
-		bool  save;
+		int   save;
 	};
 
 	struct config cfg = {
@@ -1459,7 +1459,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		.feature_id   = 0,
 		.value        = 0,
 		.data_len     = 0,
-		.save         = false,
+		.save         = 0,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
