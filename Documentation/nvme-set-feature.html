@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.7" />
+<meta name="generator" content="AsciiDoc 8.6.9" />
 <title>nvme-set-feature(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -87,9 +87,15 @@ ul, ol, li > p {
 ul > li     { color: #aaa; }
 ul > li > * { color: black; }
 
-pre {
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
   padding: 0;
   margin: 0;
+}
+pre {
+  white-space: pre-wrap;
 }
 
 #author {
@@ -219,7 +225,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -415,12 +421,6 @@ div.unbreakable { page-break-inside: avoid; }
  *
  * */
 
-tt {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
-
 div.tableblock {
   margin-top: 1.0em;
   margin-bottom: 1.5em;
@@ -435,7 +435,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -453,12 +453,6 @@ div.tableblock > table[frame="vsides"] {
  * html5 specific
  *
  * */
-
-.monospaced {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
 
 table.tableblock {
   margin-top: 1.0em;
@@ -539,6 +533,8 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
+
+
 </style>
 <script type="text/javascript">
 /*<![CDATA[*/
@@ -753,10 +749,10 @@ nvme-set-feature(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme set-feature</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                          [--feature-id=&lt;fid&gt; | -f &lt;fid&gt;] [--value=&lt;value&gt;]
+                          [--feature-id=&lt;fid&gt; | -f &lt;fid&gt;] [--value=&lt;value&gt; | -v &lt;value&gt;]
                           [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
                           [--data=&lt;data-file&gt; | -d &lt;data-file&gt;]
-                          [--raw-binary | -b]</pre>
+                          [--save| -s]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -764,16 +760,12 @@ nvme-set-feature(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Submits an NVMe Get Feature admin command and returns the applicable
+<div class="paragraph"><p>Submits an NVMe Set Feature admin command and returns the applicable
 results. This may be the feature&#8217;s value, or may also include a feature
 structure if the feature requires it (ex: LBA Range Type).</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>On success, the returned feature&#8217;s structure (if applicable) may be
-returned in one of several ways depending on the option flags; the
-structure may parsed by the program and printed in a readable format
-if it is a known structure, displayed in hex, or the raw buffer may be
-printed to stdout for another program to parse.</p></div>
+<div class="paragraph"><p>On success, the value sent to the device is displayed</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -788,7 +780,7 @@ printed to stdout for another program to parse.</p></div>
 </dt>
 <dd>
 <p>
-        Retrieve the feature for the given nsid. This is optional and
+        Sets the feature for the given nsid. This is optional and
         most features do not use this value.
 </p>
 </dd>
@@ -832,12 +824,26 @@ printed to stdout for another program to parse.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+-v &lt;value&gt;
+</dt>
+<dt class="hdlist1">
 --value=&lt;value&gt;
 </dt>
 <dd>
 <p>
         The value for command dword 11, the value you want to set the
         feature to.
+</p>
+</dd>
+<dt class="hdlist1">
+-s
+</dt>
+<dt class="hdlist1">
+--save
+</dt>
+<dd>
+<p>
+        Save the attribute so that it persists through all power states and resets.
 </p>
 </dd>
 </dl></div>
@@ -849,33 +855,11 @@ printed to stdout for another program to parse.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Retrieves the feature for Number of Queues, or feature id 7:
+Sets the Power State (PS) to 1  in feature id 2:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme set-feature /dev/nvme0 -f 7</tt></pre>
-</div></div>
-</li>
-<li>
-<p>
-The following retrieves the feature for the LBA Range Type, which
-implicitly requires a buffer and will be printed to the screen in human
-readable format:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><tt># nvme set-feature /dev/nvme0 -f 3</tt></pre>
-</div></div>
-</li>
-<li>
-<p>
-Retrieves the feature for the some vendor specific feature and
-specifically requesting a buffer be allocate for this feature, which
-will be displayed to the user in as a hex dump:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><tt># nvme set-feature /dev/nvme0 -f 0xc0 -l 512</tt></pre>
+<pre><code># nvme set-feature /dev/nvme0 -f 2 /dev/nvme0n1 -v 0x1</code></pre>
 </div></div>
 </li>
 <li>
@@ -884,20 +868,8 @@ Sets the host id to the ascii string.
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># echo "abcdefgh" | nvme set-feature /dev/nvme0 -f 0x81 -l 8</tt></pre>
+<pre><code># echo "abcdefgh" | nvme set-feature /dev/nvme0 -f 0x81 -l 8</code></pre>
 </div></div>
-</li>
-<li>
-<p>
-The following retrieves the feature for the LBA Range Type, which
-implicitly requires a buffer and will be saved to a file in its raw
-format:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><tt># nvme set-feature /dev/nvme0 -f 3 --raw-binary &gt; lba_range.raw</tt></pre>
-</div></div>
-<div class="paragraph"><p>It is probably a bad idea to not redirect stdout when using this mode.</p></div>
 </li>
 </ul></div>
 </div>
@@ -912,7 +884,7 @@ format:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-02-26 08:29:25 MST
+Last updated 2016-06-27 09:18:46 PDT
 </div>
 </div>
 </body>
