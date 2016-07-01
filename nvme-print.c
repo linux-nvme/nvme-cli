@@ -738,7 +738,7 @@ void show_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
 						fw_to_string(fw_log->frs[i]));
 }
 
-static unsigned long int48_to_long(__u8 *data)
+unsigned long int48_to_long(__u8 *data)
 {
 	int i;
 	long result = 0;
