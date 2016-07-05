@@ -232,6 +232,11 @@ static int lnvm_factory_init(int argc, char **argv, struct command *cmd, struct 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg,
 								sizeof(cfg));
 
+	if (!strlen(cfg.devname)) {
+		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		return -EINVAL;
+	}
+
 	return lnvm_do_factory_init(cfg.devname, cfg.erase_only_marked,
 				cfg.clear_host_marks, cfg.clear_bb_marks);
 }
