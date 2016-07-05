@@ -128,8 +128,8 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		char *devname;
 		char *tgtname;
 		char *tgttype;
-		int lun_begin;
-		int lun_end;
+		__u32 lun_begin;
+		__u32 lun_end;
 	};
 
 	struct config cfg = {
@@ -144,8 +144,8 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		{"device-name",   'd', "DEVICE", CFG_STRING,    &cfg.devname,   required_argument, devname},
 		{"target-name",   'n', "TARGET", CFG_STRING,    &cfg.tgtname,   required_argument, tgtname},
 		{"target-type",   't', "TARGETTYPE",  CFG_STRING,    &cfg.tgttype,   required_argument, tgttype},
-		{"lun-begin",     'b', "NUM",    CFG_POSITIVE,  &cfg.tgttype,   no_argument,       lun_begin},
-		{"lun-end",       'e', "NUM",    CFG_POSITIVE,  &cfg.tgttype,   no_argument,       lun_end},
+		{"lun-begin",     'b', "NUM",    CFG_POSITIVE,  &cfg.lun_begin,      required_argument,       lun_begin},
+		{"lun-end",       'e', "NUM",    CFG_POSITIVE,  &cfg.lun_end,   required_argument,       lun_end},
 		{0}
 	};
 
