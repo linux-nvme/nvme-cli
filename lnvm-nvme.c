@@ -38,11 +38,16 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"device-name",   'd', "DEVICE", CFG_STRING, &cfg.devname, required_argument, devname},
-		{"mediamgr-name", 'm', "MM",     CFG_STRING, &cfg.mmtype,  no_argument,       mmtype},
+		{"mediamgr-name", 'm', "MM",     CFG_STRING, &cfg.mmtype,  required_argument, mmtype},
 		{0}
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	if (!strlen(cfg.devname)) {
+		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		return -EINVAL;
+	}
 
 	return lnvm_do_init(cfg.devname, cfg.mmtype);
 }
