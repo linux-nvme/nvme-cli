@@ -38,11 +38,16 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"device-name",   'd', "DEVICE", CFG_STRING, &cfg.devname, required_argument, devname},
-		{"mediamgr-name", 'm', "MM",     CFG_STRING, &cfg.mmtype,  no_argument,       mmtype},
+		{"mediamgr-name", 'm', "MM",     CFG_STRING, &cfg.mmtype,  required_argument, mmtype},
 		{0}
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	if (!strlen(cfg.devname)) {
+		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		return -EINVAL;
+	}
 
 	return lnvm_do_init(cfg.devname, cfg.mmtype);
 }
@@ -128,8 +133,8 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		char *devname;
 		char *tgtname;
 		char *tgttype;
-		int lun_begin;
-		int lun_end;
+		__u32 lun_begin;
+		__u32 lun_end;
 	};
 
 	struct config cfg = {
@@ -144,8 +149,8 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		{"device-name",   'd', "DEVICE", CFG_STRING,    &cfg.devname,   required_argument, devname},
 		{"target-name",   'n', "TARGET", CFG_STRING,    &cfg.tgtname,   required_argument, tgtname},
 		{"target-type",   't', "TARGETTYPE",  CFG_STRING,    &cfg.tgttype,   required_argument, tgttype},
-		{"lun-begin",     'b', "NUM",    CFG_POSITIVE,  &cfg.tgttype,   no_argument,       lun_begin},
-		{"lun-end",       'e', "NUM",    CFG_POSITIVE,  &cfg.tgttype,   no_argument,       lun_end},
+		{"lun-begin",     'b', "NUM",    CFG_POSITIVE,  &cfg.lun_begin,      required_argument,       lun_begin},
+		{"lun-end",       'e', "NUM",    CFG_POSITIVE,  &cfg.lun_end,   required_argument,       lun_end},
 		{0}
 	};
 
@@ -226,6 +231,11 @@ static int lnvm_factory_init(int argc, char **argv, struct command *cmd, struct 
 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg,
 								sizeof(cfg));
+
+	if (!strlen(cfg.devname)) {
+		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		return -EINVAL;
+	}
 
 	return lnvm_do_factory_init(cfg.devname, cfg.erase_only_marked,
 				cfg.clear_host_marks, cfg.clear_bb_marks);
