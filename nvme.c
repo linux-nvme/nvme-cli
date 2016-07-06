@@ -1639,7 +1639,8 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 	if (err < 0)
 		return errno;
 	else if (err != 0)
-		fprintf(stderr, "NVME Write Uncorrectable Command Error:%d\n", err);
+		fprintf(stderr, "NVME IO command error:%s(%x)\n",
+					nvme_status_to_string(err), err);
 	else
 		printf("NVME Write Uncorrectable Success\n");
 	return err;
@@ -1713,7 +1714,8 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	if (err < 0)
 		return errno;
 	else if (err != 0)
-		fprintf(stderr, "NVME Write Zeroes Command Error:%d\n", err);
+		fprintf(stderr, "NVME IO command error:%s(%x)\n",
+					nvme_status_to_string(err), err);
 	else
 		printf("NVME Write Zeroes Success\n");
 	return err;
