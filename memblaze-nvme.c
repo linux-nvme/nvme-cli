@@ -28,6 +28,10 @@ enum {
 	NR_SMART_ITEMS,
 };
 
+enum {
+	MB_FEAT_POWER_MGMT = 0Xc6,
+};
+
 #pragma pack(push, 1)
 struct nvme_memblaze_smart_log_item {
 	__u8 id[3];
@@ -168,5 +172,206 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
 
+	return err;
+}
+
+static char *mb_feature_to_string(int feature)
+{
+	switch (feature) {
+	case MB_FEAT_POWER_MGMT: return "Memblaze power management";
+	default:	return "Unknown";
+	}
+}
+
+static int get_additional_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Read operating parameters of the "\
+		"specified controller. Operating parameters are grouped "\
+		"and identified by Feature Identifiers; each Feature "\
+		"Identifier contains one or more attributes that may affect "\
+		"behaviour of the feature. Each Feature has three possible "\
+		"settings: default, saveable, and current. If a Feature is "\
+		"saveable, it may be modified by set-feature. Default values "\
+		"are vendor-specific and not changeable. Use set-feature to "\
+		"change saveable Features.\n\n"\
+		"Available additional feature id:\n"\
+		"0xc6:	Memblaze power management\n"\
+		"	(value 0 - 25w, 1 - 20w, 2 - 15w)";
+	const char *raw_binary = "show infos in binary format";
+	const char *namespace_id = "identifier of desired namespace";
+	const char *feature_id = "hexadecimal feature name";
+	const char *sel = "[0-3]: curr./default/saved/supp.";
+	const char *data_len = "buffer len (if) data is returned";
+	const char *cdw11 = "dword 11 for interrupt vector config";
+	const char *human_readable = "show infos in readable format";
+	int err, fd;
+	__u32 result;
+	void *buf = NULL;
+
+	struct config {
+		__u32 namespace_id;
+		__u32 feature_id;
+		__u8  sel;
+		__u32 cdw11;
+		__u32 data_len;
+		int  raw_binary;
+		int  human_readable;
+	};
+
+	struct config cfg = {
+		.namespace_id = 1,
+		.feature_id   = 0,
+		.sel          = 0,
+		.cdw11        = 0,
+		.data_len     = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id",   'n', "NUM", CFG_POSITIVE, &cfg.namespace_id,   required_argument, namespace_id},
+		{"feature-id",     'f', "NUM", CFG_POSITIVE, &cfg.feature_id,     required_argument, feature_id},
+		{"sel",            's', "NUM", CFG_BYTE,     &cfg.sel,            required_argument, sel},
+		{"data-len",       'l', "NUM", CFG_POSITIVE, &cfg.data_len,       required_argument, data_len},
+		{"raw-binary",     'b', "FLAG", CFG_NONE,     &cfg.raw_binary,     no_argument,       raw_binary},
+		{"cdw11",          'c', "NUM", CFG_POSITIVE, &cfg.cdw11,          required_argument, cdw11},
+		{"human-readable", 'H', "FLAG", CFG_NONE,     &cfg.human_readable, no_argument,       human_readable},
+		{0}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	if (cfg.sel > 7) {
+		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
+		return EINVAL;
+	}
+	if (!cfg.feature_id) {
+		fprintf(stderr, "feature-id required param\n");
+		return EINVAL;
+	}
+	if (cfg.data_len) {
+		if (posix_memalign(&buf, getpagesize(), cfg.data_len))
+			exit(ENOMEM);
+		memset(buf, 0, cfg.data_len);
+	}
+
+	err = nvme_get_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.sel, cfg.cdw11,
+			cfg.data_len, buf, &result);
+	if (!err) {
+		printf("get-feature:0x%02x (%s), %s value: %#08x\n", cfg.feature_id,
+				mb_feature_to_string(cfg.feature_id),
+				nvme_select_to_string(cfg.sel), result);
+		if (cfg.human_readable)
+			nvme_feature_show_fields(cfg.feature_id, result, buf);
+		else {
+			if (buf) {
+				if (!cfg.raw_binary)
+					d(buf, cfg.data_len, 16, 1);
+				else
+					d_raw(buf, cfg.data_len);
+			}
+		}
+	} else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
+	if (buf)
+		free(buf);
+	return err;
+}
+
+static int set_additional_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Modify the saveable or changeable "\
+		"current operating parameters of the controller. Operating "\
+		"parameters are grouped and identified by Feature "\
+		"Identifiers. Feature settings can be applied to the entire "\
+		"controller and all associated namespaces, or to only a few "\
+		"namespace(s) associated with the controller. Default values "\
+		"for each Feature are vendor-specific and may not be modified."\
+		"Use get-feature to determine which Features are supported by "\
+		"the controller and are saveable/changeable.\n\n"\
+		"Available additional feature id:\n"\
+		"0xc6:	Memblaze power management\n"\
+		"	(value 0 - 25w, 1 - 20w, 2 - 15w)";
+	const char *namespace_id = "desired namespace";
+	const char *feature_id = "hex feature name (required)";
+	const char *data_len = "buffer length if data required";
+	const char *data = "optional file for feature data (default stdin)";
+	const char *value = "new value of feature (required)";
+	const char *save = "specifies that the controller shall save the attribute";
+	int err, fd;
+	__u32 result;
+	void *buf = NULL;
+	int ffd = STDIN_FILENO;
+
+	struct config {
+		char *file;
+		__u32 namespace_id;
+		__u32 feature_id;
+		__u32 value;
+		__u32 data_len;
+		int   save;
+	};
+
+	struct config cfg = {
+		.file         = "",
+		.namespace_id = 0,
+		.feature_id   = 0,
+		.value        = 0,
+		.data_len     = 0,
+		.save         = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
+		{"feature-id",   'f', "NUM",  CFG_POSITIVE, &cfg.feature_id,   required_argument, feature_id},
+		{"value",        'v', "NUM",  CFG_POSITIVE, &cfg.value,        required_argument, value},
+		{"data-len",     'l', "NUM",  CFG_POSITIVE, &cfg.data_len,     required_argument, data_len},
+		{"data",         'd', "FILE", CFG_STRING,   &cfg.file,         required_argument, data},
+		{"save",         's', "FLAG", CFG_NONE,     &cfg.save,         no_argument, save},
+		{0}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	if (!cfg.feature_id) {
+		fprintf(stderr, "feature-id required param\n");
+		return EINVAL;
+	}
+
+	if (cfg.data_len) {
+		if (posix_memalign(&buf, getpagesize(), cfg.data_len))
+			exit(ENOMEM);
+		memset(buf, 0, cfg.data_len);
+	}
+
+	if (buf) {
+		if (strlen(cfg.file)) {
+			ffd = open(cfg.file, O_RDONLY);
+			if (ffd <= 0) {
+				fprintf(stderr, "no firmware file provided\n");
+				return -EINVAL;
+			}
+		}
+		if (read(ffd, (void *)buf, cfg.data_len) < 0) {
+			fprintf(stderr, "failed to read data buffer from input file\n");
+			return EINVAL;
+		}
+	}
+
+	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value, cfg.save,
+				cfg.data_len, buf, &result);
+	if (err < 0) {
+		perror("set-feature");
+		return errno;
+	}
+	if (!err) {
+		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
+			mb_feature_to_string(cfg.feature_id), cfg.value);
+		if (buf)
+			d(buf, cfg.data_len, 16, 1);
+	} else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
+	if (buf)
+		free(buf);
 	return err;
 }

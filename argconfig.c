@@ -64,6 +64,9 @@ void print_word_wrapped(const char *s, int indent, int start)
 	}
 
 	for (c = s; *c != 0; c++) {
+		if (*c == '\n')
+			goto new_line;
+
 		if (*c == ' ' || next_space < 0) {
 			next_space = 0;
 			for (t = c + 1; *t != 0 && *t != ' '; t++)
@@ -71,6 +74,7 @@ void print_word_wrapped(const char *s, int indent, int start)
 
 			if (((int)(c - s) + start + next_space) > (last_line - indent + width)) {
 				int i;
+new_line:
 				last_line = (int) (c-s) + start;
 				putc('\n', stderr);
 				for (i = 0; i < indent; i++)

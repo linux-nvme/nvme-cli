@@ -9,6 +9,8 @@
 PLUGIN(NAME("memblaze", "Memblaze vendor specific extensions"),
 	COMMAND_LIST(
 		ENTRY("smart-log-add", "Retrieve Memblaze SMART Log, show it", get_additional_smart_log)
+		ENTRY("get-feature-add", "Get Memblaze feature and show the resulting value", get_additional_feature)
+		ENTRY("set-feature-add", "Set a Memblaze feature and show the resulting value", set_additional_feature)
 	)
 );
 
