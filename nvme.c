@@ -1306,34 +1306,92 @@ static void print_lo_hi_64(uint32_t *val)
 
 static int show_registers(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int opt, long_index;
+	const char *desc = "Reads and shows the defined NVMe controller registers "\
+					"in binary or human-readable format";
+	const char *human_readable = "show info in readable format";
 	struct nvme_bar *bar;
 
-	while ((opt = getopt_long(argc, (char **)argv, "", NULL,
-					&long_index)) != -1);
+	struct config {
+		int human_readable;
+	};
 
-	check_arg_dev(argc, argv);
-	devicename = basename(argv[optind]);
+	struct config cfg = {
+		.human_readable = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"human-readable",  'H', "", CFG_NONE, &cfg.human_readable,  no_argument, human_readable},
+		{0}
+	};
+
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
 	get_registers(&bar);
-	printf("cap     : ");
-	print_lo_hi_64((uint32_t *)&bar->cap);
 
-	printf("version : %x\n", bar->vs);
-	printf("intms   : %x\n", bar->intms);
-	printf("intmc   : %x\n", bar->intmc);
-	printf("cc      : %x\n", bar->cc);
-	printf("csts    : %x\n", bar->csts);
-	printf("nssr    : %x\n", bar->nssr);
-	printf("aqa     : %x\n", bar->aqa);
-	printf("asq     : ");
-	print_lo_hi_64((uint32_t *)&bar->asq);
+	if (cfg.human_readable) {
+		printf("cap     : ");
+		print_lo_hi_64((uint32_t *)&bar->cap);
+		show_registers_cap(&bar->cap);
 
-	printf("acq     : ");
-	print_lo_hi_64((uint32_t *)&bar->acq);
+		printf("version : %x\n", bar->vs);
+		show_registers_version(bar->vs);
 
-	printf("cmbloc  : %x\n", bar->cmbloc);
-	printf("cmbsz   : %x\n", bar->cmbsz);
+		printf("intms   : %x\n", bar->intms);
+		printf("\tInterrupt Vector Mask Set (IVMS): %x\n\n", bar->intms); 
+
+		printf("intmc   : %x\n", bar->intmc);
+		printf("\tInterrupt Vector Mask Clear (IVMC): %x\n\n", bar->intmc); 
+
+		printf("cc      : %x\n", bar->cc);
+		show_registers_cc(bar->cc);
+
+		printf("csts    : %x\n", bar->csts);
+		show_registers_csts(bar->csts);
+
+		printf("nssr    : %x\n", bar->nssr);
+		printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n", bar->nssr); 
+
+		printf("aqa     : %x\n", bar->aqa);
+		show_registers_aqa(bar->aqa);
+
+		printf("asq     : ");
+		print_lo_hi_64((uint32_t *)&bar->asq);
+		printf("\tAdmin Submission Queue Base (ASQB): ");
+		print_lo_hi_64((uint32_t *)&bar->asq);
+		printf("\n");
+
+		printf("acq     : ");
+		print_lo_hi_64((uint32_t *)&bar->acq);
+		printf("\tAdmin Completion Queue Base (ACQB): ");
+		print_lo_hi_64((uint32_t *)&bar->acq);
+		printf("\n");
+
+		printf("cmbloc  : %x\n", bar->cmbloc);
+		show_registers_cmbloc(bar->cmbloc, bar->cmbsz);
+
+		printf("cmbsz   : %x\n", bar->cmbsz);
+		show_registers_cmbsz(bar->cmbsz);
+	}
+	else {
+		printf("cap     : ");
+		print_lo_hi_64((uint32_t *)&bar->cap);
+
+		printf("version : %x\n", bar->vs);
+		printf("intms   : %x\n", bar->intms);
+		printf("intmc   : %x\n", bar->intmc);
+		printf("cc      : %x\n", bar->cc);
+		printf("csts    : %x\n", bar->csts);
+		printf("nssr    : %x\n", bar->nssr);
+		printf("aqa     : %x\n", bar->aqa);
+		printf("asq     : ");
+		print_lo_hi_64((uint32_t *)&bar->asq);
+
+		printf("acq     : ");
+		print_lo_hi_64((uint32_t *)&bar->acq);
+
+		printf("cmbloc  : %x\n", bar->cmbloc);
+		printf("cmbsz   : %x\n", bar->cmbsz);
+	}
 
 	return 0;
 }

@@ -551,6 +551,15 @@ struct nvme_bar {
 	__u32			cmbsz;	/* Controller Memory Buffer Size */
 };
 
+struct nvme_bar_cap {
+	__u16	mqes;
+	__u8	ams_cqr;
+	__u8	to;
+	__u16	css_nssrs_dstrd;
+	__u8	mpsmax_mpsmin;
+	__u8	reserved;
+};
+
 #define NVME_CNTLID_DYNAMIC	0xFFFF
 
 /* Discovery log page entry */
