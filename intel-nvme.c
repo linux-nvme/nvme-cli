@@ -309,7 +309,7 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 	cmd.cdw10 = 0x400;
 	cmd.cdw12 = cfg.log;
 	cmd.data_len = 0x1000;
-	cmd.addr = (__u64)(void *)buf;
+	cmd.addr = (unsigned long)(void *)buf;
 
 	memset(buf, 0, sizeof(buf));
 	err = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
