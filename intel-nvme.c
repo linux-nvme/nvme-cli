@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <linux/fs.h>
+#include <inttypes.h>
+#include <asm/byteorder.h>
 
 #include "linux/nvme_ioctl.h"
 
@@ -127,14 +129,14 @@ static void show_temp_stats(struct intel_temp_stats *stats)
 {
 	printf("  Intel Temperature Statistics\n");
 	printf("--------------------------------\n");
-	printf("Current temperature         : %llu\n", stats->curr);
-	printf("Last critical overtemp flag : %llu\n", stats->last_overtemp);
-	printf("Life critical overtemp flag : %llu\n", stats->life_overtemp);
-	printf("Highest temperature         : %llu\n", stats->highest_temp);
-	printf("Lowest temperature          : %llu\n", stats->lowest_temp);
-	printf("Max operating temperature   : %llu\n", stats->max_operating_temp);
-	printf("Min operating temperature   : %llu\n", stats->min_operating_temp);
-	printf("Estimated offset            : %llu\n", stats->est_offset);
+	printf("Current temperature         : %"PRIu64"\n", __le64_to_cpu(stats->curr));
+	printf("Last critical overtemp flag : %"PRIu64"\n", __le64_to_cpu(stats->last_overtemp));
+	printf("Life critical overtemp flag : %"PRIu64"\n", __le64_to_cpu(stats->life_overtemp));
+	printf("Highest temperature         : %"PRIu64"\n", __le64_to_cpu(stats->highest_temp));
+	printf("Lowest temperature          : %"PRIu64"\n", __le64_to_cpu(stats->lowest_temp));
+	printf("Max operating temperature   : %"PRIu64"\n", __le64_to_cpu(stats->max_operating_temp));
+	printf("Min operating temperature   : %"PRIu64"\n", __le64_to_cpu(stats->min_operating_temp));
+	printf("Estimated offset            : %"PRIu64"\n", __le64_to_cpu(stats->est_offset));
 }
 
 static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -307,7 +309,7 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 	cmd.cdw10 = 0x400;
 	cmd.cdw12 = cfg.log;
 	cmd.data_len = 0x1000;
-	cmd.addr = (__u64)(void *)buf;
+	cmd.addr = (unsigned long)(void *)buf;
 
 	memset(buf, 0, sizeof(buf));
 	err = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &cmd);

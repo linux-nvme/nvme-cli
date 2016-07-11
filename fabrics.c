@@ -27,6 +27,8 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <asm/byteorder.h>
+#include <inttypes.h>
 #ifdef LIBUDEV_EXISTS
 #include <libudev.h>
 #endif
@@ -266,8 +268,8 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 {
 	int i;
 
-	printf("Discovery Log Number of Records %d, Generation counter %lld\n",
-		numrec, log->genctr);
+	printf("Discovery Log Number of Records %d, Generation counter %"PRIu64"\n",
+		numrec, __le64_to_cpu(log->genctr));
 
 	for (i = 0; i < numrec; i++) {
 		struct nvmf_disc_rsp_page_entry *e = &log->entries[i];
