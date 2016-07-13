@@ -2113,6 +2113,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
 	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
 	__u16 control = 0;
+	int phys_sector_size = 0;
+	long long buffer_size = 0;
 
 	const char *start_block = "64-bit addr of first block to access";
 	const char *block_count = "number of blocks (zeroes based) on device to access";
@@ -2211,7 +2213,18 @@ static int submit_io(int opcode, char *command, const char *desc,
 		return EINVAL;
 	}
 
-	if (posix_memalign(&buffer, getpagesize(), cfg.data_size))
+	if (ioctl(fd, BLKPBSZGET, &phys_sector_size) < 0)
+		return errno;
+
+	buffer_size = (cfg.block_count + 1) * phys_sector_size;
+	if (cfg.data_size < buffer_size) {
+		fprintf(stderr, "Rounding data size to fit block count (%lld bytes)\n",
+				buffer_size);
+	} else {
+		buffer_size = cfg.data_size;
+	}
+
+	if (posix_memalign(&buffer, getpagesize(), buffer_size))
 		return ENOMEM;
 	memset(buffer, 0, cfg.data_size);
 
