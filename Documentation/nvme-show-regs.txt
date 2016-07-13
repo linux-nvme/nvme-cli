@@ -8,7 +8,7 @@ nvme-show-regs - Reads and shows the defined NVMe controller registers.
 SYNOPSIS
 --------
 [verse]
-'nvme show-regs' <device>
+'nvme show-regs' <device> [--human-readable | -H]
 
 DESCRIPTION
 -----------
@@ -20,13 +20,24 @@ device (ex: /dev/nvme0). The program uses knowledge of the sysfs layout
 to map the device to the pci resource stored there and mmaps the memory
 to get access to the registers.
 
+OPTIONS
+-------
+-H::
+--human-readable::
+       Display registers in human readable format. 
+
+
 EXAMPLES
 --------
-* Has the program map the nvme pci controller registers and prints them
-in a human readable format:
+* Show the nvme pci controller registers in a binary format:
 +
 ------------
 # nvme show-regs /dev/nvme0
+------------
+* Show the nvme pci controller registers in a human readable format:
++
+------------
+# nvme show-regs /dev/nvme0 -H
 ------------
 
 NVME

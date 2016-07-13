@@ -1395,3 +1395,151 @@ void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 	json_print_object(root, NULL);
 	printf("\n");
 }
+
+void show_registers_cap(struct nvme_bar_cap *cap)
+{
+	printf("\tMemory Page Size Maximum      (MPSMAX): %u bytes\n", 1 <<  (12 + ((cap->mpsmax_mpsmin & 0xf0) >> 4)));
+	printf("\tMemory Page Size Minimum      (MPSMIN): %u bytes\n", 1 <<  (12 + (cap->mpsmax_mpsmin & 0x0f)));
+	printf("\tCommand Sets Supported           (CSS): NVM command set is %s\n",
+			(cap->css_nssrs_dstrd & 0x0020) ? "supported":"not supported");
+	printf("\tNVM Subsystem Reset Supported  (NSSRS): %s\n", (cap->css_nssrs_dstrd & 0x0010) ? "Yes":"No");
+	printf("\tDoorbell Stride                (DSTRD): %u bytes\n", 1 << (2 + (cap->css_nssrs_dstrd & 0x000f)));
+	printf("\tTimeout                           (TO): %u ms\n", cap->to * 500);
+	printf("\tArbitration Mechanism Supported  (AMS): Weighted Round Robin with Urgent Priority Class is %s\n",
+			(cap->ams_cqr & 0x02) ? "supported":"not supported");
+	printf("\tContiguous Queues Required       (CQR): %s\n", (cap->ams_cqr & 0x01) ? "Yes":"No");
+	printf("\tMaximum Queue Entries Supported (MQES): %u\n\n", cap->mqes + 1);
+}
+
+void show_registers_version(__u32 vs)
+{
+	printf("\tNVMe specification %d.%d\n\n", (vs & 0xffff0000) >> 16,  (vs & 0x0000ff00) >> 8);
+}
+
+void show_registers_cc_ams (__u8 ams)
+{
+	printf("\tArbitration Mechanism Selected     (AMS): ");
+	switch (ams) {
+	case 0:
+		printf("Round Robin\n");
+		break;
+	case 1:
+		printf("Weighted Round Robin with Urgent Priority Class\n");
+		break;
+	case 7:
+		printf("Vendor Specific\n");
+		break;
+	default:
+		printf("Reserved\n");
+	}
+}
+
+void show_registers_cc_shn (__u8 shn)
+{
+	printf("\tShutdown Notification              (SHN): ");
+	switch (shn) {
+	case 0:
+		printf("No notification; no effect\n");
+		break;
+	case 1:
+		printf("Normal shutdown notification\n");
+		break;
+	case 2:
+		printf("Abrupt shutdown notification\n");
+		break;
+	default:
+		printf("Reserved\n");
+	}
+}
+
+void show_registers_cc (__u32 cc)
+{
+	printf("\tI/O Completion Queue Entry Size (IOSQES): %u bytes\n", 1 <<   ((cc & 0x00f00000) >> 20));
+	printf("\tI/O Submission Queue Entry Size (IOSQES): %u bytes\n", 1 <<   ((cc & 0x000f0000) >> 16));
+	show_registers_cc_shn((cc & 0x0000c000) >> 14);
+	show_registers_cc_ams((cc & 0x00003800) >> 11);
+	printf("\tMemory Page Size                   (MPS): %u bytes\n", 1 <<  (12 + ((cc & 0x00000780) >> 7)));
+	printf("\tI/O Command Sets Selected          (CSS): %s\n", (cc & 0x00000070) ? "Reserved":"NVM Command Set");
+	printf("\tEnable                              (EN): %s\n\n", (cc & 0x00000001) ? "Yes":"No");
+}
+
+void show_registers_csts_shst (__u8 shst)
+{
+	printf("\tShutdown Status               (SHST): ");
+	switch (shst) {
+	case 0:
+		printf("Normal operation (no shutdown has been requested)\n");
+		break;
+	case 1:
+		printf("Shutdown processing occurring\n");
+		break;
+	case 2:
+		printf("Shutdown processing complete\n");
+		break;
+	default:
+		printf("Reserved\n");
+	}
+}
+
+void show_registers_csts(__u32 csts)
+{
+	printf("\tProcessing Paused               (PP): %s\n", (csts & 0x00000020) ? "Yes":"No");
+	printf("\tNVM Subsystem Reset Occurred (NSSRO): %s\n", (csts & 0x00000010) ? "Yes":"No");
+	show_registers_csts_shst((csts & 0x0000000c) >> 2);
+	printf("\tController Fatal Status        (CFS): %s\n", (csts & 0x00000002) ? "True":"False");
+	printf("\tReady                          (RDY): %s\n\n", (csts & 0x00000001) ? "Yes":"No");
+
+}
+
+void show_registers_aqa(__u32 aqa)
+{
+	printf("\tAdmin Completion Queue Size (ACQS): %u bytes\n", ((aqa & 0x0fff0000) >> 16)+1);
+	printf("\tAdmin Submission Queue Size (ASQS): %u bytes\n\n", (aqa & 0x00000fff)+1);
+
+}
+
+void show_registers_cmbloc(__u32 cmbloc, __u32 cmbsz)
+{
+	if (cmbsz == 0) {
+		printf("\tController Memory Buffer feature is not supported\n\n");
+	}
+	else {
+		printf("\tOffset                 (OFST): %x (See cmbsz.szu for granularity)\n", (cmbloc & 0xfffff000) >> 12);
+		printf("\tBase Indicator Register (BIR): %x\n\n", cmbloc & 0x00000007 );
+	}
+}
+
+char *nvme_register_szu_to_string(__u8 szu)
+{
+	switch (szu) {
+	case 0:	return "4 KB";
+	case 1:	return "64 KB";
+	case 2:	return "1 MB";
+	case 3:	return "16 MB";
+	case 4:	return "256 MB";
+	case 5:	return "4 GB";
+	case 6:	return "64 GB";
+	default:	return "Reserved";
+	}
+}
+
+void show_registers_cmbsz(__u32 cmbsz)
+{
+	if (cmbsz == 0) {
+		printf("\tController Memory Buffer feature is not supported\n\n");
+	}
+	else {
+		printf("\tSize                      (SZ): %u\n", (cmbsz & 0xfffff000) >> 12);
+		printf("\tSize Units               (SZU): %s\n", nvme_register_szu_to_string((cmbsz & 0x00000f00) >> 8));
+		printf("\tWrite Data Support       (WDS): Write Data and metadata transfer in Controller Memory Buffer is %s\n",
+				(cmbsz & 0x00000010) ? "Supported":"Not supported");
+		printf("\tRead Data Support        (RDS): Read Data and metadata transfer in Controller Memory Buffer is %s\n",
+				(cmbsz & 0x00000008) ? "Supported":"Not supported");
+		printf("\tPRP SGL List Support   (LISTS): PRP/SG Lists in Controller Memory Buffer is %s\n",
+				(cmbsz & 0x00000004) ? "Supported":"Not supported");
+		printf("\tCompletion Queue Support (CQS): Admin and I/O Completion Queues in Controller Memory Buffer is %s\n",
+				(cmbsz & 0x00000002) ? "Supported":"Not supported");
+		printf("\tSubmission Queue Support (SQS): Admin and I/O Submission Queues in Controller Memory Buffer is %s\n\n",
+				(cmbsz & 0x00000001) ? "Supported":"Not supported");
+	}
+}
