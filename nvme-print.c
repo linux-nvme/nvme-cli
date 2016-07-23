@@ -506,7 +506,7 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 				ns->lbaf[i].rp == 1 ? "Better" : "Best",
 				i == (ns->flbas & 0xf) ? "(in use)" : "");
 		else
-			printf("lbaf %2d : ms:%-3d ds:%-2d rp:%#x %s\n", i,
+			printf("lbaf %2d : ms:%-3d lbads:%-2d rp:%#x %s\n", i,
 				le16toh(ns->lbaf[i].ms), ns->lbaf[i].ds, ns->lbaf[i].rp,
 				i == (ns->flbas & 0xf) ? "(in use)" : "");
 	}
