@@ -49,6 +49,7 @@ struct config {
 	char *transport;
 	char *traddr;
 	char *trsvcid;
+	char *hostnqn;
 	char *raw;
 	char *device;
 } cfg = { 0 };
@@ -395,6 +396,14 @@ static int build_options(char *argstr, int max_len)
 		max_len -= len;
 	}
 
+	if (cfg.hostnqn) {
+		len = snprintf(argstr, max_len, ",hostnqn=%s", cfg.hostnqn);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
 	return 0;
 }
 
@@ -525,6 +534,8 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 			"transport address" },
 		{"trsvcid", 's', "LIST", CFG_STRING, &cfg.trsvcid, required_argument,
 			"transport service id (e.g. IP port)" },
+		{"hostnqn", 'q', "LIST", CFG_STRING, &cfg.hostnqn, required_argument,
+			"user-defined hostnqn (if default not used)" },
 		{"raw", 'r', "LIST", CFG_STRING, &cfg.raw, required_argument,
 			"raw output file" },
 		{0},

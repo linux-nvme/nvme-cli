@@ -37,5 +37,13 @@ void json_error_log(struct nvme_error_log_page *err_log, int entries, const char
 void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
 void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname);
 
+void show_registers_version();
+void show_registers_cap();
+void show_registers_cc();
+void show_registers_csts();
+void show_registers_aqa();
+void show_registers_cmbloc();
+void show_registers_cmbsz();
+
 
 #endif

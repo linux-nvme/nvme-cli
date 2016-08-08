@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-ns
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 05/16/2016
+.\"      Date: 07/07/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "05/16/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "07/07/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,13 +32,19 @@ nvme-show-regs \- Reads and shows the defined NVMe controller registers\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme show\-regs\fR <device>
+\fInvme show\-regs\fR <device> [\-\-human\-readable | \-H]
 .fi
 .SH "DESCRIPTION"
 .sp
 For the NVMe device given, sends an identify namespace command and provides the result and returned structure\&.
 .sp
 The <device> parameter is mandatory and must be the nvme admin character device (ex: /dev/nvme0)\&. The program uses knowledge of the sysfs layout to map the device to the pci resource stored there and mmaps the memory to get access to the registers\&.
+.SH "OPTIONS"
+.PP
+\-H, \-\-human\-readable
+.RS 4
+Display registers in human readable format\&.
+.RE
 .SH "EXAMPLES"
 .sp
 .RS 4
@@ -49,13 +55,34 @@ The <device> parameter is mandatory and must be the nvme admin character device 
 .sp -1
 .IP \(bu 2.3
 .\}
-Has the program map the nvme pci controller registers and prints them in a human readable format:
+Show the nvme pci controller registers in a binary format:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
 # nvme show\-regs /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Show the nvme pci controller registers in a human readable format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme show\-regs /dev/nvme0 \-H
 .fi
 .if n \{\
 .RE
