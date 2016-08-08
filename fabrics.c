@@ -438,7 +438,8 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 		/* we can safely ignore the rest of the entries */
 		break;
 	case NVMF_TRTYPE_RDMA:
-		if (e->adrfam != NVMF_ADDR_FAMILY_IP4) {
+		if (e->adrfam != NVMF_ADDR_FAMILY_IP4 &&
+		    e->adrfam != NVMF_ADDR_FAMILY_IP6) {
 			fprintf(stderr, "skipping unsupported adrfam\n");
 			return -EINVAL;
 		}
