@@ -56,6 +56,8 @@ struct config {
 
 #define BUF_SIZE		4096
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
+#define PATH_NVMF_DISC		"/etc/nvme/discovery.conf"
+#define MAX_DISC_ARGS		10
 
 enum {
 	OPT_INSTANCE,
@@ -578,6 +580,66 @@ static int do_discover(char *argstr, bool connect)
 	return ret;
 }
 
+static int discover_from_conf_file(const char *desc, char *argstr,
+		const struct argconfig_commandline_options *opts, bool connect)
+{
+	FILE *f;
+	char line[256], *ptr, *args, **argv;
+	int argc, err, ret = 0;
+
+	f = fopen(PATH_NVMF_DISC, "r");
+	if (f == NULL) {
+		fprintf(stderr, "No discover params given and no %s conf\n", PATH_NVMF_DISC);
+		return -EINVAL;
+	}
+
+	while (fgets(line, sizeof(line), f) != NULL) {
+		if (line[0] == '#' || line[0] == '\n')
+			continue;
+
+		args = strdup(line);
+		if (!args) {
+			fprintf(stderr, "failed to strdup args\n");
+			ret = -ENOMEM;
+			goto out;
+		}
+
+		argv = calloc(MAX_DISC_ARGS, BUF_SIZE);
+		if (!argv) {
+			fprintf(stderr, "failed to allocate argv vector\n");
+			free(args);
+			ret = -ENOMEM;
+			goto out;
+		}
+
+		argc = 0;
+		argv[argc++] = "discover";
+		while ((ptr = strsep(&args, " =\n")) != NULL)
+			argv[argc++] = ptr;
+
+		argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+
+		err = build_options(argstr, BUF_SIZE);
+		if (err) {
+			ret = err;
+			continue;
+		}
+
+		err = do_discover(argstr, connect);
+		if (err) {
+			ret = err;
+			continue;
+		}
+
+		free(args);
+		free(argv);
+	}
+
+out:
+	fclose(f);
+	return ret;
+}
+
 int discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char argstr[BUF_SIZE];
@@ -600,11 +662,16 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 
 	cfg.nqn = NVME_DISC_SUBSYS_NAME;
 
-	ret = build_options(argstr, BUF_SIZE);
-	if (ret)
-		return ret;
+	if (!cfg.transport && !cfg.traddr) {
+		return discover_from_conf_file(desc, argstr,
+				command_line_options, connect);
+	} else {
+		ret = build_options(argstr, BUF_SIZE);
+		if (ret)
+			return ret;
 
-	return do_discover(argstr, connect);
+		return do_discover(argstr, connect);
+	}
 }
 
 int connect(const char *desc, int argc, char **argv)
