@@ -438,25 +438,29 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 		/* we can safely ignore the rest of the entries */
 		break;
 	case NVMF_TRTYPE_RDMA:
-		if (e->adrfam != NVMF_ADDR_FAMILY_IP4) {
+		switch (e->adrfam) {
+		case NVMF_ADDR_FAMILY_IP4:
+		case NVMF_ADDR_FAMILY_IP6:
+			/* FALLTHRU */
+			len = sprintf(p, ",transport=rdma");
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+
+			len = sprintf(p, ",traddr=%s", e->traddr);
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+
+			len = sprintf(p, ",trsvcid=%s", e->trsvcid);
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+			break;
+		default:
 			fprintf(stderr, "skipping unsupported adrfam\n");
 			return -EINVAL;
 		}
-
-		len = sprintf(p, ",transport=rdma");
-		if (len < 0)
-			return -EINVAL;
-		p += len;
-
-		len = sprintf(p, ",traddr=%s", e->traddr);
-		if (len < 0)
-			return -EINVAL;
-		p += len;
-
-		len = sprintf(p, ",trsvcid=%s", e->trsvcid);
-		if (len < 0)
-			return -EINVAL;
-		p += len;
 		break;
 	default:
 		fprintf(stderr, "skipping unsupported transport %d\n",
