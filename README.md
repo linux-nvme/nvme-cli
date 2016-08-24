@@ -62,13 +62,7 @@ steps:
 nvme-cli is tested on AlpineLinux 3.3.  Install it using:
 
     # akp update && apk add nvme-cli nvme-cli-doc
-    
-    the "list" command will not work unless you installed udev for some reason.
-    ```
-    # nvme list
-    nvme-list: libudev not detected, install and rebuild.
-    ```
-    
+
     if you just use the device you're after, it will work flawless.
     ```
     # nvme smart-log /dev/nvme0
