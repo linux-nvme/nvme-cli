@@ -281,7 +281,7 @@ int nvme_resv_release(int fd, __u32 nsid, __u8 rtype, __u8 rrela,
 	__u32 cdw10 = rrela | (iekey ? 1 << 3 : 0) | rtype << 8;
 
 	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_cmd_resv_register,
+		.opcode		= nvme_cmd_resv_release,
 		.nsid		= nsid,
 		.cdw10		= cdw10,
 		.addr		= (__u64)(uintptr_t) (payload),
