@@ -794,8 +794,7 @@ static const char *dev = "/dev/";
 static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	DIR *d;
-	struct dirent entry;
-	struct dirent *r_entry;
+       struct dirent *entry;
 	char path[256] = { 0 };
 	struct list_item list_items[MAX_LIST_ITEMS];
 	struct stat bd;
@@ -811,26 +810,31 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	}
 
 	while (1) {
-		if (readdir_r(d, &entry, &r_entry)) {
-			fprintf(stderr,
-				"Failed to read contents of %s with error %s\n",
-				dev, strerror(errno));
-			closedir(d);
-			return errno;
+		errno = 0;
+		entry = readdir(d);
+		if (NULL == entry) {
+			/* Error while reading directory */
+			if (errno) {
+				fprintf(stderr,
+						"Failed to read contents of %s with error %s\n",
+						dev, strerror(errno));
+				closedir(d);
+				return errno;
+			}
+			else {
+				/* done reading the directory stream */
+				break;
+			}
 		}
-		/* done reading the directory stream */
-		if (r_entry == NULL)
-			break;
 		/* lets not walk the entire fs */
-		if (!strcmp(entry.d_name, ".."))
+		if (!strcmp(entry->d_name, ".."))
 			continue;
-
-		if (strstr(entry.d_name, "nvme") != NULL) {
-			snprintf(path, sizeof(path), "%s%s", dev, entry.d_name);
+		if (strstr(entry->d_name, "nvme") != NULL) {
+			snprintf(path, sizeof(path), "%s%s", dev, entry->d_name);
 			if (stat(path, &bd)) {
 				fprintf(stderr,
-					"Failed to stat %s with error %s\n",
-					path, strerror(errno));
+						"Failed to stat %s with error %s\n",
+						path, strerror(errno));
 				closedir(d);
 				return errno;
 			}
