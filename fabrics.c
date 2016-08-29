@@ -50,6 +50,7 @@ struct config {
 	char *traddr;
 	char *trsvcid;
 	char *hostnqn;
+	char *nr_io_queues;
 	char *raw;
 	char *device;
 } cfg = { 0 };
@@ -481,6 +482,14 @@ static int build_options(char *argstr, int max_len)
 		max_len -= len;
 	}
 
+	if (cfg.nr_io_queues) {
+		len = snprintf(argstr, max_len, ",nr_io_queues=%s", cfg.nr_io_queues);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
 	return 0;
 }
 
@@ -713,6 +722,8 @@ int connect(const char *desc, int argc, char **argv)
 			"transport service id (e.g. IP port)" },
 		{"hostnqn", 'q', "LIST", CFG_STRING, &cfg.hostnqn, required_argument,
 			"user-defined hostnqn" },
+		{"nr-io-queues", 'i', "LIST", CFG_STRING, &cfg.nr_io_queues, required_argument,
+			"number of io queues to use (default is core count)" },
 		{0},
 	};
 
