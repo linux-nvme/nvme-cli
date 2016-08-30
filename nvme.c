@@ -709,22 +709,7 @@ struct list_item {
 	int                 nsid;
 	struct nvme_id_ns   ns;
 	unsigned            block;
-	__le32              ver;
 };
-
-
-/* For pre NVMe 1.2 devices we must get the version from the BAR, not the
- * ctrl_id.*/
-static void get_version(struct list_item* list_item)
-{
-	struct nvme_bar *bar;
-
-	list_item->ver = list_item->ctrl.ver;
-	if (list_item->ctrl.ver)
-		return;
-	get_registers(&bar);
-	list_item->ver = bar->vs;
-}
 
 static void print_list_item(struct list_item list_item)
 {
@@ -747,25 +732,22 @@ static void print_list_item(struct list_item list_item)
 	char format[128];
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ms);
-	char version[128];
-	sprintf(version,"%d.%d", (list_item.ver >> 16),
-		(list_item.ver >> 8) & 0xff);
 
-	printf("%-16s %-*.*s %-*.*s %-8s %-9d %-26s %-16s %-.*s\n", list_item.node,
+	printf("%-16s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", list_item.node,
             (int)sizeof(list_item.ctrl.sn), (int)sizeof(list_item.ctrl.sn), list_item.ctrl.sn,
             (int)sizeof(list_item.ctrl.mn), (int)sizeof(list_item.ctrl.mn), list_item.ctrl.mn,
-            version, list_item.nsid, usage, format, (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
+            list_item.nsid, usage, format, (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
 }
 
 static void print_list_items(struct list_item *list_items, unsigned len)
 {
 	unsigned i;
 
-	printf("%-16s %-20s %-40s %-8s %-9s %-26s %-16s %-8s\n",
-	    "Node", "SN", "Model", "Version", "Namespace", "Usage", "Format", "FW Rev");
-	printf("%-16s %-20s %-40s %-8s %-9s %-26s %-16s %-8s\n",
+	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
+	    "Node", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
+	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
             "----------------", "--------------------", "----------------------------------------",
-            "--------", "---------", "--------------------------", "----------------", "--------");
+            "---------", "--------------------------", "----------------", "--------");
 	for (i = 0 ; i < len ; i++)
 		print_list_item(list_items[i]);
 
@@ -785,7 +767,6 @@ static int get_nvme_info(int fd, struct list_item *item, const char *node)
 		return err;
 	strcpy(item->node, node);
 	item->block = S_ISBLK(nvme_stat.st_mode);
-	get_version(item);
 
 	return 0;
 }
