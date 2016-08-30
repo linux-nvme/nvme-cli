@@ -772,70 +772,55 @@ static int get_nvme_info(int fd, struct list_item *item, const char *node)
 }
 
 static const char *dev = "/dev/";
+
+/* Assume every block device starting with /dev/nvme is an nvme namespace */
+static int scan_dev_filter(const struct dirent *d)
+{
+	char path[256];
+	struct stat bd;
+
+	if (d->d_name[0] == '.')
+		return 0;
+
+	if (strstr(d->d_name, "nvme")) {
+		snprintf(path, sizeof(path), "%s%s", dev, d->d_name);
+		if (stat(path, &bd))
+			return 0;
+		if (S_ISBLK(bd.st_mode))
+			return 1;
+	}
+	return 0;
+}
+
 static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	DIR *d;
-       struct dirent *entry;
-	char path[256] = { 0 };
-	struct list_item list_items[MAX_LIST_ITEMS];
-	struct stat bd;
-	unsigned int count = 0;
-	int ret;
+	char path[256];
+	struct dirent **devices;
+	struct list_item *list_items;
+	unsigned int i, n, fd, ret;
 
-	d = opendir(dev);
-	if (!d) {
-		fprintf(stderr,
-			"Failed to open directory %s with error %s\n",
-			dev, strerror(errno));
-		return errno;
+	n = scandir(dev, &devices, scan_dev_filter, alphasort);
+	if (n <= 0)
+		return n;
+
+	list_items = calloc(n, sizeof(*list_items));
+	if (!list_items)
+		return ENOMEM;
+
+	for (i = 0; i < n; i++) {
+		snprintf(path, sizeof(path), "%s%s", dev, devices[i]->d_name);
+		fd = open(path, O_RDONLY);
+		ret = get_nvme_info(fd, &list_items[i], path);
+		if (ret)
+			return ret;
 	}
+	print_list_items(list_items, n);
 
-	while (1) {
-		errno = 0;
-		entry = readdir(d);
-		if (NULL == entry) {
-			/* Error while reading directory */
-			if (errno) {
-				fprintf(stderr,
-						"Failed to read contents of %s with error %s\n",
-						dev, strerror(errno));
-				closedir(d);
-				return errno;
-			}
-			else {
-				/* done reading the directory stream */
-				break;
-			}
-		}
-		/* lets not walk the entire fs */
-		if (!strcmp(entry->d_name, ".."))
-			continue;
-		if (strstr(entry->d_name, "nvme") != NULL) {
-			snprintf(path, sizeof(path), "%s%s", dev, entry->d_name);
-			if (stat(path, &bd)) {
-				fprintf(stderr,
-						"Failed to stat %s with error %s\n",
-						path, strerror(errno));
-				closedir(d);
-				return errno;
-			}
-			if (S_ISBLK(bd.st_mode)) {
-				open_dev(path);
-				ret = get_nvme_info(fd, &list_items[count], path);
-				if (ret > 0) {
-					closedir(d);
-					return ret;
-				}
-				count++;
-			}
-		}
-	}
-	closedir(d);
+	for (i = 0; i < n; i++)
+		free(devices[i]);
+	free(devices);
+	free(list_items);
 
-	if (count)
-		print_list_items(list_items, count);
-	else
-		printf("No NVMe devices detected.\n");
 	return 0;
 }
 
