@@ -351,7 +351,7 @@ struct nvme_reservation_status {
 	__u8	regctl[2];
 	__u8	resv5[2];
 	__u8	ptpls;
-	__u8	resv10[13];
+	__u8	resv10[14];
 	struct {
 		__le16	cntlid;
 		__u8	rcsts;

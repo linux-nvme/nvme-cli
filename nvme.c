@@ -2074,7 +2074,7 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 	else if (err != 0)
 		fprintf(stderr, "NVME IO command error:%04x\n", err);
 	else
-		printf("NVME Reservation Register success\n");
+		printf("NVME Reservation Release success\n");
 	return 0;
 }
 
