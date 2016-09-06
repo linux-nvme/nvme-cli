@@ -1850,7 +1850,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 				nvme_status_to_string(err), err);
 	else
 		printf("NVMe DSM: success\n");
-	return 0;
+	return err;
 }
 
 static int flush(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -1886,7 +1886,7 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 				nvme_status_to_string(err), err);
 	else
 		printf("NVMe Flush: success\n");
-	return 0;
+	return err;
 }
 
 static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -1949,7 +1949,7 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 		fprintf(stderr, "NVME IO command error:%04x\n", err);
 	else
 		printf("NVME Reservation Acquire success\n");
-	return 0;
+	return err;
 }
 
 static int resv_register(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -2009,7 +2009,7 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 		fprintf(stderr, "NVME IO command error:%04x\n", err);
 	else
 		printf("NVME Reservation  success\n");
-	return 0;
+	return err;
 }
 
 static int resv_release(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -2075,7 +2075,7 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 		fprintf(stderr, "NVME IO command error:%04x\n", err);
 	else
 		printf("NVME Reservation Release success\n");
-	return 0;
+	return err;
 }
 
 static int resv_report(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -2146,7 +2146,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 			show_nvme_resv_report(status);
 		}
 	}
-	return 0;
+	return err;
 }
 
 static int submit_io(int opcode, char *command, const char *desc,
