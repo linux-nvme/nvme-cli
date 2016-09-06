@@ -295,7 +295,7 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 			i--;
 		}
 
-		sprintf(f, "%s_%-.*s.bin\n", cfg.log == 0 ? "Nlog" :
+		sprintf(f, "%s_%-.*s.bin", cfg.log == 0 ? "Nlog" :
 				cfg.log == 2 ? "EventLog" :  "AssertLog",
 				(int)sizeof(ctrl.sn), ctrl.sn);
 		cfg.file = f;

@@ -682,7 +682,8 @@ void show_error_log(struct nvme_error_log_page *err_log, int entries, const char
 		printf("error_count  : %"PRIu64"\n", (uint64_t)le64toh(err_log[i].error_count));
 		printf("sqid         : %d\n", err_log[i].sqid);
 		printf("cmdid        : %#x\n", err_log[i].cmdid);
-		printf("status_field : %#x\n", err_log[i].status_field);
+		printf("status_field : %#x(%s)\n", err_log[i].status_field,
+			nvme_status_to_string(err_log[i].status_field >> 1));
 		printf("parm_err_loc : %#x\n", err_log[i].parm_error_location);
 		printf("lba          : %#"PRIx64"\n",(uint64_t)le64toh(err_log[i].lba));
 		printf("nsid         : %#x\n", err_log[i].nsid);

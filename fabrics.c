@@ -50,12 +50,16 @@ struct config {
 	char *traddr;
 	char *trsvcid;
 	char *hostnqn;
+	char *nr_io_queues;
 	char *raw;
 	char *device;
 } cfg = { 0 };
 
 #define BUF_SIZE		4096
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
+#define PATH_NVMF_DISC		"/etc/nvme/discovery.conf"
+#define PATH_NVMF_HOSTNQN	"/etc/nvme/hostnqn"
+#define MAX_DISC_ARGS		10
 
 enum {
 	OPT_INSTANCE,
@@ -68,6 +72,91 @@ static const match_table_t opt_tokens = {
 	{ OPT_CNTLID,		"cntlid=%d"	},
 	{ OPT_ERR,		NULL		},
 };
+
+static const char *arg_str(const char * const *strings,
+		size_t array_size, size_t idx)
+{
+	if (idx < array_size && strings[idx])
+		return strings[idx];
+	return "unrecognized";
+}
+
+static const char * const trtypes[] = {
+	[NVMF_TRTYPE_RDMA]	= "rdma",
+	[NVMF_TRTYPE_FC]	= "fibre-channel",
+	[NVMF_TRTYPE_LOOP]	= "loop",
+};
+
+static const char *trtype_str(__u8 trtype)
+{
+	return arg_str(trtypes, ARRAY_SIZE(trtypes), trtype);
+}
+
+static const char * const adrfams[] = {
+	[NVMF_ADDR_FAMILY_PCI]	= "pci",
+	[NVMF_ADDR_FAMILY_IP4]	= "ipv4",
+	[NVMF_ADDR_FAMILY_IP6]	= "ipv6",
+	[NVMF_ADDR_FAMILY_IB]	= "infiniband",
+	[NVMF_ADDR_FAMILY_FC]	= "fibre-channel",
+};
+
+static inline const char *adrfam_str(__u8 adrfam)
+{
+	return arg_str(adrfams, ARRAY_SIZE(adrfams), adrfam);
+}
+
+static const char * const nqntypes[] = {
+	[NVME_NQN_DISC]		= "discovery subsystem",
+	[NVME_NQN_NVME]		= "nvme subsystem",
+};
+
+static inline const char *nqntype_str(__u8 nqntype)
+{
+	return arg_str(nqntypes, ARRAY_SIZE(nqntypes), nqntype);
+}
+
+static const char * const treqs[] = {
+	[NVMF_TREQ_NOT_SPECIFIED]	= "unspecified transport requirements",
+	[NVMF_TREQ_REQUIRED]		= "required",
+	[NVMF_TREQ_NOT_REQUIRED]	= "not required",
+};
+
+static inline const char *treq_str(__u8 treq)
+{
+	return arg_str(treqs, ARRAY_SIZE(treqs), treq);
+}
+
+static const char * const prtypes[] = {
+	[NVMF_RDMA_PRTYPE_NOT_SPECIFIED]	= "not specified",
+	[NVMF_RDMA_PRTYPE_IB]			= "infiniband",
+	[NVMF_RDMA_PRTYPE_ROCE]			= "roce",
+	[NVMF_RDMA_PRTYPE_ROCEV2]		= "roce-v2",
+	[NVMF_RDMA_PRTYPE_IWARP]		= "iwarp",
+};
+
+static inline const char *prtype_str(__u8 prtype)
+{
+	return arg_str(prtypes, ARRAY_SIZE(prtypes), prtype);
+}
+
+static const char * const qptypes[] = {
+	[NVMF_RDMA_QPTYPE_CONNECTED]	= "connected",
+	[NVMF_RDMA_QPTYPE_DATAGRAM]	= "datagram",
+};
+
+static inline const char *qptype_str(__u8 qptype)
+{
+	return arg_str(qptypes, ARRAY_SIZE(qptypes), qptype);
+}
+
+static const char * const cms[] = {
+	[NVMF_RDMA_CMS_RDMA_CM]	= "rdma-cm",
+};
+
+static const char *cms_str(__u8 cm)
+{
+	return arg_str(cms, ARRAY_SIZE(cms), cm);
+}
 
 static int do_discover(char *argstr, bool connect);
 
@@ -276,44 +365,10 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 		struct nvmf_disc_rsp_page_entry *e = &log->entries[i];
 
 		printf("=====Discovery Log Entry %d======\n", i);
-
-		printf("trtype:  ");
-		switch(e->trtype) {
-		case NVMF_ADDR_FAMILY_IP4:
-			printf("ipv4\n");
-			break;
-		case NVMF_ADDR_FAMILY_IP6:
-			printf("ipv6\n");
-			break;
-		case NVMF_ADDR_FAMILY_IB:
-			printf("ib\n");
-			break;
-		case NVMF_ADDR_FAMILY_FC:
-			printf("fc\n");
-			break;
-		default:
-			printf("unknown\n");
-			break;
-		}
-
-		printf("adrfam:  ");
-		switch(e->adrfam) {
-		case NVMF_TRTYPE_RDMA:
-			printf("rdma\n");
-			break;
-		case NVMF_TRTYPE_FC:
-			printf("fc\n");
-			break;
-		case NVMF_TRTYPE_LOOP:
-			printf("loop\n");
-			break;
-		default:
-			printf("unknown\n");
-			break;
-		}
-
-		printf("nqntype: %d\n", e->nqntype);
-		printf("treq:    %d\n", e->treq);
+		printf("trtype:  %s\n", trtype_str(e->trtype));
+		printf("adrfam:  %s\n", adrfam_str(e->adrfam));
+		printf("nqntype: %s\n", nqntype_str(e->nqntype));
+		printf("treq:    %s\n", treq_str(e->treq));
 		printf("portid:  %d\n", e->portid);
 		printf("trsvcid: %s\n", e->trsvcid);
 		printf("subnqn:  %s\n", e->subnqn);
@@ -321,9 +376,9 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
-			printf("rdma_prtype: %d\n", e->tsas.rdma.prtype);
-			printf("rdma_qptype: %d\n", e->tsas.rdma.qptype);
-			printf("rdma_cms:    %d\n", e->tsas.rdma.cms);
+			printf("rdma_prtype: %s\n", prtype_str(e->tsas.rdma.prtype));
+			printf("rdma_qptype: %s\n", qptype_str(e->tsas.rdma.qptype));
+			printf("rdma_cms:    %s\n", cms_str(e->tsas.rdma.cms));
 			printf("rdma_pkey: 0x%04x\n", e->tsas.rdma.pkey);
 			break;
 		}
@@ -350,6 +405,29 @@ static void save_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 		printf("Discovery log is saved to %s\n", cfg.raw);
 
 	close(fd);
+}
+
+static int nvmf_hostnqn_file(void)
+{
+	FILE *f;
+	char hostnqn[NVMF_NQN_SIZE];
+	int ret = false;
+
+	f = fopen(PATH_NVMF_HOSTNQN, "r");
+	if (f == NULL)
+		return false;
+
+	if (fgets(hostnqn, sizeof(hostnqn), f) == NULL)
+		goto out;
+
+	cfg.hostnqn = strdup(hostnqn);
+	if (!cfg.hostnqn)
+		goto out;
+
+	ret = true;
+out:
+	fclose(f);
+	return ret;
 }
 
 static int build_options(char *argstr, int max_len)
@@ -396,8 +474,16 @@ static int build_options(char *argstr, int max_len)
 		max_len -= len;
 	}
 
-	if (cfg.hostnqn) {
+	if (cfg.hostnqn || nvmf_hostnqn_file()) {
 		len = snprintf(argstr, max_len, ",hostnqn=%s", cfg.hostnqn);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
+	if (cfg.nr_io_queues) {
+		len = snprintf(argstr, max_len, ",nr_io_queues=%s", cfg.nr_io_queues);
 		if (len < 0)
 			return -EINVAL;
 		argstr += len;
@@ -438,26 +524,29 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 		/* we can safely ignore the rest of the entries */
 		break;
 	case NVMF_TRTYPE_RDMA:
-		if (e->adrfam != NVMF_ADDR_FAMILY_IP4 &&
-		    e->adrfam != NVMF_ADDR_FAMILY_IP6) {
+		switch (e->adrfam) {
+		case NVMF_ADDR_FAMILY_IP4:
+		case NVMF_ADDR_FAMILY_IP6:
+			/* FALLTHRU */
+			len = sprintf(p, ",transport=rdma");
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+
+			len = sprintf(p, ",traddr=%s", e->traddr);
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+
+			len = sprintf(p, ",trsvcid=%s", e->trsvcid);
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+			break;
+		default:
 			fprintf(stderr, "skipping unsupported adrfam\n");
 			return -EINVAL;
 		}
-
-		len = sprintf(p, ",transport=rdma");
-		if (len < 0)
-			return -EINVAL;
-		p += len;
-
-		len = sprintf(p, ",traddr=%s", e->traddr);
-		if (len < 0)
-			return -EINVAL;
-		p += len;
-
-		len = sprintf(p, ",trsvcid=%s", e->trsvcid);
-		if (len < 0)
-			return -EINVAL;
-		p += len;
 		break;
 	default:
 		fprintf(stderr, "skipping unsupported transport %d\n",
@@ -524,6 +613,66 @@ static int do_discover(char *argstr, bool connect)
 	return ret;
 }
 
+static int discover_from_conf_file(const char *desc, char *argstr,
+		const struct argconfig_commandline_options *opts, bool connect)
+{
+	FILE *f;
+	char line[256], *ptr, *args, **argv;
+	int argc, err, ret = 0;
+
+	f = fopen(PATH_NVMF_DISC, "r");
+	if (f == NULL) {
+		fprintf(stderr, "No discover params given and no %s conf\n", PATH_NVMF_DISC);
+		return -EINVAL;
+	}
+
+	while (fgets(line, sizeof(line), f) != NULL) {
+		if (line[0] == '#' || line[0] == '\n')
+			continue;
+
+		args = strdup(line);
+		if (!args) {
+			fprintf(stderr, "failed to strdup args\n");
+			ret = -ENOMEM;
+			goto out;
+		}
+
+		argv = calloc(MAX_DISC_ARGS, BUF_SIZE);
+		if (!argv) {
+			fprintf(stderr, "failed to allocate argv vector\n");
+			free(args);
+			ret = -ENOMEM;
+			goto out;
+		}
+
+		argc = 0;
+		argv[argc++] = "discover";
+		while ((ptr = strsep(&args, " =\n")) != NULL)
+			argv[argc++] = ptr;
+
+		argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+
+		err = build_options(argstr, BUF_SIZE);
+		if (err) {
+			ret = err;
+			continue;
+		}
+
+		err = do_discover(argstr, connect);
+		if (err) {
+			ret = err;
+			continue;
+		}
+
+		free(args);
+		free(argv);
+	}
+
+out:
+	fclose(f);
+	return ret;
+}
+
 int discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char argstr[BUF_SIZE];
@@ -546,11 +695,16 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 
 	cfg.nqn = NVME_DISC_SUBSYS_NAME;
 
-	ret = build_options(argstr, BUF_SIZE);
-	if (ret)
-		return ret;
+	if (!cfg.transport && !cfg.traddr) {
+		return discover_from_conf_file(desc, argstr,
+				command_line_options, connect);
+	} else {
+		ret = build_options(argstr, BUF_SIZE);
+		if (ret)
+			return ret;
 
-	return do_discover(argstr, connect);
+		return do_discover(argstr, connect);
+	}
 }
 
 int connect(const char *desc, int argc, char **argv)
@@ -566,6 +720,10 @@ int connect(const char *desc, int argc, char **argv)
 			"transport address" },
 		{"trsvcid", 's', "LIST", CFG_STRING, &cfg.trsvcid, required_argument,
 			"transport service id (e.g. IP port)" },
+		{"hostnqn", 'q', "LIST", CFG_STRING, &cfg.hostnqn, required_argument,
+			"user-defined hostnqn" },
+		{"nr-io-queues", 'i', "LIST", CFG_STRING, &cfg.nr_io_queues, required_argument,
+			"number of io queues to use (default is core count)" },
 		{0},
 	};
 

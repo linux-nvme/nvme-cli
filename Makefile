@@ -35,7 +35,7 @@ OBJS := argconfig.o suffix.o parser.o nvme-print.o nvme-ioctl.o \
 	lnvm-nvme.o memblaze-nvme.o
 
 nvme: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
-	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c $(LDFLAGS) -o $(NVME) $(OBJS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $(NVME) $(OBJS) $(LDFLAGS)
 
 nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h argconfig.h suffix.h nvme-lightnvm.h fabrics.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<

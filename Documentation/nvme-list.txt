@@ -15,8 +15,6 @@ DESCRIPTION
 Scan the sysfs tree for NVM Express devices and return the /dev node
 for those devices as well as some pertinent information about them.
 
-This command requires udev.
-
 OPTIONS
 -------
 No options yet.

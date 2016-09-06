@@ -35,9 +35,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
-#ifdef LIBUDEV_EXISTS
-#include <libudev.h>
-#endif
+#include <dirent.h>
 
 #include <linux/fs.h>
 
@@ -704,28 +702,14 @@ static void get_registers(struct nvme_bar **bar)
 	*bar = membase;
 }
 
+#define MAX_LIST_ITEMS 256
 struct list_item {
 	char                node[1024];
 	struct nvme_id_ctrl ctrl;
 	int                 nsid;
 	struct nvme_id_ns   ns;
 	unsigned            block;
-	__le32              ver;
 };
-
-#ifdef LIBUDEV_EXISTS
-/* For pre NVMe 1.2 devices we must get the version from the BAR, not the
- * ctrl_id.*/
-static void get_version(struct list_item* list_item)
-{
-	struct nvme_bar *bar;
-
-	list_item->ver = list_item->ctrl.ver;
-	if (list_item->ctrl.ver)
-		return;
-	get_registers(&bar);
-	list_item->ver = bar->vs;
-}
 
 static void print_list_item(struct list_item list_item)
 {
@@ -748,36 +732,97 @@ static void print_list_item(struct list_item list_item)
 	char format[128];
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ms);
-	char version[128];
-	sprintf(version,"%d.%d", (list_item.ver >> 16),
-		(list_item.ver >> 8) & 0xff);
 
-	printf("%-16s %-*.*s %-*.*s %-8s %-9d %-26s %-16s %-.*s\n", list_item.node,
+	printf("%-16s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", list_item.node,
             (int)sizeof(list_item.ctrl.sn), (int)sizeof(list_item.ctrl.sn), list_item.ctrl.sn,
             (int)sizeof(list_item.ctrl.mn), (int)sizeof(list_item.ctrl.mn), list_item.ctrl.mn,
-            version, list_item.nsid, usage, format, (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
+            list_item.nsid, usage, format, (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
 }
 
 static void print_list_items(struct list_item *list_items, unsigned len)
 {
 	unsigned i;
 
-	printf("%-16s %-20s %-40s %-8s %-9s %-26s %-16s %-8s\n",
-	    "Node", "SN", "Model", "Version", "Namespace", "Usage", "Format", "FW Rev");
-	printf("%-16s %-20s %-40s %-8s %-9s %-26s %-16s %-8s\n",
+	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
+	    "Node", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
+	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
             "----------------", "--------------------", "----------------------------------------",
-            "--------", "---------", "--------------------------", "----------------", "--------");
+            "---------", "--------------------------", "----------------", "--------");
 	for (i = 0 ; i < len ; i++)
 		print_list_item(list_items[i]);
 
 }
-#else
+
+static int get_nvme_info(int fd, struct list_item *item, const char *node)
+{
+	int err;
+
+	err = nvme_identify_ctrl(fd, &item->ctrl);
+	if (err > 0)
+		return err;
+	item->nsid = nvme_get_nsid(fd);
+	err = nvme_identify_ns(fd, item->nsid,
+			       0, &item->ns);
+	if (err > 0)
+		return err;
+	strcpy(item->node, node);
+	item->block = S_ISBLK(nvme_stat.st_mode);
+
+	return 0;
+}
+
+static const char *dev = "/dev/";
+
+/* Assume every block device starting with /dev/nvme is an nvme namespace */
+static int scan_dev_filter(const struct dirent *d)
+{
+	char path[256];
+	struct stat bd;
+
+	if (d->d_name[0] == '.')
+		return 0;
+
+	if (strstr(d->d_name, "nvme")) {
+		snprintf(path, sizeof(path), "%s%s", dev, d->d_name);
+		if (stat(path, &bd))
+			return 0;
+		if (S_ISBLK(bd.st_mode))
+			return 1;
+	}
+	return 0;
+}
+
 static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	fprintf(stderr,"nvme-list: libudev not detected, install and rebuild.\n");
-	return -1;
+	char path[256];
+	struct dirent **devices;
+	struct list_item *list_items;
+	unsigned int i, n, fd, ret;
+
+	n = scandir(dev, &devices, scan_dev_filter, alphasort);
+	if (n <= 0)
+		return n;
+
+	list_items = calloc(n, sizeof(*list_items));
+	if (!list_items)
+		return ENOMEM;
+
+	for (i = 0; i < n; i++) {
+		snprintf(path, sizeof(path), "%s%s", dev, devices[i]->d_name);
+		fd = open(path, O_RDONLY);
+		ret = get_nvme_info(fd, &list_items[i], path);
+		if (ret)
+			return ret;
+	}
+	print_list_items(list_items, n);
+
+	for (i = 0; i < n; i++)
+		free(devices[i]);
+	free(devices);
+	free(list_items);
+
+	return 0;
 }
-#endif
 
 static int get_nsid()
 {
@@ -791,63 +836,6 @@ static int get_nsid()
 	}
 	return nsid;
 }
-
-#ifdef LIBUDEV_EXISTS
-#define MAX_LIST_ITEMS 256
-static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
-{
-	struct udev *udev;
-	struct udev_enumerate *enumerate;
-	struct udev_list_entry *devices, *dev_list_entry;
-	struct udev_device *dev;
-
-	struct list_item list_items[MAX_LIST_ITEMS];
-	unsigned count=0;
-
-	udev = udev_new();
-	if (!udev) {
-		perror("nvme-list: Cannot create udev context.");
-		return errno;
-	}
-
-	enumerate = udev_enumerate_new(udev);
-	udev_enumerate_add_match_subsystem(enumerate, "block");
-	udev_enumerate_add_match_property(enumerate, "DEVTYPE", "disk");
-	udev_enumerate_scan_devices(enumerate);
-	devices = udev_enumerate_get_list_entry(enumerate);
-	udev_list_entry_foreach(dev_list_entry, devices) {
-		int err;
-		const char *path, *node;
-		path = udev_list_entry_get_name(dev_list_entry);
-		dev  = udev_device_new_from_syspath(udev, path);
-		node = udev_device_get_devnode(dev);
-		if (strstr(node,"nvme")!=NULL){
-			open_dev(node);
-			err = nvme_identify_ctrl(fd, &list_items[count].ctrl);
-			if (err > 0)
-				return err;
-			list_items[count].nsid = nvme_get_nsid(fd);
-			err = nvme_identify_ns(fd, list_items[count].nsid,
-						0, &list_items[count].ns);
-			if (err > 0)
-				return err;
-			strcpy(list_items[count].node, node);
-			list_items[count].block = S_ISBLK(nvme_stat.st_mode);
-			get_version(&list_items[count]);
-			count++;
-		}
-	}
-	udev_enumerate_unref(enumerate);
-	udev_unref(udev);
-
-	if (count)
-		print_list_items(list_items, count);
-	else
-		printf("No NVMe devices detected.\n");
-
-	return 0;
-}
-#endif
 
 int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs))
 {
