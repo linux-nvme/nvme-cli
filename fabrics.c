@@ -116,7 +116,7 @@ static inline const char *nqntype_str(__u8 nqntype)
 }
 
 static const char * const treqs[] = {
-	[NVMF_TREQ_NOT_SPECIFIED]	= "unspecified transport requirements",
+	[NVMF_TREQ_NOT_SPECIFIED]	= "not specified",
 	[NVMF_TREQ_REQUIRED]		= "required",
 	[NVMF_TREQ_NOT_REQUIRED]	= "not required",
 };
