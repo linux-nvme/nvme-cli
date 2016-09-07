@@ -566,7 +566,7 @@ struct nvme_bar_cap {
 struct nvmf_disc_rsp_page_entry {
 	__u8	trtype;
 	__u8	adrfam;
-	__u8	nqntype;
+	__u8	subtype;
 	__u8	treq;
 	__le16	portid;
 	__le16	cntlid;

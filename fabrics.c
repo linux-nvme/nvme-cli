@@ -105,14 +105,14 @@ static inline const char *adrfam_str(__u8 adrfam)
 	return arg_str(adrfams, ARRAY_SIZE(adrfams), adrfam);
 }
 
-static const char * const nqntypes[] = {
+static const char * const subtypes[] = {
 	[NVME_NQN_DISC]		= "discovery subsystem",
 	[NVME_NQN_NVME]		= "nvme subsystem",
 };
 
-static inline const char *nqntype_str(__u8 nqntype)
+static inline const char *subtype_str(__u8 subtype)
 {
-	return arg_str(nqntypes, ARRAY_SIZE(nqntypes), nqntype);
+	return arg_str(subtypes, ARRAY_SIZE(subtypes), subtype);
 }
 
 static const char * const treqs[] = {
@@ -367,7 +367,7 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 		printf("=====Discovery Log Entry %d======\n", i);
 		printf("trtype:  %s\n", trtype_str(e->trtype));
 		printf("adrfam:  %s\n", adrfam_str(e->adrfam));
-		printf("nqntype: %s\n", nqntype_str(e->nqntype));
+		printf("subtype: %s\n", subtype_str(e->subtype));
 		printf("treq:    %s\n", treq_str(e->treq));
 		printf("portid:  %d\n", e->portid);
 		printf("trsvcid: %s\n", e->trsvcid);
@@ -499,14 +499,14 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 	bool discover = false;
 	int len;
 
-	switch (e->nqntype) {
+	switch (e->subtype) {
 	case NVME_NQN_DISC:
 		discover = true;
 	case NVME_NQN_NVME:
 		break;
 	default:
-		fprintf(stderr, "skipping unsupported NQNtype %d\n",
-			 e->nqntype);
+		fprintf(stderr, "skipping unsupported subtype %d\n",
+			 e->subtype);
 		return -EINVAL;
 	}
 
