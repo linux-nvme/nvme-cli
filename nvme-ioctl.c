@@ -296,6 +296,7 @@ int nvme_resv_report(int fd, __u32 nsid, __u32 numd, void *data)
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_report,
 		.nsid		= nsid,
+		.cdw10		= numd,
 		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= numd << 2,
 	};
