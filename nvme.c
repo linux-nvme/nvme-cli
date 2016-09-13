@@ -1813,13 +1813,13 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE,  &cfg.namespace_id, required_argument, namespace_id},
-		{"ctx-attrs",    'c', "LIST", CFG_STRING,    &cfg.ctx_attrs,    required_argument, context_attrs},
+		{"ctx-attrs",    'a', "LIST", CFG_STRING,    &cfg.ctx_attrs,    required_argument, context_attrs},
 		{"blocks", 	 'b', "LIST", CFG_STRING,    &cfg.blocks,       required_argument, blocks},
 		{"slbs", 	 's', "LIST", CFG_STRING,    &cfg.slbas,        required_argument, starting_blocks},
 		{"ad", 	         'd', "FLAG", CFG_NONE,      &cfg.ad,           no_argument,       ad},
 		{"idw", 	 'w', "FLAG", CFG_NONE,      &cfg.idw,          no_argument,       idw},
 		{"idr", 	 'r', "FLAG", CFG_NONE,      &cfg.idr,          no_argument,       idr},
-		{"cdw11",        'c', "NUM",  CFG_POSITIVE,  &cfg.namespace_id, required_argument, cdw11},
+		{"cdw11",        'c', "NUM",  CFG_POSITIVE,  &cfg.cdw11,        required_argument, cdw11},
 		{0}
 	};
 
