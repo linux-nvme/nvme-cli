@@ -666,13 +666,16 @@ static char *nvme_char_from_block(char *block)
 {
 	char slen[16];
 	unsigned len;
+
 	if (strncmp("nvme", block, 4)) {
-		fprintf(stderr,"Device %s is not a nvme device.", block);
+		fprintf(stderr, "Device %s is not a nvme device.", block);
 		exit(-1);
 	}
-	sscanf(block,"nvme%d", &len);
-	sprintf(slen,"%d", len);
-	block[4+strlen(slen)] = 0;
+
+	sscanf(block, "nvme%d", &len);
+	sprintf(slen, "%d", len);
+	block[4 + strlen(slen)] = 0;
+
 	return block;
 }
 
@@ -778,6 +781,7 @@ static int scan_dev_filter(const struct dirent *d)
 {
 	char path[256];
 	struct stat bd;
+	int ctrl, ns, part;
 
 	if (d->d_name[0] == '.')
 		return 0;
@@ -786,8 +790,11 @@ static int scan_dev_filter(const struct dirent *d)
 		snprintf(path, sizeof(path), "%s%s", dev, d->d_name);
 		if (stat(path, &bd))
 			return 0;
-		if (S_ISBLK(bd.st_mode))
-			return 1;
+		if (!S_ISBLK(bd.st_mode))
+			return 0;
+		if (sscanf(d->d_name, "nvme%dn%dp%d", &ctrl, &ns, &part) == 3)
+			return 0;
+		return 1;
 	}
 	return 0;
 }
