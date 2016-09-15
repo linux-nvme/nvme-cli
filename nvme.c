@@ -2615,11 +2615,11 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	if (err < 0)
 		perror("passthru");
 	else if (err)
-		printf("NVMe Status:%s Command Result:%08x\n",
-				nvme_status_to_string(err), result);
+		fprintf(stderr, "NVMe Status:%s(%x) Command Result:%08x\n",
+				nvme_status_to_string(err), err, result);
 	else  {
 		if (!cfg.raw_binary) {
-			printf("NVMe command result:%08x\n", result);
+			fprintf(stderr, "NVMe command result:%08x\n", result);
 			if (data && cfg.read && !err)
 				d((unsigned char *)data, cfg.data_len, 16, 1);
 		} else if (data && cfg.read)
