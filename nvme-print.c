@@ -2,9 +2,11 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "nvme-print.h"
 #include "json.h"
+#include "nvme-models.h"
 
 static long double int128_to_double(__u8 *data)
 {
@@ -57,6 +59,20 @@ void d_raw(unsigned char *buf, unsigned len)
 	unsigned i;
 	for (i = 0; i < len; i++)
 		putchar(*(buf+i));
+}
+
+static void format(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
+{
+
+	snprintf(formatter,fmt_sz, "%-*.*s",
+		 (int)tofmtsz, (int)tofmtsz, tofmt);
+	/* trim() the obnoxious trailing white lines */
+	while (--fmt_sz) {
+		if (formatter[fmt_sz - 1] != ' ' && formatter[fmt_sz - 1] != '\0') {
+			formatter[fmt_sz] = '\0';
+			break;
+		}
+	}
 }
 
 static void show_nvme_id_ctrl_cmic(__u8 cmic)
@@ -1117,6 +1133,61 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		printf("\tPersist Through Power Loss (PTPL): %s\n", (result & 0x00000001) ? "True":"False");
 		break;
 	}
+}
+
+void json_print_list_items(struct list_item *list_items, unsigned len)
+{
+	struct json_object *root;
+	struct json_object *device_attrs;
+	char pair_name[128] = { 0 };
+	char formatter[41] = { 0 };
+	int index, i = 0;
+	char *product;
+
+	root = json_create_object();
+	for (i = 0; i < len; i++) {
+		device_attrs = json_create_object();
+
+		json_object_add_value_string(device_attrs,
+					     "DevicePath",
+					     list_items[i].node);
+		json_object_add_value_string(device_attrs,
+					     "Firmware",
+					     list_items[i].ctrl.fr);
+
+		if (sscanf(list_items[i].node, "/dev/nvme%d", &index) == 1)
+			json_object_add_value_int(device_attrs,
+						  "Index",
+						  index);
+
+		format(formatter, sizeof(formatter),
+		       list_items[i].ctrl.mn,
+		       sizeof(list_items[i].ctrl.mn));
+
+		json_object_add_value_string(device_attrs,
+					     "ModelNumber",
+					     formatter);
+
+		product = nvme_product_name(index);
+		json_object_add_value_string(device_attrs,
+					     "ProductFamily",
+					     product);
+
+		format(formatter, sizeof(formatter),
+		       list_items[i].ctrl.sn,
+		       sizeof(list_items[i].ctrl.sn));
+
+		json_object_add_value_string(device_attrs,
+					     "SerialNumber",
+					     formatter);
+
+		snprintf(pair_name, sizeof(pair_name), "%s %s",
+			 product, formatter);
+		free((void*)product);
+
+		json_object_add_value_object(root, pair_name, device_attrs);
+	}
+	json_print_object(root, NULL);
 }
 
 void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
