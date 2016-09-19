@@ -159,6 +159,28 @@ static int validate_output_format(char *format)
 	return -EINVAL;
 }
 
+int parse_for_json(int argc, char **argv)
+{
+	int fmt;
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	const struct argconfig_commandline_options opts[] = {
+		{"output-format", 'o', "FMT",
+		 CFG_STRING, &cfg.output_format,
+		 required_argument, "Output Format: normal|json"},
+		{NULL}
+	};
+	argconfig_parse(argc, argv, NULL, opts, &cfg, sizeof(cfg));
+	fmt = validate_output_format(cfg.output_format);
+	return fmt == JSON;
+}
+
 static int get_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_smart_log smart_log;
