@@ -51,6 +51,7 @@ struct config {
 	char *trsvcid;
 	char *hostnqn;
 	char *nr_io_queues;
+	char *keep_alive_tmo;
 	char *raw;
 	char *device;
 } cfg = { 0 };
@@ -498,6 +499,14 @@ static int build_options(char *argstr, int max_len)
 		max_len -= len;
 	}
 
+	if (cfg.keep_alive_tmo) {
+		len = snprintf(argstr, max_len, ",keep_alive_tmo=%s", cfg.keep_alive_tmo);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
 	return 0;
 }
 
@@ -739,6 +748,8 @@ int connect(const char *desc, int argc, char **argv)
 		{"nr-io-queues", 'i', "LIST", CFG_STRING, &cfg.nr_io_queues,
 		 required_argument,
 		 "number of io queues to use (default is core count)" },
+		{"keep-alive-tmo", 'k', "LIST", CFG_STRING, &cfg.keep_alive_tmo, required_argument,
+			"keep alive timeout period in seconds" },
 		{0},
 	};
 
