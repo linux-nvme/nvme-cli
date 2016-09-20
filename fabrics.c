@@ -52,6 +52,7 @@ struct config {
 	char *hostnqn;
 	char *nr_io_queues;
 	char *keep_alive_tmo;
+	char *reconnect_delay;
 	char *raw;
 	char *device;
 } cfg = { 0 };
@@ -507,6 +508,14 @@ static int build_options(char *argstr, int max_len)
 		max_len -= len;
 	}
 
+	if (cfg.reconnect_delay) {
+		len = snprintf(argstr, max_len, ",reconnect_delay=%s", cfg.reconnect_delay);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
 	return 0;
 }
 
@@ -750,6 +759,8 @@ int connect(const char *desc, int argc, char **argv)
 		 "number of io queues to use (default is core count)" },
 		{"keep-alive-tmo", 'k', "LIST", CFG_STRING, &cfg.keep_alive_tmo, required_argument,
 			"keep alive timeout period in seconds" },
+		{"reconnect-delay", 'r', "LIST", CFG_STRING, &cfg.reconnect_delay, required_argument,
+			"reconnect timeout period in seconds" },
 		{0},
 	};
 
