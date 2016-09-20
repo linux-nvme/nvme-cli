@@ -1135,6 +1135,31 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 	}
 }
 
+void json_format(int error, __u32 nsid, const char* devname)
+{
+	char str[64];
+	struct json_object *root;
+	struct json_object *data;
+	root = json_create_object();
+	data = json_create_object();
+
+	if (error < 0)
+		json_object_add_value_string(data, "Status",
+					     "Internal nvme-cli Error");
+	else if (error != 0) {
+		snprintf(str, sizeof(str), "NVME Admin command error:%s(%x)",
+			 nvme_status_to_string(error), error);
+		json_object_add_value_string(data, "Status", str);
+	} else {
+		snprintf(str, sizeof(str), "Success formatting namespace: %x",
+			 nsid);
+		json_object_add_value_string(data, "Status", str);
+	}
+	snprintf(str, sizeof(str), "Format information for %s", devname);
+	json_object_add_value_object(root, str, data);
+	json_print_object(root, NULL);
+}
+
 void json_print_list_items(struct list_item *list_items, unsigned len)
 {
 	struct json_object *root;

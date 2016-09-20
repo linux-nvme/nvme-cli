@@ -1467,7 +1467,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	const char *ms = "[0-1]: extended format off/on";
 	const char *reset = "Automatically reset the controller after successful format";
 	const char *timeout = "timeout value";
-	int err;
+	int err, fmt;
 
 	struct config {
 		__u32 namespace_id;
@@ -1478,6 +1478,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		__u8  pil;
 		__u8  ms;
 		int reset;
+		char *output_format;
 	};
 
 	struct config cfg = {
@@ -1487,6 +1488,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		.ses          = 0,
 		.pi           = 0,
 		.reset        = 0,
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -1498,10 +1500,16 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		{"pil",          'p', "NUM",  CFG_BYTE,     &cfg.pil,          required_argument, pil},
 		{"ms",           'm', "NUM",  CFG_BYTE,     &cfg.ms,           required_argument, ms},
 		{"reset",        'r', "FLAG", CFG_NONE,     &cfg.reset,        no_argument,       reset},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (fmt == BINARY)
+		return EINVAL;
 
 	/* ses & pi checks set to 7 for forward-compatibility */
 	if (cfg.ses > 7) {
@@ -1529,17 +1537,23 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 
 	err = nvme_format(fd, cfg.namespace_id, cfg.lbaf, cfg.ses, cfg.pi,
 				cfg.pil, cfg.ms, cfg.timeout);
-	if (err < 0)
-		perror("format");
-	else if (err != 0)
-		fprintf(stderr, "NVME Admin command error:%s(%x)\n",
-					nvme_status_to_string(err), err);
+	if (fmt == JSON)
+		json_format(err, cfg.namespace_id, devicename);
 	else {
-		printf("Success formatting namespace:%x\n", cfg.namespace_id);
+		if (err < 0)
+			perror("format");
+		else if (err != 0)
+			fprintf(stderr, "NVME Admin command error:%s(%x)\n",
+				nvme_status_to_string(err), err);
+		else
+			printf("Success formatting namespace:%x\n", cfg.namespace_id);
+	}
+	if (err == 0) {
 		ioctl(fd, BLKRRPART);
 		if (cfg.reset && S_ISCHR(nvme_stat.st_mode))
 			nvme_reset_controller(fd);
 	}
+
 	return err;
 }
 
