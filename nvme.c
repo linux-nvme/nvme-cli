@@ -1181,7 +1181,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	const char *fw = "firmware file (required)";
 	const char *xfer = "transfer chunksize limit";
 	const char *offset = "starting dword offset, default 0";
-	int err, fw_fd = -1;
+	int err, fmt, fw_fd = -1;
 	unsigned int fw_size;
 	struct stat sb;
 	void *fw_buf;
@@ -1190,22 +1190,30 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		char  *fw;
 		__u32 xfer;
 		__u32 offset;
+		char *output_format;
 	};
 
 	struct config cfg = {
 		.fw     = "",
 		.xfer   = 4096,
 		.offset = 0,
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"fw",     'f', "FILE", CFG_STRING,   &cfg.fw,     required_argument, fw},
 		{"xfer",   'x', "NUM",  CFG_POSITIVE, &cfg.xfer,   required_argument, xfer},
 		{"offset", 'o', "NUM",  CFG_POSITIVE, &cfg.offset, required_argument, offset},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (fmt == BINARY)
+		return EINVAL;
 
 	fw_fd = open(cfg.fw, O_RDONLY);
 	cfg.offset <<= 2;
@@ -1238,10 +1246,16 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 
 		err = nvme_fw_download(fd, cfg.offset, cfg.xfer, fw_buf);
 		if (err < 0) {
-			perror("fw-download");
+			if (fmt == JSON)
+				json_fw_dl(err, devicename);
+			else
+				perror("fw-download");
 			exit(errno);
 		} else if (err != 0) {
-			fprintf(stderr, "NVME Admin command error:%s(%x)\n",
+			if (fmt == JSON)
+				json_fw_dl(err, devicename);
+			else
+				fprintf(stderr, "NVME Admin command error:%s(%x)\n",
 					nvme_status_to_string(err), err);
 			break;
 		}
@@ -1249,12 +1263,16 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		fw_size    -= cfg.xfer;
 		cfg.offset += cfg.xfer;
 	}
-	if (!err)
-		printf("Firmware download success\n");
+	if (!err) {
+		if (fmt == JSON)
+			json_fw_dl(err, devicename);
+		else
+			printf("Firmware download success\n");
+	}
 	return err;
 }
 
-static char *nvme_fw_status_reset_type(__u32 status)
+char *nvme_fw_status_reset_type(__u32 status)
 {
 	switch (status) {
 	case NVME_SC_FW_NEEDS_CONV_RESET:	return "conventional";
@@ -1273,25 +1291,33 @@ static int fw_activate(int argc, char **argv, struct command *cmd, struct plugin
 		"Ensure nvmeX is the device you just activated before reset.";
 	const char *slot = "firmware slot to activate";
 	const char *action = "[0-2]: replacement action";
-	int err;
+	int err, fmt;
 
 	struct config {
 		__u8 slot;
 		__u8 action;
+		char *output_format;
 	};
 
 	struct config cfg = {
 		.slot   = 0,
 		.action = 0,
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"slot",   's', "NUM", CFG_BYTE, &cfg.slot,   required_argument, slot},
 		{"action", 'a', "NUM", CFG_BYTE, &cfg.action, required_argument, action},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (fmt == BINARY)
+		return EINVAL;
 
 	if (cfg.slot > 7) {
 		fprintf(stderr, "invalid slot:%d\n", cfg.slot);
@@ -1303,24 +1329,29 @@ static int fw_activate(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 	err = nvme_fw_activate(fd, cfg.slot, cfg.action);
-	if (err < 0)
-		perror("fw-activate");
-	else if (err != 0)
-		switch (err) {
-		case NVME_SC_FW_NEEDS_CONV_RESET:
-		case NVME_SC_FW_NEEDS_SUBSYS_RESET:
-		case NVME_SC_FW_NEEDS_RESET:
-			printf("Success activating firmware action:%d slot:%d, but firmware requires %s reset\n",
-			       cfg.action, cfg.slot, nvme_fw_status_reset_type(err));
-			break;
-		default:
-			fprintf(stderr, "NVME Admin command error:%s(%x)\n",
-						nvme_status_to_string(err), err);
-			break;
-		}
-	else
-		printf("Success activating firmware action:%d slot:%d\n",
-		       cfg.action, cfg.slot);
+
+	if (fmt == JSON)
+		json_fw_act(err, cfg.slot, cfg.action, devicename);
+	else {
+		if (err < 0)
+			perror("fw-activate");
+		else if (err != 0)
+			switch (err) {
+			case NVME_SC_FW_NEEDS_CONV_RESET:
+			case NVME_SC_FW_NEEDS_SUBSYS_RESET:
+			case NVME_SC_FW_NEEDS_RESET:
+				printf("Success activating firmware action:%d slot:%d, but firmware requires %s reset\n",
+				       cfg.action, cfg.slot, nvme_fw_status_reset_type(err));
+				break;
+			default:
+				fprintf(stderr, "NVME Admin command error:%s(%x)\n",
+					nvme_status_to_string(err), err);
+				break;
+			}
+		else
+			printf("Success activating firmware action:%d slot:%d\n",
+			       cfg.action, cfg.slot);
+	}
 	return err;
 }
 

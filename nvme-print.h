@@ -40,6 +40,8 @@ void json_add_smart_log(struct nvme_additional_smart_log *smart,
 void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname);
 void json_print_list_items(struct list_item *items, unsigned amnt);
 void json_format(int error, __u32 nsid, const char* devname);
+void json_fw_dl(int error, const char *devname);
+void json_fw_act(int error, __u8 slot, __u8 action, const char *devname);
 
 void show_registers_version(__u32 vs);
 void show_registers_cap(struct nvme_bar_cap *cap);

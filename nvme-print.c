@@ -1135,6 +1135,73 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 	}
 }
 
+static inline void add_error_message(int error, struct json_object *data)
+{
+	char str[64];
+	if (error < 0)
+		json_object_add_value_string(data, "Status",
+					     "Internal nvme-cli Error");
+	else if (error != 0) {
+		snprintf(str, sizeof(str), "NVME Admin command error:%s(%x)",
+			 nvme_status_to_string(error), error);
+		json_object_add_value_string(data, "Status", str);
+	}
+}
+
+void json_fw_act(int error, __u8 slot, __u8 action, const char *devname)
+{
+	char str[128];
+	struct json_object *root;
+	struct json_object *data;
+	root = json_create_object();
+	data = json_create_object();
+
+	if (error && error != NVME_SC_FW_NEEDS_CONV_RESET &&
+	    error != NVME_SC_FW_NEEDS_SUBSYS_RESET &&
+	    error != NVME_SC_FW_NEEDS_RESET)
+		add_error_message(error, data);
+	else {
+		switch (error) {
+		case NVME_SC_FW_NEEDS_CONV_RESET:
+		case NVME_SC_FW_NEEDS_SUBSYS_RESET:
+		case NVME_SC_FW_NEEDS_RESET:
+			snprintf(str, sizeof(str),
+				 "Success activating firmware action:%d slot:%d,"\
+				 " but firmware requires %s reset\n",
+				 action, slot, nvme_fw_status_reset_type(error));
+			json_object_add_value_string(data, "Status", str);
+			break;
+		default:
+			snprintf(str, sizeof(str),
+				 "Success activating firmware action:%d slot:%d\n",
+				 action, slot);
+			json_object_add_value_string(data, "Status", str);
+			break;
+		}
+	}
+	snprintf(str, sizeof(str),"Firmware Activate Information For %s", devname);
+	json_object_add_value_object(root, str, data);
+	json_print_object(root, NULL);
+}
+
+void json_fw_dl(int error, const char *devname)
+{
+	char str[64];
+	struct json_object *root;
+	struct json_object *data;
+	root = json_create_object();
+	data = json_create_object();
+
+	if (error)
+		add_error_message(error, data);
+	else
+		json_object_add_value_string(data, "Status", "Success Downloading Firmware");
+
+	snprintf(str, sizeof(str),"Firmware Download Information For %s", devname);
+	json_object_add_value_object(root, str, data);
+	json_print_object(root, NULL);
+}
+
 void json_format(int error, __u32 nsid, const char* devname)
 {
 	char str[64];
@@ -1143,14 +1210,9 @@ void json_format(int error, __u32 nsid, const char* devname)
 	root = json_create_object();
 	data = json_create_object();
 
-	if (error < 0)
-		json_object_add_value_string(data, "Status",
-					     "Internal nvme-cli Error");
-	else if (error != 0) {
-		snprintf(str, sizeof(str), "NVME Admin command error:%s(%x)",
-			 nvme_status_to_string(error), error);
-		json_object_add_value_string(data, "Status", str);
-	} else {
+	if (error)
+		add_error_message(error, data);
+	else {
 		snprintf(str, sizeof(str), "Success formatting namespace: %x",
 			 nsid);
 		json_object_add_value_string(data, "Status", str);
