@@ -1192,9 +1192,9 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 
 	int i;
 
-	sprintf(sn, "%-.*s\n", (int)sizeof(ctrl->sn), ctrl->sn);
-	sprintf(mn, "%-.*s\n", (int)sizeof(ctrl->mn), ctrl->mn);
-	sprintf(fr, "%-.*s\n", (int)sizeof(ctrl->fr), ctrl->fr);
+	snprintf(sn, sizeof(sn), "%-.*s\n", (int)sizeof(ctrl->sn), ctrl->sn);
+	snprintf(mn, sizeof(mn),  "%-.*s\n", (int)sizeof(ctrl->mn), ctrl->mn);
+	snprintf(fr, sizeof(fr), "%-.*s\n", (int)sizeof(ctrl->fr), ctrl->fr);
 
 	root = json_create_object();
 
