@@ -14,6 +14,7 @@ SYNOPSIS
 		    [--pil=<pil> | -p <pil>]
 		    [--pi=<pi> | -i <pi>]
 		    [--ms=<ms> | -m <ms>]
+		    [--reset | -r ]
 
 DESCRIPTION
 -----------
@@ -100,6 +101,11 @@ cryptographically. This is accomplished by deleting the encryption key.
 	cleared to ‘0’ if the metadata is transferred as part of a
 	separate buffer. The metadata may include protection information,
 	based on the Protection Information (PI) field. Defaults to 0.
+
+-r::
+--reset::
+	Issue a reset after successful format. Must use the character
+	device for this.
 
 EXAMPLES
 --------

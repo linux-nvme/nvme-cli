@@ -1403,6 +1403,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	const char *pil = "[0-1]: protection info location last/first 8 bytes of metadata";
 	const char *pi = "[0-3]: protection info off/Type 1/Type 2/Type 3";
 	const char *ms = "[0-1]: extended format off/on";
+	const char *reset = "Automatically reset the controller after successful format";
 	const char *timeout = "timeout value";
 	int err;
 
@@ -1414,6 +1415,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		__u8  pi;
 		__u8  pil;
 		__u8  ms;
+		int reset;
 	};
 
 	struct config cfg = {
@@ -1422,6 +1424,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		.lbaf         = 0,
 		.ses          = 0,
 		.pi           = 0,
+		.reset        = 0,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -1432,6 +1435,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		{"pi",           'i', "NUM",  CFG_BYTE,     &cfg.pi,           required_argument, pi},
 		{"pil",          'p', "NUM",  CFG_BYTE,     &cfg.pil,          required_argument, pil},
 		{"ms",           'm', "NUM",  CFG_BYTE,     &cfg.ms,           required_argument, ms},
+		{"reset",        'r', "FLAG", CFG_NONE,     &cfg.reset,        no_argument,       reset},
 		{0}
 	};
 
@@ -1471,6 +1475,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	else {
 		printf("Success formatting namespace:%x\n", cfg.namespace_id);
 		ioctl(fd, BLKRRPART);
+		if (cfg.reset && S_ISCHR(nvme_stat.st_mode))
+			nvme_reset_controller(fd);
 	}
 	return err;
 }
