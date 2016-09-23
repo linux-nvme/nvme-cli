@@ -731,8 +731,8 @@ struct list_item {
 static void print_list_item(struct list_item list_item)
 {
 
-	double nsze       = list_item.ns.nsze;
-	double nuse       = list_item.ns.nuse;
+	double nsze       = le64_to_cpu(list_item.ns.nsze);
+	double nuse       = le64_to_cpu(list_item.ns.nuse);
 	long long int lba = list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ds;
 
 	lba  = (1 << lba);
