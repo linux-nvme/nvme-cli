@@ -299,7 +299,13 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		fprintf(stderr, "could not identify controller\n");
 		return ENODEV;
 	} else {
-		struct nvme_error_log_page err_log[cfg.log_entries];
+		struct nvme_error_log_page *err_log;
+
+		err_log = calloc(cfg.log_entries, sizeof(struct nvme_error_log_page));
+		if (!err_log) {
+			fprintf(stderr, "could not alloc buffer for error log\n");
+			return ENOMEM;
+		}
 
 		err = nvme_error_log(fd, cfg.namespace_id, cfg.log_entries, err_log);
 		if (!err) {
@@ -313,6 +319,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		else if (err > 0)
 			fprintf(stderr, "NVMe Status:%s(%x)\n",
 						nvme_status_to_string(err), err);
+		free(err_log);
 	}
 	return err;
 }
@@ -403,7 +410,13 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		fprintf(stderr, "non-zero log-len is required param\n");
 		return EINVAL;
 	} else {
-		unsigned char log[cfg.log_len];
+		unsigned char *log;
+
+		log = malloc(cfg.log_len);
+		if (!log) {
+			fprintf(stderr, "could not alloc buffer for log\n");
+			return EINVAL;
+		}
 
 		err = nvme_get_log(fd, cfg.namespace_id, cfg.log_id, cfg.log_len, log);
 		if (!err) {
@@ -417,6 +430,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		} else if (err > 0)
 			fprintf(stderr, "NVMe Status:%s(%x)\n",
 						nvme_status_to_string(err), err);
+		free(log);
 		return err;
 	}
 }
