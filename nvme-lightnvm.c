@@ -432,7 +432,7 @@ int lnvm_do_set_bbtbl(int fd, int nsid,
 	if (chid >= nvm_id.groups[0].num_ch ||
 					lunid >= nvm_id.groups[0].num_lun ||
 					plnid >= nvm_id.groups[0].num_pln ||
-					blkid >= nvm_id.groups[0].num_blk) {
+					blkid >= le16_to_cpu(nvm_id.groups[0].num_blk)) {
 		fprintf(stderr, "Out of bound channel id, LUN id, plane id, or"\
 				"block id\n");
 		return -EINVAL;
