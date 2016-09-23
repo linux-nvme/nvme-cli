@@ -398,7 +398,7 @@ static int __lnvm_do_set_bbtbl(int fd, struct ppa_addr ppa, __u8 value)
 
 	struct nvme_nvm_setbbtbl cmd = {
 		.opcode		= nvme_nvm_admin_set_bb_tbl,
-		.nsid		= 1,
+		.nsid		= cpu_to_le32(1),
 		.ppa		= cpu_to_le64(ppa.ppa),
 		.nlb		= cpu_to_le16(0),
 		.value		= value,
