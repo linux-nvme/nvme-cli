@@ -338,9 +338,9 @@ static int __lnvm_do_get_bbtbl(int fd, struct nvme_nvm_id *id,
 
 	struct nvme_nvm_getbbtbl cmd = {
 		.opcode		= nvme_nvm_admin_get_bb_tbl,
-		.nsid		= 1,
+		.nsid		= cpu_to_le32(1),
 		.addr		= (__u64)(uintptr_t)bbtbl,
-		.data_len	= bufsz,
+		.data_len	= cpu_to_le32(bufsz),
 		.ppa		= cpu_to_le64(ppa.ppa),
 	};
 
