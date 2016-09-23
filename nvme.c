@@ -466,10 +466,10 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 
 	err = nvme_identify_ctrl_list(fd, cfg.namespace_id, cfg.cntid, cntlist);
 	if (!err) {
-		__u16 num = le16toh(cntlist->num);
+		__u16 num = le16_to_cpu(cntlist->num);
 
 		for (i = 0; i < (min(num, 2048)); i++)
-			printf("[%4u]:%#x\n", i, le16toh(cntlist->identifier[i]));
+			printf("[%4u]:%#x\n", i, le16_to_cpu(cntlist->identifier[i]));
 	}
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x) cntid:%d\n",

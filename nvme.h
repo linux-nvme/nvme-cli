@@ -134,6 +134,26 @@ struct nvme_bar_cap {
 	__u8	reserved;
 };
 
+#ifdef __CHECKER__
+#define __force       __attribute__((force))
+#else
+#define __force
+#endif
+
+#define cpu_to_le16(x) \
+	((__force __le16)htole16(x))
+#define cpu_to_le32(x) \
+	((__force __le32)htole32(x))
+#define cpu_to_le64(x) \
+	((__force __le64)htole64(x))
+
+#define le16_to_cpu(x) \
+	le16toh((__force __u16)(x))
+#define le32_to_cpu(x) \
+	le32toh((__force __u32)(x))
+#define le64_to_cpu(x) \
+	le64toh((__force __u64)(x))
+
 void register_extension(struct plugin *plugin);
 
 #include "argconfig.h"

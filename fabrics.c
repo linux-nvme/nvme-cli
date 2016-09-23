@@ -304,8 +304,8 @@ static int nvmf_get_log_page_discovery(const char *dev_path,
 	}
 
 	/* check numrec limits */
-	*numrec = le64toh(log->numrec);
-	genctr = le64toh(log->genctr);
+	*numrec = le64_to_cpu(log->numrec);
+	genctr = le64_to_cpu(log->genctr);
 	free(log);
 
 	if (*numrec == 0) {
@@ -338,7 +338,7 @@ static int nvmf_get_log_page_discovery(const char *dev_path,
 		goto out_free_log;
 	}
 
-	if (*numrec != le32toh(log->numrec) || genctr != le64toh(log->genctr)) {
+	if (*numrec != le32_to_cpu(log->numrec) || genctr != le64_to_cpu(log->genctr)) {
 		error = DISC_NOT_EQUAL;
 		goto out_free_log;
 	}

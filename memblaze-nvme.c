@@ -115,24 +115,24 @@ static int show_memblaze_smart_log(int fd, __u32 nsid, const char *devname,
 		smart->items[THERMAL_THROTTLE].thermal_throttle.count);
 
 	printf("Maximum temperature in Kelvin since last factory reset		: %u\n",
-		le16toh(smart->items[TEMPT_SINCE_RESET].temperature.max));
+		le16_to_cpu(smart->items[TEMPT_SINCE_RESET].temperature.max));
 	printf("Minimum temperature in Kelvin since last factory reset		: %u\n",
-		le16toh(smart->items[TEMPT_SINCE_RESET].temperature.min));
+		le16_to_cpu(smart->items[TEMPT_SINCE_RESET].temperature.min));
 	if (compare_fw_version(fw_ver, "0.09.0300") != 0) {
 		printf("Maximum temperature in Kelvin since power on			: %u\n",
-			le16toh(smart->items[TEMPT_SINCE_BOOTUP].temperature_p.max));
+			le16_to_cpu(smart->items[TEMPT_SINCE_BOOTUP].temperature_p.max));
 		printf("Minimum temperature in Kelvin since power on			: %u\n",
-			le16toh(smart->items[TEMPT_SINCE_BOOTUP].temperature_p.min));
+			le16_to_cpu(smart->items[TEMPT_SINCE_BOOTUP].temperature_p.min));
 	}
 	printf("Current temperature in Kelvin					: %u\n",
-		le16toh(smart->items[TEMPT_SINCE_RESET].temperature.curr));
+		le16_to_cpu(smart->items[TEMPT_SINCE_RESET].temperature.curr));
 
 	printf("Maximum power in watt since power on				: %u\n",
-		le16toh(smart->items[POWER_CONSUMPTION].power.max));
+		le16_to_cpu(smart->items[POWER_CONSUMPTION].power.max));
 	printf("Minimum power in watt since power on				: %u\n",
-		le16toh(smart->items[POWER_CONSUMPTION].power.min));
+		le16_to_cpu(smart->items[POWER_CONSUMPTION].power.min));
 	printf("Current power in watt						: %u\n",
-		le16toh(smart->items[POWER_CONSUMPTION].power.curr));
+		le16_to_cpu(smart->items[POWER_CONSUMPTION].power.curr));
 
 	return err;
 }
