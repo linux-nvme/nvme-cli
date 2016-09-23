@@ -1395,8 +1395,10 @@ void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 	json_object_add_value_float(root, "unsafe_shutdowns", unsafe_shutdowns);
 	json_object_add_value_float(root, "media_errors", media_errors);
 	json_object_add_value_float(root, "num_err_log_entries", num_err_log_entries);
-	json_object_add_value_int(root, "warning_temp_time", smart->warning_temp_time);
-	json_object_add_value_int(root, "critical_comp_time", smart->critical_comp_time);
+	json_object_add_value_int(root, "warning_temp_time",
+			le32_to_cpu(smart->warning_temp_time));
+	json_object_add_value_int(root, "critical_comp_time",
+			le32_to_cpu(smart->critical_comp_time));
 
 	json_print_object(root, NULL);
 	printf("\n");
