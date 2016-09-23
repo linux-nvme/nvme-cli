@@ -502,8 +502,8 @@ int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist,
 	};
 
 	memset(buf, 0, sizeof(buf));
-	cntlist->num = num_ctrls;
-	for (i = 0; i < cntlist->num; i++)
+	cntlist->num = cpu_to_le16(num_ctrls);
+	for (i = 0; i < num_ctrls; i++)
 		cntlist->identifier[i] = cpu_to_le16(ctrlist[i]);
 
 	return nvme_submit_admin_passthru(fd, &cmd);
