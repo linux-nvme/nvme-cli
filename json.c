@@ -8,7 +8,7 @@
 static inline void fail_and_notify(void)
 {
 	fprintf(stderr, "Allocation of memory for json object failed, aborting.\n");
-	__builtin_abort();
+	abort();
 }
 
 struct json_object *json_create_object(void)
