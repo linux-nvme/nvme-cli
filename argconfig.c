@@ -42,9 +42,9 @@
 
 static argconfig_help_func *help_funcs[MAX_HELP_FUNC] = { NULL };
 
-char END_DEFAULT[] = "__end_default__";
+static char END_DEFAULT[] = "__end_default__";
 
-const char *append_usage_str = "";
+static const char *append_usage_str = "";
 
 void argconfig_append_usage(const char *str)
 {
@@ -130,7 +130,7 @@ static void argconfig_print_help(const char *program_desc,
 	print_word_wrapped(program_desc, 0, 0);
 	printf("\n\n\033[1mOptions:\033[0m\n");
 
-	for (s = options; (s->option != 0) && (s != NULL); s++)
+	for (s = options; (s->option != NULL) && (s != NULL); s++)
 		show_option(s);
 }
 
@@ -146,13 +146,13 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	void *value_addr;
 
 	errno = 0;
-	for (s = options; s->option != 0; s++)
+	for (s = options; s->option != NULL; s++)
 		options_count++;
 
 	long_opts = malloc(sizeof(struct option) * (options_count + 2));
 	short_opts = malloc(sizeof(*short_opts) * (options_count * 3 + 4));
 
-	for (s = options; (s->option != 0) && (option_index < options_count);
+	for (s = options; (s->option != NULL) && (option_index < options_count);
 	     s++) {
 		if (s->short_option != 0) {
 			short_opts[short_index++] = s->short_option;

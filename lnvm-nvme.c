@@ -39,7 +39,7 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"device-name",   'd', "DEVICE", CFG_STRING, &cfg.devname, required_argument, devname},
 		{"mediamgr-name", 'm', "MM",     CFG_STRING, &cfg.mmtype,  required_argument, mmtype},
-		{0}
+		{NULL}
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -57,7 +57,7 @@ static int lnvm_list(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *desc = "List all devices registered with LightNVM.";
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{0}
+		{NULL}
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
@@ -70,7 +70,7 @@ static int lnvm_info(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *desc = "Show general information and registered target types with LightNVM";
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{0}
+		{NULL}
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
@@ -105,7 +105,7 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 		{"force",           'f', "FLAG", CFG_NONE,     &cfg.force,           no_argument,       force},
 		{"raw-binary",      'b', "FLAG", CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
 		{"human-readable",  'H', "FLAG", CFG_NONE,     &cfg.human_readable,  no_argument,       human_readable},
-		{0}
+		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -151,7 +151,7 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		{"target-type",   't', "TARGETTYPE",  CFG_STRING,    &cfg.tgttype,   required_argument, tgttype},
 		{"lun-begin",     'b', "NUM",    CFG_POSITIVE,  &cfg.lun_begin,      required_argument,       lun_begin},
 		{"lun-end",       'e', "NUM",    CFG_POSITIVE,  &cfg.lun_end,   required_argument,       lun_end},
-		{0}
+		{NULL}
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -188,7 +188,7 @@ static int lnvm_remove_tgt(int argc, char **argv, struct command *cmd, struct pl
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"target-name",   'n', "TARGET", CFG_STRING,    &cfg.tgtname,   required_argument, tgtname},
-		{0}
+		{NULL}
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -226,7 +226,7 @@ static int lnvm_factory_init(int argc, char **argv, struct command *cmd, struct 
 		{"erase-only-marked",    'e', "",       CFG_NONE,   &cfg.erase_only_marked, no_argument,       erase_only_marked},
 		{"clear-host-side-blks", 's', "",       CFG_NONE,   &cfg.clear_host_marks,  no_argument,       host_marks},
 		{"clear-bb-blks",        'b', "",       CFG_NONE,   &cfg.clear_bb_marks,    no_argument,       bb_marks},
-		{0}
+		{NULL}
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg,
@@ -270,7 +270,7 @@ static int lnvm_get_bbtbl(int argc, char **argv, struct command *cmd, struct plu
 		{"channel-id",   'c', "",     CFG_SHORT,    &cfg.chid,         required_argument, ch},
 		{"lun-id",       'l', "",     CFG_SHORT,    &cfg.lunid,        required_argument, lun},
 		{"raw-binary",   'b', "FLAG", CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
-		{0}
+		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -320,7 +320,7 @@ static int lnvm_set_bbtbl(int argc, char **argv, struct command *cmd, struct plu
 		{"plane-id",     'p', "NUM",     CFG_SHORT,    &cfg.plnid,        required_argument, pln},
 		{"block-id",     'b', "NUM",     CFG_SHORT,    &cfg.blkid,        required_argument, blk},
 		{"value",        'v', "NUM",     CFG_SHORT,    &cfg.value,        required_argument, value},
-		{0}
+		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));

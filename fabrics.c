@@ -44,7 +44,7 @@
 
 #include "common.h"
 
-struct config {
+static struct config {
 	char *nqn;
 	char *transport;
 	char *traddr;
@@ -55,7 +55,7 @@ struct config {
 	char *reconnect_delay;
 	char *raw;
 	char *device;
-} cfg = { 0 };
+} cfg = { NULL };
 
 #define BUF_SIZE		4096
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
@@ -718,7 +718,7 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 		 "user-defined hostnqn (if default not used)" },
 		{"raw", 'r', "LIST", CFG_STRING, &cfg.raw, required_argument,
 		 "raw output file" },
-		{0},
+		{NULL},
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg,
@@ -761,7 +761,7 @@ int connect(const char *desc, int argc, char **argv)
 			"keep alive timeout period in seconds" },
 		{"reconnect-delay", 'r', "LIST", CFG_STRING, &cfg.reconnect_delay, required_argument,
 			"reconnect timeout period in seconds" },
-		{0},
+		{NULL},
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg,
@@ -885,7 +885,7 @@ int disconnect(const char *desc, int argc, char **argv)
 		 required_argument, nqn},
 		{"device", 'd', "LIST", CFG_STRING, &cfg.device,
 		 required_argument, device},
-		{0},
+		{NULL},
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg,

@@ -1417,7 +1417,7 @@ void show_registers_version(__u32 vs)
 	printf("\tNVMe specification %d.%d\n\n", (vs & 0xffff0000) >> 16,  (vs & 0x0000ff00) >> 8);
 }
 
-void show_registers_cc_ams (__u8 ams)
+static void show_registers_cc_ams (__u8 ams)
 {
 	printf("\tArbitration Mechanism Selected     (AMS): ");
 	switch (ams) {
@@ -1435,7 +1435,7 @@ void show_registers_cc_ams (__u8 ams)
 	}
 }
 
-void show_registers_cc_shn (__u8 shn)
+static void show_registers_cc_shn (__u8 shn)
 {
 	printf("\tShutdown Notification              (SHN): ");
 	switch (shn) {
@@ -1464,7 +1464,7 @@ void show_registers_cc (__u32 cc)
 	printf("\tEnable                              (EN): %s\n\n", (cc & 0x00000001) ? "Yes":"No");
 }
 
-void show_registers_csts_shst (__u8 shst)
+static void show_registers_csts_shst (__u8 shst)
 {
 	printf("\tShutdown Status               (SHST): ");
 	switch (shst) {
@@ -1510,7 +1510,7 @@ void show_registers_cmbloc(__u32 cmbloc, __u32 cmbsz)
 	}
 }
 
-char *nvme_register_szu_to_string(__u8 szu)
+static char *nvme_register_szu_to_string(__u8 szu)
 {
 	switch (szu) {
 	case 0:	return "4 KB";

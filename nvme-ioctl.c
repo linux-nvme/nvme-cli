@@ -21,7 +21,7 @@
 
 #include "nvme-ioctl.h"
 
-void nvme_verify_chr(int fd)
+static void nvme_verify_chr(int fd)
 {
 	static struct stat nvme_stat;
 	int err = fstat(fd, &nvme_stat);
@@ -70,12 +70,12 @@ int nvme_submit_passthru(int fd, int ioctl_cmd, struct nvme_passthru_cmd *cmd)
 	return ioctl(fd, ioctl_cmd, cmd);
 }
 
-int nvme_submit_admin_passthru(int fd, struct nvme_passthru_cmd *cmd)
+static int nvme_submit_admin_passthru(int fd, struct nvme_passthru_cmd *cmd)
 {
 	return ioctl(fd, NVME_IOCTL_ADMIN_CMD, cmd);
 }
 
-int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd)
+static int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd)
 {
 	return ioctl(fd, NVME_IOCTL_IO_CMD, cmd);
 }

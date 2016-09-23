@@ -217,7 +217,7 @@ int lnvm_do_factory_init(char *devname, int erase_only_marked,
 	return ret;
 }
 
-void show_lnvm_id_grp(struct nvme_nvm_id_group *grp)
+static void show_lnvm_id_grp(struct nvme_nvm_id_group *grp)
 {
 	printf(" mtype   : %d\n", grp->mtype);
 	printf(" fmtype  : %d\n", grp->fmtype);
@@ -240,7 +240,7 @@ void show_lnvm_id_grp(struct nvme_nvm_id_group *grp)
 	printf(" cpar    : %#x\n", (uint16_t)le16toh(grp->cpar));
 }
 
-void show_lnvm_ppaf(struct nvme_nvm_addr_format *ppaf)
+static void show_lnvm_ppaf(struct nvme_nvm_addr_format *ppaf)
 {
 	printf("ppaf     :\n");
 	printf(" ch offs : %d ch bits  : %d\n",
@@ -257,7 +257,7 @@ void show_lnvm_ppaf(struct nvme_nvm_addr_format *ppaf)
 					ppaf->sect_offset, ppaf->sect_len);
 }
 
-void show_lnvm_id_ns(struct nvme_nvm_id *id)
+static void show_lnvm_id_ns(struct nvme_nvm_id *id)
 {
 	int i;
 
@@ -279,7 +279,7 @@ void show_lnvm_id_ns(struct nvme_nvm_id *id)
 	}
 }
 
-int lnvm_get_identity(int fd, int nsid, struct nvme_nvm_id *nvm_id)
+static int lnvm_get_identity(int fd, int nsid, struct nvme_nvm_id *nvm_id)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_nvm_admin_identity,
