@@ -2,12 +2,12 @@
 .\"     Title: nvme-format
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 05/16/2016
+.\"      Date: 09/22/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FORMAT" "1" "05/16/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-FORMAT" "1" "09/22/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,6 +38,7 @@ nvme-format \- Format an NVMe device
                     [\-\-pil=<pil> | \-p <pil>]
                     [\-\-pi=<pi> | \-i <pi>]
                     [\-\-ms=<ms> | \-m <ms>]
+                    [\-\-reset | \-r ]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -150,6 +151,11 @@ T}
 \-m <ms>, \-\-ms=<ms>
 .RS 4
 Metadata Settings: This field is set to \(oq1\(cq if the metadata is transferred as part of an extended data LBA\&. This field is cleared to \(oq0\(cq if the metadata is transferred as part of a separate buffer\&. The metadata may include protection information, based on the Protection Information (PI) field\&. Defaults to 0\&.
+.RE
+.PP
+\-r, \-\-reset
+.RS 4
+Issue a reset after successful format\&. Must use the character device for this\&.
 .RE
 .SH "EXAMPLES"
 .sp

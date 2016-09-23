@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.7" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
 <title>nvme-format(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -87,10 +87,14 @@ ul, ol, li > p {
 ul > li     { color: #aaa; }
 ul > li > * { color: black; }
 
-pre {
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
   padding: 0;
   margin: 0;
 }
+
 
 #author {
   color: #527bbd;
@@ -415,12 +419,6 @@ div.unbreakable { page-break-inside: avoid; }
  *
  * */
 
-tt {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
-
 div.tableblock {
   margin-top: 1.0em;
   margin-bottom: 1.5em;
@@ -435,7 +433,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -453,12 +451,6 @@ div.tableblock > table[frame="vsides"] {
  * html5 specific
  *
  * */
-
-.monospaced {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
 
 table.tableblock {
   margin-top: 1.0em;
@@ -539,6 +531,8 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
+
+
 </style>
 <script type="text/javascript">
 /*<![CDATA[*/
@@ -757,7 +751,8 @@ nvme-format(1) Manual Page
                     [--ses=&lt;ses&gt; | -s &lt;ses&gt;]
                     [--pil=&lt;pil&gt; | -p &lt;pil&gt;]
                     [--pi=&lt;pi&gt; | -i &lt;pi&gt;]
-                    [--ms=&lt;ms&gt; | -m &lt;ms&gt;]</pre>
+                    [--ms=&lt;ms&gt; | -m &lt;ms&gt;]
+                    [--reset | -r ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -939,6 +934,18 @@ cellspacing="0" cellpadding="4">
         based on the Protection Information (PI) field. Defaults to 0.
 </p>
 </dd>
+<dt class="hdlist1">
+-r
+</dt>
+<dt class="hdlist1">
+--reset
+</dt>
+<dd>
+<p>
+        Issue a reset after successful format. Must use the character
+        device for this.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -952,7 +959,7 @@ Format the device using all defaults:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme format /dev/nvme0n1</tt></pre>
+<pre><code># nvme format /dev/nvme0n1</code></pre>
 </div></div>
 </li>
 <li>
@@ -962,7 +969,7 @@ information:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme format /dev/nvme0 --namespace-id=1 --ses=1 --pi=1</tt></pre>
+<pre><code># nvme format /dev/nvme0 --namespace-id=1 --ses=1 --pi=1</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -978,7 +985,7 @@ information:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-02-26 08:26:37 MST
+Last updated 2016-09-22 12:09:58 EDT
 </div>
 </div>
 </body>

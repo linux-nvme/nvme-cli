@@ -666,13 +666,16 @@ static char *nvme_char_from_block(char *block)
 {
 	char slen[16];
 	unsigned len;
+
 	if (strncmp("nvme", block, 4)) {
-		fprintf(stderr,"Device %s is not a nvme device.", block);
+		fprintf(stderr, "Device %s is not a nvme device.", block);
 		exit(-1);
 	}
-	sscanf(block,"nvme%d", &len);
-	sprintf(slen,"%d", len);
-	block[4+strlen(slen)] = 0;
+
+	sscanf(block, "nvme%d", &len);
+	sprintf(slen, "%d", len);
+	block[4 + strlen(slen)] = 0;
+
 	return block;
 }
 
@@ -778,6 +781,7 @@ static int scan_dev_filter(const struct dirent *d)
 {
 	char path[256];
 	struct stat bd;
+	int ctrl, ns, part;
 
 	if (d->d_name[0] == '.')
 		return 0;
@@ -786,8 +790,11 @@ static int scan_dev_filter(const struct dirent *d)
 		snprintf(path, sizeof(path), "%s%s", dev, d->d_name);
 		if (stat(path, &bd))
 			return 0;
-		if (S_ISBLK(bd.st_mode))
-			return 1;
+		if (!S_ISBLK(bd.st_mode))
+			return 0;
+		if (sscanf(d->d_name, "nvme%dn%dp%d", &ctrl, &ns, &part) == 3)
+			return 0;
+		return 1;
 	}
 	return 0;
 }
@@ -1396,6 +1403,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	const char *pil = "[0-1]: protection info location last/first 8 bytes of metadata";
 	const char *pi = "[0-3]: protection info off/Type 1/Type 2/Type 3";
 	const char *ms = "[0-1]: extended format off/on";
+	const char *reset = "Automatically reset the controller after successful format";
 	const char *timeout = "timeout value";
 	int err;
 
@@ -1407,6 +1415,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		__u8  pi;
 		__u8  pil;
 		__u8  ms;
+		int reset;
 	};
 
 	struct config cfg = {
@@ -1415,6 +1424,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		.lbaf         = 0,
 		.ses          = 0,
 		.pi           = 0,
+		.reset        = 0,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -1425,6 +1435,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		{"pi",           'i', "NUM",  CFG_BYTE,     &cfg.pi,           required_argument, pi},
 		{"pil",          'p', "NUM",  CFG_BYTE,     &cfg.pil,          required_argument, pil},
 		{"ms",           'm', "NUM",  CFG_BYTE,     &cfg.ms,           required_argument, ms},
+		{"reset",        'r', "FLAG", CFG_NONE,     &cfg.reset,        no_argument,       reset},
 		{0}
 	};
 
@@ -1464,6 +1475,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	else {
 		printf("Success formatting namespace:%x\n", cfg.namespace_id);
 		ioctl(fd, BLKRRPART);
+		if (cfg.reset && S_ISCHR(nvme_stat.st_mode))
+			nvme_reset_controller(fd);
 	}
 	return err;
 }
@@ -1813,13 +1826,13 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE,  &cfg.namespace_id, required_argument, namespace_id},
-		{"ctx-attrs",    'c', "LIST", CFG_STRING,    &cfg.ctx_attrs,    required_argument, context_attrs},
+		{"ctx-attrs",    'a', "LIST", CFG_STRING,    &cfg.ctx_attrs,    required_argument, context_attrs},
 		{"blocks", 	 'b', "LIST", CFG_STRING,    &cfg.blocks,       required_argument, blocks},
 		{"slbs", 	 's', "LIST", CFG_STRING,    &cfg.slbas,        required_argument, starting_blocks},
 		{"ad", 	         'd', "FLAG", CFG_NONE,      &cfg.ad,           no_argument,       ad},
 		{"idw", 	 'w', "FLAG", CFG_NONE,      &cfg.idw,          no_argument,       idw},
 		{"idr", 	 'r', "FLAG", CFG_NONE,      &cfg.idr,          no_argument,       idr},
-		{"cdw11",        'c', "NUM",  CFG_POSITIVE,  &cfg.namespace_id, required_argument, cdw11},
+		{"cdw11",        'c', "NUM",  CFG_POSITIVE,  &cfg.cdw11,        required_argument, cdw11},
 		{0}
 	};
 
@@ -2608,11 +2621,11 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	if (err < 0)
 		perror("passthru");
 	else if (err)
-		printf("NVMe Status:%s Command Result:%08x\n",
-				nvme_status_to_string(err), result);
+		fprintf(stderr, "NVMe Status:%s(%x) Command Result:%08x\n",
+				nvme_status_to_string(err), err, result);
 	else  {
 		if (!cfg.raw_binary) {
-			printf("NVMe command result:%08x\n", result);
+			fprintf(stderr, "NVMe command result:%08x\n", result);
 			if (data && cfg.read && !err)
 				d((unsigned char *)data, cfg.data_len, 16, 1);
 		} else if (data && cfg.read)
