@@ -154,6 +154,15 @@ struct nvme_bar_cap {
 #define le64_to_cpu(x) \
 	le64toh((__force __u64)(x))
 
+#define MAX_LIST_ITEMS 256
+struct list_item {
+	char                node[1024];
+	struct nvme_id_ctrl ctrl;
+	int                 nsid;
+	struct nvme_id_ns   ns;
+	unsigned            block;
+};
+
 void register_extension(struct plugin *plugin);
 
 #include "argconfig.h"
@@ -163,5 +172,6 @@ int parse_and_open(int argc, char **argv, const char *desc,
 extern const char *devicename;
 
 int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs));
+char *nvme_fw_status_reset_type(__u32 status);
 
 #endif /* _NVME_H */

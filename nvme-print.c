@@ -2,9 +2,11 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "nvme-print.h"
 #include "json.h"
+#include "nvme-models.h"
 
 static long double int128_to_double(__u8 *data)
 {
@@ -57,6 +59,20 @@ void d_raw(unsigned char *buf, unsigned len)
 	unsigned i;
 	for (i = 0; i < len; i++)
 		putchar(*(buf+i));
+}
+
+static void format(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
+{
+
+	snprintf(formatter,fmt_sz, "%-*.*s",
+		 (int)tofmtsz, (int)tofmtsz, tofmt);
+	/* trim() the obnoxious trailing white lines */
+	while (--fmt_sz) {
+		if (formatter[fmt_sz - 1] != ' ' && formatter[fmt_sz - 1] != '\0') {
+			formatter[fmt_sz] = '\0';
+			break;
+		}
+	}
 }
 
 static void show_nvme_id_ctrl_cmic(__u8 cmic)
@@ -1119,6 +1135,148 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 	}
 }
 
+static inline void add_error_message(int error, struct json_object *data)
+{
+	char str[64];
+	if (error < 0)
+		json_object_add_value_string(data, "Status",
+					     "Internal nvme-cli Error");
+	else if (error != 0) {
+		snprintf(str, sizeof(str), "NVME Admin command error:%s(%x)",
+			 nvme_status_to_string(error), error);
+		json_object_add_value_string(data, "Status", str);
+	}
+}
+
+void json_fw_act(int error, __u8 slot, __u8 action, const char *devname)
+{
+	char str[128];
+	struct json_object *root;
+	struct json_object *data;
+	root = json_create_object();
+	data = json_create_object();
+
+	if (error && error != NVME_SC_FW_NEEDS_CONV_RESET &&
+	    error != NVME_SC_FW_NEEDS_SUBSYS_RESET &&
+	    error != NVME_SC_FW_NEEDS_RESET)
+		add_error_message(error, data);
+	else {
+		switch (error) {
+		case NVME_SC_FW_NEEDS_CONV_RESET:
+		case NVME_SC_FW_NEEDS_SUBSYS_RESET:
+		case NVME_SC_FW_NEEDS_RESET:
+			snprintf(str, sizeof(str),
+				 "Success activating firmware action:%d slot:%d,"\
+				 " but firmware requires %s reset\n",
+				 action, slot, nvme_fw_status_reset_type(error));
+			json_object_add_value_string(data, "Status", str);
+			break;
+		default:
+			snprintf(str, sizeof(str),
+				 "Success activating firmware action:%d slot:%d\n",
+				 action, slot);
+			json_object_add_value_string(data, "Status", str);
+			break;
+		}
+	}
+	snprintf(str, sizeof(str),"Firmware Activate Information For %s", devname);
+	json_object_add_value_object(root, str, data);
+	json_print_object(root, NULL);
+}
+
+void json_fw_dl(int error, const char *devname)
+{
+	char str[64];
+	struct json_object *root;
+	struct json_object *data;
+	root = json_create_object();
+	data = json_create_object();
+
+	if (error)
+		add_error_message(error, data);
+	else
+		json_object_add_value_string(data, "Status", "Success Downloading Firmware");
+
+	snprintf(str, sizeof(str),"Firmware Download Information For %s", devname);
+	json_object_add_value_object(root, str, data);
+	json_print_object(root, NULL);
+}
+
+void json_format(int error, __u32 nsid, const char* devname)
+{
+	char str[64];
+	struct json_object *root;
+	struct json_object *data;
+	root = json_create_object();
+	data = json_create_object();
+
+	if (error)
+		add_error_message(error, data);
+	else {
+		snprintf(str, sizeof(str), "Success formatting namespace: %x",
+			 nsid);
+		json_object_add_value_string(data, "Status", str);
+	}
+	snprintf(str, sizeof(str), "Format information for %s", devname);
+	json_object_add_value_object(root, str, data);
+	json_print_object(root, NULL);
+}
+
+void json_print_list_items(struct list_item *list_items, unsigned len)
+{
+	struct json_object *root;
+	struct json_object *device_attrs;
+	char pair_name[128] = { 0 };
+	char formatter[41] = { 0 };
+	int index, i = 0;
+	char *product;
+
+	root = json_create_object();
+	for (i = 0; i < len; i++) {
+		device_attrs = json_create_object();
+
+		json_object_add_value_string(device_attrs,
+					     "DevicePath",
+					     list_items[i].node);
+		json_object_add_value_string(device_attrs,
+					     "Firmware",
+					     list_items[i].ctrl.fr);
+
+		if (sscanf(list_items[i].node, "/dev/nvme%d", &index) == 1)
+			json_object_add_value_int(device_attrs,
+						  "Index",
+						  index);
+
+		format(formatter, sizeof(formatter),
+		       list_items[i].ctrl.mn,
+		       sizeof(list_items[i].ctrl.mn));
+
+		json_object_add_value_string(device_attrs,
+					     "ModelNumber",
+					     formatter);
+
+		product = nvme_product_name(index);
+		json_object_add_value_string(device_attrs,
+					     "ProductFamily",
+					     product);
+
+		format(formatter, sizeof(formatter),
+		       list_items[i].ctrl.sn,
+		       sizeof(list_items[i].ctrl.sn));
+
+		json_object_add_value_string(device_attrs,
+					     "SerialNumber",
+					     formatter);
+
+		snprintf(pair_name, sizeof(pair_name), "%s %s",
+			 product, formatter);
+		free((void*)product);
+
+		json_object_add_value_object(root, pair_name, device_attrs);
+	}
+	json_print_object(root, NULL);
+}
+
 void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 {
 	char nguid_buf[2 * sizeof(ns->nguid) + 1], eui64_buf[2 * sizeof(ns->eui64) + 1];
@@ -1337,27 +1495,77 @@ void json_nvme_resv_report(struct nvme_reservation_status *status)
 void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
 {
 	struct json_object *root;
-	struct json_array *frs;
+	struct json_object *fwsi;
+	char fmt[21];
+	char str[32];
 	int i;
 
 	root = json_create_object();
+	fwsi = json_create_object();
 
-	json_object_add_value_int(root, "afi", fw_log->afi);
-
-	frs = json_create_array();
-	json_object_add_value_array(root, "frs", frs);
+	json_object_add_value_int(fwsi, "Active Firmware Slot (afi)", fw_log->afi);
 
 	for (i = 0; i < 7; i++) {
-		struct json_object *fr = json_create_object();
-
-		json_object_add_value_int(fr, "frs", fw_log->frs[i]);
-
-		json_array_add_value_object(frs, fr);
-
+		snprintf(fmt, sizeof(fmt), "Firmware Rev Slot %d", i);
+		snprintf(str, sizeof(str), "%lu (%s)", (uint64_t)fw_log->frs[i],
+			 fw_to_string(fw_log->frs[i]));
+		json_object_add_value_string(fwsi, fmt, str);
 	}
+	json_object_add_value_object(root, devname, fwsi);
 
 	json_print_object(root, NULL);
 	printf("\n");
+}
+
+void json_add_smart_log(struct nvme_additional_smart_log *smart,
+			unsigned int nsid, const char *devname)
+{
+	struct json_object *root;
+	struct json_object *data;
+	char fmt[128];
+
+	root = json_create_object();
+	data = json_create_object();
+
+	json_object_add_value_int(data, "Program Fail Count",
+				  int48_to_long(smart->program_fail_cnt.raw));
+	json_object_add_value_int(data, "Erase Fail Count",
+				  int48_to_long(smart->erase_fail_cnt.raw));
+	json_object_add_value_int(data, "Wear Leveling Min",
+				  le16toh(smart->wear_leveling_cnt.wear_level.min));
+	json_object_add_value_int(data, "Wear Leveling Max",
+				  le16toh(smart->wear_leveling_cnt.wear_level.max));
+	json_object_add_value_int(data, "Wear Leveling Avg",
+				  le16toh(smart->wear_leveling_cnt.wear_level.avg));
+	json_object_add_value_int(data, "End-to-end Error Detection Count",
+				  int48_to_long(smart->e2e_err_cnt.raw));
+	json_object_add_value_int(data, "CRC Error Count",
+				  int48_to_long(smart->crc_err_cnt.raw));
+	json_object_add_value_float(data, "Timed Workload Media Wear",
+				    ((long double)int48_to_long(smart->timed_workload_media_wear.raw)) / 1024);
+
+	json_object_add_value_int(data, "Timed Workload Host Reads",
+				  int48_to_long(smart->timed_workload_host_reads.raw));
+	json_object_add_value_int(data, "Timed Workload Timer",
+				  int48_to_long(smart->timed_workload_timer.raw));
+	snprintf(fmt, sizeof(fmt), "%u%%",
+		 smart->thermal_throttle_status.thermal_throttle.pct);
+	json_object_add_value_string(data, "Thermal Throttle status Percentage",
+				     fmt);
+	json_object_add_value_int(data, "Thermal Throttle Status Count",
+				  smart->thermal_throttle_status.thermal_throttle.count);
+	json_object_add_value_int(data, "Retry Buffer Overflow Count",
+				  int48_to_long(smart->retry_buffer_overflow_cnt.raw));
+	json_object_add_value_int(data, "PLL Lock Loss Count",
+				  int48_to_long(smart->pll_lock_loss_cnt.raw));
+	json_object_add_value_int(data, "Nand Bytes Written",
+				  int48_to_long(smart->nand_bytes_written.raw));
+	json_object_add_value_int(data, "Host Bytes Written",
+				  int48_to_long(smart->host_bytes_written.raw));
+
+	snprintf(fmt, sizeof(fmt), "Additional Smart Log for %s", devname);
+	json_object_add_value_object(root, fmt, data);
+	json_print_object(root, NULL);
 }
 
 void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname)

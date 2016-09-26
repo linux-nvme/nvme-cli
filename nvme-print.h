@@ -35,7 +35,13 @@ void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int flags);
 void json_nvme_resv_report(struct nvme_reservation_status *status);
 void json_error_log(struct nvme_error_log_page *err_log, int entries, const char *devname);
 void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
+void json_add_smart_log(struct nvme_additional_smart_log *smart,
+			unsigned int nsid, const char *devname);
 void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname);
+void json_print_list_items(struct list_item *items, unsigned amnt);
+void json_format(int error, __u32 nsid, const char* devname);
+void json_fw_dl(int error, const char *devname);
+void json_fw_act(int error, __u8 slot, __u8 action, const char *devname);
 
 void show_registers_version(__u32 vs);
 void show_registers_cap(struct nvme_bar_cap *cap);
