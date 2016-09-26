@@ -159,6 +159,28 @@ static int validate_output_format(char *format)
 	return -EINVAL;
 }
 
+int parse_for_json(int argc, char **argv)
+{
+	int fmt;
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	const struct argconfig_commandline_options opts[] = {
+		{"output-format", 'o', "FMT",
+		 CFG_STRING, &cfg.output_format,
+		 required_argument, "Output Format: normal|json"},
+		{NULL}
+	};
+	argconfig_parse(argc, argv, NULL, opts, &cfg, sizeof(cfg));
+	fmt = validate_output_format(cfg.output_format);
+	return fmt == JSON;
+}
+
 static int get_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_smart_log smart_log;
@@ -213,7 +235,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_additional_smart_log smart_log;
-	int err;
+	int err, fmt;
 	char *desc = "Get Intel vendor specific additional smart log (optionally, "\
 		      "for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
@@ -221,26 +243,36 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	struct config {
 		__u32 namespace_id;
 		int   raw_binary;
+		char *output_format;
 	};
 
 	struct config cfg = {
 		.namespace_id = 0xffffffff,
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
 		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (cfg.raw_binary)
+		fmt = BINARY;
 
 	err = nvme_intel_smart_log(fd, cfg.namespace_id, &smart_log);
 	if (!err) {
-		if (!cfg.raw_binary)
-			show_intel_smart_log(&smart_log, cfg.namespace_id, devicename);
-		else
+		if (fmt == BINARY)
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
+		if (fmt == JSON)
+			json_add_smart_log(&smart_log, cfg.namespace_id, devicename);
+		else
+			show_intel_smart_log(&smart_log, cfg.namespace_id, devicename);
 	}
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
@@ -719,15 +751,6 @@ static void get_registers(struct nvme_bar **bar)
 	*bar = membase;
 }
 
-#define MAX_LIST_ITEMS 256
-struct list_item {
-	char                node[1024];
-	struct nvme_id_ctrl ctrl;
-	int                 nsid;
-	struct nvme_id_ns   ns;
-	unsigned            block;
-};
-
 static void print_list_item(struct list_item list_item)
 {
 
@@ -819,6 +842,27 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	struct dirent **devices;
 	struct list_item *list_items;
 	unsigned int i, n, fd, ret;
+	int fmt;
+	const char *desc = "Retrieve basic information for the given device";
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	const struct argconfig_commandline_options opts[] = {
+		{"output-format", 'o', "FMT",
+		 CFG_STRING, &cfg.output_format,
+		 required_argument, "Output Format: normal|json"},
+		{NULL}
+	};
+	argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fmt = validate_output_format(cfg.output_format);
+
+	if (fmt != JSON || fmt != NORMAL)
+		return -EINVAL;
 
 	n = scandir(dev, &devices, scan_dev_filter, alphasort);
 	if (n <= 0)
@@ -835,7 +879,11 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		if (ret)
 			return ret;
 	}
-	print_list_items(list_items, n);
+
+	if (fmt == JSON)
+		json_print_list_items(list_items, n);
+	else
+		print_list_items(list_items, n);
 
 	for (i = 0; i < n; i++)
 		free(devices[i]);
@@ -1419,7 +1467,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	const char *ms = "[0-1]: extended format off/on";
 	const char *reset = "Automatically reset the controller after successful format";
 	const char *timeout = "timeout value";
-	int err;
+	int err, fmt;
 
 	struct config {
 		__u32 namespace_id;
@@ -1430,6 +1478,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		__u8  pil;
 		__u8  ms;
 		int reset;
+		char *output_format;
 	};
 
 	struct config cfg = {
@@ -1439,6 +1488,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		.ses          = 0,
 		.pi           = 0,
 		.reset        = 0,
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -1450,10 +1500,16 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		{"pil",          'p', "NUM",  CFG_BYTE,     &cfg.pil,          required_argument, pil},
 		{"ms",           'm', "NUM",  CFG_BYTE,     &cfg.ms,           required_argument, ms},
 		{"reset",        'r', "FLAG", CFG_NONE,     &cfg.reset,        no_argument,       reset},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (fmt == BINARY)
+		return EINVAL;
 
 	/* ses & pi checks set to 7 for forward-compatibility */
 	if (cfg.ses > 7) {
@@ -1481,17 +1537,23 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 
 	err = nvme_format(fd, cfg.namespace_id, cfg.lbaf, cfg.ses, cfg.pi,
 				cfg.pil, cfg.ms, cfg.timeout);
-	if (err < 0)
-		perror("format");
-	else if (err != 0)
-		fprintf(stderr, "NVME Admin command error:%s(%x)\n",
-					nvme_status_to_string(err), err);
+	if (fmt == JSON)
+		json_format(err, cfg.namespace_id, devicename);
 	else {
-		printf("Success formatting namespace:%x\n", cfg.namespace_id);
+		if (err < 0)
+			perror("format");
+		else if (err != 0)
+			fprintf(stderr, "NVME Admin command error:%s(%x)\n",
+				nvme_status_to_string(err), err);
+		else
+			printf("Success formatting namespace:%x\n", cfg.namespace_id);
+	}
+	if (err == 0) {
 		ioctl(fd, BLKRRPART);
 		if (cfg.reset && S_ISCHR(nvme_stat.st_mode))
 			nvme_reset_controller(fd);
 	}
+
 	return err;
 }
 
