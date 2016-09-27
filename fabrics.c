@@ -759,7 +759,7 @@ int connect(const char *desc, int argc, char **argv)
 		 "number of io queues to use (default is core count)" },
 		{"keep-alive-tmo", 'k', "LIST", CFG_STRING, &cfg.keep_alive_tmo, required_argument,
 			"keep alive timeout period in seconds" },
-		{"reconnect-delay", 'r', "LIST", CFG_STRING, &cfg.reconnect_delay, required_argument,
+		{"reconnect-delay", 'c', "LIST", CFG_STRING, &cfg.reconnect_delay, required_argument,
 			"reconnect timeout period in seconds" },
 		{NULL},
 	};
