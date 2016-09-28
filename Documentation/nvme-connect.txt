@@ -1,0 +1,89 @@
+nvme-connect(1)
+==============
+
+NAME
+----
+nvme-connect - Connect to an NVMe-over-Fabrics subsystem.
+
+SYNOPSIS
+--------
+[verse]
+'nvme connect'	[device]
+		[--transport=<trtype>  | -t <trtype>]
+		[--traddr=<traddr>     | -a <traddr>]
+		[--trsvcid=<trsvcid>   | -s <trsvcid>]
+		[--hostnqn=<hostnqn>   | -q <hostnqn>]
+		[--nqn=<subnqn>        | -n <subnqn>]
+		[--nr-io-queues=<#>    | -i <#>]
+		[--keep-alive-tmo=<#>  | -k <#>]
+		[--reconnect-delay=<#> | -c <#>]
+
+DESCRIPTION
+-----------
+TBD (note 'device' is optional)
+
+BACKGROUND
+----------
+TBD
+
+OPTIONS
+-------
+-t <trtype>::
+--transport=<trtype>::
+	TBD
+
+-a <traddr>::
+--traddr=<traddr>::
+	TBD
+
+-s <trsvcid>::
+--trsvcid=<trsvcid>::
+	TBD
+ 
+-q <hostnqn>::
+--hostnqn=<hostnqn>::
+	TBD
+
+-n <subnqn>::
+--nqn=<subnqn>::
+	TBD
+
+-i <#>::
+--nr-io-queues<#>::
+	TBD
+
+-k <#>::
+--keep-alive-tmo=<#>::
+	TBD
+
+-c <#>::
+--reconnect-delay=<#>::
+	TBD
+
+EXAMPLES
+--------
+* TBD
++
+------------
+# nvme connect... 
+------------
+
+SEE ALSO
+--------
+nvme-discover(1)
+
+AUTHORS
+-------
+This was co-written by mailto:james.p.freyensee@intel.com[Jay Freyensee]
+and mailto:hch@lst.de[Christoph Hellwig]
+for mailto:keith.busch@intel.com[Keith Busch].
+
+REPORTING BUGS
+--------------
+Patches and issues for 'connect' should be submitted to the
+Linux kernel email list mailto:linux-nvme@lists.infradead.org[linux-nvme]
+before merging to https://github.com/linux-nvme/nvme-cli.
+
+NVME
+----
+Part of the nvme-user suite
