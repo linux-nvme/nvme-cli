@@ -2668,7 +2668,7 @@ static int admin_passthru(int argc, char **argv, struct command *cmd, struct plu
 
 static int discover_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
-	const char *desc = "Send command to discovery service.";
+	const char *desc = "Send Get Log Page request to Discovery Controller.";
 	return discover(desc, argc, argv, false);
 }
 
