@@ -655,6 +655,8 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 	if (human)
 		show_nvme_id_ctrl_sgls(ctrl->sgls);
 
+	printf("subnqn  : %-.*s\n", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
+
 	show_nvme_id_ctrl_power(ctrl);
 	if (vendor_show)
 		vendor_show(ctrl->vs);
@@ -1188,18 +1190,24 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 	long double unvmcap = int128_to_double(ctrl->unvmcap);
 
 	char sn[sizeof(ctrl->sn) + 1], mn[sizeof(ctrl->mn) + 1], fr[sizeof(ctrl->fr) + 1];
+	char subnqn[sizeof(ctrl->subnqn) + 1];
 	__u32 ieee = ctrl->ieee[2] << 16 | ctrl->ieee[1] << 8 | ctrl->ieee[0];
 
 	int i;
 
 	snprintf(sn, sizeof(sn), "%-.*s\n", (int)sizeof(ctrl->sn), ctrl->sn);
-	snprintf(mn, sizeof(mn),  "%-.*s\n", (int)sizeof(ctrl->mn), ctrl->mn);
+	snprintf(mn, sizeof(mn), "%-.*s\n", (int)sizeof(ctrl->mn), ctrl->mn);
 	snprintf(fr, sizeof(fr), "%-.*s\n", (int)sizeof(ctrl->fr), ctrl->fr);
+	snprintf(subnqn, sizeof(subnqn), "%-.*s\n", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
+
 
 	root = json_create_object();
 
 	json_object_add_value_int(root, "vid", le16_to_cpu(ctrl->vid));
 	json_object_add_value_int(root, "ssvid", le16_to_cpu(ctrl->ssvid));
+	json_object_add_value_string(root, "sn", sn);
+	json_object_add_value_string(root, "mn", mn);
+	json_object_add_value_string(root, "fr", fr);
 	json_object_add_value_int(root, "rab", ctrl->rab);
 	json_object_add_value_int(root, "ieee", ieee);
 	json_object_add_value_int(root, "cmic", ctrl->cmic);
@@ -1238,6 +1246,7 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 	json_object_add_value_int(root, "nvscc", ctrl->nvscc);
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
 	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
+	json_object_add_value_string(root, "subnqn", subnqn);
 
 	psds = json_create_array();
 	json_object_add_value_array(root, "psds", psds);
