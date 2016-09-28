@@ -217,30 +217,30 @@ int lnvm_do_factory_init(char *devname, int erase_only_marked,
 	return ret;
 }
 
-void show_lnvm_id_grp(struct nvme_nvm_id_group *grp)
+static void show_lnvm_id_grp(struct nvme_nvm_id_group *grp)
 {
 	printf(" mtype   : %d\n", grp->mtype);
 	printf(" fmtype  : %d\n", grp->fmtype);
 	printf(" chnls   : %d\n", grp->num_ch);
 	printf(" luns    : %d\n", grp->num_lun);
 	printf(" plns    : %d\n", grp->num_pln);
-	printf(" blks    : %d\n", (uint16_t)le16toh(grp->num_blk));
-	printf(" pgs     : %d\n", (uint16_t)le16toh(grp->num_pg));
-	printf(" fpg_sz  : %d\n", (uint16_t)le16toh(grp->fpg_sz));
-	printf(" csecs   : %d\n", (uint16_t)le16toh(grp->csecs));
-	printf(" sos     : %d\n", (uint16_t)le16toh(grp->sos));
-	printf(" trdt    : %d\n", (uint32_t)le32toh(grp->trdt));
-	printf(" trdm    : %d\n", (uint32_t)le32toh(grp->trdm));
-	printf(" tprt    : %d\n", (uint32_t)le32toh(grp->tprt));
-	printf(" tprm    : %d\n", (uint32_t)le32toh(grp->tprm));
-	printf(" tbet    : %d\n", (uint32_t)le32toh(grp->tbet));
-	printf(" tbem    : %d\n", (uint32_t)le32toh(grp->tbem));
-	printf(" mpos    : %#x\n", (uint32_t)le32toh(grp->mpos));
-	printf(" mccap   : %#x\n", (uint32_t)le32toh(grp->mccap));
-	printf(" cpar    : %#x\n", (uint16_t)le16toh(grp->cpar));
+	printf(" blks    : %d\n", (uint16_t)le16_to_cpu(grp->num_blk));
+	printf(" pgs     : %d\n", (uint16_t)le16_to_cpu(grp->num_pg));
+	printf(" fpg_sz  : %d\n", (uint16_t)le16_to_cpu(grp->fpg_sz));
+	printf(" csecs   : %d\n", (uint16_t)le16_to_cpu(grp->csecs));
+	printf(" sos     : %d\n", (uint16_t)le16_to_cpu(grp->sos));
+	printf(" trdt    : %d\n", (uint32_t)le32_to_cpu(grp->trdt));
+	printf(" trdm    : %d\n", (uint32_t)le32_to_cpu(grp->trdm));
+	printf(" tprt    : %d\n", (uint32_t)le32_to_cpu(grp->tprt));
+	printf(" tprm    : %d\n", (uint32_t)le32_to_cpu(grp->tprm));
+	printf(" tbet    : %d\n", (uint32_t)le32_to_cpu(grp->tbet));
+	printf(" tbem    : %d\n", (uint32_t)le32_to_cpu(grp->tbem));
+	printf(" mpos    : %#x\n", (uint32_t)le32_to_cpu(grp->mpos));
+	printf(" mccap   : %#x\n", (uint32_t)le32_to_cpu(grp->mccap));
+	printf(" cpar    : %#x\n", (uint16_t)le16_to_cpu(grp->cpar));
 }
 
-void show_lnvm_ppaf(struct nvme_nvm_addr_format *ppaf)
+static void show_lnvm_ppaf(struct nvme_nvm_addr_format *ppaf)
 {
 	printf("ppaf     :\n");
 	printf(" ch offs : %d ch bits  : %d\n",
@@ -257,7 +257,7 @@ void show_lnvm_ppaf(struct nvme_nvm_addr_format *ppaf)
 					ppaf->sect_offset, ppaf->sect_len);
 }
 
-void show_lnvm_id_ns(struct nvme_nvm_id *id)
+static void show_lnvm_id_ns(struct nvme_nvm_id *id)
 {
 	int i;
 
@@ -269,8 +269,8 @@ void show_lnvm_id_ns(struct nvme_nvm_id *id)
 	printf("verid    : %#x\n", id->ver_id);
 	printf("vmnt     : %#x\n", id->vmnt);
 	printf("cgrps    : %d\n", id->cgrps);
-	printf("cap      : %#x\n", (uint32_t)le32toh(id->cap));
-	printf("dom      : %#x\n", (uint32_t)le32toh(id->dom));
+	printf("cap      : %#x\n", (uint32_t)le32_to_cpu(id->cap));
+	printf("dom      : %#x\n", (uint32_t)le32_to_cpu(id->dom));
 	show_lnvm_ppaf(&id->ppaf);
 
 	for (i = 0; i < id->cgrps; i++) {
@@ -279,7 +279,7 @@ void show_lnvm_id_ns(struct nvme_nvm_id *id)
 	}
 }
 
-int lnvm_get_identity(int fd, int nsid, struct nvme_nvm_id *nvm_id)
+static int lnvm_get_identity(int fd, int nsid, struct nvme_nvm_id *nvm_id)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_nvm_admin_identity,
@@ -313,12 +313,12 @@ int lnvm_do_id_ns(int fd, int nsid, unsigned int flags)
 
 static void show_lnvm_bbtbl(struct nvme_nvm_bb_tbl *tbl)
 {
-	printf("verid    : %#x\n", (uint16_t)le16toh(tbl->verid));
-	printf("tblks    : %d\n", (uint32_t)le32toh(tbl->tblks));
-	printf("tfact    : %d\n", (uint32_t)le32toh(tbl->tfact));
-	printf("tgrown   : %d\n", (uint32_t)le32toh(tbl->tgrown));
-	printf("tdresv   : %d\n", (uint32_t)le32toh(tbl->tdresv));
-	printf("thresv   : %d\n", (uint32_t)le32toh(tbl->thresv));
+	printf("verid    : %#x\n", (uint16_t)le16_to_cpu(tbl->verid));
+	printf("tblks    : %d\n", (uint32_t)le32_to_cpu(tbl->tblks));
+	printf("tfact    : %d\n", (uint32_t)le32_to_cpu(tbl->tfact));
+	printf("tgrown   : %d\n", (uint32_t)le32_to_cpu(tbl->tgrown));
+	printf("tdresv   : %d\n", (uint32_t)le32_to_cpu(tbl->tdresv));
+	printf("thresv   : %d\n", (uint32_t)le32_to_cpu(tbl->thresv));
 	printf("Use raw output to retrieve table.\n");
 }
 
@@ -327,7 +327,7 @@ static int __lnvm_do_get_bbtbl(int fd, struct nvme_nvm_id *id,
 						unsigned int flags)
 {
 	struct nvme_nvm_id_group *grp = &id->groups[0];
-	int bbtblsz = ((uint16_t)le16toh(grp->num_blk) * grp->num_pln);
+	int bbtblsz = ((uint16_t)le16_to_cpu(grp->num_blk) * grp->num_pln);
 	int bufsz = bbtblsz + sizeof(struct nvme_nvm_bb_tbl);
 	struct nvme_nvm_bb_tbl *bbtbl;
 	int err;
@@ -338,10 +338,10 @@ static int __lnvm_do_get_bbtbl(int fd, struct nvme_nvm_id *id,
 
 	struct nvme_nvm_getbbtbl cmd = {
 		.opcode		= nvme_nvm_admin_get_bb_tbl,
-		.nsid		= 1,
+		.nsid		= cpu_to_le32(1),
 		.addr		= (__u64)(uintptr_t)bbtbl,
-		.data_len	= bufsz,
-		.ppa		= htole64(ppa.ppa),
+		.data_len	= cpu_to_le32(bufsz),
+		.ppa		= cpu_to_le64(ppa.ppa),
 	};
 
 	err = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD,
@@ -398,9 +398,9 @@ static int __lnvm_do_set_bbtbl(int fd, struct ppa_addr ppa, __u8 value)
 
 	struct nvme_nvm_setbbtbl cmd = {
 		.opcode		= nvme_nvm_admin_set_bb_tbl,
-		.nsid		= 1,
-		.ppa		= htole64(ppa.ppa),
-		.nlb		= htole16(0),
+		.nsid		= cpu_to_le32(1),
+		.ppa		= cpu_to_le64(ppa.ppa),
+		.nlb		= cpu_to_le16(0),
 		.value		= value,
 	};
 
@@ -432,7 +432,7 @@ int lnvm_do_set_bbtbl(int fd, int nsid,
 	if (chid >= nvm_id.groups[0].num_ch ||
 					lunid >= nvm_id.groups[0].num_lun ||
 					plnid >= nvm_id.groups[0].num_pln ||
-					blkid >= nvm_id.groups[0].num_blk) {
+					blkid >= le16_to_cpu(nvm_id.groups[0].num_blk)) {
 		fprintf(stderr, "Out of bound channel id, LUN id, plane id, or"\
 				"block id\n");
 		return -EINVAL;

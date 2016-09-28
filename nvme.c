@@ -138,7 +138,7 @@ int parse_and_open(int argc, char **argv, const char *desc,
 	return fd;
 }
 
-const char *output_format = "Output format: normal|json|binary";
+static const char *output_format = "Output format: normal|json|binary";
 
 enum {
 	NORMAL,
@@ -184,7 +184,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -230,7 +230,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
 		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -277,7 +277,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		{"log-entries",  'e', "NUM",  CFG_POSITIVE, &cfg.log_entries,  required_argument, log_entries},
 		{"raw-binary",   'b', "",     CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -299,7 +299,13 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		fprintf(stderr, "could not identify controller\n");
 		return ENODEV;
 	} else {
-		struct nvme_error_log_page err_log[cfg.log_entries];
+		struct nvme_error_log_page *err_log;
+
+		err_log = calloc(cfg.log_entries, sizeof(struct nvme_error_log_page));
+		if (!err_log) {
+			fprintf(stderr, "could not alloc buffer for error log\n");
+			return ENOMEM;
+		}
 
 		err = nvme_error_log(fd, cfg.namespace_id, cfg.log_entries, err_log);
 		if (!err) {
@@ -313,6 +319,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		else if (err > 0)
 			fprintf(stderr, "NVMe Status:%s(%x)\n",
 						nvme_status_to_string(err), err);
+		free(err_log);
 	}
 	return err;
 }
@@ -337,7 +344,7 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"raw-binary", 'b', "",   CFG_NONE, &cfg.raw_binary,   no_argument,       raw_binary},
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -394,7 +401,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		{"log-id",       'i', "NUM",  CFG_POSITIVE, &cfg.log_id,       required_argument, log_id},
 		{"log-len",      'l', "NUM",  CFG_POSITIVE, &cfg.log_len,      required_argument, log_len},
 		{"raw-binary",   'b', "",     CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -403,7 +410,13 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		fprintf(stderr, "non-zero log-len is required param\n");
 		return EINVAL;
 	} else {
-		unsigned char log[cfg.log_len];
+		unsigned char *log;
+
+		log = malloc(cfg.log_len);
+		if (!log) {
+			fprintf(stderr, "could not alloc buffer for log\n");
+			return EINVAL;
+		}
 
 		err = nvme_get_log(fd, cfg.namespace_id, cfg.log_id, cfg.log_len, log);
 		if (!err) {
@@ -417,6 +430,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		} else if (err > 0)
 			fprintf(stderr, "NVMe Status:%s(%x)\n",
 						nvme_status_to_string(err), err);
+		free(log);
 		return err;
 	}
 }
@@ -442,7 +456,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"cntid",        'c', "NUM", CFG_SHORT,    &cfg.cntid,        required_argument, controller},
 		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -452,10 +466,10 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 
 	err = nvme_identify_ctrl_list(fd, cfg.namespace_id, cfg.cntid, cntlist);
 	if (!err) {
-		__u16 num = le16toh(cntlist->num);
+		__u16 num = le16_to_cpu(cntlist->num);
 
 		for (i = 0; i < (min(num, 2048)); i++)
-			printf("[%4u]:%#x\n", i, le16toh(cntlist->identifier[i]));
+			printf("[%4u]:%#x\n", i, le16_to_cpu(cntlist->identifier[i]));
 	}
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x) cntid:%d\n",
@@ -484,7 +498,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
 		{"all",          'a', "",     CFG_NONE,     &cfg.all,          no_argument,       all},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -522,7 +536,7 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id,    required_argument, namespace_id},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -565,7 +579,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
 		{"controllers",  'c', "LIST", CFG_STRING,   &cfg.cntlist,      required_argument, cont},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -648,7 +662,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		{"flbas", 'f', "NUM", CFG_BYTE,        &cfg.flbas, required_argument, flbas},
 		{"dps",   'd', "NUM", CFG_BYTE,        &cfg.dps,   required_argument, dps},
 		{"nmic",  'm', "NUM", CFG_BYTE,        &cfg.nmic,  required_argument, nmic},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -697,7 +711,7 @@ static void get_registers(struct nvme_bar **bar)
 		exit(ENODEV);
 	}
 
-	membase = mmap(0, getpagesize(), PROT_READ, MAP_SHARED, pci_fd, 0);
+	membase = mmap(NULL, getpagesize(), PROT_READ, MAP_SHARED, pci_fd, 0);
 	if (membase == MAP_FAILED) {
 		fprintf(stderr, "%s failed to map\n", base);
 		exit(ENODEV);
@@ -717,8 +731,8 @@ struct list_item {
 static void print_list_item(struct list_item list_item)
 {
 
-	double nsze       = list_item.ns.nsze;
-	double nuse       = list_item.ns.nuse;
+	double nsze       = le64_to_cpu(list_item.ns.nsze);
+	double nuse       = le64_to_cpu(list_item.ns.nuse);
 	long long int lba = list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ds;
 
 	lba  = (1 << lba);
@@ -831,7 +845,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	return 0;
 }
 
-static int get_nsid()
+static int get_nsid(void)
 {
 	int nsid = nvme_get_nsid(fd);
 
@@ -874,7 +888,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 		{"raw-binary",      'b', "", CFG_NONE, &cfg.raw_binary,      no_argument, raw_binary},
 		{"human-readable",  'H', "", CFG_NONE, &cfg.human_readable,  no_argument, human_readable},
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -949,7 +963,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		{"raw-binary",      'b', "FLAG", CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
 		{"human-readable",  'H', "FLAG", CFG_NONE,     &cfg.human_readable,  no_argument,       human_readable},
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1046,7 +1060,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		{"raw-binary",     'b', "FLAG",CFG_NONE,     &cfg.raw_binary,     no_argument,       raw_binary},
 		{"cdw11",          'c', "NUM", CFG_POSITIVE, &cfg.cdw11,          required_argument, cdw11},
 		{"human-readable", 'H', "FLAG",CFG_NONE,     &cfg.human_readable, no_argument,       human_readable},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1140,7 +1154,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		{"fw",     'f', "FILE", CFG_STRING,   &cfg.fw,     required_argument, fw},
 		{"xfer",   'x', "NUM",  CFG_POSITIVE, &cfg.xfer,   required_argument, xfer},
 		{"offset", 'o', "NUM",  CFG_POSITIVE, &cfg.offset, required_argument, offset},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1226,7 +1240,7 @@ static int fw_activate(int argc, char **argv, struct command *cmd, struct plugin
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"slot",   's', "NUM", CFG_BYTE, &cfg.slot,   required_argument, slot},
 		{"action", 'a', "NUM", CFG_BYTE, &cfg.action, required_argument, action},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1316,7 +1330,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"human-readable",  'H', "", CFG_NONE, &cfg.human_readable,  no_argument, human_readable},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1326,7 +1340,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	if (cfg.human_readable) {
 		printf("cap     : ");
 		print_lo_hi_64((uint32_t *)&bar->cap);
-		show_registers_cap(&bar->cap);
+		show_registers_cap((struct nvme_bar_cap *)&bar->cap);
 
 		printf("version : %x\n", bar->vs);
 		show_registers_version(bar->vs);
@@ -1436,7 +1450,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		{"pil",          'p', "NUM",  CFG_BYTE,     &cfg.pil,          required_argument, pil},
 		{"ms",           'm', "NUM",  CFG_BYTE,     &cfg.ms,           required_argument, ms},
 		{"reset",        'r', "FLAG", CFG_NONE,     &cfg.reset,        no_argument,       reset},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1528,7 +1542,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		{"data-len",     'l', "NUM",  CFG_POSITIVE, &cfg.data_len,     required_argument, data_len},
 		{"data",         'd', "FILE", CFG_STRING,   &cfg.file,         required_argument, data},
 		{"save",         's', "FLAG", CFG_NONE,     &cfg.save,         no_argument, save},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1626,7 +1640,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		{"secp",         'p', "NUM",  CFG_BYTE,     &cfg.secp,         required_argument, secp},
 		{"spsp",         's', "NUM",  CFG_SHORT,    &cfg.spsp,         required_argument, spsp},
 		{"tl",           't', "NUM",  CFG_POSITIVE, &cfg.tl,           required_argument, tl},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1685,7 +1699,7 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 		{"namespace-id",      'n', "NUM",  CFG_POSITIVE,    &cfg.namespace_id,      required_argument, namespace_id},
 		{"start-block",       's', "NUM",  CFG_LONG_SUFFIX, &cfg.start_block,       required_argument, start_block},
 		{"block-count",       'c', "NUM",  CFG_SHORT,       &cfg.block_count,       required_argument, block_count},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1752,7 +1766,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		{"ref-tag",           'r', "NUM",  CFG_POSITIVE,    &cfg.ref_tag,           required_argument, ref_tag},
 		{"app-tag-mask",      'm', "NUM",  CFG_BYTE,        &cfg.app_tag_mask,      required_argument, app_tag_mask},
 		{"app-tag",           'a', "NUM",  CFG_POSITIVE,    &cfg.app_tag,           required_argument, app_tag},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1833,7 +1847,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		{"idw", 	 'w', "FLAG", CFG_NONE,      &cfg.idw,          no_argument,       idw},
 		{"idr", 	 'r', "FLAG", CFG_NONE,      &cfg.idr,          no_argument,       idr},
 		{"cdw11",        'c', "NUM",  CFG_POSITIVE,  &cfg.cdw11,        required_argument, cdw11},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1886,7 +1900,7 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE,    &cfg.namespace_id, required_argument, namespace_id},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1942,7 +1956,7 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 		{"rtype",        't', "NUM",  CFG_BYTE,        &cfg.rtype,        required_argument, rtype},
 		{"racqa",        'a', "NUM",  CFG_BYTE,        &cfg.racqa,        required_argument, racqa},
 		{"iekey",        'i', "",     CFG_NONE,        &cfg.iekey,        no_argument,       iekey},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -2002,7 +2016,7 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 		{"rrega",        'r', "NUM",  CFG_BYTE,        &cfg.rrega,        required_argument, rrega},
 		{"cptpl",        'p', "NUM",  CFG_BYTE,        &cfg.cptpl,        required_argument, cptpl},
 		{"iekey",        'i', "",     CFG_NONE,        &cfg.iekey,        no_argument,       iekey},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -2064,7 +2078,7 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 		{"rtype",        't', "NUM",  CFG_BYTE,        &cfg.rtype,        required_argument, rtype},
 		{"rrela",        'a', "NUM",  CFG_BYTE,        &cfg.rrela,        required_argument, rrela},
 		{"iekey",        'i', "NUM",  CFG_BYTE,        &cfg.iekey,        required_argument, iekey},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -2123,7 +2137,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		{"numd",         'd', "NUM",  CFG_POSITIVE, &cfg.numd,         required_argument, numd},
 		{"raw-binary",   'b', "",     CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -2238,7 +2252,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		{"show-command",      'v', "",     CFG_NONE,        &cfg.show,              no_argument,       show},
 		{"dry-run",           'w', "",     CFG_NONE,        &cfg.dry_run,           no_argument,       dry},
 		{"latency",           't', "",     CFG_NONE,        &cfg.latency,           no_argument,       latency},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -2423,7 +2437,7 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 		{"spsp",         's', "NUM",  CFG_SHORT,    &cfg.spsp,         required_argument, spsp},
 		{"al",           't', "NUM",  CFG_POSITIVE, &cfg.al,           required_argument, al},
 		{"raw-binary",   'b', "",     CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -2551,7 +2565,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 		{"dry-run",      'd', "",     CFG_NONE,     &cfg.dry_run,      no_argument,       dry},
 		{"read",         'r', "",     CFG_NONE,     &cfg.read,         no_argument,       re},
 		{"write",        'w', "",     CFG_NONE,     &cfg.write,        no_argument,       wr},
-		{0}
+		{NULL}
 	};
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));

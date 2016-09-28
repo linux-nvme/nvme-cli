@@ -61,7 +61,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
 		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw},
-		{0}
+		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -95,7 +95,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
-		{0}
+		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -129,14 +129,14 @@ static void show_temp_stats(struct intel_temp_stats *stats)
 {
 	printf("  Intel Temperature Statistics\n");
 	printf("--------------------------------\n");
-	printf("Current temperature         : %"PRIu64"\n", (uint64_t)__le64_to_cpu(stats->curr));
-	printf("Last critical overtemp flag : %"PRIu64"\n", (uint64_t)__le64_to_cpu(stats->last_overtemp));
-	printf("Life critical overtemp flag : %"PRIu64"\n", (uint64_t)__le64_to_cpu(stats->life_overtemp));
-	printf("Highest temperature         : %"PRIu64"\n", (uint64_t)__le64_to_cpu(stats->highest_temp));
-	printf("Lowest temperature          : %"PRIu64"\n", (uint64_t)__le64_to_cpu(stats->lowest_temp));
-	printf("Max operating temperature   : %"PRIu64"\n", (uint64_t)__le64_to_cpu(stats->max_operating_temp));
-	printf("Min operating temperature   : %"PRIu64"\n", (uint64_t)__le64_to_cpu(stats->min_operating_temp));
-	printf("Estimated offset            : %"PRIu64"\n", (uint64_t)__le64_to_cpu(stats->est_offset));
+	printf("Current temperature         : %"PRIu64"\n", (uint64_t)le64_to_cpu(stats->curr));
+	printf("Last critical overtemp flag : %"PRIu64"\n", (uint64_t)le64_to_cpu(stats->last_overtemp));
+	printf("Life critical overtemp flag : %"PRIu64"\n", (uint64_t)le64_to_cpu(stats->life_overtemp));
+	printf("Highest temperature         : %"PRIu64"\n", (uint64_t)le64_to_cpu(stats->highest_temp));
+	printf("Lowest temperature          : %"PRIu64"\n", (uint64_t)le64_to_cpu(stats->lowest_temp));
+	printf("Max operating temperature   : %"PRIu64"\n", (uint64_t)le64_to_cpu(stats->max_operating_temp));
+	printf("Min operating temperature   : %"PRIu64"\n", (uint64_t)le64_to_cpu(stats->min_operating_temp));
+	printf("Estimated offset            : %"PRIu64"\n", (uint64_t)le64_to_cpu(stats->est_offset));
 }
 
 static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -155,7 +155,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
-		{0}
+		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -221,7 +221,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"write",      'w', "", CFG_NONE, &cfg.write,      no_argument, write},
 		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
-		{0}
+		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -275,7 +275,7 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 		{"log",          'l', "NUM",  CFG_POSITIVE, &cfg.log,          required_argument, log},
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
 		{"output-file",  'o', "FILE", CFG_STRING,   &cfg.file,         required_argument, file},
-		{0}
+		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));

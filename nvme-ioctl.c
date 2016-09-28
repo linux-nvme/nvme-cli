@@ -21,7 +21,7 @@
 
 #include "nvme-ioctl.h"
 
-void nvme_verify_chr(int fd)
+static void nvme_verify_chr(int fd)
 {
 	static struct stat nvme_stat;
 	int err = fstat(fd, &nvme_stat);
@@ -70,12 +70,12 @@ int nvme_submit_passthru(int fd, int ioctl_cmd, struct nvme_passthru_cmd *cmd)
 	return ioctl(fd, ioctl_cmd, cmd);
 }
 
-int nvme_submit_admin_passthru(int fd, struct nvme_passthru_cmd *cmd)
+static int nvme_submit_admin_passthru(int fd, struct nvme_passthru_cmd *cmd)
 {
 	return ioctl(fd, NVME_IOCTL_ADMIN_CMD, cmd);
 }
 
-int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd)
+static int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd)
 {
 	return ioctl(fd, NVME_IOCTL_IO_CMD, cmd);
 }
@@ -234,9 +234,9 @@ struct nvme_dsm_range *nvme_setup_dsm_range(__u32 *ctx_attrs, __u32 *llbas,
 	if (!dsm)
 		exit(ENOMEM);
 	for (i = 0; i < nr_ranges; i++) {
-		dsm[i].cattr = htole32(ctx_attrs[i]);
-		dsm[i].nlb = htole32(llbas[i]);
-		dsm[i].slba = htole64(slbas[i]);
+		dsm[i].cattr = cpu_to_le32(ctx_attrs[i]);
+		dsm[i].nlb = cpu_to_le32(llbas[i]);
+		dsm[i].slba = cpu_to_le64(slbas[i]);
 	}
 	return dsm;
 }
@@ -244,7 +244,7 @@ struct nvme_dsm_range *nvme_setup_dsm_range(__u32 *ctx_attrs, __u32 *llbas,
 int nvme_resv_acquire(int fd, __u32 nsid, __u8 rtype, __u8 racqa,
 		      bool iekey, __u64 crkey, __u64 nrkey)
 {
-	__le64 payload[2] = { htole64(crkey), htole64(nrkey) };
+	__le64 payload[2] = { cpu_to_le64(crkey), cpu_to_le64(nrkey) };
 	__u32 cdw10 = racqa | (iekey ? 1 << 3 : 0) | rtype << 8;
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_acquire,
@@ -260,7 +260,7 @@ int nvme_resv_acquire(int fd, __u32 nsid, __u8 rtype, __u8 racqa,
 int nvme_resv_register(int fd, __u32 nsid, __u8 rrega, __u8 cptpl,
 		       bool iekey, __u64 crkey, __u64 nrkey)
 {
-	__le64 payload[2] = { htole64(crkey), htole64(nrkey) };
+	__le64 payload[2] = { cpu_to_le64(crkey), cpu_to_le64(nrkey) };
 	__u32 cdw10 = rrega | (iekey ? 1 << 3 : 0) | cptpl << 30;
 
 	struct nvme_passthru_cmd cmd = {
@@ -277,7 +277,7 @@ int nvme_resv_register(int fd, __u32 nsid, __u8 rrega, __u8 cptpl,
 int nvme_resv_release(int fd, __u32 nsid, __u8 rtype, __u8 rrela,
 		      bool iekey, __u64 crkey)
 {
-	__le64 payload[1] = { htole64(crkey) };
+	__le64 payload[1] = { cpu_to_le64(crkey) };
 	__u32 cdw10 = rrela | (iekey ? 1 << 3 : 0) | rtype << 8;
 
 	struct nvme_passthru_cmd cmd = {
@@ -455,8 +455,8 @@ int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas,
 		   __u8 dps, __u8 nmic, __u32 *result)
 {
 	struct nvme_id_ns ns = {
-		.nsze		= htole64(nsze),
-		.ncap		= htole64(ncap),
+		.nsze		= cpu_to_le64(nsze),
+		.ncap		= cpu_to_le64(ncap),
 		.flbas		= flbas,
 		.dps		= dps,
 		.nmic		= nmic,
@@ -502,9 +502,9 @@ int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist,
 	};
 
 	memset(buf, 0, sizeof(buf));
-	cntlist->num = num_ctrls;
-	for (i = 0; i < cntlist->num; i++)
-		cntlist->identifier[i] = htole16((__u16) ctrlist[i]);
+	cntlist->num = cpu_to_le16(num_ctrls);
+	for (i = 0; i < num_ctrls; i++)
+		cntlist->identifier[i] = cpu_to_le16(ctrlist[i]);
 
 	return nvme_submit_admin_passthru(fd, &cmd);
 }

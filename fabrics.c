@@ -44,7 +44,7 @@
 
 #include "common.h"
 
-struct config {
+static struct config {
 	char *nqn;
 	char *transport;
 	char *traddr;
@@ -55,7 +55,7 @@ struct config {
 	char *reconnect_delay;
 	char *raw;
 	char *device;
-} cfg = { 0 };
+} cfg = { NULL };
 
 #define BUF_SIZE		4096
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
@@ -304,8 +304,8 @@ static int nvmf_get_log_page_discovery(const char *dev_path,
 	}
 
 	/* check numrec limits */
-	*numrec = le64toh(log->numrec);
-	genctr = le64toh(log->genctr);
+	*numrec = le64_to_cpu(log->numrec);
+	genctr = le64_to_cpu(log->genctr);
 	free(log);
 
 	if (*numrec == 0) {
@@ -338,7 +338,7 @@ static int nvmf_get_log_page_discovery(const char *dev_path,
 		goto out_free_log;
 	}
 
-	if (*numrec != le32toh(log->numrec) || genctr != le64toh(log->genctr)) {
+	if (*numrec != le32_to_cpu(log->numrec) || genctr != le64_to_cpu(log->genctr)) {
 		error = DISC_NOT_EQUAL;
 		goto out_free_log;
 	}
@@ -362,7 +362,7 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 
 	printf("\nDiscovery Log Number of Records %d, "
 	       "Generation counter %"PRIu64"\n",
-		numrec, (uint64_t)__le64_to_cpu(log->genctr));
+		numrec, (uint64_t)le64_to_cpu(log->genctr));
 
 	for (i = 0; i < numrec; i++) {
 		struct nvmf_disc_rsp_page_entry *e = &log->entries[i];
@@ -718,7 +718,7 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 		 "user-defined hostnqn (if default not used)" },
 		{"raw", 'r', "LIST", CFG_STRING, &cfg.raw, required_argument,
 		 "raw output file" },
-		{0},
+		{NULL},
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg,
@@ -759,9 +759,9 @@ int connect(const char *desc, int argc, char **argv)
 		 "number of io queues to use (default is core count)" },
 		{"keep-alive-tmo", 'k', "LIST", CFG_STRING, &cfg.keep_alive_tmo, required_argument,
 			"keep alive timeout period in seconds" },
-		{"reconnect-delay", 'r', "LIST", CFG_STRING, &cfg.reconnect_delay, required_argument,
+		{"reconnect-delay", 'c', "LIST", CFG_STRING, &cfg.reconnect_delay, required_argument,
 			"reconnect timeout period in seconds" },
-		{0},
+		{NULL},
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg,
@@ -885,7 +885,7 @@ int disconnect(const char *desc, int argc, char **argv)
 		 required_argument, nqn},
 		{"device", 'd', "LIST", CFG_STRING, &cfg.device,
 		 required_argument, device},
-		{0},
+		{NULL},
 	};
 
 	argconfig_parse(argc, argv, desc, command_line_options, &cfg,

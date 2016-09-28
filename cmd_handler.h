@@ -87,8 +87,8 @@ static struct plugin plugin = {				\
 	.commands = commands				\
 }; 							\
 							\
-static void init() __attribute__((constructor)); 	\
-static void init()					\
+static void init(void) __attribute__((constructor)); 	\
+static void init(void)					\
 {							\
 	register_extension(&plugin);			\
 }
