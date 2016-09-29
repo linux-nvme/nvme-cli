@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 09/22/2016
+.\"      Date: 09/29/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "09/22/2016" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "09/29/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -223,6 +223,16 @@ Set Feature
 \fBnvme-show-regs\fR(1)
 .RS 4
 Show NVMe Controller Registers
+.RE
+.PP
+\fBnvme-discover\fR(1)
+.RS 4
+Send Get Log Page request to Discovery Controller
+.RE
+.PP
+\fBnvme-connect\fR(1)
+.RS 4
+Connect to an NVMe\-over\-Fabrics subsystem
 .RE
 .SH "FURTHER DOCUMENTATION"
 .sp
