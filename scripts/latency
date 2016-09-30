@@ -64,6 +64,11 @@ while getopts ":d:n:w" opt; do
   esac
 done
 
+if [ "$COUNT" == "0" ]; then
+    echo "Count can not be 0"
+    exit 1
+fi
+
 if [ -z "$DEVICE" ]; then
      echo "regress: You must specify a NVMe device using -d"
      exit 1
@@ -86,7 +91,7 @@ make install > /dev/null || exit -1
 for i in `seq 1 ${COUNT}`;
 do
     if $WRITE ; then
-        run_test dd if=/dev/urandom of=${RAND_WFILE} bs=${DATA_SIZE} count=1
+        dd if=/dev/urandom of=${RAND_WFILE} bs=${DATA_SIZE} count=1
         run_test nvme write ${DEVICE} --start-block=0 --block-count=0 \
             --metadata-size=${METADATA_SIZE} --data-size=${DATA_SIZE} \
             --data ${RAND_WFILE} --latency
@@ -98,3 +103,12 @@ do
         rm ${RAND_RFILE} > /dev/null
     fi
 done
+
+# Calculate average latency
+SUM=0
+for i in `cat ${OUTPUT} | awk '{print $3}' | xargs`
+do
+    SUM=$(($SUM + $i))
+done
+AVERAGE=$(echo "scale=2; $SUM/$COUNT" | bc -l)
+echo "Average Latency: $AVERAGE us"
