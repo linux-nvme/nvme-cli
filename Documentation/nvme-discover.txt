@@ -1,0 +1,125 @@
+nvme-discover(1)
+==============
+
+NAME
+----
+nvme-discover - Send Get Log Page request to Discovery Controller.
+
+SYNOPSIS
+--------
+[verse]
+'nvme discover'	[device]
+		[--transport=<trtype> | -t <trtype>]
+		[--traddr=<traddr>    | -a <traddr>]
+		[--trsvcid=<trsvcid>  | -s <trsvcid>]
+		[--hostnqn=<hostnqn>  | -q <hostnqn>]
+		[--raw=<filename>     | -r <filename>]
+
+DESCRIPTION
+-----------
+For a given NVMe Host, send a Discovery Get Log Page request
+to a Discovery Controller on the network.
+
+The [device] parameter is OPTIONAL and will default to
+/dev/nvme-fabrics if none is given.
+
+If no parameters are given, then 'nvme discover' will attempt to 
+find a /etc/nvme/discovery.conf file to use to supply the
+the discover command options.  If no /etc/nvme/discovery.conf file
+exists, the command will quit with an error.
+
+BACKGROUND
+----------
+The NVMe-over-Fabrics specification defines the concept of a 
+Discovery Controller that an NVMe Host can query on a fabric
+network to discover NVMe subsystems contained in NVMe Targets
+which it can connect to on the network.  The Discovery Controller
+will return Discovery Log Pages that provide the NVMe Host
+with specific information (such as network address and unique
+subsystem NQN) the NVMe Host can use to issue an
+NVMe connect command to connect itself to a storage resource
+contained in that NVMe subsystem on the NVMe Target.
+
+Note that the base NVMe specfication defines the NQN (NVMe Qualified
+Name) format which an NVMe endpoint (device, subsystem, etc) must
+follow to guarantee a unique name under the NVMe standard.
+
+A Discovery Controller has it's own NQN defined in the NVMe-over-Fabrics
+specification, *nqn.2014-08.org.nvmexpress.discovery*.  All Discovery
+Controllers must use this NQN name. This NQN is used by default by
+nvme-cli for the 'discover' command. 
+
+OPTIONS
+-------
+-t <trtype>::
+--transport=<trtype>::
+	This field specifies the network fabric being used for
+	a NVMe-over-Fabrics network.  Current string values include:
++
+[]
+|=================
+|Value|Definition
+|rdma|The network fabric is an rdma network (RoCE, iWARP, Infiniband, basic rdma, etc)
+|fc  |*WIP* The network fabric is a Fibre Channel network.
+|=================
+
+-a <traddr>::
+--traddr=<traddr>::
+	This field specifies the network address of the Discovery Controller.
+
+-s <trsvcid>::
+--trsvcid=<trsvcid>::
+	This field specifies the transport service id.  For IP addresses,
+	this field is the port number. By default, the IP port number
+	is 4420.
+ 
+-q <hostnqn>::
+--hostnqn=<hostnqn>::
+	This field is the unique NQN of a NVMe Host. This field
+	will be used by the Discovery Controller to check what NVMe
+	Target resources are allocated to the NVMe Host for a connection.
+
+-r <filename>::
+--raw=<filename>::
+	This field will take the output of the 'nvme discover' command
+	and dump it to a raw binary file. By default 'nvme discover' will
+	dump the output to stdout.
+
+EXAMPLES
+--------
+* Query the Discover Controller with IP4 address 192.168.1.3 for all
+resources allocated for NVMe Host name host1-rogue-nqn on the RDMA network.
+Port 4420 is used by default:
++
+------------
+# nvme discover --transport=rdma --traddr=192.168.1.3 \
+--hostnqn=host1-rogue-nqn
+------------
++
+* Issue a 'nvme discover' command using a /etc/nvme/discovery.conf file:
+-----------
+# Machine default. Note currently only works for single command:
+-t rdma -a 192.168.1.4 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432 
+
+At the prompt type "nvme discover".
+
+------------
+
+SEE ALSO
+--------
+nvme-connect(1)
+
+AUTHORS
+-------
+This was written by mailto:james.p.freyensee@intel.com[Jay Freyensee]
+for mailto:keith.busch@intel.com[Keith Busch].
+
+REPORTING BUGS
+--------------
+Patches and issues for 'discover' should be submitted to the Linux
+kernel email list mailto:linux-nvme@lists.infradead.org[linux-nvme]
+before merging to https://github.com/linux-nvme/nvme-cli.
+
+NVME
+----
+Part of the nvme-user suite

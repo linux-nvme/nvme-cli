@@ -106,3 +106,9 @@ linknvme:nvme-set-feature[1]::
 linknvme:nvme-show-regs[1]::
 	Show NVMe Controller Registers
 
+linknvme:nvme-discover[1]::
+	Send Get Log Page request to Discovery Controller
+
+linknvme:nvme-connect[1]::
+	Connect to an NVMe-over-Fabrics subsystem
+

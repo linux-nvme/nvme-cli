@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.7" />
-<title>nvme-write(1)</title>
+<title>nvme-connect(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -738,12 +738,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-write(1) Manual Page
+nvme-connect(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-write -
-   Send an NVMe write command, provide results
+<p>nvme-connect -
+   Connect to an NVMe-over-Fabrics subsystem.
 </p>
 </div>
 </div>
@@ -752,19 +752,15 @@ nvme-write(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme-write</em> &lt;device&gt; [--start-block=&lt;slba&gt; | -s &lt;slba&gt;]
-                        [--block-count=&lt;nlb&gt; | -c &lt;nlb&gt;]
-                        [--data-size=&lt;size&gt; | -z &lt;size&gt;]
-                        [--metadata-size=&lt;size&gt; | -y &lt;size&gt;]
-                        [--ref-tag=&lt;reftag&gt; | -r &lt;reftag&gt;]
-                        [--data=&lt;data-file&gt; | -d &lt;data-file&gt;]
-                        [--metadata=&lt;metadata-file&gt; | -M &lt;metadata-file&gt;]
-                        [--prinfo=&lt;prinfo&gt; | -p &lt;prinfo&gt;]
-                        [--app-tag-mask=&lt;appmask&gt; | -m &lt;appmask&gt;]
-                        [--app-tag=&lt;apptag&gt; | -a &lt;apptag&gt;]
-                        [--limited-retry | -l]
-                        [--latency | -t]
-                        [--force-unit-access | -f]</pre>
+<pre class="content"><em>nvme connect</em>  [device]
+                [--transport=&lt;trtype&gt;  | -t &lt;trtype&gt;]
+                [--traddr=&lt;traddr&gt;     | -a &lt;traddr&gt;]
+                [--trsvcid=&lt;trsvcid&gt;   | -s &lt;trsvcid&gt;]
+                [--hostnqn=&lt;hostnqn&gt;   | -q &lt;hostnqn&gt;]
+                [--nqn=&lt;subnqn&gt;        | -n &lt;subnqn&gt;]
+                [--nr-io-queues=&lt;#&gt;    | -i &lt;#&gt;]
+                [--keep-alive-tmo=&lt;#&gt;  | -k &lt;#&gt;]
+                [--reconnect-delay=&lt;#&gt; | -c &lt;#&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -772,9 +768,13 @@ nvme-write(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>The Write command writes the logical blocks specified by the command to
-the medium from the data data buffer provided. Will use stdin by default
-if you don&#8217;t provide a file.</p></div>
+<div class="paragraph"><p>TBD (note <em>device</em> is optional)</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_background">BACKGROUND</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>TBD</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -782,38 +782,91 @@ if you don&#8217;t provide a file.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
---start-block=&lt;slba&gt;
+-t &lt;trtype&gt;
 </dt>
 <dt class="hdlist1">
--s &lt;slba&gt;
+--transport=&lt;trtype&gt;
 </dt>
 <dd>
 <p>
-        Start block.
+        TBD
 </p>
 </dd>
 <dt class="hdlist1">
---block-count
+-a &lt;traddr&gt;
 </dt>
 <dt class="hdlist1">
--c
+--traddr=&lt;traddr&gt;
 </dt>
 <dd>
 <p>
-        The number of blocks to transfer. This is a zeroes based value to
-        align with the kernel&#8217;s use of this field. (ie. 0 means transfer
-        1 block).
+        TBD
 </p>
 </dd>
 <dt class="hdlist1">
---latency
+-s &lt;trsvcid&gt;
 </dt>
 <dt class="hdlist1">
--t
+--trsvcid=&lt;trsvcid&gt;
 </dt>
 <dd>
 <p>
-        Print out the latency the IOCTL took (in us).
+        TBD
+</p>
+</dd>
+<dt class="hdlist1">
+-q &lt;hostnqn&gt;
+</dt>
+<dt class="hdlist1">
+--hostnqn=&lt;hostnqn&gt;
+</dt>
+<dd>
+<p>
+        TBD
+</p>
+</dd>
+<dt class="hdlist1">
+-n &lt;subnqn&gt;
+</dt>
+<dt class="hdlist1">
+--nqn=&lt;subnqn&gt;
+</dt>
+<dd>
+<p>
+        TBD
+</p>
+</dd>
+<dt class="hdlist1">
+-i &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--nr-io-queues&lt;#&gt;
+</dt>
+<dd>
+<p>
+        TBD
+</p>
+</dd>
+<dt class="hdlist1">
+-k &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--keep-alive-tmo=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        TBD
+</p>
+</dd>
+<dt class="hdlist1">
+-c &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--reconnect-delay=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        TBD
 </p>
 </dd>
 </dl></div>
@@ -822,7 +875,39 @@ if you don&#8217;t provide a file.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No examples yet.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+TBD
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><tt># nvme connect...</tt></pre>
+</div></div>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>nvme-discover(1)</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_authors">AUTHORS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>This was co-written by <a href="mailto:james.p.freyensee@intel.com">Jay Freyensee</a>
+and <a href="mailto:hch@lst.de">Christoph Hellwig</a>
+for <a href="mailto:keith.busch@intel.com">Keith Busch</a>.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_reporting_bugs">REPORTING BUGS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Patches and issues for <em>connect</em> should be submitted to the
+Linux kernel email list <a href="mailto:linux-nvme@lists.infradead.org">linux-nvme</a>
+before merging to <a href="https://github.com/linux-nvme/nvme-cli">https://github.com/linux-nvme/nvme-cli</a>.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -835,7 +920,7 @@ if you don&#8217;t provide a file.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-08-05 14:45:10 MDT
+Last updated 2016-09-29 12:40:44 MDT
 </div>
 </div>
 </body>
