@@ -98,8 +98,13 @@ Port 4420 is used by default:
 +
 * Issue a 'nvme discover' command using a /etc/nvme/discovery.conf file:
 -----------
-# Machine default. Note currently only works for single command:
--t rdma -a 192.168.1.4 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432 
+# Machine default 'nvme discover' commands.  Query the
+# Discovery Controller's two ports (some resources may only
+# be accessible on a single port).  Note an official
+# nqn (Host) name defined in the NVMe specification is being used
+# in this example.
+-t rdma -a 192.168.69.33 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
+-t rdma -a 192.168.1.4   -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
 
 At the prompt type "nvme discover".
 
