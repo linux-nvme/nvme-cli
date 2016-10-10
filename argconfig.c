@@ -244,7 +244,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			}
 			*((int *)value_addr) = tmp;
 		} else if (s->config_type == CFG_BYTE) {
-			uint8_t tmp = strtol(optarg, &endptr, 0);
+			uint8_t tmp = strtoul(optarg, &endptr, 0);
 			if (errno || tmp < 0 || optarg == endptr) {
 				fprintf(stderr,
 					"Expected positive argument for '%s' but got '%s'!\n",
@@ -253,7 +253,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			}
 			*((uint8_t *) value_addr) = tmp;
 		} else if (s->config_type == CFG_SHORT) {
-			uint16_t tmp = strtol(optarg, &endptr, 0);
+			uint16_t tmp = strtoul(optarg, &endptr, 0);
 			if (errno || tmp < 0 || optarg == endptr) {
 				fprintf(stderr,
 					"Expected positive argument for '%s' but got '%s'!\n",
@@ -262,7 +262,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			}
 			*((uint16_t *) value_addr) = tmp;
 		} else if (s->config_type == CFG_POSITIVE) {
-			uint32_t tmp = strtol(optarg, &endptr, 0);
+			uint32_t tmp = strtoul(optarg, &endptr, 0);
 			if (errno || tmp < 0 || optarg == endptr) {
 				fprintf(stderr,
 					"Expected positive argument for '%s' but got '%s'!\n",
@@ -273,7 +273,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		} else if (s->config_type == CFG_INCREMENT) {
 			(*((int *)value_addr))++;
 		} else if (s->config_type == CFG_LONG) {
-			*((long *)value_addr) = strtol(optarg, &endptr, 0);
+			*((long *)value_addr) = strtoul(optarg, &endptr, 0);
 			if (errno || optarg == endptr) {
 				fprintf(stderr,
 					"Expected long integer argument for '%s' but got '%s'!\n",
