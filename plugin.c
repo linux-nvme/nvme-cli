@@ -31,10 +31,8 @@ static int help(int argc, char **argv, struct plugin *plugin)
 		sprintf(man, "%s-%s-%s", prog->name, plugin->name, argv[1]);
 	else
 		sprintf(man, "%s-%s", prog->name, argv[1]);
-	if (execlp("man", "man", man, (char *)NULL)) {
+	if (execlp("man", "man", man, (char *)NULL))
 		perror(argv[1]);
-		exit(errno);
-	}
 	return 0;
 }
 
