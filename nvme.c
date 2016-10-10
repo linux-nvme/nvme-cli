@@ -776,12 +776,12 @@ static int get_nvme_info(int fd, struct list_item *item, const char *node)
 	int err;
 
 	err = nvme_identify_ctrl(fd, &item->ctrl);
-	if (err > 0)
+	if (err)
 		return err;
 	item->nsid = nvme_get_nsid(fd);
 	err = nvme_identify_ns(fd, item->nsid,
 			       0, &item->ns);
-	if (err > 0)
+	if (err)
 		return err;
 	strcpy(item->node, node);
 	item->block = S_ISBLK(nvme_stat.st_mode);
