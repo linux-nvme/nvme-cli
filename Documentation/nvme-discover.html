@@ -912,8 +912,13 @@ Issue a <em>nvme discover</em> command using a /etc/nvme/discovery.conf file:
 </ul></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt># Machine default. Note currently only works for single command:
--t rdma -a 192.168.1.4 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
+<pre><tt># Machine default 'nvme discover' commands.  Query the
+# Discovery Controller's two ports (some resources may only
+# be accessible on a single port).  Note an official
+# nqn (Host) name defined in the NVMe specification is being used
+# in this example.
+-t rdma -a 192.168.69.33 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
+-t rdma -a 192.168.1.4   -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
 
 At the prompt type "nvme discover".</tt></pre>
 </div></div>
@@ -950,7 +955,7 @@ before merging to <a href="https://github.com/linux-nvme/nvme-cli">https://githu
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-09-29 12:40:44 MDT
+Last updated 2016-10-10 12:06:21 MDT
 </div>
 </div>
 </body>

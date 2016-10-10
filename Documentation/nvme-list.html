@@ -752,7 +752,7 @@ nvme-list(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme list</em></pre>
+<pre class="content"><em>nvme list</em> [-o &lt;fmt&gt; | --output-format=&lt;fmt&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -767,7 +767,20 @@ for those devices as well as some pertinent information about them.</p></div>
 <div class="sect1">
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No options yet.</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+-o &lt;format&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;format&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em> or <em>json</em>. Only one output
+        format can be used at a time.
+</p>
+</dd>
+</dl></div>
 </div>
 </div>
 <div class="sect1">
@@ -786,7 +799,7 @@ for those devices as well as some pertinent information about them.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-06-20 09:01:26 MDT
+Last updated 2016-10-10 14:28:53 MDT
 </div>
 </div>
 </body>
