@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.7" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
 <title>nvme(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -87,10 +87,14 @@ ul, ol, li > p {
 ul > li     { color: #aaa; }
 ul > li > * { color: black; }
 
-pre {
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
   padding: 0;
   margin: 0;
 }
+
 
 #author {
   color: #527bbd;
@@ -415,12 +419,6 @@ div.unbreakable { page-break-inside: avoid; }
  *
  * */
 
-tt {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
-
 div.tableblock {
   margin-top: 1.0em;
   margin-bottom: 1.5em;
@@ -453,12 +451,6 @@ div.tableblock > table[frame="vsides"] {
  * html5 specific
  *
  * */
-
-.monospaced {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
 
 table.tableblock {
   margin-top: 1.0em;
@@ -539,6 +531,8 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
+
+
 </style>
 <script type="text/javascript">
 /*<![CDATA[*/
@@ -1070,6 +1064,22 @@ available, run "nvme help".</p></div>
         Show NVMe Controller Registers
 </p>
 </dd>
+<dt class="hdlist1">
+<a href="nvme-discover.html">nvme-discover(1)</a>
+</dt>
+<dd>
+<p>
+        Send Get Log Page request to Discovery Controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-connect.html">nvme-connect(1)</a>
+</dt>
+<dd>
+<p>
+        Connect to an NVMe-over-Fabrics subsystem
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1091,7 +1101,8 @@ NVM-Express Site</a>.</p></div>
 <h2 id="_reporting_bugs">Reporting Bugs</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Patches and issues may be submitted to the official repository at
-<a href="https://github.com/linux-nvme/nvme-cli">https://github.com/linux-nvme/nvme-cli</a>.</p></div>
+<a href="https://github.com/linux-nvme/nvme-cli">https://github.com/linux-nvme/nvme-cli</a> or the Linux NVMe mailing list
+<a href="mailto:linux-nvme@lists.infradead.org">linux-nvme</a></p></div>
 </div>
 </div>
 <div class="sect1">
@@ -1104,7 +1115,7 @@ NVM-Express Site</a>.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-02 08:25:25 MST
+Last updated 2016-10-12 15:10:33 EDT
 </div>
 </div>
 </body>
