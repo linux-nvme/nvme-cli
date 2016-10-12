@@ -46,7 +46,8 @@ This is written and maintained by mailto:keith.busch@intel.com[Keith Busch].
 Reporting Bugs
 --------------
 Patches and issues may be submitted to the official repository at
-https://github.com/linux-nvme/nvme-cli.
+https://github.com/linux-nvme/nvme-cli or the Linux NVMe mailing list
+mailto:linux-nvme@lists.infradead.org[linux-nvme]
 
 NVME
 ----

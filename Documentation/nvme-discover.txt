@@ -119,12 +119,6 @@ AUTHORS
 This was written by mailto:james.p.freyensee@intel.com[Jay Freyensee]
 for mailto:keith.busch@intel.com[Keith Busch].
 
-REPORTING BUGS
---------------
-Patches and issues for 'discover' should be submitted to the Linux
-kernel email list mailto:linux-nvme@lists.infradead.org[linux-nvme]
-before merging to https://github.com/linux-nvme/nvme-cli.
-
 NVME
 ----
 Part of the nvme-user suite
