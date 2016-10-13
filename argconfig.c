@@ -244,28 +244,28 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			}
 			*((int *)value_addr) = tmp;
 		} else if (s->config_type == CFG_BYTE) {
-			uint8_t tmp = strtoul(optarg, &endptr, 0);
-			if (errno || tmp < 0 || optarg == endptr) {
+			unsigned long tmp = strtoul(optarg, &endptr, 0);
+			if (errno || tmp >= (1 << 8)  || optarg == endptr) {
 				fprintf(stderr,
-					"Expected positive argument for '%s' but got '%s'!\n",
+					"Expected byte argument for '%s' but got '%s'!\n",
 					long_opts[option_index].name, optarg);
 				goto exit;
 			}
 			*((uint8_t *) value_addr) = tmp;
 		} else if (s->config_type == CFG_SHORT) {
-			uint16_t tmp = strtoul(optarg, &endptr, 0);
-			if (errno || tmp < 0 || optarg == endptr) {
+			unsigned long tmp = strtoul(optarg, &endptr, 0);
+			if (errno || tmp >= (1 << 16) || optarg == endptr) {
 				fprintf(stderr,
-					"Expected positive argument for '%s' but got '%s'!\n",
+					"Expected short argument for '%s' but got '%s'!\n",
 					long_opts[option_index].name, optarg);
 				goto exit;
 			}
 			*((uint16_t *) value_addr) = tmp;
 		} else if (s->config_type == CFG_POSITIVE) {
 			uint32_t tmp = strtoul(optarg, &endptr, 0);
-			if (errno || tmp < 0 || optarg == endptr) {
+			if (errno || optarg == endptr) {
 				fprintf(stderr,
-					"Expected positive argument for '%s' but got '%s'!\n",
+					"Expected word argument for '%s' but got '%s'!\n",
 					long_opts[option_index].name, optarg);
 				goto exit;
 			}
@@ -273,7 +273,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		} else if (s->config_type == CFG_INCREMENT) {
 			(*((int *)value_addr))++;
 		} else if (s->config_type == CFG_LONG) {
-			*((long *)value_addr) = strtoul(optarg, &endptr, 0);
+			*((unsigned long *)value_addr) = strtoul(optarg, &endptr, 0);
 			if (errno || optarg == endptr) {
 				fprintf(stderr,
 					"Expected long integer argument for '%s' but got '%s'!\n",
