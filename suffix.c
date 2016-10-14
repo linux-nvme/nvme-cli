@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
+#include <math.h>
 
 static struct si_suffix {
 	double magnitude;
@@ -99,7 +100,7 @@ const char *suffix_dbinary_get(double *value)
 	struct binary_suffix *s;
 
 	for (s = binary_suffixes; s->shift != 0; s++) {
-		if (llabs(*value) >= (1LL << s->shift)) {
+		if (fabs(*value) >= (1LL << s->shift)) {
 			*value = *value / (1 << s->shift);
 			return s->suffix;
 		}

@@ -166,8 +166,7 @@ static int add_ctrl(const char *argstr)
 {
 	substring_t args[MAX_OPT_ARGS];
 	char buf[BUF_SIZE], *options, *p;
-	size_t len = strlen(argstr);
-	int token, ret, fd;
+	int token, ret, fd, len = strlen(argstr);
 
 	fd = open(PATH_NVME_FABRICS, O_RDWR);
 	if (fd < 0) {
