@@ -25,6 +25,10 @@ enum {
 	TEMPT_SINCE_RESET,
 	POWER_CONSUMPTION,
 	TEMPT_SINCE_BOOTUP,
+	POWER_LOSS_PROTECTION,
+	WEARLEVELING_COUNT,
+	HOST_WRITE,
+	THERMAL_THROTTLE_CNT,
 	NR_SMART_ITEMS,
 };
 
@@ -35,7 +39,10 @@ enum {
 #pragma pack(push, 1)
 struct nvme_memblaze_smart_log_item {
 	__u8 id[3];
-	__u8 nmval[2];
+	union {
+		__u8	__nmval[2];
+		__le16  nmval;
+	};
 	union {
 		__u8 rawval[6];
 		struct temperature {
@@ -56,6 +63,18 @@ struct nvme_memblaze_smart_log_item {
 			__le16 max;
 			__le16 min;
 		} temperature_p;
+		struct power_loss_protection {
+			__u8 curr;
+		} power_loss_protection;
+		struct wearleveling_count {
+			__le16 min;
+			__le16 max;
+			__le16 avg;
+		} wearleveling_count;
+		struct thermal_throttle_cnt {
+			__u8 active;
+			__le32 cnt;
+		} thermal_throttle_cnt;
 	};
 	__u8 resv;
 };
@@ -88,12 +107,27 @@ static int compare_fw_version(const char *fw1, const char *fw2)
 	return 0;
 }
 
+static __u32 item_id_2_u32(struct nvme_memblaze_smart_log_item *item)
+{
+	__le32	__id = 0;
+	memcpy(&__id, item->id, 3);
+	return le32_to_cpu(__id);
+}
+
+static __u64 raw_2_u64(const __u8 *buf, size_t len)
+{
+	__le64	val = 0;
+	memcpy(&val, buf, len);
+	return le64_to_cpu(val);
+}
+
 static int show_memblaze_smart_log(int fd, __u32 nsid, const char *devname,
 		struct nvme_memblaze_smart_log *smart)
 {
 	struct nvme_id_ctrl ctrl;
 	char fw_ver[10];
 	int err = 0;
+	struct nvme_memblaze_smart_log_item *item;
 
 	err = nvme_identify_ctrl(fd, &ctrl);
 	if (err)
@@ -133,6 +167,33 @@ static int show_memblaze_smart_log(int fd, __u32 nsid, const char *devname,
 		le16_to_cpu(smart->items[POWER_CONSUMPTION].power.min));
 	printf("Current power in watt						: %u\n",
 		le16_to_cpu(smart->items[POWER_CONSUMPTION].power.curr));
+
+	item = &smart->items[POWER_LOSS_PROTECTION];
+	if (item_id_2_u32(item) == 0xEC)
+		printf("Power loss protection normalized value				: %u\n",
+			item->power_loss_protection.curr);
+
+	item = &smart->items[WEARLEVELING_COUNT];
+	if (item_id_2_u32(item) == 0xAD) {
+		printf("Percentage of wearleveling count left				: %u\n",
+				le16_to_cpu(item->nmval));
+		printf("Wearleveling count min erase cycle				: %u\n",
+				le16_to_cpu(item->wearleveling_count.min));
+		printf("Wearleveling count max erase cycle				: %u\n",
+				le16_to_cpu(item->wearleveling_count.max));
+		printf("Wearleveling count avg erase cycle				: %u\n",
+				le16_to_cpu(item->wearleveling_count.avg));
+	}
+
+	item = &smart->items[HOST_WRITE];
+	if (item_id_2_u32(item) == 0xF5)
+		printf("Total host write in GiB since device born 			: %llu\n",
+				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+		
+	item = &smart->items[THERMAL_THROTTLE_CNT];
+	if (item_id_2_u32(item) == 0xEB)
+		printf("Thermal throttling count since device born 			: %u\n",
+				item->thermal_throttle_cnt.cnt);
 
 	return err;
 }
