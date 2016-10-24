@@ -49,6 +49,7 @@ static struct config {
 	char *transport;
 	char *traddr;
 	char *trsvcid;
+	char *host_traddr;
 	char *hostnqn;
 	char *nr_io_queues;
 	char *keep_alive_tmo;
@@ -474,6 +475,14 @@ static int build_options(char *argstr, int max_len)
 		max_len -= len;
 	}
 
+	if (cfg.host_traddr) {
+		len = snprintf(argstr, max_len, ",host_traddr=%s", cfg.host_traddr);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
 	if (cfg.trsvcid) {
 		len = snprintf(argstr, max_len, ",trsvcid=%s", cfg.trsvcid);
 		if (len < 0)
@@ -571,6 +580,24 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 			p += len;
 
 			len = sprintf(p, ",trsvcid=%s", e->trsvcid);
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+			break;
+		default:
+			fprintf(stderr, "skipping unsupported adrfam\n");
+			return -EINVAL;
+		}
+		break;
+	case NVMF_TRTYPE_FC:
+		switch (e->adrfam) {
+		case NVMF_ADDR_FAMILY_FC:
+			len = sprintf(p, ",transport=fc");
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+
+			len = sprintf(p, ",traddr=%s", e->traddr);
 			if (len < 0)
 				return -EINVAL;
 			p += len;
@@ -719,6 +746,8 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 		 required_argument, "transport address" },
 		{"trsvcid", 's', "LIST", CFG_STRING, &cfg.trsvcid,
 		 required_argument, "transport service id (e.g. IP port)" },
+		{"host_traddr", 's', "LIST", CFG_STRING, &cfg.host_traddr,
+		 required_argument, "host traddr (e.g. FC WWN's)" },
 		{"hostnqn", 'q', "LIST", CFG_STRING, &cfg.hostnqn,
 		 required_argument,
 		 "user-defined hostnqn (if default not used)" },
@@ -758,6 +787,8 @@ int connect(const char *desc, int argc, char **argv)
 		 required_argument, "transport address" },
 		{"trsvcid", 's', "LIST", CFG_STRING, &cfg.trsvcid,
 		 required_argument, "transport service id (e.g. IP port)" },
+                {"host_traddr", 's', "LIST", CFG_STRING, &cfg.host_traddr,
+                 required_argument, "host traddr (e.g. FC WWN's)" },
 		{"hostnqn", 'q', "LIST", CFG_STRING, &cfg.hostnqn,
 		 required_argument, "user-defined hostnqn" },
 		{"nr-io-queues", 'i', "LIST", CFG_STRING, &cfg.nr_io_queues,
