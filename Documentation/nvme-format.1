@@ -2,12 +2,12 @@
 .\"     Title: nvme-format
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 10/21/2016
+.\"      Date: 10/26/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FORMAT" "1" "10/21/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-FORMAT" "1" "10/26/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,6 +39,7 @@ nvme-format \- Format an NVMe device
                     [\-\-pi=<pi> | \-i <pi>]
                     [\-\-ms=<ms> | \-m <ms>]
                     [\-\-reset | \-r ]
+                    [\-\-timeout | \-t ]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -156,6 +157,11 @@ Metadata Settings: This field is set to \(oq1\(cq if the metadata is transferred
 \-r, \-\-reset
 .RS 4
 Issue a reset after successful format\&. Must use the character device for this\&.
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

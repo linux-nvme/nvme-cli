@@ -15,6 +15,7 @@ SYNOPSIS
 		    [--pi=<pi> | -i <pi>]
 		    [--ms=<ms> | -m <ms>]
 		    [--reset | -r ]
+		    [--timeout | -t ]
 
 DESCRIPTION
 -----------
@@ -106,6 +107,10 @@ cryptographically. This is accomplished by deleting the encryption key.
 --reset::
 	Issue a reset after successful format. Must use the character
 	device for this.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

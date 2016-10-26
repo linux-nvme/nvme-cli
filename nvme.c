@@ -1456,7 +1456,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	const char *pi = "[0-3]: protection info off/Type 1/Type 2/Type 3";
 	const char *ms = "[0-1]: extended format off/on";
 	const char *reset = "Automatically reset the controller after successful format";
-	const char *timeout = "timeout value";
+	const char *timeout = "timeout value, in milliseconds";
 	int err;
 
 	struct config {
@@ -2563,7 +2563,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	const char *namespace_id = "desired namespace";
 	const char *data_len = "data I/O length (bytes)";
 	const char *metadata_len = "metadata seg. length (bytes)";
-	const char *timeout = "timeout value";
+	const char *timeout = "timeout value, in milliseconds";
 	const char *cdw2 = "command dword 2 value";
 	const char *cdw3 = "command dword 3 value";
 	const char *cdw10 = "command dword 10 value";
