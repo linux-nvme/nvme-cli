@@ -49,6 +49,18 @@ COMMAND_LIST(
 	ENTRY("connect", "Connect to NVMeoF subsystem", connect_cmd)
 	ENTRY("disconnect", "Disconnect from NVMeoF subsystem", disconnect_cmd)
 	ENTRY("gen-hostnqn", "Generate NVMeoF host NQN", gen_hostnqn_cmd)
+	ENTRY("sed-save", "Save Password to unlock LR during resume-from-suspen", _sed_save)
+	ENTRY("sed-lock-state", "Lock or Unlock the locking range", _sed_lock_unlock)
+	ENTRY("sed-ownership", "Bring a controller out of a factory setting", _sed_ownership)
+	ENTRY("sed-activatelsp", "Activate the Locking SP", _sed_activatelsp)
+	ENTRY("sed-reverttper", "Revert the TPer to Factory settings *THIS WILL ERASE YOUR DATA*", _sed_reverttper)
+	ENTRY("sed-setuplr", "Set up locking ranges", _sed_setuplr)
+	ENTRY("sed-addusertolr", "Add Users to Locking ranges", _sed_add_usr_to_lr)
+	ENTRY("sed-shadowMBR", "Enable or Disable Shadow MBR", _sed_shadowmbr)
+	ENTRY("sed-setpw", "Set Password for UserN/Admin1", _sed_setpw)
+	ENTRY("sed-enable-user", "Enable a user in the Locking SP", _sed_enable_user)
+	ENTRY("sed-eraselr", "Erase a locking range", _sed_erase_lr)
+	ENTRY("sed-secure-eraselr", "Erase a locking range", _sed_secure_erase_lr)
 );
 
 #endif

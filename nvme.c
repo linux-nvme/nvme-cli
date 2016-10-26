@@ -58,6 +58,7 @@
 #include "suffix.h"
 
 #include "fabrics.h"
+#include "sed.h"
 
 #define array_len(x) ((size_t)(sizeof(x) / sizeof(x[0])))
 #define min(x, y) (x) > (y) ? (y) : (x)
