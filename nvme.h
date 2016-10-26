@@ -109,22 +109,6 @@ struct nvme_controller_list {
 	__le16 identifier[];
 };
 
-struct nvme_bar {
-	__u64			cap;	/* Controller Capabilities */
-	__u32			vs;	/* Version */
-	__u32			intms;	/* Interrupt Mask Set */
-	__u32			intmc;	/* Interrupt Mask Clear */
-	__u32			cc;	/* Controller Configuration */
-	__u32			rsvd1;	/* Reserved */
-	__u32			csts;	/* Controller Status */
-	__u32			nssr;	/* NVM Subsystem Reset */
-	__u32			aqa;	/* Admin Queue Attributes */
-	__u64			asq;	/* Admin SQ Base Address */
-	__u64			acq;	/* Admin CQ Base Address */
-	__u32			cmbloc;	/* Controller Memory Buffer Location */
-	__u32			cmbsz;	/* Controller Memory Buffer Size */
-};
-
 struct nvme_bar_cap {
 	__u16	mqes;
 	__u8	ams_cqr;
