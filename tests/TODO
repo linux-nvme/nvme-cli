@@ -1,0 +1,14 @@
+nvmetests TODO List
+===================
+
+Feature list (with priority):-
+------------------------------
+    1. PRE and POST section improvements :-
+        a. Add functionality to load and unload driver.
+        b. Make sure default namespace is present, if not create one before
+           any test begins. Read the default namespace size from config file.
+    2. Add system statistics collection in PRE and POST section of testcase.
+    3. Create execution summary file under log directory at the end of each
+       run.
+    4. Add tracing functionality to track overall and current progress of the
+       testcase.

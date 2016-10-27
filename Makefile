@@ -46,6 +46,9 @@ nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h argconfig.h suffix.h nvme-lightn
 doc: $(NVME)
 	$(MAKE) -C Documentation
 
+test:
+	$(MAKE) -C tests/ run
+
 all: doc
 
 clean:
@@ -136,4 +139,4 @@ rpm: dist
 	$(RPMBUILD) -ta nvme-$(NVME_VERSION).tar.gz
 
 .PHONY: default doc all clean clobber install-man install-bin install
-.PHONY: dist pkg dist-orig deb deb-light rpm FORCE
+.PHONY: dist pkg dist-orig deb deb-light rpm FORCE test
