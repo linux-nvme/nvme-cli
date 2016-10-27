@@ -1,5 +1,5 @@
 nvme-connect(1)
-==============
+===============
 
 NAME
 ----
@@ -11,6 +11,7 @@ SYNOPSIS
 'nvme connect'	[device]
 		[--transport=<trtype>  | -t <trtype>]
 		[--traddr=<traddr>     | -a <traddr>]
+		[--host-traddr=<traddr>| -w <host-traddr>]
 		[--trsvcid=<trsvcid>   | -s <trsvcid>]
 		[--hostnqn=<hostnqn>   | -q <hostnqn>]
 		[--nqn=<subnqn>        | -n <subnqn>]
@@ -34,6 +35,10 @@ OPTIONS
 
 -a <traddr>::
 --traddr=<traddr>::
+	TBD
+
+-w <traddr>::
+--host-traddr=<traddr>::
 	TBD
 
 -s <trsvcid>::

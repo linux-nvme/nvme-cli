@@ -787,7 +787,7 @@ int connect(const char *desc, int argc, char **argv)
 		 required_argument, "transport address" },
 		{"trsvcid", 's', "LIST", CFG_STRING, &cfg.trsvcid,
 		 required_argument, "transport service id (e.g. IP port)" },
-                {"host_traddr", 's', "LIST", CFG_STRING, &cfg.host_traddr,
+                {"host-traddr", 'w', "LIST", CFG_STRING, &cfg.host_traddr,
                  required_argument, "host traddr (e.g. FC WWN's)" },
 		{"hostnqn", 'q', "LIST", CFG_STRING, &cfg.hostnqn,
 		 required_argument, "user-defined hostnqn" },

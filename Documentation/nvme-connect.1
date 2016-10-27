@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 10/21/2016
+.\"      Date: 10/27/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "10/21/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "10/27/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,6 +35,7 @@ nvme-connect \- Connect to an NVMe\-over\-Fabrics subsystem\&.
 \fInvme connect\fR  [device]
                 [\-\-transport=<trtype>  | \-t <trtype>]
                 [\-\-traddr=<traddr>     | \-a <traddr>]
+                [\-\-host\-traddr=<traddr>| \-w <host\-traddr>]
                 [\-\-trsvcid=<trsvcid>   | \-s <trsvcid>]
                 [\-\-hostnqn=<hostnqn>   | \-q <hostnqn>]
                 [\-\-nqn=<subnqn>        | \-n <subnqn>]
@@ -56,6 +57,11 @@ TBD
 .RE
 .PP
 \-a <traddr>, \-\-traddr=<traddr>
+.RS 4
+TBD
+.RE
+.PP
+\-w <traddr>, \-\-host\-traddr=<traddr>
 .RS 4
 TBD
 .RE
