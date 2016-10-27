@@ -749,6 +749,7 @@ nvme-connect-all(1) Manual Page
 <pre class="content"><em>nvme connect-all</em>
                 [--transport=&lt;trtype&gt; | -t &lt;trtype&gt;]
                 [--traddr=&lt;traddr&gt;    | -a &lt;traddr&gt;]
+                [--host-traddr=&lt;traddr&gt;| -w &lt;host-traddr&gt;]
                 [--trsvcid=&lt;trsvcid&gt;  | -s &lt;trsvcid&gt;]
                 [--hostnqn=&lt;hostnqn&gt;  | -q &lt;hostnqn&gt;]
                 [--raw=&lt;filename&gt;     | -r &lt;filename&gt;]</pre>
@@ -826,6 +827,17 @@ cellspacing="0" cellpadding="4">
         This field specifies the network address of the Discovery Controller.
         For transports using IP addressing (e.g. rdma) this should be an
         IP-based address (ex. IPv4).
+</p>
+</dd>
+<dt class="hdlist1">
+-w &lt;traddr&gt;
+</dt>
+<dt class="hdlist1">
+--host-traddr=&lt;traddr&gt;
+</dt>
+<dd>
+<p>
+        This field specificies the host traddr. Eg.: FC WWN&#8217;s.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -914,7 +926,7 @@ nvme-connect(1)</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-10-27 12:19:12 EDT
+Last updated 2016-10-27 12:31:19 EDT
 </div>
 </div>
 </body>
