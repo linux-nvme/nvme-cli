@@ -740,19 +740,12 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 	char argstr[BUF_SIZE];
 	int ret;
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"transport", 't', "LIST", CFG_STRING, &cfg.transport,
-		 required_argument, "transport type" },
-		{"traddr", 'a', "LIST", CFG_STRING, &cfg.traddr,
-		 required_argument, "transport address" },
-		{"trsvcid", 's', "LIST", CFG_STRING, &cfg.trsvcid,
-		 required_argument, "transport service id (e.g. IP port)" },
-		{"host_traddr", 's', "LIST", CFG_STRING, &cfg.host_traddr,
-		 required_argument, "host traddr (e.g. FC WWN's)" },
-		{"hostnqn", 'q', "LIST", CFG_STRING, &cfg.hostnqn,
-		 required_argument,
-		 "user-defined hostnqn (if default not used)" },
-		{"raw", 'r', "LIST", CFG_STRING, &cfg.raw, required_argument,
-		 "raw output file" },
+		{"transport",   't', "LIST", CFG_STRING, &cfg.transport,   required_argument, "transport type" },
+		{"traddr",      'a', "LIST", CFG_STRING, &cfg.traddr,      required_argument, "transport address" },
+		{"trsvcid",     's', "LIST", CFG_STRING, &cfg.trsvcid,     required_argument, "transport service id (e.g. IP port)" },
+		{"host-traddr", 'w', "LIST", CFG_STRING, &cfg.host_traddr, required_argument, "host traddr (e.g. FC WWN's)" },
+		{"hostnqn",     'q', "LIST", CFG_STRING, &cfg.hostnqn,     required_argument, "user-defined hostnqn (if default not used)" },
+		{"raw",         'r', "LIST", CFG_STRING, &cfg.raw,         required_argument, "raw output file" },
 		{NULL},
 	};
 
@@ -778,26 +771,15 @@ int connect(const char *desc, int argc, char **argv)
 	char argstr[BUF_SIZE];
 	int instance, ret;
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"transport", 't', "LIST", CFG_STRING, &cfg.transport,
-		 required_argument,
-		 "transport type" },
-		{"nqn", 'n', "LIST", CFG_STRING, &cfg.nqn, required_argument,
-			"nqn name" },
-		{"traddr", 'a', "LIST", CFG_STRING, &cfg.traddr,
-		 required_argument, "transport address" },
-		{"trsvcid", 's', "LIST", CFG_STRING, &cfg.trsvcid,
-		 required_argument, "transport service id (e.g. IP port)" },
-                {"host-traddr", 'w', "LIST", CFG_STRING, &cfg.host_traddr,
-                 required_argument, "host traddr (e.g. FC WWN's)" },
-		{"hostnqn", 'q', "LIST", CFG_STRING, &cfg.hostnqn,
-		 required_argument, "user-defined hostnqn" },
-		{"nr-io-queues", 'i', "LIST", CFG_STRING, &cfg.nr_io_queues,
-		 required_argument,
-		 "number of io queues to use (default is core count)" },
-		{"keep-alive-tmo", 'k', "LIST", CFG_STRING, &cfg.keep_alive_tmo, required_argument,
-			"keep alive timeout period in seconds" },
-		{"reconnect-delay", 'c', "LIST", CFG_STRING, &cfg.reconnect_delay, required_argument,
-			"reconnect timeout period in seconds" },
+		{"transport",       't', "LIST", CFG_STRING, &cfg.transport,       required_argument, "transport type" },
+		{"nqn",             'n', "LIST", CFG_STRING, &cfg.nqn,             required_argument, "nqn name" },
+		{"traddr",          'a', "LIST", CFG_STRING, &cfg.traddr,          required_argument, "transport address" },
+		{"trsvcid",         's', "LIST", CFG_STRING, &cfg.trsvcid,         required_argument, "transport service id (e.g. IP port)" },
+		{"host-traddr",     'w', "LIST", CFG_STRING, &cfg.host_traddr,     required_argument, "host traddr (e.g. FC WWN's)" },
+		{"hostnqn",         'q', "LIST", CFG_STRING, &cfg.hostnqn,         required_argument, "user-defined hostnqn" },
+		{"nr-io-queues",    'i', "LIST", CFG_STRING, &cfg.nr_io_queues,    required_argument, "number of io queues to use (default is core count)" },
+		{"keep-alive-tmo",  'k', "LIST", CFG_STRING, &cfg.keep_alive_tmo,  required_argument, "keep alive timeout period in seconds" },
+		{"reconnect-delay", 'c', "LIST", CFG_STRING, &cfg.reconnect_delay, required_argument, "reconnect timeout period in seconds" },
 		{NULL},
 	};
 
@@ -918,10 +900,8 @@ int disconnect(const char *desc, int argc, char **argv)
 	int ret = 0;
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"nqn", 'n', "LIST", CFG_STRING, &cfg.nqn,
-		 required_argument, nqn},
-		{"device", 'd', "LIST", CFG_STRING, &cfg.device,
-		 required_argument, device},
+		{"nqn",    'n', "LIST", CFG_STRING, &cfg.nqn,    required_argument, nqn},
+		{"device", 'd', "LIST", CFG_STRING, &cfg.device, required_argument, device},
 		{NULL},
 	};
 
