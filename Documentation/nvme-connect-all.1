@@ -35,7 +35,6 @@ nvme-connect-all \- Discover and Connect to Fabrics controllers\&.
 \fInvme connect\-all\fR
                 [\-\-transport=<trtype> | \-t <trtype>]
                 [\-\-traddr=<traddr>    | \-a <traddr>]
-                [\-\-host\-traddr=<traddr>| \-w <host\-traddr>]
                 [\-\-trsvcid=<trsvcid>  | \-s <trsvcid>]
                 [\-\-hostnqn=<hostnqn>  | \-q <hostnqn>]
                 [\-\-raw=<filename>     | \-r <filename>]
@@ -88,11 +87,6 @@ T}
 \-a <traddr>, \-\-traddr=<traddr>
 .RS 4
 This field specifies the network address of the Discovery Controller\&. For transports using IP addressing (e\&.g\&. rdma) this should be an IP\-based address (ex\&. IPv4)\&.
-.RE
-.PP
-\-w <traddr>, \-\-host\-traddr=<traddr>
-.RS 4
-This field specificies the host traddr\&. Eg\&.: FC WWN\(cqs\&.
 .RE
 .PP
 \-s <trsvcid>, \-\-trsvcid=<trsvcid>

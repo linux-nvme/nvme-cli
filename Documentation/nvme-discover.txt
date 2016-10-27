@@ -11,6 +11,7 @@ SYNOPSIS
 'nvme discover'
 		[--transport=<trtype> | -t <trtype>]
 		[--traddr=<traddr>    | -a <traddr>]
+		[--host-traddr=<traddr>| -w <host-traddr>]
 		[--trsvcid=<trsvcid>  | -s <trsvcid>]
 		[--hostnqn=<hostnqn>  | -q <hostnqn>]
 		[--raw=<filename>     | -r <filename>]
@@ -73,6 +74,10 @@ OPTIONS
 	This field specifies the network address of the Discovery Controller.
 	For transports using IP addressing (e.g. rdma) this should be an
 	IP-based (ex. IPv4) address.
+
+-w <traddr>::
+--host-traddr=<traddr>::
+	This field specificies the host traddr. Eg.: FC WWN's.
 
 -s <trsvcid>::
 --trsvcid=<trsvcid>::
