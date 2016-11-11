@@ -1124,23 +1124,20 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	err = nvme_get_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.sel, cfg.cdw11,
 			cfg.data_len, buf, &result);
 	if (!err) {
-		printf("get-feature:0x%02x (%s), %s value: %#08x\n", cfg.feature_id,
+		if (!cfg.raw_binary || !buf) {
+			printf("get-feature:%#02x (%s), %s value:%#08x\n", cfg.feature_id,
 				nvme_feature_to_string(cfg.feature_id),
 				nvme_select_to_string(cfg.sel), result);
-		if (cfg.human_readable)
-			nvme_feature_show_fields(cfg.feature_id, result, buf);
-		else {
-			if (buf) {
-				if (!cfg.raw_binary)
-					d(buf, cfg.data_len, 16, 1);
-				else
-					d_raw(buf, cfg.data_len);
-			}
-		}
-	}
-	else if (err > 0)
+			if (cfg.human_readable)
+				nvme_feature_show_fields(cfg.feature_id, result, buf);
+			else if (buf)
+				d(buf, cfg.data_len, 16, 1);
+		} else if (buf)
+			d_raw(buf, cfg.data_len);
+	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 				nvme_status_to_string(err), err);
+
 	if (buf)
 		free(buf);
 	return err;
@@ -1616,8 +1613,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	if (err < 0) {
 		perror("set-feature");
 		return errno;
-	}
-	if (!err) {
+	} else if (!err) {
 		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
 			nvme_feature_to_string(cfg.feature_id), cfg.value);
 		if (buf) {
@@ -1627,8 +1623,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 			else
 				d(buf, cfg.data_len, 16, 1);
 		}
-	}
-	else if (err > 0)
+	} else
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 				nvme_status_to_string(err), err);
 	if (buf)
