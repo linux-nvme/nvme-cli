@@ -23,6 +23,14 @@ OPTIONS
 -s <slba>::
 	Start block.
 
+--block-count=<nlb>::
+-c::
+	Number of logical blocks to write uncorrectable.
+
+--namespace-id=<nsid>::
+-n <nsid>::
+	Namespace ID use in the command.
+
 EXAMPLES
 --------
 No examples yet.

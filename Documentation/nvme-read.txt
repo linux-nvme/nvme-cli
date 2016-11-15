@@ -40,6 +40,54 @@ OPTIONS
 	align with the kernel's use of this field. (ie. 0 means transfer
 	1 block).
 
+--block-count=<nlb>::
+-c <nlb>::
+	Number of logical blocks to write.
+
+--data-size=<size>::
+-z <size>::
+	Size of data, in bytes.
+
+--metadata-size=<size>::
+-y <size>::
+	Size of metadata in bytes.
+
+--data=<data-file>::
+-d <data-file>::
+	Data file. If none provided, contents are sent to STDOUT.
+
+--metadata=<metadata-file>::
+-M <metadata-file>::
+	Metadata file, if necessary.
+
+--prinfo=<prinfo>::
+-p <prinfo>::
+	Protection Information field defintion.
++
+[]
+|=================
+|Bit|Description
+|3|PRACT: Protection Information Action. When set to 1, PI is stripped/inserted
+on read/write when the block format's metadata size is 8. When set to 0,
+metadata is passes.
+|2:0|PRCHK: Protection Information Check:
+|2|Set to 1 enables checking the guard tag
+|1|Set to 1 enables checking the application tag
+|0|Set to 1 enables checking the reference tag
+|=================
+
+--ref-tag=<reftag>::
+-r <reftag>::
+	Optional reftag when used with protection information.
+
+--app-tag-mask=<appmask>::
+-m <appmask>::
+	Optional application tag mask when used with protection information.
+
+--force-unit-access::
+-f::
+	Set the force-unit access flag.
+
 --latency::
 -t::
 	Print out the latency the IOCTL took (in us).

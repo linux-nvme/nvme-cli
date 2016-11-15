@@ -28,6 +28,51 @@ OPTIONS
 -s <slba>::
 	Start block.
 
+--block-count=<nlb>::
+-c <nlb>::
+	Number of logical blocks to write zeroes.
+
+--prinfo=<prinfo>::
+-p <prinfo>::
+	Protection Information field defintion.
++
+[]
+|=================
+|Bit|Description
+|3|PRACT: Protection Information Action. When set to 1, PI is stripped/inserted
+on read/write when the block format's metadata size is 8. When set to 0,
+metadata is passes.
+|2:0|PRCHK: Protection Information Check:
+|2|Set to 1 enables checking the guard tag
+|1|Set to 1 enables checking the application tag
+|0|Set to 1 enables checking the reference tag
+|=================
+
+--ref-tag=<reftag>::
+-r <reftag>::
+	Optional reftag when used with protection information.
+
+--app-tag-mask=<appmask>::
+-m <appmask>::
+	Optional application tag mask when used with protection information.
+
+--app-tag=<apptag>::
+-a <apptag>::
+	Optional application tag when used with protection information.
+
+--limited-retry::
+-l::
+	Sets the limited retry flag.
+
+--force-unit-access::
+-f::
+	Set the force-unit access flag.
+
+--namespace-id=<nsid>::
+-n <nsid>::
+	Namespace ID use in the command.
+
+EXAMPLES
 EXAMPLES
 --------
 No examples yet.

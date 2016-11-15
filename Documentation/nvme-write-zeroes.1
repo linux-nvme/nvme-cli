@@ -2,12 +2,12 @@
 .\"     Title: nvme-zeroes
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 10/21/2016
+.\"      Date: 11/15/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZEROES" "1" "10/21/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-ZEROES" "1" "11/15/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,9 +51,99 @@ The Write Zeroes command is used to set a range of logical blocks to 0\&.
 .RS 4
 Start block\&.
 .RE
-.SH "EXAMPLES"
+.PP
+\-\-block\-count=<nlb>, \-c <nlb>
+.RS 4
+Number of logical blocks to write zeroes\&.
+.RE
+.PP
+\-\-prinfo=<prinfo>, \-p <prinfo>
+.RS 4
+Protection Information field defintion\&.
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+Bit
+T}:T{
+Description
+T}
+T{
+3
+T}:T{
+PRACT: Protection Information Action\&. When set to 1, PI is stripped/inserted on read/write when the block format\(cqs metadata size is 8\&. When set to 0, metadata is passes\&.
+T}
+T{
+2:0
+T}:T{
+PRCHK: Protection Information Check:
+T}
+T{
+2
+T}:T{
+Set to 1 enables checking the guard tag
+T}
+T{
+1
+T}:T{
+Set to 1 enables checking the application tag
+T}
+T{
+0
+T}:T{
+Set to 1 enables checking the reference tag
+T}
+.TE
+.sp 1
+.RE
+.PP
+\-\-ref\-tag=<reftag>, \-r <reftag>
+.RS 4
+Optional reftag when used with protection information\&.
+.RE
+.PP
+\-\-app\-tag\-mask=<appmask>, \-m <appmask>
+.RS 4
+Optional application tag mask when used with protection information\&.
+.RE
+.PP
+\-\-app\-tag=<apptag>, \-a <apptag>
+.RS 4
+Optional application tag when used with protection information\&.
+.RE
+.PP
+\-\-limited\-retry, \-l
+.RS 4
+Sets the limited retry flag\&.
+.RE
+.PP
+\-\-force\-unit\-access, \-f
+.RS 4
+Set the force\-unit access flag\&.
+.RE
+.PP
+\-\-namespace\-id=<nsid>, \-n <nsid>
+.RS 4
+Namespace ID use in the command\&.
+.RE
 .sp
+EXAMPLES EXAMPLES
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
 No examples yet\&.
-.SH "NVME"
+
+NVME
+.fi
+.if n \{\
+.RE
+.\}
 .sp
 Part of the nvme\-user suite

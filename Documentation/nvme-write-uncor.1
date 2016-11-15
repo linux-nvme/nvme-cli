@@ -2,12 +2,12 @@
 .\"     Title: nvme-uncor
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 11/11/2016
+.\"      Date: 11/15/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-UNCOR" "1" "11/11/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-UNCOR" "1" "11/15/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -44,6 +44,16 @@ The Write Uncorrectable command is used to invalidate a range of logical blocks\
 \-\-start\-block=<slba>, \-s <slba>
 .RS 4
 Start block\&.
+.RE
+.PP
+\-\-block\-count=<nlb>, \-c
+.RS 4
+Number of logical blocks to write uncorrectable\&.
+.RE
+.PP
+\-\-namespace\-id=<nsid>, \-n <nsid>
+.RS 4
+Namespace ID use in the command\&.
 .RE
 .SH "EXAMPLES"
 .sp
