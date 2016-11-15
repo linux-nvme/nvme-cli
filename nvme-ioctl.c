@@ -414,7 +414,6 @@ int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
 	int err;
 
 	err = nvme_submit_admin_passthru(fd, &cmd);
-	printf("err:%d result:%x\n", err, cmd.result);
 	if (!err && result)
 		*result = cmd.result;
 	return err;
