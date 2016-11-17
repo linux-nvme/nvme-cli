@@ -9,12 +9,12 @@ SYNOPSIS
 --------
 [verse]
 'nvme connect-all'
-		[--transport=<trtype> | -t <trtype>]
-		[--traddr=<traddr>    | -a <traddr>]
-		[--host-traddr=<traddr>| -w <host-traddr>]
-		[--trsvcid=<trsvcid>  | -s <trsvcid>]
-		[--hostnqn=<hostnqn>  | -q <hostnqn>]
-		[--raw=<filename>     | -r <filename>]
+		[--transport=<trtype>     | -t <trtype>]
+		[--traddr=<traddr>        | -a <traddr>]
+		[--trsvcid=<trsvcid>      | -s <trsvcid>]
+		[--host-traddr=<traddr>   | -w <traddr>]
+		[--hostnqn=<hostnqn>      | -q <hostnqn>]
+		[--raw=<filename>         | -r <filename>]
 
 DESCRIPTION
 -----------
@@ -54,16 +54,17 @@ OPTIONS
 	For transports using IP addressing (e.g. rdma) this should be an
 	IP-based address (ex. IPv4).
 
--w <traddr>::
---host-traddr=<traddr>::
-	This field specificies the host traddr. Eg.: FC WWN's.
-
 -s <trsvcid>::
 --trsvcid=<trsvcid>::
 	This field specifies the transport service id.  For transports using IP
 	addressing (e.g. rdma) this field is the port number. By default, the IP
 	port number for the RDMA transport is 4420.
- 
+
+-w <traddr>::
+--host-traddr=<traddr>::
+	This field specifies the network address used on the host to connect
+	to the Discovery Controller.
+
 -q <hostnqn>::
 --hostnqn=<hostnqn>::
 	Overrides the default Host NQN that identifies the NVMe Host.
@@ -73,6 +74,12 @@ OPTIONS
 	The Host NQN uniquely identifies the NVMe Host, and may be used by the
 	the Discovery Controller to control what NVMe Target resources are
 	allocated to the NVMe Host for a connection.
+
+-r <filename>::
+--raw=<filename>::
+	This field will take the output of the 'nvme connect-all' command
+	and dump it to a raw binary file. By default 'nvme connect-all' will
+	dump the output to stdout.
 
 EXAMPLES
 --------
