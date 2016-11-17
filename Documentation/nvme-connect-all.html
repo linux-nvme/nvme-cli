@@ -747,12 +747,12 @@ nvme-connect-all(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme connect-all</em>
-                [--transport=&lt;trtype&gt; | -t &lt;trtype&gt;]
-                [--traddr=&lt;traddr&gt;    | -a &lt;traddr&gt;]
-                [--host-traddr=&lt;traddr&gt;| -w &lt;host-traddr&gt;]
-                [--trsvcid=&lt;trsvcid&gt;  | -s &lt;trsvcid&gt;]
-                [--hostnqn=&lt;hostnqn&gt;  | -q &lt;hostnqn&gt;]
-                [--raw=&lt;filename&gt;     | -r &lt;filename&gt;]</pre>
+                [--transport=&lt;trtype&gt;     | -t &lt;trtype&gt;]
+                [--traddr=&lt;traddr&gt;        | -a &lt;traddr&gt;]
+                [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
+                [--host_traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
+                [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
+                [--raw=&lt;filename&gt;         | -r &lt;filename&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -854,6 +854,18 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
+-s &lt;traddr&gt;
+</dt>
+<dt class="hdlist1">
+--host_traddr=&lt;traddr&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the network address used on the host to connect
+        to the Discovery Controller.
+</p>
+</dd>
+<dt class="hdlist1">
 -q &lt;hostnqn&gt;
 </dt>
 <dt class="hdlist1">
@@ -868,6 +880,19 @@ cellspacing="0" cellpadding="4">
         The Host NQN uniquely identifies the NVMe Host, and may be used by the
         the Discovery Controller to control what NVMe Target resources are
         allocated to the NVMe Host for a connection.
+</p>
+</dd>
+<dt class="hdlist1">
+-r &lt;filename&gt;
+</dt>
+<dt class="hdlist1">
+--raw=&lt;filename&gt;
+</dt>
+<dd>
+<p>
+        This field will take the output of the <em>nvme connect-all</em> command
+        and dump it to a raw binary file. By default <em>nvme connect-all</em> will
+        dump the output to stdout.
 </p>
 </dd>
 </dl></div>
@@ -926,7 +951,7 @@ nvme-connect(1)</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-10-27 12:31:19 EDT
+Last updated 2016-11-17 11:43:30 EST
 </div>
 </div>
 </body>

@@ -737,7 +737,7 @@ nvme-connect(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-connect -
-   Connect to an NVMe-over-Fabrics subsystem.
+   Connect to a Fabrics controller.
 </p>
 </div>
 </div>
@@ -746,16 +746,16 @@ nvme-connect(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme connect</em>  [device]
-                [--transport=&lt;trtype&gt;  | -t &lt;trtype&gt;]
-                [--traddr=&lt;traddr&gt;     | -a &lt;traddr&gt;]
-                [--host-traddr=&lt;traddr&gt;| -w &lt;host-traddr&gt;]
-                [--trsvcid=&lt;trsvcid&gt;   | -s &lt;trsvcid&gt;]
-                [--hostnqn=&lt;hostnqn&gt;   | -q &lt;hostnqn&gt;]
-                [--nqn=&lt;subnqn&gt;        | -n &lt;subnqn&gt;]
-                [--nr-io-queues=&lt;#&gt;    | -i &lt;#&gt;]
-                [--keep-alive-tmo=&lt;#&gt;  | -k &lt;#&gt;]
-                [--reconnect-delay=&lt;#&gt; | -c &lt;#&gt;]</pre>
+<pre class="content"><em>nvme connect</em>
+                [--transport=&lt;trtype&gt;     | -t &lt;trtype&gt;]
+                [--nqn=&lt;subnqn&gt;           | -n &lt;subnqn&gt;]
+                [--traddr=&lt;traddr&gt;        | -a &lt;traddr&gt;]
+                [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
+                [--host_traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
+                [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
+                [--nr-io-queues=&lt;#&gt;       | -i &lt;#&gt;]
+                [--keep-alive-tmo=&lt;#&gt;     | -k &lt;#&gt;]
+                [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -763,13 +763,9 @@ nvme-connect(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>TBD (note <em>device</em> is optional)</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_background">BACKGROUND</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>TBD</p></div>
+<div class="paragraph"><p>Create a transport connection to a remote system (specified by --traddr and
+--trsvcid) and create a NVMe over Fabrics controller for the NVMe subsystem
+specified by the --nqn option.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -784,7 +780,46 @@ nvme-connect(1) Manual Page
 </dt>
 <dd>
 <p>
-        TBD
+        This field specifies the network fabric being used for
+        a NVMe-over-Fabrics network.  Current string values include:
+</p>
+<div class="tableblock">
+<table rules="all"
+width="100%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table">Value</p></td>
+<td align="left" valign="top"><p class="table">Definition</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">rdma</p></td>
+<td align="left" valign="top"><p class="table">The network fabric is an rdma network (RoCE, iWARP, Infiniband, basic rdma, etc)</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">fc</p></td>
+<td align="left" valign="top"><p class="table"><strong>WIP</strong> The network fabric is a Fibre Channel network.</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">loop</p></td>
+<td align="left" valign="top"><p class="table">Connect to a NVMe over Fabrics target on the local host</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd>
+<dt class="hdlist1">
+-n &lt;subnqn&gt;
+</dt>
+<dt class="hdlist1">
+--nqn &lt;subnqn&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the name for the NVMe subsystem to connect to.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -795,7 +830,9 @@ nvme-connect(1) Manual Page
 </dt>
 <dd>
 <p>
-        TBD
+        This field specifies the network address of the Controller.
+        For transports using IP addressing (e.g. rdma) this should be an
+        IP-based address (ex. IPv4).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -817,7 +854,21 @@ nvme-connect(1) Manual Page
 </dt>
 <dd>
 <p>
-        TBD
+        This field specifies the transport service id.  For transports using IP
+        addressing (e.g. rdma) this field is the port number. By default, the IP
+        port number for the RDMA transport is 4420.
+</p>
+</dd>
+<dt class="hdlist1">
+-s &lt;traddr&gt;
+</dt>
+<dt class="hdlist1">
+--host_traddr=&lt;traddr&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the network address used on the host to connect
+        to the Controller.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -828,29 +879,22 @@ nvme-connect(1) Manual Page
 </dt>
 <dd>
 <p>
-        TBD
-</p>
-</dd>
-<dt class="hdlist1">
--n &lt;subnqn&gt;
-</dt>
-<dt class="hdlist1">
---nqn=&lt;subnqn&gt;
-</dt>
-<dd>
-<p>
-        TBD
+        Overrides the default Host NQN that identifies the NVMe Host.
+        If this option is not specified, the default is read from
+        /etc/nvme/hostnqn first. If that does not exist, the autogenerated
+        NQN value from the NVMe Host kernel module is used next.
+        The Host NQN uniquely identifies the NVMe Host.
 </p>
 </dd>
 <dt class="hdlist1">
 -i &lt;#&gt;
 </dt>
 <dt class="hdlist1">
---nr-io-queues&lt;#&gt;
+--nr-io-queues=&lt;#&gt;
 </dt>
 <dd>
 <p>
-        TBD
+        Overrides the default number of I/O queues create by the driver.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -861,7 +905,7 @@ nvme-connect(1) Manual Page
 </dt>
 <dd>
 <p>
-        TBD
+        Overrides the default keep alive timeout (in seconds).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -872,7 +916,8 @@ nvme-connect(1) Manual Page
 </dt>
 <dd>
 <p>
-        TBD
+        Overrides the default delay (in seconds) before reconnect is attempted
+        after a connect loss.
 </p>
 </dd>
 </dl></div>
@@ -884,20 +929,22 @@ nvme-connect(1) Manual Page
 <div class="ulist"><ul>
 <li>
 <p>
-TBD
+Connect to a subsystem named nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
+on the IP4 address 192.168.1.3. Port 4420 is used by default:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme connect...</code></pre>
+<pre><code># nvme connect --transport=rdma --traddr=192.168.1.3 \
+--nqn=nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432</code></pre>
 </div></div>
 </li>
 </ul></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_see_also">SEE ALSO</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>nvme-discover(1)</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>SEE ALSO</code></pre>
+</div></div>
+<div class="paragraph"><p>nvme-discover(1)
+nvme-connect-all(1)</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -918,7 +965,7 @@ for <a href="mailto:keith.busch@intel.com">Keith Busch</a>.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-10-27 11:59:03 EDT
+Last updated 2016-11-17 11:43:33 EST
 </div>
 </div>
 </body>
