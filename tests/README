@@ -12,8 +12,17 @@ nvmetests
 ------------------------------
 
     1. Python(>= 2.7.5 or >= 3.3)
-    2. nose2(Installation guide http://nose2.readthedocs.io/)
-    3. nvme-cli(https://github.com/linux-nvme/nvme-cli.git)
+    2. nose(http://nose.readthedocs.io/en/latest/)
+    3. nose2(Installation guide http://nose2.readthedocs.io/)
+    4. pep8(https://pypi.python.org/pypi/setuptools-pep8)
+    5. flake8(https://pypi.python.org/pypi/flake8)
+    6. pylint(https://www.pylint.org/)
+    7. Epydoc(http://epydoc.sourceforge.net/)
+    8. nvme-cli(https://github.com/linux-nvme/nvme-cli.git)
+
+    Python package management system pip can be used to install most of the
+    listed packages(https://pip.pypa.io/en/stable/installing/) :-
+    $ pip install nose nose2 pep8 flake8 pylint epydoc
 
 2. Overview
 -----------
