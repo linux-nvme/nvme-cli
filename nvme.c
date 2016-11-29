@@ -227,59 +227,6 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	return err;
 }
 
-static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
-{
-	struct nvme_additional_smart_log smart_log;
-	int err, fmt, fd;
-	char *desc = "Get Intel vendor specific additional smart log (optionally, "\
-		"for the specified namespace), and show it.";
-	const char *namespace = "(optional) desired namespace";
-	const char *raw = "dump output in binary format";
-	struct config {
-		__u32 namespace_id;
-		int   raw_binary;
-		char *output_format;
-	};
-
-	struct config cfg = {
-		.namespace_id = 0xffffffff,
-		.output_format = "normal",
-	};
-
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
-		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw},
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{NULL}
-	};
-
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
-	if (fd < 0)
-		return fd;
-
-	fmt = validate_output_format(cfg.output_format);
-	if (fmt < 0)
-		return fmt;
-	if (cfg.raw_binary)
-		fmt = BINARY;
-
-	err = nvme_intel_smart_log(fd, cfg.namespace_id, &smart_log);
-	if (!err) {
-		if (fmt == BINARY)
-			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
-		if (fmt == JSON)
-			json_add_smart_log(&smart_log, cfg.namespace_id, devicename);
-		else
-			show_intel_smart_log(&smart_log, cfg.namespace_id, devicename);
-	}
-	else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
-	else
-		perror("intel smart log");
-	return err;
-}
-
 static int get_error_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve specified number of "\
