@@ -773,12 +773,12 @@ void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 {
 	/* convert temperature from Kelvin to Celsius */
 	int c;
-	unsigned int temperature = ((smart->temperature[1] << 8) |
+	int temperature = ((smart->temperature[1] << 8) |
 		smart->temperature[0]) - 273;
 
 	printf("Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
 	printf("critical_warning                    : %#x\n", smart->critical_warning);
-	printf("temperature                         : %u C\n", temperature);
+	printf("temperature                         : %d C\n", temperature);
 	printf("available_spare                     : %u%%\n", smart->avail_spare);
 	printf("available_spare_threshold           : %u%%\n", smart->spare_thresh);
 	printf("percentage_used                     : %u%%\n", smart->percent_used);
