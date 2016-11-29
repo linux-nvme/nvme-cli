@@ -25,6 +25,7 @@ void show_error_log(struct nvme_error_log_page *err_log, int entries, const char
 void show_intel_smart_log(struct nvme_additional_smart_log *smart, unsigned int nsid, const char *devname);
 void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
 void show_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname);
+void show_ctrl_registers(void *bar, unsigned int mode);
 
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf);
 char *nvme_status_to_string(__u32 status);
@@ -40,14 +41,6 @@ void json_add_smart_log(struct nvme_additional_smart_log *smart,
 			unsigned int nsid, const char *devname);
 void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname);
 void json_print_list_items(struct list_item *items, unsigned amnt);
-
-void show_registers_version(__u32 vs);
-void show_registers_cap(struct nvme_bar_cap *cap);
-void show_registers_cc(__u32 cc);
-void show_registers_csts(__u32 csts);
-void show_registers_aqa(__u32 aqa);
-void show_registers_cmbloc(__u32 cmbloc, __u32 cmbsz);
-void show_registers_cmbsz(__u32 cmbsz);
 
 
 #endif

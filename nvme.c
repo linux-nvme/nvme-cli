@@ -88,7 +88,7 @@ static struct program nvme = {
 static unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time)
 {
-	unsigned long long ret = (end_time.tv_sec - start_time.tv_sec)*1000000 +
+	unsigned long long ret = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
 		(end_time.tv_usec - start_time.tv_usec);
 	return ret;
 }
@@ -194,9 +194,9 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw},
+		{"namespace-id",  'n', "NUM", CFG_POSITIVE, &cfg.namespace_id,  required_argument, namespace},
+		{"output-format", 'o', "FMT", CFG_STRING,   &cfg.output_format, required_argument, output_format },
+		{"raw-binary",    'b', "",    CFG_NONE,     &cfg.raw_binary,    no_argument,       raw},
 		{NULL}
 	};
 
@@ -232,7 +232,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	struct nvme_additional_smart_log smart_log;
 	int err, fmt, fd;
 	char *desc = "Get Intel vendor specific additional smart log (optionally, "\
-		      "for the specified namespace), and show it.";
+		"for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
 	struct config {
@@ -274,7 +274,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	}
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+				nvme_status_to_string(err), err);
 	else
 		perror("intel smart log");
 	return err;
@@ -305,10 +305,10 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
-		{"log-entries",  'e', "NUM",  CFG_POSITIVE, &cfg.log_entries,  required_argument, log_entries},
-		{"raw-binary",   'b', "",     CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
+		{"namespace-id",  'n', "NUM", CFG_POSITIVE, &cfg.namespace_id,  required_argument, namespace_id},
+		{"log-entries",   'e', "NUM", CFG_POSITIVE, &cfg.log_entries,   required_argument, log_entries},
+		{"raw-binary",    'b', "",    CFG_NONE,     &cfg.raw_binary,    no_argument,       raw_binary},
+		{"output-format", 'o', "FMT", CFG_STRING,   &cfg.output_format, required_argument, output_format },
 		{NULL}
 	};
 
@@ -380,7 +380,7 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"raw-binary", 'b', "",   CFG_NONE, &cfg.raw_binary,   no_argument,       raw_binary},
+		{"raw-binary",    'b', "",    CFG_NONE,   &cfg.raw_binary,    no_argument,       raw_binary},
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{NULL}
 	};
@@ -437,10 +437,10 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
-		{"log-id",       'i', "NUM",  CFG_POSITIVE, &cfg.log_id,       required_argument, log_id},
-		{"log-len",      'l', "NUM",  CFG_POSITIVE, &cfg.log_len,      required_argument, log_len},
-		{"raw-binary",   'b', "",     CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
+		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
+		{"log-id",       'i', "NUM", CFG_POSITIVE, &cfg.log_id,       required_argument, log_id},
+		{"log-len",      'l', "NUM", CFG_POSITIVE, &cfg.log_len,      required_argument, log_len},
+		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
 		{NULL}
 	};
 
@@ -546,8 +546,8 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
-		{"all",          'a', "",     CFG_NONE,     &cfg.all,          no_argument,       all},
+		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
+		{"all",          'a', "",    CFG_NONE,     &cfg.all,          no_argument,       all},
 		{NULL}
 	};
 
@@ -694,6 +694,12 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		"parameters. The next available namespace ID is used for the "\
 		"create operation. Note that create-ns does not attach the "\
 		"namespace to a controller, the attach-ns command is needed.";
+	const char *nsze = "size of ns";
+	const char *ncap = "capacity of ns";
+	const char *flbas = "FLBA size";
+	const char *dps = "data protection capabilities";
+	const char *nmic = "multipath and sharing capabilities";
+
 	int err = 0, fd;
 	__u32 nsid;
 
@@ -707,12 +713,6 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 
 	struct config cfg = {
 	};
-
-	const char *nsze = "size of ns";
-	const char *ncap = "capacity of ns";
-	const char *flbas = "FLBA size";
-	const char *dps = "data protection capabilities";
-	const char *nmic = "multipath and sharing capabilities";
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"nsze",  's', "NUM", CFG_LONG_SUFFIX, &cfg.nsze,  required_argument, nsze},
@@ -783,26 +783,21 @@ static void *get_registers(void)
 
 static void print_list_item(struct list_item list_item)
 {
-
-	double nsze       = le64_to_cpu(list_item.ns.nsze);
-	double nuse       = le64_to_cpu(list_item.ns.nuse);
-	long long int lba = list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ds;
-
-	lba  = (1 << lba);
-	nsze *= lba;
-	nuse *= lba;
+	long long int lba = 1 << list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ds;
+	double nsze       = le64_to_cpu(list_item.ns.nsze) * lba;
+	double nuse       = le64_to_cpu(list_item.ns.nuse) * lba;
 
 	const char *s_suffix = suffix_si_get(&nsze);
 	const char *u_suffix = suffix_si_get(&nuse);
 	const char *l_suffix = suffix_binary_get(&lba);
 
 	char usage[128];
+	char format[128];
+
 	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
 		nsze, s_suffix);
-	char format[128];
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ms);
-
 	printf("%-16s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", list_item.node,
             (int)sizeof(list_item.ctrl.sn), (int)sizeof(list_item.ctrl.sn), list_item.ctrl.sn,
             (int)sizeof(list_item.ctrl.mn), (int)sizeof(list_item.ctrl.mn), list_item.ctrl.mn,
@@ -883,9 +878,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	};
 
 	const struct argconfig_commandline_options opts[] = {
-		{"output-format", 'o', "FMT",
-		 CFG_STRING, &cfg.output_format,
-		 required_argument, "Output Format: normal|json"},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, "Output Format: normal|json"},
 		{NULL}
 	};
 
@@ -965,10 +958,10 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"vendor-specific", 'v', "", CFG_NONE, &cfg.vendor_specific, no_argument, vendor_specific},
-		{"raw-binary",      'b', "", CFG_NONE, &cfg.raw_binary,      no_argument, raw_binary},
-		{"human-readable",  'H', "", CFG_NONE, &cfg.human_readable,  no_argument, human_readable},
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
+		{"vendor-specific", 'v', "",    CFG_NONE,   &cfg.vendor_specific, no_argument,       vendor_specific},
+		{"raw-binary",      'b', "",    CFG_NONE,   &cfg.raw_binary,      no_argument,       raw_binary},
+		{"human-readable",  'H', "",    CFG_NONE,   &cfg.human_readable,  no_argument,       human_readable},
+		{"output-format",   'o', "FMT", CFG_STRING, &cfg.output_format,   required_argument, output_format },
 		{NULL}
 	};
 
@@ -1042,12 +1035,12 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id",    'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id,    required_argument, namespace_id},
-		{"force",           'f', "FLAG", CFG_NONE,     &cfg.force,           no_argument,       force},
-		{"vendor-specific", 'v', "FLAG", CFG_NONE,     &cfg.vendor_specific, no_argument,       vendor_specific},
-		{"raw-binary",      'b', "FLAG", CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
-		{"human-readable",  'H', "FLAG", CFG_NONE,     &cfg.human_readable,  no_argument,       human_readable},
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
+		{"namespace-id",    'n', "NUM", CFG_POSITIVE, &cfg.namespace_id,    required_argument, namespace_id},
+		{"force",           'f', "",    CFG_NONE,     &cfg.force,           no_argument,       force},
+		{"vendor-specific", 'v', "",    CFG_NONE,     &cfg.vendor_specific, no_argument,       vendor_specific},
+		{"raw-binary",      'b', "",    CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
+		{"human-readable",  'H', "",    CFG_NONE,     &cfg.human_readable,  no_argument,       human_readable},
+		{"output-format",   'o', "FMT", CFG_STRING,   &cfg.output_format,   required_argument, output_format },
 		{NULL}
 	};
 
@@ -1060,7 +1053,6 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		return fmt;
 	if (cfg.raw_binary)
 		fmt = BINARY;
-
 	if (cfg.vendor_specific)
 		flags |= VS;
 	if (cfg.human_readable)
@@ -1146,9 +1138,9 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		{"feature-id",     'f', "NUM", CFG_POSITIVE, &cfg.feature_id,     required_argument, feature_id},
 		{"sel",            's', "NUM", CFG_BYTE,     &cfg.sel,            required_argument, sel},
 		{"data-len",       'l', "NUM", CFG_POSITIVE, &cfg.data_len,       required_argument, data_len},
-		{"raw-binary",     'b', "FLAG",CFG_NONE,     &cfg.raw_binary,     no_argument,       raw_binary},
+		{"raw-binary",     'b', "",    CFG_NONE,     &cfg.raw_binary,     no_argument,       raw_binary},
 		{"cdw11",          'c', "NUM", CFG_POSITIVE, &cfg.cdw11,          required_argument, cdw11},
-		{"human-readable", 'H', "FLAG",CFG_NONE,     &cfg.human_readable, no_argument,       human_readable},
+		{"human-readable", 'H', "",    CFG_NONE,     &cfg.human_readable, no_argument,       human_readable},
 		{NULL}
 	};
 
@@ -1408,29 +1400,12 @@ static int reset(int argc, char **argv, struct command *cmd, struct plugin *plug
 	return err;
 }
 
-static inline uint32_t mmio_read32(void *addr)
-{
-	__le32 *p = addr;
-
-	return le32_to_cpu(*p);
-}
-
-/* Access 64-bit registers as 2 32-bit; Some devices fail 64-bit MMIO. */
-static inline __u64 mmio_read64(void *addr)
-{
-	__le32 *p = addr;
-
-	return le32_to_cpu(*p) | ((uint64_t)le32_to_cpu(*(p + 1)) << 32);
-}
-
 static int show_registers(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Reads and shows the defined NVMe controller registers "\
 					"in binary or human-readable format";
 	const char *human_readable = "show info in readable format";
 	void *bar;
-	uint64_t cap, asq, acq;
-	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc;
 	int fd;
 
 	struct config {
@@ -1442,7 +1417,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"human-readable",  'H', "", CFG_NONE, &cfg.human_readable,  no_argument, human_readable},
+		{"human-readable", 'H', "", CFG_NONE, &cfg.human_readable, no_argument, human_readable},
 		{NULL}
 	};
 
@@ -1454,72 +1429,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	if (!bar)
 		return ENODEV;
 
-	cap = mmio_read64(bar + NVME_REG_CAP);
-	vs = mmio_read32(bar + NVME_REG_VS);
-	intms = mmio_read32(bar + NVME_REG_INTMS);
-	intmc = mmio_read32(bar + NVME_REG_INTMC);
-	cc = mmio_read32(bar + NVME_REG_CC);
-	csts = mmio_read32(bar + NVME_REG_CSTS);
-	nssr = mmio_read32(bar + NVME_REG_NSSR);
-	aqa = mmio_read32(bar + NVME_REG_AQA);
-	asq = mmio_read64(bar + NVME_REG_ASQ);
-	acq = mmio_read64(bar + NVME_REG_ACQ);
-	cmbloc = mmio_read32(bar + NVME_REG_CMBLOC);
-	cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
-
-	if (cfg.human_readable) {
-		printf("cap     : %"PRIx64"\n", cap);
-		show_registers_cap((struct nvme_bar_cap *)&cap);
-
-		printf("version : %x\n", vs);
-		show_registers_version(vs);
-	
-		printf("intms   : %x\n", intms);
-		printf("\tInterrupt Vector Mask Set (IVMS): %x\n\n", intms);
-
-		printf("intmc   : %x\n", intmc);
-		printf("\tInterrupt Vector Mask Clear (IVMC): %x\n\n", intmc);
-
-		printf("cc      : %x\n", cc);
-		show_registers_cc(cc);
-
-		printf("csts    : %x\n", csts);
-		show_registers_csts(csts);
-
-		printf("nssr    : %x\n", nssr);
-		printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n", nssr);
-
-		printf("aqa     : %x\n", aqa);
-		show_registers_aqa(aqa);
-
-		printf("asq     : %"PRIx64"\n", asq);
-		printf("\tAdmin Submission Queue Base (ASQB): %"PRIx64"\n",
-				asq);
-
-		printf("acq     : %"PRIx64"\n", acq);
-		printf("\tAdmin Completion Queue Base (ACQB): %"PRIx64"\n",
-				acq);
-
-		printf("cmbloc  : %x\n", cmbloc);
-		show_registers_cmbloc(cmbloc, cmbsz);
-
-		printf("cmbsz   : %x\n", cmbsz);
-		show_registers_cmbsz(cmbsz);
-	} else {
-		printf("cap     : %"PRIx64"\n", cap);
-		printf("version : %x\n", vs);
-		printf("intms   : %x\n", intms);
-		printf("intmc   : %x\n", intmc);
-		printf("cc      : %x\n", cc);
-		printf("csts    : %x\n", csts);
-		printf("nssr    : %x\n", nssr);
-		printf("aqa     : %x\n", aqa);
-		printf("asq     : %"PRIx64"\n", asq);
-		printf("acq     : %"PRIx64"\n", acq);
-		printf("cmbloc  : %x\n", cmbloc);
-		printf("cmbsz   : %x\n", cmbsz);
-	}
-
+	show_ctrl_registers(bar, cfg.human_readable ? HUMAN : 0);
 	return 0;
 }
 
@@ -1567,7 +1477,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		{"pi",           'i', "NUM",  CFG_BYTE,     &cfg.pi,           required_argument, pi},
 		{"pil",          'p', "NUM",  CFG_BYTE,     &cfg.pil,          required_argument, pil},
 		{"ms",           'm', "NUM",  CFG_BYTE,     &cfg.ms,           required_argument, ms},
-		{"reset",        'r', "FLAG", CFG_NONE,     &cfg.reset,        no_argument,       reset},
+		{"reset",        'r', "",     CFG_NONE,     &cfg.reset,        no_argument,       reset},
 		{NULL}
 	};
 
@@ -1659,7 +1569,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		{"value",        'v', "NUM",  CFG_POSITIVE, &cfg.value,        required_argument, value},
 		{"data-len",     'l', "NUM",  CFG_POSITIVE, &cfg.data_len,     required_argument, data_len},
 		{"data",         'd', "FILE", CFG_STRING,   &cfg.file,         required_argument, data},
-		{"save",         's', "FLAG", CFG_NONE,     &cfg.save,         no_argument, save},
+		{"save",         's', "",     CFG_NONE,     &cfg.save,         no_argument, save},
 		{NULL}
 	};
 
@@ -1814,9 +1724,9 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id",      'n', "NUM",  CFG_POSITIVE,    &cfg.namespace_id,      required_argument, namespace_id},
-		{"start-block",       's', "NUM",  CFG_LONG_SUFFIX, &cfg.start_block,       required_argument, start_block},
-		{"block-count",       'c', "NUM",  CFG_SHORT,       &cfg.block_count,       required_argument, block_count},
+		{"namespace-id", 'n', "NUM", CFG_POSITIVE,    &cfg.namespace_id, required_argument, namespace_id},
+		{"start-block",  's', "NUM", CFG_LONG_SUFFIX, &cfg.start_block,  required_argument, start_block},
+		{"block-count",  'c', "NUM", CFG_SHORT,       &cfg.block_count,  required_argument, block_count},
 		{NULL}
 	};
 
@@ -1875,15 +1785,15 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id",      'n', "NUM",  CFG_POSITIVE,    &cfg.namespace_id,      required_argument, namespace_id},
-		{"start-block",       's', "NUM",  CFG_LONG_SUFFIX, &cfg.start_block,       required_argument, start_block},
-		{"block-count",       'c', "NUM",  CFG_SHORT,       &cfg.block_count,       required_argument, block_count},
-		{"limited-retry",     'l', "",     CFG_NONE,        &cfg.limited_retry,     no_argument,       limited_retry},
-		{"force-unit-access", 'f', "",     CFG_NONE,        &cfg.force_unit_access, no_argument,       force},
-		{"prinfo",            'p', "NUM",  CFG_BYTE,        &cfg.prinfo,            required_argument, prinfo},
-		{"ref-tag",           'r', "NUM",  CFG_POSITIVE,    &cfg.ref_tag,           required_argument, ref_tag},
-		{"app-tag-mask",      'm', "NUM",  CFG_BYTE,        &cfg.app_tag_mask,      required_argument, app_tag_mask},
-		{"app-tag",           'a', "NUM",  CFG_POSITIVE,    &cfg.app_tag,           required_argument, app_tag},
+		{"namespace-id",      'n', "NUM", CFG_POSITIVE,    &cfg.namespace_id,      required_argument, namespace_id},
+		{"start-block",       's', "NUM", CFG_LONG_SUFFIX, &cfg.start_block,       required_argument, start_block},
+		{"block-count",       'c', "NUM", CFG_SHORT,       &cfg.block_count,       required_argument, block_count},
+		{"limited-retry",     'l', "",    CFG_NONE,        &cfg.limited_retry,     no_argument,       limited_retry},
+		{"force-unit-access", 'f', "",    CFG_NONE,        &cfg.force_unit_access, no_argument,       force},
+		{"prinfo",            'p', "NUM", CFG_BYTE,        &cfg.prinfo,            required_argument, prinfo},
+		{"ref-tag",           'r', "NUM", CFG_POSITIVE,    &cfg.ref_tag,           required_argument, ref_tag},
+		{"app-tag-mask",      'm', "NUM", CFG_BYTE,        &cfg.app_tag_mask,      required_argument, app_tag_mask},
+		{"app-tag",           'a', "NUM", CFG_POSITIVE,    &cfg.app_tag,           required_argument, app_tag},
 		{NULL}
 	};
 
@@ -1957,14 +1867,14 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM",  CFG_POSITIVE,  &cfg.namespace_id, required_argument, namespace_id},
-		{"ctx-attrs",    'a', "LIST", CFG_STRING,    &cfg.ctx_attrs,    required_argument, context_attrs},
-		{"blocks", 	 'b', "LIST", CFG_STRING,    &cfg.blocks,       required_argument, blocks},
-		{"slbs", 	 's', "LIST", CFG_STRING,    &cfg.slbas,        required_argument, starting_blocks},
-		{"ad", 	         'd', "FLAG", CFG_NONE,      &cfg.ad,           no_argument,       ad},
-		{"idw", 	 'w', "FLAG", CFG_NONE,      &cfg.idw,          no_argument,       idw},
-		{"idr", 	 'r', "FLAG", CFG_NONE,      &cfg.idr,          no_argument,       idr},
-		{"cdw11",        'c', "NUM",  CFG_POSITIVE,  &cfg.cdw11,        required_argument, cdw11},
+		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
+		{"ctx-attrs",    'a', "LIST", CFG_STRING,   &cfg.ctx_attrs,    required_argument, context_attrs},
+		{"blocks", 	 'b', "LIST", CFG_STRING,   &cfg.blocks,       required_argument, blocks},
+		{"slbs", 	 's', "LIST", CFG_STRING,   &cfg.slbas,        required_argument, starting_blocks},
+		{"ad", 	         'd', "",     CFG_NONE,     &cfg.ad,           no_argument,       ad},
+		{"idw", 	 'w', "",     CFG_NONE,     &cfg.idw,          no_argument,       idw},
+		{"idr", 	 'r', "",     CFG_NONE,     &cfg.idr,          no_argument,       idr},
+		{"cdw11",        'c', "NUM",  CFG_POSITIVE, &cfg.cdw11,        required_argument, cdw11},
 		{NULL}
 	};
 
@@ -2071,12 +1981,12 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM",  CFG_POSITIVE,    &cfg.namespace_id, required_argument, namespace_id},
-		{"crkey",        'c', "NUM",  CFG_LONG_SUFFIX, &cfg.crkey,        required_argument, crkey},
-		{"prkey",        'p', "NUM",  CFG_LONG_SUFFIX, &cfg.prkey,        required_argument, prkey},
-		{"rtype",        't', "NUM",  CFG_BYTE,        &cfg.rtype,        required_argument, rtype},
-		{"racqa",        'a', "NUM",  CFG_BYTE,        &cfg.racqa,        required_argument, racqa},
-		{"iekey",        'i', "",     CFG_NONE,        &cfg.iekey,        no_argument,       iekey},
+		{"namespace-id", 'n', "NUM", CFG_POSITIVE,    &cfg.namespace_id, required_argument, namespace_id},
+		{"crkey",        'c', "NUM", CFG_LONG_SUFFIX, &cfg.crkey,        required_argument, crkey},
+		{"prkey",        'p', "NUM", CFG_LONG_SUFFIX, &cfg.prkey,        required_argument, prkey},
+		{"rtype",        't', "NUM", CFG_BYTE,        &cfg.rtype,        required_argument, rtype},
+		{"racqa",        'a', "NUM", CFG_BYTE,        &cfg.racqa,        required_argument, racqa},
+		{"iekey",        'i', "",    CFG_NONE,        &cfg.iekey,        no_argument,       iekey},
 		{NULL}
 	};
 
@@ -2131,12 +2041,12 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM",  CFG_POSITIVE,    &cfg.namespace_id, required_argument, namespace_id},
-		{"crkey",        'c', "NUM",  CFG_LONG_SUFFIX, &cfg.crkey,        required_argument, crkey},
-		{"nrkey",        'k', "NUM",  CFG_LONG_SUFFIX, &cfg.nrkey,        required_argument, nrkey},
-		{"rrega",        'r', "NUM",  CFG_BYTE,        &cfg.rrega,        required_argument, rrega},
-		{"cptpl",        'p', "NUM",  CFG_BYTE,        &cfg.cptpl,        required_argument, cptpl},
-		{"iekey",        'i', "",     CFG_NONE,        &cfg.iekey,        no_argument,       iekey},
+		{"namespace-id", 'n', "NUM", CFG_POSITIVE,    &cfg.namespace_id, required_argument, namespace_id},
+		{"crkey",        'c', "NUM", CFG_LONG_SUFFIX, &cfg.crkey,        required_argument, crkey},
+		{"nrkey",        'k', "NUM", CFG_LONG_SUFFIX, &cfg.nrkey,        required_argument, nrkey},
+		{"rrega",        'r', "NUM", CFG_BYTE,        &cfg.rrega,        required_argument, rrega},
+		{"cptpl",        'p', "NUM", CFG_BYTE,        &cfg.cptpl,        required_argument, cptpl},
+		{"iekey",        'i', "",    CFG_NONE,        &cfg.iekey,        no_argument,       iekey},
 		{NULL}
 	};
 
@@ -2254,10 +2164,10 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
-		{"numd",         'd', "NUM",  CFG_POSITIVE, &cfg.numd,         required_argument, numd},
-		{"raw-binary",   'b', "",     CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
+		{"namespace-id",  'n', "NUM", CFG_POSITIVE, &cfg.namespace_id,  required_argument, namespace_id},
+		{"numd",          'd', "NUM", CFG_POSITIVE, &cfg.numd,          required_argument, numd},
+		{"raw-binary",    'b', "",    CFG_NONE,     &cfg.raw_binary,    no_argument,       raw_binary},
+		{"output-format", 'o', "FMT", CFG_STRING,   &cfg.output_format, required_argument, output_format },
 		{NULL}
 	};
 
@@ -2554,13 +2464,13 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
-		{"size",         'x', "NUM",  CFG_POSITIVE, &cfg.size,         required_argument, size},
-		{"nssf",         'N', "NUM",  CFG_BYTE,     &cfg.nssf,         required_argument, nssf},
-		{"secp",         'p', "NUM",  CFG_BYTE,     &cfg.secp,         required_argument, secp},
-		{"spsp",         's', "NUM",  CFG_SHORT,    &cfg.spsp,         required_argument, spsp},
-		{"al",           't', "NUM",  CFG_POSITIVE, &cfg.al,           required_argument, al},
-		{"raw-binary",   'b', "",     CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
+		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
+		{"size",         'x', "NUM", CFG_POSITIVE, &cfg.size,         required_argument, size},
+		{"nssf",         'N', "NUM", CFG_BYTE,     &cfg.nssf,         required_argument, nssf},
+		{"secp",         'p', "NUM", CFG_BYTE,     &cfg.secp,         required_argument, secp},
+		{"spsp",         's', "NUM", CFG_SHORT,    &cfg.spsp,         required_argument, spsp},
+		{"al",           't', "NUM", CFG_POSITIVE, &cfg.al,           required_argument, al},
+		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
 		{NULL}
 	};
 

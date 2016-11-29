@@ -462,8 +462,8 @@ static void show_nvme_id_ns_fpi(__u8 fpi)
 void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 {
 	int i;
-	int human = mode&HUMAN,
-		vs = mode&VS;
+	int human = mode & HUMAN,
+		vs = mode & VS;
 
 	printf("nsze    : %#"PRIx64"\n", (uint64_t)le64_to_cpu(ns->nsze));
 	printf("ncap    : %#"PRIx64"\n", (uint64_t)le64_to_cpu(ns->ncap));
@@ -1541,7 +1541,7 @@ void show_registers_cap(struct nvme_bar_cap *cap)
 	printf("\tMaximum Queue Entries Supported (MQES): %u\n\n", cap->mqes + 1);
 }
 
-void show_registers_version(__u32 vs)
+static void show_registers_version(__u32 vs)
 {
 	printf("\tNVMe specification %d.%d\n\n", (vs & 0xffff0000) >> 16,  (vs & 0x0000ff00) >> 8);
 }
@@ -1582,7 +1582,7 @@ static void show_registers_cc_shn (__u8 shn)
 	}
 }
 
-void show_registers_cc (__u32 cc)
+static void show_registers_cc(__u32 cc)
 {
 	printf("\tI/O Completion Queue Entry Size (IOSQES): %u bytes\n", 1 <<   ((cc & 0x00f00000) >> 20));
 	printf("\tI/O Submission Queue Entry Size (IOSQES): %u bytes\n", 1 <<   ((cc & 0x000f0000) >> 16));
@@ -1593,7 +1593,7 @@ void show_registers_cc (__u32 cc)
 	printf("\tEnable                              (EN): %s\n\n", (cc & 0x00000001) ? "Yes":"No");
 }
 
-static void show_registers_csts_shst (__u8 shst)
+static void show_registers_csts_shst(__u8 shst)
 {
 	printf("\tShutdown Status               (SHST): ");
 	switch (shst) {
@@ -1611,7 +1611,7 @@ static void show_registers_csts_shst (__u8 shst)
 	}
 }
 
-void show_registers_csts(__u32 csts)
+static void show_registers_csts(__u32 csts)
 {
 	printf("\tProcessing Paused               (PP): %s\n", (csts & 0x00000020) ? "Yes":"No");
 	printf("\tNVM Subsystem Reset Occurred (NSSRO): %s\n", (csts & 0x00000010) ? "Yes":"No");
@@ -1621,20 +1621,21 @@ void show_registers_csts(__u32 csts)
 
 }
 
-void show_registers_aqa(__u32 aqa)
+static void show_registers_aqa(__u32 aqa)
 {
 	printf("\tAdmin Completion Queue Size (ACQS): %u bytes\n", ((aqa & 0x0fff0000) >> 16)+1);
 	printf("\tAdmin Submission Queue Size (ASQS): %u bytes\n\n", (aqa & 0x00000fff)+1);
 
 }
 
-void show_registers_cmbloc(__u32 cmbloc, __u32 cmbsz)
+static void show_registers_cmbloc(__u32 cmbloc, __u32 cmbsz)
 {
 	if (cmbsz == 0) {
 		printf("\tController Memory Buffer feature is not supported\n\n");
 	}
 	else {
-		printf("\tOffset                 (OFST): %x (See cmbsz.szu for granularity)\n", (cmbloc & 0xfffff000) >> 12);
+		printf("\tOffset                 (OFST): %x (See cmbsz.szu for granularity)\n",
+			(cmbloc & 0xfffff000) >> 12);
 		printf("\tBase Indicator Register (BIR): %x\n\n", cmbloc & 0x00000007 );
 	}
 }
@@ -1653,23 +1654,111 @@ static char *nvme_register_szu_to_string(__u8 szu)
 	}
 }
 
-void show_registers_cmbsz(__u32 cmbsz)
+static void show_registers_cmbsz(__u32 cmbsz)
 {
 	if (cmbsz == 0) {
 		printf("\tController Memory Buffer feature is not supported\n\n");
+		return;
 	}
-	else {
-		printf("\tSize                      (SZ): %u\n", (cmbsz & 0xfffff000) >> 12);
-		printf("\tSize Units               (SZU): %s\n", nvme_register_szu_to_string((cmbsz & 0x00000f00) >> 8));
-		printf("\tWrite Data Support       (WDS): Write Data and metadata transfer in Controller Memory Buffer is %s\n",
-				(cmbsz & 0x00000010) ? "Supported":"Not supported");
-		printf("\tRead Data Support        (RDS): Read Data and metadata transfer in Controller Memory Buffer is %s\n",
-				(cmbsz & 0x00000008) ? "Supported":"Not supported");
-		printf("\tPRP SGL List Support   (LISTS): PRP/SG Lists in Controller Memory Buffer is %s\n",
-				(cmbsz & 0x00000004) ? "Supported":"Not supported");
-		printf("\tCompletion Queue Support (CQS): Admin and I/O Completion Queues in Controller Memory Buffer is %s\n",
-				(cmbsz & 0x00000002) ? "Supported":"Not supported");
-		printf("\tSubmission Queue Support (SQS): Admin and I/O Submission Queues in Controller Memory Buffer is %s\n\n",
-				(cmbsz & 0x00000001) ? "Supported":"Not supported");
+	printf("\tSize                      (SZ): %u\n", (cmbsz & 0xfffff000) >> 12);
+	printf("\tSize Units               (SZU): %s\n", nvme_register_szu_to_string((cmbsz & 0x00000f00) >> 8));
+	printf("\tWrite Data Support       (WDS): Write Data and metadata transfer in Controller Memory Buffer is %s\n",
+			(cmbsz & 0x00000010) ? "Supported":"Not supported");
+	printf("\tRead Data Support        (RDS): Read Data and metadata transfer in Controller Memory Buffer is %s\n",
+			(cmbsz & 0x00000008) ? "Supported":"Not supported");
+	printf("\tPRP SGL List Support   (LISTS): PRP/SG Lists in Controller Memory Buffer is %s\n",
+			(cmbsz & 0x00000004) ? "Supported":"Not supported");
+	printf("\tCompletion Queue Support (CQS): Admin and I/O Completion Queues in Controller Memory Buffer is %s\n",
+			(cmbsz & 0x00000002) ? "Supported":"Not supported");
+	printf("\tSubmission Queue Support (SQS): Admin and I/O Submission Queues in Controller Memory Buffer is %s\n\n",
+			(cmbsz & 0x00000001) ? "Supported":"Not supported");
+}
+
+static inline uint32_t mmio_read32(void *addr)
+{
+	__le32 *p = addr;
+
+	return le32_to_cpu(*p);
+}
+
+/* Access 64-bit registers as 2 32-bit; Some devices fail 64-bit MMIO. */
+static inline __u64 mmio_read64(void *addr)
+{
+	__le32 *p = addr;
+
+	return le32_to_cpu(*p) | ((uint64_t)le32_to_cpu(*(p + 1)) << 32);
+}
+
+void show_ctrl_registers(void *bar, unsigned int mode)
+{
+	uint64_t cap, asq, acq;
+	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc;
+
+	int human = mode & HUMAN;
+
+	cap = mmio_read64(bar + NVME_REG_CAP);
+	vs = mmio_read32(bar + NVME_REG_VS);
+	intms = mmio_read32(bar + NVME_REG_INTMS);
+	intmc = mmio_read32(bar + NVME_REG_INTMC);
+	cc = mmio_read32(bar + NVME_REG_CC);
+	csts = mmio_read32(bar + NVME_REG_CSTS);
+	nssr = mmio_read32(bar + NVME_REG_NSSR);
+	aqa = mmio_read32(bar + NVME_REG_AQA);
+	asq = mmio_read64(bar + NVME_REG_ASQ);
+	acq = mmio_read64(bar + NVME_REG_ACQ);
+	cmbloc = mmio_read32(bar + NVME_REG_CMBLOC);
+	cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
+
+	if (human) {
+		printf("cap     : %"PRIx64"\n", cap);
+		show_registers_cap((struct nvme_bar_cap *)&cap);
+
+		printf("version : %x\n", vs);
+		show_registers_version(vs);
+
+		printf("intms   : %x\n", intms);
+		printf("\tInterrupt Vector Mask Set (IVMS): %x\n\n", intms);
+
+		printf("intmc   : %x\n", intmc);
+		printf("\tInterrupt Vector Mask Clear (IVMC): %x\n\n", intmc);
+
+		printf("cc      : %x\n", cc);
+		show_registers_cc(cc);
+
+		printf("csts    : %x\n", csts);
+		show_registers_csts(csts);
+
+		printf("nssr    : %x\n", nssr);
+		printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n", nssr);
+
+		printf("aqa     : %x\n", aqa);
+		show_registers_aqa(aqa);
+
+		printf("asq     : %"PRIx64"\n", asq);
+		printf("\tAdmin Submission Queue Base (ASQB): %"PRIx64"\n",
+				asq);
+
+		printf("acq     : %"PRIx64"\n", acq);
+		printf("\tAdmin Completion Queue Base (ACQB): %"PRIx64"\n",
+				acq);
+
+		printf("cmbloc  : %x\n", cmbloc);
+		show_registers_cmbloc(cmbloc, cmbsz);
+
+		printf("cmbsz   : %x\n", cmbsz);
+		show_registers_cmbsz(cmbsz);
+	} else {
+		printf("cap     : %"PRIx64"\n", cap);
+		printf("version : %x\n", vs);
+		printf("intms   : %x\n", intms);
+		printf("intmc   : %x\n", intmc);
+		printf("cc      : %x\n", cc);
+		printf("csts    : %x\n", csts);
+		printf("nssr    : %x\n", nssr);
+		printf("aqa     : %x\n", aqa);
+		printf("asq     : %"PRIx64"\n", asq);
+		printf("acq     : %"PRIx64"\n", acq);
+		printf("cmbloc  : %x\n", cmbloc);
+		printf("cmbsz   : %x\n", cmbsz);
 	}
 }
