@@ -2573,13 +2573,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 			fprintf(stderr, "data direction not given\n");
 			err = EINVAL;
 			goto free_and_return;
-		}
-		if (cfg.read && cfg.write) {
-			fprintf(stderr, "command can't be both read and write\n");
-			err = EINVAL;
-			goto free_and_return;
-		}
-		if (cfg.write) {
+		} else if (cfg.write) {
 			if (read(wfd, data, cfg.data_len) < 0) {
 				fprintf(stderr, "failed to read write buffer\n");
 				err = EINVAL;
