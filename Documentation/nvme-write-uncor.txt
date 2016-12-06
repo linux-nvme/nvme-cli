@@ -8,19 +8,28 @@ nvme-write-uncor - Send an NVMe write uncorrectable command, return results
 SYNOPSIS
 --------
 [verse]
-'nvme-write-zeroes' <device> [--start-block=<slba> | -s <slba>]
+'nvme-write-uncorr' <device> [--start-block=<slba> | -s <slba>]
 			[--block-count=<nlb> | -c <nlb>]
 			[--namespace-id=<nsid> | -n <nsid>]
 
 DESCRIPTION
 -----------
-The Write Zeroes command is used to set a range of logical blocks to 0.
+The Write Uncorrectable command is used to invalidate a range of logical
+blocks.
 
 OPTIONS
 -------
 --start-block=<slba>::
 -s <slba>::
 	Start block.
+
+--block-count=<nlb>::
+-c::
+	Number of logical blocks to write uncorrectable.
+
+--namespace-id=<nsid>::
+-n <nsid>::
+	Namespace ID use in the command.
 
 EXAMPLES
 --------

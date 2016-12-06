@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.7" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
 <title>nvme-read(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -87,10 +87,14 @@ ul, ol, li > p {
 ul > li     { color: #aaa; }
 ul > li > * { color: black; }
 
-pre {
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
   padding: 0;
   margin: 0;
 }
+
 
 #author {
   color: #527bbd;
@@ -415,12 +419,6 @@ div.unbreakable { page-break-inside: avoid; }
  *
  * */
 
-tt {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
-
 div.tableblock {
   margin-top: 1.0em;
   margin-bottom: 1.5em;
@@ -453,12 +451,6 @@ div.tableblock > table[frame="vsides"] {
  * html5 specific
  *
  * */
-
-.monospaced {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
 
 table.tableblock {
   margin-top: 1.0em;
@@ -539,6 +531,8 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
+
+
 </style>
 <script type="text/javascript">
 /*<![CDATA[*/
@@ -806,6 +800,142 @@ by default if you don&#8217;t provide a file.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+--block-count=&lt;nlb&gt;
+</dt>
+<dt class="hdlist1">
+-c &lt;nlb&gt;
+</dt>
+<dd>
+<p>
+        Number of logical blocks to write.
+</p>
+</dd>
+<dt class="hdlist1">
+--data-size=&lt;size&gt;
+</dt>
+<dt class="hdlist1">
+-z &lt;size&gt;
+</dt>
+<dd>
+<p>
+        Size of data, in bytes.
+</p>
+</dd>
+<dt class="hdlist1">
+--metadata-size=&lt;size&gt;
+</dt>
+<dt class="hdlist1">
+-y &lt;size&gt;
+</dt>
+<dd>
+<p>
+        Size of metadata in bytes.
+</p>
+</dd>
+<dt class="hdlist1">
+--data=&lt;data-file&gt;
+</dt>
+<dt class="hdlist1">
+-d &lt;data-file&gt;
+</dt>
+<dd>
+<p>
+        Data file. If none provided, contents are sent to STDOUT.
+</p>
+</dd>
+<dt class="hdlist1">
+--metadata=&lt;metadata-file&gt;
+</dt>
+<dt class="hdlist1">
+-M &lt;metadata-file&gt;
+</dt>
+<dd>
+<p>
+        Metadata file, if necessary.
+</p>
+</dd>
+<dt class="hdlist1">
+--prinfo=&lt;prinfo&gt;
+</dt>
+<dt class="hdlist1">
+-p &lt;prinfo&gt;
+</dt>
+<dd>
+<p>
+        Protection Information field defintion.
+</p>
+<div class="tableblock">
+<table rules="all"
+width="100%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table">Bit</p></td>
+<td align="left" valign="top"><p class="table">Description</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">3</p></td>
+<td align="left" valign="top"><p class="table">PRACT: Protection Information Action. When set to 1, PI is stripped/inserted
+on read/write when the block format&#8217;s metadata size is 8. When set to 0,
+metadata is passes.</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">2:0</p></td>
+<td align="left" valign="top"><p class="table">PRCHK: Protection Information Check:</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">2</p></td>
+<td align="left" valign="top"><p class="table">Set to 1 enables checking the guard tag</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">1</p></td>
+<td align="left" valign="top"><p class="table">Set to 1 enables checking the application tag</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0</p></td>
+<td align="left" valign="top"><p class="table">Set to 1 enables checking the reference tag</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd>
+<dt class="hdlist1">
+--ref-tag=&lt;reftag&gt;
+</dt>
+<dt class="hdlist1">
+-r &lt;reftag&gt;
+</dt>
+<dd>
+<p>
+        Optional reftag when used with protection information.
+</p>
+</dd>
+<dt class="hdlist1">
+--app-tag-mask=&lt;appmask&gt;
+</dt>
+<dt class="hdlist1">
+-m &lt;appmask&gt;
+</dt>
+<dd>
+<p>
+        Optional application tag mask when used with protection information.
+</p>
+</dd>
+<dt class="hdlist1">
+--force-unit-access
+</dt>
+<dt class="hdlist1">
+-f
+</dt>
+<dd>
+<p>
+        Set the force-unit access flag.
+</p>
+</dd>
+<dt class="hdlist1">
 --latency
 </dt>
 <dt class="hdlist1">
@@ -835,7 +965,7 @@ by default if you don&#8217;t provide a file.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-06-20 17:02:08 MDT
+Last updated 2016-11-15 18:08:16 EST
 </div>
 </div>
 </body>

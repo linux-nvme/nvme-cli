@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-discover
 .\"    Author: [see the "AUTHORS" section]
-.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 09/30/2016
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 11/17/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCOVER" "1" "09/30/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCOVER" "1" "11/17/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,25 +32,26 @@ nvme-discover \- Send Get Log Page request to Discovery Controller\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme discover\fR [device]
-                [\-\-transport=<trtype> | \-t <trtype>]
-                [\-\-traddr=<traddr>    | \-a <traddr>]
-                [\-\-trsvcid=<trsvcid>  | \-s <trsvcid>]
-                [\-\-hostnqn=<hostnqn>  | \-q <hostnqn>]
-                [\-\-raw=<filename>     | \-r <filename>]
+\fInvme discover\fR
+                [\-\-transport=<trtype>     | \-t <trtype>]
+                [\-\-traddr=<traddr>        | \-a <traddr>]
+                [\-\-trsvcid=<trsvcid>      | \-s <trsvcid>]
+                [\-\-host\-traddr=<traddr>   | \-w <traddr>]
+                [\-\-hostnqn=<hostnqn>      | \-q <hostnqn>]
+                [\-\-raw=<filename>         | \-r <filename>]
 .fi
 .SH "DESCRIPTION"
 .sp
-For a given NVMe Host, send a Discovery Get Log Page request to a Discovery Controller on the network\&.
+Send one or more Get Log Page requests to a NVMe\-over\-Fabrics Discovery Controller\&.
 .sp
-The [device] parameter is OPTIONAL and will default to /dev/nvme\-fabrics if none is given\&.
+If no parameters are given, then \fInvme discover\fR will attempt to find a /etc/nvme/discovery\&.conf file to use to supply a list of Discovery commands to run\&. If no /etc/nvme/discovery\&.conf file exists, the command will quit with an error\&.
 .sp
-If no parameters are given, then \fInvme discover\fR will attempt to find a /etc/nvme/discovery\&.conf file to use to supply the the discover command options\&. If no /etc/nvme/discovery\&.conf file exists, the command will quit with an error\&.
+Otherwise, a specific Discovery Controller should be specified using the \-\-transport, \-\-traddr, and if necessary the \-\-trsvcid flags\&. A Diѕcovery request will then be sent to the specified Discovery Controller\&.
 .SH "BACKGROUND"
 .sp
 The NVMe\-over\-Fabrics specification defines the concept of a Discovery Controller that an NVMe Host can query on a fabric network to discover NVMe subsystems contained in NVMe Targets which it can connect to on the network\&. The Discovery Controller will return Discovery Log Pages that provide the NVMe Host with specific information (such as network address and unique subsystem NQN) the NVMe Host can use to issue an NVMe connect command to connect itself to a storage resource contained in that NVMe subsystem on the NVMe Target\&.
 .sp
-Note that the base NVMe specfication defines the NQN (NVMe Qualified Name) format which an NVMe endpoint (device, subsystem, etc) must follow to guarantee a unique name under the NVMe standard\&.
+Note that the base NVMe specfication defines the NQN (NVMe Qualified Name) format which an NVMe endpoint (device, subsystem, etc) must follow to guarantee a unique name under the NVMe standard\&. In particular, the Host NQN uniquely identifies the NVMe Host, and may be used by the the Discovery Controller to control what NVMe Target resources are allocated to the NVMe Host for a connection\&.
 .sp
 A Discovery Controller has it\(cqs own NQN defined in the NVMe\-over\-Fabrics specification, \fBnqn\&.2014\-08\&.org\&.nvmexpress\&.discovery\fR\&. All Discovery Controllers must use this NQN name\&. This NQN is used by default by nvme\-cli for the \fIdiscover\fR command\&.
 .SH "OPTIONS"
@@ -60,6 +61,7 @@ A Discovery Controller has it\(cqs own NQN defined in the NVMe\-over\-Fabrics sp
 This field specifies the network fabric being used for a NVMe\-over\-Fabrics network\&. Current string values include:
 .TS
 allbox tab(:);
+lt lt
 lt lt
 lt lt
 lt lt.
@@ -79,23 +81,33 @@ T}:T{
 \fBWIP\fR
 The network fabric is a Fibre Channel network\&.
 T}
+T{
+loop
+T}:T{
+Connect to a NVMe over Fabrics target on the local host
+T}
 .TE
 .sp 1
 .RE
 .PP
 \-a <traddr>, \-\-traddr=<traddr>
 .RS 4
-This field specifies the network address of the Discovery Controller\&.
+This field specifies the network address of the Discovery Controller\&. For transports using IP addressing (e\&.g\&. rdma) this should be an IP\-based (ex\&. IPv4) address\&.
 .RE
 .PP
 \-s <trsvcid>, \-\-trsvcid=<trsvcid>
 .RS 4
-This field specifies the transport service id\&. For IP addresses, this field is the port number\&. By default, the IP port number is 4420\&.
+This field specifies the transport service id\&. For transports using IP addressing (e\&.g\&. rdma) this field is the port number\&. By default, the IP port number for the RDMA transport is 4420\&.
 .RE
 .PP
 \-q <hostnqn>, \-\-hostnqn=<hostnqn>
 .RS 4
-This field is the unique NQN of a NVMe Host\&. This field will be used by the Discovery Controller to check what NVMe Target resources are allocated to the NVMe Host for a connection\&.
+Overrides the default host NQN that identifies the NVMe Host\&. If this option is not specified, the default is read from /etc/nvme/hostnqn first\&. If that does not exist, the autogenerated NQN value from the NVMe Host kernel module is used next\&.
+.RE
+.PP
+\-w <traddr>, \-\-host\-traddr=<traddr>
+.RS 4
+This field specifies the network address used on the host to connect to the Discovery Controller\&.
 .RE
 .PP
 \-r <filename>, \-\-raw=<filename>
@@ -147,8 +159,13 @@ command using a /etc/nvme/discovery\&.conf file:
 .RS 4
 .\}
 .nf
-# Machine default\&. Note currently only works for single command:
-\-t rdma \-a 192\&.168\&.1\&.4 \-s 4420 \-q nqn\&.2014\-08\&.com\&.example:nvme:nvm\-subsystem\-sn\-d78432
+# Machine default \*(Aqnvme discover\*(Aq commands\&.  Query the
+# Discovery Controller\*(Aqs two ports (some resources may only
+# be accessible on a single port)\&.  Note an official
+# nqn (Host) name defined in the NVMe specification is being used
+# in this example\&.
+\-t rdma \-a 192\&.168\&.69\&.33 \-s 4420 \-q nqn\&.2014\-08\&.com\&.example:nvme:nvm\-subsystem\-sn\-d78432
+\-t rdma \-a 192\&.168\&.1\&.4   \-s 4420 \-q nqn\&.2014\-08\&.com\&.example:nvme:nvm\-subsystem\-sn\-d78432
 
 At the prompt type "nvme discover"\&.
 .fi
@@ -157,13 +174,10 @@ At the prompt type "nvme discover"\&.
 .\}
 .SH "SEE ALSO"
 .sp
-nvme\-connect(1)
+nvme\-connect(1) nvme\-connect\-all(1)
 .SH "AUTHORS"
 .sp
 This was written by \m[blue]\fBJay Freyensee\fR\m[]\&\s-2\u[1]\d\s+2 for \m[blue]\fBKeith Busch\fR\m[]\&\s-2\u[2]\d\s+2\&.
-.SH "REPORTING BUGS"
-.sp
-Patches and issues for \fIdiscover\fR should be submitted to the Linux kernel email list \m[blue]\fBlinux\-nvme\fR\m[]\&\s-2\u[3]\d\s+2 before merging to \m[blue]\fBhttps://github\&.com/linux\-nvme/nvme\-cli\fR\m[]\&.
 .SH "NVME"
 .sp
 Part of the nvme\-user suite
@@ -177,9 +191,4 @@ Jay Freyensee
 Keith Busch
 .RS 4
 \%mailto:keith.busch@intel.com
-.RE
-.IP " 3." 4
-linux-nvme
-.RS 4
-\%mailto:linux-nvme@lists.infradead.org
 .RE

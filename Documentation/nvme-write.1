@@ -2,12 +2,12 @@
 .\"     Title: nvme-write
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 09/29/2016
+.\"      Date: 11/17/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WRITE" "1" "09/29/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-WRITE" "1" "11/17/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,10 +36,10 @@ nvme-write \- Send an NVMe write command, provide results
                         [\-\-block\-count=<nlb> | \-c <nlb>]
                         [\-\-data\-size=<size> | \-z <size>]
                         [\-\-metadata\-size=<size> | \-y <size>]
-                        [\-\-ref\-tag=<reftag> | \-r <reftag>]
                         [\-\-data=<data\-file> | \-d <data\-file>]
                         [\-\-metadata=<metadata\-file> | \-M <metadata\-file>]
                         [\-\-prinfo=<prinfo> | \-p <prinfo>]
+                        [\-\-ref\-tag=<reftag> | \-r <reftag>]
                         [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
                         [\-\-app\-tag=<apptag> | \-a <apptag>]
                         [\-\-limited\-retry | \-l]
@@ -59,6 +59,101 @@ Start block\&.
 \-\-block\-count, \-c
 .RS 4
 The number of blocks to transfer\&. This is a zeroes based value to align with the kernel\(cqs use of this field\&. (ie\&. 0 means transfer 1 block)\&.
+.RE
+.PP
+\-\-block\-count=<nlb>, \-c <nlb>
+.RS 4
+Number of logical blocks to write\&.
+.RE
+.PP
+\-\-data\-size=<size>, \-z <size>
+.RS 4
+Size of data, in bytes\&.
+.RE
+.PP
+\-\-metadata\-size=<size>, \-y <size>
+.RS 4
+Size of metadata in bytes\&.
+.RE
+.PP
+\-\-data=<data\-file>, \-d <data\-file>
+.RS 4
+Data file\&. If none provided, contents are sent from STDIN\&.
+.RE
+.PP
+\-\-metadata=<metadata\-file>, \-M <metadata\-file>
+.RS 4
+Metadata file, if necessary\&.
+.RE
+.PP
+\-\-prinfo=<prinfo>, \-p <prinfo>
+.RS 4
+Protection Information field defintion\&.
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+Bit
+T}:T{
+Description
+T}
+T{
+3
+T}:T{
+PRACT: Protection Information Action\&. When set to 1, PI is stripped/inserted on read/write when the block format\(cqs metadata size is 8\&. When set to 0, metadata is passes\&.
+T}
+T{
+2:0
+T}:T{
+PRCHK: Protection Information Check:
+T}
+T{
+2
+T}:T{
+Set to 1 enables checking the guard tag
+T}
+T{
+1
+T}:T{
+Set to 1 enables checking the application tag
+T}
+T{
+0
+T}:T{
+Set to 1 enables checking the reference tag
+T}
+.TE
+.sp 1
+.RE
+.PP
+\-\-ref\-tag=<reftag>, \-r <reftag>
+.RS 4
+Optional reftag when used with protection information\&.
+.RE
+.PP
+\-\-app\-tag\-mask=<appmask>, \-m <appmask>
+.RS 4
+Optional application tag mask when used with protection information\&.
+.RE
+.PP
+\-\-app\-tag=<apptag>, \-a <apptag>
+.RS 4
+Optional application tag when used with protection information\&.
+.RE
+.PP
+\-\-limited\-retry, \-l
+.RS 4
+Sets the limited retry flag\&.
+.RE
+.PP
+\-\-force\-unit\-access, \-f
+.RS 4
+Set the force\-unit access flag\&.
 .RE
 .PP
 \-\-latency, \-t

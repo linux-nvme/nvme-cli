@@ -1,0 +1,5 @@
+{
+	"controller" : "/dev/nvme0",
+        "ns1": "/dev/nvme0n1",
+	"log_dir": "nvmetests/"
+}

@@ -1,0 +1,93 @@
+nvmetests
+=========
+
+    This contains NVMe unit tests framework. The purpose of this framework
+    to use nvme cli and test various supported commands and scenarios for
+    NVMe device.
+
+    In current implementation this framework uses nvme cli to
+    interact with underlying controller/namespace.
+
+1. Common Package Dependencies
+------------------------------
+
+    1. Python(>= 2.7.5 or >= 3.3)
+    2. nose(http://nose.readthedocs.io/en/latest/)
+    3. nose2(Installation guide http://nose2.readthedocs.io/)
+    4. pep8(https://pypi.python.org/pypi/setuptools-pep8)
+    5. flake8(https://pypi.python.org/pypi/flake8)
+    6. pylint(https://www.pylint.org/)
+    7. Epydoc(http://epydoc.sourceforge.net/)
+    8. nvme-cli(https://github.com/linux-nvme/nvme-cli.git)
+
+    Python package management system pip can be used to install most of the
+    listed packages(https://pip.pypa.io/en/stable/installing/) :-
+    $ pip install nose nose2 pep8 flake8 pylint epydoc
+
+2. Overview
+-----------
+
+    This framework follows simple class hierarchy. Each test file contains
+    one test. Each test is direct subclass or indirect subclass of TestNVMe
+    class which represents one testcase. To write a new testcase one can copy
+    existing template "nvme_simple_template_test.py" and start adding new
+    testcase specific functionality. For detailed information please look into
+    section 3.
+
+    For more information about tests, class hierarchy and code please refer :-
+
+    1. Documentation :- html/
+    2. Class Index :-  html/index.html
+    3. Class Hierarchy :- html/class-tree.html
+
+    For each testcase it will create log directory mentioned in
+    configuration file. This directory will be used for a temporary files
+    and storing execution logs of each testcases. Current implementation stores
+    stdout and stderr for each testcase under log directory, e.g. :-
+
+        $ tree nvmetests/
+        nvmetests/
+        ├── TestNVMeAttachDetachNSCmd
+        │   ├── stderr.log
+        │   └── stdout.log
+        ├── TestNVMeFlushCmd
+        │   ├── stderr.log
+        │   └── stdout.log
+        └── TestNVMeFormatCmd
+            ├── stderr.log
+            └── stdout.log
+                 .
+                 .
+                 .
+
+3. Walk-Through Example for writing a new testcase
+--------------------------------------------------
+    1. Copy simple test template file from current directory
+       with appropriate name, replace "simple_template" with testcase name
+       in new file name. Update config.json if necessary.
+    2. Write a testcase main function, make sure its name is starting with
+       test_*.
+    3. Based on the requirement one can inherit TestNVMe or TestNVMeIO
+       class.
+    4. Write test precondition code into __init__. Make sure you are calling
+       super class __init__.
+    5. Write test post condition code into __del__. Make sure you are calling
+       super class __del__.
+    6. Before writing a new function have a look into TestNVMe to see if it
+       can be reused.
+    7. Once testcase is ready make sure :-
+           a. Run pep8, flake8, pylint on the testcase and fix errors/warnings.
+              -Example "$ make static_check" will run pep8, flake8 and pylint on
+              all the python files in current directory.
+           b. Execute make doc to generate the documentation.
+              -Example "$ make doc" will create and update existing
+              documentation.
+
+4. Running testcases with framework
+-----------------------------------
+    1. Running single testcase with nose2 :-
+       $ nose2 --verbose nvme_writezeros_test
+       $ nose2 --verbose nvme_read_write_test
+
+    2. Running all the testcases with Makefile :-
+       $ make run

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.7" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
 <title>nvme-zeroes(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -87,10 +87,14 @@ ul, ol, li > p {
 ul > li     { color: #aaa; }
 ul > li > * { color: black; }
 
-pre {
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
   padding: 0;
   margin: 0;
 }
+
 
 #author {
   color: #527bbd;
@@ -415,12 +419,6 @@ div.unbreakable { page-break-inside: avoid; }
  *
  * */
 
-tt {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
-
 div.tableblock {
   margin-top: 1.0em;
   margin-bottom: 1.5em;
@@ -453,12 +451,6 @@ div.tableblock > table[frame="vsides"] {
  * html5 specific
  *
  * */
-
-.monospaced {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
 
 table.tableblock {
   margin-top: 1.0em;
@@ -539,6 +531,8 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
+
+
 </style>
 <script type="text/javascript">
 /*<![CDATA[*/
@@ -786,18 +780,140 @@ nvme-zeroes(1) Manual Page
         Start block.
 </p>
 </dd>
+<dt class="hdlist1">
+--block-count=&lt;nlb&gt;
+</dt>
+<dt class="hdlist1">
+-c &lt;nlb&gt;
+</dt>
+<dd>
+<p>
+        Number of logical blocks to write zeroes.
+</p>
+</dd>
+<dt class="hdlist1">
+--prinfo=&lt;prinfo&gt;
+</dt>
+<dt class="hdlist1">
+-p &lt;prinfo&gt;
+</dt>
+<dd>
+<p>
+        Protection Information field defintion.
+</p>
+<div class="tableblock">
+<table rules="all"
+width="100%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table">Bit</p></td>
+<td align="left" valign="top"><p class="table">Description</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">3</p></td>
+<td align="left" valign="top"><p class="table">PRACT: Protection Information Action. When set to 1, PI is stripped/inserted
+on read/write when the block format&#8217;s metadata size is 8. When set to 0,
+metadata is passes.</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">2:0</p></td>
+<td align="left" valign="top"><p class="table">PRCHK: Protection Information Check:</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">2</p></td>
+<td align="left" valign="top"><p class="table">Set to 1 enables checking the guard tag</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">1</p></td>
+<td align="left" valign="top"><p class="table">Set to 1 enables checking the application tag</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">0</p></td>
+<td align="left" valign="top"><p class="table">Set to 1 enables checking the reference tag</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd>
+<dt class="hdlist1">
+--ref-tag=&lt;reftag&gt;
+</dt>
+<dt class="hdlist1">
+-r &lt;reftag&gt;
+</dt>
+<dd>
+<p>
+        Optional reftag when used with protection information.
+</p>
+</dd>
+<dt class="hdlist1">
+--app-tag-mask=&lt;appmask&gt;
+</dt>
+<dt class="hdlist1">
+-m &lt;appmask&gt;
+</dt>
+<dd>
+<p>
+        Optional application tag mask when used with protection information.
+</p>
+</dd>
+<dt class="hdlist1">
+--app-tag=&lt;apptag&gt;
+</dt>
+<dt class="hdlist1">
+-a &lt;apptag&gt;
+</dt>
+<dd>
+<p>
+        Optional application tag when used with protection information.
+</p>
+</dd>
+<dt class="hdlist1">
+--limited-retry
+</dt>
+<dt class="hdlist1">
+-l
+</dt>
+<dd>
+<p>
+        Sets the limited retry flag.
+</p>
+</dd>
+<dt class="hdlist1">
+--force-unit-access
+</dt>
+<dt class="hdlist1">
+-f
+</dt>
+<dd>
+<p>
+        Set the force-unit access flag.
+</p>
+</dd>
+<dt class="hdlist1">
+--namespace-id=&lt;nsid&gt;
+</dt>
+<dt class="hdlist1">
+-n &lt;nsid&gt;
+</dt>
+<dd>
+<p>
+        Namespace ID use in the command.
+</p>
+</dd>
 </dl></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_examples">EXAMPLES</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>No examples yet.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_nvme">NVME</h2>
-<div class="sectionbody">
+<div class="paragraph"><p>EXAMPLES
+EXAMPLES</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>No examples yet.
+
+NVME</code></pre>
+</div></div>
 <div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
@@ -805,7 +921,7 @@ nvme-zeroes(1) Manual Page
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-02 08:24:55 MST
+Last updated 2016-11-15 18:10:54 EST
 </div>
 </div>
 </body>

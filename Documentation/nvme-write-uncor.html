@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.7" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
 <title>nvme-uncor(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -87,10 +87,14 @@ ul, ol, li > p {
 ul > li     { color: #aaa; }
 ul > li > * { color: black; }
 
-pre {
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
   padding: 0;
   margin: 0;
 }
+
 
 #author {
   color: #527bbd;
@@ -415,12 +419,6 @@ div.unbreakable { page-break-inside: avoid; }
  *
  * */
 
-tt {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
-
 div.tableblock {
   margin-top: 1.0em;
   margin-bottom: 1.5em;
@@ -453,12 +451,6 @@ div.tableblock > table[frame="vsides"] {
  * html5 specific
  *
  * */
-
-.monospaced {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
 
 table.tableblock {
   margin-top: 1.0em;
@@ -539,6 +531,8 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
+
+
 </style>
 <script type="text/javascript">
 /*<![CDATA[*/
@@ -752,7 +746,7 @@ nvme-uncor(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme-write-zeroes</em> &lt;device&gt; [--start-block=&lt;slba&gt; | -s &lt;slba&gt;]
+<pre class="content"><em>nvme-write-uncorr</em> &lt;device&gt; [--start-block=&lt;slba&gt; | -s &lt;slba&gt;]
                         [--block-count=&lt;nlb&gt; | -c &lt;nlb&gt;]
                         [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
 <div class="attribution">
@@ -762,7 +756,8 @@ nvme-uncor(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>The Write Zeroes command is used to set a range of logical blocks to 0.</p></div>
+<div class="paragraph"><p>The Write Uncorrectable command is used to invalidate a range of logical
+blocks.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -778,6 +773,28 @@ nvme-uncor(1) Manual Page
 <dd>
 <p>
         Start block.
+</p>
+</dd>
+<dt class="hdlist1">
+--block-count=&lt;nlb&gt;
+</dt>
+<dt class="hdlist1">
+-c
+</dt>
+<dd>
+<p>
+        Number of logical blocks to write uncorrectable.
+</p>
+</dd>
+<dt class="hdlist1">
+--namespace-id=&lt;nsid&gt;
+</dt>
+<dt class="hdlist1">
+-n &lt;nsid&gt;
+</dt>
+<dd>
+<p>
+        Namespace ID use in the command.
 </p>
 </dd>
 </dl></div>
@@ -799,7 +816,7 @@ nvme-uncor(1) Manual Page
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-02 08:24:54 MST
+Last updated 2016-11-15 16:34:32 EST
 </div>
 </div>
 </body>

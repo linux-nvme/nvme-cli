@@ -2,12 +2,12 @@
 .\"     Title: nvme-list
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 09/29/2016
+.\"      Date: 11/17/2016
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LIST" "1" "09/29/2016" "NVMe" "NVMe Manual"
+.TH "NVME\-LIST" "1" "11/17/2016" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,14 +32,20 @@ nvme-list \- List all recognized NVMe devices
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme list\fR
+\fInvme list\fR [\-o <fmt> | \-\-output\-format=<fmt>]
 .fi
 .SH "DESCRIPTION"
 .sp
 Scan the sysfs tree for NVM Express devices and return the /dev node for those devices as well as some pertinent information about them\&.
 .SH "OPTIONS"
-.sp
-No options yet\&.
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+Set the reporting format to
+\fInormal\fR
+or
+\fIjson\fR\&. Only one output format can be used at a time\&.
+.RE
 .SH "EXAMPLES"
 .sp
 No examples yet\&.

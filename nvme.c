@@ -703,7 +703,7 @@ static char *nvme_char_from_block(char *block)
 	return block;
 }
 
-static void get_registers(struct nvme_bar **bar)
+static void *get_registers(void)
 {
 	int pci_fd;
 	char *base, path[512];
@@ -726,7 +726,7 @@ static void get_registers(struct nvme_bar **bar)
 		fprintf(stderr, "%s failed to map\n", base);
 		exit(ENODEV);
 	}
-	*bar = membase;
+	return membase;
 }
 
 static void print_list_item(struct list_item list_item)
@@ -776,12 +776,12 @@ static int get_nvme_info(int fd, struct list_item *item, const char *node)
 	int err;
 
 	err = nvme_identify_ctrl(fd, &item->ctrl);
-	if (err > 0)
+	if (err)
 		return err;
 	item->nsid = nvme_get_nsid(fd);
 	err = nvme_identify_ns(fd, item->nsid,
 			       0, &item->ns);
-	if (err > 0)
+	if (err)
 		return err;
 	strcpy(item->node, node);
 	item->block = S_ISBLK(nvme_stat.st_mode);
@@ -1124,23 +1124,20 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	err = nvme_get_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.sel, cfg.cdw11,
 			cfg.data_len, buf, &result);
 	if (!err) {
-		printf("get-feature:0x%02x (%s), %s value: %#08x\n", cfg.feature_id,
+		if (!cfg.raw_binary || !buf) {
+			printf("get-feature:%#02x (%s), %s value:%#08x\n", cfg.feature_id,
 				nvme_feature_to_string(cfg.feature_id),
 				nvme_select_to_string(cfg.sel), result);
-		if (cfg.human_readable)
-			nvme_feature_show_fields(cfg.feature_id, result, buf);
-		else {
-			if (buf) {
-				if (!cfg.raw_binary)
-					d(buf, cfg.data_len, 16, 1);
-				else
-					d_raw(buf, cfg.data_len);
-			}
-		}
-	}
-	else if (err > 0)
+			if (cfg.human_readable)
+				nvme_feature_show_fields(cfg.feature_id, result, buf);
+			else if (buf)
+				d(buf, cfg.data_len, 16, 1);
+		} else if (buf)
+			d_raw(buf, cfg.data_len);
+	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 				nvme_status_to_string(err), err);
+
 	if (buf)
 		free(buf);
 	return err;
@@ -1334,9 +1331,19 @@ static int reset(int argc, char **argv, struct command *cmd, struct plugin *plug
 	return err;
 }
 
-static void print_lo_hi_64(uint32_t *val)
+static inline uint32_t mmio_read32(void *addr)
 {
-	printf("%x%08x\n", val[1], val[0]);
+	__le32 *p = addr;
+
+	return le32_to_cpu(*p);
+}
+
+/* Access 64-bit registers as 2 32-bit; Some devices fail 64-bit MMIO. */
+static inline __u64 mmio_read64(void *addr)
+{
+	__le32 *p = addr;
+
+	return le32_to_cpu(*p) | ((uint64_t)le32_to_cpu(*(p + 1)) << 32);
 }
 
 static int show_registers(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -1344,7 +1351,9 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	const char *desc = "Reads and shows the defined NVMe controller registers "\
 					"in binary or human-readable format";
 	const char *human_readable = "show info in readable format";
-	struct nvme_bar *bar;
+	uint64_t cap, asq, acq;
+	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc;
+	void *bar;
 
 	struct config {
 		int human_readable;
@@ -1361,71 +1370,71 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 
 	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
-	get_registers(&bar);
+	bar = get_registers();
+	cap = mmio_read64(bar + NVME_REG_CAP);
+	vs = mmio_read32(bar + NVME_REG_VS);
+	intms = mmio_read32(bar + NVME_REG_INTMS);
+	intmc = mmio_read32(bar + NVME_REG_INTMC);
+	cc = mmio_read32(bar + NVME_REG_CC);
+	csts = mmio_read32(bar + NVME_REG_CSTS);
+	nssr = mmio_read32(bar + NVME_REG_NSSR);
+	aqa = mmio_read32(bar + NVME_REG_AQA);
+	asq = mmio_read64(bar + NVME_REG_ASQ);
+	acq = mmio_read64(bar + NVME_REG_ACQ);
+	cmbloc = mmio_read32(bar + NVME_REG_CMBLOC);
+	cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
 
 	if (cfg.human_readable) {
-		printf("cap     : ");
-		print_lo_hi_64((uint32_t *)&bar->cap);
-		show_registers_cap((struct nvme_bar_cap *)&bar->cap);
+		printf("cap     : %"PRIx64"\n", cap);
+		show_registers_cap((struct nvme_bar_cap *)&cap);
 
-		printf("version : %x\n", bar->vs);
-		show_registers_version(bar->vs);
+		printf("version : %x\n", vs);
+		show_registers_version(vs);
+	
+		printf("intms   : %x\n", intms);
+		printf("\tInterrupt Vector Mask Set (IVMS): %x\n\n", intms);
 
-		printf("intms   : %x\n", bar->intms);
-		printf("\tInterrupt Vector Mask Set (IVMS): %x\n\n", bar->intms); 
+		printf("intmc   : %x\n", intmc);
+		printf("\tInterrupt Vector Mask Clear (IVMC): %x\n\n", intmc);
 
-		printf("intmc   : %x\n", bar->intmc);
-		printf("\tInterrupt Vector Mask Clear (IVMC): %x\n\n", bar->intmc); 
+		printf("cc      : %x\n", cc);
+		show_registers_cc(cc);
 
-		printf("cc      : %x\n", bar->cc);
-		show_registers_cc(bar->cc);
+		printf("csts    : %x\n", csts);
+		show_registers_csts(csts);
 
-		printf("csts    : %x\n", bar->csts);
-		show_registers_csts(bar->csts);
+		printf("nssr    : %x\n", nssr);
+		printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n", nssr);
 
-		printf("nssr    : %x\n", bar->nssr);
-		printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n", bar->nssr); 
+		printf("aqa     : %x\n", aqa);
+		show_registers_aqa(aqa);
 
-		printf("aqa     : %x\n", bar->aqa);
-		show_registers_aqa(bar->aqa);
+		printf("asq     : %"PRIx64"\n", asq);
+		printf("\tAdmin Submission Queue Base (ASQB): %"PRIx64"\n",
+				asq);
 
-		printf("asq     : ");
-		print_lo_hi_64((uint32_t *)&bar->asq);
-		printf("\tAdmin Submission Queue Base (ASQB): ");
-		print_lo_hi_64((uint32_t *)&bar->asq);
-		printf("\n");
+		printf("acq     : %"PRIx64"\n", acq);
+		printf("\tAdmin Completion Queue Base (ACQB): %"PRIx64"\n",
+				acq);
 
-		printf("acq     : ");
-		print_lo_hi_64((uint32_t *)&bar->acq);
-		printf("\tAdmin Completion Queue Base (ACQB): ");
-		print_lo_hi_64((uint32_t *)&bar->acq);
-		printf("\n");
+		printf("cmbloc  : %x\n", cmbloc);
+		show_registers_cmbloc(cmbloc, cmbsz);
 
-		printf("cmbloc  : %x\n", bar->cmbloc);
-		show_registers_cmbloc(bar->cmbloc, bar->cmbsz);
-
-		printf("cmbsz   : %x\n", bar->cmbsz);
-		show_registers_cmbsz(bar->cmbsz);
-	}
-	else {
-		printf("cap     : ");
-		print_lo_hi_64((uint32_t *)&bar->cap);
-
-		printf("version : %x\n", bar->vs);
-		printf("intms   : %x\n", bar->intms);
-		printf("intmc   : %x\n", bar->intmc);
-		printf("cc      : %x\n", bar->cc);
-		printf("csts    : %x\n", bar->csts);
-		printf("nssr    : %x\n", bar->nssr);
-		printf("aqa     : %x\n", bar->aqa);
-		printf("asq     : ");
-		print_lo_hi_64((uint32_t *)&bar->asq);
-
-		printf("acq     : ");
-		print_lo_hi_64((uint32_t *)&bar->acq);
-
-		printf("cmbloc  : %x\n", bar->cmbloc);
-		printf("cmbsz   : %x\n", bar->cmbsz);
+		printf("cmbsz   : %x\n", cmbsz);
+		show_registers_cmbsz(cmbsz);
+	} else {
+		printf("cap     : %"PRIx64"\n", cap);
+		printf("version : %x\n", vs);
+		printf("intms   : %x\n", intms);
+		printf("intmc   : %x\n", intmc);
+		printf("cc      : %x\n", cc);
+		printf("csts    : %x\n", csts);
+		printf("nssr    : %x\n", nssr);
+		printf("aqa     : %x\n", aqa);
+		printf("asq     : %"PRIx64"\n", asq);
+		printf("acq     : %"PRIx64"\n", acq);
+		printf("cmbloc  : %x\n", cmbloc);
+		printf("cmbsz   : %x\n", cmbsz);
 	}
 
 	return 0;
@@ -1444,7 +1453,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	const char *pi = "[0-3]: protection info off/Type 1/Type 2/Type 3";
 	const char *ms = "[0-1]: extended format off/on";
 	const char *reset = "Automatically reset the controller after successful format";
-	const char *timeout = "timeout value";
+	const char *timeout = "timeout value, in milliseconds";
 	int err;
 
 	struct config {
@@ -1604,8 +1613,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	if (err < 0) {
 		perror("set-feature");
 		return errno;
-	}
-	if (!err) {
+	} else if (!err) {
 		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
 			nvme_feature_to_string(cfg.feature_id), cfg.value);
 		if (buf) {
@@ -1615,8 +1623,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 			else
 				d(buf, cfg.data_len, 16, 1);
 		}
-	}
-	else if (err > 0)
+	} else
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 				nvme_status_to_string(err), err);
 	if (buf)
@@ -2551,7 +2558,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	const char *namespace_id = "desired namespace";
 	const char *data_len = "data I/O length (bytes)";
 	const char *metadata_len = "metadata seg. length (bytes)";
-	const char *timeout = "timeout value";
+	const char *timeout = "timeout value, in milliseconds";
 	const char *cdw2 = "command dword 2 value";
 	const char *cdw3 = "command dword 3 value";
 	const char *cdw10 = "command dword 10 value";

@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.7" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
 <title>nvme-discover(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -87,10 +87,14 @@ ul, ol, li > p {
 ul > li     { color: #aaa; }
 ul > li > * { color: black; }
 
-pre {
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
   padding: 0;
   margin: 0;
 }
+
 
 #author {
   color: #527bbd;
@@ -415,12 +419,6 @@ div.unbreakable { page-break-inside: avoid; }
  *
  * */
 
-tt {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
-
 div.tableblock {
   margin-top: 1.0em;
   margin-bottom: 1.5em;
@@ -453,12 +451,6 @@ div.tableblock > table[frame="vsides"] {
  * html5 specific
  *
  * */
-
-.monospaced {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
 
 table.tableblock {
   margin-top: 1.0em;
@@ -539,6 +531,8 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
+
+
 </style>
 <script type="text/javascript">
 /*<![CDATA[*/
@@ -752,12 +746,13 @@ nvme-discover(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme discover</em> [device]
-                [--transport=&lt;trtype&gt; | -t &lt;trtype&gt;]
-                [--traddr=&lt;traddr&gt;    | -a &lt;traddr&gt;]
-                [--trsvcid=&lt;trsvcid&gt;  | -s &lt;trsvcid&gt;]
-                [--hostnqn=&lt;hostnqn&gt;  | -q &lt;hostnqn&gt;]
-                [--raw=&lt;filename&gt;     | -r &lt;filename&gt;]</pre>
+<pre class="content"><em>nvme discover</em>
+                [--transport=&lt;trtype&gt;     | -t &lt;trtype&gt;]
+                [--traddr=&lt;traddr&gt;        | -a &lt;traddr&gt;]
+                [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
+                [--host_traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
+                [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
+                [--raw=&lt;filename&gt;         | -r &lt;filename&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -765,14 +760,15 @@ nvme-discover(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For a given NVMe Host, send a Discovery Get Log Page request
-to a Discovery Controller on the network.</p></div>
-<div class="paragraph"><p>The [device] parameter is OPTIONAL and will default to
-/dev/nvme-fabrics if none is given.</p></div>
+<div class="paragraph"><p>Send one or more Get Log Page requests to a NVMe-over-Fabrics Discovery
+Controller.</p></div>
 <div class="paragraph"><p>If no parameters are given, then <em>nvme discover</em> will attempt to
-find a /etc/nvme/discovery.conf file to use to supply the
-the discover command options.  If no /etc/nvme/discovery.conf file
+find a /etc/nvme/discovery.conf file to use to supply a list of
+Discovery commands to run.  If no /etc/nvme/discovery.conf file
 exists, the command will quit with an error.</p></div>
+<div class="paragraph"><p>Otherwise, a specific Discovery Controller should be specified using the
+--transport, --traddr, and if necessary the --trsvcid flags. A Diѕcovery
+request will then be sent to the specified Discovery Controller.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -789,7 +785,10 @@ NVMe connect command to connect itself to a storage resource
 contained in that NVMe subsystem on the NVMe Target.</p></div>
 <div class="paragraph"><p>Note that the base NVMe specfication defines the NQN (NVMe Qualified
 Name) format which an NVMe endpoint (device, subsystem, etc) must
-follow to guarantee a unique name under the NVMe standard.</p></div>
+follow to guarantee a unique name under the NVMe standard.
+In particular, the Host NQN uniquely identifies the NVMe Host, and
+may be used by the the Discovery Controller to control what NVMe Target
+resources are allocated to the NVMe Host for a connection.</p></div>
 <div class="paragraph"><p>A Discovery Controller has it&#8217;s own NQN defined in the NVMe-over-Fabrics
 specification, <strong>nqn.2014-08.org.nvmexpress.discovery</strong>.  All Discovery
 Controllers must use this NQN name. This NQN is used by default by
@@ -831,6 +830,10 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">fc</p></td>
 <td align="left" valign="top"><p class="table"><strong>WIP</strong> The network fabric is a Fibre Channel network.</p></td>
 </tr>
+<tr>
+<td align="left" valign="top"><p class="table">loop</p></td>
+<td align="left" valign="top"><p class="table">Connect to a NVMe over Fabrics target on the local host</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -844,6 +847,19 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         This field specifies the network address of the Discovery Controller.
+        For transports using IP addressing (e.g. rdma) this should be an
+        IP-based (ex. IPv4) address.
+</p>
+</dd>
+<dt class="hdlist1">
+-w &lt;traddr&gt;
+</dt>
+<dt class="hdlist1">
+--host-traddr=&lt;traddr&gt;
+</dt>
+<dd>
+<p>
+        This field specificies the host traddr. Eg.: FC WWN&#8217;s.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -854,9 +870,9 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        This field specifies the transport service id.  For IP addresses,
-        this field is the port number. By default, the IP port number
-        is 4420.
+        This field specifies the transport service id.  For transports using IP
+        addressing (e.g. rdma) this field is the port number. By default, the IP
+        port number for the RDMA transport is 4420.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -867,9 +883,22 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        This field is the unique NQN of a NVMe Host. This field
-        will be used by the Discovery Controller to check what NVMe
-        Target resources are allocated to the NVMe Host for a connection.
+        Overrides the default host NQN that identifies the NVMe Host.
+        If this option is not specified, the default is read from
+        /etc/nvme/hostnqn first. If that does not exist, the autogenerated
+        NQN value from the NVMe Host kernel module is used next.
+</p>
+</dd>
+<dt class="hdlist1">
+-s &lt;traddr&gt;
+</dt>
+<dt class="hdlist1">
+--host_traddr=&lt;traddr&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the network address used on the host to connect
+        to the Discovery Controller.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -900,8 +929,8 @@ Port 4420 is used by default:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme discover --transport=rdma --traddr=192.168.1.3 \
---hostnqn=host1-rogue-nqn</tt></pre>
+<pre><code># nvme discover --transport=rdma --traddr=192.168.1.3 \
+--hostnqn=host1-rogue-nqn</code></pre>
 </div></div>
 </li>
 <li>
@@ -912,17 +941,23 @@ Issue a <em>nvme discover</em> command using a /etc/nvme/discovery.conf file:
 </ul></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt># Machine default. Note currently only works for single command:
--t rdma -a 192.168.1.4 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
+<pre><code># Machine default 'nvme discover' commands.  Query the
+# Discovery Controller's two ports (some resources may only
+# be accessible on a single port).  Note an official
+# nqn (Host) name defined in the NVMe specification is being used
+# in this example.
+-t rdma -a 192.168.69.33 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
+-t rdma -a 192.168.1.4   -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
 
-At the prompt type "nvme discover".</tt></pre>
+At the prompt type "nvme discover".</code></pre>
 </div></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>nvme-connect(1)</p></div>
+<div class="paragraph"><p>nvme-connect(1)
+nvme-connect-all(1)</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -930,14 +965,6 @@ At the prompt type "nvme discover".</tt></pre>
 <div class="sectionbody">
 <div class="paragraph"><p>This was written by <a href="mailto:james.p.freyensee@intel.com">Jay Freyensee</a>
 for <a href="mailto:keith.busch@intel.com">Keith Busch</a>.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_reporting_bugs">REPORTING BUGS</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>Patches and issues for <em>discover</em> should be submitted to the Linux
-kernel email list <a href="mailto:linux-nvme@lists.infradead.org">linux-nvme</a>
-before merging to <a href="https://github.com/linux-nvme/nvme-cli">https://github.com/linux-nvme/nvme-cli</a>.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -950,7 +977,7 @@ before merging to <a href="https://github.com/linux-nvme/nvme-cli">https://githu
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-09-29 12:40:44 MDT
+Last updated 2016-11-17 11:43:30 EST
 </div>
 </div>
 </body>

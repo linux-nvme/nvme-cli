@@ -49,6 +49,7 @@ static struct config {
 	char *transport;
 	char *traddr;
 	char *trsvcid;
+	char *host_traddr;
 	char *hostnqn;
 	char *nr_io_queues;
 	char *keep_alive_tmo;
@@ -166,8 +167,7 @@ static int add_ctrl(const char *argstr)
 {
 	substring_t args[MAX_OPT_ARGS];
 	char buf[BUF_SIZE], *options, *p;
-	size_t len = strlen(argstr);
-	int token, ret, fd;
+	int token, ret, fd, len = strlen(argstr);
 
 	fd = open(PATH_NVME_FABRICS, O_RDWR);
 	if (fd < 0) {
@@ -475,6 +475,14 @@ static int build_options(char *argstr, int max_len)
 		max_len -= len;
 	}
 
+	if (cfg.host_traddr) {
+		len = snprintf(argstr, max_len, ",host_traddr=%s", cfg.host_traddr);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
 	if (cfg.trsvcid) {
 		len = snprintf(argstr, max_len, ",trsvcid=%s", cfg.trsvcid);
 		if (len < 0)
@@ -541,6 +549,13 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 		return -EINVAL;
 	p += len;
 
+	if (cfg.hostnqn) {
+		len = sprintf(p, ",hostnqn=%s", cfg.hostnqn);
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+	}
+
 	switch (e->trtype) {
 	case NVMF_TRTYPE_LOOP: /* loop */
 		len = sprintf(p, ",transport=loop");
@@ -565,6 +580,24 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 			p += len;
 
 			len = sprintf(p, ",trsvcid=%s", e->trsvcid);
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+			break;
+		default:
+			fprintf(stderr, "skipping unsupported adrfam\n");
+			return -EINVAL;
+		}
+		break;
+	case NVMF_TRTYPE_FC:
+		switch (e->adrfam) {
+		case NVMF_ADDR_FAMILY_FC:
+			len = sprintf(p, ",transport=fc");
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+
+			len = sprintf(p, ",traddr=%s", e->traddr);
 			if (len < 0)
 				return -EINVAL;
 			p += len;
@@ -707,17 +740,12 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 	char argstr[BUF_SIZE];
 	int ret;
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"transport", 't', "LIST", CFG_STRING, &cfg.transport,
-		 required_argument, "transport type" },
-		{"traddr", 'a', "LIST", CFG_STRING, &cfg.traddr,
-		 required_argument, "transport address" },
-		{"trsvcid", 's', "LIST", CFG_STRING, &cfg.trsvcid,
-		 required_argument, "transport service id (e.g. IP port)" },
-		{"hostnqn", 'q', "LIST", CFG_STRING, &cfg.hostnqn,
-		 required_argument,
-		 "user-defined hostnqn (if default not used)" },
-		{"raw", 'r', "LIST", CFG_STRING, &cfg.raw, required_argument,
-		 "raw output file" },
+		{"transport",   't', "LIST", CFG_STRING, &cfg.transport,   required_argument, "transport type" },
+		{"traddr",      'a', "LIST", CFG_STRING, &cfg.traddr,      required_argument, "transport address" },
+		{"trsvcid",     's', "LIST", CFG_STRING, &cfg.trsvcid,     required_argument, "transport service id (e.g. IP port)" },
+		{"host-traddr", 'w', "LIST", CFG_STRING, &cfg.host_traddr, required_argument, "host traddr (e.g. FC WWN's)" },
+		{"hostnqn",     'q', "LIST", CFG_STRING, &cfg.hostnqn,     required_argument, "user-defined hostnqn (if default not used)" },
+		{"raw",         'r', "LIST", CFG_STRING, &cfg.raw,         required_argument, "raw output file" },
 		{NULL},
 	};
 
@@ -743,24 +771,15 @@ int connect(const char *desc, int argc, char **argv)
 	char argstr[BUF_SIZE];
 	int instance, ret;
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"transport", 't', "LIST", CFG_STRING, &cfg.transport,
-		 required_argument,
-		 "transport type" },
-		{"nqn", 'n', "LIST", CFG_STRING, &cfg.nqn, required_argument,
-			"nqn name" },
-		{"traddr", 'a', "LIST", CFG_STRING, &cfg.traddr,
-		 required_argument, "transport address" },
-		{"trsvcid", 's', "LIST", CFG_STRING, &cfg.trsvcid,
-		 required_argument, "transport service id (e.g. IP port)" },
-		{"hostnqn", 'q', "LIST", CFG_STRING, &cfg.hostnqn,
-		 required_argument, "user-defined hostnqn" },
-		{"nr-io-queues", 'i', "LIST", CFG_STRING, &cfg.nr_io_queues,
-		 required_argument,
-		 "number of io queues to use (default is core count)" },
-		{"keep-alive-tmo", 'k', "LIST", CFG_STRING, &cfg.keep_alive_tmo, required_argument,
-			"keep alive timeout period in seconds" },
-		{"reconnect-delay", 'c', "LIST", CFG_STRING, &cfg.reconnect_delay, required_argument,
-			"reconnect timeout period in seconds" },
+		{"transport",       't', "LIST", CFG_STRING, &cfg.transport,       required_argument, "transport type" },
+		{"nqn",             'n', "LIST", CFG_STRING, &cfg.nqn,             required_argument, "nqn name" },
+		{"traddr",          'a', "LIST", CFG_STRING, &cfg.traddr,          required_argument, "transport address" },
+		{"trsvcid",         's', "LIST", CFG_STRING, &cfg.trsvcid,         required_argument, "transport service id (e.g. IP port)" },
+		{"host-traddr",     'w', "LIST", CFG_STRING, &cfg.host_traddr,     required_argument, "host traddr (e.g. FC WWN's)" },
+		{"hostnqn",         'q', "LIST", CFG_STRING, &cfg.hostnqn,         required_argument, "user-defined hostnqn" },
+		{"nr-io-queues",    'i', "LIST", CFG_STRING, &cfg.nr_io_queues,    required_argument, "number of io queues to use (default is core count)" },
+		{"keep-alive-tmo",  'k', "LIST", CFG_STRING, &cfg.keep_alive_tmo,  required_argument, "keep alive timeout period in seconds" },
+		{"reconnect-delay", 'c', "LIST", CFG_STRING, &cfg.reconnect_delay, required_argument, "reconnect timeout period in seconds" },
 		{NULL},
 	};
 
@@ -881,10 +900,8 @@ int disconnect(const char *desc, int argc, char **argv)
 	int ret = 0;
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"nqn", 'n', "LIST", CFG_STRING, &cfg.nqn,
-		 required_argument, nqn},
-		{"device", 'd', "LIST", CFG_STRING, &cfg.device,
-		 required_argument, device},
+		{"nqn",    'n', "LIST", CFG_STRING, &cfg.nqn,    required_argument, nqn},
+		{"device", 'd', "LIST", CFG_STRING, &cfg.device, required_argument, device},
 		{NULL},
 	};
 

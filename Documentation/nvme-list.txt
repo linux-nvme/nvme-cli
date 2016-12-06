@@ -8,7 +8,7 @@ nvme-list - List all recognized NVMe devices
 SYNOPSIS
 --------
 [verse]
-'nvme list' 
+'nvme list' [-o <fmt> | --output-format=<fmt>]
 
 DESCRIPTION
 -----------
@@ -17,7 +17,10 @@ for those devices as well as some pertinent information about them.
 
 OPTIONS
 -------
-No options yet.
+-o <format>::
+--output-format=<format>::
+	Set the reporting format to 'normal' or 'json'. Only one output
+	format can be used at a time.
 
 EXAMPLES
 --------
