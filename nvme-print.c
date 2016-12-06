@@ -1139,12 +1139,14 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 void json_print_list_items(struct list_item *list_items, unsigned len)
 {
 	struct json_object *root;
+	struct json_array *devices;
 	struct json_object *device_attrs;
 	char formatter[41] = { 0 };
 	int index, i = 0;
 	char *product;
 
 	root = json_create_object();
+	devices = json_create_array();
 	for (i = 0; i < len; i++) {
 		device_attrs = json_create_object();
 
@@ -1175,6 +1177,10 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 
 		product = nvme_product_name(index);
 
+		json_object_add_value_string(device_attrs,
+					     "ProductName",
+					     product);
+
 		format(formatter, sizeof(formatter),
 		       list_items[i].ctrl.sn,
 		       sizeof(list_items[i].ctrl.sn));
@@ -1183,9 +1189,10 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 					     "SerialNumber",
 					     formatter);
 
-		json_object_add_value_object(root, product, device_attrs);
+		json_array_add_value_object(devices, device_attrs);
 		free((void*)product);
 	}
+	json_object_add_value_array(root, "Devices", devices);
 	json_print_object(root, NULL);
 }
 
