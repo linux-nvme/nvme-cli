@@ -1,5 +1,4 @@
 #include <endian.h>
-#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -757,10 +756,10 @@ void show_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
 						fw_to_string(fw_log->frs[i]));
 }
 
-unsigned long int48_to_long(__u8 *data)
+uint64_t int48_to_long(__u8 *data)
 {
 	int i;
-	long result = 0;
+	uint64_t result = 0;
 
 	for (i = 0; i < 6; i++) {
 		result *= 256;
@@ -815,10 +814,10 @@ void show_intel_smart_log(struct nvme_additional_smart_log *smart, unsigned int 
 {
 	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
 	printf("key                               normalized raw\n");
-	printf("program_fail_count              : %3d%%       %lu\n",
+	printf("program_fail_count              : %3d%%       %"PRIu64"\n",
 		smart->program_fail_cnt.norm,
 		int48_to_long(smart->program_fail_cnt.raw));
-	printf("erase_fail_count                : %3d%%       %lu\n",
+	printf("erase_fail_count                : %3d%%       %"PRIu64"\n",
 		smart->erase_fail_cnt.norm,
 		int48_to_long(smart->erase_fail_cnt.raw));
 	printf("wear_leveling                   : %3d%%       min: %u, max: %u, avg: %u\n",
@@ -826,35 +825,35 @@ void show_intel_smart_log(struct nvme_additional_smart_log *smart, unsigned int 
 		le16_to_cpu(smart->wear_leveling_cnt.wear_level.min),
 		le16_to_cpu(smart->wear_leveling_cnt.wear_level.max),
 		le16_to_cpu(smart->wear_leveling_cnt.wear_level.avg));
-	printf("end_to_end_error_detection_count: %3d%%       %lu\n",
+	printf("end_to_end_error_detection_count: %3d%%       %"PRIu64"\n",
 		smart->e2e_err_cnt.norm,
 		int48_to_long(smart->e2e_err_cnt.raw));
-	printf("crc_error_count                 : %3d%%       %lu\n",
+	printf("crc_error_count                 : %3d%%       %"PRIu64"\n",
 		smart->crc_err_cnt.norm,
 		int48_to_long(smart->crc_err_cnt.raw));
 	printf("timed_workload_media_wear       : %3d%%       %.3f%%\n",
 		smart->timed_workload_media_wear.norm,
 		((float)int48_to_long(smart->timed_workload_media_wear.raw)) / 1024);
-	printf("timed_workload_host_reads       : %3d%%       %lu%%\n",
+	printf("timed_workload_host_reads       : %3d%%       %"PRIu64"%%\n",
 		smart->timed_workload_host_reads.norm,
 		int48_to_long(smart->timed_workload_host_reads.raw));
-	printf("timed_workload_timer            : %3d%%       %lu min\n",
+	printf("timed_workload_timer            : %3d%%       %"PRIu64" min\n",
 		smart->timed_workload_timer.norm,
 		int48_to_long(smart->timed_workload_timer.raw));
 	printf("thermal_throttle_status         : %3d%%       %u%%, cnt: %u\n",
 		smart->thermal_throttle_status.norm,
 		smart->thermal_throttle_status.thermal_throttle.pct,
 		smart->thermal_throttle_status.thermal_throttle.count);
-	printf("retry_buffer_overflow_count     : %3d%%       %lu\n",
+	printf("retry_buffer_overflow_count     : %3d%%       %"PRIu64"\n",
 		smart->retry_buffer_overflow_cnt.norm,
 		int48_to_long(smart->retry_buffer_overflow_cnt.raw));
-	printf("pll_lock_loss_count             : %3d%%       %lu\n",
+	printf("pll_lock_loss_count             : %3d%%       %"PRIu64"\n",
 		smart->pll_lock_loss_cnt.norm,
 		int48_to_long(smart->pll_lock_loss_cnt.raw));
-	printf("nand_bytes_written              : %3d%%       sectors: %lu\n",
+	printf("nand_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
 		smart->nand_bytes_written.norm,
 		int48_to_long(smart->nand_bytes_written.raw));
-	printf("host_bytes_written              : %3d%%       sectors: %lu\n",
+	printf("host_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
 		smart->host_bytes_written.norm,
 		int48_to_long(smart->host_bytes_written.raw));
 }

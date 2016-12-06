@@ -138,9 +138,9 @@ static int show_memblaze_smart_log(int fd, __u32 nsid, const char *devname,
 
 	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
 
-	printf("Total write in GB since last factory reset			: %lu\n",
+	printf("Total write in GB since last factory reset			: %"PRIu64"\n",
 		int48_to_long(smart->items[TOTAL_WRITE].rawval));
-	printf("Total read in GB since last factory reset			: %lu\n",
+	printf("Total read in GB since last factory reset			: %"PRIu64"\n",
 		int48_to_long(smart->items[TOTAL_READ].rawval));
 
 	printf("Thermal throttling status[1:HTP in progress]			: %u\n",

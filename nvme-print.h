@@ -2,6 +2,7 @@
 #define NVME_PRINT_H
 
 #include "nvme.h"
+#include <inttypes.h>
 
 enum {
 	TERSE = 0x1u,	// only show a few useful fields
@@ -13,7 +14,7 @@ enum {
 void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
 
-unsigned long int48_to_long(__u8 *data);
+uint64_t int48_to_long(__u8 *data);
 
 void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vendor_show)(__u8 *vs));
 void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode);
