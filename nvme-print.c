@@ -1422,7 +1422,7 @@ void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
 
 	for (i = 0; i < 7; i++) {
 		snprintf(fmt, sizeof(fmt), "Firmware Rev Slot %d", i);
-		snprintf(str, sizeof(str), "%lu (%s)", (uint64_t)fw_log->frs[i],
+		snprintf(str, sizeof(str), "%"PRIu64" (%s)", (uint64_t)fw_log->frs[i],
 			 fw_to_string(fw_log->frs[i]));
 		json_object_add_value_string(fwsi, fmt, str);
 	}
