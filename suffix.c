@@ -87,7 +87,7 @@ const char *suffix_binary_get(long long *value)
 	for (s = binary_suffixes; s->shift != 0; s++) {
 		if (llabs(*value) >= (1LL << s->shift)) {
 			*value =
-			    (*value + (1 << (s->shift - 1))) / (1 << s->shift);
+			    (*value + (1LL << (s->shift - 1))) / (1LL << s->shift);
 			return s->suffix;
 		}
 	}
@@ -101,7 +101,7 @@ const char *suffix_dbinary_get(double *value)
 
 	for (s = binary_suffixes; s->shift != 0; s++) {
 		if (fabs(*value) >= (1LL << s->shift)) {
-			*value = *value / (1 << s->shift);
+			*value = *value / (1LL << s->shift);
 			return s->suffix;
 		}
 	}

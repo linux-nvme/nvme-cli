@@ -43,7 +43,7 @@ static int lnvm_open(void)
 	if (fd < 0) {
 		printf("Failed to open LightNVM mgmt interface\n");
 		perror(dev);
-		exit(errno);
+		return fd;
 	}
 
 	return fd;
@@ -60,6 +60,8 @@ int lnvm_do_init(char *dev, char *mmtype)
 	int fd, ret;
 
 	fd = lnvm_open();
+	if (fd < 0)
+		return fd;
 
 	memset(&init, 0, sizeof(struct nvm_ioctl_dev_init));
 	strncpy(init.dev, dev, DISK_NAME_LEN);
@@ -91,6 +93,8 @@ int lnvm_do_list_devices(void)
 	int fd, ret, i;
 
 	fd = lnvm_open();
+	if (fd < 0)
+		return fd;
 
 	ret = ioctl(fd, NVM_GET_DEVICES, &devs);
 	if (ret)
@@ -118,6 +122,8 @@ int lnvm_do_info(void)
 	int fd, ret, i;
 
 	fd = lnvm_open();
+	if (fd < 0)
+		return fd;
 
 	memset(&c, 0, sizeof(struct nvm_ioctl_info));
 	ret = ioctl(fd, NVM_INFO, &c);
@@ -147,6 +153,8 @@ int lnvm_do_create_tgt(char *devname, char *tgtname, char *tgttype,
 	int fd, ret;
 
 	fd = lnvm_open();
+	if (fd < 0)
+		return fd;
 
 	strncpy(c.dev, devname, DISK_NAME_LEN);
 	strncpy(c.tgtname, tgtname, DISK_NAME_LEN);
@@ -170,6 +178,8 @@ int lnvm_do_remove_tgt(char *tgtname)
 	int fd, ret;
 
 	fd = lnvm_open();
+	if (fd < 0)
+		return fd;
 
 	strncpy(c.tgtname, tgtname, DISK_NAME_LEN);
 	c.flags = 0;
@@ -190,6 +200,8 @@ int lnvm_do_factory_init(char *devname, int erase_only_marked,
 	int fd, ret;
 
 	fd = lnvm_open();
+	if (fd < 0)
+		return fd;
 
 	memset(&fact, 0, sizeof(struct nvm_ioctl_dev_factory));
 

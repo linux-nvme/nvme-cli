@@ -249,6 +249,9 @@ char *nvme_product_name(int id)
 	size_t size = 1024;
 	char ret;
 
+	if (!file)
+		goto error1;
+
 	snprintf(fmt1, 78, _fmt1, id);
 	snprintf(fmt2, 78, _fmt2, id);
 	snprintf(fmt3, 78, _fmt3, id);

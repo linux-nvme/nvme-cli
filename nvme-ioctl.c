@@ -21,31 +21,40 @@
 
 #include "nvme-ioctl.h"
 
-static void nvme_verify_chr(int fd)
+static int nvme_verify_chr(int fd)
 {
 	static struct stat nvme_stat;
 	int err = fstat(fd, &nvme_stat);
 
 	if (err < 0) {
 		perror("fstat");
-		exit(err);
+		return errno;
 	}
 	if (!S_ISCHR(nvme_stat.st_mode)) {
 		fprintf(stderr,
 			"Error: requesting reset on non-controller handle\n");
-		exit(ENOTBLK);
+		return ENOTBLK;
 	}
+	return 0;
 }
 
 int nvme_subsystem_reset(int fd)
 {
-	nvme_verify_chr(fd);
+	int ret;
+
+	ret = nvme_verify_chr(fd);
+	if (ret)
+		return ret;
 	return ioctl(fd, NVME_IOCTL_SUBSYS_RESET);
 }
 
 int nvme_reset_controller(int fd)
 {
-	nvme_verify_chr(fd);
+	int ret;
+
+	ret = nvme_verify_chr(fd);
+	if (ret)
+		return ret;
 	return ioctl(fd, NVME_IOCTL_RESET);
 }
 
@@ -60,7 +69,7 @@ int nvme_get_nsid(int fd)
 	if (!S_ISBLK(nvme_stat.st_mode)) {
 		fprintf(stderr,
 			"Error: requesting namespace-id from non-block device\n");
-		exit(ENOTBLK);
+		return ENOTBLK;
 	}
 	return ioctl(fd, NVME_IOCTL_ID);
 }
@@ -232,7 +241,7 @@ struct nvme_dsm_range *nvme_setup_dsm_range(__u32 *ctx_attrs, __u32 *llbas,
 	struct nvme_dsm_range *dsm = malloc(nr_ranges * sizeof(*dsm));
 
 	if (!dsm)
-		exit(ENOMEM);
+		return NULL;
 	for (i = 0; i < nr_ranges; i++) {
 		dsm[i].cattr = cpu_to_le32(ctx_attrs[i]);
 		dsm[i].nlb = cpu_to_le32(llbas[i]);

@@ -72,15 +72,6 @@ struct argconfig_commandline_options {
 #define CFG_MAX_SUBOPTS 500
 #define MAX_HELP_FUNC 20
 
-struct argconfig_sub_options {
-	const char *option;
-	const char short_option;
-	const char *meta;
-	enum argconfig_types config_type;
-	const void *default_value;
-	const char *help;
-};
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -99,19 +90,6 @@ unsigned argconfig_parse_comma_sep_array_long(char *string,
 					      unsigned max_length);
 void argconfig_register_help_func(argconfig_help_func * f);
 
-void argconfig_print_subopt_help(const struct argconfig_sub_options
-				 *options, int indent);
-
-void argconfig_parse_subopt(char *const opts[], const char *module,
-			    const struct argconfig_sub_options *options,
-			    void *config_out, size_t config_size);
-
-int argconfig_set_subopt(const char *opt,
-			 const struct argconfig_sub_options *options,
-			 void *config_out, va_list arg);
-int argconfig_get_subopt(const char *opt,
-			 const struct argconfig_sub_options *options,
-			 void *config_out, va_list arg);
 void print_word_wrapped(const char *s, int indent, int start);
 #ifdef __cplusplus
 }

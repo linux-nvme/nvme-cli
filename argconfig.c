@@ -199,7 +199,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		if (c != 0) {
 			if (c == '?' || c == 'h') {
 				argconfig_print_help(program_desc, options);
-				goto exit;
+				goto out;
 			}
 			for (option_index = 0; option_index < options_count;
 			     option_index++) {
@@ -224,7 +224,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				fprintf(stderr,
 					"Expected integer argument for '%s' but got '%s'!\n",
 					long_opts[option_index].name, optarg);
-				goto exit;
+				goto out;
 			}
 		} else if (s->config_type == CFG_INT) {
 			*((int *)value_addr) = strtol(optarg, &endptr, 0);
@@ -232,7 +232,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				fprintf(stderr,
 					"Expected integer argument for '%s' but got '%s'!\n",
 					long_opts[option_index].name, optarg);
-				goto exit;
+				goto out;
 			}
 		} else if (s->config_type == CFG_BOOL) {
 			int tmp = strtol(optarg, &endptr, 0);
@@ -240,7 +240,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				fprintf(stderr,
 					"Expected 0 or 1 argument for '%s' but got '%s'!\n",
 					long_opts[option_index].name, optarg);
-				goto exit;
+				goto out;
 			}
 			*((int *)value_addr) = tmp;
 		} else if (s->config_type == CFG_BYTE) {
@@ -249,7 +249,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				fprintf(stderr,
 					"Expected byte argument for '%s' but got '%s'!\n",
 					long_opts[option_index].name, optarg);
-				goto exit;
+				goto out;
 			}
 			*((uint8_t *) value_addr) = tmp;
 		} else if (s->config_type == CFG_SHORT) {
@@ -258,7 +258,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				fprintf(stderr,
 					"Expected short argument for '%s' but got '%s'!\n",
 					long_opts[option_index].name, optarg);
-				goto exit;
+				goto out;
 			}
 			*((uint16_t *) value_addr) = tmp;
 		} else if (s->config_type == CFG_POSITIVE) {
@@ -267,7 +267,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				fprintf(stderr,
 					"Expected word argument for '%s' but got '%s'!\n",
 					long_opts[option_index].name, optarg);
-				goto exit;
+				goto out;
 			}
 			*((uint32_t *) value_addr) = tmp;
 		} else if (s->config_type == CFG_INCREMENT) {
@@ -278,7 +278,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				fprintf(stderr,
 					"Expected long integer argument for '%s' but got '%s'!\n",
 					long_opts[option_index].name, optarg);
-				goto exit;
+				goto out;
 			}
 		} else if (s->config_type == CFG_LONG_SUFFIX) {
 			*((long *)value_addr) = suffix_binary_parse(optarg);
@@ -286,7 +286,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				fprintf(stderr,
 					"Expected long suffixed integer argument for '%s' but got '%s'!\n",
 					long_opts[option_index].name, optarg);
-				goto exit;
+				goto out;
 			}
 		} else if (s->config_type == CFG_DOUBLE) {
 			*((double *)value_addr) = strtod(optarg, &endptr);
@@ -294,7 +294,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				fprintf(stderr,
 					"Expected float argument for '%s' but got '%s'!\n",
 					long_opts[option_index].name, optarg);
-				goto exit;
+				goto out;
 			}
 		} else if (s->config_type == CFG_SUBOPTS) {
 			char **opts = ((char **)value_addr);
@@ -319,10 +319,10 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			if (r == 2) {
 				fprintf(stderr,
 					"Error Parsing Sub-Options: Too many options!\n");
-				goto exit;
+				goto out;
 			} else if (r) {
 				fprintf(stderr, "Error Parsing Sub-Options\n");
-				goto exit;
+				goto out;
 			}
 		} else if (s->config_type == CFG_FILE_A ||
 			   s->config_type == CFG_FILE_R ||
@@ -348,7 +348,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			if (f == NULL) {
 				fprintf(stderr, "Unable to open %s file: %s\n",
 					s->option, optarg);
-				goto exit;
+				goto out;
 			}
 			*((FILE **) value_addr) = f;
 		}
@@ -357,10 +357,10 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	free(long_opts);
 
 	return 0;
- exit:
+ out:
 	free(short_opts);
 	free(long_opts);
-	exit(1);
+	return -EINVAL;
 }
 
 int argconfig_parse_subopt_string(char *string, char **options,
@@ -452,12 +452,10 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
 		return 0;
 
 	val[ret] = strtol(tmp, &p, 0);
-
 	if (*p != 0)
-		exit(1);
+		return -1;
 
 	ret++;
-
 	while (1) {
 		tmp = strtok(NULL, ",");
 
@@ -465,16 +463,14 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
 			return ret;
 
 		if (ret >= max_length)
-			exit(1);
+			return -1;
 
 		val[ret] = strtol(tmp, &p, 0);
 
 		if (*p != 0)
-			exit(1);
-
+			return -1;
 		ret++;
 	}
-
 }
 
 unsigned argconfig_parse_comma_sep_array_long(char *string,
@@ -494,7 +490,7 @@ unsigned argconfig_parse_comma_sep_array_long(char *string,
 
 	val[ret] = strtoll(tmp, &p, 0);
 	if (*p != 0)
-		exit(1);
+		return -1;
 	ret++;
 	while (1) {
 		tmp = strtok(NULL, ",");
@@ -503,11 +499,11 @@ unsigned argconfig_parse_comma_sep_array_long(char *string,
 			return ret;
 
 		if (ret >= max_length)
-			exit(1);
+			return -1;
 
 		val[ret] = strtoll(tmp, &p, 0);
 		if (*p != 0)
-			exit(1);
+			return -1;
 		ret++;
 	}
 }
@@ -522,183 +518,4 @@ void argconfig_register_help_func(argconfig_help_func * f)
 			break;
 		}
 	}
-}
-
-void argconfig_parse_subopt(char *const opts[], const char *module,
-			    const struct argconfig_sub_options *options,
-			    void *config_out, size_t config_size)
-{
-	int enddefault = 0;
-	int tmp;
-	const struct argconfig_sub_options *s;
-	char *const *o;
-
-	errno = 0;
-
-	for (o = opts; o != NULL && *o != NULL; o += 2) {
-		if (*o == END_DEFAULT) {
-			enddefault = 1;
-			continue;
-		}
-
-		for (s = options; s->option != NULL; s++)
-			if (strcmp(o[0], s->option) == 0)
-				break;
-
-		if (s->option == NULL && enddefault) {
-			fprintf(stderr, "%s: Invalid sub-option '%s'.\n",
-				module, o[0]);
-			exit(1);
-		} else if (s->option == NULL) {
-			continue;
-		}
-
-		void *value_addr = (void *)(char *)s->default_value;
-
-		if (s->config_type == CFG_STRING) {
-			*((char **)value_addr) = o[1];
-		} else if (s->config_type == CFG_INT) {
-			*((int *)value_addr) = (int)strtol(o[1], NULL, 0);
-		} else if (s->config_type == CFG_SIZE) {
-			*((size_t *) value_addr) =
-			    (size_t) strtol(o[1], NULL, 0);
-		} else if (s->config_type == CFG_LONG) {
-			*((long *)value_addr) = strtol(o[1], NULL, 0);
-		} else if (s->config_type == CFG_LONG_SUFFIX) {
-			*((long *)value_addr) = suffix_binary_parse(o[1]);
-		} else if (s->config_type == CFG_DOUBLE) {
-			*((double *)value_addr) = strtod(o[1], NULL);
-		} else if (s->config_type == CFG_BOOL) {
-			tmp = strtol(o[1], NULL, 0);
-
-			if (tmp < 0 || tmp > 1)
-				errno = 1;
-
-			*((int *)value_addr) = (int)tmp;
-		} else if (s->config_type == CFG_POSITIVE) {
-			tmp = strtol(o[1], NULL, 0);
-
-			if (tmp < 0)
-				errno = 1;
-
-			*((int *)value_addr) = (int)tmp;
-		} else if (s->config_type == CFG_FILE_A ||
-			   s->config_type == CFG_FILE_R ||
-			   s->config_type == CFG_FILE_W ||
-			   s->config_type == CFG_FILE_AP ||
-			   s->config_type == CFG_FILE_RP ||
-			   s->config_type == CFG_FILE_WP) {
-			const char *fopts = "";
-			if (s->config_type == CFG_FILE_A)
-				fopts = "a";
-			else if (s->config_type == CFG_FILE_R)
-				fopts = "r";
-			else if (s->config_type == CFG_FILE_W)
-				fopts = "w";
-			else if (s->config_type == CFG_FILE_AP)
-				fopts = "a+";
-			else if (s->config_type == CFG_FILE_RP)
-				fopts = "r+";
-			else if (s->config_type == CFG_FILE_WP)
-				fopts = "w+";
-
-			FILE *f = fopen(o[1], fopts);
-
-			if (f == NULL) {
-				fprintf(stderr, "Unable to open %s file: %s\n",
-					s->option, o[1]);
-				exit(1);
-			}
-
-			*((FILE **) value_addr) = f;
-		}
-
-		if (errno) {
-			fprintf(stderr,
-				"%s: Invalid value '%s' for option '%s'.\n",
-				module, o[1], o[0]);
-			exit(1);
-		}
-	}
-}
-
-int argconfig_set_subopt(const char *opt,
-			 const struct argconfig_sub_options *options,
-			 void *config_out, va_list argp)
-{
-	const struct argconfig_sub_options *s;
-	for (s = options; s->option != NULL; s++)
-		if (strcmp(opt, s->option) == 0)
-			break;
-
-	if (s->option == NULL)
-		return 1;
-
-	void *value_addr = (void *)(char *)s->default_value;
-
-	if (s->config_type == CFG_STRING) {
-		*((char **)value_addr) = va_arg(argp, char *);
-	} else if (s->config_type == CFG_INT ||
-		   s->config_type == CFG_BOOL ||
-		   s->config_type == CFG_POSITIVE) {
-		*((int *)value_addr) = va_arg(argp, int);
-	} else if (s->config_type == CFG_SIZE) {
-		*((size_t *) value_addr) = va_arg(argp, size_t);
-	} else if (s->config_type == CFG_LONG) {
-		*((long *)value_addr) = va_arg(argp, long);
-	} else if (s->config_type == CFG_LONG_SUFFIX) {
-		*((long *)value_addr) = va_arg(argp, long);
-	} else if (s->config_type == CFG_DOUBLE) {
-		*((double *)value_addr) = va_arg(argp, double);
-	} else if (s->config_type == CFG_FILE_A ||
-		   s->config_type == CFG_FILE_R ||
-		   s->config_type == CFG_FILE_W ||
-		   s->config_type == CFG_FILE_AP ||
-		   s->config_type == CFG_FILE_RP ||
-		   s->config_type == CFG_FILE_WP) {
-
-		*((FILE **) value_addr) = va_arg(argp, FILE *);
-	}
-
-	return 0;
-}
-
-int argconfig_get_subopt(const char *opt,
-			 const struct argconfig_sub_options *options,
-			 void *config_out, va_list argp)
-{
-	const struct argconfig_sub_options *s;
-	for (s = options; s->option != NULL; s++)
-		if (strcmp(opt, s->option) == 0)
-			break;
-
-	if (s->option == NULL)
-		return 1;
-
-	void *value_addr = (void *)(char *)s->default_value;
-
-	if (s->config_type == CFG_STRING) {
-		*va_arg(argp, char **) = *((char **)value_addr);
-	} else if (s->config_type == CFG_INT ||
-		   s->config_type == CFG_BOOL ||
-		   s->config_type == CFG_POSITIVE) {
-		*va_arg(argp, int *) = *((int *)value_addr);
-	} else if (s->config_type == CFG_SIZE) {
-		*va_arg(argp, size_t *) = *((size_t *) value_addr);
-	} else if (s->config_type == CFG_LONG) {
-		*va_arg(argp, long *) = *((long *)value_addr);
-	} else if (s->config_type == CFG_LONG_SUFFIX) {
-		*va_arg(argp, long *) = *((long *)value_addr);
-	} else if (s->config_type == CFG_DOUBLE) {
-		*va_arg(argp, double *) = *((double *)value_addr);
-	} else if (s->config_type == CFG_FILE_A ||
-		   s->config_type == CFG_FILE_R ||
-		   s->config_type == CFG_FILE_W ||
-		   s->config_type == CFG_FILE_AP ||
-		   s->config_type == CFG_FILE_RP ||
-		   s->config_type == CFG_FILE_WP) {
-		*va_arg(argp, FILE **) = *((FILE **) value_addr);
-	}
-
-	return 0;
 }
