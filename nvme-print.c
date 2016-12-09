@@ -1151,9 +1151,14 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 		json_object_add_value_string(device_attrs,
 					     "DevicePath",
 					     list_items[i].node);
+
+		format(formatter, sizeof(formatter),
+			   list_items[i].ctrl.fr,
+			   sizeof(list_items[i].ctrl.fr));
+
 		json_object_add_value_string(device_attrs,
 					     "Firmware",
-					     list_items[i].ctrl.fr);
+					     formatter);
 
 		if (sscanf(list_items[i].node, "/dev/nvme%d", &index) == 1)
 			json_object_add_value_int(device_attrs,
