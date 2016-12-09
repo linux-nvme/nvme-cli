@@ -63,14 +63,15 @@ void d_raw(unsigned char *buf, unsigned len)
 static void format(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
 {
 
-	snprintf(formatter,fmt_sz, "%-*.*s",
+	fmt_sz = snprintf(formatter,fmt_sz, "%-*.*s",
 		 (int)tofmtsz, (int)tofmtsz, tofmt);
 	/* trim() the obnoxious trailing white lines */
-	while (--fmt_sz) {
+	while (fmt_sz) {
 		if (formatter[fmt_sz - 1] != ' ' && formatter[fmt_sz - 1] != '\0') {
 			formatter[fmt_sz] = '\0';
 			break;
 		}
+		fmt_sz--;
 	}
 }
 
