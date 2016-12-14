@@ -1951,7 +1951,7 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 	if (err < 0)
 		perror("reservation acquire");
 	else if (err != 0)
-		fprintf(stderr, "NVME IO command error:%04x\n", err);
+		fprintf(stderr, "NVME IO command error:%s(%x)\n", nvme_status_to_string(err), err);
 	else
 		printf("NVME Reservation Acquire success\n");
 	return err;
@@ -2011,7 +2011,7 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 	if (err < 0)
 		perror("reservation register");
 	else if (err != 0)
-		fprintf(stderr, "NVME IO command error:%04x\n", err);
+		fprintf(stderr, "NVME IO command error:%s(%x)\n", nvme_status_to(err), err);
 	else
 		printf("NVME Reservation  success\n");
 	return err;
@@ -2077,7 +2077,7 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 	if (err < 0)
 		perror("reservation release");
 	else if (err != 0)
-		fprintf(stderr, "NVME IO command error:%04x\n", err);
+		fprintf(stderr, "NVME IO command error:%s(%x)\n", nvme_status_to_string(err), err);
 	else
 		printf("NVME Reservation Release success\n");
 	return err;

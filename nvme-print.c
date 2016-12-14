@@ -913,6 +913,7 @@ char *nvme_status_to_string(__u32 status)
 	case NVME_SC_LBA_RANGE:			return "LBA_RANGE";
 	case NVME_SC_CAP_EXCEEDED:		return "CAP_EXCEEDED";
 	case NVME_SC_NS_NOT_READY:		return "NS_NOT_READY";
+	case NVME_SC_RESERVATION_CONFLICT:	return "RESERVATION_CONFLICT";
 	case NVME_SC_CQ_INVALID:		return "CQ_INVALID";
 	case NVME_SC_QID_INVALID:		return "QID_INVALID";
 	case NVME_SC_QUEUE_SIZE:		return "QUEUE_SIZE";
