@@ -26,13 +26,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <sys/ioctl.h>
 #include <asm/byteorder.h>
 #include <inttypes.h>
-#ifdef LIBUDEV_EXISTS
-#include <libudev.h>
-#endif
-
 #include <linux/types.h>
 
 #include "parser.h"
@@ -62,6 +59,7 @@ static struct config {
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
 #define PATH_NVMF_DISC		"/etc/nvme/discovery.conf"
 #define PATH_NVMF_HOSTNQN	"/etc/nvme/hostnqn"
+#define SYS_NVME		"/sys/class/nvme"
 #define MAX_DISC_ARGS		10
 
 enum {
@@ -801,85 +799,64 @@ int connect(const char *desc, int argc, char **argv)
 	return 0;
 }
 
-#ifdef LIBUDEV_EXISTS
-static int disconnect_subsys(struct udev_enumerate *enumerate, char *nqn)
+static int scan_sys_nvme_filter(const struct dirent *d)
 {
-	struct udev_list_entry *list_entry;
-	const char *subsysnqn;
-	char *sysfs_path;
-	int ret = 1;
+	if (!strcmp(d->d_name, "."))
+		return 0;
+	if (!strcmp(d->d_name, ".."))
+		return 0;
+	return 1;
+}
 
-	udev_list_entry_foreach(list_entry,
-				udev_enumerate_get_list_entry(enumerate)) {
-		struct udev_device *device;
+static int disconnect_subsys(char *nqn, char *ctrl)
+{
+	char *sysfs_nqn_path, *sysfs_del_path;;
+	char subsysnqn[NVMF_NQN_SIZE] = {};
+	int fd, ret = 0;
 
-		device = udev_device_new_from_syspath(
-				udev_enumerate_get_udev(enumerate),
-				udev_list_entry_get_name(list_entry));
-		if (device != NULL) {
-			subsysnqn = udev_device_get_sysattr_value(
-					device, "subsysnqn");
-			if (subsysnqn && !strcmp(subsysnqn, nqn)) {
-				if (asprintf(&sysfs_path,
-					"%s/delete_controller",
-					udev_device_get_syspath(device)) < 0) {
-					ret = errno;
-					udev_device_unref(device);
-					break;
-				}
-				udev_device_unref(device);
-				ret = remove_ctrl_by_path(sysfs_path);
-				free(sysfs_path);
-				break;
-			}
-			udev_device_unref(device);
-		}
-	}
+	asprintf(&sysfs_nqn_path, "%s/%s/subsysnqn", SYS_NVME, ctrl);
+	asprintf(&sysfs_del_path, "%s/%s/delete_controller", SYS_NVME, ctrl);
 
+	fd = open(sysfs_nqn_path, O_RDONLY);
+	if (fd < 0)
+		goto free;
+
+	if (read(fd, subsysnqn, NVMF_NQN_SIZE) < 0)
+		goto close;
+
+	subsysnqn[strcspn(subsysnqn, "\n")] = '\0';
+	if (strcmp(subsysnqn, nqn))
+		goto close;
+
+	ret = remove_ctrl_by_path(sysfs_del_path);
+ close:
+	close(fd);
+ free:
+	free(sysfs_del_path);
+	free(sysfs_nqn_path);
 	return ret;
 }
 
 static int disconnect_by_nqn(char *nqn)
 {
-	struct udev *udev;
-	struct udev_enumerate *udev_enumerate;
-	int ret;
+	struct dirent **devices = NULL;
+	int i, n, ret = 0;
 
-	if (strlen(nqn) > NVMF_NQN_SIZE) {
-		ret = -EINVAL;
-		goto exit;
-	}
+	if (strlen(nqn) > NVMF_NQN_SIZE)
+		return -EINVAL;
 
-	udev = udev_new();
-	if (!udev) {
-		fprintf(stderr, "failed to create udev\n");
-		ret = -ENOMEM;
-		goto exit;
-	}
+	n = scandir(SYS_NVME, &devices, scan_sys_nvme_filter, alphasort);
+	if (n < 0)
+		return n;
 
-	udev_enumerate = udev_enumerate_new(udev);
-	if (udev_enumerate == NULL) {
-		ret = -ENOMEM;
-		goto free_udev;
-	}
+	for (i = 0; i < n; i++)
+		ret = disconnect_subsys(nqn, devices[i]->d_name);
 
-	udev_enumerate_add_match_subsystem(udev_enumerate, "nvme");
-	udev_enumerate_scan_devices(udev_enumerate);
-	ret = disconnect_subsys(udev_enumerate, nqn);
-	udev_enumerate_unref(udev_enumerate);
-
-free_udev:
-	udev_unref(udev);
-exit:
+	for (i = 0; i < n; i++)
+		free(devices[i]);
+	free(devices);
 	return ret;
 }
-#else
-static int disconnect_by_nqn(char *nqn)
-{
-	fprintf(stderr, "libudev not detected, install and rebuild.\n");
-	return -1;
-}
-#endif
 
 static int disconnect_by_device(char *device)
 {

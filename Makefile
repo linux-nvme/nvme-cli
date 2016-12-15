@@ -7,7 +7,6 @@ DESTDIR =
 PREFIX ?= /usr/local
 SYSCONFDIR = /etc
 SBINDIR = $(PREFIX)/sbin
-LIBUDEV := $(shell ld -o /dev/null -ludev >/dev/null 2>&1; echo $$?)
 LIB_DEPENDS =
 
 RPMBUILD = rpmbuild
@@ -15,12 +14,6 @@ TAR = tar
 RM = rm -f
 
 AUTHOR=Keith Busch <keith.busch@intel.com>
-
-ifeq ($(LIBUDEV),0)
-	override LDFLAGS += -ludev
-	override CFLAGS  += -DLIBUDEV_EXISTS
-	override LIB_DEPENDS += udev
-endif
 
 default: $(NVME)
 
