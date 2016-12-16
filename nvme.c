@@ -1429,6 +1429,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	/* ses & pi checks set to 7 for forward-compatibility */
 	if (cfg.ses > 7) {
@@ -1521,6 +1523,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
@@ -1619,6 +1623,8 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	sec_fd = open(cfg.file, O_RDONLY);
 	if (sec_fd < 0) {
@@ -1678,6 +1684,8 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (!cfg.namespace_id)
 		cfg.namespace_id = get_nsid(fd);
@@ -1745,6 +1753,8 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (cfg.prinfo > 0xf)
 		return EINVAL;
@@ -1826,6 +1836,8 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, ctx_attrs, array_len(ctx_attrs));
 	nb = argconfig_parse_comma_sep_array(cfg.blocks, nlbs, array_len(nlbs));
@@ -1882,6 +1894,8 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	err = nvme_flush(fd, cfg.namespace_id);
 	if (err < 0)
@@ -1938,6 +1952,8 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (!cfg.namespace_id)
 		cfg.namespace_id = get_nsid(fd);
@@ -1998,6 +2014,8 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (!cfg.namespace_id)
 		cfg.namespace_id = get_nsid(fd);
@@ -2060,6 +2078,8 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (!cfg.namespace_id)
 		cfg.namespace_id = get_nsid(fd);
@@ -2119,6 +2139,8 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0)
@@ -2234,6 +2256,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	dfd = mfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
 	if (cfg.prinfo > 0xf)
@@ -2422,6 +2446,8 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (cfg.size) {
 		if (posix_memalign(&sec_buf, getpagesize(), cfg.size)) {
@@ -2550,6 +2576,8 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (strlen(cfg.input_file)){
 		wfd = open(cfg.input_file, O_RDONLY,
