@@ -91,7 +91,7 @@ NO_SUBDIR = :
 endif
 
 DESTDIR =
-PREFIX := /usr/local
+PREFIX ?= /usr/local
 
 all: man html
 
