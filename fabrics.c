@@ -808,6 +808,9 @@ static int scan_sys_nvme_filter(const struct dirent *d)
 	return 1;
 }
 
+/*
+ * Returns 1 if disconnect occurred, 0 otherwise.
+ */
 static int disconnect_subsys(char *nqn, char *ctrl)
 {
 	char *sysfs_nqn_path, *sysfs_del_path;;
@@ -828,7 +831,8 @@ static int disconnect_subsys(char *nqn, char *ctrl)
 	if (strcmp(subsysnqn, nqn))
 		goto close;
 
-	ret = remove_ctrl_by_path(sysfs_del_path);
+	if (!remove_ctrl_by_path(sysfs_del_path))
+		ret = 1;
  close:
 	close(fd);
  free:
@@ -837,6 +841,9 @@ static int disconnect_subsys(char *nqn, char *ctrl)
 	return ret;
 }
 
+/*
+ * Returns the number of controllers successfully disconnected.
+ */
 static int disconnect_by_nqn(char *nqn)
 {
 	struct dirent **devices = NULL;
@@ -850,11 +857,12 @@ static int disconnect_by_nqn(char *nqn)
 		return n;
 
 	for (i = 0; i < n; i++)
-		ret = disconnect_subsys(nqn, devices[i]->d_name);
+		ret += disconnect_subsys(nqn, devices[i]->d_name);
 
 	for (i = 0; i < n; i++)
 		free(devices[i]);
 	free(devices);
+
 	return ret;
 }
 
@@ -891,9 +899,11 @@ int disconnect(const char *desc, int argc, char **argv)
 
 	if (cfg.nqn) {
 		ret = disconnect_by_nqn(cfg.nqn);
-		if (ret)
+		if (ret < 0)
 			fprintf(stderr, "Failed to disconnect by NQN: %s\n",
 				cfg.nqn);
+		else
+			printf("NQN:%s disconnected %d controller(s)\n", cfg.nqn, ret);
 	}
 
 	if (cfg.device) {
