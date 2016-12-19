@@ -813,12 +813,14 @@ static int scan_sys_nvme_filter(const struct dirent *d)
  */
 static int disconnect_subsys(char *nqn, char *ctrl)
 {
-	char *sysfs_nqn_path, *sysfs_del_path;;
+	char *sysfs_nqn_path = NULL, *sysfs_del_path = NULL;
 	char subsysnqn[NVMF_NQN_SIZE] = {};
 	int fd, ret = 0;
 
-	asprintf(&sysfs_nqn_path, "%s/%s/subsysnqn", SYS_NVME, ctrl);
-	asprintf(&sysfs_del_path, "%s/%s/delete_controller", SYS_NVME, ctrl);
+	if (asprintf(&sysfs_nqn_path, "%s/%s/subsysnqn", SYS_NVME, ctrl) < 0)
+		goto free;
+	if (asprintf(&sysfs_del_path, "%s/%s/delete_controller", SYS_NVME, ctrl) < 0)
+		goto free;
 
 	fd = open(sysfs_nqn_path, O_RDONLY);
 	if (fd < 0)
