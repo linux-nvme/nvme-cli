@@ -16,6 +16,7 @@
 #define _NVME_H
 
 #include <stdbool.h>
+#include <endian.h>
 #include "plugin.h"
 
 #define unlikely(x) x
