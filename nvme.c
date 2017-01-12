@@ -44,6 +44,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <uuid/uuid.h>
 
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
@@ -2669,6 +2670,17 @@ static int admin_passthru(int argc, char **argv, struct command *cmd, struct plu
 	const char *desc = "Send a user-defined Admin command to the specified "\
 		"device via IOCTL passthrough, return results.";
 	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD, desc, cmd);
+}
+
+static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	uuid_t uuid;
+	char uuid_str[37]; /* e.g. 1b4e28ba-2fa1-11d2-883f-0016d3cca427 + \0 */
+
+	uuid_generate_random(uuid);
+	uuid_unparse_lower(uuid, uuid_str);
+	printf("nqn.2014-08.org.nvmexpress:NVMf:uuid:%s\n", uuid_str);
+	return 0;
 }
 
 static int discover_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)

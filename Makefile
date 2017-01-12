@@ -1,6 +1,7 @@
 CFLAGS ?= -O2 -g -Wall -Werror
 CFLAGS += -std=gnu99
 CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
+LDFLAGS += -luuid
 NVME = nvme
 INSTALL ?= install
 DESTDIR =
