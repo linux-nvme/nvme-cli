@@ -1,0 +1,29 @@
+nvme-gen-hostnqn(1)
+===================
+
+NAME
+----
+nvme-gen-hostnqn - Generate a host NVMe Qualified Name
+
+SYNOPSIS
+--------
+[verse]
+'nvme gen-hostnqn'
+
+DESCRIPTION
+-----------
+Generate a random host NQN in the form:
+nqn.2014-08.org.nvmexpress:NVMf:uuid:1b4e28ba-2fa1-11d2-883f-0016d3cca427
+and prints it to stdout.
+
+OPTIONS
+-------
+No options needed
+
+EXAMPLES
+--------
+nvme gen-hostnqn
+
+NVME
+----
+Part of the nvme-user suite
