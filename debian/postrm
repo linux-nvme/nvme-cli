@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ "$1" = "purge" ]; then
+	if [ -d /etc/nvme ]; then
+		rm -f /etc/nvme/hostnqn
+		if [ ! -n "`ls -A /etc/nvme`" ]; then
+			rm -rf /etc/nvme
+		fi
+	fi
+fi

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+    configure|install)
+	if [ ! -f /etc/nvme/hostnqn ]; then
+		install -D /dev/null /etc/nvme/hostnqn
+		echo `nvme gen-hostnqn` > /etc/nvme/hostnqn
+        fi
+        ;;
+
+    upgrade|abort-upgrade)
+        ;;
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 0
+        ;;
+esac
+exit 0

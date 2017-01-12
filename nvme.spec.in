@@ -33,6 +33,23 @@ make install DESTDIR=%{buildroot} PREFIX=/usr
 %clean
 rm -rf $RPM_BUILD_ROOT
 
+%post
+if [ $1 = 1 ]; then # 1 : This package is being installed for the first time
+	if [ ! -f /etc/nvme/hostnqn ]; then
+		install -D /dev/null /etc/nvme/hostnqn
+		echo $(nvme gen-hostnqn) > /etc/nvme/hostnqn
+        fi
+fi
+
+%preun
+if [ "$1" = "remove" ]; then
+	if [ -d /etc/nvme ]; then
+		rm -f /etc/nvme/hostnqn
+		if [ ! -n "`ls -A /etc/nvme`" ]; then
+			rm -rf /etc/nvme
+		fi
+	fi
+fi
 %changelog
 * Thu Oct 15 2015 Keith Busch <keith.busch@intel.com>
 - Initial RPM spec
