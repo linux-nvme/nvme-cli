@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-lnvm-init
+.\"     Title: nvme-gen-hostnqn
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
 .\"      Date: 01/18/2017
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LNVM\-INIT" "1" "01/18/2017" "NVMe" "NVMe Manual"
+.TH "NVME\-GEN\-HOSTNQN" "1" "01/18/2017" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,70 +28,21 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-lnvm-init \- Initialize LightNVM device with media manager
+nvme-gen-hostnqn \- Generate a host NVMe Qualified Name
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme lnvm\-init\fR [\-\-device\-name=<DEVICE> | \-d <DEVICE>]
-                        [\-\-mediamgr\-name | \-m]
+\fInvme gen\-hostnqn\fR
 .fi
 .SH "DESCRIPTION"
 .sp
-Initialize LightNVM device\&. A LightNVM/Open\-Channel SSD must have a media manager associated before it can be exposed to the user\&. The default is to initialize the general media manager on top of the device\&.
+Generate a random host NQN in the form: nqn\&.2014\-08\&.org\&.nvmexpress:NVMf:uuid:1b4e28ba\-2fa1\-11d2\-883f\-0016d3cca427 and prints it to stdout\&.
 .SH "OPTIONS"
-.PP
-\-\-device\-name=<DEVICE>, \-d <DEVICE>
-.RS 4
-Device name to initialize\&.
-.RE
-.PP
-\-\-mediamgr\-name=<MediaMgr>, \-m <MediaMgr>
-.RS 4
-Media Manager name to use for initialization\&.
-.RE
+.sp
+No options needed
 .SH "EXAMPLES"
 .sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-Initialize nvme0n1
-.RE
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-# nvme lnvm\-init \-d nvme0n1
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-Initialize nvme0n1 with gennvm media manager (default media manager)
-.RE
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-# nvme lnvm\-init \-d nvme0n1 \-m gennvm
-.fi
-.if n \{\
-.RE
-.\}
+nvme gen\-hostnqn
 .SH "NVME"
 .sp
 Part of the nvme\-user suite
