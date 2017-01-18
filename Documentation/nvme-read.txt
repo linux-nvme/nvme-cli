@@ -40,10 +40,6 @@ OPTIONS
 	align with the kernel's use of this field. (ie. 0 means transfer
 	1 block).
 
---block-count=<nlb>::
--c <nlb>::
-	Number of logical blocks to write.
-
 --data-size=<size>::
 -z <size>::
 	Size of data, in bytes.
