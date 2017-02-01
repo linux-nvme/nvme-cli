@@ -1119,6 +1119,9 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		cfg.data_len = 8;
 		break;
 	}
+
+	if (cfg.sel == 3)
+		cfg.data_len = 0;
 	
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
@@ -1135,7 +1138,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 			printf("get-feature:%#02x (%s), %s value:%#08x\n", cfg.feature_id,
 				nvme_feature_to_string(cfg.feature_id),
 				nvme_select_to_string(cfg.sel), result);
-			if (cfg.human_readable)
+			if (cfg.human_readable && buf)
 				nvme_feature_show_fields(cfg.feature_id, result, buf);
 			else if (buf)
 				d(buf, cfg.data_len, 16, 1);
