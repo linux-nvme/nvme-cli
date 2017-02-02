@@ -31,7 +31,7 @@ driver are recent enough, you can activate the firmware by issuing a
 reset through Linux sysfs, for example:
 
 ------------
- # echo 1 > /sys/class/misc/nvme0/device/reset
+ # echo 1 > /sys/class/nvme/nvme0/device/reset
 ------------
 
 If your kernel is not recent enough, you will need to remove and add
