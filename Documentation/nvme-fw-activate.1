@@ -2,12 +2,12 @@
 .\"     Title: nvme-fw-activate
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 01/18/2017
+.\"      Date: 02/02/2017
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FW\-ACTIVATE" "1" "01/18/2017" "NVMe" "NVMe Manual"
+.TH "NVME\-FW\-ACTIVATE" "1" "02/02/2017" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -47,7 +47,7 @@ No further action is automatically taken to reset the device, which is usually r
 .RS 4
 .\}
 .nf
- # echo 1 > /sys/class/misc/nvme0/device/reset
+ # echo 1 > /sys/class/nvme/nvme0/device/reset
 .fi
 .if n \{\
 .RE
