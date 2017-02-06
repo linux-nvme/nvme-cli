@@ -49,6 +49,7 @@ all: doc
 clean:
 	$(RM) $(NVME) *.o *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
 	$(MAKE) -C Documentation clean
+	$(RM) tests/*.pyc
 
 clobber: clean
 	$(MAKE) -C Documentation clobber
