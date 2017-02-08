@@ -595,6 +595,11 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 				return -EINVAL;
 			p += len;
 
+			len = sprintf(p, ",host_traddr=%s", cfg.host_traddr);
+			if (len < 0)
+				return -EINVAL;
+			p+= len;
+
 			len = sprintf(p, ",traddr=%s", e->traddr);
 			if (len < 0)
 				return -EINVAL;
