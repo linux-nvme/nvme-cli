@@ -141,8 +141,8 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		.devname = "",
 		.tgtname = "",
 		.tgttype = "",
-		.lun_begin = 0,
-		.lun_end = 0,
+		.lun_begin = -1,
+		.lun_end = -1,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
