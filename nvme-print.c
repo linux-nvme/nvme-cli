@@ -1421,6 +1421,7 @@ void json_nvme_resv_report(struct nvme_reservation_status *status)
 
 	json_print_object(root, NULL);
 	printf("\n");
+	json_free_object(root);
 }
 
 void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)

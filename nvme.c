@@ -2177,6 +2177,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 			show_nvme_resv_report(status);
 		}
 	}
+	free(status);
 	return err;
 }
 
