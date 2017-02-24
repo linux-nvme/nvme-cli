@@ -1500,6 +1500,8 @@ void json_add_smart_log(struct nvme_additional_smart_log *smart,
 	snprintf(fmt, sizeof(fmt), "Additional Smart Log for %s", devname);
 	json_object_add_value_object(root, fmt, data);
 	json_print_object(root, NULL);
+	json_free_object(data);
+	json_free_object(root);
 }
 
 void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname)
