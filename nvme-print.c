@@ -1354,6 +1354,7 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 
 	json_print_object(root, NULL);
 	printf("\n");
+	json_free_object(root);
 }
 
 void json_error_log(struct nvme_error_log_page *err_log, int entries, const char *devname)
