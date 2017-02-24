@@ -1542,6 +1542,7 @@ void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 
 	json_print_object(root, NULL);
 	printf("\n");
+	json_free_object(root);
 }
 
 void show_registers_cap(struct nvme_bar_cap *cap)
