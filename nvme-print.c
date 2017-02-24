@@ -1387,6 +1387,7 @@ void json_error_log(struct nvme_error_log_page *err_log, int entries, const char
 
 	json_print_object(root, NULL);
 	printf("\n");
+	json_free_object(root);
 }
 
 void json_nvme_resv_report(struct nvme_reservation_status *status)
