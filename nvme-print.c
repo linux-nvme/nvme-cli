@@ -1256,6 +1256,7 @@ void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 
 	json_print_object(root, NULL);
 	printf("\n");
+	json_free_object(root);
 }
 
 void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
