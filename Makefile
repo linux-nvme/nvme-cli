@@ -1,7 +1,7 @@
 CFLAGS ?= -O2 -g -Wall -Werror
 CFLAGS += -std=gnu99
 CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
-LDFLAGS += -luuid
+LIBUUID = $(shell ld -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 NVME = nvme
 INSTALL ?= install
 DESTDIR =
@@ -9,6 +9,12 @@ PREFIX ?= /usr/local
 SYSCONFDIR = /etc
 SBINDIR = $(PREFIX)/sbin
 LIB_DEPENDS =
+
+ifeq ($(LIBUUID),0)
+	override LDFLAGS += -luuid
+	override CFLAGS += -DLIBUUID
+	override LIB_DEPENDS += uuid
+endif
 
 RPMBUILD = rpmbuild
 TAR = tar

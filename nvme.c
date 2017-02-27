@@ -44,7 +44,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+
+#ifdef LIBUUID
 #include <uuid/uuid.h>
+#endif
 
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
@@ -2676,6 +2679,7 @@ static int admin_passthru(int argc, char **argv, struct command *cmd, struct plu
 	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD, desc, cmd);
 }
 
+#ifdef LIBUUID
 static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	uuid_t uuid;
@@ -2686,6 +2690,14 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struc
 	printf("nqn.2014-08.org.nvmexpress:NVMf:uuid:%s\n", uuid_str);
 	return 0;
 }
+#else
+static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	fprintf(stderr, "\"%s\" not supported. Install lib uuid and rebuild.\n",
+		command->name);
+	return -ENOTSUP;
+}
+#endif
 
 static int discover_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
