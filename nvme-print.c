@@ -806,8 +806,11 @@ void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 	printf("Critical Composite Temperature Time : %u\n", le32_to_cpu(smart->critical_comp_time));
 	for (c=0; c < 8; c++) {
 		__s32 temp = le16_to_cpu(smart->temp_sensor[c]);
+
+		if (temp == 0)
+			continue;
 		printf("Temperature Sensor %d                : %d C\n", c + 1,
-			temp ? temp - 273 : 0);
+			temp - 273);
 	}
 }
 
