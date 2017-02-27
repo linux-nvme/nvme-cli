@@ -1034,7 +1034,9 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 {
 	int nsid, fd;
 
-	fd = open_dev(argv[1]);
+	fd = get_dev(argc, argv);
+	if (fd < 0)
+		return fd;
 	nsid = nvme_get_nsid(fd);
 	if (nsid <= 0) {
 		perror(devicename);
