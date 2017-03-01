@@ -2,6 +2,7 @@
 #define NVME_PRINT_H
 
 #include "nvme.h"
+#include "json.h"
 #include <inttypes.h>
 
 enum {
@@ -16,7 +17,7 @@ void d_raw(unsigned char *buf, unsigned len);
 
 uint64_t int48_to_long(__u8 *data);
 
-void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vendor_show)(__u8 *vs));
+void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vendor_show)(__u8 *vs, struct json_object *root));
 void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode);
 void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int flags);
 void show_nvme_resv_report(struct nvme_reservation_status *status);
@@ -32,7 +33,7 @@ char *nvme_status_to_string(__u32 status);
 char *nvme_select_to_string(int sel);
 char *nvme_feature_to_string(int feature);
 
-void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode);
+void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vendor_show)(__u8 *vs, struct json_object *root));
 void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int flags);
 void json_nvme_resv_report(struct nvme_reservation_status *status);
 void json_error_log(struct nvme_error_log_page *err_log, int entries, const char *devname);

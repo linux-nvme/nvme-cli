@@ -12,6 +12,7 @@
 #include "nvme.h"
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
+#include "json.h"
 #include "plugin.h"
 
 #include "argconfig.h"
@@ -20,7 +21,7 @@
 #define CREATE_CMD
 #include "intel-nvme.h"
 
-static void intel_id_ctrl(__u8 *vs)
+static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 {
 	char bl[9];
         char health[21];
@@ -28,12 +29,18 @@ static void intel_id_ctrl(__u8 *vs)
 	memcpy(bl, &vs[28], sizeof(bl));
 	memcpy(health, &vs[4], sizeof(health));
 
-        bl[sizeof(bl) - 1] = '\0';
-        health[sizeof(health) - 1] = '\0';
+	bl[sizeof(bl) - 1] = '\0';
+	health[sizeof(health) - 1] = '\0';
 
-	printf("ss      : %d\n", vs[3]);
-	printf("health  : %s\n", health[0] ? health : "healthy");
-	printf("bl      : %s\n", bl);
+	if (root) {
+		json_object_add_value_int(root, "ss", vs[3]);
+		json_object_add_value_string(root, "health", health[0] ? health : "healthy");
+		json_object_add_value_string(root, "bl", bl);
+	} else {
+		printf("ss      : %d\n", vs[3]);
+		printf("health  : %s\n", health[0] ? health : "healthy");
+		printf("bl      : %s\n", bl);
+	}
 }
 
 static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)

@@ -883,7 +883,7 @@ static int get_nsid(int fd)
 	return nsid;
 }
 
-int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs))
+int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root))
 {
 	const char *desc = "Send an Identify Controller command to "\
 		"the given device and report information about the specified "\
@@ -936,7 +936,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 		if (fmt == BINARY)
 			d_raw((unsigned char *)&ctrl, sizeof(ctrl));
 		else if (fmt == JSON)
-			json_nvme_id_ctrl(&ctrl, flags);
+			json_nvme_id_ctrl(&ctrl, flags, vs);
 		else {
 			printf("NVME Identify Controller:\n");
 			__show_nvme_id_ctrl(&ctrl, flags, vs);

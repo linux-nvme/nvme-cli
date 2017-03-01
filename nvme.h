@@ -18,6 +18,7 @@
 #include <stdbool.h>
 #include <endian.h>
 #include "plugin.h"
+#include "json.h"
 
 #define unlikely(x) x
 #include "linux/nvme.h"
@@ -156,6 +157,6 @@ int parse_and_open(int argc, char **argv, const char *desc,
 
 extern const char *devicename;
 
-int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs));
+int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root));
 
 #endif /* _NVME_H */

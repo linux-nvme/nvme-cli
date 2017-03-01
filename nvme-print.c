@@ -590,7 +590,7 @@ static void show_nvme_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 	}
 }
 
-void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vendor_show)(__u8 *vs))
+void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
 	int human = mode & HUMAN, vs = mode & VS;
 
@@ -675,7 +675,7 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 
 	show_nvme_id_ctrl_power(ctrl);
 	if (vendor_show)
-		vendor_show(ctrl->vs);
+		vendor_show(ctrl->vs, NULL);
 	else if (vs) {
 		printf("vs[]:\n");
 		d(ctrl->vs, sizeof(ctrl->vs), 16, 1);
@@ -1262,7 +1262,7 @@ void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	json_free_object(root);
 }
 
-void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
+void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vs)(__u8 *vs, struct json_object *root))
 {
 	struct json_object *root;
 	struct json_array *psds;
@@ -1356,6 +1356,8 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 		json_array_add_value_object(psds, psd);
 	}
 
+	if(vs)
+		vs(ctrl->vs, root);
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
