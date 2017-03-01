@@ -157,13 +157,7 @@ int parse_and_open(int argc, char **argv, const char *desc,
 
 static const char *output_format = "Output format: normal|json|binary";
 
-enum {
-	NORMAL,
-	JSON,
-	BINARY,
-};
-
-static int validate_output_format(char *format)
+int validate_output_format(char *format)
 {
 	if (!format)
 		return -EINVAL;

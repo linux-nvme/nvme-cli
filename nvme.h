@@ -149,6 +149,12 @@ struct list_item {
 	unsigned            block;
 };
 
+enum {
+	NORMAL,
+	JSON,
+	BINARY,
+};
+
 void register_extension(struct plugin *plugin);
 
 #include "argconfig.h"
@@ -158,5 +164,6 @@ int parse_and_open(int argc, char **argv, const char *desc,
 extern const char *devicename;
 
 int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root));
+int	validate_output_format(char *format);
 
 #endif /* _NVME_H */
