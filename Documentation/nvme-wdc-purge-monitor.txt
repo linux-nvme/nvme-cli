@@ -1,0 +1,63 @@
+nvme-wdc-purge-monitor(1)
+==========================
+
+NAME
+----
+nvme-wdc-purge-monitor - Send NVMe WDC Purge-Monitor Vendor Unique Command, return result
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc purge-monitor' <device>
+
+DESCRIPTION
+-----------
+For the NVMe device given, send a Vendor Unique WDC Purge-Monitor command and
+provide the status of the purge command.
+
+Expected status and description :-
+
+[cols="2*", options="header"]
+|===
+|Status Code |Description
+
+|0x00
+|Purge State Idle.
+
+|0x01
+|Purge State Done.
+
+|0x02
+|Purge State Busy.
+
+|0x03
+|Purge State Error : Purge operation resulted in error, power cycle required.
+
+|0x04
+|Purge State Error : Purge operation interrupted by power cycle or reset.
+|===
+
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+No options yet.
+
+EXAMPLES
+--------
+* Has the program issue WDC Purge-Monitor Vendor Unique Command :
++
+------------
+# nvme wdc purge-monitor /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

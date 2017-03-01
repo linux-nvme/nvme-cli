@@ -1,0 +1,40 @@
+nvme-wdc-purge(1)
+==================
+
+NAME
+----
+nvme-wdc-purge - Send NVMe WDC Purge Vendor Unique Command, return result
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc purge' <device>
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends a Vendor Unique WDC Purge command and
+provides the result.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+No options yet.
+
+EXAMPLES
+--------
+* Has the program issue WDC Purge Vendor Unique Command :
++
+------------
+# nvme wdc purge /dev/nvme0n1
+------------
+
+NVME
+----
+Part of the nvme-user suite.

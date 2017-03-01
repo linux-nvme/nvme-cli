@@ -1,0 +1,50 @@
+nvme-wdc-cap-diag(1)
+====================
+
+NAME
+----
+nvme-wdc-cap-diag - Retrieve WDC device's diagnostic log and save to file.
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc cap-diag' <device> [--output-file=<FILE>, -o <FILE>]
+
+DESCRIPTION
+-----------
+
+For the NVMe device given, sends the WDC Vendor Unique Capture-Diagnostics
+request and saves the result to a file.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+OPTIONS
+-------
+-o <FILE>::
+--output-file=<FILE>::
+	Output file; defaults to device serial number followed by "cap_diag" suffix
+
+EXAMPLES
+--------
+* Gets the capture diagnostics log from the device and saves to default file in current directory (e.g. STM00019F3F9cap_diag.bin):
++
+------------
+# nvme wdc cap-diag /dev/nvme0
+------------
+* Gets the capture diagnostics log from the device and saves to defined file in current directory (e.g. testSTM00019F3F9cap_diag.bin):
++
+------------
+# nvme wdc cap-diag /dev/nvme0 -o test
+------------
+* Gets the capture diagnostics log from the device and saves to defined file with pathname (e.g. /tmp/testSTM00019F3F9cap_diag.bin):
++
+------------
+# nvme wdc cap-diag /dev/nvme0 -o /tmp/test
+------------
+
+NVME
+----
+Part of the nvme-user suite.

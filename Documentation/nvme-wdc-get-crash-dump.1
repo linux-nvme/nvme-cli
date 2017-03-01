@@ -1,0 +1,116 @@
+'\" t
+.\"     Title: nvme-wdc-get-crash-dump
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 02/28/2017
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-WDC\-GET\-CRAS" "1" "02/28/2017" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-wdc-get-crash-dump \- Retrieve WDC device\*(Aqs crash dump\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme wdc get\-crash\-dump\fR <device> [\-\-output\-file=<FILE>, \-o <FILE>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, sends the WDC vendor unique crash dump request and saves the result to file\&. In current implementation crash dump is captured if it is present\&. On success it will save the dump in file with appropriate suffix\&. Note that this command will clear the available dump from the device on success\&.
+.sp
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0)\&.
+.sp
+This will only work on WDC devices supporting this feature\&. Results for any other device are undefined\&.
+.SH "OPTIONS"
+.PP
+\-o <FILE>, \-\-output\-file=<FILE>
+.RS 4
+Output file; defaults to device serial number followed by "crash_dump" suffix
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Gets the crash dump from the device and saves to default file in current directory (e\&.g\&. STM00019F3F9crash_dump\&.bin):
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme wdc get\-crash\-dump /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Gets the crash dump from the device and saves to defined file in current directory (e\&.g\&. testSTM00019F3F9crash_dump\&.bin):
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme wdc get\-crash\-dump /dev/nvme0 \-o test
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Gets the crash dump from the device and saves to defined file with pathname (e\&.g\&. /tmp/testSTM00019F3F9crash_dump\&.bin):
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme wdc get\-crash\-dump /dev/nvme0 \-o /tmp/test
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite
