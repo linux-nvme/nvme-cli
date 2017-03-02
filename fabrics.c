@@ -354,6 +354,17 @@ out:
 	return error;
 }
 
+static int space_strip_len(int max, const char *str)
+{
+	int i;
+
+	for (i = max - 1; i >= 0; i--)
+		if (str[i] != '\0' && str[i] != ' ')
+			break;
+
+	return i + 1;
+}
+
 static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 {
 	int i;
@@ -371,9 +382,13 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 		printf("subtype: %s\n", subtype_str(e->subtype));
 		printf("treq:    %s\n", treq_str(e->treq));
 		printf("portid:  %d\n", e->portid);
-		printf("trsvcid: %s\n", e->trsvcid);
+		printf("trsvcid: %.*s\n",
+		       space_strip_len(NVMF_TRSVCID_SIZE, e->trsvcid),
+		       e->trsvcid);
 		printf("subnqn:  %s\n", e->subnqn);
-		printf("traddr:  %s\n", e->traddr);
+		printf("traddr:  %.*s\n",
+		       space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
+		       e->traddr);
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
@@ -572,12 +587,16 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 				return -EINVAL;
 			p += len;
 
-			len = sprintf(p, ",traddr=%s", e->traddr);
+			len = sprintf(p, ",traddr=%.*s",
+				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
+				      e->traddr);
 			if (len < 0)
 				return -EINVAL;
 			p += len;
 
-			len = sprintf(p, ",trsvcid=%s", e->trsvcid);
+			len = sprintf(p, ",trsvcid=%.*s",
+				      space_strip_len(NVMF_TRSVCID_SIZE, e->trsvcid),
+				      e->trsvcid);
 			if (len < 0)
 				return -EINVAL;
 			p += len;
@@ -600,7 +619,9 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 				return -EINVAL;
 			p+= len;
 
-			len = sprintf(p, ",traddr=%s", e->traddr);
+			len = sprintf(p, ",traddr=%.*s",
+				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
+				      e->traddr);
 			if (len < 0)
 				return -EINVAL;
 			p += len;
