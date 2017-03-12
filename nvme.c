@@ -2282,7 +2282,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	if (strlen(cfg.metadata)){
 		mfd = open(cfg.metadata, flags, mode);
 		if (mfd < 0) {
-			perror(cfg.data);
+			perror(cfg.metadata);
 			return EINVAL;
 		}
 	}
