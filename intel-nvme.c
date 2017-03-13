@@ -48,6 +48,56 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 	return __id_ctrl(argc, argv, cmd, plugin, intel_id_ctrl);
 }
 
+static void show_intel_smart_log(struct nvme_additional_smart_log *smart,
+		unsigned int nsid, const char *devname)
+{
+	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
+		devname, nsid);
+	printf("key                               normalized raw\n");
+	printf("program_fail_count              : %3d%%       %"PRIu64"\n",
+		smart->program_fail_cnt.norm,
+		int48_to_long(smart->program_fail_cnt.raw));
+	printf("erase_fail_count                : %3d%%       %"PRIu64"\n",
+		smart->erase_fail_cnt.norm,
+		int48_to_long(smart->erase_fail_cnt.raw));
+	printf("wear_leveling                   : %3d%%       min: %u, max: %u, avg: %u\n",
+		smart->wear_leveling_cnt.norm,
+		le16_to_cpu(smart->wear_leveling_cnt.wear_level.min),
+		le16_to_cpu(smart->wear_leveling_cnt.wear_level.max),
+		le16_to_cpu(smart->wear_leveling_cnt.wear_level.avg));
+	printf("end_to_end_error_detection_count: %3d%%       %"PRIu64"\n",
+		smart->e2e_err_cnt.norm,
+		int48_to_long(smart->e2e_err_cnt.raw));
+	printf("crc_error_count                 : %3d%%       %"PRIu64"\n",
+		smart->crc_err_cnt.norm,
+		int48_to_long(smart->crc_err_cnt.raw));
+	printf("timed_workload_media_wear       : %3d%%       %.3f%%\n",
+		smart->timed_workload_media_wear.norm,
+		((float)int48_to_long(smart->timed_workload_media_wear.raw)) / 1024);
+	printf("timed_workload_host_reads       : %3d%%       %"PRIu64"%%\n",
+		smart->timed_workload_host_reads.norm,
+		int48_to_long(smart->timed_workload_host_reads.raw));
+	printf("timed_workload_timer            : %3d%%       %"PRIu64" min\n",
+		smart->timed_workload_timer.norm,
+		int48_to_long(smart->timed_workload_timer.raw));
+	printf("thermal_throttle_status         : %3d%%       %u%%, cnt: %u\n",
+		smart->thermal_throttle_status.norm,
+		smart->thermal_throttle_status.thermal_throttle.pct,
+		smart->thermal_throttle_status.thermal_throttle.count);
+	printf("retry_buffer_overflow_count     : %3d%%       %"PRIu64"\n",
+		smart->retry_buffer_overflow_cnt.norm,
+		int48_to_long(smart->retry_buffer_overflow_cnt.raw));
+	printf("pll_lock_loss_count             : %3d%%       %"PRIu64"\n",
+		smart->pll_lock_loss_cnt.norm,
+		int48_to_long(smart->pll_lock_loss_cnt.raw));
+	printf("nand_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
+		smart->nand_bytes_written.norm,
+		int48_to_long(smart->nand_bytes_written.raw));
+	printf("host_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
+		smart->host_bytes_written.norm,
+		int48_to_long(smart->host_bytes_written.raw));
+}
+
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_additional_smart_log smart_log;
