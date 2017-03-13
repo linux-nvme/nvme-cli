@@ -83,8 +83,6 @@ int nvme_fw_log(int fd, struct nvme_firmware_log_page *fw_log);
 int nvme_error_log(int fd, __u32 nsid, int entries,
 		   struct nvme_error_log_page *err_log);
 int nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log *smart_log);
-int nvme_intel_smart_log(int fd, __u32 nsid,
-			 struct nvme_additional_smart_log *intel_smart_log);
 int nvme_discovery_log(int fd, struct nvmf_disc_rsp_page_hdr *log, __u32 size);
 
 int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10,
