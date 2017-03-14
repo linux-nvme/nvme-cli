@@ -2498,7 +2498,7 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 							result);
 			d(sec_buf, cfg.size, 16, 1);
 		} else if (cfg.size)
-			d_raw((unsigned char *)&sec_buf, cfg.size);
+			d_raw((unsigned char *)sec_buf, cfg.size);
 	}
 	return err;
 }
