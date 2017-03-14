@@ -1397,7 +1397,9 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	const char *ms = "[0-1]: extended format off/on";
 	const char *reset = "Automatically reset the controller after successful format";
 	const char *timeout = "timeout value, in milliseconds";
+	struct nvme_id_ns ns;
 	int err, fd;
+	__u8 prev_lbaf = 0;
 
 	struct config {
 		__u32 namespace_id;
@@ -1413,7 +1415,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	struct config cfg = {
 		.namespace_id = 0xffffffff,
 		.timeout      = 120000,
-		.lbaf         = 0,
+		.lbaf         = 0xff,
 		.ses          = 0,
 		.pi           = 0,
 		.reset        = 0,
@@ -1434,6 +1436,24 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (fd < 0)
 		return fd;
+
+	if (S_ISBLK(nvme_stat.st_mode))
+		cfg.namespace_id = get_nsid(fd);
+	if (cfg.namespace_id != 0xffffffff) {
+		err = nvme_identify_ns(fd, cfg.namespace_id, 0, &ns);
+		if (err) {
+			if (err < 0)
+				perror("identify-namespace");
+			else
+				fprintf(stderr,
+					"NVME Admin command error:%s(%x)\n",
+					nvme_status_to_string(err), err);
+			return err;
+		}
+		prev_lbaf = ns.flbas & 0xf;
+	}
+	if (cfg.lbaf == 0xff)
+		cfg.lbaf = prev_lbaf;
 
 	/* ses & pi checks set to 7 for forward-compatibility */
 	if (cfg.ses > 7) {
@@ -1456,8 +1476,6 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		fprintf(stderr, "invalid ms:%d\n", cfg.ms);
 		return EINVAL;
 	}
-	if (S_ISBLK(nvme_stat.st_mode))
-		cfg.namespace_id = get_nsid(fd);
 
 	err = nvme_format(fd, cfg.namespace_id, cfg.lbaf, cfg.ses, cfg.pi,
 				cfg.pil, cfg.ms, cfg.timeout);
