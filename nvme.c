@@ -1665,6 +1665,12 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		return ENOMEM;
 	}
 
+	if (read(sec_fd, sec_buf, sec_size) < 0) {
+		fprintf(stderr, "Failed to read data from security file with %s\n",
+			strerror(errno));
+		return EINVAL;
+	}
+
 	err = nvme_sec_send(fd, cfg.namespace_id, cfg.nssf, cfg.spsp, cfg.secp,
 			cfg.tl, sec_size, sec_buf, &result);
 	if (err < 0)
