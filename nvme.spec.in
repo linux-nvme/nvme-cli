@@ -28,7 +28,7 @@ make install DESTDIR=%{buildroot} PREFIX=/usr
 %doc Documentation/nvme*.1
 %{_sbindir}/nvme
 %{_mandir}/man1/nvme*.1*
-%{_sysconfdir}/bash_completion.d/nvme
+%{_datadir}/bash_completion.d/nvme
 
 %clean
 rm -rf $RPM_BUILD_ROOT
