@@ -31,6 +31,7 @@
 #include <asm/byteorder.h>
 #include <inttypes.h>
 #include <linux/types.h>
+#include <libgen.h>
 
 #include "parser.h"
 #include "nvme-ioctl.h"
@@ -899,9 +900,12 @@ static int disconnect_by_device(char *device)
 	int instance;
 	int ret;
 
+	device = basename(device);
 	ret = sscanf(device, "nvme%d", &instance);
 	if (ret < 0)
 		return ret;
+	if (!ret)
+		return -1;
 
 	return remove_ctrl(instance);
 }
