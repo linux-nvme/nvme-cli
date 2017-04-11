@@ -220,7 +220,7 @@ static inline struct ppa_addr generic_to_dev_addr(
 int lnvm_do_init(char *, char *);
 int lnvm_do_list_devices(void);
 int lnvm_do_info(void);
-int lnvm_do_create_tgt(char *, char *, char *, int, int);
+int lnvm_do_create_tgt(char *, char *, char *, int, int, int);
 int lnvm_do_remove_tgt(char *);
 int lnvm_do_factory_init(char *, int, int, int);
 int lnvm_do_id_ns(int, int, unsigned int);

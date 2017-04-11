@@ -147,7 +147,7 @@ int lnvm_do_info(void)
 }
 
 int lnvm_do_create_tgt(char *devname, char *tgtname, char *tgttype,
-						int lun_begin, int lun_end)
+					int lun_begin, int lun_end, int flags)
 {
 	struct nvm_ioctl_create c;
 	int fd, ret;
@@ -163,6 +163,7 @@ int lnvm_do_create_tgt(char *devname, char *tgtname, char *tgttype,
 	c.conf.type = 0;
 	c.conf.s.lun_begin = lun_begin;
 	c.conf.s.lun_end = lun_end;
+	c.flags = flags;
 
 	ret = ioctl(fd, NVM_DEV_CREATE, &c);
 	if (ret)
