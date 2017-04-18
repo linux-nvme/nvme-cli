@@ -934,8 +934,10 @@ int disconnect(const char *desc, int argc, char **argv)
 		if (ret < 0)
 			fprintf(stderr, "Failed to disconnect by NQN: %s\n",
 				cfg.nqn);
-		else
+		else {
 			printf("NQN:%s disconnected %d controller(s)\n", cfg.nqn, ret);
+			ret = 0;
+		}
 	}
 
 	if (cfg.device) {
