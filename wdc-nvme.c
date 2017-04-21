@@ -303,7 +303,7 @@ static __u32 wdc_dump_length(int fd, __u32 opcode, __u32 cdw10, __u32 cdw12, __u
 	l = (struct wdc_log_size *) buf;
 	memset(&admin_cmd, 0, sizeof (struct nvme_admin_cmd));
 	admin_cmd.opcode = opcode;
-	admin_cmd.addr = (__u64) buf;
+	admin_cmd.addr = (__u64)(uintptr_t)buf;
 	admin_cmd.data_len = WDC_NVME_LOG_SIZE_DATA_LEN;
 	admin_cmd.cdw10 = cdw10;
 	admin_cmd.cdw12 = cdw12;
@@ -339,7 +339,7 @@ static int wdc_do_dump(int fd, __u32 opcode,__u32 data_len, __u32 cdw10,
 	memset(dump_data, 0, sizeof (__u8) * dump_length);
 	memset(&admin_cmd, 0, sizeof (struct nvme_admin_cmd));
 	admin_cmd.opcode = opcode;
-	admin_cmd.addr = (__u64) dump_data;
+	admin_cmd.addr = (__u64)(uintptr_t)dump_data;
 	admin_cmd.data_len = data_len;
 	admin_cmd.cdw10 = cdw10;
 	admin_cmd.cdw12 = cdw12;
@@ -479,7 +479,7 @@ static int wdc_do_drive_log(int fd, char *file)
 	memset(drive_log_data, 0, sizeof (__u8) * drive_log_length);
 	memset(&admin_cmd, 0, sizeof (struct nvme_admin_cmd));
 	admin_cmd.opcode = WDC_NVME_DRIVE_LOG_OPCODE;
-	admin_cmd.addr = (__u64) drive_log_data;
+	admin_cmd.addr = (__u64)(uintptr_t)drive_log_data;
 	admin_cmd.data_len = drive_log_length;
 	admin_cmd.cdw10 = drive_log_length;
 	admin_cmd.cdw12 = ((WDC_NVME_DRIVE_LOG_SUBCMD <<
@@ -662,7 +662,7 @@ static int wdc_purge_monitor(int argc, char **argv,
 	memset(output, 0, sizeof (output));
 	memset(&admin_cmd, 0, sizeof (struct nvme_admin_cmd));
 	admin_cmd.opcode = WDC_NVME_PURGE_MONITOR_OPCODE;
-	admin_cmd.addr = (__u64) output;
+	admin_cmd.addr = (__u64)(uintptr_t)output;
 	admin_cmd.data_len = WDC_NVME_PURGE_MONITOR_DATA_LEN;
 	admin_cmd.cdw10 = WDC_NVME_PURGE_MONITOR_CMD_CDW10;
 	admin_cmd.timeout_ms = WDC_NVME_PURGE_MONITOR_TIMEOUT;
