@@ -1,0 +1,31 @@
+nvme-list(1)
+============
+
+NAME
+----
+nvme-huawei-list - List all recognized Huawei NVMe devices
+
+SYNOPSIS
+--------
+[verse]
+'nvme huawei list' [-o <fmt> | --output-format=<fmt>]
+
+DESCRIPTION
+-----------
+Scan the sysfs tree for NVM Express devices and return the /dev node
+for those Huawei devices as well as some pertinent information about them.
+
+OPTIONS
+-------
+-o <format>::
+--output-format=<format>::
+	Set the reporting format to 'normal' or 'json'. Only one output
+	format can be used at a time.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite
