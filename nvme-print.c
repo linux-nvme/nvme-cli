@@ -1662,11 +1662,11 @@ void show_ctrl_registers(void *bar, unsigned int mode)
 		show_registers_aqa(aqa);
 
 		printf("asq     : %"PRIx64"\n", asq);
-		printf("\tAdmin Submission Queue Base (ASQB): %"PRIx64"\n",
+		printf("\tAdmin Submission Queue Base (ASQB): %"PRIx64"\n\n",
 				asq);
 
 		printf("acq     : %"PRIx64"\n", acq);
-		printf("\tAdmin Completion Queue Base (ACQB): %"PRIx64"\n",
+		printf("\tAdmin Completion Queue Base (ACQB): %"PRIx64"\n\n",
 				acq);
 
 		printf("cmbloc  : %x\n", cmbloc);
