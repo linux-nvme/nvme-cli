@@ -834,7 +834,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		return -EINVAL;
 
 	n = scandir(dev, &devices, scan_dev_filter, alphasort);
-	if (n <= 0)
+	if (n < 0)
 		return n;
 
 	list_items = calloc(n, sizeof(*list_items));

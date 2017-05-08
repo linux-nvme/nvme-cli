@@ -1149,7 +1149,8 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 		json_array_add_value_object(devices, device_attrs);
 		free((void*)product);
 	}
-	json_object_add_value_array(root, "Devices", devices);
+	if (i)
+		json_object_add_value_array(root, "Devices", devices);
 	json_print_object(root, NULL);
 }
 
