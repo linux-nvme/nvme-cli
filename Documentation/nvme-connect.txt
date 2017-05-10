@@ -16,6 +16,7 @@ SYNOPSIS
 		[--host-traddr=<traddr>   | -w <traddr>]
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
 		[--nr-io-queues=<#>       | -i <#>]
+		[--queue-size=<#>         | -Q <#>]
 		[--keep-alive-tmo=<#>     | -k <#>]
 		[--reconnect-delay=<#>    | -c <#>]
 
@@ -72,6 +73,11 @@ OPTIONS
 -i <#>::
 --nr-io-queues=<#>::
 	Overrides the default number of I/O queues create by the driver.
+
+-Q <#>::
+--queue-size=<#>::
+	Overrides the default number of elements in the I/O queues created
+	by the driver.
 
 -k <#>::
 --keep-alive-tmo=<#>::
