@@ -81,6 +81,11 @@ OPTIONS
 	and dump it to a raw binary file. By default 'nvme connect-all' will
 	dump the output to stdout.
 
+-Q <#>::
+--queue-size=<#>::
+	Overrides the default number of elements in the I/O queues created
+	by the driver.
+
 EXAMPLES
 --------
 * Connect to all records returned by the Discover Controller with IP4 address
