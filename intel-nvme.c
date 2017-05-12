@@ -86,6 +86,95 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 	return __id_ctrl(argc, argv, cmd, plugin, intel_id_ctrl);
 }
 
+static void show_intel_smart_log_jsn(struct nvme_additional_smart_log *smart,
+		unsigned int nsid, const char *devname)
+{
+	struct json_object *root, *entry_stats, *dev_stats, *multi;
+
+	root = json_create_object();
+	json_object_add_value_string(root, "Intel Smart log", devname);
+
+	dev_stats = json_create_object();
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->program_fail_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->program_fail_cnt.raw));
+	json_object_add_value_object(dev_stats, "program_fail_count", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->erase_fail_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->erase_fail_cnt.raw));
+	json_object_add_value_object(dev_stats, "erase_fail_count", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->wear_leveling_cnt.norm);
+	multi = json_create_object();
+	json_object_add_value_int(multi, "min", le16_to_cpu(smart->wear_leveling_cnt.wear_level.min));
+	json_object_add_value_int(multi, "max", le16_to_cpu(smart->wear_leveling_cnt.wear_level.max));
+	json_object_add_value_int(multi, "avg", le16_to_cpu(smart->wear_leveling_cnt.wear_level.avg));
+	json_object_add_value_object(entry_stats, "raw", multi);
+	json_object_add_value_object(dev_stats, "wear_leveling", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->e2e_err_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->e2e_err_cnt.raw));
+	json_object_add_value_object(dev_stats, "end_to_end_error_detection_count", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->crc_err_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->crc_err_cnt.raw));
+	json_object_add_value_object(dev_stats, "crc_error_count", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->timed_workload_media_wear.norm);
+	json_object_add_value_float(entry_stats, "raw", ((float)int48_to_long(smart->timed_workload_media_wear.raw)) / 1024);
+	json_object_add_value_object(dev_stats, "timed_workload_media_wear", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->timed_workload_host_reads.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->timed_workload_host_reads.raw));
+	json_object_add_value_object(dev_stats, "timed_workload_host_reads", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->timed_workload_timer.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->timed_workload_timer.raw));
+	json_object_add_value_object(dev_stats, "timed_workload_timer", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->thermal_throttle_status.norm);
+	multi = json_create_object();
+	json_object_add_value_int(multi, "pct", smart->thermal_throttle_status.thermal_throttle.pct);
+	json_object_add_value_int(multi, "cnt", smart->thermal_throttle_status.thermal_throttle.count);
+	json_object_add_value_object(entry_stats, "raw", multi);
+	json_object_add_value_object(dev_stats, "thermal_throttle_status", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->retry_buffer_overflow_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->retry_buffer_overflow_cnt.raw));
+	json_object_add_value_object(dev_stats, "retry_buffer_overflow_count", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->pll_lock_loss_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->pll_lock_loss_cnt.raw));
+	json_object_add_value_object(dev_stats, "pll_lock_loss_count", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->nand_bytes_written.norm);
+	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->nand_bytes_written.raw));
+	json_object_add_value_object(dev_stats, "nand_bytes_written", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->host_bytes_written.norm);
+	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->host_bytes_written.raw));
+	json_object_add_value_object(dev_stats, "host_bytes_written", entry_stats);
+
+	json_object_add_value_object(root, "Device stats", dev_stats);
+
+	json_print_object(root, NULL);
+	printf("/n");
+	json_free_object(root);
+}
+
 static void show_intel_smart_log(struct nvme_additional_smart_log *smart,
 		unsigned int nsid, const char *devname)
 {
@@ -144,9 +233,11 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 		      "for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
+	const char *json= "Dump output in json format";
 	struct config {
 		__u32 namespace_id;
 		int   raw_binary;
+		int   json;
 	};
 
 	struct config cfg = {
@@ -156,6 +247,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
 		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw},
+		{"json",         'j', "",    CFG_NONE,     &cfg.json,         no_argument,       json},
 		{NULL}
 	};
 
@@ -164,7 +256,9 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	err = nvme_get_log(fd, cfg.namespace_id, 0xca, sizeof(smart_log),
 			&smart_log);
 	if (!err) {
-		if (!cfg.raw_binary)
+		if (cfg.json)
+			show_intel_smart_log_jsn(&smart_log, cfg.namespace_id, devicename);
+		else if (!cfg.raw_binary)
 			show_intel_smart_log(&smart_log, cfg.namespace_id, devicename);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
