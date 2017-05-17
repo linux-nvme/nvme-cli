@@ -71,7 +71,7 @@ static const char *dev = "/dev/";
 /* Assume every block device starting with /dev/nvme is an nvme namespace */
 static int huawei_scan_dev_filter(const struct dirent *d)
 {
-	char path[256];
+	char path[264];
 	struct stat bd;
 	int ctrl, ns, part;
 
@@ -318,7 +318,7 @@ static void huawei_print_list_items(struct huawei_list_item *list_items, unsigne
 static int huawei_list(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char path[256];
+	char path[264];
 	struct dirent **devices;
 	struct huawei_list_item *list_items;
 	unsigned int i, n, fd, ret;

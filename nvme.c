@@ -786,7 +786,7 @@ static const char *dev = "/dev/";
 /* Assume every block device starting with /dev/nvme is an nvme namespace */
 static int scan_dev_filter(const struct dirent *d)
 {
-	char path[256];
+	char path[264];
 	struct stat bd;
 	int ctrl, ns, part;
 
@@ -808,7 +808,7 @@ static int scan_dev_filter(const struct dirent *d)
 
 static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	char path[256];
+	char path[264];
 	struct dirent **devices;
 	struct list_item *list_items;
 	unsigned int i, n, fd, ret;
