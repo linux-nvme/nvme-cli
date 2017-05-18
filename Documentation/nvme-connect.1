@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 02/02/2017
+.\"      Date: 05/18/2017
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "02/02/2017" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "05/18/2017" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -40,6 +40,7 @@ nvme-connect \- Connect to a Fabrics controller\&.
                 [\-\-host\-traddr=<traddr>   | \-w <traddr>]
                 [\-\-hostnqn=<hostnqn>      | \-q <hostnqn>]
                 [\-\-nr\-io\-queues=<#>       | \-i <#>]
+                [\-\-queue\-size=<#>         | \-Q <#>]
                 [\-\-keep\-alive\-tmo=<#>     | \-k <#>]
                 [\-\-reconnect\-delay=<#>    | \-c <#>]
 .fi
@@ -110,6 +111,11 @@ Overrides the default Host NQN that identifies the NVMe Host\&. If this option i
 \-i <#>, \-\-nr\-io\-queues=<#>
 .RS 4
 Overrides the default number of I/O queues create by the driver\&.
+.RE
+.PP
+\-Q <#>, \-\-queue\-size=<#>
+.RS 4
+Overrides the default number of elements in the I/O queues created by the driver\&.
 .RE
 .PP
 \-k <#>, \-\-keep\-alive\-tmo=<#>
