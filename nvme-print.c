@@ -1512,7 +1512,6 @@ void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
 
 	json_print_object(root, NULL);
 	printf("\n");
-	json_free_object(fwsi);
 	json_free_object(root);
 }
 
