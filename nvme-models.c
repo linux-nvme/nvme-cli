@@ -32,11 +32,17 @@ static char *class_final;
 static void free_all(void)
 {
 	free(device_top);
+	device_top = NULL;
 	free(device_mid);
+	device_mid = NULL;
 	free(device_final);
+	device_final = NULL;
 	free(class_top);
+	class_top = NULL;
 	free(class_mid);
+	class_mid = NULL;
 	free(class_final);
+	class_final = NULL;
 }
 
 static char *find_data(char *data)
