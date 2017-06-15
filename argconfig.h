@@ -78,6 +78,8 @@ extern "C" {
 
 typedef void argconfig_help_func();
 void argconfig_append_usage(const char *str);
+void argconfig_print_help(const char *program_desc,
+			  const struct argconfig_commandline_options *options);
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    const struct argconfig_commandline_options *options,
 		    void *config_out, size_t config_size);

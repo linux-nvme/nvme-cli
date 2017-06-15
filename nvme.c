@@ -135,10 +135,8 @@ static int get_dev(int argc, char **argv)
 	int ret;
 
 	ret = check_arg_dev(argc, argv);
-	if (ret) {
-		fprintf(stderr, "expected nvme device (ex: /dev/nvme0), none provided\n");
+	if (ret)
 		return ret;
-	}
 
 	return open_dev((const char *)argv[optind]);
 }
@@ -152,7 +150,11 @@ int parse_and_open(int argc, char **argv, const char *desc,
 	if (ret)
 		return ret;
 
-	return get_dev(argc, argv);
+	ret = get_dev(argc, argv);
+	if (ret < 0)
+		argconfig_print_help(desc, clo);
+
+	return ret;
 }
 
 static const char *output_format = "Output format: normal|json|binary";

@@ -119,7 +119,7 @@ static void show_option(const struct argconfig_commandline_options *option)
 	fprintf(stderr, "\n");
 }
 
-static void argconfig_print_help(const char *program_desc,
+void argconfig_print_help(const char *program_desc,
 			  const struct argconfig_commandline_options *options)
 {
 	const struct argconfig_commandline_options *s;
