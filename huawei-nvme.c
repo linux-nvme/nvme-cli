@@ -380,3 +380,18 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	return 0;
 }
 
+static void huawei_do_id_ctrl(__u8 *vs, struct json_object *root)
+{
+	char array_name[ARRAY_NAME_LEN + 1] = {0};
+
+	memcpy(array_name, vs, ARRAY_NAME_LEN);
+	if (root)
+		json_object_add_value_string(root, "array name", strlen(array_name) > 1 ? array_name : "NULL");
+	else
+		printf("array name : %s\n", strlen(array_name) > 1 ? array_name : "NULL");
+}
+
+static int huawei_id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	return __id_ctrl(argc, argv, cmd, plugin, huawei_do_id_ctrl);
+}

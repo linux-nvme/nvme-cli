@@ -9,6 +9,7 @@
 PLUGIN(NAME("huawei", "Huawei vendor specific extensions"),
 	COMMAND_LIST(
 		ENTRY("list", "List all Huawei NVMe devices and namespaces on machine", huawei_list)
+		ENTRY("id-ctrl", "Huawei identify controller", huawei_id_ctrl)
 	)
 );
 
