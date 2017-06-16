@@ -428,112 +428,367 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	return err;
 }
 
-struct intel_vu_log {
-    __u16    major;
-    __u16    minor;
-    __u32    header;
-    __u32    size;
-    __u8     reserved[4084];
+struct intel_assert_dump {
+    __u32 coreoffset;
+    __u32 assertsize;
+    __u8  assertdumptype;
+    __u8  assertvalid;
+    __u8  reserved[2];
 };
 
-static int get_internal_log(int argc, char **argv, struct command *command, struct plugin *plugin)
+struct intel_event_dump {
+	__u32 numeventdumps;
+	__u32 coresize;
+	__u32 coreoffset;
+	__u32 eventidoffset[16];
+	__u8  eventIdValidity[16];
+};
+
+struct intel_vu_version {
+	__u16    major;
+	__u16    minor;
+};
+
+struct intel_event_header {
+	__u32 eventidsize;
+	struct intel_event_dump edumps[0];
+};
+
+struct intel_vu_log {
+    struct intel_vu_version ver;
+    __u32    header;
+    __u32    size;
+    __u32    numcores;
+    __u8     reserved[4080];
+};
+
+struct intel_vu_nlog {
+	struct intel_vu_version ver;
+	__u32 logselect;
+	__u32 totalnlogs;
+	__u32 nlognum;
+	__u32 nlogname;
+	__u32 nlogbytesize;
+	__u32 nlogprimarybuffsize;
+	__u32 tickspersecond;
+	__u32 corecount;
+	__u32 nlogpausestatus;
+	__u32 selectoffsetref;
+	__u32 selectnlogpause;
+	__u32 selectaddedoffset;
+	__u32 nlogbufnum;
+	__u32 nlogbufnummax;
+	__u32 coreselected;
+	__u32 reserved[3];
+};
+
+struct intel_cd_log {
+    union {
+	struct {
+		__u32 selectLog  : 3;
+		__u32 selectCore : 2;
+		__u32 selectNlog : 8;
+		__u8  selectOffsetRef : 1;
+		__u32 selectNlogPause : 2;
+		__u32 reserved2  : 16;
+	}fields;
+	__u32 entireDword;
+    }u;
+};
+
+#define max(x,y) (x) > (y) ? (x) : (y)
+#define min(x,y) (x) > (y) ? (y) : (x)
+
+static void print_intel_nlog(struct intel_vu_nlog *intel_nlog)
 {
-	__u8 buf[0x1000];
-	char f[0x100];
-	int err, fd, output, size;
-	struct nvme_passthru_cmd cmd;
-	struct intel_vu_log *intel;
-	struct nvme_id_ctrl ctrl;
+	printf("Version Major %u\n"
+	       "Version Minor %u\n"
+	       "Log_select %u\n"
+	       "totalnlogs %u\n"
+	       "nlognum %u\n"
+	       "nlogname %u\n"
+	       "nlogbytesze %u\n"
+	       "nlogprimarybuffsize %u\n"
+	       "tickspersecond %u\n"
+	       "corecount %u\n"
+	       "nlogpausestatus %u\n"
+	       "selectoffsetref %u\n"
+	       "selectnlogpause %u\n"
+	       "selectaddedoffset %u\n"
+	       "nlogbufnum %u\n"
+	       "nlogbufnummax %u\n"
+	       "coreselected %u\n",
+	       intel_nlog->ver.major, intel_nlog->ver.minor,
+	       intel_nlog->logselect, intel_nlog->totalnlogs, intel_nlog->nlognum,
+	       intel_nlog->nlogname, intel_nlog->nlogbytesize,
+	       intel_nlog->nlogprimarybuffsize, intel_nlog->tickspersecond,
+	       intel_nlog->corecount, intel_nlog->nlogpausestatus,
+	       intel_nlog->selectoffsetref, intel_nlog->selectnlogpause,
+	       intel_nlog->selectaddedoffset, intel_nlog->nlogbufnum,
+	       intel_nlog->nlogbufnummax, intel_nlog->coreselected);
+}
 
-	char *desc = "Get Intel Firmware Log and save it.";
-	char *log = "Log type: 0, 1, or 2 for nlog, event log, and assert log, respectively.";
-	char *file = "Output file; defaults to device name provided";
-	const char *namespace_id = "Namespace to get logs from";
+static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
+			   const size_t max_tfer, int out_fd, int ioctl_fd,
+			   __u8 *buf)
+{
+	int err = 0;
+	size_t dword_tfer = 0;
 
-	struct config {
-		__u32 namespace_id;
-		__u32 log;
-		char *file;
-	};
-
-	struct config cfg = {
-		.namespace_id = 0,
-		.file = NULL
-	};
-
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"log",          'l', "NUM",  CFG_POSITIVE, &cfg.log,          required_argument, log},
-		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
-		{"output-file",  'o', "FILE", CFG_STRING,   &cfg.file,         required_argument, file},
-		{NULL}
-	};
-
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
-	if (cfg.log > 2)
-		return EINVAL;
-
-	if (!cfg.file) {
-		int i = sizeof(ctrl.sn) - 1;
-
-		err = nvme_identify_ctrl(fd, &ctrl);
-		if (err)
+	dword_tfer = min(max_tfer, total_size);
+	while (total_size > 0) {
+		err = nvme_submit_passthru(ioctl_fd, NVME_IOCTL_ADMIN_CMD, cmd);
+		if (err) {
+			printf("failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n", cmd->data_len, cmd->cdw13, cmd->cdw12, cmd->cdw10, err, total_size);
 			goto out;
-
-		/* Remove trailing spaces from the name */
-		while (i && ctrl.sn[i] == ' ') {
-			ctrl.sn[i] = '\0';
-			i--;
 		}
 
-		sprintf(f, "%s_%-.*s.bin", cfg.log == 0 ? "Nlog" :
-				cfg.log == 2 ? "EventLog" :  "AssertLog",
-				(int)sizeof(ctrl.sn), ctrl.sn);
-		cfg.file = f;
+		if (out_fd > 0) {
+			err = write(out_fd, buf, cmd->data_len);
+			if (err < 0) {
+				perror("write failure");
+				goto out;
+			}
+			err = 0;
+		}
+		total_size -= dword_tfer;
+		cmd->cdw13 += dword_tfer;
+		cmd->cdw10 = dword_tfer = min(max_tfer, total_size);
+		cmd->data_len = (min(max_tfer, total_size)) * 4;
 	}
 
-	output = open(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+ out:
+	return err;
+}
 
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode = 0xd2;
-	cmd.nsid = cfg.namespace_id;
-	cmd.cdw10 = 0x400;
-	cmd.cdw12 = cfg.log;
-	cmd.data_len = 0x1000;
-	cmd.addr = (unsigned long)(void *)buf;
+static int write_header(__u8 *buf, int fd, size_t amnt)
+{
+	if (write(fd, buf, amnt) < 0)
+		return 1;
+	return 0;
+}
 
-	memset(buf, 0, sizeof(buf));
-	err = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+static int read_header(struct nvme_passthru_cmd *cmd,__u8 *buf, int ioctl_fd, __u32 dw12, int nsid)
+{
+	memset(cmd, 0, sizeof(*cmd));
+	memset(buf, 0, 4096);
+	cmd->opcode = 0xd2;
+	cmd->nsid = nsid;
+	cmd->cdw10 = 0x400;
+	cmd->cdw12 = dw12;
+	cmd->data_len = 0x1000;
+	cmd->addr = (unsigned long)(void *)buf;
+	return read_entire_cmd(cmd, 0x400, 0x400, -1, ioctl_fd, buf);
+}
+
+static int setup_file(char *f, char *file, int fd, int type)
+{
+	struct nvme_id_ctrl ctrl;
+	int err = 0, i = sizeof(ctrl.sn) - 1;
+
+	err = nvme_identify_ctrl(fd, &ctrl);
 	if (err)
-		goto out;
+		return err;
+
+	/* Remove trailing spaces from the name */
+	while (i && ctrl.sn[i] == ' ') {
+		ctrl.sn[i] = '\0';
+		i--;
+	}
+
+	sprintf(f, "%s_%-.*s.bin", type == 0 ? "Nlog" :
+		type == 1 ? "EventLog" :  "AssertLog",
+		(int)sizeof(ctrl.sn), ctrl.sn);
+	return err;
+}
+
+static int get_internal_log_old(__u8 *buf, int output, int fd,
+				struct nvme_passthru_cmd *cmd)
+{
+	struct intel_vu_log *intel;
+	int err = 0;
+	const int dwmax = 0x400;
+	const int dmamax = 0x1000;
 
 	intel = (struct intel_vu_log *)buf;
-	size = intel->size * 4; /* size reported in dwords */
 
 	printf("Log major:%d minor:%d header:%d size:%d\n",
-		intel->major, intel->minor, intel->header, intel->size);
+		intel->ver.major, intel->ver.minor, intel->header, intel->size);
 
 	err = write(output, buf, 0x1000);
 	if (err < 0) {
 		perror("write failure");
 		goto out;
 	}
-	size -= 0x1000;
+	intel->size -= 0x400;
+	cmd->opcode = 0xd2;
+	cmd->cdw10 = min(dwmax, intel->size);
+	cmd->data_len = min(dmamax, intel->size);
+	err = read_entire_cmd(cmd, intel->size, dwmax, output, fd, buf);
+	if (err)
+		goto out;
 
-	while (size > 0) {
-		cmd.cdw13 += 0x400;
-		err = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	err = 0;
+ out:
+	return err;
+}
+
+static int get_internal_log(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	__u8 buf[0x2000];
+	char f[0x100];
+	int err, fd, output, i, j, count = 0, core_num = 1;//, remainder;
+	struct nvme_passthru_cmd cmd;
+	static struct intel_vu_log intel;
+	struct intel_assert_dump *ad;
+	struct intel_vu_nlog *intel_nlog;
+	struct intel_event_header *ehdr;
+
+
+	char *desc = "Get Intel Firmware Log and save it.";
+	char *log = "Log type: 0, 1, or 2 for nlog, event log, and assert log, respectively.";
+	char *core = "Select which region log should come from. -1 for all";
+	char *nlognum = "Select which nlog to read. -1 for all nlogs";
+	char *file = "Output file; defaults to device name provided";
+	char *verb = "To print out verbose nlog info";
+	const char *namespace_id = "Namespace to get logs from";
+
+	struct config {
+		__u32 namespace_id;
+		__u32 log;
+		int core;
+		int lnum;
+		char *file;
+		bool verbose;
+	};
+
+	struct config cfg = {
+		.namespace_id = -1,
+		.file = NULL
+	};
+
+	struct intel_cd_log cdlog;
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"log",          'l', "NUM",  CFG_POSITIVE, &cfg.log,          required_argument, log},
+		{"region",       'r', "NUM",  CFG_INT, &cfg.core,         required_argument, core},
+		{"nlognum",      'm', "NUM",  CFG_INT, &cfg.lnum,         required_argument, nlognum},
+		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
+		{"output-file",  'o', "FILE", CFG_STRING,   &cfg.file,         required_argument, file},
+		{"verbose_nlog", 'v', ""    , CFG_NONE,     &cfg.verbose,     no_argument, verb},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (cfg.log > 2 || cfg.core > 4 || cfg.lnum > 255)
+		return EINVAL;
+
+	if (!cfg.file) {
+		err = setup_file(f, cfg.file, fd, cfg.log);
 		if (err)
 			goto out;
+		cfg.file = f;
+	}
 
-		err = write(output, buf, 0x1000);
-		if (err < 0) {
+	memset(&cdlog, 0, sizeof(cdlog));
+	memset(&intel_nlog, 0, sizeof(intel_nlog));
+
+	cdlog.u.fields.selectLog = cfg.log;
+	cdlog.u.fields.selectCore = cfg.core < 0 ? 0 : cfg.core;
+	cdlog.u.fields.selectNlog = cfg.lnum < 0 ? 0 : cfg.lnum;
+
+	output = open(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+
+	err = read_header(&cmd, buf, fd, cdlog.u.entireDword, cfg.namespace_id);
+	if (err)
+		goto out;
+
+	memcpy(&intel, buf, sizeof(intel));
+	cmd.addr = (unsigned long)(void *)buf;
+	core_num = 1;
+
+	/* for 1.1 Fultondales will use old nlog, but current assert/event */
+	if ((intel.ver.major < 1 && intel.ver.minor < 1) ||
+	    (intel.ver.major <= 1 && intel.ver.minor <= 1 && cfg.log == 0)) {
+		err = get_internal_log_old(buf, output, fd, &cmd);
+		goto out;
+	}
+
+	if (cfg.log == 2) {
+		if (cfg.verbose)
+			printf("Log major:%d minor:%d header:%d size:%d numcores:%d\n",
+			       intel.ver.major, intel.ver.minor, intel.header, intel.size,
+			       intel.numcores);
+
+		err = write_header(buf, output, 0x1000);
+		if (err) {
 			perror("write failure");
 			goto out;
 		}
-		size -= 0x1000;
+
+		count = intel.numcores;
+		ad = (void *) intel.reserved;
+	} else if (!cfg.log) {
+		intel_nlog = (void*)buf;
+		if (cfg.lnum < 0)
+			count = intel_nlog->totalnlogs;
+		else
+			count = 1;
+		if (cfg.core < 0)
+			core_num = intel_nlog->corecount;
+	} else if (cfg.log == 1) {
+		ehdr = (void *) intel.reserved;
+		core_num = intel.numcores;
+		count = 1;
+		err = write_header(buf, output, sizeof(intel));
+		if (err)
+			goto out;
+	}
+
+	for (j = 0; j < core_num; j++) {
+		cdlog.u.fields.selectCore = j;
+		for (i = 0; i < count; i++) {
+			if (cfg.log == 0 && ad[i].assertvalid) {
+				cmd.cdw13 = ad[i].coreoffset;
+				cmd.cdw10 = 0x400;
+				cmd.data_len = min(0x400, ad[i].assertsize) * 4;
+				err = read_entire_cmd(&cmd, ad[i].assertsize,
+						      0x400, output, fd, buf);
+				if (err)
+					goto out;
+
+			} else if(!cfg.log) {
+				/* If the user selected to read the entire nlog */
+				if (count > 1)
+					cdlog.u.fields.selectNlog = i;
+
+				err = read_header(&cmd, buf, fd, cdlog.u.entireDword, cfg.namespace_id);
+				if (err)
+					goto out;
+				err = write_header(buf, output, sizeof(*intel_nlog));
+				if (err)
+					goto out;
+				if (cfg.verbose)
+					print_intel_nlog(intel_nlog);
+				cmd.cdw13 = 0x400;
+				cmd.cdw10 = 0x400;
+				cmd.data_len = min(0x1000, intel_nlog->nlogbytesize);
+				err = read_entire_cmd(&cmd, intel_nlog->nlogbytesize/4,
+						      0x400, output, fd, buf);
+				if (err)
+					goto out;
+			} else if (cfg.log == 1) {
+				cmd.cdw13 = ehdr->edumps[j].coreoffset;
+				cmd.cdw10 = 0x400;
+				cmd.data_len = 0x400;
+				err = read_entire_cmd(&cmd, ehdr->edumps[j].coresize,
+						      0x400, output, fd, buf);
+				if (err)
+					goto out;
+			}
+		}
 	}
 	err = 0;
-	printf("Successfully wrote log to %s\n", cfg.file);
  out:
 	if (err > 0) {
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
@@ -541,6 +796,8 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 	} else if (err < 0) {
 		perror("intel log");
 		err = EIO;
-	}
+	} else
+		printf("Successfully wrote log to %s\n", cfg.file);
 	return err;
+
 }
