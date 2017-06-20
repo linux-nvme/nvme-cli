@@ -795,7 +795,7 @@ static void wdc_print_log_json(struct wdc_ssd_perf_stats *perf)
 			(uint64_t)le64_to_cpu(perf->nw_blks));
 	json_object_add_value_int(root, "Average NAND Write Size",
 			safe_div_fp((le64_to_cpu(perf->nw_blks)), (le64_to_cpu(perf->nw_cmds))));
-	json_object_add_value_int(root, "NAND Read Before Writen",
+	json_object_add_value_int(root, "NAND Read Before Written",
 			(uint64_t)le64_to_cpu(perf->nrbw));
 	json_print_object(root, NULL);
 	printf("\n");
