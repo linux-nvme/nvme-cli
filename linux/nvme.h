@@ -23,6 +23,7 @@
 /* However the max length of a qualified name is another size */
 #define NVMF_NQN_SIZE		223
 
+#define NVMF_HOSTID_SIZE        36
 #define NVMF_TRSVCID_SIZE	32
 #define NVMF_TRADDR_SIZE	256
 #define NVMF_TSAS_SIZE		256

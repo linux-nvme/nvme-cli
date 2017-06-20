@@ -51,6 +51,7 @@ static struct config {
 	char *trsvcid;
 	char *host_traddr;
 	char *hostnqn;
+	char *hostid;
 	char *nr_io_queues;
 	char *queue_size;
 	char *keep_alive_tmo;
@@ -63,6 +64,7 @@ static struct config {
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
 #define PATH_NVMF_DISC		"/etc/nvme/discovery.conf"
 #define PATH_NVMF_HOSTNQN	"/etc/nvme/hostnqn"
+#define PATH_NVMF_HOSTID	"/etc/nvme/hostid"
 #define SYS_NVME		"/sys/class/nvme"
 #define MAX_DISC_ARGS		10
 
@@ -456,6 +458,29 @@ out:
 	return ret;
 }
 
+static int nvmf_hostid_file(void)
+{
+	FILE *f;
+	char hostid[NVMF_HOSTID_SIZE];
+	int ret = false;
+
+	f = fopen(PATH_NVMF_HOSTID, "r");
+	if (f == NULL)
+		return false;
+
+	if (fgets(hostid, sizeof(hostid), f) == NULL)
+		goto out;
+
+	cfg.hostid = strdup(hostid);
+	if (!cfg.hostid)
+		goto out;
+
+	ret = true;
+out:
+	fclose(f);
+	return ret;
+}
+
 static int build_options(char *argstr, int max_len)
 {
 	int len;
@@ -510,6 +535,14 @@ static int build_options(char *argstr, int max_len)
 
 	if (cfg.hostnqn || nvmf_hostnqn_file()) {
 		len = snprintf(argstr, max_len, ",hostnqn=%s", cfg.hostnqn);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
+	if (cfg.hostid || nvmf_hostid_file()) {
+		len = snprintf(argstr, max_len, ",hostid=%s", cfg.hostid);
 		if (len < 0)
 			return -EINVAL;
 		argstr += len;
@@ -577,6 +610,13 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 
 	if (cfg.hostnqn) {
 		len = sprintf(p, ",hostnqn=%s", cfg.hostnqn);
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+	}
+
+	if (cfg.hostid) {
+		len = sprintf(p, ",hostid=%s", cfg.hostid);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
@@ -782,6 +822,7 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 		{"trsvcid",     's', "LIST", CFG_STRING, &cfg.trsvcid,     required_argument, "transport service id (e.g. IP port)" },
 		{"host-traddr", 'w', "LIST", CFG_STRING, &cfg.host_traddr, required_argument, "host traddr (e.g. FC WWN's)" },
 		{"hostnqn",     'q', "LIST", CFG_STRING, &cfg.hostnqn,     required_argument, "user-defined hostnqn (if default not used)" },
+		{"hostid",      'I', "LIST", CFG_STRING, &cfg.hostid,      required_argument, "user-defined hostid (if default not used)"},
 		{"queue-size",  'Q', "LIST", CFG_STRING, &cfg.queue_size,  required_argument, "number of io queue elements to use (default 128)" },
 		{"raw",         'r', "LIST", CFG_STRING, &cfg.raw,         required_argument, "raw output file" },
 		{NULL},
@@ -815,6 +856,7 @@ int connect(const char *desc, int argc, char **argv)
 		{"trsvcid",         's', "LIST", CFG_STRING, &cfg.trsvcid,         required_argument, "transport service id (e.g. IP port)" },
 		{"host-traddr",     'w', "LIST", CFG_STRING, &cfg.host_traddr,     required_argument, "host traddr (e.g. FC WWN's)" },
 		{"hostnqn",         'q', "LIST", CFG_STRING, &cfg.hostnqn,         required_argument, "user-defined hostnqn" },
+		{"hostid",          'I', "LIST", CFG_STRING, &cfg.hostid,      required_argument, "user-defined hostid (if default not used)"},
 		{"nr-io-queues",    'i', "LIST", CFG_STRING, &cfg.nr_io_queues,    required_argument, "number of io queues to use (default is core count)" },
 		{"queue-size",      'Q', "LIST", CFG_STRING, &cfg.queue_size,      required_argument, "number of io queue elements to use (default 128)" },
 		{"keep-alive-tmo",  'k', "LIST", CFG_STRING, &cfg.keep_alive_tmo,  required_argument, "keep alive timeout period in seconds" },
