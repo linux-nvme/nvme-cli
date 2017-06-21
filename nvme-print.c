@@ -1023,6 +1023,10 @@ void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 		printf("Temperature Sensor %d                : %d C\n", c + 1,
 			temp - 273);
 	}
+	printf("Thermal Management T1 Trans Count   : %u\n", le32_to_cpu(smart->thm_temp1_trans_count));
+	printf("Thermal Management T2 Trans Count   : %u\n", le32_to_cpu(smart->thm_temp2_trans_count));
+	printf("Thermal Management T1 Total Time    : %u\n", le32_to_cpu(smart->thm_temp1_total_time));
+	printf("Thermal Management T2 Total Time    : %u\n", le32_to_cpu(smart->thm_temp2_total_time));
 }
 
 char *nvme_feature_to_string(int feature)
@@ -1677,6 +1681,14 @@ void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 			le32_to_cpu(smart->warning_temp_time));
 	json_object_add_value_int(root, "critical_comp_time",
 			le32_to_cpu(smart->critical_comp_time));
+	json_object_add_value_int(root, "thm_temp1_trans_count",
+			le32_to_cpu(smart->thm_temp1_trans_count));
+	json_object_add_value_int(root, "thm_temp2_trans_count",
+			le32_to_cpu(smart->thm_temp2_trans_count));
+	json_object_add_value_int(root, "thm_temp1_total_time",
+			le32_to_cpu(smart->thm_temp1_total_time));
+	json_object_add_value_int(root, "thm_temp2_total_time",
+			le32_to_cpu(smart->thm_temp2_total_time));
 
 	json_print_object(root, NULL);
 	printf("\n");
