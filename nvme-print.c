@@ -1041,6 +1041,7 @@ char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_ASYNC_EVENT:	return "Async Event Configuration";
 	case NVME_FEAT_AUTO_PST:	return "Autonomous Power State Transition";
 	case NVME_FEAT_HOST_MEM_BUF:	return "Host Memory Buffer";
+	case NVME_FEAT_KATO:		return "Keep Alive Timer";
 	case NVME_FEAT_SW_PROGRESS:	return "Software Progress";
 	case NVME_FEAT_HOST_ID:		return "Host Identifier";
 	case NVME_FEAT_RESV_MASK:	return "Reservation Notification Mask";

@@ -1181,6 +1181,9 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		break;
 	case NVME_FEAT_HOST_ID:
 		cfg.data_len = 8;
+		/* check for Extended Host Identifier */
+		if (cfg.cdw11 & 0x1)
+			cfg.data_len = 16;
 		break;
 	}
 

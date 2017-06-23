@@ -63,8 +63,7 @@ OPTIONS
 	Range Type
 
 --cdw11=<cdw11>::
-	The value for command dword 11, if applicable. Only known feature
-	using this is the interrupt vector configuration feature.
+	The value for command dword 11, if applicable.
 
 -b::
 --raw-binary::
