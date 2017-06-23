@@ -3,6 +3,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef LIBUUID
+#include <uuid/uuid.h>
+#endif
+
 #include "nvme-print.h"
 #include "json.h"
 #include "nvme-models.h"
@@ -596,6 +600,124 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	if (vs) {
 		printf("vs[]:");
 		d(ns->vs, sizeof(ns->vs), 16, 1);
+	}
+}
+
+void json_nvme_id_ns_descs(void *data)
+{
+#ifdef LIBUUID
+	uuid_t uuid;
+	char uuid_str[37];
+#endif
+	__u8 eui64_desc[8];
+	__u8 nguid_desc[16];
+	char nguid_str[2 * sizeof(nguid_desc) + 1];
+	char eui64_str[2 * sizeof(eui64_desc) + 1];
+	char *eui64 = eui64_str;
+	char *nguid = nguid_str;
+	struct json_object *root;
+	off_t off;
+	int pos, len = 0;
+	int i;
+
+	root = json_create_object();
+
+	for (pos = 0; pos < NVME_IDENTIFY_CMD_LEN; pos += len) {
+		struct nvme_ns_id_desc *cur = data + pos;
+
+		off = pos + sizeof(*cur);
+
+		if (cur->nidl == 0)
+			break;
+
+		switch (cur->nidt) {
+		case NVME_NIDT_EUI64:
+			memset(eui64, 0, sizeof(eui64_str));
+			memcpy(eui64_desc, data + off, sizeof(eui64_desc));
+			for (i = 0; i < sizeof(eui64); i++)
+				eui64 += sprintf(eui64, "%02x", eui64_desc[i]);
+			len += sizeof(eui64);
+			json_object_add_value_string(root, "eui64", eui64_str);
+			break;
+		case NVME_NIDT_NGUID:
+			memset(nguid, 0, sizeof(nguid_str));
+			memcpy(nguid_desc, data + off, sizeof(nguid_desc));
+			for (i = 0; i < sizeof(nguid); i++)
+				nguid += sprintf(nguid, "%02x", nguid_desc[i]);
+			len += sizeof(nguid);
+			json_object_add_value_string(root, "nguid", nguid_str);
+			break;
+#ifdef LIBUUID
+		case NVME_NIDT_UUID:
+			memcpy(uuid, data + off, 16);
+			uuid_unparse_lower(uuid, uuid_str);
+			len += sizeof(uuid);
+			json_object_add_value_string(root, "uuid", uuid_str);
+			break;
+#endif
+		default:
+			/* Skip unnkown types */
+			len = cur->nidl;
+			break;
+		}
+
+		len += sizeof(*cur);
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void show_nvme_id_ns_descs(void *data)
+{
+	int pos, len = 0;
+	int i;
+#ifdef LIBUUID
+	uuid_t uuid;
+	char uuid_str[37];
+#endif
+	__u8 eui64[8];
+	__u8 nguid[16];
+
+	for (pos = 0; pos < NVME_IDENTIFY_CMD_LEN; pos += len) {
+		struct nvme_ns_id_desc *cur = data + pos;
+
+		if (cur->nidl == 0)
+			break;
+
+		switch (cur->nidt) {
+		case NVME_NIDT_EUI64:
+			memcpy(eui64, data + pos + sizeof(*cur), sizeof(eui64));
+			printf("eui64   : ");
+			for (i = 0; i < 8; i++)
+				printf("%02x", eui64[i]);
+			printf("\n");
+			len += sizeof(eui64);
+			break;
+		case NVME_NIDT_NGUID:
+			memcpy(nguid, data + pos + sizeof(*cur), sizeof(nguid));
+			printf("nguid   : ");
+			for (i = 0; i < 16; i++)
+				printf("%02x", nguid[i]);
+			printf("\n");
+			len += sizeof(nguid);
+			break;
+#ifdef LIBUUID
+		case NVME_NIDT_UUID:
+			memcpy(uuid, data + pos + sizeof(*cur), 16);
+			uuid_unparse_lower(uuid, uuid_str);
+			printf("uuid    : %s\n", uuid_str);
+			len += sizeof(uuid);
+			break;
+#endif
+		default:
+			/* Skip unnkown types */
+			len = cur->nidl;
+			break;
+		}
+
+		len += sizeof(*cur);
 	}
 }
 

@@ -863,6 +863,20 @@ struct nvme_command {
 	};
 };
 
+#define NVME_IDENTIFY_CMD_LEN 4096
+#define NVME_ID_CNS_NS_DESC_LIST 0x3
+enum {
+	NVME_NIDT_EUI64		= 0x1,
+	NVME_NIDT_NGUID		= 0x2,
+	NVME_NIDT_UUID		= 0x3,
+};
+
+struct nvme_ns_id_desc {
+	__u8 nidt;
+	__u8 nidl;
+	__u16 reserved;
+};
+
 static inline bool nvme_is_write(struct nvme_command *cmd)
 {
 	/*

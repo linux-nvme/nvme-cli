@@ -952,6 +952,69 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 	return __id_ctrl(argc, argv, cmd, plugin, NULL);
 }
 
+static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Send Namespace Identification Descriptoprs commadn to the "\
+			    "given device, returns the namespace identifcation descriptors "\
+			    "of the specific namespace in either human-readable or binary format.";
+	const char *raw_binary = "show infos in binary format";
+	const char *namespace_id = "identifier of desired namespace";
+	int err, fmt, fd;
+	char *nsdescs[0x1000] = { };
+	struct config {
+		__u32 namespace_id;
+		int raw_binary;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.namespace_id = 0,
+		.output_format = "normal",
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id",    'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
+		{"raw-binary",      'b', "",    CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
+		{"output-format",   'o', "FMT", CFG_STRING,   &cfg.output_format,   required_argument, output_format },
+		{NULL}
+	};
+
+	if (posix_memalign((void *)&nsdescs, getpagesize(), 0x1000)) {
+		fprintf(stderr, "can not allocate controller list payload\n");
+		return ENOMEM;
+	}
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (cfg.raw_binary)
+		fmt = BINARY;
+	if (!cfg.namespace_id)
+		cfg.namespace_id = get_nsid(fd);
+
+	err = nvme_identify_ns_descs(fd, cfg.namespace_id, &nsdescs);
+	if (!err) {
+		if (fmt == BINARY)
+			d_raw((unsigned char *)&nsdescs, 0x1000);
+		else if (fmt == JSON)
+			json_nvme_id_ns_descs(&nsdescs);
+		else {
+			printf("NVME Namespace Identification Descriptors NS %d:\n", cfg.namespace_id);
+			show_nvme_id_ns_descs(&nsdescs);
+		}
+	}
+	else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x) NSID:%d\n",
+			nvme_status_to_string(err), err, cfg.namespace_id);
+	else
+		perror("identify namespace");
+	return err;
+}
+
 static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send an Identify Namespace command to the "\

@@ -364,6 +364,12 @@ int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
 	return nvme_identify(fd, nsid, (cntid << 16) | cns, data);
 }
 
+int nvme_identify_ns_descs(int fd, __u32 nsid, void *data)
+{
+
+	return nvme_identify(fd, nsid, NVME_ID_CNS_CTRL_LIST, data);
+}
+
 int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {

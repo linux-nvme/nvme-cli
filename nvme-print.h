@@ -26,6 +26,7 @@ void show_error_log(struct nvme_error_log_page *err_log, int entries, const char
 void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
 void show_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname);
 void show_ctrl_registers(void *bar, unsigned int mode);
+void show_nvme_id_ns_descs(void *data);
 
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf);
 char *nvme_status_to_string(__u32 status);
@@ -39,6 +40,7 @@ void json_error_log(struct nvme_error_log_page *err_log, int entries, const char
 void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
 void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname);
 void json_print_list_items(struct list_item *items, unsigned amnt);
+void json_nvme_id_ns_descs(void *data);
 
 
 #endif

@@ -11,6 +11,7 @@ COMMAND_LIST(
 	ENTRY("id-ctrl", "Send NVMe Identify Controller", id_ctrl)
 	ENTRY("id-ns", "Send NVMe Identify Namespace, display structure", id_ns)
 	ENTRY("list-ns", "Send NVMe Identify List, display structure", list_ns)
+	ENTRY("ns-descs", "Send NVMe Namespace Descriptor List, display structure", ns_descs)
 	ENTRY("create-ns", "Creates a namespace with the provided parameters", create_ns)
 	ENTRY("delete-ns", "Deletes a namespace from the controller", delete_ns)
 	ENTRY("attach-ns", "Attaches a namespace to requested controller(s)", attach_ns)
