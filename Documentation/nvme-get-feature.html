@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.7" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
 <title>nvme-get-feature(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -87,10 +87,14 @@ ul, ol, li > p {
 ul > li     { color: #aaa; }
 ul > li > * { color: black; }
 
-pre {
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
   padding: 0;
   margin: 0;
 }
+
 
 #author {
   color: #527bbd;
@@ -415,12 +419,6 @@ div.unbreakable { page-break-inside: avoid; }
  *
  * */
 
-tt {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
-
 div.tableblock {
   margin-top: 1.0em;
   margin-bottom: 1.5em;
@@ -435,7 +433,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -453,12 +451,6 @@ div.tableblock > table[frame="vsides"] {
  * html5 specific
  *
  * */
-
-.monospaced {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
 
 table.tableblock {
   margin-top: 1.0em;
@@ -539,6 +531,8 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
+
+
 </style>
 <script type="text/javascript">
 /*<![CDATA[*/
@@ -869,8 +863,7 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        The value for command dword 11, if applicable. Only known feature
-        using this is the interrupt vector configuration feature.
+        The value for command dword 11, if applicable.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -898,7 +891,7 @@ Retrieves the feature for Number of Queues, or feature id 7:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme get-feature /dev/nvme0 -f 7</tt></pre>
+<pre><code># nvme get-feature /dev/nvme0 -f 7</code></pre>
 </div></div>
 </li>
 <li>
@@ -909,7 +902,7 @@ readable format:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme get-feature /dev/nvme0 -f 3</tt></pre>
+<pre><code># nvme get-feature /dev/nvme0 -f 3</code></pre>
 </div></div>
 </li>
 <li>
@@ -920,7 +913,7 @@ will be displayed to the user in as a hex dump:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme get-feature /dev/nvme0 -f 0xc0 -l 512</tt></pre>
+<pre><code># nvme get-feature /dev/nvme0 -f 0xc0 -l 512</code></pre>
 </div></div>
 </li>
 <li>
@@ -931,7 +924,7 @@ format:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme get-feature /dev/nvme0 -f 3 --raw-binary &gt; lba_range.raw</tt></pre>
+<pre><code># nvme get-feature /dev/nvme0 -f 3 --raw-binary &gt; lba_range.raw</code></pre>
 </div></div>
 <div class="paragraph"><p>It is probably a bad idea to not redirect stdout when using this mode.</p></div>
 </li>
@@ -948,7 +941,7 @@ format:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-02-26 08:27:10 MST
+Last updated 2017-06-23 12:34:32 EDT
 </div>
 </div>
 </body>

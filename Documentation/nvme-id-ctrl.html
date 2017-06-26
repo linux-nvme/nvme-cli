@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.7" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
 <title>nvme-id-ctrl(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -87,10 +87,14 @@ ul, ol, li > p {
 ul > li     { color: #aaa; }
 ul > li > * { color: black; }
 
-pre {
+.monospaced, code, pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: inherit;
+  color: navy;
   padding: 0;
   margin: 0;
 }
+
 
 #author {
   color: #527bbd;
@@ -415,12 +419,6 @@ div.unbreakable { page-break-inside: avoid; }
  *
  * */
 
-tt {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
-
 div.tableblock {
   margin-top: 1.0em;
   margin-bottom: 1.5em;
@@ -453,12 +451,6 @@ div.tableblock > table[frame="vsides"] {
  * html5 specific
  *
  * */
-
-.monospaced {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
-}
 
 table.tableblock {
   margin-top: 1.0em;
@@ -539,6 +531,8 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
+
+
 </style>
 <script type="text/javascript">
 /*<![CDATA[*/
@@ -837,7 +831,7 @@ fields in a human readable format:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme id-ctrl /dev/nvme0</tt></pre>
+<pre><code># nvme id-ctrl /dev/nvme0</code></pre>
 </div></div>
 </li>
 <li>
@@ -847,8 +841,8 @@ the vendor unique field:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme id-ctrl /dev/nvme0 --vendor-specific
-# nvme id-ctrl /dev/nvme0 -v</tt></pre>
+<pre><code># nvme id-ctrl /dev/nvme0 --vendor-specific
+# nvme id-ctrl /dev/nvme0 -v</code></pre>
 </div></div>
 <div class="paragraph"><p>The above will dump the <em>vs</em> buffer in hex since it doesn&#8217;t know how to
 interpret it.</p></div>
@@ -859,8 +853,8 @@ Have the program return the raw structure in binary:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme id-ctrl /dev/nvme0 --raw-binary &gt; id_ctrl.raw
-# nvme id-ctrl /dev/nvme0 -b &gt; id_ctrl.raw</tt></pre>
+<pre><code># nvme id-ctrl /dev/nvme0 --raw-binary &gt; id_ctrl.raw
+# nvme id-ctrl /dev/nvme0 -b &gt; id_ctrl.raw</code></pre>
 </div></div>
 <div class="paragraph"><p>It is probably a bad idea to not redirect stdout when using this mode.</p></div>
 </li>
@@ -871,17 +865,17 @@ can parse the raw buffer.
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><tt># nvme id-ctrl /dev/nvme0 --raw-binary | nvme_parse_id_ctrl</tt></pre>
+<pre><code># nvme id-ctrl /dev/nvme0 --raw-binary | nvme_parse_id_ctrl</code></pre>
 </div></div>
 <div class="paragraph"><p>The parse program in the above example can be a program that shows the
 structure in a way you like. The following program is such an example
-that will parse it and can accept the output through a pipe, <tt>'|'</tt>,
-as shown in the above example, or you can <tt>'cat'</tt> a saved output buffer to it.</p></div>
+that will parse it and can accept the output through a pipe, <code>'|'</code>,
+as shown in the above example, or you can <code>'cat'</code> a saved output buffer to it.</p></div>
 </li>
 </ul></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>/* File: nvme_parse_id_ctrl.c */
+<pre><code>/* File: nvme_parse_id_ctrl.c */
 
 #include &lt;linux/nvme.h&gt;
 #include &lt;stdio.h&gt;
@@ -898,7 +892,7 @@ int main(int argc, char **argv)
         printf("vid   : %#x\n", ctrl-&gt;vid);
         printf("ssvid : %#x\n", ctrl-&gt;ssvid);
         return 0;
-}</tt></pre>
+}</code></pre>
 </div></div>
 </div>
 </div>
@@ -912,7 +906,7 @@ int main(int argc, char **argv)
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-06-06 15:26:32 MDT
+Last updated 2017-02-27 10:11:58 EST
 </div>
 </div>
 </body>

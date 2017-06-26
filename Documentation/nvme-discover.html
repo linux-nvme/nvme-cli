@@ -750,7 +750,7 @@ nvme-discover(1) Manual Page
                 [--transport=&lt;trtype&gt;     | -t &lt;trtype&gt;]
                 [--traddr=&lt;traddr&gt;        | -a &lt;traddr&gt;]
                 [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
-                [--host_traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
+                [--host-traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
                 [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
                 [--raw=&lt;filename&gt;         | -r &lt;filename&gt;]</pre>
 <div class="attribution">
@@ -852,17 +852,6 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
--w &lt;traddr&gt;
-</dt>
-<dt class="hdlist1">
---host-traddr=&lt;traddr&gt;
-</dt>
-<dd>
-<p>
-        This field specificies the host traddr. Eg.: FC WWN&#8217;s.
-</p>
-</dd>
-<dt class="hdlist1">
 -s &lt;trsvcid&gt;
 </dt>
 <dt class="hdlist1">
@@ -890,10 +879,10 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
--s &lt;traddr&gt;
+-w &lt;traddr&gt;
 </dt>
 <dt class="hdlist1">
---host_traddr=&lt;traddr&gt;
+--host-traddr=&lt;traddr&gt;
 </dt>
 <dd>
 <p>
@@ -977,7 +966,7 @@ for <a href="mailto:keith.busch@intel.com">Keith Busch</a>.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-11-17 11:43:30 EST
+Last updated 2017-02-27 10:11:57 EST
 </div>
 </div>
 </body>
