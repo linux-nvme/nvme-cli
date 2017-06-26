@@ -983,9 +983,9 @@ uint64_t int48_to_long(__u8 *data)
 void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname)
 {
 	/* convert temperature from Kelvin to Celsius */
-	int c;
 	int temperature = ((smart->temperature[1] << 8) |
 		smart->temperature[0]) - 273;
+	int i;
 
 	printf("Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
 	printf("critical_warning                    : %#x\n", smart->critical_warning);
@@ -1015,12 +1015,12 @@ void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 		int128_to_double(smart->num_err_log_entries));
 	printf("Warning Temperature Time            : %u\n", le32_to_cpu(smart->warning_temp_time));
 	printf("Critical Composite Temperature Time : %u\n", le32_to_cpu(smart->critical_comp_time));
-	for (c=0; c < 8; c++) {
-		__s32 temp = le16_to_cpu(smart->temp_sensor[c]);
+	for (i = 0; i < 8; i++) {
+		__s32 temp = le16_to_cpu(smart->temp_sensor[i]);
 
 		if (temp == 0)
 			continue;
-		printf("Temperature Sensor %d                : %d C\n", c + 1,
+		printf("Temperature Sensor %d                : %d C\n", i + 1,
 			temp - 273);
 	}
 	printf("Thermal Management T1 Trans Count   : %u\n", le32_to_cpu(smart->thm_temp1_trans_count));
