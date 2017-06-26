@@ -27,7 +27,7 @@ COMMAND_LIST(
 	ENTRY("format", "Format namespace with new block format", format)
 	ENTRY("fw-activate", "Activate new firmware slot", fw_activate)
 	ENTRY("fw-download", "Download new firmware", fw_download)
-	ENTRY("admin-passthru", "Submit arbitrary admin command, return results", admin_passthru)
+	ENTRY("admin-passthru", "Submit an arbitrary admin command, return results", admin_passthru)
 	ENTRY("io-passthru", "Submit an arbitrary IO command, return results", io_passthru)
 	ENTRY("security-send", "Submit a Security Send command, return results", sec_send)
 	ENTRY("security-recv", "Submit a Security Receive command, return results", sec_recv)
