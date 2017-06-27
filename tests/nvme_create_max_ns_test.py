@@ -39,7 +39,7 @@ class TestNVMeCreateMaxNS(TestNVMe):
 
         - Attributes:
               - dps : data protection information.
-              - flabs : LBA format information.
+              - flbas : LBA format information.
               - nsze : namespace size.
               - ncap : namespace capacity.
               - ctrl_id : controller id.
