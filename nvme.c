@@ -1094,8 +1094,13 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int nsid, fd;
+	const char *desc = "Get namespce ID of a the block device.";
 
-	fd = get_dev(argc, argv);
+	const struct argconfig_commandline_options command_line_options[] = {
+		{NULL},
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
 	if (fd < 0)
 		return fd;
 	nsid = nvme_get_nsid(fd);
