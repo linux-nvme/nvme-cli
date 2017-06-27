@@ -321,6 +321,20 @@ class TestNVMe(object):
             - Returns:
                 - 0 on success, error code on failure.
         """
+        smart_log_supported_per_ns_cmd = "nvme id-ctrl " + self.ctrl
+        proc = subprocess.Popen(smart_log_supported_per_ns_cmd,
+                                shell=True,
+                                stdout=subprocess.PIPE)
+        err = proc.wait()
+        if nsid != '0xFFFFFFFF':
+            smart_log_per_ns = 0
+            for line in proc.stdout:
+                if line.startswith('lpa'):
+                    if bin(int(line.split(' ')[-1], 16))[2:][-1] == '0':
+                        smart_log_per_ns = -1
+                        break
+            if smart_log_per_ns != 0:
+                return 0
         smart_log_cmd = "nvme smart-log " + self.ctrl + " -n " + str(nsid)
         print smart_log_cmd
         proc = subprocess.Popen(smart_log_cmd,
