@@ -62,7 +62,7 @@ int nvme_resv_register(int fd, __u32 nsid, __u8 rrega, __u8 cptpl,
 		       bool iekey, __u64 crkey, __u64 nrkey);
 int nvme_resv_release(int fd, __u32 nsid, __u8 rtype, __u8 rrela,
 		      bool iekey, __u64 crkey);
-int nvme_resv_report(int fd, __u32 nsid, __u32 numd, void *data);
+int nvme_resv_report(int fd, __u32 nsid, __u32 numd, __u32 cdw11, void *data);
 
 /* NVME_ADMIN_CMD */
 int nvme_passthru_admin(int fd, __u8 opcode, __u8 flags, __u16 rsvd,

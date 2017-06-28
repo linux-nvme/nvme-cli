@@ -373,7 +373,7 @@ struct nvme_reservation_status {
 	__u8	regctl[2];
 	__u8	resv5[2];
 	__u8	ptpls;
-	__u8	resv10[13];
+	__u8	resv10[14];
 	struct {
 		__le16	cntlid;
 		__u8	rcsts;
@@ -381,6 +381,24 @@ struct nvme_reservation_status {
 		__le64	hostid;
 		__le64	rkey;
 	} regctl_ds[];
+};
+
+struct nvme_reservation_status_ext {
+	__le32	gen;
+	__u8	rtype;
+	__u8	regctl[2];
+	__u8	resv5[2];
+	__u8	ptpls;
+	__u8	resv10[14];
+	__u8	resv24[40];
+	struct {
+		__le16	cntlid;
+		__u8	rcsts;
+		__u8	resv3[5];
+		__le64	rkey;
+		__u8	hostid[16];
+		__u8	resv32[32];
+	} regctl_eds[];
 };
 
 enum nvme_async_event_type {

@@ -921,28 +921,52 @@ void show_error_log(struct nvme_error_log_page *err_log, int entries, const char
 	}
 }
 
-void show_nvme_resv_report(struct nvme_reservation_status *status)
+void show_nvme_resv_report(struct nvme_reservation_status *status, int bytes, __u32 cdw11)
 {
-	int i, regctl;
+	int i, j, regctl, entries;
 
 	regctl = status->regctl[0] | (status->regctl[1] << 8);
 
 	printf("\nNVME Reservation status:\n\n");
 	printf("gen       : %d\n", le32_to_cpu(status->gen));
-	printf("regctl    : %d\n", regctl);
 	printf("rtype     : %d\n", status->rtype);
+	printf("regctl    : %d\n", regctl);
 	printf("ptpls     : %d\n", status->ptpls);
 
-	for (i = 0; i < regctl; i++) {
-		printf("regctl[%d] :\n", i);
-		printf("  cntlid  : %x\n", le16_to_cpu(status->regctl_ds[i].cntlid));
-		printf("  rcsts   : %x\n", status->regctl_ds[i].rcsts);
-		printf("  hostid  : %"PRIx64"\n", (uint64_t)le64_to_cpu(status->regctl_ds[i].hostid));
-		printf("  rkey    : %"PRIx64"\n", (uint64_t)le64_to_cpu(status->regctl_ds[i].rkey));
+	/* check Extended Data Structure bit */
+	if ((cdw11 & 0x1) == 0) {
+		/* if status buffer was too small, don't loop past the end of the buffer */
+		entries = (bytes - 24) / 24;
+		if (entries < regctl)
+			regctl = entries;
+
+		for (i = 0; i < regctl; i++) {
+			printf("regctl[%d] :\n", i);
+			printf("  cntlid  : %x\n", le16_to_cpu(status->regctl_ds[i].cntlid));
+			printf("  rcsts   : %x\n", status->regctl_ds[i].rcsts);
+			printf("  hostid  : %"PRIx64"\n", (uint64_t)le64_to_cpu(status->regctl_ds[i].hostid));
+			printf("  rkey    : %"PRIx64"\n", (uint64_t)le64_to_cpu(status->regctl_ds[i].rkey));
+		}
+	} else {
+		struct nvme_reservation_status_ext *ext_status = (struct nvme_reservation_status_ext *)status;
+		/* if status buffer was too small, don't loop past the end of the buffer */
+		entries = (bytes - 64) / 64;
+		if (entries < regctl)
+			regctl = entries;
+
+		for (i = 0; i < regctl; i++) {
+			printf("regctlext[%d] :\n", i);
+			printf("  cntlid     : %x\n", le16_to_cpu(ext_status->regctl_eds[i].cntlid));
+			printf("  rcsts      : %x\n", ext_status->regctl_eds[i].rcsts);
+			printf("  rkey       : %"PRIx64"\n", (uint64_t)le64_to_cpu(ext_status->regctl_eds[i].rkey));
+			printf("  hostid     : ");
+			for (j = 0; j < 16; j++)
+				printf("%x", ext_status->regctl_eds[i].hostid[j]);
+			printf("\n");
+		}
 	}
 	printf("\n");
 }
-
 
 static char *fw_to_string(__u64 fw)
 {
@@ -1582,33 +1606,63 @@ void json_error_log(struct nvme_error_log_page *err_log, int entries, const char
 	json_free_object(root);
 }
 
-void json_nvme_resv_report(struct nvme_reservation_status *status)
+void json_nvme_resv_report(struct nvme_reservation_status *status, int bytes, __u32 cdw11)
 {
 	struct json_object *root;
 	struct json_array *rcs;
-	int i, regctl;
+	int i, j, regctl, entries;
 
 	regctl = status->regctl[0] | (status->regctl[1] << 8);
 
 	root = json_create_object();
 
 	json_object_add_value_int(root, "gen", le32_to_cpu(status->gen));
-	json_object_add_value_int(root, "regctl", regctl);
 	json_object_add_value_int(root, "rtype", status->rtype);
+	json_object_add_value_int(root, "regctl", regctl);
 	json_object_add_value_int(root, "ptpls", status->ptpls);
 
 	rcs = json_create_array();
-	json_object_add_value_array(root, "regctls", rcs);
+        /* check Extended Data Structure bit */
+        if ((cdw11 & 0x1) == 0) {
+                /* if status buffer was too small, don't loop past the end of the buffer */
+                entries = (bytes - 24) / 24;
+                if (entries < regctl)
+                        regctl = entries;
 
-	for (i = 0; i < regctl; i++) {
-		struct json_object *rc = json_create_object();
+		json_object_add_value_array(root, "regctls", rcs);
+		for (i = 0; i < regctl; i++) {
+			struct json_object *rc = json_create_object();
 
-		json_object_add_value_int(rc, "cntlid", le16_to_cpu(status->regctl_ds[i].cntlid));
-		json_object_add_value_int(rc, "rcsts", status->regctl_ds[i].rcsts);
-		json_object_add_value_int(rc, "hostid", (uint64_t)le64_to_cpu(status->regctl_ds[i].hostid));
-		json_object_add_value_int(rc, "rkey", (uint64_t)le64_to_cpu(status->regctl_ds[i].rkey));
+			json_object_add_value_int(rc, "cntlid", le16_to_cpu(status->regctl_ds[i].cntlid));
+			json_object_add_value_int(rc, "rcsts", status->regctl_ds[i].rcsts);
+			json_object_add_value_int(rc, "hostid", (uint64_t)le64_to_cpu(status->regctl_ds[i].hostid));
+			json_object_add_value_int(rc, "rkey", (uint64_t)le64_to_cpu(status->regctl_ds[i].rkey));
 
-		json_array_add_value_object(rcs, rc);
+			json_array_add_value_object(rcs, rc);
+		}
+	} else {
+		struct nvme_reservation_status_ext *ext_status = (struct nvme_reservation_status_ext *)status;
+		char	hostid[33];
+
+                /* if status buffer was too small, don't loop past the end of the buffer */
+                entries = (bytes - 64) / 64;
+                if (entries < regctl)
+                        regctl = entries;
+
+		json_object_add_value_array(root, "regctlext", rcs);
+		for (i = 0; i < regctl; i++) {
+			struct json_object *rc = json_create_object();
+
+			json_object_add_value_int(rc, "cntlid", le16_to_cpu(ext_status->regctl_eds[i].cntlid));
+			json_object_add_value_int(rc, "rcsts", ext_status->regctl_eds[i].rcsts);
+			json_object_add_value_int(rc, "rkey", (uint64_t)le64_to_cpu(ext_status->regctl_eds[i].rkey));
+			for (j = 0; j < 16; j++)
+				sprintf(hostid + j * 2, "%02x", ext_status->regctl_eds[i].hostid[j]);
+
+			json_object_add_value_string(rc, "hostid", hostid);
+
+			json_array_add_value_object(rcs, rc);
+		}
 	}
 
 	json_print_object(root, NULL);
