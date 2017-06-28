@@ -16,6 +16,7 @@
 #define _LINUX_NVME_H
 
 #include <linux/types.h>
+#include <linux/uuid.h>
 
 /* NQN names in commands fields specified one size */
 #define NVMF_NQN_FIELD_LEN	256
@@ -23,7 +24,6 @@
 /* However the max length of a qualified name is another size */
 #define NVMF_NQN_SIZE		223
 
-#define NVMF_HOSTID_SIZE        36
 #define NVMF_TRSVCID_SIZE	32
 #define NVMF_TRADDR_SIZE	256
 #define NVMF_TSAS_SIZE		256
@@ -102,6 +102,7 @@ enum {
 	NVME_REG_ACQ	= 0x0030,	/* Admin CQ Base Address */
 	NVME_REG_CMBLOC = 0x0038,	/* Controller Memory Buffer Location */
 	NVME_REG_CMBSZ	= 0x003c,	/* Controller Memory Buffer Size */
+	NVME_REG_DBS	= 0x1000,	/* SQ 0 Tail Doorbell */
 };
 
 #define NVME_CAP_MQES(cap)	((cap) & 0xffff)
@@ -249,7 +250,10 @@ enum {
 	NVME_CTRL_ONCS_COMPARE			= 1 << 0,
 	NVME_CTRL_ONCS_WRITE_UNCORRECTABLE	= 1 << 1,
 	NVME_CTRL_ONCS_DSM			= 1 << 2,
+	NVME_CTRL_ONCS_WRITE_ZEROES		= 1 << 3,
 	NVME_CTRL_VWC_PRESENT			= 1 << 0,
+	NVME_CTRL_OACS_SEC_SUPP                 = 1 << 0,
+	NVME_CTRL_OACS_DBBUF_SUPP		= 1 << 7,
 };
 
 struct nvme_lbaf {
@@ -289,6 +293,17 @@ struct nvme_id_ns {
 };
 
 enum {
+	NVME_ID_CNS_NS			= 0x00,
+	NVME_ID_CNS_CTRL		= 0x01,
+	NVME_ID_CNS_NS_ACTIVE_LIST	= 0x02,
+	NVME_ID_CNS_NS_DESC_LIST	= 0x03,
+	NVME_ID_CNS_NS_PRESENT_LIST	= 0x10,
+	NVME_ID_CNS_NS_PRESENT		= 0x11,
+	NVME_ID_CNS_CTRL_NS_LIST	= 0x12,
+	NVME_ID_CNS_CTRL_LIST		= 0x13,
+};
+
+enum {
 	NVME_NS_FEAT_THIN	= 1 << 0,
 	NVME_NS_FLBAS_LBA_MASK	= 0xf,
 	NVME_NS_FLBAS_META_EXT	= 0x10,
@@ -306,6 +321,22 @@ enum {
 	NVME_NS_DPS_PI_TYPE1	= 1,
 	NVME_NS_DPS_PI_TYPE2	= 2,
 	NVME_NS_DPS_PI_TYPE3	= 3,
+};
+
+struct nvme_ns_id_desc {
+	__u8 nidt;
+	__u8 nidl;
+	__le16 reserved;
+};
+
+#define NVME_NIDT_EUI64_LEN	8
+#define NVME_NIDT_NGUID_LEN	16
+#define NVME_NIDT_UUID_LEN	16
+
+enum {
+	NVME_NIDT_EUI64		= 0x01,
+	NVME_NIDT_NGUID		= 0x02,
+	NVME_NIDT_UUID		= 0x03,
 };
 
 struct nvme_smart_log {
@@ -571,10 +602,40 @@ enum {
 	NVME_DSMGMT_AD		= 1 << 2,
 };
 
+#define NVME_DSM_MAX_RANGES	256
+
 struct nvme_dsm_range {
 	__le32			cattr;
 	__le32			nlb;
 	__le64			slba;
+};
+
+struct nvme_write_zeroes_cmd {
+	__u8			opcode;
+	__u8			flags;
+	__u16			command_id;
+	__le32			nsid;
+	__u64			rsvd2;
+	__le64			metadata;
+	union nvme_data_ptr	dptr;
+	__le64			slba;
+	__le16			length;
+	__le16			control;
+	__le32			dsmgmt;
+	__le32			reftag;
+	__le16			apptag;
+	__le16			appmask;
+};
+
+/* Features */
+
+struct nvme_feat_auto_pst {
+	__le64 entries[32];
+};
+
+enum {
+	NVME_HOST_MEM_ENABLE	= (1 << 0),
+	NVME_HOST_MEM_RETURN	= (1 << 1),
 };
 
 /* Admin commands */
@@ -595,6 +656,7 @@ enum nvme_admin_opcode {
 	nvme_admin_download_fw		= 0x11,
 	nvme_admin_ns_attach		= 0x15,
 	nvme_admin_keep_alive		= 0x18,
+	nvme_admin_dbbuf		= 0x7C,
 	nvme_admin_format_nvm		= 0x80,
 	nvme_admin_security_send	= 0x81,
 	nvme_admin_security_recv	= 0x82,
@@ -642,9 +704,13 @@ struct nvme_identify {
 	__le32			nsid;
 	__u64			rsvd2[2];
 	union nvme_data_ptr	dptr;
-	__le32			cns;
+	__u8			cns;
+	__u8			rsvd3;
+	__le16			ctrlid;
 	__u32			rsvd11[5];
 };
+
+#define NVME_IDENTIFY_DATA_SIZE 4096
 
 struct nvme_features {
 	__u8			opcode;
@@ -655,7 +721,16 @@ struct nvme_features {
 	union nvme_data_ptr	dptr;
 	__le32			fid;
 	__le32			dword11;
-	__u32			rsvd12[4];
+	__le32                  dword12;
+	__le32                  dword13;
+	__le32                  dword14;
+	__le32                  dword15;
+};
+
+struct nvme_host_mem_buf_desc {
+	__le64			addr;
+	__le32			size;
+	__u32			rsvd;
 };
 
 struct nvme_create_cq {
@@ -831,7 +906,7 @@ struct nvmf_connect_command {
 };
 
 struct nvmf_connect_data {
-	__u8		hostid[16];
+	uuid_t		hostid;
 	__le16		cntlid;
 	char		resv4[238];
 	char		subsysnqn[NVMF_NQN_FIELD_LEN];
@@ -864,6 +939,16 @@ struct nvmf_property_get_command {
 	__u8		resv4[16];
 };
 
+struct nvme_dbbuf {
+	__u8			opcode;
+	__u8			flags;
+	__u16			command_id;
+	__u32			rsvd1[5];
+	__le64			prp1;
+	__le64			prp2;
+	__u32			rsvd12[6];
+};
+
 struct nvme_command {
 	union {
 		struct nvme_common_command common;
@@ -876,27 +961,15 @@ struct nvme_command {
 		struct nvme_download_firmware dlfw;
 		struct nvme_format_cmd format;
 		struct nvme_dsm_cmd dsm;
+		struct nvme_write_zeroes_cmd write_zeroes;
 		struct nvme_abort_cmd abort;
 		struct nvme_get_log_page_command get_log_page;
 		struct nvmf_common_command fabrics;
 		struct nvmf_connect_command connect;
 		struct nvmf_property_set_command prop_set;
 		struct nvmf_property_get_command prop_get;
+		struct nvme_dbbuf dbbuf;
 	};
-};
-
-#define NVME_IDENTIFY_CMD_LEN 4096
-#define NVME_ID_CNS_NS_DESC_LIST 0x3
-enum {
-	NVME_NIDT_EUI64		= 0x1,
-	NVME_NIDT_NGUID		= 0x2,
-	NVME_NIDT_UUID		= 0x3,
-};
-
-struct nvme_ns_id_desc {
-	__u8 nidt;
-	__u8 nidl;
-	__u16 reserved;
 };
 
 static inline bool nvme_is_write(struct nvme_command *cmd)
@@ -980,6 +1053,7 @@ enum {
 	NVME_SC_BAD_ATTRIBUTES		= 0x180,
 	NVME_SC_INVALID_PI		= 0x181,
 	NVME_SC_READ_ONLY		= 0x182,
+	NVME_SC_ONCS_NOT_SUPPORTED	= 0x183,
 
 	/*
 	 * I/O Command Set Specific - Fabrics commands:
@@ -1006,23 +1080,41 @@ enum {
 	NVME_SC_UNWRITTEN_BLOCK		= 0x287,
 
 	NVME_SC_DNR			= 0x4000,
+
+
+	/*
+	 * FC Transport-specific error status values for NVME commands
+	 *
+	 * Transport-specific status code values must be in the range 0xB0..0xBF
+	 */
+
+	/* Generic FC failure - catchall */
+	NVME_SC_FC_TRANSPORT_ERROR	= 0x00B0,
+
+	/* I/O failure due to FC ABTS'd */
+	NVME_SC_FC_TRANSPORT_ABORTED	= 0x00B1,
 };
 
 struct nvme_completion {
 	/*
 	 * Used by Admin and Fabrics commands to return data:
 	 */
-	union {
-		__le16	result16;
-		__le32	result;
-		__le64	result64;
-	};
+	union nvme_result {
+		__le16	u16;
+		__le32	u32;
+		__le64	u64;
+	} result;
 	__le16	sq_head;	/* how much of this queue may be reclaimed */
 	__le16	sq_id;		/* submission queue that generated this entry */
 	__u16	command_id;	/* of the command which completed */
 	__le16	status;		/* did the command fail, and if so, why? */
 };
 
-#define NVME_VS(major, minor) (((major) << 16) | ((minor) << 8))
+#define NVME_VS(major, minor, tertiary) \
+	(((major) << 16) | ((minor) << 8) | (tertiary))
+
+#define NVME_MAJOR(ver)		((ver) >> 16)
+#define NVME_MINOR(ver)		(((ver) >> 8) & 0xff)
+#define NVME_TERTIARY(ver)	((ver) & 0xff)
 
 #endif /* _LINUX_NVME_H */

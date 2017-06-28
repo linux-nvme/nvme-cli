@@ -44,6 +44,8 @@
 
 #include "common.h"
 
+#define NVMF_HOSTID_SIZE	36
+
 static struct config {
 	char *nqn;
 	char *transport;

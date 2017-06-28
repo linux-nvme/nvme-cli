@@ -45,10 +45,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
-#ifdef LIBUUID
-#include <uuid/uuid.h>
-#endif
-
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
 #include "nvme-lightnvm.h"

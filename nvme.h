@@ -21,6 +21,15 @@
 #include "json.h"
 
 #define unlikely(x) x
+
+#ifdef LIBUUID
+#include <uuid/uuid.h>
+#else
+typedef struct {
+	__u8 b[16];
+} uuid_t;
+#endif
+
 #include "linux/nvme.h"
 
 struct nvme_error_log_page {
@@ -44,16 +53,6 @@ struct nvme_firmware_log_page {
 
 /* idle and active power scales occupy the last 2 bits of the field */
 #define POWER_SCALE(s) ((s) >> 6)
-
-enum {
-	NVME_ID_CNS_NS			= 0x00,
-	NVME_ID_CNS_CTRL		= 0x01,
-	NVME_ID_CNS_NS_ACTIVE_LIST	= 0x02,
-	NVME_ID_CNS_NS_PRESENT_LIST	= 0x10,
-	NVME_ID_CNS_NS_PRESENT		= 0x11,
-	NVME_ID_CNS_CTRL_NS_LIST	= 0x12,
-	NVME_ID_CNS_CTRL_LIST		= 0x13,
-};
 
 struct nvme_host_mem_buffer {
 	__u32			hsize;

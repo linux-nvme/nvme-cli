@@ -3,10 +3,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef LIBUUID
-#include <uuid/uuid.h>
-#endif
-
 #include "nvme-print.h"
 #include "json.h"
 #include "nvme-models.h"
@@ -622,7 +618,7 @@ void json_nvme_id_ns_descs(void *data)
 
 	root = json_create_object();
 
-	for (pos = 0; pos < NVME_IDENTIFY_CMD_LEN; pos += len) {
+	for (pos = 0; pos < NVME_IDENTIFY_DATA_SIZE; pos += len) {
 		struct nvme_ns_id_desc *cur = data + pos;
 
 		off = pos + sizeof(*cur);
@@ -680,7 +676,7 @@ void show_nvme_id_ns_descs(void *data)
 	__u8 eui64[8];
 	__u8 nguid[16];
 
-	for (pos = 0; pos < NVME_IDENTIFY_CMD_LEN; pos += len) {
+	for (pos = 0; pos < NVME_IDENTIFY_DATA_SIZE; pos += len) {
 		struct nvme_ns_id_desc *cur = data + pos;
 
 		if (cur->nidl == 0)
