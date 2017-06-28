@@ -17,6 +17,7 @@
 
 #include <stdbool.h>
 #include <endian.h>
+#include <stdint.h>
 #include "plugin.h"
 #include "json.h"
 
@@ -26,7 +27,7 @@
 #include <uuid/uuid.h>
 #else
 typedef struct {
-	__u8 b[16];
+	uint8_t b[16];
 } uuid_t;
 #endif
 
