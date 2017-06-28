@@ -1390,20 +1390,19 @@ static int fw_activate(int argc, char **argv, struct command *cmd, struct plugin
 	return err;
 }
 
-static int clear_args(int argc, char **argv)
-{
-	int opt, long_index;
-
-	while ((opt = getopt_long(argc, (char **)argv, "", NULL,
-					&long_index)) != -1);
-	return get_dev(argc, argv);
-}
-
 static int subsystem_reset(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
+	const char *desc = "Resets the NVMe subsystem\n";
 	int err, fd;
 
-	fd = clear_args(argc, argv);
+	const struct argconfig_commandline_options command_line_options[] = {
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	if (fd < 0)
+		return fd;
+
 	err = nvme_subsystem_reset(fd);
 	if (err < 0) {
 		perror("Subsystem-reset");
@@ -1414,9 +1413,17 @@ static int subsystem_reset(int argc, char **argv, struct command *cmd, struct pl
 
 static int reset(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
+	const char *desc = "Resets the NVMe controller\n";
 	int err, fd;
 
-	fd = clear_args(argc, argv);
+	const struct argconfig_commandline_options command_line_options[] = {
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	if (fd < 0)
+		return fd;
+
 	err = nvme_reset_controller(fd);
 	if (err < 0) {
 		perror("Reset");
