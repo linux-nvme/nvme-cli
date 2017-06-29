@@ -42,6 +42,7 @@ COMMAND_LIST(
 	ENTRY("write", "Submit a write command, return results", write_cmd)
 	ENTRY("write-zeroes", "Submit a write zeroes command, return results", write_zeroes)
 	ENTRY("write-uncor", "Submit a write uncorrectable command, return results", write_uncor)
+	ENTRY("sanitize", "Submit a sanitize command", sanitize)
 	ENTRY("reset", "Resets the controller", reset)
 	ENTRY("subsystem-reset", "Resets the controller", subsystem_reset)
 	ENTRY("show-regs", "Shows the controller registers. Requires admin character device", show_registers)

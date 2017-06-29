@@ -1428,6 +1428,98 @@ static int reset(int argc, char **argv, struct command *cmd, struct plugin *plug
 	return err;
 }
 
+static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	char *desc = "Send a sanitize command.";
+	char *no_dealloc_desc = "No deallocate after sanitize.";
+	char *oipbp_desc = "Overwrite invert pattern between passes.";
+	char *owpass_desc = "Overwrite pass count.";
+	char *ause_desc = "Allow unrestricted sanitize exit.";
+	char *sanact_desc = "Sanitize action.";
+	char *ovrpat_desc = "Overwrite pattern.";
+
+	int fd;
+	int ret;
+	__u32 sanitize_cdw10 = 0;
+	__u32 sanitize_cdw11 = 0;
+
+	struct nvme_passthru_cmd admin_cmd;
+
+	struct config {
+		uint8_t no_dealloc;
+		uint8_t oipbp;
+		uint8_t owpass;
+		uint8_t ause;
+		uint8_t sanact;
+		uint32_t ovrpat;
+	};
+
+	struct config cfg = {
+		.no_dealloc = 0,
+		.oipbp = 0,
+		.owpass = 0,
+		.ause = 0,
+		.sanact = 0,
+		.ovrpat = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"no-dealloc", 'd', "", CFG_NONE, &cfg.no_dealloc, no_argument, no_dealloc_desc},
+		{"oipbp", 'i', "", CFG_NONE, &cfg.oipbp, no_argument, oipbp_desc},
+		{"owpass", 'n', "NUM", CFG_POSITIVE, &cfg.owpass, required_argument, owpass_desc},
+		{"ause", 'u', "", CFG_NONE, &cfg.ause, no_argument, ause_desc},
+		{"sanact", 'a', "NUM", CFG_POSITIVE, &cfg.sanact, required_argument, sanact_desc},
+		{"ovrpat", 'p', "NUM", CFG_POSITIVE, &cfg.ovrpat, required_argument, ovrpat_desc},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	if (fd < 0)
+		return fd;
+
+	switch (cfg.sanact) {
+	case NVME_SANITIZE_ACT_CRYPTO_ERASE:
+	case NVME_SANITIZE_ACT_BLOCK_ERASE:
+	case NVME_SANITIZE_ACT_EXIT:
+		sanitize_cdw10 = cfg.sanact;
+		break;
+	case NVME_SANITIZE_ACT_OVERWRITE:
+		sanitize_cdw10 = cfg.sanact;
+		sanitize_cdw11 = cfg.ovrpat;
+		break;
+	default:
+		fprintf(stderr, "Invalid Sanitize Action\n");
+		return -1;
+	}
+
+	if (cfg.ause)
+		sanitize_cdw10 |= NVME_SANITIZE_AUSE;
+
+	if (cfg.sanact == NVME_SANITIZE_ACT_OVERWRITE) {
+		if (cfg.owpass >= 0 && cfg.owpass <= 16) {
+			sanitize_cdw10 |= (cfg.owpass << NVME_SANITIZE_OWPASS_SHIFT);
+		} else {
+			fprintf(stderr, "owpass out of range [0-16] or sanitize action is not set to overwrite\n");
+			return -1;
+		}
+		if (cfg.oipbp)
+			sanitize_cdw10 |= NVME_SANITIZE_OIPBP;
+	}
+
+	if (cfg.sanact != NVME_SANITIZE_ACT_EXIT && cfg.no_dealloc)
+		sanitize_cdw10 |= NVME_SANITIZE_NO_DEALLOC;
+
+	memset(&admin_cmd, 0, sizeof (admin_cmd));
+	admin_cmd.opcode = nvme_admin_sanitize;
+	admin_cmd.cdw10 = sanitize_cdw10;
+	admin_cmd.cdw11 = sanitize_cdw11;
+
+	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+
+	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	return ret;
+}
+
 static int show_registers(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Reads and shows the defined NVMe controller registers "\

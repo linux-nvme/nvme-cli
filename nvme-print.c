@@ -1102,6 +1102,8 @@ char *nvme_status_to_string(__u32 status)
 	case NVME_SC_FUSED_MISSING:		return "FUSED_MISSING";
 	case NVME_SC_INVALID_NS:		return "INVALID_NS";
 	case NVME_SC_CMD_SEQ_ERROR:		return "CMD_SEQ_ERROR";
+	case NVME_SC_SANITIZE_FAILED:		return "SANITIZE_FAILED";
+	case NVME_SC_SANITIZE_IN_PROGRESS:	return "SANITIZE_IN_PROGRESS";
 	case NVME_SC_LBA_RANGE:			return "LBA_RANGE";
 	case NVME_SC_CAP_EXCEEDED:		return "CAP_EXCEEDED";
 	case NVME_SC_NS_NOT_READY:		return "NS_NOT_READY";

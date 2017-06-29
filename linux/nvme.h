@@ -660,6 +660,7 @@ enum nvme_admin_opcode {
 	nvme_admin_format_nvm		= 0x80,
 	nvme_admin_security_send	= 0x81,
 	nvme_admin_security_recv	= 0x82,
+	nvme_admin_sanitize			= 0x84,
 };
 
 enum {
@@ -695,6 +696,18 @@ enum {
 	NVME_FWACT_REPL		= (0 << 3),
 	NVME_FWACT_REPL_ACTV	= (1 << 3),
 	NVME_FWACT_ACTV		= (2 << 3),
+};
+
+/* Sanitize */
+enum {
+	NVME_SANITIZE_NO_DEALLOC		= 0x00000200,
+	NVME_SANITIZE_OIPBP				= 0x00000100,
+	NVME_SANITIZE_OWPASS_SHIFT		= 0x00000004,
+	NVME_SANITIZE_AUSE				= 0x00000008,
+	NVME_SANITIZE_ACT_CRYPTO_ERASE	= 0x00000004,
+	NVME_SANITIZE_ACT_OVERWRITE		= 0x00000003,
+	NVME_SANITIZE_ACT_BLOCK_ERASE	= 0x00000002,
+	NVME_SANITIZE_ACT_EXIT			= 0x00000001,
 };
 
 struct nvme_identify {
@@ -1009,6 +1022,9 @@ enum {
 
 	NVME_SC_SGL_INVALID_OFFSET	= 0x16,
 	NVME_SC_SGL_INVALID_SUBTYPE	= 0x17,
+
+	NVME_SC_SANITIZE_FAILED			= 0x1C,
+	NVME_SC_SANITIZE_IN_PROGRESS	= 0x1D,
 
 	NVME_SC_LBA_RANGE		= 0x80,
 	NVME_SC_CAP_EXCEEDED		= 0x81,
