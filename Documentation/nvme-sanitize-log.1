@@ -1,0 +1,126 @@
+'\" t
+.\"     Title: nvme-sanitize-log
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/28/2017
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SANITIZE\-LOG" "1" "06/28/2017" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-sanitize-log \- Send NVMe sanitize\-log Command, return result
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme sanitize\-log\fR <device>
+.fi
+.SH "DESCRIPTION"
+.sp
+Retrieves the NVMe Sanitize log page from an NVMe device and provides the status of sanitize command\&.
+.sp
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0)\&.
+.sp
+Expected status and description :\-
+.TS
+allbox tab(:);
+ltB ltB.
+T{
+Status Code
+T}:T{
+Description
+T}
+.T&
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+.sp
+0x0000
+T}:T{
+.sp
+NVM subsystem has never been sanitized\&.
+T}
+T{
+.sp
+0x0001
+T}:T{
+.sp
+The most recent sanitize operation completed successfully\&.
+T}
+T{
+.sp
+0x0002
+T}:T{
+.sp
+A sanitize operation is currently in progress\&.
+T}
+T{
+.sp
+0x0003
+T}:T{
+.sp
+The most recent sanitize operation failed\&.
+T}
+T{
+.sp
+0x0100
+T}:T{
+.sp
+Global Data Erased bit If set to 1 then non\-volatile storage in the NVM subsystem has not been written to: a) since being manufactured and the NVM subsystem has never been sanitized; or b) since the most recent successful sanitize operation\&. If cleared to 0, then non\-volatile storage in the NVM subsystem has been written to: a) since being manufactured and the NVM subsystem has never been sanitized; or b) since the most recent successful sanitize operation of the NVM subsystem\&.
+T}
+.TE
+.sp 1
+.sp
+Sanitize Progress \- percentage complete
+.sp
+On success it returns 0, error code otherwise\&.
+.SH "OPTIONS"
+.sp
+No options yet\&.
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program issue Sanitize\-log Command :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme sanitize\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.

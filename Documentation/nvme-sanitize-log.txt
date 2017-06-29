@@ -1,0 +1,67 @@
+nvme-sanitize-log(1)
+====================
+
+NAME
+----
+nvme-sanitize-log - Send NVMe sanitize-log Command, return result
+
+SYNOPSIS
+--------
+[verse]
+'nvme sanitize-log' <device>
+
+DESCRIPTION
+-----------
+Retrieves the NVMe Sanitize log page from an NVMe device and provides the
+status of sanitize command.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+Expected status and description :-
+
+[cols="2*", options="header"]
+|===
+|Status Code |Description
+
+|0x0000
+|NVM subsystem has never been sanitized.
+
+|0x0001
+|The most recent sanitize operation completed successfully.
+
+|0x0002
+|A sanitize operation is currently in progress.
+
+|0x0003
+|The most recent sanitize operation failed.
+
+|0x0100
+|Global Data Erased bit
+If set to 1 then non-volatile storage in the NVM subsystem has
+not been written to:
+    a) since being manufactured and the NVM subsystem has never been sanitized; or
+    b) since the most recent successful sanitize operation.
+If cleared to 0, then non-volatile storage in the NVM subsystem has been written to:
+    a) since being manufactured and the NVM subsystem has never been sanitized; or
+    b) since the most recent successful sanitize operation of the NVM subsystem.
+|===
+
+Sanitize Progress - percentage complete
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+No options yet.
+
+EXAMPLES
+--------
+* Has the program issue Sanitize-log Command :
++
+------------
+# nvme sanitize-log /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.
