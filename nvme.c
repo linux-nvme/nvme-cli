@@ -422,6 +422,68 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	}
 }
 
+static const char * sanitize_mon_status_to_string(__u16 status)
+{
+	const char * str;
+
+	switch (status & NVME_SANITIZE_LOG_STATUS_MASK) {
+	case NVME_SANITIZE_LOG_NEVER_SANITIZED:
+		str = "NVM Subsystem has never been sanitized.";
+		break;
+	case NVME_SANITIZE_LOG_COMPLETED_SUCCESS:
+		str = "Most Recent Sanitize Command Completed Successfully.";
+		break;
+	case NVME_SANITIZE_LOG_IN_PROGESS:
+		str = "Sanitize in Progress.";
+		break;
+	case NVME_SANITIZE_LOG_COMPLETED_FAILED:
+		str = "Most Recent Sanitize Command Failed.";
+		break;
+	default:
+		str = "Unknown.";
+	}
+
+	return str;
+}
+
+static int sanitize_log(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	char *desc = "Retrieve sanitize log and show it.";
+	int fd;
+	int ret;
+	__u8 output[NVME_SANITIZE_LOG_DATA_LEN] = {0};
+	struct nvme_sanitize_log_page *slp;
+	double progress_percent;
+	const struct argconfig_commandline_options command_line_options[] = {
+		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	if (fd < 0)
+		return fd;
+
+	ret = nvme_get_log(fd, 0x01, NVME_LOG_SANITIZE, NVME_SANITIZE_LOG_DATA_LEN, output);
+	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	if (ret != 0)
+		return ret;
+
+	slp = (struct nvme_sanitize_log_page *) output;
+	printf("Sanitize status                     = 0x%0x\n", slp->status);
+	printf("%s\n", sanitize_mon_status_to_string(slp->status));
+
+	if ((slp->status & NVME_SANITIZE_LOG_STATUS_MASK) == NVME_SANITIZE_LOG_IN_PROGESS) {
+		progress_percent = (((double)le32_to_cpu(slp->progress) * 100) / 0x10000);
+		printf("Sanitize Progress (percentage)      = %f%%\n", progress_percent);
+	} else {
+		if (slp->status & NVME_SANITIZE_LOG_GLOBAL_DATA_ERASED)
+			printf("Global Data Erased Set\n");
+		else
+			printf("Global Data Erased Cleared\n");
+	}
+	return ret;
+}
+
 static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Show controller list information for the subsystem the "\

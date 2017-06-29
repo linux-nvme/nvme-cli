@@ -693,13 +693,15 @@ enum {
 	NVME_LOG_FW_SLOT	= 0x03,
 	NVME_LOG_DISC		= 0x70,
 	NVME_LOG_RESERVATION	= 0x80,
+	NVME_LOG_SANITIZE	= 0x81,
 	NVME_FWACT_REPL		= (0 << 3),
 	NVME_FWACT_REPL_ACTV	= (1 << 3),
 	NVME_FWACT_ACTV		= (2 << 3),
 };
 
-/* Sanitize */
+/* Sanitize and Sanitize Monitor/Log */
 enum {
+	/* Sanitize */
 	NVME_SANITIZE_NO_DEALLOC		= 0x00000200,
 	NVME_SANITIZE_OIPBP				= 0x00000100,
 	NVME_SANITIZE_OWPASS_SHIFT		= 0x00000004,
@@ -708,6 +710,15 @@ enum {
 	NVME_SANITIZE_ACT_OVERWRITE		= 0x00000003,
 	NVME_SANITIZE_ACT_BLOCK_ERASE	= 0x00000002,
 	NVME_SANITIZE_ACT_EXIT			= 0x00000001,
+
+	/* Sanitize Monitor/Log */
+	NVME_SANITIZE_LOG_DATA_LEN				= 0x0014,
+	NVME_SANITIZE_LOG_GLOBAL_DATA_ERASED	= 0x0100,
+	NVME_SANITIZE_LOG_STATUS_MASK			= 0x0007,
+	NVME_SANITIZE_LOG_NEVER_SANITIZED		= 0x0000,
+	NVME_SANITIZE_LOG_COMPLETED_SUCCESS		= 0x0001,
+	NVME_SANITIZE_LOG_IN_PROGESS			= 0x0002,
+	NVME_SANITIZE_LOG_COMPLETED_FAILED		= 0x0003,
 };
 
 struct nvme_identify {
@@ -830,6 +841,16 @@ struct nvme_get_log_page_command {
 	__le32			lpol;
 	__le32			lpou;
 	__u32			rsvd14[2];
+};
+
+/* Sanitize Log Page */
+struct nvme_sanitize_log_page {
+	__le16			progress;
+	__le16			status;
+	__le32			cdw10_info;
+	__le32			est_ovrwrt_time;
+	__le32			est_blk_erase_time;
+	__le32			est_crypto_erase_time;
 };
 
 /*
