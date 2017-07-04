@@ -400,6 +400,9 @@ static int wdc_cap_diag(int argc, char **argv, struct command *command,
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	if (fd < 0)
+		return fd;
+
 	wdc_check_device(fd);
 	if (cfg.file != NULL) {
 		strncpy(f, cfg.file, PATH_MAX);
@@ -517,6 +520,9 @@ static int wdc_drive_log(int argc, char **argv, struct command *command,
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	if (fd < 0)
+		return fd;
+
 	wdc_check_device(fd);
 	if (cfg.file != NULL) {
 		strncpy(f, cfg.file, PATH_MAX);
@@ -550,6 +556,9 @@ static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	if (fd < 0)
+		return fd;
+
 	wdc_check_device(fd);
 	ret = wdc_crash_dump(fd, cfg.file);
 	if (ret != 0) {
@@ -624,6 +633,9 @@ static int wdc_purge(int argc, char **argv,
 	admin_cmd.opcode = WDC_NVME_PURGE_CMD_OPCODE;
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	if (fd < 0)
+		return fd;
+
 	wdc_check_device(fd);
 	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
 	if (ret > 0) {
@@ -668,6 +680,9 @@ static int wdc_purge_monitor(int argc, char **argv,
 	admin_cmd.timeout_ms = WDC_NVME_PURGE_MONITOR_TIMEOUT;
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	if (fd < 0)
+		return fd;
+
 	wdc_check_device(fd);
 	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
 	if (ret == 0) {
@@ -854,6 +869,9 @@ static int wdc_smart_log_add(int argc, char **argv, struct command *command,
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	if (fd < 0)
+		return fd;
+
 	wdc_check_device(fd);
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
