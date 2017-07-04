@@ -871,8 +871,8 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	char path[264];
 	struct dirent **devices;
 	struct list_item *list_items;
-	unsigned int i, n, fd, ret;
-	int fmt;
+	unsigned int i, n, fd;
+	int fmt, ret;
 	const char *desc = "Retrieve basic information for the given device";
 	struct config {
 		char *output_format;
@@ -887,7 +887,10 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		{NULL}
 	};
 
-	argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	if (ret < 0)
+		return ret;
+
 	fmt = validate_output_format(cfg.output_format);
 
 	if (fmt != JSON && fmt != NORMAL)
@@ -979,8 +982,10 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0)
 		return fmt;
-	if (cfg.raw_binary)
+	if (cfg.raw_binary) {
+		fprintf(stderr, "binary output\n");
 		fmt = BINARY;
+	}
 
 	if (cfg.vendor_specific)
 		flags |= VS;
