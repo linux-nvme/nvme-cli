@@ -353,7 +353,7 @@ int nvme_identify_ns(int fd, __u32 nsid, bool present, void *data)
 
 int nvme_identify_ns_list(int fd, __u32 nsid, bool all, void *data)
 {
-	int cns = all ? NVME_ID_CNS_NS_ACTIVE_LIST : NVME_ID_CNS_NS_PRESENT_LIST;
+	int cns = all ? NVME_ID_CNS_NS_PRESENT_LIST : NVME_ID_CNS_NS_ACTIVE_LIST;
 
 	return nvme_identify(fd, nsid, cns, data);
 }
