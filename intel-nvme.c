@@ -239,7 +239,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	struct nvme_additional_smart_log smart_log;
 	int err, fd;
 	char *desc = "Get Intel vendor specific additional smart log (optionally, "\
-				"for the specified namespace), and show it.";
+		"for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
 	const char *json= "Dump output in json format";
