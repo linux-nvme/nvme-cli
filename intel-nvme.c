@@ -57,6 +57,7 @@ struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	pll_lock_loss_cnt;
 	struct nvme_additional_smart_log_item	nand_bytes_written;
 	struct nvme_additional_smart_log_item	host_bytes_written;
+	struct nvme_additional_smart_log_item system_area_life_remaining;
 };
 
 static void intel_id_ctrl(__u8 *vs, struct json_object *root)
@@ -168,6 +169,11 @@ static void show_intel_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->host_bytes_written.raw));
 	json_object_add_value_object(dev_stats, "host_bytes_written", entry_stats);
 
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->system_area_life_remaining.norm);
+	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->system_area_life_remaining.raw));
+	json_object_add_value_object(dev_stats, "system_area_life_remaining", entry_stats);
+
 	json_object_add_value_object(root, "Device stats", dev_stats);
 
 	json_print_object(root, NULL);
@@ -223,6 +229,9 @@ static void show_intel_smart_log(struct nvme_additional_smart_log *smart,
 	printf("host_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
 		smart->host_bytes_written.norm,
 		int48_to_long(smart->host_bytes_written.raw));
+	printf("system_area_life_remaining      : %3d%%       sectors: %"PRIu64"\n",
+		smart->system_area_life_remaining.norm,
+		int48_to_long(smart->system_area_life_remaining.raw));
 }
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -230,7 +239,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	struct nvme_additional_smart_log smart_log;
 	int err, fd;
 	char *desc = "Get Intel vendor specific additional smart log (optionally, "\
-		      "for the specified namespace), and show it.";
+					"for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
 	const char *json= "Dump output in json format";
@@ -309,11 +318,61 @@ struct intel_temp_stats {
 	__u64	life_overtemp;
 	__u64	highest_temp;
 	__u64	lowest_temp;
-	__u8	rsvd[40];
+	__u8  rsvd_1[40];
 	__u64	max_operating_temp;
+	__u8  rsvd_2[40];
 	__u64	min_operating_temp;
 	__u64	est_offset;
+	__u8  rsvd_3[40];
 };
+
+static void show_temp_stats_jsn(struct intel_temp_stats *stats, const char *devname)
+{
+	struct json_object *root, *entry_stats, *dev_stats;
+
+	root = json_create_object();
+	json_object_add_value_string(root, "Intel Temperature Statistics", devname);
+
+	dev_stats = json_create_object();
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "Temperature", stats->curr);
+	json_object_add_value_object(dev_stats, "Current Internal Temperature (Celsius)", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "Flag", stats->last_overtemp);
+	json_object_add_value_object(dev_stats, "Overtemp Shutdown Flag for Last Drive Overheat", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "Flag", stats->life_overtemp);
+	json_object_add_value_object(dev_stats, "Overtemp Shutdown Flag for Temp Drive Overheat", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "Temperature", stats->highest_temp);
+	json_object_add_value_object(dev_stats, "Highest Lifetime Temperature (Celsius)", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "Temperature", stats->lowest_temp);
+	json_object_add_value_object(dev_stats, "Lowest Lifetime Temperature (Celsius)", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "Temperature", stats->max_operating_temp);
+	json_object_add_value_object(dev_stats, "Specified PCB Maximum Operating Temperature (Celsius)", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "Temperature", stats->min_operating_temp);
+	json_object_add_value_object(dev_stats, "Specified PCB Minimum Operating Temperature (Celsius)", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "Offset", stats->est_offset);
+	json_object_add_value_object(dev_stats, "Estimated Offset (Celsius)", entry_stats);
+
+	json_object_add_value_object(root, "Temperature Statistics", dev_stats);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
 
 static void show_temp_stats(struct intel_temp_stats *stats)
 {
@@ -336,8 +395,10 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 
 	char *desc = "Get Intel Marketing Name log and show it.";
 	const char *raw = "dump output in binary format";
+	const char *json= "Dump output in json format";
 	struct config {
 		int  raw_binary;
+		int  json;
 	};
 
 	struct config cfg = {
@@ -345,6 +406,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
+		{"json", 'j', "", CFG_NONE, &cfg.json, no_argument, json},
 		{NULL}
 	};
 
@@ -352,7 +414,9 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 
 	err = nvme_get_log(fd, 0xffffffff, 0xc5, sizeof(stats), &stats);
 	if (!err) {
-		if (!cfg.raw_binary)
+		if (cfg.json)
+			show_temp_stats_jsn(&stats, devicename);
+		else if (!cfg.raw_binary)
 			show_temp_stats(&stats);
 		else
 			d_raw((unsigned char *)&stats, sizeof(stats));
@@ -363,33 +427,130 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 }
 
 struct intel_lat_stats {
-	__u16	maj;
-	__u16	min;
-	__u32	bucket_1[32];
-	__u32	bucket_2[31];
-	__u32	bucket_3[31];
+	__u16  maj;
+	__u16  min;
+	__u32  bucket_1[32];
+	__u32  bucket_2[31];
+	__u32  bucket_3[31];
+	__u32 bucket_4;
+	__u32 bucket_5;
+	__u32 bucket_6;
 };
+
+static void show_lat_stats_jsn(struct intel_lat_stats *stats, int write, const char *devname)
+{
+	unsigned int count;
+	const unsigned int bucketStringSize = 20;
+	char bucketString[bucketStringSize];
+	struct json_object *root, *entry_stats;
+
+	root = json_create_object();
+	json_object_add_value_string(root, "Intel IO Latency Statistics", devname);
+
+	entry_stats = json_create_object();
+
+	for(count = 0; count < 32; count++)
+	{
+		snprintf(bucketString, bucketStringSize, "Interval %d", count+1);
+		json_object_add_value_int(entry_stats, bucketString, stats->bucket_1[count]);
+
+	}
+
+	json_object_add_value_object(root, "Group 2 - Range: 0 - 1 mS | Interval Width: 32 uS", entry_stats);
+
+	entry_stats = json_create_object();
+
+	for(count = 0; count < 31; count++)
+	{
+		snprintf(bucketString, bucketStringSize, "Interval %d", count+1);
+		json_object_add_value_int(entry_stats, bucketString, stats->bucket_2[count]);
+
+	}
+
+	json_object_add_value_object(root, "Group 2 - Range: 1 - 32 mS | Interval Width: 1 mS", entry_stats);
+
+	entry_stats = json_create_object();
+
+	for(count = 0; count < 31; count++)
+	{
+		snprintf(bucketString, bucketStringSize, "Interval %d", count+1);
+		json_object_add_value_int(entry_stats, bucketString, stats->bucket_3[count]);
+
+	}
+
+	json_object_add_value_object(root, "Group 3 - Range: 32 mS - 1 S | Interval Width: 32 mS", entry_stats);
+
+	if(stats->maj == 4)
+	{
+		json_object_add_value_object(root, "Group 4 - Range: 1 S - 2 S | Interval Width: 1 S", entry_stats);
+		json_object_add_value_int(entry_stats, "Interval 1", stats->bucket_4);
+
+		json_object_add_value_object(root, "Group 5 - Range: 2 S - 4 S | Interval Width: 2 S", entry_stats);
+		json_object_add_value_int(entry_stats, "Interval 1", stats->bucket_5);
+
+		json_object_add_value_object(root, "Group 5 - Range: 4+ S", entry_stats);
+		json_object_add_value_int(entry_stats, "Interval 1", stats->bucket_6);
+
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
 
 static void show_lat_stats(struct intel_lat_stats *stats, int write)
 {
-	int i;
+	unsigned int count;
+	int highBond = 0;
+	int lowBond = 31;
 
 	printf(" Intel IO %s Command Latency Statistics\n", write ? "Write" : "Read");
 	printf("-------------------------------------\n");
 	printf("Major Revision : %u\n", stats->maj);
 	printf("Minor Revision : %u\n", stats->min);
 
-	printf("\nGroup 1: Range is 0-1ms, step is 32us\n");
-	for (i = 0; i < 32; i++)
-		printf("Bucket %2d: %u\n", i, stats->bucket_1[i]);
+	printf("\nIO %s Group 1: Range - 0 - 1 mS | Width - 32 uS \n", write ? "Write" : "Read");
+	for (count = 0; count < 32; count++)
+	{
+		printf("Interval %2d (%2d uS - %2d uS): %u\n", count + 1, lowBond, highBond, stats->bucket_1[count]);
+		lowBond += 32;
+		highBond += 32;
+	}
 
-	printf("\nGroup 2: Range is 1-32ms, step is 1ms\n");
-	for (i = 0; i < 31; i++)
-		printf("Bucket %2d: %u\n", i, stats->bucket_1[i]);
+	highBond = 1;
+	lowBond  = 2;
 
-	printf("\nGroup 3: Range is 32-1s, step is 32ms:\n");
-	for (i = 0; i < 31; i++)
-		printf("Bucket %2d: %u\n", i, stats->bucket_1[i]);
+	printf("\nIO %s Group 2: Range - 1 - 32 mS | Width - 1 mS \n", write ? "Write" : "Read");
+	for (count = 0; count < 31; count++)
+	{
+		printf("Interval %2d (%2d mS - %2d mS): %u\n", count + 1, lowBond, highBond, stats->bucket_2[count]);
+		lowBond++;
+		highBond++;
+	}
+
+	lowBond = 32;
+	highBond = 63;
+
+	printf("\nIO %s Group 3: Range - 32 mS - 1 S | Width - 32 mS \n", write ? "Write" : "Read");
+	for (count = 0; count < 31; count++)
+	{
+		printf("Interval %2d (%2d mS - %2d mS): %u\n", count + 1, lowBond, highBond, stats->bucket_3[count]);
+		lowBond += 32;
+		highBond += 32;
+	}
+
+	if(stats->maj == 4)
+	{
+		printf("\nIO %s Group 4: Range - 1 S - 2 S\n", write ? "Write" : "Read");
+		printf("Interval 1 (1 S - 2 S): %u\n", stats->bucket_4);
+
+		printf("\nIO %s Group 5: Range - 2 S - 4 S\n", write ? "Write" : "Read");
+		printf("Interval 1 (2 S - 4 S): %u\n", stats->bucket_5);
+
+		printf("\nIO %s Group 6: Range - 4 S+\n", write ? "Write" : "Read");
+		printf("Interval 1 (4 S+): %u\n", stats->bucket_5);
+
+	}
 }
 
 static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -400,9 +561,11 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	char *desc = "Get Intel Latency Statistics log and show it.";
 	const char *raw = "dump output in binary format";
 	const char *write = "Get write statistics (read default)";
+	const char *json= "Dump output in json format";
 	struct config {
 		int  raw_binary;
 		int  write;
+		int  json;
 	};
 
 	struct config cfg = {
@@ -411,6 +574,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"write",      'w', "", CFG_NONE, &cfg.write,      no_argument, write},
 		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
+		{"json", 'j', "", CFG_NONE, &cfg.json, no_argument, json},
 		{NULL}
 	};
 
@@ -418,7 +582,9 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 
 	err = nvme_get_log(fd, 0xffffffff, cfg.write ? 0xc2 : 0xc1, sizeof(stats), &stats);
 	if (!err) {
-		if (!cfg.raw_binary)
+		if (cfg.json)
+			show_lat_stats_jsn(&stats, cfg.write, devicename);
+		else if (!cfg.raw_binary)
 			show_lat_stats(&stats, cfg.write);
 		else
 			d_raw((unsigned char *)&stats, sizeof(stats));
