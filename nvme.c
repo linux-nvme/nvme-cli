@@ -407,8 +407,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		if (!err) {
 			if (!cfg.raw_binary) {
 				printf("Device:%s log-id:%d namespace-id:%#x\n",
-				       devicename, cfg.log_id,
-				       cfg.namespace_id);
+					   devicename, cfg.log_id,
+					   cfg.namespace_id);
 				d(log, cfg.log_len, 16, 1);
 			} else
 				d_raw((unsigned char *)log, cfg.log_len);
@@ -658,7 +658,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	for (i = 0; i < num; i++)
 		ctrlist[i] = (uint16_t)list[i];
 
-	if (attach)	
+	if (attach)
 		err = nvme_ns_attach_ctrls(fd, cfg.namespace_id, num, ctrlist);
 	else
 		err = nvme_ns_detach_ctrls(fd, cfg.namespace_id, num, ctrlist);
@@ -804,9 +804,9 @@ static void print_list_item(struct list_item list_item)
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ms);
 	printf("%-16s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", list_item.node,
-            (int)sizeof(list_item.ctrl.sn), (int)sizeof(list_item.ctrl.sn), list_item.ctrl.sn,
-            (int)sizeof(list_item.ctrl.mn), (int)sizeof(list_item.ctrl.mn), list_item.ctrl.mn,
-            list_item.nsid, usage, format, (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
+			(int)sizeof(list_item.ctrl.sn), (int)sizeof(list_item.ctrl.sn), list_item.ctrl.sn,
+			(int)sizeof(list_item.ctrl.mn), (int)sizeof(list_item.ctrl.mn), list_item.ctrl.mn,
+			list_item.nsid, usage, format, (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
 }
 
 static void print_list_items(struct list_item *list_items, unsigned len)
@@ -814,10 +814,10 @@ static void print_list_items(struct list_item *list_items, unsigned len)
 	unsigned i;
 
 	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
-	    "Node", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
+		"Node", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
 	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
-            "----------------", "--------------------", "----------------------------------------",
-            "---------", "--------------------------", "----------------", "--------");
+			"----------------", "--------------------", "----------------------------------------",
+			"---------", "--------------------------", "----------------", "--------");
 	for (i = 0 ; i < len ; i++)
 		print_list_item(list_items[i]);
 
@@ -832,7 +832,7 @@ static int get_nvme_info(int fd, struct list_item *item, const char *node)
 		return err;
 	item->nsid = nvme_get_nsid(fd);
 	err = nvme_identify_ns(fd, item->nsid,
-			       0, &item->ns);
+				   0, &item->ns);
 	if (err)
 		return err;
 	strcpy(item->node, node);
@@ -1020,8 +1020,8 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send Namespace Identification Descriptoprs commadn to the "\
-			    "given device, returns the namespace identifcation descriptors "\
-			    "of the specific namespace in either human-readable or binary format.";
+				"given device, returns the namespace identifcation descriptors "\
+				"of the specific namespace in either human-readable or binary format.";
 	const char *raw_binary = "show infos in binary format";
 	const char *namespace_id = "identifier of desired namespace";
 	int err, fmt, fd;
@@ -1238,7 +1238,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		fprintf(stderr, "feature-id required param\n");
 		return EINVAL;
 	}
-	
+
 	switch (cfg.feature_id) {
 	case NVME_FEAT_LBA_RANGE:
 		cfg.data_len = 4096;
@@ -1259,7 +1259,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (cfg.sel == 3)
 		cfg.data_len = 0;
-	
+
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
 			fprintf(stderr, "can not allocate feature payload\n");
@@ -1440,7 +1440,7 @@ static int fw_activate(int argc, char **argv, struct command *cmd, struct plugin
 		case NVME_SC_FW_NEEDS_SUBSYS_RESET:
 		case NVME_SC_FW_NEEDS_RESET:
 			printf("Success activating firmware action:%d slot:%d, but firmware requires %s reset\n",
-			       cfg.action, cfg.slot, nvme_fw_status_reset_type(err));
+				   cfg.action, cfg.slot, nvme_fw_status_reset_type(err));
 			break;
 		default:
 			fprintf(stderr, "NVME Admin command error:%s(%x)\n",
@@ -1449,7 +1449,7 @@ static int fw_activate(int argc, char **argv, struct command *cmd, struct plugin
 		}
 	else
 		printf("Success activating firmware action:%d slot:%d\n",
-		       cfg.action, cfg.slot);
+			   cfg.action, cfg.slot);
 	return err;
 }
 
@@ -1632,27 +1632,36 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	const char *pil = "[0-1]: protection info location last/first 8 bytes of metadata";
 	const char *pi = "[0-3]: protection info off/Type 1/Type 2/Type 3";
 	const char *ms = "[0-1]: extended format off/on";
+	const char *lbads = "LBA data size  format support";
+	const char *bs = "Block size for LBA data size format support";
 	const char *reset = "Automatically reset the controller after successful format";
 	const char *timeout = "timeout value, in milliseconds";
 	struct nvme_id_ns ns;
 	int err, fd;
 	__u8 prev_lbaf = 0;
+	unsigned int lbaf_flag = 0;
+	unsigned int count;
+	double bsBaseChange = -1;
 
 	struct config {
 		__u32 namespace_id;
 		__u32 timeout;
 		__u8  lbaf;
+		__u8 lbads;
+		__u32 bs;
 		__u8  ses;
 		__u8  pi;
 		__u8  pil;
 		__u8  ms;
-		int reset;
+		int   reset;
 	};
 
 	struct config cfg = {
 		.namespace_id = 0xffffffff,
 		.timeout      = 120000,
 		.lbaf         = 0xff,
+		.lbads        = 0xff,
+		.bs           = 0xffff,
 		.ses          = 0,
 		.pi           = 0,
 		.reset        = 0,
@@ -1666,6 +1675,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		{"pi",           'i', "NUM",  CFG_BYTE,     &cfg.pi,           required_argument, pi},
 		{"pil",          'p', "NUM",  CFG_BYTE,     &cfg.pil,          required_argument, pil},
 		{"ms",           'm', "NUM",  CFG_BYTE,     &cfg.ms,           required_argument, ms},
+		{"lbads",        'd', "NUM",  CFG_BYTE,     &cfg.lbads,        required_argument, lbads},
+		{"bs",           'b', "NUM",  CFG_POSITIVE, &cfg.bs,           required_argument, bs},
 		{"reset",        'r', "",     CFG_NONE,     &cfg.reset,        no_argument,       reset},
 		{NULL}
 	};
@@ -1687,8 +1698,54 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 					nvme_status_to_string(err), err);
 			return err;
 		}
+
 		prev_lbaf = ns.flbas & 0xf;
 	}
+
+	// Test for Block Size or LBADS Format
+	if (cfg.lbaf == 0xff && (cfg.bs != 0xffff || cfg.lbads != 0xff)){
+		if( cfg.bs != 0xffff && cfg.lbads != 0xff ){
+			fprintf(stderr, "Invalid use of both BS (Block Size) and LBADS (LBA Data Size).\n");
+			return fd;
+		}
+
+		if(cfg.bs != 0xffff){
+			if(cfg.bs < 512){
+				fprintf(stderr, "Invalid LBA Data Size settings:%d\n", cfg.bs);
+				return EINVAL;
+			}
+
+			bsBaseChange = log(cfg.bs)/log(2);
+
+		}
+
+		if(cfg.lbads < 9){
+			fprintf(stderr, "Invalid Block Size settings:%d\n", cfg.lbads);
+			return EINVAL;
+		}
+
+		for(count = 0; count < 16 && !lbaf_flag; count++){
+			if(ns.lbaf[count].ds == bsBaseChange){
+				cfg.lbaf = bsBaseChange;
+				lbaf_flag = 1;
+			}
+
+			if(ns.lbaf[count].ds == cfg.lbads){
+				cfg.lbaf = cfg.lbads;
+				lbaf_flag = 1;
+			}
+		}
+
+		if(!lbaf_flag){
+			fprintf(stderr, "Invalid LBA Data Size.\n");
+			return cfg.lbads;
+
+		}
+	} else if (cfg.lbaf != 0xff && (cfg.bs != 0xff || cfg.lbads != 0xff)){
+		fprintf(stderr, "Invalid use of both BS (Block Size) or LBADS (LBA Data Size) and LBAF (LBA Format).\n");
+		return fd;
+	}
+
 	if (cfg.lbaf == 0xff)
 		cfg.lbaf = prev_lbaf;
 
@@ -2449,7 +2506,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 }
 
 static int submit_io(int opcode, char *command, const char *desc,
-		     int argc, char **argv)
+			 int argc, char **argv)
 {
 	struct timeval start_time, end_time;
 	void *buffer, *mbuffer = NULL;
@@ -2580,7 +2637,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	if (cfg.metadata_size) {
 		mbuffer = malloc(cfg.metadata_size);
 		if (!mbuffer) {
- 			free(buffer);
+			free(buffer);
 			fprintf(stderr, "can not allocate io metadata payload\n");
 			return ENOMEM;
 		}
