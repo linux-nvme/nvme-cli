@@ -1513,30 +1513,30 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	struct nvme_passthru_cmd admin_cmd;
 
 	struct config {
-		uint8_t no_dealloc;
-		uint8_t oipbp;
-		uint8_t owpass;
-		uint8_t ause;
-		uint8_t sanact;
-		uint32_t ovrpat;
+		int    no_dealloc;
+		int    oipbp;
+		__u8   owpass;
+		int    ause;
+		__u8   sanact;
+		__u32  ovrpat;
 	};
 
 	struct config cfg = {
 		.no_dealloc = 0,
 		.oipbp = 0,
-		.owpass = 0,
+		.owpass = 1,
 		.ause = 0,
 		.sanact = 0,
 		.ovrpat = 0,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"no-dealloc", 'd', "", CFG_NONE, &cfg.no_dealloc, no_argument, no_dealloc_desc},
-		{"oipbp", 'i', "", CFG_NONE, &cfg.oipbp, no_argument, oipbp_desc},
-		{"owpass", 'n', "NUM", CFG_POSITIVE, &cfg.owpass, required_argument, owpass_desc},
-		{"ause", 'u', "", CFG_NONE, &cfg.ause, no_argument, ause_desc},
-		{"sanact", 'a', "NUM", CFG_POSITIVE, &cfg.sanact, required_argument, sanact_desc},
-		{"ovrpat", 'p', "NUM", CFG_POSITIVE, &cfg.ovrpat, required_argument, ovrpat_desc},
+		{"no-dealloc", 'd', "",    CFG_NONE,     &cfg.no_dealloc, no_argument,       no_dealloc_desc},
+		{"oipbp",      'i', "",    CFG_NONE,     &cfg.oipbp,      no_argument,       oipbp_desc},
+		{"owpass",     'n', "NUM", CFG_BYTE,     &cfg.owpass,     required_argument, owpass_desc},
+		{"ause",       'u', "",    CFG_NONE,     &cfg.ause,       no_argument,       ause_desc},
+		{"sanact",     'a', "NUM", CFG_BYTE,     &cfg.sanact,     required_argument, sanact_desc},
+		{"ovrpat",     'p', "NUM", CFG_POSITIVE, &cfg.ovrpat,     required_argument, ovrpat_desc},
 		{NULL}
 	};
 
@@ -1559,7 +1559,7 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 		return -1;
 	}
 
-	if (cfg.ause)
+	if (cfg.sanact != NVME_SANITIZE_ACT_EXIT && cfg.ause)
 		sanitize_cdw10 |= NVME_SANITIZE_AUSE;
 
 	if (cfg.sanact == NVME_SANITIZE_ACT_OVERWRITE) {
