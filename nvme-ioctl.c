@@ -138,8 +138,8 @@ int nvme_io(int fd, __u8 opcode, __u64 slba, __u16 nblocks, __u16 control,
 		.slba		= slba,
 		.dsmgmt		= dsmgmt,
 		.reftag		= reftag,
-		.appmask	= apptag,
-		.apptag		= appmask,
+		.appmask	= appmask,
+		.apptag		= apptag,
 	};
 	return ioctl(fd, NVME_IOCTL_SUBMIT_IO, &io);
 }
