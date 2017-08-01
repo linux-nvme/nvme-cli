@@ -1986,10 +1986,10 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		__u64 start_block;
 		__u32 namespace_id;
 		__u32 ref_tag;
-		__u32 app_tag;
+		__u16 app_tag;
+		__u16 app_tag_mask;
 		__u16 block_count;
 		__u8  prinfo;
-		__u8  app_tag_mask;
 		int   limited_retry;
 		int   force_unit_access;
 	};
@@ -2011,8 +2011,8 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		{"force-unit-access", 'f', "",    CFG_NONE,        &cfg.force_unit_access, no_argument,       force},
 		{"prinfo",            'p', "NUM", CFG_BYTE,        &cfg.prinfo,            required_argument, prinfo},
 		{"ref-tag",           'r', "NUM", CFG_POSITIVE,    &cfg.ref_tag,           required_argument, ref_tag},
-		{"app-tag-mask",      'm', "NUM", CFG_BYTE,        &cfg.app_tag_mask,      required_argument, app_tag_mask},
-		{"app-tag",           'a', "NUM", CFG_POSITIVE,    &cfg.app_tag,           required_argument, app_tag},
+		{"app-tag-mask",      'm', "NUM", CFG_SHORT,       &cfg.app_tag_mask,      required_argument, app_tag_mask},
+		{"app-tag",           'a', "NUM", CFG_SHORT,       &cfg.app_tag,           required_argument, app_tag},
 		{NULL}
 	};
 
@@ -2486,8 +2486,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 		char  *data;
 		char  *metadata;
 		__u8  prinfo;
-		__u8  app_tag_mask;
-		__u32 app_tag;
+		__u16 app_tag_mask;
+		__u16 app_tag;
 		int   limited_retry;
 		int   force_unit_access;
 		int   show;
@@ -2517,8 +2517,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 		{"data",              'd', "FILE", CFG_STRING,      &cfg.data,              required_argument, data},
 		{"metadata",          'M', "FILE", CFG_STRING,      &cfg.metadata,          required_argument, metadata},
 		{"prinfo",            'p', "NUM",  CFG_BYTE,        &cfg.prinfo,            required_argument, prinfo},
-		{"app-tag-mask",      'm', "NUM",  CFG_BYTE,        &cfg.app_tag_mask,      required_argument, app_tag_mask},
-		{"app-tag",           'a', "NUM",  CFG_POSITIVE,    &cfg.app_tag,           required_argument, app_tag},
+		{"app-tag-mask",      'm', "NUM",  CFG_SHORT,       &cfg.app_tag_mask,      required_argument, app_tag_mask},
+		{"app-tag",           'a', "NUM",  CFG_SHORT,       &cfg.app_tag,           required_argument, app_tag},
 		{"limited-retry",     'l', "",     CFG_NONE,        &cfg.limited_retry,     no_argument,       limited_retry},
 		{"force-unit-access", 'f', "",     CFG_NONE,        &cfg.force_unit_access, no_argument,       force},
 		{"show-command",      'v', "",     CFG_NONE,        &cfg.show,              no_argument,       show},
