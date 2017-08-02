@@ -911,7 +911,13 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	for (i = 0; i < n; i++) {
 		snprintf(path, sizeof(path), "%s%s", dev, devices[i]->d_name);
 		fd = open(path, O_RDONLY);
+		if (fd < 0) {
+			fprintf(stderr, "can not open %s: %s\n", path,
+					strerror(errno));
+			return errno;
+		}
 		ret = get_nvme_info(fd, &list_items[i], path);
+		close(fd);
 		if (ret)
 			return ret;
 	}
