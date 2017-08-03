@@ -463,7 +463,7 @@ out:
 static int nvmf_hostid_file(void)
 {
 	FILE *f;
-	char hostid[NVMF_HOSTID_SIZE];
+	char hostid[NVMF_HOSTID_SIZE + 1];
 	int ret = false;
 
 	f = fopen(PATH_NVMF_HOSTID, "r");
