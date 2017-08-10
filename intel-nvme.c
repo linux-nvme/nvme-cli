@@ -664,7 +664,9 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 
 	struct config cfg = {
 		.namespace_id = -1,
-		.file = NULL
+		.file = NULL,
+		.lnum = -1,
+		.core = -1
 	};
 
 	struct intel_cd_log cdlog;
@@ -705,7 +707,6 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 
 	memcpy(&intel, buf, sizeof(intel));
 	cmd.addr = (unsigned long)(void *)buf;
-	core_num = 1;
 
 	/* for 1.1 Fultondales will use old nlog, but current assert/event */
 	if ((intel.ver.major < 1 && intel.ver.minor < 1) ||
@@ -745,7 +746,7 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 			goto out;
 	}
 
-	for (j = 0; j < core_num; j++) {
+	for (j = (cfg.core < 0 ? 0 : cfg.core); j < (cfg.core < 0 ? core_num : cfg.core + 1); j++) {
 		cdlog.u.fields.selectCore = j;
 		for (i = 0; i < count; i++) {
 			if (cfg.log == 0 && ad[i].assertvalid) {
