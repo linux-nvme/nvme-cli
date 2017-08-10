@@ -871,8 +871,8 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	char path[264];
 	struct dirent **devices;
 	struct list_item *list_items;
-	unsigned int i, n, fd;
-	int fmt, ret;
+	unsigned int i, n;
+	int fmt, ret, fd;
 	const char *desc = "Retrieve basic information for the given device";
 	struct config {
 		char *output_format;
