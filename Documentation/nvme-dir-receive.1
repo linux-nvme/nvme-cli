@@ -1,0 +1,235 @@
+'\" t
+.\"     Title: nvme-dir-receive
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 08/10/2017
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-DIR\-RECEIVE" "1" "08/10/2017" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-dir-receive \- Send a directive receive command, returns applicable results
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme dir\-receive\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                          [\-\-data\-len=<data\-len> | \-l <data\-len>]
+                          [\-\-dir\-type=<dtype> | \-D <dtype>]
+                          [\-\-dir\-spec=<dspec> | \-S <dspec>]
+                          [\-\-dir\-oper=<doper> | \-O <doper>]
+                          [\-\-req\-resource=<nsr> | \-r <nsr>]
+                          [\-\-human\-readable | \-H]
+                          [\-\-raw\-binary | \-b]
+.fi
+.SH "DESCRIPTION"
+.sp
+Submits an NVMe Directive Receive admin command and returns the applicable results\&. This may be the combination of directive type, and operation, as well as number of requested resource if specific operation needs it\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+On success, the returned directive\(cqs parameter structure (if applicable) is returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format if it is a known structure, displayed in hex, or the raw buffer may be printed to stdout for another program to parse\&.
+.SH "OPTIONS"
+.PP
+\-n <nsid>, \-\-namespace\-id=<nsid>
+.RS 4
+Retrieve the feature for the given nsid\&. This is optional and most features do not use this value\&.
+.RE
+.PP
+\-D <dtype>, \-\-dir\-type=<dtype>
+.RS 4
+Directive type
+.RE
+.PP
+\-S <dspec>, \-\-dir\-spec=<dspec>
+.RS 4
+Directive specific
+.RE
+.PP
+\-O <doper>, \-\-dir\-oper=<doper>
+.RS 4
+Directive operation
+.RE
+.PP
+\-r <nsr>, \-\-req\-resource=<nsr>
+.RS 4
+Directive requested resource count
+.RE
+.sp
++
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+.sp
+Select
+T}:T{
+.sp
+Description
+T}
+T{
+.sp
+0
+T}:T{
+.sp
+Current
+T}
+T{
+.sp
+1
+T}:T{
+.sp
+Default
+T}
+T{
+.sp
+2
+T}:T{
+.sp
+Saved
+T}
+T{
+.sp
+3
+T}:T{
+.sp
+Supported capabilities
+T}
+T{
+.sp
+4\(en7
+T}:T{
+.sp
+Reserved
+T}
+.TE
+.sp 1
+.PP
+\-l <data\-len>, \-\-data\-len=<data\-len>
+.RS 4
+The data length for the buffer returned for this feature\&. Most known features do not use this value\&. The exception is LBA Range Type
+.RE
+.PP
+\-b, \-\-raw\-binary
+.RS 4
+Print the raw receive buffer to stdout if the command returns a structure\&.
+.RE
+.PP
+\-H, \-\-human\-readable
+.RS 4
+Print the decoded receive buffer to stdout if the command returns a structure\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Identify directive type supported :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme dir\-receive /dev/nvme0 \-\-dir\-type 0 \-\-dir\-oper 1 \-\-human\-readable
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Get stream directive parameters :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme dir\-receive /dev/nvme0 \-\-dir\-type 1 \-\-dir\-oper 1 \-\-human\-readable
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Allocate 3 streams for namespace 1
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme dir\-receive /dev/nvme0n1 \-\-dir\-type 1 \-\-dir\-oper 3 \-\-req\-resource 3 \-\-human\-readable
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Get streams directive status :
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme dir\-receive /dev/nvme0 \-\-dir\-type 1 \-\-dir\-oper 2 \-\-human\-readable
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+It is probably a bad idea to not redirect stdout when using this mode\&.
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

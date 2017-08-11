@@ -1,0 +1,118 @@
+nvme-dir-receive(1)
+===================
+
+NAME
+----
+nvme-dir-receive - Send a directive receive command, returns applicable results
+
+SYNOPSIS
+--------
+[verse]
+'nvme dir-receive' <device> [--namespace-id=<nsid> | -n <nsid>]
+			  [--data-len=<data-len> | -l <data-len>]
+			  [--dir-type=<dtype> | -D <dtype>]
+			  [--dir-spec=<dspec> | -S <dspec>]
+			  [--dir-oper=<doper> | -O <doper>]
+			  [--req-resource=<nsr> | -r <nsr>]
+			  [--human-readable | -H]
+			  [--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Submits an NVMe Directive Receive admin command and returns the applicable
+results. This may be the combination of directive type, and operation, as 
+well as number of requested resource if specific operation needs it.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned directive's parameter structure (if applicable) is 
+returned in one of several ways depending on the option flags; the
+structure may parsed by the program and printed in a readable format
+if it is a known structure, displayed in hex, or the raw buffer may be
+printed to stdout for another program to parse.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Retrieve the feature for the given nsid. This is optional and
+	most features do not use this value.
+
+-D <dtype>::
+--dir-type=<dtype>::
+	Directive type	
+
+-S <dspec>::
+--dir-spec=<dspec>::
+	Directive specific	
+
+-O <doper>::
+--dir-oper=<doper>::
+	Directive operation	
+
+-r <nsr>::
+--req-resource=<nsr>::
+	Directive requested resource count
+
++
+[]
+|==================
+|Select|Description
+|0|Current 
+|1|Default 
+|2|Saved
+|3|Supported capabilities
+|4–7|Reserved
+|==================
+
+-l <data-len>::
+--data-len=<data-len>::
+	The data length for the buffer returned for this feature. Most
+	known features do not use this value. The exception is LBA
+	Range Type
+
+-b::
+--raw-binary::
+	Print the raw receive buffer to stdout if the command returns
+	a structure.
+
+-H::
+--human-readable::
+	Print the decoded receive buffer to stdout if the command returns
+	a structure.
+
+EXAMPLES
+--------
+* Identify directive type supported :
++
+------------
+# nvme dir-receive /dev/nvme0 --dir-type 0 --dir-oper 1 --human-readable
+------------
++
+
+* Get stream directive parameters : 
++
+------------
+# nvme dir-receive /dev/nvme0 --dir-type 1 --dir-oper 1 --human-readable 
+------------
++
+
+* Allocate 3 streams for namespace 1
++
+------------
+# nvme dir-receive /dev/nvme0n1 --dir-type 1 --dir-oper 3 --req-resource 3 --human-readable 
+------------
++
+
+* Get streams directive status :
++
+------------
+# nvme dir-receive /dev/nvme0 --dir-type 1 --dir-oper 2 --human-readable 
+------------
++
+It is probably a bad idea to not redirect stdout when using this mode.
+
+NVME
+----
+Part of the nvme-user suite
