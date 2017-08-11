@@ -122,7 +122,9 @@ static void show_nvme_id_ctrl_ctratt(__le32 ctrl_ctratt)
 static void show_nvme_id_ctrl_oacs(__le16 ctrl_oacs)
 {
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
-	__u16 rsvd = (oacs & 0xFFF0) >> 4;
+	__u16 rsvd = (oacs & 0xFFF0) >> 6;
+	__u16 dir = (oacs & 0x20) >> 5;
+	__u16 sft = (oacs & 0x10) >> 4;
 	__u16 nsm = (oacs & 0x8) >> 3;
 	__u16 fwc = (oacs & 0x4) >> 2;
 	__u16 fmt = (oacs & 0x2) >> 1;
@@ -130,6 +132,10 @@ static void show_nvme_id_ctrl_oacs(__le16 ctrl_oacs)
 
 	if (rsvd)
 		printf(" [15:4] : %#x\tReserved\n", rsvd);
+	printf("  [5:5] : %#x\tDirectives %sSupported\n",
+		dir, dir ? "" : "Not ");
+	printf("  [4:4] : %#x\tDevice Self-test %sSupported\n",
+		sft, sft ? "" : "Not ");
 	printf("  [3:3] : %#x\tNS Management and Attachment %sSupported\n",
 		nsm, nsm ? "" : "Not ");
 	printf("  [2:2] : %#x\tFW Commit and Download %sSupported\n",
@@ -1240,6 +1246,57 @@ static void show_host_mem_buffer(struct nvme_host_mem_buffer *hmb)
 	printf("\tHost Memory Descriptor List Address     (HMDLAU): %u\n", hmb->hmdlau);
 	printf("\tHost Memory Descriptor List Address     (HMDLAL): %u\n", hmb->hmdlal);
 	printf("\tHost Memory Buffer Size                  (HSIZE): %u\n", hmb->hsize);
+}
+
+void nvme_directive_show_fields(__u8 dtype, __u8 doper, unsigned int result, unsigned char *buf)
+{
+        __u8 *field = buf;
+        int count, i;
+        switch (dtype) {
+        case NVME_DIR_IDENTIFY:
+                switch (doper) {
+                case NVME_DIR_RCV_ID_OP_PARAM:
+                        printf("\tDirective support \n");
+                        printf("\t\tIdentify Directive  : %s\n", (*field & 0x1) ? "supported":"not supported");
+                        printf("\t\tStream Directive    : %s\n", (*field & 0x2) ? "supported":"not supported");
+                        printf("\tDirective status \n");
+                        printf("\t\tIdentify Directive  : %s\n", (*(field + 32) & 0x1) ? "enabled" : "disabled");
+                        printf("\t\tStream Directive    : %s\n", (*(field + 32) & 0x2) ? "enabled" : "disabled");
+                        break;
+                default:
+                        fprintf(stderr, "invalid directive operations for Identify Directives\n");
+                }
+                break;
+        case NVME_DIR_STREAMS:
+                switch (doper) {
+                case NVME_DIR_RCV_ST_OP_PARAM:
+                        printf("\tMax Streams Limit                          (MSL): %u\n", *(__u16 *) field);
+                        printf("\tNVM Subsystem Streams Available           (NSSA): %u\n", *(__u16 *) (field + 2));
+                        printf("\tNVM Subsystem Streams Open                (NSSO): %u\n", *(__u16 *) (field + 4));
+                        printf("\tStream Write Size (in unit of LB size)     (SWS): %u\n", *(__u32 *) (field + 16));
+                        printf("\tStream Granularity Size (in unit of SWS)   (SGS): %u\n", *(__u16 *) (field + 20));
+                        printf("\tNamespece Streams Allocated                (NSA): %u\n", *(__u16 *) (field + 22));
+                        printf("\tNamespace Streams Open                     (NSO): %u\n", *(__u16 *) (field + 24));
+                        break;
+                case NVME_DIR_RCV_ST_OP_STATUS:
+                        count = *(__u16 *) field;
+                        printf("\tOpen Stream Count  : %u\n", *(__u16 *) field);
+                        for ( i = 0; i < count; i++ ) {
+                                printf("\tStream Identifier %.6u : %u\n", i + 1, *(__u16 *) (field + ((i + 1) * 2)));
+                        }
+                        break;
+                case NVME_DIR_RCV_ST_OP_RESOURCE:
+                        printf("\tNamespace Streams Allocated (NSA): %u\n", result & 0xffff);
+                        break;
+                default:
+                        fprintf(stderr, "invalid directive operations for Streams Directives\n");
+                }
+                break;
+        default:
+                fprintf(stderr, "invalid directive type\n");
+                break;
+        }
+        return;
 }
 
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf)

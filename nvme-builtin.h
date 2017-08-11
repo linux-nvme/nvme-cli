@@ -52,6 +52,8 @@ COMMAND_LIST(
 	ENTRY("connect", "Connect to NVMeoF subsystem", connect_cmd)
 	ENTRY("disconnect", "Disconnect from NVMeoF subsystem", disconnect_cmd)
 	ENTRY("gen-hostnqn", "Generate NVMeoF host NQN", gen_hostnqn_cmd)
+	ENTRY("dir-receive", "Submit a Directive Receive command, return results", dir_receive)
+	ENTRY("dir-send", "Submit a Directive Send command, return results", dir_send)
 );
 
 #endif
