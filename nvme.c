@@ -2566,6 +2566,11 @@ static int submit_io(int opcode, char *command, const char *desc,
 		return EINVAL;
 	}
 
+	if (!dfd)       {
+		fprintf(stderr, "data file not provided\n");
+		return EINVAL;
+	}
+
 	if (ioctl(fd, BLKPBSZGET, &phys_sector_size) < 0)
 		return errno;
 
