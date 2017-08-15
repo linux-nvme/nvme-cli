@@ -56,8 +56,8 @@
 #include "fabrics.h"
 
 #define array_len(x) ((size_t)(sizeof(x) / sizeof(x[0])))
-#define min(x, y) (x) > (y) ? (y) : (x)
-#define max(x, y) (x) > (y) ? (x) : (y)
+#define min(x, y) ((x) > (y) ? (y) : (x))
+#define max(x, y) ((x) > (y) ? (x) : (y))
 
 static struct stat nvme_stat;
 const char *devicename;
