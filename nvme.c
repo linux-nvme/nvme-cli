@@ -704,6 +704,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *flbas = "FLBA size";
 	const char *dps = "data protection capabilities";
 	const char *nmic = "multipath and sharing capabilities";
+	const char *timeout = "timeout value, in milliseconds";
 
 	int err = 0, fd;
 	__u32 nsid;
@@ -714,9 +715,11 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		__u8	flbas;
 		__u8	dps;
 		__u8	nmic;
+		__u32	timeout;
 	};
 
 	struct config cfg = {
+		.timeout      = NVME_IOCTL_TIMEOUT,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -725,6 +728,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		{"flbas", 'f', "NUM", CFG_BYTE,        &cfg.flbas, required_argument, flbas},
 		{"dps",   'd', "NUM", CFG_BYTE,        &cfg.dps,   required_argument, dps},
 		{"nmic",  'm', "NUM", CFG_BYTE,        &cfg.nmic,  required_argument, nmic},
+		{"timeout", 't', "NUM", CFG_POSITIVE,  &cfg.timeout, required_argument, timeout},
 		{NULL}
 	};
 
@@ -732,7 +736,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	if (fd < 0)
 		return fd;
 
-	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic, &nsid);
+	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic, cfg.timeout, &nsid);
 	if (!err)
 		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
 	else if (err > 0)
