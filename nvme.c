@@ -1025,7 +1025,7 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send Namespace Identification Descriptoprs commadn to the "\
+	const char *desc = "Send Namespace Identification Descriptors command to the "\
 			    "given device, returns the namespace identifcation descriptors "\
 			    "of the specific namespace in either human-readable or binary format.";
 	const char *raw_binary = "show infos in binary format";
