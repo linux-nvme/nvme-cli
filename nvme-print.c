@@ -122,7 +122,10 @@ static void show_nvme_id_ctrl_ctratt(__le32 ctrl_ctratt)
 static void show_nvme_id_ctrl_oacs(__le16 ctrl_oacs)
 {
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
-	__u16 rsvd = (oacs & 0xFFF0) >> 6;
+	__u16 rsvd = (oacs & 0xFE00) >> 9;
+	__u16 dbc = (oacs & 0x100) >> 8;
+	__u16 vir = (oacs & 0x80) >> 7;
+	__u16 nmi = (oacs & 0x40) >> 6;
 	__u16 dir = (oacs & 0x20) >> 5;
 	__u16 sft = (oacs & 0x10) >> 4;
 	__u16 nsm = (oacs & 0x8) >> 3;
@@ -131,7 +134,13 @@ static void show_nvme_id_ctrl_oacs(__le16 ctrl_oacs)
 	__u16 sec = oacs & 0x1;
 
 	if (rsvd)
-		printf(" [15:4] : %#x\tReserved\n", rsvd);
+		printf(" [15:9] : %#x\tReserved\n", rsvd);
+	printf("  [8:8] : %#x\tDoorbell Buffer Config %sSupported\n",
+		dbc, dbc ? "" : "Not ");
+	printf("  [7:7] : %#x\tVirtualization Management %sSupported\n",
+		vir, vir ? "" : "Not ");
+	printf("  [6:6] : %#x\tNVMe-MI Send and Receive %sSupported\n",
+		nmi, nmi ? "" : "Not ");
 	printf("  [5:5] : %#x\tDirectives %sSupported\n",
 		dir, dir ? "" : "Not ");
 	printf("  [4:4] : %#x\tDevice Self-test %sSupported\n",
