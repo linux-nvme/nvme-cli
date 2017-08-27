@@ -54,7 +54,8 @@ field. This image is not activated.
 field. This image is activated at the next reset.
 |2|The image indicated by the Firmware Slot field is activated at the
 next reset.
-|3|Reserved.
+|3|The image specified by the Firmware Slot field is requested to be
+activated immediately without reset.
 |=================
 
 -s <slot>::
