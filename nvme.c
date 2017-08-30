@@ -3217,7 +3217,7 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struc
 
 	uuid_generate_random(uuid);
 	uuid_unparse_lower(uuid, uuid_str);
-	printf("nqn.2014-08.org.nvmexpress:NVMf:uuid:%s\n", uuid_str);
+	printf("nqn.2014-08.org.nvmexpress:uuid:%s\n", uuid_str);
 	return 0;
 }
 #else
