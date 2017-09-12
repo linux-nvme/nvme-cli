@@ -1389,7 +1389,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 
 static char *nvme_fw_status_reset_type(__u32 status)
 {
-	switch (status) {
+	switch (status & 0x3ff) {
 	case NVME_SC_FW_NEEDS_CONV_RESET:	return "conventional";
 	case NVME_SC_FW_NEEDS_SUBSYS_RESET:	return "subsystem";
 	case NVME_SC_FW_NEEDS_RESET:		return "any controller";
@@ -1441,7 +1441,7 @@ static int fw_activate(int argc, char **argv, struct command *cmd, struct plugin
 	if (err < 0)
 		perror("fw-activate");
 	else if (err != 0)
-		switch (err) {
+		switch (err & 0x3ff) {
 		case NVME_SC_FW_NEEDS_CONV_RESET:
 		case NVME_SC_FW_NEEDS_SUBSYS_RESET:
 		case NVME_SC_FW_NEEDS_RESET:
