@@ -1281,9 +1281,9 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 			printf("get-feature:%#02x (%s), %s value:%#08x\n", cfg.feature_id,
 				nvme_feature_to_string(cfg.feature_id),
 				nvme_select_to_string(cfg.sel), result);
-			if (cfg.human_readable && buf)
-				nvme_feature_show_fields(cfg.feature_id, result, buf);
-			else if (buf)
+			if (cfg.human_readable)
+				nvme_feature_show_fields(cfg.feature_id, (cfg.cdw11 & 0x3f0000) | result, buf);
+			if (buf)
 				d(buf, cfg.data_len, 16, 1);
 		} else if (buf)
 			d_raw(buf, cfg.data_len);
