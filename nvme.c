@@ -1282,7 +1282,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 				nvme_feature_to_string(cfg.feature_id),
 				nvme_select_to_string(cfg.sel), result);
 			if (cfg.human_readable)
-				nvme_feature_show_fields(cfg.feature_id, (cfg.cdw11 & 0x3f0000) | result, buf);
+				nvme_feature_show_fields(cfg.feature_id, result, buf);
 			if (buf)
 				d(buf, cfg.data_len, 16, 1);
 		} else if (buf)
