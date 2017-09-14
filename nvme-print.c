@@ -1342,7 +1342,7 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		printf("\tThreshold Type Select         (THSEL): %u - %s\n", field, nvme_feature_temp_type_to_string(field));
 		field = (result & 0x000f0000) >> 16;
 		printf("\tThreshold Temperature Select (TMPSEL): %u - %s\n", field, nvme_feature_temp_sel_to_string(field));
-		printf("\tTemperature Threshold         (TMPTH): %u C\n", (result & 0x0000ffff) - 273);
+		printf("\tTemperature Threshold         (TMPTH): %d C\n", (result & 0x0000ffff) - 273);
 		break;
 	case NVME_FEAT_ERR_RECOVERY:
 		printf("\tDeallocated or Unwritten Logical Block Error Enable (DULBE): %s\n", ((result & 0x00010000) >> 16) ? "Enabled":"Disabled");
