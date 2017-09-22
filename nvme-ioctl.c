@@ -58,6 +58,16 @@ int nvme_reset_controller(int fd)
 	return ioctl(fd, NVME_IOCTL_RESET);
 }
 
+int nvme_ns_rescan(int fd)
+{
+	int ret;
+
+	ret = nvme_verify_chr(fd);
+	if (ret)
+		return ret;
+	return ioctl(fd, NVME_IOCTL_RESCAN);
+}
+
 int nvme_get_nsid(int fd)
 {
 	static struct stat nvme_stat;

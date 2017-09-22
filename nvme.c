@@ -1501,6 +1501,27 @@ static int reset(int argc, char **argv, struct command *cmd, struct plugin *plug
 	return err;
 }
 
+static int ns_rescan(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Rescans the NVMe namespaces\n";
+	int err, fd;
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	if (fd < 0)
+		return fd;
+
+	err = nvme_ns_rescan(fd);
+	if (err < 0) {
+		perror("Namespace Rescan");
+		return errno;
+	}
+	return err;
+}
+
 static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	char *desc = "Send a sanitize command.";

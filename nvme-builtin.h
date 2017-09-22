@@ -46,6 +46,7 @@ COMMAND_LIST(
 	ENTRY("sanitize-log", "Retrive sanitize log, show it", sanitize_log)
 	ENTRY("reset", "Resets the controller", reset)
 	ENTRY("subsystem-reset", "Resets the controller", subsystem_reset)
+	ENTRY("ns-rescan", "Rescans the NVME namespaces", ns_rescan)
 	ENTRY("show-regs", "Shows the controller registers. Requires admin character device", show_registers)
 	ENTRY("discover", "Discover NVMeoF subsystems", discover_cmd)
 	ENTRY("connect-all", "Discover and Connect to NVMeoF subsystems", connect_all_cmd)
