@@ -748,6 +748,7 @@ nvme-get-log(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme get-log</em> &lt;device&gt; [--log-id=&lt;log-id&gt; | -i &lt;log-id&gt;]
                       [--log-len=&lt;log-len&gt; | -l &lt;log-len&gt;]
+                      [--aen=&lt;aen&gt; | -a &lt;aen&gt;]
                       [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                       [--raw-binary | -b]</pre>
 <div class="attribution">
@@ -793,6 +794,19 @@ program to parse.</p></div>
 <dd>
 <p>
         Sets the commands requested log-id to &lt;log-id&gt;. Defaults to 0.
+</p>
+</dd>
+<dt class="hdlist1">
+-a &lt;aen&gt;
+</dt>
+<dt class="hdlist1">
+--aen=&lt;aen&gt;
+</dt>
+<dd>
+<p>
+        Convenience field for extracting log information based on an
+        asynchronous event notification result. This will override log-id and
+        log-len, if set.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -863,7 +877,7 @@ Have the program return the raw log page in binary:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-05-16 12:47:42 EDT
+Last updated 2017-10-20 15:09:05 MDT
 </div>
 </div>
 </body>

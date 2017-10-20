@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-get-log
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 06/28/2017
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/20/2017
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-LOG" "1" "06/28/2017" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-LOG" "1" "10/20/2017" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,6 +34,7 @@ nvme-get-log \- Retrieves a log page from an NVMe device
 .nf
 \fInvme get\-log\fR <device> [\-\-log\-id=<log\-id> | \-i <log\-id>]
                       [\-\-log\-len=<log\-len> | \-l <log\-len>]
+                      [\-\-aen=<aen> | \-a <aen>]
                       [\-\-namespace\-id=<nsid> | \-n <nsid>]
                       [\-\-raw\-binary | \-b]
 .fi
@@ -54,6 +55,11 @@ Allocates a buffer of <log\-len> bytes size and requests this many bytes be retu
 \-i <log\-id>, \-\-log\-id=<log\-id>
 .RS 4
 Sets the commands requested log\-id to <log\-id>\&. Defaults to 0\&.
+.RE
+.PP
+\-a <aen>, \-\-aen=<aen>
+.RS 4
+Convenience field for extracting log information based on an asynchronous event notification result\&. This will override log\-id and log\-len, if set\&.
 .RE
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>
