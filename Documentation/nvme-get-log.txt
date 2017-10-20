@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme get-log' <device> [--log-id=<log-id> | -i <log-id>]
 		      [--log-len=<log-len> | -l <log-len>]
+		      [--aen=<aen> | -a <aen>]
 		      [--namespace-id=<nsid> | -n <nsid>]
 		      [--raw-binary | -b]
 
@@ -37,6 +38,12 @@ OPTIONS
 -i <log-id>::
 --log-id=<log-id>::
 	Sets the commands requested log-id to <log-id>. Defaults to 0.
+
+-a <aen>::
+--aen=<aen>::
+	Convenience field for extracting log information based on an
+	asynchronous event notification result. This will override log-id and
+	log-len, if set.
 
 -n <nsid>::
 --namespace-id=<nsid>::
