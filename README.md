@@ -86,6 +86,13 @@ Install from AUR, e.g.:
 $ yaourt -S nvme-cli-git
 ```
 
+### Nix(OS)
+
+The attribute is named `nvme-cli` and can e.g. be installed with:
+```
+$ nix-env -f '<nixpkgs>' -iA nvme-cli
+```
+
 ### Other Distros
 
 TBD
