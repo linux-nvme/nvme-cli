@@ -1255,8 +1255,8 @@ static void show_auto_pst(struct nvme_auto_pst *apst)
 static void show_host_mem_buffer(struct nvme_host_mem_buffer *hmb)
 {
 	printf("\tHost Memory Descriptor List Entry Count (HMDLEC): %u\n", hmb->hmdlec);
-	printf("\tHost Memory Descriptor List Address     (HMDLAU): %u\n", hmb->hmdlau);
-	printf("\tHost Memory Descriptor List Address     (HMDLAL): %u\n", hmb->hmdlal);
+	printf("\tHost Memory Descriptor List Address     (HMDLAU): 0x%x\n", hmb->hmdlau);
+	printf("\tHost Memory Descriptor List Address     (HMDLAL): 0x%x\n", hmb->hmdlal);
 	printf("\tHost Memory Buffer Size                  (HSIZE): %u\n", hmb->hsize);
 }
 
