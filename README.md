@@ -29,7 +29,7 @@ many architectures. For a complete list try running:
   ```
   rmadison nvme-cli
    nvme-cli | 0.3-1 | xenial/universe | source, amd64, arm64, armhf, i386, powerpc, ppc64el, s390x
-  ```  
+  ```
 A Debian based package for nvme-cli is currently maintained as a
 Ubuntu PPA. Right now there is support for Trusty, Vivid and Wiley. To
 install nvme-cli using this approach please perform the following
@@ -56,22 +56,22 @@ steps:
    ```
    otherwise you will see information about each NVMe device installed
    in the system.
-   
-### AlpineLinux
 
-nvme-cli is tested on AlpineLinux 3.3.  Install it using:
+### Alpine Linux
+
+nvme-cli is tested on Alpine Linux 3.3.  Install it using:
 
     # akp update && apk add nvme-cli nvme-cli-doc
 
-    if you just use the device you're after, it will work flawless.
-    ```
-    # nvme smart-log /dev/nvme0
+if you just use the device you're after, it will work flawless.
+```
+# nvme smart-log /dev/nvme0
 Smart Log for NVME device:/dev/nvme0 namespace-id:ffffffff
 critical_warning                    : 0
 temperature                         : 49 C
 available_spare                     : 100%
-    ```
-   
+```
+
 ### openSUSE Tumbleweed
 
 nvme-cli is available in openSUSE Tumbleweed. You can install it using zypper.
@@ -84,6 +84,13 @@ For example:
 Install from AUR, e.g.:
 ```
 $ yaourt -S nvme-cli-git
+```
+
+### Nix(OS)
+
+The attribute is named `nvme-cli` and can e.g. be installed with:
+```
+$ nix-env -f '<nixpkgs>' -iA nvme-cli
 ```
 
 ### Other Distros
