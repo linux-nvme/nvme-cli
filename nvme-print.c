@@ -1408,6 +1408,9 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 	char formatter[41] = { 0 };
 	int index, i = 0;
 	char *product;
+	long long int lba;
+	double nsze;
+	double nuse;
 
 	root = json_create_object();
 	devices = json_create_array();
@@ -1455,9 +1458,9 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 
 		json_array_add_value_object(devices, device_attrs);
 
-		long long int lba = 1 << list_items[i].ns.lbaf[(list_items[i].ns.flbas & 0x0f)].ds;
-		double nsze       = le64_to_cpu(list_items[i].ns.nsze) * lba;
-		double nuse       = le64_to_cpu(list_items[i].ns.nuse) * lba;
+		lba = 1 << list_items[i].ns.lbaf[(list_items[i].ns.flbas & 0x0f)].ds;
+		nsze = le64_to_cpu(list_items[i].ns.nsze) * lba;
+		nuse = le64_to_cpu(list_items[i].ns.nuse) * lba;
 		json_object_add_value_int(device_attrs,
 					  "UsedBytes",
 					  nuse);
