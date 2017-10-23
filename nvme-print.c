@@ -1454,6 +1454,23 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 					     formatter);
 
 		json_array_add_value_object(devices, device_attrs);
+
+		long long int lba = 1 << list_items[i].ns.lbaf[(list_items[i].ns.flbas & 0x0f)].ds;
+		double nsze       = le64_to_cpu(list_items[i].ns.nsze) * lba;
+		double nuse       = le64_to_cpu(list_items[i].ns.nuse) * lba;
+		json_object_add_value_int(device_attrs,
+					  "UsedBytes",
+					  nuse);
+		json_object_add_value_int(device_attrs,
+					  "MaximiumLBA",
+					  le64_to_cpu(list_items[i].ns.nsze));
+		json_object_add_value_int(device_attrs,
+					  "PhysicalSize",
+					  nsze);
+		json_object_add_value_int(device_attrs,
+					  "SectorSize",
+					  lba);
+
 		free((void*)product);
 	}
 	if (i)
