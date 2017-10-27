@@ -1718,7 +1718,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 
 	struct config cfg = {
 		.namespace_id = 0xffffffff,
-		.timeout      = 120000,
+		.timeout      = 600000,
 		.lbaf         = 0xff,
 		.ses          = 0,
 		.pi           = 0,
