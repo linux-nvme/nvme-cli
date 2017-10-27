@@ -59,7 +59,6 @@ static struct config {
 	char *keep_alive_tmo;
 	char *reconnect_delay;
 	char *ctrl_loss_tmo;
-	char *duplicate_connect;
 	char *raw;
 	char *device;
 } cfg = { NULL };
@@ -485,22 +484,6 @@ out:
 	return ret;
 }
 
-static int
-add_argument(char **argstr, int *max_len, char *arg_str, char *arg)
-{
-	int len;
-
-	if (arg) {
-		len = snprintf(*argstr, *max_len, ",%s=%s", arg_str, arg);
-		if (len < 0)
-			return -EINVAL;
-		*argstr += len;
-		*max_len -= len;
-	}
-
-	return 0;
-}
-
 static int build_options(char *argstr, int max_len)
 {
 	int len;
@@ -517,33 +500,99 @@ static int build_options(char *argstr, int max_len)
 		}
 	}
 
-	/* always specify nqn as first arg - this will init the string */
 	len = snprintf(argstr, max_len, "nqn=%s", cfg.nqn);
 	if (len < 0)
 		return -EINVAL;
 	argstr += len;
 	max_len -= len;
 
-	if (add_argument(&argstr, &max_len, "transport", cfg.transport) ||
-	    add_argument(&argstr, &max_len, "traddr", cfg.traddr) ||
-	    add_argument(&argstr, &max_len, "host_traddr", cfg.host_traddr) ||
-	    add_argument(&argstr, &max_len, "trsvcid", cfg.trsvcid) ||
-	    ((cfg.hostnqn || nvmf_hostnqn_file()) &&
-		    add_argument(&argstr, &max_len, "hostnqn", cfg.hostnqn)) ||
-	    ((cfg.hostid || nvmf_hostid_file()) &&
-		    add_argument(&argstr, &max_len, "hostid", cfg.hostid)) ||
-	    add_argument(&argstr, &max_len, "nr_io_queues",
-		    cfg.nr_io_queues) ||
-	    add_argument(&argstr, &max_len, "queue_size", cfg.queue_size) ||
-	    add_argument(&argstr, &max_len, "keep_alive_tmo",
-		    cfg.keep_alive_tmo) ||
-	    add_argument(&argstr, &max_len, "reconnect_delay",
-		    cfg.reconnect_delay) ||
-	    add_argument(&argstr, &max_len, "ctrl_loss_tmo",
-		    cfg.ctrl_loss_tmo) ||
-	    add_argument(&argstr, &max_len, "duplicate_connect",
-		    cfg.duplicate_connect))
+	len = snprintf(argstr, max_len, ",transport=%s", cfg.transport);
+	if (len < 0)
 		return -EINVAL;
+	argstr += len;
+	max_len -= len;
+
+	if (cfg.traddr) {
+		len = snprintf(argstr, max_len, ",traddr=%s", cfg.traddr);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
+	if (cfg.host_traddr) {
+		len = snprintf(argstr, max_len, ",host_traddr=%s", cfg.host_traddr);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
+	if (cfg.trsvcid) {
+		len = snprintf(argstr, max_len, ",trsvcid=%s", cfg.trsvcid);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
+	if (cfg.hostnqn || nvmf_hostnqn_file()) {
+		len = snprintf(argstr, max_len, ",hostnqn=%s", cfg.hostnqn);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
+	if (cfg.hostid || nvmf_hostid_file()) {
+		len = snprintf(argstr, max_len, ",hostid=%s", cfg.hostid);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
+	if (cfg.nr_io_queues) {
+		len = snprintf(argstr, max_len, ",nr_io_queues=%s",
+				cfg.nr_io_queues);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
+	if (cfg.queue_size) {
+		len = snprintf(argstr, max_len, ",queue_size=%s",
+				cfg.queue_size);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
+	if (cfg.keep_alive_tmo) {
+		len = snprintf(argstr, max_len, ",keep_alive_tmo=%s", cfg.keep_alive_tmo);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
+	if (cfg.reconnect_delay) {
+		len = snprintf(argstr, max_len, ",reconnect_delay=%s", cfg.reconnect_delay);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
+
+	if (cfg.ctrl_loss_tmo) {
+		len = snprintf(argstr, max_len, ",ctrl_loss_tmo=%s", cfg.ctrl_loss_tmo);
+		if (len < 0)
+			return -EINVAL;
+		argstr += len;
+		max_len -= len;
+	}
 
 	return 0;
 }
@@ -839,7 +888,6 @@ int connect(const char *desc, int argc, char **argv)
 		{"keep-alive-tmo",  'k', "LIST", CFG_STRING, &cfg.keep_alive_tmo,  required_argument, "keep alive timeout period in seconds" },
 		{"reconnect-delay", 'c', "LIST", CFG_STRING, &cfg.reconnect_delay, required_argument, "reconnect timeout period in seconds" },
 		{"ctrl-loss-tmo",   'l', "LIST", CFG_STRING, &cfg.ctrl_loss_tmo,   required_argument, "controller loss timeout period in seconds" },
-		{"duplicate_connect", 'D', "LIST", CFG_STRING, &cfg.duplicate_connect, required_argument, "allow duplicate connections between same transport host and subsystem port" },
 		{NULL},
 	};
 
