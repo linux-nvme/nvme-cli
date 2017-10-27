@@ -223,6 +223,38 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	return err;
 }
 
+static int get_effects_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve command effects log page and print the table.";
+	struct nvme_effects_log_page effects;
+
+	int err, fd;
+
+	struct config {
+	};
+
+	struct config cfg = {
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	err = nvme_get_log(fd, 0xffffffff, 5, 4096, &effects);
+	if (!err)
+		show_effects_log(&effects);
+	else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
+	else
+		perror("effects log page");
+	return err;
+}
+
 static int get_error_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve specified number of "\

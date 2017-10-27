@@ -33,6 +33,12 @@ typedef struct {
 
 #include "linux/nvme.h"
 
+struct nvme_effects_log_page {
+	__le32 acs[256];
+	__le32 iocs[256];
+	__u8   resv[2048];
+};
+
 struct nvme_error_log_page {
 	__u64	error_count;
 	__u16	sqid;

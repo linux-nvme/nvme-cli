@@ -1006,6 +1006,23 @@ void show_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
 						fw_to_string(fw_log->frs[i]));
 }
 
+void show_effects_log(struct nvme_effects_log_page *effects)
+{
+	int i;
+	__u32 effect;
+
+	for (i = 0; i < 256; i++) {
+		effect = le32_to_cpu(effects->acs[i]);
+		if (effect & 1)
+			printf("ACS%-4d: %08x\n", i, effects->acs[i]);
+	}
+	for (i = 0; i < 256; i++) {
+		effect = le32_to_cpu(effects->acs[i]);
+		if (effect & 1)
+			printf("IOCS%-3d: %08x\n", i, effects->iocs[i]);
+	}
+}
+
 uint64_t int48_to_long(__u8 *data)
 {
 	int i;

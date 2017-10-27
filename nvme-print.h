@@ -25,6 +25,7 @@ void show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges);
 void show_error_log(struct nvme_error_log_page *err_log, int entries, const char *devname);
 void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
 void show_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname);
+void show_effects_log(struct nvme_effects_log_page *effects);
 void show_ctrl_registers(void *bar, unsigned int mode);
 void show_nvme_id_ns_descs(void *data);
 
