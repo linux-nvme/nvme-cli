@@ -218,7 +218,7 @@ static void show_nvme_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
 	__u32 tsz = (rpmbs & 0xFF0000) >> 16;
 	__u32 rsvd = (rpmbs & 0xFFC0) >> 6;
 	__u32 auth = (rpmbs & 0x38) >> 3;
-	__u32 rpmb = rpmbs & 0x3;
+	__u32 rpmb = rpmbs & 0x7;
 
 	printf(" [31:24]: %#x\tAccess Size\n", asz);
 	printf(" [23:16]: %#x\tTotal Size\n", tsz);
