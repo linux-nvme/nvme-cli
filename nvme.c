@@ -488,7 +488,7 @@ static const char * sanitize_mon_status_to_string(__u16 status)
 
 static int sanitize_log(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
-	char *desc = "Retrieve sanitize log and show it.";
+	const char *desc = "Retrieve sanitize log and show it.";
 	int fd;
 	int ret;
 	__u8 output[NVME_SANITIZE_LOG_DATA_LEN] = {0};
