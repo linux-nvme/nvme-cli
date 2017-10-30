@@ -147,7 +147,8 @@ int lnvm_do_info(void)
 }
 
 int lnvm_do_create_tgt(char *devname, char *tgtname, char *tgttype,
-					int lun_begin, int lun_end, int flags)
+					int lun_begin, int lun_end,
+					int over_prov, int flags)
 {
 	struct nvm_ioctl_create c;
 	int fd, ret;
@@ -159,11 +160,19 @@ int lnvm_do_create_tgt(char *devname, char *tgtname, char *tgttype,
 	strncpy(c.dev, devname, DISK_NAME_LEN);
 	strncpy(c.tgtname, tgtname, DISK_NAME_LEN);
 	strncpy(c.tgttype, tgttype, NVM_TTYPE_NAME_MAX);
-	c.flags = 0;
-	c.conf.type = 0;
-	c.conf.s.lun_begin = lun_begin;
-	c.conf.s.lun_end = lun_end;
 	c.flags = flags;
+
+	/* Fall back into simple IOCTL version if no extended attributes used */
+	if (over_prov != -1) {
+		c.conf.type = NVM_CONFIG_TYPE_EXTENDED;
+		c.conf.e.lun_begin = lun_begin;
+		c.conf.e.lun_end = lun_end;
+		c.conf.e.over_prov = over_prov;
+	} else {
+		c.conf.type = NVM_CONFIG_TYPE_SIMPLE;
+		c.conf.s.lun_begin = lun_begin;
+		c.conf.s.lun_end = lun_end;
+	}
 
 	ret = ioctl(fd, NVM_DEV_CREATE, &c);
 	if (ret)
