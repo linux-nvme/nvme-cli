@@ -1178,8 +1178,11 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		flags |= VS;
 	if (cfg.human_readable)
 		flags |= HUMAN;
-	if (!cfg.namespace_id)
+	if (!cfg.namespace_id && S_ISBLK(nvme_stat.st_mode))
 		cfg.namespace_id = get_nsid(fd);
+	else if(!cfg.namespace_id)
+		fprintf(stderr,
+			"Error: requesting namespace-id from non-block device\n");`
 
 	err = nvme_identify_ns(fd, cfg.namespace_id, cfg.force, &ns);
 	if (!err) {
