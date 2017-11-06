@@ -113,7 +113,7 @@ long long suffix_binary_parse(const char *value)
 {
 	char *suffix;
 	errno = 0;
-	long long ret = strtol(value, &suffix, 0);
+	long long ret = strtoll(value, &suffix, 0);
 	if (errno)
 		return 0;
 
