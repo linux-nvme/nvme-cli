@@ -1182,7 +1182,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		cfg.namespace_id = get_nsid(fd);
 	else if(!cfg.namespace_id)
 		fprintf(stderr,
-			"Error: requesting namespace-id from non-block device\n");`
+			"Error: requesting namespace-id from non-block device\n");
 
 	err = nvme_identify_ns(fd, cfg.namespace_id, cfg.force, &ns);
 	if (!err) {
