@@ -18,6 +18,7 @@
 #include <stdbool.h>
 #include <endian.h>
 #include <stdint.h>
+#include <dirent.h>
 #include "plugin.h"
 #include "json.h"
 
@@ -133,5 +134,7 @@ extern const char *devicename;
 
 int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root));
 int	validate_output_format(char *format);
+int get_nvme_info(int fd, struct list_item *item, const char *node);
+int scan_dev_filter(const struct dirent *d);
 
 #endif /* _NVME_H */
