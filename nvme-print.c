@@ -612,7 +612,7 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 				i == (ns->flbas & 0xf) ? "(in use)" : "");
 	}
 	if (vs) {
-		printf("vs[]:");
+		printf("vs[]:\n");
 		d(ns->vs, sizeof(ns->vs), 16, 1);
 	}
 }
