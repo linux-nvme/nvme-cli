@@ -151,7 +151,7 @@ static void show_nvme_id_ctrl_oacs(__le16 ctrl_oacs)
 		fwc, fwc ? "" : "Not ");
 	printf("  [1:1] : %#x\tFormat NVM %sSupported\n",
 		fmt, fmt ? "" : "Not ");
-	printf("  [0:0] : %#x\tSec. Send and Receive %sSupported\n",
+	printf("  [0:0] : %#x\tSecurity Send and Receive %sSupported\n",
 		sec, sec ? "" : "Not ");
 	printf("\n");
 }
