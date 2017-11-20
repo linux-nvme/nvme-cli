@@ -2375,6 +2375,7 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 				nvme_status_to_string(err), err);
 	else
 		printf("NVMe Flush: success\n");
+	close(fd);
 	return err;
 }
 
