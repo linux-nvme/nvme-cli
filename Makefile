@@ -1,14 +1,7 @@
-CFLAGS ?= -O2 -g -Wall -Werror
-override CFLAGS += -std=gnu99 -I. -I./libnvme
-override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
+include ./Makefile.inc
+
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 NVME = nvme
-INSTALL ?= install
-DESTDIR =
-PREFIX ?= /usr/local
-SYSCONFDIR = /etc
-SBINDIR = $(PREFIX)/sbin
-LIB_DEPENDS =
 LDFLAGS += -L./libnvme -lnvme
 
 ifeq ($(LIBUUID),0)
@@ -16,10 +9,6 @@ ifeq ($(LIBUUID),0)
 	override CFLAGS += -DLIBUUID
 	override LIB_DEPENDS += uuid
 endif
-
-RPMBUILD = rpmbuild
-TAR = tar
-RM = rm -f
 
 AUTHOR=Keith Busch <keith.busch@intel.com>
 
@@ -110,6 +99,9 @@ install-etc:
 	if [ ! -f $(DESTDIR)$(SBINDIR)/nvme/discovery.conf ]; then \
 		$(INSTALL) -m 644 -T ./etc/discovery.conf.in $(DESTDIR)$(SYSCONFDIR)/nvme/discovery.conf; \
 	fi
+
+install-libnvme:
+	$(MAKE) -C libnvme install
 
 install-spec: install-bin install-man install-bash-completion install-zsh-completion install-etc
 install: install-spec install-hostparams

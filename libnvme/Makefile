@@ -2,6 +2,8 @@
 #
 # Copyright (C) 2017 Red Hat, Inc.
 # Gris Ge <fge@redhat.com>
+#
+include ../Makefile.inc
 
 ifeq ($(TOPDIR),)
 	TOPDIR	= ..
@@ -14,17 +16,17 @@ SONAME=$(LIBNVME_VERSION)
 DEVLIB = libnvme.so
 LIBS = $(DEVLIB).$(SONAME)
 LIBS_MAJOR = $(DEVLIB).$(LIBNVME_VERSION_MAJOR)
-HEADERS = libnvme.h
+HEADERS = libnvme/libnvme.h
 TESTS = test/ptr_array_test test/nvme_ctrls_test
+PKGFILE = libnvme.pc
 
 OBJS = libnvme.o ioctl.o ptr_array.o sysfs.o ctrl.o utils.o
 
-CFLAGS ?= -g
 CFLAGS += -Wall -Werror -Wextra -fvisibility=hidden -fPIC -I.
 
 #LIBADD =
 
-all: $(LIBS) $(DEVLIB) $(LIBS_MAJOR)
+all: $(LIBS) $(DEVLIB) $(LIBS_MAJOR) $(TESTS)
 
 $(LIBS): $(OBJS)
 	$(CC) $(LDFLAGS) -shared -Wl,-soname=$@ -o $@ $(OBJS) $(LIBADD)
@@ -36,13 +38,13 @@ $(LIBS_MAJOR): $(LIBS)
 	ln -sf $(LIBS) $@
 
 clean:
-	$(RM) core *.a *.o *.gz *.so *.so.* $(TESTS)
+	$(RM) core *.a *.o *.gz *.so *.so.* $(TESTS) test/nvme_test_ns.o
 
 test/ptr_array_test: ptr_array.o
 
+test/nvme_ctrls_test: $(DEVLIB)
 test/nvme_ctrls_test: CFLAGS = -Wall -Werror -Wextra -I$(TOPDIR)/libnvme -g
 test/nvme_ctrls_test: LDFLAGS = -L$(TOPDIR)/libnvme -lnvme
-test/nvme_ctrls_test: $(DEVLIB)
 
 check: $(TESTS)
 	for unit_test in $(TESTS); do \
@@ -53,3 +55,17 @@ check: $(TESTS)
 			--trace-children=yes --error-exitcode=1 \
 			$$unit_test || exit 1; \
 	done
+
+install: $(LIBS) $(DEVLIB) $(LIBS_MAJOR)
+	$(INSTALL) -d $(DESTDIR)$(LIB_DIR)/
+	$(INSTALL) $(LIBS) $(DESTDIR)$(LIB_DIR)/
+	$(INSTALL) $(DEVLIB) $(DESTDIR)$(LIB_DIR)/
+	$(INSTALL) $(LIBS_MAJOR) $(DESTDIR)$(LIB_DIR)/
+	$(INSTALL) $(HEADERS) $(DESTDIR)$(INCLUDE_DIR)/
+	$(INSTALL) -m 644 -D $(PKGFILE).in $(DESTDIR)$(PKGCONF_DIR)/$(PKGFILE)
+	perl -i -pe 's|__VERSION__|$(LIBNVME_VERSION)|g' \
+		$(DESTDIR)$(PKGCONF_DIR)/$(PKGFILE)
+	perl -i -pe 's|__LIB_DIR__|$(LIB_DIR)|g' \
+		$(DESTDIR)$(PKGCONF_DIR)/$(PKGFILE)
+	perl -i -pe 's|__INCLUDE_DIR__|$(INCLUDE_DIR)|g' \
+		$(DESTDIR)$(PKGCONF_DIR)/$(PKGFILE)
