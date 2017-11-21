@@ -44,8 +44,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-
 #include "common.h"
+
+#include <libnvme/libnvme.h>
+
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
 #include "nvme-status.h"
@@ -1937,7 +1939,9 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	const char *human_readable = "show infos in readable format";
 	int err, fmt, fd;
 	unsigned int flags = 0;
-	struct nvme_id_ctrl ctrl;
+	struct nvme_ctrl *ctrl = NULL;
+	const char *err_msg = NULL;
+	struct nvme_id_ctrl *id_ctrl = NULL;
 
 	struct config {
 		int vendor_specific;
@@ -1979,21 +1983,24 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	if (cfg.human_readable)
 		flags |= HUMAN;
 
-	err = nvme_identify_ctrl(fd, &ctrl);
-	if (!err) {
+	err = nvme_ctrl_get_by_fd(fd, &ctrl, &err_msg);
+	if (err == NVME_OK) {
 		if (fmt == BINARY)
-			d_raw((unsigned char *)&ctrl, sizeof(ctrl));
+			d_raw((unsigned char *) nvme_ctrl_raw_id_data_get(ctrl),
+			      NVME_CTRL_RAW_IDENTIFY_DATA_LEN);
 		else if (fmt == JSON)
-			json_nvme_id_ctrl(&ctrl, flags, vs);
+			json_nvme_id_ctrl(ctrl, flags, vs);
 		else {
 			printf("NVME Identify Controller:\n");
-			__show_nvme_id_ctrl(&ctrl, flags, vs);
+			id_ctrl = (struct nvme_id_ctrl *)
+				nvme_ctrl_raw_id_data_get(ctrl);
+			__show_nvme_id_ctrl(id_ctrl, flags, vs);
 		}
+	} else {
+		fprintf(stderr, "Error %d: %s\n", err, nvme_strerror(err));
 	}
-	else if (err > 0)
-		show_nvme_status(err);
-	else
-		perror("identify controller");
+
+	nvme_ctrl_free(ctrl);
 
 close_fd:
 	close(fd);

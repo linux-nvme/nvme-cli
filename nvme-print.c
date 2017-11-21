@@ -3,6 +3,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdint.h>
+
+#include <libnvme/libnvme.h>
 
 #include "nvme-print.h"
 #include "json.h"
@@ -2349,129 +2352,138 @@ void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	json_free_object(root);
 }
 
-void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vs)(__u8 *vs, struct json_object *root))
+void json_nvme_id_ctrl(struct nvme_ctrl *ctrl, unsigned int mode,
+		       void (*vs)(__u8 *vs, struct json_object *root))
 {
-	struct json_object *root;
-	struct json_array *psds;
+	struct json_object *root = NULL;
+	struct json_array *psds = NULL;
+	long double tnvmcap = 0;
+	long double unvmcap = 0;
+	uint8_t i = 0;
+	const char *subnqn = nvme_ctrl_subnqn_get(ctrl);
+	struct nvme_psd **nv_psds = NULL;
+	uint8_t psd_count = 0;
 
-	long double tnvmcap = int128_to_double(ctrl->tnvmcap);
-	long double unvmcap = int128_to_double(ctrl->unvmcap);
-
-	char sn[sizeof(ctrl->sn) + 1], mn[sizeof(ctrl->mn) + 1],
-		fr[sizeof(ctrl->fr) + 1], subnqn[sizeof(ctrl->subnqn) + 1];
-	__u32 ieee = ctrl->ieee[2] << 16 | ctrl->ieee[1] << 8 | ctrl->ieee[0];
-
-	int i;
-
-	snprintf(sn, sizeof(sn), "%-.*s", (int)sizeof(ctrl->sn), ctrl->sn);
-	snprintf(mn, sizeof(mn), "%-.*s", (int)sizeof(ctrl->mn), ctrl->mn);
-	snprintf(fr, sizeof(fr), "%-.*s", (int)sizeof(ctrl->fr), ctrl->fr);
-	snprintf(subnqn, sizeof(subnqn), "%-.*s", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
+	unvmcap = int128_to_double((__u8 *) nvme_ctrl_unvmcap_get(ctrl));
+	tnvmcap = int128_to_double((__u8 *) nvme_ctrl_tnvmcap_get(ctrl));
 
 	root = json_create_object();
 
-	json_object_add_value_int(root, "vid", le16_to_cpu(ctrl->vid));
-	json_object_add_value_int(root, "ssvid", le16_to_cpu(ctrl->ssvid));
-	json_object_add_value_string(root, "sn", sn);
-	json_object_add_value_string(root, "mn", mn);
-	json_object_add_value_string(root, "fr", fr);
-	json_object_add_value_int(root, "rab", ctrl->rab);
-	json_object_add_value_int(root, "ieee", ieee);
-	json_object_add_value_int(root, "cmic", ctrl->cmic);
-	json_object_add_value_int(root, "mdts", ctrl->mdts);
-	json_object_add_value_int(root, "cntlid", le16_to_cpu(ctrl->cntlid));
-	json_object_add_value_uint(root, "ver", le32_to_cpu(ctrl->ver));
-	json_object_add_value_uint(root, "rtd3r", le32_to_cpu(ctrl->rtd3r));
-	json_object_add_value_uint(root, "rtd3e", le32_to_cpu(ctrl->rtd3e));
-	json_object_add_value_uint(root, "oaes", le32_to_cpu(ctrl->oaes));
-	json_object_add_value_int(root, "ctratt", le32_to_cpu(ctrl->ctratt));
-	json_object_add_value_int(root, "rrls", le16_to_cpu(ctrl->rrls));
-	json_object_add_value_int(root, "oacs", le16_to_cpu(ctrl->oacs));
-	json_object_add_value_int(root, "acl", ctrl->acl);
-	json_object_add_value_int(root, "aerl", ctrl->aerl);
-	json_object_add_value_int(root, "frmw", ctrl->frmw);
-	json_object_add_value_int(root, "lpa", ctrl->lpa);
-	json_object_add_value_int(root, "elpe", ctrl->elpe);
-	json_object_add_value_int(root, "npss", ctrl->npss);
-	json_object_add_value_int(root, "avscc", ctrl->avscc);
-	json_object_add_value_int(root, "apsta", ctrl->apsta);
-	json_object_add_value_int(root, "wctemp", le16_to_cpu(ctrl->wctemp));
-	json_object_add_value_int(root, "cctemp", le16_to_cpu(ctrl->cctemp));
-	json_object_add_value_int(root, "mtfa", le16_to_cpu(ctrl->mtfa));
-	json_object_add_value_uint(root, "hmpre", le32_to_cpu(ctrl->hmpre));
-	json_object_add_value_uint(root, "hmmin", le32_to_cpu(ctrl->hmmin));
+	json_object_add_value_int(root, "vid", nvme_ctrl_vid_get(ctrl));
+	json_object_add_value_int(root, "ssvid", nvme_ctrl_ssvid_get(ctrl));
+	json_object_add_value_string(root, "sn", nvme_ctrl_sn_get(ctrl));
+	json_object_add_value_string(root, "mn", nvme_ctrl_mn_get(ctrl));
+	json_object_add_value_string(root, "fr", nvme_ctrl_fr_get(ctrl));
+	json_object_add_value_int(root, "rab", nvme_ctrl_rab_get(ctrl));
+	json_object_add_value_int(root, "ieee", nvme_ctrl_ieee_get(ctrl));
+	json_object_add_value_int(root, "cmic", nvme_ctrl_cmic_get(ctrl));
+	json_object_add_value_int(root, "mdts", nvme_ctrl_mdts_get(ctrl));
+	json_object_add_value_int(root, "cntlid", nvme_ctrl_cntlid_get(ctrl));
+	json_object_add_value_uint(root, "ver", nvme_ctrl_ver_get(ctrl));
+	json_object_add_value_string(root, "ver_str", nvme_ctrl_ver_str_get(ctrl));
+	json_object_add_value_uint(root, "rtd3r", nvme_ctrl_rtd3r_get(ctrl));
+	json_object_add_value_uint(root, "rtd3e", nvme_ctrl_rtd3e_get(ctrl));
+	json_object_add_value_uint(root, "oaes", nvme_ctrl_oaes_get(ctrl));
+	json_object_add_value_int(root, "ctratt", nvme_ctrl_ctratt_get(ctrl));
+	json_object_add_value_int(root, "oacs", nvme_ctrl_oacs_get(ctrl));
+	json_object_add_value_int(root, "acl", nvme_ctrl_acl_get(ctrl));
+	json_object_add_value_int(root, "aerl", nvme_ctrl_aerl_get(ctrl));
+	json_object_add_value_int(root, "frmw", nvme_ctrl_frmw_get(ctrl));
+	json_object_add_value_int(root, "lpa", nvme_ctrl_lpa_get(ctrl));
+	json_object_add_value_int(root, "elpe", nvme_ctrl_elpe_get(ctrl));
+	json_object_add_value_int(root, "npss", nvme_ctrl_npss_get(ctrl));
+	json_object_add_value_int(root, "avscc", nvme_ctrl_avscc_get(ctrl));
+	json_object_add_value_int(root, "apsta", nvme_ctrl_apsta_get(ctrl));
+	json_object_add_value_int(root, "wctemp", nvme_ctrl_wctemp_get(ctrl));
+	json_object_add_value_int(root, "cctemp", nvme_ctrl_cctemp_get(ctrl));
+	json_object_add_value_int(root, "mtfa", nvme_ctrl_mtfa_get(ctrl));
+	json_object_add_value_uint(root, "hmpre", nvme_ctrl_hmpre_get(ctrl));
+	json_object_add_value_uint(root, "hmmin", nvme_ctrl_hmmin_get(ctrl));
 	json_object_add_value_float(root, "tnvmcap", tnvmcap);
 	json_object_add_value_float(root, "unvmcap", unvmcap);
-	json_object_add_value_uint(root, "rpmbs", le32_to_cpu(ctrl->rpmbs));
-	json_object_add_value_int(root, "edstt", le16_to_cpu(ctrl->edstt));
-	json_object_add_value_int(root, "dsto", ctrl->dsto);
-	json_object_add_value_int(root, "fwug", ctrl->fwug);
-	json_object_add_value_int(root, "kas", le16_to_cpu(ctrl->kas));
-	json_object_add_value_int(root, "hctma", le16_to_cpu(ctrl->hctma));
-	json_object_add_value_int(root, "mntmt", le16_to_cpu(ctrl->mntmt));
-	json_object_add_value_int(root, "mxtmt", le16_to_cpu(ctrl->mxtmt));
-	json_object_add_value_int(root, "sanicap", le32_to_cpu(ctrl->sanicap));
-	json_object_add_value_int(root, "hmminds", le32_to_cpu(ctrl->hmminds));
-	json_object_add_value_int(root, "hmmaxd", le16_to_cpu(ctrl->hmmaxd));
-	json_object_add_value_int(root, "nsetidmax", le16_to_cpu(ctrl->nsetidmax));
+	json_object_add_value_uint(root, "rpmbs", nvme_ctrl_rpmbs_get(ctrl));
+	json_object_add_value_int(root, "edstt", nvme_ctrl_edstt_get(ctrl));
+	//json_object_add_value_int(root, "dsto", ctrl->dsto);  / * Device self test */
+	json_object_add_value_int(root, "fwug", nvme_ctrl_fwug_get(ctrl));
+	json_object_add_value_int(root, "kas", nvme_ctrl_kas_get(ctrl));
+	json_object_add_value_int(root, "hctma", nvme_ctrl_hctma_get(ctrl));
+	json_object_add_value_int(root, "mntmt", nvme_ctrl_mntmt_get(ctrl));
+	json_object_add_value_int(root, "mxtmt", nvme_ctrl_mxtmt_get(ctrl));
+	json_object_add_value_int(root, "sanicap", nvme_ctrl_sanicap_get(ctrl));
+	//json_object_add_value_int(root, "hmminds", le32_to_cpu(ctrl->hmminds));
+	//json_object_add_value_int(root, "hmmaxd", le16_to_cpu(ctrl->hmmaxd));
+	//json_object_add_value_int(root, "nsetidmax", le16_to_cpu(ctrl->nsetidmax));
 
-	json_object_add_value_int(root, "anatt",ctrl->anatt);
-	json_object_add_value_int(root, "anacap", ctrl->anacap);
-	json_object_add_value_int(root, "anagrpmax", le32_to_cpu(ctrl->anagrpmax));
-	json_object_add_value_int(root, "nanagrpid", le32_to_cpu(ctrl->nanagrpid));
-	json_object_add_value_int(root, "sqes", ctrl->sqes);
-	json_object_add_value_int(root, "cqes", ctrl->cqes);
-	json_object_add_value_int(root, "maxcmd", le16_to_cpu(ctrl->maxcmd));
-	json_object_add_value_uint(root, "nn", le32_to_cpu(ctrl->nn));
-	json_object_add_value_int(root, "oncs", le16_to_cpu(ctrl->oncs));
-	json_object_add_value_int(root, "fuses", le16_to_cpu(ctrl->fuses));
-	json_object_add_value_int(root, "fna", ctrl->fna);
-	json_object_add_value_int(root, "vwc", ctrl->vwc);
-	json_object_add_value_int(root, "awun", le16_to_cpu(ctrl->awun));
-	json_object_add_value_int(root, "awupf", le16_to_cpu(ctrl->awupf));
-	json_object_add_value_int(root, "nvscc", ctrl->nvscc);
-	json_object_add_value_int(root, "nwpc", ctrl->nwpc);
-	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
-	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
+	//json_object_add_value_int(root, "anatt",ctrl->anatt);
+	//json_object_add_value_int(root, "anacap", ctrl->anacap);
+	//json_object_add_value_int(root, "anagrpmax", le32_to_cpu(ctrl->anagrpmax));
+	//json_object_add_value_int(root, "nanagrpid", le32_to_cpu(ctrl->nanagrpid));
+	json_object_add_value_int(root, "sqes", nvme_ctrl_sqes_get(ctrl));
+	json_object_add_value_int(root, "cqes", nvme_ctrl_sqes_get(ctrl));
+	json_object_add_value_int(root, "maxcmd", nvme_ctrl_maxcmd_get(ctrl));
+	json_object_add_value_uint(root, "nn", nvme_ctrl_nn_get(ctrl));
+	json_object_add_value_int(root, "oncs", nvme_ctrl_oncs_get(ctrl));
+	json_object_add_value_int(root, "fuses", nvme_ctrl_fuses_get(ctrl));
+	json_object_add_value_int(root, "fna", nvme_ctrl_fna_get(ctrl));
+	json_object_add_value_int(root, "vwc", nvme_ctrl_vwc_get(ctrl));
+	json_object_add_value_int(root, "awun", nvme_ctrl_awun_get(ctrl));
+	json_object_add_value_int(root, "awupf", nvme_ctrl_awupf_get(ctrl));
+	json_object_add_value_int(root, "nvscc", nvme_ctrl_nvscc_get(ctrl));
+	//json_object_add_value_int(root, "nwpc", ctrl->nwpc);
+	json_object_add_value_int(root, "acwu", nvme_ctrl_acwu_get(ctrl));
+	json_object_add_value_int(root, "sgls", nvme_ctrl_sgls_get(ctrl));
 
 	if (strlen(subnqn))
 		json_object_add_value_string(root, "subnqn", subnqn);
 
-	json_object_add_value_int(root, "ioccsz", le32_to_cpu(ctrl->ioccsz));
-	json_object_add_value_int(root, "iorcsz", le32_to_cpu(ctrl->iorcsz));
-	json_object_add_value_int(root, "icdoff", le16_to_cpu(ctrl->icdoff));
-	json_object_add_value_int(root, "ctrattr", ctrl->ctrattr);
-	json_object_add_value_int(root, "msdbd", ctrl->msdbd);
+	json_object_add_value_int(root, "ioccsz", nvme_ctrl_ioccsz_get(ctrl));
+	json_object_add_value_int(root, "iorcsz", nvme_ctrl_iorcsz_get(ctrl));
+	json_object_add_value_int(root, "icdoff", nvme_ctrl_icdoff_get(ctrl));
+	json_object_add_value_int(root, "ctrattr", nvme_ctrl_ctrattr_get(ctrl));
+	json_object_add_value_int(root, "msdbd", nvme_ctrl_msdbd_get(ctrl));
 
 	psds = json_create_array();
 	json_object_add_value_array(root, "psds", psds);
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	nv_psds = nvme_ctrl_psds_get(ctrl);
+	psd_count = nvme_ctrl_npss_get(ctrl);
+
+	for (i = 0; i <= psd_count; ++i) {
 		struct json_object *psd = json_create_object();
 
-		json_object_add_value_int(psd, "max_power",
-			le16_to_cpu(ctrl->psd[i].max_power));
-		json_object_add_value_int(psd, "flags", ctrl->psd[i].flags);
-		json_object_add_value_uint(psd, "entry_lat",
-			le32_to_cpu(ctrl->psd[i].entry_lat));
-		json_object_add_value_uint(psd, "exit_lat",
-			le32_to_cpu(ctrl->psd[i].exit_lat));
-		json_object_add_value_int(psd, "read_tput", ctrl->psd[i].read_tput);
-		json_object_add_value_int(psd, "read_lat", ctrl->psd[i].read_lat);
-		json_object_add_value_int(psd, "write_tput", ctrl->psd[i].write_tput);
-		json_object_add_value_int(psd, "write_lat", ctrl->psd[i].write_lat);
-		json_object_add_value_int(psd, "idle_power",
-			le16_to_cpu(ctrl->psd[i].idle_power));
-		json_object_add_value_int(psd, "idle_scale", ctrl->psd[i].idle_scale);
-		json_object_add_value_int(psd, "active_power",
-			le16_to_cpu(ctrl->psd[i].active_power));
-		json_object_add_value_int(psd, "active_work_scale", ctrl->psd[i].active_work_scale);
-
+		json_object_add_value_int(psd, "mp",
+			nvme_psd_mp_get(nv_psds[i]));
+		json_object_add_value_int(psd, "mxps",
+			nvme_psd_mxps_get(nv_psds[i]));
+		json_object_add_value_int(psd, "nops",
+			nvme_psd_nops_get(nv_psds[i]));
+		json_object_add_value_int(psd, "enlat",
+			nvme_psd_enlat_get(nv_psds[i]));
+		json_object_add_value_int(psd, "exlat",
+			nvme_psd_exlat_get(nv_psds[i]));
+		json_object_add_value_int(psd, "rrt",
+			nvme_psd_rrt_get(nv_psds[i]));
+		json_object_add_value_int(psd, "rrl",
+			nvme_psd_rrl_get(nv_psds[i]));
+		json_object_add_value_int(psd, "rwt",
+			nvme_psd_rwt_get(nv_psds[i]));
+		json_object_add_value_int(psd, "rwl",
+			nvme_psd_rwl_get(nv_psds[i]));
+		json_object_add_value_int(psd, "idlp",
+			nvme_psd_idlp_get(nv_psds[i]));
+		json_object_add_value_int(psd, "ips",
+			nvme_psd_ips_get(nv_psds[i]));
+		json_object_add_value_int(psd, "actp",
+			nvme_psd_actp_get(nv_psds[i]));
+		json_object_add_value_int(psd, "apw",
+			nvme_psd_apw_get(nv_psds[i]));
+		json_object_add_value_int(psd, "aps",
+			nvme_psd_aps_get(nv_psds[i]));
 		json_array_add_value_object(psds, psd);
 	}
 
 	if(vs)
-		vs(ctrl->vs, root);
+		vs((__u8 *) nvme_ctrl_vendor_specfic_get(ctrl), root);
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);

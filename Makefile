@@ -1,5 +1,5 @@
 CFLAGS ?= -O2 -g -Wall -Werror
-override CFLAGS += -std=gnu99 -I.
+override CFLAGS += -std=gnu99 -I. -I./libnvme
 override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 NVME = nvme
@@ -9,6 +9,7 @@ PREFIX ?= /usr/local
 SYSCONFDIR = /etc
 SBINDIR = $(PREFIX)/sbin
 LIB_DEPENDS =
+LDFLAGS += -L./libnvme -lnvme
 
 ifeq ($(LIBUUID),0)
 	override LDFLAGS += -luuid
@@ -49,7 +50,7 @@ PLUGIN_OBJS :=					\
 	plugins/virtium/virtium-nvme.o		\
 	plugins/shannon/shannon-nvme.o
 
-nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) NVME-VERSION-FILE
+nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) NVME-VERSION-FILE libnvme.so
 	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(LDFLAGS)
 
 verify-no-dep: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
@@ -72,6 +73,7 @@ all: doc
 clean:
 	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
 	$(MAKE) -C Documentation clean
+	$(MAKE) -C libnvme clean
 	$(RM) tests/*.pyc
 	$(RM) verify-no-dep
 
@@ -181,3 +183,6 @@ rpm: dist
 
 .PHONY: default doc all clean clobber install-man install-bin install
 .PHONY: dist pkg dist-orig deb deb-light rpm FORCE test
+
+libnvme.so:
+	$(MAKE) -C libnvme

@@ -4,6 +4,7 @@ a.out
 *.o
 *~
 *.swp
+*.so*
 NVME-VERSION-FILE
 
 cscope.*
@@ -16,3 +17,6 @@ cscope.*
 tests/__pycache__
 tests/nvmetests
 tests/*.pyc
+
+libnvme/test/nvme_ctrls_test
+libnvme/test/ptr_array_test
