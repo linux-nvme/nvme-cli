@@ -680,8 +680,10 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
-	if (cfg.log > 2 || cfg.core > 4 || cfg.lnum > 255)
+	if (cfg.log > 2 || cfg.core > 4 || cfg.lnum > 255) {
+		free(intel);
 		return EINVAL;
+	}
 
 	if (!cfg.file) {
 		err = setup_file(f, cfg.file, fd, cfg.log);
