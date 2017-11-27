@@ -2187,6 +2187,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	const char *ref_tag = "reference tag (for end to end PI)";
 	const char *app_tag_mask = "app tag mask (for end to end PI)";
 	const char *app_tag = "app tag (for end to end PI)";
+	const char *deac = "Set DEAC bit, requesting controller to deallocate specified logical blocks";
 
 	struct config {
 		__u64 start_block;
@@ -2196,6 +2197,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		__u16 app_tag_mask;
 		__u16 block_count;
 		__u8  prinfo;
+		int   deac;
 		int   limited_retry;
 		int   force_unit_access;
 	};
@@ -2213,6 +2215,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		{"namespace-id",      'n', "NUM", CFG_POSITIVE,    &cfg.namespace_id,      required_argument, namespace_id},
 		{"start-block",       's', "NUM", CFG_LONG_SUFFIX, &cfg.start_block,       required_argument, start_block},
 		{"block-count",       'c', "NUM", CFG_SHORT,       &cfg.block_count,       required_argument, block_count},
+		{"deac",              'd', "",    CFG_NONE,        &cfg.deac,              no_argument,       deac},
 		{"limited-retry",     'l', "",    CFG_NONE,        &cfg.limited_retry,     no_argument,       limited_retry},
 		{"force-unit-access", 'f', "",    CFG_NONE,        &cfg.force_unit_access, no_argument,       force},
 		{"prinfo",            'p', "NUM", CFG_BYTE,        &cfg.prinfo,            required_argument, prinfo},
@@ -2234,6 +2237,8 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		control |= NVME_RW_LR;
 	if (cfg.force_unit_access)
 		control |= NVME_RW_FUA;
+	if (cfg.deac)
+		control |= NVME_RW_DEAC;
 	if (!cfg.namespace_id)
 		cfg.namespace_id = get_nsid(fd);
 
