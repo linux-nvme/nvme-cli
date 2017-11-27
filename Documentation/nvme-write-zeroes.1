@@ -2,12 +2,12 @@
 .\"     Title: nvme-zeroes
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/20/2017
+.\"      Date: 11/27/2017
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZEROES" "1" "10/20/2017" "NVMe" "NVMe Manual"
+.TH "NVME\-ZEROES" "1" "11/27/2017" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,6 +38,7 @@ nvme-write-zeroes \- Send an NVMe write zeroes command, return results
                         [\-\-prinfo=<prinfo> | \-p <prinfo>]
                         [\-\-app\-tag\-mask=<appmask> | \-m <appmask>]
                         [\-\-app\-tag=<apptag> | \-a <apptag>]
+                        [\-\-deac | \-d]
                         [\-\-limited\-retry | \-l]
                         [\-\-force\-unit\-access | \-f]
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
@@ -120,6 +121,11 @@ Optional application tag when used with protection information\&.
 \-\-limited\-retry, \-l
 .RS 4
 Sets the limited retry flag\&.
+.RE
+.PP
+\-\-deac, \-d
+.RS 4
+Sets the DEAC bit, requesting controller deallocate the logical blocks\&.
 .RE
 .PP
 \-\-force\-unit\-access, \-f

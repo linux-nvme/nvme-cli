@@ -14,6 +14,7 @@ SYNOPSIS
 			[--prinfo=<prinfo> | -p <prinfo>]
 			[--app-tag-mask=<appmask> | -m <appmask>]
 			[--app-tag=<apptag> | -a <apptag>]
+			[--deac | -d]
 			[--limited-retry | -l]
 			[--force-unit-access | -f]
 			[--namespace-id=<nsid> | -n <nsid>]
@@ -63,6 +64,10 @@ metadata is passes.
 --limited-retry::
 -l::
 	Sets the limited retry flag.
+
+--deac::
+-d::
+	Sets the DEAC bit, requesting controller deallocate the logical blocks.
 
 --force-unit-access::
 -f::
