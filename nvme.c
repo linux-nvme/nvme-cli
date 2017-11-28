@@ -1647,7 +1647,7 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 		sanitize_cdw10 |= NVME_SANITIZE_NO_DEALLOC;
 
 	memset(&admin_cmd, 0, sizeof (admin_cmd));
-	admin_cmd.opcode = nvme_admin_sanitize;
+	admin_cmd.opcode = nvme_admin_sanitize_nvm;
 	admin_cmd.cdw10 = sanitize_cdw10;
 	admin_cmd.cdw11 = sanitize_cdw11;
 
