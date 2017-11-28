@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.8" />
-<title>nvme-wdc-smart-log-add(1)</title>
+<title>nvme-wdc-smart-add-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -732,12 +732,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-wdc-smart-log-add(1) Manual Page
+nvme-wdc-smart-add-log(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-wdc-smart-log-add -
-   Send NVMe WDC smart-log-add Vendor Unique Command, return result
+<p>nvme-wdc-smart-add-log -
+   Send NVMe WDC smart-add-log Vendor Unique Command, return result
 </p>
 </div>
 </div>
@@ -746,7 +746,7 @@ nvme-wdc-smart-log-add(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme wdc smart-log-add</em> &lt;device&gt; [--interval=&lt;NUM&gt;, -i &lt;NUM&gt;] [--output-format=&lt;normal|json&gt; -o &lt;normal|json&gt;]</pre>
+<pre class="content"><em>nvme wdc smart-add-log</em> &lt;device&gt; [--interval=&lt;NUM&gt;, -i &lt;NUM&gt;] [--output-format=&lt;normal|json&gt; -o &lt;normal|json&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -754,7 +754,7 @@ nvme-wdc-smart-log-add(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, send a Vendor Unique WDC smart-log-add command and
+<div class="paragraph"><p>For the NVMe device given, send a Vendor Unique WDC smart-add-log command and
 provide the additional smart log. The --interval option will return performance
 statistics from the specified reporting interval.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
@@ -836,7 +836,117 @@ accumulated statistics.</p></td>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_output_explanation">Output Explanation</h2>
+<h2 id="_ca_log_page_data_output_explanation">CA Log Page Data Output Explanation</h2>
+<div class="sectionbody">
+<div class="tableblock">
+<table rules="all"
+style="margin-left:auto; margin-right:auto;"
+width="100%"
+frame="hsides"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<thead>
+<tr>
+<th align="left" valign="top">Field </th>
+<th align="left" valign="top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>Physical NAND bytes written.</strong></p></td>
+<td align="left" valign="top"><p class="table">The number of bytes written to NAND.  16 bytes - hi/lo</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>Physical NAND bytes read</strong></p></td>
+<td align="left" valign="top"><p class="table">The number of bytes read from NAND.  16 bytes - hi/lo</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>Bad NAND Block Count</strong></p></td>
+<td align="left" valign="top"><p class="table">Raw and normalized count of the number of NAND blocks that have been
+retired after the drives manufacturing tests (i.e. grown back blocks).
+2 bytes normalized, 6 bytes raw count</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>Uncorrectable Read Error Count</strong></p></td>
+<td align="left" valign="top"><p class="table">Total count of NAND reads that were not correctable by read retries, all
+levels of ECC, or XOR (as applicable).  8 bytes</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>Soft ECC Error Count</strong></p></td>
+<td align="left" valign="top"><p class="table">Total count of NAND reads that were not correctable by read retries, or
+first-level ECC.  8 bytes</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>SSD End to End Detection Count</strong></p></td>
+<td align="left" valign="top"><p class="table">A count of the detected errors by the SSD end to end error correction which
+includes DRAM, SRAM, or other storage element ECC/CRC protection mechanism (not
+NAND ECC).  4 bytes</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>SSD End to End Correction Count</strong></p></td>
+<td align="left" valign="top"><p class="table">A count of the corrected errors by the SSD end to end error correction which
+includes DRAM, SRAM, or other storage element ECC/CRC protection mechanism (not
+NAND ECC).  4 bytes</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>System Data % Used</strong></p></td>
+<td align="left" valign="top"><p class="table">A normalized cumulative count of the number of erase cycles per block since
+leaving the factory for the system (FW and metadata) area. Starts at 0 and
+increments. 100 indicates that the estimated endurance has been consumed.</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>User Data Max Erase Count</strong></p></td>
+<td align="left" valign="top"><p class="table">The maximum erase count across all NAND blocks in the drive.  4 bytes</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>User Data Min Erase Count</strong></p></td>
+<td align="left" valign="top"><p class="table">The minimum erase count across all NAND blocks in the drive.  4 bytes</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>Refresh Count</strong></p></td>
+<td align="left" valign="top"><p class="table">A count of the number of blocks that have been re-allocated due to
+background operations only.  8 bytes</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>Program Fail Count</strong></p></td>
+<td align="left" valign="top"><p class="table">Raw and normalized count of total program failures. Normalized count
+starts at 100 and shows the percent of remaining allowable failures.
+2 bytes normalized, 6 bytes raw count</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>User Data Erase Fail Count</strong></p></td>
+<td align="left" valign="top"><p class="table">Raw and normalized count of total erase failures in the user area.
+Normalized count starts at 100 and shows the percent of remaining
+allowable failures.  2 bytes normalized, 6 bytes raw count</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>System Area Erase Fail Count</strong></p></td>
+<td align="left" valign="top"><p class="table">Raw and normalized count of total erase failures in the system area.
+Normalized count starts at 100 and shows the percent of remaining
+allowable failures.  2 bytes normalized, 6 bytes raw count</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>Thermal Throttling Status</strong></p></td>
+<td align="left" valign="top"><p class="table">The current status of thermal throttling (enabled or disabled).
+2 bytes</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>Thermal Throttling Count</strong></p></td>
+<td align="left" valign="top"><p class="table">A count of the number of thermal throttling events.  2 bytes</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><strong>PCIe Correctable Error Count</strong></p></td>
+<td align="left" valign="top"><p class="table">Summation counter of all PCIe correctable errors (Bad TLP, Bad
+DLLP, Receiver error, Replay timeouts, Replay rollovers).  8 bytes</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_c1_log_page_data_output_explanation">C1 Log Page Data Output Explanation</h2>
 <div class="sectionbody">
 <div class="tableblock">
 <table rules="all"
@@ -999,11 +1109,11 @@ a detrimental effect on the overall performance of the device.</p></td>
 <div class="ulist"><ul>
 <li>
 <p>
-Has the program issue WDC smart-log-add Vendor Unique Command with default interval (14) :
+Has the program issue WDC smart-add-log Vendor Unique Command with default interval (14) :
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme wdc smart-log-add /dev/nvme0</code></pre>
+<pre><code># nvme wdc smart-add-log /dev/nvme0</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -1019,7 +1129,7 @@ Has the program issue WDC smart-log-add Vendor Unique Command with default inter
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-03-01 10:14:21 EST
+Last updated 2017-11-28 08:42:45 MST
 </div>
 </div>
 </body>
