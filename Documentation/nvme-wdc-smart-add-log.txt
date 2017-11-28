@@ -1,18 +1,18 @@
-nvme-wdc-smart-log-add(1)
+nvme-wdc-smart-add-log(1)
 =========================
 
 NAME
 ----
-nvme-wdc-smart-log-add - Send NVMe WDC smart-log-add Vendor Unique Command, return result
+nvme-wdc-smart-add-log - Send NVMe WDC smart-add-log Vendor Unique Command, return result
 
 SYNOPSIS
 --------
 [verse]
-'nvme wdc smart-log-add' <device> [--interval=<NUM>, -i <NUM>] [--output-format=<normal|json> -o <normal|json>]
+'nvme wdc smart-add-log' <device> [--interval=<NUM>, -i <NUM>] [--output-format=<normal|json> -o <normal|json>]
 
 DESCRIPTION
 -----------
-For the NVMe device given, send a Vendor Unique WDC smart-log-add command and
+For the NVMe device given, send a Vendor Unique WDC smart-add-log command and
 provide the additional smart log. The --interval option will return performance
 statistics from the specified reporting interval.
 
@@ -59,8 +59,86 @@ accumulated statistics.
 |The statistical set accumulated during the entire lifetime of the device.
 |===
 
-Output Explanation
-------------------
+CA Log Page Data Output Explanation
+-----------------------------------
+[cols="2*", frame="topbot", align="center", options="header"]
+|===
+|Field |Description
+
+|*Physical NAND bytes written.*
+|The number of bytes written to NAND.  16 bytes - hi/lo
+
+|*Physical NAND bytes read*
+|The number of bytes read from NAND.  16 bytes - hi/lo
+
+|*Bad NAND Block Count*
+|Raw and normalized count of the number of NAND blocks that have been
+retired after the drives manufacturing tests (i.e. grown back blocks).
+2 bytes normalized, 6 bytes raw count
+
+|*Uncorrectable Read Error Count*
+|Total count of NAND reads that were not correctable by read retries, all
+levels of ECC, or XOR (as applicable).  8 bytes
+
+|*Soft ECC Error Count*
+|Total count of NAND reads that were not correctable by read retries, or
+first-level ECC.  8 bytes
+
+|*SSD End to End Detection Count*
+|A count of the detected errors by the SSD end to end error correction which
+includes DRAM, SRAM, or other storage element ECC/CRC protection mechanism (not
+NAND ECC).  4 bytes
+
+|*SSD End to End Correction Count*
+|A count of the corrected errors by the SSD end to end error correction which
+includes DRAM, SRAM, or other storage element ECC/CRC protection mechanism (not
+NAND ECC).  4 bytes
+
+|*System Data % Used*
+|A normalized cumulative count of the number of erase cycles per block since
+leaving the factory for the system (FW and metadata) area. Starts at 0 and
+increments. 100 indicates that the estimated endurance has been consumed.
+
+|*User Data Max Erase Count*
+|The maximum erase count across all NAND blocks in the drive.  4 bytes
+
+|*User Data Min Erase Count*
+|The minimum erase count across all NAND blocks in the drive.  4 bytes
+
+|*Refresh Count*
+|A count of the number of blocks that have been re-allocated due to
+background operations only.  8 bytes
+
+|*Program Fail Count*
+|Raw and normalized count of total program failures. Normalized count
+starts at 100 and shows the percent of remaining allowable failures.
+2 bytes normalized, 6 bytes raw count
+
+|*User Data Erase Fail Count*
+|Raw and normalized count of total erase failures in the user area.
+Normalized count starts at 100 and shows the percent of remaining
+allowable failures.  2 bytes normalized, 6 bytes raw count
+
+|*System Area Erase Fail Count*
+|Raw and normalized count of total erase failures in the system area.
+Normalized count starts at 100 and shows the percent of remaining
+allowable failures.  2 bytes normalized, 6 bytes raw count
+
+|*Thermal Throttling Status*
+|The current status of thermal throttling (enabled or disabled).
+2 bytes
+
+|*Thermal Throttling Count*
+|A count of the number of thermal throttling events.  2 bytes
+
+|*PCIe Correctable Error Count*
+|Summation counter of all PCIe correctable errors (Bad TLP, Bad
+DLLP, Receiver error, Replay timeouts, Replay rollovers).  8 bytes
+|===
+
+
+C1 Log Page Data Output Explanation
+-----------------------------------
 [cols="2*", frame="topbot", align="center", options="header"]
 |===
 |Field |Description
@@ -179,10 +257,10 @@ a detrimental effect on the overall performance of the device.
 
 EXAMPLES
 --------
-* Has the program issue WDC smart-log-add Vendor Unique Command with default interval (14) :
+* Has the program issue WDC smart-add-log Vendor Unique Command with default interval (14) :
 +
 ------------
-# nvme wdc smart-log-add /dev/nvme0
+# nvme wdc smart-add-log /dev/nvme0
 ------------
 
 NVME
