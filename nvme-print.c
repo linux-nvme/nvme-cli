@@ -860,6 +860,8 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 	printf("sanicap : %#x\n", le32_to_cpu(ctrl->sanicap));
 	if (human)
 		show_nvme_id_ctrl_sanicap(ctrl->sanicap);
+	printf("hmminds : %d\n", le32_to_cpu(ctrl->hmminds));
+	printf("hmmaxd  : %d\n", le16_to_cpu(ctrl->hmmaxd));
 	printf("sqes    : %#x\n", ctrl->sqes);
 	if (human)
 		show_nvme_id_ctrl_sqes(ctrl->sqes);
