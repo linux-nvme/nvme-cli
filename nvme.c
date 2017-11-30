@@ -185,7 +185,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	struct config cfg = {
-		.namespace_id = 0xffffffff,
+		.namespace_id = NVME_NSID_ALL,
 		.output_format = "normal",
 	};
 
@@ -244,7 +244,7 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	if (fd < 0)
 		return fd;
 
-	err = nvme_get_log(fd, 0xffffffff, 5, 4096, &effects);
+	err = nvme_get_log(fd, NVME_NSID_ALL, 5, 4096, &effects);
 	if (!err)
 		show_effects_log(&effects);
 	else if (err > 0)
@@ -274,7 +274,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	struct config cfg = {
-		.namespace_id = 0xffffffff,
+		.namespace_id = NVME_NSID_ALL,
 		.log_entries  = 64,
 		.output_format = "normal",
 	};
@@ -408,7 +408,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	};
 
 	struct config cfg = {
-		.namespace_id = 0xffffffff,
+		.namespace_id = NVME_NSID_ALL,
 		.log_id       = 0,
 		.log_len      = 0,
 	};
@@ -1720,7 +1720,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	};
 
 	struct config cfg = {
-		.namespace_id = 0xffffffff,
+		.namespace_id = NVME_NSID_ALL,
 		.timeout      = 600000,
 		.lbaf         = 0xff,
 		.ses          = 0,
@@ -1746,7 +1746,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 
 	if (S_ISBLK(nvme_stat.st_mode))
 		cfg.namespace_id = get_nsid(fd);
-	if (cfg.namespace_id != 0xffffffff) {
+	if (cfg.namespace_id != NVME_NSID_ALL) {
 		err = nvme_identify_ns(fd, cfg.namespace_id, 0, &ns);
 		if (err) {
 			if (err < 0)
@@ -2360,7 +2360,7 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 	};
 
 	struct config cfg = {
-		.namespace_id = 0xffffffff,
+		.namespace_id = NVME_NSID_ALL,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {

@@ -241,7 +241,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	};
 
 	struct config cfg = {
-		.namespace_id = 0xffffffff,
+		.namespace_id = NVME_NSID_ALL,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -290,7 +290,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
-	err = nvme_get_log(fd, 0xffffffff, 0xdd, sizeof(log), log);
+	err = nvme_get_log(fd, NVME_NSID_ALL, 0xdd, sizeof(log), log);
 	if (!err) {
 		if (!cfg.raw_binary)
 			printf("Intel Marketing Name Log:\n%s\n", log);
@@ -350,7 +350,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
-	err = nvme_get_log(fd, 0xffffffff, 0xc5, sizeof(stats), &stats);
+	err = nvme_get_log(fd, NVME_NSID_ALL, 0xc5, sizeof(stats), &stats);
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_temp_stats(&stats);
@@ -416,7 +416,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
-	err = nvme_get_log(fd, 0xffffffff, cfg.write ? 0xc2 : 0xc1, sizeof(stats), &stats);
+	err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1, sizeof(stats), &stats);
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_lat_stats(&stats, cfg.write);

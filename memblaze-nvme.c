@@ -212,7 +212,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	};
 
 	struct config cfg = {
-		.namespace_id = 0xffffffff,
+		.namespace_id = NVME_NSID_ALL,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
