@@ -650,7 +650,7 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 	char *core = "Select which region log should come from. -1 for all";
 	char *nlognum = "Select which nlog to read. -1 for all nlogs";
 	char *file = "Output file; defaults to device name provided";
-	char *verb = "To print out verbose nlog info";
+	char *verbose = "To print out verbose nlog info";
 	const char *namespace_id = "Namespace to get logs from";
 
 	struct config {
@@ -671,11 +671,11 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"log",          'l', "NUM",  CFG_POSITIVE, &cfg.log,          required_argument, log},
-		{"region",       'r', "NUM",  CFG_INT, &cfg.core,         required_argument, core},
-		{"nlognum",      'm', "NUM",  CFG_INT, &cfg.lnum,         required_argument, nlognum},
+		{"region",       'r', "NUM",  CFG_INT,      &cfg.core,         required_argument, core},
+		{"nlognum",      'm', "NUM",  CFG_INT,      &cfg.lnum,         required_argument, nlognum},
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
 		{"output-file",  'o', "FILE", CFG_STRING,   &cfg.file,         required_argument, file},
-		{"verbose_nlog", 'v', ""    , CFG_NONE,     &cfg.verbose,     no_argument, verb},
+		{"verbose_nlog", 'v', ""    , CFG_NONE,     &cfg.verbose,      no_argument,       verbose},
 		{NULL}
 	};
 
