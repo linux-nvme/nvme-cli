@@ -9,6 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme intel internal-log ' <device> [--log=<NUM>, -l <NUM>]
+		[--region=<NUM>, r <NUM>]
+		[--nlognum=<NUM>, m <NUM>]
 		[--namespace-id=<NUM>, -n <NUM>]
 		[--output-file=<FILE>, -o <FILE>]
 
@@ -40,6 +42,16 @@ OPTIONS
 -o <FILE>::
 --output-file=<FILE>::
 	Output file; defaults to device name provided
+
+-r <NUM>::
+--region=<NUM>::
+	Select which core region to retrieve the log from. -1 for all
+	available, if supported by the device.
+
+-m <NUM>::
+--nlognum=<NUM>::
+	When used with 'nlog', this specifies which nlog to read. -1
+	for all, if supported by the device.
 
 
 EXAMPLES
