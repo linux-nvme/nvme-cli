@@ -1238,8 +1238,8 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	const char *raw_binary = "show infos in binary format";
 	const char *namespace_id = "identifier of desired namespace";
 	const char *feature_id = "hexadecimal feature name";
-	const char *sel = "[0-3]: curr./default/saved/supp.";
-	const char *data_len = "buffer len (if) data is returned";
+	const char *sel = "[0-3]: current/default/saved/supported";
+	const char *data_len = "buffer len if data is returned through host memory buffer";
 	const char *cdw11 = "dword 11 for interrupt vector config";
 	const char *human_readable = "show infos in readable format";
 	int err, fd;
