@@ -2670,6 +2670,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
 	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
 	__u16 control = 0;
+	__u32 dsmgmt = 0;
 	int phys_sector_size = 0;
 	long long buffer_size = 0;
 
@@ -2688,6 +2689,9 @@ static int submit_io(int opcode, char *command, const char *desc,
 	const char *force = "force device to commit data before command completes";
 	const char *show = "show command before sending";
 	const char *dry = "show command instead of sending";
+	const char *dtype = "directive type (for write-only)";
+	const char *dspec = "directive specific (for write-only)";
+	const char *dsm = "dataset management attributes (lower 16 bits)";
 
 	struct config {
 		__u64 start_block;
@@ -2698,6 +2702,9 @@ static int submit_io(int opcode, char *command, const char *desc,
 		char  *data;
 		char  *metadata;
 		__u8  prinfo;
+		__u8 dtype;
+		__u16 dspec;
+		__u16 dsmgmt;
 		__u16 app_tag_mask;
 		__u16 app_tag;
 		int   limited_retry;
@@ -2733,6 +2740,9 @@ static int submit_io(int opcode, char *command, const char *desc,
 		{"app-tag",           'a', "NUM",  CFG_SHORT,       &cfg.app_tag,           required_argument, app_tag},
 		{"limited-retry",     'l', "",     CFG_NONE,        &cfg.limited_retry,     no_argument,       limited_retry},
 		{"force-unit-access", 'f', "",     CFG_NONE,        &cfg.force_unit_access, no_argument,       force},
+		{"dir-type",          'T', "NUM",  CFG_BYTE,        &cfg.dtype,             required_argument, dtype},
+		{"dir-spec",          'S', "NUM",  CFG_SHORT,       &cfg.dspec,             required_argument, dspec},
+		{"dsm",               'D', "NUM",  CFG_SHORT,       &cfg.dsmgmt,            required_argument, dsm},
 		{"show-command",      'v', "",     CFG_NONE,        &cfg.show,              no_argument,       show},
 		{"dry-run",           'w', "",     CFG_NONE,        &cfg.dry_run,           no_argument,       dry},
 		{"latency",           't', "",     CFG_NONE,        &cfg.latency,           no_argument,       latency},
@@ -2746,11 +2756,23 @@ static int submit_io(int opcode, char *command, const char *desc,
 	dfd = mfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
 	if (cfg.prinfo > 0xf)
 		return EINVAL;
+
+	dsmgmt = cfg.dsmgmt;
 	control |= (cfg.prinfo << 10);
 	if (cfg.limited_retry)
 		control |= NVME_RW_LR;
 	if (cfg.force_unit_access)
 		control |= NVME_RW_FUA;
+	if (cfg.dtype) {
+		if (cfg.dtype > 0xf) {
+			fprintf(stderr, "Invalid directive type, %x\n",
+				cfg.dtype);
+			return EINVAL;
+		}
+		control |= cfg.dtype << 4;
+		dsmgmt |= ((__u32)cfg.dspec) << 16;
+	}
+	
 	if (strlen(cfg.data)){
 		dfd = open(cfg.data, flags, mode);
 		if (dfd < 0) {
@@ -2820,7 +2842,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		printf("metadata     : %"PRIx64"\n", (uint64_t)(uintptr_t)mbuffer);
 		printf("addr         : %"PRIx64"\n", (uint64_t)(uintptr_t)buffer);
 		printf("sbla         : %"PRIx64"\n", (uint64_t)cfg.start_block);
-		printf("dsmgmt       : %08x\n", 0);
+		printf("dsmgmt       : %08x\n", dsmgmt);
 		printf("reftag       : %08x\n", cfg.ref_tag);
 		printf("apptag       : %04x\n", cfg.app_tag);
 		printf("appmask      : %04x\n", cfg.app_tag_mask);
@@ -2829,7 +2851,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	}
 
 	gettimeofday(&start_time, NULL);
-	err = nvme_io(fd, opcode, cfg.start_block, cfg.block_count, control, 0,
+	err = nvme_io(fd, opcode, cfg.start_block, cfg.block_count, control, dsmgmt,
 			cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask, buffer, mbuffer);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
