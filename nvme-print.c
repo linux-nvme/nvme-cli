@@ -365,17 +365,25 @@ static void show_nvme_id_ctrl_nvscc(__u8 nvscc)
 static void show_nvme_id_ctrl_sgls(__le32 ctrl_sgls)
 {
 	__u32 sgls = le32_to_cpu(ctrl_sgls);
-	__u32 rsvd0 = (sgls & 0xFFF80000) >> 19;
+	__u32 rsvd0 = (sgls & 0xFF700000) >> 21;
+	__u32 aofdsl = (sgls & 0x100000) >> 20;
+	__u32 mpcsd = (sgls & 0x80000) >> 19;
 	__u32 sglltb = (sgls & 0x40000) >> 18;
 	__u32 bacmdb = (sgls & 0x20000) >> 17;
 	__u32 bbs = (sgls & 0x10000) >> 16;
 	__u32 rsvd1 = (sgls & 0xFFF8) >> 3;
 	__u32 key = (sgls & 0x4) >> 2;
-	__u32 rsvd2 = (sgls & 0x2) >> 1;
-	__u32 sglsp = sgls & 0x1;
+	__u32 sglsp = sgls & 0x3;
 
 	if (rsvd0)
-		printf(" [31:19]: %#x\tReserved\n", rsvd0);
+		printf(" [31:21]: %#x\tReserved\n", rsvd0);
+	if (sglsp || (!sglsp && aofdsl))
+		printf(" [20:20]: %#x\tAddress Offsets %sSupported\n",
+			aofdsl, aofdsl ? "" : "Not ");
+	if (sglsp || (!sglsp && mpcsd))
+		printf(" [19:19]: %#x\tMetadata Pointer Containing "
+			"SGL Descriptor is %sSupported\n",
+			mpcsd, mpcsd ? "" : "Not ");
 	if (sglsp || (!sglsp && sglltb))
 		printf(" [18:18]: %#x\tSGL Length Larger than Buffer %sSupported\n",
 			sglltb, sglltb ? "" : "Not ");
@@ -388,12 +396,18 @@ static void show_nvme_id_ctrl_sgls(__le32 ctrl_sgls)
 	if (rsvd1)
 		printf(" [15:3] : %#x\tReserved\n", rsvd1);
 	if (sglsp || (!sglsp && key))
-		printf(" [16:16]: %#x\tKeyed SGL Data Block descriptor %sSupported\n",
+		printf("  [2:2] : %#x\tKeyed SGL Data Block descriptor %sSupported\n",
 			key, key ? "" : "Not ");
-	if (rsvd2)
-		printf(" [1:1] : %#x\tReserved\n", rsvd2);
-	printf("  [0:0] : %#x\tScatter-Gather Lists %sSupported\n",
-		sglsp, sglsp ? "" : "Not ");
+	if (sglsp == 0x3)
+		printf("  [1:0] : %#x\tReserved\n", sglsp);
+	else if (sglsp == 0x2)
+		printf("  [1:0] : %#x\tScatter-Gather Lists Supported."
+			" Dword alignment required.\n", sglsp);
+	else if (sglsp == 0x1)
+		printf("  [1:0] : %#x\tScatter-Gather Lists Supported."
+			" No Dword alignment required.\n", sglsp);
+	else
+		printf(" [1:0]  : %#x\tScatter-Gather Lists Not Supported\n", sglsp);
 	printf("\n");
 }
 
@@ -612,7 +626,7 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 				i == (ns->flbas & 0xf) ? "(in use)" : "");
 	}
 	if (vs) {
-		printf("vs[]:");
+		printf("vs[]:\n");
 		d(ns->vs, sizeof(ns->vs), 16, 1);
 	}
 }
