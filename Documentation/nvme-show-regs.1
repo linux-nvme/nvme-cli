@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-id-ns
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 12/10/2017
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 12/13/2017
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "12/10/2017" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "12/13/2017" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-show-regs \- Reads and shows the defined NVMe controller registers\&.
+nvme-show-regs \- Reads and shows the defined NVMe controller registers for NVMe over PCIe or the controller properties for NVMe over Fabrics\&.
 .SH "SYNOPSIS"
 .sp
 .nf
@@ -36,14 +36,14 @@ nvme-show-regs \- Reads and shows the defined NVMe controller registers\&.
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, sends an identify namespace command and provides the result and returned structure\&.
+For the NVMe over PCIe device given, sends an identify namespace command and provides the result and returned structure\&. For the NVMe over Fabrics device given, sends a fabric command and provides the result and returned structure\&.
 .sp
-The <device> parameter is mandatory and must be the nvme admin character device (ex: /dev/nvme0)\&. The program uses knowledge of the sysfs layout to map the device to the pci resource stored there and mmaps the memory to get access to the registers\&.
+The <device> parameter is mandatory and must be the nvme admin character device (ex: /dev/nvme0)\&. For NVMe over PCIe, the program uses knowledge of the sysfs layout to map the device to the pci resource stored there and mmaps the memory to get access to the registers\&. For NVMe over Fabrics, the programs sends a fabric command to get the properties of the target NVMe controller\&. Only the supported properties are displayed\&.
 .SH "OPTIONS"
 .PP
 \-H, \-\-human\-readable
 .RS 4
-Display registers in human readable format\&.
+Display registers or supported properties in human readable format\&.
 .RE
 .SH "EXAMPLES"
 .sp
@@ -55,7 +55,7 @@ Display registers in human readable format\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-Show the nvme pci controller registers in a binary format:
+Show the NVMe over PCIe controller registers or the NVMe over Fabric controller properties in a binary format:
 .sp
 .if n \{\
 .RS 4
@@ -76,7 +76,7 @@ Show the nvme pci controller registers in a binary format:
 .sp -1
 .IP \(bu 2.3
 .\}
-Show the nvme pci controller registers in a human readable format:
+Show the NVMe over PCIe controller registers or the NVMe over Fabric controller properties in a human readable format:
 .sp
 .if n \{\
 .RS 4

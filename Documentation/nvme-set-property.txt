@@ -1,5 +1,5 @@
 nvme-set-property(1)
-=============
+====================
 
 NAME
 ----
@@ -9,25 +9,27 @@ for NVMe ove Fabric
 SYNOPSIS
 --------
 [verse]
-'nvme set-property' <device> [--offset=<offset> | -o <offset>] [--value=<val> | -v <val>]
+'nvme set-property' <device> [--offset=<offset> | -o <offset>]
+				[--value=<val> | -v <val>]
 
 
 DESCRIPTION
 -----------
-Writes and shows the defined NVMe controller property  for NVMe ove Fabric
+Writes and shows the defined NVMe controller property for NVMe ove Fabric.
 
 OPTIONS
 -------
 -o::
 --offset::
-       The offset of the property
+       The offset of the property.
 
 -v::
 --value:
-	The value of the property to be set
+	The value of the property to be set.
 
 EXAMPLES
 --------
+No examples (yet).
 
 NVME
 ----
