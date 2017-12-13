@@ -2093,7 +2093,7 @@ static inline __u64 mmio_read64(void *addr)
 	return le32_to_cpu(*p) | ((uint64_t)le32_to_cpu(*(p + 1)) << 32);
 }
 
-void show_ctrl_registers(void *bar, unsigned int mode)
+void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 {
 	uint64_t cap, asq, acq;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc;
@@ -2114,55 +2114,70 @@ void show_ctrl_registers(void *bar, unsigned int mode)
 	cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
 
 	if (human) {
-		printf("cap     : %"PRIx64"\n", cap);
-		show_registers_cap((struct nvme_bar_cap *)&cap);
+		if (cap != 0xffffffff) {
+			printf("cap     : %"PRIx64"\n", cap);
+			show_registers_cap((struct nvme_bar_cap *)&cap);
+		}
+		if (vs != 0xffffffff) {
+			printf("version : %x\n", vs);
+			show_registers_version(vs);
+		}
+		if (cc != 0xffffffff) {
+			printf("cc      : %x\n", cc);
+			show_registers_cc(cc);
+		}
+		if (csts != 0xffffffff) {
+			printf("csts    : %x\n", csts);
+			show_registers_csts(csts);
+		}
+		if (nssr != 0xffffffff) {
+			printf("nssr    : %x\n", nssr);
+			printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n", nssr);
+		}
+		if (!fabrics) {
+			printf("intms   : %x\n", intms);
+			printf("\tInterrupt Vector Mask Set (IVMS): %x\n\n",
+					intms);
 
-		printf("version : %x\n", vs);
-		show_registers_version(vs);
+			printf("intmc   : %x\n", intmc);
+			printf("\tInterrupt Vector Mask Clear (IVMC): %x\n\n",
+					intmc);
+			printf("aqa     : %x\n", aqa);
+			show_registers_aqa(aqa);
 
-		printf("intms   : %x\n", intms);
-		printf("\tInterrupt Vector Mask Set (IVMS): %x\n\n", intms);
+			printf("asq     : %"PRIx64"\n", asq);
+			printf("\tAdmin Submission Queue Base (ASQB): %"PRIx64"\n\n",
+					asq);
 
-		printf("intmc   : %x\n", intmc);
-		printf("\tInterrupt Vector Mask Clear (IVMC): %x\n\n", intmc);
+			printf("acq     : %"PRIx64"\n", acq);
+			printf("\tAdmin Completion Queue Base (ACQB): %"PRIx64"\n\n",
+					acq);
 
-		printf("cc      : %x\n", cc);
-		show_registers_cc(cc);
+			printf("cmbloc  : %x\n", cmbloc);
+			show_registers_cmbloc(cmbloc, cmbsz);
 
-		printf("csts    : %x\n", csts);
-		show_registers_csts(csts);
-
-		printf("nssr    : %x\n", nssr);
-		printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n", nssr);
-
-		printf("aqa     : %x\n", aqa);
-		show_registers_aqa(aqa);
-
-		printf("asq     : %"PRIx64"\n", asq);
-		printf("\tAdmin Submission Queue Base (ASQB): %"PRIx64"\n\n",
-				asq);
-
-		printf("acq     : %"PRIx64"\n", acq);
-		printf("\tAdmin Completion Queue Base (ACQB): %"PRIx64"\n\n",
-				acq);
-
-		printf("cmbloc  : %x\n", cmbloc);
-		show_registers_cmbloc(cmbloc, cmbsz);
-
-		printf("cmbsz   : %x\n", cmbsz);
-		show_registers_cmbsz(cmbsz);
+			printf("cmbsz   : %x\n", cmbsz);
+			show_registers_cmbsz(cmbsz);
+		}
 	} else {
-		printf("cap     : %"PRIx64"\n", cap);
-		printf("version : %x\n", vs);
-		printf("intms   : %x\n", intms);
-		printf("intmc   : %x\n", intmc);
-		printf("cc      : %x\n", cc);
-		printf("csts    : %x\n", csts);
-		printf("nssr    : %x\n", nssr);
-		printf("aqa     : %x\n", aqa);
-		printf("asq     : %"PRIx64"\n", asq);
-		printf("acq     : %"PRIx64"\n", acq);
-		printf("cmbloc  : %x\n", cmbloc);
-		printf("cmbsz   : %x\n", cmbsz);
+		if (cap != 0xffffffff)
+			printf("cap     : %"PRIx64"\n", cap);
+		if (vs != 0xffffffff)
+			printf("version : %x\n", vs);
+		if (cc != 0xffffffff)
+			printf("cc      : %x\n", cc);
+		if (csts != 0xffffffff)
+			printf("csts    : %x\n", csts);
+		if (nssr != 0xffffffff)
+			printf("nssr    : %x\n", nssr);
+		if (!fabrics) {
+			printf("intms   : %x\n", intms);
+			printf("intmc   : %x\n", intmc);
+			printf("aqa     : %x\n", aqa);
+			printf("asq     : %"PRIx64"\n", asq);
+			printf("acq     : %"PRIx64"\n", acq);
+			printf("cmbloc  : %x\n", cmbloc);
+			printf("cmbsz   : %x\n", cmbsz);
+		}
 	}
 }

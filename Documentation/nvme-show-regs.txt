@@ -3,7 +3,8 @@ nvme-id-ns(1)
 
 NAME
 ----
-nvme-show-regs - Reads and shows the defined NVMe controller registers.
+nvme-show-regs - Reads and shows the defined NVMe controller registers for
+NVMe over PCIe or the controller properties for NVMe over Fabrics.
 
 SYNOPSIS
 --------
@@ -12,29 +13,35 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-For the NVMe device given, sends an identify namespace command and
+For the NVMe over PCIe device given, sends an identify namespace command and
 provides the result and returned structure.
+For the NVMe over Fabrics device given, sends a fabric command and provides
+the result and returned structure.
 
 The <device> parameter is mandatory and must be the nvme admin character
-device (ex: /dev/nvme0). The program uses knowledge of the sysfs layout
-to map the device to the pci resource stored there and mmaps the memory
-to get access to the registers.
+device (ex: /dev/nvme0). For NVMe over PCIe, the program uses knowledge of the
+sysfs layout to map the device to the pci resource stored there and mmaps the
+memory to get access to the registers. For NVMe over Fabrics, the programs
+sends a fabric command to get the properties of the target NVMe controller.
+Only the supported properties are displayed.
 
 OPTIONS
 -------
 -H::
 --human-readable::
-       Display registers in human readable format. 
+       Display registers or supported properties in human readable format.
 
 
 EXAMPLES
 --------
-* Show the nvme pci controller registers in a binary format:
+* Show the NVMe over PCIe controller registers or the NVMe over Fabric controller
+properties in a binary format:
 +
 ------------
 # nvme show-regs /dev/nvme0
 ------------
-* Show the nvme pci controller registers in a human readable format:
+* Show the NVMe over PCIe controller registers or the NVMe over Fabric controller
+properties in a human readable format:
 +
 ------------
 # nvme show-regs /dev/nvme0 -H

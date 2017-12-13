@@ -802,23 +802,23 @@ static char *nvme_char_from_block(char *block)
 
 static void *get_registers(void)
 {
-	int pci_fd;
+	int fd;
 	char *base, path[512];
 	void *membase;
 
 	base = nvme_char_from_block((char *)devicename);
 	sprintf(path, "/sys/class/nvme/%s/device/resource0", base);
-	pci_fd = open(path, O_RDONLY);
-	if (pci_fd < 0) {
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
 		sprintf(path, "/sys/class/misc/%s/device/resource0", base);
-		pci_fd = open(path, O_RDONLY);
+		fd = open(path, O_RDONLY);
 	}
-	if (pci_fd < 0) {
+	if (fd < 0) {
 		fprintf(stderr, "%s did not find a pci resource\n", base);
 		return NULL;
 	}
 
-	membase = mmap(NULL, getpagesize(), PROT_READ, MAP_SHARED, pci_fd, 0);
+	membase = mmap(NULL, getpagesize(), PROT_READ, MAP_SHARED, fd, 0);
 	if (membase == MAP_FAILED) {
 		fprintf(stderr, "%s failed to map\n", base);
 		return NULL;
@@ -2003,7 +2003,8 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 					"in binary or human-readable format";
 	const char *human_readable = "show info in readable format";
 	void *bar;
-	int fd;
+	int fd, err;
+	bool fabrics = true;
 
 	struct config {
 		int human_readable;
@@ -2022,11 +2023,17 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	if (fd < 0)
 		return fd;
 
-	bar = get_registers();
+	err = nvme_get_properties(fd, &bar);
+	if (err) {
+		bar = get_registers();
+		fabrics = false;
+	}
 	if (!bar)
 		return ENODEV;
+	show_ctrl_registers(bar, cfg.human_readable ? HUMAN : 0, fabrics);
 
-	show_ctrl_registers(bar, cfg.human_readable ? HUMAN : 0);
+	if (fabrics)
+		free(bar);
 	return 0;
 }
 

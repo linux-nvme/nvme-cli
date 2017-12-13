@@ -447,6 +447,85 @@ int nvme_set_feature(int fd, __u32 nsid, __u8 fid, __u32 value, bool save,
 			    data_len, data, result);
 }
 
+int nvme_property(int fd, __u8 fctype, __le32 off, __le64 *value, __u8 attrib)
+{
+	int err;
+	struct nvmf_property_get_command *prop_get_cmd;
+	struct nvmf_property_set_command *prop_set_cmd;
+	struct nvme_admin_cmd cmd = {
+		.opcode		= nvme_fabrics_command,
+	};
+
+	if (!value) {
+		errno = EINVAL;
+		return -errno;
+	}
+	if (fctype == nvme_fabrics_type_property_get){
+		prop_get_cmd = (struct nvmf_property_get_command *)&cmd;
+		prop_get_cmd->fctype = nvme_fabrics_type_property_get;
+		prop_get_cmd->offset = off;
+		prop_get_cmd->attrib = attrib;
+	}
+	else if(fctype == nvme_fabrics_type_property_set) {
+		prop_set_cmd = (struct nvmf_property_set_command *)&cmd;
+		prop_set_cmd->fctype = nvme_fabrics_type_property_set;
+		prop_set_cmd->offset = off;
+		prop_set_cmd->attrib = attrib;
+		prop_set_cmd->value = *value;
+	}
+	else {
+		errno = EINVAL;
+		return -errno;
+	}
+
+	err = nvme_submit_admin_passthru(fd, &cmd);
+	if (!err && fctype == nvme_fabrics_type_property_get) {
+		*value = cpu_to_le64(cmd.result);
+	}
+
+	return err;
+}
+
+int nvme_get_properties(int fd, void **pbar)
+{
+	__le64 value64;
+	__le32 off;
+	int err, ret = -EINVAL;
+	bool is64bit;
+	int size = getpagesize();
+
+	*pbar = malloc(size);
+	if (!*pbar)
+		return ret;
+
+	memset(*pbar, 0xff, size);
+	for (off = NVME_REG_CAP; off <= NVME_REG_CMBSZ; off += 4) {
+		switch (off) {
+		case NVME_REG_CAP:
+		case NVME_REG_ASQ:
+		case NVME_REG_ACQ:
+			is64bit = true;
+			break;
+		default:
+			is64bit = false;
+		}
+		err = nvme_property(fd, nvme_fabrics_type_property_get,
+				off, &value64, is64bit ? 1: 0);
+		if (err) {
+			if (is64bit)
+				off += 4;
+			continue;
+		}
+		ret = 0;
+		if (is64bit)
+			*(uint64_t *)(*pbar + off) = le64_to_cpu(value64);
+		else
+			*(uint32_t *)(*pbar + off) = le32_to_cpu(value64);
+	}
+
+	return ret;
+}
+
 int nvme_get_feature(int fd, __u32 nsid, __u8 fid, __u8 sel, __u32 cdw11,
 		     __u32 data_len, void *data, __u32 *result)
 {
