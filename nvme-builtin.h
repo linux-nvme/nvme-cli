@@ -8,6 +8,7 @@
 
 COMMAND_LIST(
 	ENTRY("list", "List all NVMe devices and namespaces on machine", list)
+	ENTRY("list-subsys", "List nvme subsystems", list_subsys)
 	ENTRY("id-ctrl", "Send NVMe Identify Controller", id_ctrl)
 	ENTRY("id-ns", "Send NVMe Identify Namespace, display structure", id_ns)
 	ENTRY("list-ns", "Send NVMe Identify List, display structure", list_ns)
@@ -57,7 +58,6 @@ COMMAND_LIST(
 	ENTRY("gen-hostnqn", "Generate NVMeoF host NQN", gen_hostnqn_cmd)
 	ENTRY("dir-receive", "Submit a Directive Receive command, return results", dir_receive)
 	ENTRY("dir-send", "Submit a Directive Send command, return results", dir_send)
-	ENTRY("list-subsys", "List nvme subsystems", list_subsys)
 );
 
 #endif
