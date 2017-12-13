@@ -2037,6 +2037,58 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	return 0;
 }
 
+static int set_property(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Writes and shows the defined NVMe controller property "\
+			   "for NVMe ove Fabric";
+	const char *offset = "the offset of the property";
+	const char *value = "the value of the property to be set";
+	int fd, err;
+
+	struct config {
+		int offset;
+		int value;
+	};
+
+	struct config cfg = {
+		.offset = -1,
+		.value = -1,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"offset", 'o', "NUM", CFG_POSITIVE, &cfg.offset, required_argument, offset},
+		{"value", 'v', "NUM", CFG_POSITIVE, &cfg.value, required_argument, value},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	if (cfg.offset == -1) {
+		fprintf(stderr, "offset required param");
+		return EINVAL;
+	}
+	if (cfg.value == -1) {
+		fprintf(stderr, "value required param");
+		return EINVAL;
+	}
+
+	err = nvme_set_property(fd, cfg.offset, cfg.value);
+	if (err < 0) {
+		perror("set-property");
+		return errno;
+	} else if (!err) {
+		printf("set-property: %02x (%s), value: %#08x\n", cfg.offset,
+				nvme_register_to_string(cfg.offset), cfg.value);
+	} else if (err > 0) {
+		fprintf(stderr, "NVMe Status: %s(%x)\n",
+				nvme_status_to_string(err), err);
+	}
+
+	return err;
+}
+
 static int format(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Re-format a specified namespace on the "\

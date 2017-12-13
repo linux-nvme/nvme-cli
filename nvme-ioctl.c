@@ -526,6 +526,26 @@ int nvme_get_properties(int fd, void **pbar)
 	return ret;
 }
 
+int nvme_set_property(int fd, int offset, int value)
+{
+	__le64 val = cpu_to_le64(value);
+	__le32 off = cpu_to_le32(offset);
+	bool is64bit;
+
+	switch (off) {
+	case NVME_REG_CAP:
+	case NVME_REG_ASQ:
+	case NVME_REG_ACQ:
+		is64bit = true;
+		break;
+	default:
+		is64bit = false;
+	}
+
+	return nvme_property(fd, nvme_fabrics_type_property_set,
+			off, &val, is64bit ? 1: 0);
+}
+
 int nvme_get_feature(int fd, __u32 nsid, __u8 fid, __u8 sel, __u32 cdw11,
 		     __u32 data_len, void *data, __u32 *result)
 {

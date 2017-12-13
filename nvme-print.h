@@ -34,6 +34,7 @@ void nvme_directive_show_fields(__u8 dtype, __u8 doper, unsigned int result, uns
 char *nvme_status_to_string(__u32 status);
 char *nvme_select_to_string(int sel);
 char *nvme_feature_to_string(int feature);
+char *nvme_register_to_string(int reg);
 
 void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vendor_show)(__u8 *vs, struct json_object *root));
 void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int flags);

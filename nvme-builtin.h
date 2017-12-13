@@ -25,6 +25,7 @@ COMMAND_LIST(
 	ENTRY("effects-log", "Retrieve Command Effects Log, show it", get_effects_log)
 	ENTRY("get-feature", "Get feature and show the resulting value", get_feature)
 	ENTRY("set-feature", "Set a feature and show the resulting value", set_feature)
+	ENTRY("set-property", "Set a property and show the resulting value", set_property)
 	ENTRY("format", "Format namespace with new block format", format)
 	ENTRY("fw-activate", "Activate new firmware slot", fw_activate)
 	ENTRY("fw-download", "Download new firmware", fw_download)

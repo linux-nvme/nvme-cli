@@ -1125,6 +1125,25 @@ char *nvme_feature_to_string(int feature)
 	}
 }
 
+char *nvme_register_to_string(int reg)
+{
+	switch (reg) {
+	case NVME_REG_CAP:	return "Controller Capabilities";
+	case NVME_REG_VS:	return "Version";
+	case NVME_REG_INTMS:	return "Interrupt Vector Mask Set";
+	case NVME_REG_INTMC:	return "Interrupt Vector Mask Clear";
+	case NVME_REG_CC:	return "Controller Configuration";
+	case NVME_REG_CSTS:	return "Controller Status";
+	case NVME_REG_NSSR:	return "NVM Subsystem Reset";
+	case NVME_REG_AQA:	return "Admin Queue Attributes";
+	case NVME_REG_ASQ:	return "Admin Submission Queue Base Address";
+	case NVME_REG_ACQ:	return "Admin Completion Queue Base Address";
+	case NVME_REG_CMBLOC:	return "Controller Memory Buffer Location";
+	case NVME_REG_CMBSZ:	return "Controller Memory Buffer Size";
+	default:			return "Unknown";
+	}
+}
+
 char* nvme_select_to_string(int sel)
 {
 	switch (sel) {
