@@ -117,6 +117,19 @@ struct list_item {
 	unsigned            block;
 };
 
+struct ctrl_list_item {
+	char *name;
+	char *address;
+	char *transport;
+};
+
+struct subsys_list_item {
+	char *name;
+	char *subsysnqn;
+	int nctrls;
+	struct ctrl_list_item *ctrls;
+};
+
 enum {
 	NORMAL,
 	JSON,

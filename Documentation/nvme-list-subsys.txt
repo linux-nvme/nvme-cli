@@ -1,0 +1,81 @@
+nvme-list-subsys(1)
+===================
+
+NAME
+----
+nvme-list-subsys - List all NVMe subsystems
+
+SYNOPSIS
+--------
+[verse]
+'nvme list-subsys' [-o <fmt> | --output-format=<fmt>]
+
+DESCRIPTION
+-----------
+Scan the sysfs tree for NVM Express subsystems and return the controllers
+for those subsystems as well as some pertinent information about them.
+
+OPTIONS
+-------
+-o <format>::
+--output-format=<format>::
+	Set the reporting format to 'normal' or 'json'. Only one output
+	format can be used at a time.
+
+EXAMPLES
+--------
+root@host# nvme list-subsys
+nvme-subsys0 - NQN=nvmf-test
+\
+ +- nvme0 rdma traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.1
+ +- nvme1 rdma traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.2
+nvme-subsys1 - NQN=nvmf-test2
+\
+ +- nvme2 rdma traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.2
+ +- nvme3 rdma traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.1
+
+root@host# nvme list-subsys -o json
+{
+  "Subsystems" : [
+    {
+      "Name" : "nvme-subsys0",
+      "NQN" : "nvmf-test"
+    },
+    {
+      "Paths" : [
+        {
+          "Name" : "nvme0",
+          "Transport" : "rdma",
+          "Address" : "traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.1"
+        },
+        {
+          "Name" : "nvme1",
+          "Transport" : "rdma",
+          "Address" : "traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.2"
+        }
+      ]
+    },
+    {
+      "Name" : "nvme-subsys1",
+      "NQN" : "nvmf-test2"
+    },
+    {
+      "Paths" : [
+        {
+          "Name" : "nvme2",
+          "Transport" : "rdma",
+          "Address" : "traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.2"
+        },
+        {
+          "Name" : "nvme3",
+          "Transport" : "rdma",
+          "Address" : "traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.1"
+        }
+      ]
+    }
+  ]
+}
+
+NVME
+----
+Part of the nvme-user suite

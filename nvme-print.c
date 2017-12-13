@@ -1881,6 +1881,55 @@ void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 	json_free_object(root);
 }
 
+void json_print_nvme_subsystem_list(struct subsys_list_item *slist, int n)
+{
+	struct json_object *root;
+	struct json_array *subsystems;
+	struct json_object *subsystem_attrs;
+	struct json_array *paths;
+	struct json_object *path_attrs;
+	struct json_object *path_object;
+	int i, j;
+
+	root = json_create_object();
+	subsystems = json_create_array();
+
+	for (i = 0; i < n; i++) {
+		subsystem_attrs = json_create_object();
+
+		json_object_add_value_string(subsystem_attrs,
+					     "Name", slist[i].name);
+		json_object_add_value_string(subsystem_attrs,
+					     "NQN", slist[i].subsysnqn);
+
+		json_array_add_value_object(subsystems, subsystem_attrs);
+
+		paths = json_create_array();
+		path_object = json_create_object();
+
+		for (j = 0; j < slist[i].nctrls; j++) {
+			path_attrs = json_create_object();
+			json_object_add_value_string(path_attrs, "Name",
+					slist[i].ctrls[j].name);
+			json_object_add_value_string(path_attrs, "Transport",
+					slist[i].ctrls[j].transport);
+			json_object_add_value_string(path_attrs, "Address",
+					slist[i].ctrls[j].address);
+			json_array_add_value_object(paths, path_attrs);
+		}
+		if (j) {
+			json_object_add_value_array(path_object, "Paths",
+					paths);
+			json_array_add_value_object(subsystems, path_object);
+		}
+
+	}
+
+	if (i)
+		json_object_add_value_array(root, "Subsystems", subsystems);
+	json_print_object(root, NULL);
+}
+
 void show_registers_cap(struct nvme_bar_cap *cap)
 {
 	printf("\tMemory Page Size Maximum      (MPSMAX): %u bytes\n", 1 <<  (12 + ((cap->mpsmax_mpsmin & 0xf0) >> 4)));

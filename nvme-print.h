@@ -43,6 +43,7 @@ void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname);
 void json_print_list_items(struct list_item *items, unsigned amnt);
 void json_nvme_id_ns_descs(void *data);
+void json_print_nvme_subsystem_list(struct subsys_list_item *slist, int n);
 
 
 #endif
