@@ -133,7 +133,8 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 		if (!strcmp(str, "version"))
 			return version(plugin);
 		if (strcmp(str, cmd->name))
-			continue;
+			if (!cmd->alias || (cmd->alias && strcmp(str, cmd->alias)))
+				continue;
 
 		return (cmd->fn(argc, argv, cmd, plugin));
 	}

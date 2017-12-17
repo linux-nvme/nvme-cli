@@ -1780,7 +1780,7 @@ static char *nvme_fw_status_reset_type(__u32 status)
 	}
 }
 
-static int fw_activate(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Verify downloaded firmware image and "\
 		"commit to specific firmware slot. Device is not automatically "\
