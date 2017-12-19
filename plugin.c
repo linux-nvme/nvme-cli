@@ -21,18 +21,28 @@ static int help(int argc, char **argv, struct plugin *plugin)
 {
 	char man[0x100];
 	struct program *prog = plugin->parent;
+	char *str = argv[1];
+	int i;
 
 	if (argc == 1) {
 		general_help(plugin);
 		return 0;
 	}
 
-	if (plugin->name)
-		sprintf(man, "%s-%s-%s", prog->name, plugin->name, argv[1]);
-	else
-		sprintf(man, "%s-%s", prog->name, argv[1]);
-	if (execlp("man", "man", man, (char *)NULL))
-		perror(argv[1]);
+	for (i = 0; plugin->commands[i]; i++) {
+		struct command *cmd = plugin->commands[i];
+
+		if (strcmp(str, cmd->name))
+			if (!cmd->alias || (cmd->alias && strcmp(str, cmd->alias)))
+				continue;
+
+		if (plugin->name)
+			sprintf(man, "%s-%s-%s", prog->name, plugin->name, cmd->name);
+		else
+			sprintf(man, "%s-%s", prog->name, cmd->name);
+		if (execlp("man", "man", man, (char *)NULL))
+			perror(argv[1]);
+	}
 	return 0;
 }
 
@@ -125,13 +135,14 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	while (*str == '-')
 		str++;
 
+	if (!strcmp(str, "help"))
+		return help(argc, argv, plugin);
+	if (!strcmp(str, "version"))
+		return version(plugin);
+
 	for (; plugin->commands[i]; i++) {
 		struct command *cmd = plugin->commands[i];
 
-		if (!strcmp(str, "help"))
-			return help(argc, argv, plugin);
-		if (!strcmp(str, "version"))
-			return version(plugin);
 		if (strcmp(str, cmd->name))
 			if (!cmd->alias || (cmd->alias && strcmp(str, cmd->alias)))
 				continue;

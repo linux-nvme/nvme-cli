@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.8" />
-<title>nvme-fw-activate(1)</title>
+<title>nvme-fw-commit(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -732,11 +732,11 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-fw-activate(1) Manual Page
+nvme-fw-commit(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-fw-activate -
+<p>nvme-fw-commit -
    Used to verify and commit a firmware image.
 </p>
 </div>
@@ -746,8 +746,9 @@ nvme-fw-activate(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme fw-activate</em> &lt;device&gt; [--slot=&lt;slot&gt; | -s &lt;slot&gt;]
-                    [--action=&lt;action&gt; | -a &lt;action&gt;]</pre>
+<pre class="content"><em>nvme fw-commit</em> &lt;device&gt; [--slot=&lt;slot&gt; | -s &lt;slot&gt;]
+                    [--action=&lt;action&gt; | -a &lt;action&gt;]
+                    [--bpid=&lt;boot-partid&gt; | -b &lt;boot-partid&gt; ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -755,11 +756,11 @@ nvme-fw-activate(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, send an nvme Firmware Activate admin command
+<div class="paragraph"><p>For the NVMe device given, send an nvme Firmware Commit admin command
 and provides the results.</p></div>
-<div class="paragraph"><p>The Firmware Activate command is used to verify that a valid firmware
+<div class="paragraph"><p>The Firmware Commit command is used to verify that a valid firmware
 image has been downloaded and to commit that revision to a specific
-firmware slot. The host may select the firmware image to activate on the
+firmware slot. The host may select the firmware image to commit on the
 next controller reset (CC.EN transitions from ‘1’ to ‘0’, a PCI
 function level reset, and/or other Controller or NVM Subsystem Reset)
 as part of this command. The currently executing firmware revision may
@@ -767,7 +768,7 @@ be determined from the Firmware Revision field of the Identify Controller
 data structure as indicated in the Firmware Slot Information log page.</p></div>
 <div class="paragraph"><p>No further action is automatically taken to reset the device, which is
 usually required to complete the activation process. If your kernel and
-driver are recent enough, you can activate the firmware by issuing a
+driver are recent enough, you can commit the firmware by issuing a
 reset through Linux sysfs, for example:</p></div>
 <div class="listingblock">
 <div class="content">
@@ -789,7 +790,7 @@ the device some other way.</p></div>
 </dt>
 <dd>
 <p>
-        Activate Action: This field specifies the action that is taken
+        Commit Action: This field specifies the action that is taken
         on the image downloaded with the Firmware Image Download command
         or on a previously downloaded and placed image.
 </p>
@@ -825,6 +826,16 @@ next reset.</p></td>
 <td align="left" valign="top"><p class="table">The image specified by the Firmware Slot field is requested to be
 activated immediately without reset.</p></td>
 </tr>
+<tr>
+<td align="left" valign="top"><p class="table">6</p></td>
+<td align="left" valign="top"><p class="table">Downloaded image replaces the Boot Partition specified by the Boot Partition
+ID field.</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">7</p></td>
+<td align="left" valign="top"><p class="table">Mark the Boot Partition specified in the BPID field as active and update
+BPINFO.ABPID.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -838,9 +849,21 @@ activated immediately without reset.</p></td>
 <dd>
 <p>
         Firmware Slot: Specifies the firmware slot that shall be used for
-        the Activate Action, if applicable. If the value specified is 0h,
+        the Commit Action, if applicable. If the value specified is 0h,
         then the controller shall choose the firmware slot (slot 1 – 7)
         to use for the operation.
+</p>
+</dd>
+<dt class="hdlist1">
+--bpid=&lt;boot-partid&gt;
+</dt>
+<dt class="hdlist1">
+-b &lt;boot-partid&gt;
+</dt>
+<dd>
+<p>
+        Specifiies the Boot partition that shall be used for the Commit Action,
+        if applicable (default: 0)
 </p>
 </dd>
 </dl></div>
@@ -852,14 +875,20 @@ activated immediately without reset.</p></td>
 <div class="ulist"><ul>
 <li>
 <p>
-Activate the last downloaded fw to slot 1.
+commit the last downloaded fw to slot 1.
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme fw-activate /dev/nvme0 --slot=1 --action=2</code></pre>
+<pre><code># nvme fw-commit /dev/nvme0 --slot=1 --action=2</code></pre>
 </div></div>
 </li>
 </ul></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_alias">ALIAS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>fw-activate</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -872,7 +901,7 @@ Activate the last downloaded fw to slot 1.
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-08-28 10:19:30 EDT
+Last updated 2017-12-19 13:33:25 MST
 </div>
 </div>
 </body>

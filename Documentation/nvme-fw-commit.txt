@@ -1,24 +1,25 @@
-nvme-fw-activate(1)
-===================
+nvme-fw-commit(1)
+=================
 
 NAME
 ----
-nvme-fw-activate - Used to verify and commit a firmware image.
+nvme-fw-commit - Used to verify and commit a firmware image.
 
 SYNOPSIS
 --------
 [verse]
-'nvme fw-activate' <device> [--slot=<slot> | -s <slot>]
+'nvme fw-commit' <device> [--slot=<slot> | -s <slot>]
 		    [--action=<action> | -a <action>]
+		    [--bpid=<boot-partid> | -b <boot-partid> ]
 
 DESCRIPTION
 -----------
-For the NVMe device given, send an nvme Firmware Activate admin command
+For the NVMe device given, send an nvme Firmware Commit admin command
 and provides the results.
 
-The Firmware Activate command is used to verify that a valid firmware
+The Firmware Commit command is used to verify that a valid firmware
 image has been downloaded and to commit that revision to a specific
-firmware slot. The host may select the firmware image to activate on the
+firmware slot. The host may select the firmware image to commit on the
 next controller reset (CC.EN transitions from ‘1’ to ‘0’, a PCI
 function level reset, and/or other Controller or NVM Subsystem Reset)
 as part of this command. The currently executing firmware revision may
@@ -27,7 +28,7 @@ data structure as indicated in the Firmware Slot Information log page.
 
 No further action is automatically taken to reset the device, which is
 usually required to complete the activation process. If your kernel and
-driver are recent enough, you can activate the firmware by issuing a
+driver are recent enough, you can commit the firmware by issuing a
 reset through Linux sysfs, for example:
 
 ------------
@@ -41,7 +42,7 @@ OPTIONS
 -------
 -a <action>::
 --action=<action>::
-	Activate Action: This field specifies the action that is taken
+	Commit Action: This field specifies the action that is taken
 	on the image downloaded with the Firmware Image Download command
 	or on a previously downloaded and placed image.
 +
@@ -56,23 +57,36 @@ field. This image is activated at the next reset.
 next reset.
 |3|The image specified by the Firmware Slot field is requested to be
 activated immediately without reset.
+|6|Downloaded image replaces the Boot Partition specified by the Boot Partition
+ID field.
+|7|Mark the Boot Partition specified in the BPID field as active and update
+BPINFO.ABPID.
 |=================
 
 -s <slot>::
 --slot=<slot>::
 	Firmware Slot: Specifies the firmware slot that shall be used for
-	the Activate Action, if applicable. If the value specified is 0h,
+	the Commit Action, if applicable. If the value specified is 0h,
 	then the controller shall choose the firmware slot (slot 1 – 7)
 	to use for the operation.
 
+--bpid=<boot-partid>::
+-b <boot-partid>::
+	Specifiies the Boot partition that shall be used for the Commit Action,
+	if applicable (default: 0)
+
 EXAMPLES
 --------
-* Activate the last downloaded fw to slot 1.
+* commit the last downloaded fw to slot 1.
 +
 ------------
-# nvme fw-activate /dev/nvme0 --slot=1 --action=2
+# nvme fw-commit /dev/nvme0 --slot=1 --action=2
 ------------
 
+ALIAS
+-----
+
+fw-activate
 
 NVME
 ----
