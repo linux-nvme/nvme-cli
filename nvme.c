@@ -168,6 +168,60 @@ int validate_output_format(char *format)
 	return -EINVAL;
 }
 
+static int get_self_test_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve up to 20 self test results";
+	const char *namespace = "(optional) desired namespace";
+	const char *raw = "output in binary format";
+	const char *maxt = "Maximum number of results to display";
+	int err, fmt, fd;
+	struct config {
+		__u32 namespace_id;
+		int   raw_binary;
+		char *output_format;
+		unsigned int max_tests;
+	};
+
+	struct config cfg = {
+		.namespace_id = NVME_NSID_ALL,
+		.output_format = "normal",
+		.max_tests = 20,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id",  'n', "NUM", CFG_POSITIVE, &cfg.namespace_id,  required_argument, namespace},
+		{"output-format", 'o', "FMT", CFG_STRING,   &cfg.output_format, required_argument, output_format },
+		{"raw-binary",    'b', "",    CFG_NONE,     &cfg.raw_binary,    no_argument,       raw},
+		{"max-tests",     'm', "NUM", CFG_POSITIVE, &cfg.max_tests,     required_argument, maxt},
+		{NULL}
+	};
+
+	struct nvme_self_test_log_page stlp;
+
+	memset(&stlp, 0, sizeof(stlp));
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (cfg.raw_binary)
+		fmt = BINARY;
+
+	err = nvme_self_test_log(fd, cfg.namespace_id, &stlp);
+	if (err < 0)
+		perror("self-test-log");
+	if (stlp.current_operation) {
+		printf("Self test is still in progress with %d%% complete\n",
+		       stlp.complete_percentage);
+		return 0;
+	}
+
+	show_self_test_log(&stlp, cfg.max_tests, fmt);
+	return 0;
+}
+
 static int get_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_smart_log smart_log;
@@ -2210,6 +2264,100 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		ioctl(fd, BLKRRPART);
 		if (cfg.reset && S_ISCHR(nvme_stat.st_mode))
 			nvme_reset_controller(fd);
+	}
+	return err;
+}
+
+
+
+/* XXX: Add json output once controllers start supporing this and we can test! */
+static int self_test(int argc, char **argv, struct command *cmd,
+		     struct plugin *plugin)
+{
+	const char *desc = "Device self test operation is a diagnostic "\
+		"testing sequence that tests the integrity and functionality" \
+		" of the controller and may include testing of the media " \
+		"associated with namespaces.";
+
+	const char *namespace_id = "desired namespace";
+	const char *sync_log = "Do not wait for the self test to complete and display the log page";
+	const char *ttype = "Test type, 1 for short, 2 for extended 3 for abort.";
+	struct nvme_id_ctrl ctrl;
+	struct nvme_self_test_log_page stlp;
+	int err = 0, fd, sync_time = 2;
+
+	struct config {
+		__u32 namespace_id;
+		int async;
+		unsigned int test_type;
+	};
+
+	struct config cfg = {
+		.namespace_id = 0,
+		.async = 0,
+		.test_type = 1,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
+		{"async",        'a', "",    CFG_NONE, &cfg.async, no_argument, sync_log},
+		{"test-type",   't', "NUM", CFG_POSITIVE, & cfg.test_type, required_argument, ttype},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	if (cfg.test_type > 3 || !cfg.test_type) {
+		fprintf(stderr, "Please provide a test between 1(Short) and 2(Extended)\n");
+		return EINVAL;
+	}
+
+	if (cfg.test_type == 2 && !cfg.async) {
+		err = nvme_identify_ctrl(fd, &ctrl);
+		if (!err) {
+			printf("Time to complete extended test is %d minutes!\n",
+			       ctrl.edstt);
+			sync_time = ctrl.edstt;
+		}
+	}
+	if (cfg.test_type == 3)
+		cfg.test_type = 0xF;
+
+	err = nvme_self_test(fd, cfg.namespace_id, cfg.test_type);
+	if (err < 0)
+		perror("self-test");
+	else if (!cfg.async) {
+		printf("Sync command was selected, process will wait %d minutes for "\
+		       "test completion!\n", sync_time);
+		memset(&stlp, 0, sizeof(stlp));
+
+		while (1) {
+			err = nvme_self_test_log(fd, cfg.namespace_id, &stlp);
+			if (!err) {
+				/* 1 indicates short in progress.
+				 * 2 indicates extended in progress.
+				 */
+				if (stlp.current_operation) {
+					printf("%d%%...", stlp.complete_percentage);
+					fflush(stdout);
+				}
+				/* Test complete! */
+				else {
+					show_self_test_log(&stlp, 1, HUMAN);
+					return err;
+				}
+			} else if (err > 0) {
+				fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+				return err;
+			} else
+				perror("nvme self test + log");
+
+			sleep(20);
+		}
+
 	}
 	return err;
 }
