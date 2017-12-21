@@ -3694,7 +3694,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 		} else if (data && cfg.read)
 			d_raw((unsigned char *)data, cfg.data_len);
 	}
-	return err;
+
 free_and_return:
 	free(data);
 	free(metadata);
