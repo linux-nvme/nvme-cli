@@ -1409,7 +1409,7 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		printf("\tNumber of IO Submission Queues Allocated (NSQA): %u\n",  (result & 0x0000ffff) + 1);
 		break;
 	case NVME_FEAT_IRQ_COALESCE:
-		printf("\tAggregation Time     (TIME): %u ms\n", ((result & 0x0000ff00) >> 8) * 100);
+		printf("\tAggregation Time     (TIME): %u usec\n", ((result & 0x0000ff00) >> 8) * 100);
 		printf("\tAggregation Threshold (THR): %u\n",  (result & 0x000000ff) + 1);
 		break;
 	case NVME_FEAT_IRQ_CONFIG:
