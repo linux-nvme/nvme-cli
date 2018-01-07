@@ -462,65 +462,61 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	}
 }
 
-static const char * sanitize_mon_status_to_string(__u16 status)
-{
-	const char * str;
-
-	switch (status & NVME_SANITIZE_LOG_STATUS_MASK) {
-	case NVME_SANITIZE_LOG_NEVER_SANITIZED:
-		str = "NVM Subsystem has never been sanitized.";
-		break;
-	case NVME_SANITIZE_LOG_COMPLETED_SUCCESS:
-		str = "Most Recent Sanitize Command Completed Successfully.";
-		break;
-	case NVME_SANITIZE_LOG_IN_PROGESS:
-		str = "Sanitize in Progress.";
-		break;
-	case NVME_SANITIZE_LOG_COMPLETED_FAILED:
-		str = "Most Recent Sanitize Command Failed.";
-		break;
-	default:
-		str = "Unknown.";
-	}
-
-	return str;
-}
-
 static int sanitize_log(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Retrieve sanitize log and show it.";
+	const char *raw_binary = "show infos in binary format";
+	const char *human_readable = "show infos in readable format";
 	int fd;
 	int ret;
-	__u8 output[NVME_SANITIZE_LOG_DATA_LEN] = {0};
-	struct nvme_sanitize_log_page *slp;
-	double progress_percent;
+	int fmt;
+	unsigned int flags = 0;
+	struct nvme_sanitize_log_page sanitize_log;
+
+	struct config {
+		int   raw_binary;
+		int   human_readable;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
 	const struct argconfig_commandline_options command_line_options[] = {
-		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc},
+		{"output-format", 'o', "FMT", CFG_STRING,   &cfg.output_format, required_argument, output_format},
+		{"human-readable",'H', "",    CFG_NONE,     &cfg.human_readable,no_argument,       human_readable},
+		{"raw-binary",    'b', "",    CFG_NONE,     &cfg.raw_binary,    no_argument,       raw_binary},
 		{NULL}
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (fd < 0)
 		return fd;
 
-	ret = nvme_get_log(fd, 0x01, NVME_LOG_SANITIZE, NVME_SANITIZE_LOG_DATA_LEN, output);
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
-	if (ret != 0)
-		return ret;
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (cfg.raw_binary)
+		fmt = BINARY;
 
-	slp = (struct nvme_sanitize_log_page *) output;
-	printf("Sanitize status                     = 0x%0x\n", slp->status);
-	printf("%s\n", sanitize_mon_status_to_string(slp->status));
+	if (cfg.human_readable)
+		flags |= HUMAN;
 
-	if ((slp->status & NVME_SANITIZE_LOG_STATUS_MASK) == NVME_SANITIZE_LOG_IN_PROGESS) {
-		progress_percent = (((double)le32_to_cpu(slp->progress) * 100) / 0x10000);
-		printf("Sanitize Progress (percentage)      = %f%%\n", progress_percent);
-	} else {
-		if (slp->status & NVME_SANITIZE_LOG_GLOBAL_DATA_ERASED)
-			printf("Global Data Erased Set\n");
+	ret = nvme_sanitize_log(fd, &sanitize_log);
+	if (!ret) {
+		if (fmt == BINARY)
+			d_raw((unsigned char *)&sanitize_log, sizeof(sanitize_log));
+		else if (fmt == JSON)
+			return -EINVAL;
 		else
-			printf("Global Data Erased Cleared\n");
+			show_sanitize_log(&sanitize_log, flags, devicename);
 	}
+	else if (ret > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	else
+		perror("sanitize status log");
+
 	return ret;
 }
 
