@@ -947,6 +947,7 @@ void show_error_log(struct nvme_error_log_page *err_log, int entries, const char
 		printf("lba          : %#"PRIx64"\n",(uint64_t)le64_to_cpu(err_log[i].lba));
 		printf("nsid         : %#x\n", err_log[i].nsid);
 		printf("vs           : %d\n", err_log[i].vs);
+		printf("cs           : %#"PRIx64"\n", (uint64_t) err_log[i].cs);
 		printf(".................\n");
 	}
 }
