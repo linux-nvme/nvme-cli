@@ -1922,13 +1922,13 @@ static int ns_rescan(int argc, char **argv, struct command *cmd, struct plugin *
 
 static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	char *desc = "Send a sanitize command.";
-	char *no_dealloc_desc = "No deallocate after sanitize.";
-	char *oipbp_desc = "Overwrite invert pattern between passes.";
-	char *owpass_desc = "Overwrite pass count.";
-	char *ause_desc = "Allow unrestricted sanitize exit.";
-	char *sanact_desc = "Sanitize action.";
-	char *ovrpat_desc = "Overwrite pattern.";
+	const char *desc = "Send a sanitize command.";
+	const char *no_dealloc_desc = "No deallocate after sanitize.";
+	const char *oipbp_desc = "Overwrite invert pattern between passes.";
+	const char *owpass_desc = "Overwrite pass count.";
+	const char *ause_desc = "Allow unrestricted sanitize exit.";
+	const char *sanact_desc = "Sanitize action.";
+	const char *ovrpat_desc = "Overwrite pattern.";
 
 	int fd;
 	int ret;
