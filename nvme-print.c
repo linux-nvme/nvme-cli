@@ -1100,67 +1100,6 @@ void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 	printf("Thermal Management T2 Total Time    : %u\n", le32_to_cpu(smart->thm_temp2_total_time));
 }
 
-static void show_sanitize_log_sprog(__u32 sprog)
-{
-	double percent;
-
-	percent = (((double)sprog * 100) / 0x10000);
-	printf("\t(%f%%)\n", percent);
-}
-
-static void show_sanitize_log_sstat(__u16 status)
-{
-	const char * str;
-
-	switch (status & NVME_SANITIZE_LOG_STATUS_MASK) {
-	case NVME_SANITIZE_LOG_NEVER_SANITIZED:
-		str = "NVM Subsystem has never been sanitized.";
-		break;
-	case NVME_SANITIZE_LOG_COMPLETED_SUCCESS:
-		str = "Most Recent Sanitize Command Completed Successfully.";
-		break;
-	case NVME_SANITIZE_LOG_IN_PROGESS:
-		str = "Sanitize in Progress.";
-		break;
-	case NVME_SANITIZE_LOG_COMPLETED_FAILED:
-		str = "Most Recent Sanitize Command Failed.";
-		break;
-	default:
-		str = "Unknown.";
-	}
-
-	printf("\t[2:0]\t%s\n", str);
-	str = "Number of completed passes if most recent operation was overwrite";
-	printf("\t[7:3]\t%s:\t%u\n", str, (status & NVME_SANITIZE_LOG_NUM_CMPLTED_PASS_MASK) >> 3);
-
-	printf("\t  [8]\t");
-	if (status & NVME_SANITIZE_LOG_GLOBAL_DATA_ERASED)
-		str = "Global Data Erased set: NVM storage has not been written";
-	else
-		str = "Global Data Erased cleared: NVM storage has been written";
-	printf("%s\n", str);
-}
-
-void show_sanitize_log(struct nvme_sanitize_log_page *sanitize, unsigned int mode, const char *devname)
-{
-	int human = mode & HUMAN;
-
-	printf("Sanitize Progress                     (SPROG) :  %u", le32_to_cpu(sanitize->progress));
-	if (human && (sanitize->status & NVME_SANITIZE_LOG_STATUS_MASK) == NVME_SANITIZE_LOG_IN_PROGESS)
-		show_sanitize_log_sprog(le32_to_cpu(sanitize->progress));
-	else
-		printf("\n");
-
-	printf("Sanitize Status                       (SSTAT) :  %#x\n", le16_to_cpu(sanitize->status));
-	if (human)
-		show_sanitize_log_sstat(le16_to_cpu(sanitize->status));
-
-	printf("Sanitize Command Dword 10 Information (SCDW10):  %#x\n", le32_to_cpu(sanitize->cdw10_info));
-	printf("Estimated Time For Overwrite                  :  %u\n", le32_to_cpu(sanitize->est_ovrwrt_time));
-	printf("Estimated Time For Block Erase                :  %u\n", le32_to_cpu(sanitize->est_blk_erase_time));
-	printf("Estimated Time For Crypto Erase               :  %u\n", le32_to_cpu(sanitize->est_crypto_erase_time));
-}
-
 char *nvme_feature_to_string(int feature)
 {
 	switch (feature) {
