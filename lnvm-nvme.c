@@ -83,7 +83,6 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 	const char *desc = "Send an Identify Geometry command to the "\
 		"given LightNVM device, returns properties of the specified "\
 		"namespace in either human-readable or binary format.";
-	const char *force = "Return this namespace, even if not supported";
 	const char *raw_binary = "show infos in binary format";
 	const char *human_readable = "show infos in readable format";
 	const char *namespace_id = "identifier of desired namespace. default: 1";
@@ -93,7 +92,6 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 		__u32 namespace_id;
 		int   raw_binary;
 		int   human_readable;
-		int   force;
 	};
 
 	struct config cfg = {
@@ -102,7 +100,6 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id",    'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id,    required_argument, namespace_id},
-		{"force",           'f', "FLAG", CFG_NONE,     &cfg.force,           no_argument,       force},
 		{"raw-binary",      'b', "FLAG", CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
 		{"human-readable",  'H', "FLAG", CFG_NONE,     &cfg.human_readable,  no_argument,       human_readable},
 		{NULL}
@@ -117,7 +114,6 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 
 	return lnvm_do_id_ns(fd, cfg.namespace_id, flags);
 }
-
 
 static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
