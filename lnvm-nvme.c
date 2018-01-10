@@ -106,6 +106,8 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (cfg.human_readable)
 		flags |= HUMAN;
