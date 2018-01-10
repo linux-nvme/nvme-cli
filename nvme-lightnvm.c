@@ -230,10 +230,29 @@ int lnvm_do_factory_init(char *devname, int erase_only_marked,
 	return ret;
 }
 
-static void show_lnvm_id_grp(struct nvme_nvm_id_group *grp)
+static void show_lnvm_id_grp(struct nvme_nvm_id_group *grp, int human)
 {
+	uint32_t mpos = (uint32_t)le32_to_cpu(grp->mpos);
+	uint32_t mccap = (uint32_t)le32_to_cpu(grp->mccap);
+
 	printf(" mtype   : %d\n", grp->mtype);
+	if (human) {
+		if (grp->mtype == LNVM_IDFY_GRP_MTYPE_NAND)
+			printf("           NAND Flash Memory\n");
+		else
+			printf("           Reserved\n");
+	}
 	printf(" fmtype  : %d\n", grp->fmtype);
+	if (human) {
+		if (grp->fmtype == LNVM_IDFY_GRP_FMTYPE_SLC)
+			printf("           Single bit Level Cell flash (SLC)\n");
+		else if (grp->fmtype == LNVM_IDFY_GRP_FMTYPE_MLC)
+			printf("           Two bit Level Cell flash (MLC)\n");
+		else if (grp->fmtype == LNVM_IDFY_GRP_FMTYPE_TLC)
+			printf("           Three bit Level Cell flash (TLC)\n");
+		else
+			printf("           Reserved\n");
+	}
 	printf(" chnls   : %d\n", grp->num_ch);
 	printf(" luns    : %d\n", grp->num_lun);
 	printf(" plns    : %d\n", grp->num_pln);
@@ -248,9 +267,40 @@ static void show_lnvm_id_grp(struct nvme_nvm_id_group *grp)
 	printf(" tprm    : %d\n", (uint32_t)le32_to_cpu(grp->tprm));
 	printf(" tbet    : %d\n", (uint32_t)le32_to_cpu(grp->tbet));
 	printf(" tbem    : %d\n", (uint32_t)le32_to_cpu(grp->tbem));
-	printf(" mpos    : %#x\n", (uint32_t)le32_to_cpu(grp->mpos));
-	printf(" mccap   : %#x\n", (uint32_t)le32_to_cpu(grp->mccap));
+	printf(" mpos    : %#x\n", mpos);
+	if (human) {
+		if (mpos & (1 << LNVM_IDFY_GRP_MPOS_SNGL_PLN_RD))
+			printf("           [0]: Single plane read\n");
+		if (mpos & (1 << LNVM_IDFY_GRP_MPOS_DUAL_PLN_RD))
+			printf("           [1]: Dual plane read\n");
+		if (mpos & (1 << LNVM_IDFY_GRP_MPOS_QUAD_PLN_RD))
+			printf("           [2]: Quad plane read\n");
+		if (mpos & (1 << LNVM_IDFY_GRP_MPOS_SNGL_PLN_PRG))
+			printf("           [8]: Single plane program\n");
+		if (mpos & (1 << LNVM_IDFY_GRP_MPOS_DUAL_PLN_PRG))
+			printf("           [9]: Dual plane program\n");
+		if (mpos & (1 << LNVM_IDFY_GRP_MPOS_QUAD_PLN_PRG))
+			printf("           [10]: Quad plane program\n");
+		if (mpos & (1 << LNVM_IDFY_GRP_MPOS_SNGL_PLN_ERS))
+			printf("           [16]: Single plane erase\n");
+		if (mpos & (1 << LNVM_IDFY_GRP_MPOS_DUAL_PLN_ERS))
+			printf("           [17]: Dual plane erase\n");
+		if (mpos & (1 << LNVM_IDFY_GRP_MPOS_QUAD_PLN_ERS))
+			printf("           [18]: Quad plane erase\n");
+	}
+	printf(" mccap   : %#x\n", mccap);
+	if (human) {
+		if (mccap & (1 << LNVM_IDFY_GRP_MCCAP_SLC))
+			printf("           [0]: SLC mode\n");
+		if (mccap & (1 << LNVM_IDFY_GRP_MCCAP_CMD_SUSP))
+			printf("           [1]: Command suspension\n");
+		if (mccap & (1 << LNVM_IDFY_GRP_MCCAP_SCRAMBLE))
+			printf("           [2]: Scramble\n");
+		if (mccap & (1 << LNVM_IDFY_GRP_MCCAP_ENCRYPT))
+			printf("           [3]: Encryption\n");
+	}
 	printf(" cpar    : %#x\n", (uint16_t)le16_to_cpu(grp->cpar));
+
 }
 
 static void show_lnvm_ppaf(struct nvme_nvm_addr_format *ppaf)
@@ -270,9 +320,13 @@ static void show_lnvm_ppaf(struct nvme_nvm_addr_format *ppaf)
 					ppaf->sect_offset, ppaf->sect_len);
 }
 
-static void show_lnvm_id_ns(struct nvme_nvm_id *id)
+static void show_lnvm_id_ns(struct nvme_nvm_id *id, unsigned int flags)
 {
 	int i;
+	int human = flags & HUMAN;
+
+	uint32_t cap = (uint32_t) le32_to_cpu(id->cap);
+	uint32_t dom = (uint32_t) le32_to_cpu(id->dom);
 
 	if (id->cgrps > 4) {
 		fprintf(stderr, "invalid identify geometry returned\n");
@@ -281,14 +335,33 @@ static void show_lnvm_id_ns(struct nvme_nvm_id *id)
 
 	printf("verid    : %#x\n", id->ver_id);
 	printf("vmnt     : %#x\n", id->vmnt);
+	if (human) {
+		if (!id->vmnt)
+			printf("           Generic/Enable opcodes as found in this spec.");
+		else
+			printf("           Reserved/Reserved for future opcode configurations");
+	}
+	printf("\n");
 	printf("cgrps    : %d\n", id->cgrps);
-	printf("cap      : %#x\n", (uint32_t)le32_to_cpu(id->cap));
-	printf("dom      : %#x\n", (uint32_t)le32_to_cpu(id->dom));
+	printf("cap      : %#x\n", cap);
+	if (human) {
+		if (cap & (1 << LNVM_IDFY_CAP_BAD_BLK_TBL_MGMT))
+			printf("           [0]: Bad block table management\n");
+		if (cap & (1 << LNVM_IDFY_CAP_HYBRID_CMD_SUPP))
+			printf("           [1]: Hybrid command support\n");
+	}
+	printf("dom      : %#x\n", dom);
+	if (human) {
+		if (dom & (1 << LNVM_IDFY_DOM_HYBRID_MODE))
+			printf("           [0]: Hybrid mode (L2P MAP is in device)\n");
+		if (dom & (1 << LNVM_IDFY_DOM_ECC_MODE))
+			printf("           [1]: Error Code Correction(ECC) mode\n");
+	}
 	show_lnvm_ppaf(&id->ppaf);
 
 	for (i = 0; i < id->cgrps; i++) {
 		printf("grp      : %d\n", i);
-		show_lnvm_id_grp(&id->groups[i]);
+		show_lnvm_id_grp(&id->groups[i], human);
 	}
 }
 
@@ -315,7 +388,7 @@ int lnvm_do_id_ns(int fd, int nsid, unsigned int flags)
 			d_raw((unsigned char *)&nvm_id, sizeof(nvm_id));
 		else {
 			printf("LightNVM Identify Geometry (%d):\n", nsid);
-			show_lnvm_id_ns(&nvm_id);
+			show_lnvm_id_ns(&nvm_id, flags);
 		}
 	}
 	else if (err > 0)
