@@ -258,29 +258,25 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 static int get_error_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve specified number of "\
-		"error log entries from a given device (or "\
-		"namespace) in either decoded format (default) or binary.";
-	const char *namespace_id = "desired namespace";
+		"error log entries from a given device "\
+		"in either decoded format (default) or binary.";
 	const char *log_entries = "number of entries to retrieve";
 	const char *raw_binary = "dump in binary format";
 	struct nvme_id_ctrl ctrl;
 	int err, fmt, fd;
 
 	struct config {
-		__u32 namespace_id;
 		__u32 log_entries;
 		int   raw_binary;
 		char *output_format;
 	};
 
 	struct config cfg = {
-		.namespace_id = NVME_NSID_ALL,
 		.log_entries  = 64,
 		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id",  'n', "NUM", CFG_POSITIVE, &cfg.namespace_id,  required_argument, namespace_id},
 		{"log-entries",   'e', "NUM", CFG_POSITIVE, &cfg.log_entries,   required_argument, log_entries},
 		{"raw-binary",    'b', "",    CFG_NONE,     &cfg.raw_binary,    no_argument,       raw_binary},
 		{"output-format", 'o', "FMT", CFG_STRING,   &cfg.output_format, required_argument, output_format },
@@ -318,7 +314,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 			return ENOMEM;
 		}
 
-		err = nvme_error_log(fd, cfg.namespace_id, cfg.log_entries, err_log);
+		err = nvme_error_log(fd, cfg.log_entries, err_log);
 		if (!err) {
 			if (fmt == BINARY)
 				d_raw((unsigned char *)err_log, sizeof(err_log));
