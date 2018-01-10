@@ -81,7 +81,7 @@ static int lnvm_info(int argc, char **argv, struct command *cmd, struct plugin *
 static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send an Identify Geometry command to the "\
-		"given LightNVM device, returns properties of the specified"\
+		"given LightNVM device, returns properties of the specified "\
 		"namespace in either human-readable or binary format.";
 	const char *force = "Return this namespace, even if not supported";
 	const char *raw_binary = "show infos in binary format";
