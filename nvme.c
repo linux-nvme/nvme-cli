@@ -508,7 +508,7 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 		if (fmt == BINARY)
 			d_raw((unsigned char *)&sanitize_log, sizeof(sanitize_log));
 		else if (fmt == JSON)
-			return -EINVAL;
+			json_sanitize_log(&sanitize_log, devicename);
 		else
 			show_sanitize_log(&sanitize_log, flags, devicename);
 	}
