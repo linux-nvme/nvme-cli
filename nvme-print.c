@@ -2057,10 +2057,11 @@ void show_registers_cap(struct nvme_bar_cap *cap)
 {
 	printf("\tMemory Page Size Maximum      (MPSMAX): %u bytes\n", 1 <<  (12 + ((cap->mpsmax_mpsmin & 0xf0) >> 4)));
 	printf("\tMemory Page Size Minimum      (MPSMIN): %u bytes\n", 1 <<  (12 + (cap->mpsmax_mpsmin & 0x0f)));
+	printf("\tBoot Partition Support           (BPS): %s\n", (cap->bps_css_nssrs_dstrd & 0x2000) ? "Yes":"No");
 	printf("\tCommand Sets Supported           (CSS): NVM command set is %s\n",
-			(cap->css_nssrs_dstrd & 0x0020) ? "supported":"not supported");
-	printf("\tNVM Subsystem Reset Supported  (NSSRS): %s\n", (cap->css_nssrs_dstrd & 0x0010) ? "Yes":"No");
-	printf("\tDoorbell Stride                (DSTRD): %u bytes\n", 1 << (2 + (cap->css_nssrs_dstrd & 0x000f)));
+			(cap->bps_css_nssrs_dstrd & 0x0020) ? "supported":"not supported");
+	printf("\tNVM Subsystem Reset Supported  (NSSRS): %s\n", (cap->bps_css_nssrs_dstrd & 0x0010) ? "Yes":"No");
+	printf("\tDoorbell Stride                (DSTRD): %u bytes\n", 1 << (2 + (cap->bps_css_nssrs_dstrd & 0x000f)));
 	printf("\tTimeout                           (TO): %u ms\n", cap->to * 500);
 	printf("\tArbitration Mechanism Supported  (AMS): Weighted Round Robin with Urgent Priority Class is %s\n",
 			(cap->ams_cqr & 0x02) ? "supported":"not supported");
