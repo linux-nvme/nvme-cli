@@ -746,8 +746,7 @@ nvme-error-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme error-log</em> &lt;device&gt;  [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                         [--log-entries=&lt;entries&gt; | -e &lt;entries&gt;]
+<pre class="content"><em>nvme error-log</em> &lt;device&gt;  [--log-entries=&lt;entries&gt; | -e &lt;entries&gt;]
                          [--raw-binary | -b]
                          [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]</pre>
 <div class="attribution">
@@ -771,21 +770,6 @@ printed to stdout for another program to parse.</p></div>
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
 <div class="dlist"><dl>
-<dt class="hdlist1">
--n &lt;nsid&gt;
-</dt>
-<dt class="hdlist1">
---namespace-id=&lt;nsid&gt;
-</dt>
-<dd>
-<p>
-        Retrieve the Error Log for the given nsid. This is optional
-        and its success may depend on the device&#8217;s capabilities to
-        provide this log on a per-namespace basis (see the NVMe Identify
-        Controller for this capability). The default nsid to use is
-        0xffffffff for the device global error log.
-</p>
-</dd>
 <dt class="hdlist1">
 -e &lt;entries&gt;
 </dt>
