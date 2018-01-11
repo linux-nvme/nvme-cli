@@ -1109,9 +1109,9 @@ static void show_sanitize_log_sprog(__u32 sprog)
 	printf("\t(%f%%)\n", percent);
 }
 
-static void show_sanitize_log_sstat(__u16 status)
+static const char *get_sanitize_log_sstat_status_str(__u16 status)
 {
-	const char * str;
+	const char *str;
 
 	switch (status & NVME_SANITIZE_LOG_STATUS_MASK) {
 	case NVME_SANITIZE_LOG_NEVER_SANITIZED:
@@ -1129,6 +1129,13 @@ static void show_sanitize_log_sstat(__u16 status)
 	default:
 		str = "Unknown.";
 	}
+
+	return str;
+}
+
+static void show_sanitize_log_sstat(__u16 status)
+{
+	const char *str = get_sanitize_log_sstat_status_str(status);
 
 	printf("\t[2:0]\t%s\n", str);
 	str = "Number of completed passes if most recent operation was overwrite";
@@ -1958,6 +1965,40 @@ void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 	json_object_add_value_int(root, "thm_temp2_total_time",
 			le32_to_cpu(smart->thm_temp2_total_time));
 
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log, const char *devname)
+{
+	struct json_object *root;
+	struct json_object *dev;
+	struct json_object *sstat;
+	const char *status_str;
+	char str[128];
+
+	root = json_create_object();
+	dev = json_create_object();
+	sstat = json_create_object();
+
+	json_object_add_value_int(dev, "sprog", le16_to_cpu(sanitize_log->progress));
+	json_object_add_value_int(sstat, "global_erased",
+			(le16_to_cpu(sanitize_log->status) & NVME_SANITIZE_LOG_GLOBAL_DATA_ERASED) >> 8);
+	json_object_add_value_int(sstat, "no_cmplted_passes",
+			(le16_to_cpu(sanitize_log->status) & NVME_SANITIZE_LOG_NUM_CMPLTED_PASS_MASK) >> 3);
+
+	status_str = get_sanitize_log_sstat_status_str(sanitize_log->status);
+	sprintf(str, "(%d) %s", sanitize_log->status & NVME_SANITIZE_LOG_STATUS_MASK, status_str);
+	json_object_add_value_string(sstat, "status", str);
+
+	json_object_add_value_object(dev, "sstat", sstat);
+	json_object_add_value_int(dev, "cdw10_info", le32_to_cpu(sanitize_log->cdw10_info));
+	json_object_add_value_int(dev, "time_over_write", le32_to_cpu(sanitize_log->est_ovrwrt_time));
+	json_object_add_value_int(dev, "time_block_erase", le32_to_cpu(sanitize_log->est_blk_erase_time));
+	json_object_add_value_int(dev, "time_crypto_erase", le32_to_cpu(sanitize_log->est_crypto_erase_time));
+
+	json_object_add_value_object(root, devname, dev);
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
