@@ -750,7 +750,7 @@ nvme-intel-smart-log-add(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme intel smart-log-add</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                         [--raw-binary | -b]
-                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]</pre>
+                        [--json | -j]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -799,15 +799,14 @@ printed to stdout for another program to parse.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
--o &lt;format&gt;
+-j
 </dt>
 <dt class="hdlist1">
---output-format=&lt;format&gt;
+--json
 </dt>
 <dd>
 <p>
-              Set the reporting format to <em>normal</em>, <em>json</em>, or
-              <em>binary</em>. Only one output format can be used at a time.
+              Dump output in <em>json</em> format.
 </p>
 </dd>
 </dl></div>

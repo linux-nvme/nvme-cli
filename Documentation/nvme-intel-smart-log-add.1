@@ -2,12 +2,12 @@
 .\"     Title: nvme-intel-smart-log-add
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 01/11/2018
+.\"      Date: 01/12/2018
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-INTEL\-SMART\-" "1" "01/11/2018" "NVMe" "NVMe Manual"
+.TH "NVME\-INTEL\-SMART\-" "1" "01/12/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,7 +34,7 @@ nvme-intel-smart-log-add \- Send NVMe Intel Additional SMART log page request, r
 .nf
 \fInvme intel smart\-log\-add\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-raw\-binary | \-b]
-                        [\-\-output\-format=<fmt> | \-o <fmt>]
+                        [\-\-json | \-j]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -55,12 +55,9 @@ Retrieve the Additional SMART log for the given nsid\&. This is optional and its
 Print the raw Intel Additional SMART log buffer to stdout\&.
 .RE
 .PP
-\-o <format>, \-\-output\-format=<format>
+\-j, \-\-json
 .RS 4
-Set the reporting format to
-\fInormal\fR,
-\fIjson\fR, or
-\fIbinary\fR\&. Only one output format can be used at a time\&.
+Dump output in json format\&.
 .RE
 .SH "EXAMPLES"
 .sp
