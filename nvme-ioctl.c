@@ -413,6 +413,11 @@ int nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log *smart_log)
 	return nvme_get_log(fd, nsid, NVME_LOG_SMART, sizeof(*smart_log), smart_log);
 }
 
+int nvme_effects_log(int fd, struct nvme_effects_log_page *effects_log)
+{
+	return nvme_get_log(fd, 0, NVME_LOG_CMD_EFFECTS, sizeof(*effects_log), effects_log);
+}
+
 int nvme_discovery_log(int fd, struct nvmf_disc_rsp_page_hdr *log, __u32 size)
 {
 	return nvme_get_log(fd, 0, NVME_LOG_DISC, size, log);

@@ -226,17 +226,28 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 static int get_effects_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve command effects log page and print the table.";
+	const char *raw_binary = "show infos in binary format";
+	const char *human_readable = "show infos in readable format";
 	struct nvme_effects_log_page effects;
 
 	int err, fd;
+	int fmt;
+	unsigned int flags = 0;
 
 	struct config {
+		int   raw_binary;
+		int   human_readable;
+		char *output_format;
 	};
 
 	struct config cfg = {
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
+		{"output-format", 'o', "FMT", CFG_STRING,   &cfg.output_format, required_argument, output_format},
+		{"human-readable",'H', "",    CFG_NONE,     &cfg.human_readable,no_argument,       human_readable},
+		{"raw-binary",    'b', "",    CFG_NONE,     &cfg.raw_binary,    no_argument,       raw_binary},
 		{NULL}
 	};
 
@@ -244,9 +255,24 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	if (fd < 0)
 		return fd;
 
-	err = nvme_get_log(fd, NVME_NSID_ALL, 5, 4096, &effects);
-	if (!err)
-		show_effects_log(&effects);
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+	if (cfg.raw_binary)
+		fmt = BINARY;
+
+	if (cfg.human_readable)
+		flags |= HUMAN;
+
+	err = nvme_effects_log(fd, &effects);
+	if (!err) {
+		if (fmt == BINARY)
+			d_raw((unsigned char *)&effects, sizeof(effects));
+		else if (fmt == JSON)
+			json_effects_log(&effects, devicename);
+		else
+			show_effects_log(&effects, flags);
+	}
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 				nvme_status_to_string(err), err);
