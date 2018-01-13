@@ -2,12 +2,12 @@
 .\"     Title: nvme-effects-log
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 12/10/2017
+.\"      Date: 01/13/2018
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-EFFECTS\-LOG" "1" "12/10/2017" "NVMe" "NVMe Manual"
+.TH "NVME\-EFFECTS\-LOG" "1" "01/13/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,9 @@ nvme-effects-log \- Send NVMe Command Effects log page request, returns result a
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme effects\-log\fR <device>
+\fInvme effects\-log\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>]
+                            [\-\-human\-readable | \-H]
+                            [\-\-raw\-binary | \-b]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -42,8 +44,21 @@ The <device> parameter is mandatory and should be the NVMe character device (ex:
 .sp
 On success, the returned command effects log structure will be printed for each command that is supported\&.
 .SH "OPTIONS"
-.sp
-No options\&.
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+This option will set the reporting format to normal, json, or binary\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-H, \-\-human\-readable
+.RS 4
+This option will parse and format many of the bit fields into a human\-readable format\&.
+.RE
+.PP
+\-b, \-\-raw\-binary
+.RS 4
+This option will print the raw buffer to stdout\&. Structure is not parsed by program\&. This overrides the human\-readable option\&.
+.RE
 .SH "EXAMPLES"
 .sp
 .RS 4
@@ -65,8 +80,28 @@ Print the effects log page in a human readable format:
 .if n \{\
 .RE
 .\}
+.RE
 .sp
-Not much to it\&.
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Have the program return the raw structure in binary:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme effects\-log /dev/nvme0 \-\-raw\-binary > effects_log\&.raw
+# nvme effects\-log /dev/nvme0 \-b > effects_log\&.raw
+.fi
+.if n \{\
+.RE
+.\}
 .RE
 .SH "NVME"
 .sp
