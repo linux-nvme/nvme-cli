@@ -21,7 +21,6 @@
 NVMe Smart Log Verification Testcase:-
 
     1. Execute error-log on controller.
-    2. Execute error-log on each available namespace.
 
 """
 
@@ -57,30 +56,8 @@ class TestNVMeErrorLogCmd(TestNVMe):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        return self.get_error_log("0xFFFFFFFF")
-
-    def get_error_log_ns(self, nsid):
-        """ Wrapper for executing error-log on a namespace.
-            - Args:
-                - nsid: namespace id to be used in error-log command.
-            - Returns:
-                - 0 on success, error code on failure.
-        """
-        return self.get_error_log(nsid)
-
-    def get_error_log_all_ns(self):
-        """ Wrapper for executing error-log on all the namespaces.
-            - Args:
-                - None:
-            - Returns:
-                - 0 on success, error code on failure.
-        """
-        ns_list = self.get_ns_list()
-        for nsid in range(0, len(ns_list)):
-            self.get_error_log_ns(ns_list[nsid])
-        return 0
+        return self.get_error_log()
 
     def test_get_error_log(self):
         """ Testcase main """
         assert_equal(self.get_error_log_ctrl(), 0)
-        assert_equal(self.get_error_log_all_ns(), 0)
