@@ -1023,20 +1023,52 @@ void show_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
 						fw_to_string(fw_log->frs[i]));
 }
 
-void show_effects_log(struct nvme_effects_log_page *effects)
+static void show_effects_log_human(__u32 effect)
+{
+	const char *set = "+";
+	const char *clr = "-";
+
+	printf("  CSUPP+");
+	printf("  LBCC%s", (effect & NVME_CMD_EFFECTS_LBCC) ? set : clr);
+	printf("  NCC%s", (effect & NVME_CMD_EFFECTS_NCC) ? set : clr);
+	printf("  NIC%s", (effect & NVME_CMD_EFFECTS_NIC) ? set : clr);
+	printf("  CCC%s", (effect & NVME_CMD_EFFECTS_CCC) ? set : clr);
+
+	if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 0)
+		printf("  No command restriction\n");
+	else if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 1)
+		printf("  No other command for same namespace\n");
+	else if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 2)
+		printf("  No other command for any namespace\n");
+	else
+		printf("  Reserved CSE\n");
+}
+
+void show_effects_log(struct nvme_effects_log_page *effects, unsigned int flags)
 {
 	int i;
+	int human = flags & HUMAN;
 	__u32 effect;
 
 	for (i = 0; i < 256; i++) {
 		effect = le32_to_cpu(effects->acs[i]);
-		if (effect & 1)
-			printf("ACS%-4d: %08x\n", i, effects->acs[i]);
+		if (effect & NVME_CMD_EFFECTS_CSUPP) {
+			printf("ACS%-4d: %08x", i, effect);
+			if (human)
+				show_effects_log_human(effect);
+			else
+				printf("\n");
+		}
 	}
 	for (i = 0; i < 256; i++) {
-		effect = le32_to_cpu(effects->acs[i]);
-		if (effect & 1)
-			printf("IOCS%-3d: %08x\n", i, effects->iocs[i]);
+		effect = le32_to_cpu(effects->iocs[i]);
+		if (effect & NVME_CMD_EFFECTS_CSUPP) {
+			printf("IOCS%-3d: %08x", i, effect);
+			if (human)
+				show_effects_log_human(effect);
+			else
+				printf("\n");
+		}
 	}
 }
 
@@ -1964,6 +1996,32 @@ void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 			le32_to_cpu(smart->thm_temp1_total_time));
 	json_object_add_value_int(root, "thm_temp2_total_time",
 			le32_to_cpu(smart->thm_temp2_total_time));
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void json_effects_log(struct nvme_effects_log_page *effects_log, const char *devname)
+{
+	struct json_object *root;
+	unsigned int opcode;
+	char key[16];
+	__u32 effect;
+
+	root = json_create_object();
+
+	for (opcode = 0; opcode < 256; opcode++) {
+		sprintf(key, "ACS%-4d", opcode);
+		effect = le32_to_cpu(effects_log->acs[opcode]);
+		json_object_add_value_int(root, key, effect);
+	}
+
+	for (opcode = 0; opcode < 256; opcode++) {
+		sprintf(key, "IOCS%-3d", opcode);
+		effect = le32_to_cpu(effects_log->iocs[opcode]);
+		json_object_add_value_int(root, key, effect);
+	}
 
 	json_print_object(root, NULL);
 	printf("\n");
