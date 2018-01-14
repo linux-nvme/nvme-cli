@@ -125,6 +125,7 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 	const char *tgttype = "identifier of target type. e.g. pblk.";
 	const char *lun_begin = "Define begin of luns to use for target.";
 	const char *lun_end = "Define set of luns to use for target.";
+	const char *over_prov = "Define over-provision percentage for target.";
 	const char *flag_factory = "Create target in factory mode";
 	int flags;
 
@@ -135,6 +136,8 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		char *tgttype;
 		__u32 lun_begin;
 		__u32 lun_end;
+		__u32 over_prov;
+
 		/* flags */
 		__u32 factory;
 	};
@@ -145,6 +148,7 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		.tgttype = "",
 		.lun_begin = -1,
 		.lun_end = -1,
+		.over_prov = -1,
 		.factory = 0,
 	};
 
@@ -154,7 +158,8 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		{"target-type",   't', "TARGETTYPE",  CFG_STRING,    &cfg.tgttype,   required_argument, tgttype},
 		{"lun-begin",     'b', "NUM",    CFG_POSITIVE,  &cfg.lun_begin,      required_argument,       lun_begin},
 		{"lun-end",       'e', "NUM",    CFG_POSITIVE,  &cfg.lun_end,   required_argument,       lun_end},
-		{"factory",      'f', "FLAG",   CFG_NONE,  &cfg.factory,   no_argument,  flag_factory},
+		{"over-prov",     'o', "NUM",    CFG_POSITIVE,  &cfg.over_prov, required_argument,  over_prov},
+		{"factory",       'f', "FLAG",   CFG_NONE,  &cfg.factory,   no_argument,  flag_factory},
 		{NULL}
 	};
 
@@ -177,7 +182,7 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 	if (cfg.factory)
 		flags |= NVM_TARGET_FACTORY;
 
-	return lnvm_do_create_tgt(cfg.devname, cfg.tgtname, cfg.tgttype, cfg.lun_begin, cfg.lun_end, flags);
+	return lnvm_do_create_tgt(cfg.devname, cfg.tgtname, cfg.tgttype, cfg.lun_begin, cfg.lun_end, cfg.over_prov, flags);
 }
 
 static int lnvm_remove_tgt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
