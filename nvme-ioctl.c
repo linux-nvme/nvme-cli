@@ -349,6 +349,17 @@ int nvme_identify(int fd, __u32 nsid, __u32 cdw10, void *data)
 	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
+int nvme_self_test(int fd, __u32 nsid, __u32 cdw10)
+{
+	struct nvme_admin_cmd cmd = {
+		.opcode		= nvme_admin_self_test,
+		.nsid		= nsid,
+		.cdw10		= cdw10,
+	};
+
+	return nvme_submit_admin_passthru(fd, &cmd);
+}
+
 int nvme_identify_ctrl(int fd, void *data)
 {
 	return nvme_identify(fd, 0, 1, data);
@@ -396,6 +407,11 @@ int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
 	cmd.cdw11 = numdu;
 
 	return nvme_submit_admin_passthru(fd, &cmd);
+}
+
+int nvme_self_test_log(int fd, __u32 nsid, struct nvme_self_test_log_page *stlp)
+{
+	return nvme_get_log(fd, nsid, NVME_LOG_SELF_TEST, sizeof(*stlp), stlp);
 }
 
 int nvme_fw_log(int fd, struct nvme_firmware_log_page *fw_log)

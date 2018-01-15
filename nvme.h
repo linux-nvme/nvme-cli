@@ -33,6 +33,31 @@ typedef struct {
 
 #include "linux/nvme.h"
 
+#define NVME_SELF_TEST_SHORT 0x1
+#define NVME_SELF_TEST_EXTENDED 0x2
+#define NVME_MAX_STLPE 20
+
+/* Spec 1.3 Figure 98/99 */
+struct nvme_self_test_res {
+	__u8 self_test_status;
+	__u8 segment;
+	__u8 valid;
+	__u8 rsvd;
+	__u64 poh; /* Power on Hours */
+	__u32 nsid;
+	__u64 flba; /* Failing LBA */
+	__u8 status_code_type; /* Additional information related to errors */
+	__u8 status_code;
+	__u8 vndr[2];
+} __attribute__((packed));
+
+struct nvme_self_test_log_page {
+	__u8 current_operation;
+	__u8 complete_percentage;
+	__u8 resv[2];
+	struct nvme_self_test_res res[NVME_MAX_STLPE];
+};
+
 struct nvme_effects_log_page {
 	__le32 acs[256];
 	__le32 iocs[256];

@@ -7,6 +7,8 @@
 #include "json.h"
 #include "nvme-models.h"
 
+#define min(x, y) ((x) > (y) ? (y) : (x))
+
 static long double int128_to_double(__u8 *data)
 {
 	int i;
@@ -926,6 +928,86 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 {
 	__show_nvme_id_ctrl(ctrl, mode, NULL);
+}
+
+static void show_self_test_log_human(struct nvme_self_test_log_page *stlp,
+				     unsigned int max_entries)
+{
+	static const char *self_test_segment_names[] = {
+		"RAM Check",
+		"SMART Check",
+		"Volatile Memory Backup",
+		"Metadata Validation ",
+		"NVM Integrity",
+		"Data Integrity",
+		"Media Check",
+		"Drive Life",
+		"SMART Check"
+	};
+
+	static const char *self_test_status_str[] = {
+		"Operation completed without error",
+		"Operation was aborted by a Device Self test command",
+		"Operation was aborted by a Controller Level Reset",
+		"Operation was aborted due to a removal of a namespace from the namespace inventory",
+		"Operation was aborted due to the processing of a Format NVM command",
+
+		"A fatal error or unknown test error occurred while the " \
+		"controller was executing the device self-test operation and the operation did not complete",
+
+		"Operation completed with a segment that failed and the segment that failed is not known",
+		"Unused",
+		"Operation was aborted for unknown reason"
+	};
+
+	struct nvme_self_test_res *res;
+	int i;
+
+	for (i = 0; i < max_entries; i++) {
+		res = &stlp->res[i];
+		/* Empty result break here */
+		if (res->self_test_status == 0xF)
+			break;
+
+		/* One or more failed segments */
+		if (res->self_test_status == 0x7)
+			if (res->segment < 9 && res->segment > 0)
+				printf("Failed Segment %d: %s\n",
+				       res->segment,
+				       self_test_segment_names[res->segment - 1]);
+		        else
+				printf("Failed Segment %d: Unknown\n",
+				       res->segment);
+		else
+			printf("%s", self_test_status_str[res->self_test_status]);
+
+		printf("Power on hours: %llu\n", res->poh);
+		if (res->valid & 0x1)
+			printf("Namespace ID: %u\n", res->nsid);
+		if (res->valid & 0x2)
+			printf("Failing LBA: %llu\n", res->flba);
+		if (res->valid & 0x3)
+			printf("Status Code type: %hhu\n", res->status_code_type);
+		if (res->valid & 0x4)
+			printf("Status Code: %hhu\n", res->status_code);
+	}
+
+}
+void show_self_test_log(struct nvme_self_test_log_page *stlp,
+			unsigned int num_entries,
+			unsigned int mode)
+{
+	unsigned int max_entries = min(NVME_MAX_STLPE, num_entries);
+
+	if (stlp->current_operation) {
+		printf("an operation is ongoing, cannot parse yet!\n");
+		return;
+	}
+	if (mode == HUMAN)
+		show_self_test_log_human(stlp, max_entries);
+	else
+		d_raw((unsigned char *) stlp, sizeof(*stlp));
+	/* TODO support json */
 }
 
 void show_error_log(struct nvme_error_log_page *err_log, int entries, const char *devname)
