@@ -78,8 +78,9 @@ int nvme_identify_ns(int fd, __u32 nsid, bool present, void *data);
 int nvme_identify_ns_list(int fd, __u32 nsid, bool all, void *data);
 int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data);
 int nvme_identify_ns_descs(int fd, __u32 nsid, void *data);
+int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
+                 __u32 data_len, void *data);
 
-int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data);
 int nvme_fw_log(int fd, struct nvme_firmware_log_page *fw_log);
 int nvme_error_log(int fd, int entries, struct nvme_error_log_page *err_log);
 int nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log *smart_log);

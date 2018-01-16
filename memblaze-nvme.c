@@ -223,7 +223,9 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 
-	err = nvme_get_log(fd, cfg.namespace_id, 0xca, sizeof(smart_log), &smart_log);
+	err = nvme_get_log(fd, cfg.namespace_id, 0xca,
+			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			   sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
 			err = show_memblaze_smart_log(fd, cfg.namespace_id, devicename, &smart_log);

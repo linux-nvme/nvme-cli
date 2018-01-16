@@ -776,6 +776,11 @@ enum {
 	NVME_FWACT_ACTV		= (2 << 3),
 };
 
+enum {
+	NVME_NO_LOG_LSP       = 0x0,
+	NVME_NO_LOG_LPO       = 0x0,
+};
+
 /* Sanitize and Sanitize Monitor/Log */
 enum {
 	/* Sanitize */

@@ -381,7 +381,8 @@ int nvme_identify_ns_descs(int fd, __u32 nsid, void *data)
 	return nvme_identify(fd, nsid, NVME_ID_CNS_NS_DESC_LIST, data);
 }
 
-int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
+int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
+                 __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_get_log_page,
@@ -393,39 +394,56 @@ int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
 	__u16 numdu = numd >> 16, numdl = numd & 0xffff;
 
 	cmd.cdw10 = log_id | (numdl << 16);
+	if (lsp)
+                cmd.cdw10 |= lsp << 8;
+
 	cmd.cdw11 = numdu;
+	cmd.cdw12 = lpo;
+	cmd.cdw13 = (lpo >> 32);
 
 	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
 int nvme_fw_log(int fd, struct nvme_firmware_log_page *fw_log)
 {
-	return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_FW_SLOT, sizeof(*fw_log), fw_log);
+	return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_FW_SLOT,
+			    NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			    sizeof(*fw_log), fw_log);
 }
 
 int nvme_error_log(int fd, int entries, struct nvme_error_log_page *err_log)
 {
-	return nvme_get_log(fd, 0, NVME_LOG_ERROR, entries * sizeof(*err_log), err_log);
+	return nvme_get_log(fd, 0, NVME_LOG_ERROR,
+			    NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			    entries * sizeof(*err_log), err_log);
 }
 
 int nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log *smart_log)
 {
-	return nvme_get_log(fd, nsid, NVME_LOG_SMART, sizeof(*smart_log), smart_log);
+	return nvme_get_log(fd, nsid, NVME_LOG_SMART,
+			    NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			    sizeof(*smart_log), smart_log);
 }
 
 int nvme_effects_log(int fd, struct nvme_effects_log_page *effects_log)
 {
-	return nvme_get_log(fd, 0, NVME_LOG_CMD_EFFECTS, sizeof(*effects_log), effects_log);
+	return nvme_get_log(fd, 0, NVME_LOG_CMD_EFFECTS,
+			    NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			    sizeof(*effects_log), effects_log);
 }
 
 int nvme_discovery_log(int fd, struct nvmf_disc_rsp_page_hdr *log, __u32 size)
 {
-	return nvme_get_log(fd, 0, NVME_LOG_DISC, size, log);
+	return nvme_get_log(fd, 0, NVME_LOG_DISC,
+			    NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			    size, log);
 }
 
 int nvme_sanitize_log(int fd, struct nvme_sanitize_log_page *sanitize_log)
 {
-	return nvme_get_log(fd, 0, NVME_LOG_SANITIZE, sizeof(*sanitize_log), sanitize_log);
+	return nvme_get_log(fd, 0, NVME_LOG_SANITIZE,
+			    NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			    sizeof(*sanitize_log), sanitize_log);
 }
 
 int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
