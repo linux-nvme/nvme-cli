@@ -396,7 +396,9 @@ static int wdc_nvme_check_supported_log_page(int fd, __u8 log_id)
 	memset(data, 0, sizeof (__u8) * WDC_C2_LOG_BUF_LEN);
 
 	/* get the log page length */
-	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_AVAILABLE_LOG_PAGES_OPCODE, WDC_C2_LOG_BUF_LEN, data);
+	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_AVAILABLE_LOG_PAGES_OPCODE,
+			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			   WDC_C2_LOG_BUF_LEN, data);
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : Unable to get C2 Log Page length, ret = %d\n", ret);
 		goto out;
@@ -409,7 +411,9 @@ static int wdc_nvme_check_supported_log_page(int fd, __u8 log_id)
 		goto out;
 	}
 
-	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_AVAILABLE_LOG_PAGES_OPCODE, hdr_ptr->length, data);
+	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_AVAILABLE_LOG_PAGES_OPCODE,
+			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			   hdr_ptr->length, data);
 	/* parse the data until the List of log page ID's is found */
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : Unable to read C2 Log Page data, ret = %d\n", ret);
@@ -1143,7 +1147,9 @@ static int wdc_get_ca_log_page(int fd, char *format)
 	}
 	memset(data, 0, sizeof (__u8) * WDC_CA_LOG_BUF_LEN);
 
-	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE, WDC_CA_LOG_BUF_LEN, data);
+	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE,
+			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			   WDC_CA_LOG_BUF_LEN, data);
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 
@@ -1191,7 +1197,9 @@ static int wdc_get_c1_log_page(int fd, char *format, uint8_t interval)
 	}
 	memset(data, 0, sizeof (__u8) * WDC_ADD_LOG_BUF_LEN);
 
-	ret = nvme_get_log(fd, 0x01, WDC_NVME_ADD_LOG_OPCODE, WDC_ADD_LOG_BUF_LEN, data);
+	ret = nvme_get_log(fd, 0x01, WDC_NVME_ADD_LOG_OPCODE,
+			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			   WDC_ADD_LOG_BUF_LEN, data);
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	if (ret == 0) {
