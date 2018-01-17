@@ -779,7 +779,6 @@ enum {
 enum {
 	NVME_NO_LOG_LSP       = 0x0,
 	NVME_NO_LOG_LPO       = 0x0,
-	NVME_TELEM_LSP_CREATE = 0x1,
 };
 
 /* Sanitize and Sanitize Monitor/Log */

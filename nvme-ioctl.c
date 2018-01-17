@@ -381,7 +381,7 @@ int nvme_identify_ns_descs(int fd, __u32 nsid, void *data)
 	return nvme_identify(fd, nsid, NVME_ID_CNS_NS_DESC_LIST, data);
 }
 
-int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u32 lpo,
+int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
                  __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
@@ -395,10 +395,11 @@ int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u32 lpo,
 
 	cmd.cdw10 = log_id | (numdl << 16);
 	if (lsp)
-                cmd.cdw10 |= ((int)lsp) << 8;
+                cmd.cdw10 |= lsp << 8;
 
 	cmd.cdw11 = numdu;
-        cmd.cdw12 = lpo;
+	cmd.cdw12 = lpo;
+	cmd.cdw13 = (lpo >> 32);
 
 	return nvme_submit_admin_passthru(fd, &cmd);
 }

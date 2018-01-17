@@ -428,7 +428,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		__u32 log_id;
 		__u32 log_len;
 		__u32 aen;
-		__u32 lpo;
+		__u64 lpo;
 		__u8  lsp;
 		int   raw_binary;
 	};
@@ -447,8 +447,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		{"log-len",      'l', "NUM", CFG_POSITIVE, &cfg.log_len,      required_argument, log_len},
 		{"aen",          'a', "NUM", CFG_POSITIVE, &cfg.aen,          required_argument, aen},
 		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
-		{"lsp",          's', "NUM", CFG_POSITIVE, &cfg.lsp,          required_argument, lsp},
-		{"lsp",          'o', "NUM", CFG_POSITIVE, &cfg.lpo,          required_argument, lpo},
+		{"lsp",          's', "NUM", CFG_LONG, &cfg.lsp,          required_argument, lsp},
+		{"lsp",          'o', "NUM", CFG_BYTE, &cfg.lpo,          required_argument, lpo},
 		{NULL}
 	};
 
