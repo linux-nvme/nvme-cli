@@ -404,6 +404,19 @@ int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
 	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
+int nvme_get_telemetry_log(int fd, void *lp, int generate_report,
+			   size_t log_page_size, __u64 offset)
+{
+	if (generate_report)
+		return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_TELEMETRY_HOST,
+				    NVME_TELEM_LSP_CREATE, offset,
+				    log_page_size, lp);
+	else
+		return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_TELEMETRY_HOST,
+				    NVME_NO_LOG_LSP, offset,
+				    log_page_size, lp);
+}
+
 int nvme_fw_log(int fd, struct nvme_firmware_log_page *fw_log)
 {
 	return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_FW_SLOT,

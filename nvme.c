@@ -223,6 +223,112 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	return err;
 }
 
+static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve telemetry log and write to binary file";
+	const char *fname = "File name to save raw binary, includes header";
+	const char *hgen = "Have the host tell the controller to generate the report";
+	struct nvme_telemetry_log_page_hdr *hdr;
+	void *page_log;
+	size_t full_size, offset, num_blocks;
+	int err = 0 , fd, output;
+
+	struct config {
+		char *file_name;
+		__u32 host_gen;
+	};
+	struct config cfg = {
+		.file_name = NULL,
+		.host_gen = 1,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"output-file", 'o', "FILE", CFG_STRING, &cfg.file_name, required_argument, fname},
+		{"host-generate", 'h', "NUM", CFG_POSITIVE, &cfg.host_gen, required_argument, hgen},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0) {
+		fprintf(stderr, "parse and open failed\n");
+		return fd;
+	}
+
+	if (!cfg.file_name) {
+		fprintf(stderr, "Please provide an output file!\n");
+		close(fd);
+		return EINVAL;
+	}
+
+	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	if (output < 0) {
+		fprintf(stderr, "Failed to open output file!\n");
+		return output;
+	}
+
+	cfg.host_gen = !!cfg.host_gen;
+
+	hdr = malloc(4096);
+	memset(hdr, 0, 4096);
+
+	err = nvme_get_telemetry_log(fd, hdr, cfg.host_gen, 4096, 0);
+	if (err) {
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+			nvme_status_to_string(err), err);
+		fprintf(stderr, "Failed to aquire telemetry header %d!\n", err);
+		free(hdr);
+		goto close_out;
+	}
+
+	err = write(output, (void *) hdr, 4096);
+	if (err != 4096) {
+		fprintf(stderr, "Failed to flush all data to file!");
+		goto close_out;
+	}
+
+	num_blocks = max(hdr->dalb1, max(hdr->dalb2, hdr->dalb3));
+
+	free(hdr);
+	full_size = num_blocks * 512;
+	/* Round to page boundary */
+	full_size += (4096 - (full_size % 4096));
+	/* We've already pulled 1 page worth of data, lets remove that. */
+	full_size -= 4096;
+	offset = 4096;
+
+	page_log = malloc(4096);
+	if (!page_log) {
+		fprintf(stderr, "Failed to allocate %zu bytes for log\n",
+			full_size);
+		err = ENOMEM;
+		goto close_out;
+	}
+
+	while (full_size) {
+		err = nvme_get_telemetry_log(fd, page_log, 0, 4096, offset);
+		if (err) {
+			fprintf(stderr, "Failed to aquire full telemetry log!\n");
+			fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
+			goto out;
+		}
+
+		err = write(output, (void *) page_log, 4096);
+		if (err != 4096) {
+			fprintf(stderr, "Failed to flush all data to file!");
+			goto out;
+		}
+		full_size -= 4096;
+		offset += 4096;
+	}
+ out:
+	free(page_log);
+ close_out:
+	close(fd);
+	close(output);
+	return err;
+}
+
 static int get_effects_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve command effects log page and print the table.";
