@@ -418,6 +418,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *log_id = "identifier of log to retrieve";
 	const char *log_len = "how many bytes to retrieve";
 	const char *aen = "result of the aen, use to override log id";
+	const char *lsp = "Log Specific Field";
+	const char *lpo = "The log page offset specifies the location within a log page to start returning data from";
 	const char *raw_binary = "output in raw format";
 	int err, fd;
 
@@ -426,6 +428,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		__u32 log_id;
 		__u32 log_len;
 		__u32 aen;
+		__u64 lpo;
+		__u8  lsp;
 		int   raw_binary;
 	};
 
@@ -433,6 +437,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.namespace_id = NVME_NSID_ALL,
 		.log_id       = 0,
 		.log_len      = 0,
+		.lpo          = NVME_NO_LOG_LPO,
+		.lsp          = NVME_NO_LOG_LSP,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -441,6 +447,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		{"log-len",      'l', "NUM", CFG_POSITIVE, &cfg.log_len,      required_argument, log_len},
 		{"aen",          'a', "NUM", CFG_POSITIVE, &cfg.aen,          required_argument, aen},
 		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
+		{"lpo",          's', "NUM", CFG_LONG, &cfg.lsp,          required_argument, lsp},
+		{"lsp",          'o', "NUM", CFG_BYTE, &cfg.lpo,          required_argument, lpo},
 		{NULL}
 	};
 
@@ -465,7 +473,9 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 			return EINVAL;
 		}
 
-		err = nvme_get_log(fd, cfg.namespace_id, cfg.log_id, cfg.log_len, log);
+		err = nvme_get_log(fd, cfg.namespace_id, cfg.log_id,
+				   cfg.lsp, cfg.lpo,
+				   cfg.log_len, log);
 		if (!err) {
 			if (!cfg.raw_binary) {
 				printf("Device:%s log-id:%d namespace-id:%#x\n",
