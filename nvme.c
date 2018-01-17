@@ -1432,7 +1432,7 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *raw_binary = "show infos in binary format";
 	const char *namespace_id = "identifier of desired namespace";
 	int err, fmt, fd;
-	char *nsdescs[0x1000] = { };
+	void *nsdescs;
 	struct config {
 		__u32 namespace_id;
 		int raw_binary;
@@ -1451,11 +1451,6 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 		{NULL}
 	};
 
-	if (posix_memalign((void *)&nsdescs, getpagesize(), 0x1000)) {
-		fprintf(stderr, "can not allocate controller list payload\n");
-		return ENOMEM;
-	}
-
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (fd < 0)
 		return fd;
@@ -1468,15 +1463,20 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (!cfg.namespace_id)
 		cfg.namespace_id = get_nsid(fd);
 
-	err = nvme_identify_ns_descs(fd, cfg.namespace_id, &nsdescs);
+	if (posix_memalign(&nsdescs, getpagesize(), 0x1000)) {
+		fprintf(stderr, "can not allocate controller list payload\n");
+		return ENOMEM;
+	}
+
+	err = nvme_identify_ns_descs(fd, cfg.namespace_id, nsdescs);
 	if (!err) {
 		if (fmt == BINARY)
-			d_raw((unsigned char *)&nsdescs, 0x1000);
+			d_raw((unsigned char *)nsdescs, 0x1000);
 		else if (fmt == JSON)
-			json_nvme_id_ns_descs(&nsdescs);
+			json_nvme_id_ns_descs(nsdescs);
 		else {
 			printf("NVME Namespace Identification Descriptors NS %d:\n", cfg.namespace_id);
-			show_nvme_id_ns_descs(&nsdescs);
+			show_nvme_id_ns_descs(nsdescs);
 		}
 	}
 	else if (err > 0)
@@ -1484,6 +1484,9 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 			nvme_status_to_string(err), err, cfg.namespace_id);
 	else
 		perror("identify namespace");
+
+	free(nsdescs);
+
 	return err;
 }
 
