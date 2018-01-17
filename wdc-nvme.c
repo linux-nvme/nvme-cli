@@ -550,8 +550,8 @@ static int wdc_do_cap_diag(int fd, char *file)
 static int wdc_cap_diag(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Capture Diagnostics Log.";
-	char *file = "Output file pathname.";
+	const char *desc = "Capture Diagnostics Log.";
+	const char *file = "Output file pathname.";
 	char f[PATH_MAX] = {0};
 	int fd;
 
@@ -671,8 +671,8 @@ static int wdc_do_drive_log(int fd, char *file)
 static int wdc_drive_log(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Capture Drive Log.";
-	char *file = "Output file pathname.";
+	const char *desc = "Capture Drive Log.";
+	const char *file = "Output file pathname.";
 	char f[PATH_MAX] = {0};
 	int fd;
 	struct config {
@@ -707,8 +707,8 @@ static int wdc_drive_log(int argc, char **argv, struct command *command,
 static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Get Crash Dump.";
-	char *file = "Output file pathname.";
+	const char *desc = "Get Crash Dump.";
+	const char *file = "Output file pathname.";
 	int fd;
 	int ret;
 	struct config {
@@ -788,7 +788,7 @@ static const char* wdc_purge_mon_status_to_string(__u32 status)
 static int wdc_purge(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
-	char *desc = "Send a Purge command.";
+	const char *desc = "Send a Purge command.";
 	char *err_str;
 	int fd;
 	int ret;
@@ -829,7 +829,7 @@ static int wdc_purge(int argc, char **argv,
 static int wdc_purge_monitor(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
-	char *desc = "Send a Purge Monitor command.";
+	const char *desc = "Send a Purge Monitor command.";
 	int fd;
 	int ret;
 	__u8 output[WDC_NVME_PURGE_MONITOR_DATA_LEN];
@@ -1219,8 +1219,8 @@ static int wdc_get_c1_log_page(int fd, char *format, uint8_t interval)
 static int wdc_smart_add_log(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Retrieve additional performance statistics.";
-	char *interval = "Interval to read the statistics from [1, 15].";
+	const char *desc = "Retrieve additional performance statistics.";
+	const char *interval = "Interval to read the statistics from [1, 15].";
 	int fd;
 	int ret;
 
