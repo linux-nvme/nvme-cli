@@ -2420,7 +2420,8 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (read(sec_fd, sec_buf, sec_size) < 0) {
 		fprintf(stderr, "Failed to read data from security file with %s\n",
 			strerror(errno));
-		return EINVAL;
+		err = EINVAL;
+		goto free;
 	}
 
 	err = nvme_sec_send(fd, cfg.namespace_id, cfg.nssf, cfg.spsp, cfg.secp,
@@ -2431,6 +2432,9 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		fprintf(stderr, "NVME Security Send Command Error:%d\n", err);
 	else
 		printf("NVME Security Send Command Success:%d\n", result);
+
+free:
+	free(sec_buf);
 	return err;
 }
 
