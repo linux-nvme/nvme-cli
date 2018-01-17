@@ -3431,6 +3431,9 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 		} else if (cfg.size)
 			d_raw((unsigned char *)sec_buf, cfg.size);
 	}
+
+	free(sec_buf);
+
 	return err;
 }
 
