@@ -2314,12 +2314,14 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 			ffd = open(cfg.file, O_RDONLY);
 			if (ffd <= 0) {
 				fprintf(stderr, "no firmware file provided\n");
-				return -EINVAL;
+				err = EINVAL;
+				goto free;
 			}
 		}
 		if (read(ffd, (void *)buf, cfg.data_len) < 0) {
 			fprintf(stderr, "failed to read data buffer from input file\n");
-			return EINVAL;
+			err = EINVAL;
+			goto free;
 		}
 	}
 
@@ -2327,7 +2329,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 				cfg.data_len, buf, &result);
 	if (err < 0) {
 		perror("set-feature");
-		return errno;
+		goto free;
 	} else if (!err) {
 		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
 			nvme_feature_to_string(cfg.feature_id), cfg.value);
@@ -2341,6 +2343,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 				nvme_status_to_string(err), err);
+
+free:
 	if (buf)
 		free(buf);
 	return err;
