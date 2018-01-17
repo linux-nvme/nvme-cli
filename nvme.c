@@ -587,6 +587,9 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 			nvme_status_to_string(err), err, cfg.cntid);
 	else
 		perror("id controller list");
+
+	free(cntlist);
+
 	return err;
 }
 
