@@ -1791,6 +1791,9 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	}
 	if (!err)
 		printf("Firmware download success\n");
+
+	free(fw_buf);
+
 	return err;
 }
 
