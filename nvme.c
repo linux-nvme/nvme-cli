@@ -2541,12 +2541,14 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
                         ffd = open(cfg.file, O_RDONLY);
                         if (ffd <= 0) {
                                 fprintf(stderr, "no firmware file provided\n");
-                                return -EINVAL;
+				err = EINVAL;
+				goto free;
                         }
                 }
                 if (read(ffd, (void *)buf, cfg.data_len) < 0) {
                         fprintf(stderr, "failed to read data buffer from input file\n");
-                        return EINVAL;
+			err = EINVAL;
+			goto free;
                 }
         }
 
@@ -2554,7 +2556,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
                                 cfg.data_len, dw12, buf, &result);
         if (err < 0) {
                 perror("dir-send");
-                return errno;
+		goto free;
         }
         if (!err) {
                 printf("dir-send: type %#x, operation %#x, spec_val %#x, nsid %#x, result %#x \n",
@@ -2569,6 +2571,8 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
         else if (err > 0)
                 fprintf(stderr, "NVMe Status:%s(%x)\n",
                                 nvme_status_to_string(err), err);
+
+free:
         if (buf)
                 free(buf);
         return err;
