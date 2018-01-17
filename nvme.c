@@ -447,7 +447,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		{"log-len",      'l', "NUM", CFG_POSITIVE, &cfg.log_len,      required_argument, log_len},
 		{"aen",          'a', "NUM", CFG_POSITIVE, &cfg.aen,          required_argument, aen},
 		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
-		{"lsp",          's', "NUM", CFG_LONG, &cfg.lsp,          required_argument, lsp},
+		{"lpo",          's', "NUM", CFG_LONG, &cfg.lsp,          required_argument, lsp},
 		{"lsp",          'o', "NUM", CFG_BYTE, &cfg.lpo,          required_argument, lpo},
 		{NULL}
 	};
