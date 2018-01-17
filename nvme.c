@@ -3536,7 +3536,7 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
                         cfg.data_len, dw12, buf, &result);
         if (err < 0) {
                 perror("dir-receive");
-                return errno;
+		goto free;
         }
 
         if (!err) {
@@ -3556,6 +3556,7 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
         else if (err > 0)
                 fprintf(stderr, "NVMe Status:%s(%x)\n",
                                 nvme_status_to_string(err), err);
+free:
         if (buf)
                 free(buf);
         return err;
