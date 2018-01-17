@@ -3679,6 +3679,8 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 		metadata = malloc(cfg.metadata_len);
 	if (cfg.data_len) {
 		if (posix_memalign(&data, getpagesize(), cfg.data_len)) {
+			if (metadata)
+				free(metadata);
 			fprintf(stderr, "can not allocate data payload\n");
 			return ENOMEM;
 		}
