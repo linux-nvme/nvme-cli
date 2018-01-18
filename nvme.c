@@ -703,6 +703,9 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 			nvme_status_to_string(err), err, cfg.cntid);
 	else
 		perror("id controller list");
+
+	free(cntlist);
+
 	return err;
 }
 
@@ -1545,7 +1548,7 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *raw_binary = "show infos in binary format";
 	const char *namespace_id = "identifier of desired namespace";
 	int err, fmt, fd;
-	char *nsdescs[0x1000] = { };
+	void *nsdescs;
 	struct config {
 		__u32 namespace_id;
 		int raw_binary;
@@ -1564,11 +1567,6 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 		{NULL}
 	};
 
-	if (posix_memalign((void *)&nsdescs, getpagesize(), 0x1000)) {
-		fprintf(stderr, "can not allocate controller list payload\n");
-		return ENOMEM;
-	}
-
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (fd < 0)
 		return fd;
@@ -1581,15 +1579,20 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (!cfg.namespace_id)
 		cfg.namespace_id = get_nsid(fd);
 
-	err = nvme_identify_ns_descs(fd, cfg.namespace_id, &nsdescs);
+	if (posix_memalign(&nsdescs, getpagesize(), 0x1000)) {
+		fprintf(stderr, "can not allocate controller list payload\n");
+		return ENOMEM;
+	}
+
+	err = nvme_identify_ns_descs(fd, cfg.namespace_id, nsdescs);
 	if (!err) {
 		if (fmt == BINARY)
-			d_raw((unsigned char *)&nsdescs, 0x1000);
+			d_raw((unsigned char *)nsdescs, 0x1000);
 		else if (fmt == JSON)
-			json_nvme_id_ns_descs(&nsdescs);
+			json_nvme_id_ns_descs(nsdescs);
 		else {
 			printf("NVME Namespace Identification Descriptors NS %d:\n", cfg.namespace_id);
-			show_nvme_id_ns_descs(&nsdescs);
+			show_nvme_id_ns_descs(nsdescs);
 		}
 	}
 	else if (err > 0)
@@ -1597,6 +1600,9 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 			nvme_status_to_string(err), err, cfg.namespace_id);
 	else
 		perror("identify namespace");
+
+	free(nsdescs);
+
 	return err;
 }
 
@@ -1901,6 +1907,9 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	}
 	if (!err)
 		printf("Firmware download success\n");
+
+	free(fw_buf);
+
 	return err;
 }
 
@@ -2421,12 +2430,14 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 			ffd = open(cfg.file, O_RDONLY);
 			if (ffd <= 0) {
 				fprintf(stderr, "no firmware file provided\n");
-				return -EINVAL;
+				err = EINVAL;
+				goto free;
 			}
 		}
 		if (read(ffd, (void *)buf, cfg.data_len) < 0) {
 			fprintf(stderr, "failed to read data buffer from input file\n");
-			return EINVAL;
+			err = EINVAL;
+			goto free;
 		}
 	}
 
@@ -2434,7 +2445,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 				cfg.data_len, buf, &result);
 	if (err < 0) {
 		perror("set-feature");
-		return errno;
+		goto free;
 	} else if (!err) {
 		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
 			nvme_feature_to_string(cfg.feature_id), cfg.value);
@@ -2448,6 +2459,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 				nvme_status_to_string(err), err);
+
+free:
 	if (buf)
 		free(buf);
 	return err;
@@ -2523,7 +2536,8 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (read(sec_fd, sec_buf, sec_size) < 0) {
 		fprintf(stderr, "Failed to read data from security file with %s\n",
 			strerror(errno));
-		return EINVAL;
+		err = EINVAL;
+		goto free;
 	}
 
 	err = nvme_sec_send(fd, cfg.namespace_id, cfg.nssf, cfg.spsp, cfg.secp,
@@ -2534,6 +2548,9 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		fprintf(stderr, "NVME Security Send Command Error:%d\n", err);
 	else
 		printf("NVME Security Send Command Success:%d\n", result);
+
+free:
+	free(sec_buf);
 	return err;
 }
 
@@ -2640,12 +2657,14 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
                         ffd = open(cfg.file, O_RDONLY);
                         if (ffd <= 0) {
                                 fprintf(stderr, "no firmware file provided\n");
-                                return -EINVAL;
+				err = EINVAL;
+				goto free;
                         }
                 }
                 if (read(ffd, (void *)buf, cfg.data_len) < 0) {
                         fprintf(stderr, "failed to read data buffer from input file\n");
-                        return EINVAL;
+			err = EINVAL;
+			goto free;
                 }
         }
 
@@ -2653,7 +2672,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
                                 cfg.data_len, dw12, buf, &result);
         if (err < 0) {
                 perror("dir-send");
-                return errno;
+		goto free;
         }
         if (!err) {
                 printf("dir-send: type %#x, operation %#x, spec_val %#x, nsid %#x, result %#x \n",
@@ -2668,6 +2687,8 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
         else if (err > 0)
                 fprintf(stderr, "NVMe Status:%s(%x)\n",
                                 nvme_status_to_string(err), err);
+
+free:
         if (buf)
                 free(buf);
         return err;
@@ -3526,6 +3547,9 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 		} else if (cfg.size)
 			d_raw((unsigned char *)sec_buf, cfg.size);
 	}
+
+	free(sec_buf);
+
 	return err;
 }
 
@@ -3628,7 +3652,7 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
                         cfg.data_len, dw12, buf, &result);
         if (err < 0) {
                 perror("dir-receive");
-                return errno;
+		goto free;
         }
 
         if (!err) {
@@ -3648,6 +3672,7 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
         else if (err > 0)
                 fprintf(stderr, "NVMe Status:%s(%x)\n",
                                 nvme_status_to_string(err), err);
+free:
         if (buf)
                 free(buf);
         return err;
@@ -3775,6 +3800,8 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	}
 	if (cfg.data_len) {
 		if (posix_memalign(&data, getpagesize(), cfg.data_len)) {
+			if (metadata)
+				free(metadata);
 			fprintf(stderr, "can not allocate data payload\n");
 			return ENOMEM;
 		}
