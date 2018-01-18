@@ -121,6 +121,11 @@
 #define WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE			0xCA
 #define WDC_CA_LOG_BUF_LEN							0x80
 
+/* Clear PCIe Correctable Errors */
+#define WDC_NVME_CLEAR_PCIE_CORR_OPCODE  	WDC_NVME_CAP_DIAG_CMD_OPCODE
+#define WDC_NVME_CLEAR_PCIE_CORR_CMD		0x22
+#define WDC_NVME_CLEAR_PCIE_CORR_SUBCMD		0x04
+
 /* Drive Essentials */
 #define WDC_DE_DEFAULT_NUMBER_OF_ERROR_ENTRIES		64
 #define WDC_DE_GENERIC_BUFFER_SIZE					80
@@ -294,6 +299,8 @@ static int wdc_purge(int argc, char **argv,
 static int wdc_purge_monitor(int argc, char **argv,
 		struct command *command, struct plugin *plugin);
 static int wdc_nvme_check_supported_log_page(int fd, __u8 log_id);
+static int wdc_clear_pcie_corr(int argc, char **argv, struct command *command,
+		struct plugin *plugin);
 static int wdc_do_drive_essentials(int fd, char *dir, char *key);
 static int wdc_drive_essentials(int argc, char **argv, struct command *command,
 		struct plugin *plugin);
@@ -1470,6 +1477,34 @@ static int wdc_smart_add_log(int argc, char **argv, struct command *command,
 	return 0;
 }
 
+static int wdc_clear_pcie_corr(int argc, char **argv, struct command *command,
+		struct plugin *plugin)
+{
+	char *desc = "Clear PCIE Correctable Errors.";
+	int fd;
+	int ret;
+	struct nvme_passthru_cmd admin_cmd;
+	const struct argconfig_commandline_options command_line_options[] = {
+		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc },
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	if (fd < 0)
+		return fd;
+
+	wdc_check_device(fd);
+
+	memset(&admin_cmd, 0, sizeof (admin_cmd));
+	admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE;
+	admin_cmd.cdw12 = ((WDC_NVME_CLEAR_PCIE_CORR_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
+			WDC_NVME_CLEAR_PCIE_CORR_CMD);
+
+	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	return ret;
+}
+
 static int wdc_get_serial_and_fw_rev(int fd, char *sn, char *fw_rev)
 {
 	int i;
@@ -2007,7 +2042,7 @@ static int wdc_do_drive_essentials(int fd, char *dir, char *key)
 	dataBuffer = calloc(1, elogBufferSize);
 	elogBuffer = (struct nvme_error_log_page *)dataBuffer;
 
-	ret = nvme_error_log(fd, 0, elogNumEntries, elogBuffer);
+	ret = nvme_error_log(fd, elogNumEntries, elogBuffer);
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : nvme_error_log() failed, ret = %d\n", ret);
 	} else {
@@ -2052,7 +2087,9 @@ static int wdc_do_drive_essentials(int fd, char *dir, char *key)
 		dataBuffer = calloc(1, dataBufferSize);
 		memset(dataBuffer, 0, dataBufferSize);
 
-		ret = nvme_get_log(fd, WDC_DE_GLOBAL_NSID, deVULogPagesList[vuLogIdx].logPageId, dataBufferSize, dataBuffer);
+		ret = nvme_get_log(fd, WDC_DE_GLOBAL_NSID, deVULogPagesList[vuLogIdx].logPageId,
+			   	NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+				dataBufferSize, dataBuffer);
 		if (ret) {
 			fprintf(stderr, "ERROR : WDC : nvme_get_log() for log page 0x%x failed, ret = %d\n",
 					deVULogPagesList[vuLogIdx].logPageId, ret);
