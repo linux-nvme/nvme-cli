@@ -377,6 +377,28 @@ enum {
 	NVME_NIDT_UUID		= 0x03,
 };
 
+/* Derived from 1.3a Figure 101: Get Log Page – Telemetry Host
+ * -Initiated Log (Log Identifier 07h)
+ */
+struct nvme_telemetry_log_page_hdr {
+	__u8    lpi; /* Log page identifier */
+	__u8    rsvd[4];
+	__u8    iee_oui[3];
+	__u16   dalb1; /* Data area 1 last block */
+	__u16   dalb2; /* Data area 2 last block */
+	__u16   dalb3; /* Data area 3 last block */
+	__u8    rsvd1[368]; /* TODO verify */
+	__u8    ctrlavail; /* Controller initiated data avail?*/
+	__u8    ctrldgn; /* Controller initiated telemetry Data Gen # */
+	__u8    rsnident[128];
+	/* We'll have to double fetch so we can get the header,
+	 * parse dalb1->3 determine how much size we need for the
+	 * log then alloc below. Or just do a secondary non-struct
+	 * allocation.
+	 */
+	__u8    telemetry_dataarea[0];
+};
+
 struct nvme_smart_log {
 	__u8			critical_warning;
 	__u8			temperature[2];
@@ -768,6 +790,7 @@ enum {
 	NVME_LOG_SMART		= 0x02,
 	NVME_LOG_FW_SLOT	= 0x03,
 	NVME_LOG_CMD_EFFECTS	= 0x05,
+	NVME_LOG_TELEMETRY_HOST = 0x07,
 	NVME_LOG_DISC		= 0x70,
 	NVME_LOG_RESERVATION	= 0x80,
 	NVME_LOG_SANITIZE	= 0x81,
@@ -779,6 +802,7 @@ enum {
 enum {
 	NVME_NO_LOG_LSP       = 0x0,
 	NVME_NO_LOG_LPO       = 0x0,
+	NVME_TELEM_LSP_CREATE = 0x1,
 };
 
 /* Sanitize and Sanitize Monitor/Log */
