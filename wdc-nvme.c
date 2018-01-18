@@ -396,7 +396,9 @@ static int wdc_nvme_check_supported_log_page(int fd, __u8 log_id)
 	memset(data, 0, sizeof (__u8) * WDC_C2_LOG_BUF_LEN);
 
 	/* get the log page length */
-	ret = nvme_get_log(fd, NVME_NSID_ALL, WDC_NVME_GET_AVAILABLE_LOG_PAGES_OPCODE, WDC_C2_LOG_BUF_LEN, data);
+	ret = nvme_get_log(fd, NVME_NSID_ALL, WDC_NVME_GET_AVAILABLE_LOG_PAGES_OPCODE,
+			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			   WDC_C2_LOG_BUF_LEN, data);
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : Unable to get C2 Log Page length, ret = %d\n", ret);
 		goto out;
@@ -409,7 +411,9 @@ static int wdc_nvme_check_supported_log_page(int fd, __u8 log_id)
 		goto out;
 	}
 
-	ret = nvme_get_log(fd, NVME_NSID_ALL, WDC_NVME_GET_AVAILABLE_LOG_PAGES_OPCODE, hdr_ptr->length, data);
+	ret = nvme_get_log(fd, NVME_NSID_ALL, WDC_NVME_GET_AVAILABLE_LOG_PAGES_OPCODE,
+			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			   hdr_ptr->length, data);
 	/* parse the data until the List of log page ID's is found */
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : Unable to read C2 Log Page data, ret = %d\n", ret);
@@ -550,8 +554,8 @@ static int wdc_do_cap_diag(int fd, char *file)
 static int wdc_cap_diag(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Capture Diagnostics Log.";
-	char *file = "Output file pathname.";
+	const char *desc = "Capture Diagnostics Log.";
+	const char *file = "Output file pathname.";
 	char f[PATH_MAX] = {0};
 	int fd;
 
@@ -671,8 +675,8 @@ static int wdc_do_drive_log(int fd, char *file)
 static int wdc_drive_log(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Capture Drive Log.";
-	char *file = "Output file pathname.";
+	const char *desc = "Capture Drive Log.";
+	const char *file = "Output file pathname.";
 	char f[PATH_MAX] = {0};
 	int fd;
 	struct config {
@@ -707,8 +711,8 @@ static int wdc_drive_log(int argc, char **argv, struct command *command,
 static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Get Crash Dump.";
-	char *file = "Output file pathname.";
+	const char *desc = "Get Crash Dump.";
+	const char *file = "Output file pathname.";
 	int fd;
 	int ret;
 	struct config {
@@ -788,7 +792,7 @@ static const char* wdc_purge_mon_status_to_string(__u32 status)
 static int wdc_purge(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
-	char *desc = "Send a Purge command.";
+	const char *desc = "Send a Purge command.";
 	char *err_str;
 	int fd;
 	int ret;
@@ -829,7 +833,7 @@ static int wdc_purge(int argc, char **argv,
 static int wdc_purge_monitor(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
-	char *desc = "Send a Purge Monitor command.";
+	const char *desc = "Send a Purge Monitor command.";
 	int fd;
 	int ret;
 	__u8 output[WDC_NVME_PURGE_MONITOR_DATA_LEN];
@@ -1143,7 +1147,9 @@ static int wdc_get_ca_log_page(int fd, char *format)
 	}
 	memset(data, 0, sizeof (__u8) * WDC_CA_LOG_BUF_LEN);
 
-	ret = nvme_get_log(fd, NVME_NSID_ALL, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE, WDC_CA_LOG_BUF_LEN, data);
+	ret = nvme_get_log(fd, NVME_NSID_ALL, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE,
+			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			   WDC_CA_LOG_BUF_LEN, data);
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 
@@ -1191,7 +1197,9 @@ static int wdc_get_c1_log_page(int fd, char *format, uint8_t interval)
 	}
 	memset(data, 0, sizeof (__u8) * WDC_ADD_LOG_BUF_LEN);
 
-	ret = nvme_get_log(fd, 0x01, WDC_NVME_ADD_LOG_OPCODE, WDC_ADD_LOG_BUF_LEN, data);
+	ret = nvme_get_log(fd, 0x01, WDC_NVME_ADD_LOG_OPCODE,
+			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			   WDC_ADD_LOG_BUF_LEN, data);
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	if (ret == 0) {
@@ -1219,8 +1227,8 @@ static int wdc_get_c1_log_page(int fd, char *format, uint8_t interval)
 static int wdc_smart_add_log(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
-	char *desc = "Retrieve additional performance statistics.";
-	char *interval = "Interval to read the statistics from [1, 15].";
+	const char *desc = "Retrieve additional performance statistics.";
+	const char *interval = "Interval to read the statistics from [1, 15].";
 	int fd;
 	int ret;
 
