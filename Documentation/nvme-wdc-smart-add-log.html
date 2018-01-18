@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 8.6.9" />
 <title>nvme-wdc-smart-add-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +94,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +225,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -787,9 +789,9 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-        Set the reporting format to <em>human</em>, or
+        Set the reporting format to <em>normal</em>, or
         <em>json</em>. Only one output format can be used at a time.
-        Default is human.
+        Default is normal.
 </p>
 </dd>
 </dl></div>
@@ -1129,7 +1131,8 @@ Has the program issue WDC smart-add-log Vendor Unique Command with default inter
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-11-28 08:42:45 MST
+Last updated
+ 2018-01-17 20:47:00 KST
 </div>
 </div>
 </body>
