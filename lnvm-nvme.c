@@ -24,6 +24,7 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 			   " lnvm-init -d nvme0n1";
 	const char *devname = "identifier of desired device. e.g. nvme0n1.";
 	const char *mmtype = "media manager to initialize on top of device. Default: gennvm.";
+	int ret;
 
 	struct config
 	{
@@ -42,7 +43,9 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 		{NULL}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (ret < 0)
+		return ret;
 
 	if (!strlen(cfg.devname)) {
 		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
@@ -55,12 +58,15 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 static int lnvm_list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "List all devices registered with LightNVM.";
+	int ret;
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{NULL}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
+	ret = argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
+	if (ret < 0)
+		return ret;
 
 	return lnvm_do_list_devices();
 }
@@ -68,12 +74,15 @@ static int lnvm_list(int argc, char **argv, struct command *cmd, struct plugin *
 static int lnvm_info(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Show general information and registered target types with LightNVM";
+	int ret;
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{NULL}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
+	ret = argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
+	if (ret < 0)
+		return ret;
 
 	return lnvm_do_info();
 }
@@ -128,6 +137,7 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 	const char *over_prov = "Define over-provision percentage for target.";
 	const char *flag_factory = "Create target in factory mode";
 	int flags;
+	int ret;
 
 	struct config
 	{
@@ -163,7 +173,9 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		{NULL}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (ret < 0)
+		return ret;
 
 	if (!strlen(cfg.devname)) {
 		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
@@ -189,6 +201,7 @@ static int lnvm_remove_tgt(int argc, char **argv, struct command *cmd, struct pl
 {
 	const char *desc = "Remove an initialized LightNVM target.";
 	const char *tgtname = "target name of the device to initialize. e.g. target0.";
+	int ret;
 
 	struct config
 	{
@@ -204,7 +217,9 @@ static int lnvm_remove_tgt(int argc, char **argv, struct command *cmd, struct pl
 		{NULL}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (ret < 0)
+		return ret;
 
 	if (!strlen(cfg.tgtname)) {
 		fprintf(stderr, "target name missing\n");
@@ -221,6 +236,7 @@ static int lnvm_factory_init(int argc, char **argv, struct command *cmd, struct 
 	const char *erase_only_marked = "only erase marked blocks. default: all blocks.";
 	const char *host_marks = "remove host side blocks list. default: keep.";
 	const char *bb_marks = "remove grown bad blocks list. default: keep";
+	int ret;
 
 	struct config
 	{
@@ -242,8 +258,10 @@ static int lnvm_factory_init(int argc, char **argv, struct command *cmd, struct 
 		{NULL}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options, &cfg,
+	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg,
 								sizeof(cfg));
+	if (ret < 0)
+		return ret;
 
 	if (!strlen(cfg.devname)) {
 		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
