@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme intel smart-log-add' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--raw-binary | -b]
+			[--json | -j]
 
 DESCRIPTION
 -----------
@@ -37,6 +38,10 @@ OPTIONS
 -b::
 --raw-binary::
 	Print the raw Intel Additional SMART log buffer to stdout.
+
+-j::
+--json::
+              Dump output in json format.
 
 EXAMPLES
 --------

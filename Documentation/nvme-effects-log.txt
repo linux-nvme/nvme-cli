@@ -8,7 +8,9 @@ nvme-effects-log - Send NVMe Command Effects log page request, returns result an
 SYNOPSIS
 --------
 [verse]
-'nvme effects-log' <device>
+'nvme effects-log' <device> [--output-format=<fmt> | -o <fmt>]
+                            [--human-readable | -H]
+                            [--raw-binary | -b]
 
 DESCRIPTION
 -----------
@@ -24,7 +26,20 @@ for each command that is supported.
 OPTIONS
 -------
 
-No options.
+-o <format>::
+--output-format=<format>::
+	This option will set the reporting format to normal, json, or binary.
+	Only one output format can be used at a time.
+
+-H::
+--human-readable::
+	This option will parse and format many of the bit fields into a
+	human-readable format.
+
+-b::
+--raw-binary::
+	This option will print the raw buffer to stdout. Structure is not
+	parsed by program.  This overrides the human-readable option.
 
 EXAMPLES
 --------
@@ -35,7 +50,12 @@ EXAMPLES
 ------------
 +
 
-Not much to it.
+* Have the program return the raw structure in binary:
++
+------------
+# nvme effects-log /dev/nvme0 --raw-binary > effects_log.raw
+# nvme effects-log /dev/nvme0 -b > effects_log.raw
+------------
 
 NVME
 ----

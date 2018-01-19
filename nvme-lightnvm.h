@@ -152,6 +152,30 @@ struct nvme_nvm_addr_format {
 	__u8			res[4];
 } __attribute__((packed));
 
+enum {
+	LNVM_IDFY_CAP_BAD_BLK_TBL_MGMT	= 0,
+	LNVM_IDFY_CAP_HYBRID_CMD_SUPP	= 1,
+	LNVM_IDFY_DOM_HYBRID_MODE	= 0,
+	LNVM_IDFY_DOM_ECC_MODE		= 1,
+	LNVM_IDFY_GRP_MTYPE_NAND	= 0,
+	LNVM_IDFY_GRP_FMTYPE_SLC	= 0,
+	LNVM_IDFY_GRP_FMTYPE_MLC	= 1,
+	LNVM_IDFY_GRP_FMTYPE_TLC	= 2,
+	LNVM_IDFY_GRP_MPOS_SNGL_PLN_RD	= 0,
+	LNVM_IDFY_GRP_MPOS_DUAL_PLN_RD	= 1,
+	LNVM_IDFY_GRP_MPOS_QUAD_PLN_RD	= 2,
+	LNVM_IDFY_GRP_MPOS_SNGL_PLN_PRG	= 8,
+	LNVM_IDFY_GRP_MPOS_DUAL_PLN_PRG	= 9,
+	LNVM_IDFY_GRP_MPOS_QUAD_PLN_PRG	= 10,
+	LNVM_IDFY_GRP_MPOS_SNGL_PLN_ERS	= 16,
+	LNVM_IDFY_GRP_MPOS_DUAL_PLN_ERS	= 17,
+	LNVM_IDFY_GRP_MPOS_QUAD_PLN_ERS	= 18,
+	LNVM_IDFY_GRP_MCCAP_SLC		= 0,
+	LNVM_IDFY_GRP_MCCAP_CMD_SUSP	= 1,
+	LNVM_IDFY_GRP_MCCAP_SCRAMBLE	= 2,
+	LNVM_IDFY_GRP_MCCAP_ENCRYPT	= 3,
+};
+
 struct nvme_nvm_id {
 	__u8			ver_id;
 	__u8			vmnt;
@@ -220,7 +244,7 @@ static inline struct ppa_addr generic_to_dev_addr(
 int lnvm_do_init(char *, char *);
 int lnvm_do_list_devices(void);
 int lnvm_do_info(void);
-int lnvm_do_create_tgt(char *, char *, char *, int, int, int);
+int lnvm_do_create_tgt(char *, char *, char *, int, int, int, int);
 int lnvm_do_remove_tgt(char *);
 int lnvm_do_factory_init(char *, int, int, int);
 int lnvm_do_id_ns(int, int, unsigned int);

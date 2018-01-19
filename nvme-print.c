@@ -174,12 +174,15 @@ static void show_nvme_id_ctrl_frmw(__u8 frmw)
 
 static void show_nvme_id_ctrl_lpa(__u8 lpa)
 {
-	__u8 rsvd = (lpa & 0xF8) >> 3;
+	__u8 rsvd = (lpa & 0xF0) >> 4;
+	__u8 telem = (lpa & 0x8) >> 3;
 	__u8 ed = (lpa & 0x4) >> 2;
 	__u8 celp = (lpa & 0x2) >> 1;
 	__u8 smlp = lpa & 0x1;
 	if (rsvd)
-		printf("  [7:3] : %#x\tReserved\n", rsvd);
+		printf("  [7:4] : %#x\tReserved\n", rsvd);
+	printf("  [3:3] : %#x\tTelemetry host/controller initiated log page %sSuporrted\n",
+	       telem, telem ? "" : "Not ");
 	printf("  [2:2] : %#x\tExtended data for Get Log Page %sSupported\n",
 		ed, ed ? "" : "Not ");
 	printf("  [1:1] : %#x\tCommand Effects Log Page %sSupported\n",
@@ -947,6 +950,7 @@ void show_error_log(struct nvme_error_log_page *err_log, int entries, const char
 		printf("lba          : %#"PRIx64"\n",(uint64_t)le64_to_cpu(err_log[i].lba));
 		printf("nsid         : %#x\n", err_log[i].nsid);
 		printf("vs           : %d\n", err_log[i].vs);
+		printf("cs           : %#"PRIx64"\n", (uint64_t) err_log[i].cs);
 		printf(".................\n");
 	}
 }
@@ -1022,20 +1026,52 @@ void show_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
 						fw_to_string(fw_log->frs[i]));
 }
 
-void show_effects_log(struct nvme_effects_log_page *effects)
+static void show_effects_log_human(__u32 effect)
+{
+	const char *set = "+";
+	const char *clr = "-";
+
+	printf("  CSUPP+");
+	printf("  LBCC%s", (effect & NVME_CMD_EFFECTS_LBCC) ? set : clr);
+	printf("  NCC%s", (effect & NVME_CMD_EFFECTS_NCC) ? set : clr);
+	printf("  NIC%s", (effect & NVME_CMD_EFFECTS_NIC) ? set : clr);
+	printf("  CCC%s", (effect & NVME_CMD_EFFECTS_CCC) ? set : clr);
+
+	if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 0)
+		printf("  No command restriction\n");
+	else if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 1)
+		printf("  No other command for same namespace\n");
+	else if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 2)
+		printf("  No other command for any namespace\n");
+	else
+		printf("  Reserved CSE\n");
+}
+
+void show_effects_log(struct nvme_effects_log_page *effects, unsigned int flags)
 {
 	int i;
+	int human = flags & HUMAN;
 	__u32 effect;
 
 	for (i = 0; i < 256; i++) {
 		effect = le32_to_cpu(effects->acs[i]);
-		if (effect & 1)
-			printf("ACS%-4d: %08x\n", i, effects->acs[i]);
+		if (effect & NVME_CMD_EFFECTS_CSUPP) {
+			printf("ACS%-4d: %08x", i, effect);
+			if (human)
+				show_effects_log_human(effect);
+			else
+				printf("\n");
+		}
 	}
 	for (i = 0; i < 256; i++) {
-		effect = le32_to_cpu(effects->acs[i]);
-		if (effect & 1)
-			printf("IOCS%-3d: %08x\n", i, effects->iocs[i]);
+		effect = le32_to_cpu(effects->iocs[i]);
+		if (effect & NVME_CMD_EFFECTS_CSUPP) {
+			printf("IOCS%-3d: %08x", i, effect);
+			if (human)
+				show_effects_log_human(effect);
+			else
+				printf("\n");
+		}
 	}
 }
 
@@ -1098,6 +1134,74 @@ void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 	printf("Thermal Management T2 Trans Count   : %u\n", le32_to_cpu(smart->thm_temp2_trans_count));
 	printf("Thermal Management T1 Total Time    : %u\n", le32_to_cpu(smart->thm_temp1_total_time));
 	printf("Thermal Management T2 Total Time    : %u\n", le32_to_cpu(smart->thm_temp2_total_time));
+}
+
+static void show_sanitize_log_sprog(__u32 sprog)
+{
+	double percent;
+
+	percent = (((double)sprog * 100) / 0x10000);
+	printf("\t(%f%%)\n", percent);
+}
+
+static const char *get_sanitize_log_sstat_status_str(__u16 status)
+{
+	const char *str;
+
+	switch (status & NVME_SANITIZE_LOG_STATUS_MASK) {
+	case NVME_SANITIZE_LOG_NEVER_SANITIZED:
+		str = "NVM Subsystem has never been sanitized.";
+		break;
+	case NVME_SANITIZE_LOG_COMPLETED_SUCCESS:
+		str = "Most Recent Sanitize Command Completed Successfully.";
+		break;
+	case NVME_SANITIZE_LOG_IN_PROGESS:
+		str = "Sanitize in Progress.";
+		break;
+	case NVME_SANITIZE_LOG_COMPLETED_FAILED:
+		str = "Most Recent Sanitize Command Failed.";
+		break;
+	default:
+		str = "Unknown.";
+	}
+
+	return str;
+}
+
+static void show_sanitize_log_sstat(__u16 status)
+{
+	const char *str = get_sanitize_log_sstat_status_str(status);
+
+	printf("\t[2:0]\t%s\n", str);
+	str = "Number of completed passes if most recent operation was overwrite";
+	printf("\t[7:3]\t%s:\t%u\n", str, (status & NVME_SANITIZE_LOG_NUM_CMPLTED_PASS_MASK) >> 3);
+
+	printf("\t  [8]\t");
+	if (status & NVME_SANITIZE_LOG_GLOBAL_DATA_ERASED)
+		str = "Global Data Erased set: NVM storage has not been written";
+	else
+		str = "Global Data Erased cleared: NVM storage has been written";
+	printf("%s\n", str);
+}
+
+void show_sanitize_log(struct nvme_sanitize_log_page *sanitize, unsigned int mode, const char *devname)
+{
+	int human = mode & HUMAN;
+
+	printf("Sanitize Progress                     (SPROG) :  %u", le32_to_cpu(sanitize->progress));
+	if (human && (sanitize->status & NVME_SANITIZE_LOG_STATUS_MASK) == NVME_SANITIZE_LOG_IN_PROGESS)
+		show_sanitize_log_sprog(le32_to_cpu(sanitize->progress));
+	else
+		printf("\n");
+
+	printf("Sanitize Status                       (SSTAT) :  %#x\n", le16_to_cpu(sanitize->status));
+	if (human)
+		show_sanitize_log_sstat(le16_to_cpu(sanitize->status));
+
+	printf("Sanitize Command Dword 10 Information (SCDW10):  %#x\n", le32_to_cpu(sanitize->cdw10_info));
+	printf("Estimated Time For Overwrite                  :  %u\n", le32_to_cpu(sanitize->est_ovrwrt_time));
+	printf("Estimated Time For Block Erase                :  %u\n", le32_to_cpu(sanitize->est_blk_erase_time));
+	printf("Estimated Time For Crypto Erase               :  %u\n", le32_to_cpu(sanitize->est_crypto_erase_time));
 }
 
 char *nvme_feature_to_string(int feature)
@@ -1409,7 +1513,7 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		printf("\tNumber of IO Submission Queues Allocated (NSQA): %u\n",  (result & 0x0000ffff) + 1);
 		break;
 	case NVME_FEAT_IRQ_COALESCE:
-		printf("\tAggregation Time     (TIME): %u ms\n", ((result & 0x0000ff00) >> 8) * 100);
+		printf("\tAggregation Time     (TIME): %u usec\n", ((result & 0x0000ff00) >> 8) * 100);
 		printf("\tAggregation Threshold (THR): %u\n",  (result & 0x000000ff) + 1);
 		break;
 	case NVME_FEAT_IRQ_CONFIG:
@@ -1901,6 +2005,66 @@ void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 	json_free_object(root);
 }
 
+void json_effects_log(struct nvme_effects_log_page *effects_log, const char *devname)
+{
+	struct json_object *root;
+	unsigned int opcode;
+	char key[16];
+	__u32 effect;
+
+	root = json_create_object();
+
+	for (opcode = 0; opcode < 256; opcode++) {
+		sprintf(key, "ACS%-4d", opcode);
+		effect = le32_to_cpu(effects_log->acs[opcode]);
+		json_object_add_value_int(root, key, effect);
+	}
+
+	for (opcode = 0; opcode < 256; opcode++) {
+		sprintf(key, "IOCS%-3d", opcode);
+		effect = le32_to_cpu(effects_log->iocs[opcode]);
+		json_object_add_value_int(root, key, effect);
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log, const char *devname)
+{
+	struct json_object *root;
+	struct json_object *dev;
+	struct json_object *sstat;
+	const char *status_str;
+	char str[128];
+
+	root = json_create_object();
+	dev = json_create_object();
+	sstat = json_create_object();
+
+	json_object_add_value_int(dev, "sprog", le16_to_cpu(sanitize_log->progress));
+	json_object_add_value_int(sstat, "global_erased",
+			(le16_to_cpu(sanitize_log->status) & NVME_SANITIZE_LOG_GLOBAL_DATA_ERASED) >> 8);
+	json_object_add_value_int(sstat, "no_cmplted_passes",
+			(le16_to_cpu(sanitize_log->status) & NVME_SANITIZE_LOG_NUM_CMPLTED_PASS_MASK) >> 3);
+
+	status_str = get_sanitize_log_sstat_status_str(sanitize_log->status);
+	sprintf(str, "(%d) %s", sanitize_log->status & NVME_SANITIZE_LOG_STATUS_MASK, status_str);
+	json_object_add_value_string(sstat, "status", str);
+
+	json_object_add_value_object(dev, "sstat", sstat);
+	json_object_add_value_int(dev, "cdw10_info", le32_to_cpu(sanitize_log->cdw10_info));
+	json_object_add_value_int(dev, "time_over_write", le32_to_cpu(sanitize_log->est_ovrwrt_time));
+	json_object_add_value_int(dev, "time_block_erase", le32_to_cpu(sanitize_log->est_blk_erase_time));
+	json_object_add_value_int(dev, "time_crypto_erase", le32_to_cpu(sanitize_log->est_crypto_erase_time));
+
+	json_object_add_value_object(root, devname, dev);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
 void json_print_nvme_subsystem_list(struct subsys_list_item *slist, int n)
 {
 	struct json_object *root;
@@ -1954,10 +2118,11 @@ void show_registers_cap(struct nvme_bar_cap *cap)
 {
 	printf("\tMemory Page Size Maximum      (MPSMAX): %u bytes\n", 1 <<  (12 + ((cap->mpsmax_mpsmin & 0xf0) >> 4)));
 	printf("\tMemory Page Size Minimum      (MPSMIN): %u bytes\n", 1 <<  (12 + (cap->mpsmax_mpsmin & 0x0f)));
+	printf("\tBoot Partition Support           (BPS): %s\n", (cap->bps_css_nssrs_dstrd & 0x2000) ? "Yes":"No");
 	printf("\tCommand Sets Supported           (CSS): NVM command set is %s\n",
-			(cap->css_nssrs_dstrd & 0x0020) ? "supported":"not supported");
-	printf("\tNVM Subsystem Reset Supported  (NSSRS): %s\n", (cap->css_nssrs_dstrd & 0x0010) ? "Yes":"No");
-	printf("\tDoorbell Stride                (DSTRD): %u bytes\n", 1 << (2 + (cap->css_nssrs_dstrd & 0x000f)));
+			(cap->bps_css_nssrs_dstrd & 0x0020) ? "supported":"not supported");
+	printf("\tNVM Subsystem Reset Supported  (NSSRS): %s\n", (cap->bps_css_nssrs_dstrd & 0x0010) ? "Yes":"No");
+	printf("\tDoorbell Stride                (DSTRD): %u bytes\n", 1 << (2 + (cap->bps_css_nssrs_dstrd & 0x000f)));
 	printf("\tTimeout                           (TO): %u ms\n", cap->to * 500);
 	printf("\tArbitration Mechanism Supported  (AMS): Weighted Round Robin with Urgent Priority Class is %s\n",
 			(cap->ams_cqr & 0x02) ? "supported":"not supported");

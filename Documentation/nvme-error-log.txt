@@ -8,8 +8,7 @@ nvme-error-log - Send NVME Error log page request, return result and log
 SYNOPSIS
 --------
 [verse]
-'nvme error-log' <device>  [--namespace-id=<nsid> | -n <nsid>]
-			 [--log-entries=<entries> | -e <entries>]
+'nvme error-log' <device>  [--log-entries=<entries> | -e <entries>]
 			 [--raw-binary | -b]
 			 [--output-format=<fmt> | -o <fmt>]
 
@@ -28,14 +27,6 @@ printed to stdout for another program to parse.
 
 OPTIONS
 -------
--n <nsid>::
---namespace-id=<nsid>::
-	Retrieve the Error Log for the given nsid. This is optional
-	and its success may depend on the device's capabilities to
-	provide this log on a per-namespace basis (see the NVMe Identify
-	Controller for this capability). The default nsid to use is
-	0xffffffff for the device global error log.
-
 -e <entries>::
 --log-entries=<entries>::
 	Specifies how many log entries the program should request from

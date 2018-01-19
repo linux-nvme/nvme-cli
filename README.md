@@ -110,10 +110,11 @@ events are created by Linux kernel's 'ftrace' component.
 
 The first thing to do is define a new command entry in the command
 list. This is declared in nvme-builtin.h. Simply append a new "ENTRY" into
-the list. The ENTRY takes three arguments: the "name" of the subcommand
-(this is what the user will type at the command line to invoke your
-command), a short help description of what your command does, and the
-name of the function callback that you're going to write.
+the list. The ENTRY normally takes three arguments: the "name" of the 
+subcommand (this is what the user will type at the command line to invoke
+your command), a short help description of what your command does, and the
+name of the function callback that you're going to write. Additionally,
+You can declare an alias name of subcommand with fourth argument, if needed.
 
 After the ENTRY is defined, you need to implement the callback. It takes
 four arguments: argc, argv, the command structure associated with the

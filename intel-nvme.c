@@ -229,7 +229,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 {
 	struct nvme_additional_smart_log smart_log;
 	int err, fd;
-	char *desc = "Get Intel vendor specific additional smart log (optionally, "\
+	const char *desc = "Get Intel vendor specific additional smart log (optionally, "\
 		      "for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
@@ -252,9 +252,12 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
-	err = nvme_get_log(fd, cfg.namespace_id, 0xca, sizeof(smart_log),
-			&smart_log);
+	err = nvme_get_log(fd, cfg.namespace_id, 0xca,
+			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			   sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (cfg.json)
 			show_intel_smart_log_jsn(&smart_log, cfg.namespace_id, devicename);
@@ -274,7 +277,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 	char log[512];
 	int err, fd;
 
-	char *desc = "Get Intel Marketing Name log and show it.";
+	const char *desc = "Get Intel Marketing Name log and show it.";
 	const char *raw = "dump output in binary format";
 	struct config {
 		int  raw_binary;
@@ -289,8 +292,12 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
-	err = nvme_get_log(fd, NVME_NSID_ALL, 0xdd, sizeof(log), log);
+	err = nvme_get_log(fd, NVME_NSID_ALL, 0xdd,
+			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			   sizeof(log), log);
 	if (!err) {
 		if (!cfg.raw_binary)
 			printf("Intel Marketing Name Log:\n%s\n", log);
@@ -334,7 +341,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	struct intel_temp_stats stats;
 	int err, fd;
 
-	char *desc = "Get Intel Marketing Name log and show it.";
+	const char *desc = "Get Intel Marketing Name log and show it.";
 	const char *raw = "dump output in binary format";
 	struct config {
 		int  raw_binary;
@@ -349,8 +356,12 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
-	err = nvme_get_log(fd, NVME_NSID_ALL, 0xc5, sizeof(stats), &stats);
+	err = nvme_get_log(fd, NVME_NSID_ALL, 0xc5,
+			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			   sizeof(stats), &stats);
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_temp_stats(&stats);
@@ -397,7 +408,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	struct intel_lat_stats stats;
 	int err, fd;
 
-	char *desc = "Get Intel Latency Statistics log and show it.";
+	const char *desc = "Get Intel Latency Statistics log and show it.";
 	const char *raw = "dump output in binary format";
 	const char *write = "Get write statistics (read default)";
 	struct config {
@@ -415,8 +426,12 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
-	err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1, sizeof(stats), &stats);
+	err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
+			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
+			   sizeof(stats), &stats);
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_lat_stats(&stats, cfg.write);
@@ -645,12 +660,12 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 	struct intel_assert_dump *ad = (struct intel_assert_dump *) intel->reserved;
 	struct intel_event_header *ehdr = (struct intel_event_header *)intel->reserved;
 
-	char *desc = "Get Intel Firmware Log and save it.";
-	char *log = "Log type: 0, 1, or 2 for nlog, event log, and assert log, respectively.";
-	char *core = "Select which region log should come from. -1 for all";
-	char *nlognum = "Select which nlog to read. -1 for all nlogs";
-	char *file = "Output file; defaults to device name provided";
-	char *verbose = "To print out verbose nlog info";
+	const char *desc = "Get Intel Firmware Log and save it.";
+	const char *log = "Log type: 0, 1, or 2 for nlog, event log, and assert log, respectively.";
+	const char *core = "Select which region log should come from. -1 for all";
+	const char *nlognum = "Select which nlog to read. -1 for all nlogs";
+	const char *file = "Output file; defaults to device name provided";
+	const char *verbose = "To print out verbose nlog info";
 	const char *namespace_id = "Namespace to get logs from";
 
 	struct config {

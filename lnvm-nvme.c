@@ -24,6 +24,7 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 			   " lnvm-init -d nvme0n1";
 	const char *devname = "identifier of desired device. e.g. nvme0n1.";
 	const char *mmtype = "media manager to initialize on top of device. Default: gennvm.";
+	int ret;
 
 	struct config
 	{
@@ -42,7 +43,9 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 		{NULL}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (ret < 0)
+		return ret;
 
 	if (!strlen(cfg.devname)) {
 		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
@@ -55,12 +58,15 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 static int lnvm_list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "List all devices registered with LightNVM.";
+	int ret;
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{NULL}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
+	ret = argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
+	if (ret < 0)
+		return ret;
 
 	return lnvm_do_list_devices();
 }
@@ -68,12 +74,15 @@ static int lnvm_list(int argc, char **argv, struct command *cmd, struct plugin *
 static int lnvm_info(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Show general information and registered target types with LightNVM";
+	int ret;
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{NULL}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
+	ret = argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
+	if (ret < 0)
+		return ret;
 
 	return lnvm_do_info();
 }
@@ -81,9 +90,8 @@ static int lnvm_info(int argc, char **argv, struct command *cmd, struct plugin *
 static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send an Identify Geometry command to the "\
-		"given LightNVM device, returns properties of the specified"\
+		"given LightNVM device, returns properties of the specified "\
 		"namespace in either human-readable or binary format.";
-	const char *force = "Return this namespace, even if not supported";
 	const char *raw_binary = "show infos in binary format";
 	const char *human_readable = "show infos in readable format";
 	const char *namespace_id = "identifier of desired namespace. default: 1";
@@ -93,7 +101,6 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 		__u32 namespace_id;
 		int   raw_binary;
 		int   human_readable;
-		int   force;
 	};
 
 	struct config cfg = {
@@ -102,13 +109,14 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id",    'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id,    required_argument, namespace_id},
-		{"force",           'f', "FLAG", CFG_NONE,     &cfg.force,           no_argument,       force},
 		{"raw-binary",      'b', "FLAG", CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
 		{"human-readable",  'H', "FLAG", CFG_NONE,     &cfg.human_readable,  no_argument,       human_readable},
 		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (cfg.human_readable)
 		flags |= HUMAN;
@@ -118,7 +126,6 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 	return lnvm_do_id_ns(fd, cfg.namespace_id, flags);
 }
 
-
 static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Instantiate a target on top of a LightNVM enabled device.";
@@ -127,8 +134,10 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 	const char *tgttype = "identifier of target type. e.g. pblk.";
 	const char *lun_begin = "Define begin of luns to use for target.";
 	const char *lun_end = "Define set of luns to use for target.";
+	const char *over_prov = "Define over-provision percentage for target.";
 	const char *flag_factory = "Create target in factory mode";
 	int flags;
+	int ret;
 
 	struct config
 	{
@@ -137,6 +146,8 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		char *tgttype;
 		__u32 lun_begin;
 		__u32 lun_end;
+		__u32 over_prov;
+
 		/* flags */
 		__u32 factory;
 	};
@@ -147,6 +158,7 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		.tgttype = "",
 		.lun_begin = -1,
 		.lun_end = -1,
+		.over_prov = -1,
 		.factory = 0,
 	};
 
@@ -156,11 +168,14 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		{"target-type",   't', "TARGETTYPE",  CFG_STRING,    &cfg.tgttype,   required_argument, tgttype},
 		{"lun-begin",     'b', "NUM",    CFG_POSITIVE,  &cfg.lun_begin,      required_argument,       lun_begin},
 		{"lun-end",       'e', "NUM",    CFG_POSITIVE,  &cfg.lun_end,   required_argument,       lun_end},
-		{"factory",      'f', "FLAG",   CFG_NONE,  &cfg.factory,   no_argument,  flag_factory},
+		{"over-prov",     'o', "NUM",    CFG_POSITIVE,  &cfg.over_prov, required_argument,  over_prov},
+		{"factory",       'f', "FLAG",   CFG_NONE,  &cfg.factory,   no_argument,  flag_factory},
 		{NULL}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (ret < 0)
+		return ret;
 
 	if (!strlen(cfg.devname)) {
 		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
@@ -179,13 +194,14 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 	if (cfg.factory)
 		flags |= NVM_TARGET_FACTORY;
 
-	return lnvm_do_create_tgt(cfg.devname, cfg.tgtname, cfg.tgttype, cfg.lun_begin, cfg.lun_end, flags);
+	return lnvm_do_create_tgt(cfg.devname, cfg.tgtname, cfg.tgttype, cfg.lun_begin, cfg.lun_end, cfg.over_prov, flags);
 }
 
 static int lnvm_remove_tgt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Remove an initialized LightNVM target.";
 	const char *tgtname = "target name of the device to initialize. e.g. target0.";
+	int ret;
 
 	struct config
 	{
@@ -201,7 +217,9 @@ static int lnvm_remove_tgt(int argc, char **argv, struct command *cmd, struct pl
 		{NULL}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (ret < 0)
+		return ret;
 
 	if (!strlen(cfg.tgtname)) {
 		fprintf(stderr, "target name missing\n");
@@ -218,6 +236,7 @@ static int lnvm_factory_init(int argc, char **argv, struct command *cmd, struct 
 	const char *erase_only_marked = "only erase marked blocks. default: all blocks.";
 	const char *host_marks = "remove host side blocks list. default: keep.";
 	const char *bb_marks = "remove grown bad blocks list. default: keep";
+	int ret;
 
 	struct config
 	{
@@ -239,8 +258,10 @@ static int lnvm_factory_init(int argc, char **argv, struct command *cmd, struct 
 		{NULL}
 	};
 
-	argconfig_parse(argc, argv, desc, command_line_options, &cfg,
+	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg,
 								sizeof(cfg));
+	if (ret < 0)
+		return ret;
 
 	if (!strlen(cfg.devname)) {
 		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));

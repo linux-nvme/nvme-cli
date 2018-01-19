@@ -1,0 +1,48 @@
+nvme-wdc-drive-essentials(1)
+============================
+
+NAME
+----
+nvme-wdc-drive-essentials - Retrieve WDC device's drive essentials bin files and save to a tar file.
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc drive-essentials' <device> [--dir-name=<DIRECTORY>, -d <DIRECTORY>] 
+
+DESCRIPTION
+-----------
+
+For the NVMe device given, captures the drive essential bin files and saves them into a tar file.  
+The tar file will be in the following format:  DRIVE_ESSENTIALS_<Serial Num>_<FW Revision>_<Date>_<Time>.tar.gz 
+    e.g. DRIVE_ESSENTIALS_A00FD8CA_1048_20170713_091731.tar.gz
+
+The <device> parameter is mandatory; NVMe character device (ex: /dev/nvme0).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+OPTIONS
+-------
+-d <DIRECTORY>::
+--dir-name=<DIRECTORY>::
+	Output directory; defaults to current working directory. 
+
+EXAMPLES
+--------
+* Gets the drive essentials data files from the device and saves the tar file in current directory
+  (e.g. DRIVE_ESSENTIALS_A00FD8CA_1048_20170713_091731.tar.gz):
++
+------------
+# nvme wdc drive-essentials /dev/nvme0 
+------------
+* Gets the drive essentials data files from the device and saves the tar file to specified directory 
+  (e.g. /tmp/DRIVE_ESSENTIALS_A00FD8CA_1048_20170713_091731):
++
+------------
+# nvme wdc drive-essentials /dev/nvme0 -d /tmp/ 
+------------
+
+NVME
+----
+Part of the nvme-user suite.

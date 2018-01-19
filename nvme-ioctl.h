@@ -78,13 +78,17 @@ int nvme_identify_ns(int fd, __u32 nsid, bool present, void *data);
 int nvme_identify_ns_list(int fd, __u32 nsid, bool all, void *data);
 int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data);
 int nvme_identify_ns_descs(int fd, __u32 nsid, void *data);
+int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
+                 __u32 data_len, void *data);
 
-int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data);
+int nvme_get_telemetry_log(int fd, void *lp, int generate_report,
+			   size_t log_page_size, __u64 offset);
 int nvme_fw_log(int fd, struct nvme_firmware_log_page *fw_log);
-int nvme_error_log(int fd, __u32 nsid, int entries,
-		   struct nvme_error_log_page *err_log);
+int nvme_error_log(int fd, int entries, struct nvme_error_log_page *err_log);
 int nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log *smart_log);
+int nvme_effects_log(int fd, struct nvme_effects_log_page *effects_log);
 int nvme_discovery_log(int fd, struct nvmf_disc_rsp_page_hdr *log, __u32 size);
+int nvme_sanitize_log(int fd, struct nvme_sanitize_log_page *sanitize_log);
 
 int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10,
 		 __u32 cdw11, __u32 data_len, void *data, __u32 *result);

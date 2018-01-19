@@ -349,15 +349,15 @@ class TestNVMe(object):
         print "host_write_commands " + host_write_commands
         return err
 
-    def get_error_log(self, nsid):
+    def get_error_log(self):
         """ Wrapper for nvme error-log command.
             - Args:
-                - nsid : namespace id to get error log from.
+                - None
             - Returns:
                 - 0 on success, error code on failure.
         """
         pattern = re.compile("^ Entry\[[ ]*[0-9]+\]")
-        error_log_cmd = "nvme error-log " + self.ctrl + " -n " + str(nsid)
+        error_log_cmd = "nvme error-log " + self.ctrl
         proc = subprocess.Popen(error_log_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE)
