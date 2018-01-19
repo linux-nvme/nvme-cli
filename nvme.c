@@ -579,9 +579,9 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 			return EINVAL;
 		}
 
-		err = nvme_get_log(fd, cfg.namespace_id, cfg.log_id,
-				   cfg.lsp, cfg.lpo,
-				   cfg.log_len, log);
+		err = nvme_get_log13(fd, cfg.namespace_id, cfg.log_id,
+				     cfg.lsp, cfg.lpo,
+				     cfg.log_len, log);
 		if (!err) {
 			if (!cfg.raw_binary) {
 				printf("Device:%s log-id:%d namespace-id:%#x\n",
