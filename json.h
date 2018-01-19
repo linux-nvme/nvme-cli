@@ -10,12 +10,14 @@ struct json_pair;
 #define JSON_TYPE_FLOAT 2
 #define JSON_TYPE_OBJECT 3
 #define JSON_TYPE_ARRAY 4
+#define JSON_TYPE_UINT 5
 #define JSON_PARENT_TYPE_PAIR 0
 #define JSON_PARENT_TYPE_ARRAY 1
 struct json_value {
 	int type;
 	union {
 		long long integer_number;
+		unsigned long long uint_number;
 		long double float_number;
 		char *string;
 		struct json_object *object;
@@ -54,6 +56,8 @@ void json_free_object(struct json_object *obj);
 int json_object_add_value_type(struct json_object *obj, const char *name, int type, ...);
 #define json_object_add_value_int(obj, name, val) \
 	json_object_add_value_type((obj), name, JSON_TYPE_INTEGER, (long long) (val))
+#define json_object_add_value_uint(obj, name, val) \
+	json_object_add_value_type((obj), name, JSON_TYPE_UINT, (unsigned long long) (val))
 #define json_object_add_value_float(obj, name, val) \
 	json_object_add_value_type((obj), name, JSON_TYPE_FLOAT, (val))
 #define json_object_add_value_string(obj, name, val) \
@@ -65,6 +69,8 @@ int json_object_add_value_type(struct json_object *obj, const char *name, int ty
 int json_array_add_value_type(struct json_array *array, int type, ...);
 #define json_array_add_value_int(obj, val) \
 	json_array_add_value_type((obj), JSON_TYPE_INTEGER, (val))
+#define json_array_add_value_uint(obj, val) \
+	json_array_add_value_type((obj), JSON_TYPE_UINT, (val))
 #define json_array_add_value_float(obj, val) \
 	json_array_add_value_type((obj), JSON_TYPE_FLOAT, (val))
 #define json_array_add_value_string(obj, val) \
