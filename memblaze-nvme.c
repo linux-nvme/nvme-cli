@@ -222,6 +222,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	err = nvme_get_log(fd, cfg.namespace_id, 0xca,
 			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
@@ -301,6 +303,8 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (cfg.sel > 7) {
 		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
@@ -394,6 +398,8 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
