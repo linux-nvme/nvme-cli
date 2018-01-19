@@ -589,7 +589,7 @@ static int wdc_nvme_check_supported_log_page(int fd, __u8 log_id)
 	memset(data, 0, sizeof (__u8) * WDC_C2_LOG_BUF_LEN);
 
 	/* get the log page length */
-	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_AVAILABLE_LOG_PAGES_OPCODE,
+	ret = nvme_get_log(fd, NVME_NSID_ALL, WDC_NVME_GET_AVAILABLE_LOG_PAGES_OPCODE,
 			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
 			   WDC_C2_LOG_BUF_LEN, data);
 	if (ret) {
@@ -604,7 +604,7 @@ static int wdc_nvme_check_supported_log_page(int fd, __u8 log_id)
 		goto out;
 	}
 
-	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_AVAILABLE_LOG_PAGES_OPCODE,
+	ret = nvme_get_log(fd, NVME_NSID_ALL, WDC_NVME_GET_AVAILABLE_LOG_PAGES_OPCODE,
 			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
 			   hdr_ptr->length, data);
 	/* parse the data until the List of log page ID's is found */
@@ -1340,7 +1340,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 	}
 	memset(data, 0, sizeof (__u8) * WDC_CA_LOG_BUF_LEN);
 
-	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE,
+	ret = nvme_get_log(fd, NVME_NSID_ALL, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE,
 			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
 			   WDC_CA_LOG_BUF_LEN, data);
 	if (strcmp(format, "json"))
