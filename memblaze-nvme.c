@@ -222,6 +222,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	err = nvme_get_log(fd, cfg.namespace_id, 0xca,
 			   NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
@@ -301,6 +303,8 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (cfg.sel > 7) {
 		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
@@ -394,6 +398,8 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
 
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
@@ -411,12 +417,14 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 			ffd = open(cfg.file, O_RDONLY);
 			if (ffd <= 0) {
 				fprintf(stderr, "no firmware file provided\n");
-				return -EINVAL;
+				err = EINVAL;
+				goto free;
 			}
 		}
 		if (read(ffd, (void *)buf, cfg.data_len) < 0) {
 			fprintf(stderr, "failed to read data buffer from input file\n");
-			return EINVAL;
+			err = EINVAL;
+			goto free;
 		}
 	}
 
@@ -424,7 +432,7 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 				cfg.data_len, buf, &result);
 	if (err < 0) {
 		perror("set-feature");
-		return errno;
+		goto free;
 	}
 	if (!err) {
 		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
@@ -434,6 +442,8 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 				nvme_status_to_string(err), err);
+
+free:
 	if (buf)
 		free(buf);
 	return err;
