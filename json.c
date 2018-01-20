@@ -55,6 +55,19 @@ static struct json_value *json_create_value_int(long long number)
 	return value;
 }
 
+static struct json_value *json_create_value_uint(unsigned long long number)
+{
+	struct json_value *value = malloc(sizeof(struct json_value));
+
+	if (value) {
+		value->type = JSON_TYPE_UINT;
+		value->uint_number = number;
+	} else
+		fail_and_notify();
+
+	return value;
+}
+
 static struct json_value *json_create_value_float(long double number)
 {
 	struct json_value *value = malloc(sizeof(struct json_value));
@@ -234,6 +247,8 @@ int json_object_add_value_type(struct json_object *obj, const char *name, int ty
 		value = json_create_value_string(va_arg(args, char *));
 	else if (type == JSON_TYPE_INTEGER)
 		value = json_create_value_int(va_arg(args, long long));
+	else if (type == JSON_TYPE_UINT)
+		value = json_create_value_uint(va_arg(args, unsigned long long));
 	else if (type == JSON_TYPE_FLOAT)
 		value = json_create_value_float(va_arg(args, long double));
 	else if (type == JSON_TYPE_OBJECT)
@@ -270,6 +285,8 @@ int json_array_add_value_type(struct json_array *array, int type, ...)
 		value = json_create_value_string(va_arg(args, char *));
 	else if (type == JSON_TYPE_INTEGER)
 		value = json_create_value_int(va_arg(args, long long));
+	else if (type == JSON_TYPE_UINT)
+		value = json_create_value_uint(va_arg(args, unsigned long long));
 	else if (type == JSON_TYPE_FLOAT)
 		value = json_create_value_float(va_arg(args, double));
 	else if (type == JSON_TYPE_OBJECT)
@@ -372,6 +389,9 @@ static void json_print_value(struct json_value *value, void *out)
 		break;
 	case JSON_TYPE_INTEGER:
 		printf( "%lld", value->integer_number);
+		break;
+	case JSON_TYPE_UINT:
+		printf( "%llu", value->uint_number);
 		break;
 	case JSON_TYPE_FLOAT:
 		printf( "%.0Lf", value->float_number);
