@@ -1110,8 +1110,6 @@ static void wdc_print_log_normal(struct wdc_ssd_perf_stats *perf)
 		(uint64_t)le64_to_cpu(perf->nr_blks));
 	printf("  Average NAND Read Size                         %20f\n",
 		safe_div_fp((le64_to_cpu(perf->nr_blks)), (le64_to_cpu((perf->nr_cmds)))));
-	printf("  Host Write Odd Start Commands                  %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->hw_os_cmds));
 	printf("  Nand Write Commands                            %20"PRIu64"\n",
 			(uint64_t)le64_to_cpu(perf->nw_cmds));
 	printf("  NAND Write Blocks                              %20"PRIu64"\n",
@@ -1167,8 +1165,6 @@ static void wdc_print_log_json(struct wdc_ssd_perf_stats *perf)
 		(uint64_t)le64_to_cpu(perf->nr_blks));
 	json_object_add_value_int(root, "Average NAND Read Size",
 		safe_div_fp((le64_to_cpu(perf->nr_blks)), (le64_to_cpu((perf->nr_cmds)))));
-	json_object_add_value_int(root, "Host Write Odd Start Commands",
-			(uint64_t)le64_to_cpu(perf->hw_os_cmds));
 	json_object_add_value_int(root, "Nand Write Commands",
 			(uint64_t)le64_to_cpu(perf->nw_cmds));
 	json_object_add_value_int(root, "NAND Write Blocks",
