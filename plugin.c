@@ -61,7 +61,8 @@ void general_help(struct plugin *plugin)
 	struct program *prog = plugin->parent;
 	struct plugin *extension;
 	unsigned i = 0;
-
+	unsigned padding = 15;
+	unsigned curr_length = 0;
 	printf("%s-%s\n", prog->name, prog->version);
 
 	usage(plugin);
@@ -78,12 +79,19 @@ void general_help(struct plugin *plugin)
 
 	printf("\nThe following are all implemented sub-commands:\n");
 
+	/* iterate through all commands to get maximum length */
+	/* Still need to handle the case of ultra long strings, help messages, etc */
 	for (; plugin->commands[i]; i++)
-		printf("  %-*s %s\n", 15, plugin->commands[i]->name,
+		if (padding < (curr_length = 2 + strlen(plugin->commands[i]->name)))
+			padding = curr_length;
+
+	i = 0;
+	for (; plugin->commands[i]; i++)
+		printf("  %-*s %s\n", padding, plugin->commands[i]->name,
 					plugin->commands[i]->help);
 
-	printf("  %-*s %s\n", 15, "version", "Shows the program version");
-	printf("  %-*s %s\n", 15, "help", "Display this help");
+	printf("  %-*s %s\n", padding, "version", "Shows the program version");
+	printf("  %-*s %s\n", padding, "help", "Display this help");
 	printf("\n");
 
 	if (plugin->name)
