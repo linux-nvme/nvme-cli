@@ -1047,26 +1047,80 @@ static void show_effects_log_human(__u32 effect)
 		printf("  Reserved CSE\n");
 }
 
+static char *nvme_cmd_to_string(int admin, __u8 opcode)
+{
+	if (admin) {
+		switch (opcode) {
+		case nvme_admin_delete_sq:	return "Delete I/O Submission Queue";
+		case nvme_admin_create_sq:	return "Create I/O Submission Queue";
+		case nvme_admin_get_log_page:	return "Get Log Page";
+		case nvme_admin_delete_cq:	return "Delete I/O Completion Queue";
+		case nvme_admin_create_cq:	return "Create I/O Completion Queue";
+		case nvme_admin_identify:	return "Identify";
+		case nvme_admin_abort_cmd:	return "Abort";
+		case nvme_admin_set_features:	return "Set Features";
+		case nvme_admin_get_features:	return "Get Features";
+		case nvme_admin_async_event:	return "Asynchronous Event Request";
+		case nvme_admin_ns_mgmt:	return "Namespace Management";
+		case nvme_admin_activate_fw:	return "Firmware Commit";
+		case nvme_admin_download_fw:	return "Firmware Image Download";
+		case nvme_admin_dev_self_test:	return "Device Self-test";
+		case nvme_admin_ns_attach:	return "Namespace Attachment";
+		case nvme_admin_keep_alive:	return "Keep Alive";
+		case nvme_admin_directive_send:	return "Directive Send";
+		case nvme_admin_directive_recv:	return "Directive Receive";
+		case nvme_admin_virtual_mgmt:	return "Virtualization Management";
+		case nvme_admin_nvme_mi_send:	return "NVMEe-MI Send";
+		case nvme_admin_nvme_mi_recv:	return "NVMEe-MI Receive";
+		case nvme_admin_dbbuf:		return "Doorbell Buffer Config";
+		case nvme_admin_format_nvm:	return "Format NVM";
+		case nvme_admin_security_send:	return "Security Send";
+		case nvme_admin_security_recv:	return "Security Receive";
+		case nvme_admin_sanitize_nvm:	return "Sanitize";
+		}
+	} else {
+		switch (opcode) {
+		case nvme_cmd_flush:		return "Flush";
+		case nvme_cmd_write:		return "Write";
+		case nvme_cmd_read:		return "Read";
+		case nvme_cmd_write_uncor:	return "Write Uncorrectable";
+		case nvme_cmd_compare:		return "Compare";
+		case nvme_cmd_write_zeroes:	return "Write Zeroes";
+		case nvme_cmd_dsm:		return "Dataset Management";
+		case nvme_cmd_resv_register:	return "Reservation Register";
+		case nvme_cmd_resv_report:	return "Reservation Report";
+		case nvme_cmd_resv_acquire:	return "Reservation Acquire";
+		case nvme_cmd_resv_release:	return "Reservation Release";
+		}
+	}
+
+	return "Unknown";
+}
+
 void show_effects_log(struct nvme_effects_log_page *effects, unsigned int flags)
 {
 	int i;
 	int human = flags & HUMAN;
 	__u32 effect;
 
+	printf("Admin Command Set\n");
 	for (i = 0; i < 256; i++) {
 		effect = le32_to_cpu(effects->acs[i]);
 		if (effect & NVME_CMD_EFFECTS_CSUPP) {
-			printf("ACS%-4d: %08x", i, effect);
+			printf("ACS%-6d[%-32s] %08x", i,
+					nvme_cmd_to_string(1, i), effect);
 			if (human)
 				show_effects_log_human(effect);
 			else
 				printf("\n");
 		}
 	}
+	printf("\nNVM Command Set\n");
 	for (i = 0; i < 256; i++) {
 		effect = le32_to_cpu(effects->iocs[i]);
 		if (effect & NVME_CMD_EFFECTS_CSUPP) {
-			printf("IOCS%-3d: %08x", i, effect);
+			printf("IOCS%-5d[%-32s] %08x", i,
+					nvme_cmd_to_string(0, i), effect);
 			if (human)
 				show_effects_log_human(effect);
 			else
@@ -2009,19 +2063,19 @@ void json_effects_log(struct nvme_effects_log_page *effects_log, const char *dev
 {
 	struct json_object *root;
 	unsigned int opcode;
-	char key[16];
+	char key[128];
 	__u32 effect;
 
 	root = json_create_object();
 
 	for (opcode = 0; opcode < 256; opcode++) {
-		sprintf(key, "ACS%-4d", opcode);
+		sprintf(key, "ACS%d (%s)", opcode, nvme_cmd_to_string(1, opcode));
 		effect = le32_to_cpu(effects_log->acs[opcode]);
 		json_object_add_value_int(root, key, effect);
 	}
 
 	for (opcode = 0; opcode < 256; opcode++) {
-		sprintf(key, "IOCS%-3d", opcode);
+		sprintf(key, "IOCS%d (%s)", opcode, nvme_cmd_to_string(0, opcode));
 		effect = le32_to_cpu(effects_log->iocs[opcode]);
 		json_object_add_value_int(root, key, effect);
 	}
