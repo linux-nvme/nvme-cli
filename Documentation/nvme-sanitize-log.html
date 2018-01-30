@@ -748,7 +748,9 @@ nvme-sanitize-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme sanitize-log</em> &lt;device&gt;</pre>
+<pre class="content"><em>nvme sanitize-log</em> &lt;device&gt; [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]
+                             [--human-readable | -H]
+                             [--raw-binary | -b]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -811,7 +813,44 @@ If cleared to 0, then non-volatile storage in the NVM subsystem has been written
 <div class="sect1">
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No options yet.</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+-o &lt;format&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;format&gt;
+</dt>
+<dd>
+<p>
+              Set the reporting format to <em>normal</em>, <em>json</em>, or
+              <em>binary</em>. Only one output format can be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+-H
+</dt>
+<dt class="hdlist1">
+--human-readable
+</dt>
+<dd>
+<p>
+        This option will parse and format many of the bit fields
+        into human-readable formats.
+</p>
+</dd>
+<dt class="hdlist1">
+-b
+</dt>
+<dt class="hdlist1">
+--raw-binary
+</dt>
+<dd>
+<p>
+        Print the raw buffer to stdout. Structure is not parsed by
+        program. This overrides the vendor specific and human readable options.
+</p>
+</dd>
+</dl></div>
 </div>
 </div>
 <div class="sect1">
@@ -841,7 +880,7 @@ Has the program issue Sanitize-log Command :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2017-06-28 11:25:21 PDT
+ 2018-01-30 19:28:39 KST
 </div>
 </div>
 </body>
