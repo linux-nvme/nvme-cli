@@ -674,6 +674,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 
 	struct config cfg = {
 		.cntid = 0,
+		.namespace_id = 0,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
