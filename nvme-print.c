@@ -110,11 +110,26 @@ static void show_nvme_id_ctrl_oaes(__le32 ctrl_oaes)
 static void show_nvme_id_ctrl_ctratt(__le32 ctrl_ctratt)
 {
 	__u32 ctratt = le32_to_cpu(ctrl_ctratt);
-	__u32 rsvd0 = (ctratt & 0xFFFFFFFE) >> 1;
-	__u32 hostid128 = ctratt & 0x1;
+	__u32 rsvd0 = ctratt >> 6;
+	__u32 hostid128 = ctratt & NVME_CTRL_CTRATT_128_ID >> 0;
+	__u32 psp = ctratt & NVME_CTRL_CTRATT_NON_OP_PSP >> 1;
+	__u32 sets = ctratt & NVME_CTRL_CTRATT_NVM_SETS >> 2;
+	__u32 rrl = ctratt & NVME_CTRL_CTRATT_READ_RECV_LVLS >> 3;
+	__u32 eg = ctratt & NVME_CTRL_CTRATT_ENDURANCE_GROUPS >> 4;
+	__u32 iod = ctratt & NVME_CTRL_CTRATT_PREDICTABLE_LAT >> 5;
 
 	if (rsvd0)
-		printf(" [31:1] : %#x\tReserved\n", rsvd0);
+		printf(" [31:6] : %#x\tReserved\n", rsvd0);
+	printf("  [5:5] : %#x\tPredictable Latency Mode %sSupported\n",
+		iod, iod ? "" : "Not ");
+	printf("  [4:4] : %#x\tEndurance Groups %sSupported\n",
+		eg, eg ? "" : "Not ");
+	printf("  [3:3] : %#x\tRead Recovery Levels %sSupported\n",
+		rrl, rrl ? "" : "Not ");
+	printf("  [2:2] : %#x\tNVM Sets %sSupported\n",
+		sets, sets ? "" : "Not ");
+	printf("  [1:1] : %#x\tNon-Operational Power State Permissive %sSupported\n",
+		psp, psp ? "" : "Not ");
 	printf("  [0:0] : %#x\t128-bit Host Identifier %sSupported\n",
 		hostid128, hostid128 ? "" : "Not ");
 	printf("\n");
