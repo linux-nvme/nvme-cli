@@ -426,8 +426,8 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 		}
 	}
 
-	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value, cfg.save,
-				cfg.data_len, buf, &result);
+	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value,
+				0, cfg.save, cfg.data_len, buf, &result);
 	if (err < 0) {
 		perror("set-feature");
 		goto free;

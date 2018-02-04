@@ -459,13 +459,14 @@ int nvme_sanitize_log(int fd, struct nvme_sanitize_log_page *sanitize_log)
 }
 
 int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
-		 __u32 data_len, void *data, __u32 *result)
+		 __u32 cdw12, __u32 data_len, void *data, __u32 *result)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= opcode,
 		.nsid		= nsid,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
+		.cdw11		= cdw12,
 		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= data_len,
 	};
@@ -477,13 +478,13 @@ int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
 	return err;
 }
 
-int nvme_set_feature(int fd, __u32 nsid, __u8 fid, __u32 value, bool save,
-		     __u32 data_len, void *data, __u32 *result)
+int nvme_set_feature(int fd, __u32 nsid, __u8 fid, __u32 value, __u32 cdw12,
+		     bool save, __u32 data_len, void *data, __u32 *result)
 {
 	__u32 cdw10 = fid | (save ? 1 << 31 : 0);
 
 	return nvme_feature(fd, nvme_admin_set_features, nsid, cdw10, value,
-			    data_len, data, result);
+			    cdw12, data_len, data, result);
 }
 
 int nvme_property(int fd, __u8 fctype, __le32 off, __le64 *value, __u8 attrib)
@@ -591,7 +592,7 @@ int nvme_get_feature(int fd, __u32 nsid, __u8 fid, __u8 sel, __u32 cdw11,
 	__u32 cdw10 = fid | sel << 8;
 
 	return nvme_feature(fd, nvme_admin_get_features, nsid, cdw10, cdw11,
-			    data_len, data, result);
+			    0, data_len, data, result);
 }
 
 int nvme_format(int fd, __u32 nsid, __u8 lbaf, __u8 ses, __u8 pi,

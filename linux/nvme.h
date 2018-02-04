@@ -491,6 +491,15 @@ enum {
 	NVME_LBART_ATTRIB_HIDE	= 1 << 1,
 };
 
+struct nvme_plm_config {
+	__u16	enable_event;
+	__u8	rsvd2[30];
+	__u64	dtwin_reads_thresh;
+	__u64	dtwin_writes_thresh;
+	__u64	dtwin_time_thresh;
+	__u8	rsvd56[456];
+};
+
 struct nvme_reservation_status {
 	__le32	gen;
 	__u8	rtype;
@@ -792,6 +801,8 @@ enum {
 	NVME_FEAT_HOST_MEM_BUF	= 0x0d,
 	NVME_FEAT_TIMESTAMP	= 0x0e,
 	NVME_FEAT_KATO		= 0x0f,
+	NVME_FEAT_PLM_CONFIG	= 0x13,
+	NVME_FEAT_PLM_WINDOW	= 0x14,
 	NVME_FEAT_SW_PROGRESS	= 0x80,
 	NVME_FEAT_HOST_ID	= 0x81,
 	NVME_FEAT_RESV_MASK	= 0x82,

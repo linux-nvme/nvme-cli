@@ -1811,6 +1811,9 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		if (cfg.cdw11 & 0x1)
 			cfg.data_len = 16;
 		break;
+	case NVME_FEAT_PLM_CONFIG:
+		cfg.data_len = 512;
+		break;
 	}
 
 	if (cfg.sel == 3)
@@ -2457,10 +2460,11 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		"Use get-feature to determine which Features are supported by "\
 		"the controller and are saveable/changeable.";
 	const char *namespace_id = "desired namespace";
-	const char *feature_id = "hex feature name (required)";
+	const char *feature_id = "feature identifier (required)";
 	const char *data_len = "buffer length if data required";
 	const char *data = "optional file for feature data (default stdin)";
 	const char *value = "new value of feature (required)";
+	const char *cdw12 = "feature cdw12, if used";
 	const char *save = "specifies that the controller shall save the attribute";
 	int err;
 	__u32 result;
@@ -2472,6 +2476,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		__u32 namespace_id;
 		__u32 feature_id;
 		__u32 value;
+		__u32 cdw12;
 		__u32 data_len;
 		int   save;
 	};
@@ -2489,6 +2494,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
 		{"feature-id",   'f', "NUM",  CFG_POSITIVE, &cfg.feature_id,   required_argument, feature_id},
 		{"value",        'v', "NUM",  CFG_POSITIVE, &cfg.value,        required_argument, value},
+		{"cdw12",        'c', "NUM",  CFG_POSITIVE, &cfg.cdw12,        required_argument, cdw12},
 		{"data-len",     'l', "NUM",  CFG_POSITIVE, &cfg.data_len,     required_argument, data_len},
 		{"data",         'd', "FILE", CFG_STRING,   &cfg.file,         required_argument, data},
 		{"save",         's', "",     CFG_NONE,     &cfg.save,         no_argument, save},
@@ -2531,8 +2537,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		}
 	}
 
-	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value, cfg.save,
-				cfg.data_len, buf, &result);
+	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value,
+			       cfg.cdw12, cfg.save, cfg.data_len, buf, &result);
 	if (err < 0) {
 		perror("set-feature");
 	} else if (!err) {

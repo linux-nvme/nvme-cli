@@ -1291,6 +1291,8 @@ char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_AUTO_PST:	return "Autonomous Power State Transition";
 	case NVME_FEAT_HOST_MEM_BUF:	return "Host Memory Buffer";
 	case NVME_FEAT_KATO:		return "Keep Alive Timer";
+	case NVME_FEAT_PLM_CONFIG:	return "Predicatable Latency Mode Config";
+	case NVME_FEAT_PLM_WINDOW:	return "Predicatable Latency Mode Window";
 	case NVME_FEAT_SW_PROGRESS:	return "Software Progress";
 	case NVME_FEAT_HOST_ID:		return "Host Identifier";
 	case NVME_FEAT_RESV_MASK:	return "Reservation Notification Mask";
@@ -1538,6 +1540,26 @@ void nvme_directive_show_fields(__u8 dtype, __u8 doper, unsigned int result, uns
         return;
 }
 
+static char *nvme_plm_window(__u32 plm)
+{
+	switch (plm & 0x7) {
+	case 1:
+		return "Deterministic Window (DTWIN)";
+	case 2:
+		return "Non-deterministic Window (NDWIN)";
+	default:
+		return "Reserved";
+	}
+}
+
+static void show_plm_config(struct nvme_plm_config *plmcfg)
+{
+	printf("\tEnable Event          :%04x\n", le16_to_cpu(plmcfg->enable_event));
+	printf("\tDTWIN Reads Threshold :%"PRIu64"\n", (uint64_t)le64_to_cpu(plmcfg->dtwin_reads_thresh));
+	printf("\tDTWIN Writes Threshold:%"PRIu64"\n", (uint64_t)le64_to_cpu(plmcfg->dtwin_writes_thresh));
+	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", (uint64_t)le64_to_cpu(plmcfg->dtwin_time_thresh));
+}
+
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf)
 {
 	__u8 field;
@@ -1609,6 +1631,13 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		break;
 	case NVME_FEAT_SW_PROGRESS:
 		printf("\tPre-boot Software Load Count (PBSLC): %u\n", result & 0x000000ff);
+		break;
+	case NVME_FEAT_PLM_CONFIG:
+		printf("\tPredictable Latency Window Enabled: %s\n", result & 0x1 ? "True":"False");
+		show_plm_config((struct nvme_plm_config *)buf);
+		break;
+	case NVME_FEAT_PLM_WINDOW:
+		printf("\tWindow Select: %s", nvme_plm_window(result));
 		break;
 	case NVME_FEAT_HOST_ID:
 		ull =  buf[7]; ull <<= 8; ull |= buf[6]; ull <<= 8; ull |= buf[5]; ull <<= 8;
