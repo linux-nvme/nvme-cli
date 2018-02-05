@@ -2941,6 +2941,8 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 	if (fd < 0)
 		return fd;
 
+	if (S_ISBLK(nvme_stat.st_mode))
+		cfg.namespace_id = get_nsid(fd);
 	err = nvme_flush(fd, cfg.namespace_id);
 	if (err < 0)
 		perror("flush");
