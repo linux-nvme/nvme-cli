@@ -79,7 +79,7 @@ int nvme_get_nsid(int fd)
 	if (!S_ISBLK(nvme_stat.st_mode)) {
 		fprintf(stderr,
 			"Error: requesting namespace-id from non-block device\n");
-		return ENOTBLK;
+		return -ENOTBLK;
 	}
 	return ioctl(fd, NVME_IOCTL_ID);
 }
@@ -689,7 +689,7 @@ int nvme_fw_commit(int fd, __u8 slot, __u8 action, __u8 bpid)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_activate_fw,
-		.cdw10		= (action << 3) | slot,
+		.cdw10		= (bpid << 31) | (action << 3) | slot,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);

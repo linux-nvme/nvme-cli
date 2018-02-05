@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme wdc id-ctrl' <device> [-v | --vendor-specific] [-b | --raw-binary]
+			[-H | --human-readable]
 			[-o <fmt> | --output-format=<fmt>]
 
 DESCRIPTION

@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-log
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 12/10/2017
+.\"      Date: 01/30/2018
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-LOG" "1" "12/10/2017" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-LOG" "1" "01/30/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,6 +37,8 @@ nvme-get-log \- Retrieves a log page from an NVMe device
                       [\-\-aen=<aen> | \-a <aen>]
                       [\-\-namespace\-id=<nsid> | \-n <nsid>]
                       [\-\-raw\-binary | \-b]
+                      [\-\-lpo=<offset> | \-o <offset>]
+                      [\-\-lsp=<field> | \-s <field>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -70,6 +72,16 @@ Sets the command\(cqs nsid value to the given nsid\&. Defaults to 0xffffffff if 
 \-b, \-\-raw\-binary
 .RS 4
 Print the raw log buffer to stdout\&.
+.RE
+.PP
+\-o <offset>, \-\-lpo=<offset>
+.RS 4
+The log page offset specifies the location within a log page to start returning data from\&. It\(cqs Dword\-aligned and 64\-bits\&.
+.RE
+.PP
+\-s <field>, \-\-lsp=<field>
+.RS 4
+The log specified field of LID\&.
 .RE
 .SH "EXAMPLES"
 .sp

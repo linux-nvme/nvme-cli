@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 8.6.9" />
 <title>nvme-get-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +94,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +225,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -750,7 +752,9 @@ nvme-get-log(1) Manual Page
                       [--log-len=&lt;log-len&gt; | -l &lt;log-len&gt;]
                       [--aen=&lt;aen&gt; | -a &lt;aen&gt;]
                       [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                      [--raw-binary | -b]</pre>
+                      [--raw-binary | -b]
+                      [--lpo=&lt;offset&gt; | -o &lt;offset&gt;]
+                      [--lsp=&lt;field&gt; | -s &lt;field&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -834,6 +838,29 @@ program to parse.</p></div>
         Print the raw log buffer to stdout.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;offset&gt;
+</dt>
+<dt class="hdlist1">
+--lpo=&lt;offset&gt;
+</dt>
+<dd>
+<p>
+        The log page offset specifies the location within a log page to start
+        returning data from. It&#8217;s Dword-aligned and 64-bits.
+</p>
+</dd>
+<dt class="hdlist1">
+-s &lt;field&gt;
+</dt>
+<dt class="hdlist1">
+--lsp=&lt;field&gt;
+</dt>
+<dd>
+<p>
+        The log specified field of LID.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -877,7 +904,8 @@ Have the program return the raw log page in binary:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-10-20 15:09:05 MDT
+Last updated
+ 2018-01-30 19:28:39 KST
 </div>
 </div>
 </body>

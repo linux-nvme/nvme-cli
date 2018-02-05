@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-feature
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 12/10/2017
+.\"      Date: 01/30/2018
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-FEATURE" "1" "12/10/2017" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-FEATURE" "1" "01/30/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,6 +37,7 @@ nvme-get-feature \- Gets an NVMe feature, returns applicable results
                           [\-\-data\-len=<data\-len> | \-l <data\-len>]
                           [\-\-sel=<select> | \-s <select>]
                           [\-\-raw\-binary | \-b]
+                          [\-\-human\-readable | \-H]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -115,6 +116,11 @@ The value for command dword 11, if applicable\&.
 \-b, \-\-raw\-binary
 .RS 4
 Print the raw feature buffer to stdout if the feature returns a structure\&.
+.RE
+.PP
+\-H, \-\-human\-readable
+.RS 4
+This option will parse and format many of the bit fields into human\-readable formats\&.
 .RE
 .SH "EXAMPLES"
 .sp

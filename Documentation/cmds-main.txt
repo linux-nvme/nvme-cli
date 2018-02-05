@@ -31,6 +31,9 @@ linknvme:nvme-get-feature[1]::
 linknvme:nvme-get-log[1]::
 	Generic Get Log
 
+linknvme:nvme-telemetry-log[1]::
+	Telemetry Host-Initiated Log
+
 linknvme:nvme-smart-log[1]::
 	Retrieve Smart Log
 
@@ -63,6 +66,9 @@ linknvme:nvme-io-passthru[1]::
 
 linknvme:nvme-list-ns[1]::
 	List all nvme namespaces
+
+linknvme:nvme-ns-descs[1]::
+	Identify Namespace Identification Descriptor
 
 linknvme:nvme-list[1]::
 	List all nvme controllers

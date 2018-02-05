@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.9" />
-<title>nvme-get-feature(1)</title>
+<title>nvme-telemetry-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -734,12 +734,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-get-feature(1) Manual Page
+nvme-telemetry-log(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-get-feature -
-   Gets an NVMe feature, returns applicable results
+<p>nvme-telemetry-log -
+   Retrieves a Telemetry Host-Initiated log page from an NVMe device
 </p>
 </div>
 </div>
@@ -748,12 +748,8 @@ nvme-get-feature(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme get-feature</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                          [--feature-id=&lt;fid&gt; | -f &lt;fid&gt;] [--cdw11=&lt;cdw11&gt;]
-                          [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
-                          [--sel=&lt;select&gt; | -s &lt;select&gt;]
-                          [--raw-binary | -b]
-                          [--human-readable | -H]</pre>
+<pre class="content"><em>nvme telemetry-log</em> &lt;device&gt; [--output-file=&lt;file&gt; | -o &lt;file&gt;]
+                      [--host-generate=&lt;gen&gt; | -h &lt;gen&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -761,16 +757,12 @@ nvme-get-feature(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Submits an NVMe Get Feature admin command and returns the applicable
-results. This may be the feature&#8217;s value, or may also include a feature
-structure if the feature requires it (ex: LBA Range Type).</p></div>
+<div class="paragraph"><p>Retrieves an Telemetry Host-Initiated log page from an NVMe device and provides
+the retuned structure.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>On success, the returned feature&#8217;s structure (if applicable) may be
-returned in one of several ways depending on the option flags; the
-structure may parsed by the program and printed in a readable format
-if it is a known structure, displayed in hex, or the raw buffer may be
-printed to stdout for another program to parse.</p></div>
+<div class="paragraph"><p>On success, the returned log structure will be in raw binary format <em>only</em> with
+--output-file option which is mandatory.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -778,119 +770,28 @@ printed to stdout for another program to parse.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--n &lt;nsid&gt;
+-o &lt;file&gt;
 </dt>
 <dt class="hdlist1">
---namespace-id=&lt;nsid&gt;
+--output-file=&lt;file&gt;
 </dt>
 <dd>
 <p>
-        Retrieve the feature for the given nsid. This is optional and
-        most features do not use this value.
+        File name to which raw binary data will be saved to.
 </p>
 </dd>
 <dt class="hdlist1">
--f &lt;fid&gt;
+-h &lt;gen&gt;
 </dt>
 <dt class="hdlist1">
---feature-id=&lt;fid&gt;
+--host-generate=&lt;gen&gt;
 </dt>
 <dd>
 <p>
-        The feature id to send with the command. Value provided should
-        be in hex.
-</p>
-</dd>
-<dt class="hdlist1">
--s &lt;select&gt;
-</dt>
-<dt class="hdlist1">
---sel=&lt;select&gt;
-</dt>
-<dd>
-<p>
-        Select (SEL): This field specifies which value of the attributes
-        to return in the provided data:
-</p>
-<div class="tableblock">
-<table rules="all"
-width="100%"
-frame="border"
-cellspacing="0" cellpadding="4">
-<col width="50%" />
-<col width="50%" />
-<tbody>
-<tr>
-<td align="left" valign="top"><p class="table">Select</p></td>
-<td align="left" valign="top"><p class="table">Description</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">0</p></td>
-<td align="left" valign="top"><p class="table">Current</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">1</p></td>
-<td align="left" valign="top"><p class="table">Default</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">2</p></td>
-<td align="left" valign="top"><p class="table">Saved</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">3</p></td>
-<td align="left" valign="top"><p class="table">Supported capabilities</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">4–7</p></td>
-<td align="left" valign="top"><p class="table">Reserved</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</dd>
-<dt class="hdlist1">
--l &lt;data-len&gt;
-</dt>
-<dt class="hdlist1">
---data-len=&lt;data-len&gt;
-</dt>
-<dd>
-<p>
-        The data length for the buffer returned for this feature. Most
-        known features do not use this value. The exception is LBA
-        Range Type
-</p>
-</dd>
-<dt class="hdlist1">
---cdw11=&lt;cdw11&gt;
-</dt>
-<dd>
-<p>
-        The value for command dword 11, if applicable.
-</p>
-</dd>
-<dt class="hdlist1">
--b
-</dt>
-<dt class="hdlist1">
---raw-binary
-</dt>
-<dd>
-<p>
-        Print the raw feature buffer to stdout if the feature returns
-        a structure.
-</p>
-</dd>
-<dt class="hdlist1">
--H
-</dt>
-<dt class="hdlist1">
---human-readable
-</dt>
-<dd>
-<p>
-        This option will parse and format many of the bit fields
-        into human-readable formats.
+        If set to 1, controller shall capture the Telemetry Host-Initiated data
+        representing the internal state of the controller at the time the
+        associated Get Log Page command is processed.
+        If cleated to 0, controller shall <em>not</em> update this data.
 </p>
 </dd>
 </dl></div>
@@ -902,46 +803,12 @@ cellspacing="0" cellpadding="4">
 <div class="ulist"><ul>
 <li>
 <p>
-Retrieves the feature for Number of Queues, or feature id 7:
+Retrieve Telemetry Host-Initiated data to telemetry_log.bin
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme get-feature /dev/nvme0 -f 7</code></pre>
+<pre><code># nvme telemetry-log /dev/nvme0 --output-file=telemetry_log.bin</code></pre>
 </div></div>
-</li>
-<li>
-<p>
-The following retrieves the feature for the LBA Range Type, which
-implicitly requires a buffer and will be printed to the screen in human
-readable format:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme get-feature /dev/nvme0 -f 3</code></pre>
-</div></div>
-</li>
-<li>
-<p>
-Retrieves the feature for the some vendor specific feature and
-specifically requesting a buffer be allocate for this feature, which
-will be displayed to the user in as a hex dump:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme get-feature /dev/nvme0 -f 0xc0 -l 512</code></pre>
-</div></div>
-</li>
-<li>
-<p>
-The following retrieves the feature for the LBA Range Type, which
-implicitly requires a buffer and will be saved to a file in its raw
-format:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme get-feature /dev/nvme0 -f 3 --raw-binary &gt; lba_range.raw</code></pre>
-</div></div>
-<div class="paragraph"><p>It is probably a bad idea to not redirect stdout when using this mode.</p></div>
 </li>
 </ul></div>
 </div>

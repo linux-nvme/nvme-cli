@@ -6,6 +6,7 @@
 #include "nvme-print.h"
 #include "json.h"
 #include "nvme-models.h"
+#include "suffix.h"
 
 static long double int128_to_double(__u8 *data)
 {
@@ -1047,26 +1048,80 @@ static void show_effects_log_human(__u32 effect)
 		printf("  Reserved CSE\n");
 }
 
+static char *nvme_cmd_to_string(int admin, __u8 opcode)
+{
+	if (admin) {
+		switch (opcode) {
+		case nvme_admin_delete_sq:	return "Delete I/O Submission Queue";
+		case nvme_admin_create_sq:	return "Create I/O Submission Queue";
+		case nvme_admin_get_log_page:	return "Get Log Page";
+		case nvme_admin_delete_cq:	return "Delete I/O Completion Queue";
+		case nvme_admin_create_cq:	return "Create I/O Completion Queue";
+		case nvme_admin_identify:	return "Identify";
+		case nvme_admin_abort_cmd:	return "Abort";
+		case nvme_admin_set_features:	return "Set Features";
+		case nvme_admin_get_features:	return "Get Features";
+		case nvme_admin_async_event:	return "Asynchronous Event Request";
+		case nvme_admin_ns_mgmt:	return "Namespace Management";
+		case nvme_admin_activate_fw:	return "Firmware Commit";
+		case nvme_admin_download_fw:	return "Firmware Image Download";
+		case nvme_admin_dev_self_test:	return "Device Self-test";
+		case nvme_admin_ns_attach:	return "Namespace Attachment";
+		case nvme_admin_keep_alive:	return "Keep Alive";
+		case nvme_admin_directive_send:	return "Directive Send";
+		case nvme_admin_directive_recv:	return "Directive Receive";
+		case nvme_admin_virtual_mgmt:	return "Virtualization Management";
+		case nvme_admin_nvme_mi_send:	return "NVMEe-MI Send";
+		case nvme_admin_nvme_mi_recv:	return "NVMEe-MI Receive";
+		case nvme_admin_dbbuf:		return "Doorbell Buffer Config";
+		case nvme_admin_format_nvm:	return "Format NVM";
+		case nvme_admin_security_send:	return "Security Send";
+		case nvme_admin_security_recv:	return "Security Receive";
+		case nvme_admin_sanitize_nvm:	return "Sanitize";
+		}
+	} else {
+		switch (opcode) {
+		case nvme_cmd_flush:		return "Flush";
+		case nvme_cmd_write:		return "Write";
+		case nvme_cmd_read:		return "Read";
+		case nvme_cmd_write_uncor:	return "Write Uncorrectable";
+		case nvme_cmd_compare:		return "Compare";
+		case nvme_cmd_write_zeroes:	return "Write Zeroes";
+		case nvme_cmd_dsm:		return "Dataset Management";
+		case nvme_cmd_resv_register:	return "Reservation Register";
+		case nvme_cmd_resv_report:	return "Reservation Report";
+		case nvme_cmd_resv_acquire:	return "Reservation Acquire";
+		case nvme_cmd_resv_release:	return "Reservation Release";
+		}
+	}
+
+	return "Unknown";
+}
+
 void show_effects_log(struct nvme_effects_log_page *effects, unsigned int flags)
 {
 	int i;
 	int human = flags & HUMAN;
 	__u32 effect;
 
+	printf("Admin Command Set\n");
 	for (i = 0; i < 256; i++) {
 		effect = le32_to_cpu(effects->acs[i]);
 		if (effect & NVME_CMD_EFFECTS_CSUPP) {
-			printf("ACS%-4d: %08x", i, effect);
+			printf("ACS%-6d[%-32s] %08x", i,
+					nvme_cmd_to_string(1, i), effect);
 			if (human)
 				show_effects_log_human(effect);
 			else
 				printf("\n");
 		}
 	}
+	printf("\nNVM Command Set\n");
 	for (i = 0; i < 256; i++) {
 		effect = le32_to_cpu(effects->iocs[i]);
 		if (effect & NVME_CMD_EFFECTS_CSUPP) {
-			printf("IOCS%-3d: %08x", i, effect);
+			printf("IOCS%-5d[%-32s] %08x", i,
+					nvme_cmd_to_string(0, i), effect);
 			if (human)
 				show_effects_log_human(effect);
 			else
@@ -1557,6 +1612,43 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 	}
 }
 
+static void show_list_item(struct list_item list_item)
+{
+	long long int lba = 1 << list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ds;
+	double nsze       = le64_to_cpu(list_item.ns.nsze) * lba;
+	double nuse       = le64_to_cpu(list_item.ns.nuse) * lba;
+
+	const char *s_suffix = suffix_si_get(&nsze);
+	const char *u_suffix = suffix_si_get(&nuse);
+	const char *l_suffix = suffix_binary_get(&lba);
+
+	char usage[128];
+	char format[128];
+
+	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
+		nsze, s_suffix);
+	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
+		list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ms);
+	printf("%-16s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", list_item.node,
+            (int)sizeof(list_item.ctrl.sn), (int)sizeof(list_item.ctrl.sn), list_item.ctrl.sn,
+            (int)sizeof(list_item.ctrl.mn), (int)sizeof(list_item.ctrl.mn), list_item.ctrl.mn,
+            list_item.nsid, usage, format, (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
+}
+
+void show_list_items(struct list_item *list_items, unsigned len)
+{
+	unsigned i;
+
+	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
+	    "Node", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
+	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
+            "----------------", "--------------------", "----------------------------------------",
+            "---------", "--------------------------", "----------------", "--------");
+	for (i = 0 ; i < len ; i++)
+		show_list_item(list_items[i]);
+
+}
+
 void json_print_list_items(struct list_item *list_items, unsigned len)
 {
 	struct json_object *root;
@@ -1841,6 +1933,7 @@ void json_error_log(struct nvme_error_log_page *err_log, int entries, const char
 		json_object_add_value_int(error, "lba", err_log[i].lba);
 		json_object_add_value_int(error, "nsid", err_log[i].nsid);
 		json_object_add_value_int(error, "vs", err_log[i].vs);
+		json_object_add_value_uint(error, "cs", err_log[i].cs);
 
 		json_array_add_value_object(errors, error);
 	}
@@ -1928,10 +2021,12 @@ void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
 	json_object_add_value_int(fwsi, "Active Firmware Slot (afi)", fw_log->afi);
 
 	for (i = 0; i < 7; i++) {
-		snprintf(fmt, sizeof(fmt), "Firmware Rev Slot %d", i);
-		snprintf(str, sizeof(str), "%"PRIu64" (%s)", (uint64_t)fw_log->frs[i],
-			 fw_to_string(fw_log->frs[i]));
-		json_object_add_value_string(fwsi, fmt, str);
+		if (fw_log->frs[i]) {
+			snprintf(fmt, sizeof(fmt), "Firmware Rev Slot %d", i+1);
+			snprintf(str, sizeof(str), "%"PRIu64" (%s)", (uint64_t)fw_log->frs[i],
+			fw_to_string(fw_log->frs[i]));
+			json_object_add_value_string(fwsi, fmt, str);
+		}
 	}
 	json_object_add_value_object(root, devname, fwsi);
 
@@ -2009,19 +2104,19 @@ void json_effects_log(struct nvme_effects_log_page *effects_log, const char *dev
 {
 	struct json_object *root;
 	unsigned int opcode;
-	char key[16];
+	char key[128];
 	__u32 effect;
 
 	root = json_create_object();
 
 	for (opcode = 0; opcode < 256; opcode++) {
-		sprintf(key, "ACS%-4d", opcode);
+		sprintf(key, "ACS%d (%s)", opcode, nvme_cmd_to_string(1, opcode));
 		effect = le32_to_cpu(effects_log->acs[opcode]);
 		json_object_add_value_int(root, key, effect);
 	}
 
 	for (opcode = 0; opcode < 256; opcode++) {
-		sprintf(key, "IOCS%-3d", opcode);
+		sprintf(key, "IOCS%d (%s)", opcode, nvme_cmd_to_string(0, opcode));
 		effect = le32_to_cpu(effects_log->iocs[opcode]);
 		json_object_add_value_int(root, key, effect);
 	}
@@ -2065,6 +2160,28 @@ void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log, const char *
 	json_free_object(root);
 }
 
+static void show_nvme_subsystem(struct subsys_list_item *item)
+{
+	int i;
+
+	printf("%s - NQN=%s\n", item->name, item->subsysnqn);
+	printf("\\\n");
+
+	for (i = 0; i < item->nctrls; i++) {
+		printf(" +- %s %s %s\n", item->ctrls[i].name,
+				item->ctrls[i].transport,
+				item->ctrls[i].address);
+	}
+
+}
+
+void show_nvme_subsystem_list(struct subsys_list_item *slist, int n)
+{
+	int i;
+
+	for (i = 0; i < n; i++)
+		show_nvme_subsystem(&slist[i]);
+}
 void json_print_nvme_subsystem_list(struct subsys_list_item *slist, int n)
 {
 	struct json_object *root;

@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-ns
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 12/10/2017
+.\"      Date: 01/30/2018
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "12/10/2017" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "01/30/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,6 +33,7 @@ nvme-list-ns \- Send NVMe Identify List Namespaces, return result and structure
 .sp
 .nf
 \fInvme list\-ns\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-all | \-a]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -46,6 +47,11 @@ On success, the namespace array is printed for each index and nsid for a valid n
 \-n <nsid>, \-\-namespace\-id=<nsid>
 .RS 4
 Retrieve the identify list structure starting with the given nsid\&.
+.RE
+.PP
+\-a, \-\-all
+.RS 4
+Retrieve the identify list structure for all namespaces in the subsystem, whether attached or inactive\&.
 .RE
 .SH "EXAMPLES"
 .sp
