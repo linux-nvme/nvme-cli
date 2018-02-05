@@ -1342,6 +1342,8 @@ static int get_nvme_info(int fd, struct list_item *item, const char *node)
 	if (err)
 		return err;
 	item->nsid = nvme_get_nsid(fd);
+	if (item->nsid <= 0)
+		return item->nsid;
 	err = nvme_identify_ns(fd, item->nsid,
 			       0, &item->ns);
 	if (err)
@@ -1454,7 +1456,6 @@ static int get_nsid(int fd)
 		fprintf(stderr,
 			"%s: failed to return namespace id\n",
 			devicename);
-		return errno;
 	}
 	return nsid;
 }
@@ -1577,8 +1578,11 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 	if (cfg.raw_binary)
 		fmt = BINARY;
-	if (!cfg.namespace_id)
+	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
+		if (cfg.namespace_id <= 0)
+			return EINVAL;
+	}
 
 	if (posix_memalign(&nsdescs, getpagesize(), 0x1000)) {
 		fprintf(stderr, "can not allocate controller list payload\n");
@@ -1665,8 +1669,11 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		flags |= VS;
 	if (cfg.human_readable)
 		flags |= HUMAN;
-	if (!cfg.namespace_id && S_ISBLK(nvme_stat.st_mode))
+	if (!cfg.namespace_id && S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
+		if (cfg.namespace_id <= 0)
+			return EINVAL;
+	}
 	else if(!cfg.namespace_id)
 		fprintf(stderr,
 			"Error: requesting namespace-id from non-block device\n");
@@ -2364,8 +2371,11 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	if (fd < 0)
 		return fd;
 
-	if (S_ISBLK(nvme_stat.st_mode))
+	if (S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
+		if (cfg.namespace_id <= 0)
+			return EINVAL;
+	}
 	if (cfg.namespace_id != NVME_NSID_ALL) {
 		err = nvme_identify_ns(fd, cfg.namespace_id, 0, &ns);
 		if (err) {
@@ -2818,8 +2828,11 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 	if (fd < 0)
 		return fd;
 
-	if (!cfg.namespace_id)
+	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
+		if (cfg.namespace_id <= 0)
+			return EINVAL;
+	}
 
 	err = nvme_write_uncorrectable(fd, cfg.namespace_id, cfg.start_block,
 					cfg.block_count);
@@ -2905,8 +2918,11 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		control |= NVME_RW_FUA;
 	if (cfg.deac)
 		control |= NVME_RW_DEAC;
-	if (!cfg.namespace_id)
+	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
+		if (cfg.namespace_id <= 0)
+			return EINVAL;
+	}
 
 	err = nvme_write_zeros(fd, cfg.namespace_id, cfg.start_block, cfg.block_count,
 			control, cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask);
@@ -2993,8 +3009,11 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		goto close_fd;
 	}
 
-	if (!cfg.namespace_id)
+	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
+		if (cfg.namespace_id <= 0)
+			return EINVAL;
+	}
 	if (!cfg.cdw11)
 		cfg.cdw11 = (cfg.ad << 2) | (cfg.idw << 1) | (cfg.idr << 0);
 
@@ -3107,8 +3126,11 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 	if (fd < 0)
 		return fd;
 
-	if (!cfg.namespace_id)
+	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
+		if (cfg.namespace_id <= 0)
+			return EINVAL;
+	}
 	if (cfg.racqa > 7) {
 		fprintf(stderr, "invalid racqa:%d\n", cfg.racqa);
 		err = EINVAL;
@@ -3173,8 +3195,11 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 	if (fd < 0)
 		return fd;
 
-	if (!cfg.namespace_id)
+	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
+		if (cfg.namespace_id <= 0)
+			return EINVAL;
+	}
 	if (cfg.cptpl > 3) {
 		fprintf(stderr, "invalid cptpl:%d\n", cfg.cptpl);
 		err = EINVAL;
@@ -3241,8 +3266,11 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 	if (fd < 0)
 		return fd;
 
-	if (!cfg.namespace_id)
+	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
+		if (cfg.namespace_id <= 0)
+			return EINVAL;
+	}
 	if (cfg.iekey > 1) {
 		fprintf(stderr, "invalid iekey:%d\n", cfg.iekey);
 		err = EINVAL;
@@ -3319,8 +3347,11 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	if (cfg.raw_binary)
 		fmt = BINARY;
 
-	if (!cfg.namespace_id)
+	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
+		if (cfg.namespace_id <= 0)
+			return EINVAL;
+	}
 	if (!cfg.numd || cfg.numd > (0x1000 >> 2))
 		cfg.numd = 0x1000 >> 2;
 	if (cfg.numd < 3)
