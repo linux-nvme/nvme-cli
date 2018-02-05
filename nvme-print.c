@@ -1841,6 +1841,7 @@ void json_error_log(struct nvme_error_log_page *err_log, int entries, const char
 		json_object_add_value_int(error, "lba", err_log[i].lba);
 		json_object_add_value_int(error, "nsid", err_log[i].nsid);
 		json_object_add_value_int(error, "vs", err_log[i].vs);
+		json_object_add_value_uint(error, "cs", err_log[i].cs);
 
 		json_array_add_value_object(errors, error);
 	}
