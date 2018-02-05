@@ -689,7 +689,7 @@ int nvme_fw_commit(int fd, __u8 slot, __u8 action, __u8 bpid)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_activate_fw,
-		.cdw10		= (action << 3) | slot,
+		.cdw10		= (bpid << 31) | (action << 3) | slot,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);
