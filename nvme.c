@@ -3258,7 +3258,7 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 		{"crkey",        'c', "NUM",  CFG_LONG_SUFFIX, &cfg.crkey,        required_argument, crkey},
 		{"rtype",        't', "NUM",  CFG_BYTE,        &cfg.rtype,        required_argument, rtype},
 		{"rrela",        'a', "NUM",  CFG_BYTE,        &cfg.rrela,        required_argument, rrela},
-		{"iekey",        'i', "NUM",  CFG_BYTE,        &cfg.iekey,        required_argument, iekey},
+		{"iekey",        'i', "",     CFG_NONE,        &cfg.iekey,        no_argument, iekey},
 		{NULL}
 	};
 
@@ -3270,11 +3270,6 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id <= 0)
 			return EINVAL;
-	}
-	if (cfg.iekey > 1) {
-		fprintf(stderr, "invalid iekey:%d\n", cfg.iekey);
-		err = EINVAL;
-		goto close_fd;
 	}
 	if (cfg.rrela > 7) {
 		fprintf(stderr, "invalid rrela:%d\n", cfg.rrela);
