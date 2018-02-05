@@ -8,13 +8,13 @@ nvme-security-recv - Security Recv command
 SYNOPSIS
 --------
 [verse]
-'nvme security-recv' [<device>] [--size=<size> | -x <size>]
+'nvme security-recv' <device> [--size=<size> | -x <size>]
 		    [--secp=<security-protocol> | -p <security-protocol>]
 		    [--spsp=<protocol-specific> | -s <protocol-specific>]
 		    [--nssf=<nvme-specific> | -N <nvme-specific>]
-		    [--tl=<transfer-length> | -t <transfer-length>]
+		    [--al=<allocation-length> | -t <allocation-length>]
 		    [--namespace-id=<nsid> | -n <nsid>]
-		    [-b | --raw-binary]
+		    [--raw-binary | -b]
 
 DESCRIPTION
 -----------
@@ -62,7 +62,7 @@ OPTIONS
 	SP Specific: The value of this field is specific to the Security
 	Protocol as defined in SPC-4.
 
--a <allocation-length>::
+-t <allocation-length>::
 --al=<allocation-length>::
 	Allocation Length: The value of this field is specific to the
 	Security Protocol as defined in SPC-4.

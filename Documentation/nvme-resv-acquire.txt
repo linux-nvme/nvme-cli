@@ -8,7 +8,12 @@ nvme-resv-acquire - Acquire an nvme reservation
 SYNOPSIS
 --------
 [verse]
-'nvme resv-acquire' <device>
+'nvme resv-acquire' <device> [--namespace-id=<nsid> | -n <nsid>]
+			     [--crkey=<crkey> | -c <crkey>]
+			     [--prkey=<prkey> | -p <prkey>]
+			     [--rtype=<rtype> | -t <rtype>]
+			     [--racqa=<racqa> | -a <racqa>]
+			     [--iekey | -i]
 
 DESCRIPTION
 -----------

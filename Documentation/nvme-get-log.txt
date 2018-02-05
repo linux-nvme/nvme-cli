@@ -13,6 +13,8 @@ SYNOPSIS
 		      [--aen=<aen> | -a <aen>]
 		      [--namespace-id=<nsid> | -n <nsid>]
 		      [--raw-binary | -b]
+		      [--lpo=<offset> | -o <offset>]
+		      [--lsp=<field> | -s <field>]
 
 DESCRIPTION
 -----------
@@ -55,6 +57,15 @@ OPTIONS
 -b::
 --raw-binary::
 	Print the raw log buffer to stdout.
+
+-o <offset>::
+--lpo=<offset>::
+	The log page offset specifies the location within a log page to start
+	returning data from. It's Dword-aligned and 64-bits.
+
+-s <field>::
+--lsp=<field>::
+	The log specified field of LID.
 
 EXAMPLES
 --------

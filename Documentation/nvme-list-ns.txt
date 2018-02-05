@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme list-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
+			[--all | -a]
 
 DESCRIPTION
 -----------
@@ -28,6 +29,11 @@ OPTIONS
 -n <nsid>::
 --namespace-id=<nsid>::
 	Retrieve the identify list structure starting with the given nsid.
+
+-a::
+--all::
+	Retrieve the identify list structure for all namespaces in the
+	subsystem, whether attached or inactive.
 
 EXAMPLES
 --------
