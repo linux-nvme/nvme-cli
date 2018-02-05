@@ -412,8 +412,12 @@ int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
 }
 
 int nvme_get_telemetry_log(int fd, void *lp, int generate_report,
-			   size_t log_page_size, __u64 offset)
+			   int ctrl_init, size_t log_page_size, __u64 offset)
 {
+	if (ctrl_init)
+		return nvme_get_log13(fd, NVME_NSID_ALL, NVME_LOG_TELEMETRY_CTRL,
+				      NVME_NO_LOG_LSP, offset,
+				      log_page_size, lp);
 	if (generate_report)
 		return nvme_get_log13(fd, NVME_NSID_ALL, NVME_LOG_TELEMETRY_HOST,
 				      NVME_TELEM_LSP_CREATE, offset,
