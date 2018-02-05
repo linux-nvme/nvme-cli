@@ -51,7 +51,6 @@
 #include "plugin.h"
 
 #include "argconfig.h"
-#include "suffix.h"
 
 #include "fabrics.h"
 
@@ -1155,29 +1154,6 @@ static int scan_ctrls_filter(const struct dirent *d)
 	return 0;
 }
 
-void print_nvme_subsystem(struct subsys_list_item *item)
-{
-	int i;
-
-	printf("%s - NQN=%s\n", item->name, item->subsysnqn);
-	printf("\\\n");
-
-	for (i = 0; i < item->nctrls; i++) {
-		printf(" +- %s %s %s\n", item->ctrls[i].name,
-				item->ctrls[i].transport,
-				item->ctrls[i].address);
-	}
-
-}
-
-void print_nvme_subsystem_list(struct subsys_list_item *slist, int n)
-{
-	int i;
-
-	for (i = 0; i < n; i++)
-		print_nvme_subsystem(&slist[i]);
-}
-
 int get_nvme_subsystem_info(char *name, char *path,
 				struct subsys_list_item *item)
 {
@@ -1346,7 +1322,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	if (fmt == JSON)
 		json_print_nvme_subsystem_list(slist, n);
 	else
-		print_nvme_subsystem_list(slist, n);
+		show_nvme_subsystem_list(slist, n);
 
 free_subsys:
 	free_subsys_list(slist, n);
@@ -1356,43 +1332,6 @@ free_subsys:
 	free(subsys);
 
 	return ret;
-}
-
-static void print_list_item(struct list_item list_item)
-{
-	long long int lba = 1 << list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ds;
-	double nsze       = le64_to_cpu(list_item.ns.nsze) * lba;
-	double nuse       = le64_to_cpu(list_item.ns.nuse) * lba;
-
-	const char *s_suffix = suffix_si_get(&nsze);
-	const char *u_suffix = suffix_si_get(&nuse);
-	const char *l_suffix = suffix_binary_get(&lba);
-
-	char usage[128];
-	char format[128];
-
-	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
-		nsze, s_suffix);
-	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
-		list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ms);
-	printf("%-16s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", list_item.node,
-            (int)sizeof(list_item.ctrl.sn), (int)sizeof(list_item.ctrl.sn), list_item.ctrl.sn,
-            (int)sizeof(list_item.ctrl.mn), (int)sizeof(list_item.ctrl.mn), list_item.ctrl.mn,
-            list_item.nsid, usage, format, (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
-}
-
-static void print_list_items(struct list_item *list_items, unsigned len)
-{
-	unsigned i;
-
-	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
-	    "Node", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
-	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
-            "----------------", "--------------------", "----------------------------------------",
-            "---------", "--------------------------", "----------------", "--------");
-	for (i = 0 ; i < len ; i++)
-		print_list_item(list_items[i]);
-
 }
 
 static int get_nvme_info(int fd, struct list_item *item, const char *node)
@@ -1497,7 +1436,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	if (fmt == JSON)
 		json_print_list_items(list_items, n);
 	else
-		print_list_items(list_items, n);
+		show_list_items(list_items, n);
 
 	for (i = 0; i < n; i++)
 		free(devices[i]);

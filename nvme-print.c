@@ -6,6 +6,7 @@
 #include "nvme-print.h"
 #include "json.h"
 #include "nvme-models.h"
+#include "suffix.h"
 
 static long double int128_to_double(__u8 *data)
 {
@@ -1611,6 +1612,43 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 	}
 }
 
+static void show_list_item(struct list_item list_item)
+{
+	long long int lba = 1 << list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ds;
+	double nsze       = le64_to_cpu(list_item.ns.nsze) * lba;
+	double nuse       = le64_to_cpu(list_item.ns.nuse) * lba;
+
+	const char *s_suffix = suffix_si_get(&nsze);
+	const char *u_suffix = suffix_si_get(&nuse);
+	const char *l_suffix = suffix_binary_get(&lba);
+
+	char usage[128];
+	char format[128];
+
+	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
+		nsze, s_suffix);
+	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
+		list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ms);
+	printf("%-16s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", list_item.node,
+            (int)sizeof(list_item.ctrl.sn), (int)sizeof(list_item.ctrl.sn), list_item.ctrl.sn,
+            (int)sizeof(list_item.ctrl.mn), (int)sizeof(list_item.ctrl.mn), list_item.ctrl.mn,
+            list_item.nsid, usage, format, (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
+}
+
+void show_list_items(struct list_item *list_items, unsigned len)
+{
+	unsigned i;
+
+	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
+	    "Node", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
+	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
+            "----------------", "--------------------", "----------------------------------------",
+            "---------", "--------------------------", "----------------", "--------");
+	for (i = 0 ; i < len ; i++)
+		show_list_item(list_items[i]);
+
+}
+
 void json_print_list_items(struct list_item *list_items, unsigned len)
 {
 	struct json_object *root;
@@ -2122,6 +2160,28 @@ void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log, const char *
 	json_free_object(root);
 }
 
+static void show_nvme_subsystem(struct subsys_list_item *item)
+{
+	int i;
+
+	printf("%s - NQN=%s\n", item->name, item->subsysnqn);
+	printf("\\\n");
+
+	for (i = 0; i < item->nctrls; i++) {
+		printf(" +- %s %s %s\n", item->ctrls[i].name,
+				item->ctrls[i].transport,
+				item->ctrls[i].address);
+	}
+
+}
+
+void show_nvme_subsystem_list(struct subsys_list_item *slist, int n)
+{
+	int i;
+
+	for (i = 0; i < n; i++)
+		show_nvme_subsystem(&slist[i]);
+}
 void json_print_nvme_subsystem_list(struct subsys_list_item *slist, int n)
 {
 	struct json_object *root;
