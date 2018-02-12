@@ -1869,7 +1869,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	int err, fd, fw_fd = -1;
 	unsigned int fw_size;
 	struct stat sb;
-	void *fw_buf;
+	void *fw_buf, *buf;
 
 	struct config {
 		char  *fw;
@@ -1919,6 +1919,8 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		err = ENOMEM;
 		goto close_fw_fd;
 	}
+
+	buf = fw_buf;
 	if (cfg.xfer == 0 || cfg.xfer % 4096)
 		cfg.xfer = 4096;
 	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size))) {
@@ -1946,7 +1948,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		printf("Firmware download success\n");
 
  free:
-	free(fw_buf);
+	free(buf);
  close_fw_fd:
 	close(fw_fd);
  close_fd:
