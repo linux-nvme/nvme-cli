@@ -42,7 +42,7 @@ nvme: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
 nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h argconfig.h suffix.h nvme-lightnvm.h fabrics.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
 
-%.o: %.c %.h nvme.h linux/nvme_ioctl.h
+%.o: %.c %.h nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h argconfig.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
 
 doc: $(NVME)
