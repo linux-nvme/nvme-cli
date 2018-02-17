@@ -1307,6 +1307,7 @@ char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_AUTO_PST:	return "Autonomous Power State Transition";
 	case NVME_FEAT_HOST_MEM_BUF:	return "Host Memory Buffer";
 	case NVME_FEAT_KATO:		return "Keep Alive Timer";
+	case NVME_FEAT_RRL:		return "Read Recovery Level";
 	case NVME_FEAT_PLM_CONFIG:	return "Predicatable Latency Mode Config";
 	case NVME_FEAT_PLM_WINDOW:	return "Predicatable Latency Mode Window";
 	case NVME_FEAT_SW_PROGRESS:	return "Software Progress";
