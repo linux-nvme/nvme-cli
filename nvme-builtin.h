@@ -25,6 +25,7 @@ COMMAND_LIST(
 	ENTRY("smart-log", "Retrieve SMART Log, show it", get_smart_log)
 	ENTRY("error-log", "Retrieve Error Log, show it", get_error_log)
 	ENTRY("effects-log", "Retrieve Command Effects Log, show it", get_effects_log)
+	ENTRY("endurance-log", "Retrieve Endurance Group Log, show it", get_endurance_log)
 	ENTRY("get-feature", "Get feature and show the resulting value", get_feature)
 	ENTRY("set-feature", "Set a feature and show the resulting value", set_feature)
 	ENTRY("set-property", "Set a property and show the resulting value", set_property)

@@ -405,6 +405,18 @@ struct nvme_telemetry_log_page_hdr {
 	__u8    telemetry_dataarea[0];
 };
 
+struct nvme_endurance_group_log {
+	__u32	rsvd0;
+	__u8	avl_spare_threshold;
+	__u8	percent_used;
+	__u8	rsvd6[26];
+	__u8	endurance_estimate[16];
+	__u8	data_units_read[16];
+	__u8	data_units_written[16];
+	__u8	media_units_written[16];
+	__u8	rsvd96[416];
+};
+
 struct nvme_smart_log {
 	__u8			critical_warning;
 	__u8			temperature[2];
@@ -813,6 +825,7 @@ enum {
 	NVME_LOG_CMD_EFFECTS	= 0x05,
 	NVME_LOG_TELEMETRY_HOST = 0x07,
 	NVME_LOG_TELEMETRY_CTRL = 0x08,
+	NVME_LOG_ENDURANCE_GROUP = 0x09,
 	NVME_LOG_DISC		= 0x70,
 	NVME_LOG_RESERVATION	= 0x80,
 	NVME_LOG_SANITIZE	= 0x81,

@@ -382,7 +382,7 @@ int nvme_identify_ns_descs(int fd, __u32 nsid, void *data)
 }
 
 int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
-                 __u32 data_len, void *data)
+                 __u16 lsi, __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_get_log_page,
@@ -397,7 +397,7 @@ int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
 	if (lsp)
                 cmd.cdw10 |= lsp << 8;
 
-	cmd.cdw11 = numdu;
+	cmd.cdw11 = numdu | (lsi << 16);
 	cmd.cdw12 = lpo;
 	cmd.cdw13 = (lpo >> 32);
 
@@ -408,7 +408,7 @@ int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
 int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
 {
 	return nvme_get_log13(fd, nsid, log_id, NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
-			      data_len, data);
+			      0, data_len, data);
 }
 
 int nvme_get_telemetry_log(int fd, void *lp, int generate_report,
@@ -417,15 +417,15 @@ int nvme_get_telemetry_log(int fd, void *lp, int generate_report,
 	if (ctrl_init)
 		return nvme_get_log13(fd, NVME_NSID_ALL, NVME_LOG_TELEMETRY_CTRL,
 				      NVME_NO_LOG_LSP, offset,
-				      log_page_size, lp);
+				      0, log_page_size, lp);
 	if (generate_report)
 		return nvme_get_log13(fd, NVME_NSID_ALL, NVME_LOG_TELEMETRY_HOST,
 				      NVME_TELEM_LSP_CREATE, offset,
-				      log_page_size, lp);
+				      0, log_page_size, lp);
 	else
 		return nvme_get_log13(fd, NVME_NSID_ALL, NVME_LOG_TELEMETRY_HOST,
 				      NVME_NO_LOG_LSP, offset,
-				      log_page_size, lp);
+				      0, log_page_size, lp);
 }
 
 int nvme_fw_log(int fd, struct nvme_firmware_log_page *fw_log)
@@ -436,6 +436,12 @@ int nvme_fw_log(int fd, struct nvme_firmware_log_page *fw_log)
 int nvme_error_log(int fd, int entries, struct nvme_error_log_page *err_log)
 {
 	return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_ERROR, entries * sizeof(*err_log), err_log);
+}
+
+int nvme_endurance_log(int fd, __u16 group_id, struct nvme_endurance_group_log *endurance_log)
+{
+	return nvme_get_log13(fd, 0, NVME_LOG_ENDURANCE_GROUP, 0, 0, group_id,
+			sizeof(*endurance_log), endurance_log);
 }
 
 int nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log *smart_log)

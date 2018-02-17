@@ -341,6 +341,57 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	return err;
 }
 
+static int get_endurance_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	struct nvme_endurance_group_log endurance_log;
+
+	const char *desc = "Retrieves endurance groups log page and prints the log.";
+	const char *group_id = "The endurance group identifier";
+
+	int err, fd;
+	int fmt;
+
+	struct config {
+		char *output_format;
+		__u16 group_id;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+		.group_id = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format},
+		{"group-id",      'g', "NUM", CFG_SHORT,  &cfg.group_id,      required_argument, group_id},
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		return fmt;
+
+	err = nvme_endurance_log(fd, cfg.group_id, &endurance_log);
+	if (!err) {
+		if (fmt == BINARY)
+			d_raw((unsigned char *)&endurance_log, sizeof(endurance_log));
+		else if (fmt == JSON)
+			json_endurance_log(&endurance_log, cfg.group_id, devicename);
+		else
+			show_endurance_log(&endurance_log, cfg.group_id, devicename);
+	} else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+	else
+		perror("endurance log");
+
+	close(fd);
+	return err;
+}
+
 static int get_effects_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve command effects log page and print the table.";
@@ -610,7 +661,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		}
 
 		err = nvme_get_log13(fd, cfg.namespace_id, cfg.log_id,
-				     cfg.lsp, cfg.lpo,
+				     cfg.lsp, cfg.lpo, 0,
 				     cfg.log_len, log);
 		if (!err) {
 			if (!cfg.raw_binary) {

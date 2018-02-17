@@ -1157,6 +1157,22 @@ uint64_t int48_to_long(__u8 *data)
 	return result;
 }
 
+void show_endurance_log(struct nvme_endurance_group_log *endurance_group,
+			__u16 group_id, const char *devname)
+{
+	printf("Endurance Group Log for NVME device:%s Group ID:%x\n", devname, group_id);
+	printf("avl_spare_threshold   : %u\n", endurance_group->avl_spare_threshold);
+	printf("percent_used          : %u%%\n", endurance_group->percent_used);
+	printf("endurance_estimate    : %'.0Lf\n",
+		int128_to_double(endurance_group->endurance_estimate));
+	printf("data_units_read       : %'.0Lf\n",
+		int128_to_double(endurance_group->data_units_read));
+	printf("data_units_written    : %'.0Lf\n",
+		int128_to_double(endurance_group->data_units_written));
+	printf("media_units_written   : %'.0Lf\n",
+		int128_to_double(endurance_group->media_units_written));
+}
+
 void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname)
 {
 	/* convert temperature from Kelvin to Celsius */
@@ -2073,6 +2089,30 @@ void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
 		}
 	}
 	json_object_add_value_object(root, devname, fwsi);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
+			__u16 group_id, const char *devname)
+{
+	struct json_object *root;
+
+	long double endurance_estimate= int128_to_double(endurance_group->endurance_estimate);
+	long double data_units_read= int128_to_double(endurance_group->data_units_read);
+	long double data_units_written= int128_to_double(endurance_group->data_units_written);
+	long double media_units_written= int128_to_double(endurance_group->media_units_written);
+
+	root = json_create_object();
+
+	json_object_add_value_int(root, "avl_spare_threshold", endurance_group->avl_spare_threshold);
+	json_object_add_value_int(root, "percent_used", endurance_group->percent_used);
+	json_object_add_value_float(root, "endurance_estimate", endurance_estimate);
+	json_object_add_value_float(root, "data_units_read", data_units_read);
+	json_object_add_value_float(root, "data_units_written", data_units_written);
+	json_object_add_value_float(root, "mediate_write_commands", media_units_written);
 
 	json_print_object(root, NULL);
 	printf("\n");
