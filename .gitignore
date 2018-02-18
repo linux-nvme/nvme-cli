@@ -6,6 +6,8 @@ a.out
 *.swp
 NVME-VERSION-FILE
 
+cscope.*
+
 /debian/files
 /debian/nvme-cli.debhelper.log
 /debian/nvme-cli.substvars
