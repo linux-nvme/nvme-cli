@@ -1197,15 +1197,20 @@ static int wdc_print_log(struct wdc_ssd_perf_stats *perf, int fmt)
 
 static void wdc_print_ca_log_normal(struct wdc_ssd_ca_perf_stats *perf)
 {
+	uint64_t converted = 0;
+
 	printf("  CA Log Page Performance Statistics :- \n");
 	printf("  NAND Bytes Written                             %20"PRIu64 "%20"PRIu64"\n",
 			(uint64_t)le64_to_cpu(perf->nand_bytes_wr_hi), (uint64_t)le64_to_cpu(perf->nand_bytes_wr_lo));
 	printf("  NAND Bytes Read                                %20"PRIu64 "%20"PRIu64"\n",
 			(uint64_t)le64_to_cpu(perf->nand_bytes_rd_hi), (uint64_t)le64_to_cpu(perf->nand_bytes_rd_lo));
-	printf("  NAND Bad Block Count (Normalized)              %20"PRIu16"\n",
-			(uint16_t)le16_to_cpu(perf->nand_bad_block & 0x000000000000FFFF));
+
+	converted = le64_to_cpu(perf->nand_bad_block);
+	printf("  NAND Bad Block Count (Normalized)              %20"PRIu64"\n",
+			converted & 0xFFFF);
 	printf("  NAND Bad Block Count (Raw)                     %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->nand_bad_block & 0xFFFFFFFFFFFF0000)>>16);
+			converted >> 16);
+
 	printf("  Uncorrectable Read Count                       %20"PRIu64"\n",
 			(uint64_t)le64_to_cpu(perf->uncorr_read_count));
 	printf("  Soft ECC Error Count                           %20"PRIu64"\n",
@@ -1222,18 +1227,25 @@ static void wdc_print_ca_log_normal(struct wdc_ssd_ca_perf_stats *perf)
 			(uint32_t)le32_to_cpu(perf->data_erase_min));
 	printf("  Refresh Count                                  %20"PRIu64"\n",
 			(uint64_t)le64_to_cpu(perf->refresh_count));
-	printf("  Program Fail Count (Normalized)                %20"PRIu16"\n",
-			(uint16_t)le16_to_cpu(perf->program_fail & 0x000000000000FFFF));
+
+	converted = le64_to_cpu(perf->program_fail);
+	printf("  Program Fail Count (Normalized)                %20"PRIu64"\n",
+			converted & 0xFFFF);
 	printf("  Program Fail Count (Raw)                       %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->program_fail & 0xFFFFFFFFFFFF0000)>>16);
-	printf("  User Data Erase Fail Count (Normalized)        %20"PRIu16"\n",
-			(uint16_t)le16_to_cpu(perf->user_erase_fail & 0x000000000000FFFF));
+			converted >> 16);
+
+	converted = le64_to_cpu(perf->user_erase_fail);
+	printf("  User Data Erase Fail Count (Normalized)        %20"PRIu64"\n",
+			converted & 0xFFFF);
 	printf("  User Data Erase Fail Count (Raw)               %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->user_erase_fail & 0xFFFFFFFFFFFF0000)>>16);
-	printf("  System Area Erase Fail Count (Normalized)      %20"PRIu16"\n",
-			(uint16_t)le16_to_cpu(perf->system_erase_fail & 0x000000000000FFFF));
+			converted >> 16);
+
+	converted = le64_to_cpu(perf->system_erase_fail);
+	printf("  System Area Erase Fail Count (Normalized)      %20"PRIu64"\n",
+			converted & 0xFFFF);
 	printf("  System Area Erase Fail Count (Raw)             %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->system_erase_fail & 0xFFFFFFFFFFFF0000)>>16);
+			converted >> 16);
+
 	printf("  Thermal Throttling Status                      %20"PRIu16"\n",
 			(uint16_t)le16_to_cpu(perf->thermal_throttle_status));
 	printf("  Thermal Throttling Count                       %20"PRIu16"\n",
@@ -1245,16 +1257,20 @@ static void wdc_print_ca_log_normal(struct wdc_ssd_ca_perf_stats *perf)
 static void wdc_print_ca_log_json(struct wdc_ssd_ca_perf_stats *perf)
 {
 	struct json_object *root;
+	uint64_t converted = 0;
 
 	root = json_create_object();
 	json_object_add_value_int(root, "NAND Bytes Written Hi", le64_to_cpu(perf->nand_bytes_wr_hi));
 	json_object_add_value_int(root, "NAND Bytes Written Lo", le64_to_cpu(perf->nand_bytes_wr_lo));
 	json_object_add_value_int(root, "NAND Bytes Read Hi", le64_to_cpu(perf->nand_bytes_rd_hi));
 	json_object_add_value_int(root, "NAND Bytes Read Lo", le64_to_cpu(perf->nand_bytes_rd_lo));
+
+	converted = le64_to_cpu(perf->nand_bad_block);
 	json_object_add_value_int(root, "NAND Bad Block Count (Normalized)",
-			le16_to_cpu(perf->nand_bad_block & 0x000000000000FFFF));
+			converted & 0xFFFF);
 	json_object_add_value_int(root, "NAND Bad Block Count (Raw)",
-			le64_to_cpu(perf->nand_bad_block & 0xFFFFFFFFFFFF0000)>>16);
+			converted >> 16);
+
 	json_object_add_value_int(root, "Uncorrectable Read Count", le64_to_cpu(perf->uncorr_read_count));
 	json_object_add_value_int(root, "Soft ECC Error Count",	le64_to_cpu(perf->ecc_error_count));
 	json_object_add_value_int(root, "SSD End to End Detected Correction Count",
@@ -1268,18 +1284,25 @@ static void wdc_print_ca_log_json(struct wdc_ssd_ca_perf_stats *perf)
 	json_object_add_value_int(root, "User Data Erase Counts Min",
 			le32_to_cpu(perf->data_erase_min));
 	json_object_add_value_int(root, "Refresh Count", le64_to_cpu(perf->refresh_count));
+
+	converted = le64_to_cpu(perf->program_fail);
 	json_object_add_value_int(root, "Program Fail Count (Normalized)",
-			le16_to_cpu(perf->program_fail & 0x000000000000FFFF));
+			converted & 0xFFFF);
 	json_object_add_value_int(root, "Program Fail Count (Raw)",
-			le64_to_cpu(perf->program_fail & 0xFFFFFFFFFFFF0000)>>16);
+			converted >> 16);
+
+	converted = le64_to_cpu(perf->user_erase_fail);
 	json_object_add_value_int(root, "User Data Erase Fail Count (Normalized)",
-			le16_to_cpu(perf->user_erase_fail & 0x000000000000FFFF));
+			converted & 0xFFFF);
 	json_object_add_value_int(root, "User Data Erase Fail Count (Raw)",
-			le64_to_cpu(perf->user_erase_fail & 0xFFFFFFFFFFFF0000)>>16);
+			converted >> 16);
+
+	converted = le64_to_cpu(perf->system_erase_fail);
 	json_object_add_value_int(root, "System Area Erase Fail Count (Normalized)",
-			le16_to_cpu(perf->system_erase_fail & 0x000000000000FFFF));
+			converted & 0xFFFF);
 	json_object_add_value_int(root, "System Area Erase Fail Count (Raw)",
-			le64_to_cpu(perf->system_erase_fail & 0xFFFFFFFFFFFF0000)>>16);
+			converted >> 16);
+
 	json_object_add_value_int(root, "Thermal Throttling Status",
 			le16_to_cpu(perf->thermal_throttle_status));
 	json_object_add_value_int(root, "Thermal Throttling Count",
@@ -1463,7 +1486,7 @@ static int wdc_smart_add_log(int argc, char **argv, struct command *command,
 		}
 	}
 	else {
-		fprintf(stderr, "INFO : WDC : Command not supported in this devicer\n");
+		fprintf(stderr, "INFO : WDC : Command not supported in this device\n");
 	}
 
 	return 0;
