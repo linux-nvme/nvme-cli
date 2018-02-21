@@ -342,7 +342,7 @@ int nvme_identify(int fd, __u32 nsid, __u32 cdw10, void *data)
 		.opcode		= nvme_admin_identify,
 		.nsid		= nsid,
 		.addr		= (__u64)(uintptr_t) data,
-		.data_len	= 0x1000,
+		.data_len	= NVME_IDENTIFY_DATA_SIZE,
 		.cdw10		= cdw10,
 	};
 
