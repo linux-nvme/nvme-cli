@@ -2189,10 +2189,6 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	int fd;
 	int ret;
-	__u32 sanitize_cdw10 = 0;
-	__u32 sanitize_cdw11 = 0;
-
-	struct nvme_passthru_cmd admin_cmd;
 
 	struct config {
 		int    no_dealloc;
@@ -2206,7 +2202,7 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	struct config cfg = {
 		.no_dealloc = 0,
 		.oipbp = 0,
-		.owpass = 1,
+		.owpass = 0,
 		.ause = 0,
 		.sanact = 0,
 		.ovrpat = 0,
@@ -2230,44 +2226,41 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	case NVME_SANITIZE_ACT_CRYPTO_ERASE:
 	case NVME_SANITIZE_ACT_BLOCK_ERASE:
 	case NVME_SANITIZE_ACT_EXIT:
-		sanitize_cdw10 = cfg.sanact;
-		break;
 	case NVME_SANITIZE_ACT_OVERWRITE:
-		sanitize_cdw10 = cfg.sanact;
-		sanitize_cdw11 = cfg.ovrpat;
 		break;
 	default:
 		fprintf(stderr, "Invalid Sanitize Action\n");
-		ret = -1;
+		ret = EINVAL;
 		goto close_fd;
 	}
 
-	if (cfg.sanact != NVME_SANITIZE_ACT_EXIT && cfg.ause)
-		sanitize_cdw10 |= NVME_SANITIZE_AUSE;
-
-	if (cfg.sanact == NVME_SANITIZE_ACT_OVERWRITE) {
-		if (cfg.owpass >= 0 && cfg.owpass <= 16) {
-			sanitize_cdw10 |= (cfg.owpass << NVME_SANITIZE_OWPASS_SHIFT);
-		} else {
-			fprintf(stderr, "owpass out of range [0-16] or sanitize action is not set to overwrite\n");
-			ret = -1;
+	if (cfg.sanact == NVME_SANITIZE_ACT_EXIT) {
+	       if (cfg.ause || cfg.no_dealloc) {
+			fprintf(stderr, "SANACT is Exit Failure Mode\n");
+			ret = EINVAL;
 			goto close_fd;
-		}
-		if (cfg.oipbp)
-			sanitize_cdw10 |= NVME_SANITIZE_OIPBP;
+	       }
 	}
 
-	if (cfg.sanact != NVME_SANITIZE_ACT_EXIT && cfg.no_dealloc)
-		sanitize_cdw10 |= NVME_SANITIZE_NO_DEALLOC;
+	if (cfg.sanact == NVME_SANITIZE_ACT_OVERWRITE) {
+		if (!(cfg.owpass >= 0 && cfg.owpass <= 16)) {
+			fprintf(stderr, "OWPASS out of range [0-16]\n");
+			ret = EINVAL;
+			goto close_fd;
+		}
+	} else {
+		if (cfg.owpass || cfg.oipbp || cfg.ovrpat) {
+			fprintf(stderr, "SANACT is not Overwrite\n");
+			ret = EINVAL;
+			goto close_fd;
+		}
+	}
 
-	memset(&admin_cmd, 0, sizeof (admin_cmd));
-	admin_cmd.opcode = nvme_admin_sanitize_nvm;
-	admin_cmd.cdw10 = sanitize_cdw10;
-	admin_cmd.cdw11 = sanitize_cdw11;
-
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
-
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	ret = nvme_sanitize(fd, cfg.sanact, cfg.ause, cfg.owpass, cfg.oipbp,
+			    cfg.no_dealloc, cfg.ovrpat);
+	if (ret)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(ret), ret);
 
  close_fd:
 	close(fd);

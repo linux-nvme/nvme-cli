@@ -784,3 +784,16 @@ int nvme_dir_recv(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,
         return err;
 }
 
+int nvme_sanitize(int fd, __u8 sanact, __u8 ause, __u8 owpass, __u8 oipbp,
+		  __u8 no_dealloc, __u32 ovrpat)
+{
+	struct nvme_admin_cmd cmd = {
+		.opcode		= nvme_admin_sanitize_nvm,
+		.cdw10		= no_dealloc << 9 | oipbp << 8 |
+				  owpass << NVME_SANITIZE_OWPASS_SHIFT |
+				  ause << 3 | sanact,
+		.cdw11		= ovrpat,
+	};
+
+	return nvme_submit_admin_passthru(fd, &cmd);
+}
