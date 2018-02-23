@@ -496,39 +496,30 @@ int nvme_set_feature(int fd, __u32 nsid, __u8 fid, __u32 value, __u32 cdw12,
 int nvme_property(int fd, __u8 fctype, __le32 off, __le64 *value, __u8 attrib)
 {
 	int err;
-	struct nvmf_property_get_command *prop_get_cmd;
-	struct nvmf_property_set_command *prop_set_cmd;
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_fabrics_command,
+		.cdw10		= attrib,
+		.cdw11		= off,
 	};
 
 	if (!value) {
 		errno = EINVAL;
 		return -errno;
 	}
+
 	if (fctype == nvme_fabrics_type_property_get){
-		prop_get_cmd = (struct nvmf_property_get_command *)&cmd;
-		prop_get_cmd->fctype = nvme_fabrics_type_property_get;
-		prop_get_cmd->offset = off;
-		prop_get_cmd->attrib = attrib;
-	}
-	else if(fctype == nvme_fabrics_type_property_set) {
-		prop_set_cmd = (struct nvmf_property_set_command *)&cmd;
-		prop_set_cmd->fctype = nvme_fabrics_type_property_set;
-		prop_set_cmd->offset = off;
-		prop_set_cmd->attrib = attrib;
-		prop_set_cmd->value = *value;
-	}
-	else {
+		cmd.nsid = nvme_fabrics_type_property_get;
+	} else if(fctype == nvme_fabrics_type_property_set) {
+		cmd.nsid = nvme_fabrics_type_property_set;
+		cmd.cdw12 = *value;
+	} else {
 		errno = EINVAL;
 		return -errno;
 	}
 
 	err = nvme_submit_admin_passthru(fd, &cmd);
-	if (!err && fctype == nvme_fabrics_type_property_get) {
+	if (!err && fctype == nvme_fabrics_type_property_get)
 		*value = cpu_to_le64(cmd.result);
-	}
-
 	return err;
 }
 
