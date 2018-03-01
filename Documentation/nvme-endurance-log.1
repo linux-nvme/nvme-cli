@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-huawei-id-ctrl
+.\"     Title: nvme-endurance-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 03/01/2018
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-HUAWEI\-ID\-CT" "1" "03/01/2018" "NVMe" "NVMe Manual"
+.TH "NVME\-ENDURANCE\-LOG" "1" "03/01/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,39 +28,25 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-huawei-id-ctrl \- Send NVMe Identify Controller, return result and structure
+nvme-endurance-log \- Send NVMe Endurance log page request, returns result and log
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme huawei id\-ctrl\fR <device> [\-v | \-\-vendor\-specific] [\-b | \-\-raw\-binary]
-                        [\-o <fmt> | \-\-output\-format=<fmt>]
+\fInvme endurance\-log\fR <device> [\-\-group\-id=<group> | \-g <group>]
+                        [\-\-output\-format=<fmt> | \-o <fmt>]
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, sends an identify controller command and provides the result and returned structure\&.
+Retrieves the NVMe Endurance log page from an NVMe device and provides the retuned structure\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
-This will only work on Huawei devices supporting this feature\&. Results for any other device are undefined\&.
-.sp
-On success, the structure may be returned in one of several ways depending on the option flags; the structure may be parsed by the program or the raw buffer may be printed to stdout\&.
-.sp
-If having the program decode the output for readability, this version will decode Huawei vendor unique portions of the structure\&.
+On success, the returned endurance log structure may be returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format, the raw buffer may be printed to stdout for another program to parse, or reported in json format\&.
 .SH "OPTIONS"
 .PP
-\-b, \-\-raw\-binary
+\-g <group>, \-\-group\-id=<group>
 .RS 4
-Print the raw buffer to stdout\&. Structure is not parsed by program\&. This overrides the vendor specific and human readable options\&.
-.RE
-.PP
-\-v, \-\-vendor\-specific
-.RS 4
-In addition to parsing known fields, this option will dump the vendor specific region of the structure in hex with ascii interpretation\&.
-.RE
-.PP
-\-H, \-\-human\-readable
-.RS 4
-This option will parse and format many of the bit fields into human\-readable formats\&.
+The endurance group identifier\&.
 .RE
 .PP
 \-o <format>, \-\-output\-format=<format>
@@ -80,17 +66,40 @@ Set the reporting format to
 .sp -1
 .IP \(bu 2.3
 .\}
-Has the program interpret the returned buffer and display the known fields in a human readable format:
+Print the Endurance log page in a human readable format:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme huawei id\-ctrl /dev/nvme0
+# nvme endurance\-log /dev/nvme0
 .fi
 .if n \{\
 .RE
 .\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Print the raw Endurance log to a file:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme endurance\-log /dev/nvme0 \-\-output=binary > endurance_log\&.raw
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+It is probably a bad idea to not redirect stdout when using this mode\&.
 .RE
 .SH "NVME"
 .sp

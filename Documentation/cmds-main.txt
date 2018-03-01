@@ -37,6 +37,12 @@ linknvme:nvme-telemetry-log[1]::
 linknvme:nvme-smart-log[1]::
 	Retrieve Smart Log
 
+linknvme:nvme-endurance-log[1]::
+	Retrieve endurance Log
+
+linknvme:nvme-effects-log[1]::
+	Retrieve effects Log
+
 linknvme:nvme-get-ns-id[1]::
 	Retrieve namespace identifier
 
