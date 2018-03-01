@@ -1,0 +1,56 @@
+nvme-endurance-log(1)
+=====================
+
+NAME
+----
+nvme-endurance-log - Send NVMe Endurance log page request, returns result and log
+
+SYNOPSIS
+--------
+[verse]
+'nvme endurance-log' <device> [--group-id=<group> | -g <group>]
+			[--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+Retrieves the NVMe Endurance log page from an NVMe device and provides the retuned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned endurance log structure may be returned in one of
+several ways depending on the option flags; the structure may parsed by
+the program and printed in a readable format, the raw buffer may be
+printed to stdout for another program to parse, or reported in json format.
+
+OPTIONS
+-------
+-g <group>::
+--group-id=<group>::
+	The endurance group identifier.
+
+-o <format>::
+--output-format=<format>::
+              Set the reporting format to 'normal', 'json', or
+              'binary'. Only one output format can be used at a time.
+
+EXAMPLES
+--------
+* Print the Endurance log page in a human readable format:
++
+------------
+# nvme endurance-log /dev/nvme0
+------------
++
+
+* Print the raw Endurance log to a file:
++
+------------
+# nvme endurance-log /dev/nvme0 --output=binary > endurance_log.raw
+------------
++
+It is probably a bad idea to not redirect stdout when using this mode.
+
+NVME
+----
+Part of the nvme-user suite
