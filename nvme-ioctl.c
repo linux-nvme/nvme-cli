@@ -472,7 +472,7 @@ int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
 		.nsid		= nsid,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
-		.cdw11		= cdw12,
+		.cdw12		= cdw12,
 		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= data_len,
 	};
