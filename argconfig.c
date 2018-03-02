@@ -128,8 +128,12 @@ void argconfig_print_help(const char *program_desc,
 	       append_usage_str);
 
 	print_word_wrapped(program_desc, 0, 0);
-	printf("\n\n\033[1mOptions:\033[0m\n");
+	printf("\n");
 
+	if (!options || !options->option)
+		return;
+
+	printf("\n\033[1mOptions:\033[0m\n");
 	for (s = options; (s->option != NULL) && (s != NULL); s++)
 		show_option(s);
 }
