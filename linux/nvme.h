@@ -211,7 +211,8 @@ struct nvme_id_ctrl {
 	__le32			rtd3e;
 	__le32			oaes;
 	__le32			ctratt;
-	__u8			rsvd100[156];
+	__le16			rrls;
+	__u8			rsvd102[154];
 	__le16			oacs;
 	__u8			acl;
 	__u8			aerl;
@@ -239,7 +240,8 @@ struct nvme_id_ctrl {
 	__le32			sanicap;
 	__le32			hmminds;
 	__le16			hmmaxd;
-	__u8			rsvd338[174];
+	__le16			nsetidmax;
+	__u8			rsvd340[172];
 	__u8			sqes;
 	__u8			cqes;
 	__le16			maxcmd;

@@ -830,108 +830,110 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 {
 	int human = mode & HUMAN, vs = mode & VS;
 
-	printf("vid     : %#x\n", le16_to_cpu(ctrl->vid));
-	printf("ssvid   : %#x\n", le16_to_cpu(ctrl->ssvid));
-	printf("sn      : %-.*s\n", (int)sizeof(ctrl->sn), ctrl->sn);
-	printf("mn      : %-.*s\n", (int)sizeof(ctrl->mn), ctrl->mn);
-	printf("fr      : %-.*s\n", (int)sizeof(ctrl->fr), ctrl->fr);
-	printf("rab     : %d\n", ctrl->rab);
-	printf("ieee    : %02x%02x%02x\n",
+	printf("vid       : %#x\n", le16_to_cpu(ctrl->vid));
+	printf("ssvid     : %#x\n", le16_to_cpu(ctrl->ssvid));
+	printf("sn        : %-.*s\n", (int)sizeof(ctrl->sn), ctrl->sn);
+	printf("mn        : %-.*s\n", (int)sizeof(ctrl->mn), ctrl->mn);
+	printf("fr        : %-.*s\n", (int)sizeof(ctrl->fr), ctrl->fr);
+	printf("rab       : %d\n", ctrl->rab);
+	printf("ieee      : %02x%02x%02x\n",
 		ctrl->ieee[2], ctrl->ieee[1], ctrl->ieee[0]);
-	printf("cmic    : %#x\n", ctrl->cmic);
+	printf("cmic      : %#x\n", ctrl->cmic);
 	if (human)
 		show_nvme_id_ctrl_cmic(ctrl->cmic);
-	printf("mdts    : %d\n", ctrl->mdts);
-	printf("cntlid  : %x\n", le16_to_cpu(ctrl->cntlid));
-	printf("ver     : %x\n", le32_to_cpu(ctrl->ver));
-	printf("rtd3r   : %x\n", le32_to_cpu(ctrl->rtd3r));
-	printf("rtd3e   : %x\n", le32_to_cpu(ctrl->rtd3e));
-	printf("oaes    : %#x\n", le32_to_cpu(ctrl->oaes));
+	printf("mdts      : %d\n", ctrl->mdts);
+	printf("cntlid    : %x\n", le16_to_cpu(ctrl->cntlid));
+	printf("ver       : %x\n", le32_to_cpu(ctrl->ver));
+	printf("rtd3r     : %x\n", le32_to_cpu(ctrl->rtd3r));
+	printf("rtd3e     : %x\n", le32_to_cpu(ctrl->rtd3e));
+	printf("oaes      : %#x\n", le32_to_cpu(ctrl->oaes));
 	if (human)
 		show_nvme_id_ctrl_oaes(ctrl->oaes);
-	printf("ctratt  : %#x\n", le32_to_cpu(ctrl->ctratt));
+	printf("ctratt    : %#x\n", le32_to_cpu(ctrl->ctratt));
 	if (human)
 		show_nvme_id_ctrl_ctratt(ctrl->ctratt);
-	printf("oacs    : %#x\n", le16_to_cpu(ctrl->oacs));
+	printf("rrls      : %#x\n", le16_to_cpu(ctrl->rrls));
+	printf("oacs      : %#x\n", le16_to_cpu(ctrl->oacs));
 	if (human)
 		show_nvme_id_ctrl_oacs(ctrl->oacs);
-	printf("acl     : %d\n", ctrl->acl);
-	printf("aerl    : %d\n", ctrl->aerl);
-	printf("frmw    : %#x\n", ctrl->frmw);
+	printf("acl       : %d\n", ctrl->acl);
+	printf("aerl      : %d\n", ctrl->aerl);
+	printf("frmw      : %#x\n", ctrl->frmw);
 	if (human)
 		show_nvme_id_ctrl_frmw(ctrl->frmw);
-	printf("lpa     : %#x\n", ctrl->lpa);
+	printf("lpa       : %#x\n", ctrl->lpa);
 	if (human)
 		show_nvme_id_ctrl_lpa(ctrl->lpa);
-	printf("elpe    : %d\n", ctrl->elpe);
-	printf("npss    : %d\n", ctrl->npss);
-	printf("avscc   : %#x\n", ctrl->avscc);
+	printf("elpe      : %d\n", ctrl->elpe);
+	printf("npss      : %d\n", ctrl->npss);
+	printf("avscc     : %#x\n", ctrl->avscc);
 	if (human)
 		show_nvme_id_ctrl_avscc(ctrl->avscc);
-	printf("apsta   : %#x\n", ctrl->apsta);
+	printf("apsta     : %#x\n", ctrl->apsta);
 	if (human)
 		show_nvme_id_ctrl_apsta(ctrl->apsta);
-	printf("wctemp  : %d\n", le16_to_cpu(ctrl->wctemp));
-	printf("cctemp  : %d\n", le16_to_cpu(ctrl->cctemp));
-	printf("mtfa    : %d\n", le16_to_cpu(ctrl->mtfa));
-	printf("hmpre   : %d\n", le32_to_cpu(ctrl->hmpre));
-	printf("hmmin   : %d\n", le32_to_cpu(ctrl->hmmin));
-	printf("tnvmcap : %.0Lf\n", int128_to_double(ctrl->tnvmcap));
-	printf("unvmcap : %.0Lf\n", int128_to_double(ctrl->unvmcap));
-	printf("rpmbs   : %#x\n", le32_to_cpu(ctrl->rpmbs));
+	printf("wctemp    : %d\n", le16_to_cpu(ctrl->wctemp));
+	printf("cctemp    : %d\n", le16_to_cpu(ctrl->cctemp));
+	printf("mtfa      : %d\n", le16_to_cpu(ctrl->mtfa));
+	printf("hmpre     : %d\n", le32_to_cpu(ctrl->hmpre));
+	printf("hmmin     : %d\n", le32_to_cpu(ctrl->hmmin));
+	printf("tnvmcap   : %.0Lf\n", int128_to_double(ctrl->tnvmcap));
+	printf("unvmcap   : %.0Lf\n", int128_to_double(ctrl->unvmcap));
+	printf("rpmbs     : %#x\n", le32_to_cpu(ctrl->rpmbs));
 	if (human)
 		show_nvme_id_ctrl_rpmbs(ctrl->rpmbs);
-	printf("edstt   : %d\n", le16_to_cpu(ctrl->edstt));
-	printf("dsto    : %d\n", ctrl->dsto);
-	printf("fwug    : %d\n", ctrl->fwug);
-	printf("kas     : %d\n", le16_to_cpu(ctrl->kas));
-	printf("hctma   : %#x\n", le16_to_cpu(ctrl->hctma));
+	printf("edstt     : %d\n", le16_to_cpu(ctrl->edstt));
+	printf("dsto      : %d\n", ctrl->dsto);
+	printf("fwug      : %d\n", ctrl->fwug);
+	printf("kas       : %d\n", le16_to_cpu(ctrl->kas));
+	printf("hctma     : %#x\n", le16_to_cpu(ctrl->hctma));
 	if (human)
 		show_nvme_id_ctrl_hctma(ctrl->hctma);
-	printf("mntmt   : %d\n", le16_to_cpu(ctrl->mntmt));
-	printf("mxtmt   : %d\n", le16_to_cpu(ctrl->mxtmt));
-	printf("sanicap : %#x\n", le32_to_cpu(ctrl->sanicap));
+	printf("mntmt     : %d\n", le16_to_cpu(ctrl->mntmt));
+	printf("mxtmt     : %d\n", le16_to_cpu(ctrl->mxtmt));
+	printf("sanicap   : %#x\n", le32_to_cpu(ctrl->sanicap));
 	if (human)
 		show_nvme_id_ctrl_sanicap(ctrl->sanicap);
-	printf("hmminds : %d\n", le32_to_cpu(ctrl->hmminds));
-	printf("hmmaxd  : %d\n", le16_to_cpu(ctrl->hmmaxd));
-	printf("sqes    : %#x\n", ctrl->sqes);
+	printf("hmminds   : %d\n", le32_to_cpu(ctrl->hmminds));
+	printf("hmmaxd    : %d\n", le16_to_cpu(ctrl->hmmaxd));
+	printf("nsetidmax : %d\n", le16_to_cpu(ctrl->nsetidmax));
+	printf("sqes      : %#x\n", ctrl->sqes);
 	if (human)
 		show_nvme_id_ctrl_sqes(ctrl->sqes);
-	printf("cqes    : %#x\n", ctrl->cqes);
+	printf("cqes      : %#x\n", ctrl->cqes);
 	if (human)
 		show_nvme_id_ctrl_cqes(ctrl->cqes);
-	printf("maxcmd  : %d\n", le16_to_cpu(ctrl->maxcmd));
-	printf("nn      : %d\n", le32_to_cpu(ctrl->nn));
-	printf("oncs    : %#x\n", le16_to_cpu(ctrl->oncs));
+	printf("maxcmd    : %d\n", le16_to_cpu(ctrl->maxcmd));
+	printf("nn        : %d\n", le32_to_cpu(ctrl->nn));
+	printf("oncs      : %#x\n", le16_to_cpu(ctrl->oncs));
 	if (human)
 		show_nvme_id_ctrl_oncs(ctrl->oncs);
-	printf("fuses   : %#x\n", le16_to_cpu(ctrl->fuses));
+	printf("fuses     : %#x\n", le16_to_cpu(ctrl->fuses));
 	if (human)
 		show_nvme_id_ctrl_fuses(ctrl->fuses);
-	printf("fna     : %#x\n", ctrl->fna);
+	printf("fna       : %#x\n", ctrl->fna);
 	if (human)
 		show_nvme_id_ctrl_fna(ctrl->fna);
-	printf("vwc     : %#x\n", ctrl->vwc);
+	printf("vwc       : %#x\n", ctrl->vwc);
 	if (human)
 		show_nvme_id_ctrl_vwc(ctrl->vwc);
-	printf("awun    : %d\n", le16_to_cpu(ctrl->awun));
-	printf("awupf   : %d\n", le16_to_cpu(ctrl->awupf));
-	printf("nvscc   : %d\n", ctrl->nvscc);
+	printf("awun      : %d\n", le16_to_cpu(ctrl->awun));
+	printf("awupf     : %d\n", le16_to_cpu(ctrl->awupf));
+	printf("nvscc     : %d\n", ctrl->nvscc);
 	if (human)
 		show_nvme_id_ctrl_nvscc(ctrl->nvscc);
-	printf("acwu    : %d\n", le16_to_cpu(ctrl->acwu));
-	printf("sgls    : %x\n", le32_to_cpu(ctrl->sgls));
+	printf("acwu      : %d\n", le16_to_cpu(ctrl->acwu));
+	printf("sgls      : %x\n", le32_to_cpu(ctrl->sgls));
 	if (human)
 		show_nvme_id_ctrl_sgls(ctrl->sgls);
-	printf("subnqn  : %-.*s\n", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
-	printf("ioccsz  : %d\n", le32_to_cpu(ctrl->ioccsz));
-	printf("iorcsz  : %d\n", le32_to_cpu(ctrl->iorcsz));
-	printf("icdoff  : %d\n", le16_to_cpu(ctrl->icdoff));
-	printf("ctrattr : %x\n", ctrl->ctrattr);
+	printf("subnqn    : %-.*s\n", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
+	printf("ioccsz    : %d\n", le32_to_cpu(ctrl->ioccsz));
+	printf("iorcsz    : %d\n", le32_to_cpu(ctrl->iorcsz));
+	printf("icdoff    : %d\n", le16_to_cpu(ctrl->icdoff));
+	printf("ctrattr   : %x\n", ctrl->ctrattr);
 	if (human)
 		show_nvme_id_ctrl_ctrattr(ctrl->ctrattr);
-	printf("msdbd   : %d\n", ctrl->msdbd);
+	printf("msdbd     : %d\n", ctrl->msdbd);
 
 	show_nvme_id_ctrl_power(ctrl);
 	if (vendor_show)
@@ -1889,6 +1891,7 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vs)(
 	json_object_add_value_uint(root, "rtd3e", le32_to_cpu(ctrl->rtd3e));
 	json_object_add_value_uint(root, "oaes", le32_to_cpu(ctrl->oaes));
 	json_object_add_value_int(root, "ctratt", le32_to_cpu(ctrl->ctratt));
+	json_object_add_value_int(root, "rrls", le16_to_cpu(ctrl->rrls));
 	json_object_add_value_int(root, "oacs", le16_to_cpu(ctrl->oacs));
 	json_object_add_value_int(root, "acl", ctrl->acl);
 	json_object_add_value_int(root, "aerl", ctrl->aerl);
@@ -1914,6 +1917,9 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vs)(
 	json_object_add_value_int(root, "mntmt", le16_to_cpu(ctrl->mntmt));
 	json_object_add_value_int(root, "mxtmt", le16_to_cpu(ctrl->mxtmt));
 	json_object_add_value_int(root, "sanicap", le32_to_cpu(ctrl->sanicap));
+	json_object_add_value_int(root, "hmminds", le32_to_cpu(ctrl->hmminds));
+	json_object_add_value_int(root, "hmmaxd", le16_to_cpu(ctrl->hmmaxd));
+	json_object_add_value_int(root, "nsetidmax", le16_to_cpu(ctrl->nsetidmax));
 	json_object_add_value_int(root, "sqes", ctrl->sqes);
 	json_object_add_value_int(root, "cqes", ctrl->cqes);
 	json_object_add_value_int(root, "maxcmd", le16_to_cpu(ctrl->maxcmd));
