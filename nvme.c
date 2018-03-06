@@ -1793,7 +1793,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		"change saveable Features.";
 	const char *raw_binary = "show infos in binary format";
 	const char *namespace_id = "identifier of desired namespace";
-	const char *feature_id = "hexadecimal feature name";
+	const char *feature_id = "feature identifier";
 	const char *sel = "[0-3]: current/default/saved/supported";
 	const char *data_len = "buffer len if data is returned through host memory buffer";
 	const char *cdw11 = "dword 11 for interrupt vector config";
@@ -3146,7 +3146,7 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 	const char *namespace_id = "identifier of desired namespace";
 	const char *crkey = "current reservation key";
 	const char *prkey = "pre-empt reservation key";
-	const char *rtype = "hex reservation type";
+	const char *rtype = "reservation type";
 	const char *racqa = "reservation acquiry action";
 	const char *iekey = "ignore existing res. key";
 	int err, fd;
@@ -3289,7 +3289,7 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 	const char *namespace_id = "desired namespace";
 	const char *crkey = "current reservation key";
 	const char *iekey = "ignore existing res. key";
-	const char *rtype = "hex reservation type";
+	const char *rtype = "reservation type";
 	const char *rrela = "reservation release action";
 	int err, fd;
 
@@ -3960,7 +3960,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 		.prefill      = 0,
 	};
 
-	const char *opcode = "hex opcode (required)";
+	const char *opcode = "opcode (required)";
 	const char *flags = "command flags";
 	const char *rsvd = "value for reserved field";
 	const char *namespace_id = "desired namespace";
