@@ -1214,21 +1214,27 @@ int get_nvme_subsystem_info(char *name, char *path,
 {
 	char ctrl_path[512];
 	struct dirent **ctrls;
-	int n, i;
+	int n, i, ret = 1;
 
 	item->subsysnqn = get_nvme_subsnqn(path);
-	if (!item->subsysnqn)
-		return 1;
+	if (!item->subsysnqn) {
+		fprintf(stderr, "failed to get subsystem nqn.\n");
+		return ret;
+	}
 
 	item->name = strdup(name);
 
 	n = scandir(path, &ctrls, scan_ctrls_filter, alphasort);
-	if (n < 0)
-		goto free_subysynqn;
+	if (n < 0) {
+		fprintf(stderr, "failed to scan controller(s).\n");
+		return ret;
+	}
 
 	item->ctrls = calloc(n, sizeof(struct ctrl_list_item));
-	if (!item->ctrls)
+	if (!item->ctrls) {
+		fprintf(stderr, "failed to allocate subsystem controller(s)\n");
 		goto free_ctrls;
+	}
 
 	item->nctrls = n;
 
@@ -1240,37 +1246,26 @@ int get_nvme_subsystem_info(char *name, char *path,
 
 		item->ctrls[i].address = get_nvme_ctrl_address(ctrl_path);
 		if (!item->ctrls[i].address) {
-			free(item->ctrls[i].name);
-			goto free_ctrl_list;
+			fprintf(stderr, "failed to get controller[%d] address.\n", i);
+			goto free_ctrls;
 		}
 
 		item->ctrls[i].transport = get_nvme_ctrl_transport(ctrl_path);
 		if (!item->ctrls[i].transport) {
-			free(item->ctrls[i].name);
-			free(item->ctrls[i].address);
-			goto free_ctrl_list;
+			fprintf(stderr, "failed to get controller[%d] transport.\n", i);
+			goto free_ctrls;
 		}
 	}
 
-	for (i = 0; i < n; i++)
-		free(ctrls[i]);
-	free(ctrls);
-
-	return 0;
-
-free_ctrl_list:
-	free(item->ctrls);
+	ret = 0;
 
 free_ctrls:
 	for (i = 0; i < n; i++)
 		free(ctrls[i]);
 	free(ctrls);
 
-free_subysynqn:
-	free(item->subsysnqn);
-	free(item->name);
+	return ret;
 
-	return 1;
 }
 
 static int scan_subsys_filter(const struct dirent *d)
