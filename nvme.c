@@ -1214,17 +1214,17 @@ int get_nvme_subsystem_info(char *name, char *path,
 {
 	char ctrl_path[512];
 	struct dirent **ctrls;
-	int n, i;
+	int n, i, ret = 1;
 
 	item->subsysnqn = get_nvme_subsnqn(path);
 	if (!item->subsysnqn)
-		return 1;
+		return ret;
 
 	item->name = strdup(name);
 
 	n = scandir(path, &ctrls, scan_ctrls_filter, alphasort);
 	if (n < 0)
-		goto free_subysynqn;
+		return ret;
 
 	item->ctrls = calloc(n, sizeof(struct ctrl_list_item));
 	if (!item->ctrls)
@@ -1239,38 +1239,23 @@ int get_nvme_subsystem_info(char *name, char *path,
 			 item->ctrls[i].name);
 
 		item->ctrls[i].address = get_nvme_ctrl_address(ctrl_path);
-		if (!item->ctrls[i].address) {
-			free(item->ctrls[i].name);
-			goto free_ctrl_list;
-		}
+		if (!item->ctrls[i].address)
+			goto free_ctrls;
 
 		item->ctrls[i].transport = get_nvme_ctrl_transport(ctrl_path);
-		if (!item->ctrls[i].transport) {
-			free(item->ctrls[i].name);
-			free(item->ctrls[i].address);
-			goto free_ctrl_list;
-		}
+		if (!item->ctrls[i].transport)
+			goto free_ctrls;
 	}
 
-	for (i = 0; i < n; i++)
-		free(ctrls[i]);
-	free(ctrls);
-
-	return 0;
-
-free_ctrl_list:
-	free(item->ctrls);
+	ret = 0;
 
 free_ctrls:
 	for (i = 0; i < n; i++)
 		free(ctrls[i]);
 	free(ctrls);
 
-free_subysynqn:
-	free(item->subsysnqn);
-	free(item->name);
+	return ret;
 
-	return 1;
 }
 
 static int scan_subsys_filter(const struct dirent *d)
