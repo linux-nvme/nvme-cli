@@ -614,6 +614,14 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 		p += len;
 	}
 
+	if (cfg.host_traddr) {
+		len = sprintf(p, ",host_traddr=%s", cfg.host_traddr);
+		if (len < 0)
+			return -EINVAL;
+		p+= len;
+	}
+
+
 	switch (e->trtype) {
 	case NVMF_TRTYPE_LOOP: /* loop */
 		len = sprintf(p, ",transport=loop");
@@ -658,11 +666,6 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 			if (len < 0)
 				return -EINVAL;
 			p += len;
-
-			len = sprintf(p, ",host_traddr=%s", cfg.host_traddr);
-			if (len < 0)
-				return -EINVAL;
-			p+= len;
 
 			len = sprintf(p, ",traddr=%.*s",
 				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
