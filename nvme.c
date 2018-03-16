@@ -621,7 +621,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	struct config cfg = {
 		.namespace_id = NVME_NSID_ALL,
-		.log_id       = 0,
+		.log_id       = 1,
 		.log_len      = 0,
 		.lpo          = NVME_NO_LOG_LPO,
 		.lsp          = NVME_NO_LOG_LSP,
