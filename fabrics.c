@@ -736,10 +736,10 @@ static int do_discover(char *argstr, bool connect)
 		break;
 	case DISC_NOT_EQUAL:
 		fprintf(stderr,
-		"Numrec values of last two get dicovery log page not equal\n");
+		"Numrec values of last two get discovery log page not equal\n");
 		break;
 	default:
-		fprintf(stderr, "Get dicovery log page failed: %d\n", ret);
+		fprintf(stderr, "Get discovery log page failed: %d\n", ret);
 		break;
 	}
 
