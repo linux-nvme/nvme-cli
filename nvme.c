@@ -1022,10 +1022,13 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic, &nsid);
 	if (!err)
 		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
-	else if (err > 0)
+	else if (err > 0) {
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
-	else
+        if (err == NVME_SC_NS_ID_UNAVAILABLE) 
+            fprintf(stderr, "The number of namespaces supported h
+                    as been exceeded!\n");
+    } else
 		perror("create namespace");
 
 	close(fd);
