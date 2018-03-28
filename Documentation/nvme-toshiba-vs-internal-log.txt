@@ -1,0 +1,64 @@
+nvme-toshiba-vs-internal-log(1)
+===============================
+
+NAME
+----
+nvme-toshiba-vs-internal-log - Retrieve a Toshiba device's vendor specific internal log and either save to file or dump the contents.
+
+SYNOPSIS
+--------
+[verse]
+'nvme toshiba vs-internal-log ' <device>
+		[--output-file=<FILE>, -o <FILE>] (optional)
+		[--saved-log, -s] (optional)
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends the Toshiba internal device log
+request and either saves the result to a file or dumps the content to stdout.
+
+The <device> parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1). 
+
+The log is associated with the controller rather than any
+namespaces.
+
+Two logs exist, the current log and the previous log.
+
+This will only work on Toshiba devices supporting this feature.
+
+Note: The logs are quite large - typically 100's of MB. This command can take several minutes to complete. 
+A progress runner is included when data is written to file and a page count is included in the stdout dump.
+
+OPTIONS
+-------
+
+
+-o <FILE>::
+--output-file=<FILE>::
+	Output binary file. Defaults to text-formatted dump to stdout
+
+
+-p::
+--prev-log::
+	Use previous log contents. Defaults to the current log contents.
+
+EXAMPLES
+--------
+* Get the current log from the device and dump it to stdout:
++
+------------
+# nvme toshiba internal-log /dev/nvme0 
+------------
++
+
+* Get the previous log from the device and save to a binary file:
++
+------------
+# nvme toshiba internal-log /dev/nvme0 --output-file=log.bin --prev-log
+------------
+
+NVME
+----
+Part of the nvme-user suite

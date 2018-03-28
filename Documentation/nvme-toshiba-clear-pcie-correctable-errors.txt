@@ -1,0 +1,34 @@
+nvme-toshiba-clear-pcie-correctable-errors(1)
+=============================================
+
+NAME
+----
+nvme-toshiba-clear-pcie-correctable-errors - Reset the PCIe correctable errors count to zero.
+
+SYNOPSIS
+--------
+[verse]
+'nvme toshiba clear-pcie-correctable-errors ' <device>
+
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends the Toshiba clear PCIe correctable errors
+request.
+
+The <device> parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1). 
+
+
+EXAMPLES
+--------
+* Clear the PCIe correctable errors count:
++
+------------
+# nvme toshiba clear-pcie-correctable-errors /dev/nvme0 
+------------
+
+NVME
+----
+Part of the nvme-user suite
