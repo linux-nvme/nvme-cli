@@ -1,0 +1,64 @@
+nvme-toshiba-vs-smart-add-log(1)
+================================
+
+NAME
+----
+nvme-toshiba-vs-smart-add-log - Retrieve a Toshiba device's vendor specific extended SMART log page contents and either save to file or dump the contents.
+
+SYNOPSIS
+--------
+[verse]
+'nvme toshiba vs-smart-add-log ' <device> [--log=<NUM>, -l <NUM>]
+		[--namespace-id=<NUM>, -n <NUM>]
+		[--output-file=<FILE>, -o <FILE>]
+
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends the Toshiba vendor log
+request and either saves the result to a file or dumps the content to stdout.
+
+The <device> parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1). 
+
+The log contents may be associated with the controller, in which case the namespace parameter is ignored.
+
+Two logs exist, page 0xC0 (log page directory) and page 0xCA (vendor log page)
+
+This will only work on Toshiba devices supporting this feature.
+
+OPTIONS
+-------
+
+-l <NUM>::
+--log=<NUM>::
+	Log page: 0xC0 or 0xCA  (defaults to 0xCA)
+
+-n <NUM>::
+--namespace-id=<NUM>::
+
+-o <FILE>::
+--output-file=<FILE>::
+	Output binary file. Defaults to text-formatted dump to stdout
+
+
+
+EXAMPLES
+--------
+* Get the current log from the device and dumps it to stdout:
++
+------------
+# nvme toshiba vs-smart-add-log /dev/nvme0 
+------------
++
+
+* Get the contents of log page 0xC0 from the device and save to a binary file:
++
+------------
+# nvme toshiba vs-smart-add-log /dev/nvme0 --output-file=log.bin --log=0xC0
+------------
+
+NVME
+----
+Part of the nvme-user suite

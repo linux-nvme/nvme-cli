@@ -1,0 +1,108 @@
+'\" t
+.\"     Title: nvme-toshiba-vs-internal-log
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 03/07/2018
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-TOSHIBA\-VS\-I" "1" "03/07/2018" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-toshiba-vs-internal-log \- Retrieve a Toshiba device\*(Aqs vendor specific internal log and either save to file or dump the contents\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\*(Aqnvme toshiba vs\-internal\-log \*(Aq <device>
+                [\-\-output\-file=<FILE>, \-o <FILE>] (optional)
+                [\-\-saved\-log, \-s] (optional)
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, sends the Toshiba internal device log request and either saves the result to a file or dumps the content to stdout\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+The log is associated with the controller rather than any namespaces\&.
+.sp
+Two logs exist, the current log and the previous log\&.
+.sp
+This will only work on Toshiba devices supporting this feature\&.
+.sp
+Note: The logs are quite large \- typically 100\(cqs of MB\&. This command can take several minutes to complete\&. A progress runner is included when data is written to file and a page count is included in the stdout dump\&.
+.SH "OPTIONS"
+.PP
+\-o <FILE>, \-\-output\-file=<FILE>
+.RS 4
+Output binary file\&. Defaults to text\-formatted dump to stdout
+.RE
+.PP
+\-p, \-\-prev\-log
+.RS 4
+Use previous log contents\&. Defaults to the current log contents\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Get the current log from the device and dump it to stdout:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme toshiba internal\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Get the previous log from the device and save to a binary file:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme toshiba internal\-log /dev/nvme0 \-\-output\-file=log\&.bin \-\-prev\-log
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite
