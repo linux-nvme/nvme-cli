@@ -109,11 +109,11 @@ const char *suffix_dbinary_get(double *value)
 	return "";
 }
 
-long long suffix_binary_parse(const char *value)
+uint64_t suffix_binary_parse(const char *value)
 {
 	char *suffix;
 	errno = 0;
-	long long ret = strtoll(value, &suffix, 0);
+	uint64_t ret = strtoll(value, &suffix, 0);
 	if (errno)
 		return 0;
 
