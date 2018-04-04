@@ -258,10 +258,8 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		fprintf(stderr, "parse and open failed\n");
+	if (fd < 0)
 		return fd;
-	}
 
 	if (!cfg.file_name) {
 		fprintf(stderr, "Please provide an output file!\n");
