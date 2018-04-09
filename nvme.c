@@ -1634,8 +1634,10 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 		fmt = BINARY;
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id <= 0)
-			return EINVAL;
+		if (cfg.namespace_id <= 0) {
+			err = EINVAL;
+			goto close_fd;
+		}
 	}
 
 	if (posix_memalign(&nsdescs, getpagesize(), 0x1000)) {
@@ -1725,8 +1727,10 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		flags |= HUMAN;
 	if (!cfg.namespace_id && S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id <= 0)
-			return EINVAL;
+		if (cfg.namespace_id <= 0) {
+			err = EINVAL;
+			goto close_fd;
+		}
 	}
 	else if(!cfg.namespace_id)
 		fprintf(stderr,
@@ -2425,8 +2429,10 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 
 	if (S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id <= 0)
-			return EINVAL;
+		if (cfg.namespace_id <= 0) {
+			err = EINVAL;
+			goto close_fd;
+		}
 	}
 	if (cfg.namespace_id != NVME_NSID_ALL) {
 		err = nvme_identify_ns(fd, cfg.namespace_id, 0, &ns);
@@ -2885,8 +2891,10 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id <= 0)
-			return EINVAL;
+		if (cfg.namespace_id <= 0) {
+			err = EINVAL;
+			goto close_fd;
+		}
 	}
 
 	err = nvme_write_uncorrectable(fd, cfg.namespace_id, cfg.start_block,
@@ -2899,8 +2907,8 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 	else
 		printf("NVME Write Uncorrectable Success\n");
 
+ close_fd:
 	close(fd);
-
 	return err;
 }
 
@@ -2975,8 +2983,10 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		control |= NVME_RW_DEAC;
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id <= 0)
-			return EINVAL;
+		if (cfg.namespace_id <= 0) {
+			err = EINVAL;
+			goto close_fd;
+		}
 	}
 
 	err = nvme_write_zeros(fd, cfg.namespace_id, cfg.start_block, cfg.block_count,
@@ -3066,8 +3076,10 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id <= 0)
-			return EINVAL;
+		if (cfg.namespace_id <= 0) {
+			err = EINVAL;
+			goto close_fd;
+		}
 	}
 	if (!cfg.cdw11)
 		cfg.cdw11 = (cfg.ad << 2) | (cfg.idw << 1) | (cfg.idr << 0);
@@ -3183,9 +3195,12 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id <= 0)
-			return EINVAL;
+		if (cfg.namespace_id <= 0) {
+			err = EINVAL;
+			goto close_fd;
+		}
 	}
+
 	if (cfg.racqa > 7) {
 		fprintf(stderr, "invalid racqa:%d\n", cfg.racqa);
 		err = EINVAL;
@@ -3252,8 +3267,10 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id <= 0)
-			return EINVAL;
+		if (cfg.namespace_id <= 0) {
+			err = EINVAL;
+			goto close_fd;
+		}
 	}
 	if (cfg.cptpl > 3) {
 		fprintf(stderr, "invalid cptpl:%d\n", cfg.cptpl);
@@ -3323,8 +3340,10 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id <= 0)
-			return EINVAL;
+		if (cfg.namespace_id <= 0) {
+			err = EINVAL;
+			goto close_fd;
+		}
 	}
 	if (cfg.rrela > 7) {
 		fprintf(stderr, "invalid rrela:%d\n", cfg.rrela);
@@ -3399,8 +3418,10 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id <= 0)
-			return EINVAL;
+		if (cfg.namespace_id <= 0) {
+			err = EINVAL;
+			goto close_fd;
+		}
 	}
 	if (!cfg.numd || cfg.numd > (0x1000 >> 2))
 		cfg.numd = 0x1000 >> 2;
