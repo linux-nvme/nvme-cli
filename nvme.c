@@ -370,8 +370,10 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 		return fd;
 
 	fmt = validate_output_format(cfg.output_format);
-	if (fmt < 0)
-		return fmt;
+	if (fmt < 0) {
+		err = fmt;
+		goto close_fd;
+	}
 
 	err = nvme_endurance_log(fd, cfg.group_id, &endurance_log);
 	if (!err) {
@@ -387,6 +389,7 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 	else
 		perror("endurance log");
 
+ close_fd:
 	close(fd);
 	return err;
 }
