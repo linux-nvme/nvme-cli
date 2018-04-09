@@ -362,6 +362,7 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format},
 		{"group-id",      'g', "NUM", CFG_SHORT,  &cfg.group_id,      required_argument, group_id},
+		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -369,8 +370,10 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 		return fd;
 
 	fmt = validate_output_format(cfg.output_format);
-	if (fmt < 0)
-		return fmt;
+	if (fmt < 0) {
+		err = fmt;
+		goto close_fd;
+	}
 
 	err = nvme_endurance_log(fd, cfg.group_id, &endurance_log);
 	if (!err) {
@@ -386,6 +389,7 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 	else
 		perror("endurance log");
 
+ close_fd:
 	close(fd);
 	return err;
 }
