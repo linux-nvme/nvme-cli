@@ -362,6 +362,7 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format},
 		{"group-id",      'g', "NUM", CFG_SHORT,  &cfg.group_id,      required_argument, group_id},
+		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
