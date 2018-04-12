@@ -2298,6 +2298,8 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	if (err) {
 		bar = get_registers();
 		fabrics = false;
+		if (bar)
+			err = 0;
 	}
 	if (!bar) {
 		err = ENODEV;
