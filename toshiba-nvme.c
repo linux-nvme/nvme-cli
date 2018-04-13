@@ -340,77 +340,6 @@ struct nvme_xdn_smart_log_c0 {
 	__u8 resv[512 - NR_SMART_ITEMS_C0];
 };
 
-enum LOG_PAGE_CA {
-	PHYSICAL_NAND_BYTES_WRITTEN_CA = 0,
-	PHYSICAL_NAND_BYTES_READ_CA = 16,
-	BAD_NAND_BLOCK_COUNT_CA = 32,
-	UNCORRECTABLE_READ_ERROR_COUNT_CA = 40,
-	SOFT_ECC_ERROR_COUNT_CA = 48,
-	SDD_END_TO_END_CORRECTION_COUNTS_CA = 56,
-	SYSTEM_DATA_USED_CA = 64,
-	USER_DATA_ERASE_COUNTS_CA = 65,
-	REFRESH_COUNT_CA = 73,
-	PROGRAM_FAIL_COUNT_CA = 81,
-	USER_ERASE_FAIL_COUNT_CA = 89,
-	SYSTEM_AREA_ERASE_FAIL_COUNT_CA = 97,
-	THERMAL_THROTTLING_STATUS_CA = 105,
-	THERMAL_THROTTLING_COUNT_CA = 106,
-	PCIE_CORRECTABLE_ERROR_COUNT_CA = 107,
-	INCOMPLETE_SHUTDOWNS_CA = 115,
-	FREE_BLOCKS_NORMALISED_CA = 119,
-
-	NR_SMART_ITEMS_CA = 120,
-};
-
-struct nvme_xdn_smart_log_ca {
-	__u8 items[NR_SMART_ITEMS_CA];
-	__u8 resv[512 - NR_SMART_ITEMS_CA];
-};
-
-static unsigned long uint_n_to_ulong(__u8 *data, size_t length)
-{
-	unsigned long result = 0;
-	for (size_t i = 0; i < length; i++) {
-		result *= 256;
-		result += data[(length -1) - i];
-	}
-	return result;
-}
-
-static float uint_n_to_float(__u8 *data, size_t length)
-{
-	float result = 0;
-	for (size_t i = 0; i < length; i++) {
-		result *= 256.0;
-		result += data[(length -1) - i];
-	}
-	return result;
-}
-
-static const char* UNITS_B = "B";
-static const char* UNITS_KB = "KiB";
-static const char* UNITS_MB = "MiB";
-static const char* UNITS_GB = "GiB";
-
-static float to_readable_units(float raw_bytes, const char** units)
-{
-	*units = UNITS_B;
-	float scaled_units = raw_bytes;
-	if (scaled_units > 102400.0) { // Switch to KiB above 100 KiB
-		scaled_units /= 1024.0; // Now in KiB.
-		*units = UNITS_KB;
-	}
-	if (scaled_units > 102400.0) { // Switch to MiB above 100 MiB
-		scaled_units /= 1024.0; // Now in MiB.
-		*units = UNITS_MB;
-	}
-	if (scaled_units > 102400.0) { //Switch to GiB above 100 GiB
-		scaled_units /= 1024.0; // Now in GiB.
-		*units = UNITS_GB;
-	}
-	return scaled_units;
-}
-
 static void default_show_vendor_log_c0(int fd, __u32 nsid, const char *devname,
 		struct nvme_xdn_smart_log_c0 *smart)
 {
@@ -422,41 +351,6 @@ static void default_show_vendor_log_c0(int fd, __u32 nsid, const char *devname,
 	printf("Device Self Test   : %u \n", smart->items[DEVICE_SELF_TEST_C0]);
 	printf("Log Page Directory : %u \n", smart->items[LOG_PAGE_DIRECTORY_C0]);
 	printf("SMART Attributes   : %u \n", smart->items[SMART_ATTRIBUTES_C0]);
-}
-
-static void default_show_vendor_log_ca(int fd, __u32 nsid, const char *devname,
-		struct nvme_xdn_smart_log_ca *smart)
-{
-	printf("Vendor Log Page 0xCA for NVME device:%s namespace-id:%x\n", devname, nsid);
-	const char* units;
-	float media_units;
-	media_units = uint_n_to_float(&smart->items[PHYSICAL_NAND_BYTES_WRITTEN_CA], 16); // units are bytes
-	media_units = to_readable_units(media_units, &units);
-	printf("Total data written to NAND               : %.1f %s\n", media_units, units);
-	media_units = uint_n_to_float(&smart->items[PHYSICAL_NAND_BYTES_READ_CA], 16); // units are bytes
-	media_units = to_readable_units(media_units, &units);
-	printf("Total data read from NAND                : %.1f %s\n", media_units, units);
-	printf("Bad NAND Block Count (Normalised)        : %lu\n", uint_n_to_ulong(&smart->items[BAD_NAND_BLOCK_COUNT_CA], 2));
-	printf("Bad NAND Block Count (Raw)               : %lu\n", uint_n_to_ulong(&smart->items[BAD_NAND_BLOCK_COUNT_CA+2], 6));
-	printf("Uncorrectable Read Error Count           : %lu\n", uint_n_to_ulong(&smart->items[UNCORRECTABLE_READ_ERROR_COUNT_CA], 8));
-	printf("Soft ECC Error Count                     : %lu\n", uint_n_to_ulong(&smart->items[SOFT_ECC_ERROR_COUNT_CA], 8));
-	printf("End-to-end Error Count (Detected)        : %lu\n", uint_n_to_ulong(&smart->items[SDD_END_TO_END_CORRECTION_COUNTS_CA], 4));
-	printf("End-to-end Error Count (Corrected)       : %lu\n", uint_n_to_ulong(&smart->items[SDD_END_TO_END_CORRECTION_COUNTS_CA + 4], 4));
-	printf("System Data Used                         : %u %%\n", smart->items[SYSTEM_DATA_USED_CA]);
-	printf("User Data Erase Count (Max)              : %lu\n", uint_n_to_ulong(&smart->items[USER_DATA_ERASE_COUNTS_CA], 4));
-	printf("User Data Erase Count (Min)              : %lu\n", uint_n_to_ulong(&smart->items[USER_DATA_ERASE_COUNTS_CA + 4], 4));
-	printf("Refresh Count                            : %lu\n", uint_n_to_ulong(&smart->items[REFRESH_COUNT_CA], 8));
-	printf("Program Fail Count (Normalised)          : %lu\n", uint_n_to_ulong(&smart->items[PROGRAM_FAIL_COUNT_CA], 2));
-	printf("Program Fail Count (Raw)                 : %lu\n", uint_n_to_ulong(&smart->items[PROGRAM_FAIL_COUNT_CA + 2], 6));
-	printf("User Data Erase Fail Count (Normalised)  : %lu\n", uint_n_to_ulong(&smart->items[USER_ERASE_FAIL_COUNT_CA], 2));
-	printf("User Data Erase Fail Count (Raw)         : %lu\n", uint_n_to_ulong(&smart->items[USER_ERASE_FAIL_COUNT_CA + 2], 6));
-	printf("System Area Erase Fail Count (Normalised): %lu\n", uint_n_to_ulong(&smart->items[SYSTEM_AREA_ERASE_FAIL_COUNT_CA], 2));
-	printf("System Area Erase Fail Count (Raw)       : %lu\n", uint_n_to_ulong(&smart->items[SYSTEM_AREA_ERASE_FAIL_COUNT_CA + 2], 6));
-	printf("Thermal Throttling Status                : %u \n", smart->items[THERMAL_THROTTLING_STATUS_CA]);
-	printf("Thermal Throttling Count                 : %u \n", smart->items[THERMAL_THROTTLING_COUNT_CA]);
-	printf("PCIe Correctable Error Count             : %lu\n", uint_n_to_ulong(&smart->items[PCIE_CORRECTABLE_ERROR_COUNT_CA], 8));
-	printf("Incomplete Shutdowns                     : %lu\n", uint_n_to_ulong(&smart->items[INCOMPLETE_SHUTDOWNS_CA], 4));
-	printf("Free blocks                              : %u %%\n", smart->items[FREE_BLOCKS_NORMALISED_CA]);
 }
 
 static int nvme_get_vendor_log(int fd, __u32 namespace_id, int log_page, const char* const filename)
@@ -499,10 +393,8 @@ static int nvme_get_vendor_log(int fd, __u32 namespace_id, int log_page, const c
 	} else {
 		if (log_page == 0xc0) {
 			default_show_vendor_log_c0(fd, namespace_id, devicename, (struct nvme_xdn_smart_log_c0 *)log);
-		} else if (log_page == 0xca) {
-			default_show_vendor_log_ca(fd, namespace_id, devicename, (struct nvme_xdn_smart_log_ca *)log);
 		} else {
-			d(log, sizeof(log),16,1);
+			d(log, log_len,16,1);
 		}
 	}
 end:
