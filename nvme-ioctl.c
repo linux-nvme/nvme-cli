@@ -357,7 +357,7 @@ int nvme_passthru_admin(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 			     metadata, timeout_ms, NULL);
 }
 
-int nvme_identify(int fd, __u32 nsid, __u32 cdw10, void *data)
+int nvme_identify13(int fd, __u32 nsid, __u32 cdw10, __u32 cdw11, void *data)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_identify,
@@ -365,9 +365,15 @@ int nvme_identify(int fd, __u32 nsid, __u32 cdw10, void *data)
 		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= NVME_IDENTIFY_DATA_SIZE,
 		.cdw10		= cdw10,
+		.cdw11		= cdw11,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);
+}
+
+int nvme_identify(int fd, __u32 nsid, __u32 cdw10, void *data)
+{
+	return nvme_identify13(fd, nsid, cdw10, 0, data);
 }
 
 int nvme_identify_ctrl(int fd, void *data)
@@ -400,6 +406,11 @@ int nvme_identify_ns_descs(int fd, __u32 nsid, void *data)
 {
 
 	return nvme_identify(fd, nsid, NVME_ID_CNS_NS_DESC_LIST, data);
+}
+
+int nvme_identify_nvmset(int fd, __u16 nvmset_id, void *data)
+{
+	return nvme_identify13(fd, 0, NVME_ID_CNS_NVMSET_LIST, nvmset_id, data);
 }
 
 int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,

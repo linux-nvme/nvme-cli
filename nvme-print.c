@@ -949,6 +949,63 @@ void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 	__show_nvme_id_ctrl(ctrl, mode, NULL);
 }
 
+void show_nvme_id_nvmset(struct nvme_id_nvmset *nvmset)
+{
+	int i;
+
+	printf("nid     : %d\n", nvmset->nid);
+	printf(".................\n");
+	for (i = 0; i < nvmset->nid; i++) {
+		printf(" NVM Set Attribute Entry[%2d]\n", i);
+		printf(".................\n");
+		printf("nvmset_id               : %d\n",
+				le16_to_cpu(nvmset->ent[i].id));
+		printf("enduracne_group_id      : %d\n",
+				le16_to_cpu(nvmset->ent[i].endurance_group_id));
+		printf("random_4k_read_typical  : %u\n",
+				le32_to_cpu(nvmset->ent[i].random_4k_read_typical));
+		printf("optimal_write_size      : %u\n",
+				le32_to_cpu(nvmset->ent[i].opt_write_size));
+		printf("total_nvmset_cap        : %.0Lf\n",
+				int128_to_double(nvmset->ent[i].total_nvmset_cap));
+		printf("unalloc_nvmset_cap      : %.0Lf\n",
+				int128_to_double(nvmset->ent[i].unalloc_nvmset_cap));
+		printf(".................\n");
+	}
+}
+
+void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset, const char *devname)
+{
+	struct json_object *root;
+	struct json_array *entries;
+	__u32 nent = le32_to_cpu(nvmset->nid);
+	int i;
+
+	root = json_create_object();
+
+	json_object_add_value_int(root, "nid", nent);
+
+	entries = json_create_array();
+	for (i = 0; i < nent; i++) {
+		struct json_object *entry = json_create_object();
+
+		json_object_add_value_int(entry, "nvmset_id", le16_to_cpu(nvmset->ent[i].id));
+		json_object_add_value_int(entry, "endurance_group_id", le16_to_cpu(nvmset->ent[i].endurance_group_id));
+		json_object_add_value_int(entry, "random_4k_read_typical", le32_to_cpu(nvmset->ent[i].random_4k_read_typical));
+		json_object_add_value_int(entry, "optimal_write_size", le32_to_cpu(nvmset->ent[i].opt_write_size));
+		json_object_add_value_float(entry, "total_nvmset_cap", int128_to_double(nvmset->ent[i].total_nvmset_cap));
+		json_object_add_value_float(entry, "unalloc_nvmset_cap", int128_to_double(nvmset->ent[i].unalloc_nvmset_cap));
+
+		json_array_add_value_object(entries, entry);
+	}
+
+	json_object_add_value_array(root, "NVMSet", entries);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
 void show_error_log(struct nvme_error_log_page *err_log, int entries, const char *devname)
 {
 	int i;

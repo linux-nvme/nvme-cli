@@ -330,6 +330,7 @@ enum {
 	NVME_ID_CNS_CTRL		= 0x01,
 	NVME_ID_CNS_NS_ACTIVE_LIST	= 0x02,
 	NVME_ID_CNS_NS_DESC_LIST	= 0x03,
+	NVME_ID_CNS_NVMSET_LIST		= 0x04,
 	NVME_ID_CNS_NS_PRESENT_LIST	= 0x10,
 	NVME_ID_CNS_NS_PRESENT		= 0x11,
 	NVME_ID_CNS_CTRL_NS_LIST	= 0x12,
@@ -383,6 +384,25 @@ enum {
 	NVME_NIDT_EUI64		= 0x01,
 	NVME_NIDT_NGUID		= 0x02,
 	NVME_NIDT_UUID		= 0x03,
+};
+
+#define NVME_MAX_NVMSET		31
+
+struct nvme_nvmset_attr_entry {
+	__le16			id;
+	__le16			endurance_group_id;
+	__u8			rsvd4[4];
+	__le32			random_4k_read_typical;
+	__le32			opt_write_size;
+	__u8			total_nvmset_cap[16];
+	__u8			unalloc_nvmset_cap[16];
+	__u8			rsvd48[80];
+};
+
+struct nvme_id_nvmset {
+	__u8				nid;
+	__u8				rsvd1[127];
+	struct nvme_nvmset_attr_entry	ent[NVME_MAX_NVMSET];
 };
 
 /* Derived from 1.3a Figure 101: Get Log Page – Telemetry Host
