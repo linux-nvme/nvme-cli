@@ -14,6 +14,7 @@ SYNOPSIS
 		[--trsvcid=<trsvcid>      | -s <trsvcid>]
 		[--host-traddr=<traddr>   | -w <traddr>]
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
+		[--keep-alive-tmo=<#>     | -k <#>]
 		[--raw=<filename>         | -r <filename>]
 
 DESCRIPTION
@@ -85,6 +86,10 @@ OPTIONS
 --queue-size=<#>::
 	Overrides the default number of elements in the I/O queues created
 	by the driver.
+
+-k <#>::
+--keep-alive-tmo=<#>::
+	Overrides the default keep alive timeout (in seconds).
 
 EXAMPLES
 --------
