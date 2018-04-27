@@ -171,6 +171,32 @@ static const char *cms_str(__u8 cm)
 
 static int do_discover(char *argstr, bool connect);
 
+#define OPEN_RETRIES	4
+#define OPEN_DELAY	500000		/* us units, thus 1/2 second */
+
+static void
+wait_for_devname(int instance)
+{
+	char *dev_name;
+	int retry = 0, fd;
+
+	if (asprintf(&dev_name, "/dev/nvme%d", instance) < 0)
+		return;
+
+	/* takes a little time for udev to make the dev node */
+	for ( ; retry < OPEN_RETRIES; retry++) {
+		fd = open(dev_name, O_RDWR);
+		if (fd >= 0) {
+			close(fd);
+			break;
+		}
+		if (errno != EAGAIN)
+			break;
+		usleep(OPEN_DELAY);
+	}
+	free(dev_name);
+}
+
 static int add_ctrl(const char *argstr)
 {
 	substring_t args[MAX_OPT_ARGS];
@@ -225,6 +251,8 @@ out_fail:
 out_close:
 	close(fd);
 out:
+	if (ret >= 0)
+		wait_for_devname(ret);
 	return ret;
 }
 
