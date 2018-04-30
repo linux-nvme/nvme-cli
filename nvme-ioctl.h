@@ -6,6 +6,14 @@
 #include "linux/nvme_ioctl.h"
 #include "nvme.h"
 
+/* rate of ioctl retries */
+#define IOCTL_TIMESPERSEC	4
+/* delay between retries. Units in us */
+#define IOCTL_DELAY		(1000000 / IOCTL_TIMESPERSEC)	/* 250ms */
+
+#define NO_RETRIES		0
+#define DISCOVERY_RETRIES	(IOCTL_TIMESPERSEC * 60)	/* 60s */
+
 int nvme_get_nsid(int fd);
 
 /* Generic passthrough */
