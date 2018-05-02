@@ -853,6 +853,18 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	return err;
 }
 
+static int get_nsid(int fd)
+{
+	int nsid = nvme_get_nsid(fd);
+
+	if (nsid <= 0) {
+		fprintf(stderr,
+			"%s: failed to return namespace id\n",
+			devicename);
+	}
+	return nsid;
+}
+
 static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Delete the given namespace by "\
@@ -881,7 +893,13 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	if (fd < 0)
 		return fd;
 
-	if (!cfg.namespace_id) {
+	if (S_ISBLK(nvme_stat.st_mode)) {
+		cfg.namespace_id = get_nsid(fd);
+		if (cfg.namespace_id <= 0) {
+			err = EINVAL;
+			goto close_fd;
+		}
+	} else if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
 						cmd->name);
 		err = EINVAL;
@@ -1524,18 +1542,6 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	free(list_items);
 
 	return 0;
-}
-
-static int get_nsid(int fd)
-{
-	int nsid = nvme_get_nsid(fd);
-
-	if (nsid <= 0) {
-		fprintf(stderr,
-			"%s: failed to return namespace id\n",
-			devicename);
-	}
-	return nsid;
 }
 
 int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root))
