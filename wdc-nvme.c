@@ -508,11 +508,13 @@ static int wdc_get_serial_name(int fd, char *file, size_t len, char *suffix)
 {
 	int i;
 	int ret;
+	int ctrl_sn_len = 20;
+	int res_len = 0;
 	char orig[PATH_MAX] = {0};
 	struct nvme_id_ctrl ctrl;
 
 	i = sizeof (ctrl.sn) - 1;
-	strncpy(orig, file, PATH_MAX);
+	strncpy(orig, file, PATH_MAX - 1);
 	memset(file, 0, len);
 	memset(&ctrl, 0, sizeof (struct nvme_id_ctrl));
 	ret = nvme_identify_ctrl(fd, &ctrl);
@@ -526,7 +528,18 @@ static int wdc_get_serial_name(int fd, char *file, size_t len, char *suffix)
 		ctrl.sn[i] = '\0';
 		i--;
 	}
-	snprintf(file, len, "%s%s%s.bin", orig, ctrl.sn, suffix);
+
+	if (ctrl.sn[sizeof (ctrl.sn) - 1] == '\0') {
+		ctrl_sn_len = strlen(ctrl.sn);
+	}
+
+	res_len = snprintf(file, len, "%s%.*s%s.bin", orig, ctrl_sn_len, ctrl.sn, suffix);
+	if (len <= res_len) {
+		fprintf(stderr, "ERROR : WDC : cannot format serial number due to data "
+				"of unexpected length\n");
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -770,7 +783,7 @@ static int wdc_cap_diag(int argc, char **argv, struct command *command,
 
 	wdc_check_device(fd);
 	if (cfg.file != NULL) {
-		strncpy(f, cfg.file, PATH_MAX);
+		strncpy(f, cfg.file, PATH_MAX - 1);
 	}
 	if (wdc_get_serial_name(fd, f, PATH_MAX, "cap_diag") == -1) {
 		fprintf(stderr, "ERROR : WDC: failed to generate file name\n");
@@ -813,7 +826,7 @@ static int wdc_crash_dump(int fd, char *file)
 	char f[PATH_MAX] = {0};
 
 	if (file != NULL) {
-		strncpy(f, file, PATH_MAX);
+		strncpy(f, file, PATH_MAX - 1);
 	}
 	if (wdc_get_serial_name(fd, f, PATH_MAX, "crash_dump") == -1) {
 		fprintf(stderr, "ERROR : WDC : failed to generate file name\n");
@@ -890,7 +903,7 @@ static int wdc_drive_log(int argc, char **argv, struct command *command,
 
 	wdc_check_device(fd);
 	if (cfg.file != NULL) {
-		strncpy(f, cfg.file, PATH_MAX);
+		strncpy(f, cfg.file, PATH_MAX - 1);
 	}
 	if (wdc_get_serial_name(fd, f, PATH_MAX, "drive_log") == -1) {
 		fprintf(stderr, "ERROR : WDC : failed to generate file name\n");
@@ -2250,7 +2263,7 @@ static int wdc_drive_essentials(int argc, char **argv, struct command *command,
 	}
 
 	if (cfg.dirName != NULL) {
-		strncpy(d, cfg.dirName, PATH_MAX);
+		strncpy(d, cfg.dirName, PATH_MAX - 1);
 		d_ptr = d;
 	} else {
 		d_ptr = NULL;
