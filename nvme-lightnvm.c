@@ -64,8 +64,8 @@ int lnvm_do_init(char *dev, char *mmtype)
 		return fd;
 
 	memset(&init, 0, sizeof(struct nvm_ioctl_dev_init));
-	strncpy(init.dev, dev, DISK_NAME_LEN);
-	strncpy(init.mmtype, mmtype, NVM_MMTYPE_LEN);
+	strncpy(init.dev, dev, DISK_NAME_LEN - 1);
+	strncpy(init.mmtype, mmtype, NVM_MMTYPE_LEN - 1);
 
 	ret = ioctl(fd, NVM_DEV_INIT, &init);
 	switch (errno) {
@@ -157,9 +157,9 @@ int lnvm_do_create_tgt(char *devname, char *tgtname, char *tgttype,
 	if (fd < 0)
 		return fd;
 
-	strncpy(c.dev, devname, DISK_NAME_LEN);
-	strncpy(c.tgtname, tgtname, DISK_NAME_LEN);
-	strncpy(c.tgttype, tgttype, NVM_TTYPE_NAME_MAX);
+	strncpy(c.dev, devname, DISK_NAME_LEN - 1);
+	strncpy(c.tgtname, tgtname, DISK_NAME_LEN - 1);
+	strncpy(c.tgttype, tgttype, NVM_TTYPE_NAME_MAX - 1);
 	c.flags = flags;
 
 	/* Fall back into simple IOCTL version if no extended attributes used */
@@ -191,7 +191,7 @@ int lnvm_do_remove_tgt(char *tgtname)
 	if (fd < 0)
 		return fd;
 
-	strncpy(c.tgtname, tgtname, DISK_NAME_LEN);
+	strncpy(c.tgtname, tgtname, DISK_NAME_LEN - 1);
 	c.flags = 0;
 
 	ret = ioctl(fd, NVM_DEV_REMOVE, &c);
@@ -215,7 +215,7 @@ int lnvm_do_factory_init(char *devname, int erase_only_marked,
 
 	memset(&fact, 0, sizeof(struct nvm_ioctl_dev_factory));
 
-	strncpy(fact.dev, devname, DISK_NAME_LEN);
+	strncpy(fact.dev, devname, DISK_NAME_LEN - 1);
 	if (erase_only_marked)
 		fact.flags |= NVM_FACTORY_ERASE_ONLY_USER;
 	if (clear_host_marks)
