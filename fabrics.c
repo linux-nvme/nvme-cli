@@ -60,6 +60,7 @@ static struct config {
 	char *raw;
 	char *device;
 	int  duplicate_connect;
+	int  disable_sqflow;
 } cfg = { NULL };
 
 #define BUF_SIZE		4096
@@ -129,6 +130,8 @@ static const char * const treqs[] = {
 	[NVMF_TREQ_NOT_SPECIFIED]	= "not specified",
 	[NVMF_TREQ_REQUIRED]		= "required",
 	[NVMF_TREQ_NOT_REQUIRED]	= "not required",
+	[NVMF_TREQ_DISABLE_SQFLOW]	= "not specified, "
+					  "sq flow control disable supported",
 };
 
 static inline const char *treq_str(__u8 treq)
@@ -595,7 +598,9 @@ static int build_options(char *argstr, int max_len)
 	    add_int_argument(&argstr, &max_len, "ctrl_loss_tmo",
 				cfg.ctrl_loss_tmo) ||
 	    add_bool_argument(&argstr, &max_len, "duplicate_connect",
-				cfg.duplicate_connect))
+				cfg.duplicate_connect) ||
+	    add_bool_argument(&argstr, &max_len, "disable_sqflow",
+				cfg.disable_sqflow))
 		return -EINVAL;
 
 	return 0;
@@ -603,9 +608,13 @@ static int build_options(char *argstr, int max_len)
 
 static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 {
-	char argstr[BUF_SIZE], *p = argstr;
-	bool discover = false;
-	int len;
+	char argstr[BUF_SIZE], *p;
+	bool discover, disable_sqflow = true;
+	int len, ret;
+
+retry:
+	p = argstr;
+	discover = false;
 
 	switch (e->subtype) {
 	case NVME_NQN_DISC:
@@ -677,6 +686,7 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 		len = sprintf(p, ",transport=loop");
 		if (len < 0)
 			return -EINVAL;
+		p += len;
 		/* we can safely ignore the rest of the entries */
 		break;
 	case NVMF_TRTYPE_RDMA:
@@ -701,6 +711,7 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 				      e->trsvcid);
 			if (len < 0)
 				return -EINVAL;
+			p += len;
 			break;
 		default:
 			fprintf(stderr, "skipping unsupported adrfam\n");
@@ -720,6 +731,7 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 				      e->traddr);
 			if (len < 0)
 				return -EINVAL;
+			p += len;
 			break;
 		default:
 			fprintf(stderr, "skipping unsupported adrfam\n");
@@ -732,10 +744,23 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 		return -EINVAL;
 	}
 
+	if (e->treq & NVMF_TREQ_DISABLE_SQFLOW && disable_sqflow) {
+		len = sprintf(p, ",disable_sqflow");
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+	}
+
 	if (discover)
-		return do_discover(argstr, true);
+		ret = do_discover(argstr, true);
 	else
-		return add_ctrl(argstr);
+		ret = add_ctrl(argstr);
+	if (ret == -EINVAL && e->treq & NVMF_TREQ_DISABLE_SQFLOW) {
+		/* disable_sqflow param might not be supported, try without it */
+		disable_sqflow = false;
+		goto retry;
+	}
+	return ret;
 }
 
 static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
@@ -935,6 +960,7 @@ int connect(const char *desc, int argc, char **argv)
 		{"reconnect-delay", 'c', "LIST", CFG_INT, &cfg.reconnect_delay, required_argument, "reconnect timeout period in seconds" },
 		{"ctrl-loss-tmo",   'l', "LIST", CFG_INT, &cfg.ctrl_loss_tmo,   required_argument, "controller loss timeout period in seconds" },
 		{"duplicate_connect", 'D', "", CFG_NONE, &cfg.duplicate_connect, no_argument, "allow duplicate connections between same transport host and subsystem port" },
+		{"disable_sqflow", 'd', "", CFG_NONE, &cfg.disable_sqflow, no_argument, "disable controller sq flow control (default false)" },
 		{NULL},
 	};
 
