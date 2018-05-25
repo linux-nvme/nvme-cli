@@ -3684,7 +3684,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		printf("rsvd         : %04x\n", 0);
 		printf("metadata     : %"PRIx64"\n", (uint64_t)(uintptr_t)mbuffer);
 		printf("addr         : %"PRIx64"\n", (uint64_t)(uintptr_t)buffer);
-		printf("sbla         : %"PRIx64"\n", (uint64_t)cfg.start_block);
+		printf("slba         : %"PRIx64"\n", (uint64_t)cfg.start_block);
 		printf("dsmgmt       : %08x\n", dsmgmt);
 		printf("reftag       : %08x\n", cfg.ref_tag);
 		printf("apptag       : %04x\n", cfg.app_tag);
