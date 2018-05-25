@@ -109,7 +109,7 @@ struct nvme_nvm_lp_tbl {
 	struct nvme_nvm_lp_mlc	mlc;
 };
 
-struct nvme_nvm_id_group {
+struct nvme_nvm_id12_group {
 	__u8			mtype;
 	__u8			fmtype;
 	__le16			res16;
@@ -155,6 +155,8 @@ struct nvme_nvm_addr_format {
 enum {
 	LNVM_IDFY_CAP_BAD_BLK_TBL_MGMT	= 0,
 	LNVM_IDFY_CAP_HYBRID_CMD_SUPP	= 1,
+	LNVM_IDFY_CAP_VCOPY		= 0,
+	LNVM_IDFY_CAP_MRESETS		= 1,
 	LNVM_IDFY_DOM_HYBRID_MODE	= 0,
 	LNVM_IDFY_DOM_ECC_MODE		= 1,
 	LNVM_IDFY_GRP_MTYPE_NAND	= 0,
@@ -176,7 +178,7 @@ enum {
 	LNVM_IDFY_GRP_MCCAP_ENCRYPT	= 3,
 };
 
-struct nvme_nvm_id {
+struct nvme_nvm_id12 {
 	__u8			ver_id;
 	__u8			vmnt;
 	__u8			cgrps;
@@ -185,7 +187,64 @@ struct nvme_nvm_id {
 	__le32			dom;
 	struct nvme_nvm_addr_format ppaf;
 	__u8			resv[228];
-	struct nvme_nvm_id_group groups[4];
+	struct nvme_nvm_id12_group groups[4];
+} __attribute__((packed));
+
+struct nvme_nvm_id20_addrf {
+	__u8			grp_len;
+	__u8			pu_len;
+	__u8			chk_len;
+	__u8			lba_len;
+	__u8			resv[4];
+} __attribute__((packed));
+
+struct nvme_nvm_id20 {
+	__u8			mjr;
+	__u8			mnr;
+	__u8			resv[6];
+
+	struct nvme_nvm_id20_addrf lbaf;
+
+	__le32			mccap;
+	__u8			resv2[12];
+
+	__u8			wit;
+	__u8			resv3[31];
+
+	/* Geometry */
+	__le16			num_grp;
+	__le16			num_pu;
+	__le32			num_chk;
+	__le32			clba;
+	__u8			resv4[52];
+
+	/* Write data requirements */
+	__le32			ws_min;
+	__le32			ws_opt;
+	__le32			mw_cunits;
+	__le32			maxoc;
+	__le32			maxocpu;
+	__u8			resv5[44];
+
+	/* Performance related metrics */
+	__le32			trdt;
+	__le32			trdm;
+	__le32			twrt;
+	__le32			twrm;
+	__le32			tcrst;
+	__le32			tcrsm;
+	__u8			resv6[40];
+
+	/* Reserved area */
+	__u8			resv7[2816];
+
+	/* Vendor specific */
+	__u8			vs[1024];
+} __attribute__((packed));
+
+struct nvme_nvm_id {
+	__u8			ver_id;
+	__u8			resv[4095];
 } __attribute__((packed));
 
 struct nvme_nvm_bb_tbl {
