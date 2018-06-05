@@ -446,6 +446,26 @@ struct nvme_smart_log {
 	__u8			rsvd232[280];
 };
 
+struct nvme_self_test_res {
+	__u8 			device_self_test_status;
+	__u8			segment_num;
+	__u8			valid_diagnostic_info;
+	__u8			rsvd;
+	__le64			power_on_hours;
+	__le32			nsid;
+	__le64			failing_lba;
+	__u8			status_code_type;
+	__u8			status_code;
+	__le16			vendor_specific;
+}__attribute__((packed));
+
+struct nvme_self_test_log {
+	__u8                      crnt_dev_selftest_oprn;
+	__u8                      crnt_dev_selftest_compln;
+	__u8                      rsvd[2];
+	struct nvme_self_test_res result[20];
+};
+
 struct nvme_fw_slot_info_log {
 	__u8			afi;
 	__u8			rsvd1[7];
@@ -826,6 +846,7 @@ enum {
 	NVME_LOG_SMART		= 0x02,
 	NVME_LOG_FW_SLOT	= 0x03,
 	NVME_LOG_CMD_EFFECTS	= 0x05,
+	NVME_LOG_DEVICE_SELF_TEST = 0x06,
 	NVME_LOG_TELEMETRY_HOST = 0x07,
 	NVME_LOG_TELEMETRY_CTRL = 0x08,
 	NVME_LOG_ENDURANCE_GROUP = 0x09,

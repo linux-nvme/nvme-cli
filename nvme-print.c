@@ -1224,6 +1224,89 @@ void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 	printf("Thermal Management T2 Total Time    : %u\n", le32_to_cpu(smart->thm_temp2_total_time));
 }
 
+void show_self_test_log(struct nvme_self_test_log *self_test, const char *devname)
+{
+	int i, temp;
+	const char *test_code_res;
+	const char *test_res[10] = {
+		"Operation completed without error\n",
+		"Operation was aborted by a Device Self-test command\n",
+		"Operation was aborted by a Controller Level Reset\n",
+		"Operation was aborted due to a removal of a namespace from the namespace inventory",
+		"Operation was aborted due to the processing of a Format NVM command",
+		"A fatal error or unknown test error occurred while the controller was executing the"\
+		" device self-test operation andthe operation did not complete",
+		"Operation completed with a segment that failed and the segment that failed is not known",
+		"Operation completed with one or more failed segments and the first segment that failed "\
+		"is indicated in the SegmentNumber field",
+		"Operation was aborted for unknown reason",
+		"Reserved"
+	};
+
+	printf("Smart Log for NVME device:%s\n", devname);
+	printf("Current self test operation : %#x\n", self_test->crnt_dev_selftest_oprn);
+	printf("Current Device Self-Test Completion : %u%%\n", self_test->crnt_dev_selftest_compln);
+	for (i = 0; i < 20; i++) {
+		printf("\nPrinting the contents of REPORT-%d\n",(i+1));
+
+		temp = self_test->result[i].device_self_test_status & 0xf;
+		if (temp == 0xf){
+			printf("Entry not used (does not contain a test result)\n");
+			continue;
+		}
+		if(temp > 8)
+			temp = 9;
+		printf("Self test result - %#x: %s\n", temp, test_res[temp]);
+
+		temp = self_test->result[i].device_self_test_status >> 4;
+		switch(temp){
+		case 1:
+			test_code_res = "Short device self-test operation";
+			break;
+		case 2:
+			test_code_res = "Extended device self-test operation";
+			break;
+		case 0xe:
+			test_code_res = "Vendor specific";
+			break;
+		default :
+			test_code_res = "Reserved";
+			break;
+		}
+		printf("Self test code - %#x : %s\n", temp, test_code_res);
+		printf("Segment number : %#x\n", self_test->result[i].segment_num);
+		printf("Valid Diagnostic Information : %#x\n", self_test->result[i].valid_diagnostic_info);
+
+		temp = self_test->result[i].valid_diagnostic_info & 1;
+		if(temp)
+			printf("Namespace Identifier (NSID) : %#x\n", le32_to_cpu(self_test->result[i].nsid));
+		else
+			printf("The contents of Namespace Identifier field is invalid\n");
+
+		temp = self_test->result[i].valid_diagnostic_info & 2;
+		if(temp)
+			printf("Failing LBA : %#"PRIx64"\n",(uint64_t)le64_to_cpu(self_test->result[i].failing_lba));
+		else
+			printf("The contents of Failing LBA field is invalid.\n");
+
+		temp = self_test->result[i].valid_diagnostic_info & 4;
+		if(temp)
+			printf("Status Code Type : %#x\n",self_test->result[i].status_code_type);
+		else
+			printf("The contents of Status Code Type field is invalid.\n");
+
+		temp = self_test->result[i].valid_diagnostic_info & 8;
+		if(temp)
+			printf("Status Code : %#x\n",self_test->result[i].status_code);
+		else
+			printf("The contents of Status Code field is invalid.\n");
+		printf("Power on hours (POH) : %#"PRIx64"\n",
+			le64_to_cpu(self_test->result[i].power_on_hours));
+		printf("Vendor Specific : %x\n", le16_to_cpu(self_test->result[i].vendor_specific));
+		printf("\n\n");
+	}
+}
+
 static void show_sanitize_log_sprog(__u32 sprog)
 {
 	double percent;
@@ -2192,6 +2275,39 @@ void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 	json_free_object(root);
 }
 
+void json_self_test_log(struct nvme_self_test_log *self_test, const char *devname)
+{
+	struct json_object *root, *valid_test, *ind_test;
+	int i;
+	char key[21];
+
+	root = json_create_object();
+	json_object_add_value_int(root, "Current Device Self-Test Operation", self_test->crnt_dev_selftest_oprn);
+	json_object_add_value_int(root, "Current Device Self-Test Completion", self_test->crnt_dev_selftest_compln);
+	valid_test = json_create_object();
+
+	for (i=0; i < 20; i++) {
+		if ((self_test->result[i].device_self_test_status & 0xf) == 0xf)
+			continue;
+		ind_test = json_create_object();
+		json_object_add_value_int(ind_test, "Self test result", self_test->result[i].device_self_test_status & 0xf);
+		json_object_add_value_int(ind_test, "Self test code", self_test->result[i].device_self_test_status >> 4);
+		json_object_add_value_int(ind_test, "Segment number", self_test->result[i].segment_num);
+		json_object_add_value_int(ind_test, "Valid Diagnostic Information", self_test->result[i].valid_diagnostic_info);
+		json_object_add_value_uint(ind_test, "Power on hours (POH)",le64_to_cpu(self_test->result[i].power_on_hours));
+		json_object_add_value_int(ind_test, "Namespace Identifier (NSID)", le32_to_cpu(self_test->result[i].nsid));
+		json_object_add_value_uint(ind_test, "Failing LBA",(uint64_t)le64_to_cpu(self_test->result[i].failing_lba));
+		json_object_add_value_int(ind_test, "Status Code Type",self_test->result[i].status_code_type);
+		json_object_add_value_int(ind_test, "Status Code",self_test->result[i].status_code);
+		json_object_add_value_int(ind_test, "Vendor Specific", le16_to_cpu(self_test->result[i].vendor_specific));
+		sprintf(key, "Report: %d", i+1);
+		json_object_add_value_object(valid_test, key, ind_test);
+	}
+	json_object_add_value_object(root, "List of Reports", valid_test);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
 void json_effects_log(struct nvme_effects_log_page *effects_log, const char *devname)
 {
 	struct json_object *root;
