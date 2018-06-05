@@ -446,6 +446,11 @@ struct nvme_smart_log {
 	__u8			rsvd232[280];
 };
 
+struct nvme_timestamp {
+	__u8 timestamp[6];
+	__u8 reserved[2];
+};
+
 struct nvme_fw_slot_info_log {
 	__u8			afi;
 	__u8			rsvd1[7];

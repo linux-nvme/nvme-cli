@@ -27,6 +27,8 @@ COMMAND_LIST(
 	ENTRY("effects-log", "Retrieve Command Effects Log, show it", get_effects_log)
 	ENTRY("endurance-log", "Retrieve Endurance Group Log, show it", get_endurance_log)
 	ENTRY("get-feature", "Get feature and show the resulting value", get_feature)
+	ENTRY("get-timestamp","Retrieve the timestamp from the controller",get_timestamp)
+	ENTRY("set-timestamp","Set the timestamp in the controller",set_timestamp)
 	ENTRY("set-feature", "Set a feature and show the resulting value", set_feature)
 	ENTRY("set-property", "Set a property and show the resulting value", set_property)
 	ENTRY("format", "Format namespace with new block format", format)

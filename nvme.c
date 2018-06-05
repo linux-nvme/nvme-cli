@@ -36,6 +36,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <dirent.h>
+#include <time.h>
 
 #include <linux/fs.h>
 
@@ -1813,6 +1814,64 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 	return 0;
 }
 
+// nvme get-timestamp /dev/nvme0n1 --json|--rawbinary|--human
+static int get_timestamp(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Implementing the Timestamp feature in UTC ";
+	char *output_format = "The timestamp can be printed in "\
+		"json | normal | binary";
+
+	int err = 0, fd, fmt;
+	struct nvme_timestamp buf;
+	__u32 result;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"output-format", 'o', "FMT", CFG_STRING,   &cfg.output_format,
+			 required_argument, output_format },
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		err = fmt;
+		goto close_fd;
+	}
+
+	err = nvme_get_feature(fd, NVME_NSID_ALL, NVME_FEAT_TIMESTAMP, 0, 0,
+			sizeof(struct nvme_timestamp), &buf, &result);
+
+	if (!err) {
+		if (fmt == BINARY){
+			d_raw((unsigned char *)&buf, sizeof(buf));
+			goto close_fd;
+		}else if (fmt == JSON)
+			json_timestamp(buf.timestamp);
+		else
+			show_timestamp(buf.timestamp);
+	}else if (err > 0) {
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
+	} else
+		perror("get-feature");
+
+close_fd:
+	close(fd);
+	return err;
+
+}
+
 static int get_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Read operating parameters of the "\
@@ -1878,7 +1937,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		err = EINVAL;
 		goto close_fd;
 	}
-	
+
 	switch (cfg.feature_id) {
 	case NVME_FEAT_LBA_RANGE:
 		cfg.data_len = 4096;
@@ -1902,7 +1961,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (cfg.sel == 3)
 		cfg.data_len = 0;
-	
+
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
 			fprintf(stderr, "can not allocate feature payload\n");
@@ -2527,6 +2586,70 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	close(fd);
 
 	return err;
+}
+
+// nvme set-timestamp /dev/nvme0n1 --host-gen|--time=user#here
+static int set_timestamp(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "The set-timestamp feature takes the"\
+		" timestamp from the user and sets the value in the"\
+		" controller";
+	const char *timestamp = "timestamp value input by the user. (required)";
+	const char *host_gen = "Ask the system to generate the timestamp.";
+
+	struct nvme_timestamp buf;
+	int err, fd;
+	__u32 result;
+
+	struct config{
+		__u64 timestamp;
+		__u8 host_gen;
+	};
+
+	struct config cfg = {
+		.timestamp = 0,
+		.host_gen  = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"timestamp", 't', "NUM",  CFG_POSITIVE, &cfg.timestamp, required_argument, timestamp},
+		{"host-gen",  'h', "",     CFG_NONE,     &cfg.host_gen,  no_argument,       host_gen },
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	if (!(cfg.timestamp || cfg.host_gen)) {
+		fprintf(stderr, "Invalid param\n");
+		err = EINVAL;
+		goto close_fd;
+	}
+
+	if(cfg.host_gen){
+		cfg.timestamp = time(NULL) * 1000;
+		if (cfg.timestamp < 0){
+			perror("Error in generating timestamp\n");
+			err = EINVAL;
+			goto close_fd;
+		}
+	}
+	for(int i = 0; i < 6; i++)
+		buf.timestamp[i] = cfg.timestamp >> (8*i) & 255;
+
+	err = nvme_set_feature(fd, NVME_NSID_ALL, NVME_FEAT_TIMESTAMP, 0, 0,
+			        0, sizeof(struct nvme_timestamp), &buf, &result);
+
+	if (err > 0) {
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
+	} else if (err)
+		perror("get-feature");
+
+close_fd:
+		close(fd);
+		return err;
 }
 
 static int set_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)

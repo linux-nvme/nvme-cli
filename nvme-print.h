@@ -54,6 +54,8 @@ void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 void json_print_list_items(struct list_item *items, unsigned amnt);
 void json_nvme_id_ns_descs(void *data);
 void json_print_nvme_subsystem_list(struct subsys_list_item *slist, int n);
+void json_timestamp(__u8 *data);
+void show_timestamp(__u8 *data);
 
 
 #endif

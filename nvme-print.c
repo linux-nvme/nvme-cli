@@ -2645,3 +2645,19 @@ void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 		}
 	}
 }
+
+void json_timestamp(__u8 *data)
+{
+	struct json_object *root;
+
+	root = json_create_object();
+	json_object_add_value_float(root, "Timestamp", int48_to_long(data));
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void show_timestamp(__u8 *data)
+{
+	printf("Timestamp : %lu\n",int48_to_long(data));
+}
