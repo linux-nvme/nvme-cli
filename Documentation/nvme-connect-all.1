@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect-all
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/01/2018
+.\"      Date: 06/05/2018
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT\-ALL" "1" "03/01/2018" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT\-ALL" "1" "06/05/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,6 +38,8 @@ nvme-connect-all \- Discover and Connect to Fabrics controllers\&.
                 [\-\-trsvcid=<trsvcid>      | \-s <trsvcid>]
                 [\-\-host\-traddr=<traddr>   | \-w <traddr>]
                 [\-\-hostnqn=<hostnqn>      | \-q <hostnqn>]
+                [\-\-keep\-alive\-tmo=<#>     | \-k <#>]
+                [\-\-ctrl\-loss\-tmo=<#>      | \-l <#>]
                 [\-\-raw=<filename>         | \-r <filename>]
 .fi
 .SH "DESCRIPTION"
@@ -117,6 +119,11 @@ will dump the output to stdout\&.
 \-Q <#>, \-\-queue\-size=<#>
 .RS 4
 Overrides the default number of elements in the I/O queues created by the driver\&.
+.RE
+.PP
+\-k <#>, \-\-keep\-alive\-tmo=<#>
+.RS 4
+Overrides the default keep alive timeout (in seconds)\&.
 .RE
 .SH "EXAMPLES"
 .sp

@@ -752,6 +752,8 @@ nvme-connect-all(1) Manual Page
                 [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
                 [--host-traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
                 [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
+                [--keep-alive-tmo=&lt;#&gt;     | -k &lt;#&gt;]
+                [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]
                 [--raw=&lt;filename&gt;         | -r &lt;filename&gt;]</pre>
 <div class="attribution">
 </div></div>
@@ -896,6 +898,17 @@ cellspacing="0" cellpadding="4">
         by the driver.
 </p>
 </dd>
+<dt class="hdlist1">
+-k &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--keep-alive-tmo=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Overrides the default keep alive timeout (in seconds).
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -952,7 +965,7 @@ nvme-connect(1)</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-05-18 10:22:18 EDT
+Last updated 2018-06-04 13:41:40 MDT
 </div>
 </div>
 </body>
