@@ -1813,6 +1813,116 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 	return 0;
 }
 
+/*Perform the device self-test
+ * 1. Short device self-test
+ * 2. Extended device self-test
+ * 3. Vendor specific device self-test
+ * 4. Abort the device self-test in progress
+ */
+static int device_self_test(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc  = "Implementing the device self-test feature"\
+		" which provides the necessary log to determine the state of the device";
+	const char *namespace_id = "Indicate the namespace in which the device self-test"\
+		" has to be carried out";
+	const char * self_test_code = "This field specifies the action taken by the device self-test command : "\
+		"\n1h Start a short device self-test operation\n"\
+		"2h Start a extended device self-test operation\n"\
+		"eh Start a vendor specific device self-test operation\n"\
+		"fh abort the device self-test operation\n";
+	int fd, err;
+
+	struct config {
+		__u32 namespace_id;
+		__u32 cdw10;
+	};
+
+	struct config cfg = {
+		.namespace_id  = NVME_NSID_ALL,
+		.cdw10         = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id",  'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
+		{"self-test-code",'s', "NUM", CFG_POSITIVE, &cfg.cdw10,	       required_argument, self_test_code},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	err = nvme_self_test_start(fd, cfg.namespace_id, cfg.cdw10);
+	if (!err) {
+		if ((cfg.cdw10 & 0xf) == 0xf)
+			printf("Aborting device self-test operation\n");
+		else
+			printf("Device self-test started\n");
+	} else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x) NSID:%d\n",
+			nvme_status_to_string(err), err, cfg.namespace_id);
+	else
+		perror("Device self-test");
+
+	close(fd);
+	return err;
+}
+
+static int self_test_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	struct nvme_self_test_log self_test_log;
+	const char *desc = "Retrieve the self-test log for the given device and given test "\
+			"(or optionally a namespace) in either decoded format "\
+			"(default) or binary.";
+	int err, fmt, fd;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		err = fmt;
+		goto close_fd;
+	}
+
+	err = nvme_self_test_log(fd, &self_test_log);
+	if (!err) {
+		if (self_test_log.crnt_dev_selftest_compln == 100) {
+			if (fmt == BINARY)
+				d_raw((unsigned char *)&self_test_log, sizeof(self_test_log));
+			else if (fmt == JSON)
+				json_self_test_log(&self_test_log, devicename);
+			else
+				show_self_test_log(&self_test_log, devicename);
+		} else
+			printf("Test is %d%% complete and is still in progress.\n",
+				self_test_log.crnt_dev_selftest_compln);
+	} else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+	else
+		perror("self_test_log");
+
+ close_fd:
+	close(fd);
+
+	return err;
+}
+
 static int get_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Read operating parameters of the "\
@@ -1878,7 +1988,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		err = EINVAL;
 		goto close_fd;
 	}
-	
+
 	switch (cfg.feature_id) {
 	case NVME_FEAT_LBA_RANGE:
 		cfg.data_len = 4096;
@@ -1902,7 +2012,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (cfg.sel == 3)
 		cfg.data_len = 0;
-	
+
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
 			fprintf(stderr, "can not allocate feature payload\n");

@@ -24,6 +24,7 @@ void show_nvme_resv_report(struct nvme_reservation_status *status, int bytes, __
 void show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges);
 void show_error_log(struct nvme_error_log_page *err_log, int entries, const char *devname);
 void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname);
+void show_self_test_log(struct nvme_self_test_log *self_test, const char *devname);
 void show_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname);
 void show_effects_log(struct nvme_effects_log_page *effects, unsigned int flags);
 void show_endurance_log(struct nvme_endurance_group_log *endurance_group,
@@ -54,6 +55,7 @@ void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 void json_print_list_items(struct list_item *items, unsigned amnt);
 void json_nvme_id_ns_descs(void *data);
 void json_print_nvme_subsystem_list(struct subsys_list_item *slist, int n);
+void json_self_test_log(struct nvme_self_test_log *self_test, const char *devname);
 
 
 #endif
