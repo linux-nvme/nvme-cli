@@ -1642,6 +1642,17 @@ static void show_host_mem_buffer(struct nvme_host_mem_buffer *hmb)
 	printf("\tHost Memory Buffer Size                  (HSIZE): %u\n", hmb->hsize);
 }
 
+void show_hctm(__u32 cdw11)
+{
+	int temp;
+
+	temp = cdw11 >> 16;
+	printf("Thermal Management Temperature 1 (TMT1) : %d Kelvin", temp);
+
+	temp = cdw11 & 0xffff;
+	printf("Thermal Management Temperature 2 (TMT2) : %d Kelvin", temp);
+}
+
 void nvme_directive_show_fields(__u8 dtype, __u8 doper, unsigned int result, unsigned char *buf)
 {
         __u8 *field = buf;

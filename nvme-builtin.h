@@ -63,6 +63,8 @@ COMMAND_LIST(
 	ENTRY("gen-hostnqn", "Generate NVMeoF host NQN", gen_hostnqn_cmd)
 	ENTRY("dir-receive", "Submit a Directive Receive command, return results", dir_receive)
 	ENTRY("dir-send", "Submit a Directive Send command, return results", dir_send)
+	ENTRY("get-hctm", "Retrieve the thermal info", get_hctm)
+	ENTRY("set-hctm", "Set the min. and max. controller temperature values.", set_hctm)
 );
 
 #endif

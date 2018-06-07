@@ -1987,6 +1987,61 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	return err;
 }
 
+static int get_hctm(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Host controlled thermal management provides a mechanism for the host "\
+		"to configure a controller to automatically transition between active power states or "\
+		"perform vendor specific thermal management actions in order to attempt to meet thermal "\
+		"management requirements specified by the host. If active power states transitions are "\
+		"used to attempt to meet these thermal management requirements specified by the host "\
+		"then those active power states transitions are vendor specific.";
+	const char *raw_binary = "show infos in binary format";
+	const char *human_readable = "show infos in readable format";
+	int err = 0, fd;
+	__u32 result;
+
+	struct config {
+		__u32 cdw11;
+		int  raw_binary;
+		int  human_readable;
+	};
+
+	struct config cfg = {
+		.cdw11        	= 0,
+		.raw_binary	= 0,
+		.human_readable = 1,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"raw-binary",     'b', "",    CFG_NONE,     &cfg.raw_binary,     no_argument, raw_binary},
+		{"human-readable", 'H', "",    CFG_NONE,     &cfg.human_readable, no_argument, human_readable},
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	err = nvme_get_feature(fd, NVME_NSID_ALL, NVME_FEAT_HCTM, 0, 0,
+			       sizeof(cfg.cdw11), &cfg.cdw11, &result);
+	if (!err) {
+		if (cfg.raw_binary) {
+			d_raw((unsigned char *)&cfg.cdw11, sizeof(cfg.cdw11));
+			goto close_fd;
+		}
+		else
+			show_hctm(cfg.cdw11);
+	} else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
+	else
+		perror("get_hctm");
+
+close_fd:
+	close(fd);
+
+	return err;
+}
+
 static int get_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Read operating parameters of the "\
@@ -2699,6 +2754,52 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 
  close_fd:
 	close(fd);
+
+	return err;
+}
+
+static int set_hctm(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Lets the user set the minimum and the maximum "\
+		"temperature threshold that a controller can reach upto "\
+		"and perform the vendor specififc actions.";
+	const char *lower_th = "The min. threshold temperature";
+	const char *upper_th = "The max. threshold temperature";
+	__u32 result;
+	int err, fd;
+
+	struct config {
+		__u32 cdw11;
+		__u16 lower_th;
+		__u16 upper_th;
+	};
+
+	struct config cfg = {
+		.cdw11 		= 0,
+		.lower_th 	= 0,
+		.upper_th 	= 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"lower-th", 'l', "NUM",  CFG_POSITIVE, &cfg.lower_th, required_argument, lower_th},
+		{"upper-th", 'u', "NUM",  CFG_POSITIVE, &cfg.upper_th, required_argument, upper_th},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	cfg.cdw11 = cfg.upper_th;
+	cfg.cdw11 = (cfg.cdw11 << 16) | (cfg.lower_th);
+
+	err = nvme_set_feature(fd, NVME_NSID_ALL, NVME_FEAT_HCTM, 0,
+				0, 0, sizeof(cfg.cdw11), &cfg.cdw11, &result);
+	if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
+	else
+		perror("set_hctm");
 
 	return err;
 }
