@@ -28,14 +28,11 @@
 
 PLUGIN(NAME("seagate", "Seagate vendor specific extensions"),
 	COMMAND_LIST(
-		ENTRY("vs-temp-stats",      "Retrieve Seagate temperature statistics ", temp_stats)		
-		ENTRY("vs-temperature-stats",      "Retrieve Seagate temperature statistics ",             temp_stats_wrapper)		
+		ENTRY("vs-temperature-stats",      "Retrieve Seagate temperature statistics ",             temp_stats)		
 		ENTRY("vs-log-page-sup",    "Retrieve Seagate Supported Log-pages Information ", log_pages_supp)		
-		ENTRY("vs-smart-log",       "Retrieve Seagate extended-SMART Information ", vs_smart_log)		
-        ENTRY("vs-smart-add-log",       "Retrieve Seagate extended-SMART Information ",         vs_smart_log_wrapper)		
+        ENTRY("vs-smart-add-log",       "Retrieve Seagate extended-SMART Information ",         vs_smart_log)		
 		ENTRY("vs-pcie-stats",      "Retrieve Seagate PCIe error statistics ", vs_pcie_error_log)		
-        ENTRY("clr-pcie-errs",      "Clear Seagate PCIe error statistics ",             vs_clr_pcie_correctable_errs)
-        ENTRY("clear-pcie-correctable-errors",      "Clear Seagate PCIe error statistics  ",             vs_clr_pcie_correctable_errs_wrapper)
+        ENTRY("clear-pcie-correctable-errors",      "Clear Seagate PCIe error statistics  ",             vs_clr_pcie_correctable_errs)
         ENTRY("get-host-tele",       "Retrieve Seagate Host-Initiated Telemetry ",          get_host_tele)
         ENTRY("get-ctrl-tele",       "Retrieve Seagate Controller-Initiated Telemetry ",    get_ctrl_tele)
         ENTRY("vs-internal-log",       "Retrieve Seagate Controller-Initiated Telemetry in binary format",  vs_internal_log)		

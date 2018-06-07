@@ -826,11 +826,6 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 }
 //EOF Extended-SMART Information
 
-static int vs_smart_log_wrapper(int argc, char **argv, struct command *cmd, struct plugin *plugin)
-{
-    return vs_smart_log(argc, argv, cmd, plugin);
-}
-
 /***************************************
 * Temperature-Stats information 
 ***************************************/
@@ -955,12 +950,6 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	return err;				
 }	
 //EOF Temperature Stats information
-
-static int temp_stats_wrapper(int argc, char **argv, struct command *cmd, struct plugin *plugin)
-{
-    return temp_stats(argc, argv, cmd, plugin);
-}
-
 
 /***************************************
 * PCIe error-log information 
@@ -1120,11 +1109,6 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 
     return err;
 
-}
-
-static int vs_clr_pcie_correctable_errs_wrapper(int argc, char **argv, struct command *cmd, struct plugin *plugin)
-{
-    return vs_clr_pcie_correctable_errs(argc, argv, cmd, plugin);
 }
 
 int nvme_get_log_with_offset(int fd, __u32 nsid, __u16 log_id, __u32 data_len, __u64 offset, void *data)
