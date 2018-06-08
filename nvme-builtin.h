@@ -27,6 +27,8 @@ COMMAND_LIST(
 	ENTRY("effects-log", "Retrieve Command Effects Log, show it", get_effects_log)
 	ENTRY("endurance-log", "Retrieve Endurance Group Log, show it", get_endurance_log)
 	ENTRY("get-feature", "Get feature and show the resulting value", get_feature)
+	ENTRY("device-self-test", "Perform the necessary tests to observe the performance", device_self_test)
+	ENTRY("self-test-log", "Retrieve the SELF-TEST Log, show it", self_test_log)
 	ENTRY("set-feature", "Set a feature and show the resulting value", set_feature)
 	ENTRY("set-property", "Set a property and show the resulting value", set_property)
 	ENTRY("format", "Format namespace with new block format", format)
