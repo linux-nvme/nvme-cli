@@ -474,6 +474,12 @@ int nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log *smart_log)
 	return nvme_get_log(fd, nsid, NVME_LOG_SMART, sizeof(*smart_log), smart_log);
 }
 
+int nvme_self_test_log(int fd, struct nvme_self_test_log *self_test_log)
+{
+	return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_DEVICE_SELF_TEST,
+		sizeof(*self_test_log), self_test_log);
+}
+
 int nvme_effects_log(int fd, struct nvme_effects_log_page *effects_log)
 {
 	return nvme_get_log(fd, 0, NVME_LOG_CMD_EFFECTS, sizeof(*effects_log), effects_log);
@@ -809,6 +815,18 @@ int nvme_sanitize(int fd, __u8 sanact, __u8 ause, __u8 owpass, __u8 oipbp,
 				  owpass << NVME_SANITIZE_OWPASS_SHIFT |
 				  ause << 3 | sanact,
 		.cdw11		= ovrpat,
+	};
+
+	return nvme_submit_admin_passthru(fd, &cmd);
+}
+
+
+int nvme_self_test_start(int fd, __u32 nsid, __u32 cdw10)
+{
+	struct nvme_admin_cmd cmd = {
+		.opcode = nvme_admin_dev_self_test,
+		.nsid = nsid,
+		.cdw10 = cdw10,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);
