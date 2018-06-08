@@ -35,6 +35,12 @@ OPTIONS
 	associated Get Log Page command is processed.
 	If cleated to 0, controller shall _not_ update this data.
 
+-d <da>::
+--data-area=<da>::
+	Retrieves the specific data area requested. Valid inputs are 1,2,3. If
+	this option is not specified, the default value is 3, since that will
+	always give the user all three data areas.
+
 EXAMPLES
 --------
 * Retrieve Telemetry Host-Initiated data to telemetry_log.bin
