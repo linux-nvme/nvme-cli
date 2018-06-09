@@ -114,13 +114,13 @@ char* log_pages_supp_print(__u32 pageID)
             return "DRAM Supercap SMART Attributes";
             break;
 		case 0xD6:
-			return "VS_HPE_WORK_LOAD";
+			return "VS_OEM2_WORK_LOAD";
 		break;
 		case 0xD7:
-			return "VS_HPE_FW_SECURITY";
+			return "VS_OEM2_FW_SECURITY";
 		break;
 		case 0xD8:
-			return "VS_HPE_REVISION"; 
+			return "VS_OEM2_REVISION"; 
 		break;
 
 		default:
