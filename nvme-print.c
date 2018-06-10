@@ -619,6 +619,8 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	printf("nabspf  : %d\n", le16_to_cpu(ns->nabspf));
 	printf("noiob   : %d\n", le16_to_cpu(ns->noiob));
 	printf("nvmcap  : %.0Lf\n", int128_to_double(ns->nvmcap));
+	printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
+	printf("endgid  : %d\n", le16_to_cpu(ns->endgid));
 
 	printf("nguid   : ");
 	for (i = 0; i < 16; i++)
@@ -1958,6 +1960,8 @@ void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	json_object_add_value_int(root, "nabspf", le16_to_cpu(ns->nabspf));
 	json_object_add_value_int(root, "noiob", le16_to_cpu(ns->noiob));
 	json_object_add_value_float(root, "nvmcap", nvmcap);
+	json_object_add_value_int(root, "nvmsetid", le16_to_cpu(ns->nvmsetid));
+	json_object_add_value_int(root, "endgid", le16_to_cpu(ns->endgid));
 
 	memset(eui64, 0, sizeof(eui64_buf));
 	for (i = 0; i < sizeof(ns->eui64); i++)
