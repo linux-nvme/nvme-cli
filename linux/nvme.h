@@ -495,6 +495,12 @@ struct nvme_fw_slot_info_log {
 	__u8			rsvd64[448];
 };
 
+#define NVME_MAX_CHANGED_NAMESPACES     1024
+
+struct nvme_changed_ns_list_log {
+	__le32			log[NVME_MAX_CHANGED_NAMESPACES];
+};
+
 enum {
 	NVME_CMD_EFFECTS_CSUPP		= 1 << 0,
 	NVME_CMD_EFFECTS_LBCC		= 1 << 1,
@@ -869,6 +875,7 @@ enum {
 	NVME_LOG_ERROR		= 0x01,
 	NVME_LOG_SMART		= 0x02,
 	NVME_LOG_FW_SLOT	= 0x03,
+	NVME_LOG_CHANGED_NS	= 0x04,
 	NVME_LOG_CMD_EFFECTS	= 0x05,
 	NVME_LOG_DEVICE_SELF_TEST = 0x06,
 	NVME_LOG_TELEMETRY_HOST = 0x07,

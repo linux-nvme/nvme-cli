@@ -23,6 +23,7 @@ COMMAND_LIST(
 	ENTRY("get-log", "Generic NVMe get log, returns log in raw format", get_log)
 	ENTRY("telemetry-log", "Retrieve FW Telemetry log write to file", get_telemetry_log)
 	ENTRY("fw-log", "Retrieve FW Log, show it", get_fw_log)
+	ENTRY("changed-ns-list-log", "Retrieve Changed Namespace List, show it", get_changed_ns_list_log)
 	ENTRY("smart-log", "Retrieve SMART Log, show it", get_smart_log)
 	ENTRY("error-log", "Retrieve Error Log, show it", get_error_log)
 	ENTRY("effects-log", "Retrieve Command Effects Log, show it", get_effects_log)

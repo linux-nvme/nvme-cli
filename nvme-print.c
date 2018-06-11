@@ -1103,6 +1103,23 @@ void show_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
 						fw_to_string(fw_log->frs[i]));
 }
 
+void show_changed_ns_list_log(struct nvme_changed_ns_list_log *log, const char *devname)
+{
+	int i;
+	__u32 nsid;
+
+	if (log->log[0] != cpu_to_le32(0XFFFFFFFF)) {
+		for (i = 0; i < NVME_MAX_CHANGED_NAMESPACES; i++) {
+			nsid = le32_to_cpu(log->log[i]);
+			if (nsid == 0)
+				break;
+
+			printf("[%4u]:%#x\n", i, nsid);
+		}
+	} else
+		printf("more than %d ns changed\n", NVME_MAX_CHANGED_NAMESPACES);
+}
+
 static void show_effects_log_human(__u32 effect)
 {
 	const char *set = "+";
@@ -2263,6 +2280,41 @@ void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
 
 	json_print_object(root, NULL);
 	printf("\n");
+	json_free_object(root);
+}
+
+void json_changed_ns_list_log(struct nvme_changed_ns_list_log *log, const char *devname)
+{
+	struct json_object *root;
+	struct json_object *nsi;
+	char fmt[32];
+	char str[32];
+	__u32 nsid;
+	int i;
+
+	if (log->log[0] == cpu_to_le32(0XFFFFFFFF))
+		return;
+
+	root = json_create_object();
+	nsi = json_create_object();
+
+	json_object_add_value_string(root, "Changed Namespace List Log", devname);
+
+	for (i = 0; i < NVME_MAX_CHANGED_NAMESPACES; i++) {
+		nsid = le32_to_cpu(log->log[i]);
+
+		if (nsid == 0)
+			break;
+
+		snprintf(fmt, sizeof(fmt), "[%4u]", i + 1);
+		snprintf(str, sizeof(str), "%#x", nsid);
+		json_object_add_value_string(nsi, fmt, str);
+	}
+
+	json_object_add_value_object(root, devname, nsi);
+	json_print_object(root, NULL);
+	printf("\n");
+
 	json_free_object(root);
 }
 

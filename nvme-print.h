@@ -27,6 +27,7 @@ void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 void show_self_test_log(struct nvme_self_test_log *self_test, const char *devname);
 void show_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname);
 void show_effects_log(struct nvme_effects_log_page *effects, unsigned int flags);
+void show_changed_ns_list_log(struct nvme_changed_ns_list_log *log, const char *devname);
 void show_endurance_log(struct nvme_endurance_group_log *endurance_group,
 			__u16 group_id, const char *devname);
 void show_sanitize_log(struct nvme_sanitize_log_page *sanitize, unsigned int mode, const char *devname);
@@ -51,6 +52,7 @@ void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 void json_effects_log(struct nvme_effects_log_page *effects_log, const char *devname);
 void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log, const char *devname);
 void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname);
+void json_changed_ns_list_log(struct nvme_changed_ns_list_log *log, const char *devname);
 void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 			__u16 group_id, const char *devname);
 void json_print_list_items(struct list_item *items, unsigned amnt);

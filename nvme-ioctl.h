@@ -88,6 +88,8 @@ int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data);
 int nvme_get_telemetry_log(int fd, void *lp, int generate_report,
 			   int ctrl_gen, size_t log_page_size, __u64 offset);
 int nvme_fw_log(int fd, struct nvme_firmware_log_page *fw_log);
+int nvme_changed_ns_list_log(int fd,
+		struct nvme_changed_ns_list_log *changed_ns_list_log);
 int nvme_error_log(int fd, int entries, struct nvme_error_log_page *err_log);
 int nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log *smart_log);
 int nvme_effects_log(int fd, struct nvme_effects_log_page *effects_log);

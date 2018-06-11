@@ -606,6 +606,62 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 	return err;
 }
 
+static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	struct nvme_changed_ns_list_log changed_ns_list_log;
+	const char *desc = "Retrieve Changed Namespaces log for the given device "\
+			"in either decoded format "\
+			"(default) or binary.";
+	const char *raw = "output in binary format";
+	int err, fmt, fd;
+
+	struct config {
+		int   raw_binary;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"output-format", 'o', "FMT", CFG_STRING,   &cfg.output_format, required_argument, output_format },
+		{"raw-binary",    'b', "",    CFG_NONE,     &cfg.raw_binary,    no_argument,       raw},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		err = fmt;
+		goto close_fd;
+	}
+
+	if (cfg.raw_binary)
+		fmt = BINARY;
+
+	err = nvme_changed_ns_list_log(fd, &changed_ns_list_log);
+	if (!err) {
+		if (fmt == BINARY)
+			d_raw((unsigned char *)changed_ns_list_log.log, sizeof(changed_ns_list_log.log));
+		else if (fmt == JSON)
+			json_changed_ns_list_log(&changed_ns_list_log, devicename);
+		else
+			show_changed_ns_list_log(&changed_ns_list_log, devicename);
+	} else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+	else
+		perror("changed ns list log");
+
+ close_fd:
+	close(fd);
+
+	return err;
+}
+
 static int get_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve desired number of bytes "\
