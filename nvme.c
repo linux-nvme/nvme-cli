@@ -1798,6 +1798,65 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	return err;
 }
 
+static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Send an Identify NVM Set List command to the "\
+		"given device, returns entries for NVM Set identifiers greater "\
+		"than or equal to the value specified CDW11.NVMSETID "\
+		"in either binary format or json format";
+	const char *nvmset_id = "NVM Set Identify value";
+	int err, fmt, fd;
+	struct nvme_id_nvmset nvmset;
+
+	struct config {
+		__u16 nvmset_id;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.nvmset_id = 0,
+		.output_format = "normal",
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"nvmset_id",       'i', "NUM", CFG_POSITIVE, &cfg.nvmset_id,       required_argument, nvmset_id},
+		{"output-format",   'o', "FMT", CFG_STRING,   &cfg.output_format,   required_argument, output_format },
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		err = fmt;
+		goto close_fd;
+	}
+
+	err = nvme_identify_nvmset(fd, cfg.nvmset_id, &nvmset);
+	if (!err) {
+		if (fmt == BINARY)
+			d_raw((unsigned char *)&nvmset, sizeof(nvmset));
+		else if (fmt == JSON)
+			json_nvme_id_nvmset(&nvmset, devicename);
+		else {
+			printf("NVME Identify NVM Set List %d:\n", cfg.nvmset_id);
+			show_nvme_id_nvmset(&nvmset);
+		}
+	}
+	else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x) NVMSETID:%d\n",
+			nvme_status_to_string(err), err, cfg.nvmset_id);
+	else
+		perror("identify nvm set list");
+
+ close_fd:
+	close(fd);
+
+	return err;
+}
+
 static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int nsid, fd;
