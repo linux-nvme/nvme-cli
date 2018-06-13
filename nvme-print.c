@@ -1451,6 +1451,7 @@ char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_RESV_MASK:	return "Reservation Notification Mask";
 	case NVME_FEAT_RESV_PERSIST:	return "Reservation Persistence";
 	case NVME_FEAT_TIMESTAMP:	return "Timestamp";
+	case NVME_FEAT_HCTM:		return "Host Controlled Thermal Management";
 	default:			return "Unknown";
 	}
 }
@@ -1821,6 +1822,10 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		break;
 	case NVME_FEAT_TIMESTAMP:
 		show_timestamp((struct nvme_timestamp *)buf);
+		break;
+	case NVME_FEAT_HCTM:
+		printf("\tThermal Management Temperature 1 (TMT1) : %u Kelvin\n", (result >> 16));
+		printf("\tThermal Management Temperature 2 (TMT2) : %u Kelvin\n", (result & 0x0000ffff));
 		break;
 	}
 }
