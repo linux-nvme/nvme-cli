@@ -6,14 +6,6 @@
 #include "linux/nvme_ioctl.h"
 #include "nvme.h"
 
-/* rate of ioctl retries */
-#define IOCTL_TIMESPERSEC	4
-/* delay between retries. Units in us */
-#define IOCTL_DELAY		(1000000 / IOCTL_TIMESPERSEC)	/* 250ms */
-
-#define NO_RETRIES		0
-#define DISCOVERY_RETRIES	(IOCTL_TIMESPERSEC * 60)	/* 60s */
-
 int nvme_get_nsid(int fd);
 
 /* Generic passthrough */
@@ -80,12 +72,14 @@ int nvme_passthru_admin(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 			__u32 data_len, void *data, __u32 metadata_len,
 			void *metadata, __u32 timeout);
 
+int nvme_identify13(int fd, __u32 nsid, __u32 cdw10, __u32 cdw11, void *data);
 int nvme_identify(int fd, __u32 nsid, __u32 cdw10, void *data);
 int nvme_identify_ctrl(int fd, void *data);
 int nvme_identify_ns(int fd, __u32 nsid, bool present, void *data);
 int nvme_identify_ns_list(int fd, __u32 nsid, bool all, void *data);
 int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data);
 int nvme_identify_ns_descs(int fd, __u32 nsid, void *data);
+int nvme_identify_nvmset(int fd, __u16 nvmset_id, void *data);
 int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
 		   __u16 group_id, __u32 data_len, void *data);
 int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data);
