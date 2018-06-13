@@ -1443,6 +1443,7 @@ char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_AUTO_PST:	return "Autonomous Power State Transition";
 	case NVME_FEAT_HOST_MEM_BUF:	return "Host Memory Buffer";
 	case NVME_FEAT_KATO:		return "Keep Alive Timer";
+	case NVME_FEAT_NOPSC:		return "Non-Operational Power State Config";
 	case NVME_FEAT_RRL:		return "Read Recovery Level";
 	case NVME_FEAT_PLM_CONFIG:	return "Predicatable Latency Mode Config";
 	case NVME_FEAT_PLM_WINDOW:	return "Predicatable Latency Mode Window";
@@ -1829,6 +1830,9 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		break;
 	case NVME_FEAT_KATO:
 		printf("\tKeep Alive Timeout (KATO) in milliseconds: %u\n", result);
+		break;
+	case NVME_FEAT_NOPSC:
+		printf("\tNon-Operational Power State Permissive Mode Enable (NOPPME): %s\n", (result & 1) ? "True" : "False");
 		break;
 	}
 }
