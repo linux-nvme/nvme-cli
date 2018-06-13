@@ -2072,6 +2072,9 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	case NVME_FEAT_PLM_CONFIG:
 		cfg.data_len = 512;
 		break;
+	case NVME_FEAT_TIMESTAMP:
+		cfg.data_len = 8;
+		break;
 	}
 
 	if (cfg.sel == 3)

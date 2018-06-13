@@ -1450,6 +1450,7 @@ char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_HOST_ID:		return "Host Identifier";
 	case NVME_FEAT_RESV_MASK:	return "Reservation Notification Mask";
 	case NVME_FEAT_RESV_PERSIST:	return "Reservation Persistence";
+	case NVME_FEAT_TIMESTAMP:	return "Timestamp";
 	default:			return "Unknown";
 	}
 }
@@ -1634,6 +1635,17 @@ static void show_auto_pst(struct nvme_auto_pst *apst)
 	}
 }
 
+static void show_timestamp(struct nvme_timestamp *ts)
+{
+	printf("\tThe timestamp is : %lu\n", int48_to_long(ts->timestamp));
+	printf("\t%s\n", (ts->attr & 2) ? "The Timestamp field was initialized with a "\
+			"Timestamp value using a Set Features command." : "The Timestamp field was initialized "\
+			"to ‘0’ by a Controller Level Reset.");
+	printf("\t%s\n", (ts->attr & 1) ? "The controller may have stopped counting during vendor specific "\
+			"intervals after the Timestamp value was initialized" : "The controller counted time in milliseconds "\
+			"continuously since the Timestamp value was initialized.");
+}
+
 static void show_host_mem_buffer(struct nvme_host_mem_buffer *hmb)
 {
 	printf("\tHost Memory Descriptor List Entry Count (HMDLEC): %u\n", hmb->hmdlec);
@@ -1806,6 +1818,9 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		break;
 	case NVME_FEAT_RESV_PERSIST:
 		printf("\tPersist Through Power Loss (PTPL): %s\n", (result & 0x00000001) ? "True":"False");
+		break;
+	case NVME_FEAT_TIMESTAMP:
+		show_timestamp((struct nvme_timestamp *)buf);
 		break;
 	}
 }
