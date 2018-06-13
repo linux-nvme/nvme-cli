@@ -1827,6 +1827,9 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		printf("\tThermal Management Temperature 1 (TMT1) : %u Kelvin\n", (result >> 16));
 		printf("\tThermal Management Temperature 2 (TMT2) : %u Kelvin\n", (result & 0x0000ffff));
 		break;
+	case NVME_FEAT_KATO:
+		printf("\tKeep Alive Timeout (KATO) in milliseconds: %u\n", result);
+		break;
 	}
 }
 
