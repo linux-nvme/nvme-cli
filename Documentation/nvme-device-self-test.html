@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.8" />
-<title>nvme-telemetry-log(1)</title>
+<title>nvme-device-self-test(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -732,12 +732,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-telemetry-log(1) Manual Page
+nvme-device-self-test(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-telemetry-log -
-   Retrieves a Telemetry Host-Initiated log page from an NVMe device
+<p>nvme-device-self-test -
+   Perform the necessary tests to observe the performance and the parameters
 </p>
 </div>
 </div>
@@ -746,8 +746,8 @@ nvme-telemetry-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme telemetry-log</em> &lt;device&gt; [--output-file=&lt;file&gt; | -o &lt;file&gt;]
-                      [--host-generate=&lt;gen&gt; | -h &lt;gen&gt;]</pre>
+<pre class="content"><em>nvme device-self-test</em> &lt;device&gt; [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
+                        [--self-test-code=&lt;NUM&gt; | -s &lt;NUM&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -755,12 +755,10 @@ nvme-telemetry-log(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Retrieves an Telemetry Host-Initiated log page from an NVMe device and provides
-the retuned structure.</p></div>
+<div class="paragraph"><p>Initiates the required test based on the user input.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>On success, the returned log structure will be in raw binary format <em>only</em> with
---output-file option which is mandatory.</p></div>
+<div class="paragraph"><p>On success, the corresponding test is initiated.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -768,41 +766,29 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--o &lt;file&gt;
+-n &lt;NUM&gt;
 </dt>
 <dt class="hdlist1">
---output-file=&lt;file&gt;
+--namespace-id=&lt;NUM&gt;
 </dt>
 <dd>
 <p>
-        File name to which raw binary data will be saved to.
+        Indicate the namespace in which the device self-test has to becarried out
 </p>
 </dd>
 <dt class="hdlist1">
--h &lt;gen&gt;
+-s &lt;NUM&gt;
 </dt>
 <dt class="hdlist1">
---host-generate=&lt;gen&gt;
+--self-test-code=&lt;NUM&gt;
 </dt>
 <dd>
 <p>
-        If set to 1, controller shall capture the Telemetry Host-Initiated data
-        representing the internal state of the controller at the time the
-        associated Get Log Page command is processed.
-        If cleated to 0, controller shall <em>not</em> update this data.
-</p>
-</dd>
-<dt class="hdlist1">
--d &lt;da&gt;
-</dt>
-<dt class="hdlist1">
---data-area=&lt;da&gt;
-</dt>
-<dd>
-<p>
-        Retrieves the specific data area requested. Valid inputs are 1,2,3. If
-        this option is not specified, the default value is 3, since that will
-        always give the user all three data areas.
+        This field specifies the action taken by the device self-test command :
+         1h: Start a short device self-test operation
+         2h: Start a extended device self-test operation
+         eh: Start a vendor specific device self-test operation
+         fh: abort the device self-test operation
 </p>
 </dd>
 </dl></div>
@@ -814,11 +800,20 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <div class="ulist"><ul>
 <li>
 <p>
-Retrieve Telemetry Host-Initiated data to telemetry_log.bin
+Start a short device self-test in the namespace-id 1:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme telemetry-log /dev/nvme0 --output-file=telemetry_log.bin</code></pre>
+<pre><code># nvme device-self-test /dev/nvme0 -n 1 -s 1</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Abort the device self-test operation in the namespace-id 1:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme device-self-test /dev/nvme0 -n 1 -s 0xf</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -834,7 +829,7 @@ Retrieve Telemetry Host-Initiated data to telemetry_log.bin
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-06-11 13:36:50 MDT
+Last updated 2018-06-15 13:12:01 MDT
 </div>
 </div>
 </body>

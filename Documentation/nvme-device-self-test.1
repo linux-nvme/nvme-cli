@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-telemetry-log
+.\"     Title: nvme-device-self-test
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 06/15/2018
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-TELEMETRY\-LOG" "1" "06/15/2018" "NVMe" "NVMe Manual"
+.TH "NVME\-DEVICE\-SELF\-" "1" "06/15/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,37 +28,30 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-telemetry-log \- Retrieves a Telemetry Host\-Initiated log page from an NVMe device
+nvme-device-self-test \- Perform the necessary tests to observe the performance and the parameters
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme telemetry\-log\fR <device> [\-\-output\-file=<file> | \-o <file>]
-                      [\-\-host\-generate=<gen> | \-h <gen>]
+\fInvme device\-self\-test\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
+                        [\-\-self\-test\-code=<NUM> | \-s <NUM>]
 .fi
 .SH "DESCRIPTION"
 .sp
-Retrieves an Telemetry Host\-Initiated log page from an NVMe device and provides the retuned structure\&.
+Initiates the required test based on the user input\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
-On success, the returned log structure will be in raw binary format \fIonly\fR with \-\-output\-file option which is mandatory\&.
+On success, the corresponding test is initiated\&.
 .SH "OPTIONS"
 .PP
-\-o <file>, \-\-output\-file=<file>
+\-n <NUM>, \-\-namespace\-id=<NUM>
 .RS 4
-File name to which raw binary data will be saved to\&.
+Indicate the namespace in which the device self\-test has to becarried out
 .RE
 .PP
-\-h <gen>, \-\-host\-generate=<gen>
+\-s <NUM>, \-\-self\-test\-code=<NUM>
 .RS 4
-If set to 1, controller shall capture the Telemetry Host\-Initiated data representing the internal state of the controller at the time the associated Get Log Page command is processed\&. If cleated to 0, controller shall
-\fInot\fR
-update this data\&.
-.RE
-.PP
-\-d <da>, \-\-data\-area=<da>
-.RS 4
-Retrieves the specific data area requested\&. Valid inputs are 1,2,3\&. If this option is not specified, the default value is 3, since that will always give the user all three data areas\&.
+This field specifies the action taken by the device self\-test command : 1h: Start a short device self\-test operation 2h: Start a extended device self\-test operation eh: Start a vendor specific device self\-test operation fh: abort the device self\-test operation
 .RE
 .SH "EXAMPLES"
 .sp
@@ -70,13 +63,34 @@ Retrieves the specific data area requested\&. Valid inputs are 1,2,3\&. If this 
 .sp -1
 .IP \(bu 2.3
 .\}
-Retrieve Telemetry Host\-Initiated data to telemetry_log\&.bin
+Start a short device self\-test in the namespace\-id 1:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme telemetry\-log /dev/nvme0 \-\-output\-file=telemetry_log\&.bin
+# nvme device\-self\-test /dev/nvme0 \-n 1 \-s 1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Abort the device self\-test operation in the namespace\-id 1:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme device\-self\-test /dev/nvme0 \-n 1 \-s 0xf
 .fi
 .if n \{\
 .RE
