@@ -33,7 +33,7 @@ nvme-telemetry-log \- Retrieves a Telemetry Host\-Initiated log page from an NVM
 .sp
 .nf
 \fInvme telemetry\-log\fR <device> [\-\-output\-file=<file> | \-o <file>]
-                      [\-\-host\-generate=<gen> | \-h <gen>]
+                      [\-\-host\-generate=<gen> | \-g <gen>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -49,7 +49,7 @@ On success, the returned log structure will be in raw binary format \fIonly\fR w
 File name to which raw binary data will be saved to\&.
 .RE
 .PP
-\-h <gen>, \-\-host\-generate=<gen>
+\-g <gen>, \-\-host\-generate=<gen>
 .RS 4
 If set to 1, controller shall capture the Telemetry Host\-Initiated data representing the internal state of the controller at the time the associated Get Log Page command is processed\&. If cleated to 0, controller shall
 \fInot\fR

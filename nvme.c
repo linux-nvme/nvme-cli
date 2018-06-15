@@ -256,7 +256,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"output-file",     'o', "FILE", CFG_STRING,   &cfg.file_name, required_argument, fname},
-		{"host-generate",   'h', "NUM",  CFG_POSITIVE, &cfg.host_gen,  required_argument, hgen},
+		{"host-generate",   'g', "NUM",  CFG_POSITIVE, &cfg.host_gen,  required_argument, hgen},
 		{"controller-init", 'c', "",     CFG_NONE,     &cfg.ctrl_init, no_argument,       cgen},
 		{"data-area",       'd', "NUM",  CFG_POSITIVE, &cfg.data_area, required_argument, dgen},
 		{NULL}

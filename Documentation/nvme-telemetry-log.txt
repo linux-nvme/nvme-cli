@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme telemetry-log' <device> [--output-file=<file> | -o <file>]
-		      [--host-generate=<gen> | -h <gen>]
+		      [--host-generate=<gen> | -g <gen>]
 
 DESCRIPTION
 -----------
@@ -28,7 +28,7 @@ OPTIONS
 --output-file=<file>::
 	File name to which raw binary data will be saved to.
 
--h <gen>::
+-g <gen>::
 --host-generate=<gen>::
 	If set to 1, controller shall capture the Telemetry Host-Initiated data
 	representing the internal state of the controller at the time the
