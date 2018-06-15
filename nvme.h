@@ -76,6 +76,12 @@ struct nvme_auto_pst {
 	__u32	rsvd32;
 };
 
+struct nvme_timestamp {
+	__u8 timestamp[6];
+	__u8 attr;
+	__u8 rsvd;
+};
+
 struct nvme_controller_list {
 	__le16 num;
 	__le16 identifier[];

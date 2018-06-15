@@ -1443,6 +1443,7 @@ char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_AUTO_PST:	return "Autonomous Power State Transition";
 	case NVME_FEAT_HOST_MEM_BUF:	return "Host Memory Buffer";
 	case NVME_FEAT_KATO:		return "Keep Alive Timer";
+	case NVME_FEAT_NOPSC:		return "Non-Operational Power State Config";
 	case NVME_FEAT_RRL:		return "Read Recovery Level";
 	case NVME_FEAT_PLM_CONFIG:	return "Predicatable Latency Mode Config";
 	case NVME_FEAT_PLM_WINDOW:	return "Predicatable Latency Mode Window";
@@ -1450,6 +1451,8 @@ char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_HOST_ID:		return "Host Identifier";
 	case NVME_FEAT_RESV_MASK:	return "Reservation Notification Mask";
 	case NVME_FEAT_RESV_PERSIST:	return "Reservation Persistence";
+	case NVME_FEAT_TIMESTAMP:	return "Timestamp";
+	case NVME_FEAT_HCTM:		return "Host Controlled Thermal Management";
 	default:			return "Unknown";
 	}
 }
@@ -1634,6 +1637,17 @@ static void show_auto_pst(struct nvme_auto_pst *apst)
 	}
 }
 
+static void show_timestamp(struct nvme_timestamp *ts)
+{
+	printf("\tThe timestamp is : %lu\n", int48_to_long(ts->timestamp));
+	printf("\t%s\n", (ts->attr & 2) ? "The Timestamp field was initialized with a "\
+			"Timestamp value using a Set Features command." : "The Timestamp field was initialized "\
+			"to ‘0’ by a Controller Level Reset.");
+	printf("\t%s\n", (ts->attr & 1) ? "The controller may have stopped counting during vendor specific "\
+			"intervals after the Timestamp value was initialized" : "The controller counted time in milliseconds "\
+			"continuously since the Timestamp value was initialized.");
+}
+
 static void show_host_mem_buffer(struct nvme_host_mem_buffer *hmb)
 {
 	printf("\tHost Memory Descriptor List Entry Count (HMDLEC): %u\n", hmb->hmdlec);
@@ -1806,6 +1820,19 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		break;
 	case NVME_FEAT_RESV_PERSIST:
 		printf("\tPersist Through Power Loss (PTPL): %s\n", (result & 0x00000001) ? "True":"False");
+		break;
+	case NVME_FEAT_TIMESTAMP:
+		show_timestamp((struct nvme_timestamp *)buf);
+		break;
+	case NVME_FEAT_HCTM:
+		printf("\tThermal Management Temperature 1 (TMT1) : %u Kelvin\n", (result >> 16));
+		printf("\tThermal Management Temperature 2 (TMT2) : %u Kelvin\n", (result & 0x0000ffff));
+		break;
+	case NVME_FEAT_KATO:
+		printf("\tKeep Alive Timeout (KATO) in milliseconds: %u\n", result);
+		break;
+	case NVME_FEAT_NOPSC:
+		printf("\tNon-Operational Power State Permissive Mode Enable (NOPPME): %s\n", (result & 1) ? "True" : "False");
 		break;
 	}
 }
