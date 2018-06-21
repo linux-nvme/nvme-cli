@@ -1639,7 +1639,7 @@ static void show_auto_pst(struct nvme_auto_pst *apst)
 
 static void show_timestamp(struct nvme_timestamp *ts)
 {
-	printf("\tThe timestamp is : %lu\n", int48_to_long(ts->timestamp));
+	printf("\tThe timestamp is : %"PRIu64"\n", int48_to_long(ts->timestamp));
 	printf("\t%s\n", (ts->attr & 2) ? "The Timestamp field was initialized with a "\
 			"Timestamp value using a Set Features command." : "The Timestamp field was initialized "\
 			"to ‘0’ by a Controller Level Reset.");
