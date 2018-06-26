@@ -390,11 +390,11 @@ static void show_lat_stats(struct intel_lat_stats *stats, int write)
 
 	printf("\nGroup 2: Range is 1-32ms, step is 1ms\n");
 	for (i = 0; i < 31; i++)
-		printf("Bucket %2d: %u\n", i, stats->bucket_1[i]);
+		printf("Bucket %2d: %u\n", i, stats->bucket_2[i]);
 
 	printf("\nGroup 3: Range is 32-1s, step is 32ms:\n");
 	for (i = 0; i < 31; i++)
-		printf("Bucket %2d: %u\n", i, stats->bucket_1[i]);
+		printf("Bucket %2d: %u\n", i, stats->bucket_3[i]);
 }
 
 static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
