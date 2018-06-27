@@ -2921,3 +2921,48 @@ void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 		}
 	}
 }
+
+void show_single_property(int offset, uint64_t value64, int human)
+{
+	uint32_t value32;
+
+	if (!human) {
+		printf("property: 0x%02x (%s), value: %"PRIx64"\n", offset,
+			   nvme_register_to_string(offset), value64);
+		return;
+	}
+
+	value32 = (uint32_t) value64;
+
+	switch (offset) {
+	case NVME_REG_CAP:
+		printf("cap : %"PRIx64"\n", value64);
+		show_registers_cap((struct nvme_bar_cap *)&value64);
+		break;
+
+	case NVME_REG_VS:
+		printf("version : %x\n", value32);
+		show_registers_version(value32);
+		break;
+
+	case NVME_REG_CC:
+		printf("cc : %x\n", value32);
+		show_registers_cc(value32);
+		break;
+
+	case NVME_REG_CSTS:
+		printf("csts : %x\n", value32);
+		show_registers_csts(value32);
+		break;
+
+	case NVME_REG_NSSR:
+		printf("nssr : %x\n", value32);
+		printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n", value32);
+		break;
+
+	default:
+		printf("unknown property: 0x%02x (%s), value: %"PRIx64"\n", offset,
+			   nvme_register_to_string(offset), value64);
+		break;
+	}
+}

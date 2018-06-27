@@ -136,6 +136,7 @@ int nvme_dir_recv(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,
 		  __u32 data_len, __u32 dw12, void *data, __u32 *result);
 int nvme_get_properties(int fd, void **pbar);
 int nvme_set_property(int fd, int offset, int value);
+int nvme_get_property(int fd, int offset, uint64_t *value);
 int nvme_sanitize(int fd, __u8 sanact, __u8 ause, __u8 owpass, __u8 oipbp,
 		  __u8 no_dealloc, __u32 ovrpat);
 int nvme_self_test_start(int fd, __u32 nsid, __u32 cdw10);
