@@ -577,6 +577,25 @@ static void show_nvme_id_ns_fpi(__u8 fpi)
 	printf("\n");
 }
 
+static void show_nvme_id_ns_dlfeat(__u8 dlfeat)
+{
+	__u8 rsvd = (dlfeat & 0xE0) >> 5;
+	__u8 guard = (dlfeat & 0x10) >> 4;
+	__u8 dwz = (dlfeat & 0x8) >> 3;
+	__u8 val = dlfeat & 0x7;
+	if (rsvd)
+		printf("  [7:5] : %#x\tReserved\n", rsvd);
+	printf("  [4:4] : %#x\tGuard Field of Deallocated Logical Blocks is set to %s\n",
+		guard, guard ? "CRC of The Value Read" : "0xFFFF");
+	printf("  [3:3] : %#x\tDeallocate Bit in the Write Zeroes Commmand is %sSupported\n",
+		dwz, dwz ? "" : "Not ");
+	printf("  [2:0] : %#x\tBytes Read From a Deallocated Logical Block and its Metadata are %s\n", val,
+		val == 2 ? "0xFF" :
+		val == 1 ? "0x00" :
+		val == 0 ? "Not Reported" : "Reserved Value");
+	printf("\n");
+}
+
 void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 {
 	int i;
@@ -611,6 +630,9 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	printf("fpi     : %#x\n", ns->fpi);
 	if (human)
 		show_nvme_id_ns_fpi(ns->fpi);
+	printf("dlfeat  : %d\n", le16_to_cpu(ns->dlfeat));
+	if (human)
+		show_nvme_id_ns_dlfeat(ns->dlfeat);
 	printf("nawun   : %d\n", le16_to_cpu(ns->nawun));
 	printf("nawupf  : %d\n", le16_to_cpu(ns->nawupf));
 	printf("nacwu   : %d\n", le16_to_cpu(ns->nacwu));
