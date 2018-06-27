@@ -578,8 +578,10 @@ int nvme_get_properties(int fd, void **pbar)
 			continue;
 		}
 		ret = 0;
-		if (is64bit)
+		if (is64bit) {
 			*(uint64_t *)(*pbar + off) = le64_to_cpu(value64);
+			off += 4;
+		}
 		else
 			*(uint32_t *)(*pbar + off) = le32_to_cpu(value64);
 	}
