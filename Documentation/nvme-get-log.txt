@@ -15,6 +15,7 @@ SYNOPSIS
 		      [--raw-binary | -b]
 		      [--lpo=<offset> | -o <offset>]
 		      [--lsp=<field> | -s <field>]
+		      [--rae | -r]
 
 DESCRIPTION
 -----------
@@ -66,6 +67,10 @@ OPTIONS
 -s <field>::
 --lsp=<field>::
 	The log specified field of LID.
+
+-r::
+--rae::
+	Retain an Asynchronous Event.
 
 EXAMPLES
 --------
