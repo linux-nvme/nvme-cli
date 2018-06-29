@@ -33,6 +33,7 @@ COMMAND_LIST(
 	ENTRY("self-test-log", "Retrieve the SELF-TEST Log, show it", self_test_log)
 	ENTRY("set-feature", "Set a feature and show the resulting value", set_feature)
 	ENTRY("set-property", "Set a property and show the resulting value", set_property)
+	ENTRY("get-property", "Get a property and show the resulting value", get_property)
 	ENTRY("format", "Format namespace with new block format", format)
 	ENTRY("fw-commit", "Verify and commit firmware to a specific slot (fw-activate in old version < 1.2)", fw_commit, "fw-activate")
 	ENTRY("fw-download", "Download new firmware", fw_download)

@@ -1030,7 +1030,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	for (i = 0; i < num; i++)
 		ctrlist[i] = (uint16_t)list[i];
 
-	if (attach)	
+	if (attach)
 		err = nvme_ns_attach_ctrls(fd, cfg.namespace_id, num, ctrlist);
 	else
 		err = nvme_ns_detach_ctrls(fd, cfg.namespace_id, num, ctrlist);
@@ -2586,6 +2586,59 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	return err;
 }
 
+static int get_property(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Reads and shows the defined NVMe controller property "\
+			   "for NVMe over Fabric. Property offset must be one of:\n"
+			   "CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20";
+	const char *offset = "offset of the requested property";
+	const char *human_readable = "show infos in readable format";
+
+	int fd, err;
+	uint64_t value;
+
+	struct config {
+		int offset;
+		int human_readable;
+	};
+
+	struct config cfg = {
+		.offset = -1,
+		.human_readable = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"offset", 'o', "NUM", CFG_POSITIVE, &cfg.offset, required_argument, offset},
+		{"human-readable", 'H', "", CFG_NONE, &cfg.human_readable, no_argument, human_readable},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	if (cfg.offset == -1) {
+		fprintf(stderr, "offset required param");
+		err = EINVAL;
+		goto close_fd;
+	}
+
+	err = nvme_get_property(fd, cfg.offset, &value);
+	if (err < 0) {
+		perror("get-property");
+	} else if (!err) {
+		show_single_property(cfg.offset, value, cfg.human_readable);
+	} else if (err > 0) {
+		fprintf(stderr, "NVMe Status: %s(%x)\n",
+				nvme_status_to_string(err), err);
+	}
+
+ close_fd:
+	close(fd);
+
+	return err;
+}
+
 static int set_property(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Writes and shows the defined NVMe controller property "\
@@ -3848,7 +3901,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		control |= cfg.dtype << 4;
 		dsmgmt |= ((__u32)cfg.dspec) << 16;
 	}
-	
+
 	if (strlen(cfg.data)){
 		dfd = open(cfg.data, flags, mode);
 		if (dfd < 0) {
