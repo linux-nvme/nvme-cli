@@ -94,12 +94,15 @@ static void show_nvme_id_ctrl_cmic(__u8 cmic)
 static void show_nvme_id_ctrl_oaes(__le32 ctrl_oaes)
 {
 	__u32 oaes = le32_to_cpu(ctrl_oaes);
-	__u32 rsvd0 = (oaes & 0xFFFFFE00) >> 9;
+	__u32 rsvd0 = (oaes & 0xFFFFFC00) >> 10;
 	__u32 nace = (oaes & 0x100) >> 8;
+	__u32 fan = (oaes & 0x200) >> 9;
 	__u32 rsvd1 = oaes & 0xFF;
 
 	if (rsvd0)
-		printf(" [31:9] : %#x\tReserved\n", rsvd0);
+		printf(" [31:10] : %#x\tReserved\n", rsvd0);
+	printf("  [9:9] : %#x\tFirmware Activation Notices %sSupported\n",
+		fan, fan ? "" : "Not ");
 	printf("  [8:8] : %#x\tNamespace Attribute Changed Event %sSupported\n",
 		nace, nace ? "" : "Not ");
 	if (rsvd1)
