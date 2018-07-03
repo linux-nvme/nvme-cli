@@ -3942,7 +3942,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		err = ENOMEM;
 		goto close_mfd;
 	}
-	memset(buffer, 0, cfg.data_size);
+	memset(buffer, 0, buffer_size);
 
 	if (cfg.metadata_size) {
 		mbuffer = malloc(cfg.metadata_size);
