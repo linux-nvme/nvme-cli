@@ -452,7 +452,7 @@ static int nvmf_hostnqn_file(void)
 	if (fgets(hostnqn, sizeof(hostnqn), f) == NULL)
 		goto out;
 
-	cfg.hostnqn = strdup(hostnqn);
+	cfg.hostnqn = strndup(hostnqn, strcspn(hostnqn, "\n"));
 	if (!cfg.hostnqn)
 		goto out;
 
