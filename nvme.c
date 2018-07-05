@@ -909,7 +909,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	if (!err) {
 		for (i = 0; i < 1024; i++)
 			if (ns_list[i])
-				printf("[%4u]:%#x\n", i, ns_list[i]);
+				printf("[%4u]:%#x\n", i, le32_to_cpu(ns_list[i]));
 	}
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x) NSID:%d\n",
