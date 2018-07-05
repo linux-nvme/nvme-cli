@@ -3706,7 +3706,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	const char *cdw11 = "command dword 11 value";
 	const char *raw_binary = "dump output in binary format";
 
-	int err, fmt, fd;
+	int err, fmt, fd, size;
 	struct nvme_reservation_status *status;
 
 	struct config {
@@ -3752,17 +3752,19 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 			goto close_fd;
 		}
 	}
-	if (!cfg.numd || cfg.numd > (0x1000 >> 2))
-		cfg.numd = 0x1000 >> 2;
+	if (!cfg.numd || cfg.numd >= (0x1000 >> 2))
+		cfg.numd = (0x1000 >> 2) - 1;
 	if (cfg.numd < 3)
 		cfg.numd = 3; /* get the header fields at least */
 
-	if (posix_memalign((void **)&status, getpagesize(), cfg.numd << 2)) {
-		fprintf(stderr, "No memory for resv report:%d\n", cfg.numd << 2);
+	size = (cfg.numd + 1) << 2;
+
+	if (posix_memalign((void **)&status, getpagesize(), size)) {
+		fprintf(stderr, "No memory for resv report:%d\n", size);
 		err = ENOMEM;
 		goto close_fd;
 	}
-	memset(status, 0, cfg.numd << 2);
+	memset(status, 0, size);
 
 	err = nvme_resv_report(fd, cfg.namespace_id, cfg.numd, cfg.cdw11, status);
 	if (err < 0)
@@ -3771,12 +3773,12 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		fprintf(stderr, "NVME IO command error:%04x\n", err);
 	else {
 		if (fmt == BINARY)
-			d_raw((unsigned char *)status, cfg.numd << 2);
+			d_raw((unsigned char *)status, size);
 		else if (fmt == JSON)
-			json_nvme_resv_report(status, cfg.numd << 2, cfg.cdw11);
+			json_nvme_resv_report(status, size, cfg.cdw11);
 		else {
 			printf("NVME Reservation Report success\n");
-			show_nvme_resv_report(status, cfg.numd << 2, cfg.cdw11);
+			show_nvme_resv_report(status, size, cfg.cdw11);
 		}
 	}
 	free(status);

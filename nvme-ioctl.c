@@ -319,7 +319,7 @@ int nvme_resv_report(int fd, __u32 nsid, __u32 numd, __u32 cdw11, void *data)
 		.cdw10		= numd,
 		.cdw11		= cdw11,
 		.addr		= (__u64)(uintptr_t) data,
-		.data_len	= numd << 2,
+		.data_len	= (numd + 1) << 2,
 	};
 
 	return nvme_submit_io_passthru(fd, &cmd);
