@@ -205,6 +205,53 @@ class TestNVMe(object):
         return int(max_ns)
 
     @tools.nottest
+    def get_ncap(self):
+        """ Wrapper for extracting capacity.
+            - Args:
+                - None
+            - Returns:
+                - maximum number of namespaces supported.
+        """
+        pattern = re.compile("^tnvmcap[ ]+: [0-9]", re.IGNORECASE)
+        ncap = -1
+        ncap_cmd = "nvme id-ctrl " + self.ctrl
+        proc = subprocess.Popen(ncap_cmd,
+                                shell=True,
+                                stdout=subprocess.PIPE)
+        err = proc.wait()
+        assert_equal(err, 0, "ERROR : reading nvm capacity failed")
+
+        for line in proc.stdout:
+            if pattern.match(line):
+                ncap = line.split(":")[1].strip()
+                break
+        print ncap
+        return int(ncap)
+
+    @tools.nottest
+    def get_format(self):
+        """ Wrapper for extracting format.
+            - Args:
+                - None
+            - Returns:
+                - maximum format of namespace.
+        """
+        # defaulting to 4K
+        nvm_format = 4096
+        nvm_format_cmd = "nvme id-ns " + self.ctrl + " -n1"
+        proc = subprocess.Popen(nvm_format_cmd,
+                                shell=True,
+                                stdout=subprocess.PIPE)
+        err = proc.wait()
+        assert_equal(err, 0, "ERROR : reading nvm capacity failed")
+
+        for line in proc.stdout:
+            if "in use" in line:
+                nvm_format = 2 ** int(line.split(":")[3].split()[0])
+        print nvm_format
+        return int(nvm_format)
+
+    @tools.nottest
     def delete_all_ns(self):
         """ Wrapper for deleting all the namespaces.
             - Args:
