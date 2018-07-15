@@ -677,56 +677,63 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	}
 }
 
+
 void json_nvme_id_ns_descs(void *data)
 {
+	/* large enough to hold uuid str (37) or nguid str (32) + zero byte */
+	char json_str[40];
+	char *json_str_p;
+
+	union {
+		__u8 eui64[NVME_NIDT_EUI64_LEN];
+		__u8 nguid[NVME_NIDT_NGUID_LEN];
+
 #ifdef LIBUUID
-	uuid_t uuid;
-	char uuid_str[37];
+		uuid_t uuid;
 #endif
-	__u8 eui64_desc[8];
-	__u8 nguid_desc[16];
-	char nguid_str[2 * sizeof(nguid_desc) + 1];
-	char eui64_str[2 * sizeof(eui64_desc) + 1];
-	char *eui64 = eui64_str;
-	char *nguid = nguid_str;
+	} desc;
+
 	struct json_object *root;
+	struct json_array *json_array = NULL;
+
 	off_t off;
 	int pos, len = 0;
 	int i;
 
-	root = json_create_object();
-
 	for (pos = 0; pos < NVME_IDENTIFY_DATA_SIZE; pos += len) {
 		struct nvme_ns_id_desc *cur = data + pos;
-
-		off = pos + sizeof(*cur);
+		const char *nidt_name = NULL;
 
 		if (cur->nidl == 0)
 			break;
 
+		memset(json_str, 0, sizeof(json_str));
+		json_str_p = json_str;
+		off = pos + sizeof(*cur);
+
 		switch (cur->nidt) {
 		case NVME_NIDT_EUI64:
-			memset(eui64, 0, sizeof(eui64_str));
-			memcpy(eui64_desc, data + off, sizeof(eui64_desc));
-			for (i = 0; i < sizeof(eui64); i++)
-				eui64 += sprintf(eui64, "%02x", eui64_desc[i]);
-			len += sizeof(eui64);
-			json_object_add_value_string(root, "eui64", eui64_str);
+			memcpy(desc.eui64, data + off, sizeof(desc.eui64));
+			for (i = 0; i < sizeof(desc.eui64); i++)
+				json_str_p += sprintf(json_str_p, "%02x", desc.eui64[i]);
+			len += sizeof(desc.eui64);
+			nidt_name = "eui64";
 			break;
+
 		case NVME_NIDT_NGUID:
-			memset(nguid, 0, sizeof(nguid_str));
-			memcpy(nguid_desc, data + off, sizeof(nguid_desc));
-			for (i = 0; i < sizeof(nguid); i++)
-				nguid += sprintf(nguid, "%02x", nguid_desc[i]);
-			len += sizeof(nguid);
-			json_object_add_value_string(root, "nguid", nguid_str);
+			memcpy(desc.nguid, data + off, sizeof(desc.nguid));
+			for (i = 0; i < sizeof(desc.nguid); i++)
+				json_str_p += sprintf(json_str_p, "%02x", desc.nguid[i]);
+			len += sizeof(desc.nguid);
+			nidt_name = "nguid";
 			break;
+
 #ifdef LIBUUID
 		case NVME_NIDT_UUID:
-			memcpy(uuid, data + off, 16);
-			uuid_unparse_lower(uuid, uuid_str);
-			len += sizeof(uuid);
-			json_object_add_value_string(root, "uuid", uuid_str);
+			memcpy(desc.uuid, data + off, sizeof(desc.uuid));
+			uuid_unparse_lower(desc.uuid, json_str);
+			len += sizeof(desc.uuid);
+			nidt_name = "uuid";
 			break;
 #endif
 		default:
@@ -735,11 +742,32 @@ void json_nvme_id_ns_descs(void *data)
 			break;
 		}
 
+		if (nidt_name) {
+			struct json_object *elem = json_create_object();
+
+			json_object_add_value_int(elem, "loc", pos);
+			json_object_add_value_int(elem, "nidt", (int)cur->nidt);
+			json_object_add_value_int(elem, "nidl", (int)cur->nidl);
+			json_object_add_value_string(elem, "type", nidt_name);
+			json_object_add_value_string(elem, nidt_name, json_str);
+
+			if (!json_array) {
+				json_array = json_create_array();
+			}
+			json_array_add_value_object(json_array, elem);
+		}
+
 		len += sizeof(*cur);
 	}
 
+	root = json_create_object();
+
+	if (json_array)
+		json_object_add_value_array(root, "ns-descs", json_array);
+
 	json_print_object(root, NULL);
 	printf("\n");
+
 	json_free_object(root);
 }
 
