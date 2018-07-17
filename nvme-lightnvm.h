@@ -69,12 +69,11 @@ struct nvme_nvm_getbbtbl {
 	__le32	nsid;
 	__le32	cdw2;
 	__le32	cdw3;
-	__le64	metadata;
+	__u64	metadata;
 	__u64	addr;
-	__le32	metadata_len;
-	__le32	data_len;
+	__u32	metadata_len;
+	__u32	data_len;
 	__le64	ppa;
-	__le32	cdw11;
 	__le32	cdw12;
 	__le32	cdw13;
 	__le32	cdw14;
