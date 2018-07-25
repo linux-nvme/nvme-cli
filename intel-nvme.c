@@ -171,7 +171,6 @@ static void show_intel_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	json_object_add_value_object(root, "Device stats", dev_stats);
 
 	json_print_object(root, NULL);
-	printf("\n");
 	json_free_object(root);
 }
 
