@@ -627,7 +627,6 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 		len = sprintf(p, ",transport=loop");
 		if (len < 0)
 			return -EINVAL;
-		p += len;
 		/* we can safely ignore the rest of the entries */
 		break;
 	case NVMF_TRTYPE_RDMA:
@@ -652,7 +651,6 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 				      e->trsvcid);
 			if (len < 0)
 				return -EINVAL;
-			p += len;
 			break;
 		default:
 			fprintf(stderr, "skipping unsupported adrfam\n");
@@ -672,7 +670,6 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 				      e->traddr);
 			if (len < 0)
 				return -EINVAL;
-			p += len;
 			break;
 		default:
 			fprintf(stderr, "skipping unsupported adrfam\n");
