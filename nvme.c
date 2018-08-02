@@ -3981,9 +3981,9 @@ static int submit_io(int opcode, char *command, const char *desc,
 		printf("reftag       : %08x\n", cfg.ref_tag);
 		printf("apptag       : %04x\n", cfg.app_tag);
 		printf("appmask      : %04x\n", cfg.app_tag_mask);
-		if (cfg.dry_run)
-			goto free_mbuffer;
 	}
+	if (cfg.dry_run)
+		goto free_mbuffer;
 
 	gettimeofday(&start_time, NULL);
 	err = nvme_io(fd, opcode, cfg.start_block, cfg.block_count, control, dsmgmt,
@@ -4423,9 +4423,9 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 		printf("cdw14        : %08x\n", cfg.cdw14);
 		printf("cdw15        : %08x\n", cfg.cdw15);
 		printf("timeout_ms   : %08x\n", cfg.timeout);
-		if (cfg.dry_run)
-			goto free_data;
 	}
+	if (cfg.dry_run)
+		goto free_data;
 
 	err = nvme_passthru(fd, ioctl_cmd, cfg.opcode, cfg.flags, cfg.rsvd,
 				cfg.namespace_id, cfg.cdw2, cfg.cdw3, cfg.cdw10,
