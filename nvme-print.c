@@ -2009,7 +2009,7 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 					  "UsedBytes",
 					  nuse);
 		json_object_add_value_uint(device_attrs,
-					  "MaximiumLBA",
+					  "MaximumLBA",
 					  le64_to_cpu(list_items[i].ns.nsze));
 		json_object_add_value_uint(device_attrs,
 					  "PhysicalSize",
