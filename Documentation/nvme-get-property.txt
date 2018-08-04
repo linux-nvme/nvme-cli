@@ -1,0 +1,62 @@
+nvme-get-property(1)
+====================
+
+NAME
+----
+nvme-get-property - Reads and shows the defined NVMe controller property
+for NVMe over Fabric
+
+SYNOPSIS
+--------
+[verse]
+'nvme get-property' <device> [--offset=<offset> | -o <offset>]
+				[--human-readable | -H ]
+
+
+DESCRIPTION
+-----------
+Reads and shows the defined NVMe controller property for NVMe over Fabric.
+
+
+OPTIONS
+-------
+-o::
+--offset::
+        The offset of the property. One of CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20
+
+-H::
+--human-readable:
+	Show the fields packed in the propery
+
+
+EXAMPLES
+--------
+* The following will run the get-property command with offset 0
++
+------------
+# nvme get-property /dev/nvme0 --offset=0x0 --human-readable
+------------
+
+
+BUGS
+----
+Currently the CAP value is truncated to 32 bits due to a limitation in
+the ioctl interface.
+
+In a recent enough kernel, the 64 bit value is shown in kernel traces.
+
+* First enable traces by this command
++
+------------
+# echo 1 > /sys/kernel/debug/tracing/events/nvme/enable
+------------
+
+* Then look for NVMe Fabrics command (0x7f) at trace
++
+------------
+/sys/kernel/debug/tracing/trace
+------------
+
+NVME
+----
+Part of the nvme-user suite
