@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <ctype.h>
 #include "json.h"
 
 static inline void fail_and_notify(void)
@@ -83,31 +84,47 @@ static struct json_value *json_create_value_float(long double number)
 
 static char *strdup_escape(const char *str)
 {
-	const char *input = str;
-	char *p, *ret;
-	int escapes;
+	size_t len;
+	FILE *fp;
+	char *ret = NULL;
 
-	if (!strlen(str))
+	if (!str)
 		return NULL;
 
-	escapes = 0;
-	while ((input = strpbrk(input, "\\\"")) != NULL) {
-		escapes++;
-		input++;
-	}
-
-	p = ret = malloc(strlen(str) + escapes + 1);
-	if (!ret)
+	/*
+	 *	glibc specific
+	 *
+	 *	Auto-expanding memory based stdio. RET and LEN updated
+	 *	when calling fflush() or fclose()
+	 */
+	if ((fp = open_memstream(&ret, &len)) == NULL)
 		fail_and_notify();
 
 	while (*str) {
-		if (*str == '\\' || *str == '\"')
-			*p++ = '\\';
-		*p++ = *str++;
-	}
-	*p = '\0';
+		int ch = *str++;
 
+		if (!isprint(ch))
+			goto error_nonprint;
+
+		switch (ch) {
+		case '\"':
+		case '\\':
+			fputc('\\', fp);
+			/* fall through */
+		default:
+			fputc(ch, fp);
+		}
+	}
+
+	/* fclose updates RET and LEN and appends zero byte */
+	fclose(fp);
 	return ret;
+
+error_nonprint:
+	fprintf(stderr, "Non printable characters in JSON input.\n");
+	fclose(fp);
+	free(ret);
+	return NULL;
 }
 
 /*
