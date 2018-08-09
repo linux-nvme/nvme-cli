@@ -621,6 +621,12 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 		p+= len;
 	}
 
+	if (cfg.ctrl_loss_tmo) {
+		len = sprintf(p, ",ctrl_loss_tmo=%s", cfg.ctrl_loss_tmo);
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+	}
 
 	switch (e->trtype) {
 	case NVMF_TRTYPE_LOOP: /* loop */
