@@ -384,6 +384,25 @@ static void show_nvme_id_ctrl_nvscc(__u8 nvscc)
 	printf("\n");
 }
 
+static void show_nvme_id_ctrl_nwpc(__u8 nwpc)
+{
+	__u8 no_wp_wp = (nwpc & 0x01);
+	__u8 wp_power_cycle = (nwpc & 0x02) >> 1;
+	__u8 wp_permanent = (nwpc & 0x04) >> 2;
+	__u8 rsvd = (nwpc & 0xF8) >> 3;
+
+	if (rsvd)
+		printf("  [7:3] : %#x\tReserved\n", rsvd);
+
+	printf("  [2:2] : %#x\tPermanent Write Protect %sSupported\n",
+		wp_permanent, wp_permanent ? "" : "Not ");
+	printf("  [1:1] : %#x\tWrite Protect Until Power Supply %sSupported\n",
+		wp_power_cycle, wp_power_cycle ? "" : "Not ");
+	printf("  [0:0] : %#x\tNo Write Protect and Write Protect Namespace %sSupported\n",
+		no_wp_wp, no_wp_wp ? "" : "Not ");
+	printf("\n");
+}
+
 static void show_nvme_id_ctrl_sgls(__le32 ctrl_sgls)
 {
 	__u32 sgls = le32_to_cpu(ctrl_sgls);
@@ -644,6 +663,7 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	printf("nabspf  : %d\n", le16_to_cpu(ns->nabspf));
 	printf("noiob   : %d\n", le16_to_cpu(ns->noiob));
 	printf("nvmcap  : %.0Lf\n", int128_to_double(ns->nvmcap));
+	printf("nsattr	: %u\n", ns->nsattr);
 	printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
 	printf("endgid  : %d\n", le16_to_cpu(ns->endgid));
 
@@ -977,6 +997,9 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 	printf("nvscc     : %d\n", ctrl->nvscc);
 	if (human)
 		show_nvme_id_ctrl_nvscc(ctrl->nvscc);
+	printf("nwpc      : %d\n", ctrl->nwpc);
+	if (human)
+		show_nvme_id_ctrl_nwpc(ctrl->nwpc);
 	printf("acwu      : %d\n", le16_to_cpu(ctrl->acwu));
 	printf("sgls      : %x\n", le32_to_cpu(ctrl->sgls));
 	if (human)
@@ -1522,6 +1545,7 @@ char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_RESV_MASK:	return "Reservation Notification Mask";
 	case NVME_FEAT_RESV_PERSIST:	return "Reservation Persistence";
 	case NVME_FEAT_TIMESTAMP:	return "Timestamp";
+	case NVME_FEAT_WRITE_PROTECT:	return "Namespce Write Protect";
 	case NVME_FEAT_HCTM:		return "Host Controlled Thermal Management";
 	default:			return "Unknown";
 	}
@@ -1577,6 +1601,7 @@ char *nvme_status_to_string(__u32 status)
 	case NVME_SC_SANITIZE_FAILED:		return "SANITIZE_FAILED: The most recent sanitize operation failed and no recovery actions has been successfully completed";
 	case NVME_SC_SANITIZE_IN_PROGRESS:	return "SANITIZE_IN_PROGRESS: The requested function is prohibited while a sanitize operation is in progress";
 	case NVME_SC_LBA_RANGE:			return "LBA_RANGE: The command references a LBA that exceeds the size of the namespace";
+	case NVME_SC_NS_WRITE_PROTECTED:	return "NS_WRITE_PROTECTED: The command is prohibited while the namespace is write protected by the host.";
 	case NVME_SC_CAP_EXCEEDED:		return "CAP_EXCEEDED: The execution of the command has caused the capacity of the namespace to be exceeded";
 	case NVME_SC_NS_NOT_READY:		return "NS_NOT_READY: The namespace is not ready to be accessed";
 	case NVME_SC_RESERVATION_CONFLICT:	return "RESERVATION_CONFLICT: The command was aborted due to a conflict with a reservation held on the accessed namespace";
@@ -1891,6 +1916,9 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 	case NVME_FEAT_RESV_PERSIST:
 		printf("\tPersist Through Power Loss (PTPL): %s\n", (result & 0x00000001) ? "True":"False");
 		break;
+	case NVME_FEAT_WRITE_PROTECT:
+		printf("\tNamespace Write Protect: %s\n", result != NVME_NS_NO_WRITE_PROTECT ? "True" :  "False");
+		break;
 	case NVME_FEAT_TIMESTAMP:
 		show_timestamp((struct nvme_timestamp *)buf);
 		break;
@@ -2057,6 +2085,7 @@ void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	json_object_add_value_int(root, "nabspf", le16_to_cpu(ns->nabspf));
 	json_object_add_value_int(root, "noiob", le16_to_cpu(ns->noiob));
 	json_object_add_value_float(root, "nvmcap", nvmcap);
+	json_object_add_value_int(root, "nsattr", ns->nsattr);
 	json_object_add_value_int(root, "nvmsetid", le16_to_cpu(ns->nvmsetid));
 	json_object_add_value_int(root, "endgid", le16_to_cpu(ns->endgid));
 
@@ -2165,6 +2194,7 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vs)(
 	json_object_add_value_int(root, "awun", le16_to_cpu(ctrl->awun));
 	json_object_add_value_int(root, "awupf", le16_to_cpu(ctrl->awupf));
 	json_object_add_value_int(root, "nvscc", ctrl->nvscc);
+	json_object_add_value_int(root, "nwpc", ctrl->nwpc);
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
 	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
 
