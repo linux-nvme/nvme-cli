@@ -25,6 +25,7 @@ COMMAND_LIST(
 	ENTRY("fw-log", "Retrieve FW Log, show it", get_fw_log)
 	ENTRY("changed-ns-list-log", "Retrieve Changed Namespace List, show it", get_changed_ns_list_log)
 	ENTRY("smart-log", "Retrieve SMART Log, show it", get_smart_log)
+	ENTRY("ana-log", "Retrieve ANA Log, show it", get_ana_log)
 	ENTRY("error-log", "Retrieve Error Log, show it", get_error_log)
 	ENTRY("effects-log", "Retrieve Command Effects Log, show it", get_effects_log)
 	ENTRY("endurance-log", "Retrieve Endurance Group Log, show it", get_endurance_log)
