@@ -124,3 +124,5 @@ linknvme:nvme-discover[1]::
 linknvme:nvme-connect[1]::
 	Connect to an NVMe-over-Fabrics subsystem
 
+linknvme:nvme-get-property[1]::
+	Reads and shows NVMe-over-Fabrics controller property
