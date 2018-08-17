@@ -14,7 +14,9 @@ SYNOPSIS
 		[--trsvcid=<trsvcid>      | -s <trsvcid>]
 		[--host-traddr=<traddr>   | -w <traddr>]
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
-		[--raw=<filename>         | -r <filename>]
+		[--raw=<filename>	  | -r <filename>]
+		[--reconnect-delay=<#>	  | -c <#>]
+		[--ctrl-loss-tmo=<#>	  | -l <#>]
 
 DESCRIPTION
 -----------
@@ -98,6 +100,15 @@ OPTIONS
 	This field will take the output of the 'nvme discover' command
 	and dump it to a raw binary file. By default 'nvme discover' will
 	dump the output to stdout.
+
+-c <#>::
+--reconnect-delay=<#>::
+	Overrides the default delay (in seconds) before reconnect is attempted
+	after a connect loss.
+
+-l <#>::
+--ctrl-loss-tmo=<#>::
+	Overrides the default controller loss timeout period (in seconds).
 
 EXAMPLES
 --------
