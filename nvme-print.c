@@ -1460,7 +1460,8 @@ void show_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname)
 		offset += sizeof(*desc);
 		printf("grpid	:	%u\n", le32_to_cpu(desc->grpid));
 		printf("nnsids	:	%u\n", le32_to_cpu(desc->nnsids));
-		printf("chgcnt	:	%"PRIu64"\n", le64_to_cpu(desc->chgcnt));
+		printf("chgcnt	:	%"PRIu64"\n",
+		       (uint64_t)le64_to_cpu(desc->chgcnt));
 		printf("state	:	%s\n",
 				nvme_ana_state_to_string(desc->state));
 		for (j = 0; j < le32_to_cpu(desc->nnsids); j++)
