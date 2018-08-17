@@ -245,12 +245,13 @@ static void huawei_print_list_item(struct huawei_list_item list_item,
 	char usage[128];
 	char nguid_buf[2 * sizeof(list_item.ns.nguid) + 1];
 	char *nguid = nguid_buf;
+	int i;
 
 	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
 		nsze, s_suffix);
 
 	memset(nguid, 0, sizeof(nguid_buf));
-	for (int i = 0; i < sizeof(list_item.ns.nguid); i++)
+	for (i = 0; i < sizeof(list_item.ns.nguid); i++)
 		nguid += sprintf(nguid, "%02x", list_item.ns.nguid[i]);
 
 	printf("%-*.*s %-*.*s %-*.*s %-*d %-*.*s %-*.*s\n",
