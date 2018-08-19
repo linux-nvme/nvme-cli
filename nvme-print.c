@@ -2825,7 +2825,7 @@ void json_print_nvme_subsystem_list(struct subsys_list_item *slist, int n)
 	json_print_object(root, NULL);
 }
 
-void show_registers_cap(struct nvme_bar_cap *cap)
+static void show_registers_cap(struct nvme_bar_cap *cap)
 {
 	printf("\tMemory Page Size Maximum      (MPSMAX): %u bytes\n", 1 <<  (12 + ((cap->mpsmax_mpsmin & 0xf0) >> 4)));
 	printf("\tMemory Page Size Minimum      (MPSMIN): %u bytes\n", 1 <<  (12 + (cap->mpsmax_mpsmin & 0x0f)));
