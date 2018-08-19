@@ -238,7 +238,7 @@ typedef struct _WDC_DE_CSA_FEATURE_ID_LIST
     __u8 featureName[WDC_DE_GENERIC_BUFFER_SIZE];
 } WDC_DE_CSA_FEATURE_ID_LIST;
 
-WDC_DE_CSA_FEATURE_ID_LIST deFeatureIdList[] =
+static WDC_DE_CSA_FEATURE_ID_LIST deFeatureIdList[] =
 {
 	{0x00                                   , "Dummy Placeholder"},
 	{FID_ARBITRATION                        , "Arbitration"},
