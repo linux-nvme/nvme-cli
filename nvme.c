@@ -4451,13 +4451,11 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 		if (!metadata) {
 			fprintf(stderr, "can not allocate metadata payload\n");
 			err = ENOMEM;
-			goto close_fd;
+			goto close_wfd;
 		}
 	}
 	if (cfg.data_len) {
 		if (posix_memalign(&data, getpagesize(), cfg.data_len)) {
-			if (metadata)
-				free(metadata);
 			fprintf(stderr, "can not allocate data payload\n");
 			err = ENOMEM;
 			goto free_metadata;
@@ -4524,6 +4522,10 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
  free_metadata:
 	if (cfg.metadata_len)
 		free(metadata);
+
+ close_wfd:
+	if (strlen(cfg.input_file))
+		close(wfd);
  close_fd:
 	close(fd);
 	return err;
