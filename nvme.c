@@ -2585,7 +2585,7 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 
 	if (cfg.sanact == NVME_SANITIZE_ACT_OVERWRITE) {
-		if (!(cfg.owpass >= 0 && cfg.owpass <= 16)) {
+		if (cfg.owpass > 16) {
 			fprintf(stderr, "OWPASS out of range [0-16]\n");
 			ret = EINVAL;
 			goto close_fd;
