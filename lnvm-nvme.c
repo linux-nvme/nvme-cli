@@ -95,7 +95,8 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 	const char *raw_binary = "show infos in binary format";
 	const char *human_readable = "show infos in readable format";
 	const char *namespace_id = "identifier of desired namespace. default: 1";
-	unsigned int fd, flags = 0;
+	unsigned int flags = 0;
+	int fd;
 
 	struct config {
 		__u32 namespace_id;
