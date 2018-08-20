@@ -325,7 +325,7 @@ struct nvme_id_ns {
 	__u8			nvmcap[16];
 	__u8			rsvd64[28];
 	__le32			anagrpid;
-	__u8			rsvd96[4];
+	__u8			rsvd96[3];
 	__u8			nsattr;
 	__le16			nvmsetid;
 	__le16			endgid;
