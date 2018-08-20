@@ -353,9 +353,9 @@ static int nvmf_get_log_page_discovery(const char *dev_path,
 
 	/* needs to be freed by the caller */
 	*logp = log;
+	error = DISC_OK;
 	goto out_close;
 
-	error = DISC_OK;
 out_free_log:
 	free(log);
 out_close:
