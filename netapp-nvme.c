@@ -63,6 +63,9 @@ static void netapp_convert_string(char *dst, char *src, unsigned int count)
 	memset(dst, 0, count + 1);
 	for (i = 0; i < count; i++)
 		dst[i] = src[i * 2 + 1];
+	/* the json routines won't accept empty strings */
+	if (strlen(dst) == 0 && count)
+		dst[0] = ' ';
 }
 
 static void netapp_nguid_to_str(char *str, __u8 *nguid)
