@@ -643,7 +643,7 @@ static void show_nvme_id_ns_fpi(__u8 fpi)
 	printf("  [7:7] : %#x\tFormat Progress Indicator %sSupported\n",
 		fpis, fpis ? "" : "Not ");
 	if (fpis || (!fpis && fpii))
-	printf("  [6:0] : %#x\tFormat Progress Indicator (Remaining %d%%)\n",
+		printf("  [6:0] : %#x\tFormat Progress Indicator (Remaining %d%%)\n",
 		fpii, fpii);
 	printf("\n");
 }
