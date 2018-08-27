@@ -1394,7 +1394,7 @@ static void free_ctrl_list_item(struct ctrl_list_item *ctrls)
 	free(ctrls->address);
 }
 
-int get_nvme_subsystem_info(char *name, char *path,
+static int get_nvme_subsystem_info(char *name, char *path,
 				struct subsys_list_item *item)
 {
 	char ctrl_path[512];
