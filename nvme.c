@@ -1652,37 +1652,50 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	list_items = calloc(n, sizeof(*list_items));
 	if (!list_items) {
 		fprintf(stderr, "can not allocate controller list payload\n");
-		return ENOMEM;
+		ret = -ENOMEM;
+		goto cleanup_devices;
 	}
 
 	for (i = 0; i < n; i++) {
 		snprintf(path, sizeof(path), "%s%s", dev, devices[i]->d_name);
 		fd = open(path, O_RDONLY);
 		if (fd < 0) {
-			fprintf(stderr, "can not open %s: %s\n", path,
+			fprintf(stderr, "cannot open %s: %s\n", path,
 					strerror(errno));
-			return errno;
+			ret = -errno;
+			goto cleanup_list_items;
 		}
 		ret = get_nvme_info(fd, &list_items[list_cnt], path);
 		close(fd);
-		if (ret)
-			fprintf(stderr, "%s: failed to obtain nvme info: %s\n",
-				path, strerror(errno));
-		else
+		if (ret == 0) {
 			list_cnt++;
+		}
+		else if (ret > 0) {
+			fprintf(stderr, "%s: failed to obtain nvme info: %s\n",
+					path, nvme_status_to_string(ret));
+		}
+		else {
+			fprintf(stderr, "%s: failed to obtain nvme info: %s\n",
+					path, strerror(-ret));
+		}
 	}
 
-	if (fmt == JSON)
-		json_print_list_items(list_items, list_cnt);
-	else
-		show_list_items(list_items, list_cnt);
+	if (list_cnt) {
+		if (fmt == JSON)
+			json_print_list_items(list_items, list_cnt);
+		else
+			show_list_items(list_items, list_cnt);
+	}
 
+ cleanup_list_items:
+	free(list_items);
+
+ cleanup_devices:
 	for (i = 0; i < n; i++)
 		free(devices[i]);
 	free(devices);
-	free(list_items);
 
-	return 0;
+	return ret;
 }
 
 int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root))
