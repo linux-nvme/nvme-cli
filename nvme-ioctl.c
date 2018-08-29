@@ -74,7 +74,7 @@ int nvme_get_nsid(int fd)
 	int err = fstat(fd, &nvme_stat);
 
 	if (err < 0)
-		return err;
+		return -errno;
 
 	if (!S_ISBLK(nvme_stat.st_mode)) {
 		fprintf(stderr,
