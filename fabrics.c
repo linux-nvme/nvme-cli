@@ -235,6 +235,8 @@ static int remove_ctrl_by_path(char *sysfs_path)
 	fd = open(sysfs_path, O_WRONLY);
 	if (fd < 0) {
 		ret = errno;
+		fprintf(stderr, "Failed to open %s: %s\n", sysfs_path,
+				strerror(errno));
 		goto out;
 	}
 
@@ -286,6 +288,8 @@ static int nvmf_get_log_page_discovery(const char *dev_path,
 	fd = open(dev_path, O_RDWR);
 	if (fd < 0) {
 		error = -errno;
+		fprintf(stderr, "Failed to open %s: %s\n",
+				dev_path, strerror(errno));
 		goto out;
 	}
 
@@ -921,8 +925,11 @@ static int disconnect_subsys(char *nqn, char *ctrl)
 		goto free;
 
 	fd = open(sysfs_nqn_path, O_RDONLY);
-	if (fd < 0)
+	if (fd < 0) {
+		fprintf(stderr, "Failed to open %s: %s\n",
+				sysfs_nqn_path, strerror(errno));
 		goto free;
+	}
 
 	if (read(fd, subsysnqn, NVMF_NQN_SIZE) < 0)
 		goto close;

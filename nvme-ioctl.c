@@ -525,7 +525,7 @@ int nvme_set_feature(int fd, __u32 nsid, __u8 fid, __u32 value, __u32 cdw12,
 			    cdw12, data_len, data, result);
 }
 
-int nvme_property(int fd, __u8 fctype, __le32 off, __le64 *value, __u8 attrib)
+static int nvme_property(int fd, __u8 fctype, __le32 off, __le64 *value, __u8 attrib)
 {
 	int err;
 	struct nvme_admin_cmd cmd = {

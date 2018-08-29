@@ -346,7 +346,8 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
-		fprintf(stderr, "Failed to open output file!\n");
+		fprintf(stderr, "Failed to open output file %s: %s!\n",
+				cfg.file_name, strerror(errno));
 		err = output;
 		goto close_fd;
 	}
@@ -1225,7 +1226,8 @@ static void *get_registers(void)
 		fd = open(path, O_RDONLY);
 	}
 	if (fd < 0) {
-		fprintf(stderr, "%s did not find a pci resource\n", base);
+		fprintf(stderr, "%s did not find a pci resource, open failed %s\n",
+				base, strerror(errno));
 		return NULL;
 	}
 
@@ -1251,8 +1253,11 @@ static char *get_nvme_subsnqn(char *path)
 	snprintf(sspath, sizeof(sspath), "%s/subsysnqn", path);
 
 	fd = open(sspath, O_RDONLY);
-	if (fd < 0)
+	if (fd < 0) {
+		fprintf(stderr, "Failed to open %s: %s\n",
+				sspath, strerror(errno));
 		return NULL;
+	}
 
 	subsysnqn = calloc(1, 256);
 	if (!subsysnqn)
@@ -1289,8 +1294,11 @@ static char *get_nvme_ctrl_transport(char *path)
 		goto err_free_trpath;
 
 	fd = open(trpath, O_RDONLY);
-	if (fd < 0)
+	if (fd < 0) {
+		fprintf(stderr, "Failed to open %s: %s\n",
+				trpath, strerror(errno));
 		goto err_free_tr;
+	}
 
 	ret = read(fd, transport, 1024);
 	if (ret < 0)
@@ -1331,8 +1339,11 @@ static char *get_nvme_ctrl_address(char *path)
 		goto err_free_addrpath;
 
 	fd = open(addrpath, O_RDONLY);
-	if (fd < 0)
+	if (fd < 0) {
+		fprintf(stderr, "Failed to open %s: %s\n",
+				addrpath, strerror(errno));
 		goto err_free_addr;
+	}
 
 	ret = read(fd, address, 1024);
 	if (ret < 0)
@@ -1383,7 +1394,7 @@ static void free_ctrl_list_item(struct ctrl_list_item *ctrls)
 	free(ctrls->address);
 }
 
-int get_nvme_subsystem_info(char *name, char *path,
+static int get_nvme_subsystem_info(char *name, char *path,
 				struct subsys_list_item *item)
 {
 	char ctrl_path[512];
@@ -1660,7 +1671,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		snprintf(path, sizeof(path), "%s%s", dev, devices[i]->d_name);
 		fd = open(path, O_RDONLY);
 		if (fd < 0) {
-			fprintf(stderr, "cannot open %s: %s\n", path,
+			fprintf(stderr, "Failed to open %s: %s\n", path,
 					strerror(errno));
 			ret = -errno;
 			goto cleanup_list_items;
@@ -2306,7 +2317,8 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	fw_fd = open(cfg.fw, O_RDONLY);
 	cfg.offset <<= 2;
 	if (fw_fd < 0) {
-		fprintf(stderr, "no firmware file provided\n");
+		fprintf(stderr, "Failed to open firmware file %s: %s\n",
+				cfg.fw, strerror(errno));
 		err = EINVAL;
 		goto close_fd;
 	}
@@ -2981,7 +2993,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		if (strlen(cfg.file)) {
 			ffd = open(cfg.file, O_RDONLY);
 			if (ffd <= 0) {
-				fprintf(stderr, "no firmware file provided\n");
+				fprintf(stderr, "Failed to open file %s: %s\n",
+						cfg.file, strerror(errno));
 				err = EINVAL;
 				goto free;
 			}
@@ -3072,7 +3085,8 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	sec_fd = open(cfg.file, O_RDONLY);
 	if (sec_fd < 0) {
-		fprintf(stderr, "no firmware file provided\n");
+		fprintf(stderr, "Failed to open %s: %s\n",
+				cfg.file, strerror(errno));
 		err = EINVAL;
 		goto close_fd;
 	}
@@ -3222,7 +3236,8 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
                 if (strlen(cfg.file)) {
                         ffd = open(cfg.file, O_RDONLY);
                         if (ffd <= 0) {
-                                fprintf(stderr, "no firmware file provided\n");
+				fprintf(stderr, "Failed to open file %s: %s\n",
+						cfg.file, strerror(errno));
 				err = EINVAL;
 				goto free;
                         }
