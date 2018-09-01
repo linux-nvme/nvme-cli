@@ -1500,7 +1500,7 @@ static void free_subsys_list_item(struct subsys_list_item *item)
 	free(item->name);
 }
 
-static void free_subsys_list(struct subsys_list_item *slist, int n)
+void free_subsys_list(struct subsys_list_item *slist, int n)
 {
 	int i;
 
@@ -1510,13 +1510,50 @@ static void free_subsys_list(struct subsys_list_item *slist, int n)
 	free(slist);
 }
 
-static int list_subsys(int argc, char **argv, struct command *cmd,
-		       struct plugin *plugin)
+struct subsys_list_item *get_subsys_list(int *subcnt)
 {
 	char path[310];
 	struct dirent **subsys;
 	struct subsys_list_item *slist;
-	int fmt, n, i, ret = 0, subcnt = 0;
+	int n, i, ret = 0;
+
+	n = scandir(subsys_dir, &subsys, scan_subsys_filter, alphasort);
+	if (n < 0) {
+		fprintf(stderr, "no NVMe subsystem(s) detected.\n");
+		return NULL;
+	}
+
+	slist = calloc(n, sizeof(struct subsys_list_item));
+	if (!slist)
+		goto free_subsys;
+
+	for (i = 0; i < n; i++) {
+		snprintf(path, sizeof(path), "%s%s", subsys_dir,
+			subsys[i]->d_name);
+		ret = get_nvme_subsystem_info(subsys[i]->d_name, path,
+				&slist[*subcnt]);
+		if (ret) {
+			fprintf(stderr,
+				"%s: failed to get subsystem info: %s\n",
+				path, strerror(errno));
+			free_subsys_list_item(&slist[*subcnt]);
+		} else
+			(*subcnt)++;
+	}
+
+free_subsys:
+	for (i = 0; i < n; i++)
+		free(subsys[i]);
+	free(subsys);
+
+	return slist;
+}
+
+static int list_subsys(int argc, char **argv, struct command *cmd,
+		struct plugin *plugin)
+{
+	struct subsys_list_item *slist;
+	int fmt, ret, subcnt = 0;
 	const char *desc = "Retrieve information for subsystems";
 	struct config {
 		char *output_format;
@@ -1537,47 +1574,17 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		return ret;
 
 	fmt = validate_output_format(cfg.output_format);
-
 	if (fmt != JSON && fmt != NORMAL)
 		return -EINVAL;
-	n = scandir(subsys_dir, &subsys, scan_subsys_filter, alphasort);
-	if (n < 0) {
-		fprintf(stderr, "no NVMe subsystem(s) detected.\n");
-		return n;
-	}
 
-	slist = calloc(n, sizeof(struct subsys_list_item));
-	if (!slist) {
-		ret = ENOMEM;
-		goto free_subsys;
-	}
-
-	for (i = 0; i < n; i++) {
-		snprintf(path, sizeof(path), "%s%s", subsys_dir,
-			subsys[i]->d_name);
-		ret = get_nvme_subsystem_info(subsys[i]->d_name, path,
-				&slist[subcnt]);
-		if (ret) {
-			fprintf(stderr,
-				"%s: failed to get subsystem info: %s\n",
-				path, strerror(errno));
-			free_subsys_list_item(&slist[subcnt]);
-		} else
-			subcnt++;
-	}
+	slist = get_subsys_list(&subcnt);
 
 	if (fmt == JSON)
 		json_print_nvme_subsystem_list(slist, subcnt);
 	else
 		show_nvme_subsystem_list(slist, subcnt);
 
-free_subsys:
 	free_subsys_list(slist, subcnt);
-
-	for (i = 0; i < n; i++)
-		free(subsys[i]);
-	free(subsys);
-
 	return ret;
 }
 
