@@ -762,7 +762,8 @@ static int do_discover(char *argstr, bool connect)
 		fprintf(stderr, "Get discovery log entries failed.\n");
 		break;
 	case DISC_NO_LOG:
-		fprintf(stderr, "No discovery log entries to fetch.\n");
+		fprintf(stdout, "No discovery log entries to fetch.\n");
+		ret = DISC_OK;
 		break;
 	case DISC_NOT_EQUAL:
 		fprintf(stderr,
