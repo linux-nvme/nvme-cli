@@ -1048,3 +1048,32 @@ int disconnect(const char *desc, int argc, char **argv)
 
 	return ret;
 }
+
+int disconnect_all(const char *desc, int argc, char **argv)
+{
+	struct subsys_list_item *slist;
+	int i, j, ret = 0, subcnt = 0;
+	const struct argconfig_commandline_options command_line_options[] = {
+		{NULL},
+	};
+
+	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg,
+			sizeof(cfg));
+	if (ret)
+		return ret;
+
+	slist = get_subsys_list(&subcnt);
+	for (i = 0; i < subcnt; i++) {
+		struct subsys_list_item *subsys = &slist[i];
+
+		for (j = 0; j < subsys->nctrls; j++) {
+			struct ctrl_list_item *ctrl = &subsys->ctrls[j];
+
+			ret = disconnect_by_device(ctrl->name);
+			if (ret)
+				goto out;
+		}
+	}
+out:
+	return ret;
+}

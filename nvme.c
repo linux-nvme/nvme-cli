@@ -4628,6 +4628,12 @@ static int disconnect_cmd(int argc, char **argv, struct command *command, struct
 	return disconnect(desc, argc, argv);
 }
 
+static int disconnect_all_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Disconnect from all connected NVMeoF subsystems";
+	return disconnect_all(desc, argc, argv);
+}
+
 void register_extension(struct plugin *plugin)
 {
 	plugin->parent = &nvme;
