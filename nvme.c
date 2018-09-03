@@ -1245,7 +1245,7 @@ static const char *subsys_dir = "/sys/class/nvme-subsystem/";
 
 static char *get_nvme_subsnqn(char *path)
 {
-	char sspath[319];
+	char sspath[FILENAME_MAX];
 	char *subsysnqn;
 	int fd;
 	int ret;
