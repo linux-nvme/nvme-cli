@@ -148,6 +148,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	const struct argconfig_commandline_options *s;
 	int c, option_index = 0, short_index = 0, options_count = 0;
 	void *value_addr;
+	int ret = -EINVAL;
 
 	errno = 0;
 	for (s = options; s->option != NULL; s++)
@@ -155,6 +156,13 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 
 	long_opts = malloc(sizeof(struct option) * (options_count + 2));
 	short_opts = malloc(sizeof(*short_opts) * (options_count * 3 + 4));
+
+	if (!long_opts || !short_opts) {
+		fprintf(stderr, "failed to allocate memory for opts: %s\n",
+				strerror(errno));
+		ret = -errno;
+		goto out;
+	}
 
 	for (s = options; (s->option != NULL) && (option_index < options_count);
 	     s++) {
@@ -365,7 +373,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
  out:
 	free(short_opts);
 	free(long_opts);
-	return -EINVAL;
+	return ret;
 }
 
 int argconfig_parse_subopt_string(char *string, char **options,

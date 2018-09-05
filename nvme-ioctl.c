@@ -251,8 +251,10 @@ struct nvme_dsm_range *nvme_setup_dsm_range(__u32 *ctx_attrs, __u32 *llbas,
 	int i;
 	struct nvme_dsm_range *dsm = malloc(nr_ranges * sizeof(*dsm));
 
-	if (!dsm)
+	if (!dsm) {
+		fprintf(stderr, "malloc: %s\n", strerror(errno));
 		return NULL;
+	}
 	for (i = 0; i < nr_ranges; i++) {
 		dsm[i].cattr = cpu_to_le32(ctx_attrs[i]);
 		dsm[i].nlb = cpu_to_le32(llbas[i]);
@@ -599,8 +601,10 @@ int nvme_get_properties(int fd, void **pbar)
 	int size = getpagesize();
 
 	*pbar = malloc(size);
-	if (!*pbar)
-		return ret;
+	if (!*pbar) {
+		fprintf(stderr, "malloc: %s\n", strerror(errno));
+		return -ENOMEM;
+	}
 
 	memset(*pbar, 0xff, size);
 	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ; offset += advance) {

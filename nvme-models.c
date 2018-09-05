@@ -308,8 +308,10 @@ char *nvme_product_name(int id)
 		goto error0;
 
 	line = malloc(1024);
-	if (!line)
+	if (!line) {
+		fprintf(stderr, "malloc: %s\n", strerror(errno));
 		goto error0;
+	}
 
 	while ((amnt = getline(&line, &size, file)) != -1) {
 		if (is_comment(line) && !is_class_info(line))
@@ -332,5 +334,5 @@ char *nvme_product_name(int id)
 error0:
 	fclose(file);
 error1:
-	return strdup("Unknown Device");
+	return !line ? strdup("NULL") : strdup("Unknown Device");
 }

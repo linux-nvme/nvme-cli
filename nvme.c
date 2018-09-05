@@ -356,7 +356,8 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	hdr = malloc(bs);
 	page_log = malloc(bs);
 	if (!hdr || !page_log) {
-		fprintf(stderr, "Failed to allocate %zu bytes for log\n", bs);
+		fprintf(stderr, "Failed to allocate %zu bytes for log: %s\n",
+				bs, strerror(errno));
 		err = ENOMEM;
 		goto free_mem;
 	}
@@ -805,7 +806,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 		log = malloc(cfg.log_len);
 		if (!log) {
-			fprintf(stderr, "could not alloc buffer for log\n");
+			fprintf(stderr, "could not alloc buffer for log: %s\n",
+					strerror(errno));
 			err = EINVAL;
 			goto close_fd;
 		}
@@ -4049,7 +4051,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 	if (cfg.metadata_size) {
 		mbuffer = malloc(cfg.metadata_size);
 		if (!mbuffer) {
-			fprintf(stderr, "can not allocate io metadata payload\n");
+			fprintf(stderr, "can not allocate io metadata "
+					"payload: %s\n", strerror(errno));
 			err = ENOMEM;
 			goto free_buffer;
 		}
@@ -4477,7 +4480,8 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	if (cfg.metadata_len) {
 		metadata = malloc(cfg.metadata_len);
 		if (!metadata) {
-			fprintf(stderr, "can not allocate metadata payload\n");
+			fprintf(stderr, "can not allocate metadata "
+					"payload: %s\n", strerror(errno));
 			err = ENOMEM;
 			goto close_wfd;
 		}
