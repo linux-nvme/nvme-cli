@@ -2,12 +2,12 @@
 .\"     Title: nvme-discover
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/05/2018
+.\"      Date: 09/05/2018
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCOVER" "1" "06/05/2018" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCOVER" "1" "09/05/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,6 +39,8 @@ nvme-discover \- Send Get Log Page request to Discovery Controller\&.
                 [\-\-host\-traddr=<traddr>   | \-w <traddr>]
                 [\-\-hostnqn=<hostnqn>      | \-q <hostnqn>]
                 [\-\-raw=<filename>         | \-r <filename>]
+                [\-\-reconnect\-delay=<#>    | \-c <#>]
+                [\-\-ctrl\-loss\-tmo=<#>      | \-l <#>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -117,6 +119,16 @@ This field will take the output of the
 command and dump it to a raw binary file\&. By default
 \fInvme discover\fR
 will dump the output to stdout\&.
+.RE
+.PP
+\-c <#>, \-\-reconnect\-delay=<#>
+.RS 4
+Overrides the default delay (in seconds) before reconnect is attempted after a connect loss\&.
+.RE
+.PP
+\-l <#>, \-\-ctrl\-loss\-tmo=<#>
+.RS 4
+Overrides the default controller loss timeout period (in seconds)\&.
 .RE
 .SH "EXAMPLES"
 .sp
