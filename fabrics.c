@@ -282,7 +282,7 @@ static int nvmf_get_log_page_discovery(const char *dev_path,
 		struct nvmf_disc_rsp_page_hdr **logp, int *numrec)
 {
 	struct nvmf_disc_rsp_page_hdr *log;
-	unsigned int log_size = 0;
+	unsigned int hdr_size;
 	unsigned long genctr;
 	int error, fd, max_retries = MAX_DISC_RETRIES, retries = 0;
 
@@ -297,26 +297,28 @@ static int nvmf_get_log_page_discovery(const char *dev_path,
 	/* first get_log_page we just need numrec entry from discovery hdr.
 	 * host supplies its desired bytes via dwords, per NVMe spec.
 	 */
-	log_size = round_up((offsetof(struct nvmf_disc_rsp_page_hdr, numrec) +
+	hdr_size = round_up((offsetof(struct nvmf_disc_rsp_page_hdr, numrec) +
 			    sizeof(log->numrec)), sizeof(__u32));
 
 	/*
 	 * Issue first get log page w/numdl small enough to retrieve numrec.
 	 * We just want to know how many records to retrieve.
 	 */
-	log = calloc(1, log_size);
+	log = calloc(1, hdr_size);
 	if (!log) {
 		error = -ENOMEM;
 		goto out_close;
 	}
 
-	error = nvme_discovery_log(fd, log, log_size);
+	error = nvme_discovery_log(fd, log, hdr_size);
 	if (error) {
 		error = DISC_GET_NUMRECS;
 		goto out_free_log;
 	}
 
 	do {
+		unsigned int log_size;
+
 		/* check numrec limits */
 		*numrec = le64_to_cpu(log->numrec);
 		genctr = le64_to_cpu(log->genctr);
@@ -352,6 +354,18 @@ static int nvmf_get_log_page_discovery(const char *dev_path,
 			goto out_free_log;
 		}
 
+		/*
+		 * The above call to nvme_discovery_log() might result
+		 * in several calls (with different offsets), so we need
+		 * to fetch the header again to have the most up-to-date
+		 * value for the generation counter
+		 */
+		genctr = le64_to_cpu(log->genctr);
+		error = nvme_discovery_log(fd, log, hdr_size);
+		if (error) {
+			error = DISC_GET_LOG;
+			goto out_free_log;
+		}
 	} while (genctr != le64_to_cpu(log->genctr) &&
 		 ++retries < max_retries);
 
