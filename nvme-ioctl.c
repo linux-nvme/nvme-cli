@@ -421,8 +421,30 @@ int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
 
 int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
 {
-	return nvme_get_log13(fd, nsid, log_id, NVME_NO_LOG_LSP, NVME_NO_LOG_LPO,
-			      0, 0, data_len, data);
+	void *ptr = data;
+	__u32 offset = 0, xfer_len = data_len;
+	int ret;
+
+	/*
+	 * 4k is the smallest possible transfer unit, so by
+	 * restricting ourselves for 4k transfers we avoid having
+	 * to check the MDTS value of the controller.
+	 */
+	do {
+		xfer_len = data_len - offset;
+		if (xfer_len > 4096)
+			xfer_len = 4096;
+
+		ret = nvme_get_log13(fd, nsid, log_id, NVME_NO_LOG_LSP,
+				     offset, 0, false, xfer_len, ptr);
+		if (ret)
+			return ret;
+
+		offset += xfer_len;
+		ptr += xfer_len;
+	} while (offset < data_len);
+
+	return 0;
 }
 
 int nvme_get_telemetry_log(int fd, void *lp, int generate_report,
