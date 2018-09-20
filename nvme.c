@@ -1072,7 +1072,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	__u16 ctrlist[2048];
 
 	const char *namespace_id = "namespace to attach";
-	const char *cont = "optional comma-sep controllers list";
+	const char *cont = "optional comma-sep controller id list";
 
 	struct config {
 		char  *cntlist;
@@ -1102,6 +1102,14 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 
 	num = argconfig_parse_comma_sep_array(cfg.cntlist,
 					list, 2047);
+
+    if (num == -1) {
+		fprintf(stderr, "%s: controller id list is required\n",
+						cmd->name);
+		err = EINVAL;
+		goto close_fd;
+    }
+
 	for (i = 0; i < num; i++)
 		ctrlist[i] = (uint16_t)list[i];
 
