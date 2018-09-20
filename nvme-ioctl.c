@@ -327,18 +327,6 @@ int nvme_resv_report(int fd, __u32 nsid, __u32 numd, __u32 cdw11, void *data)
 	return nvme_submit_io_passthru(fd, &cmd);
 }
 
-int nvme_passthru_admin(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
-			__u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10,
-			__u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14,
-			__u32 cdw15, __u32 data_len, void *data,
-			__u32 metadata_len, void *metadata, __u32 timeout_ms)
-{
-	return nvme_passthru(fd, NVME_IOCTL_ADMIN_CMD, opcode, flags, rsvd,
-			     nsid, cdw2, cdw3, cdw10, cdw11, cdw12, cdw13,
-			     cdw14, cdw15, data_len, data, metadata_len,
-			     metadata, timeout_ms, NULL);
-}
-
 int nvme_identify13(int fd, __u32 nsid, __u32 cdw10, __u32 cdw11, void *data)
 {
 	struct nvme_admin_cmd cmd = {

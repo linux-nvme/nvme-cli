@@ -1060,34 +1060,6 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 
 }
 
-int nvme_get_log_with_offset(int fd, __u32 nsid, __u16 log_id, __u32 data_len, __u64 offset, void *data)
-{
-	struct nvme_admin_cmd cmd = {
-		.opcode		= nvme_admin_get_log_page,
-		.nsid		= nsid,
-		.addr		= (__u64)(uintptr_t) data,
-		.data_len	= data_len,
-	};
-	__u32 numd = (data_len >> 2) - 1;
-	__u16 numdu = numd >> 16, numdl = numd & 0xffff;
-
-	cmd.cdw10 = log_id | (numdl << 16);
-	cmd.cdw11 = numdu;
-	cmd.cdw12 = (__u32)(offset & 0xffffffff);
-	cmd.cdw13 = (__u32)((offset >> 32) & 0xffffffff);
-
-	/***************************************************************************
-    printf("nvme_get_log_with_offset Parameter Details - \n");
-    printf("data_len : %d cdw10 : %x cdw11 : %x cdw12 : %x cdw13 : %x\n", cmd.data_len, cmd.cdw10, cmd.cdw11, cmd.cdw12, cmd.cdw13);
-	***************************************************************************/
-	return nvme_passthru_admin(fd, cmd.opcode, 0, 0,
-				   cmd.nsid, 0, 0,
-				   cmd.cdw10, cmd.cdw11, cmd.cdw12,
-				   cmd.cdw13, 0, 0,
-				   cmd.data_len, data, 0,
-				   NULL, 100);
-}
-
 static int get_host_tele(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Capture the Telemetry Host-Initiated Data in either " \
@@ -1130,9 +1102,10 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 	cfg.log_id = (cfg.log_id << 8) | 0x07;
 
-	err = nvme_get_log_with_offset(fd, cfg.namespace_id, cfg.log_id, sizeof(tele_log), offset, (void *)(&tele_log));
+	err = nvme_get_log13(fd, cfg.namespace_id, cfg.log_id,
+			     NVME_NO_LOG_LSP, offset, 0, false,
+			     sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
-
 		maxBlk = tele_log.tele_data_area3;
 		offset += 512;
 
@@ -1169,7 +1142,9 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		memset(log, 0, blksToGet * 512);
 
-		err = nvme_get_log_with_offset(fd, cfg.namespace_id, cfg.log_id, blksToGet * 512, offset, (void *)log);
+		err = nvme_get_log13(fd, cfg.namespace_id, cfg.log_id,
+				     NVME_NO_LOG_LSP, offset, 0, false,
+				     blksToGet * 512, (void *)log);
 		if (!err) {
 			offset += blksToGet * 512;
 
@@ -1229,7 +1204,9 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 	dump_fd = STDOUT_FILENO;
 
 	log_id = 0x08;
-	err = nvme_get_log_with_offset(fd, cfg.namespace_id, log_id, sizeof(tele_log), offset, (void *)(&tele_log));
+	err = nvme_get_log13(fd, cfg.namespace_id, log_id,
+			     NVME_NO_LOG_LSP, offset, 0, false,
+			     sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
 		offset += 512;
@@ -1266,7 +1243,9 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		memset(log, 0, blksToGet * 512);
 
-		err = nvme_get_log_with_offset(fd, cfg.namespace_id, log_id, blksToGet * 512, offset, (void *)log);
+		err = nvme_get_log13(fd, cfg.namespace_id, log_id,
+				     NVME_NO_LOG_LSP, offset, 0, false,
+				     blksToGet * 512, (void *)log);
 		if (!err) {
 			offset += blksToGet * 512;
 
@@ -1351,7 +1330,9 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 	}
 
 	log_id = 0x08;
-	err = nvme_get_log_with_offset(fd, cfg.namespace_id, log_id, sizeof(tele_log), offset, (void *)(&tele_log));
+	err = nvme_get_log13(fd, cfg.namespace_id, log_id,
+			     NVME_NO_LOG_LSP, offset, 0, false,
+			     sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
 		offset += 512;
@@ -1386,7 +1367,9 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 
 		memset(log, 0, blksToGet * 512);
 
-		err = nvme_get_log_with_offset(fd, cfg.namespace_id, log_id, blksToGet * 512, offset, (void *)log);
+		err = nvme_get_log13(fd, cfg.namespace_id, log_id,
+				     NVME_NO_LOG_LSP, offset, 0, false,
+				     blksToGet * 512, (void *)log);
 		if (!err) {
 			offset += blksToGet * 512;
 
