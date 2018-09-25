@@ -1205,7 +1205,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	return err;
 }
 
-static char *nvme_char_from_block(char *block)
+char *nvme_char_from_block(char *block)
 {
 	char slen[16];
 	unsigned len;

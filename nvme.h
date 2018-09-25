@@ -157,4 +157,5 @@ int	validate_output_format(char *format);
 
 struct subsys_list_item *get_subsys_list(int *subcnt);
 void free_subsys_list(struct subsys_list_item *slist, int n);
+char *nvme_char_from_block(char *block);
 #endif /* _NVME_H */
