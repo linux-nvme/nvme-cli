@@ -3724,6 +3724,12 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 		goto close_fd;
 	}
 
+	if (cfg.rrega > 7) {
+		fprintf(stderr, "invalid rrega:%d\n", cfg.rrega);
+		err = EINVAL;
+		goto close_fd;
+	}
+
 	err = nvme_resv_register(fd, cfg.namespace_id, cfg.rrega, cfg.cptpl,
 				!!cfg.iekey, cfg.crkey, cfg.nrkey);
 	if (err < 0)

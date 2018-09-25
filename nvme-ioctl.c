@@ -267,7 +267,7 @@ int nvme_resv_acquire(int fd, __u32 nsid, __u8 rtype, __u8 racqa,
 		      bool iekey, __u64 crkey, __u64 nrkey)
 {
 	__le64 payload[2] = { cpu_to_le64(crkey), cpu_to_le64(nrkey) };
-	__u32 cdw10 = racqa | (iekey ? 1 << 3 : 0) | rtype << 8;
+	__u32 cdw10 = (racqa & 0x7) | (iekey ? 1 << 3 : 0) | rtype << 8;
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_acquire,
 		.nsid		= nsid,
@@ -283,7 +283,7 @@ int nvme_resv_register(int fd, __u32 nsid, __u8 rrega, __u8 cptpl,
 		       bool iekey, __u64 crkey, __u64 nrkey)
 {
 	__le64 payload[2] = { cpu_to_le64(crkey), cpu_to_le64(nrkey) };
-	__u32 cdw10 = rrega | (iekey ? 1 << 3 : 0) | cptpl << 30;
+	__u32 cdw10 = (rrega & 0x7) | (iekey ? 1 << 3 : 0) | cptpl << 30;
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_register,
@@ -300,7 +300,7 @@ int nvme_resv_release(int fd, __u32 nsid, __u8 rtype, __u8 rrela,
 		      bool iekey, __u64 crkey)
 {
 	__le64 payload[1] = { cpu_to_le64(crkey) };
-	__u32 cdw10 = rrela | (iekey ? 1 << 3 : 0) | rtype << 8;
+	__u32 cdw10 = (rrela & 0x7) | (iekey ? 1 << 3 : 0) | rtype << 8;
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_release,
