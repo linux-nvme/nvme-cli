@@ -76,7 +76,8 @@ class TestNVMe(object):
             - Returns:
                 - None
         """
-        cmd = cmd = "find /sys/devices -name \\*nvme0 | grep -i pci"
+        x1, x2, dev = self.ctrl.split('/')
+        cmd = cmd = "find /sys/devices -name \\*" + dev + " | grep -i pci"
         err = subprocess.call(cmd, shell=True)
         assert_equal(err, 0, "ERROR : Only NVMe PCI subsystem is supported")
 
