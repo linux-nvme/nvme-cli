@@ -2506,6 +2506,11 @@ static int subsystem_reset(int argc, char **argv, struct command *cmd, struct pl
 	if (err < 0) {
 		close(fd);
 		perror("Subsystem-reset");
+		if (errno == ENOTTY)
+			fprintf(stderr,
+				"Subsystem-reset: NVM Subsystem Reset not supported.\n");
+		else
+			perror("Subsystem-reset");
 		return errno;
 	}
 
