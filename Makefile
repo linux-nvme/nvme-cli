@@ -2,6 +2,7 @@ CFLAGS ?= -O2 -g -Wall -Werror
 CFLAGS += -std=gnu99
 CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
+HAVE_SYSTEMD = $(shell pkg-config --exists systemd  --atleast-version=232; echo $$?)
 NVME = nvme
 INSTALL ?= install
 DESTDIR =
@@ -14,6 +15,11 @@ ifeq ($(LIBUUID),0)
 	override LDFLAGS += -luuid
 	override CFLAGS += -DLIBUUID
 	override LIB_DEPENDS += uuid
+endif
+
+ifeq ($(HAVE_SYSTEMD),0)
+	override LDFLAGS += -lsystemd
+	override CFLAGS += -DHAVE_SYSTEMD
 endif
 
 RPMBUILD = rpmbuild

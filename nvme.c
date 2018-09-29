@@ -45,6 +45,11 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-id128.h>
+#define NVME_APPLICATION_ID SD_ID128_MAKE(c7,f4,61,81,12,be,49,32,8c,83,10,6f,9d,dd,d8,6b)
+#endif
+
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
 #include "nvme-lightnvm.h"
@@ -4603,7 +4608,16 @@ static int admin_passthru(int argc, char **argv, struct command *cmd, struct plu
 	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD, desc, cmd);
 }
 
-#ifdef LIBUUID
+#ifdef HAVE_SYSTEMD
+static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	sd_id128_t id;
+
+	sd_id128_get_machine_app_specific(NVME_APPLICATION_ID, &id);
+	printf("nqn.2014-08.org.nvmexpress:uuid:" SD_ID128_FORMAT_STR "\n", SD_ID128_FORMAT_VAL(id));
+	return 0;
+}
+#elif LIBUUID
 static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	uuid_t uuid;
@@ -4617,7 +4631,7 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struc
 #else
 static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
-	fprintf(stderr, "\"%s\" not supported. Install lib uuid and rebuild.\n",
+	fprintf(stderr, "\"%s\" not supported. Install lib uuid or systemd-devel and rebuild.\n",
 		command->name);
 	return -ENOTSUP;
 }
