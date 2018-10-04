@@ -28,7 +28,6 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/ioctl.h>
-#include <asm/byteorder.h>
 #include <inttypes.h>
 #include <linux/types.h>
 #include <libgen.h>
