@@ -16,8 +16,8 @@
 #define _NVME_H
 
 #include <stdbool.h>
-#include <endian.h>
 #include <stdint.h>
+#include <endian.h>
 #include "plugin.h"
 #include "json.h"
 

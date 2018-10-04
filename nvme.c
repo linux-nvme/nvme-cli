@@ -24,7 +24,6 @@
  * This program uses NVMe IOCTLs to run native nvme commands to a device.
  */
 
-#include <endian.h>
 #include <errno.h>
 #include <getopt.h>
 #include <fcntl.h>
