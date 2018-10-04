@@ -16,6 +16,7 @@
 #define _UAPI_LINUX_NVME_IOCTL_H
 
 #include <linux/types.h>
+#include <sys/ioctl.h>
 
 struct nvme_user_io {
 	__u8	opcode;

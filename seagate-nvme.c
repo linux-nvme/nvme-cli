@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <linux/fs.h>
 #include <inttypes.h>
 #include <asm/byteorder.h>
 #include <sys/ioctl.h>
