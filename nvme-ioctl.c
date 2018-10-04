@@ -15,8 +15,6 @@
 #include <unistd.h>
 #include <math.h>
 
-#include <linux/types.h>
-
 #include "nvme-ioctl.h"
 
 static int nvme_verify_chr(int fd)
