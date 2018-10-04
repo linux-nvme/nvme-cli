@@ -75,7 +75,3 @@ int wdc_UtilsStrCompare(char *pcSrc, char *pcDst);
 int wdc_UtilsCreateDir(char *path);
 int wdc_WriteToFile(char *fileName, char *buffer, unsigned int bufferLen);
 
-extern char *tzname[2];
-extern long timezone;
-extern int daylight;
-
