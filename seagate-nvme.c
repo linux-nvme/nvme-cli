@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <ctype.h>
 #include "linux/nvme_ioctl.h"
 #include "nvme.h"
