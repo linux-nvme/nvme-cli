@@ -9,9 +9,10 @@
 int nvme_get_nsid(int fd);
 
 /* Generic passthrough */
-int nvme_submit_passthru(int fd, int ioctl_cmd, struct nvme_passthru_cmd *cmd);
+int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
+			 struct nvme_passthru_cmd *cmd);
 
-int nvme_passthru(int fd, int ioctl_cmd, __u8 opcode, __u8 flags,
+int nvme_passthru(int fd, unsigned long ioctl_cmd, __u8 opcode, __u8 flags,
 		  __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3,
 		  __u32 cdw10, __u32 cdw11, __u32 cdw12,
 		  __u32 cdw13, __u32 cdw14, __u32 cdw15,
