@@ -121,7 +121,7 @@ four arguments: argc, argv, the command structure associated with the
 callback, and the plug-in structure that contains that command. The
 prototype looks like this:
 
-  ```
+  ```c
   int f(int argc, char **argv, struct command *cmd, struct plugin *plugin);
   ```
 
@@ -144,7 +144,7 @@ There is a very important order on how to define the plugin. The following
 is a basic example on how to start this:
 
 File: foo-plugin.h
-```
+```c
 #undef CMD_INC_FILE
 #define CMD_INC_FILE foo-plugin
 
@@ -174,7 +174,7 @@ To get started from the above example, we just need to define "CREATE_CMD"
 and include the header:
 
 File: foo-plugin.c
-```
+```c
 #define CREATE_CMD
 #include "foo-plugin.h"
 ```
