@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-wdc-cap-diag
+.\"     Title: nvme-wdc-vs-internal-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 10/12/2018
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WDC\-CAP\-DIAG" "1" "10/12/2018" "NVMe" "NVMe Manual"
+.TH "NVME\-WDC\-VS\-INTER" "1" "10/12/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,15 +28,15 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-wdc-cap-diag \- Retrieve WDC device\*(Aqs diagnostic log and save to file\&.
+nvme-wdc-vs-internal-log \- Retrieve WDC device\*(Aqs internal firmware log and save to file\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme wdc cap\-diag\fR <device> [\-\-output\-file=<FILE>, \-o <FILE>] [\-\-transfer\-size=<SIZE>, \-s <SIZE>]
+\fInvme wdc vs\-internal\-log\fR <device> [\-\-output\-file=<FILE>, \-o <FILE>] [\-\-transfer\-size=<SIZE>, \-s <SIZE>]
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, sends the WDC Vendor Unique Capture\-Diagnostics request and saves the result to a file\&.
+For the NVMe device given, sends the WDC Vendor Specific Internal Log request and saves the result to a file\&.
 .sp
 The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0)\&.
 .sp
@@ -45,7 +45,7 @@ This will only work on WDC devices supporting this feature\&. Results for any ot
 .PP
 \-o <FILE>, \-\-output\-file=<FILE>
 .RS 4
-Output file; defaults to device serial number followed by "cap_diag" suffix
+Output file; defaults to device serial number followed by "\fIinternal_fw_log\fR<date>_<time>\&.bin" suffix
 .RE
 .PP
 \-s <SIZE>, \-\-transfer\-size=<SIZE>
@@ -62,13 +62,13 @@ Transfer size; defaults to 0x10000 (65536 decimal) bytes
 .sp -1
 .IP \(bu 2.3
 .\}
-Gets the capture diagnostics log from the device and saves to default file in current directory (e\&.g\&. STM00019F3F9cap_diag\&.bin):
+Gets the internal firmware log from the device and saves to default file in current directory (e\&.g\&. STM00019F3F9_internal_fw_log_20171127_095704\&.bin):
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme wdc cap\-diag /dev/nvme0
+# nvme wdc vs\-internal\-log /dev/nvme0
 .fi
 .if n \{\
 .RE
@@ -83,13 +83,13 @@ Gets the capture diagnostics log from the device and saves to default file in cu
 .sp -1
 .IP \(bu 2.3
 .\}
-Gets the capture diagnostics log from the device and saves to defined file in current directory (e\&.g\&. testSTM00019F3F9cap_diag\&.bin):
+Gets the internal firmware log from the device and saves to defined file in current directory (e\&.g\&. test\&.bin):
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme wdc cap\-diag /dev/nvme0 \-o test
+# nvme wdc vs\-internal\-log /dev/nvme0 \-o test\&.bin
 .fi
 .if n \{\
 .RE
@@ -104,13 +104,13 @@ Gets the capture diagnostics log from the device and saves to defined file in cu
 .sp -1
 .IP \(bu 2.3
 .\}
-Gets the capture diagnostics log from the device and saves to defined file with pathname (e\&.g\&. /tmp/testSTM00019F3F9cap_diag\&.bin):
+Gets the internal firmware log from the device and saves to defined file with pathname (e\&.g\&. /tmp/test):
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme wdc cap\-diag /dev/nvme0 \-o /tmp/test
+# nvme wdc vs\-internal\-log /dev/nvme0 \-o /tmp/test
 .fi
 .if n \{\
 .RE
@@ -125,13 +125,13 @@ Gets the capture diagnostics log from the device and saves to defined file with 
 .sp -1
 .IP \(bu 2.3
 .\}
-Gets the capture diagnostics log from the device transferring the data in 64k chunks and saves to default file in current directory (e\&.g\&. STM00019F3F9internal_fw_log\&.bin):
+Gets the internal firmware log from the device transferring the data in 64k chunks and saves to default file in current directory (e\&.g\&. STM00019F3F9_internal_fw_log_20171127_100754\&.bin):
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme wdc cap\-diag /dev/nvme0 \-s 0x10000
+# nvme wdc vs\-internal\-log /dev/nvme0 \-s 0x10000
 .fi
 .if n \{\
 .RE
@@ -146,13 +146,13 @@ Gets the capture diagnostics log from the device transferring the data in 64k ch
 .sp -1
 .IP \(bu 2.3
 .\}
-Gets the capture diagnostics log from the device transferring the data in 16k chunks and saves to default file in current directory (e\&.g\&. STM00019F3F9internal_fw_log\&.bin):
+Gets the internal firmware log from the device transferring the data in 16k chunks and saves to default file in current directory (e\&.g\&. STM00019F3F9_internal_fw_log_20171127_100950\&.bin):
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme wdc cap\-diag /dev/nvme0 \-s 16384
+# nvme wdc vs\-internal\-log /dev/nvme0 \-s 16384
 .fi
 .if n \{\
 .RE
