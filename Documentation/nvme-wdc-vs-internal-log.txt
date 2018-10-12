@@ -1,0 +1,64 @@
+nvme-wdc-vs-internal-log(1)
+===========================
+
+NAME
+----
+nvme-wdc-vs-internal-log - Retrieve WDC device's internal firmware log and save to file.
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc vs-internal-log' <device> [--output-file=<FILE>, -o <FILE>] [--transfer-size=<SIZE>, -s <SIZE>]
+
+DESCRIPTION
+-----------
+
+For the NVMe device given, sends the WDC Vendor Specific Internal Log request and saves
+the result to a file.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+OPTIONS
+-------
+-o <FILE>::
+--output-file=<FILE>::
+	Output file; defaults to device serial number followed by "_internal_fw_log_<date>_<time>.bin" suffix
+
+-s <SIZE>::
+--transfer-size=<SIZE>::
+    Transfer size; defaults to 0x10000 (65536 decimal) bytes
+
+EXAMPLES
+--------
+* Gets the internal firmware log from the device and saves to default file in current directory (e.g. STM00019F3F9_internal_fw_log_20171127_095704.bin):
++
+------------
+# nvme wdc vs-internal-log /dev/nvme0
+------------
+* Gets the internal firmware log from the device and saves to defined file in current directory (e.g. test.bin):
++
+------------
+# nvme wdc vs-internal-log /dev/nvme0 -o test.bin
+------------
+* Gets the internal firmware log from the device and saves to defined file with pathname (e.g. /tmp/test):
++
+------------
+# nvme wdc vs-internal-log /dev/nvme0 -o /tmp/test
+------------
+* Gets the internal firmware log from the device transferring the data in 64k chunks and saves to default file in current directory (e.g. STM00019F3F9_internal_fw_log_20171127_100754.bin):
++
+------------
+# nvme wdc vs-internal-log /dev/nvme0 -s 0x10000
+------------
+* Gets the internal firmware log from the device transferring the data in 16k chunks and saves to default file in current directory (e.g. STM00019F3F9_internal_fw_log_20171127_100950.bin):
++
+------------
+# nvme wdc vs-internal-log /dev/nvme0 -s 16384
+------------
+
+NVME
+----
+Part of the nvme-user suite.
