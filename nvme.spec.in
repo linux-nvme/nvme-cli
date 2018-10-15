@@ -7,7 +7,7 @@ Group: 		Development/Tools
 URL: 		https://github.com/linux-nvme/nvme-cli/
 Source: 	nvme-@@VERSION@@.tar.gz
 Provides:	nvme
-Requires(post): uuidgen
+Requires(post): util-linux
 BuildRoot:	%{_tmppath}/%{name}-%{version}-root
 
 %description
@@ -29,7 +29,7 @@ make install DESTDIR=%{buildroot} PREFIX=/usr
 %doc Documentation/nvme*.1
 %{_sbindir}/nvme
 %{_mandir}/man1/nvme*.1*
-%{_datadir}/bash_completion.d/nvme
+%{_datadir}/bash-completion/completions/nvme
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -55,5 +55,8 @@ if [ "$1" = "remove" ]; then
 	fi
 fi
 %changelog
+* Mon Oct 15 2018 Eyal Ben-David <eyalbe@il.ibm.com> - 1.6.81.g899a-2
+- bash-completion check
+
 * Thu Oct 15 2015 Keith Busch <keith.busch@intel.com>
 - Initial RPM spec
