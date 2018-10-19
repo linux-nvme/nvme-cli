@@ -24,7 +24,6 @@
  * This program uses NVMe IOCTLs to run native nvme commands to a device.
  */
 
-#include <endian.h>
 #include <errno.h>
 #include <getopt.h>
 #include <fcntl.h>
@@ -36,6 +35,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <dirent.h>
+#include <libgen.h>
 
 #include <linux/fs.h>
 
@@ -92,7 +92,7 @@ static unsigned long long elapsed_utime(struct timeval start_time,
 	return ret;
 }
 
-static int open_dev(const char *dev)
+static int open_dev(char *dev)
 {
 	int err, fd;
 
@@ -133,7 +133,7 @@ static int get_dev(int argc, char **argv)
 	if (ret)
 		return ret;
 
-	return open_dev((const char *)argv[optind]);
+	return open_dev(argv[optind]);
 }
 
 int parse_and_open(int argc, char **argv, const char *desc,

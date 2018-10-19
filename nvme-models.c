@@ -279,7 +279,7 @@ static FILE *open_pci_ids(void)
 
 char *nvme_product_name(int id)
 {
-	char *line;
+	char *line = NULL;
 	ssize_t amnt;
 	char vendor[7] = { 0 };
 	char device[7] = { 0 };

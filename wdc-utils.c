@@ -65,22 +65,20 @@ int wdc_UtilsGetTime(PUtilsTimeInfo timeInfo)
 	time_t currTime;
 	struct tm currTimeInfo;
 
+	tzset();
 	time(&currTime);
 	localtime_r(&currTime, &currTimeInfo);
 
 	timeInfo->year			=  currTimeInfo.tm_year + 1900;
 	timeInfo->month			=  currTimeInfo.tm_mon + 1;
 	timeInfo->dayOfWeek		=  currTimeInfo.tm_wday;
-	timeInfo->dayOfMonth	=  currTimeInfo.tm_mday;
+	timeInfo->dayOfMonth		=  currTimeInfo.tm_mday;
 	timeInfo->hour			=  currTimeInfo.tm_hour;
 	timeInfo->minute		=  currTimeInfo.tm_min;
 	timeInfo->second		=  currTimeInfo.tm_sec;
 	timeInfo->msecs			=  0;
 	timeInfo->isDST			=  currTimeInfo.tm_isdst;
-
-	tzset();
-
-	timeInfo->zone = -1 *  (timezone / SECONDS_IN_MIN);
+	timeInfo->zone			= -currTimeInfo.tm_gmtoff / 60;
 
 	return WDC_STATUS_SUCCESS;
 }

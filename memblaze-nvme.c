@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <linux/fs.h>
 
 #include "linux/nvme_ioctl.h"
 

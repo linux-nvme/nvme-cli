@@ -28,9 +28,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/ioctl.h>
-#include <asm/byteorder.h>
 #include <inttypes.h>
-#include <linux/types.h>
 #include <libgen.h>
 #include <sys/stat.h>
 #include <stddef.h>

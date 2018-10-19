@@ -1,11 +1,9 @@
-#include <endian.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
 
-#include <endian.h>
 #include <errno.h>
 #include <getopt.h>
 #include <fcntl.h>
@@ -16,8 +14,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
-
-#include <linux/types.h>
 
 #include "nvme-ioctl.h"
 
@@ -85,7 +81,8 @@ int nvme_get_nsid(int fd)
 	return ioctl(fd, NVME_IOCTL_ID);
 }
 
-int nvme_submit_passthru(int fd, int ioctl_cmd, struct nvme_passthru_cmd *cmd)
+int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
+			 struct nvme_passthru_cmd *cmd)
 {
 	return ioctl(fd, ioctl_cmd, cmd);
 }
@@ -100,7 +97,8 @@ static int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd)
 	return ioctl(fd, NVME_IOCTL_IO_CMD, cmd);
 }
 
-int nvme_passthru(int fd, int ioctl_cmd, __u8 opcode, __u8 flags, __u16 rsvd,
+int nvme_passthru(int fd, unsigned long ioctl_cmd, __u8 opcode,
+		  __u8 flags, __u16 rsvd,
 		  __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11,
 		  __u32 cdw12, __u32 cdw13, __u32 cdw14, __u32 cdw15,
 		  __u32 data_len, void *data, __u32 metadata_len,
