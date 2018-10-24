@@ -273,7 +273,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 	ana_log_len = sizeof(struct nvme_ana_rsp_hdr) +
 		le32_to_cpu(ctrl.nanagrpid) * sizeof(struct nvme_ana_group_desc);
 	if (!(ctrl.anacap & (1 << 6)))
-		ana_log_len += ctrl.mnan * sizeof(__le32);
+		ana_log_len += le32_to_cpu(ctrl.mnan) * sizeof(__le32);
 
 	ana_log = malloc(ana_log_len);
 	if (!ana_log) {
