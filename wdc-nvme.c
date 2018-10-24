@@ -1148,9 +1148,9 @@ static int wdc_crash_dump(int fd, char *file, int type)
 	}
 
 	if (type == WDC_NVME_PFAIL_DUMP_TYPE)
-		strncpy(dump_type, "_pfail_dump", 11);
+		strncpy(dump_type, "_pfail_dump", PATH_MAX - 1);
 	else
-		strncpy(dump_type, "_crash_dump", 11);
+		strncpy(dump_type, "_crash_dump", PATH_MAX - 1);
 
 	if (wdc_get_serial_name(fd, f, PATH_MAX, dump_type) == -1) {
 		fprintf(stderr, "ERROR : WDC : failed to generate file name\n");
