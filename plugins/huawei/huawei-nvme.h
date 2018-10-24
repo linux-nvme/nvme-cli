@@ -1,5 +1,5 @@
 #undef CMD_INC_FILE
-#define CMD_INC_FILE huawei-nvme
+#define CMD_INC_FILE plugins/huawei/huawei-nvme
 
 #if !defined(HUAWEI_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define HUAWEI_NVME

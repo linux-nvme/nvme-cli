@@ -1,6 +1,6 @@
 
 #undef CMD_INC_FILE
-#define CMD_INC_FILE lnvm-nvme
+#define CMD_INC_FILE plugins/lnvm/lnvm-nvme
 
 #if !defined(LNVM_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define LNVM_NVME

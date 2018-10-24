@@ -1,5 +1,5 @@
 #undef CMD_INC_FILE
-#define CMD_INC_FILE memblaze-nvme
+#define CMD_INC_FILE plugins/memblaze/memblaze-nvme
 
 #if !defined(MEMBLAZE_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define MEMBLAZE_NVME

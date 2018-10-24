@@ -1,4 +1,4 @@
-CFLAGS ?= -O2 -g -Wall -Werror
+CFLAGS ?= -O2 -g -Wall -Werror -I.
 CFLAGS += -std=gnu99
 CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
@@ -32,18 +32,31 @@ override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
 NVME_DPKG_VERSION=1~`lsb_release -sc`
 
 OBJS := argconfig.o suffix.o parser.o nvme-print.o nvme-ioctl.o \
-	nvme-lightnvm.o fabrics.o json.o plugin.o intel-nvme.o \
-	lnvm-nvme.o memblaze-nvme.o wdc-nvme.o wdc-utils.o nvme-models.o \
-	huawei-nvme.o netapp-nvme.o  toshiba-nvme.o micron-nvme.o seagate-nvme.o
+	nvme-lightnvm.o fabrics.o json.o nvme-models.o plugin.o
 
-nvme: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
-	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $(NVME) $(OBJS) $(LDFLAGS)
+PLUGIN_OBJS :=					\
+	plugins/intel/intel-nvme.o		\
+	plugins/lnvm/lnvm-nvme.o		\
+	plugins/memblaze/memblaze-nvme.o	\
+	plugins/wdc/wdc-nvme.o			\
+	plugins/wdc/wdc-utils.o			\
+	plugins/huawei/huawei-nvme.o		\
+	plugins/netapp/netapp-nvme.o		\
+	plugins/toshiba/toshiba-nvme.o		\
+	plugins/micron/micron-nvme.o		\
+	plugins/seagate/seagate-nvme.o
+
+nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) NVME-VERSION-FILE
+	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(LDFLAGS)
+
+verify-no-dep: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
+	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $@ $(OBJS) $(LDFLAGS)
 
 nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h argconfig.h suffix.h nvme-lightnvm.h fabrics.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
 
 %.o: %.c %.h nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h argconfig.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
 
 doc: $(NVME)
 	$(MAKE) -C Documentation
@@ -54,9 +67,10 @@ test:
 all: doc
 
 clean:
-	$(RM) $(NVME) *.o *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
+	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
 	$(MAKE) -C Documentation clean
 	$(RM) tests/*.pyc
+	$(RM) verify-no-dep
 
 clobber: clean
 	$(MAKE) -C Documentation clobber

@@ -1,5 +1,5 @@
 #undef CMD_INC_FILE
-#define CMD_INC_FILE micron-nvme
+#define CMD_INC_FILE plugins/micron/micron-nvme
 
 #if !defined(MICRON_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define MICRON_NVME

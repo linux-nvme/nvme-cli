@@ -1,5 +1,5 @@
 #undef CMD_INC_FILE
-#define CMD_INC_FILE netapp-nvme
+#define CMD_INC_FILE plugins/netapp/netapp-nvme
 
 #if !defined(NETAPP_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define NETAPP_NVME
