@@ -1,5 +1,5 @@
 #undef CMD_INC_FILE
-#define CMD_INC_FILE intel-nvme
+#define CMD_INC_FILE plugins/intel/intel-nvme
 
 #if !defined(INTEL_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define INTEL_NVME

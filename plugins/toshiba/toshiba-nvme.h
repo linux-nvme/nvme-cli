@@ -1,5 +1,5 @@
 #undef CMD_INC_FILE
-#define CMD_INC_FILE toshiba-nvme
+#define CMD_INC_FILE plugins/toshiba/toshiba-nvme
 
 #if !defined(TOSHIBA_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define TOSHIBA_NVME
