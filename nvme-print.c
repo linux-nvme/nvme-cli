@@ -1597,9 +1597,10 @@ static void show_sanitize_log_sstat(__u16 status)
 void show_sanitize_log(struct nvme_sanitize_log_page *sanitize, unsigned int mode, const char *devname)
 {
 	int human = mode & HUMAN;
+	__u16 status = le16_to_cpu(sanitize->status) & NVME_SANITIZE_LOG_STATUS_MASK;
 
 	printf("Sanitize Progress                     (SPROG) :  %u", le32_to_cpu(sanitize->progress));
-	if (human && (sanitize->status & NVME_SANITIZE_LOG_STATUS_MASK) == NVME_SANITIZE_LOG_IN_PROGESS)
+	if (human && status == NVME_SANITIZE_LOG_IN_PROGESS)
 		show_sanitize_log_sprog(le32_to_cpu(sanitize->progress));
 	else
 		printf("\n");
@@ -2726,6 +2727,7 @@ void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log, const char *
 	struct json_object *sstat;
 	const char *status_str;
 	char str[128];
+	__u16 status = le16_to_cpu(sanitize_log->status);
 
 	root = json_create_object();
 	dev = json_create_object();
@@ -2733,12 +2735,12 @@ void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log, const char *
 
 	json_object_add_value_int(dev, "sprog", le16_to_cpu(sanitize_log->progress));
 	json_object_add_value_int(sstat, "global_erased",
-			(le16_to_cpu(sanitize_log->status) & NVME_SANITIZE_LOG_GLOBAL_DATA_ERASED) >> 8);
+			(status & NVME_SANITIZE_LOG_GLOBAL_DATA_ERASED) >> 8);
 	json_object_add_value_int(sstat, "no_cmplted_passes",
-			(le16_to_cpu(sanitize_log->status) & NVME_SANITIZE_LOG_NUM_CMPLTED_PASS_MASK) >> 3);
+			(status & NVME_SANITIZE_LOG_NUM_CMPLTED_PASS_MASK) >> 3);
 
-	status_str = get_sanitize_log_sstat_status_str(sanitize_log->status);
-	sprintf(str, "(%d) %s", sanitize_log->status & NVME_SANITIZE_LOG_STATUS_MASK, status_str);
+	status_str = get_sanitize_log_sstat_status_str(status);
+	sprintf(str, "(%d) %s", status & NVME_SANITIZE_LOG_STATUS_MASK, status_str);
 	json_object_add_value_string(sstat, "status", str);
 
 	json_object_add_value_object(dev, "sstat", sstat);
