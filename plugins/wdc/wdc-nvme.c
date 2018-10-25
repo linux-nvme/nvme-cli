@@ -304,7 +304,7 @@ static NVME_VU_DE_LOGPAGE_LIST deVULogPagesList[] =
     { NVME_DE_LOGPAGE_C0, 0xC0, 512, "0xc0"}
 };
 
-static int wdc_get_serial_name(int fd, char *file, size_t len, char *suffix);
+static int wdc_get_serial_name(int fd, char *file, size_t len, const char *suffix);
 static int wdc_create_log_file(char *file, __u8 *drive_log_data,
 		__u32 drive_log_length);
 static int wdc_do_clear_dump(int fd, __u8 opcode, __u32 cdw12);
@@ -561,7 +561,7 @@ static bool wdc_check_device_match(int fd, int vendor_id, int device_id)
 		return false;
 }
 
-static int wdc_get_serial_name(int fd, char *file, size_t len, char *suffix)
+static int wdc_get_serial_name(int fd, char *file, size_t len, const char *suffix)
 {
 	int i;
 	int ret;
@@ -1141,21 +1141,21 @@ static int wdc_do_crash_dump(int fd, char *file, int type)
 static int wdc_crash_dump(int fd, char *file, int type)
 {
 	char f[PATH_MAX] = {0};
-	char dump_type[PATH_MAX] = {0};
+	const char *dump_type;
 
 	if (file != NULL) {
 		strncpy(f, file, PATH_MAX - 1);
 	}
 
 	if (type == WDC_NVME_PFAIL_DUMP_TYPE)
-		strncpy(dump_type, "_pfail_dump", PATH_MAX - 1);
+		dump_type = "_pfail_dump";
 	else
-		strncpy(dump_type, "_crash_dump", PATH_MAX - 1);
+		dump_type = "_crash_dump";
 
 	if (wdc_get_serial_name(fd, f, PATH_MAX, dump_type) == -1) {
 		fprintf(stderr, "ERROR : WDC : failed to generate file name\n");
 		return -1;
-	    }
+	}
 	return wdc_do_crash_dump(fd, f, type);
 }
 
