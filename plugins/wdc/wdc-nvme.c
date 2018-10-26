@@ -286,10 +286,10 @@ typedef enum _NVME_VU_DE_LOGPAGE_NAMES
 } NVME_VU_DE_LOGPAGE_NAMES;
 typedef struct _NVME_VU_DE_LOGPAGE_LIST
 {
-    NVME_VU_DE_LOGPAGE_NAMES logPageName;
-    __u32 logPageId;
-    __u32 logPageLen;
-    char  logPageIdStr[4];
+	NVME_VU_DE_LOGPAGE_NAMES logPageName;
+	__u32	logPageId;
+	__u32	logPageLen;
+	char	logPageIdStr[5];
 } NVME_VU_DE_LOGPAGE_LIST, *PNVME_VU_DE_LOGPAGE_LIST;
 
 typedef struct _WDC_NVME_DE_VU_LOGPAGES
