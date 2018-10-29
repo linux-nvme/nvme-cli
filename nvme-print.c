@@ -1482,7 +1482,7 @@ void show_self_test_log(struct nvme_self_test_log *self_test, const char *devnam
 		"Operation was aborted due to a removal of a namespace from the namespace inventory",
 		"Operation was aborted due to the processing of a Format NVM command",
 		"A fatal error or unknown test error occurred while the controller was executing the"\
-		" device self-test operation andthe operation did not complete",
+		" device self-test operation and the operation did not complete",
 		"Operation completed with a segment that failed and the segment that failed is not known",
 		"Operation completed with one or more failed segments and the first segment that failed "\
 		"is indicated in the SegmentNumber field",
