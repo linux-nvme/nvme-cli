@@ -1677,6 +1677,15 @@ char* nvme_select_to_string(int sel)
 	}
 }
 
+void nvme_show_select_result(__u32 result)
+{
+	if (result & 0x1)
+		printf("  Feature is saveable\n");
+	if (result & 0x2)
+		printf("  Feature is per-namespace\n");
+	if (result & 0x4)
+		printf("  Feature is changeable\n");
+}
 
 char *nvme_status_to_string(__u32 status)
 {
