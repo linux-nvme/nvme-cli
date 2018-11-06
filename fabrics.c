@@ -738,12 +738,35 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 		return add_ctrl(argstr);
 }
 
-static void connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
+static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 {
 	int i;
+	int instance;
+	int ret = 0;
 
-	for (i = 0; i < numrec; i++)
-		connect_ctrl(&log->entries[i]);
+	for (i = 0; i < numrec; i++) {
+		instance = connect_ctrl(&log->entries[i]);
+
+		/* clean success */
+		if (instance >= 0)
+			continue;
+
+		/* already connected print message	*/
+		if (instance == -EALREADY) {
+			const char *traddr = log->entries[i].traddr;
+			fprintf(stderr,
+				"traddr=%.*s is already connected\n",
+				space_strip_len(NVMF_TRADDR_SIZE, traddr),
+				traddr);
+			continue;
+		}
+
+		/* otherwise error */
+		ret = -instance;
+		break;
+	}
+
+	return ret;
 }
 
 static int do_discover(char *argstr, bool connect)
@@ -765,7 +788,7 @@ static int do_discover(char *argstr, bool connect)
 	switch (ret) {
 	case DISC_OK:
 		if (connect)
-			connect_ctrls(log, numrec);
+			ret = connect_ctrls(log, numrec);
 		else if (cfg.raw)
 			save_discovery_log(log, numrec);
 		else
