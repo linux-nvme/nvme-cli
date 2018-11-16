@@ -1102,7 +1102,7 @@ int disconnect_all(const char *desc, int argc, char **argv)
 	if (ret)
 		return ret;
 
-	slist = get_subsys_list(&subcnt);
+	slist = get_subsys_list(&subcnt, NULL, NVME_NSID_ALL);
 	for (i = 0; i < subcnt; i++) {
 		struct subsys_list_item *subsys = &slist[i];
 

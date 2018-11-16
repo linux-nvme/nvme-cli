@@ -130,6 +130,7 @@ struct ctrl_list_item {
 	char *address;
 	char *transport;
 	char *state;
+	char *ana_state;
 };
 
 struct subsys_list_item {
@@ -156,7 +157,7 @@ extern const char *devicename;
 int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root));
 int	validate_output_format(char *format);
 
-struct subsys_list_item *get_subsys_list(int *subcnt);
+struct subsys_list_item *get_subsys_list(int *subcnt, char *subsysnqn, __u32 nsid);
 void free_subsys_list(struct subsys_list_item *slist, int n);
 char *nvme_char_from_block(char *block);
 #endif /* _NVME_H */

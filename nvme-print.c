@@ -2772,10 +2772,12 @@ static void show_nvme_subsystem(struct subsys_list_item *item)
 	printf("\\\n");
 
 	for (i = 0; i < item->nctrls; i++) {
-		printf(" +- %s %s %s %s\n", item->ctrls[i].name,
+		printf(" +- %s %s %s %s %s\n", item->ctrls[i].name,
 				item->ctrls[i].transport,
 				item->ctrls[i].address,
-				item->ctrls[i].state);
+				item->ctrls[i].state,
+				item->ctrls[i].ana_state ?
+					item->ctrls[i].ana_state : "");
 	}
 
 }
@@ -2823,6 +2825,10 @@ void json_print_nvme_subsystem_list(struct subsys_list_item *slist, int n)
 					slist[i].ctrls[j].address);
 			json_object_add_value_string(path_attrs, "State",
 					slist[i].ctrls[j].state);
+			if (slist[i].ctrls[j].ana_state)
+				json_object_add_value_string(path_attrs,
+						"ANAState",
+						slist[i].ctrls[j].ana_state);
 			json_array_add_value_object(paths, path_attrs);
 		}
 		if (j) {
