@@ -26,6 +26,7 @@ OPTIONS
 
 EXAMPLES
 --------
+[verse]
 root@host# nvme list-subsys
 nvme-subsys0 - NQN=nvmf-test
 \
@@ -36,6 +37,7 @@ nvme-subsys1 - NQN=nvmf-test2
  +- nvme2 rdma traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.2
  +- nvme3 rdma traddr=1.1.1.3 trsvcid=4420 host_traddr=1.1.1.1
 
+[verse]
 root@host# nvme list-subsys -o json
 {
   "Subsystems" : [
