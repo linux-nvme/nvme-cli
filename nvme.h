@@ -129,6 +129,7 @@ struct ctrl_list_item {
 	char *name;
 	char *address;
 	char *transport;
+	char *state;
 };
 
 struct subsys_list_item {

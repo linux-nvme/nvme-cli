@@ -1363,6 +1363,7 @@ static void free_ctrl_list_item(struct ctrl_list_item *ctrls)
 	free(ctrls->name);
 	free(ctrls->transport);
 	free(ctrls->address);
+	free(ctrls->state);
 }
 
 static int get_nvme_subsystem_info(char *name, char *path,
@@ -1412,6 +1413,14 @@ static int get_nvme_subsystem_info(char *name, char *path,
 				get_nvme_ctrl_attr(ctrl_path, "transport");
 		if (!item->ctrls[ccnt].transport) {
 			fprintf(stderr, "failed to get controller[%d] transport.\n", i);
+			free_ctrl_list_item(&item->ctrls[ccnt]);
+			continue;
+		}
+
+		item->ctrls[ccnt].state =
+				get_nvme_ctrl_attr(ctrl_path, "state");
+		if (!item->ctrls[ccnt].state) {
+			fprintf(stderr, "failed to get controller[%d] state.\n", i);
 			free_ctrl_list_item(&item->ctrls[ccnt]);
 			continue;
 		}
