@@ -123,6 +123,7 @@ static struct json_value *json_create_value_string(const char *str)
 		if (!value->string) {
 			free(value);
 			value = NULL;
+			return value;
 		}
 	}
 	if (!value)
