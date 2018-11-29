@@ -2,12 +2,12 @@
 .\"     Title: nvme-discover
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 09/05/2018
+.\"      Date: 11/29/2018
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCOVER" "1" "09/05/2018" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCOVER" "1" "11/29/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -53,7 +53,7 @@ Otherwise, a specific Discovery Controller should be specified using the \-\-tra
 .sp
 The NVMe\-over\-Fabrics specification defines the concept of a Discovery Controller that an NVMe Host can query on a fabric network to discover NVMe subsystems contained in NVMe Targets which it can connect to on the network\&. The Discovery Controller will return Discovery Log Pages that provide the NVMe Host with specific information (such as network address and unique subsystem NQN) the NVMe Host can use to issue an NVMe connect command to connect itself to a storage resource contained in that NVMe subsystem on the NVMe Target\&.
 .sp
-Note that the base NVMe specfication defines the NQN (NVMe Qualified Name) format which an NVMe endpoint (device, subsystem, etc) must follow to guarantee a unique name under the NVMe standard\&. In particular, the Host NQN uniquely identifies the NVMe Host, and may be used by the the Discovery Controller to control what NVMe Target resources are allocated to the NVMe Host for a connection\&.
+Note that the base NVMe specification defines the NQN (NVMe Qualified Name) format which an NVMe endpoint (device, subsystem, etc) must follow to guarantee a unique name under the NVMe standard\&. In particular, the Host NQN uniquely identifies the NVMe Host, and may be used by the the Discovery Controller to control what NVMe Target resources are allocated to the NVMe Host for a connection\&.
 .sp
 A Discovery Controller has it\(cqs own NQN defined in the NVMe\-over\-Fabrics specification, \fBnqn\&.2014\-08\&.org\&.nvmexpress\&.discovery\fR\&. All Discovery Controllers must use this NQN name\&. This NQN is used by default by nvme\-cli for the \fIdiscover\fR command\&.
 .SH "OPTIONS"

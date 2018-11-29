@@ -13,7 +13,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 Display vendor-specific information for each NVMe path to an E-Series namespace
-currently connnected to the host.  The E-Series paths are identified from the
+currently connected to the host.  The E-Series paths are identified from the
 NVMe nodes in /dev by sending an Identify Controller.
 
 OPTIONS

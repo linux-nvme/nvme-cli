@@ -3,7 +3,7 @@ nvme-disconnect(1)
 
 NAME
 ----
-nvme-disconnect - Disonnect one or more Fabrics controller(s).
+nvme-disconnect - Disconnect one or more Fabrics controller(s).
 
 SYNOPSIS
 --------

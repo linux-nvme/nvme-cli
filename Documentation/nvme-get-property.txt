@@ -26,7 +26,7 @@ OPTIONS
 
 -H::
 --human-readable:
-	Show the fields packed in the propery
+	Show the fields packed in the property
 
 
 EXAMPLES
