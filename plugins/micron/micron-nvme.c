@@ -23,7 +23,7 @@ static int micron_fw_commit(int fd, int select)
 		.cdw10		= 8,
         .cdw12      = select,
 	};
-    return ioctl(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+    return nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
 
 }
 
