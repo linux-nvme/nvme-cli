@@ -1,0 +1,55 @@
+nvme-device-self-test(1)
+========================
+
+NAME
+----
+nvme-device-self-test - Perform the necessary tests to observe the performance and the parameters
+
+SYNOPSIS
+--------
+[verse]
+'nvme device-self-test' <device> [--namespace-id=<NUM> | -n <NUM>]
+			[--self-test-code=<NUM> | -s <NUM>] 
+
+DESCRIPTION
+-----------
+Initiates the required test based on the user input.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the corresponding test is initiated.
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+	Indicate the namespace in which the device self-test has to becarried out
+
+-s <NUM>::
+--self-test-code=<NUM>::
+        This field specifies the action taken by the device self-test command : 
+         1h: Start a short device self-test operation
+         2h: Start a extended device self-test operation
+         eh: Start a vendor specific device self-test operation
+         fh: abort the device self-test operation
+
+
+EXAMPLES
+--------
+* Start a short device self-test in the namespace-id 1:
++
+------------
+# nvme device-self-test /dev/nvme0 -n 1 -s 1
+------------
++
+
+* Abort the device self-test operation in the namespace-id 1:
++
+------------
+# nvme device-self-test /dev/nvme0 -n 1 -s 0xf
+------------
+
+NVME
+----
+Part of the nvme-user suite

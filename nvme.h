@@ -16,8 +16,8 @@
 #define _NVME_H
 
 #include <stdbool.h>
-#include <endian.h>
 #include <stdint.h>
+#include <endian.h>
 #include "plugin.h"
 #include "json.h"
 
@@ -33,6 +33,12 @@ typedef struct {
 
 #include "linux/nvme.h"
 
+struct nvme_effects_log_page {
+	__le32 acs[256];
+	__le32 iocs[256];
+	__u8   resv[2048];
+};
+
 struct nvme_error_log_page {
 	__u64	error_count;
 	__u16	sqid;
@@ -42,7 +48,9 @@ struct nvme_error_log_page {
 	__u64	lba;
 	__u32	nsid;
 	__u8	vs;
-	__u8	resv[35];
+	__u8	resv[3];
+	__u64	cs;
+	__u8	resv2[24];
 };
 
 struct nvme_firmware_log_page {
@@ -68,6 +76,12 @@ struct nvme_auto_pst {
 	__u32	rsvd32;
 };
 
+struct nvme_timestamp {
+	__u8 timestamp[6];
+	__u8 attr;
+	__u8 rsvd;
+};
+
 struct nvme_controller_list {
 	__le16 num;
 	__le16 identifier[];
@@ -77,7 +91,7 @@ struct nvme_bar_cap {
 	__u16	mqes;
 	__u8	ams_cqr;
 	__u8	to;
-	__u16	css_nssrs_dstrd;
+	__u16	bps_css_nssrs_dstrd;
 	__u8	mpsmax_mpsmin;
 	__u8	reserved;
 };
@@ -111,6 +125,21 @@ struct list_item {
 	unsigned            block;
 };
 
+struct ctrl_list_item {
+	char *name;
+	char *address;
+	char *transport;
+	char *state;
+	char *ana_state;
+};
+
+struct subsys_list_item {
+	char *name;
+	char *subsysnqn;
+	int nctrls;
+	struct ctrl_list_item *ctrls;
+};
+
 enum {
 	NORMAL,
 	JSON,
@@ -128,4 +157,7 @@ extern const char *devicename;
 int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root));
 int	validate_output_format(char *format);
 
+struct subsys_list_item *get_subsys_list(int *subcnt, char *subsysnqn, __u32 nsid);
+void free_subsys_list(struct subsys_list_item *slist, int n);
+char *nvme_char_from_block(char *block);
 #endif /* _NVME_H */

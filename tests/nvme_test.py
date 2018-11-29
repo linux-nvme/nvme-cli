@@ -76,7 +76,8 @@ class TestNVMe(object):
             - Returns:
                 - None
         """
-        cmd = cmd = "find /sys/devices -name \\*nvme0 | grep -i pci"
+        x1, x2, dev = self.ctrl.split('/')
+        cmd = cmd = "find /sys/devices -name \\*" + dev + " | grep -i pci"
         err = subprocess.call(cmd, shell=True)
         assert_equal(err, 0, "ERROR : Only NVMe PCI subsystem is supported")
 
@@ -203,6 +204,53 @@ class TestNVMe(object):
                 break
         print max_ns
         return int(max_ns)
+
+    @tools.nottest
+    def get_ncap(self):
+        """ Wrapper for extracting capacity.
+            - Args:
+                - None
+            - Returns:
+                - maximum number of namespaces supported.
+        """
+        pattern = re.compile("^tnvmcap[ ]+: [0-9]", re.IGNORECASE)
+        ncap = -1
+        ncap_cmd = "nvme id-ctrl " + self.ctrl
+        proc = subprocess.Popen(ncap_cmd,
+                                shell=True,
+                                stdout=subprocess.PIPE)
+        err = proc.wait()
+        assert_equal(err, 0, "ERROR : reading nvm capacity failed")
+
+        for line in proc.stdout:
+            if pattern.match(line):
+                ncap = line.split(":")[1].strip()
+                break
+        print ncap
+        return int(ncap)
+
+    @tools.nottest
+    def get_format(self):
+        """ Wrapper for extracting format.
+            - Args:
+                - None
+            - Returns:
+                - maximum format of namespace.
+        """
+        # defaulting to 4K
+        nvm_format = 4096
+        nvm_format_cmd = "nvme id-ns " + self.ctrl + " -n1"
+        proc = subprocess.Popen(nvm_format_cmd,
+                                shell=True,
+                                stdout=subprocess.PIPE)
+        err = proc.wait()
+        assert_equal(err, 0, "ERROR : reading nvm capacity failed")
+
+        for line in proc.stdout:
+            if "in use" in line:
+                nvm_format = 2 ** int(line.split(":")[3].split()[0])
+        print nvm_format
+        return int(nvm_format)
 
     @tools.nottest
     def delete_all_ns(self):
@@ -349,15 +397,34 @@ class TestNVMe(object):
         print "host_write_commands " + host_write_commands
         return err
 
-    def get_error_log(self, nsid):
+    def get_id_ctrl(self, vendor=False):
+        """ Wrapper for nvme id-ctrl command.
+            - Args:
+              - None
+            - Returns:
+              - 0 on success, error code on failure.
+        """
+        if not vendor:
+            id_ctrl_cmd = "nvme id-ctrl " + self.ctrl
+        else:
+            id_ctrl_cmd = "nvme id-ctrl -v " + self.ctrl
+        print id_ctrl_cmd
+        proc = subprocess.Popen(id_ctrl_cmd,
+                                shell=True,
+                                stdout=subprocess.PIPE)
+        err = proc.wait()
+        assert_equal(err, 0, "ERROR : nvme id controller failed")
+        return err
+
+    def get_error_log(self):
         """ Wrapper for nvme error-log command.
             - Args:
-                - nsid : namespace id to get error log from.
+                - None
             - Returns:
                 - 0 on success, error code on failure.
         """
         pattern = re.compile("^ Entry\[[ ]*[0-9]+\]")
-        error_log_cmd = "nvme error-log " + self.ctrl + " -n " + str(nsid)
+        error_log_cmd = "nvme error-log " + self.ctrl
         proc = subprocess.Popen(error_log_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE)

@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-intel-internal-log
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 06/28/2017
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 09/05/2018
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-INTEL\-INTERNA" "1" "06/28/2017" "NVMe" "NVMe Manual"
+.TH "NVME\-INTEL\-INTERNA" "1" "09/05/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,6 +33,8 @@ nvme-intel-internal-log \- Retrieve Intel device\*(Aqs internal log and save to 
 .sp
 .nf
 \*(Aqnvme intel internal\-log \*(Aq <device> [\-\-log=<NUM>, \-l <NUM>]
+                [\-\-region=<NUM>, r <NUM>]
+                [\-\-nlognum=<NUM>, m <NUM>]
                 [\-\-namespace\-id=<NUM>, \-n <NUM>]
                 [\-\-output\-file=<FILE>, \-o <FILE>]
 .fi
@@ -58,6 +60,17 @@ Namespace to use\&.
 \-o <FILE>, \-\-output\-file=<FILE>
 .RS 4
 Output file; defaults to device name provided
+.RE
+.PP
+\-r <NUM>, \-\-region=<NUM>
+.RS 4
+Select which core region to retrieve the log from\&. \-1 for all available, if supported by the device\&.
+.RE
+.PP
+\-m <NUM>, \-\-nlognum=<NUM>
+.RS 4
+When used with
+\fInlog\fR, this specifies which nlog to read\&. \-1 for all, if supported by the device\&.
 .RE
 .SH "EXAMPLES"
 .sp

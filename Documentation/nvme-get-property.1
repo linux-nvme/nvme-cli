@@ -1,0 +1,123 @@
+'\" t
+.\"     Title: nvme-get-property
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 09/05/2018
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-GET\-PROPERTY" "1" "09/05/2018" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-get-property \- Reads and shows the defined NVMe controller property for NVMe over Fabric
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme get\-property\fR <device> [\-\-offset=<offset> | \-o <offset>]
+                                [\-\-human\-readable | \-H ]
+.fi
+.SH "DESCRIPTION"
+.sp
+Reads and shows the defined NVMe controller property for NVMe over Fabric\&.
+.SH "OPTIONS"
+.PP
+\-o, \-\-offset
+.RS 4
+The offset of the property\&. One of CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20
+.RE
+.PP
+\-H
+.RS 4
+\-\-human\-readable: Show the fields packed in the propery
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The following will run the get\-property command with offset 0
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme get\-property /dev/nvme0 \-\-offset=0x0 \-\-human\-readable
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "BUGS"
+.sp
+Currently the CAP value is truncated to 32 bits due to a limitation in the ioctl interface\&.
+.sp
+In a recent enough kernel, the 64 bit value is shown in kernel traces\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+First enable traces by this command
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# echo 1 > /sys/kernel/debug/tracing/events/nvme/enable
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Then look for NVMe Fabrics command (0x7f) at trace
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/sys/kernel/debug/tracing/trace
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

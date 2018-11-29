@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme id-ns' <device> [-v | --vendor-specific] [-b | --raw-binary]
 		    [--namespace-id=<nsid> | -n <nsid>] [-f | --force]
+		    [--human-readable | -H]
 		    [--output-format=<fmt> | -o <fmt>]
 
 DESCRIPTION

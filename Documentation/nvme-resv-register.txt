@@ -8,7 +8,12 @@ nvme-resv-register - Register an nvme reservation
 SYNOPSIS
 --------
 [verse]
-'nvme resv-register' <device>
+'nvme resv-register' <device> [--namespace-id=<nsid> | -n <nsid>]
+			      [--crkey=<crkey> | -c <crkey>]
+			      [--nrkey=<nrkey> | -k <nrkey>]
+			      [--rrega=<rrega> | -r <rrega>]
+			      [--cptpl=<cptpl> | -p <cptpl>]
+			      [--iekey | -i]
 
 DESCRIPTION
 -----------

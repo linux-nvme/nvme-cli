@@ -1,0 +1,108 @@
+'\" t
+.\"     Title: nvme-effects-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 09/05/2018
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-EFFECTS\-LOG" "1" "09/05/2018" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-effects-log \- Send NVMe Command Effects log page request, returns result and log
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme effects\-log\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>]
+                            [\-\-human\-readable | \-H]
+                            [\-\-raw\-binary | \-b]
+.fi
+.SH "DESCRIPTION"
+.sp
+Retrieves the NVMe Command Effects log page from an NVMe device and provides the retuned structure\&.
+.sp
+The <device> parameter is mandatory and should be the NVMe character device (ex: /dev/nvme0)\&.
+.sp
+On success, the returned command effects log structure will be printed for each command that is supported\&.
+.SH "OPTIONS"
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+This option will set the reporting format to normal, json, or binary\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-H, \-\-human\-readable
+.RS 4
+This option will parse and format many of the bit fields into a human\-readable format\&.
+.RE
+.PP
+\-b, \-\-raw\-binary
+.RS 4
+This option will print the raw buffer to stdout\&. Structure is not parsed by program\&. This overrides the human\-readable option\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Print the effects log page in a human readable format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme effects\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Have the program return the raw structure in binary:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme effects\-log /dev/nvme0 \-\-raw\-binary > effects_log\&.raw
+# nvme effects\-log /dev/nvme0 \-b > effects_log\&.raw
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

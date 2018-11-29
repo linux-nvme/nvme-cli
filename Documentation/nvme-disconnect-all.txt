@@ -1,0 +1,34 @@
+nvme-disconnect-all(1)
+======================
+
+NAME
+----
+nvme-disconnect-all - Disconnect from all connected Fabrics controllers.
+
+SYNOPSIS
+--------
+[verse]
+'nvme disconnect-all'
+
+DESCRIPTION
+-----------
+Disconnects and removes all existing NVMe over Fabrics controllers.
+
+See the documentation for the nvme-disconnect(1) command for further
+background.
+
+EXAMPLES
+--------
+* Disconnect all existing nvme controllers:
++
+------------
+# nvme disconnect-all
+------------
+
+SEE ALSO
+--------
+nvme-disconnect(1)
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,54 @@
+nvme-telemetry-log(1)
+=====================
+
+NAME
+----
+nvme-telemetry-log - Retrieves a Telemetry Host-Initiated log page from an NVMe device
+
+SYNOPSIS
+--------
+[verse]
+'nvme telemetry-log' <device> [--output-file=<file> | -o <file>]
+		      [--host-generate=<gen> | -g <gen>]
+
+DESCRIPTION
+-----------
+Retrieves an Telemetry Host-Initiated log page from an NVMe device and provides
+the retuned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned log structure will be in raw binary format _only_ with
+--output-file option which is mandatory.
+
+OPTIONS
+-------
+-o <file>::
+--output-file=<file>::
+	File name to which raw binary data will be saved to.
+
+-g <gen>::
+--host-generate=<gen>::
+	If set to 1, controller shall capture the Telemetry Host-Initiated data
+	representing the internal state of the controller at the time the
+	associated Get Log Page command is processed.
+	If cleated to 0, controller shall _not_ update this data.
+
+-d <da>::
+--data-area=<da>::
+	Retrieves the specific data area requested. Valid inputs are 1,2,3. If
+	this option is not specified, the default value is 3, since that will
+	always give the user all three data areas.
+
+EXAMPLES
+--------
+* Retrieve Telemetry Host-Initiated data to telemetry_log.bin
++
+------------
+# nvme telemetry-log /dev/nvme0 --output-file=telemetry_log.bin
+------------
+
+NVME
+----
+Part of the nvme-user suite

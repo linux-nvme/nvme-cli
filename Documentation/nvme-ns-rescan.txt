@@ -1,0 +1,32 @@
+nvme-ns-rescan(1)
+=================
+
+NAME
+----
+nvme-ns-rescan - Rescans the nvme namespaces.
+
+SYNOPSIS
+--------
+[verse]
+'nvme ns-rescan' <device>
+
+DESCRIPTION
+-----------
+Requests NVMe controller rescans the namespaces. The <device> param is mandatory and must
+be an NVMe character device (ex: /dev/nvme0).
+
+OPTIONS
+-------
+None
+
+EXAMPLES
+--------
+* Rescans the nvme namespaces.
++
+------------
+# nvme ns-rescan /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite

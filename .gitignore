@@ -6,7 +6,13 @@ a.out
 *.swp
 NVME-VERSION-FILE
 
+cscope.*
+
 /debian/files
 /debian/nvme-cli.debhelper.log
 /debian/nvme-cli.substvars
 /debian/nvme-cli
+
+tests/__pycache__
+tests/nvmetests
+tests/*.pyc

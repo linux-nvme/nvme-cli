@@ -746,7 +746,7 @@ nvme-wdc-cap-diag(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme wdc cap-diag</em> &lt;device&gt; [--output-file=&lt;FILE&gt;, -o &lt;FILE&gt;]</pre>
+<pre class="content"><em>nvme wdc cap-diag</em> &lt;device&gt; [--output-file=&lt;FILE&gt;, -o &lt;FILE&gt;] [--transfer-size=&lt;SIZE&gt;, -s &lt;SIZE&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -774,6 +774,17 @@ Results for any other device are undefined.</p></div>
 <dd>
 <p>
         Output file; defaults to device serial number followed by "cap_diag" suffix
+</p>
+</dd>
+<dt class="hdlist1">
+-s &lt;SIZE&gt;
+</dt>
+<dt class="hdlist1">
+--transfer-size=&lt;SIZE&gt;
+</dt>
+<dd>
+<p>
+    Transfer size; defaults to 0x10000 (65536 decimal) bytes
 </p>
 </dd>
 </dl></div>
@@ -810,6 +821,24 @@ Gets the capture diagnostics log from the device and saves to defined file with 
 <pre><code># nvme wdc cap-diag /dev/nvme0 -o /tmp/test</code></pre>
 </div></div>
 </li>
+<li>
+<p>
+Gets the capture diagnostics log from the device transferring the data in 64k chunks and saves to default file in current directory (e.g. STM00019F3F9internal_fw_log.bin):
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme wdc cap-diag /dev/nvme0 -s 0x10000</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Gets the capture diagnostics log from the device transferring the data in 16k chunks and saves to default file in current directory (e.g. STM00019F3F9internal_fw_log.bin):
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme wdc cap-diag /dev/nvme0 -s 16384</code></pre>
+</div></div>
+</li>
 </ul></div>
 </div>
 </div>
@@ -823,7 +852,7 @@ Gets the capture diagnostics log from the device and saves to defined file with 
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-03-01 10:14:21 EST
+Last updated 2018-10-12 13:02:47 MDT
 </div>
 </div>
 </body>

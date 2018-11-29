@@ -1,0 +1,37 @@
+nvme-netapp-smdevices(1)
+========================
+
+NAME
+----
+nvme-netapp-smdevices - Display information for each NVMe path to an E-Series volume
+
+SYNOPSIS
+--------
+[verse]
+'nvme netapp smdevices' [-o <fmt> | --output-format=<fmt>]
+
+DESCRIPTION
+-----------
+Display vendor-specific information for each NVMe path to an E-Series namespace
+currently connnected to the host.  The E-Series paths are identified from the
+NVMe nodes in /dev by sending an Identify Controller.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+              Set the reporting format to 'normal' (default), 'column', or
+              'json'. Only one output format can be used at a time.
+
+EXAMPLES
+--------
+* Display information, in a column-based format, for each path to an E-Series
+namespace.
++
+------------
+# nvme netapp smdevices -o column
+------------
+
+NVME
+----
+Part of the nvme-user suite

@@ -69,12 +69,11 @@ struct nvme_nvm_getbbtbl {
 	__le32	nsid;
 	__le32	cdw2;
 	__le32	cdw3;
-	__le64	metadata;
+	__u64	metadata;
 	__u64	addr;
-	__le32	metadata_len;
-	__le32	data_len;
+	__u32	metadata_len;
+	__u32	data_len;
 	__le64	ppa;
-	__le32	cdw11;
 	__le32	cdw12;
 	__le32	cdw13;
 	__le32	cdw14;
@@ -109,7 +108,7 @@ struct nvme_nvm_lp_tbl {
 	struct nvme_nvm_lp_mlc	mlc;
 };
 
-struct nvme_nvm_id_group {
+struct nvme_nvm_id12_group {
 	__u8			mtype;
 	__u8			fmtype;
 	__le16			res16;
@@ -152,7 +151,33 @@ struct nvme_nvm_addr_format {
 	__u8			res[4];
 } __attribute__((packed));
 
-struct nvme_nvm_id {
+enum {
+	LNVM_IDFY_CAP_BAD_BLK_TBL_MGMT	= 0,
+	LNVM_IDFY_CAP_HYBRID_CMD_SUPP	= 1,
+	LNVM_IDFY_CAP_VCOPY		= 0,
+	LNVM_IDFY_CAP_MRESETS		= 1,
+	LNVM_IDFY_DOM_HYBRID_MODE	= 0,
+	LNVM_IDFY_DOM_ECC_MODE		= 1,
+	LNVM_IDFY_GRP_MTYPE_NAND	= 0,
+	LNVM_IDFY_GRP_FMTYPE_SLC	= 0,
+	LNVM_IDFY_GRP_FMTYPE_MLC	= 1,
+	LNVM_IDFY_GRP_FMTYPE_TLC	= 2,
+	LNVM_IDFY_GRP_MPOS_SNGL_PLN_RD	= 0,
+	LNVM_IDFY_GRP_MPOS_DUAL_PLN_RD	= 1,
+	LNVM_IDFY_GRP_MPOS_QUAD_PLN_RD	= 2,
+	LNVM_IDFY_GRP_MPOS_SNGL_PLN_PRG	= 8,
+	LNVM_IDFY_GRP_MPOS_DUAL_PLN_PRG	= 9,
+	LNVM_IDFY_GRP_MPOS_QUAD_PLN_PRG	= 10,
+	LNVM_IDFY_GRP_MPOS_SNGL_PLN_ERS	= 16,
+	LNVM_IDFY_GRP_MPOS_DUAL_PLN_ERS	= 17,
+	LNVM_IDFY_GRP_MPOS_QUAD_PLN_ERS	= 18,
+	LNVM_IDFY_GRP_MCCAP_SLC		= 0,
+	LNVM_IDFY_GRP_MCCAP_CMD_SUSP	= 1,
+	LNVM_IDFY_GRP_MCCAP_SCRAMBLE	= 2,
+	LNVM_IDFY_GRP_MCCAP_ENCRYPT	= 3,
+};
+
+struct nvme_nvm_id12 {
 	__u8			ver_id;
 	__u8			vmnt;
 	__u8			cgrps;
@@ -161,7 +186,64 @@ struct nvme_nvm_id {
 	__le32			dom;
 	struct nvme_nvm_addr_format ppaf;
 	__u8			resv[228];
-	struct nvme_nvm_id_group groups[4];
+	struct nvme_nvm_id12_group groups[4];
+} __attribute__((packed));
+
+struct nvme_nvm_id20_addrf {
+	__u8			grp_len;
+	__u8			pu_len;
+	__u8			chk_len;
+	__u8			lba_len;
+	__u8			resv[4];
+} __attribute__((packed));
+
+struct nvme_nvm_id20 {
+	__u8			mjr;
+	__u8			mnr;
+	__u8			resv[6];
+
+	struct nvme_nvm_id20_addrf lbaf;
+
+	__le32			mccap;
+	__u8			resv2[12];
+
+	__u8			wit;
+	__u8			resv3[31];
+
+	/* Geometry */
+	__le16			num_grp;
+	__le16			num_pu;
+	__le32			num_chk;
+	__le32			clba;
+	__u8			resv4[52];
+
+	/* Write data requirements */
+	__le32			ws_min;
+	__le32			ws_opt;
+	__le32			mw_cunits;
+	__le32			maxoc;
+	__le32			maxocpu;
+	__u8			resv5[44];
+
+	/* Performance related metrics */
+	__le32			trdt;
+	__le32			trdm;
+	__le32			twrt;
+	__le32			twrm;
+	__le32			tcrst;
+	__le32			tcrsm;
+	__u8			resv6[40];
+
+	/* Reserved area */
+	__u8			resv7[2816];
+
+	/* Vendor specific */
+	__u8			vs[1024];
+} __attribute__((packed));
+
+struct nvme_nvm_id {
+	__u8			ver_id;
+	__u8			resv[4095];
 } __attribute__((packed));
 
 struct nvme_nvm_bb_tbl {
@@ -220,7 +302,7 @@ static inline struct ppa_addr generic_to_dev_addr(
 int lnvm_do_init(char *, char *);
 int lnvm_do_list_devices(void);
 int lnvm_do_info(void);
-int lnvm_do_create_tgt(char *, char *, char *, int, int, int);
+int lnvm_do_create_tgt(char *, char *, char *, int, int, int, int);
 int lnvm_do_remove_tgt(char *);
 int lnvm_do_factory_init(char *, int, int, int);
 int lnvm_do_id_ns(int, int, unsigned int);

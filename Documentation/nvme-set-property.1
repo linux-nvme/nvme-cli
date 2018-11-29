@@ -1,0 +1,57 @@
+'\" t
+.\"     Title: nvme-set-property
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 09/05/2018
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SET\-PROPERTY" "1" "09/05/2018" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-set-property \- Writes and shows the defined NVMe controller property for NVMe ove Fabric
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme set\-property\fR <device> [\-\-offset=<offset> | \-o <offset>]
+                                [\-\-value=<val> | \-v <val>]
+.fi
+.SH "DESCRIPTION"
+.sp
+Writes and shows the defined NVMe controller property for NVMe ove Fabric\&.
+.SH "OPTIONS"
+.PP
+\-o, \-\-offset
+.RS 4
+The offset of the property\&.
+.RE
+.PP
+\-v
+.RS 4
+\-\-value: The value of the property to be set\&.
+.RE
+.SH "EXAMPLES"
+.sp
+No examples (yet)\&.
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

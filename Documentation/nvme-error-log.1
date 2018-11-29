@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-error-log
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 06/28/2017
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 09/05/2018
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ERROR\-LOG" "1" "06/28/2017" "NVMe" "NVMe Manual"
+.TH "NVME\-ERROR\-LOG" "1" "09/05/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,8 +32,7 @@ nvme-error-log \- Send NVME Error log page request, return result and log
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme error\-log\fR <device>  [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                         [\-\-log\-entries=<entries> | \-e <entries>]
+\fInvme error\-log\fR <device>  [\-\-log\-entries=<entries> | \-e <entries>]
                          [\-\-raw\-binary | \-b]
                          [\-\-output\-format=<fmt> | \-o <fmt>]
 .fi
@@ -45,11 +44,6 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 .sp
 On success, the returned error log structure may be returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format or the raw buffer may be printed to stdout for another program to parse\&.
 .SH "OPTIONS"
-.PP
-\-n <nsid>, \-\-namespace\-id=<nsid>
-.RS 4
-Retrieve the Error Log for the given nsid\&. This is optional and its success may depend on the device\(cqs capabilities to provide this log on a per\-namespace basis (see the NVMe Identify Controller for this capability)\&. The default nsid to use is 0xffffffff for the device global error log\&.
-.RE
 .PP
 \-e <entries>, \-\-log\-entries=<entries>
 .RS 4

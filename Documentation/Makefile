@@ -35,6 +35,19 @@ MAN_REPO = ../../nvme-manpages
 
 ASCIIDOC_HTML = xhtml11
 ASCIIDOC_CONF = -f asciidoc.conf
+
+ifdef USE_ASCIIDOCTOR
+ASCIIDOC = asciidoctor
+ASCIIDOC_CONF =
+ASCIIDOC_HTML = xhtml5
+ASCIIDOC_DOCBOOK = docbook45
+ASCIIDOC_EXTRA += -acompat-mode
+ASCIIDOC_EXTRA += -I. -rasciidoctor-extensions
+ASCIIDOC_EXTRA += -alitdd='&\#x2d;&\#x2d;'
+ASCIIDOC_EXTRA += -amansource='NVMe'
+ASCIIDOC_EXTRA += -amanmanual='NVMe Manual'
+endif
+
 ASCIIDOC_COMMON = $(ASCIIDOC) $(ASCIIDOC_EXTRA) $(ASCIIDOC_CONF)
 TXT_TO_HTML = $(ASCIIDOC_COMMON) -b $(ASCIIDOC_HTML)
 

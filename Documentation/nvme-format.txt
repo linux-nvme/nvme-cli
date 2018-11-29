@@ -15,7 +15,7 @@ SYNOPSIS
 		    [--pi=<pi> | -i <pi>]
 		    [--ms=<ms> | -m <ms>]
 		    [--reset | -r ]
-		    [--timeout | -t ]
+		    [--timeout=<timeout> | -t <timeout> ]
 
 DESCRIPTION
 -----------

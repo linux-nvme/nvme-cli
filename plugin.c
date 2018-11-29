@@ -21,18 +21,28 @@ static int help(int argc, char **argv, struct plugin *plugin)
 {
 	char man[0x100];
 	struct program *prog = plugin->parent;
+	char *str = argv[1];
+	int i;
 
 	if (argc == 1) {
 		general_help(plugin);
 		return 0;
 	}
 
-	if (plugin->name)
-		sprintf(man, "%s-%s-%s", prog->name, plugin->name, argv[1]);
-	else
-		sprintf(man, "%s-%s", prog->name, argv[1]);
-	if (execlp("man", "man", man, (char *)NULL))
-		perror(argv[1]);
+	for (i = 0; plugin->commands[i]; i++) {
+		struct command *cmd = plugin->commands[i];
+
+		if (strcmp(str, cmd->name))
+			if (!cmd->alias || (cmd->alias && strcmp(str, cmd->alias)))
+				continue;
+
+		if (plugin->name)
+			sprintf(man, "%s-%s-%s", prog->name, plugin->name, cmd->name);
+		else
+			sprintf(man, "%s-%s", prog->name, cmd->name);
+		if (execlp("man", "man", man, (char *)NULL))
+			perror(argv[1]);
+	}
 	return 0;
 }
 
@@ -51,7 +61,8 @@ void general_help(struct plugin *plugin)
 	struct program *prog = plugin->parent;
 	struct plugin *extension;
 	unsigned i = 0;
-
+	unsigned padding = 15;
+	unsigned curr_length = 0;
 	printf("%s-%s\n", prog->name, prog->version);
 
 	usage(plugin);
@@ -68,12 +79,19 @@ void general_help(struct plugin *plugin)
 
 	printf("\nThe following are all implemented sub-commands:\n");
 
+	/* iterate through all commands to get maximum length */
+	/* Still need to handle the case of ultra long strings, help messages, etc */
 	for (; plugin->commands[i]; i++)
-		printf("  %-*s %s\n", 15, plugin->commands[i]->name,
+		if (padding < (curr_length = 2 + strlen(plugin->commands[i]->name)))
+			padding = curr_length;
+
+	i = 0;
+	for (; plugin->commands[i]; i++)
+		printf("  %-*s %s\n", padding, plugin->commands[i]->name,
 					plugin->commands[i]->help);
 
-	printf("  %-*s %s\n", 15, "version", "Shows the program version");
-	printf("  %-*s %s\n", 15, "help", "Display this help");
+	printf("  %-*s %s\n", padding, "version", "Shows the program version");
+	printf("  %-*s %s\n", padding, "help", "Display this help");
 	printf("\n");
 
 	if (plugin->name)
@@ -125,15 +143,17 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	while (*str == '-')
 		str++;
 
+	if (!strcmp(str, "help"))
+		return help(argc, argv, plugin);
+	if (!strcmp(str, "version"))
+		return version(plugin);
+
 	for (; plugin->commands[i]; i++) {
 		struct command *cmd = plugin->commands[i];
 
-		if (!strcmp(str, "help"))
-			return help(argc, argv, plugin);
-		if (!strcmp(str, "version"))
-			return version(plugin);
 		if (strcmp(str, cmd->name))
-			continue;
+			if (!cmd->alias || (cmd->alias && strcmp(str, cmd->alias)))
+				continue;
 
 		return (cmd->fn(argc, argv, cmd, plugin));
 	}
@@ -148,9 +168,13 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	while (extension) {
 		if (!strcmp(str, extension->name))
 			return handle_plugin(argc - 1, &argv[1], extension);
+		extension = extension->next;
+	}
 
-		/* If the command is executed with the extension name and
-		 * command together ("plugin-command"), run the plug in */
+	/* If the command is executed with the extension name and
+	 * command together ("plugin-command"), run the plug in */
+	extension = plugin->next;
+	while (extension) {
 		if (!strncmp(str, extension->name, strlen(extension->name))) {
 			argv[0] += strlen(extension->name);
 			while (*argv[0] == '-')

@@ -242,11 +242,45 @@ static int read_sys_node(char *where, char *save, size_t savesz)
 	return ret;
 }
 
+static FILE *open_pci_ids(void)
+{
+	int i;
+	char *pci_ids_path;
+	FILE *fp;
+
+	const char* pci_ids[] = {
+		"/usr/share/hwdata/pci.ids",  /* RHEL */
+		"/usr/share/pci.ids",		  /* SLES */
+		"/usr/share/misc/pci.ids",	  /* Ubuntu */
+		NULL
+	};
+
+	/* First check if user gave pci ids in environment */
+	if ((pci_ids_path = getenv("PCI_IDS_PATH")) != NULL) {
+		if ((fp = fopen(pci_ids_path, "r")) != NULL) {
+			return fp;
+		}
+		else {
+			/* fail if user provided environment variable but could not open */
+			perror(pci_ids_path);
+			return NULL;
+		}
+	}
+
+	/* NO environment, check in predefined places */
+	for (i = 0; pci_ids[i] != NULL; i++) {
+		if ((fp = fopen(pci_ids[i], "r")) != NULL)
+			return fp;
+	}
+
+	fprintf(stderr, "Could not find pci.ids file\n");
+	return NULL;
+}
+
 char *nvme_product_name(int id)
 {
-	char *line;
+	char *line = NULL;
 	ssize_t amnt;
-	FILE *file = fopen("/usr/share/hwdata/pci.ids", "r");
 	char vendor[7] = { 0 };
 	char device[7] = { 0 };
 	char sub_device[7] = { 0 };
@@ -254,6 +288,7 @@ char *nvme_product_name(int id)
 	char class[13] = { 0 };
 	size_t size = 1024;
 	char ret;
+	FILE *file = open_pci_ids();
 
 	if (!file)
 		goto error1;
@@ -270,12 +305,13 @@ char *nvme_product_name(int id)
 	ret |= read_sys_node(fmt4, device, 7);
 	ret |= read_sys_node(fmt5, class, 13);
 	if (ret)
-		goto error1;
-
+		goto error0;
 
 	line = malloc(1024);
-	if (!line)
-		goto error1;
+	if (!line) {
+		fprintf(stderr, "malloc: %s\n", strerror(errno));
+		goto error0;
+	}
 
 	while ((amnt = getline(&line, &size, file)) != -1) {
 		if (is_comment(line) && !is_class_info(line))
@@ -284,16 +320,19 @@ char *nvme_product_name(int id)
 			line[amnt - 1] = '\0';
 			device_top = strdup(line);
 			parse_vendor_device(&line, file,
-					    device,
-					    sub_device,
-					    sub_vendor);
+						device,
+						sub_device,
+						sub_vendor);
 		}
 		if (is_class_info(line))
 			pull_class_info(&line, file, class);
 	}
+	fclose(file);
 	format_all(line, vendor, device);
 	free_all();
 	return line;
- error1:
-	return strdup("Unknown Device");
+error0:
+	fclose(file);
+error1:
+	return !line ? strdup("NULL") : strdup("Unknown Device");
 }

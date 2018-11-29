@@ -8,7 +8,7 @@
 #define NAME(n, d)
 
 #undef ENTRY
-#define ENTRY(n, h, f) \
+#define ENTRY(n, h, f, ...) \
 static int f(int argc, char **argv, struct command *command, struct plugin *plugin);
 
 #undef COMMAND_LIST
@@ -28,13 +28,25 @@ static int f(int argc, char **argv, struct command *command, struct plugin *plug
 #undef NAME
 #define NAME(n, d)
 
-#undef ENTRY
-#define ENTRY(n, h, f)			\
+#undef ENTRY_W_ALIAS
+#define ENTRY_W_ALIAS(n, h, f, a)	\
 static struct command f ## _cmd = {	\
 	.name = n, 			\
 	.help = h, 			\
 	.fn = f, 			\
+	.alias = a, 			\
 };
+
+#undef ENTRY_WO_ALIAS
+#define ENTRY_WO_ALIAS(n, h, f)		\
+	ENTRY_W_ALIAS(n, h, f, NULL)
+
+#undef ENTRY_SEL
+#define ENTRY_SEL(n, h, f, a, CMD, ...) CMD
+
+#undef ENTRY
+#define ENTRY(...) 		\
+	ENTRY_SEL(__VA_ARGS__, ENTRY_W_ALIAS, ENTRY_WO_ALIAS)(__VA_ARGS__)
 
 #undef COMMAND_LIST
 #define COMMAND_LIST(args...) args
@@ -54,7 +66,7 @@ static struct command f ## _cmd = {	\
 #define NAME(n, d)
 
 #undef ENTRY
-#define ENTRY(n, h, f) &f ## _cmd,
+#define ENTRY(n, h, f, ...) &f ## _cmd,
 
 #undef COMMAND_LIST
 #define COMMAND_LIST(args...)	\

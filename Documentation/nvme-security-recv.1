@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-security-recv
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 06/28/2017
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 09/05/2018
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SECURITY\-RECV" "1" "06/28/2017" "NVMe" "NVMe Manual"
+.TH "NVME\-SECURITY\-RECV" "1" "09/05/2018" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,13 +32,13 @@ nvme-security-recv \- Security Recv command
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme security\-recv\fR [<device>] [\-\-size=<size> | \-x <size>]
+\fInvme security\-recv\fR <device> [\-\-size=<size> | \-x <size>]
                     [\-\-secp=<security\-protocol> | \-p <security\-protocol>]
                     [\-\-spsp=<protocol\-specific> | \-s <protocol\-specific>]
                     [\-\-nssf=<nvme\-specific> | \-N <nvme\-specific>]
-                    [\-\-tl=<transfer\-length> | \-t <transfer\-length>]
+                    [\-\-al=<allocation\-length> | \-t <allocation\-length>]
                     [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                    [\-b | \-\-raw\-binary]
+                    [\-\-raw\-binary | \-b]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -74,7 +74,7 @@ Security Protocol: This field specifies the security protocol as defined in SPC\
 SP Specific: The value of this field is specific to the Security Protocol as defined in SPC\-4\&.
 .RE
 .PP
-\-a <allocation\-length>, \-\-al=<allocation\-length>
+\-t <allocation\-length>, \-\-al=<allocation\-length>
 .RS 4
 Allocation Length: The value of this field is specific to the Security Protocol as defined in SPC\-4\&.
 .RE

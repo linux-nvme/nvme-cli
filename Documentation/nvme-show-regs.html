@@ -737,7 +737,7 @@ nvme-id-ns(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-show-regs -
-   Reads and shows the defined NVMe controller registers.
+   Reads and shows the defined NVMe controller registers for NVMe over PCIe or the controller properties for NVMe over Fabrics.
 </p>
 </div>
 </div>
@@ -754,12 +754,16 @@ nvme-id-ns(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends an identify namespace command and
-provides the result and returned structure.</p></div>
+<div class="paragraph"><p>For the NVMe over PCIe device given, sends an identify namespace command and
+provides the result and returned structure.
+For the NVMe over Fabrics device given, sends a fabric command and provides
+the result and returned structure.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and must be the nvme admin character
-device (ex: /dev/nvme0). The program uses knowledge of the sysfs layout
-to map the device to the pci resource stored there and mmaps the memory
-to get access to the registers.</p></div>
+device (ex: /dev/nvme0). For NVMe over PCIe, the program uses knowledge of the
+sysfs layout to map the device to the pci resource stored there and mmaps the
+memory to get access to the registers. For NVMe over Fabrics, the programs
+sends a fabric command to get the properties of the target NVMe controller.
+Only the supported properties are displayed.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -774,7 +778,7 @@ to get access to the registers.</p></div>
 </dt>
 <dd>
 <p>
-       Display registers in human readable format.
+       Display registers or supported properties in human readable format.
 </p>
 </dd>
 </dl></div>
@@ -786,7 +790,8 @@ to get access to the registers.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Show the nvme pci controller registers in a binary format:
+Show the NVMe over PCIe controller registers or the NVMe over Fabric controller
+properties in a binary format:
 </p>
 <div class="listingblock">
 <div class="content">
@@ -795,7 +800,8 @@ Show the nvme pci controller registers in a binary format:
 </li>
 <li>
 <p>
-Show the nvme pci controller registers in a human readable format:
+Show the NVMe over PCIe controller registers or the NVMe over Fabric controller
+properties in a human readable format:
 </p>
 <div class="listingblock">
 <div class="content">
@@ -815,7 +821,7 @@ Show the nvme pci controller registers in a human readable format:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-02-27 10:11:58 EST
+Last updated 2017-12-13 08:26:02 MST
 </div>
 </div>
 </body>

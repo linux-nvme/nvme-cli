@@ -10,8 +10,9 @@ SYNOPSIS
 [verse]
 'nvme resv-report' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--numd=<num-dwords> | -d <num-dwords>]
-			[-b | --raw-binary]
-			[-o <fmt> | --output-format=<fmt>]
+			[--cdw11=<cdw11> | -c <cdw11>]
+			[--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>]
 
 DESCRIPTION
 -----------

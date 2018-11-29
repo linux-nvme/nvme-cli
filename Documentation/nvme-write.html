@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 8.6.9" />
 <title>nvme-write(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +94,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +225,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -750,15 +752,20 @@ nvme-write(1) Manual Page
                         [--block-count=&lt;nlb&gt; | -c &lt;nlb&gt;]
                         [--data-size=&lt;size&gt; | -z &lt;size&gt;]
                         [--metadata-size=&lt;size&gt; | -y &lt;size&gt;]
+                        [--ref-tag=&lt;reftag&gt; | -r &lt;reftag&gt;]
                         [--data=&lt;data-file&gt; | -d &lt;data-file&gt;]
                         [--metadata=&lt;metadata-file&gt; | -M &lt;metadata-file&gt;]
                         [--prinfo=&lt;prinfo&gt; | -p &lt;prinfo&gt;]
-                        [--ref-tag=&lt;reftag&gt; | -r &lt;reftag&gt;]
                         [--app-tag-mask=&lt;appmask&gt; | -m &lt;appmask&gt;]
                         [--app-tag=&lt;apptag&gt; | -a &lt;apptag&gt;]
                         [--limited-retry | -l]
-                        [--latency | -t]
-                        [--force-unit-access | -f]</pre>
+                        [--force-unit-access | -f]
+                        [--dir-type=&lt;type&gt; | -T &lt;type&gt;]
+                        [--dir-spec=&lt;spec&gt; | -S &lt;spec&gt;]
+                        [--dsm=&lt;dsm&gt; | -D &lt;dsm&gt;]
+                        [--show-command | -v]
+                        [--dry-run | -w]
+                        [--latency | -t]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -947,10 +954,80 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
---latency
+-T &lt;type&gt;
 </dt>
 <dt class="hdlist1">
+--dir-type=&lt;type&gt;
+</dt>
+<dd>
+<p>
+        Optional directive type. The nvme-cli only enforces the value
+        be in the defined range for the directive type, though the NVMe
+        specifcation (1.3a) defines only one directive, 01h, for write
+        stream idenfiers.
+</p>
+</dd>
+<dt class="hdlist1">
+-S &lt;spec&gt;
+</dt>
+<dt class="hdlist1">
+--dir-spec=&lt;spec&gt;
+</dt>
+<dd>
+<p>
+        Optional field for directive specifics. When used with
+        write streams, this value is defined to be the write stream
+        identifier. The nvme-cli will not validate the stream requested
+        is within the controller&#8217;s capabilities.
+</p>
+</dd>
+<dt class="hdlist1">
+-D &lt;dsm&gt;
+</dt>
+<dt class="hdlist1">
+--dsm=&lt;dsm&gt;
+</dt>
+<dd>
+<p>
+        The optional data set management attributes for this command. The
+        argument for this is the lower 16 bits of the DSM field in a write
+        command; the upper 16 bits of the field come from the directive
+        specific field, if used. This may be used to set attributes for
+        the LBAs being written, like access frequency, type, latency,
+        among other things, as well as yet to be defined types. Please
+        consult the NVMe specification for detailed breakdown of how to
+        use this field.
+</p>
+</dd>
+<dt class="hdlist1">
+-v
+</dt>
+<dt class="hdlist1">
+--show-cmd
+</dt>
+<dd>
+<p>
+        Print out the command to be sent.
+</p>
+</dd>
+<dt class="hdlist1">
+-w
+</dt>
+<dt class="hdlist1">
+--dry-run
+</dt>
+<dd>
+<p>
+        Do not actually send the command. If want to use --dry-run option,
+        --show-cmd option <em>must</em> be set. Otherwise --dry-run optionn will be
+        <em>ignored</em>.
+</p>
+</dd>
+<dt class="hdlist1">
 -t
+</dt>
+<dt class="hdlist1">
+--latency
 </dt>
 <dd>
 <p>
@@ -976,7 +1053,8 @@ metadata is passes.</p></td>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-02-27 10:11:58 EST
+Last updated
+ 2018-01-30 19:28:39 KST
 </div>
 </div>
 </body>

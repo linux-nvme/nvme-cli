@@ -11,7 +11,7 @@ _cmds="list id-ctrl id-ns list-ns create-ns delete-ns \
 	resv-report dsm flush compare read write write-zeroes \
 	write-uncor reset subsystem-reset show-regs discover \
 	connect-all connect disconnect version help \
-	intel lnvm memblaze"
+	intel lnvm memblaze list-subsys"
 
 nvme_list_opts () {
         local opts=""

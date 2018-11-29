@@ -13,7 +13,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 Generate a random host NQN in the form:
-nqn.2014-08.org.nvmexpress:NVMf:uuid:1b4e28ba-2fa1-11d2-883f-0016d3cca427
+nqn.2014-08.org.nvmexpress:uuid:1b4e28ba-2fa1-11d2-883f-0016d3cca427
 and prints it to stdout.
 
 OPTIONS

@@ -1,11 +1,9 @@
-#include <endian.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
 
-#include <endian.h>
 #include <errno.h>
 #include <getopt.h>
 #include <fcntl.h>
@@ -16,8 +14,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
-
-#include <linux/types.h>
 
 #include "nvme-ioctl.h"
 
@@ -58,23 +54,35 @@ int nvme_reset_controller(int fd)
 	return ioctl(fd, NVME_IOCTL_RESET);
 }
 
+int nvme_ns_rescan(int fd)
+{
+	int ret;
+
+	ret = nvme_verify_chr(fd);
+	if (ret)
+		return ret;
+	return ioctl(fd, NVME_IOCTL_RESCAN);
+}
+
 int nvme_get_nsid(int fd)
 {
 	static struct stat nvme_stat;
 	int err = fstat(fd, &nvme_stat);
 
 	if (err < 0)
-		return err;
+		return -errno;
 
 	if (!S_ISBLK(nvme_stat.st_mode)) {
 		fprintf(stderr,
 			"Error: requesting namespace-id from non-block device\n");
-		return ENOTBLK;
+		errno = ENOTBLK;
+		return -errno;
 	}
 	return ioctl(fd, NVME_IOCTL_ID);
 }
 
-int nvme_submit_passthru(int fd, int ioctl_cmd, struct nvme_passthru_cmd *cmd)
+int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
+			 struct nvme_passthru_cmd *cmd)
 {
 	return ioctl(fd, ioctl_cmd, cmd);
 }
@@ -89,7 +97,8 @@ static int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd)
 	return ioctl(fd, NVME_IOCTL_IO_CMD, cmd);
 }
 
-int nvme_passthru(int fd, int ioctl_cmd, __u8 opcode, __u8 flags, __u16 rsvd,
+int nvme_passthru(int fd, unsigned long ioctl_cmd, __u8 opcode,
+		  __u8 flags, __u16 rsvd,
 		  __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11,
 		  __u32 cdw12, __u32 cdw13, __u32 cdw14, __u32 cdw15,
 		  __u32 data_len, void *data, __u32 metadata_len,
@@ -240,8 +249,10 @@ struct nvme_dsm_range *nvme_setup_dsm_range(__u32 *ctx_attrs, __u32 *llbas,
 	int i;
 	struct nvme_dsm_range *dsm = malloc(nr_ranges * sizeof(*dsm));
 
-	if (!dsm)
+	if (!dsm) {
+		fprintf(stderr, "malloc: %s\n", strerror(errno));
 		return NULL;
+	}
 	for (i = 0; i < nr_ranges; i++) {
 		dsm[i].cattr = cpu_to_le32(ctx_attrs[i]);
 		dsm[i].nlb = cpu_to_le32(llbas[i]);
@@ -254,7 +265,7 @@ int nvme_resv_acquire(int fd, __u32 nsid, __u8 rtype, __u8 racqa,
 		      bool iekey, __u64 crkey, __u64 nrkey)
 {
 	__le64 payload[2] = { cpu_to_le64(crkey), cpu_to_le64(nrkey) };
-	__u32 cdw10 = racqa | (iekey ? 1 << 3 : 0) | rtype << 8;
+	__u32 cdw10 = (racqa & 0x7) | (iekey ? 1 << 3 : 0) | rtype << 8;
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_acquire,
 		.nsid		= nsid,
@@ -270,7 +281,7 @@ int nvme_resv_register(int fd, __u32 nsid, __u8 rrega, __u8 cptpl,
 		       bool iekey, __u64 crkey, __u64 nrkey)
 {
 	__le64 payload[2] = { cpu_to_le64(crkey), cpu_to_le64(nrkey) };
-	__u32 cdw10 = rrega | (iekey ? 1 << 3 : 0) | cptpl << 30;
+	__u32 cdw10 = (rrega & 0x7) | (iekey ? 1 << 3 : 0) | cptpl << 30;
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_register,
@@ -287,7 +298,7 @@ int nvme_resv_release(int fd, __u32 nsid, __u8 rtype, __u8 rrela,
 		      bool iekey, __u64 crkey)
 {
 	__le64 payload[1] = { cpu_to_le64(crkey) };
-	__u32 cdw10 = rrela | (iekey ? 1 << 3 : 0) | rtype << 8;
+	__u32 cdw10 = (rrela & 0x7) | (iekey ? 1 << 3 : 0) | rtype << 8;
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_release,
@@ -308,35 +319,29 @@ int nvme_resv_report(int fd, __u32 nsid, __u32 numd, __u32 cdw11, void *data)
 		.cdw10		= numd,
 		.cdw11		= cdw11,
 		.addr		= (__u64)(uintptr_t) data,
-		.data_len	= numd << 2,
+		.data_len	= (numd + 1) << 2,
 	};
 
 	return nvme_submit_io_passthru(fd, &cmd);
 }
 
-int nvme_passthru_admin(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
-			__u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10,
-			__u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14,
-			__u32 cdw15, __u32 data_len, void *data,
-			__u32 metadata_len, void *metadata, __u32 timeout_ms)
-{
-	return nvme_passthru(fd, NVME_IOCTL_ADMIN_CMD, opcode, flags, rsvd,
-			     nsid, cdw2, cdw3, cdw10, cdw11, cdw12, cdw13,
-			     cdw14, cdw15, data_len, data, metadata_len,
-			     metadata, timeout_ms, NULL);
-}
-
-int nvme_identify(int fd, __u32 nsid, __u32 cdw10, void *data)
+int nvme_identify13(int fd, __u32 nsid, __u32 cdw10, __u32 cdw11, void *data)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_identify,
 		.nsid		= nsid,
 		.addr		= (__u64)(uintptr_t) data,
-		.data_len	= 0x1000,
+		.data_len	= NVME_IDENTIFY_DATA_SIZE,
 		.cdw10		= cdw10,
+		.cdw11		= cdw11,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);
+}
+
+int nvme_identify(int fd, __u32 nsid, __u32 cdw10, void *data)
+{
+	return nvme_identify13(fd, nsid, cdw10, 0, data);
 }
 
 int nvme_identify_ctrl(int fd, void *data)
@@ -368,10 +373,16 @@ int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
 int nvme_identify_ns_descs(int fd, __u32 nsid, void *data)
 {
 
-	return nvme_identify(fd, nsid, NVME_ID_CNS_CTRL_LIST, data);
+	return nvme_identify(fd, nsid, NVME_ID_CNS_NS_DESC_LIST, data);
 }
 
-int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
+int nvme_identify_nvmset(int fd, __u16 nvmset_id, void *data)
+{
+	return nvme_identify13(fd, 0, NVME_ID_CNS_NVMSET_LIST, nvmset_id, data);
+}
+
+int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
+                 __u16 lsi, bool rae, __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_get_log_page,
@@ -382,41 +393,135 @@ int nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
 	__u32 numd = (data_len >> 2) - 1;
 	__u16 numdu = numd >> 16, numdl = numd & 0xffff;
 
-	cmd.cdw10 = log_id | (numdl << 16);
-	cmd.cdw11 = numdu;
+	cmd.cdw10 = log_id | (numdl << 16) | (rae ? 1 << 15 : 0);
+	if (lsp)
+                cmd.cdw10 |= lsp << 8;
+
+	cmd.cdw11 = numdu | (lsi << 16);
+	cmd.cdw12 = lpo;
+	cmd.cdw13 = (lpo >> 32);
 
 	return nvme_submit_admin_passthru(fd, &cmd);
+
+}
+
+int nvme_get_log(int fd, __u32 nsid, __u8 log_id, bool rae,
+		 __u32 data_len, void *data)
+{
+	void *ptr = data;
+	__u32 offset = 0, xfer_len = data_len;
+	int ret;
+
+	/*
+	 * 4k is the smallest possible transfer unit, so by
+	 * restricting ourselves for 4k transfers we avoid having
+	 * to check the MDTS value of the controller.
+	 */
+	do {
+		xfer_len = data_len - offset;
+		if (xfer_len > 4096)
+			xfer_len = 4096;
+
+		ret = nvme_get_log13(fd, nsid, log_id, NVME_NO_LOG_LSP,
+				     offset, 0, rae, xfer_len, ptr);
+		if (ret)
+			return ret;
+
+		offset += xfer_len;
+		ptr += xfer_len;
+	} while (offset < data_len);
+
+	return 0;
+}
+
+int nvme_get_telemetry_log(int fd, void *lp, int generate_report,
+			   int ctrl_init, size_t log_page_size, __u64 offset)
+{
+	if (ctrl_init)
+		return nvme_get_log13(fd, NVME_NSID_ALL, NVME_LOG_TELEMETRY_CTRL,
+				      NVME_NO_LOG_LSP, offset,
+				      0, 1, log_page_size, lp);
+	if (generate_report)
+		return nvme_get_log13(fd, NVME_NSID_ALL, NVME_LOG_TELEMETRY_HOST,
+				      NVME_TELEM_LSP_CREATE, offset,
+				      0, 1, log_page_size, lp);
+	else
+		return nvme_get_log13(fd, NVME_NSID_ALL, NVME_LOG_TELEMETRY_HOST,
+				      NVME_NO_LOG_LSP, offset,
+				      0, 1, log_page_size, lp);
 }
 
 int nvme_fw_log(int fd, struct nvme_firmware_log_page *fw_log)
 {
-	return nvme_get_log(fd, 0xffffffff, NVME_LOG_FW_SLOT, sizeof(*fw_log), fw_log);
+	return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_FW_SLOT, true,
+			sizeof(*fw_log), fw_log);
 }
 
-int nvme_error_log(int fd, __u32 nsid, int entries,
-		   struct nvme_error_log_page *err_log)
+int nvme_changed_ns_list_log(int fd, struct nvme_changed_ns_list_log *changed_ns_list_log)
 {
-	return nvme_get_log(fd, nsid, NVME_LOG_ERROR, entries * sizeof(*err_log), err_log);
+	return nvme_get_log(fd, 0, NVME_LOG_CHANGED_NS, true,
+			sizeof(changed_ns_list_log->log),
+			changed_ns_list_log->log);
+}
+
+int nvme_error_log(int fd, int entries, struct nvme_error_log_page *err_log)
+{
+	return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_ERROR, false,
+			entries * sizeof(*err_log), err_log);
+}
+
+int nvme_endurance_log(int fd, __u16 group_id, struct nvme_endurance_group_log *endurance_log)
+{
+	return nvme_get_log13(fd, 0, NVME_LOG_ENDURANCE_GROUP, 0, 0, group_id, 0,
+			sizeof(*endurance_log), endurance_log);
 }
 
 int nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log *smart_log)
 {
-	return nvme_get_log(fd, nsid, NVME_LOG_SMART, sizeof(*smart_log), smart_log);
+	return nvme_get_log(fd, nsid, NVME_LOG_SMART, false,
+			sizeof(*smart_log), smart_log);
+}
+
+int nvme_ana_log(int fd, void *ana_log, size_t ana_log_len, int rgo)
+{
+	__u64 lpo = 0;
+
+	return nvme_get_log13(fd, NVME_NSID_ALL, NVME_LOG_ANA, rgo, lpo, 0,
+			true, ana_log_len, ana_log);
+}
+
+int nvme_self_test_log(int fd, struct nvme_self_test_log *self_test_log)
+{
+	return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_DEVICE_SELF_TEST, false,
+		sizeof(*self_test_log), self_test_log);
+}
+
+int nvme_effects_log(int fd, struct nvme_effects_log_page *effects_log)
+{
+	return nvme_get_log(fd, 0, NVME_LOG_CMD_EFFECTS, false,
+			sizeof(*effects_log), effects_log);
 }
 
 int nvme_discovery_log(int fd, struct nvmf_disc_rsp_page_hdr *log, __u32 size)
 {
-	return nvme_get_log(fd, 0, NVME_LOG_DISC, size, log);
+	return nvme_get_log(fd, 0, NVME_LOG_DISC, true, size, log);
+}
+
+int nvme_sanitize_log(int fd, struct nvme_sanitize_log_page *sanitize_log)
+{
+	return nvme_get_log(fd, 0, NVME_LOG_SANITIZE, false,
+			sizeof(*sanitize_log), sanitize_log);
 }
 
 int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
-		 __u32 data_len, void *data, __u32 *result)
+		 __u32 cdw12, __u32 data_len, void *data, __u32 *result)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= opcode,
 		.nsid		= nsid,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
+		.cdw12		= cdw12,
 		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= data_len,
 	};
@@ -428,13 +533,122 @@ int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
 	return err;
 }
 
-int nvme_set_feature(int fd, __u32 nsid, __u8 fid, __u32 value, bool save,
-		     __u32 data_len, void *data, __u32 *result)
+int nvme_set_feature(int fd, __u32 nsid, __u8 fid, __u32 value, __u32 cdw12,
+		     bool save, __u32 data_len, void *data, __u32 *result)
 {
 	__u32 cdw10 = fid | (save ? 1 << 31 : 0);
 
 	return nvme_feature(fd, nvme_admin_set_features, nsid, cdw10, value,
-			    data_len, data, result);
+			    cdw12, data_len, data, result);
+}
+
+static int nvme_property(int fd, __u8 fctype, __le32 off, __le64 *value, __u8 attrib)
+{
+	int err;
+	struct nvme_admin_cmd cmd = {
+		.opcode		= nvme_fabrics_command,
+		.cdw10		= attrib,
+		.cdw11		= off,
+	};
+
+	if (!value) {
+		errno = EINVAL;
+		return -errno;
+	}
+
+	if (fctype == nvme_fabrics_type_property_get){
+		cmd.nsid = nvme_fabrics_type_property_get;
+	} else if(fctype == nvme_fabrics_type_property_set) {
+		cmd.nsid = nvme_fabrics_type_property_set;
+		cmd.cdw12 = *value;
+	} else {
+		errno = EINVAL;
+		return -errno;
+	}
+
+	err = nvme_submit_admin_passthru(fd, &cmd);
+	if (!err && fctype == nvme_fabrics_type_property_get)
+		*value = cpu_to_le64(cmd.result);
+	return err;
+}
+
+static int get_property_helper(int fd, int offset, void *value, int *advance)
+{
+	__le64 value64;
+	int err = -EINVAL;
+
+	switch (offset) {
+	case NVME_REG_CAP:
+	case NVME_REG_ASQ:
+	case NVME_REG_ACQ:
+		*advance = 8;
+		break;
+	default:
+		*advance = 4;
+	}
+
+	if (!value)
+		return err;
+
+	err = nvme_property(fd, nvme_fabrics_type_property_get,
+			cpu_to_le32(offset), &value64, (*advance == 8));
+
+	if (!err) {
+		if (*advance == 8)
+			*((uint64_t *)value) = le64_to_cpu(value64);
+		else
+			*((uint32_t *)value) = le32_to_cpu(value64);
+	}
+
+	return err;
+}
+
+int nvme_get_property(int fd, int offset, uint64_t *value)
+{
+	int advance;
+	return get_property_helper(fd, offset, value, &advance);
+}
+
+int nvme_get_properties(int fd, void **pbar)
+{
+	int offset, advance;
+	int err, ret = -EINVAL;
+	int size = getpagesize();
+
+	*pbar = malloc(size);
+	if (!*pbar) {
+		fprintf(stderr, "malloc: %s\n", strerror(errno));
+		return -ENOMEM;
+	}
+
+	memset(*pbar, 0xff, size);
+	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ; offset += advance) {
+		err = get_property_helper(fd, offset, *pbar + offset, &advance);
+		if (!err)
+			ret = 0;
+	}
+
+	return ret;
+}
+
+int nvme_set_property(int fd, int offset, int value)
+{
+	__le64 val = cpu_to_le64(value);
+	__le32 off = cpu_to_le32(offset);
+	bool is64bit;
+
+	switch (off) {
+	case NVME_REG_CAP:
+	case NVME_REG_ASQ:
+	case NVME_REG_ACQ:
+		is64bit = true;
+		break;
+	default:
+		is64bit = false;
+	}
+
+	return nvme_property(fd, nvme_fabrics_type_property_set,
+			off, &val, is64bit ? 1: 0);
 }
 
 int nvme_get_feature(int fd, __u32 nsid, __u8 fid, __u8 sel, __u32 cdw11,
@@ -443,7 +657,7 @@ int nvme_get_feature(int fd, __u32 nsid, __u8 fid, __u8 sel, __u32 cdw11,
 	__u32 cdw10 = fid | sel << 8;
 
 	return nvme_feature(fd, nvme_admin_get_features, nsid, cdw10, cdw11,
-			    data_len, data, result);
+			    0, data_len, data, result);
 }
 
 int nvme_format(int fd, __u32 nsid, __u8 lbaf, __u8 ses, __u8 pi,
@@ -542,11 +756,11 @@ int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data)
 	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
-int nvme_fw_activate(int fd, __u8 slot, __u8 action)
+int nvme_fw_commit(int fd, __u8 slot, __u8 action, __u8 bpid)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_activate_fw,
-		.cdw10		= (action << 3) | slot,
+		.cdw10		= (bpid << 31) | (action << 3) | slot,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);
@@ -630,3 +844,27 @@ int nvme_dir_recv(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,
         return err;
 }
 
+int nvme_sanitize(int fd, __u8 sanact, __u8 ause, __u8 owpass, __u8 oipbp,
+		  __u8 no_dealloc, __u32 ovrpat)
+{
+	struct nvme_admin_cmd cmd = {
+		.opcode		= nvme_admin_sanitize_nvm,
+		.cdw10		= no_dealloc << 9 | oipbp << 8 |
+				  owpass << NVME_SANITIZE_OWPASS_SHIFT |
+				  ause << 3 | sanact,
+		.cdw11		= ovrpat,
+	};
+
+	return nvme_submit_admin_passthru(fd, &cmd);
+}
+
+int nvme_self_test_start(int fd, __u32 nsid, __u32 cdw10)
+{
+	struct nvme_admin_cmd cmd = {
+		.opcode = nvme_admin_dev_self_test,
+		.nsid = nsid,
+		.cdw10 = cdw10,
+	};
+
+	return nvme_submit_admin_passthru(fd, &cmd);
+}

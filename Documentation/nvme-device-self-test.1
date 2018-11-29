@@ -1,0 +1,101 @@
+'\" t
+.\"     Title: nvme-device-self-test
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 09/05/2018
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-DEVICE\-SELF\-" "1" "09/05/2018" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-device-self-test \- Perform the necessary tests to observe the performance and the parameters
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme device\-self\-test\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
+                        [\-\-self\-test\-code=<NUM> | \-s <NUM>]
+.fi
+.SH "DESCRIPTION"
+.sp
+Initiates the required test based on the user input\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+On success, the corresponding test is initiated\&.
+.SH "OPTIONS"
+.PP
+\-n <NUM>, \-\-namespace\-id=<NUM>
+.RS 4
+Indicate the namespace in which the device self\-test has to becarried out
+.RE
+.PP
+\-s <NUM>, \-\-self\-test\-code=<NUM>
+.RS 4
+This field specifies the action taken by the device self\-test command : 1h: Start a short device self\-test operation 2h: Start a extended device self\-test operation eh: Start a vendor specific device self\-test operation fh: abort the device self\-test operation
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Start a short device self\-test in the namespace\-id 1:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme device\-self\-test /dev/nvme0 \-n 1 \-s 1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Abort the device self\-test operation in the namespace\-id 1:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme device\-self\-test /dev/nvme0 \-n 1 \-s 0xf
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite
