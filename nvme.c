@@ -1018,18 +1018,22 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		"becomes inactive when that namespace is detached or, if "\
 		"the namespace is not already inactive, once deleted.";
 	const char *namespace_id = "namespace to delete";
+	const char *timeout = "timeout value, in milliseconds";
 	int err, fd;
 
 	struct config {
 		__u32	namespace_id;
+		__u32	timeout;
 	};
 
 	struct config cfg = {
 		.namespace_id    = 0,
+		.timeout      = NVME_IOCTL_TIMEOUT,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id,    required_argument, namespace_id},
+		{"timeout", 't', "NUM", CFG_POSITIVE,  &cfg.timeout, required_argument, timeout},
 		{NULL}
 	};
 
@@ -1050,7 +1054,7 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		goto close_fd;
 	}
 
-	err = nvme_ns_delete(fd, cfg.namespace_id);
+	err = nvme_ns_delete(fd, cfg.namespace_id, cfg.timeout);
 	if (!err)
 		printf("%s: Success, deleted nsid:%d\n", cmd->name,
 								cfg.namespace_id);

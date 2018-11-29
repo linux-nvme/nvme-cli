@@ -108,7 +108,7 @@ int nvme_format(int fd, __u32 nsid, __u8 lbaf, __u8 ses, __u8 pi,
 
 int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas,
 		   __u8 dps, __u8 nmic, __u32 timeout, __u32 *result);
-int nvme_ns_delete(int fd, __u32 nsid);
+int nvme_ns_delete(int fd, __u32 nsid, __u32 timeout);
 
 int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls,
 		       __u16 *ctrlist, bool attach);

@@ -699,12 +699,13 @@ int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas,
 	return err;
 }
 
-int nvme_ns_delete(int fd, __u32 nsid)
+int nvme_ns_delete(int fd, __u32 nsid, __u32 timeout)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_ns_mgmt,
 		.nsid		= nsid,
 		.cdw10		= 1,
+		.timeout_ms	= timeout,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);
