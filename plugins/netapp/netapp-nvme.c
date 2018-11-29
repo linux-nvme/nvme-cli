@@ -168,7 +168,7 @@ static int netapp_smdevices_get_info(int fd, struct smdevice_info *item,
 
 	err = nvme_identify_ctrl(fd, &item->ctrl);
 	if (err) {
-		fprintf(stderr, "Identify Controler failed to %s (%s)\n", dev,
+		fprintf(stderr, "Identify Controller failed to %s (%s)\n", dev,
 			strerror(err));
 		return 0;
 	}

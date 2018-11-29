@@ -657,7 +657,7 @@ static void show_nvme_id_ns_dlfeat(__u8 dlfeat)
 		printf("  [7:5] : %#x\tReserved\n", rsvd);
 	printf("  [4:4] : %#x\tGuard Field of Deallocated Logical Blocks is set to %s\n",
 		guard, guard ? "CRC of The Value Read" : "0xFFFF");
-	printf("  [3:3] : %#x\tDeallocate Bit in the Write Zeroes Commmand is %sSupported\n",
+	printf("  [3:3] : %#x\tDeallocate Bit in the Write Zeroes Command is %sSupported\n",
 		dwz, dwz ? "" : "Not ");
 	printf("  [2:0] : %#x\tBytes Read From a Deallocated Logical Block and its Metadata are %s\n", val,
 		val == 2 ? "0xFF" :
@@ -3002,7 +3002,7 @@ static void show_registers_bpinfo_brs(__u8 brs)
 		printf("No Boot Partition read operation requested\n");
 		break;
 	case 1:
-		printf("Boot Partition read in progres\n");
+		printf("Boot Partition read in progress\n");
 		break;
 	case 2:
 		printf("Boot Partition read completed successfully\n");

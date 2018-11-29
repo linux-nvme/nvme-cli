@@ -62,7 +62,7 @@ struct huawei_list_element_len {
 	unsigned int ns_name;
 	unsigned int nguid;
 	unsigned int ns_id;
-	unsigned int useage;
+	unsigned int usage;
 	unsigned int array_name;
 };
 
@@ -223,13 +223,13 @@ static void huawei_print_list_head(struct huawei_list_element_len element_len)
 		element_len.ns_name, element_len.ns_name, "NS Name",
 		element_len.nguid, element_len.nguid, "Nguid",
 		element_len.ns_id, element_len.ns_id, "NS ID",
-		element_len.useage, element_len.useage, "Usage",
+		element_len.usage, element_len.usage, "Usage",
 		element_len.array_name, element_len.array_name, "Array Name");
 
 	printf("%-.*s %-.*s %-.*s %-.*s %-.*s %-.*s\n",
 		element_len.node, dash, element_len.ns_name, dash,
 		element_len.nguid, dash, element_len.ns_id, dash,
-		element_len.useage, dash, element_len.array_name, dash);
+		element_len.usage, dash, element_len.array_name, dash);
 }
 
 static void huawei_print_list_item(struct huawei_list_item list_item,
@@ -259,7 +259,7 @@ static void huawei_print_list_item(struct huawei_list_item list_item,
 		element_len.ns_name, element_len.ns_name, list_item.ns_name,
 		element_len.nguid, element_len.nguid, nguid_buf,
 		element_len.ns_id, list_item.nsid,
-		element_len.useage, element_len.useage, usage,
+		element_len.usage, element_len.usage, usage,
 		element_len.array_name, element_len.array_name, list_item.array_name);
 
 }
@@ -306,7 +306,7 @@ static void huawei_print_list_items(struct huawei_list_item *list_items, unsigne
 	element_len.node = 16;
 	element_len.nguid = 2 * sizeof(list_items->ns.nguid) + 1;
 	element_len.ns_id = 9;
-	element_len.useage = 26;
+	element_len.usage = 26;
 	element_len.ns_name = huawei_get_ns_len(list_items, len, MIN_NS_NAME_LEN);
 	element_len.array_name = huawei_get_array_len(list_items, len, MIN_ARRAY_NAME_LEN);
 

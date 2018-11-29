@@ -38,7 +38,7 @@ class TestNVMeReadWriteTest(TestNVMeIO):
 
         - Attributes:
               - start_block : starting block of to perform IO.
-              - compare_file : data file to use in nvme comapre commmand.
+              - compare_file : data file to use in nvme compare command.
               - test_log_dir : directory for logs, temp files.
     """
     def __init__(self):
