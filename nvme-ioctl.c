@@ -504,7 +504,7 @@ int nvme_effects_log(int fd, struct nvme_effects_log_page *effects_log)
 
 int nvme_discovery_log(int fd, struct nvmf_disc_rsp_page_hdr *log, __u32 size)
 {
-	return nvme_get_log(fd, 0, NVME_LOG_DISC, true, size, log);
+	return nvme_get_log(fd, 0, NVME_LOG_DISC, false, size, log);
 }
 
 int nvme_sanitize_log(int fd, struct nvme_sanitize_log_page *sanitize_log)
