@@ -54,6 +54,7 @@ static struct config {
 	char *hostid;
 	int  nr_io_queues;
 	int  nr_write_queues;
+	int  nr_poll_queues;
 	int  queue_size;
 	int  keep_alive_tmo;
 	int  reconnect_delay;
@@ -610,6 +611,8 @@ static int build_options(char *argstr, int max_len)
 				cfg.nr_io_queues) ||
 	    add_int_argument(&argstr, &max_len, "nr_write_queues",
 				cfg.nr_write_queues) ||
+	    add_int_argument(&argstr, &max_len, "nr_poll_queues",
+				cfg.nr_poll_queues) ||
 	    add_int_argument(&argstr, &max_len, "queue_size", cfg.queue_size) ||
 	    add_int_argument(&argstr, &max_len, "keep_alive_tmo",
 				cfg.keep_alive_tmo) ||
@@ -685,6 +688,13 @@ retry:
 
 	if (cfg.nr_write_queues) {
 		len = sprintf(p, ",nr_write_queues=%d", cfg.nr_write_queues);
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+	}
+
+	if (cfg.nr_poll_queues) {
+		len = sprintf(p, ",nr_poll_queues=%d", cfg.nr_poll_queues);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
