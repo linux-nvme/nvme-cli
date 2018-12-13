@@ -16,6 +16,7 @@ SYNOPSIS
 		[--host-traddr=<traddr>   | -w <traddr>]
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
 		[--nr-io-queues=<#>       | -i <#>]
+		[--nr-write-queues=<#>    | -W <#>]
 		[--queue-size=<#>         | -Q <#>]
 		[--keep-alive-tmo=<#>     | -k <#>]
 		[--reconnect-delay=<#>    | -c <#>]
@@ -74,6 +75,10 @@ OPTIONS
 -i <#>::
 --nr-io-queues=<#>::
 	Overrides the default number of I/O queues create by the driver.
+
+-W <#>::
+--nr-write-queues=<#>::
+	Adds additional queues that will be used for write I/O.
 
 -Q <#>::
 --queue-size=<#>::

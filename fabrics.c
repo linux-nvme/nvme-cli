@@ -53,6 +53,7 @@ static struct config {
 	char *hostnqn;
 	char *hostid;
 	int  nr_io_queues;
+	int  nr_write_queues;
 	int  queue_size;
 	int  keep_alive_tmo;
 	int  reconnect_delay;
@@ -607,6 +608,8 @@ static int build_options(char *argstr, int max_len)
 		    add_argument(&argstr, &max_len, "hostid", cfg.hostid)) ||
 	    add_int_argument(&argstr, &max_len, "nr_io_queues",
 				cfg.nr_io_queues) ||
+	    add_int_argument(&argstr, &max_len, "nr_write_queues",
+				cfg.nr_write_queues) ||
 	    add_int_argument(&argstr, &max_len, "queue_size", cfg.queue_size) ||
 	    add_int_argument(&argstr, &max_len, "keep_alive_tmo",
 				cfg.keep_alive_tmo) ||
@@ -675,6 +678,13 @@ retry:
 
 	if (cfg.nr_io_queues) {
 		len = sprintf(p, ",nr_io_queues=%d", cfg.nr_io_queues);
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+	}
+
+	if (cfg.nr_write_queues) {
+		len = sprintf(p, ",nr_write_queues=%d", cfg.nr_write_queues);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
@@ -984,6 +994,8 @@ int connect(const char *desc, int argc, char **argv)
 		{"hostnqn",         'q', "LIST", CFG_STRING, &cfg.hostnqn,         required_argument, "user-defined hostnqn" },
 		{"hostid",          'I', "LIST", CFG_STRING, &cfg.hostid,      required_argument, "user-defined hostid (if default not used)"},
 		{"nr-io-queues",    'i', "LIST", CFG_INT, &cfg.nr_io_queues,    required_argument, "number of io queues to use (default is core count)" },
+		{"nr-write-queues", 'W', "LIST", CFG_INT, &cfg.nr_write_queues,    required_argument, "number of write queues to use (default 0)" },
+		{"nr-poll-queues",  'P', "LIST", CFG_INT, &cfg.nr_poll_queues,    required_argument, "number of poll queues to use (default 0)" },
 		{"queue-size",      'Q', "LIST", CFG_INT, &cfg.queue_size,      required_argument, "number of io queue elements to use (default 128)" },
 		{"keep-alive-tmo",  'k', "LIST", CFG_INT, &cfg.keep_alive_tmo,  required_argument, "keep alive timeout period in seconds" },
 		{"reconnect-delay", 'c', "LIST", CFG_INT, &cfg.reconnect_delay, required_argument, "reconnect timeout period in seconds" },
