@@ -23,7 +23,7 @@ just re-source nvme and .bashrc. To see a full list of auto-completable
 NVMe commands, type "nvme help " and hit TAB.
 
 You may also need to uncomment the "enable bash completion in interactive
-shells" part of /etc/bash.bashrc, which hopefully looks somehting like:
+shells" part of /etc/bash.bashrc, which hopefully looks something like:
 
 if [ -f /usr/share/bash-completion/bash_completion ]; then
 	. /usr/share/bash-completion/bash_completion

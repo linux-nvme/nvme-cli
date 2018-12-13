@@ -367,7 +367,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	if (err) {
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 			nvme_status_to_string(err), err);
-		fprintf(stderr, "Failed to aquire telemetry header %d!\n", err);
+		fprintf(stderr, "Failed to acquire telemetry header %d!\n", err);
 		close(output);
 		goto free_mem;
 	}
@@ -401,7 +401,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	while (offset != full_size) {
 		err = nvme_get_telemetry_log(fd, page_log, 0, cfg.ctrl_init, bs, offset);
 		if (err) {
-			fprintf(stderr, "Failed to aquire full telemetry log!\n");
+			fprintf(stderr, "Failed to acquire full telemetry log!\n");
 			fprintf(stderr, "NVMe Status:%s(%x)\n",
 				nvme_status_to_string(err), err);
 			break;
@@ -1903,7 +1903,7 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send Namespace Identification Descriptors command to the "\
-			    "given device, returns the namespace identifcation descriptors "\
+			    "given device, returns the namespace identification descriptors "\
 			    "of the specific namespace in either human-readable or binary format.";
 	const char *raw_binary = "show infos in binary format";
 	const char *namespace_id = "identifier of desired namespace";

@@ -310,7 +310,7 @@ class TestNVMe(object):
     def attach_ns(self, ctrl_id, ns_id):
         """ Wrapper for attaching the namespace.
             - Args:
-                - ctrl_id : controller id to which namespace to be attched.
+                - ctrl_id : controller id to which namespace to be attached.
                 - nsid : new namespace id.
             - Returns:
                 - 0 on success, error code on failure.
@@ -334,7 +334,7 @@ class TestNVMe(object):
     def detach_ns(self, ctrl_id, nsid):
         """ Wrapper for detaching the namespace.
             - Args:
-                - ctrl_id : controller id to which namespace to be attched.
+                - ctrl_id : controller id to which namespace to be attached.
                 - nsid : new namespace id.
             - Returns:
                 - 0 on success, error code on failure.

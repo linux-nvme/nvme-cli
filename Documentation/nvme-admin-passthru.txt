@@ -89,7 +89,7 @@ OPTIONS
 -d::
 --dry-run::
 	Do not actually send the command. If want to use --dry-run option,
-	--show-cmd option _must_ be set. Otherwise --dry-run optionn will be
+	--show-cmd option _must_ be set. Otherwise --dry-run option will be
 	_ignored_.
 
 -b::
