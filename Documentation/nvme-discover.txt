@@ -44,7 +44,7 @@ subsystem NQN) the NVMe Host can use to issue an
 NVMe connect command to connect itself to a storage resource
 contained in that NVMe subsystem on the NVMe Target.
 
-Note that the base NVMe specfication defines the NQN (NVMe Qualified
+Note that the base NVMe specification defines the NQN (NVMe Qualified
 Name) format which an NVMe endpoint (device, subsystem, etc) must
 follow to guarantee a unique name under the NVMe standard.
 In particular, the Host NQN uniquely identifies the NVMe Host, and

@@ -39,7 +39,7 @@ OPTIONS
 
 -f::
 --force::
-	Request controller return the indentify namespace structure even
+	Request controller return the identify namespace structure even
 	if the namespace is not attached to the controller. This is valid
 	only for controllers at or newer than revision 1.2. Controllers
 	at revision lower than this may interpret the command incorrectly.

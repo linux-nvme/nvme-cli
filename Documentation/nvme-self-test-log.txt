@@ -14,7 +14,7 @@ DESCRIPTION
 -----------
 Retrieves the log pages from an NVMe device corresponding to the 
 requested self-test by the user and provides 20-most recent result 
-retuned strutcure.
+returned structure.
 
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).

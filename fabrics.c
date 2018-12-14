@@ -60,6 +60,9 @@ static struct config {
 	char *raw;
 	char *device;
 	int  duplicate_connect;
+	int  disable_sqflow;
+	int  hdr_digest;
+	int  data_digest;
 } cfg = { NULL };
 
 #define BUF_SIZE		4096
@@ -94,6 +97,7 @@ static const char *arg_str(const char * const *strings,
 static const char * const trtypes[] = {
 	[NVMF_TRTYPE_RDMA]	= "rdma",
 	[NVMF_TRTYPE_FC]	= "fibre-channel",
+	[NVMF_TRTYPE_TCP]	= "tcp",
 	[NVMF_TRTYPE_LOOP]	= "loop",
 };
 
@@ -129,11 +133,23 @@ static const char * const treqs[] = {
 	[NVMF_TREQ_NOT_SPECIFIED]	= "not specified",
 	[NVMF_TREQ_REQUIRED]		= "required",
 	[NVMF_TREQ_NOT_REQUIRED]	= "not required",
+	[NVMF_TREQ_DISABLE_SQFLOW]	= "not specified, "
+					  "sq flow control disable supported",
 };
 
 static inline const char *treq_str(__u8 treq)
 {
 	return arg_str(treqs, ARRAY_SIZE(treqs), treq);
+}
+
+static const char * const sectypes[] = {
+	[NVMF_TCP_SECTYPE_NONE]		= "none",
+	[NVMF_TCP_SECTYPE_TLS]		= "tls",
+};
+
+static inline const char *sectype_str(__u8 sectype)
+{
+	return arg_str(sectypes, ARRAY_SIZE(sectypes), sectype);
 }
 
 static const char * const prtypes[] = {
@@ -432,6 +448,10 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 			printf("rdma_pkey: 0x%04x\n",
 				e->tsas.rdma.pkey);
 			break;
+		case NVMF_TRTYPE_TCP:
+			printf("sectype: %s\n",
+				sectype_str(e->tsas.tcp.sectype));
+			break;
 		}
 	}
 }
@@ -595,7 +615,11 @@ static int build_options(char *argstr, int max_len)
 	    add_int_argument(&argstr, &max_len, "ctrl_loss_tmo",
 				cfg.ctrl_loss_tmo) ||
 	    add_bool_argument(&argstr, &max_len, "duplicate_connect",
-				cfg.duplicate_connect))
+				cfg.duplicate_connect) ||
+	    add_bool_argument(&argstr, &max_len, "disable_sqflow",
+				cfg.disable_sqflow) ||
+	    add_bool_argument(&argstr, &max_len, "hdr_digest", cfg.hdr_digest) ||
+	    add_bool_argument(&argstr, &max_len, "data_digest", cfg.data_digest))
 		return -EINVAL;
 
 	return 0;
@@ -603,9 +627,14 @@ static int build_options(char *argstr, int max_len)
 
 static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 {
-	char argstr[BUF_SIZE], *p = argstr;
-	bool discover = false;
-	int len;
+	char argstr[BUF_SIZE], *p;
+	const char *transport;
+	bool discover, disable_sqflow = true;
+	int len, ret;
+
+retry:
+	p = argstr;
+	discover = false;
 
 	switch (e->subtype) {
 	case NVME_NQN_DISC:
@@ -672,23 +701,39 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 		p += len;
 	}
 
-	switch (e->trtype) {
-	case NVMF_TRTYPE_LOOP: /* loop */
-		len = sprintf(p, ",transport=loop");
+	transport = trtype_str(e->trtype);
+	if (!strcmp(transport, "unrecognized")) {
+		fprintf(stderr, "skipping unsupported transport %d\n",
+				 e->trtype);
+		return -EINVAL;
+	}
+
+	len = sprintf(p, ",transport=%s", transport);
+	if (len < 0)
+		return -EINVAL;
+	p += len;
+
+	if (cfg.hdr_digest) {
+		len = sprintf(p, ",hdr_digest");
 		if (len < 0)
 			return -EINVAL;
-		/* we can safely ignore the rest of the entries */
-		break;
+		p += len;
+	}
+
+	if (cfg.data_digest) {
+		len = sprintf(p, ",data_digest");
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+	}
+
+	switch (e->trtype) {
 	case NVMF_TRTYPE_RDMA:
+	case NVMF_TRTYPE_TCP:
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_IP4:
 		case NVMF_ADDR_FAMILY_IP6:
 			/* FALLTHRU */
-			len = sprintf(p, ",transport=rdma");
-			if (len < 0)
-				return -EINVAL;
-			p += len;
-
 			len = sprintf(p, ",traddr=%.*s",
 				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
 				      e->traddr);
@@ -701,25 +746,7 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 				      e->trsvcid);
 			if (len < 0)
 				return -EINVAL;
-			break;
-		default:
-			fprintf(stderr, "skipping unsupported adrfam\n");
-			return -EINVAL;
-		}
-		break;
-	case NVMF_TRTYPE_FC:
-		switch (e->adrfam) {
-		case NVMF_ADDR_FAMILY_FC:
-			len = sprintf(p, ",transport=fc");
-			if (len < 0)
-				return -EINVAL;
 			p += len;
-
-			len = sprintf(p, ",traddr=%.*s",
-				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
-				      e->traddr);
-			if (len < 0)
-				return -EINVAL;
 			break;
 		default:
 			fprintf(stderr, "skipping unsupported adrfam\n");
@@ -727,15 +754,40 @@ static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 		}
 		break;
 	default:
-		fprintf(stderr, "skipping unsupported transport %d\n",
-				 e->trtype);
-		return -EINVAL;
+	case NVMF_TRTYPE_FC:
+		switch (e->adrfam) {
+		case NVMF_ADDR_FAMILY_FC:
+			len = sprintf(p, ",traddr=%.*s",
+				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
+				      e->traddr);
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+			break;
+		default:
+			fprintf(stderr, "skipping unsupported adrfam\n");
+			return -EINVAL;
+		}
+		break;
+	}
+
+	if (e->treq & NVMF_TREQ_DISABLE_SQFLOW && disable_sqflow) {
+		len = sprintf(p, ",disable_sqflow");
+		if (len < 0)
+			return -EINVAL;
+		p += len;
 	}
 
 	if (discover)
-		return do_discover(argstr, true);
+		ret = do_discover(argstr, true);
 	else
-		return add_ctrl(argstr);
+		ret = add_ctrl(argstr);
+	if (ret == -EINVAL && e->treq & NVMF_TREQ_DISABLE_SQFLOW) {
+		/* disable_sqflow param might not be supported, try without it */
+		disable_sqflow = false;
+		goto retry;
+	}
+	return ret;
 }
 
 static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
@@ -895,6 +947,8 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 		{"keep-alive-tmo",  'k', "LIST", CFG_INT, &cfg.keep_alive_tmo,  required_argument, "keep alive timeout period in seconds" },
 		{"reconnect-delay", 'c', "LIST", CFG_INT, &cfg.reconnect_delay, required_argument, "reconnect timeout period in seconds" },
 		{"ctrl-loss-tmo",   'l', "LIST", CFG_INT, &cfg.ctrl_loss_tmo,   required_argument, "controller loss timeout period in seconds" },
+		{"hdr_digest", 'g', "", CFG_NONE, &cfg.hdr_digest, no_argument, "enable transport protocol header digest (TCP transport)" },
+		{"data_digest", 'G', "", CFG_NONE, &cfg.data_digest, no_argument, "enable transport protocol data digest (TCP transport)" },
 		{NULL},
 	};
 
@@ -935,6 +989,9 @@ int connect(const char *desc, int argc, char **argv)
 		{"reconnect-delay", 'c', "LIST", CFG_INT, &cfg.reconnect_delay, required_argument, "reconnect timeout period in seconds" },
 		{"ctrl-loss-tmo",   'l', "LIST", CFG_INT, &cfg.ctrl_loss_tmo,   required_argument, "controller loss timeout period in seconds" },
 		{"duplicate_connect", 'D', "", CFG_NONE, &cfg.duplicate_connect, no_argument, "allow duplicate connections between same transport host and subsystem port" },
+		{"disable_sqflow", 'd', "", CFG_NONE, &cfg.disable_sqflow, no_argument, "disable controller sq flow control (default false)" },
+		{"hdr_digest", 'g', "", CFG_NONE, &cfg.hdr_digest, no_argument, "enable transport protocol header digest (TCP transport)" },
+		{"data_digest", 'G', "", CFG_NONE, &cfg.data_digest, no_argument, "enable transport protocol data digest (TCP transport)" },
 		{NULL},
 	};
 

@@ -86,7 +86,11 @@ install-bash-completion:
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/share/bash-completion/completions
 	$(INSTALL) -m 644 -T ./completions/bash-nvme-completion.sh $(DESTDIR)$(PREFIX)/share/bash-completion/completions/nvme
 
-install: install-bin install-man install-bash-completion
+install-zsh-completion:
+	$(INSTALL) -d $(DESTDIR)$(PREFIX)/share/zsh/site-functions
+	$(INSTALL) -m 644 -T ./completions/_nvme $(DESTDIR)$(PREFIX)/share/zsh/site-functions/_nvme
+
+install: install-bin install-man install-bash-completion install-zsh-completion
 
 nvme.spec: nvme.spec.in NVME-VERSION-FILE
 	sed -e 's/@@VERSION@@/$(NVME_VERSION)/g' < $< > $@+
