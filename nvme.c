@@ -4673,8 +4673,8 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	if (err < 0)
 		perror("passthru");
 	else if (err)
-		fprintf(stderr, "NVMe Status:%s(%x) Command Result:%08x\n",
-				nvme_status_to_string(err), err, result);
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
 	else  {
 		if (!cfg.raw_binary) {
 			fprintf(stderr, "NVMe command result:%08x\n", result);
