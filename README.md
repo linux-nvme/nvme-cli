@@ -61,7 +61,7 @@ steps:
 
 nvme-cli is tested on Alpine Linux 3.3.  Install it using:
 
-    # akp update && apk add nvme-cli nvme-cli-doc
+    # apk update && apk add nvme-cli nvme-cli-doc
 
 if you just use the device you're after, it will work flawless.
 ```
