@@ -93,6 +93,13 @@ The attribute is named `nvme-cli` and can e.g. be installed with:
 $ nix-env -f '<nixpkgs>' -iA nvme-cli
 ```
 
+### Gentoo
+
+nvme-cli is available and tested in portage:
+```
+$ emerge -av nvme-cli
+```
+
 ### Other Distros
 
 TBD
