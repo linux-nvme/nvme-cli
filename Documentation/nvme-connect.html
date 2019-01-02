@@ -433,7 +433,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -754,6 +754,8 @@ nvme-connect(1) Manual Page
                 [--host-traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
                 [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
                 [--nr-io-queues=&lt;#&gt;       | -i &lt;#&gt;]
+                [--nr-write-queues=&lt;#&gt;    | -W &lt;#&gt;]
+                [--nr-poll-queues=&lt;#&gt;     | -P &lt;#&gt;]
                 [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]
                 [--keep-alive-tmo=&lt;#&gt;     | -k &lt;#&gt;]
                 [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]
@@ -889,6 +891,28 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
+-W &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--nr-write-queues=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Adds additional queues that will be used for write I/O.
+</p>
+</dd>
+<dt class="hdlist1">
+-P &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--nr-poll-queues=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Adds additional queues that will be used for polling latency sensitive I/O.
+</p>
+</dd>
+<dt class="hdlist1">
 -Q &lt;#&gt;
 </dt>
 <dt class="hdlist1">
@@ -979,7 +1003,7 @@ for <a href="mailto:keith.busch@intel.com">Keith Busch</a>.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-04-10 11:22:55 MDT
+Last updated 2019-01-02 08:45:04 MST
 </div>
 </div>
 </body>

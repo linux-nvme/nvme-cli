@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 11/29/2018
+.\"      Date: 01/02/2019
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "11/29/2018" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "01/02/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -40,6 +40,8 @@ nvme-connect \- Connect to a Fabrics controller\&.
                 [\-\-host\-traddr=<traddr>   | \-w <traddr>]
                 [\-\-hostnqn=<hostnqn>      | \-q <hostnqn>]
                 [\-\-nr\-io\-queues=<#>       | \-i <#>]
+                [\-\-nr\-write\-queues=<#>    | \-W <#>]
+                [\-\-nr\-poll\-queues=<#>     | \-P <#>]
                 [\-\-queue\-size=<#>         | \-Q <#>]
                 [\-\-keep\-alive\-tmo=<#>     | \-k <#>]
                 [\-\-reconnect\-delay=<#>    | \-c <#>]
@@ -112,6 +114,16 @@ Overrides the default Host NQN that identifies the NVMe Host\&. If this option i
 \-i <#>, \-\-nr\-io\-queues=<#>
 .RS 4
 Overrides the default number of I/O queues create by the driver\&.
+.RE
+.PP
+\-W <#>, \-\-nr\-write\-queues=<#>
+.RS 4
+Adds additional queues that will be used for write I/O\&.
+.RE
+.PP
+\-P <#>, \-\-nr\-poll\-queues=<#>
+.RS 4
+Adds additional queues that will be used for polling latency sensitive I/O\&.
 .RE
 .PP
 \-Q <#>, \-\-queue\-size=<#>
