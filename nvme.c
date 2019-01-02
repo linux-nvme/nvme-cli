@@ -2148,6 +2148,74 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 	return 0;
 }
 
+static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc  = "The Virtualization Management command is supported by primary controllers "\
+		"that support the Virtualization Enhancements capability.This command is used for "\
+		"1. Modifying Flexible Resource allocation for the primary controller  "\
+		"2. Assigning Flexible Resources for secondary controllers; and "\
+		"3. Setting the Online and Offline state for secondary controllers";
+	const char *cntlid = "This field indicates the controller for which controller resources "\
+		"are to be modified.";
+	const char *rt = "Indicate the Resource Type (RT) : \n"\
+		"1. 0 - VQ Resources.\n"\
+		"2. 1 - VI Resources.\n\n";
+	const char *act = "Indicate the Action (ACT) : \n"\
+		"1. 1 - Primary Controller Flexible Allocation\n"\
+		"2. 7 - Secondary Controller Offline\n"\
+		"3. 8 - Secondary Controller Assign\n"\
+		"4. 9 - Secondary Controller Online";
+	const char *nr = "Indicate the Number of Controller Resources (NR)";
+	int fd, err;
+	__u32 result;
+
+	struct config {
+		int     cntlid;
+		int     rt;
+		int     act;
+		__u32   cdw10;
+		__u32   cdw11;
+	};
+
+	struct config cfg = {
+		.cntlid	  = 0,
+		.rt	  = 0,
+		.act	  = 0,
+		.cdw10	  = 0,
+		.cdw11	  = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"Controller-identifier",	   'c', "NUM", CFG_POSITIVE, &cfg.cntlid, required_argument, cntlid},
+		{"Resource-type",		   'r', "NUM", CFG_POSITIVE, &cfg.rt,     required_argument, rt},
+		{"Action",			   'a', "NUM", CFG_POSITIVE, &cfg.act,    required_argument, act},
+		{"Number-of-controller-resources", 'n', "NUM", CFG_POSITIVE, &cfg.cdw11,  required_argument, nr},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	cfg.cdw10 = cfg.cntlid << 16;
+	cfg.cdw10 = cfg.cdw10 | (cfg.rt << 8);
+	cfg.cdw10 = cfg.cdw10 | cfg.act;
+
+	err = nvme_virtual_mgmt(fd, cfg.cdw10, cfg.cdw11, &result);
+	if (!err) {
+		printf("success, Number of Resources allocated:%#x\n", result);
+	}
+	else if (err > 0) {
+		fprintf(stderr, "NVMe Status:%s(%x)\n",
+				nvme_status_to_string(err), err);
+	} else
+		perror("virt-mgmt");
+
+	close(fd);
+	return err;
+
+}
+
 static int device_self_test(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc  = "Implementing the device self-test feature"\

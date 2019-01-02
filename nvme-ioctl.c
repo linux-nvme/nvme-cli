@@ -867,3 +867,19 @@ int nvme_self_test_start(int fd, __u32 nsid, __u32 cdw10)
 
 	return nvme_submit_admin_passthru(fd, &cmd);
 }
+
+int nvme_virtual_mgmt(int fd, __u32 cdw10, __u32 cdw11, __u32 *result)
+{
+	struct nvme_admin_cmd cmd = {
+		.opcode = nvme_admin_virtual_mgmt,
+		.cdw10  = cdw10,
+		.cdw11  = cdw11,
+	};
+	int err;
+
+	err = nvme_submit_admin_passthru(fd, &cmd);
+	if (!err && result)
+		*result = cmd.result;
+
+	return err;
+}
