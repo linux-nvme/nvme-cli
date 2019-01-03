@@ -83,7 +83,7 @@ For example:
 
 Install from AUR, e.g.:
 ```
-$ yaourt -S nvme-cli-git
+$ yay -S nvme-cli-git
 ```
 
 ### Nix(OS)
