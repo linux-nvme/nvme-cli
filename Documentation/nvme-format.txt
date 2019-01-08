@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme format' <device> [--namespace-id=<nsid> | -n <nsid>]
 		    [--lbaf=<lbaf> | -l <lbaf>]
+		    [--block-size=<block size | -b <block size>]
 		    [--ses=<ses> | -s <ses>]
 		    [--pil=<pil> | -p <pil>]
 		    [--pi=<pi> | -i <pi>]
@@ -48,7 +49,15 @@ OPTIONS
 --lbaf=<lbaf>::
 	LBA Format: This field specifies the LBA format to apply to the NVM
 	media. This corresponds to the LBA formats indicated in the
-	Identify Namespace command. Defaults to 0.
+	Identify Namespace command. Conflicts with --block-size argument.
+	Defaults to 0.
+
+-b <block size>::
+--block-size=<block size>::
+	Block Size: This field is used to specify the target block size to
+	format to. Potential lbaf values will be scanned and the lowest
+	numbered will be selected for the format operation. Conflicts with
+	--lbaf argument.
 
 -s <ses>::
 --ses=<ses>::
