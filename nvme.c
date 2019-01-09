@@ -2993,9 +2993,11 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	const char *ms = "[0-1]: extended format off/on";
 	const char *reset = "Automatically reset the controller after successful format";
 	const char *timeout = "timeout value, in milliseconds";
+	const char *bs = "target block size";
 	struct nvme_id_ns ns;
-	int err, fd;
+	int err, fd, i;
 	__u8 prev_lbaf = 0;
+	__u8 lbads = 0;
 
 	struct config {
 		__u32 namespace_id;
@@ -3005,6 +3007,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		__u8  pi;
 		__u8  pil;
 		__u8  ms;
+		__u64 bs;
 		int reset;
 	};
 
@@ -3015,6 +3018,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		.ses          = 0,
 		.pi           = 0,
 		.reset        = 0,
+		.bs           = 0,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -3026,6 +3030,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		{"pil",          'p', "NUM",  CFG_BYTE,     &cfg.pil,          required_argument, pil},
 		{"ms",           'm', "NUM",  CFG_BYTE,     &cfg.ms,           required_argument, ms},
 		{"reset",        'r', "",     CFG_NONE,     &cfg.reset,        no_argument,       reset},
+		{"block-size",   'b', "NUM",  CFG_LONG_SUFFIX, &cfg.bs,        required_argument, bs},
 		{NULL}
 	};
 
@@ -3033,6 +3038,19 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	if (fd < 0)
 		return fd;
 
+	if (cfg.lbaf != 0xff && cfg.bs !=0) {
+		fprintf(stderr,
+			"Invalid specification of both LBAF and Block Size, please specify only one\n");
+			return EINVAL;
+	}
+	if (cfg.bs) {
+		if ((cfg.bs & (~cfg.bs + 1)) != cfg.bs) {
+			fprintf(stderr,
+				"Invalid value for block size (%llu), must be a power of two\n",
+					cfg.bs);
+				return EINVAL;
+		}
+	}
 	if (S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
@@ -3052,6 +3070,24 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			return err;
 		}
 		prev_lbaf = ns.flbas & 0xf;
+
+		if (cfg.bs) {
+			for (i = 0; i < 16; ++i) {
+				if ((1ULL << ns.lbaf[i].ds) == cfg.bs &&
+				    ns.lbaf[i].ms == 0) {
+					cfg.lbaf = i;
+					break;
+				}
+			}
+			if (cfg.lbaf == 0xff) {
+				fprintf(stderr,
+					"LBAF corresponding to block size %llu (LBAF %u) not found\n",
+					cfg.bs, lbads);
+				fprintf(stderr,
+					"Please correct block size, or specify LBAF directly\n");
+				return EINVAL;
+			}
+		}
 	}
 	if (cfg.lbaf == 0xff)
 		cfg.lbaf = prev_lbaf;
