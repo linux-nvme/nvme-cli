@@ -2678,7 +2678,6 @@ static int subsystem_reset(int argc, char **argv, struct command *cmd, struct pl
 	err = nvme_subsystem_reset(fd);
 	if (err < 0) {
 		close(fd);
-		perror("Subsystem-reset");
 		if (errno == ENOTTY)
 			fprintf(stderr,
 				"Subsystem-reset: NVM Subsystem Reset not supported.\n");
