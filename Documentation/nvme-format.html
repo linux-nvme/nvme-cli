@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.9" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
 <title>nvme-format(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,9 +94,7 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-pre {
-  white-space: pre-wrap;
-}
+
 
 #author {
   color: #527bbd;
@@ -225,7 +223,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; vertical-align: text-bottom; }
+span.image img { border-style: none; }
 a.image:visited { color: white; }
 
 dl {
@@ -435,7 +433,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -750,6 +748,7 @@ nvme-format(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme format</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                     [--lbaf=&lt;lbaf&gt; | -l &lt;lbaf&gt;]
+                    [--block-size=&lt;block size | -b &lt;block size&gt;]
                     [--ses=&lt;ses&gt; | -s &lt;ses&gt;]
                     [--pil=&lt;pil&gt; | -p &lt;pil&gt;]
                     [--pi=&lt;pi&gt; | -i &lt;pi&gt;]
@@ -806,7 +805,22 @@ for the new block size to be visible.</p></div>
 <p>
         LBA Format: This field specifies the LBA format to apply to the NVM
         media. This corresponds to the LBA formats indicated in the
-        Identify Namespace command. Defaults to 0.
+        Identify Namespace command. Conflicts with --block-size argument.
+        Defaults to 0.
+</p>
+</dd>
+<dt class="hdlist1">
+-b &lt;block size&gt;
+</dt>
+<dt class="hdlist1">
+--block-size=&lt;block size&gt;
+</dt>
+<dd>
+<p>
+        Block Size: This field is used to specify the target block size to
+        format to. Potential lbaf values will be scanned and the lowest
+        numbered will be selected for the format operation. Conflicts with
+        --lbaf argument.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -999,8 +1013,7 @@ information:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated
- 2018-01-30 19:28:39 KST
+Last updated 2019-01-08 17:45:58 MST
 </div>
 </div>
 </body>
