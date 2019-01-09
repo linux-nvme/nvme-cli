@@ -675,7 +675,7 @@ int nvme_format(int fd, __u32 nsid, __u8 lbaf, __u8 ses, __u8 pi,
 }
 
 int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas,
-		   __u8 dps, __u8 nmic, __u32 *result)
+		   __u8 dps, __u8 nmic, __u32 timeout, __u32 *result)
 {
 	struct nvme_id_ns ns = {
 		.nsze		= cpu_to_le64(nsze),
@@ -689,6 +689,7 @@ int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas,
 		.addr		= (__u64)(uintptr_t) ((void *)&ns),
 		.cdw10		= 0,
 		.data_len	= 0x1000,
+		.timeout_ms	= timeout,
 	};
 	int err;
 
@@ -698,12 +699,13 @@ int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas,
 	return err;
 }
 
-int nvme_ns_delete(int fd, __u32 nsid)
+int nvme_ns_delete(int fd, __u32 nsid, __u32 timeout)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_ns_mgmt,
 		.nsid		= nsid,
 		.cdw10		= 1,
+		.timeout_ms	= timeout,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);
