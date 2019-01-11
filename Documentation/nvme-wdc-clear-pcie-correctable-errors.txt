@@ -1,18 +1,18 @@
-nvme-wdc-clear-pcie-corr(1)
-===========================
+nvme-wdc-clear-pcie-correctable-errors(1)
+=========================================
 
 NAME
 ----
-nvme-wdc-clear-pcie-corr - Clears the pcie correctable errors field returned in the smart-log-add command.
+nvme-wdc-clear-pcie-correctable-errors - Clears the pcie correctable errors field returned in the smart-log-add command.
 
 SYNOPSIS
 --------
 [verse]
-'nvme wdc clear-pcie-corr' <device> 
+'nvme wdc clear-pcie-correctable-errors' <device>
 
 DESCRIPTION
 -----------
-For the NVMe device given, sends the wdc vendor unique clear pcie 
+For the NVMe device given, sends the wdc vendor unique clear pcie
 correctable errors command.
 
 The <device> parameter is mandatory and may be either the NVMe
@@ -31,7 +31,7 @@ EXAMPLES
 * Clears the PCIe Correctable Error Count field returned in the smart-log-add command:
 +
 ------------
-# nvme wdc clear-pcie-corr /dev/nvme0
+# nvme wdc clear-pcie-correctable-errors /dev/nvme0
 ------------
 
 

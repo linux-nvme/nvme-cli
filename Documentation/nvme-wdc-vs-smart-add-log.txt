@@ -1,18 +1,18 @@
-nvme-wdc-smart-add-log(1)
-=========================
+nvme-wdc-vs-smart-add-log(1)
+============================
 
 NAME
 ----
-nvme-wdc-smart-add-log - Send NVMe WDC smart-add-log Vendor Unique Command, return result
+nvme-wdc-vs-smart-add-log - Send NVMe WDC vs-smart-add-log Vendor Unique Command, return result
 
 SYNOPSIS
 --------
 [verse]
-'nvme wdc smart-add-log' <device> [--interval=<NUM>, -i <NUM>] [--output-format=<normal|json> -o <normal|json>]
+'nvme wdc vs-smart-add-log' <device> [--interval=<NUM>, -i <NUM>] [--output-format=<normal|json> -o <normal|json>]
 
 DESCRIPTION
 -----------
-For the NVMe device given, send a Vendor Unique WDC smart-add-log command and
+For the NVMe device given, send a Vendor Unique WDC vs-smart-add-log command and
 provide the additional smart log. The --interval option will return performance
 statistics from the specified reporting interval.
 
@@ -257,10 +257,10 @@ a detrimental effect on the overall performance of the device.
 
 EXAMPLES
 --------
-* Has the program issue WDC smart-add-log Vendor Unique Command with default interval (14) :
+* Has the program issue WDC vs-smart-add-log Vendor Unique Command with default interval (14) :
 +
 ------------
-# nvme wdc smart-add-log /dev/nvme0
+# nvme wdc vs-smart-add-log /dev/nvme0
 ------------
 
 NVME
