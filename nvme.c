@@ -3053,7 +3053,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	if (cfg.bs) {
 		if ((cfg.bs & (~cfg.bs + 1)) != cfg.bs) {
 			fprintf(stderr,
-				"Invalid value for block size (%llu), must be a power of two\n",
+				"Invalid value for block size (%lu), must be a power of two\n",
 					cfg.bs);
 				return EINVAL;
 		}
@@ -3088,7 +3088,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			}
 			if (cfg.lbaf == 0xff) {
 				fprintf(stderr,
-					"LBAF corresponding to block size %llu (LBAF %u) not found\n",
+					"LBAF corresponding to block size %lu (LBAF %u) not found\n",
 					cfg.bs, lbads);
 				fprintf(stderr,
 					"Please correct block size, or specify LBAF directly\n");
