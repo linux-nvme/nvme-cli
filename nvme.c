@@ -1163,8 +1163,10 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *flbas = "FLBA size";
 	const char *dps = "data protection capabilities";
 	const char *nmic = "multipath and sharing capabilities";
+	const char *bs = "target block size";
 
-	int err = 0, fd;
+	int err = 0, fd, i;
+	struct nvme_id_ns ns;
 	__u32 nsid;
 
 	struct config {
@@ -1173,23 +1175,67 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		__u8	flbas;
 		__u8	dps;
 		__u8	nmic;
+		__u64	bs;
 	};
 
 	struct config cfg = {
+		.flbas = 0xff,
+		.bs = 0x00,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"nsze",  's', "NUM", CFG_LONG_SUFFIX, &cfg.nsze,  required_argument, nsze},
-		{"ncap",  'c', "NUM", CFG_LONG_SUFFIX, &cfg.ncap,  required_argument, ncap},
-		{"flbas", 'f', "NUM", CFG_BYTE,        &cfg.flbas, required_argument, flbas},
-		{"dps",   'd', "NUM", CFG_BYTE,        &cfg.dps,   required_argument, dps},
-		{"nmic",  'm', "NUM", CFG_BYTE,        &cfg.nmic,  required_argument, nmic},
+		{"nsze",         's', "NUM", CFG_LONG_SUFFIX, &cfg.nsze,  required_argument, nsze},
+		{"ncap",         'c', "NUM", CFG_LONG_SUFFIX, &cfg.ncap,  required_argument, ncap},
+		{"flbas",        'f', "NUM", CFG_BYTE,        &cfg.flbas, required_argument, flbas},
+		{"dps",          'd', "NUM", CFG_BYTE,        &cfg.dps,   required_argument, dps},
+		{"nmic",         'm', "NUM", CFG_BYTE,        &cfg.nmic,  required_argument, nmic},
+		{"block-size",   'b', "NUM", CFG_LONG_SUFFIX, &cfg.bs,    required_argument, bs},
 		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (fd < 0)
 		return fd;
+
+	if (cfg.flbas != 0xFF && cfg.bs != 0x00) {
+		fprintf(stderr,
+			"Invalid specification fo both FLBAS and Block Size, please specify only one\n");
+			return EINVAL;
+	}
+
+	if (cfg.flbas == 0xFF) {
+		fprintf(stderr,
+			"FLBAS corresponding to block size %llu not found\n", cfg.bs);
+		fprintf(stderr,
+			"Please correct block size, or specify FLBAS directly\n");
+		return EINVAL;
+	}
+
+	if (cfg.bs) {
+		if ((cfg.bs & (~cfg.bs + 1)) != cfg.bs) {
+			fprintf(stderr,
+				"Invalid value for block size (%llu). Block size must be a power of two\n", cfg.bs);
+			return EINVAL;
+		}
+		err = nvme_identify_ns(fd, NVME_NSID_ALL, 0, &ns);
+		if (err) {
+			if (err < 0)
+				perror("identify-namespace");
+			else
+				fprintf(stderr,
+					"NVME Admin command error:%s(%x)\n",
+					nvme_status_to_string(err), err);
+			return err;
+		}
+		for (i = 0; i < 16; ++i) {
+			if ((1 << ns.lbaf[i].ds) == cfg.bs && ns.lbaf[i].ms == 0) {
+				cfg.flbas = i;
+				break;
+			}
+		}
+
+	}
+
 
 	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic, &nsid);
 	if (!err)
@@ -2993,9 +3039,11 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	const char *ms = "[0-1]: extended format off/on";
 	const char *reset = "Automatically reset the controller after successful format";
 	const char *timeout = "timeout value, in milliseconds";
+	const char *bs = "target block size";
 	struct nvme_id_ns ns;
-	int err, fd;
+	int err, fd, i;
 	__u8 prev_lbaf = 0;
+	__u8 lbads = 0;
 
 	struct config {
 		__u32 namespace_id;
@@ -3005,6 +3053,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		__u8  pi;
 		__u8  pil;
 		__u8  ms;
+		__u64 bs;
 		int reset;
 	};
 
@@ -3015,6 +3064,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		.ses          = 0,
 		.pi           = 0,
 		.reset        = 0,
+		.bs           = 0,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -3026,13 +3076,26 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		{"pil",          'p', "NUM",  CFG_BYTE,     &cfg.pil,          required_argument, pil},
 		{"ms",           'm', "NUM",  CFG_BYTE,     &cfg.ms,           required_argument, ms},
 		{"reset",        'r', "",     CFG_NONE,     &cfg.reset,        no_argument,       reset},
+		{"block-size",   'b', "NUM",  CFG_LONG_SUFFIX, &cfg.bs,           required_argument, bs},
 		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (fd < 0)
 		return fd;
-
+	
+	if (cfg.lbaf != 0xff && cfg.bs !=0) {
+		fprintf(stderr,
+			"Invalid specification of both LBAF and Block Size, please specify only one\n");
+			return EINVAL;
+	}
+	if (cfg.bs) {
+		if ((cfg.bs & ( ~cfg.bs + 1)) != cfg.bs) {
+			fprintf(stderr,
+				"Invalid value for block size (%llu). Block size must be a power of two\n", cfg.bs);
+				return EINVAL;
+		}
+	}
 	if (S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
@@ -3052,6 +3115,27 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			return err;
 		}
 		prev_lbaf = ns.flbas & 0xf;
+	}
+	if (cfg.bs) {
+		__u64 bs = cfg.bs;
+		bs = bs >> 1;
+		while (bs) {
+			++lbads;
+			bs = bs >> 1;
+		}
+		for (i=0; i<16; ++i) {
+			if (ns.lbaf[i].ds == lbads && ns.lbaf[i].ms == 0) {
+				cfg.lbaf = i;
+				break;
+			}
+		}
+			if (cfg.lbaf == 0xff) {
+				fprintf(stderr,
+					"LBAF corresponding to block size %llu (LBAF %u) not found\n", cfg.bs, lbads);
+				fprintf(stderr,
+					"Please correct block size, or specify LBAF directly\n");
+				return EINVAL;
+			}
 	}
 	if (cfg.lbaf == 0xff)
 		cfg.lbaf = prev_lbaf;
