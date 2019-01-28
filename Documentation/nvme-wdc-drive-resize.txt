@@ -1,0 +1,42 @@
+nvme-wdc-drive-resize(1)
+========================
+
+NAME
+----
+nvme-wdc-drive-resize - Send NVMe WDC Resize Vendor Unique Command,
+return result.
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc drive-resize' <device> [--size=<sz> | -s <sz>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends a Vendor Unique WDC Resize command.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-s <sz>::
+--size=<sz>::
+	The new size (in GB) to resize the drive to.
+
+EXAMPLES
+--------
+* Has the program issue WDC Resize Vendor Unique Command :
++
+------------
+# nvme wdc drive-resize /dev/nvme0n1 --size=100
+------------
+
+NVME
+----
+Part of the nvme-user suite.

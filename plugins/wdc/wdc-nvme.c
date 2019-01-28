@@ -80,6 +80,7 @@
 #define WDC_DRIVE_CAP_DRIVE_STATUS			0x0000000000000020
 #define WDC_DRIVE_CAP_CLEAR_ASSERT			0x0000000000000040
 #define WDC_DRIVE_CAP_CLEAR_PCIE			0x0000000000000080
+#define WDC_DRIVE_CAP_RESIZE			0x0000000000000100
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS			0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
@@ -100,6 +101,11 @@
 #define SN730_GET_CORE_LOG_SUBOPCODE			0x00030009
 #define SN730_GET_EXTEND_LOG_SUBOPCODE			0x00040009
 #define SN730_LOG_CHUNK_SIZE				0x1000
+
+/* Drive Resize */
+#define WDC_NVME_DRIVE_RESIZE_OPCODE		0xCC
+#define WDC_NVME_DRIVE_RESIZE_CMD		0x03
+#define WDC_NVME_DRIVE_RESIZE_SUBCMD		0x01
 
 /* Capture Diagnostics */
 #define WDC_NVME_CAP_DIAG_HEADER_TOC_SIZE	WDC_NVME_LOG_SIZE_DATA_LEN
@@ -413,6 +419,9 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 		struct plugin *plugin);
 static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
 		struct plugin *plugin);
+static int wdc_drive_resize(int argc, char **argv,
+		struct command *command, struct plugin *plugin);
+static int wdc_do_drive_resize(int fd, uint64_t new_size);
 
 /* Drive log data size */
 struct wdc_log_size {
@@ -701,7 +710,8 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		/* FALLTHRU */
 		case WDC_NVME_SN840_DEV_ID:
 			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
-					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT);
+					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
+					WDC_DRIVE_CAP_RESIZE);
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -3519,4 +3529,58 @@ static int wdc_drive_essentials(int argc, char **argv, struct command *command,
 	}
 
 	return wdc_do_drive_essentials(fd, d_ptr, k);
+}
+
+static int wdc_do_drive_resize(int fd, uint64_t new_size)
+{
+	int ret;
+	struct nvme_admin_cmd admin_cmd;
+
+	memset(&admin_cmd, 0, sizeof (struct nvme_admin_cmd));
+	admin_cmd.opcode = WDC_NVME_DRIVE_RESIZE_OPCODE;
+	admin_cmd.cdw12 = ((WDC_NVME_DRIVE_RESIZE_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
+			    WDC_NVME_DRIVE_RESIZE_CMD);
+	admin_cmd.cdw13 = new_size;
+
+	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	return ret;
+}
+
+static int wdc_drive_resize(int argc, char **argv,
+		struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Send a Resize command.";
+	const char *size = "The new size (in GB) to resize the drive to.";
+	int fd;
+	int ret;
+	uint64_t capabilities = 0;
+
+	struct config {
+		uint64_t size;
+	};
+
+	struct config cfg = {
+		.size = 0,
+	};
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"size", 's', "NUM", CFG_POSITIVE, &cfg.size, required_argument, size},
+		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc },
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	if (fd < 0)
+		return fd;
+
+	wdc_check_device(fd);
+	capabilities = wdc_get_drive_capabilities(fd);
+	if ((capabilities & WDC_DRIVE_CAP_RESIZE) == WDC_DRIVE_CAP_RESIZE) {
+		ret = wdc_do_drive_resize(fd, cfg.size);
+	} else {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+	}
+	if (!ret)
+		printf("New size: %lu GB\n", cfg.size);
+	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	return ret;
 }
