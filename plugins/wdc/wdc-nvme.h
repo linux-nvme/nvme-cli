@@ -20,6 +20,7 @@ PLUGIN(NAME("wdc", "Western Digital vendor specific extensions"),
 		ENTRY("clear-pcie-correctable-errors", "WDC Clear PCIe Correctable Error Count", wdc_clear_pcie_correctable_errors)
 		ENTRY("drive-essentials", "WDC Drive Essentials", wdc_drive_essentials)
 		ENTRY("get-drive-status", "WDC Get Drive Status", wdc_drive_status)
+		ENTRY("clear-assert-dump", "WDC Clear Assert Dump", wdc_clear_assert_dump)
 	)
 );
 
