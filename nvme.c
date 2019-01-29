@@ -1213,7 +1213,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	if (cfg.bs) {
 		if ((cfg.bs & (~cfg.bs + 1)) != cfg.bs) {
 			fprintf(stderr,
-				"Invalid value for block size (%llu). Block size must be a power of two\n", cfg.bs);
+				"Invalid value for block size (%"PRIu64"). Block size must be a power of two\n",
+				(uint64_t)cfg.bs);
 			return EINVAL;
 		}
 		err = nvme_identify_ns(fd, NVME_NSID_ALL, 0, &ns);
@@ -1236,7 +1237,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	}
 	if (cfg.flbas == 0xff) {
 		fprintf(stderr,
-			"FLBAS corresponding to block size %llu not found\n", cfg.bs);
+			"FLBAS corresponding to block size %"PRIu64" not found\n",
+			(uint64_t)cfg.bs);
 		fprintf(stderr,
 			"Please correct block size, or specify FLBAS directly\n");
 		return EINVAL;
@@ -3156,7 +3158,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		}
 			if (cfg.lbaf == 0xff) {
 				fprintf(stderr,
-					"LBAF corresponding to block size %llu (LBAF %u) not found\n", cfg.bs, lbads);
+					"LBAF corresponding to block size %"PRIu64" (LBAF %u) not found\n",
+					(uint64_t)cfg.bs, lbads);
 				fprintf(stderr,
 					"Please correct block size, or specify LBAF directly\n");
 				return EINVAL;
