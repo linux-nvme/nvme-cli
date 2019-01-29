@@ -2,12 +2,12 @@
 .\"     Title: nvme-create-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/08/2019
+.\"      Date: 01/28/2019
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CREATE\-NS" "1" "01/08/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-CREATE\-NS" "1" "01/28/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,6 +37,7 @@ nvme-create-ns \- Send NVMe Namespace management command to create namespace, re
                         [\-\-flbas=<flbas> | \-f <flbas>]
                         [\-\-dps=<dps> | \-d <dps>]
                         [\-\-nmic=<nmic> | \-m <nmic>]
+                        [\-\-block\-size=<block\-size> | \-b <block\-size>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -57,7 +58,7 @@ The namespace capacity\&.
 .PP
 \-f, \-\-flbas
 .RS 4
-The namespace formatted logical block size setting\&.
+The namespace formatted logical block size setting\&. Conflicts with \-\-block\-size argument\&.
 .RE
 .PP
 \-d, \-\-dps
@@ -68,6 +69,11 @@ The data protection settings\&.
 \-m, \-\-nmic
 .RS 4
 Namespace multipath and sharing capabilities\&.
+.RE
+.PP
+\-b, \-\-block\-size
+.RS 4
+Target block size the new namespace should be formatted as\&. Potential FLBAS values will be values will be scanned and the lowest numbered will be selected for the create\-ns operation\&. Conflicts with \-\-flbas argument\&.
 .RE
 .SH "EXAMPLES"
 .sp
