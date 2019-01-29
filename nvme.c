@@ -4314,7 +4314,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		dsmgmt |= ((__u32)cfg.dspec) << 16;
 	}
 
-	if (strlen(cfg.data)){
+	if (strlen(cfg.data)) {
 		dfd = open(cfg.data, flags, mode);
 		if (dfd < 0) {
 			perror(cfg.data);
@@ -4323,7 +4323,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		}
 		mfd = dfd;
 	}
-	if (strlen(cfg.metadata)){
+	if (strlen(cfg.metadata)) {
 		mfd = open(cfg.metadata, flags, mode);
 		if (mfd < 0) {
 			perror(cfg.metadata);
@@ -4416,11 +4416,13 @@ static int submit_io(int opcode, char *command, const char *desc,
 		printf("%s:%s(%04x)\n", command, nvme_status_to_string(err), err);
 	else {
 		if (!(opcode & 1) && write(dfd, (void *)buffer, cfg.data_size) < 0) {
-			fprintf(stderr, "failed to write buffer to output file\n");
+			fprintf(stderr, "write: %s: failed to write buffer to output file\n",
+					strerror(errno));
 			err = EINVAL;
 		} else if (!(opcode & 1) && cfg.metadata_size &&
 				write(mfd, (void *)mbuffer, cfg.metadata_size) < 0) {
-			fprintf(stderr, "failed to write meta-data buffer to output file\n");
+			fprintf(stderr, "write: %s: failed to write meta-data buffer to output file\n",
+					strerror(errno));
 			err = EINVAL;
 		} else
 			fprintf(stderr, "%s: Success\n", command);
