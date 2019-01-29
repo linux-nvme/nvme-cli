@@ -13,6 +13,7 @@ SYNOPSIS
 			[--flbas=<flbas> | -f <flbas>]
 			[--dps=<dps> | -d <dps>]
 			[--nmic=<nmic> | -m <nmic>]
+			[--block-size=<block-size> | -b <block-size>]
 
 DESCRIPTION
 -----------
@@ -36,6 +37,7 @@ OPTIONS
 -f::
 --flbas::
 	The namespace formatted logical block size setting.
+	Conflicts with --block-size argument.
 
 -d::
 --dps::
@@ -44,6 +46,12 @@ OPTIONS
 -m::
 --nmic::
 	Namespace multipath and sharing capabilities.
+
+-b::
+--block-size::
+	Target block size the new namespace should be formatted as. Potential FLBAS
+  values will be values will be scanned and the lowest numbered will be
+  selected for the create-ns operation. Conflicts with --flbas argument.
 
 
 EXAMPLES

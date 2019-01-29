@@ -1168,8 +1168,10 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *dps = "data protection capabilities";
 	const char *nmic = "multipath and sharing capabilities";
 	const char *timeout = "timeout value, in milliseconds";
+	const char *bs = "target block size";
 
-	int err = 0, fd;
+	int err = 0, fd, i;
+	struct nvme_id_ns ns;
 	__u32 nsid;
 
 	struct config {
@@ -1178,20 +1180,24 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		__u8	flbas;
 		__u8	dps;
 		__u8	nmic;
+		__u64	bs;
 		__u32	timeout;
 	};
 
 	struct config cfg = {
+		.flbas = 0xff,
+		.bs = 0x00,
 		.timeout      = NVME_IOCTL_TIMEOUT,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"nsze",  's', "NUM", CFG_LONG_SUFFIX, &cfg.nsze,  required_argument, nsze},
-		{"ncap",  'c', "NUM", CFG_LONG_SUFFIX, &cfg.ncap,  required_argument, ncap},
-		{"flbas", 'f', "NUM", CFG_BYTE,        &cfg.flbas, required_argument, flbas},
-		{"dps",   'd', "NUM", CFG_BYTE,        &cfg.dps,   required_argument, dps},
-		{"nmic",  'm', "NUM", CFG_BYTE,        &cfg.nmic,  required_argument, nmic},
-		{"timeout", 't', "NUM", CFG_POSITIVE,  &cfg.timeout, required_argument, timeout},
+		{"nsze",         's', "NUM", CFG_LONG_SUFFIX, &cfg.nsze,    required_argument, nsze},
+		{"ncap",         'c', "NUM", CFG_LONG_SUFFIX, &cfg.ncap,    required_argument, ncap},
+		{"flbas",        'f', "NUM", CFG_BYTE,        &cfg.flbas,   required_argument, flbas},
+		{"dps",          'd', "NUM", CFG_BYTE,        &cfg.dps,     required_argument, dps},
+		{"nmic",         'm', "NUM", CFG_BYTE,        &cfg.nmic,    required_argument, nmic},
+		{"block-size",   'b', "NUM", CFG_LONG_SUFFIX, &cfg.bs,      required_argument, bs},
+		{"timeout",      't', "NUM", CFG_POSITIVE,    &cfg.timeout, required_argument, timeout},
 		{NULL}
 	};
 
@@ -1199,7 +1205,46 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	if (fd < 0)
 		return fd;
 
-	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic, cfg.timeout, &nsid);
+	if (cfg.flbas != 0xff && cfg.bs != 0x00) {
+		fprintf(stderr,
+			"Invalid specification of both FLBAS and Block Size, please specify only one\n");
+			return EINVAL;
+	}
+	if (cfg.bs) {
+		if ((cfg.bs & (~cfg.bs + 1)) != cfg.bs) {
+			fprintf(stderr,
+				"Invalid value for block size (%llu). Block size must be a power of two\n", cfg.bs);
+			return EINVAL;
+		}
+		err = nvme_identify_ns(fd, NVME_NSID_ALL, 0, &ns);
+		if (err) {
+			if (err < 0)
+				perror("identify-namespace");
+			else
+				fprintf(stderr,
+					"NVME Admin command error:%s(%x)\n",
+					nvme_status_to_string(err), err);
+			return err;
+		}
+		for (i = 0; i < 16; ++i) {
+			if ((1 << ns.lbaf[i].ds) == cfg.bs && ns.lbaf[i].ms == 0) {
+				cfg.flbas = i;
+				break;
+			}
+		}
+
+	}
+	if (cfg.flbas == 0xff) {
+		fprintf(stderr,
+			"FLBAS corresponding to block size %llu not found\n", cfg.bs);
+		fprintf(stderr,
+			"Please correct block size, or specify FLBAS directly\n");
+		return EINVAL;
+	}
+
+
+	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps,
+			     cfg.nmic, cfg.timeout, &nsid);
 	if (!err)
 		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
 	else if (err > 0)
@@ -3095,6 +3140,27 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 				return EINVAL;
 			}
 		}
+	}
+	if (cfg.bs) {
+		__u64 bs = cfg.bs;
+		bs = bs >> 1;
+		while (bs) {
+			++lbads;
+			bs = bs >> 1;
+		}
+		for (i=0; i<16; ++i) {
+			if (ns.lbaf[i].ds == lbads && ns.lbaf[i].ms == 0) {
+				cfg.lbaf = i;
+				break;
+			}
+		}
+			if (cfg.lbaf == 0xff) {
+				fprintf(stderr,
+					"LBAF corresponding to block size %llu (LBAF %u) not found\n", cfg.bs, lbads);
+				fprintf(stderr,
+					"Please correct block size, or specify LBAF directly\n");
+				return EINVAL;
+			}
 	}
 	if (cfg.lbaf == 0xff)
 		cfg.lbaf = prev_lbaf;
