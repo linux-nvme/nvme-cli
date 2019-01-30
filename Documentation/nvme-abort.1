@@ -1,0 +1,59 @@
+'\" t
+.\"     Title: nvme-abort
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 01/30/2019
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-ABORT" "1" "01/30/2019" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-abort \- Send an NVMe abort command, return results
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\-abort\fR <device> [\-\-command\-id=<cid> | \-c <cid>]
+                      [\-\-queue\-id=<sqid> | \-s <sqid>]
+.fi
+.SH "DESCRIPTION"
+.sp
+The Abort command is used to abort a specific command previously submitted to the Admin Submission Queue or an I/O Submission Queue\&. An Abort command is a best effort command; the command to abort may have already completed, currently be in execution, or may be deeply queued\&.
+.sp
+The values for command id and submission queue id may be got from the storage device (such as CLI or other debugging tool) or from kernel profiling\&.
+.SH "OPTIONS"
+.PP
+\-\-command\-id=<cid>, \-c <cid>
+.RS 4
+Command ID \- see Description\&.
+.RE
+.PP
+\-\-queue\-id=<sqid>, \-s <sqid>
+.RS 4
+Submission Queue ID\&. You may get the submission queue id from the storage device itself or from the linux kernel profiling
+.RE
+.SH "EXAMPLES"
+.sp
+No examples yet\&.
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

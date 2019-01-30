@@ -53,6 +53,8 @@ int nvme_write_uncorrectable(int fd, __u32 nsid, __u64 slba, __u16 nlb);
 
 int nvme_flush(int fd, __u32 nsid);
 
+int nvme_abort(int fd, __u16 cid, __u16 sqid, __u32 *result);
+
 int nvme_dsm(int fd, __u32 nsid, __u32 cdw11, struct nvme_dsm_range *dsm,
 	     __u16 nr_ranges);
 struct nvme_dsm_range *nvme_setup_dsm_range(__u32 *ctx_attrs,

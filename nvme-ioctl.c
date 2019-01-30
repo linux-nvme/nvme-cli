@@ -228,6 +228,23 @@ int nvme_flush(int fd, __u32 nsid)
 	return nvme_submit_io_passthru(fd, &cmd);
 }
 
+int nvme_abort(int fd, __u16 cid, __u16 sqid, __u32 *result)
+{
+	int rc;
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_admin_abort_cmd,
+		.cdw10		= (cid << 16) | sqid,
+	};
+
+	rc = nvme_submit_admin_passthru(fd, &cmd);
+
+	if (result)
+		*result = cmd.result;
+
+	return rc;
+}
+
 int nvme_dsm(int fd, __u32 nsid, __u32 cdw11, struct nvme_dsm_range *dsm,
 	     __u16 nr_ranges)
 {

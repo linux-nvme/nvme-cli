@@ -1,0 +1,40 @@
+nvme-abort(1)
+==============
+
+NAME
+----
+nvme-abort - Send an NVMe abort command, return results
+
+SYNOPSIS
+--------
+[verse]
+'nvme-abort' <device> [--command-id=<cid> | -c <cid>]
+		      [--queue-id=<sqid> | -s <sqid>]
+
+DESCRIPTION
+-----------
+The Abort command is used to abort a specific command previously submitted to the Admin Submission
+Queue or an I/O Submission Queue. An Abort command is a best effort command; the command to abort
+may have already completed, currently be in execution, or may be deeply queued.
+
+The values for command id and submission queue id may be got from the storage device
+(such as CLI or other debugging tool) or from kernel profiling.
+
+OPTIONS
+-------
+--command-id=<cid>::
+-c <cid>::
+	Command ID - see Description.
+
+--queue-id=<sqid>::
+-s <sqid>::
+	Submission Queue ID. You may get the submission queue id from the storage
+	device itself or from the linux kernel profiling
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

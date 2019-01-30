@@ -167,6 +167,67 @@ int validate_output_format(char *format)
 	return -EINVAL;
 }
 
+static int abort_nvme_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Aborts a command sent previously. "
+			"Commeand ID and Submission Queue ID may be fetched "
+			"from target device or kernel profiling" ;
+	const char *cid_desc = "Command ID - get from target or kernel logs";
+	const char *sqid_desc = "Submission Queue ID - get from target or kernel logs";
+	int err, fd;
+	__u32 result;
+
+	struct config {
+		int cid;
+		int sqid;
+	} cfg = {
+		.cid = -1,
+		.sqid = -1,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"command-id", 'c', "NUM", CFG_POSITIVE, &cfg.cid,	required_argument, cid_desc},
+		{"queue-id",   's', "NUM", CFG_POSITIVE, &cfg.sqid, required_argument, sqid_desc },
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	if (cfg.cid == -1 || cfg.sqid == -1) {
+		fprintf(stderr, "Command line error: missing one of command-id or queue-id\n");
+		err = EINVAL;
+		goto close_fd;
+	}
+
+	err = nvme_abort(fd, cfg.cid, cfg.sqid, &result);
+	if (err > 0)
+		fprintf(stderr, "NVMe Status: %s(%x)\n",
+				nvme_status_to_string(err), err);
+	else if (err < 0) {
+		perror("nvme-abort");
+	}
+	else {
+		switch (result) {
+		case 0:
+			printf("Command was aborted successfully\n");
+			break;
+		case 3:
+			fprintf(stderr, "Abort command limit exceeded.\n");
+			/* fall through */
+		default:
+			fprintf(stderr, "Target device failed to abort command (%d)\n",
+					result);
+			err = result;
+		}
+	}
+
+close_fd:
+	close(fd);
+	return err;
+}
+
 static int get_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_smart_log smart_log;
