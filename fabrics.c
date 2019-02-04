@@ -98,7 +98,7 @@ static const char *arg_str(const char * const *strings,
 
 static const char * const trtypes[] = {
 	[NVMF_TRTYPE_RDMA]	= "rdma",
-	[NVMF_TRTYPE_FC]	= "fibre-channel",
+	[NVMF_TRTYPE_FC]	= "fc",
 	[NVMF_TRTYPE_TCP]	= "tcp",
 	[NVMF_TRTYPE_LOOP]	= "loop",
 };
