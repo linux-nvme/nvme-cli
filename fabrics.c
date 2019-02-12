@@ -685,14 +685,14 @@ retry:
 		p += len;
 	}
 
-	if (cfg.queue_size) {
+	if (cfg.queue_size && !discover) {
 		len = sprintf(p, ",queue_size=%d", cfg.queue_size);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
 	}
 
-	if (cfg.nr_io_queues) {
+	if (cfg.nr_io_queues && !discover) {
 		len = sprintf(p, ",nr_io_queues=%d", cfg.nr_io_queues);
 		if (len < 0)
 			return -EINVAL;
