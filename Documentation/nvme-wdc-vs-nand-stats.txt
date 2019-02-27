@@ -1,0 +1,45 @@
+nvme-wdc-vs-nand-stats(1)
+=========================
+
+NAME
+----
+nvme-wdc-vs-nand-stats - Send NVMe WDC vs-nand-stats Vendor Unique Command, return result
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc vs-nand-stats' <device> [--output-format=<normal|json> -o <normal|json>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, send a Vendor Unique WDC vs-nand-stats command and
+output the NAND statistics. The --output-format option will format the output as
+specified.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns the NAND statistics, error code otherwise.
+
+OPTIONS
+-------
+-o <format>::
+--output-format=<format>::
+	Set the reporting format to 'normal', or
+	'json'. Only one output format can be used at a time.
+	Default is normal.
+
+EXAMPLES
+--------
+* Has the program issue WDC vs-nand-stats Vendor Unique Command :
++
+------------
+# nvme wdc vs-nand-stats /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.
