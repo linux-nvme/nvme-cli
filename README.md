@@ -44,6 +44,15 @@ package manager.  For example:
 
     $ sudo dnf install nvme-cli
 
+### FreeBSD
+
+`nvme-cli` is available in the FreeBSD Ports Collection.  A prebuilt binary
+package can be installed with:
+
+```console
+# pkg install nvme-cli
+```
+
 ### Gentoo
 
 nvme-cli is available and tested in portage:
