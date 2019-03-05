@@ -3,17 +3,39 @@ NVM-Express user space tooling for Linux.
 
 To install, run:
 
-  # make && make install
+   # make && make install
 
 If not sure how to use, find the top-level documentation with:
 
-  # man nvme
+   # man nvme
 
 Or find a short summary with:
 
-  # nvme help
+   # nvme help
 
 ## Distro Support
+
+### Alpine Linux
+
+nvme-cli is tested on Alpine Linux 3.3.  Install it using:
+
+    # apk update && apk add nvme-cli nvme-cli-doc
+
+if you just use the device you're after, it will work flawless.
+```
+# nvme smart-log /dev/nvme0
+Smart Log for NVME device:/dev/nvme0 namespace-id:ffffffff
+critical_warning                    : 0
+temperature                         : 49 C
+available_spare                     : 100%
+```
+
+### Arch Linux
+
+Install from AUR, e.g.:
+```
+$ yay -S nvme-cli-git
+```
 
 ### Fedora
 
@@ -21,6 +43,36 @@ nvme-cli is available in Fedora 23 and up.  Install it with your favorite
 package manager.  For example:
 
     $ sudo dnf install nvme-cli
+
+### FreeBSD
+
+`nvme-cli` is available in the FreeBSD Ports Collection.  A prebuilt binary
+package can be installed with:
+
+```console
+# pkg install nvme-cli
+```
+
+### Gentoo
+
+nvme-cli is available and tested in portage:
+```
+$ emerge -av nvme-cli
+```
+
+### Nix(OS)
+
+The attribute is named `nvme-cli` and can e.g. be installed with:
+```
+$ nix-env -f '<nixpkgs>' -iA nvme-cli
+```
+
+### openSUSE Tumbleweed
+
+nvme-cli is available in openSUSE Tumbleweed. You can install it using zypper.
+For example:
+
+    $ sudo zypper install nvme-cli
 
 ### Ubuntu
 
@@ -56,49 +108,6 @@ steps:
    ```
    otherwise you will see information about each NVMe device installed
    in the system.
-
-### Alpine Linux
-
-nvme-cli is tested on Alpine Linux 3.3.  Install it using:
-
-    # apk update && apk add nvme-cli nvme-cli-doc
-
-if you just use the device you're after, it will work flawless.
-```
-# nvme smart-log /dev/nvme0
-Smart Log for NVME device:/dev/nvme0 namespace-id:ffffffff
-critical_warning                    : 0
-temperature                         : 49 C
-available_spare                     : 100%
-```
-
-### openSUSE Tumbleweed
-
-nvme-cli is available in openSUSE Tumbleweed. You can install it using zypper.
-For example:
-
-    $ sudo zypper install nvme-cli
-
-### Arch Linux
-
-Install from AUR, e.g.:
-```
-$ yay -S nvme-cli-git
-```
-
-### Nix(OS)
-
-The attribute is named `nvme-cli` and can e.g. be installed with:
-```
-$ nix-env -f '<nixpkgs>' -iA nvme-cli
-```
-
-### Gentoo
-
-nvme-cli is available and tested in portage:
-```
-$ emerge -av nvme-cli
-```
 
 ### Other Distros
 
