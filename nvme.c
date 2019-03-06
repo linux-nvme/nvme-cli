@@ -4413,7 +4413,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	if (err < 0)
 		perror("submit-io");
 	else if (err)
-		printf("%s:%s(%04x)\n", command, nvme_status_to_string(err), err);
+		fprintf(stderr, "%s:%s(%04x)\n", command, nvme_status_to_string(err), err);
 	else {
 		if (!(opcode & 1) && write(dfd, (void *)buffer, cfg.data_size) < 0) {
 			fprintf(stderr, "write: %s: failed to write buffer to output file\n",
