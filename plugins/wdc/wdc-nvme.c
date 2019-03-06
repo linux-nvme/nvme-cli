@@ -1185,8 +1185,14 @@ static int wdc_do_dump_e6(int fd, __u32 opcode,__u32 data_len,
 
 	if (ret == 0) {
 		fprintf(stderr, "%s:  NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
-		ret = wdc_create_log_file(file, dump_data, data_len);
+	} else {
+		fprintf(stderr, "%s:  FAILURE: NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+		fprintf(stderr, "%s:  Partial data may have been captured\n", __func__);
+		snprintf(file + strlen(file), PATH_MAX, "%s", "-PARTIAL");
 	}
+
+	ret = wdc_create_log_file(file, dump_data, data_len);
+
 	free(dump_data);
 	return ret;
 }
