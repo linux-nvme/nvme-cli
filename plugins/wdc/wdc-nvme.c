@@ -792,6 +792,7 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 			break;
 		case WDC_NVME_SN340_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_SN340_DUI;
+			break;
 		default:
 			capabilities = 0;
 		}
