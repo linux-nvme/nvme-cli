@@ -1334,10 +1334,9 @@ static char *get_nvme_subsnqn(char *path)
 				strerror(errno));
 		free(subsysnqn);
 		subsysnqn = NULL;
-	}
-
-	if (subsysnqn[strlen(subsysnqn) - 1] == '\n')
+	} else if (subsysnqn[strlen(subsysnqn) - 1] == '\n') {
 		subsysnqn[strlen(subsysnqn) - 1] = '\0';
+	}
 
 close_fd:
 	close(fd);

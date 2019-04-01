@@ -390,6 +390,8 @@ int argconfig_parse_subopt_string(char *string, char **options,
 	}
 
 	tmp = calloc(strlen(string) + 2, 1);
+	if (!tmp)
+		return 1;
 	strcpy(tmp, string);
 
 	toklen = strcspn(tmp, "=");
