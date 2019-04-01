@@ -1,0 +1,35 @@
+nvme-netapp-ontapdevices(1)
+========================
+
+NAME
+----
+nvme-netapp-ontapdevices - Display information about ONTAP devices
+
+SYNOPSIS
+--------
+[verse]
+'nvme netapp ontapdevices' [-o <fmt> | --output-format=<fmt>]
+
+DESCRIPTION
+-----------
+Display information about ONTAP devices on the host. The ONTAP devices are
+are identified using the Identify Controller data.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+              Set the reporting format to 'normal' (default), 'column', or
+              'json'. Only one output format can be used at a time.
+
+EXAMPLES
+--------
+* Display information, in a column-based format, for ONTAP devices.
++
+------------
+# nvme netapp ontapdevices -o column
+------------
+
+NVME
+----
+Part of the nvme-user suite
