@@ -9,6 +9,7 @@
 PLUGIN(NAME("netapp", "NetApp vendor specific extensions"),
 	COMMAND_LIST(
 		ENTRY("smdevices", "NetApp SMdevices", netapp_smdevices)
+		ENTRY("ontapdevices", "NetApp ONTAPdevices", netapp_ontapdevices)
 	)
 );
 
