@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 8.6.10" />
 <title>nvme-discover(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -752,9 +755,17 @@ nvme-discover(1) Manual Page
                 [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
                 [--host-traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
                 [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
+                [--hostid=&lt;hostid&gt;        | -I &lt;hostid&gt;]
                 [--raw=&lt;filename&gt;         | -r &lt;filename&gt;]
+                [--keep-alive-tmo=&lt;sec&gt;   | -k &lt;sec&gt;]
                 [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]
-                [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]</pre>
+                [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]
+                [--hdr_digest             | -g]
+                [--data_digest            | -G]
+                [--nr-io-queues=&lt;#&gt;       | -i &lt;#&gt;]
+                [--nr-write-queues=&lt;#&gt;    | -W &lt;#&gt;]
+                [--nr-poll-queues=&lt;#&gt;     | -P &lt;#&gt;]
+                [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -867,6 +878,18 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
+-w &lt;traddr&gt;
+</dt>
+<dt class="hdlist1">
+--host-traddr=&lt;traddr&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the network address used on the host to connect
+        to the Discovery Controller.
+</p>
+</dd>
+<dt class="hdlist1">
 -q &lt;hostnqn&gt;
 </dt>
 <dt class="hdlist1">
@@ -881,15 +904,15 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
--w &lt;traddr&gt;
+-I &lt;hostid&gt;
 </dt>
 <dt class="hdlist1">
---host-traddr=&lt;traddr&gt;
+--hostid=&lt;hostid&gt;
 </dt>
 <dd>
 <p>
-        This field specifies the network address used on the host to connect
-        to the Discovery Controller.
+        UUID(Universally Unique Identifier) to be discovered which should be
+        formatted.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -903,6 +926,17 @@ cellspacing="0" cellpadding="4">
         This field will take the output of the <em>nvme discover</em> command
         and dump it to a raw binary file. By default <em>nvme discover</em> will
         dump the output to stdout.
+</p>
+</dd>
+<dt class="hdlist1">
+-k &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--keep-alive-tmo=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Overrides the default dealy (in seconds) for keep alive.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -928,6 +962,73 @@ cellspacing="0" cellpadding="4">
         Overrides the default controller loss timeout period (in seconds).
 </p>
 </dd>
+<dt class="hdlist1">
+-g
+</dt>
+<dt class="hdlist1">
+--hdr_digest
+</dt>
+<dd>
+<p>
+        Generates/verifies header digest (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-G
+</dt>
+<dt class="hdlist1">
+--data_digest
+</dt>
+<dd>
+<p>
+        Generates/verifies data digest (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-i &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--nr-io-queues=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Overrides the default number of I/O queues create by the driver.
+</p>
+</dd>
+<dt class="hdlist1">
+-W &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--nr-write-queues=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Adds additional queues that will be used for write I/O.
+</p>
+</dd>
+<dt class="hdlist1">
+-P &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--nr-poll-queues=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Adds additional queues that will be used for polling latency sensitive I/O.
+</p>
+</dd>
+<dt class="hdlist1">
+-Q &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--queue-size=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Overrides the default number of elements in the I/O queues created
+        by the driver which can be found at drivers/nvme/host/fabrics.h.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -951,8 +1052,6 @@ Port 4420 is used by default:
 <p>
 Issue a <em>nvme discover</em> command using a /etc/nvme/discovery.conf file:
 </p>
-</li>
-</ul></div>
 <div class="listingblock">
 <div class="content">
 <pre><code># Machine default 'nvme discover' commands.  Query the
@@ -965,6 +1064,8 @@ Issue a <em>nvme discover</em> command using a /etc/nvme/discovery.conf file:
 
 At the prompt type "nvme discover".</code></pre>
 </div></div>
+</li>
+</ul></div>
 </div>
 </div>
 <div class="sect1">
@@ -991,7 +1092,8 @@ for <a href="mailto:keith.busch@intel.com">Keith Busch</a>.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-12-17 13:07:47 MST
+Last updated
+ 2019-04-04 01:15:26 KST
 </div>
 </div>
 </body>
