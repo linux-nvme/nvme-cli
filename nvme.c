@@ -3140,32 +3140,9 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 					"Please correct block size, or specify LBAF directly\n");
 				return EINVAL;
 			}
-		}
+		} else  if (cfg.lbaf == 0xff)
+			cfg.lbaf = prev_lbaf;
 	}
-	if (cfg.bs) {
-		__u64 bs = cfg.bs;
-		bs = bs >> 1;
-		while (bs) {
-			++lbads;
-			bs = bs >> 1;
-		}
-		for (i=0; i<16; ++i) {
-			if (ns.lbaf[i].ds == lbads && ns.lbaf[i].ms == 0) {
-				cfg.lbaf = i;
-				break;
-			}
-		}
-			if (cfg.lbaf == 0xff) {
-				fprintf(stderr,
-					"LBAF corresponding to block size %"PRIu64" (LBAF %u) not found\n",
-					(uint64_t)cfg.bs, lbads);
-				fprintf(stderr,
-					"Please correct block size, or specify LBAF directly\n");
-				return EINVAL;
-			}
-	}
-	if (cfg.lbaf == 0xff)
-		cfg.lbaf = prev_lbaf;
 
 	/* ses & pi checks set to 7 for forward-compatibility */
 	if (cfg.ses > 7) {
