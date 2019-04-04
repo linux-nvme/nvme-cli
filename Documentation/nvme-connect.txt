@@ -15,6 +15,7 @@ SYNOPSIS
 		[--trsvcid=<trsvcid>      | -s <trsvcid>]
 		[--host-traddr=<traddr>   | -w <traddr>]
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
+		[--hostid=<hostid>        | -I <hostid>]
 		[--nr-io-queues=<#>       | -i <#>]
 		[--nr-write-queues=<#>    | -W <#>]
 		[--nr-poll-queues=<#>     | -P <#>]
@@ -22,6 +23,10 @@ SYNOPSIS
 		[--keep-alive-tmo=<#>     | -k <#>]
 		[--reconnect-delay=<#>    | -c <#>]
 		[--ctrl-loss-tmo=<#>      | -l <#>]
+		[--duplicate_connect      | -D]
+		[--disable_sqflow         | -d]
+		[--hdr_digest             | -g]
+		[--data_digest            | -G]
 
 DESCRIPTION
 -----------
@@ -73,6 +78,11 @@ OPTIONS
 	NQN value from the NVMe Host kernel module is used next.
 	The Host NQN uniquely identifies the NVMe Host.
 
+-I <hostid>::
+--hostid=<hostid>::
+	UUID(Universally Unique Identifier) to be discovered which should be
+	formatted.
+
 -i <#>::
 --nr-io-queues=<#>::
 	Overrides the default number of I/O queues create by the driver.
@@ -103,6 +113,24 @@ OPTIONS
 --ctrl-loss-tmo=<#>::
 	Overrides the default controller loss timeout period (in seconds).
 
+-D::
+--duplicate_connect::
+	Allows duplicated connections between same trnsport host and subsystem
+	port.
+
+-d::
+--disable_sqflow::
+	Disables SQ flow control to omit head doorbell update for submission
+	queues when sending nvme completions.
+
+-g::
+--hdr_digest::
+	Generates/verifies header digest (TCP).
+
+-G::
+--data_digest::
+	Generates/verifies data digest (TCP).
+
 EXAMPLES
 --------
 * Connect to a subsystem named nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
@@ -111,8 +139,6 @@ on the IP4 address 192.168.1.3. Port 4420 is used by default:
 ------------
 # nvme connect --transport=rdma --traddr=192.168.1.3 \
 --nqn=nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
-------------
-
 ------------
 
 SEE ALSO

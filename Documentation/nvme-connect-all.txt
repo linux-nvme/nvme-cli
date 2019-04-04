@@ -14,9 +14,17 @@ SYNOPSIS
 		[--trsvcid=<trsvcid>      | -s <trsvcid>]
 		[--host-traddr=<traddr>   | -w <traddr>]
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
-		[--keep-alive-tmo=<#>     | -k <#>]
-		[--ctrl-loss-tmo=<#>	  | -l <#>]
+		[--hostid=<hostid>        | -I <hostid>]
 		[--raw=<filename>         | -r <filename>]
+		[--keep-alive-tmo=<#>     | -k <#>]
+		[--reconnect-delay=<#>    | -c <#>]
+		[--ctrl-loss-tmo=<#>	  | -l <#>]
+		[--hdr_digest             | -g]
+		[--data_digest            | -G]
+		[--nr-io-queues=<#>       | -i <#>]
+		[--nr-write-queues=<#>    | -W <#>]
+		[--nr-poll-queues=<#>     | -P <#>]
+		[--queue-size=<#>         | -Q <#>]
 
 DESCRIPTION
 -----------
@@ -77,20 +85,54 @@ OPTIONS
 	the Discovery Controller to control what NVMe Target resources are
 	allocated to the NVMe Host for a connection.
 
+-I <hostid>::
+--hostid=<hostid>::
+	UUID(Universally Unique Identifier) to be discovered which should be
+	formatted.
+
 -r <filename>::
 --raw=<filename>::
 	This field will take the output of the 'nvme connect-all' command
 	and dump it to a raw binary file. By default 'nvme connect-all' will
 	dump the output to stdout.
 
+-k <#>::
+--keep-alive-tmo=<#>::
+	Overrides the default keep alive timeout (in seconds).
+
+-c <#>::
+--reconnect-delay=<#>::
+	Overrides the default delay (in seconds) before reconnect is attempted
+	after a connect loss.
+
+-l <#>::
+--ctrl-loss-tmo=<#>::
+	Overrides the default controller loss timeout period (in seconds).
+
+-g::
+--hdr_digest::
+	Generates/verifies header digest (TCP).
+
+-G::
+--data_digest::
+	Generates/verifies data digest (TCP).
+
+-i <#>::
+--nr-io-queues=<#>::
+	Overrides the default number of I/O queues create by the driver.
+
+-W <#>::
+--nr-write-queues=<#>::
+	Adds additional queues that will be used for write I/O.
+
+-P <#>::
+--nr-poll-queues=<#>::
+	Adds additional queues that will be used for polling latency sensitive I/O.
+
 -Q <#>::
 --queue-size=<#>::
 	Overrides the default number of elements in the I/O queues created
 	by the driver.
-
--k <#>::
---keep-alive-tmo=<#>::
-	Overrides the default keep alive timeout (in seconds).
 
 EXAMPLES
 --------
@@ -104,6 +146,7 @@ the RDMA network. Port 4420 is used by default:
 ------------
 +
 * Issue a 'nvme connect-all' command using a /etc/nvme/discovery.conf file:
++
 -----------
 # Machine default 'nvme discover' commands.  Query the
 # Discovery Controller's two ports (some resources may only

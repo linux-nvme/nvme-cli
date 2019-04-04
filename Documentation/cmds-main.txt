@@ -121,8 +121,17 @@ linknvme:nvme-show-regs[1]::
 linknvme:nvme-discover[1]::
 	Send Get Log Page request to Discovery Controller
 
+linknvme:nvme-connect-all[1]::
+	Discover and connect to all NVMe-over-Fabrics subsystems
+
 linknvme:nvme-connect[1]::
 	Connect to an NVMe-over-Fabrics subsystem
+
+linknvme:nvme-disconnect[1]::
+	Disconnect from an NVMe-over-Fabrics subsystem
+
+linknvme:nvme-disconnect-all[1]::
+	Disconnect from all NVMe-over-Fabrics subsystems
 
 linknvme:nvme-get-property[1]::
 	Reads and shows NVMe-over-Fabrics controller property

@@ -46,8 +46,6 @@ nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432:
 # nvme disconnect --device=nvme4
 ------------
 
-------------
-
 SEE ALSO
 --------
 nvme-connect(1)
