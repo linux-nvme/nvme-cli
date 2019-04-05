@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "nvme-print.h"
 #include "json.h"
@@ -1845,7 +1846,14 @@ static void show_auto_pst(struct nvme_auto_pst *apst)
 
 static void show_timestamp(struct nvme_timestamp *ts)
 {
-	printf("\tThe timestamp is : %"PRIu64"\n", int48_to_long(ts->timestamp));
+	struct tm *tm;
+	char buffer[32];
+	time_t timestamp = int48_to_long(ts->timestamp) / 1000;
+
+	tm = localtime(&timestamp);
+	strftime(buffer, sizeof(buffer), "%c %Z", tm);
+
+	printf("\tThe timestamp is : %"PRIu64" (%s)\n", int48_to_long(ts->timestamp), buffer);
 	printf("\t%s\n", (ts->attr & 2) ? "The Timestamp field was initialized with a "\
 			"Timestamp value using a Set Features command." : "The Timestamp field was initialized "\
 			"to ‘0’ by a Controller Level Reset.");
