@@ -2879,27 +2879,46 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 {
 	const char *desc = "Reads and shows the defined NVMe controller registers "\
 					"in binary or human-readable format";
-	const char *human_readable = "show info in readable format";
+	const char *human_readable = "show info in readable format in case of "\
+					"output_format == normal";
 	void *bar;
-	int fd, err;
+	int fd, err, fmt;
 	bool fabrics = true;
+	const int reg_size = 0x50;  /* 00h to 4Fh */
 
 	struct config {
 		int human_readable;
+		char *output_format;
 	};
 
 	struct config cfg = {
 		.human_readable = 0,
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"human-readable", 'H', "", CFG_NONE, &cfg.human_readable, no_argument, human_readable},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format},
 		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
 	if (fd < 0)
 		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		fprintf(stderr, "Invalid argument --output-format=%s\n",
+				cfg.output_format);
+		err = -fmt;
+		goto close_fd;
+	}
+
+	if (cfg.human_readable && fmt != NORMAL) {
+		fprintf(stderr, "Only --output-format=normal supports -H\n");
+		err = EINVAL;
+		goto close_fd;
+	}
 
 	err = nvme_get_properties(fd, &bar);
 	if (err) {
@@ -2912,7 +2931,13 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 		err = ENODEV;
 		goto close_fd;
 	}
-	show_ctrl_registers(bar, cfg.human_readable ? HUMAN : 0, fabrics);
+
+	if (fmt == BINARY)
+		d_raw((unsigned char *) bar, reg_size);
+	else if (fmt == JSON)
+		json_ctrl_registers(bar);
+	else
+		show_ctrl_registers(bar, cfg.human_readable ? HUMAN : 0, fabrics);
 
 	if (fabrics)
 		free(bar);

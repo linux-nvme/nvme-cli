@@ -3075,6 +3075,48 @@ static inline __u64 mmio_read64(void *addr)
 	return le32_to_cpu(*p) | ((uint64_t)le32_to_cpu(*(p + 1)) << 32);
 }
 
+void json_ctrl_registers(void *bar)
+{
+	uint64_t cap, asq, acq, bpmbl;
+	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc,
+			bpinfo, bprsel;
+	struct json_object *root;
+
+	cap = mmio_read64(bar + NVME_REG_CAP);
+	vs = mmio_read32(bar + NVME_REG_VS);
+	intms = mmio_read32(bar + NVME_REG_INTMS);
+	intmc = mmio_read32(bar + NVME_REG_INTMC);
+	cc = mmio_read32(bar + NVME_REG_CC);
+	csts = mmio_read32(bar + NVME_REG_CSTS);
+	nssr = mmio_read32(bar + NVME_REG_NSSR);
+	aqa = mmio_read32(bar + NVME_REG_AQA);
+	asq = mmio_read64(bar + NVME_REG_ASQ);
+	acq = mmio_read64(bar + NVME_REG_ACQ);
+	cmbloc = mmio_read32(bar + NVME_REG_CMBLOC);
+	cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
+	bpinfo = mmio_read32(bar + NVME_REG_BPINFO);
+	bprsel = mmio_read32(bar + NVME_REG_BPRSEL);
+	bpmbl = mmio_read64(bar + NVME_REG_BPMBL);
+
+	root = json_create_object();
+	json_object_add_value_uint(root, "cap", cap);
+	json_object_add_value_int(root, "vs", vs);
+	json_object_add_value_int(root, "intms", intms);
+	json_object_add_value_int(root, "intmc", intmc);
+	json_object_add_value_int(root, "cc", cc);
+	json_object_add_value_int(root, "csts", csts);
+	json_object_add_value_int(root, "nssr", nssr);
+	json_object_add_value_int(root, "aqa", aqa);
+	json_object_add_value_uint(root, "asq", asq);
+	json_object_add_value_uint(root, "acq", acq);
+	json_object_add_value_int(root, "cmbloc", cmbloc);
+	json_object_add_value_int(root, "cmbsz", cmbsz);
+	json_object_add_value_int(root, "bpinfo", bpinfo);
+	json_object_add_value_int(root, "bprsel", bprsel);
+	json_object_add_value_uint(root, "bpmbl", bpmbl);
+	json_print_object(root, NULL);
+}
+
 void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 {
 	uint64_t cap, asq, acq, bpmbl;
