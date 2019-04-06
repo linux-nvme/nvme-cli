@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-id-ns
-.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
-.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/08/2019
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 04/07/2019
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "01/08/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "04/07/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,8 @@ nvme-show-regs \- Reads and shows the defined NVMe controller registers for NVMe
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme show\-regs\fR <device> [\-\-human\-readable | \-H]
+\fInvme show\-regs\fR <device>       [\-\-human\-readable | \-H]
+                                [\-\-output\-format=<FMT> | \-o <FMT>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -44,6 +45,14 @@ The <device> parameter is mandatory and must be the nvme admin character device 
 \-H, \-\-human\-readable
 .RS 4
 Display registers or supported properties in human readable format\&.
+.RE
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR, or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
 .RE
 .SH "EXAMPLES"
 .sp
@@ -61,7 +70,7 @@ Show the NVMe over PCIe controller registers or the NVMe over Fabric controller 
 .RS 4
 .\}
 .nf
-# nvme show\-regs /dev/nvme0
+# nvme show\-regs /dev/nvme0 \-o binary
 .fi
 .if n \{\
 .RE
@@ -83,6 +92,27 @@ Show the NVMe over PCIe controller registers or the NVMe over Fabric controller 
 .\}
 .nf
 # nvme show\-regs /dev/nvme0 \-H
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Show the NVMe over PCIe controller registers or NVMe\-oF controller properties in a json format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme show\-regs /dev/nvme0 \-o json
 .fi
 .if n \{\
 .RE
