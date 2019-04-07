@@ -64,7 +64,7 @@ class TestNVMeIdentifyNamespace(TestNVMe):
                                 shell=True,
                                 stdout=subprocess.PIPE)
         id_ns_output = proc.communicate()[0]
-        print id_ns_output + "\n"
+        print(id_ns_output + "\n")
         err = proc.wait()
         return err
 

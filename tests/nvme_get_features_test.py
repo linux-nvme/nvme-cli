@@ -85,7 +85,7 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                                         shell=True,
                                         stdout=subprocess.PIPE)
                 feature_output = proc.communicate()[0]
-                print feature_output
+                print(feature_output)
                 assert_equal(proc.wait(), 0)
         else:
             get_feat_cmd = "nvme get-feature " + self.ctrl + \
@@ -94,7 +94,7 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                                     shell=True,
                                     stdout=subprocess.PIPE)
             feature_output = proc.communicate()[0]
-            print feature_output
+            print(feature_output)
             assert_equal(proc.wait(), 0)
 
     def test_get_mandatory_features(self):

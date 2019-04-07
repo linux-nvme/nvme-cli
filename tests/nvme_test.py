@@ -202,7 +202,7 @@ class TestNVMe(object):
             if pattern.match(line):
                 max_ns = line.split(":")[1].strip()
                 break
-        print max_ns
+        print(max_ns)
         return int(max_ns)
 
     @tools.nottest
@@ -226,7 +226,7 @@ class TestNVMe(object):
             if pattern.match(line):
                 ncap = line.split(":")[1].strip()
                 break
-        print ncap
+        print(ncap)
         return int(ncap)
 
     @tools.nottest
@@ -249,7 +249,7 @@ class TestNVMe(object):
         for line in proc.stdout:
             if "in use" in line:
                 nvm_format = 2 ** int(line.split(":")[3].split()[0])
-        print nvm_format
+        print(nvm_format)
         return int(nvm_format)
 
     @tools.nottest
@@ -370,7 +370,7 @@ class TestNVMe(object):
                 - 0 on success, error code on failure.
         """
         smart_log_cmd = "nvme smart-log " + self.ctrl + " -n " + str(nsid)
-        print smart_log_cmd
+        print(smart_log_cmd)
         proc = subprocess.Popen(smart_log_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE)
@@ -391,10 +391,10 @@ class TestNVMe(object):
                 host_write_commands = \
                     string.replace(line.split(":")[1].strip(), ",", "")
 
-        print "data_units_read " + data_units_read
-        print "data_units_written " + data_units_written
-        print "host_read_commands " + host_read_commands
-        print "host_write_commands " + host_write_commands
+        print("data_units_read " + data_units_read)
+        print("data_units_written " + data_units_written)
+        print("host_read_commands " + host_read_commands)
+        print("host_write_commands " + host_write_commands)
         return err
 
     def get_id_ctrl(self, vendor=False):
@@ -408,7 +408,7 @@ class TestNVMe(object):
             id_ctrl_cmd = "nvme id-ctrl " + self.ctrl
         else:
             id_ctrl_cmd = "nvme id-ctrl -v " + self.ctrl
-        print id_ctrl_cmd
+        print(id_ctrl_cmd)
         proc = subprocess.Popen(id_ctrl_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE)
@@ -450,13 +450,13 @@ class TestNVMe(object):
         ns_path = self.ctrl + "n" + str(nsid)
         io_cmd = "dd if=" + ns_path + " of=/dev/null" + " bs=" + \
                  str(block_size) + " count=10 > /dev/null 2>&1"
-        print io_cmd
+        print(io_cmd)
         run_io = subprocess.Popen(io_cmd, shell=True, stdout=subprocess.PIPE)
         run_io_result = run_io.communicate()[1]
         assert_equal(run_io_result, None)
         io_cmd = "dd if=/dev/zero of=" + ns_path + " bs=" + \
                  str(block_size) + " count=10 > /dev/null 2>&1"
-        print io_cmd
+        print(io_cmd)
         run_io = subprocess.Popen(io_cmd, shell=True, stdout=subprocess.PIPE)
         run_io_result = run_io.communicate()[1]
         assert_equal(run_io_result, None)

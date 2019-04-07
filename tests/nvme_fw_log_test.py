@@ -61,7 +61,7 @@ class TestNVMeFwLogCmd(TestNVMe):
                                 shell=True,
                                 stdout=subprocess.PIPE)
         fw_log_output = proc.communicate()[0]
-        print fw_log_output + "\n"
+        print(fw_log_output + "\n")
         err = proc.wait()
         return err
 

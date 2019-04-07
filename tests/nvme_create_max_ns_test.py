@@ -77,21 +77,21 @@ class TestNVMeCreateMaxNS(TestNVMe):
     def test_attach_detach_ns(self):
         """ Testcase main """
         for nsid in range(1, self.max_ns):
-            print "##### Creating " + str(nsid)
+            print("##### Creating " + str(nsid))
             err = self.create_and_validate_ns(nsid,
                                               self.nsze,
                                               self.ncap,
                                               self.flbas,
                                               self.dps)
             assert_equal(err, 0)
-            print "##### Attaching " + str(nsid)
+            print("##### Attaching " + str(nsid))
             assert_equal(self.attach_ns(self.ctrl_id, nsid), 0)
-            print "##### Running IOs in " + str(nsid)
+            print("##### Running IOs in " + str(nsid))
             self.run_ns_io(nsid, 0)
 
         for nsid in range(1, self.max_ns):
-            print "##### Detaching " + str(nsid)
+            print("##### Detaching " + str(nsid))
             assert_equal(self.detach_ns(self.ctrl_id, nsid), 0)
-            print "#### Deleting " + str(nsid)
+            print("#### Deleting " + str(nsid))
             assert_equal(self.delete_and_validate_ns(nsid), 0)
         self.nvme_reset_ctrl()
