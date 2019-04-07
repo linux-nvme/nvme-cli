@@ -2239,10 +2239,10 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"Controller-identifier",	   'c', "NUM", CFG_POSITIVE, &cfg.cntlid, required_argument, cntlid},
-		{"Resource-type",		   'r', "NUM", CFG_POSITIVE, &cfg.rt,     required_argument, rt},
-		{"Action",			   'a', "NUM", CFG_POSITIVE, &cfg.act,    required_argument, act},
-		{"Number-of-controller-resources", 'n', "NUM", CFG_POSITIVE, &cfg.cdw11,  required_argument, nr},
+		{"cntlid",	'c', "NUM", CFG_POSITIVE, &cfg.cntlid, required_argument, cntlid},
+		{"rt",		'r', "NUM", CFG_POSITIVE, &cfg.rt,     required_argument, rt},
+		{"act",		'a', "NUM", CFG_POSITIVE, &cfg.act,    required_argument, act},
+		{"nr",		'n', "NUM", CFG_POSITIVE, &cfg.cdw11,  required_argument, nr},
 		{NULL}
 	};
 
