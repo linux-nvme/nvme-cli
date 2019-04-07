@@ -55,9 +55,6 @@
 
 #include "fabrics.h"
 
-#define min(x, y) ((x) > (y) ? (y) : (x))
-#define max(x, y) ((x) > (y) ? (x) : (y))
-
 static struct stat nvme_stat;
 const char *devicename;
 

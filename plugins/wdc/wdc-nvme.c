@@ -31,6 +31,7 @@
 
 #include "linux/nvme_ioctl.h"
 
+#include "common.h"
 #include "nvme.h"
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
@@ -260,8 +261,6 @@
 #define WDC_DE_EVENT_LOG_FILE_NAME			"event_log"
 #define WDC_DE_DESTN_SPI				1
 #define WDC_DE_DUMPTRACE_DESTINATION			6
-
-#define min(x, y) ((x) > (y) ? (y) : (x))
 
 typedef enum _NVME_FEATURES_SELECT
 {
