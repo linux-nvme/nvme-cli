@@ -7,6 +7,7 @@
 
 #include "linux/nvme_ioctl.h"
 
+#include "common.h"
 #include "nvme.h"
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
@@ -503,9 +504,6 @@ struct intel_cd_log {
 	__u32 entireDword;
     }u;
 };
-
-#define max(x,y) (x) > (y) ? (x) : (y)
-#define min(x,y) (x) > (y) ? (y) : (x)
 
 static void print_intel_nlog(struct intel_vu_nlog *intel_nlog)
 {

@@ -45,6 +45,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include "common.h"
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
 #include "nvme-lightnvm.h"
@@ -53,10 +54,6 @@
 #include "argconfig.h"
 
 #include "fabrics.h"
-
-#define array_len(x) ((size_t)(sizeof(x) / sizeof(x[0])))
-#define min(x, y) ((x) > (y) ? (y) : (x))
-#define max(x, y) ((x) > (y) ? (x) : (y))
 
 static struct stat nvme_stat;
 const char *devicename;
@@ -3767,9 +3764,9 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	if (fd < 0)
 		return fd;
 
-	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, ctx_attrs, array_len(ctx_attrs));
-	nb = argconfig_parse_comma_sep_array(cfg.blocks, nlbs, array_len(nlbs));
-	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, array_len(slbas));
+	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, ctx_attrs, ARRAY_SIZE(ctx_attrs));
+	nb = argconfig_parse_comma_sep_array(cfg.blocks, nlbs, ARRAY_SIZE(nlbs));
+	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, ARRAY_SIZE(slbas));
 	nr = max(nc, max(nb, ns));
 	if (!nr || nr > 256) {
 		fprintf(stderr, "No range definition provided\n");

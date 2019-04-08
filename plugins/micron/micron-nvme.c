@@ -12,9 +12,8 @@
 #include <sys/ioctl.h>
 
 #define CREATE_CMD
+#include "common.h"
 #include "micron-nvme.h"
-#define min(x, y) ((x) > (y) ? (y) : (x))
-
 
 static int micron_fw_commit(int fd, int select)
 {
