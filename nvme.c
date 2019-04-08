@@ -2202,21 +2202,20 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc  = "The Virtualization Management command is supported by primary controllers "\
-		"that support the Virtualization Enhancements capability.This command is used for "\
-		"1. Modifying Flexible Resource allocation for the primary controller  "\
-		"2. Assigning Flexible Resources for secondary controllers; and "\
-		"3. Setting the Online and Offline state for secondary controllers";
-	const char *cntlid = "This field indicates the controller for which controller resources "\
-		"are to be modified.";
-	const char *rt = "Indicate the Resource Type (RT) : \n"\
-		"1. 0 - VQ Resources.\n"\
-		"2. 1 - VI Resources.\n\n";
-	const char *act = "Indicate the Action (ACT) : \n"\
-		"1. 1 - Primary Controller Flexible Allocation\n"\
-		"2. 7 - Secondary Controller Offline\n"\
-		"3. 8 - Secondary Controller Assign\n"\
-		"4. 9 - Secondary Controller Online";
-	const char *nr = "Indicate the Number of Controller Resources (NR)";
+		"that support the Virtualization Enhancements capability. This command is used for:\n"\
+		"  1. Modifying Flexible Resource allocation for the primary controller\n"\
+		"  2. Assigning Flexible Resources for secondary controllers\n"\
+		"  3. Setting the Online and Offline state for secondary controllers";
+	const char *cntlid = "Controller Identifier(CNTLID)";
+	const char *rt = "Resource Type(RT): [0,1]\n"\
+		"0h: VQ Resources\n"\
+		"1h: VI Resources";
+	const char *act = "Action(ACT): [1,7,8,9]\n"\
+		"1h: Primary Flexible\n"\
+		"7h: Secondary Offline\n"\
+		"8h: Secondary Assign\n"\
+		"9h: Secondary Online";
+	const char *nr = "Number of Controller Resources(NR)";
 	int fd, err;
 	__u32 result;
 
@@ -2237,10 +2236,10 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"Controller-identifier",	   'c', "NUM", CFG_POSITIVE, &cfg.cntlid, required_argument, cntlid},
-		{"Resource-type",		   'r', "NUM", CFG_POSITIVE, &cfg.rt,     required_argument, rt},
-		{"Action",			   'a', "NUM", CFG_POSITIVE, &cfg.act,    required_argument, act},
-		{"Number-of-controller-resources", 'n', "NUM", CFG_POSITIVE, &cfg.cdw11,  required_argument, nr},
+		{"cntlid",	'c', "NUM", CFG_POSITIVE, &cfg.cntlid, required_argument, cntlid},
+		{"rt",		'r', "NUM", CFG_POSITIVE, &cfg.rt,     required_argument, rt},
+		{"act",		'a', "NUM", CFG_POSITIVE, &cfg.act,    required_argument, act},
+		{"nr",		'n', "NUM", CFG_POSITIVE, &cfg.cdw11,  required_argument, nr},
 		{NULL}
 	};
 
