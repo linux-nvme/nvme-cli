@@ -53,7 +53,7 @@ class TestNVMeFlushCmd(TestNVMe):
                - None
         """
         flush_cmd = "nvme flush " + self.ctrl + " -n " + str(self.default_nsid)
-        print flush_cmd
+        print(flush_cmd)
         return self.exec_cmd(flush_cmd)
 
     def test_nvme_flush(self):

@@ -95,5 +95,5 @@ class TestNVMeIO(TestNVMe):
                    str(self.start_block) + " --block-count=" + \
                    str(self.block_count) + " --data-size=" + \
                    str(self.data_size) + " --data=" + self.read_file
-        print read_cmd
+        print(read_cmd)
         return self.exec_cmd(read_cmd)
