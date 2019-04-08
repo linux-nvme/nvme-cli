@@ -9,7 +9,8 @@ NVMe over PCIe or the controller properties for NVMe over Fabrics.
 SYNOPSIS
 --------
 [verse]
-'nvme show-regs' <device> [--human-readable | -H]
+'nvme show-regs' <device>	[--human-readable | -H]
+				[--output-format=<FMT> | -o <FMT>]
 
 DESCRIPTION
 -----------
@@ -31,6 +32,10 @@ OPTIONS
 --human-readable::
        Display registers or supported properties in human readable format.
 
+-o <format>::
+--output-format=<format>::
+              Set the reporting format to 'normal', 'json', or
+              'binary'. Only one output format can be used at a time.
 
 EXAMPLES
 --------
@@ -38,13 +43,19 @@ EXAMPLES
 properties in a binary format:
 +
 ------------
-# nvme show-regs /dev/nvme0
+# nvme show-regs /dev/nvme0 -o binary
 ------------
 * Show the NVMe over PCIe controller registers or the NVMe over Fabric controller
 properties in a human readable format:
 +
 ------------
 # nvme show-regs /dev/nvme0 -H
+------------
+* Show the NVMe over PCIe controller registers or NVMe-oF controller properties
+in a json format:
++
+------------
+# nvme show-regs /dev/nvme0 -o json
 ------------
 
 NVME

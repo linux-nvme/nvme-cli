@@ -64,6 +64,7 @@ void json_nvme_id_ns_descs(void *data);
 void json_print_nvme_subsystem_list(struct subsys_list_item *slist, int n);
 void json_self_test_log(struct nvme_self_test_log *self_test, const char *devname);
 void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset, const char *devname);
+void json_ctrl_registers(void *bar);
 
 
 #endif
