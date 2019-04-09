@@ -833,9 +833,12 @@ static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 			continue;
 		}
 
-		/* otherwise error */
-		ret = -instance;
-		break;
+		/*
+		 * don't error out. The Discovery Log may contain
+		 * devices that aren't necessarily connectable via
+		 * the system/host transport port. Let those items
+		 * fail and continue on to the next log element.
+		 */
 	}
 
 	return ret;
