@@ -603,7 +603,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		err = nvme_error_log(fd, cfg.log_entries, err_log);
 		if (!err) {
 			if (fmt == BINARY)
-				d_raw((unsigned char *)err_log, sizeof(err_log));
+				d_raw((unsigned char *)err_log, cfg.log_entries * sizeof(*err_log));
 			else if (fmt == JSON)
 				json_error_log(err_log, cfg.log_entries, devicename);
 			else
