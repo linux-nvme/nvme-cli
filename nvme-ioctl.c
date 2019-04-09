@@ -498,7 +498,7 @@ int nvme_self_test_log(int fd, struct nvme_self_test_log *self_test_log)
 
 int nvme_effects_log(int fd, struct nvme_effects_log_page *effects_log)
 {
-	return nvme_get_log(fd, 0, NVME_LOG_CMD_EFFECTS, false,
+	return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_CMD_EFFECTS, false,
 			sizeof(*effects_log), effects_log);
 }
 
