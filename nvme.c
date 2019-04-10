@@ -341,14 +341,6 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		goto close_fd;
 	}
 
-	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-	if (output < 0) {
-		fprintf(stderr, "Failed to open output file %s: %s!\n",
-				cfg.file_name, strerror(errno));
-		err = output;
-		goto close_fd;
-	}
-
 	cfg.host_gen = !!cfg.host_gen;
 	hdr = malloc(bs);
 	page_log = malloc(bs);
@@ -358,21 +350,28 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		err = ENOMEM;
 		goto free_mem;
 	}
-
 	memset(hdr, 0, bs);
+
+	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	if (output < 0) {
+		fprintf(stderr, "Failed to open output file %s: %s!\n",
+				cfg.file_name, strerror(errno));
+		err = output;
+		goto free_mem;
+	}
+
 	err = nvme_get_telemetry_log(fd, hdr, cfg.host_gen, cfg.ctrl_init, bs, 0);
 	if (err) {
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 			nvme_status_to_string(err), err);
 		fprintf(stderr, "Failed to acquire telemetry header %d!\n", err);
-		close(output);
-		goto free_mem;
+		goto close_output;
 	}
 
 	err = write(output, (void *) hdr, bs);
 	if (err != bs) {
 		fprintf(stderr, "Failed to flush all data to file!");
-		goto free_mem;
+		goto close_output;
 	}
 
 	switch (cfg.data_area) {
@@ -388,7 +387,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	default:
 		fprintf(stderr, "Invalid data area requested");
 		err = EINVAL;
-		goto free_mem;
+		goto close_output;
 	}
 
 	/*
@@ -411,6 +410,9 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		}
 		offset += bs;
 	}
+
+ close_output:
+	close(output);
  free_mem:
 	free(hdr);
 	free(page_log);
