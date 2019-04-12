@@ -4964,7 +4964,7 @@ int main(int argc, char **argv)
 	setlocale(LC_ALL, "");
 
 	ret = handle_plugin(argc - 1, &argv[1], nvme.extensions);
-	if (ret == -EINVAL)
+	if (ret == -ENOTTY)
 		general_help(&builtin);
 
 	return ret;
