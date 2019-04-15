@@ -1,6 +1,6 @@
 CFLAGS ?= -O2 -g -Wall -Werror
-CFLAGS += -std=gnu99 -I.
-CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
+override CFLAGS += -std=gnu99 -I.
+override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 NVME = nvme
 INSTALL ?= install
