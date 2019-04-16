@@ -35,7 +35,7 @@
 #define ONTAP_C2_LOG_ID		0xC2
 #define ONTAP_C2_LOG_SIZE	4096
 #define ONTAP_LABEL_LEN		260
-#define ONTAP_NS_PATHLEN	520
+#define ONTAP_NS_PATHLEN	525
 
 enum {
 	NNORMAL,
