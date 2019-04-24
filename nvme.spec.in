@@ -34,6 +34,7 @@ make install-spec DESTDIR=%{buildroot} PREFIX=/usr
 %dir %{_sysconfdir}/nvme
 %{_sysconfdir}/nvme/hostnqn
 %{_sysconfdir}/nvme/hostid
+%{_sysconfdir}/nvme/discovery.conf
 
 %clean
 rm -rf $RPM_BUILD_ROOT
