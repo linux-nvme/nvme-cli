@@ -626,8 +626,10 @@ int nvme_get_properties(int fd, void **pbar)
 		err = get_property_helper(fd, offset, *pbar + offset, &advance);
 		if (!err)
 			ret = 0;
-		else
+		else {
 			free(*pbar);
+			break;
+		}
 	}
 
 	return ret;
