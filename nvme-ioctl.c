@@ -370,6 +370,11 @@ int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
 	return nvme_identify(fd, nsid, (cntid << 16) | cns, data);
 }
 
+int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
+{
+	return nvme_identify(fd, nsid, (cntid << 16) | NVME_ID_CNS_SCNDRY_CTRL_LIST, data);
+}
+
 int nvme_identify_ns_descs(int fd, __u32 nsid, void *data)
 {
 

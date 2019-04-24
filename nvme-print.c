@@ -7,6 +7,7 @@
 #include "json.h"
 #include "nvme-models.h"
 #include "suffix.h"
+#include "common.h"
 
 static const char *nvme_ana_state_to_string(enum nvme_ana_state state)
 {
@@ -1138,6 +1139,69 @@ void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset, const char *devname)
 	}
 
 	json_object_add_value_array(root, "NVMSet", entries);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void show_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list *sc_list, __u32 count)
+{
+	int i;
+	__u16 num = le16_to_cpu(sc_list->num);
+	__u32 entries = min(num, count);
+
+	static const char * const state_desc[] = { "Offline", "Online" };
+	const struct nvme_secondary_controller_entry *sc_entry = &sc_list->sc_entry[0];
+
+	printf("Identify Secondary Controller List:\n");
+	printf("   NUMID       : Number of Identifiers           : %d\n", num);
+
+	for (i = 0; i < entries; i++) {
+		printf("   SCEntry[%-3d]:\n", i);
+		printf("................\n");
+		printf("     SCID      : Secondary Controller Identifier : 0x%.04x\n",
+				le16_to_cpu(sc_entry[i].scid));
+		printf("     PCID      : Primary Controller Identifier   : 0x%.04x\n",
+				le16_to_cpu(sc_entry[i].pcid));
+		printf("     SCS       : Secondary Controller State      : 0x%.04x (%s)\n",
+				le16_to_cpu(sc_entry[i].scs),
+				state_desc[le16_to_cpu(sc_entry[i].scs) & 0x1]);
+		printf("     VFN       : Virtual Function Number         : 0x%.04x\n",
+				le16_to_cpu(sc_entry[i].vfn));
+		printf("     NVQ       : Num VQ Flex Resources Assigned  : 0x%.04x\n",
+				le16_to_cpu(sc_entry[i].nvq));
+		printf("     NVI       : Num VI Flex Resources Assigned  : 0x%.04x\n",
+				le16_to_cpu(sc_entry[i].nvi));
+	}
+}
+
+void json_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list *sc_list, __u32 count)
+{
+	int i;
+	struct json_object *root;
+	struct json_array *entries;
+	__u32 nent = min(le16_to_cpu(sc_list->num), count);
+	const struct nvme_secondary_controller_entry *sc_entry = &sc_list->sc_entry[0];
+
+	root = json_create_object();
+
+	json_object_add_value_int(root, "num", nent);
+
+	entries = json_create_array();
+	for (i = 0; i < nent; i++) {
+		struct json_object *entry = json_create_object();
+
+		json_object_add_value_int(entry, "secondary-controller-identifier", le16_to_cpu(sc_entry[i].scid));
+		json_object_add_value_int(entry, "primary-controller-identifier", le16_to_cpu(sc_entry[i].pcid));
+		json_object_add_value_int(entry, "secondary-controller-state",  le16_to_cpu(sc_entry[i].scs));
+		json_object_add_value_int(entry, "virtual-function-number",  le16_to_cpu(sc_entry[i].vfn));
+		json_object_add_value_int(entry, "num-virtual-queues",  le16_to_cpu(sc_entry[i].nvq));
+		json_object_add_value_int(entry, "num-virtual-interrupts",  le16_to_cpu(sc_entry[i].nvi));
+		json_array_add_value_object(entries, entry);
+	}
+
+	json_object_add_value_array(root, "secondary-controllers", entries);
 
 	json_print_object(root, NULL);
 	printf("\n");
