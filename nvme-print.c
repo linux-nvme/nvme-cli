@@ -219,7 +219,7 @@ static void show_nvme_id_ctrl_lpa(__u8 lpa)
 	__u8 smlp = lpa & 0x1;
 	if (rsvd)
 		printf("  [7:4] : %#x\tReserved\n", rsvd);
-	printf("  [3:3] : %#x\tTelemetry host/controller initiated log page %sSuporrted\n",
+	printf("  [3:3] : %#x\tTelemetry host/controller initiated log page %sSupported\n",
 	       telem, telem ? "" : "Not ");
 	printf("  [2:2] : %#x\tExtended data for Get Log Page %sSupported\n",
 		ed, ed ? "" : "Not ");
