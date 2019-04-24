@@ -22,7 +22,7 @@ make
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=%{buildroot} PREFIX=/usr
+make install-spec DESTDIR=%{buildroot} PREFIX=/usr
 
 %files
 %defattr(-,root,root)
@@ -31,30 +31,23 @@ make install DESTDIR=%{buildroot} PREFIX=/usr
 %{_mandir}/man1/nvme*.1*
 %{_datadir}/bash-completion/completions/nvme
 %{_datadir}/zsh/site-functions/_nvme
+%dir %{_sysconfdir}/nvme
+%{_sysconfdir}/nvme/hostnqn
+%{_sysconfdir}/nvme/hostid
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %post
-if [ $1 = 1 ]; then # 1 : This package is being installed for the first time
-	if [ ! -f /etc/nvme/hostnqn ]; then
-		install -D /dev/null /etc/nvme/hostnqn
-		echo $(nvme gen-hostnqn) > /etc/nvme/hostnqn
+if [ $1 -eq 1 ]; then # 1 : This package is being installed for the first time
+	if [ ! -s %{_sysconfdir}/nvme/hostnqn ]; then
+		echo $(nvme gen-hostnqn) > %{_sysconfdir}/nvme/hostnqn
         fi
-        if [ ! -f /etc/nvme/hostid ]; then
-                uuidgen > /etc/nvme/hostid
+        if [ ! -s %{_sysconfdir}/nvme/hostid ]; then
+                uuidgen > %{_sysconfdir}/nvme/hostid
         fi
 fi
 
-%preun
-if [ "$1" = "remove" ]; then
-	if [ -d /etc/nvme ]; then
-		rm -f /etc/nvme/hostnqn
-		if [ ! -n "`ls -A /etc/nvme`" ]; then
-			rm -rf /etc/nvme
-		fi
-	fi
-fi
 %changelog
 * Mon Oct 15 2018 Eyal Ben-David <eyalbe@il.ibm.com> - 1.6.81.g899a-2
 - bash-completion check

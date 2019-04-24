@@ -90,7 +90,21 @@ install-zsh-completion:
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/share/zsh/site-functions
 	$(INSTALL) -m 644 -T ./completions/_nvme $(DESTDIR)$(PREFIX)/share/zsh/site-functions/_nvme
 
-install: install-bin install-man install-bash-completion install-zsh-completion
+install-hostparams:
+	if [ ! -s $(DESTDIR)$(SYSCONFDIR)/nvme/hostnqn ]; then \
+		echo `$(DESTDIR)$(SBINDIR)/nvme gen-hostnqn` > $(DESTDIR)$(SYSCONFDIR)/nvme/hostnqn; \
+	fi
+	if [ ! -s $(DESTDIR)$(SYSCONFDIR)/nvme/hostid ]; then \
+		uuidgen > $(DESTDIR)$(SYSCONFDIR)/nvme/hostid; \
+	fi
+
+install-etc:
+	$(INSTALL) -d $(DESTDIR)$(SYSCONFDIR)/nvme
+	touch $(DESTDIR)$(SYSCONFDIR)/nvme/hostnqn
+	touch $(DESTDIR)$(SYSCONFDIR)/nvme/hostid
+
+install-spec: install-bin install-man install-bash-completion install-zsh-completion install-etc
+install: install-spec install-hostparams
 
 nvme.spec: nvme.spec.in NVME-VERSION-FILE
 	sed -e 's/@@VERSION@@/$(NVME_VERSION)/g' < $< > $@+
