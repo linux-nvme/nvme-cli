@@ -612,7 +612,7 @@ int nvme_get_property(int fd, int offset, uint64_t *value)
 int nvme_get_properties(int fd, void **pbar)
 {
 	int offset, advance;
-	int err, ret = -EINVAL;
+	int err;
 	int size = getpagesize();
 
 	*pbar = malloc(size);
@@ -624,15 +624,13 @@ int nvme_get_properties(int fd, void **pbar)
 	memset(*pbar, 0xff, size);
 	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ; offset += advance) {
 		err = get_property_helper(fd, offset, *pbar + offset, &advance);
-		if (!err)
-			ret = 0;
-		else {
+		if (err) {
 			free(*pbar);
 			break;
 		}
 	}
 
-	return ret;
+	return err;
 }
 
 int nvme_set_property(int fd, int offset, int value)
