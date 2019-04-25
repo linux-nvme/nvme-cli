@@ -1221,7 +1221,7 @@ void show_nvme_resv_report(struct nvme_reservation_status *status, int bytes, __
 	printf("\n");
 }
 
-static char *fw_to_string(__u64 fw)
+static const char *fw_to_string(__u64 fw)
 {
 	static char ret[9];
 	char *c = (char *)&fw;
@@ -1283,7 +1283,7 @@ static void show_effects_log_human(__u32 effect)
 		printf("  Reserved CSE\n");
 }
 
-static char *nvme_cmd_to_string(int admin, __u8 opcode)
+static const char *nvme_cmd_to_string(int admin, __u8 opcode)
 {
 	if (admin) {
 		switch (opcode) {
@@ -1625,7 +1625,7 @@ void show_sanitize_log(struct nvme_sanitize_log_page *sanitize, unsigned int mod
 	printf("Estimated Time For Crypto Erase               :  %u\n", le32_to_cpu(sanitize->est_crypto_erase_time));
 }
 
-char *nvme_feature_to_string(int feature)
+const char *nvme_feature_to_string(int feature)
 {
 	switch (feature) {
 	case NVME_FEAT_ARBITRATION:	return "Arbitration";
@@ -1657,7 +1657,7 @@ char *nvme_feature_to_string(int feature)
 	}
 }
 
-char *nvme_register_to_string(int reg)
+const char *nvme_register_to_string(int reg)
 {
 	switch (reg) {
 	case NVME_REG_CAP:	return "Controller Capabilities";
@@ -1676,7 +1676,7 @@ char *nvme_register_to_string(int reg)
 	}
 }
 
-char* nvme_select_to_string(int sel)
+const char *nvme_select_to_string(int sel)
 {
 	switch (sel) {
 	case 0:  return "Current";
@@ -1697,7 +1697,7 @@ void nvme_show_select_result(__u32 result)
 		printf("  Feature is changeable\n");
 }
 
-char *nvme_status_to_string(__u32 status)
+const char *nvme_status_to_string(__u32 status)
 {
 	switch (status & 0x3ff) {
 	case NVME_SC_SUCCESS:			return "SUCCESS: The command completed successfully";
@@ -1765,7 +1765,7 @@ char *nvme_status_to_string(__u32 status)
 	}
 }
 
-static char* nvme_feature_lba_type_to_string(__u8 type)
+static const char *nvme_feature_lba_type_to_string(__u8 type)
 {
 	switch (type) {
 	case 0:	return "Reserved";
@@ -1799,7 +1799,7 @@ void show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 }
 
 
-static char *nvme_feature_wl_hints_to_string(__u8 wh)
+static const char *nvme_feature_wl_hints_to_string(__u8 wh)
 {
 	switch (wh) {
 	case 0:	return "No Workload";
@@ -1809,7 +1809,7 @@ static char *nvme_feature_wl_hints_to_string(__u8 wh)
 	}
 }
 
-static char *nvme_feature_temp_type_to_string(__u8 type)
+static const char *nvme_feature_temp_type_to_string(__u8 type)
 {
 	switch (type) {
 	case 0:	return "Over Temperature Threshold";
@@ -1818,7 +1818,7 @@ static char *nvme_feature_temp_type_to_string(__u8 type)
 	}
 }
 
-static char *nvme_feature_temp_sel_to_string(__u8 sel)
+static const char *nvme_feature_temp_sel_to_string(__u8 sel)
 {
 	switch (sel)
 	{
@@ -1927,7 +1927,7 @@ void nvme_directive_show_fields(__u8 dtype, __u8 doper, unsigned int result, uns
         return;
 }
 
-static char *nvme_plm_window(__u32 plm)
+static const char *nvme_plm_window(__u32 plm)
 {
 	switch (plm & 0x7) {
 	case 1:
@@ -2977,7 +2977,7 @@ static void show_registers_cmbloc(__u32 cmbloc, __u32 cmbsz)
 	}
 }
 
-static char *nvme_register_szu_to_string(__u8 szu)
+static const char *nvme_register_szu_to_string(__u8 szu)
 {
 	switch (szu) {
 	case 0:	return "4 KB";
