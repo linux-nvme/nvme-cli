@@ -925,7 +925,8 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000)) {
 		fprintf(stderr, "can not allocate controller list payload\n");
-		return ENOMEM;
+		err = -ENOMEM;
+		goto close_fd;
 	}
 
 	err = nvme_identify_ctrl_list(fd, cfg.namespace_id, cfg.cntid, cntlist);
@@ -942,6 +943,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 
 	free(cntlist);
 
+close_fd:
 	close(fd);
 
 	return err;
