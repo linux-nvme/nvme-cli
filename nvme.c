@@ -2268,6 +2268,84 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 
 }
 
+static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Show secondary controller list associated with the primary controller "\
+		"of the given device.";
+	const char *controller = "lowest controller identifier to display";
+	const char *namespace_id = "optional namespace attached to controller";
+	const char *num_entries = "number of entries to retrieve";
+	int err, fmt, fd;
+	struct nvme_secondary_controllers_list *sc_list;
+
+	_Static_assert(sizeof(struct nvme_secondary_controller_entry) != NVME_IDENTIFY_DATA_SIZE, "bad structure size");
+
+	struct config {
+		__u16 cntid;
+		__u32 num_entries;
+		__u32 namespace_id;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.cntid = 0,
+		.namespace_id = 0,
+		.output_format = "normal",
+		.num_entries = ARRAY_SIZE(sc_list->sc_entry),
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"cntid",         'c', "NUM", CFG_SHORT,    &cfg.cntid,         required_argument, controller},
+		{"namespace-id",  'n', "NUM", CFG_POSITIVE, &cfg.namespace_id,  required_argument, namespace_id},
+		{"num-entries",   'e', "NUM", CFG_POSITIVE, &cfg.num_entries,   required_argument, num_entries},
+		{"output-format", 'o', "FMT", CFG_STRING,   &cfg.output_format, required_argument, output_format},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		err = fmt;
+		goto close_fd;
+	}
+
+	if (!cfg.num_entries) {
+		fprintf(stderr, "non-zero num-entries is required param\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	if (posix_memalign((void *)&sc_list, getpagesize(), sizeof(*sc_list))) {
+		fprintf(stderr, "can not allocate controller list payload\n");
+		err = -ENOMEM;
+		goto close_fd;
+	}
+
+	err = nvme_identify_secondary_ctrl_list(fd, cfg.namespace_id, cfg.cntid, sc_list);
+	if (!err) {
+		if (fmt == BINARY)
+			d_raw((unsigned char *)sc_list, sizeof(*sc_list));
+		else if (fmt == JSON)
+			json_nvme_list_secondary_ctrl(sc_list, cfg.num_entries);
+		else
+			show_nvme_list_secondary_ctrl(sc_list, cfg.num_entries);
+	} else if (err > 0)
+		fprintf(stderr, "NVMe Status:%s(%x) cntid:%d\n",
+			nvme_status_to_string(err), err, cfg.cntid);
+	else
+		perror("id secondary controller list");
+
+	free(sc_list);
+
+close_fd:
+	close(fd);
+
+	return err;
+}
+
 static int device_self_test(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc  = "Implementing the device self-test feature"\

@@ -87,6 +87,23 @@ struct nvme_controller_list {
 	__le16 identifier[];
 };
 
+struct nvme_secondary_controller_entry {
+	__le16 scid;	/* Secondary Controller Identifier */
+	__le16 pcid;	/* Primary Controller Identifier */
+	__u8   scs;	/* Secondary Controller State */
+	__u8   rsvd5[3];
+	__le16 vfn;	/* Virtual Function Number */
+	__le16 nvq;	/* Number of VQ Flexible Resources Assigned */
+	__le16 nvi;	/* Number of VI Flexible Resources Assigned */
+	__u8   rsvd14[18];
+};
+
+struct nvme_secondary_controllers_list {
+	__u8   num;
+	__u8   rsvd[31];
+	struct nvme_secondary_controller_entry sc_entry[127];
+};
+
 struct nvme_bar_cap {
 	__u16	mqes;
 	__u8	ams_cqr;
