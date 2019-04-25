@@ -360,7 +360,9 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	}
 
 	err = nvme_get_telemetry_log(fd, hdr, cfg.host_gen, cfg.ctrl_init, bs, 0);
-	if (err) {
+	if (err < 0)
+		perror("get-telemetry-log");
+	else if (err > 0) {
 		show_nvme_status(err);
 		fprintf(stderr, "Failed to acquire telemetry header %d!\n", err);
 		goto close_output;
@@ -394,7 +396,10 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	 */
 	while (offset != full_size) {
 		err = nvme_get_telemetry_log(fd, page_log, 0, cfg.ctrl_init, bs, offset);
-		if (err) {
+		if (err < 0) {
+			perror("get-telemetry-log");
+			break;
+		} else if (err > 0) {
 			fprintf(stderr, "Failed to acquire full telemetry log!\n");
 			show_nvme_status(err);
 			break;
