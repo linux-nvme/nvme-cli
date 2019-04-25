@@ -12,13 +12,14 @@ COMMAND_LIST(
 	ENTRY("id-ctrl", "Send NVMe Identify Controller", id_ctrl)
 	ENTRY("id-ns", "Send NVMe Identify Namespace, display structure", id_ns)
 	ENTRY("list-ns", "Send NVMe Identify List, display structure", list_ns)
+	ENTRY("list-ctrl", "Send NVMe Identify Controller List, display structure", list_ctrl)
+	ENTRY("list-secondary", "List Secondary Controllers associated with a Primary Controller", list_secondary_ctrl)
 	ENTRY("ns-descs", "Send NVMe Namespace Descriptor List, display structure", ns_descs)
 	ENTRY("id-nvmset", "Send NVMe Identify NVM Set List, display structure", id_nvmset)
 	ENTRY("create-ns", "Creates a namespace with the provided parameters", create_ns)
 	ENTRY("delete-ns", "Deletes a namespace from the controller", delete_ns)
 	ENTRY("attach-ns", "Attaches a namespace to requested controller(s)", attach_ns)
 	ENTRY("detach-ns", "Detaches a namespace from requested controller(s)", detach_ns)
-	ENTRY("list-ctrl", "Send NVMe Identify Controller List, display structure", list_ctrl)
 	ENTRY("get-ns-id", "Retrieve the namespace ID of opened block device", get_ns_id)
 	ENTRY("get-log", "Generic NVMe get log, returns log in raw format", get_log)
 	ENTRY("telemetry-log", "Retrieve FW Telemetry log write to file", get_telemetry_log)
@@ -68,7 +69,6 @@ COMMAND_LIST(
 	ENTRY("dir-receive", "Submit a Directive Receive command, return results", dir_receive)
 	ENTRY("dir-send", "Submit a Directive Send command, return results", dir_send)
 	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller ", virtual_mgmt)
-	ENTRY("list-secondary", "List Secondary Controllers associated with a Primary Controller", list_secondary_ctrl)
 );
 
 #endif
