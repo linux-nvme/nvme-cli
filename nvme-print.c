@@ -78,6 +78,12 @@ void d_raw(unsigned char *buf, unsigned len)
 		putchar(*(buf+i));
 }
 
+void show_nvme_status(__u16 status)
+{
+	fprintf(stderr, "NVMe status: %s(%#x)\n",
+			nvme_status_to_string(status), status);
+}
+
 static void format(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
 {
 

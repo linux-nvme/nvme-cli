@@ -14,6 +14,7 @@ enum {
 
 void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
+void show_nvme_status(__u16 status);
 
 uint64_t int48_to_long(__u8 *data);
 
