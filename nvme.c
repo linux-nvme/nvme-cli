@@ -1200,14 +1200,16 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	if (cfg.flbas != 0xff && cfg.bs != 0x00) {
 		fprintf(stderr,
 			"Invalid specification of both FLBAS and Block Size, please specify only one\n");
-			return EINVAL;
+		err = -EINVAL;
+		goto close_fd;
 	}
 	if (cfg.bs) {
 		if ((cfg.bs & (~cfg.bs + 1)) != cfg.bs) {
 			fprintf(stderr,
 				"Invalid value for block size (%"PRIu64"). Block size must be a power of two\n",
 				(uint64_t)cfg.bs);
-			return EINVAL;
+			err = -EINVAL;
+			goto close_fd;
 		}
 		err = nvme_identify_ns(fd, NVME_NSID_ALL, 0, &ns);
 		if (err) {
@@ -1217,7 +1219,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 				fprintf(stderr, "identify failed\n");
 				show_nvme_status(err);
 			}
-			return err;
+			goto close_fd;
 		}
 		for (i = 0; i < 16; ++i) {
 			if ((1 << ns.lbaf[i].ds) == cfg.bs && ns.lbaf[i].ms == 0) {
@@ -1233,7 +1235,9 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 			(uint64_t)cfg.bs);
 		fprintf(stderr,
 			"Please correct block size, or specify FLBAS directly\n");
-		return EINVAL;
+
+		err = -EINVAL;
+		goto close_fd;
 	}
 
 
@@ -1246,6 +1250,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	else
 		perror("create namespace");
 
+close_fd:
 	close(fd);
 
 	return err;
