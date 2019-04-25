@@ -3176,14 +3176,16 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	if (cfg.lbaf != 0xff && cfg.bs !=0) {
 		fprintf(stderr,
 			"Invalid specification of both LBAF and Block Size, please specify only one\n");
-			return EINVAL;
+		err = -EINVAL;
+		goto close_fd;
 	}
 	if (cfg.bs) {
 		if ((cfg.bs & (~cfg.bs + 1)) != cfg.bs) {
 			fprintf(stderr,
 				"Invalid value for block size (%"PRIu64"), must be a power of two\n",
 				       (uint64_t) cfg.bs);
-				return EINVAL;
+			err = -EINVAL;
+			goto close_fd;
 		}
 	}
 	if (S_ISBLK(nvme_stat.st_mode)) {
@@ -3202,7 +3204,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 				fprintf(stderr, "identify failed\n");
 				show_nvme_status(err);
 			}
-			return err;
+			goto close_fd;
 		}
 		prev_lbaf = ns.flbas & 0xf;
 
@@ -3220,7 +3222,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 					(uint64_t)cfg.bs, lbads);
 				fprintf(stderr,
 					"Please correct block size, or specify LBAF directly\n");
-				return EINVAL;
+				err = -EINVAL;
+				goto close_fd;
 			}
 		} else  if (cfg.lbaf == 0xff)
 			cfg.lbaf = prev_lbaf;
