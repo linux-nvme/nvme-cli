@@ -2845,7 +2845,9 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	ret = nvme_sanitize(fd, cfg.sanact, cfg.ause, cfg.owpass, cfg.oipbp,
 			    cfg.no_dealloc, cfg.ovrpat);
-	if (ret)
+	if (ret < 0)
+		perror("sanitize");
+	else if (ret > 0)
 		show_nvme_status(ret);
 
  close_fd:
