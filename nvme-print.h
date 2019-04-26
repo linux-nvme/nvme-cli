@@ -14,6 +14,7 @@ enum {
 
 void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
+void show_nvme_status(__u16 status);
 
 uint64_t int48_to_long(__u8 *data);
 
@@ -42,10 +43,10 @@ void show_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list 
 
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf);
 void nvme_directive_show_fields(__u8 dtype, __u8 doper, unsigned int result, unsigned char *buf);
-char *nvme_status_to_string(__u32 status);
-char *nvme_select_to_string(int sel);
-char *nvme_feature_to_string(int feature);
-char *nvme_register_to_string(int reg);
+const char *nvme_status_to_string(__u32 status);
+const char *nvme_select_to_string(int sel);
+const char *nvme_feature_to_string(int feature);
+const char *nvme_register_to_string(int reg);
 void nvme_show_select_result(__u32 result);
 
 void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vendor_show)(__u8 *vs, struct json_object *root));
