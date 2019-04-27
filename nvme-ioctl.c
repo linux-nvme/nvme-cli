@@ -75,10 +75,13 @@ int nvme_get_nsid(int fd)
 	if (!S_ISBLK(nvme_stat.st_mode)) {
 		fprintf(stderr,
 			"Error: requesting namespace-id from non-block device\n");
-		errno = ENOTBLK;
-		return -errno;
+		return -ENOTBLK;
 	}
-	return ioctl(fd, NVME_IOCTL_ID);
+
+	err = ioctl(fd, NVME_IOCTL_ID);
+	if (err < 0)
+		return -errno;
+	return err;
 }
 
 int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,

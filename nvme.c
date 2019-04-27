@@ -2180,9 +2180,8 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 		return fd;
 	nsid = nvme_get_nsid(fd);
 	if (nsid <= 0) {
-		perror(devicename);
 		close(fd);
-		return errno;
+		return -nsid;
 	}
 	printf("%s: namespace-id:%d\n", devicename, nsid);
 
