@@ -105,17 +105,32 @@ int nvme_get_nsid(int fd)
 int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 			 struct nvme_passthru_cmd *cmd)
 {
-	return ioctl(fd, ioctl_cmd, cmd);
+	int err;
+
+	err = ioctl(fd, ioctl_cmd, cmd);
+	if (err < 0)
+		return -errno;
+	return err;
 }
 
 static int nvme_submit_admin_passthru(int fd, struct nvme_passthru_cmd *cmd)
 {
-	return ioctl(fd, NVME_IOCTL_ADMIN_CMD, cmd);
+	int err;
+
+	err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, cmd);
+	if (err < 0)
+		return -errno;
+	return err;
 }
 
 static int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd)
 {
-	return ioctl(fd, NVME_IOCTL_IO_CMD, cmd);
+	int err;
+
+	err = ioctl(fd, NVME_IOCTL_IO_CMD, cmd);
+	if (err < 0)
+		return -errno;
+	return err;
 }
 
 int nvme_passthru(int fd, unsigned long ioctl_cmd, __u8 opcode,
@@ -157,6 +172,7 @@ int nvme_io(int fd, __u8 opcode, __u64 slba, __u16 nblocks, __u16 control,
 	    __u32 dsmgmt, __u32 reftag, __u16 apptag, __u16 appmask, void *data,
 	    void *metadata)
 {
+	int err;
 	struct nvme_user_io io = {
 		.opcode		= opcode,
 		.flags		= 0,
@@ -171,7 +187,11 @@ int nvme_io(int fd, __u8 opcode, __u64 slba, __u16 nblocks, __u16 control,
 		.appmask	= appmask,
 		.apptag		= apptag,
 	};
-	return ioctl(fd, NVME_IOCTL_SUBMIT_IO, &io);
+
+	err = ioctl(fd, NVME_IOCTL_SUBMIT_IO, &io);
+	if (err < 0)
+		return -errno;
+	return err;
 }
 
 int nvme_read(int fd, __u64 slba, __u16 nblocks, __u16 control, __u32 dsmgmt,
