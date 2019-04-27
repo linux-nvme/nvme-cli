@@ -104,13 +104,17 @@ static int open_dev(char *dev)
 	err = fstat(fd, &nvme_stat);
 	if (err < 0) {
 		err = -errno;
-		goto perror;
+		goto close;
 	}
 	if (!S_ISCHR(nvme_stat.st_mode) && !S_ISBLK(nvme_stat.st_mode)) {
 		fprintf(stderr, "%s is not a block or character device\n", dev);
+		close(fd);
 		return -ENODEV;
 	}
 	return fd;
+
+ close:
+	close(fd);
  perror:
 	perror(dev);
 	return err;
