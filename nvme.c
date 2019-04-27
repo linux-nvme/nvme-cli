@@ -357,7 +357,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 	if (!cfg.file_name) {
 		fprintf(stderr, "Please provide an output file!\n");
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -367,7 +367,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	if (!hdr || !page_log) {
 		fprintf(stderr, "Failed to allocate %zu bytes for log: %s\n",
 				bs, strerror(errno));
-		err = ENOMEM;
+		err = -ENOMEM;
 		goto free_mem;
 	}
 	memset(hdr, 0, bs);
@@ -407,7 +407,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		break;
 	default:
 		fprintf(stderr, "Invalid data area requested");
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_output;
 	}
 
@@ -602,7 +602,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 
 	if (!cfg.log_entries) {
 		fprintf(stderr, "non-zero log-entries is required param\n");
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -611,7 +611,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		pr_err("id-ctrl", err);
 	else if (err) {
 		fprintf(stderr, "could not identify controller\n");
-		err = ENODEV;
+		err = -ENODEV;
 	} else {
 		struct nvme_error_log_page *err_log;
 
@@ -619,7 +619,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		err_log = calloc(cfg.log_entries, sizeof(struct nvme_error_log_page));
 		if (!err_log) {
 			fprintf(stderr, "could not alloc buffer for error log\n");
-			err = ENOMEM;
+			err = -ENOMEM;
 			goto close_fd;
 		}
 
@@ -812,13 +812,13 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	if (cfg.log_id > 0xff) {
 		fprintf(stderr, "Invalid log identifier: %d. Valid range: 0-255\n", cfg.log_id);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
 	if (!cfg.log_len) {
 		fprintf(stderr, "non-zero log-len is required param\n");
-		err = EINVAL;
+		err = -EINVAL;
 	} else {
 		unsigned char *log;
 
@@ -826,7 +826,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		if (!log) {
 			fprintf(stderr, "could not alloc buffer for log: %s\n",
 					strerror(errno));
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 
@@ -946,7 +946,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000)) {
 		fprintf(stderr, "can not allocate controller list payload\n");
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	err = nvme_identify_ctrl_list(fd, cfg.namespace_id, cfg.cntid, cntlist);
@@ -1059,13 +1059,13 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	if (S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 	} else if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
 						cmd->name);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -1114,7 +1114,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
 						cmd->name);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -1124,7 +1124,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
     if (num == -1) {
 		fprintf(stderr, "%s: controller id list is required\n",
 						cmd->name);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
     }
 
@@ -1221,14 +1221,14 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	if (cfg.flbas != 0xff && cfg.bs != 0x00) {
 		fprintf(stderr,
 			"Invalid specification of both FLBAS and Block Size, please specify only one\n");
-			return EINVAL;
+			return -EINVAL;
 	}
 	if (cfg.bs) {
 		if ((cfg.bs & (~cfg.bs + 1)) != cfg.bs) {
 			fprintf(stderr,
 				"Invalid value for block size (%"PRIu64"). Block size must be a power of two\n",
 				(uint64_t)cfg.bs);
-			return EINVAL;
+			return -EINVAL;
 		}
 		err = nvme_identify_ns(fd, NVME_NSID_ALL, 0, &ns);
 		if (err) {
@@ -1254,7 +1254,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 			(uint64_t)cfg.bs);
 		fprintf(stderr,
 			"Please correct block size, or specify FLBAS directly\n");
-		return EINVAL;
+		return -EINVAL;
 	}
 
 
@@ -2007,14 +2007,14 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 	}
 
 	if (posix_memalign(&nsdescs, getpagesize(), 0x1000)) {
 		fprintf(stderr, "can not allocate controller list payload\n");
-		err = ENOMEM;
+		err = -ENOMEM;
 		goto close_fd;
 	}
 
@@ -2099,7 +2099,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	if (!cfg.namespace_id && S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 	}
@@ -2515,12 +2515,12 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (cfg.sel > 7) {
 		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -2554,7 +2554,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
 			fprintf(stderr, "can not allocate feature payload\n");
-			err = ENOMEM;
+			err = -ENOMEM;
 			goto close_fd;
 		}
 		memset(buf, 0, cfg.data_len);
@@ -2635,7 +2635,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	if (fw_fd < 0) {
 		fprintf(stderr, "Failed to open firmware file %s: %s\n",
 				cfg.fw, strerror(errno));
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -2648,12 +2648,12 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	fw_size = sb.st_size;
 	if (fw_size & 0x3) {
 		fprintf(stderr, "Invalid size:%d for f/w image\n", fw_size);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fw_fd;
 	}
 	if (posix_memalign(&fw_buf, getpagesize(), fw_size)) {
 		fprintf(stderr, "No memory for f/w size:%d\n", fw_size);
-		err = ENOMEM;
+		err = -ENOMEM;
 		goto close_fw_fd;
 	}
 
@@ -2741,17 +2741,17 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 
 	if (cfg.slot > 7) {
 		fprintf(stderr, "invalid slot:%d\n", cfg.slot);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 	if (cfg.action > 7 || cfg.action == 4 || cfg.action == 5) {
 		fprintf(stderr, "invalid action:%d\n", cfg.action);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 	if (cfg.bpid > 1) {
 		fprintf(stderr, "invalid boot partition id:%d\n", cfg.bpid);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -2912,14 +2912,14 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 		break;
 	default:
 		fprintf(stderr, "Invalid Sanitize Action\n");
-		ret = EINVAL;
+		ret = -EINVAL;
 		goto close_fd;
 	}
 
 	if (cfg.sanact == NVME_SANITIZE_ACT_EXIT) {
 	       if (cfg.ause || cfg.no_dealloc) {
 			fprintf(stderr, "SANACT is Exit Failure Mode\n");
-			ret = EINVAL;
+			ret = -EINVAL;
 			goto close_fd;
 	       }
 	}
@@ -2927,13 +2927,13 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (cfg.sanact == NVME_SANITIZE_ACT_OVERWRITE) {
 		if (cfg.owpass > 16) {
 			fprintf(stderr, "OWPASS out of range [0-16]\n");
-			ret = EINVAL;
+			ret = -EINVAL;
 			goto close_fd;
 		}
 	} else {
 		if (cfg.owpass || cfg.oipbp || cfg.ovrpat) {
 			fprintf(stderr, "SANACT is not Overwrite\n");
-			ret = EINVAL;
+			ret = -EINVAL;
 			goto close_fd;
 		}
 	}
@@ -2992,7 +2992,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 
 	if (cfg.human_readable && fmt != NORMAL) {
 		fprintf(stderr, "Only --output-format=normal supports -H\n");
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -3004,7 +3004,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 			err = 0;
 	}
 	if (!bar) {
-		err = ENODEV;
+		err = -ENODEV;
 		goto close_fd;
 	}
 
@@ -3057,7 +3057,7 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 
 	if (cfg.offset == -1) {
 		fprintf(stderr, "offset required param");
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -3106,12 +3106,12 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 
 	if (cfg.offset == -1) {
 		fprintf(stderr, "offset required param");
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 	if (cfg.value == -1) {
 		fprintf(stderr, "value required param");
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -3193,20 +3193,20 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	if (cfg.lbaf != 0xff && cfg.bs !=0) {
 		fprintf(stderr,
 			"Invalid specification of both LBAF and Block Size, please specify only one\n");
-			return EINVAL;
+			return -EINVAL;
 	}
 	if (cfg.bs) {
 		if ((cfg.bs & (~cfg.bs + 1)) != cfg.bs) {
 			fprintf(stderr,
 				"Invalid value for block size (%"PRIu64"), must be a power of two\n",
 				       (uint64_t) cfg.bs);
-				return EINVAL;
+				return -EINVAL;
 		}
 	}
 	if (S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 	}
@@ -3237,7 +3237,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 					(uint64_t)cfg.bs, lbads);
 				fprintf(stderr,
 					"Please correct block size, or specify LBAF directly\n");
-				return EINVAL;
+				return -EINVAL;
 			}
 		} else  if (cfg.lbaf == 0xff)
 			cfg.lbaf = prev_lbaf;
@@ -3246,27 +3246,27 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	/* ses & pi checks set to 7 for forward-compatibility */
 	if (cfg.ses > 7) {
 		fprintf(stderr, "invalid secure erase settings:%d\n", cfg.ses);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 	if (cfg.lbaf > 15) {
 		fprintf(stderr, "invalid lbaf:%d\n", cfg.lbaf);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 	if (cfg.pi > 7) {
 		fprintf(stderr, "invalid pi:%d\n", cfg.pi);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 	if (cfg.pil > 1) {
 		fprintf(stderr, "invalid pil:%d\n", cfg.pil);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 	if (cfg.ms > 1) {
 		fprintf(stderr, "invalid ms:%d\n", cfg.ms);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -3348,7 +3348,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 	if (cfg.feature_id == NVME_FEAT_LBA_RANGE)
@@ -3356,7 +3356,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
 			fprintf(stderr, "can not allocate feature payload\n");
-			err = ENOMEM;
+			err = -ENOMEM;
 			goto close_fd;
 		}
 		memset(buf, 0, cfg.data_len);
@@ -3368,7 +3368,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 			if (ffd <= 0) {
 				fprintf(stderr, "Failed to open file %s: %s\n",
 						cfg.file, strerror(errno));
-				err = EINVAL;
+				err = -EINVAL;
 				goto free;
 			}
 		}
@@ -3461,7 +3461,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (sec_fd < 0) {
 		fprintf(stderr, "Failed to open %s: %s\n",
 				cfg.file, strerror(errno));
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -3474,7 +3474,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	sec_size = sb.st_size;
 	if (posix_memalign(&sec_buf, getpagesize(), sec_size)) {
 		fprintf(stderr, "No memory for security size:%d\n", sec_size);
-		err = ENOMEM;
+		err = -ENOMEM;
 		goto close_sec_fd;
 	}
 
@@ -3570,14 +3570,14 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		case NVME_DIR_SND_ID_OP_ENABLE:
 			if (!cfg.ttype) {
 				fprintf(stderr, "target-dir required param\n");
-				err = EINVAL;
+				err = -EINVAL;
 				goto close_fd;
 			}
 			dw12 = cfg.ttype << 8 | cfg.endir;
 			break;
 		default:
 			fprintf(stderr, "invalid directive operations for Identify Directives\n");
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 		break;
@@ -3588,20 +3588,20 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 			break;
 		default:
 			fprintf(stderr, "invalid directive operations for Streams Directives\n");
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 		break;
 	default:
 		fprintf(stderr, "invalid directive type\n");
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
 
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
-			err = ENOMEM;
+			err = -ENOMEM;
 			goto close_fd;
 		}
 		memset(buf, 0, cfg.data_len);
@@ -3613,7 +3613,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 			if (ffd <= 0) {
 				fprintf(stderr, "Failed to open file %s: %s\n",
 						cfg.file, strerror(errno));
-				err = EINVAL;
+				err = -EINVAL;
 				goto free;
 			}
 		}
@@ -3690,7 +3690,7 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 	}
@@ -3768,7 +3768,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		return fd;
 
 	if (cfg.prinfo > 0xf) {
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -3782,7 +3782,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 	}
@@ -3867,14 +3867,14 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	nr = max(nc, max(nb, ns));
 	if (!nr || nr > 256) {
 		fprintf(stderr, "No range definition provided\n");
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 	}
@@ -3884,7 +3884,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	dsm = nvme_setup_dsm_range((__u32 *)ctx_attrs, (__u32 *)nlbs, (__u64 *)slbas, nr);
 	if (!dsm) {
 		fprintf(stderr, "failed to allocate data set payload\n");
-		err = ENOMEM;
+		err = -ENOMEM;
 		goto close_fd;
 	}
 
@@ -3931,7 +3931,7 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 	if (S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 	}
@@ -3998,13 +3998,13 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 	}
 	if (cfg.racqa > 7) {
 		fprintf(stderr, "invalid racqa:%d\n", cfg.racqa);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -4069,19 +4069,19 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 	}
 	if (cfg.cptpl > 3) {
 		fprintf(stderr, "invalid cptpl:%d\n", cfg.cptpl);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
 	if (cfg.rrega > 7) {
 		fprintf(stderr, "invalid rrega:%d\n", cfg.rrega);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -4148,13 +4148,13 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 	}
 	if (cfg.rrela > 7) {
 		fprintf(stderr, "invalid rrela:%d\n", cfg.rrela);
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -4226,7 +4226,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 	}
@@ -4239,7 +4239,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (posix_memalign((void **)&status, getpagesize(), size)) {
 		fprintf(stderr, "No memory for resv report:%d\n", size);
-		err = ENOMEM;
+		err = -ENOMEM;
 		goto close_fd;
 	}
 	memset(status, 0, size);
@@ -4361,7 +4361,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 
 	dfd = mfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
 	if (cfg.prinfo > 0xf) {
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
@@ -4375,7 +4375,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		if (cfg.dtype > 0xf) {
 			fprintf(stderr, "Invalid directive type, %x\n",
 				cfg.dtype);
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 		control |= cfg.dtype << 4;
@@ -4386,7 +4386,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		dfd = open(cfg.data, flags, mode);
 		if (dfd < 0) {
 			perror(cfg.data);
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 		mfd = dfd;
@@ -4395,14 +4395,14 @@ static int submit_io(int opcode, char *command, const char *desc,
 		mfd = open(cfg.metadata, flags, mode);
 		if (mfd < 0) {
 			perror(cfg.metadata);
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_dfd;
 		}
 	}
 
 	if (!cfg.data_size)	{
 		fprintf(stderr, "data size not provided\n");
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_mfd;
 	}
 
@@ -4419,7 +4419,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 
 	if (posix_memalign(&buffer, getpagesize(), buffer_size)) {
 		fprintf(stderr, "can not allocate io payload\n");
-		err = ENOMEM;
+		err = -ENOMEM;
 		goto close_mfd;
 	}
 	memset(buffer, 0, buffer_size);
@@ -4429,7 +4429,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		if (!mbuffer) {
 			fprintf(stderr, "can not allocate io metadata "
 					"payload: %s\n", strerror(errno));
-			err = ENOMEM;
+			err = -ENOMEM;
 			goto free_buffer;
 		}
 	}
@@ -4486,12 +4486,12 @@ static int submit_io(int opcode, char *command, const char *desc,
 		if (!(opcode & 1) && write(dfd, (void *)buffer, cfg.data_size) < 0) {
 			fprintf(stderr, "write: %s: failed to write buffer to output file\n",
 					strerror(errno));
-			err = EINVAL;
+			err = -EINVAL;
 		} else if (!(opcode & 1) && cfg.metadata_size &&
 				write(mfd, (void *)mbuffer, cfg.metadata_size) < 0) {
 			fprintf(stderr, "write: %s: failed to write meta-data buffer to output file\n",
 					strerror(errno));
-			err = EINVAL;
+			err = -EINVAL;
 		} else
 			fprintf(stderr, "%s: Success\n", command);
 	}
@@ -4589,7 +4589,7 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 		if (posix_memalign(&sec_buf, getpagesize(), cfg.size)) {
 			fprintf(stderr, "No memory for security size:%d\n",
 								cfg.size);
-			err = ENOMEM;
+			err = -ENOMEM;
 			goto close_fd;
 		}
 	}
@@ -4679,7 +4679,7 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 			break;
 		default:
 			fprintf(stderr, "invalid directive operations for Identify Directives\n");
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 		break;
@@ -4698,19 +4698,19 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 			break;
 		default:
 			fprintf(stderr, "invalid directive operations for Streams Directives\n");
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 		break;
 	default:
 		fprintf(stderr, "invalid directive type\n");
-		err = EINVAL;
+		err = -EINVAL;
 		goto close_fd;
 	}
 
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
-			err = ENOMEM;
+			err = -ENOMEM;
 			goto close_fd;
 		}
 		memset(buf, 0, cfg.data_len);
@@ -4856,7 +4856,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 			   S_IRUSR | S_IRGRP | S_IROTH);
 		if (wfd < 0) {
 			perror(cfg.input_file);
-			err = EINVAL;
+			err = -EINVAL;
 			goto close_fd;
 		}
 	}
@@ -4866,21 +4866,21 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 		if (!metadata) {
 			fprintf(stderr, "can not allocate metadata "
 					"payload: %s\n", strerror(errno));
-			err = ENOMEM;
+			err = -ENOMEM;
 			goto close_wfd;
 		}
 	}
 	if (cfg.data_len) {
 		if (posix_memalign(&data, getpagesize(), cfg.data_len)) {
 			fprintf(stderr, "can not allocate data payload\n");
-			err = ENOMEM;
+			err = -ENOMEM;
 			goto free_metadata;
 		}
 
 		memset(data, cfg.prefill, cfg.data_len);
 		if (!cfg.read && !cfg.write) {
 			fprintf(stderr, "data direction not given\n");
-			err = EINVAL;
+			err = -EINVAL;
 			goto free_data;
 		} else if (cfg.write) {
 			if (read(wfd, data, cfg.data_len) < 0) {
