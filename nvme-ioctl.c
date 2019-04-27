@@ -41,7 +41,13 @@ int nvme_subsystem_reset(int fd)
 	ret = nvme_verify_chr(fd);
 	if (ret)
 		return ret;
-	return ioctl(fd, NVME_IOCTL_SUBSYS_RESET);
+
+	ret = ioctl(fd, NVME_IOCTL_SUBSYS_RESET);
+	if (ret < 0) {
+		perror("subsystem-reset");
+		return -errno;
+	}
+	return ret;
 }
 
 int nvme_reset_controller(int fd)
@@ -51,7 +57,13 @@ int nvme_reset_controller(int fd)
 	ret = nvme_verify_chr(fd);
 	if (ret)
 		return ret;
-	return ioctl(fd, NVME_IOCTL_RESET);
+
+	ret = ioctl(fd, NVME_IOCTL_RESET);
+	if (ret < 0) {
+		perror("ctrl-reset");
+		return -errno;
+	}
+	return ret;
 }
 
 int nvme_ns_rescan(int fd)
@@ -61,7 +73,13 @@ int nvme_ns_rescan(int fd)
 	ret = nvme_verify_chr(fd);
 	if (ret)
 		return ret;
-	return ioctl(fd, NVME_IOCTL_RESCAN);
+
+	ret = ioctl(fd, NVME_IOCTL_RESCAN);
+	if (ret < 0) {
+		perror("ns-rescan");
+		return -errno;
+	}
+	return ret;
 }
 
 int nvme_get_nsid(int fd)

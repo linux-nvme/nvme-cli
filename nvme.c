@@ -2782,12 +2782,10 @@ static int subsystem_reset(int argc, char **argv, struct command *cmd, struct pl
 	err = nvme_subsystem_reset(fd);
 	if (err < 0) {
 		close(fd);
-		if (errno == ENOTTY)
+		if (err == -ENOTTY)
 			fprintf(stderr,
 				"Subsystem-reset: NVM Subsystem Reset not supported.\n");
-		else
-			perror("Subsystem-reset");
-		return errno;
+		return err;
 	}
 
 	close(fd);
@@ -2810,8 +2808,7 @@ static int reset(int argc, char **argv, struct command *cmd, struct plugin *plug
 	err = nvme_reset_controller(fd);
 	if (err < 0) {
 		close(fd);
-		perror("Reset");
-		return errno;
+		return err;
 	}
 
 	close(fd);
@@ -2834,8 +2831,7 @@ static int ns_rescan(int argc, char **argv, struct command *cmd, struct plugin *
 	err = nvme_ns_rescan(fd);
 	if (err < 0) {
 		close(fd);
-		perror("Namespace Rescan");
-		return errno;
+		return err;
 	}
 
 	close(fd);
