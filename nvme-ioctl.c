@@ -24,12 +24,12 @@ static int nvme_verify_chr(int fd)
 
 	if (err < 0) {
 		perror("fstat");
-		return errno;
+		return -errno;
 	}
 	if (!S_ISCHR(nvme_stat.st_mode)) {
 		fprintf(stderr,
 			"Error: requesting reset on non-controller handle\n");
-		return ENOTBLK;
+		return -EINVAL;
 	}
 	return 0;
 }
