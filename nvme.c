@@ -1496,12 +1496,12 @@ static int get_nvme_subsystem_info(char *name, char *path,
 {
 	char ctrl_path[512];
 	struct dirent **ctrls;
-	int n, i, ret = 1, ccnt = 0;
+	int n, i, ret, ccnt = 0;
 
 	item->subsysnqn = get_nvme_subsnqn(path);
 	if (!item->subsysnqn) {
 		fprintf(stderr, "failed to get subsystem nqn.\n");
-		return ret;
+		return -EINVAL;
 	}
 
 	item->name = strdup(name);
@@ -1509,12 +1509,13 @@ static int get_nvme_subsystem_info(char *name, char *path,
 	n = scandir(path, &ctrls, scan_ctrls_filter, alphasort);
 	if (n < 0) {
 		fprintf(stderr, "failed to scan controller(s).\n");
-		return ret;
+		return -errno;
 	}
 
 	item->ctrls = calloc(n, sizeof(struct ctrl_list_item));
 	if (!item->ctrls) {
 		fprintf(stderr, "failed to allocate subsystem controller(s)\n");
+		ret = -errno;
 		goto free_ctrls;
 	}
 
@@ -1643,7 +1644,7 @@ struct subsys_list_item *get_subsys_list(int *subcnt, char *subsysnqn,
 		if (ret) {
 			fprintf(stderr,
 				"%s: failed to get subsystem info: %s\n",
-				path, strerror(errno));
+				path, strerror(-ret));
 			free_subsys_list_item(&slist[*subcnt]);
 		} else if (subsysnqn &&
 			   strncmp(slist[*subcnt].subsysnqn, subsysnqn, 255))
