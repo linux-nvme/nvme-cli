@@ -5034,5 +5034,5 @@ int main(int argc, char **argv)
 	if (ret == -ENOTTY)
 		general_help(&builtin);
 
-	return ret;
+	return (ret >= 0) ? 0 : abs(ret);
 }
