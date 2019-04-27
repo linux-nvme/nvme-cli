@@ -81,6 +81,20 @@ static struct program nvme = {
 	.extensions = &builtin,
 };
 
+/*
+ * pr_err - prints out a given error value with message like perror().
+ * @msg: message to be printed out before error string
+ * @err: error code to be converted to string
+ *
+ * This function behaves like perror() because errno should not be used
+ * without library calls which might update errno.  This function will be
+ * taken if there is no explicit system call.
+ */
+static inline void pr_err(const char *msg, int err)
+{
+	fprintf(stderr, "%s: %s\n", msg, strerror(abs(err)));
+}
+
 static unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time)
 {
@@ -223,7 +237,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("smart log");
+		pr_err("smart-log", err);
 
  close_fd:
 	close(fd);
@@ -296,7 +310,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 	} else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("ana-log");
+		pr_err("ana-log", err);
 	free(ana_log);
 close_fd:
 	close(fd);
@@ -368,7 +382,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 	err = nvme_get_telemetry_log(fd, hdr, cfg.host_gen, cfg.ctrl_init, bs, 0);
 	if (err < 0)
-		perror("get-telemetry-log");
+		pr_err("telemetry-log", err);
 	else if (err > 0) {
 		show_nvme_status(err);
 		fprintf(stderr, "Failed to acquire telemetry header %d!\n", err);
@@ -404,7 +418,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	while (offset != full_size) {
 		err = nvme_get_telemetry_log(fd, page_log, 0, cfg.ctrl_init, bs, offset);
 		if (err < 0) {
-			perror("get-telemetry-log");
+			pr_err("telemetry-log", err);
 			break;
 		} else if (err > 0) {
 			fprintf(stderr, "Failed to acquire full telemetry log!\n");
@@ -477,7 +491,7 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 	} else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("endurance log");
+		pr_err("endurance-log", err);
 
  close_fd:
 	close(fd);
@@ -539,7 +553,7 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("effects log page");
+		pr_err("effects-log", err);
 
  close_fd:
 	close(fd);
@@ -594,7 +608,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 
 	err = nvme_identify_ctrl(fd, &ctrl);
 	if (err < 0)
-		perror("identify controller");
+		pr_err("id-ctrl", err);
 	else if (err) {
 		fprintf(stderr, "could not identify controller\n");
 		err = ENODEV;
@@ -621,7 +635,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		else if (err > 0)
 			show_nvme_status(err);
 		else
-			perror("error log");
+			pr_err("error-log", err);
 		free(err_log);
 	}
 
@@ -677,7 +691,7 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 	else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("fw log");
+		pr_err("fw-log", err);
 
  close_fd:
 	close(fd);
@@ -732,7 +746,7 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 	} else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("changed ns list log");
+		pr_err("changed-ns-list-log", err);
 
  close_fd:
 	close(fd);
@@ -830,7 +844,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		} else if (err > 0)
 			show_nvme_status(err);
 		else
-			perror("log page");
+			pr_err("get-log", err);
 		free(log);
 	}
 
@@ -894,7 +908,7 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 	else if (ret > 0)
 		show_nvme_status(ret);
 	else
-		perror("sanitize status log");
+		pr_err("sanitize-log", ret);
 
  close_fd:
 	close(fd);
@@ -945,7 +959,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 	else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("id controller list");
+		pr_err("list-ctrl", err);
 
 	free(cntlist);
 
@@ -991,7 +1005,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("id namespace list");
+		pr_err("list-ns", err);
 
 	close(fd);
 
@@ -1062,7 +1076,7 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("delete namespace");
+		pr_err("delete-ns", err);
 
  close_fd:
 	close(fd);
@@ -1127,7 +1141,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror(attach ? "attach namespace" : "detach namespace");
+		pr_err(attach ? "attach-ns" : "detach-ns", err);
 
  close_fd:
 	close(fd);
@@ -1219,7 +1233,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		err = nvme_identify_ns(fd, NVME_NSID_ALL, 0, &ns);
 		if (err) {
 			if (err < 0)
-				perror("identify-namespace");
+				pr_err("id-ns", err);
 			else {
 				fprintf(stderr, "identify failed\n");
 				show_nvme_status(err);
@@ -1251,7 +1265,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("create namespace");
+		pr_err("create-ns", err);
 
 	close(fd);
 
@@ -1939,7 +1953,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("identify controller");
+		pr_err("id-ctrl", err);
 
  close_fd:
 	close(fd);
@@ -2018,7 +2032,7 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 	else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("identify namespace");
+		pr_err("ns-descs", err);
 
 	free(nsdescs);
 
@@ -2107,7 +2121,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("identify namespace");
+		pr_err("id-ns", err);
 
  close_fd:
 	close(fd);
@@ -2165,7 +2179,7 @@ static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *
 	else if (err > 0)
 		show_nvme_status(err);
 	else
-		perror("identify nvm set list");
+		pr_err("id-nvmset", err);
 
  close_fd:
 	close(fd);
@@ -2255,7 +2269,7 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 	else if (err > 0) {
 		show_nvme_status(err);
 	} else
-		perror("virt-mgmt");
+		pr_err("virt-mgmt", err);
 
 	close(fd);
 	return err;
@@ -2330,7 +2344,7 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 		fprintf(stderr, "NVMe Status:%s(%x) cntid:%d\n",
 			nvme_status_to_string(err), err, cfg.cntid);
 	else
-		perror("id secondary controller list");
+		pr_err("list-secondary", err);
 
 	free(sc_list);
 
@@ -2382,7 +2396,7 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 	} else if (err > 0) {
 		show_nvme_status(err);
 	} else
-		perror("Device self-test");
+		pr_err("device-self-test", err);
 
 	close(fd);
 	return err;
@@ -2435,7 +2449,7 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	} else if (err > 0) {
 		show_nvme_status(err);
 	} else {
-		perror("self_test_log");
+		pr_err("self-test-log", err);
 	}
 
  close_fd:
@@ -2564,7 +2578,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	} else if (err > 0) {
 		show_nvme_status(err);
 	} else
-		perror("get-feature");
+		pr_err("get-feature", err);
 
 	if (buf)
 		free(buf);
@@ -2657,7 +2671,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 
 		err = nvme_fw_download(fd, cfg.offset, cfg.xfer, fw_buf);
 		if (err < 0) {
-			perror("fw-download");
+			pr_err("fw-download", err);
 			break;
 		} else if (err != 0) {
 			show_nvme_status(err);
@@ -2743,7 +2757,7 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 
 	err = nvme_fw_commit(fd, cfg.slot, cfg.action, cfg.bpid);
 	if (err < 0)
-		perror("fw-commit");
+		pr_err("fw-commit", err);
 	else if (err != 0)
 		switch (err & 0x3ff) {
 		case NVME_SC_FW_NEEDS_CONV_RESET:
@@ -2927,7 +2941,7 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	ret = nvme_sanitize(fd, cfg.sanact, cfg.ause, cfg.owpass, cfg.oipbp,
 			    cfg.no_dealloc, cfg.ovrpat);
 	if (ret < 0)
-		perror("sanitize");
+		pr_err("sanitize", ret);
 	else if (ret > 0)
 		show_nvme_status(ret);
 
@@ -3049,7 +3063,7 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 
 	err = nvme_get_property(fd, cfg.offset, &value);
 	if (err < 0) {
-		perror("get-property");
+		pr_err("get-property", err);
 	} else if (!err) {
 		show_single_property(cfg.offset, value, cfg.human_readable);
 	} else if (err > 0) {
@@ -3103,7 +3117,7 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 
 	err = nvme_set_property(fd, cfg.offset, cfg.value);
 	if (err < 0) {
-		perror("set-property");
+		pr_err("set-property", err);
 	} else if (!err) {
 		printf("set-property: %02x (%s), value: %#08x\n", cfg.offset,
 				nvme_register_to_string(cfg.offset), cfg.value);
@@ -3200,7 +3214,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		err = nvme_identify_ns(fd, cfg.namespace_id, 0, &ns);
 		if (err) {
 			if (err < 0)
-				perror("identify-namespace");
+				pr_err("id-ns", err);
 			else {
 				fprintf(stderr, "identify failed\n");
 				show_nvme_status(err);
@@ -3259,7 +3273,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	err = nvme_format(fd, cfg.namespace_id, cfg.lbaf, cfg.ses, cfg.pi,
 				cfg.pil, cfg.ms, cfg.timeout);
 	if (err < 0)
-		perror("format");
+		pr_err("format", err);
 	else if (err != 0)
 		show_nvme_status(err);
 	else {
@@ -3370,7 +3384,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value,
 			       cfg.cdw12, cfg.save, cfg.data_len, buf, &result);
 	if (err < 0) {
-		perror("set-feature");
+		pr_err("set-feature", err);
 	} else if (!err) {
 		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
 			nvme_feature_to_string(cfg.feature_id), cfg.value);
@@ -3475,7 +3489,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	err = nvme_sec_send(fd, cfg.namespace_id, cfg.nssf, cfg.spsp, cfg.secp,
 			cfg.tl, sec_size, sec_buf, &result);
 	if (err < 0)
-		perror("security-send");
+		pr_err("security-send", err);
 	else if (err != 0)
 		fprintf(stderr, "NVME Security Send Command Error:%d\n", err);
 	else
@@ -3615,7 +3629,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	err = nvme_dir_send(fd, cfg.namespace_id, cfg.dspec, cfg.dtype, cfg.doper,
 			cfg.data_len, dw12, buf, &result);
 	if (err < 0) {
-		perror("dir-send");
+		pr_err("dir-send", err);
 		goto close_ffd;
 	}
 	if (!err) {
@@ -3684,7 +3698,7 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 	err = nvme_write_uncorrectable(fd, cfg.namespace_id, cfg.start_block,
 					cfg.block_count);
 	if (err < 0)
-		perror("write uncorrectable");
+		pr_err("write-uncor", err);
 	else if (err != 0)
 		show_nvme_status(err);
 	else
@@ -3776,7 +3790,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	err = nvme_write_zeros(fd, cfg.namespace_id, cfg.start_block, cfg.block_count,
 			control, cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask);
 	if (err < 0)
-		perror("write-zeroes");
+		pr_err("write-zeroes", err);
 	else if (err != 0)
 		show_nvme_status(err);
 	else
@@ -3876,7 +3890,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 
 	err = nvme_dsm(fd, cfg.namespace_id, cfg.cdw11, dsm, nr);
 	if (err < 0)
-		perror("data-set management");
+		pr_err("dsm", err);
 	else if (err != 0)
 		show_nvme_status(err);
 	else
@@ -3924,7 +3938,7 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 
 	err = nvme_flush(fd, cfg.namespace_id);
 	if (err < 0)
-		perror("flush");
+		pr_err("flush", err);
 	else if (err != 0)
 		show_nvme_status(err);
 	else
@@ -3997,7 +4011,7 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 	err = nvme_resv_acquire(fd, cfg.namespace_id, cfg.rtype, cfg.racqa,
 				!!cfg.iekey, cfg.crkey, cfg.prkey);
 	if (err < 0)
-		perror("reservation acquire");
+		pr_err("resv-acquire", err);
 	else if (err != 0)
 		show_nvme_status(err);
 	else
@@ -4074,7 +4088,7 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 	err = nvme_resv_register(fd, cfg.namespace_id, cfg.rrega, cfg.cptpl,
 				!!cfg.iekey, cfg.crkey, cfg.nrkey);
 	if (err < 0)
-		perror("reservation register");
+		pr_err("resv-register", err);
 	else if (err != 0)
 		show_nvme_status(err);
 	else
@@ -4147,7 +4161,7 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 	err = nvme_resv_release(fd, cfg.namespace_id, cfg.rtype, cfg.rrela,
 				!!cfg.iekey, cfg.crkey);
 	if (err < 0)
-		perror("reservation release");
+		pr_err("resv-releasae", err);
 	else if (err != 0)
 		show_nvme_status(err);
 	else
@@ -4232,7 +4246,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 
 	err = nvme_resv_report(fd, cfg.namespace_id, cfg.numd, cfg.cdw11, status);
 	if (err < 0)
-		perror("reservation report");
+		pr_err("resv-report", err);
 	else if (err != 0)
 		fprintf(stderr, "NVME IO command error:%04x\n", err);
 	else {
@@ -4465,7 +4479,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		printf(" latency: %s: %llu us\n",
 			command, elapsed_utime(start_time, end_time));
 	if (err < 0)
-		perror("submit-io");
+		pr_err("submit-io", err);
 	else if (err)
 		show_nvme_status(err);
 	else {
@@ -4583,7 +4597,7 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 	err = nvme_sec_recv(fd, cfg.namespace_id, cfg.nssf, cfg.spsp,
 			cfg.secp, cfg.al, cfg.size, sec_buf, &result);
 	if (err < 0)
-		perror("security receive");
+		pr_err("security-recv", err);
 	else if (err != 0)
 		fprintf(stderr, "NVME Security Receive Command Error:%d\n",
 									err);
@@ -4705,7 +4719,7 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 	err = nvme_dir_recv(fd, cfg.namespace_id, cfg.dspec, cfg.dtype, cfg.doper,
 			cfg.data_len, dw12, buf, &result);
 	if (err < 0) {
-		perror("dir-receive");
+		pr_err("dir-receive", err);
 		goto free;
 	}
 
@@ -4906,7 +4920,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 				cfg.data_len, data, cfg.metadata_len, metadata,
 				cfg.timeout, &result);
 	if (err < 0)
-		perror("passthru");
+		pr_err("passthrough", err);
 	else if (err)
 		show_nvme_status(err);
 	else  {
