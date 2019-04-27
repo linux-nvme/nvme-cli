@@ -115,8 +115,7 @@ static int open_dev(char *dev)
 static int check_arg_dev(int argc, char **argv)
 {
 	if (optind >= argc) {
-		errno = EINVAL;
-		perror(argv[0]);
+		fprintf(stderr, "check argument: %s\n", strerror(EINVAL));
 		return -EINVAL;
 	}
 	return 0;
