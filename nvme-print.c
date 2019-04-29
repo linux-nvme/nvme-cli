@@ -864,6 +864,7 @@ void show_nvme_id_ns_descs(void *data)
 
 	for (pos = 0; pos < NVME_IDENTIFY_DATA_SIZE; pos += len) {
 		struct nvme_ns_id_desc *cur = data + pos;
+		len = 0;
 
 		if (cur->nidl == 0)
 			break;
