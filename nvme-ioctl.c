@@ -577,29 +577,19 @@ static int nvme_property(int fd, __u8 fctype, __le32 off, __le64 *value, __u8 at
 	return err;
 }
 
-static int get_property_helper(int fd, int offset, void *value, int *advance)
+static int get_property_helper(int fd, int offset, void *value)
 {
 	__le64 value64;
 	int err = -EINVAL;
-
-	switch (offset) {
-	case NVME_REG_CAP:
-	case NVME_REG_ASQ:
-	case NVME_REG_ACQ:
-		*advance = 8;
-		break;
-	default:
-		*advance = 4;
-	}
 
 	if (!value)
 		return err;
 
 	err = nvme_property(fd, nvme_fabrics_type_property_get,
-			cpu_to_le32(offset), &value64, (*advance == 8));
+			cpu_to_le32(offset), &value64, is_64bit_reg(offset));
 
 	if (!err) {
-		if (*advance == 8)
+		if (is_64bit_reg(offset))
 			*((uint64_t *)value) = le64_to_cpu(value64);
 		else
 			*((uint32_t *)value) = le32_to_cpu(value64);
@@ -610,13 +600,12 @@ static int get_property_helper(int fd, int offset, void *value, int *advance)
 
 int nvme_get_property(int fd, int offset, uint64_t *value)
 {
-	int advance;
-	return get_property_helper(fd, offset, value, &advance);
+	return get_property_helper(fd, offset, value);
 }
 
 int nvme_get_properties(int fd, void **pbar)
 {
-	int offset, advance;
+	int offset;
 	int err;
 	int size = getpagesize();
 
@@ -627,12 +616,14 @@ int nvme_get_properties(int fd, void **pbar)
 	}
 
 	memset(*pbar, 0xff, size);
-	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ; offset += advance) {
-		err = get_property_helper(fd, offset, *pbar + offset, &advance);
+	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ;) {
+		err = get_property_helper(fd, offset, *pbar + offset);
 		if (err) {
 			free(*pbar);
 			break;
 		}
+
+		offset += is_64bit_reg(offset) ? 8 : 4;
 	}
 
 	return err;
