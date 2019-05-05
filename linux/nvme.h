@@ -433,9 +433,9 @@ struct nvme_telemetry_log_page_hdr {
 	__u8    lpi; /* Log page identifier */
 	__u8    rsvd[4];
 	__u8    iee_oui[3];
-	__u16   dalb1; /* Data area 1 last block */
-	__u16   dalb2; /* Data area 2 last block */
-	__u16   dalb3; /* Data area 3 last block */
+	__le16  dalb1; /* Data area 1 last block */
+	__le16  dalb2; /* Data area 2 last block */
+	__le16  dalb3; /* Data area 3 last block */
 	__u8    rsvd1[368]; /* TODO verify */
 	__u8    ctrlavail; /* Controller initiated data avail?*/
 	__u8    ctrldgn; /* Controller initiated telemetry Data Gen # */

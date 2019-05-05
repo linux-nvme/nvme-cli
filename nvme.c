@@ -376,13 +376,13 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 	switch (cfg.data_area) {
 	case 1:
-		full_size = (hdr->dalb1 * bs) + offset;
+		full_size = (le16_to_cpu(hdr->dalb1) * bs) + offset;
 		break;
 	case 2:
-		full_size = (hdr->dalb2 * bs) + offset;
+		full_size = (le16_to_cpu(hdr->dalb2) * bs) + offset;
 		break;
 	case 3:
-		full_size = (hdr->dalb3 * bs) + offset;
+		full_size = (le16_to_cpu(hdr->dalb3) * bs) + offset;
 		break;
 	default:
 		fprintf(stderr, "Invalid data area requested");
