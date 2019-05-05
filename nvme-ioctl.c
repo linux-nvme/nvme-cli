@@ -577,7 +577,7 @@ static int nvme_property(int fd, __u8 fctype, __le32 off, __le64 *value, __u8 at
 	return err;
 }
 
-static int get_property_helper(int fd, int offset, void *value)
+int nvme_get_property(int fd, int offset, uint64_t *value)
 {
 	__le64 value64;
 	int err = -EINVAL;
@@ -598,11 +598,6 @@ static int get_property_helper(int fd, int offset, void *value)
 	return err;
 }
 
-int nvme_get_property(int fd, int offset, uint64_t *value)
-{
-	return get_property_helper(fd, offset, value);
-}
-
 int nvme_get_properties(int fd, void **pbar)
 {
 	int offset;
@@ -617,7 +612,7 @@ int nvme_get_properties(int fd, void **pbar)
 
 	memset(*pbar, 0xff, size);
 	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ;) {
-		err = get_property_helper(fd, offset, *pbar + offset);
+		err = nvme_get_property(fd, offset, *pbar + offset);
 		if (err) {
 			free(*pbar);
 			break;
