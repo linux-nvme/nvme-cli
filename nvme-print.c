@@ -1549,7 +1549,7 @@ void show_self_test_log(struct nvme_self_test_log *self_test, const char *devnam
 {
 	int i, temp;
 	const char *test_code_res;
-	const char *test_res[10] = {
+	static const char *const test_res[] = {
 		"Operation completed without error",
 		"Operation was aborted by a Device Self-test command",
 		"Operation was aborted by a Controller Level Reset",
@@ -1561,6 +1561,7 @@ void show_self_test_log(struct nvme_self_test_log *self_test, const char *devnam
 		"Operation completed with one or more failed segments and the first segment that failed "\
 		"is indicated in the SegmentNumber field",
 		"Operation was aborted for unknown reason",
+		"Operation was aborted due to a sanitize operation",
 		"Reserved"
 	};
 
@@ -1574,7 +1575,7 @@ void show_self_test_log(struct nvme_self_test_log *self_test, const char *devnam
 
 		printf("Result[%d]:\n", i);
 		printf("  Test Result                  : %#x %s\n", temp,
-			test_res[temp > 9 ? 9 : temp]);
+			test_res[temp > 10 ? 10 : temp]);
 
 		temp = self_test->result[i].device_self_test_status >> 4;
 		switch (temp) {
