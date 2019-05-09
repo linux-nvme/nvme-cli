@@ -3297,8 +3297,14 @@ void show_single_property(int offset, uint64_t value64, int human)
 	uint32_t value32;
 
 	if (!human) {
-		printf("property: 0x%02x (%s), value: %"PRIx64"\n", offset,
-			   nvme_register_to_string(offset), value64);
+		if (is_64bit_reg(offset))
+			printf("property: 0x%02x (%s), value: %"PRIx64"\n", offset,
+				   nvme_register_to_string(offset), value64);
+		else
+			printf("property: 0x%02x (%s), value: %x\n", offset,
+				   nvme_register_to_string(offset),
+				   (uint32_t) value64);
+
 		return;
 	}
 
