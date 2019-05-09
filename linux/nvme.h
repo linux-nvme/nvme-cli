@@ -426,9 +426,6 @@ struct nvme_id_nvmset {
 	struct nvme_nvmset_attr_entry	ent[NVME_MAX_NVMSET];
 };
 
-/* Derived from 1.3a Figure 101: Get Log Page – Telemetry Host
- * -Initiated Log (Log Identifier 07h)
- */
 struct nvme_telemetry_log_page_hdr {
 	__u8    lpi; /* Log page identifier */
 	__u8    rsvd[4];
@@ -436,15 +433,10 @@ struct nvme_telemetry_log_page_hdr {
 	__le16  dalb1; /* Data area 1 last block */
 	__le16  dalb2; /* Data area 2 last block */
 	__le16  dalb3; /* Data area 3 last block */
-	__u8    rsvd1[368]; /* TODO verify */
+	__u8    rsvd1[368];
 	__u8    ctrlavail; /* Controller initiated data avail?*/
 	__u8    ctrldgn; /* Controller initiated telemetry Data Gen # */
 	__u8    rsnident[128];
-	/* We'll have to double fetch so we can get the header,
-	 * parse dalb1->3 determine how much size we need for the
-	 * log then alloc below. Or just do a secondary non-struct
-	 * allocation.
-	 */
 	__u8    telemetry_dataarea[0];
 };
 
