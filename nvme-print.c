@@ -360,8 +360,7 @@ static void show_nvme_id_ctrl_cqes(__u8 cqes)
 static void show_nvme_id_ctrl_oncs(__le16 ctrl_oncs)
 {
 	__u16 oncs = le16_to_cpu(ctrl_oncs);
-	__u16 rsvd = (oncs & 0xFF00) >> 8;
-	__u16 virt = (oncs & 0x80) >> 7;
+	__u16 rsvd = (oncs & 0xFF80) >> 7;
 	__u16 tmst = (oncs & 0x40) >> 6;
 	__u16 resv = (oncs & 0x20) >> 5;
 	__u16 save = (oncs & 0x10) >> 4;
@@ -371,9 +370,7 @@ static void show_nvme_id_ctrl_oncs(__le16 ctrl_oncs)
 	__u16 cmp = oncs & 0x1;
 
 	if (rsvd)
-		printf(" [15:8] : %#x\tReserved\n", rsvd);
-	printf("  [7:7] : %#x\tVirtualization Management %sSupported\n",
-		virt, virt ? "" : "Not ");
+		printf(" [15:7] : %#x\tReserved\n", rsvd);
 	printf("  [6:6] : %#x\tTimestamp %sSupported\n",
 		tmst, tmst ? "" : "Not ");
 	printf("  [5:5] : %#x\tReservations %sSupported\n",
