@@ -178,6 +178,22 @@ int nvme_compare(int fd, __u64 slba, __u16 nblocks, __u16 control, __u32 dsmgmt,
 		       reftag, apptag, appmask, data, metadata);
 }
 
+int nvme_verify(int fd, __u32 nsid, __u64 slba, __u16 nblocks,
+		__u16 control, __u32 reftag, __u16 apptag, __u16 appmask)
+{
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_cmd_verify,
+		.nsid		= nsid,
+		.cdw10		= slba & 0xffffffff,
+		.cdw11		= slba >> 32,
+		.cdw12		= nblocks | (control << 16),
+		.cdw14		= reftag,
+		.cdw15		= apptag | (appmask << 16),
+	};
+
+	return nvme_submit_io_passthru(fd, &cmd);
+}
+
 int nvme_passthru_io(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 		     __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10,
 		     __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14,

@@ -54,6 +54,7 @@ COMMAND_LIST(
 	ENTRY("write", "Submit a write command, return results", write_cmd)
 	ENTRY("write-zeroes", "Submit a write zeroes command, return results", write_zeroes)
 	ENTRY("write-uncor", "Submit a write uncorrectable command, return results", write_uncor)
+	ENTRY("verify", "Submit a verify command, return results", verify_cmd)
 	ENTRY("sanitize", "Submit a sanitize command", sanitize)
 	ENTRY("sanitize-log", "Retrieve sanitize log, show it", sanitize_log)
 	ENTRY("reset", "Resets the controller", reset)
