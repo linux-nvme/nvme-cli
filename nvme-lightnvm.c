@@ -459,8 +459,7 @@ int lnvm_do_id_ns(int fd, int nsid, unsigned int flags)
 			d_raw((unsigned char *)&nvm_id, sizeof(nvm_id));
 		else
 			show_lnvm_id_ns(&nvm_id, flags);
-	}
-	else if (err > 0)
+	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x) NSID:%d\n",
 			nvme_status_to_string(err), err, nsid);
 	return err;
