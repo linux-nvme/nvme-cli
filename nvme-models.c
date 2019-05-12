@@ -259,8 +259,7 @@ static FILE *open_pci_ids(void)
 	if ((pci_ids_path = getenv("PCI_IDS_PATH")) != NULL) {
 		if ((fp = fopen(pci_ids_path, "r")) != NULL) {
 			return fp;
-		}
-		else {
+		} else {
 			/* fail if user provided environment variable but could not open */
 			perror(pci_ids_path);
 			return NULL;
