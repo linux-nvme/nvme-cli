@@ -563,7 +563,7 @@ static int nvme_property(int fd, __u8 fctype, __le32 off, __le64 *value, __u8 at
 
 	if (fctype == nvme_fabrics_type_property_get){
 		cmd.nsid = nvme_fabrics_type_property_get;
-	} else if(fctype == nvme_fabrics_type_property_set) {
+	} else if (fctype == nvme_fabrics_type_property_set) {
 		cmd.nsid = nvme_fabrics_type_property_set;
 		cmd.cdw12 = *value;
 	} else {
