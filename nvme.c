@@ -212,8 +212,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 			json_smart_log(&smart_log, cfg.namespace_id, devicename);
 		else
 			show_smart_log(&smart_log, cfg.namespace_id, devicename);
-	}
-	else if (err > 0)
+	} else if (err > 0)
 		show_nvme_status(err);
 	else
 		perror("smart log");
@@ -2244,8 +2243,7 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 	err = nvme_virtual_mgmt(fd, cfg.cdw10, cfg.cdw11, &result);
 	if (!err) {
 		printf("success, Number of Resources allocated:%#x\n", result);
-	}
-	else if (err > 0) {
+	} else if (err > 0) {
 		show_nvme_status(err);
 	} else
 		perror("virt-mgmt");
