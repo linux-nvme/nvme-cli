@@ -2263,8 +2263,6 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 	int err, fmt, fd;
 	struct nvme_secondary_controllers_list *sc_list;
 
-	_Static_assert(sizeof(struct nvme_secondary_controller_entry) != NVME_IDENTIFY_DATA_SIZE, "bad structure size");
-
 	struct config {
 		__u16 cntid;
 		__u32 num_entries;
