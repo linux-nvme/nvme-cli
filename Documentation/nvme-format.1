@@ -2,12 +2,12 @@
 .\"     Title: nvme-format
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/08/2019
+.\"      Date: 05/16/2019
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FORMAT" "1" "04/08/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-FORMAT" "1" "05/16/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -48,7 +48,9 @@ For the NVMe device given, send an nvme Format Namespace admin command and provi
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. If the character device is given, the namespace identifier will default to 0xffffffff to send the format to all namespace, but can be overridden to any namespace with the \fInamespace\-id\fR option\&. If the block device is given, the namespace identifier will default to the namespace id of the block device given, but can be overridden with the same option\&.
 .sp
-On success, the program will automatically issue BLKRRPART ioctl to force rescanning the namespaces\&. If the driver is recent enough, this will automatically update the physical block size\&. If it is not recent enough, you will need to remove and rescan your device some other way for the new block size to be visible\&.
+Note, the numeric suffix on the character device, for example the \fI0\fR in /dev/nvme0, does NOT indicate this device handle is the parent controller of any namespaces with the same suffix\&. The namespace handle\(cqs numeral may be coming from the subsystem identifier, which is independent of the controller\(cqs identifier\&. Do not assume any particular device relationship based on their names\&. If you do, you may irrevocably erase data on an unintended device\&.
+.sp
+On success, the program will automatically issue BLKRRPART ioctl to force rescanning the namespaces\&. If the driver is recent enough, this will automatically update the physical block size\&. If it is not recent enough, you will need to remove and rescan your device some other way for the new block size to be visible, if the size was changed with this command\&.
 .SH "OPTIONS"
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>

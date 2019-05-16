@@ -771,11 +771,18 @@ to 0xffffffff to send the format to all namespace, but can be overridden
 to any namespace with the <em>namespace-id</em> option. If the block device
 is given, the namespace identifier will default to the namespace id of
 the block device given, but can be overridden with the same option.</p></div>
+<div class="paragraph"><p>Note, the numeric suffix on the character device, for example the <em>0</em> in
+/dev/nvme0, does NOT indicate this device handle is the parent controller
+of any namespaces with the same suffix. The namespace handle&#8217;s numeral
+may be coming from the subsystem identifier, which is independent of the
+controller&#8217;s identifier. Do not assume any particular device relationship
+based on their names. If you do, you may irrevocably erase data on an
+unintended device.</p></div>
 <div class="paragraph"><p>On success, the program will automatically issue BLKRRPART ioctl to
-force rescanning the namespaces. If the driver is recent enough, this
-will automatically update the physical block size. If it is not recent
-enough, you will need to remove and rescan your device some other way
-for the new block size to be visible.</p></div>
+force rescanning the namespaces. If the driver is recent enough, this will
+automatically update the physical block size. If it is not recent enough,
+you will need to remove and rescan your device some other way for the
+new block size to be visible, if the size was changed with this command.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -1013,7 +1020,7 @@ information:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-01-28 17:42:37 MST
+Last updated 2019-05-16 09:47:03 MDT
 </div>
 </div>
 </body>
