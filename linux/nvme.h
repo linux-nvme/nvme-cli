@@ -426,18 +426,33 @@ struct nvme_id_nvmset {
 	struct nvme_nvmset_attr_entry	ent[NVME_MAX_NVMSET];
 };
 
+/**
+ * struct nvme_telemetry_log_page_hdr - structure for telemetry log page
+ * @lpi: Log page identifier
+ * @iee_oui: IEEE OUI Identifier
+ * @dalb1: Data area 1 last block
+ * @dalb2: Data area 2 last block
+ * @dalb3: Data area 3 last block
+ * @ctrlavail: Controller initiated data available
+ * @ctrldgn: Controller initiated telemetry Data Generation Number
+ * @rsnident: Reason Identifier
+ * @telemetry_dataarea: Contains telemetry data block
+ *
+ * This structure can be used for both telemetry host-initiated log page
+ * and controller-initiated log page.
+ */
 struct nvme_telemetry_log_page_hdr {
-	__u8    lpi; /* Log page identifier */
-	__u8    rsvd[4];
-	__u8    iee_oui[3];
-	__le16  dalb1; /* Data area 1 last block */
-	__le16  dalb2; /* Data area 2 last block */
-	__le16  dalb3; /* Data area 3 last block */
-	__u8    rsvd1[368];
-	__u8    ctrlavail; /* Controller initiated data avail?*/
-	__u8    ctrldgn; /* Controller initiated telemetry Data Gen # */
-	__u8    rsnident[128];
-	__u8    telemetry_dataarea[0];
+	__u8	lpi;
+	__u8	rsvd[4];
+	__u8	iee_oui[3];
+	__le16	dalb1;
+	__le16	dalb2;
+	__le16	dalb3;
+	__u8	rsvd1[368];
+	__u8	ctrlavail;
+	__u8	ctrldgn;
+	__u8	rsnident[128];
+	__u8	telemetry_dataarea[0];
 };
 
 struct nvme_endurance_group_log {
