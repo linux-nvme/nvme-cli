@@ -31,11 +31,19 @@ to any namespace with the 'namespace-id' option. If the block device
 is given, the namespace identifier will default to the namespace id of
 the block device given, but can be overridden with the same option.
 
+Note, the numeric suffix on the character device, for example the '0' in
+/dev/nvme0, does NOT indicate this device handle is the parent controller
+of any namespaces with the same suffix. The namespace handle's numeral
+may be coming from the subsystem identifier, which is independent of the
+controller's identifier. Do not assume any particular device relationship
+based on their names. If you do, you may irrevocably erase data on an
+unintended device.
+
 On success, the program will automatically issue BLKRRPART ioctl to
-force rescanning the namespaces. If the driver is recent enough, this
-will automatically update the physical block size. If it is not recent
-enough, you will need to remove and rescan your device some other way
-for the new block size to be visible.
+force rescanning the namespaces. If the driver is recent enough, this will
+automatically update the physical block size. If it is not recent enough,
+you will need to remove and rescan your device some other way for the
+new block size to be visible, if the size was changed with this command.
 
 OPTIONS
 -------
