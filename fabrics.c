@@ -1196,6 +1196,8 @@ int disconnect_all(const char *desc, int argc, char **argv)
 
 		for (j = 0; j < subsys->nctrls; j++) {
 			struct ctrl_list_item *ctrl = &subsys->ctrls[j];
+			if (!strcmp(ctrl->transport, "pcie"))
+				continue;
 
 			ret = disconnect_by_device(ctrl->name);
 			if (ret)
