@@ -1180,7 +1180,7 @@ int disconnect(const char *desc, int argc, char **argv)
 int disconnect_all(const char *desc, int argc, char **argv)
 {
 	struct subsys_list_item *slist;
-	int i, j, ret = 0, subcnt = 0;
+	int i, j, ret, subcnt = 0;
 	const struct argconfig_commandline_options command_line_options[] = {
 		{NULL},
 	};
