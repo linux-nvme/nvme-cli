@@ -924,7 +924,8 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000)) {
 		fprintf(stderr, "can not allocate controller list payload\n");
-		return ENOMEM;
+		err = -ENOMEM;
+		goto close_fd;
 	}
 
 	err = nvme_identify_ctrl_list(fd, cfg.namespace_id, cfg.cntid, cntlist);
@@ -941,6 +942,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 
 	free(cntlist);
 
+close_fd:
 	close(fd);
 
 	return err;
@@ -1199,14 +1201,16 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	if (cfg.flbas != 0xff && cfg.bs != 0x00) {
 		fprintf(stderr,
 			"Invalid specification of both FLBAS and Block Size, please specify only one\n");
-			return EINVAL;
+		err = -EINVAL;
+		goto close_fd;
 	}
 	if (cfg.bs) {
 		if ((cfg.bs & (~cfg.bs + 1)) != cfg.bs) {
 			fprintf(stderr,
 				"Invalid value for block size (%"PRIu64"). Block size must be a power of two\n",
 				(uint64_t)cfg.bs);
-			return EINVAL;
+			err = -EINVAL;
+			goto close_fd;
 		}
 		err = nvme_identify_ns(fd, NVME_NSID_ALL, 0, &ns);
 		if (err) {
@@ -1216,7 +1220,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 				fprintf(stderr, "identify failed\n");
 				show_nvme_status(err);
 			}
-			return err;
+			goto close_fd;
 		}
 		for (i = 0; i < 16; ++i) {
 			if ((1 << ns.lbaf[i].ds) == cfg.bs && ns.lbaf[i].ms == 0) {
@@ -1232,7 +1236,9 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 			(uint64_t)cfg.bs);
 		fprintf(stderr,
 			"Please correct block size, or specify FLBAS directly\n");
-		return EINVAL;
+
+		err = -EINVAL;
+		goto close_fd;
 	}
 
 
@@ -1245,6 +1251,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	else
 		perror("create namespace");
 
+close_fd:
 	close(fd);
 
 	return err;
@@ -3172,14 +3179,16 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	if (cfg.lbaf != 0xff && cfg.bs !=0) {
 		fprintf(stderr,
 			"Invalid specification of both LBAF and Block Size, please specify only one\n");
-			return EINVAL;
+		err = -EINVAL;
+		goto close_fd;
 	}
 	if (cfg.bs) {
 		if ((cfg.bs & (~cfg.bs + 1)) != cfg.bs) {
 			fprintf(stderr,
 				"Invalid value for block size (%"PRIu64"), must be a power of two\n",
 				       (uint64_t) cfg.bs);
-				return EINVAL;
+			err = -EINVAL;
+			goto close_fd;
 		}
 	}
 	if (S_ISBLK(nvme_stat.st_mode)) {
@@ -3198,7 +3207,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 				fprintf(stderr, "identify failed\n");
 				show_nvme_status(err);
 			}
-			return err;
+			goto close_fd;
 		}
 		prev_lbaf = ns.flbas & 0xf;
 
@@ -3216,7 +3225,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 					(uint64_t)cfg.bs, lbads);
 				fprintf(stderr,
 					"Please correct block size, or specify LBAF directly\n");
-				return EINVAL;
+				err = -EINVAL;
+				goto close_fd;
 			}
 		} else  if (cfg.lbaf == 0xff)
 			cfg.lbaf = prev_lbaf;
