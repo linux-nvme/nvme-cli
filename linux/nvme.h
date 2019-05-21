@@ -1320,6 +1320,12 @@ static inline bool nvme_is_write(struct nvme_command *cmd)
 }
 
 enum {
+	NVME_SCT_GENERIC		= 0x0,
+	NVME_SCT_CMD_SPECIFIC		= 0x1,
+	NVME_SCT_MEDIA			= 0x2,
+};
+
+enum {
 	/*
 	 * Generic Command Status:
 	 */
