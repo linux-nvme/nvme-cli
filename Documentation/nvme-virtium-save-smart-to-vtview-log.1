@@ -1,0 +1,138 @@
+'\" t
+.\"     Title: nvme-virtium-save-smart-to-vtview-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 05/22/2019
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-VIRTIUM\-SAVE\" "1" "05/22/2019" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-virtium-save-smart-to-vtview-log \- Periodically save smart attributes into a log file (csv format)\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme virtium save\-smart\-to\-vtview\-log\fR <device> [\-\-run\-time=<NUM> | \-r <NUM>]
+                        [\-\-freq=<NUM> | \-f <NUM>]
+                        [\-\-output\-file=<FILE> | \-o <FILE>]
+                        [\-\-test\-name=<NAME> | \-n <NAME>]
+.fi
+.SH "DESCRIPTION"
+.sp
+This command automates the process of collecting SMART data periodically and saving the data in a ready\-to\-analyze format\&. Each entry is saved with timestamp and in csv format\&. Users can use excel to analyze the data\&. Some examples of use cases are collecting SMART data for temperature characterization, collecting data to calculate endurance, or collecting SMART data during a test or during normal operation\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+On success, the command generates a log file, which contains an entry for identify device (current features & settings) and periodic entries of SMART data\&.
+.sp
+This command runs for the time specified by the option <run\-time>, and collects SMART data at the frequency specified by the option <freq>\&. If the output file name is not specified, this command will generate a file name that include model string and serial number of the device\&.
+.sp
+If the test\-name option is specified, it will be recorded in the log file and be used as part of the log file name\&.
+.SH "OPTIONS"
+.PP
+\-r <NUM>, \-\-run\-tim=<NUM>
+.RS 4
+(optional) Number of hours to log data (default = 20 hours)
+.RE
+.PP
+\-f <NUM>, \-\-freq=<NUM>
+.RS 4
+(optional) How often you want to log SMART data (0\&.25 = 15\*(Aq , 0\&.5 = 30\*(Aq , 1 = 1 hour, 2 = 2 hours, etc\&.)\&. Default = 10 hours\&.
+.RE
+.PP
+\-o <FILE>, \-\-output\-file=<FILE>
+.RS 4
+(optional) Name of the log file (give it a name that easy for you to remember what the test is)\&. You can leave it blank too, the file name will be generated as <model string>\-<serial number>\-<test name>\&.txt\&.
+.RE
+.PP
+\-n <NAME>, \-\-test\-name=<NAME>
+.RS 4
+(optional) Name of the test you are doing\&. We use this string as part of the name of the log file\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Temperature characterization:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme virtium save\-smart\-to\-vtview\-log /dev/yourDevice \-\-run\-time=100 \-\-record\-frequency=0\&.25 \-\-test\-name=burn\-in\-at\-(\-40)
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Endurance testing:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme virtium save\-smart\-to\-vtview\-log /dev/yourDevice \-\-run\-time=100 \-\-record\-frequency=1 \-\-test\-name=Endurance\-test\-JEDEG\-219\-workload
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Just logging: Default logging is run for 20 hours and log every 10 hours\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme virtium save\-smart\-to\-vtview\-log /dev/yourDevice
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite
