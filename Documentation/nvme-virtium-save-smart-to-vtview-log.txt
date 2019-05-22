@@ -78,7 +78,7 @@ EXAMPLES
 ------------
 # nvme virtium save-smart-to-vtview-log /dev/yourDevice
 ------------
-+
+
 NVME
 ----
 Part of the nvme-user suite
