@@ -1,0 +1,41 @@
+nvme-virtium-show-identify(1)
+========================================
+
+NAME
+----
+nvme-virtium-show-identify - Show a complete detail of identify device information in json format.
+
+SYNOPSIS
+--------
+[verse]
+'nvme virtium show-identify' <device>
+			
+DESCRIPTION
+-----------
+This command prints complete detail of the identify device information. The details include settings and
+description of each feature. The descriptions are based on NVM Express Revision 1.3c specification.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the command prints identify device in human readable format. 
+
+
+
+OPTIONS
+-------
+none
+	
+	
+EXAMPLES
+--------
+* Show Identify Device:
++
+------------
+# nvme virtium show-identify /dev/nvme0n1
+------------
++
+
+NVME
+----
+Part of the nvme-user suite
