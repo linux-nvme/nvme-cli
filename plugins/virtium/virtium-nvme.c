@@ -24,7 +24,7 @@
 
 #define HOUR_IN_SECONDS     3600
 
-#define MAX_HEADER_BUFF     16384
+#define MAX_HEADER_BUFF     (20 * 1024)
 #define MAX_LOG_BUFF        4096
 #define DEFAULT_TEST_NAME   "Put the name of your test here"
 
