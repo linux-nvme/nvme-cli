@@ -2176,6 +2176,10 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 	for (i = 0; i < len; i++) {
 		device_attrs = json_create_object();
 
+	    json_object_add_value_int(device_attrs,
+	                              "NameSpace",
+	                              list_items[i].nsid);
+
 		json_object_add_value_string(device_attrs,
 					     "DevicePath",
 					     list_items[i].node);
