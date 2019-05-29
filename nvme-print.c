@@ -3179,6 +3179,7 @@ void json_ctrl_registers(void *bar)
 	json_object_add_value_uint(root, "bpmbl", bpmbl);
 	json_print_object(root, NULL);
 	printf("\n");
+	json_free_object(root);
 }
 
 void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
