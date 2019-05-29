@@ -295,18 +295,30 @@ static void show_nvme_id_ctrl_hctma(__le16 ctrl_hctma)
 static void show_nvme_id_ctrl_sanicap(__le32 ctrl_sanicap)
 {
 	__u32 sanicap = le32_to_cpu(ctrl_sanicap);
-	__u32 rsvd = (sanicap & 0xFFFFFFF8) >> 3;
+	__u32 rsvd = (sanicap & 0x1FFFFFF8) >> 3;
 	__u32 owr = (sanicap & 0x4) >> 2;
 	__u32 ber = (sanicap & 0x2) >> 1;
 	__u32 cer = sanicap & 0x1;
+	__u32 ndi = (sanicap & 0x20000000) >> 29;
+	__u32 nodmmas = (sanicap & 0xC0000000) >> 30;
 
+	static const char *modifies_media[] = {
+		"Additional media modification after sanitize operation completes successfully is not defined",
+		"Media is not additionally modified after sanitize operation completes successfully",
+		"Media is additionally modified after sanitize operation completes successfully",
+		"Reserved"
+	};
+
+	printf("  [31:30] : %#x\t%s\n", nodmmas, modifies_media[nodmmas]);
+	printf("  [29:29] : %#x\tNo-Deallocate After Sanitize bit in Sanitize command %sSupported\n",
+		ndi, ndi ? "Not " : "");
 	if (rsvd)
-		printf(" [31:3] : %#x\tReserved\n", rsvd);
-	printf("  [2:2] : %#x\tOverwrite Sanitize Operation %sSupported\n",
+		printf("  [28:3] : %#x\tReserved\n", rsvd);
+	printf("    [2:2] : %#x\tOverwrite Sanitize Operation %sSupported\n",
 		owr, owr ? "" : "Not ");
-	printf("  [1:1] : %#x\tBlock Erase Sanitize Operation %sSupported\n",
+	printf("    [1:1] : %#x\tBlock Erase Sanitize Operation %sSupported\n",
 		ber, ber ? "" : "Not ");
-	printf("  [0:0] : %#x\tCrypto Erase Sanitize Operation %sSupported\n",
+	printf("    [0:0] : %#x\tCrypto Erase Sanitize Operation %sSupported\n",
 		cer, cer ? "" : "Not ");
 	printf("\n");
 }
@@ -1669,6 +1681,9 @@ static const char *get_sanitize_log_sstat_status_str(__u16 status)
 	case NVME_SANITIZE_LOG_COMPLETED_FAILED:
 		str = "Most Recent Sanitize Command Failed.";
 		break;
+	case NVME_SANITIZE_LOG_ND_COMPLETED_SUCCESS:
+		str = "Most Recent Sanitize Command (No-Deallocate After Sanitize) Completed Successfully.";
+		break;
 	default:
 		str = "Unknown.";
 	}
@@ -1705,21 +1720,24 @@ void show_sanitize_log(struct nvme_sanitize_log_page *sanitize, unsigned int mod
 	int human = mode & HUMAN;
 	__u16 status = le16_to_cpu(sanitize->status) & NVME_SANITIZE_LOG_STATUS_MASK;
 
-	printf("Sanitize Progress                     (SPROG) :  %u",
+	printf("Sanitize Progress                      (SPROG) :  %u",
 	       le16_to_cpu(sanitize->progress));
 	if (human && status == NVME_SANITIZE_LOG_IN_PROGESS)
 		show_sanitize_log_sprog(le16_to_cpu(sanitize->progress));
 	else
 		printf("\n");
 
-	printf("Sanitize Status                       (SSTAT) :  %#x\n", le16_to_cpu(sanitize->status));
+	printf("Sanitize Status                        (SSTAT) :  %#x\n", le16_to_cpu(sanitize->status));
 	if (human)
 		show_sanitize_log_sstat(le16_to_cpu(sanitize->status));
 
-	printf("Sanitize Command Dword 10 Information (SCDW10):  %#x\n", le32_to_cpu(sanitize->cdw10_info));
-	show_estimate_sanitize_time("Estimated Time For Overwrite                  ", le32_to_cpu(sanitize->est_ovrwrt_time));
-	show_estimate_sanitize_time("Estimated Time For Block Erase                ", le32_to_cpu(sanitize->est_blk_erase_time));
-	show_estimate_sanitize_time("Estimated Time For Crypto Erase               ", le32_to_cpu(sanitize->est_crypto_erase_time));
+	printf("Sanitize Command Dword 10 Information (SCDW10) :  %#x\n", le32_to_cpu(sanitize->cdw10_info));
+	show_estimate_sanitize_time("Estimated Time For Overwrite                   ", le32_to_cpu(sanitize->est_ovrwrt_time));
+	show_estimate_sanitize_time("Estimated Time For Block Erase                 ", le32_to_cpu(sanitize->est_blk_erase_time));
+	show_estimate_sanitize_time("Estimated Time For Crypto Erase                ", le32_to_cpu(sanitize->est_crypto_erase_time));
+	show_estimate_sanitize_time("Estimated Time For Overwrite (No-Deallocate)   ", le32_to_cpu(sanitize->est_ovrwrt_time_with_no_deallocate));
+	show_estimate_sanitize_time("Estimated Time For Block Erase (No-Deallocate) ", le32_to_cpu(sanitize->est_blk_erase_time_with_no_deallocate));
+	show_estimate_sanitize_time("Estimated Time For Crypto Erase (No-Deallocate)", le32_to_cpu(sanitize->est_crypto_erase_time_with_no_deallocate));
 }
 
 const char *nvme_feature_to_string(int feature)
@@ -1751,6 +1769,7 @@ const char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_WRITE_PROTECT:	return "Namespce Write Protect";
 	case NVME_FEAT_HCTM:		return "Host Controlled Thermal Management";
 	case NVME_FEAT_HOST_BEHAVIOR:   return "Host Behavior";
+	case NVME_FEAT_SANITIZE:	return "Sanitize";
 	default:			return "Unknown";
 	}
 }
@@ -2899,6 +2918,10 @@ void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log, const char *
 	json_object_add_value_uint(dev, "time_over_write", le32_to_cpu(sanitize_log->est_ovrwrt_time));
 	json_object_add_value_uint(dev, "time_block_erase", le32_to_cpu(sanitize_log->est_blk_erase_time));
 	json_object_add_value_uint(dev, "time_crypto_erase", le32_to_cpu(sanitize_log->est_crypto_erase_time));
+
+	json_object_add_value_uint(dev, "time_over_write_no_dealloc", le32_to_cpu(sanitize_log->est_ovrwrt_time_with_no_deallocate));
+	json_object_add_value_uint(dev, "time_block_erase_no_dealloc", le32_to_cpu(sanitize_log->est_blk_erase_time_with_no_deallocate));
+	json_object_add_value_uint(dev, "time_crypto_erase_no_dealloc", le32_to_cpu(sanitize_log->est_crypto_erase_time_with_no_deallocate));
 
 	json_object_add_value_object(root, devname, dev);
 	json_print_object(root, NULL);
