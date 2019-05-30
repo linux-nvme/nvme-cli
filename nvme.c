@@ -950,9 +950,9 @@ close_fd:
 
 static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "For the specified device, show the "\
-		"namespace list in a NVMe subsystem, optionally starting with a given namespace";
-	const char *namespace_id = "namespace number returned list should to start after";
+	const char *desc = "For the specified controller handle, show the "\
+		"namespace list in the associated NVMe subsystem, optionally starting with a given nsid.";
+	const char *namespace_id = "first nsid returned list should start from";
 	const char *all = "show all namespaces in the subsystem, whether attached or inactive";
 	int err, i, fd;
 	__u32 ns_list[1024];
@@ -963,7 +963,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	};
 
 	struct config cfg = {
-		.namespace_id = 0,
+		.namespace_id = 1,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -976,7 +976,14 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	if (fd < 0)
 		return fd;
 
-	err = nvme_identify_ns_list(fd, cfg.namespace_id, !!cfg.all, ns_list);
+	if (!cfg.namespace_id) {
+		err = -EINVAL;
+		fprintf(stderr, "invalid nsid parameter\n");
+		goto close_fd;
+	}
+
+	err = nvme_identify_ns_list(fd, cfg.namespace_id - 1, !!cfg.all,
+				    ns_list);
 	if (!err) {
 		for (i = 0; i < 1024; i++)
 			if (ns_list[i])
@@ -987,6 +994,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	else
 		perror("id namespace list");
 
+close_fd:
 	close(fd);
 
 	return err;
