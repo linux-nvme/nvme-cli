@@ -1666,6 +1666,14 @@ static void show_sanitize_log_sstat(__u16 status)
 	printf("%s\n", str);
 }
 
+static void show_estimate_sanitize_time(const char *text, uint32_t value)
+{
+	if (value == 0xffffffff)
+		printf("%s:  0xffffffff (No time period reported)\n", text);
+	else
+		printf("%s:  %u\n", text, value);
+}
+
 void show_sanitize_log(struct nvme_sanitize_log_page *sanitize, unsigned int mode, const char *devname)
 {
 	int human = mode & HUMAN;
@@ -1682,9 +1690,9 @@ void show_sanitize_log(struct nvme_sanitize_log_page *sanitize, unsigned int mod
 		show_sanitize_log_sstat(le16_to_cpu(sanitize->status));
 
 	printf("Sanitize Command Dword 10 Information (SCDW10):  %#x\n", le32_to_cpu(sanitize->cdw10_info));
-	printf("Estimated Time For Overwrite                  :  %u\n", le32_to_cpu(sanitize->est_ovrwrt_time));
-	printf("Estimated Time For Block Erase                :  %u\n", le32_to_cpu(sanitize->est_blk_erase_time));
-	printf("Estimated Time For Crypto Erase               :  %u\n", le32_to_cpu(sanitize->est_crypto_erase_time));
+	show_estimate_sanitize_time("Estimated Time For Overwrite                  ", le32_to_cpu(sanitize->est_ovrwrt_time));
+	show_estimate_sanitize_time("Estimated Time For Block Erase                ", le32_to_cpu(sanitize->est_blk_erase_time));
+	show_estimate_sanitize_time("Estimated Time For Crypto Erase               ", le32_to_cpu(sanitize->est_crypto_erase_time));
 }
 
 const char *nvme_feature_to_string(int feature)
