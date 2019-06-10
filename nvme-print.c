@@ -2184,6 +2184,10 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 	for (i = 0; i < len; i++) {
 		device_attrs = json_create_object();
 
+	    json_object_add_value_int(device_attrs,
+	                              "NameSpace",
+	                              list_items[i].nsid);
+
 		json_object_add_value_string(device_attrs,
 					     "DevicePath",
 					     list_items[i].node);
@@ -3187,6 +3191,8 @@ void json_ctrl_registers(void *bar)
 	json_object_add_value_int(root, "bprsel", bprsel);
 	json_object_add_value_uint(root, "bpmbl", bpmbl);
 	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
 }
 
 void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
