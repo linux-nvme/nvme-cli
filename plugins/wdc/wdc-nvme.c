@@ -2125,55 +2125,55 @@ static void wdc_print_log_normal(struct wdc_ssd_perf_stats *perf)
 {
 	printf("  C1 Log Page Performance Statistics :- \n");
 	printf("  Host Read Commands                             %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->hr_cmds));
+			le64_to_cpu(perf->hr_cmds));
 	printf("  Host Read Blocks                               %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->hr_blks));
+			le64_to_cpu(perf->hr_blks));
 	printf("  Average Read Size                              %20lf\n",
 			safe_div_fp((le64_to_cpu(perf->hr_blks)), (le64_to_cpu(perf->hr_cmds))));
 	printf("  Host Read Cache Hit Commands                   %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->hr_ch_cmds));
+			le64_to_cpu(perf->hr_ch_cmds));
 	printf("  Host Read Cache Hit_Percentage                 %20"PRIu64"%%\n",
 			(uint64_t) calc_percent(le64_to_cpu(perf->hr_ch_cmds), le64_to_cpu(perf->hr_cmds)));
 	printf("  Host Read Cache Hit Blocks                     %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->hr_ch_blks));
+			le64_to_cpu(perf->hr_ch_blks));
 	printf("  Average Read Cache Hit Size                    %20f\n",
 			safe_div_fp((le64_to_cpu(perf->hr_ch_blks)), (le64_to_cpu(perf->hr_ch_cmds))));
 	printf("  Host Read Commands Stalled                     %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->hr_st_cmds));
+			le64_to_cpu(perf->hr_st_cmds));
 	printf("  Host Read Commands Stalled Percentage          %20"PRIu64"%%\n",
 			(uint64_t)calc_percent((le64_to_cpu(perf->hr_st_cmds)), le64_to_cpu(perf->hr_cmds)));
 	printf("  Host Write Commands                            %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->hw_cmds));
+			le64_to_cpu(perf->hw_cmds));
 	printf("  Host Write Blocks                              %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->hw_blks));
+			le64_to_cpu(perf->hw_blks));
 	printf("  Average Write Size                             %20f\n",
 			safe_div_fp((le64_to_cpu(perf->hw_blks)), (le64_to_cpu(perf->hw_cmds))));
 	printf("  Host Write Odd Start Commands                  %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->hw_os_cmds));
+			le64_to_cpu(perf->hw_os_cmds));
 	printf("  Host Write Odd Start Commands Percentage       %20"PRIu64"%%\n",
 			(uint64_t)calc_percent((le64_to_cpu(perf->hw_os_cmds)), (le64_to_cpu(perf->hw_cmds))));
 	printf("  Host Write Odd End Commands                    %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->hw_oe_cmds));
+			le64_to_cpu(perf->hw_oe_cmds));
 	printf("  Host Write Odd End Commands Percentage         %20"PRIu64"%%\n",
 			(uint64_t)calc_percent((le64_to_cpu(perf->hw_oe_cmds)), (le64_to_cpu((perf->hw_cmds)))));
 	printf("  Host Write Commands Stalled                    %20"PRIu64"\n",
-		(uint64_t)le64_to_cpu(perf->hw_st_cmds));
+		le64_to_cpu(perf->hw_st_cmds));
 	printf("  Host Write Commands Stalled Percentage         %20"PRIu64"%%\n",
 		(uint64_t)calc_percent((le64_to_cpu(perf->hw_st_cmds)), (le64_to_cpu(perf->hw_cmds))));
 	printf("  NAND Read Commands                             %20"PRIu64"\n",
-		(uint64_t)le64_to_cpu(perf->nr_cmds));
+		le64_to_cpu(perf->nr_cmds));
 	printf("  NAND Read Blocks Commands                      %20"PRIu64"\n",
-		(uint64_t)le64_to_cpu(perf->nr_blks));
+		le64_to_cpu(perf->nr_blks));
 	printf("  Average NAND Read Size                         %20f\n",
 		safe_div_fp((le64_to_cpu(perf->nr_blks)), (le64_to_cpu((perf->nr_cmds)))));
 	printf("  Nand Write Commands                            %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->nw_cmds));
+			le64_to_cpu(perf->nw_cmds));
 	printf("  NAND Write Blocks                              %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->nw_blks));
+			le64_to_cpu(perf->nw_blks));
 	printf("  Average NAND Write Size                        %20f\n",
 			safe_div_fp((le64_to_cpu(perf->nw_blks)), (le64_to_cpu(perf->nw_cmds))));
 	printf("  NAND Read Before Write                         %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->nrbw));
+			le64_to_cpu(perf->nrbw));
 }
 
 static void wdc_print_log_json(struct wdc_ssd_perf_stats *perf)
@@ -2186,49 +2186,49 @@ static void wdc_print_log_json(struct wdc_ssd_perf_stats *perf)
 	json_object_add_value_int(root, "Average Read Size",
 			safe_div_fp((le64_to_cpu(perf->hr_blks)), (le64_to_cpu(perf->hr_cmds))));
 	json_object_add_value_int(root, "Host Read Cache Hit Commands",
-			(uint64_t)le64_to_cpu(perf->hr_ch_cmds));
+			le64_to_cpu(perf->hr_ch_cmds));
 	json_object_add_value_int(root, "Host Read Cache Hit Percentage",
 			(uint64_t) calc_percent(le64_to_cpu(perf->hr_ch_cmds), le64_to_cpu(perf->hr_cmds)));
 	json_object_add_value_int(root, "Host Read Cache Hit Blocks",
-			(uint64_t)le64_to_cpu(perf->hr_ch_blks));
+			le64_to_cpu(perf->hr_ch_blks));
 	json_object_add_value_int(root, "Average Read Cache Hit Size",
 			safe_div_fp((le64_to_cpu(perf->hr_ch_blks)), (le64_to_cpu(perf->hr_ch_cmds))));
 	json_object_add_value_int(root, "Host Read Commands Stalled",
-			(uint64_t)le64_to_cpu(perf->hr_st_cmds));
+			le64_to_cpu(perf->hr_st_cmds));
 	json_object_add_value_int(root, "Host Read Commands Stalled Percentage",
 			(uint64_t)calc_percent((le64_to_cpu(perf->hr_st_cmds)), le64_to_cpu(perf->hr_cmds)));
 	json_object_add_value_int(root, "Host Write Commands",
-			(uint64_t)le64_to_cpu(perf->hw_cmds));
+			le64_to_cpu(perf->hw_cmds));
 	json_object_add_value_int(root, "Host Write Blocks",
-			(uint64_t)le64_to_cpu(perf->hw_blks));
+			le64_to_cpu(perf->hw_blks));
 	json_object_add_value_int(root, "Average Write Size",
 			safe_div_fp((le64_to_cpu(perf->hw_blks)), (le64_to_cpu(perf->hw_cmds))));
 	json_object_add_value_int(root, "Host Write Odd Start Commands",
-			(uint64_t)le64_to_cpu(perf->hw_os_cmds));
+			le64_to_cpu(perf->hw_os_cmds));
 	json_object_add_value_int(root, "Host Write Odd Start Commands Percentage",
 			(uint64_t)calc_percent((le64_to_cpu(perf->hw_os_cmds)), (le64_to_cpu(perf->hw_cmds))));
 	json_object_add_value_int(root, "Host Write Odd End Commands",
-			(uint64_t)le64_to_cpu(perf->hw_oe_cmds));
+			le64_to_cpu(perf->hw_oe_cmds));
 	json_object_add_value_int(root, "Host Write Odd End Commands Percentage",
 			(uint64_t)calc_percent((le64_to_cpu(perf->hw_oe_cmds)), (le64_to_cpu((perf->hw_cmds)))));
 	json_object_add_value_int(root, "Host Write Commands Stalled",
-		(uint64_t)le64_to_cpu(perf->hw_st_cmds));
+		le64_to_cpu(perf->hw_st_cmds));
 	json_object_add_value_int(root, "Host Write Commands Stalled Percentage",
 		(uint64_t)calc_percent((le64_to_cpu(perf->hw_st_cmds)), (le64_to_cpu(perf->hw_cmds))));
 	json_object_add_value_int(root, "NAND Read Commands",
-		(uint64_t)le64_to_cpu(perf->nr_cmds));
+		le64_to_cpu(perf->nr_cmds));
 	json_object_add_value_int(root, "NAND Read Blocks Commands",
-		(uint64_t)le64_to_cpu(perf->nr_blks));
+		le64_to_cpu(perf->nr_blks));
 	json_object_add_value_int(root, "Average NAND Read Size",
 		safe_div_fp((le64_to_cpu(perf->nr_blks)), (le64_to_cpu((perf->nr_cmds)))));
 	json_object_add_value_int(root, "Nand Write Commands",
-			(uint64_t)le64_to_cpu(perf->nw_cmds));
+			le64_to_cpu(perf->nw_cmds));
 	json_object_add_value_int(root, "NAND Write Blocks",
-			(uint64_t)le64_to_cpu(perf->nw_blks));
+			le64_to_cpu(perf->nw_blks));
 	json_object_add_value_int(root, "Average NAND Write Size",
 			safe_div_fp((le64_to_cpu(perf->nw_blks)), (le64_to_cpu(perf->nw_cmds))));
 	json_object_add_value_int(root, "NAND Read Before Written",
-			(uint64_t)le64_to_cpu(perf->nrbw));
+			le64_to_cpu(perf->nrbw));
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
@@ -2257,9 +2257,9 @@ static void wdc_print_ca_log_normal(struct wdc_ssd_ca_perf_stats *perf)
 
 	printf("  CA Log Page Performance Statistics :- \n");
 	printf("  NAND Bytes Written                             %20"PRIu64 "%20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->nand_bytes_wr_hi), (uint64_t)le64_to_cpu(perf->nand_bytes_wr_lo));
+			le64_to_cpu(perf->nand_bytes_wr_hi), le64_to_cpu(perf->nand_bytes_wr_lo));
 	printf("  NAND Bytes Read                                %20"PRIu64 "%20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->nand_bytes_rd_hi), (uint64_t)le64_to_cpu(perf->nand_bytes_rd_lo));
+			le64_to_cpu(perf->nand_bytes_rd_hi), le64_to_cpu(perf->nand_bytes_rd_lo));
 
 	converted = le64_to_cpu(perf->nand_bad_block);
 	printf("  NAND Bad Block Count (Normalized)              %20"PRIu64"\n",
@@ -2268,9 +2268,9 @@ static void wdc_print_ca_log_normal(struct wdc_ssd_ca_perf_stats *perf)
 			converted >> 16);
 
 	printf("  Uncorrectable Read Count                       %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->uncorr_read_count));
+			le64_to_cpu(perf->uncorr_read_count));
 	printf("  Soft ECC Error Count                           %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->ecc_error_count));
+			le64_to_cpu(perf->ecc_error_count));
 	printf("  SSD End to End Detected Correction Count       %20"PRIu32"\n",
 			(uint32_t)le32_to_cpu(perf->ssd_detect_count));
 	printf("  SSD End to End Corrected Correction Count      %20"PRIu32"\n",
@@ -2282,7 +2282,7 @@ static void wdc_print_ca_log_normal(struct wdc_ssd_ca_perf_stats *perf)
 	printf("  User Data Erase Counts Min                     %20"PRIu32"\n",
 			(uint32_t)le32_to_cpu(perf->data_erase_min));
 	printf("  Refresh Count                                  %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->refresh_count));
+			le64_to_cpu(perf->refresh_count));
 
 	converted = le64_to_cpu(perf->program_fail);
 	printf("  Program Fail Count (Normalized)                %20"PRIu64"\n",
@@ -2307,7 +2307,7 @@ static void wdc_print_ca_log_normal(struct wdc_ssd_ca_perf_stats *perf)
 	printf("  Thermal Throttling Count                       %20"PRIu8"\n",
 			perf->thermal_throttle_count);
 	printf("  PCIe Correctable Error Count                   %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->pcie_corr_error));
+			le64_to_cpu(perf->pcie_corr_error));
 	printf("  Incomplete Shutdown Count                      %20"PRIu32"\n",
 			(uint32_t)le32_to_cpu(perf->incomplete_shutdown_count));
 	printf("  Percent Free Blocks                            %20"PRIu32"%%\n",
@@ -2411,13 +2411,13 @@ static void wdc_print_d0_log_normal(struct wdc_ssd_d0_smart_log *perf)
 	printf("  Lifetime Read Disturb Reallocation Events	 %20"PRIu32"\n",
 			(uint32_t)le32_to_cpu(perf->lifetime_read_disturb_realloc_events));
 	printf("  Lifetime NAND Writes	                         %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->lifetime_nand_writes));
+			le64_to_cpu(perf->lifetime_nand_writes));
 	printf("  Capacitor Health			 	 %20"PRIu32"%%\n",
 			(uint32_t)le32_to_cpu(perf->capacitor_health));
 	printf("  Lifetime User Writes	                         %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->lifetime_user_writes));
+			le64_to_cpu(perf->lifetime_user_writes));
 	printf("  Lifetime User Reads	                         %20"PRIu64"\n",
-			(uint64_t)le64_to_cpu(perf->lifetime_user_reads));
+			le64_to_cpu(perf->lifetime_user_reads));
 	printf("  Lifetime Thermal Throttle Activations	         %20"PRIu32"\n",
 			(uint32_t)le32_to_cpu(perf->lifetime_thermal_throttle_act));
 	printf("  Percentage of P/E Cycles Remaining             %20"PRIu32"%%\n",
@@ -3726,7 +3726,7 @@ static void wdc_print_nand_stats_normal(struct wdc_nand_stats *data)
 	printf("  Bad Block Count			         %"PRIu32"\n",
 			(uint32_t)le32_to_cpu(data->bad_block_count));
 	printf("  NAND XOR/RAID Recovery Trigger Events		 %"PRIu64"\n",
-			(uint64_t)le64_to_cpu(data->nand_rec_trigger_event));
+			le64_to_cpu(data->nand_rec_trigger_event));
 }
 
 static void wdc_print_nand_stats_json(struct wdc_nand_stats *data)

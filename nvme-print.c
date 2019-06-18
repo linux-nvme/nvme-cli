@@ -680,9 +680,9 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	int human = mode & HUMAN,
 		vs = mode & VS;
 
-	printf("nsze    : %#"PRIx64"\n", (uint64_t)le64_to_cpu(ns->nsze));
-	printf("ncap    : %#"PRIx64"\n", (uint64_t)le64_to_cpu(ns->ncap));
-	printf("nuse    : %#"PRIx64"\n", (uint64_t)le64_to_cpu(ns->nuse));
+	printf("nsze    : %#"PRIx64"\n", le64_to_cpu(ns->nsze));
+	printf("ncap    : %#"PRIx64"\n", le64_to_cpu(ns->ncap));
+	printf("nuse    : %#"PRIx64"\n", le64_to_cpu(ns->nuse));
 	printf("nsfeat  : %#x\n", ns->nsfeat);
 	if (human)
 		show_nvme_id_ns_nsfeat(ns->nsfeat);
@@ -1221,13 +1221,13 @@ void show_error_log(struct nvme_error_log_page *err_log, int entries, const char
 	for (i = 0; i < entries; i++) {
 		printf(" Entry[%2d]   \n", i);
 		printf(".................\n");
-		printf("error_count  : %"PRIu64"\n", (uint64_t)le64_to_cpu(err_log[i].error_count));
+		printf("error_count  : %"PRIu64"\n", le64_to_cpu(err_log[i].error_count));
 		printf("sqid         : %d\n", err_log[i].sqid);
 		printf("cmdid        : %#x\n", err_log[i].cmdid);
 		printf("status_field : %#x(%s)\n", err_log[i].status_field,
 			nvme_status_to_string(err_log[i].status_field >> 1));
 		printf("parm_err_loc : %#x\n", err_log[i].parm_error_location);
-		printf("lba          : %#"PRIx64"\n",(uint64_t)le64_to_cpu(err_log[i].lba));
+		printf("lba          : %#"PRIx64"\n",le64_to_cpu(err_log[i].lba));
 		printf("nsid         : %#x\n", err_log[i].nsid);
 		printf("vs           : %d\n", err_log[i].vs);
 		printf("cs           : %#"PRIx64"\n", (uint64_t) err_log[i].cs);
@@ -1258,8 +1258,8 @@ void show_nvme_resv_report(struct nvme_reservation_status *status, int bytes, __
 			printf("regctl[%d] :\n", i);
 			printf("  cntlid  : %x\n", le16_to_cpu(status->regctl_ds[i].cntlid));
 			printf("  rcsts   : %x\n", status->regctl_ds[i].rcsts);
-			printf("  hostid  : %"PRIx64"\n", (uint64_t)le64_to_cpu(status->regctl_ds[i].hostid));
-			printf("  rkey    : %"PRIx64"\n", (uint64_t)le64_to_cpu(status->regctl_ds[i].rkey));
+			printf("  hostid  : %"PRIx64"\n", le64_to_cpu(status->regctl_ds[i].hostid));
+			printf("  rkey    : %"PRIx64"\n", le64_to_cpu(status->regctl_ds[i].rkey));
 		}
 	} else {
 		struct nvme_reservation_status_ext *ext_status = (struct nvme_reservation_status_ext *)status;
@@ -1272,7 +1272,7 @@ void show_nvme_resv_report(struct nvme_reservation_status *status, int bytes, __
 			printf("regctlext[%d] :\n", i);
 			printf("  cntlid     : %x\n", le16_to_cpu(ext_status->regctl_eds[i].cntlid));
 			printf("  rcsts      : %x\n", ext_status->regctl_eds[i].rcsts);
-			printf("  rkey       : %"PRIx64"\n", (uint64_t)le64_to_cpu(ext_status->regctl_eds[i].rkey));
+			printf("  rkey       : %"PRIx64"\n", le64_to_cpu(ext_status->regctl_eds[i].rkey));
 			printf("  hostid     : ");
 			for (j = 0; j < 16; j++)
 				printf("%x", ext_status->regctl_eds[i].hostid[j]);
@@ -1518,7 +1518,7 @@ void show_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname)
 			devname);
 	printf("ANA LOG HEADER :-\n");
 	printf("chgcnt	:	%"PRIu64"\n",
-			(uint64_t)le64_to_cpu(hdr->chgcnt));
+			le64_to_cpu(hdr->chgcnt));
 	printf("ngrps	:	%u\n", le16_to_cpu(hdr->ngrps));
 	printf("ANA Log Desc :-\n");
 
@@ -1531,7 +1531,7 @@ void show_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname)
 		printf("grpid	:	%u\n", le32_to_cpu(desc->grpid));
 		printf("nnsids	:	%u\n", le32_to_cpu(desc->nnsids));
 		printf("chgcnt	:	%"PRIu64"\n",
-		       (uint64_t)le64_to_cpu(desc->chgcnt));
+		       le64_to_cpu(desc->chgcnt));
 		printf("state	:	%s\n",
 				nvme_ana_state_to_string(desc->state));
 		for (j = 0; j < le32_to_cpu(desc->nnsids); j++)
@@ -1598,14 +1598,14 @@ void show_self_test_log(struct nvme_self_test_log *self_test, const char *devnam
 		temp = self_test->result[i].valid_diagnostic_info;
 		printf("  Valid Diagnostic Information : %#x\n", temp);
 		printf("  Power on hours (POH)         : %#"PRIx64"\n",
-			(uint64_t)le64_to_cpu(self_test->result[i].power_on_hours));
+			le64_to_cpu(self_test->result[i].power_on_hours));
 
 		if (temp & NVME_SELF_TEST_VALID_NSID)
 			printf("  Namespace Identifier         : %#x\n",
 				le32_to_cpu(self_test->result[i].nsid));
 		if (temp & NVME_SELF_TEST_VALID_FLBA)
 			printf("  Failing LBA                  : %#"PRIx64"\n",
-				(uint64_t)le64_to_cpu(self_test->result[i].failing_lba));
+				le64_to_cpu(self_test->result[i].failing_lba));
 		if (temp & NVME_SELF_TEST_VALID_SCT)
 			printf("  Status Code Type             : %#x\n",
 				self_test->result[i].status_code_type);
@@ -2012,9 +2012,9 @@ static const char *nvme_plm_window(__u32 plm)
 static void show_plm_config(struct nvme_plm_config *plmcfg)
 {
 	printf("\tEnable Event          :%04x\n", le16_to_cpu(plmcfg->enable_event));
-	printf("\tDTWIN Reads Threshold :%"PRIu64"\n", (uint64_t)le64_to_cpu(plmcfg->dtwin_reads_thresh));
-	printf("\tDTWIN Writes Threshold:%"PRIu64"\n", (uint64_t)le64_to_cpu(plmcfg->dtwin_writes_thresh));
-	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", (uint64_t)le64_to_cpu(plmcfg->dtwin_time_thresh));
+	printf("\tDTWIN Reads Threshold :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_reads_thresh));
+	printf("\tDTWIN Writes Threshold:%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_writes_thresh));
+	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_time_thresh));
 }
 
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf)
@@ -2509,8 +2509,8 @@ void json_nvme_resv_report(struct nvme_reservation_status *status, int bytes, __
 
 			json_object_add_value_int(rc, "cntlid", le16_to_cpu(status->regctl_ds[i].cntlid));
 			json_object_add_value_int(rc, "rcsts", status->regctl_ds[i].rcsts);
-			json_object_add_value_uint(rc, "hostid", (uint64_t)le64_to_cpu(status->regctl_ds[i].hostid));
-			json_object_add_value_uint(rc, "rkey", (uint64_t)le64_to_cpu(status->regctl_ds[i].rkey));
+			json_object_add_value_uint(rc, "hostid", le64_to_cpu(status->regctl_ds[i].hostid));
+			json_object_add_value_uint(rc, "rkey", le64_to_cpu(status->regctl_ds[i].rkey));
 
 			json_array_add_value_object(rcs, rc);
 		}
@@ -2529,7 +2529,7 @@ void json_nvme_resv_report(struct nvme_reservation_status *status, int bytes, __
 
 			json_object_add_value_int(rc, "cntlid", le16_to_cpu(ext_status->regctl_eds[i].cntlid));
 			json_object_add_value_int(rc, "rcsts", ext_status->regctl_eds[i].rcsts);
-			json_object_add_value_uint(rc, "rkey", (uint64_t)le64_to_cpu(ext_status->regctl_eds[i].rkey));
+			json_object_add_value_uint(rc, "rkey", le64_to_cpu(ext_status->regctl_eds[i].rkey));
 			for (j = 0; j < 16; j++)
 				sprintf(hostid + j * 2, "%02x", ext_status->regctl_eds[i].hostid[j]);
 
@@ -2717,7 +2717,7 @@ void json_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname)
 			"Asynchronous Namespace Access Log for NVMe device:",
 			devname);
 	json_object_add_value_uint(root, "chgcnt",
-			(uint64_t)le64_to_cpu(hdr->chgcnt));
+			le64_to_cpu(hdr->chgcnt));
 	json_object_add_value_uint(root, "ngrps", le16_to_cpu(hdr->ngrps));
 
 	desc_list = json_create_array();
@@ -2779,7 +2779,7 @@ void json_self_test_log(struct nvme_self_test_log *self_test, const char *devnam
 		if (self_test->result[i].valid_diagnostic_info & NVME_SELF_TEST_VALID_NSID)
 			json_object_add_value_int(valid_attrs, "Namespace Identifier (NSID)", le32_to_cpu(self_test->result[i].nsid));
 		if (self_test->result[i].valid_diagnostic_info & NVME_SELF_TEST_VALID_FLBA)
-			json_object_add_value_uint(valid_attrs, "Failing LBA",(uint64_t)le64_to_cpu(self_test->result[i].failing_lba));
+			json_object_add_value_uint(valid_attrs, "Failing LBA",le64_to_cpu(self_test->result[i].failing_lba));
 		if (self_test->result[i].valid_diagnostic_info & NVME_SELF_TEST_VALID_SCT)
 			json_object_add_value_int(valid_attrs, "Status Code Type",self_test->result[i].status_code_type);
 		if(self_test->result[i].valid_diagnostic_info & NVME_SELF_TEST_VALID_SC)

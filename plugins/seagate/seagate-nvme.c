@@ -615,35 +615,35 @@ void print_smart_log_CF(vendor_log_page_CF *pLogPageCF)
 	printf("%-40s", "Super-cap current temperature");
 	currentTemp = pLogPageCF->AttrCF.SuperCapCurrentTemperature;
 	/*currentTemp = currentTemp ? currentTemp - 273 : 0;*/
-	printf(" 0x%016"PRIx64"", (uint64_t)le64_to_cpu(currentTemp));
+	printf(" 0x%016"PRIx64"", le64_to_cpu(currentTemp));
 	printf("\n");
 
 	maxTemp = pLogPageCF->AttrCF.SuperCapMaximumTemperature;
 	/*maxTemp = maxTemp ? maxTemp - 273 : 0;*/
 	printf("%-40s", "Super-cap maximum temperature");
-	printf(" 0x%016"PRIx64"", (uint64_t)le64_to_cpu(maxTemp));
+	printf(" 0x%016"PRIx64"", le64_to_cpu(maxTemp));
 	printf("\n");
 
 	printf("%-40s", "Super-cap status");
-	printf(" 0x%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.SuperCapStatus));
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.SuperCapStatus));
 	printf("\n");
 
 	printf("%-40s", "Data units read to DRAM namespace");
-	printf(" 0x%016"PRIx64"%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.MS__u64),
-	       (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.LS__u64));
+	printf(" 0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.MS__u64),
+	       le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.LS__u64));
 	printf("\n");
 
 	printf("%-40s", "Data units written to DRAM namespace");
-	printf(" 0x%016"PRIx64"%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.MS__u64),
-	       (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.LS__u64));
+	printf(" 0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.MS__u64),
+	       le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.LS__u64));
 	printf("\n");
 
 	printf("%-40s", "DRAM correctable error count");
-	printf(" 0x%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DramCorrectableErrorCount));
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DramCorrectableErrorCount));
 	printf("\n");
 
 	printf("%-40s", "DRAM uncorrectable error count");
-	printf(" 0x%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DramUncorrectableErrorCount));
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DramUncorrectableErrorCount));
 	printf("\n");
 
 }
@@ -682,16 +682,16 @@ void json_print_smart_log_CF(struct json_object *root, vendor_log_page_CF *pLogP
 	lbaf = json_create_object();
 	json_object_add_value_string(lbaf, "attribute_name", "Data units read to DRAM namespace");
 	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.MS__u64),
-		(uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.LS__u64));
+	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.MS__u64),
+		le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.LS__u64));
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 
 	lbaf = json_create_object();
 	json_object_add_value_string(lbaf, "attribute_name", "Data units written to DRAM namespace");
 	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.MS__u64),
-		(uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.LS__u64));
+	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.MS__u64),
+		le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.LS__u64));
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 
