@@ -377,7 +377,9 @@ static int vt_update_vtview_log_header(const int fd, const char *path, const str
     return (ret);
 }
 
-void vt_build_identify_lv2(unsigned int data, unsigned int start, unsigned int count, const char **table, bool isEnd)
+static void vt_build_identify_lv2(unsigned int data, unsigned int start,
+				  unsigned int count, const char **table,
+				  bool isEnd)
 {
     unsigned int i, end, pos, sh = 1;
     unsigned int temp;
