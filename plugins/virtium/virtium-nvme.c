@@ -287,7 +287,7 @@ static int vt_add_entry_to_log(const int fd, const char *path, const struct vtvi
         strcpy(filename, cfg->output_file);
     }
 	
-    smart.time_stamp = time(0);
+    smart.time_stamp = time(NULL);
     nsid = nvme_get_nsid(fd);
 	
     if(nsid <= 0) 
@@ -353,7 +353,7 @@ static int vt_update_vtview_log_header(const int fd, const char *path, const str
     }
 
     printf("Log file: %s\n", filename);
-    header.time_stamp = time(0);
+    header.time_stamp = time(NULL);
 
     ret = nvme_identify_ctrl(fd, &header.raw_ctrl);
     if(ret) 
@@ -881,14 +881,14 @@ Just logging :\n\
         freq_time = 1;
     }
 	
-    start_time = time(0);
+    start_time = time(NULL);
     end_time = start_time + total_time;
 
     fflush(stdout);
 	
     while(1)
     {
-        cur_time = time(0);
+        cur_time = time(NULL);
         if(cur_time >= end_time)
         {
             break;

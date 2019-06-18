@@ -173,7 +173,7 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format,
 		 required_argument, output_format },
-		{0}
+		{ }
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options,
@@ -735,7 +735,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{0}
+		{ }
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -832,7 +832,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{0}
+		{ }
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1004,7 +1004,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{0}
+		{ }
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
