@@ -914,7 +914,8 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 	if (le32_to_cpu(hdr_ptr->length) > WDC_C2_LOG_BUF_LEN) {
 		/* Log Page buffer too small, free and reallocate the necessary size */
 		free(data);
-		if ((data = (__u8*) calloc(hdr_ptr->length, sizeof (__u8))) == NULL) {
+		data = calloc(le32_to_cpu(hdr_ptr->length), sizeof(__u8));
+		if (data == NULL) {
 			fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
 			return false;
 		}
@@ -1290,9 +1291,12 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area)
 		/* parse log header for all sections up to specified data area inclusively */
 		if (data_area != WDC_NVME_DUI_MAX_DATA_AREA) {
 			for(int i = 0; i < WDC_NVME_DUI_MAX_SECTION; i++) {
-				if (log_hdr->log_section[i].data_area_id <= data_area &&
-				    log_hdr->log_section[i].data_area_id != 0)
-					log_size += log_hdr->log_section[i].section_size;
+				__u16 data_area_id = le16_to_cpu(log_hdr->log_section[i].data_area_id);
+				__u16 section_size = le16_to_cpu(log_hdr->log_section[i].section_size);
+
+				if (data_area_id <= data_area &&
+				    data_area_id != 0)
+					log_size += section_size;
 				else
 					break;
 			}
