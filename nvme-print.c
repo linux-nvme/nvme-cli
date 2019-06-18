@@ -721,6 +721,13 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	printf("nabspf  : %d\n", le16_to_cpu(ns->nabspf));
 	printf("noiob   : %d\n", le16_to_cpu(ns->noiob));
 	printf("nvmcap  : %.0Lf\n", int128_to_double(ns->nvmcap));
+	if (ns->nsfeat & 0x10) {
+		printf("npwg    : %u\n", le16_to_cpu(ns->npwg));
+		printf("npwa    : %u\n", le16_to_cpu(ns->npwa));
+		printf("npdg    : %u\n", le16_to_cpu(ns->npdg));
+		printf("npda    : %u\n", le16_to_cpu(ns->npda));
+		printf("nows    : %u\n", le16_to_cpu(ns->nows));
+	}
 	printf("nsattr	: %u\n", ns->nsattr);
 	printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
 	printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
