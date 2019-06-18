@@ -291,6 +291,7 @@ enum {
 	DISC_NO_LOG,
 	DISC_GET_NUMRECS,
 	DISC_GET_LOG,
+	DISC_RETRY_EXHAUSTED,
 	DISC_NOT_EQUAL,
 };
 
@@ -384,6 +385,16 @@ static int nvmf_get_log_page_discovery(const char *dev_path,
 		}
 	} while (genctr != le64_to_cpu(log->genctr) &&
 		 ++retries < max_retries);
+
+	/*
+	 * If genctr is still different with the one in the log entry, it
+	 * means the retires have been exhausted to max_retries.  Then it
+	 * should be retried by the caller or the user.
+	 */
+	if (genctr != le64_to_cpu(log->genctr)) {
+		error = DISC_RETRY_EXHAUSTED;
+		goto out_free_log;
+	}
 
 	if (*numrec != le32_to_cpu(log->numrec)) {
 		error = DISC_NOT_EQUAL;
@@ -881,6 +892,10 @@ static int do_discover(char *argstr, bool connect)
 	case DISC_NO_LOG:
 		fprintf(stdout, "No discovery log entries to fetch.\n");
 		ret = DISC_OK;
+		break;
+	case DISC_RETRY_EXHAUSTED:
+		fprintf(stdout, "Discovery retries exhausted.\n");
+		ret = -EAGAIN;
 		break;
 	case DISC_NOT_EQUAL:
 		fprintf(stderr,
