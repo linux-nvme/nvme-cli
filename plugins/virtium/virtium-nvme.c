@@ -132,7 +132,7 @@ static void vt_convert_smart_data_to_human_readable_format(struct vtview_smart_l
     snprintf(tempbuff, sizeof(tempbuff), "log;%s;%lu;%s;%s;%-.*s;", smart->raw_ctrl.sn, smart->time_stamp, smart->path, \
             smart->raw_ctrl.mn, (int)sizeof(smart->raw_ctrl.fr), smart->raw_ctrl.fr);
     strcpy(text, tempbuff);
-    snprintf(tempbuff, sizeof(tempbuff), "Capacity;%f;", (double)smart->raw_ns.nsze / 1000000000);
+    snprintf(tempbuff, sizeof(tempbuff), "Capacity;%f;", (double)le64_to_cpu(smart->raw_ns.nsze) / 1000000000);
     strcat(text, tempbuff);
     snprintf(tempbuff, sizeof(tempbuff), "Critical_Warning;%u;", smart->raw_smart.critical_warning);
     strcat(text, tempbuff);
