@@ -614,7 +614,10 @@ int nvme_get_properties(int fd, void **pbar)
 	memset(*pbar, 0xff, size);
 	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ;) {
 		err = nvme_get_property(fd, offset, &value);
-		if (err) {
+		if (err > 0 && (err & 0xff) == NVME_SC_INVALID_FIELD) {
+			err = 0;
+			value = -1;
+		} else if (err) {
 			free(*pbar);
 			break;
 		}
