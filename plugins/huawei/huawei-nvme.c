@@ -163,7 +163,8 @@ static void format(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
 	}
 }
 
-void huawei_json_print_list_items(struct huawei_list_item *list_items, unsigned len)
+static void huawei_json_print_list_items(struct huawei_list_item *list_items,
+					 unsigned len)
 {
 	struct json_object *root;
 	struct json_array *devices;

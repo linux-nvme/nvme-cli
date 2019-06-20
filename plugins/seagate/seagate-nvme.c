@@ -46,7 +46,7 @@
 /***************************************
 *Command for "log-pages-supp"
 ***************************************/
-char* log_pages_supp_print(__u32 pageID)
+static char *log_pages_supp_print(__u32 pageID)
 {
 	switch(pageID) {
 	case 0x01:
@@ -128,7 +128,7 @@ char* log_pages_supp_print(__u32 pageID)
 }
 
 
-void json_log_pages_supp(log_page_map *logPageMap)
+static void json_log_pages_supp(log_page_map *logPageMap)
 {
 	struct json_object *root;
 	struct json_array *logPages;
@@ -173,7 +173,7 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format,
 		 required_argument, output_format },
-		{0}
+		{ }
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options,
@@ -214,7 +214,7 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 /***************************************
 * Extended-SMART Information
 ***************************************/
-char* print_ext_smart_id(__u8 attrId)
+static char *print_ext_smart_id(__u8 attrId)
 {
 	switch(attrId) {
 	case VS_ATTR_ID_SOFT_READ_ERROR_RATE:
@@ -360,7 +360,7 @@ char* print_ext_smart_id(__u8 attrId)
 	}
 }
 
-__u64 smart_attribute_vs(__u16 verNo, SmartVendorSpecific attr)
+static __u64 smart_attribute_vs(__u16 verNo, SmartVendorSpecific attr)
 {
 	__u64 val = 0;
 	vendor_smart_attribute_data *attrVendor;
@@ -376,7 +376,7 @@ __u64 smart_attribute_vs(__u16 verNo, SmartVendorSpecific attr)
 		return le32_to_cpu(attr.Raw0_3);
 }
 
-void print_smart_log(__u16 verNo, SmartVendorSpecific attr, int lastAttr)
+static void print_smart_log(__u16 verNo, SmartVendorSpecific attr, int lastAttr)
 {
 	static __u64 lsbGbErased = 0, msbGbErased = 0, lsbLifWrtToFlash = 0, msbLifWrtToFlash = 0,
 		lsbLifWrtFrmHost = 0, msbLifWrtFrmHost = 0, lsbLifRdToHost = 0, msbLifRdToHost = 0, lsbTrimCnt = 0, msbTrimCnt = 0;
@@ -491,7 +491,8 @@ void print_smart_log(__u16 verNo, SmartVendorSpecific attr, int lastAttr)
 	}
 }
 
-void json_print_smart_log(struct json_object *root, EXTENDED_SMART_INFO_T* ExtdSMARTInfo )
+static void json_print_smart_log(struct json_object *root,
+				 EXTENDED_SMART_INFO_T *ExtdSMARTInfo )
 {
 	/*struct json_object *root; */
 	struct json_array *lbafs;
@@ -606,7 +607,7 @@ void json_print_smart_log(struct json_object *root, EXTENDED_SMART_INFO_T* ExtdS
 	*/
 }
 
-void print_smart_log_CF(vendor_log_page_CF *pLogPageCF)
+static void print_smart_log_CF(vendor_log_page_CF *pLogPageCF)
 {
 	__u64 currentTemp, maxTemp;
 	printf("\n\nSeagate DRAM Supercap SMART Attributes :\n");
@@ -615,40 +616,41 @@ void print_smart_log_CF(vendor_log_page_CF *pLogPageCF)
 	printf("%-40s", "Super-cap current temperature");
 	currentTemp = pLogPageCF->AttrCF.SuperCapCurrentTemperature;
 	/*currentTemp = currentTemp ? currentTemp - 273 : 0;*/
-	printf(" 0x%016"PRIx64"", (uint64_t)le64_to_cpu(currentTemp));
+	printf(" 0x%016"PRIx64"", le64_to_cpu(currentTemp));
 	printf("\n");
 
 	maxTemp = pLogPageCF->AttrCF.SuperCapMaximumTemperature;
 	/*maxTemp = maxTemp ? maxTemp - 273 : 0;*/
 	printf("%-40s", "Super-cap maximum temperature");
-	printf(" 0x%016"PRIx64"", (uint64_t)le64_to_cpu(maxTemp));
+	printf(" 0x%016"PRIx64"", le64_to_cpu(maxTemp));
 	printf("\n");
 
 	printf("%-40s", "Super-cap status");
-	printf(" 0x%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.SuperCapStatus));
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.SuperCapStatus));
 	printf("\n");
 
 	printf("%-40s", "Data units read to DRAM namespace");
-	printf(" 0x%016"PRIx64"%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.MS__u64),
-	       (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.LS__u64));
+	printf(" 0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.MS__u64),
+	       le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.LS__u64));
 	printf("\n");
 
 	printf("%-40s", "Data units written to DRAM namespace");
-	printf(" 0x%016"PRIx64"%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.MS__u64),
-	       (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.LS__u64));
+	printf(" 0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.MS__u64),
+	       le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.LS__u64));
 	printf("\n");
 
 	printf("%-40s", "DRAM correctable error count");
-	printf(" 0x%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DramCorrectableErrorCount));
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DramCorrectableErrorCount));
 	printf("\n");
 
 	printf("%-40s", "DRAM uncorrectable error count");
-	printf(" 0x%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DramUncorrectableErrorCount));
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DramUncorrectableErrorCount));
 	printf("\n");
 
 }
 
-void json_print_smart_log_CF(struct json_object *root, vendor_log_page_CF *pLogPageCF)
+static void json_print_smart_log_CF(struct json_object *root,
+				    vendor_log_page_CF *pLogPageCF)
 {
 	/*struct json_object *root;*/
 	struct json_array *logPages;
@@ -682,16 +684,16 @@ void json_print_smart_log_CF(struct json_object *root, vendor_log_page_CF *pLogP
 	lbaf = json_create_object();
 	json_object_add_value_string(lbaf, "attribute_name", "Data units read to DRAM namespace");
 	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.MS__u64),
-		(uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.LS__u64));
+	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.MS__u64),
+		le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.LS__u64));
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 
 	lbaf = json_create_object();
 	json_object_add_value_string(lbaf, "attribute_name", "Data units written to DRAM namespace");
 	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", (uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.MS__u64),
-		(uint64_t)le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.LS__u64));
+	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.MS__u64),
+		le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.LS__u64));
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 
@@ -735,7 +737,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{0}
+		{ }
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -832,7 +834,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{0}
+		{ }
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -904,7 +906,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 /***************************************
  * PCIe error-log information
  ***************************************/
-void print_vs_pcie_error_log(pcie_error_log_page  pcieErrorLog)
+static void print_vs_pcie_error_log(pcie_error_log_page  pcieErrorLog)
 {
 	__u32 correctPcieEc = 0;
 	__u32 uncorrectPcieEc = 0;
@@ -944,7 +946,7 @@ void print_vs_pcie_error_log(pcie_error_log_page  pcieErrorLog)
 	printf("%-45s : %s\n", "Completer Abort Status (CAS)", "Not Supported");
 }
 
-void json_vs_pcie_error_log(pcie_error_log_page  pcieErrorLog)
+static void json_vs_pcie_error_log(pcie_error_log_page pcieErrorLog)
 {
 	struct json_object *root;
 	root = json_create_object();
@@ -1004,7 +1006,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{0}
+		{ }
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
@@ -1392,7 +1394,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 }
 
 //SEAGATE-PLUGIN Version
-int seagate_plugin_version(int argc, char **argv, struct command *cmd,
+static int seagate_plugin_version(int argc, char **argv, struct command *cmd,
 			   struct plugin *plugin)
 {
 	printf("Seagate-Plugin version : %d.%d \n", SEAGATE_PLUGIN_VERSION_MAJOR, SEAGATE_PLUGIN_VERSION_MINOR);
