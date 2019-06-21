@@ -601,7 +601,7 @@ int nvme_get_property(int fd, int offset, uint64_t *value)
 int nvme_get_properties(int fd, void **pbar)
 {
 	int offset;
-	int err, ret = EINVAL;
+	int err, ret = -EINVAL;
 	int size = getpagesize();
 
 	*pbar = malloc(size);
@@ -620,7 +620,7 @@ int nvme_get_properties(int fd, void **pbar)
 		offset += is_64bit_reg(offset) ? 8 : 4;
 	}
 
-	if(*pbar)
+	if(ret)
 		free(*pbar);
 
 	return ret;
