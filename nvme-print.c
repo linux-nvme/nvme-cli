@@ -523,12 +523,15 @@ static void show_nvme_id_ctrl_ctrattr(__u8 ctrattr)
 
 static void show_nvme_id_ns_nsfeat(__u8 nsfeat)
 {
-	__u8 rsvd = (nsfeat & 0xF8) >> 3;
+	__u8 rsvd = (nsfeat & 0xE0) >> 5;
+	__u8 ioopt = (nsfeat & 0x10) >> 4;
 	__u8 dulbe = (nsfeat & 0x4) >> 2;
 	__u8 na = (nsfeat & 0x2) >> 1;
 	__u8 thin = nsfeat & 0x1;
 	if (rsvd)
-		printf("  [7:3] : %#x\tReserved\n", rsvd);
+		printf("  [7:5] : %#x\tReserved\n", rsvd);
+	printf("  [4:4] : %#x\tNPWG, NPWA, NPDG, NPDA, and NOWS are %sSupported\n",
+		ioopt, ioopt ? "" : "Not ");
 	printf("  [2:2] : %#x\tDeallocated or Unwritten Logical Block error %sSupported\n",
 		dulbe, dulbe ? "" : "Not ");
 	printf("  [1:1] : %#x\tNamespace uses %s\n",
@@ -2295,6 +2298,14 @@ void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	json_object_add_value_float(root, "nvmcap", nvmcap);
 	json_object_add_value_int(root, "nsattr", ns->nsattr);
 	json_object_add_value_int(root, "nvmsetid", le16_to_cpu(ns->nvmsetid));
+
+	if (ns->nsfeat & 0x10) {
+		json_object_add_value_int(root, "npwg", le16_to_cpu(ns->npwg));
+		json_object_add_value_int(root, "npwa", le16_to_cpu(ns->npwa));
+		json_object_add_value_int(root, "npdg", le16_to_cpu(ns->npdg));
+		json_object_add_value_int(root, "npda", le16_to_cpu(ns->npda));
+		json_object_add_value_int(root, "nows", le16_to_cpu(ns->nows));
+	}
 
 	json_object_add_value_int(root, "anagrpid", le32_to_cpu(ns->anagrpid));
 	json_object_add_value_int(root, "endgid", le16_to_cpu(ns->endgid));
