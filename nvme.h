@@ -119,19 +119,31 @@ struct nvme_bar_cap {
 #define __force
 #endif
 
-#define cpu_to_le16(x) \
-	((__force __le16)htole16(x))
-#define cpu_to_le32(x) \
-	((__force __le32)htole32(x))
-#define cpu_to_le64(x) \
-	((__force __le64)htole64(x))
+static inline __le16 cpu_to_le16(uint16_t x)
+{
+	return (__force __le16)htole16(x);
+}
+static inline __le32 cpu_to_le32(uint32_t x)
+{
+	return (__force __le32)htole32(x);
+}
+static inline __le64 cpu_to_le64(uint64_t x)
+{
+	return (__force __le64)htole64(x);
+}
 
-#define le16_to_cpu(x) \
-	le16toh((__force __u16)(x))
-#define le32_to_cpu(x) \
-	le32toh((__force __u32)(x))
-#define le64_to_cpu(x) \
-	le64toh((__force __u64)(x))
+static inline uint16_t le16_to_cpu(__le16 x)
+{
+	return le16toh((__force __u16)x);
+}
+static inline uint32_t le32_to_cpu(__le32 x)
+{
+	return le32toh((__force __u32)x);
+}
+static inline uint64_t le64_to_cpu(__le64 x)
+{
+	return le64toh((__force __u64)x);
+}
 
 #define MAX_LIST_ITEMS 256
 struct list_item {
