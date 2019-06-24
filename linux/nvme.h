@@ -616,12 +616,13 @@ enum {
 	NVME_LBART_ATTRIB_HIDE	= 1 << 1,
 };
 
+/* Predictable Latency Mode - Deterministic Threshold Configuration Data */
 struct nvme_plm_config {
-	__u16	enable_event;
+	__le16	enable_event;
 	__u8	rsvd2[30];
-	__u64	dtwin_reads_thresh;
-	__u64	dtwin_writes_thresh;
-	__u64	dtwin_time_thresh;
+	__le64	dtwin_reads_thresh;
+	__le64	dtwin_writes_thresh;
+	__le64	dtwin_time_thresh;
 	__u8	rsvd56[456];
 };
 

@@ -713,7 +713,7 @@ void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	printf("fpi     : %#x\n", ns->fpi);
 	if (human)
 		show_nvme_id_ns_fpi(ns->fpi);
-	printf("dlfeat  : %d\n", le16_to_cpu(ns->dlfeat));
+	printf("dlfeat  : %d\n", ns->dlfeat);
 	if (human)
 		show_nvme_id_ns_dlfeat(ns->dlfeat);
 	printf("nawun   : %d\n", le16_to_cpu(ns->nawun));
@@ -1132,7 +1132,7 @@ void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset, const char *devname)
 {
 	struct json_object *root;
 	struct json_array *entries;
-	__u32 nent = le32_to_cpu(nvmset->nid);
+	__u32 nent = nvmset->nid;
 	int i;
 
 	root = json_create_object();
@@ -1163,7 +1163,7 @@ void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset, const char *devname)
 void show_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list *sc_list, __u32 count)
 {
 	int i;
-	__u16 num = le16_to_cpu(sc_list->num);
+	__u16 num = sc_list->num;
 	__u32 entries = min(num, count);
 
 	static const char * const state_desc[] = { "Offline", "Online" };
@@ -1180,8 +1180,8 @@ void show_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list 
 		printf("     PCID      : Primary Controller Identifier   : 0x%.04x\n",
 				le16_to_cpu(sc_entry[i].pcid));
 		printf("     SCS       : Secondary Controller State      : 0x%.04x (%s)\n",
-				le16_to_cpu(sc_entry[i].scs),
-				state_desc[le16_to_cpu(sc_entry[i].scs) & 0x1]);
+				sc_entry[i].scs,
+				state_desc[sc_entry[i].scs & 0x1]);
 		printf("     VFN       : Virtual Function Number         : 0x%.04x\n",
 				le16_to_cpu(sc_entry[i].vfn));
 		printf("     NVQ       : Num VQ Flex Resources Assigned  : 0x%.04x\n",
@@ -1196,7 +1196,7 @@ void json_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list 
 	int i;
 	struct json_object *root;
 	struct json_array *entries;
-	__u32 nent = min(le16_to_cpu(sc_list->num), count);
+	__u32 nent = min(sc_list->num, count);
 	const struct nvme_secondary_controller_entry *sc_entry = &sc_list->sc_entry[0];
 
 	root = json_create_object();
@@ -1209,7 +1209,8 @@ void json_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list 
 
 		json_object_add_value_int(entry, "secondary-controller-identifier", le16_to_cpu(sc_entry[i].scid));
 		json_object_add_value_int(entry, "primary-controller-identifier", le16_to_cpu(sc_entry[i].pcid));
-		json_object_add_value_int(entry, "secondary-controller-state",  le16_to_cpu(sc_entry[i].scs));
+		json_object_add_value_int(entry, "secondary-controller-state",
+					  sc_entry[i].scs);
 		json_object_add_value_int(entry, "virtual-function-number",  le16_to_cpu(sc_entry[i].vfn));
 		json_object_add_value_int(entry, "num-virtual-queues",  le16_to_cpu(sc_entry[i].nvq));
 		json_object_add_value_int(entry, "num-virtual-interrupts",  le16_to_cpu(sc_entry[i].nvi));
@@ -1237,12 +1238,13 @@ void show_error_log(struct nvme_error_log_page *err_log, int entries, const char
 		printf("sqid         : %d\n", err_log[i].sqid);
 		printf("cmdid        : %#x\n", err_log[i].cmdid);
 		printf("status_field : %#x(%s)\n", err_log[i].status_field,
-			nvme_status_to_string(err_log[i].status_field >> 1));
+			nvme_status_to_string(le16_to_cpu(err_log[i].status_field) >> 1));
 		printf("parm_err_loc : %#x\n", err_log[i].parm_error_location);
 		printf("lba          : %#"PRIx64"\n",le64_to_cpu(err_log[i].lba));
 		printf("nsid         : %#x\n", err_log[i].nsid);
 		printf("vs           : %d\n", err_log[i].vs);
-		printf("cs           : %#"PRIx64"\n", (uint64_t) err_log[i].cs);
+		printf("cs           : %#"PRIx64"\n",
+		       le64_to_cpu(err_log[i].cs));
 		printf(".................\n");
 	}
 }
@@ -1691,9 +1693,10 @@ void show_sanitize_log(struct nvme_sanitize_log_page *sanitize, unsigned int mod
 	int human = mode & HUMAN;
 	__u16 status = le16_to_cpu(sanitize->status) & NVME_SANITIZE_LOG_STATUS_MASK;
 
-	printf("Sanitize Progress                     (SPROG) :  %u", le32_to_cpu(sanitize->progress));
+	printf("Sanitize Progress                     (SPROG) :  %u",
+	       le16_to_cpu(sanitize->progress));
 	if (human && status == NVME_SANITIZE_LOG_IN_PROGESS)
-		show_sanitize_log_sprog(le32_to_cpu(sanitize->progress));
+		show_sanitize_log_sprog(le16_to_cpu(sanitize->progress));
 	else
 		printf("\n");
 
@@ -2328,8 +2331,8 @@ void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 		struct json_object *lbaf = json_create_object();
 
 		json_object_add_value_int(lbaf, "ms", le16_to_cpu(ns->lbaf[i].ms));
-		json_object_add_value_int(lbaf, "ds", le16_to_cpu(ns->lbaf[i].ds));
-		json_object_add_value_int(lbaf, "rp", le16_to_cpu(ns->lbaf[i].rp));
+		json_object_add_value_int(lbaf, "ds", ns->lbaf[i].ds);
+		json_object_add_value_int(lbaf, "rp", ns->lbaf[i].rp);
 
 		json_array_add_value_object(lbafs, lbaf);
 	}
@@ -2482,15 +2485,23 @@ void json_error_log(struct nvme_error_log_page *err_log, int entries, const char
 	for (i = 0; i < entries; i++) {
 		struct json_object *error = json_create_object();
 
-		json_object_add_value_uint(error, "error_count", err_log[i].error_count);
-		json_object_add_value_int(error, "sqid", err_log[i].sqid);
-		json_object_add_value_int(error, "cmdid", err_log[i].cmdid);
-		json_object_add_value_int(error, "status_field", err_log[i].status_field);
-		json_object_add_value_int(error, "parm_error_location", err_log[i].parm_error_location);
-		json_object_add_value_uint(error, "lba", err_log[i].lba);
-		json_object_add_value_uint(error, "nsid", err_log[i].nsid);
+		json_object_add_value_uint(error, "error_count",
+					   le64_to_cpu(err_log[i].error_count));
+		json_object_add_value_int(error, "sqid",
+					  le16_to_cpu(err_log[i].sqid));
+		json_object_add_value_int(error, "cmdid",
+					  le16_to_cpu(err_log[i].cmdid));
+		json_object_add_value_int(error, "status_field",
+					  le16_to_cpu(err_log[i].status_field));
+		json_object_add_value_int(error, "parm_error_location",
+					  le16_to_cpu(err_log[i].parm_error_location));
+		json_object_add_value_uint(error, "lba",
+					   le64_to_cpu(err_log[i].lba));
+		json_object_add_value_uint(error, "nsid",
+					   le32_to_cpu(err_log[i].nsid));
 		json_object_add_value_int(error, "vs", err_log[i].vs);
-		json_object_add_value_uint(error, "cs", err_log[i].cs);
+		json_object_add_value_uint(error, "cs",
+					   le64_to_cpu(err_log[i].cs));
 
 		json_array_add_value_object(errors, error);
 	}

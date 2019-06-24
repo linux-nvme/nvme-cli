@@ -307,15 +307,15 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 
 
 struct intel_temp_stats {
-	__u64	curr;
-	__u64	last_overtemp;
-	__u64	life_overtemp;
-	__u64	highest_temp;
-	__u64	lowest_temp;
+	__le64	curr;
+	__le64	last_overtemp;
+	__le64	life_overtemp;
+	__le64	highest_temp;
+	__le64	lowest_temp;
 	__u8	rsvd[40];
-	__u64	max_operating_temp;
-	__u64	min_operating_temp;
-	__u64	est_offset;
+	__le64	max_operating_temp;
+	__le64	min_operating_temp;
+	__le64	est_offset;
 };
 
 static void show_temp_stats(struct intel_temp_stats *stats)

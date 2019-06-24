@@ -40,16 +40,16 @@ struct nvme_effects_log_page {
 };
 
 struct nvme_error_log_page {
-	__u64	error_count;
-	__u16	sqid;
-	__u16	cmdid;
-	__u16	status_field;
-	__u16	parm_error_location;
-	__u64	lba;
-	__u32	nsid;
+	__le64	error_count;
+	__le16	sqid;
+	__le16	cmdid;
+	__le16	status_field;
+	__le16	parm_error_location;
+	__le64	lba;
+	__le32	nsid;
 	__u8	vs;
 	__u8	resv[3];
-	__u64	cs;
+	__le64	cs;
 	__u8	resv2[24];
 };
 

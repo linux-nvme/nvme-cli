@@ -727,7 +727,7 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
     vt_convert_data_buffer_to_hex_string(&buf[326], 2, true, s);
     printf("    \"Maximum Thermal Management Temperature\":\"%sh\",\n", s);
 
-    temp = le16_to_cpu(ctrl->sanicap);
+    temp = le32_to_cpu(ctrl->sanicap);
     printf("    \"Sanitize Capabilities\":{\n");
     vt_convert_data_buffer_to_hex_string(&buf[328], 2, true, s);
     printf("        \"Value\":\"%sh\",\n", s);
