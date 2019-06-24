@@ -306,6 +306,7 @@ enum {
 	NVME_CTRL_CTRATT_READ_RECV_LVLS		= 1 << 3,
 	NVME_CTRL_CTRATT_ENDURANCE_GROUPS	= 1 << 4,
 	NVME_CTRL_CTRATT_PREDICTABLE_LAT	= 1 << 5,
+	NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY	= 1 << 7,
 };
 
 struct nvme_lbaf {
@@ -365,6 +366,7 @@ enum {
 	NVME_ID_CNS_CTRL_NS_LIST	= 0x12,
 	NVME_ID_CNS_CTRL_LIST		= 0x13,
 	NVME_ID_CNS_SCNDRY_CTRL_LIST	= 0x15,
+	NVME_ID_CNS_NS_GRANULARITY	= 0x16,
 };
 
 enum {
@@ -433,6 +435,18 @@ struct nvme_id_nvmset {
 	__u8				nid;
 	__u8				rsvd1[127];
 	struct nvme_nvmset_attr_entry	ent[NVME_MAX_NVMSET];
+};
+
+struct nvme_id_ns_granularity_list_entry {
+	__le64			namespace_size_granularity;
+	__le64			namespace_capacity_granularity;
+};
+
+struct nvme_id_ns_granularity_list {
+	__le32			attributes;
+	__u8			num_descriptors;
+	__u8			rsvd[27];
+	struct nvme_id_ns_granularity_list_entry entry[16];
 };
 
 /**

@@ -11,6 +11,7 @@ COMMAND_LIST(
 	ENTRY("list-subsys", "List nvme subsystems", list_subsys)
 	ENTRY("id-ctrl", "Send NVMe Identify Controller", id_ctrl)
 	ENTRY("id-ns", "Send NVMe Identify Namespace, display structure", id_ns)
+	ENTRY("id-ns-granularity", "Send NVMe Identify Namespace Granularity List, display structure", id_ns_granularity)
 	ENTRY("list-ns", "Send NVMe Identify List, display structure", list_ns)
 	ENTRY("list-ctrl", "Send NVMe Identify Controller List, display structure", list_ctrl)
 	ENTRY("list-secondary", "List Secondary Controllers associated with a Primary Controller", list_secondary_ctrl)
