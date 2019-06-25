@@ -40,16 +40,16 @@ struct nvme_effects_log_page {
 };
 
 struct nvme_error_log_page {
-	__u64	error_count;
-	__u16	sqid;
-	__u16	cmdid;
-	__u16	status_field;
-	__u16	parm_error_location;
-	__u64	lba;
-	__u32	nsid;
+	__le64	error_count;
+	__le16	sqid;
+	__le16	cmdid;
+	__le16	status_field;
+	__le16	parm_error_location;
+	__le64	lba;
+	__le32	nsid;
 	__u8	vs;
 	__u8	resv[3];
-	__u64	cs;
+	__le64	cs;
 	__u8	resv2[24];
 };
 
@@ -119,19 +119,31 @@ struct nvme_bar_cap {
 #define __force
 #endif
 
-#define cpu_to_le16(x) \
-	((__force __le16)htole16(x))
-#define cpu_to_le32(x) \
-	((__force __le32)htole32(x))
-#define cpu_to_le64(x) \
-	((__force __le64)htole64(x))
+static inline __le16 cpu_to_le16(uint16_t x)
+{
+	return (__force __le16)htole16(x);
+}
+static inline __le32 cpu_to_le32(uint32_t x)
+{
+	return (__force __le32)htole32(x);
+}
+static inline __le64 cpu_to_le64(uint64_t x)
+{
+	return (__force __le64)htole64(x);
+}
 
-#define le16_to_cpu(x) \
-	le16toh((__force __u16)(x))
-#define le32_to_cpu(x) \
-	le32toh((__force __u32)(x))
-#define le64_to_cpu(x) \
-	le64toh((__force __u64)(x))
+static inline uint16_t le16_to_cpu(__le16 x)
+{
+	return le16toh((__force __u16)x);
+}
+static inline uint32_t le32_to_cpu(__le32 x)
+{
+	return le32toh((__force __u32)x);
+}
+static inline uint64_t le64_to_cpu(__le64 x)
+{
+	return le64toh((__force __u64)x);
+}
 
 #define MAX_LIST_ITEMS 256
 struct list_item {

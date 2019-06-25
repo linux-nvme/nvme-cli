@@ -199,17 +199,17 @@
 #define WDC_C2_USER_EOL_STATE_ID			0x1C
 #define WDC_C2_SYSTEM_EOL_STATE_ID			0x1D
 #define WDC_C2_FORMAT_CORRUPT_REASON_ID			0x1E
-#define WDC_EOL_STATUS_NORMAL				0x00000000
-#define WDC_EOL_STATUS_END_OF_LIFE			0x00000001
-#define WDC_EOL_STATUS_READ_ONLY			0x00000002
-#define WDC_ASSERT_DUMP_NOT_PRESENT			0x00000000
-#define WDC_ASSERT_DUMP_PRESENT				0x00000001
-#define WDC_THERMAL_THROTTLING_OFF			0x00000000
-#define WDC_THERMAL_THROTTLING_ON			0x00000001
-#define WDC_THERMAL_THROTTLING_UNAVAILABLE		0x00000002
-#define WDC_FORMAT_NOT_CORRUPT				0x00000000
-#define WDC_FORMAT_CORRUPT_FW_ASSERT			0x00000001
-#define WDC_FORMAT_CORRUPT_UNKNOWN			0x000000FF
+#define WDC_EOL_STATUS_NORMAL				cpu_to_le32(0x00000000)
+#define WDC_EOL_STATUS_END_OF_LIFE			cpu_to_le32(0x00000001)
+#define WDC_EOL_STATUS_READ_ONLY			cpu_to_le32(0x00000002)
+#define WDC_ASSERT_DUMP_NOT_PRESENT			cpu_to_le32(0x00000000)
+#define WDC_ASSERT_DUMP_PRESENT				cpu_to_le32(0x00000001)
+#define WDC_THERMAL_THROTTLING_OFF			cpu_to_le32(0x00000000)
+#define WDC_THERMAL_THROTTLING_ON			cpu_to_le32(0x00000001)
+#define WDC_THERMAL_THROTTLING_UNAVAILABLE		cpu_to_le32(0x00000002)
+#define WDC_FORMAT_NOT_CORRUPT				cpu_to_le32(0x00000000)
+#define WDC_FORMAT_CORRUPT_FW_ASSERT			cpu_to_le32(0x00000001)
+#define WDC_FORMAT_CORRUPT_UNKNOWN			cpu_to_le32(0x000000FF)
 
 /* CA Log Page */
 #define WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE		0xCA
@@ -611,7 +611,7 @@ static long double int128_to_double(__u8 *data)
 	return result;
 }
 
-static int wdc_get_pci_ids(int *device_id, int *vendor_id)
+static int wdc_get_pci_ids(uint32_t *device_id, uint32_t *vendor_id)
 {
 	int fd, ret = -1;
 	char *block, path[512], *id;
@@ -675,7 +675,7 @@ static int wdc_get_pci_ids(int *device_id, int *vendor_id)
 			id[strlen(id) - 1] = '\0';
 
 		/* convert the device id string to an int  */
-		*device_id = (int)strtol(&id[2], NULL, 16);
+		*device_id = strtol(&id[2], NULL, 16);
 		ret = 0;
 	}
 
@@ -690,31 +690,31 @@ static bool wdc_check_device(int fd)
 {
 	int ret;
 	bool supported;
-	int read_device_id, read_vendor_id;
+	uint32_t read_device_id, read_vendor_id;
 
-	ret = wdc_get_pci_ids((int *)&read_device_id, (int *)&read_vendor_id);
+	ret = wdc_get_pci_ids(&read_device_id, &read_vendor_id);
 	if (ret < 0)
 		return false;
 
 	supported = false;
 
-	if ((le32_to_cpu(read_vendor_id) == WDC_NVME_VID) ||
-			(le32_to_cpu(read_vendor_id) == WDC_NVME_VID_2) ||
-			(le32_to_cpu(read_vendor_id) == WDC_NVME_SNDK_VID))
+	if (read_vendor_id == WDC_NVME_VID ||
+	    read_vendor_id == WDC_NVME_VID_2 ||
+	    read_vendor_id == WDC_NVME_SNDK_VID)
 		supported = true;
 	else
 		fprintf(stderr, "ERROR : WDC: unsupported WDC device, Vendor ID = 0x%x, Device ID = 0x%x\n",
-				le32_to_cpu(read_vendor_id), le32_to_cpu(read_device_id));
+				read_vendor_id, read_device_id);
 
 	return supported;
 }
 
 static __u64 wdc_get_drive_capabilities(int fd) {
 	int ret;
-	int read_device_id, read_vendor_id;
+	uint32_t read_device_id, read_vendor_id;
 	__u64 capabilities = 0;
 
-	ret = wdc_get_pci_ids((int *)&read_device_id, (int *)&read_vendor_id);
+	ret = wdc_get_pci_ids(&read_device_id, &read_vendor_id);
 	if (ret < 0)
 		return capabilities;
 
@@ -979,7 +979,7 @@ static bool wdc_nvme_check_supported_log_page(int fd, __u8 log_id)
 	return found;
 }
 
-static bool wdc_nvme_get_dev_status_log_data(int fd, __u32 *ret_data,
+static bool wdc_nvme_get_dev_status_log_data(int fd, __le32 *ret_data,
 		__u8 log_id)
 {
 	__u32 *cbs_data = NULL;
@@ -1292,7 +1292,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area)
 		if (data_area != WDC_NVME_DUI_MAX_DATA_AREA) {
 			for(int i = 0; i < WDC_NVME_DUI_MAX_SECTION; i++) {
 				__u16 data_area_id = le16_to_cpu(log_hdr->log_section[i].data_area_id);
-				__u16 section_size = le16_to_cpu(log_hdr->log_section[i].section_size);
+				__u16 section_size = le32_to_cpu(log_hdr->log_section[i].section_size);
 
 				if (data_area_id <= data_area &&
 				    data_area_id != 0)
@@ -2610,7 +2610,7 @@ static int wdc_get_c1_log_page(int fd, char *format, uint8_t interval)
 					break;
 				}
 			}
-			skip_cnt = le32_to_cpu(sph->subpage_length) + 4;
+			skip_cnt = le16_to_cpu(sph->subpage_length) + 4;
 		}
 		if (ret) {
 			fprintf(stderr, "ERROR : WDC : Unable to read data from buffer\n");
@@ -2769,11 +2769,12 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 	char *desc = "Get Drive Status.";
 	int fd;
 	int ret = -1;
-	uint32_t system_eol_state;
-	uint32_t user_eol_state;
-	uint32_t format_corrupt_reason = 0xFFFFFFFF;
-	int32_t eol_status;
-	__u32 assert_status = 0xFFFFFFFF, thermal_status = 0xFFFFFFFF;
+	__le32 system_eol_state;
+	__le32 user_eol_state;
+	__le32 format_corrupt_reason = cpu_to_le32(0xFFFFFFFF);
+	__le32 eol_status;
+	__le32 assert_status = cpu_to_le32(0xFFFFFFFF);
+	__le32 thermal_status = cpu_to_le32(0xFFFFFFFF);
 	__u64 capabilities = 0;
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -2799,39 +2800,39 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 	}
 
 	/* Get the assert dump present status */
-	if (!wdc_nvme_get_dev_status_log_data(fd, (__u32 *)&assert_status,
+	if (!wdc_nvme_get_dev_status_log_data(fd, &assert_status,
 			WDC_C2_ASSERT_DUMP_PRESENT_ID))
 		fprintf(stderr, "ERROR : WDC : Get Assert Status Failed\n");
 
 	/* Get the thermal throttling status */
-	if (!wdc_nvme_get_dev_status_log_data(fd, (__u32 *)&thermal_status,
+	if (!wdc_nvme_get_dev_status_log_data(fd, &thermal_status,
 			WDC_C2_THERMAL_THROTTLE_STATUS_ID))
 		fprintf(stderr, "ERROR : WDC : Get Thermal Throttling Status Failed\n");
 
 	/* Get EOL status */
-	if (!wdc_nvme_get_dev_status_log_data(fd, (__u32 *)&eol_status,
+	if (!wdc_nvme_get_dev_status_log_data(fd, &eol_status,
 			WDC_C2_USER_EOL_STATUS_ID)) {
 		fprintf(stderr, "ERROR : WDC : Get User EOL Status Failed\n");
-		eol_status = -1;
+		eol_status = cpu_to_le32(-1);
 	}
 
 	/* Get Customer EOL state */
-	if (!wdc_nvme_get_dev_status_log_data(fd, (__u32 *)&user_eol_state,
+	if (!wdc_nvme_get_dev_status_log_data(fd, &user_eol_state,
 			WDC_C2_USER_EOL_STATE_ID))
 		fprintf(stderr, "ERROR : WDC : Get User EOL State Failed\n");
 
 	/* Get System EOL state*/
-	if (!wdc_nvme_get_dev_status_log_data(fd, (__u32 *)&system_eol_state,
+	if (!wdc_nvme_get_dev_status_log_data(fd, &system_eol_state,
 			WDC_C2_SYSTEM_EOL_STATE_ID))
 		fprintf(stderr, "ERROR : WDC : Get System EOL State Failed\n");
 
 	/* Get format corrupt reason*/
-	if (!wdc_nvme_get_dev_status_log_data(fd, (__u32 *)&format_corrupt_reason,
+	if (!wdc_nvme_get_dev_status_log_data(fd, &format_corrupt_reason,
 			WDC_C2_FORMAT_CORRUPT_REASON_ID))
 		fprintf(stderr, "ERROR : WDC : Get Format Corrupt Reason Failed\n");
 
 	printf("  Drive Status :- \n");
-	if (eol_status >= 0) {
+	if (le32_to_cpu(eol_status) >= 0) {
 		printf("  Percent Used:				%"PRIu32"%%\n",
 				le32_to_cpu(eol_status));
 	}
@@ -2882,7 +2883,7 @@ static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
 	char *desc = "Clear Assert Dump Present Status.";
 	int fd;
 	int ret = -1;
-	__u32 assert_status = 0xFFFFFFFF;
+	__le32 assert_status = cpu_to_le32(0xFFFFFFFF);
 	struct nvme_passthru_cmd admin_cmd;
 	const struct argconfig_commandline_options command_line_options[] = {
 		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc },
@@ -2899,7 +2900,7 @@ static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
 		ret = -1;
 		goto out;
 	}
-	if (!wdc_nvme_get_dev_status_log_data(fd, (__u32 *)&assert_status,
+	if (!wdc_nvme_get_dev_status_log_data(fd, &assert_status,
 			WDC_C2_ASSERT_DUMP_PRESENT_ID)) {
 		fprintf(stderr, "ERROR : WDC : Get Assert Status Failed\n");
 		ret = -1;
