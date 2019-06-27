@@ -1004,6 +1004,11 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 	if (human)
 		show_nvme_id_ctrl_ctratt(ctrl->ctratt);
 	printf("rrls      : %#x\n", le16_to_cpu(ctrl->rrls));
+
+	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
+	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
+	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));
+
 	printf("oacs      : %#x\n", le16_to_cpu(ctrl->oacs));
 	if (human)
 		show_nvme_id_ctrl_oacs(ctrl->oacs);
@@ -1745,6 +1750,7 @@ const char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_TIMESTAMP:	return "Timestamp";
 	case NVME_FEAT_WRITE_PROTECT:	return "Namespce Write Protect";
 	case NVME_FEAT_HCTM:		return "Host Controlled Thermal Management";
+	case NVME_FEAT_HOST_BEHAVIOR:   return "Host Behavior";
 	default:			return "Unknown";
 	}
 }
@@ -1853,6 +1859,7 @@ const char *nvme_status_to_string(__u32 status)
 	case NVME_SC_ANA_PERSISTENT_LOSS:	return "ASYMMETRIC_NAMESPACE_ACCESS_PERSISTENT_LOSS: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace being in the ANA Persistent Loss state";
 	case NVME_SC_ANA_INACCESSIBLE:		return "ASYMMETRIC_NAMESPACE_ACCESS_INACCESSIBLE: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace being in the ANA Inaccessible state";
 	case NVME_SC_ANA_TRANSITION:		return "ASYMMETRIC_NAMESPACE_ACCESS_TRANSITION: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace transitioning between Asymmetric Namespace Access states";
+	case NVME_SC_CMD_INTERRUPTED:		return "CMD_INTERRUPTED: Command processing was interrupted and the controller is unable to successfully complete the command. The host should retry the command.";
 	default:				return "Unknown";
 	}
 }
@@ -2149,6 +2156,9 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 	case NVME_FEAT_NOPSC:
 		printf("\tNon-Operational Power State Permissive Mode Enable (NOPPME): %s\n", (result & 1) ? "True" : "False");
 		break;
+	case NVME_FEAT_HOST_BEHAVIOR:
+		printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
+		break;
 	}
 }
 
@@ -2386,6 +2396,9 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vs)(
 	json_object_add_value_uint(root, "oaes", le32_to_cpu(ctrl->oaes));
 	json_object_add_value_int(root, "ctratt", le32_to_cpu(ctrl->ctratt));
 	json_object_add_value_int(root, "rrls", le16_to_cpu(ctrl->rrls));
+	json_object_add_value_int(root, "crdt1", le16_to_cpu(ctrl->crdt1));
+	json_object_add_value_int(root, "crdt2", le16_to_cpu(ctrl->crdt2));
+	json_object_add_value_int(root, "crdt3", le16_to_cpu(ctrl->crdt3));
 	json_object_add_value_int(root, "oacs", le16_to_cpu(ctrl->oacs));
 	json_object_add_value_int(root, "acl", ctrl->acl);
 	json_object_add_value_int(root, "aerl", ctrl->aerl);
