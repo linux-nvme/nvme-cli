@@ -464,7 +464,8 @@ static void show_nvme_id_ctrl_nwpc(__u8 nwpc)
 static void show_nvme_id_ctrl_sgls(__le32 ctrl_sgls)
 {
 	__u32 sgls = le32_to_cpu(ctrl_sgls);
-	__u32 rsvd0 = (sgls & 0xFF700000) >> 21;
+	__u32 rsvd0 = (sgls & 0xFFC00000) >> 22;
+	__u32 trsdbd = (sgls & 0x200000) >> 21;
 	__u32 aofdsl = (sgls & 0x100000) >> 20;
 	__u32 mpcsd = (sgls & 0x80000) >> 19;
 	__u32 sglltb = (sgls & 0x40000) >> 18;
@@ -475,7 +476,10 @@ static void show_nvme_id_ctrl_sgls(__le32 ctrl_sgls)
 	__u32 sglsp = sgls & 0x3;
 
 	if (rsvd0)
-		printf(" [31:21]: %#x\tReserved\n", rsvd0);
+		printf(" [31:22]: %#x\tReserved\n", rsvd0);
+	if (sglsp || (!sglsp && trsdbd))
+		printf(" [21:21]: %#x\tTransport SGL Data Block Descriptor %sSupported\n",
+			trsdbd, trsdbd ? "" : "Not ");
 	if (sglsp || (!sglsp && aofdsl))
 		printf(" [20:20]: %#x\tAddress Offsets %sSupported\n",
 			aofdsl, aofdsl ? "" : "Not ");
