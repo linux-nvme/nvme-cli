@@ -44,6 +44,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/sysmacros.h>
 
 #include "common.h"
 #include "nvme-print.h"
@@ -1837,6 +1838,48 @@ static int scan_dev_filter(const struct dirent *d)
 	return 0;
 }
 
+static void get_pci_bdf(char *node, char *bdf)
+{
+	struct stat st;
+	int ret, i;
+	char path[264];
+	char *p, *q;
+
+	bdf[0] = 0;
+	strcpy(path, node);
+	i = strlen(path);
+	for (; i>0; i--)
+		if (path[i]=='n') {
+			path[i] = 0;
+			break;
+	}
+	ret = stat(path, &st);
+	if (ret < 0)
+		return;
+	if ((st.st_mode & S_IFCHR) == 0)
+		return;
+	sprintf(path, "/sys/dev/char/%u:%u", major(st.st_rdev), minor(st.st_rdev));
+	ret = readlink(path, path, sizeof(path));
+	if (ret <= 0)
+		return;
+	// link value should be e.g. "../../devices/pci0000:85/0000:85:00.0/0000:86:00.0/nvme/nvme0"
+	path[sizeof(path)-1] = 0;
+	p = strstr(path, "pci");
+	if (!p)
+		return;
+	p = strchr(p, '/');
+	if (!p)
+		return;
+	p = strchr(p+1, '/');
+	if (!p)
+		return;
+	q = strchr(p+1, '/');
+	if (!q)
+		return;
+	*q = 0;
+	strcpy(bdf, p+1);
+}
+
 static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	char path[264];
@@ -1892,6 +1935,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 			ret = -errno;
 			goto cleanup_list_items;
 		}
+		get_pci_bdf(path, list_items[list_cnt].pci_bdf);
 		ret = get_nvme_info(fd, &list_items[list_cnt], path);
 		close(fd);
 		if (ret == 0) {

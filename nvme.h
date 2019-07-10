@@ -152,6 +152,7 @@ struct list_item {
 	int                 nsid;
 	struct nvme_id_ns   ns;
 	unsigned            block;
+	char                pci_bdf[16];
 };
 
 struct ctrl_list_item {

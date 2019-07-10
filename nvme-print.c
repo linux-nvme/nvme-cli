@@ -2166,21 +2166,22 @@ static void show_list_item(struct list_item list_item)
 		nsze, s_suffix);
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		le16_to_cpu(list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ms));
-	printf("%-16s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", list_item.node,
+	printf("%-16s %-*.*s %-*.*s %-9d %-26s %-16s %12s %-.*s\n", list_item.node,
             (int)sizeof(list_item.ctrl.sn), (int)sizeof(list_item.ctrl.sn), list_item.ctrl.sn,
             (int)sizeof(list_item.ctrl.mn), (int)sizeof(list_item.ctrl.mn), list_item.ctrl.mn,
-            list_item.nsid, usage, format, (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
+            list_item.nsid, usage, format, list_item.pci_bdf,
+	    (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
 }
 
 void show_list_items(struct list_item *list_items, unsigned len)
 {
 	unsigned i;
 
-	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
-	    "Node", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
-	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
+	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-12s %-8s\n",
+	    "Node", "SN", "Model", "Namespace", "Usage", "Format", "PCI Address", "FW Rev");
+	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-12s %-8s\n",
             "----------------", "--------------------", "----------------------------------------",
-            "---------", "--------------------------", "----------------", "--------");
+            "---------", "--------------------------", "----------------", "------------", "--------");
 	for (i = 0 ; i < len ; i++)
 		show_list_item(list_items[i]);
 
