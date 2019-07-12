@@ -1312,6 +1312,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 	__u64 buffer_addr;
 	__s64 total_size = 0;
 	int i;
+	int j;
 	bool last_xfer = false;
 	int err = 0, output = 0;
 
@@ -1349,13 +1350,13 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 		} else {
 			/* parse log header for all sections up to specified data area inclusively */
 			if (data_area != WDC_NVME_DUI_MAX_DATA_AREA) {
-				for(int i = 0; i < WDC_NVME_DUI_MAX_SECTION_V2; i++) {
-					if (log_hdr_v2->log_section[i].data_area_id <= data_area &&
-							log_hdr_v2->log_section[i].data_area_id != 0) {
-						log_size += log_hdr_v2->log_section[i].section_size;
+				for(j = 0; j < WDC_NVME_DUI_MAX_SECTION_V2; j++) {
+					if (log_hdr_v2->log_section[j].data_area_id <= data_area &&
+							log_hdr_v2->log_section[j].data_area_id != 0) {
+						log_size += log_hdr_v2->log_section[j].section_size;
 						if (verbose)
 							fprintf(stderr, "%s: Data area ID %d : section size 0x%x, total size = 0x%lx\n",
-								__func__, log_hdr_v2->log_section[i].data_area_id, (unsigned int)log_hdr_v2->log_section[i].section_size, (long unsigned int)log_size);
+								__func__, log_hdr_v2->log_section[j].data_area_id, (unsigned int)log_hdr_v2->log_section[j].section_size, (long unsigned int)log_size);
 					}
 					else {
 						if (verbose)
