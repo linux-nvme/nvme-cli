@@ -1296,7 +1296,7 @@ out:
 	return ret;
 }
 
-static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area)
+static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, int verbose)
 {
 	int ret = 0;
 	__u32 dui_log_hdr_size = WDC_NVME_CAP_DUI_HEADER_SIZE;
@@ -1312,7 +1312,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area)
 
 	log_hdr = (struct wdc_dui_log_hdr *) malloc(dui_log_hdr_size);
 	if (log_hdr == NULL) {
-		fprintf(stderr, "%s: ERROR : log header malloc failed : %s\n", __func__, strerror(errno));
+		fprintf(stderr, "%s: ERROR : log header malloc failed : status %s, size 0x%x\n",
+				__func__, strerror(errno), dui_log_hdr_size);
 		return -1;
 	}
 	memset(log_hdr, 0, dui_log_hdr_size);
@@ -1335,7 +1336,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area)
 
 		cap_dui_length_v2 = le64_to_cpu(log_hdr_v2->log_size);
 
-		fprintf(stderr, "INFO : WDC : Capture V2 Device Unit Info log\n");
+		if (verbose)
+			fprintf(stderr, "INFO : WDC : Capture V2 Device Unit Info log, data area = %d\n", data_area);
 
 		if (cap_dui_length_v2 == 0) {
 			fprintf(stderr, "INFO : WDC : Capture V2 Device Unit Info log is empty\n");
@@ -1344,10 +1346,17 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area)
 			if (data_area != WDC_NVME_DUI_MAX_DATA_AREA) {
 				for(int i = 0; i < WDC_NVME_DUI_MAX_SECTION_V2; i++) {
 					if (log_hdr_v2->log_section[i].data_area_id <= data_area &&
-							log_hdr_v2->log_section[i].data_area_id != 0)
+							log_hdr_v2->log_section[i].data_area_id != 0) {
 						log_size += log_hdr_v2->log_section[i].section_size;
-					else
+						if (verbose)
+							fprintf(stderr, "%s: Data area ID %d : section size 0x%x, total size = 0x%lx\n",
+								__func__, log_hdr_v2->log_section[i].data_area_id, (unsigned int)log_hdr_v2->log_section[i].section_size, (long unsigned int)log_size);
+					}
+					else {
+						if (verbose)
+							fprintf(stderr, "%s: break, total size = 0x%lx\n", 	__func__, (long unsigned int)log_size);
 						break;
+					}
 				}
 			} else
 				log_size = cap_dui_length_v2;
@@ -1356,7 +1365,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area)
 
 			dump_data = (__u8 *) malloc(sizeof (__u8) * total_size);
 			if (dump_data == NULL) {
-				fprintf(stderr, "%s: ERROR : dump data V2 malloc failed : %s, size = 0x%lx\n",
+				fprintf(stderr, "%s: ERROR : dump data V2 malloc failed : status %s, size = 0x%lx\n",
 						__func__, strerror(errno), (long unsigned int)total_size);
 				ret = -1;
 				goto out;
@@ -1396,7 +1405,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area)
 
 		cap_dui_length = le32_to_cpu(log_hdr->log_size);
 
-		fprintf(stderr, "INFO : WDC : Capture V1 Device Unit Info log\n");
+		if (verbose)
+			fprintf(stderr, "INFO : WDC : Capture V1 Device Unit Info log, data area = %d\n", data_area);
 
 		if (cap_dui_length == 0) {
 			fprintf(stderr, "INFO : WDC : Capture V1 Device Unit Info log is empty\n");
@@ -1405,18 +1415,28 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area)
 			if (data_area != WDC_NVME_DUI_MAX_DATA_AREA) {
 				for(int i = 0; i < WDC_NVME_DUI_MAX_SECTION; i++) {
 					if (log_hdr->log_section[i].data_area_id <= data_area &&
-							log_hdr->log_section[i].data_area_id != 0)
+							log_hdr->log_section[i].data_area_id != 0) {
 						log_size += log_hdr->log_section[i].section_size;
-					else
+						if (verbose)
+							fprintf(stderr, "%s: Data area ID %d : section size 0x%x, total size = 0x%x\n",
+								__func__, log_hdr->log_section[i].data_area_id, (unsigned int)log_hdr->log_section[i].section_size, (unsigned int)log_size);
+
+					}
+					else {
+						if (verbose)
+							fprintf(stderr, "%s: break, total size = 0x%x\n", 	__func__, (unsigned int)log_size);
 						break;
+					}
 				}
 			} else
 				log_size = cap_dui_length;
 
 			total_size = log_size;
+
 			dump_data = (__u8 *) malloc(sizeof (__u8) * total_size);
 			if (dump_data == NULL) {
-				fprintf(stderr, "%s: ERROR : dump data V1 malloc failed : %s\n", __func__, strerror(errno));
+				fprintf(stderr, "%s: ERROR : dump data V1 malloc failed : status %s, size = 0x%lx\n",
+						__func__, strerror(errno), (long unsigned int)total_size);
 				ret = -1;
 				goto out;
 			}
@@ -1454,7 +1474,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area)
 
 	if (ret == 0) {
 		fprintf(stderr, "%s:  NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
-		fprintf(stderr, "INFO : WDC : Capture Device Unit Info log, length = 0x%lx\n", (long unsigned int)total_size);
+		if (verbose)
+			fprintf(stderr, "INFO : WDC : Capture Device Unit Info log, length = 0x%lx\n", (long unsigned int)total_size);
 
 		ret = wdc_create_log_file(file, dump_data, total_size);
 	}
@@ -1756,6 +1777,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 	char *file = "Output file pathname.";
 	char *size = "Data retrieval transfer size.";
 	char *data_area = "Data area to retrieve up to.";
+	char *verbose = "Display more debug messages.";
 	char f[PATH_MAX] = {0};
 	char fileSuffix[PATH_MAX] = {0};
 	__u32 xfer_size = 0;
@@ -1768,18 +1790,21 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		char *file;
 		__u32 xfer_size;
 		int data_area;
+		int verbose;
 	};
 
 	struct config cfg = {
 		.file = NULL,
 		.xfer_size = 0x10000,
-		.data_area = 5
+		.data_area = 5,
+		.verbose = 0,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"output-file", 'o', "FILE", CFG_STRING, &cfg.file, required_argument, file},
 		{"transfer-size", 's', "NUM", CFG_POSITIVE, &cfg.xfer_size, required_argument, size},
 		{"data-area", 'd', "NUM", CFG_POSITIVE, &cfg.data_area, required_argument, data_area},
+		{"verbose", 'v', "",     CFG_NONE,     &cfg.verbose, no_argument, verbose},
 		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc},
 	};
 
@@ -1833,9 +1858,9 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 	if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG) {
 		return wdc_do_cap_diag(fd, f, xfer_size);
 	} else if ((capabilities & WDC_DRIVE_CAP_SN340_DUI) == WDC_DRIVE_CAP_SN340_DUI) {
-		return wdc_do_cap_dui(fd, f, xfer_size, cfg.data_area);
+		return wdc_do_cap_dui(fd, f, xfer_size, cfg.data_area, cfg.verbose);
 	} else if ((capabilities & WDC_DRIVE_CAP_DUI_DATA) == WDC_DRIVE_CAP_DUI_DATA) {
-		return wdc_do_cap_dui(fd, f, xfer_size, WDC_NVME_DUI_MAX_DATA_AREA);
+		return wdc_do_cap_dui(fd, f, xfer_size, cfg.data_area, cfg.verbose);
 	} else if ((capabilities & WDC_SN730_CAP_VUC_LOG) == WDC_SN730_CAP_VUC_LOG) {
 		return wdc_do_sn730_get_and_tar(fd, f);
 	} else {
