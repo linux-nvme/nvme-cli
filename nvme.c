@@ -1842,6 +1842,10 @@ static char *path_trim_last(char *path, char needle)
 {
 	int i;
 	i = strlen(path);
+	if (i>0 && path[i-1] == needle) {	// remove trailing slash
+		path[i-1] = 0;
+		i--;
+	}
 	for (; i>0; i--)
 		if (path[i] == needle) {
 			path[i] = 0;
