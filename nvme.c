@@ -1838,21 +1838,28 @@ static int scan_dev_filter(const struct dirent *d)
 	return 0;
 }
 
+static char *path_trim_last(char *path, char needle)
+{
+	int i;
+	i = strlen(path);
+	for (; i>0; i--)
+		if (path[i] == needle) {
+			path[i] = 0;
+			return path+i+1;
+	}
+	return NULL;
+}
+
 static void get_pci_bdf(char *node, char *bdf)
 {
 	struct stat st;
-	int ret, i;
+	int ret;
 	char path[264];
-	char *p, *q;
+	char *p;
 
 	bdf[0] = 0;
 	strcpy(path, node);
-	i = strlen(path);
-	for (; i>0; i--)
-		if (path[i]=='n') {
-			path[i] = 0;
-			break;
-	}
+	(void) path_trim_last(path, 'n');
 	ret = stat(path, &st);
 	if (ret < 0)
 		return;
@@ -1863,21 +1870,14 @@ static void get_pci_bdf(char *node, char *bdf)
 	if (ret <= 0)
 		return;
 	// link value should be e.g. "../../devices/pci0000:85/0000:85:00.0/0000:86:00.0/nvme/nvme0"
+	// or "../../devices/pci0000:3a/0000:3a:00.0/0000:3b:00.0/0000:3c:06.0/0000:43:00.0/nvme/nvme0"
+	// we want the last address before the device name
 	path[sizeof(path)-1] = 0;
-	p = strstr(path, "pci");
-	if (!p)
-		return;
-	p = strchr(p, '/');
-	if (!p)
-		return;
-	p = strchr(p+1, '/');
-	if (!p)
-		return;
-	q = strchr(p+1, '/');
-	if (!q)
-		return;
-	*q = 0;
-	strcpy(bdf, p+1);
+	(void) path_trim_last(path, '/');
+	(void) path_trim_last(path, '/');
+	p = path_trim_last(path, '/');
+	if (p && strlen(p) == 12)
+		strcpy(bdf, p);
 }
 
 static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
