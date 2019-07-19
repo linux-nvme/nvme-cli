@@ -3241,7 +3241,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	};
 
 	struct config cfg = {
-		.namespace_id = NVME_NSID_ALL,
+		.namespace_id = 0,
 		.timeout      = 600000,
 		.lbaf         = 0xff,
 		.ses          = 0,
@@ -3287,6 +3287,27 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	if (S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
+			err = -EINVAL;
+			goto close_fd;
+		}
+	} else if (cfg.namespace_id == 0) {
+		struct nvme_id_ctrl ctrl;
+
+		memset(&ctrl, 0, sizeof (struct nvme_id_ctrl));
+		err = nvme_identify_ctrl(fd, &ctrl);
+		if (err) {
+			perror("identify-ctrl");
+			goto close_fd;
+		}
+		if ((ctrl.fna & 1) == 1) {
+			/*
+			 * FNA bit 0 set to 1: all namespaces ... shall be configured with the same
+			 * attributes and a format (excluding secure erase) of any namespace results in a
+			 * format of all namespaces.
+			 */
+			cfg.namespace_id = NVME_NSID_ALL;
+		} else {
+			fprintf(stderr, "Invalid namespace ID, specify a namespace to format or use '-n 0xffffffff' to format all namespaces on this controller.\n");
 			err = -EINVAL;
 			goto close_fd;
 		}
