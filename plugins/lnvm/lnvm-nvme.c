@@ -17,7 +17,7 @@
 static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Initialize LightNVM device. A LightNVM/Open-Channel SSD"\
-			   " must have a media manager associated before it can "\
+			   " must have a media manager associated before it can"\
 			   " be exposed to the user. The default is to initialize"
 			   " the general media manager on top of the device.\n\n"
 			   "Example:"
