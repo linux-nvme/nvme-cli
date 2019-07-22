@@ -3360,7 +3360,12 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		show_nvme_status(err);
 	else {
 		printf("Success formatting namespace:%x\n", cfg.namespace_id);
-		ioctl(fd, BLKRRPART);
+		if (S_ISBLK(nvme_stat.st_mode) && ioctl(fd, BLKRRPART) < 0) {
+			fprintf(stderr, "failed to re-read partition table\n");
+			err = -errno;
+			goto close_fd;
+		}
+
 		if (cfg.reset && S_ISCHR(nvme_stat.st_mode))
 			nvme_reset_controller(fd);
 	}
