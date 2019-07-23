@@ -108,7 +108,7 @@ static int open_dev(char *dev)
 		return -ENODEV;
 	}
 	return fd;
- perror:
+perror:
 	perror(dev);
 	return err;
 }
@@ -4654,6 +4654,95 @@ static int write_cmd(int argc, char **argv, struct command *cmd, struct plugin *
 		"buffer is stdin) to specified logical blocks on the given "\
 		"device.";
 	return submit_io(nvme_cmd_write, "write", desc, argc, argv);
+}
+
+static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	int err, fd;
+	__u16 control = 0;
+	const char *desc = "Verify specified logical blocks on the given device.";
+	const char *namespace_id = "desired namespace";
+	const char *start_block = "64-bit LBA of first block to access";
+	const char *block_count = "number of blocks (zeroes based) on device to access";
+	const char *limited_retry = "limit media access attempts";
+	const char *force = "force device to commit cached data before performing the verify operation";
+	const char *prinfo = "PI and check field";
+	const char *ref_tag = "reference tag (for end to end PI)";
+	const char *app_tag_mask = "app tag mask (for end to end PI)";
+	const char *app_tag = "app tag (for end to end PI)";
+
+	struct config {
+		__u64 start_block;
+		__u32 namespace_id;
+		__u32 ref_tag;
+		__u16 app_tag;
+		__u16 app_tag_mask;
+		__u16 block_count;
+		__u8  prinfo;
+		int   limited_retry;
+		int   force_unit_access;
+	};
+
+	struct config cfg = {
+		.namespace_id      = 0,
+		.start_block       = 0,
+		.block_count       = 0,
+		.prinfo            = 0,
+		.ref_tag           = 0,
+		.app_tag           = 0,
+		.app_tag_mask      = 0,
+		.limited_retry     = 0,
+		.force_unit_access = 0,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"namespace-id",      'n', "NUM", CFG_POSITIVE,    &cfg.namespace_id,      required_argument, namespace_id},
+		{"start-block",       's', "NUM", CFG_LONG_SUFFIX, &cfg.start_block,       required_argument, start_block},
+		{"block-count",       'c', "NUM", CFG_SHORT,       &cfg.block_count,       required_argument, block_count},
+		{"limited-retry",     'l', "",    CFG_NONE,        &cfg.limited_retry,     no_argument,       limited_retry},
+		{"force-unit-access", 'f', "",    CFG_NONE,        &cfg.force_unit_access, no_argument,       force},
+		{"prinfo",            'p', "NUM", CFG_BYTE,        &cfg.prinfo,            required_argument, prinfo},
+		{"ref-tag",           'r', "NUM", CFG_POSITIVE,    &cfg.ref_tag,           required_argument, ref_tag},
+		{"app-tag",           'a', "NUM", CFG_SHORT,       &cfg.app_tag,           required_argument, app_tag},
+		{"app-tag-mask",      'm', "NUM", CFG_SHORT,       &cfg.app_tag_mask,      required_argument, app_tag_mask},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	if (cfg.prinfo > 0xf) {
+		err = EINVAL;
+		goto close_fd;
+	}
+
+	control |= (cfg.prinfo << 10);
+	if (cfg.limited_retry)
+		control |= NVME_RW_LR;
+	if (cfg.force_unit_access)
+		control |= NVME_RW_FUA;
+
+	if (!cfg.namespace_id) {
+		cfg.namespace_id = get_nsid(fd);
+		if (cfg.namespace_id == 0) {
+			err = EINVAL;
+			goto close_fd;
+		}
+	}
+
+	err = nvme_verify(fd, cfg.namespace_id, cfg.start_block, cfg.block_count,
+				control, cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask);
+	if (err < 0)
+		perror("verify");
+	else if (err != 0)
+		show_nvme_status(err);
+	else
+		printf("NVME Verify Success\n");
+
+close_fd:
+	close(fd);
+	return err;
 }
 
 static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
