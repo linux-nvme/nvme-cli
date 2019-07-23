@@ -17,7 +17,7 @@
 static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Initialize LightNVM device. A LightNVM/Open-Channel SSD"\
-			   " must have a media manager associated before it can "\
+			   " must have a media manager associated before it can"\
 			   " be exposed to the user. The default is to initialize"
 			   " the general media manager on top of the device.\n\n"
 			   "Example:"
@@ -48,7 +48,7 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 		return ret;
 
 	if (!strlen(cfg.devname)) {
-		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		fprintf(stderr, "device name missing\n");
 		return -EINVAL;
 	}
 
@@ -179,7 +179,7 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		return ret;
 
 	if (!strlen(cfg.devname)) {
-		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		fprintf(stderr, "device name missing\n");
 		return -EINVAL;
 	}
 	if (!strlen(cfg.tgtname)) {
@@ -265,7 +265,7 @@ static int lnvm_factory_init(int argc, char **argv, struct command *cmd, struct 
 		return ret;
 
 	if (!strlen(cfg.devname)) {
-		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		fprintf(stderr, "device name missing\n");
 		return -EINVAL;
 	}
 

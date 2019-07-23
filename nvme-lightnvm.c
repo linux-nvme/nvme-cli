@@ -422,13 +422,12 @@ static void show_lnvm_id20_ns(struct nvme_nvm_id20 *id, unsigned int flags)
 
 static void show_lnvm_id_ns(struct nvme_nvm_id *id, unsigned int flags)
 {
-	void *tmp = id;
 	switch (id->ver_id) {
 		case 1:
-			show_lnvm_id12_ns(tmp, flags);
+			show_lnvm_id12_ns((void *) id, flags);
 		break;
 		case 2:
-			show_lnvm_id20_ns(tmp, flags);
+			show_lnvm_id20_ns((void *) id, flags);
 		break;
 		default:
 			fprintf(stderr, "Version %d not supported.\n",
