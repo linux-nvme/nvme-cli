@@ -220,10 +220,10 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	else
 		perror("smart log");
 
- close_fd:
+close_fd:
 	close(fd);
 
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -421,14 +421,14 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		offset += bs;
 	}
 
- close_output:
+close_output:
 	close(output);
- free_mem:
+free_mem:
 	free(hdr);
 	free(page_log);
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -483,9 +483,9 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 	else
 		perror("endurance log");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -548,9 +548,9 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	else
 		perror("effects log page");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -635,9 +635,9 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		free(err_log);
 	}
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -692,9 +692,9 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 	else
 		perror("fw log");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -750,9 +750,9 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 	else
 		perror("changed ns list log");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -852,9 +852,9 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		free(log);
 	}
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -917,9 +917,9 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 	else
 		perror("sanitize status log");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(ret, false);
 }
 
@@ -1101,9 +1101,9 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	else
 		perror("delete namespace");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -1168,9 +1168,9 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	else
 		perror(attach ? "attach namespace" : "detach namespace");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -1914,14 +1914,14 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 			show_list_items(list_items, list_cnt);
 	}
 
- cleanup_list_items:
+cleanup_list_items:
 	free(list_items);
 
- cleanup_devices:
+cleanup_devices:
 	for (i = 0; i < n; i++)
 		free(devices[i]);
 	free(devices);
- ret:
+ret:
 	return nvme_status_to_errno(ret, false);
 }
 
@@ -1995,9 +1995,9 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	else
 		perror("identify controller");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -2078,9 +2078,9 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	free(nsdescs);
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -2167,9 +2167,9 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	else
 		perror("identify namespace");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -2256,9 +2256,9 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 	}
 	printf("%s: namespace-id:%d\n", devicename, nsid);
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -2454,7 +2454,7 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 		perror("Device self-test");
 
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -2510,9 +2510,9 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 		perror("self_test_log");
 	}
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -2643,9 +2643,9 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	if (buf)
 		free(buf);
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -2746,13 +2746,13 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	if (!err)
 		printf("Firmware download success\n");
 
- free:
+free:
 	free(buf);
- close_fw_fd:
+close_fw_fd:
 	close(fw_fd);
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -2845,9 +2845,9 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 		printf("\n");
 	}
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -3016,9 +3016,9 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	else if (ret > 0)
 		show_nvme_status(ret);
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(ret, false);
 }
 
@@ -3091,9 +3091,9 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	if (fabrics)
 		free(bar);
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -3145,9 +3145,9 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 		show_nvme_status(err);
 	}
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -3202,9 +3202,9 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 		show_nvme_status(err);
 	}
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -3370,9 +3370,9 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			nvme_reset_controller(fd);
 	}
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -3487,14 +3487,14 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	} else if (err > 0)
 		show_nvme_status(err);
 
- close_ffd:
+close_ffd:
 	close(ffd);
- free:
+free:
 	if (buf)
 		free(buf);
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -3587,13 +3587,13 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	else
 		printf("NVME Security Send Command Success:%d\n", result);
 
- free:
+free:
 	free(sec_buf);
- close_sec_fd:
+close_sec_fd:
 	close(sec_fd);
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -3896,9 +3896,9 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	else
 		printf("NVME Write Zeroes Success\n");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -3999,9 +3999,9 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	else
 		printf("NVMe DSM: success\n");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -4126,9 +4126,9 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 	else
 		printf("NVME Reservation Acquire success\n");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -4206,9 +4206,9 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 	else
 		printf("NVME Reservation  success\n");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -4282,9 +4282,9 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 	else
 		printf("NVME Reservation Release success\n");
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -4379,9 +4379,9 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	}
 	free(status);
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -4617,19 +4617,19 @@ static int submit_io(int opcode, char *command, const char *desc,
 			fprintf(stderr, "%s: Success\n", command);
 	}
 
- free_mbuffer:
+free_mbuffer:
 	if (cfg.metadata_size)
 		free(mbuffer);
- free_buffer:
+free_buffer:
 	free(buffer);
- close_mfd:
+close_mfd:
 	if (strlen(cfg.metadata))
 		close(mfd);
- close_dfd:
+close_dfd:
 	close(dfd);
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -4736,9 +4736,9 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	free(sec_buf);
 
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
@@ -5062,19 +5062,19 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 			d_raw((unsigned char *)data, cfg.data_len);
 	}
 
- free_data:
+free_data:
 	if (cfg.data_len)
 		free(data);
- free_metadata:
+free_metadata:
 	if (cfg.metadata_len)
 		free(metadata);
 
- close_wfd:
+close_wfd:
 	if (strlen(cfg.input_file))
 		close(wfd);
- close_fd:
+close_fd:
 	close(fd);
- ret:
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
