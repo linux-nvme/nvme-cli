@@ -7,8 +7,13 @@ nvme - the NVMe storage command line interface utility (nvme-cli)
 
 SYNOPSIS
 --------
+bulit-in plugin:
 [verse]
-'nvme' <command> <device> [<args>] 
+'nvme' <command> <device> [<args>]
+
+extension plugins:
+[verse]
+'nvme' <plugin> <command> <device> [<args>]
 
 DESCRIPTION
 -----------
