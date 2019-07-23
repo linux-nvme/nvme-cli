@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 04/04/2019
+.\"      Date: 07/24/2019
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "04/04/2019" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "07/24/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,15 +28,23 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme \- the dumb pci\-e storage utility
+nvme \- the NVMe storage command line interface utility (nvme\-cli)
 .SH "SYNOPSIS"
+.sp
+bulit\-in plugin:
 .sp
 .nf
 \fInvme\fR <command> <device> [<args>]
 .fi
+.sp
+extension plugins:
+.sp
+.nf
+\fInvme\fR <plugin> <command> <device> [<args>]
+.fi
 .SH "DESCRIPTION"
 .sp
-NVM\-Express is a fast, scalable host controller interface designed to address the needs for PCI Express based solid state drives\&.
+NVM\-Express is a fast, scalable host controller interface designed to address the needs for not only PCI Express based solid state drives, but also NVMe\-oF(over fabrics)\&.
 .sp
 This \fInvme\fR program is a user space utility to provide standards compliant tooling for NVM\-Express drives\&. It was made specifically for Linux as it relies on the IOCTLs defined by the mainline kernel driver\&.
 .SH "NVME COMMANDS"
