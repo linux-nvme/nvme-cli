@@ -442,7 +442,7 @@ static int lnvm_get_identity(int fd, int nsid, struct nvme_nvm_id *nvm_id)
 		.opcode		= nvme_nvm_admin_identity,
 		.nsid		= nsid,
 		.addr		= (__u64)(uintptr_t)nvm_id,
-		.data_len	= 0x1000,
+		.data_len	= sizeof(struct nvme_nvm_id),
 	};
 
 	return nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
