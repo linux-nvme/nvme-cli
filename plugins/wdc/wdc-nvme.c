@@ -71,8 +71,9 @@
 #define WDC_NVME_SN520_DEV_ID_1				0x5004
 #define WDC_NVME_SN520_DEV_ID_2				0x5005
 #define WDC_NVME_SN720_DEV_ID				0x5002
-#define WDC_NVME_SN730_DEV_ID				0x3714
-#define WDC_NVME_SN730_DEV_ID_1				0x3734
+#define WDC_NVME_SN730A_DEV_ID				0x5006
+#define WDC_NVME_SN730B_DEV_ID				0x3714
+#define WDC_NVME_SN730B_DEV_ID_1			0x3734
 #define WDC_NVME_SN340_DEV_ID				0x500d
 
 #define WDC_DRIVE_CAP_CAP_DIAG				0x0000000000000001
@@ -91,7 +92,7 @@
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS			0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
-#define WDC_SN730_CAP_VUC_LOG				0x0000000400000000
+#define WDC_SN730B_CAP_VUC_LOG				0x0000000400000000
 #define WDC_DRIVE_CAP_SN340_DUI				0x0000000800000000
 #define WDC_DRIVE_CAP_SMART_LOG_MASK	(WDC_DRIVE_CAP_C1_LOG_PAGE | WDC_DRIVE_CAP_CA_LOG_PAGE | \
 					 WDC_DRIVE_CAP_D0_LOG_PAGE)
@@ -785,10 +786,10 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_VU_SMART_LOG_OPCODE) == true)
 				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
 			break;
-		case WDC_NVME_SN730_DEV_ID:
+		case WDC_NVME_SN730B_DEV_ID:
 		/* FALLTHRU */
-		case WDC_NVME_SN730_DEV_ID_1:
-			capabilities = WDC_SN730_CAP_VUC_LOG;
+		case WDC_NVME_SN730B_DEV_ID_1:
+			capabilities = WDC_SN730B_CAP_VUC_LOG;
 			break;
 		default:
 			capabilities = 0;
@@ -806,6 +807,8 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		case WDC_NVME_SN520_DEV_ID_2:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA;
 		case WDC_NVME_SN720_DEV_ID:
+		/* FALLTHRU */
+		case WDC_NVME_SN730A_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_NAND_STATS;
 			break;
 		case WDC_NVME_SN340_DEV_ID:
@@ -1861,7 +1864,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		return wdc_do_cap_dui(fd, f, xfer_size, cfg.data_area, cfg.verbose);
 	} else if ((capabilities & WDC_DRIVE_CAP_DUI_DATA) == WDC_DRIVE_CAP_DUI_DATA) {
 		return wdc_do_cap_dui(fd, f, xfer_size, cfg.data_area, cfg.verbose);
-	} else if ((capabilities & WDC_SN730_CAP_VUC_LOG) == WDC_SN730_CAP_VUC_LOG) {
+	} else if ((capabilities & WDC_SN730B_CAP_VUC_LOG) == WDC_SN730B_CAP_VUC_LOG) {
 		return wdc_do_sn730_get_and_tar(fd, f);
 	} else {
 		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
