@@ -90,6 +90,7 @@
 #define WDC_DRIVE_CAP_CRASH_DUMP			0x0000000000000800
 #define WDC_DRIVE_CAP_PFAIL_DUMP			0x0000000000001000
 
+
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS			0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
 #define WDC_SN730B_CAP_VUC_LOG				0x0000000400000000
@@ -1312,6 +1313,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 	__s64 total_size = 0;
 	int i;
 	bool last_xfer = false;
+	int err = 0, output = 0;
 
 	log_hdr = (struct wdc_dui_log_hdr *) malloc(dui_log_hdr_size);
 	if (log_hdr == NULL) {
@@ -1366,21 +1368,34 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 
 			total_size = log_size;
 
-			dump_data = (__u8 *) malloc(sizeof (__u8) * total_size);
+			dump_data = (__u8 *) malloc(sizeof (__u8) * xfer_size_long);
 			if (dump_data == NULL) {
 				fprintf(stderr, "%s: ERROR : dump data V2 malloc failed : status %s, size = 0x%lx\n",
-						__func__, strerror(errno), (long unsigned int)total_size);
+						__func__, strerror(errno), (long unsigned int)xfer_size_long);
 				ret = -1;
 				goto out;
 			}
-			memset(dump_data, 0, sizeof (__u8) * total_size);
+			memset(dump_data, 0, sizeof (__u8) * xfer_size_long);
 
-			/* copy the telemetry and log headers into the dump_data buffer */
-			memcpy(dump_data, log_hdr_v2, WDC_NVME_CAP_DUI_HEADER_SIZE);
+			output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+			if (output < 0) {
+				fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
+						__func__, file, strerror(errno));
+				ret = output;
+				goto out;
+			}
+
+			/* write the telemetry and log headers into the dump_file */
+			err = write(output, (void *)log_hdr, WDC_NVME_CAP_DUI_HEADER_SIZE);
+			if (err != WDC_NVME_CAP_DUI_HEADER_SIZE) {
+				fprintf(stderr, "%s:  Failed to flush header data to file!\n", __func__);
+				goto free_mem;
+			}
 
 			log_size -= WDC_NVME_CAP_DUI_HEADER_SIZE;
 			curr_data_offset = WDC_NVME_CAP_DUI_HEADER_SIZE;
 			i = 0;
+			buffer_addr = (__u64)(uintptr_t)dump_data;
 
 			for(; log_size > 0; log_size -= xfer_size_long) {
 				xfer_size_long = min(xfer_size_long, log_size);
@@ -1388,14 +1403,20 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				if (log_size <= xfer_size_long)
 					last_xfer = true;
 
-				buffer_addr = (__u64)(uintptr_t)dump_data + (__u64)curr_data_offset;
-
 				ret = wdc_dump_dui_data_v2(fd, (__u32)xfer_size_long, curr_data_offset, (__u8 *)buffer_addr, last_xfer);
 				if (ret != 0) {
 					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%lx, offset = 0x%lx, addr = 0x%lx\n",
 							__func__, i, (long unsigned int)total_size, (long unsigned int)curr_data_offset, (long unsigned int)buffer_addr);
 					fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
 					break;
+				}
+
+				/* write the dump data into the file */
+				err = write(output, (void *)buffer_addr, xfer_size_long);
+				if (err != xfer_size_long) {
+					fprintf(stderr, "%s: ERROR : WDC : Failed to flush DUI data to file! chunk %d, err = 0x%x, xfer_size = 0x%lx\n",
+							__func__, i, err, (long unsigned int)xfer_size_long);
+					goto free_mem;
 				}
 
 				curr_data_offset += xfer_size_long;
@@ -1436,21 +1457,34 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 
 			total_size = log_size;
 
-			dump_data = (__u8 *) malloc(sizeof (__u8) * total_size);
+			dump_data = (__u8 *) malloc(sizeof (__u8) * xfer_size);
 			if (dump_data == NULL) {
-				fprintf(stderr, "%s: ERROR : dump data V1 malloc failed : status %s, size = 0x%lx\n",
-						__func__, strerror(errno), (long unsigned int)total_size);
+				fprintf(stderr, "%s: ERROR : dump data V1 malloc failed : status %s, size = 0x%x\n",
+						__func__, strerror(errno), (unsigned int)xfer_size);
 				ret = -1;
 				goto out;
 			}
-			memset(dump_data, 0, sizeof (__u8) * total_size);
+			memset(dump_data, 0, sizeof (__u8) * xfer_size);
 
-			/* copy the telemetry and log headers into the dump_data buffer */
-			memcpy(dump_data, log_hdr, WDC_NVME_CAP_DUI_HEADER_SIZE);
+			output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+			if (output < 0) {
+				fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
+						__func__, file, strerror(errno));
+				ret = output;
+				goto out;
+			}
+
+			/* write the telemetry and log headers into the dump_file */
+			err = write(output, (void *)log_hdr, WDC_NVME_CAP_DUI_HEADER_SIZE);
+			if (err != WDC_NVME_CAP_DUI_HEADER_SIZE) {
+				fprintf(stderr, "%s:  Failed to flush header data to file!\n", __func__);
+				goto free_mem;
+			}
 
 			log_size -= WDC_NVME_CAP_DUI_HEADER_SIZE;
 			curr_data_offset = WDC_NVME_CAP_DUI_HEADER_SIZE;
 			i = 0;
+			buffer_addr = (__u64)(uintptr_t)dump_data;
 
 			for(; log_size > 0; log_size -= xfer_size) {
 				xfer_size = min(xfer_size, log_size);
@@ -1458,34 +1492,37 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				if (log_size <= xfer_size)
 					last_xfer = true;
 
-				buffer_addr = (__u64)(uintptr_t)dump_data + (__u64)curr_data_offset;
-
 				ret = wdc_dump_dui_data(fd, xfer_size, curr_data_offset, (__u8 *)buffer_addr, last_xfer);
 				if (ret != 0) {
 					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%lx, offset = 0x%x, addr = 0x%lx\n",
-							__func__, i, (long unsigned int)total_size, curr_data_offset, (long unsigned int)buffer_addr);
+							__func__, i, (long unsigned int)log_size, curr_data_offset, (long unsigned int)buffer_addr);
 					fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
 					break;
+				}
+
+				/* write the dump data into the file */
+				err = write(output, (void *)buffer_addr, xfer_size);
+				if (err != xfer_size) {
+					fprintf(stderr, "%s: ERROR : WDC : Failed to flush DUI data to file! chunk %d, err = 0x%x, xfer_size = 0x%x\n",
+							__func__, i, err, xfer_size);
+					goto free_mem;
 				}
 
 				curr_data_offset += xfer_size;
 				i++;
 			}
-
 		}
 	}
 
-	if (ret == 0) {
-		fprintf(stderr, "%s:  NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
-		if (verbose)
-			fprintf(stderr, "INFO : WDC : Capture Device Unit Info log, length = 0x%lx\n", (long unsigned int)total_size);
+	fprintf(stderr, "%s:  NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+	if (verbose)
+		fprintf(stderr, "INFO : WDC : Capture Device Unit Info log, length = 0x%lx\n", (long unsigned int)total_size);
 
-		ret = wdc_create_log_file(file, dump_data, total_size);
-	}
-
+ free_mem:
+	close(output);
 	free(dump_data);
 
-out:
+ out:
 	free(log_hdr);
 	return ret;
 }
@@ -3858,6 +3895,7 @@ static int wdc_drive_resize(int argc, char **argv,
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;
 }
+
 
 static void wdc_print_nand_stats_normal(struct wdc_nand_stats *data)
 {
