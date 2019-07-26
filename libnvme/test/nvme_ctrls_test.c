@@ -118,7 +118,7 @@ static void _test_nvme_ctrl_pro_query(struct nvme_ctrl *cnt)
 	       le64toh(*((uint64_t *) nvme_ctrl_unvmcap_get(cnt))));
 	_ctrl_print_pro_u32(cnt, rpmbs);
 	_ctrl_print_pro_u16(cnt, edstt);
-	_ctrl_print_pro_u8(cnt, esto);
+	_ctrl_print_pro_u8(cnt, dsto);
 	_ctrl_print_pro_u8(cnt, fwug);
 	_ctrl_print_pro_u16(cnt, kas);
 	_ctrl_print_pro_u16(cnt, hctma);

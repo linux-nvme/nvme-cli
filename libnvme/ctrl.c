@@ -94,7 +94,7 @@ _getter_func_gen_uint32_t(nvme_ctrl, hmpre);
 _getter_func_gen_uint32_t(nvme_ctrl, hmmin);
 _getter_func_gen_uint32_t(nvme_ctrl, rpmbs);
 _getter_func_gen_uint16_t(nvme_ctrl, edstt);
-_getter_func_gen_uint8_t(nvme_ctrl, esto);
+_getter_func_gen_uint8_t(nvme_ctrl, dsto);
 _getter_func_gen_uint8_t(nvme_ctrl, fwug);
 _getter_func_gen_uint16_t(nvme_ctrl, kas);
 _getter_func_gen_uint16_t(nvme_ctrl, hctma);

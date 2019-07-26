@@ -85,7 +85,7 @@ struct _nvme_spec_id_ctrl_data {
 	uint8_t unvmcap[16];
 	uint8_t rpmbs[4];
 	uint8_t edstt[2];
-	uint8_t esto;
+	uint8_t dsto;
 	uint8_t fwug;
 	uint8_t kas[2];
 	uint8_t hctma[2];

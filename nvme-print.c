@@ -2403,7 +2403,7 @@ void json_nvme_id_ctrl(struct nvme_ctrl *ctrl, unsigned int mode,
 	json_object_add_value_float(root, "unvmcap", unvmcap);
 	json_object_add_value_uint(root, "rpmbs", nvme_ctrl_rpmbs_get(ctrl));
 	json_object_add_value_int(root, "edstt", nvme_ctrl_edstt_get(ctrl));
-	//json_object_add_value_int(root, "dsto", ctrl->dsto);  / * Device self test */
+	json_object_add_value_int(root, "dsto", nvme_ctrl_dsto_get(ctrl));
 	json_object_add_value_int(root, "fwug", nvme_ctrl_fwug_get(ctrl));
 	json_object_add_value_int(root, "kas", nvme_ctrl_kas_get(ctrl));
 	json_object_add_value_int(root, "hctma", nvme_ctrl_hctma_get(ctrl));

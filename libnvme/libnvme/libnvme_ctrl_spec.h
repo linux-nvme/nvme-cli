@@ -584,10 +584,10 @@ _DLL_PUBLIC uint32_t nvme_ctrl_rpmbs_get(struct nvme_ctrl *cnt);
 _DLL_PUBLIC uint16_t nvme_ctrl_edstt_get(struct nvme_ctrl *cnt);
 
 /**
- * nvme_ctrl_esto_get() - Retrieve the ESTO property of specified
+ * nvme_ctrl_dsto_get() - Retrieve the DSTO property of specified
  * NVMe controller.
  *
- * Retrieve the ESTO(Device Self-test Options) property of specified NVMe
+ * Retrieve the DSTO(Device Self-test Options) property of specified NVMe
  * controller.
  *
  * @cnt:
@@ -597,7 +597,7 @@ _DLL_PUBLIC uint16_t nvme_ctrl_edstt_get(struct nvme_ctrl *cnt);
  * Return:
  *	uint8_t.
  */
-_DLL_PUBLIC uint8_t nvme_ctrl_esto_get(struct nvme_ctrl *cnt);
+_DLL_PUBLIC uint8_t nvme_ctrl_dsto_get(struct nvme_ctrl *cnt);
 
 /**
  * nvme_ctrl_fwug_get() - Retrieve the FWUG property of specified
