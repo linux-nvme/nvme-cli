@@ -1212,7 +1212,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 
 		err = argconfig_parse(argc, argv, desc, opts);
 		if (err)
-			continue;
+			goto free_and_continue;
 
 		if (cfg.persistent && !cfg.keep_alive_tmo)
 			cfg.keep_alive_tmo = NVMF_DEF_DISC_TMO;
@@ -1220,15 +1220,14 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 		err = build_options(argstr, BUF_SIZE, true);
 		if (err) {
 			ret = err;
-			continue;
+			goto free_and_continue;
 		}
 
 		err = do_discover(argstr, connect);
-		if (err) {
+		if (err)
 			ret = err;
-			continue;
-		}
 
+free_and_continue:
 		free(args);
 		free(argv);
 	}
