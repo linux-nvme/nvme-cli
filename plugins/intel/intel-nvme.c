@@ -812,3 +812,91 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 	return err;
 
 }
+
+static int enable_lat_stats_tracking(int argc, char **argv,
+		struct command *command, struct plugin *plugin)
+{
+	int err, fd;
+	const char *desc = (
+			"Enable/Disable Intel Latency Statistics Tracking.\n"
+			"1 = Enable, 0 = Disable\n"
+			"No argument prints current status.");
+	const char *enable_desc = "Enable LST";
+	const char *disable_desc = "Disable LST";
+	const __u32 nsid = 0;
+	const __u8 fid = 0xe2;
+	const __u8 sel = 0;
+	const __u32 cdw11 = 0x0;
+	const __u32 cdw12 = 0x0;
+	const __u32 data_len = 32;
+	const __u32 save = 0;
+	__u32 result;
+	void *buf = NULL;
+
+	struct config {
+		bool enable, disable;
+	};
+
+	struct config cfg = {
+		.enable = false,
+		.disable = false,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"enable", 'e', "", CFG_NONE, &cfg.enable, no_argument, enable_desc},
+		{"disable", 'd', "", CFG_NONE, &cfg.disable, no_argument, disable_desc},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg,
+			sizeof(cfg));
+
+	enum Option {
+		None = -1,
+		True = 1,
+		False = 0,
+	};
+
+	enum Option option = None;
+
+	if (cfg.enable && cfg.disable)
+		printf("Cannot enable and disable simultaneously.");
+	else if (cfg.enable || cfg.disable)
+		option = cfg.enable;
+
+	if (fd < 0)
+		return fd;
+	switch (option) {
+	case None:
+		err = nvme_get_feature(fd, nsid, fid, sel, cdw11, data_len, buf,
+					&result);
+		if (!err) {
+			printf(
+				"Latency Statistics Tracking (FID 0x%X) is currently (%i).\n",
+				fid, result);
+		} else {
+			printf("Could not read feature id 0xE2.");
+			return err;
+		}
+		break;
+	case True:
+	case False:
+		err = nvme_set_feature(fd, nsid, fid, option, cdw12, save,
+				data_len, buf, &result);
+		if (err > 0) {
+			fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+		} else if (err < 0) {
+			perror("Enable latency tracking");
+			fprintf(stderr, "Command failed while parsing.");
+		} else {
+			printf("Successfully set enable bit for FID (0x%X) to %i.\n",
+				fid, option);
+		}
+		break;
+	default:
+		printf("%d not supported.", option);
+		return EINVAL;
+	}
+	return fd;
+}
