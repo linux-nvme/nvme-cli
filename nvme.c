@@ -2606,6 +2606,9 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	case NVME_FEAT_TIMESTAMP:
 		cfg.data_len = 8;
 		break;
+	case NVME_FEAT_HOST_BEHAVIOR:
+		cfg.data_len = 512;
+		break;
 	}
 
 	if (cfg.sel == 3)
