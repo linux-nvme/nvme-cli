@@ -3167,9 +3167,32 @@ static void show_registers_cmbloc(__u32 cmbloc, __u32 cmbsz)
 		printf("\tController Memory Buffer feature is not supported\n\n");
 		return;
 	}
-	printf("\tOffset                 (OFST): %x (See cmbsz.szu for granularity)\n",
+
+        static const char *enforced[] = { "Enforced", "Not Enforced" };
+
+	printf("\tOffset                                                        (OFST): 0x%x (See cmbsz.szu for granularity)\n",
 			(cmbloc & 0xfffff000) >> 12);
-	printf("\tBase Indicator Register (BIR): %x\n\n", cmbloc & 0x00000007);
+
+	printf("\tCMB Queue Dword Alignment                                     (CQDA): %d\n",
+			(cmbloc & 0x00000100) >> 8);
+
+	printf("\tCMB Data Metadata Mixed Memory Support                      (CDMMMS): %s\n",
+			enforced[(cmbloc & 0x00000080) >> 7]);
+
+	printf("\tCMB Data Pointer and Command Independent Locations Support (CDPCILS): %s\n",
+			enforced[(cmbloc & 0x00000040) >> 6]);
+
+	printf("\tCMB Data Pointer Mixed Locations Support                    (CDPMLS): %s\n",
+			enforced[(cmbloc & 0x00000020) >> 5]);
+
+	printf("\tCMB Queue Physically Discontiguous Support                   (CQPDS): %s\n",
+			enforced[(cmbloc & 0x00000010) >> 4]);
+
+	printf("\tCMB Queue Mixed Memory Support                               (CQMMS): %s\n",
+			enforced[(cmbloc & 0x00000008) >> 3]);
+
+	printf("\tBase Indicator Register                                        (BIR): 0x%x\n\n",
+			(cmbloc & 0x00000007));
 }
 
 static const char *nvme_register_szu_to_string(__u8 szu)
