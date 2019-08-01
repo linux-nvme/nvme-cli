@@ -98,7 +98,9 @@ OPTIONS
 
 -k <#>::
 --keep-alive-tmo=<#>::
-	Overrides the default keep alive timeout (in seconds).
+	Overrides the default keep alive timeout (in seconds). This
+	option will be ignored for discovery, but will be passed on to
+	the subsequent connect call.
 
 -c <#>::
 --reconnect-delay=<#>::
@@ -120,6 +122,8 @@ OPTIONS
 -i <#>::
 --nr-io-queues=<#>::
 	Overrides the default number of I/O queues create by the driver.
+	This option will be ignored for discovery, but will be passed on
+	to the subsequent connect call.
 
 -W <#>::
 --nr-write-queues=<#>::
@@ -132,7 +136,9 @@ OPTIONS
 -Q <#>::
 --queue-size=<#>::
 	Overrides the default number of elements in the I/O queues created
-	by the driver.
+	by the driver. This option will be ignored for discovery, but will be
+	passed on to the subsequent connect call.
+
 
 EXAMPLES
 --------
