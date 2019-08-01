@@ -819,7 +819,6 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	int err, fd;
 	const char *desc = (
 			"Enable/Disable Intel Latency Statistics Tracking.\n"
-			"1 = Enable, 0 = Disable\n"
 			"No argument prints current status.");
 	const char *enable_desc = "Enable LST";
 	const char *disable_desc = "Disable LST";
