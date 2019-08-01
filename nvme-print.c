@@ -141,16 +141,19 @@ static void show_nvme_id_ctrl_oaes(__le32 ctrl_oaes)
 static void show_nvme_id_ctrl_ctratt(__le32 ctrl_ctratt)
 {
 	__u32 ctratt = le32_to_cpu(ctrl_ctratt);
-	__u32 rsvd0 = ctratt >> 6;
+	__u32 rsvd0 = ctratt >> 8;
 	__u32 hostid128 = (ctratt & NVME_CTRL_CTRATT_128_ID) >> 0;
 	__u32 psp = (ctratt & NVME_CTRL_CTRATT_NON_OP_PSP) >> 1;
 	__u32 sets = (ctratt & NVME_CTRL_CTRATT_NVM_SETS) >> 2;
 	__u32 rrl = (ctratt & NVME_CTRL_CTRATT_READ_RECV_LVLS) >> 3;
 	__u32 eg = (ctratt & NVME_CTRL_CTRATT_ENDURANCE_GROUPS) >> 4;
 	__u32 iod = (ctratt & NVME_CTRL_CTRATT_PREDICTABLE_LAT) >> 5;
+	__u32 ng = (ctratt & NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY) >> 7;
 
 	if (rsvd0)
-		printf(" [31:6] : %#x\tReserved\n", rsvd0);
+		printf(" [31:8] : %#x\tReserved\n", rsvd0);
+	printf("  [7:7] : %#x\tNamespace Granularity %sSupported\n",
+		ng, ng ? "" : "Not ");
 	printf("  [5:5] : %#x\tPredictable Latency Mode %sSupported\n",
 		iod, iod ? "" : "Not ");
 	printf("  [4:4] : %#x\tEndurance Groups %sSupported\n",
@@ -1242,6 +1245,54 @@ void json_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list 
 	}
 
 	json_object_add_value_array(root, "secondary-controllers", entries);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void show_nvme_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *glist, unsigned int flags)
+{
+	int i;
+
+	printf("Identify Namespace Granularity List:\n");
+	printf("   ATTR        : Namespace Granularity Attributes: 0x%x\n", glist->attributes);
+	printf("   NUMD        : Number of Descriptors           : %d\n", glist->num_descriptors);
+
+	/* Number of Descriptors is a 0's based value */
+	for (i = 0; i <= glist->num_descriptors; i++) {
+		printf("\n     Entry[%2d] :\n", i);
+		printf("................\n");
+		printf("     NSG       : Namespace Size Granularity     : 0x%"PRIx64"\n",
+				le64_to_cpu(glist->entry[i].namespace_size_granularity));
+		printf("     NCG       : Namespace Capacity Granularity : 0x%"PRIx64"\n",
+				le64_to_cpu(glist->entry[i].namespace_capacity_granularity));
+	}
+}
+
+void json_nvme_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *glist, unsigned int flags)
+{
+	int i;
+	struct json_object *root;
+	struct json_array *entries;
+
+	root = json_create_object();
+
+	json_object_add_value_int(root, "attributes", glist->attributes);
+	json_object_add_value_int(root, "num-descriptors", glist->num_descriptors);
+
+	entries = json_create_array();
+	for (i = 0; i <= glist->num_descriptors; i++) {
+		struct json_object *entry = json_create_object();
+
+		json_object_add_value_uint(entry, "namespace-size-granularity",
+			le64_to_cpu(glist->entry[i].namespace_size_granularity));
+		json_object_add_value_uint(entry, "namespace-capacity-granularity",
+			le64_to_cpu(glist->entry[i].namespace_capacity_granularity));
+		json_array_add_value_object(entries, entry);
+	}
+
+	json_object_add_value_array(root, "namespace-granularity-list", entries);
 
 	json_print_object(root, NULL);
 	printf("\n");

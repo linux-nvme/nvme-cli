@@ -2173,6 +2173,66 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Send an Identify Namespace Granularity List command to the "\
+		"given device, returns namespace granularity list "\
+		"in either human-readable or binary format.";
+	int err, fmt, fd;
+	unsigned int flags = 0;
+        struct nvme_id_ns_granularity_list *granularity_list;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"output-format",   'o', "FMT", CFG_STRING,   &cfg.output_format,   required_argument, output_format },
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		err = fmt;
+		goto close_fd;
+	}
+
+	if (posix_memalign((void *)&granularity_list, getpagesize(), NVME_IDENTIFY_DATA_SIZE)) {
+		fprintf(stderr, "can not allocate granularity list payload\n");
+		err = -ENOMEM;
+		goto close_fd;
+	}
+
+	err = nvme_identify_ns_granularity(fd, granularity_list);
+	if (!err) {
+		if (fmt == BINARY)
+			d_raw((unsigned char *)granularity_list, sizeof(*granularity_list));
+		else if (fmt == JSON)
+			json_nvme_id_ns_granularity_list(granularity_list, flags);
+		else
+			show_nvme_id_ns_granularity_list(granularity_list, flags);
+	}
+	else if (err > 0)
+		show_nvme_status(err);
+	else
+		perror("identify namespace granularity");
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send an Identify NVM Set List command to the "\

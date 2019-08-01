@@ -403,6 +403,11 @@ int nvme_identify_nvmset(int fd, __u16 nvmset_id, void *data)
 	return nvme_identify13(fd, 0, NVME_ID_CNS_NVMSET_LIST, nvmset_id, data);
 }
 
+int nvme_identify_ns_granularity(int fd, void *data)
+{
+	return nvme_identify13(fd, 0, NVME_ID_CNS_NS_GRANULARITY, 0, data);
+}
+
 int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
                  __u16 lsi, bool rae, __u32 data_len, void *data)
 {
