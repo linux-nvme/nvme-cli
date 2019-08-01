@@ -938,6 +938,7 @@ enum {
 	NVME_FEAT_PLM_CONFIG	= 0x13,
 	NVME_FEAT_PLM_WINDOW	= 0x14,
 	NVME_FEAT_HOST_BEHAVIOR	= 0x16,
+	NVME_FEAT_SANITIZE	= 0x17,
 	NVME_FEAT_SW_PROGRESS	= 0x80,
 	NVME_FEAT_HOST_ID	= 0x81,
 	NVME_FEAT_RESV_MASK	= 0x82,
@@ -989,6 +990,7 @@ enum {
 	NVME_SANITIZE_LOG_COMPLETED_SUCCESS	= 0x0001,
 	NVME_SANITIZE_LOG_IN_PROGESS		= 0x0002,
 	NVME_SANITIZE_LOG_COMPLETED_FAILED	= 0x0003,
+	NVME_SANITIZE_LOG_ND_COMPLETED_SUCCESS	= 0x0004,
 };
 
 enum {
@@ -1148,6 +1150,9 @@ struct nvme_sanitize_log_page {
 	__le32			est_ovrwrt_time;
 	__le32			est_blk_erase_time;
 	__le32			est_crypto_erase_time;
+	__le32			est_ovrwrt_time_with_no_deallocate;
+	__le32			est_blk_erase_time_with_no_deallocate;
+	__le32			est_crypto_erase_time_with_no_deallocate;
 };
 
 /*
