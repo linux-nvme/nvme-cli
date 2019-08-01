@@ -11,7 +11,8 @@ PLUGIN(NAME("lnvm", "LightNVM specific extensions"),
 	COMMAND_LIST(
 		ENTRY("list", "List available LightNVM devices", lnvm_list)
 		ENTRY("info", "List general information and available target engines", lnvm_info)
-		ENTRY("id-ns", "List geometry for LightNVM device", lnvm_id_ns)
+		ENTRY("id-ns", "List geometry for LightNVM device", lnvm_id_ns, "geometry")
+		ENTRY("chunk-log", "Chunk Information Log Page", lnvm_chunk_log)
 		ENTRY("init", "Initialize media manager on LightNVM device", lnvm_init)
 		ENTRY("create", "Create target on top of a LightNVM device", lnvm_create_tgt)
 		ENTRY("remove", "Remove target from device", lnvm_remove_tgt)

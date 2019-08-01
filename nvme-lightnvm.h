@@ -246,6 +246,20 @@ struct nvme_nvm_id {
 	__u8			resv[4095];
 } __attribute__((packed));
 
+enum {
+	NVM_LID_CHUNK_INFO = 0xCA,
+};
+
+struct nvme_nvm_chunk_desc {
+	__u8	cs;
+	__u8	ct;
+	__u8	wli;
+	__u8	rsvd_7_3[5];
+	__u64	slba;
+	__u64	cnlb;
+	__u64	wp;
+};
+
 struct nvme_nvm_bb_tbl {
 	__u8	tblid[4];
 	__le16	verid;
@@ -299,6 +313,8 @@ static inline struct ppa_addr generic_to_dev_addr(
 	return l;
 }
 
+int lnvm_get_identity(int fd, int nsid, struct nvme_nvm_id *nvm_id);
+
 int lnvm_do_init(char *, char *);
 int lnvm_do_list_devices(void);
 int lnvm_do_info(void);
@@ -306,6 +322,7 @@ int lnvm_do_create_tgt(char *, char *, char *, int, int, int, int);
 int lnvm_do_remove_tgt(char *);
 int lnvm_do_factory_init(char *, int, int, int);
 int lnvm_do_id_ns(int, int, unsigned int);
+int lnvm_do_chunk_log(int, __u32, __u32, void *, unsigned int);
 int lnvm_do_get_bbtbl(int, int, int, int, unsigned int);
 int lnvm_do_set_bbtbl(int, int, int, int, int, int, __u8);
 
