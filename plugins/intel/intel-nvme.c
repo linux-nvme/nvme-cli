@@ -371,31 +371,129 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 struct intel_lat_stats {
 	__u16	maj;
 	__u16	min;
-	__u32	bucket_1[32];
-	__u32	bucket_2[31];
-	__u32	bucket_3[31];
+	__u32	data[1216];
 };
+
+enum FormatUnit {
+    None = 0,
+    us = 1,
+    ms = 2,
+    s = 3
+};
+
+#define US_IN_S 1000000
+#define US_IN_MS 1000
+
+static const enum FormatUnit format_seconds(__u32 microseconds) {
+    if(microseconds > US_IN_S) {
+        return s;
+    } else if (microseconds > US_IN_MS) {
+        return ms;
+    } else {
+        return us; // This is 습seconds
+    }
+}
+
+static const __u32 convert_seconds(__u32 microseconds) {
+    if(microseconds > US_IN_S) {
+        return microseconds / US_IN_S;
+    } else if (microseconds > US_IN_MS) {
+        return microseconds / US_IN_MS;
+    } else {
+        return microseconds;
+    }
+}
+
+static void get_unit(char* str, __u32 microseconds, enum FormatUnit unit) {
+    switch(unit) {
+    case us:
+        snprintf(str, 9, "%d%s", convert_seconds(microseconds), "us");
+        break;
+    case ms:
+        snprintf(str, 7, "%d%s", convert_seconds(microseconds), "ms");
+        break;
+    case s:
+        snprintf(str, 7, "%d%s", convert_seconds(microseconds), "s");
+        break;
+    default:
+        snprintf(str, 7, "%d%s", convert_seconds(microseconds), "_s");
+        break;
+    }
+}
+
+#define COL_WIDTH 10
+#define BUFSIZE 10
+
+#define PRINT_BUCKETS(start, end, bytes_per, step, nonzero_print)\
+	for (i = (start / bytes_per) - 1; i < end / bytes_per; i++) {\
+		if (nonzero_print && stats->data[i] == 0) {\
+			continue;\
+		}\
+        printf("%-*d", COL_WIDTH, i);\
+        format = format_seconds(step * i);\
+        get_unit(unit, step * i, format);\
+        printf("%-*s", COL_WIDTH, unit);\
+        format = format_seconds(step * (i + 1));\
+        get_unit(unit, step * (i + 1), format);\
+        printf("%-*s", COL_WIDTH, unit);\
+        printf("%-*d", COL_WIDTH, stats->data[i]);\
+        printf("\n");\
+	}\
+
+
+#define DASH_SEPARATOR(count)\
+    for (i = 0; i < count; i++) putchar('-');\
+    putchar('\n');\
+
+static void init_buffer(char *buffer, size_t size) {
+    int i;
+    for (i = 0; i < size; i++) buffer[i] = i + '0';
+}
 
 static void show_lat_stats(struct intel_lat_stats *stats, int write)
 {
-	int i;
+	int i = 0;
+    enum FormatUnit format = s;
+    int size = 0;
+    char unit[BUFSIZE]; 
+    init_buffer(unit, size);
+    char str[BUFSIZE]; 
+    init_buffer(str, size);
 
-	printf(" Intel IO %s Command Latency Statistics\n", write ? "Write" : "Read");
-	printf("-------------------------------------\n");
-	printf("Major Revision : %u\n", stats->maj);
-	printf("Minor Revision : %u\n", stats->min);
-
-	printf("\nGroup 1: Range is 0-1ms, step is 32us\n");
-	for (i = 0; i < 32; i++)
-		printf("Bucket %2d: %u\n", i, stats->bucket_1[i]);
-
-	printf("\nGroup 2: Range is 1-32ms, step is 1ms\n");
-	for (i = 0; i < 31; i++)
-		printf("Bucket %2d: %u\n", i, stats->bucket_2[i]);
-
-	printf("\nGroup 3: Range is 32-1s, step is 32ms:\n");
-	for (i = 0; i < 31; i++)
-		printf("Bucket %2d: %u\n", i, stats->bucket_3[i]);
+	printf("Intel IO %s Command Latency Statistics\n",
+			write ? "Write" : "Read");
+	printf("Major Revision : %u\nMinor Revision : %u\n",
+			stats->maj, stats->min);
+    DASH_SEPARATOR(50)
+    printf("%-10s%-10s%-10s%-15s\n", "Bucket", "Start", "End", "Value");
+    DASH_SEPARATOR(50)
+	switch(stats->maj) {
+	case 3:
+        PRINT_BUCKETS(4, 131, 4, 32, false)
+        PRINT_BUCKETS(132, 255, 4, 1024, false)
+        PRINT_BUCKETS(256, 379, 4, 32768, false)
+        PRINT_BUCKETS(380, 383, 4, 32, true) 
+        PRINT_BUCKETS(384, 387, 4, 32, true) 
+        PRINT_BUCKETS(388, 391, 4, 32, true) 
+        break;
+	case 4:
+		switch(stats->min) {
+		case 0:
+		case 1:
+			PRINT_BUCKETS(4, 4867, 4, 32, false)
+			break;
+		default:
+			printf(("Unsupported minor revision (%u.%u)\n"
+					"Defaulting to format for rev4.0"),
+					stats->maj, stats->min);
+			PRINT_BUCKETS(4, 4867, 4, 32, false)
+			break;
+		}
+		break;
+	default:
+		printf("Unsupported revision (%u.%u)\n", stats->maj, stats->min);
+		break;
+	}
 }
 
 static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
