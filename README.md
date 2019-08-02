@@ -32,10 +32,13 @@ available_spare                     : 100%
 
 ### Arch Linux
 
-Install from AUR, e.g.:
-```
-$ yay -S nvme-cli-git
-```
+nvme-cli is available in the `[community]` repository. It can be installed with:
+
+    # pacman -S nvme-cli
+
+The development version can be installed from AUR, e.g.:
+
+    $ yay -S nvme-cli-git
 
 ### Fedora
 
