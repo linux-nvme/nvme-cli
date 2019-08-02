@@ -384,17 +384,19 @@ enum FormatUnit {
 #define US_IN_S 1000000
 #define US_IN_MS 1000
 
-static const enum FormatUnit format_seconds(__u32 microseconds) {
+static const enum FormatUnit get_seconds_magnitude(__u32 microseconds)
+{
     if(microseconds > US_IN_S) {
         return s;
     } else if (microseconds > US_IN_MS) {
         return ms;
     } else {
-        return us; // This is 습seconds
+        return us;
     }
 }
 
-static const __u32 convert_seconds(__u32 microseconds) {
+static const __u32 convert_seconds(__u32 microseconds)
+{
     if(microseconds > US_IN_S) {
         return microseconds / US_IN_S;
     } else if (microseconds > US_IN_MS) {
@@ -404,19 +406,21 @@ static const __u32 convert_seconds(__u32 microseconds) {
     }
 }
 
-static void get_unit(char* str, __u32 microseconds, enum FormatUnit unit) {
+static void set_unit_string(char* buffer, __u32 microseconds,
+        enum FormatUnit unit)
+{
     switch(unit) {
     case us:
-        snprintf(str, 9, "%d%s", convert_seconds(microseconds), "us");
+        snprintf(buffer, 9, "%d%s", convert_seconds(microseconds), "us");
         break;
     case ms:
-        snprintf(str, 7, "%d%s", convert_seconds(microseconds), "ms");
+        snprintf(buffer, 7, "%d%s", convert_seconds(microseconds), "ms");
         break;
     case s:
-        snprintf(str, 7, "%d%s", convert_seconds(microseconds), "s");
+        snprintf(buffer, 7, "%d%s", convert_seconds(microseconds), "s");
         break;
     default:
-        snprintf(str, 7, "%d%s", convert_seconds(microseconds), "_s");
+        snprintf(buffer, 7, "%d%s", convert_seconds(microseconds), "_s");
         break;
     }
 }
@@ -424,69 +428,78 @@ static void get_unit(char* str, __u32 microseconds, enum FormatUnit unit) {
 #define COL_WIDTH 10
 #define BUFSIZE 10
 
-#define PRINT_BUCKETS(start, end, bytes_per, step, nonzero_print)\
-	for (i = (start / bytes_per) - 1; i < end / bytes_per; i++) {\
-		if (nonzero_print && stats->data[i] == 0) {\
-			continue;\
-		}\
-        printf("%-*d", COL_WIDTH, i);\
-        format = format_seconds(step * i);\
-        get_unit(unit, step * i, format);\
-        printf("%-*s", COL_WIDTH, unit);\
-        format = format_seconds(step * (i + 1));\
-        get_unit(unit, step * (i + 1), format);\
-        printf("%-*s", COL_WIDTH, unit);\
-        printf("%-*d", COL_WIDTH, stats->data[i]);\
-        printf("\n");\
-	}\
-
-
-#define DASH_SEPARATOR(count)\
-    for (i = 0; i < count; i++) putchar('-');\
-    putchar('\n');\
-
-static void init_buffer(char *buffer, size_t size) {
+static void init_buffer(char *buffer, size_t size)
+{
     int i;
     for (i = 0; i < size; i++) buffer[i] = i + '0';
 }
 
-static void show_lat_stats(struct intel_lat_stats *stats, int write)
+static void print_bucket(struct intel_lat_stats *stats, int step, int start, int i, int bytes_per)
+{
+    enum FormatUnit fu = s;
+    char unit[BUFSIZE];
+    init_buffer(unit, BUFSIZE);
+    printf("%-*d", COL_WIDTH, i);
+    fu = get_seconds_magnitude(step * i);
+    set_unit_string(unit, step * i, fu);
+    printf("%-*s", COL_WIDTH, unit);
+    fu = get_seconds_magnitude(step * (i + 1));
+    set_unit_string(unit, step * (i + 1), fu);
+    printf("%-*s", COL_WIDTH, unit);
+    printf("%-*d", COL_WIDTH, stats->data[i]);
+    printf("\n");
+}
+
+static void print_buckets(struct intel_lat_stats *stats, int start, int end, int bytes_per, int step, bool nonzero_print)
 {
 	int i = 0;
-    enum FormatUnit format = s;
-    int size = 0;
-    char unit[BUFSIZE]; 
-    init_buffer(unit, size);
-    char str[BUFSIZE]; 
-    init_buffer(str, size);
+	for (i = (start / bytes_per) - 1; i < end / bytes_per; i++) {
+		if (nonzero_print && stats->data[i] == 0) {
+			continue;
+		}
+        print_bucket(stats, step, start, i, bytes_per);
+	}
+}
 
+static void print_dash_separator(int count)
+{
+    for (int i = 0; i < count; i++) putchar('-');
+    putchar('\n');
+}
+
+
+static void show_lat_stats(struct intel_lat_stats *stats, int write)
+{
 	printf("Intel IO %s Command Latency Statistics\n",
 			write ? "Write" : "Read");
 	printf("Major Revision : %u\nMinor Revision : %u\n",
 			stats->maj, stats->min);
-    DASH_SEPARATOR(50)
+    print_dash_separator(50);
     printf("%-10s%-10s%-10s%-15s\n", "Bucket", "Start", "End", "Value");
-    DASH_SEPARATOR(50)
+    print_dash_separator(50);
 	switch(stats->maj) {
 	case 3:
-        PRINT_BUCKETS(4, 131, 4, 32, false)
-        PRINT_BUCKETS(132, 255, 4, 1024, false)
-        PRINT_BUCKETS(256, 379, 4, 32768, false)
-        PRINT_BUCKETS(380, 383, 4, 32, true) 
-        PRINT_BUCKETS(384, 387, 4, 32, true) 
-        PRINT_BUCKETS(388, 391, 4, 32, true) 
+        print_buckets(stats, 4, 131, 4, 32, false);
+        print_buckets(stats, 132, 255, 4, 1024, false);
+        print_buckets(stats, 256, 379, 4, 32768, false);
+        print_buckets(stats, 380, 383, 4, 32, true) ;
+        print_buckets(stats, 384, 387, 4, 32, true) ;
+        print_buckets(stats, 388, 391, 4, 32, true) ;
         break;
 	case 4:
 		switch(stats->min) {
-		case 0:
 		case 1:
-			PRINT_BUCKETS(4, 4867, 4, 32, false)
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+			print_buckets(stats, 4, 4867, 4, 32, false);
 			break;
 		default:
 			printf(("Unsupported minor revision (%u.%u)\n"
 					"Defaulting to format for rev4.0"),
 					stats->maj, stats->min);
-			PRINT_BUCKETS(4, 4867, 4, 32, false)
+			print_buckets(stats, 4, 4867, 4, 32, false);
 			break;
 		}
 		break;
