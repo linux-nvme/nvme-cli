@@ -3,15 +3,16 @@ NVM-Express user space tooling for Linux.
 
 To install, run:
 
-   # make && make install
+    $ make
+    # make install
 
 If not sure how to use, find the top-level documentation with:
 
-   # man nvme
+    $ man nvme
 
 Or find a short summary with:
 
-   # nvme help
+    $ nvme help
 
 ## Distro Support
 
