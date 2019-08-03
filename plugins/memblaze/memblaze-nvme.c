@@ -192,7 +192,7 @@ static int show_memblaze_smart_log(int fd, __u32 nsid, const char *devname,
 
 	item = &smart->items[HOST_WRITE];
 	if (item_id_2_u32(item) == 0xF5)
-		printf("Total host write in GiB since device born 			: %llu\n",
+		printf("Total host write in GB since device born 			: %llu\n",
 				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
 		
 	item = &smart->items[THERMAL_THROTTLE_CNT];
