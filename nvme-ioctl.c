@@ -820,6 +820,21 @@ int nvme_sec_recv(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 	return err;
 }
 
+int nvme_get_lba_status(int fd, __u64 slba, __u32 mndw, __u8 atype, __u16 rl,
+		void *data)
+{
+	struct nvme_admin_cmd cmd = {
+		.opcode =  nvme_admin_get_lba_status,
+		.addr = (__u64)(uintptr_t) data,
+		.cdw10 = slba & 0xffffffff,
+		.cdw11 = slba >> 32,
+		.cdw12 = mndw,
+		.cdw13 = (atype << 24) | rl,
+	};
+
+	return nvme_submit_admin_passthru(fd, &cmd);
+}
+
 int nvme_dir_send(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,
                   __u32 data_len, __u32 dw12, void *data, __u32 *result)
 {

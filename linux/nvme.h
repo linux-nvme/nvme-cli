@@ -526,6 +526,21 @@ struct nvme_fw_slot_info_log {
 	__u8			rsvd64[448];
 };
 
+struct nvme_lba_status_desc {
+	__u64 dslba;
+	__u32 nlb;
+	__u8 rsvd_12;
+	__u8 status;
+	__u8 rsvd_15_14[2];
+};
+
+struct nvme_lba_status {
+	__u32 nlsd;
+	__u8 cmpc;
+	__u8 rsvd_7_5[3];
+	struct nvme_lba_status_desc descs[0];
+};
+
 /* NVMe Namespace Write Protect State */
 enum {
 	NVME_NS_NO_WRITE_PROTECT = 0,
@@ -904,6 +919,7 @@ enum nvme_admin_opcode {
 	nvme_admin_security_send	= 0x81,
 	nvme_admin_security_recv	= 0x82,
 	nvme_admin_sanitize_nvm		= 0x84,
+	nvme_admin_get_lba_status	= 0x86,
 };
 
 enum {

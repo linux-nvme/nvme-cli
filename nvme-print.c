@@ -2169,6 +2169,34 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 	}
 }
 
+void show_lba_status(struct nvme_lba_status *list)
+{
+	int idx;
+
+	printf("Number of LBA Status Descriptors(NLSD): %lu\n",
+			le64_to_cpu(list->nlsd));
+	printf("Completion Condition(CMPC): %u\n", list->cmpc);
+	switch (list->cmpc) {
+	case 1:
+		printf("\tCompleted due to transferring the amount of data"\
+			" specified in the MNDW field\n");
+		break;
+	case 2:
+		printf("\tCompleted due to having performed the action\n"\
+			"\tspecified in the Action Type field over the\n"\
+			"\tnumber of logical blocks specified in the\n"\
+			"\tRange Length field\n");
+		break;
+	}
+
+	for (idx = 0; idx < list->nlsd; idx++) {
+		struct nvme_lba_status_desc *e = &list->descs[idx];
+		printf("{ DSLBA: 0x%016"PRIu64", NLB: 0x%08x, Status: 0x%02x }\n",
+				le64_to_cpu(e->dslba), le32_to_cpu(e->nlb),
+				e->status);
+	}
+}
+
 static void show_list_item(struct list_item list_item)
 {
 	long long int lba = 1 << list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ds;
