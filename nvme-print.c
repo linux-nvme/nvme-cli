@@ -122,13 +122,27 @@ static void show_nvme_id_ctrl_cmic(__u8 cmic)
 static void show_nvme_id_ctrl_oaes(__le32 ctrl_oaes)
 {
 	__u32 oaes = le32_to_cpu(ctrl_oaes);
-	__u32 rsvd0 = (oaes & 0xFFFFFC00) >> 10;
+	__u32 rsvd0 = (oaes & 0xFFFF8000) >> 15;
 	__u32 nace = (oaes & 0x100) >> 8;
 	__u32 fan = (oaes & 0x200) >> 9;
+	__u32 anacn = (oaes & 800) >> 11;
+	__u32 plealcn = (oaes & 0x1000) >> 12;
+	__u32 lbasin = (oaes & 0x2000) >> 13;
+	__u32 egealpcn = (oaes & 0x4000) >> 14;
 	__u32 rsvd1 = oaes & 0xFF;
 
 	if (rsvd0)
 		printf(" [31:10] : %#x\tReserved\n", rsvd0);
+	printf("[14:14] : %#x\tEndurance Group Event Aggregate Log Page"\
+			" Change Notice %sSupported\n",
+			egealpcn, egealpcn ? "" : "Not ");
+	printf("[13:13] : %#x\tLBA Status Information Notices %sSupported\n",
+			lbasin, lbasin ? "" : "Not ");
+	printf("[12:12] : %#x\tPredictable Latency Event Aggregate Log Change"\
+			" Notices %sSupported\n",
+			plealcn, plealcn ? "" : "Not ");
+	printf("[11:11] : %#x\tAsymmetric Namespace Access Change Notices"\
+			" %sSupported\n", anacn, anacn ? "" : "Not ");
 	printf("  [9:9] : %#x\tFirmware Activation Notices %sSupported\n",
 		fan, fan ? "" : "Not ");
 	printf("  [8:8] : %#x\tNamespace Attribute Changed Event %sSupported\n",
@@ -172,7 +186,8 @@ static void show_nvme_id_ctrl_ctratt(__le32 ctrl_ctratt)
 static void show_nvme_id_ctrl_oacs(__le16 ctrl_oacs)
 {
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
-	__u16 rsvd = (oacs & 0xFE00) >> 9;
+	__u16 rsvd = (oacs & 0xFC00) >> 10;
+	__u16 glbas = (oacs & 0x200) >> 9;
 	__u16 dbc = (oacs & 0x100) >> 8;
 	__u16 vir = (oacs & 0x80) >> 7;
 	__u16 nmi = (oacs & 0x40) >> 6;
@@ -185,6 +200,8 @@ static void show_nvme_id_ctrl_oacs(__le16 ctrl_oacs)
 
 	if (rsvd)
 		printf(" [15:9] : %#x\tReserved\n", rsvd);
+	printf("  [9:9] : %#x\tGet LBA Status Capability %sSupported\n",
+		glbas, glbas ? "" : "Not ");
 	printf("  [8:8] : %#x\tDoorbell Buffer Config %sSupported\n",
 		dbc, dbc ? "" : "Not ");
 	printf("  [7:7] : %#x\tVirtualization Management %sSupported\n",
@@ -2229,6 +2246,34 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 	case NVME_FEAT_HOST_BEHAVIOR:
 		printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
 		break;
+	}
+}
+
+void show_lba_status(struct nvme_lba_status *list)
+{
+	int idx;
+
+	printf("Number of LBA Status Descriptors(NLSD): %lu\n",
+			le64_to_cpu(list->nlsd));
+	printf("Completion Condition(CMPC): %u\n", list->cmpc);
+	switch (list->cmpc) {
+	case 1:
+		printf("\tCompleted due to transferring the amount of data"\
+			" specified in the MNDW field\n");
+		break;
+	case 2:
+		printf("\tCompleted due to having performed the action\n"\
+			"\tspecified in the Action Type field over the\n"\
+			"\tnumber of logical blocks specified in the\n"\
+			"\tRange Length field\n");
+		break;
+	}
+
+	for (idx = 0; idx < list->nlsd; idx++) {
+		struct nvme_lba_status_desc *e = &list->descs[idx];
+		printf("{ DSLBA: 0x%016"PRIu64", NLB: 0x%08x, Status: 0x%02x }\n",
+				le64_to_cpu(e->dslba), le32_to_cpu(e->nlb),
+				e->status);
 	}
 }
 

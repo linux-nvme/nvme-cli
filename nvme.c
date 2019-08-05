@@ -5077,6 +5077,88 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int get_lba_status(int argc, char **argv, struct command *cmd,
+		struct plugin *plugin)
+{
+	const char *desc = "Information about potentially unrecoverable LBAs.";
+	const char *slba = "Starting LBA(SLBA) in 64-bit address of the first"\
+			    " logical block addressed by this command";
+	const char *mndw = "Maximum Number of Dwords(MNDW) specifies maximum"\
+			    " number of dwords to return";
+	const char *atype = "Action Type(ATYPE) specifies the mechanism the"\
+			     " the controller uses in determining the LBA"\
+			     " Status Descriptors to return.";
+	const char *rl = "Range Length(RL) specifies the length of the range"\
+			  " of contiguous LBAs beginning at SLBA";
+	int err, fd, fmt;
+	void *buf;
+	unsigned long buf_len;
+
+	struct config {
+		__u64 slba;
+		__u32 mndw;
+		__u8 atype;
+		__u16 rl;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.slba = 0,
+		.mndw = 0,
+		.atype = 0,
+		.rl = 0,
+		.output_format = "normal",
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"start-lba", 's', "NUM", CFG_LONG_SUFFIX, &cfg.slba, required_argument, slba},
+		{"max-dw", 'm', "NUM", CFG_POSITIVE, &cfg.mndw, required_argument, mndw},
+		{"action", 'a', "NUM", CFG_BYTE, &cfg.atype, required_argument, atype},
+		{"range-len", 'l', "NUM", CFG_SHORT, &cfg.rl, required_argument, rl},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format},
+		{NULL}
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, command_line_options, &cfg,
+			sizeof(cfg));
+	if (fd < 0)
+		goto ret;
+
+	err = fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0)
+		goto close_fd;
+
+	if (!cfg.atype) {
+		fprintf(stderr, "action type (--action) has to be given\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	buf_len = (cfg.mndw + 1) * 4;
+	buf = calloc(1, buf_len);
+	if (!buf) {
+		err = -ENOMEM;
+		goto close_fd;
+	}
+
+	err = nvme_get_lba_status(fd, cfg.slba, cfg.mndw, cfg.atype, cfg.rl,
+			buf);
+	if (err)
+		goto free;
+
+	if (fmt == BINARY)
+		d_raw((unsigned char *)buf, buf_len);
+	else
+		show_lba_status(buf);
+
+free:
+	free(buf);
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Read directive parameters of the "\

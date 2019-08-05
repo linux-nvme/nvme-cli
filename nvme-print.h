@@ -36,6 +36,7 @@ void show_sanitize_log(struct nvme_sanitize_log_page *sanitize, unsigned int mod
 void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics);
 void show_single_property(int offset, uint64_t prop, int human);
 void show_nvme_id_ns_descs(void *data);
+void show_lba_status(struct nvme_lba_status *list);
 void show_list_items(struct list_item *list_items, unsigned len);
 void show_nvme_subsystem_list(struct subsys_list_item *slist, int n);
 void show_nvme_id_nvmset(struct nvme_id_nvmset *nvmset);
