@@ -381,6 +381,8 @@ enum FormatUnit {
     s = 3
 };
 
+#define COL_WIDTH 12
+#define BUFSIZE 10
 #define US_IN_S 1000000
 #define US_IN_MS 1000
 
@@ -411,7 +413,7 @@ static void set_unit_string(char* buffer, __u32 microseconds,
 {
     switch(unit) {
     case us:
-        snprintf(buffer, 9, "%d%s", convert_seconds(microseconds), "us");
+        snprintf(buffer, 7, "%d%s", convert_seconds(microseconds), "us");
         break;
     case ms:
         snprintf(buffer, 7, "%d%s", convert_seconds(microseconds), "ms");
@@ -425,39 +427,41 @@ static void set_unit_string(char* buffer, __u32 microseconds,
     }
 }
 
-#define COL_WIDTH 10
-#define BUFSIZE 10
-
 static void init_buffer(char *buffer, size_t size)
 {
     int i;
     for (i = 0; i < size; i++) buffer[i] = i + '0';
 }
 
-static void print_bucket(struct intel_lat_stats *stats, int step, int start, int i, int bytes_per)
+static void print_bucket(struct intel_lat_stats *stats, int start_latency, int end_latency, int i)
 {
     enum FormatUnit fu = s;
     char unit[BUFSIZE];
+
     init_buffer(unit, BUFSIZE);
     printf("%-*d", COL_WIDTH, i);
-    fu = get_seconds_magnitude(step * i);
-    set_unit_string(unit, step * i, fu);
+
+    fu = get_seconds_magnitude(start_latency);
+    set_unit_string(unit, start_latency, fu);
     printf("%-*s", COL_WIDTH, unit);
-    fu = get_seconds_magnitude(step * (i + 1));
-    set_unit_string(unit, step * (i + 1), fu);
+
+    fu = get_seconds_magnitude(end_latency);
+    set_unit_string(unit, end_latency, fu);
     printf("%-*s", COL_WIDTH, unit);
+
     printf("%-*d", COL_WIDTH, stats->data[i]);
     printf("\n");
 }
 
-static void print_buckets(struct intel_lat_stats *stats, int start, int end, int bytes_per, int step, bool nonzero_print)
+static void print_buckets(struct intel_lat_stats *stats, int start_offset, int end_offset, int bytes_per, int us_step, bool nonzero_print)
 {
 	int i = 0;
-	for (i = (start / bytes_per) - 1; i < end / bytes_per; i++) {
+	for (i = (start_offset / bytes_per) - 1; i < end_offset / bytes_per; i++) {
 		if (nonzero_print && stats->data[i] == 0) {
 			continue;
 		}
-        print_bucket(stats, step, start, i, bytes_per);
+
+        print_bucket(stats, us_step * i, us_step * (i + 1), i);
 	}
 }
 
@@ -475,7 +479,7 @@ static void show_lat_stats(struct intel_lat_stats *stats, int write)
 	printf("Major Revision : %u\nMinor Revision : %u\n",
 			stats->maj, stats->min);
     print_dash_separator(50);
-    printf("%-10s%-10s%-10s%-15s\n", "Bucket", "Start", "End", "Value");
+    printf("%-12s%-12s%-12s%-20s\n", "Bucket", "Start", "End", "Value");
     print_dash_separator(50);
 	switch(stats->maj) {
 	case 3:
