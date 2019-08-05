@@ -71,9 +71,9 @@ The attribute is named `nvme-cli` and can e.g. be installed with:
 $ nix-env -f '<nixpkgs>' -iA nvme-cli
 ```
 
-### openSUSE Tumbleweed
+### openSUSE
 
-nvme-cli is available in openSUSE Tumbleweed. You can install it using zypper.
+nvme-cli is available in openSUSE Leap 42.2 or later and Tumbleweed. You can install it using zypper.
 For example:
 
     $ sudo zypper install nvme-cli
