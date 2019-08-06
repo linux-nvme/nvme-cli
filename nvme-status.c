@@ -80,6 +80,7 @@ static inline __u8 nvme_cmd_specific_status_to_errno(__u16 status)
 	case NVME_SC_NS_IS_PRIVATE:
 	case NVME_SC_BP_WRITE_PROHIBITED:
 	case NVME_SC_READ_ONLY:
+	case NVME_SC_PMR_SAN_PROHIBITED:
 		return EPERM;
 	case NVME_SC_OVERLAPPING_RANGE:
 	case NVME_SC_NS_NOT_ATTACHED:
