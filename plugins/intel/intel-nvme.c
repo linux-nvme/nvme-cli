@@ -433,7 +433,7 @@ static void init_buffer(char *buffer, size_t size)
     for (i = 0; i < size; i++) buffer[i] = i + '0';
 }
 
-static void print_bucket(struct intel_lat_stats *stats, int start_latency, int end_latency, int i)
+static void lat_stats_bucket(struct intel_lat_stats *stats, int start_latency, int end_latency, int i)
 {
     enum FormatUnit fu = s;
     char unit[BUFSIZE];
@@ -453,7 +453,7 @@ static void print_bucket(struct intel_lat_stats *stats, int start_latency, int e
     printf("\n");
 }
 
-static void print_buckets(struct intel_lat_stats *stats, int start_offset, int end_offset, int bytes_per, int us_step, bool nonzero_print)
+static void lat_stats_range(struct intel_lat_stats *stats, int start_offset, int end_offset, int bytes_per, int us_step, bool nonzero_print)
 {
 	int i = 0;
 	for (i = (start_offset / bytes_per) - 1; i < end_offset / bytes_per; i++) {
@@ -461,7 +461,7 @@ static void print_buckets(struct intel_lat_stats *stats, int start_offset, int e
 			continue;
 		}
 
-        print_bucket(stats, us_step * i, us_step * (i + 1), i);
+        lat_stats_bucket(stats, us_step * i, us_step * (i + 1), i);
 	}
 }
 
@@ -483,12 +483,12 @@ static void show_lat_stats(struct intel_lat_stats *stats, int write)
     print_dash_separator(50);
 	switch(stats->maj) {
 	case 3:
-        print_buckets(stats, 4, 131, 4, 32, false);
-        print_buckets(stats, 132, 255, 4, 1024, false);
-        print_buckets(stats, 256, 379, 4, 32768, false);
-        print_buckets(stats, 380, 383, 4, 32, true) ;
-        print_buckets(stats, 384, 387, 4, 32, true) ;
-        print_buckets(stats, 388, 391, 4, 32, true) ;
+        lat_stats_range(stats, 4, 131, 4, 32, false);
+        lat_stats_range(stats, 132, 255, 4, 1024, false);
+        lat_stats_range(stats, 256, 379, 4, 32768, false);
+        lat_stats_range(stats, 380, 383, 4, 32, true) ;
+        lat_stats_range(stats, 384, 387, 4, 32, true) ;
+        lat_stats_range(stats, 388, 391, 4, 32, true) ;
         break;
 	case 4:
 		switch(stats->min) {
@@ -496,14 +496,21 @@ static void show_lat_stats(struct intel_lat_stats *stats, int write)
 		case 2:
 		case 3:
 		case 4:
-		case 5:
-			print_buckets(stats, 4, 4867, 4, 32, false);
+		case 5: {
+            int lower_us = 0;
+            int upper_us = 1;
+            int step = 1;
+            for (int i = 0; i < (4867) / 4; i++) {
+                lat_stats_bucket(stats, lower_us, upper_us, i);
+                lower_us = upper_us;
+                upper_us += step;
+            }
 			break;
+        }
 		default:
 			printf(("Unsupported minor revision (%u.%u)\n"
 					"Defaulting to format for rev4.0"),
 					stats->maj, stats->min);
-			print_buckets(stats, 4, 4867, 4, 32, false);
 			break;
 		}
 		break;
