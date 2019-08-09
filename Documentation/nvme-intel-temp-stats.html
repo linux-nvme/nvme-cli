@@ -737,7 +737,7 @@ nvme-intel-temp-stats(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-intel-temp-stats -
-   Send NVMe SMART log page request, returns result and log
+   Send NVMe temperature stats log page request, returns result and log
 </p>
 </div>
 </div>
@@ -746,7 +746,7 @@ nvme-intel-temp-stats(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme intel temp-stats</em> &lt;device&gt; [--raw-binary | -b]</pre>
+<pre class="content"><em>nvme intel temp-stats</em> &lt;device&gt; [--raw-binary | -b] [--json | -j]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -754,14 +754,15 @@ nvme-intel-temp-stats(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Retrieves the NVMe Intel Additional SMART log page from the device and
+<div class="paragraph"><p>Retrieves the NVMe Intel temperature stats log from the device and
 provides the returned structure.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>On success, the returned smart log structure may be returned in one of
+<div class="paragraph"><p>On success, the returned temperature stats structure may be returned in one of
 several ways depending on the option flags; the structure may parsed by
-the program and printed in a readable format or the raw buffer may be
-printed to stdout for another program to parse.</p></div>
+the program and printed in a readable format, the raw buffer may be
+printed to stdout for another program to parse, or the structure may be formatted
+as JSON and printed.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -777,6 +778,17 @@ printed to stdout for another program to parse.</p></div>
 <dd>
 <p>
         Print the raw temperature stats log buffer to stdout.
+</p>
+</dd>
+<dt class="hdlist1">
+-j
+</dt>
+<dt class="hdlist1">
+--json
+</dt>
+<dd>
+<p>
+              Dump output in json format.
 </p>
 </dd>
 </dl></div>
@@ -797,7 +809,7 @@ Print the temperature stats log page in a human readable format:
 </li>
 <li>
 <p>
-Print the raw SMART log to a file:
+Write the raw temperature stats log to a file:
 </p>
 <div class="listingblock">
 <div class="content">
@@ -818,7 +830,7 @@ Print the raw SMART log to a file:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-02-27 10:11:58 EST
+Last updated 2019-08-08 21:00:00 PST
 </div>
 </div>
 </body>

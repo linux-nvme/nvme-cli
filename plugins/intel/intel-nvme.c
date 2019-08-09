@@ -318,6 +318,25 @@ struct intel_temp_stats {
 	__le64	est_offset;
 };
 
+static void show_temp_stats_jsn(struct intel_temp_stats *stats)
+{
+	struct json_object *root;
+
+	root = json_create_object();
+
+	json_object_add_value_int(root, "current_temp", stats->curr);
+	json_object_add_value_int(root, "last_overtemp", stats->last_overtemp);
+	json_object_add_value_int(root, "life_overtemp", stats->life_overtemp);
+	json_object_add_value_int(root, "highest_temp", stats->highest_temp);
+	json_object_add_value_int(root, "lowest_temp", stats->lowest_temp);
+	json_object_add_value_int(root, "max_operating_temp", stats->max_operating_temp);
+	json_object_add_value_int(root, "min_operating_temp", stats->min_operating_temp);
+	json_object_add_value_int(root, "estimated_offset", stats->est_offset);
+
+	json_print_object(root, NULL);
+	json_free_object(root);
+}
+
 static void show_temp_stats(struct intel_temp_stats *stats)
 {
 	printf("  Intel Temperature Statistics\n");
@@ -337,10 +356,12 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	struct intel_temp_stats stats;
 	int err, fd;
 
-	const char *desc = "Get Intel Marketing Name log and show it.";
+	const char *desc = "Get Intel temperature stats log and show it.";
 	const char *raw = "dump output in binary format";
+    const char *json = "dump output in json format";
 	struct config {
 		int  raw_binary;
+		int  json;
 	};
 
 	struct config cfg = {
@@ -348,6 +369,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
+		{"json",       'j', "", CFG_NONE, &cfg.json,       no_argument, json},
 		{NULL}
 	};
 
@@ -358,7 +380,9 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	err = nvme_get_log(fd, NVME_NSID_ALL, 0xc5, false,
 			   sizeof(stats), &stats);
 	if (!err) {
-		if (!cfg.raw_binary)
+		if (cfg.json)
+			show_temp_stats_jsn(&stats);
+		else if (!cfg.raw_binary)
 			show_temp_stats(&stats);
 		else
 			d_raw((unsigned char *)&stats, sizeof(stats));

@@ -3,31 +3,36 @@ nvme-intel-temp-stats(1)
 
 NAME
 ----
-nvme-intel-temp-stats - Send NVMe SMART log page request, returns result and log
+nvme-intel-temp-stats - Send NVMe temperature stats log page request, returns result and log
 
 SYNOPSIS
 --------
 [verse]
-'nvme intel temp-stats' <device> [--raw-binary | -b]
+'nvme intel temp-stats' <device> [--raw-binary | -b] [--json | -j]
 
 DESCRIPTION
 -----------
-Retrieves the NVMe Intel Additional SMART log page from the device and
+Retrieves the NVMe Intel temperature stats log page from the device and
 provides the returned structure.
 
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 
-On success, the returned smart log structure may be returned in one of
-several ways depending on the option flags; the structure may parsed by
-the program and printed in a readable format or the raw buffer may be
-printed to stdout for another program to parse.
+On success, the returned temperature stats structure may be returned in
+one of several ways depending on the option flags; the structure may
+parsed by the program and printed in a readable format, the raw buffer
+may be printed to stdout for another program to parse, or the structure
+may be formatted as JSON and printed.
 
 OPTIONS
 -------
 -b::
 --raw-binary::
 	Print the raw temperature stats log buffer to stdout.
+ 
+-j::
+--json::
+              Dump output in json format.
 
 EXAMPLES
 --------
@@ -38,7 +43,7 @@ EXAMPLES
 ------------
 +
 
-* Print the raw SMART log to a file:
+* Write the raw temperature stats log to a file:
 +
 ------------
 # nvme intel temp-stats /dev/nvme0 --raw-binary > temp_stats_log.raw
