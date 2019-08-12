@@ -375,10 +375,10 @@ struct intel_lat_stats {
 };
 
 enum FormatUnit {
-    None = 0,
-    us = 1,
-    ms = 2,
-    s = 3
+	None = 0,
+	us = 1,
+	ms = 2,
+	s = 3
 };
 
 #define COL_WIDTH 12
@@ -386,91 +386,154 @@ enum FormatUnit {
 #define US_IN_S 1000000
 #define US_IN_MS 1000
 
-static const enum FormatUnit get_seconds_magnitude(__u32 microseconds)
+static const enum FormatUnit get_seconds_magnitude(int microseconds)
 {
-    if(microseconds > US_IN_S) {
-        return s;
-    } else if (microseconds > US_IN_MS) {
-        return ms;
-    } else {
-        return us;
-    }
+	if (microseconds > US_IN_S)
+		return s;
+	else if (microseconds > US_IN_MS)
+		return ms;
+	else
+		return us;
 }
 
-static const __u32 convert_seconds(__u32 microseconds)
+static const float convert_seconds(float microseconds)
 {
-    if(microseconds > US_IN_S) {
-        return microseconds / US_IN_S;
-    } else if (microseconds > US_IN_MS) {
-        return microseconds / US_IN_MS;
-    } else {
-        return microseconds;
-    }
+	if (microseconds > US_IN_S)
+		return microseconds / US_IN_S;
+	else if (microseconds > US_IN_MS)
+		return microseconds / US_IN_MS;
+	else
+		return microseconds;
 }
 
-static void set_unit_string(char* buffer, __u32 microseconds,
-        enum FormatUnit unit)
+static void set_unit_string(char *buffer, int microseconds,
+		enum FormatUnit unit)
 {
-    switch(unit) {
-    case us:
-        snprintf(buffer, 7, "%d%s", convert_seconds(microseconds), "us");
-        break;
-    case ms:
-        snprintf(buffer, 7, "%d%s", convert_seconds(microseconds), "ms");
-        break;
-    case s:
-        snprintf(buffer, 7, "%d%s", convert_seconds(microseconds), "s");
-        break;
-    default:
-        snprintf(buffer, 7, "%d%s", convert_seconds(microseconds), "_s");
-        break;
-    }
+	switch (unit) {
+	case us:
+		snprintf(buffer, 11, "%4.2f%s",
+				convert_seconds(microseconds), "us");
+		break;
+	case ms:
+		snprintf(buffer, 11, "%4.2f%s",
+				convert_seconds(microseconds), "ms");
+		break;
+	case s:
+		snprintf(buffer, 11, "%4.2f%s",
+				convert_seconds(microseconds), "s");
+		break;
+	default:
+		snprintf(buffer, 11, "%4.2f%s",
+				convert_seconds(microseconds), "_s");
+		break;
+	}
 }
 
 static void init_buffer(char *buffer, size_t size)
 {
-    int i;
-    for (i = 0; i < size; i++) buffer[i] = i + '0';
+	int i;
+
+	for (i = 0; i < size; i++)
+		buffer[i] = i + '0';
 }
 
-static void lat_stats_bucket(struct intel_lat_stats *stats, int start_latency, int end_latency, int i)
+static void lat_stats_bucket(struct intel_lat_stats *stats,
+		int start_microseconds, int end_microseconds, int i)
 {
-    enum FormatUnit fu = s;
-    char unit[BUFSIZE];
+	enum FormatUnit fu = s;
+	char unit[BUFSIZE];
 
-    init_buffer(unit, BUFSIZE);
-    printf("%-*d", COL_WIDTH, i);
+	init_buffer(unit, BUFSIZE);
+	printf("%-*d", COL_WIDTH, i);
 
-    fu = get_seconds_magnitude(start_latency);
-    set_unit_string(unit, start_latency, fu);
-    printf("%-*s", COL_WIDTH, unit);
+	if (start_microseconds < 0) {
+		printf("%-*s", COL_WIDTH, "-inf");
+	} else {
+		fu = get_seconds_magnitude(start_microseconds);
+		set_unit_string(unit, start_microseconds, fu);
+		printf("%-*s", COL_WIDTH, unit);
+	}
 
-    fu = get_seconds_magnitude(end_latency);
-    set_unit_string(unit, end_latency, fu);
-    printf("%-*s", COL_WIDTH, unit);
+	if (end_microseconds < 0) {
+		printf("%-*s", COL_WIDTH, "inf");
+	} else {
+		fu = get_seconds_magnitude(end_microseconds);
+		set_unit_string(unit, end_microseconds, fu);
+		printf("%-*s", COL_WIDTH, unit);
+	}
 
-    printf("%-*d", COL_WIDTH, stats->data[i]);
-    printf("\n");
+	printf("%-*d", COL_WIDTH, stats->data[i]);
+	printf("\n");
 }
 
-static void lat_stats_range(struct intel_lat_stats *stats, int start_offset, int end_offset, int bytes_per, int us_step, bool nonzero_print)
+static void lat_stats_range(struct intel_lat_stats *stats,
+		int start_offset, int end_offset, int bytes_per,
+		int us_step, bool nonzero_print)
 {
 	int i = 0;
-	for (i = (start_offset / bytes_per) - 1; i < end_offset / bytes_per; i++) {
-		if (nonzero_print && stats->data[i] == 0) {
-			continue;
-		}
 
-        lat_stats_bucket(stats, us_step * i, us_step * (i + 1), i);
+	for (i = (start_offset / bytes_per) - 1;
+			i < end_offset / bytes_per; i++) {
+		if (nonzero_print && stats->data[i] == 0)
+			continue;
+		lat_stats_bucket(stats, us_step * i, us_step * (i + 1), i);
 	}
 }
 
 static void print_dash_separator(int count)
 {
-    for (int i = 0; i < count; i++) putchar('-');
-    putchar('\n');
+	for (int i = 0; i < count; i++)
+		putchar('-');
+	putchar('\n');
 }
 
+// 4.1
+const int LATENCY_STATS_V4_BASE_BITS = 6;
+const int LATENCY_STATS_V4_BASE_VAL	 =
+	(1 << LATENCY_STATS_V4_BASE_BITS);
+const int LATENCY_STATS_V4_GROUP	 = 19;
+const int LATENCY_STATS_V4_BUCKETS	 = (LATENCY_STATS_V4_GROUP
+		* LATENCY_STATS_V4_BASE_VAL);
+
+static int lat_stats_log_scaling(int i)
+{
+	// if (i < 128)
+	if (i < (LATENCY_STATS_V4_BASE_VAL << 1))
+		return i;
+
+	int error_bits = (i >> LATENCY_STATS_V4_BASE_BITS) - 1;
+	int base = 1 << (error_bits + LATENCY_STATS_V4_BASE_BITS);
+	int k = i % LATENCY_STATS_V4_BASE_VAL;
+
+	return base + ((k + 0.5) * (1 << error_bits));
+}
+
+static void lat_stats_3_0(struct intel_lat_stats *stats)
+{
+	lat_stats_range(stats, 4, 131, 4, 32, false);
+	lat_stats_range(stats, 132, 255, 4, 1024, false);
+	lat_stats_range(stats, 256, 379, 4, 32768, false);
+	lat_stats_range(stats, 380, 383, 4, 32, true);
+	lat_stats_range(stats, 384, 387, 4, 32, true);
+	lat_stats_range(stats, 388, 391, 4, 32, true);
+}
+
+static void lat_stats_4_0(struct intel_lat_stats *stats)
+{
+	int lower_us = 0;
+	int upper_us = 1;
+	int max = 1216;
+
+	for (int i = 0; i < max; i++) {
+		lower_us = lat_stats_log_scaling(i);
+		if (i >= max - 1)
+			upper_us = -1;
+		else
+			upper_us = lat_stats_log_scaling(i + 1);
+
+		lat_stats_bucket(stats, lower_us, upper_us, i);
+	}
+}
 
 static void show_lat_stats(struct intel_lat_stats *stats, int write)
 {
@@ -478,35 +541,23 @@ static void show_lat_stats(struct intel_lat_stats *stats, int write)
 			write ? "Write" : "Read");
 	printf("Major Revision : %u\nMinor Revision : %u\n",
 			stats->maj, stats->min);
-    print_dash_separator(50);
-    printf("%-12s%-12s%-12s%-20s\n", "Bucket", "Start", "End", "Value");
-    print_dash_separator(50);
-	switch(stats->maj) {
+	print_dash_separator(50);
+	printf("%-12s%-12s%-12s%-20s\n", "Bucket", "Start", "End", "Value");
+	print_dash_separator(50);
+	switch (stats->maj) {
 	case 3:
-        lat_stats_range(stats, 4, 131, 4, 32, false);
-        lat_stats_range(stats, 132, 255, 4, 1024, false);
-        lat_stats_range(stats, 256, 379, 4, 32768, false);
-        lat_stats_range(stats, 380, 383, 4, 32, true) ;
-        lat_stats_range(stats, 384, 387, 4, 32, true) ;
-        lat_stats_range(stats, 388, 391, 4, 32, true) ;
-        break;
+		lat_stats_3_0(stats);
+		break;
 	case 4:
-		switch(stats->min) {
+		switch (stats->min) {
+		case 0:
 		case 1:
 		case 2:
 		case 3:
 		case 4:
-		case 5: {
-            int lower_us = 0;
-            int upper_us = 1;
-            int step = 1;
-            for (int i = 0; i < (4867) / 4; i++) {
-                lat_stats_bucket(stats, lower_us, upper_us, i);
-                lower_us = upper_us;
-                upper_us += step;
-            }
+		case 5:
+			lat_stats_4_0(stats);
 			break;
-        }
 		default:
 			printf(("Unsupported minor revision (%u.%u)\n"
 					"Defaulting to format for rev4.0"),
@@ -515,12 +566,14 @@ static void show_lat_stats(struct intel_lat_stats *stats, int write)
 		}
 		break;
 	default:
-		printf("Unsupported revision (%u.%u)\n", stats->maj, stats->min);
+		printf("Unsupported revision (%u.%u)\n",
+				stats->maj, stats->min);
 		break;
 	}
 }
 
-static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_lat_stats_log(int argc, char **argv,
+		struct command *cmd, struct plugin *plugin)
 {
 	struct intel_lat_stats stats;
 	int err, fd;
