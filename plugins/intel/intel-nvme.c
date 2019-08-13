@@ -374,6 +374,13 @@ struct intel_lat_stats {
 	__u32	data[1216];
 };
 
+struct latency_bucket {
+	__u16 bucket;
+	char lbound;
+	char ubound;
+	__u32 value;
+};
+
 enum FormatUnit {
 	None = 0,
 	us = 1,
@@ -407,8 +414,16 @@ static const float convert_seconds(float microseconds)
 }
 
 static void set_unit_string(char *buffer, int microseconds,
-		enum FormatUnit unit)
+		enum FormatUnit unit, bool end_value)
 {
+	if (microseconds < 0) {
+		if (end_value)
+			snprintf(buffer, 11, "%s", "inf");
+		else
+			snprintf(buffer, 11, "%s", "-inf");
+		return;
+	}
+
 	switch (unit) {
 	case us:
 		snprintf(buffer, 11, "%4.2f%s",
@@ -437,36 +452,28 @@ static void init_buffer(char *buffer, size_t size)
 		buffer[i] = i + '0';
 }
 
-static void lat_stats_bucket(struct intel_lat_stats *stats,
+static void show_lat_stats_bucket(struct intel_lat_stats *stats,
 		int start_microseconds, int end_microseconds, int i)
 {
 	enum FormatUnit fu = s;
-	char unit[BUFSIZE];
+	char buffer[BUFSIZE];
 
-	init_buffer(unit, BUFSIZE);
+	init_buffer(buffer, BUFSIZE);
 	printf("%-*d", COL_WIDTH, i);
 
-	if (start_microseconds < 0) {
-		printf("%-*s", COL_WIDTH, "-inf");
-	} else {
-		fu = get_seconds_magnitude(start_microseconds);
-		set_unit_string(unit, start_microseconds, fu);
-		printf("%-*s", COL_WIDTH, unit);
-	}
+	fu = get_seconds_magnitude(start_microseconds);
+	set_unit_string(buffer, start_microseconds, fu, false);
+	printf("%-*s", COL_WIDTH, buffer);
 
-	if (end_microseconds < 0) {
-		printf("%-*s", COL_WIDTH, "inf");
-	} else {
-		fu = get_seconds_magnitude(end_microseconds);
-		set_unit_string(unit, end_microseconds, fu);
-		printf("%-*s", COL_WIDTH, unit);
-	}
+	fu = get_seconds_magnitude(end_microseconds);
+	set_unit_string(buffer, end_microseconds, fu, true);
+	printf("%-*s", COL_WIDTH, buffer);
 
 	printf("%-*d", COL_WIDTH, stats->data[i]);
 	printf("\n");
 }
 
-static void lat_stats_range(struct intel_lat_stats *stats,
+static void show_lat_stats_linear(struct intel_lat_stats *stats,
 		int start_offset, int end_offset, int bytes_per,
 		int us_step, bool nonzero_print)
 {
@@ -476,7 +483,7 @@ static void lat_stats_range(struct intel_lat_stats *stats,
 			i < end_offset / bytes_per; i++) {
 		if (nonzero_print && stats->data[i] == 0)
 			continue;
-		lat_stats_bucket(stats, us_step * i, us_step * (i + 1), i);
+		show_lat_stats_bucket(stats, us_step * i, us_step * (i + 1), i);
 	}
 }
 
@@ -487,13 +494,12 @@ static void print_dash_separator(int count)
 	putchar('\n');
 }
 
-// 4.1
 const int LATENCY_STATS_V4_BASE_BITS = 6;
-const int LATENCY_STATS_V4_BASE_VAL	 =
-	(1 << LATENCY_STATS_V4_BASE_BITS);
+const int LATENCY_STATS_V4_BASE_VAL	 = (
+	1 << LATENCY_STATS_V4_BASE_BITS);
 const int LATENCY_STATS_V4_GROUP	 = 19;
-const int LATENCY_STATS_V4_BUCKETS	 = (LATENCY_STATS_V4_GROUP
-		* LATENCY_STATS_V4_BASE_VAL);
+const int LATENCY_STATS_V4_BUCKETS	 = (
+		LATENCY_STATS_V4_GROUP * LATENCY_STATS_V4_BASE_VAL);
 
 static int lat_stats_log_scaling(int i)
 {
@@ -508,17 +514,121 @@ static int lat_stats_log_scaling(int i)
 	return base + ((k + 0.5) * (1 << error_bits));
 }
 
-static void lat_stats_3_0(struct intel_lat_stats *stats)
+static struct json_object lat_stats_make_json_root(
+		struct json_object *root, struct json_object *bucket_list,
+		int write)
 {
-	lat_stats_range(stats, 4, 131, 4, 32, false);
-	lat_stats_range(stats, 132, 255, 4, 1024, false);
-	lat_stats_range(stats, 256, 379, 4, 32768, false);
-	lat_stats_range(stats, 380, 383, 4, 32, true);
-	lat_stats_range(stats, 384, 387, 4, 32, true);
-	lat_stats_range(stats, 388, 391, 4, 32, true);
+	struct json_object *subroot = json_create_object();
+
+	json_object_add_value_object(root, "latstats", subroot);
+	if (write)
+		json_object_add_value_string(subroot, "type", "write");
+	else
+		json_object_add_value_string(subroot, "type", "read");
+
+	json_object_add_value_object(subroot, "values", bucket_list);
+
+	return *bucket_list;
 }
 
-static void lat_stats_4_0(struct intel_lat_stats *stats)
+static void json_add_bucket(struct intel_lat_stats *stats,
+		struct json_object *bucket_list,
+		struct json_object *bucket,
+		int id, int lower_us, int upper_us, int val)
+{
+	char buffer[BUFSIZE];
+
+	init_buffer(buffer, BUFSIZE);
+
+	json_object_add_value_object(bucket_list,
+			"bucket", bucket);
+	json_object_add_value_int(bucket, "id", id);
+	set_unit_string(buffer, lower_us,
+			get_seconds_magnitude(lower_us), false);
+	json_object_add_value_string(bucket, "start", buffer);
+	set_unit_string(buffer, upper_us,
+			get_seconds_magnitude(upper_us), true);
+	json_object_add_value_string(bucket, "end", buffer);
+	json_object_add_value_int(bucket, "value", val);
+}
+
+static void json_lat_stats_linear(struct intel_lat_stats *stats,
+		struct json_object *bucket_list, int start_offset,
+		int end_offset, int bytes_per,
+		int us_step, bool nonzero_print)
+{
+	int i = 0;
+
+	for (i = (start_offset / bytes_per) - 1;
+			i < end_offset / bytes_per; i++) {
+		if (nonzero_print && stats->data[i] == 0)
+			continue;
+		struct json_object *bucket = json_create_object();
+		json_add_bucket(stats, bucket_list, bucket,
+				i, us_step * i, us_step * (i + 1),
+				stats->data[i]);
+	}
+}
+
+static void json_lat_stats_3_0(struct intel_lat_stats *stats,
+		int write)
+{
+	struct json_object *root = json_create_object();
+	struct json_object *bucket_list = json_create_object();
+
+	lat_stats_make_json_root(root, bucket_list, write);
+
+	json_lat_stats_linear(stats, bucket_list, 4, 131, 4, 32, false);
+	json_lat_stats_linear(stats, bucket_list, 4, 131, 4, 32, false);
+	json_lat_stats_linear(stats, bucket_list, 132, 255, 4, 1024, false);
+	json_lat_stats_linear(stats, bucket_list, 256, 379, 4, 32768, false);
+	json_lat_stats_linear(stats, bucket_list, 380, 383, 4, 32, true);
+	json_lat_stats_linear(stats, bucket_list, 384, 387, 4, 32, true);
+	json_lat_stats_linear(stats, bucket_list, 388, 391, 4, 32, true);
+
+	json_print_object(root, NULL);
+	json_free_object(root);
+}
+
+static void json_lat_stats_4_0(struct intel_lat_stats *stats,
+		int write)
+{
+	struct json_object *root = json_create_object();
+	struct json_object *bucket_list = json_create_object();
+
+	lat_stats_make_json_root(root, bucket_list, write);
+
+	int lower_us = 0;
+	int upper_us = 1;
+	int max = 1216;
+
+	for (int i = 0; i < max; i++) {
+		lower_us = lat_stats_log_scaling(i);
+		if (i >= max - 1)
+			upper_us = -1;
+		else
+			upper_us = lat_stats_log_scaling(i + 1);
+
+		struct json_object *bucket = json_create_object();
+
+		json_add_bucket(stats, bucket_list, bucket,
+				i, lower_us, upper_us, stats->data[i]);
+	}
+	json_print_object(root, NULL);
+	json_free_object(root);
+}
+
+static void show_lat_stats_3_0(struct intel_lat_stats *stats)
+{
+	show_lat_stats_linear(stats, 4, 131, 4, 32, false);
+	show_lat_stats_linear(stats, 132, 255, 4, 1024, false);
+	show_lat_stats_linear(stats, 256, 379, 4, 32768, false);
+	show_lat_stats_linear(stats, 380, 383, 4, 32, true);
+	show_lat_stats_linear(stats, 384, 387, 4, 32, true);
+	show_lat_stats_linear(stats, 388, 391, 4, 32, true);
+}
+
+static void show_lat_stats_4_0(struct intel_lat_stats *stats)
 {
 	int lower_us = 0;
 	int upper_us = 1;
@@ -531,22 +641,15 @@ static void lat_stats_4_0(struct intel_lat_stats *stats)
 		else
 			upper_us = lat_stats_log_scaling(i + 1);
 
-		lat_stats_bucket(stats, lower_us, upper_us, i);
+		show_lat_stats_bucket(stats, lower_us, upper_us, i);
 	}
 }
 
-static void show_lat_stats(struct intel_lat_stats *stats, int write)
+static void json_lat_stats(struct intel_lat_stats *stats, int write)
 {
-	printf("Intel IO %s Command Latency Statistics\n",
-			write ? "Write" : "Read");
-	printf("Major Revision : %u\nMinor Revision : %u\n",
-			stats->maj, stats->min);
-	print_dash_separator(50);
-	printf("%-12s%-12s%-12s%-20s\n", "Bucket", "Start", "End", "Value");
-	print_dash_separator(50);
 	switch (stats->maj) {
 	case 3:
-		lat_stats_3_0(stats);
+		json_lat_stats_3_0(stats, write);
 		break;
 	case 4:
 		switch (stats->min) {
@@ -556,7 +659,46 @@ static void show_lat_stats(struct intel_lat_stats *stats, int write)
 		case 3:
 		case 4:
 		case 5:
-			lat_stats_4_0(stats);
+			json_lat_stats_4_0(stats, write);
+			break;
+		default:
+			printf(("Unsupported minor revision (%u.%u)\n"
+					"Defaulting to format for rev4.0"),
+					stats->maj, stats->min);
+			break;
+		}
+		break;
+	default:
+		printf("Unsupported revision (%u.%u)\n",
+				stats->maj, stats->min);
+		break;
+	}
+	printf("\n");
+}
+
+static void show_lat_stats(struct intel_lat_stats *stats, int write)
+{
+
+	printf("Intel IO %s Command Latency Statistics\n",
+			write ? "Write" : "Read");
+	printf("Major Revision : %u\nMinor Revision : %u\n",
+			stats->maj, stats->min);
+	print_dash_separator(50);
+	printf("%-12s%-12s%-12s%-20s\n", "Bucket", "Start", "End", "Value");
+	print_dash_separator(50);
+	switch (stats->maj) {
+	case 3:
+		show_lat_stats_3_0(stats);
+		break;
+	case 4:
+		switch (stats->min) {
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+			show_lat_stats_4_0(stats);
 			break;
 		default:
 			printf(("Unsupported minor revision (%u.%u)\n"
@@ -576,36 +718,52 @@ static int get_lat_stats_log(int argc, char **argv,
 		struct command *cmd, struct plugin *plugin)
 {
 	struct intel_lat_stats stats;
-	int err, fd;
+	int err, fmt, fd;
 
 	const char *desc = "Get Intel Latency Statistics log and show it.";
 	const char *raw = "dump output in binary format";
 	const char *write = "Get write statistics (read default)";
+	const char *output_format = "Specify output format: normal|json|binary";
+
 	struct config {
-		int  raw_binary;
 		int  write;
+		char *output_format;
+		int  raw_binary;
 	};
 
 	struct config cfg = {
+		.output_format = "normal"
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"write",      'w', "", CFG_NONE, &cfg.write,      no_argument, write},
+		{"write", 'w', "", CFG_NONE, &cfg.write, no_argument, write},
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format},
 		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
 		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
-	if (fd < 0)
+	if (fd < 0) {
+		err = fd;
 		return fd;
+	}
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		err = fmt;
+	}
+	if (cfg.raw_binary)
+		fmt = BINARY;
 
 	err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
 			   false, sizeof(stats), &stats);
 	if (!err) {
-		if (!cfg.raw_binary)
-			show_lat_stats(&stats, cfg.write);
-		else
+		if (fmt == BINARY)
 			d_raw((unsigned char *)&stats, sizeof(stats));
+		else if (fmt == JSON)
+			json_lat_stats(&stats, cfg.write);
+		else if (fmt == NORMAL)
+			show_lat_stats(&stats, cfg.write);
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
