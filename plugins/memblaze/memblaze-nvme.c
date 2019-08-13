@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "linux/nvme_ioctl.h"
+#include "libnvme_spec/ctrl.h"
 
 #include "nvme.h"
 #include "nvme-print.h"

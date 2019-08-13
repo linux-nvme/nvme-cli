@@ -5,6 +5,8 @@
 #include "json.h"
 #include <inttypes.h>
 
+#include <libnvme/libnvme.h>
+
 enum {
 	TERSE = 0x1u,	// only show a few useful fields
 	HUMAN = 0x2u,	// interpret some values for humans
@@ -18,8 +20,9 @@ void show_nvme_status(__u16 status);
 
 uint64_t int48_to_long(__u8 *data);
 
-void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vendor_show)(__u8 *vs, struct json_object *root));
-void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode);
+void show_nvme_id_ctrl(struct nvme_ctrl *ctrl, unsigned int mode,
+		       void (*vendor_show)(__u8 *vs,
+					   struct json_object *root));
 void show_nvme_id_ns(struct nvme_id_ns *ns, unsigned int flags);
 void show_nvme_resv_report(struct nvme_reservation_status *status, int bytes, __u32 cdw11);
 void show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges);
@@ -51,7 +54,8 @@ const char *nvme_feature_to_string(int feature);
 const char *nvme_register_to_string(int reg);
 void nvme_show_select_result(__u32 result);
 
-void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vendor_show)(__u8 *vs, struct json_object *root));
+void json_nvme_id_ctrl(struct nvme_ctrl *ctrl, unsigned int mode,
+		       void (*vendor_show)(__u8 *vs, struct json_object *root));
 void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int flags);
 void json_nvme_resv_report(struct nvme_reservation_status *status, int bytes, __u32 cdw11);
 void json_error_log(struct nvme_error_log_page *err_log, int entries, const char *devname);

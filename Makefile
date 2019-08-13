@@ -1,28 +1,15 @@
-CFLAGS ?= -O2 -g -Wall -Werror
-override CFLAGS += -std=gnu99 -I.
-override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
+include ./Makefile.inc
+
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 NVME = nvme
-INSTALL ?= install
-DESTDIR =
-PREFIX ?= /usr
-SYSCONFDIR = /etc
-SBINDIR = $(PREFIX)/sbin
-LIBDIR ?= $(PREFIX)/lib
-SYSTEMDDIR ?= $(LIBDIR)/systemd
-UDEVDIR ?= $(LIBDIR)/udev
-DRACUTDIR ?= $(LIBDIR)/dracut
-LIB_DEPENDS =
+override CFLAGS += -I. -I./libnvme
+override LDFLAGS += -L./libnvme -lnvme
 
 ifeq ($(LIBUUID),0)
 	override LDFLAGS += -luuid
 	override CFLAGS += -DLIBUUID
 	override LIB_DEPENDS += uuid
 endif
-
-RPMBUILD = rpmbuild
-TAR = tar
-RM = rm -f
 
 AUTHOR=Keith Busch <keith.busch@intel.com>
 
@@ -53,7 +40,7 @@ PLUGIN_OBJS :=					\
 	plugins/virtium/virtium-nvme.o		\
 	plugins/shannon/shannon-nvme.o
 
-nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) NVME-VERSION-FILE
+nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) NVME-VERSION-FILE libnvme.so
 	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(LDFLAGS)
 
 verify-no-dep: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
@@ -65,6 +52,9 @@ nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h argconfig.h suffix.h nvme-lightn
 %.o: %.c %.h nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h argconfig.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
 
+libnvme.so:
+	$(MAKE) -C libnvme
+
 doc: $(NVME)
 	$(MAKE) -C Documentation
 
@@ -75,6 +65,7 @@ all: doc
 
 clean:
 	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
+	$(MAKE) -C libnvme clean
 	$(MAKE) -C Documentation clean
 	$(RM) tests/*.pyc
 	$(RM) verify-no-dep
@@ -126,7 +117,9 @@ install-etc:
 	fi
 
 install-spec: install-bin install-man install-bash-completion install-zsh-completion install-etc install-systemd install-udev install-dracut
-install: install-spec install-hostparams
+install-libnvme:
+	$(MAKE) -C libnvme install
+install: install-spec install-hostparams install-libnvme
 
 nvme.spec: nvme.spec.in NVME-VERSION-FILE
 	sed -e 's/@@VERSION@@/$(NVME_VERSION)/g' < $< > $@+

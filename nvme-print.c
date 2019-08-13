@@ -3,6 +3,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdint.h>
+#include <inttypes.h>
+
+#include <libnvme/libnvme.h>
 
 #include "nvme-print.h"
 #include "json.h"
@@ -87,7 +91,8 @@ void show_nvme_status(__u16 status)
 			nvme_status_to_string(status), status);
 }
 
-static void format(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
+static void format(char *formatter, size_t fmt_sz, const char *tofmt,
+		   size_t tofmtsz)
 {
 
 	fmt_sz = snprintf(formatter,fmt_sz, "%-*.*s",
@@ -312,9 +317,8 @@ static void show_nvme_id_ctrl_hctma(__le16 ctrl_hctma)
 	printf("\n");
 }
 
-static void show_nvme_id_ctrl_sanicap(__le32 ctrl_sanicap)
+static void show_nvme_id_ctrl_sanicap(uint32_t sanicap)
 {
-	__u32 sanicap = le32_to_cpu(ctrl_sanicap);
 	__u32 rsvd = (sanicap & 0x1FFFFFF8) >> 3;
 	__u32 owr = (sanicap & 0x4) >> 2;
 	__u32 ber = (sanicap & 0x2) >> 1;
@@ -382,7 +386,7 @@ static void show_nvme_id_ctrl_sqes(__u8 sqes)
 	printf("\n");
 }
 
-static void show_nvme_id_ctrl_cqes(__u8 cqes)
+static void show_nvme_id_ctrl_cqes(uint8_t cqes)
 {
 	__u8 mcqes = (cqes & 0xF0) >> 4;
 	__u8 rcqes = cqes & 0xF;
@@ -391,9 +395,8 @@ static void show_nvme_id_ctrl_cqes(__u8 cqes)
 	printf("\n");
 }
 
-static void show_nvme_id_ctrl_oncs(__le16 ctrl_oncs)
+static void show_nvme_id_ctrl_oncs(uint16_t oncs)
 {
-	__u16 oncs = le16_to_cpu(ctrl_oncs);
 	__u16 rsvd = (oncs & 0xFF00) >> 8;
 	__u16 vrfy = (oncs & 0x80) >> 7;
 	__u16 tmst = (oncs & 0x40) >> 6;
@@ -466,7 +469,7 @@ static void show_nvme_id_ctrl_vwc(__u8 vwc)
 	printf("\n");
 }
 
-static void show_nvme_id_ctrl_nvscc(__u8 nvscc)
+static void show_nvme_id_ctrl_nvscc(uint8_t nvscc)
 {
 	__u8 rsvd = (nvscc & 0xFE) >> 1;
 	__u8 fmt = nvscc & 0x1;
@@ -496,9 +499,8 @@ static void show_nvme_id_ctrl_nwpc(__u8 nwpc)
 	printf("\n");
 }
 
-static void show_nvme_id_ctrl_sgls(__le32 ctrl_sgls)
+static void show_nvme_id_ctrl_sgls(uint32_t sgls)
 {
-	__u32 sgls = le32_to_cpu(ctrl_sgls);
 	__u32 rsvd0 = (sgls & 0xFFC00000) >> 22;
 	__u32 trsdbd = (sgls & 0x200000) >> 21;
 	__u32 aofdsl = (sgls & 0x100000) >> 20;
@@ -549,7 +551,7 @@ static void show_nvme_id_ctrl_sgls(__le32 ctrl_sgls)
 	printf("\n");
 }
 
-static void show_nvme_id_ctrl_ctrattr(__u8 ctrattr)
+static void show_nvme_id_ctrl_ctrattr(uint8_t ctrattr)
 {
 	__u8 rsvd = (ctrattr & 0xFE) >> 1;
 	__u8 scm = ctrattr & 0x1;
@@ -951,200 +953,219 @@ void show_nvme_id_ns_descs(void *data)
 	}
 }
 
-static void print_ps_power_and_scale(__le16 ctr_power, __u8 scale)
+static void show_psd_ldlp(uint16_t power, uint8_t scale)
 {
-	__u16 power = le16_to_cpu(ctr_power);
-
-	switch (scale & 0x3) {
-	case 0:
-		/* Not reported for this power state */
+	switch (scale) {
+	case NVME_SPEC_IPS_NO_REPORT:
 		printf("-");
 		break;
-
-	case 1:
-		/* Units of 0.0001W */
+	case NVME_SPEC_IPS_00001W:
 		printf("%01u.%04uW", power / 10000, power % 10000);
 		break;
-
-	case 2:
-		/* Units of 0.01W */
+	case NVME_SPEC_IPS_001W:
 		printf("%01u.%02uW", power / 100, scale % 100);
 		break;
-
 	default:
 		printf("reserved");
 	}
 }
 
-static void show_nvme_id_ctrl_power(struct nvme_id_ctrl *ctrl)
+static void show_psd_actp(uint16_t power, uint8_t scale)
 {
-	int i;
-
-
-	for (i = 0; i <= ctrl->npss; i++) {
-		__u16 max_power = le16_to_cpu(ctrl->psd[i].max_power);
-
-		printf("ps %4d : mp:", i);
-
-		if (ctrl->psd[i].flags & NVME_PS_FLAGS_MAX_POWER_SCALE)
-			printf("%01u.%04uW ", max_power / 10000, max_power % 10000);
-		else
-			printf("%01u.%02uW ", max_power / 100, max_power % 100);
-
-		if (ctrl->psd[i].flags & NVME_PS_FLAGS_NON_OP_STATE)
-			printf("non-");
-
-		printf("operational enlat:%d exlat:%d rrt:%d rrl:%d\n"
-			"          rwt:%d rwl:%d idle_power:",
-			le32_to_cpu(ctrl->psd[i].entry_lat), le32_to_cpu(ctrl->psd[i].exit_lat),
-			ctrl->psd[i].read_tput, ctrl->psd[i].read_lat,
-			ctrl->psd[i].write_tput, ctrl->psd[i].write_lat);
-		print_ps_power_and_scale(ctrl->psd[i].idle_power,
-					 POWER_SCALE(ctrl->psd[i].idle_scale));
-		printf(" active_power:");
-		print_ps_power_and_scale(ctrl->psd[i].active_power,
-					 POWER_SCALE(ctrl->psd[i].active_work_scale));
-		printf("\n");
-
+	switch (scale) {
+	case NVME_SPEC_APS_NO_REPORT:
+		printf("-");
+		break;
+	case NVME_SPEC_APS_00001W:
+		printf("%01u.%04uW", power / 10000, power % 10000);
+		break;
+	case NVME_SPEC_APS_001W:
+		printf("%01u.%02uW", power / 100, scale % 100);
+		break;
+	default:
+		printf("reserved");
 	}
 }
 
-void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vendor_show)(__u8 *vs, struct json_object *root))
+static void show_nvme_id_ctrl_power(struct nvme_ctrl *ctrl)
+{
+	struct nvme_psd **psds = NULL;
+	struct nvme_psd *psd = NULL;
+	uint8_t i = 0;
+	uint16_t mp = 0;
+	uint8_t mxps = 0;
+	uint8_t nops = 0;
+
+	psds = nvme_ctrl_psds_get(ctrl);
+
+	for (i = 0; i <= nvme_ctrl_npss_get(ctrl); i++) {
+		psd = psds[i];
+		mp = nvme_psd_mp_get(psd);
+		mxps = nvme_psd_mxps_get(psd);
+		nops = nvme_psd_nops_get(psd);
+
+		printf("ps %4" PRIu8 " : max_power:", i);
+
+		if (mxps == NVME_SPEC_MXPS_001W)
+			printf("%01u.%02uW ", mp / 100, mp % 100);
+		else
+			printf("%01u.%04uW ", mp / 10000, mp % 10000);
+
+		if (nops)
+			printf("non-");
+
+		printf("operational enlat:%" PRIu32 " exlat:%" PRIu32
+		       " rrt:%" PRIu8 " rrl:%" PRIu8 "\n"
+		       "          rwt:%" PRIu8
+		       " rwl:%" PRIu8,
+		       nvme_psd_enlat_get(psd), nvme_psd_exlat_get(psd),
+		       nvme_psd_rrt_get(psd), nvme_psd_rrl_get(psd),
+		       nvme_psd_rwt_get(psd), nvme_psd_rwl_get(psd));
+		printf(" idle_power:");
+		show_psd_ldlp(nvme_psd_idlp_get(psd), nvme_psd_ips_get(psd));
+		printf(" active_power:");
+		show_psd_actp(nvme_psd_actp_get(psd), nvme_psd_aps_get(psd));
+		printf("\n");
+	}
+}
+
+void show_nvme_id_ctrl(struct nvme_ctrl *ctrl, unsigned int mode,
+		       void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
 	int human = mode & HUMAN, vs = mode & VS;
 
-	printf("vid       : %#x\n", le16_to_cpu(ctrl->vid));
-	printf("ssvid     : %#x\n", le16_to_cpu(ctrl->ssvid));
-	printf("sn        : %-.*s\n", (int)sizeof(ctrl->sn), ctrl->sn);
-	printf("mn        : %-.*s\n", (int)sizeof(ctrl->mn), ctrl->mn);
-	printf("fr        : %-.*s\n", (int)sizeof(ctrl->fr), ctrl->fr);
-	printf("rab       : %d\n", ctrl->rab);
-	printf("ieee      : %02x%02x%02x\n",
-		ctrl->ieee[2], ctrl->ieee[1], ctrl->ieee[0]);
-	printf("cmic      : %#x\n", ctrl->cmic);
+	printf("vid       : %#x\n", nvme_ctrl_vid_get(ctrl));
+	printf("ssvid     : %#x\n", nvme_ctrl_ssvid_get(ctrl));
+	printf("sn        : %-.*s\n", NVME_SPEC_CTRL_SN_LEN,
+	       nvme_ctrl_sn_get(ctrl));
+	printf("mn        : %-.*s\n", NVME_SPEC_CTRL_MN_LEN,
+	       nvme_ctrl_mn_get(ctrl));
+	printf("fr        : %-.*s\n", NVME_SPEC_CTRL_FR_LEN,
+	       nvme_ctrl_fr_get(ctrl));
+	printf("rab       : %" PRIu8 "\n", nvme_ctrl_rab_get(ctrl));
+	printf("ieee      : %s\n", nvme_ctrl_ieee_get(ctrl));
+	printf("cmic      : %#x\n", nvme_ctrl_cmic_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_cmic(ctrl->cmic);
-	printf("mdts      : %d\n", ctrl->mdts);
-	printf("cntlid    : %#x\n", le16_to_cpu(ctrl->cntlid));
-	printf("ver       : %#x\n", le32_to_cpu(ctrl->ver));
-	printf("rtd3r     : %#x\n", le32_to_cpu(ctrl->rtd3r));
-	printf("rtd3e     : %#x\n", le32_to_cpu(ctrl->rtd3e));
-	printf("oaes      : %#x\n", le32_to_cpu(ctrl->oaes));
+		show_nvme_id_ctrl_cmic(nvme_ctrl_cmic_get(ctrl));
+	printf("mdts      : %" PRIu8 "\n", nvme_ctrl_mdts_get(ctrl));
+	printf("cntlid    : %#x\n", nvme_ctrl_cntlid_get(ctrl));
+	printf("ver       : %#x\n", nvme_ctrl_ver_get(ctrl));
+	printf("rtd3r     : %#x\n", nvme_ctrl_rtd3r_get(ctrl));
+	printf("rtd3e     : %#x\n", nvme_ctrl_rtd3e_get(ctrl));
+	printf("oaes      : %#x\n", nvme_ctrl_oaes_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_oaes(ctrl->oaes);
-	printf("ctratt    : %#x\n", le32_to_cpu(ctrl->ctratt));
+		show_nvme_id_ctrl_oaes(nvme_ctrl_oaes_get(ctrl));
+	printf("ctratt    : %#x\n", nvme_ctrl_ctrattr_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_ctratt(ctrl->ctratt);
-	printf("rrls      : %#x\n", le16_to_cpu(ctrl->rrls));
-
-	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
-	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
-	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));
-
-	printf("oacs      : %#x\n", le16_to_cpu(ctrl->oacs));
+		show_nvme_id_ctrl_ctratt(nvme_ctrl_ctrattr_get(ctrl));
+	printf("rrls      : %#x\n", nvme_ctrl_rrls_get(ctrl));
+	printf("crdt1     : %" PRIu16 "\n", nvme_ctrl_crdt1_get(ctrl));
+	printf("crdt2     : %" PRIu16 "\n", nvme_ctrl_crdt2_get(ctrl));
+	printf("crdt3     : %" PRIu16 "\n", nvme_ctrl_crdt3_get(ctrl));
+	printf("oacs      : %#x\n", nvme_ctrl_oacs_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_oacs(ctrl->oacs);
-	printf("acl       : %d\n", ctrl->acl);
-	printf("aerl      : %d\n", ctrl->aerl);
-	printf("frmw      : %#x\n", ctrl->frmw);
+		show_nvme_id_ctrl_oacs(nvme_ctrl_oacs_get(ctrl));
+	printf("acl       : %" PRIu8 "\n", nvme_ctrl_acl_get(ctrl));
+	printf("aerl      : %" PRIu8 "\n", nvme_ctrl_aerl_get(ctrl));
+	printf("frmw      : %#x\n", nvme_ctrl_frmw_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_frmw(ctrl->frmw);
-	printf("lpa       : %#x\n", ctrl->lpa);
+		show_nvme_id_ctrl_frmw(nvme_ctrl_frmw_get(ctrl));
+	printf("lpa       : %#x\n", nvme_ctrl_lpa_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_lpa(ctrl->lpa);
-	printf("elpe      : %d\n", ctrl->elpe);
-	printf("npss      : %d\n", ctrl->npss);
-	printf("avscc     : %#x\n", ctrl->avscc);
+		show_nvme_id_ctrl_lpa(nvme_ctrl_lpa_get(ctrl));
+	printf("elpe      : %" PRIu8 "\n", nvme_ctrl_elpe_get(ctrl));
+	printf("npss      : %" PRIu8 "\n", nvme_ctrl_npss_get(ctrl));
+	printf("avscc     : %#x\n", nvme_ctrl_avscc_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_avscc(ctrl->avscc);
-	printf("apsta     : %#x\n", ctrl->apsta);
+		show_nvme_id_ctrl_avscc(nvme_ctrl_avscc_get(ctrl));
+	printf("apsta     : %#x\n", nvme_ctrl_apsta_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_apsta(ctrl->apsta);
-	printf("wctemp    : %d\n", le16_to_cpu(ctrl->wctemp));
-	printf("cctemp    : %d\n", le16_to_cpu(ctrl->cctemp));
-	printf("mtfa      : %d\n", le16_to_cpu(ctrl->mtfa));
-	printf("hmpre     : %d\n", le32_to_cpu(ctrl->hmpre));
-	printf("hmmin     : %d\n", le32_to_cpu(ctrl->hmmin));
-	printf("tnvmcap   : %.0Lf\n", int128_to_double(ctrl->tnvmcap));
-	printf("unvmcap   : %.0Lf\n", int128_to_double(ctrl->unvmcap));
-	printf("rpmbs     : %#x\n", le32_to_cpu(ctrl->rpmbs));
+		show_nvme_id_ctrl_apsta(nvme_ctrl_apsta_get(ctrl));
+	printf("wctemp    : %" PRIu16 "\n", nvme_ctrl_wctemp_get(ctrl));
+	printf("cctemp    : %" PRIu16 "\n", nvme_ctrl_cctemp_get(ctrl));
+	printf("mtfa      : %" PRIu16 "\n", nvme_ctrl_mtfa_get(ctrl));
+	printf("hmpre     : %" PRIu32 "\n", nvme_ctrl_hmpre_get(ctrl));
+	printf("hmmin     : %" PRIu32 "\n", nvme_ctrl_hmmin_get(ctrl));
+	printf("tnvmcap   : %.0Lf\n",
+	       int128_to_double((uint8_t *) nvme_ctrl_tnvmcap_get(ctrl)));
+	printf("unvmcap   : %.0Lf\n",
+	       int128_to_double((uint8_t *) nvme_ctrl_unvmcap_get(ctrl)));
+	printf("rpmbs     : %#x\n", nvme_ctrl_rpmbs_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_rpmbs(ctrl->rpmbs);
-	printf("edstt     : %d\n", le16_to_cpu(ctrl->edstt));
-	printf("dsto      : %d\n", ctrl->dsto);
-	printf("fwug      : %d\n", ctrl->fwug);
-	printf("kas       : %d\n", le16_to_cpu(ctrl->kas));
-	printf("hctma     : %#x\n", le16_to_cpu(ctrl->hctma));
+		show_nvme_id_ctrl_rpmbs(nvme_ctrl_rpmbs_get(ctrl));
+	printf("edstt     : %" PRIu16 "\n", nvme_ctrl_edstt_get(ctrl));
+	printf("dsto      : %" PRIu8 "\n", nvme_ctrl_dsto_get(ctrl));
+	printf("fwug      : %" PRIu8 "\n", nvme_ctrl_fwug_get(ctrl));
+	printf("kas       : %" PRIu16 "\n", nvme_ctrl_kas_get(ctrl));
+	printf("hctma     : %#x\n", nvme_ctrl_hctma_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_hctma(ctrl->hctma);
-	printf("mntmt     : %d\n", le16_to_cpu(ctrl->mntmt));
-	printf("mxtmt     : %d\n", le16_to_cpu(ctrl->mxtmt));
-	printf("sanicap   : %#x\n", le32_to_cpu(ctrl->sanicap));
+		show_nvme_id_ctrl_hctma(nvme_ctrl_hctma_get(ctrl));
+	printf("mntmt     : %" PRIu16 "\n", nvme_ctrl_mntmt_get(ctrl));
+	printf("mxtmt     : %" PRIu16 "\n", nvme_ctrl_mxtmt_get(ctrl));
+	printf("sanicap   : %#x\n", nvme_ctrl_sanicap_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_sanicap(ctrl->sanicap);
-	printf("hmminds   : %d\n", le32_to_cpu(ctrl->hmminds));
-	printf("hmmaxd    : %d\n", le16_to_cpu(ctrl->hmmaxd));
-	printf("nsetidmax : %d\n", le16_to_cpu(ctrl->nsetidmax));
-	printf("anatt     : %d\n", ctrl->anatt);
-	printf("anacap    : %d\n", ctrl->anacap);
+		show_nvme_id_ctrl_sanicap(nvme_ctrl_sanicap_get(ctrl));
+	printf("hmminds   : %" PRIu16 "\n", nvme_ctrl_hmminds_get(ctrl));
+	printf("hmmaxd    : %" PRIu16 "\n", nvme_ctrl_hmmaxd_get(ctrl));
+	printf("nsetidmax : %" PRIu16 "\n", nvme_ctrl_nsetidmax_get(ctrl));
+	printf("anatt     : %" PRIu8 "\n", nvme_ctrl_anatt_get(ctrl));
+	printf("anacap    : %" PRIu8 "\n", nvme_ctrl_anacap_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_anacap(ctrl->anacap);
-	printf("anagrpmax : %d\n", ctrl->anagrpmax);
-	printf("nanagrpid : %d\n", le32_to_cpu(ctrl->nanagrpid));
-	printf("sqes      : %#x\n", ctrl->sqes);
+		show_nvme_id_ctrl_anacap(nvme_ctrl_anacap_get(ctrl));
+	printf("anagrpmax : %" PRIu8 "\n", nvme_ctrl_anagrpmax_get(ctrl));
+	printf("nanagrpid : %" PRIu32 "\n", nvme_ctrl_nanagrpid_get(ctrl));
+	printf("sqes      : %#x\n", nvme_ctrl_sqes_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_sqes(ctrl->sqes);
-	printf("cqes      : %#x\n", ctrl->cqes);
+		show_nvme_id_ctrl_sqes(nvme_ctrl_sqes_get(ctrl));
+	printf("cqes      : %#x\n", nvme_ctrl_cqes_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_cqes(ctrl->cqes);
-	printf("maxcmd    : %d\n", le16_to_cpu(ctrl->maxcmd));
-	printf("nn        : %d\n", le32_to_cpu(ctrl->nn));
-	printf("oncs      : %#x\n", le16_to_cpu(ctrl->oncs));
+		show_nvme_id_ctrl_cqes(nvme_ctrl_cqes_get(ctrl));
+	printf("maxcmd    : %" PRIu16 "\n", nvme_ctrl_maxcmd_get(ctrl));
+	printf("nn        : %" PRIu32 "\n", nvme_ctrl_nn_get(ctrl));
+	printf("oncs      : %#x\n", nvme_ctrl_oncs_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_oncs(ctrl->oncs);
-	printf("fuses     : %#x\n", le16_to_cpu(ctrl->fuses));
+		show_nvme_id_ctrl_oncs(nvme_ctrl_oncs_get(ctrl));
+	printf("fuses     : %#x\n", le16_to_cpu(nvme_ctrl_fuses_get(ctrl)));
 	if (human)
-		show_nvme_id_ctrl_fuses(ctrl->fuses);
-	printf("fna       : %#x\n", ctrl->fna);
+		show_nvme_id_ctrl_fuses(nvme_ctrl_fuses_get(ctrl));
+	printf("fna       : %#x\n", nvme_ctrl_fna_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_fna(ctrl->fna);
-	printf("vwc       : %#x\n", ctrl->vwc);
+		show_nvme_id_ctrl_fna(nvme_ctrl_fna_get(ctrl));
+	printf("vwc       : %#x\n", nvme_ctrl_vwc_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_vwc(ctrl->vwc);
-	printf("awun      : %d\n", le16_to_cpu(ctrl->awun));
-	printf("awupf     : %d\n", le16_to_cpu(ctrl->awupf));
-	printf("nvscc     : %d\n", ctrl->nvscc);
+		show_nvme_id_ctrl_vwc(nvme_ctrl_vwc_get(ctrl));
+	printf("awun      : %" PRIu16 "\n", nvme_ctrl_awun_get(ctrl));
+	printf("awupf     : %" PRIu16 "\n", nvme_ctrl_awupf_get(ctrl));
+	printf("nvscc     : %" PRIu8 "\n", nvme_ctrl_nvscc_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_nvscc(ctrl->nvscc);
-	printf("nwpc      : %d\n", ctrl->nwpc);
+		show_nvme_id_ctrl_nvscc(nvme_ctrl_nvscc_get(ctrl));
+	printf("nwpc      : %" PRIu8 "\n", nvme_ctrl_nwpc_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_nwpc(ctrl->nwpc);
-	printf("acwu      : %d\n", le16_to_cpu(ctrl->acwu));
-	printf("sgls      : %#x\n", le32_to_cpu(ctrl->sgls));
+		show_nvme_id_ctrl_nwpc(nvme_ctrl_nwpc_get(ctrl));
+	printf("acwu      : %" PRIu16 "\n", nvme_ctrl_acwu_get(ctrl));
+	printf("sgls      : %#x\n", nvme_ctrl_sgls_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_sgls(ctrl->sgls);
-	printf("mnan      : %d\n", le32_to_cpu(ctrl->mnan));
-	printf("subnqn    : %-.*s\n", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
-	printf("ioccsz    : %d\n", le32_to_cpu(ctrl->ioccsz));
-	printf("iorcsz    : %d\n", le32_to_cpu(ctrl->iorcsz));
-	printf("icdoff    : %d\n", le16_to_cpu(ctrl->icdoff));
-	printf("ctrattr   : %#x\n", ctrl->ctrattr);
+		show_nvme_id_ctrl_sgls(nvme_ctrl_sgls_get(ctrl));
+	printf("mnan      : %" PRIu32 "\n", nvme_ctrl_mnan_get(ctrl));
+	printf("subnqn    : %-.*s\n", NVME_SPEC_CTRL_SUBNQN_LEN,
+	       nvme_ctrl_subnqn_get(ctrl));
+	printf("ioccsz    : %" PRIu32 "\n", nvme_ctrl_ioccsz_get(ctrl));
+	printf("iorcsz    : %" PRIu32 "\n", nvme_ctrl_iorcsz_get(ctrl));
+	printf("icdoff    : %" PRIu16 "\n", nvme_ctrl_icdoff_get(ctrl));
+	printf("ctrattr   : %#x\n", nvme_ctrl_ctrattr_get(ctrl));
 	if (human)
-		show_nvme_id_ctrl_ctrattr(ctrl->ctrattr);
-	printf("msdbd     : %d\n", ctrl->msdbd);
+		show_nvme_id_ctrl_ctrattr(nvme_ctrl_ctrattr_get(ctrl));
+	printf("msdbd     : %d\n", nvme_ctrl_msdbd_get(ctrl));
 
 	show_nvme_id_ctrl_power(ctrl);
 	if (vendor_show)
-		vendor_show(ctrl->vs, NULL);
+		vendor_show((uint8_t *)nvme_ctrl_vendor_specfic_get(ctrl),
+			    NULL);
 	else if (vs) {
 		printf("vs[]:\n");
-		d(ctrl->vs, sizeof(ctrl->vs), 16, 1);
+		d((uint8_t *) nvme_ctrl_vendor_specfic_get(ctrl),
+		  NVME_SPEC_CTRL_VENDOR_SPECFIC_DATA_LEN, 16 , 1);
 	}
-}
-
-void show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
-{
-	__show_nvme_id_ctrl(ctrl, mode, NULL);
 }
 
 void show_nvme_id_nvmset(struct nvme_id_nvmset *nvmset)
@@ -2279,6 +2300,8 @@ void show_lba_status(struct nvme_lba_status *list)
 
 static void show_list_item(struct list_item list_item)
 {
+	struct nvme_ctrl *ctrl = list_item.ctrl;
+
 	long long int lba = 1 << list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ds;
 	double nsze       = le64_to_cpu(list_item.ns.nsze) * lba;
 	double nuse       = le64_to_cpu(list_item.ns.nuse) * lba;
@@ -2295,9 +2318,12 @@ static void show_list_item(struct list_item list_item)
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		le16_to_cpu(list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ms));
 	printf("%-16s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", list_item.node,
-            (int)sizeof(list_item.ctrl.sn), (int)sizeof(list_item.ctrl.sn), list_item.ctrl.sn,
-            (int)sizeof(list_item.ctrl.mn), (int)sizeof(list_item.ctrl.mn), list_item.ctrl.mn,
-            list_item.nsid, usage, format, (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
+	       NVME_SPEC_CTRL_SN_LEN, NVME_SPEC_CTRL_SN_LEN,
+	       nvme_ctrl_sn_get(ctrl),
+	       NVME_SPEC_CTRL_MN_LEN, NVME_SPEC_CTRL_MN_LEN,
+	       nvme_ctrl_mn_get(ctrl),
+	       list_item.nsid, usage, format,
+	       NVME_SPEC_CTRL_FR_LEN, nvme_ctrl_fr_get(ctrl));
 }
 
 void show_list_items(struct list_item *list_items, unsigned len)
@@ -2325,11 +2351,14 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 	long long int lba;
 	double nsze;
 	double nuse;
+	struct nvme_ctrl *ctrl = NULL;
 
 	root = json_create_object();
 	devices = json_create_array();
 	for (i = 0; i < len; i++) {
 		device_attrs = json_create_object();
+
+		ctrl = list_items[i].ctrl;
 
 	    json_object_add_value_int(device_attrs,
 	                              "NameSpace",
@@ -2339,9 +2368,8 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 					     "DevicePath",
 					     list_items[i].node);
 
-		format(formatter, sizeof(formatter),
-			   list_items[i].ctrl.fr,
-			   sizeof(list_items[i].ctrl.fr));
+		format(formatter, sizeof(formatter), nvme_ctrl_fr_get(ctrl),
+		       NVME_SPEC_CTRL_FR_LEN);
 
 		json_object_add_value_string(device_attrs,
 					     "Firmware",
@@ -2352,9 +2380,8 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 						  "Index",
 						  index);
 
-		format(formatter, sizeof(formatter),
-		       list_items[i].ctrl.mn,
-		       sizeof(list_items[i].ctrl.mn));
+		format(formatter, sizeof(formatter), nvme_ctrl_mn_get(ctrl),
+		       NVME_SPEC_CTRL_MN_LEN);
 
 		json_object_add_value_string(device_attrs,
 					     "ModelNumber",
@@ -2366,9 +2393,8 @@ void json_print_list_items(struct list_item *list_items, unsigned len)
 					     "ProductName",
 					     product);
 
-		format(formatter, sizeof(formatter),
-		       list_items[i].ctrl.sn,
-		       sizeof(list_items[i].ctrl.sn));
+		format(formatter, sizeof(formatter), nvme_ctrl_sn_get(ctrl),
+		       NVME_SPEC_CTRL_SN_LEN);
 
 		json_object_add_value_string(device_attrs,
 					     "SerialNumber",
@@ -2474,132 +2500,139 @@ void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	json_free_object(root);
 }
 
-void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vs)(__u8 *vs, struct json_object *root))
+void json_nvme_id_ctrl(struct nvme_ctrl *ctrl, unsigned int mode,
+		       void (*vs)(__u8 *vs, struct json_object *root))
 {
-	struct json_object *root;
-	struct json_array *psds;
+	struct json_object *root = NULL;
+	struct json_array *psds = NULL;
+	long double tnvmcap = 0;
+	long double unvmcap = 0;
+	uint8_t i = 0;
+	const char *subnqn = nvme_ctrl_subnqn_get(ctrl);
+	struct nvme_psd **nv_psds = NULL;
+	uint8_t nv_psd_count = 0;
 
-	long double tnvmcap = int128_to_double(ctrl->tnvmcap);
-	long double unvmcap = int128_to_double(ctrl->unvmcap);
-
-	char sn[sizeof(ctrl->sn) + 1], mn[sizeof(ctrl->mn) + 1],
-		fr[sizeof(ctrl->fr) + 1], subnqn[sizeof(ctrl->subnqn) + 1];
-	__u32 ieee = ctrl->ieee[2] << 16 | ctrl->ieee[1] << 8 | ctrl->ieee[0];
-
-	int i;
-
-	snprintf(sn, sizeof(sn), "%-.*s", (int)sizeof(ctrl->sn), ctrl->sn);
-	snprintf(mn, sizeof(mn), "%-.*s", (int)sizeof(ctrl->mn), ctrl->mn);
-	snprintf(fr, sizeof(fr), "%-.*s", (int)sizeof(ctrl->fr), ctrl->fr);
-	snprintf(subnqn, sizeof(subnqn), "%-.*s", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
+	unvmcap = int128_to_double((__u8 *) nvme_ctrl_unvmcap_get(ctrl));
+	tnvmcap = int128_to_double((__u8 *) nvme_ctrl_tnvmcap_get(ctrl));
 
 	root = json_create_object();
 
-	json_object_add_value_int(root, "vid", le16_to_cpu(ctrl->vid));
-	json_object_add_value_int(root, "ssvid", le16_to_cpu(ctrl->ssvid));
-	json_object_add_value_string(root, "sn", sn);
-	json_object_add_value_string(root, "mn", mn);
-	json_object_add_value_string(root, "fr", fr);
-	json_object_add_value_int(root, "rab", ctrl->rab);
-	json_object_add_value_int(root, "ieee", ieee);
-	json_object_add_value_int(root, "cmic", ctrl->cmic);
-	json_object_add_value_int(root, "mdts", ctrl->mdts);
-	json_object_add_value_int(root, "cntlid", le16_to_cpu(ctrl->cntlid));
-	json_object_add_value_uint(root, "ver", le32_to_cpu(ctrl->ver));
-	json_object_add_value_uint(root, "rtd3r", le32_to_cpu(ctrl->rtd3r));
-	json_object_add_value_uint(root, "rtd3e", le32_to_cpu(ctrl->rtd3e));
-	json_object_add_value_uint(root, "oaes", le32_to_cpu(ctrl->oaes));
-	json_object_add_value_int(root, "ctratt", le32_to_cpu(ctrl->ctratt));
-	json_object_add_value_int(root, "rrls", le16_to_cpu(ctrl->rrls));
-	json_object_add_value_int(root, "crdt1", le16_to_cpu(ctrl->crdt1));
-	json_object_add_value_int(root, "crdt2", le16_to_cpu(ctrl->crdt2));
-	json_object_add_value_int(root, "crdt3", le16_to_cpu(ctrl->crdt3));
-	json_object_add_value_int(root, "oacs", le16_to_cpu(ctrl->oacs));
-	json_object_add_value_int(root, "acl", ctrl->acl);
-	json_object_add_value_int(root, "aerl", ctrl->aerl);
-	json_object_add_value_int(root, "frmw", ctrl->frmw);
-	json_object_add_value_int(root, "lpa", ctrl->lpa);
-	json_object_add_value_int(root, "elpe", ctrl->elpe);
-	json_object_add_value_int(root, "npss", ctrl->npss);
-	json_object_add_value_int(root, "avscc", ctrl->avscc);
-	json_object_add_value_int(root, "apsta", ctrl->apsta);
-	json_object_add_value_int(root, "wctemp", le16_to_cpu(ctrl->wctemp));
-	json_object_add_value_int(root, "cctemp", le16_to_cpu(ctrl->cctemp));
-	json_object_add_value_int(root, "mtfa", le16_to_cpu(ctrl->mtfa));
-	json_object_add_value_uint(root, "hmpre", le32_to_cpu(ctrl->hmpre));
-	json_object_add_value_uint(root, "hmmin", le32_to_cpu(ctrl->hmmin));
+	json_object_add_value_int(root, "vid", nvme_ctrl_vid_get(ctrl));
+	json_object_add_value_int(root, "ssvid", nvme_ctrl_ssvid_get(ctrl));
+	json_object_add_value_string(root, "sn", nvme_ctrl_sn_get(ctrl));
+	json_object_add_value_string(root, "mn", nvme_ctrl_mn_get(ctrl));
+	json_object_add_value_string(root, "fr", nvme_ctrl_fr_get(ctrl));
+	json_object_add_value_int(root, "rab", nvme_ctrl_rab_get(ctrl));
+	json_object_add_value_int(root, "ieee", nvme_ctrl_ieee_get(ctrl));
+	json_object_add_value_int(root, "cmic", nvme_ctrl_cmic_get(ctrl));
+	json_object_add_value_int(root, "mdts", nvme_ctrl_mdts_get(ctrl));
+	json_object_add_value_int(root, "cntlid", nvme_ctrl_cntlid_get(ctrl));
+	json_object_add_value_uint(root, "ver", nvme_ctrl_ver_get(ctrl));
+	json_object_add_value_uint(root, "rtd3r", nvme_ctrl_rtd3r_get(ctrl));
+	json_object_add_value_uint(root, "rtd3e", nvme_ctrl_rtd3e_get(ctrl));
+	json_object_add_value_uint(root, "oaes", nvme_ctrl_oaes_get(ctrl));
+	json_object_add_value_int(root, "ctratt", nvme_ctrl_ctratt_get(ctrl));
+	json_object_add_value_int(root, "rrls", nvme_ctrl_rrls_get(ctrl));
+	json_object_add_value_int(root, "crdt1", nvme_ctrl_crdt1_get(ctrl));
+	json_object_add_value_int(root, "crdt2", nvme_ctrl_crdt2_get(ctrl));
+	json_object_add_value_int(root, "crdt3", nvme_ctrl_crdt3_get(ctrl));
+	json_object_add_value_int(root, "oacs", nvme_ctrl_oacs_get(ctrl));
+	json_object_add_value_int(root, "acl", nvme_ctrl_acl_get(ctrl));
+	json_object_add_value_int(root, "aerl", nvme_ctrl_aerl_get(ctrl));
+	json_object_add_value_int(root, "frmw", nvme_ctrl_frmw_get(ctrl));
+	json_object_add_value_int(root, "lpa", nvme_ctrl_lpa_get(ctrl));
+	json_object_add_value_int(root, "elpe", nvme_ctrl_elpe_get(ctrl));
+	json_object_add_value_int(root, "npss", nvme_ctrl_npss_get(ctrl));
+	json_object_add_value_int(root, "avscc", nvme_ctrl_avscc_get(ctrl));
+	json_object_add_value_int(root, "apsta", nvme_ctrl_apsta_get(ctrl));
+	json_object_add_value_int(root, "wctemp", nvme_ctrl_wctemp_get(ctrl));
+	json_object_add_value_int(root, "cctemp", nvme_ctrl_cctemp_get(ctrl));
+	json_object_add_value_int(root, "mtfa", nvme_ctrl_mtfa_get(ctrl));
+	json_object_add_value_uint(root, "hmpre", nvme_ctrl_hmpre_get(ctrl));
+	json_object_add_value_uint(root, "hmmin", nvme_ctrl_hmmin_get(ctrl));
 	json_object_add_value_float(root, "tnvmcap", tnvmcap);
 	json_object_add_value_float(root, "unvmcap", unvmcap);
-	json_object_add_value_uint(root, "rpmbs", le32_to_cpu(ctrl->rpmbs));
-	json_object_add_value_int(root, "edstt", le16_to_cpu(ctrl->edstt));
-	json_object_add_value_int(root, "dsto", ctrl->dsto);
-	json_object_add_value_int(root, "fwug", ctrl->fwug);
-	json_object_add_value_int(root, "kas", le16_to_cpu(ctrl->kas));
-	json_object_add_value_int(root, "hctma", le16_to_cpu(ctrl->hctma));
-	json_object_add_value_int(root, "mntmt", le16_to_cpu(ctrl->mntmt));
-	json_object_add_value_int(root, "mxtmt", le16_to_cpu(ctrl->mxtmt));
-	json_object_add_value_int(root, "sanicap", le32_to_cpu(ctrl->sanicap));
-	json_object_add_value_int(root, "hmminds", le32_to_cpu(ctrl->hmminds));
-	json_object_add_value_int(root, "hmmaxd", le16_to_cpu(ctrl->hmmaxd));
-	json_object_add_value_int(root, "nsetidmax", le16_to_cpu(ctrl->nsetidmax));
-
-	json_object_add_value_int(root, "anatt",ctrl->anatt);
-	json_object_add_value_int(root, "anacap", ctrl->anacap);
-	json_object_add_value_int(root, "anagrpmax", le32_to_cpu(ctrl->anagrpmax));
-	json_object_add_value_int(root, "nanagrpid", le32_to_cpu(ctrl->nanagrpid));
-	json_object_add_value_int(root, "sqes", ctrl->sqes);
-	json_object_add_value_int(root, "cqes", ctrl->cqes);
-	json_object_add_value_int(root, "maxcmd", le16_to_cpu(ctrl->maxcmd));
-	json_object_add_value_uint(root, "nn", le32_to_cpu(ctrl->nn));
-	json_object_add_value_int(root, "oncs", le16_to_cpu(ctrl->oncs));
-	json_object_add_value_int(root, "fuses", le16_to_cpu(ctrl->fuses));
-	json_object_add_value_int(root, "fna", ctrl->fna);
-	json_object_add_value_int(root, "vwc", ctrl->vwc);
-	json_object_add_value_int(root, "awun", le16_to_cpu(ctrl->awun));
-	json_object_add_value_int(root, "awupf", le16_to_cpu(ctrl->awupf));
-	json_object_add_value_int(root, "nvscc", ctrl->nvscc);
-	json_object_add_value_int(root, "nwpc", ctrl->nwpc);
-	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
-	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
+	json_object_add_value_int(root, "rpmbs", nvme_ctrl_rpmbs_get(ctrl));
+	json_object_add_value_int(root, "edstt", nvme_ctrl_edstt_get(ctrl));
+	json_object_add_value_int(root, "dsto", nvme_ctrl_dsto_get(ctrl));
+	json_object_add_value_int(root, "fwug", nvme_ctrl_fwug_get(ctrl));
+	json_object_add_value_int(root, "kas", nvme_ctrl_kas_get(ctrl));
+	json_object_add_value_int(root, "hctma", nvme_ctrl_hctma_get(ctrl));
+	json_object_add_value_int(root, "mntmt", nvme_ctrl_mntmt_get(ctrl));
+	json_object_add_value_int(root, "mxtmt", nvme_ctrl_mxtmt_get(ctrl));
+	json_object_add_value_int(root, "sanicap", nvme_ctrl_sanicap_get(ctrl));
+	json_object_add_value_int(root, "hmminds", nvme_ctrl_hmminds_get(ctrl));
+	json_object_add_value_int(root, "hmmaxd", nvme_ctrl_hmmaxd_get(ctrl));
+	json_object_add_value_int(root, "nsetidmax",
+				  nvme_ctrl_nsetidmax_get(ctrl));
+	json_object_add_value_int(root, "anatt",nvme_ctrl_anatt_get(ctrl));
+	json_object_add_value_int(root, "anacap", nvme_ctrl_anacap_get(ctrl));
+	json_object_add_value_int(root, "anagrpmax",
+				  nvme_ctrl_anagrpmax_get(ctrl));
+	json_object_add_value_int(root, "nanagrpid",
+				  nvme_ctrl_nanagrpid_get(ctrl));
+	json_object_add_value_int(root, "sqes", nvme_ctrl_sqes_get(ctrl));
+	json_object_add_value_int(root, "cqes", nvme_ctrl_cqes_get(ctrl));
+	json_object_add_value_uint(root, "nn", nvme_ctrl_nn_get(ctrl));
+	json_object_add_value_int(root, "oncs", nvme_ctrl_oncs_get(ctrl));
+	json_object_add_value_int(root, "fuses", nvme_ctrl_fuses_get(ctrl));
+	json_object_add_value_int(root, "fna", nvme_ctrl_fna_get(ctrl));
+	json_object_add_value_int(root, "vwc", nvme_ctrl_vwc_get(ctrl));
+	json_object_add_value_int(root, "awun", nvme_ctrl_awun_get(ctrl));
+	json_object_add_value_int(root, "awupf", nvme_ctrl_awupf_get(ctrl));
+	json_object_add_value_int(root, "nvscc", nvme_ctrl_nvscc_get(ctrl));
+	json_object_add_value_int(root, "nwpc", nvme_ctrl_nwpc_get(ctrl));
+	json_object_add_value_int(root, "acwu", nvme_ctrl_acwu_get(ctrl));
+	json_object_add_value_int(root, "sgls", nvme_ctrl_sgls_get(ctrl));
 
 	if (strlen(subnqn))
 		json_object_add_value_string(root, "subnqn", subnqn);
 
-	json_object_add_value_int(root, "ioccsz", le32_to_cpu(ctrl->ioccsz));
-	json_object_add_value_int(root, "iorcsz", le32_to_cpu(ctrl->iorcsz));
-	json_object_add_value_int(root, "icdoff", le16_to_cpu(ctrl->icdoff));
-	json_object_add_value_int(root, "ctrattr", ctrl->ctrattr);
-	json_object_add_value_int(root, "msdbd", ctrl->msdbd);
+	json_object_add_value_int(root, "ioccsz", nvme_ctrl_ioccsz_get(ctrl));
+	json_object_add_value_int(root, "iorcsz", nvme_ctrl_iorcsz_get(ctrl));
+	json_object_add_value_int(root, "icdoff", nvme_ctrl_icdoff_get(ctrl));
+	json_object_add_value_int(root, "ctrattr", nvme_ctrl_ctrattr_get(ctrl));
+	json_object_add_value_int(root, "msdbd", nvme_ctrl_msdbd_get(ctrl));
 
 	psds = json_create_array();
 	json_object_add_value_array(root, "psds", psds);
 
-	for (i = 0; i <= ctrl->npss; i++) {
+	nv_psds = nvme_ctrl_psds_get(ctrl);
+	nv_psd_count = nvme_ctrl_npss_get(ctrl);
+
+	for (i = 0; i <= nv_psd_count; ++i) {
 		struct json_object *psd = json_create_object();
 
 		json_object_add_value_int(psd, "max_power",
-			le16_to_cpu(ctrl->psd[i].max_power));
-		json_object_add_value_int(psd, "flags", ctrl->psd[i].flags);
+			nvme_psd_mp_get(nv_psds[i]));
+		json_object_add_value_int(psd, "flags",
+			nvme_psd_mxps_get(nv_psds[i]) +
+			(nvme_psd_nops_get(nv_psds[i]) >> 1));
 		json_object_add_value_uint(psd, "entry_lat",
-			le32_to_cpu(ctrl->psd[i].entry_lat));
+			nvme_psd_enlat_get(nv_psds[i]));
 		json_object_add_value_uint(psd, "exit_lat",
-			le32_to_cpu(ctrl->psd[i].exit_lat));
-		json_object_add_value_int(psd, "read_tput", ctrl->psd[i].read_tput);
-		json_object_add_value_int(psd, "read_lat", ctrl->psd[i].read_lat);
-		json_object_add_value_int(psd, "write_tput", ctrl->psd[i].write_tput);
-		json_object_add_value_int(psd, "write_lat", ctrl->psd[i].write_lat);
+			nvme_psd_exlat_get(nv_psds[i]));
+		json_object_add_value_int(psd, "read_tput",
+			nvme_psd_rrt_get(nv_psds[i]));
+		json_object_add_value_int(psd, "read_lat",
+			nvme_psd_rrl_get(nv_psds[i]));
+		json_object_add_value_int(psd, "write_tput",
+			nvme_psd_rwt_get(nv_psds[i]));
+		json_object_add_value_int(psd, "write_lat",
+			nvme_psd_rwl_get(nv_psds[i]));
 		json_object_add_value_int(psd, "idle_power",
-			le16_to_cpu(ctrl->psd[i].idle_power));
-		json_object_add_value_int(psd, "idle_scale", ctrl->psd[i].idle_scale);
+			nvme_psd_idlp_get(nv_psds[i]));
+		json_object_add_value_int(psd, "idle_scale",
+			nvme_psd_ips_get(nv_psds[i]));
 		json_object_add_value_int(psd, "active_power",
-			le16_to_cpu(ctrl->psd[i].active_power));
-		json_object_add_value_int(psd, "active_work_scale", ctrl->psd[i].active_work_scale);
-
+			nvme_psd_actp_get(nv_psds[i]));
+		json_object_add_value_int(psd, "active_work_scale",
+			nvme_psd_aps_get(nv_psds[i]));
 		json_array_add_value_object(psds, psd);
 	}
 
 	if(vs)
-		vs(ctrl->vs, root);
+		vs((__u8 *) nvme_ctrl_vendor_specfic_get(ctrl), root);
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);

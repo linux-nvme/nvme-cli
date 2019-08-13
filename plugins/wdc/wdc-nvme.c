@@ -30,6 +30,7 @@
 #include <unistd.h>
 
 #include "linux/nvme_ioctl.h"
+#include "libnvme_spec/ctrl.h"
 
 #include "common.h"
 #include "nvme.h"
@@ -851,7 +852,7 @@ static int wdc_get_serial_name(int fd, char *file, size_t len, const char *suffi
 		i--;
 	}
 	if (ctrl.sn[sizeof (ctrl.sn) - 1] == '\0') {
-		ctrl_sn_len = strlen(ctrl.sn);
+		ctrl_sn_len = strlen((char *) ctrl.sn);
 	}
 
 	res_len = snprintf(file, len, "%s%.*s%s", orig, ctrl_sn_len, ctrl.sn, suffix);

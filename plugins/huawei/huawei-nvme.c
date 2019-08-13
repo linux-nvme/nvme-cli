@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 
 #include "linux/nvme_ioctl.h"
+#include "libnvme_spec/ctrl.h"
 
 #include "nvme.h"
 #include "nvme-print.h"
@@ -104,7 +105,7 @@ static int huawei_get_nvme_info(int fd, struct huawei_list_item *item, const cha
 		return err;
 
 	/*identify huawei device*/
-	if (strstr(item->ctrl.mn, "Huawei") == NULL) {
+	if (strstr((char *) item->ctrl.mn, "Huawei") == NULL) {
 		item->huawei_device = false;
 		return 0;
 	}
@@ -135,14 +136,15 @@ static int huawei_get_nvme_info(int fd, struct huawei_list_item *item, const cha
 		item->ns_name[NS_NAME_LEN - 1] = '\0';
 	}
 
-	if (item->ctrl.vs[0] == 0) {
+	if (item->ctrl.vendor_specific[0] == 0) {
 
 		len = snprintf(item->array_name, ARRAY_NAME_LEN, "%s", "----");
 	if (len < 0)
 			return -EINVAL;
 	}
 	else {
-		memcpy(item->array_name, item->ctrl.vs, ARRAY_NAME_LEN);
+		memcpy(item->array_name, item->ctrl.vendor_specific,
+		       ARRAY_NAME_LEN);
 		item->array_name[ARRAY_NAME_LEN - 1] = '\0';
 	}
 	return 0;

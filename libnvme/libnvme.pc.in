@@ -1,0 +1,9 @@
+includedir=__INCLUDE_DIR__
+libdir=__LIB_DIR__
+
+Name: libnvme
+Version: __VERSION__
+Description: NVMe library
+Requires:
+Libs: -L${libdir} -lnvme
+Cflags: -I${includedir}

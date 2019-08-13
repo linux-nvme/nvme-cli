@@ -45,6 +45,9 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include <libnvme/libnvme.h>
+
+#include "libnvme_spec/ctrl.h"
 #include "common.h"
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
@@ -237,7 +240,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 	int err, fmt, fd;
 	int groups = 0; /* Right now get all the per ANA group NSIDS */
 	size_t ana_log_len;
-	struct nvme_id_ctrl ctrl;
+	struct nvme_ctrl *ctrl = NULL;
 
 	struct config {
 		char *output_format;
@@ -264,17 +267,17 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 		goto close_fd;
 	}
 
-	memset(&ctrl, 0, sizeof (struct nvme_id_ctrl));
-	err = nvme_identify_ctrl(fd, &ctrl);
+	err = nvme_ctrl_get_by_fd(fd, &ctrl, NULL /* discard error message */);
 	if (err) {
 		fprintf(stderr, "ERROR : nvme_identify_ctrl() failed 0x%x\n",
 				err);
 		goto close_fd;
 	}
 	ana_log_len = sizeof(struct nvme_ana_rsp_hdr) +
-		le32_to_cpu(ctrl.nanagrpid) * sizeof(struct nvme_ana_group_desc);
-	if (!(ctrl.anacap & (1 << 6)))
-		ana_log_len += le32_to_cpu(ctrl.mnan) * sizeof(__le32);
+		nvme_ctrl_nanagrpid_get(ctrl) *
+		sizeof(struct nvme_ana_group_desc);
+	if (!(nvme_ctrl_anacap_get(ctrl) & (1 << 6)))
+		ana_log_len += nvme_ctrl_mnan_get(ctrl) * sizeof(__le32);
 
 	ana_log = malloc(ana_log_len);
 	if (!ana_log) {
@@ -297,6 +300,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 		perror("ana-log");
 	free(ana_log);
 close_fd:
+	nvme_ctrl_free(ctrl);
 	close(fd);
 ret:
 	return nvme_status_to_errno(err, false);
@@ -1883,7 +1887,8 @@ static int get_nvme_info(int fd, struct list_item *item, const char *node)
 {
 	int err;
 
-	err = nvme_identify_ctrl(fd, &item->ctrl);
+	err = nvme_ctrl_get_by_fd(fd, &item->ctrl,
+				  NULL /* discard error msg */);
 	if (err)
 		return err;
 	item->nsid = nvme_get_nsid(fd);
@@ -2099,7 +2104,8 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	const char *human_readable = "show infos in readable format";
 	int err, fmt, fd;
 	unsigned int flags = 0;
-	struct nvme_id_ctrl ctrl;
+	struct nvme_ctrl *ctrl = NULL;
+	const char *err_msg = NULL;
 
 	struct config {
 		int vendor_specific;
@@ -2141,21 +2147,22 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	if (cfg.human_readable)
 		flags |= HUMAN;
 
-	err = nvme_identify_ctrl(fd, &ctrl);
-	if (!err) {
+	err = nvme_ctrl_get_by_fd(fd, &ctrl, &err_msg);
+	if (err == NVME_OK) {
 		if (fmt == BINARY)
-			d_raw((unsigned char *)&ctrl, sizeof(ctrl));
+			d_raw((unsigned char *) nvme_ctrl_raw_id_data_get(ctrl),
+			      NVME_SPEC_CTRL_RAW_IDENTIFY_DATA_LEN);
 		else if (fmt == JSON)
-			json_nvme_id_ctrl(&ctrl, flags, vs);
+			json_nvme_id_ctrl(ctrl, flags, vs);
 		else {
 			printf("NVME Identify Controller:\n");
-			__show_nvme_id_ctrl(&ctrl, flags, vs);
+			show_nvme_id_ctrl(ctrl, flags, vs);
 		}
+	} else {
+		fprintf(stderr, "Error %d: %s\n", err, nvme_strerror(err));
 	}
-	else if (err > 0)
-		show_nvme_status(err);
-	else
-		perror("identify controller");
+
+	nvme_ctrl_free(ctrl);
 
 close_fd:
 	close(fd);

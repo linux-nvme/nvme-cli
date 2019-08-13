@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 
+#include "libnvme_spec/ctrl.h"
 #include "nvme.h"
 #include "nvme-ioctl.h"
 #include "json.h"
@@ -276,9 +277,11 @@ static void netapp_smdevices_print(struct smdevice_info *devices, int count, int
 		char size[128];
 
 		sprintf(size, "%.2f%sB", nsze, s_suffix);
-		netapp_convert_string(array_label, (char *)&devices[i].ctrl.vs[20],
-					ARRAY_LABEL_LEN / 2);
-		slta = devices[i].ctrl.vs[0] & 0x1;
+		netapp_convert_string(
+			array_label,
+			(char *)&devices[i].ctrl.vendor_specific[20],
+			ARRAY_LABEL_LEN / 2);
+		slta = devices[i].ctrl.vendor_specific[0] & 0x1;
 		netapp_convert_string(volume_label, (char *)devices[i].ns.vs,
 					VOLUME_LABEL_LEN / 2);
 		netapp_nguid_to_str(nguid_str, devices[i].ns.nguid);
@@ -400,7 +403,7 @@ static int netapp_smdevices_get_info(int fd, struct smdevice_info *item,
 		return 0;
 	}
 
-	if (strncmp("NetApp E-Series", item->ctrl.mn, 15) != 0)
+	if (strncmp("NetApp E-Series", (char *) item->ctrl.mn, 15) != 0)
 		return 0; // not the right model of controller
 
 	item->nsid = nvme_get_nsid(fd);
@@ -427,7 +430,7 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 		return 0;
 	}
 
-	if (strncmp("NetApp ONTAP Controller", item->ctrl.mn, 23) != 0)
+	if (strncmp("NetApp ONTAP Controller", (char *) item->ctrl.mn, 23) != 0)
 		/* not the right controller model */
 		return 0;
 

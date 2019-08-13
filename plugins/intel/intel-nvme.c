@@ -6,6 +6,7 @@
 #include <inttypes.h>
 
 #include "linux/nvme_ioctl.h"
+#include "libnvme_spec/ctrl.h"
 
 #include "common.h"
 #include "nvme.h"

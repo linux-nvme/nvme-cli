@@ -18,6 +18,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <endian.h>
+
+#include <libnvme/libnvme.h>
+
 #include "plugin.h"
 #include "json.h"
 
@@ -59,9 +62,6 @@ struct nvme_firmware_log_page {
 	__u64	frs[7];
 	__u8	resv2[448];
 };
-
-/* idle and active power scales occupy the last 2 bits of the field */
-#define POWER_SCALE(s) ((s) >> 6)
 
 struct nvme_host_mem_buffer {
 	__u32			hsize;
@@ -147,11 +147,11 @@ static inline uint64_t le64_to_cpu(__le64 x)
 
 #define MAX_LIST_ITEMS 256
 struct list_item {
-	char                node[1024];
-	struct nvme_id_ctrl ctrl;
-	int                 nsid;
-	struct nvme_id_ns   ns;
-	unsigned            block;
+	char				node[1024];
+	struct nvme_ctrl		*ctrl;
+	int				nsid;
+	struct nvme_id_ns		ns;
+	unsigned			block;
 };
 
 struct ctrl_list_item {

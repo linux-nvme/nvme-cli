@@ -9,6 +9,7 @@
 #include <time.h>
 #include <locale.h>
 
+#include "libnvme_spec/ctrl.h"
 #include "linux/nvme_ioctl.h"
 #include "nvme.h"
 #include "nvme-print.h"
@@ -317,8 +318,8 @@ static int vt_add_entry_to_log(const int fd, const char *path, const struct vtvi
         return -1;
     }
 
-    vt_process_string(smart.raw_ctrl.sn, sizeof(smart.raw_ctrl.sn));
-    vt_process_string(smart.raw_ctrl.mn, sizeof(smart.raw_ctrl.mn));
+    vt_process_string((char *) smart.raw_ctrl.sn, sizeof(smart.raw_ctrl.sn));
+    vt_process_string((char *) smart.raw_ctrl.mn, sizeof(smart.raw_ctrl.mn));
 
     ret = vt_append_log(&smart, filename);
 	
@@ -369,8 +370,8 @@ static int vt_update_vtview_log_header(const int fd, const char *path, const str
         return -1;
     }
 
-    vt_process_string(header.raw_ctrl.sn, sizeof(header.raw_ctrl.sn));
-    vt_process_string(header.raw_ctrl.mn, sizeof(header.raw_ctrl.mn));
+    vt_process_string((char *) header.raw_ctrl.sn, sizeof(header.raw_ctrl.sn));
+    vt_process_string((char *) header.raw_ctrl.mn, sizeof(header.raw_ctrl.mn));
 
     ret = vt_append_header(&header, filename);
 	
@@ -616,13 +617,13 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
     vt_convert_data_buffer_to_hex_string(&buf[88], 4, true, s);
     printf("    \"RTD3 Entry Latency\":\"%sh\",\n", s);
 
-    temp = le32_to_cpu(ctrl->oaes);
+    temp = le32_to_cpu(*((uint32_t *) ctrl->oaes));
     printf("    \"Optional Asynchronous Events Supported\":{\n");
     vt_convert_data_buffer_to_hex_string(&buf[92], 4, true, s);
     printf("        \"Value\":\"%sh\",\n", s);
     vt_build_identify_lv2(temp, 8, 2, OAEStable, true);
 
-    temp = le32_to_cpu(ctrl->ctratt);
+    temp = le32_to_cpu(*((uint32_t *) ctrl->ctratt));
     printf("    \"Controller Attributes\":{\n");
     vt_convert_data_buffer_to_hex_string(&buf[96], 4, true, s);
     printf("        \"Value\":\"%sh\",\n", s);
@@ -633,7 +634,7 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
     vt_convert_data_buffer_to_hex_string(&buf[240], 16, true, s);
     printf("    \"NVMe Management Interface Specification\":\"%sh\",\n", s);
 
-    temp = le16_to_cpu(ctrl->oacs);
+    temp = le16_to_cpu(*((uint16_t *) ctrl->oacs));
     printf("    \"Optional Admin Command Support\":{\n");
     vt_convert_data_buffer_to_hex_string(&buf[256], 2, true, s);
     printf("        \"Value\":\"%sh\",\n", s);
@@ -691,7 +692,7 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
     vt_convert_data_buffer_to_hex_string(&buf[296], 16, true, s);
     printf("    \"Unallocated NVM Capacity\":\"%sh\",\n", s);
 
-    temp = le32_to_cpu(ctrl->rpmbs); 
+    temp = le32_to_cpu(*((uint32_t *) ctrl->rpmbs)); 
     printf("    \"Replay Protected Memory Block Support\":{\n");
     vt_convert_data_buffer_to_hex_string(&buf[312], 4, true, s);
     printf("        \"Value\":\"%sh\",\n", s);
@@ -716,7 +717,7 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
     vt_convert_data_buffer_to_hex_string(&buf[320], 1, true, s);
     printf("    \"Keep Alive Support\":\"%sh\",\n", s);
 
-    temp = le16_to_cpu(ctrl->hctma);
+    temp = le16_to_cpu(*((uint16_t *) ctrl->hctma));
     printf("    \"Host Controlled Thermal Management Attributes\":{\n");
     vt_convert_data_buffer_to_hex_string(&buf[322], 2, true, s);
     printf("        \"Value\":\"%sh\",\n", s);
@@ -727,7 +728,7 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
     vt_convert_data_buffer_to_hex_string(&buf[326], 2, true, s);
     printf("    \"Maximum Thermal Management Temperature\":\"%sh\",\n", s);
 
-    temp = le32_to_cpu(ctrl->sanicap);
+    temp = le32_to_cpu(*((uint32_t *) ctrl->sanicap));
     printf("    \"Sanitize Capabilities\":{\n");
     vt_convert_data_buffer_to_hex_string(&buf[328], 2, true, s);
     printf("        \"Value\":\"%sh\",\n", s);
@@ -754,13 +755,13 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
     vt_convert_data_buffer_to_hex_string(&buf[516], 4, true, s);
     printf("    \"Number of Namespaces\":\"%sh\",\n", s);
 
-    temp = le16_to_cpu(ctrl->oncs);
+    temp = le16_to_cpu(*((uint16_t *) ctrl->oncs));
     printf("    \"Optional NVM Command Support\":{\n");
     vt_convert_data_buffer_to_hex_string(&buf[520], 2, true, s);
     printf("        \"Value\":\"%sh\",\n", s);
     vt_build_identify_lv2(temp, 0, 7, ONCStable, true);
 
-    temp = le16_to_cpu(ctrl->fuses);
+    temp = le16_to_cpu(*((uint16_t *) ctrl->fuses));
     printf("    \"Optional NVM Command Support\":{\n");
     vt_convert_data_buffer_to_hex_string(&buf[522], 2, true, s);
     printf("        \"Value\":\"%sh\",\n", s);
@@ -792,7 +793,7 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
     vt_convert_data_buffer_to_hex_string(&buf[532], 2, true, s);
     printf("    \"Atomic Compare 0 Write Unit\":\"%sh\",\n", s);
 
-    temp = le32_to_cpu(ctrl->sgls);
+    temp = le32_to_cpu(*((uint32_t *) ctrl->sgls));
     printf("    \"SGL Support\":{\n");
     vt_convert_data_buffer_to_hex_string(&buf[536], 4, true, s);
     printf("        \"Value\":\"%sh\",\n", s);
@@ -945,8 +946,8 @@ virtium show-identify /dev/yourDevice\n";
         return (-1);
     }
 
-    vt_process_string(ctrl.sn, sizeof(ctrl.sn));
-    vt_process_string(ctrl.mn, sizeof(ctrl.mn));
+    vt_process_string((char *) ctrl.sn, sizeof(ctrl.sn));
+    vt_process_string((char *) ctrl.mn, sizeof(ctrl.mn));
     // print out detail identify
     vt_parse_detail_identify(&ctrl);
 
