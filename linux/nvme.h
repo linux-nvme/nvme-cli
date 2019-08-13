@@ -124,6 +124,9 @@ enum {
 	NVME_REG_BPINFO	= 0x0040,	/* Boot Partition Information */
 	NVME_REG_BPRSEL	= 0x0044,	/* Boot Partition Read Select */
 	NVME_REG_BPMBL	= 0x0048,	/* Boot Partition Memory Buffer Location */
+	NVME_REG_PMRCAP = 0x0e00,	/* Persistent Memory Capabilities */
+	NVME_REG_PMRCTL = 0x0e04,	/* Persistent Memory Region Control */
+	NVME_REG_PMRSTS = 0x0e08,	/* Persistent Memory Region Status */
 	NVME_REG_DBS	= 0x1000,	/* SQ 0 Tail Doorbell */
 };
 
@@ -1441,6 +1444,7 @@ enum {
 	NVME_SC_THIN_PROV_NOT_SUPP	= 0x11b,
 	NVME_SC_CTRL_LIST_INVALID	= 0x11c,
 	NVME_SC_BP_WRITE_PROHIBITED	= 0x11e,
+	NVME_SC_PMR_SAN_PROHIBITED	= 0x123,
 
 	/*
 	 * I/O Command Set Specific - NVM commands:

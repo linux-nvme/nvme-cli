@@ -1769,9 +1769,11 @@ static void show_sanitize_log_sstat(__u16 status)
 
 	printf("\t  [8]\t");
 	if (status & NVME_SANITIZE_LOG_GLOBAL_DATA_ERASED)
-		str = "Global Data Erased set: NVM storage has not been written";
+		str = "Global Data Erased set: no NS LB in the NVM subsystem has been written to "\
+		      "and no PMR in the NVM subsystem has been enabled";
 	else
-		str = "Global Data Erased cleared: NVM storage has been written";
+		str = "Global Data Erased cleared: a NS LB in the NVM subsystem has been written to "\
+		      "or  a PMR in the NVM subsystem has been enabled";
 	printf("%s\n", str);
 }
 
@@ -1947,6 +1949,7 @@ const char *nvme_status_to_string(__u32 status)
 	case NVME_SC_ANA_INACCESSIBLE:		return "ASYMMETRIC_NAMESPACE_ACCESS_INACCESSIBLE: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace being in the ANA Inaccessible state";
 	case NVME_SC_ANA_TRANSITION:		return "ASYMMETRIC_NAMESPACE_ACCESS_TRANSITION: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace transitioning between Asymmetric Namespace Access states";
 	case NVME_SC_CMD_INTERRUPTED:		return "CMD_INTERRUPTED: Command processing was interrupted and the controller is unable to successfully complete the command. The host should retry the command.";
+	case NVME_SC_PMR_SAN_PROHIBITED:	return "Sanitize Prohibited While Persistent Memory Region is Enabled: A sanitize operation is prohibited while the Persistent Memory Region is enabled.";
 	default:				return "Unknown";
 	}
 }
@@ -3105,18 +3108,20 @@ void json_print_nvme_subsystem_list(struct subsys_list_item *slist, int n)
 
 static void show_registers_cap(struct nvme_bar_cap *cap)
 {
-	printf("\tMemory Page Size Maximum      (MPSMAX): %u bytes\n", 1 <<  (12 + ((cap->mpsmax_mpsmin & 0xf0) >> 4)));
-	printf("\tMemory Page Size Minimum      (MPSMIN): %u bytes\n", 1 <<  (12 + (cap->mpsmax_mpsmin & 0x0f)));
-	printf("\tBoot Partition Support           (BPS): %s\n", (cap->bps_css_nssrs_dstrd & 0x2000) ? "Yes":"No");
-	printf("\tCommand Sets Supported           (CSS): NVM command set is %s\n",
+	printf("\tPersistent Memory Region Supported (PMRS): The Persistent Memory Region is %s\n",
+			(cap->rsvd_pmrs & 0x01) ? "supported":"not supported");
+	printf("\tMemory Page Size Maximum	   (MPSMAX): %u bytes\n", 1 <<  (12 + ((cap->mpsmax_mpsmin & 0xf0) >> 4)));
+	printf("\tMemory Page Size Minimum         (MPSMIN): %u bytes\n", 1 <<  (12 + (cap->mpsmax_mpsmin & 0x0f)));
+	printf("\tBoot Partition Support              (BPS): %s\n", (cap->bps_css_nssrs_dstrd & 0x2000) ? "Yes":"No");
+	printf("\tCommand Sets Supported              (CSS): NVM command set is %s\n",
 			(cap->bps_css_nssrs_dstrd & 0x0020) ? "supported":"not supported");
-	printf("\tNVM Subsystem Reset Supported  (NSSRS): %s\n", (cap->bps_css_nssrs_dstrd & 0x0010) ? "Yes":"No");
-	printf("\tDoorbell Stride                (DSTRD): %u bytes\n", 1 << (2 + (cap->bps_css_nssrs_dstrd & 0x000f)));
-	printf("\tTimeout                           (TO): %u ms\n", cap->to * 500);
-	printf("\tArbitration Mechanism Supported  (AMS): Weighted Round Robin with Urgent Priority Class is %s\n",
+	printf("\tNVM Subsystem Reset Supported     (NSSRS): %s\n", (cap->bps_css_nssrs_dstrd & 0x0010) ? "Yes":"No");
+	printf("\tDoorbell Stride                   (DSTRD): %u bytes\n", 1 << (2 + (cap->bps_css_nssrs_dstrd & 0x000f)));
+	printf("\tTimeout                              (TO): %u ms\n", cap->to * 500);
+	printf("\tArbitration Mechanism Supported     (AMS): Weighted Round Robin with Urgent Priority Class is %s\n",
 			(cap->ams_cqr & 0x02) ? "supported":"not supported");
-	printf("\tContiguous Queues Required       (CQR): %s\n", (cap->ams_cqr & 0x01) ? "Yes":"No");
-	printf("\tMaximum Queue Entries Supported (MQES): %u\n\n", cap->mqes + 1);
+	printf("\tContiguous Queues Required	      (CQR): %s\n", (cap->ams_cqr & 0x01) ? "Yes":"No");
+	printf("\tMaximum Queue Entries Supported    (MQES): %u\n\n", cap->mqes + 1);
 }
 
 static void show_registers_version(__u32 vs)
@@ -3329,6 +3334,44 @@ static void show_registers_bpmbl(uint64_t bpmbl)
 	printf("\tBoot Partition Memory Buffer Base Address (BMBBA): %"PRIx64"\n", bpmbl);
 }
 
+static void show_registers_pmrcap(__u32 pmrcap)
+{
+	printf("\tPersistent Memory Region Timeout		    (PMRTO): %x\n", (pmrcap & 0x00ff0000) >> 16);
+	printf("\tPersistent Memory Region Write Barrier Mechanisms(PMRWBM): %x\n", (pmrcap & 0x00003c00) >> 10);
+	printf("\tPersistent Memory Region Time Units		    (PMRTU): PMR time unit is %s\n",
+			(pmrcap & 0x00000300) >> 8 ? "minutes":"500 milliseconds");
+	printf("\tBase Indicator Register			      (BIR): %x\n", (pmrcap & 0x000000e0) >> 5);
+	printf("\tWrite Data Support				      (WDS): Write data to the PMR is %s\n",
+			(pmrcap & 0x00000010) ? "supported":"not supported");
+	printf("\tRead Data Support				      (RDS): Read data from the PMR is %s\n",
+			(pmrcap & 0x00000008) ? "supported":"not supported");
+}
+
+static void show_registers_pmrctl(__u32 pmrctl)
+{
+	printf("\tEnable (EN): PMR is %s\n", (pmrctl & 0x00000001) ? "READY":"Disabled");
+}
+
+static const char *nvme_register_pmr_hsts_to_string(__u8 hsts)
+{
+        switch (hsts) {
+        case 0: return "Normal Operation";
+        case 1: return "Restore Error";
+        case 2: return "Read Only";
+        case 3: return "Unreliable";
+        default: return "Reserved";
+        }
+}
+
+static void show_registers_pmrsts(__u32 pmrsts, __u32 pmrctl)
+{
+	printf("\tHealth Status (HSTS): %s\n", nvme_register_pmr_hsts_to_string((pmrsts & 0x00000e00) >> 9));
+	printf("\tNot Ready	(NRDY): The Persistent Memory Region is %s to process "\
+	       "PCI Express memory read and write requests\n",
+	       (pmrsts & 0x00000100) == 0 && (pmrctl & 0x00000001) ? "READY":"Not Ready");
+	printf("\tError		 (ERR): %x\n", (pmrsts & 0x000000ff));
+}
+
 static inline uint32_t mmio_read32(void *addr)
 {
 	__le32 *p = addr;
@@ -3348,7 +3391,7 @@ void json_ctrl_registers(void *bar)
 {
 	uint64_t cap, asq, acq, bpmbl;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc,
-			bpinfo, bprsel;
+			bpinfo, bprsel, pmrcap, pmrctl, pmrsts;
 	struct json_object *root;
 
 	cap = mmio_read64(bar + NVME_REG_CAP);
@@ -3366,6 +3409,9 @@ void json_ctrl_registers(void *bar)
 	bpinfo = mmio_read32(bar + NVME_REG_BPINFO);
 	bprsel = mmio_read32(bar + NVME_REG_BPRSEL);
 	bpmbl = mmio_read64(bar + NVME_REG_BPMBL);
+	pmrcap = mmio_read32(bar + NVME_REG_PMRCAP);
+	pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
+	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
 
 	root = json_create_object();
 	json_object_add_value_uint(root, "cap", cap);
@@ -3383,6 +3429,9 @@ void json_ctrl_registers(void *bar)
 	json_object_add_value_int(root, "bpinfo", bpinfo);
 	json_object_add_value_int(root, "bprsel", bprsel);
 	json_object_add_value_uint(root, "bpmbl", bpmbl);
+	json_object_add_value_int(root, "pmrcap", pmrcap);
+	json_object_add_value_int(root, "pmrctl", pmrctl);
+	json_object_add_value_int(root, "pmrsts", pmrsts);
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
@@ -3391,7 +3440,8 @@ void json_ctrl_registers(void *bar)
 void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 {
 	uint64_t cap, asq, acq, bpmbl;
-	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc, bpinfo, bprsel;
+	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc, bpinfo,
+		 bprsel, pmrcap, pmrctl, pmrsts;
 
 	int human = mode & HUMAN;
 
@@ -3410,6 +3460,9 @@ void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 	bpinfo = mmio_read32(bar + NVME_REG_BPINFO);
 	bprsel = mmio_read32(bar + NVME_REG_BPRSEL);
 	bpmbl = mmio_read64(bar + NVME_REG_BPMBL);
+	pmrcap = mmio_read32(bar + NVME_REG_PMRCAP);
+	pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
+	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
 
 	if (human) {
 		if (cap != 0xffffffff) {
@@ -3465,6 +3518,15 @@ void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 
 			printf("bpmbl   : %"PRIx64"\n", bpmbl);
 			show_registers_bpmbl(bpmbl);
+
+			printf("pmrcap  : %x\n", pmrcap);
+			show_registers_pmrcap(pmrcap);
+
+			printf("pmrctl  : %x\n", pmrctl);
+			show_registers_pmrctl(pmrctl);
+
+			printf("pmrsts  : %x\n", pmrsts);
+			show_registers_pmrsts(pmrsts, pmrctl);
 		}
 	} else {
 		if (cap != 0xffffffff)

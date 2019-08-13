@@ -110,7 +110,7 @@ struct nvme_bar_cap {
 	__u8	to;
 	__u16	bps_css_nssrs_dstrd;
 	__u8	mpsmax_mpsmin;
-	__u8	reserved;
+	__u8	rsvd_pmrs;
 };
 
 #ifdef __CHECKER__
