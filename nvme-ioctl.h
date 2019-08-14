@@ -78,12 +78,22 @@ int nvme_identify_ns_list(int fd, __u32 nsid, bool all, void *data);
 int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data);
 int nvme_identify_ns_descs(int fd, __u32 nsid, void *data);
 int nvme_identify_nvmset(int fd, __u16 nvmset_id, void *data);
+int nvme_identify_uuid(int fd, void *data);
 int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data);
 int nvme_identify_ns_granularity(int fd, void *data);
-int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
-		   __u16 group_id, bool rae, __u32 data_len, void *data);
 int nvme_get_log(int fd, __u32 nsid, __u8 log_id, bool rae,
 		 __u32 data_len, void *data);
+int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
+		   __u16 group_id, bool rae, __u8 uuid_ix,
+		   __u32 data_len, void *data);
+
+static inline int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp,
+				 __u64 lpo, __u16 lsi, bool rae, __u32 data_len,
+				 void *data)
+{
+	return nvme_get_log14(fd, nsid, log_id, lsp, lpo, lsi, rae, 0,
+			      data_len, data);
+}
 
 int nvme_get_telemetry_log(int fd, void *lp, int generate_report,
 			   int ctrl_gen, size_t log_page_size, __u64 offset);

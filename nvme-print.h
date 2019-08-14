@@ -42,6 +42,7 @@ void show_nvme_subsystem_list(struct subsys_list_item *slist, int n);
 void show_nvme_id_nvmset(struct nvme_id_nvmset *nvmset);
 void show_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list *sc_list, __u32 count);
 void show_nvme_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *granularity, unsigned int flags);
+void show_nvme_id_uuid_list(const struct nvme_id_uuid_list *uuid_list, unsigned int flags);
 
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf);
 void nvme_directive_show_fields(__u8 dtype, __u8 doper, unsigned int result, unsigned char *buf);
@@ -71,4 +72,6 @@ void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset, const char *devname);
 void json_ctrl_registers(void *bar);
 void json_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list *sc_list, __u32 count);
 void json_nvme_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *granularity, unsigned int flags);
+void json_nvme_id_uuid_list(struct nvme_id_uuid_list *uuid_list);
+
 #endif

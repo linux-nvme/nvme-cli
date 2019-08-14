@@ -408,8 +408,13 @@ int nvme_identify_ns_granularity(int fd, void *data)
 	return nvme_identify13(fd, 0, NVME_ID_CNS_NS_GRANULARITY, 0, data);
 }
 
-int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
-                 __u16 lsi, bool rae, __u32 data_len, void *data)
+int nvme_identify_uuid(int fd, void *data)
+{
+	return nvme_identify(fd, 0, NVME_ID_CNS_UUID_LIST, data);
+}
+
+int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
+                 __u16 lsi, bool rae, __u8 uuid_ix, __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_get_log_page,
@@ -427,6 +432,7 @@ int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
 	cmd.cdw11 = numdu | (lsi << 16);
 	cmd.cdw12 = lpo;
 	cmd.cdw13 = (lpo >> 32);
+	cmd.cdw14 = uuid_ix;
 
 	return nvme_submit_admin_passthru(fd, &cmd);
 
