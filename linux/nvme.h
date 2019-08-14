@@ -310,6 +310,7 @@ enum {
 	NVME_CTRL_CTRATT_ENDURANCE_GROUPS	= 1 << 4,
 	NVME_CTRL_CTRATT_PREDICTABLE_LAT	= 1 << 5,
 	NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY	= 1 << 7,
+	NVME_CTRL_CTRATT_UUID_LIST		= 1 << 9,
 };
 
 struct nvme_lbaf {
@@ -370,6 +371,7 @@ enum {
 	NVME_ID_CNS_CTRL_LIST		= 0x13,
 	NVME_ID_CNS_SCNDRY_CTRL_LIST	= 0x15,
 	NVME_ID_CNS_NS_GRANULARITY	= 0x16,
+	NVME_ID_CNS_UUID_LIST		= 0x17,
 };
 
 enum {
@@ -450,6 +452,17 @@ struct nvme_id_ns_granularity_list {
 	__u8			num_descriptors;
 	__u8			rsvd[27];
 	struct nvme_id_ns_granularity_list_entry entry[16];
+};
+
+#define NVME_MAX_UUID_ENTRIES	128
+struct nvme_id_uuid_list_entry {
+	__u8			header;
+	__u8			rsvd1[15];
+	__u8			uuid[16];
+};
+
+struct nvme_id_uuid_list {
+	struct nvme_id_uuid_list_entry	entry[NVME_MAX_UUID_ENTRIES];
 };
 
 /**
@@ -583,6 +596,7 @@ enum {
 	NVME_CMD_EFFECTS_NIC		= 1 << 3,
 	NVME_CMD_EFFECTS_CCC		= 1 << 4,
 	NVME_CMD_EFFECTS_CSE_MASK	= 3 << 16,
+	NVME_CMD_EFFECTS_UUID_SEL	= 1 << 19,
 };
 
 struct nvme_effects_log {

@@ -769,6 +769,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *lpo = "log page offset specifies the location within a log page from where to start returning data";
 	const char *rae = "retain an asynchronous event";
 	const char *raw_binary = "output in raw format";
+	const char *uuid_index = "UUID index";
 	int err, fd;
 
 	struct config {
@@ -778,6 +779,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		__u32 aen;
 		__u64 lpo;
 		__u8  lsp;
+		__u8  uuid_index;
 		int   rae;
 		int   raw_binary;
 	};
@@ -789,6 +791,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.lpo          = NVME_NO_LOG_LPO,
 		.lsp          = NVME_NO_LOG_LSP,
 		.rae          = 0,
+		.uuid_index   = 0,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
@@ -800,6 +803,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		{"lpo",          'o', "NUM", CFG_LONG,     &cfg.lpo,          required_argument, lpo},
 		{"lsp",          's', "NUM", CFG_BYTE,     &cfg.lsp,          required_argument, lsp},
 		{"rae",          'r', "",    CFG_NONE,     &cfg.rae,          no_argument,       rae},
+		{"uuid-index",   'U', "NUM", CFG_BYTE,     &cfg.uuid_index,   required_argument, uuid_index},
 		{NULL}
 	};
 
@@ -834,9 +838,9 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 			goto close_fd;
 		}
 
-		err = nvme_get_log13(fd, cfg.namespace_id, cfg.log_id,
+		err = nvme_get_log14(fd, cfg.namespace_id, cfg.log_id,
 				     cfg.lsp, cfg.lpo, 0, cfg.rae,
-				     cfg.log_len, log);
+				     cfg.uuid_index, cfg.log_len, log);
 		if (!err) {
 			if (!cfg.raw_binary) {
 				printf("Device:%s log-id:%d namespace-id:%#x\n",
@@ -2455,6 +2459,61 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Send an Identify UUID List command to the "\
+		"given device, returns list of supported Vendor Specific UUIDs "\
+		"in either human-readable or binary format.";
+	const char *raw_binary = "show infos in binary format";
+	const char *human_readable = "show infos in readable format";
+	struct nvme_id_uuid_list uuid_list;
+	int err, fmt, fd;
+	unsigned int flags = 0;
+	struct config {
+		int   raw_binary;
+		int   human_readable;
+		char *output_format;
+	};
+	struct config cfg = {
+		.output_format = "normal",
+	};
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"raw-binary",      'b', "",    CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
+		{"human-readable",  'H', "",    CFG_NONE,     &cfg.human_readable,  no_argument,       human_readable},
+		{"output-format",   'o', "FMT", CFG_STRING,   &cfg.output_format,   required_argument, output_format },
+		{NULL}
+	};
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	if (fd < 0)
+		return fd;
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		err = fmt;
+		goto close_fd;
+	}
+	if (cfg.raw_binary)
+		fmt = BINARY;
+	if (cfg.human_readable)
+		flags |= HUMAN;
+	err = nvme_identify_uuid(fd, &uuid_list);
+	if (!err) {
+		if (fmt == BINARY)
+			d_raw((unsigned char *)&uuid_list, sizeof(uuid_list));
+		else if (fmt == JSON)
+			json_nvme_id_uuid_list(&uuid_list);
+		else {
+			printf("NVME Identify UUID:\n");
+			show_nvme_id_uuid_list(&uuid_list, flags);
+		}
+	} else if (err > 0)
+		show_nvme_status(err);
+	else
+		perror("identify UUID list");
+close_fd:
+	close(fd);
+	return err;
+}
+
 static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int err = 0, nsid, fd;
@@ -2616,8 +2675,7 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 		else
 			show_nvme_list_secondary_ctrl(sc_list, cfg.num_entries);
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x) cntid:%d\n",
-			nvme_status_to_string(err), err, cfg.cntid);
+		show_nvme_status(err);
 	else
 		perror("id secondary controller list");
 

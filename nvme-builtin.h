@@ -17,6 +17,7 @@ COMMAND_LIST(
 	ENTRY("list-secondary", "List Secondary Controllers associated with a Primary Controller", list_secondary_ctrl)
 	ENTRY("ns-descs", "Send NVMe Namespace Descriptor List, display structure", ns_descs)
 	ENTRY("id-nvmset", "Send NVMe Identify NVM Set List, display structure", id_nvmset)
+	ENTRY("id-uuid", "Send NVMe Identify UUID List, display structure", id_uuid)
 	ENTRY("create-ns", "Creates a namespace with the provided parameters", create_ns)
 	ENTRY("delete-ns", "Deletes a namespace from the controller", delete_ns)
 	ENTRY("attach-ns", "Attaches a namespace to requested controller(s)", attach_ns)
