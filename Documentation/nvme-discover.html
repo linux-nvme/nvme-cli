@@ -1,10 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
 <title>nvme-discover(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -95,9 +94,7 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-pre {
-  white-space: pre-wrap;
-}
+
 
 #author {
   color: #527bbd;
@@ -226,7 +223,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; vertical-align: text-bottom; }
+span.image img { border-style: none; }
 a.image:visited { color: white; }
 
 dl {
@@ -937,6 +934,8 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         Overrides the default dealy (in seconds) for keep alive.
+        This option will be ignored for the discovery, and it is only
+        implemented for completeness.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -993,6 +992,8 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         Overrides the default number of I/O queues create by the driver.
+        This option will be ignored for the discovery, and it is only
+        implemented for completeness.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1027,6 +1028,8 @@ cellspacing="0" cellpadding="4">
 <p>
         Overrides the default number of elements in the I/O queues created
         by the driver which can be found at drivers/nvme/host/fabrics.h.
+        This option will be ignored for the discovery, and it is only
+        implemented for completeness.
 </p>
 </dd>
 </dl></div>
@@ -1092,8 +1095,7 @@ for <a href="mailto:keith.busch@intel.com">Keith Busch</a>.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated
- 2019-04-04 01:15:26 KST
+Last updated 2019-08-02 10:57:03 MDT
 </div>
 </div>
 </body>

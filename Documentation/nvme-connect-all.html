@@ -1,10 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
 <title>nvme-connect-all(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -95,9 +94,7 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-pre {
-  white-space: pre-wrap;
-}
+
 
 #author {
   color: #527bbd;
@@ -226,7 +223,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; vertical-align: text-bottom; }
+span.image img { border-style: none; }
 a.image:visited { color: white; }
 
 dl {
@@ -917,7 +914,9 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        Overrides the default keep alive timeout (in seconds).
+        Overrides the default keep alive timeout (in seconds). This
+        option will be ignored for discovery, but will be passed on to
+        the subsequent connect call.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -974,6 +973,8 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         Overrides the default number of I/O queues create by the driver.
+        This option will be ignored for discovery, but will be passed on
+        to the subsequent connect call.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1007,7 +1008,8 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         Overrides the default number of elements in the I/O queues created
-        by the driver.
+        by the driver. This option will be ignored for discovery, but will be
+        passed on to the subsequent connect call.
 </p>
 </dd>
 </dl></div>
@@ -1066,8 +1068,7 @@ nvme-connect(1)</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated
- 2019-04-04 01:16:22 KST
+Last updated 2019-08-02 10:57:03 MDT
 </div>
 </div>
 </body>
