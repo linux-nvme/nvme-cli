@@ -58,7 +58,9 @@ struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	host_bytes_written;
 };
 
-static const char *output_format = "Output format: normal|json|binary";
+static const char *output_format_desc = "Output format: normal|json|binary";
+static const char *raw_desc = "DEPRECATED: Dump output in binary format.";
+static const char *json_desc = "DEPRECATED: Dump output in json format.";
 
 static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 {
@@ -228,46 +230,63 @@ static void show_intel_smart_log(struct nvme_additional_smart_log *smart,
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_additional_smart_log smart_log;
-	int err, fd;
+	int err, fmt, fd;
 	const char *desc = "Get Intel vendor specific additional smart log (optionally, "\
 		      "for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
-	const char *raw = "dump output in binary format";
-	const char *json= "Dump output in json format";
 	struct config {
 		__u32 namespace_id;
 		int   raw_binary;
 		int   json;
+		char *output_format;
 	};
 
 	struct config cfg = {
 		.namespace_id = NVME_NSID_ALL,
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
-		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw},
-		{"json",         'j', "",    CFG_NONE,     &cfg.json,         no_argument,       json},
+		// long option  | short | metavar | type        | destination       | action           | description
+		{"namespace-id",  'n',    "NUM",    CFG_POSITIVE, &cfg.namespace_id,  required_argument, namespace},
+		{"raw-binary",    'b',    "",       CFG_NONE,     &cfg.raw_binary,    no_argument,       raw_desc},
+		{"json",          'j',    "",       CFG_NONE,     &cfg.json,          no_argument,       json_desc},
+		{"output-format", 'o',    "FMT",    CFG_STRING,   &cfg.output_format, required_argument, output_format_desc },
 		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
-	if (fd < 0)
-		return fd;
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		err = fmt;
+		goto close_fd;
+	}
+	if (cfg.raw_binary)
+		fmt = BINARY;
 
 	err = nvme_get_log(fd, cfg.namespace_id, 0xca, false,
 			   sizeof(smart_log), &smart_log);
 	if (!err) {
-		if (cfg.json)
-			show_intel_smart_log_jsn(&smart_log, cfg.namespace_id, devicename);
-		else if (!cfg.raw_binary)
-			show_intel_smart_log(&smart_log, cfg.namespace_id, devicename);
-		else
+		if (fmt == BINARY)
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
+		else if (fmt == JSON)
+			show_intel_smart_log_jsn(&smart_log, cfg.namespace_id, devicename);
+		else
+			show_intel_smart_log(&smart_log, cfg.namespace_id, devicename);
 	}
 	else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
+
+close_fd:
+	close(fd);
+
+ret:
 	return err;
 }
 
@@ -359,7 +378,6 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	int err, fmt, fd;
 
 	const char *desc = "Get Intel temperature stats log and show it.";
-	const char *raw = "DEPRECATED: Dump output in binary format.";
 	struct config {
 		int  raw_binary;
 		char *output_format;
@@ -371,8 +389,8 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		// long option  | short | metavar | type      | destination       | action           | description
-		{"raw-binary",    'b',    "",       CFG_NONE,   &cfg.raw_binary,    no_argument,       raw},
-		{"output-format", 'o',    "FMT",    CFG_STRING, &cfg.output_format, required_argument, output_format },
+		{"raw-binary",    'b',    "",       CFG_NONE,   &cfg.raw_binary,    no_argument,       raw_desc},
+		{"output-format", 'o',    "FMT",    CFG_STRING, &cfg.output_format, required_argument, output_format_desc },
 		{NULL}
 	};
 
