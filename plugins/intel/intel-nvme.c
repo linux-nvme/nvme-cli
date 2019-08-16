@@ -65,7 +65,7 @@ static const char *json_desc = "DEPRECATED: Dump output in json format.";
 static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 {
 	char bl[9];
-        char health[21];
+	char health[21];
 
 	memcpy(bl, &vs[28], sizeof(bl));
 	memcpy(health, &vs[4], sizeof(health));
@@ -398,14 +398,14 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	if (fd < 0) {
 		err = fd;
 		goto ret;
-    }
+	}
 
-    fmt = validate_output_format(cfg.output_format);
-    if (fmt < 0) {
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
 		err = fmt;
 		goto close_fd;
-    }
-    if (cfg.raw_binary)
+	}
+	if (cfg.raw_binary)
 		fmt = BINARY;
 
 	err = nvme_get_log(fd, NVME_NSID_ALL, 0xc5, false,
@@ -498,11 +498,11 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 }
 
 struct intel_assert_dump {
-    __u32 coreoffset;
-    __u32 assertsize;
-    __u8  assertdumptype;
-    __u8  assertvalid;
-    __u8  reserved[2];
+	__u32 coreoffset;
+	__u32 assertsize;
+	__u8  assertdumptype;
+	__u8  assertvalid;
+	__u8  reserved[2];
 };
 
 struct intel_event_dump {
@@ -524,11 +524,11 @@ struct intel_event_header {
 };
 
 struct intel_vu_log {
-    struct intel_vu_version ver;
-    __u32    header;
-    __u32    size;
-    __u32    numcores;
-    __u8     reserved[4080];
+	struct intel_vu_version ver;
+	__u32    header;
+	__u32    size;
+	__u32    numcores;
+	__u8     reserved[4080];
 };
 
 struct intel_vu_nlog {
@@ -552,7 +552,7 @@ struct intel_vu_nlog {
 };
 
 struct intel_cd_log {
-    union {
+	union {
 	struct {
 		__u32 selectLog  : 3;
 		__u32 selectCore : 2;
@@ -562,7 +562,7 @@ struct intel_cd_log {
 		__u32 reserved2  : 16;
 	}fields;
 	__u32 entireDword;
-    }u;
+	}u;
 };
 
 static void print_intel_nlog(struct intel_vu_nlog *intel_nlog)
@@ -623,7 +623,7 @@ static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
 		cmd->data_len = (min(max_tfer, total_size)) * 4;
 	}
 
- out:
+out:
 	return err;
 }
 
@@ -695,7 +695,7 @@ static int get_internal_log_old(__u8 *buf, int output, int fd,
 		goto out;
 
 	err = 0;
- out:
+out:
 	return err;
 }
 
@@ -859,7 +859,7 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 		}
 	}
 	err = 0;
- out:
+out:
 	if (err > 0) {
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 				nvme_status_to_string(err), err);
