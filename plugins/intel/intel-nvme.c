@@ -480,39 +480,58 @@ static void show_lat_stats(struct intel_lat_stats *stats, int write)
 static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct intel_lat_stats stats;
-	int err, fd;
+	int err, fmt, fd;
 
 	const char *desc = "Get Intel Latency Statistics log and show it.";
-	const char *raw = "dump output in binary format";
 	const char *write = "Get write statistics (read default)";
 	struct config {
 		int  raw_binary;
 		int  write;
+		char *output_format;
 	};
 
 	struct config cfg = {
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"write",      'w', "", CFG_NONE, &cfg.write,      no_argument, write},
-		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
+		// long option  | short | metavar | type      | destination       | action           | description
+		{"write",         'w',    "",       CFG_NONE,   &cfg.write,         no_argument,       write},
+		{"raw-binary",    'b',    "",       CFG_NONE,   &cfg.raw_binary,    no_argument,       raw_desc},
+		{"output-format", 'o',    "FMT",    CFG_STRING, &cfg.output_format, required_argument, output_format_desc },
 		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
-	if (fd < 0)
-		return fd;
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		err = fmt;
+		goto close_fd;
+	}
+	if (cfg.raw_binary)
+		fmt = BINARY;
 
 	err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
 			   false, sizeof(stats), &stats);
 	if (!err) {
-		if (!cfg.raw_binary)
-			show_lat_stats(&stats, cfg.write);
-		else
+		if (fmt == BINARY)
 			d_raw((unsigned char *)&stats, sizeof(stats));
+		// TODO: Implement JSON output.
+		else
+			show_lat_stats(&stats, cfg.write);
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
+
+close_fd:
+	close(fd);
+
+ret:
 	return err;
 }
 
