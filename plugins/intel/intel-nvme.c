@@ -58,6 +58,8 @@ struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	host_bytes_written;
 };
 
+static const char *output_format = "Output format: normal|json|binary";
+
 static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 {
 	char bl[9];
@@ -354,41 +356,57 @@ static void show_temp_stats(struct intel_temp_stats *stats)
 static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct intel_temp_stats stats;
-	int err, fd;
+	int err, fmt, fd;
 
 	const char *desc = "Get Intel temperature stats log and show it.";
-	const char *raw = "dump output in binary format";
-    const char *json = "dump output in json format";
+	const char *raw = "DEPRECATED: Dump output in binary format.";
 	struct config {
 		int  raw_binary;
-		int  json;
+		char *output_format;
 	};
 
 	struct config cfg = {
+		.output_format = "normal",
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
-		{"json",       'j', "", CFG_NONE, &cfg.json,       no_argument, json},
+		// long option  | short | metavar | type      | destination       | action           | description
+		{"raw-binary",    'b',    "",       CFG_NONE,   &cfg.raw_binary,    no_argument,       raw},
+		{"output-format", 'o',    "FMT",    CFG_STRING, &cfg.output_format, required_argument, output_format },
 		{NULL}
 	};
 
 	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
-	if (fd < 0)
-		return fd;
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+    }
+
+    fmt = validate_output_format(cfg.output_format);
+    if (fmt < 0) {
+		err = fmt;
+		goto close_fd;
+    }
+    if (cfg.raw_binary)
+		fmt = BINARY;
 
 	err = nvme_get_log(fd, NVME_NSID_ALL, 0xc5, false,
 			   sizeof(stats), &stats);
 	if (!err) {
-		if (cfg.json)
-			show_temp_stats_jsn(&stats);
-		else if (!cfg.raw_binary)
-			show_temp_stats(&stats);
-		else
+		if (fmt == BINARY)
 			d_raw((unsigned char *)&stats, sizeof(stats));
+		else if (fmt == JSON)
+			show_temp_stats_jsn(&stats);
+		else
+			show_temp_stats(&stats);
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
+
+close_fd:
+	close(fd);
+
+ret:
 	return err;
 }
 
