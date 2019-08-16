@@ -375,10 +375,9 @@ struct intel_lat_stats {
 };
 
 enum FormatUnit {
-	None,
-	us,
-	ms,
-	s
+	US,
+	MS,
+	S
 };
 
 /*
@@ -394,16 +393,17 @@ enum FormatUnit {
 static const enum FormatUnit get_seconds_magnitude(__u32 microseconds)
 {
 	if (microseconds > US_IN_S)
-		return s;
+		return S;
 	else if (microseconds > US_IN_MS)
-		return ms;
+		return MS;
 	else
-		return us;
+		return US;
 }
 
 static const float convert_seconds(__u32 microseconds)
 {
 	float divisor = 1.0;
+
 	if (microseconds > US_IN_S)
 		divisor = US_IN_S;
 	else if (microseconds > US_IN_MS)
@@ -413,37 +413,37 @@ static const float convert_seconds(__u32 microseconds)
 
 /*
  * For control over whether a string will format to +/-INF or
- * print out ####.##us normally.
+ * print out ####.##US normally.
  */
-enum InfBound {
-	NegInf,
-	PosInf,
-	Neither
+enum inf_bound_type {
+	NEGINF,
+	POSINF,
+	NOINF
 };
 
 /*
- * Edge buckets may have range [#s, inf) or (-inf, #us] in some
+ * Edge buckets may have range [#s, inf) or (-inf, #US] in some
  * latency statistics formats.
- * Passing in NegInf to PosInf to bound_type overrides the string to
+ * Passing in NEGINF to POSINF to bound_type overrides the string to
  * either of "-INF" or "+INF", respectively.
  */
 static void set_unit_string(char *buffer, __u32 microseconds,
-		enum FormatUnit unit, enum InfBound bound_type)
+	enum FormatUnit unit, enum inf_bound_type bound_type)
 {
-	if (bound_type != Neither) {
+	if (bound_type != NOINF) {
 		snprintf(buffer, 5, "%s", bound_type ? "+INF" : "-INF");
 		return;
 	}
 	char *string;
 
 	switch (unit) {
-	case us:
+	case US:
 		string = "us";
 		break;
-	case ms:
+	case MS:
 		string = "ms";
 		break;
-	case s:
+	case S:
 		string = "s";
 		break;
 	default:
@@ -463,10 +463,10 @@ static void init_buffer(char *buffer, size_t size)
 }
 
 static void show_lat_stats_bucket(struct intel_lat_stats *stats,
-		__u32 lower_us, enum InfBound start_type,
-		__u32 upper_us, enum InfBound end_type, int i)
+	__u32 lower_us, enum inf_bound_type start_type,
+	__u32 upper_us, enum inf_bound_type end_type, int i)
 {
-	enum FormatUnit fu = s;
+	enum FormatUnit fu = S;
 	char buffer[BUFSIZE];
 
 	init_buffer(buffer, BUFSIZE);
@@ -484,15 +484,15 @@ static void show_lat_stats_bucket(struct intel_lat_stats *stats,
 }
 
 static void show_lat_stats_linear(struct intel_lat_stats *stats,
-		__u32 start_offset, __u32 end_offset, __u32 bytes_per,
-		__u32 us_step, bool nonzero_print)
+	__u32 start_offset, __u32 end_offset, __u32 bytes_per,
+	__u32 us_step, bool nonzero_print)
 {
 	for (int i = (start_offset / bytes_per) - 1;
 			i < end_offset / bytes_per; i++) {
 		if (nonzero_print && stats->data[i] == 0)
 			continue;
-		show_lat_stats_bucket(stats, us_step * i, Neither,
-			us_step * (i + 1), Neither, i);
+		show_lat_stats_bucket(stats, us_step * i, NOINF,
+			us_step * (i + 1), NOINF, i);
 	}
 }
 
@@ -545,9 +545,9 @@ static void lat_stats_make_json_root(
  *   },
  */
 static void json_add_bucket(struct intel_lat_stats *stats,
-		struct json_object *bucket_list, __u32 id,
-		__u32 lower_us, enum InfBound start_type,
-		__u32 upper_us, enum InfBound end_type, __u32 val)
+	struct json_object *bucket_list, __u32 id,
+	__u32 lower_us, enum inf_bound_type start_type,
+	__u32 upper_us, enum inf_bound_type end_type, __u32 val)
 {
 	char buffer[BUFSIZE];
 	struct json_object *bucket = json_create_object();
@@ -570,9 +570,9 @@ static void json_add_bucket(struct intel_lat_stats *stats,
 }
 
 static void json_lat_stats_linear(struct intel_lat_stats *stats,
-		struct json_object *bucket_list, __u32 start_offset,
-		__u32 end_offset, __u32 bytes_per,
-		__u32 us_step, bool nonzero_print)
+	struct json_object *bucket_list, __u32 start_offset,
+	__u32 end_offset, __u32 bytes_per,
+	__u32 us_step, bool nonzero_print)
 {
 	for (int i = (start_offset / bytes_per) - 1;
 			i < end_offset / bytes_per; i++) {
@@ -580,13 +580,13 @@ static void json_lat_stats_linear(struct intel_lat_stats *stats,
 			continue;
 
 		json_add_bucket(stats, bucket_list,
-			i, us_step * i, Neither, us_step * (i + 1),
-			Neither, stats->data[i]);
+			i, us_step * i, NOINF, us_step * (i + 1),
+			NOINF, stats->data[i]);
 	}
 }
 
 static void json_lat_stats_3_0(struct intel_lat_stats *stats,
-		int write)
+	int write)
 {
 	struct json_object *root = json_create_object();
 	struct json_object *bucket_list = json_create_object();
@@ -605,7 +605,7 @@ static void json_lat_stats_3_0(struct intel_lat_stats *stats,
 }
 
 static void json_lat_stats_4_0(struct intel_lat_stats *stats,
-		int write)
+	int write)
 {
 	struct json_object *root = json_create_object();
 	struct json_object *bucket_list = json_create_object();
@@ -625,8 +625,8 @@ static void json_lat_stats_4_0(struct intel_lat_stats *stats,
 			upper_us = lat_stats_log_scale(i + 1);
 
 		json_add_bucket(stats, bucket_list, i,
-			lower_us, Neither, upper_us,
-			end ? PosInf : Neither, stats->data[i]);
+			lower_us, NOINF, upper_us,
+			end ? POSINF : NOINF, stats->data[i]);
 	}
 	json_print_object(root, NULL);
 	json_free_object(root);
@@ -656,8 +656,8 @@ static void show_lat_stats_4_0(struct intel_lat_stats *stats)
 		else
 			upper_us = lat_stats_log_scale(i + 1);
 
-		show_lat_stats_bucket(stats, lower_us, Neither,
-			upper_us, end ? PosInf : Neither, i);
+		show_lat_stats_bucket(stats, lower_us, NOINF,
+			upper_us, end ? POSINF : NOINF, i);
 	}
 }
 
