@@ -268,6 +268,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	}
 	if (cfg.raw_binary)
 		fmt = BINARY;
+	else if (cfg.json)
+		fmt = JSON;
 
 	err = nvme_get_log(fd, cfg.namespace_id, 0xca, false,
 			   sizeof(smart_log), &smart_log);
