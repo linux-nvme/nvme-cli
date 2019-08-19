@@ -78,6 +78,7 @@ COMMAND_LIST(
 	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller ", virtual_mgmt)
 	ENTRY("zone-mgmt-send", "Perform Zone Action", zone_mgmt_send)
 	ENTRY("zone-mgmt-recv", "Receive Zone Information, show it", zone_mgmt_recv)
+	ENTRY("zone-append", "Submit a Zone Append Command, return results", zone_append)
 );
 
 #endif

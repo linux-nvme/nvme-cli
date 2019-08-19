@@ -161,5 +161,8 @@ int nvme_zone_mgmt_send(int fd, __u32 nsid, __u64 slba, __u32 cdw13,
 	void *descr, size_t zds);
 int nvme_zone_mgmt_recv(int fd, __u32 nsid, __u64 slba, __u32 cdw13,
 	__u32 data_len, void *data);
+int nvme_zone_append(int fd, __u32 nsid,  __u64 zslba, __u16 nlb,
+		    __u16 control, __u32 reftag, __u16 apptag, __u16 appmask,
+			__u32 data_len, void *data, __u32 metadata_len,void *metadata);
 
 #endif				/* _NVME_LIB_H */

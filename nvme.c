@@ -4996,6 +4996,207 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int zone_append(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	struct timeval start_time, end_time;
+	void *buffer, *mbuffer = NULL;
+	int err = 0;
+	int dfd, mfd, fd;
+	int flags = O_RDONLY;
+	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
+	__u16 control = 0;
+	int phys_sector_size = 0;
+	long long buffer_size = 0;
+	__u32 namespace_id = 0;
+
+	const char *desc = "The Zone Append command is used by the host to "\
+		"append zones with data in a Zoned Namespace";
+	const char *start_zone = "64-bit addr of first block to access";
+	const char *block_count = "number of blocks (zeroes based) on device to access";
+	const char *data_size = "size of data in bytes";
+	const char *metadata_size = "size of metadata in bytes";
+	const char *ref_tag = "reference tag (for end to end PI)";
+	const char *data = "data file";
+	const char *metadata = "metadata file";
+	const char *prinfo = "PI and check field";
+	const char *app_tag_mask = "app tag mask (for end to end PI)";
+	const char *app_tag = "app tag (for end to end PI)";
+	const char *limited_retry = "limit num. media access attempts";
+	const char *latency = "output latency statistics";
+	const char *force = "force device to commit data before command completes";
+
+	struct config {
+		__u64 start_zone;
+		__u16 block_count;
+		__u64 data_size;
+		__u64 metadata_size;
+		__u32 ref_tag;
+		char  *data;
+		char  *metadata;
+		__u8  prinfo;
+		__u16 app_tag_mask;
+		__u16 app_tag;
+		int   limited_retry;
+		int   force_unit_access;
+		int   latency;
+	};
+
+	struct config cfg = {
+		.start_zone    = 0,
+		.block_count   = 0,
+		.data_size     = 0,
+		.metadata_size = 0,
+		.ref_tag       = 0,
+		.data          = "",
+		.metadata      = "",
+		.prinfo        = 0,
+		.app_tag_mask  = 0,
+		.app_tag       = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_SUFFIX("start-zone",      's', &cfg.start_zone,        start_zone),
+		OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
+		OPT_SUFFIX("data-size",       'z', &cfg.data_size,         data_size),
+		OPT_SUFFIX("metadata-size",   'y', &cfg.metadata_size,     metadata_size),
+		OPT_UINT("ref-tag",           'r', &cfg.ref_tag,           ref_tag),
+		OPT_FILE("data",              'd', &cfg.data,              data),
+		OPT_FILE("metadata",          'M', &cfg.metadata,          metadata),
+		OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
+		OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
+		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
+		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
+		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force),
+		OPT_FLAG("latency",           't', &cfg.latency,           latency),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	namespace_id = nvme_get_nsid(fd);
+	if (namespace_id == 0) {
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	dfd = mfd = STDIN_FILENO;
+	if (cfg.prinfo > 0xf) {
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	control |= (cfg.prinfo << 10);
+	if (cfg.limited_retry)
+		control |= NVME_RW_LR;
+	if (cfg.force_unit_access)
+		control |= NVME_RW_FUA;
+
+	if (strlen(cfg.data)) {
+		dfd = open(cfg.data, flags, mode);
+		if (dfd < 0) {
+			perror(cfg.data);
+			err = -EINVAL;
+			goto close_fd;
+		}
+		mfd = dfd;
+	}
+	if (strlen(cfg.metadata)) {
+		mfd = open(cfg.metadata, flags, mode);
+		if (mfd < 0) {
+			perror(cfg.metadata);
+			err = -EINVAL;
+			goto close_dfd;
+		}
+	}
+
+	if (!cfg.data_size)	{
+		fprintf(stderr, "data size not provided\n");
+		err = -EINVAL;
+		goto close_mfd;
+	}
+
+	if (ioctl(fd, BLKPBSZGET, &phys_sector_size) < 0)
+		goto close_mfd;
+
+	buffer_size = (cfg.block_count + 1) * phys_sector_size;
+	if (cfg.data_size < buffer_size) {
+		fprintf(stderr, "Rounding data size to fit block count (%lld bytes)\n",
+				buffer_size);
+	} else {
+		buffer_size = cfg.data_size;
+	}
+
+	if (posix_memalign(&buffer, getpagesize(), buffer_size)) {
+		fprintf(stderr, "can not allocate io payload\n");
+		err = -ENOMEM;
+		goto close_mfd;
+	}
+	memset(buffer, 0, buffer_size);
+
+	if (cfg.metadata_size) {
+		mbuffer = malloc(cfg.metadata_size);
+		if (!mbuffer) {
+			fprintf(stderr, "can not allocate io metadata "
+					"payload: %s\n", strerror(errno));
+			err = -ENOMEM;
+			goto free_buffer;
+		}
+	}
+
+	err = read(dfd, (void *)buffer, cfg.data_size);
+	if (err < 0) {
+		err = -errno;
+		fprintf(stderr, "failed to read data buffer from input"
+				" file %s\n", strerror(errno));
+		goto free_mbuffer;
+	}
+
+	if (cfg.metadata_size) {
+		err = read(mfd, (void *)mbuffer, cfg.metadata_size);
+		if (err < 0) {
+			err = -errno;
+			fprintf(stderr, "failed to read meta-data buffer from"
+					" input file %s\n", strerror(errno));
+			goto free_mbuffer;
+		}
+	}
+
+	gettimeofday(&start_time, NULL);
+	err = nvme_zone_append(fd, namespace_id, cfg.start_zone, cfg.block_count,
+					control, cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask,
+					cfg.data_size, buffer, cfg.metadata_size, cfg.metadata);
+
+	gettimeofday(&end_time, NULL);
+	if (cfg.latency)
+		printf(" latency: Zone Append: %llu us\n", elapsed_utime(start_time, end_time));
+	if (err < 0)
+		perror("submit-io");
+	else if (err)
+		nvme_show_status(err);
+	else {
+		fprintf(stderr, "Zone Append : Success\n");
+	}
+
+ free_mbuffer:
+	if (cfg.metadata_size)
+		free(mbuffer);
+ free_buffer:
+	free(buffer);
+ close_mfd:
+	if (strlen(cfg.metadata))
+		close(mfd);
+ close_dfd:
+	close(dfd);
+ close_fd:
+	close(fd);
+ ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, struct command *cmd)
 {
 	void *data = NULL, *metadata = NULL;

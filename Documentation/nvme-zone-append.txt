@@ -1,0 +1,97 @@
+nvme-zone-append(1)
+===================
+
+NAME
+----
+nvme-zone-append - Send an NVMe zone append command, return results
+
+SYNOPSIS
+--------
+[verse]
+'nvme-zone-append' <device> [--start-zone=<slba> | -s <slba>]
+			[--block-count=<nlb> | -c <nlb>]
+			[--data-size=<size> | -z <size>]
+			[--metadata-size=<size> | -y <size>]
+			[--ref-tag=<reftag> | -r <reftag>]
+			[--data=<data-file> | -d <data-file>]
+			[--metadata=<metadata-file> | -M <metadata-file>]
+			[--prinfo=<prinfo> | -p <prinfo>]
+			[--app-tag-mask=<appmask> | -m <appmask>]
+			[--app-tag=<apptag> | -a <apptag>]
+			[--limited-retry | -l]
+			[--force-unit-access | -f]
+			[--latency | -t]
+
+DESCRIPTION
+-----------
+The Zone Append command appends the logical blocks specified by the command to
+the medium from the data data buffer provided. Will use stdin by default
+if you do not provide a file.
+
+OPTIONS
+-------
+--start-zone=<slba>::
+-s <slba>::
+	Start block.
+
+--block-count=<count>::
+-c <count>::
+	The number of blocks to transfer. This is a zeroes based value to
+	align with the kernel's use of this field. (ie. 0 means transfer
+	1 block).
+
+--data-size=<size>::
+-z <size>::
+	Size of data, in bytes.
+
+--metadata-size=<size>::
+-y <size>::
+	Size of metadata in bytes.
+
+--data=<data-file>::
+-d <data-file>::
+	Data file. If none provided, contents are sent from STDIN.
+
+--metadata=<metadata-file>::
+-M <metadata-file>::
+	Metadata file. If none provided, contents are sent from STDIN.
+
+--prinfo=<prinfo>::
+-p <prinfo>::
+	Protection Information field definition.
++
+[]
+|=================
+|Bit|Description
+|3|PRACT: Protection Information Action. When set to 1, PI is stripped/inserted
+on read/write when the block format's metadata size is 8. When set to 0,
+metadata is passes.
+|2:0|PRCHK: Protection Information Check:
+|2|Set to 1 enables checking the guard tag
+|1|Set to 1 enables checking the application tag
+|0|Set to 1 enables checking the reference tag
+|=================
+
+--ref-tag=<reftag>::
+-r <reftag>::
+	Optional reftag when used with protection information.
+
+--app-tag-mask=<appmask>::
+-m <appmask>::
+	Optional application tag mask when used with protection information.
+
+--force-unit-access::
+-f::
+	Set the force-unit access flag.
+
+-t::
+--latency::
+	Print out the latency the IOCTL took (in us).
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

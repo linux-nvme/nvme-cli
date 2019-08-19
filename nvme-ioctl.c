@@ -948,3 +948,25 @@ int nvme_zone_mgmt_recv(int fd, __u32 nsid, __u64 slba, __u32 cdw13,
 
 	return nvme_submit_io_passthru(fd, &cmd);
 }
+
+int nvme_zone_append(int fd, __u32 nsid,  __u64 zslba, __u16 nlb,
+		    __u16 control, __u32 reftag, __u16 apptag, __u16 appmask,
+			__u32 data_len, void *data, __u32 metadata_len,void *metadata)
+{
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_cmd_zone_append,
+		.nsid		= nsid,
+		.metadata	= (__u64)(uintptr_t) metadata,
+		.addr		= (__u64)(uintptr_t) data,
+		.metadata_len	= metadata_len,
+		.data_len	= data_len,
+		.data_len	= data_len,
+		.cdw10		= zslba & 0xffffffff,
+		.cdw11		= zslba >> 32,
+		.cdw12		= nlb | (control << 16),
+		.cdw14		= reftag,
+		.cdw15		= apptag | (appmask << 16),
+	};
+
+	return nvme_submit_io_passthru(fd, &cmd);
+}
