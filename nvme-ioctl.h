@@ -170,7 +170,5 @@ int nvme_zns_append(int fd, __u32 nsid, __u64 zslba, __u16 nlb, __u16 control,
 		    __u32 ilbrt, __u16 lbat, __u16 lbatm, __u32 data_len,
 		    void *data, __u32 metadata_len, void *metadata,
 		    __u64 *result);
-int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
-				   struct nvme_zns_changed_zone_log *log);
 
 #endif				/* _NVME_LIB_H */

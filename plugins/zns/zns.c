@@ -841,7 +841,8 @@ static int changed_zone_list(int argc, char **argv, struct command *cmd, struct 
 		}
 	}
 
-	err = nvme_get_log_zns_changed_zones(fd, cfg.namespace_id, cfg.rae, &log);
+	err = nvme_get_log(fd, cfg.namespace_id, NVME_LOG_ZONE_CHANGED_LIST, 
+						cfg.rae, sizeof(log), &log);
 	if (!err)
 		nvme_show_zns_changed(&log, flags);
 	else
