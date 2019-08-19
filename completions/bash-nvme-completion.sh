@@ -5,7 +5,7 @@
 _cmds="list id-ctrl id-ns list-ns create-ns delete-ns \
 	attach-ns detach-ns list-ctrl get-ns-id get-log \
 	fw-log smart-log smart-log-add error-log \
-	get_feature set-feature format fw-activate \
+	get-feature set-feature format fw-activate \
 	fw-download admin-passthru io-passthru security-send \
 	security-recv resv-acquire resv-register resv-release \
 	resv-report dsm flush compare read write write-zeroes \
