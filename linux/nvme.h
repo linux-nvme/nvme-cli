@@ -471,9 +471,9 @@ struct nvme_zone_info_entry {
 };
 
 struct nvme_zone_list {
-	__le16	num_zone_id;
-	__u8	rsvd2[6];
-	__le64	zone_id[];
+	__le16 num_zone_id;
+	__u8   rsvd2[6];
+	__le64 zone_id[];
 };
 
 struct nvme_id_iocs {
@@ -1110,6 +1110,7 @@ enum {
 	NVME_LOG_DISC		= 0x70,
 	NVME_LOG_RESERVATION	= 0x80,
 	NVME_LOG_SANITIZE	= 0x81,
+	NVME_LOG_ZONE_CHANGED_LIST = 0xbf,
 	NVME_FWACT_REPL		= (0 << 3),
 	NVME_FWACT_REPL_ACTV	= (1 << 3),
 	NVME_FWACT_ACTV		= (2 << 3),

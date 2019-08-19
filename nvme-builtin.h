@@ -33,6 +33,7 @@ COMMAND_LIST(
 	ENTRY("error-log", "Retrieve Error Log, show it", get_error_log)
 	ENTRY("effects-log", "Retrieve Command Effects Log, show it", get_effects_log)
 	ENTRY("endurance-log", "Retrieve Endurance Group Log, show it", get_endurance_log)
+	ENTRY("changed-zone-list-log", "Retrieve Changed Zone List Log, show it", get_changed_zone_list_log)
 	ENTRY("get-feature", "Get feature and show the resulting value", get_feature)
 	ENTRY("device-self-test", "Perform the necessary tests to observe the performance", device_self_test)
 	ENTRY("self-test-log", "Retrieve the SELF-TEST Log, show it", self_test_log)

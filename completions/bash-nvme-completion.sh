@@ -4,7 +4,7 @@
 
 _cmds="list id-ctrl id-ns list-ns id-iocs create-ns delete-ns \
 	attach-ns detach-ns list-ctrl get-ns-id get-log \
-	fw-log smart-log smart-log-add error-log \
+	fw-log smart-log smart-log-add error-log changed-zone-list-log \
 	get-feature set-feature format fw-activate \
 	fw-download admin-passthru io-passthru security-send \
 	security-recv resv-acquire resv-register resv-release \
@@ -86,6 +86,9 @@ nvme_list_opts () {
 		"error-log")
 		opts+=" --namespace-id= -n --raw-binary -b --log-entries= -e \
 			--output-format= -o"
+			;;
+		"changed-zone-list-log")
+		opts+=" --namespace-id= -n"
 			;;
 		"get-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --sel= -s \

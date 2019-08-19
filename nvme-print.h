@@ -16,6 +16,8 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, __u8 csi, unsigned int mode,
 	void (*vendor_show)(__u8 *vs, struct json_object *root));
 void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid, __u8 csi,
 	enum nvme_print_flags flags);
+void nvme_show_changed_zone_list_log(struct nvme_zone_list *log,
+	unsigned int nsid, const char *devname);
 void nvme_show_resv_report(struct nvme_reservation_status *status, int bytes, __u32 cdw11,
 	enum nvme_print_flags flags);
 void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges);

@@ -1,0 +1,63 @@
+nvme-changed-zone-list-log(1)
+=============================
+
+NAME
+----
+nvme-changed-zone-list-log - Send NVMe Changed Zone List log page
+                           request, returns result and log.
+
+SYNOPSIS
+--------
+[verse]
+'nvme changed-zone-list-log' <device> [--namespace-id=<nsid> | -n <nsid>]
+
+DESCRIPTION
+-----------
+Retrieves the NVMe Changed Zone List log page from an NVMe device and
+provides the returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+If the character device is given, the `'--namespace-id'` option is
+mandatory, otherwise it will use the ns-id of the namespace for the block
+device you opened. For block devices, the ns-id used can be overridden
+with the same option.
+
+On success, the returned Changed Zone List log structure may be returned
+The structure may parsed by the program and printed in a readable format.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Retrieve the Changed zone list log for the given nsid. This is optional
+	and its success may depend on the device's capabilities to
+	provide this log on a per-namespace basis (see the NVMe Identify
+	Controller for this capability). The default nsid to use is
+	0xffffffff for the device global SMART log.
+
+-n <nsid>::
+--namespace-id=<nsid>::
+	Retrieve the Changed zone list log for the given nsid. This	is required
+	for the character devices, or overrides the block nsid if given.
+
+EXAMPLES
+--------
+* Print the Changed Zone List Log page:
++
+------------
+# nvme changed-zone-list-log /dev/nvme0n1
+------------
++
+
+* If using the character device or overriding namespace id:
++
+------------
+# nvme changed-zone-list-log /dev/nvme0 -n 1
+# nvme changed-zone-list-log /dev/nvme0n1 -n 1
+# nvme changed-zone-list-log /dev/nvme0 --namespace-id=1
+------------
+
+NVME
+----
+Part of the nvme-user suite

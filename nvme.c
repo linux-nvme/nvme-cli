@@ -738,6 +738,71 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int get_changed_zone_list_log(int argc, char **argv, struct command *cmd,
+	struct plugin *plugin)
+{
+	const char *desc = "Retrieve Changed Zone List Log";
+	const char *nsid = "desired namespace";
+	int err, fd;
+	size_t size = 4096;
+
+	struct config {
+		__u32 namespace_id;
+	};
+
+	struct nvme_zone_list *log;
+
+	struct config cfg = {
+		.namespace_id    = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, nsid),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	if (!cfg.namespace_id) {
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id == 0) {
+			err = -EINVAL;
+			goto close_fd;
+		}
+	}
+
+	log = malloc(size);
+	if (!log) {
+		fprintf(stderr,"could not alloc buffer for log: %s\n",strerror(errno));
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	err = nvme_get_log(fd, cfg.namespace_id, NVME_LOG_ZONE_CHANGED_LIST, 0,
+						size, log);
+	if (err) {
+		if (err > 0)
+			nvme_show_status(err);
+		else
+			perror("log page");
+		goto free_log;
+	}
+	nvme_show_changed_zone_list_log(log, cfg.namespace_id, devicename);
+
+free_log:
+	free(log);
+
+ close_fd:
+	close(fd);
+
+ ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int get_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve desired number of bytes "\

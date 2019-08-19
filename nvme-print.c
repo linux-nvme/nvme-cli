@@ -3459,6 +3459,18 @@ void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
 	}
 }
 
+void nvme_show_changed_zone_list_log(struct nvme_zone_list *log,
+	unsigned int nsid, const char *devname)
+{
+	__u16 i, num_zone_id = le16_to_cpu(log->num_zone_id);
+	printf("Zone Information Log for NVMe device:%s namespace-id:%x zones:%d\n",
+		devname, nsid, num_zone_id);
+	for (i = 0; i < num_zone_id; i++) {
+		printf("\tZone Identifier[%d] : 0x%"PRIu64"\n", i,
+			le64_to_cpu(log->zone_id[i]));
+	}
+}
+
 void nvme_show_resv_report(struct nvme_reservation_status *status, int bytes,
 	__u32 cdw11, enum nvme_print_flags flags)
 {
