@@ -996,9 +996,3 @@ int nvme_zns_append(int fd, __u32 nsid, __u64 zslba, __u16 nlb, __u16 control,
 		*result = cmd.result;
 	return err;
 }
-
-int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
-				   struct nvme_zns_changed_zone_log *log)
-{
-	return 0;
-}
