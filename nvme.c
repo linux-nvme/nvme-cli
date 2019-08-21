@@ -4857,6 +4857,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 			err = -ENOMEM;
 			goto free_buffer;
 		}
+		memset(mbuffer, 0, cfg.metadata_size);
 	}
 
 	if ((opcode & 1)) {
@@ -5422,7 +5423,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	const char *dry = "show command instead of sending";
 	const char *re = "set dataflow direction to receive";
 	const char *wr = "set dataflow direction to send";
-	const char *prefill = "prefill buffer with known byte-value, default 0";
+	const char *prefill = "prefill buffers with known byte-value, default 0";
 
 	const struct argconfig_commandline_options command_line_options[] = {
 		{"opcode",       'o', "NUM",  CFG_BYTE,     &cfg.opcode,       required_argument, opcode},
@@ -5474,6 +5475,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 			err = -ENOMEM;
 			goto close_wfd;
 		}
+		memset(metadata, cfg.prefill, cfg.metadata_len);
 	}
 	if (cfg.data_len) {
 		if (posix_memalign(&data, getpagesize(), cfg.data_len)) {
