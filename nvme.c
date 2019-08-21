@@ -3491,6 +3491,78 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+/* Requires global 'devicename' was set */
+static void print_relatives()
+{
+	unsigned id, i, nsid = NVME_NSID_ALL;
+	char *path = NULL;
+	bool block = true;
+	int ret;
+
+	ret = sscanf(devicename, "nvme%dn%d", &id, &nsid);
+	switch (ret) {
+	case 1:
+		asprintf(&path, "/sys/class/nvme/%s", devicename);
+		block = false;
+		break;
+	case 2:
+		asprintf(&path, "/sys/block/%s/device", devicename);
+		break;
+	default:
+		return;
+	}
+	if (!path)
+		return;
+
+	if (block) {
+		char *subsysnqn;
+		struct subsys_list_item *slist;
+		int subcnt = 0;
+
+		subsysnqn = get_nvme_subsnqn(path);
+		if (!subsysnqn)
+			return;
+		slist = get_subsys_list(&subcnt, subsysnqn, nsid);
+		if (subcnt != 1) {
+			free(subsysnqn);
+			free(path);
+			return;
+		}
+
+		fprintf(stderr, "Namespace %s has parent controller(s):", devicename);
+		for (i = 0; i < slist[0].nctrls; i++)
+			fprintf(stderr, "%s%s", i ? ", " : "", slist[0].ctrls[i].name);
+		fprintf(stderr, "\n\n");
+		free(subsysnqn);
+	} else {
+		struct dirent **paths;
+		bool comma = false;
+		int n, ns, cntlid;
+
+		n = scandir(path, &paths, scan_ctrl_paths_filter, alphasort);
+		if (n < 0) {
+			free(path);
+			return;
+		}
+
+		fprintf(stderr, "Controller %s has child namespace(s):", devicename);
+		for (i = 0; i < n; i++) {
+			if (sscanf(paths[i]->d_name, "nvme%dc%dn%d",
+				   &id, &cntlid, &ns) != 3) {
+				if (sscanf(paths[i]->d_name, "nvme%dn%d",
+					   &id, &ns) != 2) {
+					continue;
+				}
+			}
+			fprintf(stderr, "%snvme%dn%d", comma ? ", " : "", id, ns);
+			comma = true;
+		}
+		fprintf(stderr, "\n\n");
+		free(paths);
+	}
+	free(path);
+}
+
 static int format(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Re-format a specified namespace on the "\
@@ -3506,6 +3578,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	const char *reset = "Automatically reset the controller after successful format";
 	const char *timeout = "timeout value, in milliseconds";
 	const char *bs = "target block size";
+	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
 	struct nvme_id_ns ns;
 	int err, fd, i;
 	__u8 prev_lbaf = 0;
@@ -3521,6 +3594,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		__u8  ms;
 		__u64 bs;
 		int reset;
+		int force;
 	};
 
 	struct config cfg = {
@@ -3530,6 +3604,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		.ses          = 0,
 		.pi           = 0,
 		.reset        = 0,
+		.force        = 0,
 		.bs           = 0,
 	};
 
@@ -3542,6 +3617,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		{"pil",          'p', "NUM",  CFG_BYTE,     &cfg.pil,          required_argument, pil},
 		{"ms",           'm', "NUM",  CFG_BYTE,     &cfg.ms,           required_argument, ms},
 		{"reset",        'r', "",     CFG_NONE,     &cfg.reset,        no_argument,       reset},
+		{"force",        'f', "NUM",  CFG_NONE,     &cfg.force,        no_argument,       force},
 		{"block-size",   'b', "NUM",  CFG_LONG_SUFFIX, &cfg.bs,        required_argument, bs},
 		{NULL}
 	};
@@ -3567,6 +3643,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			goto close_fd;
 		}
 	}
+
 	if (S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
 		if (cfg.namespace_id == 0) {
@@ -3654,6 +3731,17 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		fprintf(stderr, "invalid ms:%d\n", cfg.ms);
 		err = -EINVAL;
 		goto close_fd;
+	}
+
+	if (!cfg.force) {
+		fprintf(stderr, "You are about to format %s, namespace %#x.\n",
+			devicename, cfg.namespace_id);
+		print_relatives();
+		fprintf(stderr, "WARNING: Format may irrevocably delete this device's data.\n"
+			"You have 10 seconds to press Ctrl-C to cancel this operation.\n\n"
+			"Use the force [--force|-f] option to suppress this warning.\n");
+		sleep(10);
+		fprintf(stderr, "Sending format operation ... \n");
 	}
 
 	err = nvme_format(fd, cfg.namespace_id, cfg.lbaf, cfg.ses, cfg.pi,
