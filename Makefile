@@ -10,7 +10,7 @@ SYSCONFDIR = /etc
 SBINDIR = $(PREFIX)/sbin
 LIBDIR ?= $(PREFIX)/lib
 SYSTEMDDIR ?= $(LIBDIR)/systemd
-UDEVDIR ?= $(LIBDIR)/udev
+UDEVDIR ?= $(SYSCONFDIR)/udev
 DRACUTDIR ?= $(LIBDIR)/dracut
 LIB_DEPENDS =
 
