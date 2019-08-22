@@ -808,7 +808,6 @@ retry:
 			return -EINVAL;
 		}
 		break;
-	default:
 	case NVMF_TRTYPE_FC:
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_FC:
