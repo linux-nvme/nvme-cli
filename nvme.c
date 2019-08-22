@@ -3502,11 +3502,19 @@ static void print_relatives()
 	ret = sscanf(devicename, "nvme%dn%d", &id, &nsid);
 	switch (ret) {
 	case 1:
-		asprintf(&path, "/sys/class/nvme/%s", devicename);
+		ret = asprintf(&path, "/sys/class/nvme/%s", devicename);
+		if (ret < 0) {
+			perror("asprintf");
+			return;
+		}
 		block = false;
 		break;
 	case 2:
-		asprintf(&path, "/sys/block/%s/device", devicename);
+		ret = asprintf(&path, "/sys/block/%s/device", devicename);
+		if (ret < 0) {
+			perror("asprintf");
+			return;
+		}
 		break;
 	default:
 		return;
