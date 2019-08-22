@@ -121,7 +121,7 @@ install-etc:
 	$(INSTALL) -d $(DESTDIR)$(SYSCONFDIR)/nvme
 	touch $(DESTDIR)$(SYSCONFDIR)/nvme/hostnqn
 	touch $(DESTDIR)$(SYSCONFDIR)/nvme/hostid
-	if [ ! -f $(DESTDIR)$(SBINDIR)/nvme/discovery.conf ]; then \
+	if [ ! -f $(DESTDIR)$(SYSCONFDIR)/nvme/discovery.conf ]; then \
 		$(INSTALL) -m 644 -T ./etc/discovery.conf.in $(DESTDIR)$(SYSCONFDIR)/nvme/discovery.conf; \
 	fi
 
