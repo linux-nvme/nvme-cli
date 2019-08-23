@@ -30,7 +30,12 @@ OPTIONS
 
 EXAMPLES
 --------
-No examples yet.
+	Attach namspace to the controller:
+
+		# nvme attach-ns /dev/nvme1  -n 0x2 -c 0x21
+        
+		Note: Namespace identifier and controller identifier(s) should be in hexadecimal.
+
 
 NVME
 ----
