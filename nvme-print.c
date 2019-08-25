@@ -1149,6 +1149,7 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 		show_nvme_id_ctrl_anacap(ctrl->anacap);
 	printf("anagrpmax : %d\n", ctrl->anagrpmax);
 	printf("nanagrpid : %d\n", le32_to_cpu(ctrl->nanagrpid));
+	printf("pels      : %d\n", le32_to_cpu(ctrl->pels));
 	printf("sqes      : %#x\n", ctrl->sqes);
 	if (human)
 		show_nvme_id_ctrl_sqes(ctrl->sqes);
