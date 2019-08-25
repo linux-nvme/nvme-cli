@@ -222,6 +222,22 @@ static void show_nvme_id_ctrl_ctratt(__le32 ctrl_ctratt)
 	printf("\n");
 }
 
+static void show_nvme_id_ctrl_cntrltype(__u8 cntrltype)
+{
+	__u8 rsvd = (cntrltype & 0xFC) >> 2;
+	__u8 cntrl = cntrltype & 0x3;
+
+	static const char *type[] = {
+		"Controller type not reported",
+		"I/O Controller",
+		"Discovery Controller",
+		"Administrative Controller"
+	};
+
+	printf("  [7:2] : %#x\tReserved\n", rsvd);
+	printf("  [1:0] : %#x\t%s\n", cntrltype, type[cntrl]);
+}
+
 static void show_nvme_id_ctrl_oacs(__le16 ctrl_oacs)
 {
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
@@ -1075,7 +1091,8 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 	if (human)
 		show_nvme_id_ctrl_ctratt(ctrl->ctratt);
 	printf("rrls      : %#x\n", le16_to_cpu(ctrl->rrls));
-
+	printf("cntrltype : %d\n", ctrl->cntrltype);
+		show_nvme_id_ctrl_cntrltype(ctrl->cntrltype);
 	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
 	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
 	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));
