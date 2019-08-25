@@ -515,10 +515,20 @@ static void show_nvme_id_ctrl_fna(__u8 fna)
 
 static void show_nvme_id_ctrl_vwc(__u8 vwc)
 {
-	__u8 rsvd = (vwc & 0xFE) >> 1;
+	__u8 rsvd = (vwc & 0xF8) >> 3;
+	__u8 flush = (vwc & 0x6) >> 1;
 	__u8 vwcp = vwc & 0x1;
+
+	static const char *flush_behavior[] = {
+		"Support for the NSID field set to FFFFFFFFh is not indicated",
+		"Reserved",
+		"The Flush command does not support NSID set to FFFFFFFFh",
+		"The Flush command supports NSID set to FFFFFFFFh"
+	};
+
 	if (rsvd)
 		printf("  [7:3] : %#x\tReserved\n", rsvd);
+	printf("  [2:1] : %#x\t%s\n", flush, flush_behavior[flush]);
 	printf("  [0:0] : %#x\tVolatile Write Cache %sPresent\n",
 		vwcp, vwcp ? "" : "Not ");
 	printf("\n");
