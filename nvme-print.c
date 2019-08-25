@@ -1093,6 +1093,7 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 	printf("rrls      : %#x\n", le16_to_cpu(ctrl->rrls));
 	printf("cntrltype : %d\n", ctrl->cntrltype);
 		show_nvme_id_ctrl_cntrltype(ctrl->cntrltype);
+	printf("fguid     : %-.*s\n", (int)sizeof(ctrl->fguid), ctrl->fguid);
 	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
 	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
 	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));
