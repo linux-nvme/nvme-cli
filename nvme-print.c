@@ -296,13 +296,16 @@ static void show_nvme_id_ctrl_frmw(__u8 frmw)
 
 static void show_nvme_id_ctrl_lpa(__u8 lpa)
 {
-	__u8 rsvd = (lpa & 0xF0) >> 4;
+	__u8 rsvd = (lpa & 0xE0) >> 5;
+	__u8 persevnt = (lpa & 0x10) >> 4;
 	__u8 telem = (lpa & 0x8) >> 3;
 	__u8 ed = (lpa & 0x4) >> 2;
 	__u8 celp = (lpa & 0x2) >> 1;
 	__u8 smlp = lpa & 0x1;
 	if (rsvd)
 		printf("  [7:4] : %#x\tReserved\n", rsvd);
+	printf("  [4:4] : %#x\tPersistent Event log %sSupported\n",
+			persevnt, persevnt ? "" : "Not ");
 	printf("  [3:3] : %#x\tTelemetry host/controller initiated log page %sSupported\n",
 	       telem, telem ? "" : "Not ");
 	printf("  [2:2] : %#x\tExtended data for Get Log Page %sSupported\n",
