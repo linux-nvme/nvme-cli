@@ -1142,6 +1142,7 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 	printf("hmminds   : %d\n", le32_to_cpu(ctrl->hmminds));
 	printf("hmmaxd    : %d\n", le16_to_cpu(ctrl->hmmaxd));
 	printf("nsetidmax : %d\n", le16_to_cpu(ctrl->nsetidmax));
+	printf("endgidmax : %d\n", le16_to_cpu(ctrl->endgidmax));
 	printf("anatt     : %d\n", ctrl->anatt);
 	printf("anacap    : %d\n", ctrl->anacap);
 	if (human)
