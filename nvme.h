@@ -145,13 +145,52 @@ static inline uint64_t le64_to_cpu(__le64 x)
 	return le64toh((__force __u64)x);
 }
 
-#define MAX_LIST_ITEMS 256
-struct list_item {
-	char                node[1024];
-	struct nvme_id_ctrl ctrl;
-	int                 nsid;
-	struct nvme_id_ns   ns;
-	unsigned            block;
+struct nvme_subsystem;
+struct nvme_ctrl;
+
+struct nvme_namespace {
+	char *name;
+	struct nvme_ctrl *ctrl;
+
+	unsigned nsid;
+	struct nvme_id_ns ns;
+};
+
+struct nvme_path {
+	char *name;
+};
+
+struct nvme_ctrl {
+	char *name;
+	struct nvme_subsystem *subsys;
+
+	char *address;
+	char *transport;
+	char *state;
+
+	struct nvme_id_ctrl id;
+
+	int    nr_namespaces;
+	struct nvme_namespace *namespaces;
+
+	int    nr_paths;
+	struct nvme_path *paths;
+};
+
+struct nvme_subsystem {
+	char *name;
+	char *subsysnqn;
+
+	int    nr_ctrls;
+	struct nvme_ctrl *ctrls;
+
+	int    nr_namespaces;
+	struct nvme_namespace *namespaces;
+};
+
+struct nvme_topology {
+	int    nr_subsystems;
+	struct nvme_subsystem *subsystems;
 };
 
 struct ctrl_list_item {

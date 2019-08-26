@@ -2383,11 +2383,11 @@ void show_lba_status(struct nvme_lba_status *list)
 	}
 }
 
-static void show_list_item(struct list_item list_item)
+static void show_list_item(struct nvme_namespace *n)
 {
-	long long int lba = 1 << list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ds;
-	double nsze       = le64_to_cpu(list_item.ns.nsze) * lba;
-	double nuse       = le64_to_cpu(list_item.ns.nuse) * lba;
+	long long lba	= 1 << n->ns.lbaf[(n->ns.flbas & 0x0f)].ds;
+	double nsze	= le64_to_cpu(n->ns.nsze) * lba;
+	double nuse	= le64_to_cpu(n->ns.nuse) * lba;
 
 	const char *s_suffix = suffix_si_get(&nsze);
 	const char *u_suffix = suffix_si_get(&nuse);
@@ -2399,110 +2399,353 @@ static void show_list_item(struct list_item list_item)
 	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
 		nsze, s_suffix);
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
-		le16_to_cpu(list_item.ns.lbaf[(list_item.ns.flbas & 0x0f)].ms));
-	printf("%-16s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", list_item.node,
-            (int)sizeof(list_item.ctrl.sn), (int)sizeof(list_item.ctrl.sn), list_item.ctrl.sn,
-            (int)sizeof(list_item.ctrl.mn), (int)sizeof(list_item.ctrl.mn), list_item.ctrl.mn,
-            list_item.nsid, usage, format, (int)sizeof(list_item.ctrl.fr), list_item.ctrl.fr);
+		le16_to_cpu(n->ns.lbaf[(n->ns.flbas & 0x0f)].ms));
+	printf("/dev/%-11s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", n->name,
+		(int)sizeof(n->ctrl->id.sn), (int)sizeof(n->ctrl->id.sn), n->ctrl->id.sn,
+		(int)sizeof(n->ctrl->id.mn), (int)sizeof(n->ctrl->id.mn), n->ctrl->id.mn,
+		n->nsid, usage, format, (int)sizeof(n->ctrl->id.fr), n->ctrl->id.fr);
 }
 
-void show_list_items(struct list_item *list_items, unsigned len)
+static const char dash[] = "---------------------------------------------------------------------------------------------------";
+
+static void show_simple_list(struct nvme_topology *t)
 {
-	unsigned i;
+	int i, j, k;
 
 	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
 	    "Node", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
-	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
-            "----------------", "--------------------", "----------------------------------------",
-            "---------", "--------------------------", "----------------", "--------");
-	for (i = 0 ; i < len ; i++)
-		show_list_item(list_items[i]);
+	printf("%-.16s %-.20s %-.40s %-.9s %-.26s %-.16s %-.8s\n", dash, dash,
+		dash, dash, dash, dash, dash);
 
+	for (i = 0; i < t->nr_subsystems; i++) {
+		struct nvme_subsystem *s = &t->subsystems[i];
+
+		for (j = 0; j < s->nr_ctrls; j++) {
+			struct nvme_ctrl *c = &s->ctrls[j];
+
+			for (k = 0; k < c->nr_namespaces; k++) {
+				struct nvme_namespace *n = &c->namespaces[k];
+				show_list_item(n);
+			}
+		}
+
+		for (j = 0; j < s->nr_namespaces; j++) {
+			struct nvme_namespace *n = &s->namespaces[j];
+			show_list_item(n);
+		}
+	}
 }
 
-void json_print_list_items(struct list_item *list_items, unsigned len)
+static void show_details_ns(struct nvme_namespace *n, bool ctrl)
+{
+	long long lba	= 1 << n->ns.lbaf[(n->ns.flbas & 0x0f)].ds;
+	double nsze	= le64_to_cpu(n->ns.nsze) * lba;
+	double nuse	= le64_to_cpu(n->ns.nuse) * lba;
+
+	const char *s_suffix = suffix_si_get(&nsze);
+	const char *u_suffix = suffix_si_get(&nuse);
+	const char *l_suffix = suffix_binary_get(&lba);
+
+	char usage[128];
+	char format[128];
+
+	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
+		nsze, s_suffix);
+	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
+		le16_to_cpu(n->ns.lbaf[(n->ns.flbas & 0x0f)].ms));
+
+	printf("%-12s %-8x %-26s %-16s ", n->name, n->nsid, usage, format);
+
+	if (ctrl)
+		printf("%s", n->ctrl->name);
+	else {
+		struct nvme_subsystem *s = n->ctrl->subsys;
+		int i;
+
+		for (i = 0; i < s->nr_ctrls; i++)
+			printf("%s%s", i ? ", " : "", s->ctrls[i].name);
+	}
+	printf("\n");
+}
+
+static void show_detailed_list(struct nvme_topology *t)
+{
+	int i, j, k;
+
+	printf("NVM Express Subsystems\n\n");
+	printf("%-16s %-96s %-.16s\n", "Subsystem", "Subsystem-NQN", "Controllers");
+	printf("%-.16s %-.96s %-.16s\n", dash, dash, dash);
+	for (i = 0; i < t->nr_subsystems; i++) {
+		struct nvme_subsystem *s = &t->subsystems[i];
+
+		printf("%-16s %-96s ", s->name, s->subsysnqn);
+		for (j = 0; j < s->nr_ctrls; j++) {
+			struct nvme_ctrl *c = &s->ctrls[j];
+
+			printf("%s%s", j ? ", " : "", c->name);
+		}
+		printf("\n");
+	};
+
+	printf("\nNVM Express Controllers\n\n");
+	printf("%-8s %-20s %-40s %-8s %-6s %-14s %-12s %-16s\n", "Device",
+		"SN", "MN", "FR", "TxPort", "Address", "Subsystem", "Namespaces");
+	printf("%-.8s %-.20s %-.40s %-.8s %-.6s %-.14s %-.12s %-.16s\n", dash, dash,
+		dash, dash, dash, dash, dash, dash);
+	for (i = 0; i < t->nr_subsystems; i++) {
+		struct nvme_subsystem *s = &t->subsystems[i];
+
+		for (j = 0; j < s->nr_ctrls; j++) {
+			bool comma = false;
+			struct nvme_ctrl *c = &s->ctrls[j];
+
+			printf("%-8s %-.20s %-.40s %-.8s %-6s %-14s %-12s ",
+				c->name, c->id.sn, c->id.mn, c->id.fr,
+				c->transport, c->address, s->name);
+
+			for (k = 0; k < c->nr_namespaces; k++) {
+				struct nvme_namespace *n = &c->namespaces[k];
+				printf("%s%s", comma ? ", " : "", n->name);
+			}
+			for (k = 0; k < s->nr_namespaces; k++) {
+				struct nvme_namespace *n = &s->namespaces[k];
+				printf("%s%s", comma ? ", " : "", n->name);
+			}
+			printf("\n");
+		}
+	}
+
+	printf("\nNVM Express Namespaces\n\n");
+	printf("%-12s %-8s %-26s %-16s %-16s\n", "Device", "NSID", "Usage", "Format", "Controllers");
+	printf("%-.12s %-.8s %-.26s %-.16s %-.16s\n", dash, dash, dash, dash, dash);
+
+	for (i = 0; i < t->nr_subsystems; i++) {
+		struct nvme_subsystem *s = &t->subsystems[i];
+
+		for (j = 0; j < s->nr_ctrls; j++) {
+			struct nvme_ctrl *c = &s->ctrls[j];
+
+			for (k = 0; k < c->nr_namespaces; k++) {
+				struct nvme_namespace *n = &c->namespaces[k];
+				show_details_ns(n, true);
+			}
+		}
+		for (j = 0; j < s->nr_namespaces; j++) {
+			struct nvme_namespace *n = &s->namespaces[j];
+			show_details_ns(n, false);
+		}
+	}
+}
+
+void show_list_items(struct nvme_topology *t, unsigned verbose)
+{
+	switch (verbose) {
+	case 0:
+		show_simple_list(t);
+		break;
+	case 1:
+	default:
+		show_detailed_list(t);
+		break;
+	}
+}
+
+static void json_simple_ns(struct nvme_namespace *n, struct json_array *devices)
+{
+	struct json_object *device_attrs;
+	char formatter[41] = { 0 };
+	double nsze, nuse;
+	int index = -1;
+	long long lba;
+	char *devnode;
+
+	if (asprintf(&devnode, "/dev/%s", n->name) < 0)
+		return;
+
+	device_attrs = json_create_object();
+	json_object_add_value_int(device_attrs, "NameSpace", n->nsid);
+
+	json_object_add_value_string(device_attrs, "DevicePath", devnode);
+	free(devnode);
+
+	format(formatter, sizeof(formatter),
+			   n->ctrl->id.fr,
+			   sizeof(n->ctrl->id.fr));
+
+	json_object_add_value_string(device_attrs, "Firmware", formatter);
+
+	if (sscanf(n->ctrl->name, "nvme%d", &index) == 1)
+		json_object_add_value_int(device_attrs, "Index", index);
+
+	format(formatter, sizeof(formatter),
+		       n->ctrl->id.mn,
+		       sizeof(n->ctrl->id.mn));
+
+	json_object_add_value_string(device_attrs, "ModelNumber", formatter);
+
+	if (index >= 0) {
+		char *product = nvme_product_name(index);
+
+		json_object_add_value_string(device_attrs, "ProductName", product);
+		free((void*)product);
+	}
+
+	format(formatter, sizeof(formatter),
+	       n->ctrl->id.sn,
+	       sizeof(n->ctrl->id.sn));
+
+	json_object_add_value_string(device_attrs, "SerialNumber", formatter);
+
+	lba = 1 << n->ns.lbaf[(n->ns.flbas & 0x0f)].ds;
+	nsze = le64_to_cpu(n->ns.nsze) * lba;
+	nuse = le64_to_cpu(n->ns.nuse) * lba;
+
+	json_object_add_value_uint(device_attrs, "UsedBytes", nuse);
+	json_object_add_value_uint(device_attrs, "MaximumLBA",
+				  le64_to_cpu(n->ns.nsze));
+	json_object_add_value_uint(device_attrs, "PhysicalSize", nsze);
+	json_object_add_value_uint(device_attrs, "SectorSize", lba);
+
+	json_array_add_value_object(devices, device_attrs);
+}
+
+static void json_simple_list(struct nvme_topology *t)
 {
 	struct json_object *root;
 	struct json_array *devices;
-	struct json_object *device_attrs;
-	char formatter[41] = { 0 };
-	int index, i = 0;
-	char *product;
-	long long int lba;
-	double nsze;
-	double nuse;
+	int i, j, k;
 
 	root = json_create_object();
 	devices = json_create_array();
-	for (i = 0; i < len; i++) {
-		device_attrs = json_create_object();
+	for (i = 0; i < t->nr_subsystems; i++) {
+		struct nvme_subsystem *s = &t->subsystems[i];
 
-	    json_object_add_value_int(device_attrs,
-	                              "NameSpace",
-	                              list_items[i].nsid);
+		for (j = 0; j < s->nr_ctrls; j++) {
+			struct nvme_ctrl *c = &s->ctrls[j];
 
-		json_object_add_value_string(device_attrs,
-					     "DevicePath",
-					     list_items[i].node);
+			for (k = 0; k < c->nr_namespaces; k++) {
+				struct nvme_namespace *n = &c->namespaces[k];
+				json_simple_ns(n, devices);
+			}
+		}
 
-		format(formatter, sizeof(formatter),
-			   list_items[i].ctrl.fr,
-			   sizeof(list_items[i].ctrl.fr));
-
-		json_object_add_value_string(device_attrs,
-					     "Firmware",
-					     formatter);
-
-		if (sscanf(list_items[i].node, "/dev/nvme%d", &index) == 1)
-			json_object_add_value_int(device_attrs,
-						  "Index",
-						  index);
-
-		format(formatter, sizeof(formatter),
-		       list_items[i].ctrl.mn,
-		       sizeof(list_items[i].ctrl.mn));
-
-		json_object_add_value_string(device_attrs,
-					     "ModelNumber",
-					     formatter);
-
-		product = nvme_product_name(index);
-
-		json_object_add_value_string(device_attrs,
-					     "ProductName",
-					     product);
-
-		format(formatter, sizeof(formatter),
-		       list_items[i].ctrl.sn,
-		       sizeof(list_items[i].ctrl.sn));
-
-		json_object_add_value_string(device_attrs,
-					     "SerialNumber",
-					     formatter);
-
-		json_array_add_value_object(devices, device_attrs);
-
-		lba = 1 << list_items[i].ns.lbaf[(list_items[i].ns.flbas & 0x0f)].ds;
-		nsze = le64_to_cpu(list_items[i].ns.nsze) * lba;
-		nuse = le64_to_cpu(list_items[i].ns.nuse) * lba;
-		json_object_add_value_uint(device_attrs,
-					  "UsedBytes",
-					  nuse);
-		json_object_add_value_uint(device_attrs,
-					  "MaximumLBA",
-					  le64_to_cpu(list_items[i].ns.nsze));
-		json_object_add_value_uint(device_attrs,
-					  "PhysicalSize",
-					  nsze);
-		json_object_add_value_uint(device_attrs,
-					  "SectorSize",
-					  lba);
-
-		free((void*)product);
+		for (j = 0; j < s->nr_namespaces; j++) {
+			struct nvme_namespace *n = &s->namespaces[j];
+			json_simple_ns(n, devices);
+		}
 	}
-	if (i)
-		json_object_add_value_array(root, "Devices", devices);
+	json_object_add_value_array(root, "Devices", devices);
 	json_print_object(root, NULL);
+}
+
+static void json_detail_ns(struct nvme_namespace *n, struct json_object *ns_attrs)
+{
+	long long lba;
+	double nsze, nuse;
+
+	lba = 1 << n->ns.lbaf[(n->ns.flbas & 0x0f)].ds;
+	nsze = le64_to_cpu(n->ns.nsze) * lba;
+	nuse = le64_to_cpu(n->ns.nuse) * lba;
+
+	json_object_add_value_string(ns_attrs, "NameSpace", n->name);
+	json_object_add_value_uint(ns_attrs, "NSID", n->nsid);
+
+	json_object_add_value_uint(ns_attrs, "UsedBytes", nuse);
+	json_object_add_value_uint(ns_attrs, "MaximumLBA",
+		le64_to_cpu(n->ns.nsze));
+	json_object_add_value_uint(ns_attrs, "PhysicalSize", nsze);
+	json_object_add_value_uint(ns_attrs, "SectorSize", lba);
+}
+
+static void json_detail_list(struct nvme_topology *t)
+{
+	int i, j, k;
+	struct json_object *root;
+	struct json_array *devices;
+	char formatter[41] = { 0 };
+
+	root = json_create_object();
+	devices = json_create_array();
+
+	for (i = 0; i < t->nr_subsystems; i++) {
+		struct nvme_subsystem *s = &t->subsystems[i];
+		struct json_object *subsys_attrs;
+		struct json_array *namespaces, *ctrls;
+
+		subsys_attrs = json_create_object();
+		json_object_add_value_string(subsys_attrs, "Subsystem", s->name);
+		json_object_add_value_string(subsys_attrs, "SubsystemNQN", s->subsysnqn);
+
+		ctrls = json_create_array();
+		json_object_add_value_array(subsys_attrs, "Controllers", ctrls);
+		for (j = 0; j < s->nr_ctrls; j++) {
+			struct json_object *ctrl_attrs = json_create_object();
+			struct nvme_ctrl *c = &s->ctrls[j];
+			struct json_array *namespaces;
+
+			json_object_add_value_string(ctrl_attrs, "Controller", c->name);
+			json_object_add_value_string(ctrl_attrs, "Transport", c->transport);
+			json_object_add_value_string(ctrl_attrs, "Address", c->address);
+			json_object_add_value_string(ctrl_attrs, "State", c->state);
+
+			format(formatter, sizeof(formatter), c->id.fr, sizeof(c->id.fr));
+			json_object_add_value_string(ctrl_attrs, "Firmware", formatter);
+
+			format(formatter, sizeof(formatter), c->id.mn, sizeof(c->id.mn));
+			json_object_add_value_string(ctrl_attrs, "ModelNumber", formatter);
+
+			format(formatter, sizeof(formatter), c->id.sn, sizeof(c->id.sn));
+			json_object_add_value_string(ctrl_attrs, "SerialNumber", formatter);
+
+			namespaces = json_create_array();
+
+			for (k = 0; k < c->nr_namespaces; k++) {
+				struct json_object *ns_attrs = json_create_object();
+				struct nvme_namespace *n = &c->namespaces[k];
+
+				json_detail_ns(n, ns_attrs);
+				json_array_add_value_object(namespaces, ns_attrs);
+			}
+			if (k)
+				json_object_add_value_array(ctrl_attrs, "Namespaces", namespaces);
+			else
+				json_free_array(namespaces);
+
+			json_array_add_value_object(ctrls, ctrl_attrs);
+		}
+
+		namespaces = json_create_array();
+		for (k = 0; k < s->nr_namespaces; k++) {
+			struct json_object *ns_attrs = json_create_object();
+			struct nvme_namespace *n = &s->namespaces[k];
+
+			json_detail_ns(n, ns_attrs);
+			json_array_add_value_object(namespaces, ns_attrs);
+		}
+		if (k)
+			json_object_add_value_array(subsys_attrs, "Namespaces", namespaces);
+		else
+			json_free_array(namespaces);
+
+		json_array_add_value_object(devices, subsys_attrs);
+	}
+
+	json_object_add_value_array(root, "Devices", devices);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void json_print_list_items(struct nvme_topology *t, unsigned verbose)
+{
+	switch (verbose) {
+	case 0:
+		json_simple_list(t);
+		break;
+	default:
+		json_detail_list(t);
+		break;
+	}
 }
 
 void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)

@@ -173,7 +173,7 @@ void json_free_object(struct json_object *obj)
 	free(obj);
 }
 
-static void json_free_array(struct json_array *array)
+void json_free_array(struct json_array *array)
 {
 	int i;
 
