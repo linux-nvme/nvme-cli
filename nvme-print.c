@@ -5,9 +5,9 @@
 #include <time.h>
 
 #include "nvme-print.h"
-#include "json.h"
+#include "util/json.h"
 #include "nvme-models.h"
-#include "suffix.h"
+#include "util/suffix.h"
 #include "common.h"
 
 static const uint8_t zero_uuid[16] = {
@@ -3949,4 +3949,75 @@ void show_single_property(int offset, uint64_t value64, int human)
 			   nvme_register_to_string(offset), value64);
 		break;
 	}
+}
+
+void show_relatives(const char *name)
+{
+	unsigned id, i, nsid = NVME_NSID_ALL;
+	char *path = NULL;
+	bool block = true;
+	int ret;
+
+	ret = sscanf(name, "nvme%dn%d", &id, &nsid);
+	switch (ret) {
+	case 1:
+		asprintf(&path, "/sys/class/nvme/%s", name);
+		block = false;
+		break;
+	case 2:
+		asprintf(&path, "/sys/block/%s/device", name);
+		break;
+	default:
+		return;
+	}
+	if (!path)
+		return;
+
+	if (block) {
+		char *subsysnqn;
+		struct subsys_list_item *slist;
+		int subcnt = 0;
+
+		subsysnqn = get_nvme_subsnqn(path);
+		if (!subsysnqn)
+			return;
+		slist = get_subsys_list(&subcnt, subsysnqn, nsid);
+		if (subcnt != 1) {
+			free(subsysnqn);
+			free(path);
+			return;
+		}
+
+		fprintf(stderr, "Namespace %s has parent controller(s):", name);
+		for (i = 0; i < slist[0].nctrls; i++)
+			fprintf(stderr, "%s%s", i ? ", " : "", slist[0].ctrls[i].name);
+		fprintf(stderr, "\n\n");
+		free(subsysnqn);
+	} else {
+		struct dirent **paths;
+		bool comma = false;
+		int n, ns, cntlid;
+
+		n = scandir(path, &paths, scan_ctrl_paths_filter, alphasort);
+		if (n < 0) {
+			free(path);
+			return;
+		}
+
+		fprintf(stderr, "Controller %s has child namespace(s):", name);
+		for (i = 0; i < n; i++) {
+			if (sscanf(paths[i]->d_name, "nvme%dc%dn%d",
+				   &id, &cntlid, &ns) != 3) {
+				if (sscanf(paths[i]->d_name, "nvme%dn%d",
+					   &id, &ns) != 2) {
+					continue;
+				}
+			}
+			fprintf(stderr, "%snvme%dn%d", comma ? ", " : "", id, ns);
+			comma = true;
+		}
+		fprintf(stderr, "\n\n");
+		free(paths);
+	}
+	free(path);
 }

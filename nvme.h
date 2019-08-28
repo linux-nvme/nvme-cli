@@ -15,11 +15,12 @@
 #ifndef _NVME_H
 #define _NVME_H
 
+#include <dirent.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <endian.h>
 #include "plugin.h"
-#include "json.h"
+#include "util/json.h"
 
 #define unlikely(x) x
 
@@ -237,10 +238,12 @@ extern const char *conarg_transport;
 extern const char *conarg_traddr;
 extern const char *conarg_trsvcid;
 extern const char *conarg_host_traddr;
+extern const char *dev;
+extern const char *subsys_dir;
 
 void register_extension(struct plugin *plugin);
 
-#include "argconfig.h"
+#include "util/argconfig.h"
 int parse_and_open(int argc, char **argv, const char *desc,
 	const struct argconfig_commandline_options *clo, void *cfg, size_t size);
 
@@ -249,9 +252,25 @@ extern const char *devicename;
 int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root));
 int	validate_output_format(char *format);
 
+int get_nvme_ctrl_info(char *name, char *path, struct ctrl_list_item *ctrl,
+			__u32 nsid);
 struct subsys_list_item *get_subsys_list(int *subcnt, char *subsysnqn, __u32 nsid);
 void free_subsys_list(struct subsys_list_item *slist, int n);
 char *nvme_char_from_block(char *block);
+int get_nsid(int fd);
+void free_ctrl_list_item(struct ctrl_list_item *ctrls);
+void *mmap_registers(const char *dev);
+
+extern int current_index;
+int scan_namespace_filter(const struct dirent *d);
+int scan_ctrl_paths_filter(const struct dirent *d);
+int scan_ctrls_filter(const struct dirent *d);
+int scan_subsys_filter(const struct dirent *d);
+int scan_dev_filter(const struct dirent *d);
+
+int scan_subsystems(struct nvme_topology *t);
+void free_topology(struct nvme_topology *t);
+char *get_nvme_subsnqn(char *path);
 
 /*
  * is_64bit_reg - It checks whether given offset of the controller register is

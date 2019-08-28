@@ -66,31 +66,6 @@ struct huawei_list_element_len {
 	unsigned int array_name;
 };
 
-static const char *dev = "/dev/";
-
-/* Assume every block device starting with /dev/nvme is an nvme namespace */
-static int huawei_scan_dev_filter(const struct dirent *d)
-{
-	char path[264];
-	struct stat bd;
-	int ctrl, ns, part;
-
-	if (d->d_name[0] == '.')
-		return 0;
-
-	if (strstr(d->d_name, "nvme")) {
-		snprintf(path, sizeof(path), "%s%s", dev, d->d_name);
-		if (stat(path, &bd))
-			return 0;
-		if (!S_ISBLK(bd.st_mode))
-			return 0;
-		if (sscanf(d->d_name, "nvme%dn%dp%d", &ctrl, &ns, &part) == 3)
-			return 0;
-		return 1;
-	}
-	return 0;
-}
-
 static int huawei_get_nvme_info(int fd, struct huawei_list_item *item, const char *node)
 {
 	int err;
@@ -346,7 +321,7 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	if (fmt != JSON && fmt != NORMAL)
 		return -EINVAL;
 
-	n = scandir(dev, &devices, huawei_scan_dev_filter, alphasort);
+	n = scandir(dev, &devices, scan_dev_filter, alphasort);
 	if (n <= 0)
 		return n;
 

@@ -701,6 +701,7 @@ static int wdc_get_pci_ids(uint32_t *device_id, uint32_t *vendor_id)
 close_fd:
 	close(fd);
 free_id:
+	free(block);
 	free(id);
 	return ret;
 }

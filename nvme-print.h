@@ -2,7 +2,7 @@
 #define NVME_PRINT_H
 
 #include "nvme.h"
-#include "json.h"
+#include "util/json.h"
 #include <inttypes.h>
 
 enum {
@@ -51,6 +51,7 @@ const char *nvme_select_to_string(int sel);
 const char *nvme_feature_to_string(int feature);
 const char *nvme_register_to_string(int reg);
 void nvme_show_select_result(__u32 result);
+void show_relatives(const char *name);
 
 void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vendor_show)(__u8 *vs, struct json_object *root));
 void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int flags);

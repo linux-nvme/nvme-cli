@@ -53,14 +53,12 @@
 #include "plugin.h"
 
 #include "argconfig.h"
-
 #include "fabrics.h"
 
 static struct stat nvme_stat;
 const char *devicename;
 
 static const char nvme_version_string[] = NVME_VERSION;
-
 
 #define CREATE_CMD
 #include "nvme-builtin.h"
@@ -83,24 +81,16 @@ static struct program nvme = {
 	.extensions = &builtin,
 };
 
-static const char *dev = "/dev/";
-static const char *subsys_dir = "/sys/class/nvme-subsystem/";
+
 static const char *output_format = "Output format: normal|json|binary";
 
-static const char delim_space  = ' ';
 const char *conarg_nqn = "nqn";
 const char *conarg_transport = "transport";
 const char *conarg_traddr = "traddr";
 const char *conarg_trsvcid = "trsvcid";
 const char *conarg_host_traddr = "host_traddr";
-
-static unsigned long long elapsed_utime(struct timeval start_time,
-					struct timeval end_time)
-{
-	unsigned long long ret = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
-		(end_time.tv_usec - start_time.tv_usec);
-	return ret;
-}
+const char *dev = "/dev/";
+const char *subsys_dir = "/sys/class/nvme-subsystem/";
 
 static int open_dev(char *dev)
 {
@@ -1047,18 +1037,6 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
-static int get_nsid(int fd)
-{
-	int nsid = nvme_get_nsid(fd);
-
-	if (nsid <= 0) {
-		fprintf(stderr,
-			"%s: failed to return namespace id\n",
-			devicename);
-	}
-	return nsid < 0 ? 0 : nsid;
-}
-
 static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Delete the given namespace by "\
@@ -1157,15 +1135,13 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 		goto close_fd;
 	}
 
-	num = argconfig_parse_comma_sep_array(cfg.cntlist,
-					list, 2047);
-
-    if (num == -1) {
+	num = argconfig_parse_comma_sep_array(cfg.cntlist, list, 2047);
+	if (num == -1) {
 		fprintf(stderr, "%s: controller id list is required\n",
 						cmd->name);
 		err = -EINVAL;
 		goto close_fd;
-    }
+	}
 
 	for (i = 0; i < num; i++)
 		ctrlist[i] = (uint16_t)list[i];
@@ -1318,508 +1294,6 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
-char *nvme_char_from_block(char *block)
-{
-	char slen[16];
-	unsigned len;
-
-	if (strncmp("nvme", block, 4)) {
-		fprintf(stderr, "Device %s is not a nvme device.", block);
-		return NULL;
-	}
-
-	sscanf(block, "nvme%d", &len);
-	sprintf(slen, "%d", len);
-	block[4 + strlen(slen)] = 0;
-
-	return block;
-}
-
-static void *get_registers(void)
-{
-	int fd;
-	char *base, path[512];
-	void *membase;
-
-	base = nvme_char_from_block((char *)devicename);
-	sprintf(path, "/sys/class/nvme/%s/device/resource0", base);
-	fd = open(path, O_RDONLY);
-	if (fd < 0) {
-		sprintf(path, "/sys/class/misc/%s/device/resource0", base);
-		fd = open(path, O_RDONLY);
-	}
-	if (fd < 0) {
-		fprintf(stderr, "%s did not find a pci resource, open failed %s\n",
-				base, strerror(errno));
-		return NULL;
-	}
-
-	membase = mmap(NULL, getpagesize(), PROT_READ, MAP_SHARED, fd, 0);
-	if (membase == MAP_FAILED) {
-		fprintf(stderr, "%s failed to map\n", base);
-		membase = NULL;
-	}
-
-	close(fd);
-	return membase;
-}
-
-static char *get_nvme_subsnqn(char *path)
-{
-	char sspath[320];
-	char *subsysnqn;
-	int fd;
-	int ret;
-
-	snprintf(sspath, sizeof(sspath), "%s/subsysnqn", path);
-
-	fd = open(sspath, O_RDONLY);
-	if (fd < 0) {
-		fprintf(stderr, "Failed to open %s: %s\n",
-				sspath, strerror(errno));
-		return NULL;
-	}
-
-	subsysnqn = calloc(1, 256);
-	if (!subsysnqn)
-		goto close_fd;
-
-	ret = read(fd, subsysnqn, 256);
-	if (ret < 0) {
-		fprintf(stderr, "Failed to read %s: %s\n", sspath,
-				strerror(errno));
-		free(subsysnqn);
-		subsysnqn = NULL;
-	} else if (subsysnqn[strlen(subsysnqn) - 1] == '\n') {
-		subsysnqn[strlen(subsysnqn) - 1] = '\0';
-	}
-
-close_fd:
-	close(fd);
-
-	return subsysnqn;
-}
-
-static char *get_nvme_ctrl_attr(char *path, const char *attr)
-{
-	char *attrpath;
-	char *value;
-	int fd;
-	ssize_t ret;
-	int i;
-
-	ret = asprintf(&attrpath, "%s/%s", path, attr);
-	if (ret < 0)
-		return NULL;
-
-	value = calloc(1, 1024);
-	if (!value)
-		goto err_free_path;
-
-	fd = open(attrpath, O_RDONLY);
-	if (fd < 0) {
-		fprintf(stderr, "Failed to open %s: %s\n",
-				attrpath, strerror(errno));
-		goto err_free_value;
-	}
-
-	ret = read(fd, value, 1024);
-	if (ret < 0) {
-		fprintf(stderr, "read :%s :%s\n", attrpath, strerror(errno));
-		goto err_close_fd;
-	}
-
-	if (value[strlen(value) - 1] == '\n')
-		value[strlen(value) - 1] = '\0';
-
-	for (i = 0; i < strlen(value); i++) {
-		if (value[i] == ',' )
-			value[i] = ' ';
-	}
-
-	close(fd);
-	free(attrpath);
-
-	return value;
-
-err_close_fd:
-	close(fd);
-err_free_value:
-	free(value);
-err_free_path:
-	free(attrpath);
-
-	return NULL;
-}
-
-static int scan_namespace_filter(const struct dirent *d)
-{
-	int i, n;
-
-	if (d->d_name[0] == '.')
-		return 0;
-
-	if (strstr(d->d_name, "nvme"))
-		if (sscanf(d->d_name, "nvme%dn%d", &i, &n) == 2)
-			return 1;
-	return 0;
-}
-
-static int scan_ctrl_paths_filter(const struct dirent *d)
-{
-	int id, cntlid, nsid;
-
-	if (d->d_name[0] == '.')
-		return 0;
-
-	if (strstr(d->d_name, "nvme")) {
-		if (sscanf(d->d_name, "nvme%dc%dn%d", &id, &cntlid, &nsid) == 3)
-			return 1;
-		if (sscanf(d->d_name, "nvme%dn%d", &id, &nsid) == 2)
-			return 1;
-	}
-
-	return 0;
-}
-
-static char *get_nvme_ctrl_path_ana_state(char *path, int nsid)
-{
-	struct dirent **paths;
-	char *ana_state;
-	int i, n;
-
-	ana_state = calloc(1, 16);
-	if (!ana_state)
-		return NULL;
-
-	n = scandir(path, &paths, scan_ctrl_paths_filter, alphasort);
-	if (n <= 0) {
-		free(ana_state);
-		return NULL;
-	}
-	for (i = 0; i < n; i++) {
-		int id, cntlid, ns, fd;
-		ssize_t ret;
-		char *ctrl_path;
-
-		if (sscanf(paths[i]->d_name, "nvme%dc%dn%d",
-			   &id, &cntlid, &ns) != 3) {
-			if (sscanf(paths[i]->d_name, "nvme%dn%d",
-				   &id, &ns) != 2) {
-				continue;
-			}
-		}
-		if (ns != nsid)
-			continue;
-
-		ret = asprintf(&ctrl_path, "%s/%s/ana_state",
-			       path, paths[i]->d_name);
-		if (ret < 0) {
-			free(ana_state);
-			ana_state = NULL;
-			break;
-		}
-		fd = open(ctrl_path, O_RDONLY);
-		if (fd < 0) {
-			free(ctrl_path);
-			free(ana_state);
-			ana_state = NULL;
-			break;
-		}
-		ret = read(fd, ana_state, 16);
-		if (ret < 0) {
-			fprintf(stderr, "Failed to read ANA state from %s\n",
-				ctrl_path);
-			free(ana_state);
-			ana_state = NULL;
-		} else if (ana_state[strlen(ana_state) - 1] == '\n')
-			ana_state[strlen(ana_state) - 1] = '\0';
-		close(fd);
-		free(ctrl_path);
-		break;
-	}
-	for (i = 0; i < n; i++)
-		free(paths[i]);
-	free(paths);
-	return ana_state;
-}
-
-static int scan_ctrls_filter(const struct dirent *d)
-{
-	int id, nsid;
-
-	if (d->d_name[0] == '.')
-		return 0;
-
-	if (strstr(d->d_name, "nvme")) {
-		if (sscanf(d->d_name, "nvme%dn%d", &id, &nsid) == 2)
-			return 0;
-		if (sscanf(d->d_name, "nvme%dn", &id) == 1)
-			return 1;
-		return 0;
-	}
-
-	return 0;
-}
-
-static void free_ctrl_list_item(struct ctrl_list_item *ctrls)
-{
-	free(ctrls->name);
-	free(ctrls->transport);
-	free(ctrls->address);
-	free(ctrls->state);
-	free(ctrls->ana_state);
-	free(ctrls->subsysnqn);
-	free(ctrls->traddr);
-	free(ctrls->trsvcid);
-	free(ctrls->host_traddr);
-}
-
-/*
- * parse strings with connect arguments to find a particular field.
- * If field found, return string containing field value. If field
- * not found, return an empty string.
- */
-char *__parse_connect_arg(char *conargs, const char delim, const char *fieldnm)
-{
-	char *s, *e;
-	size_t cnt;
-
-	/*
-	 * There are field name overlaps: traddr and host_traddr.
-	 * By chance, both connect arg strings are set up to
-	 * have traddr field followed by host_traddr field. Thus field
-	 * name matching doesn't overlap in the searches. Technically,
-	 * as is, the loop and delimiter checking isn't necessary.
-	 * However, better to be prepared.
-	 */
-	do {
-		s = strstr(conargs, fieldnm);
-		if (!s)
-			goto empty_field;
-		/* validate prior character is delimiter */
-		if (s == conargs || *(s - 1) == delim) {
-			/* match requires next character to be assignment */
-			s += strlen(fieldnm);
-			if (*s == '=')
-				/* match */
-				break;
-		}
-		/* field overlap: seek to delimiter and keep looking */
-		conargs = strchr(s, delim);
-		if (!conargs)
-			goto empty_field;
-		conargs++;	/* skip delimiter */
-	} while (1);
-	s++;		/* skip assignment character */
-	e = strchr(s, delim);
-	if (e)
-		cnt = e - s;
-	else
-		cnt = strlen(s);
-
-	return strndup(s, cnt);
-
-empty_field:
-	return strdup("\0");
-}
-
-static int get_nvme_ctrl_info(char *name, char *path,
-			struct ctrl_list_item *ctrl, __u32 nsid)
-{
-	char ctrl_path[512];
-
-	ctrl->name = strdup(name);
-
-	snprintf(ctrl_path, sizeof(ctrl_path), "%s/%s", path, ctrl->name);
-
-	ctrl->address = get_nvme_ctrl_attr(ctrl_path, "address");
-	if (!ctrl->address) {
-		fprintf(stderr, "%s: failed to get controller address.\n",
-			ctrl->name);
-		goto free_ctrl_items;
-	}
-
-	ctrl->transport = get_nvme_ctrl_attr(ctrl_path, "transport");
-	if (!ctrl->transport) {
-		fprintf(stderr, "%s: failed to get controller transport.\n",
-			ctrl->name);
-		goto free_ctrl_items;
-	}
-
-	ctrl->state = get_nvme_ctrl_attr(ctrl_path, "state");
-	if (!ctrl->state) {
-		fprintf(stderr, "%s: failed to get controller state.\n",
-			ctrl->name);
-		goto free_ctrl_items;
-	}
-
-	if (nsid != NVME_NSID_ALL)
-		ctrl->ana_state = get_nvme_ctrl_path_ana_state(ctrl_path, nsid);
-
-	ctrl->subsysnqn = get_nvme_ctrl_attr(ctrl_path, "subsysnqn");
-	if (!ctrl->subsysnqn) {
-		fprintf(stderr, "%s: failed to get controller subsysnqn.\n",
-			ctrl->name);
-		goto free_ctrl_items;
-	}
-
-	ctrl->traddr = __parse_connect_arg(ctrl->address, delim_space,
-					conarg_traddr);
-	ctrl->trsvcid = __parse_connect_arg(ctrl->address, delim_space,
-					conarg_trsvcid);
-	ctrl->host_traddr = __parse_connect_arg(ctrl->address, delim_space,
-					conarg_host_traddr);
-
-	return 0;	/* success */
-
-free_ctrl_items:
-	free_ctrl_list_item(ctrl);
-
-	return 1;	/* failure */
-}
-
-static int get_nvme_subsystem_info(char *name, char *path,
-				struct subsys_list_item *item, __u32 nsid)
-{
-	struct dirent **ctrls;
-	int n, i, ret = 1, ccnt = 0;
-
-	item->subsysnqn = get_nvme_subsnqn(path);
-	if (!item->subsysnqn) {
-		fprintf(stderr, "failed to get subsystem nqn.\n");
-		return ret;
-	}
-
-	item->name = strdup(name);
-
-	n = scandir(path, &ctrls, scan_ctrls_filter, alphasort);
-	if (n < 0) {
-		fprintf(stderr, "failed to scan controller(s).\n");
-		return ret;
-	}
-
-	item->ctrls = calloc(n, sizeof(struct ctrl_list_item));
-	if (!item->ctrls) {
-		fprintf(stderr, "failed to allocate subsystem controller(s)\n");
-		goto free_ctrls;
-	}
-
-	item->nctrls = n;
-
-	for (i = 0; i < n; i++) {
-		if (get_nvme_ctrl_info(ctrls[i]->d_name, path,
-				&item->ctrls[ccnt], nsid)) {
-			fprintf(stderr, "failed to get controller[%d] info.\n",
-					i);
-		}
-		ccnt++;
-	}
-
-	item->nctrls = ccnt;
-
-	ret = 0;
-
-free_ctrls:
-	for (i = 0; i < n; i++)
-		free(ctrls[i]);
-	free(ctrls);
-
-	return ret;
-
-}
-
-static int scan_subsys_filter(const struct dirent *d)
-{
-	char path[310];
-	struct stat ss;
-	int id;
-	int tmp;
-
-	if (d->d_name[0] == '.')
-		return 0;
-
-	/* sanity checking, probably unneeded */
-	if (strstr(d->d_name, "nvme-subsys")) {
-		snprintf(path, sizeof(path), "%s%s", subsys_dir, d->d_name);
-		if (stat(path, &ss))
-			return 0;
-		if (!S_ISDIR(ss.st_mode))
-			return 0;
-		tmp = sscanf(d->d_name, "nvme-subsys%d", &id);
-		if (tmp != 1)
-			return 0;
-		return 1;
-	}
-
-	return 0;
-}
-
-static void free_subsys_list_item(struct subsys_list_item *item)
-{
-	int i;
-
-	for (i = 0; i < item->nctrls; i++)
-		free_ctrl_list_item(&item->ctrls[i]);
-
-	free(item->ctrls);
-	free(item->subsysnqn);
-	free(item->name);
-}
-
-void free_subsys_list(struct subsys_list_item *slist, int n)
-{
-	int i;
-
-	for (i = 0; i < n; i++)
-		free_subsys_list_item(&slist[i]);
-
-	free(slist);
-}
-
-struct subsys_list_item *get_subsys_list(int *subcnt, char *subsysnqn,
-					 __u32 nsid)
-{
-	char path[310];
-	struct dirent **subsys;
-	struct subsys_list_item *slist;
-	int n, i, ret = 0;
-
-	n = scandir(subsys_dir, &subsys, scan_subsys_filter, alphasort);
-	if (n < 0) {
-		fprintf(stderr, "no NVMe subsystem(s) detected.\n");
-		return NULL;
-	}
-
-	slist = calloc(n, sizeof(struct subsys_list_item));
-	if (!slist)
-		goto free_subsys;
-
-	for (i = 0; i < n; i++) {
-		snprintf(path, sizeof(path), "%s%s", subsys_dir,
-			subsys[i]->d_name);
-		ret = get_nvme_subsystem_info(subsys[i]->d_name, path,
-				&slist[*subcnt], nsid);
-		if (ret) {
-			fprintf(stderr,
-				"%s: failed to get subsystem info: %s\n",
-				path, strerror(errno));
-			free_subsys_list_item(&slist[*subcnt]);
-		} else if (subsysnqn &&
-			   strncmp(slist[*subcnt].subsysnqn, subsysnqn, 255))
-			free_subsys_list_item(&slist[*subcnt]);
-		else
-			(*subcnt)++;
-	}
-
-free_subsys:
-	for (i = 0; i < n; i++)
-		free(subsys[i]);
-	free(subsys);
-
-	return slist;
-}
-
 static int list_subsys(int argc, char **argv, struct command *cmd,
 		struct plugin *plugin)
 {
@@ -1899,295 +1373,6 @@ ret:
 	return nvme_status_to_errno(ret, false);
 }
 
-static int scan_namespace(struct nvme_namespace *n)
-{
-	int ret, fd;
-	char *path;
-
-	ret = asprintf(&path, "%s%s", dev, n->name);
-	if (ret < 0)
-		return ret;
-
-	fd = open(path, O_RDONLY);
-	if (fd < 0)
-		goto free;
-
-	n->nsid = get_nsid(fd);
-	ret = nvme_identify_ns(fd, n->nsid, 0, &n->ns);
-	if (ret < 0)
-		goto close_fd;
-close_fd:
-	close(fd);
-free:
-	free(path);
-	return 0;
-}
-
-static int scan_ctrl(struct nvme_ctrl *c, char *p)
-{
-	struct nvme_namespace *n;
-	struct dirent **ns;
-	char *path;
-	int i, fd, ret;
-
-	ret = asprintf(&path, "%s/%s", p, c->name);
-	if (ret < 0)
-		return ret;
-
-	c->address = get_nvme_ctrl_attr(path, "address");
-	c->transport = get_nvme_ctrl_attr(path, "transport");
-	c->state = get_nvme_ctrl_attr(path, "state");
-
-	c->nr_namespaces = scandir(path, &ns, scan_namespace_filter, alphasort);
-	c->namespaces = calloc(c->nr_namespaces, sizeof(*n));
-	for (i = 0; i < c->nr_namespaces; i++) {
-		n = &c->namespaces[i];
-		n->name = strdup(ns[i]->d_name);
-		n->ctrl = c;
-		scan_namespace(n);
-	}
-
-	while (i--)
-		free(ns[i]);
-	free(ns);
-	free(path);
-
-	ret = asprintf(&path, "%s%s", dev, c->name);
-	if (ret < 0)
-		return ret;
-
-	fd = open(path, O_RDONLY);
-	if (fd < 0)
-		goto free;
-
-	ret = nvme_identify_ctrl(fd, &c->id);
-	if (ret < 0)
-		goto close_fd;
-close_fd:
-	close(fd);
-free:
-	free(path);
-	return 0;
-}
-
-static int scan_subsystem(struct nvme_subsystem *s)
-{
-	struct dirent **ctrls, **ns;
-	struct nvme_namespace *n;
-	struct nvme_ctrl *c;
-	int i, ret;
-	char *path;
-
-	ret = asprintf(&path, "%s%s", subsys_dir, s->name);
-	if (ret < 0)
-		return ret;
-
-	s->subsysnqn = get_nvme_subsnqn(path);
-	s->nr_ctrls = scandir(path, &ctrls, scan_ctrls_filter, alphasort);
-	s->ctrls = calloc(s->nr_ctrls, sizeof(*c));
-	for (i = 0; i < s->nr_ctrls; i++) {
-		c = &s->ctrls[i];
-		c->name = strdup(ctrls[i]->d_name);
-		c->subsys = s;
-		scan_ctrl(c, path);
-	}
-
-	while (i--)
-		free(ctrls[i]);
-	free(ctrls);
-
-	s->nr_namespaces = scandir(path, &ns, scan_namespace_filter, alphasort);
-	s->namespaces = calloc(s->nr_namespaces, sizeof(*n));
-	for (i = 0; i < s->nr_namespaces; i++) {
-		n = &s->namespaces[i];
-		n->name = strdup(ns[i]->d_name);
-		n->ctrl = &s->ctrls[0];
-		scan_namespace(n);
-	}
-	while (i--)
-		free(ns[i]);
-	free(ns);
-
-	free(path);
-	return 0;
-}
-
-/* global, used for controller specific namespace filter */
-static int current_index;
-
-static int scan_dev_filter(const struct dirent *d)
-{
-	int ctrl, ns, part;
-
-	if (d->d_name[0] == '.')
-		return 0;
-
-	if (strstr(d->d_name, "nvme")) {
-		if (sscanf(d->d_name, "nvme%dn%dp%d", &ctrl, &ns, &part) == 3)
-			return 0;
-		if (sscanf(d->d_name, "nvme%dn%d", &ctrl, &ns) == 2)
-			return ctrl == current_index;
-	}
-	return 0;
-}
-
-/* Sanity check that this namespace's parent matches itself */
-static int verify_legacy_ns(struct nvme_namespace *n)
-{
-	struct nvme_ctrl *c = n->ctrl;
-	struct nvme_id_ctrl id;
-	char *path;
-	int ret, fd;
-
-	ret = asprintf(&path, "%s%s", dev, n->name);
-	if (ret < 0)
-		return ret;
-
-	fd = open(path, O_RDONLY);
-	free (path);
-
-	if (fd < 0)
-		return fd;
-
-	ret = nvme_identify_ctrl(fd, &id);
-	close(fd);
-
-	if (ret)
-		return ret;
-
-	if (memcmp(id.mn, c->id.mn, sizeof(id.mn)) ||
-	    memcmp(id.sn, c->id.mn, sizeof(id.sn)))
-		return -ENODEV;
-	return 0;
-}
-
-/*
- * For pre-subsystem enabled kernel. Topology information is limited, but we can
- * assume controller names are always a prefix to their namespaces, i.e. nvme0
- * is the controller to nvme0n1 for such older kernels. We will also assume
- * every controller is its own subsystem.
- */
-static int legacy_list(struct nvme_topology *t)
-{
-	struct nvme_ctrl *c;
-	struct nvme_subsystem *s;
-	struct nvme_namespace *n;
-        struct dirent **devices, **namespaces;
-	int ret = 0, fd, i;
-	char *path;
-
-	t->nr_subsystems = scandir(dev, &devices, scan_ctrls_filter, alphasort);
-        if (t->nr_subsystems < 0) {
-		fprintf(stderr, "no NVMe device(s) detected.\n");
-		return t->nr_subsystems;
-        }
-
-	t->subsystems = calloc(t->nr_subsystems, sizeof(*s));
-	for (i = 0; i < t->nr_subsystems; i++) {
-		int j;
-
-		s = &t->subsystems[i];
-		s->nr_ctrls = 1;
-		s->ctrls = calloc(s->nr_ctrls, sizeof(*c));
-		s->name = strdup(devices[i]->d_name);
-		s->subsysnqn = strdup(s->name);
-		s->nr_namespaces = 0;
-
-		c = s->ctrls;
-		c->name = strdup(s->name);
-		sscanf(c->name, "nvme%d", &current_index);
-		c->nr_namespaces = scandir(dev, &namespaces, scan_dev_filter,
-					   alphasort);
-		c->namespaces = calloc(c->nr_namespaces, sizeof(*n));
-
-		for (j = 0; j < c->nr_namespaces; j++) {
-			n = &c->namespaces[j];
-			n->name = strdup(namespaces[j]->d_name);
-			n->ctrl = c;
-			scan_namespace(n);
-			ret = verify_legacy_ns(n);
-			if (ret)
-				goto free;
-		}
-		while (j--)
-			free(namespaces[j]);
-		free(namespaces);
-
-		ret = asprintf(&path, "%s%s", dev, c->name);
-		if (ret < 0)
-			continue;
-		ret = 0;
-
-		fd = open(path, O_RDONLY);
-		if (fd > 0) {
-			nvme_identify_ctrl(fd, &c->id);
-			close(fd);
-		}
-		free(path);
-	}
-
-free:
-	while (i--)
-		free(devices[i]);
-	free(devices);
-	return ret;
-}
-
-static int scan_subsystems(struct nvme_topology *t)
-{
-	struct nvme_subsystem *s;
-	struct dirent **subsys;
-	int i;
-
-	t->nr_subsystems = scandir(subsys_dir, &subsys, scan_subsys_filter, alphasort);
-	if (t->nr_subsystems < 0)
-		return legacy_list(t);
-
-	t->subsystems = calloc(t->nr_subsystems, sizeof(*s));
-	for (i = 0; i < t->nr_subsystems; i++) {
-		s = &t->subsystems[i];
-		s->name = strdup(subsys[i]->d_name);
-		scan_subsystem(s);
-	}
-
-	while (i--)
-		free(subsys[i]);
-	free(subsys);
-	return 0;
-}
-
-static void free_topology(struct nvme_topology *t)
-{
-	int i, j, k;
-
-	for (i = 0; i < t->nr_subsystems; i++) {
-		struct nvme_subsystem *s = &t->subsystems[i];
-
-		for (j = 0; j < s->nr_ctrls; j++) {
-			struct nvme_ctrl *c = &s->ctrls[j];
-
-			for (k = 0; k < c->nr_namespaces; k++) {
-				struct nvme_namespace *n = &c->namespaces[k];
-				free(n->name);
-			}
-			free(c->name);
-			if (c->transport)
-				free(c->transport);
-			if (c->address)
-				free(c->address);
-			if (c->state)
-				free(c->state);
-			if (c->namespaces)
-				free(c->namespaces);
-		}
-		free(s->name);
-		free(s->subsysnqn);
-		free(s->ctrls);
-		free(s->namespaces);
-	}
-	free(t->subsystems);
-}
-
 static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve basic information for all NVMe namespaces";
@@ -2228,6 +1413,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		json_print_list_items(&t, cfg.verbose);
 	else
 		show_list_items(&t, cfg.verbose);
+
 	free_topology(&t);
 	return 0;
 }
@@ -2562,7 +1748,7 @@ static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct 
 		"in either human-readable or binary format.";
 	int err, fmt, fd;
 	unsigned int flags = 0;
-        struct nvme_id_ns_granularity_list *granularity_list;
+	struct nvme_id_ns_granularity_list *granularity_list;
 
 	struct config {
 		char *output_format;
@@ -3570,7 +2756,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 
 	err = nvme_get_properties(fd, &bar);
 	if (err) {
-		bar = get_registers();
+		bar = mmap_registers(devicename);
 		fabrics = false;
 		if (bar)
 			err = 0;
@@ -3705,78 +2891,6 @@ close_fd:
 	close(fd);
 ret:
 	return nvme_status_to_errno(err, false);
-}
-
-/* Requires global 'devicename' was set */
-static void print_relatives()
-{
-	unsigned id, i, nsid = NVME_NSID_ALL;
-	char *path = NULL;
-	bool block = true;
-	int ret;
-
-	ret = sscanf(devicename, "nvme%dn%d", &id, &nsid);
-	switch (ret) {
-	case 1:
-		asprintf(&path, "/sys/class/nvme/%s", devicename);
-		block = false;
-		break;
-	case 2:
-		asprintf(&path, "/sys/block/%s/device", devicename);
-		break;
-	default:
-		return;
-	}
-	if (!path)
-		return;
-
-	if (block) {
-		char *subsysnqn;
-		struct subsys_list_item *slist;
-		int subcnt = 0;
-
-		subsysnqn = get_nvme_subsnqn(path);
-		if (!subsysnqn)
-			return;
-		slist = get_subsys_list(&subcnt, subsysnqn, nsid);
-		if (subcnt != 1) {
-			free(subsysnqn);
-			free(path);
-			return;
-		}
-
-		fprintf(stderr, "Namespace %s has parent controller(s):", devicename);
-		for (i = 0; i < slist[0].nctrls; i++)
-			fprintf(stderr, "%s%s", i ? ", " : "", slist[0].ctrls[i].name);
-		fprintf(stderr, "\n\n");
-		free(subsysnqn);
-	} else {
-		struct dirent **paths;
-		bool comma = false;
-		int n, ns, cntlid;
-
-		n = scandir(path, &paths, scan_ctrl_paths_filter, alphasort);
-		if (n < 0) {
-			free(path);
-			return;
-		}
-
-		fprintf(stderr, "Controller %s has child namespace(s):", devicename);
-		for (i = 0; i < n; i++) {
-			if (sscanf(paths[i]->d_name, "nvme%dc%dn%d",
-				   &id, &cntlid, &ns) != 3) {
-				if (sscanf(paths[i]->d_name, "nvme%dn%d",
-					   &id, &ns) != 2) {
-					continue;
-				}
-			}
-			fprintf(stderr, "%snvme%dn%d", comma ? ", " : "", id, ns);
-			comma = true;
-		}
-		fprintf(stderr, "\n\n");
-		free(paths);
-	}
-	free(path);
 }
 
 static int format(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -3957,7 +3071,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		fprintf(stderr, "You are about to format %s, namespace %#x%s.\n",
 			devicename, cfg.namespace_id,
 			cfg.namespace_id == NVME_NSID_ALL ? "(ALL namespaces)" : "");
-		print_relatives();
+		show_relatives(devicename);
 		fprintf(stderr, "WARNING: Format may irrevocably delete this device's data.\n"
 			"You have 10 seconds to press Ctrl-C to cancel this operation.\n\n"
 			"Use the force [--force|-f] option to suppress this warning.\n");
@@ -4996,6 +4110,14 @@ close_fd:
 	close(fd);
 ret:
 	return nvme_status_to_errno(err, false);
+}
+
+static unsigned long long elapsed_utime(struct timeval start_time,
+					struct timeval end_time)
+{
+	unsigned long long ret = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
+		(end_time.tv_usec - start_time.tv_usec);
+	return ret;
 }
 
 static int submit_io(int opcode, char *command, const char *desc,
