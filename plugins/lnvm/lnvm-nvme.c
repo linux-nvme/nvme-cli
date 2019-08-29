@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "nvme.h"
 #include "nvme-print.h"
@@ -17,7 +19,7 @@
 static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Initialize LightNVM device. A LightNVM/Open-Channel SSD"\
-			   " must have a media manager associated before it can "\
+			   " must have a media manager associated before it can"\
 			   " be exposed to the user. The default is to initialize"
 			   " the general media manager on top of the device.\n\n"
 			   "Example:"
@@ -48,7 +50,7 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 		return ret;
 
 	if (!strlen(cfg.devname)) {
-		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		fprintf(stderr, "device name missing\n");
 		return -EINVAL;
 	}
 
@@ -127,6 +129,85 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 	return lnvm_do_id_ns(fd, cfg.namespace_id, flags);
 }
 
+static int lnvm_chunk_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve the chunk information log for the "\
+		"specified given LightNVM device, returns in either "\
+		"human-readable or binary format.\n"\
+		"This will request Geometry first to get the "\
+		"num_grp,num_pu,num_chk first to figure out the total size "\
+		"of the log pages."\
+		;
+	const char *output_format = "Output format: normal|binary";
+	const char *human_readable = "Print normal in readable format";
+	int err, fmt, fd;
+	struct nvme_nvm_id20 geo;
+	struct nvme_nvm_chunk_desc *chunk_log;
+	__u32 nsid;
+	__u32 data_len;
+	unsigned int flags = 0;
+
+	struct config {
+		char *output_format;
+		int human_readable;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format},
+		{"human-readable",'H', "",    CFG_NONE,   &cfg.human_readable,no_argument,       human_readable},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg,
+				sizeof(cfg));
+	if (fd < 0)
+		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		err = fmt;
+		goto close;
+	}
+
+	if (fmt == BINARY)
+		flags |= RAW;
+	else if (cfg.human_readable)
+		flags |= HUMAN;
+
+	nsid = nvme_get_nsid(fd);
+
+	/*
+	 * It needs to figure out how many bytes will be requested by this
+	 * subcommand by the (num_grp * num_pu * num_chk) from the Geometry.
+	 */
+	err = lnvm_get_identity(fd, nsid, (struct nvme_nvm_id *) &geo);
+	if (err)
+		goto close;
+
+	data_len = (geo.num_grp * geo.num_pu * geo.num_chk) *
+			sizeof(struct nvme_nvm_chunk_desc);
+	chunk_log = malloc(data_len);
+	if (!chunk_log) {
+		fprintf(stderr, "cound not alloc for chunk log %dbytes\n",
+				data_len);
+		err = -ENOMEM;
+		goto close;
+	}
+
+	err = lnvm_do_chunk_log(fd, nsid, data_len, chunk_log, flags);
+	if (err)
+		fprintf(stderr, "get log page for chunk information failed\n");
+
+	free(chunk_log);
+close:
+	close(fd);
+	return err;
+}
+
 static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Instantiate a target on top of a LightNVM enabled device.";
@@ -179,7 +260,7 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		return ret;
 
 	if (!strlen(cfg.devname)) {
-		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		fprintf(stderr, "device name missing\n");
 		return -EINVAL;
 	}
 	if (!strlen(cfg.tgtname)) {
@@ -265,7 +346,7 @@ static int lnvm_factory_init(int argc, char **argv, struct command *cmd, struct 
 		return ret;
 
 	if (!strlen(cfg.devname)) {
-		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		fprintf(stderr, "device name missing\n");
 		return -EINVAL;
 	}
 

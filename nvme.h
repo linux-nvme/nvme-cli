@@ -110,7 +110,7 @@ struct nvme_bar_cap {
 	__u8	to;
 	__u16	bps_css_nssrs_dstrd;
 	__u8	mpsmax_mpsmin;
-	__u8	reserved;
+	__u8	rsvd_pmrs;
 };
 
 #ifdef __CHECKER__
@@ -160,6 +160,10 @@ struct ctrl_list_item {
 	char *transport;
 	char *state;
 	char *ana_state;
+	char *subsysnqn;
+	char *traddr;
+	char *trsvcid;
+	char *host_traddr;
 };
 
 struct subsys_list_item {
@@ -174,6 +178,26 @@ enum {
 	JSON,
 	BINARY,
 };
+
+struct connect_args {
+	char *subsysnqn;
+	char *transport;
+	char *traddr;
+	char *trsvcid;
+	char *host_traddr;
+};
+
+#define SYS_NVME		"/sys/class/nvme"
+
+bool ctrl_matches_connectargs(char *name, struct connect_args *args);
+char *find_ctrl_with_connectargs(struct connect_args *args);
+char *__parse_connect_arg(char *conargs, const char delim, const char *fieldnm);
+
+extern const char *conarg_nqn;
+extern const char *conarg_transport;
+extern const char *conarg_traddr;
+extern const char *conarg_trsvcid;
+extern const char *conarg_host_traddr;
 
 void register_extension(struct plugin *plugin);
 

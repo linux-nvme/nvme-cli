@@ -766,11 +766,13 @@ nvme-format(1) Manual Page
 and provides the results.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
-If the character device is given, the namespace identifier will default
-to 0xffffffff to send the format to all namespace, but can be overridden
-to any namespace with the <em>namespace-id</em> option. If the block device
-is given, the namespace identifier will default to the namespace id of
-the block device given, but can be overridden with the same option.</p></div>
+If the character device is given, and the controller does not support
+formatting of particular namespaces (ID_CTRL.FNA bit 0 enabled), then all
+namespaces will be formatted. If FNA is disabled, then the namespace
+identifier must be specified with the <em>namespace-id</em> option; specify a
+value of 0xffffffff to send the format to all namespaces. If the block
+device is given, the namespace identifier will default to the namespace
+ID of the block device given, but can be overridden with the same option.</p></div>
 <div class="paragraph"><p>Note, the numeric suffix on the character device, for example the <em>0</em> in
 /dev/nvme0, does NOT indicate this device handle is the parent controller
 of any namespaces with the same suffix. The namespace handle&#8217;s numeral
@@ -799,7 +801,7 @@ new block size to be visible, if the size was changed with this command.</p></di
 <p>
         Send the format command for the specified nsid. This can be
         used to override the default value for either character device
-        (0xffffffff) or the block device (result from NVME_IOCTL_ID).
+        (unspecified) or the block device (result from NVME_IOCTL_ID).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1020,7 +1022,7 @@ information:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-05-16 09:47:03 MDT
+Last updated 2019-08-02 10:57:03 MDT
 </div>
 </div>
 </body>

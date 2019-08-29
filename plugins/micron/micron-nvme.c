@@ -40,6 +40,7 @@ static int micron_selective_download(int argc, char **argv, struct command *cmd,
 	void *fw_buf;
     int fd, selectNo,fw_fd,fw_size,err,offset = 0;
     struct stat sb;
+	int i;
 
 	struct config {
 		char  *fw;
@@ -68,7 +69,7 @@ static int micron_selective_download(int argc, char **argv, struct command *cmd,
         goto out;
     }
 
-    for(int i=0;i<3;i++) 
+    for(i=0;i<3;i++)
     {
         cfg.select[i] = toupper(cfg.select[i]);
     }

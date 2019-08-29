@@ -178,6 +178,22 @@ int nvme_compare(int fd, __u64 slba, __u16 nblocks, __u16 control, __u32 dsmgmt,
 		       reftag, apptag, appmask, data, metadata);
 }
 
+int nvme_verify(int fd, __u32 nsid, __u64 slba, __u16 nblocks,
+		__u16 control, __u32 reftag, __u16 apptag, __u16 appmask)
+{
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_cmd_verify,
+		.nsid		= nsid,
+		.cdw10		= slba & 0xffffffff,
+		.cdw11		= slba >> 32,
+		.cdw12		= nblocks | (control << 16),
+		.cdw14		= reftag,
+		.cdw15		= apptag | (appmask << 16),
+	};
+
+	return nvme_submit_io_passthru(fd, &cmd);
+}
+
 int nvme_passthru_io(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 		     __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10,
 		     __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14,
@@ -387,8 +403,18 @@ int nvme_identify_nvmset(int fd, __u16 nvmset_id, void *data)
 	return nvme_identify13(fd, 0, NVME_ID_CNS_NVMSET_LIST, nvmset_id, data);
 }
 
-int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
-                 __u16 lsi, bool rae, __u32 data_len, void *data)
+int nvme_identify_ns_granularity(int fd, void *data)
+{
+	return nvme_identify13(fd, 0, NVME_ID_CNS_NS_GRANULARITY, 0, data);
+}
+
+int nvme_identify_uuid(int fd, void *data)
+{
+	return nvme_identify(fd, 0, NVME_ID_CNS_UUID_LIST, data);
+}
+
+int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
+                 __u16 lsi, bool rae, __u8 uuid_ix, __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_get_log_page,
@@ -406,6 +432,7 @@ int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
 	cmd.cdw11 = numdu | (lsi << 16);
 	cmd.cdw12 = lpo;
 	cmd.cdw13 = (lpo >> 32);
+	cmd.cdw14 = uuid_ix;
 
 	return nvme_submit_admin_passthru(fd, &cmd);
 
@@ -802,6 +829,21 @@ int nvme_sec_recv(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 	if (!err && result)
 		*result = cmd.result;
 	return err;
+}
+
+int nvme_get_lba_status(int fd, __u64 slba, __u32 mndw, __u8 atype, __u16 rl,
+		void *data)
+{
+	struct nvme_admin_cmd cmd = {
+		.opcode =  nvme_admin_get_lba_status,
+		.addr = (__u64)(uintptr_t) data,
+		.cdw10 = slba & 0xffffffff,
+		.cdw11 = slba >> 32,
+		.cdw12 = mndw,
+		.cdw13 = (atype << 24) | rl,
+	};
+
+	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
 int nvme_dir_send(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,

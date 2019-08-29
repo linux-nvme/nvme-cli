@@ -28,6 +28,12 @@ enum {
 	WEARLEVELING_COUNT,
 	HOST_WRITE,
 	THERMAL_THROTTLE_CNT,
+	CORRECT_PCIE_PORT0,
+	CORRECT_PCIE_PORT1,
+	REBUILD_FAIL,
+	ERASE_FAIL,
+	PROGRAM_FAIL,
+	READ_FAIL,
 	NR_SMART_ITEMS,
 };
 
@@ -194,6 +200,35 @@ static int show_memblaze_smart_log(int fd, __u32 nsid, const char *devname,
 		printf("Thermal throttling count since device born 			: %u\n",
 				item->thermal_throttle_cnt.cnt);
 
+	item = &smart->items[CORRECT_PCIE_PORT0];
+	if (item_id_2_u32(item) == 0xED)
+		printf("PCIE Correctable Error Count of Port0    			: %llu\n",
+				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+
+	item = &smart->items[CORRECT_PCIE_PORT1];
+	if (item_id_2_u32(item) == 0xEE)
+		printf("PCIE Correctable Error Count of Port1 	        		: %llu\n",
+				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+
+	item = &smart->items[REBUILD_FAIL];
+	if (item_id_2_u32(item) == 0xEF)
+		printf("End-to-End Error Detection Count 	        		: %llu\n",
+				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+
+	item = &smart->items[ERASE_FAIL];
+	if (item_id_2_u32(item) == 0xF0)
+		printf("Erase Fail Count 		                        	: %llu\n",
+				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+
+    item = &smart->items[PROGRAM_FAIL];
+	if (item_id_2_u32(item) == 0xF1)
+		printf("Program Fail Count 		                        	: %llu\n",
+				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+
+	item = &smart->items[READ_FAIL];
+	if (item_id_2_u32(item) == 0xF2)
+		printf("Read Fail Count	                                 		: %llu\n",
+				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
 	return err;
 }
 

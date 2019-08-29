@@ -124,6 +124,9 @@ enum {
 	NVME_REG_BPINFO	= 0x0040,	/* Boot Partition Information */
 	NVME_REG_BPRSEL	= 0x0044,	/* Boot Partition Read Select */
 	NVME_REG_BPMBL	= 0x0048,	/* Boot Partition Memory Buffer Location */
+	NVME_REG_PMRCAP = 0x0e00,	/* Persistent Memory Capabilities */
+	NVME_REG_PMRCTL = 0x0e04,	/* Persistent Memory Region Control */
+	NVME_REG_PMRSTS = 0x0e08,	/* Persistent Memory Region Status */
 	NVME_REG_DBS	= 0x1000,	/* SQ 0 Tail Doorbell */
 };
 
@@ -221,7 +224,11 @@ struct nvme_id_ctrl {
 	__le32			oaes;
 	__le32			ctratt;
 	__le16			rrls;
-	__u8			rsvd102[154];
+	__u8			rsvd102[26];
+	__le16			crdt1;
+	__le16			crdt2;
+	__le16			crdt3;
+	__u8			rsvd134[122];
 	__le16			oacs;
 	__u8			acl;
 	__u8			aerl;
@@ -302,6 +309,8 @@ enum {
 	NVME_CTRL_CTRATT_READ_RECV_LVLS		= 1 << 3,
 	NVME_CTRL_CTRATT_ENDURANCE_GROUPS	= 1 << 4,
 	NVME_CTRL_CTRATT_PREDICTABLE_LAT	= 1 << 5,
+	NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY	= 1 << 7,
+	NVME_CTRL_CTRATT_UUID_LIST		= 1 << 9,
 };
 
 struct nvme_lbaf {
@@ -361,6 +370,8 @@ enum {
 	NVME_ID_CNS_CTRL_NS_LIST	= 0x12,
 	NVME_ID_CNS_CTRL_LIST		= 0x13,
 	NVME_ID_CNS_SCNDRY_CTRL_LIST	= 0x15,
+	NVME_ID_CNS_NS_GRANULARITY	= 0x16,
+	NVME_ID_CNS_UUID_LIST		= 0x17,
 };
 
 enum {
@@ -429,6 +440,29 @@ struct nvme_id_nvmset {
 	__u8				nid;
 	__u8				rsvd1[127];
 	struct nvme_nvmset_attr_entry	ent[NVME_MAX_NVMSET];
+};
+
+struct nvme_id_ns_granularity_list_entry {
+	__le64			namespace_size_granularity;
+	__le64			namespace_capacity_granularity;
+};
+
+struct nvme_id_ns_granularity_list {
+	__le32			attributes;
+	__u8			num_descriptors;
+	__u8			rsvd[27];
+	struct nvme_id_ns_granularity_list_entry entry[16];
+};
+
+#define NVME_MAX_UUID_ENTRIES	128
+struct nvme_id_uuid_list_entry {
+	__u8			header;
+	__u8			rsvd1[15];
+	__u8			uuid[16];
+};
+
+struct nvme_id_uuid_list {
+	struct nvme_id_uuid_list_entry	entry[NVME_MAX_UUID_ENTRIES];
 };
 
 /**
@@ -526,6 +560,21 @@ struct nvme_fw_slot_info_log {
 	__u8			rsvd64[448];
 };
 
+struct nvme_lba_status_desc {
+	__u64 dslba;
+	__u32 nlb;
+	__u8 rsvd_12;
+	__u8 status;
+	__u8 rsvd_15_14[2];
+};
+
+struct nvme_lba_status {
+	__u32 nlsd;
+	__u8 cmpc;
+	__u8 rsvd_7_5[3];
+	struct nvme_lba_status_desc descs[0];
+};
+
 /* NVMe Namespace Write Protect State */
 enum {
 	NVME_NS_NO_WRITE_PROTECT = 0,
@@ -547,6 +596,7 @@ enum {
 	NVME_CMD_EFFECTS_NIC		= 1 << 3,
 	NVME_CMD_EFFECTS_CCC		= 1 << 4,
 	NVME_CMD_EFFECTS_CSE_MASK	= 3 << 16,
+	NVME_CMD_EFFECTS_UUID_SEL	= 1 << 19,
 };
 
 struct nvme_effects_log {
@@ -676,6 +726,7 @@ enum nvme_opcode {
 	nvme_cmd_compare	= 0x05,
 	nvme_cmd_write_zeroes	= 0x08,
 	nvme_cmd_dsm		= 0x09,
+	nvme_cmd_verify		= 0x0c,
 	nvme_cmd_resv_register	= 0x0d,
 	nvme_cmd_resv_report	= 0x0e,
 	nvme_cmd_resv_acquire	= 0x11,
@@ -903,6 +954,7 @@ enum nvme_admin_opcode {
 	nvme_admin_security_send	= 0x81,
 	nvme_admin_security_recv	= 0x82,
 	nvme_admin_sanitize_nvm		= 0x84,
+	nvme_admin_get_lba_status	= 0x86,
 };
 
 enum {
@@ -932,6 +984,8 @@ enum {
 	NVME_FEAT_RRL		= 0x12,
 	NVME_FEAT_PLM_CONFIG	= 0x13,
 	NVME_FEAT_PLM_WINDOW	= 0x14,
+	NVME_FEAT_HOST_BEHAVIOR	= 0x16,
+	NVME_FEAT_SANITIZE	= 0x17,
 	NVME_FEAT_SW_PROGRESS	= 0x80,
 	NVME_FEAT_HOST_ID	= 0x81,
 	NVME_FEAT_RESV_MASK	= 0x82,
@@ -983,6 +1037,7 @@ enum {
 	NVME_SANITIZE_LOG_COMPLETED_SUCCESS	= 0x0001,
 	NVME_SANITIZE_LOG_IN_PROGESS		= 0x0002,
 	NVME_SANITIZE_LOG_COMPLETED_FAILED	= 0x0003,
+	NVME_SANITIZE_LOG_ND_COMPLETED_SUCCESS	= 0x0004,
 };
 
 enum {
@@ -1142,6 +1197,9 @@ struct nvme_sanitize_log_page {
 	__le32			est_ovrwrt_time;
 	__le32			est_blk_erase_time;
 	__le32			est_crypto_erase_time;
+	__le32			est_ovrwrt_time_with_no_deallocate;
+	__le32			est_blk_erase_time_with_no_deallocate;
+	__le32			est_crypto_erase_time_with_no_deallocate;
 };
 
 /*
@@ -1361,6 +1419,7 @@ enum {
 	NVME_SC_SANITIZE_IN_PROGRESS	= 0x1D,
 
 	NVME_SC_NS_WRITE_PROTECTED	= 0x20,
+	NVME_SC_CMD_INTERRUPTED		= 0x21,
 
 	NVME_SC_LBA_RANGE		= 0x80,
 	NVME_SC_CAP_EXCEEDED		= 0x81,
@@ -1399,6 +1458,7 @@ enum {
 	NVME_SC_THIN_PROV_NOT_SUPP	= 0x11b,
 	NVME_SC_CTRL_LIST_INVALID	= 0x11c,
 	NVME_SC_BP_WRITE_PROHIBITED	= 0x11e,
+	NVME_SC_PMR_SAN_PROHIBITED	= 0x123,
 
 	/*
 	 * I/O Command Set Specific - NVM commands:
@@ -1439,6 +1499,7 @@ enum {
 	NVME_SC_ANA_INACCESSIBLE	= 0x302,
 	NVME_SC_ANA_TRANSITION		= 0x303,
 
+	NVME_SC_CRD			= 0x1800,
 	NVME_SC_DNR			= 0x4000,
 };
 

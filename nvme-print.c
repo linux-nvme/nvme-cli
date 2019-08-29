@@ -10,6 +10,14 @@
 #include "suffix.h"
 #include "common.h"
 
+static const uint8_t zero_uuid[16] = {
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static const uint8_t invalid_uuid[16] = {
+	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+};
+
 static const char *nvme_ana_state_to_string(enum nvme_ana_state state)
 {
 	switch (state) {
@@ -102,6 +110,27 @@ static void format(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
 	}
 }
 
+static const char *nvme_uuid_to_string(uuid_t uuid)
+{
+	/* large enough to hold uuid str (37) + null-termination byte */
+	static char uuid_str[40];
+#ifdef LIBUUID
+	uuid_unparse_lower(uuid, uuid_str);
+#else
+	static const char *hex_digits = "0123456789abcdef";
+	char *p = &uuid_str[0];
+	int i;
+	for (i = 0; i < 16; i++) {
+		*p++ = hex_digits[(uuid.b[i] & 0xf0) >> 4];
+		*p++ = hex_digits[uuid.b[i] & 0x0f];
+		if (i == 3 || i == 5 || i == 7 || i == 9)
+			*p++ = '-';
+	}
+	*p = '\0';
+#endif
+	return uuid_str;
+}
+
 static void show_nvme_id_ctrl_cmic(__u8 cmic)
 {
 	__u8 rsvd = (cmic & 0xF0) >> 4;
@@ -122,13 +151,27 @@ static void show_nvme_id_ctrl_cmic(__u8 cmic)
 static void show_nvme_id_ctrl_oaes(__le32 ctrl_oaes)
 {
 	__u32 oaes = le32_to_cpu(ctrl_oaes);
-	__u32 rsvd0 = (oaes & 0xFFFFFC00) >> 10;
+	__u32 rsvd0 = (oaes & 0xFFFF8000) >> 15;
 	__u32 nace = (oaes & 0x100) >> 8;
 	__u32 fan = (oaes & 0x200) >> 9;
+	__u32 anacn = (oaes & 800) >> 11;
+	__u32 plealcn = (oaes & 0x1000) >> 12;
+	__u32 lbasin = (oaes & 0x2000) >> 13;
+	__u32 egealpcn = (oaes & 0x4000) >> 14;
 	__u32 rsvd1 = oaes & 0xFF;
 
 	if (rsvd0)
 		printf(" [31:10] : %#x\tReserved\n", rsvd0);
+	printf("[14:14] : %#x\tEndurance Group Event Aggregate Log Page"\
+			" Change Notice %sSupported\n",
+			egealpcn, egealpcn ? "" : "Not ");
+	printf("[13:13] : %#x\tLBA Status Information Notices %sSupported\n",
+			lbasin, lbasin ? "" : "Not ");
+	printf("[12:12] : %#x\tPredictable Latency Event Aggregate Log Change"\
+			" Notices %sSupported\n",
+			plealcn, plealcn ? "" : "Not ");
+	printf("[11:11] : %#x\tAsymmetric Namespace Access Change Notices"\
+			" %sSupported\n", anacn, anacn ? "" : "Not ");
 	printf("  [9:9] : %#x\tFirmware Activation Notices %sSupported\n",
 		fan, fan ? "" : "Not ");
 	printf("  [8:8] : %#x\tNamespace Attribute Changed Event %sSupported\n",
@@ -141,16 +184,29 @@ static void show_nvme_id_ctrl_oaes(__le32 ctrl_oaes)
 static void show_nvme_id_ctrl_ctratt(__le32 ctrl_ctratt)
 {
 	__u32 ctratt = le32_to_cpu(ctrl_ctratt);
-	__u32 rsvd0 = ctratt >> 6;
+	__u32 rsvd = ctratt >> 10;
 	__u32 hostid128 = (ctratt & NVME_CTRL_CTRATT_128_ID) >> 0;
 	__u32 psp = (ctratt & NVME_CTRL_CTRATT_NON_OP_PSP) >> 1;
 	__u32 sets = (ctratt & NVME_CTRL_CTRATT_NVM_SETS) >> 2;
 	__u32 rrl = (ctratt & NVME_CTRL_CTRATT_READ_RECV_LVLS) >> 3;
 	__u32 eg = (ctratt & NVME_CTRL_CTRATT_ENDURANCE_GROUPS) >> 4;
 	__u32 iod = (ctratt & NVME_CTRL_CTRATT_PREDICTABLE_LAT) >> 5;
+	__u32 ng = (ctratt & NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY) >> 7;
+	__u32 uuidlist = (ctratt & NVME_CTRL_CTRATT_UUID_LIST) >> 9;
+	__u32 rsvd6 = (ctratt & 0x00000040) >> 6;
+	__u32 rsvd8 = (ctratt & 0x00000100) >> 8;
 
-	if (rsvd0)
-		printf(" [31:6] : %#x\tReserved\n", rsvd0);
+	if (rsvd)
+		printf(" [31:10] : %#x\tReserved\n", rsvd);
+
+	printf("  [9:9] : %#x\tUUID List %sSupported\n",
+		uuidlist, uuidlist ? "" : "Not ");
+	if (rsvd8)
+		printf(" [8:8] : %#x\tReserved\n", rsvd8);
+	printf("  [7:7] : %#x\tNamespace Granularity %sSupported\n",
+		ng, ng ? "" : "Not ");
+	if (rsvd6)
+		printf(" [6:6] : %#x\tReserved\n", rsvd6);
 	printf("  [5:5] : %#x\tPredictable Latency Mode %sSupported\n",
 		iod, iod ? "" : "Not ");
 	printf("  [4:4] : %#x\tEndurance Groups %sSupported\n",
@@ -169,7 +225,8 @@ static void show_nvme_id_ctrl_ctratt(__le32 ctrl_ctratt)
 static void show_nvme_id_ctrl_oacs(__le16 ctrl_oacs)
 {
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
-	__u16 rsvd = (oacs & 0xFE00) >> 9;
+	__u16 rsvd = (oacs & 0xFC00) >> 10;
+	__u16 glbas = (oacs & 0x200) >> 9;
 	__u16 dbc = (oacs & 0x100) >> 8;
 	__u16 vir = (oacs & 0x80) >> 7;
 	__u16 nmi = (oacs & 0x40) >> 6;
@@ -182,6 +239,8 @@ static void show_nvme_id_ctrl_oacs(__le16 ctrl_oacs)
 
 	if (rsvd)
 		printf(" [15:9] : %#x\tReserved\n", rsvd);
+	printf("  [9:9] : %#x\tGet LBA Status Capability %sSupported\n",
+		glbas, glbas ? "" : "Not ");
 	printf("  [8:8] : %#x\tDoorbell Buffer Config %sSupported\n",
 		dbc, dbc ? "" : "Not ");
 	printf("  [7:7] : %#x\tVirtualization Management %sSupported\n",
@@ -295,18 +354,30 @@ static void show_nvme_id_ctrl_hctma(__le16 ctrl_hctma)
 static void show_nvme_id_ctrl_sanicap(__le32 ctrl_sanicap)
 {
 	__u32 sanicap = le32_to_cpu(ctrl_sanicap);
-	__u32 rsvd = (sanicap & 0xFFFFFFF8) >> 3;
+	__u32 rsvd = (sanicap & 0x1FFFFFF8) >> 3;
 	__u32 owr = (sanicap & 0x4) >> 2;
 	__u32 ber = (sanicap & 0x2) >> 1;
 	__u32 cer = sanicap & 0x1;
+	__u32 ndi = (sanicap & 0x20000000) >> 29;
+	__u32 nodmmas = (sanicap & 0xC0000000) >> 30;
 
+	static const char *modifies_media[] = {
+		"Additional media modification after sanitize operation completes successfully is not defined",
+		"Media is not additionally modified after sanitize operation completes successfully",
+		"Media is additionally modified after sanitize operation completes successfully",
+		"Reserved"
+	};
+
+	printf("  [31:30] : %#x\t%s\n", nodmmas, modifies_media[nodmmas]);
+	printf("  [29:29] : %#x\tNo-Deallocate After Sanitize bit in Sanitize command %sSupported\n",
+		ndi, ndi ? "Not " : "");
 	if (rsvd)
-		printf(" [31:3] : %#x\tReserved\n", rsvd);
-	printf("  [2:2] : %#x\tOverwrite Sanitize Operation %sSupported\n",
+		printf("  [28:3] : %#x\tReserved\n", rsvd);
+	printf("    [2:2] : %#x\tOverwrite Sanitize Operation %sSupported\n",
 		owr, owr ? "" : "Not ");
-	printf("  [1:1] : %#x\tBlock Erase Sanitize Operation %sSupported\n",
+	printf("    [1:1] : %#x\tBlock Erase Sanitize Operation %sSupported\n",
 		ber, ber ? "" : "Not ");
-	printf("  [0:0] : %#x\tCrypto Erase Sanitize Operation %sSupported\n",
+	printf("    [0:0] : %#x\tCrypto Erase Sanitize Operation %sSupported\n",
 		cer, cer ? "" : "Not ");
 	printf("\n");
 }
@@ -362,7 +433,8 @@ static void show_nvme_id_ctrl_cqes(__u8 cqes)
 static void show_nvme_id_ctrl_oncs(__le16 ctrl_oncs)
 {
 	__u16 oncs = le16_to_cpu(ctrl_oncs);
-	__u16 rsvd = (oncs & 0xFF80) >> 7;
+	__u16 rsvd = (oncs & 0xFF00) >> 8;
+	__u16 vrfy = (oncs & 0x80) >> 7;
 	__u16 tmst = (oncs & 0x40) >> 6;
 	__u16 resv = (oncs & 0x20) >> 5;
 	__u16 save = (oncs & 0x10) >> 4;
@@ -372,7 +444,9 @@ static void show_nvme_id_ctrl_oncs(__le16 ctrl_oncs)
 	__u16 cmp = oncs & 0x1;
 
 	if (rsvd)
-		printf(" [15:7] : %#x\tReserved\n", rsvd);
+		printf(" [15:8] : %#x\tReserved\n", rsvd);
+	printf("  [7:7] : %#x\tVerify %sSupported\n",
+		vrfy, vrfy ? "" : "Not ");
 	printf("  [6:6] : %#x\tTimestamp %sSupported\n",
 		tmst, tmst ? "" : "Not ");
 	printf("  [5:5] : %#x\tReservations %sSupported\n",
@@ -464,7 +538,8 @@ static void show_nvme_id_ctrl_nwpc(__u8 nwpc)
 static void show_nvme_id_ctrl_sgls(__le32 ctrl_sgls)
 {
 	__u32 sgls = le32_to_cpu(ctrl_sgls);
-	__u32 rsvd0 = (sgls & 0xFF700000) >> 21;
+	__u32 rsvd0 = (sgls & 0xFFC00000) >> 22;
+	__u32 trsdbd = (sgls & 0x200000) >> 21;
 	__u32 aofdsl = (sgls & 0x100000) >> 20;
 	__u32 mpcsd = (sgls & 0x80000) >> 19;
 	__u32 sglltb = (sgls & 0x40000) >> 18;
@@ -475,7 +550,10 @@ static void show_nvme_id_ctrl_sgls(__le32 ctrl_sgls)
 	__u32 sglsp = sgls & 0x3;
 
 	if (rsvd0)
-		printf(" [31:21]: %#x\tReserved\n", rsvd0);
+		printf(" [31:22]: %#x\tReserved\n", rsvd0);
+	if (sglsp || (!sglsp && trsdbd))
+		printf(" [21:21]: %#x\tTransport SGL Data Block Descriptor %sSupported\n",
+			trsdbd, trsdbd ? "" : "Not ");
 	if (sglsp || (!sglsp && aofdsl))
 		printf(" [20:20]: %#x\tAddress Offsets %sSupported\n",
 			aofdsl, aofdsl ? "" : "Not ");
@@ -997,6 +1075,11 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 	if (human)
 		show_nvme_id_ctrl_ctratt(ctrl->ctratt);
 	printf("rrls      : %#x\n", le16_to_cpu(ctrl->rrls));
+
+	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
+	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
+	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));
+
 	printf("oacs      : %#x\n", le16_to_cpu(ctrl->oacs));
 	if (human)
 		show_nvme_id_ctrl_oacs(ctrl->oacs);
@@ -1224,6 +1307,117 @@ void json_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list 
 	json_free_object(root);
 }
 
+void show_nvme_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *glist, unsigned int flags)
+{
+	int i;
+
+	printf("Identify Namespace Granularity List:\n");
+	printf("   ATTR        : Namespace Granularity Attributes: 0x%x\n", glist->attributes);
+	printf("   NUMD        : Number of Descriptors           : %d\n", glist->num_descriptors);
+
+	/* Number of Descriptors is a 0's based value */
+	for (i = 0; i <= glist->num_descriptors; i++) {
+		printf("\n     Entry[%2d] :\n", i);
+		printf("................\n");
+		printf("     NSG       : Namespace Size Granularity     : 0x%"PRIx64"\n",
+				le64_to_cpu(glist->entry[i].namespace_size_granularity));
+		printf("     NCG       : Namespace Capacity Granularity : 0x%"PRIx64"\n",
+				le64_to_cpu(glist->entry[i].namespace_capacity_granularity));
+	}
+}
+
+void json_nvme_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *glist, unsigned int flags)
+{
+	int i;
+	struct json_object *root;
+	struct json_array *entries;
+
+	root = json_create_object();
+
+	json_object_add_value_int(root, "attributes", glist->attributes);
+	json_object_add_value_int(root, "num-descriptors", glist->num_descriptors);
+
+	entries = json_create_array();
+	for (i = 0; i <= glist->num_descriptors; i++) {
+		struct json_object *entry = json_create_object();
+
+		json_object_add_value_uint(entry, "namespace-size-granularity",
+			le64_to_cpu(glist->entry[i].namespace_size_granularity));
+		json_object_add_value_uint(entry, "namespace-capacity-granularity",
+			le64_to_cpu(glist->entry[i].namespace_capacity_granularity));
+		json_array_add_value_object(entries, entry);
+	}
+
+	json_object_add_value_array(root, "namespace-granularity-list", entries);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void show_nvme_id_uuid_list(const struct nvme_id_uuid_list *uuid_list, unsigned int flags)
+{
+	int i, human = flags & HUMAN;
+	/* The 0th entry is reserved */
+	for (i = 1; i < NVME_MAX_UUID_ENTRIES; i++) {
+		uuid_t uuid;
+		char *association = "";
+		uint8_t identifier_association = uuid_list->entry[i].header & 0x3;
+		/* The list is terminated by a zero UUID value */
+		if (memcmp(uuid_list->entry[i].uuid, zero_uuid, sizeof(zero_uuid)) == 0)
+			break;
+		memcpy(&uuid, uuid_list->entry[i].uuid, sizeof(uuid));
+		if (human) {
+			switch (identifier_association) {
+			case 0x0:
+				association = "No association reported";
+				break;
+			case 0x1:
+				association = "associated with PCI Vendor ID";
+				break;
+			case 0x2:
+				association = "associated with PCI Subsystem Vendor ID";
+				break;
+			default:
+				association = "Reserved";
+				break;
+			}
+		}
+		printf(" Entry[%3d]\n", i);
+		printf(".................\n");
+		printf("association  : 0x%x %s\n", identifier_association, association);
+		printf("UUID         : %s", nvme_uuid_to_string(uuid));
+		if (memcmp(uuid_list->entry[i].uuid, invalid_uuid, sizeof(zero_uuid)) == 0)
+			printf(" (Invalid UUID)");
+		printf("\n.................\n");
+	}
+}
+
+void json_nvme_id_uuid_list(struct nvme_id_uuid_list *uuid_list)
+{
+	struct json_object *root;
+	struct json_array *entries;
+	int i;
+	root = json_create_object();
+	entries = json_create_array();
+	/* The 0th entry is reserved */
+	for (i = 1; i < NVME_MAX_UUID_ENTRIES; i++) {
+		uuid_t uuid;
+		struct json_object *entry = json_create_object();
+		/* The list is terminated by a zero UUID value */
+		if (memcmp(uuid_list->entry[i].uuid, zero_uuid, sizeof(zero_uuid)) == 0)
+			break;
+		memcpy(&uuid, uuid_list->entry[i].uuid, sizeof(uuid));
+		json_object_add_value_int(entry, "association", uuid_list->entry[i].header & 0x3);
+		json_object_add_value_string(entry, "uuid", nvme_uuid_to_string(uuid));
+		json_array_add_value_object(entries, entry);
+	}
+	json_object_add_value_array(root, "UUID-list", entries);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
 void show_error_log(struct nvme_error_log_page *err_log, int entries, const char *devname)
 {
 	int i;
@@ -1347,6 +1541,7 @@ static void show_effects_log_human(__u32 effect)
 	printf("  NCC%s", (effect & NVME_CMD_EFFECTS_NCC) ? set : clr);
 	printf("  NIC%s", (effect & NVME_CMD_EFFECTS_NIC) ? set : clr);
 	printf("  CCC%s", (effect & NVME_CMD_EFFECTS_CCC) ? set : clr);
+	printf("  USS%s", (effect & NVME_CMD_EFFECTS_UUID_SEL) ? set : clr);
 
 	if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 0)
 		printf("  No command restriction\n");
@@ -1657,6 +1852,9 @@ static const char *get_sanitize_log_sstat_status_str(__u16 status)
 	case NVME_SANITIZE_LOG_COMPLETED_FAILED:
 		str = "Most Recent Sanitize Command Failed.";
 		break;
+	case NVME_SANITIZE_LOG_ND_COMPLETED_SUCCESS:
+		str = "Most Recent Sanitize Command (No-Deallocate After Sanitize) Completed Successfully.";
+		break;
 	default:
 		str = "Unknown.";
 	}
@@ -1674,9 +1872,11 @@ static void show_sanitize_log_sstat(__u16 status)
 
 	printf("\t  [8]\t");
 	if (status & NVME_SANITIZE_LOG_GLOBAL_DATA_ERASED)
-		str = "Global Data Erased set: NVM storage has not been written";
+		str = "Global Data Erased set: no NS LB in the NVM subsystem has been written to "\
+		      "and no PMR in the NVM subsystem has been enabled";
 	else
-		str = "Global Data Erased cleared: NVM storage has been written";
+		str = "Global Data Erased cleared: a NS LB in the NVM subsystem has been written to "\
+		      "or  a PMR in the NVM subsystem has been enabled";
 	printf("%s\n", str);
 }
 
@@ -1693,21 +1893,24 @@ void show_sanitize_log(struct nvme_sanitize_log_page *sanitize, unsigned int mod
 	int human = mode & HUMAN;
 	__u16 status = le16_to_cpu(sanitize->status) & NVME_SANITIZE_LOG_STATUS_MASK;
 
-	printf("Sanitize Progress                     (SPROG) :  %u",
+	printf("Sanitize Progress                      (SPROG) :  %u",
 	       le16_to_cpu(sanitize->progress));
 	if (human && status == NVME_SANITIZE_LOG_IN_PROGESS)
 		show_sanitize_log_sprog(le16_to_cpu(sanitize->progress));
 	else
 		printf("\n");
 
-	printf("Sanitize Status                       (SSTAT) :  %#x\n", le16_to_cpu(sanitize->status));
+	printf("Sanitize Status                        (SSTAT) :  %#x\n", le16_to_cpu(sanitize->status));
 	if (human)
 		show_sanitize_log_sstat(le16_to_cpu(sanitize->status));
 
-	printf("Sanitize Command Dword 10 Information (SCDW10):  %#x\n", le32_to_cpu(sanitize->cdw10_info));
-	show_estimate_sanitize_time("Estimated Time For Overwrite                  ", le32_to_cpu(sanitize->est_ovrwrt_time));
-	show_estimate_sanitize_time("Estimated Time For Block Erase                ", le32_to_cpu(sanitize->est_blk_erase_time));
-	show_estimate_sanitize_time("Estimated Time For Crypto Erase               ", le32_to_cpu(sanitize->est_crypto_erase_time));
+	printf("Sanitize Command Dword 10 Information (SCDW10) :  %#x\n", le32_to_cpu(sanitize->cdw10_info));
+	show_estimate_sanitize_time("Estimated Time For Overwrite                   ", le32_to_cpu(sanitize->est_ovrwrt_time));
+	show_estimate_sanitize_time("Estimated Time For Block Erase                 ", le32_to_cpu(sanitize->est_blk_erase_time));
+	show_estimate_sanitize_time("Estimated Time For Crypto Erase                ", le32_to_cpu(sanitize->est_crypto_erase_time));
+	show_estimate_sanitize_time("Estimated Time For Overwrite (No-Deallocate)   ", le32_to_cpu(sanitize->est_ovrwrt_time_with_no_deallocate));
+	show_estimate_sanitize_time("Estimated Time For Block Erase (No-Deallocate) ", le32_to_cpu(sanitize->est_blk_erase_time_with_no_deallocate));
+	show_estimate_sanitize_time("Estimated Time For Crypto Erase (No-Deallocate)", le32_to_cpu(sanitize->est_crypto_erase_time_with_no_deallocate));
 }
 
 const char *nvme_feature_to_string(int feature)
@@ -1738,6 +1941,8 @@ const char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_TIMESTAMP:	return "Timestamp";
 	case NVME_FEAT_WRITE_PROTECT:	return "Namespce Write Protect";
 	case NVME_FEAT_HCTM:		return "Host Controlled Thermal Management";
+	case NVME_FEAT_HOST_BEHAVIOR:   return "Host Behavior";
+	case NVME_FEAT_SANITIZE:	return "Sanitize";
 	default:			return "Unknown";
 	}
 }
@@ -1846,6 +2051,8 @@ const char *nvme_status_to_string(__u32 status)
 	case NVME_SC_ANA_PERSISTENT_LOSS:	return "ASYMMETRIC_NAMESPACE_ACCESS_PERSISTENT_LOSS: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace being in the ANA Persistent Loss state";
 	case NVME_SC_ANA_INACCESSIBLE:		return "ASYMMETRIC_NAMESPACE_ACCESS_INACCESSIBLE: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace being in the ANA Inaccessible state";
 	case NVME_SC_ANA_TRANSITION:		return "ASYMMETRIC_NAMESPACE_ACCESS_TRANSITION: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace transitioning between Asymmetric Namespace Access states";
+	case NVME_SC_CMD_INTERRUPTED:		return "CMD_INTERRUPTED: Command processing was interrupted and the controller is unable to successfully complete the command. The host should retry the command.";
+	case NVME_SC_PMR_SAN_PROHIBITED:	return "Sanitize Prohibited While Persistent Memory Region is Enabled: A sanitize operation is prohibited while the Persistent Memory Region is enabled.";
 	default:				return "Unknown";
 	}
 }
@@ -2142,6 +2349,37 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 	case NVME_FEAT_NOPSC:
 		printf("\tNon-Operational Power State Permissive Mode Enable (NOPPME): %s\n", (result & 1) ? "True" : "False");
 		break;
+	case NVME_FEAT_HOST_BEHAVIOR:
+		printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
+		break;
+	}
+}
+
+void show_lba_status(struct nvme_lba_status *list)
+{
+	int idx;
+
+	printf("Number of LBA Status Descriptors(NLSD): %lu\n",
+			le64_to_cpu(list->nlsd));
+	printf("Completion Condition(CMPC): %u\n", list->cmpc);
+	switch (list->cmpc) {
+	case 1:
+		printf("\tCompleted due to transferring the amount of data"\
+			" specified in the MNDW field\n");
+		break;
+	case 2:
+		printf("\tCompleted due to having performed the action\n"\
+			"\tspecified in the Action Type field over the\n"\
+			"\tnumber of logical blocks specified in the\n"\
+			"\tRange Length field\n");
+		break;
+	}
+
+	for (idx = 0; idx < list->nlsd; idx++) {
+		struct nvme_lba_status_desc *e = &list->descs[idx];
+		printf("{ DSLBA: 0x%016"PRIu64", NLB: 0x%08x, Status: 0x%02x }\n",
+				le64_to_cpu(e->dslba), le32_to_cpu(e->nlb),
+				e->status);
 	}
 }
 
@@ -2379,6 +2617,9 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*vs)(
 	json_object_add_value_uint(root, "oaes", le32_to_cpu(ctrl->oaes));
 	json_object_add_value_int(root, "ctratt", le32_to_cpu(ctrl->ctratt));
 	json_object_add_value_int(root, "rrls", le16_to_cpu(ctrl->rrls));
+	json_object_add_value_int(root, "crdt1", le16_to_cpu(ctrl->crdt1));
+	json_object_add_value_int(root, "crdt2", le16_to_cpu(ctrl->crdt2));
+	json_object_add_value_int(root, "crdt3", le16_to_cpu(ctrl->crdt3));
 	json_object_add_value_int(root, "oacs", le16_to_cpu(ctrl->oacs));
 	json_object_add_value_int(root, "acl", ctrl->acl);
 	json_object_add_value_int(root, "aerl", ctrl->aerl);
@@ -2880,6 +3121,10 @@ void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log, const char *
 	json_object_add_value_uint(dev, "time_block_erase", le32_to_cpu(sanitize_log->est_blk_erase_time));
 	json_object_add_value_uint(dev, "time_crypto_erase", le32_to_cpu(sanitize_log->est_crypto_erase_time));
 
+	json_object_add_value_uint(dev, "time_over_write_no_dealloc", le32_to_cpu(sanitize_log->est_ovrwrt_time_with_no_deallocate));
+	json_object_add_value_uint(dev, "time_block_erase_no_dealloc", le32_to_cpu(sanitize_log->est_blk_erase_time_with_no_deallocate));
+	json_object_add_value_uint(dev, "time_crypto_erase_no_dealloc", le32_to_cpu(sanitize_log->est_crypto_erase_time_with_no_deallocate));
+
 	json_object_add_value_object(root, devname, dev);
 	json_print_object(root, NULL);
 	printf("\n");
@@ -2966,18 +3211,20 @@ void json_print_nvme_subsystem_list(struct subsys_list_item *slist, int n)
 
 static void show_registers_cap(struct nvme_bar_cap *cap)
 {
-	printf("\tMemory Page Size Maximum      (MPSMAX): %u bytes\n", 1 <<  (12 + ((cap->mpsmax_mpsmin & 0xf0) >> 4)));
-	printf("\tMemory Page Size Minimum      (MPSMIN): %u bytes\n", 1 <<  (12 + (cap->mpsmax_mpsmin & 0x0f)));
-	printf("\tBoot Partition Support           (BPS): %s\n", (cap->bps_css_nssrs_dstrd & 0x2000) ? "Yes":"No");
-	printf("\tCommand Sets Supported           (CSS): NVM command set is %s\n",
+	printf("\tPersistent Memory Region Supported (PMRS): The Persistent Memory Region is %s\n",
+			(cap->rsvd_pmrs & 0x01) ? "supported":"not supported");
+	printf("\tMemory Page Size Maximum	   (MPSMAX): %u bytes\n", 1 <<  (12 + ((cap->mpsmax_mpsmin & 0xf0) >> 4)));
+	printf("\tMemory Page Size Minimum         (MPSMIN): %u bytes\n", 1 <<  (12 + (cap->mpsmax_mpsmin & 0x0f)));
+	printf("\tBoot Partition Support              (BPS): %s\n", (cap->bps_css_nssrs_dstrd & 0x2000) ? "Yes":"No");
+	printf("\tCommand Sets Supported              (CSS): NVM command set is %s\n",
 			(cap->bps_css_nssrs_dstrd & 0x0020) ? "supported":"not supported");
-	printf("\tNVM Subsystem Reset Supported  (NSSRS): %s\n", (cap->bps_css_nssrs_dstrd & 0x0010) ? "Yes":"No");
-	printf("\tDoorbell Stride                (DSTRD): %u bytes\n", 1 << (2 + (cap->bps_css_nssrs_dstrd & 0x000f)));
-	printf("\tTimeout                           (TO): %u ms\n", cap->to * 500);
-	printf("\tArbitration Mechanism Supported  (AMS): Weighted Round Robin with Urgent Priority Class is %s\n",
+	printf("\tNVM Subsystem Reset Supported     (NSSRS): %s\n", (cap->bps_css_nssrs_dstrd & 0x0010) ? "Yes":"No");
+	printf("\tDoorbell Stride                   (DSTRD): %u bytes\n", 1 << (2 + (cap->bps_css_nssrs_dstrd & 0x000f)));
+	printf("\tTimeout                              (TO): %u ms\n", cap->to * 500);
+	printf("\tArbitration Mechanism Supported     (AMS): Weighted Round Robin with Urgent Priority Class is %s\n",
 			(cap->ams_cqr & 0x02) ? "supported":"not supported");
-	printf("\tContiguous Queues Required       (CQR): %s\n", (cap->ams_cqr & 0x01) ? "Yes":"No");
-	printf("\tMaximum Queue Entries Supported (MQES): %u\n\n", cap->mqes + 1);
+	printf("\tContiguous Queues Required	      (CQR): %s\n", (cap->ams_cqr & 0x01) ? "Yes":"No");
+	printf("\tMaximum Queue Entries Supported    (MQES): %u\n\n", cap->mqes + 1);
 }
 
 static void show_registers_version(__u32 vs)
@@ -3073,9 +3320,32 @@ static void show_registers_cmbloc(__u32 cmbloc, __u32 cmbsz)
 		printf("\tController Memory Buffer feature is not supported\n\n");
 		return;
 	}
-	printf("\tOffset                 (OFST): %x (See cmbsz.szu for granularity)\n",
+
+        static const char *enforced[] = { "Enforced", "Not Enforced" };
+
+	printf("\tOffset                                                        (OFST): 0x%x (See cmbsz.szu for granularity)\n",
 			(cmbloc & 0xfffff000) >> 12);
-	printf("\tBase Indicator Register (BIR): %x\n\n", cmbloc & 0x00000007);
+
+	printf("\tCMB Queue Dword Alignment                                     (CQDA): %d\n",
+			(cmbloc & 0x00000100) >> 8);
+
+	printf("\tCMB Data Metadata Mixed Memory Support                      (CDMMMS): %s\n",
+			enforced[(cmbloc & 0x00000080) >> 7]);
+
+	printf("\tCMB Data Pointer and Command Independent Locations Support (CDPCILS): %s\n",
+			enforced[(cmbloc & 0x00000040) >> 6]);
+
+	printf("\tCMB Data Pointer Mixed Locations Support                    (CDPMLS): %s\n",
+			enforced[(cmbloc & 0x00000020) >> 5]);
+
+	printf("\tCMB Queue Physically Discontiguous Support                   (CQPDS): %s\n",
+			enforced[(cmbloc & 0x00000010) >> 4]);
+
+	printf("\tCMB Queue Mixed Memory Support                               (CQMMS): %s\n",
+			enforced[(cmbloc & 0x00000008) >> 3]);
+
+	printf("\tBase Indicator Register                                        (BIR): 0x%x\n\n",
+			(cmbloc & 0x00000007));
 }
 
 static const char *nvme_register_szu_to_string(__u8 szu)
@@ -3167,6 +3437,44 @@ static void show_registers_bpmbl(uint64_t bpmbl)
 	printf("\tBoot Partition Memory Buffer Base Address (BMBBA): %"PRIx64"\n", bpmbl);
 }
 
+static void show_registers_pmrcap(__u32 pmrcap)
+{
+	printf("\tPersistent Memory Region Timeout		    (PMRTO): %x\n", (pmrcap & 0x00ff0000) >> 16);
+	printf("\tPersistent Memory Region Write Barrier Mechanisms(PMRWBM): %x\n", (pmrcap & 0x00003c00) >> 10);
+	printf("\tPersistent Memory Region Time Units		    (PMRTU): PMR time unit is %s\n",
+			(pmrcap & 0x00000300) >> 8 ? "minutes":"500 milliseconds");
+	printf("\tBase Indicator Register			      (BIR): %x\n", (pmrcap & 0x000000e0) >> 5);
+	printf("\tWrite Data Support				      (WDS): Write data to the PMR is %s\n",
+			(pmrcap & 0x00000010) ? "supported":"not supported");
+	printf("\tRead Data Support				      (RDS): Read data from the PMR is %s\n",
+			(pmrcap & 0x00000008) ? "supported":"not supported");
+}
+
+static void show_registers_pmrctl(__u32 pmrctl)
+{
+	printf("\tEnable (EN): PMR is %s\n", (pmrctl & 0x00000001) ? "READY":"Disabled");
+}
+
+static const char *nvme_register_pmr_hsts_to_string(__u8 hsts)
+{
+        switch (hsts) {
+        case 0: return "Normal Operation";
+        case 1: return "Restore Error";
+        case 2: return "Read Only";
+        case 3: return "Unreliable";
+        default: return "Reserved";
+        }
+}
+
+static void show_registers_pmrsts(__u32 pmrsts, __u32 pmrctl)
+{
+	printf("\tHealth Status (HSTS): %s\n", nvme_register_pmr_hsts_to_string((pmrsts & 0x00000e00) >> 9));
+	printf("\tNot Ready	(NRDY): The Persistent Memory Region is %s to process "\
+	       "PCI Express memory read and write requests\n",
+	       (pmrsts & 0x00000100) == 0 && (pmrctl & 0x00000001) ? "READY":"Not Ready");
+	printf("\tError		 (ERR): %x\n", (pmrsts & 0x000000ff));
+}
+
 static inline uint32_t mmio_read32(void *addr)
 {
 	__le32 *p = addr;
@@ -3186,7 +3494,7 @@ void json_ctrl_registers(void *bar)
 {
 	uint64_t cap, asq, acq, bpmbl;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc,
-			bpinfo, bprsel;
+			bpinfo, bprsel, pmrcap, pmrctl, pmrsts;
 	struct json_object *root;
 
 	cap = mmio_read64(bar + NVME_REG_CAP);
@@ -3204,6 +3512,9 @@ void json_ctrl_registers(void *bar)
 	bpinfo = mmio_read32(bar + NVME_REG_BPINFO);
 	bprsel = mmio_read32(bar + NVME_REG_BPRSEL);
 	bpmbl = mmio_read64(bar + NVME_REG_BPMBL);
+	pmrcap = mmio_read32(bar + NVME_REG_PMRCAP);
+	pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
+	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
 
 	root = json_create_object();
 	json_object_add_value_uint(root, "cap", cap);
@@ -3221,6 +3532,9 @@ void json_ctrl_registers(void *bar)
 	json_object_add_value_int(root, "bpinfo", bpinfo);
 	json_object_add_value_int(root, "bprsel", bprsel);
 	json_object_add_value_uint(root, "bpmbl", bpmbl);
+	json_object_add_value_int(root, "pmrcap", pmrcap);
+	json_object_add_value_int(root, "pmrctl", pmrctl);
+	json_object_add_value_int(root, "pmrsts", pmrsts);
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
@@ -3229,7 +3543,8 @@ void json_ctrl_registers(void *bar)
 void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 {
 	uint64_t cap, asq, acq, bpmbl;
-	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc, bpinfo, bprsel;
+	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc, bpinfo,
+		 bprsel, pmrcap, pmrctl, pmrsts;
 
 	int human = mode & HUMAN;
 
@@ -3248,6 +3563,9 @@ void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 	bpinfo = mmio_read32(bar + NVME_REG_BPINFO);
 	bprsel = mmio_read32(bar + NVME_REG_BPRSEL);
 	bpmbl = mmio_read64(bar + NVME_REG_BPMBL);
+	pmrcap = mmio_read32(bar + NVME_REG_PMRCAP);
+	pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
+	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
 
 	if (human) {
 		if (cap != 0xffffffff) {
@@ -3303,6 +3621,15 @@ void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 
 			printf("bpmbl   : %"PRIx64"\n", bpmbl);
 			show_registers_bpmbl(bpmbl);
+
+			printf("pmrcap  : %x\n", pmrcap);
+			show_registers_pmrcap(pmrcap);
+
+			printf("pmrctl  : %x\n", pmrctl);
+			show_registers_pmrctl(pmrctl);
+
+			printf("pmrsts  : %x\n", pmrsts);
+			show_registers_pmrsts(pmrsts, pmrctl);
 		}
 	} else {
 		if (cap != 0xffffffff)
