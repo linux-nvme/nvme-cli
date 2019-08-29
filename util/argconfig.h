@@ -59,6 +59,39 @@ enum argconfig_types {
 	CFG_FILE_RP,
 };
 
+#define OPT_ARGS(n) \
+	const struct argconfig_commandline_options n[]
+
+#define OPT_END() { NULL }
+
+#define OPT_FLAG(l, s, v, d) \
+	{l, s, NULL, CFG_NONE, v, no_argument, d}
+
+#define OPT_SUFFIX(l, s, v, d) \
+	{l, s, "IONUM", CFG_LONG_SUFFIX, v, required_argument, d}
+
+#define OPT_LONG(l, s, v, d) \
+	{l, s, "NUM", CFG_LONG, v, required_argument, d}
+
+#define OPT_UINT(l, s, v, d) \
+	{l, s, "NUM", CFG_POSITIVE, v, required_argument, d}
+
+#define OPT_LONG(l, s, v, d) \
+	{l, s, "NUM", CFG_LONG, v, required_argument, d}
+
+#define OPT_BYTE(l, s, v, d) \
+	{l, s, "NUM", CFG_BYTE, v, required_argument, d}
+
+#define OPT_SHRT(l, s, v, d) \
+	{l, s, "NUM", CFG_SHORT, v, required_argument, d}
+
+#define OPT_STRING(l, s, m, v, d) \
+	{l, s, m, CFG_STRING, v, required_argument, d}
+
+#define OPT_FMT(l, s, v, d)  OPT_STRING(l, s, "FMT", v, d)
+#define OPT_FILE(l, s, v, d) OPT_STRING(l, s, "FILE", v, d)
+#define OPT_LIST(l, s, v, d) OPT_STRING(l, s, "LIST", v, d)
+
 struct argconfig_commandline_options {
 	const char *option;
 	const char short_option;
