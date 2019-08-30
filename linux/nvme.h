@@ -16,7 +16,13 @@
 #define _LINUX_NVME_H
 
 #include <linux/types.h>
-#include <linux/uuid.h>
+#ifdef LIBUUID
+#include <uuid/uuid.h>
+#else
+typedef struct {
+	uint8_t b[16];
+} uuid_t;
+#endif
 
 /* NQN names in commands fields specified one size */
 #define NVMF_NQN_FIELD_LEN	256
