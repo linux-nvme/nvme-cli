@@ -16,7 +16,7 @@
 #define _LINUX_NVME_H
 
 #include <linux/types.h>
-#include <linux/uuid.h>
+#include <linux/uuid.h> ### missing file ###
 
 /* NQN names in commands fields specified one size */
 #define NVMF_NQN_FIELD_LEN	256
