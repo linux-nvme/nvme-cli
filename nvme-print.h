@@ -6,10 +6,10 @@
 #include <inttypes.h>
 
 enum {
-	TERSE = 0x1u,	// only show a few useful fields
-	HUMAN = 0x2u,	// interpret some values for humans
-	VS    = 0x4u,	// print vendor specific data area
-	RAW   = 0x8u,	// just dump raw bytes
+	TERSE = 0x1u,	/* only show a few useful fields */
+	HUMAN = 0x2u,	/* interpret some values for humans */
+	VS    = 0x4u,	/* print vendor specific data area */
+	RAW   = 0x8u,	/* just dump raw bytes */
 };
 
 void d(unsigned char *buf, int len, int width, int group);

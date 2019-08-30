@@ -1,34 +1,34 @@
-////////////////////////////////////////////////////////////////////////
-//
-// Copyright 2014 PMC-Sierra, Inc.
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-////////////////////////////////////////////////////////////////////////
+/*
+ *
+ * Copyright 2014 PMC-Sierra, Inc.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ */
 
-////////////////////////////////////////////////////////////////////////
-//
-//   Author: Logan Gunthorpe <logang@deltatee.com>
-//           Logan Gunthorpe
-//
-//   Date:   Oct 23 2014
-//
-//   Description:
-//     Header file for argconfig.c
-//
-////////////////////////////////////////////////////////////////////////
+/*
+ *
+ *   Author: Logan Gunthorpe <logang@deltatee.com>
+ *           Logan Gunthorpe
+ *
+ *   Date:   Oct 23 2014
+ *
+ *   Description:
+ *     Header file for argconfig.c
+ *
+ */
 
 #ifndef argconfig_H
 #define argconfig_H
@@ -76,8 +76,14 @@ enum argconfig_types {
 #define OPT_UINT(l, s, v, d) \
 	{l, s, "NUM", CFG_POSITIVE, v, required_argument, d}
 
+#define OPT_INT(l, s, v, d) \
+	{l, s, "NUM", CFG_INT, v, required_argument, d}
+
 #define OPT_LONG(l, s, v, d) \
 	{l, s, "NUM", CFG_LONG, v, required_argument, d}
+
+#define OPT_DOUBLE(l, s, v, d) \
+	{l, s, "NUM", CFG_DOUBLE, v, required_argument, d}
 
 #define OPT_BYTE(l, s, v, d) \
 	{l, s, "NUM", CFG_BYTE, v, required_argument, d}
@@ -105,10 +111,6 @@ struct argconfig_commandline_options {
 #define CFG_MAX_SUBOPTS 500
 #define MAX_HELP_FUNC 20
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef void argconfig_help_func();
 void argconfig_append_usage(const char *str);
 void argconfig_print_help(const char *program_desc,
@@ -126,7 +128,4 @@ unsigned argconfig_parse_comma_sep_array_long(char *string,
 void argconfig_register_help_func(argconfig_help_func * f);
 
 void print_word_wrapped(const char *s, int indent, int start);
-#ifdef __cplusplus
-}
-#endif
 #endif

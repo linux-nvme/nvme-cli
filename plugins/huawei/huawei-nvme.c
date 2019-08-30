@@ -37,6 +37,7 @@
 #include "argconfig.h"
 #include "suffix.h"
 #include <sys/ioctl.h>
+
 #define CREATE_CMD
 #include "huawei-nvme.h"
 
@@ -181,7 +182,7 @@ static void huawei_json_print_list_items(struct huawei_list_item *list_items,
 	}
 	json_object_add_value_array(root, "Devices", devices);
 	json_print_object(root, NULL);
-    printf("\n");
+	printf("\n");
 	json_free_object(root);
 }
 
@@ -299,7 +300,7 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	struct dirent **devices;
 	struct huawei_list_item *list_items;
 	unsigned int i, n, fd, ret;
-    unsigned int huawei_num = 0;
+	unsigned int huawei_num = 0;
 	int fmt;
 	const char *desc = "Retrieve basic information for the given huawei device";
 	struct config {
@@ -310,14 +311,14 @@ static int huawei_list(int argc, char **argv, struct command *command,
 		.output_format = "normal",
 	};
 
-	const struct argconfig_commandline_options opts[] = {
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, "Output Format: normal|json"},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json"),
+		OPT_END()
 	};
 
 	argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	fmt = validate_output_format(cfg.output_format);
 
+	fmt = validate_output_format(cfg.output_format);
 	if (fmt != JSON && fmt != NORMAL)
 		return -EINVAL;
 
