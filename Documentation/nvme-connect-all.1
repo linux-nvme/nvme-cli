@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect-all
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/27/2019
+.\"      Date: 08/30/2019
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT\-ALL" "1" "08/27/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT\-ALL" "1" "08/30/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -43,8 +43,8 @@ nvme-connect-all \- Discover and Connect to Fabrics controllers\&.
                 [\-\-keep\-alive\-tmo=<#>     | \-k <#>]
                 [\-\-reconnect\-delay=<#>    | \-c <#>]
                 [\-\-ctrl\-loss\-tmo=<#>      | \-l <#>]
-                [\-\-hdr_digest             | \-g]
-                [\-\-data_digest            | \-G]
+                [\-\-hdr\-digest             | \-g]
+                [\-\-data\-digest            | \-G]
                 [\-\-nr\-io\-queues=<#>       | \-i <#>]
                 [\-\-nr\-write\-queues=<#>    | \-W <#>]
                 [\-\-nr\-poll\-queues=<#>     | \-P <#>]
@@ -144,12 +144,12 @@ Overrides the default delay (in seconds) before reconnect is attempted after a c
 Overrides the default controller loss timeout period (in seconds)\&.
 .RE
 .PP
-\-g, \-\-hdr_digest
+\-g, \-\-hdr\-digest
 .RS 4
 Generates/verifies header digest (TCP)\&.
 .RE
 .PP
-\-G, \-\-data_digest
+\-G, \-\-data\-digest
 .RS 4
 Generates/verifies data digest (TCP)\&.
 .RE
