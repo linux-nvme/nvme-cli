@@ -2,12 +2,12 @@
 .\"     Title: nvme-discover
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/15/2019
+.\"      Date: 08/30/2019
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCOVER" "1" "08/15/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCOVER" "1" "08/30/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -49,6 +49,8 @@ nvme-discover \- Send Get Log Page request to Discovery Controller\&.
                 [\-\-nr\-write\-queues=<#>    | \-W <#>]
                 [\-\-nr\-poll\-queues=<#>     | \-P <#>]
                 [\-\-queue\-size=<#>         | \-Q <#>]
+                [\-\-persistent             | \-p]
+                [\-\-quiet                  | \-S]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -177,6 +179,16 @@ Adds additional queues that will be used for polling latency sensitive I/O\&.
 \-Q <#>, \-\-queue\-size=<#>
 .RS 4
 Overrides the default number of elements in the I/O queues created by the driver which can be found at drivers/nvme/host/fabrics\&.h\&. This option will be ignored for the discovery, and it is only implemented for completeness\&.
+.RE
+.PP
+\-p, \-\-persistent
+.RS 4
+Persistent discovery connection\&.
+.RE
+.PP
+\-S, \-\-quiet
+.RS 4
+Suppress already connected errors\&.
 .RE
 .SH "EXAMPLES"
 .sp

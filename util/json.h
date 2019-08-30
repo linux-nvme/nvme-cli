@@ -52,6 +52,7 @@ struct json_object *json_create_object(void);
 struct json_array *json_create_array(void);
 
 void json_free_object(struct json_object *obj);
+void json_free_array(struct json_array *array);
 
 int json_object_add_value_type(struct json_object *obj, const char *name, int type, ...);
 #define json_object_add_value_int(obj, name, val) \

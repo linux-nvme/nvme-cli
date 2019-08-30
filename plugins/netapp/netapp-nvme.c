@@ -249,7 +249,7 @@ static void netapp_smdevices_print(struct smdevice_info *devices, int count, int
 	char basestr[] = "%s, Array Name %s, Volume Name %s, NSID %d, "
 			"Volume ID %s, Controller %c, Access State %s, %s\n";
 	char columnstr[] = "%-16s %-30s %-30s %4d %32s  %c   %-12s %9s\n";
-	char *formatstr = basestr; // default to "normal" output format
+	char *formatstr = basestr; /* default to "normal" output format */
 
 	if (format == NCOLUMN) {
 		/* for column output, change output string and print column headers */
@@ -401,7 +401,7 @@ static int netapp_smdevices_get_info(int fd, struct smdevice_info *item,
 	}
 
 	if (strncmp("NetApp E-Series", item->ctrl.mn, 15) != 0)
-		return 0; // not the right model of controller
+		return 0; /* not the right model of controller */
 
 	item->nsid = nvme_get_nsid(fd);
 	err = nvme_identify_ns(fd, item->nsid, 0, &item->ns);
@@ -501,22 +501,24 @@ static int netapp_smdevices(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
 	const char *desc = "Display information about E-Series volumes.";
-	struct config {
-		char *output_format;
-	};
-	struct config cfg = {
-		.output_format = "normal",
-	};
+
 	struct dirent **devices;
 	int num, i, fd, ret, fmt;
 	struct smdevice_info *smdevices;
 	char path[264];
 	int num_smdevices = 0;
 
-	const struct argconfig_commandline_options opts[] = {
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format,
-			required_argument, "Output Format: normal|json|column"},
-		{NULL}
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json|column"),
+		OPT_END()
 	};
 
 	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
@@ -571,22 +573,23 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
 	const char *desc = "Display information about ONTAP devices.";
-	struct config {
-		char *output_format;
-	};
-	struct config cfg = {
-		.output_format = "normal",
-	};
 	struct dirent **devices;
 	int num, i, fd, ret, fmt;
 	struct ontapdevice_info *ontapdevices;
 	char path[264];
 	int num_ontapdevices = 0;
 
-	const struct argconfig_commandline_options opts[] = {
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format,
-			required_argument, "Output Format: normal|json|column"},
-		{NULL}
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json|column"),
+		OPT_END()
 	};
 
 	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
