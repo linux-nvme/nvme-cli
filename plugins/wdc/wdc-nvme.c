@@ -1914,7 +1914,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		{"transfer-size", 's', "NUM",  CFG_POSITIVE, &cfg.xfer_size, required_argument, size},
 		{"data-area",     'd', "NUM",  CFG_POSITIVE, &cfg.data_area, required_argument, data_area},
 		{"file-size",     'f', "NUM",  CFG_POSITIVE, &cfg.file_size, required_argument, file_size},
-		{"offset",        't', "NUM",  CFG_POSITIVE, &cfg.offset,    required_argument, offset},
+		{"offset",        't', "NUM",  CFG_LONG,     &cfg.offset,    required_argument, offset},
 		{"verbose",       'v', "",     CFG_NONE,     &cfg.verbose,   no_argument,       verbose},
 		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc},
 	};
