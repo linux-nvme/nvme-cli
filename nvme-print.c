@@ -3961,11 +3961,13 @@ void show_relatives(const char *name)
 	ret = sscanf(name, "nvme%dn%d", &id, &nsid);
 	switch (ret) {
 	case 1:
-		asprintf(&path, "/sys/class/nvme/%s", name);
+		if (asprintf(&path, "/sys/class/nvme/%s", name) < 0)
+			path = NULL;
 		block = false;
 		break;
 	case 2:
-		asprintf(&path, "/sys/block/%s/device", name);
+		if (asprintf(&path, "/sys/block/%s/device", name) < 0)
+			path = NULL;
 		break;
 	default:
 		return;

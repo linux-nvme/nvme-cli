@@ -637,7 +637,8 @@ char *nvme_char_from_block(char *dev)
 		return strdup(dev);
 		break;
 	case 2:
-		asprintf(&path, "/sys/block/%s/device", dev);
+		if (asprintf(&path, "/sys/block/%s/device", dev) < 0)
+			path = NULL;
 		break;
 	default:
 		fprintf(stderr, "%s is not an nvme device\n", dev);
