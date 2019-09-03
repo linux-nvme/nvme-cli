@@ -222,6 +222,22 @@ static void show_nvme_id_ctrl_ctratt(__le32 ctrl_ctratt)
 	printf("\n");
 }
 
+static void show_nvme_id_ctrl_cntrltype(__u8 cntrltype)
+{
+	__u8 rsvd = (cntrltype & 0xFC) >> 2;
+	__u8 cntrl = cntrltype & 0x3;
+
+	static const char *type[] = {
+		"Controller type not reported",
+		"I/O Controller",
+		"Discovery Controller",
+		"Administrative Controller"
+	};
+
+	printf("  [7:2] : %#x\tReserved\n", rsvd);
+	printf("  [1:0] : %#x\t%s\n", cntrltype, type[cntrl]);
+}
+
 static void show_nvme_id_ctrl_oacs(__le16 ctrl_oacs)
 {
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
@@ -280,13 +296,16 @@ static void show_nvme_id_ctrl_frmw(__u8 frmw)
 
 static void show_nvme_id_ctrl_lpa(__u8 lpa)
 {
-	__u8 rsvd = (lpa & 0xF0) >> 4;
+	__u8 rsvd = (lpa & 0xE0) >> 5;
+	__u8 persevnt = (lpa & 0x10) >> 4;
 	__u8 telem = (lpa & 0x8) >> 3;
 	__u8 ed = (lpa & 0x4) >> 2;
 	__u8 celp = (lpa & 0x2) >> 1;
 	__u8 smlp = lpa & 0x1;
 	if (rsvd)
 		printf("  [7:4] : %#x\tReserved\n", rsvd);
+	printf("  [4:4] : %#x\tPersistent Event log %sSupported\n",
+			persevnt, persevnt ? "" : "Not ");
 	printf("  [3:3] : %#x\tTelemetry host/controller initiated log page %sSupported\n",
 	       telem, telem ? "" : "Not ");
 	printf("  [2:2] : %#x\tExtended data for Get Log Page %sSupported\n",
@@ -496,10 +515,20 @@ static void show_nvme_id_ctrl_fna(__u8 fna)
 
 static void show_nvme_id_ctrl_vwc(__u8 vwc)
 {
-	__u8 rsvd = (vwc & 0xFE) >> 1;
+	__u8 rsvd = (vwc & 0xF8) >> 3;
+	__u8 flush = (vwc & 0x6) >> 1;
 	__u8 vwcp = vwc & 0x1;
+
+	static const char *flush_behavior[] = {
+		"Support for the NSID field set to FFFFFFFFh is not indicated",
+		"Reserved",
+		"The Flush command does not support NSID set to FFFFFFFFh",
+		"The Flush command supports NSID set to FFFFFFFFh"
+	};
+
 	if (rsvd)
 		printf("  [7:3] : %#x\tReserved\n", rsvd);
+	printf("  [2:1] : %#x\t%s\n", flush, flush_behavior[flush]);
 	printf("  [0:0] : %#x\tVolatile Write Cache %sPresent\n",
 		vwcp, vwcp ? "" : "Not ");
 	printf("\n");
@@ -1075,7 +1104,9 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 	if (human)
 		show_nvme_id_ctrl_ctratt(ctrl->ctratt);
 	printf("rrls      : %#x\n", le16_to_cpu(ctrl->rrls));
-
+	printf("cntrltype : %d\n", ctrl->cntrltype);
+		show_nvme_id_ctrl_cntrltype(ctrl->cntrltype);
+	printf("fguid     : %-.*s\n", (int)sizeof(ctrl->fguid), ctrl->fguid);
 	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
 	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
 	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));
@@ -1124,12 +1155,14 @@ void __show_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode, void (*ve
 	printf("hmminds   : %d\n", le32_to_cpu(ctrl->hmminds));
 	printf("hmmaxd    : %d\n", le16_to_cpu(ctrl->hmmaxd));
 	printf("nsetidmax : %d\n", le16_to_cpu(ctrl->nsetidmax));
+	printf("endgidmax : %d\n", le16_to_cpu(ctrl->endgidmax));
 	printf("anatt     : %d\n", ctrl->anatt);
 	printf("anacap    : %d\n", ctrl->anacap);
 	if (human)
 		show_nvme_id_ctrl_anacap(ctrl->anacap);
 	printf("anagrpmax : %d\n", ctrl->anagrpmax);
 	printf("nanagrpid : %d\n", le32_to_cpu(ctrl->nanagrpid));
+	printf("pels      : %d\n", le32_to_cpu(ctrl->pels));
 	printf("sqes      : %#x\n", ctrl->sqes);
 	if (human)
 		show_nvme_id_ctrl_sqes(ctrl->sqes);
