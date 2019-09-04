@@ -24,6 +24,14 @@
 
 #define unlikely(x) x
 
+#ifdef LIBUUID
+#include <uuid/uuid.h>
+#else
+typedef struct {
+	uint8_t b[16];
+} uuid_t;
+#endif
+
 #include "linux/nvme.h"
 
 struct nvme_effects_log_page {
