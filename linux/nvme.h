@@ -17,7 +17,7 @@
 
 #include <linux/types.h>
 #ifdef LIBUUID
-#include <linux/uuid.h>
+#include <uuid/uuid.h>
 #else
 typedef struct {
 	uint8_t b[16];
