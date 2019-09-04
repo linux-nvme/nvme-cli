@@ -2539,10 +2539,12 @@ static void show_detailed_list(struct nvme_topology *t)
 			for (k = 0; k < c->nr_namespaces; k++) {
 				struct nvme_namespace *n = &c->namespaces[k];
 				printf("%s%s", comma ? ", " : "", n->name);
+				comma = true;
 			}
 			for (k = 0; k < s->nr_namespaces; k++) {
 				struct nvme_namespace *n = &s->namespaces[k];
 				printf("%s%s", comma ? ", " : "", n->name);
+				comma = true;
 			}
 			printf("\n");
 		}
