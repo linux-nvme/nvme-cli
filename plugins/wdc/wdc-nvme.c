@@ -91,7 +91,7 @@
 #define WDC_DRIVE_CAP_PFAIL_DUMP			0x0000000000001000
 
 
-#define WDC_DRIVE_CAP_DRIVE_ESSENTIALS			0x0000000100000000
+#define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
 #define WDC_SN730B_CAP_VUC_LOG				0x0000000400000000
 #define WDC_DRIVE_CAP_SN340_DUI				0x0000000800000000
@@ -1369,6 +1369,12 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 
 			total_size = log_size;
 
+			if (offset >= total_size) {
+				fprintf(stderr, "%s: INFO : WDC : Offset 0x%llx exceeds total size 0x%llx, no data retrieved\n",
+					__func__, offset, total_size);
+				goto out;
+			}
+
 			dump_data = (__u8 *) malloc(sizeof (__u8) * xfer_size_long);
 			if (dump_data == NULL) {
 				fprintf(stderr, "%s: ERROR : dump data V2 malloc failed : status %s, size = 0x%lx\n",
@@ -1383,7 +1389,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
 						__func__, file, strerror(errno));
 				ret = output;
-				goto out;
+				goto free_mem;
 			}
 
 			if (file_size == 0) {
@@ -1396,42 +1402,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 
 				log_size -= WDC_NVME_CAP_DUI_HEADER_SIZE;
 				curr_data_offset = WDC_NVME_CAP_DUI_HEADER_SIZE;
-				i = 0;
-				buffer_addr = (__u64)(uintptr_t)dump_data;
-
-				for(; log_size > 0; log_size -= xfer_size_long) {
-					xfer_size_long = min(xfer_size_long, log_size);
-
-					if (log_size <= xfer_size_long)
-						last_xfer = true;
-
-					ret = wdc_dump_dui_data_v2(fd, (__u32)xfer_size_long, curr_data_offset, (__u8 *)buffer_addr, last_xfer);
-					if (ret != 0) {
-						fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%lx, offset = 0x%lx, addr = 0x%lx\n",
-								__func__, i, (long unsigned int)total_size, (long unsigned int)curr_data_offset, (long unsigned int)buffer_addr);
-						fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
-						break;
-					}
-
-					/* write the dump data into the file */
-					err = write(output, (void *)buffer_addr, xfer_size_long);
-					if (err != xfer_size_long) {
-						fprintf(stderr, "%s: ERROR : WDC : Failed to flush DUI data to file! chunk %d, err = 0x%x, xfer_size = 0x%lx\n",
-								__func__, i, err, (long unsigned int)xfer_size_long);
-						goto free_mem;
-					}
-
-					curr_data_offset += xfer_size_long;
-					i++;
-				}
 			} else {
 				/* Write the DUI data based on the passed in file size */
-				if (offset >= total_size) {
-					fprintf(stderr, "%s: INFO : WDC : Offset 0x%llx exceeds total size 0x%llx, no data retrieved\n",
-						__func__, offset, total_size);
-					goto free_mem;
-				}
-
 				if ((offset + file_size) > total_size)
 					log_size = min((total_size - offset), file_size);
 				else
@@ -1456,34 +1428,35 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				} else {
 					curr_data_offset = offset;
 				}
+			}
 
-				i = 0;
-				buffer_addr = (__u64)(uintptr_t)dump_data;
-				for(; log_size > 0; log_size -= xfer_size_long) {
-					xfer_size_long = min(xfer_size_long, log_size);
+			i = 0;
+			buffer_addr = (__u64)(uintptr_t)dump_data;
 
-					if (log_size <= xfer_size_long)
-						last_xfer = true;
+			for(; log_size > 0; log_size -= xfer_size_long) {
+				xfer_size_long = min(xfer_size_long, log_size);
 
-					ret = wdc_dump_dui_data_v2(fd, (__u32)xfer_size_long, curr_data_offset, (__u8 *)buffer_addr, last_xfer);
-					if (ret != 0) {
-						fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%lx, offset = 0x%lx, addr = 0x%lx\n",
-								__func__, i, (long unsigned int)total_size, (long unsigned int)curr_data_offset, (long unsigned int)buffer_addr);
-						fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
-						break;
-					}
+				if (log_size <= xfer_size_long)
+					last_xfer = true;
 
-					/* write the dump data into the file */
-					err = write(output, (void *)buffer_addr, xfer_size_long);
-					if (err != xfer_size_long) {
-						fprintf(stderr, "%s: ERROR : WDC : Failed to flush DUI data to file! chunk %d, err = 0x%x, xfer_size = 0x%lx\n",
-								__func__, i, err, (long unsigned int)xfer_size_long);
-						goto free_mem;
-					}
-
-					curr_data_offset += xfer_size_long;
-					i++;
+				ret = wdc_dump_dui_data_v2(fd, (__u32)xfer_size_long, curr_data_offset, (__u8 *)buffer_addr, last_xfer);
+				if (ret != 0) {
+					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%lx, offset = 0x%lx, addr = 0x%lx\n",
+							__func__, i, (long unsigned int)total_size, (long unsigned int)curr_data_offset, (long unsigned int)buffer_addr);
+					fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+					break;
 				}
+
+				/* write the dump data into the file */
+				err = write(output, (void *)buffer_addr, xfer_size_long);
+				if (err != xfer_size_long) {
+					fprintf(stderr, "%s: ERROR : WDC : Failed to flush DUI data to file! chunk %d, err = 0x%x, xfer_size = 0x%lx\n",
+							__func__, i, err, (long unsigned int)xfer_size_long);
+					goto free_mem;
+				}
+
+				curr_data_offset += xfer_size_long;
+				i++;
 			}
 		}
 	} else	{
@@ -1500,13 +1473,13 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 		} else {
 			/* parse log header for all sections up to specified data area inclusively */
 			if (data_area != WDC_NVME_DUI_MAX_DATA_AREA) {
-				for(int i = 0; i < WDC_NVME_DUI_MAX_SECTION; i++) {
-					if (log_hdr->log_section[i].data_area_id <= data_area &&
-							log_hdr->log_section[i].data_area_id != 0) {
-						log_size += log_hdr->log_section[i].section_size;
+				for(j = 0; j < WDC_NVME_DUI_MAX_SECTION; j++) {
+					if (log_hdr->log_section[j].data_area_id <= data_area &&
+							log_hdr->log_section[j].data_area_id != 0) {
+						log_size += log_hdr->log_section[j].section_size;
 						if (verbose)
 							fprintf(stderr, "%s: Data area ID %d : section size 0x%x, total size = 0x%x\n",
-								__func__, log_hdr->log_section[i].data_area_id, (unsigned int)log_hdr->log_section[i].section_size, (unsigned int)log_size);
+								__func__, log_hdr->log_section[j].data_area_id, (unsigned int)log_hdr->log_section[j].section_size, (unsigned int)log_size);
 
 					}
 					else {
@@ -2733,6 +2706,7 @@ static void wdc_print_d0_log_json(struct wdc_ssd_d0_smart_log *perf)
 	printf("\n");
 	json_free_object(root);
 }
+
 
 static int wdc_print_ca_log(struct wdc_ssd_ca_perf_stats *perf, int fmt)
 {
