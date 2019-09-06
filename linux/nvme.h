@@ -16,7 +16,15 @@
 #define _LINUX_NVME_H
 
 #include <linux/types.h>
-#include <linux/uuid.h>
+
+#ifdef LIBUUID
+#include <uuid/uuid.h>
+#else
+typedef struct {
+	uint8_t b[16];
+} uuid_t;
+#endif
+
 
 /* NQN names in commands fields specified one size */
 #define NVMF_NQN_FIELD_LEN	256
@@ -224,7 +232,9 @@ struct nvme_id_ctrl {
 	__le32			oaes;
 	__le32			ctratt;
 	__le16			rrls;
-	__u8			rsvd102[26];
+	__u8			rsvd102[9];
+	__u8			cntrltype;
+	char			fguid[16];
 	__le16			crdt1;
 	__le16			crdt2;
 	__le16			crdt3;
@@ -257,12 +267,13 @@ struct nvme_id_ctrl {
 	__le32			hmminds;
 	__le16			hmmaxd;
 	__le16			nsetidmax;
-	__u8			rsvd340[2];
+	__le16			endgidmax;
 	__u8			anatt;
 	__u8			anacap;
 	__le32			anagrpmax;
 	__le32			nanagrpid;
-	__u8			rsvd352[160];
+	__le32			pels;
+	__u8			rsvd356[156];
 	__u8			sqes;
 	__u8			cqes;
 	__le16			maxcmd;

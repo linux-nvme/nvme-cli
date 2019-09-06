@@ -230,7 +230,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	const char *desc = "Get Intel vendor specific additional smart log (optionally, "\
 		      "for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
-	const char *raw = "dump output in binary format";
+	const char *raw = "Dump output in binary format";
 	const char *json= "Dump output in json format";
 	struct config {
 		__u32 namespace_id;
@@ -242,14 +242,14 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 		.namespace_id = NVME_NSID_ALL,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
-		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw},
-		{"json",         'j', "",    CFG_NONE,     &cfg.json,         no_argument,       json},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
+		OPT_FLAG("json",         'j', &cfg.json,         json),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
 	if (fd < 0)
 		return fd;
 
@@ -283,12 +283,12 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 	struct config cfg = {
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
 	if (fd < 0)
 		return fd;
 
@@ -304,7 +304,6 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 					nvme_status_to_string(err), err);
 	return err;
 }
-
 
 struct intel_temp_stats {
 	__le64	curr;
@@ -346,12 +345,12 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	struct config cfg = {
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
 	if (fd < 0)
 		return fd;
 
@@ -414,13 +413,13 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	struct config cfg = {
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"write",      'w', "", CFG_NONE, &cfg.write,      no_argument, write},
-		{"raw-binary", 'b', "", CFG_NONE, &cfg.raw_binary, no_argument, raw},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_FLAG("write",      'w', &cfg.write,      write),
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
 	if (fd < 0)
 		return fd;
 
@@ -643,7 +642,7 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 {
 	__u8 buf[0x2000];
 	char f[0x100];
-	int err, fd, output, i, j, count = 0, core_num = 1;//, remainder;
+	int err, fd, output, i, j, count = 0, core_num = 1;
 	struct nvme_passthru_cmd cmd;
 	struct intel_cd_log cdlog;
 	struct intel_vu_log *intel = malloc(sizeof(struct intel_vu_log));
@@ -675,17 +674,17 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 		.core = -1
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"log",          'l', "NUM",  CFG_POSITIVE, &cfg.log,          required_argument, log},
-		{"region",       'r', "NUM",  CFG_INT,      &cfg.core,         required_argument, core},
-		{"nlognum",      'm', "NUM",  CFG_INT,      &cfg.lnum,         required_argument, nlognum},
-		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
-		{"output-file",  'o', "FILE", CFG_STRING,   &cfg.file,         required_argument, file},
-		{"verbose_nlog", 'v', ""    , CFG_NONE,     &cfg.verbose,      no_argument,       verbose},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_UINT("log",          'l', &cfg.log,          log),
+		OPT_INT("region",        'r', &cfg.core,         core),
+		OPT_INT("nlognum",       'm', &cfg.lnum,         nlognum),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_FILE("output-file",  'o', &cfg.file,         file),
+		OPT_FLAG("verbose-nlog", 'v', &cfg.verbose,      verbose),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
 	if (fd < 0) {
 		free(intel);
 		return fd;
@@ -810,5 +809,4 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 		printf("Successfully wrote log to %s\n", cfg.file);
 	free(intel);
 	return err;
-
 }

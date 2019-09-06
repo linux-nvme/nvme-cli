@@ -20,6 +20,8 @@ ifeq ($(LIBUUID),0)
 	override LIB_DEPENDS += uuid
 endif
 
+INC=-Iutil
+
 RPMBUILD = rpmbuild
 TAR = tar
 RM = rm -f
@@ -35,9 +37,11 @@ override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
 
 NVME_DPKG_VERSION=1~`lsb_release -sc`
 
-OBJS := argconfig.o suffix.o parser.o nvme-print.o nvme-ioctl.o \
-	nvme-lightnvm.o fabrics.o json.o nvme-models.o plugin.o \
-	nvme-status.o
+OBJS := nvme-print.o nvme-ioctl.o \
+	nvme-lightnvm.o fabrics.o nvme-models.o plugin.o \
+	nvme-status.o nvme-filters.o nvme-topology.o
+
+UTIL_OBJS := util/argconfig.o util/suffix.o util/json.o util/parser.o
 
 PLUGIN_OBJS :=					\
 	plugins/intel/intel-nvme.o		\
@@ -53,17 +57,17 @@ PLUGIN_OBJS :=					\
 	plugins/virtium/virtium-nvme.o		\
 	plugins/shannon/shannon-nvme.o
 
-nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) NVME-VERSION-FILE
-	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(LDFLAGS)
+nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) nvme.c -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)
 
 verify-no-dep: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
 	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $@ $(OBJS) $(LDFLAGS)
 
-nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h argconfig.h suffix.h nvme-lightnvm.h fabrics.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
+nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h util/argconfig.h util/suffix.h nvme-lightnvm.h fabrics.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -c $<
 
-%.o: %.c %.h nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h argconfig.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
+%.o: %.c %.h nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
 
 doc: $(NVME)
 	$(MAKE) -C Documentation
@@ -74,7 +78,7 @@ test:
 all: doc
 
 clean:
-	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
+	$(RM) $(NVME) $(OBJS) $(notdir $(PLUGIN_OBJS) $(UTIL_OBJS)) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
 	$(MAKE) -C Documentation clean
 	$(RM) tests/*.pyc
 	$(RM) verify-no-dep

@@ -64,8 +64,8 @@ typedef struct _UtilsTimeInfo
 	unsigned int minute;
 	unsigned int second;
 	unsigned int msecs;
-	unsigned char isDST; //0 or 1
-    int      zone; // Zone value like +530 or -300
+	unsigned char isDST; /*0 or 1 */
+    int      zone; /* Zone value like +530 or -300 */
 } UtilsTimeInfo, *PUtilsTimeInfo;
 
 int wdc_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer, const char *format, ...);

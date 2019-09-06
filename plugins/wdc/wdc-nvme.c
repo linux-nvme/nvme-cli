@@ -701,6 +701,7 @@ static int wdc_get_pci_ids(uint32_t *device_id, uint32_t *vendor_id)
 close_fd:
 	close(fd);
 free_id:
+	free(block);
 	free(id);
 	return ret;
 }
@@ -1178,7 +1179,7 @@ static int wdc_do_dump(int fd, __u32 opcode,__u32 data_len,
 		if ((curr_data_offset + xfer_size) <= data_len)
 			curr_data_len = xfer_size;
 		else
-			curr_data_len = data_len - curr_data_offset;   // last transfer
+			curr_data_len = data_len - curr_data_offset;   /* last transfer */
 
 		curr_data_offset += curr_data_len;
 		admin_cmd.addr = (__u64)(uintptr_t)dump_data + (__u64)curr_data_offset;
@@ -1584,22 +1585,20 @@ static int wdc_cap_diag(int argc, char **argv, struct command *command,
 		.xfer_size = 0x10000
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-			{"output-file", 'o', "FILE", CFG_STRING, &cfg.file, required_argument, file},
-			{"transfer-size", 's', "NUM", CFG_POSITIVE, &cfg.xfer_size, required_argument, size},
-			{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc},
+	OPT_ARGS(opts) = {
+		OPT_FILE("output-file",   'o', &cfg.file,      file),
+		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
 	if (fd < 0)
 		return fd;
 
-	if (cfg.file != NULL) {
+	if (cfg.file != NULL)
 		strncpy(f, cfg.file, PATH_MAX - 1);
-	}
-	if (cfg.xfer_size != 0) {
+	if (cfg.xfer_size != 0)
 		xfer_size = cfg.xfer_size;
-	}
 	if (wdc_get_serial_name(fd, f, PATH_MAX, "cap_diag") == -1) {
 		fprintf(stderr, "ERROR : WDC: failed to generate file name\n");
 		return -1;
@@ -1608,11 +1607,10 @@ static int wdc_cap_diag(int argc, char **argv, struct command *command,
 		snprintf(f + strlen(f), PATH_MAX, "%s", ".bin");
 
 	capabilities = wdc_get_drive_capabilities(fd);
-	if ((capabilities & WDC_DRIVE_CAP_CAP_DIAG) == WDC_DRIVE_CAP_CAP_DIAG) {
+	if ((capabilities & WDC_DRIVE_CAP_CAP_DIAG) == WDC_DRIVE_CAP_CAP_DIAG)
 		return wdc_do_cap_diag(fd, f, xfer_size);
-	} else
-		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
 
+	fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
 	return 0;
 }
 
@@ -1882,17 +1880,17 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		.verbose = 0,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"output-file",   'o', "FILE", CFG_STRING,   &cfg.file,      required_argument, file},
-		{"transfer-size", 's', "NUM",  CFG_POSITIVE, &cfg.xfer_size, required_argument, size},
-		{"data-area",     'd', "NUM",  CFG_POSITIVE, &cfg.data_area, required_argument, data_area},
-		{"file-size",     'f', "NUM",  CFG_POSITIVE, &cfg.file_size, required_argument, file_size},
-		{"offset",        't', "NUM",  CFG_LONG,     &cfg.offset,    required_argument, offset},
-		{"verbose",       'v', "",     CFG_NONE,     &cfg.verbose,   no_argument,       verbose},
-		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc},
+	OPT_ARGS(opts) = {
+		OPT_FILE("output-file",   'o', &cfg.file,      file),
+		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
+		OPT_UINT("data-area",     'd', &cfg.data_area, data_area),
+		OPT_UINT("file-size",     'f', &cfg.file-size, file-size),
+		OPT_LONG("offset",        't', &cfg.offset,    offset),
+		OPT_FLAG("verbose",       'v', &cfg.verbose,   verbose),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
 	if (fd < 0)
 		return fd;
 
@@ -1929,6 +1927,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 			return -1;
 		}
 	}
+
 	if (cfg.file == NULL)
 		snprintf(f + strlen(f), PATH_MAX, "%s", ".bin");
 	fprintf(stderr, "%s: filename = %s\n", __func__, f);
@@ -1939,19 +1938,18 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 	}
 
 	capabilities = wdc_get_drive_capabilities(fd);
-	if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG) {
+	if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG)
 		return wdc_do_cap_diag(fd, f, xfer_size);
-	} else if ((capabilities & WDC_DRIVE_CAP_SN340_DUI) == WDC_DRIVE_CAP_SN340_DUI) {
+	if ((capabilities & WDC_DRIVE_CAP_SN340_DUI) == WDC_DRIVE_CAP_SN340_DUI)
 		return wdc_do_cap_dui(fd, f, xfer_size, cfg.data_area, cfg.verbose, cfg.file_size, cfg.offset);
-	} else if ((capabilities & WDC_DRIVE_CAP_DUI_DATA) == WDC_DRIVE_CAP_DUI_DATA) {
+	if ((capabilities & WDC_DRIVE_CAP_DUI_DATA) == WDC_DRIVE_CAP_DUI_DATA)
 		//return wdc_do_cap_dui(fd, f, xfer_size, WDC_NVME_DUI_MAX_DATA_AREA, cfg.verbose, 0, 0);
 		return wdc_do_cap_dui(fd, f, xfer_size, cfg.data_area, cfg.verbose, cfg.file_size, cfg.offset);
-	} else if ((capabilities & WDC_SN730B_CAP_VUC_LOG) == WDC_SN730B_CAP_VUC_LOG) {
+	if ((capabilities & WDC_SN730B_CAP_VUC_LOG) == WDC_SN730B_CAP_VUC_LOG)
 		return wdc_do_sn730_get_and_tar(fd, f);
-	} else {
-		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
-		return -1;
-	}
+
+	fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+	return -1;
 }
 
 static int wdc_do_crash_dump(int fd, char *file, int type)
@@ -2104,12 +2102,12 @@ static int wdc_drive_log(int argc, char **argv, struct command *command,
 		.file = NULL
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"output-file", 'o', "FILE", CFG_STRING, &cfg.file, required_argument, file},
-		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc},
+	OPT_ARGS(opts) = {
+		OPT_FILE("output-file", 'o', &cfg.file, file),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
 	if (fd < 0)
 		return fd;
 
@@ -2138,9 +2136,9 @@ static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
 {
 	const char *desc = "Get Crash Dump.";
 	const char *file = "Output file pathname.";
-	int fd;
-	int ret;
+	int fd, ret;
 	__u64 capabilities = 0;
+
 	struct config {
 		char *file;
 	};
@@ -2149,12 +2147,12 @@ static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
 		.file = NULL,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"output-file", 'o', "FILE", CFG_STRING, &cfg.file, required_argument, file},
-		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc},
+	OPT_ARGS(opts) = {
+		OPT_FILE("output-file", 'o', &cfg.file, file),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
 	if (fd < 0)
 		return fd;
 
@@ -2191,19 +2189,19 @@ static int wdc_get_pfail_dump(int argc, char **argv, struct command *command,
 		.file = NULL,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"output-file", 'o', "FILE", CFG_STRING, &cfg.file, required_argument, file},
-		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc},
+	OPT_ARGS(opts) = {
+		OPT_FILE("output-file", 'o', &cfg.file, file),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
 	if (fd < 0)
 		return fd;
 
 	if (!wdc_check_device(fd))
 		return -1;
-	capabilities = wdc_get_drive_capabilities(fd);
 
+	capabilities = wdc_get_drive_capabilities(fd);
 	if ((capabilities & WDC_DRIVE_CAP_PFAIL_DUMP) == 0) {
 		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
 		ret = -1;
@@ -2213,6 +2211,7 @@ static int wdc_get_pfail_dump(int argc, char **argv, struct command *command,
 			fprintf(stderr, "ERROR : WDC : failed to read pfail crash dump\n");
 		}
 	}
+
 	return ret;
 }
 
@@ -2269,23 +2268,24 @@ static int wdc_purge(int argc, char **argv,
 {
 	const char *desc = "Send a Purge command.";
 	char *err_str;
-	int fd;
-	int ret;
+	int fd, ret;
 	struct nvme_passthru_cmd admin_cmd;
-	const struct argconfig_commandline_options command_line_options[] = {
-		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc },
+
+	OPT_ARGS(opts) = {
+		OPT_END()
 	};
 
 	err_str = "";
 	memset(&admin_cmd, 0, sizeof (admin_cmd));
 	admin_cmd.opcode = WDC_NVME_PURGE_CMD_OPCODE;
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
 	if (fd < 0)
 		return fd;
 
 	if (!wdc_check_device(fd))
 		return -1;
+
 	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
 	if (ret > 0) {
 		switch (ret) {
@@ -2300,6 +2300,7 @@ static int wdc_purge(int argc, char **argv,
 			err_str = "ERROR : WDC\n";
 		}
 	}
+
 	fprintf(stderr, "%s", err_str);
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;
@@ -2309,14 +2310,14 @@ static int wdc_purge_monitor(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Send a Purge Monitor command.";
-	int fd;
-	int ret;
+	int fd, ret;
 	__u8 output[WDC_NVME_PURGE_MONITOR_DATA_LEN];
 	double progress_percent;
 	struct nvme_passthru_cmd admin_cmd;
 	struct wdc_nvme_purge_monitor_data *mon;
-	const struct argconfig_commandline_options command_line_options[] = {
-		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc },
+
+	OPT_ARGS(opts) = {
+		OPT_END()
 	};
 
 	memset(output, 0, sizeof (output));
@@ -2327,12 +2328,13 @@ static int wdc_purge_monitor(int argc, char **argv,
 	admin_cmd.cdw10 = WDC_NVME_PURGE_MONITOR_CMD_CDW10;
 	admin_cmd.timeout_ms = WDC_NVME_PURGE_MONITOR_TIMEOUT;
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
 	if (fd < 0)
 		return fd;
 
 	if (!wdc_check_device(fd))
 		return -1;
+
 	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
 	if (ret == 0) {
 		mon = (struct wdc_nvme_purge_monitor_data *) output;
@@ -2345,6 +2347,7 @@ static int wdc_purge_monitor(int argc, char **argv,
 			printf("Purge Progress = %f%%\n", progress_percent);
 		}
 	}
+
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;
 }
@@ -2910,13 +2913,13 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 		.output_format = "normal",
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"interval", 'i', "NUM", CFG_POSITIVE, &cfg.interval, required_argument, interval},
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, "Output Format: normal|json" },
-		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc },
+	OPT_ARGS(opts) = {
+		OPT_UINT("interval", 'i', &cfg.interval, interval),
+		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json"),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
 	if (fd < 0)
 		return fd;
 
@@ -2929,19 +2932,19 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 	}
 
 	if ((capabilities & (WDC_DRIVE_CAP_CA_LOG_PAGE)) == (WDC_DRIVE_CAP_CA_LOG_PAGE)) {
-		// Get the CA Log Page
+		/* Get the CA Log Page */
 		ret = wdc_get_ca_log_page(fd, cfg.output_format);
 		if (ret)
 			fprintf(stderr, "ERROR : WDC : Failure reading the CA Log Page, ret = %d\n", ret);
 	}
 	if ((capabilities & WDC_DRIVE_CAP_C1_LOG_PAGE) == WDC_DRIVE_CAP_C1_LOG_PAGE) {
-		// Get the C1 Log Page
+		/* Get the C1 Log Page */
 		ret = wdc_get_c1_log_page(fd, cfg.output_format, cfg.interval);
 		if (ret)
 			fprintf(stderr, "ERROR : WDC : Failure reading the C1 Log Page, ret = %d\n", ret);
 	}
 	if ((capabilities & WDC_DRIVE_CAP_D0_LOG_PAGE) == WDC_DRIVE_CAP_D0_LOG_PAGE) {
-		// Get the D0 Log Page
+		/* Get the D0 Log Page */
 		ret = wdc_get_d0_log_page(fd, cfg.output_format);
 		if (ret)
 			fprintf(stderr, "ERROR : WDC : Failure reading the D0 Log Page, ret = %d\n", ret);
@@ -2954,15 +2957,15 @@ static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct comma
 		struct plugin *plugin)
 {
 	char *desc = "Clear PCIE Correctable Errors.";
-	int fd;
-	int ret;
+	int fd, ret;
 	__u64 capabilities = 0;
 	struct nvme_passthru_cmd admin_cmd;
-	const struct argconfig_commandline_options command_line_options[] = {
-		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc },
+
+	OPT_ARGS(opts) = {
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
 	if (fd < 0)
 		return fd;
 
@@ -3002,11 +3005,11 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 	__le32 thermal_status = cpu_to_le32(0xFFFFFFFF);
 	__u64 capabilities = 0;
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc },
+	OPT_ARGS(opts) = {
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
 	if (fd < 0)
 		return fd;
 
@@ -3109,13 +3112,14 @@ static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
 	int fd;
 	int ret = -1;
 	__le32 assert_status = cpu_to_le32(0xFFFFFFFF);
-	struct nvme_passthru_cmd admin_cmd;
-	const struct argconfig_commandline_options command_line_options[] = {
-		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc },
-	};
 	__u64 capabilities = 0;
+	struct nvme_passthru_cmd admin_cmd;
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
 	if (fd < 0)
 		return fd;
 
@@ -3335,57 +3339,58 @@ static int wdc_fetch_log_directory(int fd, PWDC_DE_VU_LOG_DIRECTORY directory)
 	__u32           entryId = 0;
 	__u32           fileDirectorySize = 0;
 
-	if (!fd || !directory)
-	{
+	if (!fd || !directory) {
 		ret = WDC_STATUS_INVALID_PARAMETER;
 		goto end;
 	}
 
-	if (WDC_STATUS_SUCCESS != (ret = wdc_de_VU_read_size(fd, 0, 5, &fileDirectorySize)))
-	{
-		fprintf(stderr, "ERROR : WDC : %s: Failed to get filesystem directory size, ret = %d\n",
-				__func__, ret);
+	ret = wdc_de_VU_read_size(fd, 0, 5, &fileDirectorySize);
+	if (WDC_STATUS_SUCCESS != ret) {
+		fprintf(stderr,
+			"ERROR : WDC : %s: Failed to get filesystem directory size, ret = %d\n",
+			__func__, ret);
 		goto end;
 	}
 
 	fileDirectory = (__u8*)calloc(1, fileDirectorySize);
-	if (WDC_STATUS_SUCCESS != (ret = wdc_de_VU_read_buffer(fd, 0, 5, 0, fileDirectory, &fileDirectorySize)))
-	{
-		fprintf(stderr, "ERROR : WDC : %s: Failed to get filesystem directory, ret = %d\n",
-				__func__, ret);
+	ret = wdc_de_VU_read_buffer(fd, 0, 5, 0, fileDirectory, &fileDirectorySize);
+	if (WDC_STATUS_SUCCESS != ret) {
+		fprintf(stderr,
+			"ERROR : WDC : %s: Failed to get filesystem directory, ret = %d\n",
+			__func__, ret);
 		goto end;
 	}
 
 	/* First four bytes of header directory is headerSize */
 	memcpy(&headerSize, fileDirectory, WDC_DE_FILE_HEADER_SIZE);
 
-	if (directory->maxNumLogEntries == 0) //minimum buffer for 1 entry is required
-	{
+	/* minimum buffer for 1 entry is required */
+	if (directory->maxNumLogEntries == 0) {
 		ret = WDC_STATUS_INVALID_PARAMETER;
 		goto end;
 	}
 
-	for (fileNum = 0; fileNum < (headerSize - WDC_DE_FILE_HEADER_SIZE) / WDC_DE_FILE_OFFSET_SIZE; fileNum++)
-	{
+	for (fileNum = 0;
+	     fileNum < (headerSize - WDC_DE_FILE_HEADER_SIZE) / WDC_DE_FILE_OFFSET_SIZE;
+	     fileNum++) {
 		if (entryId >= directory->maxNumLogEntries)
 			break;
+
 		startIdx = WDC_DE_FILE_HEADER_SIZE + (fileNum * WDC_DE_FILE_OFFSET_SIZE);
 		memcpy(&fileOffsetTemp, fileDirectory + startIdx, sizeof(fileOffsetTemp));
 		fileOffset = fileDirectory + fileOffsetTemp;
 
 		if (0 == fileOffsetTemp)
-		{
 			continue;
-		}
 
 		memset(&directory->logEntry[entryId], 0, sizeof(WDC_DRIVE_ESSENTIALS));
 		memcpy(&directory->logEntry[entryId].metaData, fileOffset, sizeof(WDC_DE_VU_FILE_META_DATA));
 		directory->logEntry[entryId].metaData.fileName[WDC_DE_FILE_NAME_SIZE - 1] = '\0';
-		wdc_UtilsDeleteCharFromString((char*)directory->logEntry[entryId].metaData.fileName, WDC_DE_FILE_NAME_SIZE, ' ');
+		wdc_UtilsDeleteCharFromString((char*)directory->logEntry[entryId].metaData.fileName,
+				WDC_DE_FILE_NAME_SIZE, ' ');
 		if (0 == directory->logEntry[entryId].metaData.fileID)
-		{
 			continue;
-		}
+
 		directory->logEntry[entryId].essentialType = wdc_get_essential_type(directory->logEntry[entryId].metaData.fileName);
 		/*fprintf(stderr, "WDC : %s: NVMe VU Log Entry %d, fileName = %s, fileSize = 0x%lx, fileId = 0x%x\n",
 			__func__, entryId, directory->logEntry[entryId].metaData.fileName,
@@ -3393,11 +3398,11 @@ static int wdc_fetch_log_directory(int fd, PWDC_DE_VU_LOG_DIRECTORY directory)
 		 */
 		entryId++;
 	}
+
 	directory->numOfValidLogEntries = entryId;
-	end:
+end:
 	if (fileDirectory != NULL)
 		free(fileDirectory);
-
 	return ret;
 }
 
@@ -3849,11 +3854,12 @@ static int wdc_drive_essentials(int argc, char **argv, struct command *command,
 {
 	char *desc = "Capture Drive Essentials.";
 	char *dirName = "Output directory pathname.";
-
 	char d[PATH_MAX] = {0};
 	char k[PATH_MAX] = {0};
 	char *d_ptr;
 	int fd;
+	__u64 capabilities = 0;
+
 	struct config {
 		char *dirName;
 	};
@@ -3862,13 +3868,13 @@ static int wdc_drive_essentials(int argc, char **argv, struct command *command,
 			.dirName = NULL,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-			{"dir-name", 'd', "DIRECTORY", CFG_STRING, &cfg.dirName, required_argument, dirName},
-			{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc},
+	OPT_ARGS(opts) = {
+		OPT_STRING("dir-name", 'd', "DIRECTORY", &cfg.dirName, dirName),
+		OPT_END()
 	};
-	__u64 capabilities = 0;
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
 	if (fd < 0)
 		return fd;
 
@@ -3908,9 +3914,8 @@ static int wdc_drive_resize(int argc, char **argv,
 {
 	const char *desc = "Send a Resize command.";
 	const char *size = "The new size (in GB) to resize the drive to.";
-	int fd;
-	int ret;
 	uint64_t capabilities = 0;
+	int fd, ret;
 
 	struct config {
 		uint64_t size;
@@ -3919,12 +3924,13 @@ static int wdc_drive_resize(int argc, char **argv,
 	struct config cfg = {
 		.size = 0,
 	};
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"size", 's', "NUM", CFG_POSITIVE, &cfg.size, required_argument, size},
-		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc },
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("size", 's', &cfg.size, size),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
 	if (fd < 0)
 		return fd;
 
@@ -3936,8 +3942,10 @@ static int wdc_drive_resize(int argc, char **argv,
 		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
 		ret = -1;
 	}
+
 	if (!ret)
 		printf("New size: %lu GB\n", cfg.size);
+
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;
 }
@@ -4042,12 +4050,12 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *command,
 		.output_format = "normal",
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, "Output Format: normal|json" },
-		{ NULL, '\0', NULL, CFG_NONE, NULL, no_argument, desc },
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json"),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
 	if (fd < 0)
 		return fd;
 
