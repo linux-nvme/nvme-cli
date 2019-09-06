@@ -1507,7 +1507,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
 						__func__, file, strerror(errno));
 				ret = output;
-				goto out;
+				goto free_mem;
 			}
 
 			/* write the telemetry and log headers into the dump_file */
