@@ -3188,7 +3188,7 @@ void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 	char key[21];
 
 	unsigned int temperature = ((smart->temperature[1] << 8) |
-		smart->temperature[0]);
+		smart->temperature[0]) - 273;
 
 	long double data_units_read = int128_to_double(smart->data_units_read);
 	long double data_units_written = int128_to_double(smart->data_units_written);
