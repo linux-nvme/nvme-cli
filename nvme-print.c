@@ -2392,7 +2392,7 @@ void show_lba_status(struct nvme_lba_status *list)
 {
 	int idx;
 
-	printf("Number of LBA Status Descriptors(NLSD): %lu\n",
+	printf("Number of LBA Status Descriptors(NLSD): %" PRIu64 "\n",
 			le64_to_cpu(list->nlsd));
 	printf("Completion Condition(CMPC): %u\n", list->cmpc);
 	switch (list->cmpc) {
