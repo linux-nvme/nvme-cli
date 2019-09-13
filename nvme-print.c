@@ -3753,6 +3753,34 @@ static void show_registers_pmrsts(__u32 pmrsts, __u32 pmrctl)
 	printf("\tError		 (ERR): %x\n", (pmrsts & 0x000000ff));
 }
 
+static const char *nvme_register_pmr_pmrszu_to_string(__u8 pmrszu)
+{
+	switch (pmrszu) {
+	case 0: return "Bytes";
+	case 1: return "One KB";
+	case 2: return "One MB";
+	case 3: return "One GB";
+	default: return "Reserved";
+	}
+}
+
+static void show_registers_pmrebs(__u32 pmrebs)
+{
+	printf("\tPMR Elasticity Buffer Size Base  (PMRWBZ): %x\n", (pmrebs & 0xffffff00) >> 8);
+	printf("\tRead Bypass Behavior			   : memory reads not conflicting with memory writes "\
+	       "in the PMR Elasticity Buffer %s bypass those memory writes\n",
+	       (pmrebs & 0x00000010) ? "SHALL":"MAY");
+	printf("\tPMR Elasticity Buffer Size Units (PMRSZU): %s\n",
+		nvme_register_pmr_pmrszu_to_string(pmrebs & 0x0000000f));
+}
+
+static void show_registers_pmrswtp(__u32 pmrswtp)
+{
+	printf("\tPMR Sustained Write Throughput       (PMRSWTV): %x\n", (pmrswtp & 0xffffff00) >> 8);
+	printf("\tPMR Sustained Write Throughput Units (PMRSWTU): %s/second\n",
+		nvme_register_pmr_pmrszu_to_string(pmrswtp & 0x0000000f));
+}
+
 static inline uint32_t mmio_read32(void *addr)
 {
 	__le32 *p = addr;
@@ -3772,7 +3800,7 @@ void json_ctrl_registers(void *bar)
 {
 	uint64_t cap, asq, acq, bpmbl;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc,
-			bpinfo, bprsel, pmrcap, pmrctl, pmrsts;
+			bpinfo, bprsel, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp;
 	struct json_object *root;
 
 	cap = mmio_read64(bar + NVME_REG_CAP);
@@ -3793,6 +3821,8 @@ void json_ctrl_registers(void *bar)
 	pmrcap = mmio_read32(bar + NVME_REG_PMRCAP);
 	pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
 	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
+	pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
+	pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
 
 	root = json_create_object();
 	json_object_add_value_uint(root, "cap", cap);
@@ -3813,6 +3843,8 @@ void json_ctrl_registers(void *bar)
 	json_object_add_value_int(root, "pmrcap", pmrcap);
 	json_object_add_value_int(root, "pmrctl", pmrctl);
 	json_object_add_value_int(root, "pmrsts", pmrsts);
+	json_object_add_value_int(root, "pmrebs", pmrebs);
+	json_object_add_value_int(root, "pmrswtp", pmrswtp);
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
@@ -3822,7 +3854,7 @@ void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 {
 	uint64_t cap, asq, acq, bpmbl;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc, bpinfo,
-		 bprsel, pmrcap, pmrctl, pmrsts;
+		 bprsel, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp;
 
 	int human = mode & HUMAN;
 
@@ -3844,6 +3876,8 @@ void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 	pmrcap = mmio_read32(bar + NVME_REG_PMRCAP);
 	pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
 	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
+	pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
+	pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
 
 	if (human) {
 		if (cap != 0xffffffff) {
@@ -3908,6 +3942,12 @@ void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 
 			printf("pmrsts  : %x\n", pmrsts);
 			show_registers_pmrsts(pmrsts, pmrctl);
+
+			printf("pmrebs  : %x\n", pmrebs);
+			show_registers_pmrebs(pmrebs);
+
+			printf("pmrswtp : %x\n", pmrswtp);
+			show_registers_pmrswtp(pmrswtp);
 		}
 	} else {
 		if (cap != 0xffffffff)
