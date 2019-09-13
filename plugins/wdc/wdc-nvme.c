@@ -1337,7 +1337,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 	__u32 cap_dui_length;
 	__u64 cap_dui_length_v2;
 	__u8 *dump_data = NULL;
-	__u64 buffer_addr;
+	__u8 *buffer_addr;
 	__s64 total_size = 0;
 	int i;
 	int j;
@@ -1459,7 +1459,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 			}
 
 			i = 0;
-			buffer_addr = (__u64)(uintptr_t)dump_data;
+			buffer_addr = dump_data;
 
 			for(; log_size > 0; log_size -= xfer_size_long) {
 				xfer_size_long = min(xfer_size_long, log_size);
@@ -1467,7 +1467,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				if (log_size <= xfer_size_long)
 					last_xfer = true;
 
-				ret = wdc_dump_dui_data_v2(fd, (__u32)xfer_size_long, curr_data_offset, (__u8 *)buffer_addr, last_xfer);
+				ret = wdc_dump_dui_data_v2(fd, (__u32)xfer_size_long, curr_data_offset, buffer_addr, last_xfer);
 				if (ret != 0) {
 					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%lx, offset = 0x%lx, addr = 0x%lx\n",
 							__func__, i, (long unsigned int)total_size, (long unsigned int)curr_data_offset, (long unsigned int)buffer_addr);
@@ -1548,7 +1548,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 			log_size -= WDC_NVME_CAP_DUI_HEADER_SIZE;
 			curr_data_offset = WDC_NVME_CAP_DUI_HEADER_SIZE;
 			i = 0;
-			buffer_addr = (__u64)(uintptr_t)dump_data;
+			buffer_addr = dump_data;
 
 			for(; log_size > 0; log_size -= xfer_size) {
 				xfer_size = min(xfer_size, log_size);
@@ -1556,10 +1556,10 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				if (log_size <= xfer_size)
 					last_xfer = true;
 
-				ret = wdc_dump_dui_data(fd, xfer_size, curr_data_offset, (__u8 *)buffer_addr, last_xfer);
+				ret = wdc_dump_dui_data(fd, xfer_size, curr_data_offset, buffer_addr, last_xfer);
 				if (ret != 0) {
-					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%lx, offset = 0x%x, addr = 0x%lx\n",
-							__func__, i, (long unsigned int)log_size, curr_data_offset, (long unsigned int)buffer_addr);
+					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%lx, offset = 0x%x, addr = %p\n",
+							__func__, i, (long unsigned int)log_size, curr_data_offset, buffer_addr);
 					fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
 					break;
 				}
@@ -4235,7 +4235,7 @@ static int wdc_drive_resize(int argc, char **argv,
 	}
 
 	if (!ret)
-		printf("New size: %lu GB\n", cfg.size);
+		printf("New size: %" PRIu64 " GB\n", cfg.size);
 
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;

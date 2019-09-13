@@ -135,6 +135,8 @@ enum {
 	NVME_REG_PMRCAP = 0x0e00,	/* Persistent Memory Capabilities */
 	NVME_REG_PMRCTL = 0x0e04,	/* Persistent Memory Region Control */
 	NVME_REG_PMRSTS = 0x0e08,	/* Persistent Memory Region Status */
+	NVME_REG_PMREBS = 0x0e0c,	/* Persistent Memory Region Elasticity Buffer Size */
+	NVME_REG_PMRSWTP= 0x0e10,	/* Persistent Memory Region Sustained Write Throughput */
 	NVME_REG_DBS	= 0x1000,	/* SQ 0 Tail Doorbell */
 };
 
