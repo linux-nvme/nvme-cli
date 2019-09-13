@@ -1705,45 +1705,46 @@ void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 	int i;
 
 	printf("Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
-	printf("critical_warning                    : %#x\n", smart->critical_warning);
-	printf("temperature                         : %d C\n", temperature);
-	printf("available_spare                     : %u%%\n", smart->avail_spare);
-	printf("available_spare_threshold           : %u%%\n", smart->spare_thresh);
-	printf("percentage_used                     : %u%%\n", smart->percent_used);
-	printf("data_units_read                     : %'.0Lf\n",
+	printf("critical_warning			: %#x\n", smart->critical_warning);
+	printf("temperature				: %d C\n", temperature);
+	printf("available_spare				: %u%%\n", smart->avail_spare);
+	printf("available_spare_threshold		: %u%%\n", smart->spare_thresh);
+	printf("percentage_used				: %u%%\n", smart->percent_used);
+	printf("endurance group critical warning summary: %#x\n", smart->endu_grp_crit_warn_sumry);
+	printf("data_units_read				: %'.0Lf\n",
 		int128_to_double(smart->data_units_read));
-	printf("data_units_written                  : %'.0Lf\n",
+	printf("data_units_written			: %'.0Lf\n",
 		int128_to_double(smart->data_units_written));
-	printf("host_read_commands                  : %'.0Lf\n",
+	printf("host_read_commands			: %'.0Lf\n",
 		int128_to_double(smart->host_reads));
-	printf("host_write_commands                 : %'.0Lf\n",
+	printf("host_write_commands			: %'.0Lf\n",
 		int128_to_double(smart->host_writes));
-	printf("controller_busy_time                : %'.0Lf\n",
+	printf("controller_busy_time			: %'.0Lf\n",
 		int128_to_double(smart->ctrl_busy_time));
-	printf("power_cycles                        : %'.0Lf\n",
+	printf("power_cycles				: %'.0Lf\n",
 		int128_to_double(smart->power_cycles));
-	printf("power_on_hours                      : %'.0Lf\n",
+	printf("power_on_hours				: %'.0Lf\n",
 		int128_to_double(smart->power_on_hours));
-	printf("unsafe_shutdowns                    : %'.0Lf\n",
+	printf("unsafe_shutdowns			: %'.0Lf\n",
 		int128_to_double(smart->unsafe_shutdowns));
-	printf("media_errors                        : %'.0Lf\n",
+	printf("media_errors				: %'.0Lf\n",
 		int128_to_double(smart->media_errors));
-	printf("num_err_log_entries                 : %'.0Lf\n",
+	printf("num_err_log_entries			: %'.0Lf\n",
 		int128_to_double(smart->num_err_log_entries));
-	printf("Warning Temperature Time            : %u\n", le32_to_cpu(smart->warning_temp_time));
-	printf("Critical Composite Temperature Time : %u\n", le32_to_cpu(smart->critical_comp_time));
+	printf("Warning Temperature Time		: %u\n", le32_to_cpu(smart->warning_temp_time));
+	printf("Critical Composite Temperature Time	: %u\n", le32_to_cpu(smart->critical_comp_time));
 	for (i = 0; i < 8; i++) {
 		__s32 temp = le16_to_cpu(smart->temp_sensor[i]);
 
 		if (temp == 0)
 			continue;
-		printf("Temperature Sensor %d                : %d C\n", i + 1,
+		printf("Temperature Sensor %d           : %d C\n", i + 1,
 			temp - 273);
 	}
-	printf("Thermal Management T1 Trans Count   : %u\n", le32_to_cpu(smart->thm_temp1_trans_count));
-	printf("Thermal Management T2 Trans Count   : %u\n", le32_to_cpu(smart->thm_temp2_trans_count));
-	printf("Thermal Management T1 Total Time    : %u\n", le32_to_cpu(smart->thm_temp1_total_time));
-	printf("Thermal Management T2 Total Time    : %u\n", le32_to_cpu(smart->thm_temp2_total_time));
+	printf("Thermal Management T1 Trans Count	: %u\n", le32_to_cpu(smart->thm_temp1_trans_count));
+	printf("Thermal Management T2 Trans Count	: %u\n", le32_to_cpu(smart->thm_temp2_trans_count));
+	printf("Thermal Management T1 Total Time	: %u\n", le32_to_cpu(smart->thm_temp1_total_time));
+	printf("Thermal Management T2 Total Time	: %u\n", le32_to_cpu(smart->thm_temp2_total_time));
 }
 
 void show_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname)
@@ -3209,6 +3210,8 @@ void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char 
 	json_object_add_value_int(root, "avail_spare", smart->avail_spare);
 	json_object_add_value_int(root, "spare_thresh", smart->spare_thresh);
 	json_object_add_value_int(root, "percent_used", smart->percent_used);
+	json_object_add_value_int(root, "endurance_grp_critical_warning_summary",
+			smart->endu_grp_crit_warn_sumry);
 	json_object_add_value_float(root, "data_units_read", data_units_read);
 	json_object_add_value_float(root, "data_units_written", data_units_written);
 	json_object_add_value_float(root, "host_read_commands", host_read_commands);
