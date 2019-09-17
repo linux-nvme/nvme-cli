@@ -1,0 +1,77 @@
+nvme-wdc-vs-fw-activate-history(1)
+==================================
+
+NAME
+----
+nvme-wdc-vs-fw-activate-history - Rend NVMe WDC vs-fw-acivate-history Vendor Unique Command, return result
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc vs-fw-activate-history' <device> [--output-format=<normal|json> -o <normal|json>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, read a Vendor Unique WDC log page that returns the firmware actiation
+history. 
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-o <format>::
+--output-format=<format>::
+	Set the reporting format to 'normal', or
+	'json'. Only one output format can be used at a time.
+	Default is normal.
+
+
+Firmware Activate History Log Page Data Output Explanation
+-----------------------------------------------------------
+[cols="2*", frame="topbot", align="center", options="header"]
+|===
+|Field |Description
+
+|*Entry Number*
+|The number of fw activate entry.  The most recent 20 entries will be displayed.
+
+|*Power on Hour*
+|The time since the power on in hours:minutes:seconds.
+
+|*Power Cycle Count*
+|The power cycle count that the firmware activation occurred.
+
+|*Current Firmware*
+|The firmware level currently running on the SSD before the activation took place.
+
+|*New Firmware*
+|The new firmware level running on the SSD after the activation took place.
+
+|*Slot Number*
+|The slot tht the firmware is being activated from. 
+
+|*Commit Action Type*
+|The commit action type associated with the firmware activation event
+
+|*Result*
+|The result of the firmware activation event.  The ouput shall be in the format:
+Pass or Failed + error code
+|===
+
+EXAMPLES
+--------
+* Has the program issue WDC vs-fw-activate-history Vendor Unique Command :
++
+------------
+# nvme wdc vs-fw-activate-history /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.
