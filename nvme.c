@@ -2178,7 +2178,7 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 
 	err = nvme_self_test_log(fd, &self_test_log);
 	if (!err) {
-		if (self_test_log.crnt_dev_selftest_compln == 100) {
+		if (self_test_log.crnt_dev_selftest_oprn == 0) {
 			if (fmt == BINARY)
 				d_raw((unsigned char *)&self_test_log, sizeof(self_test_log));
 			else if (fmt == JSON)
