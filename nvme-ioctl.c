@@ -70,12 +70,6 @@ int nvme_get_nsid(int fd)
 	if (err < 0)
 		return -errno;
 
-	if (!S_ISBLK(nvme_stat.st_mode)) {
-		fprintf(stderr,
-			"Error: requesting namespace-id from non-block device\n");
-		errno = ENOTBLK;
-		return -errno;
-	}
 	return ioctl(fd, NVME_IOCTL_ID);
 }
 
