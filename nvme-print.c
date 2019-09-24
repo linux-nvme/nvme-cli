@@ -3351,6 +3351,72 @@ static const char *nvme_trtype_to_string(__u8 trtype)
 	};
 }
 
+static void nvme_show_zone_info_entry(struct nvme_zone_info_entry *entry)
+{
+	static const char *condition_str[] = {
+		"x0",   /* reserved */
+		"ZSE",  /* empty */
+		"ZSIO", /* implicitly opened */
+		"ZSEO", /* explicitly opened */
+		"ZSC",  /* closed */
+		"x5", "x6", "x7", "x8", "x9", "xA", "xB", "xC", /* reserved */
+		"ZSRO", /* read only */
+		"ZSF",  /* full */
+		"ZSO"   /* offline */
+	};
+
+	__u64 zcap = le64_to_cpu(entry->zcap);
+	__u64 zslba = le64_to_cpu(entry->zslba);
+	__u64 wp = le64_to_cpu(entry->wp);
+
+	printf(" ");
+	printf("zslba 0x%016llx, ", zslba);
+	printf("wp 0x%016llx, ", wp);
+	printf("zcap 0x%llx, ",zcap);
+	printf("zt 0x%x, ", entry->zt);
+	printf("zc %-4s, ", condition_str[((entry->zs >> 4) & 0xf) & (ARRAY_SIZE(condition_str) - 1)]);
+	printf("za 0x%x", entry->za);
+	printf("\n");
+}
+
+void nvme_show_zone_info(unsigned char *log, const char *devname,
+		unsigned int nsid, __u64 num_zones)
+{
+	__u64 i;
+
+	printf("Zone Information Log for NVMe device:%s namespace-id:%x zones:%lld\n",
+		devname, nsid, num_zones);
+
+	for (i = 0; i < num_zones; i++) {
+		nvme_show_zone_info_entry((struct nvme_zone_info_entry *) log);
+		log += sizeof(struct nvme_zone_info_entry);
+	}
+}
+
+void nvme_show_extended_zone_info(unsigned char *log, const char *devname,
+	unsigned int nsid, __u64 num_zones, size_t zds)
+{
+	uint64_t i;
+	unsigned int j;
+
+	printf("Extended Zone Information Log for NVMe device:%s namespace-id:%#x zones:%lld\n", 
+		devname, nsid, num_zones);
+
+	for (i = 0; i < num_zones; i++) {
+		nvme_show_zone_info_entry((struct nvme_zone_info_entry *) log);
+		log = log + sizeof(struct nvme_zone_info_entry);
+		printf(" zdescr");
+		for(j = 0; j < zds; j++){
+			if (j % 32 == 0) {
+				printf("\n    ");
+			}
+
+			printf("%02x", *log++);
+		}
+		printf("\n");
+	}
+}
+
 void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
 			const char *devname, enum nvme_print_flags flags)
 {

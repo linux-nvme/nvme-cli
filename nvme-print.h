@@ -53,6 +53,10 @@ void nvme_show_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *
 void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 	enum nvme_print_flags flags);
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs);
+void nvme_show_zone_info(unsigned char *log, const char *devname,
+		unsigned int nsid, __u64 num_zones);
+void nvme_show_extended_zone_info(unsigned char *log, const char *devname,
+	unsigned int nsid, __u64 num_zones, size_t zds);
 
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf);
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
