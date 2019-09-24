@@ -1,0 +1,121 @@
+nvme-zone-mgmt-recv(1)
+======================
+
+NAME
+----
+nvme-zone-mgmt-recv - Send NVMe Zone Management Receive command and return zone
+information.
+
+SYNOPSIS
+--------
+[verse]
+'nvme-zone-mgmt-recv' <device> [--start-zone=<slba> | -s <slba>]
+			[--num-zones=<num-zones> | -c <num-zones>]
+			[--num-dwords=<num-dwords> | -d <num-dwords>]
+			[--extended | -e]
+			[--filter=<reporting-options> | -f <reporting-options>]
+			[--partial=<partial> | -p <partial>]
+
+DESCRIPTION
+-----------
+The Zone Management Receive command retrieves zone information.
+
+The <device> parameter is mandatory and must be a namespace device (e.g:
+/dev/nvme0n1).
+
+OPTIONS
+-------
+--start-zone=<slba>::
+-s <slba>::
+	Start block.
+
+--num-zones=<num-zones>::
+-c <num-zones>::
+	how many zones to retrieve information for.
+
+--num-dwords=<num-dwords>::
+-d <num-dwords>::
+	This field specifies the number of dwords to return.
+
+--extended::
+-e::
+	receive extended zone information.
+
+--filter=<reporting-options>::
+-f <reporting-options>::
+	only report zones in the specified condition.
+
+--partial=<partial>::
+-p <partial>::
+	if not given (1), only count returned data's number of zones.
+
+EXAMPLES
+--------
+* Send Zone Management Receive command and return all zones:
++
+------------
+# nvme zone-mgmt-recv /dev/nvme0n1
+------------
++
+
+* Send Zone Management Receive command and retrieve number of zone for all
+zones:
++
+------------
+# nvme zone-mgmt-recv /dev/nvme0n1 -s 0 -c 1 -p 0
+------------
++
+
+* Send Zone Management Receive command and retrieve empty zones only:
++
+------------
+# nvme zone-mgmt-recv /dev/nvme0n1 -f 0x1
+------------
++
+
+* Send Zone Management Receive command and retrieve implicitly opened zones
+only:
++
+------------
+# nvme zone-mgmt-recv /dev/nvme0n1 -s 0 -c 1 -f 0x2
+------------
++
+
+* Send Zone Management Receive command and retrieve explicitly opened zones
+only:
++
+------------
+# nvme zone-mgmt-recv /dev/nvme0n1 -f 0x3
+------------
++
+
+* Send Zone Management Receive command and retrieve closed zones only:
++
+------------
+# nvme zone-mgmt-recv /dev/nvme0n1 -f 0x4
+------------
++
+
+* Send Zone Management Receive command and retrieve full zones only:
++
+------------
+# nvme zone-mgmt-recv /dev/nvme0n1 -f 0x5
+------------
++
+
+* Send Zone Management Receive command and retrieve read-only zones only:
++
+------------
+# nvme zone-mgmt-recv /dev/nvme0n1 -f 0x6
+------------
++
+
+* Send Zone Management Receive command and retrieve offline zones only:
++
+------------
+# nvme zone-mgmt-recv /dev/nvme0n1 -f 0x7
+------------
+
+NVME
+----
+Part of the nvme-user suite

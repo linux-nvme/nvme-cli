@@ -1,0 +1,270 @@
+'\" t
+.\"     Title: nvme-zone-mgmt-recv
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 05/11/2020
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-ZONE\-MGMT\-RE" "1" "05/11/2020" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-zone-mgmt-recv \- Send NVMe Zone Management Receive command and return zone information\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\-zone\-mgmt\-recv\fR <device> [\-\-start\-zone=<slba> | \-s <slba>]
+                        [\-\-num\-zones=<num\-zones> | \-c <num\-zones>]
+                        [\-\-num\-dwords=<num\-dwords> | \-d <num\-dwords>]
+                        [\-\-extended | \-e]
+                        [\-\-filter=<reporting\-options> | \-f <reporting\-options>]
+                        [\-\-partial=<partial> | \-p <partial>]
+.fi
+.SH "DESCRIPTION"
+.sp
+The Zone Management Receive command retrieves zone information\&.
+.sp
+The <device> parameter is mandatory and must be a namespace device (e\&.g: /dev/nvme0n1)\&.
+.SH "OPTIONS"
+.PP
+\-\-start\-zone=<slba>, \-s <slba>
+.RS 4
+Start block\&.
+.RE
+.PP
+\-\-num\-zones=<num\-zones>, \-c <num\-zones>
+.RS 4
+how many zones to retrieve information for\&.
+.RE
+.PP
+\-\-num\-dwords=<num\-dwords>, \-d <num\-dwords>
+.RS 4
+This field specifies the number of dwords to return\&.
+.RE
+.PP
+\-\-extended, \-e
+.RS 4
+receive extended zone information\&.
+.RE
+.PP
+\-\-filter=<reporting\-options>, \-f <reporting\-options>
+.RS 4
+only report zones in the specified condition\&.
+.RE
+.PP
+\-\-partial=<partial>, \-p <partial>
+.RS 4
+if not given (1), only count returned data\(cqs number of zones\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Send Zone Management Receive command and return all zones:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-recv /dev/nvme0n1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Send Zone Management Receive command and retrieve number of zone for all zones:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-recv /dev/nvme0n1 \-s 0 \-c 1 \-p 0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Send Zone Management Receive command and retrieve empty zones only:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-recv /dev/nvme0n1 \-f 0x1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Send Zone Management Receive command and retrieve implicitly opened zones only:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-recv /dev/nvme0n1 \-s 0 \-c 1 \-f 0x2
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Send Zone Management Receive command and retrieve explicitly opened zones only:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-recv /dev/nvme0n1 \-f 0x3
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Send Zone Management Receive command and retrieve closed zones only:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-recv /dev/nvme0n1 \-f 0x4
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Send Zone Management Receive command and retrieve full zones only:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-recv /dev/nvme0n1 \-f 0x5
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Send Zone Management Receive command and retrieve read\-only zones only:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-recv /dev/nvme0n1 \-f 0x6
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Send Zone Management Receive command and retrieve offline zones only:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-recv /dev/nvme0n1 \-f 0x7
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

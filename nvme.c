@@ -1898,6 +1898,207 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Receive Zone Information";
+	const char *slba = "slba of first zone to retrieve information for";
+	const char *num_zones = "how many zones to retrieve information for";
+	const char *num_dwords= "This field specifies the number of dwords to return.";
+	const char *extended = "extended zone information";
+	const char *filter = "only report zones in the specified condition";
+	const char *partial = "only count returned data's number of zones";
+	struct nvme_id_ctrl ctrl;
+	struct nvme_id_ns id_ns;
+	struct nvme_id_ns_zoned id_ns_zoned;
+	struct nvme_report_zones_hdr *report;
+	int err, fd;
+	size_t buf_len, report_len, xfer_len, max_bytes, nsze_bytes, zsze_bytes;
+	__u64 nsze, zsze, max_num_zones, num_zones_reported = 0, num_zones_ret,
+			num_zones_requested;
+	__u32 cdw13, namespace_id;
+	__u16 zes;
+	void *buf, *bufp;
+	struct nvme_zone_info_entry *log;
+
+	struct config {
+		__u64 slba;
+		__u32 num_zones;
+		__u32 num_dwords;
+		int   extended;
+		__u8  filter;
+		__u8  partial;
+	};
+
+	struct config cfg = {
+		.num_zones    =  0,
+		.num_dwords   =  0,
+		.slba         =  0,
+		.extended     =  0,
+		.filter       =  0,
+		.partial      =  1,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("start-zone", 's', &cfg.slba,       slba),
+		OPT_UINT("num-zones",  'c', &cfg.num_zones,  num_zones),
+		OPT_UINT("num-dwords", 'd', &cfg.num_dwords, num_dwords),
+		OPT_FLAG("extended",   'e', &cfg.extended,   extended),
+		OPT_SHRT("filter",     'f', &cfg.filter,     filter),
+		OPT_UINT("partial",    'p', &cfg.partial,    partial),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	memset(&ctrl, 0, sizeof (struct nvme_id_ctrl));
+	err = nvme_identify_ctrl(fd, &ctrl);
+	if (err) {
+		perror("identify-ctrl");
+		goto close_fd;
+	}
+
+	namespace_id = nvme_get_nsid(fd);
+	if (namespace_id == 0) {
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	err = nvme_identify_ns(fd, namespace_id, 0, &id_ns);
+	if (err) {
+		if (err < 0)
+			perror("identify namespace");
+		else {
+			fprintf(stderr, "identify failed\n");
+			nvme_show_status(err);
+		}
+		goto close_fd;
+	}
+
+	err = nvme_identify_ns_csi(fd, namespace_id, NVME_IOCS_ZONED, false,
+			&id_ns_zoned);
+	if (err) {
+		if (err < 0)
+			perror("identify namespace");
+		else {
+			fprintf(stderr, "identify failed\n");
+			nvme_show_status(err);
+		}
+		goto close_fd;
+	}
+
+	nsze = le64_to_cpu(id_ns.nsze);
+	nsze_bytes = nsze << id_ns.lbaf[id_ns.flbas & 0xf].ds;
+	zsze = le64_to_cpu(id_ns_zoned.lbafe[id_ns.flbas & 0xf].zsze);
+	zsze_bytes = zsze << id_ns.lbaf[id_ns.flbas & 0xf].ds;
+	max_num_zones = nsze_bytes / zsze_bytes;
+
+	zes = 64;
+	if (cfg.extended) {
+		zes += id_ns_zoned.lbafe[id_ns.flbas & 0xf].zdes << 6;
+	}
+
+	if (!cfg.num_zones && !cfg.num_dwords) {
+		cfg.num_dwords = ((64+(max_num_zones*zes))/4)-1;
+	}else if(!cfg.num_dwords){
+		cfg.num_dwords = ((64+(cfg.num_zones*zes))/4)-1;
+	}else if(cfg.num_zones && cfg.num_dwords){
+		if (cfg.num_dwords != ((64+(cfg.num_zones*zes))/4)-1){
+			fprintf(stderr,
+			"Invalid num-zones different with num-dwords's number of zone\n");
+			err = -EINVAL;
+			goto close_fd;
+		}
+	}else if(((cfg.num_dwords+1)*4 < 64+zes) && cfg.partial!=0){
+		fprintf(stderr,	"Invalid dword_size cant transfer any info\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	buf_len = (cfg.num_dwords + 1) * 4;
+
+	buf = bufp = malloc(buf_len);
+	if (!buf) {
+		perror("could not allocate memory");
+		err = -errno;
+		goto close_fd;
+	}
+
+	/* the kernel has a limit of 127 4K segments per command */
+	max_bytes = 127 << 12;
+	report_len = buf_len > max_bytes ? max_bytes : buf_len;
+
+	if (posix_memalign((void **)&report, getpagesize(), report_len)) {
+		perror("could not allocate memory");
+		err = -errno;
+		goto close_fd;
+	}
+
+	cdw13 = (cfg.partial << 16) | (cfg.filter << 8) | cfg.extended;
+
+	/* transfer in chunks of mdts */
+	do {
+		xfer_len = min(buf_len, report_len);
+
+		err = nvme_zone_mgmt_recv(fd, namespace_id, cfg.slba,
+					  cdw13, xfer_len, report);
+		if (err) {
+			if (err > 0)
+				nvme_show_status(err);
+			else
+				perror("Zone Management Receive");
+
+			goto close_fd;
+		}
+
+		num_zones_ret = le64_to_cpu(report->num_zones);
+		if(num_zones_ret==0) break;
+
+		if(cfg.partial==0){
+			if(num_zones_reported==0) num_zones_reported = num_zones_ret;
+		}else{
+			num_zones_reported += num_zones_ret;
+		}
+
+		num_zones_requested = (xfer_len-64)/zes;
+
+		xfer_len = num_zones_ret < num_zones_requested ?
+					num_zones_ret * zes : xfer_len-64;
+
+		memcpy(bufp, (__u8 *)report + 64, xfer_len);
+		bufp += xfer_len;
+		buf_len -= xfer_len;
+
+
+		if (num_zones_ret < num_zones_requested){
+			break;
+		}else{
+			log = (struct nvme_zone_info_entry *)
+				((__u8 *)report + 64+(num_zones_requested-1)*zes);
+			cfg.slba = le64_to_cpu(log->zslba) + zsze;
+		}
+	} while (buf_len >= zes+64 && cfg.slba < nsze);
+
+	if (cfg.extended)
+		nvme_show_extended_zone_info(buf, devicename, namespace_id,
+					    num_zones_reported, bufp-buf, zes);
+	else
+		nvme_show_zone_info(buf, devicename, namespace_id,
+				    num_zones_reported, bufp-buf);
+
+	free(buf);
+	free(report);
+
+close_fd:
+	close(fd);
+
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Show secondary controller list associated with the primary controller "\

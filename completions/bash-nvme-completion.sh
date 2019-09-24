@@ -10,6 +10,7 @@ _cmds="list id-ctrl id-ns list-ns id-iocs create-ns delete-ns \
 	security-recv resv-acquire resv-register resv-release \
 	resv-report dsm flush compare read write write-zeroes \
 	write-uncor reset subsystem-reset show-regs discover \
+	zone-mgmt-recv \
 	connect-all connect disconnect version help \
 	intel lnvm memblaze list-subsys"
 
@@ -148,6 +149,10 @@ nvme_list_opts () {
 		"dsm")
 		opts+=" --namespace-id= -n --ctx-attrs= -a --blocks= -b\
 			-slbs= -s --ad -d --idw -w --idr -r --cdw11= -c"
+			;;
+		"zone-mgmt-recv")
+		opts+=" --start-zone= -s --num-zones= -c --num-dwords= -d \
+			--filter= -f --extended -e --partial -p"
 			;;
 		"flush")
 		opts+=" --namespace-id= -n"

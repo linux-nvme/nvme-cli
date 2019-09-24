@@ -3380,33 +3380,36 @@ static void nvme_show_zone_info_entry(struct nvme_zone_info_entry *entry)
 }
 
 void nvme_show_zone_info(unsigned char *log, const char *devname,
-		unsigned int nsid, __u64 num_zones)
+		unsigned int nsid, __u64 num_zones, __u64 buf_len)
 {
 	__u64 i;
+	__u64 exist_zones = buf_len / 64;
 
 	printf("Zone Information Log for NVMe device:%s namespace-id:%x zones:%lld\n",
 		devname, nsid, num_zones);
 
-	for (i = 0; i < num_zones; i++) {
+	for (i = 0; i < exist_zones; i++) {
 		nvme_show_zone_info_entry((struct nvme_zone_info_entry *) log);
 		log += sizeof(struct nvme_zone_info_entry);
 	}
 }
 
 void nvme_show_extended_zone_info(unsigned char *log, const char *devname,
-	unsigned int nsid, __u64 num_zones, size_t zds)
+	unsigned int nsid, __u64 num_zones, __u64 buf_len, size_t zes)
 {
 	uint64_t i;
 	unsigned int j;
+	size_t zdes = zes-64;
+	__u64 exist_zones = buf_len / zes;
 
 	printf("Extended Zone Information Log for NVMe device:%s namespace-id:%#x zones:%lld\n", 
 		devname, nsid, num_zones);
 
-	for (i = 0; i < num_zones; i++) {
+	for (i = 0; i < exist_zones; i++) {
 		nvme_show_zone_info_entry((struct nvme_zone_info_entry *) log);
 		log = log + sizeof(struct nvme_zone_info_entry);
 		printf(" zdescr");
-		for(j = 0; j < zds; j++){
+		for(j = 0; j < zdes; j++){
 			if (j % 32 == 0) {
 				printf("\n    ");
 			}
