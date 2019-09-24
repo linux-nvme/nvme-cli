@@ -1,0 +1,241 @@
+'\" t
+.\"     Title: nvme-zone-mgmt-send
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 05/11/2020
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-ZONE\-MGMT\-SE" "1" "05/11/2020" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-zone-mgmt-send \- Send NVMe Zone Management Send command, return result\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\-zone\-mgmt\-send\fR <device> [\-\-start\-zone=<slba> | \-s <slba>]
+                        [\-\-data=<data\-file> | \-d <data\-file>]
+                        [\-\-zsa=<zone\-send\-action> | \-a <zone\-send\-action>]
+                        [\-\-cdw13=<cdw13> | \-c <cdw13>]
+                        [\-\-show\-command | \-v]
+                        [\-\-select\-all | \-A]
+.fi
+.SH "DESCRIPTION"
+.sp
+The Zone Management Send command explicitly performs an action on a zone\&. If zone action is 0x10 (Set Zone Descriptor Extension), stdin will be used for the ZDE data if \-d is not specified\&.
+.sp
+The <device> parameter is mandatory and must be a namespace device (e\&.g: /dev/nvme0n1)\&.
+.SH "OPTIONS"
+.PP
+\-\-start\-zone=<slba>, \-s <slba>
+.RS 4
+64\-bit address of the first LBA in the zone to operate on\&.
+.RE
+.PP
+\-\-data=<data\-file>, \-d <data\-file>
+.RS 4
+Data file\&. If none provided, contents are sent from STDIN\&.
+.RE
+.PP
+\-\-zsa=<zone\-send\-action>, \-a <zone\-send\-action>
+.RS 4
+Zone Send Action is one of
+\fB0x1\fR
+(Close Zone),
+\fB0x2\fR
+(Finish Zone),
+\fB0x3\fR
+(Open Zone),
+\fB0x4\fR
+(Reset Zone),
+\fB0x5\fR
+(Offline Zone) or
+\fB0x10\fR
+(Set Zone Descriptor Extension)\&.
+.RE
+.PP
+\-\-cdw13=<cdw13>, \-c <cdw13>
+.RS 4
+Specifies the command dword 13 value for that specified entry in the command
+.RE
+.PP
+\-\-show\-command, \-v
+.RS 4
+Print out the command to be sent\&.
+.RE
+.PP
+\-\-select\-all, \-A
+.RS 4
+Select All\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Send NVMe Zone management send Command:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-send /dev/nvme0n1 \-s 0 \-a 3 \-R
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Zone management send command zsa close:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-send /dev/nvme0n1 \-s 0 \-a 0x1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Zone management send command zsa finish:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-send /dev/nvme0n1 \-s 0 \-a 0x2
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Zone management send command zsa open:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-send /dev/nvme0n1 \-s 0 \-a 0x3
+# nvme zone\-mgmt\-send /dev/nvme0n1 \-s 0 \-a 0x3 \-R
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Zone management send command zsa reset:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-send /dev/nvme0n1 \-s 0 \-a 0x4
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Zone management send command zsa offline:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-send /dev/nvme0n1 \-s 0 \-a 0x5
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Zone management send command zsa set zone descriptor extention:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zone\-mgmt\-send /dev/nvme0n1 \-s 0 \-a 0x10 \-d <file>
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

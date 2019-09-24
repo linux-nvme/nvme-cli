@@ -914,6 +914,22 @@ int nvme_virtual_mgmt(int fd, __u32 cdw10, __u32 cdw11, __u32 *result)
 	return err;
 }
 
+int nvme_zone_mgmt_send(int fd, __u32 nsid, __u64 slba, __u32 cdw13,
+	void *descr, size_t zds)
+{
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_cmd_zone_mgmt_send,
+		.nsid		= nsid,
+		.addr		= (__u64)(uintptr_t) descr,
+		.data_len	= zds,
+		.cdw10		= slba & 0xffffffff,
+		.cdw11		= slba >> 32,
+		.cdw13		= cdw13,
+	};
+
+	return nvme_submit_io_passthru(fd, &cmd);
+}
+
 int nvme_zone_mgmt_recv(int fd, __u32 nsid, __u64 slba, __u32 cdw13,
 	__u32 data_len, void *data)
 {

@@ -1898,6 +1898,154 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "The Zone Management Send command explicitly performs an action on one or more zones.";
+	const char *slba = "first logical block of the zone to operate on";
+	const char *data = "data file for zone descriptor";
+	const char *zsa = "zone action to execute";
+	const char *select_all = "select all zones";
+	const char *cdw13 = "explicitly set command dword 13; use instead of specifying individual attributes";
+	const char *show = "show command before sending";
+
+	int err, fd, dfd = STDIN_FILENO;
+	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
+	void *buf = NULL;
+	struct nvme_id_ns id_ns;
+	struct nvme_id_ns_zoned id_ns_zoned;
+	size_t zdes_len;
+	__u32 namespace_id;
+
+	struct config {
+		__u32 cdw13;
+		__u64 slba;
+		__u8  zsa;
+		char  *data;
+		int   show;
+		int   select_all;
+	};
+
+	struct config cfg = {
+		.slba = 0x0,
+		.data = "",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_SUFFIX("start-zone", 's', &cfg.slba,         slba),
+		OPT_FILE("data",         'd', &cfg.data,         data),
+		OPT_BYTE("zsa",          'a', &cfg.zsa,          zsa),
+		OPT_UINT("cdw13",        'c', &cfg.cdw13,        cdw13),
+		OPT_FLAG("show-command", 'v', &cfg.show,         show),
+		OPT_FLAG("select-all",   'A', &cfg.select_all,   select_all),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	if (!cfg.zsa) {
+		fprintf(stderr, "zone send action must be specified\n");
+		err = -EINVAL;
+		goto ret;
+	}
+
+	if (cfg.cdw13 && (cfg.zsa || cfg.select_all)) {
+		fprintf(stderr, "warning: cdw13 specified; zsa and select-all parameters ignored\n");
+	}
+
+	if (strlen(cfg.data) && cfg.zsa != 0x10) {
+		fprintf(stderr, "data parameter only valid with zone send action 0x10 (set data descriptor)\n");
+		err = -EINVAL;
+		goto ret;
+	}
+
+	if (strlen(cfg.data)) {
+		dfd = open(cfg.data, O_RDONLY, mode);
+		if (dfd < 0) {
+			perror(cfg.data);
+			err = -EINVAL;
+			goto close_fd;
+		}
+	}
+
+	namespace_id = nvme_get_nsid(fd);
+	if (namespace_id == 0) {
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	err = nvme_identify_ns(fd, namespace_id, 0, &id_ns);
+	if (err) {
+		if (err < 0)
+			perror("identify namespace");
+		else {
+			fprintf(stderr, "identify failed\n");
+			nvme_show_status(err);
+		}
+		goto close_fd;
+	}
+
+	err = nvme_identify_ns_csi(fd, namespace_id, NVME_IOCS_ZONED, 0,
+				   &id_ns_zoned);
+	if (err) {
+		if (err < 0)
+			perror("identify-namespace");
+		else {
+			fprintf(stderr, "identify failed\n");
+			nvme_show_status(err);
+		}
+		goto close_fd;
+	}
+
+	zdes_len = id_ns_zoned.lbafe[id_ns.flbas & 0xf].zdes << 6;
+
+	if (cfg.zsa == 0x10) {
+		if (posix_memalign(&buf, getpagesize(), zdes_len)) {
+			fprintf(stderr, "can not allocate descriptor payload\n");
+			err = -ENOMEM;
+			goto close_fd;
+		}
+		memset(buf, 0x0, zdes_len);
+
+		err = read(dfd, buf, zdes_len);
+		if (err < 0) {
+			perror("failed to read data buffer from input file");
+			free(buf);
+			err = -errno;
+			goto close_fd;
+		}
+	}
+
+	if (!cfg.cdw13)
+		cfg.cdw13 = (cfg.select_all << 8) | cfg.zsa;
+
+	if (cfg.show) {
+		printf("opcode       : 0x%02x\n", nvme_cmd_zone_mgmt_send);
+		printf("nsid         : 0x%08x\n", namespace_id);
+		printf("addr         : 0x%"PRIx64"\n", (uint64_t)(uintptr_t) buf);
+		printf("slba         : 0x%016llx\n", cfg.slba);
+		printf("cdw13        : 0x%08x\n", cfg.cdw13);
+	}
+
+	err = nvme_zone_mgmt_send(fd, namespace_id, cfg.slba, cfg.cdw13,
+			buf, zdes_len);
+	if (err < 0)
+		perror("zone management send");
+	else if (err != 0)
+		nvme_show_status(err);
+	else
+		printf("NVMe Zone Management Send: success\n");
+
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Receive Zone Information";

@@ -1,0 +1,109 @@
+nvme-zone-mgmt-send(1)
+======================
+
+NAME
+----
+nvme-zone-mgmt-send - Send NVMe Zone Management Send command, return result.
+
+SYNOPSIS
+--------
+[verse]
+'nvme-zone-mgmt-send' <device> [--start-zone=<slba> | -s <slba>]
+			[--data=<data-file> | -d <data-file>]
+			[--zsa=<zone-send-action> | -a <zone-send-action>]
+			[--cdw13=<cdw13> | -c <cdw13>]
+			[--show-command | -v]
+			[--select-all | -A]
+
+DESCRIPTION
+-----------
+The Zone Management Send command explicitly performs an action on a zone.
+If zone action is 0x10 (Set Zone Descriptor Extension), stdin will be used for
+the ZDE data if -d is not specified.
+
+The <device> parameter is mandatory and must be a namespace device (e.g:
+/dev/nvme0n1).
+
+OPTIONS
+-------
+--start-zone=<slba>::
+-s <slba>::
+	64-bit address of the first LBA in the zone to operate on.
+
+--data=<data-file>::
+-d <data-file>::
+	Data file. If none provided, contents are sent from STDIN.
+
+--zsa=<zone-send-action>::
+-a <zone-send-action>::
+	Zone Send Action is one of *0x1* (Close Zone), *0x2* (Finish Zone),
+	*0x3* (Open Zone), *0x4* (Reset Zone), *0x5* (Offline Zone) or *0x10*
+	(Set Zone Descriptor Extension).
+
+--cdw13=<cdw13>::
+-c <cdw13>::
+	Specifies the command dword 13 value for that specified entry in
+	the command
+
+--show-command::
+-v::
+	Print out the command to be sent.
+
+--select-all::
+-A::
+	Select All.
+
+EXAMPLES
+--------
+* Send NVMe Zone management send Command:
++
+------------
+# nvme zone-mgmt-send /dev/nvme0n1 -s 0 -a 3 -R
+------------
++
+
+* Zone management send command zsa close:
++
+------------
+# nvme zone-mgmt-send /dev/nvme0n1 -s 0 -a 0x1
+------------
++
+
+* Zone management send command zsa finish:
++
+------------
+# nvme zone-mgmt-send /dev/nvme0n1 -s 0 -a 0x2
+------------
++
+
+* Zone management send command zsa open:
++
+------------
+# nvme zone-mgmt-send /dev/nvme0n1 -s 0 -a 0x3
+# nvme zone-mgmt-send /dev/nvme0n1 -s 0 -a 0x3 -R
+------------
++
+
+* Zone management send command zsa reset:
++
+------------
+# nvme zone-mgmt-send /dev/nvme0n1 -s 0 -a 0x4
+------------
++
+
+* Zone management send command zsa offline:
++
+------------
+# nvme zone-mgmt-send /dev/nvme0n1 -s 0 -a 0x5
+------------
++
+
+* Zone management send command zsa set zone descriptor extention:
++
+------------
+# nvme zone-mgmt-send /dev/nvme0n1 -s 0 -a 0x10 -d <file>
+------------
+
+NVME
+----
+Part of the nvme-user suite

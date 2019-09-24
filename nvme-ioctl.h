@@ -157,6 +157,8 @@ int nvme_self_test_start(int fd, __u32 nsid, __u32 cdw10);
 int nvme_self_test_log(int fd, __u32 nsid, struct nvme_self_test_log *self_test_log);
 int nvme_virtual_mgmt(int fd, __u32 cdw10, __u32 cdw11, __u32 *result);
 
+int nvme_zone_mgmt_send(int fd, __u32 nsid, __u64 slba, __u32 cdw13,
+	void *descr, size_t zds);
 int nvme_zone_mgmt_recv(int fd, __u32 nsid, __u64 slba, __u32 cdw13,
 	__u32 data_len, void *data);
 
