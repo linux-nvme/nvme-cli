@@ -185,6 +185,29 @@ free:
 	return err;
 }
 
+static int get_zdes_bytes(int fd, __u32 nsid)
+{
+	struct nvme_zns_id_ns ns;
+	struct nvme_id_ns id_ns;
+	__u8 lbaf;
+	int err;
+
+	err = nvme_identify_ns(fd, nsid,  false, &id_ns);
+	if (err) {
+		nvme_show_status(err);
+		return err;
+	}
+
+	err = nvme_zns_identify_ns(fd, nsid,  &ns);
+	if (err) {
+		nvme_show_status(err);
+		return err;
+	}
+
+	lbaf = id_ns.flbas & NVME_NS_FLBAS_LBA_MASK;
+	return ns.lbafe[lbaf].zdes << 6;
+}
+
 static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Zone Management Send";
@@ -202,7 +225,7 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 		int	namespace_id;
 		bool	select_all;
 		__u8	zsa;
-		__u32   data_len;
+		int   data_len;
 		char   *file;
 	};
 
@@ -223,7 +246,25 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 	if (fd < 0)
 		return errno;
 
-	if (cfg.data_len) {
+	if (!cfg.zsa) {
+		fprintf(stderr, "zone send action must be specified\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	if (cfg.zsa == NVME_ZNS_ZSA_SET_DESC_EXT){
+		if(!cfg.data_len){
+			cfg.data_len = get_zdes_bytes(fd, cfg.namespace_id);
+			if (cfg.data_len == 0){
+				fprintf(stderr, 
+				"Zone Descriptor Extensions are not supported\n");
+				goto close_fd;
+			}
+			else if (cfg.data_len < 0) {
+				err = cfg.data_len;
+				goto close_fd;
+			}
+		}
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
 			fprintf(stderr, "can not allocate feature payload\n");
 			goto close_fd;
@@ -242,6 +283,14 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 		if (err < 0) {
 			perror("read");
 			goto close_ffd;
+		}
+	}
+	else{
+		if (strlen(cfg.file) || cfg.data_len){
+			fprintf(stderr, 
+			"data, data_len only valid with set extended descriptor\n");
+			err = -EINVAL;
+			goto close_fd;
 		}
 	}
 
@@ -457,29 +506,6 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 close_fd:
 	close(fd);
 	return err;
-}
-
-static int get_zdes_bytes(int fd, __u32 nsid)
-{
-	struct nvme_zns_id_ns ns;
-	struct nvme_id_ns id_ns;
-	__u8 lbaf;
-	int err;
-
-	err = nvme_identify_ns(fd, nsid,  false, &id_ns);
-	if (err) {
-		nvme_show_status(err);
-		return err;
-	}
-
-	err = nvme_zns_identify_ns(fd, nsid,  &ns);
-	if (err) {
-		nvme_show_status(err);
-		return err;
-	}
-
-	lbaf = id_ns.flbas & NVME_NS_FLBAS_LBA_MASK;
-	return ns.lbafe[lbaf].zdes << 6;
 }
 
 static int report_zones(int argc, char **argv, struct command *cmd, struct plugin *plugin)
