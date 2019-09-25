@@ -1399,8 +1399,10 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		return ret;
 
 	fmt = validate_output_format(cfg.output_format);
-	if (fmt != JSON && fmt != NORMAL)
+	if (fmt != JSON && fmt != NORMAL) {
+		fprintf(stderr, "Invalid output format\n");
 		return -EINVAL;
+	}
 
 	ret = scan_subsystems(&t);
 	if (ret) {
