@@ -83,6 +83,7 @@ static struct program nvme = {
 
 
 static const char *output_format = "Output format: normal|json|binary";
+static const char *output_format_no_binary = "Output format: normal|json";
 
 const char *conarg_nqn = "nqn";
 const char *conarg_transport = "transport";
@@ -1388,7 +1389,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary),
 		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
 		OPT_END()
 	};
