@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-id-ns
+.\"     Title: nvme-id-iocs
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 05/06/2020
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "05/06/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-IOCS" "1" "05/06/2020" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,40 +28,45 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-list-ns \- Send NVMe Identify List Namespaces, return result and structure
+nvme-id-iocs \- Send NVMe Identify I/O Command Set, return result and structure
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme list\-ns\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                        [\-\-csi=<command_set_identifier> | \-y <command_set_identifier>]
-                        [\-\-all | \-a]
+\fInvme id\-iocs\fR <device> [\-\-controller\-id=<cntid> | \-c <cntid>]
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, sends an identify command for namespace list and provides the result and returned structure\&.
+For the NVMe device given, send an identify command and return the Identify I/O Command Set data structure\&.
 .sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. If the starting namespace in the list always begins with 0 unless the \*(Aq\-\-namespace\-id\*(Aq option is given to override\&.
-.sp
-On success, the namespace array is printed for each index and nsid for a valid nsid\&.
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .SH "OPTIONS"
 .PP
-\-n <nsid>, \-\-namespace\-id=<nsid>
+\-c <cntid>, \-\-controller\-id=<cntid>
 .RS 4
-Retrieve the identify list structure starting with the given nsid\&.
-.RE
-.PP
-\-y <command_set_identifier>, \-\-csi=<command_set_identifier>
-.RS 4
-If this value is given, retrieve the identify list structure associated with the speicified I/O command set\&.
-.RE
-.PP
-\-a, \-\-all
-.RS 4
-Retrieve the identify list structure for all namespaces in the subsystem, whether attached or inactive\&.
+Retrieve the identify I/O Command set data structure for the given cntid\&. If this value is not given, cntid will be 0xffff\&.
 .RE
 .SH "EXAMPLES"
 .sp
-No examples yet\&.
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Have the program interpret the returned buffer and display the known fields in a human readable format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme id\-iocs /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

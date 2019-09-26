@@ -751,6 +751,7 @@ nvme-id-ns(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme id-ns</em> &lt;device&gt; [-v | --vendor-specific] [-b | --raw-binary]
                     [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;] [-f | --force]
+                        [--csi=&lt;command_set_identifier&gt; | -y &lt;command_set_identifier&gt;]
                     [--human-readable | -H]
                     [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]</pre>
 <div class="attribution">
@@ -802,6 +803,18 @@ raw buffer may be printed to stdout.</p></div>
         if the namespace is not attached to the controller. This is valid
         only for controllers at or newer than revision 1.2. Controllers
         at revision lower than this may interpret the command incorrectly.
+</p>
+</dd>
+<dt class="hdlist1">
+-y &lt;command_set_identifier&gt;
+</dt>
+<dt class="hdlist1">
+--csi=&lt;command_set_identifier&gt;
+</dt>
+<dd>
+<p>
+        If this value is given, retrieve I/O command set specific namespace
+        data structure with the given command set identifier.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -955,7 +968,7 @@ int main(int argc, char **argv)
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2018-11-29 13:36:39 GMT
+ 2020-05-06 10:35:44 CEST
 </div>
 </div>
 </body>

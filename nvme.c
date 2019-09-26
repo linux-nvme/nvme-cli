@@ -950,6 +950,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *desc = "For the specified controller handle, show the "\
 		"namespace list in the associated NVMe subsystem, optionally starting with a given nsid.";
 	const char *namespace_id = "first nsid returned list should start from";
+	const char *csi = "I/O command set identifier";
 	const char *all = "show all namespaces in the subsystem, whether attached or inactive";
 	int err, i, fd;
 	__le32 ns_list[1024];
@@ -957,6 +958,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	struct config {
 		__u32 namespace_id;
 		int  all;
+		__u16 csi;
 	};
 
 	struct config cfg = {
@@ -965,6 +967,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_BYTE("csi",          'y', &cfg.csi,          csi),
 		OPT_FLAG("all",          'a', &cfg.all,          all),
 		OPT_END()
 	};
@@ -979,8 +982,8 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto close_fd;
 	}
 
-	err = nvme_identify_ns_list(fd, cfg.namespace_id - 1, !!cfg.all,
-				    ns_list);
+	err = nvme_identify_ns_list_csi(fd, cfg.namespace_id - 1, cfg.csi,
+					!!cfg.all, ns_list);
 	if (!err) {
 		for (i = 0; i < 1024; i++)
 			if (ns_list[i])
@@ -1152,6 +1155,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *nmic = "multipath and sharing capabilities";
 	const char *anagrpid = "ANA Group Identifier";
 	const char *nvmsetid = "NVM Set Identifier";
+	const char *csi = "command set identifier";
 	const char *timeout = "timeout value, in milliseconds";
 	const char *bs = "target block size";
 
@@ -1169,6 +1173,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		__u16	nvmsetid;
 		__u64	bs;
 		__u32	timeout;
+		__u8  	csi;
 	};
 
 	struct config cfg = {
@@ -1189,6 +1194,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_UINT("nvmset-id",	 'i', &cfg.nvmsetid, nvmsetid),
 		OPT_SUFFIX("block-size", 'b', &cfg.bs,       bs),
 		OPT_UINT("timeout",      't', &cfg.timeout,  timeout),
+		OPT_BYTE("csi",          'y', &cfg.csi,      csi),
 		OPT_END()
 	};
 
@@ -1240,7 +1246,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	}
 
 	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic,
-			    cfg.anagrpid, cfg.nvmsetid, cfg.timeout, &nsid);
+			    cfg.anagrpid, cfg.nvmsetid, cfg.csi, cfg.timeout,
+			    &nsid);
 	if (!err)
 		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
 	else if (err > 0)
@@ -1392,6 +1399,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	const char *vendor_specific = "dump binary vendor field";
 	const char *raw = "show identify in binary format";
 	const char *human_readable = "show identify in readable format";
+	const char *csi = "I/O command set identifier";
 	enum nvme_print_flags flags;
 	struct nvme_id_ctrl ctrl;
 	int err, fd;
@@ -1401,6 +1409,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 		int raw_binary;
 		int human_readable;
 		char *output_format;
+		__u8 csi;
 	};
 
 	struct config cfg = {
@@ -1408,6 +1417,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	};
 
 	OPT_ARGS(opts) = {
+		OPT_BYTE("csi",             'y', &cfg.csi,             csi),
 		OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
 		OPT_FMT("output-format",    'o', &cfg.output_format,   output_format),
 		OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw),
@@ -1429,9 +1439,9 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
-	err = nvme_identify_ctrl(fd, &ctrl);
+	err = nvme_identify_ctrl_csi(fd, cfg.csi, &ctrl);
 	if (!err)
-		__nvme_show_id_ctrl(&ctrl, flags, vs);
+		nvme_show_id_ctrl(&ctrl, cfg.csi, flags, vs);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -1525,6 +1535,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	const char *raw = "show identify in binary format";
 	const char *human_readable = "show identify in readable format";
 	const char *namespace_id = "identifier of desired namespace";
+	const char *csi = "I/O command set identifier";
 
 	enum nvme_print_flags flags;
 	struct nvme_id_ns ns;
@@ -1537,6 +1548,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		int   human_readable;
 		int   force;
 		char *output_format;
+		__u8  csi;
 	};
 
 	struct config cfg = {
@@ -1546,6 +1558,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id),
+		OPT_BYTE("csi",             'y', &cfg.csi,             csi),
 		OPT_FLAG("force",           'f', &cfg.force,           force),
 		OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
 		OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw),
@@ -1582,9 +1595,9 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		}
 	}
 
-	err = nvme_identify_ns(fd, cfg.namespace_id, cfg.force, &ns);
+	err = nvme_identify_ns_csi(fd, cfg.namespace_id, cfg.csi, cfg.force, &ns);
 	if (!err)
-		nvme_show_id_ns(&ns, cfg.namespace_id, flags);
+		nvme_show_id_ns(&ns, cfg.namespace_id, cfg.csi, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -1747,6 +1760,49 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 close_fd:
 	close(fd);
 	return err;
+}
+
+static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Send an Identify Command Set Data command to the "\
+		"given device, returns properties of the specified controller "\
+		"in either human-readable or binary format.";
+	const char *controller_id = "identifier of desired controller";
+	struct nvme_id_iocs iocs;
+	int err, fd;
+
+	struct config {
+		__u16 cntid;
+	};
+
+	struct config cfg = {
+		.cntid = 0xffff,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_SHRT("controller-id", 'c', &cfg.cntid, controller_id),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	err = nvme_identify_iocs(fd, cfg.cntid, &iocs);
+	if (!err) {
+		printf("NVMe Identify I/O Command Set:\n");
+		nvme_show_id_iocs(&iocs);
+	}
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("NVMe Identify I/O Command Set");
+
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
 }
 
 static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *plugin)

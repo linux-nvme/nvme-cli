@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-ctrl
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/24/2020
+.\"      Date: 05/06/2020
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-CTRL" "1" "04/24/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-CTRL" "1" "05/06/2020" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,6 +33,7 @@ nvme-id-ctrl \- Send NVMe Identify Controller, return result and structure
 .sp
 .nf
 \fInvme id\-ctrl\fR <device> [\-v | \-\-vendor\-specific] [\-b | \-\-raw\-binary]
+                        [\-\-csi=<command_set_identifier> | \-y <command_set_identifier>]
                         [\-o <fmt> | \-\-output\-format=<fmt>]
 .fi
 .SH "DESCRIPTION"
@@ -43,6 +44,11 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 .sp
 On success, the structure may be returned in one of several ways depending on the option flags; the structure may be parsed by the program or the raw buffer may be printed to stdout\&.
 .SH "OPTIONS"
+.PP
+\-y <command_set_identifier>, \-\-csi=<command_set_identifier>
+.RS 4
+If this value is given, retrieve I/O command set specific controller data structure with the given command set identifier\&.
+.RE
 .PP
 \-b, \-\-raw\-binary
 .RS 4

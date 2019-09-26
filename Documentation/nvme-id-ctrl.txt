@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme id-ctrl' <device> [-v | --vendor-specific] [-b | --raw-binary]
+			[--csi=<command_set_identifier> | -y <command_set_identifier>]
 			[-o <fmt> | --output-format=<fmt>]
 
 DESCRIPTION
@@ -25,6 +26,11 @@ raw buffer may be printed to stdout.
 
 OPTIONS
 -------
+-y <command_set_identifier>::
+--csi=<command_set_identifier>::
+	If this value is given, retrieve I/O command set specific controller
+	data structure with the given command set identifier.
+
 -b::
 --raw-binary::
 	Print the raw buffer to stdout. Structure is not parsed by

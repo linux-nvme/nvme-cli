@@ -132,18 +132,16 @@ static const char *get_sanitize_log_sstat_status_str(__u16 status)
 	return str;
 }
 
-static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
+static void json_nvme_id_ns_nvm(struct json_object *root,
+		struct nvme_id_ns *ns, unsigned int mode)
 {
 	char nguid_buf[2 * sizeof(ns->nguid) + 1],
 		eui64_buf[2 * sizeof(ns->eui64) + 1];
 	char *nguid = nguid_buf, *eui64 = eui64_buf;
-	struct json_object *root;
 	struct json_array *lbafs;
 	int i;
 
 	long double nvmcap = int128_to_double(ns->nvmcap);
-
-	root = json_create_object();
 
 	json_object_add_value_uint(root, "nsze", le64_to_cpu(ns->nsze));
 	json_object_add_value_uint(root, "ncap", le64_to_cpu(ns->ncap));
@@ -203,16 +201,30 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 
 		json_array_add_value_object(lbafs, lbaf);
 	}
+}
+
+static void json_nvme_id_ns(struct nvme_id_ns *ns, __u8 csi, unsigned int mode)
+{
+	struct json_object *root = json_create_object();
+
+	switch (csi) {
+	case NVME_IOCS_NVM:
+		json_nvme_id_ns_nvm(root, ns, mode);
+		break;
+	default:
+		fprintf(stderr, "Unsupported I/O Command Set; use --raw-binary\n");
+		return json_free_object(root);
+	}
 
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
 }
 
-static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
-			void (*vs)(__u8 *vs, struct json_object *root))
+static void json_nvme_id_ctrl_nvm(struct json_object *root,
+		struct nvme_id_ctrl *ctrl, unsigned int mode,
+		void (*vs)(__u8 *vs, struct json_object *root))
 {
-	struct json_object *root;
 	struct json_array *psds;
 
 	long double tnvmcap = int128_to_double(ctrl->tnvmcap);
@@ -228,8 +240,6 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
 	snprintf(mn, sizeof(mn), "%-.*s", (int)sizeof(ctrl->mn), ctrl->mn);
 	snprintf(fr, sizeof(fr), "%-.*s", (int)sizeof(ctrl->fr), ctrl->fr);
 	snprintf(subnqn, sizeof(subnqn), "%-.*s", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
-
-	root = json_create_object();
 
 	json_object_add_value_int(root, "vid", le16_to_cpu(ctrl->vid));
 	json_object_add_value_int(root, "ssvid", le16_to_cpu(ctrl->ssvid));
@@ -296,7 +306,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
 	json_object_add_value_int(root, "vwc", ctrl->vwc);
 	json_object_add_value_int(root, "awun", le16_to_cpu(ctrl->awun));
 	json_object_add_value_int(root, "awupf", le16_to_cpu(ctrl->awupf));
-	json_object_add_value_int(root, "nvscc", ctrl->nvscc);
+	json_object_add_value_int(root, "icsvscc", ctrl->icsvscc);
 	json_object_add_value_int(root, "nwpc", ctrl->nwpc);
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
 	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
@@ -345,6 +355,23 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
 
 	if(vs)
 		vs(ctrl->vs, root);
+}
+
+static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, __u8 csi,
+		unsigned int mode,
+		void (*vs)(__u8 *vs, struct json_object *root))
+{
+	struct json_object *root = json_create_object();
+
+	switch (csi) {
+	case NVME_IOCS_NVM:
+		json_nvme_id_ctrl_nvm(root, ctrl, mode, vs);
+		break;
+	default:
+		fprintf(stderr, "Unsupported I/O Command Set; use --raw-binary\n");
+		return json_free_object(root);
+	}
+
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
@@ -953,7 +980,9 @@ static void nvme_show_registers_cap(struct nvme_bar_cap *cap)
 	printf("\tBoot Partition Support              (BPS): %s\n",
 		(cap->bps_css_nssrs_dstrd & 0x2000) ? "Yes":"No");
 	printf("\tCommand Sets Supported              (CSS): NVM command set is %s\n",
-		(cap->bps_css_nssrs_dstrd & 0x0020) ? "supported":"not supported");
+		(cap->bps_css_nssrs_dstrd & 0x0020) ? "Supported" : "Not Supported");
+	printf("\t                                           One or more I/O Command Sets are %s\n",
+		(cap->bps_css_nssrs_dstrd & 0x0800) ? "Supported" : "Not Supported");
 	printf("\tNVM Subsystem Reset Supported     (NSSRS): %s\n",
 		(cap->bps_css_nssrs_dstrd & 0x0010) ? "Yes":"No");
 	printf("\tDoorbell Stride                   (DSTRD): %u bytes\n",
@@ -1020,8 +1049,10 @@ static void nvme_show_registers_cc(__u32 cc)
 	nvme_show_registers_cc_ams((cc & 0x00003800) >> NVME_CC_AMS_SHIFT);
 	printf("\tMemory Page Size                   (MPS): %u bytes\n",
 		1 << (12 + ((cc & 0x00000780) >> NVME_CC_MPS_SHIFT)));
-	printf("\tI/O Command Sets Selected          (CSS): %s\n",
-		(cc & 0x00000070) ? "Reserved":"NVM Command Set");
+	printf("\tI/O Command Set Selected           (CSS): %s\n",
+		(cc & 0x00000070) == 0x00 ? "NVM Command Set" :
+		(cc & 0x00000070) == 0x60 ? "All supported I/O Command Sets" :
+		(cc & 0x00000070) == 0x70 ? "Admin Command Set only" : "Reserved");
 	printf("\tEnable                              (EN): %s\n\n",
 		(cc & 0x00000001) ? "Yes":"No");
 }
@@ -2150,10 +2181,10 @@ static void nvme_show_id_ctrl_vwc(__u8 vwc)
 	printf("\n");
 }
 
-static void nvme_show_id_ctrl_nvscc(__u8 nvscc)
+static void nvme_show_id_ctrl_icsvscc(__u8 icsvscc)
 {
-	__u8 rsvd = (nvscc & 0xFE) >> 1;
-	__u8 fmt = nvscc & 0x1;
+	__u8 rsvd = (icsvscc & 0xFE) >> 1;
+	__u8 fmt = icsvscc & 0x1;
 	if (rsvd)
 		printf("  [7:1] : %#x\tReserved\n", rsvd);
 	printf("  [0:0] : %#x\tNVM Vendor Specific Commands uses %s Format\n",
@@ -2402,19 +2433,14 @@ static void nvme_show_id_ns_dlfeat(__u8 dlfeat)
 	printf("\n");
 }
 
-void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
+static void nvme_show_id_ns_nvm(struct nvme_id_ns *ns, unsigned int nsid,
 		enum nvme_print_flags flags)
 {
 	int human = flags & VERBOSE;
 	int vs = flags & VS;
 	int i;
 
-	if (flags & BINARY)
-		return d_raw((unsigned char *)ns, sizeof(*ns));
-	if (flags & JSON)
-		return json_nvme_id_ns(ns, flags);
-
-	printf("NVME Identify Namespace %d:\n", nsid);
+	printf("NVM Command Set Identify Namespace %d:\n", nsid);
 	printf("nsze    : %#"PRIx64"\n", le64_to_cpu(ns->nsze));
 	printf("ncap    : %#"PRIx64"\n", le64_to_cpu(ns->ncap));
 	printf("nuse    : %#"PRIx64"\n", le64_to_cpu(ns->nuse));
@@ -2498,6 +2524,23 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	}
 }
 
+void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid, __u8 csi,
+		enum nvme_print_flags flags)
+{
+	if (flags & BINARY)
+		return d_raw((unsigned char *)ns, sizeof(*ns));
+
+	if (flags & JSON)
+		return json_nvme_id_ns(ns, csi, flags);
+
+	switch (csi) {
+	case NVME_IOCS_NVM:
+		return nvme_show_id_ns_nvm(ns, nsid, flags);
+	default:
+		fprintf(stderr, "Unsupported I/O Command Set; use --raw-binary\n");
+		return;
+	}
+}
 
 static void json_nvme_id_ns_descs(void *data)
 {
@@ -2512,6 +2555,7 @@ static void json_nvme_id_ns_descs(void *data)
 #ifdef LIBUUID
 		uuid_t uuid;
 #endif
+		__u8 csi;
 	} desc;
 
 	struct json_object *root;
@@ -2557,6 +2601,12 @@ static void json_nvme_id_ns_descs(void *data)
 			nidt_name = "uuid";
 			break;
 #endif
+		case NVME_NIDT_CSI:
+			memcpy(&desc.csi, data + off, sizeof(desc.csi));
+			json_str_p += sprintf(json_str_p, "%#x", desc.csi);
+			len += sizeof(desc.csi);
+			nidt_name = "csi";
+			break;
 		default:
 			/* Skip unnkown types */
 			len = cur->nidl;
@@ -2602,6 +2652,7 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 #endif
 	__u8 eui64[8];
 	__u8 nguid[16];
+	__u8 csi;
 
 	if (flags & BINARY)
 		return  d_raw((unsigned char *)data, 0x1000);
@@ -2640,6 +2691,11 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 			len = sizeof(uuid);
 			break;
 #endif
+		case NVME_NIDT_CSI:
+			memcpy(&csi, data + pos + sizeof(*cur), 1);
+			printf("csi     : %#x\n", csi);
+			len += sizeof(csi);
+			break;
 		default:
 			/* Skip unnkown types */
 			len = cur->nidl;
@@ -2708,17 +2764,13 @@ static void nvme_show_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 	}
 }
 
-void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
-			void (*vendor_show)(__u8 *vs, struct json_object *root))
+static void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl *ctrl,
+		enum nvme_print_flags flags,
+		void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
 	int human = flags & VERBOSE, vs = flags & VS;
 
-	if (flags & BINARY)
-		return d_raw((unsigned char *)ctrl, sizeof(*ctrl));
-	else if (flags & JSON)
-		return json_nvme_id_ctrl(ctrl, flags, vendor_show);
-
-	printf("NVME Identify Controller:\n");
+	printf("NVM Command Set Identify Controller:\n");
 	printf("vid       : %#x\n", le16_to_cpu(ctrl->vid));
 	printf("ssvid     : %#x\n", le16_to_cpu(ctrl->ssvid));
 	printf("sn        : %-.*s\n", (int)sizeof(ctrl->sn), ctrl->sn);
@@ -2824,9 +2876,9 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 		nvme_show_id_ctrl_vwc(ctrl->vwc);
 	printf("awun      : %d\n", le16_to_cpu(ctrl->awun));
 	printf("awupf     : %d\n", le16_to_cpu(ctrl->awupf));
-	printf("nvscc     : %d\n", ctrl->nvscc);
+	printf("icsvscc     : %d\n", ctrl->icsvscc);
 	if (human)
-		nvme_show_id_ctrl_nvscc(ctrl->nvscc);
+		nvme_show_id_ctrl_icsvscc(ctrl->icsvscc);
 	printf("nwpc      : %d\n", ctrl->nwpc);
 	if (human)
 		nvme_show_id_ctrl_nwpc(ctrl->nwpc);
@@ -2853,9 +2905,22 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	}
 }
 
-void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
+void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, __u8 csi, enum nvme_print_flags flags,
+		void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
-	__nvme_show_id_ctrl(ctrl, mode, NULL);
+	if (flags & BINARY)
+		return d_raw((unsigned char *)ctrl, sizeof(*ctrl));
+
+	if (flags & JSON)
+		return json_nvme_id_ctrl(ctrl, csi, flags, vendor_show);
+
+	switch (csi) {
+	case NVME_IOCS_NVM:
+		return nvme_show_id_ctrl_nvm(ctrl, flags, vendor_show);
+	default:
+		fprintf(stderr, "Unsupported I/O Command Set; use --raw-binary\n");
+		return;
+	}
 }
 
 static void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset)
@@ -3137,6 +3202,18 @@ void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 			   sizeof(zero_uuid)) == 0)
 			printf(" (Invalid UUID)");
 		printf("\n.................\n");
+	}
+}
+
+void nvme_show_id_iocs(struct nvme_id_iocs *iocs)
+{
+	__u16 i;
+
+	for (i = 0; i < 512; i++) {
+		if (iocs->iocsc[i].nvm) {
+			printf("I/O Command Set Combination[%"PRIu16"] "
+				"NVM Command Set Supported\n", i);
+		}
 	}
 }
 
@@ -3725,6 +3802,7 @@ const char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_RRL:		return "Read Recovery Level";
 	case NVME_FEAT_PLM_CONFIG:	return "Predicatable Latency Mode Config";
 	case NVME_FEAT_PLM_WINDOW:	return "Predicatable Latency Mode Window";
+	case NVME_FEAT_IOCS_SET_PROFILE:	return "I/O Command Set Profile";
 	case NVME_FEAT_SW_PROGRESS:	return "Software Progress";
 	case NVME_FEAT_HOST_ID:		return "Host Identifier";
 	case NVME_FEAT_RESV_MASK:	return "Reservation Notification Mask";
@@ -3839,6 +3917,14 @@ const char *nvme_status_to_string(__u32 status)
 		return "SANITIZE_FAILED: The most recent sanitize operation failed and no recovery actions has been successfully completed";
 	case NVME_SC_SANITIZE_IN_PROGRESS:
 		return "SANITIZE_IN_PROGRESS: The requested function is prohibited while a sanitize operation is in progress";
+	case NVME_SC_IOCS_NOT_SUPPORTED:
+		return "IOCS_NOT_SUPPORTED: The I/O command set is not supported";
+	case NVME_SC_IOCS_NOT_ENABLED:
+		return "IOCS_NOT_ENABLED: The I/O command set is not enabled";
+	case NVME_SC_IOCS_COMBINATION_REJECTED:
+		return "IOCS_COMBINATION_REJECTED: The I/O command set combination is rejected";
+	case NVME_SC_INVALID_IOCS:
+		return "INVALID_IOCS: the I/O command set is invalid";
 	case NVME_SC_LBA_RANGE:
 		return "LBA_RANGE: The command references a LBA that exceeds the size of the namespace";
 	case NVME_SC_NS_WRITE_PROTECTED:
@@ -4191,6 +4277,11 @@ static void nvme_show_plm_config(struct nvme_plm_config *plmcfg)
 	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_time_thresh));
 }
 
+static void nvme_show_iocs_vector(struct nvme_iocs_vector *iocs_vector)
+{
+	printf("\tNVM Command Set is selected: %s\n", iocs_vector->nvm ? "True":"False");
+}
+
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf)
 {
 	__u8 field;
@@ -4270,6 +4361,10 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		break;
 	case NVME_FEAT_PLM_WINDOW:
 		printf("\tWindow Select: %s", nvme_plm_window(result));
+		break;
+	case NVME_FEAT_IOCS_SET_PROFILE:
+		printf("\tI/O Command Set Profile: %s\n", result & 0x1 ? "True":"False");
+		nvme_show_iocs_vector((struct nvme_iocs_vector *)buf);
 		break;
 	case NVME_FEAT_HOST_ID:
 		ull =  buf[7]; ull <<= 8; ull |= buf[6]; ull <<= 8; ull |= buf[5]; ull <<= 8;

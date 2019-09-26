@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme id-ns' <device> [-v | --vendor-specific] [-b | --raw-binary]
 		    [--namespace-id=<nsid> | -n <nsid>] [-f | --force]
+			[--csi=<command_set_identifier> | -y <command_set_identifier>]
 		    [--human-readable | -H]
 		    [--output-format=<fmt> | -o <fmt>]
 
@@ -43,6 +44,11 @@ OPTIONS
 	if the namespace is not attached to the controller. This is valid
 	only for controllers at or newer than revision 1.2. Controllers
 	at revision lower than this may interpret the command incorrectly.
+
+-y <command_set_identifier>::
+--csi=<command_set_identifier>::
+	If this value is given, retrieve I/O command set specific namespace
+	data structure with the given command set identifier.
 
 -b::
 --raw-binary::

@@ -12,10 +12,9 @@ uint64_t int48_to_long(__u8 *data);
 void nvme_show_status(__u16 status);
 void nvme_show_relatives(const char *name);
 
-void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
+void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, __u8 csi, unsigned int mode,
 	void (*vendor_show)(__u8 *vs, struct json_object *root));
-void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode);
-void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
+void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid, __u8 csi,
 	enum nvme_print_flags flags);
 void nvme_show_resv_report(struct nvme_reservation_status *status, int bytes, __u32 cdw11,
 	enum nvme_print_flags flags);
@@ -53,6 +52,7 @@ void nvme_show_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *
 	enum nvme_print_flags flags);
 void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 	enum nvme_print_flags flags);
+void nvme_show_id_iocs(struct nvme_id_iocs *iocs);
 
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf);
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,

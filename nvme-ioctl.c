@@ -335,6 +335,8 @@ int nvme_resv_report(int fd, __u32 nsid, __u32 numd, __u32 cdw11, void *data)
 
 int nvme_identify13(int fd, __u32 nsid, __u32 cdw10, __u32 cdw11, void *data)
 {
+	memset(data, 0x0, NVME_IDENTIFY_DATA_SIZE);
+
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_identify,
 		.nsid		= nsid,
@@ -352,24 +354,52 @@ int nvme_identify(int fd, __u32 nsid, __u32 cdw10, void *data)
 	return nvme_identify13(fd, nsid, cdw10, 0, data);
 }
 
+int nvme_identify_ctrl_csi(int fd, __u8 csi, void *data)
+{
+	int cns = csi ? NVME_ID_CNS_CTRL_IOCS : NVME_ID_CNS_CTRL;
+	return nvme_identify13(fd, 0x0, cns, csi << 24, data);
+}
+
 int nvme_identify_ctrl(int fd, void *data)
 {
-	memset(data, 0, sizeof(struct nvme_id_ctrl));
-	return nvme_identify(fd, 0, 1, data);
+	return nvme_identify_ctrl_csi(fd, 0x0, data);
+}
+
+
+int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 csi, bool present, void *data)
+{
+	int cns;
+
+	if (csi) {
+		cns = present ? NVME_ID_CNS_NS_PRESENT_IOCS : NVME_ID_CNS_NS_IOCS;
+	} else {
+		cns = present ? NVME_ID_CNS_NS_PRESENT : NVME_ID_CNS_NS;
+	}
+
+	return nvme_identify13(fd, nsid, cns, csi << 24, data);
 }
 
 int nvme_identify_ns(int fd, __u32 nsid, bool present, void *data)
 {
-	int cns = present ? NVME_ID_CNS_NS_PRESENT : NVME_ID_CNS_NS;
+	return nvme_identify_ns_csi(fd, nsid, 0x0, present, data);
+}
 
-	return nvme_identify(fd, nsid, cns, data);
+int nvme_identify_ns_list_csi(int fd, __u32 nsid, __u8 csi, bool all, void *data)
+{
+	int cns;
+
+	if (csi) {
+		cns = all ? NVME_ID_CNS_NS_PRESENT_LIST_IOCS : NVME_ID_CNS_NS_ACTIVE_LIST_IOCS;
+	} else {
+		cns = all ? NVME_ID_CNS_NS_PRESENT_LIST : NVME_ID_CNS_NS_ACTIVE_LIST;
+	}
+
+	return nvme_identify13(fd, nsid, cns, csi << 24, data);
 }
 
 int nvme_identify_ns_list(int fd, __u32 nsid, bool all, void *data)
 {
-	int cns = all ? NVME_ID_CNS_NS_PRESENT_LIST : NVME_ID_CNS_NS_ACTIVE_LIST;
-
-	return nvme_identify(fd, nsid, cns, data);
+	return nvme_identify_ns_list_csi(fd, nsid, 0x0, all, data);
 }
 
 int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
@@ -403,6 +433,11 @@ int nvme_identify_ns_granularity(int fd, void *data)
 int nvme_identify_uuid(int fd, void *data)
 {
 	return nvme_identify(fd, 0, NVME_ID_CNS_UUID_LIST, data);
+}
+
+int nvme_identify_iocs(int fd, __u16 cntid, void *data)
+{
+	return nvme_identify(fd, 0, (cntid << 16) | NVME_ID_CNS_IOCS, data);
 }
 
 int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
@@ -659,8 +694,8 @@ int nvme_format(int fd, __u32 nsid, __u8 lbaf, __u8 ses, __u8 pi,
 }
 
 int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas, __u8 dps,
-		__u8 nmic, __u32 anagrpid, __u16 nvmsetid,  __u32 timeout,
-		__u32 *result)
+		__u8 nmic, __u32 anagrpid, __u16 nvmsetid, __u8 csi,
+		__u32 timeout, __u32 *result)
 {
 	struct nvme_id_ns ns = {
 		.nsze		= cpu_to_le64(nsze),
@@ -676,6 +711,7 @@ int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas, __u8 dps,
 		.opcode		= nvme_admin_ns_mgmt,
 		.addr		= (__u64)(uintptr_t) ((void *)&ns),
 		.cdw10		= 0,
+		.cdw11		= csi << 24,
 		.data_len	= 0x1000,
 		.timeout_ms	= timeout,
 	};

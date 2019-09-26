@@ -2,7 +2,7 @@
 # (unfortunately, bash won't let me add descriptions to cmds)
 # Kelly Kaoudis kelly.n.kaoudis at intel.com, Aug. 2015
 
-_cmds="list id-ctrl id-ns list-ns create-ns delete-ns \
+_cmds="list id-ctrl id-ns list-ns id-iocs create-ns delete-ns \
 	attach-ns detach-ns list-ctrl get-ns-id get-log \
 	fw-log smart-log smart-log-add error-log \
 	get-feature set-feature format fw-activate \
@@ -36,19 +36,23 @@ nvme_list_opts () {
 		;;
 		"id-ctrl")
 		opts+=" --raw-binary -b --human-readable -H \
-			--vendor-specific -v --output-format= -o"
+			--vendor-specific -v --output-format= -o \
+			--csi= -y"
 		;;
 		"id-ns")
 		opts+=" --namespace-id= -n --raw-binary -b \
 			--human-readable -H --vendor-specific -v \
-			--force -f --output-format= -o"
+			--force -f --output-format= -o --csi= -y"
 			;;
 		"list-ns")
-		opts+=" --namespace-id= -n --al -a"
+		opts+=" --namespace-id= -n --al -a --csi= -y"
+			;;
+		"id-iocs")
+		opts+=" --controller-id= -c"
 			;;
 		"create-ns")
 		opts+=" --nsze= -s --ncap= -c --flbas= -f \
-			--dps= -d --nmic= -n"
+			--dps= -d --nmic= -n --csi= -y"
 			;;
 		"delete-ns")
 		opts+=" -namespace-id= -n"

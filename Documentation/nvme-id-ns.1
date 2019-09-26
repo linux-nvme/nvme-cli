@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/24/2020
+.\"      Date: 05/06/2020
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "04/24/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "05/06/2020" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,6 +34,7 @@ nvme-id-ns \- Send NVMe Identify Namespace, return result and structure
 .nf
 \fInvme id\-ns\fR <device> [\-v | \-\-vendor\-specific] [\-b | \-\-raw\-binary]
                     [\-\-namespace\-id=<nsid> | \-n <nsid>] [\-f | \-\-force]
+                        [\-\-csi=<command_set_identifier> | \-y <command_set_identifier>]
                     [\-\-human\-readable | \-H]
                     [\-\-output\-format=<fmt> | \-o <fmt>]
 .fi
@@ -54,6 +55,11 @@ Retrieve the identify namespace structure for the given nsid\&. This is required
 \-f, \-\-force
 .RS 4
 Request controller return the identify namespace structure even if the namespace is not attached to the controller\&. This is valid only for controllers at or newer than revision 1\&.2\&. Controllers at revision lower than this may interpret the command incorrectly\&.
+.RE
+.PP
+\-y <command_set_identifier>, \-\-csi=<command_set_identifier>
+.RS 4
+If this value is given, retrieve I/O command set specific namespace data structure with the given command set identifier\&.
 .RE
 .PP
 \-b, \-\-raw\-binary
