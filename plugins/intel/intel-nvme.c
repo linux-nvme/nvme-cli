@@ -58,25 +58,70 @@ struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	host_bytes_written;
 };
 
+#pragma pack(push,1)
+struct nvme_vu_id_ctrl_field { //CDR MR5
+	__u8			rsvd1[3];
+	__u8			ss;
+	__u8			health[20];
+	__u8			cls;
+	__u8			nlw;
+	__u8			scap;
+	__u8			sstat;
+	__u8			bl[8];
+	__u8			rsvd2[38];
+	__u8			ww[8]; //little endian
+	__u8			mic_bl[4];
+	__u8			mic_fw[4];
+};
+#pragma pack(pop)
+
 static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 {
-	char bl[9];
-        char health[21];
+	struct nvme_vu_id_ctrl_field* log = (struct nvme_vu_id_ctrl_field *)vs;
 
-	memcpy(bl, &vs[28], sizeof(bl));
-	memcpy(health, &vs[4], sizeof(health));
+	char health[21];
+	char bl[9];
+	char ww[19];
+	char mic_bl[5];
+	char mic_fw[5];
+
+	memcpy(bl, log->bl, sizeof(bl));
+	memcpy(health, log->health, sizeof(health));
+	memcpy(mic_bl, log->mic_bl, sizeof(mic_bl));
+	memcpy(mic_fw, log->mic_fw, sizeof(mic_fw));
 
 	bl[sizeof(bl) - 1] = '\0';
 	health[sizeof(health) - 1] = '\0';
+	mic_bl[sizeof(mic_bl) - 1] = '\0';
+	mic_fw[sizeof(mic_fw) - 1] = '\0';
+
+	snprintf(ww, 19, "%02X%02X%02X%02X%02X%02X%02X%02X", log->ww[7],
+					log->ww[6], log->ww[5], log->ww[4], log->ww[3], log->ww[2],
+					log->ww[1], log->ww[0]);
+
 
 	if (root) {
-		json_object_add_value_int(root, "ss", vs[3]);
+		json_object_add_value_int(root, "ss", log->ss);
 		json_object_add_value_string(root, "health", health[0] ? health : "healthy");
+		json_object_add_value_int(root, "cls", log->cls);
+		json_object_add_value_int(root, "nlw", log->nlw);
+		json_object_add_value_int(root, "scap", log->scap);
+		json_object_add_value_int(root, "sstat", log->sstat);
 		json_object_add_value_string(root, "bl", bl);
+		json_object_add_value_string(root, "ww", ww);
+		json_object_add_value_string(root, "mic_bl", mic_bl);
+		json_object_add_value_string(root, "mic_fw", mic_fw);
 	} else {
-		printf("ss      : %d\n", vs[3]);
-		printf("health  : %s\n", health[0] ? health : "healthy");
-		printf("bl      : %s\n", bl);
+		printf("ss        : %d\n", log->ss);
+		printf("health    : %s\n", log->health[0] ? health : "healthy");
+		printf("cls       : %d\n", log->cls);
+		printf("nlw       : %d\n", log->nlw);
+		printf("scap      : %d\n", log->scap);
+		printf("sstat     : %d\n", log->sstat);
+		printf("bl        : %s\n", bl);
+		printf("ww        : %s\n", ww);
+		printf("mic_bl    : %s\n", mic_bl);
+		printf("mic_fw    : %s\n", mic_fw);
 	}
 }
 
