@@ -150,7 +150,12 @@ static int scan_ctrl(struct nvme_ctrl *c, char *p)
 	c->transport = get_nvme_ctrl_attr(path, "transport");
 	c->state = get_nvme_ctrl_attr(path, "state");
 
-	c->nr_namespaces = scandir(path, &ns, scan_namespace_filter, alphasort);
+	ret = scandir(path, &ns, scan_namespace_filter, alphasort);
+	if (ret == -1) {
+		fprintf(stderr, "Failed to open %s: %s\n", path, strerror(errno));
+		return errno;
+	}
+	c->nr_namespaces = ret;
 	c->namespaces = calloc(c->nr_namespaces, sizeof(*n));
 	for (i = 0; i < c->nr_namespaces; i++) {
 		n = &c->namespaces[i];
@@ -195,7 +200,12 @@ static int scan_subsystem(struct nvme_subsystem *s)
 		return ret;
 
 	s->subsysnqn = get_nvme_subsnqn(path);
-	s->nr_ctrls = scandir(path, &ctrls, scan_ctrls_filter, alphasort);
+	ret = scandir(path, &ctrls, scan_ctrls_filter, alphasort);
+	if (ret == -1) {
+		fprintf(stderr, "Failed to open %s: %s\n", path, strerror(errno));
+		return errno;
+	}
+	s->nr_ctrls = ret;
 	s->ctrls = calloc(s->nr_ctrls, sizeof(*c));
 	for (i = 0; i < s->nr_ctrls; i++) {
 		c = &s->ctrls[i];
@@ -208,7 +218,12 @@ static int scan_subsystem(struct nvme_subsystem *s)
 		free(ctrls[i]);
 	free(ctrls);
 
-	s->nr_namespaces = scandir(path, &ns, scan_namespace_filter, alphasort);
+	ret = scandir(path, &ns, scan_namespace_filter, alphasort);
+	if (ret == -1) {
+		fprintf(stderr, "Failed to open %s: %s\n", path, strerror(errno));
+		return errno;
+	}
+	s->nr_namespaces = ret;
 	s->namespaces = calloc(s->nr_namespaces, sizeof(*n));
 	for (i = 0; i < s->nr_namespaces; i++) {
 		n = &s->namespaces[i];
@@ -264,15 +279,15 @@ static int legacy_list(struct nvme_topology *t)
 	struct nvme_ctrl *c;
 	struct nvme_subsystem *s;
 	struct nvme_namespace *n;
-        struct dirent **devices, **namespaces;
+	struct dirent **devices, **namespaces;
 	int ret = 0, fd, i;
 	char *path;
 
 	t->nr_subsystems = scandir(dev, &devices, scan_ctrls_filter, alphasort);
-        if (t->nr_subsystems < 0) {
+	if (t->nr_subsystems < 0) {
 		fprintf(stderr, "no NVMe device(s) detected.\n");
 		return t->nr_subsystems;
-        }
+	}
 
 	t->subsystems = calloc(t->nr_subsystems, sizeof(*s));
 	for (i = 0; i < t->nr_subsystems; i++) {
