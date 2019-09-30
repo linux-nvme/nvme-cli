@@ -1452,6 +1452,19 @@ void json_nvme_id_uuid_list(struct nvme_id_uuid_list *uuid_list)
 	json_free_object(root);
 }
 
+static const char *nvme_trtype_to_string(__u8 trtype)
+{
+	switch(trtype) {
+	case 0: return "The transport type is not indicated or the error "\
+		"is not transport related.";
+	case 1: return "RDMA Transport error.";
+	case 2: return "Fibre Channel Transport error.";
+	case 3: return "TCP Transport error.";
+	case 254: return "Intra-host Transport error.";
+	default: return "Reserved";
+	};
+}
+
 void show_error_log(struct nvme_error_log_page *err_log, int entries, const char *devname)
 {
 	int i;
@@ -1462,17 +1475,19 @@ void show_error_log(struct nvme_error_log_page *err_log, int entries, const char
 	for (i = 0; i < entries; i++) {
 		printf(" Entry[%2d]   \n", i);
 		printf(".................\n");
-		printf("error_count  : %"PRIu64"\n", le64_to_cpu(err_log[i].error_count));
-		printf("sqid         : %d\n", err_log[i].sqid);
-		printf("cmdid        : %#x\n", err_log[i].cmdid);
-		printf("status_field : %#x(%s)\n", err_log[i].status_field,
+		printf("error_count	: %"PRIu64"\n", le64_to_cpu(err_log[i].error_count));
+		printf("sqid		: %d\n", err_log[i].sqid);
+		printf("cmdid		: %#x\n", err_log[i].cmdid);
+		printf("status_field	: %#x(%s)\n", err_log[i].status_field,
 			nvme_status_to_string(le16_to_cpu(err_log[i].status_field) >> 1));
-		printf("parm_err_loc : %#x\n", err_log[i].parm_error_location);
-		printf("lba          : %#"PRIx64"\n",le64_to_cpu(err_log[i].lba));
-		printf("nsid         : %#x\n", err_log[i].nsid);
-		printf("vs           : %d\n", err_log[i].vs);
-		printf("cs           : %#"PRIx64"\n",
+		printf("parm_err_loc	: %#x\n", err_log[i].parm_error_location);
+		printf("lba		: %#"PRIx64"\n",le64_to_cpu(err_log[i].lba));
+		printf("nsid		: %#x\n", err_log[i].nsid);
+		printf("vs		: %d\n", err_log[i].vs);
+		printf("trtype		: %s\n", nvme_trtype_to_string(err_log[i].trtype));
+		printf("cs		: %#"PRIx64"\n",
 		       le64_to_cpu(err_log[i].cs));
+		printf("trtype_spec_info: %#x\n", err_log[i].trtype_spec_info);
 		printf(".................\n");
 	}
 }
@@ -3021,8 +3036,11 @@ void json_error_log(struct nvme_error_log_page *err_log, int entries, const char
 		json_object_add_value_uint(error, "nsid",
 					   le32_to_cpu(err_log[i].nsid));
 		json_object_add_value_int(error, "vs", err_log[i].vs);
+		json_object_add_value_int(error, "trtype", err_log[i].trtype);
 		json_object_add_value_uint(error, "cs",
 					   le64_to_cpu(err_log[i].cs));
+		json_object_add_value_int(error, "trtype_spec_info",
+					  le16_to_cpu(err_log[i].trtype_spec_info));
 
 		json_array_add_value_object(errors, error);
 	}
