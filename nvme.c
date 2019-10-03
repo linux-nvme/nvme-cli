@@ -5026,6 +5026,21 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struc
 }
 #endif
 
+static int show_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	char *hostnqn;
+
+	hostnqn = hostnqn_read();
+	if (hostnqn) {
+		fputs(hostnqn, stdout);
+		free(hostnqn);
+		return 0;
+	} else {
+		fprintf(stderr, "hostnqn is not available -- use nvme gen-hostnqn\n");
+		return -ENOENT;
+	}
+}
+
 static int discover_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Send Get Log Page request to Discovery Controller.";
