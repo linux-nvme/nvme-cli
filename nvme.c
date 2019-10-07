@@ -2152,17 +2152,22 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	const char *desc = "Retrieve the self-test log for the given device and given test "\
 			"(or optionally a namespace) in either decoded format "\
 			"(default) or binary.";
+	const char *namespace_id = "Indicate the namespace from which the self-test "\
+				    "log has to be obtained";
 	int err, fmt, fd;
 
 	struct config {
+		__u32 namespace_id;
 		char *output_format;
 	};
 
 	struct config cfg = {
+		.namespace_id = NVME_NSID_ALL,
 		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_END()
 	};
@@ -2179,7 +2184,7 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 		goto close_fd;
 	}
 
-	err = nvme_self_test_log(fd, &self_test_log);
+	err = nvme_self_test_log(fd, cfg.namespace_id, &self_test_log);
 	if (!err) {
 		if (self_test_log.crnt_dev_selftest_oprn == 0) {
 			if (fmt == BINARY)

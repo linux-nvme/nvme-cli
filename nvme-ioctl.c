@@ -523,9 +523,9 @@ int nvme_ana_log(int fd, void *ana_log, size_t ana_log_len, int rgo)
 			true, ana_log_len, ana_log);
 }
 
-int nvme_self_test_log(int fd, struct nvme_self_test_log *self_test_log)
+int nvme_self_test_log(int fd, __u32 nsid, struct nvme_self_test_log *self_test_log)
 {
-	return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_DEVICE_SELF_TEST, false,
+	return nvme_get_log(fd, nsid, NVME_LOG_DEVICE_SELF_TEST, false,
 		sizeof(*self_test_log), self_test_log);
 }
 
