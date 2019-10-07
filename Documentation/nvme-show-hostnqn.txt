@@ -1,0 +1,29 @@
+nvme-show-hostnqn(1)
+===================
+
+NAME
+----
+nvme-show-hostnqn - Generate a host NVMe Qualified Name
+
+SYNOPSIS
+--------
+[verse]
+'nvme show-hostnqn'
+
+DESCRIPTION
+-----------
+Show the host NQN configured for the system.  If /etc/nvme/hostnqn is
+not present and systemd application-specific machine IDs are available,
+this will show the systemd-generated host NQN for the system.
+
+OPTIONS
+-------
+No options needed
+
+EXAMPLES
+--------
+nvme show-hostnqn
+
+NVME
+----
+Part of the nvme-user suite

@@ -43,6 +43,11 @@
 
 #include "common.h"
 
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-id128.h>
+#define NVME_HOSTNQN_ID SD_ID128_MAKE(c7,f4,61,81,12,be,49,32,8c,83,10,6f,9d,dd,d8,6b)
+#endif
+
 #define NVMF_HOSTID_SIZE	36
 
 static struct config {
@@ -563,11 +568,11 @@ static void save_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	close(fd);
 }
 
-static int nvmf_hostnqn_file(void)
+static char *hostnqn_read_file(void)
 {
 	FILE *f;
 	char hostnqn[NVMF_NQN_SIZE];
-	int ret = false;
+	char *ret = NULL;
 
 	f = fopen(PATH_NVMF_HOSTNQN, "r");
 	if (f == NULL)
@@ -576,14 +581,52 @@ static int nvmf_hostnqn_file(void)
 	if (fgets(hostnqn, sizeof(hostnqn), f) == NULL)
 		goto out;
 
-	cfg.hostnqn = strndup(hostnqn, strcspn(hostnqn, "\n"));
-	if (!cfg.hostnqn)
-		goto out;
+	ret = strndup(hostnqn, strcspn(hostnqn, "\n"));
 
-	ret = true;
 out:
 	fclose(f);
 	return ret;
+}
+
+static char *hostnqn_generate_systemd(void)
+{
+#ifdef HAVE_SYSTEMD
+	sd_id128_t id;
+	char *ret;
+
+	if (sd_id128_get_machine_app_specific(NVME_HOSTNQN_ID, &id) < 0)
+		return NULL;
+
+	if (asprintf(&ret, "nqn.2014-08.org.nvmexpress:uuid:" SD_ID128_FORMAT_STR "\n", SD_ID128_FORMAT_VAL(id)) == -1)
+		ret = NULL;
+
+	return ret;
+#else
+	return NULL;
+#endif
+}
+
+/* returns an allocated string or NULL */
+char *hostnqn_read(void)
+{
+	char *ret;
+
+	ret = hostnqn_read_file();
+	if (ret)
+		return ret;
+
+	ret = hostnqn_generate_systemd();
+	if (ret)
+		return ret;
+
+	return NULL;
+}
+
+static int nvmf_hostnqn_file(void)
+{
+	cfg.hostnqn = hostnqn_read();
+
+	return cfg.hostnqn != NULL;
 }
 
 static int nvmf_hostid_file(void)
