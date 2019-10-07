@@ -41,9 +41,11 @@ struct nvme_error_log_page {
 	__le64	lba;
 	__le32	nsid;
 	__u8	vs;
-	__u8	resv[3];
+	__u8	trtype;
+	__u8	resv[2];
 	__le64	cs;
-	__u8	resv2[24];
+	__le16	trtype_spec_info;
+	__u8	resv2[22];
 };
 
 struct nvme_firmware_log_page {
