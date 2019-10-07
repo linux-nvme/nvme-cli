@@ -1685,16 +1685,26 @@ void show_endurance_log(struct nvme_endurance_group_log *endurance_group,
 			__u16 group_id, const char *devname)
 {
 	printf("Endurance Group Log for NVME device:%s Group ID:%x\n", devname, group_id);
-	printf("avl_spare_threshold   : %u\n", endurance_group->avl_spare_threshold);
-	printf("percent_used          : %u%%\n", endurance_group->percent_used);
-	printf("endurance_estimate    : %'.0Lf\n",
+	printf("critical warning	: %u\n", endurance_group->critical_warning);
+	printf("avl_spare		: %u\n", endurance_group->avl_spare);
+	printf("avl_spare_threshold	: %u\n", endurance_group->avl_spare_threshold);
+	printf("percent_used		: %u%%\n", endurance_group->percent_used);
+	printf("endurance_estimate	: %'.0Lf\n",
 		int128_to_double(endurance_group->endurance_estimate));
-	printf("data_units_read       : %'.0Lf\n",
+	printf("data_units_read		: %'.0Lf\n",
 		int128_to_double(endurance_group->data_units_read));
-	printf("data_units_written    : %'.0Lf\n",
+	printf("data_units_written	: %'.0Lf\n",
 		int128_to_double(endurance_group->data_units_written));
-	printf("media_units_written   : %'.0Lf\n",
+	printf("media_units_written	: %'.0Lf\n",
 		int128_to_double(endurance_group->media_units_written));
+	printf("host_read_cmds		: %'.0Lf\n",
+		int128_to_double(endurance_group->host_read_cmds));
+	printf("host_write_cmds		: %'.0Lf\n",
+		int128_to_double(endurance_group->host_write_cmds));
+	printf("media_data_integrity_err: %'.0Lf\n",
+		int128_to_double(endurance_group->media_data_integrity_err));
+	printf("num_err_info_log_entries: %'.0Lf\n",
+		int128_to_double(endurance_group->num_err_info_log_entries));
 }
 
 void show_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname)
@@ -3168,15 +3178,25 @@ void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 	long double data_units_read= int128_to_double(endurance_group->data_units_read);
 	long double data_units_written= int128_to_double(endurance_group->data_units_written);
 	long double media_units_written= int128_to_double(endurance_group->media_units_written);
+	long double host_read_cmds = int128_to_double(endurance_group->host_read_cmds);
+	long double host_write_cmds = int128_to_double(endurance_group->host_write_cmds);
+	long double media_data_integrity_err = int128_to_double(endurance_group->media_data_integrity_err);
+	long double num_err_info_log_entries = int128_to_double(endurance_group->num_err_info_log_entries);
 
 	root = json_create_object();
 
+	json_object_add_value_int(root, "critical_warning", endurance_group->critical_warning);
+	json_object_add_value_int(root, "avl_spare", endurance_group->avl_spare);
 	json_object_add_value_int(root, "avl_spare_threshold", endurance_group->avl_spare_threshold);
 	json_object_add_value_int(root, "percent_used", endurance_group->percent_used);
 	json_object_add_value_float(root, "endurance_estimate", endurance_estimate);
 	json_object_add_value_float(root, "data_units_read", data_units_read);
 	json_object_add_value_float(root, "data_units_written", data_units_written);
 	json_object_add_value_float(root, "mediate_write_commands", media_units_written);
+	json_object_add_value_float(root, "host_read_cmds", host_read_cmds);
+	json_object_add_value_float(root, "host_write_cmds", host_write_cmds);
+	json_object_add_value_float(root, "media_data_integrity_err", media_data_integrity_err);
+	json_object_add_value_float(root, "num_err_info_log_entries", num_err_info_log_entries);
 
 	json_print_object(root, NULL);
 	printf("\n");

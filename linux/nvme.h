@@ -508,7 +508,9 @@ struct nvme_telemetry_log_page_hdr {
 };
 
 struct nvme_endurance_group_log {
-	__u32	rsvd0;
+	__u8	critical_warning;
+	__u8	rsvd1[2];
+	__u8	avl_spare;
 	__u8	avl_spare_threshold;
 	__u8	percent_used;
 	__u8	rsvd6[26];
@@ -516,7 +518,11 @@ struct nvme_endurance_group_log {
 	__u8	data_units_read[16];
 	__u8	data_units_written[16];
 	__u8	media_units_written[16];
-	__u8	rsvd96[416];
+	__u8	host_read_cmds[16];
+	__u8	host_write_cmds[16];
+	__u8	media_data_integrity_err[16];
+	__u8	num_err_info_log_entries[16];
+	__u8	rsvd160[352];
 };
 
 struct nvme_smart_log {
