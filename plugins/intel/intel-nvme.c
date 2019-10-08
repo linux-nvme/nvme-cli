@@ -58,7 +58,6 @@ struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	host_bytes_written;
 };
 
-#pragma pack(push,1)
 struct nvme_vu_id_ctrl_field { //CDR MR5
 	__u8			rsvd1[3];
 	__u8			ss;
@@ -73,7 +72,6 @@ struct nvme_vu_id_ctrl_field { //CDR MR5
 	__u8			mic_bl[4];
 	__u8			mic_fw[4];
 };
-#pragma pack(pop)
 
 static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 {
