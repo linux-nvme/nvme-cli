@@ -90,6 +90,7 @@
 #define WDC_DRIVE_CAP_CRASH_DUMP			0x0000000000000800
 #define WDC_DRIVE_CAP_PFAIL_DUMP			0x0000000000001000
 #define WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY   0x0000000000002000
+#define WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY  0x0000000000004000
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
@@ -185,6 +186,11 @@
 #define WDC_NVME_CLEAR_CRASH_DUMP_CMD			0x03
 #define WDC_NVME_CLEAR_CRASH_DUMP_SUBCMD		0x05
 #define WDC_NVME_CLEAR_PF_CRASH_DUMP_SUBCMD		0x06
+
+/* Clear FW Activate History */
+#define WDC_NVME_CLEAR_FW_ACT_HIST_OPCODE       0xC6
+#define WDC_NVME_CLEAR_FW_ACT_HIST_CMD			0x23
+#define WDC_NVME_CLEAR_FW_ACT_HIST_SUBCMD		0x05
 
 /* Additional Smart Log */
 #define WDC_ADD_LOG_BUF_LEN				0x4000
@@ -805,7 +811,7 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
 					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
 					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
-					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY);
+					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY);
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -3439,6 +3445,42 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *com
 		ret = -1;
 	}
 
+	return ret;
+}
+
+static int wdc_clear_fw_activate_history(int argc, char **argv, struct command *command,
+		struct plugin *plugin)
+{
+	char *desc = "Clear FW activate history table.";
+	int fd;
+	int ret = -1;
+	__u64 capabilities = 0;
+	struct nvme_passthru_cmd admin_cmd;
+
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	if (fd < 0)
+		return fd;
+
+	capabilities = wdc_get_drive_capabilities(fd);
+	if ((capabilities & WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY) != WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY) {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+		goto out;
+	}
+
+	memset(&admin_cmd, 0, sizeof (admin_cmd));
+	admin_cmd.opcode = WDC_NVME_CLEAR_FW_ACT_HIST_OPCODE;
+	admin_cmd.cdw12 = ((WDC_NVME_CLEAR_FW_ACT_HIST_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
+			WDC_NVME_CLEAR_FW_ACT_HIST_CMD);
+
+	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+
+out:
 	return ret;
 }
 
