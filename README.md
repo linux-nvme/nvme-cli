@@ -113,6 +113,11 @@ steps:
    otherwise you will see information about each NVMe device installed
    in the system.
 
+### OpenEmbedded/Yocto
+
+An [nvme-cli recipe](https://layers.openembedded.org/layerindex/recipe/88631/)
+is available as part of the `meta-openembeded` layer collection.
+
 ### Other Distros
 
 TBD

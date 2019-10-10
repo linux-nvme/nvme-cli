@@ -263,7 +263,7 @@ static int verify_legacy_ns(struct nvme_namespace *n)
 		return ret;
 
 	if (memcmp(id.mn, c->id.mn, sizeof(id.mn)) ||
-	    memcmp(id.sn, c->id.mn, sizeof(id.sn)))
+	    memcmp(id.sn, c->id.sn, sizeof(id.sn)))
 		return -ENODEV;
 	return 0;
 }
@@ -307,6 +307,18 @@ static int legacy_list(struct nvme_topology *t)
 					   alphasort);
 		c->namespaces = calloc(c->nr_namespaces, sizeof(*n));
 
+		ret = asprintf(&path, "%s%s", dev, c->name);
+		if (ret < 0)
+			continue;
+		ret = 0;
+
+		fd = open(path, O_RDONLY);
+		if (fd > 0) {
+			nvme_identify_ctrl(fd, &c->id);
+			close(fd);
+		}
+		free(path);
+
 		for (j = 0; j < c->nr_namespaces; j++) {
 			n = &c->namespaces[j];
 			n->name = strdup(namespaces[j]->d_name);
@@ -319,18 +331,6 @@ static int legacy_list(struct nvme_topology *t)
 		while (j--)
 			free(namespaces[j]);
 		free(namespaces);
-
-		ret = asprintf(&path, "%s%s", dev, c->name);
-		if (ret < 0)
-			continue;
-		ret = 0;
-
-		fd = open(path, O_RDONLY);
-		if (fd > 0) {
-			nvme_identify_ctrl(fd, &c->id);
-			close(fd);
-		}
-		free(path);
 	}
 
 free:
