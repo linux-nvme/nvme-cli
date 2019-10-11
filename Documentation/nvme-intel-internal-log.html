@@ -433,7 +433,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -747,8 +747,6 @@ nvme-intel-internal-log(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content">'nvme intel internal-log ' &lt;device&gt; [--log=&lt;NUM&gt;, -l &lt;NUM&gt;]
-                [--region=&lt;NUM&gt;, r &lt;NUM&gt;]
-                [--nlognum=&lt;NUM&gt;, m &lt;NUM&gt;]
                 [--namespace-id=&lt;NUM&gt;, -n &lt;NUM&gt;]
                 [--output-file=&lt;FILE&gt;, -o &lt;FILE&gt;]</pre>
 <div class="attribution">
@@ -807,30 +805,6 @@ controllers. Results for any other device are undefined.</p></div>
         Output file; defaults to device name provided
 </p>
 </dd>
-<dt class="hdlist1">
--r &lt;NUM&gt;
-</dt>
-<dt class="hdlist1">
---region=&lt;NUM&gt;
-</dt>
-<dd>
-<p>
-        Select which core region to retrieve the log from. -1 for all
-        available, if supported by the device.
-</p>
-</dd>
-<dt class="hdlist1">
--m &lt;NUM&gt;
-</dt>
-<dt class="hdlist1">
---nlognum=&lt;NUM&gt;
-</dt>
-<dd>
-<p>
-        When used with <em>nlog</em>, this specifies which nlog to read. -1
-        for all, if supported by the device.
-</p>
-</dd>
 </dl></div>
 </div>
 </div>
@@ -869,7 +843,7 @@ Gets the event log from the device and saves to defined file:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-10-09 15:55:16 CDT
+Last updated 2017-02-27 10:11:58 EST
 </div>
 </div>
 </body>
