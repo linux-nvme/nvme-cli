@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.8" />
-<title>nvme-netapp-smdevices(1)</title>
+<title>nvme-show-hostnqn(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -732,12 +732,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-netapp-smdevices(1) Manual Page
+nvme-show-hostnqn(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-netapp-smdevices -
-   Display information for each NVMe path to an E-Series volume
+<p>nvme-show-hostnqn -
+   Generate a host NVMe Qualified Name
 </p>
 </div>
 </div>
@@ -746,7 +746,7 @@ nvme-netapp-smdevices(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme netapp smdevices</em> [-o &lt;fmt&gt; | --output-format=&lt;fmt&gt;]</pre>
+<pre class="content"><em>nvme show-hostnqn</em></pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -754,45 +754,21 @@ nvme-netapp-smdevices(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Display vendor-specific information for each NVMe path to an E-Series namespace
-currently connected to the host.  The E-Series paths are identified from the
-NVMe nodes in /dev by sending an Identify Controller.</p></div>
+<div class="paragraph"><p>Show the host NQN configured for the system.  If /etc/nvme/hostnqn is
+not present and systemd application-specific machine IDs are available,
+this will show the systemd-generated host NQN for the system.</p></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
-<div class="dlist"><dl>
-<dt class="hdlist1">
--o &lt;fmt&gt;
-</dt>
-<dt class="hdlist1">
---output-format=&lt;fmt&gt;
-</dt>
-<dd>
-<p>
-              Set the reporting format to <em>normal</em> (default), <em>column</em>, or
-              <em>json</em>. Only one output format can be used at a time.
-</p>
-</dd>
-</dl></div>
+<div class="paragraph"><p>No options needed</p></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="ulist"><ul>
-<li>
-<p>
-Display information, in a column-based format, for each path to an E-Series
-namespace.
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme netapp smdevices -o column</code></pre>
-</div></div>
-</li>
-</ul></div>
+<div class="paragraph"><p>nvme show-hostnqn</p></div>
 </div>
 </div>
 <div class="sect1">

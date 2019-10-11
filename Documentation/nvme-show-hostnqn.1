@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-netapp-smdevices
+.\"     Title: nvme-show-hostnqn
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
 .\"      Date: 10/09/2019
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-NETAPP\-SMDEVI" "1" "10/09/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-SHOW\-HOSTNQN" "1" "10/09/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,47 +28,21 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-netapp-smdevices \- Display information for each NVMe path to an E\-Series volume
+nvme-show-hostnqn \- Generate a host NVMe Qualified Name
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme netapp smdevices\fR [\-o <fmt> | \-\-output\-format=<fmt>]
+\fInvme show\-hostnqn\fR
 .fi
 .SH "DESCRIPTION"
 .sp
-Display vendor\-specific information for each NVMe path to an E\-Series namespace currently connected to the host\&. The E\-Series paths are identified from the NVMe nodes in /dev by sending an Identify Controller\&.
+Show the host NQN configured for the system\&. If /etc/nvme/hostnqn is not present and systemd application\-specific machine IDs are available, this will show the systemd\-generated host NQN for the system\&.
 .SH "OPTIONS"
-.PP
-\-o <fmt>, \-\-output\-format=<fmt>
-.RS 4
-Set the reporting format to
-\fInormal\fR
-(default),
-\fIcolumn\fR, or
-\fIjson\fR\&. Only one output format can be used at a time\&.
-.RE
+.sp
+No options needed
 .SH "EXAMPLES"
 .sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-Display information, in a column\-based format, for each path to an E\-Series namespace\&.
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-# nvme netapp smdevices \-o column
-.fi
-.if n \{\
-.RE
-.\}
-.RE
+nvme show\-hostnqn
 .SH "NVME"
 .sp
 Part of the nvme\-user suite
