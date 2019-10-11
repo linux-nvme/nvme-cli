@@ -1907,7 +1907,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 	struct config cfg = {
 		.file = NULL,
 		.xfer_size = 0x10000,
-		.data_area = 5,
+		.data_area = 2,
 		.file_size = 0,
 		.offset = 0,
 		.verbose = 0,
