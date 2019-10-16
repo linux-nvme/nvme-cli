@@ -597,7 +597,12 @@ static char *hostnqn_generate_systemd(void)
 	if (sd_id128_get_machine_app_specific(NVME_HOSTNQN_ID, &id) < 0)
 		return NULL;
 
-	if (asprintf(&ret, "nqn.2014-08.org.nvmexpress:uuid:" SD_ID128_FORMAT_STR "\n", SD_ID128_FORMAT_VAL(id)) == -1)
+	/*
+	 * "nqn.2019-10.us.luto:sd_id128_app:" is hereby defined as an SD_ID128
+	 * app-specific machine ID as generated here.
+	 */
+
+	if (asprintf(&ret, "nqn.2019-10.us.luto:sd_id128_app:" SD_ID128_FORMAT_STR "\n", SD_ID128_FORMAT_VAL(id)) == -1)
 		ret = NULL;
 
 	return ret;
