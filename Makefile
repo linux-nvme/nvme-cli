@@ -129,14 +129,12 @@ install-hostparams: install-etc
 
 install-etc:
 	$(INSTALL) -d $(DESTDIR)$(SYSCONFDIR)/nvme
-	touch $(DESTDIR)$(SYSCONFDIR)/nvme/hostnqn
-	touch $(DESTDIR)$(SYSCONFDIR)/nvme/hostid
 	if [ ! -f $(DESTDIR)$(SYSCONFDIR)/nvme/discovery.conf ]; then \
 		$(INSTALL) -m 644 -T ./etc/discovery.conf.in $(DESTDIR)$(SYSCONFDIR)/nvme/discovery.conf; \
 	fi
 
 install-spec: install-bin install-man install-bash-completion install-zsh-completion install-etc install-systemd install-udev install-dracut
-install: install-spec install-hostparams
+install: install-spec
 
 nvme.spec: nvme.spec.in NVME-VERSION-FILE
 	sed -e 's/@@VERSION@@/$(NVME_VERSION)/g' < $< > $@+
