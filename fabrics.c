@@ -627,7 +627,7 @@ char *hostnqn_read(void)
 	return NULL;
 }
 
-static int nvmf_hostnqn_file(void)
+static int nvmf_hostnqn_load(void)
 {
 	cfg.hostnqn = hostnqn_read();
 
@@ -733,7 +733,7 @@ static int build_options(char *argstr, int max_len, bool discover)
 	    add_argument(&argstr, &max_len, "traddr", cfg.traddr) ||
 	    add_argument(&argstr, &max_len, "host_traddr", cfg.host_traddr) ||
 	    add_argument(&argstr, &max_len, "trsvcid", cfg.trsvcid) ||
-	    ((cfg.hostnqn || nvmf_hostnqn_file()) &&
+	    ((cfg.hostnqn || nvmf_hostnqn_load()) &&
 		    add_argument(&argstr, &max_len, "hostnqn", cfg.hostnqn)) ||
 	    ((cfg.hostid || nvmf_hostid_file()) &&
 		    add_argument(&argstr, &max_len, "hostid", cfg.hostid)) ||
