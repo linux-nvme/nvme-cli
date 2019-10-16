@@ -5046,6 +5046,21 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *command, stru
 	}
 }
 
+static int show_hostid_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	char *hostid;
+
+	hostid = hostid_read();
+	if (hostid) {
+		fputs(hostid, stdout);
+		free(hostid);
+		return 0;
+	} else {
+		fprintf(stderr, "hostid is not available -- generate /etc/nvme/hostid\n");
+		return -ENOENT;
+	}
+}
+
 static int discover_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Send Get Log Page request to Discovery Controller.";

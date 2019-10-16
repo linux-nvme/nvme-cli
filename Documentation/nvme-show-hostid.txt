@@ -1,0 +1,29 @@
+nvme-show-hostid(1)
+===================
+
+NAME
+----
+nvme-show-hostid - Generate a host NVMe ID
+
+SYNOPSIS
+--------
+[verse]
+'nvme show-hostid'
+
+DESCRIPTION
+-----------
+Show the host ID configured for the system.  If /etc/nvme/hostid is
+not present and systemd application-specific machine IDs are available,
+this will show the systemd-generated host ID for the system.
+
+OPTIONS
+-------
+No options needed
+
+EXAMPLES
+--------
+nvme show-hostid
+
+NVME
+----
+Part of the nvme-user suite

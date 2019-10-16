@@ -4,6 +4,7 @@
 #define NVMF_DEF_DISC_TMO	30
 
 extern char *hostnqn_read(void);
+extern char *hostid_read(void);
 
 extern int discover(const char *desc, int argc, char **argv, bool connect);
 extern int connect(const char *desc, int argc, char **argv);

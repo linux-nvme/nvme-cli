@@ -46,6 +46,7 @@
 #ifdef HAVE_SYSTEMD
 #include <systemd/sd-id128.h>
 #define NVME_HOSTNQN_ID SD_ID128_MAKE(c7,f4,61,81,12,be,49,32,8c,83,10,6f,9d,dd,d8,6b)
+#define NVME_HOSTID_ID SD_ID128_MAKE(df,66,bf,ec,f7,e4,21,0e,46,27,ac,a8,f2,8f,3b,98)
 #endif
 
 #define NVMF_HOSTID_SIZE	36
@@ -634,11 +635,11 @@ static int nvmf_hostnqn_load(void)
 	return cfg.hostnqn != NULL;
 }
 
-static int nvmf_hostid_file(void)
+static char *hostid_read_file(void)
 {
 	FILE *f;
 	char hostid[NVMF_HOSTID_SIZE + 1];
-	int ret = false;
+	char *ret = NULL;
 
 	f = fopen(PATH_NVMF_HOSTID, "r");
 	if (f == NULL)
@@ -647,14 +648,56 @@ static int nvmf_hostid_file(void)
 	if (fgets(hostid, sizeof(hostid), f) == NULL)
 		goto out;
 
-	cfg.hostid = strdup(hostid);
-	if (!cfg.hostid)
-		goto out;
+	ret = strdup(hostid);
 
-	ret = true;
+
 out:
 	fclose(f);
 	return ret;
+}
+
+static char *hostid_generate_systemd(void)
+{
+#if defined(LIBUUID) && defined(HAVE_SYSTEMD)
+	sd_id128_t id;
+	char uuidstr[37];
+	char *ret;
+
+	if (sd_id128_get_machine_app_specific(NVME_HOSTID_ID, &id) < 0)
+		return NULL;
+
+	uuid_unparse_lower(id.bytes, uuidstr);
+
+	if (asprintf(&ret, "%s\n", uuidstr) == -1)
+		ret = NULL;
+
+	return ret;
+#else
+	return NULL;
+#endif
+}
+
+/* returns an allocated string or NULL */
+char *hostid_read(void)
+{
+	char *ret;
+
+	ret = hostid_read_file();
+	if (ret)
+		return ret;
+
+	ret = hostid_generate_systemd();
+	if (ret)
+		return ret;
+
+	return NULL;
+}
+
+static int nvmf_hostid_load(void)
+{
+	cfg.hostid = hostid_read();
+
+	return cfg.hostid != NULL;
 }
 
 static int
@@ -735,7 +778,7 @@ static int build_options(char *argstr, int max_len, bool discover)
 	    add_argument(&argstr, &max_len, "trsvcid", cfg.trsvcid) ||
 	    ((cfg.hostnqn || nvmf_hostnqn_load()) &&
 		    add_argument(&argstr, &max_len, "hostnqn", cfg.hostnqn)) ||
-	    ((cfg.hostid || nvmf_hostid_file()) &&
+	    ((cfg.hostid || nvmf_hostid_load()) &&
 		    add_argument(&argstr, &max_len, "hostid", cfg.hostid)) ||
 	    (!discover &&
 	      add_int_argument(&argstr, &max_len, "nr_io_queues",
