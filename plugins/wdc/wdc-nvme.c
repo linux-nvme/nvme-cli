@@ -1917,7 +1917,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		OPT_FILE("output-file",   'o', &cfg.file,      file),
 		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
 		OPT_UINT("data-area",     'd', &cfg.data_area, data_area),
-		OPT_UINT("file-size",     'f', &cfg.file_size, file_size),
+		OPT_LONG("file-size",     'f', &cfg.file_size, file_size),
 		OPT_LONG("offset",        't', &cfg.offset,    offset),
 		OPT_FLAG("verbose",       'v', &cfg.verbose,   verbose),
 		OPT_END()
@@ -1973,11 +1973,14 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 	capabilities = wdc_get_drive_capabilities(fd);
 	if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG)
 		return wdc_do_cap_diag(fd, f, xfer_size);
-	if ((capabilities & WDC_DRIVE_CAP_SN340_DUI) == WDC_DRIVE_CAP_SN340_DUI)
+	if ((capabilities & WDC_DRIVE_CAP_SN340_DUI) == WDC_DRIVE_CAP_SN340_DUI) {
+		/* FW requirement - xfer size must be 500k for data area 4 */
+		if (cfg.data_area >= 4)
+			xfer_size = 0x80000;
 		return wdc_do_cap_dui(fd, f, xfer_size, cfg.data_area, cfg.verbose, cfg.file_size, cfg.offset);
+	}
 	if ((capabilities & WDC_DRIVE_CAP_DUI_DATA) == WDC_DRIVE_CAP_DUI_DATA)
-		//return wdc_do_cap_dui(fd, f, xfer_size, WDC_NVME_DUI_MAX_DATA_AREA, cfg.verbose, 0, 0);
-		return wdc_do_cap_dui(fd, f, xfer_size, cfg.data_area, cfg.verbose, cfg.file_size, cfg.offset);
+		return wdc_do_cap_dui(fd, f, xfer_size, WDC_NVME_DUI_MAX_DATA_AREA, cfg.verbose, 0, 0);
 	if ((capabilities & WDC_SN730B_CAP_VUC_LOG) == WDC_SN730B_CAP_VUC_LOG)
 		return wdc_do_sn730_get_and_tar(fd, f);
 
