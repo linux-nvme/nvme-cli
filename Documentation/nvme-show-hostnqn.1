@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-lnvm-remove
+.\"     Title: nvme-show-hostnqn
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 10/12/2019
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LNVM\-REMOVE" "1" "10/12/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-SHOW\-HOSTNQN" "1" "10/12/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,26 +28,21 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-lnvm-remove \- Remove an initialized LightNVM target\&.
+nvme-show-hostnqn \- Generate a host NVMe Qualified Name
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme lnvm\-remove\fR [\-\-target\-name=<TARGET> | \-n <TARGET>]
+\fInvme show\-hostnqn\fR
 .fi
 .SH "DESCRIPTION"
 .sp
-Remove an initialized target\&.
-.sp
-The target name is the name of which the media is exposed as in /dev/<TARGET>
+Show the host NQN configured for the system\&. If /etc/nvme/hostnqn is not present and systemd application\-specific machine IDs are available, this will show the systemd\-generated host NQN for the system\&.
 .SH "OPTIONS"
-.PP
-\-\-target\-name=<TARGET>, \-n <TARGET>
-.RS 4
-Target name of the device to initialize\&. For example: target0\&.
-.RE
+.sp
+No options needed
 .SH "EXAMPLES"
 .sp
-None yet
+nvme show\-hostnqn
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

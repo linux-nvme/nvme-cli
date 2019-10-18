@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
-<title>nvme-ana-log(1)</title>
+<meta name="generator" content="AsciiDoc 8.6.8" />
+<title>nvme-wdc-clear-fw-activate-history(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -95,9 +94,7 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-pre {
-  white-space: pre-wrap;
-}
+
 
 #author {
   color: #527bbd;
@@ -226,7 +223,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; vertical-align: text-bottom; }
+span.image img { border-style: none; }
 a.image:visited { color: white; }
 
 dl {
@@ -735,12 +732,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-ana-log(1) Manual Page
+nvme-wdc-clear-fw-activate-history(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-ana-log -
-   Send NVMe ANA log page request, returns result and log
+<p>nvme-wdc-clear-fw-activate-history -
+   Clears the firmware activate history table.
 </p>
 </div>
 </div>
@@ -749,7 +746,7 @@ nvme-ana-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme ana-log</em> &lt;device&gt; [-o &lt;fmt&gt; | --output-format=&lt;fmt&gt;]</pre>
+<pre class="content"><em>nvme wdc clear-fw-activate-history</em> &lt;device&gt;</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -757,32 +754,19 @@ nvme-ana-log(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Retrieves the NVMe Asymmetric Namespace Access log page from an NVMe device
-and provides the returned structure.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory NVMe character device (ex: /dev/nvme0).</p></div>
-<div class="paragraph"><p>On success, the returned ANA log structure may be returned in one of
-several ways depending on the option flags; the structure may parsed by
-the program and printed in a readable format or the raw buffer may be
-printed to stdout for another program to parse.</p></div>
+<div class="paragraph"><p>For the NVMe device given, sends the wdc vendor unique clear fw activate
+history command.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1).</p></div>
+<div class="paragraph"><p>This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.</p></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
-<div class="dlist"><dl>
-<dt class="hdlist1">
--o &lt;format&gt;
-</dt>
-<dt class="hdlist1">
---output-format=&lt;format&gt;
-</dt>
-<dd>
-<p>
-              Set the reporting format to <em>normal</em>, <em>json</em>, or
-              <em>binary</em>. Only one output format can be used at a time.
-</p>
-</dd>
-</dl></div>
+<div class="paragraph"><p>None</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -791,14 +775,14 @@ printed to stdout for another program to parse.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Print the ANA log page in a human readable format:
+Clears the firmware activate history table:
 </p>
-</li>
-</ul></div>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme ana-log /dev/nvme0</code></pre>
+<pre><code># nvme wdc clear-fw-activate-history /dev/nvme0</code></pre>
 </div></div>
+</li>
+</ul></div>
 </div>
 </div>
 <div class="sect1">
@@ -811,8 +795,7 @@ Print the ANA log page in a human readable format:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated
- 2019-10-12 00:12:24 JST
+Last updated 2019-10-10 16:07:36 CDT
 </div>
 </div>
 </body>
