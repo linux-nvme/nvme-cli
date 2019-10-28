@@ -155,4 +155,5 @@ int nvme_sanitize(int fd, __u8 sanact, __u8 ause, __u8 owpass, __u8 oipbp,
 int nvme_self_test_start(int fd, __u32 nsid, __u32 cdw10);
 int nvme_self_test_log(int fd, __u32 nsid, struct nvme_self_test_log *self_test_log);
 int nvme_virtual_mgmt(int fd, __u32 cdw10, __u32 cdw11, __u32 *result);
+int nvme_abort(int fd, __u16 sqid, __u16 cid);
 #endif				/* _NVME_LIB_H */

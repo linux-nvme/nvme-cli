@@ -2018,6 +2018,51 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int abort_cmd(int argc, char **argv, struct command *cmd,
+		     struct plugin *plugin)
+{
+	const char *desc = "Send an Abort command to the given device.";
+	const char *sqid = "identifier of the Submission Queue that the command"\
+			   " to be aborted is associated with";
+	const char *cid = "command identifier of the command to be aborted";
+	int err, fd;
+
+	struct config {
+		__u16 sqid;
+		__u16 cid;
+	};
+
+	struct config cfg = {
+		.sqid  = 0,
+		.cid = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_SHRT("sqid", 's', &cfg.sqid, sqid),
+		OPT_SHRT("cid", 'c', &cfg.cid, cid),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	err = nvme_abort(fd, cfg.sqid, cfg.cid);
+	if (!err)
+		printf("Success aborting sqid:%d cid:%d\n",
+		       cfg.sqid, cfg.cid);
+	else if (err > 0)
+		show_nvme_status(err);
+	else
+		perror("abort");
+
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Show secondary controller list associated with the primary controller "\

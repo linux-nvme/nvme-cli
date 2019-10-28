@@ -926,3 +926,13 @@ int nvme_virtual_mgmt(int fd, __u32 cdw10, __u32 cdw11, __u32 *result)
 
 	return err;
 }
+
+int nvme_abort(int fd, __u16 sqid, __u16 cid)
+{
+	struct nvme_admin_cmd cmd = {
+		.opcode		= nvme_admin_abort_cmd,
+		.cdw10		= cid << 16 | sqid,
+	};
+
+	return nvme_submit_admin_passthru(fd, &cmd);
+}
