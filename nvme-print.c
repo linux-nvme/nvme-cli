@@ -3757,6 +3757,21 @@ static void show_registers_bpmbl(uint64_t bpmbl)
 	printf("\tBoot Partition Memory Buffer Base Address (BMBBA): %"PRIx64"\n", bpmbl);
 }
 
+static void show_registers_cmbmsc(uint64_t cmbmsc)
+{
+	printf("\tController Base Address (CBA)	     : %lx\n",
+			(cmbmsc & 0xfffffffffffff000) >> 12);
+	printf("\tController Memory Space Enable (CMSE): %lx\n",
+			(cmbmsc & 0x0000000000000002) >> 1);
+	printf("\tCapabilities Registers Enabled (CRE) : CMBLOC and "\
+	       "CMBSZ registers are%senabled\n\n", (cmbmsc & 0x0000000000000001) ? " " : " NOT ");
+}
+
+static void show_registers_cmbsts(__u32 cmbsts)
+{
+	printf("\tController Base Address Invalid (CBAI): %x\n\n", (cmbsts & 0x00000001));
+}
+
 static void show_registers_pmrcap(__u32 pmrcap)
 {
 	printf("\tPersistent Memory Region Timeout		    (PMRTO): %x\n", (pmrcap & 0x00ff0000) >> 16);
@@ -3823,6 +3838,12 @@ static void show_registers_pmrswtp(__u32 pmrswtp)
 		nvme_register_pmr_pmrszu_to_string(pmrswtp & 0x0000000f));
 }
 
+static void show_registers_pmrmsc(uint64_t pmrmsc)
+{
+	printf("\tController Base Address (CBA)		: %lx\n", (pmrmsc & 0xfffffffffffff000) >> 12);
+	printf("\tController Memory Space Enable (CMSE	: %lx\n\n", (pmrmsc & 0x0000000000000001) >> 1);
+}
+
 static inline uint32_t mmio_read32(void *addr)
 {
 	__le32 *p = addr;
@@ -3840,9 +3861,9 @@ static inline __u64 mmio_read64(void *addr)
 
 void json_ctrl_registers(void *bar)
 {
-	uint64_t cap, asq, acq, bpmbl;
+	uint64_t cap, asq, acq, bpmbl, cmbmsc, pmrmsc;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc,
-			bpinfo, bprsel, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp;
+			bpinfo, bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp;
 	struct json_object *root;
 
 	cap = mmio_read64(bar + NVME_REG_CAP);
@@ -3860,11 +3881,14 @@ void json_ctrl_registers(void *bar)
 	bpinfo = mmio_read32(bar + NVME_REG_BPINFO);
 	bprsel = mmio_read32(bar + NVME_REG_BPRSEL);
 	bpmbl = mmio_read64(bar + NVME_REG_BPMBL);
+	cmbmsc = mmio_read64(bar + NVME_REG_CMBMSC);
+	cmbsts = mmio_read32(bar + NVME_REG_CMBSTS);
 	pmrcap = mmio_read32(bar + NVME_REG_PMRCAP);
 	pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
 	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
 	pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
 	pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
+	pmrmsc = mmio_read64(bar + NVME_REG_PMRMSC);
 
 	root = json_create_object();
 	json_object_add_value_uint(root, "cap", cap);
@@ -3882,11 +3906,14 @@ void json_ctrl_registers(void *bar)
 	json_object_add_value_int(root, "bpinfo", bpinfo);
 	json_object_add_value_int(root, "bprsel", bprsel);
 	json_object_add_value_uint(root, "bpmbl", bpmbl);
+	json_object_add_value_uint(root, "cmbmsc", cmbmsc);
+	json_object_add_value_int(root, "cmbsts", cmbsts);
 	json_object_add_value_int(root, "pmrcap", pmrcap);
 	json_object_add_value_int(root, "pmrctl", pmrctl);
 	json_object_add_value_int(root, "pmrsts", pmrsts);
 	json_object_add_value_int(root, "pmrebs", pmrebs);
 	json_object_add_value_int(root, "pmrswtp", pmrswtp);
+	json_object_add_value_uint(root, "pmrmsc", pmrmsc);
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
@@ -3894,9 +3921,9 @@ void json_ctrl_registers(void *bar)
 
 void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 {
-	uint64_t cap, asq, acq, bpmbl;
+	uint64_t cap, asq, acq, bpmbl, cmbmsc, pmrmsc;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc, bpinfo,
-		 bprsel, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp;
+		 bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp;
 
 	int human = mode & HUMAN;
 
@@ -3915,11 +3942,14 @@ void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 	bpinfo = mmio_read32(bar + NVME_REG_BPINFO);
 	bprsel = mmio_read32(bar + NVME_REG_BPRSEL);
 	bpmbl = mmio_read64(bar + NVME_REG_BPMBL);
+	cmbmsc = mmio_read64(bar + NVME_REG_CMBMSC);
+	cmbsts = mmio_read32(bar + NVME_REG_CMBSTS);
 	pmrcap = mmio_read32(bar + NVME_REG_PMRCAP);
 	pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
 	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
 	pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
 	pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
+	pmrmsc = mmio_read64(bar + NVME_REG_PMRMSC);
 
 	if (human) {
 		if (cap != 0xffffffff) {
@@ -3976,6 +4006,12 @@ void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 			printf("bpmbl   : %"PRIx64"\n", bpmbl);
 			show_registers_bpmbl(bpmbl);
 
+			printf("cmbmsc	: %"PRIx64"\n", cmbmsc);
+			show_registers_cmbmsc(cmbmsc);
+
+			printf("cmbsts	: %x\n", cmbsts);
+			show_registers_cmbsts(cmbsts);
+
 			printf("pmrcap  : %x\n", pmrcap);
 			show_registers_pmrcap(pmrcap);
 
@@ -3990,6 +4026,9 @@ void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 
 			printf("pmrswtp : %x\n", pmrswtp);
 			show_registers_pmrswtp(pmrswtp);
+
+			printf("pmrmsc	: %"PRIx64"\n", pmrmsc);
+			show_registers_pmrmsc(pmrmsc);
 		}
 	} else {
 		if (cap != 0xffffffff)
@@ -4013,6 +4052,14 @@ void show_ctrl_registers(void *bar, unsigned int mode, bool fabrics)
 			printf("bpinfo  : %x\n", bpinfo);
 			printf("bprsel  : %x\n", bprsel);
 			printf("bpmbl   : %"PRIx64"\n", bpmbl);
+			printf("cmbmsc	: %"PRIx64"\n", cmbmsc);
+			printf("cmbsts	: %x\n", cmbsts);
+			printf("pmrcap  : %x\n", pmrcap);
+			printf("pmrctl  : %x\n", pmrctl);
+			printf("pmrsts  : %x\n", pmrsts);
+			printf("pmrebs  : %x\n", pmrebs);
+			printf("pmrswtp : %x\n", pmrswtp);
+			printf("pmrmsc	: %"PRIx64"\n", pmrmsc);
 		}
 	}
 }
