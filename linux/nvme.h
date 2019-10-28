@@ -132,11 +132,14 @@ enum {
 	NVME_REG_BPINFO	= 0x0040,	/* Boot Partition Information */
 	NVME_REG_BPRSEL	= 0x0044,	/* Boot Partition Read Select */
 	NVME_REG_BPMBL	= 0x0048,	/* Boot Partition Memory Buffer Location */
+	NVME_REG_CMBMSC	= 0x0050,	/* Controller Memory Buffer Memory Space Control */
+	NVME_REG_CMBSTS	= 0x0058,	/* Controller Memory Buffer Status */
 	NVME_REG_PMRCAP = 0x0e00,	/* Persistent Memory Capabilities */
 	NVME_REG_PMRCTL = 0x0e04,	/* Persistent Memory Region Control */
 	NVME_REG_PMRSTS = 0x0e08,	/* Persistent Memory Region Status */
 	NVME_REG_PMREBS = 0x0e0c,	/* Persistent Memory Region Elasticity Buffer Size */
 	NVME_REG_PMRSWTP= 0x0e10,	/* Persistent Memory Region Sustained Write Throughput */
+	NVME_REG_PMRMSC = 0x0e14,	/* Persistent Memory Region Controller Memory Space Control */
 	NVME_REG_DBS	= 0x1000,	/* SQ 0 Tail Doorbell */
 };
 
