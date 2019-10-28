@@ -3531,8 +3531,10 @@ void json_print_nvme_subsystem_list(struct subsys_list_item *slist, int n)
 
 static void show_registers_cap(struct nvme_bar_cap *cap)
 {
+	printf("\tController Memory Buffer Supported (CMBS): The Controller Memory Buffer is %s\n",
+			((cap->rsvd_cmbs_pmrs & 0x02) >> 1) ? "Supported" : "Not Supported");
 	printf("\tPersistent Memory Region Supported (PMRS): The Persistent Memory Region is %s\n",
-			(cap->rsvd_pmrs & 0x01) ? "supported":"not supported");
+			(cap->rsvd_cmbs_pmrs & 0x01) ? "supported":"not supported");
 	printf("\tMemory Page Size Maximum	   (MPSMAX): %u bytes\n", 1 <<  (12 + ((cap->mpsmax_mpsmin & 0xf0) >> 4)));
 	printf("\tMemory Page Size Minimum         (MPSMIN): %u bytes\n", 1 <<  (12 + (cap->mpsmax_mpsmin & 0x0f)));
 	printf("\tBoot Partition Support              (BPS): %s\n", (cap->bps_css_nssrs_dstrd & 0x2000) ? "Yes":"No");
