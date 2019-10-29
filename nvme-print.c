@@ -3776,6 +3776,9 @@ static void show_registers_cmbsts(__u32 cmbsts)
 
 static void show_registers_pmrcap(__u32 pmrcap)
 {
+	printf("\tController Memory Space Supported (CMSS)		   : "\
+	       "Referencing PMR with host supplied addresses is %s\n",
+	       ((pmrcap & 0x01000000) >> 24) ? "Supported" : "Not Supported");
 	printf("\tPersistent Memory Region Timeout		    (PMRTO): %x\n", (pmrcap & 0x00ff0000) >> 16);
 	printf("\tPersistent Memory Region Write Barrier Mechanisms(PMRWBM): %x\n", (pmrcap & 0x00003c00) >> 10);
 	printf("\tPersistent Memory Region Time Units		    (PMRTU): PMR time unit is %s\n",
@@ -3805,11 +3808,12 @@ static const char *nvme_register_pmr_hsts_to_string(__u8 hsts)
 
 static void show_registers_pmrsts(__u32 pmrsts, __u32 pmrctl)
 {
-	printf("\tHealth Status (HSTS): %s\n", nvme_register_pmr_hsts_to_string((pmrsts & 0x00000e00) >> 9));
-	printf("\tNot Ready	(NRDY): The Persistent Memory Region is %s to process "\
+	printf("\tController Base Address Invalid (CBAI): %x\n", (pmrsts & 0x00001000) >> 12);
+	printf("\tHealth Status			  (HSTS): %s\n", nvme_register_pmr_hsts_to_string((pmrsts & 0x00000e00) >> 9));
+	printf("\tNot Ready			  (NRDY): The Persistent Memory Region is %s to process "\
 	       "PCI Express memory read and write requests\n",
 	       (pmrsts & 0x00000100) == 0 && (pmrctl & 0x00000001) ? "READY":"Not Ready");
-	printf("\tError		 (ERR): %x\n", (pmrsts & 0x000000ff));
+	printf("\tError				  (ERR) : %x\n", (pmrsts & 0x000000ff));
 }
 
 static const char *nvme_register_pmr_pmrszu_to_string(__u8 pmrszu)
