@@ -239,7 +239,7 @@ void register_extension(struct plugin *plugin);
 
 #include "util/argconfig.h"
 int parse_and_open(int argc, char **argv, const char *desc,
-	const struct argconfig_commandline_options *clo, void *cfg, size_t size);
+	const struct argconfig_commandline_options *clo);
 
 extern const char *devicename;
 

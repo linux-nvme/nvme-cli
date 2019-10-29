@@ -191,17 +191,17 @@ static int get_dev(int argc, char **argv)
 }
 
 int parse_and_open(int argc, char **argv, const char *desc,
-	const struct argconfig_commandline_options *clo, void *cfg, size_t size)
+	const struct argconfig_commandline_options *opts)
 {
 	int ret;
 
-	ret = argconfig_parse(argc, argv, desc, clo, cfg, size);
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
 	ret = get_dev(argc, argv);
 	if (ret < 0)
-		argconfig_print_help(desc, clo);
+		argconfig_print_help(desc, opts);
 
 	return ret;
 }
@@ -248,11 +248,9 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -277,7 +275,6 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 
 close_fd:
 	close(fd);
-
 ret:
 	return nvme_status_to_errno(err, false);
 }
@@ -307,11 +304,9 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -391,11 +386,9 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (!cfg.file_name) {
 		fprintf(stderr, "Please provide an output file!\n");
@@ -513,11 +506,9 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -572,11 +563,9 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -637,11 +626,9 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -719,11 +706,9 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -777,11 +762,9 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -862,11 +845,9 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (cfg.aen) {
 		cfg.log_len = 4096;
@@ -943,11 +924,9 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		ret = fd;
+	ret = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -1004,11 +983,9 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000)) {
 		fprintf(stderr, "can not allocate controller list payload\n");
@@ -1060,11 +1037,9 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (!cfg.namespace_id) {
 		err = -EINVAL;
@@ -1118,11 +1093,9 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
@@ -1176,11 +1149,9 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
@@ -1283,11 +1254,9 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (cfg.flbas != 0xff && cfg.bs != 0x00) {
 		fprintf(stderr,
@@ -1369,7 +1338,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		goto ret;
 
@@ -1447,7 +1416,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
@@ -1580,11 +1549,9 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -1655,11 +1622,9 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -1745,11 +1710,9 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -1817,11 +1780,9 @@ static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -1881,11 +1842,9 @@ static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -1941,7 +1900,7 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -1984,11 +1943,9 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	nsid = nvme_get_nsid(fd);
 	if (nsid <= 0) {
@@ -2048,11 +2005,9 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	cfg.cdw10 = cfg.cntlid << 16;
 	cfg.cdw10 = cfg.cdw10 | (cfg.rt << 8);
@@ -2103,11 +2058,9 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -2177,11 +2130,9 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	err = nvme_self_test_start(fd, cfg.namespace_id, cfg.cdw10);
 	if (!err) {
@@ -2225,11 +2176,9 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -2313,11 +2262,9 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (cfg.sel > 7) {
 		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
@@ -2436,11 +2383,9 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fw_fd = open(cfg.fw, O_RDONLY);
 	cfg.offset <<= 2;
@@ -2549,11 +2494,9 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (cfg.slot > 7) {
 		fprintf(stderr, "invalid slot:%d\n", cfg.slot);
@@ -2612,11 +2555,9 @@ static int subsystem_reset(int argc, char **argv, struct command *cmd, struct pl
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	err = nvme_subsystem_reset(fd);
 	if (err < 0) {
@@ -2641,11 +2582,9 @@ static int reset(int argc, char **argv, struct command *cmd, struct plugin *plug
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	err = nvme_reset_controller(fd);
 	if (err < 0)
@@ -2665,11 +2604,9 @@ static int ns_rescan(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	err = nvme_ns_rescan(fd);
 	if (err < 0)
@@ -2690,8 +2627,7 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *sanact_desc = "Sanitize action.";
 	const char *ovrpat_desc = "Overwrite pattern.";
 
-	int fd;
-	int ret;
+	int fd, ret;
 
 	struct config {
 		int    no_dealloc;
@@ -2721,11 +2657,9 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
-	if (fd < 0) {
-		ret = fd;
+	ret = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	switch (cfg.sanact) {
 	case NVME_SANITIZE_ACT_CRYPTO_ERASE:
@@ -2801,11 +2735,9 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -2876,11 +2808,9 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (cfg.offset == -1) {
 		fprintf(stderr, "offset required param");
@@ -2927,11 +2857,9 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (cfg.offset == -1) {
 		fprintf(stderr, "offset required param");
@@ -3020,11 +2948,9 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (cfg.lbaf != 0xff && cfg.bs !=0) {
 		fprintf(stderr,
@@ -3223,11 +3149,9 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
@@ -3337,11 +3261,9 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	sec_fd = open(cfg.file, O_RDONLY);
 	if (sec_fd < 0) {
@@ -3447,11 +3369,9 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	switch (cfg.dtype) {
 	case NVME_DIR_IDENTIFY:
@@ -3573,11 +3493,9 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
@@ -3655,11 +3573,9 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (cfg.prinfo > 0xf) {
 		err = -EINVAL;
@@ -3752,11 +3668,9 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, ctx_attrs, ARRAY_SIZE(ctx_attrs));
 	nb = argconfig_parse_comma_sep_array(cfg.blocks, nlbs, ARRAY_SIZE(nlbs));
@@ -3822,11 +3736,9 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (S_ISBLK(nvme_stat.st_mode)) {
 		cfg.namespace_id = get_nsid(fd);
@@ -3892,11 +3804,9 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
@@ -3966,11 +3876,9 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
@@ -4048,11 +3956,9 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (!cfg.namespace_id) {
 		cfg.namespace_id = get_nsid(fd);
@@ -4121,11 +4027,9 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt < 0) {
@@ -4277,11 +4181,9 @@ static int submit_io(int opcode, char *command, const char *desc,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	dfd = mfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
 	if (cfg.prinfo > 0xf) {
@@ -4512,7 +4414,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -4596,11 +4498,9 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (cfg.size) {
 		if (posix_memalign(&sec_buf, getpagesize(), cfg.size)) {
@@ -4677,8 +4577,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		OPT_END()
 	};
 
-	err = fd = parse_and_open(argc, argv, desc, opts, &cfg,
-			sizeof(cfg));
+	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		goto ret;
 
@@ -4766,11 +4665,9 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	switch (cfg.dtype) {
 	case NVME_DIR_IDENTIFY:
@@ -4951,11 +4848,9 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (fd < 0) {
-		err = fd;
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
 		goto ret;
-	}
 
 	if (strlen(cfg.input_file)){
 		wfd = open(cfg.input_file, O_RDONLY,

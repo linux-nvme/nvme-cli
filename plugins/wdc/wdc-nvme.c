@@ -1624,7 +1624,7 @@ static int wdc_cap_diag(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -1923,7 +1923,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -2143,7 +2143,7 @@ static int wdc_drive_log(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -2188,7 +2188,7 @@ static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -2230,7 +2230,7 @@ static int wdc_get_pfail_dump(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -2315,7 +2315,7 @@ static int wdc_purge(int argc, char **argv,
 	memset(&admin_cmd, 0, sizeof (admin_cmd));
 	admin_cmd.opcode = WDC_NVME_PURGE_CMD_OPCODE;
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -2364,7 +2364,7 @@ static int wdc_purge_monitor(int argc, char **argv,
 	admin_cmd.cdw10 = WDC_NVME_PURGE_MONITOR_CMD_CDW10;
 	admin_cmd.timeout_ms = WDC_NVME_PURGE_MONITOR_TIMEOUT;
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -3124,7 +3124,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -3170,7 +3170,7 @@ static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct comma
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -3214,7 +3214,7 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -3324,7 +3324,7 @@ static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -3433,7 +3433,7 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *com
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 
 	if (fd < 0)
 		return fd;
@@ -3465,7 +3465,7 @@ static int wdc_clear_fw_activate_history(int argc, char **argv, struct command *
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -4210,7 +4210,7 @@ static int wdc_drive_essentials(int argc, char **argv, struct command *command,
 	};
 
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -4266,7 +4266,7 @@ static int wdc_drive_resize(int argc, char **argv,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -4391,7 +4391,7 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 

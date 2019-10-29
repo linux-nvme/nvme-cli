@@ -838,7 +838,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 
 	vt_generate_vtview_log_file_name(vt_default_log_file_name);
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)  {
 		printf("Error parse and open (fd = %d)\n", fd);
 		return (fd);
@@ -904,7 +904,7 @@ static int vt_show_identify(int argc, char **argv, struct command *cmd, struct p
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)  {
 		printf("Error parse and open (fd = %d)\n", fd);
 		return (fd);

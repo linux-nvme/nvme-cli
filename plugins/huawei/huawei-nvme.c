@@ -316,8 +316,7 @@ static int huawei_list(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
-
+	argconfig_parse(argc, argv, desc, opts);
 	fmt = validate_output_format(cfg.output_format);
 	if (fmt != JSON && fmt != NORMAL)
 		return -EINVAL;

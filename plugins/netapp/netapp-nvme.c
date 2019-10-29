@@ -521,7 +521,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
@@ -592,7 +592,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 

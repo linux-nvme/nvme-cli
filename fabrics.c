@@ -1123,7 +1123,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 		while ((ptr = strsep(&args, " =\n")) != NULL)
 			argv[argc++] = ptr;
 
-		err = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+		err = argconfig_parse(argc, argv, desc, opts);
 		if (err)
 			continue;
 
@@ -1181,7 +1181,7 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 	};
 
 	cfg.tos = -1;
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		goto out;
 
@@ -1235,7 +1235,7 @@ int connect(const char *desc, int argc, char **argv)
 	};
 
 	cfg.tos = -1;
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		goto out;
 
@@ -1351,7 +1351,7 @@ int disconnect(const char *desc, int argc, char **argv)
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		goto out;
 
@@ -1393,7 +1393,7 @@ int disconnect_all(const char *desc, int argc, char **argv)
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		goto out;
 
