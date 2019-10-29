@@ -71,55 +71,51 @@ struct nvme_vu_id_ctrl_field { /* CDR MR5 */
 	__u8			mic_fw[4];
 };
 
+static void json_intel_id_ctrl(struct nvme_vu_id_ctrl_field *id,
+	char *health, char *bl, char *ww, char *mic_bl, char *mic_fw,
+	struct json_object *root)
+{
+	json_object_add_value_int(root, "ss", id->ss);
+	json_object_add_value_string(root, "health", health[0] ? health : "healthy");
+	json_object_add_value_int(root, "cls", id->cls);
+	json_object_add_value_int(root, "nlw", id->nlw);
+	json_object_add_value_int(root, "scap", id->scap);
+	json_object_add_value_int(root, "sstat", id->sstat);
+	json_object_add_value_string(root, "bl", bl);
+	json_object_add_value_string(root, "ww", ww);
+	json_object_add_value_string(root, "mic_bl", mic_bl);
+	json_object_add_value_string(root, "mic_fw", mic_fw);
+}
+
 static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 {
-	struct nvme_vu_id_ctrl_field* log = (struct nvme_vu_id_ctrl_field *)vs;
+	struct nvme_vu_id_ctrl_field* id = (struct nvme_vu_id_ctrl_field *)vs;
 
-	char health[21];
-	char bl[9];
-	char ww[19];
-	char mic_bl[5];
-	char mic_fw[5];
+	char health[21] = { 0 };
+	char bl[9] = { 0 };
+	char ww[19] = { 0 };
+	char mic_bl[5] = { 0 };
+	char mic_fw[5] = { 0 };
 
-	memcpy(bl, log->bl, sizeof(bl));
-	memcpy(health, log->health, sizeof(health));
-	memcpy(mic_bl, log->mic_bl, sizeof(mic_bl));
-	memcpy(mic_fw, log->mic_fw, sizeof(mic_fw));
-
-	bl[sizeof(bl) - 1] = '\0';
-	health[sizeof(health) - 1] = '\0';
-	mic_bl[sizeof(mic_bl) - 1] = '\0';
-	mic_fw[sizeof(mic_fw) - 1] = '\0';
-
-	snprintf(ww, 19, "%02X%02X%02X%02X%02X%02X%02X%02X", log->ww[7],
-		log->ww[6], log->ww[5], log->ww[4], log->ww[3], log->ww[2],
-		log->ww[1], log->ww[0]);
-
+	snprintf(ww, 19, "%02X%02X%02X%02X%02X%02X%02X%02X", id->ww[7],
+		id->ww[6], id->ww[5], id->ww[4], id->ww[3], id->ww[2],
+		id->ww[1], id->ww[0]);
 
 	if (root) {
-		json_object_add_value_int(root, "ss", log->ss);
-		json_object_add_value_string(root, "health",
-			health[0] ? health : "healthy");
-		json_object_add_value_int(root, "cls", log->cls);
-		json_object_add_value_int(root, "nlw", log->nlw);
-		json_object_add_value_int(root, "scap", log->scap);
-		json_object_add_value_int(root, "sstat", log->sstat);
-		json_object_add_value_string(root, "bl", bl);
-		json_object_add_value_string(root, "ww", ww);
-		json_object_add_value_string(root, "mic_bl", mic_bl);
-		json_object_add_value_string(root, "mic_fw", mic_fw);
-	} else {
-		printf("ss        : %d\n", log->ss);
-		printf("health    : %s\n", log->health[0] ? health : "healthy");
-		printf("cls       : %d\n", log->cls);
-		printf("nlw       : %d\n", log->nlw);
-		printf("scap      : %d\n", log->scap);
-		printf("sstat     : %d\n", log->sstat);
-		printf("bl        : %s\n", bl);
-		printf("ww        : %s\n", ww);
-		printf("mic_bl    : %s\n", mic_bl);
-		printf("mic_fw    : %s\n", mic_fw);
+		json_intel_id_ctrl(id, health, bl, ww, mic_bl, mic_fw, root);
+		return;
 	}
+
+	printf("ss        : %d\n", id->ss);
+	printf("health    : %s\n", id->health[0] ? health : "healthy");
+	printf("cls       : %d\n", id->cls);
+	printf("nlw       : %d\n", id->nlw);
+	printf("scap      : %d\n", id->scap);
+	printf("sstat     : %d\n", id->sstat);
+	printf("bl        : %s\n", bl);
+	printf("ww        : %s\n", ww);
+	printf("mic_bl    : %s\n", mic_bl);
+	printf("mic_fw    : %s\n", mic_fw);
 }
 
 static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
