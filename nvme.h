@@ -19,12 +19,19 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <endian.h>
+
 #include "plugin.h"
 #include "util/json.h"
-
-#define unlikely(x) x
-
+#include "util/argconfig.h"
 #include "linux/nvme.h"
+
+enum nvme_print_flags {
+	NORMAL	= 0,
+	VERBOSE	= 1 << 0,	/* verbosely decode complex values for humans */
+	JSON	= 1 << 1,	/* display in json format */
+	VS	= 1 << 2,	/* hex dump vendor specific data areas */
+	BINARY	= 1 << 3,	/* binary dump raw bytes */
+};
 
 struct nvme_effects_log_page {
 	__le32 acs[256];
@@ -207,12 +214,6 @@ struct subsys_list_item {
 	struct ctrl_list_item *ctrls;
 };
 
-enum {
-	NORMAL,
-	JSON,
-	BINARY,
-};
-
 struct connect_args {
 	char *subsysnqn;
 	char *transport;
@@ -237,14 +238,13 @@ extern const char *subsys_dir;
 
 void register_extension(struct plugin *plugin);
 
-#include "util/argconfig.h"
 int parse_and_open(int argc, char **argv, const char *desc,
 	const struct argconfig_commandline_options *clo);
 
 extern const char *devicename;
 
 int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root));
-int	validate_output_format(char *format);
+enum nvme_print_flags validate_output_format(char *format);
 
 int get_nvme_ctrl_info(char *name, char *path, struct ctrl_list_item *ctrl,
 			__u32 nsid);

@@ -155,6 +155,7 @@ static int scan_ctrl(struct nvme_ctrl *c, char *p)
 		fprintf(stderr, "Failed to open %s: %s\n", path, strerror(errno));
 		return errno;
 	}
+
 	c->nr_namespaces = ret;
 	c->namespaces = calloc(c->nr_namespaces, sizeof(*n));
 	for (i = 0; i < c->nr_namespaces; i++) {
@@ -174,8 +175,10 @@ static int scan_ctrl(struct nvme_ctrl *c, char *p)
 		return ret;
 
 	fd = open(path, O_RDONLY);
-	if (fd < 0)
+	if (fd < 0) {
+		fprintf(stderr, "Failed to open %s\n", path);
 		goto free;
+	}
 
 	ret = nvme_identify_ctrl(fd, &c->id);
 	if (ret < 0)
@@ -223,6 +226,7 @@ static int scan_subsystem(struct nvme_subsystem *s)
 		fprintf(stderr, "Failed to open %s: %s\n", path, strerror(errno));
 		return errno;
 	}
+
 	s->nr_namespaces = ret;
 	s->namespaces = calloc(s->nr_namespaces, sizeof(*n));
 	for (i = 0; i < s->nr_namespaces; i++) {
@@ -231,6 +235,7 @@ static int scan_subsystem(struct nvme_subsystem *s)
 		n->ctrl = &s->ctrls[0];
 		scan_namespace(n);
 	}
+
 	while (i--)
 		free(ns[i]);
 	free(ns);

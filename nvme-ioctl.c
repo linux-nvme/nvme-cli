@@ -363,6 +363,7 @@ int nvme_identify(int fd, __u32 nsid, __u32 cdw10, void *data)
 
 int nvme_identify_ctrl(int fd, void *data)
 {
+	memset(data, 0, sizeof(struct nvme_id_ctrl));
 	return nvme_identify(fd, 0, 1, data);
 }
 

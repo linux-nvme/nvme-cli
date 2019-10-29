@@ -121,9 +121,9 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 		return fd;
 
 	if (cfg.human_readable)
-		flags |= HUMAN;
+		flags |= VERBOSE;
 	else if (cfg.raw_binary)
-		flags |= RAW;
+		flags |= BINARY;
 
 	return lnvm_do_id_ns(fd, cfg.namespace_id, flags);
 }
@@ -172,9 +172,9 @@ static int lnvm_chunk_log(int argc, char **argv, struct command *cmd, struct plu
 	}
 
 	if (fmt == BINARY)
-		flags |= RAW;
+		flags |= BINARY;
 	else if (cfg.human_readable)
-		flags |= HUMAN;
+		flags |= VERBOSE;
 
 	nsid = nvme_get_nsid(fd);
 
@@ -382,7 +382,7 @@ static int lnvm_get_bbtbl(int argc, char **argv, struct command *cmd, struct plu
 	fd = parse_and_open(argc, argv, desc, opts);
 
 	if (cfg.raw_binary)
-		flags |= RAW;
+		flags |= BINARY;
 
 	return lnvm_do_get_bbtbl(fd, cfg.namespace_id, cfg.lunid, cfg.chid, flags);
 }
