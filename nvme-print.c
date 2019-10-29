@@ -3820,10 +3820,11 @@ static void nvme_show_host_mem_buffer(struct nvme_host_mem_buffer *hmb)
 	printf("\tHost Memory Buffer Size                  (HSIZE): %u\n", hmb->hsize);
 }
 
-void nvme_directive_show_fields(__u8 dtype, __u8 doper, unsigned int result, unsigned char *buf)
+static void nvme_directive_show_fields(__u8 dtype, __u8 doper, unsigned int result, unsigned char *buf)
 {
         __u8 *field = buf;
         int count, i;
+
         switch (dtype) {
         case NVME_DIR_IDENTIFY:
                 switch (doper) {
@@ -3869,6 +3870,23 @@ void nvme_directive_show_fields(__u8 dtype, __u8 doper, unsigned int result, uns
                 break;
         }
         return;
+}
+
+void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
+	void *buf, __u32 len, enum nvme_print_flags flags)
+{
+	if (flags & BINARY) {
+		if (buf)
+			return d_raw(buf, len);
+		return;
+	}
+
+	printf("dir-receive: type:%#x operation:%#x spec:%#x nsid:%#x result:%#x\n",
+		type, oper, spec, nsid, result);
+	if (flags & VERBOSE)
+		nvme_directive_show_fields(type, oper, result, buf);
+	else if (buf)
+		d(buf, len, 16, 1);
 }
 
 static const char *nvme_plm_window(__u32 plm)

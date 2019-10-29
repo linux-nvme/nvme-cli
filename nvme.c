@@ -4459,6 +4459,8 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 	const char *doper = "directive operation";
 	const char *nsr = "namespace stream requested";
 	const char *human_readable = "show directive in readable format";
+
+	enum nvme_print_flags flags = NORMAL;
 	int err, fd;
 	__u32 result;
 	__u32 dw12 = 0;
@@ -4499,6 +4501,11 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		goto ret;
+
+	if (cfg.human_readable)
+		flags |= VERBOSE;
+	if (cfg.raw_binary)
+		flags = BINARY;
 
 	switch (cfg.dtype) {
 	case NVME_DIR_IDENTIFY:
@@ -4548,28 +4555,15 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 
 	err = nvme_dir_recv(fd, cfg.namespace_id, cfg.dspec, cfg.dtype, cfg.doper,
 			cfg.data_len, dw12, buf, &result);
-	if (err < 0) {
-		perror("dir-receive");
-		goto free;
-	}
-
-	if (!err) {
-		printf("dir-receive: type %#x, operation %#x, spec %#x, nsid %#x, result %#x \n",
-				cfg.dtype, cfg.doper, cfg.dspec, cfg.namespace_id, result);
-		if (cfg.human_readable)
-			nvme_directive_show_fields(cfg.dtype, cfg.doper, result, buf);
-		else {
-			if (buf) {
-				if (!cfg.raw_binary)
-					d(buf, cfg.data_len, 16, 1);
-				else
-					d_raw(buf, cfg.data_len);
-			}
-		}
-	}
+	if (!err)
+		nvme_directive_show(cfg.dtype, cfg.doper, cfg.dspec,
+				    cfg.namespace_id, result, buf, cfg.data_len,
+				    flags);
 	else if (err > 0)
 		nvme_show_status(err);
-free:
+	else if (err < 0)
+		perror("dir-receive");
+
 	if (cfg.data_len)
 		free(buf);
 close_fd:
@@ -4765,14 +4759,12 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 		} else if (data && cfg.read)
 			d_raw((unsigned char *)data, cfg.data_len);
 	}
-
 free_data:
 	if (cfg.data_len)
 		nvme_free(data, huge);
 free_metadata:
 	if (cfg.metadata_len)
 		free(metadata);
-
 close_wfd:
 	if (strlen(cfg.input_file))
 		close(wfd);
@@ -4864,7 +4856,6 @@ static int disconnect_all_cmd(int argc, char **argv, struct command *command, st
 void register_extension(struct plugin *plugin)
 {
 	plugin->parent = &nvme;
-
 	nvme.extensions->tail->next = plugin;
 	nvme.extensions->tail = plugin;
 }
