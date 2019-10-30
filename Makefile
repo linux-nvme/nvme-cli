@@ -91,7 +91,7 @@ test:
 all: doc
 
 clean:
-	$(RM) $(NVME) $(OBJS) $(notdir $(PLUGIN_OBJS) $(UTIL_OBJS)) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
+	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
 	$(MAKE) -C Documentation clean
 	$(RM) tests/*.pyc
 	$(RM) verify-no-dep
