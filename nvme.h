@@ -158,10 +158,6 @@ struct nvme_namespace {
 	struct nvme_id_ns ns;
 };
 
-struct nvme_path {
-	char *name;
-};
-
 struct nvme_ctrl {
 	char *name;
 	struct nvme_subsystem *subsys;
@@ -174,9 +170,6 @@ struct nvme_ctrl {
 
 	int    nr_namespaces;
 	struct nvme_namespace *namespaces;
-
-	int    nr_paths;
-	struct nvme_path *paths;
 };
 
 struct nvme_subsystem {
