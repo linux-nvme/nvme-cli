@@ -321,7 +321,7 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	if (fmt != JSON && fmt != NORMAL)
 		return -EINVAL;
 
-	n = scandir(dev, &devices, scan_namespace_filter, alphasort);
+	n = scandir("/dev", &devices, scan_namespace_filter, alphasort);
 	if (n <= 0)
 		return n;
 
@@ -332,7 +332,7 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	}
 
 	for (i = 0; i < n; i++) {
-		snprintf(path, sizeof(path), "%s%s", dev, devices[i]->d_name);
+		snprintf(path, sizeof(path), "/dev/%s", devices[i]->d_name);
 		fd = open(path, O_RDONLY);
 		ret = huawei_get_nvme_info(fd, &list_items[huawei_num], path);
 		if (ret)

@@ -59,13 +59,13 @@
 #include "argconfig.h"
 #include "fabrics.h"
 
+#define CREATE_CMD
+#include "nvme-builtin.h"
+
 static struct stat nvme_stat;
 const char *devicename;
 
 static const char nvme_version_string[] = NVME_VERSION;
-
-#define CREATE_CMD
-#include "nvme-builtin.h"
 
 static struct plugin builtin = {
 	.commands = commands,
@@ -85,17 +85,8 @@ static struct program nvme = {
 	.extensions = &builtin,
 };
 
-
 static const char *output_format = "Output format: normal|json|binary";
 static const char *output_format_no_binary = "Output format: normal|json";
-
-const char *conarg_nqn = "nqn";
-const char *conarg_transport = "transport";
-const char *conarg_traddr = "traddr";
-const char *conarg_trsvcid = "trsvcid";
-const char *conarg_host_traddr = "host_traddr";
-const char *dev = "/dev/";
-const char *subsys_dir = "/sys/class/nvme-subsystem/";
 
 static void *__nvme_alloc(size_t len, bool *huge)
 {
@@ -1028,9 +1019,9 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		goto ret;
 
 	if (S_ISBLK(nvme_stat.st_mode)) {
-		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = -EINVAL;
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
 			goto close_fd;
 		}
 	} else if (!cfg.namespace_id) {
@@ -1250,23 +1241,27 @@ ret:
 static int list_subsys(int argc, char **argv, struct command *cmd,
 		struct plugin *plugin)
 {
-	struct subsys_list_item *slist;
+	struct nvme_topology t = { };
 	enum nvme_print_flags flags;
-	int err, subcnt = 0;
 	char *subsysnqn = NULL;
 	const char *desc = "Retrieve information for subsystems";
-	__u32 namespace_id;
+	const char *verbose = "Increase output verbosity";
+	__u32 ns_instance = 0;
+	int err;
 
 	struct config {
 		char *output_format;
+		int verbose;
 	};
 
 	struct config cfg = {
 		.output_format = "normal",
+		.verbose = 0,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json"),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary), 
+		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
 		OPT_END()
 	};
 
@@ -1280,7 +1275,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		int id;
 
 		devicename = basename(argv[optind]);
-		if (sscanf(devicename, "nvme%dn%d", &id, &namespace_id) != 2) {
+		if (sscanf(devicename, "nvme%dn%d", &id, &ns_instance) != 2) {
 			fprintf(stderr, "%s is not a NVMe namespace device\n",
 				argv[optind]);
 			err = -EINVAL;
@@ -1304,11 +1299,17 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		err = -EINVAL;
 		goto free;
 	}
+	if (cfg.verbose)
+		flags |= VERBOSE;
 
-	slist = get_subsys_list(&subcnt, subsysnqn, namespace_id);
-	nvme_show_subsystem_list(slist, subcnt, flags);
-	free_subsys_list(slist, subcnt);
+	err = scan_subsystems(&t, subsysnqn, ns_instance);
+	if (err) {
+		fprintf(stderr, "Failed to scan namespaces\n");
+		goto free;
+	}
+	nvme_show_subsystem_list(&t, flags);
 free:
+	free_topology(&t);
 	if (subsysnqn)
 		free(subsysnqn);
 ret:
@@ -1319,7 +1320,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 {
 	const char *desc = "Retrieve basic information for all NVMe namespaces";
 	const char *verbose = "Increase output verbosity";
-	struct nvme_topology t;
+	struct nvme_topology t = { };
 	enum nvme_print_flags flags;
 	int err = 0;
 
@@ -1353,7 +1354,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
-	err = scan_subsystems(&t);
+	err = scan_subsystems(&t, NULL, 0);
 	if (err) {
 		fprintf(stderr, "Failed to scan namespaces\n");
 		return err;
@@ -1362,81 +1363,6 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	nvme_show_list_items(&t, flags);
 	free_topology(&t);
 	return 0;
-}
-
-/*
- * Given a controller name, create a ctrl_list_item with its
- * attributes and compare the attributes against the connect args
- * given.
- * Return true/false based on whether it matches
- */
-bool ctrl_matches_connectargs(char *name, struct connect_args *args)
-{
-	struct ctrl_list_item *ctrl;
-	bool found = false;
-
-	ctrl = malloc(sizeof(*ctrl));
-	if (!ctrl) {
-		fprintf(stderr, "Failed to allocate controller list element\n");
-		return false;
-	}
-	memset(ctrl, 0, sizeof(*ctrl));
-
-	if (get_nvme_ctrl_info(name, SYS_NVME, ctrl, NVME_NSID_ALL))
-		goto cleanup_exit;
-
-	if (!strcmp(ctrl->subsysnqn, args->subsysnqn) &&
-	    !strcmp(ctrl->transport, args->transport) &&
-	    (!strcmp(ctrl->traddr, args->traddr) ||
-	     !strcmp(args->traddr, "none")) &&
-	    (!strcmp(ctrl->trsvcid, args->trsvcid) ||
-	     !strcmp(args->trsvcid, "none")) &&
-	    (!strcmp(ctrl->host_traddr, args->host_traddr) ||
-	     !strcmp(args->host_traddr, "none")))
-		found = true;
-
-cleanup_exit:
-	free_ctrl_list_item(ctrl);
-	free(ctrl);
-
-	return found;
-}
-
-/*
- * Look through the system to find an existing controller whose
- * attributes match the connect arguments specified
- * If found, a string containing the controller name (ex: "nvme?")
- * is returned.
- * If not found, a NULL is returned.
- */
-char *find_ctrl_with_connectargs(struct connect_args *args)
-{
-	struct dirent **devices;
-	char *devname = NULL;
-	int i, n;
-
-	n = scandir(SYS_NVME, &devices, scan_ctrls_filter, alphasort);
-	if (n < 0) {
-		fprintf(stderr, "no NVMe controller(s) detected.\n");
-		return NULL;
-	}
-
-	for (i = 0; i < n; i++) {
-		if (ctrl_matches_connectargs(devices[i]->d_name, args)) {
-			devname = strdup(devices[i]->d_name);
-			if (devname == NULL)
-				fprintf(stderr, "no memory for ctrl name %s\n",
-						devices[i]->d_name);
-			goto cleanup_devices;
-		}
-	}
-
-cleanup_devices:
-	for (i = 0; i < n; i++)
-		free(devices[i]);
-	free(devices);
-
-	return devname;
 }
 
 int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
@@ -1545,9 +1471,9 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 		flags = BINARY;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = -EINVAL;
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
 			goto close_fd;
 		}
 	}
@@ -1627,9 +1553,9 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id && S_ISBLK(nvme_stat.st_mode)) {
-		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = -EINVAL;
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
 			goto close_fd;
 		}
 	} else if (!cfg.namespace_id) {
@@ -2823,9 +2749,9 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		 */
 		cfg.namespace_id = NVME_NSID_ALL;
 	} else if (S_ISBLK(nvme_stat.st_mode)) {
-		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = -EINVAL;
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
 			goto close_fd;
 		}
 	}
@@ -3338,9 +3264,9 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 		goto ret;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = -EINVAL;
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
 			goto close_fd;
 		}
 	}
@@ -3430,9 +3356,9 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	if (cfg.deac)
 		control |= NVME_RW_DEAC;
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = -EINVAL;
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
 			goto close_fd;
 		}
 	}
@@ -3523,9 +3449,9 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	}
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = -EINVAL;
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
 			goto close_fd;
 		}
 	}
@@ -3581,9 +3507,9 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 		goto ret;
 
 	if (S_ISBLK(nvme_stat.st_mode)) {
-		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = -EINVAL;
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
 			goto close_fd;
 		}
 	}
@@ -3649,9 +3575,9 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 		goto ret;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = -EINVAL;
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
 			goto close_fd;
 		}
 	}
@@ -3721,9 +3647,9 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 		goto ret;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = -EINVAL;
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
 			goto close_fd;
 		}
 	}
@@ -3801,9 +3727,9 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 		goto ret;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = -EINVAL;
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
 			goto close_fd;
 		}
 	}
@@ -3879,9 +3805,9 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		flags = BINARY;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = -ENOTBLK;
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
 			goto close_fd;
 		}
 	}
@@ -4261,9 +4187,9 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		control |= NVME_RW_FUA;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = EINVAL;
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
 			goto close_fd;
 		}
 	}

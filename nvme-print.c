@@ -844,62 +844,59 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 	json_free_object(root);
 }
 
-static void nvme_show_subsystem(struct subsys_list_item *item)
+static void nvme_show_subsystem(struct nvme_subsystem *s)
 {
 	int i;
 
-	printf("%s - NQN=%s\n", item->name, item->subsysnqn);
+	printf("%s - NQN=%s\n", s->name, s->subsysnqn);
 	printf("\\\n");
 
-	for (i = 0; i < item->nctrls; i++) {
-		printf(" +- %s %s %s %s %s\n", item->ctrls[i].name,
-				item->ctrls[i].transport,
-				item->ctrls[i].address,
-				item->ctrls[i].state,
-				item->ctrls[i].ana_state ?
-					item->ctrls[i].ana_state : "");
+	for (i = 0; i < s->nr_ctrls; i++) {
+		printf(" +- %s %s %s %s %s\n", s->ctrls[i].name,
+				s->ctrls[i].transport,
+				s->ctrls[i].address,
+				s->ctrls[i].state,
+				s->ctrls[i].ana_state ? : "");
 	}
 }
 
-static void json_print_nvme_subsystem_list(struct subsys_list_item *slist,
-					   int n)
+static void json_print_nvme_subsystem_list(struct nvme_topology *t)
 {
+	struct json_object *subsystem_attrs, *path_attrs;
+	struct json_array *subsystems, *paths;
 	struct json_object *root;
-	struct json_array *subsystems;
-	struct json_object *subsystem_attrs;
-	struct json_array *paths;
-	struct json_object *path_attrs;
 	int i, j;
 
 	root = json_create_object();
 	subsystems = json_create_array();
 
-	for (i = 0; i < n; i++) {
-		subsystem_attrs = json_create_object();
+	for (i = 0; i < t->nr_subsystems; i++) {
+		struct nvme_subsystem *s = &t->subsystems[i];
 
+		subsystem_attrs = json_create_object();
 		json_object_add_value_string(subsystem_attrs,
-					     "Name", slist[i].name);
+					     "Name", s->name);
 		json_object_add_value_string(subsystem_attrs,
-					     "NQN", slist[i].subsysnqn);
+					     "NQN", s->subsysnqn);
 
 		json_array_add_value_object(subsystems, subsystem_attrs);
 
 		paths = json_create_array();
+		for (j = 0; j < s->nr_ctrls; j++) {
+			struct nvme_ctrl *c = &s->ctrls[j];
 
-		for (j = 0; j < slist[i].nctrls; j++) {
 			path_attrs = json_create_object();
 			json_object_add_value_string(path_attrs, "Name",
-					slist[i].ctrls[j].name);
+					c->name);
 			json_object_add_value_string(path_attrs, "Transport",
-					slist[i].ctrls[j].transport);
+					c->transport);
 			json_object_add_value_string(path_attrs, "Address",
-					slist[i].ctrls[j].address);
+					c->address);
 			json_object_add_value_string(path_attrs, "State",
-					slist[i].ctrls[j].state);
-			if (slist[i].ctrls[j].ana_state)
+					c->state);
+			if (c->ana_state)
 				json_object_add_value_string(path_attrs,
-						"ANAState",
-						slist[i].ctrls[j].ana_state);
+						"ANAState", c->ana_state);
 			json_array_add_value_object(paths, path_attrs);
 		}
 		if (j)
@@ -914,16 +911,16 @@ static void json_print_nvme_subsystem_list(struct subsys_list_item *slist,
 	json_free_object(root);
 }
 
-void nvme_show_subsystem_list(struct subsys_list_item *slist, int n,
-			     enum nvme_print_flags flags)
+void nvme_show_subsystem_list(struct nvme_topology *t,
+			      enum nvme_print_flags flags)
 {
 	int i;
 
 	if (flags & JSON)
-		return json_print_nvme_subsystem_list(slist, n);
+		return json_print_nvme_subsystem_list(t);
 
-	for (i = 0; i < n; i++)
-		nvme_show_subsystem(&slist[i]);
+	for (i = 0; i < t->nr_subsystems; i++)
+		nvme_show_subsystem(&t->subsystems[i]);
 }
 
 static void nvme_show_registers_cap(struct nvme_bar_cap *cap)
@@ -1593,26 +1590,29 @@ void nvme_show_relatives(const char *name)
 		return;
 
 	if (block) {
+		struct nvme_topology t = { };
 		char *subsysnqn;
-		struct subsys_list_item *slist;
-		int subcnt = 0;
+		int err;
 
 		subsysnqn = get_nvme_subsnqn(path);
-		if (!subsysnqn)
+		if (!subsysnqn) {
+			free(path);
 			return;
-		slist = get_subsys_list(&subcnt, subsysnqn, nsid);
-		if (subcnt != 1) {
+		}
+		err = scan_subsystems(&t, subsysnqn, 0);
+		if (err || t.nr_subsystems != 1) {
 			free(subsysnqn);
 			free(path);
 			return;
 		}
 
 		fprintf(stderr, "Namespace %s has parent controller(s):", name);
-		for (i = 0; i < slist[0].nctrls; i++)
+		for (i = 0; i < t.subsystems[0].nr_ctrls; i++)
 			fprintf(stderr, "%s%s", i ? ", " : "",
-				slist[0].ctrls[i].name);
+				t.subsystems[0].ctrls[i].name);
 		fprintf(stderr, "\n\n");
 		free(subsysnqn);
+		free_topology(&t);
 	} else {
 		struct dirent **paths;
 		bool comma = false;

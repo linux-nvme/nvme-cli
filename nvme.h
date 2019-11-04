@@ -33,7 +33,6 @@ enum nvme_print_flags {
 	BINARY	= 1 << 3,	/* binary dump raw bytes */
 };
 
-
 struct nvme_subsystem;
 struct nvme_ctrl;
 
@@ -52,6 +51,10 @@ struct nvme_ctrl {
 	char *address;
 	char *transport;
 	char *state;
+	char *ana_state;
+	char *traddr;
+	char *trsvcid;
+	char *host_traddr;
 
 	struct nvme_id_ctrl id;
 
@@ -75,64 +78,18 @@ struct nvme_topology {
 	struct nvme_subsystem *subsystems;
 };
 
-struct ctrl_list_item {
-	char *name;
-	char *address;
-	char *transport;
-	char *state;
-	char *ana_state;
-	char *subsysnqn;
-	char *traddr;
-	char *trsvcid;
-	char *host_traddr;
-};
-
-struct subsys_list_item {
-	char *name;
-	char *subsysnqn;
-	int nctrls;
-	struct ctrl_list_item *ctrls;
-};
-
-struct connect_args {
-	char *subsysnqn;
-	char *transport;
-	char *traddr;
-	char *trsvcid;
-	char *host_traddr;
-};
-
-#define SYS_NVME		"/sys/class/nvme"
-
-bool ctrl_matches_connectargs(char *name, struct connect_args *args);
-char *find_ctrl_with_connectargs(struct connect_args *args);
-char *__parse_connect_arg(char *conargs, const char delim, const char *fieldnm);
-
-extern const char *conarg_nqn;
-extern const char *conarg_transport;
-extern const char *conarg_traddr;
-extern const char *conarg_trsvcid;
-extern const char *conarg_host_traddr;
-extern const char *dev;
-extern const char *subsys_dir;
+#define SYS_NVME "/sys/class/nvme"
 
 void register_extension(struct plugin *plugin);
-
 int parse_and_open(int argc, char **argv, const char *desc,
 	const struct argconfig_commandline_options *clo);
 
 extern const char *devicename;
 
-int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root));
 enum nvme_print_flags validate_output_format(char *format);
-
-int get_nvme_ctrl_info(char *name, char *path, struct ctrl_list_item *ctrl,
-			__u32 nsid);
-struct subsys_list_item *get_subsys_list(int *subcnt, char *subsysnqn, __u32 nsid);
-void free_subsys_list(struct subsys_list_item *slist, int n);
+int __id_ctrl(int argc, char **argv, struct command *cmd,
+	struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root));
 char *nvme_char_from_block(char *block);
-int get_nsid(int fd);
-void free_ctrl_list_item(struct ctrl_list_item *ctrls);
 void *mmap_registers(const char *dev);
 
 extern int current_index;
@@ -142,8 +99,10 @@ int scan_ctrls_filter(const struct dirent *d);
 int scan_subsys_filter(const struct dirent *d);
 int scan_dev_filter(const struct dirent *d);
 
-int scan_subsystems(struct nvme_topology *t);
+int scan_subsystems(struct nvme_topology *t, const char *subsysnqn,
+		    __u32 ns_instance);
 void free_topology(struct nvme_topology *t);
 char *get_nvme_subsnqn(char *path);
+char *nvme_get_ctrl_attr(char *path, const char *attr);
 
 #endif /* _NVME_H */

@@ -43,8 +43,8 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
 	enum nvme_print_flags flags);
 void nvme_show_list_items(struct nvme_topology *t, enum nvme_print_flags flags);
-void nvme_show_subsystem_list(struct subsys_list_item *slist, int n,
-	enum nvme_print_flags flags);
+void nvme_show_subsystem_list(struct nvme_topology *t,
+      enum nvme_print_flags flags);
 void nvme_show_id_nvmset(struct nvme_id_nvmset *nvmset, unsigned nvmset_id,
 	enum nvme_print_flags flags);
 void nvme_show_list_secondary_ctrl(const struct nvme_secondary_controllers_list *sc_list,
