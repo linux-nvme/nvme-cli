@@ -37,6 +37,10 @@
 #include <dirent.h>
 #include <libgen.h>
 
+#ifdef LIBHUGETLBFS
+#include <hugetlbfs.h>
+#endif
+
 #include <linux/fs.h>
 
 #include <sys/ioctl.h>
@@ -92,6 +96,55 @@ const char *conarg_trsvcid = "trsvcid";
 const char *conarg_host_traddr = "host_traddr";
 const char *dev = "/dev/";
 const char *subsys_dir = "/sys/class/nvme-subsystem/";
+
+static void *__nvme_alloc(size_t len, bool *huge)
+{
+	void *p;
+
+	if (!posix_memalign(&p, getpagesize(), len)) {
+		*huge = false;
+		memset(p, 0, len);
+		return p;
+	}
+	return NULL;
+}
+
+#ifdef LIBHUGETLBFS
+#define HUGE_MIN 0x80000
+
+static void nvme_free(void *p, bool huge)
+{
+	if (huge)
+		free_hugepage_region(p);
+	else
+		free(p);
+}
+
+static void *nvme_alloc(size_t len, bool *huge)
+{
+	void *p;
+
+	if (len < HUGE_MIN)
+		return __nvme_alloc(len, huge);
+
+	p = get_hugepage_region(len, GHP_DEFAULT);
+	if (!p)
+		return __nvme_alloc(len, huge);
+
+	*huge = true;
+	return p;
+}
+#else
+static void nvme_free(void *p, bool huge)
+{
+	free(p);
+}
+
+static void *nvme_alloc(size_t len, bool *huge)
+{
+	return __nvme_alloc(len, huge);
+}
+#endif
 
 static int open_dev(char *dev)
 {
@@ -2362,6 +2415,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	unsigned int fw_size;
 	struct stat sb;
 	void *fw_buf, *buf;
+	bool huge;
 
 	struct config {
 		char  *fw;
@@ -2409,7 +2463,9 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		err = -EINVAL;
 		goto close_fw_fd;
 	}
-	if (posix_memalign(&fw_buf, getpagesize(), fw_size)) {
+
+	fw_buf = nvme_alloc(fw_size, &huge);
+	if (!fw_buf) {
 		fprintf(stderr, "No memory for f/w size:%d\n", fw_size);
 		err = -ENOMEM;
 		goto close_fw_fd;
@@ -2443,7 +2499,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		printf("Firmware download success\n");
 
 free:
-	free(buf);
+	nvme_free(buf, huge);
 close_fw_fd:
 	close(fw_fd);
 close_fd:
@@ -4144,6 +4200,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	__u32 dsmgmt = 0;
 	int phys_sector_size = 0;
 	long long buffer_size = 0;
+	bool huge;
 
 	const char *start_block = "64-bit addr of first block to access";
 	const char *block_count = "number of blocks (zeroes based) on device to access";
@@ -4284,12 +4341,12 @@ static int submit_io(int opcode, char *command, const char *desc,
 		buffer_size = cfg.data_size;
 	}
 
-	if (posix_memalign(&buffer, getpagesize(), buffer_size)) {
+	buffer = nvme_alloc(buffer_size, &huge);
+	if (!buffer) {
 		fprintf(stderr, "can not allocate io payload\n");
 		err = -ENOMEM;
 		goto close_mfd;
 	}
-	memset(buffer, 0, buffer_size);
 
 	if (cfg.metadata_size) {
 		mbuffer = malloc(cfg.metadata_size);
@@ -4368,7 +4425,7 @@ free_mbuffer:
 	if (cfg.metadata_size)
 		free(mbuffer);
 free_buffer:
-	free(buffer);
+	nvme_free(buffer, huge);
 close_mfd:
 	if (strlen(cfg.metadata))
 		close(mfd);
@@ -4798,6 +4855,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	void *data = NULL, *metadata = NULL;
 	int err = 0, wfd = STDIN_FILENO, fd;
 	__u32 result;
+	bool huge;
 
 	struct config {
 		__u8  opcode;
@@ -4920,7 +4978,8 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 		memset(metadata, cfg.prefill, cfg.metadata_len);
 	}
 	if (cfg.data_len) {
-		if (posix_memalign(&data, getpagesize(), cfg.data_len)) {
+		data = nvme_alloc(cfg.data_len, &huge);
+		if (!data) {
 			fprintf(stderr, "can not allocate data payload\n");
 			err = -ENOMEM;
 			goto free_metadata;
@@ -4983,7 +5042,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 
 free_data:
 	if (cfg.data_len)
-		free(data);
+		nvme_free(data, huge);
 free_metadata:
 	if (cfg.metadata_len)
 		free(metadata);

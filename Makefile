@@ -2,6 +2,7 @@ CFLAGS ?= -O2 -g -Wall -Werror
 override CFLAGS += -std=gnu99 -I.
 override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
+LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
 HAVE_SYSTEMD = $(shell pkg-config --exists systemd  --atleast-version=232; echo $$?)
 NVME = nvme
 INSTALL ?= install
@@ -19,6 +20,12 @@ ifeq ($(LIBUUID),0)
 	override LDFLAGS += -luuid
 	override CFLAGS += -DLIBUUID
 	override LIB_DEPENDS += uuid
+endif
+
+ifeq ($(LIBHUGETLBFS),0)
+	override LDFLAGS += -lhugetlbfs
+	override CFLAGS += -DLIBHUGETLBFS
+	override LIB_DEPENDS += hugetlbfs
 endif
 
 INC=-Iutil
