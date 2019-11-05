@@ -840,34 +840,6 @@ enum {
 	NVME_CMD_SGL_ALL	= NVME_CMD_SGL_METABUF | NVME_CMD_SGL_METASEG,
 };
 
-struct nvme_common_command {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__le32			cdw2[2];
-	__le64			metadata;
-	union nvme_data_ptr	dptr;
-	__le32			cdw10[6];
-};
-
-struct nvme_rw_command {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__u64			rsvd2;
-	__le64			metadata;
-	union nvme_data_ptr	dptr;
-	__le64			slba;
-	__le16			length;
-	__le16			control;
-	__le32			dsmgmt;
-	__le32			reftag;
-	__le16			apptag;
-	__le16			appmask;
-};
-
 enum {
 	NVME_RW_LR			= 1 << 15,
 	NVME_RW_FUA			= 1 << 14,
@@ -894,18 +866,6 @@ enum {
 	NVME_RW_DTYPE_STREAMS		= 1 << 4,
 };
 
-struct nvme_dsm_cmd {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__u64			rsvd2[2];
-	union nvme_data_ptr	dptr;
-	__le32			nr;
-	__le32			attributes;
-	__u32			rsvd12[4];
-};
-
 enum {
 	NVME_DSMGMT_IDR		= 1 << 0,
 	NVME_DSMGMT_IDW		= 1 << 1,
@@ -920,25 +880,7 @@ struct nvme_dsm_range {
 	__le64			slba;
 };
 
-struct nvme_write_zeroes_cmd {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__u64			rsvd2;
-	__le64			metadata;
-	union nvme_data_ptr	dptr;
-	__le64			slba;
-	__le16			length;
-	__le16			control;
-	__le32			dsmgmt;
-	__le32			reftag;
-	__le16			apptag;
-	__le16			appmask;
-};
-
 /* Features */
-
 struct nvme_feat_auto_pst {
 	__le64 entries[32];
 };
@@ -1072,144 +1014,12 @@ enum {
 	NVME_SELF_TEST_REPORTS		= 20,
 };
 
-struct nvme_identify {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__u64			rsvd2[2];
-	union nvme_data_ptr	dptr;
-	__u8			cns;
-	__u8			rsvd3;
-	__le16			ctrlid;
-	__u32			rsvd11[5];
-};
-
 #define NVME_IDENTIFY_DATA_SIZE 4096
-
-struct nvme_features {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__u64			rsvd2[2];
-	union nvme_data_ptr	dptr;
-	__le32			fid;
-	__le32			dword11;
-	__le32                  dword12;
-	__le32                  dword13;
-	__le32                  dword14;
-	__le32                  dword15;
-};
 
 struct nvme_host_mem_buf_desc {
 	__le64			addr;
 	__le32			size;
 	__u32			rsvd;
-};
-
-struct nvme_create_cq {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__u32			rsvd1[5];
-	__le64			prp1;
-	__u64			rsvd8;
-	__le16			cqid;
-	__le16			qsize;
-	__le16			cq_flags;
-	__le16			irq_vector;
-	__u32			rsvd12[4];
-};
-
-struct nvme_create_sq {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__u32			rsvd1[5];
-	__le64			prp1;
-	__u64			rsvd8;
-	__le16			sqid;
-	__le16			qsize;
-	__le16			sq_flags;
-	__le16			cqid;
-	__u32			rsvd12[4];
-};
-
-struct nvme_delete_queue {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__u32			rsvd1[9];
-	__le16			qid;
-	__u16			rsvd10;
-	__u32			rsvd11[5];
-};
-
-struct nvme_abort_cmd {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__u32			rsvd1[9];
-	__le16			sqid;
-	__u16			cid;
-	__u32			rsvd11[5];
-};
-
-struct nvme_download_firmware {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__u32			rsvd1[5];
-	union nvme_data_ptr	dptr;
-	__le32			numd;
-	__le32			offset;
-	__u32			rsvd12[4];
-};
-
-struct nvme_format_cmd {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__u64			rsvd2[4];
-	__le32			cdw10;
-	__u32			rsvd11[5];
-};
-
-struct nvme_get_log_page_command {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__u64			rsvd2[2];
-	union nvme_data_ptr	dptr;
-	__u8			lid;
-	__u8			lsp;
-	__le16			numdl;
-	__le16			numdu;
-	__u16			rsvd11;
-	__le32			lpol;
-	__le32			lpou;
-	__u32			rsvd14[2];
-};
-
-struct nvme_directive_cmd {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__le32			nsid;
-	__u64			rsvd2[2];
-	union nvme_data_ptr	dptr;
-	__le32			numd;
-	__u8			doper;
-	__u8			dtype;
-	__le16			dspec;
-	__u8			endir;
-	__u8			tdtype;
-	__u16			rsvd15;
-
-	__u32			rsvd16[3];
 };
 
 /* Sanitize Log Page */
@@ -1236,15 +1046,6 @@ enum nvmf_capsule_command {
 	nvme_fabrics_type_property_set	= 0x00,
 	nvme_fabrics_type_connect	= 0x01,
 	nvme_fabrics_type_property_get	= 0x04,
-};
-
-struct nvmf_common_command {
-	__u8	opcode;
-	__u8	resv1;
-	__u16	command_id;
-	__u8	fctype;
-	__u8	resv2[35];
-	__u8	ts[24];
 };
 
 /*
@@ -1298,22 +1099,6 @@ struct nvmf_disc_rsp_page_hdr {
 	struct nvmf_disc_rsp_page_entry entries[0];
 };
 
-struct nvmf_connect_command {
-	__u8		opcode;
-	__u8		resv1;
-	__u16		command_id;
-	__u8		fctype;
-	__u8		resv2[19];
-	union nvme_data_ptr dptr;
-	__le16		recfmt;
-	__le16		qid;
-	__le16		sqsize;
-	__u8		cattr;
-	__u8		resv3;
-	__le32		kato;
-	__u8		resv4[12];
-};
-
 struct nvmf_connect_data {
 	uuid_t		hostid;
 	__le16		cntlid;
@@ -1321,41 +1106,6 @@ struct nvmf_connect_data {
 	char		subsysnqn[NVMF_NQN_FIELD_LEN];
 	char		hostnqn[NVMF_NQN_FIELD_LEN];
 	char		resv5[256];
-};
-
-struct nvmf_property_set_command {
-	__u8		opcode;
-	__u8		resv1;
-	__u16		command_id;
-	__u8		fctype;
-	__u8		resv2[35];
-	__u8		attrib;
-	__u8		resv3[3];
-	__le32		offset;
-	__le64		value;
-	__u8		resv4[8];
-};
-
-struct nvmf_property_get_command {
-	__u8		opcode;
-	__u8		resv1;
-	__u16		command_id;
-	__u8		fctype;
-	__u8		resv2[35];
-	__u8		attrib;
-	__u8		resv3[3];
-	__le32		offset;
-	__u8		resv4[16];
-};
-
-struct nvme_dbbuf {
-	__u8			opcode;
-	__u8			flags;
-	__u16			command_id;
-	__u32			rsvd1[5];
-	__le64			prp1;
-	__le64			prp2;
-	__u32			rsvd12[6];
 };
 
 struct streams_directive_params {
@@ -1369,42 +1119,6 @@ struct streams_directive_params {
 	__le16	nso;
 	__u8	rsvd2[6];
 };
-
-struct nvme_command {
-	union {
-		struct nvme_common_command common;
-		struct nvme_rw_command rw;
-		struct nvme_identify identify;
-		struct nvme_features features;
-		struct nvme_create_cq create_cq;
-		struct nvme_create_sq create_sq;
-		struct nvme_delete_queue delete_queue;
-		struct nvme_download_firmware dlfw;
-		struct nvme_format_cmd format;
-		struct nvme_dsm_cmd dsm;
-		struct nvme_write_zeroes_cmd write_zeroes;
-		struct nvme_abort_cmd abort;
-		struct nvme_get_log_page_command get_log_page;
-		struct nvmf_common_command fabrics;
-		struct nvmf_connect_command connect;
-		struct nvmf_property_set_command prop_set;
-		struct nvmf_property_get_command prop_get;
-		struct nvme_dbbuf dbbuf;
-		struct nvme_directive_cmd directive;
-	};
-};
-
-static inline bool nvme_is_write(struct nvme_command *cmd)
-{
-	/*
-	 * What a mess...
-	 *
-	 * Why can't we simply have a Fabrics In and Fabrics out command?
-	 */
-	if (unlikely(cmd->common.opcode == nvme_fabrics_command))
-		return cmd->fabrics.fctype & 1;
-	return cmd->common.opcode & 1;
-}
 
 enum {
 	NVME_SCT_GENERIC		= 0x0,

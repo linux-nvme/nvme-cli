@@ -576,52 +576,19 @@ int nvme_set_feature(int fd, __u32 nsid, __u8 fid, __u32 value, __u32 cdw12,
 }
 
 
-/*
- * Perform the opposite operation of the byte-swapping code at the start of the
- * kernel function nvme_user_cmd().
- */
-static void nvme_to_passthru_cmd(struct nvme_passthru_cmd *pcmd,
-				 const struct nvme_command *ncmd)
-{
-	assert(sizeof(*ncmd) < sizeof(*pcmd));
-	memset(pcmd, 0, sizeof(*pcmd));
-	pcmd->opcode = ncmd->common.opcode;
-	pcmd->flags = ncmd->common.flags;
-	pcmd->rsvd1 = ncmd->common.command_id;
-	pcmd->nsid = le32_to_cpu(ncmd->common.nsid);
-	pcmd->cdw2 = le32_to_cpu(ncmd->common.cdw2[0]);
-	pcmd->cdw3 = le32_to_cpu(ncmd->common.cdw2[1]);
-	/* Skip metadata and addr */
-	pcmd->cdw10 = le32_to_cpu(ncmd->common.cdw10[0]);
-	pcmd->cdw11 = le32_to_cpu(ncmd->common.cdw10[1]);
-	pcmd->cdw12 = le32_to_cpu(ncmd->common.cdw10[2]);
-	pcmd->cdw13 = le32_to_cpu(ncmd->common.cdw10[3]);
-	pcmd->cdw14 = le32_to_cpu(ncmd->common.cdw10[4]);
-	pcmd->cdw15 = le32_to_cpu(ncmd->common.cdw10[5]);
-}
-
 int nvme_get_property(int fd, int offset, uint64_t *value)
 {
-	struct nvme_passthru_cmd pcmd;
-	struct nvmf_property_get_command pg = {
-		.opcode	= nvme_fabrics_command,
-		.fctype	= nvme_fabrics_type_property_get,
-		.offset	= cpu_to_le32(offset),
-		.attrib = is_64bit_reg(offset),
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_fabrics_command,
+		.nsid		= nvme_fabrics_type_property_get,
+		.cdw10		= is_64bit_reg(offset),
+		.cdw11		= offset,
 	};
-	struct nvme_command gcmd;
 	int err;
 
-	gcmd.prop_get = pg;
-	nvme_to_passthru_cmd(&pcmd, &gcmd);
-	err = nvme_submit_admin_passthru(fd, &pcmd);
-	if (!err) {
-		/*
-		 * nvme_submit_admin_passthru() stores the lower 32 bits
-		 * of the property value in pcmd.result using CPU endianness.
-		 */
-		*value = pcmd.result;
-	}
+	err = nvme_submit_admin_passthru(fd, &cmd);
+	if (!err && value)
+		*value = cmd.result;
 	return err;
 }
 
@@ -662,19 +629,16 @@ int nvme_get_properties(int fd, void **pbar)
 
 int nvme_set_property(int fd, int offset, uint64_t value)
 {
-	struct nvmf_property_set_command ps = {
-		.opcode	= nvme_fabrics_command,
-		.fctype	= nvme_fabrics_type_property_set,
-		.offset	= cpu_to_le32(offset),
-		.value = cpu_to_le64(value),
-		.attrib = is_64bit_reg(offset),
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_fabrics_command,
+		.nsid		= nvme_fabrics_type_property_set,
+		.cdw10		= is_64bit_reg(offset),
+		.cdw11		= offset,
+		.cdw12		= value & 0xffffffff,
+		.cdw13		= value >> 32,
 	};
-	struct nvme_command scmd;
-	struct nvme_passthru_cmd pcmd;
 
-	scmd.prop_set = ps;
-	nvme_to_passthru_cmd(&pcmd, &scmd);
-	return nvme_submit_admin_passthru(fd, &pcmd);
+	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
 int nvme_get_feature(int fd, __u32 nsid, __u8 fid, __u8 sel, __u32 cdw11,
@@ -710,6 +674,7 @@ int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas,
 		.dps		= dps,
 		.nmic		= nmic,
 	};
+
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_ns_mgmt,
 		.addr		= (__u64)(uintptr_t) ((void *)&ns),
