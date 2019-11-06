@@ -322,7 +322,7 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	if (fmt != JSON && fmt != NORMAL)
 		return -EINVAL;
 
-	n = scandir(dev, &devices, scan_dev_filter, alphasort);
+	n = scandir(dev, &devices, scan_namespace_filter, alphasort);
 	if (n <= 0)
 		return n;
 
