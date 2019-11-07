@@ -39,7 +39,7 @@ RPMBUILD = rpmbuild
 TAR = tar
 RM = rm -f
 
-AUTHOR=Keith Busch <keith.busch@intel.com>
+AUTHOR=Keith Busch <kbusch@kernel.org>
 
 default: $(NVME)
 

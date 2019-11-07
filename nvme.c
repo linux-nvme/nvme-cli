@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2014-2015, Intel Corporation.
  *
- * Written by Keith Busch <keith.busch@intel.com>
+ * Written by Keith Busch <kbusch@kernel.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
