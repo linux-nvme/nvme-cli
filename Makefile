@@ -82,6 +82,9 @@ nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h util/argconfig.h util/suffix.h n
 %.o: %.c %.h nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
 
+%.o: %.c nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
+
 doc: $(NVME)
 	$(MAKE) -C Documentation
 
