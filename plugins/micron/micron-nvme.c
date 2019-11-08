@@ -22,8 +22,8 @@ static int micron_fw_commit(int fd, int select)
 		.cdw10		= 8,
 		.cdw12      = select,
 	};
-	return nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
 
+	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
 static int micron_selective_download(int argc, char **argv, struct command *cmd, struct plugin *plugin)

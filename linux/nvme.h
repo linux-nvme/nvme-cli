@@ -246,6 +246,9 @@ struct nvme_id_power_state {
 	__u8			rsvd23[9];
 };
 
+/* idle and active power scales occupy the last 2 bits of the field */
+#define POWER_SCALE(s) ((s) >> 6)
+
 enum {
 	NVME_PS_FLAGS_MAX_POWER_SCALE	= 1 << 0,
 	NVME_PS_FLAGS_NON_OP_STATE	= 1 << 1,
@@ -1180,9 +1183,6 @@ struct nvme_firmware_log_page {
 	__u8	resv2[448];
 };
 
-/* idle and active power scales occupy the last 2 bits of the field */
-#define POWER_SCALE(s) ((s) >> 6)
-
 struct nvme_host_mem_buffer {
 	__u32			hsize;
 	__u32			hmdlal;
@@ -1204,7 +1204,7 @@ struct nvme_timestamp {
 
 struct nvme_controller_list {
 	__le16 num;
-	__le16 identifier[];
+	__le16 identifier[2047];
 };
 
 struct nvme_secondary_controller_entry {

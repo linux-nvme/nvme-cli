@@ -88,12 +88,12 @@ int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 	return ioctl(fd, ioctl_cmd, cmd);
 }
 
-static int nvme_submit_admin_passthru(int fd, struct nvme_passthru_cmd *cmd)
+int nvme_submit_admin_passthru(int fd, struct nvme_passthru_cmd *cmd)
 {
 	return ioctl(fd, NVME_IOCTL_ADMIN_CMD, cmd);
 }
 
-static int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd)
+int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd)
 {
 	return ioctl(fd, NVME_IOCTL_IO_CMD, cmd);
 }
@@ -417,33 +417,38 @@ int nvme_identify_uuid(int fd, void *data)
 int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
                  __u16 lsi, bool rae, __u8 uuid_ix, __u32 data_len, void *data)
 {
+	__u32 numd = (data_len >> 2) - 1;
+	__u16 numdu = numd >> 16, numdl = numd & 0xffff;
+	__u32 cdw10 = log_id | (numdl << 16) | (rae ? 1 << 15 : 0) | lsp << 8;
+
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_get_log_page,
 		.nsid		= nsid,
 		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= data_len,
+		.cdw10		= cdw10,
+		.cdw11		= numdu | (lsi << 16),
+		.cdw12		= lpo & 0xffffffff,
+		.cdw13		= lpo >> 32,
+		.cdw14		= uuid_ix,
 	};
-	__u32 numd = (data_len >> 2) - 1;
-	__u16 numdu = numd >> 16, numdl = numd & 0xffff;
-
-	cmd.cdw10 = log_id | (numdl << 16) | (rae ? 1 << 15 : 0);
-	if (lsp)
-                cmd.cdw10 |= lsp << 8;
-
-	cmd.cdw11 = numdu | (lsi << 16);
-	cmd.cdw12 = lpo;
-	cmd.cdw13 = (lpo >> 32);
-	cmd.cdw14 = uuid_ix;
 
 	return nvme_submit_admin_passthru(fd, &cmd);
+}
 
+int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp,
+		 __u64 lpo, __u16 lsi, bool rae, __u32 data_len,
+		 void *data)
+{
+	return nvme_get_log14(fd, nsid, log_id, lsp, lpo, lsi, rae, 0,
+			      data_len, data);
 }
 
 int nvme_get_log(int fd, __u32 nsid, __u8 log_id, bool rae,
 		 __u32 data_len, void *data)
 {
-	void *ptr = data;
 	__u32 offset = 0, xfer_len = data_len;
+	void *ptr = data;
 	int ret;
 
 	/*
@@ -518,9 +523,7 @@ int nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log *smart_log)
 
 int nvme_ana_log(int fd, void *ana_log, size_t ana_log_len, int rgo)
 {
-	__u64 lpo = 0;
-
-	return nvme_get_log13(fd, NVME_NSID_ALL, NVME_LOG_ANA, rgo, lpo, 0,
+	return nvme_get_log13(fd, NVME_NSID_ALL, NVME_LOG_ANA, rgo, 0, 0,
 			true, ana_log_len, ana_log);
 }
 
@@ -597,8 +600,7 @@ int nvme_get_properties(int fd, void **pbar)
 {
 	int offset;
 	uint64_t value;
-	int err;
-	int size = getpagesize();
+	int err, size = getpagesize();
 
 	*pbar = malloc(size);
 	if (!*pbar) {
@@ -706,22 +708,21 @@ int nvme_ns_delete(int fd, __u32 nsid, __u32 timeout)
 int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist,
 		       bool attach)
 {
-	int i;
-	__u8 buf[0x1000];
-	struct nvme_controller_list *cntlist =
-					(struct nvme_controller_list *)buf;
+	struct nvme_controller_list cntlist = {
+		.num = cpu_to_le16(num_ctrls),
+	};
+
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_ns_attach,
 		.nsid		= nsid,
-		.addr		= (__u64)(uintptr_t) cntlist,
+		.addr		= (__u64)(uintptr_t)&cntlist,
 		.cdw10		= attach ? 0 : 1,
 		.data_len	= 0x1000,
 	};
+	int i;
 
-	memset(buf, 0, sizeof(buf));
-	cntlist->num = cpu_to_le16(num_ctrls);
 	for (i = 0; i < num_ctrls; i++)
-		cntlist->identifier[i] = cpu_to_le16(ctrlist[i]);
+		cntlist.identifier[i] = cpu_to_le16(ctrlist[i]);
 
 	return nvme_submit_admin_passthru(fd, &cmd);
 }

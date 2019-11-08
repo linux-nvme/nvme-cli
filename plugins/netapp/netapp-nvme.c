@@ -379,7 +379,7 @@ static int nvme_get_ontap_c2_log(int fd, __u32 nsid, void *buf, __u32 buflen)
 	get_log.cdw10 |= ONTAP_C2_LOG_NSINFO_LSP << 8;
 	get_log.cdw11 = numdu;
 
-	err = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &get_log);
+	err = nvme_submit_admin_passthru(fd, &get_log);
 	if (err) {
 		fprintf(stderr, "ioctl error %0x\n", err);
 		return 1;
