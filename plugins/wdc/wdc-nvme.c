@@ -1426,17 +1426,9 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				goto free_mem;
 			}
 
-			if (file_size == 0) {
-				/* write the telemetry and log headers into the dump_file */
-				err = write(output, (void *)log_hdr, WDC_NVME_CAP_DUI_HEADER_SIZE);
-				if (err != WDC_NVME_CAP_DUI_HEADER_SIZE) {
-					fprintf(stderr, "%s:  Failed to flush header data to file!\n", __func__);
-					goto free_mem;
-				}
+			curr_data_offset = 0;
 
-				log_size -= WDC_NVME_CAP_DUI_HEADER_SIZE;
-				curr_data_offset = WDC_NVME_CAP_DUI_HEADER_SIZE;
-			} else {
+			if (file_size != 0) {
 				/* Write the DUI data based on the passed in file size */
 				if ((offset + file_size) > total_size)
 					log_size = min((total_size - offset), file_size);
@@ -1447,21 +1439,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 					fprintf(stderr, "%s: INFO : WDC : Offset 0x%llx, file size 0x%llx, total size 0x%llx, log size 0x%llx\n",
 						__func__, offset, file_size, total_size, log_size);
 
-				curr_data_offset = 0;
+				curr_data_offset = offset;
 
-				if (offset == 0) {
-					/* write the telemetry and log headers into the dump_file */
-					err = write(output, (void *)log_hdr, WDC_NVME_CAP_DUI_HEADER_SIZE);
-					if (err != WDC_NVME_CAP_DUI_HEADER_SIZE) {
-						fprintf(stderr, "%s:  Failed to flush header data to file!\n", __func__);
-						goto free_mem;
-					}
-
-					log_size -= WDC_NVME_CAP_DUI_HEADER_SIZE;
-					curr_data_offset = WDC_NVME_CAP_DUI_HEADER_SIZE;
-				} else {
-					curr_data_offset = offset;
-				}
 			}
 
 			i = 0;
