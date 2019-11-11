@@ -116,8 +116,7 @@ void argconfig_append_usage(const char *str);
 void argconfig_print_help(const char *program_desc,
 			  const struct argconfig_commandline_options *options);
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
-		    const struct argconfig_commandline_options *options,
-		    void *config_out, size_t config_size);
+		    const struct argconfig_commandline_options *options);
 int argconfig_parse_subopt_string(char *string, char **options,
 				  size_t max_options);
 unsigned argconfig_parse_comma_sep_array(char *string, int *ret,

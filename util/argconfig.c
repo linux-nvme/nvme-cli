@@ -138,8 +138,7 @@ void argconfig_print_help(const char *program_desc,
 }
 
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
-		    const struct argconfig_commandline_options *options,
-		    void *config_out, size_t config_size)
+		    const struct argconfig_commandline_options *options)
 {
 	char *short_opts;
 	char *endptr;

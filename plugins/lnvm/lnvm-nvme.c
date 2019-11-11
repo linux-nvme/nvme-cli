@@ -44,7 +44,7 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
@@ -65,7 +65,7 @@ static int lnvm_list(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, NULL, 0);
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
@@ -81,7 +81,7 @@ static int lnvm_info(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, NULL, 0);
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
@@ -116,14 +116,14 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
 	if (cfg.human_readable)
-		flags |= HUMAN;
+		flags |= VERBOSE;
 	else if (cfg.raw_binary)
-		flags |= RAW;
+		flags |= BINARY;
 
 	return lnvm_do_id_ns(fd, cfg.namespace_id, flags);
 }
@@ -161,8 +161,7 @@ static int lnvm_chunk_log(int argc, char **argv, struct command *cmd, struct plu
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg,
-				sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -173,9 +172,9 @@ static int lnvm_chunk_log(int argc, char **argv, struct command *cmd, struct plu
 	}
 
 	if (fmt == BINARY)
-		flags |= RAW;
+		flags |= BINARY;
 	else if (cfg.human_readable)
-		flags |= HUMAN;
+		flags |= VERBOSE;
 
 	nsid = nvme_get_nsid(fd);
 
@@ -253,7 +252,7 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
@@ -296,7 +295,7 @@ static int lnvm_remove_tgt(int argc, char **argv, struct command *cmd, struct pl
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
@@ -336,8 +335,7 @@ static int lnvm_factory_init(int argc, char **argv, struct command *cmd, struct 
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg,
-								sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
@@ -381,10 +379,10 @@ static int lnvm_get_bbtbl(int argc, char **argv, struct command *cmd, struct plu
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 
 	if (cfg.raw_binary)
-		flags |= RAW;
+		flags |= BINARY;
 
 	return lnvm_do_get_bbtbl(fd, cfg.namespace_id, cfg.lunid, cfg.chid, flags);
 }
@@ -429,7 +427,7 @@ static int lnvm_set_bbtbl(int argc, char **argv, struct command *cmd, struct plu
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 
 	printf("Updating: Ch.: %u LUN: %u Plane: %u Block: %u -> %u\n",
 			cfg.chid, cfg.lunid, cfg.plnid, cfg.blkid, cfg.value);

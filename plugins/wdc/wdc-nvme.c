@@ -1057,7 +1057,7 @@ static int wdc_do_clear_dump(int fd, __u8 opcode, __u32 cdw12)
 	memset(&admin_cmd, 0, sizeof (struct nvme_admin_cmd));
 	admin_cmd.opcode = opcode;
 	admin_cmd.cdw12 = cdw12;
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	if (ret != 0) {
 		fprintf(stdout, "ERROR : WDC : Crash dump erase failed\n");
 	}
@@ -1080,7 +1080,7 @@ static __u32 wdc_dump_length(int fd, __u32 opcode, __u32 cdw10, __u32 cdw12, __u
 	admin_cmd.cdw10 = cdw10;
 	admin_cmd.cdw12 = cdw12;
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	if (ret != 0) {
 		l->log_size = 0;
 		ret = -1;
@@ -1108,7 +1108,7 @@ static __u32 wdc_dump_length_e6(int fd, __u32 opcode, __u32 cdw10, __u32 cdw12, 
 	admin_cmd.cdw10 = cdw10;
 	admin_cmd.cdw12 = cdw12;
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	if (ret != 0) {
 		fprintf(stderr, "ERROR : WDC : reading dump length failed\n");
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
@@ -1135,7 +1135,7 @@ static __u32 wdc_dump_dui_data(int fd, __u32 dataLen, __u32 offset, __u8 *dump_d
 		admin_cmd.cdw14 = WDC_NVME_CAP_DUI_DISABLE_IO;
 
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	if (ret != 0) {
 		fprintf(stderr, "ERROR : WDC : reading DUI data failed\n");
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
@@ -1162,7 +1162,7 @@ static __u32 wdc_dump_dui_data_v2(int fd, __u32 dataLen, __u64 offset, __u8 *dum
 	else
 		admin_cmd.cdw14 = WDC_NVME_CAP_DUI_DISABLE_IO;
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	if (ret != 0) {
 		fprintf(stderr, "ERROR : WDC : reading DUI data V2 failed\n");
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
@@ -1200,7 +1200,7 @@ static int wdc_do_dump(int fd, __u32 opcode,__u32 data_len,
 	admin_cmd.cdw13 = curr_data_offset;
 
 	while (curr_data_offset < data_len) {
-		ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+		ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 		if (ret != 0) {
 			fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n",
 				__func__, nvme_status_to_string(ret), ret);
@@ -1265,7 +1265,7 @@ static int wdc_do_dump_e6(int fd, __u32 opcode,__u32 data_len,
 		admin_cmd.cdw10 = xfer_size >> 2;
 		admin_cmd.cdw13 = curr_data_offset >> 2;
 
-		ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+		ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 		if (ret != 0) {
 			fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
 			fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%x, offset = 0x%x, addr = 0x%lx\n",
@@ -1603,7 +1603,7 @@ static int wdc_cap_diag(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -1645,7 +1645,7 @@ static int wdc_do_get_sn730_log_len(int fd, uint32_t *len_buf, uint32_t subopcod
 	admin_cmd.cdw12 = subopcode;
 	admin_cmd.cdw10 = SN730_LOG_CHUNK_SIZE / 4;
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	if (ret == 0)
 		*len_buf = *output;
 	free(output);
@@ -1670,7 +1670,7 @@ static int wdc_do_get_sn730_log(int fd, void * log_buf, uint32_t offset, uint32_
 	admin_cmd.cdw13 = offset;
 	admin_cmd.cdw10 = SN730_LOG_CHUNK_SIZE / 4;
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	if (!ret)
 		memcpy(log_buf, output, SN730_LOG_CHUNK_SIZE);
 	return ret;
@@ -1902,7 +1902,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -2090,7 +2090,7 @@ static int wdc_do_drive_log(int fd, char *file)
 	admin_cmd.cdw12 = ((WDC_NVME_DRIVE_LOG_SUBCMD <<
 				WDC_NVME_SUBCMD_SHIFT) | WDC_NVME_DRIVE_LOG_SIZE_CMD);
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret),
 			ret);
 	if (ret == 0) {
@@ -2122,7 +2122,7 @@ static int wdc_drive_log(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -2167,7 +2167,7 @@ static int wdc_get_crash_dump(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -2209,7 +2209,7 @@ static int wdc_get_pfail_dump(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -2294,14 +2294,14 @@ static int wdc_purge(int argc, char **argv,
 	memset(&admin_cmd, 0, sizeof (admin_cmd));
 	admin_cmd.opcode = WDC_NVME_PURGE_CMD_OPCODE;
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
 	if (!wdc_check_device(fd))
 		return -1;
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	if (ret > 0) {
 		switch (ret) {
 		case WDC_NVME_PURGE_CMD_SEQ_ERR:
@@ -2343,14 +2343,14 @@ static int wdc_purge_monitor(int argc, char **argv,
 	admin_cmd.cdw10 = WDC_NVME_PURGE_MONITOR_CMD_CDW10;
 	admin_cmd.timeout_ms = WDC_NVME_PURGE_MONITOR_TIMEOUT;
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
 	if (!wdc_check_device(fd))
 		return -1;
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	if (ret == 0) {
 		mon = (struct wdc_nvme_purge_monitor_data *) output;
 		printf("Purge state = 0x%0x\n", admin_cmd.result);
@@ -3103,7 +3103,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -3149,7 +3149,7 @@ static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct comma
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -3170,7 +3170,7 @@ static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct comma
 	admin_cmd.cdw12 = ((WDC_NVME_CLEAR_PCIE_CORR_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
 			WDC_NVME_CLEAR_PCIE_CORR_CMD);
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 out:
 	return ret;
@@ -3193,7 +3193,7 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -3303,7 +3303,7 @@ static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -3327,7 +3327,7 @@ static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
 		admin_cmd.cdw12 = ((WDC_NVME_CLEAR_ASSERT_DUMP_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
 				WDC_NVME_CLEAR_ASSERT_DUMP_CMD);
 
-		ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+		ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	} else
 		fprintf(stderr, "INFO : WDC : No Assert Dump Present\n");
@@ -3412,7 +3412,7 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *com
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 
 	if (fd < 0)
 		return fd;
@@ -3444,7 +3444,7 @@ static int wdc_clear_fw_activate_history(int argc, char **argv, struct command *
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -3460,7 +3460,7 @@ static int wdc_clear_fw_activate_history(int argc, char **argv, struct command *
 	admin_cmd.cdw12 = ((WDC_NVME_CLEAR_FW_ACT_HIST_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
 			WDC_NVME_CLEAR_FW_ACT_HIST_CMD);
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 
 out:
@@ -3531,7 +3531,7 @@ static int wdc_de_VU_read_size(int fd, __u32 fileId, __u16 spiDestn, __u32* logS
 	cmd.cdw13 = fileId<<16;
 	cmd.cdw14 = spiDestn;
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	ret = nvme_submit_admin_passthru(fd, &cmd);
 
 	if (!ret && logSize)
 		*logSize = cmd.result;
@@ -3566,7 +3566,7 @@ static int wdc_de_VU_read_buffer(int fd, __u32 fileId, __u16 spiDestn, __u32 off
 	cmd.addr = (__u64)(__u64)(uintptr_t)dataBuffer;
 	cmd.data_len = *bufferSize;
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	ret = nvme_submit_admin_passthru(fd, &cmd);
 
 	if( ret != WDC_STATUS_SUCCESS)
 		fprintf(stderr, "ERROR : WDC : VUReadBuffer() failed, status:%s(0x%x)\n", nvme_status_to_string(ret), ret);
@@ -4189,7 +4189,7 @@ static int wdc_drive_essentials(int argc, char **argv, struct command *command,
 	};
 
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -4220,7 +4220,7 @@ static int wdc_do_drive_resize(int fd, uint64_t new_size)
 			    WDC_NVME_DRIVE_RESIZE_CMD);
 	admin_cmd.cdw13 = new_size;
 
-	ret = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	return ret;
 }
 
@@ -4245,7 +4245,7 @@ static int wdc_drive_resize(int argc, char **argv,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -4370,7 +4370,7 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *command,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, NULL, 0);
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 

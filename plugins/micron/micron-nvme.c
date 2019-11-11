@@ -22,8 +22,8 @@ static int micron_fw_commit(int fd, int select)
 		.cdw10		= 8,
 		.cdw12      = select,
 	};
-	return nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
 
+	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
 static int micron_selective_download(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -58,8 +58,7 @@ static int micron_selective_download(int argc, char **argv, struct command *cmd,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
-
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
