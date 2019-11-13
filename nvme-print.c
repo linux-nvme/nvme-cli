@@ -1706,6 +1706,26 @@ static void format(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
 	}
 }
 
+void nvme_show_format_pi(struct nvme_id_ns *ns, unsigned int nsid)
+{
+	__u8 fpi_sup, fpi_percent;
+
+	fpi_sup = (ns->fpi & 0x80) >> 7;
+	if (!fpi_sup) {
+		printf("The namespace: %d does NOT support the Format Progress "\
+			"Indicator(FPI)\n", nsid);
+		return;
+	}
+
+	fpi_percent = ns->fpi & 0x7f;
+	if (!fpi_percent)
+		printf("Namespace fromatted as specified by the FLBAS and DPS. "\
+			"There is NO Format NVM command in progress\n");
+	else
+		printf("%d%% of the Format NVM command has been completed and %d%% "\
+			"remains to be completed\n", (100 - fpi_percent), fpi_percent);
+}
+
 static const char *nvme_uuid_to_string(uuid_t uuid)
 {
 	/* large enough to hold uuid str (37) + null-termination byte */

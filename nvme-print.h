@@ -58,6 +58,7 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
 	void *buf, __u32 len, enum nvme_print_flags flags);
 void nvme_show_select_result(__u32 result);
+void nvme_show_format_pi(struct nvme_id_ns *ns, unsigned int nsid);
 
 const char *nvme_status_to_string(__u32 status);
 const char *nvme_select_to_string(int sel);

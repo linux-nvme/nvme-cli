@@ -2862,6 +2862,58 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int format_pi(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Indicates the percentage of the namespace that "\
+			    "remains to be formatted.";
+	const char *namespace_id = "desired namespace";
+
+	struct nvme_id_ns ns;
+	int err, fd;
+
+	struct config {
+		__u32 namespace_id;
+	};
+
+	struct config cfg = {
+		.namespace_id = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if(fd < 0)
+		goto ret;
+
+	if (!cfg.namespace_id && S_ISBLK(nvme_stat.st_mode)) {
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
+			goto close_fd;
+		}
+	} else if (!cfg.namespace_id) {
+		fprintf(stderr,
+			"Error: requesting namespace-id from non-block device\n");
+		err = -ENOTBLK;
+		goto close_fd;
+	}
+
+	err = nvme_identify_ns(fd, cfg.namespace_id, 0, &ns);
+	if (!err)
+		nvme_show_format_pi(&ns, cfg.namespace_id);
+	else if(err > 0)
+		nvme_show_status(err);
+	else
+		perror("Identify namespace");
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int set_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Modify the saveable or changeable "\
