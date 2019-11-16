@@ -1141,6 +1141,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *flbas = "FLBA size";
 	const char *dps = "data protection capabilities";
 	const char *nmic = "multipath and sharing capabilities";
+	const char *anagrpid = "ANA Group Identifier";
+	const char *nvmsetid = "NVM Set Identifier";
 	const char *timeout = "timeout value, in milliseconds";
 	const char *bs = "target block size";
 
@@ -1154,24 +1156,30 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		__u8	flbas;
 		__u8	dps;
 		__u8	nmic;
+		__u32	anagrpid;
+		__u16	nvmsetid;
 		__u64	bs;
 		__u32	timeout;
 	};
 
 	struct config cfg = {
 		.flbas		= 0xff,
+		.anagrpid	= 0,
+		.nvmsetid	= 0,
 		.bs		= 0x00,
 		.timeout	= NVME_IOCTL_TIMEOUT,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_SUFFIX("nsze",       's', &cfg.nsze,    nsze),
-		OPT_SUFFIX("ncap",       'c', &cfg.ncap,    ncap),
-		OPT_BYTE("flbas",        'f', &cfg.flbas,   flbas),
-		OPT_BYTE("dps",          'd', &cfg.dps,     dps),
-		OPT_BYTE("nmic",         'm', &cfg.nmic,    nmic),
-		OPT_SUFFIX("block-size", 'b', &cfg.bs,      bs),
-		OPT_UINT("timeout",      't', &cfg.timeout, timeout),
+		OPT_SUFFIX("nsze",       's', &cfg.nsze,     nsze),
+		OPT_SUFFIX("ncap",       'c', &cfg.ncap,     ncap),
+		OPT_BYTE("flbas",        'f', &cfg.flbas,    flbas),
+		OPT_BYTE("dps",          'd', &cfg.dps,      dps),
+		OPT_BYTE("nmic",         'm', &cfg.nmic,     nmic),
+		OPT_UINT("anagrp-id",	 'a', &cfg.anagrpid, anagrpid),
+		OPT_UINT("nvmset-id",	 'i', &cfg.nvmsetid, nvmsetid),
+		OPT_SUFFIX("block-size", 'b', &cfg.bs,       bs),
+		OPT_UINT("timeout",      't', &cfg.timeout,  timeout),
 		OPT_END()
 	};
 
@@ -1222,9 +1230,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		goto close_fd;
 	}
 
-
-	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps,
-			     cfg.nmic, cfg.timeout, &nsid);
+	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic,
+			    cfg.anagrpid, cfg.nvmsetid, cfg.timeout, &nsid);
 	if (!err)
 		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
 	else if (err > 0)
