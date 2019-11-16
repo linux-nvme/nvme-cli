@@ -667,8 +667,9 @@ int nvme_format(int fd, __u32 nsid, __u8 lbaf, __u8 ses, __u8 pi,
 	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
-int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas,
-		   __u8 dps, __u8 nmic, __u32 timeout, __u32 *result)
+int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas, __u8 dps,
+		__u8 nmic, __u32	anagrpid, __u16	nvmsetid,  __u32 timeout,
+		__u32 *result)
 {
 	struct nvme_id_ns ns = {
 		.nsze		= cpu_to_le64(nsze),
@@ -676,6 +677,8 @@ int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas,
 		.flbas		= flbas,
 		.dps		= dps,
 		.nmic		= nmic,
+		.anagrpid	= anagrpid,
+		.nvmsetid	= nvmsetid,
 	};
 
 	struct nvme_admin_cmd cmd = {
