@@ -1758,6 +1758,7 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 		err = errno;
 		goto close_fd;
 	}
+	err = 0;
 	printf("%s: namespace-id:%d\n", devicename, nsid);
 
 close_fd:
