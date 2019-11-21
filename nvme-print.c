@@ -3527,8 +3527,7 @@ void nvme_show_self_test_log(struct nvme_self_test_log *self_test, const char *d
 	};
 
 	if (self_test->crnt_dev_selftest_oprn == 0) {
-		fprintf(stderr, "Test is %d%% complete and is still in progress.\n",
-			self_test->crnt_dev_selftest_compln);
+		fprintf(stderr, "No device self-test operation in progress\n");
 		return;
 	}
 
