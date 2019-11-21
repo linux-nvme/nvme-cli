@@ -444,6 +444,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 			fprintf(stderr, "Failed to flush all data to file!");
 			break;
 		}
+		err = 0;
 		offset += bs;
 	}
 
