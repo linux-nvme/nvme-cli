@@ -1268,7 +1268,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary), 
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary),
 		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
 		OPT_END()
 	};
@@ -1959,6 +1959,7 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 			"(default) or binary.";
 	const char *namespace_id = "Indicate the namespace from which the self-test "\
 				    "log has to be obtained";
+	const char *verbose = "Increase output verbosity";
 
 	struct nvme_self_test_log self_test_log;
 	enum nvme_print_flags flags;
@@ -1967,6 +1968,7 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	struct config {
 		__u32 namespace_id;
 		char *output_format;
+		int verbose;
 	};
 
 	struct config cfg = {
@@ -1977,6 +1979,7 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
 		OPT_END()
 	};
 
@@ -1987,6 +1990,8 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	err = flags = validate_output_format(cfg.output_format);
 	if (flags < 0)
 		goto close_fd;
+	if (cfg.verbose)
+		flags |= VERBOSE;
 
 	err = nvme_self_test_log(fd, cfg.namespace_id, &self_test_log);
 	if (!err)

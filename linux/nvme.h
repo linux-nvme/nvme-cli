@@ -591,17 +591,41 @@ struct nvme_smart_log {
 };
 
 struct nvme_self_test_res {
-	__u8 			device_self_test_status;
-	__u8			segment_num;
-	__u8			valid_diagnostic_info;
-	__u8			rsvd;
-	__le64			power_on_hours;
+	__u8 			dsts;
+	__u8			seg;
+	__u8			vdi;
+	__u8			rsvd3;
+	__le64			poh;
 	__le32			nsid;
-	__le64			failing_lba;
-	__u8			status_code_type;
-	__u8			status_code;
-	__u8			vendor_specific[2];
+	__le64			flba;
+	__u8			sct;
+	__u8			sc;
+	__u8			vs[2];
 } __attribute__((packed));
+
+enum {
+	NVME_ST_CODE_SHIFT    		= 4,
+	NVME_ST_CODE_SHORT_OP 		= 0x1,
+	NVME_ST_CODE_EXT_OP   		= 0x2,
+	NVME_ST_CODE_VS	      		= 0xe,
+	NVME_ST_RES_MASK      		= 0xf,
+	NVME_ST_RES_NO_ERR    		= 0x0,
+	NVME_ST_RES_ABORTED   		= 0x1,
+	NVME_ST_RES_CLR	      		= 0x2,
+	NVME_ST_RES_NS_REMOVED		= 0x3,
+	NVME_ST_RES_ABORTED_FORMAT	= 0x4,
+	NVME_ST_RES_FATAL_ERR		= 0x5,
+	NVME_ST_RES_UNKNOWN_SEG_FAIL	= 0x6,
+	NVME_ST_RES_KNOWN_SEG_FAIL	= 0x7,
+	NVME_ST_RES_ABORTED_UNKNOWN	= 0x8,
+	NVME_ST_RES_ABORTED_SANITIZE	= 0x9,
+	NVME_ST_RES_NOT_USED		= 0xf,
+	NVME_ST_VALID_NSID		= 1 << 0,
+	NVME_ST_VALID_FLBA		= 1 << 1,
+	NVME_ST_VALID_SCT		= 1 << 2,
+	NVME_ST_VALID_SC		= 1 << 3,
+	NVME_ST_REPORTS			= 20,
+};
 
 struct nvme_self_test_log {
 	__u8                      crnt_dev_selftest_oprn;
@@ -1037,15 +1061,6 @@ enum {
 	NVME_SANITIZE_LOG_IN_PROGESS		= 0x0002,
 	NVME_SANITIZE_LOG_COMPLETED_FAILED	= 0x0003,
 	NVME_SANITIZE_LOG_ND_COMPLETED_SUCCESS	= 0x0004,
-};
-
-enum {
-	/* Self-test log Validation bits */
-	NVME_SELF_TEST_VALID_NSID	= 1 << 0,
-	NVME_SELF_TEST_VALID_FLBA	= 1 << 1,
-	NVME_SELF_TEST_VALID_SCT	= 1 << 2,
-	NVME_SELF_TEST_VALID_SC		= 1 << 3,
-	NVME_SELF_TEST_REPORTS		= 20,
 };
 
 #define NVME_IDENTIFY_DATA_SIZE 4096

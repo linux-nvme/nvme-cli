@@ -730,35 +730,36 @@ static void json_self_test_log(struct nvme_self_test_log *self_test)
 		self_test->crnt_dev_selftest_compln);
 	valid = json_create_array();
 
-	for (i=0; i < NVME_SELF_TEST_REPORTS; i++) {
-		if ((self_test->result[i].device_self_test_status & 0xf) == 0xf)
-			continue;
+	for (i = 0; i < NVME_ST_REPORTS; i++) {
 		valid_attrs = json_create_object();
 		json_object_add_value_int(valid_attrs, "Self test result",
-			self_test->result[i].device_self_test_status & 0xf);
+			self_test->result[i].dsts & 0xf);
+		if ((self_test->result[i].dsts & 0xf) == 0xf)
+			goto add;
 		json_object_add_value_int(valid_attrs, "Self test code",
-			self_test->result[i].device_self_test_status >> 4);
+			self_test->result[i].dsts >> 4);
 		json_object_add_value_int(valid_attrs, "Segment number",
-			self_test->result[i].segment_num);
+			self_test->result[i].seg);
 		json_object_add_value_int(valid_attrs, "Valid Diagnostic Information",
-			self_test->result[i].valid_diagnostic_info);
-		json_object_add_value_uint(valid_attrs, "Power on hours (POH)",
-			le64_to_cpu(self_test->result[i].power_on_hours));
-		if (self_test->result[i].valid_diagnostic_info & NVME_SELF_TEST_VALID_NSID)
-			json_object_add_value_int(valid_attrs, "Namespace Identifier (NSID)",
+			self_test->result[i].vdi);
+		json_object_add_value_uint(valid_attrs, "Power on hours",
+			le64_to_cpu(self_test->result[i].poh));
+		if (self_test->result[i].vdi & NVME_ST_VALID_NSID)
+			json_object_add_value_int(valid_attrs, "Namespace Identifier",
 				le32_to_cpu(self_test->result[i].nsid));
-		if (self_test->result[i].valid_diagnostic_info & NVME_SELF_TEST_VALID_FLBA)
+		if (self_test->result[i].vdi & NVME_ST_VALID_FLBA)
 			json_object_add_value_uint(valid_attrs, "Failing LBA",
-				le64_to_cpu(self_test->result[i].failing_lba));
-		if (self_test->result[i].valid_diagnostic_info & NVME_SELF_TEST_VALID_SCT)
+				le64_to_cpu(self_test->result[i].flba));
+		if (self_test->result[i].vdi & NVME_ST_VALID_SCT)
 			json_object_add_value_int(valid_attrs, "Status Code Type",
-				self_test->result[i].status_code_type);
-		if(self_test->result[i].valid_diagnostic_info & NVME_SELF_TEST_VALID_SC)
+				self_test->result[i].sct);
+		if (self_test->result[i].vdi & NVME_ST_VALID_SC)
 			json_object_add_value_int(valid_attrs, "Status Code",
-				self_test->result[i].status_code);
+				self_test->result[i].sc);
 		json_object_add_value_int(valid_attrs, "Vendor Specific",
-			(self_test->result[i].vendor_specific[1] << 8) |
-			(self_test->result[i].vendor_specific[0]));
+			(self_test->result[i].vs[1] << 8) |
+			(self_test->result[i].vs[0]));
+add:
 		json_array_add_value_object(valid, valid_attrs);
 	}
 	json_object_add_value_array(root, "List of Valid Reports", valid);
@@ -3505,11 +3506,9 @@ void nvme_show_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname,
 	}
 }
 
-void nvme_show_self_test_log(struct nvme_self_test_log *self_test, const char *devname,
+static void nvme_show_self_test_result(struct nvme_self_test_res *res,
 			     enum nvme_print_flags flags)
 {
-	int i, temp;
-	const char *test_code_res;
 	static const char *const test_res[] = {
 		"Operation completed without error",
 		"Operation was aborted by a Device Self-test command",
@@ -3523,13 +3522,71 @@ void nvme_show_self_test_log(struct nvme_self_test_log *self_test, const char *d
 			"is indicated in the SegmentNumber field",
 		"Operation was aborted for unknown reason",
 		"Operation was aborted due to a sanitize operation",
-		"Reserved"
+		"Reserved",
+		[NVME_ST_RES_NOT_USED] = "Entry not used (does not contain a result)",
 	};
+	__u8 op, code;
 
-	if (self_test->crnt_dev_selftest_oprn == 0) {
-		fprintf(stderr, "No device self-test operation in progress\n");
+	op = res->dsts & NVME_ST_RES_MASK;
+	printf("  Operation Result             : %#x", op);
+	if (flags & VERBOSE)
+		printf(" %s", (op < ARRAY_SIZE(test_res) && test_res[op]) ?
+			test_res[op] : test_res[ARRAY_SIZE(test_res) - 1]);
+	printf("\n");
+	if (op == NVME_ST_RES_NOT_USED)
 		return;
+
+	code = res->dsts >> NVME_ST_CODE_SHIFT;
+	printf("  Self Test Code               : %x", code);
+
+	if (flags & VERBOSE) {
+		switch (code) {
+		case NVME_ST_CODE_SHORT_OP:
+			printf(" Short device self-test operation");
+			break;
+		case NVME_ST_CODE_EXT_OP:
+			printf(" Extended device self-test operation");
+			break;
+		case NVME_ST_CODE_VS:
+			printf(" Vendor specific");
+			break;
+		default:
+			printf(" Reserved");
+			break;
+		}
 	}
+	printf("\n");
+
+	if (op == NVME_ST_RES_KNOWN_SEG_FAIL)
+		printf("  Segment Number               : %#x\n", res->seg);
+
+	printf("  Valid Diagnostic Information : %#x\n", res->vdi);
+	printf("  Power on hours (POH)         : %#"PRIx64"\n",
+		(uint64_t)le64_to_cpu(res->poh));
+
+	if (res->vdi & NVME_ST_VALID_NSID)
+		printf("  Namespace Identifier         : %#x\n",
+			le32_to_cpu(res->nsid));
+	if (res->vdi & NVME_ST_VALID_FLBA)
+		printf("  Failing LBA                  : %#"PRIx64"\n",
+			(uint64_t)le64_to_cpu(res->flba));
+	if (res->vdi & NVME_ST_VALID_SCT)
+		printf("  Status Code Type             : %#x\n", res->sct);
+	if (res->vdi & NVME_ST_VALID_SC) {
+		printf("  Status Code                  : %#x", res->sc);
+		if (flags & VERBOSE)
+			printf(" %s", nvme_status_to_string(
+				(res->sct & 7) << 8 | res->sc));
+		printf("\n");
+	}
+	printf("  Vendor Specific              : %#x %#x\n",
+		res->vs[0], res->vs[1]);
+}
+
+void nvme_show_self_test_log(struct nvme_self_test_log *self_test, const char *devname,
+			     enum nvme_print_flags flags)
+{
+	int i;
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)self_test, sizeof(*self_test));
@@ -3537,58 +3594,11 @@ void nvme_show_self_test_log(struct nvme_self_test_log *self_test, const char *d
 		return json_self_test_log(self_test);
 
 	printf("Device Self Test Log for NVME device:%s\n", devname);
-	printf("Current operation : %#x\n", self_test->crnt_dev_selftest_oprn);
+	printf("Current operation  : %#x\n", self_test->crnt_dev_selftest_oprn);
 	printf("Current Completion : %u%%\n", self_test->crnt_dev_selftest_compln);
-	for (i = 0; i < NVME_SELF_TEST_REPORTS; i++) {
-		temp = self_test->result[i].device_self_test_status & 0xf;
-		if (temp == 0xf)
-			continue;
-
-		printf("Result[%d]:\n", i);
-		printf("  Test Result                  : %#x %s\n", temp,
-			test_res[temp > 10 ? 10 : temp]);
-
-		temp = self_test->result[i].device_self_test_status >> 4;
-		switch (temp) {
-		case 1:
-			test_code_res = "Short device self-test operation";
-			break;
-		case 2:
-			test_code_res = "Extended device self-test operation";
-			break;
-		case 0xe:
-			test_code_res = "Vendor specific";
-			break;
-		default :
-			test_code_res = "Reserved";
-			break;
-		}
-		printf("  Test Code                    : %#x %s\n", temp,
-			test_code_res);
-		if (temp == 7)
-			printf("  Segment number               : %#x\n",
-				self_test->result[i].segment_num);
-
-		temp = self_test->result[i].valid_diagnostic_info;
-		printf("  Valid Diagnostic Information : %#x\n", temp);
-		printf("  Power on hours (POH)         : %#"PRIx64"\n",
-			le64_to_cpu(self_test->result[i].power_on_hours));
-
-		if (temp & NVME_SELF_TEST_VALID_NSID)
-			printf("  Namespace Identifier         : %#x\n",
-				le32_to_cpu(self_test->result[i].nsid));
-		if (temp & NVME_SELF_TEST_VALID_FLBA)
-			printf("  Failing LBA                  : %#"PRIx64"\n",
-				le64_to_cpu(self_test->result[i].failing_lba));
-		if (temp & NVME_SELF_TEST_VALID_SCT)
-			printf("  Status Code Type             : %#x\n",
-				self_test->result[i].status_code_type);
-		if (temp & NVME_SELF_TEST_VALID_SC)
-			printf("  Status Code                  : %#x\n",
-				self_test->result[i].status_code);
-		printf("  Vendor Specific                      : %x %x\n",
-			self_test->result[i].vendor_specific[0],
-			self_test->result[i].vendor_specific[0]);
+	for (i = 0; i < NVME_ST_REPORTS; i++) {
+		printf("Self Test Result[%d]:\n", i);
+		nvme_show_self_test_result(&self_test->result[i], flags);
 	}
 }
 
