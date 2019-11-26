@@ -2,12 +2,12 @@
 .\"     Title: nvme-attach-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/08/2019
+.\"      Date: 11/08/2019
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ATTACH\-NS" "1" "01/08/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-ATTACH\-NS" "1" "11/08/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,7 +51,25 @@ The comma separated list of controller identifiers to attach the namesapce too\&
 .RE
 .SH "EXAMPLES"
 .sp
-No examples yet\&.
+.if n \{\
+.RS 4
+.\}
+.nf
+Attach namspace to the controller:
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme attach\-ns /dev/nvme1  \-n 0x2 \-c 0x21
+.fi
+.if n \{\
+.RE
+.\}
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

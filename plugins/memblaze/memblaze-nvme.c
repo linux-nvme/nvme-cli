@@ -249,13 +249,13 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 		.namespace_id = NVME_NSID_ALL,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
-		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -295,7 +295,7 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 		"Available additional feature id:\n"\
 		"0xc6:	Memblaze power management\n"\
 		"	(value 0 - 25w, 1 - 20w, 2 - 15w)";
-	const char *raw_binary = "show infos in binary format";
+	const char *raw = "show feature in binary format";
 	const char *namespace_id = "identifier of desired namespace";
 	const char *feature_id = "hexadecimal feature name";
 	const char *sel = "[0-3]: curr./default/saved/supp.";
@@ -324,18 +324,18 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 		.data_len     = 0,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id",   'n', "NUM", CFG_POSITIVE, &cfg.namespace_id,   required_argument, namespace_id},
-		{"feature-id",     'f', "NUM", CFG_POSITIVE, &cfg.feature_id,     required_argument, feature_id},
-		{"sel",            's', "NUM", CFG_BYTE,     &cfg.sel,            required_argument, sel},
-		{"data-len",       'l', "NUM", CFG_POSITIVE, &cfg.data_len,       required_argument, data_len},
-		{"raw-binary",     'b', "FLAG", CFG_NONE,     &cfg.raw_binary,     no_argument,       raw_binary},
-		{"cdw11",          'c', "NUM", CFG_POSITIVE, &cfg.cdw11,          required_argument, cdw11},
-		{"human-readable", 'H', "FLAG", CFG_NONE,     &cfg.human_readable, no_argument,       human_readable},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id),
+		OPT_UINT("feature-id",     'f', &cfg.feature_id,     feature_id),
+		OPT_BYTE("sel",            's', &cfg.sel,            sel),
+		OPT_UINT("data-len",       'l', &cfg.data_len,       data_len),
+		OPT_UINT("cdw11",          'c', &cfg.cdw11,          cdw11),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
+		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -420,17 +420,17 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 		.save         = 0,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
-		{"feature-id",   'f', "NUM",  CFG_POSITIVE, &cfg.feature_id,   required_argument, feature_id},
-		{"value",        'v', "NUM",  CFG_POSITIVE, &cfg.value,        required_argument, value},
-		{"data-len",     'l', "NUM",  CFG_POSITIVE, &cfg.data_len,     required_argument, data_len},
-		{"data",         'd', "FILE", CFG_STRING,   &cfg.file,         required_argument, data},
-		{"save",         's', "FLAG", CFG_NONE,     &cfg.save,         no_argument, save},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_UINT("feature-id",   'f', &cfg.feature_id,   feature_id),
+		OPT_UINT("value",        'v', &cfg.value,        value),
+		OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
+		OPT_FILE("data",         'd', &cfg.file,         data),
+		OPT_FLAG("save",         's', &cfg.save,         save),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 

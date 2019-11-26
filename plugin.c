@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #include "plugin.h"
-#include "argconfig.h"
+#include "util/argconfig.h"
 
 static int version(struct plugin *plugin)
 {

@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-format
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 07/28/2019
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 11/08/2019
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FORMAT" "1" "07/28/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-FORMAT" "1" "11/08/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -40,6 +40,7 @@ nvme-format \- Format an NVMe device
                     [\-\-pi=<pi> | \-i <pi>]
                     [\-\-ms=<ms> | \-m <ms>]
                     [\-\-reset | \-r ]
+                    [\-\-force | \-f ]
                     [\-\-timeout=<timeout> | \-t <timeout> ]
 .fi
 .SH "DESCRIPTION"
@@ -165,6 +166,11 @@ Metadata Settings: This field is set to \(oq1\(cq if the metadata is transferred
 \-r, \-\-reset
 .RS 4
 Issue a reset after successful format\&. Must use the character device for this\&.
+.RE
+.PP
+\-f, \-\-force
+.RS 4
+Just send the command immediately without warning of the implications\&.
 .RE
 .PP
 \-t <timeout>, \-\-timeout=<timeout>

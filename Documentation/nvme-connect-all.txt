@@ -19,8 +19,8 @@ SYNOPSIS
 		[--keep-alive-tmo=<#>     | -k <#>]
 		[--reconnect-delay=<#>    | -c <#>]
 		[--ctrl-loss-tmo=<#>	  | -l <#>]
-		[--hdr_digest             | -g]
-		[--data_digest            | -G]
+		[--hdr-digest             | -g]
+		[--data-digest            | -G]
 		[--nr-io-queues=<#>       | -i <#>]
 		[--nr-write-queues=<#>    | -W <#>]
 		[--nr-poll-queues=<#>     | -P <#>]
@@ -112,11 +112,11 @@ OPTIONS
 	Overrides the default controller loss timeout period (in seconds).
 
 -g::
---hdr_digest::
+--hdr-digest::
 	Generates/verifies header digest (TCP).
 
 -G::
---data_digest::
+--data-digest::
 	Generates/verifies data digest (TCP).
 
 -i <#>::

@@ -13,8 +13,10 @@ SYNOPSIS
 			[--flbas=<flbas> | -f <flbas>]
 			[--dps=<dps> | -d <dps>]
 			[--nmic=<nmic> | -m <nmic>]
+			[--anagrp-id=<anagrpid> | -a <anagrpid>]
+			[--nvmset-id=<nvmsetid> | -i <nvmsetid>]
 			[--block-size=<block-size> | -b <block-size>]
-
+			[--timeout=<timeout> | -t <timeout>]
 DESCRIPTION
 -----------
 For the NVMe device given, sends a namespace management command to create
@@ -46,6 +48,15 @@ OPTIONS
 -m::
 --nmic::
 	Namespace multipath and sharing capabilities.
+
+-a::
+--anagrp-id::
+	ANA Gorup Identifier. If this value is 0h specifies
+	that the controller determines the value to use
+
+-i <nvmsetid>::
+--nvmset-id=<nvmsetid>::
+	This field specifies the identifier of the NVM Set.
 
 -b::
 --block-size::

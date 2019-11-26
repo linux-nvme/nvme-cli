@@ -23,6 +23,8 @@ PLUGIN(NAME("wdc", "Western Digital vendor specific extensions"),
 		ENTRY("get-drive-status", "WDC Get Drive Status", wdc_drive_status)
 		ENTRY("clear-assert-dump", "WDC Clear Assert Dump", wdc_clear_assert_dump)
 		ENTRY("drive-resize", "WDC Drive Resize", wdc_drive_resize)
+		ENTRY("vs-fw-activate-history", "WDC Get FW Activate History", wdc_vs_fw_activate_history)
+		ENTRY("clear-fw-activate-history", "WDC Clear FW Activate History", wdc_clear_fw_activate_history)
 	)
 );
 

@@ -1,33 +1,32 @@
-////////////////////////////////////////////////////////////////////////
-//
-// Copyright 2014 PMC-Sierra, Inc.
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-////////////////////////////////////////////////////////////////////////
+/*
+ * Copyright 2014 PMC-Sierra, Inc.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ */
 
-////////////////////////////////////////////////////////////////////////
-//
-//   Author: Logan Gunthorpe
-//
-//   Date:   Oct 23 2014
-//
-//   Description:
-//     Functions for parsing command line options.
-//
-////////////////////////////////////////////////////////////////////////
+/*
+ *
+ *   Author: Logan Gunthorpe
+ *
+ *   Date:   Oct 23 2014
+ *
+ *   Description:
+ *     Functions for parsing command line options.
+ *
+ */
 
 #include "argconfig.h"
 #include "suffix.h"
@@ -139,8 +138,7 @@ void argconfig_print_help(const char *program_desc,
 }
 
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
-		    const struct argconfig_commandline_options *options,
-		    void *config_out, size_t config_size)
+		    const struct argconfig_commandline_options *options)
 {
 	char *short_opts;
 	char *endptr;

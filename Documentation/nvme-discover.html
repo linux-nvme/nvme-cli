@@ -765,7 +765,9 @@ nvme-discover(1) Manual Page
                 [--nr-io-queues=&lt;#&gt;       | -i &lt;#&gt;]
                 [--nr-write-queues=&lt;#&gt;    | -W &lt;#&gt;]
                 [--nr-poll-queues=&lt;#&gt;     | -P &lt;#&gt;]
-                [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]</pre>
+                [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]
+                [--persistent             | -p]
+                [--quiet                  | -S]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -937,6 +939,8 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         Overrides the default dealy (in seconds) for keep alive.
+        This option will be ignored for the discovery, and it is only
+        implemented for completeness.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -993,6 +997,8 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         Overrides the default number of I/O queues create by the driver.
+        This option will be ignored for the discovery, and it is only
+        implemented for completeness.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1027,6 +1033,30 @@ cellspacing="0" cellpadding="4">
 <p>
         Overrides the default number of elements in the I/O queues created
         by the driver which can be found at drivers/nvme/host/fabrics.h.
+        This option will be ignored for the discovery, and it is only
+        implemented for completeness.
+</p>
+</dd>
+<dt class="hdlist1">
+-p
+</dt>
+<dt class="hdlist1">
+--persistent
+</dt>
+<dd>
+<p>
+        Persistent discovery connection.
+</p>
+</dd>
+<dt class="hdlist1">
+-S
+</dt>
+<dt class="hdlist1">
+--quiet
+</dt>
+<dd>
+<p>
+        Suppress already connected errors.
 </p>
 </dd>
 </dl></div>
@@ -1078,8 +1108,7 @@ nvme-connect-all(1)</p></div>
 <div class="sect1">
 <h2 id="_authors">AUTHORS</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>This was written by <a href="mailto:james.p.freyensee@intel.com">Jay Freyensee</a>
-for <a href="mailto:keith.busch@intel.com">Keith Busch</a>.</p></div>
+<div class="paragraph"><p>This was written by <a href="mailto:james.p.freyensee@intel.com">Jay Freyensee</a></p></div>
 </div>
 </div>
 <div class="sect1">
@@ -1093,7 +1122,7 @@ for <a href="mailto:keith.busch@intel.com">Keith Busch</a>.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-04-04 01:15:26 KST
+ 2019-11-08 08:22:36 JST
 </div>
 </div>
 </body>

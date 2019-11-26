@@ -2,6 +2,8 @@ CFLAGS ?= -O2 -g -Wall -Werror
 override CFLAGS += -std=gnu99 -I.
 override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
+LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
+HAVE_SYSTEMD = $(shell pkg-config --exists systemd  --atleast-version=232; echo $$?)
 NVME = nvme
 INSTALL ?= install
 DESTDIR =
@@ -10,7 +12,7 @@ SYSCONFDIR = /etc
 SBINDIR = $(PREFIX)/sbin
 LIBDIR ?= $(PREFIX)/lib
 SYSTEMDDIR ?= $(LIBDIR)/systemd
-UDEVDIR ?= $(LIBDIR)/udev
+UDEVDIR ?= $(SYSCONFDIR)/udev
 DRACUTDIR ?= $(LIBDIR)/dracut
 LIB_DEPENDS =
 
@@ -20,11 +22,24 @@ ifeq ($(LIBUUID),0)
 	override LIB_DEPENDS += uuid
 endif
 
+ifeq ($(LIBHUGETLBFS),0)
+	override LDFLAGS += -lhugetlbfs
+	override CFLAGS += -DLIBHUGETLBFS
+	override LIB_DEPENDS += hugetlbfs
+endif
+
+INC=-Iutil
+
+ifeq ($(HAVE_SYSTEMD),0)
+	override LDFLAGS += -lsystemd
+	override CFLAGS += -DHAVE_SYSTEMD
+endif
+
 RPMBUILD = rpmbuild
 TAR = tar
 RM = rm -f
 
-AUTHOR=Keith Busch <keith.busch@intel.com>
+AUTHOR=Keith Busch <kbusch@kernel.org>
 
 default: $(NVME)
 
@@ -35,9 +50,11 @@ override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
 
 NVME_DPKG_VERSION=1~`lsb_release -sc`
 
-OBJS := argconfig.o suffix.o parser.o nvme-print.o nvme-ioctl.o \
-	nvme-lightnvm.o fabrics.o json.o nvme-models.o plugin.o \
-	nvme-status.o
+OBJS := nvme-print.o nvme-ioctl.o \
+	nvme-lightnvm.o fabrics.o nvme-models.o plugin.o \
+	nvme-status.o nvme-filters.o nvme-topology.o
+
+UTIL_OBJS := util/argconfig.o util/suffix.o util/json.o util/parser.o
 
 PLUGIN_OBJS :=					\
 	plugins/intel/intel-nvme.o		\
@@ -53,17 +70,20 @@ PLUGIN_OBJS :=					\
 	plugins/virtium/virtium-nvme.o		\
 	plugins/shannon/shannon-nvme.o
 
-nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) NVME-VERSION-FILE
-	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(LDFLAGS)
+nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) nvme.c -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)
 
 verify-no-dep: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
 	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $@ $(OBJS) $(LDFLAGS)
 
-nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h argconfig.h suffix.h nvme-lightnvm.h fabrics.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
+nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h util/argconfig.h util/suffix.h nvme-lightnvm.h fabrics.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -c $<
 
-%.o: %.c %.h nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h argconfig.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
+%.o: %.c %.h nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
+
+%.o: %.c nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
 
 doc: $(NVME)
 	$(MAKE) -C Documentation
@@ -74,7 +94,7 @@ test:
 all: doc
 
 clean:
-	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
+	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
 	$(MAKE) -C Documentation clean
 	$(RM) tests/*.pyc
 	$(RM) verify-no-dep
@@ -109,7 +129,7 @@ install-zsh-completion:
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/share/zsh/site-functions
 	$(INSTALL) -m 644 -T ./completions/_nvme $(DESTDIR)$(PREFIX)/share/zsh/site-functions/_nvme
 
-install-hostparams:
+install-hostparams: install-etc
 	if [ ! -s $(DESTDIR)$(SYSCONFDIR)/nvme/hostnqn ]; then \
 		echo `$(DESTDIR)$(SBINDIR)/nvme gen-hostnqn` > $(DESTDIR)$(SYSCONFDIR)/nvme/hostnqn; \
 	fi
@@ -121,7 +141,7 @@ install-etc:
 	$(INSTALL) -d $(DESTDIR)$(SYSCONFDIR)/nvme
 	touch $(DESTDIR)$(SYSCONFDIR)/nvme/hostnqn
 	touch $(DESTDIR)$(SYSCONFDIR)/nvme/hostid
-	if [ ! -f $(DESTDIR)$(SBINDIR)/nvme/discovery.conf ]; then \
+	if [ ! -f $(DESTDIR)$(SYSCONFDIR)/nvme/discovery.conf ]; then \
 		$(INSTALL) -m 644 -T ./etc/discovery.conf.in $(DESTDIR)$(SYSCONFDIR)/nvme/discovery.conf; \
 	fi
 

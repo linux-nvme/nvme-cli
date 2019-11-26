@@ -1,22 +1,23 @@
-//
-// Do NOT modify or remove this copyright and license
-//
-// Copyright (c) 2017-2018 Seagate Technology LLC and/or its Affiliates, All Rights Reserved
-//
-// ******************************************************************************************
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// \file seagate-nvme.c
-// \brief This file defines the functions and macros to make building a nvme-cli seagate plug-in.
+/*
+ * Do NOT modify or remove this copyright and license
+ *
+ * Copyright (c) 2017-2018 Seagate Technology LLC and/or its Affiliates, All Rights Reserved
+ *
+ * ******************************************************************************************
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * \file seagate-nvme.c
+ * \brief This file defines the functions and macros to make building a nvme-cli seagate plug-in.
+ */
 
 
 #include <fcntl.h>
@@ -170,15 +171,12 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 		.output_format = "normal",
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format,
-		 required_argument, output_format },
-		{ }
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options,
-			    &cfg, sizeof(cfg));
-
+	fd = parse_and_open(argc, argv, desc, opts);
 	err = nvme_get_log(fd, 1, 0xc5, false, sizeof(logPageMap), &logPageMap);
 	if (!err) {
 		if (strcmp(cfg.output_format,"json")) {
@@ -208,7 +206,7 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 	return err;
 }
 
-//EOF Command for "log-pages-supp"
+/* EOF Command for "log-pages-supp" */
 
 
 /***************************************
@@ -501,7 +499,6 @@ static void json_print_smart_log(struct json_object *root,
 	static __u64 lsbGbErased = 0, msbGbErased = 0, lsbLifWrtToFlash = 0, msbLifWrtToFlash = 0,
 		lsbLifWrtFrmHost = 0, msbLifWrtFrmHost = 0, lsbLifRdToHost = 0, msbLifRdToHost = 0, lsbTrimCnt = 0, msbTrimCnt = 0;
 	char buf[40] = {0};
-	//char strBuf[35] = {0};
 
 	/*root = json_create_object();*/
 	lbafs = json_create_array();
@@ -735,12 +732,12 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 		.output_format = "normal",
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{ }
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (strcmp(cfg.output_format,"json"))
 		printf("Seagate Extended SMART Information :\n");
 
@@ -786,7 +783,8 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 
 	return err;
 }
-//EOF Extended-SMART Information
+
+/*EOF Extended-SMART Information */
 
 /***************************************
  * Temperature-Stats information
@@ -832,12 +830,12 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 		.output_format = "normal",
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{ }
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0) {
 		printf ("\nDevice not found \n");;
 		return -1;
@@ -845,7 +843,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 
 	if(strcmp(cfg.output_format,"json"))
 		printf("Seagate Temperature Stats Information :\n");
-	//STEP-1 : Get Current Temperature from SMART
+	/*STEP-1 : Get Current Temperature from SMART */
 	err = nvme_smart_log(fd, 0xffffffff, &smart_log);
 	if (!err) {
 		temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]);
@@ -861,7 +859,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 		}
 	}
 
-	// STEP-2 : Get Max temperature form Ext SMART-id 194
+	/* STEP-2 : Get Max temperature form Ext SMART-id 194 */
 	err = nvme_get_log(fd, 1, 0xC4, false, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
 	if (!err) {
 		for(index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++) {
@@ -901,7 +899,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 
 	return err;
 }
-//EOF Temperature Stats information
+/* EOF Temperature Stats information */
 
 /***************************************
  * PCIe error-log information
@@ -1004,12 +1002,12 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 		.output_format = "normal",
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, output_format },
-		{ }
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if(strcmp(cfg.output_format,"json"))
 		printf("Seagate PCIe error counters Information :\n");
 
@@ -1025,7 +1023,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 
 	return err;
 }
-//EOF PCIE error-log information
+/* EOF PCIE error-log information */
 
 static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
@@ -1043,12 +1041,12 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 		.save         = 0,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"save",         's', "FLAG", CFG_NONE,     &cfg.save,         no_argument, save},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_FLAG("save", 's', &cfg.save, save),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 
 	err = nvme_set_feature(fd, 0, 0xE1, 0xCB, 0, cfg.save, 0, buf, &result);
 
@@ -1069,7 +1067,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 	const char *log_specific = "1 - controller shall capture Data representing the internal " \
 		"state of the controller at the time the command is processed. " \
 		"0 - controller shall not update the Telemetry Host Initiated Data.";
-	const char *raw_binary = "output in raw format";
+	const char *raw = "output in raw format";
 	int err, fd, dump_fd;
 	struct nvme_temetry_log_hdr tele_log;
 	__le64  offset = 0;
@@ -1087,22 +1085,19 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		.log_id       = 0,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
-		{"log_specific", 'i', "NUM", CFG_POSITIVE, &cfg.log_id,       required_argument, log_specific},
-		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_UINT("log_specific", 'i', &cfg.log_id,       log_specific),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
 	dump_fd = STDOUT_FILENO;
-
-
 	cfg.log_id = (cfg.log_id << 8) | 0x07;
-
 	err = nvme_get_log13(fd, cfg.namespace_id, cfg.log_id,
 			     NVME_NO_LOG_LSP, offset, 0, false,
 			     sizeof(tele_log), (void *)(&tele_log));
@@ -1167,7 +1162,6 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 	}
 
 	return err;
-
 }
 
 static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -1175,7 +1169,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 	const char *desc = "Capture the Telemetry Controller-Initiated Data in either "	\
 		"hex-dump (default) or binary format";
 	const char *namespace_id = "desired namespace";
-	const char *raw_binary = "output in raw format";
+	const char *raw = "output in raw format";
 	int err, fd, dump_fd;
 	struct nvme_temetry_log_hdr tele_log;
 	__le64  offset = 0;
@@ -1192,13 +1186,13 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 		.namespace_id = 0xffffffff,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
-		{"raw-binary",   'b', "",    CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -1274,7 +1268,7 @@ void seaget_d_raw(unsigned char *buf, int len, int fd)
 {
 	/*********************
 	int i;
-    fflush(stdout);
+	fflush(stdout);
 	for (i = 0; i < len; i++)
 		putchar(*(buf+i));
 	*********************/
@@ -1310,18 +1304,17 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 		.file         = "",
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM", CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace_id},
-		{"dump-file",    'f', "FILE", CFG_STRING,  &cfg.file,         required_argument, file},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_FILE("dump-file",    'f', &cfg.file,         file),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
 	dump_fd = STDOUT_FILENO;
-
 	if(strlen(cfg.file)) {
 		dump_fd = open(cfg.file, flags, mode);
 		if (dump_fd < 0) {
@@ -1338,11 +1331,10 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 		maxBlk = tele_log.tele_data_area3;
 		offset += 512;
 
-		/***************************************************************************
-	printf("Data Block 1 Last Block:%d Data Block 2 Last Block:%d Data Block 3 Last Block:%d\n",
-		   tele_log.tele_data_area1, tele_log.tele_data_area2, tele_log.tele_data_area3);
-		***************************************************************************/
-
+		/*
+		printf("Data Block 1 Last Block:%d Data Block 2 Last Block:%d Data Block 3 Last Block:%d\n",
+			tele_log.tele_data_area1, tele_log.tele_data_area2, tele_log.tele_data_area3);
+		*/
 		seaget_d_raw((unsigned char *)(&tele_log), sizeof(tele_log), dump_fd);
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
@@ -1393,11 +1385,13 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 	return err;
 }
 
-//SEAGATE-PLUGIN Version
+/*SEAGATE-PLUGIN Version */
 static int seagate_plugin_version(int argc, char **argv, struct command *cmd,
 			   struct plugin *plugin)
 {
-	printf("Seagate-Plugin version : %d.%d \n", SEAGATE_PLUGIN_VERSION_MAJOR, SEAGATE_PLUGIN_VERSION_MINOR);
+	printf("Seagate-Plugin version : %d.%d \n",
+		SEAGATE_PLUGIN_VERSION_MAJOR,
+		SEAGATE_PLUGIN_VERSION_MINOR);
 	return 0;
 }
-//EOF SEAGATE-PLUGIN Version
+/*EOF SEAGATE-PLUGIN Version */

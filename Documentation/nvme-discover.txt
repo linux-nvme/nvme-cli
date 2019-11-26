@@ -25,6 +25,8 @@ SYNOPSIS
 		[--nr-write-queues=<#>    | -W <#>]
 		[--nr-poll-queues=<#>     | -P <#>]
 		[--queue-size=<#>         | -Q <#>]
+		[--persistent             | -p]
+		[--quiet                  | -S]
 
 DESCRIPTION
 -----------
@@ -158,6 +160,14 @@ OPTIONS
 	This option will be ignored for the discovery, and it is only
 	implemented for completeness.
 
+-p::
+--persistent::
+	Persistent discovery connection.
+
+-S::
+--quiet::
+	Suppress already connected errors.
+
 EXAMPLES
 --------
 * Query the Discover Controller with IP4 address 192.168.1.3 for all
@@ -192,7 +202,6 @@ nvme-connect-all(1)
 AUTHORS
 -------
 This was written by mailto:james.p.freyensee@intel.com[Jay Freyensee]
-for mailto:keith.busch@intel.com[Keith Busch].
 
 NVME
 ----

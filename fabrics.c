@@ -33,17 +33,28 @@
 #include <sys/stat.h>
 #include <stddef.h>
 
-#include "parser.h"
+#include "util/parser.h"
 #include "nvme-ioctl.h"
 #include "nvme-status.h"
 #include "fabrics.h"
 
 #include "nvme.h"
-#include "argconfig.h"
+#include "util/argconfig.h"
 
 #include "common.h"
 
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-id128.h>
+#define NVME_HOSTNQN_ID SD_ID128_MAKE(c7,f4,61,81,12,be,49,32,8c,83,10,6f,9d,dd,d8,6b)
+#endif
+
 #define NVMF_HOSTID_SIZE	36
+
+const char *conarg_nqn = "nqn";
+const char *conarg_transport = "transport";
+const char *conarg_traddr = "traddr";
+const char *conarg_trsvcid = "trsvcid";
+const char *conarg_host_traddr = "host_traddr";
 
 static struct config {
 	char *nqn;
@@ -60,6 +71,7 @@ static struct config {
 	int  keep_alive_tmo;
 	int  reconnect_delay;
 	int  ctrl_loss_tmo;
+	int  tos;
 	char *raw;
 	char *device;
 	int  duplicate_connect;
@@ -69,6 +81,14 @@ static struct config {
 	bool persistent;
 	bool quiet;
 } cfg = { NULL };
+
+struct connect_args {
+	char *subsysnqn;
+	char *transport;
+	char *traddr;
+	char *trsvcid;
+	char *host_traddr;
+};
 
 #define BUF_SIZE		4096
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
@@ -190,6 +210,55 @@ static const char *cms_str(__u8 cm)
 
 static int do_discover(char *argstr, bool connect);
 
+/*
+ * parse strings with connect arguments to find a particular field.
+ * If field found, return string containing field value. If field
+ * not found, return an empty string.
+ */
+static char *parse_conn_arg(char *conargs, const char delim, const char *field)
+{
+	char *s, *e;
+	size_t cnt;
+
+	/*
+	 * There are field name overlaps: traddr and host_traddr.
+	 * By chance, both connect arg strings are set up to
+	 * have traddr field followed by host_traddr field. Thus field
+	 * name matching doesn't overlap in the searches. Technically,
+	 * as is, the loop and delimiter checking isn't necessary.
+	 * However, better to be prepared.
+	 */
+	do {
+		s = strstr(conargs, field);
+		if (!s)
+			goto empty_field;
+		/* validate prior character is delimiter */
+		if (s == conargs || *(s - 1) == delim) {
+			/* match requires next character to be assignment */
+			s += strlen(field);
+			if (*s == '=')
+				/* match */
+				break;
+		}
+		/* field overlap: seek to delimiter and keep looking */
+		conargs = strchr(s, delim);
+		if (!conargs)
+			goto empty_field;
+		conargs++;	/* skip delimiter */
+	} while (1);
+	s++;		/* skip assignment character */
+	e = strchr(s, delim);
+	if (e)
+		cnt = e - s;
+	else
+		cnt = strlen(s);
+
+	return strndup(s, cnt);
+
+empty_field:
+	return strdup("\0");
+}
+
 static int ctrl_instance(char *device)
 {
 	char d[64];
@@ -203,6 +272,86 @@ static int ctrl_instance(char *device)
 	    strcmp(device, d))
 		return -EINVAL;
 	return instance;
+}
+
+/*
+ * Given a controller name, create a connect_args with its
+ * attributes and compare the attributes against the connect args
+ * given.
+ * Return true/false based on whether it matches
+ */
+static bool ctrl_matches_connectargs(char *name, struct connect_args *args)
+{
+	struct connect_args cargs;
+	bool found = false;
+	char *path, *addr;
+	int ret;
+
+	ret = asprintf(&path, "%s/%s", SYS_NVME, name);
+	if (ret < 0)
+		return found;
+
+	addr = nvme_get_ctrl_attr(path, "address");
+	cargs.subsysnqn = nvme_get_ctrl_attr(path, "subsysnqn");
+	cargs.transport = nvme_get_ctrl_attr(path, "transport");
+	cargs.traddr = parse_conn_arg(addr, ' ', conarg_traddr);
+	cargs.trsvcid = parse_conn_arg(addr, ' ', conarg_trsvcid);
+	cargs.host_traddr = parse_conn_arg(addr, ' ', conarg_host_traddr);
+
+	if (!strcmp(cargs.subsysnqn, args->subsysnqn) &&
+	    !strcmp(cargs.transport, args->transport) &&
+	    (!strcmp(cargs.traddr, args->traddr) ||
+	     !strcmp(args->traddr, "none")) &&
+	    (!strcmp(cargs.trsvcid, args->trsvcid) ||
+	     !strcmp(args->trsvcid, "none")) &&
+	    (!strcmp(cargs.host_traddr, args->host_traddr) ||
+	     !strcmp(args->host_traddr, "none")))
+		found = true;
+
+	free(cargs.subsysnqn);
+	free(cargs.transport);
+	free(cargs.traddr);
+	free(cargs.trsvcid);
+	free(cargs.host_traddr);
+
+	return found;
+}
+
+/*
+ * Look through the system to find an existing controller whose
+ * attributes match the connect arguments specified
+ * If found, a string containing the controller name (ex: "nvme?")
+ * is returned.
+ * If not found, a NULL is returned.
+ */
+static char *find_ctrl_with_connectargs(struct connect_args *args)
+{
+	struct dirent **devices;
+	char *devname = NULL;
+	int i, n;
+
+	n = scandir(SYS_NVME, &devices, scan_ctrls_filter, alphasort);
+	if (n < 0) {
+		fprintf(stderr, "no NVMe controller(s) detected.\n");
+		return NULL;
+	}
+
+	for (i = 0; i < n; i++) {
+		if (ctrl_matches_connectargs(devices[i]->d_name, args)) {
+			devname = strdup(devices[i]->d_name);
+			if (devname == NULL)
+				fprintf(stderr, "no memory for ctrl name %s\n",
+						devices[i]->d_name);
+			goto cleanup_devices;
+		}
+	}
+
+cleanup_devices:
+	for (i = 0; i < n; i++)
+		free(devices[i]);
+	free(devices);
+
+	return devname;
 }
 
 static int add_ctrl(const char *argstr)
@@ -513,11 +662,11 @@ static void save_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	close(fd);
 }
 
-static int nvmf_hostnqn_file(void)
+static char *hostnqn_read_file(void)
 {
 	FILE *f;
 	char hostnqn[NVMF_NQN_SIZE];
-	int ret = false;
+	char *ret = NULL;
 
 	f = fopen(PATH_NVMF_HOSTNQN, "r");
 	if (f == NULL)
@@ -526,14 +675,52 @@ static int nvmf_hostnqn_file(void)
 	if (fgets(hostnqn, sizeof(hostnqn), f) == NULL)
 		goto out;
 
-	cfg.hostnqn = strndup(hostnqn, strcspn(hostnqn, "\n"));
-	if (!cfg.hostnqn)
-		goto out;
+	ret = strndup(hostnqn, strcspn(hostnqn, "\n"));
 
-	ret = true;
 out:
 	fclose(f);
 	return ret;
+}
+
+static char *hostnqn_generate_systemd(void)
+{
+#ifdef HAVE_SYSTEMD
+	sd_id128_t id;
+	char *ret;
+
+	if (sd_id128_get_machine_app_specific(NVME_HOSTNQN_ID, &id) < 0)
+		return NULL;
+
+	if (asprintf(&ret, "nqn.2014-08.org.nvmexpress:uuid:" SD_ID128_FORMAT_STR "\n", SD_ID128_FORMAT_VAL(id)) == -1)
+		ret = NULL;
+
+	return ret;
+#else
+	return NULL;
+#endif
+}
+
+/* returns an allocated string or NULL */
+char *hostnqn_read(void)
+{
+	char *ret;
+
+	ret = hostnqn_read_file();
+	if (ret)
+		return ret;
+
+	ret = hostnqn_generate_systemd();
+	if (ret)
+		return ret;
+
+	return NULL;
+}
+
+static int nvmf_hostnqn_file(void)
+{
+	cfg.hostnqn = hostnqn_read();
+
+	return cfg.hostnqn != NULL;
 }
 
 static int nvmf_hostid_file(void)
@@ -576,11 +763,12 @@ add_bool_argument(char **argstr, int *max_len, char *arg_str, bool arg)
 }
 
 static int
-add_int_argument(char **argstr, int *max_len, char *arg_str, int arg)
+add_int_argument(char **argstr, int *max_len, char *arg_str, int arg,
+		 bool allow_zero)
 {
 	int len;
 
-	if (arg) {
+	if ((arg && !allow_zero) || (arg != -1 && allow_zero)) {
 		len = snprintf(*argstr, *max_len, ",%s=%d", arg_str, arg);
 		if (len < 0)
 			return -EINVAL;
@@ -640,21 +828,23 @@ static int build_options(char *argstr, int max_len, bool discover)
 		    add_argument(&argstr, &max_len, "hostid", cfg.hostid)) ||
 	    (!discover &&
 	      add_int_argument(&argstr, &max_len, "nr_io_queues",
-				cfg.nr_io_queues)) ||
+				cfg.nr_io_queues, false)) ||
 	    add_int_argument(&argstr, &max_len, "nr_write_queues",
-				cfg.nr_write_queues) ||
+				cfg.nr_write_queues, false) ||
 	    add_int_argument(&argstr, &max_len, "nr_poll_queues",
-				cfg.nr_poll_queues) ||
+				cfg.nr_poll_queues, false) ||
 	    (!discover &&
 	      add_int_argument(&argstr, &max_len, "queue_size",
-				cfg.queue_size)) ||
+				cfg.queue_size, false)) ||
 	    (!discover &&
 	      add_int_argument(&argstr, &max_len, "keep_alive_tmo",
-				cfg.keep_alive_tmo)) ||
+				cfg.keep_alive_tmo, false)) ||
 	    add_int_argument(&argstr, &max_len, "reconnect_delay",
-				cfg.reconnect_delay) ||
+				cfg.reconnect_delay, false) ||
 	    add_int_argument(&argstr, &max_len, "ctrl_loss_tmo",
-				cfg.ctrl_loss_tmo) ||
+				cfg.ctrl_loss_tmo, false) ||
+	    add_int_argument(&argstr, &max_len, "tos",
+				cfg.tos, true) ||
 	    add_bool_argument(&argstr, &max_len, "duplicate_connect",
 				cfg.duplicate_connect) ||
 	    add_bool_argument(&argstr, &max_len, "disable_sqflow",
@@ -749,6 +939,13 @@ retry:
 		p += len;
 	}
 
+	if (cfg.tos != -1) {
+		len = sprintf(p, ",tos=%d", cfg.tos);
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+	}
+
 	if (cfg.keep_alive_tmo && !discover) {
 		len = sprintf(p, ",keep_alive_tmo=%d", cfg.keep_alive_tmo);
 		if (len < 0)
@@ -808,7 +1005,6 @@ retry:
 			return -EINVAL;
 		}
 		break;
-	default:
 	case NVMF_TRTYPE_FC:
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_FC:
@@ -882,8 +1078,6 @@ static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	return ret;
 }
 
-static const char delim_comma  = ',';
-
 static int do_discover(char *argstr, bool connect)
 {
 	struct nvmf_disc_rsp_page_hdr *log = NULL;
@@ -895,16 +1089,11 @@ static int do_discover(char *argstr, bool connect)
 		struct connect_args cargs;
 
 		memset(&cargs, 0, sizeof(cargs));
-		cargs.subsysnqn = __parse_connect_arg(argstr, delim_comma,
-						conarg_nqn);
-		cargs.transport = __parse_connect_arg(argstr, delim_comma,
-						conarg_transport);
-		cargs.traddr = __parse_connect_arg(argstr, delim_comma,
-						conarg_traddr);
-		cargs.trsvcid = __parse_connect_arg(argstr, delim_comma,
-						conarg_trsvcid);
-		cargs.host_traddr = __parse_connect_arg(argstr, delim_comma,
-						conarg_host_traddr);
+		cargs.subsysnqn = parse_conn_arg(argstr, '.', conarg_nqn);
+		cargs.transport = parse_conn_arg(argstr, '.', conarg_transport);
+		cargs.traddr = parse_conn_arg(argstr, '.', conarg_traddr);
+		cargs.trsvcid = parse_conn_arg(argstr, '.', conarg_trsvcid);
+		cargs.host_traddr = parse_conn_arg(argstr, '.', conarg_host_traddr);
 
 		/*
 		 * if the cfg.device passed in matches the connect args
@@ -1021,7 +1210,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 		while ((ptr = strsep(&args, " =\n")) != NULL)
 			argv[argc++] = ptr;
 
-		err = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+		err = argconfig_parse(argc, argv, desc, opts);
 		if (err)
 			continue;
 
@@ -1053,31 +1242,33 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char argstr[BUF_SIZE];
 	int ret;
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"transport",   't', "LIST", CFG_STRING, &cfg.transport,   required_argument, "transport type" },
-		{"traddr",      'a', "LIST", CFG_STRING, &cfg.traddr,      required_argument, "transport address" },
-		{"trsvcid",     's', "LIST", CFG_STRING, &cfg.trsvcid,     required_argument, "transport service id (e.g. IP port)" },
-		{"host-traddr", 'w', "LIST", CFG_STRING, &cfg.host_traddr, required_argument, "host traddr (e.g. FC WWN's)" },
-		{"hostnqn",     'q', "LIST", CFG_STRING, &cfg.hostnqn,     required_argument, "user-defined hostnqn (if default not used)" },
-		{"hostid",      'I', "LIST", CFG_STRING, &cfg.hostid,      required_argument, "user-defined hostid (if default not used)"},
-		{"raw",         'r', "LIST", CFG_STRING, &cfg.raw,         required_argument, "raw output file" },
-		{"device",      'd', "LIST", CFG_STRING, &cfg.device, required_argument, "use existing discovery controller device" },
-		{"keep-alive-tmo",  'k', "LIST", CFG_INT, &cfg.keep_alive_tmo,  required_argument, "keep alive timeout period in seconds" },
-		{"reconnect-delay", 'c', "LIST", CFG_INT, &cfg.reconnect_delay, required_argument, "reconnect timeout period in seconds" },
-		{"ctrl-loss-tmo",   'l', "LIST", CFG_INT, &cfg.ctrl_loss_tmo,   required_argument, "controller loss timeout period in seconds" },
-		{"hdr_digest", 'g', "", CFG_NONE, &cfg.hdr_digest, no_argument, "enable transport protocol header digest (TCP transport)" },
-		{"data_digest", 'G', "", CFG_NONE, &cfg.data_digest, no_argument, "enable transport protocol data digest (TCP transport)" },
-		{"nr-io-queues",    'i', "LIST", CFG_INT, &cfg.nr_io_queues,    required_argument, "number of io queues to use (default is core count)" },
-		{"nr-write-queues", 'W', "LIST", CFG_INT, &cfg.nr_write_queues,    required_argument, "number of write queues to use (default 0)" },
-		{"nr-poll-queues",  'P', "LIST", CFG_INT, &cfg.nr_poll_queues,    required_argument, "number of poll queues to use (default 0)" },
-		{"queue-size",      'Q', "LIST", CFG_INT, &cfg.queue_size,      required_argument, "number of io queue elements to use (default 128)" },
-		{"persistent",  'p', "LIST", CFG_NONE, &cfg.persistent,  no_argument, "persistent discovery connection" },
-		{"quiet",       'Q', "LIST", CFG_NONE, &cfg.quiet,  no_argument, "suppress already connected errors" },
-		{NULL},
+
+	OPT_ARGS(opts) = {
+		OPT_LIST("transport",      't', &cfg.transport,       "transport type"),
+		OPT_LIST("traddr",         'a', &cfg.traddr,          "transport address"),
+		OPT_LIST("trsvcid",        's', &cfg.trsvcid,         "transport service id (e.g. IP port)"),
+		OPT_LIST("host-traddr",    'w', &cfg.host_traddr,     "host traddr (e.g. FC WWN's)"),
+		OPT_LIST("hostnqn",        'q', &cfg.hostnqn,         "user-defined hostnqn (if default not used)"),
+		OPT_LIST("hostid",         'I', &cfg.hostid,          "user-defined hostid (if default not used)"),
+		OPT_LIST("raw",            'r', &cfg.raw,             "raw output file"),
+		OPT_LIST("device",         'd', &cfg.device,          "use existing discovery controller device"),
+		OPT_INT("keep-alive-tmo",  'k', &cfg.keep_alive_tmo,  "keep alive timeout period in seconds"),
+		OPT_INT("reconnect-delay", 'c', &cfg.reconnect_delay, "reconnect timeout period in seconds"),
+		OPT_INT("ctrl-loss-tmo",   'l', &cfg.ctrl_loss_tmo,   "controller loss timeout period in seconds"),
+		OPT_INT("tos",             'T', &cfg.tos,             "type of service"),
+		OPT_FLAG("hdr_digest",     'g', &cfg.hdr_digest,      "enable transport protocol header digest (TCP transport)"),
+		OPT_FLAG("data_digest",    'G', &cfg.data_digest,     "enable transport protocol data digest (TCP transport)"),
+		OPT_INT("nr-io-queues",    'i', &cfg.nr_io_queues,    "number of io queues to use (default is core count)"),
+		OPT_INT("nr-write-queues", 'W', &cfg.nr_write_queues, "number of write queues to use (default 0)"),
+		OPT_INT("nr-poll-queues",  'P', &cfg.nr_poll_queues,  "number of poll queues to use (default 0)"),
+		OPT_INT("queue-size",      'Q', &cfg.queue_size,      "number of io queue elements to use (default 128)"),
+		OPT_FLAG("persistent",     'p', &cfg.persistent,      "persistent discovery connection"),
+		OPT_FLAG("quiet",          'S', &cfg.quiet,           "suppress already connected errors"),
+		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg,
-			sizeof(cfg));
+	cfg.tos = -1;
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		goto out;
 
@@ -1087,8 +1278,7 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 	cfg.nqn = NVME_DISC_SUBSYS_NAME;
 
 	if (!cfg.transport && !cfg.traddr) {
-		ret = discover_from_conf_file(desc, argstr,
-				command_line_options, connect);
+		ret = discover_from_conf_file(desc, argstr, opts, connect);
 	} else {
 		if (cfg.persistent && !cfg.keep_alive_tmo)
 			cfg.keep_alive_tmo = NVMF_DEF_DISC_TMO;
@@ -1107,30 +1297,32 @@ int connect(const char *desc, int argc, char **argv)
 {
 	char argstr[BUF_SIZE];
 	int instance, ret;
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"transport",       't', "LIST", CFG_STRING, &cfg.transport,       required_argument, "transport type" },
-		{"nqn",             'n', "LIST", CFG_STRING, &cfg.nqn,             required_argument, "nqn name" },
-		{"traddr",          'a', "LIST", CFG_STRING, &cfg.traddr,          required_argument, "transport address" },
-		{"trsvcid",         's', "LIST", CFG_STRING, &cfg.trsvcid,         required_argument, "transport service id (e.g. IP port)" },
-		{"host-traddr",     'w', "LIST", CFG_STRING, &cfg.host_traddr,     required_argument, "host traddr (e.g. FC WWN's)" },
-		{"hostnqn",         'q', "LIST", CFG_STRING, &cfg.hostnqn,         required_argument, "user-defined hostnqn" },
-		{"hostid",          'I', "LIST", CFG_STRING, &cfg.hostid,      required_argument, "user-defined hostid (if default not used)"},
-		{"nr-io-queues",    'i', "LIST", CFG_INT, &cfg.nr_io_queues,    required_argument, "number of io queues to use (default is core count)" },
-		{"nr-write-queues", 'W', "LIST", CFG_INT, &cfg.nr_write_queues,    required_argument, "number of write queues to use (default 0)" },
-		{"nr-poll-queues",  'P', "LIST", CFG_INT, &cfg.nr_poll_queues,    required_argument, "number of poll queues to use (default 0)" },
-		{"queue-size",      'Q', "LIST", CFG_INT, &cfg.queue_size,      required_argument, "number of io queue elements to use (default 128)" },
-		{"keep-alive-tmo",  'k', "LIST", CFG_INT, &cfg.keep_alive_tmo,  required_argument, "keep alive timeout period in seconds" },
-		{"reconnect-delay", 'c', "LIST", CFG_INT, &cfg.reconnect_delay, required_argument, "reconnect timeout period in seconds" },
-		{"ctrl-loss-tmo",   'l', "LIST", CFG_INT, &cfg.ctrl_loss_tmo,   required_argument, "controller loss timeout period in seconds" },
-		{"duplicate_connect", 'D', "", CFG_NONE, &cfg.duplicate_connect, no_argument, "allow duplicate connections between same transport host and subsystem port" },
-		{"disable_sqflow", 'd', "", CFG_NONE, &cfg.disable_sqflow, no_argument, "disable controller sq flow control (default false)" },
-		{"hdr_digest", 'g', "", CFG_NONE, &cfg.hdr_digest, no_argument, "enable transport protocol header digest (TCP transport)" },
-		{"data_digest", 'G', "", CFG_NONE, &cfg.data_digest, no_argument, "enable transport protocol data digest (TCP transport)" },
-		{NULL},
+
+	OPT_ARGS(opts) = {
+		OPT_LIST("transport",         't', &cfg.transport,         "transport type"),
+		OPT_LIST("nqn",               'n', &cfg.nqn,               "nqn name"),
+		OPT_LIST("traddr",            'a', &cfg.traddr,            "transport address"),
+		OPT_LIST("trsvcid",           's', &cfg.trsvcid,           "transport service id (e.g. IP port)"),
+		OPT_LIST("host-traddr",       'w', &cfg.host_traddr,       "host traddr (e.g. FC WWN's)"),
+		OPT_LIST("hostnqn",           'q', &cfg.hostnqn,           "user-defined hostnqn"),
+		OPT_LIST("hostid",            'I', &cfg.hostid,            "user-defined hostid (if default not used)"),
+		OPT_INT("nr-io-queues",       'i', &cfg.nr_io_queues,      "number of io queues to use (default is core count)"),
+		OPT_INT("nr-write-queues",    'W', &cfg.nr_write_queues,   "number of write queues to use (default 0)"),
+		OPT_INT("nr-poll-queues",     'P', &cfg.nr_poll_queues,    "number of poll queues to use (default 0)"),
+		OPT_INT("queue-size",         'Q', &cfg.queue_size,        "number of io queue elements to use (default 128)"),
+		OPT_INT("keep-alive-tmo",     'k', &cfg.keep_alive_tmo,    "keep alive timeout period in seconds"),
+		OPT_INT("reconnect-delay",    'c', &cfg.reconnect_delay,   "reconnect timeout period in seconds"),
+		OPT_INT("ctrl-loss-tmo",      'l', &cfg.ctrl_loss_tmo,     "controller loss timeout period in seconds"),
+		OPT_INT("tos",                'T', &cfg.tos,               "type of service"),
+		OPT_FLAG("duplicate-connect", 'D', &cfg.duplicate_connect, "allow duplicate connections between same transport host and subsystem port"),
+		OPT_FLAG("disable-sqflow",    'd', &cfg.disable_sqflow,    "disable controller sq flow control (default false)"),
+		OPT_FLAG("hdr-digest",        'g', &cfg.hdr_digest,        "enable transport protocol header digest (TCP transport)"),
+		OPT_FLAG("data-digest",       'G', &cfg.data_digest,       "enable transport protocol data digest (TCP transport)"),
+		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg,
-			sizeof(cfg));
+	cfg.tos = -1;
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		goto out;
 
@@ -1240,14 +1432,13 @@ int disconnect(const char *desc, int argc, char **argv)
 	const char *device = "nvme device";
 	int ret;
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"nqn",    'n', "LIST", CFG_STRING, &cfg.nqn,    required_argument, nqn},
-		{"device", 'd', "LIST", CFG_STRING, &cfg.device, required_argument, device},
-		{NULL},
+	OPT_ARGS(opts) = {
+		OPT_LIST("nqn",    'n', &cfg.nqn,    nqn),
+		OPT_LIST("device", 'd', &cfg.device, device),
+		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg,
-			sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		goto out;
 
@@ -1282,34 +1473,38 @@ out:
 
 int disconnect_all(const char *desc, int argc, char **argv)
 {
-	struct subsys_list_item *slist;
-	int i, j, ret, subcnt = 0;
-	const struct argconfig_commandline_options command_line_options[] = {
-		{NULL},
+	struct nvme_topology t = { };
+	int i, j, err;
+
+	OPT_ARGS(opts) = {
+		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg,
-			sizeof(cfg));
-	if (ret)
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err)
 		goto out;
 
-	slist = get_subsys_list(&subcnt, NULL, NVME_NSID_ALL);
-	for (i = 0; i < subcnt; i++) {
-		struct subsys_list_item *subsys = &slist[i];
+	err = scan_subsystems(&t, NULL, 0);
+	if (err) {
+		fprintf(stderr, "Failed to scan namespaces\n");
+		goto out;
+	}
 
-		for (j = 0; j < subsys->nctrls; j++) {
-			struct ctrl_list_item *ctrl = &subsys->ctrls[j];
-			if (!strcmp(ctrl->transport, "pcie"))
+	for (i = 0; i < t.nr_subsystems; i++) {
+		struct nvme_subsystem *s = &t.subsystems[i];
+
+		for (j = 0; j < s->nr_ctrls; j++) {
+			struct nvme_ctrl *c = &s->ctrls[j];
+
+			if (!strcmp(c->transport, "pcie"))
 				continue;
-
-			ret = disconnect_by_device(ctrl->name);
-			if (ret)
+			err = disconnect_by_device(c->name);
+			if (err)
 				goto free;
 		}
 	}
-
 free:
-	free_subsys_list(slist, subcnt);
+	free_topology(&t);
 out:
-	return nvme_status_to_errno(ret, true);
+	return nvme_status_to_errno(err, true);
 }
