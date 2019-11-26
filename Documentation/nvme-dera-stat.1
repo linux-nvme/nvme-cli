@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: nvme-list
-.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
-.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 11/08/2019
+.\"     Title: nvme-dera-stat
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 11/26/2019
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LIST" "1" "11/08/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-DERA\-STAT" "1" "11/26/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,35 +28,44 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-list \- List all recognized NVMe devices
+nvme-dera-stat \- Send NVMe Dera Device status and Additional SMART log page request, returns result and log
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme list\fR [\-o <fmt> | \-\-output\-format=<fmt>]
+\fInvme dera stat\fR <device>
 .fi
 .SH "DESCRIPTION"
 .sp
-Scan the sysfs tree for NVM Express devices and return the /dev node for those devices as well as some pertinent information about them\&.
-.SH "OPTIONS"
-.PP
-\-o <format>, \-\-output\-format=<format>
-.RS 4
-Set the reporting format to
-\fInormal\fR
-or
-\fIjson\fR\&. Only one output format can be used at a time\&.
-.RE
-.PP
-\-v, \-\-verbose
-.RS 4
-Increase the information in the output, showing nvme subsystems, controllers and namespaces separately and how they\(cqre realted to each other\&.
-.RE
-.SH "ENVIRONMENT"
+Retrieves the NVMe Dera Device status and Additional SMART log page from the device and provides the returned structure\&.
 .sp
-PCI_IDS_PATH \- Full path of pci\&.ids file in case nvme could not find it in common locations\&.
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+On success, the returned status and smart log structure are printed in a readable format\&.
+.SH "OPTIONS"
+.sp
+none
 .SH "EXAMPLES"
 .sp
-No examples yet\&.
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Print the Dera Device status and Additional SMART log page in a human readable format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme dera stat /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

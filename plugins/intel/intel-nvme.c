@@ -20,7 +20,6 @@
 #define CREATE_CMD
 #include "intel-nvme.h"
 
-#pragma pack(push,1)
 struct nvme_additional_smart_log_item {
 	__u8			key;
 	__u8			_kp[2];
@@ -32,15 +31,14 @@ struct nvme_additional_smart_log_item {
 			__le16	min;
 			__le16	max;
 			__le16	avg;
-		} wear_level ;
+		} wear_level;
 		struct thermal_throttle {
 			__u8	pct;
 			__u32	count;
 		} thermal_throttle;
 	};
 	__u8			_rp;
-};
-#pragma pack(pop)
+} __attribute__((packed));
 
 struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	program_fail_cnt;
@@ -58,7 +56,7 @@ struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	host_bytes_written;
 };
 
-struct nvme_vu_id_ctrl_field { //CDR MR5
+struct nvme_vu_id_ctrl_field { /* CDR MR5 */
 	__u8			rsvd1[3];
 	__u8			ss;
 	__u8			health[20];
@@ -68,59 +66,56 @@ struct nvme_vu_id_ctrl_field { //CDR MR5
 	__u8			sstat;
 	__u8			bl[8];
 	__u8			rsvd2[38];
-	__u8			ww[8]; //little endian
+	__u8			ww[8]; /* little endian */
 	__u8			mic_bl[4];
 	__u8			mic_fw[4];
 };
 
+static void json_intel_id_ctrl(struct nvme_vu_id_ctrl_field *id,
+	char *health, char *bl, char *ww, char *mic_bl, char *mic_fw,
+	struct json_object *root)
+{
+	json_object_add_value_int(root, "ss", id->ss);
+	json_object_add_value_string(root, "health", health[0] ? health : "healthy");
+	json_object_add_value_int(root, "cls", id->cls);
+	json_object_add_value_int(root, "nlw", id->nlw);
+	json_object_add_value_int(root, "scap", id->scap);
+	json_object_add_value_int(root, "sstat", id->sstat);
+	json_object_add_value_string(root, "bl", bl);
+	json_object_add_value_string(root, "ww", ww);
+	json_object_add_value_string(root, "mic_bl", mic_bl);
+	json_object_add_value_string(root, "mic_fw", mic_fw);
+}
+
 static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 {
-	struct nvme_vu_id_ctrl_field* log = (struct nvme_vu_id_ctrl_field *)vs;
+	struct nvme_vu_id_ctrl_field* id = (struct nvme_vu_id_ctrl_field *)vs;
 
-	char health[21];
-	char bl[9];
-	char ww[19];
-	char mic_bl[5];
-	char mic_fw[5];
+	char health[21] = { 0 };
+	char bl[9] = { 0 };
+	char ww[19] = { 0 };
+	char mic_bl[5] = { 0 };
+	char mic_fw[5] = { 0 };
 
-	memcpy(bl, log->bl, sizeof(bl));
-	memcpy(health, log->health, sizeof(health));
-	memcpy(mic_bl, log->mic_bl, sizeof(mic_bl));
-	memcpy(mic_fw, log->mic_fw, sizeof(mic_fw));
-
-	bl[sizeof(bl) - 1] = '\0';
-	health[sizeof(health) - 1] = '\0';
-	mic_bl[sizeof(mic_bl) - 1] = '\0';
-	mic_fw[sizeof(mic_fw) - 1] = '\0';
-
-	snprintf(ww, 19, "%02X%02X%02X%02X%02X%02X%02X%02X", log->ww[7],
-					log->ww[6], log->ww[5], log->ww[4], log->ww[3], log->ww[2],
-					log->ww[1], log->ww[0]);
-
+	snprintf(ww, 19, "%02X%02X%02X%02X%02X%02X%02X%02X", id->ww[7],
+		id->ww[6], id->ww[5], id->ww[4], id->ww[3], id->ww[2],
+		id->ww[1], id->ww[0]);
 
 	if (root) {
-		json_object_add_value_int(root, "ss", log->ss);
-		json_object_add_value_string(root, "health", health[0] ? health : "healthy");
-		json_object_add_value_int(root, "cls", log->cls);
-		json_object_add_value_int(root, "nlw", log->nlw);
-		json_object_add_value_int(root, "scap", log->scap);
-		json_object_add_value_int(root, "sstat", log->sstat);
-		json_object_add_value_string(root, "bl", bl);
-		json_object_add_value_string(root, "ww", ww);
-		json_object_add_value_string(root, "mic_bl", mic_bl);
-		json_object_add_value_string(root, "mic_fw", mic_fw);
-	} else {
-		printf("ss        : %d\n", log->ss);
-		printf("health    : %s\n", log->health[0] ? health : "healthy");
-		printf("cls       : %d\n", log->cls);
-		printf("nlw       : %d\n", log->nlw);
-		printf("scap      : %d\n", log->scap);
-		printf("sstat     : %d\n", log->sstat);
-		printf("bl        : %s\n", bl);
-		printf("ww        : %s\n", ww);
-		printf("mic_bl    : %s\n", mic_bl);
-		printf("mic_fw    : %s\n", mic_fw);
+		json_intel_id_ctrl(id, health, bl, ww, mic_bl, mic_fw, root);
+		return;
 	}
+
+	printf("ss        : %d\n", id->ss);
+	printf("health    : %s\n", id->health[0] ? health : "healthy");
+	printf("cls       : %d\n", id->cls);
+	printf("nlw       : %d\n", id->nlw);
+	printf("scap      : %d\n", id->scap);
+	printf("sstat     : %d\n", id->sstat);
+	printf("bl        : %s\n", bl);
+	printf("ww        : %s\n", ww);
+	printf("mic_bl    : %s\n", mic_bl);
+	printf("mic_fw    : %s\n", mic_fw);
 }
 
 static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -268,13 +263,15 @@ static void show_intel_smart_log(struct nvme_additional_smart_log *smart,
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	struct nvme_additional_smart_log smart_log;
-	int err, fd;
 	const char *desc = "Get Intel vendor specific additional smart log (optionally, "\
 		      "for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "Dump output in binary format";
 	const char *json= "Dump output in json format";
+
+	struct nvme_additional_smart_log smart_log;
+	int err, fd;
+
 	struct config {
 		__u32 namespace_id;
 		int   raw_binary;
@@ -292,7 +289,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -314,11 +311,12 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 
 static int get_market_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
+	const char *desc = "Get Intel Marketing Name log and show it.";
+	const char *raw = "dump output in binary format";
+
 	char log[512];
 	int err, fd;
 
-	const char *desc = "Get Intel Marketing Name log and show it.";
-	const char *raw = "dump output in binary format";
 	struct config {
 		int  raw_binary;
 	};
@@ -331,7 +329,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -393,7 +391,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -462,7 +460,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -480,11 +478,11 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 }
 
 struct intel_assert_dump {
-    __u32 coreoffset;
-    __u32 assertsize;
-    __u8  assertdumptype;
-    __u8  assertvalid;
-    __u8  reserved[2];
+	__u32 coreoffset;
+	__u32 assertsize;
+	__u8  assertdumptype;
+	__u8  assertvalid;
+	__u8  reserved[2];
 };
 
 struct intel_event_dump {
@@ -534,17 +532,17 @@ struct intel_vu_nlog {
 };
 
 struct intel_cd_log {
-    union {
-	struct {
-		__u32 selectLog  : 3;
-		__u32 selectCore : 2;
-		__u32 selectNlog : 8;
-		__u8  selectOffsetRef : 1;
-		__u32 selectNlogPause : 2;
-		__u32 reserved2  : 16;
-	}fields;
-	__u32 entireDword;
-    }u;
+	union {
+		struct {
+			__u32 selectLog  : 3;
+			__u32 selectCore : 2;
+			__u32 selectNlog : 8;
+			__u8  selectOffsetRef : 1;
+			__u32 selectNlogPause : 2;
+			__u32 reserved2  : 16;
+		} fields;
+		__u32 entireDword;
+    } u;
 };
 
 static void print_intel_nlog(struct intel_vu_nlog *intel_nlog)
@@ -585,9 +583,12 @@ static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
 
 	dword_tfer = min(max_tfer, total_size);
 	while (total_size > 0) {
-		err = nvme_submit_passthru(ioctl_fd, NVME_IOCTL_ADMIN_CMD, cmd);
+		err = nvme_submit_admin_passthru(ioctl_fd, cmd);
 		if (err) {
-			fprintf(stderr, "failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n", cmd->data_len, cmd->cdw13, cmd->cdw12, cmd->cdw10, err, total_size);
+			fprintf(stderr,
+				"failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n",
+				cmd->data_len, cmd->cdw13, cmd->cdw12,
+				cmd->cdw10, err, total_size);
 			goto out;
 		}
 
@@ -616,7 +617,8 @@ static int write_header(__u8 *buf, int fd, size_t amnt)
 	return 0;
 }
 
-static int read_header(struct nvme_passthru_cmd *cmd,__u8 *buf, int ioctl_fd, __u32 dw12, int nsid)
+static int read_header(struct nvme_passthru_cmd *cmd,__u8 *buf, int ioctl_fd,
+			__u32 dw12, int nsid)
 {
 	memset(cmd, 0, sizeof(*cmd));
 	memset(buf, 0, 4096);
@@ -681,7 +683,8 @@ static int get_internal_log_old(__u8 *buf, int output, int fd,
 	return err;
 }
 
-static int get_internal_log(int argc, char **argv, struct command *command, struct plugin *plugin)
+static int get_internal_log(int argc, char **argv, struct command *command,
+				struct plugin *plugin)
 {
 	__u8 buf[0x2000];
 	char f[0x100];
@@ -727,7 +730,7 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0) {
 		free(intel);
 		return fd;
@@ -769,8 +772,8 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 	if (cfg.log == 2) {
 		if (cfg.verbose)
 			printf("Log major:%d minor:%d header:%d size:%d numcores:%d\n",
-			       intel->ver.major, intel->ver.minor, intel->header, intel->size,
-			       intel->numcores);
+			       intel->ver.major, intel->ver.minor,
+				intel->header, intel->size, intel->numcores);
 
 		err = write_header(buf, output, 0x1000);
 		if (err) {
@@ -794,7 +797,9 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 			goto out;
 	}
 
-	for (j = (cfg.core < 0 ? 0 : cfg.core); j < (cfg.core < 0 ? core_num : cfg.core + 1); j++) {
+	for (j = (cfg.core < 0 ? 0 : cfg.core);
+			j < (cfg.core < 0 ? core_num : cfg.core + 1);
+			j++) {
 		cdlog.u.fields.selectCore = j;
 		for (i = 0; i < count; i++) {
 			if (cfg.log == 2) {

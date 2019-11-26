@@ -122,11 +122,12 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 	struct nvme_dera_smart_info_log log;
 	enum dera_device_status state = DEVICE_STATUS_FATAL_ERROR;
 	char *desc = "Get the Dera device status";
-	const struct argconfig_commandline_options command_line_options[] = {
-		{ 0 }
+
+	OPT_ARGS(opts) = {
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, NULL, 0); 
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 	

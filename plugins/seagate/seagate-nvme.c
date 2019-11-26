@@ -176,7 +176,7 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	err = nvme_get_log(fd, 1, 0xc5, false, sizeof(logPageMap), &logPageMap);
 	if (!err) {
 		if (strcmp(cfg.output_format,"json")) {
@@ -737,7 +737,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (strcmp(cfg.output_format,"json"))
 		printf("Seagate Extended SMART Information :\n");
 
@@ -835,7 +835,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0) {
 		printf ("\nDevice not found \n");;
 		return -1;
@@ -1007,7 +1007,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if(strcmp(cfg.output_format,"json"))
 		printf("Seagate PCIe error counters Information :\n");
 
@@ -1046,7 +1046,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 
 	err = nvme_set_feature(fd, 0, 0xE1, 0xCB, 0, cfg.save, 0, buf, &result);
 
@@ -1092,7 +1092,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -1192,7 +1192,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -1310,7 +1310,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 

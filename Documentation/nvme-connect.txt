@@ -151,7 +151,6 @@ AUTHORS
 -------
 This was co-written by mailto:james.p.freyensee@intel.com[Jay Freyensee]
 and mailto:hch@lst.de[Christoph Hellwig]
-for mailto:keith.busch@intel.com[Keith Busch].
 
 NVME
 ----

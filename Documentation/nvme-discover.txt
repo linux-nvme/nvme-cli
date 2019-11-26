@@ -202,7 +202,6 @@ nvme-connect-all(1)
 AUTHORS
 -------
 This was written by mailto:james.p.freyensee@intel.com[Jay Freyensee]
-for mailto:keith.busch@intel.com[Keith Busch].
 
 NVME
 ----
