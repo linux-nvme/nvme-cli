@@ -2,6 +2,7 @@ CFLAGS ?= -O2 -g -Wall -Werror
 override CFLAGS += -std=gnu99 -I.
 override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
+LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
 HAVE_SYSTEMD = $(shell pkg-config --exists systemd  --atleast-version=232; echo $$?)
 NVME = nvme
 INSTALL ?= install
@@ -21,6 +22,12 @@ ifeq ($(LIBUUID),0)
 	override LIB_DEPENDS += uuid
 endif
 
+ifeq ($(LIBHUGETLBFS),0)
+	override LDFLAGS += -lhugetlbfs
+	override CFLAGS += -DLIBHUGETLBFS
+	override LIB_DEPENDS += hugetlbfs
+endif
+
 INC=-Iutil
 
 ifeq ($(HAVE_SYSTEMD),0)
@@ -32,7 +39,7 @@ RPMBUILD = rpmbuild
 TAR = tar
 RM = rm -f
 
-AUTHOR=Keith Busch <keith.busch@intel.com>
+AUTHOR=Keith Busch <kbusch@kernel.org>
 
 default: $(NVME)
 
@@ -73,7 +80,10 @@ verify-no-dep: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
 nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h util/argconfig.h util/suffix.h nvme-lightnvm.h fabrics.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -c $<
 
-%.o: %.c %.h nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
+%.o: %.c %.h nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
+
+%.o: %.c nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
 
 doc: $(NVME)
@@ -85,7 +95,7 @@ test:
 all: doc
 
 clean:
-	$(RM) $(NVME) $(OBJS) $(notdir $(PLUGIN_OBJS) $(UTIL_OBJS)) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
+	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
 	$(MAKE) -C Documentation clean
 	$(RM) tests/*.pyc
 	$(RM) verify-no-dep

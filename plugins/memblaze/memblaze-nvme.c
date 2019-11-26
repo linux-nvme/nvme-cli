@@ -255,7 +255,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -335,7 +335,7 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -430,7 +430,7 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 

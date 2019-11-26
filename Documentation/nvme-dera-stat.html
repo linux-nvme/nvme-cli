@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.8" />
-<title>nvme-create-ns(1)</title>
+<title>nvme-dera-stat(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -729,146 +729,56 @@ asciidoc.install();
 /*]]>*/
 </script>
 </head>
-<body class="manpage">
+<body class="article">
 <div id="header">
-<h1>
-nvme-create-ns(1) Manual Page
-</h1>
-<h2>NAME</h2>
-<div class="sectionbody">
-<p>nvme-create-ns -
-   Send NVMe Namespace management command to create namespace, returns results.
-</p>
-</div>
+<h1>nvme-dera-stat(1)</h1>
 </div>
 <div id="content">
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>nvme-dera-stat - Send NVMe Dera Device status and Additional SMART log page request, returns result and log</p></div>
+</div>
+</div>
 <div class="sect1">
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme create-ns</em> &lt;device&gt; [--nsze=&lt;nsze&gt; | -s &lt;nsze&gt;]
-                        [--ncap=&lt;ncap&gt; | -c &lt;ncap&gt;]
-                        [--flbas=&lt;flbas&gt; | -f &lt;flbas&gt;]
-                        [--dps=&lt;dps&gt; | -d &lt;dps&gt;]
-                        [--nmic=&lt;nmic&gt; | -m &lt;nmic&gt;]
-                        [--anagrp-id=&lt;anagrpid&gt; | -a &lt;anagrpid&gt;]
-                        [--nvmset-id=&lt;nvmsetid&gt; | -i &lt;nvmsetid&gt;]
-                        [--block-size=&lt;block-size&gt; | -b &lt;block-size&gt;]
-                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]
-DESCRIPTION</pre>
+<pre class="content"><em>nvme dera stat</em> &lt;device&gt;</pre>
 <div class="attribution">
 </div></div>
-<div class="listingblock">
-<div class="content">
-<pre><code>For the NVMe device given, sends a namespace management command to create
-the namespace with the requested settings. On success, the namespace
-identifier assigned by the controller is returned.
-
-The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
-
-OPTIONS</code></pre>
-</div></div>
-<div class="dlist"><dl>
-<dt class="hdlist1">
--s
-</dt>
-<dt class="hdlist1">
---nsze
-</dt>
-<dd>
-<p>
-        The namespace size.
-</p>
-</dd>
-<dt class="hdlist1">
--c
-</dt>
-<dt class="hdlist1">
---ncap
-</dt>
-<dd>
-<p>
-        The namespace capacity.
-</p>
-</dd>
-<dt class="hdlist1">
--f
-</dt>
-<dt class="hdlist1">
---flbas
-</dt>
-<dd>
-<p>
-        The namespace formatted logical block size setting.
-        Conflicts with --block-size argument.
-</p>
-</dd>
-<dt class="hdlist1">
--d
-</dt>
-<dt class="hdlist1">
---dps
-</dt>
-<dd>
-<p>
-        The data protection settings.
-</p>
-</dd>
-<dt class="hdlist1">
--m
-</dt>
-<dt class="hdlist1">
---nmic
-</dt>
-<dd>
-<p>
-        Namespace multipath and sharing capabilities.
-</p>
-</dd>
-<dt class="hdlist1">
--a
-</dt>
-<dt class="hdlist1">
---anagrp-id
-</dt>
-<dd>
-<p>
-        ANA Gorup Identifier. If this value is 0h specifies
-        that the controller determines the value to use
-</p>
-</dd>
-<dt class="hdlist1">
--i &lt;nvmsetid&gt;
-</dt>
-<dt class="hdlist1">
---nvmset_id=&lt;nvmsetid&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the identifier of the NVM Set.
-</p>
-</dd>
-<dt class="hdlist1">
--b
-</dt>
-<dt class="hdlist1">
---block-size
-</dt>
-<dd>
-<p>
-        Target block size the new namespace should be formatted as. Potential FLBAS
-  values will be values will be scanned and the lowest numbered will be
-  selected for the create-ns operation. Conflicts with --flbas argument.
-</p>
-</dd>
-</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Retrieves the NVMe Dera Device status and Additional SMART log page from the device and
+provides the returned structure.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
+<div class="paragraph"><p>On success, the returned status and smart log structure are printed in a readable format.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">OPTIONS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>none</p></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No examples provided yet.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Print the Dera Device status and Additional SMART log page in a human readable format:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme dera stat /dev/nvme0</code></pre>
+</div></div>
+</li>
+</ul></div>
 </div>
 </div>
 <div class="sect1">
@@ -881,7 +791,7 @@ OPTIONS</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-11-16 14:07:32 KST
+Last updated 2019-11-26 13:57:30 CST
 </div>
 </div>
 </body>

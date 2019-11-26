@@ -333,7 +333,7 @@ static void show_lnvm_ppaf(struct nvme_nvm_addr_format *ppaf)
 static void show_lnvm_id12_ns(void *t, unsigned int flags)
 {
 	int i;
-	int human = flags & HUMAN;
+	int human = flags & VERBOSE;
 	struct nvme_nvm_id12 *id = t;
 
 	uint32_t cap = (uint32_t) le32_to_cpu(id->cap);
@@ -379,7 +379,7 @@ static void show_lnvm_id12_ns(void *t, unsigned int flags)
 
 static void show_lnvm_id20_ns(struct nvme_nvm_id20 *id, unsigned int flags)
 {
-	int human = flags & HUMAN;
+	int human = flags & VERBOSE;
 	uint32_t mccap = (uint32_t) le32_to_cpu(id->mccap);
 
 	printf("ver_major     : %#x\n", id->mjr);
@@ -454,7 +454,7 @@ int lnvm_do_id_ns(int fd, int nsid, unsigned int flags)
 
 	err = lnvm_get_identity(fd, nsid, &nvm_id);
 	if (!err) {
-		if (flags & RAW)
+		if (flags & BINARY)
 			d_raw((unsigned char *)&nvm_id, sizeof(nvm_id));
 		else
 			show_lnvm_id_ns(&nvm_id, flags);
@@ -532,7 +532,7 @@ int lnvm_do_chunk_log(int fd, __u32 nsid, __u32 data_len, void *data,
 		goto out;
 	}
 
-	if (flags & RAW)
+	if (flags & BINARY)
 		d_raw(data, data_len);
 	else
 		show_lnvm_chunk_log(data, data_len);
@@ -584,7 +584,7 @@ static int __lnvm_do_get_bbtbl(int fd, struct nvme_nvm_id12 *id,
 		return err;
 	}
 
-	if (flags & RAW)
+	if (flags & BINARY)
 		d_raw((unsigned char *)&bbtbl->blk, bbtblsz);
 	else {
 		printf("LightNVM Bad Block Stats:\n");
