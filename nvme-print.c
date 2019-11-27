@@ -1184,9 +1184,9 @@ static void nvme_show_registers_bpmbl(uint64_t bpmbl)
 
 static void nvme_show_registers_cmbmsc(uint64_t cmbmsc)
 {
-	printf("\tController Base Address (CBA)	     : %lx\n",
+	printf("\tController Base Address (CBA)	     : %" PRIx64 "\n",
 			(cmbmsc & 0xfffffffffffff000) >> 12);
-	printf("\tController Memory Space Enable (CMSE): %lx\n",
+	printf("\tController Memory Space Enable (CMSE): %" PRIx64 "\n",
 			(cmbmsc & 0x0000000000000002) >> 1);
 	printf("\tCapabilities Registers Enabled (CRE) : CMBLOC and "\
 	       "CMBSZ registers are%senabled\n\n",
@@ -1280,9 +1280,9 @@ static void nvme_show_registers_pmrswtp(__u32 pmrswtp)
 
 static void nvme_show_registers_pmrmsc(uint64_t pmrmsc)
 {
-	printf("\tController Base Address (CBA)		: %lx\n",
+	printf("\tController Base Address (CBA)		: %" PRIx64 "\n",
 		(pmrmsc & 0xfffffffffffff000) >> 12);
-	printf("\tController Memory Space Enable (CMSE	: %lx\n\n",
+	printf("\tController Memory Space Enable (CMSE	: %" PRIx64 "\n\n",
 		(pmrmsc & 0x0000000000000001) >> 1);
 }
 
