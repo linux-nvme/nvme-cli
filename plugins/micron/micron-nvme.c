@@ -725,6 +725,7 @@ static int micron_nand_stats(int argc, char **argv, struct command *cmd, struct 
 {
     const char *desc = "Retrieve Micron NAND stats for the given device ";
     unsigned int extSmartLog[64] = {0};
+    struct nvme_id_ctrl ctrl;
     int fd, err;
 
     OPT_ARGS(opts) = {
@@ -737,21 +738,35 @@ static int micron_nand_stats(int argc, char **argv, struct command *cmd, struct 
         return -1;
     }
 
+    err = nvme_identify_ctrl(fd, &ctrl);
+    if (err)
+        goto out;
+
     err = NVMEGetLogPage(fd,0xD0, (unsigned char *)extSmartLog, D0_log_size);
+    if (err)
+        goto out;
 
     unsigned long long count = ((unsigned long long )extSmartLog[45] << 32) | extSmartLog[44];
-    printf("%-10s : 0x%llx\n", "NAND Writes (Bytes Written)", count);
-    printf("%-10s : ", "Program Failure Count");
+    printf("%-40s : 0x%llx\n", "NAND Writes (Bytes Written)", count);
+    printf("%-40s : ", "Program Failure Count");
 
-    count = ((unsigned long long )extSmartLog[39] << 32) | extSmartLog[38];
-    if (count != 0) printf("0x%llx", count);
-    count = ((unsigned long long )extSmartLog[37] << 32) | extSmartLog[36];
-    printf("0x%llx\n", count);
+    unsigned long long count_hi = ((unsigned long long )extSmartLog[39] << 32) | extSmartLog[38];
+    unsigned long long count_lo = ((unsigned long long )extSmartLog[37] << 32) | extSmartLog[36];
+    if (count_hi != 0)
+	printf("0x%llx%016llx", count_hi, count_lo);
+    else
+        printf("0x%llx\n", count_lo);
 
     count = ((unsigned long long )extSmartLog[25] << 32) | extSmartLog[24];
-    printf("%-10s : 0x%llx\n", "Erase Failures", count);
-    printf("%-10s : 0x%x\n", "Bad Block Count", extSmartLog[3]);
+    printf("%-40s : 0x%llx\n", "Erase Failures", count);
+    printf("%-40s : 0x%x\n", "Bad Block Count", extSmartLog[3]);
 
+    count = (unsigned long long)extSmartLog[3] - (count_lo + count);
+    printf("%-40s : 0x%llx\n", "NAND XOR/RAID Recovery Trigger Events", count);
+    printf("%-40s : 0x%x\n", "NSZE Change Supported", (ctrl.oacs >> 3) & 0x1);
+    printf("%-40s : 0x%x\n", "Number of NSZE Modifications", extSmartLog[1]);
+out:
+    close(fd);
     return err;
 }
 
