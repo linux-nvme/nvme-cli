@@ -4645,6 +4645,14 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 			goto free_metadata;
 		}
 
+		if (cfg.write && !(cfg.opcode & 0x01)) {
+			fprintf(stderr, "warning: write flag set but write direction bit is not set in the opcode\n");
+		}
+
+		if (cfg.read && !(cfg.opcode & 0x02)) {
+			fprintf(stderr, "warning: read flag set but read direction bit is not set in the opcode\n");
+		}
+
 		memset(data, cfg.prefill, cfg.data_len);
 		if (!cfg.read && !cfg.write) {
 			fprintf(stderr, "data direction not given\n");
