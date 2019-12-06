@@ -91,6 +91,7 @@
 #define WDC_DRIVE_CAP_PFAIL_DUMP			0x0000000000001000
 #define WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY   0x0000000000002000
 #define WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY  0x0000000000004000
+#define WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG 0x0000000000008000
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
@@ -245,6 +246,8 @@
 #define WDC_NVME_CLEAR_ASSERT_DUMP_OPCODE		0xD8
 #define WDC_NVME_CLEAR_ASSERT_DUMP_CMD			0x03
 #define WDC_NVME_CLEAR_ASSERT_DUMP_SUBCMD		0x05
+
+#define WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID   0xD2
 
 /* Drive Essentials */
 #define WDC_DE_DEFAULT_NUMBER_OF_ERROR_ENTRIES		64
@@ -798,7 +801,17 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		case WDC_NVME_SN630_DEV_ID:
 		/* FALLTHRU */
 		case WDC_NVME_SN630_DEV_ID_1:
-		/* FALLTHRU */
+			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
+					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
+					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE);
+			/* verify the 0xCA log page is supported */
+			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
+				capabilities |= WDC_DRIVE_CAP_CA_LOG_PAGE;
+
+			/* verify the 0xD0 log page is supported */
+			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_VU_SMART_LOG_OPCODE) == true)
+				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
+			break;
 		case WDC_NVME_SN640_DEV_ID:
 		/* FALLTHRU */
 		case WDC_NVME_SN640_DEV_ID_1:
@@ -811,7 +824,8 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
 					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
 					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
-					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY);
+					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY |
+					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG);
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -3466,6 +3480,84 @@ static int wdc_clear_fw_activate_history(int argc, char **argv, struct command *
 out:
 	return ret;
 }
+
+static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct command *command,
+		struct plugin *plugin)
+{
+	char *desc = "Disable/Enable Controller Option of the Telemetry Log Page.";
+	char *disable = "Disable controller option of the telemetry log page.";
+	char *enable = "Enable controller option of the telemetry log page.";
+	char *status = "Displays the current state of the controller initiated log page.";
+	int fd;
+	int ret = -1;
+	__u64 capabilities = 0;
+	__u32 result;
+	void *buf = NULL;
+
+
+	struct config {
+		int disable;
+		int enable;
+		int status;
+	};
+
+	struct config cfg = {
+		.disable = 0,
+		.enable = 0,
+		.status = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("disable",       'd', &cfg.disable,   disable),
+		OPT_FLAG("enable",        'e', &cfg.enable,    enable),
+		OPT_FLAG("status",        's', &cfg.status,    status),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	capabilities = wdc_get_drive_capabilities(fd);
+	if ((capabilities & WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG) != WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG) {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+		goto out;
+	}
+
+	if (cfg.disable) {
+		ret = nvme_set_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 0,
+				       0, 0, 0, buf, &result);
+	}
+	else {
+	   if (cfg.enable) {
+			ret = nvme_set_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 1,
+					       0, 0, 0, buf, &result);
+	   }
+	   else if (cfg.status) {
+			ret = nvme_get_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 0, 0,
+					4, buf, &result);
+			if (ret == 0) {
+				if (result)
+					fprintf(stderr, "Controller Option Telemetry Log Page State: Enabled\n");
+				else
+					fprintf(stderr, "Controller Option Telemetry Log Page State: Disabled\n");
+			} else {
+				fprintf(stderr, "ERROR : WDC: NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+			}
+	   }
+	   else {
+			fprintf(stderr, "ERROR : WDC: unsupported option for this command\n");
+			ret = -1;
+			goto out;
+	   }
+
+	}
+
+out:
+	return ret;
+}
+
 
 static int wdc_get_serial_and_fw_rev(int fd, char *sn, char *fw_rev)
 {
