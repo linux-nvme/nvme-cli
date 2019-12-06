@@ -1,0 +1,63 @@
+nvme-wdc-vs-telemetry-controller-option(1)
+==========================================
+
+NAME
+----
+nvme-wdc-vs-telemetry-controller-option - Disable/Enable the controller initiated option of the telemetry log page.
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc vs-telemetry-controller-option' <device> [--disable, -d] [--enable, -e] 
+    [--status, -s] 
+
+DESCRIPTION
+-----------
+
+For the NVMe device given, sends the WDC Vendor Specific set feature command to disable, enable or get current status
+of the controller initiated option of the telemetry log page.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+OPTIONS
+-------
+-d::
+--disable::
+	Disables the controller initiated option of the telemetry log page.
+
+-e::
+--enable::
+	Enables the controller initiated option of the telemetry log page.
+
+-s::
+--status::
+	Returns the current status (enabled or disabled) of the controller initiated option of the telemetry log page.
+
+
+EXAMPLES
+--------
+* Disables the controller initiated option of the telemetry log page:
++
+------------
+# nvme wdc vs-telemetry-controller-option /dev/nvme0 --disable
+# nvme wdc vs-telemetry-controller-option /dev/nvme0 -d
+------------
+* Enables the controller initiated option of the telemetry log page:
++
+------------
+# nvme wdc vs-telemetry-controller-option /dev/nvme0 --enable
+# nvme wdc vs-telemetry-controller-option /dev/nvme0 -e
+------------
+* Gets the current status (enabled or disabled) of the controller initiated option of the telemetry log page:
++
+------------
+# nvme wdc vs-telemetry-controller-option /dev/nvme0 --status
+# nvme wdc vs-telemetry-controller-option /dev/nvme0 -s
+------------
+
+NVME
+----
+Part of the nvme-user suite.
