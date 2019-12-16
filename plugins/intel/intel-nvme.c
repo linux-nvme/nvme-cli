@@ -782,21 +782,25 @@ static void show_lat_stats(struct intel_lat_stats *stats, int write)
 static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct intel_lat_stats stats;
+	enum nvme_print_flags flags;
 	int err, fd;
 
 	const char *desc = "Get Intel Latency Statistics log and show it.";
 	const char *raw = "dump output in binary format";
 	const char *write = "Get write statistics (read default)";
 	struct config {
+		char *output_format;
 		int  raw_binary;
 		int  write;
 	};
 
 	struct config cfg = {
+		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_FLAG("write",      'w', &cfg.write,      write),
+		OPT_FMT("output-format", 'o', &cfg.output_format, "Output format: normal|json|binary"),
 		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
 		OPT_END()
 	};
@@ -805,16 +809,28 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	if (fd < 0)
 		return fd;
 
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+
+	if (cfg.raw_binary)
+		flags = BINARY;
+
 	err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
 			   false, sizeof(stats), &stats);
 	if (!err) {
-		if (!cfg.raw_binary)
-			show_lat_stats(&stats, cfg.write);
-		else
+		if (flags & JSON)
+			json_lat_stats(&stats, cfg.write);
+		else if (flags & BINARY)
 			d_raw((unsigned char *)&stats, sizeof(stats));
+		else
+			show_lat_stats(&stats, cfg.write);
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
+
+close_fd:
+	close(fd);
 	return err;
 }
 
