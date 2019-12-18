@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.10" />
-<title>nvme-reset(1)</title>
+<title>nvme-wdc-vs-telemetry-controller-option(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -735,12 +735,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-reset(1) Manual Page
+nvme-wdc-vs-telemetry-controller-option(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-reset -
-   Reset the nvme controller.
+<p>nvme-wdc-vs-telemetry-controller-option -
+   Disable/Enable the controller initiated option of the telemetry log page.
 </p>
 </div>
 </div>
@@ -749,7 +749,8 @@ nvme-reset(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme reset</em> &lt;device&gt;</pre>
+<pre class="content"><em>nvme wdc vs-telemetry-controller-option</em> &lt;device&gt; [--disable, -d] [--enable, -e]
+    [--status, -s]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -757,14 +758,51 @@ nvme-reset(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Requests NVMe controller reset. The &lt;device&gt; param is mandatory and must
-be an NVMe character device (ex: /dev/nvme0).</p></div>
+<div class="paragraph"><p>For the NVMe device given, sends the WDC Vendor Specific set feature command to disable, enable or get current status
+of the controller initiated option of the telemetry log page.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory NVMe character device (ex: /dev/nvme0).</p></div>
+<div class="paragraph"><p>This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.</p></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>None</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+-d
+</dt>
+<dt class="hdlist1">
+--disable
+</dt>
+<dd>
+<p>
+        Disables the controller initiated option of the telemetry log page.
+</p>
+</dd>
+<dt class="hdlist1">
+-e
+</dt>
+<dt class="hdlist1">
+--enable
+</dt>
+<dd>
+<p>
+        Enables the controller initiated option of the telemetry log page.
+</p>
+</dd>
+<dt class="hdlist1">
+-s
+</dt>
+<dt class="hdlist1">
+--status
+</dt>
+<dd>
+<p>
+        Returns the current status (enabled or disabled) of the controller initiated option of the telemetry log page.
+</p>
+</dd>
+</dl></div>
 </div>
 </div>
 <div class="sect1">
@@ -773,11 +811,32 @@ be an NVMe character device (ex: /dev/nvme0).</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Resets the controller.
+Disables the controller initiated option of the telemetry log page:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme reset /dev/nvme0</code></pre>
+<pre><code># nvme wdc vs-telemetry-controller-option /dev/nvme0 --disable
+# nvme wdc vs-telemetry-controller-option /dev/nvme0 -d</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Enables the controller initiated option of the telemetry log page:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme wdc vs-telemetry-controller-option /dev/nvme0 --enable
+# nvme wdc vs-telemetry-controller-option /dev/nvme0 -e</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Gets the current status (enabled or disabled) of the controller initiated option of the telemetry log page:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme wdc vs-telemetry-controller-option /dev/nvme0 --status
+# nvme wdc vs-telemetry-controller-option /dev/nvme0 -s</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -786,7 +845,7 @@ Resets the controller.
 <div class="sect1">
 <h2 id="_nvme">NVME</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Part of the nvme-user suite</p></div>
+<div class="paragraph"><p>Part of the nvme-user suite.</p></div>
 </div>
 </div>
 </div>
@@ -794,7 +853,7 @@ Resets the controller.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-11-08 08:41:30 JST
+ 2019-12-19 04:03:07 JST
 </div>
 </div>
 </body>
