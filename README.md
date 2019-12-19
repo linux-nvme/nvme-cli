@@ -118,6 +118,11 @@ steps:
 An [nvme-cli recipe](https://layers.openembedded.org/layerindex/recipe/88631/)
 is available as part of the `meta-openembeded` layer collection.
 
+### Buildroot
+
+`nvme-cli` is available as [buildroot](https://buildroot.org) package. The
+package is named `nvme`.
+
 ### Other Distros
 
 TBD

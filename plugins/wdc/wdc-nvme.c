@@ -66,6 +66,7 @@
 #define WDC_NVME_SN640_DEV_ID				0x2400
 #define WDC_NVME_SN640_DEV_ID_1				0x2401
 #define WDC_NVME_SN640_DEV_ID_2				0x2402
+#define WDC_NVME_SN740_DEV_ID				0x2600
 #define WDC_NVME_SXSLCL_DEV_ID				0x2001
 #define WDC_NVME_SN520_DEV_ID				0x5003
 #define WDC_NVME_SN520_DEV_ID_1				0x5004
@@ -91,6 +92,7 @@
 #define WDC_DRIVE_CAP_PFAIL_DUMP			0x0000000000001000
 #define WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY   0x0000000000002000
 #define WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY  0x0000000000004000
+#define WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG 0x0000000000008000
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
@@ -134,6 +136,13 @@
 #define WDC_NVME_DUI_MAX_SECTION			0x3A
 #define WDC_NVME_DUI_MAX_SECTION_V2			0x26
 #define WDC_NVME_DUI_MAX_DATA_AREA			0x05
+
+/* Telemtery types for vs-internal-log command  */
+#define WDC_TELEMETRY_TYPE_NONE             0x0
+#define WDC_TELEMETRY_TYPE_HOST             0x1
+#define WDC_TELEMETRY_TYPE_CONTROLLER       0x2
+#define WDC_TELEMETRY_HEADER_LENGTH         512
+#define WDC_TELEMETRY_BLOCK_SIZE            512
 
 /* Crash dump */
 #define WDC_NVME_CRASH_DUMP_SIZE_DATA_LEN		WDC_NVME_LOG_SIZE_DATA_LEN
@@ -245,6 +254,8 @@
 #define WDC_NVME_CLEAR_ASSERT_DUMP_OPCODE		0xD8
 #define WDC_NVME_CLEAR_ASSERT_DUMP_CMD			0x03
 #define WDC_NVME_CLEAR_ASSERT_DUMP_SUBCMD		0x05
+
+#define WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID   0xD2
 
 /* Drive Essentials */
 #define WDC_DE_DEFAULT_NUMBER_OF_ERROR_ENTRIES		64
@@ -798,7 +809,17 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		case WDC_NVME_SN630_DEV_ID:
 		/* FALLTHRU */
 		case WDC_NVME_SN630_DEV_ID_1:
-		/* FALLTHRU */
+			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
+					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
+					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE);
+			/* verify the 0xCA log page is supported */
+			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
+				capabilities |= WDC_DRIVE_CAP_CA_LOG_PAGE;
+
+			/* verify the 0xD0 log page is supported */
+			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_VU_SMART_LOG_OPCODE) == true)
+				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
+			break;
 		case WDC_NVME_SN640_DEV_ID:
 		/* FALLTHRU */
 		case WDC_NVME_SN640_DEV_ID_1:
@@ -808,10 +829,13 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		case WDC_NVME_SN840_DEV_ID:
 		/* FALLTHRU */
 		case WDC_NVME_SN840_DEV_ID_1:
+			/* FALLTHRU */
+		case WDC_NVME_SN740_DEV_ID:
 			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
 					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
 					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
-					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY);
+					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY |
+					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG);
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -1292,9 +1316,146 @@ static int wdc_do_dump_e6(int fd, __u32 opcode,__u32 data_len,
 	return ret;
 }
 
-static int wdc_do_cap_diag(int fd, char *file, __u32 xfer_size)
+static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int data_area)
 {
-	int ret;
+	struct nvme_telemetry_log_page_hdr *hdr;
+	size_t full_size, offset = WDC_TELEMETRY_HEADER_LENGTH;
+	int err = 0, output;
+	void *page_log;
+	__u32 host_gen = 1;
+	int ctrl_init = 0;
+	__u32 result;
+	void *buf = NULL;
+
+
+	if (type == WDC_TELEMETRY_TYPE_HOST) {
+		host_gen = 1;
+		ctrl_init = 0;
+	} else if (type == WDC_TELEMETRY_TYPE_CONTROLLER) {
+		/* Verify the Controller Initiated Option is enabled */
+		err = nvme_get_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 0, 0,
+				4, buf, &result);
+		if (err == 0) {
+			if (result) {
+				host_gen = 0;
+				ctrl_init = 1;
+			}
+			else {
+				fprintf(stderr, "%s: Controller initiated option telemetry log page disabled\n", __func__);
+				err = -EINVAL;
+				goto close_fd;
+			}
+		} else {
+			fprintf(stderr, "ERROR : WDC: Get telemetry option feature failed.  NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+			err = -EPERM;
+			goto close_fd;
+		}
+	} else {
+		fprintf(stderr, "%s: Invalid type parameter; type = %d\n", __func__, type);
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	if (!file) {
+		fprintf(stderr, "%s: Please provide an output file!\n", __func__);
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	hdr = malloc(bs);
+	page_log = malloc(bs);
+	if (!hdr || !page_log) {
+		fprintf(stderr, "%s: Failed to allocate 0x%x bytes for log: %s\n",
+				__func__, bs, strerror(errno));
+		err = -ENOMEM;
+		goto free_mem;
+	}
+	memset(hdr, 0, bs);
+
+	output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	if (output < 0) {
+		fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
+				__func__, file, strerror(errno));
+		err = output;
+		goto free_mem;
+	}
+
+	err = nvme_get_telemetry_log(fd, hdr, host_gen, ctrl_init, WDC_TELEMETRY_HEADER_LENGTH, 0);
+	if (err < 0)
+		perror("get-telemetry-log");
+	else if (err > 0) {
+		nvme_show_status(err);
+		fprintf(stderr, "%s: Failed to acquire telemetry header!\n", __func__);
+		goto close_output;
+	}
+
+	err = write(output, (void *) hdr, WDC_TELEMETRY_HEADER_LENGTH);
+	if (err != WDC_TELEMETRY_HEADER_LENGTH) {
+		fprintf(stderr, "%s: Failed to flush header data to file!, err = %d\n", __func__, err);
+		goto close_output;
+	}
+
+	switch (data_area) {
+	case 1:
+		full_size = (le16_to_cpu(hdr->dalb1) * WDC_TELEMETRY_BLOCK_SIZE) + WDC_TELEMETRY_HEADER_LENGTH;
+		break;
+	case 2:
+		full_size = (le16_to_cpu(hdr->dalb2) * WDC_TELEMETRY_BLOCK_SIZE) + WDC_TELEMETRY_HEADER_LENGTH;
+		break;
+	case 3:
+		full_size = (le16_to_cpu(hdr->dalb3) * WDC_TELEMETRY_BLOCK_SIZE) + WDC_TELEMETRY_HEADER_LENGTH;
+		break;
+	default:
+		fprintf(stderr, "%s: Invalid data area requested, data area = %d\n", __func__, data_area);
+		err = -EINVAL;
+		goto close_output;
+	}
+
+	/*
+	 * Continuously pull data until the offset hits the end of the last
+	 * block.
+	 */
+	while (offset < full_size) {
+		if ((full_size - offset) < bs)
+			bs = (full_size - offset);
+
+
+		err = nvme_get_telemetry_log(fd, page_log, 0, ctrl_init, bs, offset);
+		if (err < 0) {
+			perror("get-telemetry-log");
+			break;
+		} else if (err > 0) {
+			nvme_show_status(err);
+			fprintf(stderr, "%s: Failed to acquire full telemetry log!\n", __func__);
+			nvme_show_status(err);
+			break;
+		}
+
+		err = write(output, (void *) page_log, bs);
+		if (err != bs) {
+			fprintf(stderr, "%s: Failed to flush telemetry data to file!, err = %d\n", __func__, err);
+			break;
+		}
+		err = 0;
+		offset += bs;
+	}
+
+close_output:
+	close(output);
+free_mem:
+	free(hdr);
+	free(page_log);
+close_fd:
+	close(fd);
+
+	return err;
+
+}
+
+static int wdc_do_cap_diag(int fd, char *file, __u32 xfer_size, int type, int data_area)
+{
+	int ret = -1;
 	__u32 e6_log_hdr_size = WDC_NVME_CAP_DIAG_HEADER_TOC_SIZE;
 	struct wdc_e6_log_hdr *log_hdr;
 	__u32 cap_diag_length;
@@ -1307,27 +1468,34 @@ static int wdc_do_cap_diag(int fd, char *file, __u32 xfer_size)
 	}
 	memset(log_hdr, 0, e6_log_hdr_size);
 
-	ret = wdc_dump_length_e6(fd, WDC_NVME_CAP_DIAG_OPCODE,
-						WDC_NVME_CAP_DIAG_HEADER_TOC_SIZE>>2,
-						0x00,
-						log_hdr);
-	if (ret == -1) {
-		ret = -1;
-		goto out;
-	}
+	if (type == WDC_TELEMETRY_TYPE_NONE) {
+		ret = wdc_dump_length_e6(fd, WDC_NVME_CAP_DIAG_OPCODE,
+							WDC_NVME_CAP_DIAG_HEADER_TOC_SIZE>>2,
+							0x00,
+							log_hdr);
+		if (ret == -1) {
+			ret = -1;
+			goto out;
+		}
 
-	cap_diag_length = (log_hdr->log_size[0] << 24 | log_hdr->log_size[1] << 16 |
-			log_hdr->log_size[2] << 8 | log_hdr->log_size[3]);
+		cap_diag_length = (log_hdr->log_size[0] << 24 | log_hdr->log_size[1] << 16 |
+				log_hdr->log_size[2] << 8 | log_hdr->log_size[3]);
 
-	if (cap_diag_length == 0) {
-		fprintf(stderr, "INFO : WDC : Capture Diagnostics log is empty\n");
-	} else {
-		ret = wdc_do_dump_e6(fd, WDC_NVME_CAP_DIAG_OPCODE, cap_diag_length,
-						(WDC_NVME_CAP_DIAG_SUBCMD << WDC_NVME_SUBCMD_SHIFT) | WDC_NVME_CAP_DIAG_CMD,
-						file, xfer_size, (__u8 *)log_hdr);
+		if (cap_diag_length == 0) {
+			fprintf(stderr, "INFO : WDC : Capture Diagnostics log is empty\n");
+		} else {
+			ret = wdc_do_dump_e6(fd, WDC_NVME_CAP_DIAG_OPCODE, cap_diag_length,
+							(WDC_NVME_CAP_DIAG_SUBCMD << WDC_NVME_SUBCMD_SHIFT) | WDC_NVME_CAP_DIAG_CMD,
+							file, xfer_size, (__u8 *)log_hdr);
 
-		fprintf(stderr, "INFO : WDC : Capture Diagnostics log, length = 0x%x\n", cap_diag_length);
-	}
+			fprintf(stderr, "INFO : WDC : Capture Diagnostics log, length = 0x%x\n", cap_diag_length);
+		}
+	} else if ((type == WDC_TELEMETRY_TYPE_HOST) ||
+			(type == WDC_TELEMETRY_TYPE_CONTROLLER)) {
+		/* Get the desired telemetry log page */
+		ret = wdc_do_cap_telemetry_log(fd, file, xfer_size, type, data_area);
+	} else
+		fprintf(stderr, "%s: ERROR : Invalid type : %d\n", __func__, type);
 
 out:
 	free(log_hdr);
@@ -1620,7 +1788,7 @@ static int wdc_cap_diag(int argc, char **argv, struct command *command,
 
 	capabilities = wdc_get_drive_capabilities(fd);
 	if ((capabilities & WDC_DRIVE_CAP_CAP_DIAG) == WDC_DRIVE_CAP_CAP_DIAG)
-		return wdc_do_cap_diag(fd, f, xfer_size);
+		return wdc_do_cap_diag(fd, f, xfer_size, 0, 0);
 
 	fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
 	return 0;
@@ -1862,14 +2030,16 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 	char *desc = "Internal Firmware Log.";
 	char *file = "Output file pathname.";
 	char *size = "Data retrieval transfer size.";
-	char *data_area = "Data area to retrieve up to.";
-	char *file_size = "Output file size.";
-	char *offset = "Output file data offset.";
+	char *data_area = "Data area to retrieve up to. Currently only supported on the SN340, SN640, and SN840 devices.";
+	char *file_size = "Output file size.  Currently only supported on the SN340 device.";
+	char *offset = "Output file data offset. Currently only supported on the SN340 device.";
+	char *type = "Telemetry type - NONE, HOST, or CONTROLLER. Currently only supported on the SN640 and SN840 devices.";
 	char *verbose = "Display more debug messages.";
 	char f[PATH_MAX] = {0};
 	char fileSuffix[PATH_MAX] = {0};
 	__u32 xfer_size = 0;
 	int fd;
+	int telemetry_type = 0, telemetry_data_area = 0;
 	UtilsTimeInfo             timeInfo;
 	__u8                      timeStamp[MAX_PATH_LEN];
 	__u64 capabilities = 0;
@@ -1880,6 +2050,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		int data_area;
 		__u64 file_size;
 		__u64 offset;
+		char *type;
 		int verbose;
 	};
 
@@ -1889,6 +2060,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		.data_area = 2,
 		.file_size = 0,
 		.offset = 0,
+		.type = NULL,
 		.verbose = 0,
 	};
 
@@ -1897,7 +2069,8 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
 		OPT_UINT("data-area",     'd', &cfg.data_area, data_area),
 		OPT_LONG("file-size",     'f', &cfg.file_size, file_size),
-		OPT_LONG("offset",        't', &cfg.offset,    offset),
+		OPT_LONG("offset",        'e', &cfg.offset,    offset),
+		OPT_FILE("type",          't', &cfg.type,      type),
 		OPT_FLAG("verbose",       'v', &cfg.verbose,   verbose),
 		OPT_END()
 	};
@@ -1950,12 +2123,28 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 	}
 
 	capabilities = wdc_get_drive_capabilities(fd);
-	if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG)
-		return wdc_do_cap_diag(fd, f, xfer_size);
+	if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG) {
+		if ((cfg.type == NULL) ||
+			(!strcmp(cfg.type, "NONE")) ||
+			(!strcmp(cfg.type, "none"))) {
+			telemetry_type = WDC_TELEMETRY_TYPE_NONE;
+			data_area = 0;
+		} else if ((!strcmp(cfg.type, "HOST")) ||
+				(!strcmp(cfg.type, "host"))) {
+			telemetry_type = WDC_TELEMETRY_TYPE_HOST;
+			telemetry_data_area = cfg.data_area;
+		} else if ((!strcmp(cfg.type, "CONTROLLER")) ||
+				(!strcmp(cfg.type, "controller"))) {
+			telemetry_type = WDC_TELEMETRY_TYPE_CONTROLLER;
+			telemetry_data_area = cfg.data_area;
+		}
+
+		return wdc_do_cap_diag(fd, f, xfer_size, telemetry_type, telemetry_data_area);
+	}
 	if ((capabilities & WDC_DRIVE_CAP_SN340_DUI) == WDC_DRIVE_CAP_SN340_DUI) {
-		/* FW requirement - xfer size must be 500k for data area 4 */
+		/* FW requirement - xfer size must be 256k for data area 4 */
 		if (cfg.data_area >= 4)
-			xfer_size = 0x80000;
+			xfer_size = 0x40000;
 		return wdc_do_cap_dui(fd, f, xfer_size, cfg.data_area, cfg.verbose, cfg.file_size, cfg.offset);
 	}
 	if ((capabilities & WDC_DRIVE_CAP_DUI_DATA) == WDC_DRIVE_CAP_DUI_DATA)
@@ -3466,6 +3655,84 @@ static int wdc_clear_fw_activate_history(int argc, char **argv, struct command *
 out:
 	return ret;
 }
+
+static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct command *command,
+		struct plugin *plugin)
+{
+	char *desc = "Disable/Enable Controller Option of the Telemetry Log Page.";
+	char *disable = "Disable controller option of the telemetry log page.";
+	char *enable = "Enable controller option of the telemetry log page.";
+	char *status = "Displays the current state of the controller initiated log page.";
+	int fd;
+	int ret = -1;
+	__u64 capabilities = 0;
+	__u32 result;
+	void *buf = NULL;
+
+
+	struct config {
+		int disable;
+		int enable;
+		int status;
+	};
+
+	struct config cfg = {
+		.disable = 0,
+		.enable = 0,
+		.status = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("disable",       'd', &cfg.disable,   disable),
+		OPT_FLAG("enable",        'e', &cfg.enable,    enable),
+		OPT_FLAG("status",        's', &cfg.status,    status),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	capabilities = wdc_get_drive_capabilities(fd);
+	if ((capabilities & WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG) != WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG) {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+		goto out;
+	}
+
+	if (cfg.disable) {
+		ret = nvme_set_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 0,
+				       0, 0, 0, buf, &result);
+	}
+	else {
+	   if (cfg.enable) {
+			ret = nvme_set_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 1,
+					       0, 0, 0, buf, &result);
+	   }
+	   else if (cfg.status) {
+			ret = nvme_get_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 0, 0,
+					4, buf, &result);
+			if (ret == 0) {
+				if (result)
+					fprintf(stderr, "Controller Option Telemetry Log Page State: Enabled\n");
+				else
+					fprintf(stderr, "Controller Option Telemetry Log Page State: Disabled\n");
+			} else {
+				fprintf(stderr, "ERROR : WDC: NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+			}
+	   }
+	   else {
+			fprintf(stderr, "ERROR : WDC: unsupported option for this command\n");
+			ret = -1;
+			goto out;
+	   }
+
+	}
+
+out:
+	return ret;
+}
+
 
 static int wdc_get_serial_and_fw_rev(int fd, char *sn, char *fw_rev)
 {
