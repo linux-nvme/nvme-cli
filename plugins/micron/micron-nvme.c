@@ -59,7 +59,7 @@ static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 	nRet = system(strBuffer);
 
 	if (nRet < 0) {
-		printf("Unable to create zip package!\n");
+		fprintf(stderr, "Unable to create zip package!\n");
 		err = EINVAL;
 		goto exit_status;
 	}
@@ -67,13 +67,14 @@ static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 	sprintf(strBuffer, "rm -f -R \"%s\" >temp.txt 2>&1", strDirName);
 	nRet = system(strBuffer);
 	if (nRet < 0) {
-		printf("Unable to remove temporary files!\n");
+		fprintf(stderr, "Unable to remove temporary files!\n");
 		err = EINVAL;
 		goto exit_status;
 	}
 
  exit_status:
-	(void)system("rm -f temp.txt");
+	if (system("rm -f temp.txt") < 0)
+		fprintf(stderr, "Unable to remove temp.txt\n");
 	return err;
 }
 
@@ -207,7 +208,7 @@ static int GetLogPageSize(int nFD, unsigned char ucLogID, int *nLogSize)
 			LogPageHeader_t *pLogHeader1 = (LogPageHeader_t *) pLogHeader;
 			*nLogSize = (int)(pLogHeader1->numDwordsInEntireLogPage) * 4;
 		} else {
-			printf ("Getting size of log page : 0x%X failed with %d\n", ucLogID, err);
+			fprintf (stderr, "Getting size of log page : 0x%X failed with %d\n", ucLogID, err);
 			*nLogSize = 0;
 		}
 	}
@@ -483,7 +484,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *cmd, struct 
 
 	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0) {
-		printf("\nDevice not found \n");;
+		fprintf(stderr, "\nDevice not found \n");;
 		return -1;
 	}
 
@@ -529,20 +530,22 @@ static int micron_pcie_stats(int argc, char **argv, struct command *cmd, struct 
 		sprintf(tdevice, "%s%s", devicename, "n1");
 		devicename = tdevice;
 	} else {
-		printf("Invalid device specified!\n");
+		fprintf(stderr, "Invalid device specified!\n");
 		goto out;
 	}
 	sprintf(strTempFile, "/sys/block/%s/device", devicename);
 	sLinkSize = readlink(strTempFile, strTempFile2, 1024);
 	if (sLinkSize < 0) {
-		printf("Unable to read device\n");
+		err = (int)sLinkSize;
+		fprintf(stderr, "Unable to read device\n");
 		goto out;
 	}
 	if (strstr(strTempFile2, "../../nvme")) {
 		sprintf(strTempFile, "/sys/block/%s/device/device", devicename);
 		sLinkSize = readlink(strTempFile, strTempFile2, 1024);
 		if (sLinkSize < 0) {
-			printf("Unable to read device\n");
+			err = (int)sLinkSize;
+			fprintf(stderr, "Unable to read device\n");
 			goto out;
 		}
 	}
@@ -552,12 +555,14 @@ static int micron_pcie_stats(int argc, char **argv, struct command *cmd, struct 
 		function);
 	fp = popen(command, "r");
 	if (fp == NULL) {
-		printf("Unable to retrieve error count\n");
+		err = errno;
+		fprintf(stderr, "Unable to retrieve error count\n");
 		goto out;
 	}
 	res = fgets(correctable, sizeof(correctable), fp);
 	if (res == NULL) {
-		printf("Unable to retrieve error count\n");
+		err = errno;
+		fprintf(stderr, "Unable to retrieve error count\n");
 		goto out;
 	}
 	pclose(fp);
@@ -566,12 +571,14 @@ static int micron_pcie_stats(int argc, char **argv, struct command *cmd, struct 
 		function);
 	fp = popen(command, "r");
 	if (fp == NULL) {
-		printf("Unable to retrieve error count\n");
+		err = errno;
+		fprintf(stderr, "Unable to retrieve error count\n");
 		goto out;
 	}
 	res = fgets(uncorrectable, sizeof(uncorrectable), fp);
 	if (res == NULL) {
-		printf("Unable to retrieve error count\n");
+		err = errno;
+		fprintf(stderr, "Unable to retrieve error count\n");
 		goto out;
 	}
 	pclose(fp);
@@ -609,20 +616,29 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 		sprintf(tdevice, "%s%s", devicename, "n1");
 		devicename = tdevice;
 	} else {
-		printf("Invalid device specified!\n");
+		fprintf(stderr, "Invalid device specified!\n");
+		err = EINVAL;
 		goto out;
 	}
-	sprintf(strTempFile, "/sys/block/%s/device", devicename);
+	err = snprintf(strTempFile, sizeof(strTempFile),
+			"/sys/block/%s/device", devicename);
+	if (err < 0)
+		goto out;
 	sLinkSize = readlink(strTempFile, strTempFile2, 1024);
 	if (sLinkSize < 0) {
-		printf("Unable to read device\n");
+		err = (int)sLinkSize;
+		fprintf(stderr, "Unable to read device\n");
 		goto out;
 	}
 	if (strstr(strTempFile2, "../../nvme")) {
-		sprintf(strTempFile, "/sys/block/%s/device/device", devicename);
+		err = snprintf(strTempFile, sizeof(strTempFile),
+				"/sys/block/%s/device/device", devicename);
+		if (err < 0)
+			goto out;
 		sLinkSize = readlink(strTempFile, strTempFile2, 1024);
 		if (sLinkSize < 0) {
-			printf("Unable to read device\n");
+			err = (int)sLinkSize;
+			fprintf(stderr, "Unable to read device\n");
 			goto out;
 		}
 	}
@@ -633,7 +649,8 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 
 	fp = popen(command, "r");
 	if (fp == NULL) {
-		printf("Unable to clear error count\n");
+		err = errno;
+		fprintf(stderr, "Unable to clear error count\n");
 		goto out;
 	}
 	pclose(fp);
@@ -642,12 +659,14 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 		function);
 	fp = popen(command, "r");
 	if (fp == NULL) {
-		printf("Unable to retrieve error count\n");
+		err = errno;
+		fprintf(stderr, "Unable to retrieve error count\n");
 		goto out;
 	}
 	res = fgets(correctable, sizeof(correctable), fp);
 	if (res == NULL) {
-		printf("Unable to retrieve error count\n");
+		err = EINVAL;
+		fprintf(stderr, "Unable to retrieve error count\n");
 		goto out;
 	}
 	pclose(fp);
@@ -671,7 +690,7 @@ static int micron_nand_stats(int argc, char **argv, struct command *cmd, struct 
 
 	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0) {
-		printf("\nDevice not found \n");;
+		fprintf(stderr, "\nDevice not found \n");;
 		return -1;
 	}
 
@@ -788,7 +807,7 @@ static void GetDriveInfo(const char *strOSDirName, int nFD,
 	sprintf(tempFile, "%s/%s", strDest, "drive-info.txt");
 	fpOutFile = fopen(tempFile, "w+");
 	if (!fpOutFile) {
-		printf("Unable to create %s\n", tempFile);
+		fprintf(stderr, "Unable to create %s\n", tempFile);
 		free(strPDir);
 		return;
 	}
@@ -860,7 +879,7 @@ static void GetCtrlIDDInfo(const char *strCtrlDirName, struct nvme_id_ctrl *ctrl
 		"nvme_controller_identify_data.bin");
 	fpOutFile = fopen(tempFolder, "wb");
 	if (fwrite(ctrlp, 1, sizeof(*ctrlp), fpOutFile) != sizeof(*ctrlp))
-		printf("Unable to write controller data to %s file!", tempFolder);
+		fprintf(stderr, "Unable to write controller data to %s file!", tempFolder);
 	if (fpOutFile)
 		fclose(fpOutFile);
 }
@@ -874,7 +893,7 @@ static void GetSmartlogData(int fd, const char *strCtrlDirName)
 		sprintf(tempFolder, "%s/%s", strCtrlDirName, "smart_data.bin");
 		fpOutFile = fopen(tempFolder, "wb");
 		if (fwrite(&smart_log, 1, sizeof(smart_log), fpOutFile) != sizeof(smart_log))
-			printf("Unable to write smart log data to %s file!", tempFolder);
+			fprintf(stderr, "Unable to write smart log data to %s file!", tempFolder);
 		if (fpOutFile)
 			fclose(fpOutFile);
 	}
@@ -895,7 +914,7 @@ static void GetErrorlogData(int fd, int entries, const char *strCtrlDirName)
 			"error_information_log.bin");
 		fpOutFile = fopen(tempFolder, "wb");
 		if (fwrite(error_log, 1, logSize, fpOutFile) != logSize)
-			printf("Unable to write error log to %s file!", tempFolder);
+			fprintf(stderr, "Unable to write error log to %s file!", tempFolder);
 		if (fpOutFile)
 			fclose(fpOutFile);
 	}
@@ -913,7 +932,7 @@ static void GetNSIDDInfo(int fd, const char *strCtrlDirName, int nsid)
 		sprintf(strFileName, "%s/%s", strCtrlDirName, tempFolder);
 		fpOutFile = fopen(strFileName, "wb");
 		if (fwrite(&ns, 1, sizeof(ns), fpOutFile) != sizeof(ns))
-			printf("Unable to write controller data to %s file!", tempFolder);
+			fprintf(stderr, "Unable to write controller data to %s file!", tempFolder);
 		if (fpOutFile)
 			fclose(fpOutFile);
 	}
@@ -954,7 +973,8 @@ static void GetOSConfig(const char *strOSDirName)
 		}
 		strcpy(strTemp, cmdArray[i].strCommand);
 		sprintf(strBuffer, strTemp, strFileName);
-		(void)system(strBuffer);
+		if (system(strBuffer) < 0)
+			fprintf(stderr, "unable run %s\n", strBuffer);
 	}
 }
 
@@ -1048,7 +1068,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
 	/* pull log details based on the model name */
 	sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx);
 	if ((eModel = GetDriveModel(ctrlIdx)) == UNKNOWN_MODEL) {
-		printf ("Unsupported drive model for vs-internal-log collection\n");
+		fprintf (stderr, "Unsupported drive model for vs-internal-log collection\n");
 		close(fd);
 		goto out;
 	}
@@ -1137,7 +1157,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
 					aVendorLogs[i].strFileName);
 				fpOutFile = fopen(tempFolder, "ab+");
 				if (fwrite(dataBuffer, 1, bSize, fpOutFile) != bSize) {
-					printf ("Unable to write log to file %s\n!", aVendorLogs[i].strFileName);
+					fprintf (stderr, "Unable to write log to file %s\n!", aVendorLogs[i].strFileName);
 				}
 				if (fpOutFile)
 					fclose(fpOutFile);
@@ -1154,7 +1174,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
 				aVendorLogs[i].strFileName);
 			fpOutFile = fopen(tempFolder, "ab+");
 			if (fwrite(dataBuffer, 1, bSize, fpOutFile) != bSize) {
-				printf("Unable to write log to file %s\n!", aVendorLogs[i].strFileName);
+				fprintf(stderr, "Unable to write log to file %s\n!", aVendorLogs[i].strFileName);
 			}
 			if (fpOutFile)
 				fclose(fpOutFile);
