@@ -18,6 +18,23 @@ API_DOCS =
 SP_ARTICLES += $(API_DOCS)
 SP_ARTICLES += $(TECH_DOCS)
 
+ifneq ($(findstring $(MAKEFLAGS),s),s)
+ifndef V
+	QUIET_ASCIIDOC  = @echo '   ' ASCIIDOC $@;
+	QUIET_XMLTO     = @echo '   ' XMLTO $@;
+	QUIET_DB2TEXI   = @echo '   ' DB2TEXI $@;
+	QUIET_MAKEINFO  = @echo '   ' MAKEINFO $@;
+	QUIET_DBLATEX   = @echo '   ' DBLATEX $@;
+	QUIET_XSLTPROC  = @echo '   ' XSLTPROC $@;
+	QUIET_GEN       = @echo '   ' GEN $@;
+	QUIET_LINT      = @echo '   ' LINT $@;
+	QUIET_STDERR    = 2> /dev/null
+	QUIET_SUBDIR0   = +@subdir=
+	QUIET_SUBDIR1   = ;$(NO_SUBDIR) echo '   ' SUBDIR $$subdir; \
+			$(MAKE) $(PRINT_DIR) -C $$subdir
+	export V
+endif
+endif
 
 DOC_MAN1 = $(patsubst %.txt,%.1,$(MAN1_TXT))
 
