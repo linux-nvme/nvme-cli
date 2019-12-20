@@ -118,7 +118,7 @@ static void *nvme_alloc(size_t len, bool *huge)
 	if (len < HUGE_MIN)
 		return __nvme_alloc(len, huge);
 
-	p = get_hugepage_region(len, GHP_DEFAULT);
+	p = get_hugepage_region(len, GHR_DEFAULT);
 	if (!p)
 		return __nvme_alloc(len, huge);
 
