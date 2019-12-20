@@ -73,7 +73,7 @@ static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 	}
 
  exit_status:
-	(void)system("rm -f temp.txt");
+	err = system("rm -f temp.txt");
 	return err;
 }
 
@@ -960,7 +960,8 @@ static void GetOSConfig(const char *strOSDirName)
 		}
 		strcpy(strTemp, cmdArray[i].strCommand);
 		sprintf(strBuffer, strTemp, strFileName);
-		(void)system(strBuffer);
+		if (system(strBuffer))
+			fprintf(stderr, "Failed to send \"%s\"\n", strBuffer);
 	}
 }
 
