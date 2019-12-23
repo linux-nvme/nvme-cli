@@ -25,6 +25,8 @@ SYNOPSIS
 		[--nr-write-queues=<#>    | -W <#>]
 		[--nr-poll-queues=<#>     | -P <#>]
 		[--queue-size=<#>         | -Q <#>]
+		[--persistent             | -p]
+		[--quiet                  | -S]
 
 DESCRIPTION
 -----------
@@ -117,6 +119,8 @@ OPTIONS
 -k <#>::
 --keep-alive-tmo=<#>::
 	Overrides the default dealy (in seconds) for keep alive.
+	This option will be ignored for the discovery, and it is only
+	implemented for completeness.
 
 -c <#>::
 --reconnect-delay=<#>::
@@ -138,6 +142,8 @@ OPTIONS
 -i <#>::
 --nr-io-queues=<#>::
 	Overrides the default number of I/O queues create by the driver.
+	This option will be ignored for the discovery, and it is only
+	implemented for completeness.
 
 -W <#>::
 --nr-write-queues=<#>::
@@ -151,6 +157,16 @@ OPTIONS
 --queue-size=<#>::
 	Overrides the default number of elements in the I/O queues created
 	by the driver which can be found at drivers/nvme/host/fabrics.h.
+	This option will be ignored for the discovery, and it is only
+	implemented for completeness.
+
+-p::
+--persistent::
+	Persistent discovery connection.
+
+-S::
+--quiet::
+	Suppress already connected errors.
 
 EXAMPLES
 --------
@@ -186,7 +202,6 @@ nvme-connect-all(1)
 AUTHORS
 -------
 This was written by mailto:james.p.freyensee@intel.com[Jay Freyensee]
-for mailto:keith.busch@intel.com[Keith Busch].
 
 NVME
 ----

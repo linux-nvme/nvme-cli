@@ -16,6 +16,7 @@ SYNOPSIS
 		    [--pi=<pi> | -i <pi>]
 		    [--ms=<ms> | -m <ms>]
 		    [--reset | -r ]
+		    [--force | -f ]
 		    [--timeout=<timeout> | -t <timeout> ]
 
 DESCRIPTION
@@ -25,11 +26,13 @@ and provides the results.
 
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
-If the character device is given, the namespace identifier will default
-to 0xffffffff to send the format to all namespace, but can be overridden
-to any namespace with the 'namespace-id' option. If the block device
-is given, the namespace identifier will default to the namespace id of
-the block device given, but can be overridden with the same option.
+If the character device is given, and the controller does not support
+formatting of particular namespaces (ID_CTRL.FNA bit 0 enabled), then all
+namespaces will be formatted. If FNA is disabled, then the namespace
+identifier must be specified with the 'namespace-id' option; specify a
+value of 0xffffffff to send the format to all namespaces. If the block
+device is given, the namespace identifier will default to the namespace
+ID of the block device given, but can be overridden with the same option.
 
 Note, the numeric suffix on the character device, for example the '0' in
 /dev/nvme0, does NOT indicate this device handle is the parent controller
@@ -51,7 +54,7 @@ OPTIONS
 --namespace-id=<nsid>::
 	Send the format command for the specified nsid. This can be
 	used to override the default value for either character device
-	(0xffffffff) or the block device (result from NVME_IOCTL_ID).
+	(unspecified) or the block device (result from NVME_IOCTL_ID).
 
 -l <lbaf>::
 --lbaf=<lbaf>::
@@ -124,6 +127,10 @@ cryptographically. This is accomplished by deleting the encryption key.
 --reset::
 	Issue a reset after successful format. Must use the character
 	device for this.
+
+-f::
+--force::
+	Just send the command immediately without warning of the implications.
 
 -t <timeout>::
 --timeout=<timeout>::

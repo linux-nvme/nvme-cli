@@ -751,24 +751,24 @@ nvme-create-ns(1) Manual Page
                         [--flbas=&lt;flbas&gt; | -f &lt;flbas&gt;]
                         [--dps=&lt;dps&gt; | -d &lt;dps&gt;]
                         [--nmic=&lt;nmic&gt; | -m &lt;nmic&gt;]
-                        [--block-size=&lt;block-size&gt; | -b &lt;block-size&gt;]</pre>
+                        [--anagrp-id=&lt;anagrpid&gt; | -a &lt;anagrpid&gt;]
+                        [--nvmset-id=&lt;nvmsetid&gt; | -i &lt;nvmsetid&gt;]
+                        [--block-size=&lt;block-size&gt; | -b &lt;block-size&gt;]
+                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]
+DESCRIPTION</pre>
 <div class="attribution">
 </div></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_description">DESCRIPTION</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends a namespace management command to create
+<div class="listingblock">
+<div class="content">
+<pre><code>For the NVMe device given, sends a namespace management command to create
 the namespace with the requested settings. On success, the namespace
-identifier assigned by the controller is returned.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_options">OPTIONS</h2>
-<div class="sectionbody">
+identifier assigned by the controller is returned.
+
+The &lt;device&gt; parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+OPTIONS</code></pre>
+</div></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
 -s
@@ -827,6 +827,29 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 </p>
 </dd>
 <dt class="hdlist1">
+-a
+</dt>
+<dt class="hdlist1">
+--anagrp-id
+</dt>
+<dd>
+<p>
+        ANA Gorup Identifier. If this value is 0h specifies
+        that the controller determines the value to use
+</p>
+</dd>
+<dt class="hdlist1">
+-i &lt;nvmsetid&gt;
+</dt>
+<dt class="hdlist1">
+--nvmset_id=&lt;nvmsetid&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the identifier of the NVM Set.
+</p>
+</dd>
+<dt class="hdlist1">
 -b
 </dt>
 <dt class="hdlist1">
@@ -858,7 +881,7 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-01-28 17:49:54 MST
+Last updated 2019-11-16 14:07:32 KST
 </div>
 </div>
 </body>

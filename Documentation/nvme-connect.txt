@@ -23,10 +23,10 @@ SYNOPSIS
 		[--keep-alive-tmo=<#>     | -k <#>]
 		[--reconnect-delay=<#>    | -c <#>]
 		[--ctrl-loss-tmo=<#>      | -l <#>]
-		[--duplicate_connect      | -D]
-		[--disable_sqflow         | -d]
-		[--hdr_digest             | -g]
-		[--data_digest            | -G]
+		[--duplicate-connect      | -D]
+		[--disable-sqflow         | -d]
+		[--hdr-digest             | -g]
+		[--data-digest            | -G]
 
 DESCRIPTION
 -----------
@@ -114,21 +114,21 @@ OPTIONS
 	Overrides the default controller loss timeout period (in seconds).
 
 -D::
---duplicate_connect::
+--duplicate-connect::
 	Allows duplicated connections between same trnsport host and subsystem
 	port.
 
 -d::
---disable_sqflow::
+--disable-sqflow::
 	Disables SQ flow control to omit head doorbell update for submission
 	queues when sending nvme completions.
 
 -g::
---hdr_digest::
+--hdr-digest::
 	Generates/verifies header digest (TCP).
 
 -G::
---data_digest::
+--data-digest::
 	Generates/verifies data digest (TCP).
 
 EXAMPLES
@@ -151,7 +151,6 @@ AUTHORS
 -------
 This was co-written by mailto:james.p.freyensee@intel.com[Jay Freyensee]
 and mailto:hch@lst.de[Christoph Hellwig]
-for mailto:keith.busch@intel.com[Keith Busch].
 
 NVME
 ----

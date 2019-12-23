@@ -1,0 +1,10 @@
+[Unit]
+Description=Auto-connect to subsystems on FC-NVME devices found during boot
+ConditionPathExists=/sys/class/fc/fc_udev_device/nvme_discovery
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "echo add > /sys/class/fc/fc_udev_device/nvme_discovery"
+
+[Install]
+WantedBy=default.target

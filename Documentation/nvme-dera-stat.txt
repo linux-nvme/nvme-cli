@@ -1,0 +1,38 @@
+nvme-dera-stat(1)
+=================
+
+NAME
+----
+nvme-dera-stat - Send NVMe Dera Device status and Additional SMART log page request, returns result and log
+
+SYNOPSIS
+--------
+[verse]
+'nvme dera stat' <device> 
+
+DESCRIPTION
+-----------
+Retrieves the NVMe Dera Device status and Additional SMART log page from the device and
+provides the returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned status and smart log structure are printed in a readable format.
+
+OPTIONS
+-------
+none
+
+
+EXAMPLES
+--------
+* Print the Dera Device status and Additional SMART log page in a human readable format:
++
+------------
+# nvme dera stat /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite

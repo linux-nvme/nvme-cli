@@ -3,15 +3,16 @@ NVM-Express user space tooling for Linux.
 
 To install, run:
 
-   # make && make install
+    $ make
+    # make install
 
 If not sure how to use, find the top-level documentation with:
 
-   # man nvme
+    $ man nvme
 
 Or find a short summary with:
 
-   # nvme help
+    $ nvme help
 
 ## Distro Support
 
@@ -32,10 +33,13 @@ available_spare                     : 100%
 
 ### Arch Linux
 
-Install from AUR, e.g.:
-```
-$ yay -S nvme-cli-git
-```
+nvme-cli is available in the `[community]` repository. It can be installed with:
+
+    # pacman -S nvme-cli
+
+The development version can be installed from AUR, e.g.:
+
+    $ yay -S nvme-cli-git
 
 ### Fedora
 
@@ -67,9 +71,9 @@ The attribute is named `nvme-cli` and can e.g. be installed with:
 $ nix-env -f '<nixpkgs>' -iA nvme-cli
 ```
 
-### openSUSE Tumbleweed
+### openSUSE
 
-nvme-cli is available in openSUSE Tumbleweed. You can install it using zypper.
+nvme-cli is available in openSUSE Leap 42.2 or later and Tumbleweed. You can install it using zypper.
 For example:
 
     $ sudo zypper install nvme-cli
@@ -108,6 +112,16 @@ steps:
    ```
    otherwise you will see information about each NVMe device installed
    in the system.
+
+### OpenEmbedded/Yocto
+
+An [nvme-cli recipe](https://layers.openembedded.org/layerindex/recipe/88631/)
+is available as part of the `meta-openembeded` layer collection.
+
+### Buildroot
+
+`nvme-cli` is available as [buildroot](https://buildroot.org) package. The
+package is named `nvme`.
 
 ### Other Distros
 

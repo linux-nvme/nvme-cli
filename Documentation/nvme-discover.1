@@ -2,12 +2,12 @@
 .\"     Title: nvme-discover
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/15/2019
+.\"      Date: 12/19/2019
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCOVER" "1" "04/15/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCOVER" "1" "12/19/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -49,6 +49,8 @@ nvme-discover \- Send Get Log Page request to Discovery Controller\&.
                 [\-\-nr\-write\-queues=<#>    | \-W <#>]
                 [\-\-nr\-poll\-queues=<#>     | \-P <#>]
                 [\-\-queue\-size=<#>         | \-Q <#>]
+                [\-\-persistent             | \-p]
+                [\-\-quiet                  | \-S]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -136,7 +138,7 @@ will dump the output to stdout\&.
 .PP
 \-k <#>, \-\-keep\-alive\-tmo=<#>
 .RS 4
-Overrides the default dealy (in seconds) for keep alive\&.
+Overrides the default dealy (in seconds) for keep alive\&. This option will be ignored for the discovery, and it is only implemented for completeness\&.
 .RE
 .PP
 \-c <#>, \-\-reconnect\-delay=<#>
@@ -161,7 +163,7 @@ Generates/verifies data digest (TCP)\&.
 .PP
 \-i <#>, \-\-nr\-io\-queues=<#>
 .RS 4
-Overrides the default number of I/O queues create by the driver\&.
+Overrides the default number of I/O queues create by the driver\&. This option will be ignored for the discovery, and it is only implemented for completeness\&.
 .RE
 .PP
 \-W <#>, \-\-nr\-write\-queues=<#>
@@ -176,7 +178,17 @@ Adds additional queues that will be used for polling latency sensitive I/O\&.
 .PP
 \-Q <#>, \-\-queue\-size=<#>
 .RS 4
-Overrides the default number of elements in the I/O queues created by the driver which can be found at drivers/nvme/host/fabrics\&.h\&.
+Overrides the default number of elements in the I/O queues created by the driver which can be found at drivers/nvme/host/fabrics\&.h\&. This option will be ignored for the discovery, and it is only implemented for completeness\&.
+.RE
+.PP
+\-p, \-\-persistent
+.RS 4
+Persistent discovery connection\&.
+.RE
+.PP
+\-S, \-\-quiet
+.RS 4
+Suppress already connected errors\&.
 .RE
 .SH "EXAMPLES"
 .sp
@@ -237,7 +249,7 @@ At the prompt type "nvme discover"\&.
 nvme\-connect(1) nvme\-connect\-all(1)
 .SH "AUTHORS"
 .sp
-This was written by \m[blue]\fBJay Freyensee\fR\m[]\&\s-2\u[1]\d\s+2 for \m[blue]\fBKeith Busch\fR\m[]\&\s-2\u[2]\d\s+2\&.
+This was written by \m[blue]\fBJay Freyensee\fR\m[]\&\s-2\u[1]\d\s+2
 .SH "NVME"
 .sp
 Part of the nvme\-user suite
@@ -246,9 +258,4 @@ Part of the nvme\-user suite
 Jay Freyensee
 .RS 4
 \%mailto:james.p.freyensee@intel.com
-.RE
-.IP " 2." 4
-Keith Busch
-.RS 4
-\%mailto:keith.busch@intel.com
 .RE

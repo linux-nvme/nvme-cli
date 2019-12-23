@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "nvme.h"
 #include "nvme-print.h"
@@ -17,7 +19,7 @@
 static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Initialize LightNVM device. A LightNVM/Open-Channel SSD"\
-			   " must have a media manager associated before it can "\
+			   " must have a media manager associated before it can"\
 			   " be exposed to the user. The default is to initialize"
 			   " the general media manager on top of the device.\n\n"
 			   "Example:"
@@ -26,8 +28,7 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *mmtype = "media manager to initialize on top of device. Default: gennvm.";
 	int ret;
 
-	struct config
-	{
+	struct config {
 		char *devname;
 		char *mmtype;
 	};
@@ -37,18 +38,18 @@ static int lnvm_init(int argc, char **argv, struct command *cmd, struct plugin *
 		.mmtype = "gennvm",
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"device-name",   'd', "DEVICE", CFG_STRING, &cfg.devname, required_argument, devname},
-		{"mediamgr-name", 'm', "MM",     CFG_STRING, &cfg.mmtype,  required_argument, mmtype},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_STRING("device-name",   'd', "DEVICE", &cfg.devname, devname),
+		OPT_STRING("mediamgr-name", 'm', "MM",     &cfg.mmtype,  mmtype),
+		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
 	if (!strlen(cfg.devname)) {
-		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		fprintf(stderr, "device name missing\n");
 		return -EINVAL;
 	}
 
@@ -60,11 +61,11 @@ static int lnvm_list(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *desc = "List all devices registered with LightNVM.";
 	int ret;
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
@@ -76,11 +77,11 @@ static int lnvm_info(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *desc = "Show general information and registered target types with LightNVM";
 	int ret;
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, command_line_options, NULL, 0);
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
@@ -108,23 +109,101 @@ static int lnvm_id_ns(int argc, char **argv, struct command *cmd, struct plugin 
 		.namespace_id    = 1,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id",    'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id,    required_argument, namespace_id},
-		{"raw-binary",      'b', "FLAG", CFG_NONE,     &cfg.raw_binary,      no_argument,       raw_binary},
-		{"human-readable",  'H', "FLAG", CFG_NONE,     &cfg.human_readable,  no_argument,       human_readable},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id),
+		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_binary),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
 	if (cfg.human_readable)
-		flags |= HUMAN;
+		flags |= VERBOSE;
 	else if (cfg.raw_binary)
-		flags |= RAW;
+		flags |= BINARY;
 
 	return lnvm_do_id_ns(fd, cfg.namespace_id, flags);
+}
+
+static int lnvm_chunk_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve the chunk information log for the "\
+		"specified given LightNVM device, returns in either "\
+		"human-readable or binary format.\n"\
+		"This will request Geometry first to get the "\
+		"num_grp,num_pu,num_chk first to figure out the total size "\
+		"of the log pages."\
+		;
+	const char *output_format = "Output format: normal|binary";
+	const char *human_readable = "Print normal in readable format";
+	int err, fmt, fd;
+	struct nvme_nvm_id20 geo;
+	struct nvme_nvm_chunk_desc *chunk_log;
+	__u32 nsid;
+	__u32 data_len;
+	unsigned int flags = 0;
+
+	struct config {
+		char *output_format;
+		int human_readable;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
+		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		err = fmt;
+		goto close;
+	}
+
+	if (fmt == BINARY)
+		flags |= BINARY;
+	else if (cfg.human_readable)
+		flags |= VERBOSE;
+
+	nsid = nvme_get_nsid(fd);
+
+	/*
+	 * It needs to figure out how many bytes will be requested by this
+	 * subcommand by the (num_grp * num_pu * num_chk) from the Geometry.
+	 */
+	err = lnvm_get_identity(fd, nsid, (struct nvme_nvm_id *) &geo);
+	if (err)
+		goto close;
+
+	data_len = (geo.num_grp * geo.num_pu * geo.num_chk) *
+			sizeof(struct nvme_nvm_chunk_desc);
+	chunk_log = malloc(data_len);
+	if (!chunk_log) {
+		fprintf(stderr, "cound not alloc for chunk log %dbytes\n",
+				data_len);
+		err = -ENOMEM;
+		goto close;
+	}
+
+	err = lnvm_do_chunk_log(fd, nsid, data_len, chunk_log, flags);
+	if (err)
+		fprintf(stderr, "get log page for chunk information failed\n");
+
+	free(chunk_log);
+close:
+	close(fd);
+	return err;
 }
 
 static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -140,8 +219,7 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 	int flags;
 	int ret;
 
-	struct config
-	{
+	struct config {
 		char *devname;
 		char *tgtname;
 		char *tgttype;
@@ -163,23 +241,23 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 		.factory = 0,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"device-name",   'd', "DEVICE", CFG_STRING,    &cfg.devname,   required_argument, devname},
-		{"target-name",   'n', "TARGET", CFG_STRING,    &cfg.tgtname,   required_argument, tgtname},
-		{"target-type",   't', "TARGETTYPE",  CFG_STRING,    &cfg.tgttype,   required_argument, tgttype},
-		{"lun-begin",     'b', "NUM",    CFG_POSITIVE,  &cfg.lun_begin,      required_argument,       lun_begin},
-		{"lun-end",       'e', "NUM",    CFG_POSITIVE,  &cfg.lun_end,   required_argument,       lun_end},
-		{"over-prov",     'o', "NUM",    CFG_POSITIVE,  &cfg.over_prov, required_argument,  over_prov},
-		{"factory",       'f', "FLAG",   CFG_NONE,  &cfg.factory,   no_argument,  flag_factory},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_STRING("device-name", 'd', "DEVICE",      &cfg.devname, devname),
+		OPT_STRING("target-name", 'n', "TARGET",      &cfg.tgtname, tgtname),
+		OPT_STRING("target-type", 't', "TARGETTYPE",  &cfg.tgttype, tgttype),
+		OPT_UINT("lun-begin",     'b', &cfg.lun_begin, lun_begin),
+		OPT_UINT("lun-end",       'e', &cfg.lun_end,   lun_end),
+		OPT_UINT("over-prov",     'o', &cfg.over_prov, over_prov),
+		OPT_FLAG("factory",       'f', &cfg.factory,   flag_factory),
+		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
 	if (!strlen(cfg.devname)) {
-		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		fprintf(stderr, "device name missing\n");
 		return -EINVAL;
 	}
 	if (!strlen(cfg.tgtname)) {
@@ -201,11 +279,10 @@ static int lnvm_create_tgt(int argc, char **argv, struct command *cmd, struct pl
 static int lnvm_remove_tgt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Remove an initialized LightNVM target.";
-	const char *tgtname = "target name of the device to initialize. e.g. target0.";
+	const char *tgtname = "target name of the device to remove. e.g. target0.";
 	int ret;
 
-	struct config
-	{
+	struct config {
 		char *tgtname;
 	};
 
@@ -213,12 +290,12 @@ static int lnvm_remove_tgt(int argc, char **argv, struct command *cmd, struct pl
 		.tgtname = "",
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"target-name",   'n', "TARGET", CFG_STRING,    &cfg.tgtname,   required_argument, tgtname},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_STRING("target-name", 'n', "TARGET", &cfg.tgtname, tgtname),
+		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
@@ -239,8 +316,7 @@ static int lnvm_factory_init(int argc, char **argv, struct command *cmd, struct 
 	const char *bb_marks = "remove grown bad blocks list. default: keep";
 	int ret;
 
-	struct config
-	{
+	struct config {
 		char *devname;
 		int  erase_only_marked;
 		int  clear_host_marks;
@@ -251,21 +327,20 @@ static int lnvm_factory_init(int argc, char **argv, struct command *cmd, struct 
 		.devname = "",
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"device-name",          'd', "DEVICE", CFG_STRING, &cfg.devname,           required_argument, devname},
-		{"erase-only-marked",    'e', "",       CFG_NONE,   &cfg.erase_only_marked, no_argument,       erase_only_marked},
-		{"clear-host-side-blks", 's', "",       CFG_NONE,   &cfg.clear_host_marks,  no_argument,       host_marks},
-		{"clear-bb-blks",        'b', "",       CFG_NONE,   &cfg.clear_bb_marks,    no_argument,       bb_marks},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_STRING("device-name",        'd', "DEVICE", &cfg.devname, devname),
+		OPT_FLAG("erase-only-marked",    'e', &cfg.erase_only_marked, erase_only_marked),
+		OPT_FLAG("clear-host-side-blks", 's', &cfg.clear_host_marks,  host_marks),
+		OPT_FLAG("clear-bb-blks",        'b', &cfg.clear_bb_marks,    bb_marks),
+		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, command_line_options, &cfg,
-								sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
 	if (!strlen(cfg.devname)) {
-		fprintf(stderr, "device name missing %d\n", (int)strlen(cfg.devname));
+		fprintf(stderr, "device name missing\n");
 		return -EINVAL;
 	}
 
@@ -283,8 +358,7 @@ static int lnvm_get_bbtbl(int argc, char **argv, struct command *cmd, struct plu
 	const char *raw_binary = "show infos in binary format";
 	unsigned int fd, flags = 0;
 
-	struct config
-	{
+	struct config {
 		__u32 namespace_id;
 		__u16 lunid;
 		__u16 chid;
@@ -297,21 +371,20 @@ static int lnvm_get_bbtbl(int argc, char **argv, struct command *cmd, struct plu
 		.chid = 0,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
-		{"channel-id",   'c', "",     CFG_SHORT,    &cfg.chid,         required_argument, ch},
-		{"lun-id",       'l', "",     CFG_SHORT,    &cfg.lunid,        required_argument, lun},
-		{"raw-binary",   'b', "FLAG", CFG_NONE,     &cfg.raw_binary,   no_argument,       raw_binary},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
+		OPT_SHRT("channel-id",   'c', &cfg.chid,         ch),
+		OPT_SHRT("lun-id",       'l', &cfg.lunid,        lun),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_binary),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 
 	if (cfg.raw_binary)
-		flags |= RAW;
+		flags |= BINARY;
 
-	return lnvm_do_get_bbtbl(fd, cfg.namespace_id, cfg.lunid, cfg.chid,
-									flags);
+	return lnvm_do_get_bbtbl(fd, cfg.namespace_id, cfg.lunid, cfg.chid, flags);
 }
 
 static int lnvm_set_bbtbl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -326,8 +399,7 @@ static int lnvm_set_bbtbl(int argc, char **argv, struct command *cmd, struct plu
 	const char *value = "value to update the specific block to.";
 	int fd;
 
-	struct config
-	{
+	struct config {
 		__u32 namespace_id;
 		__u16 lunid;
 		__u16 chid;
@@ -345,22 +417,20 @@ static int lnvm_set_bbtbl(int argc, char **argv, struct command *cmd, struct plu
 		.value = 0,
 	};
 
-	const struct argconfig_commandline_options command_line_options[] = {
-		{"namespace-id", 'n', "NUM",  CFG_POSITIVE, &cfg.namespace_id, required_argument, namespace},
-		{"channel-id",   'c', "NUM",     CFG_SHORT,    &cfg.chid,         required_argument, ch},
-		{"lun-id",       'l', "NUM",     CFG_SHORT,    &cfg.lunid,        required_argument, lun},
-		{"plane-id",     'p', "NUM",     CFG_SHORT,    &cfg.plnid,        required_argument, pln},
-		{"block-id",     'b', "NUM",     CFG_SHORT,    &cfg.blkid,        required_argument, blk},
-		{"value",        'v', "NUM",     CFG_SHORT,    &cfg.value,        required_argument, value},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
+		OPT_SHRT("channel-id",   'c', &cfg.chid,         ch),
+		OPT_SHRT("lun-id",       'l', &cfg.lunid,        lun),
+		OPT_SHRT("plane-id",     'p', &cfg.plnid,        pln),
+		OPT_SHRT("block-id",     'b', &cfg.blkid,        blk),
+		OPT_SHRT("value",        'v', &cfg.value,        value),
+		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 
 	printf("Updating: Ch.: %u LUN: %u Plane: %u Block: %u -> %u\n",
 			cfg.chid, cfg.lunid, cfg.plnid, cfg.blkid, cfg.value);
-
-	return lnvm_do_set_bbtbl(fd, cfg.namespace_id,
-				 cfg.chid, cfg.lunid, cfg.plnid, cfg.blkid,
-				 cfg.value);
+	return lnvm_do_set_bbtbl(fd, cfg.namespace_id, cfg.chid, cfg.lunid,
+				 cfg.plnid, cfg.blkid, cfg.value);
 }

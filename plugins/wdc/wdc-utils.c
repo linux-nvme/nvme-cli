@@ -27,43 +27,42 @@
 
 int wdc_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer, const char *format, ...)
 {
-    int res = 0;
+	int res = 0;
+	va_list vArgs;
 
-    va_list vArgs;
-    va_start(vArgs, format);
-    res = vsnprintf(buffer, sizeOfBuffer, format, vArgs);
-    va_end(vArgs);
+	va_start(vArgs, format);
+	res = vsnprintf(buffer, sizeOfBuffer, format, vArgs);
+	va_end(vArgs);
 
-    return res;
+	return res;
 }
 
 void wdc_UtilsDeleteCharFromString(char* buffer, int buffSize, char charToRemove)
 {
-    int i = 0;
-    int count = 0;
-    if (!buffer || !buffSize)
-    {
-        return;
-    }
+	int i = 0;
+	int count = 0;
 
-    // Traverse the given string. If current character is not charToRemove, then place it at index count++
-    for (i = 0; ((i < buffSize) && (buffer[i] != '\0')); i++)
-    {
-        if (buffer[i] != charToRemove)
-        {
-            buffer[count++] = buffer[i];
-        }
-    }
-    buffer[count] = '\0';
+	if (!buffer || !buffSize)
+		return;
+
+	/*
+	 * Traverse the given string. If current character is not charToRemove,
+	 * then place it at index count++
+	 */
+	for (i = 0; ((i < buffSize) && (buffer[i] != '\0')); i++) {
+		if (buffer[i] != charToRemove)
+			buffer[count++] = buffer[i];
+	}
+	buffer[count] = '\0';
 }
 
 int wdc_UtilsGetTime(PUtilsTimeInfo timeInfo)
 {
-	if(!timeInfo)
-		return WDC_STATUS_INVALID_PARAMETER;
-
 	time_t currTime;
 	struct tm currTimeInfo;
+
+	if(!timeInfo)
+		return WDC_STATUS_INVALID_PARAMETER;
 
 	tzset();
 	time(&currTime);
@@ -85,59 +84,45 @@ int wdc_UtilsGetTime(PUtilsTimeInfo timeInfo)
 
 int wdc_UtilsCreateDir(char *path)
 {
-    int retStatus;
-    int status = WDC_STATUS_SUCCESS;
+	int retStatus;
+	int status = WDC_STATUS_SUCCESS;
 
-    if  (!path )
-    {
-        return WDC_STATUS_INVALID_PARAMETER;
-    }
+	if  (!path )
+		return WDC_STATUS_INVALID_PARAMETER;
 
-    retStatus = mkdir(path, 0x999);
+	retStatus = mkdir(path, 0x999);
+	if (retStatus < 0) {
+		if (errno == EEXIST)
+			status = WDC_STATUS_DIR_ALREADY_EXISTS;
+		else if (errno == ENOENT)
+			status = WDC_STATUS_PATH_NOT_FOUND;
+		else
+			status = WDC_STATUS_CREATE_DIRECTORY_FAILED;
+	}
 
-    if (retStatus < 0)
-    {
-        if (errno == EEXIST)
-        {
-            status = WDC_STATUS_DIR_ALREADY_EXISTS;
-        }
-        else if (errno == ENOENT)
-        {
-            status = WDC_STATUS_PATH_NOT_FOUND;
-        }
-        else
-        {
-            status = WDC_STATUS_CREATE_DIRECTORY_FAILED;
-        }
-    }
-
-    return status;
+	return status;
 }
 
 int wdc_WriteToFile(char *fileName, char *buffer, unsigned int bufferLen)
 {
-    int          status = WDC_STATUS_SUCCESS;
-    FILE         *file;
-    size_t       bytesWritten = 0;
-    file = fopen(fileName, "ab+");
+	int          status = WDC_STATUS_SUCCESS;
+	FILE         *file;
+	size_t       bytesWritten = 0;
 
-    if(!file)
-    {
-        status = WDC_STATUS_UNABLE_TO_OPEN_FILE;
-        goto end;
-    }
+	file = fopen(fileName, "ab+");
+	if (!file) {
+		status = WDC_STATUS_UNABLE_TO_OPEN_FILE;
+		goto end;
+	}
 
-    bytesWritten = fwrite(buffer, 1, bufferLen, file);
-    if (bytesWritten != bufferLen)
-    {
-        status = WDC_STATUS_UNABLE_TO_WRITE_ALL_DATA;
-    }
+	bytesWritten = fwrite(buffer, 1, bufferLen, file);
+	if (bytesWritten != bufferLen)
+		status = WDC_STATUS_UNABLE_TO_WRITE_ALL_DATA;
 
 end:
-    if(file)
-        fclose(file);
-
-    return status;
+	if(file)
+		fclose(file);
+	return status;
 }
 
 /**
@@ -152,12 +137,10 @@ end:
  */
 int wdc_UtilsStrCompare(char *pcSrc, char *pcDst)
 {
-    while((toupper(*pcSrc) == toupper(*pcDst)) && (*pcSrc != '\0'))
-    {
-        pcSrc++;
-        pcDst++;
-    }
-
-    return *pcSrc - *pcDst;
+	while ((toupper(*pcSrc) == toupper(*pcDst)) && (*pcSrc != '\0')) {
+		pcSrc++;
+		pcDst++;
+	}
+	return *pcSrc - *pcDst;
 }
 

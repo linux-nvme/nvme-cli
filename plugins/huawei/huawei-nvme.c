@@ -37,6 +37,7 @@
 #include "argconfig.h"
 #include "suffix.h"
 #include <sys/ioctl.h>
+
 #define CREATE_CMD
 #include "huawei-nvme.h"
 
@@ -65,31 +66,6 @@ struct huawei_list_element_len {
 	unsigned int usage;
 	unsigned int array_name;
 };
-
-static const char *dev = "/dev/";
-
-/* Assume every block device starting with /dev/nvme is an nvme namespace */
-static int huawei_scan_dev_filter(const struct dirent *d)
-{
-	char path[264];
-	struct stat bd;
-	int ctrl, ns, part;
-
-	if (d->d_name[0] == '.')
-		return 0;
-
-	if (strstr(d->d_name, "nvme")) {
-		snprintf(path, sizeof(path), "%s%s", dev, d->d_name);
-		if (stat(path, &bd))
-			return 0;
-		if (!S_ISBLK(bd.st_mode))
-			return 0;
-		if (sscanf(d->d_name, "nvme%dn%dp%d", &ctrl, &ns, &part) == 3)
-			return 0;
-		return 1;
-	}
-	return 0;
-}
 
 static int huawei_get_nvme_info(int fd, struct huawei_list_item *item, const char *node)
 {
@@ -163,7 +139,8 @@ static void format(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
 	}
 }
 
-void huawei_json_print_list_items(struct huawei_list_item *list_items, unsigned len)
+static void huawei_json_print_list_items(struct huawei_list_item *list_items,
+					 unsigned len)
 {
 	struct json_object *root;
 	struct json_array *devices;
@@ -205,7 +182,7 @@ void huawei_json_print_list_items(struct huawei_list_item *list_items, unsigned 
 	}
 	json_object_add_value_array(root, "Devices", devices);
 	json_print_object(root, NULL);
-    printf("\n");
+	printf("\n");
 	json_free_object(root);
 }
 
@@ -323,7 +300,7 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	struct dirent **devices;
 	struct huawei_list_item *list_items;
 	unsigned int i, n, fd, ret;
-    unsigned int huawei_num = 0;
+	unsigned int huawei_num = 0;
 	int fmt;
 	const char *desc = "Retrieve basic information for the given huawei device";
 	struct config {
@@ -334,18 +311,17 @@ static int huawei_list(int argc, char **argv, struct command *command,
 		.output_format = "normal",
 	};
 
-	const struct argconfig_commandline_options opts[] = {
-		{"output-format", 'o', "FMT", CFG_STRING, &cfg.output_format, required_argument, "Output Format: normal|json"},
-		{NULL}
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json"),
+		OPT_END()
 	};
 
-	argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	argconfig_parse(argc, argv, desc, opts);
 	fmt = validate_output_format(cfg.output_format);
-
 	if (fmt != JSON && fmt != NORMAL)
 		return -EINVAL;
 
-	n = scandir(dev, &devices, huawei_scan_dev_filter, alphasort);
+	n = scandir("/dev", &devices, scan_namespace_filter, alphasort);
 	if (n <= 0)
 		return n;
 
@@ -356,7 +332,7 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	}
 
 	for (i = 0; i < n; i++) {
-		snprintf(path, sizeof(path), "%s%s", dev, devices[i]->d_name);
+		snprintf(path, sizeof(path), "/dev/%s", devices[i]->d_name);
 		fd = open(path, O_RDONLY);
 		ret = huawei_get_nvme_info(fd, &list_items[huawei_num], path);
 		if (ret)

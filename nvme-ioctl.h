@@ -13,6 +13,8 @@ int nvme_get_nsid(int fd);
 /* Generic passthrough */
 int nvme_submit_passthru(int fd, unsigned long ioctl_cmd,
 			 struct nvme_passthru_cmd *cmd);
+int nvme_submit_admin_passthru(int fd, struct nvme_passthru_cmd *cmd);
+int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd);
 
 int nvme_passthru(int fd, unsigned long ioctl_cmd, __u8 opcode, __u8 flags,
 		  __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3,
@@ -20,6 +22,7 @@ int nvme_passthru(int fd, unsigned long ioctl_cmd, __u8 opcode, __u8 flags,
 		  __u32 cdw13, __u32 cdw14, __u32 cdw15,
 		  __u32 data_len, void *data, __u32 metadata_len,
 		  void *metadata, __u32 timeout_ms, __u32 *result);
+
 
 /* NVME_SUBMIT_IO */
 int nvme_io(int fd, __u8 opcode, __u64 slba, __u16 nblocks, __u16 control,
@@ -51,6 +54,9 @@ int nvme_write_zeros(int fd, __u32 nsid, __u64 slba, __u16 nlb,
 
 int nvme_write_uncorrectable(int fd, __u32 nsid, __u64 slba, __u16 nlb);
 
+int nvme_verify(int fd, __u32 nsid, __u64 slba, __u16 nblocks,
+		__u16 control, __u32 reftag, __u16 apptag, __u16 appmask);
+
 int nvme_flush(int fd, __u32 nsid);
 
 int nvme_dsm(int fd, __u32 nsid, __u32 cdw11, struct nvme_dsm_range *dsm,
@@ -67,6 +73,7 @@ int nvme_resv_release(int fd, __u32 nsid, __u8 rtype, __u8 rrela,
 		      bool iekey, __u64 crkey);
 int nvme_resv_report(int fd, __u32 nsid, __u32 numd, __u32 cdw11, void *data);
 
+/* NVME_ADMIN_CMD */
 int nvme_identify13(int fd, __u32 nsid, __u32 cdw10, __u32 cdw11, void *data);
 int nvme_identify(int fd, __u32 nsid, __u32 cdw10, void *data);
 int nvme_identify_ctrl(int fd, void *data);
@@ -75,13 +82,17 @@ int nvme_identify_ns_list(int fd, __u32 nsid, bool all, void *data);
 int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data);
 int nvme_identify_ns_descs(int fd, __u32 nsid, void *data);
 int nvme_identify_nvmset(int fd, __u16 nvmset_id, void *data);
+int nvme_identify_uuid(int fd, void *data);
 int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data);
-int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
-		   __u16 group_id, bool rae, __u32 data_len, void *data);
+int nvme_identify_ns_granularity(int fd, void *data);
 int nvme_get_log(int fd, __u32 nsid, __u8 log_id, bool rae,
 		 __u32 data_len, void *data);
-
-
+int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
+		   __u16 group_id, bool rae, __u8 uuid_ix,
+		   __u32 data_len, void *data);
+int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp,
+		 __u64 lpo, __u16 lsi, bool rae, __u32 data_len,
+		 void *data);
 int nvme_get_telemetry_log(int fd, void *lp, int generate_report,
 			   int ctrl_gen, size_t log_page_size, __u64 offset);
 int nvme_fw_log(int fd, struct nvme_firmware_log_page *fw_log);
@@ -107,8 +118,9 @@ int nvme_get_feature(int fd, __u32 nsid, __u8 fid, __u8 sel,
 int nvme_format(int fd, __u32 nsid, __u8 lbaf, __u8 ses, __u8 pi,
 		__u8 pil, __u8 ms, __u32 timeout);
 
-int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas,
-		   __u8 dps, __u8 nmic, __u32 timeout, __u32 *result);
+int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas, __u8 dps,
+		__u8 nmic, __u32 anagrpid, __u16 nvmsetid,  __u32 timeout,
+		__u32 *result);
 int nvme_ns_delete(int fd, __u32 nsid, __u32 timeout);
 
 int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls,
@@ -128,16 +140,18 @@ int nvme_subsystem_reset(int fd);
 int nvme_reset_controller(int fd);
 int nvme_ns_rescan(int fd);
 
+int nvme_get_lba_status(int fd, __u64 slba, __u32 mndw, __u8 atype, __u16 rl,
+		void *data);
 int nvme_dir_send(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,
 		  __u32 data_len, __u32 dw12, void *data, __u32 *result);
 int nvme_dir_recv(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,
 		  __u32 data_len, __u32 dw12, void *data, __u32 *result);
 int nvme_get_properties(int fd, void **pbar);
-int nvme_set_property(int fd, int offset, int value);
+int nvme_set_property(int fd, int offset, uint64_t value);
 int nvme_get_property(int fd, int offset, uint64_t *value);
 int nvme_sanitize(int fd, __u8 sanact, __u8 ause, __u8 owpass, __u8 oipbp,
 		  __u8 no_dealloc, __u32 ovrpat);
 int nvme_self_test_start(int fd, __u32 nsid, __u32 cdw10);
-int nvme_self_test_log(int fd, struct nvme_self_test_log *self_test_log);
+int nvme_self_test_log(int fd, __u32 nsid, struct nvme_self_test_log *self_test_log);
 int nvme_virtual_mgmt(int fd, __u32 cdw10, __u32 cdw11, __u32 *result);
 #endif				/* _NVME_LIB_H */

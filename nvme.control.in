@@ -4,6 +4,6 @@ Section: base
 Priority: optional
 Architecture: amd64
 Depends: @@DEPENDS@@
-Maintainer: Keith Busch <keith.busch@intel.com>
+Maintainer: Keith Busch <kbusch@kernel.org>
 Description: NVM-Express Command Line Interface
  The nvme management tool

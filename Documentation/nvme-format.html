@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 8.6.10" />
 <title>nvme-format(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -754,6 +757,7 @@ nvme-format(1) Manual Page
                     [--pi=&lt;pi&gt; | -i &lt;pi&gt;]
                     [--ms=&lt;ms&gt; | -m &lt;ms&gt;]
                     [--reset | -r ]
+                    [--force | -f ]
                     [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt; ]</pre>
 <div class="attribution">
 </div></div>
@@ -766,11 +770,13 @@ nvme-format(1) Manual Page
 and provides the results.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
-If the character device is given, the namespace identifier will default
-to 0xffffffff to send the format to all namespace, but can be overridden
-to any namespace with the <em>namespace-id</em> option. If the block device
-is given, the namespace identifier will default to the namespace id of
-the block device given, but can be overridden with the same option.</p></div>
+If the character device is given, and the controller does not support
+formatting of particular namespaces (ID_CTRL.FNA bit 0 enabled), then all
+namespaces will be formatted. If FNA is disabled, then the namespace
+identifier must be specified with the <em>namespace-id</em> option; specify a
+value of 0xffffffff to send the format to all namespaces. If the block
+device is given, the namespace identifier will default to the namespace
+ID of the block device given, but can be overridden with the same option.</p></div>
 <div class="paragraph"><p>Note, the numeric suffix on the character device, for example the <em>0</em> in
 /dev/nvme0, does NOT indicate this device handle is the parent controller
 of any namespaces with the same suffix. The namespace handle&#8217;s numeral
@@ -799,7 +805,7 @@ new block size to be visible, if the size was changed with this command.</p></di
 <p>
         Send the format command for the specified nsid. This can be
         used to override the default value for either character device
-        (0xffffffff) or the block device (result from NVME_IOCTL_ID).
+        (unspecified) or the block device (result from NVME_IOCTL_ID).
 </p>
 </dd>
 <dt class="hdlist1">
@@ -971,6 +977,17 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
+-f
+</dt>
+<dt class="hdlist1">
+--force
+</dt>
+<dd>
+<p>
+        Just send the command immediately without warning of the implications.
+</p>
+</dd>
+<dt class="hdlist1">
 -t &lt;timeout&gt;
 </dt>
 <dt class="hdlist1">
@@ -1020,7 +1037,8 @@ information:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-05-16 09:47:03 MDT
+Last updated
+ 2019-09-18 00:00:58 JST
 </div>
 </div>
 </body>

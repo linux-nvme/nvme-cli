@@ -22,6 +22,12 @@ OPTIONS
 	Set the reporting format to 'normal' or 'json'. Only one output
 	format can be used at a time.
 
+-v::
+--verbose::
+	Increase the information in the output, showing nvme subsystems,
+	controllers and namespaces separately and how they're realted to each
+	other.
+
 ENVIRONMENT
 -----------
 PCI_IDS_PATH - Full path of pci.ids file in case nvme could not find it in common locations.
