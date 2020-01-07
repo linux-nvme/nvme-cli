@@ -3,7 +3,7 @@ nvme-wdc-vs-fw-activate-history(1)
 
 NAME
 ----
-nvme-wdc-vs-fw-activate-history - Rend NVMe WDC vs-fw-acivate-history Vendor Unique Command, return result
+nvme-wdc-vs-fw-activate-history - Execute NVMe WDC vs-fw-activate-history Vendor Unique Command, return result
 
 SYNOPSIS
 --------
@@ -15,8 +15,7 @@ DESCRIPTION
 For the NVMe device given, read a Vendor Unique WDC log page that returns the firmware actiation
 history. 
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0).
+The <device> parameter is mandatory and must be the NVMe character device (ex: /dev/nvme0).
 
 This will only work on WDC devices supporting this feature.
 Results for any other device are undefined.

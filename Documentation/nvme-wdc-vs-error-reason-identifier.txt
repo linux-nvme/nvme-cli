@@ -1,0 +1,56 @@
+nvme-wdc-vs-error-reason-identifier(1)
+======================================
+
+NAME
+----
+nvme-wdc-vs-error-reason-identifier - Retrieve WDC device's telemetry log error reason identifier field
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc vs-error-reason-identifier' <device> [--log-id=<NUM>, -i <NUM>] [--file=<FILE>, -o <FILE>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, retrieve the telemetry log error reason id field for either the host generated or 
+controller initiated log.  The controller initiated telemetry log page option must be enabled to retrieve the
+error reason id for that log page id.  
+
+The <device> parameter is mandatory and must be the NVMe character device (ex: /dev/nvme0).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-i <id>::
+--log-id=<id>::
+	Specifies the telemetry log id of the error reason identifier to retrieve.  
+	Use id 7 for the host generated log page.
+	Use id 8 for the controller initiated log page. 
+	The default is 7/host generated
+
+-o <FILE>::
+--output-file=<FILE>::
+	Output file; defaults to "<device serial number>_error_reason_identifier_host_<date>_<time>.bin" for 
+	the host generated log or "<device serial number>_error_reason_identifier_ctlr_<date>_<time>.bin" for 
+	the controller initiated log. 
+
+EXAMPLES
+--------
+* Retrieves the host generated error reason identifier field and save it in file host_gen_error_reason_id.bin. 
++
+--------
+# nvme wdc vs-error-reason-identifier /dev/nvme0 -i 7 -o host_gen_error_reason_id.bin
+--------
+* Retrieves the controller initiated error reason identifier field and save it in file ctlr_init_error_reason_id.bin. 
++
+--------
+# nvme wdc vs-error-reason-identifier /dev/nvme0 -i 8 -o ctlr_init_error_reason_id.bin
+--------
+
+NVME
+----
+Part of the nvme-user suite.
