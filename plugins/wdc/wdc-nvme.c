@@ -4679,8 +4679,8 @@ static int wdc_get_drive_reason_id(int fd, char *drive_reason_id, size_t len)
 static int wdc_save_reason_id(int fd, __u8 *rsn_ident,  int size)
 {
 	int ret = 0;
+	char *reason_id_file;
 	char drive_reason_id[PATH_MAX] = {0};
-	char reason_id_file[PATH_MAX] = {0};
 	char reason_id_path[PATH_MAX] = WDC_REASON_ID_PATH_NAME;
 	struct stat st = {0};
 
@@ -4694,12 +4694,15 @@ static int wdc_save_reason_id(int fd, __u8 *rsn_ident,  int size)
 	    mkdir(reason_id_path, 0700);
 	}
 
-	snprintf(reason_id_file, PATH_MAX, "%s/%s%s", reason_id_path, drive_reason_id, ".bin");
+	if (asprintf(&reason_id_file, "%s/%s%s", reason_id_path,
+		    drive_reason_id, ".bin") < 0)
+		return -ENOMEM;
 
 	fprintf(stderr, "%s: reason id file = %s\n", __func__, reason_id_file);
 
 	/* save off the error reason identifier to a file in /usr/local/nvmecli  */
 	ret = wdc_create_log_file(reason_id_file, rsn_ident, WDC_REASON_ID_ENTRY_LEN);
+	free(reason_id_file);
 
 	return ret;
 }
@@ -4708,15 +4711,17 @@ static int wdc_clear_reason_id(int fd)
 {
 	int ret = -1;
 	int verify_file;
+	char *reason_id_file;
 	char drive_reason_id[PATH_MAX] = {0};
-	char reason_id_file[PATH_MAX] = {0};
 
 	if (wdc_get_drive_reason_id(fd, drive_reason_id, PATH_MAX) == -1) {
 		fprintf(stderr, "%s: ERROR : failed to get drive reason id\n", __func__);
 		return -1;
 	}
 
-	snprintf(reason_id_file, PATH_MAX, "%s/%s%s", WDC_REASON_ID_PATH_NAME, drive_reason_id, ".bin");
+	if (asprintf(&reason_id_file, "%s/%s%s", WDC_REASON_ID_PATH_NAME,
+		     drive_reason_id, ".bin") < 0)
+		return -ENOMEM;
 
 	/* verify the drive reason id file name and path is valid */
 	verify_file = open(reason_id_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
@@ -4728,6 +4733,7 @@ static int wdc_clear_reason_id(int fd)
 
 	/* remove the reason id file */
 	ret = remove(reason_id_file);
+	free(reason_id_file);
 
 	return ret;
 }
