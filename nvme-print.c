@@ -585,10 +585,11 @@ static void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 	json_free_object(root);
 }
 
-static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid)
+static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
+	enum nvme_print_flags flags)
 {
+	int c, human = flags & VERBOSE;
 	struct json_object *root;
-	int c;
 	char key[21];
 
 	unsigned int temperature = ((smart->temperature[1] << 8) |
@@ -607,8 +608,22 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid)
 
 	root = json_create_object();
 
-	json_object_add_value_int(root, "critical_warning",
-		smart->critical_warning);
+	if (human) {
+		struct json_object *crt = json_create_object();
+
+		json_object_add_value_int(crt, "value", smart->critical_warning);
+		json_object_add_value_int(crt, "available_spare", smart->critical_warning & 0x01);
+		json_object_add_value_int(crt, "temp_threshold", (smart->critical_warning & 0x02) >> 1);
+		json_object_add_value_int(crt, "reliability_degraded", (smart->critical_warning & 0x04) >> 2);
+		json_object_add_value_int(crt, "ro", (smart->critical_warning & 0x08) >> 3);
+		json_object_add_value_int(crt, "vmbu_failed", (smart->critical_warning & 0x10) >> 4);
+		json_object_add_value_int(crt, "pmr_ro", (smart->critical_warning & 0x20) >> 5);
+
+		json_object_add_value_object(root, "critical_warning", crt);
+	} else
+		json_object_add_value_int(root, "critical_warning",
+			smart->critical_warning);
+
 	json_object_add_value_int(root, "temperature", temperature);
 	json_object_add_value_int(root, "avail_spare", smart->avail_spare);
 	json_object_add_value_int(root, "spare_thresh", smart->spare_thresh);
@@ -3400,16 +3415,26 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	/* convert temperature from Kelvin to Celsius */
 	int temperature = ((smart->temperature[1] << 8) |
 			    smart->temperature[0]) - 273;
-	int i;
+	int i, human = flags & VERBOSE;
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)smart, sizeof(*smart));
 	else if (flags & JSON)
-		return json_smart_log(smart, nsid);
+		return json_smart_log(smart, nsid, flags);
 
 	printf("Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
 	printf("critical_warning			: %#x\n",
 		smart->critical_warning);
+
+	if (human) {
+		printf("      Available Spare[0]             : %d\n", smart->critical_warning & 0x01);
+		printf("      Temp. Threshold[1]             : %d\n", (smart->critical_warning & 0x02) >> 1);
+		printf("      NVM subsystem Reliability[2]   : %d\n", (smart->critical_warning & 0x04) >> 2);
+		printf("      Read-only[3]                   : %d\n", (smart->critical_warning & 0x08) >> 3);
+		printf("      Volatile mem. backup failed[4] : %d\n", (smart->critical_warning & 0x10) >> 4);
+		printf("      Persistent Mem. RO[5]          : %d\n", (smart->critical_warning & 0x20) >> 5);
+	}
+
 	printf("temperature				: %d C\n",
 		temperature);
 	printf("available_spare				: %u%%\n",

@@ -218,6 +218,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 			"(default) or binary.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "output in binary format";
+	const char *human_readable = "show info in readable format";
 	enum nvme_print_flags flags;
 	int err, fd;
 
@@ -225,6 +226,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 		__u32 namespace_id;
 		int   raw_binary;
 		char *output_format;
+		int   human_readable;
 	};
 
 	struct config cfg = {
@@ -234,9 +236,10 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
+		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace),
+		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
 		OPT_END()
 	};
 
@@ -249,6 +252,8 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 		goto close_fd;
 	if (cfg.raw_binary)
 		flags = BINARY;
+	if (cfg.human_readable)
+		flags |= VERBOSE;
 
 	err = nvme_smart_log(fd, cfg.namespace_id, &smart_log);
 	if (!err)
