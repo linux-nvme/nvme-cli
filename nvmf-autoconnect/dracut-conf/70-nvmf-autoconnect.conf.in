@@ -1,0 +1,1 @@
+install_items+="@@UDEVDIR@@/rules.d/70-nvmf-autoconnect.rules"
