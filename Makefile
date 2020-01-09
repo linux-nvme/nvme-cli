@@ -101,7 +101,7 @@ test:
 all: doc
 
 clean:
-	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
+	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb 70-nvmf-autoconnect.conf
 	$(MAKE) -C Documentation clean
 	$(RM) tests/*.pyc
 	$(RM) verify-no-dep
@@ -128,9 +128,9 @@ install-udev:
 	$(INSTALL) -d $(DESTDIR)$(UDEVDIR)/rules.d
 	$(INSTALL) -m 644 ./nvmf-autoconnect/udev-rules/* $(DESTDIR)$(UDEVDIR)/rules.d
 
-install-dracut:
+install-dracut: 70-nvmf-autoconnect.conf
 	$(INSTALL) -d $(DESTDIR)$(DRACUTDIR)/dracut.conf.d
-	$(INSTALL) -m 644 ./nvmf-autoconnect/dracut-conf/* $(DESTDIR)$(DRACUTDIR)/dracut.conf.d
+	$(INSTALL) -m 644 $< $(DESTDIR)$(DRACUTDIR)/dracut.conf.d
 
 install-zsh-completion:
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/share/zsh/site-functions
@@ -157,6 +157,10 @@ install: install-spec install-hostparams
 
 nvme.spec: nvme.spec.in NVME-VERSION-FILE
 	sed -e 's/@@VERSION@@/$(NVME_VERSION)/g' < $< > $@+
+	mv $@+ $@
+
+70-nvmf-autoconnect.conf: nvmf-autoconnect/dracut-conf/70-nvmf-autoconnect.conf.in
+	sed -e 's#@@UDEVDIR@@#$(UDEVDIR)#g' < $< > $@+
 	mv $@+ $@
 
 dist: nvme.spec
