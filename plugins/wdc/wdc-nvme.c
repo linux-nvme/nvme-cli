@@ -94,6 +94,7 @@
 #define WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY  0x0000000000004000
 #define WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG 0x0000000000008000
 #define WDC_DRIVE_CAP_REASON_ID             0x0000000000010000
+#define WDC_DRIVE_CAP_LOG_PAGE_DIR          0x0000000000020000
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
@@ -245,6 +246,25 @@
 /* D0 Smart Log Page */
 #define WDC_NVME_GET_VU_SMART_LOG_OPCODE		0xD0
 #define WDC_NVME_VU_SMART_LOG_LEN			0x200
+
+/* Log Page Directory defines  */
+#define NVME_LOG_PERSISTENT_EVENT               0x0D
+#define WDC_LOG_ID_C0                           0xC0
+#define WDC_LOG_ID_C2                           WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE
+#define WDC_LOG_ID_C4                           0xC4
+#define WDC_LOG_ID_C5                           0xC5
+#define WDC_LOG_ID_C6                           0xC6
+#define WDC_LOG_ID_CA                           WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE
+#define WDC_LOG_ID_CB                           WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID
+#define WDC_LOG_ID_D0                           WDC_NVME_GET_VU_SMART_LOG_OPCODE
+#define WDC_LOG_ID_D6                           0xD6
+#define WDC_LOG_ID_D7                           0xD7
+#define WDC_LOG_ID_D8                           0xD8
+#define WDC_LOG_ID_DE                           0xDE
+#define WDC_LOG_ID_F0                           0xF0
+#define WDC_LOG_ID_F1                           0xF1
+#define WDC_LOG_ID_F2                           0xF2
+#define WDC_LOG_ID_FA                           0xFA
 
 /* Clear PCIe Correctable Errors */
 #define WDC_NVME_CLEAR_PCIE_CORR_OPCODE			WDC_NVME_CAP_DIAG_CMD_OPCODE
@@ -465,6 +485,8 @@ static int wdc_do_get_reason_id(int fd, char *file, int log_id);
 static int wdc_save_reason_id(int fd, __u8 *rsn_ident,  int size);
 static int wdc_clear_reason_id(int fd);
 static int wdc_dump_telemetry_hdr(int fd, int log_id, struct nvme_telemetry_log_page_hdr *log_hdr);
+static int wdc_log_page_directory(int argc, char **argv, struct command *command,
+		struct plugin *plugin);
 
 /* Drive log data size */
 struct wdc_log_size {
@@ -847,7 +869,8 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
 					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
 					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY |
-					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG | WDC_DRIVE_CAP_REASON_ID);
+					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG | WDC_DRIVE_CAP_REASON_ID |
+					WDC_DRIVE_CAP_LOG_PAGE_DIR);
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -4636,6 +4659,127 @@ static int wdc_reason_identifier(int argc, char **argv,
 		return ret;
 }
 
+static const char *nvme_log_id_to_string(__u8 log_id)
+{
+	switch (log_id) {
+		case NVME_LOG_ERROR:	        return "Error Information Log ID";
+		case NVME_LOG_SMART:	        return "Smart/Health Information Log ID";
+		case NVME_LOG_FW_SLOT:	        return "Firmware Slot Information Log ID";
+		case NVME_LOG_CHANGED_NS:       return "Namespace Changed Log ID";
+		case NVME_LOG_CMD_EFFECTS:      return "Commamds Supported and Effects Log ID";
+		case NVME_LOG_DEVICE_SELF_TEST:	return "Device Self Test Log ID";
+		case NVME_LOG_TELEMETRY_HOST:	return "Telemetry Host Initiated Log ID";
+		case NVME_LOG_TELEMETRY_CTRL:	return "Telemetry Controller Generated Log ID";
+		case NVME_LOG_ENDURANCE_GROUP:	return "Endurance Group Log ID";
+		case NVME_LOG_ANA:              return "ANA Log ID";
+		case NVME_LOG_PERSISTENT_EVENT: return "Persistent Event Log ID";
+		case NVME_LOG_DISC:             return "Discovery Log ID";
+		case NVME_LOG_RESERVATION:      return "Reservation Notification Log ID";
+		case NVME_LOG_SANITIZE:	        return "Sanitize Status Log ID";
+
+		case WDC_LOG_ID_C0:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_C2:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_C4:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_C5:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_C6:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_CA:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_CB:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_D0:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_D6:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_D7:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_D8:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_DE:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_F0:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_F1:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_F2:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_FA:             return "WDC Vendor Unique Log ID";
+
+		default:                        return "Unknown Log ID";
+	}
+}
+
+static int wdc_log_page_directory(int argc, char **argv, struct command *command,
+		struct plugin *plugin)
+{
+	const char *desc = "Retrieve Log Page Directory.";
+	int fd;
+	int ret = 0;
+	__u64 capabilities = 0;
+	struct wdc_c2_cbs_data *cbs_data = NULL;
+    int i;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json|binary"),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	ret = validate_output_format(cfg.output_format);
+	if (ret < 0) {
+		fprintf(stderr, "%s: ERROR : WDC : invalid output format\n", __func__);
+		return ret;
+	}
+
+	capabilities = wdc_get_drive_capabilities(fd);
+
+	if ((capabilities & WDC_DRIVE_CAP_LOG_PAGE_DIR) == 0) {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+	} else {
+		/* verify the 0xC2 Device Manageability log page is supported */
+		if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE) == false) {
+			fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page not supported\n", __func__);
+			ret = -1;
+			goto out;
+		}
+
+		if (get_dev_mgment_cbs_data(fd, WDC_C2_LOG_PAGES_SUPPORTED_ID, (void *)&cbs_data)) {
+			if (cbs_data != NULL) {
+				printf("Log Page Directory\n");
+				/* print the supported pages */
+				if (!strcmp(cfg.output_format, "normal")) {
+					for (i = 0; i < le32_to_cpu(cbs_data->length); i++) {
+						printf("0x%x  - %s\n", cbs_data->data[i],
+								nvme_log_id_to_string(cbs_data->data[i]));
+					}
+				} else if (!strcmp(cfg.output_format, "binary")) {
+					d((__u8 *)cbs_data->data, le32_to_cpu(cbs_data->length), 16, 1);
+				} else if (!strcmp(cfg.output_format, "json")) {
+					struct json_object *root;
+					root = json_create_object();
+
+					for (i = 0; i < le32_to_cpu(cbs_data->length); i++) {
+						json_object_add_value_int(root, nvme_log_id_to_string(cbs_data->data[i]),
+								cbs_data->data[i]);
+					}
+
+					json_print_object(root, NULL);
+					printf("\n");
+					json_free_object(root);
+				} else
+					fprintf(stderr, "%s: ERROR : WDC : Invalid format, format = %s\n", __func__, cfg.output_format);
+			} else
+				fprintf(stderr, "%s: ERROR : WDC : NULL_data ptr\n", __func__);
+		} else
+			fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_LOG_PAGES_SUPPORTED_ID);
+
+
+	}
+
+ out:
+	return ret;
+}
 
 static int wdc_get_drive_reason_id(int fd, char *drive_reason_id, size_t len)
 {
