@@ -27,7 +27,7 @@ PLUGIN(NAME("wdc", "Western Digital vendor specific extensions"),
 		ENTRY("clear-fw-activate-history", "WDC Clear FW Activate History", wdc_clear_fw_activate_history)
 		ENTRY("vs-telemetry-controller-option", "WDC Enable/Disable Controller Initiated Telemetry Log", wdc_vs_telemetry_controller_option)
 		ENTRY("vs-error-reason-identifier", "WDC Telemetry Reason Identifier", wdc_reason_identifier)
-
+		ENTRY("log-page-directory", "WDC Get Log Page Directory", wdc_log_page_directory)
 	)
 );
 
