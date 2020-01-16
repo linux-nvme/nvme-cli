@@ -269,7 +269,7 @@ static int ctrl_instance(char *device)
 	if (ret <= 0)
 		return -EINVAL;
 	if (snprintf(d, sizeof(d), "nvme%d", instance) <= 0 ||
-	    strcmp(device, d))
+	    strncmp(device, d, strlen(d)))
 		return -EINVAL;
 	return instance;
 }
