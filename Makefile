@@ -13,6 +13,7 @@ SBINDIR = $(PREFIX)/sbin
 LIBDIR ?= $(PREFIX)/lib
 SYSTEMDDIR ?= $(LIBDIR)/systemd
 UDEVDIR ?= $(SYSCONFDIR)/udev
+UDEVRULESDIR ?= $(UDEVDIR)/rules.d
 DRACUTDIR ?= $(LIBDIR)/dracut
 LIB_DEPENDS =
 
@@ -125,8 +126,8 @@ install-systemd:
 	$(INSTALL) -m 644 ./nvmf-autoconnect/systemd/* $(DESTDIR)$(SYSTEMDDIR)/system
 
 install-udev:
-	$(INSTALL) -d $(DESTDIR)$(UDEVDIR)/rules.d
-	$(INSTALL) -m 644 ./nvmf-autoconnect/udev-rules/* $(DESTDIR)$(UDEVDIR)/rules.d
+	$(INSTALL) -d $(DESTDIR)$(UDEVRULESDIR)
+	$(INSTALL) -m 644 ./nvmf-autoconnect/udev-rules/* $(DESTDIR)$(UDEVRULESDIR)
 
 install-dracut: 70-nvmf-autoconnect.conf
 	$(INSTALL) -d $(DESTDIR)$(DRACUTDIR)/dracut.conf.d
@@ -160,7 +161,7 @@ nvme.spec: nvme.spec.in NVME-VERSION-FILE
 	mv $@+ $@
 
 70-nvmf-autoconnect.conf: nvmf-autoconnect/dracut-conf/70-nvmf-autoconnect.conf.in
-	sed -e 's#@@UDEVDIR@@#$(UDEVDIR)#g' < $< > $@+
+	sed -e 's#@@UDEVRULESDIR@@#$(UDEVRULESDIR)#g' < $< > $@+
 	mv $@+ $@
 
 dist: nvme.spec
