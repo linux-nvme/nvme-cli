@@ -83,7 +83,8 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                                " --cdw11=" + str(vector)
                 proc = subprocess.Popen(get_feat_cmd,
                                         shell=True,
-                                        stdout=subprocess.PIPE)
+                                        stdout=subprocess.PIPE,
+                                        encoding='utf-8')
                 feature_output = proc.communicate()[0]
                 print(feature_output)
                 assert_equal(proc.wait(), 0)

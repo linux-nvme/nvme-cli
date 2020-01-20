@@ -28,7 +28,6 @@ import mmap
 import stat
 import time
 import shutil
-import string
 import subprocess
 from nose import tools
 from nose.tools import assert_equal
@@ -174,10 +173,11 @@ class TestNVMe(object):
         ns_list_cmd = "nvme list-ns " + self.ctrl
         proc = subprocess.Popen(ns_list_cmd,
                                 shell=True,
-                                stdout=subprocess.PIPE)
+                                stdout=subprocess.PIPE,
+                                encoding='utf-8')
         assert_equal(proc.wait(), 0, "ERROR : nvme list namespace failed")
         for line in proc.stdout:
-            ns_list.append(string.replace(line.split(":")[1], '\n', ''))
+            ns_list.append(line.replace('\n', '', 1))
 
         return ns_list
 
@@ -373,23 +373,24 @@ class TestNVMe(object):
         print(smart_log_cmd)
         proc = subprocess.Popen(smart_log_cmd,
                                 shell=True,
-                                stdout=subprocess.PIPE)
+                                stdout=subprocess.PIPE,
+                                encoding='utf-8')
         err = proc.wait()
         assert_equal(err, 0, "ERROR : nvme smart log failed")
 
         for line in proc.stdout:
             if "data_units_read" in line:
                 data_units_read = \
-                    string.replace(line.split(":")[1].strip(), ",", "")
+                    line.replace(",", "", 1)
             if "data_units_written" in line:
                 data_units_written = \
-                    string.replace(line.split(":")[1].strip(), ",", "")
+                    line.replace(",", "", 1)
             if "host_read_commands" in line:
                 host_read_commands = \
-                    string.replace(line.split(":")[1].strip(), ",", "")
+                    line.replace(",", "", 1)
             if "host_write_commands" in line:
                 host_write_commands = \
-                    string.replace(line.split(":")[1].strip(), ",", "")
+                    line.replace(",", "", 1)
 
         print("data_units_read " + data_units_read)
         print("data_units_written " + data_units_written)
@@ -427,7 +428,8 @@ class TestNVMe(object):
         error_log_cmd = "nvme error-log " + self.ctrl
         proc = subprocess.Popen(error_log_cmd,
                                 shell=True,
-                                stdout=subprocess.PIPE)
+                                stdout=subprocess.PIPE,
+                                encoding='utf-8')
         err = proc.wait()
         assert_equal(err, 0, "ERROR : nvme error log failed")
         line = proc.stdout.readline()
