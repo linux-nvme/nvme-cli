@@ -3751,9 +3751,9 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 					4, buf, &result);
 			if (ret == 0) {
 				if (result)
-					fprintf(stderr, "Controller Option Telemetry Log Page State: Enabled\n");
-				else
 					fprintf(stderr, "Controller Option Telemetry Log Page State: Disabled\n");
+				else
+					fprintf(stderr, "Controller Option Telemetry Log Page State: Enabled\n");
 			} else {
 				fprintf(stderr, "ERROR : WDC: NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 			}
@@ -4870,13 +4870,15 @@ static int wdc_clear_reason_id(int fd)
 	/* verify the drive reason id file name and path is valid */
 	verify_file = open(reason_id_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (verify_file < 0) {
-		fprintf(stderr, "%s: ERROR : WDC: reason id file not valid : %s\n", __func__, strerror(errno));
-		return -1;
+		ret = -1;
+		goto free;
 	}
 	close(verify_file);
 
 	/* remove the reason id file */
 	ret = remove(reason_id_file);
+
+ free:
 	free(reason_id_file);
 
 	return ret;
