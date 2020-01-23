@@ -89,6 +89,56 @@ err_free_path:
 	return NULL;
 }
 
+static char *path_trim_last(char *path, char needle)
+{
+	int i;
+	i = strlen(path);
+	if (i>0 && path[i-1] == needle)		// remove trailing slash
+		path[--i] = 0;
+	for (; i>0; i--)
+		if (path[i] == needle) {
+			path[i] = 0;
+			return path+i+1;
+	}
+	return NULL;
+}
+
+static void legacy_get_pci_bdf(char *node, char *bdf)
+{
+	int ret;
+	char path[264], nodetmp[264];
+	struct stat st;
+	char *p, *__path = path;
+
+	bdf[0] = 0;
+	strcpy(nodetmp, node);
+	p = path_trim_last(nodetmp, '/');
+	sprintf(path, "/sys/block/%s/device", p);
+	ret = readlink(path, nodetmp, sizeof(nodetmp));
+	if (ret <= 0)
+		return;
+	nodetmp[ret] = 0;
+	/* The link value is either "device -> ../../../0000:86:00.0" or "device -> ../../nvme0" */
+	(void) path_trim_last(path, '/');
+	sprintf(path+strlen(path), "/%s/device", nodetmp);
+	ret = stat(path, &st);
+	if (ret < 0)
+		return;
+	if ((st.st_mode & S_IFLNK) == 0) {
+		/* follow the second link to get the PCI address */
+		ret = readlink(path, __path, sizeof(path));
+		if (ret <= 0)
+			return;
+		path[ret] = 0;
+	}
+	else
+		(void) path_trim_last(path, '/');
+
+	p = path_trim_last(path, '/');
+	if (p && strlen(p) == 12)
+		strcpy(bdf, p);
+}
+
 static int scan_namespace(struct nvme_namespace *n)
 {
 	int ret, fd;
@@ -302,6 +352,15 @@ static int verify_legacy_ns(struct nvme_namespace *n)
 	ret = asprintf(&path, "%s%s", dev, n->name);
 	if (ret < 0)
 		return ret;
+
+	if (!n->ctrl->transport && !n->ctrl->address) {
+		char tmp_address[64] = "";
+		legacy_get_pci_bdf(path, tmp_address);
+		if (tmp_address[0]) {
+			asprintf(&n->ctrl->transport, "pcie");
+			asprintf(&n->ctrl->address, tmp_address);
+		}
+	}
 
 	fd = open(path, O_RDONLY);
 	free (path);
