@@ -1089,11 +1089,11 @@ static int do_discover(char *argstr, bool connect)
 		struct connect_args cargs;
 
 		memset(&cargs, 0, sizeof(cargs));
-		cargs.subsysnqn = parse_conn_arg(argstr, '.', conarg_nqn);
-		cargs.transport = parse_conn_arg(argstr, '.', conarg_transport);
-		cargs.traddr = parse_conn_arg(argstr, '.', conarg_traddr);
-		cargs.trsvcid = parse_conn_arg(argstr, '.', conarg_trsvcid);
-		cargs.host_traddr = parse_conn_arg(argstr, '.', conarg_host_traddr);
+		cargs.subsysnqn = parse_conn_arg(argstr, ',', conarg_nqn);
+		cargs.transport = parse_conn_arg(argstr, ',', conarg_transport);
+		cargs.traddr = parse_conn_arg(argstr, ',', conarg_traddr);
+		cargs.trsvcid = parse_conn_arg(argstr, ',', conarg_trsvcid);
+		cargs.host_traddr = parse_conn_arg(argstr, ',', conarg_host_traddr);
 
 		/*
 		 * if the cfg.device passed in matches the connect args
