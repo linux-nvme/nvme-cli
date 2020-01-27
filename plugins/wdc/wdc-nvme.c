@@ -654,7 +654,9 @@ struct __attribute__((__packed__)) wdc_nand_stats {
 	__le32		nand_erase_failure;
 	__le32		bad_block_count;
 	__le64		nand_rec_trigger_event;
-	__u8		rsvd[460];
+	__le64		e2e_error_counter;
+	__le64		successful_ns_resize_event;
+	__u8		rsvd[444];
 };
 
 struct wdc_fw_act_history_log_hdr {
@@ -4954,6 +4956,10 @@ static void wdc_print_nand_stats_normal(struct wdc_nand_stats *data)
 			(uint32_t)le32_to_cpu(data->bad_block_count));
 	printf("  NAND XOR/RAID Recovery Trigger Events		 %"PRIu64"\n",
 			le64_to_cpu(data->nand_rec_trigger_event));
+	printf("  E2E Error Counter                    		 %"PRIu64"\n",
+			le64_to_cpu(data->e2e_error_counter));
+	printf("  Number Successful NS Resizing Events		 %"PRIu64"\n",
+			le64_to_cpu(data->successful_ns_resize_event));
 }
 
 static void wdc_print_nand_stats_json(struct wdc_nand_stats *data)
@@ -4973,6 +4979,10 @@ static void wdc_print_nand_stats_json(struct wdc_nand_stats *data)
 			le32_to_cpu(data->bad_block_count));
 	json_object_add_value_uint(root, "NAND XOR/RAID Recovery Trigger Events",
 			le64_to_cpu(data->nand_rec_trigger_event));
+	json_object_add_value_uint(root, "E2E Error Counter",
+			le64_to_cpu(data->e2e_error_counter));
+	json_object_add_value_uint(root, "Number Successful NS Resizing Events",
+			le64_to_cpu(data->successful_ns_resize_event));
 
 	json_print_object(root, NULL);
 	printf("\n");
