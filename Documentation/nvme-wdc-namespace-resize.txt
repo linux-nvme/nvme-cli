@@ -1,0 +1,56 @@
+nvme-wdc-namespace-resize(1)
+============================
+
+NAME
+----
+nvme-wdc-namespace-resize - Resizes the device's namespace.
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc namespace-resize' <device> [--nsid=<NAMSPACE ID>, -n <NAMSPACE ID>] [--op_option=<OP OPTION>, -o <OP OPTION>] 
+
+DESCRIPTION
+-----------
+
+For the NVMe device given, sends the WDC Vendor Specific Command that modifies the namespace size reported  
+by the device.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+OPTIONS
+-------
+-n <NAMSPACE ID>::
+--namespace-id=<NAMSPACE_ID>::
+	Namespace ID; ID of the namespace to resize
+
+-o <OP OPTION>::
+--op-option=<OP OPTION>::
+    Overprovisioning Option; defaults to 0xF
+    
+    Valid Values:
+    0x1 - 7% of Original TNVMCAP reported value
+    0x2 - 28% of Original TNVMCAP reported value
+    0x3 - 50% of Original TNVMCAP reported value
+    0xF - 0% of Original TNVMCAP reported value (original config)
+    All other values - reserved
+
+EXAMPLES
+--------
+* Resizes namespace 1 to 50% of the orginal TNVMCAP reported value:
++
+------------
+# nvme wdc namespace-resize /dev/nvme0 -n 1 -o 3
+------------
+* Resizes namespace 2 to 7% of the orginal TNVMCAP reported value:
++
+------------
+# nvme wdc namespace-resize /dev/nvme0 --namespace-id=2 --op-option=1
+------------
+
+NVME
+----
+Part of the nvme-user suite.
