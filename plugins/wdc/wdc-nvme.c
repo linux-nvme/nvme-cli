@@ -95,6 +95,7 @@
 #define WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG 0x0000000000008000
 #define WDC_DRIVE_CAP_REASON_ID             0x0000000000010000
 #define WDC_DRIVE_CAP_LOG_PAGE_DIR          0x0000000000020000
+#define WDC_DRIVE_CAP_NS_RESIZE             0x0000000000040000
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
@@ -121,6 +122,9 @@
 #define WDC_NVME_DRIVE_RESIZE_CMD			0x03
 #define WDC_NVME_DRIVE_RESIZE_SUBCMD			0x01
 
+/* Namespace Resize  */
+#define WDC_NVME_NAMESPACE_RESIZE_OPCODE    0xFB
+
 /* Capture Diagnostics */
 #define WDC_NVME_CAP_DIAG_HEADER_TOC_SIZE		WDC_NVME_LOG_SIZE_DATA_LEN
 #define WDC_NVME_CAP_DIAG_OPCODE			0xE6
@@ -137,6 +141,7 @@
 #define WDC_NVME_CAP_DUI_DISABLE_IO         0x01
 #define WDC_NVME_DUI_MAX_SECTION			0x3A
 #define WDC_NVME_DUI_MAX_SECTION_V2			0x26
+#define WDC_NVME_DUI_MAX_SECTION_V3			0x23
 #define WDC_NVME_DUI_MAX_DATA_AREA			0x05
 
 /* Telemtery types for vs-internal-log command  */
@@ -524,10 +529,22 @@ struct wdc_dui_log_hdr {
 
 struct __attribute__((__packed__)) wdc_dui_log_hdr_v2 {
 	__u8    telemetry_hdr[512];
-	__le16	hdr_version;
+	__u8	hdr_version;
+	__u8    product_id;
 	__le16	section_count;
 	__le64	log_size;
 	struct	wdc_dui_log_section_v2 log_section[WDC_NVME_DUI_MAX_SECTION_V2];
+	__u8    log_data[40];
+};
+
+struct __attribute__((__packed__)) wdc_dui_log_hdr_v3 {
+	__u8    telemetry_hdr[512];
+	__u8	hdr_version;
+	__u8    product_id;
+	__le16	section_count;
+	__le64	log_size;
+	struct	wdc_dui_log_section_v2 log_section[WDC_NVME_DUI_MAX_SECTION_V3];
+	__u8    securityNonce[36];
 	__u8    log_data[40];
 };
 
@@ -902,8 +919,10 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		/* FALLTHRU */
 		case WDC_NVME_SN520_DEV_ID_2:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA;
+			break;
 		case WDC_NVME_SN720_DEV_ID:
-		/* FALLTHRU */
+			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_NAND_STATS | WDC_DRIVE_CAP_NS_RESIZE;
+			break;
 		case WDC_NVME_SN730A_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_NAND_STATS;
 			break;
@@ -1544,9 +1563,9 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 	int ret = 0;
 	__u32 dui_log_hdr_size = WDC_NVME_CAP_DUI_HEADER_SIZE;
 	struct wdc_dui_log_hdr *log_hdr;
-	struct wdc_dui_log_hdr_v2 *log_hdr_v2;
+	struct wdc_dui_log_hdr_v3 *log_hdr_v3;
 	__u32 cap_dui_length;
-	__u64 cap_dui_length_v2;
+	__u64 cap_dui_length_v3;
 	__u8 *dump_data = NULL;
 	__u8 *buffer_addr;
 	__s64 total_size = 0;
@@ -1572,30 +1591,36 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 	}
 
 	/* Check the Log Header version  */
-	if (log_hdr->hdr_version == 2) {								/* Process Version 2 of the header */
+	if (((log_hdr->hdr_version & 0xFF) == 0x02) ||
+		((log_hdr->hdr_version & 0xFF) == 0x03)) {					/* Process Version 2 or 3 header */
 		__s64 log_size = 0;
 		__u64 curr_data_offset = 0;
 		__u64 xfer_size_long = (__u64)xfer_size;
 
-		log_hdr_v2 = (struct wdc_dui_log_hdr_v2 *)log_hdr;
+		log_hdr_v3 = (struct wdc_dui_log_hdr_v3 *)log_hdr;
 
-		cap_dui_length_v2 = le64_to_cpu(log_hdr_v2->log_size);
+		cap_dui_length_v3 = le64_to_cpu(log_hdr_v3->log_size);
 
-		if (verbose)
-			fprintf(stderr, "INFO : WDC : Capture V2 Device Unit Info log, data area = %d\n", data_area);
+		if (verbose) {
+			fprintf(stderr, "INFO : WDC : Capture V2 or V3 Device Unit Info log, data area = %d\n", data_area);
 
-		if (cap_dui_length_v2 == 0) {
-			fprintf(stderr, "INFO : WDC : Capture V2 Device Unit Info log is empty\n");
+			fprintf(stderr, "INFO : WDC : DUI Header Version = 0x%x\n", log_hdr_v3->hdr_version);
+			if (log_hdr_v3->hdr_version >= 0x03)
+				fprintf(stderr, "INFO : WDC : DUI Product ID = %c\n", log_hdr_v3->product_id);
+		}
+
+		if (cap_dui_length_v3 == 0) {
+			fprintf(stderr, "INFO : WDC : Capture V2 or V3 Device Unit Info log is empty\n");
 		} else {
 			/* parse log header for all sections up to specified data area inclusively */
 			if (data_area != WDC_NVME_DUI_MAX_DATA_AREA) {
-				for(j = 0; j < WDC_NVME_DUI_MAX_SECTION_V2; j++) {
-					if (log_hdr_v2->log_section[j].data_area_id <= data_area &&
-							log_hdr_v2->log_section[j].data_area_id != 0) {
-						log_size += log_hdr_v2->log_section[j].section_size;
+				for(j = 0; j < WDC_NVME_DUI_MAX_SECTION_V3; j++) {
+					if (log_hdr_v3->log_section[j].data_area_id <= data_area &&
+							log_hdr_v3->log_section[j].data_area_id != 0) {
+						log_size += log_hdr_v3->log_section[j].section_size;
 						if (verbose)
 							fprintf(stderr, "%s: Data area ID %d : section size 0x%x, total size = 0x%lx\n",
-								__func__, log_hdr_v2->log_section[j].data_area_id, (unsigned int)log_hdr_v2->log_section[j].section_size, (long unsigned int)log_size);
+								__func__, log_hdr_v3->log_section[j].data_area_id, (unsigned int)log_hdr_v3->log_section[j].section_size, (long unsigned int)log_size);
 					}
 					else {
 						if (verbose)
@@ -1604,7 +1629,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 					}
 				}
 			} else
-				log_size = cap_dui_length_v2;
+				log_size = cap_dui_length_v3;
 
 			total_size = log_size;
 
@@ -1616,7 +1641,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 
 			dump_data = (__u8 *) malloc(sizeof (__u8) * xfer_size_long);
 			if (dump_data == NULL) {
-				fprintf(stderr, "%s: ERROR : dump data V2 malloc failed : status %s, size = 0x%lx\n",
+				fprintf(stderr, "%s: ERROR : dump data v3 malloc failed : status %s, size = 0x%lx\n",
 						__func__, strerror(errno), (long unsigned int)xfer_size_long);
 				ret = -1;
 				goto out;
@@ -1683,8 +1708,10 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 
 		cap_dui_length = le32_to_cpu(log_hdr->log_size);
 
-		if (verbose)
+		if (verbose) {
 			fprintf(stderr, "INFO : WDC : Capture V1 Device Unit Info log, data area = %d\n", data_area);
+			fprintf(stderr, "INFO : WDC : DUI Header Version = 0x%x\n", log_hdr->hdr_version);
+		}
 
 		if (cap_dui_length == 0) {
 			fprintf(stderr, "INFO : WDC : Capture V1 Device Unit Info log is empty\n");
@@ -2094,7 +2121,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 	struct config cfg = {
 		.file = NULL,
 		.xfer_size = 0x10000,
-		.data_area = 2,
+		.data_area = 3,
 		.file_size = 0,
 		.offset = 0,
 		.type = NULL,
