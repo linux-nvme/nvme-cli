@@ -484,6 +484,9 @@ static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
 static int wdc_drive_resize(int argc, char **argv,
 		struct command *command, struct plugin *plugin);
 static int wdc_do_drive_resize(int fd, uint64_t new_size);
+static int wdc_namespace_resize(int argc, char **argv,
+		struct command *command, struct plugin *plugin);
+static int wdc_do_namespace_resize(int fd, __u32 nsid, __u32 op_option);
 static int wdc_reason_identifier(int argc, char **argv,
 		struct command *command, struct plugin *plugin);
 static int wdc_do_get_reason_id(int fd, char *file, int log_id);
@@ -4557,6 +4560,20 @@ static int wdc_do_drive_resize(int fd, uint64_t new_size)
 	return ret;
 }
 
+static int wdc_do_namespace_resize(int fd, __u32 nsid, __u32 op_option)
+{
+	int ret;
+	struct nvme_admin_cmd admin_cmd;
+
+	memset(&admin_cmd, 0, sizeof (struct nvme_admin_cmd));
+	admin_cmd.opcode = WDC_NVME_NAMESPACE_RESIZE_OPCODE;
+	admin_cmd.nsid = nsid;
+	admin_cmd.cdw10 = op_option;
+
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
+	return ret;
+}
+
 static int wdc_drive_resize(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
@@ -4593,6 +4610,60 @@ static int wdc_drive_resize(int argc, char **argv,
 
 	if (!ret)
 		printf("New size: %" PRIu64 " GB\n", cfg.size);
+
+	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	return ret;
+}
+
+static int wdc_namespace_resize(int argc, char **argv,
+		struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Send a Namespace Resize command.";
+	const char *namespace_id = "The namespace id to resize.";
+	const char *op_option = "The over provisioning option to set for namespace.";
+	uint64_t capabilities = 0;
+	int fd, ret;
+
+	struct config {
+		__u32 namespace_id;
+		__u32 op_option;
+	};
+
+	struct config cfg = {
+		.namespace_id = 0x1,
+		.op_option = 0xF,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_UINT("op-option", 'o', &cfg.op_option, op_option),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	if ((cfg.op_option != 0x1) &&
+		(cfg.op_option != 0x2) &&
+		(cfg.op_option != 0x3) &&
+		(cfg.op_option != 0xF))
+	{
+		fprintf(stderr, "ERROR : WDC: unsupported OP option parameter\n");
+		return -1;
+	}
+
+	wdc_check_device(fd);
+	capabilities = wdc_get_drive_capabilities(fd);
+	if ((capabilities & WDC_DRIVE_CAP_NS_RESIZE) == WDC_DRIVE_CAP_NS_RESIZE) {
+		ret = wdc_do_namespace_resize(fd, cfg.namespace_id, cfg.op_option);
+
+		if (ret != 0)
+			printf("ERROR : WDC: Namespace Resize of namespace id 0x%x, op option 0x%x failed\n", cfg.namespace_id, cfg.op_option);
+	} else {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+	}
 
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;
