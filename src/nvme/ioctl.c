@@ -608,7 +608,7 @@ int nvme_get_log_endurance_grp_evt(int fd, bool rae, __u32 offset, __u32 len,
 
 int nvme_get_log_discovery(int fd, bool rae, __u32 offset, __u32 len, void *log)
 {
-	return nvme_get_log(fd, NVME_LOG_LID_DISC, NVME_NSID_NONE, offset,
+	return nvme_get_log(fd, NVME_LOG_LID_DISCOVER, NVME_NSID_NONE, offset,
 		NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE, rae, NVME_UUID_NONE,
 		len, log);
 }

@@ -1,44 +1,36 @@
 Name: libnvme
 Version: 0.1
-Release: 1
+Release: 0
 Summary: Linux-native nvme device management library
 License: LGPLv2+
-Group:  System Environment/Libraries
 Source: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-root
 URL: http://github.com/linux-nvme/nvme-cli
+BuildRequires: gcc
 
 %description
-Provides library functions for accessing and managing nvme devices.
+Provides library functions for accessing and managing nvme devices on a Linux
+system.
 
 %package devel
 Summary: Development files for Linux-native nvme
-Group: Development/System
 Requires: libnvme
 Provides: libnvme.so.1
 
 %description devel
 This package provides header files to include and libraries to link with
-for the Linux-native nvme.
+for Linux-native nvme device maangement.
 
 %prep
 %setup
 
 %build
 ./configure --prefix=/usr --libdir=/%{_libdir} --mandir=/usr/share/man
-make
+
+%make_build
 
 %install
-[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
-
-make install DESTDIR=$RPM_BUILD_ROOT
-
-%clean
-[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
-
-%post -p /sbin/ldconfig
-
-%postun -p /sbin/ldconfig
+%make_install
 
 %files
 %defattr(-,root,root)

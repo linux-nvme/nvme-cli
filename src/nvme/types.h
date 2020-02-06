@@ -2060,24 +2060,82 @@ struct nvme_host_mem_buf_desc {
 };
 
 /**
- * enum -
+ * enum nvme_ae_type -
+ * @NVME_AER_ERROR:
+ * @NVME_AER_SMART:
+ * @NVME_AER_NOTICE:
+ * @NVME_AER_CSS:
+ * @NVME_AER_VS:
  */
-enum {
-        NVME_AER_ERROR                  = 0,
-        NVME_AER_SMART                  = 1,
-        NVME_AER_NOTICE                 = 2,
-        NVME_AER_CSS                    = 6,
-        NVME_AER_VS                     = 7,
+enum nvme_ae_type {
+        NVME_AER_ERROR				= 0,
+        NVME_AER_SMART				= 1,
+        NVME_AER_NOTICE				= 2,
+        NVME_AER_CSS				= 6,
+        NVME_AER_VS				= 7,
+};
+/**
+ * enum nvme_ae_info_error -
+ * @NVME_AER_ERROR_INVALID_DB_REG:
+ * @NVME_AER_ERROR_INVALID_DB_VAL:
+ * @NVME_AER_ERROR_DIAG_FAILURE:
+ * @NVME_AER_ERROR_PERSISTENT_INTERNAL_ERROR:
+ * @NVME_AER_ERROR_TRANSIENT_INTERNAL_ERROR:
+ * @NVME_AER_ERROR_FW_IMAGE_LOAD_ERROR:
+ */
+enum nvme_ae_info_error {
+	NVME_AER_ERROR_INVALID_DB_REG			= 0x00,
+	NVME_AER_ERROR_INVALID_DB_VAL			= 0x01,
+	NVME_AER_ERROR_DIAG_FAILURE			= 0x02,
+	NVME_AER_ERROR_PERSISTENT_INTERNAL_ERROR	= 0x03,
+	NVME_AER_ERROR_TRANSIENT_INTERNAL_ERROR		= 0x04,
+	NVME_AER_ERROR_FW_IMAGE_LOAD_ERROR		= 0x05,
 };
 
 /**
- * enum -
+ * enum nvme_ae_info_smart -
+ * @NVME_AER_SMART_SUBSYSTEM_RELIABILITY:
+ * @NVME_AER_SMART_TEMPERATURE_THRESHOLD:
+ * @NVME_AER_SMART_SPARE_THRESHOLD:
  */
-enum {
-        NVME_AER_NOTICE_NS_CHANGED      = 0x00,
-        NVME_AER_NOTICE_FW_ACT_STARTING = 0x01,
-        NVME_AER_NOTICE_ANA             = 0x03,
-        NVME_AER_NOTICE_DISC_CHANGED    = 0xf0,
+enum nvme_ae_info_smart {
+	NVME_AER_SMART_SUBSYSTEM_RELIABILITY		= 0x00,
+	NVME_AER_SMART_TEMPERATURE_THRESHOLD		= 0x01,
+	NVME_AER_SMART_SPARE_THRESHOLD			= 0x02,
+};
+
+/**
+ * enum nvme_ae_info_css_nvm -
+ * @NVME_AER_CSS_NVM_RESERVATION:
+ * @NVME_AER_CSS_NVM_SANITIZE_COMPLETED:
+ * @NVME_AER_CSS_NVM_UNEXPECTED_SANITIZE_DEALLOC:
+ */
+enum nvme_ae_info_css_nvm {
+	NVME_AER_CSS_NVM_RESERVATION			= 0x00,
+	NVME_AER_CSS_NVM_SANITIZE_COMPLETED		= 0x01,
+	NVME_AER_CSS_NVM_UNEXPECTED_SANITIZE_DEALLOC	= 0x02,
+};
+
+/**
+ * enum nvme_ae_info_notice -
+ * @NVME_AER_NOTICE_NS_CHANGED:
+ * @NVME_AER_NOTICE_FW_ACT_STARTING:
+ * @NVME_AER_NOTICE_TELEMETRY:
+ * @NVME_AER_NOTICE_ANA:
+ * @NVME_AER_NOTICE_PL_EVENT:
+ * @NVME_AER_NOTICE_LBA_STATUS_ALERT:
+ * @NVME_AER_NOTICE_EG_EVENT:
+ * @NVME_AER_NOTICE_DISC_CHANGED:
+ */
+enum nvme_ae_info_notice {
+        NVME_AER_NOTICE_NS_CHANGED			= 0x00,
+        NVME_AER_NOTICE_FW_ACT_STARTING			= 0x01,
+        NVME_AER_NOTICE_TELEMETRY			= 0x02,
+        NVME_AER_NOTICE_ANA				= 0x03,
+        NVME_AER_NOTICE_PL_EVENT			= 0x04,
+        NVME_AER_NOTICE_LBA_STATUS_ALERT		= 0x05,
+        NVME_AER_NOTICE_EG_EVENT			= 0x06,
+        NVME_AER_NOTICE_DISC_CHANGED			= 0xf0,
 };
 
 /**

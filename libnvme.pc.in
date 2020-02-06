@@ -6,7 +6,7 @@ includedir=@includedir@
 Name: @NAME@
 Version: @VERSION@
 Description: Manage "libnvme" subsystem devices (Non-volatile Memory Express)
-URL: http://github.com/linux-nvme/nvme-cli/
+URL: http://github.com/linux-nvme/libnvme/
 
 Libs: -L${libdir} -lnvme
 Cflags: -I${includedir}

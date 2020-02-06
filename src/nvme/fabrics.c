@@ -248,7 +248,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
 
 static int nvme_discovery_log(int fd, __u32 len, struct nvmf_discovery_log *log)
 {
-	return nvme_get_log_page(fd, 0, NVME_LOG_LID_DISC, true, len, log);
+	return nvme_get_log_page(fd, 0, NVME_LOG_LID_DISCOVER, true, len, log);
 }
 
 int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
