@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <libnvme.h>
-   
+
 struct events {
 	nvme_ctrl_t c;
 	int uevent_fd;
@@ -63,7 +63,6 @@ static void save_telemetry(nvme_ctrl_t c)
 	else
 		printf("telemetry log save as %s, wrote:%d size:%d\n", buf,
 			ret, log_size);
-
 	close(fd);
 	free(log);
 }
@@ -81,7 +80,7 @@ static void check_telemetry(nvme_ctrl_t c, int ufd)
 		__u32 aen, type, info, lid;
 
 		if (sscanf(p, "NVME_AEN=0x%08x", &aen) != 1)
-			break;
+			continue;
 
 		type = aen & 0x07;
 		info = (aen >> 8) & 0xff;
