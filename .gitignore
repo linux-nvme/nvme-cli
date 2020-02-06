@@ -1,0 +1,11 @@
+a.out
+*.o
+*.ol
+*.os
+*~
+*.swp
+*.a
+*.so.*
+test/test
+
+cscope.*

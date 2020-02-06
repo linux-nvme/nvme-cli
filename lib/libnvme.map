@@ -1,0 +1,6 @@
+{
+	global:
+		nvme_submit_passthru;
+	local:
+		*;
+};
