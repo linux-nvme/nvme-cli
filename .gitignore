@@ -6,6 +6,14 @@ a.out
 *.swp
 *.a
 *.so.*
+
 test/test
+
+examples/display-tree
+examples/telemetry-listen
+
+config-host.h
+config-host.mak
+config.log
 
 cscope.*

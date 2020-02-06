@@ -7,11 +7,11 @@ ifneq ($(MAKECMDGOALS),clean)
 include ../config-host.mak
 endif
 
-all_targets += nvme-telemetry
+all_targets += telemetry-listen display-tree
 
 all: $(all_targets)
 
-test_srcs := nvme-telemetry
+test_srcs := telemetry-listen.c display-tree.c
 
 test_objs := $(patsubst %.c,%.ol,$(test_srcs))
 

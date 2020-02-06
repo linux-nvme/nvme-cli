@@ -49,7 +49,7 @@ install-tests:
 	@$(MAKE) -C test install prefix=$(DESTDIR)$(prefix) datadir=$(DESTDIR)$(datadir)
 
 clean:
-	@rm -f config-host.mak config-host.h cscope.out $(NAME).pc
+	@rm -f config-host.mak config-host.h cscope.out cscope.files $(NAME).pc
 	@$(MAKE) -C src clean
 	@$(MAKE) -C test clean
 	@$(MAKE) -C examples clean
