@@ -66,7 +66,7 @@ nvme_ns_t nvme_subsystem_first_ns(nvme_subsystem_t s);
 nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 
 /**
- * ()
+ * nvme_for_each_subsystem_safe()
  */
 #define nvme_for_each_subsystem_safe(r, s, _s)			\
 	for (s = nvme_first_subsystem(r), 			\
@@ -75,14 +75,14 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 	     s = _s, _s = nvme_next_subsystem(r, s))
 
 /**
- * ()
+ * nvme_for_each_subsystem()
  */
 #define nvme_for_each_subsystem(r, s)				\
 	for (s = nvme_first_subsystem(r); s != NULL; 		\
 		s = nvme_next_subsystem(r, s))
 
 /**
- * ()
+ * nvme_subsystem_for_each_ctrl_safe()
  */
 #define nvme_subsystem_for_each_ctrl_safe(s, c, _c)		\
 	for (c = nvme_subsystem_first_ctrl(s), 			\
@@ -91,14 +91,14 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 	     c = _c, _c = nvme_subsystem_next_ctrl(s, c))
 
 /**
- * ()
+ * nvme_subsystem_for_each_ctrl()
  */
 #define nvme_subsystem_for_each_ctrl(s, c)			\
 	for (c = nvme_subsystem_first_ctrl(s); c != NULL; 	\
 		c = nvme_subsystem_next_ctrl(s, c))
 
 /**
- * ()
+ * nvme_ctrl_for_each_ns_safe()
  */
 #define nvme_ctrl_for_each_ns_safe(c, n, _n)			\
 	for (n = nvme_ctrl_first_ns(c), 			\
@@ -107,14 +107,14 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 	     n = _n, _n = nvme_ctrl_next_ns(c, n))
 
 /**
- * ()
+ * nvme_ctrl_for_each_ns()
  */
 #define nvme_ctrl_for_each_ns(c, n)				\
 	for (n = nvme_ctrl_first_ns(c); n != NULL; 		\
 		n = nvme_ctrl_next_ns(c, n))
 
 /**
- * ()
+ * nvme_ctrl_for_each_path_safe()
  */
 #define nvme_ctrl_for_each_path_safe(c, p, _p)			\
 	for (p = nvme_ctrl_first_path(c), 			\
@@ -123,14 +123,14 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 	     p = _p, _p = nvme_ctrl_next_path(c, p))
 
 /**
- * ()
+ * nvme_ctrl_for_each_path()
  */
 #define nvme_ctrl_for_each_path(c, p)				\
 	for (p = nvme_ctrl_first_path(c); p != NULL; 		\
 		p = nvme_ctrl_next_path(c, p))
 
 /**
- * ()
+ * nvme_subsystem_for_each_ns_safe()
  */
 #define nvme_subsystem_for_each_ns_safe(s, n, _n)		\
 	for (n = nvme_subsystem_first_ns(s), 			\
@@ -139,7 +139,7 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 	     n = _n, _n = nvme_subsystem_next_ns(s, n))
 
 /**
- * ()
+ * nvme_subsystem_for_each_ns()
  */
 #define nvme_subsystem_for_each_ns(s, n)			\
 	for (n = nvme_subsystem_first_ns(s); n != NULL; 	\
@@ -171,12 +171,12 @@ uint64_t nvme_ns_get_lba_count(nvme_ns_t n);
 uint64_t nvme_ns_get_lba_util(nvme_ns_t n);
 
 /**
- * char () -
+ * nvme_ns_get_sysfs_dir() -
  */
 const char *nvme_ns_get_sysfs_dir(nvme_ns_t n);
 
 /**
- * char () -
+ * nvme_ns_get_name() -
  */
 const char *nvme_ns_get_name(nvme_ns_t n);
 
@@ -231,17 +231,17 @@ int nvme_ns_flush(nvme_ns_t n);
 int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns);
 
 /**
- * char () -
+ * nvme_path_get_name() -
  */
 const char *nvme_path_get_name(nvme_path_t p);
 
 /**
- * char () -
+ * nvme_path_get_sysfs_dir() -
  */
 const char *nvme_path_get_sysfs_dir(nvme_path_t p);
 
 /**
- * char () -
+ * nvme_path_get_ana_state() -
  */
 const char *nvme_path_get_ana_state(nvme_path_t p);
 
@@ -255,59 +255,64 @@ nvme_ctrl_t nvme_path_get_subsystem(nvme_path_t p);
  */
 nvme_ns_t nvme_path_get_ns(nvme_path_t p);
 
-int nvme_ctrl_get_fd(nvme_ctrl_t c);
 /**
- * char () -
+ * nvme_ctrl_get_fd() -
+ */
+int nvme_ctrl_get_fd(nvme_ctrl_t c);
+
+/**
+ * nvme_ctrl_get_name() -
  */
 const char *nvme_ctrl_get_name(nvme_ctrl_t c);
 /**
- * char () -
+ * nvme_ctrl_get_sysfs_dir() -
  */
 const char *nvme_ctrl_get_sysfs_dir(nvme_ctrl_t c);
 /**
- * char () -
+ * nvme_ctrl_get_address() -
  */
 const char *nvme_ctrl_get_address(nvme_ctrl_t c);
 /**
- * char () -
+ * nvme_ctrl_get_firmware() -
  */
 const char *nvme_ctrl_get_firmware(nvme_ctrl_t c);
 /**
- * char () -
+ * nvme_ctrl_get_model() -
  */
 const char *nvme_ctrl_get_model(nvme_ctrl_t c);
 /**
- * char () -
+ * nvme_ctrl_get_state() -
  */
 const char *nvme_ctrl_get_state(nvme_ctrl_t c);
 /**
- * char () -
+ * nvme_ctrl_get_numa_node() -
  */
 const char *nvme_ctrl_get_numa_node(nvme_ctrl_t c);
 /**
- * char () -
+ * nvme_ctrl_get_queue_count() -
  */
 const char *nvme_ctrl_get_queue_count(nvme_ctrl_t c);
 /**
- * char () -
+ * nvme_ctrl_get_serial() -
  */
 const char *nvme_ctrl_get_serial(nvme_ctrl_t c);
 /**
- * char () -
+ * nvme_ctrl_get_sqsize() -
  */
 const char *nvme_ctrl_get_sqsize(nvme_ctrl_t c);
 /**
- * char () -
+ * nvme_ctrl_get_transport() -
  */
 const char *nvme_ctrl_get_transport(nvme_ctrl_t c);
 /**
- * char () -
+ * nvme_ctrl_get_nqn() -
  */
 const char *nvme_ctrl_get_nqn(nvme_ctrl_t c);
 /**
- * char () -
+ * nvme_ctrl_get_subsysnqn() -
  */
 const char *nvme_ctrl_get_subsysnqn(nvme_ctrl_t c);
+
 /**
  * nvme_ctrl_get_subsystem() -
  */
@@ -317,10 +322,12 @@ nvme_subsystem_t nvme_ctrl_get_subsystem(nvme_ctrl_t c);
  * nvme_ctrl_identify() -
  */
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id);
+
 /**
  * nvme_ctrl_disconnect() -
  */
 int nvme_ctrl_disconnect(nvme_ctrl_t c);
+
 /**
  * nvme_scan_ctrl() -
  */
@@ -336,15 +343,17 @@ void nvme_free_ctrl(struct nvme_ctrl *c);
 void nvme_unlink_ctrl(struct nvme_ctrl *c);
 
 /**
- * char () -
+ * nvme_subsystem_get_nqn() -
  */
 const char *nvme_subsystem_get_nqn(nvme_subsystem_t s);
+
 /**
- * char () -
+ * nvme_subsystem_get_sysfs_dir() -
  */
 const char *nvme_subsystem_get_sysfs_dir(nvme_subsystem_t s);
+
 /**
- * char () -
+ * nvme_subsystem_get_name() -
  */
 const char *nvme_subsystem_get_name(nvme_subsystem_t s);
 
@@ -376,22 +385,22 @@ void nvme_reset_topology(nvme_root_t r);
 void nvme_free_tree(nvme_root_t r);
 
 /**
- * *() -
+ * nvme_get_subsys_attr() -
  */
 char *nvme_get_subsys_attr(nvme_subsystem_t s, const char *attr);
 
 /**
- * *() -
+ * nvme_get_ctrl_attr() -
  */
 char *nvme_get_ctrl_attr(nvme_ctrl_t c, const char *attr);
 
 /**
- * *() -
+ * nvme_get_ns_attr() -
  */
 char *nvme_get_ns_attr(nvme_ns_t n, const char *attr);
 
 /**
- * *() -
+ * nvme_get_path_attr() -
  */
 char *nvme_get_path_attr(nvme_path_t p, const char *attr);
 

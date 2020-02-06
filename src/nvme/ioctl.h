@@ -210,7 +210,7 @@ int nvme_admin_passthru(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 		__u32 timeout_ms, __u32 *result);
 
 /**
- * nvme_submit_passthru64() - Submit a 64-bit nvme passthrough command
+ * nvme_submit_io_passthru64() - Submit a 64-bit nvme passthrough command
  * @fd:		File descriptor of nvme device
  * @cmd:	The nvme io command to send
  * @result:	Optional field to return the result from the CQE DW0-1
@@ -260,7 +260,7 @@ int nvme_io_passthru64(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 		__u32 timeout_ms, __u64 *result);
 
 /**
- * nvme_submit_passthru() - Submit an nvme passthrough command
+ * nvme_submit_io_passthru() - Submit an nvme passthrough command
  * @fd:		File descriptor of nvme device
  * @cmd:	The nvme io command to send
  * @result:	Optional field to return the result from the CQE dword 0
@@ -322,14 +322,14 @@ int nvme_io_passthru(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 int nvme_subsystem_reset(int fd);
 
 /**
- * nvme_reset_ctrl() - Initiate a controller reset
+ * nvme_ctrl_reset() - Initiate a controller reset
  * @fd:		File descriptor of nvme device
  *
  * This should only be sent to controller handles, not to namespaces.
  *
  * Return: Zero if a reset was initiated or -1 with errno set otherwise.
  */
-int nvme_reset_ctrl(int fd);
+int nvme_ctrl_reset(int fd);
 
 /**
  * nvme_ns_rescan() - Initiate a controller rescan

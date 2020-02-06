@@ -33,10 +33,10 @@ const char *nvme_status_to_string(int status, bool fabrics);
 __u8 nvme_status_to_errno(int status, bool fabrics);
 
 /**
- * nvme_fw_download_split() -
+ * nvme_fw_download_seq() -
  */
-int nvme_fw_download_split(int fd, __u32 size, __u32 xfer, __u32 offset,
-			    void *buf);
+int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
+			 void *buf);
 
 /**
  * nvme_get_telemetry_log() -

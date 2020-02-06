@@ -39,7 +39,7 @@ int nvme_subsystem_reset(int fd)
 	return ioctl(fd, NVME_IOCTL_SUBSYS_RESET);
 }
 
-int nvme_reset_controller(int fd)
+int nvme_ctrl_reset(int fd)
 {
 	int ret;
 

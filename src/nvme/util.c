@@ -212,8 +212,8 @@ close_fd:
 	return -1;
 }
 
-int nvme_fw_download_split(int fd, __u32 size, __u32 xfer, __u32 offset,
-			    void *buf)
+int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
+			 void *buf)
 {
 	int err = 0;
 
@@ -263,9 +263,11 @@ int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 int nvme_get_telemetry_log(int fd, bool create, bool ctrl, int data_area,
 		       void **buf, __u32 *log_size)
 {
-	struct nvme_telemetry_log *telem;
 	static const __u32 xfer = 512;
-	__u32 size, offset = xfer;
+
+	__u8 lid = NVME_LOG_LID_TELEMETRY_HOST;
+	struct nvme_telemetry_log *telem;
+	__u32 size;
 	void *log;
 	int err;
 
@@ -275,9 +277,10 @@ int nvme_get_telemetry_log(int fd, bool create, bool ctrl, int data_area,
 		return -1;
 	}
 
-	if (ctrl)
+	if (ctrl) {
 		err = nvme_get_log_telemetry_ctrl(fd, true, 0, xfer, log);
-	else if (create)
+		lid = NVME_LOG_LID_TELEMETRY_CTRL;
+	} else if (create)
 		err = nvme_get_log_create_telemetry_host(fd, log);
 	else
 		err = nvme_get_log_telemetry_host(fd, 0, xfer, log);
@@ -314,17 +317,9 @@ int nvme_get_telemetry_log(int fd, bool create, bool ctrl, int data_area,
 		goto free;
 	}
 
-	while (offset != size) {
-		if (ctrl)
-			err = nvme_get_log_telemetry_ctrl(fd, true, offset,
-							  xfer, log + offset);
-		else
-			err = nvme_get_log_telemetry_host(fd, offset, xfer,
-							  log + offset);
-		if (err)
-			goto free;
-		offset += xfer;
-	}
+	err = nvme_get_log_page(fd, NVME_NSID_NONE, lid, true, size, (void *)log);
+	if (err)
+		goto free;
 done:
 	*log_size = size;
 	*buf = log;

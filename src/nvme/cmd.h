@@ -765,7 +765,9 @@ int nvme_get_log_device_self_test(int fd, struct nvme_self_test_log *log);
  * nvme_get_log_create_telemetry_host() -
  */
 int nvme_get_log_create_telemetry_host(int fd, struct nvme_telemetry_log *log);
-/** * nvme_get_log_telemetry_host() -
+
+/**
+ * nvme_get_log_telemetry_host() -
  * @fd:		File descriptor of nvme device
  * @offset:	Offset into the telemetry data
  * @len:	Length of provided user buffer to hold the log data in bytes
@@ -1133,10 +1135,9 @@ int nvme_set_features_hctm(int fd, __u16 tmt2, __u16 tmt1, bool save,
 			   __u32 *result);
 
 /**
- * nvme_admin_set_features_nopsc() -
+ * nvme_set_features_nopsc() -
  */
-int nvme_admin_set_features_nopsc(int fd, bool noppme, bool save,
-				  __u32 *result);
+int nvme_set_features_nopsc(int fd, bool noppme, bool save, __u32 *result);
 
 /**
  * nvme_set_features_rrl() -
@@ -2253,8 +2254,6 @@ enum nvme_io_dsm_flags {
  * metadata_len:Length of user buffer, @metadata, in bytes
  * @metadata:	Pointer to user address of the metadata buffer
  *
- * Calls nvme_io() with nvme_cmd_read for the opcode.
- *
  * Return: The nvme command status if a response was received or -1 with errno
  * 	   set otherwise.
  */
@@ -2285,8 +2284,6 @@ int nvme_read(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * metadata_len:Length of user buffer, @metadata, in bytes
  * @metadata:	Pointer to user address of the metadata buffer
  *
- * Calls nvme_io() with nvme_cmd_write for the opcode.
- *
  * Return: The nvme command status if a response was received or -1 with errno
  * 	   set otherwise.
  */
@@ -2315,8 +2312,6 @@ int nvme_write(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * @data:	Pointer to user address of the data buffer
  * metadata_len:Length of user buffer, @metadata, in bytes
  * @metadata:	Pointer to user address of the metadata buffer
- *
- * Calls nvme_io() with nvme_cmd_compare for the opcode.
  *
  * Return: The nvme command status if a response was received or -1 with errno
  * 	   set otherwise.
