@@ -10,6 +10,7 @@ a.out
 test/test
 
 examples/display-tree
+examples/display-columnar
 examples/telemetry-listen
 
 config-host.h

@@ -7,11 +7,11 @@ ifneq ($(MAKECMDGOALS),clean)
 include ../config-host.mak
 endif
 
-all_targets += telemetry-listen display-tree
+all_targets += telemetry-listen display-tree display-columnar
 
 all: $(all_targets)
 
-test_srcs := telemetry-listen.c display-tree.c
+test_srcs := telemetry-listen.c display-tree.c display-columnar.c
 
 test_objs := $(patsubst %.c,%.ol,$(test_srcs))
 
