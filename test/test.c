@@ -118,47 +118,47 @@ static int test_ctrl(nvme_ctrl_t c)
 	if (!ret)
 		printf("  Reservation Log\n");
 	else
-		printf("  ERROR: Reservation Log :%x\n", ret);
+		printf("  ERROR: Reservation Log:%x\n", ret);
 	ret = nvme_get_log_ana_groups(fd, true, sizeof(buf), analog);
 	if (!ret)
 		printf("  ANA Groups\n");
 	else
-		printf("  ERROR: ANA Groups :%x\n", ret);
+		printf("  ERROR: ANA Groups:%x\n", ret);
 	ret = nvme_get_log_endurance_group(fd, 0, &eglog);
 	if (!ret)
 		printf("  Endurance Group\n");
 	else
-		printf("  ERROR: Endurance Group :%x\n", ret);
+		printf("  ERROR: Endurance Group:%x\n", ret);
 	ret = nvme_get_log_telemetry_ctrl(fd, true, 0, sizeof(buf), telem);
 	if (!ret)
 		printf("  Telemetry Controller\n");
 	else
-		printf("  ERROR: Telemetry Controller :%x\n", ret);
+		printf("  ERROR: Telemetry Controller:%x\n", ret);
 	ret = nvme_get_log_device_self_test(fd, &st);
 	if (!ret)
 		printf("  Device Self Test\n");
 	else
-		printf("  ERROR: Device Self Test :%x\n", ret);
+		printf("  ERROR: Device Self Test:%x\n", ret);
 	ret = nvme_get_log_cmd_effects(fd, &cfx);
 	if (!ret)
 		printf("  Command Effects\n");
 	else
-		printf("  ERROR: Command Effects :%x\n", ret);
+		printf("  ERROR: Command Effects:%x\n", ret);
 	ret = nvme_get_log_changed_ns_list(fd, true, &ns_list);
 	if (!ret)
 		printf("  Change NS List\n");
 	else
-		printf("  ERROR: Change NS List :%x\n", ret);
+		printf("  ERROR: Change NS List:%x\n", ret);
 	ret = nvme_get_log_fw_slot(fd, true, &fw);
-	if (ret)
+	if (!ret)
 		printf("  FW Slot\n");
 	else
-		printf("  ERROR: FW Slot :%x\n", ret);
+		printf("  ERROR: FW Slot%x\n", ret);
 	ret = nvme_get_log_error(fd, 64, true, error);
 	if (!ret)
 		printf("  Error Log\n");
 	else
-		printf("  ERROR: Error Log :%x\n", ret);
+		printf("  ERROR: Error Log:%x\n", ret);
 	printf("\nFeatures\n");
 	ret = nvme_get_features_arbitration(fd, sel, &result);
 	if (!ret)
