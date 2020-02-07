@@ -263,7 +263,7 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 		__u32 data_len, void *data)
 {
-	return __nvme_get_log_page(fd, nsid, log_id, rae, 4086, data_len, data);
+	return __nvme_get_log_page(fd, nsid, log_id, rae, 4096, data_len, data);
 }
 
 int nvme_get_telemetry_log(int fd, bool create, bool ctrl, int data_area,
