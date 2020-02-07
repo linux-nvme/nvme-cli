@@ -154,8 +154,6 @@ int nvmf_add_ctrl_opts(struct nvme_fabrics_config *cfg)
 		return ret;
 
 	ret = __nvmf_add_ctrl(argstr);
-	printf("ctrl:%s ret:%d\n", argstr, ret);
-
 	free(argstr);
 	return ret;
 }
@@ -229,7 +227,23 @@ nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
 		errno = EINVAL;
 		return NULL;
 	}
-	cfg.transport = nvmf_trtype_str(e->trtype);
+
+	switch (e->trtype) {
+	case NVMF_TRTYPE_RDMA:
+		cfg.transport = "rdma";
+		break;
+	case NVMF_TRTYPE_FC:
+		cfg.transport = "fc";
+		break;
+	case NVMF_TRTYPE_TCP:
+		cfg.transport = "tcp";
+		break;
+	case NVMF_TRTYPE_LOOP:
+		cfg.transport = "loop";
+		break;
+	default:
+		break;
+	}
 
 	cfg.nqn = e->subnqn;
 	if (e->treq & NVMF_TREQ_DISABLE_SQFLOW)
@@ -248,7 +262,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
 
 static int nvme_discovery_log(int fd, __u32 len, struct nvmf_discovery_log *log)
 {
-	return nvme_get_log_page(fd, 0, NVME_LOG_LID_DISCOVER, true, len, log);
+	return __nvme_get_log_page(fd, 0, NVME_LOG_LID_DISCOVER, true, 512, len, log);
 }
 
 int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,

@@ -1,6 +1,6 @@
 /**
- * display-tree: Scans the nvme topology, prints as an ascii tree with some
- * selected attributes for each component.
+ * display-columnar: Scans the nvme topology, prints each record type in a
+ * column format for easy visual scanning.
  */
 #include <stdio.h>
 #include <libnvme.h>

@@ -216,6 +216,7 @@
 		nvme_setup_ctrl_list;
 		nvme_dsm_range;
 		nvme_get_log_page;
+		__nvme_get_log_page;
 		nvme_get_ana_log_len;
 		nvme_namespace_attach_ctrls;
 		nvme_namespace_detach_ctrls;

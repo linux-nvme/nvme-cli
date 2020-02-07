@@ -231,10 +231,10 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 	return err;
 }
 
-int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
-		__u32 data_len, void *data)
+int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
+		__u32 xfer_len, __u32 data_len, void *data)
 {
-	__u64 offset = 0, xfer_len = data_len;
+	__u64 offset = 0, xfer;
 	void *ptr = data;
 	int ret;
 
@@ -243,21 +243,27 @@ int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 	 * avoids having to check the MDTS value of the controller.
 	 */
 	do {
-		xfer_len = data_len - offset;
-		if (xfer_len > 4096)
-			xfer_len = 4096;
+		xfer = data_len - offset;
+		if (xfer > xfer_len)
+			xfer  = xfer_len;
 
 		ret = nvme_get_log(fd, log_id, nsid, offset, NVME_LOG_LSP_NONE,
 				   NVME_LOG_LSI_NONE, rae, NVME_UUID_NONE,
-				   xfer_len, ptr);
+				   xfer, ptr);
 		if (ret)
 			return ret;
 
-		offset += xfer_len;
-		ptr += xfer_len;
+		offset += xfer;
+		ptr += xfer;
 	} while (offset < data_len);
 
 	return 0;
+}
+
+int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
+		__u32 data_len, void *data)
+{
+	return __nvme_get_log_page(fd, nsid, log_id, rae, 4086, data_len, data);
 }
 
 int nvme_get_telemetry_log(int fd, bool create, bool ctrl, int data_area,

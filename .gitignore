@@ -12,6 +12,7 @@ test/test
 examples/display-tree
 examples/display-columnar
 examples/telemetry-listen
+examples/discover-loop
 
 config-host.h
 config-host.mak

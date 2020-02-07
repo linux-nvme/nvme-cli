@@ -73,7 +73,28 @@ void nvme_setup_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
 			  __u32 *llbas, __u64 *slbas, __u16 nr_ranges);
 
 /**
+ * __nvme_get_log_page() -
+ * @fd:
+ * @nsid:
+ * @log_id:
+ * @rae:
+ * @xfer_len:	Max partial log transfer size to request while splitting
+ * @data_len:
+ * @data:
+ */
+int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
+		__u32 xfer_len, __u32 data_len, void *data);
+
+/**
  * nvme_get_log_page() -
+ * @fd:
+ * @nsid:
+ * @log_id:
+ * @rae:
+ * @data_len:
+ * @data:
+ *
+ * Calls __nvme_get_log_page() with a default 4k transfer length.
  */
 int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 		__u32 data_len, void *data);
