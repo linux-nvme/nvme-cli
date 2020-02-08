@@ -39,7 +39,7 @@ nvme_root_t nvme_scan_filter(nvme_scan_filter_t f)
 	}
 
 	memset(r, 0, sizeof(*r));
-	TAILQ_INIT(&r->subsystems);
+	list_head_init(&r->subsystems);
 	nvme_scan_topology(r, f);
 	return r;
 }
@@ -51,14 +51,14 @@ nvme_root_t nvme_scan()
 
 nvme_subsystem_t nvme_first_subsystem(nvme_root_t r)
 {
-	return TAILQ_FIRST(&r->subsystems);
+	return list_top(&r->subsystems, struct nvme_subsystem, entry);
 }
 
 nvme_subsystem_t nvme_next_subsystem(nvme_root_t r, nvme_subsystem_t s)
 {
 	if (!s)
 		return NULL;
-	return TAILQ_NEXT(s, entry);
+	return list_next(&r->subsystems, s, entry);
 }
 
 void nvme_refresh_topology(nvme_root_t r)
@@ -105,26 +105,35 @@ const char *nvme_subsystem_get_name(nvme_subsystem_t s)
 
 nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s)
 {
-	return TAILQ_FIRST(&s->ctrls);
+	return list_top(&s->ctrls, struct nvme_ctrl, entry);
 }
 
 nvme_ctrl_t nvme_subsystem_next_ctrl(nvme_subsystem_t s, nvme_ctrl_t c)
 {
 	if (!c)
 		return NULL;
-	return TAILQ_NEXT(c, entry);
+	return list_next(&s->ctrls, c, entry);
 }
 
 nvme_ns_t nvme_subsystem_first_ns(nvme_subsystem_t s)
 {
-	return TAILQ_FIRST(&s->namespaces);
+	return list_top(&s->namespaces, struct nvme_ns, entry);
 }
 
 nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n)
 {
 	if (!n)
 		return NULL;
-	return TAILQ_NEXT(n, entry);
+	return list_next(&s->namespaces, n, entry);
+}
+
+static void nvme_free_ns(struct nvme_ns *n)
+{
+	list_del_init(&n->entry);
+	close(n->fd);
+	free(n->name);
+	free(n->sysfs_dir);
+	free(n);
 }
 
 void nvme_free_subsystem(struct nvme_subsystem *s)
@@ -132,14 +141,12 @@ void nvme_free_subsystem(struct nvme_subsystem *s)
 	struct nvme_ctrl *c, *_c;
 	struct nvme_ns *n, *_n;
 
-	if (s->r)
-		TAILQ_REMOVE(&s->r->subsystems, s, entry);
-
+	list_del_init(&s->entry);
 	nvme_subsystem_for_each_ctrl_safe(s, c, _c)
 		nvme_free_ctrl(c);
 
 	nvme_subsystem_for_each_ns_safe(s, n, _n)
-		nvme_subsystem_free_ns(n);
+		nvme_free_ns(n);
 
 	free(s->name);
 	free(s->sysfs_dir);
@@ -200,12 +207,12 @@ int nvme_scan_subsystem(struct nvme_root *r, char *name, nvme_scan_filter_t f)
 	s->name = strdup(name);;
 	s->sysfs_dir = path;
 	s->subsysnqn = nvme_get_subsys_attr(s, "subsysnqn");
-	TAILQ_INIT(&s->ctrls);
-	TAILQ_INIT(&s->namespaces);
+	list_head_init(&s->ctrls);
+	list_head_init(&s->namespaces);
 
 	nvme_subsystem_scan_namespaces(s);
 	nvme_subsystem_scan_ctrls(s);
-	TAILQ_INSERT_TAIL(&r->subsystems, s, entry);
+	list_add(&r->subsystems, &s->entry);
 
 	if (f && !f(s)) {
 		nvme_free_subsystem(s);
@@ -245,8 +252,8 @@ const char *nvme_path_get_ana_state(nvme_path_t p)
 
 void nvme_free_path(struct nvme_path *p)
 {
-	TAILQ_REMOVE(&p->c->paths, p, entry);
-	TAILQ_REMOVE(&p->n->paths, p, nentry);
+	list_del_init(&p->entry);
+	list_del_init(&p->nentry);
 	free(p->name);
 	free(p->sysfs_dir);
 	free(p->ana_state);
@@ -266,7 +273,7 @@ static void nvme_subsystem_set_path_ns(nvme_subsystem_t s, nvme_path_t p)
 	sprintf(n_name, "nvme%dn%d", i, nsid);
 	nvme_subsystem_for_each_ns(s, n) {
 		if (!strcmp(n_name, nvme_ns_get_name(n))) {
-			TAILQ_INSERT_TAIL(&n->paths, p, nentry);
+			list_add(&n->paths, &p->nentry);
 			p->n = n;
 		}
 	}
@@ -303,7 +310,7 @@ int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name)
 		free(grpid);
 	}
 
-	TAILQ_INSERT_TAIL(&c->paths, p, entry);
+	list_add(&c->paths, &p->entry);
 	return 0;
 
 free_path:
@@ -388,26 +395,26 @@ int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)
 
 nvme_ns_t nvme_ctrl_first_ns(nvme_ctrl_t c)
 {
-	return TAILQ_FIRST(&c->namespaces);
+	return list_top(&c->namespaces, struct nvme_ns, entry);
 }
 
 nvme_ns_t nvme_ctrl_next_ns(nvme_ctrl_t c, nvme_ns_t n)
 {
 	if (!n)
 		return NULL;
-	return TAILQ_NEXT(n, entry);
+	return list_next(&c->namespaces, n, entry);
 }
 
 nvme_path_t nvme_ctrl_first_path(nvme_ctrl_t c)
 {
-	return TAILQ_FIRST(&c->paths);
+	return list_top(&c->paths, struct nvme_path, entry);
 }
 
 nvme_path_t nvme_ctrl_next_path(nvme_ctrl_t c, nvme_path_t p)
 {
 	if (!p)
 		return NULL;
-	return TAILQ_NEXT(p, entry);
+	return list_next(&c->paths, p, entry);
 }
 
 int nvme_ctrl_disconnect(nvme_ctrl_t c)
@@ -417,8 +424,7 @@ int nvme_ctrl_disconnect(nvme_ctrl_t c)
 
 void nvme_unlink_ctrl(nvme_ctrl_t c)
 {
-	if (c->s)
-		TAILQ_REMOVE(&c->s->ctrls, c, entry);
+	list_del_init(&c->entry);
 	c->s = NULL;
 }
 
@@ -433,7 +439,7 @@ void nvme_free_ctrl(nvme_ctrl_t c)
 		nvme_free_path(p);
 
 	nvme_ctrl_for_each_ns_safe(c, n, _n)
-		nvme_ctrl_free_ns(n);
+		nvme_free_ns(n);
 
 	close(c->fd);
 	free(c->name);
@@ -501,8 +507,9 @@ static nvme_ctrl_t __nvme_ctrl_alloc(const char *path, const char *name)
 	if (c->fd < 0)
 		goto free_ctrl;
 
-	TAILQ_INIT(&c->namespaces);
-	TAILQ_INIT(&c->paths);
+	list_head_init(&c->namespaces);
+	list_head_init(&c->paths);
+	list_node_init(&c->entry);
 	c->name = strdup(name);
 	c->sysfs_dir = (char *)path;
 	c->subsysnqn = nvme_get_ctrl_attr(c, "subsysnqn");
@@ -557,7 +564,7 @@ int nvme_subsystem_scan_ctrl(struct nvme_subsystem *s, char *name)
 	c->s = s;
 	nvme_ctrl_scan_namespaces(c);
 	nvme_ctrl_scan_paths(c);
-	TAILQ_INSERT_TAIL(&s->ctrls, c, entry);
+	list_add(&s->ctrls, &c->entry);
 
 	return 0;
 }
@@ -705,26 +712,6 @@ int nvme_ns_flush(nvme_ns_t n)
 	return nvme_flush(nvme_ns_get_fd(n), nvme_ns_get_nsid(n));
 }
 
-static void nvme_free_ns(struct nvme_ns *n)
-{
-	close(n->fd);
-	free(n->name);
-	free(n->sysfs_dir);
-	free(n);
-}
-
-void nvme_ctrl_free_ns(struct nvme_ns *n)
-{
-	TAILQ_REMOVE(&n->s->namespaces, n, entry);
-	nvme_free_ns(n);
-}
-
-void nvme_subsystem_free_ns(struct nvme_ns *n)
-{
-	TAILQ_REMOVE(&n->s->namespaces, n, entry);
-	nvme_free_ns(n);
-}
-
 static void nvme_ns_init(struct nvme_ns *n)
 {
 	struct nvme_id_ns ns = { 0 };
@@ -766,7 +753,7 @@ static struct nvme_ns *__nvme_scan_namespace(const char *sysfs_dir, char *name)
 	if (n->nsid < 0)
 		goto close_fd;
 
-	TAILQ_INIT(&n->paths);
+	list_head_init(&n->paths);
 	nvme_ns_init(n);
 
 	return n;
@@ -790,7 +777,7 @@ int nvme_ctrl_scan_namespace(struct nvme_ctrl *c, char *name)
 
 	n->s = c->s;
 	n->c = c;
-	TAILQ_INSERT_TAIL(&c->namespaces, n, entry);
+	list_add(&c->namespaces, &n->entry);
 	return 0;
 }
 
@@ -803,6 +790,6 @@ int nvme_subsystem_scan_namespace(struct nvme_subsystem *s, char *name)
 		return -1;
 
 	n->s = s;
-	TAILQ_INSERT_TAIL(&s->namespaces, n, entry);
+	list_add(&s->namespaces, &n->entry);
 	return 0;
 }

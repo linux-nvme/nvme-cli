@@ -6,7 +6,9 @@ prefix ?= /usr
 includedir ?= $(prefix)/include
 libdir ?= $(prefix)/lib
 
-CFLAGS ?= -g -fomit-frame-pointer -O2 -I/usr/include -Invme/
+CCANDIR=ccan/
+
+CFLAGS ?= -g -fomit-frame-pointer -O2 -I/usr/include -Invme/ -I$(CCANDIR)
 override CFLAGS += -Wall -fPIC
 SO_CFLAGS=-shared $(CFLAGS)
 L_CFLAGS=$(CFLAGS)
@@ -37,22 +39,27 @@ ifeq ($(ENABLE_SHARED),1)
 all_targets += $(libname)
 endif
 
-ifneq ($(findstring $(MAKEFLAGS),s),s)
-ifndef V
-	QUIET_CC	= @echo '    '   CC $@;
-	QUIET_LINK	= @echo '  '   LINK $@;
-	QUIET_AR	= @echo '    '   AR $@;
-	QUIET_RANLIB	= @echo ''   RANLIB $@;
-endif
-endif
+include ../Makefile.quiet
 
 all: $(all_targets)
 
+$(CCANDIR)config.h: $(CCANDIR)tools/configurator/configurator
+	$< > $@
+
+libccan_headers := $(wildcard $(CCANDIR)ccan/*/*.h)
+libccan_srcs := $(wildcard $(CCANDIR)ccan/*/*.c)
+libccan_objs := $(patsubst %.c,%.ol,$(libccan_srcs))
+libccan_sobjs := $(patsubst %.c,%.os,$(libccan_srcs))
+
+$(libccan_objs) $(libccan_sobjs): $(libccan_headers)
+
+libnvme_priv := nvme/private.h
+libnvme_api := libnvme.h nvme/types.h nvme/ioctl.h nvme/filters.h nvme/tree.h nvme/util.h nvme/cmd.h
 libnvme_srcs := nvme/ioctl.c nvme/filters.c nvme/fabrics.c nvme/util.c nvme/tree.c
 libnvme_objs := $(patsubst %.c,%.ol,$(libnvme_srcs))
 libnvme_sobjs := $(patsubst %.c,%.os,$(libnvme_srcs))
 
-$(libnvme_objs) $(libnvme_sobjs): libnvme.h nvme/types.h nvme/ioctl.h nvme/filters.h nvme/tree.h nvme/util.h nvme/cmd.h
+$(libnvme_objs) $(libnvme_sobjs): $(libnvme_api) $(libnvme_private) $(libccan_objs)
 
 %.os: %.c
 	$(QUIET_CC)$(CC) $(SO_CFLAGS) -c -o $@ $<
@@ -62,20 +69,18 @@ $(libnvme_objs) $(libnvme_sobjs): libnvme.h nvme/types.h nvme/ioctl.h nvme/filte
 
 AR ?= ar
 RANLIB ?= ranlib
-libnvme.a: $(libnvme_objs)
+libnvme.a: $(libnvme_objs) $(libccan_objs)
 	@rm -f libnvme.a
 	$(QUIET_AR)$(AR) r libnvme.a $^
 	$(QUIET_RANLIB)$(RANLIB) libnvme.a
 
-$(libname): $(libnvme_sobjs) libnvme.map
-	$(QUIET_CC)$(CC) $(SO_CFLAGS) -Wl,--version-script=libnvme.map -Wl,-soname=$(soname) -o $@ $(libnvme_sobjs) $(LINK_FLAGS)
+$(libname): $(libnvme_sobjs) $(libccan_sobjs) libnvme.map
+	$(QUIET_CC)$(CC) $(SO_CFLAGS) -Wl,--version-script=libnvme.map -Wl,-soname=$(soname) -o $@ $(libnvme_sobjs) $(libccan_sobjs) $(LINK_FLAGS)
 
 install: $(all_targets) $(NAME).pc
-	$(INSTALL) -D -m 644 nvme/types.h $(includedir)/nvme/types.h
-	$(INSTALL) -D -m 644 nvme/ioctl.h $(includedir)/nvme/ioctl.h
-	$(INSTALL) -D -m 644 nvme/fabrics.h $(includedir)/nvme/fabrics.h
-	$(INSTALL) -D -m 644 nvme/filters.h $(includedir)/nvme/filters.h
-	$(INSTALL) -D -m 644 libnvme.h $(includedir)/libnvme.h
+	for i in $(libnvme_api); do \
+		$(INSTALL) -D -m 644 ${i} $(includedir)/${i}
+	done
 	$(INSTALL) -D -m 644 libnvme.a $(libdir)/libnvme.a
 	$(INSTALL) -D -m 644 $(NAME).pc $(DESTDIR)$(libdir)/pkgconfig/$(NAME).pc
 ifeq ($(ENABLE_SHARED),1)
@@ -84,8 +89,11 @@ ifeq ($(ENABLE_SHARED),1)
 	ln -sf $(libname) $(libdir)/libnvme.so
 endif
 
-$(libnvme_objs): libnvme.h
+$(libnvme_objs): $(libnvme_api) $(libnvme_private)
+$(libccan_objs): $(libccan_headers) $(CCANDIR)config.h
 
 clean:
-	rm -f $(all_targets) $(libnvme_objs) $(libnvme_sobjs) $(soname).new $(NAME).pc
+	rm -f $(all_targets) $(libnvme_objs) $(libnvme_sobjs) $(libccan_objs) $(libccan_sobjs) $(soname).new $(NAME).pc
+	rm -f $(CCANDIR)config.h
+	rm -f $(CCANDIR)tools/configurator/configurator
 	rm -f *.so* *.a *.o

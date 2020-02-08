@@ -15,6 +15,8 @@
 
 #include <systemd/sd-id128.h>
 
+#include <ccan/array_size/array_size.h>
+
 #include "fabrics.h"
 #include "types.h"
 #include "cmd.h"
@@ -22,7 +24,6 @@
 
 #define NVMF_HOSTID_SIZE	36
 #define NVME_HOSTNQN_ID SD_ID128_MAKE(c7,f4,61,81,12,be,49,32,8c,83,10,6f,9d,dd,d8,6b)
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof (*x))
 
 const char *nvmf_dev = "/dev/nvme-fabrics";
 const char *nvmf_hostnqn_file = "/etc/nvme/hostnqn";

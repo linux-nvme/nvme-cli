@@ -2,15 +2,17 @@
 #define _LIBNVME_PRIVATE_H
 
 #include <dirent.h>
-#include <sys/queue.h>
 #include <stdint.h>
 #include <stdlib.h>
+
+#include <ccan/list/list.h>
 
 #include "tree.h"
 
 struct nvme_path {
-	TAILQ_ENTRY(nvme_path) entry;
-	TAILQ_ENTRY(nvme_path) nentry;
+	struct list_node entry;
+	struct list_node nentry;
+
 	struct nvme_ctrl *c;
 	struct nvme_ns *n;
 
@@ -21,8 +23,9 @@ struct nvme_path {
 };
 
 struct nvme_ns {
-	TAILQ_ENTRY(nvme_ns) entry;
-	TAILQ_HEAD(, nvme_path) paths;
+	struct list_node entry;
+	struct list_head paths;
+
 	struct nvme_subsystem *s;
 	struct nvme_ctrl *c;
 
@@ -38,9 +41,10 @@ struct nvme_ns {
 };
 
 struct nvme_ctrl {
-	TAILQ_ENTRY(nvme_ctrl) entry;
-	TAILQ_HEAD(, nvme_ns) namespaces;
-	TAILQ_HEAD(, nvme_path) paths;
+	struct list_node entry;
+	struct list_head paths;
+	struct list_head namespaces;
+
 	struct nvme_subsystem *s;
 
 	int fd;
@@ -59,9 +63,9 @@ struct nvme_ctrl {
 };
 
 struct nvme_subsystem {
-	TAILQ_ENTRY(nvme_subsystem) entry;
-	TAILQ_HEAD(, nvme_ctrl) ctrls;
-	TAILQ_HEAD(, nvme_ns) namespaces;
+	struct list_node entry;
+	struct list_head ctrls;
+	struct list_head namespaces;
 	struct nvme_root *r;
 
 	char *name;
@@ -70,7 +74,7 @@ struct nvme_subsystem {
 };
 
 struct nvme_root {
-	TAILQ_HEAD(, nvme_subsystem) subsystems;
+	struct list_head subsystems;
 };
 
 void nvme_free_ctrl(struct nvme_ctrl *c);

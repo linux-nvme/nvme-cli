@@ -9,6 +9,8 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 
+#include <ccan/build_assert/build_assert.h>
+
 #include "ioctl.h"
 #include "cmd.h"
 #include "types.h"
@@ -365,11 +367,13 @@ static int __nvme_identify(int fd, __u8 cns, __u32 nsid, void *data)
 
 int nvme_identify_ctrl(int fd, struct nvme_id_ctrl *id)
 {
+	BUILD_ASSERT(sizeof(struct nvme_id_ctrl) == 4096);
 	return __nvme_identify(fd, NVME_IDENTIFY_CNS_CTRL, NVME_NSID_NONE, id);
 }
 
 int nvme_identify_ns(int fd, __u32 nsid, struct nvme_id_ns *ns)
 {
+	BUILD_ASSERT(sizeof(struct nvme_id_ns) == 4096);
 	return __nvme_identify(fd, NVME_IDENTIFY_CNS_NS, nsid, ns);
 }
 
@@ -380,6 +384,7 @@ int nvme_identify_allocated_ns(int fd, __u32 nsid, struct nvme_id_ns *ns)
 
 int nvme_identify_active_ns_list(int fd, __u32 nsid, struct nvme_ns_list *list)
 {
+	BUILD_ASSERT(sizeof(struct nvme_ns_list) == 4096);
 	return __nvme_identify(fd, NVME_IDENTIFY_CNS_NS_ACTIVE_LIST, nsid,
 		list);
 }
@@ -394,6 +399,7 @@ int nvme_identify_allocated_ns_list(int fd, __u32 nsid,
 int nvme_identify_ctrl_list(int fd, __u16 cntid,
 			    struct nvme_ctrl_list *ctrlist)
 {
+	BUILD_ASSERT(sizeof(struct nvme_ctrl_list) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CTRL_LIST,
 		NVME_NSID_NONE, cntid, NVME_NVMSETID_NONE,
 		NVME_UUID_NONE, ctrlist);
@@ -414,6 +420,7 @@ int nvme_identify_ns_descs(int fd, __u32 nsid, struct nvme_ns_id_desc *descs)
 int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 	struct nvme_id_nvmset_list *nvmset)
 {
+	BUILD_ASSERT(sizeof(struct nvme_id_nvmset_list) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_NVMSET_LIST,
 		NVME_NSID_NONE, NVME_CNTLID_NONE, nvmsetid, NVME_UUID_NONE,
 		nvmset);
@@ -422,6 +429,7 @@ int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 	struct nvme_primary_ctrl_cap *cap)
 {
+	BUILD_ASSERT(sizeof(struct nvme_primary_ctrl_cap) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP,
 		NVME_NSID_NONE, cntid, NVME_NVMSETID_NONE, NVME_UUID_NONE,
 		cap);
@@ -430,6 +438,7 @@ int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 int nvme_identify_secondary_ctrl_list(int fd, __u16 cntid,
 	struct nvme_secondary_ctrl_list *list)
 {
+	BUILD_ASSERT(sizeof(struct nvme_secondary_ctrl_list) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
 		NVME_NSID_NONE, cntid, NVME_NVMSETID_NONE, NVME_UUID_NONE,
 		list);
@@ -438,12 +447,14 @@ int nvme_identify_secondary_ctrl_list(int fd, __u16 cntid,
 int nvme_identify_ns_granularity(int fd,
 	struct nvme_id_ns_granularity_list *list)
 {
+	BUILD_ASSERT(sizeof(struct nvme_id_ns_granularity_list) == 4096);
 	return __nvme_identify(fd, NVME_IDENTIFY_CNS_NS_GRANULARITY,
 		NVME_NSID_NONE, list);
 }
 
 int nvme_identify_uuid(int fd, struct nvme_id_uuid_list *list)
 {
+	BUILD_ASSERT(sizeof(struct nvme_id_uuid_list) == 4096);
 	return __nvme_identify(fd, NVME_IDENTIFY_CNS_UUID_LIST, NVME_NSID_NONE,
 		list);
 }
@@ -489,12 +500,14 @@ static int __nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, bool  rae,
 int nvme_get_log_error(int fd, unsigned nr_entries, bool rae,
 		       struct nvme_error_log_page *log)
 {
+	BUILD_ASSERT(sizeof(struct nvme_error_log_page) == 64);
 	return __nvme_get_log(fd, NVME_LOG_LID_ERROR, rae,
 		sizeof(*log) * nr_entries, log);
 }
 
 int nvme_get_log_smart(int fd, __u32 nsid, bool rae, struct nvme_smart_log *log)
 {
+	BUILD_ASSERT(sizeof(struct nvme_smart_log) == 512);
 	return nvme_get_log(fd, NVME_LOG_LID_SMART,  nsid, 0,
 		NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE, rae, NVME_UUID_NONE,
 		sizeof(*log), log);
@@ -502,6 +515,7 @@ int nvme_get_log_smart(int fd, __u32 nsid, bool rae, struct nvme_smart_log *log)
 
 int nvme_get_log_fw_slot(int fd, bool rae, struct nvme_firmware_slot *log)
 {
+	BUILD_ASSERT(sizeof(struct nvme_firmware_slot) == 512);
 	return __nvme_get_log(fd, NVME_LOG_LID_FW_SLOT, rae, sizeof(*log),
 		log);
 }
@@ -514,12 +528,14 @@ int nvme_get_log_changed_ns_list(int fd, bool rae, struct nvme_ns_list *log)
 
 int nvme_get_log_cmd_effects(int fd, struct nvme_cmd_effects_log *log)
 {
+	BUILD_ASSERT(sizeof(struct nvme_cmd_effects_log) == 4096);
 	return __nvme_get_log(fd, NVME_LOG_LID_CMD_EFFECTS, false,
 		sizeof(*log), log);
 }
 
 int nvme_get_log_device_self_test(int fd, struct nvme_self_test_log *log)
 {
+	BUILD_ASSERT(sizeof(struct nvme_self_test_log) == 564);
 	return __nvme_get_log(fd, NVME_LOG_LID_DEVICE_SELF_TEST, false,
 		sizeof(*log), log);
 }
@@ -531,6 +547,7 @@ enum nvme_cmd_get_log_telemetry_host_lsp {
 
 int nvme_get_log_create_telemetry_host(int fd, struct nvme_telemetry_log *log)
 {
+	BUILD_ASSERT(sizeof(struct nvme_telemetry_log) == 512);
 	return nvme_get_log(fd, NVME_LOG_LID_TELEMETRY_HOST, NVME_NSID_NONE, 0,
 		NVME_LOG_TELEM_HOST_LSP_CREATE, NVME_LOG_LSI_NONE, false,
 		NVME_UUID_NONE, sizeof(*log), log);
@@ -554,6 +571,7 @@ int nvme_get_log_telemetry_ctrl(int fd, bool rae, __u64 offset, __u32 len,
 int nvme_get_log_endurance_group(int fd, __u16 endgid,
 	struct nvme_endurance_group_log *log)
 {
+	BUILD_ASSERT(sizeof(struct nvme_endurance_group_log) == 512);
 	return nvme_get_log(fd, NVME_LOG_LID_ENDURANCE_GROUP, NVME_NSID_NONE,
 		0, NVME_LOG_LSP_NONE, endgid, false, NVME_UUID_NONE,
 		sizeof(*log), log);
@@ -562,6 +580,7 @@ int nvme_get_log_endurance_group(int fd, __u16 endgid,
 int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
 				struct nvme_nvmset_predictable_lat_log *log)
 {
+	BUILD_ASSERT(sizeof(struct nvme_nvmset_predictable_lat_log) == 512);
 	return nvme_get_log(fd, NVME_LOG_LID_PREDICTABLE_LAT_NVMSET,
 		NVME_NSID_NONE, 0, NVME_LOG_LSP_NONE, nvmsetid, false,
 		NVME_UUID_NONE, sizeof(*log), log);
@@ -615,6 +634,7 @@ int nvme_get_log_discovery(int fd, bool rae, __u32 offset, __u32 len, void *log)
 int nvme_get_log_reservation(int fd, bool rae,
 			     struct nvme_resv_notification_log *log)
 {
+	BUILD_ASSERT(sizeof(struct nvme_resv_notification_log) == 64);
 	return __nvme_get_log(fd, NVME_LOG_LID_RESERVATION, rae,
 		sizeof(*log), log);
 }
@@ -622,6 +642,7 @@ int nvme_get_log_reservation(int fd, bool rae,
 int nvme_get_log_sanitize(int fd, bool rae,
 			  struct nvme_sanitize_log_page *log)
 {
+	BUILD_ASSERT(sizeof(struct nvme_sanitize_log_page) == 512);
 	return __nvme_get_log(fd, NVME_LOG_LID_SANITIZE, rae, sizeof(*log),
 		log);
 }

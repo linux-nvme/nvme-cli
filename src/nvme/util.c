@@ -400,8 +400,10 @@ int nvme_get_ana_log_len(int fd, size_t *analen)
 	int ret;
 
 	ret = nvme_identify_ctrl(fd, &ctrl);
-	if (ret)
-		return ret;
+	if (ret) {
+		errno = nvme_status_to_errno(ret, false);
+		return -1;
+	}
 
 	*analen = sizeof(struct nvme_ana_log) +
 		le32_to_cpu(ctrl.nanagrpid) * sizeof(struct nvme_ana_group_desc) +
@@ -456,7 +458,8 @@ int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len)
 		*len = 0;
 		break;
 	default:
-		return EINVAL;
+		errno = EINVAL;
+		return -1;
 	}
 	return 0;
 }
@@ -470,7 +473,8 @@ int nvme_get_directive_receive_length(__u8 dtype, __u8 doper, __u32 *len)
 			*len = sizeof(struct nvme_id_directives);
 			break;
 		default:
-			return -EINVAL;
+			errno = EINVAL;
+			return -1;
 		}
 		break;
 	case NVME_DIRECTIVE_DTYPE_STREAMS:

@@ -13,12 +13,34 @@
 #define __force
 #endif
 
-static inline __le16 cpu_to_le16(uint16_t x) { return (__force __le16)htole16(x); }
-static inline __le32 cpu_to_le32(uint32_t x) { return (__force __le32)htole32(x); }
-static inline __le64 cpu_to_le64(uint64_t x) { return (__force __le64)htole64(x); }
-static inline uint16_t le16_to_cpu(__le16 x) { return le16toh((__force __u16)x); }
-static inline uint32_t le32_to_cpu(__le32 x) { return le32toh((__force __u32)x); }
-static inline uint64_t le64_to_cpu(__le64 x) { return le64toh((__force __u64)x); }
+static inline __le16 cpu_to_le16(uint16_t x)
+{
+	return (__force __le16)htole16(x);
+}
+
+static inline __le32 cpu_to_le32(uint32_t x)
+{
+	return (__force __le32)htole32(x);
+}
+
+static inline __le64 cpu_to_le64(uint64_t x)
+{
+	return (__force __le64)htole64(x);
+}
+
+static inline uint16_t le16_to_cpu(__le16 x)
+{
+	return le16toh((__force __u16)x);
+}
+
+static inline uint32_t le32_to_cpu(__le32 x)
+{
+	return le32toh((__force __u32)x); }
+
+static inline uint64_t le64_to_cpu(__le64 x)
+{
+	return le64toh((__force __u64)x);
+}
 
 /**
  * enum nvme_constants -
@@ -53,6 +75,7 @@ enum nvme_constants {
 	NVME_ID_CTRL_LIST_MAX		= 2047,
 	NVME_ID_NS_LIST_MAX		= 1024,
 	NVME_ID_SECONDARY_CTRL_MAX	= 127,
+	NVME_ID_ND_DESCRIPTOR_MAX	= 16,
 	NVME_FEAT_LBA_RANGE_MAX		= 64,
 	NVME_LOG_ST_MAX_RESULTS		= 20,
 	NVME_DSM_MAX_RANGES		= 256,
@@ -948,9 +971,9 @@ struct nvme_id_nvmset_list {
 };
 
 /**
- * struct nvme_id_ns_granularity_list_entry -
+ * struct nvme_id_ns_granularity_desc -
  */
-struct nvme_id_ns_granularity_list_entry {
+struct nvme_id_ns_granularity_desc {
 	__le64			namespace_size_granularity;
 	__le64			namespace_capacity_granularity;
 };
@@ -962,7 +985,8 @@ struct nvme_id_ns_granularity_list {
 	__le32			attributes;
 	__u8			num_descriptors;
 	__u8			rsvd[27];
-	struct nvme_id_ns_granularity_list_entry entry[16];
+	struct nvme_id_ns_granularity_desc entry[NVME_ID_ND_DESCRIPTOR_MAX];
+	__u8			rsvd288[3808];
 };
 
 /**

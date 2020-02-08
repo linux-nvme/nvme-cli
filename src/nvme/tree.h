@@ -9,59 +9,99 @@
 #include "ioctl.h"
 #include "util.h"
 
+extern const char *nvme_ctrl_sysfs_dir;
+extern const char *nvme_subsys_sysfs_dir;
+
 typedef struct nvme_ns *nvme_ns_t;
 typedef struct nvme_path *nvme_path_t;
 typedef struct nvme_ctrl *nvme_ctrl_t;
 typedef struct nvme_subsystem *nvme_subsystem_t;
 typedef struct nvme_root *nvme_root_t;
 
+typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t);
+
 /**
  * nvme_first_subsystem() -
+ * @r:
+ *
+ * Return: 
  */
 nvme_subsystem_t nvme_first_subsystem(nvme_root_t r);
 
 /**
  * nvme_next_subsystem() -
+ * @r:
+ * @s:
+ *
+ * Return: 
  */
 nvme_subsystem_t nvme_next_subsystem(nvme_root_t r, nvme_subsystem_t s);
 
 /**
  * nvme_ctrl_first_ns() -
+ * @c:
+ *
+ * Return: 
  */
 nvme_ns_t nvme_ctrl_first_ns(nvme_ctrl_t c);
 
 /**
  * nvme_ctrl_next_ns() -
+ * @c:
+ * @n:
+ *
+ * Return: 
  */
 nvme_ns_t nvme_ctrl_next_ns(nvme_ctrl_t c, nvme_ns_t n);
 
 /**
  * nvme_ctrl_first_path() -
+ * @c:
+ *
+ * Return: 
  */
 nvme_path_t nvme_ctrl_first_path(nvme_ctrl_t c);
 
 /**
  * nvme_ctrl_next_path() -
+ * @c:
+ * @p:
+ *
+ * Return: 
  */
 nvme_path_t nvme_ctrl_next_path(nvme_ctrl_t c, nvme_path_t p);
 
 /**
  * nvme_subsystem_first_ctrl() -
+ * @s:
+ *
+ * Return: 
  */
 nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s);
 
 /**
  * nvme_subsystem_next_ctrl() -
+ * @s:
+ * @c:
+ *
+ * Return: 
  */
 nvme_ctrl_t nvme_subsystem_next_ctrl(nvme_subsystem_t s, nvme_ctrl_t c);
 
 /**
  * nvme_subsystem_first_ns() -
+ * @s:
+ *
+ * Return: 
  */
 nvme_ns_t nvme_subsystem_first_ns(nvme_subsystem_t s);
 
 /**
  * nvme_subsystem_next_ns() -
+ * @s:
+ * @n:
+ *
+ * Return: 
  */
 nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 
@@ -147,263 +187,444 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 
 /**
  * nvme_ns_get_fd() -
+ * @n:
+ *
+ * Return: 
  */
 int nvme_ns_get_fd(nvme_ns_t n);
 
 /**
  * nvme_ns_get_nsid() -
+ * @n:
+ *
+ * Return: 
  */
 int nvme_ns_get_nsid(nvme_ns_t n);
 
 /**
  * nvme_ns_get_lba_size() -
+ * @n:
+ *
+ * Return: 
  */
 int nvme_ns_get_lba_size(nvme_ns_t n);
 
 /**
  * nvme_ns_get_lba_count() -
+ * @n:
+ *
+ * Return: 
  */
 uint64_t nvme_ns_get_lba_count(nvme_ns_t n);
 
 /**
  * nvme_ns_get_lba_util() -
+ * @n:
+ *
+ * Return: 
  */
 uint64_t nvme_ns_get_lba_util(nvme_ns_t n);
 
 /**
  * nvme_ns_get_sysfs_dir() -
+ * @n:
+ *
+ * Return: 
  */
 const char *nvme_ns_get_sysfs_dir(nvme_ns_t n);
 
 /**
  * nvme_ns_get_name() -
+ * @n:
+ *
+ * Return: 
  */
 const char *nvme_ns_get_name(nvme_ns_t n);
 
 /**
  * nvme_ns_get_subsystem() -
+ * @n:
+ *
+ * Return: 
  */
 nvme_subsystem_t nvme_ns_get_subsystem(nvme_ns_t n);
 
 /**
  * nvme_ns_get_ctrl() -
+ * @n:
+ *
+ * Return: 
  */
 nvme_ctrl_t nvme_ns_get_ctrl(nvme_ns_t n);
 
 /**
  * nvme_ns_read() -
+ * @n:
+ * @buf:
+ * @offset:
+ * @count:
+ *
+ * Return: 
  */
 int nvme_ns_read(nvme_ns_t n, void *buf, off_t offset, size_t count);
 
 /**
  * nvme_ns_write() -
+ * @n:
+ * @buf:
+ * @offset:
+ * @count:
+ *
+ * Return: 
  */
 int nvme_ns_write(nvme_ns_t n, void *buf, off_t offset, size_t count);
 
 /**
  * nvme_ns_verify() -
+ * @n:
+ * @offset:
+ * @count:
+ *
+ * Return: 
  */
 int nvme_ns_verify(nvme_ns_t n, off_t offset, size_t count);
 
 /**
  * nvme_ns_compare() -
+ * @n:
+ * @buf:
+ * @offset:
+ * @count:
+ *
+ * Return: 
  */
 int nvme_ns_compare(nvme_ns_t n, void *buf, off_t offset, size_t count);
 
 /**
  * nvme_ns_write_zeros() -
+ * @n:
+ * @offset:
+ * @count:
+ *
+ * Return: 
  */
 int nvme_ns_write_zeros(nvme_ns_t n, off_t offset, size_t count);
 
 /**
  * nvme_ns_write_uncorrectable() -
+ * @n:
+ * @offset:
+ * @count:
+ *
+ * Return: 
  */
 int nvme_ns_write_uncorrectable(nvme_ns_t n, off_t offset, size_t count);
 
 /**
  * nvme_ns_flush() -
+ * @n:
+ *
+ * Return: 
  */
 int nvme_ns_flush(nvme_ns_t n);
 
 /**
  * nvme_ns_identify() -
+ * @n:
+ * @ns:
+ *
+ * Return: 
  */
 int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns);
 
 /**
  * nvme_path_get_name() -
+ * @p:
+ *
+ * Return: 
  */
 const char *nvme_path_get_name(nvme_path_t p);
 
 /**
  * nvme_path_get_sysfs_dir() -
+ * @p:
+ *
+ * Return: 
  */
 const char *nvme_path_get_sysfs_dir(nvme_path_t p);
 
 /**
  * nvme_path_get_ana_state() -
+ * @p:
+ *
+ * Return: 
  */
 const char *nvme_path_get_ana_state(nvme_path_t p);
 
 /**
  * nvme_path_get_subsystem() -
+ * @p:
+ *
+ * Return: 
  */
 nvme_ctrl_t nvme_path_get_subsystem(nvme_path_t p);
 
 /**
  * nvme_path_get_ns() -
+ * @p:
+ *
+ * Return: 
  */
 nvme_ns_t nvme_path_get_ns(nvme_path_t p);
 
 /**
  * nvme_ctrl_get_fd() -
+ * @c:
+ *
+ * Return: 
  */
 int nvme_ctrl_get_fd(nvme_ctrl_t c);
 
 /**
  * nvme_ctrl_get_name() -
+ * @c:
+ *
+ * Return: 
  */
 const char *nvme_ctrl_get_name(nvme_ctrl_t c);
+
 /**
  * nvme_ctrl_get_sysfs_dir() -
+ * @c:
+ *
+ * Return: 
  */
 const char *nvme_ctrl_get_sysfs_dir(nvme_ctrl_t c);
+
 /**
  * nvme_ctrl_get_address() -
+ * @c:
+ *
+ * Return: 
  */
 const char *nvme_ctrl_get_address(nvme_ctrl_t c);
+
 /**
  * nvme_ctrl_get_firmware() -
+ * @c:
+ *
+ * Return: 
  */
 const char *nvme_ctrl_get_firmware(nvme_ctrl_t c);
+
 /**
  * nvme_ctrl_get_model() -
+ * @c:
+ *
+ * Return: 
  */
 const char *nvme_ctrl_get_model(nvme_ctrl_t c);
+
 /**
  * nvme_ctrl_get_state() -
+ * @c:
+ *
+ * Return: 
  */
 const char *nvme_ctrl_get_state(nvme_ctrl_t c);
+
 /**
  * nvme_ctrl_get_numa_node() -
+ * @c:
+ *
+ * Return: 
  */
 const char *nvme_ctrl_get_numa_node(nvme_ctrl_t c);
+
 /**
  * nvme_ctrl_get_queue_count() -
+ * @c:
+ *
+ * Return: 
  */
 const char *nvme_ctrl_get_queue_count(nvme_ctrl_t c);
+
 /**
  * nvme_ctrl_get_serial() -
+ * @c:
+ *
+ * Return: 
  */
 const char *nvme_ctrl_get_serial(nvme_ctrl_t c);
+
 /**
  * nvme_ctrl_get_sqsize() -
+ * @c:
+ *
+ * Return: 
  */
 const char *nvme_ctrl_get_sqsize(nvme_ctrl_t c);
+
 /**
  * nvme_ctrl_get_transport() -
+ * @c:
+ *
+ * Return: 
  */
 const char *nvme_ctrl_get_transport(nvme_ctrl_t c);
+
 /**
  * nvme_ctrl_get_nqn() -
+ * @c:
+ *
+ * Return: 
  */
 const char *nvme_ctrl_get_nqn(nvme_ctrl_t c);
+
 /**
  * nvme_ctrl_get_subsysnqn() -
+ * @c:
+ *
+ * Return: 
  */
 const char *nvme_ctrl_get_subsysnqn(nvme_ctrl_t c);
 
 /**
  * nvme_ctrl_get_subsystem() -
+ * @c:
+ *
+ * Return: 
  */
 nvme_subsystem_t nvme_ctrl_get_subsystem(nvme_ctrl_t c);
 
 /**
  * nvme_ctrl_identify() -
+ * @c:
+ * @id:
+ *
+ * Return: 
  */
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id);
 
 /**
  * nvme_ctrl_disconnect() -
+ * @c:
+ *
+ * Return: 
  */
 int nvme_ctrl_disconnect(nvme_ctrl_t c);
 
 /**
  * nvme_scan_ctrl() -
+ * @name:
+ *
+ * Return: 
  */
 nvme_ctrl_t nvme_scan_ctrl(const char *name);
 
 /**
  * nvme_free_ctrl() -
+ * @c:
  */
 void nvme_free_ctrl(struct nvme_ctrl *c);
+
 /**
  * nvme_unlink_ctrl() -
+ * @c:
  */
 void nvme_unlink_ctrl(struct nvme_ctrl *c);
 
 /**
  * nvme_subsystem_get_nqn() -
+ * @s:
+ *
+ * Return: 
  */
 const char *nvme_subsystem_get_nqn(nvme_subsystem_t s);
 
 /**
  * nvme_subsystem_get_sysfs_dir() -
+ * @s:
+ *
+ * Return: 
  */
 const char *nvme_subsystem_get_sysfs_dir(nvme_subsystem_t s);
 
 /**
  * nvme_subsystem_get_name() -
+ * @s:
+ *
+ * Return: 
  */
 const char *nvme_subsystem_get_name(nvme_subsystem_t s);
 
-typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t);
-
 /**
  * nvme_scan_filter() -
+ * @f:
+ *
+ * Return: 
  */
 nvme_root_t nvme_scan_filter(nvme_scan_filter_t f);
 
 /**
  * nvme_scan() -
+ *
+ * Return: 
  */
 nvme_root_t nvme_scan();
 
 /**
  * nvme_refresh_topology() -
+ * @r:
  */
 void nvme_refresh_topology(nvme_root_t r);
 
 /**
  * nvme_reset_topology() -
+ * @r:
  */
 void nvme_reset_topology(nvme_root_t r);
 
 /**
  * nvme_free_tree() -
+ * @r:
  */
 void nvme_free_tree(nvme_root_t r);
 
 /**
  * nvme_get_subsys_attr() -
+ * @s:
+ * @attr:
+ *
+ * Return: 
  */
 char *nvme_get_subsys_attr(nvme_subsystem_t s, const char *attr);
 
 /**
  * nvme_get_ctrl_attr() -
+ * @c:
+ * @attr:
+ *
+ * Return: 
  */
 char *nvme_get_ctrl_attr(nvme_ctrl_t c, const char *attr);
 
 /**
  * nvme_get_ns_attr() -
+ * @n:
+ * @attr:
+ *
+ * Return: 
  */
 char *nvme_get_ns_attr(nvme_ns_t n, const char *attr);
 
 /**
  * nvme_get_path_attr() -
+ * @p:
+ * @attr:
+ *
+ * Return: 
  */
 char *nvme_get_path_attr(nvme_path_t p, const char *attr);
 
-extern const char *nvme_ctrl_sysfs_dir;
-extern const char *nvme_subsys_sysfs_dir;
 #endif /* _LIBNVME_TREE_H */

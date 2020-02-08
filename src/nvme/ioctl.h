@@ -1,8 +1,9 @@
 #ifndef _LIBNVME_IOCTL_H
 #define _LIBNVME_IOCTL_H
 
-#include <linux/types.h>
 #include <sys/ioctl.h>
+
+#include "types.h"
 
 /*
  * We can not always count on the kernel UAPI being installed. Use the same
