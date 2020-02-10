@@ -12,8 +12,6 @@
 #include <ccan/build_assert/build_assert.h>
 
 #include "ioctl.h"
-#include "cmd.h"
-#include "types.h"
 
 static int nvme_verify_chr(int fd)
 {

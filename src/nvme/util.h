@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <linux/types.h>
 
-#include "cmd.h"
+#include "ioctl.h"
 
 /**
  * nvme_status_to_errno() - Converts nvme return status to errno

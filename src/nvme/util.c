@@ -16,8 +16,6 @@
 #include <unistd.h>
 
 #include "filters.h"
-#include "types.h"
-#include "cmd.h"
 #include "ioctl.h"
 #include "util.h"
 #include "tree.h"

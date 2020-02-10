@@ -18,8 +18,7 @@
 #include <ccan/array_size/array_size.h>
 
 #include "fabrics.h"
-#include "types.h"
-#include "cmd.h"
+#include "ioctl.h"
 #include "util.h"
 
 #define NVMF_HOSTID_SIZE	36

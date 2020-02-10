@@ -54,7 +54,7 @@ libccan_sobjs := $(patsubst %.c,%.os,$(libccan_srcs))
 $(libccan_objs) $(libccan_sobjs): $(libccan_headers)
 
 libnvme_priv := nvme/private.h
-libnvme_api := libnvme.h nvme/types.h nvme/ioctl.h nvme/filters.h nvme/tree.h nvme/util.h nvme/cmd.h
+libnvme_api := libnvme.h nvme/types.h nvme/ioctl.h nvme/filters.h nvme/tree.h nvme/util.h
 libnvme_srcs := nvme/ioctl.c nvme/filters.c nvme/fabrics.c nvme/util.c nvme/tree.c
 libnvme_objs := $(patsubst %.c,%.ol,$(libnvme_srcs))
 libnvme_sobjs := $(patsubst %.c,%.os,$(libnvme_srcs))
