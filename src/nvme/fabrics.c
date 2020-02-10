@@ -13,7 +13,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#ifdef CONFIG_SYSTEMD
 #include <systemd/sd-id128.h>
+#define NVME_HOSTNQN_ID SD_ID128_MAKE(c7,f4,61,81,12,be,49,32,8c,83,10,6f,9d,dd,d8,6b)
+#endif
 
 #include <ccan/array_size/array_size.h>
 
@@ -22,7 +25,6 @@
 #include "util.h"
 
 #define NVMF_HOSTID_SIZE	36
-#define NVME_HOSTNQN_ID SD_ID128_MAKE(c7,f4,61,81,12,be,49,32,8c,83,10,6f,9d,dd,d8,6b)
 
 const char *nvmf_dev = "/dev/nvme-fabrics";
 const char *nvmf_hostnqn_file = "/etc/nvme/hostnqn";
@@ -336,6 +338,7 @@ out_free_log:
 	return ret;
 }
 
+#ifdef CONFIG_SYSTEMD
 char *nvmf_hostnqn_generate()
 {
 	char *ret = NULL;
@@ -351,6 +354,13 @@ char *nvmf_hostnqn_generate()
 
 	return ret;
 }
+#else
+char *nvmf_hostnqn_generate()
+{
+	errno = ENOTSUP;
+	return NULL;
+}
+#endif
 
 static char *nvmf_read_file(const char *f, int len)
 {

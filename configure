@@ -138,6 +138,18 @@ compile_prog() {
   do_cc $CFLAGS $local_cflags -o $TMPE $TMPC $LDFLAGS $local_ldflags
 }
 
+feature_not_found() {
+  feature=$1
+  packages=$2
+
+  echo ""
+  echo "ERROR: $feature package requirements not met"
+  if test ! -z "$packages" ; then
+    echo "ERROR: needs $packages installed"
+  fi
+  fatal ""
+}
+
 has() {
   type "$1" >/dev/null 2>&1
 }
@@ -167,25 +179,25 @@ print_and_output_mak "datadir" "$datadir"
 libuuid="no"
 ${ld} -o /dev/null -luuid >/dev/null 2>&1
 if [ $? -eq 0 ]; then
-	libuuid="yes"
+  libuuid="yes"
 fi
 print_config "libuuid" "${libuuid}"
 
 ##########################################
 # check for SystemD
-havesystemd="no"
-pkg-config --exists systemd  --atleast-version=232
+systemd="no"
+pkg-config --exists systemd --atleast-version=232
 if [ $? -eq 0 ]; then
-	havesystemd="yes"
+  systemd="yes"
 fi
-print_config "havesystemd" "${havesystemd}"
+print_config "systemd" "${systemd}"
 
 if test "$libuuid" = "yes"; then
-  output_sym "LIBUUID"
+  output_sym "CONFIG_LIBUUID"
   echo "override LDFLAGS += -luuid" >> $config_host_mak
   echo "override LIB_DEPENDS += uuid" >> $config_host_mak 
 fi
-if test "$havesystemd" = "yes"; then
-  output_sym "HAVE_SYSTEMD"
+if test "$systemd" = "yes"; then
+  output_sym "CONFIG_SYSTEMD"
   echo "override LDFLAGS += -lsystemd" >> $config_host_mak
 fi
