@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <linux/types.h>
 
-#include "types.h"
+#include "cmd.h"
 
 /**
  * nvme_status_to_errno() - Converts nvme return status to errno
@@ -31,18 +31,35 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 			 void *buf);
 
 /**
- * nvme_get_telemetry_log() -
+ * nvme_get_ctrl_telemetry() -
  * @fd:
- * @create:
- * @ctrl:
- * @data_area:
+ * @rae:
  * @buf:
  * @log_size:
  *
- * Return: 
+ * Returns:
  */
-int nvme_get_telemetry_log(int fd, bool create, bool ctrl, int data_area,
-			   void **buf, __u32 *log_size);
+int nvme_get_ctrl_telemetry(int fd, bool rae, void **buf, __u32 *log_size);
+
+/**
+ * nvme_get_host_telemetry() -
+ * @fd:
+ * @buf:
+ * @log_size:
+ *
+ * Returns:
+ */
+int nvme_get_host_telemetry(int fd, void **buf, __u32 *log_size);
+
+/**
+ * nvme_get_new_host_telemetry() -
+ * @fd:
+ * @buf:
+ * @log_size:
+ *
+ * Returns:
+ */
+int nvme_get_new_host_telemetry(int fd, void **buf, __u32 *log_size);
 
 /**
  * nvme_setup_id_ns() -
@@ -156,13 +173,15 @@ int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len);
 
 /**
  * nvme_get_directive_receive_length() -
- * @dtype:
- * @doper:
- * @len:
+ * @dtype:	Directive type, see &enum nvme_directive_dtype
+ * @doper:	Directive receive operation, see &enum nvme_directive_receive_doper
+ * @len:	Address to save the payload length of the directive in bytes on
+ * 		a successful decode
  *
- * Return: 
+ * Return: 0 on success, -1 with errno set to EINVAL.
  */
-int nvme_get_directive_receive_length(__u8 dtype, __u8 doper, __u32 *len);
+int nvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
+		enum nvme_directive_receive_doper doper, __u32 *len);
 
 /**
  * nvme_open() - Open an nvme controller or namespace device

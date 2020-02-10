@@ -314,42 +314,37 @@ enum nvme_directive_dtype {
 };
 
 /**
- * enum -
+ * enum nvme_directive_receive_doper -
+ * @NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM:
+ * @NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM:
+ * @NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS:
+ * @NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE:
  */
-enum nvme_cmd_directive_receive_identify_doper {
+enum nvme_directive_receive_doper {
 	NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM		= 0x01,
-};
-
-/**
- * enum -
- */
-enum nvme_cmd_directive_receive_streams_doper {
 	NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM		= 0x01,
 	NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS		= 0x02,
 	NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE		= 0x03,
 };
 
 /**
- * enum -
+ * enum nvme_directive_send_doper -
+ * @NVME_DIRECTIVE_SEND_IDENTIFY_DOPER_ENDIR:
+ * @NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_IDENTIFIER:
+ * @NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE:
  */
-enum nvme_cmd_directive_send_identify_doper {
+enum nvme_directive_send_doper {
 	NVME_DIRECTIVE_SEND_IDENTIFY_DOPER_ENDIR		= 0x01,
-};
-
-/**
- * enum -
- */
-enum nvme_cmd_directive_send_identify_endir {
-	NVME_DIRECTIVE_SEND_IDENTIFY_ENDIR_DISABLE		= 0,
-	NVME_DIRECTIVE_SEND_IDENTIFY_ENDIR_ENABLE		= 1,
-};
-
-/**
- * enum -
- */
-enum nvme_cmd_directive_send_streams_doper {
 	NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_IDENTIFIER	= 0x01,
 	NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE	= 0x02,
+};
+
+/**
+ * enum -
+ */
+enum nvme_directive_send_identify_endir {
+	NVME_DIRECTIVE_SEND_IDENTIFY_ENDIR_DISABLE		= 0,
+	NVME_DIRECTIVE_SEND_IDENTIFY_ENDIR_ENABLE		= 1,
 };
 
 /**
@@ -1893,7 +1888,7 @@ int nvme_get_lba_status(int fd, __u32 nsid, __u64 slba, __u32 mndw, __u16 rl,
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID, if applicable
  * @dspec:	Directive specific field
- * @doper:	Directive operation
+ * @doper:	Directive send operation, see &enum nvme_directive_send_doper
  * @dtype:	Directive type, see &enum nvme_directive_dtype
  * @dw12:	Directive specific command dword12
  * @data_len:	Length of data payload in bytes
@@ -1909,7 +1904,8 @@ int nvme_get_lba_status(int fd, __u32 nsid, __u64 slba, __u32 mndw, __u16 rl,
  * Return: The nvme command status if a response was received or -1 with errno
  * 	   set otherwise.
  */
-int nvme_directive_send(int fd, __u32 nsid, __u16 dspec, __u8 doper,
+int nvme_directive_send(int fd, __u32 nsid, __u16 dspec,
+			enum nvme_directive_send_doper doper,
 			enum nvme_directive_dtype dtype, __u32 cdw12,
 			__u32 data_len, void *data, __u32 *result);
 
@@ -1951,7 +1947,7 @@ int nvme_directive_send_stream_release_resource(int fd, __u32 nsid);
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID, if applicable
  * @dspec:	Directive specific field
- * @doper:	Directive operation
+ * @doper:	Directive receive operation, see &enum nvme_directive_receive_doper
  * @dtype:	Directive type, see &enum nvme_directive_dtype
  * @dw12:	Directive specific command dword12
  * @data_len:	Length of data payload
@@ -1961,7 +1957,8 @@ int nvme_directive_send_stream_release_resource(int fd, __u32 nsid);
  * Return: The nvme command status if a response was received or -1 with errno
  * 	   set otherwise.
  */
-int nvme_directive_recv(int fd, __u32 nsid, __u16 dspec, __u8 doper,
+int nvme_directive_recv(int fd, __u32 nsid, __u16 dspec,
+			enum nvme_directive_receive_doper doper,
 			enum nvme_directive_dtype dtype, __u32 cdw12,
 			__u32 data_len, void *data, __u32 *result);
 

@@ -1281,7 +1281,8 @@ int nvme_get_lba_status(int fd, __u32 nsid, __u64 slba, __u32 mndw, __u16 rl,
 	return nvme_submit_admin_passthru(fd, &cmd, NULL);
 }
 
-int nvme_directive_send(int fd, __u32 nsid, __u16 dspec, __u8 doper,
+int nvme_directive_send(int fd, __u32 nsid, __u16 dspec,
+			enum nvme_directive_send_doper doper,
 			enum nvme_directive_dtype dtype, __u32 cdw12,
 			__u32 data_len, void *data, __u32 *result)
 {
@@ -1331,7 +1332,8 @@ int nvme_directive_send_stream_release_resource(int fd, __u32 nsid)
 		NULL);
 }
 
-int nvme_directive_recv(int fd, __u32 nsid, __u16 dspec, __u8 doper,
+int nvme_directive_recv(int fd, __u32 nsid, __u16 dspec,
+			enum nvme_directive_receive_doper doper,
 			enum nvme_directive_dtype dtype, __u32 cdw12,
 			__u32 data_len, void *data, __u32 *result)
 {

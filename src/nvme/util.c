@@ -235,6 +235,7 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 		__u32 xfer_len, __u32 data_len, void *data)
 {
 	__u64 offset = 0, xfer;
+	bool retain = true;
 	void *ptr = data;
 	int ret;
 
@@ -247,8 +248,16 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 		if (xfer > xfer_len)
 			xfer  = xfer_len;
 
+		/*
+		 * Always retain regardless of the RAE parameter until the very
+		 * last portion of this log page so the data remains latched
+		 * during the fetch sequence.
+		 */
+		if (offset + xfer == data_len)
+			retain = rae;
+
 		ret = nvme_get_log(fd, log_id, nsid, offset, NVME_LOG_LSP_NONE,
-				   NVME_LOG_LSI_NONE, rae, NVME_UUID_NONE,
+				   NVME_LOG_LSI_NONE, retain, NVME_UUID_NONE,
 				   xfer, ptr);
 		if (ret)
 			return ret;
@@ -266,14 +275,14 @@ int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 	return __nvme_get_log_page(fd, nsid, log_id, rae, 4096, data_len, data);
 }
 
-int nvme_get_telemetry_log(int fd, bool create, bool ctrl, int data_area,
-		       void **buf, __u32 *log_size)
+static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae, void **buf,
+		__u32 *log_size)
 {
 	static const __u32 xfer = 512;
 
-	__u8 lid = NVME_LOG_LID_TELEMETRY_HOST;
 	struct nvme_telemetry_log *telem;
 	__u32 size;
+	__u8 lid;
 	void *log;
 	int err;
 
@@ -286,36 +295,24 @@ int nvme_get_telemetry_log(int fd, bool create, bool ctrl, int data_area,
 	if (ctrl) {
 		err = nvme_get_log_telemetry_ctrl(fd, true, 0, xfer, log);
 		lid = NVME_LOG_LID_TELEMETRY_CTRL;
-	} else if (create)
-		err = nvme_get_log_create_telemetry_host(fd, log);
-	else
-		err = nvme_get_log_telemetry_host(fd, 0, xfer, log);
+	} else {
+		lid = NVME_LOG_LID_TELEMETRY_HOST;
+		if (create)
+			err = nvme_get_log_create_telemetry_host(fd, log);
+		else
+			err = nvme_get_log_telemetry_host(fd, 0, xfer, log);
+	}
 
 	if (err)
 		goto free;
 
 	telem = log;
-	if (!telem->ctrlavail) {
+	if (ctrl && !telem->ctrlavail) {
 		size = xfer;
 		goto done;
 	}
 
-	switch (data_area) {
-	case 1:
-		size = (le16_to_cpu(telem->dalb1) * xfer) + xfer;
-		break;
-	case 2:
-		size = (le16_to_cpu(telem->dalb2) * xfer) + xfer;
-		break;
-	case 3:
-		size = (le16_to_cpu(telem->dalb3) * xfer) + xfer;
-		break;
-	default:
-		errno = EINVAL;
-		err = -1;
-		goto free;
-	}
-
+	size = (le16_to_cpu(telem->dalb3) * xfer) + xfer;
 	log = realloc(log, size);
 	if (!log) {
 		errno = ENOMEM;
@@ -323,7 +320,7 @@ int nvme_get_telemetry_log(int fd, bool create, bool ctrl, int data_area,
 		goto free;
 	}
 
-	err = nvme_get_log_page(fd, NVME_NSID_NONE, lid, true, size, (void *)log);
+	err = nvme_get_log_page(fd, NVME_NSID_NONE, lid, rae, size, (void *)log);
 	if (err)
 		goto free;
 done:
@@ -333,6 +330,21 @@ done:
 free:
 	free(log);
 	return err;
+}
+
+int nvme_get_ctrl_telemetry(int fd, bool rae, void **buf, __u32 *log_size)
+{
+	return nvme_get_telemetry_log(fd, false, true, rae, buf, log_size);
+}
+
+int nvme_get_host_telemetry(int fd,  void **buf, __u32 *log_size)
+{
+	return nvme_get_telemetry_log(fd, false, false, false, buf, log_size);
+}
+
+int nvme_get_new_host_telemetry(int fd,  void **buf, __u32 *log_size)
+{
+	return nvme_get_telemetry_log(fd, true, false, false, buf, log_size);
 }
 
 void nvme_setup_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
@@ -464,37 +476,36 @@ int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len)
 	return 0;
 }
 
-int nvme_get_directive_receive_length(__u8 dtype, __u8 doper, __u32 *len)
+int nvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
+		enum nvme_directive_receive_doper doper, __u32 *len)
 {
 	switch (dtype) {
 	case NVME_DIRECTIVE_DTYPE_IDENTIFY:
 		switch (doper) {
 		case NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM:
 			*len = sizeof(struct nvme_id_directives);
-			break;
+			return 0;
 		default:
 			errno = EINVAL;
 			return -1;
 		}
-		break;
 	case NVME_DIRECTIVE_DTYPE_STREAMS:
 		switch (doper) {
 		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM:
 			*len = sizeof(struct nvme_streams_directive_params);
-			break;
+			return 0;
 		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS:
 			*len = (128 * 1024) * sizeof(__le16);
-			break;
+			return 0;
 		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE:
 			*len = 0;
-			break;
+			return 0;
 		default:
 			return -EINVAL;
 		}
 	default:
 		return -EINVAL;
 	}
-	return 0;
 }
 
 static int __nvme_set_attr(const char *path, const char *value)

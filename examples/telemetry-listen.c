@@ -33,15 +33,10 @@ static void save_telemetry(nvme_ctrl_t c)
 	void *log;
 	time_t s;
 
-	ret = nvme_get_telemetry_log(nvme_ctrl_get_fd(c), false, true, 3, &log,
-		&log_size);
+	/* Clear the log (rae == false) at the end to see new telemetry events later */
+	ret = nvme_get_ctrl_telemetry(nvme_ctrl_get_fd(c), false, &log, &log_size);
 	if (ret)
 		return;
-
-	/* Clear the log (rae == false) to see new telemetry events later */
-	nvme_get_log_telemetry_ctrl(nvme_ctrl_get_fd(c), false, 0, sizeof(buf),
-		buf);
-	memset(buf, 0, sizeof(buf));
 
 	s = time(NULL);
 	ret = snprintf(buf, sizeof(buf), "/var/log/%s-telemetry-%ld",
