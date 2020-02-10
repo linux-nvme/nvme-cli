@@ -33,19 +33,21 @@ static int add_bool_argument(char **argstr, char *tok, bool arg)
 {
 	char *nstr;
 
-	if (arg) {
-		if (asprintf(&nstr, "%s,%s", *argstr, tok) < 0) {
-			errno = ENOMEM;
-			return -1;
-		}
-		free(*argstr);
-		*argstr = nstr;
+	if (!arg)
+		return 0;
+
+	if (asprintf(&nstr, "%s,%s", *argstr, tok) < 0) {
+		errno = ENOMEM;
+		return -1;
 	}
+	free(*argstr);
+	*argstr = nstr;
+
 	return 0;
 }
 
 static int add_int_argument(char **argstr, char *tok, int arg,
-		 bool allow_zero)
+			    bool allow_zero)
 {
 	char *nstr;
 
@@ -64,14 +66,14 @@ static int add_argument(char **argstr, const char *tok, const char *arg)
 {
 	char *nstr;
 
-	if (arg && strcmp(arg, "none")) {
-		if (asprintf(&nstr, "%s,%s=%s", *argstr, tok, arg) < 0) {
-			errno = ENOMEM;
-			return -1;
-		}
-		free(*argstr);
-		*argstr = nstr;
+	if (!(arg && strcmp(arg, "none")))
+		return 0;
+	if (asprintf(&nstr, "%s,%s=%s", *argstr, tok, arg) < 0) {
+		errno = ENOMEM;
+		return -1;
 	}
+	free(*argstr);
+	*argstr = nstr;
 	return 0;
 }
 
@@ -108,6 +110,7 @@ static int build_options(char **argstr, struct nvme_fabrics_config *cfg)
 
 	return 0;
 }
+
 static int __nvmf_add_ctrl(const char *argstr)
 {
 	int ret, fd, len = strlen(argstr);
@@ -161,14 +164,13 @@ int nvmf_add_ctrl_opts(struct nvme_fabrics_config *cfg)
 
 nvme_ctrl_t nvmf_add_ctrl(struct nvme_fabrics_config *cfg)
 {
-	char d[32];
+	char d[32] = { 0 };
 	int ret;
 
 	ret = nvmf_add_ctrl_opts(cfg);
 	if (ret < 0)
 		return NULL;
 
-	memset(d, 0, sizeof(d));
 	if (snprintf(d, sizeof(d), "nvme%d", ret) < 0)
 		return NULL;
 
@@ -182,7 +184,8 @@ static void chomp(char *s, int l)
 }
 
 nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
-	const struct nvme_fabrics_config *defcfg, bool *discover)
+				    const struct nvme_fabrics_config *defcfg,
+				    bool *discover)
 {
 	struct nvme_fabrics_config cfg = { 0 };
 	nvme_ctrl_t c;
@@ -263,11 +266,12 @@ nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
 
 static int nvme_discovery_log(int fd, __u32 len, struct nvmf_discovery_log *log)
 {
-	return __nvme_get_log_page(fd, 0, NVME_LOG_LID_DISCOVER, true, 512, len, log);
+	return __nvme_get_log_page(fd, 0, NVME_LOG_LID_DISCOVER, true, 512,
+				   len, log);
 }
 
 int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
-	int max_retries)
+			   int max_retries)
 {
 	struct nvmf_discovery_log *log;
 	int hdr, ret, retries = 0;
@@ -335,8 +339,8 @@ out_free_log:
 
 char *nvmf_hostnqn_generate()
 {
-	sd_id128_t id;
 	char *ret = NULL;
+	sd_id128_t id;
 
 	if (sd_id128_get_machine_app_specific(NVME_HOSTNQN_ID, &id) < 0)
 		return NULL;
