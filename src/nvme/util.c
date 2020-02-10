@@ -232,7 +232,7 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 }
 
 int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
-		__u32 xfer_len, __u32 data_len, void *data)
+			__u32 xfer_len, __u32 data_len, void *data)
 {
 	__u64 offset = 0, xfer;
 	bool retain = true;
@@ -270,13 +270,13 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 }
 
 int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
-		__u32 data_len, void *data)
+		      __u32 data_len, void *data)
 {
 	return __nvme_get_log_page(fd, nsid, log_id, rae, 4096, data_len, data);
 }
 
-static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae, void **buf,
-		__u32 *log_size)
+static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
+				  void **buf, __u32 *log_size)
 {
 	static const __u32 xfer = 512;
 
@@ -382,26 +382,27 @@ void nvme_setup_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
 		cntlist->identifier[i] = cpu_to_le16(ctrlist[i]);
 }
 
-static int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist, bool attach)
+static int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls,
+			      __u16 *ctrlist, bool attach)
 {
+	enum nvme_ns_attach_sel sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH;
 	struct nvme_ctrl_list cntlist = { 0 };
-	enum nvme_ns_attach_sel sel;
 
 	if (attach)
 		sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH;
-	else
-		sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH;
 
 	nvme_setup_ctrl_list(&cntlist, num_ctrls, ctrlist);
 	return nvme_ns_attach(fd, nsid, sel, &cntlist);
 }
 
-int nvme_namespace_attach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist)
+int nvme_namespace_attach_ctrls(int fd, __u32 nsid, __u16 num_ctrls,
+				__u16 *ctrlist)
 {
 	return nvme_ns_attachment(fd, nsid, num_ctrls, ctrlist, true);
 }
 
-int nvme_namespace_detach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist)
+int nvme_namespace_detach_ctrls(int fd, __u32 nsid, __u16 num_ctrls,
+				__u16 *ctrlist)
 {
 	return nvme_ns_attachment(fd, nsid, num_ctrls, ctrlist, false);
 }
@@ -544,7 +545,6 @@ static char *__nvme_get_attr(const char *path)
 	if (fd < 0)
 		return NULL;
 
-	memset(value, 0, sizeof(value));
 	ret = read(fd, value, sizeof(value) - 1);
 	if (ret < 0) {
 		close(fd);
