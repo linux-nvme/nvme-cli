@@ -31,14 +31,13 @@ static int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 
 nvme_root_t nvme_scan_filter(nvme_scan_filter_t f)
 {
-	struct nvme_root *r = malloc(sizeof(*r));
+	struct nvme_root *r = calloc(1, sizeof(*r));
 
 	if (!r) {
 		errno = ENOMEM;
 		return NULL;
 	}
 
-	memset(r, 0, sizeof(*r));
 	list_head_init(&r->subsystems);
 	nvme_scan_topology(r, f);
 	return r;
@@ -56,9 +55,7 @@ nvme_subsystem_t nvme_first_subsystem(nvme_root_t r)
 
 nvme_subsystem_t nvme_next_subsystem(nvme_root_t r, nvme_subsystem_t s)
 {
-	if (!s)
-		return NULL;
-	return list_next(&r->subsystems, s, entry);
+	return s ? list_next(&r->subsystems, s, entry) : NULL;
 }
 
 void nvme_refresh_topology(nvme_root_t r)
@@ -110,9 +107,7 @@ nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s)
 
 nvme_ctrl_t nvme_subsystem_next_ctrl(nvme_subsystem_t s, nvme_ctrl_t c)
 {
-	if (!c)
-		return NULL;
-	return list_next(&s->ctrls, c, entry);
+	return c ? list_next(&s->ctrls, c, entry) : NULL;
 }
 
 nvme_ns_t nvme_subsystem_first_ns(nvme_subsystem_t s)
@@ -122,9 +117,7 @@ nvme_ns_t nvme_subsystem_first_ns(nvme_subsystem_t s)
 
 nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n)
 {
-	if (!n)
-		return NULL;
-	return list_next(&s->namespaces, n, entry);
+	return n ? list_next(&s->namespaces, n, entry) : NULL;
 }
 
 static void nvme_free_ns(struct nvme_ns *n)
@@ -196,12 +189,11 @@ int nvme_scan_subsystem(struct nvme_root *r, char *name, nvme_scan_filter_t f)
 	if (ret < 0)
 		return ret;
 
-	s = malloc(sizeof(*s));
+	s = calloc(1, sizeof(*s));
 	if (!s) {
 		errno = ENOMEM;
 		goto free_path;
 	}
-	memset(s, 0, sizeof(*s));
 
 	s->r = r;
 	s->name = strdup(name);;
@@ -291,12 +283,11 @@ int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name)
 		return -1;
 	}
 
-	p = malloc(sizeof(*p));
+	p = calloc(1, sizeof(*p));
 	if (!p) {
 		errno = ENOMEM;
 		goto free_path;
 	}
-	memset(p, 0, sizeof(*p));
 
 	p->c = c;
 	p->name = strdup(name);
@@ -400,9 +391,7 @@ nvme_ns_t nvme_ctrl_first_ns(nvme_ctrl_t c)
 
 nvme_ns_t nvme_ctrl_next_ns(nvme_ctrl_t c, nvme_ns_t n)
 {
-	if (!n)
-		return NULL;
-	return list_next(&c->namespaces, n, entry);
+	return n ? list_next(&c->namespaces, n, entry) : NULL;
 }
 
 nvme_path_t nvme_ctrl_first_path(nvme_ctrl_t c)
@@ -412,14 +401,13 @@ nvme_path_t nvme_ctrl_first_path(nvme_ctrl_t c)
 
 nvme_path_t nvme_ctrl_next_path(nvme_ctrl_t c, nvme_path_t p)
 {
-	if (!p)
-		return NULL;
-	return list_next(&c->paths, p, entry);
+	return p ? list_next(&c->paths, p, entry) : NULL;
 }
 
 int nvme_ctrl_disconnect(nvme_ctrl_t c)
 {
-	return nvme_set_attr(nvme_ctrl_get_sysfs_dir(c), "delete_controller", "1");
+	return nvme_set_attr(nvme_ctrl_get_sysfs_dir(c),
+			     "delete_controller", "1");
 }
 
 void nvme_unlink_ctrl(nvme_ctrl_t c)
@@ -496,12 +484,11 @@ static nvme_ctrl_t __nvme_ctrl_alloc(const char *path, const char *name)
 		return NULL;
 	closedir(d);
 
-	c = malloc(sizeof(*c));
+	c = calloc(1, sizeof(*c));
 	if (!c) {
 		errno = ENOMEM;
 		return NULL;
 	}
-	memset(c, 0, sizeof(*c));
 
 	c->fd = nvme_open(name);
 	if (c->fd < 0)
@@ -569,8 +556,8 @@ int nvme_subsystem_scan_ctrl(struct nvme_subsystem *s, char *name)
 	return 0;
 }
 
-static int nvme_bytes_to_lba(nvme_ns_t n, off_t offset, size_t count, __u64 *lba,
-				__u16 *nlb)
+static int nvme_bytes_to_lba(nvme_ns_t n, off_t offset, size_t count,
+			    __u64 *lba, __u16 *nlb)
 {
 	int bs;
 
@@ -644,7 +631,7 @@ int nvme_ns_verify(nvme_ns_t n, off_t offset, size_t count)
 		return -1;
 
 	return nvme_verify(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba, nlb,
-			0, 0, 0, 0);
+			   0, 0, 0, 0);
 }
 
 int nvme_ns_write_uncorrectable(nvme_ns_t n, off_t offset, size_t count)
@@ -656,7 +643,7 @@ int nvme_ns_write_uncorrectable(nvme_ns_t n, off_t offset, size_t count)
 		return -1;
 
 	return nvme_write_uncorrectable(nvme_ns_get_fd(n), nvme_ns_get_nsid(n),
-			slba, nlb);
+					slba, nlb);
 }
 
 int nvme_ns_write_zeros(nvme_ns_t n, off_t offset, size_t count)
@@ -668,7 +655,7 @@ int nvme_ns_write_zeros(nvme_ns_t n, off_t offset, size_t count)
 		return -1;
 
 	return nvme_write_zeros(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba,
-			nlb, 0, 0, 0, 0);
+				nlb, 0, 0, 0, 0);
 }
 
 int nvme_ns_write(nvme_ns_t n, void *buf, off_t offset, size_t count)
@@ -680,7 +667,7 @@ int nvme_ns_write(nvme_ns_t n, void *buf, off_t offset, size_t count)
 		return -1;
 
 	return nvme_write(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba, nlb, 0,
-		0, 0, 0, 0, 0, count, buf, 0, NULL);
+			  0, 0, 0, 0, 0, count, buf, 0, NULL);
 }
 
 int nvme_ns_read(nvme_ns_t n, void *buf, off_t offset, size_t count)
@@ -692,7 +679,7 @@ int nvme_ns_read(nvme_ns_t n, void *buf, off_t offset, size_t count)
 		return -1;
 
 	return nvme_read(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba, nlb, 0,
-		0, 0, 0, 0, count, buf, 0, NULL);
+			 0, 0, 0, 0, count, buf, 0, NULL);
 }
 
 int nvme_ns_compare(nvme_ns_t n, void *buf, off_t offset, size_t count)
@@ -704,7 +691,7 @@ int nvme_ns_compare(nvme_ns_t n, void *buf, off_t offset, size_t count)
 		return -1;
 
 	return nvme_compare(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba, nlb,
-		0, 0, 0, 0, count, buf, 0, NULL);
+			    0, 0, 0, 0, count, buf, 0, NULL);
 }
 
 int nvme_ns_flush(nvme_ns_t n)
@@ -736,12 +723,11 @@ static struct nvme_ns *__nvme_scan_namespace(const char *sysfs_dir, char *name)
 		return NULL;
 	}
 
-	n = malloc(sizeof(*n));
+	n = calloc(1, sizeof(*n));
 	if (!n) {
 		errno = ENOMEM;
 		goto free_path;
 	}
-	memset(n, 0, sizeof(*n));
 
 	n->name = strdup(name);
 	n->sysfs_dir = path;
