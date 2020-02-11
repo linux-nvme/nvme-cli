@@ -5,18 +5,28 @@ include ../Makefile.quiet
 
 ifneq ($(MAKECMDGOALS),clean)
 include ../config-host.mak
+else
+CONFIG_CPLUSPLUS=y
 endif
 
-all_targets += test
+c_targets += test
 
+ifdef CONFIG_CPLUSPLUS
+cpp_targets += cpp
+else
+cpp_targets += 
+endif
+
+all_targets += $(c_targets) $(cpp_targets)
 all: $(all_targets)
+
+CXXFLAGS ?= -lstdc++
+
+%: %.cc
+	$(QUIET_CC)$(CC) $(CFLAGS) $(CXXFLAGS) -o $@ $< -lnvme
 
 %: %.c
 	$(QUIET_CC)$(CC) $(CFLAGS) -o $@ $< -lnvme
 
-test_srs := test.c
-
-test_objs := $(patsubst %.c,%.ol,$(test_srcs))
-
 clean:
-	@rm -f $(all_targets) $(test_objs)
+	rm -f $(all_targets)

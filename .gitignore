@@ -8,6 +8,7 @@ a.out
 *.so.*
 
 test/test
+test/cpp
 
 examples/display-tree
 examples/display-columnar

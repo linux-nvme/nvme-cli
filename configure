@@ -192,6 +192,16 @@ if [ $? -eq 0 ]; then
 fi
 print_config "systemd" "${systemd}"
 
+##########################################
+# check for c++
+cpp="no"
+which g++ > /dev/null 2> /dev/null
+if [ $? -eq 0 ]; then
+  cpp="yes"
+fi
+print_config "cpp" "${cpp}"
+
+
 if test "$libuuid" = "yes"; then
   output_sym "CONFIG_LIBUUID"
   echo "override LDFLAGS += -luuid" >> $config_host_mak
@@ -200,4 +210,7 @@ fi
 if test "$systemd" = "yes"; then
   output_sym "CONFIG_SYSTEMD"
   echo "override LDFLAGS += -lsystemd" >> $config_host_mak
+fi
+if test "$cpp" = "yes"; then
+  output_mak "CONFIG_CPLUSPLUS" "y"
 fi
