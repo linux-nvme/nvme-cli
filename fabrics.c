@@ -947,7 +947,7 @@ retry:
 		p += len;
 	}
 
-	if (cfg.keep_alive_tmo && !discover) {
+	if (cfg.keep_alive_tmo) {
 		len = sprintf(p, ",keep_alive_tmo=%d", cfg.keep_alive_tmo);
 		if (len < 0)
 			return -EINVAL;
