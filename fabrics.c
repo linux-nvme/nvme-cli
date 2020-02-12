@@ -672,7 +672,8 @@ static char *hostnqn_read_file(void)
 	if (f == NULL)
 		return false;
 
-	if (fgets(hostnqn, sizeof(hostnqn), f) == NULL)
+	if (fgets(hostnqn, sizeof(hostnqn), f) == NULL ||
+	    !strlen(hostnqn))
 		goto out;
 
 	ret = strndup(hostnqn, strcspn(hostnqn, "\n"));
