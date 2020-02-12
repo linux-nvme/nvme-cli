@@ -1,3 +1,11 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+/**
+ * This file is part of libnvme.
+ * Copyright (c) 2020 Western Digital Corporation or its affiliates.
+ *
+ * Authors: Keith Busch <keith.busch@wdc.com>
+ */
+
 /**
  * Basic libnvme test: uses scan filters, single controllers, and many admin
  * command APIs for identifications, logs, and features. No verification for

@@ -1,3 +1,11 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+/**
+ * This file is part of libnvme.
+ * Copyright (c) 2020 Western Digital Corporation or its affiliates.
+ *
+ * Authors: Keith Busch <keith.busch@wdc.com>
+ */
+
 /**
  * discover-loop: Use fabrics commands to discover any loop targets and print
  * those records. You must have at least one configured nvme loop target on the

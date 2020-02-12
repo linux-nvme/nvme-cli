@@ -8,7 +8,7 @@ libdir ?= $(prefix)/lib
 
 CCANDIR=ccan/
 
-CFLAGS ?= -g -fomit-frame-pointer -O2 -I/usr/include -Invme/ -I$(CCANDIR) -include ../config-host.h
+CFLAGS ?= -g -fomit-frame-pointer -O2 -I/usr/include -Invme/ -I$(CCANDIR) -include ../config-host.h -D_GNU_SOURCE
 override CFLAGS += -Wall -fPIC
 SO_CFLAGS=-shared $(CFLAGS)
 L_CFLAGS=$(CFLAGS)
