@@ -6,7 +6,7 @@ prefix ?= /usr
 includedir ?= $(prefix)/include
 libdir ?= $(prefix)/lib
 
-CCANDIR=ccan/
+CCANDIR=../ccan/
 
 CFLAGS ?= -g -fomit-frame-pointer -O2 -I/usr/include -Invme/ -I$(CCANDIR) -include ../config-host.h -D_GNU_SOURCE
 override CFLAGS += -Wall -fPIC
