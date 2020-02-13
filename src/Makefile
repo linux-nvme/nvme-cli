@@ -51,7 +51,7 @@ libccan_srcs := $(wildcard $(CCANDIR)ccan/*/*.c)
 libccan_objs := $(patsubst %.c,%.ol,$(libccan_srcs))
 libccan_sobjs := $(patsubst %.c,%.os,$(libccan_srcs))
 
-$(libccan_objs) $(libccan_sobjs): $(libccan_headers)
+$(libccan_objs) $(libccan_sobjs): $(libccan_headers) $(CCANDIR)config.h
 
 libnvme_priv := nvme/private.h
 libnvme_api := libnvme.h nvme/types.h nvme/ioctl.h nvme/filters.h nvme/tree.h nvme/util.h
