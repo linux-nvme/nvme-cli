@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
-/**
+/*
  * This file is part of libnvme.
  * Copyright (c) 2020 Western Digital Corporation or its affiliates.
  *
