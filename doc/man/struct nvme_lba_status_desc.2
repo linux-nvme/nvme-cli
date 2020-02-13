@@ -1,0 +1,21 @@
+.TH "libnvme" 2 "struct nvme_lba_status_desc" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_lba_status_desc \- 
+.SH SYNOPSIS
+struct nvme_lba_status_desc {
+.br
+.BI "    __le64 dslba;"
+.br
+.BI "    __le32 nlb;"
+.br
+.BI "    __u8 rsvd12;"
+.br
+.BI "    __u8 status;"
+.br
+.BI "    __u8 rsvd14[2];"
+.br
+.BI "
+};
+.br
+
+.SH Members

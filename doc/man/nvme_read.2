@@ -1,0 +1,55 @@
+.TH "nvme_read" 2 "nvme_read" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_read \- Submit an nvme user read command
+.SH SYNOPSIS
+.B "int" nvme_read
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "__u64 " slba ","
+.BI "__u16 " nlb ","
+.BI "__u16 " control ","
+.BI "__u8 " dsm ","
+.BI "__u32 " reftag ","
+.BI "__u16 " apptag ","
+.BI "__u16 " appmask ","
+.BI "__u32 " data_len ","
+.BI "void *" data ","
+.BI "__u32 " metadata_len ","
+.BI "void *" metadata ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID
+.IP "slba" 12
+Starting logical block
+.IP "nlb" 12
+-- undescribed --
+.IP "control" 12
+Command control flags, see \fIenum nvme_io_control_flags\fP.
+.IP "dsm" 12
+Data set management attributes, see \fIenum nvme_io_dsm_flags\fP
+.IP "reftag" 12
+This field specifies the Initial Logical Block Reference Tag
+expected value. Used only if the namespace is formatted to use
+end-to-end protection information.
+.IP "apptag" 12
+This field specifies the Application Tag Mask expected value.
+Used only if the namespace is formatted to use end-to-end
+protection information.
+.IP "appmask" 12
+This field specifies the Application Tag expected value. Used
+only if the namespace is formatted to use end-to-end protection
+information.
+.IP "data_len" 12
+Length of user buffer, \fIdata\fP, in bytes
+.IP "data" 12
+Pointer to user address of the data buffer
+metadata_len:Length of user buffer, \fImetadata\fP, in bytes
+.IP "metadata_len" 12
+-- undescribed --
+.IP "metadata" 12
+Pointer to user address of the metadata buffer
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

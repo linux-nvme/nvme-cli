@@ -1,0 +1,22 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_vwc" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_vwc \- 
+.SH SYNOPSIS
+enum nvme_id_ctrl_vwc {
+.br
+.BI "    NVME_CTRL_VWC_PRESENT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VWC_FLUSH"
+
+};
+.SH Constants
+.IP "NVME_CTRL_VWC_PRESENT" 12
+If set, indicates a volatile write cache is present.
+If a volatile write cache is present, then the host
+controls whether the volatile write cache is enabled
+with a Set Features command specifying the value
+NVME_FEAT_FID_VOLATILE_WC.
+.IP "NVME_CTRL_VWC_FLUSH" 12
+Mask to get the value of the flush command behavior.

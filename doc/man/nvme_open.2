@@ -1,0 +1,15 @@
+.TH "nvme_open" 2 "nvme_open" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_open \- Open an nvme controller or namespace device
+.SH SYNOPSIS
+.B "int" nvme_open
+.BI "(const char *" name ");"
+.SH ARGUMENTS
+.IP "name" 12
+The basename of the device to open
+.SH "DESCRIPTION"
+This will look for the handle in /dev/ and validate the name and filetype
+match linux conventions.
+.SH "RETURN"
+A file descriptor for the device on a successful open, or -1 with
+errno set otherwise.

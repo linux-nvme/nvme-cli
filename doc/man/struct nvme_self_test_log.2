@@ -1,0 +1,19 @@
+.TH "libnvme" 2 "struct nvme_self_test_log" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_self_test_log \- 
+.SH SYNOPSIS
+struct nvme_self_test_log {
+.br
+.BI "    __u8 current_operation;"
+.br
+.BI "    __u8 completion;"
+.br
+.BI "    __u8 rsvd[2];"
+.br
+.BI "    struct nvme_st_result   result[NVME_LOG_ST_MAX_RESULTS];"
+.br
+.BI "
+};
+.br
+
+.SH Members

@@ -1,0 +1,87 @@
+.TH "libnvme" 2 "struct nvme_passthru_cmd64" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_passthru_cmd64 \- 
+.SH SYNOPSIS
+struct nvme_passthru_cmd64 {
+.br
+.BI "    __u8 opcode;"
+.br
+.BI "    __u8 flags;"
+.br
+.BI "    __u16 rsvd1;"
+.br
+.BI "    __u32 nsid;"
+.br
+.BI "    __u32 cdw2;"
+.br
+.BI "    __u32 cdw3;"
+.br
+.BI "    __u64 metadata;"
+.br
+.BI "    __u64 addr;"
+.br
+.BI "    __u32 metadata_len;"
+.br
+.BI "    __u32 data_len;"
+.br
+.BI "    __u32 cdw10;"
+.br
+.BI "    __u32 cdw11;"
+.br
+.BI "    __u32 cdw12;"
+.br
+.BI "    __u32 cdw13;"
+.br
+.BI "    __u32 cdw14;"
+.br
+.BI "    __u32 cdw15;"
+.br
+.BI "    __u32 timeout_ms;"
+.br
+.BI "    __u32 rsvd2;"
+.br
+.BI "    __u64 result;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "opcode" 12
+Operation code, see \fIenum nvme_io_opcodes\fP and \fIenum nvme_admin_opcodes\fP
+.IP "flags" 12
+Not supported: intended for command flags (eg: SGL, FUSE)
+.IP "rsvd1" 12
+Reserved for future use
+.IP "nsid" 12
+Namespace Identifier, or Fabrics type
+.IP "cdw2" 12
+Command Dword 2 (no spec defined use)
+.IP "cdw3" 12
+Command Dword 3 (no spec defined use)
+.IP "metadata" 12
+User space address to metadata buffer (NULL if not used)
+.IP "addr" 12
+User space address to data buffer (NULL if not used)
+.IP "metadata_len" 12
+Metadata buffer transfer length
+.IP "data_len" 12
+Data buffer transfer length
+.IP "cdw10" 12
+Command Dword 10 (command specific)
+.IP "cdw11" 12
+Command Dword 11 (command specific)
+.IP "cdw12" 12
+Command Dword 12 (command specific)
+.IP "cdw13" 12
+Command Dword 13 (command specific)
+.IP "cdw14" 12
+Command Dword 14 (command specific)
+.IP "cdw15" 12
+Command Dword 15 (command specific)
+.IP "timeout_ms" 12
+If non-zero, overrides system default timeout in milliseconds
+.IP "rsvd2" 12
+Reserved for future use (and fills an impicit struct pad
+.IP "result" 12
+Set on completion to the command's CQE DWORD 0-1 controller response

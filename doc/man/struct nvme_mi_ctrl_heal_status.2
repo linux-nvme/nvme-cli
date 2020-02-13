@@ -1,0 +1,25 @@
+.TH "libnvme" 2 "struct nvme_mi_ctrl_heal_status" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_mi_ctrl_heal_status \- 
+.SH SYNOPSIS
+struct nvme_mi_ctrl_heal_status {
+.br
+.BI "    __le16 ctlid;"
+.br
+.BI "    __le16 csts;"
+.br
+.BI "    __le16 ctemp;"
+.br
+.BI "    __u8 pdlu;"
+.br
+.BI "    __u8 spare;"
+.br
+.BI "    __u8 cwarn;"
+.br
+.BI "    __u8 rsvd9[7];"
+.br
+.BI "
+};
+.br
+
+.SH Members

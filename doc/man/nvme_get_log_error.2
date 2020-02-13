@@ -1,0 +1,25 @@
+.TH "nvme_get_log_error" 2 "nvme_get_log_error" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_log_error \- Retrieve nvme error log
+.SH SYNOPSIS
+.B "int" nvme_get_log_error
+.BI "(int " fd ","
+.BI "unsigned " nr_entries ","
+.BI "bool " rae ","
+.BI "struct nvme_error_log_page *" log ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nr_entries" 12
+-- undescribed --
+.IP "rae" 12
+Retain asynchronous events
+.IP "log" 12
+-- undescribed --
+.SH "DESCRIPTION"
+This log page is used to describe extended error information for a command
+that completed with error, or may report an error that is not specific to a
+particular command.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

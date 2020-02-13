@@ -1,0 +1,42 @@
+.TH "nvme_directive_send" 2 "nvme_directive_send" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_directive_send \- Send directive command
+.SH SYNOPSIS
+.B "int" nvme_directive_send
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "__u16 " dspec ","
+.BI "enum nvme_directive_send_doper " doper ","
+.BI "enum nvme_directive_dtype " dtype ","
+.BI "__u32 " cdw12 ","
+.BI "__u32 " data_len ","
+.BI "void *" data ","
+.BI "__u32 *" result ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID, if applicable
+.IP "dspec" 12
+Directive specific field
+.IP "doper" 12
+Directive send operation, see \fIenum nvme_directive_send_doper\fP
+.IP "dtype" 12
+Directive type, see \fIenum nvme_directive_dtype\fP
+.IP "cdw12" 12
+-- undescribed --
+.IP "data_len" 12
+Length of data payload in bytes
+.IP "data" 12
+Usespace address of data payload
+.IP "result" 12
+If successful, the CQE dword0 value
+.SH "DESCRIPTION"
+Directives is a mechanism to enable host and NVM subsystem or controller
+information exchange. The Directive Send command is used to transfer data
+related to a specific Directive Type from the host to the controller.
+
+See the NVMe specification for more information.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

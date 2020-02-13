@@ -1,0 +1,39 @@
+.TH "nvme_security_receive" 2 "nvme_security_receive" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_security_receive \- 
+.SH SYNOPSIS
+.B "int" nvme_security_receive
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "__u8 " nssf ","
+.BI "__u8 " spsp0 ","
+.BI "__u8 " spsp1 ","
+.BI "__u8 " secp ","
+.BI "__u32 " al ","
+.BI "__u32 " data_len ","
+.BI "void *" data ","
+.BI "__u32 *" result ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID to issue security command on
+.IP "nssf" 12
+NVMe Security Specific field
+.IP "spsp0" 12
+Security Protocol Specific field
+.IP "spsp1" 12
+Security Protocol Specific field
+.IP "secp" 12
+Security Protocol
+.IP "al" 12
+Protocol specific allocation length
+.IP "data_len" 12
+Data length of the payload in bytes
+.IP "data" 12
+Security data payload to send
+.IP "result" 12
+The command completion result from CQE dword0
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

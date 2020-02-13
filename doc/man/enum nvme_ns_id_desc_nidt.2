@@ -1,0 +1,27 @@
+.TH "libnvme" 2 "enum nvme_ns_id_desc_nidt" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_ns_id_desc_nidt \- Known namespace identifier types
+.SH SYNOPSIS
+enum nvme_ns_id_desc_nidt {
+.br
+.BI "    NVME_NIDT_EUI64"
+, 
+.br
+.br
+.BI "    NVME_NIDT_NGUID"
+, 
+.br
+.br
+.BI "    NVME_NIDT_UUID"
+
+};
+.SH Constants
+.IP "NVME_NIDT_EUI64" 12
+IEEE Extended Unique Identifier, the NID field contains a
+copy of the EUI64 field in the struct nvme_id_ns.eui64.
+.IP "NVME_NIDT_NGUID" 12
+Namespace Globally Unique Identifier, the NID field
+contains a copy of the NGUID field in struct nvme_id_ns.nguid.
+.IP "NVME_NIDT_UUID" 12
+The NID field contains a 128-bit Universally Unique
+Identifier (UUID) as specified in RFC 4122.

@@ -1,0 +1,18 @@
+.TH "nvme_identify_allocated_ns" 2 "nvme_identify_allocated_ns" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_identify_allocated_ns \- Same as nvme_identify_ns, but only for allocated namespaces
+.SH SYNOPSIS
+.B "int" nvme_identify_allocated_ns
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "struct nvme_id_ns *" ns ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace to identify
+.IP "ns" 12
+User space destination address to transfer the data
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

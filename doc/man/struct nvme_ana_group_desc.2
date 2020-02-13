@@ -1,0 +1,23 @@
+.TH "libnvme" 2 "struct nvme_ana_group_desc" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_ana_group_desc \- 
+.SH SYNOPSIS
+struct nvme_ana_group_desc {
+.br
+.BI "    __le32 grpid;"
+.br
+.BI "    __le32 nnsids;"
+.br
+.BI "    __le64 chgcnt;"
+.br
+.BI "    __u8 state;"
+.br
+.BI "    __u8 rsvd17[15];"
+.br
+.BI "    __le32 nsids[];"
+.br
+.BI "
+};
+.br
+
+.SH Members

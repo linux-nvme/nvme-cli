@@ -1,0 +1,24 @@
+.TH "nvme_get_log_telemetry_host" 2 "nvme_get_log_telemetry_host" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_log_telemetry_host \- 
+.SH SYNOPSIS
+.B "int" nvme_get_log_telemetry_host
+.BI "(int " fd ","
+.BI "__u64 " offset ","
+.BI "__u32 " len ","
+.BI "void *" log ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "offset" 12
+Offset into the telemetry data
+.IP "len" 12
+Length of provided user buffer to hold the log data in bytes
+.IP "log" 12
+User address for log page data
+.SH "DESCRIPTION"
+Retreives the Telemetry Host-Initiated log page at the requested offset
+using the previously existing capture.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

@@ -1,0 +1,31 @@
+.TH "libnvme" 2 "struct nvme_sanitize_log_page" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_sanitize_log_page \- 
+.SH SYNOPSIS
+struct nvme_sanitize_log_page {
+.br
+.BI "    __le16 sprog;"
+.br
+.BI "    __le16 sstat;"
+.br
+.BI "    __le32 scdw10;"
+.br
+.BI "    __le32 eto;"
+.br
+.BI "    __le32 etbe;"
+.br
+.BI "    __le32 etce;"
+.br
+.BI "    __le32 etond;"
+.br
+.BI "    __le32 etbend;"
+.br
+.BI "    __le32 etcend;"
+.br
+.BI "    __u8 rsvd32[480];"
+.br
+.BI "
+};
+.br
+
+.SH Members

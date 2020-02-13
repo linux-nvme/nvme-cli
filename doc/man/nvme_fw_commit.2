@@ -1,0 +1,25 @@
+.TH "nvme_fw_commit" 2 "nvme_fw_commit" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_fw_commit \- Commit firmware using the specified action
+.SH SYNOPSIS
+.B "int" nvme_fw_commit
+.BI "(int " fd ","
+.BI "__u8 " slot ","
+.BI "enum nvme_fw_commit_ca " action ","
+.BI "bool " bpid ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "slot" 12
+Firmware slot to commit the downloaded image
+.IP "action" 12
+Action to use for the firmware image, see \fIenum nvme_fw_commit_ca\fP
+.IP "bpid" 12
+Set to true to select the boot partition id
+.SH "DESCRIPTION"
+The Firmware Commit command is used to modify the firmware image or Boot
+Partitions.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise. The command status response may specify additional
+reset actions required to complete the commit process.

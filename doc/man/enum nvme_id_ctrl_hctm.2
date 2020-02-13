@@ -1,0 +1,15 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_hctm" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_hctm \- Flags indicate the attributes of the host controlled thermal management feature
+.SH SYNOPSIS
+enum nvme_id_ctrl_hctm {
+.br
+.BI "    NVME_CTRL_HCTMA_HCTM"
+
+};
+.SH Constants
+.IP "NVME_CTRL_HCTMA_HCTM" 12
+then the controller supports host controlled thermal
+management, and the Set Features command and Get
+Features command with the Feature Identifier field
+set to NVME_FEAT_FID_HCTM.

@@ -1,0 +1,34 @@
+.TH "nvme_resv_register" 2 "nvme_resv_register" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_resv_register \- Send an nvme reservation register
+.SH SYNOPSIS
+.B "int" nvme_resv_register
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "enum nvme_reservation_rrega " rrega ","
+.BI "enum nvme_reservation_cptpl " cptpl ","
+.BI "bool " iekey ","
+.BI "__u64 " crkey ","
+.BI "__u64 " nrkey ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace identifier
+.IP "rrega" 12
+The registration action, see \fIenum nvme_reservation_rrega\fP
+.IP "cptpl" 12
+Change persist through power loss, see \fIenum nvme_reservation_cptpl\fP
+.IP "iekey" 12
+Set to ignore the existing key
+.IP "crkey" 12
+The current reservation key associated with the host
+.IP "nrkey" 12
+The new reservation key to be register if action is register or
+replace
+.SH "DESCRIPTION"
+The Reservation Register command is used to register, unregister, or replace
+a reservation key.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

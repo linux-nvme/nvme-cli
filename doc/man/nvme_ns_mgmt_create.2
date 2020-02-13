@@ -1,0 +1,26 @@
+.TH "nvme_ns_mgmt_create" 2 "nvme_ns_mgmt_create" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_ns_mgmt_create \- 
+.SH SYNOPSIS
+.B "int" nvme_ns_mgmt_create
+.BI "(int " fd ","
+.BI "struct nvme_id_ns *" ns ","
+.BI "__u32 *" nsid ","
+.BI "__u32 " timeout ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "ns" 12
+Namespace identifiaction that defines creation parameters
+.IP "nsid" 12
+On success, set to the namespace id that was created
+.IP "timeout" 12
+Overide the default timeout to this value in milliseconds;
+set to 0 to use the system default.
+.SH "DESCRIPTION"
+On successful creation, the namespace exists in the subsystem, but is not
+attached to any controller. Use the \fBnvme_ns_attach_ctrls\fP to assign the
+namespace to one or more controllers.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

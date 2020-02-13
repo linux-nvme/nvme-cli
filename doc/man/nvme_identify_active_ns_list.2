@@ -1,0 +1,24 @@
+.TH "nvme_identify_active_ns_list" 2 "nvme_identify_active_ns_list" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_identify_active_ns_list \- Retrieves active namespaces id list
+.SH SYNOPSIS
+.B "int" nvme_identify_active_ns_list
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "struct nvme_ns_list *" list ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Return namespaces greater than this identifer
+.IP "list" 12
+-- undescribed --
+.SH "DESCRIPTION"
+A list of 1024 namespace IDs is returned to the host containing NSIDs in
+increasing order that are greater than the value specified in the Namespace
+Identifier (nsid) field of the command.
+
+See \fIstruct nvme_ns_list\fP for the definition of the returned structure.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

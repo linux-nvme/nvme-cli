@@ -1,0 +1,18 @@
+.TH "nvme_get_log_cmd_effects" 2 "nvme_get_log_cmd_effects" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_log_cmd_effects \- Retrieve nvme command effects log
+.SH SYNOPSIS
+.B "int" nvme_get_log_cmd_effects
+.BI "(int " fd ","
+.BI "struct nvme_cmd_effects_log *" log ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "log" 12
+-- undescribed --
+.SH "DESCRIPTION"
+This log page is used to describe the commands that the controller supports
+and the effects of those commands on the state of the NVM subsystem.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

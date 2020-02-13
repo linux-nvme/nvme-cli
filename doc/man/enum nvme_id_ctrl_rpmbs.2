@@ -1,0 +1,30 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_rpmbs" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_rpmbs \- This field indicates if the controller supports one or more Replay Protected Memory Blocks, from &struct nvme_id_ctrl.rpmbs.
+.SH SYNOPSIS
+enum nvme_id_ctrl_rpmbs {
+.br
+.BI "    NVME_CTRL_RPMBS_NR_UNITS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_RPMBS_AUTH_METHOD"
+, 
+.br
+.br
+.BI "    NVME_CTRL_RPMBS_TOTAL_SIZE"
+, 
+.br
+.br
+.BI "    NVME_CTRL_RPMBS_ACCESS_SIZE"
+
+};
+.SH Constants
+.IP "NVME_CTRL_RPMBS_NR_UNITS" 12
+Mask to get the value of the Number of RPMB Units
+.IP "NVME_CTRL_RPMBS_AUTH_METHOD" 12
+Mask to get the value of the Authentication Method
+.IP "NVME_CTRL_RPMBS_TOTAL_SIZE" 12
+Mask to get the value of Total Size
+.IP "NVME_CTRL_RPMBS_ACCESS_SIZE" 12
+Mask to get the value of Access Size

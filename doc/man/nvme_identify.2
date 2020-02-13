@@ -1,0 +1,33 @@
+.TH "nvme_identify" 2 "nvme_identify" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_identify \- Send the NVMe Identify command
+.SH SYNOPSIS
+.B "int" nvme_identify
+.BI "(int " fd ","
+.BI "enum nvme_identify_cns " cns ","
+.BI "__u32 " nsid ","
+.BI "__u16 " cntid ","
+.BI "__u16 " nvmsetid ","
+.BI "__u8 " uuidx ","
+.BI "void *" data ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "cns" 12
+The Controller or Namespace structure, see \fIenum\fP nvme_identify_cns
+.IP "nsid" 12
+Namespace identifier, if applicable
+.IP "cntid" 12
+The Controller Identifier, if applicable
+.IP "nvmsetid" 12
+The NVMe Set ID if CNS is 04h
+.IP "uuidx" 12
+UUID Index if controller supports this id selection method
+.IP "data" 12
+User space destination address to transfer the data
+.SH "DESCRIPTION"
+The Identify command returns a data buffer that describes information about
+the NVM subsystem, the controller or the namespace(s).
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

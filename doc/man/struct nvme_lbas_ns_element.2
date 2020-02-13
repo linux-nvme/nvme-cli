@@ -1,0 +1,21 @@
+.TH "libnvme" 2 "struct nvme_lbas_ns_element" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_lbas_ns_element \- 
+.SH SYNOPSIS
+struct nvme_lbas_ns_element {
+.br
+.BI "    __le32 neid;"
+.br
+.BI "    __le32 nrld;"
+.br
+.BI "    __u8 ratype;"
+.br
+.BI "    __u8 rsvd8[7];"
+.br
+.BI "    struct nvme_lba_rd lba_rd[];"
+.br
+.BI "
+};
+.br
+
+.SH Members

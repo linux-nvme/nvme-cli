@@ -1,0 +1,21 @@
+.TH "libnvme" 2 "struct nvme_registered_ctrl" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_registered_ctrl \- 
+.SH SYNOPSIS
+struct nvme_registered_ctrl {
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __u8 rcsts;"
+.br
+.BI "    __u8 rsvd3[5];"
+.br
+.BI "    __le64 hostid;"
+.br
+.BI "    __le64 rkey;"
+.br
+.BI "
+};
+.br
+
+.SH Members

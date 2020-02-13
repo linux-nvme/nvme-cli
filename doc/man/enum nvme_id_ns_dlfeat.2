@@ -1,0 +1,50 @@
+.TH "libnvme" 2 "enum nvme_id_ns_dlfeat" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ns_dlfeat \- This field indicates information about features that affect deallocating logical blocks for this namespace.
+.SH SYNOPSIS
+enum nvme_id_ns_dlfeat {
+.br
+.BI "    NVME_NS_DLFEAT_RB"
+, 
+.br
+.br
+.BI "    NVME_NS_DLFEAT_RB_NR"
+, 
+.br
+.br
+.BI "    NVME_NS_DLFEAT_RB_ALL_0S"
+, 
+.br
+.br
+.BI "    NVME_NS_DLFEAT_RB_ALL_FS"
+, 
+.br
+.br
+.BI "    NVME_NS_DLFEAT_WRITE_ZEROES"
+, 
+.br
+.br
+.BI "    NVME_NS_DLFEAT_CRC_GUARD"
+
+};
+.SH Constants
+.IP "NVME_NS_DLFEAT_RB" 12
+Mask to get the value of the read behavior
+.IP "NVME_NS_DLFEAT_RB_NR" 12
+Read behvaior is not reported
+.IP "NVME_NS_DLFEAT_RB_ALL_0S" 12
+A deallocated logical block returns all bytes
+cleared to 0h.
+.IP "NVME_NS_DLFEAT_RB_ALL_FS" 12
+A deallocated logical block returns all bytes
+set to FFh.
+.IP "NVME_NS_DLFEAT_WRITE_ZEROES" 12
+If set, indicates that the controller supports
+the Deallocate bit in the Write Zeroes command
+for this namespace.
+.IP "NVME_NS_DLFEAT_CRC_GUARD" 12
+If set, indicates that the Guard field for
+deallocated logical blocks that contain
+protection information is set to the CRC for
+the value read from the deallocated logical
+block and its metadata

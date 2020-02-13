@@ -1,0 +1,21 @@
+.TH "nvme_get_log_telemetry_ctrl" 2 "nvme_get_log_telemetry_ctrl" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_log_telemetry_ctrl \- 
+.SH SYNOPSIS
+.B "int" nvme_get_log_telemetry_ctrl
+.BI "(int " fd ","
+.BI "bool " rae ","
+.BI "__u64 " offset ","
+.BI "__u32 " len ","
+.BI "void *" log ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "rae" 12
+Retain asynchronous events
+.IP "offset" 12
+Offset into the telemetry data
+.IP "len" 12
+Length of provided user buffer to hold the log data in bytes
+.IP "log" 12
+User address for log page data

@@ -1,0 +1,16 @@
+.TH "is_64bit_reg" 2 "is_64bit_reg" "February 2020" "libnvme Manual"
+.SH NAME
+is_64bit_reg \- Checks if offset of the controller register is 64bit or not.
+.SH SYNOPSIS
+.B "bool" is_64bit_reg
+.BI "(__u32 " offset ");"
+.SH ARGUMENTS
+.IP "offset" 12
+Offset of controller register field in bytes
+.SH "DESCRIPTION"
+This function does not care about transport so that the offset is not going
+to be checked inside of this function for the unsupported fields in a
+specific transport. For example, BPMBL(Boot Partition Memory Buffer
+Location) register is not supported by fabrics, but it can be chcked here.
+
+Returns true if given offset is 64bit register, otherwise it returns false.

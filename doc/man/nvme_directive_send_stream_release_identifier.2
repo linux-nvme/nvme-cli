@@ -1,0 +1,18 @@
+.TH "nvme_directive_send_stream_release_identifier" 2 "nvme_directive_send_stream_release_identifier" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_directive_send_stream_release_identifier \- 
+.SH SYNOPSIS
+.B "int" nvme_directive_send_stream_release_identifier
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "__u16 " stream_id ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID
+.IP "stream_id" 12
+-- undescribed --
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

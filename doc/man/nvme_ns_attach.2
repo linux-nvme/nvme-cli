@@ -1,0 +1,18 @@
+.TH "nvme_ns_attach" 2 "nvme_ns_attach" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_ns_attach \- Attach or detach namespace to controller(s)
+.SH SYNOPSIS
+.B "int" nvme_ns_attach
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "enum nvme_ns_attach_sel " sel ","
+.BI "struct nvme_ctrl_list *" ctrlist ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID to execute attach selection
+.IP "sel" 12
+Attachment selection, see \fIenum nvme_ns_attach_sel\fP
+.IP "ctrlist" 12
+Controller list to modify attachment state of nsid

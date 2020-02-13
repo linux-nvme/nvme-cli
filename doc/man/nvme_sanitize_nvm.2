@@ -1,0 +1,40 @@
+.TH "nvme_sanitize_nvm" 2 "nvme_sanitize_nvm" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_sanitize_nvm \- Start a sanitize operation
+.SH SYNOPSIS
+.B "int" nvme_sanitize_nvm
+.BI "(int " fd ","
+.BI "enum nvme_sanitize_sanact " sanact ","
+.BI "bool " ause ","
+.BI "__u8 " owpass ","
+.BI "bool " oipbp ","
+.BI "bool " nodas ","
+.BI "__u32 " ovrpat ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "sanact" 12
+Sanitize action, see \fIenum nvme_sanitize_sanact\fP
+.IP "ause" 12
+Set to allow unrestriced sanitize exit
+.IP "owpass" 12
+Overwrite pass count
+.IP "oipbp" 12
+Set to overwrite invert pattern between passes
+.IP "nodas" 12
+Set to not deallocate blocks after sanitizing
+.IP "ovrpat" 12
+Overwrite pattern
+.SH "DESCRIPTION"
+A sanitize operation alters all user data in the NVM subsystem such that
+recovery of any previous user data from any cache, the non-volatile media,
+or any Controller Memory Buffer is not possible.
+
+The Sanitize command is used to start a sanitize operation or to recover
+from a previously failed sanitize operation. The sanitize operation types
+that may be supported are Block Erase, Crypto Erase, and Overwrite. All
+sanitize operations are processed in the background, i.e., completion of the
+sanitize command does not indicate completion of the sanitize operation.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

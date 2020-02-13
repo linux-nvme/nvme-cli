@@ -1,0 +1,28 @@
+.TH "nvme_get_log_smart" 2 "nvme_get_log_smart" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_log_smart \- Retrieve nvme smart log
+.SH SYNOPSIS
+.B "int" nvme_get_log_smart
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "bool " rae ","
+.BI "struct nvme_smart_log *" log ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Optional namespace identifier
+.IP "rae" 12
+Retain asynchronous events
+.IP "log" 12
+-- undescribed --
+.SH "DESCRIPTION"
+This log page is used to provide SMART and general health information. The
+information provided is over the life of the controller and is retained
+across power cycles. To request the controller log page, the namespace
+identifier specified is FFFFFFFFh. The controller may also support
+requesting the log page on a per namespace basis, as indicated by bit 0 of
+the LPA field in the Identify Controller data structure.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

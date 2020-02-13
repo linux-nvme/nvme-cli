@@ -1,0 +1,24 @@
+.TH "nvme_directive_send_id_endir" 2 "nvme_directive_send_id_endir" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_directive_send_id_endir \- 
+.SH SYNOPSIS
+.B "int" nvme_directive_send_id_endir
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "bool " endir ","
+.BI "enum nvme_directive_dtype " dtype ","
+.BI "struct nvme_id_directives *" id ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID
+.IP "endir" 12
+-- undescribed --
+.IP "dtype" 12
+-- undescribed --
+.IP "id" 12
+-- undescribed --
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

@@ -1,0 +1,34 @@
+.TH "nvme_fw_download" 2 "nvme_fw_download" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_fw_download \- Download part or all of a firmware image to the controller
+.SH SYNOPSIS
+.B "int" nvme_fw_download
+.BI "(int " fd ","
+.BI "__u32 " offset ","
+.BI "__u32 " data_len ","
+.BI "void *" data ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "offset" 12
+Offset in the firmware data
+.IP "data_len" 12
+Length of data in this command in bytes
+.IP "data" 12
+Userspace address of the firmware data
+.SH "DESCRIPTION"
+The Firmware Image Download command is used to download all or a portion of
+an image for a future update to the controller. The Firmware Image Download
+command downloads a new image (in whole or in part) to the controller.
+
+The image may be constructed of multiple pieces that are individually
+downloaded with separate Firmware Image Download commands. Each Firmware
+Image Download command includes a Dword Offset and Number of Dwords that
+specify a dword range.
+
+The new firmware image is not activated as part of the Firmware Image
+Download command. Use the \fBnvme_fw_commit\fP to activate a newly downloaded
+image.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

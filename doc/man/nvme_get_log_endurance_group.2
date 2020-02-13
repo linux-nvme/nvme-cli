@@ -1,0 +1,25 @@
+.TH "nvme_get_log_endurance_group" 2 "nvme_get_log_endurance_group" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_log_endurance_group \- 
+.SH SYNOPSIS
+.B "int" nvme_get_log_endurance_group
+.BI "(int " fd ","
+.BI "__u16 " endgid ","
+.BI "struct nvme_endurance_group_log *" log ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "endgid" 12
+Starting group identifier to return in the list
+.IP "log" 12
+User address to store the endurance log
+.SH "DESCRIPTION"
+This log page indicates if an Endurance Group Event has occurred for a
+particular Endurance Group. If an Endurance Group Event has occurred, the
+details of the particular event are included in the Endurance Group
+Information log page for that Endurance Group. An asynchronous event is
+generated when an entry for an Endurance Group is newly added to this log
+page.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

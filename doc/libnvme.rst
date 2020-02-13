@@ -1,3 +1,919 @@
+
+
+.. c:type:: struct nvme_fabrics_config
+
+
+**Definition**
+
+::
+
+  struct nvme_fabrics_config {
+    const char *transport;
+    const char *traddr;
+    const char *trsvcid;
+    const char *nqn;
+    const char *hostnqn;
+    const char *host_traddr;
+    const char *hostid;
+    int queue_size;
+    int nr_io_queues;
+    int reconnect_delay;
+    int ctrl_loss_tmo;
+    int keep_alive_tmo;
+    int nr_write_queues;
+    int nr_poll_queues;
+    int tos;
+    bool duplicate_connect;
+    bool disable_sqflow;
+    bool hdr_digest;
+    bool data_digest;
+    uint8_t rsvd[0x200];
+  };
+
+**Members**
+
+
+
+.. c:function:: int nvmf_add_ctrl_opts (struct nvme_fabrics_config * cfg)
+
+
+**Parameters**
+
+``struct nvme_fabrics_config * cfg``
+  *undescribed*
+
+
+.. c:function:: nvme_ctrl_t nvmf_add_ctrl (struct nvme_fabrics_config * cfg)
+
+
+**Parameters**
+
+``struct nvme_fabrics_config * cfg``
+  *undescribed*
+
+
+.. c:function:: int nvmf_get_discovery_log (nvme_ctrl_t c, struct nvmf_discovery_log ** logp, int max_retries)
+
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  *undescribed*
+
+``struct nvmf_discovery_log ** logp``
+  *undescribed*
+
+``int max_retries``
+  *undescribed*
+
+
+.. c:function:: char * nvmf_hostnqn_generate ()
+
+
+**Parameters**
+
+
+.. c:function:: char * nvmf_hostnqn_from_file ()
+
+
+**Parameters**
+
+
+.. c:function:: char * nvmf_hostid_from_file ()
+
+
+**Parameters**
+
+
+.. c:function:: const char * nvmf_trtype_str (__u8 trtype)
+
+
+**Parameters**
+
+``__u8 trtype``
+  *undescribed*
+
+
+.. c:function:: const char * nvmf_adrfam_str (__u8 adrfam)
+
+
+**Parameters**
+
+``__u8 adrfam``
+  *undescribed*
+
+
+.. c:function:: const char * nvmf_subtype_str (__u8 subtype)
+
+
+**Parameters**
+
+``__u8 subtype``
+  *undescribed*
+
+
+.. c:function:: const char * nvmf_treq_str (__u8 treq)
+
+
+**Parameters**
+
+``__u8 treq``
+  *undescribed*
+
+
+.. c:function:: const char * nvmf_sectype_str (__u8 sectype)
+
+
+**Parameters**
+
+``__u8 sectype``
+  *undescribed*
+
+
+.. c:function:: const char * nvmf_prtype_str (__u8 prtype)
+
+
+**Parameters**
+
+``__u8 prtype``
+  *undescribed*
+
+
+.. c:function:: const char * nvmf_qptype_str (__u8 qptype)
+
+
+**Parameters**
+
+``__u8 qptype``
+  *undescribed*
+
+
+.. c:function:: const char * nvmf_cms_str (__u8 cm)
+
+
+**Parameters**
+
+``__u8 cm``
+  *undescribed*
+
+
+.. c:function:: nvme_ctrl_t nvmf_connect_disc_entry (struct nvmf_disc_log_entry * e, const struct nvme_fabrics_config * defcfg, bool * discover)
+
+
+**Parameters**
+
+``struct nvmf_disc_log_entry * e``
+  *undescribed*
+
+``const struct nvme_fabrics_config * defcfg``
+  *undescribed*
+
+``bool * discover``
+  *undescribed*
+
+
+.. c:function:: int nvme_namespace_filter (const struct dirent * d)
+
+
+**Parameters**
+
+``const struct dirent * d``
+
+
+.. c:function:: int nvme_paths_filter (const struct dirent * d)
+
+
+**Parameters**
+
+``const struct dirent * d``
+
+
+.. c:function:: int nvme_ctrls_filter (const struct dirent * d)
+
+
+**Parameters**
+
+``const struct dirent * d``
+
+
+.. c:function:: int nvme_subsys_filter (const struct dirent * d)
+
+
+**Parameters**
+
+``const struct dirent * d``
+
+
+.. c:function:: int nvme_scan_subsystems (struct dirent *** subsys)
+
+
+**Parameters**
+
+``struct dirent *** subsys``
+
+
+.. c:function:: int nvme_scan_subsystem_ctrls (nvme_subsystem_t s, struct dirent *** ctrls)
+
+
+**Parameters**
+
+``nvme_subsystem_t s``
+  *undescribed*
+
+``struct dirent *** ctrls``
+
+
+.. c:function:: int nvme_scan_subsystem_namespaces (nvme_subsystem_t s, struct dirent *** namespaces)
+
+
+**Parameters**
+
+``nvme_subsystem_t s``
+  *undescribed*
+
+``struct dirent *** namespaces``
+
+
+.. c:function:: int nvme_scan_ctrl_namespace_paths (nvme_ctrl_t c, struct dirent *** namespaces)
+
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  *undescribed*
+
+``struct dirent *** namespaces``
+
+
+.. c:function:: int nvme_scan_ctrl_namespaces (nvme_ctrl_t c, struct dirent *** namespaces)
+
+
+**Parameters**
+
+``nvme_ctrl_t c``
+  *undescribed*
+
+``struct dirent *** namespaces``
+
+
+
+
+.. c:type:: struct nvme_passthru_cmd
+
+
+**Definition**
+
+::
+
+  struct nvme_passthru_cmd {
+    __u8 opcode;
+    __u8 flags;
+    __u16 rsvd1;
+    __u32 nsid;
+    __u32 cdw2;
+    __u32 cdw3;
+    __u64 metadata;
+    __u64 addr;
+    __u32 metadata_len;
+    __u32 data_len;
+    __u32 cdw10;
+    __u32 cdw11;
+    __u32 cdw12;
+    __u32 cdw13;
+    __u32 cdw14;
+    __u32 cdw15;
+    __u32 timeout_ms;
+    __u32 result;
+  };
+
+**Members**
+
+``opcode``
+  Operation code, see :c:type:`enum nvme_io_opcodes <nvme_io_opcodes>` and :c:type:`enum nvme_admin_opcodes <nvme_admin_opcodes>`
+
+``flags``
+  Not supported: intended for command flags (eg: SGL, FUSE)
+
+``rsvd1``
+  Reserved for future use
+
+``nsid``
+  Namespace Identifier, or Fabrics type
+
+``cdw2``
+  Command Dword 2 (no spec defined use)
+
+``cdw3``
+  Command Dword 3 (no spec defined use)
+
+``metadata``
+  User space address to metadata buffer (NULL if not used)
+
+``addr``
+  User space address to data buffer (NULL if not used)
+
+``metadata_len``
+  Metadata buffer transfer length
+
+``data_len``
+  Data buffer transfer length
+
+``cdw10``
+  Command Dword 10 (command specific)
+
+``cdw11``
+  Command Dword 11 (command specific)
+
+``cdw12``
+  Command Dword 12 (command specific)
+
+``cdw13``
+  Command Dword 13 (command specific)
+
+``cdw14``
+  Command Dword 14 (command specific)
+
+``cdw15``
+  Command Dword 15 (command specific)
+
+``timeout_ms``
+  If non-zero, overrides system default timeout in milliseconds
+
+``result``
+  Set on completion to the command's CQE DWORD 0 controller response
+
+
+
+
+
+.. c:type:: struct nvme_passthru_cmd64
+
+
+**Definition**
+
+::
+
+  struct nvme_passthru_cmd64 {
+    __u8 opcode;
+    __u8 flags;
+    __u16 rsvd1;
+    __u32 nsid;
+    __u32 cdw2;
+    __u32 cdw3;
+    __u64 metadata;
+    __u64 addr;
+    __u32 metadata_len;
+    __u32 data_len;
+    __u32 cdw10;
+    __u32 cdw11;
+    __u32 cdw12;
+    __u32 cdw13;
+    __u32 cdw14;
+    __u32 cdw15;
+    __u32 timeout_ms;
+    __u32 rsvd2;
+    __u64 result;
+  };
+
+**Members**
+
+``opcode``
+  Operation code, see :c:type:`enum nvme_io_opcodes <nvme_io_opcodes>` and :c:type:`enum nvme_admin_opcodes <nvme_admin_opcodes>`
+
+``flags``
+  Not supported: intended for command flags (eg: SGL, FUSE)
+
+``rsvd1``
+  Reserved for future use
+
+``nsid``
+  Namespace Identifier, or Fabrics type
+
+``cdw2``
+  Command Dword 2 (no spec defined use)
+
+``cdw3``
+  Command Dword 3 (no spec defined use)
+
+``metadata``
+  User space address to metadata buffer (NULL if not used)
+
+``addr``
+  User space address to data buffer (NULL if not used)
+
+``metadata_len``
+  Metadata buffer transfer length
+
+``data_len``
+  Data buffer transfer length
+
+``cdw10``
+  Command Dword 10 (command specific)
+
+``cdw11``
+  Command Dword 11 (command specific)
+
+``cdw12``
+  Command Dword 12 (command specific)
+
+``cdw13``
+  Command Dword 13 (command specific)
+
+``cdw14``
+  Command Dword 14 (command specific)
+
+``cdw15``
+  Command Dword 15 (command specific)
+
+``timeout_ms``
+  If non-zero, overrides system default timeout in milliseconds
+
+``rsvd2``
+  Reserved for future use (and fills an impicit struct pad
+
+``result``
+  Set on completion to the command's CQE DWORD 0-1 controller response
+
+
+
+.. c:function:: int nvme_submit_admin_passthru64 (int fd, struct nvme_passthru_cmd64 * cmd, __u64 * result)
+
+   Submit a 64-bit nvme passthrough admin command
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``struct nvme_passthru_cmd64 * cmd``
+  The nvme admin command to send
+
+``__u64 * result``
+  Optional field to return the result from the CQE DW0-1
+
+**Description**
+
+Uses NVME_IOCTL_ADMIN64_CMD for the ioctl request.
+
+**Return**
+
+The nvme command status if a response was received or -1
+        with errno set otherwise.
+
+
+.. c:function:: int nvme_admin_passthru64 (int fd, __u8 opcode, __u8 flags, __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14, __u32 cdw15, __u32 data_len, void * data, __u32 metadata_len, void * metadata, __u32 timeout_ms, __u64 * result)
+
+   Submit an nvme passthrough command
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u8 opcode``
+  The nvme io command to send
+
+``__u8 flags``
+  NVMe command flags (not used)
+
+``__u16 rsvd``
+  Reserevd for future use
+
+``__u32 nsid``
+  Namespace identifier
+
+``__u32 cdw2``
+  Command dword 2
+
+``__u32 cdw3``
+  Command dword 3
+
+``__u32 cdw10``
+  Command dword 10
+
+``__u32 cdw11``
+  Command dword 11
+
+``__u32 cdw12``
+  Command dword 12
+
+``__u32 cdw13``
+  Command dword 13
+
+``__u32 cdw14``
+  Command dword 14
+
+``__u32 cdw15``
+  Command dword 15
+
+``__u32 data_len``
+  Length of the data transfered in this command in bytes
+
+``void * data``
+  Pointer to user address of the data buffer
+
+``__u32 metadata_len``
+  Length of metadata transfered in this command
+
+``void * metadata``
+  Pointer to user address of the metadata buffer
+
+``__u32 timeout_ms``
+  How long the kernel waits for the command to complete
+
+``__u64 * result``
+  Optional field to return the result from the CQE dword 0
+
+**Description**
+
+Parameterized form of nvme_submit_admin_passthru64(). This sets up and
+submits a :c:type:`struct nvme_passthru_cmd64 <nvme_passthru_cmd64>`.
+
+Known values for **opcode** are defined in :c:type:`enum nvme_admin_opcode <nvme_admin_opcode>`.
+
+**Return**
+
+The nvme command status if a response was received or -1
+        with errno set otherwise.
+
+
+.. c:function:: int nvme_submit_admin_passthru (int fd, struct nvme_passthru_cmd * cmd, __u32 * result)
+
+   Submit an nvme passthrough admin command
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``struct nvme_passthru_cmd * cmd``
+  The nvme admin command to send
+
+``__u32 * result``
+  Optional field to return the result from the CQE DW0
+
+**Description**
+
+Uses NVME_IOCTL_ADMIN_CMD for the ioctl request.
+
+**Return**
+
+The nvme command status if a response was received or -1
+        with errno set otherwise.
+
+
+.. c:function:: int nvme_admin_passthru (int fd, __u8 opcode, __u8 flags, __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14, __u32 cdw15, __u32 data_len, void * data, __u32 metadata_len, void * metadata, __u32 timeout_ms, __u32 * result)
+
+   Submit an nvme passthrough command
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u8 opcode``
+  The nvme io command to send
+
+``__u8 flags``
+  NVMe command flags (not used)
+
+``__u16 rsvd``
+  Reserevd for future use
+
+``__u32 nsid``
+  Namespace identifier
+
+``__u32 cdw2``
+  Command dword 2
+
+``__u32 cdw3``
+  Command dword 3
+
+``__u32 cdw10``
+  Command dword 10
+
+``__u32 cdw11``
+  Command dword 11
+
+``__u32 cdw12``
+  Command dword 12
+
+``__u32 cdw13``
+  Command dword 13
+
+``__u32 cdw14``
+  Command dword 14
+
+``__u32 cdw15``
+  Command dword 15
+
+``__u32 data_len``
+  Length of the data transfered in this command in bytes
+
+``void * data``
+  Pointer to user address of the data buffer
+
+``__u32 metadata_len``
+  Length of metadata transfered in this command
+
+``void * metadata``
+  Pointer to user address of the metadata buffer
+
+``__u32 timeout_ms``
+  How long the kernel waits for the command to complete
+
+``__u32 * result``
+  Optional field to return the result from the CQE dword 0
+
+**Description**
+
+Parameterized form of nvme_submit_admin_passthru(). This sets up and
+submits a :c:type:`struct nvme_passthru_cmd <nvme_passthru_cmd>`.
+
+Known values for **opcode** are defined in :c:type:`enum nvme_admin_opcode <nvme_admin_opcode>`.
+
+**Return**
+
+The nvme command status if a response was received or -1
+        with errno set otherwise.
+
+
+.. c:function:: int nvme_submit_io_passthru64 (int fd, struct nvme_passthru_cmd64 * cmd, __u64 * result)
+
+   Submit a 64-bit nvme passthrough command
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``struct nvme_passthru_cmd64 * cmd``
+  The nvme io command to send
+
+``__u64 * result``
+  Optional field to return the result from the CQE DW0-1
+
+**Description**
+
+Uses NVME_IOCTL_IO64_CMD for the ioctl request.
+
+**Return**
+
+The nvme command status if a response was received or -1
+        with errno set otherwise.
+
+
+.. c:function:: int nvme_io_passthru64 (int fd, __u8 opcode, __u8 flags, __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14, __u32 cdw15, __u32 data_len, void * data, __u32 metadata_len, void * metadata, __u32 timeout_ms, __u64 * result)
+
+   Submit an nvme io passthrough command
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u8 opcode``
+  The nvme io command to send
+
+``__u8 flags``
+  NVMe command flags (not used)
+
+``__u16 rsvd``
+  Reserevd for future use
+
+``__u32 nsid``
+  Namespace identifier
+
+``__u32 cdw2``
+  Command dword 2
+
+``__u32 cdw3``
+  Command dword 3
+
+``__u32 cdw10``
+  Command dword 10
+
+``__u32 cdw11``
+  Command dword 11
+
+``__u32 cdw12``
+  Command dword 12
+
+``__u32 cdw13``
+  Command dword 13
+
+``__u32 cdw14``
+  Command dword 14
+
+``__u32 cdw15``
+  Command dword 15
+
+``__u32 data_len``
+  Length of the data transfered in this command in bytes
+
+``void * data``
+  Pointer to user address of the data buffer
+
+``__u32 metadata_len``
+  Length of metadata transfered in this command
+
+``void * metadata``
+  Pointer to user address of the metadata buffer
+
+``__u32 timeout_ms``
+  How long the kernel waits for the command to complete
+
+``__u64 * result``
+  Optional field to return the result from the CQE dword 0
+
+**Description**
+
+Parameterized form of nvme_submit_io_passthru64(). This sets up and submits
+a :c:type:`struct nvme_passthru_cmd64 <nvme_passthru_cmd64>`.
+
+Known values for **opcode** are defined in :c:type:`enum nvme_io_opcode <nvme_io_opcode>`.
+
+**Return**
+
+The nvme command status if a response was received or -1 with errno
+        set otherwise.
+
+
+.. c:function:: int nvme_submit_io_passthru (int fd, struct nvme_passthru_cmd * cmd, __u32 * result)
+
+   Submit an nvme passthrough command
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``struct nvme_passthru_cmd * cmd``
+  The nvme io command to send
+
+``__u32 * result``
+  Optional field to return the result from the CQE DW0
+
+**Description**
+
+Uses NVME_IOCTL_IO_CMD for the ioctl request.
+
+**Return**
+
+The nvme command status if a response was received or -1
+        with errno set otherwise.
+
+
+.. c:function:: int nvme_io_passthru (int fd, __u8 opcode, __u8 flags, __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14, __u32 cdw15, __u32 data_len, void * data, __u32 metadata_len, void * metadata, __u32 timeout_ms, __u32 * result)
+
+   Submit an nvme io passthrough command
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+``__u8 opcode``
+  The nvme io command to send
+
+``__u8 flags``
+  NVMe command flags (not used)
+
+``__u16 rsvd``
+  Reserevd for future use
+
+``__u32 nsid``
+  Namespace identifier
+
+``__u32 cdw2``
+  Command dword 2
+
+``__u32 cdw3``
+  Command dword 3
+
+``__u32 cdw10``
+  Command dword 10
+
+``__u32 cdw11``
+  Command dword 11
+
+``__u32 cdw12``
+  Command dword 12
+
+``__u32 cdw13``
+  Command dword 13
+
+``__u32 cdw14``
+  Command dword 14
+
+``__u32 cdw15``
+  Command dword 15
+
+``__u32 data_len``
+  Length of the data transfered in this command in bytes
+
+``void * data``
+  Pointer to user address of the data buffer
+
+``__u32 metadata_len``
+  Length of metadata transfered in this command
+
+``void * metadata``
+  Pointer to user address of the metadata buffer
+
+``__u32 timeout_ms``
+  How long the kernel waits for the command to complete
+
+``__u32 * result``
+  Optional field to return the result from the CQE dword 0
+
+**Description**
+
+Parameterized form of nvme_submit_io_passthru(). This sets up and submits
+a :c:type:`struct nvme_passthru_cmd <nvme_passthru_cmd>`.
+
+Known values for **opcode** are defined in :c:type:`enum nvme_io_opcode <nvme_io_opcode>`.
+
+**Return**
+
+The nvme command status if a response was received or -1
+        with errno set otherwise.
+
+
+.. c:function:: int nvme_subsystem_reset (int fd)
+
+   Initiate a subsystem reset
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+**Description**
+
+This should only be sent to controller handles, not to namespaces.
+
+**Return**
+
+Zero if a subsystem reset was initiated or -1 with errno set
+        otherwise.
+
+
+.. c:function:: int nvme_ctrl_reset (int fd)
+
+   Initiate a controller reset
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+**Description**
+
+This should only be sent to controller handles, not to namespaces.
+
+**Return**
+
+Zero if a reset was initiated or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_ns_rescan (int fd)
+
+   Initiate a controller rescan
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme device
+
+**Description**
+
+This should only be sent to controller handles, not to namespaces.
+
+**Return**
+
+Zero if a rescan was initiated or -1 with errno set otherwise.
+
+
+.. c:function:: int nvme_get_nsid (int fd)
+
+   Retrieve the NSID from a namespace file descriptor
+
+**Parameters**
+
+``int fd``
+  File descriptor of nvme namespace
+
+**Description**
+
+This should only be sent to namespace handles, not to controllers.
+
+**Return**
+
+The namespace identifier if a succecssful or -1 with errno set
+        otherwise.
+
+
 **NVMe Admin command enums**
 
 
@@ -437,21 +1353,13 @@
 
 
 
-.. c:type:: enum nvme_cmd_directive_receive_identify_doper
+.. c:type:: enum nvme_directive_receive_doper
 
 
 **Constants**
 
 ``NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM``
   *undescribed*
-
-
-
-
-.. c:type:: enum nvme_cmd_directive_receive_streams_doper
-
-
-**Constants**
 
 ``NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM``
   *undescribed*
@@ -465,7 +1373,7 @@
 
 
 
-.. c:type:: enum nvme_cmd_directive_send_identify_doper
+.. c:type:: enum nvme_directive_send_doper
 
 
 **Constants**
@@ -473,10 +1381,16 @@
 ``NVME_DIRECTIVE_SEND_IDENTIFY_DOPER_ENDIR``
   *undescribed*
 
+``NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_IDENTIFIER``
+  *undescribed*
+
+``NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE``
+  *undescribed*
 
 
 
-.. c:type:: enum nvme_cmd_directive_send_identify_endir
+
+.. c:type:: enum nvme_directive_send_identify_endir
 
 
 **Constants**
@@ -485,20 +1399,6 @@
   *undescribed*
 
 ``NVME_DIRECTIVE_SEND_IDENTIFY_ENDIR_ENABLE``
-  *undescribed*
-
-
-
-
-.. c:type:: enum nvme_cmd_directive_send_streams_doper
-
-
-**Constants**
-
-``NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_IDENTIFIER``
-  *undescribed*
-
-``NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE``
   *undescribed*
 
 
@@ -3300,7 +4200,7 @@ The nvme command status if a response was received or -1 with errno
         set otherwise.
 
 
-.. c:function:: int nvme_directive_send (int fd, __u32 nsid, __u16 dspec, __u8 doper, enum nvme_directive_dtype dtype, __u32 cdw12, __u32 data_len, void * data, __u32 * result)
+.. c:function:: int nvme_directive_send (int fd, __u32 nsid, __u16 dspec, enum nvme_directive_send_doper doper, enum nvme_directive_dtype dtype, __u32 cdw12, __u32 data_len, void * data, __u32 * result)
 
    Send directive command
 
@@ -3315,8 +4215,8 @@ The nvme command status if a response was received or -1 with errno
 ``__u16 dspec``
   Directive specific field
 
-``__u8 doper``
-  Directive operation
+``enum nvme_directive_send_doper doper``
+  Directive send operation, see :c:type:`enum nvme_directive_send_doper <nvme_directive_send_doper>`
 
 ``enum nvme_directive_dtype dtype``
   Directive type, see :c:type:`enum nvme_directive_dtype <nvme_directive_dtype>`
@@ -3410,7 +4310,7 @@ The nvme command status if a response was received or -1 with errno
         set otherwise.
 
 
-.. c:function:: int nvme_directive_recv (int fd, __u32 nsid, __u16 dspec, __u8 doper, enum nvme_directive_dtype dtype, __u32 cdw12, __u32 data_len, void * data, __u32 * result)
+.. c:function:: int nvme_directive_recv (int fd, __u32 nsid, __u16 dspec, enum nvme_directive_receive_doper doper, enum nvme_directive_dtype dtype, __u32 cdw12, __u32 data_len, void * data, __u32 * result)
 
    Receive directive specific data
 
@@ -3425,8 +4325,8 @@ The nvme command status if a response was received or -1 with errno
 ``__u16 dspec``
   Directive specific field
 
-``__u8 doper``
-  Directive operation
+``enum nvme_directive_receive_doper doper``
+  Directive receive operation, see :c:type:`enum nvme_directive_receive_doper <nvme_directive_receive_doper>`
 
 ``enum nvme_directive_dtype dtype``
   Directive type, see :c:type:`enum nvme_directive_dtype <nvme_directive_dtype>`
@@ -4476,938 +5376,12 @@ The nvme command status if a response was received or -1 with errno
         set otherwise.
 
 
-
-
-.. c:type:: struct nvme_fabrics_config
-
-
-**Definition**
-
-::
-
-  struct nvme_fabrics_config {
-    const char *transport;
-    const char *traddr;
-    const char *trsvcid;
-    const char *nqn;
-    const char *hostnqn;
-    const char *host_traddr;
-    const char *hostid;
-    int queue_size;
-    int nr_io_queues;
-    int reconnect_delay;
-    int ctrl_loss_tmo;
-    int keep_alive_tmo;
-    int nr_write_queues;
-    int nr_poll_queues;
-    int tos;
-    bool duplicate_connect;
-    bool disable_sqflow;
-    bool hdr_digest;
-    bool data_digest;
-    uint8_t rsvd[0x200];
-  };
-
-**Members**
-
-
-
-.. c:function:: int nvmf_add_ctrl_opts (struct nvme_fabrics_config * cfg)
-
-
-**Parameters**
-
-``struct nvme_fabrics_config * cfg``
-  *undescribed*
-
-
-.. c:function:: nvme_ctrl_t nvmf_add_ctrl (struct nvme_fabrics_config * cfg)
-
-
-**Parameters**
-
-``struct nvme_fabrics_config * cfg``
-  *undescribed*
-
-
-.. c:function:: int nvmf_get_discovery_log (nvme_ctrl_t c, struct nvmf_discovery_log ** logp, int max_retries)
-
-
-**Parameters**
-
-``nvme_ctrl_t c``
-  *undescribed*
-
-``struct nvmf_discovery_log ** logp``
-  *undescribed*
-
-``int max_retries``
-  *undescribed*
-
-
-.. c:function:: char * nvmf_hostnqn_generate ()
-
-
-**Parameters**
-
-
-.. c:function:: char * nvmf_hostnqn_from_file ()
-
-
-**Parameters**
-
-
-.. c:function:: char * nvmf_hostid_from_file ()
-
-
-**Parameters**
-
-
-.. c:function:: const char * nvmf_trtype_str (__u8 trtype)
-
-
-**Parameters**
-
-``__u8 trtype``
-  *undescribed*
-
-
-.. c:function:: const char * nvmf_adrfam_str (__u8 adrfam)
-
-
-**Parameters**
-
-``__u8 adrfam``
-  *undescribed*
-
-
-.. c:function:: const char * nvmf_subtype_str (__u8 subtype)
-
-
-**Parameters**
-
-``__u8 subtype``
-  *undescribed*
-
-
-.. c:function:: const char * nvmf_treq_str (__u8 treq)
-
-
-**Parameters**
-
-``__u8 treq``
-  *undescribed*
-
-
-.. c:function:: const char * nvmf_sectype_str (__u8 sectype)
-
-
-**Parameters**
-
-``__u8 sectype``
-  *undescribed*
-
-
-.. c:function:: const char * nvmf_prtype_str (__u8 prtype)
-
-
-**Parameters**
-
-``__u8 prtype``
-  *undescribed*
-
-
-.. c:function:: const char * nvmf_qptype_str (__u8 qptype)
-
-
-**Parameters**
-
-``__u8 qptype``
-  *undescribed*
-
-
-.. c:function:: const char * nvmf_cms_str (__u8 cm)
-
-
-**Parameters**
-
-``__u8 cm``
-  *undescribed*
-
-
-.. c:function:: nvme_ctrl_t nvmf_connect_disc_entry (struct nvmf_disc_log_entry * e, const struct nvme_fabrics_config * defcfg, bool * discover)
-
-
-**Parameters**
-
-``struct nvmf_disc_log_entry * e``
-  *undescribed*
-
-``const struct nvme_fabrics_config * defcfg``
-  *undescribed*
-
-``bool * discover``
-  *undescribed*
-
-
-.. c:function:: int nvme_namespace_filter (const struct dirent * d)
-
-
-**Parameters**
-
-``const struct dirent * d``
-  *undescribed*
-
-
-.. c:function:: int nvme_paths_filter (const struct dirent * d)
-
-
-**Parameters**
-
-``const struct dirent * d``
-  *undescribed*
-
-
-.. c:function:: int nvme_ctrls_filter (const struct dirent * d)
-
-
-**Parameters**
-
-``const struct dirent * d``
-  *undescribed*
-
-
-.. c:function:: int nvme_subsys_filter (const struct dirent * d)
-
-
-**Parameters**
-
-``const struct dirent * d``
-  *undescribed*
-
-
-.. c:function:: int nvme_scan_subsystems (struct dirent *** subsys)
-
-
-**Parameters**
-
-``struct dirent *** subsys``
-  *undescribed*
-
-
-.. c:function:: int nvme_scan_subsystem_ctrls (nvme_subsystem_t s, struct dirent *** ctrls)
-
-
-**Parameters**
-
-``nvme_subsystem_t s``
-  *undescribed*
-
-``struct dirent *** ctrls``
-  *undescribed*
-
-
-.. c:function:: int nvme_scan_subsystem_namespaces (nvme_subsystem_t s, struct dirent *** namespaces)
-
-
-**Parameters**
-
-``nvme_subsystem_t s``
-  *undescribed*
-
-``struct dirent *** namespaces``
-  *undescribed*
-
-
-.. c:function:: int nvme_scan_ctrl_namespace_paths (nvme_ctrl_t c, struct dirent *** namespaces)
-
-
-**Parameters**
-
-``nvme_ctrl_t c``
-  *undescribed*
-
-``struct dirent *** namespaces``
-  *undescribed*
-
-
-.. c:function:: int nvme_scan_ctrl_namespaces (nvme_ctrl_t c, struct dirent *** namespaces)
-
-
-**Parameters**
-
-``nvme_ctrl_t c``
-  *undescribed*
-
-``struct dirent *** namespaces``
-  *undescribed*
-
-
-
-
-.. c:type:: struct nvme_passthru_cmd
-
-
-**Definition**
-
-::
-
-  struct nvme_passthru_cmd {
-    __u8 opcode;
-    __u8 flags;
-    __u16 rsvd1;
-    __u32 nsid;
-    __u32 cdw2;
-    __u32 cdw3;
-    __u64 metadata;
-    __u64 addr;
-    __u32 metadata_len;
-    __u32 data_len;
-    __u32 cdw10;
-    __u32 cdw11;
-    __u32 cdw12;
-    __u32 cdw13;
-    __u32 cdw14;
-    __u32 cdw15;
-    __u32 timeout_ms;
-    __u32 result;
-  };
-
-**Members**
-
-``opcode``
-  Operation code, see :c:type:`enum nvme_io_opcodes <nvme_io_opcodes>` and :c:type:`enum nvme_admin_opcodes <nvme_admin_opcodes>`
-
-``flags``
-  Not supported: intended for command flags (eg: SGL, FUSE)
-
-``rsvd1``
-  Reserved for future use
-
-``nsid``
-  Namespace Identifier, or Fabrics type
-
-``cdw2``
-  Command Dword 2 (no spec defined use)
-
-``cdw3``
-  Command Dword 3 (no spec defined use)
-
-``metadata``
-  User space address to metadata buffer (NULL if not used)
-
-``addr``
-  User space address to data buffer (NULL if not used)
-
-``metadata_len``
-  Metadata buffer transfer length
-
-``data_len``
-  Data buffer transfer length
-
-``cdw10``
-  Command Dword 10 (command specific)
-
-``cdw11``
-  Command Dword 11 (command specific)
-
-``cdw12``
-  Command Dword 12 (command specific)
-
-``cdw13``
-  Command Dword 13 (command specific)
-
-``cdw14``
-  Command Dword 14 (command specific)
-
-``cdw15``
-  Command Dword 15 (command specific)
-
-``timeout_ms``
-  If non-zero, overrides system default timeout in milliseconds
-
-``result``
-  Set on completion to the command's CQE DWORD 0 controller response
-
-
-
-
-
-.. c:type:: struct nvme_passthru_cmd64
-
-
-**Definition**
-
-::
-
-  struct nvme_passthru_cmd64 {
-    __u8 opcode;
-    __u8 flags;
-    __u16 rsvd1;
-    __u32 nsid;
-    __u32 cdw2;
-    __u32 cdw3;
-    __u64 metadata;
-    __u64 addr;
-    __u32 metadata_len;
-    __u32 data_len;
-    __u32 cdw10;
-    __u32 cdw11;
-    __u32 cdw12;
-    __u32 cdw13;
-    __u32 cdw14;
-    __u32 cdw15;
-    __u32 timeout_ms;
-    __u32 rsvd2;
-    __u64 result;
-  };
-
-**Members**
-
-``opcode``
-  Operation code, see :c:type:`enum nvme_io_opcodes <nvme_io_opcodes>` and :c:type:`enum nvme_admin_opcodes <nvme_admin_opcodes>`
-
-``flags``
-  Not supported: intended for command flags (eg: SGL, FUSE)
-
-``rsvd1``
-  Reserved for future use
-
-``nsid``
-  Namespace Identifier, or Fabrics type
-
-``cdw2``
-  Command Dword 2 (no spec defined use)
-
-``cdw3``
-  Command Dword 3 (no spec defined use)
-
-``metadata``
-  User space address to metadata buffer (NULL if not used)
-
-``addr``
-  User space address to data buffer (NULL if not used)
-
-``metadata_len``
-  Metadata buffer transfer length
-
-``data_len``
-  Data buffer transfer length
-
-``cdw10``
-  Command Dword 10 (command specific)
-
-``cdw11``
-  Command Dword 11 (command specific)
-
-``cdw12``
-  Command Dword 12 (command specific)
-
-``cdw13``
-  Command Dword 13 (command specific)
-
-``cdw14``
-  Command Dword 14 (command specific)
-
-``cdw15``
-  Command Dword 15 (command specific)
-
-``timeout_ms``
-  If non-zero, overrides system default timeout in milliseconds
-
-``rsvd2``
-  Reserved for future use (and fills an impicit struct pad
-
-``result``
-  Set on completion to the command's CQE DWORD 0-1 controller response
-
-
-
-.. c:function:: int nvme_submit_admin_passthru64 (int fd, struct nvme_passthru_cmd64 * cmd, __u64 * result)
-
-   Submit a 64-bit nvme passthrough admin command
-
-**Parameters**
-
-``int fd``
-  File descriptor of nvme device
-
-``struct nvme_passthru_cmd64 * cmd``
-  The nvme admin command to send
-
-``__u64 * result``
-  Optional field to return the result from the CQE DW0-1
-
-**Description**
-
-Uses NVME_IOCTL_ADMIN64_CMD for the ioctl request.
-
-**Return**
-
-The nvme command status if a response was received or -1
-        with errno set otherwise.
-
-
-.. c:function:: int nvme_admin_passthru64 (int fd, __u8 opcode, __u8 flags, __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14, __u32 cdw15, __u32 data_len, void * data, __u32 metadata_len, void * metadata, __u32 timeout_ms, __u64 * result)
-
-   Submit an nvme passthrough command
-
-**Parameters**
-
-``int fd``
-  File descriptor of nvme device
-
-``__u8 opcode``
-  The nvme io command to send
-
-``__u8 flags``
-  NVMe command flags (not used)
-
-``__u16 rsvd``
-  Reserevd for future use
-
-``__u32 nsid``
-  Namespace identifier
-
-``__u32 cdw2``
-  Command dword 2
-
-``__u32 cdw3``
-  Command dword 3
-
-``__u32 cdw10``
-  Command dword 10
-
-``__u32 cdw11``
-  Command dword 11
-
-``__u32 cdw12``
-  Command dword 12
-
-``__u32 cdw13``
-  Command dword 13
-
-``__u32 cdw14``
-  Command dword 14
-
-``__u32 cdw15``
-  Command dword 15
-
-``__u32 data_len``
-  Length of the data transfered in this command in bytes
-
-``void * data``
-  Pointer to user address of the data buffer
-
-``__u32 metadata_len``
-  Length of metadata transfered in this command
-
-``void * metadata``
-  Pointer to user address of the metadata buffer
-
-``__u32 timeout_ms``
-  How long the kernel waits for the command to complete
-
-``__u64 * result``
-  Optional field to return the result from the CQE dword 0
-
-**Description**
-
-Parameterized form of nvme_submit_admin_passthru64(). This sets up and
-submits a :c:type:`struct nvme_passthru_cmd64 <nvme_passthru_cmd64>`.
-
-Known values for **opcode** are defined in :c:type:`enum nvme_admin_opcode <nvme_admin_opcode>`.
-
-**Return**
-
-The nvme command status if a response was received or -1
-        with errno set otherwise.
-
-
-.. c:function:: int nvme_submit_admin_passthru (int fd, struct nvme_passthru_cmd * cmd, __u32 * result)
-
-   Submit an nvme passthrough admin command
-
-**Parameters**
-
-``int fd``
-  File descriptor of nvme device
-
-``struct nvme_passthru_cmd * cmd``
-  The nvme admin command to send
-
-``__u32 * result``
-  Optional field to return the result from the CQE DW0
-
-**Description**
-
-Uses NVME_IOCTL_ADMIN_CMD for the ioctl request.
-
-**Return**
-
-The nvme command status if a response was received or -1
-        with errno set otherwise.
-
-
-.. c:function:: int nvme_admin_passthru (int fd, __u8 opcode, __u8 flags, __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14, __u32 cdw15, __u32 data_len, void * data, __u32 metadata_len, void * metadata, __u32 timeout_ms, __u32 * result)
-
-   Submit an nvme passthrough command
-
-**Parameters**
-
-``int fd``
-  File descriptor of nvme device
-
-``__u8 opcode``
-  The nvme io command to send
-
-``__u8 flags``
-  NVMe command flags (not used)
-
-``__u16 rsvd``
-  Reserevd for future use
-
-``__u32 nsid``
-  Namespace identifier
-
-``__u32 cdw2``
-  Command dword 2
-
-``__u32 cdw3``
-  Command dword 3
-
-``__u32 cdw10``
-  Command dword 10
-
-``__u32 cdw11``
-  Command dword 11
-
-``__u32 cdw12``
-  Command dword 12
-
-``__u32 cdw13``
-  Command dword 13
-
-``__u32 cdw14``
-  Command dword 14
-
-``__u32 cdw15``
-  Command dword 15
-
-``__u32 data_len``
-  Length of the data transfered in this command in bytes
-
-``void * data``
-  Pointer to user address of the data buffer
-
-``__u32 metadata_len``
-  Length of metadata transfered in this command
-
-``void * metadata``
-  Pointer to user address of the metadata buffer
-
-``__u32 timeout_ms``
-  How long the kernel waits for the command to complete
-
-``__u32 * result``
-  Optional field to return the result from the CQE dword 0
-
-**Description**
-
-Parameterized form of nvme_submit_admin_passthru(). This sets up and
-submits a :c:type:`struct nvme_passthru_cmd <nvme_passthru_cmd>`.
-
-Known values for **opcode** are defined in :c:type:`enum nvme_admin_opcode <nvme_admin_opcode>`.
-
-**Return**
-
-The nvme command status if a response was received or -1
-        with errno set otherwise.
-
-
-.. c:function:: int nvme_submit_io_passthru64 (int fd, struct nvme_passthru_cmd64 * cmd, __u64 * result)
-
-   Submit a 64-bit nvme passthrough command
-
-**Parameters**
-
-``int fd``
-  File descriptor of nvme device
-
-``struct nvme_passthru_cmd64 * cmd``
-  The nvme io command to send
-
-``__u64 * result``
-  Optional field to return the result from the CQE DW0-1
-
-**Description**
-
-Uses NVME_IOCTL_IO64_CMD for the ioctl request.
-
-**Return**
-
-The nvme command status if a response was received or -1
-        with errno set otherwise.
-
-
-.. c:function:: int nvme_io_passthru64 (int fd, __u8 opcode, __u8 flags, __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14, __u32 cdw15, __u32 data_len, void * data, __u32 metadata_len, void * metadata, __u32 timeout_ms, __u64 * result)
-
-   Submit an nvme io passthrough command
-
-**Parameters**
-
-``int fd``
-  File descriptor of nvme device
-
-``__u8 opcode``
-  The nvme io command to send
-
-``__u8 flags``
-  NVMe command flags (not used)
-
-``__u16 rsvd``
-  Reserevd for future use
-
-``__u32 nsid``
-  Namespace identifier
-
-``__u32 cdw2``
-  Command dword 2
-
-``__u32 cdw3``
-  Command dword 3
-
-``__u32 cdw10``
-  Command dword 10
-
-``__u32 cdw11``
-  Command dword 11
-
-``__u32 cdw12``
-  Command dword 12
-
-``__u32 cdw13``
-  Command dword 13
-
-``__u32 cdw14``
-  Command dword 14
-
-``__u32 cdw15``
-  Command dword 15
-
-``__u32 data_len``
-  Length of the data transfered in this command in bytes
-
-``void * data``
-  Pointer to user address of the data buffer
-
-``__u32 metadata_len``
-  Length of metadata transfered in this command
-
-``void * metadata``
-  Pointer to user address of the metadata buffer
-
-``__u32 timeout_ms``
-  How long the kernel waits for the command to complete
-
-``__u64 * result``
-  Optional field to return the result from the CQE dword 0
-
-**Description**
-
-Parameterized form of nvme_submit_io_passthru64(). This sets up and submits
-a :c:type:`struct nvme_passthru_cmd64 <nvme_passthru_cmd64>`.
-
-Known values for **opcode** are defined in :c:type:`enum nvme_io_opcode <nvme_io_opcode>`.
-
-**Return**
-
-The nvme command status if a response was received or -1 with errno
-        set otherwise.
-
-
-.. c:function:: int nvme_submit_io_passthru (int fd, struct nvme_passthru_cmd * cmd, __u32 * result)
-
-   Submit an nvme passthrough command
-
-**Parameters**
-
-``int fd``
-  File descriptor of nvme device
-
-``struct nvme_passthru_cmd * cmd``
-  The nvme io command to send
-
-``__u32 * result``
-  Optional field to return the result from the CQE DW0
-
-**Description**
-
-Uses NVME_IOCTL_IO_CMD for the ioctl request.
-
-**Return**
-
-The nvme command status if a response was received or -1
-        with errno set otherwise.
-
-
-.. c:function:: int nvme_io_passthru (int fd, __u8 opcode, __u8 flags, __u16 rsvd, __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14, __u32 cdw15, __u32 data_len, void * data, __u32 metadata_len, void * metadata, __u32 timeout_ms, __u32 * result)
-
-   Submit an nvme io passthrough command
-
-**Parameters**
-
-``int fd``
-  File descriptor of nvme device
-
-``__u8 opcode``
-  The nvme io command to send
-
-``__u8 flags``
-  NVMe command flags (not used)
-
-``__u16 rsvd``
-  Reserevd for future use
-
-``__u32 nsid``
-  Namespace identifier
-
-``__u32 cdw2``
-  Command dword 2
-
-``__u32 cdw3``
-  Command dword 3
-
-``__u32 cdw10``
-  Command dword 10
-
-``__u32 cdw11``
-  Command dword 11
-
-``__u32 cdw12``
-  Command dword 12
-
-``__u32 cdw13``
-  Command dword 13
-
-``__u32 cdw14``
-  Command dword 14
-
-``__u32 cdw15``
-  Command dword 15
-
-``__u32 data_len``
-  Length of the data transfered in this command in bytes
-
-``void * data``
-  Pointer to user address of the data buffer
-
-``__u32 metadata_len``
-  Length of metadata transfered in this command
-
-``void * metadata``
-  Pointer to user address of the metadata buffer
-
-``__u32 timeout_ms``
-  How long the kernel waits for the command to complete
-
-``__u32 * result``
-  Optional field to return the result from the CQE dword 0
-
-**Description**
-
-Parameterized form of nvme_submit_io_passthru(). This sets up and submits
-a :c:type:`struct nvme_passthru_cmd <nvme_passthru_cmd>`.
-
-Known values for **opcode** are defined in :c:type:`enum nvme_io_opcode <nvme_io_opcode>`.
-
-**Return**
-
-The nvme command status if a response was received or -1
-        with errno set otherwise.
-
-
-.. c:function:: int nvme_subsystem_reset (int fd)
-
-   Initiate a subsystem reset
-
-**Parameters**
-
-``int fd``
-  File descriptor of nvme device
-
-**Description**
-
-This should only be sent to controller handles, not to namespaces.
-
-**Return**
-
-Zero if a subsystem reset was initiated or -1 with errno set
-        otherwise.
-
-
-.. c:function:: int nvme_ctrl_reset (int fd)
-
-   Initiate a controller reset
-
-**Parameters**
-
-``int fd``
-  File descriptor of nvme device
-
-**Description**
-
-This should only be sent to controller handles, not to namespaces.
-
-**Return**
-
-Zero if a reset was initiated or -1 with errno set otherwise.
-
-
-.. c:function:: int nvme_ns_rescan (int fd)
-
-   Initiate a controller rescan
-
-**Parameters**
-
-``int fd``
-  File descriptor of nvme device
-
-**Description**
-
-This should only be sent to controller handles, not to namespaces.
-
-**Return**
-
-Zero if a rescan was initiated or -1 with errno set otherwise.
-
-
-.. c:function:: int nvme_get_nsid (int fd)
-
-   Retrieve the NSID from a namespace file descriptor
-
-**Parameters**
-
-``int fd``
-  File descriptor of nvme namespace
-
-**Description**
-
-This should only be sent to namespace handles, not to controllers.
-
-**Return**
-
-The namespace identifier if a succecssful or -1 with errno set
-        otherwise.
-
-
 .. c:function:: nvme_subsystem_t nvme_first_subsystem (nvme_root_t r)
 
 
 **Parameters**
 
 ``nvme_root_t r``
-  *undescribed*
 
 
 .. c:function:: nvme_subsystem_t nvme_next_subsystem (nvme_root_t r, nvme_subsystem_t s)
@@ -5419,7 +5393,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``nvme_subsystem_t s``
-  *undescribed*
 
 
 .. c:function:: nvme_ns_t nvme_ctrl_first_ns (nvme_ctrl_t c)
@@ -5428,7 +5401,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: nvme_ns_t nvme_ctrl_next_ns (nvme_ctrl_t c, nvme_ns_t n)
@@ -5440,7 +5412,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``nvme_ns_t n``
-  *undescribed*
 
 
 .. c:function:: nvme_path_t nvme_ctrl_first_path (nvme_ctrl_t c)
@@ -5449,7 +5420,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: nvme_path_t nvme_ctrl_next_path (nvme_ctrl_t c, nvme_path_t p)
@@ -5461,7 +5431,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``nvme_path_t p``
-  *undescribed*
 
 
 .. c:function:: nvme_ctrl_t nvme_subsystem_first_ctrl (nvme_subsystem_t s)
@@ -5470,7 +5439,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_subsystem_t s``
-  *undescribed*
 
 
 .. c:function:: nvme_ctrl_t nvme_subsystem_next_ctrl (nvme_subsystem_t s, nvme_ctrl_t c)
@@ -5482,7 +5450,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: nvme_ns_t nvme_subsystem_first_ns (nvme_subsystem_t s)
@@ -5491,7 +5458,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_subsystem_t s``
-  *undescribed*
 
 
 .. c:function:: nvme_ns_t nvme_subsystem_next_ns (nvme_subsystem_t s, nvme_ns_t n)
@@ -5503,7 +5469,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``nvme_ns_t n``
-  *undescribed*
 
 
 .. c:function:: nvme_for_each_subsystem_safe ( r,  s,  _s)
@@ -5647,7 +5612,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ns_t n``
-  *undescribed*
 
 
 .. c:function:: int nvme_ns_get_nsid (nvme_ns_t n)
@@ -5656,7 +5620,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ns_t n``
-  *undescribed*
 
 
 .. c:function:: int nvme_ns_get_lba_size (nvme_ns_t n)
@@ -5665,7 +5628,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ns_t n``
-  *undescribed*
 
 
 .. c:function:: uint64_t nvme_ns_get_lba_count (nvme_ns_t n)
@@ -5674,7 +5636,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ns_t n``
-  *undescribed*
 
 
 .. c:function:: uint64_t nvme_ns_get_lba_util (nvme_ns_t n)
@@ -5683,7 +5644,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ns_t n``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ns_get_sysfs_dir (nvme_ns_t n)
@@ -5692,7 +5652,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ns_t n``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ns_get_name (nvme_ns_t n)
@@ -5701,7 +5660,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ns_t n``
-  *undescribed*
 
 
 .. c:function:: nvme_subsystem_t nvme_ns_get_subsystem (nvme_ns_t n)
@@ -5710,7 +5668,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ns_t n``
-  *undescribed*
 
 
 .. c:function:: nvme_ctrl_t nvme_ns_get_ctrl (nvme_ns_t n)
@@ -5719,7 +5676,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ns_t n``
-  *undescribed*
 
 
 .. c:function:: int nvme_ns_read (nvme_ns_t n, void * buf, off_t offset, size_t count)
@@ -5737,7 +5693,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``size_t count``
-  *undescribed*
 
 
 .. c:function:: int nvme_ns_write (nvme_ns_t n, void * buf, off_t offset, size_t count)
@@ -5755,7 +5710,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``size_t count``
-  *undescribed*
 
 
 .. c:function:: int nvme_ns_verify (nvme_ns_t n, off_t offset, size_t count)
@@ -5770,7 +5724,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``size_t count``
-  *undescribed*
 
 
 .. c:function:: int nvme_ns_compare (nvme_ns_t n, void * buf, off_t offset, size_t count)
@@ -5788,7 +5741,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``size_t count``
-  *undescribed*
 
 
 .. c:function:: int nvme_ns_write_zeros (nvme_ns_t n, off_t offset, size_t count)
@@ -5803,7 +5755,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``size_t count``
-  *undescribed*
 
 
 .. c:function:: int nvme_ns_write_uncorrectable (nvme_ns_t n, off_t offset, size_t count)
@@ -5818,7 +5769,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``size_t count``
-  *undescribed*
 
 
 .. c:function:: int nvme_ns_flush (nvme_ns_t n)
@@ -5827,7 +5777,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ns_t n``
-  *undescribed*
 
 
 .. c:function:: int nvme_ns_identify (nvme_ns_t n, struct nvme_id_ns * ns)
@@ -5839,7 +5788,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``struct nvme_id_ns * ns``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_path_get_name (nvme_path_t p)
@@ -5848,7 +5796,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_path_t p``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_path_get_sysfs_dir (nvme_path_t p)
@@ -5857,7 +5804,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_path_t p``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_path_get_ana_state (nvme_path_t p)
@@ -5866,7 +5812,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_path_t p``
-  *undescribed*
 
 
 .. c:function:: nvme_ctrl_t nvme_path_get_subsystem (nvme_path_t p)
@@ -5875,7 +5820,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_path_t p``
-  *undescribed*
 
 
 .. c:function:: nvme_ns_t nvme_path_get_ns (nvme_path_t p)
@@ -5884,7 +5828,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_path_t p``
-  *undescribed*
 
 
 .. c:function:: int nvme_ctrl_get_fd (nvme_ctrl_t c)
@@ -5893,7 +5836,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ctrl_get_name (nvme_ctrl_t c)
@@ -5902,7 +5844,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ctrl_get_sysfs_dir (nvme_ctrl_t c)
@@ -5911,7 +5852,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ctrl_get_address (nvme_ctrl_t c)
@@ -5920,7 +5860,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ctrl_get_firmware (nvme_ctrl_t c)
@@ -5929,7 +5868,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ctrl_get_model (nvme_ctrl_t c)
@@ -5938,7 +5876,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ctrl_get_state (nvme_ctrl_t c)
@@ -5947,7 +5884,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ctrl_get_numa_node (nvme_ctrl_t c)
@@ -5956,7 +5892,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ctrl_get_queue_count (nvme_ctrl_t c)
@@ -5965,7 +5900,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ctrl_get_serial (nvme_ctrl_t c)
@@ -5974,7 +5908,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ctrl_get_sqsize (nvme_ctrl_t c)
@@ -5983,7 +5916,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ctrl_get_transport (nvme_ctrl_t c)
@@ -5992,7 +5924,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ctrl_get_nqn (nvme_ctrl_t c)
@@ -6001,7 +5932,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_ctrl_get_subsysnqn (nvme_ctrl_t c)
@@ -6010,7 +5940,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: nvme_subsystem_t nvme_ctrl_get_subsystem (nvme_ctrl_t c)
@@ -6019,7 +5948,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: int nvme_ctrl_identify (nvme_ctrl_t c, struct nvme_id_ctrl * id)
@@ -6031,7 +5959,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``struct nvme_id_ctrl * id``
-  *undescribed*
 
 
 .. c:function:: int nvme_ctrl_disconnect (nvme_ctrl_t c)
@@ -6040,7 +5967,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_ctrl_t c``
-  *undescribed*
 
 
 .. c:function:: nvme_ctrl_t nvme_scan_ctrl (const char * name)
@@ -6049,7 +5975,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``const char * name``
-  *undescribed*
 
 
 .. c:function:: void nvme_free_ctrl (struct nvme_ctrl * c)
@@ -6076,7 +6001,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_subsystem_t s``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_subsystem_get_sysfs_dir (nvme_subsystem_t s)
@@ -6085,7 +6009,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_subsystem_t s``
-  *undescribed*
 
 
 .. c:function:: const char * nvme_subsystem_get_name (nvme_subsystem_t s)
@@ -6094,7 +6017,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_subsystem_t s``
-  *undescribed*
 
 
 .. c:function:: nvme_root_t nvme_scan_filter (nvme_scan_filter_t f)
@@ -6103,7 +6025,6 @@ The namespace identifier if a succecssful or -1 with errno set
 **Parameters**
 
 ``nvme_scan_filter_t f``
-  *undescribed*
 
 
 .. c:function:: nvme_root_t nvme_scan ()
@@ -6148,7 +6069,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``const char * attr``
-  *undescribed*
 
 
 .. c:function:: char * nvme_get_ctrl_attr (nvme_ctrl_t c, const char * attr)
@@ -6160,7 +6080,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``const char * attr``
-  *undescribed*
 
 
 .. c:function:: char * nvme_get_ns_attr (nvme_ns_t n, const char * attr)
@@ -6172,7 +6091,6 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``const char * attr``
-  *undescribed*
 
 
 .. c:function:: char * nvme_get_path_attr (nvme_path_t p, const char * attr)
@@ -6184,72 +6102,83 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``const char * attr``
-  *undescribed*
 
 
 
 
 .. c:type:: enum nvme_constants
 
+   A place to stash various constant nvme values
 
 **Constants**
 
 ``NVME_NSID_ALL``
-  *undescribed*
+  A broadcast value that is used to specify all
+  namespaces
 
 ``NVME_NSID_NONE``
-  *undescribed*
+  The invalid namespace id, for when the nsid
+  parameter is not used in a command
 
 ``NVME_UUID_NONE``
-  *undescribed*
+  Use to omit the uuid command parameter
 
 ``NVME_CNTLID_NONE``
-  *undescribed*
+  Use to omit the cntlid command parameter
 
 ``NVME_NVMSETID_NONE``
-  *undescribed*
+  Use to omit the nvmsetid command parameter
 
 ``NVME_LOG_LSP_NONE``
-  *undescribed*
+  Use to omit the log lsp command parameter
 
 ``NVME_LOG_LSI_NONE``
-  *undescribed*
+  Use to omit the log lsi command parameter
 
 ``NVME_IDENTIFY_DATA_SIZE``
-  *undescribed*
+  The transfer size for nvme identify commands
 
 ``NVME_ID_NVMSET_LIST_MAX``
-  *undescribed*
+  The largest possible nvmset index in identify
+  nvmeset
 
 ``NVME_ID_UUID_LIST_MAX``
-  *undescribed*
+  The largest possible uuid index in identify
+  uuid list
 
 ``NVME_ID_CTRL_LIST_MAX``
-  *undescribed*
+  The largest possible controller index in
+  identify controller list
 
 ``NVME_ID_NS_LIST_MAX``
-  *undescribed*
+  The largest possible namespace index in
+  identify namespace list
 
 ``NVME_ID_SECONDARY_CTRL_MAX``
+  The largest possible secondary controller index
+  in identify secondary controller
+
+``NVME_ID_ND_DESCRIPTOR_MAX``
   *undescribed*
 
 ``NVME_FEAT_LBA_RANGE_MAX``
-  *undescribed*
+  The largest possible LBA range index in feature
+  lba range type
 
 ``NVME_LOG_ST_MAX_RESULTS``
-  *undescribed*
+  The largest possible self test result index in the
+  device self test log
 
 ``NVME_DSM_MAX_RANGES``
-  *undescribed*
-
-
-**NVMe controller registers/properties**
+  The largest possible range index in a data-set
+  management command
 
 
 
 
 .. c:type:: enum nvme_registers
 
+   The nvme controller registers for all transports. This is the layout of BAR0/1 for PCIe, and properties for fabrics.
 
 **Constants**
 
@@ -6326,87 +6255,97 @@ The namespace identifier if a succecssful or -1 with errno set
   SQ 0 Tail Doorbell
 
 
+.. c:function:: bool is_64bit_reg (__u32 offset)
+
+   Checks if offset of the controller register is 64bit or not.
+
+**Parameters**
+
+``__u32 offset``
+  Offset of controller register field in bytes
+
+**Description**
+
+This function does not care about transport so that the offset is not going
+to be checked inside of this function for the unsupported fields in a
+specific transport. For example, BPMBL(Boot Partition Memory Buffer
+Location) register is not supported by fabrics, but it can be chcked here.
+
+Returns true if given offset is 64bit register, otherwise it returns false.
 
 
-.. c:type:: enum 
 
+
+.. c:type:: enum nvme_psd_flags
+
+   Possible flag values in nvme power state descriptor
 
 **Constants**
 
-``NVME_CC_ENABLE``
+``NVME_PSD_FLAGS_MXPS``
+  Indicates the scale for the Maximum Power
+  field. If this bit is cleared, then the scale of the
+  Maximum Power field is in 0.01 Watts. If this bit is
+  set, then the scale of the Maximum Power field is in
+  0.0001 Watts.
+
+``NVME_PSD_FLAGS_NOPS``
+  Indicates whether the controller processes I/O
+  commands in this power state. If this bit is cleared,
+  then the controller processes I/O commands in this
+  power state. If this bit is set, then the controller
+  does not process I/O commands in this power state.
+
+
+
+
+.. c:type:: enum nvme_psd_ps
+
+   Known values for :c:type:`struct nvme_psd <nvme_psd>` #ips and #aps. Use with nvme_psd_power_scale() to extract the power scale field to match this enum. NVME_PSD_IPS_100_MICRO_WATT: 0.0001 watt scale NVME_PSD_IPS_10_MILLI_WATT: 0.01 watt scale
+
+**Constants**
+
+``NVME_PSD_PS_100_MICRO_WATT``
   *undescribed*
 
-``NVME_CC_CSS_NVM``
-  *undescribed*
-
-``NVME_CC_EN_SHIFT``
-  *undescribed*
-
-``NVME_CC_CSS_SHIFT``
-  *undescribed*
-
-``NVME_CC_MPS_SHIFT``
-  *undescribed*
-
-``NVME_CC_AMS_SHIFT``
-  *undescribed*
-
-``NVME_CC_SHN_SHIFT``
-  *undescribed*
-
-``NVME_CC_IOSQES_SHIFT``
-  *undescribed*
-
-``NVME_CC_IOCQES_SHIFT``
-  *undescribed*
-
-``NVME_CC_AMS_RR``
-  *undescribed*
-
-``NVME_CC_AMS_WRRU``
-  *undescribed*
-
-``NVME_CC_AMS_VS``
-  *undescribed*
-
-``NVME_CC_SHN_NONE``
-  *undescribed*
-
-``NVME_CC_SHN_NORMAL``
-  *undescribed*
-
-``NVME_CC_SHN_ABRUPT``
-  *undescribed*
-
-``NVME_CC_SHN_MASK``
-  *undescribed*
-
-``NVME_CSTS_RDY``
-  *undescribed*
-
-``NVME_CSTS_CFS``
-  *undescribed*
-
-``NVME_CSTS_NSSRO``
-  *undescribed*
-
-``NVME_CSTS_PP``
-  *undescribed*
-
-``NVME_CSTS_SHST_NORMAL``
-  *undescribed*
-
-``NVME_CSTS_SHST_OCCUR``
-  *undescribed*
-
-``NVME_CSTS_SHST_CMPLT``
-  *undescribed*
-
-``NVME_CSTS_SHST_MASK``
+``NVME_PSD_PS_10_MILLI_WATT``
   *undescribed*
 
 
-**NVMe Identify**
+.. c:function:: unsigned nvme_psd_power_scale (__u8 ps)
+
+   power scale occupies the upper 3 bits
+
+**Parameters**
+
+``__u8 ps``
+  *undescribed*
+
+
+
+
+.. c:type:: enum nvme_psd_workload
+
+   Specifies a workload hint in the Power Management Feature (see :c:type:`struct nvme_psd <nvme_psd>`.apw) to inform the NVM subsystem or indicate the conditions for the active power level.
+
+**Constants**
+
+``NVME_PSD_WORKLOAD_1``
+  Extended Idle Period with a Burst of Random Write
+  consists of five minutes of idle followed by
+  thirty-two random write commands of size 1 MiB
+  submitted to a single controller while all other
+  controllers in the NVM subsystem are idle, and then
+  thirty (30) seconds of idle.
+
+``NVME_PSD_WORKLOAD_2``
+  Heavy Sequential Writes consists of 80,000
+  sequential write commands of size 128 KiB submitted to
+  a single controller while all other controllers in the
+  NVM subsystem are idle.  The submission queue(s)
+  should be sufficiently large allowing the host to
+  ensure there are multiple commands pending at all
+  times during the workload.
 
 
 
@@ -6439,36 +6378,68 @@ The namespace identifier if a succecssful or -1 with errno set
 
 **Members**
 
+``mp``
+  Maximum Power indicates the sustained maximum power consumed by the
+  NVM subsystem in this power state. The power in Watts is equal to
+  the value in this field multiplied by the scale specified in the Max
+  Power Scale bit (see :c:type:`enum nvme_psd_flags <nvme_psd_flags>`). A value of 0 indicates
+  Maximum Power is not reported.
 
+``flags``
+  Additional decoding flags, see :c:type:`enum nvme_psd_flags <nvme_psd_flags>`.
 
-.. c:function:: unsigned nvme_psd_power_scale (__u8 ps)
+``enlat``
+  Entry Latency indicates the maximum latency in microseconds
+  associated with entering this power state. A value of 0 indicates
+  Entry Latency is not reported.
 
-   power scale occupies the upper 3 bits
+``exlat``
+  Exit Latency indicates the maximum latency in microseconds
+  associated with exiting this power state. A value of 0 indicates
+  Exit Latency is not reported.
 
-**Parameters**
+``rrt``
+  Relative Read Throughput indicates the read throughput rank
+  associated with this power state relative to others. The value in
+  this is less than the number of supported power states.
 
-``__u8 ps``
-  *undescribed*
+``rrl``
+  Relative Reade Latency indicates the read latency rank associated
+  with this power state relative to others. The value in this field is
+  less than the number of supported power states.
 
+``rwt``
+  Relative Write Throughput indicates write throughput rank associated
+  with this power state relative to others. The value in this field is
+  less than the number of supported power states
 
+``rwl``
+  Relative Write Latency indicates the write latency rank associated
+  with this power state relative to others. The value in this field is
+  less than the number of supported power states
 
+``idlp``
+  Idle Power indicates the typical power consumed by the NVM
+  subsystem over 30 seconds in this power state when idle.
 
-.. c:type:: enum 
+``ips``
+  Idle Power Scale indicates the scale for :c:type:`struct nvme_id_psd <nvme_id_psd>`.idlp,
+  see :c:type:`enum nvme_psd_ps <nvme_psd_ps>` for decoding this field.
 
+``actp``
+  Active Power indicates the largest average power consumed by the
+  NVM subsystem over a 10 second period in this power state with
+  the workload indicated in the Active Power Workload field.
 
-**Constants**
+``apw``
+  Active Power Workload indicates the workload used to calculate
+  maximum power for this power state. See :c:type:`enum nvme_psd_workload <nvme_psd_workload>` for
+  decoding this field.
 
-``NVME_PSD_FLAGS_MAX_POWER_SCALE``
-  *undescribed*
+``aps``
+  Active Power Scale indicates the scale for the :c:type:`struct
+  nvme_id_psd <nvme_id_psd>`.actp, see :c:type:`enum nvme_psd_ps <nvme_psd_ps>` for decoding this value.
 
-``NVME_PSD_FLAGS_NON_OP_STATE``
-  *undescribed*
-
-``NVME_PSD_RELATIVE_MASK``
-  *undescribed*
-
-``NVME_PSD_APW_MASK``
-  *undescribed*
 
 
 
@@ -6576,88 +6547,356 @@ The namespace identifier if a succecssful or -1 with errno set
 **Members**
 
 ``vid``
-  Vendor ID
+  PCI Vendor ID, the company vendor identifier that is assigned by
+  the PCI SIG.
 
 ``ssvid``
-  Subsystem Vendor Id
+  PCI Subsystem Vendor ID, the company vendor identifier that is
+  assigned by the PCI SIG for the subsystem.
 
 ``sn``
-  Serial Number
+  Serial Number in ascii
 
 ``mn``
-  Model Number
+  Model Number in ascii
 
 ``fr``
-  Firmware Revision
+  Firmware Revision in ascii, the currently active firmware
+  revision for the NVM subsystem
 
 ``rab``
-  Recommended Arbitration Burst
+  Recommended Arbitration Burst, reported as a power of two
 
 ``ieee``
-  IEEE
+  IEEE assigned Organization Unique Identifier
 
 ``cmic``
-  Controller Mulitpathing Capabilities
+  Controller Multipath IO and Namespace Sharing  Capabilities of
+  the controller and NVM subsystem. See :c:type:`enum nvme_id_ctrl_cmic <nvme_id_ctrl_cmic>`.
 
 ``mdts``
-  Max Data Transfer Size
+  Max Data Transfer Size is the largest data transfer size. The
+  host should not submit a command that exceeds this maximum data
+  transfer size. The value is in units of the minimum memory page
+  size (CAP.MPSMIN) and is reported as a power of two
 
 ``cntlid``
-  Controller Identifier
+  Controller ID, the NVM subsystem unique controller identifier
+  associated with the controller.
 
 ``ver``
-  Version
+  Version, this field contains the value reported in the Version
+  register, or property (see :c:type:`enum nvme_registers <nvme_registers>` ``NVME_REG_VS``).
 
 ``rtd3r``
-  Runtime D3 Resume
+  RTD3 Resume Latency, the expected latency in microseconds to resume
+  from Runtime D3
 
 ``rtd3e``
-  Runtime D3 Exit
+  RTD3 Exit Latency, the typical latency in microseconds to enter
+  Runtime D3.
 
 ``oaes``
-  Optional Async Events Supported
+  Optional Async Events Supported, see **enum** nvme_id_ctrl_oaes .
 
 ``ctratt``
-  Controller Attributes
+  Controller Attributes, see **enum** nvme_id_ctrl_ctratt
 
 ``rrls``
-  Read Recovery Levels
+  Read Recovery Levels. If a bit is set, then the corresponding
+  Read Recovery Level is supported. If a bit is cleared, then the
+  corresponding Read Recovery Level is not supported.
 
 ``cntrltype``
-  Controller Type
+  Controller Type, see :c:type:`enum nvme_id_ctrl_cntrltype <nvme_id_ctrl_cntrltype>`
 
 ``fguid``
-  FRU GUID
+  FRU GUID, a 128-bit value that is globally unique for a given
+  Field Replaceable Unit
 
 ``crdt1``
-  Controller Retry Delay 1
+  Controller Retry Delay time in 100 millisecod units if CQE CRD
+  field is 1
 
 ``crdt2``
-  Controller Retry Delay 2
+  Controller Retry Delay time in 100 millisecod units if CQE CRD
+  field is 2
 
 ``crdt3``
-  Controller Retry Delay 3
+  Controller Retry Delay time in 100 millisecod units if CQE CRD
+  field is 3
+
+``nvmsr``
+  NVM Subsystem Report, see :c:type:`enum nvme_id_ctrl_nvmsr <nvme_id_ctrl_nvmsr>`
+
+``vwci``
+  VPD Write Cycle Information, see :c:type:`enum nvme_id_ctrl_vwci <nvme_id_ctrl_vwci>`
+
+``mec``
+  Management Endpoint Capabilities, see :c:type:`enum nvme_id_ctrl_mec <nvme_id_ctrl_mec>`
 
 ``oacs``
-  Optional Admin Commands Supported
+  Optional Admin Command Support,the optional Admin commands and
+  features supported by the controller, see :c:type:`enum nvme_id_ctrl_oacs <nvme_id_ctrl_oacs>`.
 
 ``acl``
-  Abort Command Limit
+  Abort Command Limit, the maximum number of concurrently
+  executing Abort commands supported by the controller. This is a
+  0's based value.
 
 ``aerl``
-  Async Event Request Limit
+  Async Event Request Limit, the maximum number of concurrently
+  outstanding Asynchronous Event Request commands supported by the
+  controller This is a 0's based value.
+
+``frmw``
+  Firmware Updates indicates capabilities regarding firmware
+  updates. See :c:type:`enum nvme_id_ctrl_frmw <nvme_id_ctrl_frmw>`.
 
 ``lpa``
-  Log Page Attributes
+  Log Page Attributes, see :c:type:`enum nvme_id_ctrl_lpa <nvme_id_ctrl_lpa>`.
+
+``elpe``
+  Error Log Page Entries, the maximum number of Error Information
+  log entries that are stored by the controller. This field is a
+  0's based value.
 
 ``npss``
-  Number of Power States Supported
+  Number of Power States Supported, the number of NVM Express
+  power states supported by the controller, indicating the number
+  of valid entries in :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.psd. This is a 0's
+  based value.
+
+``avscc``
+  Admin Vendor Specific Command Configuration, see :c:type:`enum
+  nvme_id_ctrl_avscc <nvme_id_ctrl_avscc>`.
+
+``apsta``
+  Autonomous Power State Transition Attributes, see :c:type:`enum
+  nvme_id_ctrl_apsta <nvme_id_ctrl_apsta>`.
+
+``wctemp``
+  Warning Composite Temperature Threshold indicates
+  the minimum Composite Temperature field value (see :c:type:`struct
+  nvme_smart_log <nvme_smart_log>`.critical_comp_time) that indicates an overheating
+  condition during which controller operation continues.
+
+``cctemp``
+  Critical Composite Temperature Threshold, field indicates the
+  minimum Composite Temperature field value (see :c:type:`struct
+   nvme_smart_log <nvme_smart_log>`.critical_comp_time) that indicates a critical
+  overheating condition.
+
+``mtfa``
+  Maximum Time for Firmware Activation indicates the maximum time
+  the controller temporarily stops processing commands to activate
+  the firmware image, specified in 100 millisecond units. This
+  field is always valid if the controller supports firmware
+  activation without a reset.
+
+``hmpre``
+  Host Memory Buffer Preferred Size indicates the preferred size
+  that the host is requested to allocate for the Host Memory
+  Buffer feature in 4 KiB units.
+
+``hmmin``
+  Host Memory Buffer Minimum Size indicates the minimum size that
+  the host is requested to allocate for the Host Memory Buffer
+  feature in 4 KiB units.
+
+``tnvmcap``
+  Total NVM Capacity, the total NVM capacity in the NVM subsystem.
+  The value is in bytes.
+
+``unvmcap``
+  Unallocated NVM Capacity, the unallocated NVM capacity in the
+  NVM subsystem. The value is in bytes.
+  **rpmbs**      Replay Protected Memory Block Support, see :c:type:`enum
+  nvme_id_ctrl_rpmbs <nvme_id_ctrl_rpmbs>`.
+  **edstt**      Extended Device Self-test Time, if Device Self-test command is
+  supported (see :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.oacs, ``NVME_CTRL_OACS_SELF_TEST``),
+  then this field indicates the nominal amount of time in one
+  minute units that the controller takes to complete an extended
+  device self-test operation when in power state 0.
+
+``dsto``
+  Device Self-test Options, see :c:type:`enum nvme_id_ctrl_dsto <nvme_id_ctrl_dsto>`.
+
+``fwug``
+  Firmware Update Granularity indicates the granularity and
+  alignment requirement of the firmware image being updated by the
+  Firmware Image Download command. The value is reported in 4 KiB
+  units. A value of 0h indicates no information on granularity is
+  provided. A value of FFh indicates no restriction
+
+``kas``
+  Keep Alive Support indicates the granularity of the Keep Alive
+  Timer in 100 millisecond units.
+
+``hctma``
+  Host Controlled Thermal Management Attributes, see :c:type:`enum nvme_id_ctrl_hctm <nvme_id_ctrl_hctm>`.
+
+``mntmt``
+  Minimum Thermal Management Temperature indicates the minimum
+  temperature, in degrees Kelvin, that the host may request in the
+  Thermal Management Temperature 1 field and Thermal Management
+  Temperature 2 field of a Set Features command with the Feature
+  Identifier field set to #NVME_FEAT_FID_HCTM.
+
+``mxtmt``
+  Maximum Thermal Management Temperature indicates the maximum
+  temperature, in degrees Kelvin, that the host may request in the
+  Thermal Management Temperature 1 field and Thermal Management
+  Temperature 2 field of the Set Features command with the Feature
+  Identifier set to #NVME_FEAT_FID_HCTM.
+
+``sanicap``
+  Sanitize Capabilities, see :c:type:`enum nvme_id_ctrl_sanicap <nvme_id_ctrl_sanicap>`
+
+``hmminds``
+  Host Memory Buffer Minimum Descriptor Entry Size indicates the
+  minimum usable size of a Host Memory Buffer Descriptor Entry in
+  4 KiB units.
+
+``hmmaxd``
+  Host Memory Maximum Descriptors Entries indicates the number of
+  usable Host Memory Buffer Descriptor Entries.
+
+``nsetidmax``
+  NVM Set Identifier Maximum, defines the maximum value of a valid
+  NVM Set Identifier for any controller in the NVM subsystem.
+
+``endgidmax``
+  Endurance Group Identifier Maximum, defines the maximum value of
+  a valid Endurance Group Identifier for any controller in the NVM
+  subsystem.
+
+``anatt``
+  ANA Transition Time indicates the maximum amount of time, in
+  seconds, for a transition between ANA states or the maximum
+  amount of time, in seconds, that the controller reports the ANA
+  change state.
+
+``anacap``
+  Asymmetric Namespace Access Capabilities, see :c:type:`enum
+  nvme_id_ctrl_anacap <nvme_id_ctrl_anacap>`.
+
+``anagrpmax``
+  ANA Group Identifier Maximum indicates the maximum value of a
+  valid ANA Group Identifier for any controller in the NVM
+  subsystem.
+
+``nanagrpid``
+  Number of ANA Group Identifiers indicates the number of ANA
+  groups supported by this controller.
+
+``pels``
+  Persistent Event Log Size indicates the maximum reportable size
+  for the Persistent Event Log.
+
+``sqes``
+  Submission Queue Entry Size, see :c:type:`enum nvme_id_ctrl_sqes <nvme_id_ctrl_sqes>`.
+
+``cqes``
+  Completion Queue Entry Size, see :c:type:`enum nvme_id_ctrl_cqes <nvme_id_ctrl_cqes>`.
+
+``maxcmd``
+  Maximum Outstanding Commands indicates the maximum number of
+  commands that the controller processes at one time for a
+  particular queue.
+
+``nn``
+  Number of Namespaces indicates the maximum value of a valid
+  nsid for the NVM subsystem. If the MNAN (:c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.mnan
+  field is cleared to 0h, then this field also indicates the
+  maximum number of namespaces supported by the NVM.  subsystem.
+
+``oncs``
+  Optional NVM Command Support, see :c:type:`enum nvme_id_ctrl_oncs <nvme_id_ctrl_oncs>`.
+
+``fuses``
+  Fused Operation Support, see :c:type:`enum nvme_id_ctrl_fuses <nvme_id_ctrl_fuses>`.
+
+``fna``
+  Format NVM Attributes, see :c:type:`enum nvme_id_ctrl_fna <nvme_id_ctrl_fna>`.
+
+``vwc``
+  Volatile Write Cache, see :c:type:`enum nvme_id_ctrl_vwc <nvme_id_ctrl_vwc>`.
+
+``awun``
+  Atomic Write Unit Normal indicates the size of the write
+  operation guaranteed to be written atomically to the NVM across
+  all namespaces with any supported namespace format during normal
+  operation. This field is specified in logical blocks and is a
+  0's based value.
+
+``awupf``
+  Atomic Write Unit Power Fail indicates the size of the write
+  operation guaranteed to be written atomically to the NVM across
+  all namespaces with any supported namespace format during a
+  power fail or error condition. This field is specified in
+  logical blocks and is a 0’s based value.
+
+``nvscc``
+  NVM Vendor Specific Command Configuration, see :c:type:`enum
+  nvme_id_ctrl_nvscc <nvme_id_ctrl_nvscc>`.
+
+``nwpc``
+  Namespace Write Protection Capabilities, see :c:type:`enum
+  nvme_id_ctrl_nwpc <nvme_id_ctrl_nwpc>`.
+
+``acwu``
+  Atomic Compare & Write Unit indicates the size of the write
+  operation guaranteed to be written atomically to the NVM across
+  all namespaces with any supported namespace format for a Compare
+  and Write fused operation. This field is specified in logical
+  blocks and is a 0’s based value.
+
+``sgls``
+  SGL Support, see :c:type:`enum nvme_id_ctrl_sgls <nvme_id_ctrl_sgls>`
+
+``mnan``
+  Maximum Number of Allowed Namespaces indicates the maximum
+  number of namespaces supported by the NVM subsystem.
+
+``subnqn``
+  NVM Subsystem NVMe Qualified Name, UTF-8 null terminated string
+
+``ioccsz``
+  I/O Queue Command Capsule Supported Size, defines the maximum
+  I/O command capsule size in 16 byte units.
+
+``iorcsz``
+  I/O Queue Response Capsule Supported Size, defines the maximum
+  I/O response capsule size in 16 byte units.
+
+``icdoff``
+  In Capsule Data Offset, defines the offset where data starts
+  within a capsule. This value is applicable to I/O Queues only.
+
+``fcatt``
+  Fabrics Controller Attributes, see :c:type:`enum nvme_id_ctrl_fcatt <nvme_id_ctrl_fcatt>`.
+
+``msdbd``
+  Maximum SGL Data Block Descriptors indicates the maximum
+  number of SGL Data Block or Keyed SGL Data Block descriptors
+  that a host is allowed to place in a capsule. A value of 0h
+  indicates no limit.
+
+``ofcs``
+  Optional Fabric Commands Support, see :c:type:`enum nvme_id_ctrl_ofcs <nvme_id_ctrl_ofcs>`.
+
+``psd``
+  Power State Descriptors, see :c:type:`struct nvme_id_psd <nvme_id_psd>`.
+
+``vs``
+  Vendor Specific
 
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_cmic
 
 
 **Constants**
@@ -6677,8 +6916,9 @@ The namespace identifier if a succecssful or -1 with errno set
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_oaes
 
+   The typical latency in microseconds to enter Runtime D3
 
 **Constants**
 
@@ -6695,7 +6935,7 @@ The namespace identifier if a succecssful or -1 with errno set
   *undescribed*
 
 ``NVME_CTRL_OAES_LBAS``
-  *undescribed*
+  :
 
 ``NVME_CTRL_OAES_EGE``
   *undescribed*
@@ -6703,7 +6943,7 @@ The namespace identifier if a succecssful or -1 with errno set
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_ctratt
 
 
 **Constants**
@@ -6741,13 +6981,10 @@ The namespace identifier if a succecssful or -1 with errno set
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_cntrltype
 
 
 **Constants**
-
-``NVME_CTRL_CNTRLTYPE_RESERVED``
-  *undescribed*
 
 ``NVME_CTRL_CNTRLTYPE_IO``
   *undescribed*
@@ -6761,105 +6998,140 @@ The namespace identifier if a succecssful or -1 with errno set
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_nvmsr
 
+   This field reports information associated with the NVM Subsystem, see :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.nvmsr.
 
 **Constants**
 
 ``NVME_CTRL_NVMSR_NVMESD``
-  *undescribed*
+  If set, then the NVM Subsystem is part of an NVMe
+  Storage Device; if cleared, then the NVM Subsystem
+  is not part of an NVMe Storage Device.
 
 ``NVME_CTRL_NVMSR_NVMEE``
-  *undescribed*
+  If set’, then the NVM Subsystem is part of an NVMe
+  Enclosure; if cleared, then the NVM Subsystem is
+  not part of an NVMe Enclosure.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_vwci
 
+   This field indicates information about remaining number of times that VPD contents are able to be updated using the VPD Write command, see :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.vwci.
 
 **Constants**
 
 ``NVME_CTRL_VWCI_VWCR``
-  *undescribed*
+  Mask to get value of VPD Write Cycles Remaining. If
+  the VPD Write Cycle Remaining Valid bit is set, then
+  this field contains a value indicating the remaining
+  number of times that VPD contents are able to be
+  updated using the VPD Write command. If this field is
+  set to 7Fh, then the remaining number of times that
+  VPD contents are able to be updated using the VPD
+  Write command is greater than or equal to 7Fh.
 
 ``NVME_CTRL_VWCI_VWCRV``
-  *undescribed*
+  VPD Write Cycle Remaining Valid. If this bit is set,
+  then the VPD Write Cycle Remaining field is valid. If
+  this bit is cleared, then the VPD Write Cycles
+  Remaining field is invalid and cleared to 0h.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_mec
 
+   Flags indicatings the capabilities of the Management Endpoint in the Controller, :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.mec.
 
 **Constants**
 
 ``NVME_CTRL_MEC_SMBUSME``
-  *undescribed*
+  If set, then the NVM Subsystem contains a Management
+  Endpoint on an SMBus/I2C port.
 
 ``NVME_CTRL_MEC_PCIEME``
-  *undescribed*
+  If set, then the NVM Subsystem contains a Management
+  Endpoint on a PCIe port.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_oacs
 
+   Flags indicating the optional Admin commands and features supported by the controller, see :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.oacs.
 
 **Constants**
 
 ``NVME_CTRL_OACS_SECURITY``
-  *undescribed*
+  If set, then the controller supports the
+  Security Send and Security Receive commands.
 
 ``NVME_CTRL_OACS_FORMAT``
-  *undescribed*
+  If set then the controller supports the Format
+  NVM command.
 
 ``NVME_CTRL_OACS_FW``
-  *undescribed*
+  If set, then the controller supports the
+  Firmware Commit and Firmware Image Download commands.
 
 ``NVME_CTRL_OACS_NS_MGMT``
-  *undescribed*
+  If set, then the controller supports the
+  Namespace Management capability
 
 ``NVME_CTRL_OACS_SELF_TEST``
-  *undescribed*
+  If set, then the controller supports the Device
+  Self-test command.
 
 ``NVME_CTRL_OACS_DIRECTIVES``
-  *undescribed*
+  If set, then the controller supports Directives
+  and the Directive Send and Directive Receive
+  commands.
 
 ``NVME_CTRL_OACS_NVME_MI``
-  *undescribed*
+  If set, then the controller supports the NVMe-MI
+  Send and NVMe-MI Receive commands.
 
 ``NVME_CTRL_OACS_VIRT_MGMT``
-  *undescribed*
+  If set, then the controller supports the
+  Virtualization Management command.
 
 ``NVME_CTRL_OACS_DBBUF_CFG``
-  *undescribed*
+  If set, then the controller supports the
+  Doorbell Buffer Config command.
 
 ``NVME_CTRL_OACS_LBA_STATUS``
-  *undescribed*
+  If set, then the controller supports the Get LBA
+  Status capability.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_frmw
 
+   Flags and values indicates capabilities regarding firmware updates from :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.frmw.
 
 **Constants**
 
 ``NVME_CTRL_FRMW_1ST_RO``
-  *undescribed*
+  If set, the first firmware slot is readonly
 
 ``NVME_CTRL_FRMW_NR_SLOTS``
-  *undescribed*
+  Mask to get the value of the number of
+  firmware slots that the controller supports.
 
 ``NVME_CTRL_FRMW_FW_ACT_NO_RESET``
-  *undescribed*
+  If set, the controller supports firmware
+  activation without a reset.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_lpa
 
+   Flags indicating optional attributes for log pages that are accessed via the Get Log Page command.
 
 **Constants**
 
@@ -6881,254 +7153,342 @@ The namespace identifier if a succecssful or -1 with errno set
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_avscc
 
+   Flags indicating the configuration settings for Admin Vendor Specific command handling.
 
 **Constants**
 
 ``NVME_CTRL_AVSCC_AVS``
-  *undescribed*
+  If set, all Admin Vendor Specific Commands use the
+  optional vendor specific command format with NDT and
+  NDM fields.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_apsta
 
+   Flags indicating the attributes of the autonomous power state transition feature.
 
 **Constants**
 
 ``NVME_CTRL_APSTA_APST``
-  *undescribed*
+  If set, then the controller supports autonomous power
+  state transitions.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_rpmbs
 
+   This field indicates if the controller supports one or more Replay Protected Memory Blocks, from :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.rpmbs.
 
 **Constants**
 
 ``NVME_CTRL_RPMBS_NR_UNITS``
-  *undescribed*
+  Mask to get the value of the Number of RPMB Units
 
 ``NVME_CTRL_RPMBS_AUTH_METHOD``
-  *undescribed*
+  Mask to get the value of the Authentication Method
 
 ``NVME_CTRL_RPMBS_TOTAL_SIZE``
-  *undescribed*
+  Mask to get the value of Total Size
 
 ``NVME_CTRL_RPMBS_ACCESS_SIZE``
-  *undescribed*
+  Mask to get the value of Access Size
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_dsto
 
+   Flags indicating the optional Device Self-test command or operation behaviors supported by the controller or NVM subsystem.
 
 **Constants**
 
 ``NVME_CTRL_DSTO_ONE_DST``
-  *undescribed*
+  If set,  then the NVM subsystem supports only one
+  device self-test operation in progress at a time.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_hctm
 
+   Flags indicate the attributes of the host controlled thermal management feature
 
 **Constants**
 
 ``NVME_CTRL_HCTMA_HCTM``
-  *undescribed*
+  then the controller supports host controlled thermal
+  management, and the Set Features command and Get
+  Features command with the Feature Identifier field
+  set to ``NVME_FEAT_FID_HCTM``.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_sanicap
 
+   Indicates attributes for sanitize operations.
 
 **Constants**
 
 ``NVME_CTRL_SANICAP_CES``
-  *undescribed*
+  Crypto Erase Support. If set, then the
+  controller supports the Crypto Erase sanitize operation.
 
 ``NVME_CTRL_SANICAP_BES``
-  *undescribed*
+  Block Erase Support. If set, then the controller
+  supports the Block Erase sanitize operation.
 
 ``NVME_CTRL_SANICAP_OWS``
-  *undescribed*
+  Overwrite Support. If set, then the controller
+  supports the Overwrite sanitize operation.
 
 ``NVME_CTRL_SANICAP_NDI``
-  *undescribed*
+  No-Deallocate Inhibited. If set and the No-
+  Deallocate Response Mode bit is set, then the
+  controller deallocates after the sanitize
+  operation even if the No-Deallocate After
+  Sanitize bit is set in a Sanitize command.
 
 ``NVME_CTRL_SANICAP_NODMMAS``
-  *undescribed*
+  No-Deallocate Modifies Media After Sanitize,
+  mask to extract value.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_anacap
 
+   This field indicates the capabilities associated with Asymmetric Namespace Access Reporting.
 
 **Constants**
 
 ``NVME_CTRL_ANACAP_OPT``
-  *undescribed*
+  If set, then the controller is able to
+  report ANA Optimized state.
 
 ``NVME_CTRL_ANACAP_NON_OPT``
-  *undescribed*
+  If set, then the controller is able to
+  report ANA Non-Optimized state.
 
 ``NVME_CTRL_ANACAP_INACCESSIBLE``
-  *undescribed*
+  If set, then the controller is able to
+  report ANA Inaccessible state.
 
 ``NVME_CTRL_ANACAP_PERSISTENT_LOSS``
-  *undescribed*
+  If set, then the controller is able to
+  report ANA Persistent Loss state.
 
 ``NVME_CTRL_ANACAP_CHANGE``
-  *undescribed*
+  If set, then the controller is able to
+  report ANA Change state.
 
 ``NVME_CTRL_ANACAP_GRPID_NO_CHG``
-  *undescribed*
+  If set, then the ANAGRPID field in the
+  Identify Namespace data structure
+  (:c:type:`struct nvme_id_ns <nvme_id_ns>`.anagrpid), does not
+  change while the namespace is attached to
+  any controller.
 
 ``NVME_CTRL_ANACAP_GRPID_MGMT``
-  *undescribed*
+  If set, then the controller supports a
+  non-zero value in the ANAGRPID field of
+  the Namespace Management command.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_sqes
 
+   Defines the required and maximum Submission Queue entry size when using the NVM Command Set.
 
 **Constants**
 
 ``NVME_CTRL_SQES_MIN``
-  *undescribed*
+  Mask to get the value of the required Submission Queue
+  Entry size when using the NVM Command Set.
 
 ``NVME_CTRL_SQES_MAX``
-  *undescribed*
+  Mask to get the value of the maximum Submission Queue
+  entry size when using the NVM Command Set.
 
 
 
 
 .. c:type:: enum 
 
+   Defines the required and maximum Completion Queue entry size when using the NVM Command Set.
 
 **Constants**
 
 ``NVME_CTRL_CQES_MIN``
-  *undescribed*
+  Mask to get the value of the required Completion Queue
+  Entry size when using the NVM Command Set.
 
 ``NVME_CTRL_CQES_MAX``
-  *undescribed*
+  Mask to get the value of the maximum Completion Queue
+  entry size when using the NVM Command Set.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_oncs
 
+   This field indicates the optional NVM commands and features supported by the controller.
 
 **Constants**
 
 ``NVME_CTRL_ONCS_COMPARE``
-  *undescribed*
+  If set, then the controller supports
+  the Compare command.
 
 ``NVME_CTRL_ONCS_WRITE_UNCORRECTABLE``
-  *undescribed*
+  If set, then the controller supports
+  the Write Uncorrectable command.
 
 ``NVME_CTRL_ONCS_DSM``
-  *undescribed*
+  If set, then the controller supports
+  the Dataset Management command.
 
 ``NVME_CTRL_ONCS_WRITE_ZEROES``
-  *undescribed*
+  If set, then the controller supports
+  the Write Zeroes command.
 
 ``NVME_CTRL_ONCS_SAVE_FEATURES``
-  *undescribed*
+  If set, then the controller supports
+  the Save field set to a non-zero value
+  in the Set Features command and the
+  Select field set to a non-zero value in
+  the Get Features command.
 
 ``NVME_CTRL_ONCS_RESERVATIONS``
-  *undescribed*
+  If set, then the controller supports
+  reservations.
 
 ``NVME_CTRL_ONCS_TIMESTAMP``
-  *undescribed*
+  If set, then the controller supports
+  the Timestamp feature.
 
 ``NVME_CTRL_ONCS_VERIFY``
-  *undescribed*
+  If set, then the controller supports
+  the Verify command.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_fuses
 
+   This field indicates the fused operations that the controller supports.
 
 **Constants**
 
 ``NVME_CTRL_FUSES_COMPARE_AND_WRITE``
-  *undescribed*
+  If set, then the controller supports the
+  Compare and Write fused operation.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_fna
 
+   This field indicates attributes for the Format NVM command.
 
 **Constants**
 
 ``NVME_CTRL_FNA_FMT_ALL_NAMESPACES``
-  *undescribed*
+  If set, then all namespaces in an NVM
+  subsystem shall be configured with the
+  same attributes and a format (excluding
+  secure erase) of any namespace results in
+  a format of all namespaces in an NVM
+  subsystem. If cleared, then the
+  controller supports format on a per
+  namespace basis.
 
 ``NVME_CTRL_FNA_SEC_ALL_NAMESPACES``
-  *undescribed*
+  If set, then any secure erase performed
+  as part of a format operation results in
+  a secure erase of all namespaces in the
+  NVM subsystem. If cleared, then any
+  secure erase performed as part of a
+  format results in a secure erase of the
+  particular namespace specified.
 
 ``NVME_CTRL_FNA_CRYPTO_ERASE``
-  *undescribed*
+  If set, then cryptographic erase is
+  supported. If cleared, then cryptographic
+  erase is not supported.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_vwc
 
 
 **Constants**
 
 ``NVME_CTRL_VWC_PRESENT``
-  *undescribed*
+  If set, indicates a volatile write cache is present.
+  If a volatile write cache is present, then the host
+  controls whether the volatile write cache is enabled
+  with a Set Features command specifying the value
+  ``NVME_FEAT_FID_VOLATILE_WC``.
 
 ``NVME_CTRL_VWC_FLUSH``
-  *undescribed*
+  Mask to get the value of the flush command behavior.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_nvscc
 
+   This field indicates the configuration settings for NVM Vendor Specific command handling.
 
 **Constants**
 
 ``NVME_CTRL_NVSCC_FMT``
-  *undescribed*
+  If set, all NVM Vendor Specific Commands use the
+  format format with NDT and NDM fields.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_nwpc
 
+   This field indicates the optional namespace write protection capabilities supported by the controller.
 
 **Constants**
 
 ``NVME_CTRL_NWPC_WRITE_PROTECT``
-  *undescribed*
+  If set, then the controller shall
+  support the No Write Protect and
+  Write Protect namespace write
+  protection states and may support
+  the Write Protect Until Power
+  Cycle state and Permanent Write
+  Protect namespace write
+  protection states.
 
 ``NVME_CTRL_NWPC_WRITE_PROTECT_POWER_CYCLE``
-  *undescribed*
+  If set, then the controller
+  supports the Write Protect Until
+  Power Cycle state.
 
 ``NVME_CTRL_NWPC_WRITE_PROTECT_PERMANENT``
-  *undescribed*
+  If set, then the controller
+  supports the Permanent Write
+  Protect state.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_sgls
 
+   This field indicates if SGLs are supported for the NVM Command Set and the particular SGL types supported.
 
 **Constants**
 
@@ -7159,30 +7519,37 @@ The namespace identifier if a succecssful or -1 with errno set
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_fcatt
 
+   This field indicates attributes of the controller that are specific to NVMe over Fabrics.
 
 **Constants**
 
 ``NVME_CTRL_FCATT_DYNAMIC``
-  *undescribed*
+  If cleared, then the NVM subsystem uses a dynamic
+  controller model. If set, then the NVM subsystem
+  uses a static controller model.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ctrl_ofcs
 
+   Indicate whether the controller supports optional fabric commands.
 
 **Constants**
 
 ``NVME_CTRL_OFCS_DISCONNECT``
-  *undescribed*
+  If set, then the controller supports the
+  Disconnect command and deletion of individual
+  I/O Queues.
 
 
 
 
 .. c:type:: struct nvme_lbaf
 
+   LBA Format Data Structure
 
 **Definition**
 
@@ -7196,35 +7563,49 @@ The namespace identifier if a succecssful or -1 with errno set
 
 **Members**
 
+``ms``
+  Metadata Size indicates the number of metadata bytes provided per LBA
+  based on the LBA Data Size indicated.
+
+``ds``
+  LBA Data Size indicates the LBA data size supported, reported as a
+  power of two.
+
+``rp``
+  Relative Performance, see :c:type:`enum nvme_lbaf_rp <nvme_lbaf_rp>`.
 
 
 
 
-.. c:type:: enum 
 
+.. c:type:: enum nvme_lbaf_rp
+
+   This field indicates the relative performance of the LBA format indicated relative to other LBA formats supported by the controller.
 
 **Constants**
 
 ``NVME_LBAF_RP_BEST``
-  *undescribed*
+  Best performance
 
 ``NVME_LBAF_RP_BETTER``
-  *undescribed*
+  Better performance
 
 ``NVME_LBAF_RP_GOOD``
-  *undescribed*
+  Good performance
 
 ``NVME_LBAF_RP_DEGRADED``
-  *undescribed*
+  Degraded performance
 
 ``NVME_LBAF_RP_MASK``
-  *undescribed*
+  Mask to get the relative performance value from the
+  field
 
 
 
 
 .. c:type:: struct nvme_id_ns
 
+   Identify Namespace data structure
 
 **Definition**
 
@@ -7272,200 +7653,415 @@ The namespace identifier if a succecssful or -1 with errno set
 
 **Members**
 
+``nsze``
+  Namespace Size indicates the total size of the namespace in
+  logical blocks. The number of logical blocks is based on the
+  formatted LBA size.
+
+``ncap``
+  Namespace Capacity indicates the maximum number of logical blocks
+  that may be allocated in the namespace at any point in time. The
+  number of logical blocks is based on the formatted LBA size.
+
+``nuse``
+  Namespace Utilization indicates the current number of logical
+  blocks allocated in the namespace. This field is smaller than or
+  equal to the Namespace Capacity. The number of logical blocks is
+  based on the formatted LBA size.
+
+``nsfeat``
+  Namespace Features, see :c:type:`enum nvme_id_nsfeat <nvme_id_nsfeat>`.
+
+``nlbaf``
+  Number of LBA Formats defines the number of supported LBA data
+  size and metadata size combinations supported by the namespace
+  and the highest possible index to :c:type:`struct nvme_id_ns <nvme_id_ns>`.labf.
+
+``flbas``
+  Formatted LBA Size, see :c:type:`enum nvme_id_ns_flbas <nvme_id_ns_flbas>`.
+
+``mc``
+  Metadata Capabilities, see :c:type:`enum nvme_id_ns_mc <nvme_id_ns_mc>`.
+
+``dpc``
+  End-to-end Data Protection Capabilities, see :c:type:`enum
+  nvme_id_ns_dpc <nvme_id_ns_dpc>`.
+
+``dps``
+  End-to-end Data Protection Type Settings, see :c:type:`enum
+  nvme_id_ns_dps <nvme_id_ns_dps>`.
+
+``nmic``
+  Namespace Multi-path I/O and Namespace Sharing Capabilities, see
+  :c:type:`enum nvme_id_ns_nmic <nvme_id_ns_nmic>`.
+
+``rescap``
+  Reservation Capabilities, see :c:type:`enum nvme_id_ns_rescap <nvme_id_ns_rescap>`.
+
+``fpi``
+  Format Progress Indicator, see :c:type:`enum nvme_nd_ns_fpi <nvme_nd_ns_fpi>`.
+
+``dlfeat``
+  Deallocate Logical Block Features, see :c:type:`enum nvme_id_ns_dlfeat <nvme_id_ns_dlfeat>`.
+
+``nawun``
+  Namespace Atomic Write Unit Normal indicates the
+  namespace specific size of the write operation guaranteed to be
+  written atomically to the NVM during normal operation.
+
+``nawupf``
+  Namespace Atomic Write Unit Power Fail indicates the
+  namespace specific size of the write operation guaranteed to be
+  written atomically to the NVM during a power fail or error
+  condition.
+
+``nacwu``
+  Namespace Atomic Compare & Write Unit indicates the namespace
+  specific size of the write operation guaranteed to be written
+  atomically to the NVM for a Compare and Write fused command.
+
+``nabsn``
+  Namespace Atomic Boundary Size Normal indicates the atomic
+  boundary size for this namespace for the NAWUN value. This field
+  is specified in logical blocks.
+
+``nabo``
+  Namespace Atomic Boundary Offset indicates the LBA on this
+  namespace where the first atomic boundary starts.
+
+``nabspf``
+  Namespace Atomic Boundary Size Power Fail indicates the atomic
+  boundary size for this namespace specific to the Namespace Atomic
+  Write Unit Power Fail value. This field is specified in logical
+  blocks.
+
+``noiob``
+  Namespace Optimal I/O Boundary indicates the optimal I/O boundary
+  for this namespace. This field is specified in logical blocks.
+  The host should construct Read and Write commands that do not
+  cross the I/O boundary to achieve optimal performance.
+
+``nvmcap``
+  NVM Capacity indicates the total size of the NVM allocated to
+  this namespace. The value is in bytes.
+
+``npwg``
+  Namespace Preferred Write Granularity indicates the smallest
+  recommended write granularity in logical blocks for this
+  namespace. This is a 0's based value.
+
+``npwa``
+  Namespace Preferred Write Alignment indicates the recommended
+  write alignment in logical blocks for this namespace. This is a
+  0's based value.
+
+``npdg``
+  Namespace Preferred Deallocate Granularity indicates the
+  recommended granularity in logical blocks for the Dataset
+  Management command with the Attribute - Deallocate bit.
+
+``npda``
+  Namespace Preferred Deallocate Alignment indicates the
+  recommended alignment in logical blocks for the Dataset
+  Management command with the Attribute - Deallocate bit
+
+``nows``
+  Namespace Optimal Write Size indicates the size in logical blocks
+  for optimal write performance for this namespace. This is a 0's
+  based value.
+
+``anagrpid``
+  ANA Group Identifier indicates the ANA Group Identifier of the
+  ANA group of which the namespace is a member.
+
+``nsattr``
+  Namespace Attributes, see :c:type:`enum nvme_id_ns_attr <nvme_id_ns_attr>`.
+
+``nvmsetid``
+  NVM Set Identifier indicates the NVM Set with which this
+  namespace is associated.
+
+``endgid``
+  Endurance Group Identifier indicates the Endurance Group with
+  which this namespace is associated.
+
+``nguid``
+  Namespace Globally Unique Identifier contains a 128-bit value
+  that is globally unique and assigned to the namespace when the
+  namespace is created. This field remains fixed throughout the
+  life of the namespace and is preserved across namespace and
+  controller operations
+
+``eui64``
+  IEEE Extended Unique Identifier contains a 64-bit IEEE Extended
+  Unique Identifier (EUI-64) that is globally unique and assigned
+  to the namespace when the namespace is created. This field
+  remains fixed throughout the life of the namespace and is
+  preserved across namespace and controller operations
+
+``lbaf``
+  LBA Format, see :c:type:`struct nvme_lbaf <nvme_lbaf>`.
+
+``vs``
+  Vendor Specific
 
 
 
 
-.. c:type:: enum 
 
+.. c:type:: enum nvme_id_nsfeat
+
+   This field defines features of the namespace.
 
 **Constants**
 
 ``NVME_NS_FEAT_THIN``
-  *undescribed*
+  If set, indicates that the namespace supports thin
+  provisioning. Specifically, the Namespace Capacity
+  reported may be less than the Namespace Size.
 
 ``NVME_NS_FEAT_NATOMIC``
-  *undescribed*
+  If set, indicates that the fields NAWUN, NAWUPF, and
+  NACWU are defined for this namespace and should be
+  used by the host for this namespace instead of the
+  AWUN, AWUPF, and ACWU fields in the Identify
+  Controller data structure.
 
 ``NVME_NS_FEAT_DULBE``
-  *undescribed*
+  If set, indicates that the controller supports the
+  Deallocated or Unwritten Logical Block error for
+  this namespace.  **NVME_NS_FEAT_ID_REUSE**: If set,
+  indicates that the value in the NGUID field for this
+  namespace, if non- zero, is never reused by the
+  controller and that the value in the EUI64 field for
+  this namespace, if non-zero, is never reused by the
+  controller.
 
 ``NVME_NS_FEAT_ID_REUSE``
   *undescribed*
 
 ``NVME_NS_FEAT_IO_OPT``
-  *undescribed*
+  If set, indicates that the fields NPWG, NPWA, NPDG,
+  NPDA, and NOWS are defined for this namespace and
+  should be used by the host for I/O optimization
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ns_flbas
 
+   This field indicates the LBA data size & metadata size combination that the namespace has been formatted with
 
 **Constants**
 
 ``NVME_NS_FLBAS_LBA_MASK``
-  *undescribed*
+  Mask to get the index of one of the 16 supported
+  LBA Formats indicated in :c:type:`struct nvme_id_ns <nvme_id_ns>`.lbaf.
 
 ``NVME_NS_FLBAS_META_EXT``
-  *undescribed*
+  Applicable only if format contains metadata. If
+  this bit is set, indicates that the metadata is
+  transferred at the end of the data LBA, creating an
+  extended data LBA. If cleared, indicates that all
+  of the metadata for a command is transferred as a
+  separate contiguous buffer of data.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ns_mc
 
+   This field indicates the capabilities for metadata.
 
 **Constants**
 
 ``NVME_NS_MC_EXTENDED``
-  *undescribed*
+  If set, indicates the namespace supports the metadata
+  being transferred as part of a separate buffer that is
+  specified in the Metadata Pointer.
 
 ``NVME_NS_MC_SEPARATE``
-  *undescribed*
+  If set, indicates that the namespace supports the
+  metadata being transferred as part of an extended data LBA.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ns_dpc
 
+   This field indicates the capabilities for the end-to-end data protection feature.
 
 **Constants**
 
 ``NVME_NS_DPC_PI_TYPE1``
-  *undescribed*
+  If set, indicates that the namespace supports
+  Protection Information Type 1.
 
 ``NVME_NS_DPC_PI_TYPE2``
-  *undescribed*
+  If set, indicates that the namespace supports
+  Protection Information Type 2.
 
 ``NVME_NS_DPC_PI_TYPE3``
-  *undescribed*
+  If set, indicates that the namespace supports
+  Protection Information Type 3.
 
 ``NVME_NS_DPC_PI_FIRST``
-  *undescribed*
+  If set, indicates that the namespace supports
+  protection information transferred as the first eight
+  bytes of metadata.
 
 ``NVME_NS_DPC_PI_LAST``
-  *undescribed*
+  If set, indicates that the namespace supports
+  protection information transferred as the last eight
+  bytes of metadata.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ns_dps
 
+   This field indicates the Type settings for the end-to-end data protection feature.
 
 **Constants**
 
 ``NVME_NS_DPS_PI_NONE``
-  *undescribed*
+  Protection information is not enabled
 
 ``NVME_NS_DPS_PI_TYPE1``
-  *undescribed*
+  Protection information is enabled, Type 1
 
 ``NVME_NS_DPS_PI_TYPE2``
-  *undescribed*
+  Protection information is enabled, Type 2
 
 ``NVME_NS_DPS_PI_TYPE3``
-  *undescribed*
+  Protection information is enabled, Type 3
 
 ``NVME_NS_DPS_PI_MASK``
-  *undescribed*
+  Mask to get the value of the PI type
 
 ``NVME_NS_DPS_PI_FIRST``
-  *undescribed*
+  If set, indicates that the protection information, if
+  enabled, is transferred as the first eight bytes of
+  metadata.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ns_nmic
 
+   This field specifies multi-path I/O and namespace sharing capabilities of the namespace.
 
 **Constants**
 
 ``NVME_NS_NMIC_SHARED``
-  *undescribed*
+  If set, then the namespace may be attached to two or
+  more controllers in the NVM subsystem concurrently
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ns_rescap
 
+   This field indicates the reservation capabilities of the namespace.
 
 **Constants**
 
 ``NVME_NS_RESCAP_PTPL``
-  *undescribed*
+  If set, indicates that the namespace supports the
+  Persist Through Power Loss capability.
 
 ``NVME_NS_RESCAP_WE``
-  *undescribed*
+  If set, indicates that the namespace supports the
+  Write Exclusive reservation type.
 
 ``NVME_NS_RESCAP_EA``
-  *undescribed*
+  If set, indicates that the namespace supports the
+  Exclusive Access reservation type.
 
 ``NVME_NS_RESCAP_WERO``
-  *undescribed*
+  If set, indicates that the namespace supports the
+  Write Exclusive - Registrants Only reservation type.
 
 ``NVME_NS_RESCAP_EARO``
-  *undescribed*
+  If set, indicates that the namespace supports the
+  Exclusive Access - Registrants Only reservation type.
 
 ``NVME_NS_RESCAP_WEAR``
-  *undescribed*
+  If set, indicates that the namespace supports the
+  Write Exclusive - All Registrants reservation type.
 
 ``NVME_NS_RESCAP_EAAR``
-  *undescribed*
+  If set, indicates that the namespace supports the
+  Exclusive Access - All Registrants reservation type.
 
 ``NVME_NS_RESCAP_IEK_13``
-  *undescribed*
+  If set, indicates that Ignore Existing Key is used
+  as defined in revision 1.3 or later of this specification.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_nd_ns_fpi
 
+   If a format operation is in progress, this field indicates the percentage of the namespace that remains to be formatted.
 
 **Constants**
 
 ``NVME_NS_FPI_REMAINING``
-  *undescribed*
+  Mask to get the format percent remaining value
 
 ``NVME_NS_FPI_SUPPORTED``
-  *undescribed*
+  If set, indicates that the namespace supports the
+  Format Progress Indicator defined for the field.
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ns_dlfeat
 
+   This field indicates information about features that affect deallocating logical blocks for this namespace.
 
 **Constants**
 
 ``NVME_NS_DLFEAT_RB``
-  *undescribed*
+  Mask to get the value of the read behavior
 
 ``NVME_NS_DLFEAT_RB_NR``
-  *undescribed*
+  Read behvaior is not reported
 
 ``NVME_NS_DLFEAT_RB_ALL_0S``
-  *undescribed*
+  A deallocated logical block returns all bytes
+  cleared to 0h.
 
 ``NVME_NS_DLFEAT_RB_ALL_FS``
-  *undescribed*
+  A deallocated logical block returns all bytes
+  set to FFh.
 
 ``NVME_NS_DLFEAT_WRITE_ZEROES``
-  *undescribed*
+  If set, indicates that the controller supports
+  the Deallocate bit in the Write Zeroes command
+  for this namespace.
 
 ``NVME_NS_DLFEAT_CRC_GUARD``
-  *undescribed*
+  If set, indicates that the Guard field for
+  deallocated logical blocks that contain
+  protection information is set to the CRC for
+  the value read from the deallocated logical
+  block and its metadata
 
 
 
 
-.. c:type:: enum 
+.. c:type:: enum nvme_id_ns_attr
 
+   Specifies attributes of the namespace.
 
 **Constants**
 
 ``NVME_NS_NSATTR_WRITE_PROTECTED``
-  *undescribed*
+  If set, then the namespace is currently
+  write protected and all write access to the
+  namespace shall fail.
 
 
 
@@ -7486,29 +8082,46 @@ The namespace identifier if a succecssful or -1 with errno set
 
 **Members**
 
+``nidt``
+  Namespace Identifier Type, see :c:type:`enum nvme_ns_id_desc_nidt <nvme_ns_id_desc_nidt>`
+
+``nidl``
+  Namespace Identifier Length contains the length in bytes of the
+  :c:type:`struct nvme_id_ns <nvme_id_ns>`.nid.
+
+``nid``
+  Namespace Identifier contains a value that is globally unique and
+  assigned to the namespace when the namespace is created. The length
+  is defined in :c:type:`struct nvme_id_ns <nvme_id_ns>`.nidl.
 
 
 
 
-.. c:type:: enum 
 
+.. c:type:: enum nvme_ns_id_desc_nidt
+
+   Known namespace identifier types
 
 **Constants**
 
 ``NVME_NIDT_EUI64``
-  *undescribed*
+  IEEE Extended Unique Identifier, the NID field contains a
+  copy of the EUI64 field in the struct nvme_id_ns.eui64.
 
 ``NVME_NIDT_NGUID``
-  *undescribed*
+  Namespace Globally Unique Identifier, the NID field
+  contains a copy of the NGUID field in struct nvme_id_ns.nguid.
 
 ``NVME_NIDT_UUID``
-  *undescribed*
+  The NID field contains a 128-bit Universally Unique
+  Identifier (UUID) as specified in RFC 4122.
 
 
 
 
 .. c:type:: struct nvme_nvmset_attr
 
+   NVM Set Attributes Entry
 
 **Definition**
 
@@ -7527,12 +8140,26 @@ The namespace identifier if a succecssful or -1 with errno set
 
 **Members**
 
+``id``
+  NVM Set Identifier
+
+``endurance_group_id``
+  Endurance Group Identifier
+
+``random_4k_read_typical``
+  Random 4 KiB Read Typical indicates the typical
+  time to complete a 4 KiB random read in 100
+  nanosecond units when the NVM Set is in a
+  Predictable Latency Mode Deterministic Window and
+  there is 1 outstanding command per NVM Set.
+
 
 
 
 
 .. c:type:: struct nvme_id_nvmset_list
 
+    **nid**;
 
 **Definition**
 
@@ -7546,18 +8173,21 @@ The namespace identifier if a succecssful or -1 with errno set
 
 **Members**
 
+``ent``
+  ;
 
 
 
 
-.. c:type:: struct nvme_id_ns_granularity_list_entry
+
+.. c:type:: struct nvme_id_ns_granularity_desc
 
 
 **Definition**
 
 ::
 
-  struct nvme_id_ns_granularity_list_entry {
+  struct nvme_id_ns_granularity_desc {
     __le64 namespace_size_granularity;
     __le64 namespace_capacity_granularity;
   };
@@ -7579,7 +8209,8 @@ The namespace identifier if a succecssful or -1 with errno set
     __le32 attributes;
     __u8 num_descriptors;
     __u8 rsvd[27];
-    struct nvme_id_ns_granularity_list_entry entry[16];
+    struct nvme_id_ns_granularity_desc entry[NVME_ID_ND_DESCRIPTOR_MAX];
+    __u8 rsvd288[3808];
   };
 
 **Members**
@@ -7647,6 +8278,7 @@ The namespace identifier if a succecssful or -1 with errno set
 
 .. c:type:: struct nvme_ctrl_list
 
+    **num**;
 
 **Definition**
 
@@ -7740,6 +8372,7 @@ The namespace identifier if a succecssful or -1 with errno set
 
 .. c:type:: struct nvme_secondary_ctrl_list
 
+    **num**;
 
 **Definition**
 
@@ -7753,9 +8386,6 @@ The namespace identifier if a succecssful or -1 with errno set
 
 **Members**
 
-
-
-**NVMe Logs**
 
 
 
@@ -8537,9 +9167,6 @@ The namespace identifier if a succecssful or -1 with errno set
 
 
 
-**NVMe Directives**
-
-
 
 
 .. c:type:: enum 
@@ -8604,478 +9231,6 @@ The namespace identifier if a succecssful or -1 with errno set
 
 
 
-**NVMe Management Interface**
-
-
-
-
-.. c:type:: struct nvme_mi_read_nvm_ss_info
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_read_nvm_ss_info {
-    __u8 nump;
-    __u8 mjr;
-    __u8 mnr;
-    __u8 rsvd3[29];
-  };
-
-**Members**
-
-
-
-
-
-.. c:type:: struct nvme_mi_port_pcie
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_port_pcie {
-    __u8 mps;
-    __u8 sls;
-    __u8 cls;
-    __u8 mlw;
-    __u8 nlw;
-    __u8 pn;
-    __u8 rsvd14[18];
-  };
-
-**Members**
-
-
-
-
-
-.. c:type:: struct nvme_mi_port_smb
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_port_smb {
-    __u8 vpd_addr;
-    __u8 mvpd_freq;
-    __u8 mme_addr;
-    __u8 mme_freq;
-    __u8 nvmebm;
-    __u8 rsvd13[19];
-  };
-
-**Members**
-
-
-
-
-
-.. c:type:: struct nvme_mi_read_port_info
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_read_port_info {
-    __u8 portt;
-    __u8 rsvd1;
-    __le16 mmctptus;
-    __le32 meb;
-    union {
-      struct nvme_mi_port_pcie pcie;
-      struct nvme_mi_port_smb smb;
-    };
-  };
-
-**Members**
-
-``{unnamed_union}``
-  anonymous
-
-
-
-
-
-.. c:type:: struct nvme_mi_read_ctrl_info
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_read_ctrl_info {
-    __u8 portid;
-    __u8 rsvd1[4];
-    __u8 prii;
-    __le16 pri;
-    __le16 vid;
-    __le16 did;
-    __le16 ssvid;
-    __le16 ssid;
-    __u8 rsvd16[16];
-  };
-
-**Members**
-
-
-
-
-
-.. c:type:: struct nvme_mi_osc
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_osc {
-    __u8 type;
-    __u8 opc;
-  };
-
-**Members**
-
-
-
-
-
-.. c:type:: struct nvme_mi_read_sc_list
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_read_sc_list {
-    __le16 numcmd;
-    struct nvme_mi_osc cmds[];
-  };
-
-**Members**
-
-
-
-
-
-.. c:type:: struct nvme_mi_nvm_ss_health_status
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_nvm_ss_health_status {
-    __u8 nss;
-    __u8 sw;
-    __u8 ctemp;
-    __u8 pdlu;
-    __le16 ccs;
-    __u8 rsvd8[2];
-  };
-
-**Members**
-
-
-
-
-
-.. c:type:: enum 
-
-
-**Constants**
-
-``NVME_MI_CCS_RDY``
-  *undescribed*
-
-``NVME_MI_CSS_CFS``
-  *undescribed*
-
-``NVME_MI_CSS_SHST``
-  *undescribed*
-
-``NVME_MI_CSS_NSSRO``
-  *undescribed*
-
-``NVME_MI_CSS_CECO``
-  *undescribed*
-
-``NVME_MI_CSS_NAC``
-  *undescribed*
-
-``NVME_MI_CSS_FA``
-  *undescribed*
-
-``NVME_MI_CSS_CSTS``
-  *undescribed*
-
-``NVME_MI_CSS_CTEMP``
-  *undescribed*
-
-``NVME_MI_CSS_PDLU``
-  *undescribed*
-
-``NVME_MI_CSS_SPARE``
-  *undescribed*
-
-``NVME_MI_CSS_CCWARN``
-  *undescribed*
-
-
-
-
-.. c:type:: struct nvme_mi_ctrl_heal_status
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_ctrl_heal_status {
-    __le16 ctlid;
-    __le16 csts;
-    __le16 ctemp;
-    __u8 pdlu;
-    __u8 spare;
-    __u8 cwarn;
-    __u8 rsvd9[7];
-  };
-
-**Members**
-
-
-
-
-
-.. c:type:: enum 
-
-
-**Constants**
-
-``NVME_MI_CSTS_RDY``
-  *undescribed*
-
-``NVME_MI_CSTS_CFS``
-  *undescribed*
-
-``NVME_MI_CSTS_SHST``
-  *undescribed*
-
-``NVME_MI_CSTS_NSSRO``
-  *undescribed*
-
-``NVME_MI_CSTS_CECO``
-  *undescribed*
-
-``NVME_MI_CSTS_NAC``
-  *undescribed*
-
-``NVME_MI_CSTS_FA``
-  *undescribed*
-
-``NVME_MI_CWARN_ST``
-  *undescribed*
-
-``NVME_MI_CWARN_TAUT``
-  *undescribed*
-
-``NVME_MI_CWARN_RD``
-  *undescribed*
-
-``NVME_MI_CWARN_RO``
-  *undescribed*
-
-``NVME_MI_CWARN_VMBF``
-  *undescribed*
-
-
-
-
-.. c:type:: struct nvme_mi_vpd_mra
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_vpd_mra {
-    __u8 nmravn;
-    __u8 ff;
-    __u8 rsvd7[6];
-    __u8 i18vpwr;
-    __u8 m18vpwr;
-    __u8 i33vpwr;
-    __u8 m33vpwr;
-    __u8 rsvd17;
-    __u8 m33vapsr;
-    __u8 i5vapsr;
-    __u8 m5vapsr;
-    __u8 i12vapsr;
-    __u8 m12vapsr;
-    __u8 mtl;
-    __u8 tnvmcap[16];
-    __u8 rsvd37[27];
-  };
-
-**Members**
-
-
-
-
-
-.. c:type:: struct nvme_mi_vpd_ppmra
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_vpd_ppmra {
-    __u8 nppmravn;
-    __u8 pn;
-    __u8 ppi;
-    __u8 ls;
-    __u8 mlw;
-    __u8 mctp;
-    __u8 refccap;
-    __u8 pi;
-    __u8 rsvd13[3];
-  };
-
-**Members**
-
-
-
-
-
-.. c:type:: struct nvme_mi_vpd_telem
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_vpd_telem {
-    __u8 type;
-    __u8 rev;
-    __u8 len;
-    __u8 data[0];
-  };
-
-**Members**
-
-
-
-
-
-.. c:type:: enum 
-
-
-**Constants**
-
-``NVME_MI_ELEM_EED``
-  *undescribed*
-
-``NVME_MI_ELEM_USCE``
-  *undescribed*
-
-``NVME_MI_ELEM_ECED``
-  *undescribed*
-
-``NVME_MI_ELEM_LED``
-  *undescribed*
-
-``NVME_MI_ELEM_SMBMED``
-  *undescribed*
-
-``NVME_MI_ELEM_PCIESED``
-  *undescribed*
-
-``NVME_MI_ELEM_NVMED``
-  *undescribed*
-
-
-
-
-.. c:type:: struct nvme_mi_vpd_tra
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_vpd_tra {
-    __u8 vn;
-    __u8 rsvd6;
-    __u8 ec;
-    struct nvme_mi_vpd_telem elems[0];
-  };
-
-**Members**
-
-
-
-
-
-.. c:type:: struct nvme_mi_vpd_mr_common
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_vpd_mr_common {
-    __u8 type;
-    __u8 rf;
-    __u8 rlen;
-    __u8 rchksum;
-    __u8 hchksum;
-    union {
-      struct nvme_mi_vpd_mra nmra;
-      struct nvme_mi_vpd_ppmra ppmra;
-      struct nvme_mi_vpd_tra tmra;
-    };
-  };
-
-**Members**
-
-``{unnamed_union}``
-  anonymous
-
-
-
-
-
-.. c:type:: struct nvme_mi_vpd_hdr
-
-
-**Definition**
-
-::
-
-  struct nvme_mi_vpd_hdr {
-    __u8 ipmiver;
-    __u8 iuaoff;
-    __u8 ciaoff;
-    __u8 biaoff;
-    __u8 piaoff;
-    __u8 mrioff;
-    __u8 rsvd6;
-    __u8 chchk;
-    __u8 vpd[];
-  };
-
-**Members**
-
-
-
-**NVMe Features**
-
-
 
 
 .. c:type:: struct nvme_feat_auto_pst
@@ -9097,6 +9252,7 @@ The namespace identifier if a succecssful or -1 with errno set
 
 .. c:type:: struct nvme_timestamp
 
+    timestamp:
 
 **Definition**
 
@@ -9185,6 +9341,7 @@ The namespace identifier if a succecssful or -1 with errno set
 
 .. c:type:: struct nvme_plm_config
 
+    **ee**; **dtwinrt**; **dtwinwt**; **dtwintt**;
 
 **Definition**
 
@@ -9298,6 +9455,7 @@ The namespace identifier if a succecssful or -1 with errno set
 
 .. c:type:: struct nvme_reservation_status
 
+   {
 
 **Definition**
 
@@ -9558,6 +9716,7 @@ The namespace identifier if a succecssful or -1 with errno set
 
 .. c:type:: struct nvmf_disc_log_entry
 
+   Discovery log page entry
 
 **Definition**
 
@@ -9595,16 +9754,12 @@ The namespace identifier if a succecssful or -1 with errno set
 **Members**
 
 
-**Description**
-
-
-Discovery log page entry
-
 
 
 
 .. c:type:: enum 
 
+   Transport Type codes for Discovery Log Page entry TRTYPE field
 
 **Constants**
 
@@ -9626,15 +9781,12 @@ Discovery log page entry
 ``NVMF_TRTYPE_MAX``
   *undescribed*
 
-**Description**
-
-Transport Type codes for Discovery Log Page entry TRTYPE field
-
 
 
 
 .. c:type:: enum 
 
+   Address Family codes for Discovery Log Page entry ADRFAM field
 
 **Constants**
 
@@ -9653,15 +9805,12 @@ Transport Type codes for Discovery Log Page entry TRTYPE field
 ``NVMF_ADDR_FAMILY_FC``
   Fibre Channel
 
-**Description**
-
-Address Family codes for Discovery Log Page entry ADRFAM field
-
 
 
 
 .. c:type:: enum 
 
+   Transport Requirements codes for Discovery Log Page entry TREQ field
 
 **Constants**
 
@@ -9677,15 +9826,12 @@ Address Family codes for Discovery Log Page entry ADRFAM field
 ``NVMF_TREQ_DISABLE_SQFLOW``
   SQ flow control disable supported
 
-**Description**
-
-Transport Requirements codes for Discovery Log Page entry TREQ field
-
 
 
 
 .. c:type:: enum 
 
+   RDMA QP Service Type codes for Discovery Log Page entry TSAS RDMA_QPTYPE field
 
 **Constants**
 
@@ -9695,16 +9841,12 @@ Transport Requirements codes for Discovery Log Page entry TREQ field
 ``NVMF_RDMA_QPTYPE_DATAGRAM``
   Reliable Datagram
 
-**Description**
-
-RDMA QP Service Type codes for Discovery Log Page entry TSAS
-RDMA_QPTYPE field
-
 
 
 
 .. c:type:: enum 
 
+   RDMA Provider Type codes for Discovery Log Page entry TSAS RDMA_PRTYPE field
 
 **Constants**
 
@@ -9723,26 +9865,17 @@ RDMA_QPTYPE field
 ``NVMF_RDMA_PRTYPE_IWARP``
   iWARP
 
-**Description**
-
-RDMA Provider Type codes for Discovery Log Page entry TSAS
-RDMA_PRTYPE field
-
 
 
 
 .. c:type:: enum 
 
+   RDMA Connection Management Service Type codes for Discovery Log Page entry TSAS RDMA_CMS field
 
 **Constants**
 
 ``NVMF_RDMA_CMS_RDMA_CM``
   Sockets based endpoint addressing
-
-**Description**
-
-RDMA Connection Management Service Type codes for Discovery Log Page
-entry TSAS RDMA_CMS field
 
 
 
@@ -9796,6 +9929,483 @@ entry TSAS RDMA_CMS field
     char subsysnqn[NVMF_NQN_FIELD_LEN];
     char hostnqn[NVMF_NQN_FIELD_LEN];
     char resv5[256];
+  };
+
+**Members**
+
+``cntlid``
+  **subsysnqn**
+  **hostnqn**
+
+
+
+
+
+.. c:type:: struct nvme_mi_read_nvm_ss_info
+
+
+**Definition**
+
+::
+
+  struct nvme_mi_read_nvm_ss_info {
+    __u8 nump;
+    __u8 mjr;
+    __u8 mnr;
+    __u8 rsvd3[29];
+  };
+
+**Members**
+
+
+
+
+
+.. c:type:: struct nvme_mi_port_pcie
+
+
+**Definition**
+
+::
+
+  struct nvme_mi_port_pcie {
+    __u8 mps;
+    __u8 sls;
+    __u8 cls;
+    __u8 mlw;
+    __u8 nlw;
+    __u8 pn;
+    __u8 rsvd14[18];
+  };
+
+**Members**
+
+
+
+
+
+.. c:type:: struct nvme_mi_port_smb
+
+
+**Definition**
+
+::
+
+  struct nvme_mi_port_smb {
+    __u8 vpd_addr;
+    __u8 mvpd_freq;
+    __u8 mme_addr;
+    __u8 mme_freq;
+    __u8 nvmebm;
+    __u8 rsvd13[19];
+  };
+
+**Members**
+
+
+
+
+
+.. c:type:: struct nvme_mi_read_port_info
+
+
+**Definition**
+
+::
+
+  struct nvme_mi_read_port_info {
+    __u8 portt;
+    __u8 rsvd1;
+    __le16 mmctptus;
+    __le32 meb;
+    union {
+      struct nvme_mi_port_pcie pcie;
+      struct nvme_mi_port_smb smb;
+    };
+  };
+
+**Members**
+
+``portt``
+  **mmctptus**;
+
+``{unnamed_union}``
+  anonymous
+
+
+
+
+
+.. c:type:: struct nvme_mi_read_ctrl_info
+
+    **portid**; **prii**; **pri**; **vid**; **did**; **ssvid**; **ssid**;
+
+**Definition**
+
+::
+
+  struct nvme_mi_read_ctrl_info {
+    __u8 portid;
+    __u8 rsvd1[4];
+    __u8 prii;
+    __le16 pri;
+    __le16 vid;
+    __le16 did;
+    __le16 ssvid;
+    __le16 ssid;
+    __u8 rsvd16[16];
+  };
+
+**Members**
+
+
+
+
+
+.. c:type:: struct nvme_mi_osc
+
+    **type**; **opc**;
+
+**Definition**
+
+::
+
+  struct nvme_mi_osc {
+    __u8 type;
+    __u8 opc;
+  };
+
+**Members**
+
+
+
+
+
+.. c:type:: struct nvme_mi_read_sc_list
+
+
+**Definition**
+
+::
+
+  struct nvme_mi_read_sc_list {
+    __le16 numcmd;
+    struct nvme_mi_osc cmds[];
+  };
+
+**Members**
+
+
+
+
+
+.. c:type:: struct nvme_mi_nvm_ss_health_status
+
+
+**Definition**
+
+::
+
+  struct nvme_mi_nvm_ss_health_status {
+    __u8 nss;
+    __u8 sw;
+    __u8 ctemp;
+    __u8 pdlu;
+    __le16 ccs;
+    __u8 rsvd8[2];
+  };
+
+**Members**
+
+
+
+
+
+.. c:type:: enum 
+
+
+**Constants**
+
+``NVME_MI_CCS_RDY``
+  *undescribed*
+
+``NVME_MI_CSS_CFS``
+  *undescribed*
+
+``NVME_MI_CSS_SHST``
+  *undescribed*
+
+``NVME_MI_CSS_NSSRO``
+  *undescribed*
+
+``NVME_MI_CSS_CECO``
+  *undescribed*
+
+``NVME_MI_CSS_NAC``
+  *undescribed*
+
+``NVME_MI_CSS_FA``
+  *undescribed*
+
+``NVME_MI_CSS_CSTS``
+  *undescribed*
+
+``NVME_MI_CSS_CTEMP``
+  *undescribed*
+
+``NVME_MI_CSS_PDLU``
+  *undescribed*
+
+``NVME_MI_CSS_SPARE``
+  *undescribed*
+
+``NVME_MI_CSS_CCWARN``
+  *undescribed*
+
+
+
+
+.. c:type:: struct nvme_mi_ctrl_heal_status
+
+
+**Definition**
+
+::
+
+  struct nvme_mi_ctrl_heal_status {
+    __le16 ctlid;
+    __le16 csts;
+    __le16 ctemp;
+    __u8 pdlu;
+    __u8 spare;
+    __u8 cwarn;
+    __u8 rsvd9[7];
+  };
+
+**Members**
+
+
+
+
+
+.. c:type:: enum 
+
+
+**Constants**
+
+``NVME_MI_CSTS_RDY``
+  *undescribed*
+
+``NVME_MI_CSTS_CFS``
+  *undescribed*
+
+``NVME_MI_CSTS_SHST``
+  *undescribed*
+
+``NVME_MI_CSTS_NSSRO``
+  *undescribed*
+
+``NVME_MI_CSTS_CECO``
+  *undescribed*
+
+``NVME_MI_CSTS_NAC``
+  *undescribed*
+
+``NVME_MI_CSTS_FA``
+  *undescribed*
+
+``NVME_MI_CWARN_ST``
+  *undescribed*
+
+``NVME_MI_CWARN_TAUT``
+  *undescribed*
+
+``NVME_MI_CWARN_RD``
+  *undescribed*
+
+``NVME_MI_CWARN_RO``
+  *undescribed*
+
+``NVME_MI_CWARN_VMBF``
+  *undescribed*
+
+
+
+
+.. c:type:: struct nvme_mi_vpd_mra
+
+    **nmravn**; **ff**; **i18vpwr**; **m18vpwr**; **i33vpwr**; **m33vpwr**; **m33vapsr**; **i5vapsr**; **m5vapsr**; **i12vapsr**; **m12vapsr**; **mtl**; **tnvmcap**[16];
+
+**Definition**
+
+::
+
+  struct nvme_mi_vpd_mra {
+    __u8 nmravn;
+    __u8 ff;
+    __u8 rsvd7[6];
+    __u8 i18vpwr;
+    __u8 m18vpwr;
+    __u8 i33vpwr;
+    __u8 m33vpwr;
+    __u8 rsvd17;
+    __u8 m33vapsr;
+    __u8 i5vapsr;
+    __u8 m5vapsr;
+    __u8 i12vapsr;
+    __u8 m12vapsr;
+    __u8 mtl;
+    __u8 tnvmcap[16];
+    __u8 rsvd37[27];
+  };
+
+**Members**
+
+
+
+
+
+.. c:type:: struct nvme_mi_vpd_ppmra
+
+
+**Definition**
+
+::
+
+  struct nvme_mi_vpd_ppmra {
+    __u8 nppmravn;
+    __u8 pn;
+    __u8 ppi;
+    __u8 ls;
+    __u8 mlw;
+    __u8 mctp;
+    __u8 refccap;
+    __u8 pi;
+    __u8 rsvd13[3];
+  };
+
+**Members**
+
+
+
+
+
+.. c:type:: struct nvme_mi_vpd_telem
+
+
+**Definition**
+
+::
+
+  struct nvme_mi_vpd_telem {
+    __u8 type;
+    __u8 rev;
+    __u8 len;
+    __u8 data[0];
+  };
+
+**Members**
+
+
+
+
+
+.. c:type:: enum 
+
+
+**Constants**
+
+``NVME_MI_ELEM_EED``
+  *undescribed*
+
+``NVME_MI_ELEM_USCE``
+  *undescribed*
+
+``NVME_MI_ELEM_ECED``
+  *undescribed*
+
+``NVME_MI_ELEM_LED``
+  *undescribed*
+
+``NVME_MI_ELEM_SMBMED``
+  *undescribed*
+
+``NVME_MI_ELEM_PCIESED``
+  *undescribed*
+
+``NVME_MI_ELEM_NVMED``
+  *undescribed*
+
+
+
+
+.. c:type:: struct nvme_mi_vpd_tra
+
+
+**Definition**
+
+::
+
+  struct nvme_mi_vpd_tra {
+    __u8 vn;
+    __u8 rsvd6;
+    __u8 ec;
+    struct nvme_mi_vpd_telem elems[0];
+  };
+
+**Members**
+
+
+
+
+
+.. c:type:: struct nvme_mi_vpd_mr_common
+
+    **type**; **rf**; **rlen**; **rchksum**; **hchksum**; **ppmra**; **tmra**;
+
+**Definition**
+
+::
+
+  struct nvme_mi_vpd_mr_common {
+    __u8 type;
+    __u8 rf;
+    __u8 rlen;
+    __u8 rchksum;
+    __u8 hchksum;
+    union {
+      struct nvme_mi_vpd_mra nmra;
+      struct nvme_mi_vpd_ppmra ppmra;
+      struct nvme_mi_vpd_tra tmra;
+    };
+  };
+
+**Members**
+
+``{unnamed_union}``
+  anonymous
+
+
+
+
+
+.. c:type:: struct nvme_mi_vpd_hdr
+
+
+**Definition**
+
+::
+
+  struct nvme_mi_vpd_hdr {
+    __u8 ipmiver;
+    __u8 iuaoff;
+    __u8 ciaoff;
+    __u8 biaoff;
+    __u8 piaoff;
+    __u8 mrioff;
+    __u8 rsvd6;
+    __u8 chchk;
+    __u8 vpd[];
   };
 
 **Members**
@@ -10146,27 +10756,25 @@ entry TSAS RDMA_CMS field
   *undescribed*
 
 
-.. c:function:: __u8 nvme_status_type (__u16 status)
+.. c:function:: __u8 nvme_status_to_errno (int status, bool fabrics)
 
-   Returns SCT(Status Code Type) in status field of the completion queue entry.
-
-**Parameters**
-
-``__u16 status``
-  return value from nvme passthrough commands, which is the nvme
-  status field, located at DW3 in completion queue entry
-
-
-.. c:function:: const char * nvme_status_to_string (int status, bool fabrics)
-
+   Converts nvme return status to errno
 
 **Parameters**
 
 ``int status``
-  *undescribed*
+  Return status from an nvme passthrough commmand
 
 ``bool fabrics``
-  *undescribed*
+  true if given status is for fabrics
+
+**Description**
+
+If status < 0, errno is already set.
+
+**Return**
+
+Appropriate errno for the given nvme status
 
 
 .. c:function:: int nvme_fw_download_seq (int fd, __u32 size, __u32 xfer, __u32 offset, void * buf)
@@ -10187,10 +10795,9 @@ entry TSAS RDMA_CMS field
   *undescribed*
 
 ``void * buf``
-  *undescribed*
 
 
-.. c:function:: int nvme_get_telemetry_log (int fd, bool create, bool ctrl, int data_area, void ** buf, __u32 * log_size)
+.. c:function:: int nvme_get_ctrl_telemetry (int fd, bool rae, void ** buf, __u32 * log_size)
 
 
 **Parameters**
@@ -10198,20 +10805,41 @@ entry TSAS RDMA_CMS field
 ``int fd``
   *undescribed*
 
-``bool create``
-  *undescribed*
-
-``bool ctrl``
-  *undescribed*
-
-``int data_area``
+``bool rae``
   *undescribed*
 
 ``void ** buf``
   *undescribed*
 
 ``__u32 * log_size``
+
+
+.. c:function:: int nvme_get_host_telemetry (int fd, void ** buf, __u32 * log_size)
+
+
+**Parameters**
+
+``int fd``
   *undescribed*
+
+``void ** buf``
+  *undescribed*
+
+``__u32 * log_size``
+
+
+.. c:function:: int nvme_get_new_host_telemetry (int fd, void ** buf, __u32 * log_size)
+
+
+**Parameters**
+
+``int fd``
+  *undescribed*
+
+``void ** buf``
+  *undescribed*
+
+``__u32 * log_size``
 
 
 .. c:function:: void nvme_setup_id_ns (struct nvme_id_ns * ns, __u64 nsze, __u64 ncap, __u8 flbas, __u8 dps, __u8 nmic, __u32 anagrpid, __u16 nvmsetid)
@@ -10346,14 +10974,19 @@ Calls __nvme_get_log_page() with a default 4k transfer length.
 
 .. c:function:: int nvme_get_ana_log_len (int fd, size_t * analen)
 
+   Retreive size of the current ANA log
 
 **Parameters**
 
 ``int fd``
-  *undescribed*
+  File descriptor of nvme device
 
 ``size_t * analen``
-  *undescribed*
+  Pointer to where the length will be set on success
+
+**Return**
+
+0 on success, -1 otherwise with errno set
 
 
 .. c:function:: int nvme_namespace_attach_ctrls (int fd, __u32 nsid, __u16 num_ctrls, __u16 * ctrlist)
@@ -10376,8 +11009,8 @@ Calls __nvme_get_log_page() with a default 4k transfer length.
 
 **Return**
 
-The nvme command status if a response was received or -errno
-        otherwise.
+The nvme command status if a response was received or -1
+        with errno set otherwise.
 
 
 .. c:function:: int nvme_namespace_detach_ctrls (int fd, __u32 nsid, __u16 num_ctrls, __u16 * ctrlist)
@@ -10400,12 +11033,13 @@ The nvme command status if a response was received or -errno
 
 **Return**
 
-The nvme command status if a response was received or -errno
-        otherwise.
+The nvme command status if a response was received or -1
+        with errno set otherwise.
 
 
 .. c:function:: int nvme_get_feature_length (int fid, __u32 cdw11, __u32 * len)
 
+   Retreive the command payload length for a specific feature identifier
 
 **Parameters**
 
@@ -10416,22 +11050,30 @@ The nvme command status if a response was received or -errno
   *undescribed*
 
 ``__u32 * len``
-  *undescribed*
+
+**Return**
+
+0 on success, -1 with errno set otherwise
 
 
-.. c:function:: int nvme_get_directive_receive_length (__u8 dtype, __u8 doper, __u32 * len)
+.. c:function:: int nvme_get_directive_receive_length (enum nvme_directive_dtype dtype, enum nvme_directive_receive_doper doper, __u32 * len)
 
 
 **Parameters**
 
-``__u8 dtype``
-  *undescribed*
+``enum nvme_directive_dtype dtype``
+  Directive type, see :c:type:`enum nvme_directive_dtype <nvme_directive_dtype>`
 
-``__u8 doper``
-  *undescribed*
+``enum nvme_directive_receive_doper doper``
+  Directive receive operation, see :c:type:`enum nvme_directive_receive_doper <nvme_directive_receive_doper>`
 
 ``__u32 * len``
-  *undescribed*
+  Address to save the payload length of the directive in bytes on
+  a successful decode
+
+**Return**
+
+0 on success, -1 with errno set to EINVAL.
 
 
 .. c:function:: int nvme_open (const char * name)
@@ -10452,5 +11094,23 @@ match linux conventions.
 
 A file descriptor for the device on a successful open, or -1 with
         errno set otherwise.
+
+
+.. c:function:: int nvme_set_attr (const char * dir, const char * attr, const char * value)
+
+
+**Parameters**
+
+``const char * dir``
+  *undescribed*
+
+``const char * attr``
+  *undescribed*
+
+``const char * value``
+
+**Description**
+
+Return 
 
 

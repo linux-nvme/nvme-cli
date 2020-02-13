@@ -1,0 +1,47 @@
+.TH "libnvme" 2 "struct nvme_primary_ctrl_cap" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_primary_ctrl_cap \- 
+.SH SYNOPSIS
+struct nvme_primary_ctrl_cap {
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __le16 portid;"
+.br
+.BI "    __u8 crt;"
+.br
+.BI "    __u8 rsvd5[27];"
+.br
+.BI "    __le32 vqfrt;"
+.br
+.BI "    __le32 vqrfa;"
+.br
+.BI "    __le16 vqrfap;"
+.br
+.BI "    __le16 vqprt;"
+.br
+.BI "    __le16 vqfrsm;"
+.br
+.BI "    __le16 vqgran;"
+.br
+.BI "    __u8 rsvd48[16];"
+.br
+.BI "    __le32 vifrt;"
+.br
+.BI "    __le32 virfa;"
+.br
+.BI "    __le16 virfap;"
+.br
+.BI "    __le16 viprt;"
+.br
+.BI "    __le16 vifrsm;"
+.br
+.BI "    __le16 vigran;"
+.br
+.BI "    __u8 rsvd80[4016];"
+.br
+.BI "
+};
+.br
+
+.SH Members

@@ -1,0 +1,35 @@
+.TH "nvme_resv_acquire" 2 "nvme_resv_acquire" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_resv_acquire \- Send an nvme reservation acquire
+.SH SYNOPSIS
+.B "int" nvme_resv_acquire
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "enum nvme_reservation_rtype " rtype ","
+.BI "enum nvme_reservation_racqa " racqa ","
+.BI "bool " iekey ","
+.BI "__u64 " crkey ","
+.BI "__u64 " nrkey ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace identifier
+.IP "rtype" 12
+The type of reservation to be create, see \fIenum nvme_reservation_rtype\fP
+.IP "racqa" 12
+The action that is performed by the command, see \fIenum nvme_reservation_racqa\fP
+.IP "iekey" 12
+Set to ignore the existing key
+.IP "crkey" 12
+The current reservation key associated with the host
+.IP "nrkey" 12
+The reservation key to be unregistered from the namespace if
+the action is preempt
+.SH "DESCRIPTION"
+The Reservation Acquire command is used to acquire a reservation on a
+namespace, preempt a reservation held on a namespace, and abort a
+reservation held on a namespace.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

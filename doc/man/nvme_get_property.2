@@ -1,0 +1,21 @@
+.TH "nvme_get_property" 2 "nvme_get_property" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_property \- Get a controller property
+.SH SYNOPSIS
+.B "int" nvme_get_property
+.BI "(int " fd ","
+.BI "int " offset ","
+.BI "__u64 *" value ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "offset" 12
+Property offset from the base to retrieve
+.IP "value" 12
+Where the property's value will be stored on success
+.SH "DESCRIPTION"
+This is an NVMe-over-Fabrics specific command, not applicable to PCIe. These
+properties align to the PCI MMIO controller registers.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

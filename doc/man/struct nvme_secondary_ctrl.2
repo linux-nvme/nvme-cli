@@ -1,0 +1,27 @@
+.TH "libnvme" 2 "struct nvme_secondary_ctrl" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_secondary_ctrl \- 
+.SH SYNOPSIS
+struct nvme_secondary_ctrl {
+.br
+.BI "    __le16 scid;"
+.br
+.BI "    __le16 pcid;"
+.br
+.BI "    __u8 scs;"
+.br
+.BI "    __u8 rsvd5[3];"
+.br
+.BI "    __le16 vfn;"
+.br
+.BI "    __le16 nvq;"
+.br
+.BI "    __le16 nvi;"
+.br
+.BI "    __u8 rsvd14[18];"
+.br
+.BI "
+};
+.br
+
+.SH Members

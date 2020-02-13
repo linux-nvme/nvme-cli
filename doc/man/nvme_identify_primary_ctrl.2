@@ -1,0 +1,19 @@
+.TH "nvme_identify_primary_ctrl" 2 "nvme_identify_primary_ctrl" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_identify_primary_ctrl \- Retrieve NVMe Primary Controller identification &fd:
+.SH SYNOPSIS
+.B "int" nvme_identify_primary_ctrl
+.BI "(int " fd ","
+.BI "__u16 " cntid ","
+.BI "struct nvme_primary_ctrl_cap *" cap ");"
+.SH ARGUMENTS
+.IP "fd" 12
+-- undescribed --
+.IP "cntid" 12
+-- undescribed --
+.IP "cap" 12
+.SH "DESCRIPTION"
+See \fIstruct nvme_primary_ctrl_cap\fP for the defintion of the returned structure, \fIcap\fP.
+.SH "RETURN"
+The nvme command status if a response was received or -1
+with errno set otherwise.

@@ -1,0 +1,35 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_nwpc" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_nwpc \- This field indicates the optional namespace write protection capabilities supported by the controller.
+.SH SYNOPSIS
+enum nvme_id_ctrl_nwpc {
+.br
+.BI "    NVME_CTRL_NWPC_WRITE_PROTECT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_NWPC_WRITE_PROTECT_POWER_CYCLE"
+, 
+.br
+.br
+.BI "    NVME_CTRL_NWPC_WRITE_PROTECT_PERMANENT"
+
+};
+.SH Constants
+.IP "NVME_CTRL_NWPC_WRITE_PROTECT" 12
+If set, then the controller shall
+support the No Write Protect and
+Write Protect namespace write
+protection states and may support
+the Write Protect Until Power
+Cycle state and Permanent Write
+Protect namespace write
+protection states.
+.IP "NVME_CTRL_NWPC_WRITE_PROTECT_POWER_CYCLE" 12
+If set, then the controller
+supports the Write Protect Until
+Power Cycle state.
+.IP "NVME_CTRL_NWPC_WRITE_PROTECT_PERMANENT" 12
+If set, then the controller
+supports the Permanent Write
+Protect state.

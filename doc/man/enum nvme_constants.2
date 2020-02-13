@@ -1,0 +1,118 @@
+.TH "libnvme" 2 "enum nvme_constants" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_constants \- A place to stash various constant nvme values
+.SH SYNOPSIS
+enum nvme_constants {
+.br
+.BI "    NVME_NSID_ALL"
+, 
+.br
+.br
+.BI "    NVME_NSID_NONE"
+, 
+.br
+.br
+.BI "    NVME_UUID_NONE"
+, 
+.br
+.br
+.BI "    NVME_CNTLID_NONE"
+, 
+.br
+.br
+.BI "    NVME_NVMSETID_NONE"
+, 
+.br
+.br
+.BI "    NVME_LOG_LSP_NONE"
+, 
+.br
+.br
+.BI "    NVME_LOG_LSI_NONE"
+, 
+.br
+.br
+.BI "    NVME_IDENTIFY_DATA_SIZE"
+, 
+.br
+.br
+.BI "    NVME_ID_NVMSET_LIST_MAX"
+, 
+.br
+.br
+.BI "    NVME_ID_UUID_LIST_MAX"
+, 
+.br
+.br
+.BI "    NVME_ID_CTRL_LIST_MAX"
+, 
+.br
+.br
+.BI "    NVME_ID_NS_LIST_MAX"
+, 
+.br
+.br
+.BI "    NVME_ID_SECONDARY_CTRL_MAX"
+, 
+.br
+.br
+.BI "    NVME_ID_ND_DESCRIPTOR_MAX"
+, 
+.br
+.br
+.BI "    NVME_FEAT_LBA_RANGE_MAX"
+, 
+.br
+.br
+.BI "    NVME_LOG_ST_MAX_RESULTS"
+, 
+.br
+.br
+.BI "    NVME_DSM_MAX_RANGES"
+
+};
+.SH Constants
+.IP "NVME_NSID_ALL" 12
+A broadcast value that is used to specify all
+namespaces
+.IP "NVME_NSID_NONE" 12
+The invalid namespace id, for when the nsid
+parameter is not used in a command
+.IP "NVME_UUID_NONE" 12
+Use to omit the uuid command parameter
+.IP "NVME_CNTLID_NONE" 12
+Use to omit the cntlid command parameter
+.IP "NVME_NVMSETID_NONE" 12
+Use to omit the nvmsetid command parameter
+.IP "NVME_LOG_LSP_NONE" 12
+Use to omit the log lsp command parameter
+.IP "NVME_LOG_LSI_NONE" 12
+Use to omit the log lsi command parameter
+.IP "NVME_IDENTIFY_DATA_SIZE" 12
+The transfer size for nvme identify commands
+.IP "NVME_ID_NVMSET_LIST_MAX" 12
+The largest possible nvmset index in identify
+nvmeset
+.IP "NVME_ID_UUID_LIST_MAX" 12
+The largest possible uuid index in identify
+uuid list
+.IP "NVME_ID_CTRL_LIST_MAX" 12
+The largest possible controller index in
+identify controller list
+.IP "NVME_ID_NS_LIST_MAX" 12
+The largest possible namespace index in
+identify namespace list
+.IP "NVME_ID_SECONDARY_CTRL_MAX" 12
+The largest possible secondary controller index
+in identify secondary controller
+.IP "NVME_ID_ND_DESCRIPTOR_MAX" 12
+-- undescribed --
+.IP "NVME_FEAT_LBA_RANGE_MAX" 12
+The largest possible LBA range index in feature
+lba range type
+.IP "NVME_LOG_ST_MAX_RESULTS" 12
+The largest possible self test result index in the
+device self test log
+.IP "NVME_DSM_MAX_RANGES" 12
+The largest possible range index in a data-set
+management command

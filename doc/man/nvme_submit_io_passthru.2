@@ -1,0 +1,20 @@
+.TH "nvme_submit_io_passthru" 2 "nvme_submit_io_passthru" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_submit_io_passthru \- Submit an nvme passthrough command
+.SH SYNOPSIS
+.B "int" nvme_submit_io_passthru
+.BI "(int " fd ","
+.BI "struct nvme_passthru_cmd *" cmd ","
+.BI "__u32 *" result ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "cmd" 12
+The nvme io command to send
+.IP "result" 12
+Optional field to return the result from the CQE DW0
+.SH "DESCRIPTION"
+Uses NVME_IOCTL_IO_CMD for the ioctl request.
+.SH "RETURN"
+The nvme command status if a response was received or -1
+with errno set otherwise.

@@ -1,0 +1,19 @@
+.TH "libnvme" 2 "struct nvme_firmware_slot" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_firmware_slot \- 
+.SH SYNOPSIS
+struct nvme_firmware_slot {
+.br
+.BI "    __u8 afi;"
+.br
+.BI "    __u8 resv[7];"
+.br
+.BI "    struct nvme_frs frs[7];"
+.br
+.BI "    __u8 resv2[448];"
+.br
+.BI "
+};
+.br
+
+.SH Members

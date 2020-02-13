@@ -1,0 +1,31 @@
+.TH "nvme_dsm" 2 "nvme_dsm" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_dsm \- Send an nvme data set management command
+.SH SYNOPSIS
+.B "int" nvme_dsm
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "__u32 " attrs ","
+.BI "__u16 " nr_ranges ","
+.BI "struct nvme_dsm_range *" dsm ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace identifier
+.IP "attrs" 12
+DSM attributes, see \fIenum nvme_dsm_attributes\fP
+\fInr_ranges\fP:  Number of block ranges in the data set management attributes
+.IP "nr_ranges" 12
+-- undescribed --
+.IP "dsm" 12
+The data set management attributes
+.SH "DESCRIPTION"
+The Dataset Management command is used by the host to indicate attributes
+for ranges of logical blocks. This includes attributes like frequency that
+data is read or written, access size, and other information that may be used
+to optimize performance and reliability, and may be used to
+deallocate/unmap/trim those logical blocks.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

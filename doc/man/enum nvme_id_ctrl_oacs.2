@@ -1,0 +1,77 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_oacs" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_oacs \- Flags indicating the optional Admin commands and features supported by the controller, see &struct nvme_id_ctrl.oacs.
+.SH SYNOPSIS
+enum nvme_id_ctrl_oacs {
+.br
+.BI "    NVME_CTRL_OACS_SECURITY"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_FORMAT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_FW"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_NS_MGMT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_SELF_TEST"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_DIRECTIVES"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_NVME_MI"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_VIRT_MGMT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_DBBUF_CFG"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_LBA_STATUS"
+
+};
+.SH Constants
+.IP "NVME_CTRL_OACS_SECURITY" 12
+If set, then the controller supports the
+Security Send and Security Receive commands.
+.IP "NVME_CTRL_OACS_FORMAT" 12
+If set then the controller supports the Format
+NVM command.
+.IP "NVME_CTRL_OACS_FW" 12
+If set, then the controller supports the
+Firmware Commit and Firmware Image Download commands.
+.IP "NVME_CTRL_OACS_NS_MGMT" 12
+If set, then the controller supports the
+Namespace Management capability
+.IP "NVME_CTRL_OACS_SELF_TEST" 12
+If set, then the controller supports the Device
+Self-test command.
+.IP "NVME_CTRL_OACS_DIRECTIVES" 12
+If set, then the controller supports Directives
+and the Directive Send and Directive Receive
+commands.
+.IP "NVME_CTRL_OACS_NVME_MI" 12
+If set, then the controller supports the NVMe-MI
+Send and NVMe-MI Receive commands.
+.IP "NVME_CTRL_OACS_VIRT_MGMT" 12
+If set, then the controller supports the
+Virtualization Management command.
+.IP "NVME_CTRL_OACS_DBBUF_CFG" 12
+If set, then the controller supports the
+Doorbell Buffer Config command.
+.IP "NVME_CTRL_OACS_LBA_STATUS" 12
+If set, then the controller supports the Get LBA
+Status capability.

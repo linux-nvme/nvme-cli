@@ -1,0 +1,41 @@
+.TH "libnvme" 2 "struct nvme_reservation_status" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_reservation_status \- {
+.SH SYNOPSIS
+struct nvme_reservation_status {
+.br
+.BI "    __le32 gen;"
+.br
+.BI "    __u8 rtype;"
+.br
+.BI "    __u8 regctl[2];"
+.br
+.BI "    __u8 rsvd7[2];"
+.br
+.BI "    __u8 ptpls;"
+.br
+.BI "    __u8 rsvd10[14];"
+.br
+.BI "    union {"
+.br
+.BI "      struct {"
+.br
+.BI "        __u8 resv24[40];"
+.br
+.BI "        struct nvme_registered_ctrl_ext regctl_eds[0];"
+.br
+.BI "      };"
+.br
+.BI "      struct nvme_registered_ctrl regctl_ds[0];"
+.br
+.BI "    };"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "{unnamed_union}" 12
+anonymous
+.IP "{unnamed_struct}" 12
+anonymous

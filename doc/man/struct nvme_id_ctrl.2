@@ -1,0 +1,455 @@
+.TH "libnvme" 2 "struct nvme_id_ctrl" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_id_ctrl \- Identify Controller data structure
+.SH SYNOPSIS
+struct nvme_id_ctrl {
+.br
+.BI "    __le16 vid;"
+.br
+.BI "    __le16 ssvid;"
+.br
+.BI "    char sn[20];"
+.br
+.BI "    char mn[40];"
+.br
+.BI "    char fr[8];"
+.br
+.BI "    __u8 rab;"
+.br
+.BI "    __u8 ieee[3];"
+.br
+.BI "    __u8 cmic;"
+.br
+.BI "    __u8 mdts;"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __le32 ver;"
+.br
+.BI "    __le32 rtd3r;"
+.br
+.BI "    __le32 rtd3e;"
+.br
+.BI "    __le32 oaes;"
+.br
+.BI "    __le32 ctratt;"
+.br
+.BI "    __le16 rrls;"
+.br
+.BI "    __u8 rsvd102[9];"
+.br
+.BI "    __u8 cntrltype;"
+.br
+.BI "    __u8 fguid[16];"
+.br
+.BI "    __le16 crdt1;"
+.br
+.BI "    __le16 crdt2;"
+.br
+.BI "    __le16 crdt3;"
+.br
+.BI "    __u8 rsvd134[119];"
+.br
+.BI "    __u8 nvmsr;"
+.br
+.BI "    __u8 vwci;"
+.br
+.BI "    __u8 mec;"
+.br
+.BI "    __le16 oacs;"
+.br
+.BI "    __u8 acl;"
+.br
+.BI "    __u8 aerl;"
+.br
+.BI "    __u8 frmw;"
+.br
+.BI "    __u8 lpa;"
+.br
+.BI "    __u8 elpe;"
+.br
+.BI "    __u8 npss;"
+.br
+.BI "    __u8 avscc;"
+.br
+.BI "    __u8 apsta;"
+.br
+.BI "    __le16 wctemp;"
+.br
+.BI "    __le16 cctemp;"
+.br
+.BI "    __le16 mtfa;"
+.br
+.BI "    __le32 hmpre;"
+.br
+.BI "    __le32 hmmin;"
+.br
+.BI "    __u8 tnvmcap[16];"
+.br
+.BI "    __u8 unvmcap[16];"
+.br
+.BI "    __le32 rpmbs;"
+.br
+.BI "    __le16 edstt;"
+.br
+.BI "    __u8 dsto;"
+.br
+.BI "    __u8 fwug;"
+.br
+.BI "    __le16 kas;"
+.br
+.BI "    __le16 hctma;"
+.br
+.BI "    __le16 mntmt;"
+.br
+.BI "    __le16 mxtmt;"
+.br
+.BI "    __le32 sanicap;"
+.br
+.BI "    __le32 hmminds;"
+.br
+.BI "    __le16 hmmaxd;"
+.br
+.BI "    __le16 nsetidmax;"
+.br
+.BI "    __le16 endgidmax;"
+.br
+.BI "    __u8 anatt;"
+.br
+.BI "    __u8 anacap;"
+.br
+.BI "    __le32 anagrpmax;"
+.br
+.BI "    __le32 nanagrpid;"
+.br
+.BI "    __le32 pels;"
+.br
+.BI "    __u8 rsvd356[156];"
+.br
+.BI "    __u8 sqes;"
+.br
+.BI "    __u8 cqes;"
+.br
+.BI "    __le16 maxcmd;"
+.br
+.BI "    __le32 nn;"
+.br
+.BI "    __le16 oncs;"
+.br
+.BI "    __le16 fuses;"
+.br
+.BI "    __u8 fna;"
+.br
+.BI "    __u8 vwc;"
+.br
+.BI "    __le16 awun;"
+.br
+.BI "    __le16 awupf;"
+.br
+.BI "    __u8 nvscc;"
+.br
+.BI "    __u8 nwpc;"
+.br
+.BI "    __le16 acwu;"
+.br
+.BI "    __u8 rsvd534[2];"
+.br
+.BI "    __le32 sgls;"
+.br
+.BI "    __le32 mnan;"
+.br
+.BI "    __u8 rsvd544[224];"
+.br
+.BI "    char subnqn[256];"
+.br
+.BI "    __u8 rsvd1024[768];"
+.br
+.BI "    __le32 ioccsz;"
+.br
+.BI "    __le32 iorcsz;"
+.br
+.BI "    __le16 icdoff;"
+.br
+.BI "    __u8 fcatt;"
+.br
+.BI "    __u8 msdbd;"
+.br
+.BI "    __le16 ofcs;"
+.br
+.BI "    __u8 rsvd1806[242];"
+.br
+.BI "    struct nvme_id_psd      psd[32];"
+.br
+.BI "    __u8 vs[1024];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "vid" 12
+PCI Vendor ID, the company vendor identifier that is assigned by
+the PCI SIG.
+.IP "ssvid" 12
+PCI Subsystem Vendor ID, the company vendor identifier that is
+assigned by the PCI SIG for the subsystem.
+.IP "sn" 12
+Serial Number in ascii
+.IP "mn" 12
+Model Number in ascii
+.IP "fr" 12
+Firmware Revision in ascii, the currently active firmware
+revision for the NVM subsystem
+.IP "rab" 12
+Recommended Arbitration Burst, reported as a power of two
+.IP "ieee" 12
+IEEE assigned Organization Unique Identifier
+.IP "cmic" 12
+Controller Multipath IO and Namespace Sharing  Capabilities of
+the controller and NVM subsystem. See \fIenum nvme_id_ctrl_cmic\fP.
+.IP "mdts" 12
+Max Data Transfer Size is the largest data transfer size. The
+host should not submit a command that exceeds this maximum data
+transfer size. The value is in units of the minimum memory page
+size (CAP.MPSMIN) and is reported as a power of two
+.IP "cntlid" 12
+Controller ID, the NVM subsystem unique controller identifier
+associated with the controller.
+.IP "ver" 12
+Version, this field contains the value reported in the Version
+register, or property (see \fIenum nvme_registers\fP NVME_REG_VS).
+.IP "rtd3r" 12
+RTD3 Resume Latency, the expected latency in microseconds to resume
+from Runtime D3
+.IP "rtd3e" 12
+RTD3 Exit Latency, the typical latency in microseconds to enter
+Runtime D3.
+.IP "oaes" 12
+Optional Async Events Supported, see \fIenum\fP nvme_id_ctrl_oaes .
+.IP "ctratt" 12
+Controller Attributes, see \fIenum\fP nvme_id_ctrl_ctratt
+.IP "rrls" 12
+Read Recovery Levels. If a bit is set, then the corresponding
+Read Recovery Level is supported. If a bit is cleared, then the
+corresponding Read Recovery Level is not supported.
+.IP "cntrltype" 12
+Controller Type, see \fIenum nvme_id_ctrl_cntrltype\fP
+.IP "fguid" 12
+FRU GUID, a 128-bit value that is globally unique for a given
+Field Replaceable Unit
+.IP "crdt1" 12
+Controller Retry Delay time in 100 millisecod units if CQE CRD
+field is 1
+.IP "crdt2" 12
+Controller Retry Delay time in 100 millisecod units if CQE CRD
+field is 2
+.IP "crdt3" 12
+Controller Retry Delay time in 100 millisecod units if CQE CRD
+field is 3
+.IP "nvmsr" 12
+NVM Subsystem Report, see \fIenum nvme_id_ctrl_nvmsr\fP
+.IP "vwci" 12
+VPD Write Cycle Information, see \fIenum nvme_id_ctrl_vwci\fP
+.IP "mec" 12
+Management Endpoint Capabilities, see \fIenum nvme_id_ctrl_mec\fP
+.IP "oacs" 12
+Optional Admin Command Support,the optional Admin commands and
+features supported by the controller, see \fIenum nvme_id_ctrl_oacs\fP.
+.IP "acl" 12
+Abort Command Limit, the maximum number of concurrently
+executing Abort commands supported by the controller. This is a
+0's based value.
+.IP "aerl" 12
+Async Event Request Limit, the maximum number of concurrently
+outstanding Asynchronous Event Request commands supported by the
+controller This is a 0's based value.
+.IP "frmw" 12
+Firmware Updates indicates capabilities regarding firmware
+updates. See \fIenum nvme_id_ctrl_frmw\fP.
+.IP "lpa" 12
+Log Page Attributes, see \fIenum nvme_id_ctrl_lpa\fP.
+.IP "elpe" 12
+Error Log Page Entries, the maximum number of Error Information
+log entries that are stored by the controller. This field is a
+0's based value.
+.IP "npss" 12
+Number of Power States Supported, the number of NVM Express
+power states supported by the controller, indicating the number
+of valid entries in \fIstruct nvme_id_ctrl\fP.psd. This is a 0's
+based value.
+.IP "avscc" 12
+Admin Vendor Specific Command Configuration, see \fIenum
+nvme_id_ctrl_avscc\fP.
+.IP "apsta" 12
+Autonomous Power State Transition Attributes, see \fIenum
+nvme_id_ctrl_apsta\fP.
+.IP "wctemp" 12
+Warning Composite Temperature Threshold indicates
+the minimum Composite Temperature field value (see \fIstruct
+nvme_smart_log\fP.critical_comp_time) that indicates an overheating
+condition during which controller operation continues.
+.IP "cctemp" 12
+Critical Composite Temperature Threshold, field indicates the
+minimum Composite Temperature field value (see \fIstruct
+nvme_smart_log\fP.critical_comp_time) that indicates a critical
+overheating condition.
+.IP "mtfa" 12
+Maximum Time for Firmware Activation indicates the maximum time
+the controller temporarily stops processing commands to activate
+the firmware image, specified in 100 millisecond units. This
+field is always valid if the controller supports firmware
+activation without a reset.
+.IP "hmpre" 12
+Host Memory Buffer Preferred Size indicates the preferred size
+that the host is requested to allocate for the Host Memory
+Buffer feature in 4 KiB units.
+.IP "hmmin" 12
+Host Memory Buffer Minimum Size indicates the minimum size that
+the host is requested to allocate for the Host Memory Buffer
+feature in 4 KiB units.
+.IP "tnvmcap" 12
+Total NVM Capacity, the total NVM capacity in the NVM subsystem.
+The value is in bytes.
+.IP "unvmcap" 12
+Unallocated NVM Capacity, the unallocated NVM capacity in the
+NVM subsystem. The value is in bytes.
+\fIrpmbs\fP      Replay Protected Memory Block Support, see \fIenum
+nvme_id_ctrl_rpmbs\fP.
+\fIedstt\fP      Extended Device Self-test Time, if Device Self-test command is
+supported (see \fIstruct nvme_id_ctrl\fP.oacs, NVME_CTRL_OACS_SELF_TEST),
+then this field indicates the nominal amount of time in one
+minute units that the controller takes to complete an extended
+device self-test operation when in power state 0.
+.IP "dsto" 12
+Device Self-test Options, see \fIenum nvme_id_ctrl_dsto\fP.
+.IP "fwug" 12
+Firmware Update Granularity indicates the granularity and
+alignment requirement of the firmware image being updated by the
+Firmware Image Download command. The value is reported in 4 KiB
+units. A value of 0h indicates no information on granularity is
+provided. A value of FFh indicates no restriction
+.IP "kas" 12
+Keep Alive Support indicates the granularity of the Keep Alive
+Timer in 100 millisecond units.
+.IP "hctma" 12
+Host Controlled Thermal Management Attributes, see \fIenum nvme_id_ctrl_hctm\fP.
+.IP "mntmt" 12
+Minimum Thermal Management Temperature indicates the minimum
+temperature, in degrees Kelvin, that the host may request in the
+Thermal Management Temperature 1 field and Thermal Management
+Temperature 2 field of a Set Features command with the Feature
+Identifier field set to #NVME_FEAT_FID_HCTM.
+.IP "mxtmt" 12
+Maximum Thermal Management Temperature indicates the maximum
+temperature, in degrees Kelvin, that the host may request in the
+Thermal Management Temperature 1 field and Thermal Management
+Temperature 2 field of the Set Features command with the Feature
+Identifier set to #NVME_FEAT_FID_HCTM.
+.IP "sanicap" 12
+Sanitize Capabilities, see \fIenum nvme_id_ctrl_sanicap\fP
+.IP "hmminds" 12
+Host Memory Buffer Minimum Descriptor Entry Size indicates the
+minimum usable size of a Host Memory Buffer Descriptor Entry in
+4 KiB units.
+.IP "hmmaxd" 12
+Host Memory Maximum Descriptors Entries indicates the number of
+usable Host Memory Buffer Descriptor Entries.
+.IP "nsetidmax" 12
+NVM Set Identifier Maximum, defines the maximum value of a valid
+NVM Set Identifier for any controller in the NVM subsystem.
+.IP "endgidmax" 12
+Endurance Group Identifier Maximum, defines the maximum value of
+a valid Endurance Group Identifier for any controller in the NVM
+subsystem.
+.IP "anatt" 12
+ANA Transition Time indicates the maximum amount of time, in
+seconds, for a transition between ANA states or the maximum
+amount of time, in seconds, that the controller reports the ANA
+change state.
+.IP "anacap" 12
+Asymmetric Namespace Access Capabilities, see \fIenum
+nvme_id_ctrl_anacap\fP.
+.IP "anagrpmax" 12
+ANA Group Identifier Maximum indicates the maximum value of a
+valid ANA Group Identifier for any controller in the NVM
+subsystem.
+.IP "nanagrpid" 12
+Number of ANA Group Identifiers indicates the number of ANA
+groups supported by this controller.
+.IP "pels" 12
+Persistent Event Log Size indicates the maximum reportable size
+for the Persistent Event Log.
+.IP "sqes" 12
+Submission Queue Entry Size, see \fIenum nvme_id_ctrl_sqes\fP.
+.IP "cqes" 12
+Completion Queue Entry Size, see \fIenum nvme_id_ctrl_cqes\fP.
+.IP "maxcmd" 12
+Maximum Outstanding Commands indicates the maximum number of
+commands that the controller processes at one time for a
+particular queue.
+.IP "nn" 12
+Number of Namespaces indicates the maximum value of a valid
+nsid for the NVM subsystem. If the MNAN (\fIstruct nvme_id_ctrl\fP.mnan
+field is cleared to 0h, then this field also indicates the
+maximum number of namespaces supported by the NVM.  subsystem.
+.IP "oncs" 12
+Optional NVM Command Support, see \fIenum nvme_id_ctrl_oncs\fP.
+.IP "fuses" 12
+Fused Operation Support, see \fIenum nvme_id_ctrl_fuses\fP.
+.IP "fna" 12
+Format NVM Attributes, see \fIenum nvme_id_ctrl_fna\fP.
+.IP "vwc" 12
+Volatile Write Cache, see \fIenum nvme_id_ctrl_vwc\fP.
+.IP "awun" 12
+Atomic Write Unit Normal indicates the size of the write
+operation guaranteed to be written atomically to the NVM across
+all namespaces with any supported namespace format during normal
+operation. This field is specified in logical blocks and is a
+0's based value.
+.IP "awupf" 12
+Atomic Write Unit Power Fail indicates the size of the write
+operation guaranteed to be written atomically to the NVM across
+all namespaces with any supported namespace format during a
+power fail or error condition. This field is specified in
+logical blocks and is a 0’s based value.
+.IP "nvscc" 12
+NVM Vendor Specific Command Configuration, see \fIenum
+nvme_id_ctrl_nvscc\fP.
+.IP "nwpc" 12
+Namespace Write Protection Capabilities, see \fIenum
+nvme_id_ctrl_nwpc\fP.
+.IP "acwu" 12
+Atomic Compare & Write Unit indicates the size of the write
+operation guaranteed to be written atomically to the NVM across
+all namespaces with any supported namespace format for a Compare
+and Write fused operation. This field is specified in logical
+blocks and is a 0’s based value.
+.IP "sgls" 12
+SGL Support, see \fIenum nvme_id_ctrl_sgls\fP
+.IP "mnan" 12
+Maximum Number of Allowed Namespaces indicates the maximum
+number of namespaces supported by the NVM subsystem.
+.IP "subnqn" 12
+NVM Subsystem NVMe Qualified Name, UTF-8 null terminated string
+.IP "ioccsz" 12
+I/O Queue Command Capsule Supported Size, defines the maximum
+I/O command capsule size in 16 byte units.
+.IP "iorcsz" 12
+I/O Queue Response Capsule Supported Size, defines the maximum
+I/O response capsule size in 16 byte units.
+.IP "icdoff" 12
+In Capsule Data Offset, defines the offset where data starts
+within a capsule. This value is applicable to I/O Queues only.
+.IP "fcatt" 12
+Fabrics Controller Attributes, see \fIenum nvme_id_ctrl_fcatt\fP.
+.IP "msdbd" 12
+Maximum SGL Data Block Descriptors indicates the maximum
+number of SGL Data Block or Keyed SGL Data Block descriptors
+that a host is allowed to place in a capsule. A value of 0h
+indicates no limit.
+.IP "ofcs" 12
+Optional Fabric Commands Support, see \fIenum nvme_id_ctrl_ofcs\fP.
+.IP "psd" 12
+Power State Descriptors, see \fIstruct nvme_id_psd\fP.
+.IP "vs" 12
+Vendor Specific

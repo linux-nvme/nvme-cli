@@ -1,0 +1,39 @@
+.TH "nvme_get_log" 2 "nvme_get_log" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_log \- NVMe Admin Get Log command
+.SH SYNOPSIS
+.B "int" nvme_get_log
+.BI "(int " fd ","
+.BI "enum nvme_cmd_get_log_lid " lid ","
+.BI "__u32 " nsid ","
+.BI "__u64 " lpo ","
+.BI "__u8 " lsp ","
+.BI "__u16 " lsi ","
+.BI "bool " rae ","
+.BI "__u8 " uuidx ","
+.BI "__u32 " len ","
+.BI "void *" log ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "lid" 12
+Log page identifier, see \fIenum nvme_cmd_get_log_lid\fP for known values
+.IP "nsid" 12
+Namespace identifier, if applicable
+.IP "lpo" 12
+Log page offset for partial log transfers
+.IP "lsp" 12
+Log specific field
+.IP "lsi" 12
+Endurance group information
+.IP "rae" 12
+Retain asynchronous events
+.IP "uuidx" 12
+UUID selection, if supported
+.IP "len" 12
+Length of provided user buffer to hold the log data in bytes
+.IP "log" 12
+User space destination address to transfer the data
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

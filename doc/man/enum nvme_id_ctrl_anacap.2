@@ -1,0 +1,59 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_anacap" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_anacap \- This field indicates the capabilities associated with Asymmetric Namespace Access Reporting.
+.SH SYNOPSIS
+enum nvme_id_ctrl_anacap {
+.br
+.BI "    NVME_CTRL_ANACAP_OPT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_NON_OPT"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_INACCESSIBLE"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_PERSISTENT_LOSS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_CHANGE"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_GRPID_NO_CHG"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ANACAP_GRPID_MGMT"
+
+};
+.SH Constants
+.IP "NVME_CTRL_ANACAP_OPT" 12
+If set, then the controller is able to
+report ANA Optimized state.
+.IP "NVME_CTRL_ANACAP_NON_OPT" 12
+If set, then the controller is able to
+report ANA Non-Optimized state.
+.IP "NVME_CTRL_ANACAP_INACCESSIBLE" 12
+If set, then the controller is able to
+report ANA Inaccessible state.
+.IP "NVME_CTRL_ANACAP_PERSISTENT_LOSS" 12
+If set, then the controller is able to
+report ANA Persistent Loss state.
+.IP "NVME_CTRL_ANACAP_CHANGE" 12
+If set, then the controller is able to
+report ANA Change state.
+.IP "NVME_CTRL_ANACAP_GRPID_NO_CHG" 12
+If set, then the ANAGRPID field in the
+Identify Namespace data structure
+(\fIstruct nvme_id_ns\fP.anagrpid), does not
+change while the namespace is attached to
+any controller.
+.IP "NVME_CTRL_ANACAP_GRPID_MGMT" 12
+If set, then the controller supports a
+non-zero value in the ANAGRPID field of
+the Namespace Management command.

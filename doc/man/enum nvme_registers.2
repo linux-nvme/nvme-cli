@@ -1,0 +1,150 @@
+.TH "libnvme" 2 "enum nvme_registers" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_registers \- The nvme controller registers for all transports. This is the layout of BAR0/1 for PCIe, and properties for fabrics.
+.SH SYNOPSIS
+enum nvme_registers {
+.br
+.BI "    NVME_REG_CAP"
+, 
+.br
+.br
+.BI "    NVME_REG_VS"
+, 
+.br
+.br
+.BI "    NVME_REG_INTMS"
+, 
+.br
+.br
+.BI "    NVME_REG_INTMC"
+, 
+.br
+.br
+.BI "    NVME_REG_CC"
+, 
+.br
+.br
+.BI "    NVME_REG_CSTS"
+, 
+.br
+.br
+.BI "    NVME_REG_NSSR"
+, 
+.br
+.br
+.BI "    NVME_REG_AQA"
+, 
+.br
+.br
+.BI "    NVME_REG_ASQ"
+, 
+.br
+.br
+.BI "    NVME_REG_ACQ"
+, 
+.br
+.br
+.BI "    NVME_REG_CMBLOC"
+, 
+.br
+.br
+.BI "    NVME_REG_CMBSZ"
+, 
+.br
+.br
+.BI "    NVME_REG_BPINFO"
+, 
+.br
+.br
+.BI "    NVME_REG_BPRSEL"
+, 
+.br
+.br
+.BI "    NVME_REG_BPMBL"
+, 
+.br
+.br
+.BI "    NVME_REG_CMBMSC"
+, 
+.br
+.br
+.BI "    NVME_REG_CMBSTS"
+, 
+.br
+.br
+.BI "    NVME_REG_PMRCAP"
+, 
+.br
+.br
+.BI "    NVME_REG_PMRCTL"
+, 
+.br
+.br
+.BI "    NVME_REG_PMRSTS"
+, 
+.br
+.br
+.BI "    NVME_REG_PMREBS"
+, 
+.br
+.br
+.BI "    NVME_REG_PMRSWTP"
+, 
+.br
+.br
+.BI "    NVME_REG_PMRMSC"
+, 
+.br
+.br
+.BI "    NVME_REG_DBS"
+
+};
+.SH Constants
+.IP "NVME_REG_CAP" 12
+Controller Capabilities
+.IP "NVME_REG_VS" 12
+Version
+.IP "NVME_REG_INTMS" 12
+Interrupt Mask Set
+.IP "NVME_REG_INTMC" 12
+Interrupt Mask Clear
+.IP "NVME_REG_CC" 12
+Controller Configuration
+.IP "NVME_REG_CSTS" 12
+Controller Status
+.IP "NVME_REG_NSSR" 12
+NVM Subsystem Reset
+.IP "NVME_REG_AQA" 12
+Admin Queue Attributes
+.IP "NVME_REG_ASQ" 12
+Admin SQ Base Address
+.IP "NVME_REG_ACQ" 12
+Admin CQ Base Address
+.IP "NVME_REG_CMBLOC" 12
+Controller Memory Buffer Location
+.IP "NVME_REG_CMBSZ" 12
+Controller Memory Buffer Size
+.IP "NVME_REG_BPINFO" 12
+Boot Partition Information
+.IP "NVME_REG_BPRSEL" 12
+Boot Partition Read Select
+.IP "NVME_REG_BPMBL" 12
+Boot Partition Memory Buffer Location
+.IP "NVME_REG_CMBMSC" 12
+Controller Memory Buffer Memory Space Control
+.IP "NVME_REG_CMBSTS" 12
+Controller Memory Buffer Status
+.IP "NVME_REG_PMRCAP" 12
+Persistent Memory Capabilities
+.IP "NVME_REG_PMRCTL" 12
+Persistent Memory Region Control
+.IP "NVME_REG_PMRSTS" 12
+Persistent Memory Region Status
+.IP "NVME_REG_PMREBS" 12
+Persistent Memory Region Elasticity Buffer Size
+.IP "NVME_REG_PMRSWTP" 12
+Memory Region Sustained Write Throughput
+.IP "NVME_REG_PMRMSC" 12
+Persistent Memory Region Controller Memory Space Control
+.IP "NVME_REG_DBS" 12
+SQ 0 Tail Doorbell

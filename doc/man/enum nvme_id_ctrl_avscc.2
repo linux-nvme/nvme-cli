@@ -1,0 +1,14 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_avscc" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_avscc \- Flags indicating the configuration settings for Admin Vendor Specific command handling.
+.SH SYNOPSIS
+enum nvme_id_ctrl_avscc {
+.br
+.BI "    NVME_CTRL_AVSCC_AVS"
+
+};
+.SH Constants
+.IP "NVME_CTRL_AVSCC_AVS" 12
+If set, all Admin Vendor Specific Commands use the
+optional vendor specific command format with NDT and
+NDM fields.

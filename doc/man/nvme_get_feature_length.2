@@ -1,0 +1,16 @@
+.TH "nvme_get_feature_length" 2 "nvme_get_feature_length" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_feature_length \- Retreive the command payload length for a specific feature identifier
+.SH SYNOPSIS
+.B "int" nvme_get_feature_length
+.BI "(int " fid ","
+.BI "__u32 " cdw11 ","
+.BI "__u32 *" len ");"
+.SH ARGUMENTS
+.IP "fid" 12
+-- undescribed --
+.IP "cdw11" 12
+-- undescribed --
+.IP "len" 12
+.SH "RETURN"
+0 on success, -1 with errno set otherwise

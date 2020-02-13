@@ -1,0 +1,23 @@
+.TH "libnvme" 2 "struct nvme_plm_config" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_plm_config \-  @ee; @dtwinrt; @dtwinwt; @dtwintt;
+.SH SYNOPSIS
+struct nvme_plm_config {
+.br
+.BI "    __le16 ee;"
+.br
+.BI "    __u8 rsvd2[30];"
+.br
+.BI "    __le64 dtwinrt;"
+.br
+.BI "    __le64 dtwinwt;"
+.br
+.BI "    __le64 dtwintt;"
+.br
+.BI "    __u8 rsvd56[456];"
+.br
+.BI "
+};
+.br
+
+.SH Members

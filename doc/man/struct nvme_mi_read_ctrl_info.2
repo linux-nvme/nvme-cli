@@ -1,0 +1,29 @@
+.TH "libnvme" 2 "struct nvme_mi_read_ctrl_info" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_mi_read_ctrl_info \-  @portid; @prii; @pri; @vid; @did; @ssvid; @ssid;
+.SH SYNOPSIS
+struct nvme_mi_read_ctrl_info {
+.br
+.BI "    __u8 portid;"
+.br
+.BI "    __u8 rsvd1[4];"
+.br
+.BI "    __u8 prii;"
+.br
+.BI "    __le16 pri;"
+.br
+.BI "    __le16 vid;"
+.br
+.BI "    __le16 did;"
+.br
+.BI "    __le16 ssvid;"
+.br
+.BI "    __le16 ssid;"
+.br
+.BI "    __u8 rsvd16[16];"
+.br
+.BI "
+};
+.br
+
+.SH Members

@@ -1,0 +1,24 @@
+.TH "nvme_set_features_plm_window" 2 "nvme_set_features_plm_window" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_set_features_plm_window \- 
+.SH SYNOPSIS
+.B "int" nvme_set_features_plm_window
+.BI "(int " fd ","
+.BI "enum nvme_feat_plm_window_select " sel ","
+.BI "__u16 " nvmsetid ","
+.BI "bool " save ","
+.BI "__u32 *" result ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "sel" 12
+-- undescribed --
+.IP "nvmsetid" 12
+-- undescribed --
+.IP "save" 12
+Save value across power states
+.IP "result" 12
+The command completion result from CQE dword0
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

@@ -1,0 +1,18 @@
+.TH "nvme_get_directive_receive_length" 2 "nvme_get_directive_receive_length" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_directive_receive_length \- 
+.SH SYNOPSIS
+.B "int" nvme_get_directive_receive_length
+.BI "(enum nvme_directive_dtype " dtype ","
+.BI "enum nvme_directive_receive_doper " doper ","
+.BI "__u32 *" len ");"
+.SH ARGUMENTS
+.IP "dtype" 12
+Directive type, see \fIenum nvme_directive_dtype\fP
+.IP "doper" 12
+Directive receive operation, see \fIenum nvme_directive_receive_doper\fP
+.IP "len" 12
+Address to save the payload length of the directive in bytes on
+a successful decode
+.SH "RETURN"
+0 on success, -1 with errno set to EINVAL.

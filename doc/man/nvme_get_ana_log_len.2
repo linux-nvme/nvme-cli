@@ -1,0 +1,14 @@
+.TH "nvme_get_ana_log_len" 2 "nvme_get_ana_log_len" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_ana_log_len \- Retreive size of the current ANA log
+.SH SYNOPSIS
+.B "int" nvme_get_ana_log_len
+.BI "(int " fd ","
+.BI "size_t *" analen ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "analen" 12
+Pointer to where the length will be set on success
+.SH "RETURN"
+0 on success, -1 otherwise with errno set

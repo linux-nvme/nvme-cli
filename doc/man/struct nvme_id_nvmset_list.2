@@ -1,0 +1,19 @@
+.TH "libnvme" 2 "struct nvme_id_nvmset_list" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_id_nvmset_list \-  @nid;
+.SH SYNOPSIS
+struct nvme_id_nvmset_list {
+.br
+.BI "    __u8 nid;"
+.br
+.BI "    __u8 rsvd1[127];"
+.br
+.BI "    struct nvme_nvmset_attr ent[NVME_ID_NVMSET_LIST_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ent" 12
+;

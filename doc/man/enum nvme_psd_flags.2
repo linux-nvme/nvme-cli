@@ -1,0 +1,26 @@
+.TH "libnvme" 2 "enum nvme_psd_flags" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_psd_flags \- Possible flag values in nvme power state descriptor
+.SH SYNOPSIS
+enum nvme_psd_flags {
+.br
+.BI "    NVME_PSD_FLAGS_MXPS"
+, 
+.br
+.br
+.BI "    NVME_PSD_FLAGS_NOPS"
+
+};
+.SH Constants
+.IP "NVME_PSD_FLAGS_MXPS" 12
+Indicates the scale for the Maximum Power
+field. If this bit is cleared, then the scale of the
+Maximum Power field is in 0.01 Watts. If this bit is
+set, then the scale of the Maximum Power field is in
+0.0001 Watts.
+.IP "NVME_PSD_FLAGS_NOPS" 12
+Indicates whether the controller processes I/O
+commands in this power state. If this bit is cleared,
+then the controller processes I/O commands in this
+power state. If this bit is set, then the controller
+does not process I/O commands in this power state.

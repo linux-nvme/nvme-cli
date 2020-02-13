@@ -1,0 +1,18 @@
+.TH "nvme_get_features_lba_sts_interval" 2 "nvme_get_features_lba_sts_interval" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_features_lba_sts_interval \- 
+.SH SYNOPSIS
+.B "int" nvme_get_features_lba_sts_interval
+.BI "(int " fd ","
+.BI "enum nvme_get_features_sel " sel ","
+.BI "__u32 *" result ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "sel" 12
+Select which type of attribute to return, see \fIenum nvme_get_features_sel\fP
+.IP "result" 12
+The command completion result from CQE dword0
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

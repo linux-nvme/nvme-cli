@@ -1,0 +1,22 @@
+.TH "nvme_identify_ns_granularity" 2 "nvme_identify_ns_granularity" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_identify_ns_granularity \- Retrieves namespace granularity identification
+.SH SYNOPSIS
+.B "int" nvme_identify_ns_granularity
+.BI "(int " fd ","
+.BI "struct nvme_id_ns_granularity_list *" list ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "list" 12
+-- undescribed --
+.SH "DESCRIPTION"
+If the controller supports reporting of Namespace Granularity, then a
+Namespace Granularity List is returned to the host for up to sixteen
+namespace granularity descriptors
+
+See \fIstruct nvme_id_ns_granularity_list\fP for the definition of the returned
+structure.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

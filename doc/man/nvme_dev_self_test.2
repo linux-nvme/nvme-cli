@@ -1,0 +1,29 @@
+.TH "nvme_dev_self_test" 2 "nvme_dev_self_test" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_dev_self_test \- Start or abort a self test
+.SH SYNOPSIS
+.B "int" nvme_dev_self_test
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "enum nvme_dst_stc " stc ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID to test
+.IP "stc" 12
+Self test code, see \fIenum nvme_dst_stc\fP
+.SH "DESCRIPTION"
+The Device Self-test command is used to start a device self-test operation
+or abort a device self-test operation. A device self-test operation is a
+diagnostic testing sequence that tests the integrity and functionality of
+the controller and may include testing of the media associated with
+namespaces. The controller may return a response to this command immediately
+while running the self-test in the background.
+
+Set the 'nsid' field to 0 to not include namepsaces in the test. Set to
+0xffffffff to test all namespaces. All other values tests a specific
+namespace, if present.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

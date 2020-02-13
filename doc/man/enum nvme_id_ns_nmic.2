@@ -1,0 +1,13 @@
+.TH "libnvme" 2 "enum nvme_id_ns_nmic" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ns_nmic \- This field specifies multi-path I/O and namespace sharing capabilities of the namespace.
+.SH SYNOPSIS
+enum nvme_id_ns_nmic {
+.br
+.BI "    NVME_NS_NMIC_SHARED"
+
+};
+.SH Constants
+.IP "NVME_NS_NMIC_SHARED" 12
+If set, then the namespace may be attached to two or
+more controllers in the NVM subsystem concurrently

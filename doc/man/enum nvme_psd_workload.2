@@ -1,0 +1,29 @@
+.TH "libnvme" 2 "enum nvme_psd_workload" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_psd_workload \- Specifies a workload hint in the Power Management Feature (see &struct nvme_psd.apw) to inform the NVM subsystem or indicate the conditions for the active power level.
+.SH SYNOPSIS
+enum nvme_psd_workload {
+.br
+.BI "    NVME_PSD_WORKLOAD_1"
+, 
+.br
+.br
+.BI "    NVME_PSD_WORKLOAD_2"
+
+};
+.SH Constants
+.IP "NVME_PSD_WORKLOAD_1" 12
+Extended Idle Period with a Burst of Random Write
+consists of five minutes of idle followed by
+thirty-two random write commands of size 1 MiB
+submitted to a single controller while all other
+controllers in the NVM subsystem are idle, and then
+thirty (30) seconds of idle.
+.IP "NVME_PSD_WORKLOAD_2" 12
+Heavy Sequential Writes consists of 80,000
+sequential write commands of size 128 KiB submitted to
+a single controller while all other controllers in the
+NVM subsystem are idle.  The submission queue(s)
+should be sufficiently large allowing the host to
+ensure there are multiple commands pending at all
+times during the workload.

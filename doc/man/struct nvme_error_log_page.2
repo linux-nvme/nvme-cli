@@ -1,0 +1,37 @@
+.TH "libnvme" 2 "struct nvme_error_log_page" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_error_log_page \- 
+.SH SYNOPSIS
+struct nvme_error_log_page {
+.br
+.BI "    __le64 error_count;"
+.br
+.BI "    __le16 sqid;"
+.br
+.BI "    __le16 cmdid;"
+.br
+.BI "    __le16 status_field;"
+.br
+.BI "    __le16 parm_error_location;"
+.br
+.BI "    __le64 lba;"
+.br
+.BI "    __le32 nsid;"
+.br
+.BI "    __u8 vs;"
+.br
+.BI "    __u8 trtype;"
+.br
+.BI "    __u8 resv[2];"
+.br
+.BI "    __le64 cs;"
+.br
+.BI "    __le16 trtype_spec_info;"
+.br
+.BI "    __u8 resv2[22];"
+.br
+.BI "
+};
+.br
+
+.SH Members

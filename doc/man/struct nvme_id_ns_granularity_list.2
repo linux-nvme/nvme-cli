@@ -1,0 +1,21 @@
+.TH "libnvme" 2 "struct nvme_id_ns_granularity_list" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_id_ns_granularity_list \- 
+.SH SYNOPSIS
+struct nvme_id_ns_granularity_list {
+.br
+.BI "    __le32 attributes;"
+.br
+.BI "    __u8 num_descriptors;"
+.br
+.BI "    __u8 rsvd[27];"
+.br
+.BI "    struct nvme_id_ns_granularity_desc entry[NVME_ID_ND_DESCRIPTOR_MAX];"
+.br
+.BI "    __u8 rsvd288[3808];"
+.br
+.BI "
+};
+.br
+
+.SH Members

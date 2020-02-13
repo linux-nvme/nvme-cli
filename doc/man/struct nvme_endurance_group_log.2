@@ -1,0 +1,41 @@
+.TH "libnvme" 2 "struct nvme_endurance_group_log" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_endurance_group_log \- 
+.SH SYNOPSIS
+struct nvme_endurance_group_log {
+.br
+.BI "    __u8 critical_warning;"
+.br
+.BI "    __u8 rsvd1[2];"
+.br
+.BI "    __u8 avl_spare;"
+.br
+.BI "    __u8 avl_spare_threshold;"
+.br
+.BI "    __u8 percent_used;"
+.br
+.BI "    __u8 rsvd6[26];"
+.br
+.BI "    __u8 endurance_estimate[16];"
+.br
+.BI "    __u8 data_units_read[16];"
+.br
+.BI "    __u8 data_units_written[16];"
+.br
+.BI "    __u8 media_units_written[16];"
+.br
+.BI "    __u8 host_read_cmds[16];"
+.br
+.BI "    __u8 host_write_cmds[16];"
+.br
+.BI "    __u8 media_data_integrity_err[16];"
+.br
+.BI "    __u8 num_err_info_log_entries[16];"
+.br
+.BI "    __u8 rsvd160[352];"
+.br
+.BI "
+};
+.br
+
+.SH Members

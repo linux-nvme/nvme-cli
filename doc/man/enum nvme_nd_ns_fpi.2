@@ -1,0 +1,19 @@
+.TH "libnvme" 2 "enum nvme_nd_ns_fpi" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_nd_ns_fpi \- If a format operation is in progress, this field indicates the percentage of the namespace that remains to be formatted.
+.SH SYNOPSIS
+enum nvme_nd_ns_fpi {
+.br
+.BI "    NVME_NS_FPI_REMAINING"
+, 
+.br
+.br
+.BI "    NVME_NS_FPI_SUPPORTED"
+
+};
+.SH Constants
+.IP "NVME_NS_FPI_REMAINING" 12
+Mask to get the format percent remaining value
+.IP "NVME_NS_FPI_SUPPORTED" 12
+If set, indicates that the namespace supports the
+Format Progress Indicator defined for the field.

@@ -1,0 +1,21 @@
+.TH "libnvme" 2 "enum nvme_id_ns_mc" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ns_mc \- This field indicates the capabilities for metadata.
+.SH SYNOPSIS
+enum nvme_id_ns_mc {
+.br
+.BI "    NVME_NS_MC_EXTENDED"
+, 
+.br
+.br
+.BI "    NVME_NS_MC_SEPARATE"
+
+};
+.SH Constants
+.IP "NVME_NS_MC_EXTENDED" 12
+If set, indicates the namespace supports the metadata
+being transferred as part of a separate buffer that is
+specified in the Metadata Pointer.
+.IP "NVME_NS_MC_SEPARATE" 12
+If set, indicates that the namespace supports the
+metadata being transferred as part of an extended data LBA.

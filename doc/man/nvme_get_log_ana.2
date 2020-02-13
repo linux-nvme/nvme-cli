@@ -1,0 +1,33 @@
+.TH "nvme_get_log_ana" 2 "nvme_get_log_ana" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_log_ana \- 
+.SH SYNOPSIS
+.B "int" nvme_get_log_ana
+.BI "(int " fd ","
+.BI "enum nvme_log_ana_lsp " lsp ","
+.BI "bool " rae ","
+.BI "__u64 " offset ","
+.BI "__u32 " len ","
+.BI "void *" log ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "lsp" 12
+Log specific, see \fIenum nvme_get_log_ana_lsp\fP
+.IP "rae" 12
+Retain asynchronous events
+.IP "offset" 12
+-- undescribed --
+.IP "len" 12
+The allocated length of the log page
+.IP "log" 12
+User address to store the ana log
+.SH "DESCRIPTION"
+This log consists of a header describing the log and descriptors containing
+the asymmetric namespace access information for ANA Groups that contain
+namespaces that are attached to the controller processing the command.
+
+See \fIstruct nvme_ana_rsp_hdr\fP for the defintion of the returned structure.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

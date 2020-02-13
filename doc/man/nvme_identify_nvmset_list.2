@@ -1,0 +1,25 @@
+.TH "nvme_identify_nvmset_list" 2 "nvme_identify_nvmset_list" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_identify_nvmset_list \- Retrieves NVM Set List
+.SH SYNOPSIS
+.B "int" nvme_identify_nvmset_list
+.BI "(int " fd ","
+.BI "__u16 " nvmsetid ","
+.BI "struct nvme_id_nvmset_list *" nvmset ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nvmsetid" 12
+-- undescribed --
+.IP "nvmset" 12
+User space destination address to transfer the data
+.SH "DESCRIPTION"
+Retrieves an NVM Set List, struct nvme_id_nvmset. The data structure is an
+ordered list by NVM Set Identifier, starting with the first NVM Set
+Identifier supported by the NVM subsystem that is equal to or greater than
+the NVM Set Identifier.
+
+See \fIstruct nvme_id_nvmset_list\fP for the defintion of the returned structure.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

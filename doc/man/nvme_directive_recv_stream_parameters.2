@@ -1,0 +1,18 @@
+.TH "nvme_directive_recv_stream_parameters" 2 "nvme_directive_recv_stream_parameters" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_directive_recv_stream_parameters \- 
+.SH SYNOPSIS
+.B "int" nvme_directive_recv_stream_parameters
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "struct nvme_streams_directive_params *" parms ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID
+.IP "parms" 12
+-- undescribed --
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

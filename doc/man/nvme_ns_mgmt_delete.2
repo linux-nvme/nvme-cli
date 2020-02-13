@@ -1,0 +1,19 @@
+.TH "nvme_ns_mgmt_delete" 2 "nvme_ns_mgmt_delete" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_ns_mgmt_delete \- 
+.SH SYNOPSIS
+.B "int" nvme_ns_mgmt_delete
+.BI "(int " fd ","
+.BI "__u32 " nsid ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace identifier to delete
+.SH "DESCRIPTION"
+It is recommended that a namespace being deleted is not attached to any
+controller. Use the \fBnvme_ns_detach_ctrls\fP first if the namespace is still
+attached.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

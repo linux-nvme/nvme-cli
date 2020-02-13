@@ -1,0 +1,51 @@
+.TH "libnvme" 2 "enum nvme_id_nsfeat" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_nsfeat \- This field defines features of the namespace.
+.SH SYNOPSIS
+enum nvme_id_nsfeat {
+.br
+.BI "    NVME_NS_FEAT_THIN"
+, 
+.br
+.br
+.BI "    NVME_NS_FEAT_NATOMIC"
+, 
+.br
+.br
+.BI "    NVME_NS_FEAT_DULBE"
+, 
+.br
+.br
+.BI "    NVME_NS_FEAT_ID_REUSE"
+, 
+.br
+.br
+.BI "    NVME_NS_FEAT_IO_OPT"
+
+};
+.SH Constants
+.IP "NVME_NS_FEAT_THIN" 12
+If set, indicates that the namespace supports thin
+provisioning. Specifically, the Namespace Capacity
+reported may be less than the Namespace Size.
+.IP "NVME_NS_FEAT_NATOMIC" 12
+If set, indicates that the fields NAWUN, NAWUPF, and
+NACWU are defined for this namespace and should be
+used by the host for this namespace instead of the
+AWUN, AWUPF, and ACWU fields in the Identify
+Controller data structure.
+.IP "NVME_NS_FEAT_DULBE" 12
+If set, indicates that the controller supports the
+Deallocated or Unwritten Logical Block error for
+this namespace.  \fINVME_NS_FEAT_ID_REUSE\fP: If set,
+indicates that the value in the NGUID field for this
+namespace, if non- zero, is never reused by the
+controller and that the value in the EUI64 field for
+this namespace, if non-zero, is never reused by the
+controller.
+.IP "NVME_NS_FEAT_ID_REUSE" 12
+-- undescribed --
+.IP "NVME_NS_FEAT_IO_OPT" 12
+If set, indicates that the fields NPWG, NPWA, NPDG,
+NPDA, and NOWS are defined for this namespace and
+should be used by the host for I/O optimization

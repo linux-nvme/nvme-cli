@@ -1,0 +1,13 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_dsto" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_dsto \- Flags indicating the optional Device Self-test command or operation behaviors supported by the controller or NVM subsystem.
+.SH SYNOPSIS
+enum nvme_id_ctrl_dsto {
+.br
+.BI "    NVME_CTRL_DSTO_ONE_DST"
+
+};
+.SH Constants
+.IP "NVME_CTRL_DSTO_ONE_DST" 12
+If set,  then the NVM subsystem supports only one
+device self-test operation in progress at a time.

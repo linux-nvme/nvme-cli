@@ -1,0 +1,34 @@
+.TH "nvme_get_lba_status" 2 "nvme_get_lba_status" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_lba_status \- Retrieve information on possibly unrecoverable LBAs
+.SH SYNOPSIS
+.B "int" nvme_get_lba_status
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "__u64 " slba ","
+.BI "__u32 " mndw ","
+.BI "__u16 " rl ","
+.BI "enum nvme_lba_status_atype " atype ","
+.BI "struct nvme_lba_status *" lbas ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID to retrieve LBA status
+.IP "slba" 12
+Starting logical block address to check statuses
+.IP "mndw" 12
+Maximum number of dwords to return
+.IP "rl" 12
+Range length from slba to perform the action
+.IP "atype" 12
+Action type mechanism to determine LBA status desctriptors to
+return, see \fIenum nvme_lba_status_atype\fP
+.IP "lbas" 12
+Data payload to return status descriptors
+.SH "DESCRIPTION"
+The Get LBA Status command requests information about Potentially
+Unrecoverable LBAs. Refer to the specification for action type descriptions.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

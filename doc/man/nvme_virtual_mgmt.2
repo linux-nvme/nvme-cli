@@ -1,0 +1,35 @@
+.TH "nvme_virtual_mgmt" 2 "nvme_virtual_mgmt" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_virtual_mgmt \- Virtualization resource management
+.SH SYNOPSIS
+.B "int" nvme_virtual_mgmt
+.BI "(int " fd ","
+.BI "enum nvme_virt_mgmt_act " act ","
+.BI "enum nvme_virt_mgmt_rt " rt ","
+.BI "__u16 " cntlid ","
+.BI "__u16 " nr ","
+.BI "__u32 *" result ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "act" 12
+Virtual resource action, see \fIenum nvme_virt_mgmt_act\fP
+.IP "rt" 12
+Resource type to modify, see \fIenum nvme_virt_mgmt_rt\fP
+.IP "cntlid" 12
+Controller id for which resources are bing modified
+.IP "nr" 12
+Number of resources being allocated or assigned
+.IP "result" 12
+If successful, the CQE dword0
+.SH "DESCRIPTION"
+The Virtualization Management command is supported by primary controllers
+that support the Virtualization Enhancements capability. This command is
+used for several functions:
+
+- Modifying Flexible Resource allocation for the primary controller
+- Assigning Flexible Resources for secondary controllers
+- Setting the Online and Offline state for secondary controllers
+.SH "RETURN"
+The nvme command status if a response was received or -1
+with errno set otherwise.

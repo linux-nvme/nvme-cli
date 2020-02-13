@@ -1,0 +1,65 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_oncs" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_oncs \- This field indicates the optional NVM commands and features supported by the controller.
+.SH SYNOPSIS
+enum nvme_id_ctrl_oncs {
+.br
+.BI "    NVME_CTRL_ONCS_COMPARE"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_WRITE_UNCORRECTABLE"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_DSM"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_WRITE_ZEROES"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_SAVE_FEATURES"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_RESERVATIONS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_TIMESTAMP"
+, 
+.br
+.br
+.BI "    NVME_CTRL_ONCS_VERIFY"
+
+};
+.SH Constants
+.IP "NVME_CTRL_ONCS_COMPARE" 12
+If set, then the controller supports
+the Compare command.
+.IP "NVME_CTRL_ONCS_WRITE_UNCORRECTABLE" 12
+If set, then the controller supports
+the Write Uncorrectable command.
+.IP "NVME_CTRL_ONCS_DSM" 12
+If set, then the controller supports
+the Dataset Management command.
+.IP "NVME_CTRL_ONCS_WRITE_ZEROES" 12
+If set, then the controller supports
+the Write Zeroes command.
+.IP "NVME_CTRL_ONCS_SAVE_FEATURES" 12
+If set, then the controller supports
+the Save field set to a non-zero value
+in the Set Features command and the
+Select field set to a non-zero value in
+the Get Features command.
+.IP "NVME_CTRL_ONCS_RESERVATIONS" 12
+If set, then the controller supports
+reservations.
+.IP "NVME_CTRL_ONCS_TIMESTAMP" 12
+If set, then the controller supports
+the Timestamp feature.
+.IP "NVME_CTRL_ONCS_VERIFY" 12
+If set, then the controller supports
+the Verify command.

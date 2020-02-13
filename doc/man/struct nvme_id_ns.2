@@ -1,0 +1,203 @@
+.TH "libnvme" 2 "struct nvme_id_ns" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_id_ns \- Identify Namespace data structure
+.SH SYNOPSIS
+struct nvme_id_ns {
+.br
+.BI "    __le64 nsze;"
+.br
+.BI "    __le64 ncap;"
+.br
+.BI "    __le64 nuse;"
+.br
+.BI "    __u8 nsfeat;"
+.br
+.BI "    __u8 nlbaf;"
+.br
+.BI "    __u8 flbas;"
+.br
+.BI "    __u8 mc;"
+.br
+.BI "    __u8 dpc;"
+.br
+.BI "    __u8 dps;"
+.br
+.BI "    __u8 nmic;"
+.br
+.BI "    __u8 rescap;"
+.br
+.BI "    __u8 fpi;"
+.br
+.BI "    __u8 dlfeat;"
+.br
+.BI "    __le16 nawun;"
+.br
+.BI "    __le16 nawupf;"
+.br
+.BI "    __le16 nacwu;"
+.br
+.BI "    __le16 nabsn;"
+.br
+.BI "    __le16 nabo;"
+.br
+.BI "    __le16 nabspf;"
+.br
+.BI "    __le16 noiob;"
+.br
+.BI "    __u8 nvmcap[16];"
+.br
+.BI "    __le16 npwg;"
+.br
+.BI "    __le16 npwa;"
+.br
+.BI "    __le16 npdg;"
+.br
+.BI "    __le16 npda;"
+.br
+.BI "    __le16 nows;"
+.br
+.BI "    __u8 rsvd74[18];"
+.br
+.BI "    __le32 anagrpid;"
+.br
+.BI "    __u8 rsvd96[3];"
+.br
+.BI "    __u8 nsattr;"
+.br
+.BI "    __le16 nvmsetid;"
+.br
+.BI "    __le16 endgid;"
+.br
+.BI "    __u8 nguid[16];"
+.br
+.BI "    __u8 eui64[8];"
+.br
+.BI "    struct nvme_lbaf        lbaf[16];"
+.br
+.BI "    __u8 rsvd192[192];"
+.br
+.BI "    __u8 vs[3712];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nsze" 12
+Namespace Size indicates the total size of the namespace in
+logical blocks. The number of logical blocks is based on the
+formatted LBA size.
+.IP "ncap" 12
+Namespace Capacity indicates the maximum number of logical blocks
+that may be allocated in the namespace at any point in time. The
+number of logical blocks is based on the formatted LBA size.
+.IP "nuse" 12
+Namespace Utilization indicates the current number of logical
+blocks allocated in the namespace. This field is smaller than or
+equal to the Namespace Capacity. The number of logical blocks is
+based on the formatted LBA size.
+.IP "nsfeat" 12
+Namespace Features, see \fIenum nvme_id_nsfeat\fP.
+.IP "nlbaf" 12
+Number of LBA Formats defines the number of supported LBA data
+size and metadata size combinations supported by the namespace
+and the highest possible index to \fIstruct nvme_id_ns\fP.labf.
+.IP "flbas" 12
+Formatted LBA Size, see \fIenum nvme_id_ns_flbas\fP.
+.IP "mc" 12
+Metadata Capabilities, see \fIenum nvme_id_ns_mc\fP.
+.IP "dpc" 12
+End-to-end Data Protection Capabilities, see \fIenum
+nvme_id_ns_dpc\fP.
+.IP "dps" 12
+End-to-end Data Protection Type Settings, see \fIenum
+nvme_id_ns_dps\fP.
+.IP "nmic" 12
+Namespace Multi-path I/O and Namespace Sharing Capabilities, see
+\fIenum nvme_id_ns_nmic\fP.
+.IP "rescap" 12
+Reservation Capabilities, see \fIenum nvme_id_ns_rescap\fP.
+.IP "fpi" 12
+Format Progress Indicator, see \fIenum nvme_nd_ns_fpi\fP.
+.IP "dlfeat" 12
+Deallocate Logical Block Features, see \fIenum nvme_id_ns_dlfeat\fP.
+.IP "nawun" 12
+Namespace Atomic Write Unit Normal indicates the
+namespace specific size of the write operation guaranteed to be
+written atomically to the NVM during normal operation.
+.IP "nawupf" 12
+Namespace Atomic Write Unit Power Fail indicates the
+namespace specific size of the write operation guaranteed to be
+written atomically to the NVM during a power fail or error
+condition.
+.IP "nacwu" 12
+Namespace Atomic Compare & Write Unit indicates the namespace
+specific size of the write operation guaranteed to be written
+atomically to the NVM for a Compare and Write fused command.
+.IP "nabsn" 12
+Namespace Atomic Boundary Size Normal indicates the atomic
+boundary size for this namespace for the NAWUN value. This field
+is specified in logical blocks.
+.IP "nabo" 12
+Namespace Atomic Boundary Offset indicates the LBA on this
+namespace where the first atomic boundary starts.
+.IP "nabspf" 12
+Namespace Atomic Boundary Size Power Fail indicates the atomic
+boundary size for this namespace specific to the Namespace Atomic
+Write Unit Power Fail value. This field is specified in logical
+blocks.
+.IP "noiob" 12
+Namespace Optimal I/O Boundary indicates the optimal I/O boundary
+for this namespace. This field is specified in logical blocks.
+The host should construct Read and Write commands that do not
+cross the I/O boundary to achieve optimal performance.
+.IP "nvmcap" 12
+NVM Capacity indicates the total size of the NVM allocated to
+this namespace. The value is in bytes.
+.IP "npwg" 12
+Namespace Preferred Write Granularity indicates the smallest
+recommended write granularity in logical blocks for this
+namespace. This is a 0's based value.
+.IP "npwa" 12
+Namespace Preferred Write Alignment indicates the recommended
+write alignment in logical blocks for this namespace. This is a
+0's based value.
+.IP "npdg" 12
+Namespace Preferred Deallocate Granularity indicates the
+recommended granularity in logical blocks for the Dataset
+Management command with the Attribute - Deallocate bit.
+.IP "npda" 12
+Namespace Preferred Deallocate Alignment indicates the
+recommended alignment in logical blocks for the Dataset
+Management command with the Attribute - Deallocate bit
+.IP "nows" 12
+Namespace Optimal Write Size indicates the size in logical blocks
+for optimal write performance for this namespace. This is a 0's
+based value.
+.IP "anagrpid" 12
+ANA Group Identifier indicates the ANA Group Identifier of the
+ANA group of which the namespace is a member.
+.IP "nsattr" 12
+Namespace Attributes, see \fIenum nvme_id_ns_attr\fP.
+.IP "nvmsetid" 12
+NVM Set Identifier indicates the NVM Set with which this
+namespace is associated.
+.IP "endgid" 12
+Endurance Group Identifier indicates the Endurance Group with
+which this namespace is associated.
+.IP "nguid" 12
+Namespace Globally Unique Identifier contains a 128-bit value
+that is globally unique and assigned to the namespace when the
+namespace is created. This field remains fixed throughout the
+life of the namespace and is preserved across namespace and
+controller operations
+.IP "eui64" 12
+IEEE Extended Unique Identifier contains a 64-bit IEEE Extended
+Unique Identifier (EUI-64) that is globally unique and assigned
+to the namespace when the namespace is created. This field
+remains fixed throughout the life of the namespace and is
+preserved across namespace and controller operations
+.IP "lbaf" 12
+LBA Format, see \fIstruct nvme_lbaf\fP.
+.IP "vs" 12
+Vendor Specific

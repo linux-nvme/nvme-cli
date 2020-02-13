@@ -1,0 +1,13 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_nvscc" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_nvscc \- This field indicates the configuration settings for NVM Vendor Specific command handling.
+.SH SYNOPSIS
+enum nvme_id_ctrl_nvscc {
+.br
+.BI "    NVME_CTRL_NVSCC_FMT"
+
+};
+.SH Constants
+.IP "NVME_CTRL_NVSCC_FMT" 12
+If set, all NVM Vendor Specific Commands use the
+format format with NDT and NDM fields.

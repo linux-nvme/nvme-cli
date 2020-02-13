@@ -1,0 +1,27 @@
+.TH "nvme_write_uncorrectable" 2 "nvme_write_uncorrectable" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_write_uncorrectable \- Submit an nvme write uncorrectable command
+.SH SYNOPSIS
+.B "int" nvme_write_uncorrectable
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "__u64 " slba ","
+.BI "__u16 " nlb ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace identifier
+.IP "slba" 12
+Starting logical block
+.IP "nlb" 12
+Number of logical blocks to invalidate (0's based value)
+.SH "DESCRIPTION"
+The Write Uncorrectable command is used to mark a range of logical blocks as
+invalid. When the specified logical block(s) are read after this operation,
+a failure is returned with Unrecovered Read Error status. To clear the
+invalid logical block status, a write operation on those logical blocks is
+required.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

@@ -1,0 +1,21 @@
+.TH "libnvme" 2 "struct nvmf_discovery_log" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvmf_discovery_log \- 
+.SH SYNOPSIS
+struct nvmf_discovery_log {
+.br
+.BI "    __le64 genctr;"
+.br
+.BI "    __le64 numrec;"
+.br
+.BI "    __le16 recfmt;"
+.br
+.BI "    __u8 resv14[1006];"
+.br
+.BI "    struct nvmf_disc_log_entry entries[0];"
+.br
+.BI "
+};
+.br
+
+.SH Members

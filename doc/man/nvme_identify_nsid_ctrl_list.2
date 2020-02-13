@@ -1,0 +1,26 @@
+.TH "nvme_identify_nsid_ctrl_list" 2 "nvme_identify_nsid_ctrl_list" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_identify_nsid_ctrl_list \- 
+.SH SYNOPSIS
+.B "int" nvme_identify_nsid_ctrl_list
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "__u16 " cntid ","
+.BI "struct nvme_ctrl_list *" ctrlist ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Return controllers that are attached to this nsid
+.IP "cntid" 12
+-- undescribed --
+.IP "ctrlist" 12
+-- undescribed --
+.SH "DESCRIPTION"
+Up to 2047 controller identifiers is returned containing a controller
+identifier greater than or equal to the controller identifier  specified in
+\fIcntid\fP.
+
+See \fIstruct nvme_ctrl_list\fP for a definition of the structure returned.
+.SH "RETURN"
+The nvme command status if a response was received or -1

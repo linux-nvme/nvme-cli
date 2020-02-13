@@ -1,0 +1,24 @@
+.TH "libnvme" 2 "enum nvme_id_ns_flbas" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ns_flbas \- This field indicates the LBA data size & metadata size combination that the namespace has been formatted with
+.SH SYNOPSIS
+enum nvme_id_ns_flbas {
+.br
+.BI "    NVME_NS_FLBAS_LBA_MASK"
+, 
+.br
+.br
+.BI "    NVME_NS_FLBAS_META_EXT"
+
+};
+.SH Constants
+.IP "NVME_NS_FLBAS_LBA_MASK" 12
+Mask to get the index of one of the 16 supported
+LBA Formats indicated in \fIstruct nvme_id_ns\fP.lbaf.
+.IP "NVME_NS_FLBAS_META_EXT" 12
+Applicable only if format contains metadata. If
+this bit is set, indicates that the metadata is
+transferred at the end of the data LBA, creating an
+extended data LBA. If cleared, indicates that all
+of the metadata for a command is transferred as a
+separate contiguous buffer of data.

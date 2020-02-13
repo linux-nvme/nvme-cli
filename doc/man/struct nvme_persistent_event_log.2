@@ -1,0 +1,43 @@
+.TH "libnvme" 2 "struct nvme_persistent_event_log" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_persistent_event_log \- 
+.SH SYNOPSIS
+struct nvme_persistent_event_log {
+.br
+.BI "    __u8 lid;"
+.br
+.BI "    __u8 rsvd1[3];"
+.br
+.BI "    __le32 ttl;"
+.br
+.BI "    __u8 rv;"
+.br
+.BI "    __u8 rsvd17;"
+.br
+.BI "    __le16 lht;"
+.br
+.BI "    __le64 ts;"
+.br
+.BI "    __u8 poh[16];"
+.br
+.BI "    __le64 pcc;"
+.br
+.BI "    __le16 vid;"
+.br
+.BI "    __le16 ssvid;"
+.br
+.BI "    char sn[20];"
+.br
+.BI "    char mn[40];"
+.br
+.BI "    char subnqn[256];"
+.br
+.BI "    __u8 rsvd372;"
+.br
+.BI "    __u8 seb[32];"
+.br
+.BI "
+};
+.br
+
+.SH Members

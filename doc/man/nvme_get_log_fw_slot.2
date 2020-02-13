@@ -1,0 +1,22 @@
+.TH "nvme_get_log_fw_slot" 2 "nvme_get_log_fw_slot" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_log_fw_slot \- Retrieves the controller firmware log
+.SH SYNOPSIS
+.B "int" nvme_get_log_fw_slot
+.BI "(int " fd ","
+.BI "bool " rae ","
+.BI "struct nvme_firmware_slot *" log ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "rae" 12
+Retain asynchronous events
+.IP "log" 12
+-- undescribed --
+.SH "DESCRIPTION"
+This log page is used to describe the firmware revision stored in each
+firmware slot supported. The firmware revision is indicated as an ASCII
+string. The log page also indicates the active slot number.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

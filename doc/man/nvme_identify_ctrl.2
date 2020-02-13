@@ -1,0 +1,20 @@
+.TH "nvme_identify_ctrl" 2 "nvme_identify_ctrl" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_identify_ctrl \- Retrieves nvme identify controller
+.SH SYNOPSIS
+.B "int" nvme_identify_ctrl
+.BI "(int " fd ","
+.BI "struct nvme_id_ctrl *" id ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+id:          User space destination address to transfer the data,
+.IP "id" 12
+-- undescribed --
+.SH "DESCRIPTION"
+Sends nvme identify with CNS value NVME_IDENTIFY_CNS_CTRL.
+
+See \fIstruct nvme_id_ctrl\fP for details on the data returned.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

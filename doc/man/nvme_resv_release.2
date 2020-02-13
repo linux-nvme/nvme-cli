@@ -1,0 +1,27 @@
+.TH "nvme_resv_release" 2 "nvme_resv_release" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_resv_release \- Send an nvme reservation release
+.SH SYNOPSIS
+.B "int" nvme_resv_release
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "enum nvme_reservation_rtype " rtype ","
+.BI "enum nvme_reservation_rrela " rrela ","
+.BI "bool " iekey ","
+.BI "__u64 " crkey ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace identifier
+.IP "rtype" 12
+The type of reservation to be create, see \fIenum nvme_reservation_rtype\fP
+.IP "rrela" 12
+Reservation releast action, see \fIenum  nvme_reservation_rrela\fP
+.IP "iekey" 12
+Set to ignore the existing key
+.IP "crkey" 12
+The current reservation key to release
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

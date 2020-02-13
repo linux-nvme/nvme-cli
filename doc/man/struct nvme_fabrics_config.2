@@ -1,0 +1,51 @@
+.TH "libnvme" 2 "struct nvme_fabrics_config" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_fabrics_config \- 
+.SH SYNOPSIS
+struct nvme_fabrics_config {
+.br
+.BI "    const char *transport;"
+.br
+.BI "    const char *traddr;"
+.br
+.BI "    const char *trsvcid;"
+.br
+.BI "    const char *nqn;"
+.br
+.BI "    const char *hostnqn;"
+.br
+.BI "    const char *host_traddr;"
+.br
+.BI "    const char *hostid;"
+.br
+.BI "    int queue_size;"
+.br
+.BI "    int nr_io_queues;"
+.br
+.BI "    int reconnect_delay;"
+.br
+.BI "    int ctrl_loss_tmo;"
+.br
+.BI "    int keep_alive_tmo;"
+.br
+.BI "    int nr_write_queues;"
+.br
+.BI "    int nr_poll_queues;"
+.br
+.BI "    int tos;"
+.br
+.BI "    bool duplicate_connect;"
+.br
+.BI "    bool disable_sqflow;"
+.br
+.BI "    bool hdr_digest;"
+.br
+.BI "    bool data_digest;"
+.br
+.BI "    uint8_t rsvd[0x200];"
+.br
+.BI "
+};
+.br
+
+.SH Members

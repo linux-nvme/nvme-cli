@@ -1,0 +1,14 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_ofcs" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_ofcs \- Indicate whether the controller supports optional fabric commands.
+.SH SYNOPSIS
+enum nvme_id_ctrl_ofcs {
+.br
+.BI "    NVME_CTRL_OFCS_DISCONNECT"
+
+};
+.SH Constants
+.IP "NVME_CTRL_OFCS_DISCONNECT" 12
+If set, then the controller supports the
+Disconnect command and deletion of individual
+I/O Queues.

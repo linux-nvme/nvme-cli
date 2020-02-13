@@ -1,0 +1,25 @@
+.TH "libnvme" 2 "struct nvme_lbaf" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_lbaf \- LBA Format Data Structure
+.SH SYNOPSIS
+struct nvme_lbaf {
+.br
+.BI "    __le16 ms;"
+.br
+.BI "    __u8 ds;"
+.br
+.BI "    __u8 rp;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ms" 12
+Metadata Size indicates the number of metadata bytes provided per LBA
+based on the LBA Data Size indicated.
+.IP "ds" 12
+LBA Data Size indicates the LBA data size supported, reported as a
+power of two.
+.IP "rp" 12
+Relative Performance, see \fIenum nvme_lbaf_rp\fP.

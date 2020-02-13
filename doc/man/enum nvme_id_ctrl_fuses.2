@@ -1,0 +1,13 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_fuses" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_fuses \- This field indicates the fused operations that the controller supports.
+.SH SYNOPSIS
+enum nvme_id_ctrl_fuses {
+.br
+.BI "    NVME_CTRL_FUSES_COMPARE_AND_WRITE"
+
+};
+.SH Constants
+.IP "NVME_CTRL_FUSES_COMPARE_AND_WRITE" 12
+If set, then the controller supports the
+Compare and Write fused operation.

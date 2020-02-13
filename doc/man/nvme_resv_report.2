@@ -1,0 +1,28 @@
+.TH "nvme_resv_report" 2 "nvme_resv_report" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_resv_report \- Send an nvme reservation report
+.SH SYNOPSIS
+.B "int" nvme_resv_report
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "bool " eds ","
+.BI "__u32 " len ","
+.BI "struct nvme_reservation_status *" report ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace identifier
+.IP "eds" 12
+Request extended Data Structure
+.IP "len" 12
+Number of bytes to request transfered with this command
+.IP "report" 12
+The user space destination address to store the reservation report
+.SH "DESCRIPTION"
+Returns a Reservation Status data structure to memory that describes the
+registration and reservation status of a namespace. See the defintion for
+the returned structure, \fIstruct nvme_reservation_status\fP, for more details.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

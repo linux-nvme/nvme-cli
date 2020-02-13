@@ -1,0 +1,28 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_vwci" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_vwci \- This field indicates information about remaining number of times that VPD contents are able to be updated using the VPD Write command, see &struct nvme_id_ctrl.vwci.
+.SH SYNOPSIS
+enum nvme_id_ctrl_vwci {
+.br
+.BI "    NVME_CTRL_VWCI_VWCR"
+, 
+.br
+.br
+.BI "    NVME_CTRL_VWCI_VWCRV"
+
+};
+.SH Constants
+.IP "NVME_CTRL_VWCI_VWCR" 12
+Mask to get value of VPD Write Cycles Remaining. If
+the VPD Write Cycle Remaining Valid bit is set, then
+this field contains a value indicating the remaining
+number of times that VPD contents are able to be
+updated using the VPD Write command. If this field is
+set to 7Fh, then the remaining number of times that
+VPD contents are able to be updated using the VPD
+Write command is greater than or equal to 7Fh.
+.IP "NVME_CTRL_VWCI_VWCRV" 12
+VPD Write Cycle Remaining Valid. If this bit is set,
+then the VPD Write Cycle Remaining field is valid. If
+this bit is cleared, then the VPD Write Cycles
+Remaining field is invalid and cleared to 0h.

@@ -1,0 +1,43 @@
+.TH "nvme_verify" 2 "nvme_verify" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_verify \- Send an nvme verify command
+.SH SYNOPSIS
+.B "int" nvme_verify
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "__u64 " slba ","
+.BI "__u16 " nlb ","
+.BI "__u16 " control ","
+.BI "__u32 " reftag ","
+.BI "__u16 " apptag ","
+.BI "__u16 " appmask ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace identifier
+.IP "slba" 12
+Starting logical block
+.IP "nlb" 12
+Number of logical blocks to verify (0's based value)
+.IP "control" 12
+Command control flags, see \fIenum nvme_io_control_flags\fP.
+.IP "reftag" 12
+This field specifies the Initial Logical Block Reference Tag
+expected value. Used only if the namespace is formatted to use
+end-to-end protection information.
+.IP "apptag" 12
+This field specifies the Application Tag Mask expected value.
+Used only if the namespace is formatted to use end-to-end
+protection information.
+.IP "appmask" 12
+This field specifies the Application Tag expected value. Used
+only if the namespace is formatted to use end-to-end protection
+information.
+.SH "DESCRIPTION"
+The Verify command verifies integrity of stored information by reading data
+and metadata, if applicable, for the LBAs indicated without transferring any
+data or metadata to the host.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

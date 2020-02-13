@@ -1,0 +1,19 @@
+.TH "libnvme" 2 "struct nvme_ana_log" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_ana_log \- 
+.SH SYNOPSIS
+struct nvme_ana_log {
+.br
+.BI "    __le64 chgcnt;"
+.br
+.BI "    __le16 ngrps;"
+.br
+.BI "    __u8 rsvd10[6];"
+.br
+.BI "    struct nvme_ana_group_desc descs[];"
+.br
+.BI "
+};
+.br
+
+.SH Members

@@ -1,0 +1,63 @@
+.TH "libnvme" 2 "struct nvmf_disc_log_entry" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvmf_disc_log_entry \- Discovery log page entry
+.SH SYNOPSIS
+struct nvmf_disc_log_entry {
+.br
+.BI "    __u8 trtype;"
+.br
+.BI "    __u8 adrfam;"
+.br
+.BI "    __u8 subtype;"
+.br
+.BI "    __u8 treq;"
+.br
+.BI "    __le16 portid;"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __le16 asqsz;"
+.br
+.BI "    __u8 resv10[22];"
+.br
+.BI "    char trsvcid[NVMF_TRSVCID_SIZE];"
+.br
+.BI "    __u8 resv64[192];"
+.br
+.BI "    char subnqn[NVMF_NQN_FIELD_LEN];"
+.br
+.BI "    char traddr[NVMF_TRADDR_SIZE];"
+.br
+.BI "    union tsas {"
+.br
+.BI "      char common[NVMF_TSAS_SIZE];"
+.br
+.BI "      struct rdma {"
+.br
+.BI "        __u8 qptype;"
+.br
+.BI "        __u8 prtype;"
+.br
+.BI "        __u8 cms;"
+.br
+.BI "        __u8 resv3[5];"
+.br
+.BI "        __u16 pkey;"
+.br
+.BI "        __u8 resv10[246];"
+.br
+.BI "      } rdma;"
+.br
+.BI "      struct tcp {"
+.br
+.BI "        __u8 sectype;"
+.br
+.BI "      } tcp;"
+.br
+.BI "    } tsas;"
+.br
+.BI "
+};
+.br
+
+.SH Members

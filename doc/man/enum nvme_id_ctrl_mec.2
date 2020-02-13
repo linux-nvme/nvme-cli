@@ -1,0 +1,20 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_mec" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_mec \- Flags indicatings the capabilities of the Management Endpoint in the Controller, &struct nvme_id_ctrl.mec.
+.SH SYNOPSIS
+enum nvme_id_ctrl_mec {
+.br
+.BI "    NVME_CTRL_MEC_SMBUSME"
+, 
+.br
+.br
+.BI "    NVME_CTRL_MEC_PCIEME"
+
+};
+.SH Constants
+.IP "NVME_CTRL_MEC_SMBUSME" 12
+If set, then the NVM Subsystem contains a Management
+Endpoint on an SMBus/I2C port.
+.IP "NVME_CTRL_MEC_PCIEME" 12
+If set, then the NVM Subsystem contains a Management
+Endpoint on a PCIe port.

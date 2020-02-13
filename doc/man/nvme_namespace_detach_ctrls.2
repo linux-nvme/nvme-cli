@@ -1,0 +1,21 @@
+.TH "nvme_namespace_detach_ctrls" 2 "nvme_namespace_detach_ctrls" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_namespace_detach_ctrls \- Detach namespace from controller(s)
+.SH SYNOPSIS
+.B "int" nvme_namespace_detach_ctrls
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "__u16 " num_ctrls ","
+.BI "__u16 *" ctrlist ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID to detach
+.IP "num_ctrls" 12
+Number of controllers in ctrlist
+.IP "ctrlist" 12
+List of controller IDs to perform the detach action
+.SH "RETURN"
+The nvme command status if a response was received or -1
+with errno set otherwise.

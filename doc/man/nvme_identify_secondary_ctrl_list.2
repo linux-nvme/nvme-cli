@@ -1,0 +1,26 @@
+.TH "nvme_identify_secondary_ctrl_list" 2 "nvme_identify_secondary_ctrl_list" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_identify_secondary_ctrl_list \- Retrieves secondary controller list
+.SH SYNOPSIS
+.B "int" nvme_identify_secondary_ctrl_list
+.BI "(int " fd ","
+.BI "__u16 " cntid ","
+.BI "struct nvme_secondary_ctrl_list *" list ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "cntid" 12
+Return controllers starting at this identifier
+.IP "list" 12
+-- undescribed --
+.SH "DESCRIPTION"
+A Secondary Controller List is returned to the host for up to 127 secondary
+controllers associated with the primary controller processing this command.
+The list contains entries for controller identifiers greater than or equal
+to the value specified in the Controller Identifier (cntid).
+
+See \fIstruct nvme_secondary_ctrls_list\fP for a defintion of the returned
+structure.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

@@ -1,0 +1,39 @@
+.TH "libnvme" 2 "struct nvme_nvmset_predictable_lat_log" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_nvmset_predictable_lat_log \- 
+.SH SYNOPSIS
+struct nvme_nvmset_predictable_lat_log {
+.br
+.BI "    __u8 status;"
+.br
+.BI "    __u8 rsvd1;"
+.br
+.BI "    __le16 event_type;"
+.br
+.BI "    __u8 rsvd4[28];"
+.br
+.BI "    __le64 dtwin_rt;"
+.br
+.BI "    __le64 dtwin_wt;"
+.br
+.BI "    __le64 dtwin_tmax;"
+.br
+.BI "    __le64 dtwin_tmin_hi;"
+.br
+.BI "    __le64 dtwin_tmin_lo;"
+.br
+.BI "    __u8 rsvd72[56];"
+.br
+.BI "    __le64 dtwin_re;"
+.br
+.BI "    __le64 dtwin_we;"
+.br
+.BI "    __le64 dtwin_te;"
+.br
+.BI "    __u8 rsvd152[360];"
+.br
+.BI "
+};
+.br
+
+.SH Members

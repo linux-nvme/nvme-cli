@@ -1,0 +1,22 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_nvmsr" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_nvmsr \- This field reports information associated with the NVM Subsystem, see &struct nvme_id_ctrl.nvmsr.
+.SH SYNOPSIS
+enum nvme_id_ctrl_nvmsr {
+.br
+.BI "    NVME_CTRL_NVMSR_NVMESD"
+, 
+.br
+.br
+.BI "    NVME_CTRL_NVMSR_NVMEE"
+
+};
+.SH Constants
+.IP "NVME_CTRL_NVMSR_NVMESD" 12
+If set, then the NVM Subsystem is part of an NVMe
+Storage Device; if cleared, then the NVM Subsystem
+is not part of an NVMe Storage Device.
+.IP "NVME_CTRL_NVMSR_NVMEE" 12
+If set’, then the NVM Subsystem is part of an NVMe
+Enclosure; if cleared, then the NVM Subsystem is
+not part of an NVMe Enclosure.

@@ -1,0 +1,17 @@
+.TH "libnvme" 2 "struct nvme_secondary_ctrl_list" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_secondary_ctrl_list \-  @num;
+.SH SYNOPSIS
+struct nvme_secondary_ctrl_list {
+.br
+.BI "    __u8 num;"
+.br
+.BI "    __u8 rsvd[31];"
+.br
+.BI "    struct nvme_secondary_ctrl sc_entry[NVME_ID_SECONDARY_CTRL_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members

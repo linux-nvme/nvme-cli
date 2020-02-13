@@ -1,0 +1,31 @@
+.TH "libnvme" 2 "struct nvme_streams_directive_params" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_streams_directive_params \- 
+.SH SYNOPSIS
+struct nvme_streams_directive_params {
+.br
+.BI "    __le16 msl;"
+.br
+.BI "    __le16 nssa;"
+.br
+.BI "    __le16 nsso;"
+.br
+.BI "    __u8 nssc;"
+.br
+.BI "    __u8 rsvd[9];"
+.br
+.BI "    __le32 sws;"
+.br
+.BI "    __le16 sgs;"
+.br
+.BI "    __le16 nsa;"
+.br
+.BI "    __le16 nso;"
+.br
+.BI "    __u8 rsvd2[6];"
+.br
+.BI "
+};
+.br
+
+.SH Members

@@ -1,0 +1,31 @@
+.TH "libnvme" 2 "struct nvme_mi_read_port_info" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_mi_read_port_info \- 
+.SH SYNOPSIS
+struct nvme_mi_read_port_info {
+.br
+.BI "    __u8 portt;"
+.br
+.BI "    __u8 rsvd1;"
+.br
+.BI "    __le16 mmctptus;"
+.br
+.BI "    __le32 meb;"
+.br
+.BI "    union {"
+.br
+.BI "      struct nvme_mi_port_pcie pcie;"
+.br
+.BI "      struct nvme_mi_port_smb smb;"
+.br
+.BI "    };"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "portt" 12
+\fImmctptus\fP;
+.IP "{unnamed_union}" 12
+anonymous

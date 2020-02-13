@@ -1,0 +1,37 @@
+.TH "libnvme" 2 "struct nvme_nvmset_attr" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_nvmset_attr \- NVM Set Attributes Entry
+.SH SYNOPSIS
+struct nvme_nvmset_attr {
+.br
+.BI "    __le16 id;"
+.br
+.BI "    __le16 endurance_group_id;"
+.br
+.BI "    __u8 rsvd4[4];"
+.br
+.BI "    __le32 random_4k_read_typical;"
+.br
+.BI "    __le32 opt_write_size;"
+.br
+.BI "    __u8 total_nvmset_cap[16];"
+.br
+.BI "    __u8 unalloc_nvmset_cap[16];"
+.br
+.BI "    __u8 rsvd48[80];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "id" 12
+NVM Set Identifier
+.IP "endurance_group_id" 12
+Endurance Group Identifier
+.IP "random_4k_read_typical" 12
+Random 4 KiB Read Typical indicates the typical
+time to complete a 4 KiB random read in 100
+nanosecond units when the NVM Set is in a
+Predictable Latency Mode Deterministic Window and
+there is 1 outstanding command per NVM Set.

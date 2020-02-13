@@ -1,0 +1,14 @@
+.TH "libnvme" 2 "enum nvme_id_ns_attr" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ns_attr \- Specifies attributes of the namespace.
+.SH SYNOPSIS
+enum nvme_id_ns_attr {
+.br
+.BI "    NVME_NS_NSATTR_WRITE_PROTECTED"
+
+};
+.SH Constants
+.IP "NVME_NS_NSATTR_WRITE_PROTECTED" 12
+If set, then the namespace is currently
+write protected and all write access to the
+namespace shall fail.

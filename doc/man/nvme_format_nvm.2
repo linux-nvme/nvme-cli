@@ -1,0 +1,39 @@
+.TH "nvme_format_nvm" 2 "nvme_format_nvm" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_format_nvm \- Format nvme namespace(s)
+.SH SYNOPSIS
+.B "int" nvme_format_nvm
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "__u8 " lbaf ","
+.BI "enum nvme_cmd_format_mset " mset ","
+.BI "enum nvme_cmd_format_pi " pi ","
+.BI "enum nvme_cmd_format_pil " pil ","
+.BI "enum nvme_cmd_format_ses " ses ","
+.BI "__u32 " timeout ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID to format
+.IP "lbaf" 12
+Logical block address format
+.IP "mset" 12
+Metadata settings (extended or separated), true if extended
+.IP "pi" 12
+Protection information type
+.IP "pil" 12
+Protection information location (beginning or end), true if end
+.IP "ses" 12
+Secure erase settings
+.IP "timeout" 12
+Set to override default timeout to this value in milliseconds;
+useful for long running formats. 0 will use system default.
+.SH "DESCRIPTION"
+The Format NVM command is used to low level format the NVM media. This
+command is used by the host to change the LBA data size and/or metadata
+size. A low level format may destroy all data and metadata associated with
+all namespaces or only the specific namespace associated with the command
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

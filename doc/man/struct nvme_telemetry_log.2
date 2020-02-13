@@ -1,0 +1,33 @@
+.TH "libnvme" 2 "struct nvme_telemetry_log" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_telemetry_log \- 
+.SH SYNOPSIS
+struct nvme_telemetry_log {
+.br
+.BI "    __u8 lpi;"
+.br
+.BI "    __u8 rsvd[4];"
+.br
+.BI "    __u8 ieee[3];"
+.br
+.BI "    __le16 dalb1;"
+.br
+.BI "    __le16 dalb2;"
+.br
+.BI "    __le16 dalb3;"
+.br
+.BI "    __u8 rsvd1[368];"
+.br
+.BI "    __u8 ctrlavail;"
+.br
+.BI "    __u8 ctrldgn;"
+.br
+.BI "    __u8 rsnident[128];"
+.br
+.BI "    __u8 telemetry_dataarea[];"
+.br
+.BI "
+};
+.br
+
+.SH Members

@@ -1,0 +1,26 @@
+.TH "libnvme" 2 "struct nvmf_connect_data" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvmf_connect_data \- 
+.SH SYNOPSIS
+struct nvmf_connect_data {
+.br
+.BI "    __u8 hostid[16];"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    char resv4[238];"
+.br
+.BI "    char subsysnqn[NVMF_NQN_FIELD_LEN];"
+.br
+.BI "    char hostnqn[NVMF_NQN_FIELD_LEN];"
+.br
+.BI "    char resv5[256];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "cntlid" 12
+\fIsubsysnqn\fP
+\fIhostnqn\fP

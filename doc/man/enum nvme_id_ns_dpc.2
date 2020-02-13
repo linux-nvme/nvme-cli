@@ -1,0 +1,43 @@
+.TH "libnvme" 2 "enum nvme_id_ns_dpc" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ns_dpc \- This field indicates the capabilities for the end-to-end data protection feature.
+.SH SYNOPSIS
+enum nvme_id_ns_dpc {
+.br
+.BI "    NVME_NS_DPC_PI_TYPE1"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_PI_TYPE2"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_PI_TYPE3"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_PI_FIRST"
+, 
+.br
+.br
+.BI "    NVME_NS_DPC_PI_LAST"
+
+};
+.SH Constants
+.IP "NVME_NS_DPC_PI_TYPE1" 12
+If set, indicates that the namespace supports
+Protection Information Type 1.
+.IP "NVME_NS_DPC_PI_TYPE2" 12
+If set, indicates that the namespace supports
+Protection Information Type 2.
+.IP "NVME_NS_DPC_PI_TYPE3" 12
+If set, indicates that the namespace supports
+Protection Information Type 3.
+.IP "NVME_NS_DPC_PI_FIRST" 12
+If set, indicates that the namespace supports
+protection information transferred as the first eight
+bytes of metadata.
+.IP "NVME_NS_DPC_PI_LAST" 12
+If set, indicates that the namespace supports
+protection information transferred as the last eight
+bytes of metadata.

@@ -1,0 +1,28 @@
+.TH "libnvme" 2 "struct nvme_ns_id_desc" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_ns_id_desc \- 
+.SH SYNOPSIS
+struct nvme_ns_id_desc {
+.br
+.BI "    __u8 nidt;"
+.br
+.BI "    __u8 nidl;"
+.br
+.BI "    __le16 reserved;"
+.br
+.BI "    __u8 nid[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nidt" 12
+Namespace Identifier Type, see \fIenum nvme_ns_id_desc_nidt\fP
+.IP "nidl" 12
+Namespace Identifier Length contains the length in bytes of the
+\fIstruct nvme_id_ns\fP.nid.
+.IP "nid" 12
+Namespace Identifier contains a value that is globally unique and
+assigned to the namespace when the namespace is created. The length
+is defined in \fIstruct nvme_id_ns\fP.nidl.

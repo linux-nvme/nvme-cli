@@ -1,0 +1,14 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_fcatt" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_fcatt \- This field indicates attributes of the controller that are specific to NVMe over Fabrics.
+.SH SYNOPSIS
+enum nvme_id_ctrl_fcatt {
+.br
+.BI "    NVME_CTRL_FCATT_DYNAMIC"
+
+};
+.SH Constants
+.IP "NVME_CTRL_FCATT_DYNAMIC" 12
+If cleared, then the NVM subsystem uses a dynamic
+controller model. If set, then the NVM subsystem
+uses a static controller model.

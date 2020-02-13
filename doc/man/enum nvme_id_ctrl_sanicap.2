@@ -1,0 +1,44 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_sanicap" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_sanicap \- Indicates attributes for sanitize operations.
+.SH SYNOPSIS
+enum nvme_id_ctrl_sanicap {
+.br
+.BI "    NVME_CTRL_SANICAP_CES"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_BES"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_OWS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_NDI"
+, 
+.br
+.br
+.BI "    NVME_CTRL_SANICAP_NODMMAS"
+
+};
+.SH Constants
+.IP "NVME_CTRL_SANICAP_CES" 12
+Crypto Erase Support. If set, then the
+controller supports the Crypto Erase sanitize operation.
+.IP "NVME_CTRL_SANICAP_BES" 12
+Block Erase Support. If set, then the controller
+supports the Block Erase sanitize operation.
+.IP "NVME_CTRL_SANICAP_OWS" 12
+Overwrite Support. If set, then the controller
+supports the Overwrite sanitize operation.
+.IP "NVME_CTRL_SANICAP_NDI" 12
+No-Deallocate Inhibited. If set and the No-
+Deallocate Response Mode bit is set, then the
+controller deallocates after the sanitize
+operation even if the No-Deallocate After
+Sanitize bit is set in a Sanitize command.
+.IP "NVME_CTRL_SANICAP_NODMMAS" 12
+No-Deallocate Modifies Media After Sanitize,
+mask to extract value.

@@ -1,0 +1,39 @@
+.TH "libnvme" 2 "enum nvme_id_ctrl_fna" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_fna \- This field indicates attributes for the Format NVM command.
+.SH SYNOPSIS
+enum nvme_id_ctrl_fna {
+.br
+.BI "    NVME_CTRL_FNA_FMT_ALL_NAMESPACES"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FNA_SEC_ALL_NAMESPACES"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FNA_CRYPTO_ERASE"
+
+};
+.SH Constants
+.IP "NVME_CTRL_FNA_FMT_ALL_NAMESPACES" 12
+If set, then all namespaces in an NVM
+subsystem shall be configured with the
+same attributes and a format (excluding
+secure erase) of any namespace results in
+a format of all namespaces in an NVM
+subsystem. If cleared, then the
+controller supports format on a per
+namespace basis.
+.IP "NVME_CTRL_FNA_SEC_ALL_NAMESPACES" 12
+If set, then any secure erase performed
+as part of a format operation results in
+a secure erase of all namespaces in the
+NVM subsystem. If cleared, then any
+secure erase performed as part of a
+format results in a secure erase of the
+particular namespace specified.
+.IP "NVME_CTRL_FNA_CRYPTO_ERASE" 12
+If set, then cryptographic erase is
+supported. If cleared, then cryptographic
+erase is not supported.

@@ -1,0 +1,20 @@
+.TH "nvme_get_log_ana_groups" 2 "nvme_get_log_ana_groups" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_log_ana_groups \- 
+.SH SYNOPSIS
+.B "int" nvme_get_log_ana_groups
+.BI "(int " fd ","
+.BI "bool " rae ","
+.BI "__u32 " len ","
+.BI "struct nvme_ana_group_desc *" log ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "rae" 12
+Retain asynchronous events
+.IP "len" 12
+-- undescribed --
+.IP "log" 12
+-- undescribed --
+.SH "DESCRIPTION"
+See \fIstruct nvme_ana_group_desc\fP for the defintion of the returned structure.

@@ -1,0 +1,17 @@
+.TH "nvme_get_log_predictable_lat_nvmset" 2 "nvme_get_log_predictable_lat_nvmset" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_log_predictable_lat_nvmset \- 
+.SH SYNOPSIS
+.B "int" nvme_get_log_predictable_lat_nvmset
+.BI "(int " fd ","
+.BI "__u16 " nvmsetid ","
+.BI "struct nvme_nvmset_predictable_lat_log *" log ");"
+.SH ARGUMENTS
+.IP "fd" 12
+-- undescribed --
+.IP "nvmsetid" 12
+.IP "log" 12
+-- undescribed --
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

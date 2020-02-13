@@ -1,0 +1,62 @@
+.TH "libnvme" 2 "enum nvme_id_ns_rescap" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_id_ns_rescap \- This field indicates the reservation capabilities of the namespace.
+.SH SYNOPSIS
+enum nvme_id_ns_rescap {
+.br
+.BI "    NVME_NS_RESCAP_PTPL"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_WE"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_EA"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_WERO"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_EARO"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_WEAR"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_EAAR"
+, 
+.br
+.br
+.BI "    NVME_NS_RESCAP_IEK_13"
+
+};
+.SH Constants
+.IP "NVME_NS_RESCAP_PTPL" 12
+If set, indicates that the namespace supports the
+Persist Through Power Loss capability.
+.IP "NVME_NS_RESCAP_WE" 12
+If set, indicates that the namespace supports the
+Write Exclusive reservation type.
+.IP "NVME_NS_RESCAP_EA" 12
+If set, indicates that the namespace supports the
+Exclusive Access reservation type.
+.IP "NVME_NS_RESCAP_WERO" 12
+If set, indicates that the namespace supports the
+Write Exclusive - Registrants Only reservation type.
+.IP "NVME_NS_RESCAP_EARO" 12
+If set, indicates that the namespace supports the
+Exclusive Access - Registrants Only reservation type.
+.IP "NVME_NS_RESCAP_WEAR" 12
+If set, indicates that the namespace supports the
+Write Exclusive - All Registrants reservation type.
+.IP "NVME_NS_RESCAP_EAAR" 12
+If set, indicates that the namespace supports the
+Exclusive Access - All Registrants reservation type.
+.IP "NVME_NS_RESCAP_IEK_13" 12
+If set, indicates that Ignore Existing Key is used
+as defined in revision 1.3 or later of this specification.

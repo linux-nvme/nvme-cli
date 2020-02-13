@@ -1,0 +1,37 @@
+.TH "libnvme" 2 "enum nvme_lbaf_rp" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_lbaf_rp \- This field indicates the relative performance of the LBA format indicated relative to other LBA formats supported by the controller.
+.SH SYNOPSIS
+enum nvme_lbaf_rp {
+.br
+.BI "    NVME_LBAF_RP_BEST"
+, 
+.br
+.br
+.BI "    NVME_LBAF_RP_BETTER"
+, 
+.br
+.br
+.BI "    NVME_LBAF_RP_GOOD"
+, 
+.br
+.br
+.BI "    NVME_LBAF_RP_DEGRADED"
+, 
+.br
+.br
+.BI "    NVME_LBAF_RP_MASK"
+
+};
+.SH Constants
+.IP "NVME_LBAF_RP_BEST" 12
+Best performance
+.IP "NVME_LBAF_RP_BETTER" 12
+Better performance
+.IP "NVME_LBAF_RP_GOOD" 12
+Good performance
+.IP "NVME_LBAF_RP_DEGRADED" 12
+Degraded performance
+.IP "NVME_LBAF_RP_MASK" 12
+Mask to get the relative performance value from the
+field

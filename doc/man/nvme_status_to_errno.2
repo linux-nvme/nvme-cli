@@ -1,0 +1,16 @@
+.TH "nvme_status_to_errno" 2 "nvme_status_to_errno" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_status_to_errno \- Converts nvme return status to errno
+.SH SYNOPSIS
+.B "__u8" nvme_status_to_errno
+.BI "(int " status ","
+.BI "bool " fabrics ");"
+.SH ARGUMENTS
+.IP "status" 12
+Return status from an nvme passthrough commmand
+.IP "fabrics" 12
+true if given status is for fabrics
+.SH "DESCRIPTION"
+If status < 0, errno is already set.
+.SH "RETURN"
+Appropriate errno for the given nvme status

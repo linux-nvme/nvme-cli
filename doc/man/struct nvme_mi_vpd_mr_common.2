@@ -1,0 +1,33 @@
+.TH "libnvme" 2 "struct nvme_mi_vpd_mr_common" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_mi_vpd_mr_common \-  @type; @rf; @rlen; @rchksum; @hchksum; @ppmra; @tmra;
+.SH SYNOPSIS
+struct nvme_mi_vpd_mr_common {
+.br
+.BI "    __u8 type;"
+.br
+.BI "    __u8 rf;"
+.br
+.BI "    __u8 rlen;"
+.br
+.BI "    __u8 rchksum;"
+.br
+.BI "    __u8 hchksum;"
+.br
+.BI "    union {"
+.br
+.BI "      struct nvme_mi_vpd_mra nmra;"
+.br
+.BI "      struct nvme_mi_vpd_ppmra ppmra;"
+.br
+.BI "      struct nvme_mi_vpd_tra tmra;"
+.br
+.BI "    };"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "{unnamed_union}" 12
+anonymous

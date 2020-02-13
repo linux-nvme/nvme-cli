@@ -1,0 +1,36 @@
+.TH "nvme_get_features" 2 "nvme_get_features" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_features \- Retrieve a feature attribute
+.SH SYNOPSIS
+.B "int" nvme_get_features
+.BI "(int " fd ","
+.BI "enum nvme_features_id " fid ","
+.BI "__u32 " nsid ","
+.BI "enum nvme_get_features_sel " sel ","
+.BI "__u32 " cdw11 ","
+.BI "__u8 " uuidx ","
+.BI "__u32 " data_len ","
+.BI "void *" data ","
+.BI "__u32 *" result ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "fid" 12
+Feature identifier
+.IP "nsid" 12
+Namespace ID, if applicable
+.IP "sel" 12
+Select which type of attribute to return, see \fIenum nvme_get_features_sel\fP
+.IP "cdw11" 12
+Feature specific command dword11 field
+.IP "uuidx" 12
+UUID Index for differentiating vendor specific encoding
+.IP "data_len" 12
+Length of feature data, if applicable, in bytes
+.IP "data" 12
+User address of feature data, if applicable
+.IP "result" 12
+The command completion result from CQE dword0
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

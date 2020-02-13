@@ -1,0 +1,17 @@
+.TH "libnvme" 2 "struct nvme_cmd_effects_log" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_cmd_effects_log \- 
+.SH SYNOPSIS
+struct nvme_cmd_effects_log {
+.br
+.BI "    __le32 acs[256];"
+.br
+.BI "    __le32 iocs[256];"
+.br
+.BI "    __u8 resv[2048];"
+.br
+.BI "
+};
+.br
+
+.SH Members

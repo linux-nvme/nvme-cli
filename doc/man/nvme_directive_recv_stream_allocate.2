@@ -1,0 +1,21 @@
+.TH "nvme_directive_recv_stream_allocate" 2 "nvme_directive_recv_stream_allocate" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_directive_recv_stream_allocate \- 
+.SH SYNOPSIS
+.B "int" nvme_directive_recv_stream_allocate
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "__u16 " nsr ","
+.BI "__u32 *" result ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID
+.IP "nsr" 12
+-- undescribed --
+.IP "result" 12
+-- undescribed --
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

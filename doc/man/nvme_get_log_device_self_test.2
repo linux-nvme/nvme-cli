@@ -1,0 +1,19 @@
+.TH "nvme_get_log_device_self_test" 2 "nvme_get_log_device_self_test" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_get_log_device_self_test \- Retrieve the device self test log
+.SH SYNOPSIS
+.B "int" nvme_get_log_device_self_test
+.BI "(int " fd ","
+.BI "struct nvme_self_test_log *" log ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "log" 12
+Userspace address of the log payload
+.SH "DESCRIPTION"
+The log page is used to indicate the status of an in progress self test and
+the percent complete of that operation, and the results of the previous 20
+self-test operations.
+.SH "RETURN"
+The nvme command status if a response was received or -1 with errno
+set otherwise.

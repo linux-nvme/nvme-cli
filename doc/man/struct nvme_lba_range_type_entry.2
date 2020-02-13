@@ -1,0 +1,25 @@
+.TH "libnvme" 2 "struct nvme_lba_range_type_entry" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_lba_range_type_entry \- 
+.SH SYNOPSIS
+struct nvme_lba_range_type_entry {
+.br
+.BI "    __u8 type;"
+.br
+.BI "    __u8 attributes;"
+.br
+.BI "    __u8 rsvd2[14];"
+.br
+.BI "    __u64 slba;"
+.br
+.BI "    __u64 nlb;"
+.br
+.BI "    __u8 guid[16];"
+.br
+.BI "    __u8 rsvd48[16];"
+.br
+.BI "
+};
+.br
+
+.SH Members

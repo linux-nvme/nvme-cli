@@ -1,0 +1,15 @@
+.TH "nvme_ns_attach_ctrls" 2 "nvme_ns_attach_ctrls" "February 2020" "libnvme Manual"
+.SH NAME
+nvme_ns_attach_ctrls \- 
+.SH SYNOPSIS
+.B "int" nvme_ns_attach_ctrls
+.BI "(int " fd ","
+.BI "__u32 " nsid ","
+.BI "struct nvme_ctrl_list *" ctrlist ");"
+.SH ARGUMENTS
+.IP "fd" 12
+File descriptor of nvme device
+.IP "nsid" 12
+Namespace ID to attach
+.IP "ctrlist" 12
+Controller list to modify attachment state of nsid

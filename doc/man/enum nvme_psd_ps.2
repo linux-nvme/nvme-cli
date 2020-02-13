@@ -1,0 +1,18 @@
+.TH "libnvme" 2 "enum nvme_psd_ps" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+enum nvme_psd_ps \- Known values for &struct nvme_psd #ips and #aps. Use with nvme_psd_power_scale() to extract the power scale field to match this enum. NVME_PSD_IPS_100_MICRO_WATT: 0.0001 watt scale NVME_PSD_IPS_10_MILLI_WATT: 0.01 watt scale
+.SH SYNOPSIS
+enum nvme_psd_ps {
+.br
+.BI "    NVME_PSD_PS_100_MICRO_WATT"
+, 
+.br
+.br
+.BI "    NVME_PSD_PS_10_MILLI_WATT"
+
+};
+.SH Constants
+.IP "NVME_PSD_PS_100_MICRO_WATT" 12
+-- undescribed --
+.IP "NVME_PSD_PS_10_MILLI_WATT" 12
+-- undescribed --

@@ -1,0 +1,31 @@
+.TH "libnvme" 2 "struct nvme_st_result" "February 2020" "LIBNVME API Manual" LINUX
+.SH NAME
+struct nvme_st_result \- 
+.SH SYNOPSIS
+struct nvme_st_result {
+.br
+.BI "    __u8 dsts;"
+.br
+.BI "    __u8 seg;"
+.br
+.BI "    __u8 vdi;"
+.br
+.BI "    __u8 rsvd;"
+.br
+.BI "    __le64 poh;"
+.br
+.BI "    __le32 nsid;"
+.br
+.BI "    __le64 flba;"
+.br
+.BI "    __u8 sct;"
+.br
+.BI "    __u8 sc;"
+.br
+.BI "    __u8 vs[2];"
+.br
+.BI "
+};
+.br
+
+.SH Members
