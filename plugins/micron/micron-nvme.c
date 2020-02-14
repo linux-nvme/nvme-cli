@@ -13,6 +13,7 @@
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
 #include <sys/ioctl.h>
+#include <limits.h>
 
 #define CREATE_CMD
 #include "micron-nvme.h"
