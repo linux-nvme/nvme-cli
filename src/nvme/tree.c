@@ -23,6 +23,9 @@
 #include "filters.h"
 #include "util.h"
 
+/* XXX: Make a place for private declarations */
+extern int nvme_set_attr(const char *dir, const char *attr, const char *value);
+
 struct nvme_path {
 	struct list_node entry;
 	struct list_node nentry;

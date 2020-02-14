@@ -44,7 +44,6 @@ static int add_bool_argument(char **argstr, char *tok, bool arg)
 
 	if (!arg)
 		return 0;
-
 	if (asprintf(&nstr, "%s,%s", *argstr, tok) < 0) {
 		errno = ENOMEM;
 		return -1;
@@ -55,19 +54,19 @@ static int add_bool_argument(char **argstr, char *tok, bool arg)
 	return 0;
 }
 
-static int add_int_argument(char **argstr, char *tok, int arg,
-			    bool allow_zero)
+static int add_int_argument(char **argstr, char *tok, int arg, bool allow_zero)
 {
 	char *nstr;
 
-	if ((arg && !allow_zero) || (arg != -1 && allow_zero)) {
-		if (asprintf(&nstr, "%s,%s=%d", *argstr, tok, arg) < 0) {
-			errno = ENOMEM;
-			return -1;
-		}
-		free(*argstr);
-		*argstr = nstr;
+	if (arg < 0 || (!arg && !allow_zero))
+		return 0;
+	if (asprintf(&nstr, "%s,%s=%d", *argstr, tok, arg) < 0) {
+		errno = ENOMEM;
+		return -1;
 	}
+	free(*argstr);
+	*argstr = nstr;
+
 	return 0;
 }
 
@@ -83,6 +82,7 @@ static int add_argument(char **argstr, const char *tok, const char *arg)
 	}
 	free(*argstr);
 	*argstr = nstr;
+
 	return 0;
 }
 

@@ -7,7 +7,6 @@
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,7 +15,6 @@
 #include <dirent.h>
 #include <libgen.h>
 
-#include <linux/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -24,7 +22,6 @@
 #include <unistd.h>
 
 #include "filters.h"
-#include "ioctl.h"
 #include "util.h"
 #include "tree.h"
 
@@ -138,17 +135,15 @@ static inline __u8 nvme_fabrics_status_to_errno(__u16 status)
 
 __u8 nvme_status_to_errno(int status, bool fabrics)
 {
-	__u16 sc, sct;
+	__u16 sc;
 
 	if (!status)
 		return 0;
 	if (status < 0)
 		return errno;
 
-	sc = status & NVME_SC_MASK;
-	sct = status & NVME_SCT_MASK;
-
-	switch (sct) {
+	sc = nvme_status_code(status);
+	switch (nvme_status_code_type(status)) {
 	case NVME_SCT_GENERIC:
 		return nvme_generic_status_to_errno(sc);
 	case NVME_SCT_CMD_SPECIFIC:
@@ -156,10 +151,6 @@ __u8 nvme_status_to_errno(int status, bool fabrics)
 			return nvme_fabrics_status_to_errno(sc);
 		return nvme_cmd_specific_status_to_errno(sc);
 	default:
-		/*
-		 * Media, integrity related status, and the others will be
-		 * mapped to EIO.
-		 */
 		return EIO;
 	}
 }
@@ -282,14 +273,14 @@ int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 }
 
 static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
-				  void **buf, __u32 *log_size)
+				  struct nvme_telemetry_log **buf)
 {
-	static const __u32 xfer = 512;
+	static const __u32 xfer = NVME_LOG_TELEM_BLOCK_SIZE;
 
 	struct nvme_telemetry_log *telem;
+	enum nvme_cmd_get_log_lid lid;
+	void *log, *tmp;
 	__u32 size;
-	__u8 lid;
-	void *log;
 	int err;
 
 	log = malloc(xfer);
@@ -314,47 +305,47 @@ static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
 
 	telem = log;
 	if (ctrl && !telem->ctrlavail) {
-		size = xfer;
-		goto done;
+		*buf = log;
+		return 0;
 	}
 
-	size = (le16_to_cpu(telem->dalb3) * xfer) + xfer;
-	log = realloc(log, size);
-	if (!log) {
+	/* dalb3 >= dalb2 >= dalb1 */
+	size = (le16_to_cpu(telem->dalb3) + 1) * xfer;
+	tmp = realloc(log, size);
+	if (!tmp) {
 		errno = ENOMEM;
 		err = -1;
 		goto free;
 	}
+	log = tmp;
 
 	err = nvme_get_log_page(fd, NVME_NSID_NONE, lid, rae, size, (void *)log);
-	if (err)
-		goto free;
-done:
-	*log_size = size;
-	*buf = log;
-	return 0;
+	if (!err) {
+		*buf = log;
+		return 0;
+	}
 free:
 	free(log);
 	return err;
 }
 
-int nvme_get_ctrl_telemetry(int fd, bool rae, void **buf, __u32 *log_size)
+int nvme_get_ctrl_telemetry(int fd, bool rae, struct nvme_telemetry_log **log)
 {
-	return nvme_get_telemetry_log(fd, false, true, rae, buf, log_size);
+	return nvme_get_telemetry_log(fd, false, true, rae, log);
 }
 
-int nvme_get_host_telemetry(int fd,  void **buf, __u32 *log_size)
+int nvme_get_host_telemetry(int fd,  struct nvme_telemetry_log **log)
 {
-	return nvme_get_telemetry_log(fd, false, false, false, buf, log_size);
+	return nvme_get_telemetry_log(fd, false, false, false, log);
 }
 
-int nvme_get_new_host_telemetry(int fd,  void **buf, __u32 *log_size)
+int nvme_get_new_host_telemetry(int fd,  struct nvme_telemetry_log  **log)
 {
-	return nvme_get_telemetry_log(fd, true, false, false, buf, log_size);
+	return nvme_get_telemetry_log(fd, true, false, false, log);
 }
 
-void nvme_setup_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
-			  __u32 *llbas, __u64 *slbas, __u16 nr_ranges)
+void nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
+			 __u32 *llbas, __u64 *slbas, __u16 nr_ranges)
 {
 	int i;
 
@@ -365,7 +356,7 @@ void nvme_setup_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
 	}
 }
 
-void nvme_setup_id_ns(struct nvme_id_ns *ns, __u64 nsze, __u64 ncap, __u8 flbas,
+void nvme_init_id_ns(struct nvme_id_ns *ns, __u64 nsze, __u64 ncap, __u8 flbas,
 		__u8 dps, __u8 nmic, __u32 anagrpid, __u16 nvmsetid)
 {
 	memset(ns, 0, sizeof(*ns));
@@ -378,7 +369,7 @@ void nvme_setup_id_ns(struct nvme_id_ns *ns, __u64 nsze, __u64 ncap, __u8 flbas,
 	ns->nvmsetid = cpu_to_le16(nvmsetid);
 }
 
-void nvme_setup_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
+void nvme_init_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
 			  __u16 *ctrlist)
 {
 	int i;
@@ -397,7 +388,7 @@ static int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls,
 	if (attach)
 		sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH;
 
-	nvme_setup_ctrl_list(&cntlist, num_ctrls, ctrlist);
+	nvme_init_ctrl_list(&cntlist, num_ctrls, ctrlist);
 	return nvme_ns_attach(fd, nsid, sel, &cntlist);
 }
 
@@ -419,10 +410,8 @@ int nvme_get_ana_log_len(int fd, size_t *analen)
 	int ret;
 
 	ret = nvme_identify_ctrl(fd, &ctrl);
-	if (ret) {
-		errno = nvme_status_to_errno(ret, false);
-		return -1;
-	}
+	if (ret)
+		return ret;
 
 	*analen = sizeof(struct nvme_ana_log) +
 		le32_to_cpu(ctrl.nanagrpid) * sizeof(struct nvme_ana_group_desc) +

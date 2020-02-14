@@ -1428,7 +1428,7 @@ int nvme_directive_recv_stream_allocate(int fd, __u32 nsid, __u16 nsr,
 
 int nvme_set_property(int fd, int offset, __u64 value)
 {
-	__u32 cdw10 = is_64bit_reg(offset);
+	__u32 cdw10 = nvme_is_64bit_reg(offset);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_fabrics,
@@ -1444,7 +1444,7 @@ int nvme_set_property(int fd, int offset, __u64 value)
 
 int nvme_get_property(int fd, int offset, __u64 *value)
 {
-	__u32 cdw10 = is_64bit_reg(offset);
+	__u32 cdw10 = nvme_is_64bit_reg(offset);
 
 	struct nvme_passthru_cmd64 cmd = {
 		.opcode		= nvme_admin_fabrics,

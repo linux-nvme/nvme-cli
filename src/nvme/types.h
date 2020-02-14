@@ -22,30 +22,55 @@
 #define __force
 #endif
 
+/**
+ * cpu_to_le16() -
+ * @x: 16-bit CPU value to turn to little endian.
+ */
 static inline __le16 cpu_to_le16(uint16_t x)
 {
 	return (__force __le16)htole16(x);
 }
 
+/**
+ * cpu_to_le32() -
+ * @x: 32-bit CPU value to turn little endian.
+ */
 static inline __le32 cpu_to_le32(uint32_t x)
 {
 	return (__force __le32)htole32(x);
 }
 
+/**
+ * cpu_to_le64() -
+ * @x: 64-bit CPU value to turn little endian.
+ */
 static inline __le64 cpu_to_le64(uint64_t x)
 {
 	return (__force __le64)htole64(x);
 }
 
+/**
+ * le16_to_cpu() -
+ * @x: 16-bit little endian value to turn to CPU.
+ */
 static inline uint16_t le16_to_cpu(__le16 x)
 {
 	return le16toh((__force __u16)x);
 }
 
+/**
+ * le32_to_cpu() -
+ * @x: 32-bit little endian value to turn to CPU.
+ */
 static inline uint32_t le32_to_cpu(__le32 x)
 {
-	return le32toh((__force __u32)x); }
+	return le32toh((__force __u32)x);
+}
 
+/**
+ * le64_to_cpu() -
+ * @x: 64-bit little endian value to turn to CPU.
+ */
 static inline uint64_t le64_to_cpu(__le64 x)
 {
 	return le64toh((__force __u64)x);
@@ -77,8 +102,12 @@ static inline uint64_t le64_to_cpu(__le64 x)
  * 				lba range type
  * @NVME_LOG_ST_MAX_RESULTS:	The largest possible self test result index in the
  * 				device self test log
+ * @NVME_LOG_TELEM_BLOCK_SIZE:	Specification defined size of Telemetry Data Blocks
  * @NVME_DSM_MAX_RANGES:	The largest possible range index in a data-set
  * 				management command
+ * @NVME_NQN_LENGTH:		Max length for NVMe Qualified Name.
+ * @NVMF_TRADDR_SIZE:
+ * @NVMF_TSAS_SIZE:
  */
 enum nvme_constants {
 	NVME_NSID_ALL			= 0xffffffff,
@@ -97,7 +126,11 @@ enum nvme_constants {
 	NVME_ID_ND_DESCRIPTOR_MAX	= 16,
 	NVME_FEAT_LBA_RANGE_MAX		= 64,
 	NVME_LOG_ST_MAX_RESULTS		= 20,
+	NVME_LOG_TELEM_BLOCK_SIZE	= 512,
 	NVME_DSM_MAX_RANGES		= 256,
+	NVME_NQN_LENGTH			= 256,
+	NVMF_TRADDR_SIZE		= 256,
+	NVMF_TSAS_SIZE			= 256,
 };
 
 /**
@@ -208,7 +241,8 @@ enum {
 };
 
 /**
- * is_64bit_reg() - Checks if offset of the controller register is 64bit or not.
+ * nvme_is_64bit_reg() - Checks if offset of the controller register is a know
+ * 			 64bit value.
  * @offset:	Offset of controller register field in bytes
  *
  * This function does not care about transport so that the offset is not going
@@ -218,7 +252,7 @@ enum {
  *
  * Returns true if given offset is 64bit register, otherwise it returns false.
  */
-static inline bool is_64bit_reg(__u32 offset)
+static inline bool nvme_is_64bit_reg(__u32 offset)
 {
 	switch (offset) {
 	case NVME_REG_CAP:
@@ -619,7 +653,7 @@ struct nvme_id_ctrl {
 	__le32			sgls;
 	__le32			mnan;
 	__u8			rsvd544[224];
-	char			subnqn[256];
+	char			subnqn[NVME_NQN_LENGTH];
 	__u8			rsvd1024[768];
 
 	/* Fabrics Only */
@@ -2189,7 +2223,7 @@ struct nvme_persistent_event_log {
 	__le16	ssvid;
 	char	sn[20];
 	char	mn[40];
-	char	subnqn[256];
+	char	subnqn[NVME_NQN_LENGTH];
 	__u8	rsvd372;
 	__u8	seb[32];
 };
@@ -2771,14 +2805,9 @@ enum nvme_subsys_type {
 #define NVME_DISC_SUBSYS_NAME	"nqn.2014-08.org.nvmexpress.discovery"
 #define NVME_RDMA_IP_PORT	4420
 
-/* NQN names in commands fields specified one size */
-#define NVMF_NQN_FIELD_LEN	256
-
 /* However the max length of a qualified name is another size */
 #define NVMF_NQN_SIZE		223
 #define NVMF_TRSVCID_SIZE	32
-#define NVMF_TRADDR_SIZE	256
-#define NVMF_TSAS_SIZE		256
 
 /**
  * struct nvmf_disc_log_entry - Discovery log page entry
@@ -2810,7 +2839,7 @@ struct nvmf_disc_log_entry {
 	__u8		resv10[22];
 	char		trsvcid[NVMF_TRSVCID_SIZE];
 	__u8		resv64[192];
-	char		subnqn[NVMF_NQN_FIELD_LEN];
+	char		subnqn[NVME_NQN_LENGTH];
 	char		traddr[NVMF_TRADDR_SIZE];
 	union tsas {
 		char		common[NVMF_TSAS_SIZE];
@@ -2949,8 +2978,8 @@ struct nvmf_connect_data {
 	__u8		hostid[16];
 	__le16		cntlid;
 	char		resv4[238];
-	char		subsysnqn[NVMF_NQN_FIELD_LEN];
-	char		hostnqn[NVMF_NQN_FIELD_LEN];
+	char		subsysnqn[NVME_NQN_LENGTH];
+	char		hostnqn[NVME_NQN_LENGTH];
 	char		resv5[256];
 };
 
@@ -3267,14 +3296,14 @@ struct nvme_mi_vpd_tra {
 
 /**
  * struct nvme_mi_vpd_mr_common -
- * @type;
- * @rf;
- * @rlen;
- * @rchksum;
- * @hchksum;
-nmra;
- * @ppmra;
- * @tmra;
+ * @type:
+ * @rf:
+ * @rlen:
+ * @rchksum:
+ * @hchksum:
+ * @nmra:
+ * @ppmra:
+ * @tmra:
  */
 struct nvme_mi_vpd_mr_common {
 	__u8	type;
@@ -3314,21 +3343,374 @@ struct nvme_mi_vpd_hdr {
 };
 
 /**
- * enum -
+ * enum nvme_status_code - Defines all parts of the nvme status field: status
+ * 			   code, status code type, and additional flags.
+ * @NVME_SCT_MASK:		      Mask to get the value of the Status Code Type
+ * @NVME_SCT_GENERIC:		      Generic errors applicable to multiple opcodes
+ * @NVME_SCT_CMD_SPECIFIC:	      Errors associated to a specific opcode
+ * @NVME_SCT_MEDIA:		      Errors associated with media and data integrity
+ * @NVME_SCT_PATH:		      Errors associated with the paths connection
+ * @NVME_SCT_VS:		      Vendor specific errors
+ * @NVME_SC_MASK:		      Mask to get the value of the status code.
+ * @NVME_SC_SUCCESS:		      Successful Completion: The command
+ * 				      completed without error.
+ * @NVME_SC_INVALID_OPCODE:	      Invalid Command Opcode: A reserved coded
+ * 				      value or an unsupported value in the command opcode field.
+ * @NVME_SC_INVALID_FIELD:	      Invalid Field in Command: A reserved
+ * 				      coded value or an unsupported value in a defined field.
+ * @NVME_SC_CMDID_CONFLICT:	      Command ID Conflict: The command
+ * 				      identifier is already in use.
+ * @NVME_SC_DATA_XFER_ERROR:	      Data Transfer Error: Transferring the
+ * 				      data or metadata associated with a command experienced an error.
+ * @NVME_SC_POWER_LOSS:		      Commands Aborted due to Power Loss
+ * 				      Notification: Indicates that the command
+ * 				      was aborted due to a power loss
+ * 				      notification.
+ * @NVME_SC_INTERNAL:		      Internal Error: The command was not
+ * 				      completed successfully due to an internal error.
+ * @NVME_SC_ABORT_REQ:		      Command Abort Requested: The command was
+ * 				      aborted due to an Abort command being
+ * 				      received that specified the Submission
+ * 				      Queue Identifier and Command Identifier
+ * 				      of this command.
+ * @NVME_SC_ABORT_QUEUE:	      Command Aborted due to SQ Deletion: The
+ * 				      command was aborted due to a Delete I/O
+ * 				      Submission Queue request received for the
+ * 				      Submission Queue to which the command was
+ * 				      submitted.
+ * @NVME_SC_FUSED_FAIL:		      Command Aborted due to Failed Fused Command:
+ * 				      The command was aborted due to the other
+ * 				      command in a fused operation failing.
+ * @NVME_SC_FUSED_MISSING:	      Aborted due to Missing Fused Command: The
+ * 				      fused command was aborted due to the
+ * 				      adjacent submission queue entry not
+ * 				      containing a fused command that is the
+ * 				      other command.
+ * @NVME_SC_INVALID_NS:		      Invalid Namespace or Format: The
+ * 				      namespace or the format of that namespace is invalid.
+ * @NVME_SC_CMD_SEQ_ERROR:	      Command Sequence Error: The command was
+ * 				      aborted due to a protocol violation in a multi-command sequence.
+ * @NVME_SC_SGL_INVALID_LAST:	      Invalid SGL Segment Descriptor: The
+ * 				      command includes an invalid SGL Last Segment or SGL Segment descriptor.
+ * @NVME_SC_SGL_INVALID_COUNT:	      Invalid Number of SGL Descriptors: There
+ * 				      is an SGL Last Segment descriptor or an
+ * 				      SGL Segment descriptor in a location
+ * 				      other than the last descriptor of a
+ * 				      segment based on the length indicated.
+ * @NVME_SC_SGL_INVALID_DATA:	      Data SGL Length Invalid: This may occur
+ * 				      if the length of a Data SGL is too short.
+ * 				      This may occur if the length of a Data
+ * 				      SGL is too long and the controller does
+ * 				      not support SGL transfers longer than the
+ * 				      amount of data to be transferred as
+ * 				      indicated in the SGL Support field of the
+ * 				      Identify Controller data structure.
+ * @NVME_SC_SGL_INVALID_METADATA:     Metadata SGL Length Invalid: This may
+ * 				      occur if the length of a Metadata SGL is
+ * 				      too short. This may occur if the length
+ * 				      of a Metadata SGL is too long and the
+ * 				      controller does not support SGL transfers
+ * 				      longer than the amount of data to be
+ * 				      transferred as indicated in the SGL
+ * 				      Support field of the Identify Controller
+ * 				      data structure.
+ * @NVME_SC_SGL_INVALID_TYPE:	      SGL Descriptor Type Invalid: The type of
+ * 				      an SGL Descriptor is a type that is not supported by the controller.
+ * @NVME_SC_CMB_INVALID_USE:	      Invalid Use of Controller Memory Buffer:
+ * 				      The attempted use of the Controller
+ * 				      Memory Buffer is not supported by the
+ * 				      controller.
+ * @NVME_SC_PRP_INVALID_OFFSET:       PRP Offset Invalid: The Offset field for
+ * 				      a PRP entry is invalid.
+ * @NVME_SC_AWU_EXCEEDED:	      Atomic Write Unit Exceeded: The length
+ * 				      specified exceeds the atomic write unit size.
+ * @NVME_SC_OP_DENIED:		      Operation Denied: The command was denied
+ * 				      due to lack of access rights. Refer to
+ * 				      the appropriate security specification.
+ * @NVME_SC_SGL_INVALID_OFFSET:	      SGL Offset Invalid: The offset specified
+ * 				      in a descriptor is invalid. This may
+ * 				      occur when using capsules for data
+ * 				      transfers in NVMe over Fabrics
+ * 				      implementations and an invalid offset in
+ * 				      the capsule is specified.
+ * @NVME_SC_HOSTID_FORMAT:	      Host Identifier Inconsistent Format: The
+ * 				      NVM subsystem detected the simultaneous
+ * 				      use of 64- bit and 128-bit Host
+ * 				      Identifier values on different
+ * 				      controllers.
+ * @NVME_SC_KAT_EXPIRED:	      Keep Alive Timer Expired: The Keep Alive
+ * 				      Timer expired.
+ * @NVME_SC_KAT_INVALID:	      Keep Alive Timeout Invalid: The Keep
+ * 				      Alive Timeout value specified is invalid.
+ * @NVME_SC_CMD_ABORTED_PREMEPT:      Command Aborted due to Preempt and Abort:
+ * 				      The command was aborted due to a Reservation Acquire command.
+ * @NVME_SC_SANITIZE_FAILED:	      Sanitize Failed: The most recent sanitize
+ * 				      operation failed and no recovery action has been successfully completed.
+ * @NVME_SC_SANITIZE_IN_PROGRESS:     Sanitize In Progress: The requested
+ * 				      function (e.g., command) is prohibited
+ * 				      while a sanitize operation is in
+ * 				      progress.
+ * @NVME_SC_SGL_INVALID_GRANULARITY:  SGL Data Block Granularity Invalid: The
+ * 				      Address alignment or Length granularity
+ * 				      for an SGL Data Block descriptor is
+ * 				      invalid.
+ * @NVME_SC_CMD_IN_CMBQ_NOT_SUPP:     Command Not Supported for Queue in CMB:
+ * 				      The implementation does not support
+ * 				      submission of the command to a Submission
+ * 				      Queue in the Controller Memory Buffer or
+ * 				      command completion to a Completion Queue
+ * 				      in the Controller Memory Buffer.
+ * @NVME_SC_NS_WRITE_PROTECTED:	      Namespace is Write Protected: The command
+ * 				      is prohibited while the namespace is
+ * 				      write protected as a result of a change
+ * 				      in the namespace write protection state
+ * 				      as defined by the Namespace Write
+ * 				      Protection State Machine.
+ * @NVME_SC_CMD_INTERRUPTED:	      Command Interrupted: Command processing
+ * 				      was interrupted and the controller is
+ * 				      unable to successfully complete the
+ * 				      command. The host should retry the
+ * 				      command.
+ * @NVME_SC_TRAN_TPORT_ERROR:	      Transient Transport Error: A transient
+ * 				      transport error was detected. If the
+ * 				      command is retried on the same
+ * 				      controller, the command is likely to
+ * 				      succeed. A command that fails with a
+ * 				      transient transport error four or more
+ * 				      times should be treated as a persistent
+ * 				      transport error that is not likely to
+ * 				      succeed if retried on the same
+ * 				      controller.
+ * @NVME_SC_LBA_RANGE:		      LBA Out of Range: The command references
+ * 				      an LBA that exceeds the size of the namespace.
+ * @NVME_SC_CAP_EXCEEDED:	      Capacity Exceeded: Execution of the
+ * 				      command has caused the capacity of the
+ * 				      namespace to be exceeded.
+ * @NVME_SC_NS_NOT_READY:	      Namespace Not Ready: The namespace is not
+ * 				      ready to be accessed as a result of a
+ * 				      condition other than a condition that is
+ * 				      reported as an Asymmetric Namespace
+ * 				      Access condition.
+ * @NVME_SC_RESERVATION_CONFLICT:     Reservation Conflict: The command was
+ * 				      aborted due to a conflict with a
+ * 				      reservation held on the accessed
+ * 				      namespace.
+ * @NVME_SC_FORMAT_IN_PROGRESS:	      Format In Progress: A Format NVM command
+ * 				      is in progress on the namespace.
+ * @NVME_SC_CQ_INVALID:		      Completion Queue Invalid: The Completion
+ * 				      Queue identifier specified in the command
+ * 				      does not exist.
+ * @NVME_SC_QID_INVALID:	      Invalid Queue Identifier: The creation of
+ *				      the I/O Completion Queue failed due to an
+ *				      invalid queue identifier specified as
+ *				      part of the command. An invalid queue
+ *				      identifier is one that is currently in
+ *				      use or one that is outside the range
+ *				      supported by the controller.
+ * @NVME_SC_QUEUE_SIZE:		      Invalid Queue Size: The host attempted to
+ * 				      create an I/O Completion Queue with an
+ * 				      invalid number of entries.
+ * @NVME_SC_ABORT_LIMIT:	      Abort Command Limit Exceeded: The number
+ * of concurrently outstanding Abort commands has exceeded the limit indicated
+ * 				      in the Identify Controller data
+ * 				      structure.
+ * @NVME_SC_ABORT_MISSING:	      Abort Command is missing: The abort
+ * 				      command is missing.
+ * @NVME_SC_ASYNC_LIMIT:	      Asynchronous Event Request Limit
+ * 				      Exceeded: The number of concurrently
+ * 				      outstanding Asynchronous Event Request
+ * 				      commands has been exceeded.
+ * @NVME_SC_FIRMWARE_SLOT:	      Invalid Firmware Slot: The firmware slot
+ * 				      indicated is invalid or read only. This
+ * 				      error is indicated if the firmware slot
+ * 				      exceeds the number supported.
+ * @NVME_SC_FIRMWARE_IMAGE:	      Invalid Firmware Image: The firmware
+ * 				      image specified for activation is invalid
+ * 				      and not loaded by the controller.
+ * @NVME_SC_INVALID_VECTOR:	      Invalid Interrupt Vector: The creation of
+ * 				      the I/O Completion Queue failed due to an
+ * 				      invalid interrupt vector specified as
+ * 				      part of the command.
+ * @NVME_SC_INVALID_LOG_PAGE:	      Invalid Log Page: The log page indicated
+ * 				      is invalid. This error condition is also
+ * 				      returned if a reserved log page is
+ * 				      requested.
+ * @NVME_SC_INVALID_FORMAT:	      Invalid Format: The LBA Format specified
+ * 				      is not supported.
+ * @NVME_SC_FW_NEEDS_CONV_RESET:      Firmware Activation Requires Conventional Reset:
+ * 				      The firmware commit was successful,
+ * 				      however, activation of the firmware image
+ * 				      requires a conventional reset.
+ * @NVME_SC_INVALID_QUEUE:	      Invalid Queue Deletion: Invalid I/O
+ * 				      Completion Queue specified to delete.
+ * @NVME_SC_FEATURE_NOT_SAVEABLE:     Feature Identifier Not Saveable: The
+ * 				      Feature Identifier specified does not
+ * 				      support a saveable value.
+ * @NVME_SC_FEATURE_NOT_CHANGEABLE:   Feature Not Changeable: The Feature
+ * 				      Identifier is not able to be changed.
+ * @NVME_SC_FEATURE_NOT_PER_NS:	      Feature Not Namespace Specific: The
+ * 				      Feature Identifier specified is not
+ * 				      namespace specific. The Feature
+ * 				      Identifier settings apply across all
+ * 				      namespaces.
+ * @NVME_SC_FW_NEEDS_SUBSYS_RESET:    Firmware Activation Requires NVM
+ * 				      Subsystem Reset: The firmware commit was
+ * 				      successful, however, activation of the
+ * 				      firmware image requires an NVM Subsystem.
+ * @NVME_SC_FW_NEEDS_RESET:	      Firmware Activation Requires Controller
+ * 				      Level Reset: The firmware commit was
+ * 				      successful; however, the image specified
+ * 				      does not support being activated without
+ * 				      a reset.
+ * @NVME_SC_FW_NEEDS_MAX_TIME:	      Firmware Activation Requires Maximum Time
+ * 				      Violation: The image specified if
+ * 				      activated immediately would exceed the
+ * 				      Maximum Time for Firmware Activation
+ * 				      (MTFA) value reported in Identify
+ * 				      Controller.
+ * @NVME_SC_FW_ACTIVATE_PROHIBITED:   Firmware Activation Prohibited: The image
+ * 				      specified is being prohibited from
+ * 				      activation by the controller for vendor
+ * 				      specific reasons.
+ * @NVME_SC_OVERLAPPING_RANGE:	      Overlapping Range: The downloaded
+ * 				      firmware image has overlapping ranges.
+ * @NVME_SC_NS_INSUFFICIENT_CAP:      Namespace Insufficient Capacity: Creating
+ * 				      the namespace requires more free space
+ * 				      than is currently available.
+ * @NVME_SC_NS_ID_UNAVAILABLE:	      Namespace Identifier Unavailable: The
+ * 				      number of namespaces supported has been
+ * 				      exceeded.
+ * @NVME_SC_NS_ALREADY_ATTACHED:      Namespace Already Attached: The
+ * 				      controller is already attached to the
+ * 				      namespace specified.
+ * @NVME_SC_NS_IS_PRIVATE:	      Namespace Is Private: The namespace is
+ * 				      private and is already attached to one
+ * 				      controller.
+ * @NVME_SC_NS_NOT_ATTACHED:	      Namespace Not Attached: The request to
+ * 				      detach the controller could not be completed because the controller is not
+ * 				      attached to the namespace.
+ * @NVME_SC_THIN_PROV_NOT_SUPP:	      Thin Provisioning Not Supported: Thin
+ * 				      provisioning is not supported by the
+ * 				      controller.
+ * @NVME_SC_CTRL_LIST_INVALID:	      Controller List Invalid: The controller
+ * 				      list provided contains invalid controller
+ * 				      ids.
+ * @NVME_SC_SELF_TEST_IN_PROGRESS:    Device Self-test In Progress:
+ * @NVME_SC_BP_WRITE_PROHIBITED:      Boot Partition Write Prohibited: The
+ * 				      command is trying to modify a locked Boot
+ * 				      Partition.
+ * @NVME_SC_INVALID_CTRL_ID:	      Invalid Controller Identifier:
+ * @NVME_SC_INVALID_SEC_CTRL_STATE:   Invalid Secondary Controller State
+ * @NVME_SC_INVALID_CTRL_RESOURCES:   Invalid Number of Controller Resources
+ * @NVME_SC_INVALID_RESOURCE_ID:      Invalid Resource Identifier
+ * @NVME_SC_PMR_SAN_PROHIBITED:	      Sanitize Prohibited While Persistent
+ * 				      Memory Region is Enabled
+ * @NVME_SC_ANA_GROUP_ID_INVALID:     ANA Group Identifier Invalid
+ * @NVME_SC_ANA_ATTACH_FAILED:	      ANA Attach Failed
+ * @NVME_SC_BAD_ATTRIBUTES:	      Conflicting Dataset Management Attributes
+ * @NVME_SC_INVALID_PI:		      Invalid Protection Information
+ * @NVME_SC_READ_ONLY:		      Attempted Write to Read Only Range
+ * @NVME_SC_CONNECT_FORMAT:	      Incompatible Format: The NVM subsystem
+ * 				      does not support the record format
+ * 				      specified by the host.
+ * @NVME_SC_CONNECT_CTRL_BUSY:	      Controller Busy: The controller is
+ * 				      already associated with a host.
+ * @NVME_SC_CONNECT_INVALID_PARAM:    Connect Invalid Parameters: One or more
+ * 				      of the command parameters.
+ * @NVME_SC_CONNECT_RESTART_DISC:     Connect Restart Discovery: The NVM
+ * 				      subsystem requested is not available.
+ * @NVME_SC_CONNECT_INVALID_HOST:     Connect Invalid Host: The host is either
+ * 				      not allowed to establish an association
+ * 				      to any controller in the NVM subsystem or
+ * 				      the host is not allowed to establish an
+ * 				      association to the specified controller
+ * @NVME_SC_DISCONNECT_INVALID_QTYPE: Invalid Queue Type: The command was sent
+ * 				      on the wrong queue type.
+ * @NVME_SC_DISCOVERY_RESTART:	      Discover Restart: The snapshot of the
+ * 				      records is now invalid or out of date.
+ * @NVME_SC_AUTH_REQUIRED:	      Authentication Required: NVMe in-band
+ * 				      authentication is required and the queue
+ * 				      has not yet been authenticated.
+ * @NVME_SC_WRITE_FAULT:	      Write Fault: The write data could not be
+ * 				      committed to the media.
+ * @NVME_SC_READ_ERROR:		      Unrecovered Read Error: The read data
+ * 				      could not be recovered from the media.
+ * @NVME_SC_GUARD_CHECK:	      End-to-end Guard Check Error: The command
+ * 				      was aborted due to an end-to-end guard
+ * 				      check failure.
+ * @NVME_SC_APPTAG_CHECK:	      End-to-end Application Tag Check Error:
+ * 				      The command was aborted due to an
+ * 				      end-to-end application tag check failure.
+ * @NVME_SC_REFTAG_CHECK:	      End-to-end Reference Tag Check Error: The
+ * 				      command was aborted due to an end-to-end
+ * 				      reference tag check failure.
+ * @NVME_SC_COMPARE_FAILED:	      Compare Failure: The command failed due
+ * 				      to a miscompare during a Compare command.
+ * @NVME_SC_ACCESS_DENIED:	      Access Denied: Access to the namespace
+ * 				      and/or LBA range is denied due to lack of
+ * 				      access rights.
+ * @NVME_SC_UNWRITTEN_BLOCK:	      Deallocated or Unwritten Logical Block:
+ * 				      The command failed due to an attempt to
+ * 				      read from or verify an LBA range
+ * 				      containing a deallocated or unwritten
+ * 				      logical block.
+ * @NVME_SC_ANA_INTERNAL_PATH_ERROR:  Internal Path Error: The command was not
+ * 				      completed as the result of a controller
+ * 				      internal error that is specific to the
+ * 				      controller processing the command.
+ * @NVME_SC_ANA_PERSISTENT_LOSS:      Asymmetric Access Persistent Loss: The
+ * 				      requested function (e.g., command) is not
+ * 				      able to be performed as a result of the
+ * 				      relationship between the controller and
+ * 				      the namespace being in the ANA Persistent
+ * 				      Loss state.
+ * @NVME_SC_ANA_INACCESSIBLE:	      Asymmetric Access Inaccessible: The
+ * 				      requested function (e.g., command) is not
+ * 				      able to be performed as a result of the
+ * 				      relationship between the controller and
+ * 				      the namespace being in the ANA
+ * 				      Inaccessible state.
+ * @NVME_SC_ANA_TRANSITION:	      Asymmetric Access Transition: The
+ * 				      requested function (e.g., command) is not
+ * 				      able to be performed as a result of the
+ * 				      relationship between the controller and
+ * 				      the namespace transitioning between
+ * 				      Asymmetric Namespace Access states.
+ * @NVME_SC_CTRL_PATH_ERROR:	      Controller Pathing Error: A pathing error
+ * 				      was detected by the controller.
+ * @NVME_SC_HOST_PATH_ERROR:	      Host Pathing Error: A pathing error was
+ * 				      detected by the host.
+ * @NVME_SC_CMD_ABORTED_BY_HOST:      Command Aborted By Host: The command was
+ * 				      aborted as a result of host action.
+ * @NVME_SC_CRD:		      Mask to get value of Command Retry Delay
+ * 				      index
+ * @NVME_SC_MORE:		      More bit. If set, more status information
+ * 				      for this command as part of the Error
+ * 				      Information log that may be retrieved with
+ * 				      the Get Log Page command.
+ * @NVME_SC_DNR:		      Do Not Retry bit. If set, if the same
+ * 				      command is re-submitted to any controller
+ * 				      in the NVM subsystem, then that
+ * 				      re-submitted command is expected to fail.
  */
-enum {
+enum nvme_status_field {
 	/*
-	 * Status code type
+	 * Status Code Type indicators
 	 */
+	NVME_SCT_MASK			= 0x700,
 	NVME_SCT_GENERIC		= 0x000,
 	NVME_SCT_CMD_SPECIFIC		= 0x100,
 	NVME_SCT_MEDIA			= 0x200,
 	NVME_SCT_PATH			= 0x300,
 	NVME_SCT_VS			= 0x700,
-	NVME_SCT_MASK			= 0x700,
 
 	/*
-	 * Generic Command Status:
+	 * Status Code inidicators
+	 */
+	NVME_SC_MASK			= 0xff,
+
+	/*
+	 * Generic Command Status Codes:
 	 */
 	NVME_SC_SUCCESS			= 0x0,
 	NVME_SC_INVALID_OPCODE		= 0x1,
@@ -3353,7 +3735,6 @@ enum {
 	NVME_SC_AWU_EXCEEDED		= 0x14,
 	NVME_SC_OP_DENIED		= 0x15,
 	NVME_SC_SGL_INVALID_OFFSET	= 0x16,
-
 	NVME_SC_HOSTID_FORMAT		= 0x18,
 	NVME_SC_KAT_EXPIRED		= 0x19,
 	NVME_SC_KAT_INVALID		= 0x1a,
@@ -3365,7 +3746,6 @@ enum {
 	NVME_SC_NS_WRITE_PROTECTED	= 0x20,
 	NVME_SC_CMD_INTERRUPTED		= 0x21,
 	NVME_SC_TRAN_TPORT_ERROR	= 0x22,
-
 	NVME_SC_LBA_RANGE		= 0x80,
 	NVME_SC_CAP_EXCEEDED		= 0x81,
 	NVME_SC_NS_NOT_READY		= 0x82,
@@ -3373,7 +3753,7 @@ enum {
 	NVME_SC_FORMAT_IN_PROGRESS	= 0x84,
 
 	/*
-	 * Command Specific Status:
+	 * Command Specific Status Codes:
 	 */
 	NVME_SC_CQ_INVALID		= 0x00,
 	NVME_SC_QID_INVALID		= 0x01,
@@ -3429,7 +3809,6 @@ enum {
 	NVME_SC_CONNECT_RESTART_DISC	= 0x83,
 	NVME_SC_CONNECT_INVALID_HOST	= 0x84,
 	NVME_SC_DISCONNECT_INVALID_QTYPE= 0x85,
-
 	NVME_SC_DISCOVERY_RESTART	= 0x90,
 	NVME_SC_AUTH_REQUIRED		= 0x91,
 
@@ -3452,24 +3831,39 @@ enum {
 	NVME_SC_ANA_PERSISTENT_LOSS	= 0x01,
 	NVME_SC_ANA_INACCESSIBLE	= 0x02,
 	NVME_SC_ANA_TRANSITION		= 0x03,
-
 	NVME_SC_CTRL_PATH_ERROR		= 0x60,
-
 	NVME_SC_HOST_PATH_ERROR		= 0x70,
 	NVME_SC_CMD_ABORTED_BY_HOST	= 0x71,
 
 	/*
-	 * Status code mask
-	 */
-	NVME_SC_MASK			= 0xff,
-
-	/*
-	 * Additional status info
+	 * Additional status field flags
 	 */
 	NVME_SC_CRD			= 0x1800,
 	NVME_SC_MORE			= 0x2000,
 	NVME_SC_DNR			= 0x4000,
 };
+
+/**
+ * nvme_status_code_type() - Returns the NVMe Status Code Type
+ * @status_field: The NVMe Completion Queue Entry's Status Field
+ *
+ * See &enum nvme_status_field
+ */
+static inline __u16 nvme_status_code_type(__u16 status_field)
+{
+	return status_field & NVME_SCT_MASK;
+}
+
+/**
+ * nvme_status_code() - Returns the NVMe Status Code
+ * @status_field: The NVMe Completion Queue Entry's Status Field
+ *
+ * See &enum nvme_status_field
+ */
+static inline __u16 nvme_status_code(__u16 status_field)
+{
+	return status_field & NVME_SCT_MASK;
+}
 
 #define NVME_MAJOR(ver)		((ver) >> 16)
 #define NVME_MINOR(ver)		(((ver) >> 8) & 0xff)

@@ -64,78 +64,61 @@ struct nvme_fabrics_config {
 
 /**
  * nvmf_add_ctrl_opts() -
+ * @cfg:
+ *
+ * Return:
  */
 int nvmf_add_ctrl_opts(struct nvme_fabrics_config *cfg);
 
 /**
  * nvmf_add_ctrl() -
+ * @cfg:
+ *
+ * Return:
  */
 nvme_ctrl_t nvmf_add_ctrl(struct nvme_fabrics_config *cfg);
 
 /**
  * nvmf_get_discovery_log() -
+ * @c:
+ * @logp:
+ * @max_retries:
+ *
+ * Return:
  */
 int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 			   int max_retries);
 
 /**
- * nvmf_hostnqn_generate() -
+ * nvmf_hostnqn_generate() - Generate a machine specific host nqn
+ * Returns: An nvm namespace qualifieid name string based on the machine
+ * 	    identifier, or NULL if not successful.
  */
 char *nvmf_hostnqn_generate();
 
 /**
- * nvmf_hostnqn_from_file() -
+ * nvmf_hostnqn_from_file() - Reads the host nvm qualified name from the config
+ * 			      default location in /etc/nvme/
+ * Return: The host nqn, or NULL if unsuccessful. If found, the caller
+ * 	   is responsible to free the string.
  */
 char *nvmf_hostnqn_from_file();
 
 /**
- * nvmf_hostid_from_file() -
+ * nvmf_hostid_from_file() - Reads the host identifier from the config default
+ * 			     location in /etc/nvme/.
+ * Return: The host identifier, or NULL if unsuccessful. If found, the caller
+ * 	   is responsible to free the string.
  */
 char *nvmf_hostid_from_file();
 
 /**
- * nvmf_trtype_str() -
- */
-const char *nvmf_trtype_str(__u8 trtype);
-
-/**
- * nvmf_adrfam_str() -
- */
-const char *nvmf_adrfam_str(__u8 adrfam);
-
-/**
- * nvmf_subtype_str() -
- */
-const char *nvmf_subtype_str(__u8 subtype);
-
-/**
- * nvmf_treq_str() -
- */
-const char *nvmf_treq_str(__u8 treq);
-
-/**
- * nvmf_sectype_str() -
- */
-const char *nvmf_sectype_str(__u8 sectype);
-
-/**
- * nvmf_prtype_str() -
- */
-const char *nvmf_prtype_str(__u8 prtype);
-
-/**
- * nvmf_qptype_str() -
- */
-const char *nvmf_qptype_str(__u8 qptype);
-
-/**
- * nvmf_cms_str() -
- */
-const char *nvmf_cms_str(__u8 cm);
-
-
-/**
  * nvmf_connect_disc_entry() -
+ * @e:
+ * @defcfg:
+ * @discover:
+ *
+ * Return:
  */
 nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
 	const struct nvme_fabrics_config *defcfg, bool *discover);

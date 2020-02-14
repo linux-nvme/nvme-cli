@@ -38,11 +38,11 @@ static void save_telemetry(nvme_ctrl_t c)
 	char buf[0x1000];
 	__u32 log_size;
 	int ret, fd;
-	void *log;
+	struct nvme_telemetry_log *log;
 	time_t s;
 
 	/* Clear the log (rae == false) at the end to see new telemetry events later */
-	ret = nvme_get_ctrl_telemetry(nvme_ctrl_get_fd(c), false, &log, &log_size);
+	ret = nvme_get_ctrl_telemetry(nvme_ctrl_get_fd(c), false, &log);
 	if (ret)
 		return;
 
@@ -53,6 +53,7 @@ static void save_telemetry(nvme_ctrl_t c)
 		free(log);
 		return;
 	}
+	log_size = (le16_to_cpu(log->dalb3) + 1) * NVME_LOG_TELEM_BLOCK_SIZE;
 
 	fd = open(buf, O_CREAT|O_WRONLY, S_IRUSR|S_IRGRP);
 	if (fd < 0) {
