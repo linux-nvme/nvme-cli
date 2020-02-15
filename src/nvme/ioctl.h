@@ -2414,7 +2414,7 @@ int nvme_set_property(int fd, int offset, __u64 value);
 int nvme_get_property(int fd, int offset, __u64 *value);
 
 /**
- * nvme_sanitize_nvme() - Start a sanitize operation
+ * nvme_sanitize_nvm() - Start a sanitize operation
  * @fd:		File descriptor of nvme device
  * @sanact:	Sanitize action, see &enum nvme_sanitize_sanact
  * @ause:	Set to allow unrestriced sanitize exit
