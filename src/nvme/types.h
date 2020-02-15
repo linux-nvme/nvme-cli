@@ -131,12 +131,14 @@ enum nvme_constants {
 	NVME_NQN_LENGTH			= 256,
 	NVMF_TRADDR_SIZE		= 256,
 	NVMF_TSAS_SIZE			= 256,
+	NVME_NIDT_EUI64_LEN		= 8,
+	NVME_NIDT_NGUID_LEN		= 16,
 };
 
 /**
- * enum nvme_registers - The nvme controller registers for all transports. This
- * 			 is the layout of BAR0/1 for PCIe, and properties for
- * 			 fabrics.
+ * enum nvme_register_offsets - The nvme controller registers for all transports. This
+ * 				is the layout of BAR0/1 for PCIe, and
+ * 				properties for fabrics.
  * @NVME_REG_CAP:	Controller Capabilities
  * @NVME_REG_VS:	Version
  * @NVME_REG_INTMS:	Interrupt Mask Set
@@ -162,7 +164,7 @@ enum nvme_constants {
  * @NVME_REG_PMRMSC:	Persistent Memory Region Controller Memory Space Control
  * @NVME_REG_DBS:	SQ 0 Tail Doorbell
  */
-enum nvme_registers {
+enum nvme_register_offsets {
 	NVME_REG_CAP	= 0x0000,
 	NVME_REG_VS	= 0x0008,
 	NVME_REG_INTMS	= 0x000c,
@@ -1853,23 +1855,15 @@ enum {
 };
 
 /**
- * struct nvme_frs -
- * @frs:
- */
-struct nvme_frs {
-	char frs[8];
-};
-
-/**
  * struct nvme_firmware_slot -
  * @afi:
  * @frs:
  */
 struct nvme_firmware_slot {
-	__u8		afi;
-	__u8		resv[7];
-	struct nvme_frs	frs[7];
-	__u8		resv2[448];
+	__u8	afi;
+	__u8	resv[7];
+	char	frs[7][8];
+	__u8	resv2[448];
 };
 
 /**
@@ -1941,6 +1935,7 @@ struct nvme_st_result {
  * @NVME_ST_RESULT_ABORTED_UNKNOWN:
  * @NVME_ST_RESULT_ABORTED_SANITIZE:
  * @NVME_ST_RESULT_NOT_USED:
+ * @NVME_ST_RESULT_NOT_MASK:
  */
 enum {
 	NVME_ST_RESULT_NO_ERR    	= 0x0,
@@ -1954,20 +1949,22 @@ enum {
 	NVME_ST_RESULT_ABORTED_UNKNOWN	= 0x8,
 	NVME_ST_RESULT_ABORTED_SANITIZE	= 0x9,
 	NVME_ST_RESULT_NOT_USED		= 0xf,
+	NVME_ST_RESULT_NOT_MASK		= 0xf,
 };
 
 /**
  * enum -
- * @NVME_ST_OPERATION_NONE:
- * @NVME_ST_OPERATION_SHORT:
- * @NVME_ST_OPERATION_EXTENDED:
- * @NVME_ST_OPERATION_VS:
+ * @NVME_ST_CODE_NONE:
+ * @NVME_ST_CODE_SHORT:
+ * @NVME_ST_CODE_EXTENDED:
+ * @NVME_ST_CODE_VS:
  */
 enum {
-	NVME_ST_OPERATION_NONE		= 0x0,
-	NVME_ST_OPERATION_SHORT		= 0x1,
-	NVME_ST_OPERATION_EXTENDED	= 0x2,
-	NVME_ST_OPERATION_VS		= 0xe,
+	NVME_ST_CODE_SHIFT		= 4,
+	NVME_ST_CODE_RESRVED		= 0x0,
+	NVME_ST_CODE_SHORT		= 0x1,
+	NVME_ST_CODE_EXTENDED		= 0x2,
+	NVME_ST_CODE_VS			= 0xe,
 };
 
 /**
@@ -2165,14 +2162,14 @@ struct nvme_ana_group_desc {
 };
 
 /**
- * enum -
+ * enum nvme_ana_state -
  * @NVME_ANA_STATE_OPTIMIZED:
  * @NVME_ANA_STATE_NONOPTIMIZED:
  * @NVME_ANA_STATE_INACCESSIBLE:
  * @NVME_ANA_STATE_PERSISTENT_LOSS:
  * @NVME_ANA_STATE_CHANGE:
  */
-enum {
+enum nvme_ana_state {
 	NVME_ANA_STATE_OPTIMIZED	= 0x1,
 	NVME_ANA_STATE_NONOPTIMIZED	= 0x2,
 	NVME_ANA_STATE_INACCESSIBLE	= 0x3,
@@ -2347,19 +2344,24 @@ struct nvme_sanitize_log_page {
 };
 
 /**
- * enum -
- * @NVME_SANITIZE_SSTAT_NEVER_SANITIZED:
- * @NVME_SANITIZE_SSTAT_COMPLETE_SUCCESS:
- * @NVME_SANITIZE_SSTAT_IN_PROGESS:
- * @NVME_SANITIZE_SSTAT_COMPLETED_FAILED:
- * @NVME_SANITIZE_SSTAT_ND_COMPLETE_SUCCESS:
+ * enum nvme_sanitize_sstat -
+ * @NVME_SANITIZE_SSTAT_STATUS_MASK:
+ * @NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED:
+ * @NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS:
+ * @NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS:
+ * @NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED:
+ * @NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS:
  */
-enum {
-	NVME_SANITIZE_SSTAT_NEVER_SANITIZED	= 0,
-	NVME_SANITIZE_SSTAT_COMPLETE_SUCCESS	= 1,
-	NVME_SANITIZE_SSTAT_IN_PROGESS		= 2,
-	NVME_SANITIZE_SSTAT_COMPLETED_FAILED	= 3,
-	NVME_SANITIZE_SSTAT_ND_COMPLETE_SUCCESS	= 4,
+enum nvme_sanitize_sstat {
+	NVME_SANITIZE_SSTAT_STATUS_MASK			= 0x7,
+	NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED	= 0,
+	NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS	= 1,
+	NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS		= 2,
+	NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED	= 3,
+	NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS	= 4,
+	NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK	= 0xf8,
+	NVME_SANITIZE_SSTAT_COMPLETED_PASSES_SHIFT	= 3,
+	NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED		= 1 << 8,
 };
 
 /**
@@ -3343,8 +3345,8 @@ struct nvme_mi_vpd_hdr {
 };
 
 /**
- * enum nvme_status_code - Defines all parts of the nvme status field: status
- * 			   code, status code type, and additional flags.
+ * enum nvme_status_field - Defines all parts of the nvme status field: status
+ * 			    code, status code type, and additional flags.
  * @NVME_SCT_MASK:		      Mask to get the value of the Status Code Type
  * @NVME_SCT_GENERIC:		      Generic errors applicable to multiple opcodes
  * @NVME_SCT_CMD_SPECIFIC:	      Errors associated to a specific opcode
@@ -3355,13 +3357,16 @@ struct nvme_mi_vpd_hdr {
  * @NVME_SC_SUCCESS:		      Successful Completion: The command
  * 				      completed without error.
  * @NVME_SC_INVALID_OPCODE:	      Invalid Command Opcode: A reserved coded
- * 				      value or an unsupported value in the command opcode field.
+ * 				      value or an unsupported value in the
+ * 				      command opcode field.
  * @NVME_SC_INVALID_FIELD:	      Invalid Field in Command: A reserved
- * 				      coded value or an unsupported value in a defined field.
+ * 				      coded value or an unsupported value in a
+ * 				      defined field.
  * @NVME_SC_CMDID_CONFLICT:	      Command ID Conflict: The command
  * 				      identifier is already in use.
  * @NVME_SC_DATA_XFER_ERROR:	      Data Transfer Error: Transferring the
- * 				      data or metadata associated with a command experienced an error.
+ * 				      data or metadata associated with a
+ * 				      command experienced an error.
  * @NVME_SC_POWER_LOSS:		      Commands Aborted due to Power Loss
  * 				      Notification: Indicates that the command
  * 				      was aborted due to a power loss
@@ -3387,11 +3392,14 @@ struct nvme_mi_vpd_hdr {
  * 				      containing a fused command that is the
  * 				      other command.
  * @NVME_SC_INVALID_NS:		      Invalid Namespace or Format: The
- * 				      namespace or the format of that namespace is invalid.
+ * 				      namespace or the format of that namespace
+ * 				      is invalid.
  * @NVME_SC_CMD_SEQ_ERROR:	      Command Sequence Error: The command was
- * 				      aborted due to a protocol violation in a multi-command sequence.
+ * 				      aborted due to a protocol violation in a
+ * 				      multi-command sequence.
  * @NVME_SC_SGL_INVALID_LAST:	      Invalid SGL Segment Descriptor: The
- * 				      command includes an invalid SGL Last Segment or SGL Segment descriptor.
+ * 				      command includes an invalid SGL Last
+ * 				      Segment or SGL Segment descriptor.
  * @NVME_SC_SGL_INVALID_COUNT:	      Invalid Number of SGL Descriptors: There
  * 				      is an SGL Last Segment descriptor or an
  * 				      SGL Segment descriptor in a location
@@ -3415,7 +3423,8 @@ struct nvme_mi_vpd_hdr {
  * 				      Support field of the Identify Controller
  * 				      data structure.
  * @NVME_SC_SGL_INVALID_TYPE:	      SGL Descriptor Type Invalid: The type of
- * 				      an SGL Descriptor is a type that is not supported by the controller.
+ * 				      an SGL Descriptor is a type that is not
+ * 				      supported by the controller.
  * @NVME_SC_CMB_INVALID_USE:	      Invalid Use of Controller Memory Buffer:
  * 				      The attempted use of the Controller
  * 				      Memory Buffer is not supported by the
@@ -3443,9 +3452,11 @@ struct nvme_mi_vpd_hdr {
  * @NVME_SC_KAT_INVALID:	      Keep Alive Timeout Invalid: The Keep
  * 				      Alive Timeout value specified is invalid.
  * @NVME_SC_CMD_ABORTED_PREMEPT:      Command Aborted due to Preempt and Abort:
- * 				      The command was aborted due to a Reservation Acquire command.
+ * 				      The command was aborted due to a
+ * 				      Reservation Acquire command.
  * @NVME_SC_SANITIZE_FAILED:	      Sanitize Failed: The most recent sanitize
- * 				      operation failed and no recovery action has been successfully completed.
+ * 				      operation failed and no recovery action
+ * 				      has been successfully completed.
  * @NVME_SC_SANITIZE_IN_PROGRESS:     Sanitize In Progress: The requested
  * 				      function (e.g., command) is prohibited
  * 				      while a sanitize operation is in
@@ -3698,6 +3709,7 @@ enum nvme_status_field {
 	 * Status Code Type indicators
 	 */
 	NVME_SCT_MASK			= 0x700,
+	NVME_SCT_SHIFT			= 0x700,
 	NVME_SCT_GENERIC		= 0x000,
 	NVME_SCT_CMD_SPECIFIC		= 0x100,
 	NVME_SCT_MEDIA			= 0x200,

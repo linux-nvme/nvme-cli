@@ -904,7 +904,7 @@ int nvme_set_features_resv_mask(int fd, __u32 mask, bool save, __u32 *result)
 
 int nvme_set_features_resv_persist(int fd, bool ptpl, bool save, __u32 *result)
 {
-	return __nvme_set_features(fd, NVME_FEAT_RESV_PERSIST, !!ptpl, save,
+	return __nvme_set_features(fd, NVME_FEAT_FID_RESV_PERSIST, !!ptpl, save,
 				   result);
 }
 
@@ -1122,7 +1122,7 @@ int nvme_get_features_resv_mask(int fd, enum nvme_get_features_sel sel,
 int nvme_get_features_resv_persist(int fd, enum nvme_get_features_sel sel,
 				   __u32 *result)
 {
-	return __nvme_get_features(fd, NVME_FEAT_RESV_PERSIST, sel, result);
+	return __nvme_get_features(fd, NVME_FEAT_FID_RESV_PERSIST, sel, result);
 }
 
 int nvme_get_features_write_protect(int fd, __u32 nsid,

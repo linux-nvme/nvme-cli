@@ -461,7 +461,7 @@ int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len)
 	case NVME_FEAT_FID_ENDURANCE_EVT_CFG:
 	case NVME_FEAT_FID_SW_PROGRESS:
 	case NVME_FEAT_FID_RESV_MASK:
-	case NVME_FEAT_RESV_PERSIST:
+	case NVME_FEAT_FID_RESV_PERSIST:
 	case NVME_FEAT_FID_WRITE_PROTECT:
 		*len = 0;
 		break;

@@ -20,6 +20,9 @@
 #ifndef _UAPI_LINUX_NVME_IOCTL_H
 #define _UAPI_LINUX_NVME_IOCTL_H
 
+#ifndef _LINUX_NVME_IOCTL_H
+#define _LINUX_NVME_IOCTL_H
+
 /**
  * struct nvme_passthru_cmd -
  * @opcode:	Operation code, see &enum nvme_io_opcodes and &enum nvme_admin_opcodes
@@ -116,6 +119,8 @@ struct nvme_passthru_cmd64 {
 #define NVME_IOCTL_IO64_CMD     _IOWR('N', 0x48, struct nvme_passthru_cmd64)
 
 #endif /* _UAPI_LINUX_NVME_IOCTL_H */
+
+#endif /* _LINUX_NVME_IOCTL_H */
 
 /**
  * nvme_submit_admin_passthru64() - Submit a 64-bit nvme passthrough admin
@@ -526,7 +531,7 @@ enum nvme_cmd_get_log_lid {
  * @NVME_FEAT_FID_SW_PROGRESS:
  * @NVME_FEAT_FID_HOST_ID:
  * @NVME_FEAT_FID_RESV_MASK:
- * @NVME_FEAT_RESV_PERSIST:
+ * @NVME_FEAT_FID_RESV_PERSIST:
  * @NVME_FEAT_FID_WRITE_PROTECT:
  */
 enum nvme_features_id {
@@ -557,7 +562,7 @@ enum nvme_features_id {
 	NVME_FEAT_FID_SW_PROGRESS				= 0x80,
 	NVME_FEAT_FID_HOST_ID					= 0x81,
 	NVME_FEAT_FID_RESV_MASK					= 0x82,
-	NVME_FEAT_RESV_PERSIST					= 0x83,
+	NVME_FEAT_FID_RESV_PERSIST				= 0x83,
 	NVME_FEAT_FID_WRITE_PROTECT				= 0x84,
 };
 
@@ -2409,7 +2414,7 @@ int nvme_set_property(int fd, int offset, __u64 value);
 int nvme_get_property(int fd, int offset, __u64 *value);
 
 /**
- * nvme_sanitize() - Start a sanitize operation
+ * nvme_sanitize_nvme() - Start a sanitize operation
  * @fd:		File descriptor of nvme device
  * @sanact:	Sanitize action, see &enum nvme_sanitize_sanact
  * @ause:	Set to allow unrestriced sanitize exit
