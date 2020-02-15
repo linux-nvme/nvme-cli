@@ -24,17 +24,6 @@ micro=1
 libname=$(soname).$(minor).$(micro)
 all_targets += $(NAME).a
 
-SED_PROCESS = \
-	$(SED) -e "s%@prefix@%$(prefix)%g" \
-               -e "s%@libdir@%$(libdir)%g" \
-               -e "s%@includedir@%$(includedir)%g" \
-               -e "s%@NAME@%$(NAME)%g" \
-               -e "s%@VERSION@%$(VERSION)%g" \
-               $< >$@
-
-%.pc: %.pc.in Makefile
-	$(SED_PROCESS)
-
 ifeq ($(ENABLE_SHARED),1)
 all_targets += $(libname)
 endif
@@ -77,12 +66,9 @@ libnvme.a: $(libnvme_objs) $(libccan_objs)
 $(libname): $(libnvme_sobjs) $(libccan_sobjs) libnvme.map
 	$(QUIET_CC)$(CC) $(SO_CFLAGS) -Wl,--version-script=libnvme.map -Wl,-soname=$(soname) -o $@ $(libnvme_sobjs) $(libccan_sobjs) $(LINK_FLAGS)
 
-install: $(all_targets) $(NAME).pc
-	for i in $(libnvme_api); do \
-		$(INSTALL) -D -m 644 ${i} $(includedir)/${i}
-	done
+install: $(all_targets)
 	$(INSTALL) -D -m 644 libnvme.a $(libdir)/libnvme.a
-	$(INSTALL) -D -m 644 $(NAME).pc $(DESTDIR)$(libdir)/pkgconfig/$(NAME).pc
+	for i in $(libnvme_api); do $(INSTALL) -D -m 644 $$i $(includedir)/$$i; done
 ifeq ($(ENABLE_SHARED),1)
 	$(INSTALL) -D -m 755 $(libname) $(libdir)/$(libname)
 	ln -sf $(libname) $(libdir)/$(soname)
@@ -93,7 +79,7 @@ $(libnvme_objs): $(libnvme_api) $(libnvme_private)
 $(libccan_objs): $(libccan_headers) $(CCANDIR)config.h
 
 clean:
-	rm -f $(all_targets) $(libnvme_objs) $(libnvme_sobjs) $(libccan_objs) $(libccan_sobjs) $(soname).new $(NAME).pc
+	rm -f $(all_targets) $(libnvme_objs) $(libnvme_sobjs) $(libccan_objs) $(libccan_sobjs) $(soname).new
 	rm -f $(CCANDIR)config.h
 	rm -f $(CCANDIR)tools/configurator/configurator
 	rm -f *.so* *.a *.o

@@ -31,19 +31,22 @@ ifneq ($(MAKECMDGOALS),clean)
 include config-host.mak
 endif
 
+SED_PROCESS = \
+	$(SED) -e "s%@prefix@%$(prefix)%g" \
+               -e "s%@libdir@%$(libdir)%g" \
+               -e "s%@includedir@%$(includedir)%g" \
+               -e "s%@NAME@%$(NAME)%g" \
+               -e "s%@VERSION@%$(VERSION)%g" \
+               $< >$@
+
 %.pc: %.pc.in config-host.mak $(SPECFILE)
-	sed -e "s%@prefix@%$(prefix)%g" \
-	    -e "s%@libdir@%$(libdir)%g" \
-	    -e "s%@includedir@%$(includedir)%g" \
-	    -e "s%@NAME@%$(NAME)%g" \
-	    -e "s%@VERSION@%$(VERSION)%g" \
-	    $< >$@
+	$(SED_PROCESS)
 
 install: $(NAME).pc
 	@$(MAKE) -C src install prefix=$(DESTDIR)$(prefix) includedir=$(DESTDIR)$(includedir) libdir=$(DESTDIR)$(libdir)
 	$(INSTALL) -D -m 644 $(NAME).pc $(DESTDIR)$(libdir)/pkgconfig/$(NAME).pc
 	$(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man2
-	$(INSTALL) -m 644 man/*.2 $(DESTDIR)$(mandir)/man2
+	$(INSTALL) -m 644 doc/man/*.2 $(DESTDIR)$(mandir)/man2
 
 install-tests:
 	@$(MAKE) -C test install prefix=$(DESTDIR)$(prefix) datadir=$(DESTDIR)$(datadir)
