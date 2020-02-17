@@ -29,8 +29,8 @@ __u8 nvme_status_to_errno(int status, bool fabrics);
  * @offset: Starting offset to send with this firmware downlaod
  * @buf:    Address of buffer containing all or part of the firmware image.
  *
- * Return: The nvme command status if a response was received (see &enum
- * 	   nvme_status_field) or -1 with errno set otherwise.
+ * Return: The nvme command status if a response was received (see
+ * 	   &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 			 void *buf);
@@ -44,8 +44,8 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
  * The total size allocated can be calculated as:
  *   (&struct nvme_telemetry_log.dalb3 + 1) * %NVME_LOG_TELEM_BLOCK_SIZE.
  *
- * Return: The nvme command status if a response was received (see &enum
- * 	   nvme_status_field) or -1 with errno set otherwise.
+ * Return: The nvme command status if a response was received (see
+ * 	   &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_get_ctrl_telemetry(int fd, bool rae, struct nvme_telemetry_log **log);
 
@@ -57,8 +57,8 @@ int nvme_get_ctrl_telemetry(int fd, bool rae, struct nvme_telemetry_log **log);
  * The total size allocated can be calculated as:
  *   (&struct nvme_telemetry_log.dalb3 + 1) * %NVME_LOG_TELEM_BLOCK_SIZE.
  *
- * Return: The nvme command status if a response was received (see &enum
- * 	   nvme_status_field) or -1 with errno set otherwise.
+ * Return: The nvme command status if a response was received (see
+ * 	   &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_get_host_telemetry(int fd,  struct nvme_telemetry_log **log);
 
@@ -70,8 +70,8 @@ int nvme_get_host_telemetry(int fd,  struct nvme_telemetry_log **log);
  * The total size allocated can be calculated as:
  *   (&struct nvme_telemetry_log.dalb3 + 1) * %NVME_LOG_TELEM_BLOCK_SIZE.
  *
- * Return: The nvme command status if a response was received (see &enum
- * 	   nvme_status_field) or -1 with errno set otherwise.
+ * Return: The nvme command status if a response was received (see
+ * 	   &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_get_new_host_telemetry(int fd,  struct nvme_telemetry_log **log);
 
@@ -131,8 +131,8 @@ void nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
  * @data_len: Total length of the log to transfer.
  * @data:     User address of at least &data_len to store the log.
  *
- * Return: The nvme command status if a response was received (see &enum
- * 	   nvme_status_field) or -1 with errno set otherwise.
+ * Return: The nvme command status if a response was received (see
+ * 	   &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 			__u32 xfer_len, __u32 data_len, void *data);
@@ -149,8 +149,8 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
  * Calls __nvme_get_log_page() with a default 4k transfer length, as that is
  * guarnateed by the protocol to be a safe transfer size.
  *
- * Return: The nvme command status if a response was received (see &enum
- * 	   nvme_status_field) or -1 with errno set otherwise.
+ * Return: The nvme command status if a response was received (see
+ * 	   &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 		      __u32 data_len, void *data);
@@ -160,8 +160,8 @@ int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
  * @fd:		File descriptor of nvme device
  * @analen:	Pointer to where the length will be set on success
  *
- * Return: The nvme command status if a response was received (see &enum
- * 	   nvme_status_field) or -1 with errno set otherwise.
+ * Return: The nvme command status if a response was received (see
+ * 	   &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_get_ana_log_len(int fd, size_t *analen);
 
@@ -172,8 +172,8 @@ int nvme_get_ana_log_len(int fd, size_t *analen);
  * @num_ctrls:	Number of controllers in ctrlist
  * @ctrlist:	List of controller IDs to perform the attach action
  *
- * Return: The nvme command status if a response was received (see &enum
- * 	   nvme_status_field) or -1 with errno set otherwise.
+ * Return: The nvme command status if a response was received (see
+ * 	   &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_namespace_attach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
 
@@ -184,8 +184,8 @@ int nvme_namespace_attach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrl
  * @num_ctrls:	Number of controllers in ctrlist
  * @ctrlist:	List of controller IDs to perform the detach action
  *
- * Return: The nvme command status if a response was received (see &enum
- * 	   nvme_status_field) or -1 with errno set otherwise.
+ * Return: The nvme command status if a response was received (see
+ * 	   &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_namespace_detach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
 
