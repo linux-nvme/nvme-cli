@@ -3893,7 +3893,7 @@ static inline __u16 nvme_status_code_type(__u16 status_field)
  */
 static inline __u16 nvme_status_code(__u16 status_field)
 {
-	return status_field & NVME_SCT_MASK;
+	return status_field & NVME_SC_MASK;
 }
 
 #define NVME_MAJOR(ver)		((ver) >> 16)
