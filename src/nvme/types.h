@@ -1752,10 +1752,10 @@ struct nvme_error_log_page {
 	__le32	nsid;
 	__u8	vs;
 	__u8	trtype;
-	__u8	resv[2];
+	__u8	rsvd[2];
 	__le64	cs;
 	__le16	trtype_spec_info;
-	__u8	resv2[22];
+	__u8	rsvd2[22];
 };
 
 /**
@@ -1867,9 +1867,9 @@ struct nvme_frs {
  */
 struct nvme_firmware_slot {
 	__u8		afi;
-	__u8		resv[7];
+	__u8		rsvd[7];
 	struct nvme_frs	frs[7];
-	__u8		resv2[448];
+	__u8		rsvd2[448];
 };
 
 /**
@@ -1880,7 +1880,7 @@ struct nvme_firmware_slot {
 struct nvme_cmd_effects_log {
 	__le32 acs[256];
 	__le32 iocs[256];
-	__u8   resv[2048];
+	__u8   rsvd[2048];
 };
 
 /**
@@ -1999,16 +1999,35 @@ struct nvme_self_test_log {
 } __attribute__((packed));
 
 /**
- * struct nvme_telemetry_log -
- * @lpi:
- * @ieee:
- * @dalb1:
- * @dalb2:
- * @dalb3:
- * @ctrlavail:
- * @ctrldgn:
- * @rsnident:
- * @telemetry_dataarea:
+ * struct nvme_telemetry_log - Retrieve internal data specific to the
+ * 			       manufacturer.
+ * @lpi:       Log Identifier, either #NVME_LOG_LID_TELEMETRY_HOST or
+ * 	       #NVME_LOG_LID_TELEMETRY_CTRL
+ * @ieee:      IEEE OUI Identifier is the Organization Unique Identifier (OUI)
+ * 	       for the controller vendor that is able to interpret the data.
+ * @dalb1:     Telemetry Controller-Initiated Data Area 1 Last Block is
+ * 	       the value of the last block in this area.
+ * @dalb3:     Telemetry Controller-Initiated Data Area 1 Last Block is
+ * 	       the value of the last block in this area.
+ * @dalb3:     Telemetry Controller-Initiated Data Area 1 Last Block is
+ * 	       the value of the last block in this area.
+ * @ctrlavail: Telemetry Controller-Initiated Data Available, if cleared,
+ * 	       then the controller telemetry log does not contain saved
+ * 	       internal controller state. If this field is set to 1h, the
+ * 	       controller log contains saved internal controller state. If
+ * 	       this field is set to 1h, the data will be latched until the
+ * 	       host releases it by reading the log with RAE cleared.
+ * @ctrldgn:   Telemetry Controller-Initiated Data Generation Number is
+ * 	       a value that is incremented each time the controller initiates a
+ * 	       capture of its internal controller state in the controller .
+ * @rsnident:  Reason Identifieris a vendor specific identifier that describes
+ * 	       the operating conditions of the controller at the time of
+ * 	       capture.
+ * @data_area: Telemetry data blocks, vendor specific information data.
+ *
+ * This log consists of a header describing the log and zero or more Telemetry
+ * Data Blocks. All Telemetry Data Blocks are %NVME_LOG_TELEM_BLOCK_SIZE, 512
+ * bytes, in size. This log captures the controller’s internal state.
  */
 struct nvme_telemetry_log {
 	__u8	lpi;
@@ -2021,7 +2040,7 @@ struct nvme_telemetry_log {
 	__u8	ctrlavail;
 	__u8	ctrldgn;
 	__u8	rsnident[128];
-	__u8	telemetry_dataarea[];
+	__u8	data_area[];
 };
 
 /**
@@ -2476,7 +2495,7 @@ struct nvme_plm_config {
  */
 struct nvme_feat_host_behavior {
 	__u8 acre;
-	__u8 resv1[511];
+	__u8 rsvd1[511];
 };
 
 /**
@@ -2524,10 +2543,10 @@ struct nvme_registered_ctrl {
 struct nvme_registered_ctrl_ext {
 	__le16	cntlid;
 	__u8	rcsts;
-	__u8	resv3[5];
+	__u8	rsvd3[5];
 	__le64	rkey;
 	__u8	hostid[16];
-	__u8	resv32[32];
+	__u8	rsvd32[32];
 };
 
 /**
@@ -2548,7 +2567,7 @@ struct nvme_reservation_status {
 	__u8	rsvd10[14];
 	union {
 		struct {
-			__u8	resv24[40];
+			__u8	rsvd24[40];
 			struct nvme_registered_ctrl_ext regctl_eds[0];
 		};
 		struct nvme_registered_ctrl regctl_ds[0];
@@ -2836,9 +2855,9 @@ struct nvmf_disc_log_entry {
 	__le16		portid;
 	__le16		cntlid;
 	__le16		asqsz;
-	__u8		resv10[22];
+	__u8		rsvd10[22];
 	char		trsvcid[NVMF_TRSVCID_SIZE];
-	__u8		resv64[192];
+	__u8		rsvd64[192];
 	char		subnqn[NVME_NQN_LENGTH];
 	char		traddr[NVMF_TRADDR_SIZE];
 	union tsas {
@@ -2847,9 +2866,9 @@ struct nvmf_disc_log_entry {
 			__u8	qptype;
 			__u8	prtype;
 			__u8	cms;
-			__u8	resv3[5];
+			__u8	rsvd3[5];
 			__u16	pkey;
-			__u8	resv10[246];
+			__u8	rsvd10[246];
 		} rdma;
 		struct tcp {
 			__u8	sectype;
@@ -2963,7 +2982,7 @@ struct nvmf_discovery_log {
 	__le64		genctr;
 	__le64		numrec;
 	__le16		recfmt;
-	__u8		resv14[1006];
+	__u8		rsvd14[1006];
 	struct nvmf_disc_log_entry entries[0];
 };
 
@@ -2977,10 +2996,10 @@ struct nvmf_discovery_log {
 struct nvmf_connect_data {
 	__u8		hostid[16];
 	__le16		cntlid;
-	char		resv4[238];
+	char		rsvd4[238];
 	char		subsysnqn[NVME_NQN_LENGTH];
 	char		hostnqn[NVME_NQN_LENGTH];
-	char		resv5[256];
+	char		rsvd5[256];
 };
 
 /**
