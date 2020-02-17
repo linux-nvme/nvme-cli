@@ -7,6 +7,8 @@ a.out
 *.a
 *.so.*
 
+libnvme.pc
+
 test/test
 test/cpp
 
