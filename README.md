@@ -205,6 +205,8 @@ and include the header:
 
 File: foo-plugin.c
 ```c
+#include "nvme.h"
+
 #define CREATE_CMD
 #include "foo-plugin.h"
 ```
