@@ -1,11 +1,8 @@
 #include <assert.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
-#include <string.h>
 #include <errno.h>
-#include <unistd.h>
 
-#include <errno.h>
 #include <getopt.h>
 #include <fcntl.h>
 #include <inttypes.h>
