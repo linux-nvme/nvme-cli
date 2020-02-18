@@ -1935,7 +1935,7 @@ struct nvme_st_result {
  * @NVME_ST_RESULT_ABORTED_UNKNOWN:
  * @NVME_ST_RESULT_ABORTED_SANITIZE:
  * @NVME_ST_RESULT_NOT_USED:
- * @NVME_ST_RESULT_NOT_MASK:
+ * @NVME_ST_RESULT_MASK:
  */
 enum {
 	NVME_ST_RESULT_NO_ERR    	= 0x0,
@@ -1949,7 +1949,7 @@ enum {
 	NVME_ST_RESULT_ABORTED_UNKNOWN	= 0x8,
 	NVME_ST_RESULT_ABORTED_SANITIZE	= 0x9,
 	NVME_ST_RESULT_NOT_USED		= 0xf,
-	NVME_ST_RESULT_NOT_MASK		= 0xf,
+	NVME_ST_RESULT_MASK		= 0xf,
 };
 
 /**
@@ -2412,10 +2412,20 @@ struct nvme_lba_status {
 
 /**
  * struct nvme_feat_auto_pst -
- * @apst_entry:
+ * @apst_entry: See &enum nvme_apst_entry
  */
 struct nvme_feat_auto_pst {
 	__le64	apst_entry[32];
+};
+
+/**
+ * enum nvme_apst_entry -
+ */
+enum nvme_apst_entry {
+	NVME_APST_ENTRY_ITPS_MASK = 0xf8,
+	NVME_APST_ENTRY_ITPS_SHIFT = 3,
+	NVME_APST_ENTRY_ITPT_MASK = 0xffffff00,
+	NVME_APST_ENTRY_ITPT_SHIFT = 8,
 };
 
 /**
@@ -2985,7 +2995,7 @@ struct nvmf_discovery_log {
 	__le64		numrec;
 	__le16		recfmt;
 	__u8		rsvd14[1006];
-	struct nvmf_disc_log_entry entries[0];
+	struct nvmf_disc_log_entry entries[];
 };
 
 /**
@@ -3617,7 +3627,8 @@ struct nvme_mi_vpd_hdr {
  * 				      private and is already attached to one
  * 				      controller.
  * @NVME_SC_NS_NOT_ATTACHED:	      Namespace Not Attached: The request to
- * 				      detach the controller could not be completed because the controller is not
+ * 				      detach the controller could not be
+ * 				      completed because the controller is not
  * 				      attached to the namespace.
  * @NVME_SC_THIN_PROV_NOT_SUPP:	      Thin Provisioning Not Supported: Thin
  * 				      provisioning is not supported by the
