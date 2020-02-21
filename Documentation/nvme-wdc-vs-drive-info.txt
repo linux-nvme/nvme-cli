@@ -1,0 +1,42 @@
+nvme-wdc-vs-drive-info(1)
+=========================
+
+NAME
+----
+nvme-wdc-vs-drive-info - Send the NVMe WDC vs-drive-info command, return result
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc vs-drive-info' <device>
+
+DESCRIPTION
+-----------
+For the NVMe device given, send the unique WDC vs-drive-info command and
+provide the additional drive information.
+
+The <device> parameter is mandatory and must be the NVMe character 
+device (ex: /dev/nvme0).
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+Output Explanation
+------------------
+There are 2 fields returned from this command:
+
+Drive HW Revision
+
+FTL Unit Size
+
+
+EXAMPLE
+--------
+# nvme wdc vs-drive-info /dev/nvme0
+
+
+NVME
+----
+Part of the nvme-user suite.
