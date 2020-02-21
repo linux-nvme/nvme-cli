@@ -99,6 +99,7 @@
 #define WDC_DRIVE_CAP_REASON_ID             0x0000000000010000
 #define WDC_DRIVE_CAP_LOG_PAGE_DIR          0x0000000000020000
 #define WDC_DRIVE_CAP_NS_RESIZE             0x0000000000040000
+#define WDC_DRIVE_CAP_INFO                  0x0000000000080000
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
@@ -127,6 +128,11 @@
 
 /* Namespace Resize  */
 #define WDC_NVME_NAMESPACE_RESIZE_OPCODE    0xFB
+
+/* Drive Info */
+#define WDC_NVME_DRIVE_INFO_OPCODE          0xC6
+#define WDC_NVME_DRIVE_INFO_CMD             0x22
+#define WDC_NVME_DRIVE_INFO_SUBCMD          0x06
 
 /* Capture Diagnostics */
 #define WDC_NVME_CAP_DIAG_HEADER_TOC_SIZE		WDC_NVME_LOG_SIZE_DATA_LEN
@@ -497,6 +503,9 @@ static int wdc_save_reason_id(int fd, __u8 *rsn_ident,  int size);
 static int wdc_clear_reason_id(int fd);
 static int wdc_dump_telemetry_hdr(int fd, int log_id, struct nvme_telemetry_log_page_hdr *log_hdr);
 static int wdc_log_page_directory(int argc, char **argv, struct command *command,
+		struct plugin *plugin);
+static int wdc_do_drive_info(int fd, __u32 *result);
+static int wdc_vs_drive_info(int argc, char **argv, struct command *command,
 		struct plugin *plugin);
 
 /* Drive log data size */
@@ -899,7 +908,7 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
 					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY |
 					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG | WDC_DRIVE_CAP_REASON_ID |
-					WDC_DRIVE_CAP_LOG_PAGE_DIR);
+					WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_INFO);
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -4581,6 +4590,25 @@ static int wdc_do_namespace_resize(int fd, __u32 nsid, __u32 op_option)
 	return ret;
 }
 
+static int wdc_do_drive_info(int fd, __u32 *result)
+{
+	int ret;
+	struct nvme_admin_cmd admin_cmd;
+
+	memset(&admin_cmd, 0, sizeof (struct nvme_admin_cmd));
+	admin_cmd.opcode = WDC_NVME_DRIVE_INFO_OPCODE;
+	admin_cmd.cdw12 = ((WDC_NVME_DRIVE_INFO_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
+			    WDC_NVME_DRIVE_INFO_CMD);
+
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
+
+	if (!ret && result)
+		*result = admin_cmd.result;
+
+	return ret;
+}
+
+
 static int wdc_drive_resize(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
@@ -5175,3 +5203,44 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *command,
 
 	return ret;
 }
+
+static int wdc_vs_drive_info(int argc, char **argv,
+		struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Send a vs-drive-info command.";
+	uint64_t capabilities = 0;
+	int fd, ret;
+	__le32 result;
+	__u16 size;
+	double rev;
+
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	wdc_check_device(fd);
+	capabilities = wdc_get_drive_capabilities(fd);
+	if ((capabilities & WDC_DRIVE_CAP_INFO) == WDC_DRIVE_CAP_INFO) {
+		ret = wdc_do_drive_info(fd, &result);
+	} else {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+	}
+
+	if (!ret) {
+		size = (__u16)((cpu_to_le32(result) & 0xffff0000) >> 16);
+		rev = (double)(cpu_to_le32(result) & 0x0000ffff);
+
+		printf("Drive HW Revison: %4.1f\n", (.1 * rev));
+		printf("FTL Unit Size:     0x%x KB\n", size);
+	}
+
+	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	return ret;
+}
+
+
