@@ -588,3 +588,286 @@ char *nvme_get_path_attr(nvme_path_t p, const char *attr)
 {
 	return nvme_get_attr(nvme_path_get_sysfs_dir(p), attr);
 }
+
+enum {
+	NVME_FEAT_ARB_BURST_MASK	= 0x00000007,
+	NVME_FEAT_ARB_LPW_MASK		= 0x0000ff00,
+	NVME_FEAT_ARB_MPW_MASK		= 0x00ff0000,
+	NVME_FEAT_ARB_HPW_MASK		= 0xff000000,
+	NVME_FEAT_PM_PS_MASK		= 0x0000001f,
+	NVME_FEAT_PM_WH_MASK		= 0x000000e0,
+	NVME_FEAT_LBAR_NR_MASK		= 0x0000003f,
+	NVME_FEAT_TT_TMPTH_MASK		= 0x0000ffff,
+	NVME_FEAT_TT_TMPSEL_MASK	= 0x000f0000,
+	NVME_FEAT_TT_THSEL_MASK		= 0x00300000,
+	NVME_FEAT_ER_TLER_MASK		= 0x0000ffff,
+	NVME_FEAT_ER_DULBE_MASK		= 0x00010000,
+	NVME_FEAT_VWC_WCE_MASK		= 0x00000001,
+	NVME_FEAT_NRQS_NSQR_MASK	= 0x0000ffff,
+	NVME_FEAT_NRQS_NCQR_MASK	= 0xffff0000,
+	NVME_FEAT_ICOAL_THR_MASK	= 0x000000ff,
+	NVME_FEAT_ICOAL_TIME_MASK	= 0x0000ff00,
+	NVME_FEAT_ICFG_IV_MASK		= 0x0000ffff,
+	NVME_FEAT_ICFG_CD_MASK		= 0x00010000,
+	NVME_FEAT_WA_DN_MASK		= 0x00000001,
+	NVME_FEAT_AE_SMART_MASK		= 0x000000ff,
+	NVME_FEAT_AE_NAN_MASK		= 0x00000100,
+	NVME_FEAT_AE_FW_MASK		= 0x00000200,
+	NVME_FEAT_AE_TELEM_MASK		= 0x00000400,
+	NVME_FEAT_AE_ANA_MASK		= 0x00000800,
+	NVME_FEAT_AE_PLA_MASK		= 0x00001000,
+	NVME_FEAT_AE_LBAS_MASK		= 0x00002000,
+	NVME_FEAT_AE_EGA_MASK		= 0x00004000,
+	NVME_FEAT_APST_APSTE_MASK	= 0x00000001,
+	NVME_FEAT_HMEM_EHM_MASK		= 0x00000001,
+	NVME_FEAT_HCTM_TMT2_MASK	= 0x0000ffff,
+	NVME_FEAT_HCTM_TMT1_MASK	= 0xffff0000,
+	NVME_FEAT_NOPS_NOPPME_MASK	= 0x00000001,
+	NVME_FEAT_RRL_RRL_MASK		= 0x000000ff,
+	NVME_FEAT_PLM_PLME_MASK		= 0x00000001,
+	NVME_FEAT_PLMW_WS_MASK		= 0x00000007,
+	NVME_FEAT_LBAS_LSIRI_MASK	= 0x0000ffff,
+	NVME_FEAT_LBAS_LSIPI_MASK	= 0xffff0000,
+	NVME_FEAT_SC_NODRM_MASK		= 0x00000001,
+	NVME_FEAT_EG_ENDGID_MASK	= 0x0000ffff,
+	NVME_FEAT_EG_EGCW_MASK		= 0x00ff0000,
+	NVME_FEAT_SPM_PBSLC_MASK	= 0x000000ff,
+	NVME_FEAT_HOSTID_EXHID_MASK	= 0x00000001,
+	NVME_FEAT_RM_REGPRE_MASK	= 0x00000002,
+	NVME_FEAT_RM_RESREL_MASK	= 0x00000004,
+	NVME_FEAT_RM_RESPRE_MASK	= 0x00000008,
+	NVME_FEAT_RP_PTPL_MASK		= 0x00000001,
+	NVME_FEAT_WP_WPS_MASK		= 0x00000007,
+};
+
+#define shift(v, s, m)  ((v & m) >> s)
+
+#define NVME_FEAT_ARB_BURST(v)		shift(v, 0, NVME_FEAT_ARB_BURST_MASK)
+#define NVME_FEAT_ARB_LPW(v)		shift(v, 8, NVME_FEAT_ARB_LPW_MASK)
+#define NVME_FEAT_ARB_MPW(v)		shift(v, 16, NVME_FEAT_ARB_MPW_MASK)
+#define NVME_FEAT_ARB_HPW(v)		shift(v, 24, NVME_FEAT_ARB_HPW_MASK)
+
+void nvme_feature_decode_arbitration(__u32 value, __u8 *ab, __u8 *lpw,
+	__u8 *mpw, __u8 *hpw)
+{
+	*ab  = NVME_FEAT_ARB_BURST(value);
+	*lpw = NVME_FEAT_ARB_LPW(value);
+	*mpw = NVME_FEAT_ARB_MPW(value);
+	*hpw = NVME_FEAT_ARB_HPW(value);
+};
+
+#define NVME_FEAT_PM_PS(v)		shift(v, 0, NVME_FEAT_PM_PS_MASK)
+#define NVME_FEAT_PM_WH(v)		shift(v, 5, NVME_FEAT_PM_WH_MASK)
+
+void nvme_feature_decode_power_mgmt(__u32 value, __u8 *ps, __u8 *wh)
+{
+	*ps = NVME_FEAT_PM_PS(value);
+	*wh = NVME_FEAT_PM_WH(value);
+}
+
+#define NVME_FEAT_LBAR_NR(v)		shift(v, 0, NVME_FEAT_LBAR_NR_MASK)
+
+void nvme_feature_decode_lba_range(__u32 value, __u8 *num)
+{
+	*num = NVME_FEAT_LBAR_NR(value);
+}
+
+#define NVME_FEAT_TT_TMPTH(v)		shift(v, 0, NVME_FEAT_TT_TMPTH_MASK)
+#define NVME_FEAT_TT_TMPSEL(v)		shift(v, 16, NVME_FEAT_TT_TMPSEL_MASK)
+#define NVME_FEAT_TT_THSEL(v)		shift(v, 20, NVME_FEAT_TT_THSEL_MASK)
+
+void nvme_feature_decode_temp_threshold(__u32 value, __u16 *tmpth, __u8 *tmpsel, __u8 *thsel)
+{
+	*tmpth	= NVME_FEAT_TT_TMPTH(value);
+	*tmpsel	= NVME_FEAT_TT_TMPSEL(value);
+	*thsel	= NVME_FEAT_TT_THSEL(value);
+}
+
+#define NVME_FEAT_ER_TLER(v)		shift(v, 0, NVME_FEAT_ER_TLER_MASK)
+#define NVME_FEAT_ER_DULBE(v)		shift(v, 16, NVME_FEAT_ER_DULBE_MASK)
+
+void nvme_feature_decode_error_recovery(__u32 value, __u16 *tler, bool *dulbe)
+{
+	*tler	= NVME_FEAT_ER_TLER(value);
+	*dulbe	= NVME_FEAT_ER_DULBE(value);
+}
+
+#define NVME_FEAT_VWC_WCE(v)		shift(v, 0, NVME_FEAT_VWC_WCE_MASK)
+
+void nvme_feature_decode_volatile_write_cache(__u32 value, bool *wce)
+{
+	*wce	= NVME_FEAT_VWC_WCE(value);
+}
+
+#define NVME_FEAT_NRQS_NSQR(v)		shift(v, 0, NVME_FEAT_NRQS_NSQR_MASK)
+#define NVME_FEAT_NRQS_NCQR(v)		shift(v, 16, NVME_FEAT_NRQS_NCQR_MASK)
+
+void nvme_feature_decode_number_of_queues(__u32 value, __u16 *nsqr, __u16 *ncqr)
+{
+	*nsqr	= NVME_FEAT_NRQS_NSQR(value);
+	*ncqr	= NVME_FEAT_NRQS_NCQR(value);
+}
+
+#define NVME_FEAT_ICOAL_THR(v)		shift(v, 0, NVME_FEAT_ICOAL_THR_MASK)
+#define NVME_FEAT_ICOAL_TIME(v)		shift(v, 8, NVME_FEAT_ICOAL_TIME_MASK)
+
+void nvme_feature_decode_interrupt_coalescing(__u32 value, __u8 *thr, __u8 *time)
+{
+	*thr	= NVME_FEAT_ICOAL_THR(value);
+	*time	= NVME_FEAT_ICOAL_TIME(value);
+}
+
+#define NVME_FEAT_ICFG_IV(v)		shift(v, 0, NVME_FEAT_ICFG_IV_MASK)
+#define NVME_FEAT_ICFG_CD(v)		shift(v, 16, NVME_FEAT_ICFG_CD_MASK)
+
+void nvme_feature_decode_interrupt_config(__u32 value, __u16 *iv, bool *cd)
+{
+	*iv	= NVME_FEAT_ICFG_IV(value);
+	*cd	= NVME_FEAT_ICFG_CD(value);
+}
+
+#define NVME_FEAT_WA_DN(v)		shift(v, 0, NVME_FEAT_WA_DN_MASK)
+
+void nvme_feature_decode_write_atomicity(__u32 value, bool *dn)
+{
+	*dn	= NVME_FEAT_WA_DN(value);
+}
+
+#define NVME_FEAT_AE_SMART(v)		shift(v, 0, NVME_FEAT_AE_SMART_MASK)
+#define NVME_FEAT_AE_NAN(v)		shift(v, 8, NVME_FEAT_AE_NAN_MASK)
+#define NVME_FEAT_AE_FW(v)		shift(v, 9, NVME_FEAT_AE_FW_MASK)
+#define NVME_FEAT_AE_TELEM(v)		shift(v, 10, NVME_FEAT_AE_TELEM_MASK)
+#define NVME_FEAT_AE_ANA(v)		shift(v, 11, NVME_FEAT_AE_ANA_MASK)
+#define NVME_FEAT_AE_PLA(v)		shift(v, 12, NVME_FEAT_AE_PLA_MASK)
+#define NVME_FEAT_AE_LBAS(v)		shift(v, 13, NVME_FEAT_AE_LBAS_MASK)
+#define NVME_FEAT_AE_EGA(v)		shift(v, 14, NVME_FEAT_AE_EGA_MASK)
+
+void nvme_feature_decode_async_event_config(__u32 value, __u8 *smart,
+	bool *nan, bool *fw, bool *telem, bool *ana, bool *pla, bool *lbas,
+	bool *ega)
+{
+	*smart	= NVME_FEAT_AE_SMART(value);
+	*nan	= NVME_FEAT_AE_NAN(value);
+	*fw	= NVME_FEAT_AE_FW(value);
+	*telem	= NVME_FEAT_AE_TELEM(value);
+	*ana	= NVME_FEAT_AE_ANA(value);
+	*pla	= NVME_FEAT_AE_PLA(value);
+	*lbas	= NVME_FEAT_AE_LBAS(value);
+	*ega	= NVME_FEAT_AE_EGA(value);
+}
+
+#define NVME_FEAT_APST_APSTE(v)		shift(v, 0, NVME_FEAT_APST_APSTE_MASK)
+
+void nvme_feature_decode_auto_power_state(__u32 value, bool *apste)
+{
+	*apste	= NVME_FEAT_APST_APSTE(value);
+}
+
+#define NVME_FEAT_HMEM_EHM(v)		shift(v, 0, NVME_FEAT_HMEM_EHM_MASK)
+
+void nvme_feature_decode_host_memory_buffer(__u32 value, bool *ehm)
+{
+	*ehm	= NVME_FEAT_HMEM_EHM(value);
+}
+
+#define NVME_FEAT_HCTM_TMT2(v)		shift(v, 0, NVME_FEAT_HCTM_TMT2_MASK)
+#define NVME_FEAT_HCTM_TMT1(v)		shift(v, 16, NVME_FEAT_HCTM_TMT1_MASK)
+
+void nvme_feature_decode_host_thermal_mgmt(__u32 value, __u16 *tmt2, __u16 *tmt1)
+{
+	*tmt2	= NVME_FEAT_HCTM_TMT2(value);
+	*tmt1	= NVME_FEAT_HCTM_TMT1(value);
+}
+
+#define NVME_FEAT_NOPS_NOPPME(v)	shift(v, 0, NVME_FEAT_NOPS_NOPPME_MASK)
+
+void nvme_feature_decode_non_op_power_config(__u32 value, bool *noppme)
+{
+	*noppme	= NVME_FEAT_NOPS_NOPPME(value);
+}
+
+#define NVME_FEAT_RRL_RRL(v)		shift(v, 0, NVME_FEAT_RRL_RRL_MASK)
+
+void nvme_feature_decode_read_recovery_level_config(__u32 value, __u8 *rrl)
+{
+	*rrl	= NVME_FEAT_RRL_RRL(value);
+}
+
+#define NVME_FEAT_PLM_PLME(v)		shift(v, 0, NVME_FEAT_PLM_PLME_MASK)
+
+void nvme_feature_decode_predictable_latency_mode_config(__u32 value, bool *plme)
+{
+	*plme	= NVME_FEAT_PLM_PLME(value);
+}
+
+#define NVME_FEAT_PLMW_WS(v)		shift(v, 0, NVME_FEAT_PLMW_WS_MASK)
+
+void nvme_feature_decode_predictable_latency_mode_window(__u32 value, __u8 *ws)
+{
+	*ws	= NVME_FEAT_PLMW_WS(value);
+}
+
+#define NVME_FEAT_LBAS_LSIRI(v)		shift(v, 0, NVME_FEAT_LBAS_LSIRI_MASK)
+#define NVME_FEAT_LBAS_LSIPI(v)		shift(v, 16, NVME_FEAT_LBAS_LSIPI_MASK)
+
+void nvme_feature_decode_lba_status_attributes(__u32 value, __u16 *lsiri, __u16 *lsipi)
+{
+	*lsiri	= NVME_FEAT_LBAS_LSIRI(value);
+	*lsipi	= NVME_FEAT_LBAS_LSIPI(value);
+}
+
+#define NVME_FEAT_SC_NODRM(v)		shift(v, 0, NVME_FEAT_SC_NODRM_MASK)
+
+void nvme_feature_decode_sanitize_config(__u32 value, bool *nodrm)
+{
+	*nodrm	= NVME_FEAT_SC_NODRM(value);
+}
+
+#define NVME_FEAT_EG_ENDGID(v)		shift(v, 0, NVME_FEAT_EG_ENDGID_MASK)
+#define NVME_FEAT_EG_EGCW(v)		shift(v, 16, NVME_FEAT_EG_EGCW_MASK)
+
+void nvme_feature_decode_endurance_group_event_config(__u32 value,
+	__u16 *endgid, __u8 *endgcw)
+{
+	*endgid	= NVME_FEAT_EG_ENDGID(value);
+	*endgcw	= NVME_FEAT_EG_EGCW(value);
+}
+
+#define NVME_FEAT_SPM_PBSLC(v)		shift(v, 0, NVME_FEAT_SPM_PBSLC_MASK)
+
+void nvme_feature_decode_software_progress_marker(__u32 value, __u8 *pbslc)
+{
+	*pbslc	= NVME_FEAT_SPM_PBSLC(value);
+}
+
+#define NVME_FEAT_HOSTID_EXHID(v)	shift(v, 0, NVME_FEAT_HOSTID_EXHID_MASK)
+
+void nvme_feature_decode_host_identifier(__u32 value, bool *exhid)
+{
+	*exhid = NVME_FEAT_HOSTID_EXHID(value);
+}
+
+#define NVME_FEAT_RM_REGPRE(v)		shift(v, 1, NVME_FEAT_RM_REGPRE_MASK)
+#define NVME_FEAT_RM_RESREL(v)		shift(v, 2, NVME_FEAT_RM_RESREL_MASK)
+#define NVME_FEAT_RM_RESPRE(v)		shift(v, 3, NVME_FEAT_RM_RESPRE_MASK)
+
+void nvme_feature_decode_reservation_notification(__u32 value, bool *regpre, bool *resrel, bool *respre)
+{
+	*regpre	= NVME_FEAT_RM_REGPRE(value);
+	*resrel	= NVME_FEAT_RM_RESREL(value);
+	*respre	= NVME_FEAT_RM_RESPRE(value);
+}
+
+#define NVME_FEAT_RP_PTPL(v)		shift(v, 0, NVME_FEAT_RP_PTPL_MASK)
+
+void nvme_feature_decode_reservation_persistance(__u32 value, bool *ptpl)
+{
+	*ptpl	= NVME_FEAT_RP_PTPL(value);
+}
+
+#define NVME_FEAT_WP_WPS(v)		shift(v, 0, NVME_FEAT_WP_WPS_MASK)
+
+void nvme_feature_decode_namespace_write_protect(__u32 value, __u8 *wps)
+{
+	*wps	= NVME_FEAT_WP_WPS(value);
+}
