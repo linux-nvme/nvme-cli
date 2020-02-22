@@ -303,7 +303,6 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 		numrec = le64_to_cpu(log->numrec);
 		genctr = le64_to_cpu(log->genctr);
 
-		free(log);
 		if (numrec == 0) {
 			*logp = log;
 			return 0;
@@ -312,6 +311,7 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 		size = sizeof(struct nvmf_discovery_log) +
 			sizeof(struct nvmf_disc_log_entry) * (numrec);
 
+		free(log);
 		log = malloc(size);
 		if (!log) {
 			errno = ENOMEM;
