@@ -58,7 +58,8 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                               " cut -d : -f 1 | tr -d ' ' | tr '\n' ' '"
         proc = subprocess.Popen(get_vector_list_cmd,
                                 shell=True,
-                                stdout=subprocess.PIPE)
+                                stdout=subprocess.PIPE,
+                                encoding='utf-8')
         self.vector_list = []
         self.vector_list = proc.stdout.read().strip().split(" ")
 
@@ -93,7 +94,8 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                            " --feature-id=" + str(feature_id)
             proc = subprocess.Popen(get_feat_cmd,
                                     shell=True,
-                                    stdout=subprocess.PIPE)
+                                    stdout=subprocess.PIPE,
+                                    encoding='utf-8')
             feature_output = proc.communicate()[0]
             print(feature_output)
             assert_equal(proc.wait(), 0)
