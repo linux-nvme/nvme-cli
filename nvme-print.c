@@ -1768,7 +1768,7 @@ static void nvme_show_id_ctrl_oaes(__le32 ctrl_oaes)
 	__u32 rsvd0 = (oaes & 0xFFFF8000) >> 15;
 	__u32 nace = (oaes & 0x100) >> 8;
 	__u32 fan = (oaes & 0x200) >> 9;
-	__u32 anacn = (oaes & 800) >> 11;
+	__u32 anacn = (oaes & 0x800) >> 11;
 	__u32 plealcn = (oaes & 0x1000) >> 12;
 	__u32 lbasin = (oaes & 0x2000) >> 13;
 	__u32 egealpcn = (oaes & 0x4000) >> 14;
