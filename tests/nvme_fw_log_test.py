@@ -59,7 +59,8 @@ class TestNVMeFwLogCmd(TestNVMe):
         fw_log_cmd = "nvme fw-log " + self.ctrl
         proc = subprocess.Popen(fw_log_cmd,
                                 shell=True,
-                                stdout=subprocess.PIPE)
+                                stdout=subprocess.PIPE,
+                                encoding='utf-8')
         fw_log_output = proc.communicate()[0]
         print(fw_log_output + "\n")
         err = proc.wait()

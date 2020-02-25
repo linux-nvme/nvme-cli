@@ -62,7 +62,8 @@ class TestNVMeIdentifyNamespace(TestNVMe):
         id_ns_cmd = "nvme id-ns " + self.ctrl + "n" + str(nsid)
         proc = subprocess.Popen(id_ns_cmd,
                                 shell=True,
-                                stdout=subprocess.PIPE)
+                                stdout=subprocess.PIPE,
+                                encoding='utf-8')
         id_ns_output = proc.communicate()[0]
         print(id_ns_output + "\n")
         err = proc.wait()
@@ -78,7 +79,7 @@ class TestNVMeIdentifyNamespace(TestNVMe):
         """
         err = 0
         for namespace  in self.ns_list:
-            err = self.get_id_ns(str(namespace).split("x", 1)[1])
+            err = self.get_id_ns(str(namespace))
         return err
 
     def test_id_ns(self):
