@@ -186,7 +186,7 @@ print_config "libuuid" "${libuuid}"
 ##########################################
 # check for SystemD
 systemd="no"
-pkg-config --exists systemd --atleast-version=232
+pkg-config --exists libsystemd --atleast-version=232
 if [ $? -eq 0 ]; then
   systemd="yes"
 fi

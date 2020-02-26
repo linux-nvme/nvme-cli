@@ -1,5 +1,5 @@
 CFLAGS ?= -g -O2
-override CFLAGS += -Wall -D_GNU_SOURCE -L../src/ -I../src/ -lsystemd
+override CFLAGS += -Wall -D_GNU_SOURCE -L../src/ -I../src/
 
 include ../Makefile.quiet
 
@@ -12,7 +12,7 @@ all_targets += telemetry-listen display-tree display-columnar discover-loop
 all: $(all_targets)
 
 %: %.c
-	$(QUIET_CC)$(CC) $(CFLAGS) -o $@ $< -lnvme
+	$(QUIET_CC)$(CC) $(CFLAGS) -o $@ $< -lnvme ${LDFLAGS}
 
 clean:
 	rm -f $(all_targets)
