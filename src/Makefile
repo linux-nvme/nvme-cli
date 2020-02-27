@@ -2,6 +2,10 @@ NAME=libnvme
 SPECFILE=$(NAME).spec
 VERSION=$(shell awk '/Version:/ { print $$2 }' $(SPECFILE))
 
+ifneq ($(MAKECMDGOALS),clean)
+include ../config-host.mak
+endif
+
 prefix ?= /usr
 includedir ?= $(prefix)/include
 libdir ?= $(prefix)/lib
@@ -12,7 +16,7 @@ CFLAGS ?= -g -fomit-frame-pointer -O2 -I/usr/include -Invme/ -I$(CCANDIR) -inclu
 override CFLAGS += -Wall -fPIC
 SO_CFLAGS=-shared $(CFLAGS)
 L_CFLAGS=$(CFLAGS)
-LINK_FLAGS= -L /usr/lib64 -lsystemd
+LINK_FLAGS= -L /usr/lib64
 LINK_FLAGS+=$(LDFLAGS)
 ENABLE_SHARED ?= 1
 SED ?= sed
