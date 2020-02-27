@@ -45,7 +45,7 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
         - Attributes:
               - feature_id_list : list of the mandatory features.
               - get_vector_list_cmd : vector list collection for 09h.
-              - vector_list : vector list to hold the interrupt vectors.
+              - vector_list_len : numer of the interrupt vectors.
     """
 
     def __init__(self):
@@ -60,8 +60,7 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                                 shell=True,
                                 stdout=subprocess.PIPE,
                                 encoding='utf-8')
-        self.vector_list = []
-        self.vector_list = proc.stdout.read().strip().split(" ")
+        self.vector_list_len = len(proc.stdout.read().strip().split(" "))
 
     def __del__(self):
         """ Post Section for TestNVMeGetMandatoryFeatures
@@ -78,7 +77,7 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                 - None
         """
         if str(feature_id) == "0x09":
-            for vector in self.vector_list:
+            for vector in range(self.vector_list_len):
                 get_feat_cmd = "nvme get-feature " + self.ctrl + \
                                " --feature-id=" + str(feature_id) + \
                                " --cdw11=" + str(vector)
