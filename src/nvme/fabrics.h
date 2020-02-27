@@ -14,27 +14,26 @@
 #include "tree.h"
 
 /**
- * struct nvme_fabrics_config -
- * @transport:		
- * @traddr:		
- * @trsvcid:		
- * @nqn:		
- * @hostnqn:		
- * @host_traddr:	
- * @hostid:		
- * @queue_size:		
- * @nr_io_queues:	
- * @reconnect_delay:	
- * @ctrl_loss_tmo:	
- * @keep_alive_tmo:	
- * @nr_write_queues:	
- * @nr_poll_queues:	
- * @tos:		
- * @duplicate_connect:	
- * @disable_sqflow:	
- * @hdr_digest:		
- * @data_digest:	
- * @rsvd:		
+ * struct nvme_fabrics_config - Defines all linux nvme fabrics initiator options
+ * @transport:		The fabric transport to use, either loop, fc, tcp, or rdma
+ * @traddr:		Transport Address for the target, format specific to transport type
+ * @trsvcid:		Transport Service Identifier, specific to the transport type
+ * @nqn:		Target NVMe Qualified Name
+ * @hostnqn:		Host NVMe Qualified Name
+ * @host_traddr:	Host Transport Address
+ * @hostid:		Host Identifier
+ * @queue_size:		Number of IO queue entries
+ * @nr_io_queues:	Number of controller IO queues to establish
+ * @reconnect_delay:	Time between two consecutive reconnect attempts.
+ * @ctrl_loss_tmo:	Override the default controller reconnect attempt timeout in seconds
+ * @keep_alive_tmo:	Override the default keep-alive-timeout to this value in seconds
+ * @nr_write_queues:	Number of queues to use for exclusively for writing
+ * @nr_poll_queues:	Number of queues to reserve for polling completions
+ * @tos:		Type of service
+ * @duplicate_connect:	Allow multiple connections to the same target
+ * @disable_sqflow:	Disable controller sq flow control
+ * @hdr_digest:		Generate/verify header digest (TCP)
+ * @data_digest:	Generate/verify data digest (TCP)
  */
 struct nvme_fabrics_config {
 	const char *transport;
@@ -58,8 +57,6 @@ struct nvme_fabrics_config {
 	bool disable_sqflow;
 	bool hdr_digest;
 	bool data_digest;
-
-	uint8_t	rsvd[0x200];
 };
 
 /**
@@ -92,7 +89,7 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 /**
  * nvmf_hostnqn_generate() - Generate a machine specific host nqn
  * Returns: An nvm namespace qualifieid name string based on the machine
- * 	    identifier, or NULL if not successful.
+ * identifier, or NULL if not successful.
  */
 char *nvmf_hostnqn_generate();
 
@@ -100,7 +97,7 @@ char *nvmf_hostnqn_generate();
  * nvmf_hostnqn_from_file() - Reads the host nvm qualified name from the config
  * 			      default location in /etc/nvme/
  * Return: The host nqn, or NULL if unsuccessful. If found, the caller
- * 	   is responsible to free the string.
+ * is responsible to free the string.
  */
 char *nvmf_hostnqn_from_file();
 
@@ -118,7 +115,7 @@ char *nvmf_hostid_from_file();
  * @defcfg:
  * @discover:
  *
- * Return:
+ * Return: An 
  */
 nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
 	const struct nvme_fabrics_config *defcfg, bool *discover);

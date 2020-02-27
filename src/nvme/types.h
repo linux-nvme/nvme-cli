@@ -286,7 +286,7 @@ enum nvme_psd_flags {
 };
 
 /**
- * enum nvme_psd_ps - Known values for &struct nvme_psd #ips and #aps. Use with
+ * enum nvme_psd_ps - Known values for &struct nvme_psd %ips and %aps. Use with
  * 		      nvme_psd_power_scale() to extract the power scale field
  * 		      to match this enum.
  * NVME_PSD_IPS_100_MICRO_WATT:	0.0001 watt scale
@@ -495,12 +495,12 @@ struct nvme_id_psd {
  * 	       temperature, in degrees Kelvin, that the host may request in the
  * 	       Thermal Management Temperature 1 field and Thermal Management
  * 	       Temperature 2 field of a Set Features command with the Feature
- * 	       Identifier field set to #NVME_FEAT_FID_HCTM.
+ * 	       Identifier field set to %NVME_FEAT_FID_HCTM.
  * @mxtmt:     Maximum Thermal Management Temperature indicates the maximum
  * 	       temperature, in degrees Kelvin, that the host may request in the
  * 	       Thermal Management Temperature 1 field and Thermal Management
  * 	       Temperature 2 field of the Set Features command with the Feature
- * 	       Identifier set to #NVME_FEAT_FID_HCTM.
+ * 	       Identifier set to %NVME_FEAT_FID_HCTM.
  * @sanicap:   Sanitize Capabilities, see &enum nvme_id_ctrl_sanicap
  * @hmminds:   Host Memory Buffer Minimum Descriptor Entry Size indicates the
  * 	       minimum usable size of a Host Memory Buffer Descriptor Entry in
@@ -1998,8 +1998,8 @@ struct nvme_self_test_log {
 /**
  * struct nvme_telemetry_log - Retrieve internal data specific to the
  * 			       manufacturer.
- * @lpi:       Log Identifier, either #NVME_LOG_LID_TELEMETRY_HOST or
- * 	       #NVME_LOG_LID_TELEMETRY_CTRL
+ * @lpi:       Log Identifier, either %NVME_LOG_LID_TELEMETRY_HOST or
+ * 	       %NVME_LOG_LID_TELEMETRY_CTRL
  * @ieee:      IEEE OUI Identifier is the Organization Unique Identifier (OUI)
  * 	       for the controller vendor that is able to interpret the data.
  * @dalb1:     Telemetry Controller-Initiated Data Area 1 Last Block is
@@ -3268,12 +3268,12 @@ struct nvme_mi_vpd_hdr {
 /**
  * enum nvme_status_field - Defines all parts of the nvme status field: status
  * 			    code, status code type, and additional flags.
- * @NVME_SCT_MASK:		      Mask to get the value of the Status Code Type
  * @NVME_SCT_GENERIC:		      Generic errors applicable to multiple opcodes
  * @NVME_SCT_CMD_SPECIFIC:	      Errors associated to a specific opcode
  * @NVME_SCT_MEDIA:		      Errors associated with media and data integrity
  * @NVME_SCT_PATH:		      Errors associated with the paths connection
  * @NVME_SCT_VS:		      Vendor specific errors
+ * @NVME_SCT_MASK:		      Mask to get the value of the Status Code Type
  * @NVME_SC_MASK:		      Mask to get the value of the status code.
  * @NVME_SC_SUCCESS:		      Successful Completion: The command
  * 				      completed without error.
@@ -3630,13 +3630,12 @@ enum nvme_status_field {
 	/*
 	 * Status Code Type indicators
 	 */
-	NVME_SCT_MASK			= 0x700,
-	NVME_SCT_SHIFT			= 0x700,
 	NVME_SCT_GENERIC		= 0x000,
 	NVME_SCT_CMD_SPECIFIC		= 0x100,
 	NVME_SCT_MEDIA			= 0x200,
 	NVME_SCT_PATH			= 0x300,
 	NVME_SCT_VS			= 0x700,
+	NVME_SCT_MASK			= 0x700,
 
 	/*
 	 * Status Code inidicators

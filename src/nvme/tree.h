@@ -21,12 +21,34 @@
 extern const char *nvme_ctrl_sysfs_dir;
 extern const char *nvme_subsys_sysfs_dir;
 
+/**
+ *
+ */
 typedef struct nvme_ns *nvme_ns_t;
+
+/**
+ *
+ */
 typedef struct nvme_path *nvme_path_t;
+
+/**
+ *
+ */
 typedef struct nvme_ctrl *nvme_ctrl_t;
+
+/**
+ *
+ */
 typedef struct nvme_subsystem *nvme_subsystem_t;
+
+/**
+ *
+ */
 typedef struct nvme_root *nvme_root_t;
 
+/**
+ *
+ */
 typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t);
 
 /**
