@@ -20,25 +20,25 @@
 #define CREATE_CMD
 #include "intel-nvme.h"
 
-struct nvme_additional_smart_log_item {
+struct  __attribute__((packed)) nvme_additional_smart_log_item {
 	__u8			key;
 	__u8			_kp[2];
 	__u8			norm;
 	__u8			_np;
-	union {
+	union __attribute__((packed)) {
 		__u8		raw[6];
-		struct wear_level {
+		struct __attribute__((packed))  wear_level {
 			__le16	min;
 			__le16	max;
 			__le16	avg;
 		} wear_level;
-		struct thermal_throttle {
+		struct __attribute__((packed)) thermal_throttle {
 			__u8	pct;
 			__u32	count;
 		} thermal_throttle;
-	};
+	} ;
 	__u8			_rp;
-} __attribute__((packed));
+} ;
 
 struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	program_fail_cnt;
