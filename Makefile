@@ -7,6 +7,7 @@ HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=232; ec
 NVME = nvme
 INSTALL ?= install
 DESTDIR =
+DESTDIROLD = /usr/local/sbin
 PREFIX ?= /usr
 SYSCONFDIR = /etc
 SBINDIR = $(PREFIX)/sbin
@@ -114,6 +115,7 @@ install-man:
 	$(MAKE) -C Documentation install-no-build
 
 install-bin: default
+	$(RM) $(DESTDIROLD)/nvme
 	$(INSTALL) -d $(DESTDIR)$(SBINDIR)
 	$(INSTALL) -m 755 nvme $(DESTDIR)$(SBINDIR)
 
