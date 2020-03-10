@@ -1250,8 +1250,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		{NULL}
 	};
 
-	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg,
-			sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, command_line_options);
 
 	enum Option {
 		None = -1,
