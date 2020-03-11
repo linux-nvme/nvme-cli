@@ -858,7 +858,8 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 			break;
 		case WDC_NVME_SN200_DEV_ID:
 			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG | WDC_DRIVE_CAP_CLEAR_PCIE |
-					WDC_DRIVE_CAP_DRIVE_LOG | WDC_DRIVE_CAP_CRASH_DUMP | WDC_DRIVE_CAP_PFAIL_DUMP);
+				        	WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_DRIVE_LOG |
+			        		WDC_DRIVE_CAP_CRASH_DUMP | WDC_DRIVE_CAP_PFAIL_DUMP);
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -1038,6 +1039,54 @@ static int wdc_create_log_file(char *file, __u8 *drive_log_data,
 	return 0;
 }
 
+static const uint8_t zero_uuid[16] = { 0 };
+
+static int get_wdc_uuid_index(int fd, __u8* uuid_ix, uuid_t uuid)
+{
+	*uuid_ix = 1;
+	int ret = -1;
+
+	struct nvme_id_ctrl ctrl;
+	struct nvme_id_uuid_list uuid_list;
+
+	/* Determine if the controller supports a UUID List by checking CTRATT */
+	ret = nvme_identify_ctrl(fd, &ctrl);
+
+	if (ret == 0) {
+
+		if ((ctrl.ctrattr & NVME_CTRL_CTRATT_UUID_LIST) == NVME_CTRL_CTRATT_UUID_LIST) {
+			/* UUID list is supported.  Get the WDC UUID entry */
+			ret = nvme_identify_uuid(fd, &uuid_list);
+
+			if (ret == 0) {
+            	/* The 0th entry is reserved so start at 1 */
+				for (*uuid_ix = 1; *uuid_ix < NVME_MAX_UUID_ENTRIES; (*uuid_ix)++) {
+
+					/* The list is terminated by a zero UUID value */
+					if (memcmp(uuid_list.entry[*uuid_ix].uuid, zero_uuid, sizeof(zero_uuid)) == 0) {
+						/* if we reached the end then we did not find the uuid */
+						*uuid_ix = 0;
+						break;
+					} else {
+
+						if (memcmp(uuid_list.entry[*uuid_ix].uuid, uuid.b, sizeof(uuid.b)) == 0) {
+
+							/* found the uuid.  */
+							break;
+						}
+					}
+				}
+			} else{
+				/* bad return code from identify_uuid. */
+			}
+		} else {
+			/* UUID list not supported. */
+		}
+	}
+
+	return ret;
+}
+
 static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 {
 	int ret = -1;
@@ -1046,6 +1095,8 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 	struct wdc_c2_log_subpage_header *sph;
 	__u32 length = 0;
 	bool found = false;
+	__u8 uuid_ix = 1;
+	uuid_t uuid = { 0 };
 
 	*cbs_data = NULL;
 
@@ -1055,9 +1106,23 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 	}
 	memset(data, 0, sizeof (__u8) * WDC_C2_LOG_BUF_LEN);
 
+	/* TODO:  get wdc uuid value */
+
+	ret = get_wdc_uuid_index(fd, &uuid_ix, uuid);
+
+	if (ret) {
+		fprintf(stderr, "ERROR : WDC : Get UUID failed, ret = 0x%x\n", ret);
+	}
+
+	if (uuid_ix == 0) {
+
+		/* if uuid was not found then default to 1 */
+		uuid_ix = 1;
+	}
+
 	/* get the log page length */
-	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
-			   false, WDC_C2_LOG_BUF_LEN, data);
+	ret = nvme_get_log_from_uuid(fd, 0xFFFFFFFF, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
+			   false, uuid_ix, WDC_C2_LOG_BUF_LEN, data);
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : Unable to get C2 Log Page length, ret = 0x%x\n", ret);
 		goto end;
@@ -1075,8 +1140,9 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 		}
 	}
 
-	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
-			   false, le32_to_cpu(hdr_ptr->length), data);
+	ret = nvme_get_log_from_uuid(fd, 0xFFFFFFFF, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
+			   false, uuid_ix, le32_to_cpu(hdr_ptr->length), data);
+
 	/* parse the data until the List of log page ID's is found */
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : Unable to read C2 Log Page data, ret = 0x%x\n", ret);
