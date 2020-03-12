@@ -3672,6 +3672,7 @@ void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		d_raw((unsigned char *)sanitize, sizeof(*sanitize));
 	else if (flags & JSON)
 		json_sanitize_log(sanitize, devname);
+        return;
 
 	printf("Sanitize Progress                      (SPROG) :  %u",
 	       le16_to_cpu(sanitize->progress));
