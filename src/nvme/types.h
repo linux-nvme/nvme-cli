@@ -215,7 +215,7 @@ enum nvme_register_offsets {
 #define NVME_CMB_CQS(cmbsz)	((cmbsz) & 0x2)
 #define NVME_CMB_SQS(cmbsz)	((cmbsz) & 0x1)
 
-enum {
+enum nvme_cc {
 	NVME_CC_ENABLE		= 1 << 0,
 	NVME_CC_CSS_NVM		= 0 << 4,
 	NVME_CC_EN_SHIFT	= 0,
@@ -232,6 +232,9 @@ enum {
 	NVME_CC_SHN_NORMAL	= 1 << NVME_CC_SHN_SHIFT,
 	NVME_CC_SHN_ABRUPT	= 2 << NVME_CC_SHN_SHIFT,
 	NVME_CC_SHN_MASK	= 3 << NVME_CC_SHN_SHIFT,
+};
+
+enum nvme_csts {
 	NVME_CSTS_RDY		= 1 << 0,
 	NVME_CSTS_CFS		= 1 << 1,
 	NVME_CSTS_NSSRO		= 1 << 4,
@@ -1631,13 +1634,13 @@ struct nvme_id_uuid_list_entry {
 };
 
 /**
- * enum -
+ * enum - nvme_id_uuid
  * @NVME_ID_UUID_HDR_ASSOCIATION_MASK:
  * @NVME_ID_UUID_ASSOCIATION_NONE:
  * @NVME_ID_UUID_ASSOCIATION_VENDOR:
  * @NVME_ID_UUID_ASSOCIATION_SUBSYSTEM_VENDOR:
  */
-enum {
+enum nvme_id_uuid {
 	NVME_ID_UUID_HDR_ASSOCIATION_MASK		= 0x3,
 	NVME_ID_UUID_ASSOCIATION_NONE			= 0,
 	NVME_ID_UUID_ASSOCIATION_VENDOR			= 1,
@@ -1765,7 +1768,7 @@ struct nvme_error_log_page {
  * @NVME_ERR_PEL_BYTE_MASK:
  * @NVME_ERR_PEL_BIT_MASK:
  */
-enum {
+enum nvme_err_pel {
 	NVME_ERR_PEL_BYTE_MASK	= 0xf,
 	NVME_ERR_PEL_BIT_MASK	= 0x70,
 };
@@ -1825,7 +1828,7 @@ struct nvme_smart_log {
 };
 
 /**
- * enum -
+ * enum - nvme_smart_crit
  * @NVME_SMART_CRIT_SPARE:
  * @NVME_SMART_CRIT_TEMPERATURE:
  * @NVME_SMART_CRIT_DEGRADED:
@@ -1833,7 +1836,7 @@ struct nvme_smart_log {
  * @NVME_SMART_CRIT_VOLATILE_MEMORY:
  * @NVME_SMART_CRIT_PMR_RO:
  */
-enum {
+enum nvme_smart_crit {
 	NVME_SMART_CRIT_SPARE		= 1 << 0,
 	NVME_SMART_CRIT_TEMPERATURE	= 1 << 1,
 	NVME_SMART_CRIT_DEGRADED	= 1 << 2,
@@ -1843,12 +1846,12 @@ enum {
 };
 
 /**
- * enum -
+ * enum - nvme_smart_egcw
  * @NVME_SMART_EGCW_SPARE:
  * @NVME_SMART_EGCW_DEGRADED:
  * @NVME_SMART_EGCW_RO:
  */
-enum {
+enum nvme_smart_egcw {
 	NVME_SMART_EGCW_SPARE		= 1 << 0,
 	NVME_SMART_EGCW_DEGRADED	= 1 << 2,
 	NVME_SMART_EGCW_RO		= 1 << 3,
@@ -1878,7 +1881,7 @@ struct nvme_cmd_effects_log {
 };
 
 /**
- * enum -
+ * enum - nvme_cmd_effects
  * @NVME_CMD_EFFECTS_CSUPP:
  * @NVME_CMD_EFFECTS_LBCC:
  * @NVME_CMD_EFFECTS_NCC:
@@ -1887,7 +1890,7 @@ struct nvme_cmd_effects_log {
  * @NVME_CMD_EFFECTS_CSE_MASK:
  * @NVME_CMD_EFFECTS_UUID_SEL:
  */
-enum {
+enum nvme_cmd_effects {
 	NVME_CMD_EFFECTS_CSUPP		= 1 << 0,
 	NVME_CMD_EFFECTS_LBCC		= 1 << 1,
 	NVME_CMD_EFFECTS_NCC		= 1 << 2,
@@ -1937,7 +1940,7 @@ struct nvme_st_result {
  * @NVME_ST_RESULT_NOT_USED:
  * @NVME_ST_RESULT_MASK:
  */
-enum {
+enum nvme_status_result {
 	NVME_ST_RESULT_NO_ERR    	= 0x0,
 	NVME_ST_RESULT_ABORTED   	= 0x1,
 	NVME_ST_RESULT_CLR		= 0x2,
@@ -1959,7 +1962,7 @@ enum {
  * @NVME_ST_CODE_EXTENDED:
  * @NVME_ST_CODE_VS:
  */
-enum {
+enum nvme_st_code {
 	NVME_ST_CODE_SHIFT		= 4,
 	NVME_ST_CODE_RESRVED		= 0x0,
 	NVME_ST_CODE_SHORT		= 0x1,
@@ -1974,7 +1977,7 @@ enum {
  * @NVME_ST_VALID_DIAG_INFO_SCT:
  * @NVME_ST_VALID_DIAG_INFO_SC:
  */
-enum {
+enum nvme_st_valid_diag_info {
 	NVME_ST_VALID_DIAG_INFO_NSID		= 1 << 0,
 	NVME_ST_VALID_DIAG_INFO_FLBA		= 1 << 1,
 	NVME_ST_VALID_DIAG_INFO_SCT		= 1 << 2,
@@ -2126,26 +2129,26 @@ struct nvme_nvmset_predictable_lat_log {
 };
 
 /**
- * enum -
+ * enum - nvme_nvmeset_pl_status
  * @NVME_NVMSET_PL_STATUS_DISABLED:
  * @NVME_NVMSET_PL_STATUS_DTWIN:
  * @NVME_NVMSET_PL_STATUS_NDWIN:
  */
-enum {
+enum nvme_nvmeset_pl_status {
 	NVME_NVMSET_PL_STATUS_DISABLED	= 0,
 	NVME_NVMSET_PL_STATUS_DTWIN	= 1,
 	NVME_NVMSET_PL_STATUS_NDWIN	= 2,
 };
 
 /**
- * enum -
+ * enum - nvme_nvmset_pl_events
  * @NVME_NVMSET_PL_EVENT_DTWIN_READ_WARN:
  * @NVME_NVMSET_PL_EVENT_DTWIN_WRITE_WARN:
  * @NVME_NVMSET_PL_EVENT_DTWIN_TIME_WARN:
  * @NVME_NVMSET_PL_EVENT_DTWIN_EXCEEDED:
  * @NVME_NVMSET_PL_EVENT_DTWIN_EXCURSION:
  */
-enum {
+enum nvme_nvmset_pl_events {
 	NVME_NVMSET_PL_EVENT_DTWIN_READ_WARN	= 1 << 0,
 	NVME_NVMSET_PL_EVENT_DTWIN_WRITE_WARN	= 1 << 1,
 	NVME_NVMSET_PL_EVENT_DTWIN_TIME_WARN	= 1 << 2,
@@ -2458,7 +2461,7 @@ struct nvme_lba_range_type_entry {
 };
 
 /**
- * enum -
+ * enum - nvme_lbart
  * @NVME_LBART_TYPE_GP:
  * @NVME_LBART_TYPE_FS:
  * @NVME_LBART_TYPE_RAID:
@@ -2467,7 +2470,7 @@ struct nvme_lba_range_type_entry {
  * @NVME_LBART_ATTRIB_TEMP:
  * @NVME_LBART_ATTRIB_HIDE:
  */
-enum {
+enum nvme_lbart {
 	NVME_LBART_TYPE_GP	= 0,
 	NVME_LBART_TYPE_FS	= 1,
 	NVME_LBART_TYPE_RAID	= 2,
@@ -2788,7 +2791,7 @@ struct nvmf_disc_log_entry {
  * @NVMF_TRTYPE_TCP:		TCP
  * @NVMF_TRTYPE_LOOP:		Reserved for host usage
  */
-enum {
+enum nvme_trtype {
 	NVMF_TRTYPE_UNSPECIFIED	= 0,
 	NVMF_TRTYPE_RDMA	= 1,
 	NVMF_TRTYPE_FC		= 2,
@@ -2805,7 +2808,7 @@ enum {
  * @NVMF_ADDR_FAMILY_IB:	InfiniBand
  * @NVMF_ADDR_FAMILY_FC:	Fibre Channel
  */
-enum {
+enum nvmf_addr_familiy {
 	NVMF_ADDR_FAMILY_PCI	= 0,
 	NVMF_ADDR_FAMILY_IP4	= 1,
 	NVMF_ADDR_FAMILY_IP6	= 2,
@@ -2820,7 +2823,7 @@ enum {
  * @NVMF_TREQ_NOT_REQUIRED:	Not Required
  * @NVMF_TREQ_DISABLE_SQFLOW:	SQ flow control disable supported
  */
-enum {
+enum nvmf_treq {
 	NVMF_TREQ_NOT_SPECIFIED		= 0,
 	NVMF_TREQ_REQUIRED		= 1,
 	NVMF_TREQ_NOT_REQUIRED		= 2,
@@ -2847,7 +2850,7 @@ enum {
  * @NVMF_RDMA_PRTYPE_ROCEV2:	    InfiniBand RoCEV2
  * @NVMF_RDMA_PRTYPE_IWARP:	    iWARP
  */
-enum {
+enum  nvme_rdma_prtype {
 	NVMF_RDMA_PRTYPE_NOT_SPECIFIED	= 1,
 	NVMF_RDMA_PRTYPE_IB		= 2,
 	NVMF_RDMA_PRTYPE_ROCE		= 3,
@@ -3034,7 +3037,7 @@ struct nvme_mi_nvm_ss_health_status {
 };
 
 /**
- * enum  -
+ * enum  - nvme_mi_css
  * @NVME_MI_CCS_RDY:
  * @NVME_MI_CSS_CFS:
  * @NVME_MI_CSS_SHST:
@@ -3048,7 +3051,7 @@ struct nvme_mi_nvm_ss_health_status {
  * @NVME_MI_CSS_SPARE:
  * @NVME_MI_CSS_CCWARN:
  */
-enum {
+enum nvme_mi_css {
 	NVME_MI_CCS_RDY		= 1 << 0,
 	NVME_MI_CSS_CFS		= 1 << 1,
 	NVME_MI_CSS_SHST	= 1 << 2,
@@ -3097,7 +3100,7 @@ struct nvme_mi_ctrl_heal_status {
  * @NVME_MI_CWARN_RO:
  * @NVME_MI_CWARN_VMBF:
  */
-enum {
+enum nvme_mi_csts {
 	NVME_MI_CSTS_RDY	= 1 << 0,
 	NVME_MI_CSTS_CFS	= 1 << 1,
 	NVME_MI_CSTS_SHST	= 1 << 2,
@@ -3105,6 +3108,10 @@ enum {
 	NVME_MI_CSTS_CECO	= 1 << 5,
 	NVME_MI_CSTS_NAC	= 1 << 6,
 	NVME_MI_CSTS_FA		= 1 << 7,
+};
+
+enum nvme_mi_cwarn {
+
 	NVME_MI_CWARN_ST	= 1 << 0,
 	NVME_MI_CWARN_TAUT	= 1 << 1,
 	NVME_MI_CWARN_RD	= 1 << 2,
@@ -3194,7 +3201,7 @@ struct nvme_mi_vpd_telem {
  * @NVME_MI_ELEM_PCIESED:
  * @NVME_MI_ELEM_NVMED:
  */
-enum {
+enum nvme_mi_elem {
 	NVME_MI_ELEM_EED	= 1,
 	NVME_MI_ELEM_USCE	= 2,
 	NVME_MI_ELEM_ECED	= 3,
