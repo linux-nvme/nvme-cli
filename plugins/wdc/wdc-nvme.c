@@ -691,6 +691,34 @@ struct __attribute__((__packed__)) wdc_nand_stats {
 	__u8		rsvd[444];
 };
 
+struct __attribute__((__packed__)) wdc_nand_stats_V3 {
+	__u8		nand_write_tlc[16];
+	__u8		nand_write_slc[16];
+	__le64		bad_nand_block_count;
+	__le64		xor_recovery_count;
+	__le64		uecc_read_error_count;
+	__u8		ssd_correction_counts[16];
+	__u8        percent_life_used;
+	__le64      user_data_erase_counts[4];
+	__le64      program_fail_count;
+	__le64      erase_fail_count;
+	__le64      correctable_error_count;
+	__u8        percent_free_blocks_user;
+	__le64      security_version_number;
+	__u8        percent_free_blocks_system;
+	__u8        trim_competions[25];
+	__u8        back_pressure_guage;
+	__le64		soft_ecc_error_count;
+	__le64		refresh_count;
+	__le64		bad_sys_nand_error_count;
+	__u8		endurance_estimate[16];
+	__u8        thermal_throttling_st_ct[2];
+	__le64      unaligned_IO;
+	__u8		physical_media_units[16];
+	__u8		reserved[279];
+	__u16       log_ppage_version;
+};
+
 struct wdc_fw_act_history_log_hdr {
 	__le32		eye_catcher;
 	__u8        version;
@@ -5172,6 +5200,11 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *command,
 	int fd;
 	int ret = 0;
 	__u64 capabilities = 0;
+
+	struct wdc_nand_stats_V3 nand_stats_3;
+
+	fprintf(stderr, "WDC : wdc_do_vs_nand_stats: wdc_nand_stats_V3 size = %lu\n", sizeof(nand_stats_3));
+
 
 	struct config {
 		char *output_format;
