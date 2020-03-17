@@ -1043,48 +1043,40 @@ static const uint8_t zero_uuid[16] = { 0 };
 
 static int get_wdc_uuid_index(int fd, __u8* uuid_ix, uuid_t uuid)
 {
-	*uuid_ix = 1;
-	int ret = -1;
-
+	struct nvme_id_uuid_list uuid_list = { 0 };
 	struct nvme_id_ctrl ctrl;
-	struct nvme_id_uuid_list uuid_list;
+	int i, ret = -1;
+
+	*uuid_ix = 1;
 
 	/* Determine if the controller supports a UUID List by checking CTRATT */
 	ret = nvme_identify_ctrl(fd, &ctrl);
+	if (ret)
+		return ret;
 
-	if (ret == 0) {
+	if (!(ctrl.ctrattr & NVME_CTRL_CTRATT_UUID_LIST))
+		return 0;
 
-		if ((ctrl.ctrattr & NVME_CTRL_CTRATT_UUID_LIST) == NVME_CTRL_CTRATT_UUID_LIST) {
-			/* UUID list is supported.  Get the WDC UUID entry */
-			ret = nvme_identify_uuid(fd, &uuid_list);
+	/* UUID list is supported.  Get the WDC UUID entry */
+	ret = nvme_identify_uuid(fd, &uuid_list);
+	if (ret)
+		return ret;
 
-			if (ret == 0) {
-            	/* The 0th entry is reserved so start at 1 */
-				for (*uuid_ix = 1; *uuid_ix < NVME_MAX_UUID_ENTRIES; (*uuid_ix)++) {
+	/* The 0th entry is reserved so start at 1 */
+	for (i = 1; i< NVME_MAX_UUID_ENTRIES; i++) {
+		struct nvme_id_uuid_list_entry *entry = &uuid_list.entry[i];
 
-					/* The list is terminated by a zero UUID value */
-					if (memcmp(uuid_list.entry[*uuid_ix].uuid, zero_uuid, sizeof(zero_uuid)) == 0) {
-						/* if we reached the end then we did not find the uuid */
-						*uuid_ix = 0;
-						break;
-					} else {
-
-						if (memcmp(uuid_list.entry[*uuid_ix].uuid, &uuid, sizeof(uuid_t)) == 0) {
-
-							/* found the uuid.  */
-							break;
-						}
-					}
-				}
-			} else{
-				/* bad return code from identify_uuid. */
+		/* The list is terminated by a zero UUID value */
+		if (memcmp(entry->uuid, zero_uuid, sizeof(zero_uuid))) {
+			if (memcmp(entry->uuid, &uuid, sizeof(uuid_t)) == 0) {
+				*uuid_ix = i;
+				return 0;
 			}
-		} else {
-			/* UUID list not supported. */
-		}
+		} else
+			break;
 	}
 
-	return ret;
+	return 0;
 }
 
 static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
