@@ -1069,7 +1069,11 @@ static int get_wdc_uuid_index(int fd, __u8* uuid_ix, uuid_t uuid)
 						break;
 					} else {
 
+#ifdef LIBUUID
+						if (memcmp(uuid_list.entry[*uuid_ix].uuid, uuid, sizeof(uuid_t)) == 0) {
+#else
 						if (memcmp(uuid_list.entry[*uuid_ix].uuid, uuid.b, sizeof(uuid.b)) == 0) {
+#endif
 
 							/* found the uuid.  */
 							break;
