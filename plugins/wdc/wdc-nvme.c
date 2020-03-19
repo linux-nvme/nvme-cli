@@ -3816,6 +3816,7 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 	   }
 	   else {
 			fprintf(stderr, "ERROR : WDC: unsupported option for this command\n");
+			fprintf(stderr, "Please provide an option, -d, -e or -s\n");
 			ret = -1;
 			goto out;
 	   }
