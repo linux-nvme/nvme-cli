@@ -76,7 +76,8 @@ PLUGIN_OBJS :=					\
 	plugins/seagate/seagate-nvme.o 		\
 	plugins/virtium/virtium-nvme.o		\
 	plugins/shannon/shannon-nvme.o		\
-	plugins/dera/dera-nvme.o
+	plugins/dera/dera-nvme.o            \
+    plugins/transcend/transcend-nvme.o
 
 nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)
