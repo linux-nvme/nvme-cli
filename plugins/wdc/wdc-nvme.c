@@ -3783,6 +3783,14 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 		goto out;
 	}
 
+	/* allow only one option at a time */
+	if ((cfg.disable + cfg.enable + cfg.status) > 1) {
+
+		fprintf(stderr, "ERROR : WDC : Invalid option\n");
+		ret = -1;
+		goto out;
+	}
+
 	if (cfg.disable) {
 		ret = nvme_set_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 1,
 				       0, 0, 0, buf, &result);
@@ -3808,6 +3816,7 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 	   }
 	   else {
 			fprintf(stderr, "ERROR : WDC: unsupported option for this command\n");
+			fprintf(stderr, "Please provide an option, -d, -e or -s\n");
 			ret = -1;
 			goto out;
 	   }
