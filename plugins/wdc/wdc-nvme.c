@@ -2220,6 +2220,9 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 				(!strcmp(cfg.type, "controller"))) {
 			telemetry_type = WDC_TELEMETRY_TYPE_CONTROLLER;
 			telemetry_data_area = cfg.data_area;
+		} else {
+			fprintf(stderr, "ERROR : WDC: Invalid type - Must be NONE, HOST or CONTROLLER\n");
+			return -1;
 		}
 
 		return wdc_do_cap_diag(fd, f, xfer_size, telemetry_type, telemetry_data_area);
