@@ -1411,7 +1411,8 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 		err = nvme_get_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 0, 0,
 				4, buf, &result);
 		if (err == 0) {
-			if (result) {
+			if (result == 0) {
+				/* enabled */
 				host_gen = 0;
 				ctrl_init = 1;
 			}
