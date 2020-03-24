@@ -4543,6 +4543,10 @@ static void json_detail_list(struct nvme_topology *t)
 			json_object_add_value_string(ctrl_attrs, "Transport", c->transport);
 			json_object_add_value_string(ctrl_attrs, "Address", c->address);
 			json_object_add_value_string(ctrl_attrs, "State", c->state);
+			if (c->hostnqn)
+				json_object_add_value_string(ctrl_attrs, "HostNQN", c->hostnqn);
+			if (c->hostid)
+				json_object_add_value_string(ctrl_attrs, "HostID", c->hostid);
 
 			format(formatter, sizeof(formatter), c->id.fr, sizeof(c->id.fr));
 			json_object_add_value_string(ctrl_attrs, "Firmware", formatter);

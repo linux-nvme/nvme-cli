@@ -192,6 +192,8 @@ static int scan_ctrl(struct nvme_ctrl *c, char *p, __u32 ns_instance)
 	c->address = nvme_get_ctrl_attr(path, "address");
 	c->transport = nvme_get_ctrl_attr(path, "transport");
 	c->state = nvme_get_ctrl_attr(path, "state");
+	c->hostnqn = nvme_get_ctrl_attr(path, "hostnqn");
+	c->hostid = nvme_get_ctrl_attr(path, "hostid");
 
 	if (ns_instance)
 		c->ana_state = get_nvme_ctrl_path_ana_state(path, ns_instance);
@@ -403,6 +405,8 @@ static void free_ctrl(struct nvme_ctrl *c)
 	free(c->transport);
 	free(c->address);
 	free(c->state);
+	free(c->hostnqn);
+	free(c->hostid);
 	free(c->ana_state);
 	free(c->namespaces);
 }
