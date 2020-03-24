@@ -1079,6 +1079,16 @@ static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	return ret;
 }
 
+static void nvmf_get_host_identifiers(int ctrl_instance)
+{
+	char *path;
+
+	if (asprintf(&path, "%s/nvme%d", SYS_NVME, ctrl_instance) < 0)
+		return;
+	cfg.hostnqn = nvme_get_ctrl_attr(path, "hostnqn");
+	cfg.hostid = nvme_get_ctrl_attr(path, "hostid");
+}
+
 static int do_discover(char *argstr, bool connect)
 {
 	struct nvmf_disc_rsp_page_hdr *log = NULL;
@@ -1117,10 +1127,12 @@ static int do_discover(char *argstr, bool connect)
 		free(cargs.host_traddr);
 	}
 
-	if (!cfg.device)
+	if (!cfg.device) {
 		instance = add_ctrl(argstr);
-	else
+	} else {
 		instance = ctrl_instance(cfg.device);
+		nvmf_get_host_identifiers(instance);
+	}
 	if (instance < 0)
 		return instance;
 
