@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <unistd.h>
 
 #include <ccan/list/list.h>
@@ -51,6 +52,7 @@ struct nvme_ns {
 	char *sysfs_dir;
 	int nsid;
 
+	int lba_shift;
 	int lba_size;
 	int meta_size;
 	uint64_t lba_count;
@@ -668,8 +670,8 @@ static int nvme_bytes_to_lba(nvme_ns_t n, off_t offset, size_t count,
 		return -1;
 	}
 
-	*lba = offset / bs;
-	*nlb = (count / bs) - 1;
+	*lba = offset >> n->lba_shift;
+	*nlb = (count >> n->lba_shift) - 1;
 	return 0;
 }
 
@@ -807,32 +809,27 @@ static void nvme_ns_init(struct nvme_ns *n)
 	if (nvme_ns_identify(n, &ns) != 0)
 		return;
 
-	n->lba_size = 1 << ns.lbaf[ns.flbas & NVME_NS_FLBAS_LBA_MASK].ds;
+	n->lba_shift = ns.lbaf[ns.flbas & NVME_NS_FLBAS_LBA_MASK].ds;
+	n->lba_size = 1 << n->lba_shift;
 	n->lba_count = le64_to_cpu(ns.nsze);
 	n->lba_util = le64_to_cpu(ns.nuse);
 }
 
-static struct nvme_ns *__nvme_scan_namespace(const char *sysfs_dir, char *name)
-{
-	struct nvme_ns *n;
-	char *path;
-	int ret;
 
-	ret = asprintf(&path, "%s/%s", sysfs_dir, name);
-	if (ret < 0) {
-		errno = ENOMEM;
-		return NULL;
-	}
+nvme_ns_t nvme_ns_open(char *name)
+{
+	char *b = basename(name);
+	struct nvme_ns *n;
 
 	n = calloc(1, sizeof(*n));
 	if (!n) {
 		errno = ENOMEM;
-		goto free_path;
+		return NULL;
 	}
 
-	n->name = strdup(name);
-	n->sysfs_dir = path;
-	n->fd = nvme_open(name);
+	n->name = strdup(b);
+	n->fd = nvme_open(b);
+
 	if (n->fd < 0)
 		goto free_ns;
 
@@ -849,6 +846,28 @@ close_fd:
 	close(n->fd);
 free_ns:
 	free(n);
+	return NULL;
+}
+
+static struct nvme_ns *__nvme_scan_namespace(const char *sysfs_dir, char *name)
+{
+	struct nvme_ns *n;
+	char *path;
+	int ret;
+
+	ret = asprintf(&path, "%s/%s", sysfs_dir, name);
+	if (ret < 0) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	n = nvme_ns_open(name);
+	if (!n)
+		goto free_path;
+
+	n->sysfs_dir = path;
+	return n;
+
 free_path:
 	free(path);
 	return NULL;

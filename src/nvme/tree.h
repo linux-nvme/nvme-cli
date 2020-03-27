@@ -51,6 +51,12 @@ typedef struct nvme_root *nvme_root_t;
  */
 typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t);
 
+
+/**
+ *
+ */
+nvme_ns_t nvme_ns_open(char *name);
+
 /**
  * nvme_first_subsystem() -
  * @r:

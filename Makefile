@@ -32,7 +32,7 @@ include config-host.mak
 endif
 
 SED_PROCESS = \
-	$(SED) -e "s%@prefix@%$(prefix)%g" \
+	sed -e "s%@prefix@%$(prefix)%g" \
                -e "s%@libdir@%$(libdir)%g" \
                -e "s%@includedir@%$(includedir)%g" \
                -e "s%@NAME@%$(NAME)%g" \
