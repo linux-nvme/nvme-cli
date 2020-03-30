@@ -76,7 +76,7 @@ static void json_intel_id_ctrl(struct nvme_vu_id_ctrl_field *id,
 	struct json_object *root)
 {
 	json_object_add_value_int(root, "ss", id->ss);
-	json_object_add_value_string(root, "health", health[0] ? health : "healthy");
+	json_object_add_value_string(root, "health", health );
 	json_object_add_value_int(root, "cls", id->cls);
 	json_object_add_value_int(root, "nlw", id->nlw);
 	json_object_add_value_int(root, "scap", id->scap);
@@ -97,9 +97,22 @@ static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 	char mic_bl[5] = { 0 };
 	char mic_fw[5] = { 0 };
 
+
+	if (id->health[0]==0)
+	{
+			snprintf(health, 21, "%s", "healthy");
+	}
+	else
+	{
+			snprintf(health, 21, "%s", id->health);
+	}
+
+	snprintf(bl, 9, "%s", id->bl);
 	snprintf(ww, 19, "%02X%02X%02X%02X%02X%02X%02X%02X", id->ww[7],
 		id->ww[6], id->ww[5], id->ww[4], id->ww[3], id->ww[2],
 		id->ww[1], id->ww[0]);
+	snprintf(mic_bl, 5, "%s", id->mic_bl);
+	snprintf(mic_fw, 5, "%s", id->mic_fw);
 
 	if (root) {
 		json_intel_id_ctrl(id, health, bl, ww, mic_bl, mic_fw, root);
@@ -107,7 +120,7 @@ static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 	}
 
 	printf("ss        : %d\n", id->ss);
-	printf("health    : %s\n", id->health[0] ? health : "healthy");
+	printf("health    : %s\n", health);
 	printf("cls       : %d\n", id->cls);
 	printf("nlw       : %d\n", id->nlw);
 	printf("scap      : %d\n", id->scap);
