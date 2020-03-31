@@ -60,11 +60,8 @@ char *nvme_get_ctrl_attr(char *path, const char *attr)
 		goto err_free_path;
 
 	fd = open(attrpath, O_RDONLY);
-	if (fd < 0) {
-		fprintf(stderr, "Failed to open %s: %s\n",
-				attrpath, strerror(errno));
+	if (fd < 0)
 		goto err_free_value;
-	}
 
 	ret = read(fd, value, 1024);
 	if (ret < 0) {
