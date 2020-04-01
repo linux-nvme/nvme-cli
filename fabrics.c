@@ -33,6 +33,10 @@
 #include <sys/stat.h>
 #include <stddef.h>
 
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+
 #include "util/parser.h"
 #include "nvme-ioctl.h"
 #include "nvme-status.h"
@@ -857,6 +861,63 @@ static int build_options(char *argstr, int max_len, bool discover)
 	return 0;
 }
 
+static bool traddr_is_hostname(struct config *cfg)
+{
+	char addrstr[NVMF_TRADDR_SIZE];
+
+	if (!cfg->traddr)
+		return false;
+	if (strcmp(cfg->transport, "tcp") && strcmp(cfg->transport, "rdma"))
+		return false;
+	if (inet_pton(AF_INET, cfg->traddr, addrstr) > 0 ||
+	    inet_pton(AF_INET6, cfg->traddr, addrstr) > 0)
+		return false;
+	return true;
+}
+
+static int hostname2traddr(struct config *cfg)
+{
+	struct addrinfo *host_info, hints = {.ai_family = AF_UNSPEC};
+	char addrstr[NVMF_TRADDR_SIZE];
+	const char *p;
+	int ret;
+
+	ret = getaddrinfo(cfg->traddr, NULL, &hints, &host_info);
+	if (ret) {
+		fprintf(stderr, "failed to resolve host %s info\n", cfg->traddr);
+		return ret;
+	}
+
+	switch (host_info->ai_family) {
+	case AF_INET:
+		p = inet_ntop(host_info->ai_family,
+			&(((struct sockaddr_in *)host_info->ai_addr)->sin_addr),
+			addrstr, NVMF_TRADDR_SIZE);
+		break;
+	case AF_INET6:
+		p = inet_ntop(host_info->ai_family,
+			&(((struct sockaddr_in6 *)host_info->ai_addr)->sin6_addr),
+			addrstr, NVMF_TRADDR_SIZE);
+		break;
+	default:
+		fprintf(stderr, "unrecognized address family (%d) %s\n",
+			host_info->ai_family, cfg->traddr);
+		ret = -EINVAL;
+		goto free_addrinfo;
+	}
+
+	if (!p) {
+		fprintf(stderr, "failed to get traddr for %s\n", cfg->traddr);
+		ret = -errno;
+		goto free_addrinfo;
+	}
+	cfg->traddr = strdup(addrstr);
+
+free_addrinfo:
+	freeaddrinfo(host_info);
+	return ret;
+}
+
 static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 {
 	char argstr[BUF_SIZE], *p;
@@ -1230,6 +1291,12 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 		if (cfg.persistent && !cfg.keep_alive_tmo)
 			cfg.keep_alive_tmo = NVMF_DEF_DISC_TMO;
 
+		if (traddr_is_hostname(&cfg)) {
+			ret = hostname2traddr(&cfg);
+			if (ret)
+				goto out;
+		}
+
 		err = build_options(argstr, BUF_SIZE, true);
 		if (err) {
 			ret = err;
@@ -1294,6 +1361,13 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	} else {
 		if (cfg.persistent && !cfg.keep_alive_tmo)
 			cfg.keep_alive_tmo = NVMF_DEF_DISC_TMO;
+
+		if (traddr_is_hostname(&cfg)) {
+			ret = hostname2traddr(&cfg);
+			if (ret)
+				goto out;
+		}
+
 		ret = build_options(argstr, BUF_SIZE, true);
 		if (ret)
 			goto out;
@@ -1337,6 +1411,12 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		goto out;
+
+	if (traddr_is_hostname(&cfg)) {
+		ret = hostname2traddr(&cfg);
+		if (ret)
+			goto out;
+	}
 
 	ret = build_options(argstr, BUF_SIZE, false);
 	if (ret)
