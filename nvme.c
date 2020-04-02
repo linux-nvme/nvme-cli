@@ -3570,6 +3570,137 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "The Copy command is used by the host to copy data "
+			   "from one or more source logical block ranges to a "
+			   "single consecutive destination logical block "
+			   "range.";
+
+	const char *d_sdlba = "64-bit addr of first destination logical block";
+	const char *d_slbas = "64-bit addr of first block per range (comma-separated list)";
+	const char *d_nlbs = "number of blocks per range (comma-separated list, zeroes-based values)";
+	const char *d_lr = "limited retry";
+	const char *d_fua = "force unit access";
+	const char *d_prinfor = "protection information and check field (read part)";
+	const char *d_prinfow = "protection information and check field (write part)";
+	const char *d_ilbrt = "initial lba reference tag (write part)";
+	const char *d_eilbrts = "expected lba reference tags (read part, comma-separated list)";
+	const char *d_lbat = "lba application tag (write part)";
+	const char *d_elbats = "expected lba application tags (read part, comma-separated list)";
+	const char *d_lbatm = "lba application tag mask (write part)";
+	const char *d_elbatms = "expected lba application tag masks (read part, comma-separated list)";
+	const char *d_dtype = "directive type (write part)";
+	const char *d_dspec = "directive specific (write part)";
+	const char *d_format = "source range entry format";
+
+	int err, fd;
+	uint16_t nr, nb, ns, nrts, natms, nats;
+	__u32 namespace_id;
+	int nlbs[128] = { 0 };
+	unsigned long long slbas[128] = {0,};
+	int eilbrts[128] = { 0 };
+	int elbatms[128] = { 0 };
+	int elbats[128] = { 0 };
+	struct nvme_copy_range *copy;
+
+	struct config {
+		__u64 sdlba;
+		char  *nlbs;
+		char  *slbas;
+		__u32 ilbrt;
+		char  *eilbrts;
+		__u16 lbatm;
+		char  *elbatms;
+		__u16 lbat;
+		char  *elbats;
+		__u8  prinfow;
+		__u8  prinfor;
+		int   lr;
+		int   fua;
+		__u8  dtype;
+		__u16 dspec;
+		__u8  format;
+	};
+
+	struct config cfg = {
+		.nlbs    = "",
+		.slbas   = "",
+		.eilbrts = "",
+		.elbatms = "",
+		.elbats  = "",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,   d_sdlba),
+		OPT_LIST("slbs",                   's', &cfg.slbas,   d_slbas),
+		OPT_LIST("blocks",                 'b', &cfg.nlbs,    d_nlbs),
+		OPT_FLAG("limited-retry",          'l', &cfg.lr,      d_lr),
+		OPT_FLAG("force-unit-access",      'f', &cfg.fua,     d_fua),
+		OPT_BYTE("prinfow",                'p', &cfg.prinfow, d_prinfow),
+		OPT_BYTE("prinfor",                'P', &cfg.prinfor, d_prinfor),
+		OPT_UINT("ref-tag",                'r', &cfg.ilbrt,   d_ilbrt),
+		OPT_LIST("expected-ref-tags",      'R', &cfg.eilbrts, d_eilbrts),
+		OPT_SHRT("app-tag",                'a', &cfg.lbat,    d_lbat),
+		OPT_LIST("expected-app-tags",      'A', &cfg.elbats,  d_elbats),
+		OPT_SHRT("app-tag-mask",           'm', &cfg.lbatm,   d_lbatm),
+		OPT_LIST("expected-app-tag-masks", 'M', &cfg.elbatms, d_elbatms),
+		OPT_BYTE("dir-type",               'T', &cfg.dtype,   d_dtype),
+		OPT_SHRT("dir-spec",               'S', &cfg.dspec,   d_dspec),
+		OPT_BYTE("format",                 'F', &cfg.format,  d_format),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	nb = argconfig_parse_comma_sep_array(cfg.nlbs, nlbs, ARRAY_SIZE(nlbs));
+	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, ARRAY_SIZE(slbas));
+	nrts = argconfig_parse_comma_sep_array(cfg.eilbrts, eilbrts, ARRAY_SIZE(eilbrts));
+	natms = argconfig_parse_comma_sep_array(cfg.elbatms, elbatms, ARRAY_SIZE(elbatms));
+	nats = argconfig_parse_comma_sep_array(cfg.elbats, elbats, ARRAY_SIZE(elbats));
+
+	nr = max(nb, max(ns, max(nrts, max(natms, nats))));
+	if (!nr || nr > 128) {
+		fprintf(stderr, "invalid range\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	namespace_id = nvme_get_nsid(fd);
+	if (namespace_id == 0) {
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	copy = nvme_setup_copy_range((__u16 *)nlbs, (__u64 *)slbas,
+			(__u32 *)eilbrts, (__u16 *)elbatms, (__u16 *)elbats,
+			nr);
+	if (!copy) {
+		fprintf(stderr, "failed to allocate payload\n");
+		err = -ENOMEM;
+		goto close_fd;
+	}
+
+	err = nvme_copy(fd, namespace_id, copy, cfg.sdlba, nr, cfg.prinfor,
+			cfg.prinfow, cfg.dtype, cfg.dspec, cfg.format, cfg.lr,
+			cfg.fua, cfg.ilbrt, cfg.lbatm, cfg.lbat);
+	if (err < 0)
+		perror("NVMe Copy");
+	else if (err != 0)
+		nvme_show_status(err);
+	else
+		printf("NVMe Copy: success\n");
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int flush(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Commit data and metadata associated with "\

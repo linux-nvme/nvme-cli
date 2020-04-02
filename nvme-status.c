@@ -97,7 +97,6 @@ static inline __u8 nvme_cmd_specific_status_to_errno(__u16 status)
 	case NVME_SC_NS_ALREADY_ATTACHED:
 		return EALREADY;
 	case NVME_SC_THIN_PROV_NOT_SUPP:
-	case NVME_SC_ONCS_NOT_SUPPORTED:
 		return EOPNOTSUPP;
 	case NVME_SC_DEVICE_SELF_TEST_IN_PROGRESS:
 		return EINPROGRESS;

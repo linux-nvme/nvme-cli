@@ -1,0 +1,111 @@
+nvme-copy(1)
+============
+
+NAME
+----
+nvme-copy - Send an NVMe Simple Copy command, provide results
+
+SYNOPSIS
+--------
+[verse]
+'nvme-copy' <device> [--sdlba=<sdlba> | -d <sdlba>]
+			[--blocks=<nlb-list,> | -b <nlb-list,>]
+			[--slbs=<slbas,> | -s <slbas,>]
+			[--limited-retry | -l]
+			[--force-unit-access | -f]
+			[--prinfow=<prinfow> | -p <prinfow>]
+			[--prinfor=<prinfor> | -P <prinfor>]
+			[--ref-tag=<reftag> | -r <reftag>]
+			[--expected-ref-tags=<reftag,> | -R <reftag,>]
+			[--app-tag=<apptag> | -a <apptag>]
+			[--expected-app-tags=<apptag,> | -A <apptag,>]
+			[--app-mask=<appmask> | -m <appmask>]
+			[--expected-app-masks=<appmask,> | -M <appmask,>]
+			[--dir-type=<type> | -T <type>]
+			[--dir-spec=<spec> | -S <spec>]
+			[--format=<entry-format> | -F <entry-format>]
+
+DESCRIPTION
+-----------
+The Copy command is used by the host to copy data from one or more source
+logical block ranges to a single consecutive destination logical block range.
+
+OPTIONS
+-------
+--sdlba=<sdlba>::
+-d <sdlba>::
+	64-bit addr of first destination logical block
+
+--blocks=<nlb-list,>::
+-b <nlb-list,>::
+	Comma separated list of the number of blocks in each range
+
+--slbs=<slbas,>::
+-s <slbas,>::
+	Comma separated list of the starting blocks in each range
+
+--limited-retry::
+-l::
+	Sets the limited retry flag.
+
+--force-unit-access::
+-f::
+	Set the force-unit access flag.
+
+--prinfow=<prinfow>::
+-p <prinfow>::
+	Protection Information field write definition.
+
+--prinfor=<prinfor>::
+-P <prinfor>::
+	Protection Information field read definition.
+
+--ref-tag=<reftag>::
+-r <reftag>::
+	initial lba reference tag.
+
+--expected-ref-tags=<reftag,>::
+-R <reftag,>::
+	expected lba reference tags (comma-separated list).
+
+--app-tag=<apptag>::
+-a <apptag>::
+	lba app tag
+
+--expected-app-tags=<apptag,>::
+-A <apptag,>::
+	expected lba app tags (comma-separated list)
+
+--app-mask=<appmask>::
+-m <appmask>::
+	lba tag mask
+
+--expected-app-masks=<appmask,>::
+-M <appmask,>::
+	expected lba tag masks (comma-separated list)
+
+--dir-type=<type>::
+-T <type>::
+	Optional directive type. The nvme-cli only enforces the value
+	be in the defined range for the directive type, though the NVMe
+	specifcation (1.3a) defines only one directive, 01h, for write
+	stream idenfiers.
+
+--dir-spec=<spec>::
+-S <spec>::
+	Optional field for directive specifics. When used with
+	write streams, this value is defined to be the write stream
+	identifier. The nvme-cli will not validate the stream requested
+	is within the controller's capabilities.
+
+--format=<entry-format>::
+-F <entry-format>::
+	source range entry format
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

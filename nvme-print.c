@@ -176,6 +176,10 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 		json_object_add_value_int(root, "nows", le16_to_cpu(ns->nows));
 	}
 
+	json_object_add_value_int(root, "mssrl", le16_to_cpu(ns->mssrl));
+	json_object_add_value_int(root, "mcl", le32_to_cpu(ns->mcl));
+	json_object_add_value_int(root, "msrc", ns->msrc);
+
 	json_object_add_value_int(root, "anagrpid", le32_to_cpu(ns->anagrpid));
 	json_object_add_value_int(root, "endgid", le16_to_cpu(ns->endgid));
 
@@ -299,6 +303,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
 	json_object_add_value_int(root, "icsvscc", ctrl->icsvscc);
 	json_object_add_value_int(root, "nwpc", ctrl->nwpc);
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
+	json_object_add_value_int(root, "ocfs", le16_to_cpu(ctrl->ocfs));
 	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
 
 	if (strlen(subnqn))
@@ -2082,7 +2087,8 @@ static void nvme_show_id_ctrl_cqes(__u8 cqes)
 static void nvme_show_id_ctrl_oncs(__le16 ctrl_oncs)
 {
 	__u16 oncs = le16_to_cpu(ctrl_oncs);
-	__u16 rsvd = (oncs & 0xFF00) >> 8;
+	__u16 rsvd = (oncs & 0xFE00) >> 9;
+	__u16 copy = (oncs & 0x100) >> 8;
 	__u16 vrfy = (oncs & 0x80) >> 7;
 	__u16 tmst = (oncs & 0x40) >> 6;
 	__u16 resv = (oncs & 0x20) >> 5;
@@ -2093,7 +2099,9 @@ static void nvme_show_id_ctrl_oncs(__le16 ctrl_oncs)
 	__u16 cmp = oncs & 0x1;
 
 	if (rsvd)
-		printf(" [15:8] : %#x\tReserved\n", rsvd);
+		printf(" [15:9] : %#x\tReserved\n", rsvd);
+	printf("  [8:8] : %#x\tCopy %sSupported\n",
+		copy, copy ? "" : "Not ");
 	printf("  [7:7] : %#x\tVerify %sSupported\n",
 		vrfy, vrfy ? "" : "Not ");
 	printf("  [6:6] : %#x\tTimestamp %sSupported\n",
@@ -2475,6 +2483,9 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		printf("npda    : %u\n", le16_to_cpu(ns->npda));
 		printf("nows    : %u\n", le16_to_cpu(ns->nows));
 	}
+	printf("mssrl   : %u\n", le16_to_cpu(ns->mssrl));
+	printf("mcl     : %d\n", le32_to_cpu(ns->mcl));
+	printf("msrc    : %u\n", ns->msrc);
 	printf("nsattr	: %u\n", ns->nsattr);
 	printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
 	printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
@@ -2506,6 +2517,7 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 				ns->lbaf[i].rp,
 				i == (ns->flbas & 0xf) ? "(in use)" : "");
 	}
+
 	if (vs) {
 		printf("vs[]:\n");
 		d(ns->vs, sizeof(ns->vs), 16, 1);
@@ -2858,6 +2870,7 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_nwpc(ctrl->nwpc);
 	printf("acwu      : %d\n", le16_to_cpu(ctrl->acwu));
+	printf("ocfs      : %d\n", le16_to_cpu(ctrl->ocfs));
 	printf("sgls      : %#x\n", le32_to_cpu(ctrl->sgls));
 	if (human)
 		nvme_show_id_ctrl_sgls(ctrl->sgls);
@@ -4228,6 +4241,8 @@ const char *nvme_status_to_string(__u32 status)
 		return "ANA_ATTACH_FAIL: The controller is not attached to the namespace as a result of an ANA condition";
 	case NVME_SC_BAD_ATTRIBUTES:
 		return "BAD_ATTRIBUTES: Bad attributes were given";
+	case NVME_SC_CMD_SIZE_LIMIT_EXCEEDED:
+		return "CMD_SIZE_LIMIT_EXCEEDED: Command size limit exceeded";
 	case NVME_SC_WRITE_FAULT:
 		return "WRITE_FAULT: The write data could not be committed to the media";
 	case NVME_SC_READ_ERROR:

@@ -52,6 +52,7 @@ COMMAND_LIST(
 	ENTRY("resv-release", "Submit a Reservation Release, return results", resv_release)
 	ENTRY("resv-report", "Submit a Reservation Report, return results", resv_report)
 	ENTRY("dsm", "Submit a Data Set Management command, return results", dsm)
+	ENTRY("copy", "Submit a Simple Copy command, return results", copy)
 	ENTRY("flush", "Submit a Flush command, return results", flush)
 	ENTRY("compare", "Submit a Compare command, return results", compare)
 	ENTRY("read", "Submit a read command, return results", read_cmd)
