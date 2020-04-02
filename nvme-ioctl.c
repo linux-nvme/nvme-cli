@@ -269,6 +269,52 @@ struct nvme_dsm_range *nvme_setup_dsm_range(__u32 *ctx_attrs, __u32 *llbas,
 	return dsm;
 }
 
+int nvme_copy(int fd, __u32 nsid, struct nvme_copy_range *copy, __u64 sdlba,
+		__u16 nr, __u8 prinfor, __u8 prinfow, __u8 dtype, __u16 dspec,
+		__u8 format, int lr, int fua, __u32 ilbrt, __u16 lbatm,
+		__u16 lbat)
+{
+	__u32 cdw12 = ((nr - 1) & 0xff) | ((format & 0xf) <<  8) |
+		((prinfor & 0xf) << 12) | ((dtype & 0xf) << 20) |
+		((prinfow & 0xf) << 26) | ((fua & 0x1) << 30) |
+		((lr & 0x1) << 31);
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode         = nvme_cmd_copy,
+		.nsid           = nsid,
+		.addr           = (__u64)(uintptr_t)copy,
+		.data_len       = nr * sizeof(*copy),
+		.cdw10          = sdlba & 0xffffffff,
+		.cdw11          = sdlba >> 32,
+		.cdw12          = cdw12,
+		.cdw13		= (dspec & 0xffff) << 16,
+		.cdw14		= ilbrt,
+		.cdw15		= (lbatm << 16) | lbat,
+	};
+
+	return nvme_submit_io_passthru(fd, &cmd);
+}
+
+struct nvme_copy_range *nvme_setup_copy_range(__u16 *nlbs, __u64 *slbas,
+		__u32 *eilbrts, __u16 *elbatms, __u16 *elbats, __u16 nr)
+{
+	struct nvme_copy_range *copy = malloc(nr * sizeof(*copy));
+	if (!copy) {
+		fprintf(stderr, "malloc: %s\n", strerror(errno));
+		return NULL;
+	}
+
+	for (int i = 0; i < nr; i++) {
+		copy[i].nlb = cpu_to_le16(nlbs[i]);
+		copy[i].slba = cpu_to_le64(slbas[i]);
+		copy[i].eilbrt = cpu_to_le32(eilbrts[i]);
+		copy[i].elbatm = cpu_to_le16(elbatms[i]);
+		copy[i].elbat = cpu_to_le16(elbats[i]);
+	}
+
+	return copy;
+}
+
 int nvme_resv_acquire(int fd, __u32 nsid, __u8 rtype, __u8 racqa,
 		      bool iekey, __u64 crkey, __u64 nrkey)
 {

@@ -9,7 +9,7 @@ _cmds="list id-ctrl id-ns list-ns id-iocs create-ns delete-ns \
 	fw-download admin-passthru io-passthru security-send \
 	security-recv resv-acquire resv-register resv-release \
 	resv-report dsm flush compare read write write-zeroes \
-	write-uncor reset subsystem-reset show-regs discover \
+	write-uncor copy reset subsystem-reset show-regs discover \
 	connect-all connect disconnect version help \
 	intel lnvm memblaze list-subsys"
 
@@ -147,6 +147,15 @@ nvme_list_opts () {
 		"dsm")
 		opts+=" --namespace-id= -n --ctx-attrs= -a --blocks= -b\
 			-slbs= -s --ad -d --idw -w --idr -r --cdw11= -c"
+			;;
+		"copy")
+		opts+=" --sdlba= -d --blocks= -b --slbs= -s \
+			--limited-retry -l --force-unit-access -f \
+			--prinfow= -p --prinfor= -P \
+			--ref-tag= -r --expected-ref-tag= -R \
+			--app-tag= -a --expected-app-tag= -A \
+			--app-tag-mask= -m --expected-app-tag-mask= -M \
+			--dir-type= -T --dir-spec= -S --format= -F"
 			;;
 		"flush")
 		opts+=" --namespace-id= -n"

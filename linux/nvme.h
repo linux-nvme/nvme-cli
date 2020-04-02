@@ -335,7 +335,7 @@ struct nvme_id_ctrl {
 	__u8			icsvscc;
 	__u8			nwpc;
 	__le16			acwu;
-	__u8			rsvd534[2];
+	__le16			ocfs;
 	__le32			sgls;
 	__le32			mnan;
 	__u8			rsvd544[224];
@@ -405,7 +405,10 @@ struct nvme_id_ns {
 	__le16			npdg;
 	__le16			npda;
 	__le16			nows;
-	__u8			rsvd74[18];
+	__le16			mssrl;
+	__le32			mcl;
+	__u8			msrc;
+	__u8			rsvd81[11];
 	__le32			anagrpid;
 	__u8			rsvd96[3];
 	__u8			nsattr;
@@ -833,6 +836,7 @@ enum nvme_opcode {
 	nvme_cmd_resv_report	= 0x0e,
 	nvme_cmd_resv_acquire	= 0x11,
 	nvme_cmd_resv_release	= 0x15,
+	nvme_cmd_copy		= 0x19,
 	nvme_zns_cmd_mgmt_send	= 0x79,
 	nvme_zns_cmd_mgmt_recv	= 0x7a,
 	nvme_zns_cmd_append	= 0x7d,
@@ -960,6 +964,16 @@ struct nvme_dsm_range {
 	__le32			cattr;
 	__le32			nlb;
 	__le64			slba;
+};
+
+struct nvme_copy_range {
+	__u8			rsvd0[8];
+	__le64			slba;
+	__le16			nlb;
+	__u8			rsvd18[6];
+	__le32			eilbrt;
+	__le16			elbatm;
+	__le16			elbat;
 };
 
 /* Features */
@@ -1403,7 +1417,7 @@ enum {
 	NVME_SC_BAD_ATTRIBUTES		= 0x180,
 	NVME_SC_INVALID_PI		= 0x181,
 	NVME_SC_READ_ONLY		= 0x182,
-	NVME_SC_ONCS_NOT_SUPPORTED	= 0x183,
+	NVME_SC_CMD_SIZE_LIMIT_EXCEEDED = 0x183,
 
 	/*
 	 * I/O Command Set Specific - Fabrics commands:
