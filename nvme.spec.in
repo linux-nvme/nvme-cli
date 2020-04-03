@@ -41,6 +41,7 @@ make install-spec DESTDIR=%{buildroot} PREFIX=/usr
 %{_libdir}/systemd/system/nvmf-connect@.service
 %{_libdir}/systemd/system/nvmefc-boot-connections.service
 %{_libdir}/systemd/system/nvmf-connect.target
+%{_libdir}/systemd/system/nvmf-autoconnect.service
 
 %clean
 rm -rf $RPM_BUILD_ROOT
