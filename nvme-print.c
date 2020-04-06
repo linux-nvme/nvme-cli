@@ -2622,7 +2622,7 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 			for (i = 0; i < 8; i++)
 				printf("%02x", eui64[i]);
 			printf("\n");
-			len += sizeof(eui64);
+			len = sizeof(eui64);
 			break;
 		case NVME_NIDT_NGUID:
 			memcpy(nguid, data + pos + sizeof(*cur), sizeof(nguid));
@@ -2630,14 +2630,14 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 			for (i = 0; i < 16; i++)
 				printf("%02x", nguid[i]);
 			printf("\n");
-			len += sizeof(nguid);
+			len = sizeof(nguid);
 			break;
 #ifdef LIBUUID
 		case NVME_NIDT_UUID:
 			memcpy(uuid, data + pos + sizeof(*cur), 16);
 			uuid_unparse_lower(uuid, uuid_str);
 			printf("uuid    : %s\n", uuid_str);
-			len += sizeof(uuid);
+			len = sizeof(uuid);
 			break;
 #endif
 		default:
