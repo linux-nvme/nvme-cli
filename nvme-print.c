@@ -2537,7 +2537,7 @@ static void json_nvme_id_ns_descs(void *data)
 			memcpy(desc.eui64, data + off, sizeof(desc.eui64));
 			for (i = 0; i < sizeof(desc.eui64); i++)
 				json_str_p += sprintf(json_str_p, "%02x", desc.eui64[i]);
-			len += sizeof(desc.eui64);
+			len = sizeof(desc.eui64);
 			nidt_name = "eui64";
 			break;
 
@@ -2545,7 +2545,7 @@ static void json_nvme_id_ns_descs(void *data)
 			memcpy(desc.nguid, data + off, sizeof(desc.nguid));
 			for (i = 0; i < sizeof(desc.nguid); i++)
 				json_str_p += sprintf(json_str_p, "%02x", desc.nguid[i]);
-			len += sizeof(desc.nguid);
+			len = sizeof(desc.nguid);
 			nidt_name = "nguid";
 			break;
 
@@ -2553,7 +2553,7 @@ static void json_nvme_id_ns_descs(void *data)
 		case NVME_NIDT_UUID:
 			memcpy(desc.uuid, data + off, sizeof(desc.uuid));
 			uuid_unparse_lower(desc.uuid, json_str);
-			len += sizeof(desc.uuid);
+			len = sizeof(desc.uuid);
 			nidt_name = "uuid";
 			break;
 #endif
