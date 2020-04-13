@@ -707,7 +707,7 @@ struct __attribute__((__packed__)) wdc_nand_stats_V3 {
 	__u8        percent_free_blocks_user;
 	__le64      security_version_number;
 	__u8        percent_free_blocks_system;
-	__u8        trim_competions[25];
+	__u8        trim_completions[25];
 	__u8        back_pressure_guage;
 	__le64		soft_ecc_error_count;
 	__le64		refresh_count;
@@ -5132,7 +5132,7 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 				le16_to_cpu(nand_stats->log_page_version));
 		break;
 	case 3:
-		printf("  NAND Statistics :- \n");
+		printf("  NAND Statistics V3:- \n");
 		printf("  TLC Units Written				 %.0Lf\n",
 				int128_to_double(nand_stats_v3->nand_write_tlc));
 		printf("  SLC Units Written 				 %.0Lf\n",
@@ -5167,12 +5167,12 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->security_version_number));
 		printf("  %% Free Blocks (System)			 %u\n",
 				nand_stats_v3->percent_free_blocks_system);
-		/*
-			TODO:  how to print/convert 25 byte array - __u8        trim_competions[25];
-			code below will get 16 bytes of the data
-		*/
-		printf("  Trim Completions				 %.0Lf\n",
-				int128_to_double(nand_stats_v3->trim_competions));
+		printf("  Data Set Management Commands			 %.0Lf\n",
+				int128_to_double(nand_stats_v3->trim_completions));
+		printf("  Estimate of Incomplete Trim Data		 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->trim_completions[16]));
+		printf("  %% of completed trim				 %u\n",
+				nand_stats_v3->trim_completions[24]);
 		printf("  Background Back-Pressure-Guage		 %u\n",
 				nand_stats_v3->back_pressure_guage);
 		printf("  Soft ECC Error Count				 %"PRIu64"\n",
@@ -5271,12 +5271,12 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->security_version_number));
 		json_object_add_value_uint(root, "% Free Blocks (System)",
 				nand_stats_v3->percent_free_blocks_system);
-		/*
-			TODO:  how to print/convert 25 byte array - __u8        trim_competions[25];
-			code below will get 16 bytes of the data
-		*/
-		json_object_add_value_float(root, "Trim Completions",
-				int128_to_double(nand_stats_v3->trim_competions));
+		json_object_add_value_float(root, "Data Set Management Commands",
+				int128_to_double(nand_stats_v3->trim_completions));
+		json_object_add_value_uint(root, "Estimate of Incomplete Trim Data",
+				le64_to_cpu(nand_stats_v3->trim_completions[16]));
+		json_object_add_value_uint(root, "%% of completed trim",
+				nand_stats_v3->trim_completions[24]);
 		json_object_add_value_uint(root, "Background Back-Pressure-Guage",
 				nand_stats_v3->back_pressure_guage);
 		json_object_add_value_uint(root, "Soft ECC Error Count",
