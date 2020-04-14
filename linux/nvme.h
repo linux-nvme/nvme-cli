@@ -143,6 +143,7 @@ enum {
  */
 enum {
 	NVME_IOCS_NVM   = 0x00,
+	NVME_IOCS_ZONED = 0x02,
 };
 
 #define NVME_AQ_DEPTH		32
@@ -350,6 +351,11 @@ struct nvme_id_ctrl {
 	__u8			vs[1024];
 };
 
+struct nvme_id_ctrl_zoned {
+	__u8			zasl;
+	__u8			rsvd1[4095];
+};
+
 enum {
 	NVME_CTRL_ONCS_COMPARE			= 1 << 0,
 	NVME_CTRL_ONCS_WRITE_UNCORRECTABLE	= 1 << 1,
@@ -418,8 +424,56 @@ struct nvme_id_ns {
 };
 
 struct nvme_iocs_vector {
-	__le64	nvm  : 1;
-	__le64	rsvd : 63;
+	union {
+		struct {
+			__le64 nvm  : 1;
+			__le64 rsvd1 : 1;
+			__le64 zoned : 1;
+			__le64 rsvd3 : 61;
+		};
+
+		__le64 a;
+	};
+};
+
+struct nvme_lbafe {
+	__le64		zsze;
+	__u8		zdes;
+	__u8		rsvd9[7];
+};
+
+struct nvme_id_ns_zoned {
+	__le16			zoc;
+	__le16			ozcs;
+	__le32			mar;
+	__le32			mor;
+	__le32			rrl;
+	__le32			frl;
+	__u8			rsvd20[2796];
+	struct nvme_lbafe	lbafe[16];
+	__u8			vs[256];
+};
+
+struct nvme_report_zones_hdr {
+	__le64	num_zones;
+	__u8	rsvd[56];
+};
+
+struct nvme_zone_info_entry {
+	__u8	zt;
+	__u8	zs;
+	__u8	za;
+	__u8	rsvd3[5];
+	__le64	zcap;
+	__le64	zslba;
+	__le64	wp;
+	__u8	rsvd32[32];
+};
+
+struct nvme_zone_list {
+	__le16	num_zone_id;
+	__u8	rsvd2[6];
+	__le64	zone_id[];
 };
 
 struct nvme_id_iocs {
@@ -837,6 +891,9 @@ enum nvme_opcode {
 	nvme_cmd_resv_report	= 0x0e,
 	nvme_cmd_resv_acquire	= 0x11,
 	nvme_cmd_resv_release	= 0x15,
+	nvme_cmd_zone_mgmt_send = 0x79,
+	nvme_cmd_zone_mgmt_recv = 0x7a,
+	nvme_cmd_zone_append    = 0x7d,
 };
 
 /*
@@ -1416,6 +1473,18 @@ enum {
 
 	NVME_SC_DISCOVERY_RESTART	= 0x190,
 	NVME_SC_AUTH_REQUIRED		= 0x191,
+
+	/*
+	 * I/O Command Set Specific - Zoned Namespace commands:
+	 */
+	NVME_SC_ZONE_BOUNDARY_ERROR		= 0x1B8,
+	NVME_SC_ZONE_IS_FULL			= 0x1B9,
+	NVME_SC_ZONE_IS_READ_ONLY		= 0x1BA,
+	NVME_SC_ZONE_IS_OFFLINE			= 0x1BB,
+	NVME_SC_ZONE_INVALID_WRITE		= 0x1BC,
+	NVME_SC_TOO_MANY_ACTIVE_ZONES		= 0x1BD,
+	NVME_SC_TOO_MANY_OPEN_ZONES		= 0x1BE,
+	NVME_SC_ZONE_INVALID_STATE_TRANSITION	= 0x1BF,
 
 	/*
 	 * Media and Data Integrity Errors:
