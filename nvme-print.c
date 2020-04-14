@@ -1773,17 +1773,23 @@ static void nvme_show_id_ctrl_cmic(__u8 cmic)
 static void nvme_show_id_ctrl_oaes(__le32 ctrl_oaes)
 {
 	__u32 oaes = le32_to_cpu(ctrl_oaes);
-	__u32 rsvd0 = (oaes & 0xFFFF8000) >> 15;
+	__u32 rsvd0 = (oaes & 0xF0000000) >> 28;
+	__u32 zicn = (oaes & 0x08000000) >> 27;
+	__u32 rsvd1 = (oaes & 0x07FF8000) >> 15;
 	__u32 nace = (oaes & 0x100) >> 8;
 	__u32 fan = (oaes & 0x200) >> 9;
 	__u32 anacn = (oaes & 0x800) >> 11;
 	__u32 plealcn = (oaes & 0x1000) >> 12;
 	__u32 lbasin = (oaes & 0x2000) >> 13;
 	__u32 egealpcn = (oaes & 0x4000) >> 14;
-	__u32 rsvd1 = oaes & 0xFF;
+	__u32 rsvd2 = oaes & 0xFF;
 
 	if (rsvd0)
-		printf(" [31:10] : %#x\tReserved\n", rsvd0);
+		printf(" [31:28] : %#x\tReserved\n", rsvd0);
+	printf("[27:27] : %#x\tZone Descriptor Changed Notices %sSupported\n",
+			zicn, zicn ? "" : "Not ");
+	if (rsvd1)
+		printf(" [26:15] : %#x\tReserved\n", rsvd1);
 	printf("[14:14] : %#x\tEndurance Group Event Aggregate Log Page"\
 			" Change Notice %sSupported\n",
 			egealpcn, egealpcn ? "" : "Not ");
@@ -1798,7 +1804,7 @@ static void nvme_show_id_ctrl_oaes(__le32 ctrl_oaes)
 		fan, fan ? "" : "Not ");
 	printf("  [8:8] : %#x\tNamespace Attribute Changed Event %sSupported\n",
 		nace, nace ? "" : "Not ");
-	if (rsvd1)
+	if (rsvd2)
 		printf("  [7:0] : %#x\tReserved\n", rsvd1);
 	printf("\n");
 }
@@ -2934,9 +2940,38 @@ void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
 	json_free_object(root);
 }
 
+static void show_nvme_id_ns_zoned_zoc(__le16 ns_zoc)
+{
+	__u16 zoc = le16_to_cpu(ns_zoc);
+	__u8 rsvd = (zoc & 0xfc) >> 2;
+	__u8 ze = (zoc & 0x2) >> 1;
+	__u8 vzc = zoc & 0x1;
+	if (rsvd)
+		printf("  [7:2] : %#x\tReserved\n", rsvd);
+	printf("  [1:1] : %#x\tZone Active Excursions: %s\n",
+		ze, ze ? "Yes (Host support required)" : "No");
+	printf("  [0:0] : %#x\tVariable Zone Capacity: %s\n",
+		vzc, vzc ? "Yes (Host support required)" : "No");
+	printf("\n");
+}
+
+static void show_nvme_id_ns_zoned_ozcs(__le16 ns_ozcs)
+{
+	__u16 ozcs = le16_to_cpu(ns_ozcs);
+	__u8 rsvd = (ozcs & 0xfe) >> 1;
+	__u8 razb = ozcs & 0x1;
+
+	if (rsvd)
+		printf("  [7:1] : %#x\tReserved\n", rsvd);
+	printf("  [2:2] : %#x\tRead Across Zone Boundaries: %s\n",
+		razb, razb ? "Yes" : "No");
+	printf("\n");
+}
+
 void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	struct nvme_id_ns *id_ns, unsigned long flags)
 {
+	int human = flags & VERBOSE, vs = flags & VS;
 	uint8_t lbaf = id_ns->flbas & NVME_NS_FLBAS_LBA_MASK;
 	int i;
 
@@ -2947,16 +2982,31 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 
 	printf("NVMe ZNS Identify Namespace:\n");
 	printf("zoc:    %u\n", le16_to_cpu(ns->zoc));
+	if (human)
+		show_nvme_id_ns_zoned_zoc(ns->zoc);
 	printf("ozcs:   %u\n", le16_to_cpu(ns->ozcs));
+	if (human)
+		show_nvme_id_ns_zoned_ozcs(ns->ozcs);
 	printf("mar:    %u\n", le16_to_cpu(ns->mar));
 	printf("mor:    %u\n", le16_to_cpu(ns->mor));
 	printf("rrl:    %u\n", ns->rrl);
 	printf("frl:    %u\n", ns->frl);
 
-	for (i = 0; i <= id_ns->nlbaf; i++)
-		printf("lbafe %02d: zsze:%"PRIx64" zdes:%u%s\n", i,
-			(uint64_t)le64_to_cpu(ns->lbafe[i].zsze),
-			ns->lbafe[i].zdes, i == lbaf ? " (in use)" : "");
+	for (i = 0; i <= id_ns->nlbaf; i++){
+		if (human)
+			printf("LBA Format Extension %2d : Zone Size: %"PRIx64" blocks"
+					"Zone Descriptor Extension Size: %-5d bytes %s\n",
+				i, le64_to_cpu(ns->lbafe[i].zsze), ns->lbafe[i].zdes << 6,
+				i == lbaf ? "(in use)" : "");
+		else
+			printf("lbafe %2d: zsze:%"PRIx64" zdes:%u%s\n", i,
+				(uint64_t)le64_to_cpu(ns->lbafe[i].zsze),
+				ns->lbafe[i].zdes, i == lbaf ? " (in use)" : "");
+	}
+	if (vs) {
+		printf("vs[]:\n");
+		d(ns->vs, sizeof(ns->vs), 16, 1);
+	}
 }
 
 void nvme_show_zns_changed(struct nvme_zns_changed_zone_log *log,
@@ -4065,6 +4115,22 @@ const char *nvme_status_to_string(__u32 status)
 		return "RESERVATION_CONFLICT: The command was aborted due to a conflict with a reservation held on the accessed namespace";
 	case NVME_SC_FORMAT_IN_PROGRESS:
 		return "FORMAT_IN_PROGRESS: A Format NVM command is in progress on the namespace.";
+	case NVME_SC_ZONE_BOUNDARY_ERROR:
+		return "ZONE_BOUNDARY_ERROR: Invalid Zone Boundary crossing";
+	case NVME_SC_ZONE_IS_FULL:
+		return "ZONE_IS_FULL: The accessed zone is in ZSF:Full state";
+	case NVME_SC_ZONE_IS_READ_ONLY:
+		return "ZONE_IS_READ_ONLY: The accessed zone is in ZSRO:Read Only state";
+	case NVME_SC_ZONE_IS_OFFLINE:
+		return "ZONE_IS_OFFLINE: The access zone is in ZSO:Offline state";
+	case NVME_SC_ZONE_INVALID_WRITE:
+		return "ZONE_INVALID_WRITE: The write to zone was not at the write pointer offset";
+	case NVME_SC_TOO_MANY_ACTIVE_ZONES:
+		return "TOO_MANY_ACTIVE_ZONES: The controller does not allow additional active zones";
+	case NVME_SC_TOO_MANY_OPEN_ZONES:
+		return "TOO_MANY_OPEN_ZONES: The controller does not allow additional open zones";
+	case NVME_SC_ZONE_INVALID_STATE_TRANSITION:
+		return "INVALID_ZONE_STATE_TRANSITION: The zone state change was invalid";
 	case NVME_SC_CQ_INVALID:
 		return "CQ_INVALID: The Completion Queue identifier specified in the command does not exist";
 	case NVME_SC_QID_INVALID:
@@ -4405,7 +4471,8 @@ static void nvme_show_plm_config(struct nvme_plm_config *plmcfg)
 
 static void nvme_show_iocs_vector(struct nvme_iocs_vector *iocs_vector)
 {
-	printf("\tNVM Command Set is selected: %s\n", iocs_vector->nvm ? "True":"False");
+	printf("\tNVM             Command Set is selected: %s\n", iocs_vector->nvm ? "True":"False");
+	printf("\tZoned Namespace Command Set is selected: %s\n", iocs_vector->zoned ? "True":"False");
 }
 
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf)
