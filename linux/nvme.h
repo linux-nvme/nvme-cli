@@ -143,6 +143,7 @@ enum {
  */
 enum {
 	NVME_IOCS_NVM   = 0x00,
+	NVME_IOCS_ZONED = 0x02,
 };
 
 #define NVME_AQ_DEPTH		32
@@ -418,8 +419,13 @@ struct nvme_id_ns {
 };
 
 struct nvme_iocs_vector {
-	__le64	nvm  : 1;
-	__le64	rsvd : 63;
+	union {
+		__le64 nvm   : 1;
+		__le64 rsvd1 : 1;
+		__le64 zoned : 1;
+		__le64 rsvd3 : 61;
+	};
+	__le64 a;
 };
 
 struct nvme_id_iocs {
@@ -1421,6 +1427,18 @@ enum {
 	NVME_SC_AUTH_REQUIRED		= 0x191,
 
 	/*
+	 * I/O Command Set Specific - Zoned Namespace commands:
+	 */
+	NVME_SC_ZONE_BOUNDARY_ERROR		= 0x1B8,
+	NVME_SC_ZONE_IS_FULL			= 0x1B9,
+	NVME_SC_ZONE_IS_READ_ONLY		= 0x1BA,
+	NVME_SC_ZONE_IS_OFFLINE			= 0x1BB,
+	NVME_SC_ZONE_INVALID_WRITE		= 0x1BC,
+	NVME_SC_TOO_MANY_ACTIVE_ZONES		= 0x1BD,
+	NVME_SC_TOO_MANY_OPEN_ZONES		= 0x1BE,
+	NVME_SC_ZONE_INVALID_STATE_TRANSITION	= 0x1BF,
+
+	/*
 	 * Media and Data Integrity Errors:
 	 */
 	NVME_SC_WRITE_FAULT		= 0x280,
@@ -1488,10 +1506,10 @@ struct nvme_zns_id_ns {
 
 /**
  * struct nvme_zns_id_ctrl -
- * @zamds:
+ * @zasl:
  */
 struct nvme_zns_id_ctrl {
-	__u8	zamds;
+	__u8	zasl;
 	__u8	rsvd1[4095];
 };
 
