@@ -2884,7 +2884,7 @@ static void json_nvme_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mo
 	struct json_object *root;
 
 	root = json_create_object();
-	json_object_add_value_int(root, "zamds", ctrl->zamds);
+	json_object_add_value_int(root, "zasl", ctrl->zasl);
 
 	json_print_object(root, NULL);
 	printf("\n");
@@ -2899,7 +2899,7 @@ void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode)
 		return json_nvme_zns_id_ctrl(ctrl, mode);
 
 	printf("NVMe ZNS Identify Controller:\n");
-	printf("zamds: %u\n", ctrl->zamds);
+	printf("zasl: %u\n", ctrl->zasl);
 }
 
 void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
