@@ -711,7 +711,7 @@ struct __attribute__((__packed__)) wdc_nand_stats_V3 {
 	__u8        back_pressure_guage;
 	__le64		soft_ecc_error_count;
 	__le64		refresh_count;
-	__le64		bad_sys_nand_block_count;
+	__u8		bad_sys_nand_block_count[8];
 	__u8		endurance_estimate[16];
 	__u8        thermal_throttling_st_ct[2];
 	__le64      unaligned_IO;
@@ -5107,6 +5107,7 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 {
 	struct wdc_nand_stats *nand_stats = (struct wdc_nand_stats *)(data);
 	struct wdc_nand_stats_V3 *nand_stats_v3 = (struct wdc_nand_stats_V3 *)(data);
+	__u32 temp_u32;
 
 	switch (version)
 	{
@@ -5143,17 +5144,21 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->xor_recovery_count));
 		printf("  UECC Read Error count				 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->uecc_read_error_count));
-		printf("  SSD End to End correction counts		 %.0Lf\n",
-				int128_to_double(nand_stats_v3->ssd_correction_counts));
+		printf("  SSD End to End corrected errors		 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->ssd_correction_counts[0]));
+		printf("  SSD End to End detected errors		 %"PRIu32"\n",
+				le32_to_cpu(nand_stats_v3->ssd_correction_counts[8]));
+		printf("  SSD End to End uncorrected E2E errors		 %"PRIu32"\n",
+				le32_to_cpu(nand_stats_v3->ssd_correction_counts[12]));
 		printf("  System data %% life-used			 %u\n",
 				nand_stats_v3->percent_life_used);
-		printf("  User Data Erase Counts - SLC Min		 %"PRIu64"\n",
-				le64_to_cpu(nand_stats_v3->user_data_erase_counts[0]));
-		printf("  User Data Erase Counts - SLC Max		 %"PRIu64"\n",
-				le64_to_cpu(nand_stats_v3->user_data_erase_counts[1]));
 		printf("  User Data Erase Counts - TLC Min		 %"PRIu64"\n",
-				le64_to_cpu(nand_stats_v3->user_data_erase_counts[2]));
+				le64_to_cpu(nand_stats_v3->user_data_erase_counts[0]));
 		printf("  User Data Erase Counts - TLC Max		 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->user_data_erase_counts[1]));
+		printf("  User Data Erase Counts - SLC Min		 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->user_data_erase_counts[2]));
+		printf("  User Data Erase Counts - SLC Max		 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->user_data_erase_counts[3]));
 		printf("  Program Fail Count				 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->program_fail_count));
@@ -5179,13 +5184,16 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->soft_ecc_error_count));
 		printf("  Refresh Count					 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->refresh_count));
-		printf("  Bad System Nand Block Count			 %"PRIu64"\n",
-				le64_to_cpu(nand_stats_v3->bad_sys_nand_block_count));
+		printf("  Bad System Nand Block Count - Normalized	 %"PRIu16"\n",
+				le16_to_cpu(nand_stats_v3->bad_sys_nand_block_count[0]));
+		temp_u32 = (__u32)(nand_stats_v3->bad_sys_nand_block_count[2] & 0x0000FFFFFFFFFFFF);
+		printf("  Bad System Nand Block Count - Raw		 %"PRIu32"\n",
+				le32_to_cpu(temp_u32));
 		printf("  Endurance Estimate				 %.0Lf\n",
 				int128_to_double(nand_stats_v3->endurance_estimate));
-		printf("  Thermal Throttling Status			 %u\n",
-				nand_stats_v3->thermal_throttling_st_ct[0]);
 		printf("  Thermal Throttling Count			 %u\n",
+				nand_stats_v3->thermal_throttling_st_ct[0]);
+		printf("  Thermal Throttling Status			 %u\n",
 				nand_stats_v3->thermal_throttling_st_ct[1]);
 		printf("  Unaligned I/O					 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->unaligned_IO));
@@ -5208,6 +5216,7 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 	struct wdc_nand_stats_V3 *nand_stats_v3 = (struct wdc_nand_stats_V3 *)(data);
 	struct json_object *root;
 	root = json_create_object();
+	__u32 temp_u32;
 
 	switch (version)
 	{
@@ -5247,8 +5256,12 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->xor_recovery_count));
 		json_object_add_value_uint(root, "UECC Read Error count",
 				le64_to_cpu(nand_stats_v3->uecc_read_error_count));
-		json_object_add_value_float(root, "SSD End to End correction counts",
-				int128_to_double(nand_stats_v3->ssd_correction_counts));
+		json_object_add_value_uint(root, "SSD End to End corrected errors",
+				le64_to_cpu(nand_stats_v3->ssd_correction_counts[0]));
+		json_object_add_value_uint(root, "SSD End to End detected errors",
+				le32_to_cpu(nand_stats_v3->ssd_correction_counts[8]));
+		json_object_add_value_uint(root, "SSD End to End uncorrected E2E errors",
+				le32_to_cpu(nand_stats_v3->ssd_correction_counts[12]));
 		json_object_add_value_uint(root, "System data % life-used",
 				nand_stats_v3->percent_life_used);
 		json_object_add_value_uint(root, "User Data Erase Counts - SLC Min",
@@ -5283,8 +5296,11 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->soft_ecc_error_count));
 		json_object_add_value_uint(root, "Refresh Count",
 				le64_to_cpu(nand_stats_v3->refresh_count));
-		json_object_add_value_uint(root, "Bad System Nand Block Count",
-				le64_to_cpu(nand_stats_v3->bad_sys_nand_block_count));
+		json_object_add_value_uint(root, "Bad System Nand Block Count - Normalized",
+				le16_to_cpu(nand_stats_v3->bad_sys_nand_block_count[0]));
+		temp_u32 = (__u32)(nand_stats_v3->bad_sys_nand_block_count[2] & 0x0000FFFFFFFFFFFF);
+		json_object_add_value_uint(root, "Bad System Nand Block Count - Raw",
+				le32_to_cpu(temp_u32));
 		json_object_add_value_float(root, "Endurance Estimate",
 				int128_to_double(nand_stats_v3->endurance_estimate));
 		json_object_add_value_uint(root, "Thermal Throttling Status",
