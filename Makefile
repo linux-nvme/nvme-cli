@@ -3,7 +3,7 @@ override CFLAGS += -std=gnu99 -I.
 override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
-HAVE_SYSTEMD = $(shell pkg-config --exists systemd  --atleast-version=232; echo $$?)
+HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=232; echo $$?)
 NVME = nvme
 INSTALL ?= install
 DESTDIR =
@@ -13,6 +13,7 @@ SBINDIR = $(PREFIX)/sbin
 LIBDIR ?= $(PREFIX)/lib
 SYSTEMDDIR ?= $(LIBDIR)/systemd
 UDEVDIR ?= $(SYSCONFDIR)/udev
+UDEVRULESDIR ?= $(UDEVDIR)/rules.d
 DRACUTDIR ?= $(LIBDIR)/dracut
 LIB_DEPENDS =
 
@@ -40,6 +41,12 @@ TAR = tar
 RM = rm -f
 
 AUTHOR=Keith Busch <kbusch@kernel.org>
+
+ifneq ($(findstring $(MAKEFLAGS),s),s)
+ifndef V
+	QUIET_CC	= @echo '   ' CC $@;
+endif
+endif
 
 default: $(NVME)
 
@@ -72,19 +79,19 @@ PLUGIN_OBJS :=					\
 	plugins/dera/dera-nvme.o
 
 nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) nvme.c -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)
+	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)
 
 verify-no-dep: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
-	$(CC) $(CPPFLAGS) $(CFLAGS) nvme.c -o $@ $(OBJS) $(LDFLAGS)
+	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@ $(OBJS) $(LDFLAGS)
 
 nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h util/argconfig.h util/suffix.h nvme-lightnvm.h fabrics.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -c $<
+	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -c $<
 
 %.o: %.c %.h nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
+	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
 
 %.o: %.c nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
+	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
 
 doc: $(NVME)
 	$(MAKE) -C Documentation
@@ -95,7 +102,7 @@ test:
 all: doc
 
 clean:
-	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb
+	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb 70-nvmf-autoconnect.conf
 	$(MAKE) -C Documentation clean
 	$(RM) tests/*.pyc
 	$(RM) verify-no-dep
@@ -119,12 +126,12 @@ install-systemd:
 	$(INSTALL) -m 644 ./nvmf-autoconnect/systemd/* $(DESTDIR)$(SYSTEMDDIR)/system
 
 install-udev:
-	$(INSTALL) -d $(DESTDIR)$(UDEVDIR)/rules.d
-	$(INSTALL) -m 644 ./nvmf-autoconnect/udev-rules/* $(DESTDIR)$(UDEVDIR)/rules.d
+	$(INSTALL) -d $(DESTDIR)$(UDEVRULESDIR)
+	$(INSTALL) -m 644 ./nvmf-autoconnect/udev-rules/* $(DESTDIR)$(UDEVRULESDIR)
 
-install-dracut:
+install-dracut: 70-nvmf-autoconnect.conf
 	$(INSTALL) -d $(DESTDIR)$(DRACUTDIR)/dracut.conf.d
-	$(INSTALL) -m 644 ./nvmf-autoconnect/dracut-conf/* $(DESTDIR)$(DRACUTDIR)/dracut.conf.d
+	$(INSTALL) -m 644 $< $(DESTDIR)$(DRACUTDIR)/dracut.conf.d
 
 install-zsh-completion:
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/share/zsh/site-functions
@@ -151,6 +158,10 @@ install: install-spec install-hostparams
 
 nvme.spec: nvme.spec.in NVME-VERSION-FILE
 	sed -e 's/@@VERSION@@/$(NVME_VERSION)/g' < $< > $@+
+	mv $@+ $@
+
+70-nvmf-autoconnect.conf: nvmf-autoconnect/dracut-conf/70-nvmf-autoconnect.conf.in
+	sed -e 's#@@UDEVRULESDIR@@#$(UDEVRULESDIR)#g' < $< > $@+
 	mv $@+ $@
 
 dist: nvme.spec

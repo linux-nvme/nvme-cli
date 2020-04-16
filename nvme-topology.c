@@ -60,11 +60,8 @@ char *nvme_get_ctrl_attr(char *path, const char *attr)
 		goto err_free_path;
 
 	fd = open(attrpath, O_RDONLY);
-	if (fd < 0) {
-		fprintf(stderr, "Failed to open %s: %s\n",
-				attrpath, strerror(errno));
+	if (fd < 0)
 		goto err_free_value;
-	}
 
 	ret = read(fd, value, 1024);
 	if (ret < 0) {
@@ -195,6 +192,8 @@ static int scan_ctrl(struct nvme_ctrl *c, char *p, __u32 ns_instance)
 	c->address = nvme_get_ctrl_attr(path, "address");
 	c->transport = nvme_get_ctrl_attr(path, "transport");
 	c->state = nvme_get_ctrl_attr(path, "state");
+	c->hostnqn = nvme_get_ctrl_attr(path, "hostnqn");
+	c->hostid = nvme_get_ctrl_attr(path, "hostid");
 
 	if (ns_instance)
 		c->ana_state = get_nvme_ctrl_path_ana_state(path, ns_instance);
@@ -406,6 +405,8 @@ static void free_ctrl(struct nvme_ctrl *c)
 	free(c->transport);
 	free(c->address);
 	free(c->state);
+	free(c->hostnqn);
+	free(c->hostid);
 	free(c->ana_state);
 	free(c->namespaces);
 }

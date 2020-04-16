@@ -672,7 +672,8 @@ static char *hostnqn_read_file(void)
 	if (f == NULL)
 		return false;
 
-	if (fgets(hostnqn, sizeof(hostnqn), f) == NULL)
+	if (fgets(hostnqn, sizeof(hostnqn), f) == NULL ||
+	    !strlen(hostnqn))
 		goto out;
 
 	ret = strndup(hostnqn, strcspn(hostnqn, "\n"));
@@ -946,7 +947,7 @@ retry:
 		p += len;
 	}
 
-	if (cfg.keep_alive_tmo && !discover) {
+	if (cfg.keep_alive_tmo) {
 		len = sprintf(p, ",keep_alive_tmo=%d", cfg.keep_alive_tmo);
 		if (len < 0)
 			return -EINVAL;
@@ -1078,6 +1079,16 @@ static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	return ret;
 }
 
+static void nvmf_get_host_identifiers(int ctrl_instance)
+{
+	char *path;
+
+	if (asprintf(&path, "%s/nvme%d", SYS_NVME, ctrl_instance) < 0)
+		return;
+	cfg.hostnqn = nvme_get_ctrl_attr(path, "hostnqn");
+	cfg.hostid = nvme_get_ctrl_attr(path, "hostid");
+}
+
 static int do_discover(char *argstr, bool connect)
 {
 	struct nvmf_disc_rsp_page_hdr *log = NULL;
@@ -1089,11 +1100,11 @@ static int do_discover(char *argstr, bool connect)
 		struct connect_args cargs;
 
 		memset(&cargs, 0, sizeof(cargs));
-		cargs.subsysnqn = parse_conn_arg(argstr, '.', conarg_nqn);
-		cargs.transport = parse_conn_arg(argstr, '.', conarg_transport);
-		cargs.traddr = parse_conn_arg(argstr, '.', conarg_traddr);
-		cargs.trsvcid = parse_conn_arg(argstr, '.', conarg_trsvcid);
-		cargs.host_traddr = parse_conn_arg(argstr, '.', conarg_host_traddr);
+		cargs.subsysnqn = parse_conn_arg(argstr, ',', conarg_nqn);
+		cargs.transport = parse_conn_arg(argstr, ',', conarg_transport);
+		cargs.traddr = parse_conn_arg(argstr, ',', conarg_traddr);
+		cargs.trsvcid = parse_conn_arg(argstr, ',', conarg_trsvcid);
+		cargs.host_traddr = parse_conn_arg(argstr, ',', conarg_host_traddr);
 
 		/*
 		 * if the cfg.device passed in matches the connect args
@@ -1116,10 +1127,12 @@ static int do_discover(char *argstr, bool connect)
 		free(cargs.host_traddr);
 	}
 
-	if (!cfg.device)
+	if (!cfg.device) {
 		instance = add_ctrl(argstr);
-	else
+	} else {
 		instance = ctrl_instance(cfg.device);
+		nvmf_get_host_identifiers(instance);
+	}
 	if (instance < 0)
 		return instance;
 

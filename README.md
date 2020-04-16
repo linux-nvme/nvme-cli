@@ -176,7 +176,7 @@ is a basic example on how to start this:
 File: foo-plugin.h
 ```c
 #undef CMD_INC_FILE
-#define CMD_INC_FILE foo-plugin
+#define CMD_INC_FILE plugins/foo/foo-plugin
 
 #if !defined(FOO) || defined(CMD_HEADER_MULTI_READ)
 #define FOO
@@ -205,6 +205,8 @@ and include the header:
 
 File: foo-plugin.c
 ```c
+#include "nvme.h"
+
 #define CREATE_CMD
 #include "foo-plugin.h"
 ```
