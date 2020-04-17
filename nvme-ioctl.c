@@ -727,16 +727,6 @@ int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist,
 	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
-int nvme_ns_attach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist)
-{
-	return nvme_ns_attachment(fd, nsid, num_ctrls, ctrlist, true);
-}
-
-int nvme_ns_detach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist)
-{
-	return nvme_ns_attachment(fd, nsid, num_ctrls, ctrlist, false);
-}
-
 int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
