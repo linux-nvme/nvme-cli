@@ -17,7 +17,8 @@ static inline __u8 nvme_generic_status_to_errno(__u16 status)
 	case NVME_SC_SGL_INVALID_METADATA:
 	case NVME_SC_SGL_INVALID_TYPE:
 	case NVME_SC_SGL_INVALID_OFFSET:
-	case NVME_SC_SGL_INVALID_SUBTYPE:
+	case NVME_SC_CMB_INVALID_USE:
+	case NVME_SC_PRP_INVALID_OFFSET:
 		return EINVAL;
 	case NVME_SC_CMDID_CONFLICT:
 		return EADDRINUSE;
@@ -34,6 +35,7 @@ static inline __u8 nvme_generic_status_to_errno(__u16 status)
 	case NVME_SC_CMD_SEQ_ERROR:
 		return EILSEQ;
 	case NVME_SC_SANITIZE_IN_PROGRESS:
+	case NVME_SC_FORMAT_IN_PROGRESS:
 		return EINPROGRESS;
 	case NVME_SC_NS_WRITE_PROTECTED:
 	case NVME_SC_NS_NOT_READY:
@@ -43,6 +45,8 @@ static inline __u8 nvme_generic_status_to_errno(__u16 status)
 		return EREMOTEIO;
 	case NVME_SC_CAP_EXCEEDED:
 		return ENOSPC;
+	case NVME_SC_OPERATION_DENIED:
+		return EPERM;
 	}
 
 	return EIO;
@@ -65,6 +69,11 @@ static inline __u8 nvme_cmd_specific_status_to_errno(__u16 status)
 	case NVME_SC_CTRL_LIST_INVALID:
 	case NVME_SC_BAD_ATTRIBUTES:
 	case NVME_SC_INVALID_PI:
+	case NVME_SC_INVALID_CTRL_ID:
+	case NVME_SC_INVALID_SECONDARY_CTRL_STATE:
+	case NVME_SC_INVALID_NUM_CTRL_RESOURCE:
+	case NVME_SC_INVALID_RESOURCE_ID:
+	case NVME_SC_ANA_INVALID_GROUP_ID:
 		return EINVAL;
 	case NVME_SC_ABORT_LIMIT:
 	case NVME_SC_ASYNC_LIMIT:
@@ -90,6 +99,8 @@ static inline __u8 nvme_cmd_specific_status_to_errno(__u16 status)
 	case NVME_SC_THIN_PROV_NOT_SUPP:
 	case NVME_SC_ONCS_NOT_SUPPORTED:
 		return EOPNOTSUPP;
+	case NVME_SC_DEVICE_SELF_TEST_IN_PROGRESS:
+		return EINPROGRESS;
 	}
 
 	return EIO;

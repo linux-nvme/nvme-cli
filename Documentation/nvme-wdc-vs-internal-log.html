@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 8.6.10" />
 <title>nvme-wdc-vs-internal-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -746,7 +749,9 @@ nvme-wdc-vs-internal-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme wdc vs-internal-log</em> &lt;device&gt; [--output-file=&lt;FILE&gt;, -o &lt;FILE&gt;] [--transfer-size=&lt;SIZE&gt;, -s &lt;SIZE&gt;]</pre>
+<pre class="content"><em>nvme wdc vs-internal-log</em> &lt;device&gt; [--output-file=&lt;FILE&gt;, -o &lt;FILE&gt;] [--transfer-size=&lt;SIZE&gt;, -s &lt;SIZE&gt;]
+    [--data-area=&lt;DATA AREA&gt;, -d &lt;DATA_AREA&gt;] [--file-size=&lt;FILE SIZE&gt;, -f &lt;FILE SIZE&gt;] [--offset=&lt;OFFSET&gt;, -e &lt;OFFSET&gt;]
+    [--type=&lt;TYPE&gt;, -t &lt;type&gt;] [--verbose, -v]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -785,6 +790,69 @@ Results for any other device are undefined.</p></div>
 <dd>
 <p>
     Transfer size; defaults to 0x10000 (65536 decimal) bytes
+</p>
+</dd>
+<dt class="hdlist1">
+-d &lt;DATA AREA&gt;
+</dt>
+<dt class="hdlist1">
+--data-area=&lt;DATA AREA&gt;
+</dt>
+<dd>
+<p>
+    DUI data area to retrieve.  The DUI data areas from 1 to &lt;DATA AREA&gt; will be retrieved.  This parameter
+    is currently only supported on the SN340, SN640, and SN840 devices.
+</p>
+</dd>
+<dt class="hdlist1">
+-f &lt;FILE SIZE&gt;
+</dt>
+<dt class="hdlist1">
+--file-size=&lt;FILE SIZE&gt;
+</dt>
+<dd>
+<p>
+    Specifies the desired size of the data file starting at the passed in offset.  This allows the user to
+    retrieve the data in several smaller files of the passed in size.  This parameter is currently only
+    supported on the SN340 device.
+</p>
+</dd>
+<dt class="hdlist1">
+-e &lt;OFFSET&gt;
+</dt>
+<dt class="hdlist1">
+--offset=&lt;OFFSET&gt;
+</dt>
+<dd>
+<p>
+        Specifies the data offset at which to start retrieving the data.  This parameter is used in combination
+        with the file size parameter to retrieve the data in several smaller files.  This parameter is currently
+    only supported on the SN340 device.
+</p>
+</dd>
+<dt class="hdlist1">
+-t &lt;TYPE&gt;
+</dt>
+<dt class="hdlist1">
+--type=&lt;TYPE&gt;
+</dt>
+<dd>
+<p>
+        Specifies the telemetry type - NONE, HOST, or CONTROLLER.  This parameter is used to get either the host
+        generated or controller initiated telemetry log page.  If not specified or none is specified, the command
+    will return the default E6 log data.  This parameter is currently only supported on the SN640 and SN840
+    devices.
+</p>
+</dd>
+<dt class="hdlist1">
+-v &lt;VERBOSE&gt;
+</dt>
+<dt class="hdlist1">
+--verbose=&lt;VERBOSE&gt;
+</dt>
+<dd>
+<p>
+        Provides additional debug messages for certain drives.
 </p>
 </dd>
 </dl></div>
@@ -839,6 +907,35 @@ Gets the internal firmware log from the device transferring the data in 16k chun
 <pre><code># nvme wdc vs-internal-log /dev/nvme0 -s 16384</code></pre>
 </div></div>
 </li>
+<li>
+<p>
+Gets the internal firmware log up to data area 3 from the device in 3 files of 0x1000000 bytes:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme wdc vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x0000000 -o /tmp/sn340_dui_data_1.bin
+# nvme wdc vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x1000000 -o /tmp/sn340_dui_data_2.bin
+# nvme wdc vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x2000000 -o /tmp/sn340_dui_data_3.bin</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Gets the host telemetry log page to data area 3 from the device and stores it in file host-telem-log-da3.bin:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme wdc vs-internal-log /dev/nvme1 -t host -o host-telem-log-da3.bin -d 3</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Gets the controller telemetry log page to data area 3 from the device and stores it in file ctlr-telem-log-da3.bin:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme wdc vs-internal-log /dev/nvme1 -t controller -o ctlr-telem-log-da3.bin -d 3</code></pre>
+</div></div>
+</li>
 </ul></div>
 </div>
 </div>
@@ -852,7 +949,8 @@ Gets the internal firmware log from the device transferring the data in 16k chun
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-04-08 14:47:25 MDT
+Last updated
+ 2019-12-19 04:03:07 JST
 </div>
 </div>
 </body>

@@ -2,12 +2,12 @@
 .\"     Title: nvme-create-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/12/2019
+.\"      Date: 01/07/2020
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CREATE\-NS" "1" "10/12/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-CREATE\-NS" "1" "01/07/2020" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,14 +37,23 @@ nvme-create-ns \- Send NVMe Namespace management command to create namespace, re
                         [\-\-flbas=<flbas> | \-f <flbas>]
                         [\-\-dps=<dps> | \-d <dps>]
                         [\-\-nmic=<nmic> | \-m <nmic>]
+                        [\-\-anagrp\-id=<anagrpid> | \-a <anagrpid>]
+                        [\-\-nvmset\-id=<nvmsetid> | \-i <nvmsetid>]
                         [\-\-block\-size=<block\-size> | \-b <block\-size>]
+                        [\-\-timeout=<timeout> | \-t <timeout>]
+DESCRIPTION
 .fi
-.SH "DESCRIPTION"
 .sp
-For the NVMe device given, sends a namespace management command to create the namespace with the requested settings\&. On success, the namespace identifier assigned by the controller is returned\&.
-.sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
-.SH "OPTIONS"
+.nf
+For the NVMe device given, sends a namespace management command to create
+the namespace with the requested settings\&. On success, the namespace
+identifier assigned by the controller is returned\&.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+
+OPTIONS
+.fi
 .PP
 \-s, \-\-nsze
 .RS 4
@@ -69,6 +78,16 @@ The data protection settings\&.
 \-m, \-\-nmic
 .RS 4
 Namespace multipath and sharing capabilities\&.
+.RE
+.PP
+\-a, \-\-anagrp\-id
+.RS 4
+ANA Gorup Identifier\&. If this value is 0h specifies that the controller determines the value to use
+.RE
+.PP
+\-i <nvmsetid>, \-\-nvmset\-id=<nvmsetid>
+.RS 4
+This field specifies the identifier of the NVM Set\&.
 .RE
 .PP
 \-b, \-\-block\-size

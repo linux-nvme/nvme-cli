@@ -32,7 +32,7 @@ controller.
 The new firmware image is not applied as part of the Firmware Image
 Download command. It is applied following a reset, where the image to
 apply and the firmware slot it should be committed to is specified with
-the Firmware Activate command.
+the Firmware Commit command (nvme fw-commit <args>).
 
 OPTIONS
 -------

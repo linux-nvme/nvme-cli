@@ -36,10 +36,12 @@ make install-spec DESTDIR=%{buildroot} PREFIX=/usr
 %{_sysconfdir}/nvme/hostid
 %{_sysconfdir}/nvme/discovery.conf
 %{_sysconfdir}/udev/rules.d/70-nvmf-autoconnect.rules
+%{_sysconfdir}/udev/rules.d/71-nvmf-iopolicy-netapp.rules
 %{_libdir}/dracut/dracut.conf.d/70-nvmf-autoconnect.conf
 %{_libdir}/systemd/system/nvmf-connect@.service
 %{_libdir}/systemd/system/nvmefc-boot-connections.service
 %{_libdir}/systemd/system/nvmf-connect.target
+%{_libdir}/systemd/system/nvmf-autoconnect.service
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -59,6 +61,9 @@ if [ $1 -eq 1 ]; then # 1 : This package is being installed for the first time
 fi
 
 %changelog
+* Tue Dec 17 2019 Simon Schricker <sschricker@suse.de>
+  - Add new udev rules to set iopolicy for NetApp devices
+
 * Mon Oct 15 2018 Eyal Ben-David <eyalbe@il.ibm.com> - 1.6.81.g899a-2
 - bash-completion check
 

@@ -20,27 +20,25 @@
 #define CREATE_CMD
 #include "intel-nvme.h"
 
-#pragma pack(push,1)
-struct nvme_additional_smart_log_item {
+struct  __attribute__((packed)) nvme_additional_smart_log_item {
 	__u8			key;
 	__u8			_kp[2];
 	__u8			norm;
 	__u8			_np;
-	union {
+	union __attribute__((packed)) {
 		__u8		raw[6];
-		struct wear_level {
+		struct __attribute__((packed))  wear_level {
 			__le16	min;
 			__le16	max;
 			__le16	avg;
-		} wear_level ;
-		struct thermal_throttle {
+		} wear_level;
+		struct __attribute__((packed)) thermal_throttle {
 			__u8	pct;
 			__u32	count;
 		} thermal_throttle;
-	};
+	} ;
 	__u8			_rp;
-};
-#pragma pack(pop)
+} ;
 
 struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	program_fail_cnt;
@@ -58,7 +56,7 @@ struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	host_bytes_written;
 };
 
-struct nvme_vu_id_ctrl_field { //CDR MR5
+struct nvme_vu_id_ctrl_field { /* CDR MR5 */
 	__u8			rsvd1[3];
 	__u8			ss;
 	__u8			health[20];
@@ -68,59 +66,69 @@ struct nvme_vu_id_ctrl_field { //CDR MR5
 	__u8			sstat;
 	__u8			bl[8];
 	__u8			rsvd2[38];
-	__u8			ww[8]; //little endian
+	__u8			ww[8]; /* little endian */
 	__u8			mic_bl[4];
 	__u8			mic_fw[4];
 };
 
+static void json_intel_id_ctrl(struct nvme_vu_id_ctrl_field *id,
+	char *health, char *bl, char *ww, char *mic_bl, char *mic_fw,
+	struct json_object *root)
+{
+	json_object_add_value_int(root, "ss", id->ss);
+	json_object_add_value_string(root, "health", health );
+	json_object_add_value_int(root, "cls", id->cls);
+	json_object_add_value_int(root, "nlw", id->nlw);
+	json_object_add_value_int(root, "scap", id->scap);
+	json_object_add_value_int(root, "sstat", id->sstat);
+	json_object_add_value_string(root, "bl", bl);
+	json_object_add_value_string(root, "ww", ww);
+	json_object_add_value_string(root, "mic_bl", mic_bl);
+	json_object_add_value_string(root, "mic_fw", mic_fw);
+}
+
 static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 {
-	struct nvme_vu_id_ctrl_field* log = (struct nvme_vu_id_ctrl_field *)vs;
+	struct nvme_vu_id_ctrl_field* id = (struct nvme_vu_id_ctrl_field *)vs;
 
-	char health[21];
-	char bl[9];
-	char ww[19];
-	char mic_bl[5];
-	char mic_fw[5];
+	char health[21] = { 0 };
+	char bl[9] = { 0 };
+	char ww[19] = { 0 };
+	char mic_bl[5] = { 0 };
+	char mic_fw[5] = { 0 };
 
-	memcpy(bl, log->bl, sizeof(bl));
-	memcpy(health, log->health, sizeof(health));
-	memcpy(mic_bl, log->mic_bl, sizeof(mic_bl));
-	memcpy(mic_fw, log->mic_fw, sizeof(mic_fw));
 
-	bl[sizeof(bl) - 1] = '\0';
-	health[sizeof(health) - 1] = '\0';
-	mic_bl[sizeof(mic_bl) - 1] = '\0';
-	mic_fw[sizeof(mic_fw) - 1] = '\0';
+	if (id->health[0]==0)
+	{
+			snprintf(health, 21, "%s", "healthy");
+	}
+	else
+	{
+			snprintf(health, 21, "%s", id->health);
+	}
 
-	snprintf(ww, 19, "%02X%02X%02X%02X%02X%02X%02X%02X", log->ww[7],
-					log->ww[6], log->ww[5], log->ww[4], log->ww[3], log->ww[2],
-					log->ww[1], log->ww[0]);
-
+	snprintf(bl, 9, "%s", id->bl);
+	snprintf(ww, 19, "%02X%02X%02X%02X%02X%02X%02X%02X", id->ww[7],
+		id->ww[6], id->ww[5], id->ww[4], id->ww[3], id->ww[2],
+		id->ww[1], id->ww[0]);
+	snprintf(mic_bl, 5, "%s", id->mic_bl);
+	snprintf(mic_fw, 5, "%s", id->mic_fw);
 
 	if (root) {
-		json_object_add_value_int(root, "ss", log->ss);
-		json_object_add_value_string(root, "health", health[0] ? health : "healthy");
-		json_object_add_value_int(root, "cls", log->cls);
-		json_object_add_value_int(root, "nlw", log->nlw);
-		json_object_add_value_int(root, "scap", log->scap);
-		json_object_add_value_int(root, "sstat", log->sstat);
-		json_object_add_value_string(root, "bl", bl);
-		json_object_add_value_string(root, "ww", ww);
-		json_object_add_value_string(root, "mic_bl", mic_bl);
-		json_object_add_value_string(root, "mic_fw", mic_fw);
-	} else {
-		printf("ss        : %d\n", log->ss);
-		printf("health    : %s\n", log->health[0] ? health : "healthy");
-		printf("cls       : %d\n", log->cls);
-		printf("nlw       : %d\n", log->nlw);
-		printf("scap      : %d\n", log->scap);
-		printf("sstat     : %d\n", log->sstat);
-		printf("bl        : %s\n", bl);
-		printf("ww        : %s\n", ww);
-		printf("mic_bl    : %s\n", mic_bl);
-		printf("mic_fw    : %s\n", mic_fw);
+		json_intel_id_ctrl(id, health, bl, ww, mic_bl, mic_fw, root);
+		return;
 	}
+
+	printf("ss        : %d\n", id->ss);
+	printf("health    : %s\n", health);
+	printf("cls       : %d\n", id->cls);
+	printf("nlw       : %d\n", id->nlw);
+	printf("scap      : %d\n", id->scap);
+	printf("sstat     : %d\n", id->sstat);
+	printf("bl        : %s\n", bl);
+	printf("ww        : %s\n", ww);
+	printf("mic_bl    : %s\n", mic_bl);
+	printf("mic_fw    : %s\n", mic_fw);
 }
 
 static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -268,13 +276,15 @@ static void show_intel_smart_log(struct nvme_additional_smart_log *smart,
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	struct nvme_additional_smart_log smart_log;
-	int err, fd;
 	const char *desc = "Get Intel vendor specific additional smart log (optionally, "\
 		      "for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "Dump output in binary format";
 	const char *json= "Dump output in json format";
+
+	struct nvme_additional_smart_log smart_log;
+	int err, fd;
+
 	struct config {
 		__u32 namespace_id;
 		int   raw_binary;
@@ -292,7 +302,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -314,11 +324,12 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 
 static int get_market_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
+	const char *desc = "Get Intel Marketing Name log and show it.";
+	const char *raw = "dump output in binary format";
+
 	char log[512];
 	int err, fd;
 
-	const char *desc = "Get Intel Marketing Name log and show it.";
-	const char *raw = "dump output in binary format";
 	struct config {
 		int  raw_binary;
 	};
@@ -331,7 +342,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -393,7 +404,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
 
@@ -411,80 +422,437 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 }
 
 struct intel_lat_stats {
-	__u16	maj;
-	__u16	min;
-	__u32	bucket_1[32];
-	__u32	bucket_2[31];
-	__u32	bucket_3[31];
+	__u16 maj;
+	__u16 min;
+	__u32 data[1216];
 };
+
+enum FormatUnit {
+	US,
+	MS,
+	S
+};
+
+/*
+ * COL_WIDTH controls width of columns in human-readable output.
+ * BUFSIZE is for local temp char[]
+ * US_IN_S and US_IN_MS are for unit conversions when printing.
+ */
+#define COL_WIDTH 12
+#define BUFSIZE 10
+#define US_IN_S 1000000
+#define US_IN_MS 1000
+
+static const enum FormatUnit get_seconds_magnitude(__u32 microseconds)
+{
+	if (microseconds > US_IN_S)
+		return S;
+	else if (microseconds > US_IN_MS)
+		return MS;
+	else
+		return US;
+}
+
+static const float convert_seconds(__u32 microseconds)
+{
+	float divisor = 1.0;
+
+	if (microseconds > US_IN_S)
+		divisor = US_IN_S;
+	else if (microseconds > US_IN_MS)
+		divisor = US_IN_MS;
+	return microseconds / divisor;
+}
+
+/*
+ * For control over whether a string will format to +/-INF or
+ * print out ####.##US normally.
+ */
+enum inf_bound_type {
+	NEGINF,
+	POSINF,
+	NOINF
+};
+
+/*
+ * Edge buckets may have range [#s, inf) or (-inf, #US] in some
+ * latency statistics formats.
+ * Passing in NEGINF to POSINF to bound_type overrides the string to
+ * either of "-INF" or "+INF", respectively.
+ */
+static void set_unit_string(char *buffer, __u32 microseconds,
+	enum FormatUnit unit, enum inf_bound_type bound_type)
+{
+	if (bound_type != NOINF) {
+		snprintf(buffer, 5, "%s", bound_type ? "+INF" : "-INF");
+		return;
+	}
+	char *string;
+
+	switch (unit) {
+	case US:
+		string = "us";
+		break;
+	case MS:
+		string = "ms";
+		break;
+	case S:
+		string = "s";
+		break;
+	default:
+		string = "_s";
+		break;
+	}
+	snprintf(buffer, 11, "%4.2f%s",
+		convert_seconds(microseconds), string);
+}
+
+static void init_buffer(char *buffer, size_t size)
+{
+	size_t i;
+
+	for (i = 0; i < size; i++)
+		buffer[i] = i + '0';
+}
+
+static void show_lat_stats_bucket(struct intel_lat_stats *stats,
+	__u32 lower_us, enum inf_bound_type start_type,
+	__u32 upper_us, enum inf_bound_type end_type, int i)
+{
+	enum FormatUnit fu = S;
+	char buffer[BUFSIZE];
+
+	init_buffer(buffer, BUFSIZE);
+	printf("%-*d", COL_WIDTH, i);
+
+	fu = get_seconds_magnitude(lower_us);
+	set_unit_string(buffer, lower_us, fu, start_type);
+	printf("%-*s", COL_WIDTH, buffer);
+
+	fu = get_seconds_magnitude(upper_us);
+	set_unit_string(buffer, upper_us, fu, end_type);
+	printf("%-*s", COL_WIDTH, buffer);
+
+	printf("%-*d\n", COL_WIDTH, stats->data[i]);
+}
+
+static void show_lat_stats_linear(struct intel_lat_stats *stats,
+	__u32 start_offset, __u32 end_offset, __u32 bytes_per,
+	__u32 us_step, bool nonzero_print)
+{
+	for (int i = (start_offset / bytes_per) - 1;
+			i < end_offset / bytes_per; i++) {
+		if (nonzero_print && stats->data[i] == 0)
+			continue;
+		show_lat_stats_bucket(stats, us_step * i, NOINF,
+			us_step * (i + 1), NOINF, i);
+	}
+}
+
+/*
+ * For 4.0-4.5 revision.
+ */
+static int lat_stats_log_scale(int i)
+{
+	static const int LATENCY_STATS_V4_BASE_BITS = 6;
+	static const int LATENCY_STATS_V4_BASE_VAL = (
+		1 << LATENCY_STATS_V4_BASE_BITS);
+
+	// if (i < 128)
+	if (i < (LATENCY_STATS_V4_BASE_VAL << 1))
+		return i;
+
+	int error_bits = (i >> LATENCY_STATS_V4_BASE_BITS) - 1;
+	int base = 1 << (error_bits + LATENCY_STATS_V4_BASE_BITS);
+	int k = i % LATENCY_STATS_V4_BASE_VAL;
+
+	return base + ((k + 0.5) * (1 << error_bits));
+}
+
+/*
+ * Creates a subroot in the following manner:
+ * {
+ *   "latstats" : {
+ *     "type" : "write" or "read",
+ *     "values" : {
+ */
+static void lat_stats_make_json_root(
+	struct json_object *root, struct json_object *bucket_list,
+	int write)
+{
+	struct json_object *subroot = json_create_object();
+
+	json_object_add_value_object(root, "latstats", subroot);
+	json_object_add_value_string(subroot, "type", write ? "write" : "read");
+	json_object_add_value_object(subroot, "values", bucket_list);
+}
+
+/*
+ * Creates a bucket under the "values" json_object. Format is:
+ * "values" : {
+ *   "bucket" : {
+ *     "id" : #,
+ *     "start" : string,
+ *     "end" : string,
+ *     "value" : 0,
+ *   },
+ */
+static void json_add_bucket(struct intel_lat_stats *stats,
+	struct json_object *bucket_list, __u32 id,
+	__u32 lower_us, enum inf_bound_type start_type,
+	__u32 upper_us, enum inf_bound_type end_type, __u32 val)
+{
+	char buffer[BUFSIZE];
+	struct json_object *bucket = json_create_object();
+
+	init_buffer(buffer, BUFSIZE);
+
+	json_object_add_value_object(bucket_list,
+		"bucket", bucket);
+	json_object_add_value_int(bucket, "id", id);
+
+	set_unit_string(buffer, lower_us,
+		get_seconds_magnitude(lower_us), start_type);
+	json_object_add_value_string(bucket, "start", buffer);
+
+	set_unit_string(buffer, upper_us,
+		get_seconds_magnitude(upper_us), end_type);
+	json_object_add_value_string(bucket, "end", buffer);
+
+	json_object_add_value_int(bucket, "value", val);
+}
+
+static void json_lat_stats_linear(struct intel_lat_stats *stats,
+	struct json_object *bucket_list, __u32 start_offset,
+	__u32 end_offset, __u32 bytes_per,
+	__u32 us_step, bool nonzero_print)
+{
+	for (int i = (start_offset / bytes_per) - 1;
+			i < end_offset / bytes_per; i++) {
+		if (nonzero_print && stats->data[i] == 0)
+			continue;
+
+		json_add_bucket(stats, bucket_list,
+			i, us_step * i, NOINF, us_step * (i + 1),
+			NOINF, stats->data[i]);
+	}
+}
+
+static void json_lat_stats_3_0(struct intel_lat_stats *stats,
+	int write)
+{
+	struct json_object *root = json_create_object();
+	struct json_object *bucket_list = json_create_object();
+
+	lat_stats_make_json_root(root, bucket_list, write);
+
+	json_lat_stats_linear(stats, bucket_list, 4, 131, 4, 32, false);
+	json_lat_stats_linear(stats, bucket_list, 132, 255, 4, 1024, false);
+	json_lat_stats_linear(stats, bucket_list, 256, 379, 4, 32768, false);
+	json_lat_stats_linear(stats, bucket_list, 380, 383, 4, 32, true);
+	json_lat_stats_linear(stats, bucket_list, 384, 387, 4, 32, true);
+	json_lat_stats_linear(stats, bucket_list, 388, 391, 4, 32, true);
+
+	json_print_object(root, NULL);
+	json_free_object(root);
+}
+
+static void json_lat_stats_4_0(struct intel_lat_stats *stats,
+	int write)
+{
+	struct json_object *root = json_create_object();
+	struct json_object *bucket_list = json_create_object();
+
+	lat_stats_make_json_root(root, bucket_list, write);
+
+	__u32 lower_us = 0;
+	__u32 upper_us = 1;
+	bool end = false;
+	int max = 1216;
+
+	for (int i = 0; i < max; i++) {
+		lower_us = lat_stats_log_scale(i);
+		if (i >= max - 1)
+			end = true;
+		else
+			upper_us = lat_stats_log_scale(i + 1);
+
+		json_add_bucket(stats, bucket_list, i,
+			lower_us, NOINF, upper_us,
+			end ? POSINF : NOINF, stats->data[i]);
+	}
+	json_print_object(root, NULL);
+	json_free_object(root);
+}
+
+static void show_lat_stats_3_0(struct intel_lat_stats *stats)
+{
+	show_lat_stats_linear(stats, 4, 131, 4, 32, false);
+	show_lat_stats_linear(stats, 132, 255, 4, 1024, false);
+	show_lat_stats_linear(stats, 256, 379, 4, 32768, false);
+	show_lat_stats_linear(stats, 380, 383, 4, 32, true);
+	show_lat_stats_linear(stats, 384, 387, 4, 32, true);
+	show_lat_stats_linear(stats, 388, 391, 4, 32, true);
+}
+
+static void show_lat_stats_4_0(struct intel_lat_stats *stats)
+{
+	int lower_us = 0;
+	int upper_us = 1;
+	bool end = false;
+	int max = 1216;
+
+	for (int i = 0; i < max; i++) {
+		lower_us = lat_stats_log_scale(i);
+		if (i >= max - 1)
+			end = true;
+		else
+			upper_us = lat_stats_log_scale(i + 1);
+
+		show_lat_stats_bucket(stats, lower_us, NOINF,
+			upper_us, end ? POSINF : NOINF, i);
+	}
+}
+
+static void json_lat_stats(struct intel_lat_stats *stats, int write)
+{
+	switch (stats->maj) {
+	case 3:
+		json_lat_stats_3_0(stats, write);
+		break;
+	case 4:
+		switch (stats->min) {
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+			json_lat_stats_4_0(stats, write);
+			break;
+		default:
+			printf(("Unsupported minor revision (%u.%u)\n"
+				"Defaulting to format for rev4.0"),
+				stats->maj, stats->min);
+			break;
+		}
+		break;
+	default:
+		printf("Unsupported revision (%u.%u)\n",
+			stats->maj, stats->min);
+		break;
+	}
+	printf("\n");
+}
+
+static void print_dash_separator(int count)
+{
+	for (int i = 0; i < count; i++)
+		putchar('-');
+	putchar('\n');
+}
 
 static void show_lat_stats(struct intel_lat_stats *stats, int write)
 {
-	int i;
+	static const int separator_length = 50;
 
-	printf(" Intel IO %s Command Latency Statistics\n", write ? "Write" : "Read");
-	printf("-------------------------------------\n");
-	printf("Major Revision : %u\n", stats->maj);
-	printf("Minor Revision : %u\n", stats->min);
+	printf("Intel IO %s Command Latency Statistics\n",
+		write ? "Write" : "Read");
+	printf("Major Revision : %u\nMinor Revision : %u\n",
+		stats->maj, stats->min);
+	print_dash_separator(separator_length);
+	printf("%-12s%-12s%-12s%-20s\n", "Bucket", "Start", "End", "Value");
+	print_dash_separator(separator_length);
 
-	printf("\nGroup 1: Range is 0-1ms, step is 32us\n");
-	for (i = 0; i < 32; i++)
-		printf("Bucket %2d: %u\n", i, stats->bucket_1[i]);
-
-	printf("\nGroup 2: Range is 1-32ms, step is 1ms\n");
-	for (i = 0; i < 31; i++)
-		printf("Bucket %2d: %u\n", i, stats->bucket_2[i]);
-
-	printf("\nGroup 3: Range is 32-1s, step is 32ms:\n");
-	for (i = 0; i < 31; i++)
-		printf("Bucket %2d: %u\n", i, stats->bucket_3[i]);
+	switch (stats->maj) {
+	case 3:
+		show_lat_stats_3_0(stats);
+		break;
+	case 4:
+		switch (stats->min) {
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+			show_lat_stats_4_0(stats);
+			break;
+		default:
+			printf(("Unsupported minor revision (%u.%u)\n"
+				"Defaulting to format for rev4.0"),
+				stats->maj, stats->min);
+			break;
+		}
+		break;
+	default:
+		printf("Unsupported revision (%u.%u)\n",
+				stats->maj, stats->min);
+		break;
+	}
 }
 
 static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct intel_lat_stats stats;
+	enum nvme_print_flags flags;
 	int err, fd;
 
 	const char *desc = "Get Intel Latency Statistics log and show it.";
 	const char *raw = "dump output in binary format";
 	const char *write = "Get write statistics (read default)";
 	struct config {
+		char *output_format;
 		int  raw_binary;
 		int  write;
 	};
 
 	struct config cfg = {
+		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_FLAG("write",      'w', &cfg.write,      write),
+		OPT_FMT("output-format", 'o', &cfg.output_format, "Output format: normal|json|binary"),
 		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+
+	if (cfg.raw_binary)
+		flags = BINARY;
 
 	err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
 			   false, sizeof(stats), &stats);
 	if (!err) {
-		if (!cfg.raw_binary)
-			show_lat_stats(&stats, cfg.write);
-		else
+		if (flags & JSON)
+			json_lat_stats(&stats, cfg.write);
+		else if (flags & BINARY)
 			d_raw((unsigned char *)&stats, sizeof(stats));
+		else
+			show_lat_stats(&stats, cfg.write);
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
+
+close_fd:
+	close(fd);
 	return err;
 }
 
 struct intel_assert_dump {
-    __u32 coreoffset;
-    __u32 assertsize;
-    __u8  assertdumptype;
-    __u8  assertvalid;
-    __u8  reserved[2];
+	__u32 coreoffset;
+	__u32 assertsize;
+	__u8  assertdumptype;
+	__u8  assertvalid;
+	__u8  reserved[2];
 };
 
 struct intel_event_dump {
@@ -534,17 +902,17 @@ struct intel_vu_nlog {
 };
 
 struct intel_cd_log {
-    union {
-	struct {
-		__u32 selectLog  : 3;
-		__u32 selectCore : 2;
-		__u32 selectNlog : 8;
-		__u8  selectOffsetRef : 1;
-		__u32 selectNlogPause : 2;
-		__u32 reserved2  : 16;
-	}fields;
-	__u32 entireDword;
-    }u;
+	union {
+		struct {
+			__u32 selectLog  : 3;
+			__u32 selectCore : 2;
+			__u32 selectNlog : 8;
+			__u8  selectOffsetRef : 1;
+			__u32 selectNlogPause : 2;
+			__u32 reserved2  : 16;
+		} fields;
+		__u32 entireDword;
+    } u;
 };
 
 static void print_intel_nlog(struct intel_vu_nlog *intel_nlog)
@@ -585,9 +953,12 @@ static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
 
 	dword_tfer = min(max_tfer, total_size);
 	while (total_size > 0) {
-		err = nvme_submit_passthru(ioctl_fd, NVME_IOCTL_ADMIN_CMD, cmd);
+		err = nvme_submit_admin_passthru(ioctl_fd, cmd);
 		if (err) {
-			fprintf(stderr, "failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n", cmd->data_len, cmd->cdw13, cmd->cdw12, cmd->cdw10, err, total_size);
+			fprintf(stderr,
+				"failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n",
+				cmd->data_len, cmd->cdw13, cmd->cdw12,
+				cmd->cdw10, err, total_size);
 			goto out;
 		}
 
@@ -616,7 +987,8 @@ static int write_header(__u8 *buf, int fd, size_t amnt)
 	return 0;
 }
 
-static int read_header(struct nvme_passthru_cmd *cmd,__u8 *buf, int ioctl_fd, __u32 dw12, int nsid)
+static int read_header(struct nvme_passthru_cmd *cmd,__u8 *buf, int ioctl_fd,
+			__u32 dw12, int nsid)
 {
 	memset(cmd, 0, sizeof(*cmd));
 	memset(buf, 0, 4096);
@@ -681,7 +1053,8 @@ static int get_internal_log_old(__u8 *buf, int output, int fd,
 	return err;
 }
 
-static int get_internal_log(int argc, char **argv, struct command *command, struct plugin *plugin)
+static int get_internal_log(int argc, char **argv, struct command *command,
+				struct plugin *plugin)
 {
 	__u8 buf[0x2000];
 	char f[0x100];
@@ -727,7 +1100,7 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0) {
 		free(intel);
 		return fd;
@@ -769,8 +1142,8 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 	if (cfg.log == 2) {
 		if (cfg.verbose)
 			printf("Log major:%d minor:%d header:%d size:%d numcores:%d\n",
-			       intel->ver.major, intel->ver.minor, intel->header, intel->size,
-			       intel->numcores);
+			       intel->ver.major, intel->ver.minor,
+				intel->header, intel->size, intel->numcores);
 
 		err = write_header(buf, output, 0x1000);
 		if (err) {
@@ -794,7 +1167,9 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 			goto out;
 	}
 
-	for (j = (cfg.core < 0 ? 0 : cfg.core); j < (cfg.core < 0 ? core_num : cfg.core + 1); j++) {
+	for (j = (cfg.core < 0 ? 0 : cfg.core);
+			j < (cfg.core < 0 ? core_num : cfg.core + 1);
+			j++) {
 		cdlog.u.fields.selectCore = j;
 		for (i = 0; i < count; i++) {
 			if (cfg.log == 2) {
@@ -852,4 +1227,90 @@ static int get_internal_log(int argc, char **argv, struct command *command, stru
 		printf("Successfully wrote log to %s\n", cfg.file);
 	free(intel);
 	return err;
+}
+
+static int enable_lat_stats_tracking(int argc, char **argv,
+		struct command *command, struct plugin *plugin)
+{
+	int err, fd;
+	const char *desc = (
+			"Enable/Disable Intel Latency Statistics Tracking.\n"
+			"No argument prints current status.");
+	const char *enable_desc = "Enable LST";
+	const char *disable_desc = "Disable LST";
+	const __u32 nsid = 0;
+	const __u8 fid = 0xe2;
+	const __u8 sel = 0;
+	const __u32 cdw11 = 0x0;
+	const __u32 cdw12 = 0x0;
+	const __u32 data_len = 32;
+	const __u32 save = 0;
+	__u32 result;
+	void *buf = NULL;
+
+	struct config {
+		bool enable, disable;
+	};
+
+	struct config cfg = {
+		.enable = false,
+		.disable = false,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"enable", 'e', "", CFG_NONE, &cfg.enable, no_argument, enable_desc},
+		{"disable", 'd', "", CFG_NONE, &cfg.disable, no_argument, disable_desc},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options);
+
+	enum Option {
+		None = -1,
+		True = 1,
+		False = 0,
+	};
+
+	enum Option option = None;
+
+	if (cfg.enable && cfg.disable)
+		printf("Cannot enable and disable simultaneously.");
+	else if (cfg.enable || cfg.disable)
+		option = cfg.enable;
+
+	if (fd < 0)
+		return fd;
+	switch (option) {
+	case None:
+		err = nvme_get_feature(fd, nsid, fid, sel, cdw11, data_len, buf,
+					&result);
+		if (!err) {
+			printf(
+				"Latency Statistics Tracking (FID 0x%X) is currently (%i).\n",
+				fid, result);
+		} else {
+			printf("Could not read feature id 0xE2.");
+			return err;
+		}
+		break;
+	case True:
+	case False:
+		err = nvme_set_feature(fd, nsid, fid, option, cdw12, save,
+				data_len, buf, &result);
+		if (err > 0) {
+			fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+		} else if (err < 0) {
+			perror("Enable latency tracking");
+			fprintf(stderr, "Command failed while parsing.");
+		} else {
+			printf("Successfully set enable bit for FID (0x%X) to %i.\n",
+				fid, option);
+		}
+		break;
+	default:
+		printf("%d not supported.", option);
+		return EINVAL;
+	}
+	return fd;
 }

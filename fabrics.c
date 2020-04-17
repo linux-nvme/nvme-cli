@@ -50,6 +50,12 @@
 
 #define NVMF_HOSTID_SIZE	36
 
+const char *conarg_nqn = "nqn";
+const char *conarg_transport = "transport";
+const char *conarg_traddr = "traddr";
+const char *conarg_trsvcid = "trsvcid";
+const char *conarg_host_traddr = "host_traddr";
+
 static struct config {
 	char *nqn;
 	char *transport;
@@ -75,6 +81,14 @@ static struct config {
 	bool persistent;
 	bool quiet;
 } cfg = { NULL };
+
+struct connect_args {
+	char *subsysnqn;
+	char *transport;
+	char *traddr;
+	char *trsvcid;
+	char *host_traddr;
+};
 
 #define BUF_SIZE		4096
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
@@ -201,7 +215,7 @@ static int do_discover(char *argstr, bool connect);
  * If field found, return string containing field value. If field
  * not found, return an empty string.
  */
-char *__parse_connect_arg(char *conargs, const char delim, const char *fieldnm)
+static char *parse_conn_arg(char *conargs, const char delim, const char *field)
 {
 	char *s, *e;
 	size_t cnt;
@@ -215,13 +229,13 @@ char *__parse_connect_arg(char *conargs, const char delim, const char *fieldnm)
 	 * However, better to be prepared.
 	 */
 	do {
-		s = strstr(conargs, fieldnm);
+		s = strstr(conargs, field);
 		if (!s)
 			goto empty_field;
 		/* validate prior character is delimiter */
 		if (s == conargs || *(s - 1) == delim) {
 			/* match requires next character to be assignment */
-			s += strlen(fieldnm);
+			s += strlen(field);
 			if (*s == '=')
 				/* match */
 				break;
@@ -258,6 +272,86 @@ static int ctrl_instance(char *device)
 	    strcmp(device, d))
 		return -EINVAL;
 	return instance;
+}
+
+/*
+ * Given a controller name, create a connect_args with its
+ * attributes and compare the attributes against the connect args
+ * given.
+ * Return true/false based on whether it matches
+ */
+static bool ctrl_matches_connectargs(char *name, struct connect_args *args)
+{
+	struct connect_args cargs;
+	bool found = false;
+	char *path, *addr;
+	int ret;
+
+	ret = asprintf(&path, "%s/%s", SYS_NVME, name);
+	if (ret < 0)
+		return found;
+
+	addr = nvme_get_ctrl_attr(path, "address");
+	cargs.subsysnqn = nvme_get_ctrl_attr(path, "subsysnqn");
+	cargs.transport = nvme_get_ctrl_attr(path, "transport");
+	cargs.traddr = parse_conn_arg(addr, ' ', conarg_traddr);
+	cargs.trsvcid = parse_conn_arg(addr, ' ', conarg_trsvcid);
+	cargs.host_traddr = parse_conn_arg(addr, ' ', conarg_host_traddr);
+
+	if (!strcmp(cargs.subsysnqn, args->subsysnqn) &&
+	    !strcmp(cargs.transport, args->transport) &&
+	    (!strcmp(cargs.traddr, args->traddr) ||
+	     !strcmp(args->traddr, "none")) &&
+	    (!strcmp(cargs.trsvcid, args->trsvcid) ||
+	     !strcmp(args->trsvcid, "none")) &&
+	    (!strcmp(cargs.host_traddr, args->host_traddr) ||
+	     !strcmp(args->host_traddr, "none")))
+		found = true;
+
+	free(cargs.subsysnqn);
+	free(cargs.transport);
+	free(cargs.traddr);
+	free(cargs.trsvcid);
+	free(cargs.host_traddr);
+
+	return found;
+}
+
+/*
+ * Look through the system to find an existing controller whose
+ * attributes match the connect arguments specified
+ * If found, a string containing the controller name (ex: "nvme?")
+ * is returned.
+ * If not found, a NULL is returned.
+ */
+static char *find_ctrl_with_connectargs(struct connect_args *args)
+{
+	struct dirent **devices;
+	char *devname = NULL;
+	int i, n;
+
+	n = scandir(SYS_NVME, &devices, scan_ctrls_filter, alphasort);
+	if (n < 0) {
+		fprintf(stderr, "no NVMe controller(s) detected.\n");
+		return NULL;
+	}
+
+	for (i = 0; i < n; i++) {
+		if (ctrl_matches_connectargs(devices[i]->d_name, args)) {
+			devname = strdup(devices[i]->d_name);
+			if (devname == NULL)
+				fprintf(stderr, "no memory for ctrl name %s\n",
+						devices[i]->d_name);
+			goto cleanup_devices;
+		}
+	}
+
+cleanup_devices:
+	for (i = 0; i < n; i++)
+		free(devices[i]);
+	free(devices);
+
+	return devname;
 }
 
 static int add_ctrl(const char *argstr)
@@ -578,7 +672,8 @@ static char *hostnqn_read_file(void)
 	if (f == NULL)
 		return false;
 
-	if (fgets(hostnqn, sizeof(hostnqn), f) == NULL)
+	if (fgets(hostnqn, sizeof(hostnqn), f) == NULL ||
+	    !strlen(hostnqn))
 		goto out;
 
 	ret = strndup(hostnqn, strcspn(hostnqn, "\n"));
@@ -852,7 +947,7 @@ retry:
 		p += len;
 	}
 
-	if (cfg.keep_alive_tmo && !discover) {
+	if (cfg.keep_alive_tmo) {
 		len = sprintf(p, ",keep_alive_tmo=%d", cfg.keep_alive_tmo);
 		if (len < 0)
 			return -EINVAL;
@@ -984,7 +1079,15 @@ static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	return ret;
 }
 
-static const char delim_comma  = ',';
+static void nvmf_get_host_identifiers(int ctrl_instance)
+{
+	char *path;
+
+	if (asprintf(&path, "%s/nvme%d", SYS_NVME, ctrl_instance) < 0)
+		return;
+	cfg.hostnqn = nvme_get_ctrl_attr(path, "hostnqn");
+	cfg.hostid = nvme_get_ctrl_attr(path, "hostid");
+}
 
 static int do_discover(char *argstr, bool connect)
 {
@@ -997,16 +1100,11 @@ static int do_discover(char *argstr, bool connect)
 		struct connect_args cargs;
 
 		memset(&cargs, 0, sizeof(cargs));
-		cargs.subsysnqn = __parse_connect_arg(argstr, delim_comma,
-						conarg_nqn);
-		cargs.transport = __parse_connect_arg(argstr, delim_comma,
-						conarg_transport);
-		cargs.traddr = __parse_connect_arg(argstr, delim_comma,
-						conarg_traddr);
-		cargs.trsvcid = __parse_connect_arg(argstr, delim_comma,
-						conarg_trsvcid);
-		cargs.host_traddr = __parse_connect_arg(argstr, delim_comma,
-						conarg_host_traddr);
+		cargs.subsysnqn = parse_conn_arg(argstr, ',', conarg_nqn);
+		cargs.transport = parse_conn_arg(argstr, ',', conarg_transport);
+		cargs.traddr = parse_conn_arg(argstr, ',', conarg_traddr);
+		cargs.trsvcid = parse_conn_arg(argstr, ',', conarg_trsvcid);
+		cargs.host_traddr = parse_conn_arg(argstr, ',', conarg_host_traddr);
 
 		/*
 		 * if the cfg.device passed in matches the connect args
@@ -1029,10 +1127,12 @@ static int do_discover(char *argstr, bool connect)
 		free(cargs.host_traddr);
 	}
 
-	if (!cfg.device)
+	if (!cfg.device) {
 		instance = add_ctrl(argstr);
-	else
+	} else {
 		instance = ctrl_instance(cfg.device);
+		nvmf_get_host_identifiers(instance);
+	}
 	if (instance < 0)
 		return instance;
 
@@ -1123,7 +1223,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 		while ((ptr = strsep(&args, " =\n")) != NULL)
 			argv[argc++] = ptr;
 
-		err = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+		err = argconfig_parse(argc, argv, desc, opts);
 		if (err)
 			continue;
 
@@ -1181,7 +1281,7 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 	};
 
 	cfg.tos = -1;
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		goto out;
 
@@ -1235,7 +1335,7 @@ int connect(const char *desc, int argc, char **argv)
 	};
 
 	cfg.tos = -1;
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		goto out;
 
@@ -1351,7 +1451,7 @@ int disconnect(const char *desc, int argc, char **argv)
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
+	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		goto out;
 
@@ -1386,34 +1486,38 @@ out:
 
 int disconnect_all(const char *desc, int argc, char **argv)
 {
-	struct subsys_list_item *slist;
-	int i, j, ret, subcnt = 0;
+	struct nvme_topology t = { };
+	int i, j, err;
 
 	OPT_ARGS(opts) = {
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts, &cfg, sizeof(cfg));
-	if (ret)
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err)
 		goto out;
 
-	slist = get_subsys_list(&subcnt, NULL, NVME_NSID_ALL);
-	for (i = 0; i < subcnt; i++) {
-		struct subsys_list_item *subsys = &slist[i];
+	err = scan_subsystems(&t, NULL, 0);
+	if (err) {
+		fprintf(stderr, "Failed to scan namespaces\n");
+		goto out;
+	}
 
-		for (j = 0; j < subsys->nctrls; j++) {
-			struct ctrl_list_item *ctrl = &subsys->ctrls[j];
-			if (!strcmp(ctrl->transport, "pcie"))
+	for (i = 0; i < t.nr_subsystems; i++) {
+		struct nvme_subsystem *s = &t.subsystems[i];
+
+		for (j = 0; j < s->nr_ctrls; j++) {
+			struct nvme_ctrl *c = &s->ctrls[j];
+
+			if (!strcmp(c->transport, "pcie"))
 				continue;
-
-			ret = disconnect_by_device(ctrl->name);
-			if (ret)
+			err = disconnect_by_device(c->name);
+			if (err)
 				goto free;
 		}
 	}
-
 free:
-	free_subsys_list(slist, subcnt);
+	free_topology(&t);
 out:
-	return nvme_status_to_errno(ret, true);
+	return nvme_status_to_errno(err, true);
 }

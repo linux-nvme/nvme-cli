@@ -7,7 +7,7 @@ nvme - the NVMe storage command line interface utility (nvme-cli)
 
 SYNOPSIS
 --------
-bulit-in plugin:
+built-in plugin:
 [verse]
 'nvme' <command> <device> [<args>]
 
@@ -47,7 +47,7 @@ NVM-Express Site].
 
 Authors
 -------
-This is written and maintained by mailto:keith.busch@intel.com[Keith Busch].
+This is written and maintained by mailto:kbusch@kernel.org[Keith Busch].
 
 Reporting Bugs
 --------------
