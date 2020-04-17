@@ -1098,10 +1098,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	for (i = 0; i < num; i++)
 		ctrlist[i] = (uint16_t)list[i];
 
-	if (attach)
-		err = nvme_ns_attach_ctrls(fd, cfg.namespace_id, num, ctrlist);
-	else
-		err = nvme_ns_detach_ctrls(fd, cfg.namespace_id, num, ctrlist);
+	err = nvme_ns_attachment(fd, cfg.namespace_id, num, ctrlist, attach);
 
 	if (!err)
 		printf("%s: Success, nsid:%d\n", cmd->name, cfg.namespace_id);

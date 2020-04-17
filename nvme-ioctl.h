@@ -125,8 +125,6 @@ int nvme_ns_delete(int fd, __u32 nsid, __u32 timeout);
 
 int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls,
 		       __u16 *ctrlist, bool attach);
-int nvme_ns_attach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
-int nvme_ns_detach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
 
 int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data);
 int nvme_fw_commit(int fd, __u8 slot, __u8 action, __u8 bpid);
