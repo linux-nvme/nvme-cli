@@ -8,7 +8,8 @@
 
 PLUGIN(NAME("dera", "Dera vendor specific extensions"),
 	COMMAND_LIST(
-		ENTRY("smart-log-add", "Retrieve Dera SMART Log, show it", get_status)
+		ENTRY("smart-log-add", "Retrieve Dera SMART Log, show it", get_additional_smart_log)
+		ENTRY("stat", "Retrieve Dera device status, show it", get_status)
 	)
 );
 

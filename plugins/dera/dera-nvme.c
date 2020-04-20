@@ -116,7 +116,7 @@ static int nvme_dera_get_device_status(int fd, enum dera_device_status *result)
 	return err;
 }
 
-static int get_status(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int fd, err;
 	struct nvme_dera_smart_info_log log;
@@ -209,3 +209,7 @@ exit:
 	return err;
 }
 
+static int get_status(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	return get_additional_smart_log(argc, argv, cmd, plugin);
+}
