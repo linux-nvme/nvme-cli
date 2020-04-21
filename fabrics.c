@@ -141,6 +141,7 @@ static const char * const adrfams[] = {
 	[NVMF_ADDR_FAMILY_IP6]	= "ipv6",
 	[NVMF_ADDR_FAMILY_IB]	= "infiniband",
 	[NVMF_ADDR_FAMILY_FC]	= "fibre-channel",
+	[NVMF_ADDR_FAMILY_LOOP]	= "loop",
 };
 
 static inline const char *adrfam_str(__u8 adrfam)
