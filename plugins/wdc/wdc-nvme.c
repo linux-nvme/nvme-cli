@@ -1411,7 +1411,8 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 		err = nvme_get_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 0, 0,
 				4, buf, &result);
 		if (err == 0) {
-			if (result) {
+			if (result == 0) {
+				/* enabled */
 				host_gen = 0;
 				ctrl_init = 1;
 			}
@@ -2220,6 +2221,9 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 				(!strcmp(cfg.type, "controller"))) {
 			telemetry_type = WDC_TELEMETRY_TYPE_CONTROLLER;
 			telemetry_data_area = cfg.data_area;
+		} else {
+			fprintf(stderr, "ERROR : WDC: Invalid type - Must be NONE, HOST or CONTROLLER\n");
+			return -1;
 		}
 
 		return wdc_do_cap_diag(fd, f, xfer_size, telemetry_type, telemetry_data_area);
@@ -3783,6 +3787,14 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 		goto out;
 	}
 
+	/* allow only one option at a time */
+	if ((cfg.disable + cfg.enable + cfg.status) > 1) {
+
+		fprintf(stderr, "ERROR : WDC : Invalid option\n");
+		ret = -1;
+		goto out;
+	}
+
 	if (cfg.disable) {
 		ret = nvme_set_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 1,
 				       0, 0, 0, buf, &result);
@@ -3808,6 +3820,7 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 	   }
 	   else {
 			fprintf(stderr, "ERROR : WDC: unsupported option for this command\n");
+			fprintf(stderr, "Please provide an option, -d, -e or -s\n");
 			ret = -1;
 			goto out;
 	   }
