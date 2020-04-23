@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-disconnect-all
+.\"     Title: nvme-transcend-badblock
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
 .\"      Date: 04/24/2020
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCONNECT\-AL" "1" "04/24/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-TRANSCEND\-BAD" "1" "04/24/2020" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,17 +28,22 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-disconnect-all \- Disconnect from all connected Fabrics controllers\&.
+nvme-transcend-badblock \- Retrieve Transcend NVMe device\*(Aqs bad blocks\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme disconnect\-all\fR
+\fInvme transcend badblock\fR <device>
 .fi
 .SH "DESCRIPTION"
 .sp
-Disconnects and removes all existing NVMe over Fabrics controllers\&.
+For the NVMe device given, sends the Transcend vendor command and return the bad block of the device\&.
 .sp
-See the documentation for the nvme\-disconnect(1) command for further background\&.
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+On success, the returned value would print the amount of bad blocks\&.
+.SH "OPTIONS"
+.sp
+none
 .SH "EXAMPLES"
 .sp
 .RS 4
@@ -49,21 +54,18 @@ See the documentation for the nvme\-disconnect(1) command for further background
 .sp -1
 .IP \(bu 2.3
 .\}
-Disconnect all existing nvme controllers:
+Print the Transcend device\(cqs bad blocks in a human readable format:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme disconnect\-all
+# nvme transcend badblock /dev/nvme0
 .fi
 .if n \{\
 .RE
 .\}
 .RE
-.SH "SEE ALSO"
-.sp
-nvme\-disconnect(1)
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

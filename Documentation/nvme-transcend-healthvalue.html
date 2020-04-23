@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.10" />
-<title>nvme-connect(1)</title>
+<title>nvme-transcend-healthvalue(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -735,12 +735,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-connect(1) Manual Page
+nvme-transcend-healthvalue(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-connect -
-   Connect to a Fabrics controller.
+<p>nvme-transcend-healthvalue -
+   Use NVMe SMART table to analyse the health value of Transcend device.
 </p>
 </div>
 </div>
@@ -749,25 +749,7 @@ nvme-connect(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme connect</em>
-                [--transport=&lt;trtype&gt;     | -t &lt;trtype&gt;]
-                [--nqn=&lt;subnqn&gt;           | -n &lt;subnqn&gt;]
-                [--traddr=&lt;traddr&gt;        | -a &lt;traddr&gt;]
-                [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
-                [--host-traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
-                [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
-                [--hostid=&lt;hostid&gt;        | -I &lt;hostid&gt;]
-                [--nr-io-queues=&lt;#&gt;       | -i &lt;#&gt;]
-                [--nr-write-queues=&lt;#&gt;    | -W &lt;#&gt;]
-                [--nr-poll-queues=&lt;#&gt;     | -P &lt;#&gt;]
-                [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]
-                [--keep-alive-tmo=&lt;#&gt;     | -k &lt;#&gt;]
-                [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]
-                [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]
-                [--duplicate-connect      | -D]
-                [--disable-sqflow         | -d]
-                [--hdr-digest             | -g]
-                [--data-digest            | -G]</pre>
+<pre class="content"><em>nvme transcned healthvalue</em> &lt;device&gt;</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -775,256 +757,16 @@ nvme-connect(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Create a transport connection to a remote system (specified by --traddr and
---trsvcid) and create a NVMe over Fabrics controller for the NVMe subsystem
-specified by the --nqn option.</p></div>
+<div class="paragraph"><p>Retrieves the NVMe Device SMART log page from the Transcend device and evaluate health status of Transcend device.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
+<div class="paragraph"><p>On success, the returned value would print health percentage value.</p></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
-<div class="dlist"><dl>
-<dt class="hdlist1">
--t &lt;trtype&gt;
-</dt>
-<dt class="hdlist1">
---transport=&lt;trtype&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the network fabric being used for
-        a NVMe-over-Fabrics network.  Current string values include:
-</p>
-<div class="tableblock">
-<table rules="all"
-width="100%"
-frame="border"
-cellspacing="0" cellpadding="4">
-<col width="50%" />
-<col width="50%" />
-<tbody>
-<tr>
-<td align="left" valign="top"><p class="table">Value</p></td>
-<td align="left" valign="top"><p class="table">Definition</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">rdma</p></td>
-<td align="left" valign="top"><p class="table">The network fabric is an rdma network (RoCE, iWARP, Infiniband, basic rdma, etc)</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">fc</p></td>
-<td align="left" valign="top"><p class="table"><strong>WIP</strong> The network fabric is a Fibre Channel network.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">loop</p></td>
-<td align="left" valign="top"><p class="table">Connect to a NVMe over Fabrics target on the local host</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</dd>
-<dt class="hdlist1">
--n &lt;subnqn&gt;
-</dt>
-<dt class="hdlist1">
---nqn &lt;subnqn&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the name for the NVMe subsystem to connect to.
-</p>
-</dd>
-<dt class="hdlist1">
--a &lt;traddr&gt;
-</dt>
-<dt class="hdlist1">
---traddr=&lt;traddr&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the network address of the Controller.
-        For transports using IP addressing (e.g. rdma) this should be an
-        IP-based address (ex. IPv4).
-</p>
-</dd>
-<dt class="hdlist1">
--s &lt;trsvcid&gt;
-</dt>
-<dt class="hdlist1">
---trsvcid=&lt;trsvcid&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the transport service id.  For transports using IP
-        addressing (e.g. rdma) this field is the port number. By default, the IP
-        port number for the RDMA transport is 4420.
-</p>
-</dd>
-<dt class="hdlist1">
--w &lt;traddr&gt;
-</dt>
-<dt class="hdlist1">
---host-traddr=&lt;traddr&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the network address used on the host to connect
-        to the Controller.
-</p>
-</dd>
-<dt class="hdlist1">
--q &lt;hostnqn&gt;
-</dt>
-<dt class="hdlist1">
---hostnqn=&lt;hostnqn&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default Host NQN that identifies the NVMe Host.
-        If this option is not specified, the default is read from
-        /etc/nvme/hostnqn first. If that does not exist, the autogenerated
-        NQN value from the NVMe Host kernel module is used next.
-        The Host NQN uniquely identifies the NVMe Host.
-</p>
-</dd>
-<dt class="hdlist1">
--I &lt;hostid&gt;
-</dt>
-<dt class="hdlist1">
---hostid=&lt;hostid&gt;
-</dt>
-<dd>
-<p>
-        UUID(Universally Unique Identifier) to be discovered which should be
-        formatted.
-</p>
-</dd>
-<dt class="hdlist1">
--i &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---nr-io-queues=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default number of I/O queues create by the driver.
-</p>
-</dd>
-<dt class="hdlist1">
--W &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---nr-write-queues=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Adds additional queues that will be used for write I/O.
-</p>
-</dd>
-<dt class="hdlist1">
--P &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---nr-poll-queues=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Adds additional queues that will be used for polling latency sensitive I/O.
-</p>
-</dd>
-<dt class="hdlist1">
--Q &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---queue-size=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default number of elements in the I/O queues created
-        by the driver.
-</p>
-</dd>
-<dt class="hdlist1">
--k &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---keep-alive-tmo=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default keep alive timeout (in seconds).
-</p>
-</dd>
-<dt class="hdlist1">
--c &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---reconnect-delay=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default delay (in seconds) before reconnect is attempted
-        after a connect loss.
-</p>
-</dd>
-<dt class="hdlist1">
--l &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---ctrl-loss-tmo=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default controller loss timeout period (in seconds).
-</p>
-</dd>
-<dt class="hdlist1">
--D
-</dt>
-<dt class="hdlist1">
---duplicate-connect
-</dt>
-<dd>
-<p>
-        Allows duplicated connections between same trnsport host and subsystem
-        port.
-</p>
-</dd>
-<dt class="hdlist1">
--d
-</dt>
-<dt class="hdlist1">
---disable-sqflow
-</dt>
-<dd>
-<p>
-        Disables SQ flow control to omit head doorbell update for submission
-        queues when sending nvme completions.
-</p>
-</dd>
-<dt class="hdlist1">
--g
-</dt>
-<dt class="hdlist1">
---hdr-digest
-</dt>
-<dd>
-<p>
-        Generates/verifies header digest (TCP).
-</p>
-</dd>
-<dt class="hdlist1">
--G
-</dt>
-<dt class="hdlist1">
---data-digest
-</dt>
-<dd>
-<p>
-        Generates/verifies data digest (TCP).
-</p>
-</dd>
-</dl></div>
+<div class="paragraph"><p>none</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -1033,30 +775,14 @@ cellspacing="0" cellpadding="4">
 <div class="ulist"><ul>
 <li>
 <p>
-Connect to a subsystem named nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
-on the IP4 address 192.168.1.3. Port 4420 is used by default:
+Print the Transcend Device health value in a human readable format:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme connect --transport=rdma --traddr=192.168.1.3 \
---nqn=nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432</code></pre>
+<pre><code># nvme transcned healthvalue /dev/nvme0</code></pre>
 </div></div>
 </li>
 </ul></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_see_also">SEE ALSO</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>nvme-discover(1)
-nvme-connect-all(1)</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_authors">AUTHORS</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>This was co-written by <a href="mailto:james.p.freyensee@intel.com">Jay Freyensee</a>
-and <a href="mailto:hch@lst.de">Christoph Hellwig</a></p></div>
 </div>
 </div>
 <div class="sect1">
@@ -1070,7 +796,7 @@ and <a href="mailto:hch@lst.de">Christoph Hellwig</a></p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2020-02-15 08:33:28 JST
+ 2020-04-24 05:24:52 JST
 </div>
 </div>
 </body>
