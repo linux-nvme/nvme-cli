@@ -34,6 +34,7 @@ typedef enum {
 	PLL_LOCK_LOSS,			 	
 	NAND_WRITE,
 	HOST_WRITE,
+	SRAM_ERROR_CNT,
 	ADD_SMART_ITEMS,
 }addtional_smart_items;
 
@@ -111,6 +112,9 @@ static void show_shannon_smart_log(struct nvme_shannon_smart_log *smart,
 	printf("host_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
 		smart->items[HOST_WRITE].norm,
 		int48_to_long(smart->items[HOST_WRITE].item_val));
+	printf("sram_error_count		: %3d%%       %"PRIu64"\n",
+		smart->items[RETRY_BUFFER_OVERFLOW].norm,
+		int48_to_long(smart->items[SRAM_ERROR_CNT].item_val));
 }
 
 

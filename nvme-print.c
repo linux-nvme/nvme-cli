@@ -2537,7 +2537,7 @@ static void json_nvme_id_ns_descs(void *data)
 			memcpy(desc.eui64, data + off, sizeof(desc.eui64));
 			for (i = 0; i < sizeof(desc.eui64); i++)
 				json_str_p += sprintf(json_str_p, "%02x", desc.eui64[i]);
-			len += sizeof(desc.eui64);
+			len = sizeof(desc.eui64);
 			nidt_name = "eui64";
 			break;
 
@@ -2545,7 +2545,7 @@ static void json_nvme_id_ns_descs(void *data)
 			memcpy(desc.nguid, data + off, sizeof(desc.nguid));
 			for (i = 0; i < sizeof(desc.nguid); i++)
 				json_str_p += sprintf(json_str_p, "%02x", desc.nguid[i]);
-			len += sizeof(desc.nguid);
+			len = sizeof(desc.nguid);
 			nidt_name = "nguid";
 			break;
 
@@ -2553,7 +2553,7 @@ static void json_nvme_id_ns_descs(void *data)
 		case NVME_NIDT_UUID:
 			memcpy(desc.uuid, data + off, sizeof(desc.uuid));
 			uuid_unparse_lower(desc.uuid, json_str);
-			len += sizeof(desc.uuid);
+			len = sizeof(desc.uuid);
 			nidt_name = "uuid";
 			break;
 #endif
@@ -2622,7 +2622,7 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 			for (i = 0; i < 8; i++)
 				printf("%02x", eui64[i]);
 			printf("\n");
-			len += sizeof(eui64);
+			len = sizeof(eui64);
 			break;
 		case NVME_NIDT_NGUID:
 			memcpy(nguid, data + pos + sizeof(*cur), sizeof(nguid));
@@ -2630,14 +2630,14 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 			for (i = 0; i < 16; i++)
 				printf("%02x", nguid[i]);
 			printf("\n");
-			len += sizeof(nguid);
+			len = sizeof(nguid);
 			break;
 #ifdef LIBUUID
 		case NVME_NIDT_UUID:
 			memcpy(uuid, data + pos + sizeof(*cur), 16);
 			uuid_unparse_lower(uuid, uuid_str);
 			printf("uuid    : %s\n", uuid_str);
-			len += sizeof(uuid);
+			len = sizeof(uuid);
 			break;
 #endif
 		default:
@@ -4543,6 +4543,10 @@ static void json_detail_list(struct nvme_topology *t)
 			json_object_add_value_string(ctrl_attrs, "Transport", c->transport);
 			json_object_add_value_string(ctrl_attrs, "Address", c->address);
 			json_object_add_value_string(ctrl_attrs, "State", c->state);
+			if (c->hostnqn)
+				json_object_add_value_string(ctrl_attrs, "HostNQN", c->hostnqn);
+			if (c->hostid)
+				json_object_add_value_string(ctrl_attrs, "HostID", c->hostid);
 
 			format(formatter, sizeof(formatter), c->id.fr, sizeof(c->id.fr));
 			json_object_add_value_string(ctrl_attrs, "Firmware", formatter);

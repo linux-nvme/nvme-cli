@@ -1,0 +1,37 @@
+nvme-transcend-healthvalue(1)
+=============================
+
+NAME
+----
+nvme-transcend-healthvalue - Use NVMe SMART table to analyse the health value of Transcend device.
+
+SYNOPSIS
+--------
+[verse]
+'nvme transcned healthvalue' <device> 
+
+DESCRIPTION
+-----------
+Retrieves the NVMe Device SMART log page from the Transcend device and evaluate health status of Transcend device.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned value would print health percentage value.
+
+OPTIONS
+-------
+none
+
+
+EXAMPLES
+--------
+* Print the Transcend Device health value in a human readable format:
++
+------------
+# nvme transcned healthvalue /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite
