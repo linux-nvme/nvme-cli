@@ -357,8 +357,10 @@ static int verify_legacy_ns(struct nvme_namespace *n)
 		char tmp_address[64] = "";
 		legacy_get_pci_bdf(path, tmp_address);
 		if (tmp_address[0]) {
-			asprintf(&n->ctrl->transport, "pcie");
-			asprintf(&n->ctrl->address, tmp_address);
+			if (asprintf(&n->ctrl->transport, "pcie") != 1)
+				return -1;
+			if (asprintf(&n->ctrl->address, "%s", tmp_address) != 1)
+				return -1;
 		}
 	}
 
