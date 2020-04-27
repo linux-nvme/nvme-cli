@@ -97,8 +97,10 @@ int lnvm_do_list_devices(void)
 		return fd;
 
 	ret = ioctl(fd, NVM_GET_DEVICES, &devs);
-	if (ret)
+	if (ret) {
+		lnvm_close(fd);
 		return ret;
+	}
 
 	printf("Number of devices: %u\n", devs.nr_devices);
 	printf("%-12s\t%-12s\tVersion\n", "Device", "Block manager");
@@ -127,8 +129,10 @@ int lnvm_do_info(void)
 
 	memset(&c, 0, sizeof(struct nvm_ioctl_info));
 	ret = ioctl(fd, NVM_INFO, &c);
-	if (ret)
+	if (ret) {
+		lnvm_close(fd);
 		return ret;
+	}
 
 	printf("LightNVM (%u,%u,%u). %u target type(s) registered.\n",
 			c.version[0], c.version[1], c.version[2], c.tgtsize);
