@@ -26,6 +26,7 @@ SYNOPSIS
 		[--nr-poll-queues=<#>     | -P <#>]
 		[--queue-size=<#>         | -Q <#>]
 		[--matching               | -m]
+		[--persistent             | -p]
 
 DESCRIPTION
 -----------
@@ -145,6 +146,11 @@ OPTIONS
 	If a traddr was specified on the command line or in the configuration
 	file, only create controllers for discovery records that match the
 	given traddr, rather than for all entries in the discovery log page.
+
+-p::
+--persistent::
+	Don't remove the discovery controller after retrieving the discovery
+	log page.
 
 
 EXAMPLES
