@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect-all
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/24/2020
+.\"      Date: 04/29/2020
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT\-ALL" "1" "04/24/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT\-ALL" "1" "04/29/2020" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -49,6 +49,9 @@ nvme-connect-all \- Discover and Connect to Fabrics controllers\&.
                 [\-\-nr\-write\-queues=<#>    | \-W <#>]
                 [\-\-nr\-poll\-queues=<#>     | \-P <#>]
                 [\-\-queue\-size=<#>         | \-Q <#>]
+                [\-\-matching               | \-m]
+                [\-\-persistent             | \-p]
+                [\-\-quiet                  | \-q]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -172,6 +175,21 @@ Adds additional queues that will be used for polling latency sensitive I/O\&.
 \-Q <#>, \-\-queue\-size=<#>
 .RS 4
 Overrides the default number of elements in the I/O queues created by the driver\&. This option will be ignored for discovery, but will be passed on to the subsequent connect call\&.
+.RE
+.PP
+\-m, \-\-matching
+.RS 4
+If a traddr was specified on the command line or in the configuration file, only create controllers for discovery records that match the given traddr, rather than for all entries in the discovery log page\&.
+.RE
+.PP
+\-p, \-\-persistent
+.RS 4
+Don\(cqt remove the discovery controller after retrieving the discovery log page\&.
+.RE
+.PP
+\-q, \-\-quiet
+.RS 4
+Suppress error messages\&.
 .RE
 .SH "EXAMPLES"
 .sp
