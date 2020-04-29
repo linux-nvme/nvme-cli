@@ -11,4 +11,4 @@ Requires=nvmf-connect.target
 [Service]
 Type=simple
 Environment="CONNECT_ARGS=%i"
-ExecStart=/bin/sh -c "nvme connect-all --quiet `/bin/echo -e '${CONNECT_ARGS}'`"
+ExecStart=/bin/sh -c "nvme connect-all --matching --quiet `/bin/echo -e '${CONNECT_ARGS}'`"
