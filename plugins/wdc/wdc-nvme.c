@@ -568,6 +568,8 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 static int wdc_do_drive_info(int fd, __u32 *result);
 static int wdc_vs_drive_info(int argc, char **argv, struct command *command,
 		struct plugin *plugin);
+static int wdc_vs_temperature_stats(int argc, char **argv, struct command *command,
+		struct plugin *plugin);
 
 /* Drive log data size */
 struct wdc_log_size {
@@ -6536,5 +6538,34 @@ static int wdc_vs_drive_info(int argc, char **argv,
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;
 }
+static int wdc_vs_temperature_stats(int argc, char **argv,
+		struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Send a vs-temperature-stats command.";
+	struct nvme_smart_log smart_log;
+	int fd, ret;
+	/* convert temperature from Kelvin to Celsius */
 
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
 
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	wdc_check_device(fd);
+	ret = nvme_smart_log(fd, NVME_NSID_ALL, &smart_log);
+
+	if (ret == 0) {
+		int temperature = ((smart_log.temperature[1] << 8) |
+				    smart_log.temperature[0]) - 273;
+
+		printf("temperature				: %d C\n",
+			temperature);
+
+	}
+
+	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	return ret;
+}
