@@ -4629,7 +4629,7 @@ static void json_simple_ns(struct nvme_namespace *n, struct json_array *devices)
 
 	json_object_add_value_string(device_attrs, "ModelNumber", formatter);
 
-	if (index >= 0) {
+	if (index >= 0 && !strcmp(n->ctrl->transport, "pcie")) {
 		char *product = nvme_product_name(index);
 
 		json_object_add_value_string(device_attrs, "ProductName", product);
@@ -4682,6 +4682,8 @@ static void json_simple_list(struct nvme_topology *t)
 	}
 	json_object_add_value_array(root, "Devices", devices);
 	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
 }
 
 static void json_print_list_items(struct nvme_topology *t,
