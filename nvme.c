@@ -1093,7 +1093,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	}
 
 	if (num == -1) {
-		fprintf(stderr, "%s: controller id list is required\n",
+		fprintf(stderr, "%s: controller id list is malformed\n",
 						cmd->name);
 		err = -EINVAL;
 		goto close_fd;
