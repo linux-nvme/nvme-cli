@@ -995,6 +995,13 @@ retry:
 		p+= len;
 	}
 
+	if (cfg.reconnect_delay) {
+		len = sprintf(p, ",reconnect_delay=%d", cfg.reconnect_delay);
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+	}
+
 	if (cfg.ctrl_loss_tmo) {
 		len = sprintf(p, ",ctrl_loss_tmo=%d", cfg.ctrl_loss_tmo);
 		if (len < 0)
