@@ -1,0 +1,37 @@
+nvme-transcend-badblock(1)
+==========================
+
+NAME
+----
+nvme-transcend-badblock - Retrieve Transcend NVMe device's bad blocks.
+
+SYNOPSIS
+--------
+[verse]
+'nvme transcend badblock' <device> 
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends the Transcend vendor command and return the bad block of the device.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned value would print the amount of bad blocks.
+
+OPTIONS
+-------
+none
+
+
+EXAMPLES
+--------
+* Print the Transcend device's bad blocks in a human readable format:
++
+------------
+# nvme transcend badblock /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite

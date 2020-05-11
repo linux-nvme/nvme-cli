@@ -76,7 +76,7 @@ static void json_intel_id_ctrl(struct nvme_vu_id_ctrl_field *id,
 	struct json_object *root)
 {
 	json_object_add_value_int(root, "ss", id->ss);
-	json_object_add_value_string(root, "health", health[0] ? health : "healthy");
+	json_object_add_value_string(root, "health", health );
 	json_object_add_value_int(root, "cls", id->cls);
 	json_object_add_value_int(root, "nlw", id->nlw);
 	json_object_add_value_int(root, "scap", id->scap);
@@ -97,9 +97,22 @@ static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 	char mic_bl[5] = { 0 };
 	char mic_fw[5] = { 0 };
 
+
+	if (id->health[0]==0)
+	{
+			snprintf(health, 21, "%s", "healthy");
+	}
+	else
+	{
+			snprintf(health, 21, "%s", id->health);
+	}
+
+	snprintf(bl, 9, "%s", id->bl);
 	snprintf(ww, 19, "%02X%02X%02X%02X%02X%02X%02X%02X", id->ww[7],
 		id->ww[6], id->ww[5], id->ww[4], id->ww[3], id->ww[2],
 		id->ww[1], id->ww[0]);
+	snprintf(mic_bl, 5, "%s", id->mic_bl);
+	snprintf(mic_fw, 5, "%s", id->mic_fw);
 
 	if (root) {
 		json_intel_id_ctrl(id, health, bl, ww, mic_bl, mic_fw, root);
@@ -107,7 +120,7 @@ static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 	}
 
 	printf("ss        : %d\n", id->ss);
-	printf("health    : %s\n", id->health[0] ? health : "healthy");
+	printf("health    : %s\n", health);
 	printf("cls       : %d\n", id->cls);
 	printf("nlw       : %d\n", id->nlw);
 	printf("scap      : %d\n", id->scap);
@@ -1214,4 +1227,90 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 		printf("Successfully wrote log to %s\n", cfg.file);
 	free(intel);
 	return err;
+}
+
+static int enable_lat_stats_tracking(int argc, char **argv,
+		struct command *command, struct plugin *plugin)
+{
+	int err, fd;
+	const char *desc = (
+			"Enable/Disable Intel Latency Statistics Tracking.\n"
+			"No argument prints current status.");
+	const char *enable_desc = "Enable LST";
+	const char *disable_desc = "Disable LST";
+	const __u32 nsid = 0;
+	const __u8 fid = 0xe2;
+	const __u8 sel = 0;
+	const __u32 cdw11 = 0x0;
+	const __u32 cdw12 = 0x0;
+	const __u32 data_len = 32;
+	const __u32 save = 0;
+	__u32 result;
+	void *buf = NULL;
+
+	struct config {
+		bool enable, disable;
+	};
+
+	struct config cfg = {
+		.enable = false,
+		.disable = false,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"enable", 'e', "", CFG_NONE, &cfg.enable, no_argument, enable_desc},
+		{"disable", 'd', "", CFG_NONE, &cfg.disable, no_argument, disable_desc},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options);
+
+	enum Option {
+		None = -1,
+		True = 1,
+		False = 0,
+	};
+
+	enum Option option = None;
+
+	if (cfg.enable && cfg.disable)
+		printf("Cannot enable and disable simultaneously.");
+	else if (cfg.enable || cfg.disable)
+		option = cfg.enable;
+
+	if (fd < 0)
+		return fd;
+	switch (option) {
+	case None:
+		err = nvme_get_feature(fd, nsid, fid, sel, cdw11, data_len, buf,
+					&result);
+		if (!err) {
+			printf(
+				"Latency Statistics Tracking (FID 0x%X) is currently (%i).\n",
+				fid, result);
+		} else {
+			printf("Could not read feature id 0xE2.");
+			return err;
+		}
+		break;
+	case True:
+	case False:
+		err = nvme_set_feature(fd, nsid, fid, option, cdw12, save,
+				data_len, buf, &result);
+		if (err > 0) {
+			fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+		} else if (err < 0) {
+			perror("Enable latency tracking");
+			fprintf(stderr, "Command failed while parsing.");
+		} else {
+			printf("Successfully set enable bit for FID (0x%X) to %i.\n",
+				fid, option);
+		}
+		break;
+	default:
+		printf("%d not supported.", option);
+		return EINVAL;
+	}
+	return fd;
 }

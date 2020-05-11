@@ -472,8 +472,6 @@ static int netapp_nvme_filter(const struct dirent *d)
 		snprintf(path, sizeof(path), "%s%s", dev_path, d->d_name);
 		if (stat(path, &bd))
 			return 0;
-		if (!S_ISBLK(bd.st_mode))
-			return 0;
 		if (sscanf(d->d_name, "nvme%dn%d", &ctrl, &ns) != 2)
 			return 0;
 		if (sscanf(d->d_name, "nvme%dn%dp%d", &ctrl, &ns, &partition) == 3)

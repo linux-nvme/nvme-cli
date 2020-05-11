@@ -25,6 +25,9 @@ SYNOPSIS
 		[--nr-write-queues=<#>    | -W <#>]
 		[--nr-poll-queues=<#>     | -P <#>]
 		[--queue-size=<#>         | -Q <#>]
+		[--matching               | -m]
+		[--persistent             | -p]
+		[--quiet                  | -q]
 
 DESCRIPTION
 -----------
@@ -138,6 +141,21 @@ OPTIONS
 	Overrides the default number of elements in the I/O queues created
 	by the driver. This option will be ignored for discovery, but will be
 	passed on to the subsequent connect call.
+
+-m::
+--matching::
+	If a traddr was specified on the command line or in the configuration
+	file, only create controllers for discovery records that match the
+	given traddr, rather than for all entries in the discovery log page.
+
+-p::
+--persistent::
+	Don't remove the discovery controller after retrieving the discovery
+	log page.
+
+-q::
+--quiet::
+	Suppress error messages.
 
 
 EXAMPLES

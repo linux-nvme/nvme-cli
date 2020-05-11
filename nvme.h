@@ -55,6 +55,8 @@ struct nvme_ctrl {
 	char *traddr;
 	char *trsvcid;
 	char *host_traddr;
+	char *hostnqn;
+	char *hostid;
 
 	struct nvme_id_ctrl id;
 

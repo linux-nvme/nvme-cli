@@ -2537,7 +2537,7 @@ static void json_nvme_id_ns_descs(void *data)
 			memcpy(desc.eui64, data + off, sizeof(desc.eui64));
 			for (i = 0; i < sizeof(desc.eui64); i++)
 				json_str_p += sprintf(json_str_p, "%02x", desc.eui64[i]);
-			len += sizeof(desc.eui64);
+			len = sizeof(desc.eui64);
 			nidt_name = "eui64";
 			break;
 
@@ -2545,7 +2545,7 @@ static void json_nvme_id_ns_descs(void *data)
 			memcpy(desc.nguid, data + off, sizeof(desc.nguid));
 			for (i = 0; i < sizeof(desc.nguid); i++)
 				json_str_p += sprintf(json_str_p, "%02x", desc.nguid[i]);
-			len += sizeof(desc.nguid);
+			len = sizeof(desc.nguid);
 			nidt_name = "nguid";
 			break;
 
@@ -2553,7 +2553,7 @@ static void json_nvme_id_ns_descs(void *data)
 		case NVME_NIDT_UUID:
 			memcpy(desc.uuid, data + off, sizeof(desc.uuid));
 			uuid_unparse_lower(desc.uuid, json_str);
-			len += sizeof(desc.uuid);
+			len = sizeof(desc.uuid);
 			nidt_name = "uuid";
 			break;
 #endif
@@ -2622,7 +2622,7 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 			for (i = 0; i < 8; i++)
 				printf("%02x", eui64[i]);
 			printf("\n");
-			len += sizeof(eui64);
+			len = sizeof(eui64);
 			break;
 		case NVME_NIDT_NGUID:
 			memcpy(nguid, data + pos + sizeof(*cur), sizeof(nguid));
@@ -2630,14 +2630,14 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 			for (i = 0; i < 16; i++)
 				printf("%02x", nguid[i]);
 			printf("\n");
-			len += sizeof(nguid);
+			len = sizeof(nguid);
 			break;
 #ifdef LIBUUID
 		case NVME_NIDT_UUID:
 			memcpy(uuid, data + pos + sizeof(*cur), 16);
 			uuid_unparse_lower(uuid, uuid_str);
 			printf("uuid    : %s\n", uuid_str);
-			len += sizeof(uuid);
+			len = sizeof(uuid);
 			break;
 #endif
 		default:
@@ -3670,8 +3670,10 @@ void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 
 	if (flags & BINARY)
 		d_raw((unsigned char *)sanitize, sizeof(*sanitize));
-	else if (flags & JSON)
+	else if (flags & JSON) {
 		json_sanitize_log(sanitize, devname);
+		return;
+	}
 
 	printf("Sanitize Progress                      (SPROG) :  %u",
 	       le16_to_cpu(sanitize->progress));
@@ -3805,6 +3807,34 @@ const char *nvme_status_to_string(__u32 status)
 		return "INVALID_NS: The namespace or the format of that namespace is invalid";
 	case NVME_SC_CMD_SEQ_ERROR:
 		return "CMD_SEQ_ERROR: The command was aborted due to a protocol violation in a multicommand sequence";
+	case NVME_SC_SGL_INVALID_LAST:
+		return "SGL_INVALID_LAST: The command includes an invalid SGL Last Segment or SGL Segment descriptor.";
+	case NVME_SC_SGL_INVALID_COUNT:
+		return "SGL_INVALID_COUNT: There is an SGL Last Segment descriptor or an SGL Segment descriptor in a location other than the last descriptor of a segment based on the length indicated.";
+	case NVME_SC_SGL_INVALID_DATA:
+		return "SGL_INVALID_DATA: This may occur if the length of a Data SGL is too short.";
+	case NVME_SC_SGL_INVALID_METADATA:
+		return "SGL_INVALID_METADATA: This may occur if the length of a Metadata SGL is too short";
+	case NVME_SC_SGL_INVALID_TYPE:
+		return "SGL_INVALID_TYPE: The type of an SGL Descriptor is a type that is not supported by the controller.";
+	case NVME_SC_CMB_INVALID_USE:
+		return "CMB_INVALID_USE: The attempted use of the Controller Memory Buffer is not supported by the controller.";
+	case NVME_SC_PRP_INVALID_OFFSET:
+		return "PRP_INVALID_OFFSET: The Offset field for a PRP entry is invalid.";
+	case NVME_SC_ATOMIC_WRITE_UNIT_EXCEEDED:
+		return "ATOMIC_WRITE_UNIT_EXCEEDED: The length specified exceeds the atomic write unit size.";
+	case NVME_SC_OPERATION_DENIED:
+		return "OPERATION_DENIED: The command was denied due to lack of access rights.";
+	case NVME_SC_SGL_INVALID_OFFSET:
+		return "SGL_INVALID_OFFSET: The offset specified in a descriptor is invalid.";
+	case NVME_SC_INCONSISTENT_HOST_ID:
+		return "INCONSISTENT_HOST_ID: The NVM subsystem detected the simultaneous use of 64-bit and 128-bit Host Identifier values on different controllers.";
+	case NVME_SC_KEEP_ALIVE_EXPIRED:
+		return "KEEP_ALIVE_EXPIRED: The Keep Alive Timer expired.";
+	case NVME_SC_KEEP_ALIVE_INVALID:
+		return "KEEP_ALIVE_INVALID: The Keep Alive Timeout value specified is invalid.";
+	case NVME_SC_PREEMPT_ABORT:
+		return "PREEMPT_ABORT: The command was aborted due to a Reservation Acquire command with the Reservation Acquire Action (RACQA) set to 010b (Preempt and Abort).";
 	case NVME_SC_SANITIZE_FAILED:
 		return "SANITIZE_FAILED: The most recent sanitize operation failed and no recovery actions has been successfully completed";
 	case NVME_SC_SANITIZE_IN_PROGRESS:
@@ -3813,12 +3843,16 @@ const char *nvme_status_to_string(__u32 status)
 		return "LBA_RANGE: The command references a LBA that exceeds the size of the namespace";
 	case NVME_SC_NS_WRITE_PROTECTED:
 		return "NS_WRITE_PROTECTED: The command is prohibited while the namespace is write protected by the host.";
+	case NVME_SC_TRANSIENT_TRANSPORT:
+		return "TRANSIENT_TRANSPORT: A transient transport error was detected.";
 	case NVME_SC_CAP_EXCEEDED:
 		return "CAP_EXCEEDED: The execution of the command has caused the capacity of the namespace to be exceeded";
 	case NVME_SC_NS_NOT_READY:
 		return "NS_NOT_READY: The namespace is not ready to be accessed as a result of a condition other than a condition that is reported as an Asymmetric Namespace Access condition";
 	case NVME_SC_RESERVATION_CONFLICT:
 		return "RESERVATION_CONFLICT: The command was aborted due to a conflict with a reservation held on the accessed namespace";
+	case NVME_SC_FORMAT_IN_PROGRESS:
+		return "FORMAT_IN_PROGRESS: A Format NVM command is in progress on the namespace.";
 	case NVME_SC_CQ_INVALID:
 		return "CQ_INVALID: The Completion Queue identifier specified in the command does not exist";
 	case NVME_SC_QID_INVALID:
@@ -3875,8 +3909,22 @@ const char *nvme_status_to_string(__u32 status)
 		return "THIN_PROVISIONING_NOT_SUPPORTED: Thin provisioning is not supported by the controller";
 	case NVME_SC_CTRL_LIST_INVALID:
 		return "CONTROLLER_LIST_INVALID: The controller list provided is invalid";
+	case NVME_SC_DEVICE_SELF_TEST_IN_PROGRESS:
+		return "DEVICE_SELF_TEST_IN_PROGRESS: The controller or NVM subsystem already has a device self-test operation in process.";
 	case NVME_SC_BP_WRITE_PROHIBITED:
 		return "BOOT PARTITION WRITE PROHIBITED: The command is trying to modify a Boot Partition while it is locked";
+	case NVME_SC_INVALID_CTRL_ID:
+		return "INVALID_CTRL_ID: An invalid Controller Identifier was specified.";
+	case NVME_SC_INVALID_SECONDARY_CTRL_STATE:
+		return "INVALID_SECONDARY_CTRL_STATE: The action requested for the secondary controller is invalid based on the current state of the secondary controller and its primary controller.";
+	case NVME_SC_INVALID_NUM_CTRL_RESOURCE:
+		return "INVALID_NUM_CTRL_RESOURCE: The specified number of Flexible Resources is invalid";
+	case NVME_SC_INVALID_RESOURCE_ID:
+		return "INVALID_RESOURCE_ID: At least one of the specified resource identifiers was invalid";
+	case NVME_SC_ANA_INVALID_GROUP_ID:
+		return "ANA_INVALID_GROUP_ID: The specified ANA Group Identifier (ANAGRPID) is not supported in the submitted command.";
+	case NVME_SC_ANA_ATTACH_FAIL:
+		return "ANA_ATTACH_FAIL: The controller is not attached to the namespace as a result of an ANA condition";
 	case NVME_SC_BAD_ATTRIBUTES:
 		return "BAD_ATTRIBUTES: Bad attributes were given";
 	case NVME_SC_WRITE_FAULT:
@@ -4495,6 +4543,10 @@ static void json_detail_list(struct nvme_topology *t)
 			json_object_add_value_string(ctrl_attrs, "Transport", c->transport);
 			json_object_add_value_string(ctrl_attrs, "Address", c->address);
 			json_object_add_value_string(ctrl_attrs, "State", c->state);
+			if (c->hostnqn)
+				json_object_add_value_string(ctrl_attrs, "HostNQN", c->hostnqn);
+			if (c->hostid)
+				json_object_add_value_string(ctrl_attrs, "HostID", c->hostid);
 
 			format(formatter, sizeof(formatter), c->id.fr, sizeof(c->id.fr));
 			json_object_add_value_string(ctrl_attrs, "Firmware", formatter);
@@ -4577,7 +4629,7 @@ static void json_simple_ns(struct nvme_namespace *n, struct json_array *devices)
 
 	json_object_add_value_string(device_attrs, "ModelNumber", formatter);
 
-	if (index >= 0) {
+	if (index >= 0 && !strcmp(n->ctrl->transport, "pcie")) {
 		char *product = nvme_product_name(index);
 
 		json_object_add_value_string(device_attrs, "ProductName", product);
@@ -4630,6 +4682,8 @@ static void json_simple_list(struct nvme_topology *t)
 	}
 	json_object_add_value_array(root, "Devices", devices);
 	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
 }
 
 static void json_print_list_items(struct nvme_topology *t,
