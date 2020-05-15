@@ -2874,7 +2874,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		nvme_show_status(err);
 	else {
 		printf("Success formatting namespace:%x\n", cfg.namespace_id);
-		if (ioctl(fd, BLKRRPART) < 0) {
+		if (cfg.lbaf != prev_lbaf && ioctl(fd, BLKRRPART) < 0) {
 			fprintf(stderr, "failed to re-read partition table\n");
 			err = -errno;
 			goto close_fd;
