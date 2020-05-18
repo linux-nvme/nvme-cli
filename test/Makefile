@@ -9,7 +9,7 @@ else
 CONFIG_CPLUSPLUS=y
 endif
 
-c_targets += test
+c_targets += test register
 
 ifdef CONFIG_CPLUSPLUS
 cpp_targets += cpp

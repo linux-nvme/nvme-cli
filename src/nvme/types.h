@@ -136,7 +136,7 @@ enum nvme_constants {
 };
 
 /**
- * enum nvme_register_offsets - The nvme controller registers for all transports. This
+ * enum nvme_register_offsets - controller registers for all transports. This
  * 				is the layout of BAR0/1 for PCIe, and
  * 				properties for fabrics.
  * @NVME_REG_CAP:	Controller Capabilities
@@ -162,87 +162,31 @@ enum nvme_constants {
  * @NVME_REG_PMREBS:	Persistent Memory Region Elasticity Buffer Size
  * @NVME_REG_PMRSWTP:	Memory Region Sustained Write Throughput
  * @NVME_REG_PMRMSC:	Persistent Memory Region Controller Memory Space Control
- * @NVME_REG_DBS:	SQ 0 Tail Doorbell
  */
 enum nvme_register_offsets {
-	NVME_REG_CAP	= 0x0000,
-	NVME_REG_VS	= 0x0008,
-	NVME_REG_INTMS	= 0x000c,
-	NVME_REG_INTMC	= 0x0010,
-	NVME_REG_CC	= 0x0014,
-	NVME_REG_CSTS	= 0x001c,
-	NVME_REG_NSSR	= 0x0020,
-	NVME_REG_AQA	= 0x0024,
-	NVME_REG_ASQ	= 0x0028,
-	NVME_REG_ACQ	= 0x0030,
-	NVME_REG_CMBLOC = 0x0038,
-	NVME_REG_CMBSZ	= 0x003c,
-	NVME_REG_BPINFO	= 0x0040,
-	NVME_REG_BPRSEL	= 0x0044,
-	NVME_REG_BPMBL	= 0x0048,
-	NVME_REG_CMBMSC	= 0x0050,
-	NVME_REG_CMBSTS	= 0x0058,
-	NVME_REG_PMRCAP = 0x0e00,
-	NVME_REG_PMRCTL = 0x0e04,
-	NVME_REG_PMRSTS = 0x0e08,
-	NVME_REG_PMREBS = 0x0e0c,
-	NVME_REG_PMRSWTP= 0x0e10,
-	NVME_REG_PMRMSC = 0x0e14,
-	NVME_REG_DBS	= 0x1000,
-};
-
-#define NVME_CAP_MQES(cap)	((cap) & 0xffff)
-#define NVME_CAP_CQR(cap)	(((cap) >> 16) & 0x1)
-#define NVME_CAP_AMS(cap)	(((cap) >> 17) & 0x3)
-#define NVME_CAP_TIMEOUT(cap)	(((cap) >> 24) & 0xff)
-#define NVME_CAP_STRIDE(cap)	(((cap) >> 32) & 0xf)
-#define NVME_CAP_NSSRC(cap)	(((cap) >> 36) & 0x1)
-#define NVME_CAP_CSS(cap)	(((cap) >> 37) & 0xff)
-#define NVME_CAP_BPS(cap)	(((cap) >> 45) & 0x1)
-#define NVME_CAP_MPSMIN(cap)	(((cap) >> 48) & 0xf)
-#define NVME_CAP_MPSMAX(cap)	(((cap) >> 52) & 0xf)
-#define NVME_CAP_CMBS(cap)	(((cap) >> 57) & 1)
-#define NVME_CAP_PMRS(cap)	(((cap) >> 56) & 1)
-
-#define NVME_CMB_BIR(cmbloc)	((cmbloc) & 0x7)
-#define NVME_CMB_OFST(cmbloc)	(((cmbloc) >> 12) & 0xfffff)
-#define NVME_CMB_SZ(cmbsz)	(((cmbsz) >> 12) & 0xfffff)
-#define NVME_CMB_SZU(cmbsz)	(((cmbsz) >> 8) & 0xf)
-
-#define NVME_CMB_WDS(cmbsz)	((cmbsz) & 0x10)
-#define NVME_CMB_RDS(cmbsz)	((cmbsz) & 0x8)
-#define NVME_CMB_LISTS(cmbsz)	((cmbsz) & 0x4)
-#define NVME_CMB_CQS(cmbsz)	((cmbsz) & 0x2)
-#define NVME_CMB_SQS(cmbsz)	((cmbsz) & 0x1)
-
-enum nvme_cc {
-	NVME_CC_ENABLE		= 1 << 0,
-	NVME_CC_CSS_NVM		= 0 << 4,
-	NVME_CC_EN_SHIFT	= 0,
-	NVME_CC_CSS_SHIFT	= 4,
-	NVME_CC_MPS_SHIFT	= 7,
-	NVME_CC_AMS_SHIFT	= 11,
-	NVME_CC_SHN_SHIFT	= 14,
-	NVME_CC_IOSQES_SHIFT	= 16,
-	NVME_CC_IOCQES_SHIFT	= 20,
-	NVME_CC_AMS_RR		= 0 << NVME_CC_AMS_SHIFT,
-	NVME_CC_AMS_WRRU	= 1 << NVME_CC_AMS_SHIFT,
-	NVME_CC_AMS_VS		= 7 << NVME_CC_AMS_SHIFT,
-	NVME_CC_SHN_NONE	= 0 << NVME_CC_SHN_SHIFT,
-	NVME_CC_SHN_NORMAL	= 1 << NVME_CC_SHN_SHIFT,
-	NVME_CC_SHN_ABRUPT	= 2 << NVME_CC_SHN_SHIFT,
-	NVME_CC_SHN_MASK	= 3 << NVME_CC_SHN_SHIFT,
-};
-
-enum nvme_csts {
-	NVME_CSTS_RDY		= 1 << 0,
-	NVME_CSTS_CFS		= 1 << 1,
-	NVME_CSTS_NSSRO		= 1 << 4,
-	NVME_CSTS_PP		= 1 << 5,
-	NVME_CSTS_SHST_NORMAL	= 0 << 2,
-	NVME_CSTS_SHST_OCCUR	= 1 << 2,
-	NVME_CSTS_SHST_CMPLT	= 2 << 2,
-	NVME_CSTS_SHST_MASK	= 3 << 2,
+	NVME_REG_CAP			= 0x0000,
+	NVME_REG_VS			= 0x0008,
+	NVME_REG_INTMS			= 0x000c,
+	NVME_REG_INTMC			= 0x0010,
+	NVME_REG_CC			= 0x0014,
+	NVME_REG_CSTS			= 0x001c,
+	NVME_REG_NSSR			= 0x0020,
+	NVME_REG_AQA			= 0x0024,
+	NVME_REG_ASQ			= 0x0028,
+	NVME_REG_ACQ			= 0x0030,
+	NVME_REG_CMBLOC 		= 0x0038,
+	NVME_REG_CMBSZ			= 0x003c,
+	NVME_REG_BPINFO			= 0x0040,
+	NVME_REG_BPRSEL			= 0x0044,
+	NVME_REG_BPMBL			= 0x0048,
+	NVME_REG_CMBMSC			= 0x0050,
+	NVME_REG_CMBSTS			= 0x0058,
+	NVME_REG_PMRCAP 		= 0x0e00,
+	NVME_REG_PMRCTL 		= 0x0e04,
+	NVME_REG_PMRSTS 		= 0x0e08,
+	NVME_REG_PMREBS 		= 0x0e0c,
+	NVME_REG_PMRSWTP		= 0x0e10,
+	NVME_REG_PMRMSC 		= 0x0e14,
 };
 
 /**
@@ -253,7 +197,7 @@ enum nvme_csts {
  * This function does not care about transport so that the offset is not going
  * to be checked inside of this function for the unsupported fields in a
  * specific transport. For example, BPMBL(Boot Partition Memory Buffer
- * Location) register is not supported by fabrics, but it can be chcked here.
+ * Location) register is not supported by fabrics, but it can be checked here.
  *
  * Returns true if given offset is 64bit register, otherwise it returns false.
  */
@@ -264,11 +208,398 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
 	case NVME_REG_ASQ:
 	case NVME_REG_ACQ:
 	case NVME_REG_BPMBL:
+	case NVME_REG_CMBMSC:
+	case NVME_REG_PMRMSC:
 		return true;
 	default:
 		return false;
 	}
 }
+
+static inline __u32 nvme_mmio_read32(void *addr)
+{
+        __le32 *p = addr;
+
+        return le32_to_cpu(*p);
+}
+
+static inline __u64 nvme_mmio_read64(void *addr)
+{
+        __le32 *p = addr;
+
+	/*
+	 * Some devices fail 64-bit MMIO. Access 64-bit registers as 2 32-bit.
+	 */
+        return le32_to_cpu(*p) | ((uint64_t)le32_to_cpu(*(p + 1)) << 32);
+}
+
+#define NVME_REG_VALUE(name, value) \
+	(((value) >> NVME_##name##_SHIFT) & NVME_##name##_MASK)
+
+enum nvme_cap {
+	NVME_CAP_MQES_SHIFT		= 0,
+	NVME_CAP_CQR_SHIFT		= 16,
+	NVME_CAP_AMS_SHIFT		= 17,
+	NVME_CAP_TO_SHIFT		= 24,
+	NVME_CAP_DSTRD_SHIFT		= 32,
+	NVME_CAP_NSSRC_SHIFT		= 36,
+	NVME_CAP_CSS_SHIFT		= 37,
+	NVME_CAP_BPS_SHIFT		= 45,
+	NVME_CAP_MPSMIN_SHIFT		= 48,
+	NVME_CAP_MPSMAX_SHIFT		= 52,
+	NVME_CAP_PMRS_SHIFT		= 56,
+	NVME_CAP_CMBS_SHIFT		= 57,
+	NVME_CAP_MQES_MASK		= 0xffff,
+	NVME_CAP_CQR_MASK		= 0x1,
+	NVME_CAP_AMS_MASK		= 0x3,
+	NVME_CAP_TO_MASK		= 0xff,
+	NVME_CAP_DSTRD_MASK		= 0xf,
+	NVME_CAP_NSSRC_MASK		= 0x1,
+	NVME_CAP_CSS_MASK		= 0xff,
+	NVME_CAP_BPS_MASK		= 0x1,
+	NVME_CAP_MPSMIN_MASK		= 0xf,
+	NVME_CAP_MPSMAX_MASK		= 0xf,
+	NVME_CAP_PMRS_MASK		= 0x1,
+	NVME_CAP_CMBS_MASK		= 0x1,
+	NVME_CAP_AMS_WRR		= 1 << 0,
+	NVME_CAP_AMS_VS			= 1 << 1,
+	NVME_CAP_CSS_NVM		= 1 << 0,
+	NVME_CAP_CSS_ADMIN		= 1 << 7,
+};
+
+#define NVME_CAP_MQES(cap)	NVME_REG_VALUE(CAP_MQES, cap)
+#define NVME_CAP_CQR(cap)	NVME_REG_VALUE(CAP_CQR, cap)
+#define NVME_CAP_AMS(cap)	NVME_REG_VALUE(CAP_AMS, cap)
+#define NVME_CAP_TO(cap)	NVME_REG_VALUE(CAP_TO, cap)
+#define NVME_CAP_DSTRD(cap)	NVME_REG_VALUE(CAP_DSTRD, cap)
+#define NVME_CAP_NSSRC(cap)	NVME_REG_VALUE(CAP_NSSRC, cap)
+#define NVME_CAP_CSS(cap)	NVME_REG_VALUE(CAP_CSS, cap)
+#define NVME_CAP_BPS(cap)	NVME_REG_VALUE(CAP_BPS, cap)
+#define NVME_CAP_MPSMIN(cap)	NVME_REG_VALUE(CAP_MPSMIN, cap)
+#define NVME_CAP_MPSMAX(cap)	NVME_REG_VALUE(CAP_MPSMAX, cap)
+#define NVME_CAP_CMBS(cap)	NVME_REG_VALUE(CAP_CMBS, cap)
+#define NVME_CAP_PMRS(cap)	NVME_REG_VALUE(CAP_PMRS, cap)
+
+enum nvme_vs {
+	NVME_VS_TER_SHIFT		= 0,
+	NVME_VS_MNR_SHIFT		= 8,
+	NVME_VS_MJR_SHIFT		= 16,
+	NVME_VS_TER_MASK		= 0xff,
+	NVME_VS_MNR_MASK		= 0xff,
+	NVME_VS_MJR_MASK		= 0xffff,
+};
+
+#define NVME_VS_TER(vs)		NVME_REG_VALUE(VS_TER, vs)
+#define NVME_VS_MNR(vs)		NVME_REG_VALUE(VS_MNR, vs)
+#define NVME_VS_MJR(vs)		NVME_REG_VALUE(VS_MJR, vs)
+
+#define NVME_MAJOR(ver)		NVME_VS_MJR(ver)
+#define NVME_MINOR(ver)		NVME_VS_MNR(ver)
+#define NVME_TERTIARY(ver)	NVME_VS_TER(ver)
+
+enum nvme_cc {
+	NVME_CC_EN_SHIFT	= 0,
+	NVME_CC_CSS_SHIFT	= 4,
+	NVME_CC_MPS_SHIFT	= 7,
+	NVME_CC_AMS_SHIFT	= 11,
+	NVME_CC_SHN_SHIFT	= 14,
+	NVME_CC_IOSQES_SHIFT	= 16,
+	NVME_CC_IOCQES_SHIFT	= 20,
+	NVME_CC_EN_MASK		= 0x1,
+	NVME_CC_CSS_MASK	= 0x7,
+	NVME_CC_MPS_MASK	= 0xf,
+	NVME_CC_AMS_MASK	= 0x7,
+	NVME_CC_SHN_MASK	= 0x3,
+	NVME_CC_IOSQES_MASK	= 0xf,
+	NVME_CC_IOCQES_MASK	= 0xf,
+	NVME_CC_CSS_NVM		= 0,
+	NVME_CC_CSS_ADMIN	= 7,
+	NVME_CC_AMS_RR		= 0,
+	NVME_CC_AMS_WRRU	= 1,
+	NVME_CC_AMS_VS		= 7,
+	NVME_CC_SHN_NONE	= 0,
+	NVME_CC_SHN_NORMAL	= 1,
+	NVME_CC_SHN_ABRUPT	= 2,
+};
+
+#define NVME_CC_EN(cc)		NVME_REG_VALUE(CC_EN, cc)
+#define NVME_CC_CSS(cc)		NVME_REG_VALUE(CC_CSS, cc)
+#define NVME_CC_MPS(cc)		NVME_REG_VALUE(CC_MPS, cc)
+#define NVME_CC_AMS(cc)		NVME_REG_VALUE(CC_AMS, cc)
+#define NVME_CC_SHN(cc)		NVME_REG_VALUE(CC_SHN, cc)
+#define NVME_CC_IOSQES(cc)	NVME_REG_VALUE(CC_IOSQES, cc)
+#define NVME_CC_IOCQES(cc)	NVME_REG_VALUE(CC_IOCQES, cc)
+
+enum nvme_csts {
+	NVME_CSTS_RDY_SHIFT	= 0,
+	NVME_CSTS_CFS_SHIFT	= 1,
+	NVME_CSTS_SHST_SHIFT	= 2,
+	NVME_CSTS_NSSRO_SHIFT	= 4,
+	NVME_CSTS_PP_SHIFT	= 5,
+	NVME_CSTS_RDY_MASK	= 0x1,
+	NVME_CSTS_CFS_MASK	= 0x1,
+	NVME_CSTS_SHN_MASK	= 0x3,
+	NVME_CSTS_NSSRO_MASK	= 0x1,
+	NVME_CSTS_PP_MASK	= 0x1,
+	NVME_CSTS_SHST_NORMAL	= 0,
+	NVME_CSTS_SHST_OCCUR	= 1,
+	NVME_CSTS_SHST_CMPLT	= 2,
+	NVME_CSTS_SHST_MASK	= 3,
+};
+
+#define NVME_CSTS_RDY(csts)	NVME_REG_VALUE(CSTS_RDY, csts)
+#define NVME_CSTS_CFS(csts)	NVME_REG_VALUE(CSTS_CFS, csts)
+#define NVME_CSTS_SHST(csts)	NVME_REG_VALUE(CSTS_SHST, csts)
+#define NVME_CSTS_NSSRO(csts)	NVME_REG_VALUE(CSTS_NSSRO, csts)
+#define NVME_CSTS_PP(csts)	NVME_REG_VALUE(CSTS_PP, csts)
+
+enum nvme_aqa {
+	NVME_AQA_ASQS_SHIFT	= 0,
+	NVME_AQA_ACQS_SHIFT	= 16,
+	NVME_AQA_ASQS_MASK	= 0xfff,
+	NVME_AQA_ACQS_MASK	= 0xfff,
+};
+
+#define NVME_AQA_ASQS(aqa)	NVME_REG_VALUE(AQA_ASQS, aqa)
+#define NVME_AQA_ACQS(aqa)	NVME_REG_VALUE(AQA_ACQS, aqa)
+
+enum nvme_cmbloc {
+	NVME_CMBLOC_BIR_SHIFT		= 0,
+	NVME_CMBLOC_CQMMS_SHIFT		= 3,
+	NVME_CMBLOC_CQPDS_SHIFT		= 4,
+	NVME_CMBLOC_CDPLMS_SHIFT	= 5,
+	NVME_CMBLOC_CDPCILS_SHIFT	= 6,
+	NVME_CMBLOC_CDMMMS_SHIFT	= 7,
+	NVME_CMBLOC_CQDA_SHIFT		= 8,
+	NVME_CMBLOC_OFST_SHIFT		= 12,
+	NVME_CMBLOC_BIR_MASK		= 0x7,
+	NVME_CMBLOC_CQMMS_MASK		= 0x1,
+	NVME_CMBLOC_CQPDS_MASK		= 0x1,
+	NVME_CMBLOC_CDPLMS_MASK		= 0x1,
+	NVME_CMBLOC_CDPCILS_MASK	= 0x1,
+	NVME_CMBLOC_CDMMMS_MASK		= 0x1,
+	NVME_CMBLOC_CQDA_MASK		= 0x1,
+	NVME_CMBLOC_OFST_MASK		= 0xfffff,
+};
+
+#define NVME_CMBLOC_BIR(cmbloc)		NVME_REG_VALUE(CMBLOC_BIR, cmbloc)
+#define NVME_CMBLOC_CQMMS(cmbloc)	NVME_REG_VALUE(CMBLOC_CQMMS, cmbloc)
+#define NVME_CMBLOC_CQPDS(cmbloc)	NVME_REG_VALUE(CMBLOC_CQPDS, cmbloc)
+#define NVME_CMBLOC_CDPLMS(cmbloc)	NVME_REG_VALUE(CMBLOC_CDPLMS, cmbloc)
+#define NVME_CMBLOC_CDPCILS(cmbloc)	NVME_REG_VALUE(CMBLOC_CDPCILS, cmbloc)
+#define NVME_CMBLOC_CDMMMS(cmbloc)	NVME_REG_VALUE(CMBLOC_CDMMMS, cmbloc)
+#define NVME_CMBLOC_CQDA(cmbloc)	NVME_REG_VALUE(CMBLOC_CQDA, cmbloc)
+#define NVME_CMBLOC_OFST(cmbloc)	NVME_REG_VALUE(CMBLOC_OFST, cmbloc)
+
+enum nvme_cmbsz {
+	NVME_CMBSZ_SQS_SHIFT	= 0,
+	NVME_CMBSZ_CQS_SHIFT	= 1,
+	NVME_CMBSZ_LISTS_SHIFT	= 2,
+	NVME_CMBSZ_RDS_SHIFT	= 3,
+	NVME_CMBSZ_WDS_SHIFT	= 4,
+	NVME_CMBSZ_SZU_SHIFT	= 8,
+	NVME_CMBSZ_SZ_SHIFT	= 12,
+	NVME_CMBSZ_SQS_MASK	= 0x1,
+	NVME_CMBSZ_CQS_MASK	= 0x1,
+	NVME_CMBSZ_LISTS_MASK	= 0x1,
+	NVME_CMBSZ_RDS_MASK	= 0x1,
+	NVME_CMBSZ_WDS_MASK	= 0x1,
+	NVME_CMBSZ_SZU_MASK	= 0xf,
+	NVME_CMBSZ_SZ_MASK	= 0xfffff,
+	NVME_CMBSZ_SZU_4K	= 0,
+	NVME_CMBSZ_SZU_64K	= 1,
+	NVME_CMBSZ_SZU_1M	= 2,
+	NVME_CMBSZ_SZU_16M	= 3,
+	NVME_CMBSZ_SZU_256M	= 4,
+	NVME_CMBSZ_SZU_4G	= 5,
+	NVME_CMBSZ_SZU_64G	= 6,
+};
+
+#define NVME_CMBSZ_SQS(cmbsz)		NVME_REG_VALUE(CMBSZ_SQS, cmbsz)
+#define NVME_CMBSZ_CQS(cmbsz)		NVME_REG_VALUE(CMBSZ_CQS, cmbsz)
+#define NVME_CMBSZ_LISTS(cmbsz)		NVME_REG_VALUE(CMBSZ_LISTS, cmbsz)
+#define NVME_CMBSZ_RDS(cmbsz)		NVME_REG_VALUE(CMBSZ_RDS, cmbsz)
+#define NVME_CMBSZ_WDS(cmbsz)		NVME_REG_VALUE(CMBSZ_WDS, cmbsz)
+#define NVME_CMBSZ_SZU(cmbsz)		NVME_REG_VALUE(CMBSZ_SZU, cmbsz)
+#define NVME_CMBSZ_SZ(cmbsz)		NVME_REG_VALUE(CMBSZ_SZ, cmbsz)
+
+/**
+ * nvme_cmb_size() - Calculate size of the controller memory buffer
+ * @cmbsz:	Value from controller register %NVME_REG_CMBSZ
+ *
+ * Returns size of controller memory buffer in bytes
+ */
+static inline __u64 nvme_cmb_size(__u32 cmbsz)
+{
+	return ((__u64)NVME_CMBSZ_SZ(cmbsz)) *
+		(1ULL << (12 + 4 * NVME_CMBSZ_SZU(cmbsz)));
+}
+
+enum nvme_bpinfo {
+	NVME_BPINFO_BPSZ_SHIFT			= 0,
+	NVME_BPINFO_BRS_SHIFT			= 24,
+	NVME_BPINFO_ABPID_SHIFT			= 31,
+	NVME_BPINFO_BPSZ_MASK			= 0x7fff,
+	NVME_BPINFO_BRS_MASK			= 0x3,
+	NVME_BPINFO_ABPID_MASK			= 0x1,
+	NVME_BPINFO_BRS_NONE			= 0,
+	NVME_BPINFO_BRS_READ_IN_PROGRESS	= 1,
+	NVME_BPINFO_BRS_READ_SUCCESS		= 2,
+	NVME_BPINFO_BRS_READ_ERROR		= 3,
+};
+
+#define NVME_BPINFO_BPSZ(bpinfo)	NVME_REG_VALUE(BPINFO_BPSZ, bpinfo)
+#define NVME_BPINFO_BRS(bpinfo)		NVME_REG_VALUE(BPINFO_BRS, bpinfo)
+#define NVME_BPINFO_ABPID(bpinfo)	NVME_REG_VALUE(BPINFO_ABPID, bpinfo)
+
+enum nvme_bprsel {
+	NVME_BPRSEL_BPRSZ_SHIFT		= 0,
+	NVME_BPRSEL_BPROF_SHIFT		= 10,
+	NVME_BPRSEL_BPID_SHIFT		= 31,
+	NVME_BPRSEL_BPRSZ_MASK		= 0x3ff,
+	NVME_BPRSEL_BPROF_MASK		= 0xfff,
+	NVME_BPRSEL_BPID_MASK		= 0x1,
+};
+
+#define NVME_BPRSEL_BPRSZ(bprsel)	NVME_REG_VALUE(BPRSEL_BPRSZ, bprsel)
+#define NVME_BPRSEL_BPROF(bprsel)	NVME_REG_VALUE(BPRSEL_BPROF, bprsel)
+#define NVME_BPRSEL_BPID(bprsel)	NVME_REG_VALUE(BPRSEL_BPID, bprsel)
+
+enum nvme_cmbmsc {
+	NVME_CMBMSC_CRE_SHIFT		= 0,
+	NVME_CMBMSC_CMSE_SHIFT		= 1,
+	NVME_CMBMSC_CBA_SHIFT		= 12,
+	NVME_CMBMSC_CRE_MASK		= 0x1,
+	NVME_CMBMSC_CMSE_MASK		= 0x1,
+};
+static const __u64 NVME_CMBMSC_CBA_MASK = 0xfffffffffffffull;
+
+#define NVME_CMBMSC_CRE(cmbmsc)		NVME_REG_VALUE(CMBMSC_CRE, cmbmsc)
+#define NVME_CMBMSC_CMSE(cmbmsc)	NVME_REG_VALUE(CMBMSC_CMSE, cmbmsc)
+#define NVME_CMBMSC_CBA(cmbmsc)		NVME_REG_VALUE(CMBMSC_CBA, cmbmsc)
+
+enum nvme_cmbsts {
+	NVME_CMBSTS_CBAI_SHIFT	= 0,
+	NVME_CMBSTS_CBAI_MASK	= 0x1,
+};
+
+#define NVME_CMBSTS_CBAI(cmbsts)	NVME_REG_VALUE(CMBSTS_CBAI, cmbsts)
+
+enum nvme_pmrcap {
+	NVME_PMRCAP_RDS_SHIFT		= 3,
+	NVME_PMRCAP_WDS_SHIFT		= 4,
+	NVME_PMRCAP_BIR_SHIFT		= 5,
+	NVME_PMRCAP_PMRTU_SHIFT		= 8,
+	NVME_PMRCAP_PMRWMB_SHIFT	= 10,
+	NVME_PMRCAP_PMRTO_SHIFT		= 16,
+	NVME_PMRCAP_CMSS_SHIFT		= 24,
+	NVME_PMRCAP_RDS_MASK		= 0x1,
+	NVME_PMRCAP_WDS_MASK		= 0x1,
+	NVME_PMRCAP_BIR_MASK		= 0x7,
+	NVME_PMRCAP_PMRTU_MASK		= 0x3,
+	NVME_PMRCAP_PMRWMB_MASK		= 0xf,
+	NVME_PMRCAP_PMRTO_MASK		= 0xff,
+	NVME_PMRCAP_CMSS_MASK		= 0x1,
+	NVME_PMRCAP_PMRTU_500MS		= 0,
+	NVME_PMRCAP_PMRTU_60S		= 1,
+};
+
+#define NVME_PMRCAP_RDS(pmrcap)		NVME_REG_VALUE(PMRCAP_RDS, pmrcap)
+#define NVME_PMRCAP_WDS(pmrcap)		NVME_REG_VALUE(PMRCAP_WDS, pmrcap)
+#define NVME_PMRCAP_BIR(pmrcap)		NVME_REG_VALUE(PMRCAP_BIR, pmrcap)
+#define NVME_PMRCAP_PMRTU(pmrcap)	NVME_REG_VALUE(PMRCAP_PMRTU, pmrcap)
+#define NVME_PMRCAP_PMRWMB(pmrcap)	NVME_REG_VALUE(PMRCAP_PMRWMB, pmrcap)
+#define NVME_PMRCAP_PMRTO(pmrcap)	NVME_REG_VALUE(PMRCAP_PMRTO, pmrcap)
+#define NVME_PMRCAP_CMSS(pmrcap)	NVME_REG_VALUE(PMRCAP_CMSS, pmrcap)
+
+enum nvme_pmrctl {
+	NVME_PMRCTL_EN_SHIFT	= 0,
+	NVME_PMRCTL_EN_MASK	= 0x1,
+};
+
+#define NVME_PMRCTL_EN(pmrctl)		NVME_REG_VALUE(PMRCTL_EN, pmrctl)
+
+enum nvme_pmrsts {
+	NVME_PMRSTS_ERR_SHIFT		= 0,
+	NVME_PMRSTS_NRDY_SHIFT		= 8,
+	NVME_PMRSTS_HSTS_SHIFT		= 9,
+	NVME_PMRSTS_CBAI_SHIFT		= 12,
+	NVME_PMRSTS_ERR_MASK		= 0xff,
+	NVME_PMRSTS_NRDY_MASK		= 0x1,
+	NVME_PMRSTS_HSTS_MASK		= 0x7,
+	NVME_PMRSTS_CBAI_MASK		= 0x1,
+};
+
+#define NVME_PMRSTS_ERR(pmrsts)		NVME_REG_VALUE(PMRSTS_ERR, pmrsts)
+#define NVME_PMRSTS_NRDY(pmrsts)	NVME_REG_VALUE(PMRSTS_NRDY, pmrsts)
+#define NVME_PMRSTS_HSTS(pmrsts)	NVME_REG_VALUE(PMRSTS_HSTS, pmrsts)
+#define NVME_PMRSTS_CBAI(pmrsts)	NVME_REG_VALUE(PMRSTS_CBAI, pmrsts)
+
+enum nvme_pmrebs {
+	NVME_PMREBS_PMRSZU_SHIFT	= 0,
+	NVME_PMREBS_RBB_SHIFT		= 4,
+	NVME_PMREBS_PMRWBZ_SHIFT	= 8,
+	NVME_PMREBS_PMRSZU_MASK		= 0xf,
+	NVME_PMREBS_RBB_MASK		= 0x1,
+	NVME_PMREBS_PMRWBZ_MASK		= 0xffffff,
+	NVME_PMREBS_PMRSZU_B		= 0,
+	NVME_PMREBS_PMRSZU_1K		= 1,
+	NVME_PMREBS_PMRSZU_1M		= 2,
+	NVME_PMREBS_PMRSZU_1G		= 3,
+};
+
+#define NVME_PMREBS_PMRSZU(pmrebs)	NVME_REG_VALUE(PMREBS_PMRSZU, pmrebs)
+#define NVME_PMREBS_RBB(pmrebs)		NVME_REG_VALUE(PMREBS_RBB, pmrebs)
+#define NVME_PMREBS_PMRWBZ(pmrebs)	NVME_REG_VALUE(PMREBS_PMRWBZ, pmrebs)
+
+/**
+ * nvme_pmr_size() - Calculate size of persistent memory region elasticity
+ * 		     buffer
+ * @pmrebs:	Value from controller register %NVME_REG_PMREBS
+ *
+ * Returns size of controller persistent memory buffer in bytes
+ */
+static inline __u64 nvme_pmr_size(__u32 pmrebs)
+{
+	return ((__u64)NVME_PMREBS_PMRWBZ(pmrebs)) *
+		(1ULL << (10 * NVME_PMREBS_PMRSZU(pmrebs)));
+}
+
+enum nvme_pmrswtp {
+	NVME_PMRSWTP_PMRSWTU_SHIFT	= 0,
+	NVME_PMRSWTP_PMRSWTV_SHIFT	= 8,
+	NVME_PMRSWTP_PMRSWTU_MASK	= 0xf,
+	NVME_PMRSWTP_PMRSWTV_MASK	= 0xffffff,
+	NVME_PMRSWTP_PMRSWTU_BPS	= 0,
+	NVME_PMRSWTP_PMRSWTU_KBPS	= 1,
+	NVME_PMRSWTP_PMRSWTU_MBPS	= 2,
+	NVME_PMRSWTP_PMRSWTU_GBPS	= 3,
+};
+
+#define NVME_PMRSWTP_PMRSWTU(pmrswtp)	NVME_REG_VALUE(PMRSWTP_PMRSWTU, pmrswtp)
+#define NVME_PMRSWTP_PMRSWTV(pmrswtp)	NVME_REG_VALUE(PMRSWTP_PMRSWTU, pmrswtp)
+
+/**
+ * nvme_pmr_throughput() - Calculate throughput of persistent memory buffer
+ * @mprswtp:	Value from controller register %NVME_REG_PMRSWTP
+ *
+ * Returns throughput of controller persistent memory buffer in bytes/second
+ */
+static inline __u64 nvme_pmr_throughput(__u32 pmrswtp)
+{
+	return ((__u64)NVME_PMRSWTP_PMRSWTV(pmrswtp)) *
+		(1ULL << (10 * NVME_PMRSWTP_PMRSWTU(pmrswtp)));
+}
+
+enum nvme_pmrmsc {
+	NVME_PMRMSC_CMSE_SHIFT	= 1,
+	NVME_PMRMSC_CBA_SHIFT	= 12,
+	NVME_PMRMSC_CMSE_MASK	= 0x1,
+};
+static const __u64 NVME_PMRMSC_CBA_MASK = 0xfffffffffffffull;
+
+#define NVME_PMRMSC_CMSE(pmrmsc)	NVME_REG_VALUE(PMRMSC_CMSE, pmrmsc)
+#define NVME_PMRMSC_CBA(pmrmsc)		NVME_REG_VALUE(PMRMSC_CBA, pmrmsc)
 
 /**
  * enum nvme_psd_flags - Possible flag values in nvme power state descriptor
@@ -3804,9 +4135,5 @@ static inline __u16 nvme_status_code(__u16 status_field)
 {
 	return status_field & NVME_SC_MASK;
 }
-
-#define NVME_MAJOR(ver)		((ver) >> 16)
-#define NVME_MINOR(ver)		(((ver) >> 8) & 0xff)
-#define NVME_TERTIARY(ver)	((ver) & 0xff)
 
 #endif /* _LIBNVME_TYPES_H */

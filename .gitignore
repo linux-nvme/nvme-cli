@@ -9,6 +9,7 @@ a.out
 
 libnvme.pc
 
+test/register
 test/test
 test/cpp
 
@@ -19,6 +20,8 @@ examples/discover-loop
 
 ccan/config.h
 ccan/tools/configurator/configurator
+
+doc/_build
 
 config-host.h
 config-host.mak
