@@ -106,7 +106,7 @@
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
 #define WDC_SN730B_CAP_VUC_LOG				0x0000000400000000
-#define WDC_DRIVE_CAP_SN340_DUI				0x0000000800000000
+#define WDC_DRIVE_CAP_DUI    				0x0000000800000000
 #define WDC_DRIVE_CAP_SMART_LOG_MASK	(WDC_DRIVE_CAP_C1_LOG_PAGE | WDC_DRIVE_CAP_CA_LOG_PAGE | \
 					 WDC_DRIVE_CAP_D0_LOG_PAGE)
 
@@ -160,6 +160,7 @@
 #define WDC_NVME_DUI_MAX_SECTION_V2			0x26
 #define WDC_NVME_DUI_MAX_SECTION_V3			0x23
 #define WDC_NVME_DUI_MAX_DATA_AREA			0x05
+#define WDC_NVME_SN730_SECTOR_SIZE		    512
 
 /* Telemtery types for vs-internal-log command  */
 #define WDC_TELEMETRY_TYPE_NONE             0x0
@@ -983,10 +984,10 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_NAND_STATS | WDC_DRIVE_CAP_NS_RESIZE;
 			break;
 		case WDC_NVME_SN730A_DEV_ID:
-			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_NAND_STATS;
+			capabilities = WDC_DRIVE_CAP_DUI | WDC_DRIVE_CAP_NAND_STATS | WDC_DRIVE_CAP_INFO;
 			break;
 		case WDC_NVME_SN340_DEV_ID:
-			capabilities = WDC_DRIVE_CAP_SN340_DUI;
+			capabilities = WDC_DRIVE_CAP_DUI;
 			break;
 		default:
 			capabilities = 0;
@@ -1652,7 +1653,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 	}
 
 	/* Check the Log Header version  */
-	if ((log_hdr->hdr_version & 0xFF) == 0x01)	{
+	if ((log_hdr->hdr_version & 0xFF) == 0x00 ||
+        (log_hdr->hdr_version & 0xFF) == 0x01)	{
 		__s32 log_size = 0;
 		__u32 curr_data_offset = 0;
 
@@ -1758,8 +1760,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 			fprintf(stderr, "INFO : WDC : Capture V2 or V3 Device Unit Info log, data area = %d\n", data_area);
 
 			fprintf(stderr, "INFO : WDC : DUI Header Version = 0x%x\n", log_hdr_v3->hdr_version);
-			if (log_hdr_v3->hdr_version >= 0x03)
-				fprintf(stderr, "INFO : WDC : DUI Product ID = %c\n", log_hdr_v3->product_id);
+			if ((log_hdr->hdr_version & 0xFF) == 0x03)
+			    fprintf(stderr, "INFO : WDC : DUI Product ID = 0x%x/%c\n", log_hdr_v3->product_id, log_hdr_v3->product_id);
 		}
 
 		if (cap_dui_length_v3 == 0) {
@@ -1857,10 +1859,105 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 		}
 	}
 	else if ((log_hdr->hdr_version & 0xFF) == 0x04)	{
+		__s32 log_size = 0;
+		__u32 curr_data_offset = 0;
+		struct wdc_dui_log_hdr_v4 *log_hdr_v4;
+		log_hdr_v4 = (struct wdc_dui_log_hdr_v4 *)log_hdr;
 
+
+		cap_dui_length = le32_to_cpu(log_hdr_v4->log_size_sectors) * WDC_NVME_SN730_SECTOR_SIZE;
+
+		if (verbose) {
+			fprintf(stderr, "INFO : WDC : Capture V4 Device Unit Info log, data area = %d\n", data_area);
+			fprintf(stderr, "INFO : WDC : DUI Header Version = 0x%x\n", log_hdr_v4->hdr_version);
+			fprintf(stderr, "INFO : WDC : DUI Product ID = 0x%x/%c\n", log_hdr_v4->product_id, log_hdr_v4->product_id);
+
+		}
+
+		if (cap_dui_length == 0) {
+			fprintf(stderr, "INFO : WDC : Capture V4 Device Unit Info log is empty\n");
+		} else {
+			/* parse log header for all sections up to specified data area inclusively */
+			if (data_area != WDC_NVME_DUI_MAX_DATA_AREA) {
+				for(j = 0; j < WDC_NVME_DUI_MAX_SECTION; j++) {
+					if (log_hdr_v4->log_section[j].data_area_id <= data_area &&
+							log_hdr_v4->log_section[j].data_area_id != 0) {
+						log_size += (log_hdr_v4->log_section[j].section_size_sectors * WDC_NVME_SN730_SECTOR_SIZE);
+						if (verbose)
+							fprintf(stderr, "%s: Data area ID %d : section size 0x%x, total size = 0x%x\n",
+									__func__, log_hdr_v4->log_section[j].data_area_id, ((unsigned int)log_hdr_v4->log_section[j].section_size_sectors * WDC_NVME_SN730_SECTOR_SIZE),
+									(unsigned int)log_size);
+
+					}
+					else {
+						if (verbose)
+							fprintf(stderr, "%s: break, total size = 0x%x\n", 	__func__, (unsigned int)log_size);
+						break;
+					}
+				}
+			} else
+				log_size = cap_dui_length;
+
+			total_size = log_size;
+
+			dump_data = (__u8 *) malloc(sizeof (__u8) * xfer_size);
+			if (dump_data == NULL) {
+				fprintf(stderr, "%s: ERROR : dump data V4 malloc failed : status %s, size = 0x%x\n",
+						__func__, strerror(errno), (unsigned int)xfer_size);
+				ret = -1;
+				goto out;
+			}
+			memset(dump_data, 0, sizeof (__u8) * xfer_size);
+
+			output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+			if (output < 0) {
+				fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
+						__func__, file, strerror(errno));
+				ret = output;
+				goto free_mem;
+			}
+
+			/* write the telemetry and log headers into the dump_file */
+			err = write(output, (void *)log_hdr_v4, WDC_NVME_CAP_DUI_HEADER_SIZE);
+			if (err != WDC_NVME_CAP_DUI_HEADER_SIZE) {
+				fprintf(stderr, "%s:  Failed to flush header data to file!\n", __func__);
+				goto free_mem;
+			}
+
+			log_size -= WDC_NVME_CAP_DUI_HEADER_SIZE;
+			curr_data_offset = WDC_NVME_CAP_DUI_HEADER_SIZE;
+			i = 0;
+			buffer_addr = dump_data;
+
+			for(; log_size > 0; log_size -= xfer_size) {
+				xfer_size = min(xfer_size, log_size);
+
+				if (log_size <= xfer_size)
+					last_xfer = true;
+
+				ret = wdc_dump_dui_data(fd, xfer_size, curr_data_offset, buffer_addr, last_xfer);
+				if (ret != 0) {
+					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%lx, offset = 0x%x, addr = %p\n",
+							__func__, i, (long unsigned int)log_size, curr_data_offset, buffer_addr);
+					fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+					break;
+				}
+
+				/* write the dump data into the file */
+				err = write(output, (void *)buffer_addr, xfer_size);
+				if (err != xfer_size) {
+					fprintf(stderr, "%s: ERROR : WDC : Failed to flush DUI data to file! chunk %d, err = 0x%x, xfer_size = 0x%x\n",
+							__func__, i, err, xfer_size);
+					goto free_mem;
+				}
+
+				curr_data_offset += xfer_size;
+				i++;
+			}
+		}
 	}
 	else {
-		fprintf(stderr, "INFO : WDC : Unsupported header version = 0x%x\n", (log_hdr->hdr_version & 0xFF));
+		fprintf(stderr, "INFO : WDC : Unsupported header version = 0x%x\n", log_hdr->hdr_version);
         goto out;
 	}
 
@@ -2278,7 +2375,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 
 		return wdc_do_cap_diag(fd, f, xfer_size, telemetry_type, telemetry_data_area);
 	}
-	if ((capabilities & WDC_DRIVE_CAP_SN340_DUI) == WDC_DRIVE_CAP_SN340_DUI) {
+	if ((capabilities & WDC_DRIVE_CAP_DUI) == WDC_DRIVE_CAP_DUI) {
 		/* FW requirement - xfer size must be 256k for data area 4 */
 		if (cfg.data_area >= 4)
 			xfer_size = 0x40000;
