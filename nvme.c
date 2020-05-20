@@ -412,7 +412,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 	err = write(output, (void *) hdr, bs);
 	if (err != bs) {
-		fprintf(stderr, "Failed to flush all data to file!");
+		fprintf(stderr, "Failed to flush all data to file!\n");
 		goto close_output;
 	}
 
@@ -427,7 +427,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		full_size = (le16_to_cpu(hdr->dalb3) * bs) + offset;
 		break;
 	default:
-		fprintf(stderr, "Invalid data area requested");
+		fprintf(stderr, "Invalid data area requested\n");
 		err = -EINVAL;
 		goto close_output;
 	}
@@ -449,7 +449,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 		err = write(output, (void *) page_log, bs);
 		if (err != bs) {
-			fprintf(stderr, "Failed to flush all data to file!");
+			fprintf(stderr, "Failed to flush all data to file!\n");
 			break;
 		}
 		err = 0;
@@ -1580,7 +1580,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 			err = -ENOTBLK;
 			goto close_fd;
 		}
-	} 
+	}
 
 	err = nvme_identify_ns(fd, cfg.namespace_id, cfg.force, &ns);
 	if (!err)
@@ -2603,7 +2603,7 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 		goto ret;
 
 	if (cfg.offset == -1) {
-		fprintf(stderr, "offset required param");
+		fprintf(stderr, "offset required param\n");
 		err = -EINVAL;
 		goto close_fd;
 	}
@@ -2652,12 +2652,12 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 		goto ret;
 
 	if (cfg.offset == -1) {
-		fprintf(stderr, "offset required param");
+		fprintf(stderr, "offset required param\n");
 		err = -EINVAL;
 		goto close_fd;
 	}
 	if (cfg.value == -1) {
-		fprintf(stderr, "value required param");
+		fprintf(stderr, "value required param\n");
 		err = -EINVAL;
 		goto close_fd;
 	}
