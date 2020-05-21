@@ -80,7 +80,7 @@ static int getBadblock(int argc, char **argv, struct command *cmd, struct plugin
 	nvmecmd.opcode=OP_BAD_BLOCK;
 	nvmecmd.cdw10=DW10_BAD_BLOCK;
 	nvmecmd.cdw12=DW12_BAD_BLOCK;
-	nvmecmd.addr =(__u64) data;
+	nvmecmd.addr = (__u64)(uintptr_t)data;
 	nvmecmd.data_len = 0x1;
 	result = nvme_submit_admin_passthru(fd,&nvmecmd);
 	if(!result) {
