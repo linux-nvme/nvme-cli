@@ -2952,6 +2952,9 @@ static void wdc_print_bd_ca_log_normal(void *data)
 		word_raw = (__u16*)&bd_data->raw_value[4];
 		printf("  Ave erase cycles                              %10"PRIu16"\n",
 				le16_to_cpu(*word_raw));
+		printf("  Wear Leveling Normalized 		               %3"PRIu8"\n",
+				bd_data->normalized_value);
+
 	} else {
 		goto invalid_id;
 	}
@@ -3088,6 +3091,7 @@ static void wdc_print_bd_ca_log_json(void *data)
 		json_object_add_value_int(root, "Max erase cycles", le16_to_cpu(*word_raw));
 		word_raw = (__u16*)&bd_data->raw_value[4];
 		json_object_add_value_int(root, "Ave erase cycles", le16_to_cpu(*word_raw));
+		json_object_add_value_int(root, "Wear Leveling Normalized",	bd_data->normalized_value);
 	} else {
 		goto invalid_id;
 	}
@@ -3610,7 +3614,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 
 			memset(data, 0, sizeof (__u8) * WDC_BD_CA_LOG_BUF_LEN);
 			ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE,
-					   false, WDC_FB_CA_LOG_BUF_LEN, data);
+					   false, WDC_BD_CA_LOG_BUF_LEN, data);
 			if (strcmp(format, "json"))
 				fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 
