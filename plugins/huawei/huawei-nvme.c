@@ -41,6 +41,7 @@
 #define CREATE_CMD
 #include "huawei-nvme.h"
 
+#define HW_SSD_PCI_VENDOR_ID 0x19E5
 #define ARRAY_NAME_LEN 80
 #define NS_NAME_LEN    40
 
@@ -80,16 +81,15 @@ static int huawei_get_nvme_info(int fd, struct huawei_list_item *item, const cha
 		return err;
 
 	/*identify huawei device*/
-	if (strstr(item->ctrl.mn, "Huawei") == NULL) {
+	if (strstr(item->ctrl.mn, "Huawei") == NULL &&
+	    le16_to_cpu(item->ctrl.vid) != HW_SSD_PCI_VENDOR_ID) {
 		item->huawei_device = false;
 		return 0;
 	}
-	else
-		item->huawei_device = true;
 
+	item->huawei_device = true;
 	item->nsid = nvme_get_nsid(fd);
-	err = nvme_identify_ns(fd, item->nsid,
-							0, &item->ns);
+	err = nvme_identify_ns(fd, item->nsid, 0, &item->ns);
 	if (err)
 		return err;
 
