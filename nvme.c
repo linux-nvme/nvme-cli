@@ -2518,7 +2518,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 					"in binary or human-readable format";
 	const char *human_readable = "show info in readable format in case of "\
 					"output_format == normal";
-	const char *old_spec = "only use NVMe 1.2 compatible methods.";
+	const char *no_fabrics = "don't even attempt to connect via fabrics";
 
 	enum nvme_print_flags flags;
 	bool fabrics = true;
@@ -2526,19 +2526,19 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	void *bar;
 
 	struct config {
-        int old_spec;
+		int no_fabrics;
 		int human_readable;
 		char *output_format;
 	};
 
 	struct config cfg = {
-        .old_spec = 0,
+		.no_fabrics = 0,
 		.human_readable = 0,
 		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
-        OPT_FLAG("old-spec", 's', &cfg.old_spec, old_spec),
+		OPT_FLAG("no-fabrics", 'f', &cfg.no_fabrics, no_fabrics),
 		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
 		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
 		OPT_END()
@@ -2554,10 +2554,10 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
-    if (!cfg.old_spec) {
-        err = nvme_get_properties(fd, &bar);
-    }
-	if (cfg.old_spec || err) {
+	if (!cfg.no_fabrics) {
+		err = nvme_get_properties(fd, &bar);
+	}
+	if (cfg.no_fabrics || err) {
 		bar = mmap_registers(devicename);
 		fabrics = false;
 		if (bar)
