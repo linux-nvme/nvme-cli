@@ -3574,6 +3574,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 		} else {
 
 			fprintf(stderr, "ERROR : WDC : Unsupported Customer id, id = %d\n", *cust_id);
+			return -1;
 		}
 		break;
 
@@ -3630,12 +3631,14 @@ static int wdc_get_ca_log_page(int fd, char *format)
 		} else {
 
 			fprintf(stderr, "ERROR : WDC : Unsupported Customer id, id = %d\n", *cust_id);
+			return -1;
 		}
 		break;
 
 	default:
 
 		fprintf(stderr, "ERROR : WDC : Log page 0xCA not supported for this device\n");
+		return -1;
 		break;
 	}
 
