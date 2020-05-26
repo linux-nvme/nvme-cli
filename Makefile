@@ -3,7 +3,7 @@ override CFLAGS += -std=gnu99 -I.
 override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
-HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=232; echo $$?)
+HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=242; echo $$?)
 NVME = nvme
 INSTALL ?= install
 DESTDIR =
