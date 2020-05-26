@@ -78,6 +78,7 @@ PLUGIN_OBJS :=					\
 	plugins/virtium/virtium-nvme.o		\
 	plugins/shannon/shannon-nvme.o		\
 	plugins/dera/dera-nvme.o            \
+	plugins/scaleflux/sfx-nvme.o        \
     plugins/transcend/transcend-nvme.o
 
 nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
