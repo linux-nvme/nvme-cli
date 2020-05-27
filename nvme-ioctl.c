@@ -438,30 +438,7 @@ int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp,
 int nvme_get_log(int fd, __u32 nsid, __u8 log_id, bool rae,
 		 __u32 data_len, void *data)
 {
-	__u32 offset = 0, xfer_len = data_len;
-	void *ptr = data;
-	int ret;
-
-	/*
-	 * 4k is the smallest possible transfer unit, so by
-	 * restricting ourselves for 4k transfers we avoid having
-	 * to check the MDTS value of the controller.
-	 */
-	do {
-		xfer_len = data_len - offset;
-		if (xfer_len > 4096)
-			xfer_len = 4096;
-
-		ret = nvme_get_log13(fd, nsid, log_id, NVME_NO_LOG_LSP,
-				     offset, 0, rae, xfer_len, ptr);
-		if (ret)
-			return ret;
-
-		offset += xfer_len;
-		ptr += xfer_len;
-	} while (offset < data_len);
-
-	return 0;
+	return nvme_get_log_from_uuid(fd, nsid, log_id, rae, 0, data_len, data);
 }
 
 int nvme_get_log_from_uuid(int fd, __u32 nsid, __u8 log_id, bool rae, __u8 uuid_ix,
