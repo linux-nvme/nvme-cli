@@ -122,7 +122,8 @@
 #define SN730_LOG_CHUNK_SIZE				0x1000
 
 /* Customer ID's */
-#define WDC_CUSTOMER_ID_GENERIC				0x0001
+#define WDC_CUSTOMER_ID_GN					0x0001
+#define WDC_CUSTOMER_ID_GD					0x0101
 #define WDC_CUSTOMER_ID_0x1002				0x1002
 #define WDC_CUSTOMER_ID_0x1004				0x1004
 #define WDC_CUSTOMER_ID_0x1005				0x1005
@@ -3606,7 +3607,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 				fprintf(stderr, "ERROR : WDC : Unable to read CA Log Page data\n");
 				ret = -1;
 			}
-		} else if (*cust_id == WDC_CUSTOMER_ID_GENERIC) {
+		} else if ((*cust_id == WDC_CUSTOMER_ID_GN) || (*cust_id == WDC_CUSTOMER_ID_GD)) {
 
 			if ((data = (__u8*) malloc(sizeof (__u8) * WDC_BD_CA_LOG_BUF_LEN)) == NULL) {
 				fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
