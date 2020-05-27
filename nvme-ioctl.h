@@ -87,6 +87,8 @@ int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *dat
 int nvme_identify_ns_granularity(int fd, void *data);
 int nvme_get_log(int fd, __u32 nsid, __u8 log_id, bool rae,
 		 __u32 data_len, void *data);
+int nvme_get_log_from_uuid(int fd, __u32 nsid, __u8 log_id, bool rae, __u8 uuid_ix,
+		 __u32 data_len, void *data);
 int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
 		   __u16 group_id, bool rae, __u8 uuid_ix,
 		   __u32 data_len, void *data);

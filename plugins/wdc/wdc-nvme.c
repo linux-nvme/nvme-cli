@@ -1054,6 +1054,101 @@ static int wdc_create_log_file(char *file, __u8 *drive_log_data,
 	return 0;
 }
 
+bool wdc_get_dev_mng_log_entry(
+    __u32 log_length,
+    __u32 entry_id,
+    struct wdc_c2_log_page_header* p_log_hdr,
+    struct wdc_c2_log_subpage_header **p_p_found_log_entry
+)
+{
+    __u32 remaining_len = 0;
+    __u32 log_entry_hdr_size = sizeof(struct wdc_c2_log_subpage_header) - 1;
+    __u32 log_entry_size = 0;
+    __u32 size = 0;
+    bool valid_log;
+    __u32 current_data_offset = 0;
+    struct wdc_c2_log_subpage_header *p_next_log_entry = NULL;
+
+    if (*p_p_found_log_entry == NULL) {
+    	fprintf(stderr, "ERROR : WDC - wdc_get_dev_mng_log_entry: No ppLogEntry pointer.\n");
+        return false;
+    }
+
+    *p_p_found_log_entry = NULL;
+
+    // Ensure log data is large enough for common header
+    if (log_length < sizeof(struct wdc_c2_log_page_header)) {
+    	fprintf(stderr, "ERROR : WDC - wdc_get_dev_mng_log_entry: \
+    			Buffer is not large enough for the common header. BufSize: 0x%x  HdrSize: 0x%lx\n",
+                log_length, sizeof(struct wdc_c2_log_page_header));
+        return false;
+    }
+
+    // Get pointer to first log Entry
+    size = sizeof(struct wdc_c2_log_page_header);
+    current_data_offset = size;
+    p_next_log_entry = (struct wdc_c2_log_subpage_header *)((__u8*)p_log_hdr + current_data_offset);
+    remaining_len = log_length - size;
+    valid_log = false;
+
+    // Walk the entire structure. Perform a sanity check to make sure this is a
+    // standard version of the structure. This means making sure each entry looks
+    // valid. But allow for the data to overflow the allocated
+    // buffer (we don't want a false negative because of a FW formatting error)
+
+    // Proceed only if there is at least enough data to read an entry header
+    while (remaining_len >= log_entry_hdr_size) {
+        // Get size of the next entry
+        log_entry_size = p_next_log_entry->length;
+
+        // If log entry size is 0 or the log entry goes past the end
+        // of the data, we must be at the end of the data
+        if ((log_entry_size == 0) ||
+            (log_entry_size > remaining_len)) {
+        	fprintf(stderr, "ERROR : WDC: wdc_get_dev_mng_log_entry: \
+        			Detected unaligned end of the data. Data Offset: 0x%x  \
+        			Entry Size: 0x%x, Remaining Log Length: 0x%x Entry Id: 0x%x\n",
+					current_data_offset, log_entry_size, remaining_len, p_next_log_entry->entry_id);
+
+            // Force the loop to end
+            remaining_len = 0;
+        } else if ((p_next_log_entry->entry_id == 0) ||
+            (p_next_log_entry->entry_id > 200)) {
+            // Invalid entry - fail the search
+        	fprintf(stderr, "ERROR : WDC: wdc_get_dev_mng_log_entry: \
+        			Invalid entry found at offset: 0x%x Entry Size: 0x%x, \
+        			Remaining Log Length: 0x%x Entry Id: 0x%x\n",
+                current_data_offset, log_entry_size, remaining_len, p_next_log_entry->entry_id);
+
+            // Force the loop to end
+            remaining_len = 0;
+            valid_log = false;
+
+            // The struture is invalid, so any match that was found is invalid.
+            *p_p_found_log_entry = NULL;
+        } else {
+            // Structure must have at least one valid entry to be considered valid
+            valid_log = true;
+            if (p_next_log_entry->entry_id == entry_id) {
+                // A potential match.
+                *p_p_found_log_entry = p_next_log_entry;
+            }
+
+            remaining_len -= log_entry_size;
+
+            if (remaining_len > 0) {
+                // Increment the offset counter
+                current_data_offset += log_entry_size;
+
+                // Get the next entry
+                p_next_log_entry = (struct wdc_c2_log_subpage_header *)(((__u8*)p_log_hdr) + current_data_offset);
+            }
+        }
+    }
+
+    return valid_log;
+}
+
 static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 {
 	int ret = -1;
@@ -1062,6 +1157,7 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 	struct wdc_c2_log_subpage_header *sph;
 	__u32 length = 0;
 	bool found = false;
+	__u8 uuid_ix = 1;
 
 	*cbs_data = NULL;
 
@@ -1072,8 +1168,8 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 	memset(data, 0, sizeof (__u8) * WDC_C2_LOG_BUF_LEN);
 
 	/* get the log page length */
-	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
-			   false, WDC_C2_LOG_BUF_LEN, data);
+	ret = nvme_get_log_from_uuid(fd, 0xFFFFFFFF, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
+			   false, uuid_ix, WDC_C2_LOG_BUF_LEN, data);
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : Unable to get C2 Log Page length, ret = 0x%x\n", ret);
 		goto end;
@@ -1091,28 +1187,45 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 		}
 	}
 
-	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
-			   false, le32_to_cpu(hdr_ptr->length), data);
-	/* parse the data until the List of log page ID's is found */
+	/* get the log page data */
+	ret = nvme_get_log_from_uuid(fd, 0xFFFFFFFF, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
+			   false, uuid_ix, le32_to_cpu(hdr_ptr->length), data);
+
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : Unable to read C2 Log Page data, ret = 0x%x\n", ret);
 		goto end;
 	}
 
+	/* Check the log data to see if the WD version of log page ID's is found */
+
 	length = sizeof(struct wdc_c2_log_page_header);
 	hdr_ptr = (struct wdc_c2_log_page_header *)data;
+	sph = (struct wdc_c2_log_subpage_header *)(data + length);
+	found = wdc_get_dev_mng_log_entry(hdr_ptr->length, log_id, hdr_ptr, &sph);
 
-	while (length < le32_to_cpu(hdr_ptr->length)) {
+	if (found) {
+		*cbs_data = (void *)&sph->data;
+	} else {
+
+		/* not found with uuid = 1 try with uuid = 0 */
+		if (uuid_ix)
+			uuid_ix = 0;
+		else
+			uuid_ix = 1;
+		/* get the log page data */
+		ret = nvme_get_log_from_uuid(fd, 0xFFFFFFFF, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
+				   false, uuid_ix, le32_to_cpu(hdr_ptr->length), data);
+
+		hdr_ptr = (struct wdc_c2_log_page_header *)data;
 		sph = (struct wdc_c2_log_subpage_header *)(data + length);
-
-		if (le32_to_cpu(sph->entry_id) == log_id) {
+		found = wdc_get_dev_mng_log_entry(hdr_ptr->length, log_id, hdr_ptr, &sph);
+		if (found) {
 			*cbs_data = (void *)&sph->data;
-			found = true;
-			break;
+		} else {
+			/* WD version not found  */
+			fprintf(stderr, "ERROR : WDC : Unable to find correct version of page 0xC2, entry id = %d\n", log_id);
 		}
-		length += le32_to_cpu(sph->length);
 	}
-
 end:
 	free(data);
 	return found;
