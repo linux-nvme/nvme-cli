@@ -122,8 +122,8 @@
 #define SN730_LOG_CHUNK_SIZE				0x1000
 
 /* Customer ID's */
-#define WDC_CUSTOMER_ID_GENERIC				0x0001
-#define WDC_CUSTOMER_ID_0x1002				0x1002
+#define WDC_CUSTOMER_ID_GN					0x0001
+#define WDC_CUSTOMER_ID_GD					0x0101
 #define WDC_CUSTOMER_ID_0x1004				0x1004
 #define WDC_CUSTOMER_ID_0x1005				0x1005
 
@@ -1670,8 +1670,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 			total_size = log_size;
 
 			if (offset >= total_size) {
-				fprintf(stderr, "%s: INFO : WDC : Offset 0x%llx exceeds total size 0x%llx, no data retrieved\n",
-					__func__, offset, total_size);
+				fprintf(stderr, "%s: INFO : WDC : Offset 0x%"PRIx64" exceeds total size 0x%"PRIx64", no data retrieved\n",
+					__func__, (uint64_t)offset, (uint64_t)total_size);
 				goto out;
 			}
 
@@ -1702,8 +1702,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 					log_size = min(total_size, file_size);
 
 				if (verbose)
-					fprintf(stderr, "%s: INFO : WDC : Offset 0x%llx, file size 0x%llx, total size 0x%llx, log size 0x%llx\n",
-						__func__, offset, file_size, total_size, log_size);
+					fprintf(stderr, "%s: INFO : WDC : Offset 0x%"PRIx64", file size 0x%"PRIx64", total size 0x%"PRIx64", log size 0x%"PRIx64"\n",
+						__func__, (uint64_t)offset, (uint64_t)file_size, (uint64_t)total_size, (uint64_t)log_size);
 
 				curr_data_offset = offset;
 
@@ -2952,6 +2952,9 @@ static void wdc_print_bd_ca_log_normal(void *data)
 		word_raw = (__u16*)&bd_data->raw_value[4];
 		printf("  Ave erase cycles                              %10"PRIu16"\n",
 				le16_to_cpu(*word_raw));
+		printf("  Wear Leveling Normalized 		               %3"PRIu8"\n",
+				bd_data->normalized_value);
+
 	} else {
 		goto invalid_id;
 	}
@@ -3088,6 +3091,7 @@ static void wdc_print_bd_ca_log_json(void *data)
 		json_object_add_value_int(root, "Max erase cycles", le16_to_cpu(*word_raw));
 		word_raw = (__u16*)&bd_data->raw_value[4];
 		json_object_add_value_int(root, "Ave erase cycles", le16_to_cpu(*word_raw));
+		json_object_add_value_int(root, "Wear Leveling Normalized",	bd_data->normalized_value);
 	} else {
 		goto invalid_id;
 	}
@@ -3570,6 +3574,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 		} else {
 
 			fprintf(stderr, "ERROR : WDC : Unsupported Customer id, id = %d\n", *cust_id);
+			return -1;
 		}
 		break;
 
@@ -3601,7 +3606,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 				fprintf(stderr, "ERROR : WDC : Unable to read CA Log Page data\n");
 				ret = -1;
 			}
-		} else if (*cust_id == WDC_CUSTOMER_ID_GENERIC) {
+		} else if ((*cust_id == WDC_CUSTOMER_ID_GN) || (*cust_id == WDC_CUSTOMER_ID_GD)) {
 
 			if ((data = (__u8*) malloc(sizeof (__u8) * WDC_BD_CA_LOG_BUF_LEN)) == NULL) {
 				fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
@@ -3610,7 +3615,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 
 			memset(data, 0, sizeof (__u8) * WDC_BD_CA_LOG_BUF_LEN);
 			ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE,
-					   false, WDC_FB_CA_LOG_BUF_LEN, data);
+					   false, WDC_BD_CA_LOG_BUF_LEN, data);
 			if (strcmp(format, "json"))
 				fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 
@@ -3626,12 +3631,14 @@ static int wdc_get_ca_log_page(int fd, char *format)
 		} else {
 
 			fprintf(stderr, "ERROR : WDC : Unsupported Customer id, id = %d\n", *cust_id);
+			return -1;
 		}
 		break;
 
 	default:
 
 		fprintf(stderr, "ERROR : WDC : Log page 0xCA not supported for this device\n");
+		return -1;
 		break;
 	}
 
