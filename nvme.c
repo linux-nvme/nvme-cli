@@ -412,7 +412,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 	err = write(output, (void *) hdr, bs);
 	if (err != bs) {
-		fprintf(stderr, "Failed to flush all data to file!");
+		fprintf(stderr, "Failed to flush all data to file!\n");
 		goto close_output;
 	}
 
@@ -427,7 +427,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		full_size = (le16_to_cpu(hdr->dalb3) * bs) + offset;
 		break;
 	default:
-		fprintf(stderr, "Invalid data area requested");
+		fprintf(stderr, "Invalid data area requested\n");
 		err = -EINVAL;
 		goto close_output;
 	}
@@ -449,7 +449,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 		err = write(output, (void *) page_log, bs);
 		if (err != bs) {
-			fprintf(stderr, "Failed to flush all data to file!");
+			fprintf(stderr, "Failed to flush all data to file!\n");
 			break;
 		}
 		err = 0;
@@ -1027,14 +1027,16 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	if (fd < 0)
 		goto ret;
 
-	cfg.namespace_id = nvme_get_nsid(fd);
-	if (cfg.namespace_id == 0) {
-		 err = -EINVAL;
-		 goto close_fd;
-	}
-	if (cfg.namespace_id < 0) {
-		err = cfg.namespace_id;
-		goto close_fd;
+	if (!cfg.namespace_id) {
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id == 0) {
+			err = -EINVAL;
+			goto close_fd;
+		}
+		else if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
+			goto close_fd;
+		}
 	}
 
 	err = nvme_ns_delete(fd, cfg.namespace_id, cfg.timeout);
@@ -1572,11 +1574,12 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 			err = cfg.namespace_id;
 			goto close_fd;
 		}
-	} else if (!cfg.namespace_id) {
-		fprintf(stderr,
-			"Error: requesting namespace-id from non-block device\n");
-		err = -ENOTBLK;
-		goto close_fd;
+		else if (!cfg.namespace_id) {
+			fprintf(stderr,
+				"Error: requesting namespace-id from non-block device\n");
+			err = -ENOTBLK;
+			goto close_fd;
+		}
 	}
 
 	err = nvme_identify_ns(fd, cfg.namespace_id, cfg.force, &ns);
@@ -2600,7 +2603,7 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 		goto ret;
 
 	if (cfg.offset == -1) {
-		fprintf(stderr, "offset required param");
+		fprintf(stderr, "offset required param\n");
 		err = -EINVAL;
 		goto close_fd;
 	}
@@ -2649,12 +2652,12 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 		goto ret;
 
 	if (cfg.offset == -1) {
-		fprintf(stderr, "offset required param");
+		fprintf(stderr, "offset required param\n");
 		err = -EINVAL;
 		goto close_fd;
 	}
 	if (cfg.value == -1) {
-		fprintf(stderr, "value required param");
+		fprintf(stderr, "value required param\n");
 		err = -EINVAL;
 		goto close_fd;
 	}
@@ -2769,10 +2772,12 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		 */
 		cfg.namespace_id = NVME_NSID_ALL;
 	} else {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
-			goto close_fd;
+		if (!cfg.namespace_id) {
+			cfg.namespace_id = nvme_get_nsid(fd);
+			if (cfg.namespace_id < 0) {
+				err = cfg.namespace_id;
+				goto close_fd;
+			}
 		}
 	}
 
@@ -2817,6 +2822,9 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			}
 		} else  if (cfg.lbaf == 0xff)
 			cfg.lbaf = prev_lbaf;
+	}
+	else {
+		if (cfg.lbaf == 0xff) cfg.lbaf = 0;
 	}
 
 	/* ses & pi checks set to 7 for forward-compatibility */
@@ -2866,7 +2874,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		nvme_show_status(err);
 	else {
 		printf("Success formatting namespace:%x\n", cfg.namespace_id);
-		if (ioctl(fd, BLKRRPART) < 0) {
+		if (cfg.lbaf != prev_lbaf && ioctl(fd, BLKRRPART) < 0) {
 			fprintf(stderr, "failed to re-read partition table\n");
 			err = -errno;
 			goto close_fd;
@@ -3526,10 +3534,12 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 	if (fd < 0)
 		goto ret;
 
-	cfg.namespace_id = nvme_get_nsid(fd);
-	if (cfg.namespace_id < 0) {
-		err = cfg.namespace_id;
-		goto close_fd;
+	if (!cfg.namespace_id) {
+		cfg.namespace_id = nvme_get_nsid(fd);
+		if (cfg.namespace_id < 0) {
+			err = cfg.namespace_id;
+			goto close_fd;
+		}
 	}
 
 	err = nvme_flush(fd, cfg.namespace_id);

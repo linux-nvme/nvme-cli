@@ -55,6 +55,8 @@ static int compare_fw_version(const char *fw1, const char *fw2)
 
 // 2.83 = raisin
 #define IS_RAISIN(str)          (!strcmp(str, "2.83"))
+// 2.13 = papaya
+#define IS_PAPAYA(str)          (!strcmp(str, "2.13"))
 #define STR_VER_SIZE            5
 
 int getlogpage_format_type(char *fw_ver)
@@ -226,7 +228,11 @@ static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s,
 static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
     unsigned int nsid, const char *devname, const char *fw_ver)
 {
+    char fw_ver_local[STR_VER_SIZE];
     struct nvme_memblaze_smart_log_item *item;
+
+    strncpy(fw_ver_local, fw_ver, STR_VER_SIZE);
+    *(fw_ver_local + STR_VER_SIZE - 1) = '\0';
 
     printf("Additional Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
 
@@ -316,6 +322,36 @@ static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
     if (item_id_2_u32(item) == 0xF2)
         printf("Read Fail Count	                                 		: %llu\n",
             (unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+
+     if ( IS_PAPAYA(fw_ver_local) ) {
+        struct nvme_p4_smart_log *s = (struct nvme_p4_smart_log *)smart;
+        u8 *nm = malloc(NM_SIZE * sizeof(u8));
+        u8 *raw = malloc(RAW_SIZE * sizeof(u8));
+
+        /* 00 RAISIN_SI_VD_PROGRAM_FAIL */
+        get_memblaze_new_smart_info(s, PROGRAM_FAIL, nm, raw);
+        printf("%-32s                                : %3d%%       %"PRIu64"\n",
+			STR00_01, *nm, int48_to_long(raw));
+        /* 01 RAISIN_SI_VD_ERASE_FAIL */
+        get_memblaze_new_smart_info(s, ERASE_FAIL, nm, raw);
+        printf("%-32s                                : %3d%%       %"PRIu64"\n",
+			STR01_01, *nm, int48_to_long(raw));
+        /* 02 RAISIN_SI_VD_WEARLEVELING_COUNT */
+        get_memblaze_new_smart_info(s, WEARLEVELING_COUNT, nm, raw);
+        printf("%-31s                                 : %3d%%       %s%u%s%u%s%u\n",
+			STR02_01, *nm, STR02_03, *raw, STR02_04, *(raw+2), STR02_05, *(raw+4));
+        /* 11 RAISIN_SI_VD_TOTAL_WRITE */
+        get_memblaze_new_smart_info(s, TOTAL_WRITE, nm, raw);
+        printf("%-32s                                : %3d%%       %"PRIu64"\n",
+			STR11_01, *nm, 32*int48_to_long(raw));
+        /* 12 RAISIN_SI_VD_HOST_WRITE */
+        get_memblaze_new_smart_info(s, HOST_WRITE, nm, raw);
+        printf("%-32s                                : %3d%%       %"PRIu64"\n",
+			STR12_01, *nm, 32*int48_to_long(raw));
+
+        free(nm);
+        free(raw);
+    }
 }
 
 static int show_memblaze_smart_log(int fd, __u32 nsid, const char *devname,
@@ -328,6 +364,7 @@ static int show_memblaze_smart_log(int fd, __u32 nsid, const char *devname,
     err = nvme_identify_ctrl(fd, &ctrl);
     if (err)
         return err;
+
     snprintf(fw_ver, sizeof(fw_ver), "%c.%c%c.%c%c%c%c",
         ctrl.fr[0], ctrl.fr[1], ctrl.fr[2], ctrl.fr[3],
         ctrl.fr[4], ctrl.fr[5], ctrl.fr[6]);
