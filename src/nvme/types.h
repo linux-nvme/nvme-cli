@@ -218,14 +218,14 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
 
 static inline __u32 nvme_mmio_read32(void *addr)
 {
-        __le32 *p = addr;
+        __le32 *p = (__le32 *)addr;
 
         return le32_to_cpu(*p);
 }
 
 static inline __u64 nvme_mmio_read64(void *addr)
 {
-        __le32 *p = addr;
+        __le32 *p = (__le32 *)addr;
 
 	/*
 	 * Some devices fail 64-bit MMIO. Access 64-bit registers as 2 32-bit.
