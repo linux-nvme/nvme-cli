@@ -225,6 +225,13 @@ static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s,
     free(raw);
 }
 
+// in unit is GB
+// out unit is 32MiB
+// out = in * 1000^3 / 1024^3 * 1024 / 32
+// 1000^3 / 1024^3 * 1024 / 32 = 29.80232238769531;
+#define RATIO                          (29.80232238769531)
+#define GB_2_32MiB(in)                 (uint64_t)(in*RATIO)
+
 static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
     unsigned int nsid, const char *devname, const char *fw_ver)
 {
@@ -285,7 +292,7 @@ static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
 
     item = &smart->items[HOST_WRITE];
     if (item_id_2_u32(item) == 0xF5)
-        printf("Total host write in GiB since device born 			: %llu\n",
+        printf("Total host write in GB since device born 			: %llu\n",
             (unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
 
     item = &smart->items[THERMAL_THROTTLE_CNT];
@@ -343,11 +350,11 @@ static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
         /* 11 RAISIN_SI_VD_TOTAL_WRITE */
         get_memblaze_new_smart_info(s, TOTAL_WRITE, nm, raw);
         printf("%-32s                                : %3d%%       %"PRIu64"\n",
-			STR11_01, *nm, 32*int48_to_long(raw));
+			STR11_01, *nm, GB_2_32MiB(int48_to_long(raw)));
         /* 12 RAISIN_SI_VD_HOST_WRITE */
         get_memblaze_new_smart_info(s, HOST_WRITE, nm, raw);
         printf("%-32s                                : %3d%%       %"PRIu64"\n",
-			STR12_01, *nm, 32*int48_to_long(raw));
+			STR12_01, *nm, GB_2_32MiB(int48_to_long(raw)));
 
         free(nm);
         free(raw);
