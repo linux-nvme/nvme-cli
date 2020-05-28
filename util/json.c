@@ -274,7 +274,7 @@ int json_object_add_value_type(struct json_object *obj, const char *name, int ty
 	return 0;
 }
 
-static void json_print_array(struct json_array *array, void *);
+static void json_print_array(struct json_array *array, FILE *stream);
 int json_array_add_value_type(struct json_array *array, int type, ...)
 {
 	struct json_value *value;
@@ -335,73 +335,78 @@ static int json_value_level(struct json_value *value)
 		return json_array_level(value->parent_array) + 1;
 }
 
-static void json_print_level(int level, void *out)
+static void json_print_level(int level, FILE *stream)
 {
 	while (level-- > 0)
-		printf("  ");
+		fprintf(stream, "  ");
 }
 
-static void json_print_pair(struct json_pair *pair, void *);
-static void json_print_array(struct json_array *array, void *);
-static void json_print_value(struct json_value *value, void *);
-void json_print_object(struct json_object *obj, void *out)
+static void json_print_pair(struct json_pair *pair, FILE *stream);
+static void json_print_array(struct json_array *array, FILE *stream);
+static void json_print_value(struct json_value *value, FILE *stream);
+void json_print_object_stream(struct json_object *obj, FILE *stream)
 {
 	int i;
 
-	printf("{\n");
+	fprintf(stream, "{\n");
 	for (i = 0; i < obj->pair_cnt; i++) {
 		if (i > 0)
-			printf(",\n");
-		json_print_pair(obj->pairs[i], out);
+			fprintf(stream, ",\n");
+		json_print_pair(obj->pairs[i], stream);
 	}
-	printf("\n");
-	json_print_level(json_object_level(obj), out);
-	printf("}");
+	fprintf(stream, "\n");
+	json_print_level(json_object_level(obj), stream);
+	fprintf(stream, "}");
 }
 
-static void json_print_pair(struct json_pair *pair, void *out)
+void json_print_object(struct json_object *obj, void *out)
 {
-	json_print_level(json_pair_level(pair), out);
-	printf("\"%s\" : ", pair->name);
-	json_print_value(pair->value, out);
+	json_print_object_stream(obj, stdout);
 }
 
-static void json_print_array(struct json_array *array, void *out)
+static void json_print_pair(struct json_pair *pair, FILE *stream)
+{
+	json_print_level(json_pair_level(pair), stream);
+	fprintf(stream, "\"%s\" : ", pair->name);
+	json_print_value(pair->value, stream);
+}
+
+static void json_print_array(struct json_array *array, FILE *stream)
 {
 	int i;
 
-	printf("[\n");
+	fprintf(stream, "[\n");
 	for (i = 0; i < array->value_cnt; i++) {
 		if (i > 0)
-			printf(",\n");
-		json_print_level(json_value_level(array->values[i]), out);
-		json_print_value(array->values[i], out);
+			fprintf(stream, ",\n");
+		json_print_level(json_value_level(array->values[i]), stream);
+		json_print_value(array->values[i], stream);
 	}
-	printf("\n");
-	json_print_level(json_array_level(array), out);
-	printf("]");
+	fprintf(stream, "\n");
+	json_print_level(json_array_level(array), stream);
+	fprintf(stream, "]");
 }
 
-static void json_print_value(struct json_value *value, void *out)
+static void json_print_value(struct json_value *value, FILE *stream)
 {
 	switch (value->type) {
 	case JSON_TYPE_STRING:
-		printf( "\"%s\"", value->string);
+		fprintf(stream, "\"%s\"", value->string);
 		break;
 	case JSON_TYPE_INTEGER:
-		printf( "%lld", value->integer_number);
+		fprintf(stream, "%lld", value->integer_number);
 		break;
 	case JSON_TYPE_UINT:
-		printf( "%llu", value->uint_number);
+		fprintf(stream, "%llu", value->uint_number);
 		break;
 	case JSON_TYPE_FLOAT:
-		printf( "%.0Lf", value->float_number);
+		fprintf(stream, "%.0Lf", value->float_number);
 		break;
 	case JSON_TYPE_OBJECT:
-		json_print_object(value->object, out);
+		json_print_object(value->object, stream);
 		break;
 	case JSON_TYPE_ARRAY:
-		json_print_array(value->array, out);
+		json_print_array(value->array, stream);
 		break;
 	}
 }

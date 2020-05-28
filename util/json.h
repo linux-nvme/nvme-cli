@@ -1,6 +1,8 @@
 #ifndef __JSON__H
 #define __JSON__H
 
+#include <stdio.h>
+
 struct json_object;
 struct json_array;
 struct json_pair;
@@ -85,4 +87,5 @@ int json_array_add_value_type(struct json_array *array, int type, ...);
 	(obj->values[obj->value_cnt - 1]->object)
 
 void json_print_object(struct json_object *obj, void *);
+void json_print_object_stream(struct json_object *obj, FILE *stream);
 #endif
