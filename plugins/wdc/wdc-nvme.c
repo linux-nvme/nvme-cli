@@ -1153,15 +1153,16 @@ static bool wdc_nvme_get_dev_status_log_data(int fd, __le32 *ret_data,
 		__u8 log_id)
 {
 	__u32 *cbs_data = NULL;
-	bool found = false;
 
 	if (get_dev_mgment_cbs_data(fd, log_id, (void *)&cbs_data)) {
 		if (cbs_data != NULL) {
 			memcpy((void *)ret_data, (void *)cbs_data, 4);
-			found = true;
+			return true;
 		}
 	}
-	return found;
+
+	*ret_data = 0;
+	return false;
 }
 
 static int wdc_do_clear_dump(int fd, __u8 opcode, __u32 cdw12)
