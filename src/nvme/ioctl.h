@@ -1281,7 +1281,7 @@ int nvme_get_log_sanitize(int fd, bool rae,
 			  struct nvme_sanitize_log_page *log);
 
 /**
- * nvme_set_feature() - Set a feature attribute
+ * nvme_set_features() - Set a feature attribute
  * @fd:		File descriptor of nvme device
  * @fid:	Feature identifier
  * @nsid:	Namespace ID, if applicable
