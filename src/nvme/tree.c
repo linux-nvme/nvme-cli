@@ -29,6 +29,13 @@
 /* XXX: Make a place for private declarations */
 extern int nvme_set_attr(const char *dir, const char *attr, const char *value);
 
+void nvme_free_subsystem(struct nvme_subsystem *s);
+int nvme_subsystem_scan_namespace(struct nvme_subsystem *s, char *name);
+int nvme_scan_subsystem(struct nvme_root *r, char *name, nvme_scan_filter_t f);
+int nvme_subsystem_scan_ctrl(struct nvme_subsystem *s, char *name);
+int nvme_ctrl_scan_namespace(struct nvme_ctrl *c, char *name);
+int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name);
+
 struct nvme_path {
 	struct list_node entry;
 	struct list_node nentry;
@@ -101,20 +108,6 @@ struct nvme_subsystem {
 struct nvme_root {
 	struct list_head subsystems;
 };
-
-void nvme_free_ctrl(struct nvme_ctrl *c);
-void nvme_ctrl_free_ns(struct nvme_ns *n);
-void nvme_subsystem_free_ns(struct nvme_ns *n);
-void nvme_free_path(struct nvme_path *p);
-void nvme_free_subsystem(struct nvme_subsystem *s);
-
-int nvme_scan_subsystem(struct nvme_root *t, char *name, nvme_scan_filter_t f);
-int nvme_subsystem_scan_namespace(struct nvme_subsystem *s, char *name);
-int nvme_subsystem_scan_ctrls(struct nvme_subsystem *s);
-int nvme_subsystem_scan_ctrl(struct nvme_subsystem *s, char *name);
-
-int nvme_ctrl_scan_namespace(struct nvme_ctrl *c, char *name);
-int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name);
 
 static inline void nvme_free_dirents(struct dirent **d, int i)
 {
@@ -229,7 +222,7 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n)
 	return n ? list_next(&s->namespaces, n, entry) : NULL;
 }
 
-static void nvme_free_ns(struct nvme_ns *n)
+void nvme_free_ns(struct nvme_ns *n)
 {
 	list_del_init(&n->entry);
 	close(n->fd);
@@ -873,9 +866,8 @@ static void nvme_ns_init(struct nvme_ns *n)
 		nvme_ns_parse_descriptors(n, descs);
 }
 
-nvme_ns_t nvme_ns_open(char *name)
+static nvme_ns_t nvme_ns_open(const char *name)
 {
-	char *b = basename(name);
 	struct nvme_ns *n;
 
 	n = calloc(1, sizeof(*n));
@@ -884,9 +876,8 @@ nvme_ns_t nvme_ns_open(char *name)
 		return NULL;
 	}
 
-	n->name = strdup(b);
-	n->fd = nvme_open(b);
-
+	n->name = strdup(name);
+	n->fd = nvme_open(n->name);
 	if (n->fd < 0)
 		goto free_ns;
 
@@ -895,6 +886,7 @@ nvme_ns_t nvme_ns_open(char *name)
 		goto close_fd;
 
 	list_head_init(&n->paths);
+	list_node_init(&n->entry);
 	nvme_ns_init(n);
 
 	return n;
@@ -902,11 +894,12 @@ nvme_ns_t nvme_ns_open(char *name)
 close_fd:
 	close(n->fd);
 free_ns:
+	free(n->name);
 	free(n);
 	return NULL;
 }
 
-static struct nvme_ns *__nvme_scan_namespace(const char *sysfs_dir, char *name)
+static struct nvme_ns *__nvme_scan_namespace(const char *sysfs_dir, const char *name)
 {
 	struct nvme_ns *n;
 	char *path;
@@ -928,6 +921,11 @@ static struct nvme_ns *__nvme_scan_namespace(const char *sysfs_dir, char *name)
 free_path:
 	free(path);
 	return NULL;
+}
+
+nvme_ns_t nvme_scan_namespace(const char *name)
+{
+	return __nvme_scan_namespace(nvme_ns_sysfs_dir, name);
 }
 
 int nvme_ctrl_scan_namespace(struct nvme_ctrl *c, char *name)

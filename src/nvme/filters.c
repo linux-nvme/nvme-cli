@@ -23,6 +23,7 @@
 #include "util.h"
 
 const char *nvme_ctrl_sysfs_dir = "/sys/class/nvme";
+const char *nvme_ns_sysfs_dir = "/sys/block";
 const char *nvme_subsys_sysfs_dir = "/sys/class/nvme-subsystem";
 
 int nvme_namespace_filter(const struct dirent *d)

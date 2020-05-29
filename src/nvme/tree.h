@@ -22,6 +22,7 @@
 
 extern const char *nvme_ctrl_sysfs_dir;
 extern const char *nvme_subsys_sysfs_dir;
+extern const char *nvme_ns_sysfs_dir;
 
 /**
  *
@@ -52,12 +53,6 @@ typedef struct nvme_root *nvme_root_t;
  *
  */
 typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t);
-
-
-/**
- *
- */
-nvme_ns_t nvme_ns_open(char *name);
 
 /**
  * nvme_first_subsystem() -
@@ -320,6 +315,12 @@ nvme_subsystem_t nvme_ns_get_subsystem(nvme_ns_t n);
  * Return: 
  */
 nvme_ctrl_t nvme_ns_get_ctrl(nvme_ns_t n);
+
+/**
+ * nvme_free_ns() -
+ * @ns:
+ */
+void nvme_free_ns(struct nvme_ns *n);
 
 /**
  * nvme_ns_read() -
@@ -699,5 +700,7 @@ char *nvme_get_ns_attr(nvme_ns_t n, const char *attr);
  * Return: 
  */
 char *nvme_get_path_attr(nvme_path_t p, const char *attr);
+
+nvme_ns_t nvme_scan_namespace(const char *name);
 
 #endif /* _LIBNVME_TREE_H */
