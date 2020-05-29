@@ -23,6 +23,20 @@
 #endif
 
 /**
+ * NVME_GET() - extract field from complex value
+ * @name: The name of the sub-field within an nvme value
+ * @value: The original value of a complex field
+ *
+ * By convention, this library defines _SHIFT and _MASK such that mask can be
+ * applied after the shift to isolate a specific set of bits that decode to a
+ * sub-field.
+ *
+ * Returns: The 'name' field from 'value'
+ */
+#define NVME_GET(name, value) \
+	(((value) >> NVME_##name##_SHIFT) & NVME_##name##_MASK)
+
+/**
  * cpu_to_le16() -
  * @x: 16-bit CPU value to turn to little endian.
  */
@@ -82,11 +96,11 @@ static inline uint64_t le64_to_cpu(__le64 x)
  * 				namespaces
  * @NVME_NSID_NONE:		The invalid namespace id, for when the nsid
  * 				parameter is not used in a command
- * @NVME_UUID_NONE:		Use to omit the uuid command parameter
- * @NVME_CNTLID_NONE:		Use to omit the cntlid command parameter
- * @NVME_NVMSETID_NONE: 	Use to omit the nvmsetid command parameter
- * @NVME_LOG_LSP_NONE:		Use to omit the log lsp command parameter
- * @NVME_LOG_LSI_NONE:		Use to omit the log lsi command parameter
+ * @NVME_UUID_NONE:		Use to omit a uuid command parameter
+ * @NVME_CNTLID_NONE:		Use to omit a cntlid command parameter
+ * @NVME_NVMSETID_NONE: 	Use to omit a nvmsetid command parameter
+ * @NVME_LOG_LSP_NONE:		Use to omit a log lsp command parameter
+ * @NVME_LOG_LSI_NONE:		Use to omit a log lsi command parameter
  * @NVME_IDENTIFY_DATA_SIZE:	The transfer size for nvme identify commands
  * @NVME_ID_NVMSET_LIST_MAX:	The largest possible nvmset index in identify
  * 				nvmeset
@@ -105,9 +119,9 @@ static inline uint64_t le64_to_cpu(__le64 x)
  * @NVME_LOG_TELEM_BLOCK_SIZE:	Specification defined size of Telemetry Data Blocks
  * @NVME_DSM_MAX_RANGES:	The largest possible range index in a data-set
  * 				management command
- * @NVME_NQN_LENGTH:		Max length for NVMe Qualified Name.
- * @NVMF_TRADDR_SIZE:
- * @NVMF_TSAS_SIZE:
+ * @NVME_NQN_LENGTH:		Max length for NVMe Qualified Name
+ * @NVMF_TRADDR_SIZE:		Max Transport Address size
+ * @NVMF_TSAS_SIZE:		Max Transport Specific Address Subtype size
  */
 enum nvme_constants {
 	NVME_NSID_ALL			= 0xffffffff,
@@ -131,8 +145,6 @@ enum nvme_constants {
 	NVME_NQN_LENGTH			= 256,
 	NVMF_TRADDR_SIZE		= 256,
 	NVMF_TSAS_SIZE			= 256,
-	NVME_NIDT_EUI64_LEN		= 8,
-	NVME_NIDT_NGUID_LEN		= 16,
 };
 
 /**
@@ -233,8 +245,7 @@ static inline __u64 nvme_mmio_read64(void *addr)
         return le32_to_cpu(*p) | ((uint64_t)le32_to_cpu(*(p + 1)) << 32);
 }
 
-#define NVME_REG_VALUE(name, value) \
-	(((value) >> NVME_##name##_SHIFT) & NVME_##name##_MASK)
+#define NVME_REG_VALUE(name, value) NVME_GET(name, value)
 
 enum nvme_cap {
 	NVME_CAP_MQES_SHIFT		= 0,
@@ -1894,27 +1905,32 @@ enum nvme_ns_id_desc_nidt {
 	NVME_NIDT_UUID		= 3,
 };
 
+enum nvme_ns_id_desc_nidt_lens {
+	NVME_NIDT_EUI64_LEN		= 8,
+	NVME_NIDT_NGUID_LEN		= 16,
+	NVME_NIDT_UUID_LEN		= 16,
+};
+
 /**
  * struct nvme_nvmset_attr - NVM Set Attributes Entry
- * @id:			    NVM Set Identifier
- * @endurance_group_id:	    Endurance Group Identifier
- * @random_4k_read_typical: Random 4 KiB Read Typical indicates the typical
- * 			    time to complete a 4 KiB random read in 100
- * 			    nanosecond units when the NVM Set is in a
- * 			    Predictable Latency Mode Deterministic Window and
- * 			    there is 1 outstanding command per NVM Set.
- * @opt_write_size:
- * @total_nvmset_cap:
- * @unalloc_nvmset_cap:
+ * @nvmsetid:	NVM Set Identifier
+ * @endgid:	Endurance Group Identifier
+ * @rr4kt:	Random 4 KiB Read Typical indicates the typical
+ *		time to complete a 4 KiB random read in 100 nanosecond units
+ *		when the NVM Set is in a Predictable Latency Mode Deterministic
+ *		Window and there is 1 outstanding command per NVM Set.
+ * @ows:	Optimal Write Size
+ * @tnvmsetcap:	Total NVM Set Capacity
+ * @unvmsetcap:	Unallocated NVM Set Capacity
  */
 struct nvme_nvmset_attr {
-	__le16			id;
-	__le16			endurance_group_id;
+	__le16			nvmsetid;
+	__le16			endgid;
 	__u8			rsvd4[4];
-	__le32			random_4k_read_typical;
-	__le32			opt_write_size;
-	__u8			total_nvmset_cap[16];
-	__u8			unalloc_nvmset_cap[16];
+	__le32			rr4kt;
+	__le32			ows;
+	__u8			tnvmsetcap[16];
+	__u8			unvmsetcap[16];
 	__u8			rsvd48[80];
 };
 
@@ -1931,12 +1947,12 @@ struct nvme_id_nvmset_list {
 
 /**
  * struct nvme_id_ns_granularity_desc -
- * @namespace_size_granularity:
- * @namespace_capacity_granularity:
+ * @nszegran:
+ * @ncapgran:
  */
 struct nvme_id_ns_granularity_desc {
-	__le64			namespace_size_granularity;
-	__le64			namespace_capacity_granularity;
+	__le64			nszegran;
+	__le64			ncapgran;
 };
 
 /**
@@ -2706,15 +2722,17 @@ struct nvme_sanitize_log_page {
  * @NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS:
  */
 enum nvme_sanitize_sstat {
+	NVME_SANITIZE_SSTAT_STATUS_SHIFT		= 0,
 	NVME_SANITIZE_SSTAT_STATUS_MASK			= 0x7,
 	NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED	= 0,
 	NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS	= 1,
 	NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS		= 2,
 	NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED	= 3,
 	NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS	= 4,
-	NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK	= 0xf8,
 	NVME_SANITIZE_SSTAT_COMPLETED_PASSES_SHIFT	= 3,
-	NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED		= 1 << 8,
+	NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK	= 0x1f,
+	NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_SHIFT	= 8,
+	NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_MASK	= 0x1,
 };
 
 /**
@@ -2756,10 +2774,10 @@ struct nvme_feat_auto_pst {
  * enum nvme_apst_entry -
  */
 enum nvme_apst_entry {
-	NVME_APST_ENTRY_ITPS_MASK = 0xf8,
 	NVME_APST_ENTRY_ITPS_SHIFT = 3,
-	NVME_APST_ENTRY_ITPT_MASK = 0xffffff00,
 	NVME_APST_ENTRY_ITPT_SHIFT = 8,
+	NVME_APST_ENTRY_ITPS_MASK = 0x1f,
+	NVME_APST_ENTRY_ITPT_MASK = 0xffffff,
 };
 
 /**
@@ -2896,7 +2914,7 @@ struct nvme_registered_ctrl_ext {
 };
 
 /**
- * struct nvme_reservation_status -{
+ * struct nvme_resv_status -{
  * @gen:
  * @rtype:
  * @regctl:
@@ -2904,7 +2922,7 @@ struct nvme_registered_ctrl_ext {
  * @regctl_eds:
  * @regctl_ds:
  */
-struct nvme_reservation_status {
+struct nvme_resv_status {
 	__le32	gen;
 	__u8	rtype;
 	__u8	regctl[2];

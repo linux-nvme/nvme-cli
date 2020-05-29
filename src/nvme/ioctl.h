@@ -939,9 +939,9 @@ int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 /**
  * nvme_identify_primary_ctrl() - Retrieve NVMe Primary Controller
  * 				  identification
- * &fd:
- * @cntid:
- * @cap:
+ * @fd:		File descriptor of nvme device
+ * @cntid:	Return controllers starting at this identifier
+ * @cap:	User space destination buffer address to transfer the data
  *
  * See &struct nvme_primary_ctrl_cap for the defintion of the returned structure, @cap.
  *
@@ -1006,10 +1006,11 @@ int nvme_identify_uuid(int fd, struct nvme_id_uuid_list *list);
 
 /**
  * nvme_get_log() - NVMe Admin Get Log command
- * @fd:	  File descriptor of nvme device
- * @lid:  Log page identifier, see &enum nvme_cmd_get_log_lid for known values
- * @nsid:  Namespace identifier, if applicable
- * @lpo:   Log page offset for partial log transfers
+ * @fd:		File descriptor of nvme device
+ * @lid:	Log page identifier, see &enum nvme_cmd_get_log_lid for known
+ * 		values
+ * @nsid: 	Namespace identifier, if applicable
+ * @lpo:	Log page offset for partial log transfers
  * @lsp:   Log specific field
  * @lsi:   Endurance group information
  * @rae:   Retain asynchronous events
@@ -1030,8 +1031,8 @@ int nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u64 lpo,
  * @rae:	Retain asynchronous events
  * @err_log:	Array of error logs of size 'entries'
  *
- * This log page is used to describe extended error information for a command
- * that completed with error, or may report an error that is not specific to a
+ * This log page describes extended error information for a command that
+ * completed with error, or may report an error that is not specific to a
  * particular command.
  *
  * Return: The nvme command status if a response was received (see
@@ -1047,12 +1048,12 @@ int nvme_get_log_error(int fd, unsigned nr_entries, bool rae,
  * @rae:	Retain asynchronous events
  * @smart_log:	User address to store the smart log
  *
- * This log page is used to provide SMART and general health information. The
- * information provided is over the life of the controller and is retained
- * across power cycles. To request the controller log page, the namespace
- * identifier specified is FFFFFFFFh. The controller may also support
- * requesting the log page on a per namespace basis, as indicated by bit 0 of
- * the LPA field in the Identify Controller data structure.
+ * This log page provides SMART and general health information. The information
+ * provided is over the life of the controller and is retained across power
+ * cycles. To request the controller log page, the namespace identifier
+ * specified is FFFFFFFFh. The controller may also support requesting the log
+ * page on a per namespace basis, as indicated by bit 0 of the LPA field in the
+ * Identify Controller data structure.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -1065,9 +1066,9 @@ int nvme_get_log_smart(int fd, __u32 nsid, bool rae, struct nvme_smart_log *log)
  * @rae:	Retain asynchronous events
  * @fw_log:	User address to store the log page
  *
- * This log page is used to describe the firmware revision stored in each
- * firmware slot supported. The firmware revision is indicated as an ASCII
- * string. The log page also indicates the active slot number.
+ * This log page describes the firmware revision stored in each firmware slot
+ * supported. The firmware revision is indicated as an ASCII string. The log
+ * page also indicates the active slot number.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -1080,9 +1081,9 @@ int nvme_get_log_fw_slot(int fd, bool rae, struct nvme_firmware_slot *log);
  * @rae:	Retain asynchronous events
  * @ns_list:	User address to store the log page
  *
- * This log page is used to describe namespaces attached to this controller
- * that have changed since the last time the namespace was identified, been
- * added, or deleted.
+ * This log page describes namespaces attached to this controller that have
+ * changed since the last time the namespace was identified, been added, or
+ * deleted.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -1094,8 +1095,8 @@ int nvme_get_log_changed_ns_list(int fd, bool rae, struct nvme_ns_list *log);
  * @fd:		File descriptor of nvme device
  * @effects_log:User address to store the effects log
  *
- * This log page is used to describe the commands that the controller supports
- * and the effects of those commands on the state of the NVM subsystem.
+ * This log page describes the commands that the controller supports and the
+ * effects of those commands on the state of the NVM subsystem.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -1108,8 +1109,8 @@ int nvme_get_log_cmd_effects(int fd, struct nvme_cmd_effects_log *log);
  * @nsid:	Namespace ID being tested
  * @log:	Userspace address of the log payload
  *
- * The log page is used to indicate the status of an in progress self test and
- * the percent complete of that operation, and the results of the previous 20
+ * The log page indicates the status of an in progress self test and the
+ * percent complete of that operation, and the results of the previous 20
  * self-test operations.
  *
  * Return: The nvme command status if a response was received (see
@@ -1272,8 +1273,8 @@ int nvme_get_log_reservation(int fd, bool rae,
  * @rae:	Retain asynchronous events
  * @log:	User address to store the sanitize log
  *
- * The Sanitize Status log page is used to report sanitize operation time
- * estimates and information about the most recent sanitize operation.
+ * The Sanitize Status log page reports sanitize operation time estimates and
+ * information about the most recent sanitize operation.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -1338,7 +1339,6 @@ int nvme_set_features_power_mgmt(int fd, __u8 ps, __u8 wh, bool save,
 int nvme_set_features_lba_range(int fd, __u32 nsid, __u32 nr_ranges, bool save,
 				struct nvme_lba_range_type *data, __u32 *result);
 
-
 /**
  * enum nvme_feat_tmpthresh_thsel -
  */
@@ -1371,7 +1371,6 @@ int nvme_set_features_temp_thresh(int fd, __u16 tmpth, __u8 tmpsel,
  */
 int nvme_set_features_err_recovery(int fd, __u32 nsid, __u16 tler,
 				   bool dulbe, bool save, __u32 *result);
-
 
 /**
  * nvme_set_features_volatile_wc() -
@@ -1408,7 +1407,6 @@ int nvme_set_features_irq_coalesce(int fd, __u8 thr, __u8 time,
  */
 int nvme_set_features_irq_config(int fd, __u16 iv, bool cd, bool save,
 				 __u32 *result);
-
 
 /**
  * nvme_set_features_write_atomic() -
@@ -1454,7 +1452,6 @@ enum nvme_features_async_event_config_flags {
 int nvme_set_features_async_event(int fd, __u32 events, bool save,
 				  __u32 *result);
 
-
 /**
  * nvme_set_features_auto_pst() -
  * @fd:		File descriptor of nvme device
@@ -1479,7 +1476,6 @@ int nvme_set_features_auto_pst(int fd, bool apste, bool save,
  */
 int nvme_set_features_timestamp(int fd, bool save, __u64 timestamp);
 
-
 /**
  * nvme_set_features_hctm() -
  * @fd:		File descriptor of nvme device
@@ -1494,6 +1490,12 @@ int nvme_set_features_hctm(int fd, __u16 tmt2, __u16 tmt1, bool save,
 
 /**
  * nvme_set_features_nopsc() -
+ * @fd:		File descriptor of nvme device
+ * @save:	Save value across power states
+ * @result:	The command completion result from CQE dword0
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_set_features_nopsc(int fd, bool noppme, bool save, __u32 *result);
 
@@ -1542,7 +1544,6 @@ enum nvme_feat_plm_window_select {
 int nvme_set_features_plm_window(int fd, enum nvme_feat_plm_window_select sel,
 				 __u16 nvmsetid, bool save, __u32 *result);
 
-
 /**
  * nvme_set_features_lba_sts_interval() -
  * @fd:		File descriptor of nvme device
@@ -1555,11 +1556,11 @@ int nvme_set_features_plm_window(int fd, enum nvme_feat_plm_window_select sel,
 int nvme_set_features_lba_sts_interval(int fd, __u16 lsiri, __u16 lsipi,
 				       bool save, __u32 *result);
 
-
 /**
  * nvme_set_features_host_behavior() -
  * @fd:		File descriptor of nvme device
  * @save:	Save value across power states
+ * @data:	
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -1570,6 +1571,7 @@ int nvme_set_features_host_behavior(int fd, bool save,
 /**
  * nvme_set_features_sanitize() -
  * @fd:		File descriptor of nvme device
+ * @nodrm:	
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -1595,6 +1597,7 @@ int nvme_set_features_endurance_evt_cfg(int fd, __u16 endgid, __u8 egwarn,
 /**
  * nvme_set_features_sw_progress() -
  * @fd:		File descriptor of nvme device
+ * @pbslc:	
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -1608,6 +1611,7 @@ int nvme_set_features_sw_progress(int fd, __u8 pbslc, bool save,
 /**
  * nvme_set_features_host_id() -
  * @fd:		File descriptor of nvme device
+ * @exhid:	
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -1628,6 +1632,7 @@ enum nvme_feat_resv_notify_flags {
 /**
  * nvme_set_features_resv_mask() -
  * @fd:		File descriptor of nvme device
+ * @mask:	
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -1639,6 +1644,7 @@ int nvme_set_features_resv_mask(int fd, __u32 mask, bool save, __u32 *result);
 /**
  * nvme_set_features_resv_persist() -
  * @fd:		File descriptor of nvme device
+ * @ptpl:	
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -1664,6 +1670,7 @@ enum nvme_feat_nswpcfg_state {
 /**
  * nvme_set_features_write_protect() -
  * @fd:		File descriptor of nvme device
+ * @stat:	
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2054,10 +2061,10 @@ int nvme_get_features_write_protect(int fd, __u32 nsid,
  * @timeout:	Set to override default timeout to this value in milliseconds;
  * 		useful for long running formats. 0 will use system default.
  *
- * The Format NVM command is used to low level format the NVM media. This
- * command is used by the host to change the LBA data size and/or metadata
- * size. A low level format may destroy all data and metadata associated with
- * all namespaces or only the specific namespace associated with the command
+ * The Format NVM command low level formats the NVM media. This command is used
+ * by the host to change the LBA data size and/or metadata size. A low level
+ * format may destroy all data and metadata associated with all namespaces or
+ * only the specific namespace associated with the command
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -2142,9 +2149,9 @@ int nvme_ns_detach_ctrls(int fd, __u32 nsid, struct nvme_ctrl_list *ctrlist);
  * @data_len:	Length of data in this command in bytes
  * @data:	Userspace address of the firmware data
  *
- * The Firmware Image Download command is used to download all or a portion of
- * an image for a future update to the controller. The Firmware Image Download
- * command downloads a new image (in whole or in part) to the controller.
+ * The Firmware Image Download command downloads all or a portion of an image
+ * for a future update to the controller. The Firmware Image Download command
+ * downloads a new image (in whole or in part) to the controller.
  *
  * The image may be constructed of multiple pieces that are individually
  * downloaded with separate Firmware Image Download commands. Each Firmware
@@ -2167,8 +2174,7 @@ int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data);
  * @action:	Action to use for the firmware image, see &enum nvme_fw_commit_ca
  * @bpid:	Set to true to select the boot partition id
  *
- * The Firmware Commit command is used to modify the firmware image or Boot
- * Partitions.
+ * The Firmware Commit command modifies the firmware image or Boot Partitions.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise. The command
@@ -2191,7 +2197,7 @@ int nvme_fw_commit(int fd, __u8 slot, enum nvme_fw_commit_ca action, bool bpid);
  * @data:	Security data payload to send
  * @result:	The command completion result from CQE dword0
  *
- * The Security Send command is used to transfer security protocol data to the
+ * The Security Send command transfers security protocol data to the
  * controller. The data structure transferred to the controller as part of this
  * command contains security protocol specific commands to be performed by the
  * controller. The data structure transferred may also contain data or
@@ -2261,8 +2267,8 @@ int nvme_get_lba_status(int fd, __u32 nsid, __u64 slba, __u32 mndw, __u16 rl,
  * @result:	If successful, the CQE dword0 value
  *
  * Directives is a mechanism to enable host and NVM subsystem or controller
- * information exchange. The Directive Send command is used to transfer data
- * related to a specific Directive Type from the host to the controller.
+ * information exchange. The Directive Send command transfers data related to a
+ * specific Directive Type from the host to the controller.
  *
  * See the NVMe specification for more information.
  *
@@ -2431,11 +2437,11 @@ int nvme_get_property(int fd, int offset, __u64 *value);
  * recovery of any previous user data from any cache, the non-volatile media,
  * or any Controller Memory Buffer is not possible.
  *
- * The Sanitize command is used to start a sanitize operation or to recover
- * from a previously failed sanitize operation. The sanitize operation types
- * that may be supported are Block Erase, Crypto Erase, and Overwrite. All
- * sanitize operations are processed in the background, i.e., completion of the
- * sanitize command does not indicate completion of the sanitize operation.
+ * The Sanitize command starts a sanitize operation or to recover from a
+ * previously failed sanitize operation. The sanitize operation types that may
+ * be supported are Block Erase, Crypto Erase, and Overwrite. All sanitize
+ * operations are processed in the background, i.e., completion of the sanitize
+ * command does not indicate completion of the sanitize operation.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -2449,12 +2455,12 @@ int nvme_sanitize_nvm(int fd, enum nvme_sanitize_sanact sanact, bool ause,
  * @nsid:	Namespace ID to test
  * @stc:	Self test code, see &enum nvme_dst_stc
  *
- * The Device Self-test command is used to start a device self-test operation
- * or abort a device self-test operation. A device self-test operation is a
- * diagnostic testing sequence that tests the integrity and functionality of
- * the controller and may include testing of the media associated with
- * namespaces. The controller may return a response to this command immediately
- * while running the self-test in the background.
+ * The Device Self-test command starts a device self-test operation or abort a
+ * device self-test operation. A device self-test operation is a diagnostic
+ * testing sequence that tests the integrity and functionality of the
+ * controller and may include testing of the media associated with namespaces.
+ * The controller may return a response to this command immediately while
+ * running the self-test in the background.
  *
  * Set the 'nsid' field to 0 to not include namepsaces in the test. Set to
  * 0xffffffff to test all namespaces. All other values tests a specific
@@ -2524,8 +2530,8 @@ enum nvme_io_opcode {
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace identifier
  *
- * The Flush command is used to request that the contents of volatile write
- * cache be made non-volatile.
+ * The Flush command requests that the contents of volatile write cache be made
+ * non-volatile.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -2695,10 +2701,10 @@ int nvme_compare(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * 		only if the namespace is formatted to use end-to-end protection
  * 		information.
  *
- * The Write Zeroes command is used to set a range of logical blocks to zero.
- * After successful completion of this command, the value returned by
- * subsequent reads of logical blocks in this range shall be all bytes cleared
- * to 0h until a write occurs to this LBA range.
+ * The Write Zeroes command sets a range of logical blocks to zero.  After
+ * successful completion of this command, the value returned by subsequent
+ * reads of logical blocks in this range shall be all bytes cleared to 0h until
+ * a write occurs to this LBA range.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -2713,11 +2719,10 @@ int nvme_write_zeros(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * @slba:	Starting logical block
  * @nlb:	Number of logical blocks to invalidate (0's based value)
  *
- * The Write Uncorrectable command is used to mark a range of logical blocks as
- * invalid. When the specified logical block(s) are read after this operation,
- * a failure is returned with Unrecovered Read Error status. To clear the
- * invalid logical block status, a write operation on those logical blocks is
- * required.
+ * The Write Uncorrectable command marks a range of logical blocks as invalid.
+ * When the specified logical block(s) are read after this operation, a failure
+ * is returned with Unrecovered Read Error status. To clear the invalid logical
+ * block status, a write operation on those logical blocks is required.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -2784,7 +2789,7 @@ int nvme_dsm(int fd, __u32 nsid, __u32 attrs, __u16 nr_ranges,
 	     struct nvme_dsm_range *dsm);
 
 /**
- * enum nvme_reservation_rtype -
+ * enum nvme_resv_rtype -
  * @NVME_RESERVATION_RTYPE_WE:
  * @NVME_RESERVATION_RTYPE_EA:
  * @NVME_RESERVATION_RTYPE_WERO:
@@ -2792,7 +2797,7 @@ int nvme_dsm(int fd, __u32 nsid, __u32 attrs, __u16 nr_ranges,
  * @NVME_RESERVATION_RTYPE_WEAR:
  * @NVME_RESERVATION_RTYPE_EAAR:
  */
-enum nvme_reservation_rtype {
+enum nvme_resv_rtype {
 	NVME_RESERVATION_RTYPE_WE	= 1,
 	NVME_RESERVATION_RTYPE_EA	= 2,
 	NVME_RESERVATION_RTYPE_WERO	= 3,
@@ -2802,12 +2807,12 @@ enum nvme_reservation_rtype {
 };
 
 /**
- * enum nvme_reservation_racqa -
+ * enum nvme_resv_racqa -
  * @NVME_RESERVATION_RACQA_ACQUIRE:
  * @NVME_RESERVATION_RACQA_PREEMPT:
  * @NVME_RESERVATION_RACQA_PREEMPT_AND_ABORT:
  */
-enum nvme_reservation_racqa {
+enum nvme_resv_racqa {
 	NVME_RESERVATION_RACQA_ACQUIRE			= 0,
 	NVME_RESERVATION_RACQA_PREEMPT			= 1,
 	NVME_RESERVATION_RACQA_PREEMPT_AND_ABORT	= 2,
@@ -2817,43 +2822,43 @@ enum nvme_reservation_racqa {
  * nvme_resv_acquire() - Send an nvme reservation acquire
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace identifier
- * @rtype:	The type of reservation to be create, see &enum nvme_reservation_rtype
- * @racqa:	The action that is performed by the command, see &enum nvme_reservation_racqa
+ * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
+ * @racqa:	The action that is performed by the command, see &enum nvme_resv_racqa
  * @iekey:	Set to ignore the existing key
  * @crkey:	The current reservation key associated with the host
  * @nrkey:	The reservation key to be unregistered from the namespace if
  * 		the action is preempt
  *
- * The Reservation Acquire command is used to acquire a reservation on a
- * namespace, preempt a reservation held on a namespace, and abort a
- * reservation held on a namespace.
+ * The Reservation Acquire command acquires a reservation on a namespace,
+ * preempt a reservation held on a namespace, and abort a reservation held on a
+ * namespace.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_reservation_rtype rtype,
-		      enum nvme_reservation_racqa racqa, bool iekey,
+int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
+		      enum nvme_resv_racqa racqa, bool iekey,
 		      __u64 crkey, __u64 nrkey);
 
 /**
- * enum nvme_reservation_rrega -
+ * enum nvme_resv_rrega -
  * @NVME_RESERVATION_RREGA_REGISTER_KEY:
  * @NVME_RESERVATION_RREGA_UNREGISTER_KEY:
  * @NVME_RESERVATION_RREGA_REPLACE_KEY:
  */
-enum nvme_reservation_rrega {
+enum nvme_resv_rrega {
 	NVME_RESERVATION_RREGA_REGISTER_KEY		= 0,
 	NVME_RESERVATION_RREGA_UNREGISTER_KEY		= 1,
 	NVME_RESERVATION_RREGA_REPLACE_KEY		= 2,
 };
 
 /**
- * enum nvme_reservation_cptpl -
+ * enum nvme_resv_cptpl -
  * @NVME_RESERVATION_CPTPL_NO_CHANGE:
  * @NVME_RESERVATION_CPTPL_CLEAR:
  * @NVME_RESERVATION_CPTPL_PERSIST:
  */
-enum nvme_reservation_cptpl {
+enum nvme_resv_cptpl {
 	NVME_RESERVATION_CPTPL_NO_CHANGE		= 0,
 	NVME_RESERVATION_CPTPL_CLEAR			= 2,
 	NVME_RESERVATION_CPTPL_PERSIST			= 3,
@@ -2863,29 +2868,29 @@ enum nvme_reservation_cptpl {
  * nvme_resv_register() - Send an nvme reservation register
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace identifier
- * @rrega:	The registration action, see &enum nvme_reservation_rrega
- * @cptpl:	Change persist through power loss, see &enum nvme_reservation_cptpl
+ * @rrega:	The registration action, see &enum nvme_resv_rrega
+ * @cptpl:	Change persist through power loss, see &enum nvme_resv_cptpl
  * @iekey:	Set to ignore the existing key
  * @crkey:	The current reservation key associated with the host
  * @nrkey:	The new reservation key to be register if action is register or
  * 		replace
  *
- * The Reservation Register command is used to register, unregister, or replace
- * a reservation key.
+ * The Reservation Register command registers, unregisters, or replaces a
+ * reservation key.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_resv_register(int fd, __u32 nsid, enum nvme_reservation_rrega rrega,
-		       enum nvme_reservation_cptpl cptpl, bool iekey,
+int nvme_resv_register(int fd, __u32 nsid, enum nvme_resv_rrega rrega,
+		       enum nvme_resv_cptpl cptpl, bool iekey,
 		       __u64 crkey, __u64 nrkey);
 
 /**
- * enum nvme_reservation_rrela -
+ * enum nvme_resv_rrela -
  * @NVME_RESERVATION_RRELA_RELEASE:
  * @NVME_RESERVATION_RRELA_CLEAR:
  */
-enum nvme_reservation_rrela {
+enum nvme_resv_rrela {
 	NVME_RESERVATION_RRELA_RELEASE			= 0,
 	NVME_RESERVATION_RRELA_CLEAR			= 1
 };
@@ -2894,16 +2899,16 @@ enum nvme_reservation_rrela {
  * nvme_resv_release() - Send an nvme reservation release
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace identifier
- * @rtype:	The type of reservation to be create, see &enum nvme_reservation_rtype
- * @rrela:	Reservation releast action, see &enum  nvme_reservation_rrela
+ * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
+ * @rrela:	Reservation releast action, see &enum nvme_resv_rrela
  * @iekey:	Set to ignore the existing key
  * @crkey:	The current reservation key to release
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_resv_release(int fd, __u32 nsid, enum nvme_reservation_rtype rtype,
-		      enum nvme_reservation_rrela rrela, bool iekey,
+int nvme_resv_release(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
+		      enum nvme_resv_rrela rrela, bool iekey,
 		      __u64 crkey);
 
 /**
@@ -2922,5 +2927,5 @@ int nvme_resv_release(int fd, __u32 nsid, enum nvme_reservation_rtype rtype,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
-		     struct nvme_reservation_status *report);
+		     struct nvme_resv_status *report);
 #endif /* _LIBNVME_IOCTL_H */

@@ -15,6 +15,8 @@
 
 #include <sys/types.h>
 
+#include <uuid/uuid.h>
+
 #include "ioctl.h"
 #include "util.h"
 
@@ -263,6 +265,31 @@ uint64_t nvme_ns_get_lba_count(nvme_ns_t n);
 uint64_t nvme_ns_get_lba_util(nvme_ns_t n);
 
 /**
+ * nvme_ns_get_eui64() -
+ * @n:
+ *
+ * Returns a pointer to the 64-bit eui
+ */
+const uint8_t *nvme_ns_get_eui64(nvme_ns_t n);
+
+/**
+ * nvme_ns_get_nguid() -
+ * @n:
+ *
+ * Returns a pointer to the 128-bit nguid
+ */
+const uint8_t *nvme_ns_get_nguid(nvme_ns_t n);
+
+/**
+ * nvme_ns_get_uuid() -
+ * @n:
+ * @out:
+ *
+ * Copies the namespace's uuid to the destination buffer
+ */
+void nvme_ns_get_uuid(nvme_ns_t n, uuid_t out);
+
+/**
  * nvme_ns_get_sysfs_dir() -
  * @n:
  *
@@ -373,6 +400,15 @@ int nvme_ns_flush(nvme_ns_t n);
  * Return: 
  */
 int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns);
+
+/**
+ * nvme_ns_identify_descs() -
+ * @n:
+ * @descs:
+ *
+ * Return: 
+ */
+int nvme_ns_identify_descs(nvme_ns_t n, struct nvme_ns_id_desc *descs);
 
 /**
  * nvme_path_get_name() -

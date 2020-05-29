@@ -18,6 +18,8 @@
 
 #include <ccan/list/list.h>
 
+#include <uuid/uuid.h>
+
 #include "ioctl.h"
 #include "filters.h"
 #include "tree.h"
@@ -48,15 +50,19 @@ struct nvme_ns {
 	struct nvme_ctrl *c;
 
 	int fd;
+	int nsid;
 	char *name;
 	char *sysfs_dir;
-	int nsid;
 
 	int lba_shift;
 	int lba_size;
 	int meta_size;
 	uint64_t lba_count;
 	uint64_t lba_util;
+
+	uint8_t eui64[8];
+	uint8_t nguid[16];
+	uuid_t  uuid;
 };
 
 struct nvme_ctrl {
@@ -357,7 +363,7 @@ void nvme_free_path(struct nvme_path *p)
 
 static void nvme_subsystem_set_path_ns(nvme_subsystem_t s, nvme_path_t p)
 {
-	char n_name[32] = { 0 };
+	char n_name[32] = { };
 	int i, c, nsid, ret;
 	nvme_ns_t n;
 
@@ -720,9 +726,29 @@ uint64_t nvme_ns_get_lba_util(nvme_ns_t n)
 	return n->lba_util;
 }
 
+const uint8_t *nvme_ns_get_eui64(nvme_ns_t n)
+{
+	return n->eui64;
+}
+
+const uint8_t *nvme_ns_get_nguid(nvme_ns_t n)
+{
+	return n->nguid;
+}
+
+void nvme_ns_get_uuid(nvme_ns_t n, uuid_t out)
+{
+	uuid_copy(out, n->uuid);
+}
+
 int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns)
 {
 	return nvme_identify_ns(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), ns);
+}
+
+int nvme_ns_identify_descs(nvme_ns_t n, struct nvme_ns_id_desc *descs)
+{
+	return nvme_identify_ns_descs(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), descs);
 }
 
 int nvme_ns_verify(nvme_ns_t n, off_t offset, size_t count)
@@ -802,9 +828,38 @@ int nvme_ns_flush(nvme_ns_t n)
 	return nvme_flush(nvme_ns_get_fd(n), nvme_ns_get_nsid(n));
 }
 
+static void nvme_ns_parse_descriptors(struct nvme_ns *n,
+				      struct nvme_ns_id_desc *descs)
+{
+	void *d = descs;
+	int i, len;
+
+	for (i = 0; i < NVME_IDENTIFY_DATA_SIZE; i += len) {
+		struct nvme_ns_id_desc *desc = d + i;
+
+		if (!desc->nidl)
+			break;
+		len = desc->nidl + sizeof(*desc);
+
+		switch (desc->nidt) {
+		case NVME_NIDT_EUI64:
+			memcpy(n->eui64, desc->nid, sizeof(n->eui64));
+			break;
+		case NVME_NIDT_NGUID:
+			memcpy(n->nguid, desc->nid, sizeof(n->nguid));
+			break;
+		case NVME_NIDT_UUID:
+			memcpy(n->uuid, desc->nid, sizeof(n->uuid));
+			break;
+		}
+	}
+}
+
 static void nvme_ns_init(struct nvme_ns *n)
 {
-	struct nvme_id_ns ns = { 0 };
+	struct nvme_id_ns ns = { };
+	uint8_t buffer[NVME_IDENTIFY_DATA_SIZE] = { };
+	struct nvme_ns_id_desc *descs = (void *)buffer;
 
 	if (nvme_ns_identify(n, &ns) != 0)
 		return;
@@ -813,8 +868,10 @@ static void nvme_ns_init(struct nvme_ns *n)
 	n->lba_size = 1 << n->lba_shift;
 	n->lba_count = le64_to_cpu(ns.nsze);
 	n->lba_util = le64_to_cpu(ns.nuse);
-}
 
+	if (!nvme_ns_identify_descs(n, descs))
+		nvme_ns_parse_descriptors(n, descs);
+}
 
 nvme_ns_t nvme_ns_open(char *name)
 {

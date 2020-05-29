@@ -277,7 +277,7 @@ static int test_namespace(nvme_ns_t n)
 		printf("  ERROR: Identify allocated ns:%x\n", ret);
 	ret = nvme_identify_ns_descs(fd, nsid,  &descs);
 	if (!ret)
-		printf("  Identify NS Descriptorss\n");
+		printf("  Identify NS Descriptors\n");
 	else
 		printf("  ERROR: Identify NS Descriptors:%x\n", ret);
 	ret = nvme_get_features_write_protect(fd, nsid,
@@ -287,6 +287,14 @@ static int test_namespace(nvme_ns_t n)
 	else if (ret > 0)
 		printf("  ERROR: Write Protect:%x\n", ret);
 	return 0;
+}
+
+static void print_hex(const uint8_t *x, int len)
+{
+	int i;
+
+	for (i = 0; i < len; i++)
+		printf("%02x", x[i]);
 }
 
 int main()
@@ -338,10 +346,21 @@ int main()
 				nvme_ctrl_get_address(c),
 				nvme_ctrl_get_state(c));
 
-			nvme_ctrl_for_each_ns(c, n)
+			nvme_ctrl_for_each_ns(c, n) {
+				char uuid_str[40];
+				uuid_t uuid;
+
 				printf("   `- %s lba size:%d lba max:%lu\n",
 					nvme_ns_get_name(n), nvme_ns_get_lba_size(n),
 					nvme_ns_get_lba_count(n));
+				printf("      eui:");
+				print_hex(nvme_ns_get_eui64(n), 8);
+				printf(" nguid:");
+				print_hex(nvme_ns_get_nguid(n), 16);
+				nvme_ns_get_uuid(n, uuid);
+				uuid_unparse_lower(uuid, uuid_str);
+				printf(" uuid:%s\n", uuid_str);
+			}
 
 			nvme_ctrl_for_each_path(c, p)
 				printf("   `- %s %s\n", nvme_path_get_name(p),

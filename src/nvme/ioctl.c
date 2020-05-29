@@ -1645,8 +1645,8 @@ int nvme_dsm(int fd, __u32 nsid, __u32 attrs, __u16 nr_ranges,
 	return nvme_submit_io_passthru(fd, &cmd, NULL);
 }
 
-int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_reservation_rtype rtype,
-		      enum nvme_reservation_racqa racqa, bool iekey,
+int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
+		      enum nvme_resv_racqa racqa, bool iekey,
 		      __u64 crkey, __u64 nrkey)
 {
 	__le64 payload[2] = { cpu_to_le64(crkey), cpu_to_le64(nrkey) };
@@ -1663,8 +1663,8 @@ int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_reservation_rtype rtype,
 	return nvme_submit_io_passthru(fd, &cmd, NULL);
 }
 
-int nvme_resv_register(int fd, __u32 nsid, enum nvme_reservation_rrega rrega,
-		       enum nvme_reservation_cptpl cptpl, bool iekey,
+int nvme_resv_register(int fd, __u32 nsid, enum nvme_resv_rrega rrega,
+		       enum nvme_resv_cptpl cptpl, bool iekey,
 		       __u64 crkey, __u64 nrkey)
 {
 	__le64 payload[2] = { cpu_to_le64(crkey), cpu_to_le64(nrkey) };
@@ -1681,8 +1681,8 @@ int nvme_resv_register(int fd, __u32 nsid, enum nvme_reservation_rrega rrega,
 	return nvme_submit_io_passthru(fd, &cmd, NULL);
 }
 
-int nvme_resv_release(int fd, __u32 nsid, enum nvme_reservation_rtype rtype,
-		      enum nvme_reservation_rrela rrela, bool iekey,
+int nvme_resv_release(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
+		      enum nvme_resv_rrela rrela, bool iekey,
 		      __u64 crkey)
 {
 	__le64 payload[1] = { cpu_to_le64(crkey) };
@@ -1700,7 +1700,7 @@ int nvme_resv_release(int fd, __u32 nsid, enum nvme_reservation_rtype rtype,
 }
 
 int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
-		     struct nvme_reservation_status *report)
+		     struct nvme_resv_status *report)
 {
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_report,
