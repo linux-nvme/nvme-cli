@@ -186,12 +186,6 @@ nvme_ctrl_t nvmf_add_ctrl(struct nvme_fabrics_config *cfg)
 	return nvme_scan_ctrl(d);
 }
 
-static void chomp(char *s, int l)
-{
-	while (l && (s[l] == '\0' || s[l] == ' '))
-		s[l--] = '\0';
-}
-
 nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
 				    const struct nvme_fabrics_config *defcfg,
 				    bool *discover)
@@ -218,8 +212,8 @@ nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_IP4:
 		case NVMF_ADDR_FAMILY_IP6:
-			chomp(e->traddr, NVMF_TRADDR_SIZE);
-			chomp(e->trsvcid, NVMF_TRSVCID_SIZE);
+			nvme_chomp(e->traddr, NVMF_TRADDR_SIZE);
+			nvme_chomp(e->trsvcid, NVMF_TRSVCID_SIZE);
 			cfg.traddr = e->traddr;
 			cfg.trsvcid = e->trsvcid;
 			break;
@@ -231,7 +225,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
         case NVMF_TRTYPE_FC:
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_FC:
-			chomp(e->traddr, NVMF_TRADDR_SIZE),
+			nvme_chomp(e->traddr, NVMF_TRADDR_SIZE),
 			cfg.traddr = e->traddr;
 			cfg.trsvcid = NULL;
 			break;

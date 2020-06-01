@@ -226,4 +226,15 @@ int nvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
  */
 int nvme_open(const char *name);
 
+/**
+ * nvme_chomp() - Strip trailing white space
+ * &s: String to strip
+ * @l: Maximum length of string
+ */
+static inline void nvme_chomp(char *s, int l)
+{
+	while (l && (s[l] == '\0' || s[l] == ' '))
+		s[l--] = '\0';
+}
+
 #endif /* _LIBNVME_UTIL_H */
