@@ -244,6 +244,14 @@ int nvme_ns_get_nsid(nvme_ns_t n);
 int nvme_ns_get_lba_size(nvme_ns_t n);
 
 /**
+ * nvme_ns_get_meta_size() -
+ * @n:
+ *
+ * Return:
+ */
+int nvme_ns_get_meta_size(nvme_ns_t n);
+
+/**
  * nvme_ns_get_lba_count() -
  * @n:
  *

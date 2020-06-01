@@ -709,6 +709,11 @@ int nvme_ns_get_lba_size(nvme_ns_t n)
 	return n->lba_size;
 }
 
+int nvme_ns_get_meta_size(nvme_ns_t n)
+{
+	return n->meta_size;
+}
+
 uint64_t nvme_ns_get_lba_count(nvme_ns_t n)
 {
 	return n->lba_count;
@@ -853,14 +858,17 @@ static void nvme_ns_init(struct nvme_ns *n)
 	struct nvme_id_ns ns = { };
 	uint8_t buffer[NVME_IDENTIFY_DATA_SIZE] = { };
 	struct nvme_ns_id_desc *descs = (void *)buffer;
+	int flbas;
 
 	if (nvme_ns_identify(n, &ns) != 0)
 		return;
 
-	n->lba_shift = ns.lbaf[ns.flbas & NVME_NS_FLBAS_LBA_MASK].ds;
+	flbas = ns.flbas & NVME_NS_FLBAS_LBA_MASK;
+	n->lba_shift = ns.lbaf[flbas].ds;
 	n->lba_size = 1 << n->lba_shift;
 	n->lba_count = le64_to_cpu(ns.nsze);
 	n->lba_util = le64_to_cpu(ns.nuse);
+	n->meta_size = le16_to_cpu(ns.lbaf[flbas].ms);
 
 	if (!nvme_ns_identify_descs(n, descs))
 		nvme_ns_parse_descriptors(n, descs);
