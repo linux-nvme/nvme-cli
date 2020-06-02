@@ -147,7 +147,7 @@ static int test_ctrl(nvme_ctrl_t c)
 		printf("  Device Self Test\n");
 	else
 		printf("  ERROR: Device Self Test:%x\n", ret);
-	ret = nvme_get_log_cmd_effects(fd, &cfx);
+	ret = nvme_get_log_cmd_effects(fd, NVME_CSI_NVM, &cfx);
 	if (!ret)
 		printf("  Command Effects\n");
 	else
@@ -359,7 +359,7 @@ int main()
 				print_hex(nvme_ns_get_nguid(n), 16);
 				nvme_ns_get_uuid(n, uuid);
 				uuid_unparse_lower(uuid, uuid_str);
-				printf(" uuid:%s\n", uuid_str);
+				printf(" uuid:%s csi:%d\n", uuid_str, nvme_ns_get_csi(n));
 			}
 
 			nvme_ctrl_for_each_path(c, p)

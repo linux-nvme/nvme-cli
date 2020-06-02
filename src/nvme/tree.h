@@ -268,6 +268,14 @@ uint64_t nvme_ns_get_lba_count(nvme_ns_t n);
 uint64_t nvme_ns_get_lba_util(nvme_ns_t n);
 
 /**
+ * nvme_ns_get_csi() -
+ * @n:
+ *
+ * Return: The namespace's command set identifier in use
+ */
+enum nvme_csi nvme_ns_get_csi(nvme_ns_t n);
+
+/**
  * nvme_ns_get_eui64() -
  * @n:
  *

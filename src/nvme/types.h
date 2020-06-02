@@ -145,6 +145,16 @@ enum nvme_constants {
 	NVME_NQN_LENGTH			= 256,
 	NVMF_TRADDR_SIZE		= 256,
 	NVMF_TSAS_SIZE			= 256,
+	NVME_ZNS_CHANGED_ZONES_MAX	= 511,
+};
+
+/**
+ * enum nvme_csi - Defined command set indicators
+ * @NVME_CSI_NVM:	NVM Command Set Indicator
+ */
+enum nvme_csi {
+	NVME_CSI_NVM			= 0,
+	NVME_CSI_ZNS			= 2,
 };
 
 /**
@@ -324,6 +334,7 @@ enum nvme_cc {
 	NVME_CC_IOSQES_MASK	= 0xf,
 	NVME_CC_IOCQES_MASK	= 0xf,
 	NVME_CC_CSS_NVM		= 0,
+	NVME_CC_CSS_CSI         = 6,
 	NVME_CC_CSS_ADMIN	= 7,
 	NVME_CC_AMS_RR		= 0,
 	NVME_CC_AMS_WRRU	= 1,
@@ -1903,12 +1914,14 @@ enum nvme_ns_id_desc_nidt {
 	NVME_NIDT_EUI64		= 1,
 	NVME_NIDT_NGUID		= 2,
 	NVME_NIDT_UUID		= 3,
+	NVME_NIDT_CSI		= 4,
 };
 
 enum nvme_ns_id_desc_nidt_lens {
 	NVME_NIDT_EUI64_LEN		= 8,
 	NVME_NIDT_NGUID_LEN		= 16,
 	NVME_NIDT_UUID_LEN		= 16,
+	NVME_NIDT_CSI_LEN		= 1,
 };
 
 /**
@@ -2022,6 +2035,50 @@ struct nvme_ns_list {
 };
 
 /**
+ * struct nvme_zns_lbafe -
+ * zsze:
+ * zdes:
+ */
+struct nvme_zns_lbafe {
+	__le64	zsze;
+	__u8	zdes;
+	__u8	rsvd9[7];
+};
+
+/**
+ * struct nvme_zns_id_ns -
+ * @zoc:
+ * @ozcs:
+ * @mar:
+ * @mor:
+ * @rrl:
+ * @frl:
+ * @lbafe:
+ * @vs:
+ */
+struct nvme_zns_id_ns {
+	__le16			zoc;
+	__le16			ozcs;
+	__le32			mar;
+	__le32			mor;
+	__le32			rrl;
+	__le32			frl;
+	__u8			rsvd20[2796];
+	struct nvme_zns_lbafe	lbafe[16];
+	__u8			rsvd3072[768];
+	__u8			vs[256];
+};
+
+/**
+ * struct nvme_zns_id_ctrl -
+ * @zamds:
+ */
+struct nvme_zns_id_ctrl {
+	__u8	zamds;
+	__u8	rsvd1[4095];
+};
+
+/**
  * struct nvme_primary_ctrl_cap -
  * @cntlid:
  * @portid:
@@ -2089,6 +2146,14 @@ struct nvme_secondary_ctrl_list {
 	__u8   num;
 	__u8   rsvd[31];
 	struct nvme_secondary_ctrl sc_entry[NVME_ID_SECONDARY_CTRL_MAX];
+};
+
+/**
+ * struct nvme_id_iocs - NVMe Identify IO Command Set data structure
+ * @iocsc:	List of supported IO Command Set Combination vectors
+ */
+struct nvme_id_iocs {
+	__u64 iocsc[512];
 };
 
 /**
@@ -2733,6 +2798,70 @@ enum nvme_sanitize_sstat {
 	NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK	= 0x1f,
 	NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_SHIFT	= 8,
 	NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_MASK	= 0x1,
+};
+
+/**
+ * struct nvme_zns_changed_zone_log - ZNS Changed Zone List log
+ * @nrzid:
+ * @zid:
+ */
+struct nvme_zns_changed_zone_log {
+	__le16		nrzid;
+	__u8		rsvd2[6];
+	__le64		zid[NVME_ZNS_CHANGED_ZONES_MAX];
+};
+
+/**
+ * enum nvme_zns_zt -
+ */
+enum nvme_zns_zt {
+	NVME_ZONE_TYPE_SEQWRITE_REQ	= 0x2,
+};
+
+/**
+ * enum nvme_zns_za -
+ */
+enum nvme_zns_za {
+	NVME_ZNS_ZA_ZFC			= 1 << 0,
+	NVME_ZNS_ZA_FZR			= 1 << 1,
+	NVME_ZNS_ZA_RZR			= 1 << 2,
+	NVME_ZNS_ZA_ZDEV		= 1 << 7,
+};
+
+/**
+ * enum nvme_zns_zs -
+ */
+enum nvme_zns_zs {
+	NVME_ZNS_ZS_EMPTY		= 0x1,
+	NVME_ZNS_ZS_IMPL_OPEN		= 0x2,
+	NVME_ZNS_ZS_EXPL_OPEN		= 0x3,
+	NVME_ZNS_ZS_CLOSED		= 0x4,
+	NVME_ZNS_ZS_READ_ONLY		= 0xd,
+	NVME_ZNS_ZS_FULL		= 0xe,
+	NVME_ZNS_ZS_OFFLINE		= 0xf,
+};
+
+/**
+ * struct nvme_zns_desc -
+ */
+struct nvme_zns_desc {
+	__u8	zt;
+	__u8	zs;
+	__u8	za;
+	__u8	rsvd3[5];
+	__le64	zcap;
+	__le64	zslba;
+	__le64	wp;
+	__u8	rsvd32[32];
+};
+
+/**
+ * struct nvme_zone_report -
+ */
+struct nvme_zone_report {
+	__le64			nr_zones;
+	__u8			resv8[56];
+	struct nvme_zns_desc	entries[];
 };
 
 /**
@@ -4100,6 +4229,18 @@ enum nvme_status_field {
 	NVME_SC_DISCONNECT_INVALID_QTYPE= 0x85,
 	NVME_SC_DISCOVERY_RESTART	= 0x90,
 	NVME_SC_AUTH_REQUIRED		= 0x91,
+
+	/*
+	 * I/O Command Set Specific - ZNS commands:
+	 */
+	NVME_SC_ZNS_BOUNDARY_ERROR     = 0xb8,
+	NVME_SC_ZNS_FULL               = 0xb9,
+	NVME_SC_ZNS_READ_ONLY          = 0xba,
+	NVME_SC_ZNS_OFFLINE            = 0xbb,
+	NVME_SC_ZNS_INVALID_WRITE      = 0xbc,
+	NVME_SC_ZNS_TOO_MANY_ACTIVE    = 0xbd,
+	NVME_SC_ZNS_TOO_MANY_OPENS     = 0xbe,
+	NVME_SC_ZNS_INVAL_TRANSITION   = 0xbf,
 
 	/*
 	 * Media and Data Integrity Errors:

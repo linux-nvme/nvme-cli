@@ -70,6 +70,7 @@ struct nvme_ns {
 	uint8_t eui64[8];
 	uint8_t nguid[16];
 	uuid_t  uuid;
+	enum nvme_csi csi;
 };
 
 struct nvme_ctrl {
@@ -724,6 +725,11 @@ uint64_t nvme_ns_get_lba_util(nvme_ns_t n)
 	return n->lba_util;
 }
 
+enum nvme_csi nvme_ns_get_csi(nvme_ns_t n)
+{
+	return n->csi;
+}
+
 const uint8_t *nvme_ns_get_eui64(nvme_ns_t n)
 {
 	return n->eui64;
@@ -848,6 +854,9 @@ static void nvme_ns_parse_descriptors(struct nvme_ns *n,
 			break;
 		case NVME_NIDT_UUID:
 			memcpy(n->uuid, desc->nid, sizeof(n->uuid));
+			break;
+		case NVME_NIDT_CSI:
+			memcpy(&n->csi, desc->nid, sizeof(n->csi));
 			break;
 		}
 	}

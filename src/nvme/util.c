@@ -255,7 +255,7 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 
 		ret = nvme_get_log(fd, log_id, nsid, offset, NVME_LOG_LSP_NONE,
 				   NVME_LOG_LSI_NONE, retain, NVME_UUID_NONE,
-				   xfer, ptr);
+				   NVME_CSI_NVM, xfer, ptr);
 		if (ret)
 			return ret;
 

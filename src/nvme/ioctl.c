@@ -233,6 +233,7 @@ enum nvme_cmd_dword_fields {
 	NVME_LOG_CDW11_NUMDU_SHIFT				= 0,
 	NVME_LOG_CDW11_LSI_SHIFT				= 16,
 	NVME_LOG_CDW14_UUID_SHIFT				= 0,
+	NVME_LOG_CDW14_CSI_SHIFT				= 24,
 	NVME_LOG_CDW10_LID_MASK					= 0xff,
 	NVME_LOG_CDW10_LSP_MASK					= 0xf,
 	NVME_LOG_CDW10_RAE_MASK					= 0x1,
@@ -240,14 +241,17 @@ enum nvme_cmd_dword_fields {
 	NVME_LOG_CDW11_NUMDU_MASK				= 0xff,
 	NVME_LOG_CDW11_LSI_MASK					= 0xff,
 	NVME_LOG_CDW14_UUID_MASK				= 0x7f,
+	NVME_LOG_CDW14_CSI_MASK					= 0xff,
 	NVME_IDENTIFY_CDW10_CNS_SHIFT				= 0,
 	NVME_IDENTIFY_CDW10_CNTID_SHIFT				= 16,
 	NVME_IDENTIFY_CDW11_NVMSETID_SHIFT			= 0,
 	NVME_IDENTIFY_CDW14_UUID_SHIFT				= 0,
+	NVME_IDENTIFY_CDW11_CSI_SHIFT				= 24,
 	NVME_IDENTIFY_CDW10_CNS_MASK				= 0xff,
 	NVME_IDENTIFY_CDW10_CNTID_MASK				= 0xffff,
 	NVME_IDENTIFY_CDW11_NVMSETID_MASK			= 0xffff,
 	NVME_IDENTIFY_CDW14_UUID_MASK				= 0x7f,
+	NVME_IDENTIFY_CDW11_CSI_MASK				= 0xff,
 	NVME_NAMESPACE_ATTACH_CDW10_SEL_SHIFT			= 0,
 	NVME_NAMESPACE_ATTACH_CDW10_SEL_MASK			= 0xf,
 	NVME_NAMESPACE_MGMT_CDW10_SEL_SHIFT			= 0,
@@ -292,6 +296,16 @@ enum nvme_cmd_dword_fields {
 	NVME_GET_LBA_STATUS_CDW13_ATYPE_SHIFT			= 24,
 	NVME_GET_LBA_STATUS_CDW13_RL_MASK			= 0xffff,
 	NVME_GET_LBA_STATUS_CDW13_ATYPE_MASK			= 0xff,
+	NVME_ZNS_MGMT_SEND_SEL_SHIFT				= 8,
+	NVME_ZNS_MGMT_SEND_SEL_MASK				= 0x1,
+	NVME_ZNS_MGMT_SEND_ZSA_SHIFT				= 0,
+	NVME_ZNS_MGMT_SEND_ZSA_MASK				= 0xff,
+	NVME_ZNS_MGMT_RECV_ZRA_SHIFT				= 0,
+	NVME_ZNS_MGMT_RECV_ZRA_MASK				= 0xff,
+	NVME_ZNS_MGMT_RECV_ZRASF_SHIFT				= 8,
+	NVME_ZNS_MGMT_RECV_ZRASF_MASK				= 0xff,
+	NVME_ZNS_MGMT_RECV_ZRAS_FEAT_SHIFT			= 16,
+	NVME_ZNS_MGMT_RECV_ZRAS_FEAT_MASK			= 0x1,
 };
 
 enum features {
@@ -345,16 +359,19 @@ enum features {
 	NVME_FEATURES_LBAS_LSIPI_SHIFT				= 16,
 	NVME_FEATURES_LBAS_LSIRI_MASK				= 0xffff,
 	NVME_FEATURES_LBAS_LSIPI_MASK				= 0xffff,
+	NVME_FEATURES_IOCSP_IOCSCI_SHIFT			= 0,
+	NVME_FEATURES_IOCSP_IOCSCI_MASK				= 0xff,
 };
 
 #define DW(value, prefix) ((value) & (prefix ## _MASK)) << prefix ## _SHIFT
 
 int nvme_identify(int fd, enum nvme_identify_cns cns, __u32 nsid, __u16 cntid,
-		  __u16 nvmsetid, __u8 uuidx, void *data)
+		  __u16 nvmsetid, __u8 uuidx, __u8 csi, void *data)
 {
 	__u32 cdw10 = DW(cntid, NVME_IDENTIFY_CDW10_CNTID) |
 			DW(cns, NVME_IDENTIFY_CDW10_CNS);
-	__u32 cdw11 = DW(nvmsetid, NVME_IDENTIFY_CDW11_NVMSETID);
+	__u32 cdw11 = DW(nvmsetid, NVME_IDENTIFY_CDW11_NVMSETID) |
+			DW(csi, NVME_IDENTIFY_CDW11_CSI);
 	__u32 cdw14 = DW(uuidx, NVME_IDENTIFY_CDW14_UUID);
 
 	struct nvme_passthru_cmd cmd = {
@@ -373,7 +390,8 @@ int nvme_identify(int fd, enum nvme_identify_cns cns, __u32 nsid, __u16 cntid,
 static int __nvme_identify(int fd, __u8 cns, __u32 nsid, void *data)
 {
 	return nvme_identify(fd, cns, nsid, NVME_CNTLID_NONE,
-			     NVME_NVMSETID_NONE, NVME_UUID_NONE, data);
+			     NVME_NVMSETID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
+			     data);
 }
 
 int nvme_identify_ctrl(int fd, struct nvme_id_ctrl *id)
@@ -413,7 +431,7 @@ int nvme_identify_ctrl_list(int fd, __u16 cntid,
 	BUILD_ASSERT(sizeof(struct nvme_ctrl_list) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CTRL_LIST,
 			     NVME_NSID_NONE, cntid, NVME_NVMSETID_NONE,
-			     NVME_UUID_NONE, ctrlist);
+			     NVME_UUID_NONE, NVME_CSI_NVM, ctrlist);
 }
 
 int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
@@ -421,7 +439,7 @@ int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
 {
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_NS_CTRL_LIST, nsid,
 			     cntid, NVME_NVMSETID_NONE, NVME_UUID_NONE,
-			     ctrlist);
+			     NVME_CSI_NVM, ctrlist);
 }
 
 int nvme_identify_ns_descs(int fd, __u32 nsid, struct nvme_ns_id_desc *descs)
@@ -435,7 +453,7 @@ int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 	BUILD_ASSERT(sizeof(struct nvme_id_nvmset_list) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_NVMSET_LIST,
 			     NVME_NSID_NONE, NVME_CNTLID_NONE, nvmsetid,
-			     NVME_UUID_NONE, nvmset);
+			     NVME_UUID_NONE, NVME_CSI_NVM, nvmset);
 }
 
 int nvme_identify_primary_ctrl(int fd, __u16 cntid,
@@ -444,7 +462,7 @@ int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 	BUILD_ASSERT(sizeof(struct nvme_primary_ctrl_cap) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP,
 			     NVME_NSID_NONE, cntid, NVME_NVMSETID_NONE,
-			     NVME_UUID_NONE, cap);
+			     NVME_UUID_NONE, NVME_CSI_NVM, cap);
 }
 
 int nvme_identify_secondary_ctrl_list(int fd, __u16 cntid,
@@ -453,7 +471,7 @@ int nvme_identify_secondary_ctrl_list(int fd, __u16 cntid,
 	BUILD_ASSERT(sizeof(struct nvme_secondary_ctrl_list) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
 			     NVME_NSID_NONE, cntid, NVME_NVMSETID_NONE,
-			     NVME_UUID_NONE, list);
+			     NVME_UUID_NONE, NVME_CSI_NVM, list);
 }
 
 int nvme_identify_ns_granularity(int fd,
@@ -471,8 +489,47 @@ int nvme_identify_uuid(int fd, struct nvme_id_uuid_list *list)
 			       list);
 }
 
+int nvme_identify_ctrl_csi(int fd, __u8 csi, void *data)
+{
+	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_CTRL, NVME_NSID_NONE,
+			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
+			     NVME_UUID_NONE, csi, data);
+}
+
+int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 csi, void *data)
+{
+	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_NS, nsid,
+			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
+			     NVME_UUID_NONE, csi, data);
+}
+
+int nvme_identify_iocs(int fd, struct nvme_id_iocs *iocs)
+{
+	BUILD_ASSERT(sizeof(struct nvme_id_iocs) == 4096);
+	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_CTRL, NVME_NSID_NONE,
+			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
+			     NVME_UUID_NONE, NVME_CSI_NVM, iocs);
+}
+
+int nvme_zns_identify_ns(int fd, __u32 nsid, struct nvme_zns_id_ns *data)
+{
+	BUILD_ASSERT(sizeof(struct nvme_zns_id_ns) == 4096);
+	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_NS, nsid,
+			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
+			     NVME_UUID_NONE, NVME_CSI_ZNS, data);
+}
+
+int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *data)
+{
+	BUILD_ASSERT(sizeof(struct nvme_zns_id_ctrl) == 4096);
+	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_CTRL, NVME_NSID_NONE,
+			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
+			     NVME_UUID_NONE, NVME_CSI_ZNS, data);
+}
+
 int nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u64 lpo,
-		 __u8 lsp, __u16 lsi, bool rae, __u8 uuidx, __u32 len, void *log)
+		 __u8 lsp, __u16 lsi, bool rae, __u8 uuidx, enum nvme_csi csi,
+		 __u32 len, void *log)
 {
 	__u32 numd = (len >> 2) - 1;
 	__u16 numdu = numd >> 16, numdl = numd & 0xffff;
@@ -485,7 +542,8 @@ int nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u64 lpo,
 			DW(lsi, NVME_LOG_CDW11_LSI);
 	__u32 cdw12 = lpo & 0xffffffff;
 	__u32 cdw13 = lpo >> 32;
-	__u32 cdw14 = DW(uuidx, NVME_LOG_CDW14_UUID);
+	__u32 cdw14 = DW(uuidx, NVME_LOG_CDW14_UUID) |
+			DW(csi, NVME_LOG_CDW14_CSI);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_get_log_page,
@@ -506,7 +564,8 @@ static int __nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, bool rae,
 			  __u32 len, void *log)
 {
 	return nvme_get_log(fd, lid, NVME_NSID_ALL, 0, NVME_LOG_LSP_NONE,
-			    NVME_LOG_LSI_NONE, NVME_UUID_NONE, rae, len, log);
+			    NVME_LOG_LSI_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
+			    rae, len, log);
 }
 
 int nvme_get_log_error(int fd, unsigned nr_entries, bool rae,
@@ -522,7 +581,7 @@ int nvme_get_log_smart(int fd, __u32 nsid, bool rae, struct nvme_smart_log *log)
 	BUILD_ASSERT(sizeof(struct nvme_smart_log) == 512);
 	return nvme_get_log(fd, NVME_LOG_LID_SMART,  nsid, 0,
 			    NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE, rae,
-			    NVME_UUID_NONE, sizeof(*log), log);
+			    NVME_UUID_NONE, NVME_CSI_NVM, sizeof(*log), log);
 }
 
 int nvme_get_log_fw_slot(int fd, bool rae, struct nvme_firmware_slot *log)
@@ -538,11 +597,14 @@ int nvme_get_log_changed_ns_list(int fd, bool rae, struct nvme_ns_list *log)
 			      sizeof(*log), log);
 }
 
-int nvme_get_log_cmd_effects(int fd, struct nvme_cmd_effects_log *log)
+int nvme_get_log_cmd_effects(int fd, enum nvme_csi csi,
+			     struct nvme_cmd_effects_log *log)
 {
 	BUILD_ASSERT(sizeof(struct nvme_cmd_effects_log) == 4096);
-	return __nvme_get_log(fd, NVME_LOG_LID_CMD_EFFECTS, false,
-			      sizeof(*log), log);
+	return nvme_get_log(fd, NVME_LOG_LID_CMD_EFFECTS, NVME_NSID_ALL, 0,
+			    NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE,
+			    NVME_UUID_NONE, csi, false, sizeof(*log),
+			    log);
 }
 
 int nvme_get_log_device_self_test(int fd, struct nvme_self_test_log *log)
@@ -562,15 +624,16 @@ int nvme_get_log_create_telemetry_host(int fd, struct nvme_telemetry_log *log)
 	BUILD_ASSERT(sizeof(struct nvme_telemetry_log) == 512);
 	return nvme_get_log(fd, NVME_LOG_LID_TELEMETRY_HOST, NVME_NSID_NONE, 0,
 			    NVME_LOG_TELEM_HOST_LSP_CREATE, NVME_LOG_LSI_NONE,
-			    false, NVME_UUID_NONE, sizeof(*log), log);
+			    false, NVME_UUID_NONE, NVME_CSI_NVM, sizeof(*log),
+			    log);
 }
 
 int nvme_get_log_telemetry_host(int fd, __u64 offset, __u32 len, void *log)
 {
 	return nvme_get_log(fd, NVME_LOG_LID_TELEMETRY_HOST, NVME_NSID_NONE,
 			    offset, NVME_LOG_TELEM_HOST_LSP_RETAIN,
-			    NVME_LOG_LSI_NONE,
-			    false, NVME_UUID_NONE, len, log);
+			    NVME_LOG_LSI_NONE, false, NVME_UUID_NONE,
+			    NVME_CSI_NVM, len, log);
 }
 
 int nvme_get_log_telemetry_ctrl(int fd, bool rae, __u64 offset, __u32 len,
@@ -578,7 +641,7 @@ int nvme_get_log_telemetry_ctrl(int fd, bool rae, __u64 offset, __u32 len,
 {
 	return nvme_get_log(fd, NVME_LOG_LID_TELEMETRY_CTRL, NVME_NSID_NONE,
 			    offset, NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE, rae,
-			    NVME_UUID_NONE, len, log);
+			    NVME_UUID_NONE, NVME_CSI_NVM, len, log);
 }
 
 int nvme_get_log_endurance_group(int fd, __u16 endgid,
@@ -587,7 +650,7 @@ int nvme_get_log_endurance_group(int fd, __u16 endgid,
 	BUILD_ASSERT(sizeof(struct nvme_endurance_group_log) == 512);
 	return nvme_get_log(fd, NVME_LOG_LID_ENDURANCE_GROUP, NVME_NSID_NONE,
 			    0, NVME_LOG_LSP_NONE, endgid, false, NVME_UUID_NONE,
-			    sizeof(*log), log);
+			    NVME_CSI_NVM, sizeof(*log), log);
 }
 
 int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
@@ -596,7 +659,8 @@ int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
 	BUILD_ASSERT(sizeof(struct nvme_nvmset_predictable_lat_log) == 512);
 	return nvme_get_log(fd, NVME_LOG_LID_PREDICTABLE_LAT_NVMSET,
 			    NVME_NSID_NONE, 0, NVME_LOG_LSP_NONE, nvmsetid,
-			    false, NVME_UUID_NONE, sizeof(*log), log);
+			    false, NVME_UUID_NONE, NVME_CSI_NVM, sizeof(*log),
+			    log);
 }
 
 int nvme_get_log_predictable_lat_event(int fd, bool rae, __u32 offset,
@@ -604,7 +668,7 @@ int nvme_get_log_predictable_lat_event(int fd, bool rae, __u32 offset,
 {
 	return nvme_get_log(fd, NVME_LOG_LID_PREDICTABLE_LAT_AGG,
 		NVME_NSID_NONE, offset, NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE,
-		rae, NVME_UUID_NONE, len, log);
+		rae, NVME_UUID_NONE, NVME_CSI_NVM, len, log);
 }
 
 int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae, __u64 offset,
@@ -612,7 +676,7 @@ int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae, __u64 offset,
 {
 	return nvme_get_log(fd, NVME_LOG_LID_ANA, NVME_NSID_NONE, offset,
 			    lsp,NVME_LOG_LSI_NONE, false, NVME_UUID_NONE,
-			    len, log);
+			    NVME_CSI_NVM, len, log);
 }
 
 int nvme_get_log_ana_groups(int fd, bool rae, __u32 len,
@@ -627,7 +691,7 @@ int nvme_get_log_lba_status(int fd, bool rae, __u64 offset, __u32 len,
 {
 	return nvme_get_log(fd, NVME_LOG_LID_LBA_STATUS, NVME_NSID_NONE,
 			    offset, NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE, rae,
-			    NVME_UUID_NONE, len, log);
+			    NVME_UUID_NONE, NVME_CSI_NVM, len, log);
 }
 
 int nvme_get_log_endurance_grp_evt(int fd, bool rae, __u32 offset, __u32 len,
@@ -635,14 +699,15 @@ int nvme_get_log_endurance_grp_evt(int fd, bool rae, __u32 offset, __u32 len,
 {
 	return nvme_get_log(fd, NVME_LOG_LID_ENDURANCE_GRP_EVT,
 			    NVME_NSID_NONE, offset, NVME_LOG_LSP_NONE,
-			    NVME_LOG_LSI_NONE, rae, NVME_UUID_NONE, len, log);
+			    NVME_LOG_LSI_NONE, rae, NVME_UUID_NONE,
+			    NVME_CSI_NVM, len, log);
 }
 
 int nvme_get_log_discovery(int fd, bool rae, __u32 offset, __u32 len, void *log)
 {
 	return nvme_get_log(fd, NVME_LOG_LID_DISCOVER, NVME_NSID_NONE, offset,
 			    NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE, rae,
-			    NVME_UUID_NONE, len, log);
+			    NVME_UUID_NONE, NVME_CSI_NVM, len, log);
 }
 
 int nvme_get_log_reservation(int fd, bool rae,
@@ -659,6 +724,15 @@ int nvme_get_log_sanitize(int fd, bool rae,
 	BUILD_ASSERT(sizeof(struct nvme_sanitize_log_page) == 512);
 	return __nvme_get_log(fd, NVME_LOG_LID_SANITIZE, rae, sizeof(*log),
 			      log);
+}
+
+int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
+				   struct nvme_zns_changed_zone_log *log)
+{
+	BUILD_ASSERT(sizeof(struct nvme_zns_changed_zone_log) == 4096);
+	return nvme_get_log(fd, NVME_LOG_LID_ZNS_CHANGED_ZONES, nsid, 0,
+			    NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE, rae,
+			    NVME_UUID_NONE, NVME_CSI_ZNS, sizeof(*log), log);
 }
 
 int nvme_set_features(int fd, __u8 fid, __u32 nsid, __u32 cdw11, __u32 cdw12,
@@ -915,6 +989,14 @@ int nvme_set_features_write_protect(int fd, enum nvme_feat_nswpcfg_state state,
 				   save, result);
 }
 
+int nvme_set_features_iocs_profile(int fd, __u8 iocsi, bool save)
+{
+	__u32 value = DW(iocsi, NVME_FEATURES_IOCSP_IOCSCI);
+
+	return __nvme_set_features(fd, NVME_FEAT_FID_IOCS_PROFILE, value,
+				   save, NULL);
+}
+
 int nvme_get_features(int fd, enum nvme_features_id fid, __u32 nsid,
 		      enum nvme_get_features_sel sel, __u32 cdw11, __u8 uuidx,
 		      __u32 data_len, void *data, __u32 *result)
@@ -1131,6 +1213,12 @@ int nvme_get_features_write_protect(int fd, __u32 nsid,
 {
 	return nvme_get_features(fd, NVME_FEAT_FID_WRITE_PROTECT, nsid, sel, 0,
 				 NVME_UUID_NONE, 0, NULL, result);
+}
+
+int nvme_get_features_iocs_profile(int fd, enum nvme_get_features_sel sel,
+				   __u32 *result)
+{
+	return __nvme_get_features(fd, NVME_FEAT_FID_IOCS_PROFILE, sel, result);
 }
 
 int nvme_format_nvm(int fd, __u32 nsid, __u8 lbaf,
@@ -1712,4 +1800,79 @@ int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
 	};
 
 	return nvme_submit_io_passthru(fd, &cmd, NULL);
+}
+
+int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
+		       enum nvme_zns_send_action zsa, __u32 data_len,
+		       void *data)
+{
+	__u32 cdw10 = slba & 0xffffffff;
+	__u32 cdw11 = slba >> 32;
+	__u32 cdw13 = DW(!!select_all, NVME_ZNS_MGMT_SEND_SEL) |
+			DW(zsa, NVME_ZNS_MGMT_SEND_ZSA);
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_zns_cmd_mgmt_send,
+		.nsid		= nsid,
+		.cdw10		= cdw10,
+		.cdw11		= cdw11,
+		.cdw13		= cdw13,
+		.addr		= (__u64)(uintptr_t)data,
+		.data_len	= data_len,
+	};
+
+	return nvme_submit_io_passthru(fd, &cmd, NULL);
+}
+
+int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
+		       enum nvme_zns_recv_action zra, __u16 zrasf,
+		       bool zras_feat, __u32 data_len, void *data)
+{
+	__u32 cdw10 = slba & 0xffffffff;
+	__u32 cdw11 = slba >> 32;
+	__u32 cdw12 = (data_len >> 2) - 1;
+	__u32 cdw13 = DW(zra , NVME_ZNS_MGMT_RECV_ZRA) |
+			DW(zrasf, NVME_ZNS_MGMT_RECV_ZRASF) |
+			DW(zras_feat, NVME_ZNS_MGMT_RECV_ZRAS_FEAT);
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_zns_cmd_mgmt_send,
+		.nsid		= nsid,
+		.cdw10		= cdw10,
+		.cdw11		= cdw11,
+		.cdw12		= cdw12,
+		.cdw13		= cdw13,
+		.addr		= (__u64)(uintptr_t)data,
+		.data_len	= data_len,
+	};
+
+	return nvme_submit_io_passthru(fd, &cmd, NULL);
+}
+
+int nvme_zns_append(int fd, __u32 nsid, __u64 zslba, __u16 nlb, __u16 control,
+		    __u32 ilbrt, __u16 lbat, __u16 lbatm, __u32 data_len,
+		    void *data, __u32 metadata_len, void *metadata,
+		    __u64 *result)
+{
+	__u32 cdw10 = zslba & 0xffffffff;
+	__u32 cdw11 = zslba >> 32;
+	__u32 cdw12 = nlb | (control << 16);
+	__u32 cdw14 = ilbrt;
+	__u32 cdw15 = lbat | (lbatm << 16);
+
+	struct nvme_passthru_cmd64 cmd = {
+		.opcode		= nvme_zns_cmd_append,
+		.nsid		= nsid,
+		.cdw10		= cdw10,
+		.cdw11		= cdw11,
+		.cdw12		= cdw12,
+		.cdw14		= cdw14,
+		.cdw15		= cdw15,
+		.metadata	= (__u64)(uintptr_t)metadata,
+		.addr		= (__u64)(uintptr_t)data,
+		.metadata_len	= metadata_len,
+		.data_len	= data_len,
+	};
+
+	return nvme_submit_io_passthru64(fd, &cmd, result);
 }

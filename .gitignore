@@ -12,6 +12,7 @@ libnvme.pc
 test/register
 test/test
 test/cpp
+test/zns
 
 examples/display-tree
 examples/display-columnar

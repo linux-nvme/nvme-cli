@@ -9,7 +9,7 @@ else
 CONFIG_CPLUSPLUS=y
 endif
 
-c_targets += test register
+c_targets += test register zns
 
 ifdef CONFIG_CPLUSPLUS
 cpp_targets += cpp
@@ -23,10 +23,10 @@ all: $(all_targets)
 CXXFLAGS ?= -lstdc++
 
 %: %.cc
-	$(QUIET_CC)$(CC) $(CFLAGS) $(CXXFLAGS) -o $@ $< -lnvme
+	$(QUIET_CC)$(CC) $(CFLAGS) $(LDFLAGS) $(CXXFLAGS) -o $@ $< -lnvme
 
 %: %.c
-	$(QUIET_CC)$(CC) $(CFLAGS) -o $@ $< -lnvme
+	$(QUIET_CC)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< -lnvme
 
 clean:
 	rm -f $(all_targets)
