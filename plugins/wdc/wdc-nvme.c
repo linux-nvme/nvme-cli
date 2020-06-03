@@ -958,6 +958,10 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		case WDC_NVME_SN640_DEV_ID_1:
 		/* FALLTHRU */
 		case WDC_NVME_SN640_DEV_ID_2:
+			/* verify the 0xC0 log page is supported */
+			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == false) {
+				capabilities = WDC_DRIVE_CAP_C0_LOG_PAGE;
+			}
 		/* FALLTHRU */
 		case WDC_NVME_SN840_DEV_ID:
 		/* FALLTHRU */
@@ -968,7 +972,7 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		case WDC_NVME_SN7GC_DEV_ID:
 		case WDC_NVME_SN7GC_DEV_ID_1:
 		case WDC_NVME_SN7GC_DEV_ID_2:
-			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
+			capabilities |= (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
 					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
 					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
 					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY |
@@ -3689,10 +3693,8 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 			int128_to_double(&log_data[SCAO_EEST]));
 	json_object_add_value_uint(root, "Log page version",
 			(uint16_t)le16_to_cpu(log_data[SCAO_LPV]));
-
-//	int i;
-//	json_object_add_value_int(root, "Log page GUID");
-//	for (i=0;i<16;i++) printf("%X", (__u8)log_data[SCAO_LPG+i]);
+	json_object_add_value_uint(root, "Log page GUID",
+			int128_to_double(&log_data[SCAO_LPG]));
 
 	json_print_object(root, NULL);
 	printf("\n");
@@ -3799,11 +3801,6 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 	if (fmt < 0) {
 		fprintf(stderr, "ERROR : WDC : invalid output format\n");
 		return fmt;
-	}
-
-	/* verify the 0xC0 log page is supported */
-	if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == false) {
-		return -1;
 	}
 
 	if (!get_dev_mgment_cbs_data(fd, WDC_C2_CUSTOMER_ID_ID, (void*)&data)) {
@@ -4138,28 +4135,29 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 {
 	const char *desc = "Retrieve additional performance statistics.";
 	const char *interval = "Interval to read the statistics from [1, 15].";
-	const char *uuid_index = "UUID index";
+	const char *log_page_version = "Log Page Version: 0 = vendor, 1 = WDC";
 	int fd;
 	int ret = 0;
+	int uuid_index = 0;
 	__u64 capabilities = 0;
 
 	struct config {
 		uint8_t interval;
 		int   vendor_specific;
 		char *output_format;
-		__u8  uuid_index;
+		__u8  log_page_version;
 	};
 
 	struct config cfg = {
 		.interval = 14,
 		.output_format = "normal",
-		.uuid_index   = 0,
+		.log_page_version  = 0,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("interval", 'i', &cfg.interval, interval),
 		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json"),
-		OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index),
+		OPT_BYTE("log-page-version",   'l', &cfg.log_page_version,   log_page_version),
 		OPT_END()
 	};
 
@@ -4167,18 +4165,30 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 	if (fd < 0)
 		return fd;
 
-	/* Get 0xC0 log page if possible. */
-	ret = wdc_get_c0_log_page(fd, cfg.output_format, cfg.uuid_index);
+	if (cfg.log_page_version == 0) {
+		uuid_index = 0;
+	} else if (cfg.log_page_version == 1) {
+		uuid_index = 1;
+	} else {
+		fprintf(stderr, "ERROR : WDC: unsupported log page version for this command\n");
+		ret = -1;
+		goto out;
+	}
+
+	capabilities = wdc_get_drive_capabilities(fd);
+
+	if ((capabilities & WDC_DRIVE_CAP_SMART_LOG_MASK) == 0) {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+		goto out;
+	}
+
+	if ((capabilities & WDC_DRIVE_CAP_C0_LOG_PAGE) == WDC_DRIVE_CAP_C0_LOG_PAGE) {
+		/* Get 0xC0 log page if possible. */
+		ret = wdc_get_c0_log_page(fd, cfg.output_format, uuid_index);
+	}
 
 	if (ret == -1) {
-
-		capabilities = wdc_get_drive_capabilities(fd);
-
-		if ((capabilities & WDC_DRIVE_CAP_SMART_LOG_MASK) == 0) {
-			fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
-			ret = -1;
-			goto out;
-		}
 
 		if ((capabilities & (WDC_DRIVE_CAP_CA_LOG_PAGE)) == (WDC_DRIVE_CAP_CA_LOG_PAGE)) {
 			/* Get the CA Log Page */
