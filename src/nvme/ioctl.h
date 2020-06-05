@@ -3077,9 +3077,27 @@ enum nvme_zns_recv_action {
 };
 
 /**
- * enum nvme_zns_recv_action_spec -
+ * nvme_zns_mgmt_recv() -
+ * @fd:		File descriptor of nvme device
+ * @nsid:	Namespace ID
+ * @slba:
+ * @zra:
+ * @zrasf:
+ * @zras_feat:
+ * @data_len:
+ * @data:
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-enum nvme_zns_recv_action_spec {
+int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
+		       enum nvme_zns_recv_action zra, __u16 zrasf,
+		       bool zras_feat, __u32 data_len, void *data);
+
+/**
+ * enum nvme_zns_report_options -
+ */
+enum nvme_zns_report_options {
 	NVME_ZNS_ZRAS_REPORT_ALL		= 0x0,
 	NVME_ZNS_ZRAS_REPORT_EMPTY		= 0x1,
 	NVME_ZNS_ZRAS_REPORT_IMPL_OPENED	= 0x2,
@@ -3090,17 +3108,9 @@ enum nvme_zns_recv_action_spec {
 	NVME_ZNS_ZRAS_REPORT_OFFLINE		= 0x7,
 };
 
-/**
- * nvme_zns_mgmt_recv() -
- * @fd:		File descriptor of nvme device
- * @nsid:	Namespace ID
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
- */
-int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
-		       enum nvme_zns_recv_action zra, __u16 zrasf,
-		       bool zras_feat, __u32 data_len, void *data);
+int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba, bool extended,
+			  enum nvme_zns_report_options opts, bool partial,
+			  __u32 data_len, void *data);
 
 /**
  * nvme_zns_append() -

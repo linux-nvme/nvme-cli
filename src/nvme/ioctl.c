@@ -1836,7 +1836,7 @@ int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
 			DW(zras_feat, NVME_ZNS_MGMT_RECV_ZRAS_FEAT);
 
 	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_zns_cmd_mgmt_send,
+		.opcode		= nvme_zns_cmd_mgmt_recv,
 		.nsid		= nsid,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
@@ -1847,6 +1847,22 @@ int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
 	};
 
 	return nvme_submit_io_passthru(fd, &cmd, NULL);
+}
+
+int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba, bool extended,
+			  enum nvme_zns_report_options opts, bool partial,
+			  __u32 data_len, void *data)
+{
+	BUILD_ASSERT(sizeof(struct nvme_zns_desc) == 64);
+	enum nvme_zns_recv_action zra;
+
+	if (extended)
+		zra = NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES;
+	else
+		zra = NVME_ZNS_ZRA_REPORT_ZONES;
+
+	return nvme_zns_mgmt_recv(fd, nsid, slba, zra, opts, partial,
+		data_len, data);
 }
 
 int nvme_zns_append(int fd, __u32 nsid, __u64 zslba, __u16 nlb, __u16 control,
