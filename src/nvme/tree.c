@@ -57,7 +57,7 @@ struct nvme_ns {
 	struct nvme_ctrl *c;
 
 	int fd;
-	int nsid;
+	__u32 nsid;
 	char *name;
 	char *sysfs_dir;
 
@@ -898,8 +898,7 @@ static nvme_ns_t nvme_ns_open(const char *name)
 	if (n->fd < 0)
 		goto free_ns;
 
-	n->nsid = nvme_get_nsid(n->fd);
-	if (n->nsid < 0)
+	if (nvme_get_nsid(n->fd, &n->nsid) < 0)
 		goto close_fd;
 
 	list_head_init(&n->paths);

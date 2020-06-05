@@ -66,19 +66,11 @@ int nvme_ns_rescan(int fd)
 	return ioctl(fd, NVME_IOCTL_RESCAN);
 }
 
-int nvme_get_nsid(int fd)
+int nvme_get_nsid(int fd, __u32 *nsid)
 {
-	static struct stat nvme_stat;
-	int err = fstat(fd, &nvme_stat);
-
-	if (err < 0)
-		return -1;
-
-	if (!S_ISBLK(nvme_stat.st_mode)) {
-		errno = ENOTBLK;
-		return -1;
-	}
-	return ioctl(fd, NVME_IOCTL_ID);
+	errno = 0;
+	*nsid = ioctl(fd, NVME_IOCTL_ID);
+	return -1 * (errno != 0);
 }
 
 static int nvme_submit_passthru64(int fd, unsigned long ioctl_cmd,

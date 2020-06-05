@@ -358,13 +358,13 @@ int nvme_ns_rescan(int fd);
 /**
  * nvme_get_nsid() - Retrieve the NSID from a namespace file descriptor
  * @fd:		File descriptor of nvme namespace
+ * @nsid:	User pointer to namespace id
  *
  * This should only be sent to namespace handles, not to controllers.
  *
- * Return: The namespace identifier if a succecssful or -1 with errno set
- * otherwise.
+ * Return: 0 if @nsid was set succecssfully or -1 with errno set otherwise.
  */
-int nvme_get_nsid(int fd);
+int nvme_get_nsid(int fd, __u32 *nsid);
 
 /**
  * enum nvme_admin_opcode - Known NVMe admin opcodes
