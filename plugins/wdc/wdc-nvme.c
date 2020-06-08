@@ -959,7 +959,7 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		/* FALLTHRU */
 		case WDC_NVME_SN640_DEV_ID_2:
 			/* verify the 0xC0 log page is supported */
-			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == false) {
+			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
 				capabilities = WDC_DRIVE_CAP_C0_LOG_PAGE;
 			}
 		/* FALLTHRU */
@@ -4186,32 +4186,29 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 	if ((capabilities & WDC_DRIVE_CAP_C0_LOG_PAGE) == WDC_DRIVE_CAP_C0_LOG_PAGE) {
 		/* Get 0xC0 log page if possible. */
 		ret = wdc_get_c0_log_page(fd, cfg.output_format, uuid_index);
+		if (ret == -1) {
+			if ((capabilities & (WDC_DRIVE_CAP_CA_LOG_PAGE)) == (WDC_DRIVE_CAP_CA_LOG_PAGE)) {
+				/* Get the CA Log Page */
+				ret = wdc_get_ca_log_page(fd, cfg.output_format);
+				if (ret)
+					fprintf(stderr, "ERROR : WDC : Failure reading the CA Log Page, ret = %d\n", ret);
+			}
+		}
+	}
+	if ((capabilities & WDC_DRIVE_CAP_C1_LOG_PAGE) == WDC_DRIVE_CAP_C1_LOG_PAGE) {
+		/* Get the C1 Log Page */
+		ret = wdc_get_c1_log_page(fd, cfg.output_format, cfg.interval);
+		if (ret)
+			fprintf(stderr, "ERROR : WDC : Failure reading the C1 Log Page, ret = %d\n", ret);
+	}
+	if ((capabilities & WDC_DRIVE_CAP_D0_LOG_PAGE) == WDC_DRIVE_CAP_D0_LOG_PAGE) {
+		/* Get the D0 Log Page */
+		ret = wdc_get_d0_log_page(fd, cfg.output_format);
+		if (ret)
+			fprintf(stderr, "ERROR : WDC : Failure reading the D0 Log Page, ret = %d\n", ret);
 	}
 
-	if (ret == -1) {
-
-		if ((capabilities & (WDC_DRIVE_CAP_CA_LOG_PAGE)) == (WDC_DRIVE_CAP_CA_LOG_PAGE)) {
-			/* Get the CA Log Page */
-			ret = wdc_get_ca_log_page(fd, cfg.output_format);
-			if (ret)
-				fprintf(stderr, "ERROR : WDC : Failure reading the CA Log Page, ret = %d\n", ret);
-		}
-		if ((capabilities & WDC_DRIVE_CAP_C1_LOG_PAGE) == WDC_DRIVE_CAP_C1_LOG_PAGE) {
-			/* Get the C1 Log Page */
-			ret = wdc_get_c1_log_page(fd, cfg.output_format, cfg.interval);
-			if (ret)
-				fprintf(stderr, "ERROR : WDC : Failure reading the C1 Log Page, ret = %d\n", ret);
-		}
-		if ((capabilities & WDC_DRIVE_CAP_D0_LOG_PAGE) == WDC_DRIVE_CAP_D0_LOG_PAGE) {
-			/* Get the D0 Log Page */
-			ret = wdc_get_d0_log_page(fd, cfg.output_format);
-			if (ret)
-				fprintf(stderr, "ERROR : WDC : Failure reading the D0 Log Page, ret = %d\n", ret);
-		}
-	} else	{
-		ret = 0;
-	}
-out:
+	out:
 	return ret;
 }
 
