@@ -2858,6 +2858,100 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 	__nvme_show_id_ctrl(ctrl, mode, NULL);
 }
 
+static void json_nvme_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode)
+{
+	struct json_object *root;
+
+	root = json_create_object();
+	json_object_add_value_int(root, "zamds", ctrl->zamds);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode)
+{
+	if (mode & BINARY)
+		return d_raw((unsigned char *)ctrl, sizeof(*ctrl));
+	else if (mode & JSON)
+		return json_nvme_zns_id_ctrl(ctrl, mode);
+
+	printf("NVMe ZNS Identify Controller:\n");
+	printf("zamds: %u\n", ctrl->zamds);
+}
+
+void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
+	struct nvme_id_ns *id_ns, unsigned long flags)
+{
+	uint8_t lbaf = id_ns->flbas & NVME_NS_FLBAS_LBA_MASK;
+	int i;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)ns, sizeof(*ns));
+
+	printf("NVMe ZNS Identify Namespace:\n");
+	printf("zoc:    %u", le16_to_cpu(ns->zoc));
+	printf("ozcs:   %u", le16_to_cpu(ns->ozcs));
+	printf("mar:    %u", le16_to_cpu(ns->mar));
+	printf("mor:    %u", le16_to_cpu(ns->mor));
+	printf("rrl:    %u", ns->rrl);
+	printf("frl:    %u", ns->frl);
+
+	for (i = 0; i <= id_ns->nlbaf; i++)
+		printf("lbafe %02d: zsze:%"PRIx64" zdes:%u%s\n", i,
+			(uint64_t)le64_to_cpu(ns->lbafe[i].zsze),
+			ns->lbafe[i].zdes, i == lbaf ? " in use" : "");
+}
+
+void nvme_show_zns_changed( struct nvme_zns_changed_zone_log *log,
+	unsigned long flags)
+{
+	uint16_t nrzid;
+	int i;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)log, sizeof(*log));
+
+	nrzid = le16_to_cpu(log->nrzid);
+	printf("NVMe Changed Zone List:\n");
+	printf("nrzid:  %u\n", nrzid);
+
+	for (i = 0; i < min(nrzid, (uint16_t)NVME_ZNS_CHANGED_ZONES_MAX); i++)
+		printf("zid %03d: %"PRIu64"\n", i, (uint64_t)le64_to_cpu(log->zid[i]));
+}
+
+void nvme_show_zns_report_zones(void *report, __u32 descs,
+	__u8 ext_size, __u32 report_size, unsigned long flags)
+{
+	struct nvme_zone_report *r = report;
+	struct nvme_zns_desc *desc;
+	int i;
+
+	__u64 nr_zones = le64_to_cpu(r->nr_zones);
+
+	if (nr_zones < descs)
+		descs = nr_zones;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)report, report_size);
+
+	printf("nr_zones : %"PRIu64"\n", (uint64_t)le64_to_cpu(r->nr_zones));
+	for (i = 0; i < descs; i++) {
+		desc = (struct nvme_zns_desc *)
+			(report + sizeof(*r) + i * (sizeof(*desc) + ext_size));
+		printf(" desc %02d:\n", i);
+		printf(".................\n");
+		printf("zt      : %x\n", desc->zt);
+		printf("zs      : %x\n", desc->zs);
+		printf("za      : %x\n", desc->za);
+		printf("zcap    : %"PRIx64"\n", le64_to_cpu(desc->zcap));
+		printf("zslba   : %"PRIx64"\n", le64_to_cpu(desc->zslba));
+		printf("wp      : %"PRIx64"\n", le64_to_cpu(desc->wp));
+		printf(".................\n");
+	}
+}
+
 static void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset)
 {
 	__u32 nent = nvmset->nid;

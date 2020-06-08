@@ -85,6 +85,8 @@ int nvme_identify_nvmset(int fd, __u16 nvmset_id, void *data);
 int nvme_identify_uuid(int fd, void *data);
 int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data);
 int nvme_identify_ns_granularity(int fd, void *data);
+int nvme_zns_identify_ctrl(int fd, void *data);
+int nvme_zns_identify_ns(int fd, __u32 nsid, void *data);
 int nvme_get_log(int fd, __u32 nsid, __u8 log_id, bool rae,
 		 __u32 data_len, void *data);
 int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
@@ -152,4 +154,21 @@ int nvme_sanitize(int fd, __u8 sanact, __u8 ause, __u8 owpass, __u8 oipbp,
 int nvme_self_test_start(int fd, __u32 nsid, __u32 cdw10);
 int nvme_self_test_log(int fd, __u32 nsid, struct nvme_self_test_log *self_test_log);
 int nvme_virtual_mgmt(int fd, __u32 cdw10, __u32 cdw11, __u32 *result);
+
+int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
+		       enum nvme_zns_send_action zsa, __u32 data_len,
+		       void *data);
+int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
+		       enum nvme_zns_recv_action zra, __u16 zrasf,
+		       bool zras_feat, __u32 data_len, void *data);
+int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba, bool extended,
+			  enum nvme_zns_report_options opts, bool partial,
+			  __u32 data_len, void *data);
+int nvme_zns_append(int fd, __u32 nsid, __u64 zslba, __u16 nlb, __u16 control,
+		    __u32 ilbrt, __u16 lbat, __u16 lbatm, __u32 data_len,
+		    void *data, __u32 metadata_len, void *metadata,
+		    __u64 *result);
+int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
+				   struct nvme_zns_changed_zone_log *log);
+
 #endif				/* _NVME_LIB_H */

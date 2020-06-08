@@ -85,7 +85,7 @@ static struct program nvme = {
 	.extensions = &builtin,
 };
 
-static const char *output_format = "Output format: normal|json|binary";
+const char *output_format = "Output format: normal|json|binary";
 static const char *output_format_no_binary = "Output format: normal|json";
 
 static void *__nvme_alloc(size_t len, bool *huge)
@@ -103,7 +103,7 @@ static void *__nvme_alloc(size_t len, bool *huge)
 #ifdef LIBHUGETLBFS
 #define HUGE_MIN 0x80000
 
-static void nvme_free(void *p, bool huge)
+void nvme_free(void *p, bool huge)
 {
 	if (huge)
 		free_hugepage_region(p);
@@ -111,7 +111,7 @@ static void nvme_free(void *p, bool huge)
 		free(p);
 }
 
-static void *nvme_alloc(size_t len, bool *huge)
+void *nvme_alloc(size_t len, bool *huge)
 {
 	void *p;
 
@@ -126,12 +126,12 @@ static void *nvme_alloc(size_t len, bool *huge)
 	return p;
 }
 #else
-static void nvme_free(void *p, bool huge)
+void nvme_free(void *p, bool huge)
 {
 	free(p);
 }
 
-static void *nvme_alloc(size_t len, bool *huge)
+void *nvme_alloc(size_t len, bool *huge)
 {
 	return __nvme_alloc(len, huge);
 }
