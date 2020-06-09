@@ -1297,8 +1297,8 @@ static void nvme_show_registers_pmrmsc(uint64_t pmrmsc)
 {
 	printf("\tController Base Address (CBA)		: %" PRIx64 "\n",
 		(pmrmsc & 0xfffffffffffff000) >> 12);
-	printf("\tController Memory Space Enable (CMSE	: %" PRIx64 "\n\n",
-		(pmrmsc & 0x0000000000000001) >> 1);
+	printf("\tController Memory Space Enable (CMSE)	: %" PRIx64 "\n\n",
+		(pmrmsc & 0x0000000000000002) >> 1);
 }
 
 static inline uint32_t mmio_read32(void *addr)
