@@ -20,6 +20,7 @@
 #include <ccan/build_assert/build_assert.h>
 
 #include "ioctl.h"
+#include "util.h"
 
 static int nvme_verify_chr(int fd)
 {
@@ -355,16 +356,14 @@ enum features {
 	NVME_FEATURES_IOCSP_IOCSCI_MASK				= 0xff,
 };
 
-#define DW(value, prefix) ((value) & (prefix ## _MASK)) << prefix ## _SHIFT
-
 int nvme_identify(int fd, enum nvme_identify_cns cns, __u32 nsid, __u16 cntid,
 		  __u16 nvmsetid, __u8 uuidx, __u8 csi, void *data)
 {
-	__u32 cdw10 = DW(cntid, NVME_IDENTIFY_CDW10_CNTID) |
-			DW(cns, NVME_IDENTIFY_CDW10_CNS);
-	__u32 cdw11 = DW(nvmsetid, NVME_IDENTIFY_CDW11_NVMSETID) |
-			DW(csi, NVME_IDENTIFY_CDW11_CSI);
-	__u32 cdw14 = DW(uuidx, NVME_IDENTIFY_CDW14_UUID);
+	__u32 cdw10 = NVME_SET(cntid, IDENTIFY_CDW10_CNTID) |
+			NVME_SET(cns, IDENTIFY_CDW10_CNS);
+	__u32 cdw11 = NVME_SET(nvmsetid, IDENTIFY_CDW11_NVMSETID) |
+			NVME_SET(csi, IDENTIFY_CDW11_CSI);
+	__u32 cdw14 = NVME_SET(uuidx, IDENTIFY_CDW14_UUID);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_identify,
@@ -526,16 +525,16 @@ int nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u64 lpo,
 	__u32 numd = (len >> 2) - 1;
 	__u16 numdu = numd >> 16, numdl = numd & 0xffff;
 
-	__u32 cdw10 = DW(lid, NVME_LOG_CDW10_LID) |
-			DW(lsp, NVME_LOG_CDW10_LSP) |
-			DW(!!rae, NVME_LOG_CDW10_RAE) |
-			DW(numdl, NVME_LOG_CDW10_NUMDL);
-	__u32 cdw11 = DW(numdu, NVME_LOG_CDW11_NUMDU) |
-			DW(lsi, NVME_LOG_CDW11_LSI);
+	__u32 cdw10 = NVME_SET(lid, LOG_CDW10_LID) |
+			NVME_SET(lsp, LOG_CDW10_LSP) |
+			NVME_SET(!!rae, LOG_CDW10_RAE) |
+			NVME_SET(numdl, LOG_CDW10_NUMDL);
+	__u32 cdw11 = NVME_SET(numdu, LOG_CDW11_NUMDU) |
+			NVME_SET(lsi, LOG_CDW11_LSI);
 	__u32 cdw12 = lpo & 0xffffffff;
 	__u32 cdw13 = lpo >> 32;
-	__u32 cdw14 = DW(uuidx, NVME_LOG_CDW14_UUID) |
-			DW(csi, NVME_LOG_CDW14_CSI);
+	__u32 cdw14 = NVME_SET(uuidx, LOG_CDW14_UUID) |
+			NVME_SET(csi, LOG_CDW14_CSI);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_get_log_page,
@@ -731,9 +730,9 @@ int nvme_set_features(int fd, __u8 fid, __u32 nsid, __u32 cdw11, __u32 cdw12,
 		      bool save, __u8 uuidx, __u32 cdw15, __u32 data_len,
 		      void *data, __u32 *result)
 {
-	__u32 cdw10 = DW(fid, NVME_FEATURES_CDW10_FID) |
-			DW(!!save, NVME_SET_FEATURES_CDW10_SAVE);
-	__u32 cdw14 = DW(uuidx, NVME_FEATURES_CDW14_UUID);
+	__u32 cdw10 = NVME_SET(fid, FEATURES_CDW10_FID) |
+			NVME_SET(!!save, SET_FEATURES_CDW10_SAVE);
+	__u32 cdw14 = NVME_SET(uuidx, FEATURES_CDW14_UUID);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_set_features,
@@ -760,10 +759,10 @@ static int __nvme_set_features(int fd, __u8 fid, __u32 cdw11, bool save,
 int nvme_set_features_arbitration(int fd, __u8 ab, __u8 lpw, __u8 mpw,
 	__u8 hpw, bool save, __u32 *result)
 {
-	__u32 value = DW(ab, NVME_FEATURES_ARBITRATION_BURST) |
-			DW(lpw, NVME_FEATURES_ARBITRATION_LPW) |
-			DW(mpw, NVME_FEATURES_ARBITRATION_MPW) |
-			DW(hpw, NVME_FEATURES_ARBITRATION_HPW);
+	__u32 value = NVME_SET(ab, FEAT_ARBITRATION_BURST) |
+			NVME_SET(lpw, FEAT_ARBITRATION_LPW) |
+			NVME_SET(mpw, FEAT_ARBITRATION_MPW) |
+			NVME_SET(hpw, FEAT_ARBITRATION_HPW);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_ARBITRATION, value, save,
 				   result);
@@ -772,8 +771,8 @@ int nvme_set_features_arbitration(int fd, __u8 ab, __u8 lpw, __u8 mpw,
 int nvme_set_features_power_mgmt(int fd, __u8 ps, __u8 wh, bool save,
 	__u32 *result)
 {
-	__u32 value = DW(ps, NVME_FEATURES_PWRMGMT_PS) |
-			DW(wh, NVME_FEATURES_PWRMGMT_PS);
+	__u32 value = NVME_SET(ps, FEAT_PWRMGMT_PS) |
+			NVME_SET(wh, FEAT_PWRMGMT_PS);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_POWER_MGMT, value, save,
 				   result);
@@ -788,9 +787,9 @@ int nvme_set_features_lba_range(int fd, __u32 nsid, __u32 nr_ranges, bool save,
 int nvme_set_features_temp_thresh(int fd, __u16 tmpth, __u8 tmpsel,
 	enum nvme_feat_tmpthresh_thsel thsel, bool save, __u32 *result)
 {
-	__u32 value = DW(tmpth, NVME_FEATURES_TMPTH) |
-			DW(tmpsel, NVME_FEATURES_TMPSEL) |
-			DW(thsel, NVME_FEATURES_THSEL);
+	__u32 value = NVME_SET(tmpth, FEAT_TT_TMPTH) |
+			NVME_SET(tmpsel, FEAT_TT_TMPSEL) |
+			NVME_SET(thsel, FEAT_TT_THSEL);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_TEMP_THRESH, value, save,
 				   result);
@@ -799,8 +798,8 @@ int nvme_set_features_temp_thresh(int fd, __u16 tmpth, __u8 tmpsel,
 int nvme_set_features_err_recovery(int fd, __u32 nsid, __u16 tler, bool dulbe,
 	bool save, __u32 *result)
 {
-	__u32 value = DW(tler, NVME_FEATURES_ERROR_RECOVERY_TLER) |
-			DW(!!dulbe, NVME_FEATURES_ERROR_RECOVERY_DULBE);
+	__u32 value = NVME_SET(tler, FEAT_ERROR_RECOVERY_TLER) |
+			NVME_SET(!!dulbe, FEAT_ERROR_RECOVERY_DULBE);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_ERR_RECOVERY, value, save,
 				   result);
@@ -808,7 +807,7 @@ int nvme_set_features_err_recovery(int fd, __u32 nsid, __u16 tler, bool dulbe,
 
 int nvme_set_features_volatile_wc(int fd, bool wce, bool save, __u32 *result)
 {
-	__u32 value = DW(!!wce, NVME_FEATURES_VWC_WCE);
+	__u32 value = NVME_SET(!!wce, FEAT_VWC_WCE);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_VOLATILE_WC, value, save,
 				   result);
@@ -817,8 +816,8 @@ int nvme_set_features_volatile_wc(int fd, bool wce, bool save, __u32 *result)
 int nvme_set_features_irq_coalesce(int fd, __u8 thr, __u8 time, bool save,
 	__u32 *result)
 {
-	__u32 value = DW(thr, NVME_FEATURES_IRQC_TIME) |
-			DW(time, NVME_FEATURES_IRQC_THR);
+	__u32 value = NVME_SET(thr, FEAT_IRQC_TIME) |
+			NVME_SET(time, FEAT_IRQC_THR);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_IRQ_COALESCE, value, save,
 				   result);
@@ -827,8 +826,8 @@ int nvme_set_features_irq_coalesce(int fd, __u8 thr, __u8 time, bool save,
 int nvme_set_features_irq_config(int fd, __u16 iv, bool cd, bool save,
 	__u32 *result)
 {
-	__u32 value = DW(iv, NVME_FEATURES_IVC_IV) |
-			DW(!!cd, NVME_FEATURES_IVC_CD);
+	__u32 value = NVME_SET(iv, FEAT_ICFG_IV) |
+			NVME_SET(!!cd, FEAT_ICFG_CD);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_IRQ_CONFIG, value, save,
 				   result);
@@ -836,7 +835,7 @@ int nvme_set_features_irq_config(int fd, __u16 iv, bool cd, bool save,
 
 int nvme_set_features_write_atomic(int fd, bool dn, bool save, __u32 *result)
 {
-	__u32 value = DW(!!dn, NVME_FEATURES_WAN_DN);
+	__u32 value = NVME_SET(!!dn, FEAT_WA_DN);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_WRITE_ATOMIC, value, save,
 				   result);
@@ -852,7 +851,7 @@ int nvme_set_features_async_event(int fd, __u32 events,
 int nvme_set_features_auto_pst(int fd, bool apste, bool save,
 	struct nvme_feat_auto_pst *apst, __u32 *result)
 {
-	__u32 value = DW(!!apste, NVME_FEATURES_APST_APSTE);
+	__u32 value = NVME_SET(!!apste, FEAT_APST_APSTE);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_AUTO_PST, value, save,
 				   result);
@@ -872,8 +871,8 @@ int nvme_set_features_timestamp(int fd, bool save, __u64 timestamp)
 int nvme_set_features_hctm(int fd, __u16 tmt2, __u16 tmt1,
 	bool save, __u32 *result)
 {
-	__u32 value = DW(tmt2, NVME_FEATURES_HCTM_TMT2) |
-			DW(tmt1, NVME_FEATURES_HCTM_TMT1);
+	__u32 value = NVME_SET(tmt2, FEAT_HCTM_TMT2) |
+			NVME_SET(tmt1, FEAT_HCTM_TMT1);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_HCTM, value, save,
 				   result);
@@ -881,7 +880,7 @@ int nvme_set_features_hctm(int fd, __u16 tmt2, __u16 tmt1,
 
 int nvme_set_features_nopsc(int fd, bool noppme, bool save, __u32 *result)
 {
-	__u32 value = DW(noppme, NVME_FEATURES_NOPS_NOPPME);
+	__u32 value = NVME_SET(noppme, FEAT_NOPS_NOPPME);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_NOPSC, value, save,
 				   result);
@@ -906,7 +905,7 @@ int nvme_set_features_plm_config(int fd, bool plm, __u16 nvmsetid, bool save,
 int nvme_set_features_plm_window(int fd, enum nvme_feat_plm_window_select sel,
 	__u16 nvmsetid, bool save, __u32 *result)
 {
-	__u32 cdw12 = DW(sel, NVME_FEATURES_PLM_WINDOW_SELECT);
+	__u32 cdw12 = NVME_SET(sel, FEAT_PLMW_WS);
 
 	return nvme_set_features(fd, NVME_FEAT_FID_PLM_WINDOW, NVME_NSID_NONE,
 				 nvmsetid, cdw12, save, NVME_UUID_NONE, 0, 0,
@@ -916,8 +915,8 @@ int nvme_set_features_plm_window(int fd, enum nvme_feat_plm_window_select sel,
 int nvme_set_features_lba_sts_interval(int fd, __u16 lsiri, __u16 lsipi,
 	bool save, __u32 *result)
 {
-	__u32 value = DW(lsiri, NVME_FEATURES_LBAS_LSIRI) |
-			DW(lsipi, NVME_FEATURES_LBAS_LSIPI);
+	__u32 value = NVME_SET(lsiri, FEAT_LBAS_LSIRI) |
+			NVME_SET(lsipi, FEAT_LBAS_LSIPI);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_LBA_STS_INTERVAL, value,
 				   save, result);
@@ -983,7 +982,7 @@ int nvme_set_features_write_protect(int fd, enum nvme_feat_nswpcfg_state state,
 
 int nvme_set_features_iocs_profile(int fd, __u8 iocsi, bool save)
 {
-	__u32 value = DW(iocsi, NVME_FEATURES_IOCSP_IOCSCI);
+	__u32 value = NVME_SET(iocsi, FEAT_IOCSP_IOCSCI);
 
 	return __nvme_set_features(fd, NVME_FEAT_FID_IOCS_PROFILE, value,
 				   save, NULL);
@@ -993,9 +992,9 @@ int nvme_get_features(int fd, enum nvme_features_id fid, __u32 nsid,
 		      enum nvme_get_features_sel sel, __u32 cdw11, __u8 uuidx,
 		      __u32 data_len, void *data, __u32 *result)
 {
-	__u32 cdw10 = DW(fid, NVME_FEATURES_CDW10_FID) |
-			DW(sel, NVME_GET_FEATURES_CDW10_SEL);
-	__u32 cdw14 = DW(uuidx, NVME_FEATURES_CDW14_UUID);
+	__u32 cdw10 = NVME_SET(fid, FEATURES_CDW10_FID) |
+			NVME_SET(sel, GET_FEATURES_CDW10_SEL);
+	__u32 cdw14 = NVME_SET(uuidx, FEATURES_CDW14_UUID);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_get_features,
@@ -1218,11 +1217,11 @@ int nvme_format_nvm(int fd, __u32 nsid, __u8 lbaf,
 		    enum nvme_cmd_format_pil pil, enum nvme_cmd_format_ses ses,
 		    __u32 timeout)
 {
-	__u32 cdw10 = DW(lbaf, NVME_FORMAT_CDW10_LBAF) |
-			DW(mset, NVME_FORMAT_CDW10_MSET) |
-			DW(pi, NVME_FORMAT_CDW10_PI) |
-			DW(pil, NVME_FORMAT_CDW10_PIL) |
-			DW(ses, NVME_FORMAT_CDW10_SES);
+	__u32 cdw10 = NVME_SET(lbaf, FORMAT_CDW10_LBAF) |
+			NVME_SET(mset, FORMAT_CDW10_MSET) |
+			NVME_SET(pi, FORMAT_CDW10_PI) |
+			NVME_SET(pil, FORMAT_CDW10_PIL) |
+			NVME_SET(ses, FORMAT_CDW10_SES);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_format_nvm,
@@ -1237,7 +1236,7 @@ int nvme_format_nvm(int fd, __u32 nsid, __u8 lbaf,
 int nvme_ns_mgmt(int fd, __u32 nsid, enum nvme_ns_mgmt_sel sel,
 		 struct nvme_id_ns *ns, __u32 *result, __u32 timeout)
 {
-	__u32 cdw10 = DW(sel, NVME_NAMESPACE_MGMT_CDW10_SEL);
+	__u32 cdw10 = NVME_SET(sel, NAMESPACE_MGMT_CDW10_SEL);
 	__u32 data_len = ns ? sizeof(*ns) : 0;
 
 	struct nvme_passthru_cmd cmd = {
@@ -1267,7 +1266,7 @@ int nvme_ns_mgmt_delete(int fd, __u32 nsid)
 int nvme_ns_attach(int fd, __u32 nsid, enum nvme_ns_attach_sel sel,
 		   struct nvme_ctrl_list *ctrlist)
 {
-	__u32 cdw10 = DW(sel, NVME_NAMESPACE_ATTACH_CDW10_SEL);
+	__u32 cdw10 = NVME_SET(sel, NAMESPACE_ATTACH_CDW10_SEL);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_ns_attach,
@@ -1309,9 +1308,9 @@ int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data)
 
 int nvme_fw_commit(int fd, __u8 slot, enum nvme_fw_commit_ca action, bool bpid)
 {
-	__u32 cdw10 = DW(slot, NVME_FW_COMMIT_CDW10_FS) |
-			DW(action, NVME_FW_COMMIT_CDW10_CA) |
-			DW(bpid, NVME_FW_COMMIT_CDW10_BPID);
+	__u32 cdw10 = NVME_SET(slot, FW_COMMIT_CDW10_FS) |
+			NVME_SET(action, FW_COMMIT_CDW10_CA) |
+			NVME_SET(bpid, FW_COMMIT_CDW10_BPID);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_fw_commit,
@@ -1325,10 +1324,10 @@ int nvme_security_send(int fd, __u32 nsid, __u8 nssf, __u8 spsp0, __u8 spsp1,
 		       __u8 secp, __u32 tl, __u32 data_len, void *data,
 		       __u32 *result)
 {
-	__u32 cdw10 = DW(secp, NVME_SECURITY_SECP) |
-			DW(spsp0, NVME_SECURITY_SPSP0)  |
-			DW(spsp1, NVME_SECURITY_SPSP1) |
-			DW(nssf, NVME_SECURITY_NSSF);
+	__u32 cdw10 = NVME_SET(secp, SECURITY_SECP) |
+			NVME_SET(spsp0, SECURITY_SPSP0)  |
+			NVME_SET(spsp1, SECURITY_SPSP1) |
+			NVME_SET(nssf, SECURITY_NSSF);
 	__u32 cdw11 = tl;
 
 	struct nvme_passthru_cmd cmd = {
@@ -1347,10 +1346,10 @@ int nvme_security_receive(int fd, __u32 nsid, __u8 nssf, __u8 spsp0,
 			  __u8 spsp1, __u8 secp, __u32 al, __u32 data_len,
 			  void *data, __u32 *result)
 {
-	__u32 cdw10 = DW(secp, NVME_SECURITY_SECP) |
-			DW(spsp0, NVME_SECURITY_SPSP0)  |
-			DW(spsp1, NVME_SECURITY_SPSP1) |
-			DW(nssf, NVME_SECURITY_NSSF);
+	__u32 cdw10 = NVME_SET(secp, SECURITY_SECP) |
+			NVME_SET(spsp0, SECURITY_SPSP0)  |
+			NVME_SET(spsp1, SECURITY_SPSP1) |
+			NVME_SET(nssf, SECURITY_NSSF);
 	__u32 cdw11 = al;
 
 	struct nvme_passthru_cmd cmd = {
@@ -1372,8 +1371,8 @@ int nvme_get_lba_status(int fd, __u32 nsid, __u64 slba, __u32 mndw, __u16 rl,
 	__u32 cdw10 = slba & 0xffffffff;
 	__u32 cdw11 = slba >> 32;
 	__u32 cdw12 = mndw;
-	__u32 cdw13 = DW(rl, NVME_GET_LBA_STATUS_CDW13_RL) |
-			DW(atype, NVME_GET_LBA_STATUS_CDW13_ATYPE);
+	__u32 cdw13 = NVME_SET(rl, GET_LBA_STATUS_CDW13_RL) |
+			NVME_SET(atype, GET_LBA_STATUS_CDW13_ATYPE);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode =  nvme_admin_get_lba_status,
@@ -1394,9 +1393,9 @@ int nvme_directive_send(int fd, __u32 nsid, __u16 dspec,
 			__u32 data_len, void *data, __u32 *result)
 {
 	__u32 cdw10 = data_len ? (data_len >> 2) - 1 : 0;
-	__u32 cdw11 = DW(doper, NVME_DIRECTIVE_CDW11_DOPER) |
-			DW(dtype, NVME_DIRECTIVE_CDW11_DTYPE) |
-			DW(dspec, NVME_DIRECTIVE_CDW11_DPSEC);
+	__u32 cdw11 = NVME_SET(doper, DIRECTIVE_CDW11_DOPER) |
+			NVME_SET(dtype, DIRECTIVE_CDW11_DTYPE) |
+			NVME_SET(dspec, DIRECTIVE_CDW11_DPSEC);
 
         struct nvme_passthru_cmd cmd = {
                 .opcode         = nvme_admin_directive_send,
@@ -1415,8 +1414,8 @@ int nvme_directive_send_id_endir(int fd, __u32 nsid, bool endir,
 				 enum nvme_directive_dtype dtype,
 				 struct nvme_id_directives *id)
 {
-	__u32 cdw12 = DW(dtype, NVME_DIRECTIVE_SEND_IDENTIFY_CDW12_DTYPE) |
-		DW(endir, NVME_DIRECTIVE_SEND_IDENTIFY_CDW12_ENDIR);
+	__u32 cdw12 = NVME_SET(dtype, DIRECTIVE_SEND_IDENTIFY_CDW12_DTYPE) |
+		NVME_SET(endir, DIRECTIVE_SEND_IDENTIFY_CDW12_ENDIR);
 
 	return nvme_directive_send(fd, nsid, 0, NVME_DIRECTIVE_DTYPE_IDENTIFY,
 				   NVME_DIRECTIVE_SEND_IDENTIFY_DOPER_ENDIR,
@@ -1449,9 +1448,9 @@ int nvme_directive_recv(int fd, __u32 nsid, __u16 dspec,
 			__u32 data_len, void *data, __u32 *result)
 {
 	__u32 cdw10 = data_len ? (data_len >> 2) - 1 : 0;
-	__u32 cdw11 = DW(doper, NVME_DIRECTIVE_CDW11_DOPER) |
-			DW(dtype, NVME_DIRECTIVE_CDW11_DTYPE) |
-			DW(dspec, NVME_DIRECTIVE_CDW11_DPSEC);
+	__u32 cdw11 = NVME_SET(doper, DIRECTIVE_CDW11_DOPER) |
+			NVME_SET(dtype, DIRECTIVE_CDW11_DTYPE) |
+			NVME_SET(dspec, DIRECTIVE_CDW11_DPSEC);
 
         struct nvme_passthru_cmd cmd = {
                 .opcode         = nvme_admin_directive_recv,
@@ -1539,11 +1538,11 @@ int nvme_get_property(int fd, int offset, __u64 *value)
 int nvme_sanitize_nvm(int fd, enum nvme_sanitize_sanact sanact, bool ause,
 		      __u8 owpass, bool oipbp, bool nodas, __u32 ovrpat)
 {
-	__u32 cdw10 = DW(sanact, NVME_SANITIZE_CDW10_SANACT) |
-			DW(!!ause, NVME_SANITIZE_CDW10_AUSE) |
-			DW(owpass, NVME_SANITIZE_CDW10_OWPASS) |
-			DW(!!oipbp, NVME_SANITIZE_CDW10_OIPBP) |
-			DW(!!nodas, NVME_SANITIZE_CDW10_NODAS);
+	__u32 cdw10 = NVME_SET(sanact, SANITIZE_CDW10_SANACT) |
+			NVME_SET(!!ause, SANITIZE_CDW10_AUSE) |
+			NVME_SET(owpass, SANITIZE_CDW10_OWPASS) |
+			NVME_SET(!!oipbp, SANITIZE_CDW10_OIPBP) |
+			NVME_SET(!!nodas, SANITIZE_CDW10_NODAS);
 	__u32 cdw11 = ovrpat;
 
 	struct nvme_passthru_cmd cmd = {
@@ -1557,7 +1556,7 @@ int nvme_sanitize_nvm(int fd, enum nvme_sanitize_sanact sanact, bool ause,
 
 int nvme_dev_self_test(int fd, __u32 nsid, enum nvme_dst_stc stc)
 {
-	__u32 cdw10 = DW(stc, NVME_DEVICE_SELF_TEST_CDW10_STC);
+	__u32 cdw10 = NVME_SET(stc, DEVICE_SELF_TEST_CDW10_STC);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode = nvme_admin_dev_self_test,
@@ -1572,10 +1571,10 @@ int nvme_virtual_mgmt(int fd, enum nvme_virt_mgmt_act act,
 		      enum nvme_virt_mgmt_rt rt, __u16 cntlid, __u16 nr,
 		      __u32 *result)
 {
-	__u32 cdw10 = DW(act, NVME_VIRT_MGMT_CDW10_ACT) |
-			DW(rt, NVME_VIRT_MGMT_CDW10_RT) |
-			DW(cntlid, NVME_VIRT_MGMT_CDW10_CNTLID);
-	__u32 cdw11 = DW(nr, NVME_VIRT_MGMT_CDW11_NR);
+	__u32 cdw10 = NVME_SET(act, VIRT_MGMT_CDW10_ACT) |
+			NVME_SET(rt, VIRT_MGMT_CDW10_RT) |
+			NVME_SET(cntlid, VIRT_MGMT_CDW10_CNTLID);
+	__u32 cdw11 = NVME_SET(nr, VIRT_MGMT_CDW11_NR);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode = nvme_admin_virtual_mgmt,
@@ -1800,8 +1799,8 @@ int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
 {
 	__u32 cdw10 = slba & 0xffffffff;
 	__u32 cdw11 = slba >> 32;
-	__u32 cdw13 = DW(!!select_all, NVME_ZNS_MGMT_SEND_SEL) |
-			DW(zsa, NVME_ZNS_MGMT_SEND_ZSA);
+	__u32 cdw13 = NVME_SET(!!select_all, ZNS_MGMT_SEND_SEL) |
+			NVME_SET(zsa, ZNS_MGMT_SEND_ZSA);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_zns_cmd_mgmt_send,
@@ -1823,9 +1822,9 @@ int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
 	__u32 cdw10 = slba & 0xffffffff;
 	__u32 cdw11 = slba >> 32;
 	__u32 cdw12 = (data_len >> 2) - 1;
-	__u32 cdw13 = DW(zra , NVME_ZNS_MGMT_RECV_ZRA) |
-			DW(zrasf, NVME_ZNS_MGMT_RECV_ZRASF) |
-			DW(zras_feat, NVME_ZNS_MGMT_RECV_ZRAS_FEAT);
+	__u32 cdw13 = NVME_SET(zra, ZNS_MGMT_RECV_ZRA) |
+			NVME_SET(zrasf, ZNS_MGMT_RECV_ZRASF) |
+			NVME_SET(zras_feat, ZNS_MGMT_RECV_ZRAS_FEAT);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_zns_cmd_mgmt_recv,
