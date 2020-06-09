@@ -1297,8 +1297,8 @@ static void nvme_show_registers_pmrmsc(uint64_t pmrmsc)
 {
 	printf("\tController Base Address (CBA)		: %" PRIx64 "\n",
 		(pmrmsc & 0xfffffffffffff000) >> 12);
-	printf("\tController Memory Space Enable (CMSE	: %" PRIx64 "\n\n",
-		(pmrmsc & 0x0000000000000001) >> 1);
+	printf("\tController Memory Space Enable (CMSE)	: %" PRIx64 "\n\n",
+		(pmrmsc & 0x0000000000000002) >> 1);
 }
 
 static inline uint32_t mmio_read32(void *addr)
@@ -1320,7 +1320,8 @@ static void json_ctrl_registers(void *bar)
 {
 	uint64_t cap, asq, acq, bpmbl, cmbmsc, pmrmsc;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc,
-		bpinfo, bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp;
+		bpinfo, bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp,
+		pmrmscl, pmrmsch;
 	struct json_object *root;
 
 	cap = mmio_read64(bar + NVME_REG_CAP);
@@ -1345,7 +1346,9 @@ static void json_ctrl_registers(void *bar)
 	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
 	pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
 	pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
-	pmrmsc = mmio_read64(bar + NVME_REG_PMRMSC);
+	pmrmscl = mmio_read32(bar + NVME_REG_PMRMSCL);
+	pmrmsch = mmio_read32(bar + NVME_REG_PMRMSCH);
+	pmrmsc = ((uint64_t) pmrmsch << 32) | pmrmscl;
 
 	root = json_create_object();
 	json_object_add_value_uint(root, "cap", cap);
@@ -1381,7 +1384,8 @@ void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags fla
 	const unsigned int reg_size = 0x50;  /* 00h to 4Fh */
 	uint64_t cap, asq, acq, bpmbl, cmbmsc, pmrmsc;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc, bpinfo,
-		 bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp;
+		 bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp, pmrmscl,
+		 pmrmsch;
 	int human = flags & VERBOSE;
 
 	if (flags & BINARY)
@@ -1411,7 +1415,9 @@ void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags fla
 	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
 	pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
 	pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
-	pmrmsc = mmio_read64(bar + NVME_REG_PMRMSC);
+	pmrmscl = mmio_read32(bar + NVME_REG_PMRMSCL);
+	pmrmsch = mmio_read32(bar + NVME_REG_PMRMSCH);
+	pmrmsc = ((uint64_t) pmrmsch << 32) | pmrmscl;
 
 	if (human) {
 		if (cap != 0xffffffff) {

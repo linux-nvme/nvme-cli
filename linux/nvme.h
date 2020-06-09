@@ -170,7 +170,8 @@ enum {
 	NVME_REG_PMRSTS = 0x0e08,	/* Persistent Memory Region Status */
 	NVME_REG_PMREBS = 0x0e0c,	/* Persistent Memory Region Elasticity Buffer Size */
 	NVME_REG_PMRSWTP= 0x0e10,	/* Persistent Memory Region Sustained Write Throughput */
-	NVME_REG_PMRMSC = 0x0e14,	/* Persistent Memory Region Controller Memory Space Control */
+	NVME_REG_PMRMSCL= 0x0e14,	/* Persistent Memory Region Controller Memory Space Control Low */
+	NVME_REG_PMRMSCH= 0x0e18,	/* Persistent Memory Region Controller Memory Space Control High */
 	NVME_REG_DBS	= 0x1000,	/* SQ 0 Tail Doorbell */
 };
 
