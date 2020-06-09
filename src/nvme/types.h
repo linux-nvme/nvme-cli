@@ -248,22 +248,22 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
 	}
 }
 
-static inline __u32 nvme_mmio_read32(void *addr)
+static inline uint32_t nvme_mmio_read32(volatile void *addr)
 {
-        __le32 *p = (__le32 *)addr;
+        uint32_t *p = (__le32 *)addr;
 
         return le32_to_cpu(*p);
 }
 
-static inline __u64 nvme_mmio_read64(void *addr)
+static inline uint64_t nvme_mmio_read64(volatile void *addr)
 {
-        __le32 *p = (__le32 *)addr;
+        volatile __u32 *p = (__u32 *)addr;
+        uint32_t low, high;
 
-	/*
-	 * Some devices fail 64-bit MMIO, and at least one 64-bit register is
-	 * not aligned to 64-bit. Access 64-bit registers as two 32-bit.
-	 */
-        return le32_to_cpu(*p) | ((uint64_t)le32_to_cpu(*(p + 1)) << 32);
+        low = nvme_mmio_read32(p);
+        high = nvme_mmio_read32(p + 1);
+
+        return low + ((uint64_t)high << 32);
 }
 
 enum nvme_cap {
