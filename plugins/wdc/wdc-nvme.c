@@ -721,7 +721,7 @@ struct wdc_fw_act_history_log_entry {
 	__le32      entry_num;
 	__le32      power_cycle_count;
 	__le64      power_on_seconds;
-	__le64      current_fw_version;
+	__le64      previous_fw_version;
 	__le64      new_fw_version;
     __u8        slot_number;
     __u8        commit_action_type;
@@ -3332,22 +3332,22 @@ static void wdc_print_fw_act_history_log_normal(struct wdc_fw_act_history_log_en
 		int num_entries)
 {
 	int i;
-	char current_fw[9];
+	char previous_fw[9];
 	char new_fw[9];
 	char commit_action_bin[8];
-	memset((void *)current_fw, 0, 9);
+	memset((void *)previous_fw, 0, 9);
 	memset((void *)new_fw, 0, 9);
 	memset((void *)commit_action_bin, 0, 8);
 	char *null_fw = "--------";
 
 
 	printf("  Firmware Activate History Log \n");
-	printf("         Power on Hour   Power Cycle   Current     New                               \n");
+	printf("         Power on Hour   Power Cycle   Previous    New                               \n");
 	printf("  Entry    hh:mm:ss      Count         Firmware    Firmware    Slot   Action  Result \n");
 	printf("  -----  --------------  ------------  ----------  ----------  -----  ------  -------\n");
 
 	for (i = 0; i < num_entries; i++) {
-		memcpy(current_fw, (char *)&(fw_act_history_entry->current_fw_version), 8);
+		memcpy(previous_fw, (char *)&(fw_act_history_entry->previous_fw_version), 8);
 		if (strlen((char *)&(fw_act_history_entry->new_fw_version)) > 1)
 			memcpy(new_fw, (char *)&(fw_act_history_entry->new_fw_version), 8);
 		else
@@ -3361,7 +3361,7 @@ static void wdc_print_fw_act_history_log_normal(struct wdc_fw_act_history_log_en
 		printf("       ");
 		printf("%8"PRIu32"", (uint32_t)le32_to_cpu(fw_act_history_entry->power_cycle_count));
 		printf("     ");
-		printf("%s", (char *)current_fw);
+		printf("%s", (char *)previous_fw);
 		printf("    ");
 		printf("%s", (char *)new_fw);
 		printf("     ");
@@ -3386,12 +3386,12 @@ static void wdc_print_fw_act_history_log_json(struct wdc_fw_act_history_log_entr
 {
 	struct json_object *root;
 	int i;
-	char current_fw[9];
+	char previous_fw[9];
 	char new_fw[9];
 	char commit_action_bin[8];
 	char fail_str[32];
 	char time_str[9];
-	memset((void *)current_fw, 0, 9);
+	memset((void *)previous_fw, 0, 9);
 	memset((void *)new_fw, 0, 9);
 	memset((void *)commit_action_bin, 0, 8);
 	memset((void *)time_str, 0, 9);
@@ -3401,7 +3401,7 @@ static void wdc_print_fw_act_history_log_json(struct wdc_fw_act_history_log_entr
 	root = json_create_object();
 
 	for (i = 0; i < num_entries; i++) {
-		memcpy(current_fw, (char *)&(fw_act_history_entry->current_fw_version), 8);
+		memcpy(previous_fw, (char *)&(fw_act_history_entry->previous_fw_version), 8);
 		if (strlen((char *)&(fw_act_history_entry->new_fw_version)) > 1)
 		    memcpy(new_fw, (char *)&(fw_act_history_entry->new_fw_version), 8);
 		else
@@ -3417,8 +3417,8 @@ static void wdc_print_fw_act_history_log_json(struct wdc_fw_act_history_log_entr
 
 		json_object_add_value_int(root, "Power Cycle Count",
 			le32_to_cpu(fw_act_history_entry->power_cycle_count));
-		json_object_add_value_string(root, "Current Firmware",
-				current_fw);
+		json_object_add_value_string(root, "Previous Firmware",
+				previous_fw);
 		json_object_add_value_string(root, "New Firmware",
 				new_fw);
 		json_object_add_value_int(root, "Slot",
