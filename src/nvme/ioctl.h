@@ -360,7 +360,10 @@ int nvme_ns_rescan(int fd);
  * @fd:		File descriptor of nvme namespace
  * @nsid:	User pointer to namespace id
  *
- * This should only be sent to namespace handles, not to controllers.
+ * This should only be sent to namespace handles, not to controllers. The
+ * kernel's interface returns the nsid as the return value. This is unfortunate
+ * for many architectures that are incapable of allowing distinguishing a
+ * namespace id > 0x80000000 from a negative error number.
  *
  * Return: 0 if @nsid was set succecssfully or -1 with errno set otherwise.
  */
