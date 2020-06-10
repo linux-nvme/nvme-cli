@@ -2667,7 +2667,7 @@ static void print_ps_power_and_scale(__le16 ctr_power, __u8 scale)
 
 	case 2:
 		/* Units of 0.01W */
-		printf("%01u.%02uW", power / 100, scale % 100);
+		printf("%01u.%02uW", power / 100, power % 100);
 		break;
 
 	default:
