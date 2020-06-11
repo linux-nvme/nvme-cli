@@ -541,6 +541,14 @@ struct __attribute__((__packed__)) wdc_dui_log_section_v2 {
 	__le64	section_size;
 };
 
+/* DUI log header V4 */
+struct wdc_dui_log_section_v4 {
+	__le16	section_type;
+	__u8	data_area_id;
+	__u8    reserved;
+	__le32	section_size_sectors;
+};
+
 struct wdc_dui_log_hdr {
 	__u8    telemetry_hdr[512];
 	__le16	hdr_version;
@@ -568,6 +576,16 @@ struct __attribute__((__packed__)) wdc_dui_log_hdr_v3 {
 	__le64	log_size;
 	struct	wdc_dui_log_section_v2 log_section[WDC_NVME_DUI_MAX_SECTION_V3];
 	__u8    securityNonce[36];
+	__u8    log_data[40];
+};
+
+struct __attribute__((__packed__)) wdc_dui_log_hdr_v4 {
+	__u8    telemetry_hdr[512];
+	__u8	hdr_version;
+	__u8    product_id;
+	__le16	section_count;
+	__le32	log_size_sectors;
+	struct	wdc_dui_log_section_v4 log_section[WDC_NVME_DUI_MAX_SECTION];
 	__u8    log_data[40];
 };
 
@@ -1628,7 +1646,99 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 	}
 
 	/* Check the Log Header version  */
-	if (((log_hdr->hdr_version & 0xFF) == 0x02) ||
+	if ((log_hdr->hdr_version & 0xFF) == 0x01)	{
+		__s32 log_size = 0;
+		__u32 curr_data_offset = 0;
+
+		cap_dui_length = le32_to_cpu(log_hdr->log_size);
+
+		if (verbose) {
+			fprintf(stderr, "INFO : WDC : Capture V1 Device Unit Info log, data area = %d\n", data_area);
+			fprintf(stderr, "INFO : WDC : DUI Header Version = 0x%x\n", log_hdr->hdr_version);
+		}
+
+		if (cap_dui_length == 0) {
+			fprintf(stderr, "INFO : WDC : Capture V1 Device Unit Info log is empty\n");
+		} else {
+			/* parse log header for all sections up to specified data area inclusively */
+			if (data_area != WDC_NVME_DUI_MAX_DATA_AREA) {
+				for(j = 0; j < WDC_NVME_DUI_MAX_SECTION; j++) {
+					if (log_hdr->log_section[j].data_area_id <= data_area &&
+							log_hdr->log_section[j].data_area_id != 0) {
+						log_size += log_hdr->log_section[j].section_size;
+						if (verbose)
+							fprintf(stderr, "%s: Data area ID %d : section size 0x%x, total size = 0x%x\n",
+									__func__, log_hdr->log_section[j].data_area_id, (unsigned int)log_hdr->log_section[j].section_size, (unsigned int)log_size);
+
+					}
+					else {
+						if (verbose)
+							fprintf(stderr, "%s: break, total size = 0x%x\n", 	__func__, (unsigned int)log_size);
+						break;
+					}
+				}
+			} else
+				log_size = cap_dui_length;
+
+			total_size = log_size;
+
+			dump_data = (__u8 *) malloc(sizeof (__u8) * xfer_size);
+			if (dump_data == NULL) {
+				fprintf(stderr, "%s: ERROR : dump data V1 malloc failed : status %s, size = 0x%x\n",
+						__func__, strerror(errno), (unsigned int)xfer_size);
+				ret = -1;
+				goto out;
+			}
+			memset(dump_data, 0, sizeof (__u8) * xfer_size);
+
+			output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+			if (output < 0) {
+				fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
+						__func__, file, strerror(errno));
+				ret = output;
+				goto free_mem;
+			}
+
+			/* write the telemetry and log headers into the dump_file */
+			err = write(output, (void *)log_hdr, WDC_NVME_CAP_DUI_HEADER_SIZE);
+			if (err != WDC_NVME_CAP_DUI_HEADER_SIZE) {
+				fprintf(stderr, "%s:  Failed to flush header data to file!\n", __func__);
+				goto free_mem;
+			}
+
+			log_size -= WDC_NVME_CAP_DUI_HEADER_SIZE;
+			curr_data_offset = WDC_NVME_CAP_DUI_HEADER_SIZE;
+			i = 0;
+			buffer_addr = dump_data;
+
+			for(; log_size > 0; log_size -= xfer_size) {
+				xfer_size = min(xfer_size, log_size);
+
+				if (log_size <= xfer_size)
+					last_xfer = true;
+
+				ret = wdc_dump_dui_data(fd, xfer_size, curr_data_offset, buffer_addr, last_xfer);
+				if (ret != 0) {
+					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%lx, offset = 0x%x, addr = %p\n",
+							__func__, i, (long unsigned int)log_size, curr_data_offset, buffer_addr);
+					fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+					break;
+				}
+
+				/* write the dump data into the file */
+				err = write(output, (void *)buffer_addr, xfer_size);
+				if (err != xfer_size) {
+					fprintf(stderr, "%s: ERROR : WDC : Failed to flush DUI data to file! chunk %d, err = 0x%x, xfer_size = 0x%x\n",
+							__func__, i, err, xfer_size);
+					goto free_mem;
+				}
+
+				curr_data_offset += xfer_size;
+				i++;
+			}
+		}
+	}
+	else if (((log_hdr->hdr_version & 0xFF) == 0x02) ||
 		((log_hdr->hdr_version & 0xFF) == 0x03)) {					/* Process Version 2 or 3 header */
 		__s64 log_size = 0;
 		__u64 curr_data_offset = 0;
@@ -1739,98 +1849,15 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				i++;
 			}
 		}
-	} else	{
-		__s32 log_size = 0;
-		__u32 curr_data_offset = 0;
-
-		cap_dui_length = le32_to_cpu(log_hdr->log_size);
-
-		if (verbose) {
-			fprintf(stderr, "INFO : WDC : Capture V1 Device Unit Info log, data area = %d\n", data_area);
-			fprintf(stderr, "INFO : WDC : DUI Header Version = 0x%x\n", log_hdr->hdr_version);
-		}
-
-		if (cap_dui_length == 0) {
-			fprintf(stderr, "INFO : WDC : Capture V1 Device Unit Info log is empty\n");
-		} else {
-			/* parse log header for all sections up to specified data area inclusively */
-			if (data_area != WDC_NVME_DUI_MAX_DATA_AREA) {
-				for(j = 0; j < WDC_NVME_DUI_MAX_SECTION; j++) {
-					if (log_hdr->log_section[j].data_area_id <= data_area &&
-							log_hdr->log_section[j].data_area_id != 0) {
-						log_size += log_hdr->log_section[j].section_size;
-						if (verbose)
-							fprintf(stderr, "%s: Data area ID %d : section size 0x%x, total size = 0x%x\n",
-								__func__, log_hdr->log_section[j].data_area_id, (unsigned int)log_hdr->log_section[j].section_size, (unsigned int)log_size);
-
-					}
-					else {
-						if (verbose)
-							fprintf(stderr, "%s: break, total size = 0x%x\n", 	__func__, (unsigned int)log_size);
-						break;
-					}
-				}
-			} else
-				log_size = cap_dui_length;
-
-			total_size = log_size;
-
-			dump_data = (__u8 *) malloc(sizeof (__u8) * xfer_size);
-			if (dump_data == NULL) {
-				fprintf(stderr, "%s: ERROR : dump data V1 malloc failed : status %s, size = 0x%x\n",
-						__func__, strerror(errno), (unsigned int)xfer_size);
-				ret = -1;
-				goto out;
-			}
-			memset(dump_data, 0, sizeof (__u8) * xfer_size);
-
-			output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-			if (output < 0) {
-				fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
-						__func__, file, strerror(errno));
-				ret = output;
-				goto free_mem;
-			}
-
-			/* write the telemetry and log headers into the dump_file */
-			err = write(output, (void *)log_hdr, WDC_NVME_CAP_DUI_HEADER_SIZE);
-			if (err != WDC_NVME_CAP_DUI_HEADER_SIZE) {
-				fprintf(stderr, "%s:  Failed to flush header data to file!\n", __func__);
-				goto free_mem;
-			}
-
-			log_size -= WDC_NVME_CAP_DUI_HEADER_SIZE;
-			curr_data_offset = WDC_NVME_CAP_DUI_HEADER_SIZE;
-			i = 0;
-			buffer_addr = dump_data;
-
-			for(; log_size > 0; log_size -= xfer_size) {
-				xfer_size = min(xfer_size, log_size);
-
-				if (log_size <= xfer_size)
-					last_xfer = true;
-
-				ret = wdc_dump_dui_data(fd, xfer_size, curr_data_offset, buffer_addr, last_xfer);
-				if (ret != 0) {
-					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%lx, offset = 0x%x, addr = %p\n",
-							__func__, i, (long unsigned int)log_size, curr_data_offset, buffer_addr);
-					fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
-					break;
-				}
-
-				/* write the dump data into the file */
-				err = write(output, (void *)buffer_addr, xfer_size);
-				if (err != xfer_size) {
-					fprintf(stderr, "%s: ERROR : WDC : Failed to flush DUI data to file! chunk %d, err = 0x%x, xfer_size = 0x%x\n",
-							__func__, i, err, xfer_size);
-					goto free_mem;
-				}
-
-				curr_data_offset += xfer_size;
-				i++;
-			}
-		}
 	}
+	else if ((log_hdr->hdr_version & 0xFF) == 0x04)	{
+
+	}
+	else {
+		fprintf(stderr, "INFO : WDC : Unsupported header version = 0x%x\n", (log_hdr->hdr_version & 0xFF));
+        goto out;
+	}
+
 
 	fprintf(stderr, "%s:  NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
 	if (verbose)
