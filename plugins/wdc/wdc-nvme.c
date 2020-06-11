@@ -66,7 +66,9 @@
 #define WDC_NVME_SN640_DEV_ID				0x2400
 #define WDC_NVME_SN640_DEV_ID_1				0x2401
 #define WDC_NVME_SN640_DEV_ID_2				0x2402
-#define WDC_NVME_SN740_DEV_ID				0x2600
+#define WDC_NVME_SN640_DEV_ID_3                         	0x2404
+#define WDC_NVME_ZN440_DEV_ID	                        	0x2600
+#define WDC_NVME_SN440_DEV_ID                           	0x2610
 #define WDC_NVME_SN7GC_DEV_ID				0x2700
 #define WDC_NVME_SN7GC_DEV_ID_1             0x2701
 #define WDC_NVME_SN7GC_DEV_ID_2             0x2702
@@ -910,12 +912,16 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		/* FALLTHRU */
 		case WDC_NVME_SN640_DEV_ID_2:
 		/* FALLTHRU */
+                case WDC_NVME_SN640_DEV_ID_3:
+                /* FALLTHRU */
 		case WDC_NVME_SN840_DEV_ID:
 		/* FALLTHRU */
 		case WDC_NVME_SN840_DEV_ID_1:
 		/* FALLTHRU */
-		case WDC_NVME_SN740_DEV_ID:
+		case WDC_NVME_ZN440_DEV_ID:
 		/* FALLTHRU */
+                case WDC_NVME_SN440_DEV_ID:
+                /* FALLTHRU */
 		case WDC_NVME_SN7GC_DEV_ID:
 		case WDC_NVME_SN7GC_DEV_ID_1:
 		case WDC_NVME_SN7GC_DEV_ID_2:
@@ -3582,6 +3588,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 	case WDC_NVME_SN640_DEV_ID:
 	case WDC_NVME_SN640_DEV_ID_1:
 	case WDC_NVME_SN640_DEV_ID_2:
+        case WDC_NVME_SN640_DEV_ID_3:
 	case WDC_NVME_SN840_DEV_ID:
 	case WDC_NVME_SN840_DEV_ID_1:
 
