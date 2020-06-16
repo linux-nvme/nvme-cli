@@ -1,0 +1,96 @@
+nvme-zns-zone-append(1)
+=======================
+
+NAME
+----
+nvme-zns-zone-append - Send an NVMe write command, provide results
+
+SYNOPSIS
+--------
+[verse]
+'nvme-zns-zone-append' <device> [--namespace-id=<NUM> | -n <NUM>]
+				[--zslba=<IONUM> | -s <IONUM>]
+				[--data-size=<IONUM> | -z <IONUM>]
+				[--metadata-size=<IONUM> | -y <IONUM>]
+				[--data=<FILE> | -d <FILE>]
+				[--metadata=<FILE> | -M <FILE>]
+				[--limited-retry | -l]
+				[--force-unit-access | -f]
+				[--ref-tag=<NUM> | -r <NUM>]
+				[--app-tag-mask=<NUM> | -m <NUM>]
+				[--app-tag=<NUM> | -a <NUM>]
+				[--prinfo=<NUM> | -p <NUM>]
+
+DESCRIPTION
+-----------
+The zone append command writes the logical blocks specified by the command to
+the medium from the data data buffer provided. Will use stdin by default
+if you don't provide a file.
+
+On sucess, the program will report the LBA that was assigned to the data for
+the append operation.
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+	Use the provided namespace id for the command. If not provided, the
+	namespace id of the block device will be used. If the command is issued
+	to a non-block device, the parameter is required.
+
+-s <IONUM>::
+--zslba=<IONUM>::
+
+-z <IONUM>::
+--data-size=<IONUM>::
+	Size of data, in bytes.
+
+-y <IONUM>::
+--metadata-size=<IONUM>::
+	Size of metadata in bytes.
+
+-d <FILE>::
+--data=<FILE>::
+	Data file providing the data to write. If none provided, contents are
+	sent from STDIN.
+
+-M <FILE>::
+--metadata=<FILE>::
+	Metadata file, if necessary.
+
+-l::
+--limited-retry::
+	Sets the limited retry flag.
+
+-f::
+--force-unit-access::
+	Set the force-unit access flag.
+
+-r <NUM>::
+--ref-tag=<NUM>::
+	Optional reftag when used with protection information.
+
+-m <NUM>::
+--app-tag-mask=<NUM>::
+	Optional application tag mask when used with protection information.
+
+-a <NUM>::
+--app-tag=<NUM>::
+	Optional application tag when used with protection information.
+
+-p <NUM>::
+--prinfo=<NUM>::
+	Protection Information field definition.
+
+EXAMPLES
+--------
+* Append the data "hello world" into 4k worth of blocks into the zone starting
+  at block 0 for namespace 1:
++
+------------
+# echo "hello world" | nvme zns zone-append /dev/nvme0 -n 1 -s 0 -z 4k
+------------
+
+NVME
+----
+Part of the nvme-user suite
