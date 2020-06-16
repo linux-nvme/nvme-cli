@@ -2891,12 +2891,12 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 		return d_raw((unsigned char *)ns, sizeof(*ns));
 
 	printf("NVMe ZNS Identify Namespace:\n");
-	printf("zoc:    %u", le16_to_cpu(ns->zoc));
-	printf("ozcs:   %u", le16_to_cpu(ns->ozcs));
-	printf("mar:    %u", le16_to_cpu(ns->mar));
-	printf("mor:    %u", le16_to_cpu(ns->mor));
-	printf("rrl:    %u", ns->rrl);
-	printf("frl:    %u", ns->frl);
+	printf("zoc:    %u\n", le16_to_cpu(ns->zoc));
+	printf("ozcs:   %u\n", le16_to_cpu(ns->ozcs));
+	printf("mar:    %u\n", le16_to_cpu(ns->mar));
+	printf("mor:    %u\n", le16_to_cpu(ns->mor));
+	printf("rrl:    %u\n", ns->rrl);
+	printf("frl:    %u\n", ns->frl);
 
 	for (i = 0; i <= id_ns->nlbaf; i++)
 		printf("lbafe %02d: zsze:%"PRIx64" zdes:%u%s\n", i,
