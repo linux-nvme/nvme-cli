@@ -2881,6 +2881,38 @@ void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode)
 	printf("zamds: %u\n", ctrl->zamds);
 }
 
+void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
+	struct nvme_id_ns *id_ns, unsigned long flags)
+{
+	struct json_object *root;
+	struct json_array *lbafs;
+	int i;
+
+	root = json_create_object();
+	json_object_add_value_int(root, "zoc", le16_to_cpu(ns->zoc));
+	json_object_add_value_int(root, "ozcs", le16_to_cpu(ns->ozcs));
+	json_object_add_value_int(root, "mar", le16_to_cpu(ns->mar));
+	json_object_add_value_int(root, "mor", le16_to_cpu(ns->mor));
+	json_object_add_value_int(root, "rrl", ns->rrl);
+	json_object_add_value_int(root, "frl", ns->frl);
+
+	lbafs = json_create_array();
+	json_object_add_value_array(root, "lbafe", lbafs);
+
+	for (i = 0; i <= id_ns->nlbaf; i++) {
+		struct json_object *lbaf = json_create_object();
+
+		json_object_add_value_int(lbaf, "zsze",
+			le64_to_cpu(ns->lbafe[i].zsze));
+		json_object_add_value_int(lbaf, "zdes", ns->lbafe[i].zdes);
+
+		json_array_add_value_object(lbafs, lbaf);
+	}
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
 void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	struct nvme_id_ns *id_ns, unsigned long flags)
 {
@@ -2889,6 +2921,8 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ns, sizeof(*ns));
+	else if (flags & JSON)
+		return json_nvme_zns_id_ns(ns, id_ns, flags);
 
 	printf("NVMe ZNS Identify Namespace:\n");
 	printf("zoc:    %u\n", le16_to_cpu(ns->zoc));
@@ -2901,7 +2935,7 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	for (i = 0; i <= id_ns->nlbaf; i++)
 		printf("lbafe %02d: zsze:%"PRIx64" zdes:%u%s\n", i,
 			(uint64_t)le64_to_cpu(ns->lbafe[i].zsze),
-			ns->lbafe[i].zdes, i == lbaf ? " in use" : "");
+			ns->lbafe[i].zdes, i == lbaf ? " (in use)" : "");
 }
 
 void nvme_show_zns_changed( struct nvme_zns_changed_zone_log *log,
