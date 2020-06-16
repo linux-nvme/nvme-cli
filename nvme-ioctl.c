@@ -407,12 +407,12 @@ int nvme_identify_uuid(int fd, void *data)
 
 int nvme_zns_identify_ns(int fd, __u32 nsid, void *data)
 {
-	return nvme_identify13(fd, nsid, 6, 2 << 24, data);
+	return nvme_identify13(fd, nsid, NVME_ID_CNS_CSI_ID_NS, 2 << 24, data);
 }
 
 int nvme_zns_identify_ctrl(int fd, void *data)
 {
-	return nvme_identify13(fd, 0, 6, 2 << 24, data);
+	return nvme_identify13(fd, 0, NVME_ID_CNS_CSI_ID_CTRL, 2 << 24, data);
 }
 
 int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
