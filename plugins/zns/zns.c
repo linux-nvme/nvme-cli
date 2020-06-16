@@ -486,7 +486,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 {
 	const char *desc = "Retrieve the Report Zones data structure";
 	const char *zslba = "starting lba of the zone";
-	const char *num_descs = "number of descriptors to retrieve";
+	const char *num_descs = "number of descriptors to retrieve (default: all of them)";
 	const char *state = "state of zones to list";
 	const char *ext = "set to use the extended report zones";
 	const char *part = "set to use the partial report";
@@ -511,6 +511,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 
 	struct config cfg = {
 		.output_format = "normal",
+		.num_descs = -1,
 	};
 
 	OPT_ARGS(opts) = {
@@ -549,6 +550,18 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 			err = zdes;
 			goto close_fd;
 		}
+	}
+
+	if (cfg.num_descs == -1) {
+		struct nvme_zone_report r;
+
+		err = nvme_zns_report_zones(fd, cfg.namespace_id, 0,
+			0, cfg.state, 0, sizeof(r), &r);
+		if (err) {
+			nvme_show_status(err);
+			goto close_fd;
+		}
+		cfg.num_descs = le64_to_cpu(r.nr_zones);
 	}
 
 	report_size = sizeof(struct nvme_zone_report) + cfg.num_descs *
