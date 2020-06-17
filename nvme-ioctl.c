@@ -974,7 +974,7 @@ int nvme_zns_append(int fd, __u32 nsid, __u64 zslba, __u16 nlb, __u16 control,
 
 	int err;
 
-	err = ioctl(fd, NVME_IOCTL_IO64_CMD, cmd);
+	err = ioctl(fd, NVME_IOCTL_IO64_CMD, &cmd);
 	if (!err && result)
 		*result = cmd.result;
 	return err;
