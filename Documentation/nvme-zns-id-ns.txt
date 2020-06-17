@@ -1,15 +1,15 @@
-nvme-zns-id-ctrl(1)
-===================
+nvme-zns-id-ns(1)
+=================
 
 NAME
 ----
-nvme-zns-id-ctrl - Send NVMe Zoned Command Set Identify Controller, return
+nvme-zns-id-ns - Send NVMe Zoned Command Set Identify Controller, return
                    result and structure
 
 SYNOPSIS
 --------
 [verse]
-'nvme zns id-ctrl' <device>  [--namespace-id=<NUM> | -n <NUM>]
+'nvme zns id-ns' <device>  [--namespace-id=<NUM> | -n <NUM>]
 			     [-o <fmt> | --output-format=<fmt>]
 			     [-v | --verbose]
 
@@ -54,7 +54,7 @@ fields in a human readable format:
 * Show the output in json format with extra details
 +
 ------------
-# nvme zns id-ctrl /dev/nvme0 -o json -v
+# nvme zns id-ns /dev/nvme0 -o json -v
 ------------
 
 NVME
