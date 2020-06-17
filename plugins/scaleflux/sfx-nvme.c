@@ -122,7 +122,6 @@ int nvme_change_cap(int fd, __u32 nsid, __u64 capacity)
 	.cdw11		 = (capacity >> 32),
 	};
 
-
 	return nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD,&cmd);
 }
 
@@ -273,65 +272,65 @@ static void show_sfx_smart_log(struct nvme_additional_smart_log *smart,
 		unsigned int nsid, const char *devname)
 {
 	printf("Additional Smart Log for ScaleFlux device:%s namespace-id:%x\n",
-		devname, nsid);
-	printf("key								  normalized raw\n");
-	printf("program_fail_count				: %3d%%		  %"PRIu64"\n",
-		smart->program_fail_cnt.norm,
-		int48_to_long(smart->program_fail_cnt.raw));
-	printf("erase_fail_count				: %3d%%		  %"PRIu64"\n",
-		smart->erase_fail_cnt.norm,
-		int48_to_long(smart->erase_fail_cnt.raw));
-	printf("wear_leveling					: %3d%%		  min: %u, max: %u, avg: %u\n",
-		smart->wear_leveling_cnt.norm,
-		le16_to_cpu(smart->wear_leveling_cnt.wear_level.min),
-		le16_to_cpu(smart->wear_leveling_cnt.wear_level.max),
-		le16_to_cpu(smart->wear_leveling_cnt.wear_level.avg));
-	printf("end_to_end_error_detection_count: %3d%%		  %"PRIu64"\n",
-		smart->e2e_err_cnt.norm,
-		int48_to_long(smart->e2e_err_cnt.raw));
-	printf("crc_error_count					: %3d%%		  %"PRIu64"\n",
-		smart->crc_err_cnt.norm,
-		int48_to_long(smart->crc_err_cnt.raw));
-	printf("timed_workload_media_wear		: %3d%%		  %.3f%%\n",
-		smart->timed_workload_media_wear.norm,
-		((float)int48_to_long(smart->timed_workload_media_wear.raw)) / 1024);
-	printf("timed_workload_host_reads		: %3d%%		  %"PRIu64"%%\n",
-		smart->timed_workload_host_reads.norm,
-		int48_to_long(smart->timed_workload_host_reads.raw));
-	printf("timed_workload_timer			: %3d%%		  %"PRIu64" min\n",
-		smart->timed_workload_timer.norm,
-		int48_to_long(smart->timed_workload_timer.raw));
-	printf("thermal_throttle_status			: %3d%%		  %u%%, cnt: %u\n",
-		smart->thermal_throttle_status.norm,
-		smart->thermal_throttle_status.thermal_throttle.pct,
-		smart->thermal_throttle_status.thermal_throttle.count);
-	printf("retry_buffer_overflow_count		: %3d%%		  %"PRIu64"\n",
-		smart->retry_buffer_overflow_cnt.norm,
-		int48_to_long(smart->retry_buffer_overflow_cnt.raw));
-	printf("pll_lock_loss_count				: %3d%%		  %"PRIu64"\n",
-		smart->pll_lock_loss_cnt.norm,
-		int48_to_long(smart->pll_lock_loss_cnt.raw));
-	printf("nand_bytes_written				: %3d%%		  sectors: %"PRIu64"\n",
-		smart->nand_bytes_written.norm,
-		int48_to_long(smart->nand_bytes_written.raw));
-	printf("host_bytes_written				: %3d%%		  sectors: %"PRIu64"\n",
-		smart->host_bytes_written.norm,
-		int48_to_long(smart->host_bytes_written.raw));
-	printf("raid_recover_cnt				: %3d%%		  %"PRIu64"\n",
-		smart->raid_recover_cnt.norm,
-		int48_to_long(smart->raid_recover_cnt.raw));
-	printf("read_ecc_cnt					: %3d%%		  %"PRIu64"\n",
-		smart->read_ecc_cnt.norm,
-		int48_to_long(smart->read_ecc_cnt.raw));
-	printf("prog_timeout_cnt				: %3d%%		  %"PRIu64"\n",
-		smart->prog_timeout_cnt.norm,
-		int48_to_long(smart->prog_timeout_cnt.raw));
-	printf("erase_timeout_cnt				: %3d%%		  %"PRIu64"\n",
-		smart->erase_timeout_cnt.norm,
-		int48_to_long(smart->erase_timeout_cnt.raw));
-	printf("read_timeout_cnt				: %3d%%		  %"PRIu64"\n",
-		smart->read_timeout_cnt.norm,
-		int48_to_long(smart->read_timeout_cnt.raw));
+			devname, nsid);
+	printf("key                               normalized raw\n");
+	printf("program_fail_count              : %3d%%       %"PRIu64"\n",
+			smart->program_fail_cnt.norm,
+			int48_to_long(smart->program_fail_cnt.raw));
+	printf("erase_fail_count                : %3d%%       %"PRIu64"\n",
+			smart->erase_fail_cnt.norm,
+			int48_to_long(smart->erase_fail_cnt.raw));
+	printf("wear_leveling                   : %3d%%       min: %u, max: %u, avg: %u\n",
+			smart->wear_leveling_cnt.norm,
+			le16_to_cpu(smart->wear_leveling_cnt.wear_level.min),
+			le16_to_cpu(smart->wear_leveling_cnt.wear_level.max),
+			le16_to_cpu(smart->wear_leveling_cnt.wear_level.avg));
+	printf("end_to_end_error_detection_count: %3d%%       %"PRIu64"\n",
+			smart->e2e_err_cnt.norm,
+			int48_to_long(smart->e2e_err_cnt.raw));
+	printf("crc_error_count                 : %3d%%       %"PRIu64"\n",
+			smart->crc_err_cnt.norm,
+			int48_to_long(smart->crc_err_cnt.raw));
+	printf("timed_workload_media_wear       : %3d%%       %.3f%%\n",
+			smart->timed_workload_media_wear.norm,
+			((float)int48_to_long(smart->timed_workload_media_wear.raw)) / 1024);
+	printf("timed_workload_host_reads       : %3d%%       %"PRIu64"%%\n",
+			smart->timed_workload_host_reads.norm,
+			int48_to_long(smart->timed_workload_host_reads.raw));
+	printf("timed_workload_timer            : %3d%%       %"PRIu64" min\n",
+			smart->timed_workload_timer.norm,
+			int48_to_long(smart->timed_workload_timer.raw));
+	printf("thermal_throttle_status         : %3d%%       %u%%, cnt: %u\n",
+			smart->thermal_throttle_status.norm,
+			smart->thermal_throttle_status.thermal_throttle.pct,
+			smart->thermal_throttle_status.thermal_throttle.count);
+	printf("retry_buffer_overflow_count     : %3d%%       %"PRIu64"\n",
+			smart->retry_buffer_overflow_cnt.norm,
+			int48_to_long(smart->retry_buffer_overflow_cnt.raw));
+	printf("pll_lock_loss_count             : %3d%%       %"PRIu64"\n",
+			smart->pll_lock_loss_cnt.norm,
+			int48_to_long(smart->pll_lock_loss_cnt.raw));
+	printf("nand_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
+			smart->nand_bytes_written.norm,
+			int48_to_long(smart->nand_bytes_written.raw));
+	printf("host_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
+			smart->host_bytes_written.norm,
+			int48_to_long(smart->host_bytes_written.raw));
+	printf("raid_recover_cnt                : %3d%%       %"PRIu64"\n",
+			smart->raid_recover_cnt.norm,
+			int48_to_long(smart->raid_recover_cnt.raw));
+	printf("read_ecc_cnt                    : %3d%%       %"PRIu64"\n",
+			smart->read_ecc_cnt.norm,
+			int48_to_long(smart->read_ecc_cnt.raw));
+	printf("prog_timeout_cnt                : %3d%%       %"PRIu64"\n",
+			smart->prog_timeout_cnt.norm,
+			int48_to_long(smart->prog_timeout_cnt.raw));
+	printf("erase_timeout_cnt               : %3d%%       %"PRIu64"\n",
+			smart->erase_timeout_cnt.norm,
+			int48_to_long(smart->erase_timeout_cnt.raw));
+	printf("read_timeout_cnt                : %3d%%       %"PRIu64"\n",
+			smart->read_timeout_cnt.norm,
+			int48_to_long(smart->read_timeout_cnt.raw));
 }
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -522,11 +521,11 @@ static void bd_table_show(unsigned char *bd_table, __u64 table_size)
 	bb_elem = (__u64 *)(bd_table + 5 * sizeof(__u32));
 
 	printf("Bad Block Table \n");
-	printf("MF_BB_COUNT:		   %u\n", mf_bb_count);
-	printf("GROWN_BB_COUNT:		   %u\n", grown_bb_count);
-	printf("TOTAL_BB_COUNT:		   %u\n", total_bb_count);
-	printf("REMAP_MFBB_COUNT:	   %u\n", remap_mfbb_count);
-	printf("REMAP_GBB_COUNT:	   %u\n", remap_gbb_count);
+	printf("MF_BB_COUNT:           %u\n", mf_bb_count);
+	printf("GROWN_BB_COUNT:        %u\n", grown_bb_count);
+	printf("TOTAL_BB_COUNT:        %u\n", total_bb_count);
+	printf("REMAP_MFBB_COUNT:      %u\n", remap_mfbb_count);
+	printf("REMAP_GBB_COUNT:       %u\n", remap_gbb_count);
 
 	printf("REMAP_MFBB_TABLE [");
 	i = 0;
@@ -662,10 +661,19 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 	/*
 	 * capacity illegal check
 	 */
-	provisoned_cap_4k = freespace_ctx.phy_space >> (SFX_PAGE_SHIFT - SECTOR_SHIFT);
-	if (trg_in_4k < ((__u64)provisoned_cap_4k/2)) {
-		fprintf(stderr, "WARNING: the target capacity is less than"
-				"0.5 provisioned capacity, please make it larger\n");
+	provisoned_cap_4k = freespace_ctx.phy_space >>
+			    (SFX_PAGE_SHIFT - SECTOR_SHIFT);
+	if (trg_in_4k < provisoned_cap_4k ||
+	    trg_in_4k > ((__u64)provisoned_cap_4k * 4)) {
+		fprintf(stderr,
+			"WARNING: Only support 1.0~4.0 x provisoned capacity!\n");
+		if (trg_in_4k < provisoned_cap_4k) {
+			fprintf(stderr,
+				"WARNING: The target capacity is less than 1.0 x provisioned capacity!\n");
+		} else {
+			fprintf(stderr,
+				"WARNING: The target capacity is larger than 4.0 x provisioned capacity!\n");
+		}
 		return -1;
 	}
 	if (trg_in_4k > ((__u64)provisoned_cap_4k*4)) {
@@ -685,9 +693,11 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 		}
 		mem_need = (trg_in_4k - cur_in_4k) * 8;
 		if (s_info.freeram <= 10 || mem_need > s_info.freeram) {
-			fprintf(stderr, "WARNING: mem needed is %llu, freemem is %lu\n"
-					"Insufficient memory, please drop cache or add free memory and retry\n",
-					mem_need, s_info.freeram);
+			fprintf(stderr,
+				"WARNING: Free memory is not enough! "
+				"Please drop cache or extend more memory and retry\n"
+				"WARNING: Memory needed is %llu, free memory is %lu\n",
+				mem_need, s_info.freeram);
 			return -1;
 		}
 	}
