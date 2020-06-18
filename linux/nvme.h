@@ -85,6 +85,8 @@ enum {
 	NVMF_ADDR_FAMILY_IP6	= 2,	/* IP6 */
 	NVMF_ADDR_FAMILY_IB	= 3,	/* InfiniBand */
 	NVMF_ADDR_FAMILY_FC	= 4,	/* Fibre Channel */
+	NVMF_ADDR_FAMILY_LOOP	= 254,	/* Reserved for host usage */
+	NVMF_ADDR_FAMILY_MAX,
 };
 
 /* Transport Type codes for Discovery Log Page entry TRTYPE field */
@@ -415,6 +417,8 @@ enum {
 	NVME_ID_CNS_NS_ACTIVE_LIST	= 0x02,
 	NVME_ID_CNS_NS_DESC_LIST	= 0x03,
 	NVME_ID_CNS_NVMSET_LIST		= 0x04,
+	NVME_ID_CNS_CSI_ID_NS		= 0x05,
+	NVME_ID_CNS_CSI_ID_CTRL		= 0x06,
 	NVME_ID_CNS_NS_PRESENT_LIST	= 0x10,
 	NVME_ID_CNS_NS_PRESENT		= 0x11,
 	NVME_ID_CNS_CTRL_NS_LIST	= 0x12,
@@ -812,6 +816,9 @@ enum nvme_opcode {
 	nvme_cmd_resv_report	= 0x0e,
 	nvme_cmd_resv_acquire	= 0x11,
 	nvme_cmd_resv_release	= 0x15,
+	nvme_zns_cmd_mgmt_send	= 0x79,
+	nvme_zns_cmd_mgmt_recv	= 0x7a,
+	nvme_zns_cmd_append	= 0x7d,
 };
 
 /*
@@ -1413,4 +1420,139 @@ enum {
 #define NVME_MINOR(ver)		(((ver) >> 8) & 0xff)
 #define NVME_TERTIARY(ver)	((ver) & 0xff)
 
+
+/**
+ * struct nvme_zns_lbafe -
+ * zsze:
+ * zdes:
+ */
+struct nvme_zns_lbafe {
+	__le64	zsze;
+	__u8	zdes;
+	__u8	rsvd9[7];
+};
+
+/**
+ * struct nvme_zns_id_ns -
+ * @zoc:
+ * @ozcs:
+ * @mar:
+ * @mor:
+ * @rrl:
+ * @frl:
+ * @lbafe:
+ * @vs:
+ */
+struct nvme_zns_id_ns {
+	__le16			zoc;
+	__le16			ozcs;
+	__le32			mar;
+	__le32			mor;
+	__le32			rrl;
+	__le32			frl;
+	__u8			rsvd20[2796];
+	struct nvme_zns_lbafe	lbafe[16];
+	__u8			rsvd3072[768];
+	__u8			vs[256];
+};
+
+/**
+ * struct nvme_zns_id_ctrl -
+ * @zamds:
+ */
+struct nvme_zns_id_ctrl {
+	__u8	zamds;
+	__u8	rsvd1[4095];
+};
+
+#define NVME_ZNS_CHANGED_ZONES_MAX	511
+
+/**
+ * struct nvme_zns_changed_zone_log - ZNS Changed Zone List log
+ * @nrzid:
+ * @zid:
+ */
+struct nvme_zns_changed_zone_log {
+	__le16		nrzid;
+	__u8		rsvd2[6];
+	__le64		zid[NVME_ZNS_CHANGED_ZONES_MAX];
+};
+
+/**
+ * enum nvme_zns_zt -
+ */
+enum nvme_zns_zt {
+	NVME_ZONE_TYPE_SEQWRITE_REQ	= 0x2,
+};
+
+/**
+ * enum nvme_zns_za -
+ */
+enum nvme_zns_za {
+	NVME_ZNS_ZA_ZFC			= 1 << 0,
+	NVME_ZNS_ZA_FZR			= 1 << 1,
+	NVME_ZNS_ZA_RZR			= 1 << 2,
+	NVME_ZNS_ZA_ZDEV		= 1 << 7,
+};
+
+/**
+ * enum nvme_zns_zs -
+ */
+enum nvme_zns_zs {
+	NVME_ZNS_ZS_EMPTY		= 0x1,
+	NVME_ZNS_ZS_IMPL_OPEN		= 0x2,
+	NVME_ZNS_ZS_EXPL_OPEN		= 0x3,
+	NVME_ZNS_ZS_CLOSED		= 0x4,
+	NVME_ZNS_ZS_READ_ONLY		= 0xd,
+	NVME_ZNS_ZS_FULL		= 0xe,
+	NVME_ZNS_ZS_OFFLINE		= 0xf,
+};
+
+/**
+ * struct nvme_zns_desc -
+ */
+struct nvme_zns_desc {
+	__u8	zt;
+	__u8	zs;
+	__u8	za;
+	__u8	rsvd3[5];
+	__le64	zcap;
+	__le64	zslba;
+	__le64	wp;
+	__u8	rsvd32[32];
+};
+
+/**
+ * struct nvme_zone_report -
+ */
+struct nvme_zone_report {
+	__le64			nr_zones;
+	__u8			resv8[56];
+	struct nvme_zns_desc	entries[];
+};
+
+enum nvme_zns_send_action {
+	NVME_ZNS_ZSA_CLOSE		= 0x1,
+	NVME_ZNS_ZSA_FINISH		= 0x2,
+	NVME_ZNS_ZSA_OPEN		= 0x3,
+	NVME_ZNS_ZSA_RESET		= 0x4,
+	NVME_ZNS_ZSA_OFFLINE		= 0x5,
+	NVME_ZNS_ZSA_SET_DESC_EXT	= 0x10,
+};
+
+enum nvme_zns_recv_action {
+	NVME_ZNS_ZRA_REPORT_ZONES		= 0x0,
+	NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES	= 0x1,
+};
+
+enum nvme_zns_report_options {
+	NVME_ZNS_ZRAS_REPORT_ALL		= 0x0,
+	NVME_ZNS_ZRAS_REPORT_EMPTY		= 0x1,
+	NVME_ZNS_ZRAS_REPORT_IMPL_OPENED	= 0x2,
+	NVME_ZNS_ZRAS_REPORT_EXPL_OPENED	= 0x3,
+	NVME_ZNS_ZRAS_REPORT_CLOSED		= 0x4,
+	NVME_ZNS_ZRAS_REPORT_FULL		= 0x5,
+	NVME_ZNS_ZRAS_REPORT_READ_ONLY		= 0x6,
+	NVME_ZNS_ZRAS_REPORT_OFFLINE		= 0x7,
+};
 #endif /* _LINUX_NVME_H */

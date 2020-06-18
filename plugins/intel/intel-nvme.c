@@ -1289,7 +1289,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 				"Latency Statistics Tracking (FID 0x%X) is currently (%i).\n",
 				fid, result);
 		} else {
-			printf("Could not read feature id 0xE2.");
+			printf("Could not read feature id 0xE2.\n");
 			return err;
 		}
 		break;
@@ -1302,14 +1302,14 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 					nvme_status_to_string(err), err);
 		} else if (err < 0) {
 			perror("Enable latency tracking");
-			fprintf(stderr, "Command failed while parsing.");
+			fprintf(stderr, "Command failed while parsing.\n");
 		} else {
 			printf("Successfully set enable bit for FID (0x%X) to %i.\n",
 				fid, option);
 		}
 		break;
 	default:
-		printf("%d not supported.", option);
+		printf("%d not supported.\n", option);
 		return EINVAL;
 	}
 	return fd;

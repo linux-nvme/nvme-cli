@@ -16,78 +16,10 @@
 
 #define CREATE_CMD
 #include "memblaze-nvme.h"
+#include "memblaze-utils.h"
 
 enum {
-	TOTAL_WRITE,
-	TOTAL_READ,
-	THERMAL_THROTTLE,
-	TEMPT_SINCE_RESET,
-	POWER_CONSUMPTION,
-	TEMPT_SINCE_BOOTUP,
-	POWER_LOSS_PROTECTION,
-	WEARLEVELING_COUNT,
-	HOST_WRITE,
-	THERMAL_THROTTLE_CNT,
-	CORRECT_PCIE_PORT0,
-	CORRECT_PCIE_PORT1,
-	REBUILD_FAIL,
-	ERASE_FAIL,
-	PROGRAM_FAIL,
-	READ_FAIL,
-	NR_SMART_ITEMS,
-};
-
-enum {
-	MB_FEAT_POWER_MGMT = 0Xc6,
-};
-
-#pragma pack(push, 1)
-struct nvme_memblaze_smart_log_item {
-	__u8 id[3];
-	union {
-		__u8	__nmval[2];
-		__le16  nmval;
-	};
-	union {
-		__u8 rawval[6];
-		struct temperature {
-			__le16 max;
-			__le16 min;
-			__le16 curr;
-		} temperature;
-		struct power {
-			__le16 max;
-			__le16 min;
-			__le16 curr;
-		} power;
-		struct thermal_throttle_mb {
-			__u8 on;
-			__u32 count;
-		} thermal_throttle;
-		struct temperature_p {
-			__le16 max;
-			__le16 min;
-		} temperature_p;
-		struct power_loss_protection {
-			__u8 curr;
-		} power_loss_protection;
-		struct wearleveling_count {
-			__le16 min;
-			__le16 max;
-			__le16 avg;
-		} wearleveling_count;
-		struct thermal_throttle_cnt {
-			__u8 active;
-			__le32 cnt;
-		} thermal_throttle_cnt;
-	};
-	__u8 resv;
-};
-#pragma pack(pop)
-
-struct nvme_memblaze_smart_log {
-	struct nvme_memblaze_smart_log_item items[NR_SMART_ITEMS];
-	__u8 resv[512 - sizeof(struct nvme_memblaze_smart_log_item) * NR_SMART_ITEMS];
+    MB_FEAT_POWER_MGMT = 0xc6,
 };
 
 /*
@@ -97,138 +29,354 @@ struct nvme_memblaze_smart_log {
  */
 static int compare_fw_version(const char *fw1, const char *fw2)
 {
-	while (*fw1 != '\0') {
-		if (*fw2 == '\0' || *fw1 > *fw2)
-			return 1;
-		if (*fw1 < *fw2)
-			return -1;
-		fw1++;
-		fw2++;
-	}
+    while (*fw1 != '\0') {
+        if (*fw2 == '\0' || *fw1 > *fw2)
+            return 1;
+        if (*fw1 < *fw2)
+            return -1;
+        fw1++;
+        fw2++;
+    }
 
-	if (*fw2 != '\0')
-		return -1;
+    if (*fw2 != '\0')
+        return -1;
 
-	return 0;
+    return 0;
+}
+
+/**********************************************************
+ * input: firmware version string
+ * output:
+ *     1: new intel format
+ *     0: old memblaze format
+ * *******************************************************/
+#define MEMBLAZE_FORMAT         (0)
+#define INTEL_FORMAT            (1)
+
+// 2.83 = raisin
+#define IS_RAISIN(str)          (!strcmp(str, "2.83"))
+// 2.13 = papaya
+#define IS_PAPAYA(str)          (!strcmp(str, "2.13"))
+#define STR_VER_SIZE            5
+
+int getlogpage_format_type(char *fw_ver)
+{
+    char fw_ver_local[STR_VER_SIZE];
+    strncpy(fw_ver_local, fw_ver, STR_VER_SIZE);
+    *(fw_ver_local + STR_VER_SIZE - 1) = '\0';
+    if ( IS_RAISIN(fw_ver_local) )
+    {
+        return INTEL_FORMAT;
+    }
+    else
+    {
+        return MEMBLAZE_FORMAT;
+    }
 }
 
 static __u32 item_id_2_u32(struct nvme_memblaze_smart_log_item *item)
 {
-	__le32	__id = 0;
-	memcpy(&__id, item->id, 3);
-	return le32_to_cpu(__id);
+    __le32  __id = 0;
+    memcpy(&__id, item->id, 3);
+    return le32_to_cpu(__id);
 }
 
 static __u64 raw_2_u64(const __u8 *buf, size_t len)
 {
-	__le64	val = 0;
-	memcpy(&val, buf, len);
-	return le64_to_cpu(val);
+    __le64  val = 0;
+    memcpy(&val, buf, len);
+    return le64_to_cpu(val);
+}
+
+#define STRN2_01    "Additional Smart Log for NVME device"
+#define STRN2_02    "namespace-id"
+#define STRN1_01    "key"
+#define STRN1_02    "normalized"
+#define STRN1_03    "raw"
+#define STR00_01    "program_fail_count"
+#define STR01_01    "erase_fail_count"
+#define STR02_01    "wear_leveling"
+#define STR02_03    "min: "
+#define STR02_04    ", max: "
+#define STR02_05    ", avg: "
+#define STR03_01    "end_to_end_error_detection_count"
+#define STR04_01    "crc_error_count"
+#define STR05_01    "timed_workload_media_wear"
+#define STR06_01    "timed_workload_host_reads"
+#define STR07_01    "timed_workload_timer"
+#define STR07_02    " min"
+#define STR08_01    "thermal_throttle_status"
+#define STR08_02    ", cnt: "
+#define STR09_01    "retry_buffer_overflow_count"
+#define STR10_01    "pll_lock_loss_count"
+#define STR11_01    "nand_bytes_written"
+#define STR11_03    "sectors: "
+#define STR12_01    "host_bytes_written"
+#define STR12_03    "sectors: "
+#define STR13_01    "system_area_life_left"
+#define STR14_01    "total_read"
+#define STR15_01    "tempt_since_born"
+#define STR15_03    "max: "
+#define STR15_04    ", min: "
+#define STR15_05    ", curr: "
+#define STR16_01    "power_consumption"
+#define STR16_03    "max: "
+#define STR16_04    ", min: "
+#define STR16_05    ", curr: "
+#define STR17_01    "tempt_since_bootup"
+#define STR17_03    "max: "
+#define STR17_04    ", min: "
+#define STR17_05    ", curr: "
+#define STR18_01    "power_loss_protection"
+#define STR19_01    "read_fail"
+#define STR20_01    "thermal_throttle_time"
+#define STR21_01    "flash_media_error"
+
+static void get_memblaze_new_smart_info(struct nvme_p4_smart_log *smart, int index, u8 *nm_val, u8 *raw_val)
+{
+    memcpy(nm_val, smart->itemArr[index].nmVal, NM_SIZE);
+    memcpy(raw_val, smart->itemArr[index].rawVal, RAW_SIZE);
+}
+
+static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s,
+    unsigned int nsid, const char *devname)
+{
+    struct nvme_p4_smart_log *smart = (struct nvme_p4_smart_log *)s;
+    u8 *nm = malloc(NM_SIZE * sizeof(u8));
+    u8 *raw = malloc(RAW_SIZE * sizeof(u8));
+
+    /* Table Title */
+    printf("%s:%s %s:%x\n", STRN2_01, devname, STRN2_02, nsid);
+    /* Clumn Name*/
+    printf("%-34s%-11s%s\n", STRN1_01, STRN1_02, STRN1_03);
+    /* 00 RAISIN_SI_VD_PROGRAM_FAIL */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_PROGRAM_FAIL, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"\n", STR00_01, *nm, int48_to_long(raw));
+    /* 01 RAISIN_SI_VD_ERASE_FAIL */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_ERASE_FAIL, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"\n", STR01_01, *nm, int48_to_long(raw));
+    /* 02 RAISIN_SI_VD_WEARLEVELING_COUNT */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_WEARLEVELING_COUNT, nm, raw);
+    printf("%-31s : %3d%%       %s%u%s%u%s%u\n", STR02_01, *nm,
+        STR02_03, *raw, STR02_04, *(raw+2), STR02_05, *(raw+4));
+    /* 03 RAISIN_SI_VD_E2E_DECTECTION_COUNT */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_E2E_DECTECTION_COUNT, nm, raw);
+    printf("%-31s: %3d%%       %"PRIu64"\n", STR03_01, *nm, int48_to_long(raw));
+    /* 04 RAISIN_SI_VD_PCIE_CRC_ERR_COUNT */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_PCIE_CRC_ERR_COUNT, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"\n", STR04_01, *nm, int48_to_long(raw));
+    /* 05 RAISIN_SI_VD_TIMED_WORKLOAD_MEDIA_WEAR */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TIMED_WORKLOAD_MEDIA_WEAR, nm, raw);
+    printf("%-32s: %3d%%       %.3f%%\n", STR05_01, *nm, ((float)int48_to_long(raw))/1000);
+    /* 06 RAISIN_SI_VD_TIMED_WORKLOAD_HOST_READ */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TIMED_WORKLOAD_HOST_READ, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"%%\n", STR06_01, *nm, int48_to_long(raw));
+    /* 07 RAISIN_SI_VD_TIMED_WORKLOAD_TIMER */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TIMED_WORKLOAD_TIMER, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"%s\n", STR07_01, *nm, int48_to_long(raw), STR07_02);
+    /* 08 RAISIN_SI_VD_THERMAL_THROTTLE_STATUS */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_THERMAL_THROTTLE_STATUS, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"%%%s%"PRIu64"\n", STR08_01, *nm,
+        int48_to_long(raw), STR08_02, int48_to_long(raw+1));
+    /* 09 RAISIN_SI_VD_RETRY_BUFF_OVERFLOW_COUNT */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_RETRY_BUFF_OVERFLOW_COUNT, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"\n", STR09_01, *nm, int48_to_long(raw));
+    /* 10 RAISIN_SI_VD_PLL_LOCK_LOSS_COUNT */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_PLL_LOCK_LOSS_COUNT, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"\n", STR10_01, *nm, int48_to_long(raw));
+    /* 11 RAISIN_SI_VD_TOTAL_WRITE */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TOTAL_WRITE, nm, raw);
+    printf("%-32s: %3d%%       %s%"PRIu64"\n", STR11_01, *nm, STR11_03, int48_to_long(raw));
+    /* 12 RAISIN_SI_VD_HOST_WRITE */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_HOST_WRITE, nm, raw);
+    printf("%-32s: %3d%%       %s%"PRIu64"\n", STR12_01, *nm, STR12_03, int48_to_long(raw));
+    /* 13 RAISIN_SI_VD_SYSTEM_AREA_LIFE_LEFT */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_SYSTEM_AREA_LIFE_LEFT, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"\n", STR13_01, *nm, int48_to_long(raw));
+    /* 14 RAISIN_SI_VD_TOTAL_READ */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TOTAL_READ, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"\n", STR14_01, *nm, int48_to_long(raw));
+    /* 15 RAISIN_SI_VD_TEMPT_SINCE_BORN */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TEMPT_SINCE_BORN, nm, raw);
+    printf("%-32s: %3d%%       %s%u%s%u%s%u\n", STR15_01,  *nm,
+        STR15_03, *raw, STR15_04, *(raw+2), STR15_05, *(raw+4));
+    /* 16 RAISIN_SI_VD_POWER_CONSUMPTION */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_POWER_CONSUMPTION, nm, raw);
+    printf("%-32s: %3d%%       %s%u%s%u%s%u\n", STR16_01,  *nm,
+        STR16_03, *raw, STR16_04, *(raw+2), STR16_05, *(raw+4));
+    /* 17 RAISIN_SI_VD_TEMPT_SINCE_BOOTUP */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_TEMPT_SINCE_BOOTUP, nm, raw);
+    printf("%-32s: %3d%%       %s%u%s%u%s%u\n", STR17_01,  *nm, STR17_03, *raw,
+        STR17_04, *(raw+2), STR17_05, *(raw+4));
+    /* 18 RAISIN_SI_VD_POWER_LOSS_PROTECTION */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_POWER_LOSS_PROTECTION, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"\n", STR18_01, *nm, int48_to_long(raw));
+    /* 19 RAISIN_SI_VD_READ_FAIL */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_READ_FAIL, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"\n", STR19_01, *nm, int48_to_long(raw));
+    /* 20 RAISIN_SI_VD_THERMAL_THROTTLE_TIME */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_THERMAL_THROTTLE_TIME, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"\n", STR20_01, *nm, int48_to_long(raw));
+    /* 21 RAISIN_SI_VD_FLASH_MEDIA_ERROR */
+    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_FLASH_MEDIA_ERROR, nm, raw);
+    printf("%-32s: %3d%%       %"PRIu64"\n", STR21_01, *nm, int48_to_long(raw));
+
+    free(nm);
+    free(raw);
+}
+
+static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
+    unsigned int nsid, const char *devname, const char *fw_ver)
+{
+    char fw_ver_local[STR_VER_SIZE];
+    struct nvme_memblaze_smart_log_item *item;
+
+    strncpy(fw_ver_local, fw_ver, STR_VER_SIZE);
+    *(fw_ver_local + STR_VER_SIZE - 1) = '\0';
+
+    printf("Additional Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
+
+    printf("Total write in GB since last factory reset			: %"PRIu64"\n",
+        int48_to_long(smart->items[TOTAL_WRITE].rawval));
+    printf("Total read in GB since last factory reset			: %"PRIu64"\n",
+        int48_to_long(smart->items[TOTAL_READ].rawval));
+
+    printf("Thermal throttling status[1:HTP in progress]			: %u\n",
+        smart->items[THERMAL_THROTTLE].thermal_throttle.on);
+    printf("Total thermal throttling minutes since power on			: %u\n",
+        smart->items[THERMAL_THROTTLE].thermal_throttle.count);
+
+    printf("Maximum temperature in Kelvin since last factory reset		: %u\n",
+        le16_to_cpu(smart->items[TEMPT_SINCE_RESET].temperature.max));
+    printf("Minimum temperature in Kelvin since last factory reset		: %u\n",
+        le16_to_cpu(smart->items[TEMPT_SINCE_RESET].temperature.min));
+    if (compare_fw_version(fw_ver, "0.09.0300") != 0) {
+        printf("Maximum temperature in Kelvin since power on			: %u\n",
+            le16_to_cpu(smart->items[TEMPT_SINCE_BOOTUP].temperature_p.max));
+        printf("Minimum temperature in Kelvin since power on			: %u\n",
+            le16_to_cpu(smart->items[TEMPT_SINCE_BOOTUP].temperature_p.min));
+    }
+    printf("Current temperature in Kelvin					: %u\n",
+        le16_to_cpu(smart->items[TEMPT_SINCE_RESET].temperature.curr));
+
+    printf("Maximum power in watt since power on				: %u\n",
+        le16_to_cpu(smart->items[POWER_CONSUMPTION].power.max));
+    printf("Minimum power in watt since power on				: %u\n",
+        le16_to_cpu(smart->items[POWER_CONSUMPTION].power.min));
+    printf("Current power in watt						: %u\n",
+        le16_to_cpu(smart->items[POWER_CONSUMPTION].power.curr));
+
+    item = &smart->items[POWER_LOSS_PROTECTION];
+    if (item_id_2_u32(item) == 0xEC)
+        printf("Power loss protection normalized value				: %u\n",
+            item->power_loss_protection.curr);
+
+    item = &smart->items[WEARLEVELING_COUNT];
+    if (item_id_2_u32(item) == 0xAD) {
+        printf("Percentage of wearleveling count left				: %u\n",
+            le16_to_cpu(item->nmval));
+        printf("Wearleveling count min erase cycle				: %u\n",
+            le16_to_cpu(item->wearleveling_count.min));
+        printf("Wearleveling count max erase cycle				: %u\n",
+            le16_to_cpu(item->wearleveling_count.max));
+        printf("Wearleveling count avg erase cycle				: %u\n",
+            le16_to_cpu(item->wearleveling_count.avg));
+    }
+
+    item = &smart->items[HOST_WRITE];
+    if (item_id_2_u32(item) == 0xF5)
+        printf("Total host write in GiB since device born 			: %llu\n",
+            (unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+
+    item = &smart->items[THERMAL_THROTTLE_CNT];
+    if (item_id_2_u32(item) == 0xEB)
+        printf("Thermal throttling count since device born 			: %u\n",
+            item->thermal_throttle_cnt.cnt);
+
+    item = &smart->items[CORRECT_PCIE_PORT0];
+    if (item_id_2_u32(item) == 0xED)
+        printf("PCIE Correctable Error Count of Port0    			: %llu\n",
+            (unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+
+    item = &smart->items[CORRECT_PCIE_PORT1];
+    if (item_id_2_u32(item) == 0xEE)
+        printf("PCIE Correctable Error Count of Port1 	        		: %llu\n",
+            (unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+
+    item = &smart->items[REBUILD_FAIL];
+    if (item_id_2_u32(item) == 0xEF)
+        printf("End-to-End Error Detection Count 	        		: %llu\n",
+            (unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+
+    item = &smart->items[ERASE_FAIL];
+    if (item_id_2_u32(item) == 0xF0)
+        printf("Erase Fail Count 		                        	: %llu\n",
+            (unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+
+    item = &smart->items[PROGRAM_FAIL];
+    if (item_id_2_u32(item) == 0xF1)
+        printf("Program Fail Count 		                        	: %llu\n",
+            (unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+
+    item = &smart->items[READ_FAIL];
+    if (item_id_2_u32(item) == 0xF2)
+        printf("Read Fail Count	                                 		: %llu\n",
+            (unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+
+     if ( IS_PAPAYA(fw_ver_local) ) {
+        struct nvme_p4_smart_log *s = (struct nvme_p4_smart_log *)smart;
+        u8 *nm = malloc(NM_SIZE * sizeof(u8));
+        u8 *raw = malloc(RAW_SIZE * sizeof(u8));
+
+        /* 00 RAISIN_SI_VD_PROGRAM_FAIL */
+        get_memblaze_new_smart_info(s, PROGRAM_FAIL, nm, raw);
+        printf("%-32s                                : %3d%%       %"PRIu64"\n",
+			STR00_01, *nm, int48_to_long(raw));
+        /* 01 RAISIN_SI_VD_ERASE_FAIL */
+        get_memblaze_new_smart_info(s, ERASE_FAIL, nm, raw);
+        printf("%-32s                                : %3d%%       %"PRIu64"\n",
+			STR01_01, *nm, int48_to_long(raw));
+        /* 02 RAISIN_SI_VD_WEARLEVELING_COUNT */
+        get_memblaze_new_smart_info(s, WEARLEVELING_COUNT, nm, raw);
+        printf("%-31s                                 : %3d%%       %s%u%s%u%s%u\n",
+			STR02_01, *nm, STR02_03, *raw, STR02_04, *(raw+2), STR02_05, *(raw+4));
+        /* 11 RAISIN_SI_VD_TOTAL_WRITE */
+        get_memblaze_new_smart_info(s, TOTAL_WRITE, nm, raw);
+        printf("%-32s                                : %3d%%       %"PRIu64"\n",
+			STR11_01, *nm, 32*int48_to_long(raw));
+        /* 12 RAISIN_SI_VD_HOST_WRITE */
+        get_memblaze_new_smart_info(s, HOST_WRITE, nm, raw);
+        printf("%-32s                                : %3d%%       %"PRIu64"\n",
+			STR12_01, *nm, 32*int48_to_long(raw));
+
+        free(nm);
+        free(raw);
+    }
 }
 
 static int show_memblaze_smart_log(int fd, __u32 nsid, const char *devname,
-		struct nvme_memblaze_smart_log *smart)
+    struct nvme_memblaze_smart_log *smart)
 {
-	struct nvme_id_ctrl ctrl;
-	char fw_ver[10];
-	int err = 0;
-	struct nvme_memblaze_smart_log_item *item;
+    struct nvme_id_ctrl ctrl;
+    char fw_ver[10];
+    int err = 0;
 
-	err = nvme_identify_ctrl(fd, &ctrl);
-	if (err)
-		return err;
-	snprintf(fw_ver, sizeof(fw_ver), "%c.%c%c.%c%c%c%c",
-		ctrl.fr[0], ctrl.fr[1], ctrl.fr[2], ctrl.fr[3],
-		ctrl.fr[4], ctrl.fr[5], ctrl.fr[6]);
+    err = nvme_identify_ctrl(fd, &ctrl);
+    if (err)
+        return err;
 
-	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
+    snprintf(fw_ver, sizeof(fw_ver), "%c.%c%c.%c%c%c%c",
+        ctrl.fr[0], ctrl.fr[1], ctrl.fr[2], ctrl.fr[3],
+        ctrl.fr[4], ctrl.fr[5], ctrl.fr[6]);
 
-	printf("Total write in GB since last factory reset			: %"PRIu64"\n",
-		int48_to_long(smart->items[TOTAL_WRITE].rawval));
-	printf("Total read in GB since last factory reset			: %"PRIu64"\n",
-		int48_to_long(smart->items[TOTAL_READ].rawval));
-
-	printf("Thermal throttling status[1:HTP in progress]			: %u\n",
-		smart->items[THERMAL_THROTTLE].thermal_throttle.on);
-	printf("Total thermal throttling minutes since power on			: %u\n",
-		smart->items[THERMAL_THROTTLE].thermal_throttle.count);
-
-	printf("Maximum temperature in Kelvin since last factory reset		: %u\n",
-		le16_to_cpu(smart->items[TEMPT_SINCE_RESET].temperature.max));
-	printf("Minimum temperature in Kelvin since last factory reset		: %u\n",
-		le16_to_cpu(smart->items[TEMPT_SINCE_RESET].temperature.min));
-	if (compare_fw_version(fw_ver, "0.09.0300") != 0) {
-		printf("Maximum temperature in Kelvin since power on			: %u\n",
-			le16_to_cpu(smart->items[TEMPT_SINCE_BOOTUP].temperature_p.max));
-		printf("Minimum temperature in Kelvin since power on			: %u\n",
-			le16_to_cpu(smart->items[TEMPT_SINCE_BOOTUP].temperature_p.min));
-	}
-	printf("Current temperature in Kelvin					: %u\n",
-		le16_to_cpu(smart->items[TEMPT_SINCE_RESET].temperature.curr));
-
-	printf("Maximum power in watt since power on				: %u\n",
-		le16_to_cpu(smart->items[POWER_CONSUMPTION].power.max));
-	printf("Minimum power in watt since power on				: %u\n",
-		le16_to_cpu(smart->items[POWER_CONSUMPTION].power.min));
-	printf("Current power in watt						: %u\n",
-		le16_to_cpu(smart->items[POWER_CONSUMPTION].power.curr));
-
-	item = &smart->items[POWER_LOSS_PROTECTION];
-	if (item_id_2_u32(item) == 0xEC)
-		printf("Power loss protection normalized value				: %u\n",
-			item->power_loss_protection.curr);
-
-	item = &smart->items[WEARLEVELING_COUNT];
-	if (item_id_2_u32(item) == 0xAD) {
-		printf("Percentage of wearleveling count left				: %u\n",
-				le16_to_cpu(item->nmval));
-		printf("Wearleveling count min erase cycle				: %u\n",
-				le16_to_cpu(item->wearleveling_count.min));
-		printf("Wearleveling count max erase cycle				: %u\n",
-				le16_to_cpu(item->wearleveling_count.max));
-		printf("Wearleveling count avg erase cycle				: %u\n",
-				le16_to_cpu(item->wearleveling_count.avg));
-	}
-
-	item = &smart->items[HOST_WRITE];
-	if (item_id_2_u32(item) == 0xF5)
-		printf("Total host write in GiB since device born 			: %llu\n",
-				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
-		
-	item = &smart->items[THERMAL_THROTTLE_CNT];
-	if (item_id_2_u32(item) == 0xEB)
-		printf("Thermal throttling count since device born 			: %u\n",
-				item->thermal_throttle_cnt.cnt);
-
-	item = &smart->items[CORRECT_PCIE_PORT0];
-	if (item_id_2_u32(item) == 0xED)
-		printf("PCIE Correctable Error Count of Port0    			: %llu\n",
-				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
-
-	item = &smart->items[CORRECT_PCIE_PORT1];
-	if (item_id_2_u32(item) == 0xEE)
-		printf("PCIE Correctable Error Count of Port1 	        		: %llu\n",
-				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
-
-	item = &smart->items[REBUILD_FAIL];
-	if (item_id_2_u32(item) == 0xEF)
-		printf("End-to-End Error Detection Count 	        		: %llu\n",
-				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
-
-	item = &smart->items[ERASE_FAIL];
-	if (item_id_2_u32(item) == 0xF0)
-		printf("Erase Fail Count 		                        	: %llu\n",
-				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
-
-    item = &smart->items[PROGRAM_FAIL];
-	if (item_id_2_u32(item) == 0xF1)
-		printf("Program Fail Count 		                        	: %llu\n",
-				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
-
-	item = &smart->items[READ_FAIL];
-	if (item_id_2_u32(item) == 0xF2)
-		printf("Read Fail Count	                                 		: %llu\n",
-				(unsigned long long)raw_2_u64(item->rawval, sizeof(item->rawval)));
+    if (getlogpage_format_type(fw_ver)) // Intel Format & new format
+    {
+        show_memblaze_smart_log_new(smart, nsid, devname);
+    }
+    else  // Memblaze Format & old format
+    {
+        show_memblaze_smart_log_old(smart, nsid, devname, fw_ver);
+    }
 	return err;
 }
 
@@ -481,3 +629,131 @@ free:
 		free(buf);
 	return err;
 }
+
+static int memblaze_fw_commit(int fd, int select)
+{
+	struct nvme_admin_cmd cmd = {
+		.opcode		= nvme_admin_activate_fw,
+		.cdw10		= 8,
+		.cdw12      = select,
+	};
+
+	return nvme_submit_admin_passthru(fd, &cmd);
+}
+
+static int memblaze_selective_download(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc =
+		"This performs a selective firmware download, which allows the user to "
+		"select which firmware binary to update for 9200 devices. This requires a power cycle once the "
+		"update completes. The options available are: \n\n"
+		"OOB - This updates the OOB and main firmware\n"
+		"EEP - This updates the eeprom and main firmware\n"
+		"ALL - This updates the eeprom, OOB, and main firmware";
+	const char *fw = "firmware file (required)";
+	const char *select = "FW Select (e.g., --select=OOB, EEP, ALL)";
+	int xfer = 4096;
+	void *fw_buf;
+	int fd, selectNo,fw_fd,fw_size,err,offset = 0;
+	struct stat sb;
+	int i;
+
+	struct config {
+		char  *fw;
+		char  *select;
+	};
+
+	struct config cfg = {
+		.fw     = "",
+		.select = "\0",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_STRING("fw", 'f', "FILE", &cfg.fw, fw),
+		OPT_STRING("select", 's', "flag", &cfg.select, select),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	if (strlen(cfg.select) != 3) {
+		fprintf(stderr, "Invalid select flag\n");
+		err = EINVAL;
+		goto out;
+	}
+
+	for (i = 0; i < 3; i++) {
+		cfg.select[i] = toupper(cfg.select[i]);
+	}
+
+	if (strncmp(cfg.select,"OOB", 3) == 0) {
+		selectNo = 18;
+	} else if (strncmp(cfg.select,"EEP", 3) == 0) {
+		selectNo = 10;
+	} else if (strncmp(cfg.select,"ALL", 3) == 0) {
+		selectNo = 26;
+	} else {
+		fprintf(stderr, "Invalid select flag\n");
+		err = EINVAL;
+		goto out;
+	}
+
+	fw_fd = open(cfg.fw, O_RDONLY);
+	if (fw_fd < 0) {
+		fprintf(stderr, "no firmware file provided\n");
+		err = EINVAL;
+		goto out;
+	}
+
+	err = fstat(fw_fd, &sb);
+	if (err < 0) {
+		perror("fstat");
+		err = errno;
+	}
+
+	fw_size = sb.st_size;
+	if (fw_size & 0x3) {
+		fprintf(stderr, "Invalid size:%d for f/w image\n", fw_size);
+		err = EINVAL;
+		goto out;
+	}
+
+	if (posix_memalign(&fw_buf, getpagesize(), fw_size)) {
+		fprintf(stderr, "No memory for f/w size:%d\n", fw_size);
+		err = ENOMEM;
+		goto out;
+	}
+
+	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size)))
+		return EIO;
+
+	while (fw_size > 0) {
+		xfer = min(xfer, fw_size);
+
+		err = nvme_fw_download(fd, offset, xfer, fw_buf);
+		if (err < 0) {
+			perror("fw-download");
+			goto out;
+		} else if (err != 0) {
+			fprintf(stderr, "NVME Admin command error:%s(%x)\n",
+					nvme_status_to_string(err), err);
+			goto out;
+		}
+		fw_buf     += xfer;
+		fw_size    -= xfer;
+		offset += xfer;
+	}
+
+	err = memblaze_fw_commit(fd,selectNo);
+
+	if(err == 0x10B || err == 0x20B) {
+		err = 0;
+		fprintf(stderr, "Update successful! Please power cycle for changes to take effect\n");
+	}
+
+out:
+	return err;
+}
+

@@ -1,0 +1,54 @@
+nvme-zns-changed-zone-list(1)
+=============================
+
+NAME
+----
+nvme-zns-changed-zone-list - Retrieve Changed Zone log for the given device
+
+SYNOPSIS
+--------
+[verse]
+'nvme zns changed-zone-list' <device> [-o <fmt> | --output-format=<fmt>]
+				      [--namespace-id=<NUM> | -n <NUM>]
+				      [--rae | -r]
+
+DESCRIPTION
+-----------
+For the NVMe device given, requests the namespace's changed zoned list log
+and provides the result and returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned list may be decoded and displayed in one of several
+ways.
+
+OPTIONS
+-------
+-o <format>::
+--output-format=<format>::
+              Set the reporting format to 'normal', 'json', or
+              'binary'. Only one output format can be used at a time.
+
+-r::
+--rae::
+	Retain an Asynchronous Event.
+
+EXAMPLES
+--------
+* Get the changed zone list log for namespace 1
++
+------------
+# nvme zns changed-zone-list /dev/nvme0 -n 1
+------------
++
+
+* Show the output in json format
++
+------------
+# nvme zns changed-zone-list /dev/nvme0 -o json -n 1
+------------
+
+NVME
+----
+Part of nvme-cli

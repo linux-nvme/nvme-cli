@@ -55,6 +55,8 @@ struct nvme_ctrl {
 	char *traddr;
 	char *trsvcid;
 	char *host_traddr;
+	char *hostnqn;
+	char *hostid;
 
 	struct nvme_id_ctrl id;
 
@@ -85,6 +87,7 @@ int parse_and_open(int argc, char **argv, const char *desc,
 	const struct argconfig_commandline_options *clo);
 
 extern const char *devicename;
+extern const char *output_format;
 
 enum nvme_print_flags validate_output_format(char *format);
 int __id_ctrl(int argc, char **argv, struct command *cmd,
@@ -105,4 +108,6 @@ void free_topology(struct nvme_topology *t);
 char *get_nvme_subsnqn(char *path);
 char *nvme_get_ctrl_attr(char *path, const char *attr);
 
+void *nvme_alloc(size_t len, bool *huge);
+void nvme_free(void *p, bool huge);
 #endif /* _NVME_H */

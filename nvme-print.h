@@ -59,6 +59,14 @@ void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 res
 	void *buf, __u32 len, enum nvme_print_flags flags);
 void nvme_show_select_result(__u32 result);
 
+void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode);
+void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
+	struct nvme_id_ns *id_ns, unsigned long flags);
+void nvme_show_zns_changed( struct nvme_zns_changed_zone_log *log,
+	unsigned long flags);
+void nvme_show_zns_report_zones(void *report, __u32 descs,
+	__u8 ext_size, __u32 report_size, unsigned long flags);
+
 const char *nvme_status_to_string(__u32 status);
 const char *nvme_select_to_string(int sel);
 const char *nvme_feature_to_string(int feature);

@@ -1297,8 +1297,8 @@ static void nvme_show_registers_pmrmsc(uint64_t pmrmsc)
 {
 	printf("\tController Base Address (CBA)		: %" PRIx64 "\n",
 		(pmrmsc & 0xfffffffffffff000) >> 12);
-	printf("\tController Memory Space Enable (CMSE	: %" PRIx64 "\n\n",
-		(pmrmsc & 0x0000000000000001) >> 1);
+	printf("\tController Memory Space Enable (CMSE)	: %" PRIx64 "\n\n",
+		(pmrmsc & 0x0000000000000002) >> 1);
 }
 
 static inline uint32_t mmio_read32(void *addr)
@@ -1311,9 +1311,13 @@ static inline uint32_t mmio_read32(void *addr)
 /* Access 64-bit registers as 2 32-bit; Some devices fail 64-bit MMIO. */
 static inline __u64 mmio_read64(void *addr)
 {
-	__le32 *p = addr;
+	const volatile __u32 *p = addr;
+	__u32 low, high;
 
-	return le32_to_cpu(*p) | ((uint64_t)le32_to_cpu(*(p + 1)) << 32);
+	low = le32_to_cpu(*p);
+	high = le32_to_cpu(*(p + 1));
+
+	return ((__u64) high << 32) | low;
 }
 
 static void json_ctrl_registers(void *bar)
@@ -2537,7 +2541,7 @@ static void json_nvme_id_ns_descs(void *data)
 			memcpy(desc.eui64, data + off, sizeof(desc.eui64));
 			for (i = 0; i < sizeof(desc.eui64); i++)
 				json_str_p += sprintf(json_str_p, "%02x", desc.eui64[i]);
-			len += sizeof(desc.eui64);
+			len = sizeof(desc.eui64);
 			nidt_name = "eui64";
 			break;
 
@@ -2545,7 +2549,7 @@ static void json_nvme_id_ns_descs(void *data)
 			memcpy(desc.nguid, data + off, sizeof(desc.nguid));
 			for (i = 0; i < sizeof(desc.nguid); i++)
 				json_str_p += sprintf(json_str_p, "%02x", desc.nguid[i]);
-			len += sizeof(desc.nguid);
+			len = sizeof(desc.nguid);
 			nidt_name = "nguid";
 			break;
 
@@ -2553,7 +2557,7 @@ static void json_nvme_id_ns_descs(void *data)
 		case NVME_NIDT_UUID:
 			memcpy(desc.uuid, data + off, sizeof(desc.uuid));
 			uuid_unparse_lower(desc.uuid, json_str);
-			len += sizeof(desc.uuid);
+			len = sizeof(desc.uuid);
 			nidt_name = "uuid";
 			break;
 #endif
@@ -2622,7 +2626,7 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 			for (i = 0; i < 8; i++)
 				printf("%02x", eui64[i]);
 			printf("\n");
-			len += sizeof(eui64);
+			len = sizeof(eui64);
 			break;
 		case NVME_NIDT_NGUID:
 			memcpy(nguid, data + pos + sizeof(*cur), sizeof(nguid));
@@ -2630,14 +2634,14 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 			for (i = 0; i < 16; i++)
 				printf("%02x", nguid[i]);
 			printf("\n");
-			len += sizeof(nguid);
+			len = sizeof(nguid);
 			break;
 #ifdef LIBUUID
 		case NVME_NIDT_UUID:
 			memcpy(uuid, data + pos + sizeof(*cur), 16);
 			uuid_unparse_lower(uuid, uuid_str);
 			printf("uuid    : %s\n", uuid_str);
-			len += sizeof(uuid);
+			len = sizeof(uuid);
 			break;
 #endif
 		default:
@@ -2667,7 +2671,7 @@ static void print_ps_power_and_scale(__le16 ctr_power, __u8 scale)
 
 	case 2:
 		/* Units of 0.01W */
-		printf("%01u.%02uW", power / 100, scale % 100);
+		printf("%01u.%02uW", power / 100, power % 100);
 		break;
 
 	default:
@@ -2856,6 +2860,134 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 {
 	__nvme_show_id_ctrl(ctrl, mode, NULL);
+}
+
+static void json_nvme_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode)
+{
+	struct json_object *root;
+
+	root = json_create_object();
+	json_object_add_value_int(root, "zamds", ctrl->zamds);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode)
+{
+	if (mode & BINARY)
+		return d_raw((unsigned char *)ctrl, sizeof(*ctrl));
+	else if (mode & JSON)
+		return json_nvme_zns_id_ctrl(ctrl, mode);
+
+	printf("NVMe ZNS Identify Controller:\n");
+	printf("zamds: %u\n", ctrl->zamds);
+}
+
+void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
+	struct nvme_id_ns *id_ns, unsigned long flags)
+{
+	struct json_object *root;
+	struct json_array *lbafs;
+	int i;
+
+	root = json_create_object();
+	json_object_add_value_int(root, "zoc", le16_to_cpu(ns->zoc));
+	json_object_add_value_int(root, "ozcs", le16_to_cpu(ns->ozcs));
+	json_object_add_value_int(root, "mar", le16_to_cpu(ns->mar));
+	json_object_add_value_int(root, "mor", le16_to_cpu(ns->mor));
+	json_object_add_value_int(root, "rrl", ns->rrl);
+	json_object_add_value_int(root, "frl", ns->frl);
+
+	lbafs = json_create_array();
+	json_object_add_value_array(root, "lbafe", lbafs);
+
+	for (i = 0; i <= id_ns->nlbaf; i++) {
+		struct json_object *lbaf = json_create_object();
+
+		json_object_add_value_int(lbaf, "zsze",
+			le64_to_cpu(ns->lbafe[i].zsze));
+		json_object_add_value_int(lbaf, "zdes", ns->lbafe[i].zdes);
+
+		json_array_add_value_object(lbafs, lbaf);
+	}
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
+	struct nvme_id_ns *id_ns, unsigned long flags)
+{
+	uint8_t lbaf = id_ns->flbas & NVME_NS_FLBAS_LBA_MASK;
+	int i;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)ns, sizeof(*ns));
+	else if (flags & JSON)
+		return json_nvme_zns_id_ns(ns, id_ns, flags);
+
+	printf("NVMe ZNS Identify Namespace:\n");
+	printf("zoc:    %u\n", le16_to_cpu(ns->zoc));
+	printf("ozcs:   %u\n", le16_to_cpu(ns->ozcs));
+	printf("mar:    %u\n", le16_to_cpu(ns->mar));
+	printf("mor:    %u\n", le16_to_cpu(ns->mor));
+	printf("rrl:    %u\n", ns->rrl);
+	printf("frl:    %u\n", ns->frl);
+
+	for (i = 0; i <= id_ns->nlbaf; i++)
+		printf("lbafe %02d: zsze:%"PRIx64" zdes:%u%s\n", i,
+			(uint64_t)le64_to_cpu(ns->lbafe[i].zsze),
+			ns->lbafe[i].zdes, i == lbaf ? " (in use)" : "");
+}
+
+void nvme_show_zns_changed( struct nvme_zns_changed_zone_log *log,
+	unsigned long flags)
+{
+	uint16_t nrzid;
+	int i;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)log, sizeof(*log));
+
+	nrzid = le16_to_cpu(log->nrzid);
+	printf("NVMe Changed Zone List:\n");
+	printf("nrzid:  %u\n", nrzid);
+
+	for (i = 0; i < min(nrzid, (uint16_t)NVME_ZNS_CHANGED_ZONES_MAX); i++)
+		printf("zid %03d: %"PRIu64"\n", i, (uint64_t)le64_to_cpu(log->zid[i]));
+}
+
+void nvme_show_zns_report_zones(void *report, __u32 descs,
+	__u8 ext_size, __u32 report_size, unsigned long flags)
+{
+	struct nvme_zone_report *r = report;
+	struct nvme_zns_desc *desc;
+	int i;
+
+	__u64 nr_zones = le64_to_cpu(r->nr_zones);
+
+	if (nr_zones < descs)
+		descs = nr_zones;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)report, report_size);
+
+	printf("nr_zones : %"PRIu64"\n", (uint64_t)le64_to_cpu(r->nr_zones));
+	for (i = 0; i < descs; i++) {
+		desc = (struct nvme_zns_desc *)
+			(report + sizeof(*r) + i * (sizeof(*desc) + ext_size));
+		printf(" desc %02d:\n", i);
+		printf(".................\n");
+		printf("zt      : %x\n", desc->zt);
+		printf("zs      : %x\n", desc->zs);
+		printf("za      : %x\n", desc->za);
+		printf("zcap    : %"PRIx64"\n", le64_to_cpu(desc->zcap));
+		printf("zslba   : %"PRIx64"\n", le64_to_cpu(desc->zslba));
+		printf("wp      : %"PRIx64"\n", le64_to_cpu(desc->wp));
+		printf(".................\n");
+	}
 }
 
 static void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset)
@@ -4543,6 +4675,10 @@ static void json_detail_list(struct nvme_topology *t)
 			json_object_add_value_string(ctrl_attrs, "Transport", c->transport);
 			json_object_add_value_string(ctrl_attrs, "Address", c->address);
 			json_object_add_value_string(ctrl_attrs, "State", c->state);
+			if (c->hostnqn)
+				json_object_add_value_string(ctrl_attrs, "HostNQN", c->hostnqn);
+			if (c->hostid)
+				json_object_add_value_string(ctrl_attrs, "HostID", c->hostid);
 
 			format(formatter, sizeof(formatter), c->id.fr, sizeof(c->id.fr));
 			json_object_add_value_string(ctrl_attrs, "Firmware", formatter);
@@ -4625,7 +4761,7 @@ static void json_simple_ns(struct nvme_namespace *n, struct json_array *devices)
 
 	json_object_add_value_string(device_attrs, "ModelNumber", formatter);
 
-	if (index >= 0) {
+	if (index >= 0 && !strcmp(n->ctrl->transport, "pcie")) {
 		char *product = nvme_product_name(index);
 
 		json_object_add_value_string(device_attrs, "ProductName", product);
@@ -4678,6 +4814,8 @@ static void json_simple_list(struct nvme_topology *t)
 	}
 	json_object_add_value_array(root, "Devices", devices);
 	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
 }
 
 static void json_print_list_items(struct nvme_topology *t,

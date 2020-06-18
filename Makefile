@@ -3,10 +3,11 @@ override CFLAGS += -std=gnu99 -I.
 override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
-HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=232; echo $$?)
+HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=242; echo $$?)
 NVME = nvme
 INSTALL ?= install
 DESTDIR =
+DESTDIROLD = /usr/local/sbin
 PREFIX ?= /usr
 SYSCONFDIR = /etc
 SBINDIR = $(PREFIX)/sbin
@@ -76,7 +77,10 @@ PLUGIN_OBJS :=					\
 	plugins/seagate/seagate-nvme.o 		\
 	plugins/virtium/virtium-nvme.o		\
 	plugins/shannon/shannon-nvme.o		\
-	plugins/dera/dera-nvme.o
+	plugins/dera/dera-nvme.o 		\
+	plugins/scaleflux/sfx-nvme.o		\
+	plugins/transcend/transcend-nvme.o	\
+	plugins/zns/zns.o
 
 nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)
@@ -114,6 +118,7 @@ install-man:
 	$(MAKE) -C Documentation install-no-build
 
 install-bin: default
+	$(RM) $(DESTDIROLD)/nvme
 	$(INSTALL) -d $(DESTDIR)$(SBINDIR)
 	$(INSTALL) -m 755 nvme $(DESTDIR)$(SBINDIR)
 

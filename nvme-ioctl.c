@@ -70,12 +70,6 @@ int nvme_get_nsid(int fd)
 	if (err < 0)
 		return -errno;
 
-	if (!S_ISBLK(nvme_stat.st_mode)) {
-		fprintf(stderr,
-			"Error: requesting namespace-id from non-block device\n");
-		errno = ENOTBLK;
-		return -errno;
-	}
 	return ioctl(fd, NVME_IOCTL_ID);
 }
 
@@ -411,6 +405,16 @@ int nvme_identify_uuid(int fd, void *data)
 	return nvme_identify(fd, 0, NVME_ID_CNS_UUID_LIST, data);
 }
 
+int nvme_zns_identify_ns(int fd, __u32 nsid, void *data)
+{
+	return nvme_identify13(fd, nsid, NVME_ID_CNS_CSI_ID_NS, 2 << 24, data);
+}
+
+int nvme_zns_identify_ctrl(int fd, void *data)
+{
+	return nvme_identify13(fd, 0, NVME_ID_CNS_CSI_ID_CTRL, 2 << 24, data);
+}
+
 int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
                  __u16 lsi, bool rae, __u8 uuid_ix, __u32 data_len, void *data)
 {
@@ -727,16 +731,6 @@ int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist,
 	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
-int nvme_ns_attach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist)
-{
-	return nvme_ns_attachment(fd, nsid, num_ctrls, ctrlist, true);
-}
-
-int nvme_ns_detach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist)
-{
-	return nvme_ns_attachment(fd, nsid, num_ctrls, ctrlist, false);
-}
-
 int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
@@ -892,4 +886,102 @@ int nvme_virtual_mgmt(int fd, __u32 cdw10, __u32 cdw11, __u32 *result)
 		*result = cmd.result;
 
 	return err;
+}
+
+int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
+		       enum nvme_zns_send_action zsa, __u32 data_len,
+		       void *data)
+{
+	__u32 cdw10 = slba & 0xffffffff;
+	__u32 cdw11 = slba >> 32;
+	__u32 cdw13 = zsa | (!!select_all) << 8;
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_zns_cmd_mgmt_send,
+		.nsid		= nsid,
+		.cdw10		= cdw10,
+		.cdw11		= cdw11,
+		.cdw13		= cdw13,
+		.addr		= (__u64)(uintptr_t)data,
+		.data_len	= data_len,
+	};
+
+	return nvme_submit_io_passthru(fd, &cmd);
+}
+
+int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
+		       enum nvme_zns_recv_action zra, __u16 zrasf,
+		       bool zras_feat, __u32 data_len, void *data)
+{
+	__u32 cdw10 = slba & 0xffffffff;
+	__u32 cdw11 = slba >> 32;
+	__u32 cdw12 = (data_len >> 2) - 1;
+	__u32 cdw13 = zra | zrasf << 8 | zras_feat << 16;
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_zns_cmd_mgmt_recv,
+		.nsid		= nsid,
+		.cdw10		= cdw10,
+		.cdw11		= cdw11,
+		.cdw12		= cdw12,
+		.cdw13		= cdw13,
+		.addr		= (__u64)(uintptr_t)data,
+		.data_len	= data_len,
+	};
+
+	return nvme_submit_io_passthru(fd, &cmd);
+}
+
+int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba, bool extended,
+			  enum nvme_zns_report_options opts, bool partial,
+			  __u32 data_len, void *data)
+{
+	enum nvme_zns_recv_action zra;
+
+	if (extended)
+		zra = NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES;
+	else
+		zra = NVME_ZNS_ZRA_REPORT_ZONES;
+
+	return nvme_zns_mgmt_recv(fd, nsid, slba, zra, opts, partial,
+		data_len, data);
+}
+
+int nvme_zns_append(int fd, __u32 nsid, __u64 zslba, __u16 nlb, __u16 control,
+		    __u32 ilbrt, __u16 lbat, __u16 lbatm, __u32 data_len,
+		    void *data, __u32 metadata_len, void *metadata,
+		    __u64 *result)
+{
+	__u32 cdw10 = zslba & 0xffffffff;
+	__u32 cdw11 = zslba >> 32;
+	__u32 cdw12 = nlb | (control << 16);
+	__u32 cdw14 = ilbrt;
+	__u32 cdw15 = lbat | (lbatm << 16);
+
+	struct nvme_passthru_cmd64 cmd = {
+		.opcode		= nvme_zns_cmd_append,
+		.nsid		= nsid,
+		.cdw10		= cdw10,
+		.cdw11		= cdw11,
+		.cdw12		= cdw12,
+		.cdw14		= cdw14,
+		.cdw15		= cdw15,
+		.metadata	= (__u64)(uintptr_t)metadata,
+		.addr		= (__u64)(uintptr_t)data,
+		.metadata_len	= metadata_len,
+		.data_len	= data_len,
+	};
+
+	int err;
+
+	err = ioctl(fd, NVME_IOCTL_IO64_CMD, &cmd);
+	if (!err && result)
+		*result = cmd.result;
+	return err;
+}
+
+int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
+				   struct nvme_zns_changed_zone_log *log)
+{
+	return 0;
 }

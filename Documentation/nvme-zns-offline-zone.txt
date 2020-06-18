@@ -1,0 +1,49 @@
+nvme-zns-offline-zone(1)
+========================
+
+NAME
+----
+nvme-zns-offline-zone - Offlines one or all zones
+
+SYNOPSIS
+--------
+[verse]
+'nvme zns offline-zone nvme zns id-ctrl' <device> [--namespace-id=<NUM> | -n <NUM>]
+						[--start-lba=<LBA> | -s <LBA>]
+						[--select-all | -a]
+
+DESCRIPTION
+-----------
+For the NVMe device given, issues the Zone Management Send command with the
+"Offline Zone" action. This will transition the zone to the offlined state.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+	Use the provided namespace id for the command. If not provided, the
+	namespace id of the block device will be used. If the command is issued
+	to a non-block device, the parameter is required.
+
+-s <lba>::
+--start-lba=<lba>::
+	The starting LBA of the zone to offline. 
+
+-a::
+--select-all::
+	Select all zones for this action
+
+EXAMPLES
+--------
+* Offline all zones on namespace 1:
++
+------------
+# nvme zns offline-zone /dev/nvme0 -a -n 1
+------------
+
+NVME
+----
+Part of nvme-cli

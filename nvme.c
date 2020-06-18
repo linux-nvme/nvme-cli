@@ -85,7 +85,7 @@ static struct program nvme = {
 	.extensions = &builtin,
 };
 
-static const char *output_format = "Output format: normal|json|binary";
+const char *output_format = "Output format: normal|json|binary";
 static const char *output_format_no_binary = "Output format: normal|json";
 
 static void *__nvme_alloc(size_t len, bool *huge)
@@ -103,7 +103,7 @@ static void *__nvme_alloc(size_t len, bool *huge)
 #ifdef LIBHUGETLBFS
 #define HUGE_MIN 0x80000
 
-static void nvme_free(void *p, bool huge)
+void nvme_free(void *p, bool huge)
 {
 	if (huge)
 		free_hugepage_region(p);
@@ -111,7 +111,7 @@ static void nvme_free(void *p, bool huge)
 		free(p);
 }
 
-static void *nvme_alloc(size_t len, bool *huge)
+void *nvme_alloc(size_t len, bool *huge)
 {
 	void *p;
 
@@ -126,12 +126,12 @@ static void *nvme_alloc(size_t len, bool *huge)
 	return p;
 }
 #else
-static void nvme_free(void *p, bool huge)
+void nvme_free(void *p, bool huge)
 {
 	free(p);
 }
 
-static void *nvme_alloc(size_t len, bool *huge)
+void *nvme_alloc(size_t len, bool *huge)
 {
 	return __nvme_alloc(len, huge);
 }
@@ -148,10 +148,13 @@ static int open_dev(char *dev)
 	fd = err;
 
 	err = fstat(fd, &nvme_stat);
-	if (err < 0)
+	if (err < 0) {
+		close(fd);
 		goto perror;
+	}
 	if (!S_ISCHR(nvme_stat.st_mode) && !S_ISBLK(nvme_stat.st_mode)) {
 		fprintf(stderr, "%s is not a block or character device\n", dev);
+		close(fd);
 		return -ENODEV;
 	}
 	return fd;
@@ -409,7 +412,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 	err = write(output, (void *) hdr, bs);
 	if (err != bs) {
-		fprintf(stderr, "Failed to flush all data to file!");
+		fprintf(stderr, "Failed to flush all data to file!\n");
 		goto close_output;
 	}
 
@@ -424,7 +427,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		full_size = (le16_to_cpu(hdr->dalb3) * bs) + offset;
 		break;
 	default:
-		fprintf(stderr, "Invalid data area requested");
+		fprintf(stderr, "Invalid data area requested\n");
 		err = -EINVAL;
 		goto close_output;
 	}
@@ -446,7 +449,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 		err = write(output, (void *) page_log, bs);
 		if (err != bs) {
-			fprintf(stderr, "Failed to flush all data to file!");
+			fprintf(stderr, "Failed to flush all data to file!\n");
 			break;
 		}
 		err = 0;
@@ -1024,17 +1027,16 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	if (fd < 0)
 		goto ret;
 
-	if (S_ISBLK(nvme_stat.st_mode)) {
+	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
+		if (cfg.namespace_id == 0) {
+			err = -EINVAL;
+			goto close_fd;
+		}
+		else if (cfg.namespace_id < 0) {
 			err = cfg.namespace_id;
 			goto close_fd;
 		}
-	} else if (!cfg.namespace_id) {
-		fprintf(stderr, "%s: namespace-id parameter required\n",
-						cmd->name);
-		err = -EINVAL;
-		goto close_fd;
 	}
 
 	err = nvme_ns_delete(fd, cfg.namespace_id, cfg.timeout);
@@ -1088,8 +1090,12 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	}
 
 	num = argconfig_parse_comma_sep_array(cfg.cntlist, list, 2047);
+	if (!num) {
+		fprintf(stderr, "warning: empty controller-id list will result in no actual change in namespace attachment\n");
+	}
+
 	if (num == -1) {
-		fprintf(stderr, "%s: controller id list is required\n",
+		fprintf(stderr, "%s: controller id list is malformed\n",
 						cmd->name);
 		err = -EINVAL;
 		goto close_fd;
@@ -1098,10 +1104,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	for (i = 0; i < num; i++)
 		ctrlist[i] = (uint16_t)list[i];
 
-	if (attach)
-		err = nvme_ns_attach_ctrls(fd, cfg.namespace_id, num, ctrlist);
-	else
-		err = nvme_ns_detach_ctrls(fd, cfg.namespace_id, num, ctrlist);
+	err = nvme_ns_attachment(fd, cfg.namespace_id, num, ctrlist, attach);
 
 	if (!err)
 		printf("%s: Success, nsid:%d\n", cmd->name, cfg.namespace_id);
@@ -1565,17 +1568,18 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
-	if (!cfg.namespace_id && S_ISBLK(nvme_stat.st_mode)) {
+	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id < 0) {
 			err = cfg.namespace_id;
 			goto close_fd;
 		}
-	} else if (!cfg.namespace_id) {
-		fprintf(stderr,
-			"Error: requesting namespace-id from non-block device\n");
-		err = -ENOTBLK;
-		goto close_fd;
+		else if (!cfg.namespace_id) {
+			fprintf(stderr,
+				"Error: requesting namespace-id from non-block device\n");
+			err = -ENOTBLK;
+			goto close_fd;
+		}
 	}
 
 	err = nvme_identify_ns(fd, cfg.namespace_id, cfg.force, &ns);
@@ -2599,7 +2603,7 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 		goto ret;
 
 	if (cfg.offset == -1) {
-		fprintf(stderr, "offset required param");
+		fprintf(stderr, "offset required param\n");
 		err = -EINVAL;
 		goto close_fd;
 	}
@@ -2648,12 +2652,12 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 		goto ret;
 
 	if (cfg.offset == -1) {
-		fprintf(stderr, "offset required param");
+		fprintf(stderr, "offset required param\n");
 		err = -EINVAL;
 		goto close_fd;
 	}
 	if (cfg.value == -1) {
-		fprintf(stderr, "value required param");
+		fprintf(stderr, "value required param\n");
 		err = -EINVAL;
 		goto close_fd;
 	}
@@ -2767,11 +2771,13 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		 * format of all namespaces.
 		 */
 		cfg.namespace_id = NVME_NSID_ALL;
-	} else if (S_ISBLK(nvme_stat.st_mode)) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
-			goto close_fd;
+	} else {
+		if (!cfg.namespace_id) {
+			cfg.namespace_id = nvme_get_nsid(fd);
+			if (cfg.namespace_id < 0) {
+				err = cfg.namespace_id;
+				goto close_fd;
+			}
 		}
 	}
 
@@ -2816,6 +2822,9 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			}
 		} else  if (cfg.lbaf == 0xff)
 			cfg.lbaf = prev_lbaf;
+	}
+	else {
+		if (cfg.lbaf == 0xff) cfg.lbaf = 0;
 	}
 
 	/* ses & pi checks set to 7 for forward-compatibility */
@@ -2865,7 +2874,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		nvme_show_status(err);
 	else {
 		printf("Success formatting namespace:%x\n", cfg.namespace_id);
-		if (S_ISBLK(nvme_stat.st_mode) && ioctl(fd, BLKRRPART) < 0) {
+		if (cfg.lbaf != prev_lbaf && ioctl(fd, BLKRRPART) < 0) {
 			fprintf(stderr, "failed to re-read partition table\n");
 			err = -errno;
 			goto close_fd;
@@ -3525,7 +3534,7 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 	if (fd < 0)
 		goto ret;
 
-	if (S_ISBLK(nvme_stat.st_mode)) {
+	if (!cfg.namespace_id) {
 		cfg.namespace_id = nvme_get_nsid(fd);
 		if (cfg.namespace_id < 0) {
 			err = cfg.namespace_id;
@@ -4779,31 +4788,31 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *command, stru
 static int discover_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Send Get Log Page request to Discovery Controller.";
-	return discover(desc, argc, argv, false);
+	return fabrics_discover(desc, argc, argv, false);
 }
 
 static int connect_all_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Discover NVMeoF subsystems and connect to them";
-	return discover(desc, argc, argv, true);
+	return fabrics_discover(desc, argc, argv, true);
 }
 
 static int connect_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Connect to NVMeoF subsystem";
-	return connect(desc, argc, argv);
+	return fabrics_connect(desc, argc, argv);
 }
 
 static int disconnect_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Disconnect from NVMeoF subsystem";
-	return disconnect(desc, argc, argv);
+	return fabrics_disconnect(desc, argc, argv);
 }
 
 static int disconnect_all_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Disconnect from all connected NVMeoF subsystems";
-	return disconnect_all(desc, argc, argv);
+	return fabrics_disconnect_all(desc, argc, argv);
 }
 
 void register_extension(struct plugin *plugin)

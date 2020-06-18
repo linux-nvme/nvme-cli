@@ -1,0 +1,50 @@
+nvme-zns-set-zone-desc(1)
+=========================
+
+NAME
+----
+nvme-zns-set-zone-desc - Set extended descriptor data for a zone
+
+SYNOPSIS
+--------
+[verse]
+'nvme zns setzone-desc' <device> [--namespace-id=<NUM> | -n <NUM>]
+				 [--start-lba=<IONUM>, -s <IONUM>]
+				 [-data=<FILE>, -d <FILE>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, issues the Zone Management Send command with the
+Set Zone Descriptor Extenions action. The input will default to stdin.
+Alternatively, the data may come from a file that can be specified. The data
+length will automatically be calculated from the zns identify namesapce.
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+	Use the provided namespace id for the command. If not provided, the
+	namespace id of the block device will be used. If the command is issued
+	to a non-block device, the parameter is required.
+
+-s <lba>::
+--start-lba=<lba>::
+	The starting LBA of the zone to manage send.
+
+-d <FILE::
+-data=<FILE>::
+	Optional file for data (default stdin)
+
+
+EXAMPLES
+--------
+* Write "hello world" into the zone descriptor for namespace 1's first zone
+  (requires device supports a large enough zone extended data) 
++
+------------
+# echo "hello world" | nvme zns set-zone-desc /dev/nvme0 -n 1 -s 0
+------------
+
+NVME
+----
+Part of nvme-cli

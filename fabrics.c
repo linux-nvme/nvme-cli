@@ -33,6 +33,10 @@
 #include <sys/stat.h>
 #include <stddef.h>
 
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+
 #include "util/parser.h"
 #include "nvme-ioctl.h"
 #include "nvme-status.h"
@@ -80,6 +84,7 @@ static struct config {
 	int  data_digest;
 	bool persistent;
 	bool quiet;
+	bool matching_only;
 } cfg = { NULL };
 
 struct connect_args {
@@ -136,6 +141,7 @@ static const char * const adrfams[] = {
 	[NVMF_ADDR_FAMILY_IP6]	= "ipv6",
 	[NVMF_ADDR_FAMILY_IB]	= "infiniband",
 	[NVMF_ADDR_FAMILY_FC]	= "fibre-channel",
+	[NVMF_ADDR_FAMILY_LOOP]	= "loop",
 };
 
 static inline const char *adrfam_str(__u8 adrfam)
@@ -857,6 +863,63 @@ static int build_options(char *argstr, int max_len, bool discover)
 	return 0;
 }
 
+static bool traddr_is_hostname(struct config *cfg)
+{
+	char addrstr[NVMF_TRADDR_SIZE];
+
+	if (!cfg->traddr)
+		return false;
+	if (strcmp(cfg->transport, "tcp") && strcmp(cfg->transport, "rdma"))
+		return false;
+	if (inet_pton(AF_INET, cfg->traddr, addrstr) > 0 ||
+	    inet_pton(AF_INET6, cfg->traddr, addrstr) > 0)
+		return false;
+	return true;
+}
+
+static int hostname2traddr(struct config *cfg)
+{
+	struct addrinfo *host_info, hints = {.ai_family = AF_UNSPEC};
+	char addrstr[NVMF_TRADDR_SIZE];
+	const char *p;
+	int ret;
+
+	ret = getaddrinfo(cfg->traddr, NULL, &hints, &host_info);
+	if (ret) {
+		fprintf(stderr, "failed to resolve host %s info\n", cfg->traddr);
+		return ret;
+	}
+
+	switch (host_info->ai_family) {
+	case AF_INET:
+		p = inet_ntop(host_info->ai_family,
+			&(((struct sockaddr_in *)host_info->ai_addr)->sin_addr),
+			addrstr, NVMF_TRADDR_SIZE);
+		break;
+	case AF_INET6:
+		p = inet_ntop(host_info->ai_family,
+			&(((struct sockaddr_in6 *)host_info->ai_addr)->sin6_addr),
+			addrstr, NVMF_TRADDR_SIZE);
+		break;
+	default:
+		fprintf(stderr, "unrecognized address family (%d) %s\n",
+			host_info->ai_family, cfg->traddr);
+		ret = -EINVAL;
+		goto free_addrinfo;
+	}
+
+	if (!p) {
+		fprintf(stderr, "failed to get traddr for %s\n", cfg->traddr);
+		ret = -errno;
+		goto free_addrinfo;
+	}
+	cfg->traddr = strdup(addrstr);
+
+free_addrinfo:
+	freeaddrinfo(host_info);
+	return ret;
+}
+
 static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
 {
 	char argstr[BUF_SIZE], *p;
@@ -931,6 +994,13 @@ retry:
 		if (len < 0)
 			return -EINVAL;
 		p+= len;
+	}
+
+	if (cfg.reconnect_delay) {
+		len = sprintf(p, ",reconnect_delay=%d", cfg.reconnect_delay);
+		if (len < 0)
+			return -EINVAL;
+		p += len;
 	}
 
 	if (cfg.ctrl_loss_tmo) {
@@ -1042,6 +1112,17 @@ retry:
 	return ret;
 }
 
+static bool should_connect(struct nvmf_disc_rsp_page_entry *entry)
+{
+	int len;
+
+	if (!cfg.matching_only || !cfg.traddr)
+		return true;
+
+	len = space_strip_len(NVMF_TRADDR_SIZE, entry->traddr);
+	return !strncmp(cfg.traddr, entry->traddr, len);
+}
+
 static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 {
 	int i;
@@ -1049,6 +1130,9 @@ static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	int ret = 0;
 
 	for (i = 0; i < numrec; i++) {
+		if (!should_connect(&log->entries[i]))
+			continue;
+
 		instance = connect_ctrl(&log->entries[i]);
 
 		/* clean success */
@@ -1077,6 +1161,16 @@ static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	}
 
 	return ret;
+}
+
+static void nvmf_get_host_identifiers(int ctrl_instance)
+{
+	char *path;
+
+	if (asprintf(&path, "%s/nvme%d", SYS_NVME, ctrl_instance) < 0)
+		return;
+	cfg.hostnqn = nvme_get_ctrl_attr(path, "hostnqn");
+	cfg.hostid = nvme_get_ctrl_attr(path, "hostid");
 }
 
 static int do_discover(char *argstr, bool connect)
@@ -1117,10 +1211,12 @@ static int do_discover(char *argstr, bool connect)
 		free(cargs.host_traddr);
 	}
 
-	if (!cfg.device)
+	if (!cfg.device) {
 		instance = add_ctrl(argstr);
-	else
+	} else {
 		instance = ctrl_instance(cfg.device);
+		nvmf_get_host_identifiers(instance);
+	}
 	if (instance < 0)
 		return instance;
 
@@ -1213,23 +1309,28 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 
 		err = argconfig_parse(argc, argv, desc, opts);
 		if (err)
-			continue;
+			goto free_and_continue;
 
 		if (cfg.persistent && !cfg.keep_alive_tmo)
 			cfg.keep_alive_tmo = NVMF_DEF_DISC_TMO;
 
+		if (traddr_is_hostname(&cfg)) {
+			ret = hostname2traddr(&cfg);
+			if (ret)
+				goto out;
+		}
+
 		err = build_options(argstr, BUF_SIZE, true);
 		if (err) {
 			ret = err;
-			continue;
+			goto free_and_continue;
 		}
 
 		err = do_discover(argstr, connect);
-		if (err) {
+		if (err)
 			ret = err;
-			continue;
-		}
 
+free_and_continue:
 		free(args);
 		free(argv);
 	}
@@ -1239,7 +1340,7 @@ out:
 	return ret;
 }
 
-int discover(const char *desc, int argc, char **argv, bool connect)
+int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char argstr[BUF_SIZE];
 	int ret;
@@ -1265,6 +1366,7 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_INT("queue-size",      'Q', &cfg.queue_size,      "number of io queue elements to use (default 128)"),
 		OPT_FLAG("persistent",     'p', &cfg.persistent,      "persistent discovery connection"),
 		OPT_FLAG("quiet",          'S', &cfg.quiet,           "suppress already connected errors"),
+		OPT_FLAG("matching",       'm', &cfg.matching_only,   "connect only records matching the traddr"),
 		OPT_END()
 	};
 
@@ -1283,6 +1385,13 @@ int discover(const char *desc, int argc, char **argv, bool connect)
 	} else {
 		if (cfg.persistent && !cfg.keep_alive_tmo)
 			cfg.keep_alive_tmo = NVMF_DEF_DISC_TMO;
+
+		if (traddr_is_hostname(&cfg)) {
+			ret = hostname2traddr(&cfg);
+			if (ret)
+				goto out;
+		}
+
 		ret = build_options(argstr, BUF_SIZE, true);
 		if (ret)
 			goto out;
@@ -1294,7 +1403,7 @@ out:
 	return nvme_status_to_errno(ret, true);
 }
 
-int connect(const char *desc, int argc, char **argv)
+int fabrics_connect(const char *desc, int argc, char **argv)
 {
 	char argstr[BUF_SIZE];
 	int instance, ret;
@@ -1326,6 +1435,12 @@ int connect(const char *desc, int argc, char **argv)
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		goto out;
+
+	if (traddr_is_hostname(&cfg)) {
+		ret = hostname2traddr(&cfg);
+		if (ret)
+			goto out;
+	}
 
 	ret = build_options(argstr, BUF_SIZE, false);
 	if (ret)
@@ -1427,7 +1542,7 @@ static int disconnect_by_device(char *device)
 	return remove_ctrl(instance);
 }
 
-int disconnect(const char *desc, int argc, char **argv)
+int fabrics_disconnect(const char *desc, int argc, char **argv)
 {
 	const char *nqn = "nqn name";
 	const char *device = "nvme device";
@@ -1472,7 +1587,7 @@ out:
 	return nvme_status_to_errno(ret, true);
 }
 
-int disconnect_all(const char *desc, int argc, char **argv)
+int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 {
 	struct nvme_topology t = { };
 	int i, j, err;
