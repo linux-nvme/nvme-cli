@@ -849,7 +849,7 @@ static int build_options(char *argstr, int max_len, bool discover)
 	    add_int_argument(&argstr, &max_len, "reconnect_delay",
 				cfg.reconnect_delay, false) ||
 	    add_int_argument(&argstr, &max_len, "ctrl_loss_tmo",
-				cfg.ctrl_loss_tmo, false) ||
+				cfg.ctrl_loss_tmo, true) ||
 	    add_int_argument(&argstr, &max_len, "tos",
 				cfg.tos, true) ||
 	    add_bool_argument(&argstr, &max_len, "duplicate_connect",
@@ -1003,7 +1003,7 @@ retry:
 		p += len;
 	}
 
-	if (cfg.ctrl_loss_tmo) {
+	if (cfg.ctrl_loss_tmo >= -1) {
 		len = sprintf(p, ",ctrl_loss_tmo=%d", cfg.ctrl_loss_tmo);
 		if (len < 0)
 			return -EINVAL;
