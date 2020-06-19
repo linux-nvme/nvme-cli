@@ -630,12 +630,14 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 	const char *lbatm = "logical block application tag mask (for end to end PI)";
 	const char *metadata_size = "size of metadata in bytes";
 	const char *data_size = "size of data in bytes";
+	const char *latency = "output latency statistics";
 
 	int err = -1, fd, dfd = STDIN_FILENO, mfd = STDIN_FILENO;
 	unsigned int lba_size, meta_size;
 	void *buf = NULL, *mbuf = NULL;
 	__u16 nblocks, control = 0;
 	__u64 result;
+	struct timeval start_time, end_time;
 
 	struct nvme_id_ns ns;
 
@@ -652,6 +654,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		__u16  lbat;
 		__u16  lbatm;
 		__u8   prinfo;
+		int   latency;
 	};
 
 	struct config cfg = {
@@ -659,9 +662,9 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
-	        OPT_SUFFIX("zslba",           's', &cfg.zslba,         zslba),
-	        OPT_SUFFIX("data-size",       'z', &cfg.data_size,     data_size),
-	        OPT_SUFFIX("metadata-size",   'y', &cfg.metadata_size, metadata_size),
+		OPT_SUFFIX("zslba",           's', &cfg.zslba,         zslba),
+		OPT_SUFFIX("data-size",       'z', &cfg.data_size,     data_size),
+		OPT_SUFFIX("metadata-size",   'y', &cfg.metadata_size, metadata_size),
 		OPT_FILE("data",              'd', &cfg.data,          data),
 		OPT_FILE("metadata",          'M', &cfg.metadata,      metadata),
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry, limited_retry),
@@ -670,6 +673,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		OPT_SHRT("app-tag-mask",      'm', &cfg.lbatm,         lbatm),
 		OPT_SHRT("app-tag",           'a', &cfg.lbat,          lbat),
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,        prinfo),
+		OPT_FLAG("latency",           't', &cfg.latency,       latency),
 		OPT_END()
 	};
 
@@ -774,10 +778,16 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 	if (cfg.fua)
 		control |= NVME_RW_FUA;
 
+	gettimeofday(&start_time, NULL);
 	err = nvme_zns_append(fd, cfg.namespace_id, cfg.zslba, nblocks,
 			      control, cfg.ref_tag, cfg.lbat, cfg.lbatm,
 			      cfg.data_size, buf, cfg.metadata_size, mbuf,
 			      &result);
+	gettimeofday(&end_time, NULL);
+	if (cfg.latency)
+		printf(" latency: zone append: %llu us\n",
+			elapsed_utime(start_time, end_time));
+
 	if (!err)
 		printf("Success appended data to LBA %"PRIx64"\n", (uint64_t)result);
 	else

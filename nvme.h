@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <endian.h>
+#include <sys/time.h>
 
 #include "plugin.h"
 #include "util/json.h"
@@ -110,4 +111,7 @@ char *nvme_get_ctrl_attr(char *path, const char *attr);
 
 void *nvme_alloc(size_t len, bool *huge);
 void nvme_free(void *p, bool huge);
+
+unsigned long long elapsed_utime(struct timeval start_time,
+					struct timeval end_time);
 #endif /* _NVME_H */
