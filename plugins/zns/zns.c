@@ -177,7 +177,7 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 		cfg.select_all, zsa, 0, NULL);
 	if (!err)
 		printf("%s: Success, action:%d zone:%"PRIx64" nsid:%d\n", command,
-			zsa, (uint64_t)zslba, cfg.namespace_id);
+			zsa, (uint64_t)cfg.zslba, cfg.namespace_id);
 	else
 		nvme_show_status(err);
 free:

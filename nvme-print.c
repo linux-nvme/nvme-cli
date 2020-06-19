@@ -2981,6 +2981,38 @@ void nvme_show_zns_changed(struct nvme_zns_changed_zone_log *log,
 		printf("zid %03d: %"PRIu64"\n", i, (uint64_t)le64_to_cpu(log->zid[i]));
 }
 
+char *zone_type_to_string(__u8 cond)
+{
+	switch (cond) {
+	case NVME_ZONE_TYPE_SEQWRITE_REQ:
+		return "SEQWRITE_REQ";
+	default:
+		return "Unknown";
+	}
+}
+
+char *zone_state_to_string(__u8 state)
+{
+	switch (state) {
+	case NVME_ZNS_ZS_EMPTY:
+		return "EMPTY";
+	case NVME_ZNS_ZS_IMPL_OPEN:
+		return "IMP_OPENED";
+	case NVME_ZNS_ZS_EXPL_OPEN:
+		return "EXP_OPENED";
+	case NVME_ZNS_ZS_CLOSED:
+		return "CLOSED";
+	case NVME_ZNS_ZS_READ_ONLY:
+		return "READONLY";
+	case NVME_ZNS_ZS_FULL:
+		return "FULL";
+	case NVME_ZNS_ZS_OFFLINE:
+		return "OFFLINE";
+	default:
+		return "Unknown State";
+	}
+}
+
 void nvme_show_zns_report_zones(void *report, __u32 descs,
 	__u8 ext_size, __u32 report_size, unsigned long flags)
 {
@@ -2996,19 +3028,24 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 	if (flags & BINARY)
 		return d_raw((unsigned char *)report, report_size);
 
-	printf("nr_zones : %"PRIu64"\n", (uint64_t)le64_to_cpu(r->nr_zones));
+	printf("nr_zones: %"PRIu64"\n", (uint64_t)le64_to_cpu(r->nr_zones));
 	for (i = 0; i < descs; i++) {
 		desc = (struct nvme_zns_desc *)
 			(report + sizeof(*r) + i * (sizeof(*desc) + ext_size));
-		printf(" desc %02d:\n", i);
-		printf(".................\n");
-		printf("zt      : %x\n", desc->zt);
-		printf("zs      : %x\n", desc->zs);
-		printf("za      : %x\n", desc->za);
-		printf("zcap    : %"PRIx64"\n", le64_to_cpu(desc->zcap));
-		printf("zslba   : %"PRIx64"\n", le64_to_cpu(desc->zslba));
-		printf("wp      : %"PRIx64"\n", le64_to_cpu(desc->wp));
-		printf(".................\n");
+		printf("SLBA: 0x%-8"PRIx64" WP: 0x%-8"PRIx64"lx Cap: 0x%-8"PRIx64"lx State: %-12s Type: %-14s Attrs: 0x%-x\n",
+		(uint64_t)le64_to_cpu(desc->zslba), (uint64_t)le64_to_cpu(desc->wp),
+		(uint64_t)le64_to_cpu(desc->zcap), zone_state_to_string(desc->zs >> 4),
+		zone_type_to_string(desc->zt), desc->za);
+
+		if (ext_size) {
+			printf("Extension Data: ");
+			if (desc->za & NVME_ZNS_ZA_ZDEV) {
+				d((unsigned char *)desc + sizeof(*desc), ext_size, 16, 1);
+				printf("..\n");
+			} else {
+				printf(" Not valid\n");
+			}
+		}
 	}
 }
 
