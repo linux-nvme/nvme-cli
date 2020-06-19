@@ -459,7 +459,7 @@ close_fd:
 	return err;
 }
 
-static int get_zdes(int fd, __u32 nsid)
+static int get_zdes_bytes(int fd, __u32 nsid)
 {
 	struct nvme_zns_id_ns ns;
 	struct nvme_id_ns id_ns;
@@ -479,7 +479,7 @@ static int get_zdes(int fd, __u32 nsid)
 	}
 
 	lbaf = id_ns.flbas & NVME_NS_FLBAS_LBA_MASK;
-	return ns.lbafe[lbaf].zdes;
+	return ns.lbafe[lbaf].zdes << 6;
 }
 
 static int report_zones(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -545,7 +545,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	}
 
 	if (cfg.extended) {
-		zdes = get_zdes(fd, cfg.namespace_id);
+		zdes = get_zdes_bytes(fd, cfg.namespace_id);
 		if (zdes < 0) {
 			err = zdes;
 			goto close_fd;
@@ -565,7 +565,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	}
 
 	report_size = sizeof(struct nvme_zone_report) + cfg.num_descs *
-		(sizeof(struct nvme_zns_desc) + zdes);
+		(sizeof(struct nvme_zns_desc) + cfg.num_descs * zdes);
 
 	report = nvme_alloc(report_size, &huge);
 	if (!report) {
