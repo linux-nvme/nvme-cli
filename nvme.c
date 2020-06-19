@@ -47,7 +47,6 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 
 #include "common.h"
 #include "nvme-print.h"
@@ -3918,7 +3917,7 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
-static unsigned long long elapsed_utime(struct timeval start_time,
+unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time)
 {
 	unsigned long long err = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
