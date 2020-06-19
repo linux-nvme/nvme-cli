@@ -44,14 +44,14 @@ nvme_list_opts () {
 			--force -f --output-format= -o"
 			;;
 		"list-ns")
-		opts+=" --namespace-id= -n --al -a"
+		opts+=" --namespace-id= -n --al -a --csi= -y"
 			;;
 		"id-iocs")
 		opts+=" --controller-id= -c"
 			;;
 		"create-ns")
 		opts+=" --nsze= -s --ncap= -c --flbas= -f \
-			--dps= -d --nmic= -n"
+			--dps= -d --nmic= -n --csi= -y"
 			;;
 		"delete-ns")
 		opts+=" -namespace-id= -n"

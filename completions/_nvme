@@ -89,6 +89,8 @@ _nvme () {
 			/dev/nvme':supply a device to use (required)'
 			--namespace-id=':start namespace infos listing with this nsid'
 			-n':alias of --namespace-id'
+			--csi=':command set identifier'
+			-y':alias of --csi'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme list-ns options" _listns
@@ -117,6 +119,8 @@ _nvme () {
 			-d':alias of --dps'
 			--nmic=':multipath and sharing'
 			-n':alias of --nmic'
+			--csi=':command set identifier'
+			-y':alias of --csi'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme create-ns options" _createns

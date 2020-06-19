@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.9" />
+<meta name="generator" content="AsciiDoc 8.6.10" />
 <title>nvme-id-ns(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -435,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -749,6 +750,7 @@ nvme-id-ns(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme list-ns</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--csi=&lt;command_set_identifier&gt; | -y &lt;command_set_identifier&gt;]
                         [--all | -a]</pre>
 <div class="attribution">
 </div></div>
@@ -783,6 +785,18 @@ a valid nsid.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+-y &lt;command_set_identifier&gt;
+</dt>
+<dt class="hdlist1">
+--csi=&lt;command_set_identifier&gt;
+</dt>
+<dd>
+<p>
+        If this value is given, retrieve the identify list structure associated
+        with the speicified I/O command set.
+</p>
+</dd>
+<dt class="hdlist1">
 -a
 </dt>
 <dt class="hdlist1">
@@ -814,7 +828,7 @@ a valid nsid.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2018-01-30 19:28:39 KST
+ 2020-05-06 10:35:44 CEST
 </div>
 </div>
 </body>
