@@ -950,6 +950,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *desc = "For the specified controller handle, show the "\
 		"namespace list in the associated NVMe subsystem, optionally starting with a given nsid.";
 	const char *namespace_id = "first nsid returned list should start from";
+	const char *csi = "I/O command set identifier";
 	const char *all = "show all namespaces in the subsystem, whether attached or inactive";
 	int err, i, fd;
 	__le32 ns_list[1024];
@@ -957,6 +958,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	struct config {
 		__u32 namespace_id;
 		int  all;
+		__u16 csi;
 	};
 
 	struct config cfg = {
@@ -965,6 +967,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_BYTE("csi",          'y', &cfg.csi,          csi),
 		OPT_FLAG("all",          'a', &cfg.all,          all),
 		OPT_END()
 	};
@@ -979,8 +982,8 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto close_fd;
 	}
 
-	err = nvme_identify_ns_list(fd, cfg.namespace_id - 1, !!cfg.all,
-				    ns_list);
+	err = nvme_identify_ns_list_csi(fd, cfg.namespace_id - 1, cfg.csi,
+					!!cfg.all, ns_list);
 	if (!err) {
 		for (i = 0; i < 1024; i++)
 			if (ns_list[i])
@@ -1152,6 +1155,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *nmic = "multipath and sharing capabilities";
 	const char *anagrpid = "ANA Group Identifier";
 	const char *nvmsetid = "NVM Set Identifier";
+	const char *csi = "command set identifier";
 	const char *timeout = "timeout value, in milliseconds";
 	const char *bs = "target block size";
 
@@ -1169,6 +1173,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		__u16	nvmsetid;
 		__u64	bs;
 		__u32	timeout;
+		__u8  	csi;
 	};
 
 	struct config cfg = {
@@ -1189,6 +1194,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_UINT("nvmset-id",	 'i', &cfg.nvmsetid, nvmsetid),
 		OPT_SUFFIX("block-size", 'b', &cfg.bs,       bs),
 		OPT_UINT("timeout",      't', &cfg.timeout,  timeout),
+		OPT_BYTE("csi",          'y', &cfg.csi,      csi),
 		OPT_END()
 	};
 
@@ -1240,7 +1246,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	}
 
 	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic,
-			    cfg.anagrpid, cfg.nvmsetid, cfg.timeout, &nsid);
+			    cfg.anagrpid, cfg.nvmsetid, cfg.csi, cfg.timeout,
+			    &nsid);
 	if (!err)
 		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
 	else if (err > 0)

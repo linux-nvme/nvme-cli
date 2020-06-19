@@ -331,7 +331,7 @@ struct nvme_id_ctrl {
 	__u8			vwc;
 	__le16			awun;
 	__le16			awupf;
-	__u8			nvscc;
+	__u8			icsvscc;
 	__u8			nwpc;
 	__le16			acwu;
 	__u8			rsvd534[2];
@@ -434,6 +434,7 @@ enum {
 	NVME_ID_CNS_NVMSET_LIST		= 0x04,
 	NVME_ID_CNS_CSI_ID_NS		= 0x05,
 	NVME_ID_CNS_CSI_ID_CTRL		= 0x06,
+	NVME_ID_CNS_CSI_NS_ACTIVE_LIST = 0x07,
 	NVME_ID_CNS_NS_PRESENT_LIST	= 0x10,
 	NVME_ID_CNS_NS_PRESENT		= 0x11,
 	NVME_ID_CNS_CTRL_NS_LIST	= 0x12,
@@ -441,6 +442,8 @@ enum {
 	NVME_ID_CNS_SCNDRY_CTRL_LIST	= 0x15,
 	NVME_ID_CNS_NS_GRANULARITY	= 0x16,
 	NVME_ID_CNS_UUID_LIST		= 0x17,
+	NVME_ID_CNS_CSI_NS_PRESENT_LIST = 0x1a,
+	NVME_ID_CNS_CSI_NS_PRESENT  = 0x1b,
 	NVME_ID_CNS_CSI             = 0x1c,
 };
 
@@ -486,11 +489,13 @@ struct nvme_ns_id_desc {
 #define NVME_NIDT_EUI64_LEN	8
 #define NVME_NIDT_NGUID_LEN	16
 #define NVME_NIDT_UUID_LEN	16
+#define NVME_NIDT_CSI_LEN	1
 
 enum {
 	NVME_NIDT_EUI64		= 0x01,
 	NVME_NIDT_NGUID		= 0x02,
 	NVME_NIDT_UUID		= 0x03,
+	NVME_NIDT_CSI		= 0x04,
 };
 
 #define NVME_MAX_NVMSET		31
@@ -1032,6 +1037,7 @@ enum {
 	NVME_FEAT_PLM_WINDOW	= 0x14,
 	NVME_FEAT_HOST_BEHAVIOR	= 0x16,
 	NVME_FEAT_SANITIZE	= 0x17,
+	NVME_FEAT_IOCS_SET_PROFILE = 0x19,
 	NVME_FEAT_SW_PROGRESS	= 0x80,
 	NVME_FEAT_HOST_ID	= 0x81,
 	NVME_FEAT_RESV_MASK	= 0x82,

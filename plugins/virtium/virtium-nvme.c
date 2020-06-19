@@ -633,7 +633,7 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	const char *VWCtable[2] = {"0 = a volatile write cache is not present",
 							   "1 = a volatile write cache is present"};
 
-	const char *NVSCCtable[2] = {"0 = the format of all NVM Vendor Specific Commands are vendor specific",
+	const char *ICSVSCCtable[2] = {"0 = the format of all NVM Vendor Specific Commands are vendor specific",
 								 "1 = all NVM Vendor Specific Commands use the format defined in NVM Express specification"};
 
 	const char *SGLSSubtable[4] =  {"00b = SGLs are not supported",
@@ -883,11 +883,11 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	vt_convert_data_buffer_to_hex_string(&buf[528], 2, true, s);
 	printf("    \"Atomic Write Unit Power Fail\":\"%sh\",\n", s);
 
-	temp = ctrl->nvscc;
+	temp = ctrl->icsvscc;
 	printf("    \"NVM Vendor Specific Command Configuration\":{\n");
 	vt_convert_data_buffer_to_hex_string(&buf[530], 1, true, s);
 	printf("        \"Value\":\"%sh\",\n", s);
-	vt_build_identify_lv2(temp, 0, 1, NVSCCtable, true);
+	vt_build_identify_lv2(temp, 0, 1, ICSVSCCtable, true);
 
 	vt_convert_data_buffer_to_hex_string(&buf[532], 2, true, s);
 	printf("    \"Atomic Compare 0 Write Unit\":\"%sh\",\n", s);
