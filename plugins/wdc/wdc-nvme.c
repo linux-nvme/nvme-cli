@@ -106,8 +106,8 @@
 #define WDC_DRIVE_CAP_NS_RESIZE             0x0000000000040000
 #define WDC_DRIVE_CAP_INFO                  0x0000000000080000
 #define WDC_DRIVE_CAP_C0_LOG_PAGE           0x0000000000100000
-
-#define WDC_DRIVE_CAP_TEMP_STATS			0x0000000000200000
+#define WDC_DRIVE_CAP_TEMP_STATS	    0x0000000000200000
+#define WDC_DRIVE_CAP_VUC_CLEAR_PCIE        0x0000000000400000
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
@@ -302,6 +302,7 @@
 #define WDC_NVME_CLEAR_PCIE_CORR_OPCODE			WDC_NVME_CAP_DIAG_CMD_OPCODE
 #define WDC_NVME_CLEAR_PCIE_CORR_CMD			0x22
 #define WDC_NVME_CLEAR_PCIE_CORR_SUBCMD			0x04
+#define WDC_NVME_CLEAR_PCIE_CORR_OPCODE_VUC             0xD2
 
 /* Clear Assert Dump Status */
 #define WDC_NVME_CLEAR_ASSERT_DUMP_OPCODE		0xD8
@@ -1075,7 +1076,8 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 			break;
 		case WDC_NVME_SN730A_DEV_ID:
 			capabilities =  WDC_DRIVE_CAP_DUI | WDC_DRIVE_CAP_NAND_STATS | 
-                        		WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_TEMP_STATS;
+                        		WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_TEMP_STATS | 
+                                        WDC_DRIVE_CAP_VUC_CLEAR_PCIE;
 			break;
 		case WDC_NVME_SN340_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI;
@@ -4553,16 +4555,20 @@ static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct comma
 	}
 
 	capabilities = wdc_get_drive_capabilities(fd);
-	if ((capabilities & WDC_DRIVE_CAP_CLEAR_PCIE) == 0) {
+	if ((capabilities & (WDC_DRIVE_CAP_CLEAR_PCIE | WDC_DRIVE_CAP_VUC_CLEAR_PCIE)) == 0) {
 		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
 		ret = -1;
 		goto out;
 	}
-
+        
 	memset(&admin_cmd, 0, sizeof (admin_cmd));
-	admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE;
-	admin_cmd.cdw12 = ((WDC_NVME_CLEAR_PCIE_CORR_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
+	if (capabilities & WDC_DRIVE_CAP_CLEAR_PCIE) {
+                admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE;
+	        admin_cmd.cdw12 = ((WDC_NVME_CLEAR_PCIE_CORR_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
 			WDC_NVME_CLEAR_PCIE_CORR_CMD);
+        }
+        else if (capabilities & WDC_DRIVE_CAP_VUC_CLEAR_PCIE)
+                admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE_VUC;
 
 	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
