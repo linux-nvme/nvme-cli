@@ -139,6 +139,12 @@ enum {
 	NVMF_TCP_SECTYPE_TLS	= 1, /* Transport Layer Security */
 };
 
+/* I/O Command Sets
+ */
+enum {
+	NVME_IOCS_NVM   = 0x00,
+};
+
 #define NVME_AQ_DEPTH		32
 #define NVME_NR_AEN_COMMANDS	1
 #define NVME_AQ_BLK_MQ_DEPTH	(NVME_AQ_DEPTH - NVME_NR_AEN_COMMANDS)
@@ -411,6 +417,15 @@ struct nvme_id_ns {
 	__u8			vs[3712];
 };
 
+struct nvme_iocs_vector {
+	__le64	nvm  : 1;
+	__le64	rsvd : 63;
+};
+
+struct nvme_id_iocs {
+	struct nvme_iocs_vector iocsc[512];
+};
+
 enum {
 	NVME_ID_CNS_NS			= 0x00,
 	NVME_ID_CNS_CTRL		= 0x01,
@@ -426,6 +441,7 @@ enum {
 	NVME_ID_CNS_SCNDRY_CTRL_LIST	= 0x15,
 	NVME_ID_CNS_NS_GRANULARITY	= 0x16,
 	NVME_ID_CNS_UUID_LIST		= 0x17,
+	NVME_ID_CNS_CSI             = 0x1c,
 };
 
 enum {
@@ -1369,6 +1385,14 @@ enum {
 	NVME_SC_PMR_SAN_PROHIBITED	= 0x123,
 	NVME_SC_ANA_INVALID_GROUP_ID= 0x124,
 	NVME_SC_ANA_ATTACH_FAIL		= 0x125,
+
+	/*
+	 * Command Set Specific - Namespace Types commands:
+	 */
+	NVME_SC_IOCS_NOT_SUPPORTED		= 0x129,
+	NVME_SC_IOCS_NOT_ENABLED		= 0x12A,
+	NVME_SC_IOCS_COMBINATION_REJECTED	= 0x12B,
+	NVME_SC_INVALID_IOCS			= 0x12C,
 
 	/*
 	 * I/O Command Set Specific - NVM commands:

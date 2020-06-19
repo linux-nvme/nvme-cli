@@ -1749,6 +1749,49 @@ close_fd:
 	return err;
 }
 
+static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Send an Identify Command Set Data command to the "\
+		"given device, returns properties of the specified controller "\
+		"in either human-readable or binary format.";
+	const char *controller_id = "identifier of desired controller";
+	struct nvme_id_iocs iocs;
+	int err, fd;
+
+	struct config {
+		__u16 cntid;
+	};
+
+	struct config cfg = {
+		.cntid = 0xffff,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_SHRT("controller-id", 'c', &cfg.cntid, controller_id),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	err = nvme_identify_iocs(fd, cfg.cntid, &iocs);
+	if (!err) {
+		printf("NVMe Identify I/O Command Set:\n");
+		nvme_show_id_iocs(&iocs);
+	}
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("NVMe Identify I/O Command Set");
+
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int err = 0, nsid, fd;

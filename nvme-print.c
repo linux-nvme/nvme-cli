@@ -3272,6 +3272,18 @@ void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 	}
 }
 
+void nvme_show_id_iocs(struct nvme_id_iocs *iocs)
+{
+	__u16 i;
+
+	for (i = 0; i < 512; i++) {
+		if (iocs->iocsc[i].nvm) {
+			printf("I/O Command Set Combination[%"PRIu16"] "
+				"NVM Command Set Supported\n", i);
+		}
+	}
+}
+
 static const char *nvme_trtype_to_string(__u8 trtype)
 {
 	switch(trtype) {
@@ -3971,6 +3983,14 @@ const char *nvme_status_to_string(__u32 status)
 		return "SANITIZE_FAILED: The most recent sanitize operation failed and no recovery actions has been successfully completed";
 	case NVME_SC_SANITIZE_IN_PROGRESS:
 		return "SANITIZE_IN_PROGRESS: The requested function is prohibited while a sanitize operation is in progress";
+	case NVME_SC_IOCS_NOT_SUPPORTED:
+		return "IOCS_NOT_SUPPORTED: The I/O command set is not supported";
+	case NVME_SC_IOCS_NOT_ENABLED:
+		return "IOCS_NOT_ENABLED: The I/O command set is not enabled";
+	case NVME_SC_IOCS_COMBINATION_REJECTED:
+		return "IOCS_COMBINATION_REJECTED: The I/O command set combination is rejected";
+	case NVME_SC_INVALID_IOCS:
+		return "INVALID_IOCS: the I/O command set is invalid";
 	case NVME_SC_LBA_RANGE:
 		return "LBA_RANGE: The command references a LBA that exceeds the size of the namespace";
 	case NVME_SC_NS_WRITE_PROTECTED:
@@ -4321,6 +4341,11 @@ static void nvme_show_plm_config(struct nvme_plm_config *plmcfg)
 	printf("\tDTWIN Reads Threshold :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_reads_thresh));
 	printf("\tDTWIN Writes Threshold:%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_writes_thresh));
 	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_time_thresh));
+}
+
+static void nvme_show_iocs_vector(struct nvme_iocs_vector *iocs_vector)
+{
+	printf("\tNVM Command Set is selected: %s\n", iocs_vector->nvm ? "True":"False");
 }
 
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf)
