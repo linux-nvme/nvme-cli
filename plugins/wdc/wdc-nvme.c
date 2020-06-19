@@ -6558,12 +6558,38 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 	ret = nvme_smart_log(fd, NVME_NSID_ALL, &smart_log);
 
 	if (ret == 0) {
+                printf("Temperature Stats for NVME device:%s namespace-id:%x\n",
+                    devicename, WDC_DE_GLOBAL_NSID);
+
 		int temperature = ((smart_log.temperature[1] << 8) |
 				    smart_log.temperature[0]) - 273;
 
-		printf("temperature				: %d C\n",
+		printf("temperature				: %d °C\n",
 			temperature);
-
+                printf("warning_temp_time                       : %"PRIu32"\n",
+                    smart_log.warning_temp_time);
+	        printf("critical_comp_time                      : %"PRIu32"\n",
+                    smart_log.critical_comp_time);
+                printf("DITT support                            : 0\n");
+                /* TODO */
+                printf("HCTM support                            : (NOT) %"PRIu32"\n",
+                    smart_log.warning_temp_time);
+	        printf("HCTM Light (TMT1)                       : (NOT) %"PRIu32"\n",
+                    smart_log.warning_temp_time);
+            
+                printf("thm_temp1_trans_count                   : %"PRIu32"\n",
+                    smart_log.thm_temp1_trans_count);
+	        printf("thm_temp1_total_time                    : %"PRIu32"\n",
+                    smart_log.thm_temp1_total_time);
+                /* TODO */
+	        printf("HCTM Heavy (TMT2)                       : (NOT) %"PRIu32"\n",
+                    smart_log.warning_temp_time);
+                
+                printf("thm_temp2_trans_count                   : %"PRIu32"\n",
+                    smart_log.thm_temp2_trans_count);
+	        printf("thm_temp2_total_time                    : %"PRIu32"\n",
+                    smart_log.thm_temp2_total_time);
+                printf("Thermal Shutdown Threshold              : 95 °C\n");	
 	}
 
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
