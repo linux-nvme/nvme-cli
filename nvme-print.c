@@ -2959,7 +2959,7 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 			ns->lbafe[i].zdes, i == lbaf ? " (in use)" : "");
 }
 
-void nvme_show_zns_changed( struct nvme_zns_changed_zone_log *log,
+void nvme_show_zns_changed(struct nvme_zns_changed_zone_log *log,
 	unsigned long flags)
 {
 	uint16_t nrzid;
@@ -2970,9 +2970,14 @@ void nvme_show_zns_changed( struct nvme_zns_changed_zone_log *log,
 
 	nrzid = le16_to_cpu(log->nrzid);
 	printf("NVMe Changed Zone List:\n");
-	printf("nrzid:  %u\n", nrzid);
 
-	for (i = 0; i < min(nrzid, (uint16_t)NVME_ZNS_CHANGED_ZONES_MAX); i++)
+	if (nrzid == 0xFFFF) {
+		printf("Too many zones have changed to fit into the log. Use report zones for changes.\n");
+		return;
+	}
+
+	printf("nrzid:  %u\n", nrzid);
+	for (i = 0; i < nrzid; i++)
 		printf("zid %03d: %"PRIu64"\n", i, (uint64_t)le64_to_cpu(log->zid[i]));
 }
 
