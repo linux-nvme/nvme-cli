@@ -3032,7 +3032,7 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 	for (i = 0; i < descs; i++) {
 		desc = (struct nvme_zns_desc *)
 			(report + sizeof(*r) + i * (sizeof(*desc) + ext_size));
-		printf("SLBA: 0x%-8"PRIx64" WP: 0x%-8"PRIx64"lx Cap: 0x%-8"PRIx64"lx State: %-12s Type: %-14s Attrs: 0x%-x\n",
+		printf("SLBA: 0x%-8"PRIx64" WP: 0x%-8"PRIx64" Cap: 0x%-8"PRIx64" State: %-12s Type: %-14s Attrs: 0x%-x\n",
 		(uint64_t)le64_to_cpu(desc->zslba), (uint64_t)le64_to_cpu(desc->wp),
 		(uint64_t)le64_to_cpu(desc->zcap), zone_state_to_string(desc->zs >> 4),
 		zone_type_to_string(desc->zt), desc->za);
