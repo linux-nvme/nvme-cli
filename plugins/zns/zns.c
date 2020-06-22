@@ -18,9 +18,9 @@ static const char *namespace_id = "Namespace identify to use";
 
 static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send ZNS specific Identify Controller command to "\
+	const char *desc = "Send an ZNS specific Identify Controller command to "\
 		"the given device and report information about the specified "\
-		"controller in varios formats.";
+		"controller in various formats.";
 
 	enum nvme_print_flags flags;
 	struct nvme_zns_id_ctrl ctrl;
@@ -59,10 +59,10 @@ close_fd:
 
 static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Send ZNS specific Identify Namespace command to "\
+	const char *desc = "Send an ZNS specific Identify Namespace command to "\
 		"the given device and report information about the specified "\
 		"namespace in varios formats.";
-	const char *verbose = "verbosely decode fields";
+	const char *human_readable = "show identify in readable format";
 
 	enum nvme_print_flags flags;
 	struct nvme_zns_id_ns ns;
@@ -72,7 +72,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	struct config {
 		char *output_format;
 		__u32 namespace_id;
-		int verbose;
+		int human_readable;
 	};
 
 	struct config cfg = {
@@ -82,7 +82,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
 		OPT_END()
 	};
 
@@ -93,7 +93,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	flags = validate_output_format(cfg.output_format);
 	if (flags < 0)
 		goto close_fd;
-	if (cfg.verbose)
+	if (cfg.human_readable)
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
@@ -490,7 +490,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	const char *state = "state of zones to list";
 	const char *ext = "set to use the extended report zones";
 	const char *part = "set to use the partial report";
-	const char *verbose = "verbosely decode fields";
+	const char *human_readable = "show report zones in readable format";
 
 	enum nvme_print_flags flags;
 	int fd, zdes = 0, err = -1;
@@ -504,7 +504,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 		__u32 namespace_id;
 		int   num_descs;
 		int   state;
-		bool  verbose;
+		int   human_readable;
 		bool  extended;
 		bool  partial;
 	};
@@ -515,14 +515,14 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
-		OPT_SUFFIX("start-lba",  's', &cfg.zslba,         zslba),
-		OPT_UINT("descs",        'd', &cfg.num_descs,     num_descs),
-		OPT_UINT("state",        'S', &cfg.state,         state),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
-		OPT_FLAG("extended",     'e', &cfg.extended,      ext),
-		OPT_FLAG("partial",      'p', &cfg.partial,       part),
+		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id),
+		OPT_SUFFIX("start-lba",   's', &cfg.zslba,          zslba),
+		OPT_UINT("descs",         'd', &cfg.num_descs,      num_descs),
+		OPT_UINT("state",         'S', &cfg.state,          state),
+		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
+		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
+		OPT_FLAG("extended",      'e', &cfg.extended,       ext),
+		OPT_FLAG("partial",       'p', &cfg.partial,        part),
 		OPT_END()
 	};
 
@@ -533,7 +533,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	flags = validate_output_format(cfg.output_format);
 	if (flags < 0)
 		goto close_fd;
-	if (cfg.verbose)
+	if (cfg.human_readable)
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
@@ -773,7 +773,7 @@ close_fd:
 	return err;
 }
 
-static int change_zone_list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int changed_zone_list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve Changed Zone log for the given device";
 	const char *rae = "retain an asynchronous event";

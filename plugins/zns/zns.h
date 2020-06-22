@@ -20,7 +20,7 @@ PLUGIN(NAME("zns", "Zoned Namespace Command Set"),
 		ENTRY("offline-zone", "Offlines one or more zones", offline_zone)
 		ENTRY("set-zone-desc", "Attaches zone descriptor extension data", set_zone_desc)
 		ENTRY("zone-append", "Writes data and metadata (if applicable), appended to the end of the requested zone", zone_append)
-		ENTRY("changed-zone-list", "Retrieves the changed zone list log", change_zone_list)
+		ENTRY("changed-zone-list", "Retrieves the changed zone list log", changed_zone_list)
 	)
 );
 
