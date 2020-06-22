@@ -143,7 +143,7 @@ close_fd:
 static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	const char *desc, enum nvme_zns_send_action zsa)
 {
-	const char *zslba = "starting lba of the zone for this command";
+	const char *zslba = "starting LBA of the zone for this command";
 	const char *select_all = "send command to all zones";
 
 	int err, fd;
@@ -188,7 +188,7 @@ free:
 static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Zone Management Send";
-	const char *zslba = "starting lba of the zone for this command";
+	const char *zslba = "starting LBA of the zone for this command";
 	const char *select_all = "send command to all zones";
 	const char *zsa = "zone send action";
 	const char *data_len = "buffer length if data required";
@@ -302,7 +302,7 @@ static int offline_zone(int argc, char **argv, struct command *cmd, struct plugi
 static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Set Zone Descriptor Extension\n";
-	const char *zslba = "starting lba of the zone for this command";
+	const char *zslba = "starting LBA of the zone for this command";
 	const char *data = "optional file for zone extention data (default stdin)";
 
 	int fd, ffd = STDIN_FILENO, err;
@@ -485,7 +485,7 @@ static int get_zdes(int fd, __u32 nsid)
 static int report_zones(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve the Report Zones data structure";
-	const char *zslba = "starting lba of the zone";
+	const char *zslba = "starting LBA of the zone";
 	const char *num_descs = "number of descriptors to retrieve (default: all of them)";
 	const char *state = "state of zones to list";
 	const char *ext = "set to use the extended report zones";
@@ -593,7 +593,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 	const char *desc = "The zone append command is used to write to a zone "\
 		  "using the slba of the zone, and the write will be appended from the "\
 		  "write pointer of the zone";
-	const char *zslba = "starting lba of the zone";
+	const char *zslba = "starting LBA of the zone";
 	const char *data = "file containing data to write";
 	const char *metadata = "file with metadata to be written";
 	const char *limited_retry = "limit media access attempts";
