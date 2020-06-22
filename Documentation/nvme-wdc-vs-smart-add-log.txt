@@ -36,6 +36,10 @@ OPTIONS
 	'json'. Only one output format can be used at a time.
 	Default is normal.
 
+-l <NUM>::
+--log-page-version=<NUM>::
+    Log Page Version: 0 = vendor, 1 = WDC
+
 Valid Interval values and description :-
 
 [cols="2*", frame="topbot", align="center", options="header"]
