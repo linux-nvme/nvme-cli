@@ -1179,6 +1179,17 @@ static int do_discover(char *argstr, bool connect)
 	char *dev_name;
 	int instance, numrec = 0, ret, err;
 	int status = 0;
+	static int discover_depth = 0;
+
+/*
+ * Referrals shall not be deeper than eight levels.
+ */
+	if (++discover_depth > 8) {
+		fprintf(stderr,
+			"Discover went too deep.\n");
+		ret = -ELOOP;
+		goto out;
+	}
 
 	if (cfg.device) {
 		struct connect_args cargs;
@@ -1218,16 +1229,23 @@ static int do_discover(char *argstr, bool connect)
 		nvmf_get_host_identifiers(instance);
 	}
 	if (instance < 0)
-		return instance;
+		ret = instance;
+		goto out;
+	}
 
-	if (asprintf(&dev_name, "/dev/nvme%d", instance) < 0)
-		return -errno;
+	if (asprintf(&dev_name, "/dev/nvme%d", instance) < 0) {
+		ret = -errno;
+		goto out;
+	}
+
 	ret = nvmf_get_log_page_discovery(dev_name, &log, &numrec, &status);
 	free(dev_name);
 	if (!cfg.device && !cfg.persistent) {
 		err = remove_ctrl(instance);
-		if (err)
-			return err;
+		if (err) {
+			ret = err;
+			goto out;
+		}
 	}
 
 	switch (ret) {
@@ -1266,6 +1284,8 @@ static int do_discover(char *argstr, bool connect)
 		break;
 	}
 
+out:
+	--discover_depth;
 	return ret;
 }
 
