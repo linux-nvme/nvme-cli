@@ -1156,7 +1156,7 @@ bool wdc_get_dev_mng_log_entry(__u32 log_length,
     /* Ensure log data is large enough for common header */
     if (log_length < sizeof(struct wdc_c2_log_page_header)) {
     	fprintf(stderr, "ERROR : WDC - wdc_get_dev_mng_log_entry: \
-    			Buffer is not large enough for the common header. BufSize: 0x%x  HdrSize: 0x%lx\n",
+    			Buffer is not large enough for the common header. BufSize: 0x%x  HdrSize: %"PRIxPTR"\n",
                 log_length, sizeof(struct wdc_c2_log_page_header));
         return false;
     }
