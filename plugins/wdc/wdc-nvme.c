@@ -775,7 +775,36 @@ struct __attribute__((__packed__)) wdc_nand_stats {
 	__le64		nand_rec_trigger_event;
 	__le64		e2e_error_counter;
 	__le64		successful_ns_resize_event;
-	__u8		rsvd[444];
+	__u8		rsvd[442];
+	__u16       log_page_version;
+};
+
+struct __attribute__((__packed__)) wdc_nand_stats_V3 {
+	__u8		nand_write_tlc[16];
+	__u8		nand_write_slc[16];
+	__le64		bad_nand_block_count;
+	__le64		xor_recovery_count;
+	__le64		uecc_read_error_count;
+	__u8		ssd_correction_counts[16];
+	__u8        percent_life_used;
+	__le64      user_data_erase_counts[4];
+	__le64      program_fail_count;
+	__le64      erase_fail_count;
+	__le64      correctable_error_count;
+	__u8        percent_free_blocks_user;
+	__le64      security_version_number;
+	__u8        percent_free_blocks_system;
+	__u8        trim_completions[25];
+	__u8        back_pressure_guage;
+	__le64		soft_ecc_error_count;
+	__le64		refresh_count;
+	__u8		bad_sys_nand_block_count[8];
+	__u8		endurance_estimate[16];
+	__u8        thermal_throttling_st_ct[2];
+	__le64      unaligned_IO;
+	__u8		physical_media_units[16];
+	__u8		reserved[279];
+	__u16       log_page_version;
 };
 
 struct wdc_fw_act_history_log_hdr {
@@ -6163,52 +6192,226 @@ static int wdc_dump_telemetry_hdr(int fd, int log_id, struct nvme_telemetry_log_
 	return ret;
 }
 
-static void wdc_print_nand_stats_normal(struct wdc_nand_stats *data)
+static void wdc_print_nand_stats_normal(__u16 version, void *data)
 {
-	printf("  NAND Statistics :- \n");
-	printf("  NAND Writes TLC (Bytes)		         %.0Lf\n",
-			int128_to_double(data->nand_write_tlc));
-	printf("  NAND Writes SLC (Bytes)		         %.0Lf\n",
-			int128_to_double(data->nand_write_slc));
-	printf("  NAND Program Failures			  	 %"PRIu32"\n",
-			(uint32_t)le32_to_cpu(data->nand_prog_failure));
-	printf("  NAND Erase Failures				 %"PRIu32"\n",
-			(uint32_t)le32_to_cpu(data->nand_erase_failure));
-	printf("  Bad Block Count			         %"PRIu32"\n",
-			(uint32_t)le32_to_cpu(data->bad_block_count));
-	printf("  NAND XOR/RAID Recovery Trigger Events		 %"PRIu64"\n",
-			le64_to_cpu(data->nand_rec_trigger_event));
-	printf("  E2E Error Counter                    		 %"PRIu64"\n",
-			le64_to_cpu(data->e2e_error_counter));
-	printf("  Number Successful NS Resizing Events		 %"PRIu64"\n",
-			le64_to_cpu(data->successful_ns_resize_event));
+	struct wdc_nand_stats *nand_stats = (struct wdc_nand_stats *)(data);
+	struct wdc_nand_stats_V3 *nand_stats_v3 = (struct wdc_nand_stats_V3 *)(data);
+	__u32 temp_u32;
+
+	switch (version)
+	{
+	case 0:
+		printf("  NAND Statistics :- \n");
+		printf("  NAND Writes TLC (Bytes)		         %.0Lf\n",
+				int128_to_double(nand_stats->nand_write_tlc));
+		printf("  NAND Writes SLC (Bytes)				%.0Lf\n",
+				int128_to_double(nand_stats->nand_write_slc));
+		printf("  NAND Program Failures			  	 %"PRIu32"\n",
+				(uint32_t)le32_to_cpu(nand_stats->nand_prog_failure));
+		printf("  NAND Erase Failures				 %"PRIu32"\n",
+				(uint32_t)le32_to_cpu(nand_stats->nand_erase_failure));
+		printf("  Bad Block Count			         %"PRIu32"\n",
+				(uint32_t)le32_to_cpu(nand_stats->bad_block_count));
+		printf("  NAND XOR/RAID Recovery Trigger Events		 %"PRIu64"\n",
+				le64_to_cpu(nand_stats->nand_rec_trigger_event));
+		printf("  E2E Error Counter                    		 %"PRIu64"\n",
+				le64_to_cpu(nand_stats->e2e_error_counter));
+		printf("  Number Successful NS Resizing Events		 %"PRIu64"\n",
+				le64_to_cpu(nand_stats->successful_ns_resize_event));
+		printf("  log page version				 %"PRIu16"\n",
+				le16_to_cpu(nand_stats->log_page_version));
+		break;
+	case 3:
+		printf("  NAND Statistics V3:- \n");
+		printf("  TLC Units Written				 %.0Lf\n",
+				int128_to_double(nand_stats_v3->nand_write_tlc));
+		printf("  SLC Units Written 				 %.0Lf\n",
+				int128_to_double(nand_stats_v3->nand_write_slc));
+		printf("  Bad NAND Blocks Count				 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->bad_nand_block_count));
+		printf("  NAND XOR Recovery count			 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->xor_recovery_count));
+		printf("  UECC Read Error count				 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->uecc_read_error_count));
+		printf("  SSD End to End corrected errors		 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->ssd_correction_counts[0]));
+		printf("  SSD End to End detected errors		 %"PRIu32"\n",
+				le32_to_cpu(nand_stats_v3->ssd_correction_counts[8]));
+		printf("  SSD End to End uncorrected E2E errors		 %"PRIu32"\n",
+				le32_to_cpu(nand_stats_v3->ssd_correction_counts[12]));
+		printf("  System data %% life-used			 %u\n",
+				nand_stats_v3->percent_life_used);
+		printf("  User Data Erase Counts - TLC Min		 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->user_data_erase_counts[0]));
+		printf("  User Data Erase Counts - TLC Max		 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->user_data_erase_counts[1]));
+		printf("  User Data Erase Counts - SLC Min		 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->user_data_erase_counts[2]));
+		printf("  User Data Erase Counts - SLC Max		 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->user_data_erase_counts[3]));
+		printf("  Program Fail Count				 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->program_fail_count));
+		printf("  Erase Fail Count				 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->erase_fail_count));
+		printf("  PCIe Correctable Error Count			 %"PRIu16"\n",
+				le16_to_cpu(nand_stats_v3->correctable_error_count));
+		printf("  %% Free Blocks (User)				 %u\n",
+				nand_stats_v3->percent_free_blocks_user);
+		printf("  Security Version Number			 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->security_version_number));
+		printf("  %% Free Blocks (System)			 %u\n",
+				nand_stats_v3->percent_free_blocks_system);
+		printf("  Data Set Management Commands			 %.0Lf\n",
+				int128_to_double(nand_stats_v3->trim_completions));
+		printf("  Estimate of Incomplete Trim Data		 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->trim_completions[16]));
+		printf("  %% of completed trim				 %u\n",
+				nand_stats_v3->trim_completions[24]);
+		printf("  Background Back-Pressure-Guage		 %u\n",
+				nand_stats_v3->back_pressure_guage);
+		printf("  Soft ECC Error Count				 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->soft_ecc_error_count));
+		printf("  Refresh Count					 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->refresh_count));
+		printf("  Bad System Nand Block Count - Normalized	 %"PRIu16"\n",
+				le16_to_cpu(nand_stats_v3->bad_sys_nand_block_count[0]));
+		temp_u32 = (__u32)(nand_stats_v3->bad_sys_nand_block_count[2] & 0x0000FFFFFFFFFFFF);
+		printf("  Bad System Nand Block Count - Raw		 %"PRIu32"\n",
+				le32_to_cpu(temp_u32));
+		printf("  Endurance Estimate				 %.0Lf\n",
+				int128_to_double(nand_stats_v3->endurance_estimate));
+		printf("  Thermal Throttling Count			 %u\n",
+				nand_stats_v3->thermal_throttling_st_ct[0]);
+		printf("  Thermal Throttling Status			 %u\n",
+				nand_stats_v3->thermal_throttling_st_ct[1]);
+		printf("  Unaligned I/O					 %"PRIu64"\n",
+				le64_to_cpu(nand_stats_v3->unaligned_IO));
+		printf("  Physical Media Units Read			 %.0Lf\n",
+				int128_to_double(nand_stats_v3->physical_media_units));
+		printf("  log page version				 %"PRIu16"\n",
+				le16_to_cpu(nand_stats_v3->log_page_version));
+		break;
+
+	default:
+		fprintf(stderr, "WDC: Namd Stats ERROR : Invalid version\n");
+		break;
+
+	}
 }
 
-static void wdc_print_nand_stats_json(struct wdc_nand_stats *data)
+static void wdc_print_nand_stats_json(__u16 version, void *data)
 {
+	struct wdc_nand_stats *nand_stats = (struct wdc_nand_stats *)(data);
+	struct wdc_nand_stats_V3 *nand_stats_v3 = (struct wdc_nand_stats_V3 *)(data);
 	struct json_object *root;
-
 	root = json_create_object();
-	json_object_add_value_float(root, "NAND Writes TLC (Bytes)",
-			int128_to_double(data->nand_write_tlc));
-	json_object_add_value_float(root, "NAND Writes SLC (Bytes)",
-			int128_to_double(data->nand_write_slc));
-	json_object_add_value_uint(root, "NAND Program Failures",
-			le32_to_cpu(data->nand_prog_failure));
-	json_object_add_value_uint(root, "NAND Erase Failures",
-			le32_to_cpu(data->nand_erase_failure));
-	json_object_add_value_uint(root, "Bad Block Count",
-			le32_to_cpu(data->bad_block_count));
-	json_object_add_value_uint(root, "NAND XOR/RAID Recovery Trigger Events",
-			le64_to_cpu(data->nand_rec_trigger_event));
-	json_object_add_value_uint(root, "E2E Error Counter",
-			le64_to_cpu(data->e2e_error_counter));
-	json_object_add_value_uint(root, "Number Successful NS Resizing Events",
-			le64_to_cpu(data->successful_ns_resize_event));
+	__u32 temp_u32;
 
-	json_print_object(root, NULL);
-	printf("\n");
+	switch (version)
+	{
+
+	case 0:
+
+		json_object_add_value_float(root, "NAND Writes TLC (Bytes)",
+				int128_to_double(nand_stats->nand_write_tlc));
+		json_object_add_value_float(root, "NAND Writes SLC (Bytes)",
+				int128_to_double(nand_stats->nand_write_slc));
+		json_object_add_value_uint(root, "NAND Program Failures",
+				le32_to_cpu(nand_stats->nand_prog_failure));
+		json_object_add_value_uint(root, "NAND Erase Failures",
+				le32_to_cpu(nand_stats->nand_erase_failure));
+		json_object_add_value_uint(root, "Bad Block Count",
+				le32_to_cpu(nand_stats->bad_block_count));
+		json_object_add_value_uint(root, "NAND XOR/RAID Recovery Trigger Events",
+				le64_to_cpu(nand_stats->nand_rec_trigger_event));
+		json_object_add_value_uint(root, "E2E Error Counter",
+				le64_to_cpu(nand_stats->e2e_error_counter));
+		json_object_add_value_uint(root, "Number Successful NS Resizing Events",
+				le64_to_cpu(nand_stats->successful_ns_resize_event));
+
+		json_print_object(root, NULL);
+		printf("\n");
+		break;
+
+	case 3:
+
+		json_object_add_value_float(root, "NAND Writes TLC (Bytes)",
+				int128_to_double(nand_stats_v3->nand_write_tlc));
+		json_object_add_value_float(root, "NAND Writes SLC (Bytes)",
+				int128_to_double(nand_stats_v3->nand_write_slc));
+		json_object_add_value_uint(root, "Bad NAND Blocks Count",
+				le64_to_cpu(nand_stats_v3->bad_nand_block_count));
+		json_object_add_value_uint(root, "NAND XOR Recovery count",
+				le64_to_cpu(nand_stats_v3->xor_recovery_count));
+		json_object_add_value_uint(root, "UECC Read Error count",
+				le64_to_cpu(nand_stats_v3->uecc_read_error_count));
+		json_object_add_value_uint(root, "SSD End to End corrected errors",
+				le64_to_cpu(nand_stats_v3->ssd_correction_counts[0]));
+		json_object_add_value_uint(root, "SSD End to End detected errors",
+				le32_to_cpu(nand_stats_v3->ssd_correction_counts[8]));
+		json_object_add_value_uint(root, "SSD End to End uncorrected E2E errors",
+				le32_to_cpu(nand_stats_v3->ssd_correction_counts[12]));
+		json_object_add_value_uint(root, "System data % life-used",
+				nand_stats_v3->percent_life_used);
+		json_object_add_value_uint(root, "User Data Erase Counts - SLC Min",
+				le64_to_cpu(nand_stats_v3->user_data_erase_counts[0]));
+		json_object_add_value_uint(root, "User Data Erase Counts - SLC Max",
+				le64_to_cpu(nand_stats_v3->user_data_erase_counts[1]));
+		json_object_add_value_uint(root, "User Data Erase Counts - TLC Min",
+				le64_to_cpu(nand_stats_v3->user_data_erase_counts[2]));
+		json_object_add_value_uint(root, "User Data Erase Counts - TLC Max",
+				le64_to_cpu(nand_stats_v3->user_data_erase_counts[3]));
+		json_object_add_value_uint(root, "Program Fail Count",
+				le64_to_cpu(nand_stats_v3->program_fail_count));
+		json_object_add_value_uint(root, "Erase Fail Count",
+				le64_to_cpu(nand_stats_v3->erase_fail_count));
+		json_object_add_value_uint(root, "PCIe Correctable Error Count",
+				le16_to_cpu(nand_stats_v3->correctable_error_count));
+		json_object_add_value_uint(root, "% Free Blocks (User)",
+				nand_stats_v3->percent_free_blocks_user);
+		json_object_add_value_uint(root, "Security Version Number",
+				le64_to_cpu(nand_stats_v3->security_version_number));
+		json_object_add_value_uint(root, "% Free Blocks (System)",
+				nand_stats_v3->percent_free_blocks_system);
+		json_object_add_value_float(root, "Data Set Management Commands",
+				int128_to_double(nand_stats_v3->trim_completions));
+		json_object_add_value_uint(root, "Estimate of Incomplete Trim Data",
+				le64_to_cpu(nand_stats_v3->trim_completions[16]));
+		json_object_add_value_uint(root, "%% of completed trim",
+				nand_stats_v3->trim_completions[24]);
+		json_object_add_value_uint(root, "Background Back-Pressure-Guage",
+				nand_stats_v3->back_pressure_guage);
+		json_object_add_value_uint(root, "Soft ECC Error Count",
+				le64_to_cpu(nand_stats_v3->soft_ecc_error_count));
+		json_object_add_value_uint(root, "Refresh Count",
+				le64_to_cpu(nand_stats_v3->refresh_count));
+		json_object_add_value_uint(root, "Bad System Nand Block Count - Normalized",
+				le16_to_cpu(nand_stats_v3->bad_sys_nand_block_count[0]));
+		temp_u32 = (__u32)(nand_stats_v3->bad_sys_nand_block_count[2] & 0x0000FFFFFFFFFFFF);
+		json_object_add_value_uint(root, "Bad System Nand Block Count - Raw",
+				le32_to_cpu(temp_u32));
+		json_object_add_value_float(root, "Endurance Estimate",
+				int128_to_double(nand_stats_v3->endurance_estimate));
+		json_object_add_value_uint(root, "Thermal Throttling Status",
+				nand_stats_v3->thermal_throttling_st_ct[0]);
+		json_object_add_value_uint(root, "Thermal Throttling Count",
+				nand_stats_v3->thermal_throttling_st_ct[1]);
+		json_object_add_value_uint(root, "Unaligned I/O",
+				le64_to_cpu(nand_stats_v3->unaligned_IO));
+		json_object_add_value_float(root, "Physical Media Units Read",
+				int128_to_double(nand_stats_v3->physical_media_units));
+		json_object_add_value_uint(root, "log page version",
+				le16_to_cpu(nand_stats_v3->log_page_version));
+
+		break;
+
+	default:
+		break;
+
+	}
+
 	json_free_object(root);
+
 }
 
 static int wdc_do_vs_nand_stats(int fd, char *format)
@@ -6216,7 +6419,7 @@ static int wdc_do_vs_nand_stats(int fd, char *format)
 	int ret;
 	int fmt = -1;
 	uint8_t *output = NULL;
-	struct wdc_nand_stats *nand_stats;
+	__u16 version = 0;
 
 	if ((output = (uint8_t*)calloc(WDC_NVME_NAND_STATS_SIZE, sizeof(uint8_t))) == NULL) {
 		fprintf(stderr, "ERROR : WDC : calloc : %s\n", strerror(errno));
@@ -6237,14 +6440,15 @@ static int wdc_do_vs_nand_stats(int fd, char *format)
 			goto out;
 		}
 
+		version = output[WDC_NVME_NAND_STATS_SIZE - 2];
+
 		/* parse the data */
-		nand_stats = (struct wdc_nand_stats *)(output);
 		switch (fmt) {
 		case NORMAL:
-			wdc_print_nand_stats_normal(nand_stats);
+			wdc_print_nand_stats_normal(version, output);
 			break;
 		case JSON:
-			wdc_print_nand_stats_json(nand_stats);
+			wdc_print_nand_stats_json(version, output);
 			break;
 		}
 	}
@@ -6258,6 +6462,7 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve NAND statistics.";
+
 	int fd;
 	int ret = 0;
 	__u64 capabilities = 0;
