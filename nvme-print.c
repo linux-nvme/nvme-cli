@@ -2905,7 +2905,7 @@ void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode)
 		return json_nvme_zns_id_ctrl(ctrl, mode);
 
 	printf("NVMe ZNS Identify Controller:\n");
-	printf("zasl: %u\n", ctrl->zasl);
+	printf("zasl    : %u\n", ctrl->zasl);
 }
 
 void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
