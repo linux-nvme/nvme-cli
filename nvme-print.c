@@ -2905,7 +2905,7 @@ void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode)
 		return json_nvme_zns_id_ctrl(ctrl, mode);
 
 	printf("NVMe ZNS Identify Controller:\n");
-	printf("zasl: %u\n", ctrl->zasl);
+	printf("zasl    : %u\n", ctrl->zasl);
 }
 
 void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
@@ -2981,30 +2981,31 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 		return json_nvme_zns_id_ns(ns, id_ns, flags);
 
 	printf("NVMe ZNS Identify Namespace:\n");
-	printf("zoc:    %u\n", le16_to_cpu(ns->zoc));
+	printf("zoc     : %u\n", le16_to_cpu(ns->zoc));
 	if (human)
 		show_nvme_id_ns_zoned_zoc(ns->zoc);
-	printf("ozcs:   %u\n", le16_to_cpu(ns->ozcs));
+	printf("ozcs    : %u\n", le16_to_cpu(ns->ozcs));
 	if (human)
 		show_nvme_id_ns_zoned_ozcs(ns->ozcs);
-	printf("mar:    %u\n", le16_to_cpu(ns->mar));
-	printf("mor:    %u\n", le16_to_cpu(ns->mor));
-	printf("rrl:    %u\n", ns->rrl);
-	printf("frl:    %u\n", ns->frl);
+	printf("mar     : %u\n", le16_to_cpu(ns->mar));
+	printf("mor     : %u\n", le16_to_cpu(ns->mor));
+	printf("rrl     : %u\n", ns->rrl);
+	printf("frl     : %u\n", ns->frl);
 
 	for (i = 0; i <= id_ns->nlbaf; i++){
 		if (human)
-			printf("LBA Format Extension %2d : Zone Size: %"PRIx64" blocks"
-					"Zone Descriptor Extension Size: %-5d bytes %s\n",
+			printf("LBA Format Extension %2d : Zone Size: %"PRIx64" blocks - "
+					"Zone Descriptor Extension Size: %-1d bytes%s\n",
 				i, le64_to_cpu(ns->lbafe[i].zsze), ns->lbafe[i].zdes << 6,
-				i == lbaf ? "(in use)" : "");
+				i == lbaf ? " (in use)" : "");
 		else
 			printf("lbafe %2d: zsze:%"PRIx64" zdes:%u%s\n", i,
 				(uint64_t)le64_to_cpu(ns->lbafe[i].zsze),
 				ns->lbafe[i].zdes, i == lbaf ? " (in use)" : "");
 	}
+
 	if (vs) {
-		printf("vs[]:\n");
+		printf("vs[]    :\n");
 		d(ns->vs, sizeof(ns->vs), 16, 1);
 	}
 }

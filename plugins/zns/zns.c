@@ -62,6 +62,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	const char *desc = "Send an ZNS specific Identify Namespace command to "\
 		"the given device and report information about the specified "\
 		"namespace in varios formats.";
+	const char *vendor_specific = "dump binary vendor fields";
 	const char *human_readable = "show identify in readable format";
 
 	enum nvme_print_flags flags;
@@ -73,6 +74,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		char *output_format;
 		__u32 namespace_id;
 		int human_readable;
+		int vendor_specific;
 	};
 
 	struct config cfg = {
@@ -81,6 +83,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
+		OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
 		OPT_END()
@@ -93,6 +96,8 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	flags = validate_output_format(cfg.output_format);
 	if (flags < 0)
 		goto close_fd;
+	if (cfg.vendor_specific)
+		flags |= VS;
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
