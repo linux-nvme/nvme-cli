@@ -6585,16 +6585,18 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
         printf("DITT support                            : 0\n");
         printf("HCTM support                            : %"PRIu16"\n",
                 id_ctrl.hctma);
-        /* retrieve HCTM Thermal Management Temperatures */
-        nvme_get_feature(fd, 0, 0x10, 0, 0, 0, 0, &hctm_tmt); 
-	printf("HCTM Light (TMT1)                       : %"PRIu16"\n",
-                (hctm_tmt >> 16) & 0xff);
+	/* retrieve HCTM Thermal Management Temperatures */
+        nvme_get_feature(fd, 0, 0x10, 0, 0, 0, 0, &hctm_tmt);
+        temperature = ((hctm_tmt >> 16) & 0xffff) ? ((hctm_tmt >> 16) & 0xffff) - 273 : 0;	
+	printf("HCTM Light (TMT1)                       : %"PRIu16" °C\n",
+                temperature);
         printf("TMT1 Transition Counter                 : %"PRIu32"\n",
                 smart_log.thm_temp1_trans_count);
 	printf("TMT1 Total Time                         : %"PRIu32"\n",
                 smart_log.thm_temp1_total_time);
-        printf("HCTM Heavy (TMT2)                       : %"PRIu16"\n",
-                hctm_tmt & 0xff);
+        temperature = (hctm_tmt & 0xffff) ? (hctm_tmt & 0xffff) - 273 : 0;	
+	printf("HCTM Heavy (TMT2)                       : %"PRIu16" °C\n",
+                temperature);
         printf("TMT2 Transition Counter                 : %"PRIu32"\n",
                 smart_log.thm_temp2_trans_count);
         printf("TMT2 Total Time                         : %"PRIu32"\n",
