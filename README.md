@@ -41,6 +41,13 @@ The development version can be installed from AUR, e.g.:
 
     $ yay -S nvme-cli-git
 
+### Debian
+
+nvme-cli is available in Debian 9 and up.  Install it with your favorite
+package manager.  For example:
+
+    $ sudo apt install nvme-cli
+
 ### Fedora
 
 nvme-cli is available in Fedora 23 and up.  Install it with your favorite
