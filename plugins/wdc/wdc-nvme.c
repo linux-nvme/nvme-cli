@@ -786,22 +786,22 @@ struct __attribute__((__packed__)) wdc_nand_stats_V3 {
 	__le64		xor_recovery_count;
 	__le64		uecc_read_error_count;
 	__u8		ssd_correction_counts[16];
-	__u8        percent_life_used;
-	__le64      user_data_erase_counts[4];
-	__le64      program_fail_count;
-	__le64      erase_fail_count;
-	__le64      correctable_error_count;
-	__u8        percent_free_blocks_user;
-	__le64      security_version_number;
-	__u8        percent_free_blocks_system;
-	__u8        trim_completions[25];
-	__u8        back_pressure_guage;
+	__u8		percent_life_used;
+	__le64		user_data_erase_counts[4];
+	__le64		program_fail_count;
+	__le64		erase_fail_count;
+	__le64		correctable_error_count;
+	__u8		percent_free_blocks_user;
+	__le64		security_version_number;
+	__u8		percent_free_blocks_system;
+	__u8		trim_completions[25];
+	__u8		back_pressure_guage;
 	__le64		soft_ecc_error_count;
 	__le64		refresh_count;
 	__u8		bad_sys_nand_block_count[8];
 	__u8		endurance_estimate[16];
-	__u8        thermal_throttling_st_ct[2];
-	__le64      unaligned_IO;
+	__u8		thermal_throttling_st_ct[2];
+	__le64		unaligned_IO;
 	__u8		physical_media_units[16];
 	__u8		reserved[279];
 	__u16       log_page_version;
@@ -6293,7 +6293,7 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 		break;
 
 	default:
-		fprintf(stderr, "WDC: Namd Stats ERROR : Invalid version\n");
+		fprintf(stderr, "WDC: Nand Stats ERROR : Invalid version\n");
 		break;
 
 	}
