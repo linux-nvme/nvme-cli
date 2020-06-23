@@ -3258,9 +3258,10 @@ static void wdc_print_bd_ca_log_normal(void *data)
 
 	if (bd_data->field_id == 0x00) {
 		raw = (__u64*)bd_data->raw_value;
-		printf("Additional Smart Log for NVME device:X namespace-id:Y\n");
-		printf("key                     normalized raw\n");
-        printf("program_fail_count              : %3"PRIu8"%%       %20"PRIu64"\n",
+		printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
+			devicename, WDC_DE_GLOBAL_NSID);
+		printf("key                               normalized raw\n");
+        printf("program_fail_count              : %3"PRIu8"%%       %"PRIu64"\n",
 				bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
@@ -3268,7 +3269,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x01) {
 		raw = (__u64*)bd_data->raw_value;
-		printf("erase_fail_count                : %3"PRIu8"%%       %20"PRIu64"\n",
+		printf("erase_fail_count                : %3"PRIu8"%%       %"PRIu64"\n",
 				bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
@@ -3278,7 +3279,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 		word_raw1 = (__u16*)bd_data->raw_value;
 		word_raw2 = (__u16*)&bd_data->raw_value[2];
 		word_raw3 = (__u16*)&bd_data->raw_value[4];
-		printf("wear_leveling                   : %3"PRIu8"%%       min: %10"PRIu16", max: %10"PRIu16", avg: %10"PRIu16"\n",
+		printf("wear_leveling                   : %3"PRIu8"%%       min: %"PRIu16", max: %"PRIu16", avg: %"PRIu16"\n",
 				bd_data->normalized_value,
 				le16_to_cpu(*word_raw1),
 				le16_to_cpu(*word_raw2),
@@ -3289,7 +3290,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x03) {
 		raw = (__u64*)bd_data->raw_value;
-		printf("end_to_end_error_detection_count: %3"PRIu8"%%       %20"PRIu64"\n",
+		printf("end_to_end_error_detection_count: %3"PRIu8"%%       %"PRIu64"\n",
 				bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
@@ -3297,7 +3298,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x04) {
 		raw = (__u64*)bd_data->raw_value;
-		printf("crc_error_count                 : %3"PRIu8"%%       %20"PRIu64"\n",
+		printf("crc_error_count                 : %3"PRIu8"%%       %"PRIu64"\n",
 			   bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
@@ -3305,7 +3306,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x05) {
 		raw = (__u64*)bd_data->raw_value;
-		printf("timed_workload_media_wear       : %3"PRIu8"%%       %20.3f"PRIu64"%%\n",
+		printf("timed_workload_media_wear       : %3"PRIu8"%%       %-.3f%%\n",
 			   bd_data->normalized_value, 
 			   safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 1024.0));
 	} else {
@@ -3314,7 +3315,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x06) {
 		raw = (__u64*)bd_data->raw_value;
-		printf("timed_workload_host_reads       : %3"PRIu8"%%       %3"PRIu64"%%\n",
+		printf("timed_workload_host_reads       : %3"PRIu8"%%       %"PRIu64"%%\n",
 			   bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
@@ -3322,7 +3323,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x07) {
 		raw = (__u64*)bd_data->raw_value;
-		printf("timed_workload_timer            : %3"PRIu8"%%       %20"PRIu64"\n",
+		printf("timed_workload_timer            : %3"PRIu8"%%       %"PRIu64"\n",
 			   bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
@@ -3331,7 +3332,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	if (bd_data->field_id == 0x08) {
 		byte_raw = (__u8*)bd_data->raw_value;
 		dword_raw = (__u32*)&bd_data->raw_value[1];
-		printf("thermal_throttle_status         : %3"PRIu8"%%       %10"PRIu16"%%, cnt: %10"PRIu16"\n",
+		printf("thermal_throttle_status         : %3"PRIu8"%%       %"PRIu16"%%, cnt: %"PRIu16"\n",
 				bd_data->normalized_value, *byte_raw, le32_to_cpu(*dword_raw));
 	} else {
 		goto invalid_id;
@@ -3339,7 +3340,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x09) {
 		raw = (__u64*)bd_data->raw_value;
-		printf("retry_buffer_overflow_count     : %3"PRIu8"%%       %20"PRIu64"\n",
+		printf("retry_buffer_overflow_count     : %3"PRIu8"%%       %"PRIu64"\n",
 			   bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
@@ -3347,7 +3348,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x0A) {
 		raw = (__u64*)bd_data->raw_value;
-		printf("pll_lock_loss_count             : %3"PRIu8"%%       %20"PRIu64"\n",
+		printf("pll_lock_loss_count             : %3"PRIu8"%%       %"PRIu64"\n",
 			   bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
@@ -3355,7 +3356,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x0B) {
 		raw = (__u64*)bd_data->raw_value;
-		printf("nand_bytes_written              : %3"PRIu8"%%       sectors: %20.0f"PRIu64"\n",
+		printf("nand_bytes_written              : %3"PRIu8"%%       sectors: %.f\n",
 			   bd_data->normalized_value, safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
 		raw = (__u64*)bd_data->raw_value;
 	} else {
@@ -3364,7 +3365,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x0C) {
 		raw = (__u64*)bd_data->raw_value;
-		printf("host_bytes_written              : %3"PRIu8"%%       sectors: %20.0f"PRIu64"\n",
+		printf("host_bytes_written              : %3"PRIu8"%%       sectors: %.f\n",
 			   bd_data->normalized_value, safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
 		raw = (__u64*)bd_data->raw_value;
 	} else {
@@ -3393,9 +3394,9 @@ static void wdc_print_bd_ca_log_json(void *data)
 	root = json_create_object();
 	if (bd_data->field_id == 0x00) {
 		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "Program fail counts",
+		json_object_add_value_int(root, "program_fail_count",
 				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-		json_object_add_value_int(root, "% Remaining of allowable program fails",
+		json_object_add_value_int(root, "normalized",
 				bd_data->normalized_value);
 	} else {
 		goto invalid_id;
@@ -3403,9 +3404,9 @@ static void wdc_print_bd_ca_log_json(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x01) {
 		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "Erase fail count",
+		json_object_add_value_int(root, "erase_fail_count",
 				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-		json_object_add_value_int(root, "% Remaining of allowable erase fails",
+		json_object_add_value_int(root, "normalized",
 				bd_data->normalized_value);
 	} else {
 		goto invalid_id;
@@ -3413,19 +3414,19 @@ static void wdc_print_bd_ca_log_json(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x02) {
 		word_raw = (__u16*)bd_data->raw_value;
-		json_object_add_value_int(root, "Min erase cycles", le16_to_cpu(*word_raw));
+		json_object_add_value_int(root, "min", le16_to_cpu(*word_raw));
 		word_raw = (__u16*)&bd_data->raw_value[2];
-		json_object_add_value_int(root, "Max erase cycles", le16_to_cpu(*word_raw));
+		json_object_add_value_int(root, "max", le16_to_cpu(*word_raw));
 		word_raw = (__u16*)&bd_data->raw_value[4];
-		json_object_add_value_int(root, "Ave erase cycles", le16_to_cpu(*word_raw));
-		json_object_add_value_int(root, "Wear Leveling Normalized",	bd_data->normalized_value);
+		json_object_add_value_int(root, "avg", le16_to_cpu(*word_raw));
+		json_object_add_value_int(root, "wear_leveling-normalized",	bd_data->normalized_value);
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x03) {
 		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "End to end error detection count",
+		json_object_add_value_int(root, "end_to_end_error_detection_count",
 				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
@@ -3433,7 +3434,7 @@ static void wdc_print_bd_ca_log_json(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x04) {
 		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "Crc error count",
+		json_object_add_value_int(root, "crc_error_count",
 				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
@@ -3441,7 +3442,7 @@ static void wdc_print_bd_ca_log_json(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x05) {
 		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_float(root, "Timed workload media error",
+		json_object_add_value_float(root, "timed_workload_media_wear",
 				safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 1024.0));
 	} else {
 		goto invalid_id;
@@ -3449,7 +3450,7 @@ static void wdc_print_bd_ca_log_json(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x06) {
 		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "Timed workload host reads %",
+		json_object_add_value_int(root, "timed_workload_host_reads",
 				le64_to_cpu(*raw & 0x00000000000000FF));
 	} else {
 		goto invalid_id;
@@ -3457,7 +3458,7 @@ static void wdc_print_bd_ca_log_json(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x07) {
 		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "Timed workload timer",
+		json_object_add_value_int(root, "timed_workload_timer",
 				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
@@ -3465,16 +3466,16 @@ static void wdc_print_bd_ca_log_json(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x08) {
 		byte_raw = (__u8*)bd_data->raw_value;
-		json_object_add_value_int(root, "Throttle status %", *byte_raw);
+		json_object_add_value_int(root, "thermal_throttle_status", *byte_raw);
 		dword_raw = (__u32*)&bd_data->raw_value[1];
-		json_object_add_value_int(root, "Throttling event counter",	le32_to_cpu(*dword_raw));
+		json_object_add_value_int(root, "cnt",	le32_to_cpu(*dword_raw));
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x09) {
 		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "Retry buffer overflow count",
+		json_object_add_value_int(root, "retry_buffer_overflow_count",
 				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
@@ -3482,7 +3483,7 @@ static void wdc_print_bd_ca_log_json(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x0A) {
 		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "Pll lock loss count",
+		json_object_add_value_int(root, "pll_lock_loss_count",
 				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
@@ -3490,7 +3491,7 @@ static void wdc_print_bd_ca_log_json(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x0B) {
 		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_float(root, "Nand bytes written (32mb)",
+		json_object_add_value_float(root, "nand_bytes_written",
 				safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
 	} else {
 		goto invalid_id;
@@ -3498,7 +3499,7 @@ static void wdc_print_bd_ca_log_json(void *data)
 	bd_data++;
 	if (bd_data->field_id == 0x0C) {
 		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_float(root, "Host bytes written (32mb)",
+		json_object_add_value_float(root, "host_bytes_written",
 				safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
 		raw = (__u64*)bd_data->raw_value;
 	} else {
