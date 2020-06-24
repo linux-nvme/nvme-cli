@@ -35,8 +35,8 @@ Expected status and description :-
 |Critical Composite TEMPerature threshold
 |temp of critical overheating
 
-|DITT support status
-|0 = unsupported
+|Device Initiated Thermal Throttling support status
+|0 = unsupported, 1 = supported
 
 |Host Controlled Thermal Management support
 |0 = unsupported, 1 = supported
