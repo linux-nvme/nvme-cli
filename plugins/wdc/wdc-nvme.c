@@ -19,7 +19,7 @@
  *   Author: Chaitanya Kulkarni <chaitanya.kulkarni@hgst.com>,
  *           Dong Ho <dong.ho@hgst.com>,
  *           Jeff Lien <jeff.lien@wdc.com>
- * 			 Brandon Paupore <brandon.paupore@wdc.com>
+ *   	     Brandon Paupore <brandon.paupore@wdc.com>
  */
 #include <stdio.h>
 #include <string.h>
@@ -6547,9 +6547,9 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 {
 	const char *desc = "Send a vs-temperature-stats command.";
 	struct nvme_smart_log smart_log;
-    struct nvme_id_ctrl id_ctrl;
+	struct nvme_id_ctrl id_ctrl;
 	uint64_t capabilities = 0;
-    __u32 hctm_tmt;
+    	__u32 hctm_tmt;
 	int fd, ret;
 
 	OPT_ARGS(opts) = {
@@ -6568,40 +6568,40 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 		return -1;
 	} 
 
-    /* get the temperature stats or report errors */
+    	/* get the temperature stats or report errors */
 	ret = nvme_identify_ctrl(fd, &id_ctrl);
-    if (ret != 0)
+   	if (ret != 0)
 		goto END;
 	ret = nvme_smart_log(fd, NVME_NSID_ALL, &smart_log);
-    if (ret != 0) 
-    	goto END;
+    	if (ret != 0) 
+    		goto END;
 
-    /* print the temperature stats */
-    printf("Temperature Stats for NVME device:%s namespace-id:%x\n",
-            devicename, WDC_DE_GLOBAL_NSID);
+    	/* print the temperature stats */
+    	printf("Temperature Stats for NVME device:%s namespace-id:%x\n",
+            	devicename, WDC_DE_GLOBAL_NSID);
 
-    /* convert from Kelvin to degrees Celsius */
+    	/* convert from Kelvin to degrees Celsius */
 	int temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]) - 273;
 	printf("Current Composite Temperature           : %d °C\n", temperature);
-    printf("WCTEMP                                  : %"PRIu16" °C\n", id_ctrl.wctemp - 273);
+    	printf("WCTEMP                                  : %"PRIu16" °C\n", id_ctrl.wctemp - 273);
 	printf("CCTEMP                                  : %"PRIu16" °C\n",  id_ctrl.cctemp - 273);
-    printf("DITT support                            : 0\n");
-    printf("HCTM support                            : %"PRIu16"\n", id_ctrl.hctma);
+    	printf("DITT support                            : 0\n");
+    	printf("HCTM support                            : %"PRIu16"\n", id_ctrl.hctma);
 
 	/* retrieve HCTM Thermal Management Temperatures */
-    nvme_get_feature(fd, 0, 0x10, 0, 0, 0, 0, &hctm_tmt);
-    temperature = ((hctm_tmt >> 16) & 0xffff) ? ((hctm_tmt >> 16) & 0xffff) - 273 : 0;	
+    	nvme_get_feature(fd, 0, 0x10, 0, 0, 0, 0, &hctm_tmt);
+    	temperature = ((hctm_tmt >> 16) & 0xffff) ? ((hctm_tmt >> 16) & 0xffff) - 273 : 0;	
 	printf("HCTM Light (TMT1)                       : %"PRIu16" °C\n", temperature);
-    printf("TMT1 Transition Counter                 : %"PRIu32"\n", smart_log.thm_temp1_trans_count);
+    	printf("TMT1 Transition Counter                 : %"PRIu32"\n", smart_log.thm_temp1_trans_count);
 	printf("TMT1 Total Time                         : %"PRIu32"\n", smart_log.thm_temp1_total_time);
 
-    temperature = (hctm_tmt & 0xffff) ? (hctm_tmt & 0xffff) - 273 : 0;	
+    	temperature = (hctm_tmt & 0xffff) ? (hctm_tmt & 0xffff) - 273 : 0;	
 	printf("HCTM Heavy (TMT2)                       : %"PRIu16" °C\n", temperature);
-    printf("TMT2 Transition Counter                 : %"PRIu32"\n", smart_log.thm_temp2_trans_count);
-    printf("TMT2 Total Time                         : %"PRIu32"\n", smart_log.thm_temp2_total_time);
-    printf("Thermal Shutdown Threshold              : 95 °C\n");	
+    	printf("TMT2 Transition Counter                 : %"PRIu32"\n", smart_log.thm_temp2_trans_count);
+    	printf("TMT2 Total Time                         : %"PRIu32"\n", smart_log.thm_temp2_total_time);
+    	printf("Thermal Shutdown Threshold              : 95 °C\n");	
        
-    END:
+    	END:
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;
 }
