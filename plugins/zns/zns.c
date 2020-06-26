@@ -368,8 +368,6 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 	const char *data = "optional file for zone extention data (default stdin)";
 
 	int fd, ffd = STDIN_FILENO, err;
-	struct nvme_zns_id_ns ns;
-	struct nvme_id_ns id_ns;
 	void *buf = NULL;
 	__u32 data_len;
 	uint8_t lbaf;
@@ -402,20 +400,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 		}
 	}
 
-	err = nvme_identify_ns(fd, cfg.namespace_id, false, &id_ns);
-	if (err) {
-		nvme_show_status(err);
-		goto close_fd;
-	}
-
-	err = nvme_zns_identify_ns(fd, cfg.namespace_id, &ns);
-	if (err) {
-		nvme_show_status(err);
-		goto close_fd;
-	}
-
-	lbaf = id_ns.flbas & NVME_NS_FLBAS_LBA_MASK;
-	data_len = ns.lbafe[lbaf].zdes;
+	data_len = get_zdes_bytes(fd, cfg.namespace_id);
 
 	if (!data_len) {
 		fprintf(stderr,
