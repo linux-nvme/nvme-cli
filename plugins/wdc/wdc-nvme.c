@@ -81,6 +81,8 @@
 #define WDC_NVME_SN730B_DEV_ID				0x3714
 #define WDC_NVME_SN730B_DEV_ID_1			0x3734
 #define WDC_NVME_SN340_DEV_ID				0x500d
+#define WDC_NVME_ZN345_DEV_ID				0x5010
+#define WDC_NVME_ZN345_DEV_ID_1				0x5018
 
 #define WDC_DRIVE_CAP_CAP_DIAG				0x0000000000000001
 #define WDC_DRIVE_CAP_INTERNAL_LOG			0x0000000000000002
@@ -1071,6 +1073,11 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 			break;
 		case WDC_NVME_SN340_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI;
+			break;
+		case WDC_NVME_ZN345_DEV_ID:
+		/* FALLTHRU */
+		case WDC_NVME_ZN345_DEV_ID_1:
+			capabilities = WDC_DRIVE_CAP_DUI_DATA;
 			break;
 		default:
 			capabilities = 0;
