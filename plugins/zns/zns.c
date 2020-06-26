@@ -132,7 +132,6 @@ static int __zns_mgmt_send(int fd, __u32 namespace_id, __u64 zslba,
 
 	err = nvme_zns_mgmt_send(fd, namespace_id, zslba, select_all, zsa,
 			data_len, buf);
-close_fd:
 	close(fd);
 	return err;
 }
@@ -170,8 +169,8 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 	if (fd < 0)
 		goto free;
 
-	if (!namespace_id) {
-		err = namespace_id = nvme_get_nsid(fd);
+	if (!cfg.namespace_id) {
+		err = cfg.namespace_id = nvme_get_nsid(fd);
 		if (err < 0) {
 			perror("get-namespace-id");
 			goto free;
@@ -370,7 +369,6 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 	int fd, ffd = STDIN_FILENO, err;
 	void *buf = NULL;
 	__u32 data_len;
-	uint8_t lbaf;
 
 	struct config {
 		__u64	zslba;
