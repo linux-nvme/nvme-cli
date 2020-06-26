@@ -130,14 +130,6 @@ static int __zns_mgmt_send(int fd, __u32 namespace_id, __u64 zslba,
 {
 	int err;
 
-	if (!namespace_id) {
-		err = namespace_id = nvme_get_nsid(fd);
-		if (err < 0) {
-			perror("get-namespace-id");
-			goto close_fd;
-		}
-	}
-
 	err = nvme_zns_mgmt_send(fd, namespace_id, zslba, select_all, zsa,
 			data_len, buf);
 close_fd:
@@ -177,6 +169,14 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		goto free;
+
+	if (!namespace_id) {
+		err = namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
+			goto free;
+		}
+	}
 
 	err = __zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba,
 		cfg.select_all, zsa, 0, NULL);
@@ -250,6 +250,14 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return errno;
+
+	if (!cfg.namespace_id) {
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
+			goto close_fd;
+		}
+	}
 
 	if (!cfg.zsa) {
 		fprintf(stderr, "zone send action must be specified\n");
@@ -385,6 +393,14 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return errno;
+
+	if (!cfg.namespace_id) {
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
+			goto close_fd;
+		}
+	}
 
 	err = nvme_identify_ns(fd, cfg.namespace_id, false, &id_ns);
 	if (err) {
