@@ -3386,12 +3386,10 @@ void nvme_show_id_iocs(struct nvme_id_iocs *iocs)
 {
 	__u16 i;
 
-	for (i = 0; i < 512; i++) {
-		if (iocs->iocsc[i].nvm) {
-			printf("I/O Command Set Combination[%"PRIu16"] "
-				"NVM Command Set Supported\n", i);
-		}
-	}
+	for (i = 0; i < 512; i++)
+		if (iocs->iocs[i])
+			printf("I/O Command Set Combination[%u]:%"PRIx64"\n", i,
+				(uint64_t)le64_to_cpu(iocs->iocs[i]));
 }
 
 static const char *nvme_trtype_to_string(__u8 trtype)
@@ -3979,7 +3977,7 @@ const char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_RRL:		return "Read Recovery Level";
 	case NVME_FEAT_PLM_CONFIG:	return "Predicatable Latency Mode Config";
 	case NVME_FEAT_PLM_WINDOW:	return "Predicatable Latency Mode Window";
-	case NVME_FEAT_IOCS_SET_PROFILE:	return "I/O Command Set Profile";
+	case NVME_FEAT_IOCS_PROFILE:	return "I/O Command Set Profile";
 	case NVME_FEAT_SW_PROGRESS:	return "Software Progress";
 	case NVME_FEAT_HOST_ID:		return "Host Identifier";
 	case NVME_FEAT_RESV_MASK:	return "Reservation Notification Mask";
@@ -4470,12 +4468,6 @@ static void nvme_show_plm_config(struct nvme_plm_config *plmcfg)
 	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_time_thresh));
 }
 
-static void nvme_show_iocs_vector(struct nvme_iocs_vector *iocs_vector)
-{
-	printf("\tNVM             Command Set is selected: %s\n", iocs_vector->nvm ? "True":"False");
-	printf("\tZoned Namespace Command Set is selected: %s\n", iocs_vector->zoned ? "True":"False");
-}
-
 void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf)
 {
 	__u8 field;
@@ -4556,9 +4548,8 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 	case NVME_FEAT_PLM_WINDOW:
 		printf("\tWindow Select: %s", nvme_plm_window(result));
 		break;
-	case NVME_FEAT_IOCS_SET_PROFILE:
+	case NVME_FEAT_IOCS_PROFILE:
 		printf("\tI/O Command Set Profile: %s\n", result & 0x1 ? "True":"False");
-		nvme_show_iocs_vector((struct nvme_iocs_vector *)buf);
 		break;
 	case NVME_FEAT_HOST_ID:
 		ull =  buf[7]; ull <<= 8; ull |= buf[6]; ull <<= 8; ull |= buf[5]; ull <<= 8;

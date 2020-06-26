@@ -418,18 +418,8 @@ struct nvme_id_ns {
 	__u8			vs[3712];
 };
 
-struct nvme_iocs_vector {
-	union {
-		__le64 nvm   : 1;
-		__le64 rsvd1 : 1;
-		__le64 zoned : 1;
-		__le64 rsvd3 : 61;
-	};
-	__le64 a;
-};
-
 struct nvme_id_iocs {
-	struct nvme_iocs_vector iocsc[512];
+	__le64 iocs[512];
 };
 
 enum {
@@ -1043,7 +1033,7 @@ enum {
 	NVME_FEAT_PLM_WINDOW	= 0x14,
 	NVME_FEAT_HOST_BEHAVIOR	= 0x16,
 	NVME_FEAT_SANITIZE	= 0x17,
-	NVME_FEAT_IOCS_SET_PROFILE = 0x19,
+	NVME_FEAT_IOCS_PROFILE	= 0x19,
 	NVME_FEAT_SW_PROGRESS	= 0x80,
 	NVME_FEAT_HOST_ID	= 0x81,
 	NVME_FEAT_RESV_MASK	= 0x82,
