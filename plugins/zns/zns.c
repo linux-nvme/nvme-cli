@@ -264,15 +264,14 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 		goto close_fd;
 	}
 
-	if (cfg.zsa == NVME_ZNS_ZSA_SET_DESC_EXT){
-		if(!cfg.data_len){
+	if (cfg.zsa == NVME_ZNS_ZSA_SET_DESC_EXT) {
+		if(!cfg.data_len) {
 			cfg.data_len = get_zdes_bytes(fd, cfg.namespace_id);
-			if (cfg.data_len == 0){
+			if (cfg.data_len == 0) {
 				fprintf(stderr, 
 				"Zone Descriptor Extensions are not supported\n");
 				goto close_fd;
-			}
-			else if (cfg.data_len < 0) {
+			} else if (cfg.data_len < 0) {
 				err = cfg.data_len;
 				goto close_fd;
 			}
@@ -296,9 +295,8 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 			perror("read");
 			goto close_ffd;
 		}
-	}
-	else{
-		if (strlen(cfg.file) || cfg.data_len){
+	} else {
+		if (cfg.file || cfg.data_len) {
 			fprintf(stderr, 
 			"data, data_len only valid with set extended descriptor\n");
 			err = -EINVAL;
