@@ -790,7 +790,7 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 	if (err < 0)
 		perror("sfx-change-cap");
 	else if (err != 0)
-		fprintf(stderr, "NVME IO command error:%s(%x)\n",
+		fprintf(stderr, "NVMe IO command error:%s(%x)\n",
 				nvme_status_to_string(err), err);
 	else {
 		printf("ScaleFlux change-capacity: success\n");
@@ -935,10 +935,10 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 	err = nvme_sfx_set_features(fd, cfg.namespace_id, cfg.feature_id, cfg.value);
 
 	if (err < 0) {
-		perror("Scaleflux-set-feature");
+		perror("ScaleFlux-set-feature");
 		return errno;
 	} else if (!err) {
-		printf("Scaleflux set-feature:%#02x (%s), value:%d\n", cfg.feature_id,
+		printf("ScaleFlux set-feature:%#02x (%s), value:%d\n", cfg.feature_id,
 			sfx_feature_to_string(cfg.feature_id), cfg.value);
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
