@@ -1320,7 +1320,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
-	err = scan_subsystems(&t, subsysnqn, ns_instance);
+	err = scan_subsystems(&t, subsysnqn, ns_instance, NULL);
 	if (err) {
 		fprintf(stderr, "Failed to scan namespaces\n");
 		goto free;
@@ -1337,22 +1337,26 @@ ret:
 static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve basic information for all NVMe namespaces";
+	const char *device_dir = "Directory to search for devices";
 	const char *verbose = "Increase output verbosity";
 	struct nvme_topology t = { };
 	enum nvme_print_flags flags;
 	int err = 0;
 
 	struct config {
+		char *device_dir;
 		char *output_format;
 		int verbose;
 	};
 
 	struct config cfg = {
+		.device_dir = NULL,
 		.output_format = "normal",
 		.verbose = 0,
 	};
 
 	OPT_ARGS(opts) = {
+		OPT_STRING("directory",  'd', "DIR",             &cfg.device_dir, device_dir),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary),
 		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
 		OPT_END()
@@ -1372,7 +1376,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
-	err = scan_subsystems(&t, NULL, 0);
+	err = scan_subsystems(&t, NULL, 0, cfg.device_dir);
 	if (err) {
 		fprintf(stderr, "Failed to scan namespaces\n");
 		return err;

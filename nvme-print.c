@@ -1629,7 +1629,7 @@ void nvme_show_relatives(const char *name)
 			free(path);
 			return;
 		}
-		err = scan_subsystems(&t, subsysnqn, 0);
+		err = scan_subsystems(&t, subsysnqn, 0, NULL);
 		if (err || t.nr_subsystems != 1) {
 			free(subsysnqn);
 			free(path);
@@ -4699,7 +4699,7 @@ static void nvme_show_list_item(struct nvme_namespace *n)
 	struct stat st;
 	int ret;
 
-	sprintf(path, "/dev/%s", n->name);
+	sprintf(path, "%s%s", n->ctrl->path, n->name);
 	ret = stat(path, &st);
 	if (ret < 0)
 		return;
@@ -4708,7 +4708,7 @@ static void nvme_show_list_item(struct nvme_namespace *n)
 		nsze, s_suffix);
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		le16_to_cpu(n->ns.lbaf[(n->ns.flbas & 0x0f)].ms));
-	printf("/dev/%-11s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", n->name,
+	printf("%-21s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", path,
 		(int)sizeof(n->ctrl->id.sn), (int)sizeof(n->ctrl->id.sn), n->ctrl->id.sn,
 		(int)sizeof(n->ctrl->id.mn), (int)sizeof(n->ctrl->id.mn), n->ctrl->id.mn,
 		n->nsid, usage, format, (int)sizeof(n->ctrl->id.fr), n->ctrl->id.fr);
@@ -4718,9 +4718,9 @@ static void nvme_show_simple_list(struct nvme_topology *t)
 {
 	int i, j, k;
 
-	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
+	printf("%-21s %-20s %-40s %-9s %-26s %-16s %-8s\n",
 	    "Node", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
-	printf("%-.16s %-.20s %-.40s %-.9s %-.26s %-.16s %-.8s\n", dash, dash,
+	printf("%-.21s %-.20s %-.40s %-.9s %-.26s %-.16s %-.8s\n", dash, dash,
 		dash, dash, dash, dash, dash);
 
 	for (i = 0; i < t->nr_subsystems; i++) {
@@ -4972,7 +4972,7 @@ static void json_simple_ns(struct nvme_namespace *n, struct json_array *devices)
 	long long lba;
 	char *devnode;
 
-	if (asprintf(&devnode, "/dev/%s", n->name) < 0)
+	if (asprintf(&devnode, "%s%s", n->ctrl->path, n->name) < 0)
 		return;
 
 	device_attrs = json_create_object();

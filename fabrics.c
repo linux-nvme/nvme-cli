@@ -1687,7 +1687,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 	if (err)
 		goto out;
 
-	err = scan_subsystems(&t, NULL, 0);
+	err = scan_subsystems(&t, NULL, 0, NULL);
 	if (err) {
 		fprintf(stderr, "Failed to scan namespaces\n");
 		goto out;

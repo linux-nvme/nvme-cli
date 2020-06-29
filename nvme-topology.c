@@ -144,7 +144,7 @@ static int scan_namespace(struct nvme_namespace *n)
 	int ret, fd;
 	char *path;
 
-	ret = asprintf(&path, "%s%s", dev, n->name);
+	ret = asprintf(&path, "%s%s", n->ctrl->path, n->name);
 	if (ret < 0)
 		return ret;
 
@@ -295,7 +295,7 @@ static int scan_ctrl(struct nvme_ctrl *c, char *p, __u32 ns_instance)
 	free(ns);
 	free(path);
 
-	ret = asprintf(&path, "%s%s", dev, c->name);
+	ret = asprintf(&path, "%s%s", c->path, c->name);
 	if (ret < 0)
 		return ret;
 
@@ -338,6 +338,7 @@ static int scan_subsystem(struct nvme_subsystem *s, __u32 ns_instance)
 	for (i = 0; i < s->nr_ctrls; i++) {
 		c = &s->ctrls[i];
 		c->name = strdup(ctrls[i]->d_name);
+		c->path = strdup(dev);
 		c->subsys = s;
 		scan_ctrl(c, path, ns_instance);
 	}
@@ -381,7 +382,7 @@ static int verify_legacy_ns(struct nvme_namespace *n)
 	char *path;
 	int ret, fd;
 
-	ret = asprintf(&path, "%s%s", dev, n->name);
+	ret = asprintf(&path, "%s%s", n->ctrl->path, n->name);
 	if (ret < 0)
 		return ret;
 
@@ -420,7 +421,7 @@ static int verify_legacy_ns(struct nvme_namespace *n)
  * is the controller to nvme0n1 for such older kernels. We will also assume
  * every controller is its own subsystem.
  */
-static int legacy_list(struct nvme_topology *t)
+static int legacy_list(struct nvme_topology *t, char *dev_dir)
 {
 	struct nvme_ctrl *c;
 	struct nvme_subsystem *s;
@@ -429,7 +430,7 @@ static int legacy_list(struct nvme_topology *t)
 	int ret = 0, fd, i;
 	char *path;
 
-	t->nr_subsystems = scandir(dev, &devices, scan_ctrls_filter, alphasort);
+	t->nr_subsystems = scandir(dev_dir, &devices, scan_ctrls_filter, alphasort);
 	if (t->nr_subsystems < 0) {
 		fprintf(stderr, "no NVMe device(s) detected.\n");
 		return t->nr_subsystems;
@@ -449,7 +450,8 @@ static int legacy_list(struct nvme_topology *t)
 		c = s->ctrls;
 		c->name = strdup(s->name);
 		sscanf(c->name, "nvme%d", &current_index);
-		c->nr_namespaces = scandir(dev, &namespaces, scan_dev_filter,
+		c->path = strdup(dev_dir);
+		c->nr_namespaces = scandir(c->path, &namespaces, scan_dev_filter,
 					   alphasort);
 		c->namespaces = calloc(c->nr_namespaces, sizeof(*n));
 		if (!c->namespaces) {
@@ -459,7 +461,7 @@ static int legacy_list(struct nvme_topology *t)
 			continue;
 		}
 
-		ret = asprintf(&path, "%s%s", dev, c->name);
+		ret = asprintf(&path, "%s%s", c->path, c->name);
 		if (ret < 0)
 			continue;
 		ret = 0;
@@ -501,6 +503,7 @@ static void free_ctrl(struct nvme_ctrl *c)
 		free(n->name);
 	}
 	free(c->name);
+	free(c->path);
 	free(c->transport);
 	free(c->address);
 	free(c->state);
@@ -527,16 +530,19 @@ static void free_subsystem(struct nvme_subsystem *s)
 }
 
 int scan_subsystems(struct nvme_topology *t, const char *subsysnqn,
-		    __u32 ns_instance)
+		    __u32 ns_instance, char *dev_dir)
 {
 	struct nvme_subsystem *s;
 	struct dirent **subsys;
 	int i, j = 0;
 
+	if (dev_dir != NULL)
+		return legacy_list(t, dev_dir);
+
 	t->nr_subsystems = scandir(subsys_dir, &subsys, scan_subsys_filter,
 				   alphasort);
 	if (t->nr_subsystems < 0)
-		return legacy_list(t);
+		return legacy_list(t, (char *)dev);
 
 	t->subsystems = calloc(t->nr_subsystems, sizeof(*s));
 	for (i = 0; i < t->nr_subsystems; i++) {
