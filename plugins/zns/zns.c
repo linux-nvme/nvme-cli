@@ -14,7 +14,7 @@
 #define CREATE_CMD
 #include "zns.h"
 
-static const char *namespace_id = "Namespace identify to use";
+static const char *namespace_id = "Namespace identifier to use";
 
 static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
@@ -161,13 +161,13 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 		OPT_END()
 	};
 
-	err = asprintf(&command, "%s-%s", plugin->name, cmd->name);
-	if (err < 0)
-		return errno;
-
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
-		goto free;
+		return errno;
+
+	err = asprintf(&command, "%s-%s", plugin->name, cmd->name);
+	if (err < 0)
+		goto close_fd;
 
 	if (!cfg.namespace_id) {
 		err = cfg.namespace_id = nvme_get_nsid(fd);
@@ -186,6 +186,8 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 		nvme_show_status(err);
 free:
 	free(command);
+close_fd:
+	close(fd);
 	return err;
 }
 

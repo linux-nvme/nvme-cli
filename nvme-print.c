@@ -2920,8 +2920,8 @@ void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
 	json_object_add_value_int(root, "ozcs", le16_to_cpu(ns->ozcs));
 	json_object_add_value_int(root, "mar", le16_to_cpu(ns->mar));
 	json_object_add_value_int(root, "mor", le16_to_cpu(ns->mor));
-	json_object_add_value_int(root, "rrl", ns->rrl);
-	json_object_add_value_int(root, "frl", ns->frl);
+	json_object_add_value_int(root, "rrl", le32_to_cpu(ns->rrl));
+	json_object_add_value_int(root, "frl", le32_to_cpu(ns->frl));
 
 	lbafs = json_create_array();
 	json_object_add_value_array(root, "lbafe", lbafs);
@@ -2989,8 +2989,8 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 		show_nvme_id_ns_zoned_ozcs(ns->ozcs);
 	printf("mar     : %u\n", le16_to_cpu(ns->mar));
 	printf("mor     : %u\n", le16_to_cpu(ns->mor));
-	printf("rrl     : %u\n", ns->rrl);
-	printf("frl     : %u\n", ns->frl);
+	printf("rrl     : %u\n", le32_to_cpu(ns->rrl));
+	printf("frl     : %u\n", le32_to_cpu(ns->frl));
 
 	for (i = 0; i <= id_ns->nlbaf; i++){
 		if (human)
