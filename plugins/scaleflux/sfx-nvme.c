@@ -778,10 +778,9 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 		cfg.capacity_in_gb, cfg.cap_in_byte, cap_in_4k);
 
 	if (change_sanity_check(fd, cap_in_4k, &shrink)) {
-		printf("Scaleflux change-capacity: fail\n");
+		printf("ScaleFlux change-capacity: fail\n");
 		return err;
 	}
-
 
 	if (!cfg.force && shrink && !sfx_confirm_change("Changing Cap may irrevocably delete this device's data")) {
 		return 0;
@@ -794,7 +793,7 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 		fprintf(stderr, "NVME IO command error:%s(%x)\n",
 				nvme_status_to_string(err), err);
 	else {
-		printf("Scaleflux change-capacity: success\n");
+		printf("ScaleFlux change-capacity: success\n");
 		ioctl(fd, BLKRRPART);
 	}
 	return err;
@@ -909,7 +908,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 					perror("identify-namespace");
 				else
 					fprintf(stderr,
-						"NVME Admin command error:%s(%x)\n",
+						"NVMe Admin command error:%s(%x)\n",
 						nvme_status_to_string(err), err);
 				return err;
 			}
@@ -917,7 +916,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 			 * atomic only support with sector-size = 4k now
 			 */
 			if ((ns.flbas & 0xf) != 1) {
-				printf("Please change-sector size to 4K, then retry!!!\n");
+				printf("Please change-sector size to 4K, then retry\n");
 				return EFAULT;
 			}
 		}
