@@ -449,6 +449,11 @@ close_fd:
 static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Zone Management Receive";
+	const char *zslba = "starting LBA of the zone";
+	const char *zra = "Zone Receive Action";
+	const char *zrasf = "Zone Receive Action Specific Field(Reporting Options)";
+	const char *partial = "Zone Receive Action Specific Features(Partial Report)";	
+	const char *data_len = "length of data in bytes";
 
 	enum nvme_print_flags flags;
 	int fd, err = -1;
@@ -460,7 +465,7 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 		__u32  namespace_id;
 		__u16  zra;
 		__u16  zrasf;
-		bool   zrass;
+		bool   partial;
 		__u32  data_len;
 	};
 
@@ -468,8 +473,14 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 		.output_format = "normal",
 	};
 
-
 	OPT_ARGS(opts) = {
+		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
+		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id),
+		OPT_SUFFIX("start-lba",   's', &cfg.zslba,          zslba),
+		OPT_SHRT("zra",           'z', &cfg.zra,            zra),
+		OPT_SHRT("zrasf",         'S', &cfg.zrasf,          zrasf),
+		OPT_FLAG("partial",       'p', &cfg.partial,        partial),
+		OPT_UINT("data-len",      'l', &cfg.data_len,       data_len),
 		OPT_END()
 	};
 
@@ -498,7 +509,7 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 	}
 
 	err = nvme_zns_mgmt_recv(fd, cfg.namespace_id, cfg.zslba, cfg.zra,
-		cfg.zrasf, cfg.zrass, cfg.data_len, data);
+		cfg.zrasf, cfg.partial, cfg.data_len, data);
 	if (!err)
 		printf("zone-mgmt-recv: Success, action:%d zone:%"PRIx64" nsid:%d\n",
 			cfg.zra, (uint64_t)cfg.zslba, cfg.namespace_id);
