@@ -95,9 +95,9 @@
 #define WDC_DRIVE_CAP_CLEAR_PCIE			0x0000000000000080
 #define WDC_DRIVE_CAP_RESIZE				0x0000000000000100
 #define WDC_DRIVE_CAP_NAND_STATS			0x0000000000000200
-#define WDC_DRIVE_CAP_DRIVE_LOG				0x0000000000000400
-#define WDC_DRIVE_CAP_CRASH_DUMP			0x0000000000000800
-#define WDC_DRIVE_CAP_PFAIL_DUMP			0x0000000000001000
+#define WDC_DRIVE_CAP_DRIVE_LOG             0x0000000000000400
+#define WDC_DRIVE_CAP_CRASH_DUMP            0x0000000000000800
+#define WDC_DRIVE_CAP_PFAIL_DUMP            0x0000000000001000
 #define WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY   0x0000000000002000
 #define WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY  0x0000000000004000
 #define WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG 0x0000000000008000
@@ -106,7 +106,7 @@
 #define WDC_DRIVE_CAP_NS_RESIZE             0x0000000000040000
 #define WDC_DRIVE_CAP_INFO                  0x0000000000080000
 #define WDC_DRIVE_CAP_C0_LOG_PAGE           0x0000000000100000
-#define WDC_DRIVE_CAP_TEMP_STATS	    0x0000000000200000
+#define WDC_DRIVE_CAP_TEMP_STATS            0x0000000000200000
 #define WDC_DRIVE_CAP_VUC_CLEAR_PCIE        0x0000000000400000
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
@@ -299,10 +299,10 @@
 #define WDC_LOG_ID_FA                           0xFA
 
 /* Clear PCIe Correctable Errors */
-#define WDC_NVME_CLEAR_PCIE_CORR_OPCODE			WDC_NVME_CAP_DIAG_CMD_OPCODE
-#define WDC_NVME_CLEAR_PCIE_CORR_CMD			0x22
-#define WDC_NVME_CLEAR_PCIE_CORR_SUBCMD			0x04
-#define WDC_NVME_CLEAR_PCIE_CORR_OPCODE_VUC             0xD2
+#define WDC_NVME_CLEAR_PCIE_CORR_OPCODE     WDC_NVME_CAP_DIAG_CMD_OPCODE
+#define WDC_NVME_CLEAR_PCIE_CORR_CMD        0x22
+#define WDC_NVME_CLEAR_PCIE_CORR_SUBCMD     0x04
+#define WDC_NVME_CLEAR_PCIE_CORR_OPCODE_VUC 0xD2
 
 /* Clear Assert Dump Status */
 #define WDC_NVME_CLEAR_ASSERT_DUMP_OPCODE		0xD8
@@ -1076,8 +1076,7 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 			break;
 		case WDC_NVME_SN730A_DEV_ID:
 			capabilities =  WDC_DRIVE_CAP_DUI | WDC_DRIVE_CAP_NAND_STATS | 
-                        		WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_TEMP_STATS | 
-                                        WDC_DRIVE_CAP_VUC_CLEAR_PCIE;
+					WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_TEMP_STATS | WDC_DRIVE_CAP_VUC_CLEAR_PCIE;
 			break;
 		case WDC_NVME_SN340_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI;
@@ -4563,12 +4562,12 @@ static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct comma
         
 	memset(&admin_cmd, 0, sizeof (admin_cmd));
 	if (capabilities & WDC_DRIVE_CAP_CLEAR_PCIE) {
-                admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE;
-	        admin_cmd.cdw12 = ((WDC_NVME_CLEAR_PCIE_CORR_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
-			WDC_NVME_CLEAR_PCIE_CORR_CMD);
-        }
-        else if (capabilities & WDC_DRIVE_CAP_VUC_CLEAR_PCIE)
-                admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE_VUC;
+		admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE;
+		admin_cmd.cdw12 = ((WDC_NVME_CLEAR_PCIE_CORR_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
+				WDC_NVME_CLEAR_PCIE_CORR_CMD);
+	}
+	else if (capabilities & WDC_DRIVE_CAP_VUC_CLEAR_PCIE)
+		admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE_VUC;
 
 	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
