@@ -2918,8 +2918,8 @@ void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
 	root = json_create_object();
 	json_object_add_value_int(root, "zoc", le16_to_cpu(ns->zoc));
 	json_object_add_value_int(root, "ozcs", le16_to_cpu(ns->ozcs));
-	json_object_add_value_int(root, "mar", le16_to_cpu(ns->mar));
-	json_object_add_value_int(root, "mor", le16_to_cpu(ns->mor));
+	json_object_add_value_int(root, "mar", le32_to_cpu(ns->mar));
+	json_object_add_value_int(root, "mor", le32_to_cpu(ns->mor));
 	json_object_add_value_int(root, "rrl", le32_to_cpu(ns->rrl));
 	json_object_add_value_int(root, "frl", le32_to_cpu(ns->frl));
 
@@ -2987,8 +2987,8 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	printf("ozcs    : %u\n", le16_to_cpu(ns->ozcs));
 	if (human)
 		show_nvme_id_ns_zoned_ozcs(ns->ozcs);
-	printf("mar     : %u\n", le16_to_cpu(ns->mar));
-	printf("mor     : %u\n", le16_to_cpu(ns->mor));
+	printf("mar     : %#x\n", le32_to_cpu(ns->mar));
+	printf("mor     : %#x\n", le32_to_cpu(ns->mor));
 	printf("rrl     : %u\n", le32_to_cpu(ns->rrl));
 	printf("frl     : %u\n", le32_to_cpu(ns->frl));
 
