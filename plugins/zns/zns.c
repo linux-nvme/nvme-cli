@@ -50,8 +50,10 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 	err = nvme_zns_identify_ctrl(fd, &ctrl);
 	if (!err)
 		nvme_show_zns_id_ctrl(&ctrl, flags);
-	else
+	else if (err > 0)
 		nvme_show_status(err);
+	else
+		perror("zns identify controller");
 close_fd:
 	close(fd);
 	return err;
@@ -118,8 +120,10 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	err = nvme_zns_identify_ns(fd, cfg.namespace_id, &ns);
 	if (!err)
 		nvme_show_zns_id_ns(&ns, &id_ns, flags);
-	else
+	else if (err > 0)
 		nvme_show_status(err);
+	else
+		perror("zns identify namespace");
 close_fd:
 	close(fd);
 	return err;
@@ -182,8 +186,10 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 	if (!err)
 		printf("%s: Success, action:%d zone:%"PRIx64" nsid:%d\n", command,
 			zsa, (uint64_t)cfg.zslba, cfg.namespace_id);
-	else
+	else if (err > 0)
 		nvme_show_status(err);
+	else
+		perror(desc);
 free:
 	free(command);
 close_fd:
@@ -199,14 +205,22 @@ static int get_zdes_bytes(int fd, __u32 nsid)
 	int err;
 
 	err = nvme_identify_ns(fd, nsid,  false, &id_ns);
-	if (err) {
+	if (err > 0){
 		nvme_show_status(err);
+		return err;
+	}
+	else if (err < 0){
+		perror("identify namespace");
 		return err;
 	}
 
 	err = nvme_zns_identify_ns(fd, nsid,  &ns);
-	if (err) {
+	if (err > 0){
 		nvme_show_status(err);
+		return err;
+	}
+	else if (err < 0){
+		perror("zns identify namespace");
 		return err;
 	}
 
@@ -311,8 +325,10 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 	if (!err)
 		printf("zone-mgmt-send: Success, action:%d zone:%"PRIx64" nsid:%d\n",
 			cfg.zsa, (uint64_t)cfg.zslba, cfg.namespace_id);
-	else
+	else if (err > 0)
 		nvme_show_status(err);
+	else
+		perror("zns zone-mgmt-send");
 
 close_ffd:
 	if (cfg.file)
@@ -434,8 +450,10 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 	if (!err)
 		printf("set-zone-desc: Success, zone:%"PRIx64" nsid:%d\n",
 			(uint64_t)cfg.zslba, cfg.namespace_id);
-	else
+	else if (err > 0)
 		nvme_show_status(err);
+	else
+		perror("zns set-zone-desc");
 close_ffd:
 	if (cfg.file)
 		close(ffd);
@@ -513,8 +531,10 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 	if (!err)
 		printf("zone-mgmt-recv: Success, action:%d zone:%"PRIx64" nsid:%d\n",
 			cfg.zra, (uint64_t)cfg.zslba, cfg.namespace_id);
-	else
+	else if (err > 0)
 		nvme_show_status(err);
+	else
+		perror("zns zone-mgmt-recv");
 
 	if (data)
 		free(data);
@@ -620,8 +640,10 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	if (!err)
 		nvme_show_zns_report_zones(report, cfg.num_descs, zdes,
 			report_size, flags);
-	else
+	else if (err > 0)
 		nvme_show_status(err);
+	else
+		perror("zns report-zones");
 
 	nvme_free(report, huge);
 close_fd:
@@ -805,8 +827,10 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (!err)
 		printf("Success appended data to LBA %"PRIx64"\n", (uint64_t)result);
-	else
+	else if (err > 0)
 		nvme_show_status(err);
+	else
+		perror("zns zone-append");
 
 free_meta:
 	free(mbuf);
@@ -870,8 +894,10 @@ static int changed_zone_list(int argc, char **argv, struct command *cmd, struct 
 						cfg.rae, sizeof(log), &log);
 	if (!err)
 		nvme_show_zns_changed(&log, flags);
-	else
+	else if (err > 0)
 		nvme_show_status(err);
+	else
+		perror("zns changed-zone-list");
 
 close_fd:
 	close(fd);
