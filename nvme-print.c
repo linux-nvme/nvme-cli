@@ -4760,7 +4760,7 @@ static void nvme_show_details_ns(struct nvme_namespace *n, bool ctrl)
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		le16_to_cpu(n->ns.lbaf[(n->ns.flbas & 0x0f)].ms));
 
-	printf("%-12s %-8x %-26s %-16s ", n->name, n->nsid, usage, format);
+	printf("%-12s %-16x %-26s %-16s ", n->name, n->nsid, usage, format);
 
 	if (ctrl)
 		printf("%s", n->ctrl->name);
@@ -4837,8 +4837,8 @@ static void nvme_show_detailed_list(struct nvme_topology *t)
 	}
 
 	printf("\nNVM Express Namespaces\n\n");
-	printf("%-12s %-8s %-26s %-16s %-16s\n", "Device", "NSID", "Usage", "Format", "Controllers");
-	printf("%-.12s %-.8s %-.26s %-.16s %-.16s\n", dash, dash, dash, dash, dash);
+	printf("%-12s %-12s %-26s %-16s %-16s\n", "Device", "NSID(hex)", "Usage", "Format", "Controllers");
+	printf("%-.12s %-.12s %-.26s %-.16s %-.16s\n", dash, dash, dash, dash, dash);
 
 	for (i = 0; i < t->nr_subsystems; i++) {
 		struct nvme_subsystem *s = &t->subsystems[i];
