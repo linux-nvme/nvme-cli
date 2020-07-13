@@ -6633,56 +6633,57 @@ static int wdc_capabilities(int argc, char **argv,
 
     /* print command and supported status */
     printf("WDC Plugin Capabilities for NVME device:%s\n", devicename);
-    printf("cap-diag                      : %s", 
+    printf("cap-diag                      : %s\n", 
             capabilities & WDC_DRIVE_CAP_CAP_DIAG ? "Supported" : "Not Supported");
-    printf("drive-log                     : %s", 
+    printf("drive-log                     : %s\n", 
             capabilities & WDC_DRIVE_CAP_DRIVE_LOG ? "Supported" : "Not Supported");
-    printf("get-crash-dump                : %s", 
+    printf("get-crash-dump                : %s\n", 
             capabilities & WDC_DRIVE_CAP_CRASH_DUMP ? "Supported" : "Not Supported");
-    printf("get-pfail-dump                : %s", 
+    printf("get-pfail-dump                : %s\n", 
             capabilities & WDC_DRIVE_CAP_PFAIL_DUMP ? "Supported" : "Not Supported");
-    printf("id-ctrl                       : Supported");
-    printf("purge                         : Supported");
-    printf("purge-monitor                 : Supported");
-    printf("vs-internal-log               : %s", 
+    printf("id-ctrl                       : Supported\n");
+    printf("purge                         : Supported\n");
+    printf("purge-monitor                 : Supported\n");
+    printf("vs-internal-log               : %s\n", 
             capabilities & WDC_DRIVE_CAP_INTERNAL_LOG ? "Supported" : "Not Supported");
-    printf("vs-nand-stats                 : %s", 
+    printf("vs-nand-stats                 : %s\n", 
             capabilities & WDC_DRIVE_CAP_NAND_STATS ? "Supported" : "Not Supported");
-    printf("vs-smart-add-log              : %s", 
+    printf("vs-smart-add-log              : %s\n", 
             capabilities & WDC_DRIVE_CAP_SMART_LOG_MASK ? "Supported" : "Not Supported");
-    printf("--C0 Log Page                 : %s",
+    printf("--C0 Log Page                 : %s\n",
             capabilities & WDC_DRIVE_CAP_C0_LOG_PAGE ? "Supported" : "Not Supported");
-    printf("--C1 Log Page                 : %s",
+    printf("--C1 Log Page                 : %s\n",
             capabilities & WDC_DRIVE_CAP_C1_LOG_PAGE ? "Supported" : "Not Supported");
-    printf("--CA Log Page                 : %s",
+    printf("--CA Log Page                 : %s\n",
             capabilities & WDC_DRIVE_CAP_CA_LOG_PAGE ? "Supported" : "Not Supported");
-    printf("--D0 Log Page                 : %s",
+    printf("--D0 Log Page                 : %s\n",
             capabilities & WDC_DRIVE_CAP_D0_LOG_PAGE ? "Supported" : "Not Supported");
-    printf("clear-pcie-correctable-errors : %s", 
+    printf("clear-pcie-correctable-errors : %s\n", 
             capabilities & WDC_DRIVE_CAP_CLEAR_PCIE_MASK ? "Supported" : "Not Supported");
-    printf("drive-essentials              : %s", 
+    printf("drive-essentials              : %s\n", 
             capabilities & WDC_DRIVE_CAP_DRIVE_ESSENTIALS ? "Supported" : "Not Supported");
-    printf("get-drive-status              : %s", 
+    printf("get-drive-status              : %s\n", 
             capabilities & WDC_DRIVE_CAP_DRIVE_STATUS ? "Supported" : "Not Supported");
-    printf("clear-assert-dump             : %s", 
-            capabilities & WDC_DRIVE_CAP_CAP_DIAG ? "Supported" : "Not Supported");
-    printf("drive-resize                  : %s", 
-            capabilities & WDC_DRIVE_CAP_CAP_DIAG ? "Supported" : "Not Supported");
-    printf("vs-fw-activate-history        : %s", 
-            capabilities & WDC_DRIVE_CAP_CAP_DIAG ? "Supported" : "Not Supported");
-    printf("clear-fw-activate-history     : %s", 
-            capabilities & WDC_DRIVE_CAP_CAP_DIAG ? "Supported" : "Not Supported");
-    printf("vs-telemetry-controller-option: %s", 
-            capabilities & WDC_DRIVE_CAP_CAP_DIAG ? "Supported" : "Not Supported");
-    printf("vs-error-reason-identifier    : %s", 
-            capabilities & WDC_DRIVE_CAP_CAP_DIAG ? "Supported" : "Not Supported");
-    printf("log-page-directory            : %s", 
-            capabilities & WDC_DRIVE_CAP_CAP_DIAG ? "Supported" : "Not Supported");
-    printf("namespace-resize              : %s", 
-            capabilities & WDC_DRIVE_CAP_CAP_DIAG ? "Supported" : "Not Supported");
-    printf("vs-drive-info                 : %s", 
-            capabilities & WDC_DRIVE_CAP_CAP_DIAG ? "Supported" : "Not Supported");
-    printf("vs-temperature-stats          : %s", 
-            capabilities & WDC_DRIVE_CAP_CAP_DIAG ? "Supported" : "Not Supported");
+    printf("clear-assert-dump             : %s\n", 
+            capabilities & WDC_DRIVE_CAP_CLEAR_ASSERT ? "Supported" : "Not Supported");
+    printf("drive-resize                  : %s\n", 
+            capabilities & WDC_DRIVE_CAP_RESIZE ? "Supported" : "Not Supported");
+    printf("vs-fw-activate-history        : %s\n", 
+            capabilities & WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY ? "Supported" : "Not Supported");
+    printf("clear-fw-activate-history     : %s\n", 
+            capabilities & WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY ? "Supported" : "Not Supported");
+    printf("vs-telemetry-controller-option: %s\n", 
+            capabilities & WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG ? "Supported" : "Not Supported");
+    printf("vs-error-reason-identifier    : %s\n", 
+            capabilities & WDC_DRIVE_CAP_REASON_ID ? "Supported" : "Not Supported");
+    printf("log-page-directory            : %s\n", 
+            capabilities & WDC_DRIVE_CAP_LOG_PAGE_DIR ? "Supported" : "Not Supported");
+    printf("namespace-resize              : %s\n", 
+            capabilities & WDC_DRIVE_CAP_NS_RESIZE ? "Supported" : "Not Supported");
+    printf("vs-drive-info                 : %s\n", 
+            capabilities & WDC_DRIVE_CAP_INFO ? "Supported" : "Not Supported");
+    printf("vs-temperature-stats          : %s\n", 
+            capabilities & WDC_DRIVE_CAP_TEMP_STATS ? "Supported" : "Not Supported");
+    printf("capabilities                  : Supported\n");
     return 0;
 }
