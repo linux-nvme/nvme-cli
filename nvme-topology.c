@@ -431,9 +431,9 @@ static int legacy_list(struct nvme_topology *t, char *dev_dir)
 	char *path;
 
 	t->nr_subsystems = scandir(dev_dir, &devices, scan_ctrls_filter, alphasort);
-	if (t->nr_subsystems < 0) {
-		fprintf(stderr, "no NVMe device(s) detected.\n");
-		return t->nr_subsystems;
+	if (t->nr_subsystems == -1) {
+		fprintf(stderr, "Failed to open %s: %s\n", dev_dir, strerror(errno));
+		return errno;
 	}
 
 	t->subsystems = calloc(t->nr_subsystems, sizeof(*s));
