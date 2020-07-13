@@ -1,0 +1,32 @@
+nvme-wdc-capabilities(1)
+========================
+
+NAME
+----
+nvme-wdc-capabilities - Display WDC plugin command capabilities
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc capabilities' <device> 
+
+DESCRIPTION
+-----------
+
+For the NVMe device given, displays list of commands and support status.
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+On success it returns 0, error code otherwise.
+
+EXAMPLES
+--------
+* Displays the capabilities for the device:
++
+------------
+# nvme wdc capabilities /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.
