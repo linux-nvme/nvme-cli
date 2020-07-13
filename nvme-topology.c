@@ -529,38 +529,64 @@ static void free_subsystem(struct nvme_subsystem *s)
 	free(s->namespaces);
 }
 
+static int scan_subsystem_dir(struct nvme_topology *t, char *dev_dir)
+{
+	struct nvme_topology dev_dir_t = { };
+	int ret, i, total_nr_subsystems;
+
+	ret = legacy_list(&dev_dir_t, dev_dir);
+	if (ret != 0)
+		return ret;
+
+	total_nr_subsystems = t->nr_subsystems + dev_dir_t.nr_subsystems;
+	t->subsystems = realloc(t->subsystems,
+				total_nr_subsystems * sizeof(struct nvme_subsystem));
+	for (i = 0; i < dev_dir_t.nr_subsystems; i++){
+		t->subsystems[i+t->nr_subsystems] = dev_dir_t.subsystems[i];
+	}
+	t->nr_subsystems = total_nr_subsystems;
+
+	return 0;
+}
+
 int scan_subsystems(struct nvme_topology *t, const char *subsysnqn,
 		    __u32 ns_instance, char *dev_dir)
 {
 	struct nvme_subsystem *s;
 	struct dirent **subsys;
-	int i, j = 0;
-
-	if (dev_dir != NULL)
-		return legacy_list(t, dev_dir);
+	int ret, i, j = 0;
 
 	t->nr_subsystems = scandir(subsys_dir, &subsys, scan_subsys_filter,
 				   alphasort);
-	if (t->nr_subsystems < 0)
-		return legacy_list(t, (char *)dev);
+	if (t->nr_subsystems < 0) {
+		ret = legacy_list(t, (char *)dev);
+		if (ret != 0)
+			return ret;
+	} else {
 
-	t->subsystems = calloc(t->nr_subsystems, sizeof(*s));
-	for (i = 0; i < t->nr_subsystems; i++) {
-		s = &t->subsystems[j];
-		s->name = strdup(subsys[i]->d_name);
-		scan_subsystem(s, ns_instance);
+		t->subsystems = calloc(t->nr_subsystems, sizeof(*s));
+		for (i = 0; i < t->nr_subsystems; i++) {
+			s = &t->subsystems[j];
+			s->name = strdup(subsys[i]->d_name);
+			scan_subsystem(s, ns_instance);
 
-		if (!subsysnqn || !strcmp(s->subsysnqn, subsysnqn))
-			j++;
-		else
-			free_subsystem(s);
+			if (!subsysnqn || !strcmp(s->subsysnqn, subsysnqn))
+				j++;
+			else
+				free_subsystem(s);
+		}
+		t->nr_subsystems = j;
+
+		while (i--)
+			free(subsys[i]);
+		free(subsys);
 	}
-	t->nr_subsystems = j;
 
-	while (i--)
-		free(subsys[i]);
-	free(subsys);
-	return 0;
+	if (dev_dir != NULL && strcmp(dev_dir, "/dev/")) {
+		ret = scan_subsystem_dir(t, dev_dir);
+	}
+
+	return ret;
 }
 
 void free_topology(struct nvme_topology *t)

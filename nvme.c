@@ -1337,7 +1337,7 @@ ret:
 static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve basic information for all NVMe namespaces";
-	const char *device_dir = "Directory to search for devices";
+	const char *device_dir = "Additional directory to search for devices";
 	const char *verbose = "Increase output verbosity";
 	struct nvme_topology t = { };
 	enum nvme_print_flags flags;
