@@ -1699,7 +1699,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 		for (j = 0; j < s->nr_ctrls; j++) {
 			struct nvme_ctrl *c = &s->ctrls[j];
 
-			if (!strcmp(c->transport, "pcie"))
+			if (!c->transport || !strcmp(c->transport, "pcie"))
 				continue;
 			err = disconnect_by_device(c->name);
 			if (err)
