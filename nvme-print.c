@@ -1580,9 +1580,9 @@ static void nvme_show_subsystem(struct nvme_subsystem *s)
 
 	for (i = 0; i < s->nr_ctrls; i++) {
 		printf(" +- %s %s %s %s %s\n", s->ctrls[i].name,
-				s->ctrls[i].transport,
-				s->ctrls[i].address,
-				s->ctrls[i].state,
+				s->ctrls[i].transport ? : "",
+				s->ctrls[i].address ? : "",
+				s->ctrls[i].state ? : "",
 				s->ctrls[i].ana_state ? : "");
 	}
 }
@@ -1615,12 +1615,15 @@ static void json_print_nvme_subsystem_list(struct nvme_topology *t)
 			path_attrs = json_create_object();
 			json_object_add_value_string(path_attrs, "Name",
 					c->name);
-			json_object_add_value_string(path_attrs, "Transport",
-					c->transport);
-			json_object_add_value_string(path_attrs, "Address",
-					c->address);
-			json_object_add_value_string(path_attrs, "State",
-					c->state);
+			if (c->transport)
+				json_object_add_value_string(path_attrs,
+						"Transport", c->transport);
+			if (c->address)
+				json_object_add_value_string(path_attrs,
+						"Address", c->address);
+			if (c->state)
+				json_object_add_value_string(path_attrs,
+						"State", c->state);
 			if (c->ana_state)
 				json_object_add_value_string(path_attrs,
 						"ANAState", c->ana_state);
@@ -5524,7 +5527,7 @@ static void nvme_show_detailed_list(struct nvme_topology *t)
 
 			printf("%-8s %-.20s %-.40s %-.8s %-6s %-14s %-12s ",
 				c->name, c->id.sn, c->id.mn, c->id.fr,
-				c->transport, c->address, s->name);
+				c->transport ? : "", c->address ? : "", s->name);
 
 			for (k = 0; k < c->nr_namespaces; k++) {
 				struct nvme_namespace *n = &c->namespaces[k];
@@ -5607,9 +5610,12 @@ static void json_detail_list(struct nvme_topology *t)
 			struct json_array *namespaces;
 
 			json_object_add_value_string(ctrl_attrs, "Controller", c->name);
-			json_object_add_value_string(ctrl_attrs, "Transport", c->transport);
-			json_object_add_value_string(ctrl_attrs, "Address", c->address);
-			json_object_add_value_string(ctrl_attrs, "State", c->state);
+			if (c->transport)
+				json_object_add_value_string(ctrl_attrs, "Transport", c->transport);
+			if (c->address)
+				json_object_add_value_string(ctrl_attrs, "Address", c->address);
+			if (c->state)
+				json_object_add_value_string(ctrl_attrs, "State", c->state);
 			if (c->hostnqn)
 				json_object_add_value_string(ctrl_attrs, "HostNQN", c->hostnqn);
 			if (c->hostid)
@@ -5696,7 +5702,7 @@ static void json_simple_ns(struct nvme_namespace *n, struct json_array *devices)
 
 	json_object_add_value_string(device_attrs, "ModelNumber", formatter);
 
-	if (index >= 0 && !strcmp(n->ctrl->transport, "pcie")) {
+	if (index >= 0 && n->ctrl->transport && !strcmp(n->ctrl->transport, "pcie")) {
 		char *product = nvme_product_name(index);
 
 		json_object_add_value_string(device_attrs, "ProductName", product);
