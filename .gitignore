@@ -5,6 +5,9 @@ a.out
 *~
 *.swp
 NVME-VERSION-FILE
+nvme.spec
+nvme-*.tar.gz
+version
 
 cscope.*
 
