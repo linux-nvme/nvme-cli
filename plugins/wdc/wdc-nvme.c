@@ -108,6 +108,7 @@
 #define WDC_DRIVE_CAP_C0_LOG_PAGE           0x0000000000100000
 #define WDC_DRIVE_CAP_TEMP_STATS            0x0000000000200000
 #define WDC_DRIVE_CAP_VUC_CLEAR_PCIE        0x0000000000400000
+#define WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE     0x0000000000800000
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
@@ -116,7 +117,8 @@
 #define WDC_DRIVE_CAP_SMART_LOG_MASK	(WDC_DRIVE_CAP_C0_LOG_PAGE | WDC_DRIVE_CAP_C1_LOG_PAGE | \
                                          WDC_DRIVE_CAP_CA_LOG_PAGE | WDC_DRIVE_CAP_D0_LOG_PAGE)
 #define WDC_DRIVE_CAP_CLEAR_PCIE_MASK       (WDC_DRIVE_CAP_CLEAR_PCIE | \
-                                             WDC_DRIVE_CAP_VUC_CLEAR_PCIE)
+                                             WDC_DRIVE_CAP_VUC_CLEAR_PCIE | \
+                                             WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE)
 /* SN730 Get Log Capabilities */
 #define SN730_NVME_GET_LOG_OPCODE			0xc2
 #define SN730_GET_FULL_LOG_LENGTH			0x00080009
@@ -272,6 +274,9 @@
 #define WDC_NVME_EOL_STATUS_LOG_LEN				0x200
 #define WDC_NVME_SMART_CLOUD_ATTR_LEN			0x200
 
+/* C0 SMART Cloud Attributes Log Page*/
+#define WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_OPCODE   0xC0
+
 /* CB - FW Activate History Log Page */
 #define WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID      0xCB
 #define WDC_FW_ACT_HISTORY_LOG_BUF_LEN          0x3d0
@@ -304,7 +309,7 @@
 #define WDC_NVME_CLEAR_PCIE_CORR_CMD        0x22
 #define WDC_NVME_CLEAR_PCIE_CORR_SUBCMD     0x04
 #define WDC_NVME_CLEAR_PCIE_CORR_OPCODE_VUC 0xD2
-
+#define WDC_NVME_CLEAR_PCIE_CORR_FEATURE_ID 0xC3
 /* Clear Assert Dump Status */
 #define WDC_NVME_CLEAR_ASSERT_DUMP_OPCODE		0xD8
 #define WDC_NVME_CLEAR_ASSERT_DUMP_CMD			0x03
@@ -1085,7 +1090,7 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		case WDC_NVME_ZN345_DEV_ID:
 		/* FALLTHRU */
 		case WDC_NVME_ZN345_DEV_ID_1:
-			capabilities = WDC_DRIVE_CAP_DUI_DATA;
+			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE | WDC_DRIVE_CAP_C0_LOG_PAGE;
 			break;
 		default:
 			capabilities = 0;
@@ -4009,20 +4014,19 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 		return fmt;
 	}
 
-	if (!get_dev_mgment_cbs_data(fd, WDC_C2_CUSTOMER_ID_ID, (void*)&data)) {
-		fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
-		return -1;
-	}
-
 	ret = wdc_get_pci_ids(&device_id, &read_vendor_id);
-
-	cust_id = (__u32*)data;
 
 	switch (device_id) {
 
 	case WDC_NVME_SN640_DEV_ID:
 	case WDC_NVME_SN640_DEV_ID_1:
 	case WDC_NVME_SN640_DEV_ID_2:
+		if (!get_dev_mgment_cbs_data(fd, WDC_C2_CUSTOMER_ID_ID, (void*)&data)) {
+			fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
+			return -1;
+		}
+
+		cust_id = (__u32*)data;
 
 		if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
 		{
@@ -4125,6 +4129,32 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 			free(data);
 		}
 		break;
+
+	case WDC_NVME_ZN345_DEV_ID:
+	case WDC_NVME_ZN345_DEV_ID_1:
+		if ((data = (__u8*) malloc(sizeof (__u8) * WDC_NVME_SMART_CLOUD_ATTR_LEN)) == NULL) {
+			fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
+			return -1;
+		}
+
+		/* Get the 0xC0 log data */
+		ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_OPCODE,
+					false, WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
+
+		if (strcmp(format, "json"))
+			fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+
+		if (ret == 0) {
+			/* parse the data */
+			wdc_print_c0_cloud_attr_log(data, fmt);
+		} else {
+			fprintf(stderr, "ERROR : WDC : Unable to read C0 Log Page data\n");
+			ret = -1;
+		}
+
+		free(data);
+		break;
+
 	default:
 
 		ret = -1;
@@ -4526,13 +4556,53 @@ out:
 	return ret;
 }
 
+static int wdc_do_clear_pcie_correctable_errors(int fd)
+{
+	int ret;
+	struct nvme_passthru_cmd admin_cmd;
+
+	memset(&admin_cmd, 0, sizeof (admin_cmd));
+	admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE;
+	admin_cmd.cdw12 = ((WDC_NVME_CLEAR_PCIE_CORR_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
+			WDC_NVME_CLEAR_PCIE_CORR_CMD);
+
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
+	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	return ret;
+}
+
+static int wdc_do_clear_pcie_correctable_errors_vuc(int fd)
+{
+	int ret;
+	struct nvme_passthru_cmd admin_cmd;
+
+	memset(&admin_cmd, 0, sizeof (admin_cmd));
+	admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE_VUC;
+
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
+	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	return ret;
+}
+
+static int wdc_do_clear_pcie_correctable_errors_fid(int fd)
+{
+	int ret;
+	__u32 result;
+	__u32 value = 1 << 31; /* Bit 31 - clear PCIe correctable count */
+
+	ret = nvme_set_feature(fd, 0, WDC_NVME_CLEAR_PCIE_CORR_FEATURE_ID, value,
+				0, 0, 0, NULL, &result);
+
+	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	return ret;
+}
+
 static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
 	char *desc = "Clear PCIE Correctable Errors.";
 	int fd, ret;
 	__u64 capabilities = 0;
-	struct nvme_passthru_cmd admin_cmd;
 
 	OPT_ARGS(opts) = {
 		OPT_END()
@@ -4554,20 +4624,20 @@ static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct comma
 		goto out;
 	}
         
-	memset(&admin_cmd, 0, sizeof (admin_cmd));
 	if (capabilities & WDC_DRIVE_CAP_CLEAR_PCIE) {
-		admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE;
-		admin_cmd.cdw12 = ((WDC_NVME_CLEAR_PCIE_CORR_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
-				WDC_NVME_CLEAR_PCIE_CORR_CMD);
+		ret = wdc_do_clear_pcie_correctable_errors(fd);
 	}
-	else if (capabilities & WDC_DRIVE_CAP_VUC_CLEAR_PCIE)
-		admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE_VUC;
+	else if (capabilities & WDC_DRIVE_CAP_VUC_CLEAR_PCIE) {
+		ret = wdc_do_clear_pcie_correctable_errors_vuc(fd);
+	}
+	else {
+		ret = wdc_do_clear_pcie_correctable_errors_fid(fd);
+	}
 
-	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 out:
 	return ret;
 }
+
 static int wdc_drive_status(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
