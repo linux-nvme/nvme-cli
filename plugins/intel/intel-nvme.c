@@ -1138,6 +1138,13 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 		err = get_internal_log_old(buf, output, fd, &cmd);
 		goto out;
 	}
+	
+	/* for newer products, telemetry will be suggested */
+	if (intel->ver.major >= 4 && intel->ver.minor >= 1)
+	{
+		printf("\nThe Intel Internal Log command is deprecated on newer products, please use the command 'nvme telemetry-log' instead\n");
+		goto out;	    
+	}
 
 	if (cfg.log == 2) {
 		if (cfg.verbose)
