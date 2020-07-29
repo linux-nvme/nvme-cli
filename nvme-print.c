@@ -2980,26 +2980,50 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	else if (flags & JSON)
 		return json_nvme_zns_id_ns(ns, id_ns, flags);
 
-	printf("NVMe ZNS Identify Namespace:\n");
-	printf("zoc     : %u\n", le16_to_cpu(ns->zoc));
-	if (human)
+	printf("ZNS Command Set Identify Namespace:\n");
+
+	if (human) {
+		printf("zoc     : %u   Zone Operation Characteristics\n", le16_to_cpu(ns->zoc));
 		show_nvme_id_ns_zoned_zoc(ns->zoc);
-	printf("ozcs    : %u\n", le16_to_cpu(ns->ozcs));
-	if (human)
+	} else {
+		printf("zoc     : %u\n", le16_to_cpu(ns->zoc));
+	}
+
+	if (human) {
+		printf("ozcs    : %u   Optional Zoned Command Support\n", le16_to_cpu(ns->ozcs));
 		show_nvme_id_ns_zoned_ozcs(ns->ozcs);
-	printf("mar     : %#x\n", le32_to_cpu(ns->mar));
-	printf("mor     : %#x\n", le32_to_cpu(ns->mor));
-	printf("rrl     : %u\n", le32_to_cpu(ns->rrl));
-	printf("frl     : %u\n", le32_to_cpu(ns->frl));
+	} else {
+		printf("ozcs    : %u\n", le16_to_cpu(ns->ozcs));
+	}
+
+	if (!le32_to_cpu(ns->mar) && human)
+		printf("mar     : No Limit\n");
+	else
+		printf("mar     : %#x\n", le32_to_cpu(ns->mar));
+
+	if (!le32_to_cpu(ns->mor) && human)
+		printf("mor     : No Limit\n");
+	else
+		printf("mor     : %#x\n", le32_to_cpu(ns->mor));
+
+	if (!le32_to_cpu(ns->rrl) && human)
+		printf("rrl     : Not Reported\n");
+	else
+		printf("rrl     : %#x\n", le32_to_cpu(ns->rrl));
+
+	if (!le32_to_cpu(ns->frl) && human)
+		printf("frl     : Not Reported\n");
+	else
+		printf("frl     : %#x\n", le32_to_cpu(ns->frl));
 
 	for (i = 0; i <= id_ns->nlbaf; i++){
 		if (human)
-			printf("LBA Format Extension %2d : Zone Size: %"PRIx64" blocks - "
+			printf("LBA Format Extension %2d : Zone Size: 0x%"PRIx64" LBAs - "
 					"Zone Descriptor Extension Size: %-1d bytes%s\n",
 				i, le64_to_cpu(ns->lbafe[i].zsze), ns->lbafe[i].zdes << 6,
 				i == lbaf ? " (in use)" : "");
 		else
-			printf("lbafe %2d: zsze:%"PRIx64" zdes:%u%s\n", i,
+			printf("lbafe %2d: zsze:0x%"PRIx64" zdes:%u%s\n", i,
 				(uint64_t)le64_to_cpu(ns->lbafe[i].zsze),
 				ns->lbafe[i].zdes, i == lbaf ? " (in use)" : "");
 	}
