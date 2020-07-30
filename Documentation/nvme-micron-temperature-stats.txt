@@ -1,0 +1,40 @@
+nvme-micron-temperarature-stats(1)
+==================================
+
+NAME
+----
+nvme-micron-temperature-stats - Retrieves temperature information of given micron device
+
+SYNOPSIS
+--------
+[verse]
+'nvme micron vs-temperature-stats' <device>
+
+DESCRIPTION
+-----------
+This command prints temperature information (composite temperature and number of active
+temperature sensors) for the given micron device.
+
+The <device> parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1). 
+
+This will only work on Micron devices devices of model numbers 54XX. Support for new
+devices may be added subsequently.
+
+OPTIONS
+-------
+None
+
+EXAMPLES
+--------
+* Retrieve temperature information
++
+------------
+# nvme micron vs-temperature-stats /dev/nvme0
+
+------------
+
+NVME
+----
+Part of the nvme-user suite
