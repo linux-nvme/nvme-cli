@@ -1,0 +1,150 @@
+nvme-rpmb(1)
+==============
+
+NAME
+----
+nvme-rpmb - Send RPMB commands to an NVMe device
+
+SYNOPSIS
+--------
+[verse]
+'nvme rpmb' <device> [--cmd=<command> | -c <command>]
+		    [--msgfile=<data-file> | -f <data-file>]
+		    [--keyfile=<key-file> | -g <key-file>]
+		    [--key=<key> | -k <key>]
+		    [--msg=<data> | -d <data>]
+		    [--address=<offset> | -o <offset>]
+		    [--blocks=<512 byte sectors> | -b <sectors> ]
+		    [--target=<target-id> | -t <id> ]
+
+DESCRIPTION
+-----------
+For the NVMe device given, send an nvme rpmb command and provide the results.
+
+The <device> parameter is mandatory and NVMe character device (ex: /dev/nvme0)
+must be specified. If the given device supports RPMB targets, command given
+with --cmd or -c option shall be sent to the controller. If given NVMe device
+doesn't support RPMB targets, a message indicating the same shall be printed
+along with controller register values related RPMB.
+
+OPTIONS
+-------
+-c <command>::
+--cmd=<command>::
+	RPMB command to be sent to the device. It can be one of the following
+
+	info          - print information regarding supported RPMB targets and
+			access and total sizes. No further arguments are required
+
+	program-key   - program 'key' specified with -k option or key read from
+			file specified with --keyfile option to the specified
+			RPMB target given with --target or -t options. As per 
+			spec, this is one time action which can't be undone.
+
+	read-couter   - Read 'write counter' of specified RPMB target. The
+			counter value read is printed onto STDOUT
+
+	read-config   - Read 512 bytes of device configuration block data of
+			specified RPMB target of the NVMe device. The data read
+			is written to input file specified with --msgfile or -f
+			option.
+	write-config  - Write 512 byes of device configuration block data
+			from file specified by --msgfile or -f options to the
+			RPMB target specified with --target or -t options.
+
+	read-data     - Supports authenticated data reading from specified
+			RPMB target (--target or -t option) at given offset
+			specified with --address or -o option, using key
+			specified using --keyfile or -k options. --blocks or
+			-o option should be given to read the amount of data
+			to be read in 512 byte blocks.
+
+	write-data    - Supports authenticated data writting to specified RPMB
+			target (--target or -t option) at given offset
+			specified with --address or -o option, using key
+			specified using --keyfile or -k options. --blocks or
+			-o option should be given to indicate amount of data
+			to be written in 512 byte blocks.
+
+	For data transfer (read/write) commands, if the specified size is not
+	within the total size supported by a target, the request is failed
+	nvme-rpmb without sending it to device. RPMB target 0 is used as the
+	default target if --target or -t is not specified. 0x0 is used as the
+	default address if no -address or -o option is specified, 
+	
+-t <target>::
+--target=<target>::
+	RPMB target id. This should be one of the supported RPMB targets as
+	reported by 'info' command. If nothing is given, default of 0 is used
+	as RPMB target.
+
+-k <key>::
+--key=<key>::
+-g <key-file>::
+--keyfile=<key-file>::
+	Authentication key to be used for read/write commands. This should have
+	been already programmed by 'program-key' command for given target. Key
+	can be specified on command line using --key or -k options. Key can
+	also be specified using file argument specified with --keyfile or -g 
+	options.
+
+-f <data-file>::
+--msgfile=<data-file>::
+	Name of the file to be used for data transfer commands (read or write).
+	For read command, if an existing file is specified, it will be appended.
+
+-d <data>::
+--msg=<data>::
+	These options provide the data on the command line itself. 
+-o <offset>::
+--address=<offset>::
+	The address (in 512 byte sector offset from 0) to be used for data 
+	trasnfer commands (read or write) for a specified RPMB target.
+-b::
+--blocks=<sectors>::
+	The size in 512 byte sectors to be used for data trasnfer commands
+	(read or write) for a specified RPMB target.
+
+EXAMPLES
+--------
+* Print RPMB support information of an NVMe device
++
+-----------
+# nvme rpmb /dev/nvme0 --cmd=info
+-----------
++
+* Program 'SecreteKey' as authentication key for target 1
++
+------------
+# nvme rpmb /dev/nvme0 --cmd=program-key -key='SecretKey' --target=1
+------------
++
+* Read current write counter of RPMB target 0
++
+------------
+# nvme rpmb /dev/nvme0 --cmd=read-counter --target=0
+------------
++
+* Read configuration data block of target 2 into config.bin file
++
+------------
+# nvme rpmb /dev/nvme0 --cmd=read-config --target=2 -f config.bin
+------------
++
+* Write 200 blocks of (512 bytes) from input.bin onto target 0
++
+------------
+# nvme rpmb /dev/nvme0 -c write-data -t 0 -f input.bin -b 200 -k 'SecreteKey'
+------------
++
+* Read 200 blocks of (512 bytes) from target 2, at offset 0x100 and save the
+* data onto output.bin
++
+------------
+# nvme rpmb /dev/nvme0 -c read-data -t 2 -f out.bin -b 200 -o 0x100
+------------
+
+NVME
+----
+Part of the nvme-user suite
+

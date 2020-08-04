@@ -1,0 +1,326 @@
+'\" t
+.\"     Title: nvme-rpmb
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 08/04/2020
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-RPMB" "1" "08/04/2020" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-rpmb \- Send RPMB commands to an NVMe device
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme rpmb\fR <device> [\-\-cmd=<command> | \-c <command>]
+                    [\-\-msgfile=<data\-file> | \-f <data\-file>]
+                    [\-\-keyfile=<key\-file> | \-g <key\-file>]
+                    [\-\-key=<key> | \-k <key>]
+                    [\-\-msg=<data> | \-d <data>]
+                    [\-\-address=<offset> | \-o <offset>]
+                    [\-\-blocks=<512 byte sectors> | \-b <sectors> ]
+                    [\-\-target=<target\-id> | \-t <id> ]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, send an nvme rpmb command and provide the results\&.
+.sp
+The <device> parameter is mandatory and NVMe character device (ex: /dev/nvme0) must be specified\&. If the given device supports RPMB targets, command given with \-\-cmd or \-c option shall be sent to the controller\&. If given NVMe device doesn\(cqt support RPMB targets, a message indicating the same shall be printed along with controller register values related RPMB\&.
+.SH "OPTIONS"
+.PP
+\-c <command>, \-\-cmd=<command>
+.RS 4
+RPMB command to be sent to the device\&. It can be one of the following
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+info          \- print information regarding supported RPMB targets and
+                access and total sizes\&. No further arguments are required
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+program\-key   \- program \*(Aqkey\*(Aq specified with \-k option or key read from
+                file specified with \-\-keyfile option to the specified
+                RPMB target given with \-\-target or \-t options\&. As per
+                spec, this is one time action which can\*(Aqt be undone\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+read\-couter   \- Read \*(Aqwrite counter\*(Aq of specified RPMB target\&. The
+                counter value read is printed onto STDOUT
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+read\-config   \- Read 512 bytes of device configuration block data of
+                specified RPMB target of the NVMe device\&. The data read
+                is written to input file specified with \-\-msgfile or \-f
+                option\&.
+write\-config  \- Write 512 byes of device configuration block data
+                from file specified by \-\-msgfile or \-f options to the
+                RPMB target specified with \-\-target or \-t options\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+read\-data     \- Supports authenticated data reading from specified
+                RPMB target (\-\-target or \-t option) at given offset
+                specified with \-\-address or \-o option, using key
+                specified using \-\-keyfile or \-k options\&. \-\-blocks or
+                \-o option should be given to read the amount of data
+                to be read in 512 byte blocks\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+write\-data    \- Supports authenticated data writting to specified RPMB
+                target (\-\-target or \-t option) at given offset
+                specified with \-\-address or \-o option, using key
+                specified using \-\-keyfile or \-k options\&. \-\-blocks or
+                \-o option should be given to indicate amount of data
+                to be written in 512 byte blocks\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+For data transfer (read/write) commands, if the specified size is not
+within the total size supported by a target, the request is failed
+nvme\-rpmb without sending it to device\&. RPMB target 0 is used as the
+default target if \-\-target or \-t is not specified\&. 0x0 is used as the
+default address if no \-address or \-o option is specified,
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\-t <target>, \-\-target=<target>
+.RS 4
+RPMB target id\&. This should be one of the supported RPMB targets as reported by
+\fIinfo\fR
+command\&. If nothing is given, default of 0 is used as RPMB target\&.
+.RE
+.PP
+\-k <key>, \-\-key=<key>, \-g <key\-file>, \-\-keyfile=<key\-file>
+.RS 4
+Authentication key to be used for read/write commands\&. This should have been already programmed by
+\fIprogram\-key\fR
+command for given target\&. Key can be specified on command line using \-\-key or \-k options\&. Key can also be specified using file argument specified with \-\-keyfile or \-g options\&.
+.RE
+.PP
+\-f <data\-file>, \-\-msgfile=<data\-file>
+.RS 4
+Name of the file to be used for data transfer commands (read or write)\&. For read command, if an existing file is specified, it will be appended\&.
+.RE
+.PP
+\-d <data>, \-\-msg=<data>
+.RS 4
+These options provide the data on the command line itself\&.
+.RE
+.PP
+\-o <offset>, \-\-address=<offset>
+.RS 4
+The address (in 512 byte sector offset from 0) to be used for data trasnfer commands (read or write) for a specified RPMB target\&.
+.RE
+.PP
+\-b, \-\-blocks=<sectors>
+.RS 4
+The size in 512 byte sectors to be used for data trasnfer commands (read or write) for a specified RPMB target\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Print RPMB support information of an NVMe device
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme rpmb /dev/nvme0 \-\-cmd=info
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Program
+\fISecreteKey\fR
+as authentication key for target 1
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme rpmb /dev/nvme0 \-\-cmd=program\-key \-key=\*(AqSecretKey\*(Aq \-\-target=1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Read current write counter of RPMB target 0
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme rpmb /dev/nvme0 \-\-cmd=read\-counter \-\-target=0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Read configuration data block of target 2 into config\&.bin file
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme rpmb /dev/nvme0 \-\-cmd=read\-config \-\-target=2 \-f config\&.bin
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Write 200 blocks of (512 bytes) from input\&.bin onto target 0
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme rpmb /dev/nvme0 \-c write\-data \-t 0 \-f input\&.bin \-b 200 \-k \*(AqSecreteKey\*(Aq
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Read 200 blocks of (512 bytes) from target 2, at offset 0x100 and save the
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+data onto output\&.bin
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme rpmb /dev/nvme0 \-c read\-data \-t 2 \-f out\&.bin \-b 200 \-o 0x100
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

@@ -1974,7 +1974,7 @@ static void nvme_show_id_ctrl_apsta(__u8 apsta)
 	printf("\n");
 }
 
-static void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
+void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
 {
 	__u32 rpmbs = le32_to_cpu(ctrl_rpmbs);
 	__u32 asz = (rpmbs & 0xFF000000) >> 24;
