@@ -4732,6 +4732,13 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+/* rpmb_cmd_option is defined in nvme-rpmb.c */
+extern int rpmb_cmd_option(int, char **, struct command *, struct plugin *);
+static int rpmb_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	return rpmb_cmd_option(argc, argv, cmd, plugin);
+}
+
 static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, struct command *cmd)
 {
 	void *data = NULL, *metadata = NULL;
