@@ -140,6 +140,12 @@
 #define WDC_CUSTOMER_ID_0x1004				0x1004
 #define WDC_CUSTOMER_ID_0x1005				0x1005
 
+#define WDC_ALL_PAGE_MASK                   0xFFFF
+#define WDC_C0_PAGE_MASK                    0x0001
+#define WDC_C1_PAGE_MASK                    0x0002
+#define WDC_CA_PAGE_MASK                    0x0004
+#define WDC_D0_PAGE_MASK                    0x0008
+
 /* Drive Resize */
 #define WDC_NVME_DRIVE_RESIZE_OPCODE			0xCC
 #define WDC_NVME_DRIVE_RESIZE_CMD			0x03
@@ -1056,16 +1062,16 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		case WDC_NVME_SN640_DEV_ID_1:
 		/* FALLTHRU */
 		case WDC_NVME_SN640_DEV_ID_2:
-			/* verify the 0xC0 log page is supported */
-			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
-				capabilities = WDC_DRIVE_CAP_C0_LOG_PAGE;
-			}
 		/* FALLTHRU */
         case WDC_NVME_SN640_DEV_ID_3:
         /* FALLTHRU */
 		case WDC_NVME_SN840_DEV_ID:
 		/* FALLTHRU */
 		case WDC_NVME_SN840_DEV_ID_1:
+			/* verify the 0xC0 log page is supported */
+			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
+				capabilities = WDC_DRIVE_CAP_C0_LOG_PAGE;
+			}
 		/* FALLTHRU */
 		case WDC_NVME_ZN440_DEV_ID:
 		/* FALLTHRU */
@@ -4134,6 +4140,8 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 	case WDC_NVME_SN640_DEV_ID:
 	case WDC_NVME_SN640_DEV_ID_1:
 	case WDC_NVME_SN640_DEV_ID_2:
+	case WDC_NVME_SN840_DEV_ID:
+	case WDC_NVME_SN840_DEV_ID_1:
 		if (!get_dev_mgment_cbs_data(fd, WDC_C2_CUSTOMER_ID_ID, (void*)&data)) {
 			fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
 			return -1;
@@ -4415,7 +4423,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 	case WDC_NVME_SN640_DEV_ID:
 	case WDC_NVME_SN640_DEV_ID_1:
 	case WDC_NVME_SN640_DEV_ID_2:
-        case WDC_NVME_SN640_DEV_ID_3:
+	case WDC_NVME_SN640_DEV_ID_3:
 	case WDC_NVME_SN840_DEV_ID:
 	case WDC_NVME_SN840_DEV_ID_1:
 
@@ -4591,27 +4599,32 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 	const char *interval = "Interval to read the statistics from [1, 15].";
 	int fd;
 	const char *log_page_version = "Log Page Version: 0 = vendor, 1 = WDC";
+	const char *log_page_mask = "Log Page Mask, comma separated list: 0xC0, 0xC1, 0xCA, 0xD0";
 	int ret = 0;
 	int uuid_index = 0;
+	int page_mask = 0, num, i;
+	int log_page_list[16];
 	__u64 capabilities = 0;
 
 	struct config {
 		uint8_t interval;
-		int   vendor_specific;
 		char *output_format;
 		__u8  log_page_version;
+		char *log_page_mask;
 	};
 
 	struct config cfg = {
 		.interval = 14,
 		.output_format = "normal",
 		.log_page_version   = 0,
+		.log_page_mask   = "",
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("interval", 'i', &cfg.interval, interval),
-		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json"),
-		OPT_BYTE("log-page-version", 'l', &cfg.log_page_version, log_page_version),
+		OPT_UINT("interval",          'i', &cfg.interval,         interval),
+		OPT_FMT("output-format",      'o', &cfg.output_format,    "Output Format: normal|json"),
+		OPT_BYTE("log-page-version",  'l', &cfg.log_page_version, log_page_version),
+		OPT_LIST("log-page-mask",     'p', &cfg.log_page_mask,    log_page_mask),
 		OPT_END()
 	};
 
@@ -4629,6 +4642,40 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 		goto out;
 	}
 
+	num = argconfig_parse_comma_sep_array(cfg.log_page_mask, log_page_list, 16);
+
+	if (num == -1) {
+		fprintf(stderr, "ERROR: WDC: log page list is malformed\n");
+		ret = -1;
+		goto out;
+	}
+
+	if (num == 0)
+	{
+		page_mask |= WDC_ALL_PAGE_MASK;
+	}
+	else
+	{
+		for (i = 0; i < num; i++)
+		{
+			if (log_page_list[i] == 0xc0)  {
+				page_mask |= WDC_C0_PAGE_MASK;
+			}
+			if (log_page_list[i] == 0xc1)  {
+				page_mask |= WDC_C1_PAGE_MASK;
+			}
+			if (log_page_list[i] == 0xca)  {
+				page_mask |= WDC_CA_PAGE_MASK;
+			}
+			if (log_page_list[i] == 0xd0)  {
+				page_mask |= WDC_D0_PAGE_MASK;
+			}
+		}
+	}
+	if (page_mask == 0)
+		fprintf(stderr, "ERROR : WDC: Unknown log page mask - %s\n", cfg.log_page_mask);
+
+
 	capabilities = wdc_get_drive_capabilities(fd);
 
 	if ((capabilities & WDC_DRIVE_CAP_SMART_LOG_MASK) == 0) {
@@ -4637,25 +4684,29 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 		goto out;
 	}
 
-	if ((capabilities & WDC_DRIVE_CAP_C0_LOG_PAGE) == WDC_DRIVE_CAP_C0_LOG_PAGE) {
+	if (((capabilities & WDC_DRIVE_CAP_C0_LOG_PAGE) == WDC_DRIVE_CAP_C0_LOG_PAGE) &&
+		(page_mask & WDC_C0_PAGE_MASK))	{
 		/* Get 0xC0 log page if possible. */
 		ret = wdc_get_c0_log_page(fd, cfg.output_format, uuid_index);
 		if (ret)
 			fprintf(stderr, "ERROR : WDC : Failure reading the C0 Log Page, ret = %d\n", ret);
 	}
-	if ((capabilities & (WDC_DRIVE_CAP_CA_LOG_PAGE)) == (WDC_DRIVE_CAP_CA_LOG_PAGE)) {
+	if (((capabilities & (WDC_DRIVE_CAP_CA_LOG_PAGE)) == (WDC_DRIVE_CAP_CA_LOG_PAGE))  &&
+		(page_mask & WDC_CA_PAGE_MASK)) {
 		/* Get the CA Log Page */
 		ret = wdc_get_ca_log_page(fd, cfg.output_format);
 		if (ret)
 			fprintf(stderr, "ERROR : WDC : Failure reading the CA Log Page, ret = %d\n", ret);
 	}
-	if ((capabilities & WDC_DRIVE_CAP_C1_LOG_PAGE) == WDC_DRIVE_CAP_C1_LOG_PAGE) {
+	if (((capabilities & WDC_DRIVE_CAP_C1_LOG_PAGE) == WDC_DRIVE_CAP_C1_LOG_PAGE) &&
+		(page_mask & WDC_C1_PAGE_MASK)) {
 		/* Get the C1 Log Page */
 		ret = wdc_get_c1_log_page(fd, cfg.output_format, cfg.interval);
 		if (ret)
 			fprintf(stderr, "ERROR : WDC : Failure reading the C1 Log Page, ret = %d\n", ret);
 	}
-	if ((capabilities & WDC_DRIVE_CAP_D0_LOG_PAGE) == WDC_DRIVE_CAP_D0_LOG_PAGE) {
+	if (((capabilities & WDC_DRIVE_CAP_D0_LOG_PAGE) == WDC_DRIVE_CAP_D0_LOG_PAGE) &&
+		(page_mask & WDC_D0_PAGE_MASK)) {
 		/* Get the D0 Log Page */
 		ret = wdc_get_d0_log_page(fd, cfg.output_format);
 		if (ret)
