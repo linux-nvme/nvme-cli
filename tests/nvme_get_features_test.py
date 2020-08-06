@@ -54,7 +54,8 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
         self.setup_log_dir(self.__class__.__name__)
         self.feature_id_list = ["0x01", "0x02", "0x04", "0x05", "0x07",
                                 "0x08", "0x09", "0x0A", "0x0B"]
-        get_vector_list_cmd = "cat /proc/interrupts | grep nvme |" \
+        device = self.ctrl.split('/')[-1]
+        get_vector_list_cmd = "grep " + device + "q /proc/interrupts |" \
                               " cut -d : -f 1 | tr -d ' ' | tr '\n' ' '"
         proc = subprocess.Popen(get_vector_list_cmd,
                                 shell=True,
