@@ -81,7 +81,7 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
             for vector in range(self.vector_list_len):
                 get_feat_cmd = "nvme get-feature " + self.ctrl + \
                                " --feature-id=" + str(feature_id) + \
-                               " --cdw11=" + str(vector)
+                               " --cdw11=" + str(vector) + " -H"
                 proc = subprocess.Popen(get_feat_cmd,
                                         shell=True,
                                         stdout=subprocess.PIPE,
@@ -91,7 +91,7 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                 assert_equal(proc.wait(), 0)
         else:
             get_feat_cmd = "nvme get-feature " + self.ctrl + \
-                           " --feature-id=" + str(feature_id)
+                           " --feature-id=" + str(feature_id) + " -H"
             proc = subprocess.Popen(get_feat_cmd,
                                     shell=True,
                                     stdout=subprocess.PIPE,
