@@ -1,0 +1,39 @@
+nvme-micron-clear-pcie-errors(1)
+===============================
+
+NAME
+----
+nvme-micron-clear-pcie-errors - Clears correctable PCIe correctable errors of given Micron device
+
+SYNOPSIS
+--------
+[verse]
+'nvme micron clear-pcie-correctable-errors' <device>
+
+DESCRIPTION
+-----------
+This command clears corretable pcie errors for the specified Micron device.
+
+The <device> parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1). 
+
+This will only work on Micron devices devices of model numbers 54XX. Support for new
+devices may be added subsequently.
+
+OPTIONS
+-------
+None
+
+EXAMPLES
+--------
+* Retrieve NAND statistics information
++
+------------
+# nvme micron clear-pcie-correctable-errors /dev/nvme0
+
+------------
+
+NVME
+----
+Part of the nvme-user suite

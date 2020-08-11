@@ -2,14 +2,14 @@
 # (unfortunately, bash won't let me add descriptions to cmds)
 # Kelly Kaoudis kelly.n.kaoudis at intel.com, Aug. 2015
 
-_cmds="list id-ctrl id-ns list-ns create-ns delete-ns \
+_cmds="list id-ctrl id-ns list-ns id-iocs create-ns delete-ns \
 	attach-ns detach-ns list-ctrl get-ns-id get-log \
 	fw-log smart-log smart-log-add error-log \
 	get-feature set-feature format fw-activate \
 	fw-download admin-passthru io-passthru security-send \
 	security-recv resv-acquire resv-register resv-release \
 	resv-report dsm flush compare read write write-zeroes \
-	write-uncor reset subsystem-reset show-regs discover \
+	write-uncor copy reset subsystem-reset show-regs discover \
 	connect-all connect disconnect version help \
 	intel lnvm memblaze list-subsys"
 
@@ -44,11 +44,14 @@ nvme_list_opts () {
 			--force -f --output-format= -o"
 			;;
 		"list-ns")
-		opts+=" --namespace-id= -n --al -a"
+		opts+=" --namespace-id= -n --al -a --csi= -y"
+			;;
+		"id-iocs")
+		opts+=" --controller-id= -c"
 			;;
 		"create-ns")
 		opts+=" --nsze= -s --ncap= -c --flbas= -f \
-			--dps= -d --nmic= -n"
+			--dps= -d --nmic= -n --csi= -y"
 			;;
 		"delete-ns")
 		opts+=" -namespace-id= -n"
@@ -144,6 +147,15 @@ nvme_list_opts () {
 		"dsm")
 		opts+=" --namespace-id= -n --ctx-attrs= -a --blocks= -b\
 			-slbs= -s --ad -d --idw -w --idr -r --cdw11= -c"
+			;;
+		"copy")
+		opts+=" --sdlba= -d --blocks= -b --slbs= -s \
+			--limited-retry -l --force-unit-access -f \
+			--prinfow= -p --prinfor= -P \
+			--ref-tag= -r --expected-ref-tag= -R \
+			--app-tag= -a --expected-app-tag= -A \
+			--app-tag-mask= -m --expected-app-tag-mask= -M \
+			--dir-type= -T --dir-spec= -S --format= -F"
 			;;
 		"flush")
 		opts+=" --namespace-id= -n"

@@ -30,6 +30,8 @@ PLUGIN(NAME("wdc", "Western Digital vendor specific extensions"),
 		ENTRY("log-page-directory", "WDC Get Log Page Directory", wdc_log_page_directory)
 		ENTRY("namespace-resize", "WDC NamespaceDrive Resize", wdc_namespace_resize)
 		ENTRY("vs-drive-info", "WDC Get Drive Info", wdc_vs_drive_info)
+		ENTRY("vs-temperature-stats", "WDC Get Temperature Stats", wdc_vs_temperature_stats)
+		ENTRY("capabilities", "WDC Device Capabilities", wdc_capabilities)
 	)
 );
 
