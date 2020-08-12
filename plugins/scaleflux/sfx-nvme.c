@@ -49,7 +49,7 @@ enum sfx_nvme_admin_opcode {
 	nvme_admin_sfx_get_features	= 0xd6,
 	nvme_admin_get_keyinfo		= 0xd7,
 	nvme_admin_set_keyinfo		= 0xd8,
-	nvme_admin_geometry			= 0xe2,
+	nvme_admin_geometry		= 0xe2,
 };
 
 struct sfx_freespace_ctx
@@ -642,7 +642,7 @@ static int name_from_link(const char *dir, char *link_name, char *tg_name,
 		return -1;
 	}
 	memset(tg_name, 0x00, tg_size);
-	sprintf(path, "%s/%s", dir, link_name);
+	snprintf(path, sizeof(path), "%s/%s", dir, link_name);
 
 	if (lstat(path, &f_state) < 0) {
 		fprintf(stderr, "lstate fail, errno=%d\r\n", errno);
@@ -659,7 +659,7 @@ static int name_from_link(const char *dir, char *link_name, char *tg_name,
 	return 0;
 }
 
-static int nvme_block_from_char(char *char_dev, char *blk_dev)
+static int nvme_block_from_char(char *char_dev, char *blk_dev, int blk_dev_len)
 {
 	char slen[16];
 	unsigned len;
@@ -672,16 +672,16 @@ static int nvme_block_from_char(char *char_dev, char *blk_dev)
 	type = sfx_dev_type(tg_name);
 
 	if (type == NVME_SFX_B_DEV_VANDA || type == NVME_SFX_B_DEV_TPLUS) {
-		sprintf(blk_dev, "%s", tg_name);
+		snprintf(blk_dev, blk_dev_len, "%s", tg_name);
 	} else if (type == NVME_SFX_C_DEV_VANDA) {
 		sscanf(tg_name, SFX_NVME_DEV_C_VANDA "%d", &len);
-		sprintf(blk_dev, SFX_NVME_DEV_B_VANDA "%dn1", len);
-		sprintf(slen, "%d", len);
+		snprintf(blk_dev, blk_dev_len, SFX_NVME_DEV_B_VANDA "%dn1", len);
+		snprintf(slen, sizeof(slen), "%d", len);
 		blk_dev[SFX_NVME_DEV_LEN_VANDA + strlen(slen) + 2] = 0;
 	} else if (type == NVME_SFX_C_DEV_TPLUS) {
 		sscanf(tg_name, SFX_NVME_DEV_C_TPLUS "%d", &len);
-		sprintf(blk_dev, SFX_NVME_DEV_B_TPLUS "%dn1", len);
-		sprintf(slen, "%dn1", len);
+		snprintf(blk_dev, blk_dev_len, SFX_NVME_DEV_B_TPLUS "%dn1", len);
+		snprintf(slen, sizeof(slen), "%dn1", len);
 		blk_dev[SFX_NVME_DEV_LEN_TPLUS + strlen(slen) + 2] = 0;
 	}
 	return 0;
@@ -698,9 +698,9 @@ static int sfx_blk_dev_ref()
 
 	NVME_DEV_TYPE type = sfx_dev_type((char *)devicename);
 	if (type == NVME_SFX_C_DEV_VANDA || type == NVME_SFX_C_DEV_TPLUS) {
-		nvme_block_from_char((char *)devicename, blk_base);
+		nvme_block_from_char((char *)devicename, blk_base, sizeof(blk_base));
 	} else {
-		sprintf(blk_base, "%s", (char *)devicename);
+		snprintf(blk_base, sizeof(blk_base), "%s", (char *)devicename);
 	}
 
 	/*
@@ -708,7 +708,7 @@ static int sfx_blk_dev_ref()
 	 * So Use mount to check if current device is mounted
 	 * Then lsof to show if current device is opened by application
 	 */
-	sprintf(cmd, "mount | grep %s | wc -l", blk_base);
+	snprintf(cmd, sizeof(cmd), "mount | grep %s | wc -l", blk_base);
 	fd = popen(cmd, "r");
 	if (!fd) {
 		fprintf(stderr, "check mount point failed\n");
@@ -724,7 +724,7 @@ static int sfx_blk_dev_ref()
 	}
 	pclose(fd);
 
-	sprintf(cmd, "lsof | grep %s | wc -l", blk_base);
+	snprintf(cmd, sizeof(cmd), "lsof | grep %s | wc -l", blk_base);
 	fd = popen(cmd, "r");
 	if (!fd) {
 		fprintf(stderr, "check lsof failed\n");
@@ -1048,12 +1048,12 @@ int sfx_wait_bd_probe_done()
 	if (type == NVME_SFX_C_DEV_VANDA) {
 		//vanda device
 		sscanf(devicename, SFX_NVME_DEV_C_VANDA "%d", &dev_index);
-		sprintf(flg_file_test,
+		snprintf(flg_file_test, sizeof(flg_file_test),
 			"cat /sys/devices/virtual/block/%s%dn1/serial >/dev/null 2>&1",
 			SFX_NVME_DEV_B_VANDA, dev_index);
 	} else if (type == NVME_SFX_C_DEV_TPLUS) {
 		sscanf(devicename, SFX_NVME_DEV_C_TPLUS "%d", &dev_index);
-		sprintf(flg_file_test,
+		snprintf(flg_file_test, sizeof(flg_file_test),
 			"cat /sys/devices/virtual/block/%s%dn1/serial >/dev/null 2>&1",
 			SFX_NVME_DEV_B_TPLUS, dev_index);
 	} else {
@@ -1130,7 +1130,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 
 	if (cfg.feature_id == SFX_FEAT_CLR_CARD) {
 		/* Find and open block device via sfxv[X] misc device */
-		nvme_block_from_char((char *)devicename, blk_base);
+		nvme_block_from_char((char *)devicename, blk_base, sizeof(blk_base));
 		if (sfx_blk_dev_ref() > 0) {
 			fprintf(stderr,
 				"Current device %s is mounted with filesystem or opened by application, "
