@@ -70,6 +70,7 @@ static inline uint64_t le64_to_cpu(__le64 x)
 #define NVME_DISC_SUBSYS_NAME	"nqn.2014-08.org.nvmexpress.discovery"
 
 #define NVME_RDMA_IP_PORT	4420
+#define NVME_DISC_IP_PORT	8009
 
 #define NVME_NSID_ALL		0xffffffff
 

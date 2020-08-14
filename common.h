@@ -9,4 +9,7 @@
 #define min(x, y) ((x) > (y) ? (y) : (x))
 #define max(x, y) ((x) > (y) ? (x) : (y))
 
+#define __stringify_1(x...) #x
+#define __stringify(x...)  __stringify_1(x)
+
 #endif
