@@ -93,7 +93,11 @@ struct connect_args {
 	char *traddr;
 	char *trsvcid;
 	char *host_traddr;
+	struct connect_args *next;
+	struct connect_args *tail;
 };
+
+struct connect_args *tracked_ctrls;
 
 #define BUF_SIZE		4096
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
@@ -385,6 +389,21 @@ static void free_connect_args(struct connect_args *cargs)
 	free(cargs);
 }
 
+static void track_ctrl(char *argstr)
+{
+	struct connect_args *cargs;
+
+	cargs = extract_connect_args(argstr);
+	if (!cargs)
+		return;
+
+	if (!tracked_ctrls)
+		tracked_ctrls = cargs;
+	else
+		tracked_ctrls->tail->next = cargs;
+	tracked_ctrls->tail = cargs;
+}
+
 static int add_ctrl(const char *argstr)
 {
 	substring_t args[MAX_OPT_ARGS];
@@ -428,6 +447,7 @@ static int add_ctrl(const char *argstr)
 			if (match_int(args, &token))
 				goto out_fail;
 			ret = token;
+			track_ctrl((char *)argstr);
 			goto out_close;
 		default:
 			/* ignore */
@@ -1148,9 +1168,38 @@ retry:
 	return ret;
 }
 
+static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry)
+{
+	struct connect_args cargs = {};
+	struct connect_args *c = tracked_ctrls;
+
+	cargs.traddr = strdup(entry->traddr);
+	cargs.transport = strdup(trtype_str(entry->trtype));
+	cargs.subsysnqn = strdup(entry->subnqn);
+	cargs.trsvcid = strdup(entry->trsvcid);
+	cargs.host_traddr = strdup(cfg.host_traddr ?: "\0");
+
+	/* check if we have a match in the discovery recursion */
+	while (c) {
+		if (!strcmp(cargs.subsysnqn, c->subsysnqn) &&
+		    !strcmp(cargs.transport, c->transport) &&
+		    !strcmp(cargs.traddr, c->traddr) &&
+		    !strcmp(cargs.trsvcid, c->trsvcid) &&
+		    !strcmp(cargs.host_traddr, c->host_traddr))
+			return true;
+		c = c->next;
+	}
+
+	/* check if we have a matching existing controller */
+	return find_ctrl_with_connectargs(&cargs) != NULL;
+}
+
 static bool should_connect(struct nvmf_disc_rsp_page_entry *entry)
 {
 	int len;
+
+	if (cargs_match_found(entry))
+		return false;
 
 	if (!cfg.matching_only || !cfg.traddr)
 		return true;
