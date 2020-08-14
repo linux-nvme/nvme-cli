@@ -360,6 +360,31 @@ cleanup_devices:
 	return devname;
 }
 
+static struct connect_args *extract_connect_args(char *argstr)
+{
+	struct connect_args *cargs;
+
+	cargs = calloc(1, sizeof(*cargs));
+	if (!cargs)
+		return NULL;
+	cargs->subsysnqn = parse_conn_arg(argstr, ',', conarg_nqn);
+	cargs->transport = parse_conn_arg(argstr, ',', conarg_transport);
+	cargs->traddr = parse_conn_arg(argstr, ',', conarg_traddr);
+	cargs->trsvcid = parse_conn_arg(argstr, ',', conarg_trsvcid);
+	cargs->host_traddr = parse_conn_arg(argstr, ',', conarg_host_traddr);
+	return cargs;
+}
+
+static void free_connect_args(struct connect_args *cargs)
+{
+	free(cargs->subsysnqn);
+	free(cargs->transport);
+	free(cargs->traddr);
+	free(cargs->trsvcid);
+	free(cargs->host_traddr);
+	free(cargs);
+}
+
 static int add_ctrl(const char *argstr)
 {
 	substring_t args[MAX_OPT_ARGS];
@@ -1192,14 +1217,11 @@ static int do_discover(char *argstr, bool connect)
 	int status = 0;
 
 	if (cfg.device) {
-		struct connect_args cargs;
+		struct connect_args *cargs;
 
-		memset(&cargs, 0, sizeof(cargs));
-		cargs.subsysnqn = parse_conn_arg(argstr, ',', conarg_nqn);
-		cargs.transport = parse_conn_arg(argstr, ',', conarg_transport);
-		cargs.traddr = parse_conn_arg(argstr, ',', conarg_traddr);
-		cargs.trsvcid = parse_conn_arg(argstr, ',', conarg_trsvcid);
-		cargs.host_traddr = parse_conn_arg(argstr, ',', conarg_host_traddr);
+		cargs = extract_connect_args(argstr);
+		if (!cargs)
+			return -ENOMEM;
 
 		/*
 		 * if the cfg.device passed in matches the connect args
@@ -1212,14 +1234,10 @@ static int do_discover(char *argstr, bool connect)
 		 *    create a new ctrl.
 		 * endif
 		 */
-		if (!ctrl_matches_connectargs(cfg.device, &cargs))
-			cfg.device = find_ctrl_with_connectargs(&cargs);
+		if (!ctrl_matches_connectargs(cfg.device, cargs))
+			cfg.device = find_ctrl_with_connectargs(cargs);
 
-		free(cargs.subsysnqn);
-		free(cargs.transport);
-		free(cargs.traddr);
-		free(cargs.trsvcid);
-		free(cargs.host_traddr);
+		free_connect_args(cargs);
 	}
 
 	if (!cfg.device) {
