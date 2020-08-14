@@ -863,6 +863,17 @@ static int build_options(char *argstr, int max_len, bool discover)
 	return 0;
 }
 
+static void discovery_trsvcid(struct config *cfg)
+{
+	if (!strcmp(cfg->transport, "tcp")) {
+		/* Default port for NVMe/TCP discovery controllers */
+		cfg->trsvcid = __stringify(NVME_DISC_IP_PORT);
+	} else if (!strcmp(cfg->transport, "rdma")) {
+		/* Default port for NVMe/RDMA controllers */
+		cfg->trsvcid = __stringify(NVME_RDMA_IP_PORT);
+	}
+}
+
 static bool traddr_is_hostname(struct config *cfg)
 {
 	char addrstr[NVMF_TRADDR_SIZE];
@@ -1320,6 +1331,9 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 				goto out;
 		}
 
+		if (!cfg.trsvcid)
+			discovery_trsvcid(&cfg);
+
 		err = build_options(argstr, BUF_SIZE, true);
 		if (err) {
 			ret = err;
@@ -1391,6 +1405,9 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 			if (ret)
 				goto out;
 		}
+
+		if (!cfg.trsvcid)
+			discovery_trsvcid(&cfg);
 
 		ret = build_options(argstr, BUF_SIZE, true);
 		if (ret)
