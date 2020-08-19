@@ -923,7 +923,7 @@ static bool traddr_is_hostname(struct config *cfg)
 {
 	char addrstr[NVMF_TRADDR_SIZE];
 
-	if (!cfg->traddr)
+	if (!cfg->traddr || !cfg->transport)
 		return false;
 	if (strcmp(cfg->transport, "tcp") && strcmp(cfg->transport, "rdma"))
 		return false;
