@@ -121,6 +121,10 @@
 #define WDC_DRIVE_CAP_CLEAR_PCIE_MASK       (WDC_DRIVE_CAP_CLEAR_PCIE | \
                                              WDC_DRIVE_CAP_VUC_CLEAR_PCIE | \
                                              WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE)
+#define WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_MASK		(WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | \
+        											 WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2)
+#define WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY_MASK		(WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY | \
+        											 WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY)
 /* SN730 Get Log Capabilities */
 #define SN730_NVME_GET_LOG_OPCODE			0xc2
 #define SN730_GET_FULL_LOG_LENGTH			0x00080009
@@ -5089,7 +5093,7 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *com
 		return fd;
 
 	capabilities = wdc_get_drive_capabilities(fd);
-	if ((capabilities & (WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2)) == 0) {
+	if ((capabilities & WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_MASK) == 0) {
 		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
 		ret = -1;
 		goto out;
@@ -5153,7 +5157,7 @@ static int wdc_clear_fw_activate_history(int argc, char **argv, struct command *
 		return fd;
 
 	capabilities = wdc_get_drive_capabilities(fd);
-	if ((capabilities & (WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY)) == 0) {
+	if ((capabilities & WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY_MASK) == 0) {
 		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
 		ret = -1;
 		goto out;
@@ -6979,9 +6983,9 @@ static int wdc_capabilities(int argc, char **argv,
     printf("drive-resize                  : %s\n", 
             capabilities & WDC_DRIVE_CAP_RESIZE ? "Supported" : "Not Supported");
     printf("vs-fw-activate-history        : %s\n", 
-            capabilities & WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY ? "Supported" : "Not Supported");
+            capabilities & WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_MASK ? "Supported" : "Not Supported");
     printf("clear-fw-activate-history     : %s\n", 
-            capabilities & WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY ? "Supported" : "Not Supported");
+            capabilities & WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY_MASK ? "Supported" : "Not Supported");
     printf("vs-telemetry-controller-option: %s\n", 
             capabilities & WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG ? "Supported" : "Not Supported");
     printf("vs-error-reason-identifier    : %s\n", 
