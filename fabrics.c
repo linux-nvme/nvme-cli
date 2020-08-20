@@ -54,6 +54,9 @@
 
 #define NVMF_HOSTID_SIZE	36
 
+/* default to 600 seconds of reconnect attempts before giving up */
+#define NVMF_DEF_CTRL_LOSS_TMO		600
+
 const char *conarg_nqn = "nqn";
 const char *conarg_transport = "transport";
 const char *conarg_traddr = "traddr";
@@ -85,7 +88,7 @@ static struct config {
 	bool persistent;
 	bool quiet;
 	bool matching_only;
-} cfg = { NULL };
+} cfg = { .ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO };
 
 struct connect_args {
 	char *subsysnqn;
