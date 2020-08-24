@@ -128,7 +128,7 @@ static __u64 raw_2_u64(const __u8 *buf, size_t len)
 #define STR17_04    ", min: "
 #define STR17_05    ", curr: "
 #define STR18_01    "power_loss_protection"
-#define STR19_01    "read_fail"
+#define STR19_01    "read_fail_count"
 #define STR20_01    "thermal_throttle_time"
 #define STR21_01    "flash_media_error"
 
