@@ -53,18 +53,26 @@ static int compare_fw_version(const char *fw1, const char *fw2)
 #define MEMBLAZE_FORMAT         (0)
 #define INTEL_FORMAT            (1)
 
-// 2.83 = raisin
-#define IS_RAISIN(str)          (!strcmp(str, "2.83"))
 // 2.13 = papaya
 #define IS_PAPAYA(str)          (!strcmp(str, "2.13"))
-#define STR_VER_SIZE            5
+// 2.83 = raisin
+#define IS_RAISIN(str)          (!strcmp(str, "2.83"))
+// 2.94 = kumquat
+#define IS_KUMQUAT(str)         (!strcmp(str, "2.94"))
+// 0.60 = loquat
+#define IS_LOQUAT(str)          (!strcmp(str, "0.60"))
+
+#define STR_VER_SIZE            (5)
 
 int getlogpage_format_type(char *fw_ver)
 {
     char fw_ver_local[STR_VER_SIZE];
     strncpy(fw_ver_local, fw_ver, STR_VER_SIZE);
     *(fw_ver_local + STR_VER_SIZE - 1) = '\0';
-    if ( IS_RAISIN(fw_ver_local) )
+    if ( IS_RAISIN(fw_ver_local)
+        || IS_KUMQUAT(fw_ver_local)
+        || IS_LOQUAT(fw_ver_local)
+        )
     {
         return INTEL_FORMAT;
     }
