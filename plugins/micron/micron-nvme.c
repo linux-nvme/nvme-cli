@@ -1014,15 +1014,16 @@ static void print_m5407_nand_stats(const unsigned char *buf, bool is_json)
         if (fb_log_page[field].size == 16) {
             lval_lo = *((__u64 *)(&buf[offset]));
             lval_hi = *((__u64 *)(&buf[offset + 8]));
-            sprintf(datastr, "0x%lx_%lx", le64_to_cpu(lval_hi), le64_to_cpu(lval_lo));
+            sprintf(datastr, "0x%"PRIx64"_%"PRIx64"", (uint64_t)le64_to_cpu(lval_hi),
+		(uint64_t)le64_to_cpu(lval_lo));
         } else if (fb_log_page[field].size == 8) {
             lval_lo = *((__u64 *)(&buf[offset]));
-            sprintf(datastr, "0x%lx", le64_to_cpu(lval_lo));
+            sprintf(datastr, "0x%"PRIx64"", (uint64_t)le64_to_cpu(lval_lo));
         } else if (fb_log_page[field].size == 6) {
             ival    = *((__u32 *)(&buf[offset]));
             sval    = *((__u16 *)(&buf[offset + 4]));
             lval_lo = (((__u64)sval << 32) | ival); 
-            sprintf(datastr, "0x%lx", le64_to_cpu(lval_lo));
+            sprintf(datastr, "0x%"PRIx64"", (uint64_t)le64_to_cpu(lval_lo));
         } else if (fb_log_page[field].size == 4) {
             ival    = *((__u32 *)(&buf[offset]));
             sprintf(datastr, "0x%x", le32_to_cpu(ival));
