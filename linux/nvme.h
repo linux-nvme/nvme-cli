@@ -1503,7 +1503,10 @@ struct nvme_zns_id_ns {
 	__le32			mor;
 	__le32			rrl;
 	__le32			frl;
-	__u8			rsvd20[2796];
+	__u32 			zrwas;  	//TP 4076
+	__u32 			zrwacg; 	//TP 4076
+	__u8 			micws;	  	//TP 4076
+	__u8			rsvd20[2787];
 	struct nvme_zns_lbafe	lbafe[16];
 	__u8			rsvd3072[768];
 	__u8			vs[256];
