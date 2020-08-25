@@ -530,7 +530,7 @@ static void bd_table_show(unsigned char *bd_table, __u64 table_size)
 	printf("REMAP_MFBB_TABLE [");
 	i = 0;
 	while (bb_elem < elem_end && i < remap_mfbb_count) {
-		printf(" 0x%llx", *(bb_elem++));
+		printf(" 0x%"PRIx64"", (uint64_t)*(bb_elem++));
 		i++;
 	}
 	printf(" ]\n");
@@ -538,7 +538,7 @@ static void bd_table_show(unsigned char *bd_table, __u64 table_size)
 	printf("REMAP_GBB_TABLE [");
 	i = 0;
 	while (bb_elem < elem_end && i < remap_gbb_count) {
-		printf(" 0x%llx",*(bb_elem++));
+		printf(" 0x%"PRIx64"", (uint64_t)*(bb_elem++));
 		i++;
 	}
 	printf(" ]\n");
@@ -597,15 +597,15 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct 
 static void show_cap_info(struct sfx_freespace_ctx *ctx)
 {
 
-	printf("logic            capacity:%5lluGB(0x%llx)\n",
-			IDEMA_CAP2GB(ctx->user_space), ctx->user_space);
-	printf("provisioned      capacity:%5lluGB(0x%llx)\n",
-			IDEMA_CAP2GB(ctx->phy_space), ctx->phy_space);
-	printf("free provisioned capacity:%5lluGB(0x%llx)\n",
-			IDEMA_CAP2GB(ctx->free_space), ctx->free_space);
-	printf("used provisioned capacity:%5lluGB(0x%llx)\n",
+	printf("logic            capacity:%5lluGB(0x%"PRIx64")\n",
+			IDEMA_CAP2GB(ctx->user_space), (uint64_t)ctx->user_space);
+	printf("provisioned      capacity:%5lluGB(0x%"PRIx64")\n",
+			IDEMA_CAP2GB(ctx->phy_space), (uint64_t)ctx->phy_space);
+	printf("free provisioned capacity:%5lluGB(0x%"PRIx64")\n",
+			IDEMA_CAP2GB(ctx->free_space), (uint64_t)ctx->free_space);
+	printf("used provisioned capacity:%5lluGB(0x%"PRIx64")\n",
 			IDEMA_CAP2GB(ctx->phy_space) - IDEMA_CAP2GB(ctx->free_space),
-			ctx->phy_space - ctx->free_space);
+			(uint64_t)(ctx->phy_space - ctx->free_space));
 }
 
 static int query_cap_info(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -696,8 +696,8 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 			fprintf(stderr,
 				"WARNING: Free memory is not enough! "
 				"Please drop cache or extend more memory and retry\n"
-				"WARNING: Memory needed is %llu, free memory is %lu\n",
-				mem_need, s_info.freeram);
+				"WARNING: Memory needed is %"PRIu64", free memory is %"PRIu64"\n",
+				(uint64_t)mem_need, (uint64_t)s_info.freeram);
 			return -1;
 		}
 	}
@@ -774,8 +774,8 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 	cap_in_4k = cap_in_sec >> 3;
 	if (cfg.cap_in_byte)
 		cap_in_4k = cfg.cap_in_byte >> 12;
-	printf("%dG %lluB %llu 4K\n",
-		cfg.capacity_in_gb, cfg.cap_in_byte, cap_in_4k);
+	printf("%dG %"PRIu64"B %"PRIu64" 4K\n",
+		cfg.capacity_in_gb, (uint64_t)cfg.cap_in_byte, (uint64_t)cap_in_4k);
 
 	if (change_sanity_check(fd, cap_in_4k, &shrink)) {
 		printf("ScaleFlux change-capacity: fail\n");
