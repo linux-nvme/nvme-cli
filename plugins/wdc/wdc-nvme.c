@@ -82,8 +82,8 @@
 #define WDC_NVME_SN730B_DEV_ID				0x3714
 #define WDC_NVME_SN730B_DEV_ID_1			0x3734
 #define WDC_NVME_SN340_DEV_ID				0x500d
-#define WDC_NVME_ZN345_DEV_ID				0x5010
-#define WDC_NVME_ZN345_DEV_ID_1 			0x5018
+#define WDC_NVME_ZN355_DEV_ID				0x5010
+#define WDC_NVME_ZN355_DEV_ID_1 			0x5018
 
 #define WDC_DRIVE_CAP_CAP_DIAG				0x0000000000000001
 #define WDC_DRIVE_CAP_INTERNAL_LOG			0x0000000000000002
@@ -1126,11 +1126,12 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		case WDC_NVME_SN340_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI;
 			break;
-		case WDC_NVME_ZN345_DEV_ID:
+		case WDC_NVME_ZN355_DEV_ID:
 		/* FALLTHRU */
-		case WDC_NVME_ZN345_DEV_ID_1:
+		case WDC_NVME_ZN355_DEV_ID_1:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE | WDC_DRIVE_CAP_C0_LOG_PAGE |
-			        WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2;
+			        WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 |
+			        WDC_DRIVE_CAP_INFO;
 			break;
 		default:
 			capabilities = 0;
@@ -4251,8 +4252,8 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 		}
 		break;
 
-	case WDC_NVME_ZN345_DEV_ID:
-	case WDC_NVME_ZN345_DEV_ID_1:
+	case WDC_NVME_ZN355_DEV_ID:
+	case WDC_NVME_ZN355_DEV_ID_1:
 		if ((data = (__u8*) malloc(sizeof (__u8) * WDC_NVME_SMART_CLOUD_ATTR_LEN)) == NULL) {
 			fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
 			return -1;
