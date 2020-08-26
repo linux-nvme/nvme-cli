@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #include "nvme-print.h"
 #include "util/json.h"
@@ -4670,7 +4671,14 @@ static void nvme_show_list_item(struct nvme_namespace *n)
 	const char *l_suffix = suffix_binary_get(&lba);
 
 	char usage[128];
-	char format[128];
+	char format[128], path[256];
+	struct stat st;
+	int ret;
+
+	sprintf(path, "/dev/%s", n->name);
+	ret = stat(path, &st);
+	if (ret < 0)
+		return;
 
 	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
 		nsze, s_suffix);
@@ -4734,17 +4742,29 @@ static void nvme_show_details_ns(struct nvme_namespace *n, bool ctrl)
 		printf("%s", n->ctrl->name);
 	else {
 		struct nvme_subsystem *s = n->ctrl->subsys;
-		int i;
+		int i, j;
+		bool comma = false;
 
-		for (i = 0; i < s->nr_ctrls; i++)
-			printf("%s%s", i ? ", " : "", s->ctrls[i].name);
+		for (i = 0; i < s->nr_ctrls; i++) {
+			struct nvme_ctrl *c = &s->ctrls[i];
+
+			for (j = 0; j < c->nr_namespaces; j++) {
+				struct nvme_namespace *ns = &c->namespaces[j];
+
+				if (ns->nsid == n->nsid) {
+					printf("%s%s", comma ? ", " : "",
+					       c->name);
+					comma = true;
+				}
+			}
+		}
 	}
 	printf("\n");
 }
 
 static void nvme_show_detailed_list(struct nvme_topology *t)
 {
-	int i, j, k;
+	int i, j, k, l;
 
 	printf("NVM Express Subsystems\n\n");
 	printf("%-16s %-96s %-.16s\n", "Subsystem", "Subsystem-NQN", "Controllers");
@@ -4779,13 +4799,14 @@ static void nvme_show_detailed_list(struct nvme_topology *t)
 
 			for (k = 0; k < c->nr_namespaces; k++) {
 				struct nvme_namespace *n = &c->namespaces[k];
-				printf("%s%s", comma ? ", " : "", n->name);
-				comma = true;
-			}
-			for (k = 0; k < s->nr_namespaces; k++) {
-				struct nvme_namespace *n = &s->namespaces[k];
-				printf("%s%s", comma ? ", " : "", n->name);
-				comma = true;
+
+				for (l = 0; l < s->nr_namespaces; l++) {
+					struct nvme_namespace *ns = &s->namespaces[l];
+					if (n->nsid == ns->nsid) {
+						printf("%s%s", comma ? ", " : "", ns->name);
+						comma = true;
+					}
+				}
 			}
 			printf("\n");
 		}
@@ -4798,17 +4819,20 @@ static void nvme_show_detailed_list(struct nvme_topology *t)
 	for (i = 0; i < t->nr_subsystems; i++) {
 		struct nvme_subsystem *s = &t->subsystems[i];
 
-		for (j = 0; j < s->nr_ctrls; j++) {
-			struct nvme_ctrl *c = &s->ctrls[j];
-
-			for (k = 0; k < c->nr_namespaces; k++) {
-				struct nvme_namespace *n = &c->namespaces[k];
-				nvme_show_details_ns(n, true);
+		if (s->nr_namespaces) {
+			for (j = 0; j < s->nr_namespaces; j++) {
+				struct nvme_namespace *n = &s->namespaces[j];
+				nvme_show_details_ns(n, false);
 			}
-		}
-		for (j = 0; j < s->nr_namespaces; j++) {
-			struct nvme_namespace *n = &s->namespaces[j];
-			nvme_show_details_ns(n, false);
+		} else {
+			for (j = 0; j < s->nr_ctrls; j++) {
+				struct nvme_ctrl *c = &s->ctrls[j];
+
+				for (k = 0; k < c->nr_namespaces; k++) {
+					struct nvme_namespace *n = &c->namespaces[k];
+					nvme_show_details_ns(n, true);
+				}
+			}
 		}
 	}
 }

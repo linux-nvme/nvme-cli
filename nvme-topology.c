@@ -152,9 +152,11 @@ static int scan_namespace(struct nvme_namespace *n)
 	if (fd < 0)
 		goto free;
 
-	n->nsid = nvme_get_nsid(fd);
-	if (n->nsid < 0)
-		goto close_fd;
+	if (!n->nsid) {
+		n->nsid = nvme_get_nsid(fd);
+		if (n->nsid < 0)
+			goto close_fd;
+	}
 
 	ret = nvme_identify_ns(fd, n->nsid, 0, &n->ns);
 	if (ret < 0)
@@ -248,7 +250,7 @@ static int scan_ctrl(struct nvme_ctrl *c, char *p, __u32 ns_instance)
 	if (ns_instance)
 		c->ana_state = get_nvme_ctrl_path_ana_state(path, ns_instance);
 
-	ret = scandir(path, &ns, scan_namespace_filter, alphasort);
+	ret = scandir(path, &ns, scan_ctrl_namespace_filter, alphasort);
 	if (ret == -1) {
 		fprintf(stderr, "Failed to open %s: %s\n", path, strerror(errno));
 		return errno;
@@ -256,11 +258,36 @@ static int scan_ctrl(struct nvme_ctrl *c, char *p, __u32 ns_instance)
 
 	c->nr_namespaces = ret;
 	c->namespaces = calloc(c->nr_namespaces, sizeof(*n));
-	for (i = 0; i < c->nr_namespaces; i++) {
-		n = &c->namespaces[i];
-		n->name = strdup(ns[i]->d_name);
-		n->ctrl = c;
-		scan_namespace(n);
+	if (c->namespaces) {
+		for (i = 0; i < c->nr_namespaces; i++) {
+			char *ns_path, nsid[16];
+			int ns_fd;
+
+			n = &c->namespaces[i];
+			n->name = strdup(ns[i]->d_name);
+			n->ctrl = c;
+			ret = asprintf(&ns_path, "%s/%s/nsid", path, n->name);
+			if (ret < 0)
+				continue;
+			ns_fd = open(ns_path, O_RDONLY);
+			if (ns_fd < 0) {
+				free(ns_path);
+				continue;
+			}
+			ret = read(ns_fd, nsid, 16);
+			if (ret < 0) {
+				close(ns_fd);
+				free(ns_path);
+				continue;
+			}
+			n->nsid = (unsigned)strtol(nsid, NULL, 10);
+			scan_namespace(n);
+			close(ns_fd);
+			free(ns_path);
+		}
+	} else {
+		i = c->nr_namespaces;
+		c->nr_namespaces = 0;
 	}
 
 	while (i--)
@@ -327,11 +354,16 @@ static int scan_subsystem(struct nvme_subsystem *s, __u32 ns_instance)
 
 	s->nr_namespaces = ret;
 	s->namespaces = calloc(s->nr_namespaces, sizeof(*n));
-	for (i = 0; i < s->nr_namespaces; i++) {
-		n = &s->namespaces[i];
-		n->name = strdup(ns[i]->d_name);
-		n->ctrl = &s->ctrls[0];
-		scan_namespace(n);
+	if (s->namespaces) {
+		for (i = 0; i < s->nr_namespaces; i++) {
+			n = &s->namespaces[i];
+			n->name = strdup(ns[i]->d_name);
+			n->ctrl = &s->ctrls[0];
+			scan_namespace(n);
+		}
+	} else {
+		i = s->nr_namespaces;
+		s->nr_namespaces = 0;
 	}
 
 	while (i--)
@@ -420,6 +452,12 @@ static int legacy_list(struct nvme_topology *t)
 		c->nr_namespaces = scandir(dev, &namespaces, scan_dev_filter,
 					   alphasort);
 		c->namespaces = calloc(c->nr_namespaces, sizeof(*n));
+		if (!c->namespaces) {
+			while (c->nr_namespaces--)
+				free(namespaces[c->nr_namespaces]);
+			free(namespaces);
+			continue;
+		}
 
 		ret = asprintf(&path, "%s%s", dev, c->name);
 		if (ret < 0)
