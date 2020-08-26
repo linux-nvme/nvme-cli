@@ -3028,7 +3028,7 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 		printf("frl     : Not Reported\n");
 	else
 		printf("frl     : %#x\n", le32_to_cpu(ns->frl));
-	__u8 zrwasup;
+	// __u8 zrwasup;
 	/*
 	zrwasup: BIT0
 	If set, then the controller supports the ZRWA capability.
