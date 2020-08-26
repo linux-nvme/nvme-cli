@@ -3028,7 +3028,19 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 		printf("frl     : Not Reported\n");
 	else
 		printf("frl     : %#x\n", le32_to_cpu(ns->frl));
-
+	__u8 zrwasup;
+	/*
+	zrwasup: BIT0
+	If set, then the controller supports the ZRWA capability.
+	If the zrwasup bit is cleard to '0', then all other bits in the ZRWACAP field are reserved.
+	*/
+	// zrwasup = ns->zrwacap & 0x1
+	//TODO: check the value of zrwasup 
+	printf("zrwacap : %u\n", ns->zrwacap);
+	printf("zrwas   : %u\n", ns->zrwas);
+	printf("zrwacg  : %u\n", ns->zrwacg);
+	printf("numzrwa : %u\n", ns->numzrwa);
+	
 	for (i = 0; i <= id_ns->nlbaf; i++){
 		if (human)
 			printf("LBA Format Extension %2d : Zone Size: 0x%"PRIx64" LBAs - "
