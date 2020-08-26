@@ -2935,10 +2935,10 @@ void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
 	json_object_add_value_int(root, "mor", le32_to_cpu(ns->mor));
 	json_object_add_value_int(root, "rrl", le32_to_cpu(ns->rrl));
 	json_object_add_value_int(root, "frl", le32_to_cpu(ns->frl));
-	json_object_add_value_int(root, 'zrwacap', ns->zrwacap);
-	json_object_add_value_int(root, 'zrwas', ns->zrwas);
-	json_object_add_value_int(root, 'zrwacg', ns->zrwacg);
-	json_object_add_value_int(root, 'numzrwa', ns->numzrwa);
+	json_object_add_value_int(root, "zrwacap", ns->zrwacap);
+	json_object_add_value_int(root, "zrwas", ns->zrwas);
+	json_object_add_value_int(root, "zrwacg", ns->zrwacg);
+	json_object_add_value_int(root, "numzrwa", ns->numzrwa);
 	
 
 	lbafs = json_create_array();
@@ -3033,12 +3033,13 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 		printf("frl     : Not Reported\n");
 	else
 		printf("frl     : %#x\n", le32_to_cpu(ns->frl));
-	// uint8_t zrwasup;
+
 	/*
 	zrwasup: BIT0
 	If set, then the controller supports the ZRWA capability.
 	If the zrwasup bit is cleard to '0', then all other bits in the ZRWACAP field are reserved.
-	*/
+	*/	
+	// uint8_t zrwasup;
 	// zrwasup = ns->zrwacap & 0x1
 	//TODO: check the value of zrwasup 
 	printf("zrwacap : %u\n", ns->zrwacap);
