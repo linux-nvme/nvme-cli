@@ -97,6 +97,7 @@ char *nvme_char_from_block(char *block);
 void *mmap_registers(const char *dev);
 
 extern int current_index;
+int scan_ctrl_namespace_filter(const struct dirent *d);
 int scan_namespace_filter(const struct dirent *d);
 int scan_ctrl_paths_filter(const struct dirent *d);
 int scan_ctrls_filter(const struct dirent *d);
