@@ -3242,6 +3242,11 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+#define STRTOUL_AUTO_BASE              (0)
+#define NVME_FEAT_LBA_RANGE_LEN        (4096)
+#define NVME_FEAT_TIMESTAMP_STR_LEN    (13)
+#define NVME_FEAT_TIMESTAMP_DATA_SIZE  (6)
+
 static int set_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Modify the saveable or changeable "\
@@ -3264,12 +3269,14 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	__u32 result;
 	void *buf = NULL;
 	int fd, ffd = STDIN_FILENO;
+	char *endptr = NULL;
+	long int number = 0;
 
 	struct config {
 		char *file;
 		__u32 namespace_id;
 		__u8  feature_id;
-		__u32 value;
+		__u64 value;
 		__u32 cdw12;
 		__u32 data_len;
 		int   save;
@@ -3287,7 +3294,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
 		OPT_UINT("feature-id",   'f', &cfg.feature_id,   feature_id),
-		OPT_UINT("value",        'v', &cfg.value,        value),
+		OPT_LONG("value",        'v', &cfg.value,        value),
 		OPT_UINT("cdw12",        'c', &cfg.cdw12,        cdw12),
 		OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
 		OPT_FILE("data",         'd', &cfg.file,         data),
@@ -3316,8 +3323,14 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		err = -EINVAL;
 		goto close_fd;
 	}
-	if (cfg.feature_id == NVME_FEAT_LBA_RANGE)
-		cfg.data_len = 4096;
+
+    if (NVME_FEAT_LBA_RANGE == cfg.feature_id) {
+        cfg.data_len = NVME_FEAT_LBA_RANGE_LEN;
+    }
+    else if (NVME_FEAT_TIMESTAMP == cfg.feature_id) {
+        cfg.data_len = NVME_FEAT_TIMESTAMP_STR_LEN;
+    }
+
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
 			fprintf(stderr, "can not allocate feature payload\n");
@@ -3328,22 +3341,34 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 	if (buf) {
-		if (strlen(cfg.file)) {
-			ffd = open(cfg.file, O_RDONLY);
-			if (ffd <= 0) {
-				fprintf(stderr, "Failed to open file %s: %s\n",
-						cfg.file, strerror(errno));
-				err = -EINVAL;
-				goto free;
-			}
-		}
-		err = read(ffd, (void *)buf, cfg.data_len);
-		if (err < 0) {
-			err = -errno;
-			fprintf(stderr, "failed to read data buffer from input"
-					" file: %s\n", strerror(errno));
-			goto close_ffd;
-		}
+        if ((NVME_FEAT_TIMESTAMP == cfg.feature_id) &&  (0 != cfg.value)) { //if feature ID is 0x0E, get timestamp value by -v option
+            cfg.data_len = NVME_FEAT_TIMESTAMP_DATA_SIZE;
+            memcpy(buf, &cfg.value, NVME_FEAT_TIMESTAMP_DATA_SIZE);
+        }
+        else {
+            if (strlen(cfg.file)) {
+                ffd = open(cfg.file, O_RDONLY);
+                if (ffd <= 0) {
+                    fprintf(stderr, "Failed to open file %s: %s\n",
+                    cfg.file, strerror(errno));
+                    err = -EINVAL;
+                    goto free;
+                }
+            }
+            err = read(ffd, (void *)buf, cfg.data_len);
+            if (err < 0) {
+                err = -errno;
+                fprintf(stderr, "failed to read data buffer from input"
+                " file: %s\n", strerror(errno));
+                goto close_ffd;
+            }
+            if (NVME_FEAT_TIMESTAMP == cfg.feature_id) { //if feature ID is 0x0E, then change string from file to integer
+                number = strtoul(buf, &endptr, STRTOUL_AUTO_BASE);
+                memset(buf, 0, cfg.data_len);
+                cfg.data_len = NVME_FEAT_TIMESTAMP_DATA_SIZE;
+                memcpy(buf, &number, NVME_FEAT_TIMESTAMP_DATA_SIZE);
+            }
+        }
 	}
 
 	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value,
@@ -3351,7 +3376,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	if (err < 0) {
 		perror("set-feature");
 	} else if (!err) {
-		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
+		printf("set-feature:%02x (%s), value:%#08llx\n", cfg.feature_id,
 			nvme_feature_to_string(cfg.feature_id), cfg.value);
 		if (buf) {
 			if (cfg.feature_id == NVME_FEAT_LBA_RANGE)
