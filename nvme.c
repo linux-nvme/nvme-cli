@@ -2097,7 +2097,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	struct config cfg = {
-		.namespace_id = 1,
+		.namespace_id = 0,
 		.feature_id   = 0,
 		.sel          = 0,
 		.cdw11        = 0,
@@ -2118,6 +2118,18 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		goto ret;
+
+	if (!cfg.namespace_id) {
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			if (errno != ENOTTY) {
+				perror("get-namespace-id");
+				goto close_fd;
+			}
+
+			cfg.namespace_id = NVME_NSID_ALL;
+		}
+	}
 
 	if (cfg.sel > 7) {
 		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
@@ -3009,6 +3021,18 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		goto ret;
+
+	if (!cfg.namespace_id) {
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			if (errno != ENOTTY) {
+				perror("get-namespace-id");
+				goto close_fd;
+			}
+
+			cfg.namespace_id = NVME_NSID_ALL;
+		}
+	}
 
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
