@@ -765,3 +765,236 @@ out:
 	return err;
 }
 
+static void ioLatencyHistogramOutput(FILE *fd, int index, int start, int end, char *unit0,
+                                     char *unit1, unsigned int *pHistogram, int print)
+{
+    int len;
+    char string[64], subString0[12], subString1[12];
+
+    len = snprintf(subString0, sizeof(subString0), "%d%s", start, unit0);
+    if (end != 0x7FFFFFFF)
+    {
+        len = snprintf(subString1, sizeof(subString1), "%d%s", end, unit1);
+    }
+    else
+    {
+        len = snprintf(subString1, sizeof(subString1), "%s", "+INF");
+    }
+    len = snprintf(string, sizeof(string), "%-11d %-11s %-11s %-11u\n", index, subString0, subString1,
+                   pHistogram[index]);
+    fwrite(string, 1, len, fd);
+    if (print)
+    {
+        printf("%s", string);
+    }
+}
+
+#define GLP_ID_VU_GET_READ_LATENCY_HISTOGRAM     0xC1
+#define GLP_ID_VU_GET_WRITE_LATENCY_HISTOGRAM    0xC2
+
+int io_latency_histogram(char *file, char *buf, int print, int logid)
+{
+    FILE *fdi = fopen(file, "w+");
+    int i, index;
+    char unit[2][3];
+    unsigned int *revision = (unsigned int *)buf;
+
+    if (logid == GLP_ID_VU_GET_READ_LATENCY_HISTOGRAM)
+    {
+        fPRINT_PARAM1("Memblaze IO Read Command Latency Histogram\n");
+    }
+    else if (logid == GLP_ID_VU_GET_WRITE_LATENCY_HISTOGRAM)
+    {
+        fPRINT_PARAM1("Memblaze IO Write Command Latency Histogram\n");
+    }
+    fPRINT_PARAM2("Major Revision : %d\n", revision[1]);
+    fPRINT_PARAM2("Minor Revision : %d\n", revision[0]);
+    buf += 8;
+
+    if (revision[1] == 1 && revision[0] == 0)
+    {
+        fPRINT_PARAM1("--------------------------------------------------\n");
+        fPRINT_PARAM1("Bucket      Start       End         Value         \n");
+        fPRINT_PARAM1("--------------------------------------------------\n");
+        index = 0;
+        strcpy(unit[0], "us");
+        strcpy(unit[1], "us");
+        for (i = 0; i < 32; i++, index++)
+        {
+            if (i == 31)
+            {
+                strcpy(unit[1], "ms");
+                ioLatencyHistogramOutput(fdi, index, i * 32, 1, unit[0], unit[1], (unsigned int *)buf, print);
+            }
+            else
+            {
+                ioLatencyHistogramOutput(fdi, index, i * 32, (i + 1) * 32, unit[0], unit[1], (unsigned int *)buf,
+                                         print);
+            }
+        }
+
+        strcpy(unit[0], "ms");
+        strcpy(unit[1], "ms");
+        for (i = 1; i < 32; i++, index++)
+        {
+            ioLatencyHistogramOutput(fdi, index, i, i + 1, unit[0], unit[1], (unsigned int *)buf, print);
+        }
+
+        for (i = 1; i < 32; i++, index++)
+        {
+            if (i == 31)
+            {
+                strcpy(unit[1], "s");
+                ioLatencyHistogramOutput(fdi, index, i * 32, 1, unit[0], unit[1], (unsigned int *)buf, print);
+            }
+            else
+            {
+                ioLatencyHistogramOutput(fdi, index, i * 32, (i + 1) * 32, unit[0], unit[1], (unsigned int *)buf,
+                                         print);
+            }
+        }
+
+        strcpy(unit[0], "s");
+        strcpy(unit[1], "s");
+        for (i = 1; i < 4; i++, index++)
+        {
+            ioLatencyHistogramOutput(fdi, index, i, i + 1, unit[0], unit[1], (unsigned int *)buf, print);
+        }
+
+        ioLatencyHistogramOutput(fdi, index, i, 0x7FFFFFFF, unit[0], unit[1], (unsigned int *)buf, print);
+    }
+    else
+    {
+        fPRINT_PARAM1("Unsupported io latency histogram revision\n");
+    }
+
+    fclose(fdi);
+    return 1;
+}
+
+#define LAT_STATS_BUFFER_SIZE          0x1000
+#define DO_PRINT_FLAG                  1
+#define NOT_PRINT_FLAG                 0
+#define FID_C1_LOG_FILENAME            "log_c1.csv"
+#define FID_C2_LOG_FILENAME            "log_c2.csv"
+
+static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+    char stats[LAT_STATS_BUFFER_SIZE];
+    int err = 0;
+    int fd;
+    char f1[] = FID_C1_LOG_FILENAME;
+    char f2[] = FID_C2_LOG_FILENAME;
+
+    const char *desc = "Get Latency Statistics log and show it.";
+    const char *write = "Get write statistics (read default)";
+
+    struct config {
+        int  write;
+    };
+    struct config cfg;
+
+    OPT_ARGS(opts) = {
+        OPT_FLAG("write",      'w', &cfg.write,      write),
+        OPT_END()
+    };
+
+    fd = parse_and_open(argc, argv, desc, opts);
+    if (fd < 0) return fd;
+
+    err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1, false, NVME_NO_LOG_LSP, sizeof(stats), &stats);
+    if (!err)
+        io_latency_histogram(cfg.write ? f2 : f1, stats, DO_PRINT_FLAG,
+         cfg.write ? GLP_ID_VU_GET_WRITE_LATENCY_HISTOGRAM : GLP_ID_VU_GET_READ_LATENCY_HISTOGRAM);
+    else
+        fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+
+    close(fd);
+    return err;
+}
+
+static int mb_set_lat_stats(int argc, char **argv,
+		struct command *command, struct plugin *plugin)
+{
+	int err, fd;
+	const char *desc = (
+			"Enable/Disable Latency Statistics Tracking.\n"
+			"No argument prints current status.");
+	const char *enable_desc = "Enable LST";
+	const char *disable_desc = "Disable LST";
+	const __u32 nsid = 0;
+	const __u8 fid = 0xe2;
+	const __u8 sel = 0;
+	const __u32 cdw11 = 0x0;
+	const __u32 cdw12 = 0x0;
+	const __u32 data_len = 32;
+	const __u32 save = 0;
+	__u32 result;
+	void *buf = NULL;
+
+	struct config {
+		bool enable, disable;
+	};
+
+	struct config cfg = {
+		.enable = false,
+		.disable = false,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"enable", 'e', "", CFG_NONE, &cfg.enable, no_argument, enable_desc},
+		{"disable", 'd', "", CFG_NONE, &cfg.disable, no_argument, disable_desc},
+		{NULL}
+	};
+
+	fd = parse_and_open(argc, argv, desc, command_line_options);
+
+	enum Option {
+		None = -1,
+		True = 1,
+		False = 0,
+	};
+	enum Option option = None;
+
+	if (cfg.enable && cfg.disable)
+		printf("Cannot enable and disable simultaneously.");
+	else if (cfg.enable || cfg.disable)
+		option = cfg.enable;
+
+	if (fd < 0)
+		return fd;
+	switch (option) {
+	case None:
+		err = nvme_get_feature(fd, nsid, fid, sel, cdw11, data_len, buf,
+					&result);
+		if (!err) {
+			printf(
+				"Latency Statistics Tracking (FID 0x%X) is currently (%i).\n",
+				fid, result);
+		} else {
+			printf("Could not read feature id 0xE2.\n");
+			return err;
+		}
+		break;
+	case True:
+	case False:
+		err = nvme_set_feature(fd, nsid, fid, option, cdw12, save,
+				data_len, buf, &result);
+		if (err > 0) {
+			fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+		} else if (err < 0) {
+			perror("Enable latency tracking");
+			fprintf(stderr, "Command failed while parsing.\n");
+		} else {
+			printf("Successfully set enable bit for FID (0x%X) to %i.\n",
+				fid, option);
+		}
+		break;
+	default:
+		printf("%d not supported.\n", option);
+		return EINVAL;
+	}
+	return fd;
+}
+

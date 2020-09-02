@@ -160,5 +160,68 @@ struct nvme_p4_smart_log
     u8 resv[SMART_INFO_NEW_SIZE - sizeof(struct nvme_p4_smart_log_item) * NR_SMART_ITEMS];
 };
 
+// base
+#define DD                           do{ printf("=Memblaze= %s[%d]-%s():\n", __FILE__, __LINE__, __func__); }while(0)
+#define DE(str)                      do{ printf("===ERROR!=== %s[%d]-%s():str=%s\n", __FILE__, __LINE__, __func__, \
+                                     str); }while(0)
+// integer
+#define DI(i)                        do{ printf("=Memblaze= %s[%d]-%s():int=%d\n", __FILE__, __LINE__, __func__, \
+                                     (int)i); } while(0)
+#define DPI(prompt, i)               do{ printf("=Memblaze= %s[%d]-%s():%s=%d\n", __FILE__, __LINE__, __func__, \
+                                     prompt, i); }while(0)
+#define DAI(prompt, i, arr, max)     do{ printf("=Memblaze= %s[%d]-%s():%s", __FILE__, __LINE__, __func__, prompt); \
+                                     for(i=0;i<max;i++) printf(" %d:%d", i, arr[i]); \
+                                     printf("\n"); }while(0)
+// char
+#define DC(c)                        do{ printf("=Memblaze= %s[%d]-%s():char=%c\n", __FILE__, __LINE__, __func__, c); \
+                                     }while(0)
+#define DPC(prompt, c)               do{ printf("=Memblaze= %s[%d]-%s():%s=%c\n", __FILE__, __LINE__, __func__, \
+                                     prompt, c); }while(0)
+// address
+#define DA(add)                      do{ printf("=Memblaze= %s[%d]-%s():address=0x%08X\n", __FILE__, __LINE__, \
+                                     __func__, add); }while(0)
+#define DPA(prompt, add)             do{ printf("=Memblaze= %s[%d]-%s():%s=0x%08X\n", __FILE__, __LINE__, __func__, \
+                                     prompt, add); }while(0)
+// string
+#define DS(str)                      do{ printf("=Memblaze= %s[%d]-%s():str=%s\n", __FILE__, __LINE__, __func__, str); \
+                                     }while(0)
+#define DPS(prompt, str)             do{ printf("=Memblaze= %s[%d]-%s():%s=%s\n", __FILE__, __LINE__, __func__, \
+                                     prompt, str); }while(0)
+#define DAS(prompt, i, arr, max)     do{ printf("=Memblaze= %s[%d]-%s():%s", __FILE__, __LINE__, __func__, prompt); \
+                                     for(i=0;i<max;i++) printf(" %d:%s", i, arr[i]); \
+                                     printf("\n"); }while(0)
+// array
+#define DR(str, k)                   do{ int ip; for(ip=0;ip<k;ip++) if(NULL != argv[ip]) \
+                                     printf("=Memblaze= %s[%d]-%s():%d=%s\n", \
+                                     __FILE__, __LINE__, __func__, ip, str[ip]); }while(0)
+#define DARG                         do{ DPI("argc", argc); \
+                                     int ip; for(ip=0;ip<argc;ip++) if(NULL != argv[ip]) \
+                                     printf("=Memblaze= %s[%d]-%s():%d=%s\n", \
+                                     __FILE__, __LINE__, __func__, ip, argv[ip]); }while(0)
+
+#define fPRINT_PARAM1(format) \
+    { \
+        do \
+        { \
+            fprintf(fdi, format);\
+            if (print) \
+            { \
+                printf(format); \
+            } \
+        } while (0); \
+    }
+
+#define fPRINT_PARAM2(format, value) \
+    { \
+        do \
+        { \
+            fprintf(fdi, format, value);\
+            if (print) \
+            { \
+                printf(format, value); \
+            } \
+        } while (0); \
+    }
+
 #endif // __MEMBLAZE_UTILS_H__
 
