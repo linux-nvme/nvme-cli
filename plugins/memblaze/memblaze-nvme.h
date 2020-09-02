@@ -18,6 +18,8 @@ PLUGIN(NAME("memblaze", "Memblaze vendor specific extensions"),
 		ENTRY("get-feature-add", "Get Memblaze feature and show the resulting value", get_additional_feature)
 		ENTRY("set-feature-add", "Set a Memblaze feature and show the resulting value", set_additional_feature)
 		ENTRY("select-download", "Selective Firmware Download", memblaze_selective_download)
+		ENTRY("lat-stats", "Enable and disable Latency Statistics logging", mb_set_lat_stats)
+		ENTRY("lat-stats-print", "Retrieve IO Latency Statistics log, show it", mb_lat_stats_log_print)
 	)
 );
 
