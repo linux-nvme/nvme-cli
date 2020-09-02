@@ -125,6 +125,8 @@
         											 WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2)
 #define WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY_MASK		(WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY | \
         											 WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY)
+#define WDC_DRIVE_CAP_INTERNAL_LOG_MASK	(WDC_DRIVE_CAP_INTERNAL_LOG | WDC_DRIVE_CAP_DUI | \
+        								 WDC_DRIVE_CAP_DUI_DATA | WDC_SN730B_CAP_VUC_LOG)
 /* SN730 Get Log Capabilities */
 #define SN730_NVME_GET_LOG_OPCODE			0xc2
 #define SN730_GET_FULL_LOG_LENGTH			0x00080009
@@ -2516,7 +2518,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 	char *desc = "Internal Firmware Log.";
 	char *file = "Output file pathname.";
 	char *size = "Data retrieval transfer size.";
-	char *data_area = "Data area to retrieve up to. Currently only supported on the SN340, SN640, and SN840 devices.";
+	char *data_area = "Data area to retrieve up to. Currently only supported on the SN340, SN640, SN730, and SN840 devices.";
 	char *file_size = "Output file size.  Currently only supported on the SN340 device.";
 	char *offset = "Output file data offset. Currently only supported on the SN340 device.";
 	char *type = "Telemetry type - NONE, HOST, or CONTROLLER. Currently only supported on the SN640 and SN840 devices.";
@@ -6960,7 +6962,7 @@ static int wdc_capabilities(int argc, char **argv,
     printf("purge                         : Supported\n");
     printf("purge-monitor                 : Supported\n");
     printf("vs-internal-log               : %s\n", 
-            capabilities & WDC_DRIVE_CAP_INTERNAL_LOG ? "Supported" : "Not Supported");
+            capabilities & WDC_DRIVE_CAP_INTERNAL_LOG_MASK ? "Supported" : "Not Supported");
     printf("vs-nand-stats                 : %s\n", 
             capabilities & WDC_DRIVE_CAP_NAND_STATS ? "Supported" : "Not Supported");
     printf("vs-smart-add-log              : %s\n", 
