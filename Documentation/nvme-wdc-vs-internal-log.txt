@@ -8,7 +8,7 @@ nvme-wdc-vs-internal-log - Retrieve WDC device's internal firmware log and save 
 SYNOPSIS
 --------
 [verse]
-'nvme wdc vs-internal-log' <device> [--output-file=<FILE>, -o <FILE>] [--transfer-size=<SIZE>, -s <SIZE>] 
+'nvme wdc vs-internal-log' <device> [--output-file=<FILE>, -o <FILE>] [--transfer-size=<SIZE>, -s <SIZE>]
     [--data-area=<DATA AREA>, -d <DATA_AREA>] [--file-size=<FILE SIZE>, -f <FILE SIZE>] [--offset=<OFFSET>, -e <OFFSET>]
     [--type=<TYPE>, -t <type>] [--verbose, -v]
 
@@ -35,31 +35,31 @@ OPTIONS
 
 -d <DATA AREA>::
 --data-area=<DATA AREA>::
-    DUI data area to retrieve.  The DUI data areas from 1 to <DATA AREA> will be retrieved.  This parameter 
-    is currently only supported on the SN340, SN640, and SN840 devices.  
-    
+    DUI data area to retrieve.  The DUI data areas from 1 to <DATA AREA> will be retrieved.  This parameter
+    is currently only supported on the SN340, SN640, SN730, and SN840 devices.
+
 -f <FILE SIZE>::
 --file-size=<FILE SIZE>::
-    Specifies the desired size of the data file starting at the passed in offset.  This allows the user to 
-    retrieve the data in several smaller files of the passed in size.  This parameter is currently only 
-    supported on the SN340 device.    
+    Specifies the desired size of the data file starting at the passed in offset.  This allows the user to
+    retrieve the data in several smaller files of the passed in size.  This parameter is currently only
+    supported on the SN340 device.
 
 -e <OFFSET>::
---offset=<OFFSET>::        
+--offset=<OFFSET>::
 	Specifies the data offset at which to start retrieving the data.  This parameter is used in combination
-	with the file size parameter to retrieve the data in several smaller files.  This parameter is currently 
-    only supported on the SN340 device.      
+	with the file size parameter to retrieve the data in several smaller files.  This parameter is currently
+    only supported on the SN340 device.
 
 -t <TYPE>::
---type=<TYPE>::        
+--type=<TYPE>::
 	Specifies the telemetry type - NONE, HOST, or CONTROLLER.  This parameter is used to get either the host
 	generated or controller initiated telemetry log page.  If not specified or none is specified, the command
     will return the default E6 log data.  This parameter is currently only supported on the SN640 and SN840
-    devices.       
+    devices.
 
 -v <VERBOSE>::
---verbose=<VERBOSE>::        
-	Provides additional debug messages for certain drives.                                                    
+--verbose=<VERBOSE>::
+	Provides additional debug messages for certain drives.
 
 EXAMPLES
 --------
@@ -100,7 +100,7 @@ EXAMPLES
 ------------
 # nvme wdc vs-internal-log /dev/nvme1 -t host -o host-telem-log-da3.bin -d 3
 ------------
-* Gets the controller telemetry log page to data area 3 from the device and stores it in file ctlr-telem-log-da3.bin: 
+* Gets the controller telemetry log page to data area 3 from the device and stores it in file ctlr-telem-log-da3.bin:
 +
 ------------
 # nvme wdc vs-internal-log /dev/nvme1 -t controller -o ctlr-telem-log-da3.bin -d 3
