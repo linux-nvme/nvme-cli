@@ -66,6 +66,7 @@ UTIL_OBJS := util/argconfig.o util/suffix.o util/json.o util/parser.o
 
 PLUGIN_OBJS :=					\
 	plugins/intel/intel-nvme.o		\
+	plugins/amzn/amzn-nvme.o		\
 	plugins/lnvm/lnvm-nvme.o		\
 	plugins/memblaze/memblaze-nvme.o	\
 	plugins/wdc/wdc-nvme.o			\
