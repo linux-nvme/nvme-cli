@@ -644,3 +644,56 @@ void *mmap_registers(const char *dev)
 	return membase;
 }
 
+unsigned int max_data_transfer_size(int fd){
+	unsigned int size = 0xffffffff, mdts;
+	int queue_fd, err, ret, id, nsid;
+	char *path, seg_buf[16]="", page_buf[16]="";
+	struct nvme_id_ctrl ctrl;
+	ret = sscanf(devicename, "nvme%dn%d", &id, &nsid);
+	switch (ret) {
+	case 2: // block device kernel limitation
+		if (asprintf(&path,"/sys/block/%s/queue/max_segments",devicename)<0)
+			goto get_mdts;
+		queue_fd = open(path, O_RDONLY);
+		if (queue_fd < 0) {
+			free(path);
+			goto get_mdts;
+		}
+		ret = read(queue_fd, seg_buf, 16);
+		close(queue_fd);
+		free(path);
+		if (ret < 0)
+			goto get_mdts;
+		size = (unsigned)strtol(seg_buf, NULL, 10);
+		if (asprintf(&path,"/sys/block/%s/queue/hw_sector_size",devicename)<0)
+			goto get_mdts;
+		queue_fd = open(path, O_RDONLY);
+		if (queue_fd < 0) {
+			free(path);
+			goto get_mdts;
+		}
+		ret = read(queue_fd, page_buf, 16);
+		close(queue_fd);
+		free(path);
+		if (ret < 0)
+			goto get_mdts;
+		size *= (unsigned)strtol(page_buf, NULL, 10);
+	case 1:
+get_mdts:   // MDTS from controller
+		err = nvme_identify_ctrl(fd, &ctrl);
+		if (err)
+			return 0;
+
+		if (ctrl.mdts==0)
+			return size;
+
+		mdts = 1<<(12+ctrl.mdts);
+		size = size < mdts ? size : mdts;
+		break;
+
+	default:
+		fprintf(stderr, "%s is not an nvme device\n", dev);
+		return 0;
+	}
+	return size;
+}

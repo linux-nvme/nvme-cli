@@ -115,4 +115,6 @@ void nvme_free(void *p, bool huge);
 
 unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time);
+
+unsigned int max_data_transfer_size(int fd);
 #endif /* _NVME_H */
