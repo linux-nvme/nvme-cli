@@ -554,10 +554,14 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	const char *human_readable = "show report zones in readable format";
 
 	enum nvme_print_flags flags;
-	int fd, zdes = 0, err = -1;
-	__u32 report_size;
-	void *report;
+	int fd, zdes = 0, err = -1, zes;
+	__u32 report_size, remain_size, xfer_len, mdts, predesc_size;
+	void *report, *report_point;
 	bool huge = false;
+	struct nvme_id_ns id_ns;
+	__u64 nsze, num_zones_reported = 0, num_zones_ret;
+	struct nvme_zone_report *partial_report;
+	struct nvme_zns_desc *log;
 
 	struct config {
 		char *output_format;
@@ -625,27 +629,91 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 		cfg.num_descs = le64_to_cpu(r.nr_zones);
 	}
 
-	report_size = sizeof(struct nvme_zone_report) + cfg.num_descs *
-		(sizeof(struct nvme_zns_desc) + cfg.num_descs * zdes);
+	err = nvme_identify_ns(fd, cfg.namespace_id, 0, &id_ns);
+	if (err) {
+		if (err < 0)
+			perror("identify namespace");
+		else {
+			fprintf(stderr, "identify failed\n");
+			nvme_show_status(err);
+		}
+		goto close_fd;
+	}
+	predesc_size = sizeof(struct nvme_zone_report);
+	nsze = le64_to_cpu(id_ns.nsze);
+	zes = sizeof(struct nvme_zns_desc) + zdes;
+	remain_size = report_size = predesc_size + cfg.num_descs * zes;
 
-	report = nvme_alloc(report_size, &huge);
+	report = malloc(report_size);
+	report_point = report + predesc_size;
 	if (!report) {
-		perror("alloc");
-		err = -1;
+		perror("could not allocate memory");
+		err = -errno;
 		goto close_fd;
 	}
 
-	err = nvme_zns_report_zones(fd, cfg.namespace_id, cfg.zslba,
-		cfg.extended, cfg.state, cfg.partial, report_size, report);
-	if (!err)
-		nvme_show_zns_report_zones(report, cfg.num_descs, zdes,
-			report_size, flags);
-	else if (err > 0)
-		nvme_show_status(err);
-	else
-		perror("zns report-zones");
+	mdts = max_data_transfer_size(fd);
+	if(!mdts){
+		perror("Get mdts failed");
+		err = -1;
+		goto free_report;
+	}
 
-	nvme_free(report, huge);
+	mdts = report_size < mdts ? report_size : mdts;
+
+	partial_report = (struct nvme_zone_report*)nvme_alloc(mdts, &huge);
+	if (!partial_report) {
+		perror("alloc");
+		err = -1;
+		goto free_report;
+	}
+
+
+	/* transfer in chunks of mdts */
+	do {
+		xfer_len = remain_size < mdts ? remain_size : mdts;
+		err = nvme_zns_report_zones(fd, cfg.namespace_id, cfg.zslba,
+			cfg.extended, cfg.state, cfg.partial, xfer_len, partial_report);
+		if (err) {
+			if (err > 0)
+				nvme_show_status(err);
+			else
+				perror("zns report-zones");
+			goto free;
+		}
+
+		num_zones_ret = le64_to_cpu(partial_report->nr_zones);
+		if(num_zones_ret==0) break;
+
+		if(cfg.partial==0){
+			if(num_zones_reported==0) num_zones_reported = num_zones_ret;
+		}else{
+			num_zones_reported += num_zones_ret;
+		}
+		xfer_len -= predesc_size;
+
+		memcpy(report_point, (__u8 *)partial_report + predesc_size, xfer_len);
+		report_point += xfer_len;
+		remain_size -= xfer_len;
+
+		if (num_zones_ret < xfer_len/zes)
+			break;
+
+		log = (struct nvme_zns_desc *)
+			((__u8 *)partial_report + predesc_size + xfer_len - zes);
+		cfg.zslba = le64_to_cpu(log->zslba) + le64_to_cpu(log->zcap);
+
+	} while (remain_size >= zes+predesc_size && cfg.zslba < nsze);
+
+	((struct nvme_zone_report *)report)->nr_zones = cpu_to_le64(num_zones_reported);
+   
+	nvme_show_zns_report_zones(report, cfg.num_descs, zdes,
+		report_size, flags);
+
+free:
+	nvme_free(partial_report, huge);
+free_report:
+	free(report);
 close_fd:
 	close(fd);
 	return err;
