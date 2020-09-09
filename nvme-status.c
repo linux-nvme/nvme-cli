@@ -142,7 +142,7 @@ __u8 nvme_status_to_errno(int status, bool fabrics)
 		return 0;
 
 	if (status < 0)
-		return ECOMM;
+		return errno;
 
 	/*
 	 * The actual status code is enough with masking 0xff, but we need to
