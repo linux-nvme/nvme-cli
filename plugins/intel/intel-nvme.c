@@ -54,6 +54,13 @@ struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	pll_lock_loss_cnt;
 	struct nvme_additional_smart_log_item	nand_bytes_written;
 	struct nvme_additional_smart_log_item	host_bytes_written;
+	struct nvme_additional_smart_log_item	host_ctx_wear_used;
+	struct nvme_additional_smart_log_item	perf_stat_indicator;
+	struct nvme_additional_smart_log_item	re_alloc_sectr_cnt;
+	struct nvme_additional_smart_log_item	soft_ecc_err_rate;
+	struct nvme_additional_smart_log_item	unexp_power_loss;
+	struct nvme_additional_smart_log_item	media_bytes_read;
+	struct nvme_additional_smart_log_item	avail_fw_downgrades;
 };
 
 struct nvme_vu_id_ctrl_field { /* CDR MR5 */
@@ -218,60 +225,118 @@ static void show_intel_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->host_bytes_written.raw));
 	json_object_add_value_object(dev_stats, "host_bytes_written", entry_stats);
 
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->host_ctx_wear_used.norm);
+	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->host_ctx_wear_used.raw));
+	json_object_add_value_object(dev_stats, "host_ctx_wear_used", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->perf_stat_indicator.norm);
+	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->perf_stat_indicator.raw));
+	json_object_add_value_object(dev_stats, "perf_stat_indicator", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->re_alloc_sectr_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->re_alloc_sectr_cnt.raw));
+	json_object_add_value_object(dev_stats, "re_alloc_sectr_cnt", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->soft_ecc_err_rate.norm);
+	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->soft_ecc_err_rate.raw));
+	json_object_add_value_object(dev_stats, "soft_ecc_err_rate", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->unexp_power_loss.norm);
+	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->unexp_power_loss.raw));
+	json_object_add_value_object(dev_stats, "unexp_power_loss", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->media_bytes_read.norm);
+	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->media_bytes_read.raw));
+	json_object_add_value_object(dev_stats, "media_bytes_read", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->avail_fw_downgrades.norm);
+	json_object_add_value_int(entry_stats, "raw", 	int48_to_long(smart->avail_fw_downgrades.raw));
+	json_object_add_value_object(dev_stats, "avail_fw_downgrades", entry_stats);
+
 	json_object_add_value_object(root, "Device stats", dev_stats);
 
 	json_print_object(root, NULL);
 	json_free_object(root);
 }
 
+static char *id_to_key(__u8 id)
+{
+	switch (id) {
+	case 0xAB:
+		return "program_fail_count";
+	case 0xAC:
+		return "erase_fail_count";
+	case 0xAD:
+		return "wear_leveling_count";
+	case 0xB8:
+		return "e2e_error_detect_count";
+	case 0xC7:
+		return "crc_error_count";
+	case 0xE2:
+		return "media_wear_percentage";
+	case 0xE3:
+		return "host_reads";
+	case 0xE4:
+		return "timed_work_load";
+	case 0xEA:
+		return "thermal_throttle_status";
+	case 0xF0:
+		return "retry_buff_overflow_count";
+	case 0xF3:
+		return "pll_lock_loss_counter";
+	case 0xF4:
+		return "nand_bytes_written";
+	case 0xF5:
+		return "host_bytes_written";
+	case 0xF6:
+		return "host_context_wear_used";
+	case 0xF7:
+		return "performance_status_indicator";
+	case 0xF8:
+		return "media_bytes_read";
+	case 0xF9:
+		return "available_fw_downgrades";
+	case 0x05:
+		return "re-allocated_sector_count";
+	case 0x0D:
+		return "soft_ecc_error_rate";
+	case 0xAE:
+		return "unexpected_power_loss";
+	default:
+		return "Invalid ID";
+	}
+}
+
+static void print_intel_smart_log_items(struct nvme_additional_smart_log_item *item)
+{
+	if (!item->key)
+		return;
+
+	printf("%#x    %-45s  %3d         %"PRIu64"\n",
+		item->key, id_to_key(item->key),
+		item->norm, int48_to_long(item->raw));
+}
+
 static void show_intel_smart_log(struct nvme_additional_smart_log *smart,
 		unsigned int nsid, const char *devname)
 {
+	struct nvme_additional_smart_log_item *iter = &smart->program_fail_cnt;
+	int num_items = sizeof(struct nvme_additional_smart_log) /
+				sizeof(struct nvme_additional_smart_log_item);
+
 	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
 		devname, nsid);
-	printf("key                               normalized raw\n");
-	printf("program_fail_count              : %3d%%       %"PRIu64"\n",
-		smart->program_fail_cnt.norm,
-		int48_to_long(smart->program_fail_cnt.raw));
-	printf("erase_fail_count                : %3d%%       %"PRIu64"\n",
-		smart->erase_fail_cnt.norm,
-		int48_to_long(smart->erase_fail_cnt.raw));
-	printf("wear_leveling                   : %3d%%       min: %u, max: %u, avg: %u\n",
-		smart->wear_leveling_cnt.norm,
-		le16_to_cpu(smart->wear_leveling_cnt.wear_level.min),
-		le16_to_cpu(smart->wear_leveling_cnt.wear_level.max),
-		le16_to_cpu(smart->wear_leveling_cnt.wear_level.avg));
-	printf("end_to_end_error_detection_count: %3d%%       %"PRIu64"\n",
-		smart->e2e_err_cnt.norm,
-		int48_to_long(smart->e2e_err_cnt.raw));
-	printf("crc_error_count                 : %3d%%       %"PRIu64"\n",
-		smart->crc_err_cnt.norm,
-		int48_to_long(smart->crc_err_cnt.raw));
-	printf("timed_workload_media_wear       : %3d%%       %.3f%%\n",
-		smart->timed_workload_media_wear.norm,
-		((float)int48_to_long(smart->timed_workload_media_wear.raw)) / 1024);
-	printf("timed_workload_host_reads       : %3d%%       %"PRIu64"%%\n",
-		smart->timed_workload_host_reads.norm,
-		int48_to_long(smart->timed_workload_host_reads.raw));
-	printf("timed_workload_timer            : %3d%%       %"PRIu64" min\n",
-		smart->timed_workload_timer.norm,
-		int48_to_long(smart->timed_workload_timer.raw));
-	printf("thermal_throttle_status         : %3d%%       %u%%, cnt: %u\n",
-		smart->thermal_throttle_status.norm,
-		smart->thermal_throttle_status.thermal_throttle.pct,
-		smart->thermal_throttle_status.thermal_throttle.count);
-	printf("retry_buffer_overflow_count     : %3d%%       %"PRIu64"\n",
-		smart->retry_buffer_overflow_cnt.norm,
-		int48_to_long(smart->retry_buffer_overflow_cnt.raw));
-	printf("pll_lock_loss_count             : %3d%%       %"PRIu64"\n",
-		smart->pll_lock_loss_cnt.norm,
-		int48_to_long(smart->pll_lock_loss_cnt.raw));
-	printf("nand_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
-		smart->nand_bytes_written.norm,
-		int48_to_long(smart->nand_bytes_written.raw));
-	printf("host_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
-		smart->host_bytes_written.norm,
-		int48_to_long(smart->host_bytes_written.raw));
+	printf("ID             KEY                                 Normalized     Raw\n");
+
+	for (int i = 0; i < num_items; i++, iter++)
+		print_intel_smart_log_items(iter);
 }
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
