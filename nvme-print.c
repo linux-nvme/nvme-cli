@@ -2957,11 +2957,11 @@ void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
 static void show_nvme_id_ns_zoned_zoc(__le16 ns_zoc)
 {
 	__u16 zoc = le16_to_cpu(ns_zoc);
-	__u8 rsvd = (zoc & 0xfc) >> 2;
+	__u8 rsvd = (zoc & 0xfffc) >> 2;
 	__u8 ze = (zoc & 0x2) >> 1;
 	__u8 vzc = zoc & 0x1;
 	if (rsvd)
-		printf("  [7:2] : %#x\tReserved\n", rsvd);
+		printf(" [15:2] : %#x\tReserved\n", rsvd);
 	printf("  [1:1] : %#x\tZone Active Excursions: %s\n",
 		ze, ze ? "Yes (Host support required)" : "No");
 	printf("  [0:0] : %#x\tVariable Zone Capacity: %s\n",
