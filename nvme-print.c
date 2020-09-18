@@ -3010,12 +3010,12 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 		printf("ozcs    : %u\n", le16_to_cpu(ns->ozcs));
 	}
 
-	if (!le32_to_cpu(ns->mar) && human)
+	if (ns->mar == 0xffffffff && human)
 		printf("mar     : No Limit\n");
 	else
 		printf("mar     : %#x\n", le32_to_cpu(ns->mar));
 
-	if (!le32_to_cpu(ns->mor) && human)
+	if (ns->mor == 0xffffffff && human)
 		printf("mor     : No Limit\n");
 	else
 		printf("mor     : %#x\n", le32_to_cpu(ns->mor));
