@@ -2977,7 +2977,7 @@ static void show_nvme_id_ns_zoned_ozcs(__le16 ns_ozcs)
 
 	if (rsvd)
 		printf(" [15:1] : %#x\tReserved\n", rsvd);
-	printf("  [2:2] : %#x\tRead Across Zone Boundaries: %s\n",
+	printf("  [0:0] : %#x\tRead Across Zone Boundaries: %s\n",
 		razb, razb ? "Yes" : "No");
 	printf("\n");
 }
