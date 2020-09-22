@@ -862,7 +862,7 @@ struct wdc_fw_act_history_log_entry {
 	__u8        reserved[12];
 };
 
-struct wdc_fw_act_history_log_entry_c2 {
+struct __attribute__((__packed__)) wdc_fw_act_history_log_entry_c2 {
 	__u8		entry_version_num;
 	__u8		entry_len;
 	__le16		reserved;
@@ -878,7 +878,7 @@ struct wdc_fw_act_history_log_entry_c2 {
 	__u8		reserved3[14];
 };
 
-struct wdc_fw_act_history_log_format_c2 {
+struct __attribute__((__packed__)) wdc_fw_act_history_log_format_c2 {
 	__u8		log_identifier;
 	__u8 		reserved[3];
 	__le32		num_entries;
@@ -3714,53 +3714,66 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries)
 	char previous_fw[9];
 	char new_fw[9];
 	char commit_action_bin[8];
-	memset((void *)previous_fw, 0, 9);
-	memset((void *)new_fw, 0, 9);
-	memset((void *)commit_action_bin, 0, 8);
 	char *null_fw = "--------";
 
-	printf("  Firmware Activate History Log \n");
-	printf("         Power on Hour   Power Cycle           Previous    New                               \n");
-	printf("  Entry    hh:mm:ss      Count                 Firmware    Firmware    Slot   Action  Result \n");
-	printf("  -----  --------------  --------------------  ----------  ----------  -----  ------  -------\n");
 
-	if(data[0] == WDC_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID) {
+	if (data[0] == WDC_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID) {
+		printf("  Firmware Activate History Log \n");
+		printf("                               Power Cycle     Previous    New                               \n");
+		printf("  Entry      Timestamp            Count        Firmware    Firmware    Slot   Action  Result \n");
+		printf("  -----  -----------------  -----------------  ---------   ---------   -----  ------  -------\n");
+
 		struct wdc_fw_act_history_log_format_c2 *fw_act_history_entry = (struct wdc_fw_act_history_log_format_c2 *)(data);
 
 		for (i = 0; i < num_entries; i++) {
+			memset((void *)previous_fw, 0, 9);
+			memset((void *)new_fw, 0, 9);
+			memset((void *)commit_action_bin, 0, 8);
+
 			memcpy(previous_fw, (char *)&(fw_act_history_entry->entry[i].previous_fw_version), 8);
-			if (strlen((char *)&(fw_act_history_entry->entry[i].current_fw_version)) > 1)
-				memcpy(new_fw, (char *)&(fw_act_history_entry[i].entry->current_fw_version), 8);
-			else
-				memcpy(new_fw, null_fw, 8);
+			memcpy(new_fw, (char *)&(fw_act_history_entry->entry[i].current_fw_version), 8);
 
 			printf("%5"PRIu16"", (uint16_t)le16_to_cpu(fw_act_history_entry->entry[i].fw_act_hist_entries));
-			printf("       ");
-			printf("%02d:%02d:%02d", (int)(le64_to_cpu(fw_act_history_entry->entry[i].timestamp)/(1000*3600)),
-					(int)(((le64_to_cpu(fw_act_history_entry->entry[i].timestamp)/1000)%3600)/60),
-					(int)((le64_to_cpu(fw_act_history_entry->entry[i].timestamp)/1000)%60));
-			printf("       ");
-			printf("%16"PRIu64"", (uint64_t)le64_to_cpu(fw_act_history_entry->entry[i].power_cycle_count));
 			printf("     ");
+						uint64_t timestamp = (0x0000FFFFFFFFFFFF & le64_to_cpu(fw_act_history_entry->entry[i].timestamp));
+			printf("%16"PRIu64"", timestamp);
+			/*
+			int year = (((timestamp/(1000*3600))/24)/365);
+			int day = ((timestamp/1000)/(3600*24));
+			int hour = ((timestamp/1000)/3600);
+			printf("%02dyr:%02dday:%02dhr:%02dmin:%02dsec",
+					(int)year,
+					(int)(day%365),
+					(int)(hour%24),
+					(int)(((timestamp/1000)%3600)/60),
+					(int)((timestamp/1000)%60));
+			*/
+			printf("   ");
+						printf("%16"PRIu64"", (uint64_t)le64_to_cpu(fw_act_history_entry->entry[i].power_cycle_count));
+			printf("   ");
 			printf("%s", (char *)previous_fw);
 			printf("    ");
 			printf("%s", (char *)new_fw);
 			printf("     ");
 			printf("%2"PRIu8"", (uint8_t)fw_act_history_entry->entry[i].slot_number);
-			printf("  ");
+			printf("   ");
 			wdc_get_commit_action_bin(fw_act_history_entry->entry[i].commit_action_type,(char *)&commit_action_bin);
 			printf("  %s", (char *)commit_action_bin);
-			printf("   ");
+			printf("  ");
 			if (le16_to_cpu(fw_act_history_entry->entry[i].result) == 0)
 				printf("pass");
 			else
 				printf("fail #%d", (uint16_t)le16_to_cpu(fw_act_history_entry->entry[i].result));
-
 			printf("\n");
 		}
 	}
 	else
 	{
+		printf("  Firmware Activate History Log \n");
+		printf("         Power on Hour   Power Cycle           Previous    New                               \n");
+		printf("  Entry    hh:mm:ss      Count                 Firmware    Firmware    Slot   Action  Result \n");
+		printf("  -----  --------------  --------------------  ----------  ----------  -----  ------  -------\n");
+
 		struct wdc_fw_act_history_log_entry *fw_act_history_entry = (struct wdc_fw_act_history_log_entry *)(data + sizeof(struct wdc_fw_act_history_log_hdr));
 
 		for (i = 0; i < num_entries; i++) {
@@ -4147,6 +4160,7 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 	case WDC_NVME_SN640_DEV_ID:
 	case WDC_NVME_SN640_DEV_ID_1:
 	case WDC_NVME_SN640_DEV_ID_2:
+	case WDC_NVME_SN640_DEV_ID_3:
 	case WDC_NVME_SN840_DEV_ID:
 	case WDC_NVME_SN840_DEV_ID_1:
 		if (!get_dev_mgment_cbs_data(fd, WDC_C2_CUSTOMER_ID_ID, (void*)&data)) {
@@ -4284,6 +4298,7 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 		break;
 
 	default:
+		fprintf(stderr, "ERROR : WDC : Unknown device id - 0x%x\n", device_id);
 
 		ret = -1;
 		break;
@@ -5103,7 +5118,43 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *com
 	}
 
 	if (capabilities & WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY) {
-		ret = wdc_get_fw_act_history(fd, cfg.output_format);
+		int uuid_index = 0;
+		bool c0GuidMatch = false;
+		__u8 *data;
+		int i;
+
+		/* check for the GUID in the 0xC0 log page to determine which log page to use to */
+		/* to retrieve fw activate history data                                          */
+		if ((data = (__u8*) malloc(sizeof (__u8) * WDC_NVME_SMART_CLOUD_ATTR_LEN)) == NULL) {
+			fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
+			return -1;
+		}
+
+		/* Get the 0xC0 log data */
+		ret = nvme_get_log14(fd, 0xFFFFFFFF, WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_OPCODE,
+				NVME_NO_LOG_LSP, 0, 0, false, uuid_index, WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
+
+		if (ret == 0) {
+			/* Verify GUID matches */
+			for (i=0; i<16; i++) {
+				if (scao_guid[i] != data[SCAO_LPG + i])	{
+					c0GuidMatch = false;
+					break;
+				}
+			}
+
+			if (i == 16) {
+				c0GuidMatch = true;
+			}
+		}
+
+		free(data);
+        if (c0GuidMatch) {
+    	    ret = wdc_get_fw_act_history_C2(fd, cfg.output_format);
+        }
+        else {
+		    ret = wdc_get_fw_act_history(fd, cfg.output_format);
+        }
 	} else {
 		ret = wdc_get_fw_act_history_C2(fd, cfg.output_format);
 	}
