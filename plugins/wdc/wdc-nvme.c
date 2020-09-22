@@ -3735,7 +3735,7 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries)
 
 			printf("%5"PRIu16"", (uint16_t)le16_to_cpu(fw_act_history_entry->entry[i].fw_act_hist_entries));
 			printf("     ");
-						uint64_t timestamp = (0x0000FFFFFFFFFFFF & le64_to_cpu(fw_act_history_entry->entry[i].timestamp));
+			uint64_t timestamp = (0x0000FFFFFFFFFFFF & le64_to_cpu(fw_act_history_entry->entry[i].timestamp));
 			printf("%16"PRIu64"", timestamp);
 			/*
 			int year = (((timestamp/(1000*3600))/24)/365);
@@ -3749,7 +3749,7 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries)
 					(int)((timestamp/1000)%60));
 			*/
 			printf("   ");
-						printf("%16"PRIu64"", (uint64_t)le64_to_cpu(fw_act_history_entry->entry[i].power_cycle_count));
+			printf("%16"PRIu64"", (uint64_t)le64_to_cpu(fw_act_history_entry->entry[i].power_cycle_count));
 			printf("   ");
 			printf("%s", (char *)previous_fw);
 			printf("    ");
