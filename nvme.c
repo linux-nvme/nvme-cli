@@ -4093,7 +4093,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
 	__u16 control = 0;
 	__u32 dsmgmt = 0;
-	int phys_sector_size = 0;
+	int logical_block_size = 0;
 	long long buffer_size = 0;
 	bool huge;
 
@@ -4223,10 +4223,10 @@ static int submit_io(int opcode, char *command, const char *desc,
 		goto close_mfd;
 	}
 
-	if (ioctl(fd, BLKPBSZGET, &phys_sector_size) < 0)
+	if (ioctl(fd, BLKSSZGET, &logical_block_size) < 0)
 		goto close_mfd;
 
-	buffer_size = (cfg.block_count + 1) * phys_sector_size;
+	buffer_size = (cfg.block_count + 1) * logical_block_size;
 	if (cfg.data_size < buffer_size) {
 		fprintf(stderr, "Rounding data size to fit block count (%lld bytes)\n",
 				buffer_size);
