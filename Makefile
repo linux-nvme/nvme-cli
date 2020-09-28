@@ -231,7 +231,10 @@ deb-light: $(NVME) pkg nvme.control.in
 	dpkg-deb --build nvme-$(NVME_VERSION)
 
 rpm: dist
-	$(RPMBUILD) --define '_libdir ${LIBDIR}' -ta nvme-$(NVME_VERSION).tar.gz
+	$(RPMBUILD) --define '_prefix $(DESTDIR)$(PREFIX)' \
+	--define '_libdir $(DESTDIR)${LIBDIR}' \
+	--define '_sysconfdir $(DESTDIR)$(SYSCONFDIR)' \
+	-ta nvme-$(NVME_VERSION).tar.gz
 
 .PHONY: default doc all clean clobber install-man install-bin install
 .PHONY: dist pkg dist-orig deb deb-light rpm FORCE test
