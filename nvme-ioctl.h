@@ -96,13 +96,13 @@ int nvme_identify_ns_granularity(int fd, void *data);
 int nvme_zns_identify_ctrl(int fd, void *data);
 int nvme_zns_identify_ns(int fd, __u32 nsid, void *data);
 int nvme_identify_iocs(int fd, __u16 cntid, void *data);
-int nvme_get_log(int fd, __u32 nsid, __u8 log_id, bool rae,
+int nvme_get_log(int fd, __u32 nsid, __u8 log_id, bool rae, __u8 csi,
 		 __u32 data_len, void *data);
 int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
-		   __u16 group_id, bool rae, __u8 uuid_ix,
+		   __u16 group_id, bool rae, __u8 csi, __u8 uuid_ix,
 		   __u32 data_len, void *data);
 int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp,
-		 __u64 lpo, __u16 lsi, bool rae, __u32 data_len,
+		 __u64 lpo, __u16 lsi, bool rae, __u8 csi, __u32 data_len,
 		 void *data);
 int nvme_get_telemetry_log(int fd, void *lp, int generate_report,
 			   int ctrl_gen, size_t log_page_size, __u64 offset);

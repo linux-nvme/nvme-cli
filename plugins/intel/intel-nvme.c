@@ -371,7 +371,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	if (fd < 0)
 		return fd;
 
-	err = nvme_get_log(fd, cfg.namespace_id, 0xca, false,
+	err = nvme_get_log(fd, cfg.namespace_id, 0xca, false, 0,
 			   sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (cfg.json)
@@ -411,7 +411,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 	if (fd < 0)
 		return fd;
 
-	err = nvme_get_log(fd, NVME_NSID_ALL, 0xdd, false,
+	err = nvme_get_log(fd, NVME_NSID_ALL, 0xdd, false, 0,
 			   sizeof(log), log);
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -473,7 +473,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	if (fd < 0)
 		return fd;
 
-	err = nvme_get_log(fd, NVME_NSID_ALL, 0xc5, false,
+	err = nvme_get_log(fd, NVME_NSID_ALL, 0xc5, false, 0,
 			   sizeof(stats), &stats);
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -895,7 +895,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		flags = BINARY;
 
 	err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
-			   false, sizeof(stats), &stats);
+			   false, 0, sizeof(stats), &stats);
 	if (!err) {
 		if (flags & JSON)
 			json_lat_stats(&stats, cfg.write);

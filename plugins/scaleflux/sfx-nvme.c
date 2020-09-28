@@ -362,7 +362,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 
 	fd = parse_and_open(argc, argv, desc, opts);
 
-	err = nvme_get_log(fd, cfg.namespace_id, 0xca, false, sizeof(smart_log),
+	err = nvme_get_log(fd, cfg.namespace_id, 0xca, false, 0, sizeof(smart_log),
 			(void *)&smart_log);
 	if (!err) {
 		if (cfg.json)
@@ -444,7 +444,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 
 	fd = parse_and_open(argc, argv, desc, opts);
 
-	err = nvme_get_log(fd, 0xffffffff, cfg.write ? 0xc3 : 0xc1, false, sizeof(stats), (void *)&stats);
+	err = nvme_get_log(fd, 0xffffffff, cfg.write ? 0xc3 : 0xc1, false, 0, sizeof(stats), (void *)&stats);
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_lat_stats(&stats, cfg.write);

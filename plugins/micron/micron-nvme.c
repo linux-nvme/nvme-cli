@@ -289,7 +289,7 @@ static int GetLogPageSize(int nFD, unsigned char ucLogID, int *nLogSize)
     LogPageHeader_t *pLogHeader = NULL;
 
     if (ucLogID == 0xC1 || ucLogID == 0xC2 || ucLogID == 0xC4) {
-        err = nvme_get_log(nFD, NVME_NSID_ALL, ucLogID, false, CommonChunkSize, pTmpBuf);
+        err = nvme_get_log(nFD, NVME_NSID_ALL, ucLogID, false, 0, CommonChunkSize, pTmpBuf);
         if (err == 0) {
             pLogHeader = (LogPageHeader_t *) pTmpBuf;
             LogPageHeader_t *pLogHeader1 = (LogPageHeader_t *) pLogHeader;
@@ -397,7 +397,7 @@ static int GetCommonLogPage(int nFD, unsigned char ucLogID, unsigned char **pBuf
         goto exit_status;
     }
     memset(pTempPtr, 0, nBuffSize);
-    err = nvme_get_log(nFD, NVME_NSID_ALL, ucLogID, false, nBuffSize, pTempPtr);
+    err = nvme_get_log(nFD, NVME_NSID_ALL, ucLogID, false, 0, nBuffSize, pTempPtr);
     *pBuffer = pTempPtr;
 
 exit_status:
@@ -1100,7 +1100,7 @@ static int micron_nand_stats(int argc, char **argv, struct command *cmd, struct 
         log_page = 0xFB;
         log_size = FB_log_size;
     }
-    err = nvme_get_log(fd, NVME_NSID_ALL, log_page, false, log_size, extSmartLog);
+    err = nvme_get_log(fd, NVME_NSID_ALL, log_page, false, 0, log_size, extSmartLog);
     if (err) {
         printf("Unable to retrieve extended smart log for the drive\n");
         goto out;
@@ -1777,7 +1777,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
             }
             if (bSize != 0 && (dataBuffer = (unsigned char *)malloc(bSize)) != NULL) {
                 memset(dataBuffer, 0, bSize);
-                err = nvme_get_log(fd, NVME_NSID_ALL, aVendorLogs[i].ucLogPage, false, bSize, dataBuffer);
+                err = nvme_get_log(fd, NVME_NSID_ALL, aVendorLogs[i].ucLogPage, false, 0, bSize, dataBuffer);
             }
             break;
 
@@ -1794,12 +1794,12 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
                break;
             }
             memset(dataBuffer, 0, bSize);
-            err = nvme_get_log(fd, NVME_NSID_ALL, aVendorLogs[i].ucLogPage, false, bSize, dataBuffer);
+            err = nvme_get_log(fd, NVME_NSID_ALL, aVendorLogs[i].ucLogPage, false, 0, bSize, dataBuffer);
             maxSize = aVendorLogs[i].nMaxSize - bSize;
             while (err == 0 && maxSize > 0 && ((unsigned int *)dataBuffer)[0] != 0xdeadbeef) {
                 sprintf(msg, "log 0x%x", aVendorLogs[i].ucLogPage);
                 WriteData(dataBuffer, bSize, strCtrlDirName, aVendorLogs[i].strFileName, msg);
-                err = nvme_get_log(fd, NVME_NSID_ALL, aVendorLogs[i].ucLogPage, false, bSize, dataBuffer);
+                err = nvme_get_log(fd, NVME_NSID_ALL, aVendorLogs[i].ucLogPage, false, 0, bSize, dataBuffer);
                 if (err || (((unsigned int *)dataBuffer)[0] == 0xdeadbeef))
                     break;
                 maxSize -= bSize;
