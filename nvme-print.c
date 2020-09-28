@@ -2962,9 +2962,9 @@ static void show_nvme_id_ns_zoned_zoc(__le16 ns_zoc)
 	__u8 vzc = zoc & 0x1;
 	if (rsvd)
 		printf(" [15:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] : %#x\tZone Active Excursions: %s\n",
+	printf("  [1:1] : %#x\t  Zone Active Excursions: %s\n",
 		ze, ze ? "Yes (Host support required)" : "No");
-	printf("  [0:0] : %#x\tVariable Zone Capacity: %s\n",
+	printf("  [0:0] : %#x\t  Variable Zone Capacity: %s\n",
 		vzc, vzc ? "Yes (Host support required)" : "No");
 	printf("\n");
 }
@@ -2977,9 +2977,8 @@ static void show_nvme_id_ns_zoned_ozcs(__le16 ns_ozcs)
 
 	if (rsvd)
 		printf(" [15:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\tRead Across Zone Boundaries: %s\n",
+	printf("  [0:0] : %#x\t  Read Across Zone Boundaries: %s\n",
 		razb, razb ? "Yes" : "No");
-	printf("\n");
 }
 
 void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
@@ -2997,38 +2996,48 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	printf("ZNS Command Set Identify Namespace:\n");
 
 	if (human) {
-		printf("zoc     : %u   Zone Operation Characteristics\n", le16_to_cpu(ns->zoc));
+		printf("zoc     : %u\tZone Operation Characteristics\n", le16_to_cpu(ns->zoc));
 		show_nvme_id_ns_zoned_zoc(ns->zoc);
 	} else {
 		printf("zoc     : %u\n", le16_to_cpu(ns->zoc));
 	}
 
 	if (human) {
-		printf("ozcs    : %u   Optional Zoned Command Support\n", le16_to_cpu(ns->ozcs));
+		printf("ozcs    : %u\tOptional Zoned Command Support\n", le16_to_cpu(ns->ozcs));
 		show_nvme_id_ns_zoned_ozcs(ns->ozcs);
 	} else {
 		printf("ozcs    : %u\n", le16_to_cpu(ns->ozcs));
 	}
 
-	if (ns->mar == 0xffffffff && human)
-		printf("mar     : No Limit\n");
-	else
-		printf("mar     : %#x\n", le32_to_cpu(ns->mar));
+	if (human) {
+		if (ns->mar == 0xffffffff) {
+			printf("mar     : No Active Resource Limit\n");
+		} else {
+			printf("mar     : %u\tActive Resources\n", le32_to_cpu(ns->mar) + 1);
+		}
+	} else {
+		printf("mar     : %u\n", le32_to_cpu(ns->mar));
+	}
 
-	if (ns->mor == 0xffffffff && human)
-		printf("mor     : No Limit\n");
-	else
-		printf("mor     : %#x\n", le32_to_cpu(ns->mor));
+	if (human) {
+		if (ns->mor == 0xffffffff) {
+			printf("mor     : No Open Resource Limit\n");
+		} else {
+			printf("mor     : %u\tOpen Resources\n", le32_to_cpu(ns->mor) + 1);
+		}
+	} else {
+		printf("mor     : %d\n", le32_to_cpu(ns->mor));
+	}
 
 	if (!le32_to_cpu(ns->rrl) && human)
 		printf("rrl     : Not Reported\n");
 	else
-		printf("rrl     : %#x\n", le32_to_cpu(ns->rrl));
+		printf("rrl     : %d\n", le32_to_cpu(ns->rrl));
 
 	if (!le32_to_cpu(ns->frl) && human)
 		printf("frl     : Not Reported\n");
 	else
-		printf("frl     : %#x\n", le32_to_cpu(ns->frl));
+		printf("frl     : %d\n", le32_to_cpu(ns->frl));
 
 	for (i = 0; i <= id_ns->nlbaf; i++){
 		if (human)
