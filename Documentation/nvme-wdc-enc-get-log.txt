@@ -1,0 +1,54 @@
+nvme-wdc-enc-get-log(1)
+=======================
+
+NAME
+----
+nvme-wdc-enc-get-log - Send NVMe WDC enc-get-log Vendor Unique Command, return result.
+
+SYNOPSIS
+--------
+[verse]
+'nvme wdc enc-get-log' <device> [--log-id=<NUM>, -l <NUM>] [--output-file=<FILE>, -o <FILE>] [--transfer-size=<SIZE>, -s <SIZE>]
+
+DESCRIPTION
+-----------
+
+For the NVMe device given, send a Vendor Unique WDC enc-get-log command and
+output the Enclosure logs.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0).
+
+The --log-id=<NUM>, -l <NUM> parameter is mandatory and may be either 0xd1, 0xd2, 0xd3, 0xd4, 0xe2 and 0xe4.
+
+This will only work on WDC devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns the enclosure log data, error code otherwise.
+
+OPTIONS
+-------
+-o <FILE>::
+--output-file=<FILE>::
+    Output file pathname
+
+-s <SIZE>::
+--transfer-size=<NUM>::
+    Data retrieval transfer size, maximum transfer size should be 0x2000 (decimal 8192)
+
+EXAMPLES
+--------
+* Gets the enclosure log from the device based on the log id(0xd1) with transfer size(0x2000) and saves to defined file in current directory:
++
+------------
+# nvme wdc enc-get-log /dev/nvme0 -l 0xd1 -o d1_log.bin -s 0x2000
+------------
+* Gets the enclosure log from the device based on the log id(0xd2) with default transfer size(0x1000) and saves to defined file in current directory:
++
+------------
+# nvme wdc enc-get-log /dev/nvme0 -l 0xd2 -o d1_log.bin 
+------------
+
+NVME
+----
+Part of the nvme-user suite.
