@@ -55,9 +55,9 @@
 #define WDC_NVME_LOG_SIZE_HDR_LEN			0x08
 
 /* Enclosure */
-#define WDC_OPENFLEX_MI_DEVICE_MODEL    "OpenFlex"
-#define WDC_RESULT_MORE_DATA   		    0x80000000
-#define WDC_RESULT_NOT_AVAILABLE    	0x7FFFFFFF
+#define WDC_OPENFLEX_MI_DEVICE_MODEL		"OpenFlex"
+#define WDC_RESULT_MORE_DATA				0x80000000
+#define WDC_RESULT_NOT_AVAILABLE			0x7FFFFFFF
 
 /* Device Config */
 #define WDC_NVME_VID					0x1c58
@@ -359,8 +359,8 @@
 /* VU Opcodes */
 #define WDC_DE_VU_READ_SIZE_OPCODE			0xC0
 #define WDC_DE_VU_READ_BUFFER_OPCODE			0xC2
-#define WDC_NVME_ADMIN_ENC_MGMT_SND         0xC9
-#define WDC_NVME_ADMIN_ENC_MGMT_RCV         0xCA
+#define WDC_NVME_ADMIN_ENC_MGMT_SND			0xC9
+#define WDC_NVME_ADMIN_ENC_MGMT_RCV			0xCA
 
 #define WDC_DE_FILE_HEADER_SIZE				4
 #define WDC_DE_FILE_OFFSET_SIZE				2
@@ -7274,7 +7274,7 @@ static int wdc_enc_get_log(int argc, char **argv, struct command *command,
 			}
 	}
 
-	// Log IDs are only for specific enclosures
+	/* Log IDs are only for specific enclosures */
 	if (cfg.log_id) {
 		xfer_size = (xfer_size) ? xfer_size : WDC_NVME_ENC_LOG_SIZE_CHUNK;
 		len = cfg.file==NULL?0:strlen(cfg.file);
@@ -7324,13 +7324,12 @@ static int wdc_enc_submit_move_data(int fd, char *cmd, int len, int xfer_size, F
 		fprintf(stderr, "%s: ERROR : malloc : %s\n", __func__, strerror(errno));
 		return -1;
 	}
-	// send something no matter what
+	/* send something no matter what */
 	cmd = (len) ? cmd : buf;
 	len = (len) ? len : 0x20;
 
 	struct nvme_admin_cmd nvme_cmd = {
 		.opcode     = WDC_NVME_ADMIN_ENC_MGMT_SND,
-		// ?
 		.nsid       = 0,
 		.addr       = (__u64)(uintptr_t) cmd,
 		.data_len   = ((len + sizeof(uint32_t) - 1)/sizeof(uint32_t)) * sizeof(uint32_t),
@@ -7343,7 +7342,7 @@ static int wdc_enc_submit_move_data(int fd, char *cmd, int len, int xfer_size, F
 
 	clock_gettime(CLOCK_REALTIME, &time);
 	srand(time.tv_nsec);
-	handle = random();  // Handle to associate send request with receive request
+	handle = random();  /* Handle to associate send request with receive request */
 	nvme_cmd.cdw11 = handle;
 
 #ifdef WDC_NVME_CLI_DEBUG
@@ -7389,7 +7388,7 @@ static int wdc_enc_submit_move_data(int fd, char *cmd, int len, int xfer_size, F
 			nvme_cmd.cdw13 = offset / sizeof(uint32_t);
 			nvme_cmd.cdw14 = cdw14;
 			nvme_cmd.cdw15 = cdw15;
-			nvme_cmd.result = 0;  // returned result !=0 indicates more data available
+			nvme_cmd.result = 0;  /* returned result !=0 indicates more data available */
 			err = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &nvme_cmd);
 			if (err != 0) {
 				more = 0;
