@@ -1038,15 +1038,7 @@ static int wdc_get_vendor_id(int fd, uint32_t *vendor_id)
 
 static bool wdc_check_power_of_2(int num)
 {
-	int first_set = 1;
-
-	if (num == 0)
-		return false;
-
-	while ((first_set & num) == 0)
-		first_set <<= 1;
-
-	return (~first_set & num) ? false : true;
+	return (num && ( !(num & (num-1))));
 }
 
 static int wdc_get_model_number(int fd, char *model)
