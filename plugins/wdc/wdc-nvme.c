@@ -2039,6 +2039,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 	struct wdc_dui_log_hdr_v3 *log_hdr_v3;
 	__u32 cap_dui_length;
 	__u64 cap_dui_length_v3;
+	__u64 cap_dui_length_v4;
 	__u8 *dump_data = NULL;
 	__u8 *buffer_addr;
 	__s64 total_size = 0;
@@ -2270,22 +2271,23 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 		}
 	}
 	else if ((log_hdr->hdr_version & 0xFF) == 0x04)	{
-		__s32 log_size = 0;
-		__u32 curr_data_offset = 0;
+		__s64 log_size = 0;
+		__u64 curr_data_offset = 0;
 		struct wdc_dui_log_hdr_v4 *log_hdr_v4;
 		log_hdr_v4 = (struct wdc_dui_log_hdr_v4 *)log_hdr;
+		__u64 xfer_size_long = (__u64)xfer_size;
 
-
-		cap_dui_length = le32_to_cpu(log_hdr_v4->log_size_sectors) * WDC_NVME_SN730_SECTOR_SIZE;
+		cap_dui_length_v4 = le64_to_cpu(log_hdr_v4->log_size_sectors) * WDC_NVME_SN730_SECTOR_SIZE;
 
 		if (verbose) {
 			fprintf(stderr, "INFO : WDC : Capture V4 Device Unit Info log, data area = %d\n", data_area);
 			fprintf(stderr, "INFO : WDC : DUI Header Version = 0x%x\n", log_hdr_v4->hdr_version);
 			fprintf(stderr, "INFO : WDC : DUI Product ID = 0x%x/%c\n", log_hdr_v4->product_id, log_hdr_v4->product_id);
-
+			fprintf(stderr, "INFO : WDC : DUI log size sectors = 0x%x\n", log_hdr_v4->log_size_sectors);
+			fprintf(stderr, "INFO : WDC : DUI cap_dui_length = 0x%lx\n", (unsigned long int)cap_dui_length_v4);
 		}
 
-		if (cap_dui_length == 0) {
+		if (cap_dui_length_v4 == 0) {
 			fprintf(stderr, "INFO : WDC : Capture V4 Device Unit Info log is empty\n");
 		} else {
 			/* parse log header for all sections up to specified data area inclusively */
@@ -2295,30 +2297,36 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 							log_hdr_v4->log_section[j].data_area_id != 0) {
 						log_size += (log_hdr_v4->log_section[j].section_size_sectors * WDC_NVME_SN730_SECTOR_SIZE);
 						if (verbose)
-							fprintf(stderr, "%s: Data area ID %d : section size 0x%x, total size = 0x%x\n",
+							fprintf(stderr, "%s: Data area ID %d : section size 0x%x, total size = 0x%lx\n",
 									__func__, log_hdr_v4->log_section[j].data_area_id, ((unsigned int)log_hdr_v4->log_section[j].section_size_sectors * WDC_NVME_SN730_SECTOR_SIZE),
-									(unsigned int)log_size);
+									(unsigned long int)log_size);
 
 					}
 					else {
 						if (verbose)
-							fprintf(stderr, "%s: break, total size = 0x%x\n", 	__func__, (unsigned int)log_size);
+							fprintf(stderr, "%s: break, total size = 0x%lx\n", 	__func__, (unsigned long int)log_size);
 						break;
 					}
 				}
 			} else
-				log_size = cap_dui_length;
+				log_size = cap_dui_length_v4;
 
 			total_size = log_size;
 
-			dump_data = (__u8 *) malloc(sizeof (__u8) * xfer_size);
+			if (offset >= total_size) {
+				fprintf(stderr, "%s: INFO : WDC : Offset 0x%"PRIx64" exceeds total size 0x%"PRIx64", no data retrieved\n",
+					__func__, (uint64_t)offset, (uint64_t)total_size);
+				goto out;
+			}
+
+			dump_data = (__u8 *) malloc(sizeof (__u8) * xfer_size_long);
 			if (dump_data == NULL) {
 				fprintf(stderr, "%s: ERROR : dump data V4 malloc failed : status %s, size = 0x%x\n",
-						__func__, strerror(errno), (unsigned int)xfer_size);
+						__func__, strerror(errno), (unsigned int)xfer_size_long);
 				ret = -1;
 				goto out;
 			}
-			memset(dump_data, 0, sizeof (__u8) * xfer_size);
+			memset(dump_data, 0, sizeof (__u8) * xfer_size_long);
 
 			output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 			if (output < 0) {
@@ -2328,41 +2336,49 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				goto free_mem;
 			}
 
-			/* write the telemetry and log headers into the dump_file */
-			err = write(output, (void *)log_hdr_v4, WDC_NVME_CAP_DUI_HEADER_SIZE);
-			if (err != WDC_NVME_CAP_DUI_HEADER_SIZE) {
-				fprintf(stderr, "%s:  Failed to flush header data to file!\n", __func__);
-				goto free_mem;
+			curr_data_offset = 0;
+
+			if (file_size != 0) {
+				/* Write the DUI data based on the passed in file size */
+				if ((offset + file_size) > total_size)
+					log_size = min((total_size - offset), file_size);
+				else
+					log_size = min(total_size, file_size);
+
+				if (verbose)
+					fprintf(stderr, "%s: INFO : WDC : Offset 0x%"PRIx64", file size 0x%"PRIx64", total size 0x%"PRIx64", log size 0x%"PRIx64"\n",
+						__func__, (uint64_t)offset, (uint64_t)file_size, (uint64_t)total_size, (uint64_t)log_size);
+
+				curr_data_offset = offset;
+
 			}
 
-			log_size -= WDC_NVME_CAP_DUI_HEADER_SIZE;
-			curr_data_offset = WDC_NVME_CAP_DUI_HEADER_SIZE;
 			i = 0;
 			buffer_addr = dump_data;
 
-			for(; log_size > 0; log_size -= xfer_size) {
-				xfer_size = min(xfer_size, log_size);
+			for(; log_size > 0; log_size -= xfer_size_long) {
+				xfer_size_long = min(xfer_size_long, log_size);
 
-				if (log_size <= xfer_size)
+				if (log_size <= xfer_size_long)
 					last_xfer = true;
 
-				ret = wdc_dump_dui_data(fd, xfer_size, curr_data_offset, buffer_addr, last_xfer);
+				ret = wdc_dump_dui_data_v2(fd, (__u32)xfer_size_long, curr_data_offset, buffer_addr, last_xfer);
 				if (ret != 0) {
-					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%lx, offset = 0x%x, addr = %p\n",
-							__func__, i, (long unsigned int)log_size, curr_data_offset, buffer_addr);
+					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%lx, offset = 0x%lx, addr = %p\n",
+							__func__, i, (long unsigned int)log_size, (long unsigned int)curr_data_offset, buffer_addr);
 					fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
 					break;
 				}
 
 				/* write the dump data into the file */
-				err = write(output, (void *)buffer_addr, xfer_size);
-				if (err != xfer_size) {
-					fprintf(stderr, "%s: ERROR : WDC : Failed to flush DUI data to file! chunk %d, err = 0x%x, xfer_size = 0x%x\n",
-							__func__, i, err, xfer_size);
+				err = write(output, (void *)buffer_addr, xfer_size_long);
+				if (err != xfer_size_long) {
+					fprintf(stderr, "%s: ERROR : WDC : Failed to flush DUI data to file! chunk %d, err = 0x%x, xfer_size_long = 0x%lx\n",
+							__func__, i, err, (long unsigned int)xfer_size_long);
 					goto free_mem;
 				}
 
-				curr_data_offset += xfer_size;
+				curr_data_offset += xfer_size_long;
 				i++;
 			}
 		}
