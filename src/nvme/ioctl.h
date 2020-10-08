@@ -2203,7 +2203,7 @@ int nvme_ns_mgmt(int fd, __u32 nsid, enum nvme_ns_mgmt_sel sel,
  * 		set to 0 to use the system default.
  *
  * On successful creation, the namespace exists in the subsystem, but is not
- * attached to any controller. Use the nvme_ns_attach_ctrls() to assign the
+ * attached to any controller. Use the &nvme_ns_attach_ctrls() to assign the
  * namespace to one or more controllers.
  *
  * Return: The nvme command status if a response was received (see
@@ -2218,7 +2218,7 @@ int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns, __u32 *nsid,
  * @nsid:	Namespace identifier to delete
  *
  * It is recommended that a namespace being deleted is not attached to any
- * controller. Use the nvme_ns_detach_ctrls() first if the namespace is still
+ * controller. Use the &nvme_ns_detach_ctrls() first if the namespace is still
  * attached.
  *
  * Return: The nvme command status if a response was received (see
