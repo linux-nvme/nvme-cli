@@ -1700,6 +1700,7 @@ static __u32 wdc_dump_dui_data_v2(int fd, __u32 dataLen, __u64 offset, __u8 *dum
 {
 	int ret;
 	struct nvme_admin_cmd admin_cmd;
+	__u64 offset_lo, offset_hi;
 
 	memset(&admin_cmd, 0, sizeof (struct nvme_admin_cmd));
 	admin_cmd.opcode = WDC_NVME_CAP_DUI_OPCODE;
@@ -1707,8 +1708,11 @@ static __u32 wdc_dump_dui_data_v2(int fd, __u32 dataLen, __u64 offset, __u8 *dum
 	admin_cmd.addr = (__u64)(uintptr_t)dump_data;
 	admin_cmd.data_len = dataLen;
 	admin_cmd.cdw10 = ((dataLen >> 2) - 1);
-	admin_cmd.cdw12 = (__u32)(offset & 0x00000000FFFFFFFF);
-	admin_cmd.cdw13 = (__u32)(offset >> 32);
+	offset_lo = offset & 0x00000000FFFFFFFF;
+	offset_hi = ((offset & 0xFFFFFFFF00000000) >> 32);
+	admin_cmd.cdw12 = (__u32)offset_lo;
+	admin_cmd.cdw13 = (__u32)offset_hi;
+
 	if (last_xfer)
 		admin_cmd.cdw14 = 0;
 	else
@@ -2275,7 +2279,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 		__u64 curr_data_offset = 0;
 		struct wdc_dui_log_hdr_v4 *log_hdr_v4;
 		log_hdr_v4 = (struct wdc_dui_log_hdr_v4 *)log_hdr;
-		__u64 xfer_size_long = (__u64)xfer_size;
+		__s64 xfer_size_long = (__s64)xfer_size;
 
 		cap_dui_length_v4 = le64_to_cpu(log_hdr_v4->log_size_sectors) * WDC_NVME_SN730_SECTOR_SIZE;
 
@@ -2295,10 +2299,10 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				for(j = 0; j < WDC_NVME_DUI_MAX_SECTION; j++) {
 					if (log_hdr_v4->log_section[j].data_area_id <= data_area &&
 							log_hdr_v4->log_section[j].data_area_id != 0) {
-						log_size += (log_hdr_v4->log_section[j].section_size_sectors * WDC_NVME_SN730_SECTOR_SIZE);
+						log_size += ((__s64)log_hdr_v4->log_section[j].section_size_sectors * WDC_NVME_SN730_SECTOR_SIZE);
 						if (verbose)
-							fprintf(stderr, "%s: Data area ID %d : section size 0x%x, total size = 0x%lx\n",
-									__func__, log_hdr_v4->log_section[j].data_area_id, ((unsigned int)log_hdr_v4->log_section[j].section_size_sectors * WDC_NVME_SN730_SECTOR_SIZE),
+							fprintf(stderr, "%s: Data area ID %d : section size 0x%x sectors, section size 0x%lx bytes, total size = 0x%lx\n",
+									__func__, log_hdr_v4->log_section[j].data_area_id, log_hdr_v4->log_section[j].section_size_sectors, ((unsigned long int)log_hdr_v4->log_section[j].section_size_sectors * WDC_NVME_SN730_SECTOR_SIZE),
 									(unsigned long int)log_size);
 
 					}
