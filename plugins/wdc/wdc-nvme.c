@@ -2280,6 +2280,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 		struct wdc_dui_log_hdr_v4 *log_hdr_v4;
 		log_hdr_v4 = (struct wdc_dui_log_hdr_v4 *)log_hdr;
 		__s64 xfer_size_long = (__s64)xfer_size;
+		__s64 section_size_bytes = 0;
 
 		cap_dui_length_v4 = le64_to_cpu(log_hdr_v4->log_size_sectors) * WDC_NVME_SN730_SECTOR_SIZE;
 
@@ -2288,7 +2289,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 			fprintf(stderr, "INFO : WDC : DUI Header Version = 0x%x\n", log_hdr_v4->hdr_version);
 			fprintf(stderr, "INFO : WDC : DUI Product ID = 0x%x/%c\n", log_hdr_v4->product_id, log_hdr_v4->product_id);
 			fprintf(stderr, "INFO : WDC : DUI log size sectors = 0x%x\n", log_hdr_v4->log_size_sectors);
-			fprintf(stderr, "INFO : WDC : DUI cap_dui_length = 0x%lx\n", (unsigned long int)cap_dui_length_v4);
+			fprintf(stderr, "INFO : WDC : DUI cap_dui_length = 0x%llX\n", cap_dui_length_v4);
 		}
 
 		if (cap_dui_length_v4 == 0) {
@@ -2299,16 +2300,16 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				for(j = 0; j < WDC_NVME_DUI_MAX_SECTION; j++) {
 					if (log_hdr_v4->log_section[j].data_area_id <= data_area &&
 							log_hdr_v4->log_section[j].data_area_id != 0) {
-						log_size += ((__s64)log_hdr_v4->log_section[j].section_size_sectors * WDC_NVME_SN730_SECTOR_SIZE);
+						section_size_bytes = ((__s64)log_hdr_v4->log_section[j].section_size_sectors * WDC_NVME_SN730_SECTOR_SIZE);
+						log_size += section_size_bytes;
 						if (verbose)
-							fprintf(stderr, "%s: Data area ID %d : section size 0x%x sectors, section size 0x%lx bytes, total size = 0x%lx\n",
-									__func__, log_hdr_v4->log_section[j].data_area_id, log_hdr_v4->log_section[j].section_size_sectors, ((unsigned long int)log_hdr_v4->log_section[j].section_size_sectors * WDC_NVME_SN730_SECTOR_SIZE),
-									(unsigned long int)log_size);
-
+							fprintf(stderr, "%s: Data area ID %d : section size 0x%x sectors, section size 0x%llX bytes, total size = 0x%llX\n",
+									__func__, log_hdr_v4->log_section[j].data_area_id, log_hdr_v4->log_section[j].section_size_sectors, section_size_bytes,
+									log_size);
 					}
 					else {
 						if (verbose)
-							fprintf(stderr, "%s: break, total size = 0x%lx\n", 	__func__, (unsigned long int)log_size);
+							fprintf(stderr, "%s: break, total size = 0x%llX\n", 	__func__, log_size);
 						break;
 					}
 				}
