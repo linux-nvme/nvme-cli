@@ -955,18 +955,27 @@ static int sfx_mod_loaded(char *mod_name)
 		return 0;
 }
 
-static void sfx_clean_card_wo_blk(char *misc_dev)
+static int sfx_clean_card_wo_blk(char *misc_dev)
 {
 	char buf[100] = { 0 };
+	int iRet = 0;
 	snprintf(buf, 100, "echo ccbeefcc > /sys/class/misc/%s/device/sfxcc",
 		 misc_dev);
-	system(buf);
+	iRet = system(buf);
+	if (iRet) {
+		perror("system() fail\n");
+		return iRet;
+	}
 
 	/*load blk module*/
 	memset(buf, 0x00, sizeof(buf));
 	snprintf(buf, 100, "modprobe %s", "sfxv_bd_dev");
-	system(buf);
-	printf("ScaleFlux clean card success\n");
+	iRet = system(buf);
+	if (iRet)
+		perror("ScaleFlux clean card Fail\n");
+	else
+		printf("ScaleFlux clean card success\n");
+	return iRet;
 }
 
 static int sfx_clean_card(int fd)
@@ -1247,7 +1256,8 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 			fprintf(stderr,
 				"Cannot restore previous configuration, drive will be formatted to default!\n");
 			if (sfx_mod_loaded("sfxv_bd_dev") == 0) {
-				sfx_clean_card_wo_blk((char *)devicename);
+				if (sfx_clean_card_wo_blk((char *)devicename))
+					return -1;
 			} else if (sfx_clean_card(fd) != 0) {
 				fprintf(stderr, "clean card failed!\n");
 				return -1;
