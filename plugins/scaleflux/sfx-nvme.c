@@ -602,24 +602,6 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct 
 	return 0;
 }
 
-static __u64 get_capacity(int fd, sfx_capacity_ctx *cap_val)
-{
-	struct sfx_freespace_ctx ctx = { 0 };
-	__u64 cap_GB = 0;
-	__u64 pcap_GB = 0;
-	if (ioctl(fd, SFX_GET_FREESPACE, &ctx)) {
-		fprintf(stderr, "Get p_capacity fail, errno=%d\n", errno);
-		return INVALID_PARAM;
-	}
-	/*Convert to GB*/
-	cap_GB = IDEMA_CAP2GB(ctx.user_space);
-	pcap_GB = ((ctx.phy_space - 97696368llu) / 1953504llu) + 50llu;
-
-	cap_val->capacity = cap_GB;
-	cap_val->p_capacity = pcap_GB;
-	return 0;
-}
-
 /**
  * @brief convert the file name to it's target file name if the input file is symbol link.
  * Otherwise, just copy the input file name to target file name
@@ -961,18 +943,41 @@ static int sfx_verify_chr(int fd)
 	return 0;
 }
 
-static int sfx_clean_card(int fd, unsigned int cap, unsigned int p_cap)
+static int sfx_mod_loaded(char *mod_name)
+{
+	char buf[100] = { 0 };
+	int iRet = 0;
+	snprintf(buf, 100, "lsmod | grep %s >/dev/null", mod_name);
+	iRet = system(buf);
+	if (iRet == 0)
+		return 1;
+	else
+		return 0;
+}
+
+static void sfx_clean_card_wo_blk(char *misc_dev)
+{
+	char buf[100] = { 0 };
+	snprintf(buf, 100, "echo ccbeefcc > /sys/class/misc/%s/device/sfxcc",
+		 misc_dev);
+	system(buf);
+
+	/*load blk module*/
+	memset(buf, 0x00, sizeof(buf));
+	snprintf(buf, 100, "modprobe %s", "sfxv_bd_dev");
+	system(buf);
+	printf("ScaleFlux clean card success\n");
+}
+
+static int sfx_clean_card(int fd)
 {
 	int ret;
-	sfx_capacity_ctx cap_val = { .capacity = 0, .p_capacity = 0 };
 
 	ret = sfx_verify_chr(fd);
 	if (ret)
 		return ret;
 
-	cap_val.capacity = cap;
-	cap_val.p_capacity = p_cap;
-	ret = ioctl(fd, NVME_IOCTL_CLR_CARD, &cap_val);
+	ret = ioctl(fd, NVME_IOCTL_CLR_CARD);
 	if (ret)
 		perror("Ioctl Fail.");
 	else
@@ -1011,7 +1016,41 @@ static int sfx_get_phy_cap_range(int fd, sfx_phy_cap_range_ctx *phy_cap_range)
 
 	return ret;
 }
+static int sfx_set_led(int argc, char **argv, struct command *cmd,
+		       struct plugin *plugin)
+{
+	char *desc = "Set LED status for ScaleFlux drive\n";
+	const char *status = "Turn on/off (1/0) activity LED for ScaleFlux drive\n";
+	int ret = 0;
+	int fd;
 
+	struct config {
+		__u32 status;
+	};
+
+	struct config cfg = { .status = 0 };
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("status",	's',	&cfg.status,	status),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		return fd;
+	}
+
+	if ((cfg.status != 0) && (cfg.status != 1)) {
+		fprintf(stderr, "Invalid value, only accept value [0|1]\n");
+		return INVALID_PARAM;
+	}
+	ret = ioctl(fd, SFX_IOCTL_SET_LED, &(cfg.status));
+	if (ret) {
+		perror("Ioctl Fail");
+		return INVALID_PARAM;
+	}
+	return ret;
+}
 int nvme_set_keyinfo(int fd, __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
@@ -1075,13 +1114,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 	char blk_base[64];
 	char blk_path[128];
 	int blk_fd = -1;
-	__u32 atomic = 0;
-	int sector_size = 0;
-	__u32 act_mode = 0;
-	int lbaf = 0;
-	int sec_erase = 0;
 	int card_cleaned = 0;
-	sfx_capacity_ctx cap_val = { .capacity = 0, .p_capacity = 0 };
 	sfx_phy_cap_range_ctx phy_cap_range = { .max_capacity = 0,
 						.pret_prov_cap = 0 };
 	const __u32 keyinfo_len = 1024;
@@ -1129,6 +1162,13 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 	}
 
 	if (cfg.feature_id == SFX_FEAT_CLR_CARD) {
+		NVME_DEV_TYPE type = sfx_dev_type((char *)devicename);
+		if (type != NVME_SFX_C_DEV_VANDA &&
+		    type != NVME_SFX_C_DEV_TPLUS) {
+			fprintf(stderr,
+				"Invalid device name, only support /dev/sfxv[X]!\n");
+			return EINVAL;
+		}
 		/* Find and open block device via sfxv[X] misc device */
 		nvme_block_from_char((char *)devicename, blk_base, sizeof(blk_base));
 		if (sfx_blk_dev_ref() > 0) {
@@ -1145,36 +1185,6 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 			goto clean_card;
 		}
 
-		/* Get sector size */
-		if (cfg.namespace_id != 0xffffffff) {
-			err = nvme_identify_ns(blk_fd, cfg.namespace_id, 0,
-					       &ns);
-			if (err) {
-				goto clean_card;
-			} else {
-				sector_size = ((ns.flbas & 0xf) ? 4096 : 512);
-			}
-		}
-
-		/* Get logical and physical capacity */
-		if (get_capacity(blk_fd, &cap_val) != 0) {
-			goto clean_card;
-		}
-
-		/* Get atomic write status */
-		err = nvme_sfx_get_features(blk_fd, cfg.namespace_id,
-					    SFX_FEAT_ATOMIC, &atomic);
-		if (err) {
-			goto clean_card;
-		}
-
-		/* Get ACT mode */
-		err = nvme_sfx_get_features(blk_fd, cfg.namespace_id,
-					    SFX_FEAT_ACT_MODE, &act_mode);
-		if (err) {
-			goto clean_card;
-		}
-
 		/* backup smart info */
 		err = nvme_get_keyinfo(blk_fd, keyinfo_len, keyinfo);
 		if (err) {
@@ -1186,8 +1196,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 			return 0;
 		} else {
 			/* do clean card and re-probe blk device*/
-			if (sfx_clean_card(fd, cap_val.capacity,
-					   cap_val.p_capacity) != 0) {
+			if (sfx_clean_card(fd) != 0) {
 				fprintf(stderr, "clean card failed!\n");
 				close(blk_fd);
 				return -1;
@@ -1222,84 +1231,6 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 				close(blk_fd);
 				return err;
 			}
-
-			/* Set sector size back, default is 512, no need to reset it */
-			if (sector_size == 4096) {
-				lbaf = 1;
-				sec_erase = 1;
-				err = nvme_format(blk_fd, cfg.namespace_id,
-						  lbaf, sec_erase, 0, 0, 0, 0);
-				if (err < 0) {
-					fprintf(stderr,
-						"NVME Admin command set sector size error:%s(%x)\n",
-						nvme_status_to_string(err),
-						err);
-					close(blk_fd);
-					return err;
-				} else {
-					__u8 retry = 0;
-					printf("Success formatting namespace:%x\n",
-					       cfg.namespace_id);
-					while (ioctl(fd, BLKRRPART)) {
-						if (retry++ > 50)
-							break;
-						usleep(100000);
-					}
-				}
-			}
-
-			/* Set atomic write back */
-			if (atomic != 0) {
-				if (cfg.namespace_id != 0xffffffff) {
-					err = nvme_identify_ns(blk_fd,
-							       cfg.namespace_id,
-							       0, &ns);
-					if (err) {
-						fprintf(stderr,
-							"NVME Admin command id ns error:%s(%x)\n",
-							nvme_status_to_string(
-								err),
-							err);
-						close(blk_fd);
-						return err;
-					}
-					/*
-					 * atomic only support with sector-size = 4k now
-					 */
-					if ((ns.flbas & 0xf) == 1) {
-						err = nvme_sfx_set_features(
-							blk_fd,
-							cfg.namespace_id,
-							SFX_FEAT_ATOMIC,
-							atomic);
-						if (err) {
-							fprintf(stderr,
-								"NVME Admin command set atomic write error:%s(%x)\n",
-								nvme_status_to_string(
-									err),
-								err);
-							close(blk_fd);
-							return err;
-						}
-					}
-				}
-			}
-
-			/* Set act mode back */
-			if (act_mode != 0) {
-				err = nvme_sfx_set_features(blk_fd,
-							    cfg.namespace_id,
-							    SFX_FEAT_ACT_MODE,
-							    act_mode);
-				if (err) {
-					fprintf(stderr,
-						"NVME Admin command set act mode error:%s(%x)\n",
-						nvme_status_to_string(err),
-						err);
-					close(blk_fd);
-					return err;
-				}
-			}
 		}
 	clean_card:
 		if (blk_fd >= 0) {
@@ -1315,8 +1246,9 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 			}
 			fprintf(stderr,
 				"Cannot restore previous configuration, drive will be formatted to default!\n");
-			if (sfx_clean_card(fd, cap_val.capacity,
-					   cap_val.p_capacity) != 0) {
+			if (sfx_mod_loaded("sfxv_bd_dev") == 0) {
+				sfx_clean_card_wo_blk((char *)devicename);
+			} else if (sfx_clean_card(fd) != 0) {
 				fprintf(stderr, "clean card failed!\n");
 				return -1;
 			} else {

@@ -15,7 +15,9 @@
 
 #define SFX_GET_FREESPACE			_IOWR('N', 0x240, struct sfx_freespace_ctx)
 #define NVME_IOCTL_CLR_CARD			_IO('N', 0x47)
-#define SFX_BLK_FTL_IOCTL_GET_PHY_CAP_RANGE     _IOWR('N', 0x23c, unsigned long)
+#define SFX_BLK_FTL_IOCTL_GET_PHY_CAP_RANGE	_IOWR('N', 0x23c, unsigned long)
+#define SFX_IOCTL_SET_LED			_IOWR('N', 0x34, __u64 )
+
 
 #define IDEMA_CAP(exp_GB)			(((__u64)(exp_GB) - 50ULL) * 1953504ULL + 97696368ULL)
 #define IDEMA_CAP2GB(exp_sector)		(((__u64)(exp_sector) - 97696368ULL) / 1953504ULL + 50ULL)

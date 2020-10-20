@@ -15,6 +15,7 @@ PLUGIN(NAME("sfx", "ScaleFlux vendor specific extensions"),
 		ENTRY("change-cap", "Dynamic change capacity", change_cap)
 		ENTRY("set-feature", "Set a feature", sfx_set_feature)
 		ENTRY("get-feature", "Get a feature", sfx_get_feature)
+		ENTRY("led", "Set led status for ScaleFlux drive", sfx_set_led)
 	)
 );
 
