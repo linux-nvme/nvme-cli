@@ -39,7 +39,7 @@ for Linux-native nvme device maangement.
 
 %files devel
 %defattr(-,root,root)
-%attr(-,root,root) %{_includedir}/libnvme/
+%attr(-,root,root) %{_includedir}/nvme/
 %attr(0644,root,root) %{_includedir}/libnvme.h
 %attr(0755,root,root) %{_libdir}/libnvme.so
 %attr(0644,root,root) %{_libdir}/libnvme.a
