@@ -5,7 +5,7 @@ Summary: Linux-native nvme device management library
 License: LGPLv2+
 Source: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-root
-URL: http://github.com/linux-nvme/nvme-cli
+URL: http://github.com/linux-nvme/libnvme
 BuildRequires: gcc
 
 %description
