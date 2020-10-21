@@ -641,7 +641,7 @@ static int name_from_link(const char *dir, char *link_name, char *tg_name,
 	return 0;
 }
 
-static int nvme_block_from_char(char *char_dev, char *blk_dev, int blk_dev_len)
+static int sfx_block_from_char(char *char_dev, char *blk_dev, int blk_dev_len)
 {
 	char slen[16];
 	unsigned len;
@@ -680,7 +680,7 @@ static int sfx_blk_dev_ref()
 
 	NVME_DEV_TYPE type = sfx_dev_type((char *)devicename);
 	if (type == NVME_SFX_C_DEV_VANDA || type == NVME_SFX_C_DEV_TPLUS) {
-		nvme_block_from_char((char *)devicename, blk_base, sizeof(blk_base));
+		sfx_block_from_char((char *)devicename, blk_base, sizeof(blk_base));
 	} else {
 		snprintf(blk_base, sizeof(blk_base), "%s", (char *)devicename);
 	}
@@ -1179,7 +1179,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 			return EINVAL;
 		}
 		/* Find and open block device via sfxv[X] misc device */
-		nvme_block_from_char((char *)devicename, blk_base, sizeof(blk_base));
+		sfx_block_from_char((char *)devicename, blk_base, sizeof(blk_base));
 		if (sfx_blk_dev_ref() > 0) {
 			fprintf(stderr,
 				"Current device %s is mounted with filesystem or opened by application, "
