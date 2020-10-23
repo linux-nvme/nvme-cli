@@ -312,7 +312,7 @@ static char *print_ext_smart_id(__u8 attrId)
 		return "RAIS_ECC_CORRECT_ERR_COUNT";
 		break;
 	case VS_ATTR_ID_UNCORRECTABLE_RAISE_ERRORS:
-		return "Uncorrectable read error count";/*VS_ATTR_ID_UNCORRECTABLE_RAISE_ERRORS*/
+		return "Uncorrectable RAISE error count";/*VS_ATTR_ID_UNCORRECTABLE_RAISE_ERRORS*/
 		break;
 	case VS_ATTR_ID_DRIVE_LIFE_PROTECTION_STATUS:
 		return "DRIVE_LIFE_PROTECTION_STATUS";
