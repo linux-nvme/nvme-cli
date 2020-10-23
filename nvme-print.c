@@ -3016,7 +3016,7 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 			printf("mar     : %u\tActive Resources\n", le32_to_cpu(ns->mar) + 1);
 		}
 	} else {
-		printf("mar     : %u\n", le32_to_cpu(ns->mar));
+		printf("mar     : %#x\n", le32_to_cpu(ns->mar));
 	}
 
 	if (human) {
@@ -3026,7 +3026,7 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 			printf("mor     : %u\tOpen Resources\n", le32_to_cpu(ns->mor) + 1);
 		}
 	} else {
-		printf("mor     : %d\n", le32_to_cpu(ns->mor));
+		printf("mor     : %#x\n", le32_to_cpu(ns->mor));
 	}
 
 	if (!le32_to_cpu(ns->rrl) && human)
