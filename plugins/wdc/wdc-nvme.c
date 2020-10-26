@@ -2255,8 +2255,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 
 				ret = wdc_dump_dui_data_v2(fd, (__u32)xfer_size_long, curr_data_offset, buffer_addr, last_xfer);
 				if (ret != 0) {
-					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%"PRIx64", offset = 0x%"PRIx64", addr = 0x%"PRIx64"\n",
-							__func__, i, (uint64_t)total_size, (uint64_t)curr_data_offset, (uint64_t)buffer_addr);
+					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%"PRIx64", offset = 0x%"PRIx64", addr = %p\n",
+							__func__, i, (uint64_t)total_size, (uint64_t)curr_data_offset, buffer_addr);
 					fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
 					break;
 				}
