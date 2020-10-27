@@ -66,6 +66,7 @@ UTIL_OBJS := util/argconfig.o util/suffix.o util/json.o util/parser.o
 
 PLUGIN_OBJS :=					\
 	plugins/intel/intel-nvme.o		\
+	plugins/amzn/amzn-nvme.o		\
 	plugins/lnvm/lnvm-nvme.o		\
 	plugins/memblaze/memblaze-nvme.o	\
 	plugins/wdc/wdc-nvme.o			\
@@ -77,9 +78,10 @@ PLUGIN_OBJS :=					\
 	plugins/seagate/seagate-nvme.o 		\
 	plugins/virtium/virtium-nvme.o		\
 	plugins/shannon/shannon-nvme.o		\
-	plugins/dera/dera-nvme.o            \
-	plugins/scaleflux/sfx-nvme.o        \
-    plugins/transcend/transcend-nvme.o
+	plugins/dera/dera-nvme.o 		\
+	plugins/scaleflux/sfx-nvme.o		\
+	plugins/transcend/transcend-nvme.o	\
+	plugins/zns/zns.o
 
 nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)
@@ -229,7 +231,10 @@ deb-light: $(NVME) pkg nvme.control.in
 	dpkg-deb --build nvme-$(NVME_VERSION)
 
 rpm: dist
-	$(RPMBUILD) --define '_libdir ${LIBDIR}' -ta nvme-$(NVME_VERSION).tar.gz
+	$(RPMBUILD) --define '_prefix $(DESTDIR)$(PREFIX)' \
+	--define '_libdir $(DESTDIR)${LIBDIR}' \
+	--define '_sysconfdir $(DESTDIR)$(SYSCONFDIR)' \
+	-ta nvme-$(NVME_VERSION).tar.gz
 
 .PHONY: default doc all clean clobber install-man install-bin install
 .PHONY: dist pkg dist-orig deb deb-light rpm FORCE test

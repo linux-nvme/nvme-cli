@@ -269,6 +269,52 @@ struct nvme_dsm_range *nvme_setup_dsm_range(__u32 *ctx_attrs, __u32 *llbas,
 	return dsm;
 }
 
+int nvme_copy(int fd, __u32 nsid, struct nvme_copy_range *copy, __u64 sdlba,
+		__u16 nr, __u8 prinfor, __u8 prinfow, __u8 dtype, __u16 dspec,
+		__u8 format, int lr, int fua, __u32 ilbrt, __u16 lbatm,
+		__u16 lbat)
+{
+	__u32 cdw12 = ((nr - 1) & 0xff) | ((format & 0xf) <<  8) |
+		((prinfor & 0xf) << 12) | ((dtype & 0xf) << 20) |
+		((prinfow & 0xf) << 26) | ((fua & 0x1) << 30) |
+		((lr & 0x1) << 31);
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode         = nvme_cmd_copy,
+		.nsid           = nsid,
+		.addr           = (__u64)(uintptr_t)copy,
+		.data_len       = nr * sizeof(*copy),
+		.cdw10          = sdlba & 0xffffffff,
+		.cdw11          = sdlba >> 32,
+		.cdw12          = cdw12,
+		.cdw13		= (dspec & 0xffff) << 16,
+		.cdw14		= ilbrt,
+		.cdw15		= (lbatm << 16) | lbat,
+	};
+
+	return nvme_submit_io_passthru(fd, &cmd);
+}
+
+struct nvme_copy_range *nvme_setup_copy_range(__u16 *nlbs, __u64 *slbas,
+		__u32 *eilbrts, __u16 *elbatms, __u16 *elbats, __u16 nr)
+{
+	struct nvme_copy_range *copy = malloc(nr * sizeof(*copy));
+	if (!copy) {
+		fprintf(stderr, "malloc: %s\n", strerror(errno));
+		return NULL;
+	}
+
+	for (int i = 0; i < nr; i++) {
+		copy[i].nlb = cpu_to_le16(nlbs[i]);
+		copy[i].slba = cpu_to_le64(slbas[i]);
+		copy[i].eilbrt = cpu_to_le32(eilbrts[i]);
+		copy[i].elbatm = cpu_to_le16(elbatms[i]);
+		copy[i].elbat = cpu_to_le16(elbats[i]);
+	}
+
+	return copy;
+}
+
 int nvme_resv_acquire(int fd, __u32 nsid, __u8 rtype, __u8 racqa,
 		      bool iekey, __u64 crkey, __u64 nrkey)
 {
@@ -365,11 +411,22 @@ int nvme_identify_ns(int fd, __u32 nsid, bool present, void *data)
 	return nvme_identify(fd, nsid, cns, data);
 }
 
+int nvme_identify_ns_list_csi(int fd, __u32 nsid, __u8 csi, bool all, void *data)
+{
+	int cns;
+
+	if (csi) {
+		cns = all ? NVME_ID_CNS_CSI_NS_PRESENT_LIST : NVME_ID_CNS_CSI_NS_ACTIVE_LIST;
+	} else {
+		cns = all ? NVME_ID_CNS_NS_PRESENT_LIST : NVME_ID_CNS_NS_ACTIVE_LIST;
+	}
+
+	return nvme_identify13(fd, nsid, cns, csi << 24, data);
+}
+
 int nvme_identify_ns_list(int fd, __u32 nsid, bool all, void *data)
 {
-	int cns = all ? NVME_ID_CNS_NS_PRESENT_LIST : NVME_ID_CNS_NS_ACTIVE_LIST;
-
-	return nvme_identify(fd, nsid, cns, data);
+	return nvme_identify_ns_list_csi(fd, nsid, 0x0, all, data);
 }
 
 int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
@@ -403,6 +460,21 @@ int nvme_identify_ns_granularity(int fd, void *data)
 int nvme_identify_uuid(int fd, void *data)
 {
 	return nvme_identify(fd, 0, NVME_ID_CNS_UUID_LIST, data);
+}
+
+int nvme_zns_identify_ns(int fd, __u32 nsid, void *data)
+{
+	return nvme_identify13(fd, nsid, NVME_ID_CNS_CSI_ID_NS, 2 << 24, data);
+}
+
+int nvme_zns_identify_ctrl(int fd, void *data)
+{
+	return nvme_identify13(fd, 0, NVME_ID_CNS_CSI_ID_CTRL, 2 << 24, data);
+}
+
+int nvme_identify_iocs(int fd, __u16 cntid, void *data)
+{
+	return nvme_identify(fd, 0, (cntid << 16) | NVME_ID_CNS_CSI, data);
 }
 
 int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
@@ -659,8 +731,8 @@ int nvme_format(int fd, __u32 nsid, __u8 lbaf, __u8 ses, __u8 pi,
 }
 
 int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas, __u8 dps,
-		__u8 nmic, __u32 anagrpid, __u16 nvmsetid,  __u32 timeout,
-		__u32 *result)
+		__u8 nmic, __u32 anagrpid, __u16 nvmsetid, __u8 csi,
+		__u32 timeout, __u32 *result)
 {
 	struct nvme_id_ns ns = {
 		.nsze		= cpu_to_le64(nsze),
@@ -676,6 +748,7 @@ int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas, __u8 dps,
 		.opcode		= nvme_admin_ns_mgmt,
 		.addr		= (__u64)(uintptr_t) ((void *)&ns),
 		.cdw10		= 0,
+		.cdw11		= csi << 24,
 		.data_len	= 0x1000,
 		.timeout_ms	= timeout,
 	};
@@ -875,5 +948,97 @@ int nvme_virtual_mgmt(int fd, __u32 cdw10, __u32 cdw11, __u32 *result)
 	if (!err && result)
 		*result = cmd.result;
 
+	return err;
+}
+
+int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
+		       enum nvme_zns_send_action zsa, __u32 data_len,
+		       void *data)
+{
+	__u32 cdw10 = slba & 0xffffffff;
+	__u32 cdw11 = slba >> 32;
+	__u32 cdw13 = zsa | (!!select_all) << 8;
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_zns_cmd_mgmt_send,
+		.nsid		= nsid,
+		.cdw10		= cdw10,
+		.cdw11		= cdw11,
+		.cdw13		= cdw13,
+		.addr		= (__u64)(uintptr_t)data,
+		.data_len	= data_len,
+	};
+
+	return nvme_submit_io_passthru(fd, &cmd);
+}
+
+int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
+		       enum nvme_zns_recv_action zra, __u16 zrasf,
+		       bool zras_feat, __u32 data_len, void *data)
+{
+	__u32 cdw10 = slba & 0xffffffff;
+	__u32 cdw11 = slba >> 32;
+	__u32 cdw12 = (data_len >> 2) - 1;
+	__u32 cdw13 = zra | zrasf << 8 | zras_feat << 16;
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_zns_cmd_mgmt_recv,
+		.nsid		= nsid,
+		.cdw10		= cdw10,
+		.cdw11		= cdw11,
+		.cdw12		= cdw12,
+		.cdw13		= cdw13,
+		.addr		= (__u64)(uintptr_t)data,
+		.data_len	= data_len,
+	};
+
+	return nvme_submit_io_passthru(fd, &cmd);
+}
+
+int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba, bool extended,
+			  enum nvme_zns_report_options opts, bool partial,
+			  __u32 data_len, void *data)
+{
+	enum nvme_zns_recv_action zra;
+
+	if (extended)
+		zra = NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES;
+	else
+		zra = NVME_ZNS_ZRA_REPORT_ZONES;
+
+	return nvme_zns_mgmt_recv(fd, nsid, slba, zra, opts, partial,
+		data_len, data);
+}
+
+int nvme_zns_append(int fd, __u32 nsid, __u64 zslba, __u16 nlb, __u16 control,
+		    __u32 ilbrt, __u16 lbat, __u16 lbatm, __u32 data_len,
+		    void *data, __u32 metadata_len, void *metadata,
+		    __u64 *result)
+{
+	__u32 cdw10 = zslba & 0xffffffff;
+	__u32 cdw11 = zslba >> 32;
+	__u32 cdw12 = nlb | (control << 16);
+	__u32 cdw14 = ilbrt;
+	__u32 cdw15 = lbat | (lbatm << 16);
+
+	struct nvme_passthru_cmd64 cmd = {
+		.opcode		= nvme_zns_cmd_append,
+		.nsid		= nsid,
+		.cdw10		= cdw10,
+		.cdw11		= cdw11,
+		.cdw12		= cdw12,
+		.cdw14		= cdw14,
+		.cdw15		= cdw15,
+		.metadata	= (__u64)(uintptr_t)metadata,
+		.addr		= (__u64)(uintptr_t)data,
+		.metadata_len	= metadata_len,
+		.data_len	= data_len,
+	};
+
+	int err;
+
+	err = ioctl(fd, NVME_IOCTL_IO64_CMD, &cmd);
+	if (!err && result)
+		*result = cmd.result;
 	return err;
 }

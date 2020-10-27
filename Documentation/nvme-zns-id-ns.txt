@@ -1,0 +1,62 @@
+nvme-zns-id-ns(1)
+=================
+
+NAME
+----
+nvme-zns-id-ns - Send NVMe Zoned Command Set Identify Controller, return
+                   result and structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme zns id-ns' <device>  [--namespace-id=<NUM> | -n <NUM>]
+			     [-o <fmt> | --output-format=<fmt>]
+			     [-v | --verbose]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends the zoned command set's identify namepsace
+command and provides the result and returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the data structure returned by the device will be decoded and
+displayed in one of several ways. 
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+	Use the provided namespace id for the command. If not provided, the
+	namespace id of the block device will be used. If the command is issued
+	to a non-block device, the parameter is required.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-o <format>::
+--output-format=<format>::
+              Set the reporting format to 'normal', 'json', or
+              'binary'. Only one output format can be used at a time.
+
+EXAMPLES
+--------
+* Has the program interpret the returned buffer and display the known
+fields in a human readable format:
++
+------------
+# nvme zns id-ns /dev/nvme0 -n 1
+------------
++
+
+* Show the output in json format with extra details
++
+------------
+# nvme zns id-ns /dev/nvme0 -o json -v
+------------
+
+NVME
+----
+Part of nvme-cli

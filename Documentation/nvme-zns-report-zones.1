@@ -1,0 +1,198 @@
+'\" t
+.\"     Title: nvme-zns-report-zones
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/20/2020
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-ZNS\-REPORT\-Z" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-zns-report-zones \- Retrieve and display the Report Zones data structure
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme zns report\-zones\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
+                                 [\-\-start\-lba=<IONUM> | \-s <IONUM>]
+                                 [\-\-descs=<NUM> | \-d <NUM>]
+                                 [\-\-state=<NUM> | \-S <NUM>]
+                                 [\-\-extended | \-e]
+                                 [\-\-partial | \-p]
+                                 [\-\-verbose | \-v]
+                                 [\-\-output\-format=<FMT> | \-o <FMT>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, sends the Zone Management Receive command with the Zone Receive Action set to either Report Zones or Extended Report Zones, depending on the \fIextended\fR option\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+On success, the data structure returned by the device will be decoded and displayed in one of several ways\&.
+.SH "OPTIONS"
+.PP
+\-n <NUM>, \-\-namespace\-id=<NUM>
+.RS 4
+Use the provided namespace id for the command\&. If not provided, the namespace id of the block device will be used\&. If the command is issued to a non\-block device, the parameter is required\&.
+.RE
+.PP
+\-s <lba>, \-\-start\-lba=<lba>
+.RS 4
+The starting LBA of the zone to begin the report
+.RE
+.PP
+\-d <NUM>, \-\-descs=<NUM>
+.RS 4
+The number of descriptors to request in the report\&.
+.RE
+.PP
+\-S <NUM>, \-\-state=<NUM>
+.RS 4
+The state of zones to request in the report\&. Known values include:
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+Value
+T}:T{
+Definition
+T}
+T{
+0
+T}:T{
+List all zones (default)
+T}
+T{
+1
+T}:T{
+Empty State
+T}
+T{
+2
+T}:T{
+Implicitly Opened State
+T}
+T{
+3
+T}:T{
+Explicitly Opened State
+T}
+T{
+4
+T}:T{
+Closed State
+T}
+T{
+5
+T}:T{
+Full State
+T}
+T{
+6
+T}:T{
+Read Only State
+T}
+T{
+7
+T}:T{
+Offline State
+T}
+.TE
+.sp 1
+.RE
+.PP
+\-e, \-\-extended
+.RS 4
+Request to use the Extended Report Zones option\&. The extended data is not decoded\&.
+.RE
+.PP
+\-p, \-\-partial
+.RS 4
+If set, the device will return the number of zones that match the state rather than the number of zones returned in the report\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the information detail in the output\&.
+.RE
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR, or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Has the program interpret the report for 16 zones, and display the known fields in a human readable format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zns report\-zones /dev/nvme0 \-n 1 \-d 16
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Show the output in json format with extra details
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme zns report\-zones /dev/nvme0 \-n 1 \-d 16 \-o json
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of nvme\-cli

@@ -47,7 +47,6 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 
 #include "common.h"
 #include "nvme-print.h"
@@ -85,7 +84,7 @@ static struct program nvme = {
 	.extensions = &builtin,
 };
 
-static const char *output_format = "Output format: normal|json|binary";
+const char *output_format = "Output format: normal|json|binary";
 static const char *output_format_no_binary = "Output format: normal|json";
 
 static void *__nvme_alloc(size_t len, bool *huge)
@@ -100,10 +99,10 @@ static void *__nvme_alloc(size_t len, bool *huge)
 	return NULL;
 }
 
-#ifdef LIBHUGETLBFS
 #define HUGE_MIN 0x80000
 
-static void nvme_free(void *p, bool huge)
+#ifdef LIBHUGETLBFS
+void nvme_free(void *p, bool huge)
 {
 	if (huge)
 		free_hugepage_region(p);
@@ -111,7 +110,7 @@ static void nvme_free(void *p, bool huge)
 		free(p);
 }
 
-static void *nvme_alloc(size_t len, bool *huge)
+void *nvme_alloc(size_t len, bool *huge)
 {
 	void *p;
 
@@ -126,12 +125,12 @@ static void *nvme_alloc(size_t len, bool *huge)
 	return p;
 }
 #else
-static void nvme_free(void *p, bool huge)
+void nvme_free(void *p, bool huge)
 {
 	free(p);
 }
 
-static void *nvme_alloc(size_t len, bool *huge)
+void *nvme_alloc(size_t len, bool *huge)
 {
 	return __nvme_alloc(len, huge);
 }
@@ -950,6 +949,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *desc = "For the specified controller handle, show the "\
 		"namespace list in the associated NVMe subsystem, optionally starting with a given nsid.";
 	const char *namespace_id = "first nsid returned list should start from";
+	const char *csi = "I/O command set identifier";
 	const char *all = "show all namespaces in the subsystem, whether attached or inactive";
 	int err, i, fd;
 	__le32 ns_list[1024];
@@ -957,6 +957,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	struct config {
 		__u32 namespace_id;
 		int  all;
+		__u16 csi;
 	};
 
 	struct config cfg = {
@@ -965,6 +966,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_BYTE("csi",          'y', &cfg.csi,          csi),
 		OPT_FLAG("all",          'a', &cfg.all,          all),
 		OPT_END()
 	};
@@ -979,8 +981,8 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto close_fd;
 	}
 
-	err = nvme_identify_ns_list(fd, cfg.namespace_id - 1, !!cfg.all,
-				    ns_list);
+	err = nvme_identify_ns_list_csi(fd, cfg.namespace_id - 1, cfg.csi,
+					!!cfg.all, ns_list);
 	if (!err) {
 		for (i = 0; i < 1024; i++)
 			if (ns_list[i])
@@ -1028,13 +1030,9 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		goto ret;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id == 0) {
-			err = -EINVAL;
-			goto close_fd;
-		}
-		else if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
@@ -1152,6 +1150,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *nmic = "multipath and sharing capabilities";
 	const char *anagrpid = "ANA Group Identifier";
 	const char *nvmsetid = "NVM Set Identifier";
+	const char *csi = "command set identifier";
 	const char *timeout = "timeout value, in milliseconds";
 	const char *bs = "target block size";
 
@@ -1169,6 +1168,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		__u16	nvmsetid;
 		__u64	bs;
 		__u32	timeout;
+		__u8  	csi;
 	};
 
 	struct config cfg = {
@@ -1189,6 +1189,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_UINT("nvmset-id",	 'i', &cfg.nvmsetid, nvmsetid),
 		OPT_SUFFIX("block-size", 'b', &cfg.bs,       bs),
 		OPT_UINT("timeout",      't', &cfg.timeout,  timeout),
+		OPT_BYTE("csi",          'y', &cfg.csi,      csi),
 		OPT_END()
 	};
 
@@ -1240,7 +1241,8 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	}
 
 	err = nvme_ns_create(fd, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic,
-			    cfg.anagrpid, cfg.nvmsetid, cfg.timeout, &nsid);
+			    cfg.anagrpid, cfg.nvmsetid, cfg.csi, cfg.timeout,
+			    &nsid);
 	if (!err)
 		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
 	else if (err > 0)
@@ -1487,9 +1489,9 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 		flags = BINARY;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
@@ -1569,15 +1571,9 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
-			goto close_fd;
-		}
-		else if (!cfg.namespace_id) {
-			fprintf(stderr,
-				"Error: requesting namespace-id from non-block device\n");
-			err = -ENOTBLK;
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
@@ -1747,6 +1743,49 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 close_fd:
 	close(fd);
 	return err;
+}
+
+static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Send an Identify Command Set Data command to the "\
+		"given device, returns properties of the specified controller "\
+		"in either human-readable or binary format.";
+	const char *controller_id = "identifier of desired controller";
+	struct nvme_id_iocs iocs;
+	int err, fd;
+
+	struct config {
+		__u16 cntid;
+	};
+
+	struct config cfg = {
+		.cntid = 0xffff,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_SHRT("controller-id", 'c', &cfg.cntid, controller_id),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	err = nvme_identify_iocs(fd, cfg.cntid, &iocs);
+	if (!err) {
+		printf("NVMe Identify I/O Command Set:\n");
+		nvme_show_id_iocs(&iocs);
+	}
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("NVMe Identify I/O Command Set");
+
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
 }
 
 static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -2048,7 +2087,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	struct config cfg = {
-		.namespace_id = 1,
+		.namespace_id = 0,
 		.feature_id   = 0,
 		.sel          = 0,
 		.cdw11        = 0,
@@ -2069,6 +2108,18 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		goto ret;
+
+	if (!cfg.namespace_id) {
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			if (errno != ENOTTY) {
+				perror("get-namespace-id");
+				goto close_fd;
+			}
+
+			cfg.namespace_id = NVME_NSID_ALL;
+		}
+	}
 
 	if (cfg.sel > 7) {
 		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
@@ -2213,7 +2264,14 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_fw_fd;
 	}
 
-	fw_buf = nvme_alloc(fw_size, &huge);
+	if (cfg.xfer == 0 || cfg.xfer % 4096)
+		cfg.xfer = 4096;
+
+	if (cfg.xfer < HUGE_MIN)
+		fw_buf = __nvme_alloc(fw_size, &huge);
+	else
+		fw_buf = nvme_alloc(fw_size, &huge);
+
 	if (!fw_buf) {
 		fprintf(stderr, "No memory for f/w size:%d\n", fw_size);
 		err = -ENOMEM;
@@ -2221,8 +2279,6 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 	buf = fw_buf;
-	if (cfg.xfer == 0 || cfg.xfer % 4096)
-		cfg.xfer = 4096;
 	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size))) {
 		err = -errno;
 		fprintf(stderr, "read :%s :%s\n", cfg.fw, strerror(errno));
@@ -2771,13 +2827,11 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		 * format of all namespaces.
 		 */
 		cfg.namespace_id = NVME_NSID_ALL;
-	} else {
-		if (!cfg.namespace_id) {
-			cfg.namespace_id = nvme_get_nsid(fd);
-			if (cfg.namespace_id < 0) {
-				err = cfg.namespace_id;
-				goto close_fd;
-			}
+	} else if (!cfg.namespace_id) {
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
+			goto close_fd;
 		}
 	}
 
@@ -2874,12 +2928,21 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		nvme_show_status(err);
 	else {
 		printf("Success formatting namespace:%x\n", cfg.namespace_id);
-		if (cfg.lbaf != prev_lbaf && ioctl(fd, BLKRRPART) < 0) {
-			fprintf(stderr, "failed to re-read partition table\n");
-			err = -errno;
-			goto close_fd;
+		if (cfg.lbaf != prev_lbaf){
+			if (S_ISCHR(nvme_stat.st_mode)) {
+				if(ioctl(fd, NVME_IOCTL_RESCAN) < 0){
+					fprintf(stderr, "failed to rescan namespaces\n");
+					err = -errno;
+					goto close_fd;
+				}
+			} else {
+				if(ioctl(fd, BLKRRPART) < 0) {
+					fprintf(stderr, "failed to re-read partition table\n");
+					err = -errno;
+					goto close_fd;
+				}
+			}
 		}
-
 		if (cfg.reset && S_ISCHR(nvme_stat.st_mode))
 			nvme_reset_controller(fd);
 	}
@@ -2946,6 +3009,18 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		goto ret;
+
+	if (!cfg.namespace_id) {
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			if (errno != ENOTTY) {
+				perror("get-namespace-id");
+				goto close_fd;
+			}
+
+			cfg.namespace_id = NVME_NSID_ALL;
+		}
+	}
 
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
@@ -3292,9 +3367,9 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 		goto ret;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
@@ -3384,9 +3459,9 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	if (cfg.deac)
 		control |= NVME_RW_DEAC;
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
@@ -3477,9 +3552,9 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	}
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
@@ -3500,6 +3575,137 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		nvme_show_status(err);
 	else
 		printf("NVMe DSM: success\n");
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
+static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "The Copy command is used by the host to copy data "
+			   "from one or more source logical block ranges to a "
+			   "single consecutive destination logical block "
+			   "range.";
+
+	const char *d_sdlba = "64-bit addr of first destination logical block";
+	const char *d_slbas = "64-bit addr of first block per range (comma-separated list)";
+	const char *d_nlbs = "number of blocks per range (comma-separated list, zeroes-based values)";
+	const char *d_lr = "limited retry";
+	const char *d_fua = "force unit access";
+	const char *d_prinfor = "protection information and check field (read part)";
+	const char *d_prinfow = "protection information and check field (write part)";
+	const char *d_ilbrt = "initial lba reference tag (write part)";
+	const char *d_eilbrts = "expected lba reference tags (read part, comma-separated list)";
+	const char *d_lbat = "lba application tag (write part)";
+	const char *d_elbats = "expected lba application tags (read part, comma-separated list)";
+	const char *d_lbatm = "lba application tag mask (write part)";
+	const char *d_elbatms = "expected lba application tag masks (read part, comma-separated list)";
+	const char *d_dtype = "directive type (write part)";
+	const char *d_dspec = "directive specific (write part)";
+	const char *d_format = "source range entry format";
+
+	int err, fd;
+	uint16_t nr, nb, ns, nrts, natms, nats;
+	__u32 namespace_id;
+	int nlbs[128] = { 0 };
+	unsigned long long slbas[128] = {0,};
+	int eilbrts[128] = { 0 };
+	int elbatms[128] = { 0 };
+	int elbats[128] = { 0 };
+	struct nvme_copy_range *copy;
+
+	struct config {
+		__u64 sdlba;
+		char  *nlbs;
+		char  *slbas;
+		__u32 ilbrt;
+		char  *eilbrts;
+		__u16 lbatm;
+		char  *elbatms;
+		__u16 lbat;
+		char  *elbats;
+		__u8  prinfow;
+		__u8  prinfor;
+		int   lr;
+		int   fua;
+		__u8  dtype;
+		__u16 dspec;
+		__u8  format;
+	};
+
+	struct config cfg = {
+		.nlbs    = "",
+		.slbas   = "",
+		.eilbrts = "",
+		.elbatms = "",
+		.elbats  = "",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,   d_sdlba),
+		OPT_LIST("slbs",                   's', &cfg.slbas,   d_slbas),
+		OPT_LIST("blocks",                 'b', &cfg.nlbs,    d_nlbs),
+		OPT_FLAG("limited-retry",          'l', &cfg.lr,      d_lr),
+		OPT_FLAG("force-unit-access",      'f', &cfg.fua,     d_fua),
+		OPT_BYTE("prinfow",                'p', &cfg.prinfow, d_prinfow),
+		OPT_BYTE("prinfor",                'P', &cfg.prinfor, d_prinfor),
+		OPT_UINT("ref-tag",                'r', &cfg.ilbrt,   d_ilbrt),
+		OPT_LIST("expected-ref-tags",      'R', &cfg.eilbrts, d_eilbrts),
+		OPT_SHRT("app-tag",                'a', &cfg.lbat,    d_lbat),
+		OPT_LIST("expected-app-tags",      'A', &cfg.elbats,  d_elbats),
+		OPT_SHRT("app-tag-mask",           'm', &cfg.lbatm,   d_lbatm),
+		OPT_LIST("expected-app-tag-masks", 'M', &cfg.elbatms, d_elbatms),
+		OPT_BYTE("dir-type",               'T', &cfg.dtype,   d_dtype),
+		OPT_SHRT("dir-spec",               'S', &cfg.dspec,   d_dspec),
+		OPT_BYTE("format",                 'F', &cfg.format,  d_format),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	nb = argconfig_parse_comma_sep_array(cfg.nlbs, nlbs, ARRAY_SIZE(nlbs));
+	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, ARRAY_SIZE(slbas));
+	nrts = argconfig_parse_comma_sep_array(cfg.eilbrts, eilbrts, ARRAY_SIZE(eilbrts));
+	natms = argconfig_parse_comma_sep_array(cfg.elbatms, elbatms, ARRAY_SIZE(elbatms));
+	nats = argconfig_parse_comma_sep_array(cfg.elbats, elbats, ARRAY_SIZE(elbats));
+
+	nr = max(nb, max(ns, max(nrts, max(natms, nats))));
+	if (!nr || nr > 128) {
+		fprintf(stderr, "invalid range\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	err = namespace_id = nvme_get_nsid(fd);
+	if (err < 0) {
+		perror("get-namespace-id");
+		goto close_fd;
+	}
+
+	copy = nvme_setup_copy_range((__u16 *)nlbs, (__u64 *)slbas,
+			(__u32 *)eilbrts, (__u16 *)elbatms, (__u16 *)elbats,
+			nr);
+	if (!copy) {
+		fprintf(stderr, "failed to allocate payload\n");
+		err = -ENOMEM;
+		goto close_fd;
+	}
+
+	err = nvme_copy(fd, namespace_id, copy, cfg.sdlba, nr, cfg.prinfor,
+			cfg.prinfow, cfg.dtype, cfg.dspec, cfg.format, cfg.lr,
+			cfg.fua, cfg.ilbrt, cfg.lbatm, cfg.lbat);
+	if (err < 0)
+		perror("NVMe Copy");
+	else if (err != 0)
+		nvme_show_status(err);
+	else
+		printf("NVMe Copy: success\n");
 
 close_fd:
 	close(fd);
@@ -3535,9 +3741,9 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 		goto ret;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
@@ -3603,9 +3809,9 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 		goto ret;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
@@ -3675,9 +3881,9 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 		goto ret;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
@@ -3755,9 +3961,9 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 		goto ret;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
@@ -3833,9 +4039,9 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		flags = BINARY;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
@@ -3868,7 +4074,7 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
-static unsigned long long elapsed_utime(struct timeval start_time,
+unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time)
 {
 	unsigned long long err = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
@@ -3887,7 +4093,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
 	__u16 control = 0;
 	__u32 dsmgmt = 0;
-	int phys_sector_size = 0;
+	int logical_block_size = 0;
 	long long buffer_size = 0;
 	bool huge;
 
@@ -4017,10 +4223,10 @@ static int submit_io(int opcode, char *command, const char *desc,
 		goto close_mfd;
 	}
 
-	if (ioctl(fd, BLKPBSZGET, &phys_sector_size) < 0)
+	if (ioctl(fd, BLKSSZGET, &logical_block_size) < 0)
 		goto close_mfd;
 
-	buffer_size = (cfg.block_count + 1) * phys_sector_size;
+	buffer_size = (cfg.block_count + 1) * logical_block_size;
 	if (cfg.data_size < buffer_size) {
 		fprintf(stderr, "Rounding data size to fit block count (%lld bytes)\n",
 				buffer_size);
@@ -4215,9 +4421,9 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		control |= NVME_RW_FUA;
 
 	if (!cfg.namespace_id) {
-		cfg.namespace_id = nvme_get_nsid(fd);
-		if (cfg.namespace_id < 0) {
-			err = cfg.namespace_id;
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}

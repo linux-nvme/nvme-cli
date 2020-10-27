@@ -14,12 +14,10 @@ PLUGIN(NAME("sfx", "ScaleFlux vendor specific extensions"),
 		ENTRY("query-cap", "Query current capacity info", query_cap_info)
 		ENTRY("change-cap", "Dynamic change capacity", change_cap)
 		ENTRY("set-feature", "Set a feature", sfx_set_feature)
-		ENTRY("get-feature", "get a feature", sfx_get_feature)
+		ENTRY("get-feature", "Get a feature", sfx_get_feature)
 	)
 );
 
 #endif
 
 #include "define_cmd.h"
-
-

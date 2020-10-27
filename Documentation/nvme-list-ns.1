@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/24/2020
+.\"      Date: 10/20/2020
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "04/24/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "10/20/2020" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,6 +33,7 @@ nvme-list-ns \- Send NVMe Identify List Namespaces, return result and structure
 .sp
 .nf
 \fInvme list\-ns\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-csi=<command_set_identifier> | \-y <command_set_identifier>]
                         [\-\-all | \-a]
 .fi
 .SH "DESCRIPTION"
@@ -47,6 +48,11 @@ On success, the namespace array is printed for each index and nsid for a valid n
 \-n <nsid>, \-\-namespace\-id=<nsid>
 .RS 4
 Retrieve the identify list structure starting with the given nsid\&.
+.RE
+.PP
+\-y <command_set_identifier>, \-\-csi=<command_set_identifier>
+.RS 4
+If this value is given, retrieve the identify list structure associated with the speicified I/O command set\&.
 .RE
 .PP
 \-a, \-\-all

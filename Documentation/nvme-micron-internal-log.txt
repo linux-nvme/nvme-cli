@@ -1,0 +1,43 @@
+nvme-micron-internal-log(1)
+==========================
+
+NAME
+----
+nvme-micron-internal-log - Retrieve Micron device's internal logs and save to given zip file.
+
+SYNOPSIS
+--------
+[verse]
+'nvme micron vs-internal-log' <device> [--package=<FILE>, -p <FILE>]
+
+DESCRIPTION
+-----------
+For the given NVMe device, sends the Micron vendor specific device commands to retrieve
+various logs (in binary format) and compresses them and saves into speficied zip file.
+These vendor unique logs can be analysed with Micron Technical support team for any device
+specific issues
+
+The <device> parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1). 
+
+This will only work on Micron devices devices of model numbers 9200 and 54XX. Support
+for new devices may be added subsequently. Results for any other device are undefined.
+
+OPTIONS
+-------
+-l <FILE>::
+--package=<FILE>::
+        name of the file (with .zip extension) to save the device logs
+
+EXAMPLES
+--------
+* Gets the logs from the device and saves to micron_logs.zip file
++
+------------
+# nvme micron vs-internal-log /dev/nvme0 --package=micron_logs.zip
+
+------------
+NVME
+----
+Part of the nvme-user suite

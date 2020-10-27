@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <endian.h>
+#include <sys/time.h>
 
 #include "plugin.h"
 #include "util/json.h"
@@ -87,6 +88,7 @@ int parse_and_open(int argc, char **argv, const char *desc,
 	const struct argconfig_commandline_options *clo);
 
 extern const char *devicename;
+extern const char *output_format;
 
 enum nvme_print_flags validate_output_format(char *format);
 int __id_ctrl(int argc, char **argv, struct command *cmd,
@@ -95,6 +97,7 @@ char *nvme_char_from_block(char *block);
 void *mmap_registers(const char *dev);
 
 extern int current_index;
+int scan_ctrl_namespace_filter(const struct dirent *d);
 int scan_namespace_filter(const struct dirent *d);
 int scan_ctrl_paths_filter(const struct dirent *d);
 int scan_ctrls_filter(const struct dirent *d);
@@ -107,4 +110,9 @@ void free_topology(struct nvme_topology *t);
 char *get_nvme_subsnqn(char *path);
 char *nvme_get_ctrl_attr(char *path, const char *attr);
 
+void *nvme_alloc(size_t len, bool *huge);
+void nvme_free(void *p, bool huge);
+
+unsigned long long elapsed_utime(struct timeval start_time,
+					struct timeval end_time);
 #endif /* _NVME_H */

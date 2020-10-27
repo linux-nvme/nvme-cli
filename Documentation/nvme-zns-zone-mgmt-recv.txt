@@ -1,0 +1,78 @@
+nvme-zns-zone-mgmt-recv(1)
+==========================
+
+NAME
+----
+nvme-zns-zone-mgmt-recv - Zone Management Receive command
+
+SYNOPSIS
+--------
+[verse]
+'nvme zns zone-mgmt-recv' <device> [--namespace-id=<NUM> | -n <NUM>]
+				   [--start-lba=<LBA> | -s <LBA>]
+				   [--data-len=<IONUM>, -l <IONUM>]
+				   [--zra=<NUM>, -z <NUM>]
+				   [--zrasf=<NUM>, -a <NUM>]
+				   [--zra-spec-feat, -f]
+				   [--output-format=<FMT>, -o <FMT>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, issues the Zone Management Receive command with the
+requested receive action and additional action specific parameters. This is the
+generic interface provided for forward compatibility as new actions are created
+that this program isn't aware of at the time of its development. As such, this
+is a generic command that does not do any additional decoding for specific
+types of data received. This will only report the data as a hex dump, or
+binary. 
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+	Use the provided namespace id for the command. If not provided, the
+	namespace id of the block device will be used. If the command is issued
+	to a non-block device, the parameter is required.
+
+-s <lba>::
+--start-lba=<lba>::
+	The starting LBA of the zone to manage receive.
+
+--data-len=<NUM>
+-l <NUM>
+	Received data buffer length
+
+-z <NUM>::
+--zra=<NUM>::
+	Zone Receive Action
+
+-a <NUM>
+--zrasf=<NUM>
+	Zone Receive Action Specific field
+
+-f::
+--zra-spec-feat::
+	Enable Zone Receive Action Specific features
+
+-o <FMT>::
+--output-format=<FMT>::
+	Output format: normal|json|binary
+
+EXAMPLES
+--------
+* Hex dump of a report all zones
++
+------------
+# nvme zns zone-mgmt-recv /dev/nvme0 -n 1 -s 0 -z 0 -a 0 -l 4k
+------------
++
+
+* Binary dump of a report all zones
++
+------------
+# nvme zns zone-mgmt-recv /dev/nvme0 -n 1 -s 0 -z 0 -a 0 -o -l 4k binary > report.out
+------------
+
+NVME
+----
+Part of nvme-cli

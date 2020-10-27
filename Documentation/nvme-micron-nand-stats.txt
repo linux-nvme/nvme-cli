@@ -1,0 +1,40 @@
+nvme-micron-nand-stats(1)
+=========================
+
+NAME
+----
+nvme-micron-nand-stats - Retrieves NAND statistics of given micron device
+
+SYNOPSIS
+--------
+[verse]
+'nvme micron vs-nand-stats' <device>
+
+DESCRIPTION
+-----------
+This command prints NAND information (Total bytes written, Bad block count and 
+Erase failures etc) for the given micron device.
+
+The <device> parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1). 
+
+This will only work on Micron devices devices of model numbers 54XX. Support for
+new devices may be added subsequently.
+
+OPTIONS
+-------
+None
+
+EXAMPLES
+--------
+* Retrieve NAND statistics information
++
+------------
+# nvme micron vs-nand-stats /dev/nvme0
+
+------------
+
+NVME
+----
+Part of the nvme-user suite

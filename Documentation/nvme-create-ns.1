@@ -2,12 +2,12 @@
 .\"     Title: nvme-create-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/24/2020
+.\"      Date: 10/20/2020
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CREATE\-NS" "1" "04/24/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-CREATE\-NS" "1" "10/20/2020" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,6 +39,7 @@ nvme-create-ns \- Send NVMe Namespace management command to create namespace, re
                         [\-\-nmic=<nmic> | \-m <nmic>]
                         [\-\-anagrp\-id=<anagrpid> | \-a <anagrpid>]
                         [\-\-nvmset\-id=<nvmsetid> | \-i <nvmsetid>]
+                        [\-\-csi=<command_set_identifier> | \-y <command_set_identifier>]
                         [\-\-block\-size=<block\-size> | \-b <block\-size>]
                         [\-\-timeout=<timeout> | \-t <timeout>]
 DESCRIPTION
@@ -88,6 +89,11 @@ ANA Gorup Identifier\&. If this value is 0h specifies that the controller determ
 \-i <nvmsetid>, \-\-nvmset\-id=<nvmsetid>
 .RS 4
 This field specifies the identifier of the NVM Set\&.
+.RE
+.PP
+\-y <command_set_identifier>, \-\-csi=<command_set_identifier>
+.RS 4
+This field specifies the identifier of command set\&. if not issued, NVM Command Set will be selected\&.
 .RE
 .PP
 \-b, \-\-block\-size

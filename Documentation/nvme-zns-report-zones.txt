@@ -1,0 +1,102 @@
+nvme-zns-report-zones(1)
+========================
+
+NAME
+----
+nvme-zns-report-zones - Retrieve and display the Report Zones data structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme zns report-zones' <device> [--namespace-id=<NUM> | -n <NUM>]
+				 [--start-lba=<IONUM> | -s <IONUM>]
+				 [--descs=<NUM> | -d <NUM>]
+				 [--state=<NUM> | -S <NUM>]
+				 [--extended | -e]
+				 [--partial | -p]
+				 [--verbose | -v]
+				 [--output-format=<FMT> | -o <FMT>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends the Zone Management Receive command with the
+Zone Receive Action set to either Report Zones or Extended Report Zones,
+depending on the 'extended' option.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the data structure returned by the device will be decoded and
+displayed in one of several ways. 
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+	Use the provided namespace id for the command. If not provided, the
+	namespace id of the block device will be used. If the command is issued
+	to a non-block device, the parameter is required.
+
+-s <lba>::
+--start-lba=<lba>::
+	The starting LBA of the zone to begin the report
+
+-d <NUM>::
+--descs=<NUM>::
+	The number of descriptors to request in the report.
+
+-S <NUM>::
+--state=<NUM>::
+	The state of zones to request in the report. Known values include:
++
+[]
+|=================
+|Value|Definition
+|0|List all zones (default)
+|1|Empty State
+|2|Implicitly Opened State
+|3|Explicitly Opened State
+|4|Closed State
+|5|Full State
+|6|Read Only State
+|7|Offline State
+|=================
+
+-e::
+--extended::
+	Request to use the Extended Report Zones option. The extended data is
+	not decoded.
+
+-p::
+--partial::
+	If set, the device will return the number of zones that match the state
+	rather than the number of zones returned in the report.
+
+-v::
+--verbose::
+	Increase the information detail in the output.
+
+-o <format>::
+--output-format=<format>::
+              Set the reporting format to 'normal', 'json', or
+              'binary'. Only one output format can be used at a time.
+
+EXAMPLES
+--------
+* Has the program interpret the report for 16 zones, and display the known
+fields in a human readable format:
++
+------------
+# nvme zns report-zones /dev/nvme0 -n 1 -d 16
+------------
++
+
+* Show the output in json format with extra details
++
+------------
+# nvme zns report-zones /dev/nvme0 -n 1 -d 16 -o json
+------------
+
+NVME
+----
+Part of nvme-cli

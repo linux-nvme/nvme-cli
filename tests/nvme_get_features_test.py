@@ -54,7 +54,8 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
         self.setup_log_dir(self.__class__.__name__)
         self.feature_id_list = ["0x01", "0x02", "0x04", "0x05", "0x07",
                                 "0x08", "0x09", "0x0A", "0x0B"]
-        get_vector_list_cmd = "cat /proc/interrupts | grep nvme |" \
+        device = self.ctrl.split('/')[-1]
+        get_vector_list_cmd = "grep " + device + "q /proc/interrupts |" \
                               " cut -d : -f 1 | tr -d ' ' | tr '\n' ' '"
         proc = subprocess.Popen(get_vector_list_cmd,
                                 shell=True,
@@ -80,7 +81,7 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
             for vector in range(self.vector_list_len):
                 get_feat_cmd = "nvme get-feature " + self.ctrl + \
                                " --feature-id=" + str(feature_id) + \
-                               " --cdw11=" + str(vector)
+                               " --cdw11=" + str(vector) + " -H"
                 proc = subprocess.Popen(get_feat_cmd,
                                         shell=True,
                                         stdout=subprocess.PIPE,
@@ -90,7 +91,7 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
                 assert_equal(proc.wait(), 0)
         else:
             get_feat_cmd = "nvme get-feature " + self.ctrl + \
-                           " --feature-id=" + str(feature_id)
+                           " --feature-id=" + str(feature_id) + " -H"
             proc = subprocess.Popen(get_feat_cmd,
                                     shell=True,
                                     stdout=subprocess.PIPE,
