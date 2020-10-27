@@ -1231,12 +1231,14 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *aen = "result of the aen, use to override log id";
 	const char *lsp = "log specific field";
 	const char *lpo = "log page offset specifies the location within a log page from where to start returning data";
+	const char *lsi = "log specific identifier specifies an identifier that is required for a particular log page";
 	const char *rae = "retain an asynchronous event";
 	const char *raw = "output in raw format";
 	const char *uuid_index = "UUID index";
 	int err, fd;
 
 	struct config {
+		__u16 lsi;
 		__u32 namespace_id;
 		__u8  log_id;
 		__u32 log_len;
@@ -1254,6 +1256,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.log_len      = 0,
 		.lpo          = NVME_NO_LOG_LPO,
 		.lsp          = NVME_NO_LOG_LSP,
+		.lsi          = 0,
 		.rae          = 0,
 		.uuid_index   = 0,
 	};
@@ -1265,6 +1268,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		OPT_UINT("aen",          'a', &cfg.aen,          aen),
 		OPT_LONG("lpo",          'o', &cfg.lpo,          lpo),
 		OPT_BYTE("lsp",          's', &cfg.lsp,          lsp),
+		OPT_SHRT("lsi",          'S', &cfg.lsi,          lsi),
 		OPT_FLAG("rae",          'r', &cfg.rae,          rae),
 		OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
@@ -1294,7 +1298,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		}
 
 		err = nvme_get_log14(fd, cfg.namespace_id, cfg.log_id,
-				     cfg.lsp, cfg.lpo, 0, cfg.rae,
+				     cfg.lsp, cfg.lpo, cfg.lsi, cfg.rae,
 				     cfg.uuid_index, cfg.log_len, log);
 		if (!err) {
 			if (!cfg.raw_binary) {
