@@ -627,6 +627,7 @@ static int wdc_vs_temperature_stats(int argc, char **argv, struct command *comma
 static __u64 wdc_get_enc_drive_capabilities(int fd);
 static int wdc_enc_get_nic_log(int fd, __u8 log_id, __u32 xfer_size, __u32 data_len, FILE *out);
 static int wdc_enc_submit_move_data(int fd, char *cmd, int len, int xfer_size, FILE *out, int data_id, int cdw14, int cdw15);
+static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data);
 
 /* Drive log data size */
 struct wdc_log_size {
@@ -1113,6 +1114,8 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 	int ret;
 	uint32_t read_device_id = -1, read_vendor_id = -1;
 	__u64 capabilities = 0;
+	__u8 *data;
+	__u32 *cust_id;
 
 	ret = wdc_get_pci_ids(&read_device_id, &read_vendor_id);
 	if (ret < 0)
@@ -1174,13 +1177,45 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		case WDC_NVME_SN640_DEV_ID_2:
 		/* FALLTHRU */
         case WDC_NVME_SN640_DEV_ID_3:
-        /* FALLTHRU */
+			/* verify the 0xC0 log page is supported */
+			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
+				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
+			}
+
+			capabilities |= (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
+					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
+					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
+					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG |
+					WDC_DRIVE_CAP_REASON_ID | WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_INFO);
+
+			/* verify the 0xCA log page is supported */
+			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
+				capabilities |= WDC_DRIVE_CAP_CA_LOG_PAGE;
+
+			/* verify the 0xD0 log page is supported */
+			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_VU_SMART_LOG_OPCODE) == true)
+				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
+
+			if (!get_dev_mgment_cbs_data(fd, WDC_C2_CUSTOMER_ID_ID, (void*)&data)) {
+				fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
+				return -1;
+			}
+
+			cust_id = (__u32*)data;
+
+			if ((read_device_id  == WDC_NVME_SN640_DEV_ID_3) ||
+					(*cust_id == WDC_CUSTOMER_ID_0x1004))
+				capabilities |= WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY;
+			else
+				capabilities |= WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY;
+
+        	break;
 		case WDC_NVME_SN840_DEV_ID:
 		/* FALLTHRU */
 		case WDC_NVME_SN840_DEV_ID_1:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
-				capabilities = WDC_DRIVE_CAP_C0_LOG_PAGE;
+				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
 			}
 		/* FALLTHRU */
 		case WDC_NVME_ZN440_DEV_ID:
@@ -3889,8 +3924,6 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries)
 	char previous_fw[9];
 	char new_fw[9];
 	char commit_action_bin[8];
-	char *null_fw = "--------";
-
 
 	if (data[0] == WDC_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID) {
 		printf("  Firmware Activate History Log \n");
@@ -3952,12 +3985,12 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries)
 		struct wdc_fw_act_history_log_entry *fw_act_history_entry = (struct wdc_fw_act_history_log_entry *)(data + sizeof(struct wdc_fw_act_history_log_hdr));
 
 		for (i = 0; i < num_entries; i++) {
-			memcpy(previous_fw, (char *)&(fw_act_history_entry->previous_fw_version), 8);
-			if (strlen((char *)&(fw_act_history_entry->new_fw_version)) > 1)
-				memcpy(new_fw, (char *)&(fw_act_history_entry->new_fw_version), 8);
-			else
-				memcpy(new_fw, null_fw, 8);
+			memset((void *)previous_fw, 0, 9);
+			memset((void *)new_fw, 0, 9);
+			memset((void *)commit_action_bin, 0, 8);
 
+			memcpy(previous_fw, (char *)&(fw_act_history_entry->previous_fw_version), 8);
+			memcpy(new_fw, (char *)&(fw_act_history_entry->new_fw_version), 8);
 			printf("%5"PRIu32"", (uint32_t)le32_to_cpu(fw_act_history_entry->entry_num));
 			printf("       ");
 			printf("%02d:%02d:%02d", (int)(le64_to_cpu(fw_act_history_entry->power_on_seconds)/3600),
