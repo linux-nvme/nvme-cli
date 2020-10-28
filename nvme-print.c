@@ -696,7 +696,7 @@ static void json_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname)
 
 	root = json_create_object();
 	json_object_add_value_string(root,
-			"Asynchronous Namespace Access Log for NVMe device",
+			"Asymmetric Namespace Access Log for NVMe device",
 			devname);
 	json_object_add_value_uint(root, "chgcnt",
 			le64_to_cpu(hdr->chgcnt));
@@ -3802,7 +3802,7 @@ void nvme_show_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname,
 	else if (flags & JSON)
 		return json_ana_log(ana_log, devname);
 
-	printf("Asynchronous Namespace Access Log for NVMe device: %s\n",
+	printf("Asymmetric Namespace Access Log for NVMe device: %s\n",
 			devname);
 	printf("ANA LOG HEADER :-\n");
 	printf("chgcnt	:	%"PRIu64"\n",
@@ -4573,6 +4573,10 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		printf("\tDisable Normal (DN): %s\n", (result & 0x00000001) ? "True":"False");
 		break;
 	case NVME_FEAT_ASYNC_EVENT:
+		printf("\tEndurance Group Event Aggregate Log Change Notices: %s\n", ((result & 0x00004000) >> 14) ? "Send async event":"Do not send async event");
+		printf("\tLBA Status Information Notices  : %s\n", ((result & 0x00002000) >> 13) ? "Send async event":"Do not send async event");
+		printf("\tPredictable Latency Event Aggregate Log Change Notices: %s\n", ((result & 0x00001000) >> 12) ? "Send async event":"Do not send async event");
+		printf("\tAsymmetric Namespace Access Change Notices: %s\n", ((result & 0x00000800) >> 11) ? "Send async event":"Do not send async event");
 		printf("\tTelemetry Log Notices           : %s\n", ((result & 0x00000400) >> 10) ? "Send async event":"Do not send async event");
 		printf("\tFirmware Activation Notices     : %s\n", ((result & 0x00000200) >> 9) ? "Send async event":"Do not send async event");
 		printf("\tNamespace Attribute Notices     : %s\n", ((result & 0x00000100) >> 8) ? "Send async event":"Do not send async event");
