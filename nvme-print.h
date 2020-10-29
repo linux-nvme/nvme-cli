@@ -55,7 +55,7 @@ void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 	enum nvme_print_flags flags);
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs);
 
-void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf);
+void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned char *buf);
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
 	void *buf, __u32 len, enum nvme_print_flags flags);
 void nvme_show_select_result(__u32 result);
@@ -70,7 +70,7 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 
 const char *nvme_status_to_string(__u32 status);
 const char *nvme_select_to_string(int sel);
-const char *nvme_feature_to_string(int feature);
+const char *nvme_feature_to_string(enum nvme_feat feature);
 const char *nvme_register_to_string(int reg);
 
 #endif
