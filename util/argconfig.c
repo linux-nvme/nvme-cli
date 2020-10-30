@@ -31,13 +31,14 @@
 #include "argconfig.h"
 #include "suffix.h"
 
-#include <string.h>
+#include <errno.h>
+#include <inttypes.h>
 #include <getopt.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <stdarg.h>
-#include <inttypes.h>
+#include <string.h>
 
 static argconfig_help_func *help_funcs[MAX_HELP_FUNC] = { NULL };
 
@@ -454,6 +455,7 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
 					 unsigned max_length)
 {
 	unsigned ret = 0;
+	unsigned long v;
 	char *tmp;
 	char *p;
 
@@ -464,9 +466,14 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
 	if (!tmp)
 		return 0;
 
-	val[ret] = strtol(tmp, &p, 0);
+	v = strtoul(tmp, &p, 0);
 	if (*p != 0)
 		return -1;
+	if (v > UINT_MAX) {
+		fprintf(stderr, "%s out of range\n", tmp);
+		return -1;
+	}
+	val[ret] = v;
 
 	ret++;
 	while (1) {
@@ -478,10 +485,14 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
 		if (ret >= max_length)
 			return -1;
 
-		val[ret] = strtol(tmp, &p, 0);
-
+		v = strtoul(tmp, &p, 0);
 		if (*p != 0)
 			return -1;
+		if (v > UINT_MAX) {
+			fprintf(stderr, "%s out of range\n", tmp);
+			return -1;
+		}
+		val[ret] = v;
 		ret++;
 	}
 }
