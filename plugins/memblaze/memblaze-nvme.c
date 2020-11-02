@@ -19,7 +19,7 @@
 #include "memblaze-utils.h"
 
 enum {
-    MB_FEAT_POWER_MGMT = 0xc6,
+    MB_FEAT_POWER_MGMT = 0x02,
 };
 
 /*
@@ -388,7 +388,7 @@ static int show_memblaze_smart_log(int fd, __u32 nsid, const char *devname,
 	return err;
 }
 
-static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int mb_get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_memblaze_smart_log smart_log;
 	int err, fd;
@@ -431,211 +431,79 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 
 static char *mb_feature_to_string(int feature)
 {
-	switch (feature) {
-	case MB_FEAT_POWER_MGMT: return "Memblaze power management";
-	default:	return "Unknown";
-	}
+    switch (feature) {
+    case MB_FEAT_POWER_MGMT: return "Memblaze power management";
+    default: return "Unknown";
+    }
 }
 
-static int get_additional_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Read operating parameters of the "\
-		"specified controller. Operating parameters are grouped "\
-		"and identified by Feature Identifiers; each Feature "\
-		"Identifier contains one or more attributes that may affect "\
-		"behaviour of the feature. Each Feature has three possible "\
-		"settings: default, saveable, and current. If a Feature is "\
-		"saveable, it may be modified by set-feature. Default values "\
-		"are vendor-specific and not changeable. Use set-feature to "\
-		"change saveable Features.\n\n"\
-		"Available additional feature id:\n"\
-		"0xc6:	Memblaze power management\n"\
-		"	(value 0 - 25w, 1 - 20w, 2 - 15w)";
-	const char *raw = "show feature in binary format";
-	const char *namespace_id = "identifier of desired namespace";
-	const char *feature_id = "hexadecimal feature name";
-	const char *sel = "[0-3]: curr./default/saved/supp.";
-	const char *data_len = "buffer len (if) data is returned";
-	const char *cdw11 = "dword 11 for interrupt vector config";
-	const char *human_readable = "show infos in readable format";
-	int err, fd;
-	__u32 result;
-	void *buf = NULL;
+    const char *desc = "Get Memblaze power management ststus\n	(value 0 - 25w, 1 - 20w, 2 - 15w)";
+    int err, fd;
+    __u32 result;
+    __u32 feature_id = MB_FEAT_POWER_MGMT;
 
-	struct config {
-		__u32 namespace_id;
-		__u32 feature_id;
-		__u8  sel;
-		__u32 cdw11;
-		__u32 data_len;
-		int  raw_binary;
-		int  human_readable;
-	};
+    OPT_ARGS(opts) = {
+        OPT_END()
+    };
 
-	struct config cfg = {
-		.namespace_id = 1,
-		.feature_id   = 0,
-		.sel          = 0,
-		.cdw11        = 0,
-		.data_len     = 0,
-	};
+    fd = parse_and_open(argc, argv, desc, opts);
+    if (fd < 0) return fd;
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id),
-		OPT_UINT("feature-id",     'f', &cfg.feature_id,     feature_id),
-		OPT_BYTE("sel",            's', &cfg.sel,            sel),
-		OPT_UINT("data-len",       'l', &cfg.data_len,       data_len),
-		OPT_UINT("cdw11",          'c', &cfg.cdw11,          cdw11),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
-		OPT_END()
-	};
-
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)
-		return fd;
-
-	if (cfg.sel > 7) {
-		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
-		return EINVAL;
-	}
-	if (!cfg.feature_id) {
-		fprintf(stderr, "feature-id required param\n");
-		return EINVAL;
-	}
-	if (cfg.data_len) {
-		if (posix_memalign(&buf, getpagesize(), cfg.data_len))
-			exit(ENOMEM);
-		memset(buf, 0, cfg.data_len);
-	}
-
-	err = nvme_get_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.sel, cfg.cdw11,
-			cfg.data_len, buf, &result);
-	if (!err) {
-		printf("get-feature:0x%02x (%s), %s value: %#08x\n", cfg.feature_id,
-				mb_feature_to_string(cfg.feature_id),
-				nvme_select_to_string(cfg.sel), result);
-		if (cfg.human_readable)
-			nvme_feature_show_fields(cfg.feature_id, result, buf);
-		else {
-			if (buf) {
-				if (!cfg.raw_binary)
-					d(buf, cfg.data_len, 16, 1);
-				else
-					d_raw(buf, cfg.data_len);
-			}
-		}
-	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
-	if (buf)
-		free(buf);
-	return err;
+    err = nvme_get_feature(fd, 0, feature_id, 0, 0, 0, NULL, &result);
+    if (err < 0) {
+        perror("get-feature");
+    }
+    if (!err) {
+        printf("get-feature:0x%02x (%s), %s value: %#08x\n", feature_id,
+            mb_feature_to_string(feature_id),
+            nvme_select_to_string(0), result);
+    } else if (err > 0)
+    fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+    return err;
 }
 
-static int set_additional_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Modify the saveable or changeable "\
-		"current operating parameters of the controller. Operating "\
-		"parameters are grouped and identified by Feature "\
-		"Identifiers. Feature settings can be applied to the entire "\
-		"controller and all associated namespaces, or to only a few "\
-		"namespace(s) associated with the controller. Default values "\
-		"for each Feature are vendor-specific and may not be modified."\
-		"Use get-feature to determine which Features are supported by "\
-		"the controller and are saveable/changeable.\n\n"\
-		"Available additional feature id:\n"\
-		"0xc6:	Memblaze power management\n"\
-		"	(value 0 - 25w, 1 - 20w, 2 - 15w)";
-	const char *namespace_id = "desired namespace";
-	const char *feature_id = "hex feature name (required)";
-	const char *data_len = "buffer length if data required";
-	const char *data = "optional file for feature data (default stdin)";
-	const char *value = "new value of feature (required)";
-	const char *save = "specifies that the controller shall save the attribute";
-	int err, fd;
-	__u32 result;
-	void *buf = NULL;
-	int ffd = STDIN_FILENO;
+    const char *desc = "Set Memblaze power management status\n	(value 0 - 25w, 1 - 20w, 2 - 15w)";
+    const char *value = "new value of feature (required)";
+    const char *save = "specifies that the controller shall save the attribute";
+    int err, fd;
+    __u32 result;
 
-	struct config {
-		char *file;
-		__u32 namespace_id;
-		__u32 feature_id;
-		__u32 value;
-		__u32 data_len;
-		int   save;
-	};
+    struct config {
+        __u32 feature_id;
+        __u32 value;
+        int   save;
+    };
 
-	struct config cfg = {
-		.file         = "",
-		.namespace_id = 0,
-		.feature_id   = 0,
-		.value        = 0,
-		.data_len     = 0,
-		.save         = 0,
-	};
+    struct config cfg = {
+        .feature_id   = MB_FEAT_POWER_MGMT,
+        .value        = 0,
+        .save         = 0,
+    };
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_UINT("feature-id",   'f', &cfg.feature_id,   feature_id),
-		OPT_UINT("value",        'v', &cfg.value,        value),
-		OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
-		OPT_FILE("data",         'd', &cfg.file,         data),
-		OPT_FLAG("save",         's', &cfg.save,         save),
-		OPT_END()
-	};
+    OPT_ARGS(opts) = {
+        OPT_UINT("value",        'v', &cfg.value,        value),
+        OPT_FLAG("save",         's', &cfg.save,         save),
+        OPT_END()
+    };
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)
-		return fd;
+    fd = parse_and_open(argc, argv, desc, opts);
+    if (fd < 0) return fd;
 
-	if (!cfg.feature_id) {
-		fprintf(stderr, "feature-id required param\n");
-		return EINVAL;
-	}
+    err = nvme_set_feature(fd, 0, cfg.feature_id, cfg.value, 0, cfg.save, 0, NULL, &result);
+    if (err < 0) {
+        perror("set-feature");
+    }
+    if (!err) {
+        printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
+            mb_feature_to_string(cfg.feature_id), cfg.value);
+    } else if (err > 0)
+        fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
 
-	if (cfg.data_len) {
-		if (posix_memalign(&buf, getpagesize(), cfg.data_len))
-			exit(ENOMEM);
-		memset(buf, 0, cfg.data_len);
-	}
-
-	if (buf) {
-		if (strlen(cfg.file)) {
-			ffd = open(cfg.file, O_RDONLY);
-			if (ffd <= 0) {
-				fprintf(stderr, "no firmware file provided\n");
-				err = EINVAL;
-				goto free;
-			}
-		}
-		if (read(ffd, (void *)buf, cfg.data_len) < 0) {
-			fprintf(stderr, "failed to read data buffer from input file\n");
-			err = EINVAL;
-			goto free;
-		}
-	}
-
-	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value,
-				0, cfg.save, cfg.data_len, buf, &result);
-	if (err < 0) {
-		perror("set-feature");
-		goto free;
-	}
-	if (!err) {
-		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
-			mb_feature_to_string(cfg.feature_id), cfg.value);
-		if (buf)
-			d(buf, cfg.data_len, 16, 1);
-	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
-
-free:
-	if (buf)
-		free(buf);
-	return err;
+    return err;
 }
 
 static int memblaze_fw_commit(int fd, int select)
@@ -649,7 +517,7 @@ static int memblaze_fw_commit(int fd, int select)
 	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
-static int memblaze_selective_download(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int mb_selective_download(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc =
 		"This performs a selective firmware download, which allows the user to "

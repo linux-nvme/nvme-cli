@@ -14,10 +14,10 @@
 
 PLUGIN(NAME("memblaze", "Memblaze vendor specific extensions"),
 	COMMAND_LIST(
-		ENTRY("smart-log-add", "Retrieve Memblaze SMART Log, show it", get_additional_smart_log)
-		ENTRY("get-feature-add", "Get Memblaze feature and show the resulting value", get_additional_feature)
-		ENTRY("set-feature-add", "Set a Memblaze feature and show the resulting value", set_additional_feature)
-		ENTRY("select-download", "Selective Firmware Download", memblaze_selective_download)
+		ENTRY("smart-log-add", "Retrieve Memblaze SMART Log, show it", mb_get_additional_smart_log)
+		ENTRY("get-pm-status", "Get Memblaze Power Manager Status", mb_get_powermanager_status)
+		ENTRY("set-pm-status", "Set Memblaze Power Manager Status", mb_set_powermanager_status)
+		ENTRY("select-download", "Selective Firmware Download", mb_selective_download)
 		ENTRY("lat-stats", "Enable and disable Latency Statistics logging", mb_set_lat_stats)
 		ENTRY("lat-stats-print", "Retrieve IO Latency Statistics log, show it", mb_lat_stats_log_print)
 	)
