@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "linux/nvme_ioctl.h"
 
@@ -19,8 +20,21 @@
 #include "memblaze-utils.h"
 
 enum {
+    // feature id
     MB_FEAT_POWER_MGMT = 0x02,
+    MB_FEAT_HIGH_LATENCY = 0xE1,
+    // log id
+    GLP_ID_VU_GET_READ_LATENCY_HISTOGRAM = 0xC1,
+    GLP_ID_VU_GET_WRITE_LATENCY_HISTOGRAM = 0xC2,
+    GLP_ID_VU_GET_HIGH_LATENCY_LOG = 0xC3,
 };
+
+#define LOG_PAGE_SIZE                                      (0x1000)
+#define DO_PRINT_FLAG                                      (1)
+#define NOT_PRINT_FLAG                                     (0)
+#define FID_C1_LOG_FILENAME                                "log_c1.csv"
+#define FID_C2_LOG_FILENAME                                "log_c2.csv"
+#define FID_C3_LOG_FILENAME                                "log_c3.csv"
 
 /*
  * Return -1 if @fw1 < @fw2
@@ -388,6 +402,41 @@ static int show_memblaze_smart_log(int fd, __u32 nsid, const char *devname,
 	return err;
 }
 
+int parse_params(char *str, int number, ...)
+{
+    va_list argp;
+    int *param;
+    char *c;
+    int value;
+
+    va_start(argp, number);
+
+    while (number > 0) {
+        c = strtok(str, ",");
+        if ( c == NULL) {
+            printf("No enough parameters. abort...\n");
+            exit(EINVAL);
+        }
+
+        if (isalnum(*c) == 0) {
+            printf("%s is not a valid number\n", c);
+            return 1;
+        }
+        value = atoi(c);
+        param = va_arg(argp, int *);
+        *param = value;
+
+        if (str) {
+            str = strchr(str, ',');
+            if (str) { str++; }
+        }
+        number--;
+    }
+    va_end(argp);
+
+    return 0;
+}
+
 static int mb_get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_memblaze_smart_log smart_log;
@@ -433,6 +482,7 @@ static char *mb_feature_to_string(int feature)
 {
     switch (feature) {
     case MB_FEAT_POWER_MGMT: return "Memblaze power management";
+    case MB_FEAT_HIGH_LATENCY: return "Memblaze high latency log";
     default: return "Unknown";
     }
 }
@@ -505,6 +555,185 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
 
     return err;
 }
+
+#define P2MIN                                              (1)
+#define P2MAX                                              (5000)
+#define MB_FEAT_HIGH_LATENCY_VALUE_SHIFT                   (15)
+static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+    const char *desc = "Set Memblaze high latency log\n"\
+                       "	input parameter p1,p2\n"\
+                       "	p1 value: 0 is disable, 1 is enable\n"\
+                       "	p2 value: 1 .. 5000 ms";
+    const char *param = "input parameters";
+    int err, fd;
+    __u32 result;
+    int param1 = 0, param2 = 0;
+
+    struct config {
+        __u32 feature_id;
+        char * param;
+        __u32 value;
+    };
+
+    struct config cfg = {
+        .feature_id   = MB_FEAT_HIGH_LATENCY,
+        .param        = "0,0",
+        .value        = 0,
+    };
+
+    OPT_ARGS(opts) = {
+        OPT_LIST("param",        'p', &cfg.param,       param),
+        OPT_END()
+    };
+
+    fd = parse_and_open(argc, argv, desc, opts);
+    if (fd < 0) return fd;
+
+    if (parse_params(cfg.param, 2, &param1, &param2)) {
+        printf("setfeature: invalid formats %s\n", cfg.param);
+        exit(EINVAL);
+    }
+    if ((param1 == 1) && (param2 < P2MIN || param2 > P2MAX)) {
+        printf("setfeature: invalid high io latency threshold %d\n", param2);
+        exit(EINVAL);
+    }
+    cfg.value = (param1 << MB_FEAT_HIGH_LATENCY_VALUE_SHIFT) | param2;
+
+    err = nvme_set_feature(fd, 0, cfg.feature_id, cfg.value, 0, 0, 0, NULL, &result);
+    if (err < 0) {
+        perror("set-feature");
+    }
+    if (!err) {
+        printf("set-feature:0x%02X (%s), value:%#08x\n", cfg.feature_id,
+            mb_feature_to_string(cfg.feature_id), cfg.value);
+    } else if (err > 0)
+        fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+
+    return err;
+}
+
+static int glp_high_latency_show_bar(FILE *fdi, int print)
+{
+    fPRINT_PARAM1("Memblaze High Latency Log\n");
+    fPRINT_PARAM1("---------------------------------------------------------------------------------------------\n");
+    fPRINT_PARAM1("Timestamp                        Type    QID    CID    NSID     StartLBA      NumLBA   Latency\n");
+    fPRINT_PARAM1("---------------------------------------------------------------------------------------------\n");
+    return 0;
+}
+
+/* High latency log page definiton
+ * Total 32 bytes
+ */
+typedef struct
+{
+    __u8 port;
+    __u8 revision;
+    __u16 rsvd;
+    __u8 opcode;
+    __u8 sqe;
+    __u16 cid;
+    __u32 nsid;
+    __u32 latency;
+    __u64 sLBA;
+    __u16 numLBA;
+    __u16 timestampH;
+    __u32 timestampL;
+} log_page_high_latency_t; /* total 32 bytes */
+
+static int find_deadbeef(char *buf)
+{
+    if (((*(buf + 0) & 0xff) == 0xef) && ((*(buf + 1) & 0xff) == 0xbe) && \
+            ((*(buf + 2) & 0xff) == 0xad) && ((*(buf + 3) & 0xff) == 0xde))
+    {
+        return 1;
+    }
+    return 0;
+}
+
+#define TIME_STR_SIZE                                      (44)
+static int glp_high_latency(FILE *fdi, char *buf, int buflen, int print)
+{
+    log_page_high_latency_t *logEntry;
+    char string[TIME_STR_SIZE];
+    int i, entrySize;
+    __u64 timestamp;
+    time_t tt = 0;
+    struct tm *t = NULL;
+    int millisec = 0;
+
+    if (find_deadbeef(buf)) return 0;
+
+    entrySize = sizeof(log_page_high_latency_t);
+    for (i = 0; i < buflen; i += entrySize)
+    {
+        logEntry = (log_page_high_latency_t *)(buf + i);
+
+        if (logEntry->latency == 0 && logEntry->revision == 0)
+        {
+            return 1;
+        }
+
+        if (0 == logEntry->timestampH)  //  generate host time string
+        {
+            snprintf(string, sizeof(string), "%d", logEntry->timestampL);
+        }
+        else  //  sort
+        {
+            timestamp = logEntry->timestampH - 1;
+            timestamp = timestamp << 32;
+            timestamp += logEntry->timestampL;
+            tt = timestamp / 1000;
+            millisec = timestamp % 1000;
+            t = gmtime(&tt);
+            snprintf(string, sizeof(string), "%4d%02d%02d--%02d:%02d:%02d.%03d UTC",
+                     1900 + t->tm_year, 1 + t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, millisec);
+        }
+
+        fprintf(fdi, "%-32s %-7x %-6x %-6x %-8x %4x%08x  %-8x %-d\n",
+                string, logEntry->opcode, logEntry->sqe, logEntry->cid, logEntry->nsid,
+                (__u32)(logEntry->sLBA >> 32), (__u32)logEntry->sLBA, logEntry->numLBA, logEntry->latency);
+        if (print)
+        {
+            printf("%-32s %-7x %-6x %-6x %-8x %4x%08x  %-8x %-d\n",
+                   string, logEntry->opcode, logEntry->sqe, logEntry->cid, logEntry->nsid,
+                   (__u32)(logEntry->sLBA >> 32), (__u32)logEntry->sLBA, logEntry->numLBA, logEntry->latency);
+        }
+    }
+    return 1;
+}
+
+static int mb_high_latency_log_print(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+    const char *desc = "Get Memblaze high latency log";
+    int err, fd;
+    char buf[LOG_PAGE_SIZE];
+    FILE *fdi = NULL;
+
+    fdi = fopen(FID_C3_LOG_FILENAME, "w+");
+    OPT_ARGS(opts) = {
+        OPT_END()
+    };
+
+    fd = parse_and_open(argc, argv, desc, opts);
+    if (fd < 0) return fd;
+
+    glp_high_latency_show_bar(fdi, DO_PRINT_FLAG);
+    err = nvme_get_log(fd, NVME_NSID_ALL, GLP_ID_VU_GET_HIGH_LATENCY_LOG, 0, NVME_NO_LOG_LSP, sizeof(buf), &buf);
+
+    while ( 1) {
+        if (!glp_high_latency(fdi, buf, LOG_PAGE_SIZE, DO_PRINT_FLAG)) break;
+        err = nvme_get_log(fd, NVME_NSID_ALL, GLP_ID_VU_GET_HIGH_LATENCY_LOG, 0, NVME_NO_LOG_LSP, sizeof(buf), &buf);
+        if ( err) {
+            fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+            break;
+        }
+    }
+
+    if (NULL != fdi) fclose(fdi);
+    return err;
+}
+
 
 static int memblaze_fw_commit(int fd, int select)
 {
@@ -657,9 +886,6 @@ static void ioLatencyHistogramOutput(FILE *fd, int index, int start, int end, ch
     }
 }
 
-#define GLP_ID_VU_GET_READ_LATENCY_HISTOGRAM     0xC1
-#define GLP_ID_VU_GET_WRITE_LATENCY_HISTOGRAM    0xC2
-
 int io_latency_histogram(char *file, char *buf, int print, int logid)
 {
     FILE *fdi = fopen(file, "w+");
@@ -740,15 +966,9 @@ int io_latency_histogram(char *file, char *buf, int print, int logid)
     return 1;
 }
 
-#define LAT_STATS_BUFFER_SIZE          0x1000
-#define DO_PRINT_FLAG                  1
-#define NOT_PRINT_FLAG                 0
-#define FID_C1_LOG_FILENAME            "log_c1.csv"
-#define FID_C2_LOG_FILENAME            "log_c2.csv"
-
 static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-    char stats[LAT_STATS_BUFFER_SIZE];
+    char stats[LOG_PAGE_SIZE];
     int err = 0;
     int fd;
     char f1[] = FID_C1_LOG_FILENAME;
