@@ -2258,7 +2258,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 	fw_size = sb.st_size;
-	if (fw_size & 0x3) {
+	if ((fw_size & 0x3) || (fw_size == 0)) {
 		fprintf(stderr, "Invalid size:%d for f/w image\n", fw_size);
 		err = -EINVAL;
 		goto close_fw_fd;
