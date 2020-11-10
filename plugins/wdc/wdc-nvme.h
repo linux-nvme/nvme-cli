@@ -34,6 +34,7 @@ PLUGIN(NAME("wdc", "Western Digital vendor specific extensions"),
 		ENTRY("vs-temperature-stats", "WDC Get Temperature Stats", wdc_vs_temperature_stats)
 		ENTRY("capabilities", "WDC Device Capabilities", wdc_capabilities)
 		ENTRY("cloud-SSD-plugin-version", "WDC Cloud SSD Plugin Version", wdc_cloud_ssd_plugin_version)
+		ENTRY("vs-pcie-stats", "WDC VS PCIE Statistics", wdc_vs_pcie_stats)
 	)
 );
 
