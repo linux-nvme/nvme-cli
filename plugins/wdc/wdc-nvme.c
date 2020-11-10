@@ -118,6 +118,7 @@
 #define WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2        0x0000000001000000
 #define WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY	0x0000000002000000
 #define WDC_DRIVE_CAP_CLOUD_SSD_VERSION		0x0000000004000000
+#define WDC_DRIVE_CAP_PCIE_STATS			0x0000000008000000
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
@@ -171,6 +172,9 @@
 #define WDC_NVME_DRIVE_INFO_OPCODE          0xC6
 #define WDC_NVME_DRIVE_INFO_CMD             0x22
 #define WDC_NVME_DRIVE_INFO_SUBCMD          0x06
+
+/* VS PCIE Stats */
+#define WDC_NVME_PCIE_STATS_OPCODE          0xD1
 
 /* Capture Diagnostics */
 #define WDC_NVME_CAP_DIAG_HEADER_TOC_SIZE		WDC_NVME_LOG_SIZE_DATA_LEN
@@ -465,8 +469,8 @@ typedef enum
     SCAO_EEDC               = 76,	/* End to end detected errors */
     SCAO_SDPU               = 80,	/* System data percent used */
     SCAO_RFSC               = 81,	/* Refresh counts */
-    SCAO_MNUDEC             = 88,	/* Min User data erase counts */
-    SCAO_MXUDEC             = 92,	/* Max User data erase counts */
+    SCAO_MXUDEC             = 88,	/* Max User data erase counts */
+    SCAO_MNUDEC             = 92,	/* Min User data erase counts */
     SCAO_NTTE               = 96,	/* Number of Thermal throttling events */
     SCAO_CTS                = 97,	/* Current throttling status */
     SCAO_PCEC               = 104,	/* PCIe correctable error count */
@@ -866,6 +870,27 @@ struct __attribute__((__packed__)) wdc_nand_stats_V3 {
 	__u8		physical_media_units[16];
 	__u8		reserved[279];
 	__u16       log_page_version;
+};
+
+struct wdc_vs_pcie_stats
+{
+    __le64      unsupportedRequestErrorCount;
+    __le64      ecrcErrorStatusCount;
+    __le64      malformedTlpStatusCount;
+    __le64      receiverOverflowStatusCount;
+    __le64      unexpectedCmpltnStatusCount;
+    __le64      completeAbortStatusCount;
+    __le64      cmpltnTimoutStatusCount;
+    __le64      flowControlErrorStatusCount;
+    __le64      poisonedTlpStatusCount;
+    __le64      dLinkPrtclErrorStatusCount;
+    __le64      advsryNFatalErrStatusCount;
+    __le64      replayTimerToStatusCount;
+    __le64      replayNumRolloverStCount;
+    __le64      badDllpStatusCount;
+    __le64      badTlpStatusCount;
+    __le64      receiverErrStatusCount;
+    __u8        reserved1[384];
 };
 
 struct wdc_fw_act_history_log_hdr {
@@ -1269,7 +1294,8 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 			break;
 		case WDC_NVME_SN730A_DEV_ID:
 			capabilities =  WDC_DRIVE_CAP_DUI | WDC_DRIVE_CAP_NAND_STATS | 
-					WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_TEMP_STATS | WDC_DRIVE_CAP_VUC_CLEAR_PCIE;
+					WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_TEMP_STATS | WDC_DRIVE_CAP_VUC_CLEAR_PCIE |
+					WDC_DRIVE_CAP_PCIE_STATS;
 			break;
 		case WDC_NVME_SN340_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI;
@@ -4158,10 +4184,10 @@ static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 			(__u8)log_data[SCAO_SDPU]);
 	printf("  Refresh counts				%"PRIu64"\n",
 			(uint64_t)(le64_to_cpu(log_data[SCAO_RFSC])& 0x00FFFFFFFFFFFFFF));
-	printf("  Min User data erase counts			%"PRIu32"\n",
-			(uint32_t)le32_to_cpu(log_data[SCAO_MNUDEC]));
 	printf("  Max User data erase counts			%"PRIu32"\n",
 			(uint32_t)le32_to_cpu(log_data[SCAO_MXUDEC]));
+	printf("  Min User data erase counts			%"PRIu32"\n",
+			(uint32_t)le32_to_cpu(log_data[SCAO_MNUDEC]));
 	printf("  Number of Thermal throttling events		%d\n",
 			(__u8)log_data[SCAO_NTTE]);
 	printf("  Current throttling status		  	0x%x\n",
@@ -6317,7 +6343,6 @@ static int wdc_do_drive_info(int fd, __u32 *result)
 	return ret;
 }
 
-
 static int wdc_drive_resize(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
@@ -7005,6 +7030,87 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 
 }
 
+static void wdc_print_pcie_stats_normal(struct wdc_vs_pcie_stats *pcie_stats)
+{
+	printf("  PCIE Statistics :- \n");
+	printf("  Unsupported Request Error Counter             %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->unsupportedRequestErrorCount));
+	printf("  ECRC Error Status Counter                     %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->ecrcErrorStatusCount));
+	printf("  Malformed TLP Status Counter                  %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->malformedTlpStatusCount));
+	printf("  Receiver Overflow Status Counter              %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->receiverOverflowStatusCount));
+	printf("  Unexpected Completion Status Counter          %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->unexpectedCmpltnStatusCount));
+	printf("  Complete Abort Status Counter                 %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->completeAbortStatusCount));
+	printf("  Completion Timeout Status Counter             %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->cmpltnTimoutStatusCount));
+	printf("  Flow Control Error Status Counter             %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->flowControlErrorStatusCount));
+	printf("  Poisoned TLP Status Counter                   %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->poisonedTlpStatusCount));
+	printf("  Dlink Protocol Error Status Counter           %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->dLinkPrtclErrorStatusCount));
+	printf("  Advisory Non Fatal Error Status Counter       %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->advsryNFatalErrStatusCount));
+	printf("  Replay Timer TO Status Counter                %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->replayTimerToStatusCount));
+	printf("  Replay Number Rollover Status Counter         %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->replayNumRolloverStCount));
+	printf("  Bad DLLP Status Counter                       %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->badDllpStatusCount));
+	printf("  Bad TLP Status Counter                        %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->badTlpStatusCount));
+	printf("  Receiver Error Status Counter                 %20"PRIu64"\n",
+			le64_to_cpu(pcie_stats->receiverErrStatusCount));
+
+}
+
+static void wdc_print_pcie_stats_json(struct wdc_vs_pcie_stats *pcie_stats)
+{
+	struct json_object *root;
+	root = json_create_object();
+
+	json_object_add_value_uint(root, "Unsupported Request Error Counter",
+			le64_to_cpu(pcie_stats->unsupportedRequestErrorCount));
+	json_object_add_value_uint(root, "ECRC Error Status Counter",
+			le64_to_cpu(pcie_stats->ecrcErrorStatusCount));
+	json_object_add_value_uint(root, "Malformed TLP Status Counter",
+			le64_to_cpu(pcie_stats->malformedTlpStatusCount));
+
+	json_object_add_value_uint(root, "Receiver Overflow Status Counter",
+			le64_to_cpu(pcie_stats->receiverOverflowStatusCount));
+	json_object_add_value_uint(root, "Unexpected Completion Status Counter",
+			le64_to_cpu(pcie_stats->unexpectedCmpltnStatusCount));
+	json_object_add_value_uint(root, "Complete Abort Status Counter",
+			le64_to_cpu(pcie_stats->completeAbortStatusCount));
+	json_object_add_value_uint(root, "Completion Timeout Status Counter",
+			le64_to_cpu(pcie_stats->cmpltnTimoutStatusCount));
+	json_object_add_value_uint(root, "Flow Control Error Status Counter",
+			le64_to_cpu(pcie_stats->flowControlErrorStatusCount));
+	json_object_add_value_uint(root, "Poisoned TLP Status Counter",
+			le64_to_cpu(pcie_stats->poisonedTlpStatusCount));
+	json_object_add_value_uint(root, "Dlink Protocol Error Status Counter",
+			le64_to_cpu(pcie_stats->dLinkPrtclErrorStatusCount));
+	json_object_add_value_uint(root, "Advisory Non Fatal Error Status Counter",
+			le64_to_cpu(pcie_stats->advsryNFatalErrStatusCount));
+	json_object_add_value_uint(root, "Replay Timer TO Status Counter",
+			le64_to_cpu(pcie_stats->replayTimerToStatusCount));
+	json_object_add_value_uint(root, "Replay Number Rollover Status Counter",
+			le64_to_cpu(pcie_stats->replayNumRolloverStCount));
+	json_object_add_value_uint(root, "Bad DLLP Status Counter",
+			le64_to_cpu(pcie_stats->badDllpStatusCount));
+	json_object_add_value_uint(root, "Bad TLP Status Counter",
+			le64_to_cpu(pcie_stats->badTlpStatusCount));
+	json_object_add_value_uint(root, "Receiver Error Status Counter",
+			le64_to_cpu(pcie_stats->receiverErrStatusCount));
+
+	json_print_object(root, NULL);
+	printf("\n");
+}
+
 static int wdc_do_vs_nand_stats(int fd, char *format)
 {
 	int ret;
@@ -7086,6 +7192,97 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *command,
 			fprintf(stderr, "ERROR : WDC : Failure reading NAND statistics, ret = %d\n", ret);
 	}
 
+	return ret;
+}
+
+static int wdc_do_vs_pcie_stats(int fd,
+		struct wdc_vs_pcie_stats *pcieStatsPtr)
+{
+	int ret;
+	struct nvme_admin_cmd admin_cmd;
+	int pcie_stats_size = sizeof(struct wdc_vs_pcie_stats);
+
+	memset(&admin_cmd, 0, sizeof (struct nvme_admin_cmd));
+	admin_cmd.opcode = WDC_NVME_PCIE_STATS_OPCODE;
+	admin_cmd.addr = (__u64)(uintptr_t)pcieStatsPtr;
+	admin_cmd.data_len = pcie_stats_size;
+
+	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
+
+	return ret;
+}
+
+static int wdc_vs_pcie_stats(int argc, char **argv, struct command *command,
+		struct plugin *plugin)
+{
+	const char *desc = "Retrieve PCIE statistics.";
+
+	int fd;
+	int ret = 0;
+	__u64 capabilities = 0;
+	int fmt = -1;
+	struct wdc_vs_pcie_stats *pcieStatsPtr = NULL;
+	int pcie_stats_size = sizeof(struct wdc_vs_pcie_stats);
+	bool huge;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json"),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		fprintf(stderr, "ERROR : WDC : invalid output format\n");
+		ret = fmt;
+		goto out;
+	}
+
+	pcieStatsPtr = nvme_alloc(pcie_stats_size, &huge);
+	if (pcieStatsPtr == NULL) {
+		fprintf(stderr, "ERROR : WDC : PCIE Stats alloc : %s\n", strerror(errno));
+		ret = -1;
+		goto out;
+	}
+
+	memset((void *)pcieStatsPtr, 0, pcie_stats_size);
+
+	capabilities = wdc_get_drive_capabilities(fd);
+
+	if ((capabilities & WDC_DRIVE_CAP_PCIE_STATS) == 0) {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+	} else {
+		ret = wdc_do_vs_pcie_stats(fd, pcieStatsPtr);
+		if (ret)
+			fprintf(stderr, "ERROR : WDC : Failure reading PCIE statistics, ret = 0x%x\n", ret);
+		else {
+			/* parse the data */
+			switch (fmt) {
+			case NORMAL:
+				wdc_print_pcie_stats_normal(pcieStatsPtr);
+				break;
+			case JSON:
+				wdc_print_pcie_stats_json(pcieStatsPtr);
+				break;
+			}
+		}
+	}
+
+	nvme_free(pcieStatsPtr, huge);
+
+out:
 	return ret;
 }
 
@@ -7267,6 +7464,8 @@ static int wdc_capabilities(int argc, char **argv,
             capabilities & WDC_DRIVE_CAP_TEMP_STATS ? "Supported" : "Not Supported");
     printf("cloud-SSD-plugin-version      : %s\n",
             capabilities & WDC_DRIVE_CAP_CLOUD_SSD_VERSION ? "Supported" : "Not Supported");
+    printf("vs-pcie-stats                 : %s\n",
+            capabilities & WDC_DRIVE_CAP_PCIE_STATS ? "Supported" : "Not Supported");
     printf("capabilities                  : Supported\n");
     return 0;
 }
