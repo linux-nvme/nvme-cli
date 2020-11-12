@@ -117,6 +117,7 @@
 #define WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE     0x0000000000800000
 #define WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2        0x0000000001000000
 #define WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY	0x0000000002000000
+#define WDC_DRIVE_CAP_CLOUD_SSD_VERSION		0x0000000004000000
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
@@ -1186,7 +1187,8 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
 					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
 					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG |
-					WDC_DRIVE_CAP_REASON_ID | WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_INFO);
+					WDC_DRIVE_CAP_REASON_ID | WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_INFO |
+					WDC_DRIVE_CAP_CLOUD_SSD_VERSION);
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -1230,7 +1232,8 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
 					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY |
 					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG | WDC_DRIVE_CAP_REASON_ID |
-					WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_INFO);
+					WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_INFO |
+					WDC_DRIVE_CAP_CLOUD_SSD_VERSION);
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -7124,6 +7127,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;
 }
+
 static int wdc_vs_temperature_stats(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
@@ -7187,6 +7191,7 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;
 }
+
 static int wdc_capabilities(int argc, char **argv, 
         struct command *command, struct plugin *plugin) 
 {
@@ -7260,7 +7265,39 @@ static int wdc_capabilities(int argc, char **argv,
             capabilities & WDC_DRIVE_CAP_INFO ? "Supported" : "Not Supported");
     printf("vs-temperature-stats          : %s\n", 
             capabilities & WDC_DRIVE_CAP_TEMP_STATS ? "Supported" : "Not Supported");
+    printf("cloud-SSD-plugin-version      : %s\n",
+            capabilities & WDC_DRIVE_CAP_CLOUD_SSD_VERSION ? "Supported" : "Not Supported");
     printf("capabilities                  : Supported\n");
+    return 0;
+}
+
+static int wdc_cloud_ssd_plugin_version(int argc, char **argv,
+        struct command *command, struct plugin *plugin)
+{
+    const char *desc = "Get Cloud SSD Plugin Version command.";
+    uint64_t capabilities = 0;
+    int fd;
+
+    OPT_ARGS(opts) =
+    {
+        OPT_END()
+    };
+
+    fd = parse_and_open(argc, argv, desc, opts);
+    if (fd < 0)
+        return fd;
+
+    /* get capabilities */
+    wdc_check_device(fd);
+    capabilities = wdc_get_drive_capabilities(fd);
+
+	if ((capabilities & WDC_DRIVE_CAP_CLOUD_SSD_VERSION) == WDC_DRIVE_CAP_CLOUD_SSD_VERSION) {
+	    /* print command and supported status */
+	    printf("WDC Cloud SSD Plugin Version: 1.0\n");
+	} else {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+	}
+
     return 0;
 }
 
