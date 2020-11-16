@@ -61,16 +61,16 @@ int nvme_flush(int fd, __u32 nsid);
 
 int nvme_dsm(int fd, __u32 nsid, __u32 cdw11, struct nvme_dsm_range *dsm,
 	     __u16 nr_ranges);
-struct nvme_dsm_range *nvme_setup_dsm_range(__u32 *ctx_attrs,
-					    __u32 *llbas, __u64 *slbas,
+struct nvme_dsm_range *nvme_setup_dsm_range(int *ctx_attrs, int *llbas,
+					    unsigned long long *slbas,
 					    __u16 nr_ranges);
 
 int nvme_copy(int fd, __u32 nsid, struct nvme_copy_range *copy, __u64 sdlba,
 		__u16 nr, __u8 prinfor, __u8 prinfow, __u8 dtype, __u16 dspec,
 		__u8 format, int lr, int fua, __u32 ilbrt, __u16 lbatm,
 		__u16 lbat);
-struct nvme_copy_range *nvme_setup_copy_range(__u16 *nlbs, __u64 *slbas,
-		__u32 *eilbrts, __u16 *elbatms, __u16 *elbats, __u16 nr);
+struct nvme_copy_range *nvme_setup_copy_range(int *nlbs, unsigned long long *slbas,
+		int *eilbrts, int *elbatms, int *elbats, __u16 nr);
 
 int nvme_resv_acquire(int fd, __u32 nsid, __u8 rtype, __u8 racqa,
 		      bool iekey, __u64 crkey, __u64 nrkey);
