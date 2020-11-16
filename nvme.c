@@ -3561,7 +3561,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	if (!cfg.cdw11)
 		cfg.cdw11 = (cfg.ad << 2) | (cfg.idw << 1) | (cfg.idr << 0);
 
-	dsm = nvme_setup_dsm_range((__u32 *)ctx_attrs, (__u32 *)nlbs, (__u64 *)slbas, nr);
+	dsm = nvme_setup_dsm_range(ctx_attrs, nlbs, slbas, nr);
 	if (!dsm) {
 		fprintf(stderr, "failed to allocate data set payload\n");
 		err = -ENOMEM;
@@ -3688,9 +3688,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		goto close_fd;
 	}
 
-	copy = nvme_setup_copy_range((__u16 *)nlbs, (__u64 *)slbas,
-			(__u32 *)eilbrts, (__u16 *)elbatms, (__u16 *)elbats,
-			nr);
+	copy = nvme_setup_copy_range(nlbs, slbas, eilbrts, elbatms, elbats, nr);
 	if (!copy) {
 		fprintf(stderr, "failed to allocate payload\n");
 		err = -ENOMEM;
