@@ -4003,9 +4003,10 @@ void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		le32_to_cpu(sanitize->est_crypto_erase_time_with_no_deallocate));
 }
 
-const char *nvme_feature_to_string(int feature)
+const char *nvme_feature_to_string(enum nvme_feat feature)
 {
 	switch (feature) {
+	case NVME_FEAT_NONE:		return "None";
 	case NVME_FEAT_ARBITRATION:	return "Arbitration";
 	case NVME_FEAT_POWER_MGMT:	return "Power Management";
 	case NVME_FEAT_LBA_RANGE:	return "LBA Range Type";
@@ -4034,8 +4035,13 @@ const char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_HCTM:		return "Host Controlled Thermal Management";
 	case NVME_FEAT_HOST_BEHAVIOR:   return "Host Behavior";
 	case NVME_FEAT_SANITIZE:	return "Sanitize";
-	default:			return "Unknown";
 	}
+	/*
+	 * We don't use the "default:" statement to let the compiler warning if
+	 * some values of the enum nvme_feat are missing in the switch().
+	 * The following return is acting as the default: statement.
+	 */
+	return "Unknown";
 }
 
 const char *nvme_register_to_string(int reg)
@@ -4517,7 +4523,7 @@ static void nvme_show_plm_config(struct nvme_plm_config *plmcfg)
 	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_time_thresh));
 }
 
-void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf)
+void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned char *buf)
 {
 	__u8 field;
 	uint64_t ull;
@@ -4636,6 +4642,11 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		break;
 	case NVME_FEAT_HOST_BEHAVIOR:
 		printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
+		break;
+	case NVME_FEAT_NONE:
+	case NVME_FEAT_SANITIZE:
+	case NVME_FEAT_RRL:
+		printf("\t%s: to be implemented\n", nvme_feature_to_string(fid));
 		break;
 	}
 }
