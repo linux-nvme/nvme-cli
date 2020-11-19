@@ -1710,9 +1710,7 @@ void d(unsigned char *buf, int len, int width, int group)
 
 void d_raw(unsigned char *buf, unsigned len)
 {
-	unsigned i;
-	for (i = 0; i < len; i++)
-		putchar(*(buf+i));
+	d((__u8 *)buf, le32_to_cpu(len), 16, 1);
 }
 
 void nvme_show_status(__u16 status)
