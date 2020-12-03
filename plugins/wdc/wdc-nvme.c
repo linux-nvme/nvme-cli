@@ -74,11 +74,11 @@
 #define WDC_NVME_SN640_DEV_ID_1				0x2401
 #define WDC_NVME_SN640_DEV_ID_2				0x2402
 #define WDC_NVME_SN640_DEV_ID_3             0x2404
-#define WDC_NVME_ZN440_DEV_ID               0x2600
-#define WDC_NVME_SN440_DEV_ID               0x2610
-#define WDC_NVME_SN7GC_DEV_ID				0x2700
-#define WDC_NVME_SN7GC_DEV_ID_1             0x2701
-#define WDC_NVME_SN7GC_DEV_ID_2             0x2702
+#define WDC_NVME_ZN540_DEV_ID               0x2600
+#define WDC_NVME_SN540_DEV_ID               0x2610
+#define WDC_NVME_SN650_DEV_ID				0x2700
+#define WDC_NVME_SN650_DEV_ID_1             0x2701
+#define WDC_NVME_SN650_DEV_ID_2             0x2702
 #define WDC_NVME_SXSLCL_DEV_ID				0x2001
 #define WDC_NVME_SN520_DEV_ID				0x5003
 #define WDC_NVME_SN520_DEV_ID_1				0x5004
@@ -1210,9 +1210,9 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 
 			capabilities |= (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
 					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
-					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
-					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG |
-					WDC_DRIVE_CAP_REASON_ID | WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_INFO |
+					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY |
+					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG | WDC_DRIVE_CAP_REASON_ID |
+					WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_INFO |
 					WDC_DRIVE_CAP_CLOUD_SSD_VERSION);
 
 			/* verify the 0xCA log page is supported */
@@ -1230,11 +1230,10 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 
 			cust_id = (__u32*)data;
 
-			if ((read_device_id  == WDC_NVME_SN640_DEV_ID_3) ||
-					(*cust_id == WDC_CUSTOMER_ID_0x1004))
-				capabilities |= WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY;
+			if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
+				capabilities |= (WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE);
 			else
-				capabilities |= WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY;
+				capabilities |= (WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_CLEAR_PCIE);
 
         	break;
 		case WDC_NVME_SN840_DEV_ID:
@@ -1245,13 +1244,10 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
 			}
 		/* FALLTHRU */
-		case WDC_NVME_ZN440_DEV_ID:
+		case WDC_NVME_ZN540_DEV_ID:
 		/* FALLTHRU */
-        case WDC_NVME_SN440_DEV_ID:
+        case WDC_NVME_SN540_DEV_ID:
         /* FALLTHRU */
-		case WDC_NVME_SN7GC_DEV_ID:
-		case WDC_NVME_SN7GC_DEV_ID_1:
-		case WDC_NVME_SN7GC_DEV_ID_2:
 			capabilities |= (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
 					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
 					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
@@ -1267,6 +1263,23 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 			/* verify the 0xD0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_VU_SMART_LOG_OPCODE) == true)
 				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
+			break;
+		case WDC_NVME_SN650_DEV_ID:
+		case WDC_NVME_SN650_DEV_ID_1:
+		case WDC_NVME_SN650_DEV_ID_2:
+			/* verify the 0xC0 log page is supported */
+			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
+				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
+			}
+
+			capabilities |= (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
+					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
+					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE |
+					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY |
+					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG | WDC_DRIVE_CAP_REASON_ID |
+					WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_INFO |
+					WDC_DRIVE_CAP_CLOUD_SSD_VERSION);
+
 			break;
 		case WDC_NVME_SN730B_DEV_ID:
 		/* FALLTHRU */
@@ -1322,6 +1335,8 @@ static __u64 wdc_get_enc_drive_capabilities(int fd) {
 	int ret;
 	uint32_t read_vendor_id;
 	__u64 capabilities = 0;
+	__u8 *data;
+	__u32 *cust_id;
 
 	ret = wdc_get_vendor_id(fd, &read_vendor_id);
 	if (ret < 0)
@@ -1343,8 +1358,7 @@ static __u64 wdc_get_enc_drive_capabilities(int fd) {
 		case WDC_NVME_VID_2:
 			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
 				WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
-				WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
-				WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY);
+				WDC_DRIVE_CAP_RESIZE);
 
 			/* verify the 0xCB log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID) == true)
@@ -1357,6 +1371,19 @@ static __u64 wdc_get_enc_drive_capabilities(int fd) {
 			/* verify the 0xD0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_VU_SMART_LOG_OPCODE) == true)
 				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
+
+			if (!get_dev_mgment_cbs_data(fd, WDC_C2_CUSTOMER_ID_ID, (void*)&data)) {
+				fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
+				return -1;
+			}
+
+			cust_id = (__u32*)data;
+
+			if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
+				capabilities |= (WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE);
+			else
+				capabilities |= (WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_CLEAR_PCIE);
+
 			break;
 		case WDC_NVME_SNDK_VID:
 			capabilities = WDC_DRIVE_CAP_DRIVE_ESSENTIALS;
