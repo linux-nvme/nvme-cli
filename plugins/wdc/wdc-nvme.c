@@ -119,6 +119,7 @@
 #define WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY	0x0000000002000000
 #define WDC_DRIVE_CAP_CLOUD_SSD_VERSION		0x0000000004000000
 #define WDC_DRIVE_CAP_PCIE_STATS			0x0000000008000000
+#define WDC_DRIVE_CAP_INFO_2				0x0000000010000000
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
@@ -1212,8 +1213,7 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
 					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY |
 					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG | WDC_DRIVE_CAP_REASON_ID |
-					WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_INFO |
-					WDC_DRIVE_CAP_CLOUD_SSD_VERSION);
+					WDC_DRIVE_CAP_LOG_PAGE_DIR);
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -1231,7 +1231,8 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 			cust_id = (__u32*)data;
 
 			if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
-				capabilities |= (WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE);
+				capabilities |= (WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE |
+						WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_CLOUD_SSD_VERSION);
 			else
 				capabilities |= (WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_CLEAR_PCIE);
 
@@ -1253,8 +1254,7 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
 					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY |
 					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG | WDC_DRIVE_CAP_REASON_ID |
-					WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_INFO |
-					WDC_DRIVE_CAP_CLOUD_SSD_VERSION);
+					WDC_DRIVE_CAP_LOG_PAGE_DIR );
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -1306,9 +1306,8 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_NAND_STATS | WDC_DRIVE_CAP_NS_RESIZE;
 			break;
 		case WDC_NVME_SN730A_DEV_ID:
-			capabilities =  WDC_DRIVE_CAP_DUI | WDC_DRIVE_CAP_NAND_STATS | 
-					WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_TEMP_STATS | WDC_DRIVE_CAP_VUC_CLEAR_PCIE |
-					WDC_DRIVE_CAP_PCIE_STATS;
+			capabilities =  WDC_DRIVE_CAP_DUI | WDC_DRIVE_CAP_NAND_STATS | WDC_DRIVE_CAP_INFO_2
+			| WDC_DRIVE_CAP_TEMP_STATS | WDC_DRIVE_CAP_VUC_CLEAR_PCIE | WDC_DRIVE_CAP_PCIE_STATS;
 			break;
 		case WDC_NVME_SN340_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI;
@@ -7322,6 +7321,9 @@ static int wdc_vs_drive_info(int argc, char **argv,
 	__le32 result;
 	__u16 size;
 	double rev;
+	struct nvme_id_ctrl ctrl;
+	char vsData[32] = {0};
+	char major_rev = 0, minor_rev = 0;
 
 	OPT_ARGS(opts) = {
 		OPT_END()
@@ -7331,22 +7333,41 @@ static int wdc_vs_drive_info(int argc, char **argv,
 	if (fd < 0)
 		return fd;
 
+	/* get the id ctrl data used to fill in drive info below */
+	ret = nvme_identify_ctrl(fd, &ctrl);
+
+	if (ret) {
+		fprintf(stderr, "ERROR : WDC %s: Identify Controller failed\n", __func__);
+		return ret;
+	}
+
 	wdc_check_device(fd);
 	capabilities = wdc_get_drive_capabilities(fd);
 	if ((capabilities & WDC_DRIVE_CAP_INFO) == WDC_DRIVE_CAP_INFO) {
 		ret = wdc_do_drive_info(fd, &result);
+
+		if (!ret) {
+			size = (__u16)((cpu_to_le32(result) & 0xffff0000) >> 16);
+			rev = (double)(cpu_to_le32(result) & 0x0000ffff);
+
+			printf("Drive HW Revison: %4.1f\n", (.1 * rev));
+			printf("FTL Unit Size:     0x%x KB\n", size);
+			printf("Customer SN:        %-.*s\n", 14, &ctrl.sn[0]);
+		}
+	}
+	else if ((capabilities & WDC_DRIVE_CAP_INFO_2) == WDC_DRIVE_CAP_INFO_2) {
+		memcpy(vsData, &ctrl.vs[0], 32);
+
+		major_rev = vsData[20];
+		minor_rev = vsData[21];
+
+		printf("Drive HW Revison:   %c.%c \n", major_rev, minor_rev);
+		printf("Customer SN:        %-.*s\n", 14, &vsData[0]);
 	} else {
 		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
-		ret = -1;
+		return -1;
 	}
 
-	if (!ret) {
-		size = (__u16)((cpu_to_le32(result) & 0xffff0000) >> 16);
-		rev = (double)(cpu_to_le32(result) & 0x0000ffff);
-
-		printf("Drive HW Revison: %4.1f\n", (.1 * rev));
-		printf("FTL Unit Size:     0x%x KB\n", size);
-	}
 
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;
@@ -7486,7 +7507,7 @@ static int wdc_capabilities(int argc, char **argv,
     printf("namespace-resize              : %s\n", 
             capabilities & WDC_DRIVE_CAP_NS_RESIZE ? "Supported" : "Not Supported");
     printf("vs-drive-info                 : %s\n", 
-            capabilities & WDC_DRIVE_CAP_INFO ? "Supported" : "Not Supported");
+            capabilities & (WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_INFO_2) ? "Supported" : "Not Supported");
     printf("vs-temperature-stats          : %s\n", 
             capabilities & WDC_DRIVE_CAP_TEMP_STATS ? "Supported" : "Not Supported");
     printf("cloud-SSD-plugin-version      : %s\n",
