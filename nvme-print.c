@@ -3074,7 +3074,7 @@ static void nvme_show_id_ns_nmic(__u8 nmic)
 
 static void nvme_show_id_ns_rescap(__u8 rescap)
 {
-	__u8 rsvd = (rescap & 0x80) >> 7;
+	__u8 iekr = (rescap & 0x80) >> 7;
 	__u8 eaar = (rescap & 0x40) >> 6;
 	__u8 wear = (rescap & 0x20) >> 5;
 	__u8 earo = (rescap & 0x10) >> 4;
@@ -3082,8 +3082,9 @@ static void nvme_show_id_ns_rescap(__u8 rescap)
 	__u8 ea = (rescap & 0x4) >> 2;
 	__u8 we = (rescap & 0x2) >> 1;
 	__u8 ptpl = rescap & 0x1;
-	if (rsvd)
-		printf("  [7:7] : %#x\tReserved\n", rsvd);
+
+	printf("  [7:7] : %#x\tIgnore Existing Key - Used as defined in revision %s\n",
+		iekr, iekr ? "1.3 or later" : "1.2.1 or earlier");
 	printf("  [6:6] : %#x\tExclusive Access - All Registrants %sSupported\n",
 		eaar, eaar ? "" : "Not ");
 	printf("  [5:5] : %#x\tWrite Exclusive - All Registrants %sSupported\n",
@@ -3194,9 +3195,11 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	printf("mssrl   : %u\n", le16_to_cpu(ns->mssrl));
 	printf("mcl     : %d\n", le32_to_cpu(ns->mcl));
 	printf("msrc    : %u\n", ns->msrc);
+	printf("reserved:\n");
+	printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
+	printf("reserved:\n");
 	printf("nsattr	: %u\n", ns->nsattr);
 	printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
-	printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
 	printf("endgid  : %d\n", le16_to_cpu(ns->endgid));
 
 	printf("nguid   : ");
@@ -3225,6 +3228,8 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 				ns->lbaf[i].rp,
 				i == (ns->flbas & 0xf) ? "(in use)" : "");
 	}
+
+	printf("reserved:\n");
 
 	if (vs) {
 		printf("vs[]:\n");
