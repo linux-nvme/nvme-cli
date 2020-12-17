@@ -38,9 +38,16 @@
 #include <math.h>
 #include <dirent.h>
 #include <libgen.h>
+#include <zlib.h>
 
 #ifdef LIBHUGETLBFS
 #include <hugetlbfs.h>
+#endif
+
+#ifdef OPENSSL
+#include <openssl/engine.h>
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
 #endif
 
 #include <linux/fs.h>
@@ -48,12 +55,14 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/random.h>
 
 #include "common.h"
 #include "nvme.h"
 #include "libnvme.h"
 #include "nvme-print.h"
 #include "plugin.h"
+#include "util/base64.h"
 
 #include "util/argconfig.h"
 #include "fabrics.h"
@@ -6631,6 +6640,175 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *command, stru
 	fprintf(stdout, "%s\n", hostnqn);
 	free(hostnqn);
 
+	return 0;
+}
+
+static int gen_dhchap_key(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Generate a DH-HMAC-CHAP host key usable "\
+		"for NVMe In-Band Authentication.";
+	const char *secret = "Optional secret (in hexadecimal characters) "\
+		"to be used to initialize the host key.";
+	const char *key_len = "Length of the resulting key "\
+		"(32, 48, or 64 bytes).";
+	const char *hmac = "HMAC function to use for key transformation "\
+		"(0 = none, 1 = SHA-256, 2 = SHA-384, 3 = SHA-512).";
+	const char *nqn = "Host NQN to use for key transformation.";
+
+	char *raw_secret;
+	unsigned char key[68];
+	char encoded_key[128];
+	unsigned long crc = crc32(0L, NULL, 0);
+	int err = 0;
+#ifdef OPENSSL
+	const EVP_MD *md = NULL;
+	const char *hostnqn;
+#else
+	const char *md = NULL;
+#endif
+	struct config {
+		char *secret;
+		unsigned int key_len;
+		char *nqn;
+		unsigned int hmac;
+	};
+
+	struct config cfg = {
+		.secret = NULL,
+		.key_len = 0,
+		.nqn = NULL,
+		.hmac = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_STR("secret", 's', &cfg.secret, secret),
+		OPT_UINT("key-length", 'l', &cfg.key_len, key_len),
+		OPT_STR("nqn", 'n', &cfg.nqn, nqn),
+		OPT_UINT("hmac", 'm', &cfg.hmac, hmac),
+		OPT_END()
+	};
+
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	if (cfg.hmac > 3) {
+		fprintf(stderr, "Invalid HMAC identifier %u\n", cfg.hmac);
+		return -EINVAL;
+	}
+	if (cfg.hmac > 0) {
+#ifdef OPENSSL
+		if (!cfg.nqn) {
+			hostnqn = nvmf_hostnqn_from_file();
+			if (!hostnqn) {
+				fprintf(stderr, "Could not read host NQN\n");
+				return -ENOENT;
+			}
+		} else {
+			hostnqn = cfg.nqn;
+		}
+		switch (cfg.hmac) {
+		case 1:
+			md = EVP_sha256();
+			if (!cfg.key_len)
+				cfg.key_len = 32;
+			else if (cfg.key_len != 32) {
+				fprintf(stderr, "Invalid key length %d for SHA(256)\n",
+					cfg.key_len);
+				return -EINVAL;
+			}
+			break;
+		case 2:
+			md = EVP_sha384();
+			if (!cfg.key_len)
+				cfg.key_len = 48;
+			else if (cfg.key_len != 48) {
+				fprintf(stderr, "Invalid key length %d for SHA(384)\n",
+					cfg.key_len);
+				return -EINVAL;
+			}
+			break;
+		case 3:
+			md = EVP_sha512();
+			if (!cfg.key_len)
+				cfg.key_len = 64;
+			else if (cfg.key_len != 64) {
+				fprintf(stderr, "Invalid key length %d for SHA(512)\n",
+					cfg.key_len);
+				return -EINVAL;
+			}
+			break;
+		default:
+			break;
+		}
+#else
+		fprintf(stderr, "HMAC transformation not supported; "\
+			"recompile with OpenSSL support.\n");
+		return -EINVAL;
+#endif
+	} else if (!cfg.key_len)
+		cfg.key_len = 32;
+
+	if (cfg.key_len != 32 && cfg.key_len != 48 && cfg.key_len != 64) {
+		fprintf(stderr, "Invalid key length %u\n", cfg.key_len);
+		return -EINVAL;
+	}
+	raw_secret = malloc(cfg.key_len);
+	if (!raw_secret)
+		return -ENOMEM;
+	if (!cfg.secret) {
+		if (getrandom(raw_secret, cfg.key_len, GRND_NONBLOCK) < 0)
+			return errno;
+	} else {
+		int secret_len = 0, i;
+		unsigned int c;
+
+		for (i = 0; i < strlen(cfg.secret); i+=2) {
+			if (sscanf(&cfg.secret[i], "%02x", &c) != 1) {
+				fprintf(stderr, "Invalid secret '%s'\n",
+					cfg.secret);
+				return -EINVAL;
+			}
+			raw_secret[secret_len++] = (unsigned char)c;
+		}
+		if (secret_len != cfg.key_len) {
+			fprintf(stderr, "Invalid key length (%d bytes)\n",
+				secret_len);
+			return -EINVAL;
+		}
+	}
+
+	if (md) {
+#ifdef OPENSSL
+		HMAC_CTX *hmac_ctx = HMAC_CTX_new();
+		const char hmac_seed[] = "NVMe-over-Fabrics";
+		unsigned int key_len;
+
+		ENGINE_load_builtin_engines();
+		ENGINE_register_all_complete();
+
+		HMAC_Init_ex(hmac_ctx, raw_secret, cfg.key_len,md, NULL);
+		HMAC_Update(hmac_ctx, (unsigned char *)hostnqn,
+			    strlen(hostnqn));
+		HMAC_Update(hmac_ctx, (unsigned char *)hmac_seed,
+			    strlen(hmac_seed));
+		HMAC_Final(hmac_ctx, key, &key_len);
+		HMAC_CTX_free(hmac_ctx);
+#endif
+	} else {
+		memcpy(key, raw_secret, cfg.key_len);
+	}
+
+	crc = crc32(crc, key, cfg.key_len);
+	key[cfg.key_len++] = crc & 0xff;
+	key[cfg.key_len++] = (crc >> 8) & 0xff;
+	key[cfg.key_len++] = (crc >> 16) & 0xff;
+	key[cfg.key_len++] = (crc >> 24) & 0xff;
+
+	memset(encoded_key, 0, sizeof(encoded_key));
+	base64_encode(key, cfg.key_len, encoded_key);
+
+	printf("DHHC-1:%02x:%s:\n", cfg.hmac, encoded_key);
 	return 0;
 }
 

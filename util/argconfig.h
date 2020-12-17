@@ -100,6 +100,7 @@ enum argconfig_types {
 #define OPT_FMT(l, s, v, d)  OPT_STRING(l, s, "FMT", v, d)
 #define OPT_FILE(l, s, v, d) OPT_STRING(l, s, "FILE", v, d)
 #define OPT_LIST(l, s, v, d) OPT_STRING(l, s, "LIST", v, d)
+#define OPT_STR(l, s, v, d) OPT_STRING(l, s, "STRING", v, d)
 
 struct argconfig_commandline_options {
 	const char *option;
