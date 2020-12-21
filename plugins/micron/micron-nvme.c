@@ -768,7 +768,7 @@ static int micron_pcie_stats(int argc, char **argv, struct command *cmd, struct 
     /* pull log details based on the model name */
     sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx);
     if ((eModel = GetDriveModel(ctrlIdx)) == UNKNOWN_MODEL) {
-        printf ("Unsupported drive model for vs-internal-log collection\n");
+        printf ("Unsupported drive model for vs-pcie-stats command\n");
         close(fd);
         goto out;
     }
@@ -970,30 +970,31 @@ static struct logpage {
 static void init_d0_log_page(__u8 *buf, __u8 nsze)
 {
     unsigned int logD0[D0_log_size/sizeof(int)] = { 0 };
-    unsigned long long count_lo, count_hi, count;
+    __u64 count_lo, count_hi, count;
 
     memcpy(logD0, buf, sizeof(logD0));
 
 
-    count = ((unsigned long long)logD0[45] << 32) | logD0[44];
-    sprintf(d0_log_page[0].datastr, "0x%llx", count);
+    count = ((__u64)logD0[45] << 32) | logD0[44];
+    sprintf(d0_log_page[0].datastr, "0x%"PRIx64, le64_to_cpu(count));
 
-    count_hi = ((unsigned long long)logD0[39] << 32) | logD0[38];
-    count_lo = ((unsigned long long)logD0[37] << 32) | logD0[36];
+    count_hi = ((__u64)logD0[39] << 32) | logD0[38];
+    count_lo = ((__u64)logD0[37] << 32) | logD0[36];
     if (count_hi != 0)
-        sprintf(d0_log_page[1].datastr, "0x%llx%016llx", count_hi, count_lo);
+        sprintf(d0_log_page[1].datastr, "0x%"PRIx64"%016"PRIx64,
+                le64_to_cpu(count_hi), le64_to_cpu(count_lo));
     else
-        sprintf(d0_log_page[1].datastr, "0x%llx", count_lo);
+        sprintf(d0_log_page[1].datastr, "0x%"PRIx64, le64_to_cpu(count_lo));
 
-    count = ((unsigned long long)logD0[25] << 32) | logD0[24];
-    sprintf(d0_log_page[2].datastr, "0x%llx", count);
+    count = ((__u64)logD0[25] << 32) | logD0[24];
+    sprintf(d0_log_page[2].datastr, "0x%"PRIx64, le64_to_cpu(count));
 
     sprintf(d0_log_page[3].datastr, "0x%x", logD0[3]);
 
-    count_lo = ((unsigned long long)logD0[37] << 32) | logD0[36];
-    count = ((unsigned long long)logD0[25] << 32) | logD0[24];
-    count = (unsigned long long)logD0[3] - (count_lo + count);
-    sprintf(d0_log_page[4].datastr, "0x%llx", count);
+    count_lo = ((__u64)logD0[37] << 32) | logD0[36];
+    count = ((__u64)logD0[25] << 32) | logD0[24];
+    count = (__u64)logD0[3] - (count_lo + count);
+    sprintf(d0_log_page[4].datastr, "0x%"PRIx64, le64_to_cpu(count));
 
     sprintf(d0_log_page[5].datastr, "0x%x", nsze);
     sprintf(d0_log_page[6].datastr, "0x%x", logD0[1]);
@@ -1195,7 +1196,7 @@ static int micron_nand_stats(int argc, char **argv, struct command *cmd, struct 
     /* pull log details based on the model name */
     sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx);
     if ((eModel = GetDriveModel(ctrlIdx)) == UNKNOWN_MODEL) {
-        printf ("Unsupported drive model for vs-internal-log collection\n");
+        printf ("Unsupported drive model for vs-nand-stats command\n");
         close(fd);
         goto out;
     }
