@@ -20,6 +20,8 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 static const char base64_table[65] =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -59,4 +61,45 @@ int base64_encode(const unsigned char *src, int srclen, char *dst)
 	}
 
 	return cp - dst;
+}
+
+/**
+ * base64_decode() - base64-decode some bytes
+ * @src: the base64-encoded string to decode
+ * @len: number of bytes to decode
+ * @dst: (output) the decoded bytes.
+ *
+ * Decodes the base64-encoded bytes @src according to RFC 4648.
+ *
+ * Return: number of decoded bytes
+ */
+int base64_decode(const char *src, int srclen, unsigned char *dst)
+{
+	u_int32_t ac = 0;
+	int i, bits = 0;
+	unsigned char *bp = dst;
+
+        for (i = 0; i < srclen; i++) {
+                const char *p = strchr(base64_table, src[i]);
+
+                if (src[i] == '=') {
+                        ac = (ac << 6);
+			bits += 6;
+			if (bits >= 8)
+				bits -= 8;
+                        continue;
+                }
+                if (p == NULL || src[i] == 0)
+                        return -EINVAL;
+                ac = (ac << 6) | (p - base64_table);
+                bits += 6;
+                if (bits >= 8) {
+                        bits -= 8;
+                        *bp++ = (unsigned char)(ac >> bits);
+                }
+	}
+	if (ac && ((1 << bits) - 1))
+		return -EAGAIN;
+
+	return bp - dst;
 }

@@ -6812,6 +6812,104 @@ static int gen_dhchap_key(int argc, char **argv, struct command *command, struct
 	return 0;
 }
 
+static int check_dhchap_key(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Check a DH-HMAC-CHAP host key for usability "\
+		"for NVMe In-Band Authentication.";
+	const char *key = "DH-HMAC-CHAP key (in hexadecimal characters) "\
+		"to be validated.";
+
+	unsigned char decoded_key[128];
+	unsigned int decoded_len;
+	u_int32_t crc = crc32(0L, NULL, 0);
+	u_int32_t key_crc;
+	int err = 0, hmac;
+	struct config {
+		char *key;
+	};
+
+	struct config cfg = {
+		.key = NULL,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_STR("key", 'k', &cfg.key, key),
+		OPT_END()
+	};
+
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	if (!cfg.key) {
+		fprintf(stderr, "Key not specified\n");
+		return -EINVAL;
+	}
+
+	if (sscanf(cfg.key, "DHHC-1:%02x:*s", &hmac) != 1) {
+		fprintf(stderr, "Invalid key header '%s'\n", cfg.key);
+		return -EINVAL;
+	}
+	switch (hmac) {
+	case 0:
+		break;
+	case 1:
+		if (strlen(cfg.key) != 59) {
+			fprintf(stderr, "Invalid key length for SHA(256)\n");
+			return -EINVAL;
+		}
+		break;
+	case 2:
+		if (strlen(cfg.key) != 83) {
+			fprintf(stderr, "Invalid key length for SHA(384)\n");
+			return -EINVAL;
+		}
+		break;
+	case 3:
+		if (strlen(cfg.key) != 103) {
+			fprintf(stderr, "Invalid key length for SHA(512)\n");
+			return -EINVAL;
+		}
+		break;
+	default:
+		fprintf(stderr, "Invalid HMAC identifier %d\n", hmac);
+		return -EINVAL;
+		break;
+	}
+
+	err = base64_decode(cfg.key + 10, strlen(cfg.key) - 11,
+			    decoded_key);
+	if (err < 0) {
+		fprintf(stderr, "Base64 decoding failed, error %d\n",
+			err);
+		return err;
+	}
+	decoded_len = err;
+	if (decoded_len < 32) {
+		fprintf(stderr, "Base64 decoding failed (%s, size %u)\n",
+			cfg.key + 10, decoded_len);
+		return -EINVAL;
+	}
+	decoded_len -= 4;
+	if (decoded_len != 32 && decoded_len != 48 && decoded_len != 64) {
+		fprintf(stderr, "Invalid key length %d\n", decoded_len);
+		return -EINVAL;
+	}
+	crc = crc32(crc, decoded_key, decoded_len);
+	key_crc = ((u_int32_t)decoded_key[decoded_len]) |
+		((u_int32_t)decoded_key[decoded_len + 1] << 8) |
+		((u_int32_t)decoded_key[decoded_len + 2] << 16) |
+		((u_int32_t)decoded_key[decoded_len + 3] << 24);
+	if (key_crc != crc) {
+		fprintf(stderr, "CRC mismatch (key %08x, crc %08x)\n",
+			key_crc, crc);
+		return -EINVAL;
+	}
+	printf("Key is valid (HMAC %d, length %d, CRC %08x)\n",
+	       hmac, decoded_len, crc);
+	return 0;
+}
+
 static int discover_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Send Get Log Page request to Discovery Controller.";
