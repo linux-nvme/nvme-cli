@@ -49,7 +49,7 @@ rm -rf $RPM_BUILD_ROOT
 %post
 if [ $1 -eq 1 ]; then # 1 : This package is being installed for the first time
 	if [ ! -s %{_sysconfdir}/nvme/hostnqn ]; then
-		echo $(nvme gen-hostnqn) > %{_sysconfdir}/nvme/hostnqn
+		echo $(%{_sbindir}/nvme gen-hostnqn) > %{_sysconfdir}/nvme/hostnqn
         fi
         if [ ! -s %{_sysconfdir}/nvme/hostid ]; then
                 uuidgen > %{_sysconfdir}/nvme/hostid

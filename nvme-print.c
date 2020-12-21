@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #include "nvme-print.h"
 #include "util/json.h"
@@ -695,7 +696,7 @@ static void json_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname)
 
 	root = json_create_object();
 	json_object_add_value_string(root,
-			"Asynchronous Namespace Access Log for NVMe device",
+			"Asymmetric Namespace Access Log for NVMe device",
 			devname);
 	json_object_add_value_uint(root, "chgcnt",
 			le64_to_cpu(hdr->chgcnt));
@@ -2956,14 +2957,14 @@ void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
 static void show_nvme_id_ns_zoned_zoc(__le16 ns_zoc)
 {
 	__u16 zoc = le16_to_cpu(ns_zoc);
-	__u8 rsvd = (zoc & 0xfc) >> 2;
+	__u8 rsvd = (zoc & 0xfffc) >> 2;
 	__u8 ze = (zoc & 0x2) >> 1;
 	__u8 vzc = zoc & 0x1;
 	if (rsvd)
-		printf("  [7:2] : %#x\tReserved\n", rsvd);
-	printf("  [1:1] : %#x\tZone Active Excursions: %s\n",
+		printf(" [15:2] : %#x\tReserved\n", rsvd);
+	printf("  [1:1] : %#x\t  Zone Active Excursions: %s\n",
 		ze, ze ? "Yes (Host support required)" : "No");
-	printf("  [0:0] : %#x\tVariable Zone Capacity: %s\n",
+	printf("  [0:0] : %#x\t  Variable Zone Capacity: %s\n",
 		vzc, vzc ? "Yes (Host support required)" : "No");
 	printf("\n");
 }
@@ -2971,14 +2972,13 @@ static void show_nvme_id_ns_zoned_zoc(__le16 ns_zoc)
 static void show_nvme_id_ns_zoned_ozcs(__le16 ns_ozcs)
 {
 	__u16 ozcs = le16_to_cpu(ns_ozcs);
-	__u8 rsvd = (ozcs & 0xfe) >> 1;
+	__u8 rsvd = (ozcs & 0xfffe) >> 1;
 	__u8 razb = ozcs & 0x1;
 
 	if (rsvd)
-		printf("  [7:1] : %#x\tReserved\n", rsvd);
-	printf("  [2:2] : %#x\tRead Across Zone Boundaries: %s\n",
+		printf(" [15:1] : %#x\tReserved\n", rsvd);
+	printf("  [0:0] : %#x\t  Read Across Zone Boundaries: %s\n",
 		razb, razb ? "Yes" : "No");
-	printf("\n");
 }
 
 void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
@@ -2996,38 +2996,48 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	printf("ZNS Command Set Identify Namespace:\n");
 
 	if (human) {
-		printf("zoc     : %u   Zone Operation Characteristics\n", le16_to_cpu(ns->zoc));
+		printf("zoc     : %u\tZone Operation Characteristics\n", le16_to_cpu(ns->zoc));
 		show_nvme_id_ns_zoned_zoc(ns->zoc);
 	} else {
 		printf("zoc     : %u\n", le16_to_cpu(ns->zoc));
 	}
 
 	if (human) {
-		printf("ozcs    : %u   Optional Zoned Command Support\n", le16_to_cpu(ns->ozcs));
+		printf("ozcs    : %u\tOptional Zoned Command Support\n", le16_to_cpu(ns->ozcs));
 		show_nvme_id_ns_zoned_ozcs(ns->ozcs);
 	} else {
 		printf("ozcs    : %u\n", le16_to_cpu(ns->ozcs));
 	}
 
-	if (!le32_to_cpu(ns->mar) && human)
-		printf("mar     : No Limit\n");
-	else
+	if (human) {
+		if (ns->mar == 0xffffffff) {
+			printf("mar     : No Active Resource Limit\n");
+		} else {
+			printf("mar     : %u\tActive Resources\n", le32_to_cpu(ns->mar) + 1);
+		}
+	} else {
 		printf("mar     : %#x\n", le32_to_cpu(ns->mar));
+	}
 
-	if (!le32_to_cpu(ns->mor) && human)
-		printf("mor     : No Limit\n");
-	else
+	if (human) {
+		if (ns->mor == 0xffffffff) {
+			printf("mor     : No Open Resource Limit\n");
+		} else {
+			printf("mor     : %u\tOpen Resources\n", le32_to_cpu(ns->mor) + 1);
+		}
+	} else {
 		printf("mor     : %#x\n", le32_to_cpu(ns->mor));
+	}
 
 	if (!le32_to_cpu(ns->rrl) && human)
 		printf("rrl     : Not Reported\n");
 	else
-		printf("rrl     : %#x\n", le32_to_cpu(ns->rrl));
+		printf("rrl     : %d\n", le32_to_cpu(ns->rrl));
 
 	if (!le32_to_cpu(ns->frl) && human)
 		printf("frl     : Not Reported\n");
 	else
-		printf("frl     : %#x\n", le32_to_cpu(ns->frl));
+		printf("frl     : %d\n", le32_to_cpu(ns->frl));
 
 	for (i = 0; i <= id_ns->nlbaf; i++){
 		if (human)
@@ -3792,7 +3802,7 @@ void nvme_show_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname,
 	else if (flags & JSON)
 		return json_ana_log(ana_log, devname);
 
-	printf("Asynchronous Namespace Access Log for NVMe device: %s\n",
+	printf("Asymmetric Namespace Access Log for NVMe device: %s\n",
 			devname);
 	printf("ANA LOG HEADER :-\n");
 	printf("chgcnt	:	%"PRIu64"\n",
@@ -3993,9 +4003,10 @@ void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 		le32_to_cpu(sanitize->est_crypto_erase_time_with_no_deallocate));
 }
 
-const char *nvme_feature_to_string(int feature)
+const char *nvme_feature_to_string(enum nvme_feat feature)
 {
 	switch (feature) {
+	case NVME_FEAT_NONE:		return "None";
 	case NVME_FEAT_ARBITRATION:	return "Arbitration";
 	case NVME_FEAT_POWER_MGMT:	return "Power Management";
 	case NVME_FEAT_LBA_RANGE:	return "LBA Range Type";
@@ -4024,8 +4035,13 @@ const char *nvme_feature_to_string(int feature)
 	case NVME_FEAT_HCTM:		return "Host Controlled Thermal Management";
 	case NVME_FEAT_HOST_BEHAVIOR:   return "Host Behavior";
 	case NVME_FEAT_SANITIZE:	return "Sanitize";
-	default:			return "Unknown";
 	}
+	/*
+	 * We don't use the "default:" statement to let the compiler warning if
+	 * some values of the enum nvme_feat are missing in the switch().
+	 * The following return is acting as the default: statement.
+	 */
+	return "Unknown";
 }
 
 const char *nvme_register_to_string(int reg)
@@ -4507,7 +4523,7 @@ static void nvme_show_plm_config(struct nvme_plm_config *plmcfg)
 	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_time_thresh));
 }
 
-void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf)
+void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned char *buf)
 {
 	__u8 field;
 	uint64_t ull;
@@ -4563,6 +4579,10 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 		printf("\tDisable Normal (DN): %s\n", (result & 0x00000001) ? "True":"False");
 		break;
 	case NVME_FEAT_ASYNC_EVENT:
+		printf("\tEndurance Group Event Aggregate Log Change Notices: %s\n", ((result & 0x00004000) >> 14) ? "Send async event":"Do not send async event");
+		printf("\tLBA Status Information Notices  : %s\n", ((result & 0x00002000) >> 13) ? "Send async event":"Do not send async event");
+		printf("\tPredictable Latency Event Aggregate Log Change Notices: %s\n", ((result & 0x00001000) >> 12) ? "Send async event":"Do not send async event");
+		printf("\tAsymmetric Namespace Access Change Notices: %s\n", ((result & 0x00000800) >> 11) ? "Send async event":"Do not send async event");
 		printf("\tTelemetry Log Notices           : %s\n", ((result & 0x00000400) >> 10) ? "Send async event":"Do not send async event");
 		printf("\tFirmware Activation Notices     : %s\n", ((result & 0x00000200) >> 9) ? "Send async event":"Do not send async event");
 		printf("\tNamespace Attribute Notices     : %s\n", ((result & 0x00000100) >> 8) ? "Send async event":"Do not send async event");
@@ -4623,6 +4643,11 @@ void nvme_feature_show_fields(__u32 fid, unsigned int result, unsigned char *buf
 	case NVME_FEAT_HOST_BEHAVIOR:
 		printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
 		break;
+	case NVME_FEAT_NONE:
+	case NVME_FEAT_SANITIZE:
+	case NVME_FEAT_RRL:
+		printf("\t%s: to be implemented\n", nvme_feature_to_string(fid));
+		break;
 	}
 }
 
@@ -4670,7 +4695,14 @@ static void nvme_show_list_item(struct nvme_namespace *n)
 	const char *l_suffix = suffix_binary_get(&lba);
 
 	char usage[128];
-	char format[128];
+	char format[128], path[256];
+	struct stat st;
+	int ret;
+
+	sprintf(path, "/dev/%s", n->name);
+	ret = stat(path, &st);
+	if (ret < 0)
+		return;
 
 	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
 		nsze, s_suffix);
@@ -4734,17 +4766,29 @@ static void nvme_show_details_ns(struct nvme_namespace *n, bool ctrl)
 		printf("%s", n->ctrl->name);
 	else {
 		struct nvme_subsystem *s = n->ctrl->subsys;
-		int i;
+		int i, j;
+		bool comma = false;
 
-		for (i = 0; i < s->nr_ctrls; i++)
-			printf("%s%s", i ? ", " : "", s->ctrls[i].name);
+		for (i = 0; i < s->nr_ctrls; i++) {
+			struct nvme_ctrl *c = &s->ctrls[i];
+
+			for (j = 0; j < c->nr_namespaces; j++) {
+				struct nvme_namespace *ns = &c->namespaces[j];
+
+				if (ns->nsid == n->nsid) {
+					printf("%s%s", comma ? ", " : "",
+					       c->name);
+					comma = true;
+				}
+			}
+		}
 	}
 	printf("\n");
 }
 
 static void nvme_show_detailed_list(struct nvme_topology *t)
 {
-	int i, j, k;
+	int i, j, k, l;
 
 	printf("NVM Express Subsystems\n\n");
 	printf("%-16s %-96s %-.16s\n", "Subsystem", "Subsystem-NQN", "Controllers");
@@ -4779,13 +4823,14 @@ static void nvme_show_detailed_list(struct nvme_topology *t)
 
 			for (k = 0; k < c->nr_namespaces; k++) {
 				struct nvme_namespace *n = &c->namespaces[k];
-				printf("%s%s", comma ? ", " : "", n->name);
-				comma = true;
-			}
-			for (k = 0; k < s->nr_namespaces; k++) {
-				struct nvme_namespace *n = &s->namespaces[k];
-				printf("%s%s", comma ? ", " : "", n->name);
-				comma = true;
+
+				for (l = 0; l < s->nr_namespaces; l++) {
+					struct nvme_namespace *ns = &s->namespaces[l];
+					if (n->nsid == ns->nsid) {
+						printf("%s%s", comma ? ", " : "", ns->name);
+						comma = true;
+					}
+				}
 			}
 			printf("\n");
 		}
@@ -4798,17 +4843,20 @@ static void nvme_show_detailed_list(struct nvme_topology *t)
 	for (i = 0; i < t->nr_subsystems; i++) {
 		struct nvme_subsystem *s = &t->subsystems[i];
 
-		for (j = 0; j < s->nr_ctrls; j++) {
-			struct nvme_ctrl *c = &s->ctrls[j];
-
-			for (k = 0; k < c->nr_namespaces; k++) {
-				struct nvme_namespace *n = &c->namespaces[k];
-				nvme_show_details_ns(n, true);
+		if (s->nr_namespaces) {
+			for (j = 0; j < s->nr_namespaces; j++) {
+				struct nvme_namespace *n = &s->namespaces[j];
+				nvme_show_details_ns(n, false);
 			}
-		}
-		for (j = 0; j < s->nr_namespaces; j++) {
-			struct nvme_namespace *n = &s->namespaces[j];
-			nvme_show_details_ns(n, false);
+		} else {
+			for (j = 0; j < s->nr_ctrls; j++) {
+				struct nvme_ctrl *c = &s->ctrls[j];
+
+				for (k = 0; k < c->nr_namespaces; k++) {
+					struct nvme_namespace *n = &c->namespaces[k];
+					nvme_show_details_ns(n, true);
+				}
+			}
 		}
 	}
 }

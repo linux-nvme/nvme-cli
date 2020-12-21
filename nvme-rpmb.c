@@ -209,12 +209,12 @@ static void write_file(unsigned char *data, size_t len, const char *dir,
 	if ((fp = fopen(temp_folder, "ab+")) != NULL) {
 		if (fwrite(data, 1, len,  fp) != len) {
 			fprintf(stderr, "Failed to write %s data to %s\n",
-				 msg, temp_folder);
+				 msg ? msg : "", temp_folder);
 		}
 		fclose(fp);
 	} else  {
 		fprintf(stderr, "Failed to open %s file to write %s\n",
-			temp_folder, msg);
+			temp_folder, msg ? msg : "");
 	}
 }
 

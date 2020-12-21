@@ -2,12 +2,12 @@
 .\"     Title: nvme-zns-id-ctrl
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/17/2020
+.\"      Date: 10/20/2020
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZNS\-ID\-CTRL" "1" "06/17/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-ZNS\-ID\-CTRL" "1" "10/20/2020" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,28 +32,16 @@ nvme-zns-id-ctrl \- Send NVMe Zoned Command Set Identify Controller, return resu
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme zns id\-ctrl\fR <device>  [\-\-namespace\-id=<NUM> | \-n <NUM>]
-                             [\-o <fmt> | \-\-output\-format=<fmt>]
-                             [\-v | \-\-verbose]
+\fInvme zns id\-ctrl\fR <device> [\-o <fmt> | \-\-output\-format=<fmt>]
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, sends the zoned command set\(cqs identify namepsace command and provides the result and returned structure\&.
+For the NVMe device given, sends the zoned command set\(cqs identify controller command and provides the result and returned structure\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
 On success, the data structure returned by the device will be decoded and displayed in one of several ways\&.
 .SH "OPTIONS"
-.PP
-\-n <NUM>, \-\-namespace\-id=<NUM>
-.RS 4
-Use the provided namespace id for the command\&. If not provided, the namespace id of the block device will be used\&. If the command is issued to a non\-block device, the parameter is required\&.
-.RE
-.PP
-\-v, \-\-verbose
-.RS 4
-Increase the information detail in the output\&.
-.RE
 .PP
 \-o <format>, \-\-output\-format=<format>
 .RS 4
@@ -78,7 +66,7 @@ Has the program interpret the returned buffer and display the known fields in a 
 .RS 4
 .\}
 .nf
-# nvme zns id\-ns /dev/nvme0 \-n 1
+# nvme zns id\-ctrl /dev/nvme0
 .fi
 .if n \{\
 .RE
@@ -93,13 +81,13 @@ Has the program interpret the returned buffer and display the known fields in a 
 .sp -1
 .IP \(bu 2.3
 .\}
-Show the output in json format with extra details
+Show the output in json format
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme zns id\-ctrl /dev/nvme0 \-o json \-v
+# nvme zns id\-ctrl /dev/nvme0 \-o json
 .fi
 .if n \{\
 .RE

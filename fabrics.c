@@ -54,6 +54,9 @@
 
 #define NVMF_HOSTID_SIZE	36
 
+/* default to 600 seconds of reconnect attempts before giving up */
+#define NVMF_DEF_CTRL_LOSS_TMO		600
+
 const char *conarg_nqn = "nqn";
 const char *conarg_transport = "transport";
 const char *conarg_traddr = "traddr";
@@ -85,7 +88,7 @@ static struct config {
 	bool persistent;
 	bool quiet;
 	bool matching_only;
-} cfg = { NULL };
+} cfg = { .ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO };
 
 struct connect_args {
 	char *subsysnqn;
@@ -93,7 +96,11 @@ struct connect_args {
 	char *traddr;
 	char *trsvcid;
 	char *host_traddr;
+	struct connect_args *next;
+	struct connect_args *tail;
 };
+
+struct connect_args *tracked_ctrls;
 
 #define BUF_SIZE		4096
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
@@ -360,6 +367,46 @@ cleanup_devices:
 	return devname;
 }
 
+static struct connect_args *extract_connect_args(char *argstr)
+{
+	struct connect_args *cargs;
+
+	cargs = calloc(1, sizeof(*cargs));
+	if (!cargs)
+		return NULL;
+	cargs->subsysnqn = parse_conn_arg(argstr, ',', conarg_nqn);
+	cargs->transport = parse_conn_arg(argstr, ',', conarg_transport);
+	cargs->traddr = parse_conn_arg(argstr, ',', conarg_traddr);
+	cargs->trsvcid = parse_conn_arg(argstr, ',', conarg_trsvcid);
+	cargs->host_traddr = parse_conn_arg(argstr, ',', conarg_host_traddr);
+	return cargs;
+}
+
+static void free_connect_args(struct connect_args *cargs)
+{
+	free(cargs->subsysnqn);
+	free(cargs->transport);
+	free(cargs->traddr);
+	free(cargs->trsvcid);
+	free(cargs->host_traddr);
+	free(cargs);
+}
+
+static void track_ctrl(char *argstr)
+{
+	struct connect_args *cargs;
+
+	cargs = extract_connect_args(argstr);
+	if (!cargs)
+		return;
+
+	if (!tracked_ctrls)
+		tracked_ctrls = cargs;
+	else
+		tracked_ctrls->tail->next = cargs;
+	tracked_ctrls->tail = cargs;
+}
+
 static int add_ctrl(const char *argstr)
 {
 	substring_t args[MAX_OPT_ARGS];
@@ -403,6 +450,7 @@ static int add_ctrl(const char *argstr)
 			if (match_int(args, &token))
 				goto out_fail;
 			ret = token;
+			track_ctrl((char *)argstr);
 			goto out_close;
 		default:
 			/* ignore */
@@ -863,11 +911,22 @@ static int build_options(char *argstr, int max_len, bool discover)
 	return 0;
 }
 
+static void discovery_trsvcid(struct config *cfg)
+{
+	if (!strcmp(cfg->transport, "tcp")) {
+		/* Default port for NVMe/TCP discovery controllers */
+		cfg->trsvcid = __stringify(NVME_DISC_IP_PORT);
+	} else if (!strcmp(cfg->transport, "rdma")) {
+		/* Default port for NVMe/RDMA controllers */
+		cfg->trsvcid = __stringify(NVME_RDMA_IP_PORT);
+	}
+}
+
 static bool traddr_is_hostname(struct config *cfg)
 {
 	char addrstr[NVMF_TRADDR_SIZE];
 
-	if (!cfg->traddr)
+	if (!cfg->traddr || !cfg->transport)
 		return false;
 	if (strcmp(cfg->transport, "tcp") && strcmp(cfg->transport, "rdma"))
 		return false;
@@ -1112,9 +1171,38 @@ retry:
 	return ret;
 }
 
+static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry)
+{
+	struct connect_args cargs = {};
+	struct connect_args *c = tracked_ctrls;
+
+	cargs.traddr = strdup(entry->traddr);
+	cargs.transport = strdup(trtype_str(entry->trtype));
+	cargs.subsysnqn = strdup(entry->subnqn);
+	cargs.trsvcid = strdup(entry->trsvcid);
+	cargs.host_traddr = strdup(cfg.host_traddr ?: "\0");
+
+	/* check if we have a match in the discovery recursion */
+	while (c) {
+		if (!strcmp(cargs.subsysnqn, c->subsysnqn) &&
+		    !strcmp(cargs.transport, c->transport) &&
+		    !strcmp(cargs.traddr, c->traddr) &&
+		    !strcmp(cargs.trsvcid, c->trsvcid) &&
+		    !strcmp(cargs.host_traddr, c->host_traddr))
+			return true;
+		c = c->next;
+	}
+
+	/* check if we have a matching existing controller */
+	return find_ctrl_with_connectargs(&cargs) != NULL;
+}
+
 static bool should_connect(struct nvmf_disc_rsp_page_entry *entry)
 {
 	int len;
+
+	if (cargs_match_found(entry))
+		return false;
 
 	if (!cfg.matching_only || !cfg.traddr)
 		return true;
@@ -1181,14 +1269,11 @@ static int do_discover(char *argstr, bool connect)
 	int status = 0;
 
 	if (cfg.device) {
-		struct connect_args cargs;
+		struct connect_args *cargs;
 
-		memset(&cargs, 0, sizeof(cargs));
-		cargs.subsysnqn = parse_conn_arg(argstr, ',', conarg_nqn);
-		cargs.transport = parse_conn_arg(argstr, ',', conarg_transport);
-		cargs.traddr = parse_conn_arg(argstr, ',', conarg_traddr);
-		cargs.trsvcid = parse_conn_arg(argstr, ',', conarg_trsvcid);
-		cargs.host_traddr = parse_conn_arg(argstr, ',', conarg_host_traddr);
+		cargs = extract_connect_args(argstr);
+		if (!cargs)
+			return -ENOMEM;
 
 		/*
 		 * if the cfg.device passed in matches the connect args
@@ -1201,14 +1286,10 @@ static int do_discover(char *argstr, bool connect)
 		 *    create a new ctrl.
 		 * endif
 		 */
-		if (!ctrl_matches_connectargs(cfg.device, &cargs))
-			cfg.device = find_ctrl_with_connectargs(&cargs);
+		if (!ctrl_matches_connectargs(cfg.device, cargs))
+			cfg.device = find_ctrl_with_connectargs(cargs);
 
-		free(cargs.subsysnqn);
-		free(cargs.transport);
-		free(cargs.traddr);
-		free(cargs.trsvcid);
-		free(cargs.host_traddr);
+		free_connect_args(cargs);
 	}
 
 	if (!cfg.device) {
@@ -1320,6 +1401,9 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 				goto out;
 		}
 
+		if (!cfg.trsvcid)
+			discovery_trsvcid(&cfg);
+
 		err = build_options(argstr, BUF_SIZE, true);
 		if (err) {
 			ret = err;
@@ -1391,6 +1475,9 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 			if (ret)
 				goto out;
 		}
+
+		if (!cfg.trsvcid)
+			discovery_trsvcid(&cfg);
 
 		ret = build_options(argstr, BUF_SIZE, true);
 		if (ret)

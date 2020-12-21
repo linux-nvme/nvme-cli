@@ -182,7 +182,7 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 
 	struct config {
 		__u32 namespace_id;
-		__u32 feature_id;
+		enum nvme_feat feature_id;
 		__u8  sel;
 		__u32 cdw11;
 		__u32 data_len;
@@ -192,7 +192,7 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 
 	struct config cfg = {
 		.namespace_id = 1,
-		.feature_id   = 0,
+		.feature_id   = NVME_FEAT_NONE,
 		.sel          = 0,
 		.cdw11        = 0,
 		.data_len     = 0,

@@ -58,6 +58,7 @@ OPTIONS
 |Value|Definition
 |rdma|The network fabric is an rdma network (RoCE, iWARP, Infiniband, basic rdma, etc)
 |fc  |*WIP* The network fabric is a Fibre Channel network.
+|tcp |The network fabric is a TCP/IP network.
 |loop|Connect to a NVMe over Fabrics target on the local host
 |=================
 
