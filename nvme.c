@@ -2753,6 +2753,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	struct nvme_id_ns ns;
 	struct nvme_id_ctrl ctrl;
 	int err, fd, i;
+	int block_size;
 	__u8 prev_lbaf = 0;
 	__u8 lbads = 0;
 
@@ -2936,6 +2937,22 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 					goto close_fd;
 				}
 			} else {
+				block_size = 1 << ns.lbaf[cfg.lbaf].ds;
+
+				/*
+				 * If block size has been changed by the format
+				 * command up there, we should notify it to
+				 * kernel blkdev to update its own block size
+				 * to the given one because blkdev will not
+				 * update by itself without re-opening fd.
+				 */
+				if (ioctl(fd, BLKBSZSET, &block_size) < 0) {
+					fprintf(stderr, "failed to set block size to %d\n",
+							block_size);
+					err = -errno;
+					goto close_fd;
+				}
+
 				if(ioctl(fd, BLKRRPART) < 0) {
 					fprintf(stderr, "failed to re-read partition table\n");
 					err = -errno;
