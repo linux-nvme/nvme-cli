@@ -4,7 +4,7 @@
 
 _cmds="list id-ctrl id-ns list-ns id-iocs create-ns delete-ns \
 	attach-ns detach-ns list-ctrl get-ns-id get-log \
-	fw-log smart-log smart-log-add error-log \
+	pred-lat-per-nvmset-log fw-log smart-log smart-log-add error-log \
 	get-feature set-feature format fw-activate \
 	fw-download admin-passthru io-passthru security-send \
 	security-recv resv-acquire resv-register resv-release \
@@ -70,6 +70,10 @@ nvme_list_opts () {
 		"get-log")
 		opts+=" --log-id= -i --log-len= -l --namespace-id= -n \
 			--raw-binary= -b"
+			;;
+		"pred-lat-per-nvmset-log")
+		opts+=" --nvmset-id= -i --raw-binary -b \
+			--output-format= -o"
 			;;
 		"fw-log")
 		opts+=" --raw-binary -b --output-format= -o"

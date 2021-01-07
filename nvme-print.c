@@ -866,6 +866,78 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 	json_free_object(root);
 }
 
+void json_predictable_latency_per_nvmset_log(
+	struct nvme_predlat_per_nvmset_log_page *plpns_log,
+	__u16 nvmset_id)
+{
+	struct json_object *root;
+
+	root = json_create_object();
+	json_object_add_value_uint(root, "nvmset_id",
+		le16_to_cpu(nvmset_id));
+	json_object_add_value_uint(root, "status",
+		plpns_log->status);
+	json_object_add_value_uint(root, "event_type",
+		le16_to_cpu(plpns_log->event_type));
+	json_object_add_value_uint(root, "dtwin_reads_typical",
+		le64_to_cpu(plpns_log->dtwin_rtyp));
+	json_object_add_value_uint(root, "dtwin_writes_typical",
+		le64_to_cpu(plpns_log->dtwin_wtyp));
+	json_object_add_value_uint(root, "dtwin_time_maximum",
+		le64_to_cpu(plpns_log->dtwin_timemax));
+	json_object_add_value_uint(root, "ndwin_time_minimum_high",
+		le64_to_cpu(plpns_log->ndwin_timemin_high));
+	json_object_add_value_uint(root, "ndwin_time_minimum_low",
+		le64_to_cpu(plpns_log->ndwin_timemin_low));
+	json_object_add_value_uint(root, "dtwin_reads_estimate",
+		le64_to_cpu(plpns_log->dtwin_restimate));
+	json_object_add_value_uint(root, "dtwin_writes_estimate",
+		le64_to_cpu(plpns_log->dtwin_westimate));
+	json_object_add_value_uint(root, "dtwin_time_estimate",
+		le64_to_cpu(plpns_log->dtwin_testimate));
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_predictable_latency_per_nvmset_log(
+	struct nvme_predlat_per_nvmset_log_page *plpns_log,
+	__u16 nvmset_id, const char *devname,
+	enum nvme_print_flags flags)
+{
+	if (flags & BINARY)
+		return d_raw((unsigned char *)plpns_log,
+			sizeof(*plpns_log));
+	if (flags & JSON)
+		return json_predictable_latency_per_nvmset_log(plpns_log,
+			nvmset_id);
+
+	printf("Predictable Latency Per NVM Set Log for device: %s\n",
+		devname);
+	printf("Predictable Latency Per NVM Set Log for NVM Set ID: %u\n",
+		le16_to_cpu(nvmset_id));
+	printf("Status: %u\n", plpns_log->status);
+	printf("Event Type: %u\n",
+		le16_to_cpu(plpns_log->event_type));
+	printf("DTWIN Reads Typical: %"PRIu64"\n",
+		le64_to_cpu(plpns_log->dtwin_rtyp));
+	printf("DTWIN Writes Typical: %"PRIu64"\n",
+		le64_to_cpu(plpns_log->dtwin_wtyp));
+	printf("DTWIN Time Maximum: %"PRIu64"\n",
+		le64_to_cpu(plpns_log->dtwin_timemax));
+	printf("NDWIN Time Minimum High: %"PRIu64" \n",
+		le64_to_cpu(plpns_log->ndwin_timemin_high));
+	printf("NDWIN Time Minimum Low: %"PRIu64"\n",
+		le64_to_cpu(plpns_log->ndwin_timemin_low));
+	printf("DTWIN Reads Estimate: %"PRIu64"\n",
+		le64_to_cpu(plpns_log->dtwin_restimate));
+	printf("DTWIN Writes Estimate: %"PRIu64"\n",
+		le64_to_cpu(plpns_log->dtwin_westimate));
+	printf("DTWIN Time Estimate: %"PRIu64"\n\n\n",
+		le64_to_cpu(plpns_log->dtwin_testimate));
+}
+
 static void nvme_show_subsystem(struct nvme_subsystem *s)
 {
 	int i;

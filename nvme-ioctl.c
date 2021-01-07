@@ -613,6 +613,15 @@ int nvme_sanitize_log(int fd, struct nvme_sanitize_log_page *sanitize_log)
 			sizeof(*sanitize_log), sanitize_log);
 }
 
+int nvme_predictable_latency_per_nvmset_log(int fd,
+		__u16 nvmset_id,
+		struct nvme_predlat_per_nvmset_log_page *plpns_log)
+{
+	return nvme_get_log13(fd, NVME_NSID_ALL,
+			NVME_LOG_PRELAT_PER_NVMSET, 0, 0, nvmset_id,
+			false, sizeof(*plpns_log), plpns_log);
+}
+
 int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
 		 __u32 cdw12, __u32 data_len, void *data, __u32 *result)
 {

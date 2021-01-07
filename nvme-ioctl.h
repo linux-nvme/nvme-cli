@@ -115,6 +115,8 @@ int nvme_ana_log(int fd, void *ana_log, size_t ana_log_len, int rgo);
 int nvme_effects_log(int fd, struct nvme_effects_log_page *effects_log);
 int nvme_discovery_log(int fd, struct nvmf_disc_rsp_page_hdr *log, __u32 size);
 int nvme_sanitize_log(int fd, struct nvme_sanitize_log_page *sanitize_log);
+int nvme_predictable_latency_per_nvmset_log(int fd,
+		__u16 nvmset_id, struct nvme_predlat_per_nvmset_log_page *plpns_log);
 int nvme_endurance_log(int fd, __u16 group_id,
 		       struct nvme_endurance_group_log *endurance_log);
 

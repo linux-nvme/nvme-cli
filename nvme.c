@@ -737,6 +737,62 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int get_pred_lat_per_nvmset_log(int argc, char **argv,
+	struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve Predictable latency per nvm set log"\
+			"page and prints it for the given device in either decoded" \
+			"format(default),json or binary.";
+	const char *nvmset_id = "NVM Set Identifier";
+	const char *raw = "use binary output";
+	struct nvme_predlat_per_nvmset_log_page plpns_log;
+	enum nvme_print_flags flags;
+	int err, fd;
+
+	struct config {
+		__u16 nvmset_id;
+		char *output_format;
+		int raw_binary;
+	};
+
+	struct config cfg = {
+		.nvmset_id = 1,
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("nvmset-id", 	 'i', &cfg.nvmset_id,     nvmset_id),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary, 	  raw),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+	if (cfg.raw_binary)
+		flags = BINARY;
+
+	err = nvme_predictable_latency_per_nvmset_log(fd,
+		cfg.nvmset_id, &plpns_log);
+	if (!err)
+		nvme_show_predictable_latency_per_nvmset_log(&plpns_log,
+			cfg.nvmset_id, devicename, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("predictable latency per nvm set log");
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int get_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve desired number of bytes "\
