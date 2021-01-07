@@ -136,6 +136,16 @@ void *nvme_alloc(size_t len, bool *huge)
 }
 #endif
 
+static bool is_chardev(void)
+{
+	return S_ISCHR(nvme_stat.st_mode);
+}
+
+static bool is_blkdev(void)
+{
+	return S_ISBLK(nvme_stat.st_mode);
+}
+
 static int open_dev(char *dev)
 {
 	int err, fd;
@@ -151,7 +161,7 @@ static int open_dev(char *dev)
 		close(fd);
 		goto perror;
 	}
-	if (!S_ISCHR(nvme_stat.st_mode) && !S_ISBLK(nvme_stat.st_mode)) {
+	if (!is_chardev() && !is_blkdev()) {
 		fprintf(stderr, "%s is not a block or character device\n", dev);
 		close(fd);
 		return -ENODEV;
@@ -2929,7 +2939,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	else {
 		printf("Success formatting namespace:%x\n", cfg.namespace_id);
 		if (cfg.lbaf != prev_lbaf){
-			if (S_ISCHR(nvme_stat.st_mode)) {
+			if (is_chardev()) {
 				if(ioctl(fd, NVME_IOCTL_RESCAN) < 0){
 					fprintf(stderr, "failed to rescan namespaces\n");
 					err = -errno;
@@ -2943,7 +2953,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 				}
 			}
 		}
-		if (cfg.reset && S_ISCHR(nvme_stat.st_mode))
+		if (cfg.reset && is_chardev())
 			nvme_reset_controller(fd);
 	}
 
