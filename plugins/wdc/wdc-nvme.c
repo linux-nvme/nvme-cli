@@ -848,14 +848,14 @@ struct __attribute__((__packed__)) wdc_nand_stats {
 struct __attribute__((__packed__)) wdc_nand_stats_V3 {
 	__u8		nand_write_tlc[16];
 	__u8		nand_write_slc[16];
-	__le64		bad_nand_block_count;
+	__u8		bad_nand_block_count[8];
 	__le64		xor_recovery_count;
 	__le64		uecc_read_error_count;
 	__u8		ssd_correction_counts[16];
 	__u8		percent_life_used;
 	__le64		user_data_erase_counts[4];
-	__le64		program_fail_count;
-	__le64		erase_fail_count;
+	__u8  		program_fail_count[8];
+	__u8  		erase_fail_count[8];
 	__le64		correctable_error_count;
 	__u8		percent_free_blocks_user;
 	__le64		security_version_number;
@@ -6838,7 +6838,9 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 {
 	struct wdc_nand_stats *nand_stats = (struct wdc_nand_stats *)(data);
 	struct wdc_nand_stats_V3 *nand_stats_v3 = (struct wdc_nand_stats_V3 *)(data);
-	__u32 temp_u32;
+	__u64 temp_raw;
+	__u16 temp_norm;
+	__u64 *temp_ptr = NULL;
 
 	switch (version)
 	{
@@ -6869,8 +6871,13 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 				int128_to_double(nand_stats_v3->nand_write_tlc));
 		printf("  SLC Units Written 				 %.0Lf\n",
 				int128_to_double(nand_stats_v3->nand_write_slc));
-		printf("  Bad NAND Blocks Count				 %"PRIu64"\n",
-				le64_to_cpu(nand_stats_v3->bad_nand_block_count));
+		temp_ptr = (__u64 *)nand_stats_v3->bad_nand_block_count;
+		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
+		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+		printf("  Bad NAND Blocks Count - Normalized 		 %"PRIu16"\n",
+				le16_to_cpu(temp_norm));
+		printf("  Bad NAND Blocks Count - Raw	        	 %"PRIu64"\n",
+				le64_to_cpu(temp_raw));
 		printf("  NAND XOR Recovery count			 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->xor_recovery_count));
 		printf("  UECC Read Error count				 %"PRIu64"\n",
@@ -6891,10 +6898,20 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->user_data_erase_counts[2]));
 		printf("  User Data Erase Counts - SLC Max		 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->user_data_erase_counts[3]));
-		printf("  Program Fail Count				 %"PRIu64"\n",
-				le64_to_cpu(nand_stats_v3->program_fail_count));
-		printf("  Erase Fail Count				 %"PRIu64"\n",
-				le64_to_cpu(nand_stats_v3->erase_fail_count));
+		temp_ptr = (__u64 *)nand_stats_v3->program_fail_count;
+		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
+		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+		printf("  Program Fail Count - Normalized	 	 %"PRIu16"\n",
+				le16_to_cpu(temp_norm));
+		printf("  Program Fail Count - Raw		     	 %"PRIu64"\n",
+				le64_to_cpu(temp_raw));
+		temp_ptr = (__u64 *)nand_stats_v3->erase_fail_count;
+		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
+		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+		printf("  Erase Fail Count - Normalized	     		 %"PRIu16"\n",
+				le16_to_cpu(temp_norm));
+		printf("  Erase Fail Count - Raw		         %"PRIu64"\n",
+				le64_to_cpu(temp_raw));
 		printf("  PCIe Correctable Error Count			 %"PRIu16"\n",
 				le16_to_cpu(nand_stats_v3->correctable_error_count));
 		printf("  %% Free Blocks (User)				 %u\n",
@@ -6915,11 +6932,13 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->soft_ecc_error_count));
 		printf("  Refresh Count					 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->refresh_count));
+		temp_ptr = (__u64 *)nand_stats_v3->bad_sys_nand_block_count;
+		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
+		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
 		printf("  Bad System Nand Block Count - Normalized	 %"PRIu16"\n",
-				le16_to_cpu(nand_stats_v3->bad_sys_nand_block_count[0]));
-		temp_u32 = (__u32)(nand_stats_v3->bad_sys_nand_block_count[2] & 0x0000FFFFFFFFFFFF);
-		printf("  Bad System Nand Block Count - Raw		 %"PRIu32"\n",
-				le32_to_cpu(temp_u32));
+				le16_to_cpu(temp_norm));
+		printf("  Bad System Nand Block Count - Raw	         %"PRIu64"\n",
+				le64_to_cpu(temp_raw));
 		printf("  Endurance Estimate				 %.0Lf\n",
 				int128_to_double(nand_stats_v3->endurance_estimate));
 		printf("  Thermal Throttling Count			 %u\n",
@@ -6947,7 +6966,9 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 	struct wdc_nand_stats_V3 *nand_stats_v3 = (struct wdc_nand_stats_V3 *)(data);
 	struct json_object *root;
 	root = json_create_object();
-	__u32 temp_u32;
+	__u64 temp_raw;
+	__u16 temp_norm;
+	__u64 *temp_ptr = NULL;
 
 	switch (version)
 	{
@@ -6981,8 +7002,13 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				int128_to_double(nand_stats_v3->nand_write_tlc));
 		json_object_add_value_float(root, "NAND Writes SLC (Bytes)",
 				int128_to_double(nand_stats_v3->nand_write_slc));
-		json_object_add_value_uint(root, "Bad NAND Blocks Count",
-				le64_to_cpu(nand_stats_v3->bad_nand_block_count));
+		temp_ptr = (__u64 *)nand_stats_v3->bad_nand_block_count;
+		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
+		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+		json_object_add_value_uint(root, "Bad NAND Blocks Count - Normalized",
+				le16_to_cpu(temp_norm));
+		json_object_add_value_uint(root, "Bad NAND Blocks Count - Raw",
+				le64_to_cpu(temp_raw));
 		json_object_add_value_uint(root, "NAND XOR Recovery count",
 				le64_to_cpu(nand_stats_v3->xor_recovery_count));
 		json_object_add_value_uint(root, "UECC Read Error count",
@@ -7003,10 +7029,20 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->user_data_erase_counts[2]));
 		json_object_add_value_uint(root, "User Data Erase Counts - TLC Max",
 				le64_to_cpu(nand_stats_v3->user_data_erase_counts[3]));
-		json_object_add_value_uint(root, "Program Fail Count",
-				le64_to_cpu(nand_stats_v3->program_fail_count));
-		json_object_add_value_uint(root, "Erase Fail Count",
-				le64_to_cpu(nand_stats_v3->erase_fail_count));
+		temp_ptr = (__u64 *)nand_stats_v3->program_fail_count;
+		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
+		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+		json_object_add_value_uint(root, "Program Fail Count - Normalized",
+				le16_to_cpu(temp_norm));
+		json_object_add_value_uint(root, "Program Fail Count - Raw",
+				le64_to_cpu(temp_raw));
+		temp_ptr = (__u64 *)nand_stats_v3->erase_fail_count;
+		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
+		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
+		json_object_add_value_uint(root, "Erase Fail Count - Normalized",
+				le16_to_cpu(temp_norm));
+		json_object_add_value_uint(root, "Erase Fail Count - Raw",
+				le64_to_cpu(temp_raw));
 		json_object_add_value_uint(root, "PCIe Correctable Error Count",
 				le16_to_cpu(nand_stats_v3->correctable_error_count));
 		json_object_add_value_uint(root, "% Free Blocks (User)",
@@ -7027,11 +7063,13 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->soft_ecc_error_count));
 		json_object_add_value_uint(root, "Refresh Count",
 				le64_to_cpu(nand_stats_v3->refresh_count));
+		temp_ptr = (__u64 *)nand_stats_v3->bad_sys_nand_block_count;
+		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
+		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
 		json_object_add_value_uint(root, "Bad System Nand Block Count - Normalized",
-				le16_to_cpu(nand_stats_v3->bad_sys_nand_block_count[0]));
-		temp_u32 = (__u32)(nand_stats_v3->bad_sys_nand_block_count[2] & 0x0000FFFFFFFFFFFF);
+				le16_to_cpu(temp_norm));
 		json_object_add_value_uint(root, "Bad System Nand Block Count - Raw",
-				le32_to_cpu(temp_u32));
+				le64_to_cpu(temp_raw));
 		json_object_add_value_float(root, "Endurance Estimate",
 				int128_to_double(nand_stats_v3->endurance_estimate));
 		json_object_add_value_uint(root, "Thermal Throttling Status",
@@ -7045,9 +7083,12 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 		json_object_add_value_uint(root, "log page version",
 				le16_to_cpu(nand_stats_v3->log_page_version));
 
+		json_print_object(root, NULL);
+		printf("\n");
 		break;
 
 	default:
+		printf("%s: Invalid Stats Version = %d\n", __func__, version);
 		break;
 
 	}
@@ -7135,6 +7176,8 @@ static void wdc_print_pcie_stats_json(struct wdc_vs_pcie_stats *pcie_stats)
 
 	json_print_object(root, NULL);
 	printf("\n");
+
+	json_free_object(root);
 }
 
 static int wdc_do_vs_nand_stats(int fd, char *format)
@@ -7324,14 +7367,33 @@ static int wdc_vs_drive_info(int argc, char **argv,
 	struct nvme_id_ctrl ctrl;
 	char vsData[32] = {0};
 	char major_rev = 0, minor_rev = 0;
+	int fmt = -1;
+	struct json_object *root = NULL;
+	char formatter[41] = { 0 };
+	char rev_str[8] = { 0 };
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
 
 	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json"),
 		OPT_END()
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		fprintf(stderr, "ERROR : WDC %s invalid output format\n", __func__);
+		return fmt;
+	}
 
 	/* get the id ctrl data used to fill in drive info below */
 	ret = nvme_identify_ctrl(fd, &ctrl);
@@ -7350,9 +7412,25 @@ static int wdc_vs_drive_info(int argc, char **argv,
 			size = (__u16)((cpu_to_le32(result) & 0xffff0000) >> 16);
 			rev = (double)(cpu_to_le32(result) & 0x0000ffff);
 
-			printf("Drive HW Revison: %4.1f\n", (.1 * rev));
-			printf("FTL Unit Size:     0x%x KB\n", size);
-			printf("Customer SN:        %-.*s\n", 14, &ctrl.sn[0]);
+			if (fmt == NORMAL) {
+				printf("Drive HW Revison: %4.1f\n", (.1 * rev));
+				printf("FTL Unit Size:     0x%x KB\n", size);
+				printf("Customer SN:        %-.*s\n", 14, &ctrl.sn[0]);
+			}
+			else if (fmt == JSON) {
+		   		root = json_create_object();
+		   		sprintf(rev_str, "%4.1f", (.1 * rev));
+				json_object_add_value_string(root, "Drive HW Revison", rev_str);
+
+				json_object_add_value_int(root, "FTL Unit Size", le16_to_cpu(size));
+				wdc_StrFormat(formatter, sizeof(formatter), &ctrl.sn[0], sizeof(&ctrl.sn));
+				json_object_add_value_string(root, "Customer SN", formatter);
+
+				json_print_object(root, NULL);
+				printf("\n");
+
+				json_free_object(root);
+			}
 		}
 	}
 	else if ((capabilities & WDC_DRIVE_CAP_INFO_2) == WDC_DRIVE_CAP_INFO_2) {
@@ -7361,8 +7439,22 @@ static int wdc_vs_drive_info(int argc, char **argv,
 		major_rev = vsData[20];
 		minor_rev = vsData[21];
 
-		printf("Drive HW Revison:   %c.%c \n", major_rev, minor_rev);
-		printf("Customer SN:        %-.*s\n", 14, &vsData[0]);
+		if (fmt == NORMAL) {
+			printf("Drive HW Revison:   %c.%c \n", major_rev, minor_rev);
+			printf("Customer SN:        %-.*s\n", 14, &vsData[0]);
+		}
+		else if (fmt == JSON) {
+	   		root = json_create_object();
+	   		sprintf(rev_str, "%c.%c", major_rev, minor_rev);
+			json_object_add_value_string(root, "Drive HW Revison", rev_str);
+			wdc_StrFormat(formatter, sizeof(formatter), &vsData[0], 14);
+			json_object_add_value_string(root, "Customer SN", formatter);
+
+			json_print_object(root, NULL);
+			printf("\n");
+
+			json_free_object(root);
+		}
 	} else {
 		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
 		return -1;
@@ -7382,14 +7474,32 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 	uint64_t capabilities = 0;
     	__u32 hctm_tmt;
 	int fd, ret;
+	int temperature, temp_tmt1, temp_tmt2;
+	int fmt = -1;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
 
 	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json"),
 		OPT_END()
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		return fd;
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		fprintf(stderr, "ERROR : WDC : invalid output format\n");
+		ret = fmt;
+		goto END;
+	}
 
 	/* check if command is supported */
 	wdc_check_device(fd);
@@ -7404,35 +7514,66 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
    	if (ret != 0)
 		goto END;
 	ret = nvme_smart_log(fd, NVME_NSID_ALL, &smart_log);
-    	if (ret != 0) 
-    		goto END;
+    if (ret != 0)
+    	goto END;
 
-    	/* print the temperature stats */
-    	printf("Temperature Stats for NVME device:%s namespace-id:%x\n",
-            	devicename, WDC_DE_GLOBAL_NSID);
 
-    	/* convert from Kelvin to degrees Celsius */
-	int temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]) - 273;
-	printf("Current Composite Temperature           : %d °C\n", temperature);
-    	printf("WCTEMP                                  : %"PRIu16" °C\n", id_ctrl.wctemp - 273);
-	printf("CCTEMP                                  : %"PRIu16" °C\n",  id_ctrl.cctemp - 273);
-    	printf("DITT support                            : 0\n");
-    	printf("HCTM support                            : %"PRIu16"\n", id_ctrl.hctma);
+   	/* convert from Kelvin to degrees Celsius */
+	temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]) - 273;
 
 	/* retrieve HCTM Thermal Management Temperatures */
-    	nvme_get_feature(fd, 0, 0x10, 0, 0, 0, 0, &hctm_tmt);
-    	temperature = ((hctm_tmt >> 16) & 0xffff) ? ((hctm_tmt >> 16) & 0xffff) - 273 : 0;	
-	printf("HCTM Light (TMT1)                       : %"PRIu16" °C\n", temperature);
-    	printf("TMT1 Transition Counter                 : %"PRIu32"\n", smart_log.thm_temp1_trans_count);
-	printf("TMT1 Total Time                         : %"PRIu32"\n", smart_log.thm_temp1_total_time);
+   	nvme_get_feature(fd, 0, 0x10, 0, 0, 0, 0, &hctm_tmt);
+   	temp_tmt1 = ((hctm_tmt >> 16) & 0xffff) ? ((hctm_tmt >> 16) & 0xffff) - 273 : 0;
+   	temp_tmt2 = (hctm_tmt & 0xffff) ? (hctm_tmt & 0xffff) - 273 : 0;
 
-    	temperature = (hctm_tmt & 0xffff) ? (hctm_tmt & 0xffff) - 273 : 0;	
-	printf("HCTM Heavy (TMT2)                       : %"PRIu16" °C\n", temperature);
-    	printf("TMT2 Transition Counter                 : %"PRIu32"\n", smart_log.thm_temp2_trans_count);
-    	printf("TMT2 Total Time                         : %"PRIu32"\n", smart_log.thm_temp2_total_time);
-    	printf("Thermal Shutdown Threshold              : 95 °C\n");	
-       
-    	END:
+   	if (fmt == NORMAL) {
+		/* print the temperature stats */
+		printf("Temperature Stats for NVME device:%s namespace-id:%x\n",
+					devicename, WDC_DE_GLOBAL_NSID);
+
+		printf("Current Composite Temperature           : %d °C\n", temperature);
+		printf("WCTEMP                                  : %"PRIu16" °C\n", id_ctrl.wctemp - 273);
+		printf("CCTEMP                                  : %"PRIu16" °C\n", id_ctrl.cctemp - 273);
+		printf("DITT support                            : 0\n");
+		printf("HCTM support                            : %"PRIu16"\n", id_ctrl.hctma);
+
+		printf("HCTM Light (TMT1)                       : %"PRIu16" °C\n", temp_tmt1);
+		printf("TMT1 Transition Counter                 : %"PRIu32"\n", smart_log.thm_temp1_trans_count);
+		printf("TMT1 Total Time                         : %"PRIu32"\n", smart_log.thm_temp1_total_time);
+
+		printf("HCTM Heavy (TMT2)                       : %"PRIu16" °C\n", temp_tmt2);
+		printf("TMT2 Transition Counter                 : %"PRIu32"\n", smart_log.thm_temp2_trans_count);
+		printf("TMT2 Total Time                         : %"PRIu32"\n", smart_log.thm_temp2_total_time);
+		printf("Thermal Shutdown Threshold              : 95 °C\n");
+   	}
+   	else if (fmt == JSON) {
+   		struct json_object *root;
+   		root = json_create_object();
+
+		json_object_add_value_int(root, "Current Composite Temperature", le32_to_cpu(temperature));
+		json_object_add_value_int(root, "WCTEMP", le16_to_cpu(id_ctrl.wctemp - 273));
+		json_object_add_value_int(root, "CCTEMP", le16_to_cpu(id_ctrl.cctemp - 273));
+		json_object_add_value_int(root, "DITT support", 0);
+		json_object_add_value_int(root, "HCTM support", le16_to_cpu(id_ctrl.hctma));
+
+		json_object_add_value_int(root, "HCTM Light (TMT1)", le16_to_cpu(temp_tmt1));
+		json_object_add_value_int(root, "TMT1 Transition Counter", le32_to_cpu(smart_log.thm_temp1_trans_count));
+		json_object_add_value_int(root, "TMT1 Total Time", le32_to_cpu(smart_log.thm_temp1_total_time));
+
+		json_object_add_value_int(root, "HCTM Light (TMT2)", le16_to_cpu(temp_tmt2));
+		json_object_add_value_int(root, "TMT2 Transition Counter", le32_to_cpu(smart_log.thm_temp2_trans_count));
+		json_object_add_value_int(root, "TMT2 Total Time", le32_to_cpu(smart_log.thm_temp2_total_time));
+		json_object_add_value_int(root, "Thermal Shutdown Threshold", 95);
+
+		json_print_object(root, NULL);
+		printf("\n");
+
+		json_free_object(root);
+   	}
+   	else
+   	   	printf("%s: Invalid format\n", __func__);
+
+END:
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;
 }
