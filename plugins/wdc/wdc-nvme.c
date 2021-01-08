@@ -7514,9 +7514,8 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
    	if (ret != 0)
 		goto END;
 	ret = nvme_smart_log(fd, NVME_NSID_ALL, &smart_log);
-    if (ret != 0)
-    	goto END;
-
+	if (ret != 0)
+		goto END;
 
    	/* convert from Kelvin to degrees Celsius */
 	temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]) - 273;
