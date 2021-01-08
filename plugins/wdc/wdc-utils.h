@@ -74,4 +74,5 @@ int wdc_UtilsGetTime(PUtilsTimeInfo timeInfo);
 int wdc_UtilsStrCompare(char *pcSrc, char *pcDst);
 int wdc_UtilsCreateDir(char *path);
 int wdc_WriteToFile(char *fileName, char *buffer, unsigned int bufferLen);
+void wdc_StrFormat(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz);
 
