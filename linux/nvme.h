@@ -880,6 +880,11 @@ enum nvme_persistent_event_log_actions {
 	NVME_PEVENT_LOG_RELEASE_CTX			= 0x2,
 };
 
+struct nvme_predlat_event_agg_log_page {
+	__le64	num_entries;
+	__le16	entries[];
+};
+
 enum {
 	NVME_SMART_CRIT_SPARE		= 1 << 0,
 	NVME_SMART_CRIT_TEMPERATURE	= 1 << 1,
@@ -1179,6 +1184,7 @@ enum {
 	NVME_LOG_TELEMETRY_CTRL = 0x08,
 	NVME_LOG_ENDURANCE_GROUP = 0x09,
 	NVME_LOG_ANA		= 0x0c,
+	NVME_LOG_PRELAT_EVENT_AGG	= 0x0b,
 	NVME_LOG_PERSISTENT_EVENT   = 0x0d,
 	NVME_LOG_DISC		= 0x70,
 	NVME_LOG_RESERVATION	= 0x80,

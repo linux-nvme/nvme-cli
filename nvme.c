@@ -737,6 +737,96 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int get_pred_lat_event_agg_log(int argc, char **argv,
+		struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve Predictable Latency Event" \
+			"Aggregate Log page and prints it, for the given" \
+			"device in either decoded format(default)," \
+			"json or binary.";
+	const char *log_entries = "Number of pending NVM Set" \
+			"log Entries list";
+	const char *rae = "Retain an Asynchronous Event";
+	const char *raw = "use binary output";
+	void *pea_log;
+	struct nvme_id_ctrl ctrl;
+	enum nvme_print_flags flags;
+	int err, fd;
+	__u32 log_size;
+
+	struct config {
+		__u64 log_entries;
+		bool rae;
+		char *output_format;
+		int raw_binary;
+	};
+
+	struct config cfg = {
+		.log_entries = 2044,
+		.rae = false,
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
+		OPT_FLAG("rae",          'r', &cfg.rae,           rae),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+	if (cfg.raw_binary)
+		flags = BINARY;
+
+	if (!cfg.log_entries) {
+		fprintf(stderr, "non-zero log-entries is required param\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	err = nvme_identify_ctrl(fd, &ctrl);
+	if (err < 0) {
+		perror("identify controller");
+		goto close_fd;
+	} else if (err) {
+		nvme_show_status(err);
+		goto close_fd;
+	}
+
+	cfg.log_entries = min(cfg.log_entries, le32_to_cpu(ctrl.nsetidmax));
+	log_size = sizeof(__u64) + cfg.log_entries * sizeof(__u16);
+	pea_log = calloc(log_size, 1);
+	if (!pea_log) {
+		fprintf(stderr, "could not alloc buffer for predictable " \
+			"latency event agggregate log entries\n");
+		err = -ENOMEM;
+		goto close_fd;
+	}
+
+	err = nvme_predictable_latency_event_agg_log(fd, pea_log, cfg.rae,
+		log_size);
+	if (!err)
+		nvme_show_predictable_latency_event_agg_log(pea_log, cfg.log_entries,
+			log_size, devicename, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("predictable latency event gggregate log page");
+	free(pea_log);
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int get_persistent_event_log(int argc, char **argv,
 		struct command *cmd, struct plugin *plugin)
 {
