@@ -866,6 +866,582 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 	json_free_object(root);
 }
 
+static const char *nvme_show_nss_hw_error(__u16 error_code)
+{
+	switch(error_code) {
+		case 0x01:
+			return "PCIe Correctable Error";
+		case 0x02:
+			return "PCIe Uncorrectable Non fatal Error";
+		case 0x03:
+			return "PCIe Uncorrectable Fatal Error";
+		case 0x04:
+			return "PCIe Link Status Change";
+		case 0x05:
+			return "PCIe Link Not Active";
+		case 0x06:
+			return "Critical Warning Condition";
+		case 0x07:
+			return "Endurance Group Critical Warning Condition";
+		case 0x08:
+			return "Unsafe Shutdown";
+		case 0x09:
+			return "Controller Fatal Status";
+		case 0xA:
+			return "Media and Data Integrity Status";
+		default:
+			return "Reserved";
+	}
+}
+
+void json_persistent_event_log(void *pevent_log_info,
+	__u32 size, enum nvme_print_flags flags)
+{
+	struct json_object *root;
+	struct json_object *valid_attrs;
+	struct json_array *valid;
+	__u32 offset, por_info_len, por_info_list;
+	__u64 *fw_rev;
+	char key[128];
+	struct nvme_smart_log *smart_event;
+	struct nvme_fw_commit_event *fw_commit_event;
+	struct nvme_time_stamp_change_event *ts_change_event;
+	struct nvme_power_on_reset_info_list *por_event;
+	struct nvme_nss_hw_err_event *nss_hw_err_event;
+	struct nvme_change_ns_event	*ns_event;
+	struct nvme_format_nvm_start_event *format_start_event;
+	struct nvme_format_nvm_compln_event *format_cmpln_event;
+	struct nvme_sanitize_start_event *sanitize_start_event;
+	struct nvme_sanitize_compln_event *sanitize_cmpln_event;
+	struct nvme_thermal_exc_event *thermal_exc_event;
+	struct nvme_persistent_event_log_head *pevent_log_head;
+	struct nvme_persistent_event_entry_head *pevent_entry_head;
+
+	root = json_create_object();
+	valid = json_create_array();
+
+	offset = sizeof(*pevent_log_head);
+	if (size >= offset) {
+		pevent_log_head = pevent_log_info;
+		char sn[sizeof(pevent_log_head->sn) + 1],
+			mn[sizeof(pevent_log_head->mn) + 1],
+			subnqn[sizeof(pevent_log_head->subnqn) + 1];
+
+		snprintf(sn, sizeof(sn), "%-.*s",
+			(int)sizeof(pevent_log_head->sn), pevent_log_head->sn);
+		snprintf(mn, sizeof(mn), "%-.*s",
+			(int)sizeof(pevent_log_head->mn), pevent_log_head->mn);
+		snprintf(subnqn, sizeof(subnqn), "%-.*s",
+			(int)sizeof(pevent_log_head->subnqn), pevent_log_head->subnqn);
+
+		json_object_add_value_uint(root, "log_id",
+			pevent_log_head->log_id);
+		json_object_add_value_uint(root, "total_num_of_events",
+			le32_to_cpu(pevent_log_head->tnev));
+		json_object_add_value_uint(root, "total_log_len",
+			le64_to_cpu(pevent_log_head->tll));
+		json_object_add_value_uint(root, "log_revision",
+			pevent_log_head->log_rev);
+		json_object_add_value_uint(root, "log_header_len",
+			le16_to_cpu(pevent_log_head->head_len));
+		json_object_add_value_uint(root, "timestamp",
+			le64_to_cpu(pevent_log_head->timestamp));
+		json_object_add_value_float(root, "power_on_hours",
+			int128_to_double(pevent_log_head->poh));
+		json_object_add_value_uint(root, "power_cycle_count",
+			le64_to_cpu(pevent_log_head->pcc));
+		json_object_add_value_uint(root, "pci_vid",
+			le16_to_cpu(pevent_log_head->vid));
+		json_object_add_value_uint(root, "pci_ssvid",
+			le16_to_cpu(pevent_log_head->ssvid));
+		json_object_add_value_string(root, "sn", sn);
+		json_object_add_value_string(root, "mn", mn);
+		json_object_add_value_string(root, "subnqn", subnqn);
+		for (int i = 0; i < 32; i++) {
+			if (pevent_log_head->supp_event_bm[i] == 0)
+				continue;
+			sprintf(key, "bitmap_%d", i);
+			json_object_add_value_uint(root, key,
+				pevent_log_head->supp_event_bm[i]);
+		}
+	} else {
+		printf("No log data can be shown with this log len at least " \
+			"512 bytes is required or can be 0 to read the complete "\
+			"log page after context established\n");
+		return;
+	}
+	for (int i = 0; i < le32_to_cpu(pevent_log_head->tnev); i++) {
+		if (offset + sizeof(*pevent_entry_head) >= size)
+			break;
+
+		pevent_entry_head = pevent_log_info + offset;
+
+		if ((offset + pevent_entry_head->ehl + 3 +
+			le16_to_cpu(pevent_entry_head->el)) >= size)
+			break;
+		valid_attrs = json_create_object();
+
+		json_object_add_value_uint(valid_attrs, "event_type",
+			pevent_entry_head->etype);
+		json_object_add_value_uint(valid_attrs, "event_type_rev",
+			pevent_entry_head->etype_rev);
+		json_object_add_value_uint(valid_attrs, "event_header_len",
+			pevent_entry_head->ehl);
+		json_object_add_value_uint(valid_attrs, "ctrl_id",
+			le16_to_cpu(pevent_entry_head->ctrl_id));
+		json_object_add_value_uint(valid_attrs, "event_time_stamp",
+			le64_to_cpu(pevent_entry_head->etimestamp));
+		json_object_add_value_uint(valid_attrs, "vu_info_len",
+			le16_to_cpu(pevent_entry_head->vsil));
+		json_object_add_value_uint(valid_attrs, "event_len",
+			le16_to_cpu(pevent_entry_head->el));
+
+		offset += pevent_entry_head->ehl + 3;
+
+		switch(pevent_entry_head->etype) {
+			case NVME_SMART_HEALTH_EVENT:
+				smart_event = pevent_log_info + offset;
+				unsigned int temperature = ((smart_event->temperature[1] << 8) |
+					smart_event->temperature[0]);
+
+				long double data_units_read = int128_to_double(smart_event->data_units_read);
+				long double data_units_written = int128_to_double(smart_event->data_units_written);
+				long double host_read_commands = int128_to_double(smart_event->host_reads);
+				long double host_write_commands = int128_to_double(smart_event->host_writes);
+				long double controller_busy_time = int128_to_double(smart_event->ctrl_busy_time);
+				long double power_cycles = int128_to_double(smart_event->power_cycles);
+				long double power_on_hours = int128_to_double(smart_event->power_on_hours);
+				long double unsafe_shutdowns = int128_to_double(smart_event->unsafe_shutdowns);
+				long double media_errors = int128_to_double(smart_event->media_errors);
+				long double num_err_log_entries = int128_to_double(smart_event->num_err_log_entries);
+				json_object_add_value_int(valid_attrs, "critical_warning",
+					smart_event->critical_warning);
+
+				json_object_add_value_int(valid_attrs, "temperature",
+					temperature);
+				json_object_add_value_int(valid_attrs, "avail_spare",
+					smart_event->avail_spare);
+				json_object_add_value_int(valid_attrs, "spare_thresh",
+					smart_event->spare_thresh);
+				json_object_add_value_int(valid_attrs, "percent_used",
+					smart_event->percent_used);
+				json_object_add_value_int(valid_attrs,
+					"endurance_grp_critical_warning_summary",
+					smart_event->endu_grp_crit_warn_sumry);
+				json_object_add_value_float(valid_attrs, "data_units_read",
+					data_units_read);
+				json_object_add_value_float(valid_attrs, "data_units_written",
+					data_units_written);
+				json_object_add_value_float(valid_attrs, "host_read_commands",
+					host_read_commands);
+				json_object_add_value_float(valid_attrs, "host_write_commands",
+					host_write_commands);
+				json_object_add_value_float(valid_attrs, "controller_busy_time",
+					controller_busy_time);
+				json_object_add_value_float(valid_attrs, "power_cycles",
+					power_cycles);
+				json_object_add_value_float(valid_attrs, "power_on_hours",
+					power_on_hours);
+				json_object_add_value_float(valid_attrs, "unsafe_shutdowns",
+					unsafe_shutdowns);
+				json_object_add_value_float(valid_attrs, "media_errors",
+					media_errors);
+				json_object_add_value_float(valid_attrs, "num_err_log_entries",
+					num_err_log_entries);
+				json_object_add_value_uint(valid_attrs, "warning_temp_time",
+						le32_to_cpu(smart_event->warning_temp_time));
+				json_object_add_value_uint(valid_attrs, "critical_comp_time",
+						le32_to_cpu(smart_event->critical_comp_time));
+
+				for (int c = 0; c < 8; c++) {
+					__s32 temp = le16_to_cpu(smart_event->temp_sensor[c]);
+					if (temp == 0)
+						continue;
+					sprintf(key, "temperature_sensor_%d",c + 1);
+					json_object_add_value_int(valid_attrs, key, temp);
+				}
+
+				json_object_add_value_uint(valid_attrs, "thm_temp1_trans_count",
+						le32_to_cpu(smart_event->thm_temp1_trans_count));
+				json_object_add_value_uint(valid_attrs, "thm_temp2_trans_count",
+						le32_to_cpu(smart_event->thm_temp2_trans_count));
+				json_object_add_value_uint(valid_attrs, "thm_temp1_total_time",
+						le32_to_cpu(smart_event->thm_temp1_total_time));
+				json_object_add_value_uint(valid_attrs, "thm_temp2_total_time",
+						le32_to_cpu(smart_event->thm_temp2_total_time));
+				break;
+			case NVME_FW_COMMIT_EVENT:
+				fw_commit_event = pevent_log_info + offset;
+				json_object_add_value_uint(valid_attrs, "old_fw_rev",
+					le64_to_cpu(fw_commit_event->old_fw_rev));
+				json_object_add_value_uint(valid_attrs, "new_fw_rev",
+					le64_to_cpu(fw_commit_event->new_fw_rev));
+				json_object_add_value_uint(valid_attrs, "fw_commit_action",
+					fw_commit_event->fw_commit_action);
+				json_object_add_value_uint(valid_attrs, "fw_slot",
+					fw_commit_event->fw_slot);
+				json_object_add_value_uint(valid_attrs, "sct_fw",
+					fw_commit_event->sct_fw);
+				json_object_add_value_uint(valid_attrs, "sc_fw",
+					fw_commit_event->sc_fw);
+				json_object_add_value_uint(valid_attrs,
+					"vu_assign_fw_commit_rc",
+					le16_to_cpu(fw_commit_event->vndr_assign_fw_commit_rc));
+				break;
+			case NVME_TIMESTAMP_EVENT:
+				ts_change_event = pevent_log_info + offset;
+				json_object_add_value_uint(valid_attrs, "prev_ts",
+					le64_to_cpu(ts_change_event->previous_timestamp));
+				json_object_add_value_uint(valid_attrs,
+					"ml_secs_since_reset",
+					le64_to_cpu(ts_change_event->ml_secs_since_reset));
+				break;
+			case NVME_POWER_ON_RESET_EVENT:
+				por_info_len = (le16_to_cpu(pevent_entry_head->el) -
+					le16_to_cpu(pevent_entry_head->vsil) - sizeof(*fw_rev));
+
+				por_info_list = por_info_len / sizeof(*por_event);
+
+				fw_rev = pevent_log_info + offset;
+				json_object_add_value_uint(valid_attrs, "fw_rev",
+					le64_to_cpu(*fw_rev));
+				for (int i = 0; i < por_info_list; i++) {
+					por_event = pevent_log_info + offset +
+						sizeof(*fw_rev) + i * sizeof(*por_event);
+					json_object_add_value_uint(valid_attrs, "ctrl_id",
+						le16_to_cpu(por_event->cid));
+					json_object_add_value_uint(valid_attrs, "fw_act",
+						por_event->fw_act);
+					json_object_add_value_uint(valid_attrs, "op_in_prog",
+						por_event->op_in_prog);
+					json_object_add_value_uint(valid_attrs, "ctrl_power_cycle",
+						le32_to_cpu(por_event->ctrl_power_cycle));
+					json_object_add_value_uint(valid_attrs, "power_on_ml_secs",
+						le64_to_cpu(por_event->power_on_ml_seconds));
+					json_object_add_value_uint(valid_attrs, "ctrl_time_stamp",
+						le64_to_cpu(por_event->ctrl_time_stamp));
+				}
+				break;
+			case NVME_NSS_HW_ERROR_EVENT:
+				nss_hw_err_event = pevent_log_info + offset;
+				json_object_add_value_uint(valid_attrs, "nss_hw_err_code",
+					le16_to_cpu(nss_hw_err_event->nss_hw_err_event_code));
+				break;
+			case NVME_CHANGE_NS_EVENT:
+				ns_event = pevent_log_info + offset;
+				json_object_add_value_uint(valid_attrs, "nsmgt_cdw10",
+					le32_to_cpu(ns_event->nsmgt_cdw10));
+				json_object_add_value_uint(valid_attrs, "nsze",
+					le64_to_cpu(ns_event->nsze));
+				long double nscap = int128_to_double(ns_event->nscap);
+				json_object_add_value_float(valid_attrs, "nscap",
+					nscap);
+				json_object_add_value_uint(valid_attrs, "flbas",
+					ns_event->flbas);
+				json_object_add_value_uint(valid_attrs, "dps",
+					ns_event->dps);
+				json_object_add_value_uint(valid_attrs, "nmic",
+					ns_event->nmic);
+				json_object_add_value_uint(valid_attrs, "ana_grp_id",
+					le32_to_cpu(ns_event->ana_grp_id));
+				json_object_add_value_uint(valid_attrs, "nvmset_id",
+					le16_to_cpu(ns_event->nvmset_id));
+				json_object_add_value_uint(valid_attrs, "nsid",
+					le32_to_cpu(ns_event->nsid));
+				break;
+			case NVME_FORMAT_START_EVENT:
+				format_start_event = pevent_log_info + offset;
+				json_object_add_value_uint(valid_attrs, "nsid",
+					le32_to_cpu(format_start_event->nsid));
+				json_object_add_value_uint(valid_attrs, "fna",
+					format_start_event->fna);
+				json_object_add_value_uint(valid_attrs, "format_nvm_cdw10",
+					le32_to_cpu(format_start_event->format_nvm_cdw10));
+				break;
+			case NVME_FORMAT_COMPLETION_EVENT:
+				format_cmpln_event = pevent_log_info + offset;
+				json_object_add_value_uint(valid_attrs, "nsid",
+					le32_to_cpu(format_cmpln_event->nsid));
+				json_object_add_value_uint(valid_attrs, "smallest_fpi",
+					format_cmpln_event->smallest_fpi);
+				json_object_add_value_uint(valid_attrs, "format_nvm_status",
+					format_cmpln_event->format_nvm_status);
+				json_object_add_value_uint(valid_attrs, "compln_info",
+					le16_to_cpu(format_cmpln_event->compln_info));
+				json_object_add_value_uint(valid_attrs, "status_field",
+					le32_to_cpu(format_cmpln_event->status_field));
+				break;
+			case NVME_SANITIZE_START_EVENT:
+				sanitize_start_event = pevent_log_info + offset;
+				json_object_add_value_uint(valid_attrs, "SANICAP",
+					le32_to_cpu(sanitize_start_event->sani_cap));
+				json_object_add_value_uint(valid_attrs, "sani_cdw10",
+					le32_to_cpu(sanitize_start_event->sani_cdw10));
+				json_object_add_value_uint(valid_attrs, "sani_cdw11",
+					le32_to_cpu(sanitize_start_event->sani_cdw11));
+				break;
+			case NVME_SANITIZE_COMPLETION_EVENT:
+				sanitize_cmpln_event = pevent_log_info + offset;
+				json_object_add_value_uint(valid_attrs, "sani_prog",
+					le16_to_cpu(sanitize_cmpln_event->sani_prog));
+				json_object_add_value_uint(valid_attrs, "sani_status",
+					le16_to_cpu(sanitize_cmpln_event->sani_status));
+				json_object_add_value_uint(valid_attrs, "cmpln_info",
+					le16_to_cpu(sanitize_cmpln_event->cmpln_info));
+				break;
+			case NVME_THERMAL_EXCURSION_EVENT:
+				thermal_exc_event = pevent_log_info + offset;
+				json_object_add_value_uint(valid_attrs, "over_temp",
+					thermal_exc_event->over_temp);
+				json_object_add_value_uint(valid_attrs, "threshold",
+					thermal_exc_event->threshold);
+				break;
+		}
+
+		json_array_add_value_object(valid, valid_attrs);
+		offset += le16_to_cpu(pevent_entry_head->el);
+	}
+
+	json_object_add_value_array(root, "list_of_event_entries", valid);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_persistent_event_log(void *pevent_log_info,
+	__u8 action, __u32 size, const char *devname,
+	enum nvme_print_flags flags)
+{
+	__u32 offset, por_info_len, por_info_list;
+	__u64 *fw_rev;
+	struct nvme_smart_log *smart_event;
+	struct nvme_fw_commit_event *fw_commit_event;
+	struct nvme_time_stamp_change_event *ts_change_event;
+	struct nvme_power_on_reset_info_list *por_event;
+	struct nvme_nss_hw_err_event *nss_hw_err_event;
+	struct nvme_change_ns_event	*ns_event;
+	struct nvme_format_nvm_start_event *format_start_event;
+	struct nvme_format_nvm_compln_event *format_cmpln_event;
+	struct nvme_sanitize_start_event *sanitize_start_event;
+	struct nvme_sanitize_compln_event *sanitize_cmpln_event;
+	struct nvme_thermal_exc_event *thermal_exc_event;
+	struct nvme_persistent_event_log_head *pevent_log_head;
+	struct nvme_persistent_event_entry_head *pevent_entry_head;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)pevent_log_info, size);
+	if (flags & JSON)
+		return json_persistent_event_log(pevent_log_info, size,
+			flags);
+
+	offset = sizeof(*pevent_log_head);
+
+	printf("Persistent Event Log for device: %s\n", devname);
+	printf("Action for Persistent Event Log: %u\n", action);
+	if (size >= offset) {
+		pevent_log_head = pevent_log_info;
+		printf("Log Identifier: %u\n", pevent_log_head->log_id);
+		printf("Total Number of Events: %u\n",
+			le32_to_cpu(pevent_log_head->tnev));
+		printf("Total Log Length : %"PRIu64"\n",
+			le64_to_cpu(pevent_log_head->tll));
+		printf("Log Revision: %u\n", pevent_log_head->log_rev);
+		printf("Log Header Length: %u\n", pevent_log_head->head_len);
+		printf("Timestamp: %"PRIu64"\n",
+			le64_to_cpu(pevent_log_head->timestamp));
+		printf("Power On Hours (POH): %'.0Lf\n",
+			int128_to_double(pevent_log_head->poh));
+		printf("Power Cycle Count: %"PRIu64"\n",
+			le64_to_cpu(pevent_log_head->pcc));
+		printf("PCI Vendor ID (VID): %u\n",
+			le16_to_cpu(pevent_log_head->vid));
+		printf("PCI Subsystem Vendor ID (SSVID): %u\n",
+			le16_to_cpu(pevent_log_head->ssvid));
+		printf("Serial Number (SN): %-.*s\n",
+			(int)sizeof(pevent_log_head->sn), pevent_log_head->sn);
+		printf("Model Number (MN): %-.*s\n",
+			(int)sizeof(pevent_log_head->mn), pevent_log_head->mn);
+		printf("NVM Subsystem NVMe Qualified Name (SUBNQN): %-.*s\n",
+			(int)sizeof(pevent_log_head->subnqn),
+			pevent_log_head->subnqn);
+		printf("Supported Events Bitmap: ");
+		for (int i = 0; i < 32; i++) {
+			if (pevent_log_head->supp_event_bm[i] == 0)
+				continue;
+			printf("BitMap[%d] is 0x%x\n", i,
+				pevent_log_head->supp_event_bm[i]);
+		}
+	} else {
+		printf("No log data can be shown with this log len at least " \
+			"512 bytes is required or can be 0 to read the complete "\
+			"log page after context established\n");
+		return;
+	}
+	printf("\n");
+	printf("\nPersistent Event Entries:\n");
+	for (int i = 0; i < le32_to_cpu(pevent_log_head->tnev); i++) {
+		if (offset + sizeof(*pevent_entry_head) >= size)
+			break;
+
+		pevent_entry_head = pevent_log_info + offset;
+
+		if ((offset + pevent_entry_head->ehl + 3 +
+			le16_to_cpu(pevent_entry_head->el)) >= size)
+			break;
+
+		printf("Event Type: %u\n", pevent_entry_head->etype);
+		printf("Event Type Revision: %u\n", pevent_entry_head->etype_rev);
+		printf("Event Header Length: %u\n", pevent_entry_head->ehl);
+		printf("Controller Identifier: %u\n",
+			le16_to_cpu(pevent_entry_head->ctrl_id));
+		printf("Event Timestamp: %"PRIu64"\n",
+			le64_to_cpu(pevent_entry_head->etimestamp));
+		printf("Vendor Specific Information Length: %u\n",
+			le16_to_cpu(pevent_entry_head->vsil));
+		printf("Event Length: %u\n", le16_to_cpu(pevent_entry_head->el));
+
+		offset += pevent_entry_head->ehl + 3;
+
+		switch(pevent_entry_head->etype) {
+			case NVME_SMART_HEALTH_EVENT:
+				smart_event = pevent_log_info + offset;
+				printf("Smart Health Event: \n");
+				nvme_show_smart_log(smart_event, NVME_NSID_ALL, devname, flags);
+				break;
+			case NVME_FW_COMMIT_EVENT:
+				fw_commit_event = pevent_log_info + offset;
+				printf("FW Commit Event: \n");
+				printf("Old Firmware Revision: %"PRIu64"\n",
+					le64_to_cpu(fw_commit_event->old_fw_rev));
+				printf("New Firmware Revision: %"PRIu64"\n",
+					le64_to_cpu(fw_commit_event->new_fw_rev));
+				printf("FW Commit Action: %u\n",
+					fw_commit_event->fw_commit_action);
+				printf("FW Slot: %u\n", fw_commit_event->fw_slot);
+				printf("Status Code Type for Firmware Commit Command: %u\n",
+					fw_commit_event->sct_fw);
+				printf("Status Returned for Firmware Commit Command: %u\n",
+					fw_commit_event->sc_fw);
+				printf("Vendor Assigned Firmware Commit Result Code: %u\n",
+					le16_to_cpu(fw_commit_event->vndr_assign_fw_commit_rc));
+				break;
+			case NVME_TIMESTAMP_EVENT:
+				ts_change_event = pevent_log_info + offset;
+				printf("Time Stamp Change Event: \n");
+				printf("Previous Timestamp: %"PRIu64"\n",
+					le64_to_cpu(ts_change_event->previous_timestamp));
+				printf("Milliseconds Since Reset: %"PRIu64"\n",
+					le64_to_cpu(ts_change_event->ml_secs_since_reset));
+				break;
+			case NVME_POWER_ON_RESET_EVENT:
+				por_info_len = (le16_to_cpu(pevent_entry_head->el) -
+					le16_to_cpu(pevent_entry_head->vsil) - sizeof(*fw_rev));
+
+				por_info_list = por_info_len / sizeof(*por_event);
+
+				printf("Power On Reset Event: \n");
+				fw_rev = pevent_log_info + offset;
+				printf("Firmware Revision: %"PRIu64"\n", le64_to_cpu(*fw_rev));
+				printf("Reset Information List: \n");
+
+				for (int i = 0; i < por_info_list; i++) {
+					por_event = pevent_log_info + offset +
+						sizeof(*fw_rev) + i * sizeof(*por_event);
+					printf("Controller ID: %u\n", le16_to_cpu(por_event->cid));
+					printf("Firmware Activation: %u\n",
+						por_event->fw_act);
+					printf("Operation in Progress: %u\n",
+						por_event->op_in_prog);
+					printf("Controller Power Cycle: %u\n",
+						le32_to_cpu(por_event->ctrl_power_cycle));
+					printf("Power on milliseconds: %"PRIu64"\n",
+						le64_to_cpu(por_event->power_on_ml_seconds));
+					printf("Controller Timestamp: %"PRIu64"\n",
+						le64_to_cpu(por_event->ctrl_time_stamp));
+				}
+				break;
+			case NVME_NSS_HW_ERROR_EVENT:
+				nss_hw_err_event = pevent_log_info + offset;
+				printf("NVM Subsystem Hardware Error Event Code: %u, %s\n",
+					le16_to_cpu(nss_hw_err_event->nss_hw_err_event_code),
+					nvme_show_nss_hw_error(nss_hw_err_event->nss_hw_err_event_code));
+				break;
+			case NVME_CHANGE_NS_EVENT:
+				ns_event = pevent_log_info + offset;
+				printf("Change Namespace Event: \n");
+				printf("Namespace Management CDW10: %u\n",
+					le32_to_cpu(ns_event->nsmgt_cdw10));
+				printf("Namespace Size: %"PRIu64"\n",
+					le64_to_cpu(ns_event->nsze));
+				printf("Namespace Capacity: %'.0Lf\n",
+					int128_to_double(ns_event->nscap));
+				printf("Formatted LBA Size: %u\n", ns_event->flbas);
+				printf("End-to-end Data Protection Type Settings: %u\n",
+					ns_event->dps);
+				printf("Namespace Multi-path I/O and Namespace Sharing" \
+					" Capabilities: %u\n", ns_event->nmic);
+				printf("ANA Group Identifier: %u\n",
+					le32_to_cpu(ns_event->ana_grp_id));
+				printf("NVM Set Identifier: %u\n", le16_to_cpu(ns_event->nvmset_id));
+				printf("Namespace ID: %u\n", le32_to_cpu(ns_event->nsid));
+				break;
+			case NVME_FORMAT_START_EVENT:
+				format_start_event = pevent_log_info + offset;
+				printf("Format NVM Start Event: \n");
+				printf("Namespace Identifier: %u\n",
+					le32_to_cpu(format_start_event->nsid));
+				printf("Format NVM Attributes: %u\n",
+					format_start_event->fna);
+				printf("Format NVM CDW10: %u\n",
+					le32_to_cpu(format_start_event->format_nvm_cdw10));
+				break;
+			case NVME_FORMAT_COMPLETION_EVENT:
+				format_cmpln_event = pevent_log_info + offset;
+				printf("Format NVM Completion Event: \n");
+				printf("Namespace Identifier: %u\n",
+					le32_to_cpu(format_cmpln_event->nsid));
+				printf("Smallest Format Progress Indicator: %u\n",
+					format_cmpln_event->smallest_fpi);
+				printf("Format NVM Status: %u\n",
+					format_cmpln_event->format_nvm_status);
+				printf("Completion Information: %u\n",
+					le16_to_cpu(format_cmpln_event->compln_info));
+				printf("Status Field: %u\n",
+					le32_to_cpu(format_cmpln_event->status_field));
+				break;
+			case NVME_SANITIZE_START_EVENT:
+				sanitize_start_event = pevent_log_info + offset;
+				printf("Sanitize Start Event: \n");
+				printf("SANICAP: %u\n", sanitize_start_event->sani_cap);
+				printf("Sanitize CDW10: %u\n",
+					le32_to_cpu(sanitize_start_event->sani_cdw10));
+				printf("Sanitize CDW11: %u\n",
+					le32_to_cpu(sanitize_start_event->sani_cdw11));
+				break;
+			case NVME_SANITIZE_COMPLETION_EVENT:
+				sanitize_cmpln_event = pevent_log_info + offset;
+				printf("Sanitize Completion Event: \n");
+				printf("Sanitize Progress: %u\n",
+					le16_to_cpu(sanitize_cmpln_event->sani_prog));
+				printf("Sanitize Status: %u\n",
+					le16_to_cpu(sanitize_cmpln_event->sani_status));
+				printf("Completion Information: %u\n",
+					le16_to_cpu(sanitize_cmpln_event->cmpln_info));
+				break;
+			case NVME_THERMAL_EXCURSION_EVENT:
+				thermal_exc_event = pevent_log_info + offset;
+				printf("Thermal Excursion Event: \n");
+				printf("Over Temperature: %u\n", thermal_exc_event->over_temp);
+				printf("Threshold: %u\n", thermal_exc_event->threshold);
+				break;
+			default:
+				printf("Reserved Event\n\n");
+		}
+		offset += le16_to_cpu(pevent_entry_head->el);
+		printf("\n");
+	}
+}
+
 static void nvme_show_subsystem(struct nvme_subsystem *s)
 {
 	int i;

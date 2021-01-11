@@ -393,7 +393,7 @@ static int nvme_get_vendor_log(int fd, __u32 namespace_id, int log_page,
 		goto end;
 	}
 	err = nvme_get_log(fd, namespace_id, log_page, false,
-		    log_len, log);
+		    NVME_NO_LOG_LSP, log_len, log);
 	if (err) {
 		fprintf(stderr, "%s: couldn't get log 0x%x\n", __func__,
 			log_page);

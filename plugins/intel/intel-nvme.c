@@ -372,7 +372,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 		return fd;
 
 	err = nvme_get_log(fd, cfg.namespace_id, 0xca, false,
-			   sizeof(smart_log), &smart_log);
+			   NVME_NO_LOG_LSP, sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (cfg.json)
 			show_intel_smart_log_jsn(&smart_log, cfg.namespace_id, devicename);
@@ -412,7 +412,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 		return fd;
 
 	err = nvme_get_log(fd, NVME_NSID_ALL, 0xdd, false,
-			   sizeof(log), log);
+			   NVME_NO_LOG_LSP, sizeof(log), log);
 	if (!err) {
 		if (!cfg.raw_binary)
 			printf("Intel Marketing Name Log:\n%s\n", log);
@@ -474,7 +474,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 		return fd;
 
 	err = nvme_get_log(fd, NVME_NSID_ALL, 0xc5, false,
-			   sizeof(stats), &stats);
+			   NVME_NO_LOG_LSP, sizeof(stats), &stats);
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_temp_stats(&stats);
@@ -895,7 +895,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		flags = BINARY;
 
 	err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
-			   false, sizeof(stats), &stats);
+			   false, NVME_NO_LOG_LSP, sizeof(stats), &stats);
 	if (!err) {
 		if (flags & JSON)
 			json_lat_stats(&stats, cfg.write);

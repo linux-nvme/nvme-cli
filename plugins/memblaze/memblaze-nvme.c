@@ -408,7 +408,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 		return fd;
 
 	err = nvme_get_log(fd, cfg.namespace_id, 0xca, false,
-			   sizeof(smart_log), &smart_log);
+			   NVME_NO_LOG_LSP, sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
 			err = show_memblaze_smart_log(fd, cfg.namespace_id, devicename, &smart_log);

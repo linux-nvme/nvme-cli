@@ -3,7 +3,7 @@
 # Kelly Kaoudis kelly.n.kaoudis at intel.com, Aug. 2015
 
 _cmds="list id-ctrl id-ns list-ns id-iocs create-ns delete-ns \
-	attach-ns detach-ns list-ctrl get-ns-id get-log \
+	attach-ns detach-ns list-ctrl get-ns-id get-log persistent-event-log \
 	fw-log smart-log smart-log-add error-log \
 	get-feature set-feature format fw-activate \
 	fw-download admin-passthru io-passthru security-send \
@@ -70,6 +70,10 @@ nvme_list_opts () {
 		"get-log")
 		opts+=" --log-id= -i --log-len= -l --namespace-id= -n \
 			--raw-binary= -b"
+			;;
+		"persistent-event-log")
+		opts+=" --action= -a --log-len= -l \
+			--raw-binary -b --output-format= -o"
 			;;
 		"fw-log")
 		opts+=" --raw-binary -b --output-format= -o"
