@@ -613,6 +613,14 @@ int nvme_sanitize_log(int fd, struct nvme_sanitize_log_page *sanitize_log)
 			NVME_NO_LOG_LSP, sizeof(*sanitize_log), sanitize_log);
 }
 
+int nvme_predictable_latency_event_agg_log(int fd,
+		void *pea_log, bool rae, __u32 size)
+{
+	return nvme_get_log(fd, NVME_NSID_ALL,
+			NVME_LOG_PRELAT_EVENT_AGG, rae, NVME_NO_LOG_LSP,
+			size, pea_log);
+}
+
 int nvme_persistent_event_log(int fd, __u8 action, __u32 size,
 	void *pevent_log_info)
 {

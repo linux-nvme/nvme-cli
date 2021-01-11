@@ -866,6 +866,63 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 	json_free_object(root);
 }
 
+void json_predictable_latency_event_agg_log(
+	struct nvme_predlat_event_agg_log_page *pea_log,
+	__u64 log_entries)
+{
+	struct json_object *root;
+	struct json_object *valid_attrs;
+	struct json_array *valid;
+	__u64 num_iter;
+	__u64 num_entries;
+
+	root = json_create_object();
+	num_entries = le64_to_cpu(pea_log->num_entries);
+	json_object_add_value_uint(root, "num_entries_avail",
+		num_entries);
+	valid = json_create_array();
+
+	num_iter = min(num_entries, log_entries);
+	for (int i = 0; i < num_iter; i++) {
+		valid_attrs = json_create_object();
+		json_object_add_value_uint(valid_attrs, "entry",
+			le16_to_cpu(pea_log->entries[i]));
+		json_array_add_value_object(valid, valid_attrs);
+	}
+	json_object_add_value_array(root, "list_of_entries", valid);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_predictable_latency_event_agg_log(
+	struct nvme_predlat_event_agg_log_page *pea_log,
+	__u64 log_entries, __u32 size, const char *devname,
+	enum nvme_print_flags flags)
+{
+	__u64 num_iter;
+	__u64 num_entries;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)pea_log, size);
+	if (flags & JSON)
+		return json_predictable_latency_event_agg_log(pea_log,
+			log_entries);
+
+	num_entries = le64_to_cpu(pea_log->num_entries);
+	printf("Predictable Latency Event Aggregate Log for"\
+		" device: %s\n", devname);
+
+	printf("Number of Entries Available: %llu\n",
+		num_entries);
+
+	num_iter = min(num_entries, log_entries);
+	for (int i = 0; i < num_iter; i++) {
+		printf("Entry[%d]: %u\n", i + 1,
+			le16_to_cpu(pea_log->entries[i]));
+	}
+}
+
 static const char *nvme_show_nss_hw_error(__u16 error_code)
 {
 	switch(error_code) {
