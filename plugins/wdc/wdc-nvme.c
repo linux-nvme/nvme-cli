@@ -4518,7 +4518,7 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 
 			/* Get the 0xC0 log data */
 			ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE,
-					   false, WDC_NVME_EOL_STATUS_LOG_LEN, data);
+					   false, NVME_NO_LOG_LSP, WDC_NVME_EOL_STATUS_LOG_LEN, data);
 
 			if (strcmp(format, "json"))
 				fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
@@ -4544,7 +4544,7 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 
 		/* Get the 0xC0 log data */
 		ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_OPCODE,
-					false, WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
+					false, NVME_NO_LOG_LSP, WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
 
 		if (strcmp(format, "json"))
 			fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
@@ -4686,7 +4686,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 			memset(data, 0, sizeof (__u8) * WDC_FB_CA_LOG_BUF_LEN);
 
 			ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE,
-					   false, WDC_FB_CA_LOG_BUF_LEN, data);
+					   false, NVME_NO_LOG_LSP, WDC_FB_CA_LOG_BUF_LEN, data);
 			if (strcmp(format, "json"))
 				fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 
@@ -4722,7 +4722,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 			memset(data, 0, sizeof (__u8) * WDC_FB_CA_LOG_BUF_LEN);
 
 			ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE,
-					   false, WDC_FB_CA_LOG_BUF_LEN, data);
+					   false, NVME_NO_LOG_LSP, WDC_FB_CA_LOG_BUF_LEN, data);
 			if (strcmp(format, "json"))
 				fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 
@@ -4743,7 +4743,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 
 			memset(data, 0, sizeof (__u8) * WDC_BD_CA_LOG_BUF_LEN);
 			ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE,
-					   false, WDC_BD_CA_LOG_BUF_LEN, data);
+					   false, NVME_NO_LOG_LSP, WDC_BD_CA_LOG_BUF_LEN, data);
 			if (strcmp(format, "json"))
 				fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 
@@ -4807,7 +4807,7 @@ static int wdc_get_c1_log_page(int fd, char *format, uint8_t interval)
 	memset(data, 0, sizeof (__u8) * WDC_ADD_LOG_BUF_LEN);
 
 	ret = nvme_get_log(fd, 0x01, WDC_NVME_ADD_LOG_OPCODE, false,
-			   WDC_ADD_LOG_BUF_LEN, data);
+			   NVME_NO_LOG_LSP, WDC_ADD_LOG_BUF_LEN, data);
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	if (ret == 0) {
@@ -4860,7 +4860,7 @@ static int wdc_get_d0_log_page(int fd, char *format)
 	memset(data, 0, sizeof (__u8) * WDC_NVME_VU_SMART_LOG_LEN);
 
 	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_VU_SMART_LOG_OPCODE,
-			   false, WDC_NVME_VU_SMART_LOG_LEN, data);
+			   false, NVME_NO_LOG_LSP, WDC_NVME_VU_SMART_LOG_LEN, data);
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 
@@ -5276,7 +5276,7 @@ static int wdc_get_fw_act_history(int fd, char *format)
 	memset(data, 0, sizeof (__u8) * WDC_FW_ACT_HISTORY_LOG_BUF_LEN);
 
 	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID,
-			   false, WDC_FW_ACT_HISTORY_LOG_BUF_LEN, data);
+			   false, NVME_NO_LOG_LSP, WDC_FW_ACT_HISTORY_LOG_BUF_LEN, data);
 
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
@@ -5323,7 +5323,7 @@ static int wdc_get_fw_act_history_C2(int fd, char *format)
 	memset(data, 0, sizeof (__u8) * WDC_FW_ACT_HISTORY_C2_LOG_BUF_LEN);
 
 	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID,
-			   false, WDC_FW_ACT_HISTORY_C2_LOG_BUF_LEN, data);
+			   false, NVME_NO_LOG_LSP, WDC_FW_ACT_HISTORY_C2_LOG_BUF_LEN, data);
 
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
@@ -6155,7 +6155,7 @@ static int wdc_do_drive_essentials(int fd, char *dir, char *key)
 		memset(dataBuffer, 0, dataBufferSize);
 
 		ret = nvme_get_log(fd, WDC_DE_GLOBAL_NSID, deVULogPagesList[vuLogIdx].logPageId,
-				   false, dataBufferSize, dataBuffer);
+				   false, NVME_NO_LOG_LSP, dataBufferSize, dataBuffer);
 		if (ret) {
 			fprintf(stderr, "ERROR : WDC : nvme_get_log() for log page 0x%x failed, ret = %d\n",
 					deVULogPagesList[vuLogIdx].logPageId, ret);
@@ -7151,7 +7151,7 @@ static int wdc_do_vs_nand_stats(int fd, char *format)
 	}
 
 	ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_NAND_STATS_LOG_ID,
-			   false, WDC_NVME_NAND_STATS_SIZE, (void*)output);
+			   false, NVME_NO_LOG_LSP, WDC_NVME_NAND_STATS_SIZE, (void*)output);
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : %s : Failed to retreive NAND stats\n", __func__);
 		goto out;

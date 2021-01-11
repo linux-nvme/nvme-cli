@@ -737,6 +737,119 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int get_persistent_event_log(int argc, char **argv,
+		struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve Persistent Event log info for"\
+			"the given device in either decoded format(default),"\
+			" json or binary.";
+	const char *action = "action the controller shall take during"\
+			"processing this persistent log page command.";
+	const char *log_len = "number of bytes to retrieve";
+	const char *raw = "use binary output";
+	void *pevent_log_info;
+	struct nvme_persistent_event_log_head *pevent_log_head;
+	enum nvme_print_flags flags;
+	int err, fd;
+	bool huge;
+
+	struct config {
+		__u8 action;
+		__u32 log_len;
+		int raw_binary;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.action = 0xff,
+		.log_len = 0,
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("action",       'a', &cfg.action,        action),
+		OPT_UINT("log_len", 	 'l', &cfg.log_len,  	  log_len),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+	if (cfg.raw_binary)
+		flags = BINARY;
+
+	pevent_log_head = calloc(sizeof(*pevent_log_head), 1);
+	if (!pevent_log_head) {
+		fprintf(stderr, "could not alloc buffer for persistent " \
+			"event log header\n");
+		err = -ENOMEM;
+		goto close_fd;
+	}
+
+	err = nvme_persistent_event_log(fd, cfg.action,
+			sizeof(*pevent_log_head), pevent_log_head);
+	if (err < 0) {
+		perror("persistent event log");
+		goto close_fd;
+	} else if (err) {
+		nvme_show_status(err);
+		goto close_fd;
+	}
+
+	if (cfg.action == NVME_PEVENT_LOG_RELEASE_CTX) {
+		printf("Releasing Persistent Event Log Context\n");
+		goto close_fd;
+	}
+
+	if (!cfg.log_len && cfg.action != NVME_PEVENT_LOG_EST_CTX_AND_READ) {
+		cfg.log_len = le64_to_cpu(pevent_log_head->tll);
+	} else if (!cfg.log_len && cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ) {
+		printf("Establishing Persistent Event Log Context\n");
+		goto close_fd;
+	}
+
+	/*
+	 * if header aleady read with context establish action 0x1,
+	 * action shall not be 0x1 again in the subsequent request,
+	 * until the current context is released by issuing action
+	 * with 0x2, otherwise throws command sequence error, make
+	 * it as zero to read the log page
+	 */
+	if (cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ)
+		cfg.action = NVME_PEVENT_LOG_READ;
+
+	pevent_log_info = nvme_alloc(cfg.log_len, &huge);
+	if (!pevent_log_info) {
+		fprintf(stderr, "could not alloc buffer for persistent " \
+			"event log page\n");
+		err = -ENOMEM;
+		goto close_fd;
+	}
+	err = nvme_persistent_event_log(fd, cfg.action,
+		cfg.log_len, pevent_log_info);
+	if (!err)
+		nvme_show_persistent_event_log(pevent_log_info, cfg.action,
+			cfg.log_len, devicename, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("persistent event log");
+
+	nvme_free(pevent_log_info, huge);
+
+close_fd:
+	free(pevent_log_head);
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int get_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve desired number of bytes "\

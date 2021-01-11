@@ -737,6 +737,149 @@ struct nvme_ana_rsp_hdr {
 	__le16  rsvd10[3];
 };
 
+/* persistent event type 02h */
+struct nvme_fw_commit_event {
+    __le64	old_fw_rev;
+    __le64 	new_fw_rev;
+    __u8 	fw_commit_action;
+    __u8 	fw_slot;
+    __u8 	sct_fw;
+    __u8 	sc_fw;
+    __le16 	vndr_assign_fw_commit_rc;
+} __attribute__((packed));
+
+/* persistent event type 03h */
+struct nvme_time_stamp_change_event {
+    __le64 	previous_timestamp;
+    __le64 	ml_secs_since_reset;
+};
+
+/* persistent event type 04h */
+struct nvme_power_on_reset_info_list {
+    __le16   cid;
+    __u8     fw_act;
+    __u8     op_in_prog;
+    __u8     rsvd4[12];
+    __le32   ctrl_power_cycle;
+    __le64   power_on_ml_seconds;
+    __le64   ctrl_time_stamp;
+} __attribute__((packed));
+
+/* persistent event type 05h */
+struct nvme_nss_hw_err_event {
+    __le16 	nss_hw_err_event_code;
+    __u8 	rsvd2[2];
+    __u8 	*add_hw_err_info;
+};
+
+/* persistent event type 06h */
+struct nvme_change_ns_event {
+	__le32	nsmgt_cdw10;
+	__u8	rsvd4[4];
+	__le64	nsze;
+	__u8	nscap[16];
+	__u8	flbas;
+	__u8	dps;
+	__u8	nmic;
+	__u8	rsvd35;
+	__le32	ana_grp_id;
+	__le16	nvmset_id;
+	__le16	rsvd42;
+	__le32	nsid;
+};
+
+/* persistent event type 07h */
+struct nvme_format_nvm_start_event {
+    __le32 	nsid;
+    __u8 	fna;
+    __u8 	rsvd5[3];
+    __le32 	format_nvm_cdw10;
+};
+
+/* persistent event type 08h */
+struct nvme_format_nvm_compln_event {
+    __le32 	nsid;
+    __u8 	smallest_fpi;
+    __u8 	format_nvm_status;
+    __le16 	compln_info;
+    __le32 	status_field;
+};
+
+/* persistent event type 09h */
+struct nvme_sanitize_start_event {
+    __le32 	sani_cap;
+    __le32 	sani_cdw10;
+    __le32 	sani_cdw11;
+};
+
+/* persistent event type 0Ah */
+struct nvme_sanitize_compln_event {
+    __le16 	sani_prog;
+    __le16 	sani_status;
+    __le16 	cmpln_info;
+	__u8 	rsvd6[2];
+};
+
+/* persistent event type 0Dh */
+struct nvme_thermal_exc_event {
+    __u8 	over_temp;
+    __u8 	threshold;
+};
+
+/* persistent event entry head */
+struct nvme_persistent_event_entry_head {
+	__u8	etype;
+	__u8	etype_rev;
+	__u8	ehl;
+	__u8	rsvd3;
+	__le16	ctrl_id;
+	__le64	etimestamp;
+	__u8	rsvd14[6];
+	__le16	vsil;
+	__le16	el;
+} __attribute__((packed));
+
+/* persistent event log head */
+struct nvme_persistent_event_log_head {
+	__u8	log_id;
+	__u8	rsvd1[3];
+	__le32	tnev;
+	__le64	tll;
+	__u8	log_rev;
+	__u8	rsvd17;
+	__le16	head_len;
+	__le64	timestamp;
+	__u8	poh[16];
+	__le64	pcc;
+	__le16	vid;
+	__le16	ssvid;
+	__u8	sn[20];
+	__u8	mn[40];
+	__u8	subnqn[256];
+	__u8    rsvd372[108];
+	__u8	supp_event_bm[32];
+} __attribute__((packed));
+
+enum nvme_persistent_event_types {
+    NVME_SMART_HEALTH_EVENT         = 0x01,
+    NVME_FW_COMMIT_EVENT            = 0x02,
+    NVME_TIMESTAMP_EVENT            = 0x03,
+    NVME_POWER_ON_RESET_EVENT       = 0x04,
+    NVME_NSS_HW_ERROR_EVENT         = 0x05,
+    NVME_CHANGE_NS_EVENT            = 0x06,
+    NVME_FORMAT_START_EVENT         = 0x07,
+    NVME_FORMAT_COMPLETION_EVENT    = 0x08,
+    NVME_SANITIZE_START_EVENT       = 0x09,
+    NVME_SANITIZE_COMPLETION_EVENT  = 0x0a,
+    NVME_THERMAL_EXCURSION_EVENT    = 0x0d
+};
+
+enum nvme_persistent_event_log_actions {
+	NVME_PEVENT_LOG_READ				= 0x0,
+	NVME_PEVENT_LOG_EST_CTX_AND_READ	= 0x1,
+	NVME_PEVENT_LOG_RELEASE_CTX			= 0x2,
+};
+
 enum {
 	NVME_SMART_CRIT_SPARE		= 1 << 0,
 	NVME_SMART_CRIT_TEMPERATURE	= 1 << 1,
@@ -1036,6 +1179,7 @@ enum {
 	NVME_LOG_TELEMETRY_CTRL = 0x08,
 	NVME_LOG_ENDURANCE_GROUP = 0x09,
 	NVME_LOG_ANA		= 0x0c,
+	NVME_LOG_PERSISTENT_EVENT   = 0x0d,
 	NVME_LOG_DISC		= 0x70,
 	NVME_LOG_RESERVATION	= 0x80,
 	NVME_LOG_SANITIZE	= 0x81,

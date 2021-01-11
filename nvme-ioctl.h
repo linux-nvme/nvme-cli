@@ -97,7 +97,7 @@ int nvme_zns_identify_ctrl(int fd, void *data);
 int nvme_zns_identify_ns(int fd, __u32 nsid, void *data);
 int nvme_identify_iocs(int fd, __u16 cntid, void *data);
 int nvme_get_log(int fd, __u32 nsid, __u8 log_id, bool rae,
-		 __u32 data_len, void *data);
+		 __u8 lsp, __u32 data_len, void *data);
 int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
 		   __u16 group_id, bool rae, __u8 uuid_ix,
 		   __u32 data_len, void *data);
@@ -115,6 +115,8 @@ int nvme_ana_log(int fd, void *ana_log, size_t ana_log_len, int rgo);
 int nvme_effects_log(int fd, struct nvme_effects_log_page *effects_log);
 int nvme_discovery_log(int fd, struct nvmf_disc_rsp_page_hdr *log, __u32 size);
 int nvme_sanitize_log(int fd, struct nvme_sanitize_log_page *sanitize_log);
+int nvme_persistent_event_log(int fd, __u8 action, __u32 size,
+		void *pevent_log_info);
 int nvme_endurance_log(int fd, __u16 group_id,
 		       struct nvme_endurance_group_log *endurance_log);
 
