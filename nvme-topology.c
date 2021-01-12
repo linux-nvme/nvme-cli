@@ -46,7 +46,7 @@ close_fd:
 	return subsysnqn;
 }
 
-char *nvme_get_ctrl_attr(char *path, const char *attr)
+char *nvme_get_ctrl_attr(const char *path, const char *attr)
 {
 	char *attrpath, *value;
 	ssize_t ret;
