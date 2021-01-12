@@ -5364,7 +5364,7 @@ static void nvme_show_details_ns(struct nvme_namespace *n, bool ctrl)
 
 static void nvme_show_detailed_list(struct nvme_topology *t)
 {
-	int i, j, k, l;
+	int i, j, k;
 
 	printf("NVM Express Subsystems\n\n");
 	printf("%-16s %-96s %-.16s\n", "Subsystem", "Subsystem-NQN", "Controllers");
@@ -5400,13 +5400,8 @@ static void nvme_show_detailed_list(struct nvme_topology *t)
 			for (k = 0; k < c->nr_namespaces; k++) {
 				struct nvme_namespace *n = &c->namespaces[k];
 
-				for (l = 0; l < s->nr_namespaces; l++) {
-					struct nvme_namespace *ns = &s->namespaces[l];
-					if (n->nsid == ns->nsid) {
-						printf("%s%s", comma ? ", " : "", ns->name);
-						comma = true;
-					}
-				}
+				printf("%s%s", comma ? ", " : "", n->name);
+				comma = true;
 			}
 			printf("\n");
 		}
