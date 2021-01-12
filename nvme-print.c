@@ -5393,7 +5393,7 @@ static void nvme_show_details_ns(struct nvme_namespace *n, bool ctrl)
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		le16_to_cpu(n->ns.lbaf[(n->ns.flbas & 0x0f)].ms));
 
-	printf("%-12s %-8x %-26s %-16s ", n->name, n->nsid, usage, format);
+	printf("%-12s %-8d %-26s %-16s ", n->name, n->nsid, usage, format);
 
 	if (ctrl)
 		printf("%s", n->ctrl->name);
