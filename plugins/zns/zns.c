@@ -618,8 +618,11 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 
 		err = nvme_zns_report_zones(fd, cfg.namespace_id, 0,
 			0, cfg.state, 0, sizeof(r), &r);
-		if (err) {
+		if (err > 0) {
 			nvme_show_status(err);
+			goto close_fd;
+		} else if (err < 0) {
+			perror("zns report-zones");
 			goto close_fd;
 		}
 		cfg.num_descs = le64_to_cpu(r.nr_zones);
