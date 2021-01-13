@@ -33,6 +33,7 @@ COMMAND_LIST(
 	ENTRY("error-log", "Retrieve Error Log, show it", get_error_log)
 	ENTRY("effects-log", "Retrieve Command Effects Log, show it", get_effects_log)
 	ENTRY("endurance-log", "Retrieve Endurance Group Log, show it", get_endurance_log)
+	ENTRY("predictable-lat-log", "Retrieve Predictable Latency per Nvmset Log, show it", get_pred_lat_per_nvmset_log)
 	ENTRY("pred-lat-event-agg-log", "Retrieve Predictable Latency Event Aggregate Log, show it", get_pred_lat_event_agg_log)
 	ENTRY("persistent-event-log", "Retrieve Presistent Event Log, show it", get_persistent_event_log)
 	ENTRY("get-feature", "Get feature and show the resulting value", get_feature)

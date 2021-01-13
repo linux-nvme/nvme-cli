@@ -885,6 +885,23 @@ struct nvme_predlat_event_agg_log_page {
 	__le16	entries[];
 };
 
+struct nvme_predlat_per_nvmset_log_page {
+	__u8	status;
+	__u8	rsvd1;
+	__le16	event_type;
+	__u8	rsvd4[28];
+	__le64	dtwin_rtyp;
+	__le64	dtwin_wtyp;
+	__le64	dtwin_timemax;
+	__le64	ndwin_timemin_high;
+	__le64	ndwin_timemin_low;
+	__u8	rsvd72[56];
+	__le64	dtwin_restimate;
+	__le64	dtwin_westimate;
+	__le64	dtwin_testimate;
+	__u8	rsvd152[360];
+};
+
 enum {
 	NVME_SMART_CRIT_SPARE		= 1 << 0,
 	NVME_SMART_CRIT_TEMPERATURE	= 1 << 1,
@@ -1183,6 +1200,7 @@ enum {
 	NVME_LOG_TELEMETRY_HOST = 0x07,
 	NVME_LOG_TELEMETRY_CTRL = 0x08,
 	NVME_LOG_ENDURANCE_GROUP = 0x09,
+	NVME_LOG_PRELAT_PER_NVMSET	= 0x0a,
 	NVME_LOG_ANA		= 0x0c,
 	NVME_LOG_PRELAT_EVENT_AGG	= 0x0b,
 	NVME_LOG_PERSISTENT_EVENT   = 0x0d,

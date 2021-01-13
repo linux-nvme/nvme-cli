@@ -5,7 +5,7 @@
 _cmds="list id-ctrl id-ns list-ns id-iocs create-ns delete-ns \
 	attach-ns detach-ns list-ctrl get-ns-id get-log persistent-event-log \
 	pred-lat-event-agg-log fw-log smart-log smart-log-add error-log \
-	get-feature set-feature format fw-activate \
+	predictable-lat-log get-feature set-feature format fw-activate \
 	fw-download admin-passthru io-passthru security-send \
 	security-recv resv-acquire resv-register resv-release \
 	resv-report dsm flush compare read write write-zeroes \
@@ -78,6 +78,10 @@ nvme_list_opts () {
 		"pred-lat-event-agg-log")
 		opts+=" --log-entries= -e  --rae -r \
 			--raw-binary -b --output-format= -o"
+			;;
+		"predictable-lat-log")
+		opts+=" --nvmset-id= -i --raw-binary -b \
+			--output-format= -o"
 			;;
 		"fw-log")
 		opts+=" --raw-binary -b --output-format= -o"
