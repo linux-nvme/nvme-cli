@@ -18,6 +18,7 @@ _nvme () {
 	'list-ctrl:identify all controller(s) attached'
 	'get-ns-id:get namespace id of opened block device'
 	'get-log:retrieve any log in raw format'
+	'predictable-lat-log:retrieve predictable latency per nvmset log'
 	'pred-lat-event-agg-log:retrieve predictable latency event aggregate log'
 	'persistent-event-log:retrieve presistent event log'
 	'fw-log:retrieve fw log'
@@ -225,6 +226,18 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme pred-lat-event-agg-log options" _predlateventagglog
+			;;
+		(predictablelatlog)
+			local _predictablelatlog
+			_predictablelatlog=(
+			/dev/nvme':supply a device to use (required)'
+			--nvmset-id=': NVM Set Identifier on which log page retrieve info'
+			-i':alias to --nvmset-id'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme predictable-lat-log options" _predictablelatlog
 			;;
 		(fw-log)
 			local _fwlog
