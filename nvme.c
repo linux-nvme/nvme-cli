@@ -4815,6 +4815,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Information about potentially unrecoverable LBAs.";
+	const char *namespace_id = "Desired Namespace";
 	const char *slba = "Starting LBA(SLBA) in 64-bit address of the first"\
 			    " logical block addressed by this command";
 	const char *mndw = "Maximum Number of Dwords(MNDW) specifies maximum"\
@@ -4831,6 +4832,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 	void *buf;
 
 	struct config {
+		__u32 namespace_id;
 		__u64 slba;
 		__u32 mndw;
 		__u8 atype;
@@ -4839,6 +4841,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 	};
 
 	struct config cfg = {
+		.namespace_id = 0,
 		.slba = 0,
 		.mndw = 0,
 		.atype = 0,
@@ -4847,6 +4850,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 	};
 
 	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_SUFFIX("start-lba",  's', &cfg.slba,          slba),
 		OPT_UINT("max-dw",       'm', &cfg.mndw,          mndw),
 		OPT_BYTE("action",       'a', &cfg.atype,         atype),
@@ -4876,8 +4880,8 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		goto close_fd;
 	}
 
-	err = nvme_get_lba_status(fd, cfg.slba, cfg.mndw, cfg.atype, cfg.rl,
-			buf);
+	err = nvme_get_lba_status(fd, cfg.namespace_id, cfg.slba, cfg.mndw,
+			cfg.atype, cfg.rl, buf);
 	if (!err)
 		nvme_show_lba_status(buf, buf_len, flags);
 	else if (err > 0)

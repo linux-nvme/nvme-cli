@@ -880,12 +880,14 @@ int nvme_sec_recv(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 	return err;
 }
 
-int nvme_get_lba_status(int fd, __u64 slba, __u32 mndw, __u8 atype, __u16 rl,
-		void *data)
+int nvme_get_lba_status(int fd, __u32 namespace_id, __u64 slba, __u32 mndw,
+		__u8 atype, __u16 rl, void *data)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode =  nvme_admin_get_lba_status,
+		.nsid = namespace_id,
 		.addr = (__u64)(uintptr_t) data,
+		.data_len = (mndw + 1) * 4,
 		.cdw10 = slba & 0xffffffff,
 		.cdw11 = slba >> 32,
 		.cdw12 = mndw,
