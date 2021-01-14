@@ -184,8 +184,9 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 	err = __zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba,
 		cfg.select_all, zsa, 0, NULL);
 	if (!err)
-		printf("%s: Success, action:%d zone:%"PRIx64" nsid:%d\n", command,
-			zsa, (uint64_t)cfg.zslba, cfg.namespace_id);
+		printf("%s: Success, action:%d zone:%"PRIx64" all:%d nsid:%d\n",
+			command, zsa, (uint64_t)cfg.zslba, (int)cfg.select_all,
+			cfg.namespace_id);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -323,8 +324,10 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 	err = __zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, cfg.select_all,
 			cfg.zsa, cfg.data_len, buf);
 	if (!err)
-		printf("zone-mgmt-send: Success, action:%d zone:%"PRIx64" nsid:%d\n",
-			cfg.zsa, (uint64_t)cfg.zslba, cfg.namespace_id);
+		printf("zone-mgmt-send: Success, action:%d zone:%"PRIx64" "
+			"all:%d nsid:%d\n",
+			cfg.zsa, (uint64_t)cfg.zslba, (int)cfg.select_all,
+			cfg.namespace_id);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
