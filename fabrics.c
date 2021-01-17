@@ -67,13 +67,13 @@ const char *conarg_trsvcid = "trsvcid";
 const char *conarg_host_traddr = "host_traddr";
 
 static struct config {
-	char *nqn;
-	char *transport;
-	char *traddr;
-	char *trsvcid;
-	char *host_traddr;
-	char *hostnqn;
-	char *hostid;
+	const char *nqn;
+	const char *transport;
+	const char *traddr;
+	const char *trsvcid;
+	const char *host_traddr;
+	const char *hostnqn;
+	const char *hostid;
 	int  nr_io_queues;
 	int  nr_write_queues;
 	int  nr_poll_queues;
@@ -82,7 +82,7 @@ static struct config {
 	int  reconnect_delay;
 	int  ctrl_loss_tmo;
 	int  tos;
-	char *raw;
+	const char *raw;
 	char *device;
 	int  duplicate_connect;
 	int  disable_sqflow;
@@ -90,7 +90,7 @@ static struct config {
 	int  data_digest;
 	bool persistent;
 	bool matching_only;
-	char *output_format;
+	const char *output_format;
 } cfg = {
 	.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO,
 	.output_format = "normal",
