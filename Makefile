@@ -75,7 +75,7 @@ OBJS := nvme-print.o nvme-ioctl.o nvme-rpmb.o \
 	nvme-status.o nvme-filters.o nvme-topology.o
 
 ifeq ($(HAVE_LIBUDEV),0)
-        OBJS += monitor.o
+	OBJS += monitor.o conn-db.o
 endif
 
 UTIL_OBJS := util/argconfig.o util/suffix.o util/parser.o \

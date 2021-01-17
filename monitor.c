@@ -36,6 +36,7 @@
 #include "common.h"
 #include "fabrics.h"
 #include "monitor.h"
+#include "conn-db.h"
 #define LOG_FUNCNAME 1
 #include "util/log.h"
 #include "event/event.h"
@@ -202,12 +203,22 @@ static int monitor_get_fc_uev_props(struct udev_device *ud,
 	return 0;
 }
 
-static int monitor_discovery(char *transport, char *traddr, char *trsvcid,
-			     char *host_traddr)
+static int monitor_discovery(const char *transport, const char *traddr,
+			     const char *trsvcid, const char *host_traddr)
 {
 	char argstr[BUF_SIZE];
 	pid_t pid;
-	int rc;
+	int rc, db_rc;
+	struct nvme_connection *co = NULL;
+
+	db_rc = conndb_add(transport, traddr, trsvcid, host_traddr, &co);
+	if (db_rc != 0 && db_rc != -EEXIST)
+		return db_rc;
+
+	if (co->status == CS_DISC_RUNNING) {
+		co->discovery_pending = 1;
+		return -EAGAIN;
+	}
 
 	pid = fork();
 	if (pid == -1) {
@@ -215,11 +226,17 @@ static int monitor_discovery(char *transport, char *traddr, char *trsvcid,
 		return -errno;
 	} else if (pid > 0) {
 		msg(LOG_DEBUG, "started discovery task %ld\n", (long)pid);
+
+		co->discovery_pending = 0;
+		co->status = CS_DISC_RUNNING;
+		co->discovery_task = pid;
+
 		return 0;
 	}
 
 	child_reset_signals();
 	free_dispatcher(mon_dsp);
+	conndb_free();
 
 	msg(LOG_NOTICE, "starting discovery\n");
 	fabrics_cfg.nqn = NVME_DISC_SUBSYS_NAME;
@@ -376,6 +393,7 @@ static int handle_epoll_err(int errcode)
 
 	got_sigchld = 0;
 	while (true) {
+	struct nvme_connection *co;
 		int wstatus;
 		pid_t pid;
 
@@ -390,14 +408,33 @@ static int handle_epoll_err(int errcode)
 		default:
 			break;
 		}
-		if (!WIFEXITED(wstatus))
+		co = conndb_find_by_pid(pid);
+		if (!co) {
+			msg(LOG_ERR, "no connection found for discovery task %ld\n",
+			    (long)pid);
+			continue;
+		}
+		if (!WIFEXITED(wstatus)) {
 			msg(LOG_WARNING, "child %ld didn't exit normally\n",
 			    (long)pid);
-		else if (WEXITSTATUS(wstatus) != 0)
+			co->status = CS_FAILED;
+		} else if (WEXITSTATUS(wstatus) != 0) {
 			msg(LOG_NOTICE, "child %ld exited with status \"%s\"\n",
 			    (long)pid, strerror(WEXITSTATUS(wstatus)));
-		else
+			co->status = CS_FAILED;
+			co->did_discovery = 1;
+			co->discovery_result = WEXITSTATUS(wstatus);
+		} else {
 			msg(LOG_DEBUG, "child %ld exited normally\n", (long)pid);
+			co->status = CS_ONLINE;
+			co->successful_discovery = co->did_discovery = 1;
+			co->discovery_result = 0;
+		}
+		if (co->discovery_pending) {
+			msg(LOG_NOTICE, "new discovery pending - restarting\n");
+			monitor_discovery(co->transport, co->traddr,
+					  co->trsvcid, co->host_traddr);
+		}
 	};
 
 out:
