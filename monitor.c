@@ -159,6 +159,36 @@ static int child_reset_signals(void)
 	return -err;
 }
 
+static void monitor_handle_nvme_add(struct udev_device *ud)
+{
+	const char *syspath = udev_device_get_syspath(ud);
+	char *subsysnqn __cleanup__(cleanup_charp) = NULL;
+	char *state __cleanup__(cleanup_charp) = NULL;
+
+	if (!syspath)
+		return;
+	subsysnqn = nvme_get_ctrl_attr(syspath, "subsysnqn");
+	state = nvme_get_ctrl_attr(syspath, "state");
+	msg(LOG_DEBUG, "add %s => %s [%s]\n", syspath, subsysnqn, state);
+}
+
+static void monitor_handle_nvme_remove(struct udev_device *ud)
+{
+	const char *sysname = udev_device_get_sysname(ud);
+	struct nvme_connection *co;
+
+	if (!sysname)
+		return;
+
+	co = conndb_find_by_ctrl(sysname);
+	if (co) {
+		msg(LOG_DEBUG, "%s: connection discovery controller removed\n",
+		    sysname);
+		co->discovery_instance = -1;
+	}
+	return;
+}
+
 static int monitor_get_fc_uev_props(struct udev_device *ud,
 				    char *traddr, size_t tra_sz,
 				    char *host_traddr, size_t htra_sz)
@@ -358,6 +388,14 @@ static void monitor_handle_nvme_uev(struct udev_device *ud)
 	char traddr[NVMF_TRADDR_SIZE], host_traddr[NVMF_TRADDR_SIZE];
 	char trsvcid[NVMF_TRSVCID_SIZE], transport[5];
 
+	if (!strcmp(udev_device_get_action(ud), "remove")) {
+		monitor_handle_nvme_remove(ud);
+		return;
+	}
+	if (!strcmp(udev_device_get_action(ud), "add")) {
+		monitor_handle_nvme_add(ud);
+		return;
+	}
 	if (strcmp(udev_device_get_action(ud), "change"))
 		return;
 
