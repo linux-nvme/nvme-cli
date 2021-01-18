@@ -471,6 +471,34 @@ out:
 	return ELOOP_CONTINUE;
 }
 
+static int monitor_kill_discovery_task(struct nvme_connection *co,
+				       void *arg __attribute__((unused)))
+{
+	int wstatus;
+	pid_t pid, wpid = -1;
+
+	if (co->status != CS_DISC_RUNNING)
+		return CD_CB_OK;
+
+	pid = co->discovery_task;
+	co->status = CS_FAILED;
+	if (kill(co->discovery_task, SIGTERM) == -1) {
+		msg(LOG_ERR, "failed to send SIGTERM to pid %ld: %m\n",
+		    (long)pid);
+		wpid = waitpid(pid, &wstatus, WNOHANG);
+	} else {
+		msg(LOG_DEBUG, "sent SIGTERM to pid %ld, waiting\n", (long)pid);
+		wpid = waitpid(pid, &wstatus, 0);
+	}
+	if (wpid != pid) {
+		msg(LOG_ERR, "failed to wait for %ld: %m\n", (long)pid);
+		return CD_CB_ERR;
+	} else {
+		msg(LOG_DEBUG, "child %ld terminated\n", (long)pid);
+		return CD_CB_OK;
+	}
+}
+
 static int monitor_parse_opts(const char *desc, int argc, char **argv)
 {
 	bool quiet = false;
@@ -578,6 +606,8 @@ int aen_monitor(const char *desc, int argc, char **argv)
 
 	ret = event_loop(mon_dsp, &wait_mask, handle_epoll_err);
 
+	conndb_for_each(monitor_kill_discovery_task, NULL);
+	conndb_free();
 out:
 	free_dispatcher(mon_dsp);
 	return nvme_status_to_errno(ret, true);
