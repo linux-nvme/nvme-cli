@@ -43,8 +43,10 @@
 
 static struct monitor_config {
 	bool autoconnect;
+	bool keep_ctrls;
 } mon_cfg = {
 	.autoconnect = true,
+	.keep_ctrls = true,
 };
 
 static struct dispatcher *mon_dsp;
@@ -499,15 +501,50 @@ static int monitor_kill_discovery_task(struct nvme_connection *co,
 	}
 }
 
+static int monitor_remove_discovery_ctrl(struct nvme_connection *co,
+					void *arg __attribute__((unused)))
+{
+	char syspath[PATH_MAX];
+	int len;
+	char *subsysnqn __cleanup__(cleanup_charp) = NULL;
+
+	if (co->discovery_instance == -1 || co->discovery_ctrl_existed)
+		return CD_CB_OK;
+
+	len = snprintf(syspath, sizeof(syspath), SYS_NVME "/nvme%d",
+		       co->discovery_instance);
+	if (len < 0 || len >= sizeof(syspath))
+		return CD_CB_ERR;
+
+	subsysnqn = nvme_get_ctrl_attr(syspath, "subsysnqn");
+	if (subsysnqn && !strcmp(subsysnqn, NVME_DISC_SUBSYS_NAME)) {
+		if (remove_ctrl(co->discovery_instance)) {
+			msg(LOG_ERR,
+			    "failed to remove discovery controller /dev/nvme%d: %m\n",
+			    co->discovery_instance);
+			return CD_CB_ERR;
+		} else
+			msg(LOG_INFO,
+			    "removed discovery controller /dev/nvme%d\n",
+			    co->discovery_instance);
+	} else
+		msg(LOG_WARNING,
+		    "unexpected NQN %s on /dev/nvme%d, not removing controller\n",
+		    subsysnqn ? subsysnqn : "(NULL)", co->discovery_instance);
+	return CD_CB_OK;
+}
+
 static int monitor_parse_opts(const char *desc, int argc, char **argv)
 {
 	bool quiet = false;
 	bool verbose = false;
 	bool debug = false;
 	bool noauto = false;
+	bool cleanup = false;
 	int ret;
 	OPT_ARGS(opts) = {
 		OPT_FLAG("no-connect",     'N', &noauto,              "dry run, do not autoconnect to discovered controllers"),
+		OPT_FLAG("cleanup",        'C', &cleanup,                     "remove created discovery controllers on exit"),
 		OPT_LIST("hostnqn",        'q', &fabrics_cfg.hostnqn,         "user-defined hostnqn (if default not used)"),
 		OPT_LIST("hostid",         'I', &fabrics_cfg.hostid,          "user-defined hostid (if default not used)"),
 		OPT_INT("keep-alive-tmo",  'k', &fabrics_cfg.keep_alive_tmo,  "keep alive timeout period in seconds"),
@@ -540,6 +577,8 @@ static int monitor_parse_opts(const char *desc, int argc, char **argv)
 		log_level = LOG_DEBUG;
 	if (noauto)
 		mon_cfg.autoconnect = false;
+	if (cleanup)
+		mon_cfg.keep_ctrls = false;
 
 	return ret;
 }
@@ -604,9 +643,12 @@ int aen_monitor(const char *desc, int argc, char **argv)
 		goto out;
 	}
 
+	conndb_init_from_sysfs();
 	ret = event_loop(mon_dsp, &wait_mask, handle_epoll_err);
 
 	conndb_for_each(monitor_kill_discovery_task, NULL);
+	if (mon_cfg.autoconnect && !mon_cfg.keep_ctrls)
+		conndb_for_each(monitor_remove_discovery_ctrl, NULL);
 	conndb_free();
 out:
 	free_dispatcher(mon_dsp);

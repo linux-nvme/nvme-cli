@@ -12,6 +12,7 @@ struct nvme_connection {
 	int discovery_pending:1;
 	int did_discovery:1;
 	int successful_discovery:1;
+	int discovery_ctrl_existed:1;
 	union {
 		pid_t discovery_task;
 		int discovery_result;
