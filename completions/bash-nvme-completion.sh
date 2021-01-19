@@ -12,7 +12,7 @@ _cmds="list id-ctrl id-ns list-ns id-iocs nvm-id-ctrl create-ns delete-ns \
 	write-uncor copy reset subsystem-reset show-regs discover \
 	connect-all connect disconnect version help \
 	intel lnvm memblaze list-subsys endurance-event-agg-log \
-	lba-status-log resv-notif-log"
+	lba-status-log resv-notif-log monitor"
 
 nvme_list_opts () {
         local opts=""
@@ -244,6 +244,10 @@ nvme_list_opts () {
 			;;
 		"disconnect")
 		opts+=" --nqn -n --device -d"
+			;;
+		"monitor")
+		opts+=" --no-connect -N --cleanup -C \
+			--hostnqn= -q --verbose -v --timestamps -t"
 			;;
 		"version")
 		opts+=""
