@@ -168,3 +168,7 @@ linknvme:nvme-disconnect-all[1]::
 
 linknvme:nvme-get-property[1]::
 	Reads and shows NVMe-over-Fabrics controller property
+
+linknvme:nvme-monitor[1]::
+	Monitor Discovery events and Discover and Connect automatically
+
