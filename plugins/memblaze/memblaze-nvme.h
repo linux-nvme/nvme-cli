@@ -22,6 +22,7 @@ PLUGIN(NAME("memblaze", "Memblaze vendor specific extensions"),
 		ENTRY("lat-stats-print", "Retrieve IO Latency Statistics log, show it", mb_lat_stats_log_print)
 		ENTRY("lat-log", "Set Memblaze High Latency Log", mb_set_high_latency_log)
 		ENTRY("lat-log-print", "Output Memblaze High Latency Log", mb_high_latency_log_print)
+		ENTRY("clear-error-log", "Clear error log", memblaze_clear_error_log)
 	)
 );
 

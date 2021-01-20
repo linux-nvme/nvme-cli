@@ -27,6 +27,7 @@ enum {
     GLP_ID_VU_GET_READ_LATENCY_HISTOGRAM = 0xC1,
     GLP_ID_VU_GET_WRITE_LATENCY_HISTOGRAM = 0xC2,
     GLP_ID_VU_GET_HIGH_LATENCY_LOG = 0xC3,
+    MB_FEAT_CLEAR_ERRORLOG = 0xF7,
 };
 
 #define LOG_PAGE_SIZE                                      (0x1000)
@@ -483,6 +484,7 @@ static char *mb_feature_to_string(int feature)
     switch (feature) {
     case MB_FEAT_POWER_MGMT: return "Memblaze power management";
     case MB_FEAT_HIGH_LATENCY: return "Memblaze high latency log";
+    case MB_FEAT_CLEAR_ERRORLOG: return "Memblaze clear error log";
     default: return "Unknown";
     }
 }
@@ -980,7 +982,9 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, st
     struct config {
         int  write;
     };
-    struct config cfg;
+    struct config cfg = {
+        .write = 0,
+    };
 
     OPT_ARGS(opts) = {
         OPT_FLAG("write",      'w', &cfg.write,      write),
@@ -999,6 +1003,64 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, st
 
     close(fd);
     return err;
+}
+
+#define OP         0xFC
+#define FID        0x68
+static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	int err, fd;
+	char *desc = "Clear Memblaze devices error log.";
+
+    //const char *value = "new value of feature (required)";
+    //const char *save = "specifies that the controller shall save the attribute";
+    __u32 result;
+
+    struct config {
+        __u32 feature_id;
+        __u32 value;
+        int   save;
+    };
+
+    struct config cfg = {
+        .feature_id   = 0xf7,
+        .value        = 0x534d0001,
+        .save         = 0,
+    };
+
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+
+
+    err = nvme_set_feature(fd, 0, cfg.feature_id, cfg.value, 0, cfg.save, 0, NULL, &result);
+    if (err < 0) {
+        perror("set-feature");
+    }
+    if (!err) {
+        printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id, mb_feature_to_string(cfg.feature_id), cfg.value);
+    } else if (err > 0)
+        fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+/*
+	struct nvme_admin_cmd admin_cmd = {
+		.opcode		= OP,
+		.cdw10		= FID,
+	};
+
+	err = nvme_submit_admin_passthru(fd, &admin_cmd);
+
+	if (!err) {
+		printf("OP(0x%2X) FID(0x%2X) Clear error log success.\n", OP, FID);
+	} else {
+		printf("NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+	};
+*/
+	return err;
 }
 
 static int mb_set_lat_stats(int argc, char **argv,
