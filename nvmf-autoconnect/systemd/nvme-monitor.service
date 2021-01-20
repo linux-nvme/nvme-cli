@@ -1,0 +1,18 @@
+[Unit]
+Description=NVMe Event Monitor for Automatical Subsystem Connection
+Documentation=man:nvme-monitor(1)
+DefaultDependencies=false
+RequiresMountsFor=/sys /run /dev
+Conflicts=shutdown.target
+After=systemd-udevd-kernel.socket
+Before=sysinit.target systemd-udev-trigger.service nvmefc-boot-connections.service
+
+[Service]
+Type=simple
+ExecStartPre=-/usr/bin/ln -sf /dev/null /run/udev/rules.d/70-nvmf-autoconnect.rules
+ExecStart=/usr/sbin/nvme monitor
+ExecStartPost=-/usr/bin/rm -f /run/udev/rules.d/70-nvmf-autoconnect.rules
+KillMode=mixed
+
+[Install]
+WantedBy=sysinit.target
