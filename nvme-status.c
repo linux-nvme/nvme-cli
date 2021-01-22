@@ -141,8 +141,11 @@ __u8 nvme_status_to_errno(int status, bool fabrics)
 	if (!status)
 		return 0;
 
-	if (status < 0)
-		return errno;
+	if (status < 0) {
+		if (errno)
+			return errno;
+		return status;
+	}
 
 	/*
 	 * The actual status code is enough with masking 0xff, but we need to
