@@ -1295,6 +1295,7 @@ struct nvme_sanitize_log_page {
 	__le32			est_ovrwrt_time_with_no_deallocate;
 	__le32			est_blk_erase_time_with_no_deallocate;
 	__le32			est_crypto_erase_time_with_no_deallocate;
+	__u8			rsvd32[480];
 };
 
 /*
