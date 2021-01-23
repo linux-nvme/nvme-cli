@@ -2278,27 +2278,28 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	const char *desc = "Retrieve the self-test log for the given device and given test "\
 			"(or optionally a namespace) in either decoded format "\
 			"(default) or binary.";
-	const char *namespace_id = "Indicate the namespace from which the self-test "\
-				    "log has to be obtained";
+	const char *dst_entries = "Indicate how many DST log entries to be retrieved, "\
+			"by default all the 20 entries will be retrieved";
 	const char *verbose = "Increase output verbosity";
 
 	struct nvme_self_test_log self_test_log;
 	enum nvme_print_flags flags;
 	int err, fd;
+	__u32 log_size;
 
 	struct config {
-		__u32 namespace_id;
+		__u8 dst_entries;
 		char *output_format;
 		int verbose;
 	};
 
 	struct config cfg = {
-		.namespace_id = NVME_NSID_ALL,
+		.dst_entries = NVME_ST_REPORTS,
 		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
+		OPT_UINT("dst-entries",  'e', &cfg.dst_entries,   dst_entries),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
 		OPT_END()
@@ -2314,9 +2315,11 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
-	err = nvme_self_test_log(fd, cfg.namespace_id, &self_test_log);
+	log_size = NVME_ST_LOG_HEAD_SIZE + cfg.dst_entries * NVME_ST_LOG_ENTRY_SIZE;
+	err = nvme_self_test_log(fd, log_size, &self_test_log);
 	if (!err)
-		nvme_show_self_test_log(&self_test_log, devicename, flags);
+		nvme_show_self_test_log(&self_test_log, cfg.dst_entries, log_size,
+			devicename, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else

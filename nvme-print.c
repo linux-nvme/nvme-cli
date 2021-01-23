@@ -737,12 +737,13 @@ static void json_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname)
 	json_free_object(root);
 }
 
-static void json_self_test_log(struct nvme_self_test_log *self_test)
+static void json_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entries)
 {
 	struct json_object *valid_attrs;
 	struct json_object *root;
 	struct json_array *valid;
 	int i;
+	__u32 num_entries;
 
 	root = json_create_object();
 	json_object_add_value_int(root, "Current Device Self-Test Operation",
@@ -751,7 +752,8 @@ static void json_self_test_log(struct nvme_self_test_log *self_test)
 		self_test->crnt_dev_selftest_compln);
 	valid = json_create_array();
 
-	for (i = 0; i < NVME_ST_REPORTS; i++) {
+	num_entries = min(dst_entries, NVME_ST_REPORTS);
+	for (i = 0; i < num_entries; i++) {
 		valid_attrs = json_create_object();
 		json_object_add_value_int(valid_attrs, "Self test result",
 			self_test->result[i].dsts & 0xf);
@@ -4615,20 +4617,22 @@ static void nvme_show_self_test_result(struct nvme_self_test_res *res,
 		res->vs[0], res->vs[1]);
 }
 
-void nvme_show_self_test_log(struct nvme_self_test_log *self_test, const char *devname,
-			     enum nvme_print_flags flags)
+void nvme_show_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entries,
+				__u32 size, const char *devname, enum nvme_print_flags flags)
 {
 	int i;
+	__u8 num_entries;
 
 	if (flags & BINARY)
-		return d_raw((unsigned char *)self_test, sizeof(*self_test));
+		return d_raw((unsigned char *)self_test, size);
 	if (flags & JSON)
-		return json_self_test_log(self_test);
+		return json_self_test_log(self_test, dst_entries);
 
 	printf("Device Self Test Log for NVME device:%s\n", devname);
 	printf("Current operation  : %#x\n", self_test->crnt_dev_selftest_oprn);
 	printf("Current Completion : %u%%\n", self_test->crnt_dev_selftest_compln);
-	for (i = 0; i < NVME_ST_REPORTS; i++) {
+	num_entries = min(dst_entries, NVME_ST_REPORTS);
+	for (i = 0; i < num_entries; i++) {
 		printf("Self Test Result[%d]:\n", i);
 		nvme_show_self_test_result(&self_test->result[i], flags);
 	}

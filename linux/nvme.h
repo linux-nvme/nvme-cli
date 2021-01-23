@@ -650,12 +650,14 @@ enum {
 	NVME_ST_VALID_SCT		= 1 << 2,
 	NVME_ST_VALID_SC		= 1 << 3,
 	NVME_ST_REPORTS			= 20,
+	NVME_ST_LOG_ENTRY_SIZE	= 28,
+	NVME_ST_LOG_HEAD_SIZE	= 4,
 };
 
 struct nvme_self_test_log {
 	__u8                      crnt_dev_selftest_oprn;
 	__u8                      crnt_dev_selftest_compln;
-	__u8                      rsvd[2];
+	__u8                      rsvd2[2];
 	struct nvme_self_test_res result[20];
 } __attribute__((packed));
 

@@ -26,8 +26,8 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	const char *devname, enum nvme_print_flags flags);
 void nvme_show_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname,
 	enum nvme_print_flags flags, size_t len);
-void nvme_show_self_test_log(struct nvme_self_test_log *self_test, const char *devname,
-	enum nvme_print_flags flags);
+void nvme_show_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entries,
+	__u32 size, const char *devname, enum nvme_print_flags flags);
 void nvme_show_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname,
 	enum nvme_print_flags flags);
 void nvme_show_effects_log(struct nvme_effects_log_page *effects, unsigned int flags);
