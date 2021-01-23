@@ -554,7 +554,7 @@ int scan_subsystems(struct nvme_topology *t, const char *subsysnqn,
 {
 	struct nvme_subsystem *s;
 	struct dirent **subsys;
-	int ret, i, j = 0;
+	int ret = 0, i, j = 0;
 
 	t->nr_subsystems = scandir(subsys_dir, &subsys, scan_subsys_filter,
 				   alphasort);
