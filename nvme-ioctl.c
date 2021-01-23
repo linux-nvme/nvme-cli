@@ -951,12 +951,12 @@ int nvme_sanitize(int fd, __u8 sanact, __u8 ause, __u8 owpass, __u8 oipbp,
 	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
-int nvme_self_test_start(int fd, __u32 nsid, __u32 cdw10)
+int nvme_self_test_start(int fd, __u32 nsid, __u8 stc)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode = nvme_admin_dev_self_test,
 		.nsid = nsid,
-		.cdw10 = cdw10,
+		.cdw10 = stc,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);
