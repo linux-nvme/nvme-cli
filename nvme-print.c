@@ -737,12 +737,13 @@ static void json_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname)
 	json_free_object(root);
 }
 
-static void json_self_test_log(struct nvme_self_test_log *self_test)
+static void json_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entries)
 {
 	struct json_object *valid_attrs;
 	struct json_object *root;
 	struct json_array *valid;
 	int i;
+	__u32 num_entries;
 
 	root = json_create_object();
 	json_object_add_value_int(root, "Current Device Self-Test Operation",
@@ -751,7 +752,8 @@ static void json_self_test_log(struct nvme_self_test_log *self_test)
 		self_test->crnt_dev_selftest_compln);
 	valid = json_create_array();
 
-	for (i = 0; i < NVME_ST_REPORTS; i++) {
+	num_entries = min(dst_entries, NVME_ST_REPORTS);
+	for (i = 0; i < num_entries; i++) {
 		valid_attrs = json_create_object();
 		json_object_add_value_int(valid_attrs, "Self test result",
 			self_test->result[i].dsts & 0xf);
@@ -1580,9 +1582,9 @@ static void nvme_show_subsystem(struct nvme_subsystem *s)
 
 	for (i = 0; i < s->nr_ctrls; i++) {
 		printf(" +- %s %s %s %s %s\n", s->ctrls[i].name,
-				s->ctrls[i].transport,
-				s->ctrls[i].address,
-				s->ctrls[i].state,
+				s->ctrls[i].transport ? : "",
+				s->ctrls[i].address ? : "",
+				s->ctrls[i].state ? : "",
 				s->ctrls[i].ana_state ? : "");
 	}
 }
@@ -1615,12 +1617,15 @@ static void json_print_nvme_subsystem_list(struct nvme_topology *t)
 			path_attrs = json_create_object();
 			json_object_add_value_string(path_attrs, "Name",
 					c->name);
-			json_object_add_value_string(path_attrs, "Transport",
-					c->transport);
-			json_object_add_value_string(path_attrs, "Address",
-					c->address);
-			json_object_add_value_string(path_attrs, "State",
-					c->state);
+			if (c->transport)
+				json_object_add_value_string(path_attrs,
+						"Transport", c->transport);
+			if (c->address)
+				json_object_add_value_string(path_attrs,
+						"Address", c->address);
+			if (c->state)
+				json_object_add_value_string(path_attrs,
+						"State", c->state);
 			if (c->ana_state)
 				json_object_add_value_string(path_attrs,
 						"ANAState", c->ana_state);
@@ -2334,7 +2339,7 @@ void nvme_show_relatives(const char *name)
 			free(path);
 			return;
 		}
-		err = scan_subsystems(&t, subsysnqn, 0);
+		err = scan_subsystems(&t, subsysnqn, 0, NULL);
 		if (err || t.nr_subsystems != 1) {
 			free(subsysnqn);
 			free(path);
@@ -4612,20 +4617,22 @@ static void nvme_show_self_test_result(struct nvme_self_test_res *res,
 		res->vs[0], res->vs[1]);
 }
 
-void nvme_show_self_test_log(struct nvme_self_test_log *self_test, const char *devname,
-			     enum nvme_print_flags flags)
+void nvme_show_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entries,
+				__u32 size, const char *devname, enum nvme_print_flags flags)
 {
 	int i;
+	__u8 num_entries;
 
 	if (flags & BINARY)
-		return d_raw((unsigned char *)self_test, sizeof(*self_test));
+		return d_raw((unsigned char *)self_test, size);
 	if (flags & JSON)
-		return json_self_test_log(self_test);
+		return json_self_test_log(self_test, dst_entries);
 
 	printf("Device Self Test Log for NVME device:%s\n", devname);
 	printf("Current operation  : %#x\n", self_test->crnt_dev_selftest_oprn);
 	printf("Current Completion : %u%%\n", self_test->crnt_dev_selftest_compln);
-	for (i = 0; i < NVME_ST_REPORTS; i++) {
+	num_entries = min(dst_entries, NVME_ST_REPORTS);
+	for (i = 0; i < num_entries; i++) {
 		printf("Self Test Result[%d]:\n", i);
 		nvme_show_self_test_result(&self_test->result[i], flags);
 	}
@@ -5404,7 +5411,7 @@ static void nvme_show_list_item(struct nvme_namespace *n)
 	struct stat st;
 	int ret;
 
-	sprintf(path, "/dev/%s", n->name);
+	sprintf(path, "%s%s", n->ctrl->path, n->name);
 	ret = stat(path, &st);
 	if (ret < 0)
 		return;
@@ -5413,7 +5420,7 @@ static void nvme_show_list_item(struct nvme_namespace *n)
 		nsze, s_suffix);
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		le16_to_cpu(n->ns.lbaf[(n->ns.flbas & 0x0f)].ms));
-	printf("/dev/%-11s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", n->name,
+	printf("%-21s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", path,
 		(int)sizeof(n->ctrl->id.sn), (int)sizeof(n->ctrl->id.sn), n->ctrl->id.sn,
 		(int)sizeof(n->ctrl->id.mn), (int)sizeof(n->ctrl->id.mn), n->ctrl->id.mn,
 		n->nsid, usage, format, (int)sizeof(n->ctrl->id.fr), n->ctrl->id.fr);
@@ -5423,9 +5430,9 @@ static void nvme_show_simple_list(struct nvme_topology *t)
 {
 	int i, j, k;
 
-	printf("%-16s %-20s %-40s %-9s %-26s %-16s %-8s\n",
+	printf("%-21s %-20s %-40s %-9s %-26s %-16s %-8s\n",
 	    "Node", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
-	printf("%-.16s %-.20s %-.40s %-.9s %-.26s %-.16s %-.8s\n", dash, dash,
+	printf("%-.21s %-.20s %-.40s %-.9s %-.26s %-.16s %-.8s\n", dash, dash,
 		dash, dash, dash, dash, dash);
 
 	for (i = 0; i < t->nr_subsystems; i++) {
@@ -5524,7 +5531,7 @@ static void nvme_show_detailed_list(struct nvme_topology *t)
 
 			printf("%-8s %-.20s %-.40s %-.8s %-6s %-14s %-12s ",
 				c->name, c->id.sn, c->id.mn, c->id.fr,
-				c->transport, c->address, s->name);
+				c->transport ? : "", c->address ? : "", s->name);
 
 			for (k = 0; k < c->nr_namespaces; k++) {
 				struct nvme_namespace *n = &c->namespaces[k];
@@ -5607,9 +5614,12 @@ static void json_detail_list(struct nvme_topology *t)
 			struct json_array *namespaces;
 
 			json_object_add_value_string(ctrl_attrs, "Controller", c->name);
-			json_object_add_value_string(ctrl_attrs, "Transport", c->transport);
-			json_object_add_value_string(ctrl_attrs, "Address", c->address);
-			json_object_add_value_string(ctrl_attrs, "State", c->state);
+			if (c->transport)
+				json_object_add_value_string(ctrl_attrs, "Transport", c->transport);
+			if (c->address)
+				json_object_add_value_string(ctrl_attrs, "Address", c->address);
+			if (c->state)
+				json_object_add_value_string(ctrl_attrs, "State", c->state);
 			if (c->hostnqn)
 				json_object_add_value_string(ctrl_attrs, "HostNQN", c->hostnqn);
 			if (c->hostid)
@@ -5672,7 +5682,7 @@ static void json_simple_ns(struct nvme_namespace *n, struct json_array *devices)
 	long long lba;
 	char *devnode;
 
-	if (asprintf(&devnode, "/dev/%s", n->name) < 0)
+	if (asprintf(&devnode, "%s%s", n->ctrl->path, n->name) < 0)
 		return;
 
 	device_attrs = json_create_object();
@@ -5696,7 +5706,7 @@ static void json_simple_ns(struct nvme_namespace *n, struct json_array *devices)
 
 	json_object_add_value_string(device_attrs, "ModelNumber", formatter);
 
-	if (index >= 0 && !strcmp(n->ctrl->transport, "pcie")) {
+	if (index >= 0 && n->ctrl->transport && !strcmp(n->ctrl->transport, "pcie")) {
 		char *product = nvme_product_name(index);
 
 		json_object_add_value_string(device_attrs, "ProductName", product);

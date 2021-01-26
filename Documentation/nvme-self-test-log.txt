@@ -8,7 +8,8 @@ nvme-self-test-log - Retrieve the log information initited by device-self-test a
 SYNOPSIS
 --------
 [verse]
-'nvme self-test'-log <device> [--output-format=<FMT> | -o <FMT>] 
+'nvme self-test'-log <device> [--log-entries=<entries> | -e <entries>]
+                    [--output-format=<FMT> | -o <FMT>] 
 
 DESCRIPTION
 -----------
@@ -28,6 +29,12 @@ By default the log is printed out in the normal readable format.
 
 OPTION
 -------
+-e <entries>::
+--log-entries=<entries>::
+	Specifies how many DST log entries the program should request from
+	the device. This must be at least one, and shouldn't exceed the
+	20 entries. Defaults to 20 DST log entries.
+
 -o <format>::
 --output-format=<format>::
               Set the reporting format to 'normal', 'json', or

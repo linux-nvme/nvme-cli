@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 8.6.10" />
 <title>nvme-self-test-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -433,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -746,7 +749,8 @@ nvme-self-test-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme self-test</em>-log &lt;device&gt; [--output-format=&lt;FMT&gt; | -o &lt;FMT&gt;]</pre>
+<pre class="content"><em>nvme self-test</em>-log &lt;device&gt; [--log-entries=&lt;entries&gt; | -e &lt;entries&gt;]
+                    [--output-format=&lt;FMT&gt; | -o &lt;FMT&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -770,6 +774,19 @@ json format.</p></div>
 <h2 id="_option">OPTION</h2>
 <div class="sectionbody">
 <div class="dlist"><dl>
+<dt class="hdlist1">
+-e &lt;entries&gt;
+</dt>
+<dt class="hdlist1">
+--log-entries=&lt;entries&gt;
+</dt>
+<dd>
+<p>
+        Specifies how many DST log entries the program should request from
+        the device. This must be at least one, and shouldn&#8217;t exceed the
+        20 entries. Defaults to 20 DST log entries.
+</p>
+</dd>
 <dt class="hdlist1">
 -o &lt;format&gt;
 </dt>
@@ -829,7 +846,8 @@ Get the self-test-log and print it in a json format:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-06-15 13:12:28 MDT
+Last updated
+ 2021-01-23 16:07:45 IST
 </div>
 </div>
 </body>

@@ -154,6 +154,7 @@
 #define WDC_CUSTOMER_ID_GD					0x0101
 #define WDC_CUSTOMER_ID_0x1004				0x1004
 #define WDC_CUSTOMER_ID_0x1005				0x1005
+#define WDC_CUSTOMER_ID_0x1008				0x1008
 
 #define WDC_ALL_PAGE_MASK                   0xFFFF
 #define WDC_C0_PAGE_MASK                    0x0001
@@ -311,6 +312,7 @@
 /* C2 - FW Activation History Log Page */
 #define WDC_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID   0xC2
 #define WDC_FW_ACT_HISTORY_C2_LOG_BUF_LEN       0x1000
+#define WDC_MAX_NUM_ACT_HIST_ENTRIES            20
 
 /* D0 Smart Log Page */
 #define WDC_NVME_GET_VU_SMART_LOG_OPCODE		0xD0
@@ -1230,7 +1232,7 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 
 			cust_id = (__u32*)data;
 
-			if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
+			if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1008) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
 				capabilities |= (WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE |
 						WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_CLOUD_SSD_VERSION);
 			else
@@ -1378,7 +1380,7 @@ static __u64 wdc_get_enc_drive_capabilities(int fd) {
 
 			cust_id = (__u32*)data;
 
-			if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
+			if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1008) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
 				capabilities |= (WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE);
 			else
 				capabilities |= (WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_CLEAR_PCIE);
@@ -3973,61 +3975,93 @@ static void wdc_get_commit_action_bin(__u8 commit_action_type, char *action_bin)
 
 }
 
-static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries)
+static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries, __u32 cust_id)
 {
 	int i;
 	char previous_fw[9];
 	char new_fw[9];
 	char commit_action_bin[8];
+	char time_str[11];
+	__u16 oldestEntryIdx = 0, entryIdx = 0;
+	char *null_fw = "--------";
+	memset((void *)time_str, 0, 11);
 
 	if (data[0] == WDC_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID) {
 		printf("  Firmware Activate History Log \n");
-		printf("                               Power Cycle     Previous    New                               \n");
-		printf("  Entry      Timestamp            Count        Firmware    Firmware    Slot   Action  Result \n");
-		printf("  -----  -----------------  -----------------  ---------   ---------   -----  ------  -------\n");
-
+		if (cust_id == WDC_CUSTOMER_ID_0x1005) {
+			printf("           Power on Hour       Power Cycle     Previous    New                               \n");
+			printf("  Entry      hh:mm:ss             Count        Firmware    Firmware    Slot   Action  Result \n");
+			printf("  -----  -----------------  -----------------  ---------   ---------   -----  ------  -------\n");
+		} else {
+			printf("                               Power Cycle     Previous    New                               \n");
+			printf("  Entry      Timestamp            Count        Firmware    Firmware    Slot   Action  Result \n");
+			printf("  -----  -----------------  -----------------  ---------   ---------   -----  ------  -------\n");
+		}
 		struct wdc_fw_act_history_log_format_c2 *fw_act_history_entry = (struct wdc_fw_act_history_log_format_c2 *)(data);
+
+		if (num_entries == WDC_MAX_NUM_ACT_HIST_ENTRIES) {
+			/* find lowest/oldest entry */
+			for (i = 0; i < num_entries; i++) {
+				if (le16_to_cpu(fw_act_history_entry->entry[i].fw_act_hist_entries) >
+						le16_to_cpu(fw_act_history_entry->entry[i+1].fw_act_hist_entries)) {
+					oldestEntryIdx = i+1;
+					break;
+				}
+			}
+		}
+		if (oldestEntryIdx == WDC_MAX_NUM_ACT_HIST_ENTRIES)
+			entryIdx = 0;
+		else
+			entryIdx = oldestEntryIdx;
 
 		for (i = 0; i < num_entries; i++) {
 			memset((void *)previous_fw, 0, 9);
 			memset((void *)new_fw, 0, 9);
 			memset((void *)commit_action_bin, 0, 8);
 
-			memcpy(previous_fw, (char *)&(fw_act_history_entry->entry[i].previous_fw_version), 8);
-			memcpy(new_fw, (char *)&(fw_act_history_entry->entry[i].current_fw_version), 8);
+			memcpy(previous_fw, (char *)&(fw_act_history_entry->entry[entryIdx].previous_fw_version), 8);
+			if (strlen((char *)&(fw_act_history_entry->entry[entryIdx].current_fw_version)) > 1)
+				memcpy(new_fw, (char *)&(fw_act_history_entry->entry[entryIdx].current_fw_version), 8);
+			else
+				memcpy(new_fw, null_fw, 8);
 
-			printf("%5"PRIu16"", (uint16_t)le16_to_cpu(fw_act_history_entry->entry[i].fw_act_hist_entries));
+			printf("%5"PRIu16"", (uint16_t)le16_to_cpu(fw_act_history_entry->entry[entryIdx].fw_act_hist_entries));
+			if (cust_id == WDC_CUSTOMER_ID_0x1005) {
+				printf("       ");
+				memset((void *)time_str, 0, 9);
+				sprintf((char *)time_str, "%04d:%02d:%02d", (int)(le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp)/3600),
+						(int)((le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp%3600)/60)),
+						(int)(le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp%60)));
+
+				printf("%s", time_str);
+				printf("     ");
+			} else {
+				printf("   ");
+				uint64_t timestamp = (0x0000FFFFFFFFFFFF & le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp));
+				printf("%16"PRIu64"", timestamp);
+				printf("   ");
+			}
+
+			printf("%16"PRIu64"", (uint64_t)le64_to_cpu(fw_act_history_entry->entry[entryIdx].power_cycle_count));
 			printf("     ");
-			uint64_t timestamp = (0x0000FFFFFFFFFFFF & le64_to_cpu(fw_act_history_entry->entry[i].timestamp));
-			printf("%16"PRIu64"", timestamp);
-			/*
-			int year = (((timestamp/(1000*3600))/24)/365);
-			int day = ((timestamp/1000)/(3600*24));
-			int hour = ((timestamp/1000)/3600);
-			printf("%02dyr:%02dday:%02dhr:%02dmin:%02dsec",
-					(int)year,
-					(int)(day%365),
-					(int)(hour%24),
-					(int)(((timestamp/1000)%3600)/60),
-					(int)((timestamp/1000)%60));
-			*/
-			printf("   ");
-			printf("%16"PRIu64"", (uint64_t)le64_to_cpu(fw_act_history_entry->entry[i].power_cycle_count));
-			printf("   ");
 			printf("%s", (char *)previous_fw);
 			printf("    ");
 			printf("%s", (char *)new_fw);
 			printf("     ");
-			printf("%2"PRIu8"", (uint8_t)fw_act_history_entry->entry[i].slot_number);
+			printf("%2"PRIu8"", (uint8_t)fw_act_history_entry->entry[entryIdx].slot_number);
 			printf("   ");
-			wdc_get_commit_action_bin(fw_act_history_entry->entry[i].commit_action_type,(char *)&commit_action_bin);
+			wdc_get_commit_action_bin(fw_act_history_entry->entry[entryIdx].commit_action_type,(char *)&commit_action_bin);
 			printf("  %s", (char *)commit_action_bin);
 			printf("  ");
-			if (le16_to_cpu(fw_act_history_entry->entry[i].result) == 0)
+			if (le16_to_cpu(fw_act_history_entry->entry[entryIdx].result) == 0)
 				printf("pass");
 			else
-				printf("fail #%d", (uint16_t)le16_to_cpu(fw_act_history_entry->entry[i].result));
+				printf("fail #%d", (uint16_t)le16_to_cpu(fw_act_history_entry->entry[entryIdx].result));
 			printf("\n");
+
+			entryIdx++;
+			if (entryIdx >= WDC_MAX_NUM_ACT_HIST_ENTRIES)
+				entryIdx = 0;
 		}
 	}
 	else
@@ -4039,43 +4073,64 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries)
 
 		struct wdc_fw_act_history_log_entry *fw_act_history_entry = (struct wdc_fw_act_history_log_entry *)(data + sizeof(struct wdc_fw_act_history_log_hdr));
 
+		if (num_entries == WDC_MAX_NUM_ACT_HIST_ENTRIES) {
+			/* find lowest/oldest entry */
+			for (i = 0; i < num_entries; i++) {
+				if (le32_to_cpu(fw_act_history_entry[i].entry_num) > le32_to_cpu(fw_act_history_entry[i+1].entry_num)) {
+					oldestEntryIdx = i+1;
+					break;
+				}
+			}
+		}
+
+		if (oldestEntryIdx == WDC_MAX_NUM_ACT_HIST_ENTRIES)
+			entryIdx = 0;
+		else
+			entryIdx = oldestEntryIdx;
+
 		for (i = 0; i < num_entries; i++) {
 			memset((void *)previous_fw, 0, 9);
 			memset((void *)new_fw, 0, 9);
 			memset((void *)commit_action_bin, 0, 8);
 
-			memcpy(previous_fw, (char *)&(fw_act_history_entry->previous_fw_version), 8);
-			memcpy(new_fw, (char *)&(fw_act_history_entry->new_fw_version), 8);
-			printf("%5"PRIu32"", (uint32_t)le32_to_cpu(fw_act_history_entry->entry_num));
-			printf("       ");
-			printf("%02d:%02d:%02d", (int)(le64_to_cpu(fw_act_history_entry->power_on_seconds)/3600),
-					(int)((le64_to_cpu(fw_act_history_entry->power_on_seconds)%3600)/60),
-					(int)(le64_to_cpu(fw_act_history_entry->power_on_seconds)%60));
-			printf("       ");
-			printf("%16"PRIu32"", (uint32_t)le32_to_cpu(fw_act_history_entry->power_cycle_count));
+			memcpy(previous_fw, (char *)&(fw_act_history_entry[entryIdx].previous_fw_version), 8);
+			if (strlen((char *)&(fw_act_history_entry[entryIdx].new_fw_version)) > 1)
+				memcpy(new_fw, (char *)&(fw_act_history_entry[entryIdx].new_fw_version), 8);
+			else
+				memcpy(new_fw, null_fw, 8);
+
+			printf("%5"PRIu32"", (uint32_t)le32_to_cpu(fw_act_history_entry[entryIdx].entry_num));
+			printf("      ");
+			printf("%04d:%02d:%02d", (int)(le64_to_cpu(fw_act_history_entry[entryIdx].power_on_seconds)/3600),
+					(int)((le64_to_cpu(fw_act_history_entry[entryIdx].power_on_seconds)%3600)/60),
+					(int)(le64_to_cpu(fw_act_history_entry[entryIdx].power_on_seconds)%60));
+			printf("      ");
+			printf("%16"PRIu32"", (uint32_t)le32_to_cpu(fw_act_history_entry[entryIdx].power_cycle_count));
 			printf("     ");
 			printf("%s", (char *)previous_fw);
 			printf("    ");
 			printf("%s", (char *)new_fw);
 			printf("     ");
-			printf("%2"PRIu8"", (uint8_t)fw_act_history_entry->slot_number);
+			printf("%2"PRIu8"", (uint8_t)fw_act_history_entry[entryIdx].slot_number);
 			printf("  ");
-			wdc_get_commit_action_bin(fw_act_history_entry->commit_action_type,(char *)&commit_action_bin);
+			wdc_get_commit_action_bin(fw_act_history_entry[entryIdx].commit_action_type,(char *)&commit_action_bin);
 			printf("  %s", (char *)commit_action_bin);
 			printf("   ");
-			if (le16_to_cpu(fw_act_history_entry->result) == 0)
+			if (le16_to_cpu(fw_act_history_entry[entryIdx].result) == 0)
 				printf("pass");
 			else
-				printf("fail #%d", (uint16_t)le16_to_cpu(fw_act_history_entry->result));
+				printf("fail #%d", (uint16_t)le16_to_cpu(fw_act_history_entry[entryIdx].result));
 
 			printf("\n");
 
-			fw_act_history_entry++;
+			entryIdx++;
+			if (entryIdx >= WDC_MAX_NUM_ACT_HIST_ENTRIES)
+				entryIdx = 0;
 		}
 	}
 }
 
-static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries)
+static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries, __u32 cust_id)
 {
 	struct json_object *root;
 	int i;
@@ -4083,92 +4138,135 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries)
 	char new_fw[9];
 	char commit_action_bin[8];
 	char fail_str[32];
-	char time_str[9];
+	char time_str[11];
 	memset((void *)previous_fw, 0, 9);
 	memset((void *)new_fw, 0, 9);
 	memset((void *)commit_action_bin, 0, 8);
-	memset((void *)time_str, 0, 9);
+	memset((void *)time_str, 0, 11);
 	memset((void *)fail_str, 0, 11);
 	char *null_fw = "--------";
+	__u16 oldestEntryIdx = 0, entryIdx = 0;
 
 	root = json_create_object();
 
 	if(data[0] == WDC_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID) {
 		struct wdc_fw_act_history_log_format_c2 *fw_act_history_entry = (struct wdc_fw_act_history_log_format_c2 *)(data);
 
+		if (num_entries == WDC_MAX_NUM_ACT_HIST_ENTRIES) {
+			/* find lowest/oldest entry */
+			for (i = 0; i < num_entries; i++) {
+				if (le16_to_cpu(fw_act_history_entry->entry[i].fw_act_hist_entries) >
+						le16_to_cpu(fw_act_history_entry->entry[i+1].fw_act_hist_entries)) {
+					oldestEntryIdx = i+1;
+					break;
+				}
+			}
+		}
+		if (oldestEntryIdx == WDC_MAX_NUM_ACT_HIST_ENTRIES)
+			entryIdx = 0;
+		else
+			entryIdx = oldestEntryIdx;
+
 		for (i = 0; i < num_entries; i++) {
-			memcpy(previous_fw, (char *)&(fw_act_history_entry->entry[i].previous_fw_version), 8);
-			if (strlen((char *)&(fw_act_history_entry->entry[i].current_fw_version)) > 1)
-			    memcpy(new_fw, (char *)&(fw_act_history_entry->entry[i].current_fw_version), 8);
+			memcpy(previous_fw, (char *)&(fw_act_history_entry->entry[entryIdx].previous_fw_version), 8);
+			if (strlen((char *)&(fw_act_history_entry->entry[entryIdx].current_fw_version)) > 1)
+			    memcpy(new_fw, (char *)&(fw_act_history_entry->entry[entryIdx].current_fw_version), 8);
 			else
 				memcpy(new_fw, null_fw, 8);
 
 			json_object_add_value_int(root, "Entry",
-				le16_to_cpu(fw_act_history_entry->entry[i].fw_act_hist_entries));
+				le16_to_cpu(fw_act_history_entry->entry[entryIdx].fw_act_hist_entries));
 
-			sprintf((char *)time_str, "%02d:%02d:%02d", (int)(le64_to_cpu(fw_act_history_entry->entry[i].timestamp)/(1000*3600)),
-					(int)(((le64_to_cpu(fw_act_history_entry->entry[i].timestamp)/1000)%3600)/60),
-					(int)((le64_to_cpu(fw_act_history_entry->entry[i].timestamp)/1000)%60));
-			json_object_add_value_string(root, "Power on Hour", time_str);
+			if (cust_id == WDC_CUSTOMER_ID_0x1005) {
+				sprintf((char *)time_str, "%04d:%02d:%02d", (int)(le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp)/3600),
+						(int)((le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp%3600)/60)),
+						(int)(le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp%60)));
+
+				json_object_add_value_string(root, "Power on Hour", time_str);
+
+			} else {
+				uint64_t timestamp = (0x0000FFFFFFFFFFFF & le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp));
+				json_object_add_value_int(root, "Timestamp", timestamp);
+			}
 
 			json_object_add_value_int(root, "Power Cycle Count",
-				le64_to_cpu(fw_act_history_entry->entry[i].power_cycle_count));
+				le64_to_cpu(fw_act_history_entry->entry[entryIdx].power_cycle_count));
 			json_object_add_value_string(root, "Previous Firmware",
 					previous_fw);
 			json_object_add_value_string(root, "New Firmware",
 					new_fw);
 			json_object_add_value_int(root, "Slot",
-				fw_act_history_entry->entry[i].slot_number);
+				fw_act_history_entry->entry[entryIdx].slot_number);
 
-			wdc_get_commit_action_bin(fw_act_history_entry->entry[i].commit_action_type,(char *)&commit_action_bin);
+			wdc_get_commit_action_bin(fw_act_history_entry->entry[entryIdx].commit_action_type,(char *)&commit_action_bin);
 			json_object_add_value_string(root, "Action", commit_action_bin);
 
-			if (le16_to_cpu(fw_act_history_entry->entry[i].result) == 0)
+			if (le16_to_cpu(fw_act_history_entry->entry[entryIdx].result) == 0)
 				json_object_add_value_string(root, "Result", "pass");
 			else {
-				sprintf((char *)fail_str, "fail #%d", (int)(le16_to_cpu(fw_act_history_entry->entry[i].result)));
+				sprintf((char *)fail_str, "fail #%d", (int)(le16_to_cpu(fw_act_history_entry->entry[entryIdx].result)));
 				json_object_add_value_string(root, "Result", fail_str);
 			}
+
+			entryIdx++;
+			if (entryIdx >= WDC_MAX_NUM_ACT_HIST_ENTRIES)
+				entryIdx = 0;
 		}
 	}
 	else {
 		struct wdc_fw_act_history_log_entry *fw_act_history_entry = (struct wdc_fw_act_history_log_entry *)(data + sizeof(struct wdc_fw_act_history_log_hdr));
 
+		if (num_entries == WDC_MAX_NUM_ACT_HIST_ENTRIES) {
+			/* find lowest/oldest entry */
+			for (i = 0; i < num_entries; i++) {
+				if (le32_to_cpu(fw_act_history_entry[i].entry_num) > le32_to_cpu(fw_act_history_entry[i+1].entry_num)) {
+					oldestEntryIdx = i+1;
+					break;
+				}
+			}
+		}
+		if (oldestEntryIdx == WDC_MAX_NUM_ACT_HIST_ENTRIES)
+			entryIdx = 0;
+		else
+			entryIdx = oldestEntryIdx;
+
 		for (i = 0; i < num_entries; i++) {
-			memcpy(previous_fw, (char *)&(fw_act_history_entry->previous_fw_version), 8);
-			if (strlen((char *)&(fw_act_history_entry->new_fw_version)) > 1)
-			    memcpy(new_fw, (char *)&(fw_act_history_entry->new_fw_version), 8);
+			memcpy(previous_fw, (char *)&(fw_act_history_entry[entryIdx].previous_fw_version), 8);
+			if (strlen((char *)&(fw_act_history_entry[entryIdx].new_fw_version)) > 1)
+			    memcpy(new_fw, (char *)&(fw_act_history_entry[entryIdx].new_fw_version), 8);
 			else
 				memcpy(new_fw, null_fw, 8);
 
 			json_object_add_value_int(root, "Entry",
-				le32_to_cpu(fw_act_history_entry->entry_num));
+				le32_to_cpu(fw_act_history_entry[entryIdx].entry_num));
 
-			sprintf((char *)time_str, "%02d:%02d:%02d", (int)(le64_to_cpu(fw_act_history_entry->power_on_seconds)/3600),
-					(int)((le64_to_cpu(fw_act_history_entry->power_on_seconds)%3600)/60),
-					(int)(le64_to_cpu(fw_act_history_entry->power_on_seconds)%60));
+			sprintf((char *)time_str, "%04d:%02d:%02d", (int)(le64_to_cpu(fw_act_history_entry[entryIdx].power_on_seconds)/3600),
+					(int)((le64_to_cpu(fw_act_history_entry[entryIdx].power_on_seconds)%3600)/60),
+					(int)(le64_to_cpu(fw_act_history_entry[entryIdx].power_on_seconds)%60));
 			json_object_add_value_string(root, "Power on Hour", time_str);
 
 			json_object_add_value_int(root, "Power Cycle Count",
-				le32_to_cpu(fw_act_history_entry->power_cycle_count));
+				le32_to_cpu(fw_act_history_entry[entryIdx].power_cycle_count));
 			json_object_add_value_string(root, "Previous Firmware",
 					previous_fw);
 			json_object_add_value_string(root, "New Firmware",
 					new_fw);
 			json_object_add_value_int(root, "Slot",
-				fw_act_history_entry->slot_number);
+				fw_act_history_entry[entryIdx].slot_number);
 
-			wdc_get_commit_action_bin(fw_act_history_entry->commit_action_type,(char *)&commit_action_bin);
+			wdc_get_commit_action_bin(fw_act_history_entry[entryIdx].commit_action_type,(char *)&commit_action_bin);
 			json_object_add_value_string(root, "Action", commit_action_bin);
 
-			if (le16_to_cpu(fw_act_history_entry->result) == 0)
+			if (le16_to_cpu(fw_act_history_entry[entryIdx].result) == 0)
 				json_object_add_value_string(root, "Result", "pass");
 			else {
-				sprintf((char *)fail_str, "fail #%d", (int)(le16_to_cpu(fw_act_history_entry->result)));
+				sprintf((char *)fail_str, "fail #%d", (int)(le16_to_cpu(fw_act_history_entry[entryIdx].result)));
 				json_object_add_value_string(root, "Result", fail_str);
 			}
 
-		    fw_act_history_entry++;
+			entryIdx++;
+			if (entryIdx >= WDC_MAX_NUM_ACT_HIST_ENTRIES)
+				entryIdx = 0;
 		}
 	}
 
@@ -4433,7 +4531,7 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 
 		cust_id = (__u32*)data;
 
-		if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
+		if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1008) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
 		{
 			if (uuid_index == 0)
 			{
@@ -4622,7 +4720,7 @@ static int wdc_print_d0_log(struct wdc_ssd_d0_smart_log *perf, int fmt)
 	return 0;
 }
 
-static int wdc_print_fw_act_history_log(__u8 *data, int num_entries, int fmt)
+static int wdc_print_fw_act_history_log(__u8 *data, int num_entries, int fmt, __u32 cust_id)
 {
 	if (!data) {
 		fprintf(stderr, "ERROR : WDC : Invalid buffer to read fw activate history entries\n");
@@ -4631,10 +4729,10 @@ static int wdc_print_fw_act_history_log(__u8 *data, int num_entries, int fmt)
 
 	switch (fmt) {
 	case NORMAL:
-		wdc_print_fw_act_history_log_normal(data, num_entries);
+		wdc_print_fw_act_history_log_normal(data, num_entries, cust_id);
 		break;
 	case JSON:
-		wdc_print_fw_act_history_log_json(data, num_entries);
+		wdc_print_fw_act_history_log_json(data, num_entries, cust_id);
 		break;
 	}
 	return 0;
@@ -5285,10 +5383,16 @@ static int wdc_get_fw_act_history(int fd, char *format)
 		/* parse the data */
 		fw_act_history_hdr = (struct wdc_fw_act_history_log_hdr *)(data);
 
-		if (fw_act_history_hdr->num_entries > 0)
-			ret = wdc_print_fw_act_history_log(data, fw_act_history_hdr->num_entries, fmt);
-		else
-			fprintf(stderr, "INFO : WDC : No entries found in FW Activate History Log Page\n");
+		if ((fw_act_history_hdr->num_entries > 0) && (fw_act_history_hdr->num_entries <= WDC_MAX_NUM_ACT_HIST_ENTRIES))
+			ret = wdc_print_fw_act_history_log(data, fw_act_history_hdr->num_entries, fmt, 0);
+		else if (fw_act_history_hdr->num_entries == 0) {
+			fprintf(stderr, "INFO : WDC : No FW Activate History entries found.\n");
+			ret = 0;
+		}
+		else {
+			fprintf(stderr, "ERROR : WDC : Invalid number entries found in FW Activate History Log Page - %d\n", fw_act_history_hdr->num_entries);
+			ret = -1;
+		}
 	} else {
 		fprintf(stderr, "ERROR : WDC : Unable to read FW Activate History Log Page data\n");
 		ret = -1;
@@ -5303,6 +5407,7 @@ static int wdc_get_fw_act_history_C2(int fd, char *format)
 	int ret = 0;
 	int fmt = -1;
 	__u8 *data;
+	__u32 *cust_id;
 	struct wdc_fw_act_history_log_format_c2 *fw_act_history_log;
 	__u32 num_entries = 0;
 
@@ -5333,15 +5438,29 @@ static int wdc_get_fw_act_history_C2(int fd, char *format)
 		fw_act_history_log = (struct wdc_fw_act_history_log_format_c2*)(data);
 		num_entries = le32_to_cpu(fw_act_history_log->num_entries);
 
-		if (num_entries > 0)
-			ret = wdc_print_fw_act_history_log(data, num_entries, fmt);
-		else
-			fprintf(stderr, "INFO : WDC : No entries found in FW Activate History Log Page\n");
+		if ((num_entries > 0) && (num_entries <= WDC_MAX_NUM_ACT_HIST_ENTRIES)) {
+			/* get the FW customer id */
+			if (!get_dev_mgment_cbs_data(fd, WDC_C2_CUSTOMER_ID_ID, (void*)&cust_id)) {
+				fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
+				ret = -1;
+				goto freeData;
+			}
+
+			ret = wdc_print_fw_act_history_log(data, num_entries, fmt, *cust_id);
+		} else if (num_entries == 0) {
+			fprintf(stderr, "INFO : WDC : No FW Activate History entries found.\n");
+			ret = 0;
+		}
+		else {
+			fprintf(stderr, "ERROR : WDC : Invalid number entries found in FW Activate History Log Page - %d\n", num_entries);
+			ret = -1;
+		}
 	} else {
 		fprintf(stderr, "ERROR : WDC : Unable to read FW Activate History Log Page data\n");
 		ret = -1;
 	}
 
+freeData:
 	free(data);
 	return ret;
 }

@@ -1589,7 +1589,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
-	err = scan_subsystems(&t, subsysnqn, ns_instance);
+	err = scan_subsystems(&t, subsysnqn, ns_instance, NULL);
 	if (err) {
 		fprintf(stderr, "Failed to scan namespaces\n");
 		goto free;
@@ -1606,22 +1606,26 @@ ret:
 static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve basic information for all NVMe namespaces";
+	const char *device_dir = "Additional directory to search for devices";
 	const char *verbose = "Increase output verbosity";
 	struct nvme_topology t = { };
 	enum nvme_print_flags flags;
 	int err = 0;
 
 	struct config {
+		char *device_dir;
 		char *output_format;
 		int verbose;
 	};
 
 	struct config cfg = {
+		.device_dir = NULL,
 		.output_format = "normal",
 		.verbose = 0,
 	};
 
 	OPT_ARGS(opts) = {
+		OPT_STRING("directory",  'd', "DIR",             &cfg.device_dir, device_dir),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary),
 		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
 		OPT_END()
@@ -1641,7 +1645,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
-	err = scan_subsystems(&t, NULL, 0);
+	err = scan_subsystems(&t, NULL, 0, cfg.device_dir);
 	if (err) {
 		fprintf(stderr, "Failed to scan namespaces\n");
 		return err;
@@ -2235,17 +2239,17 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 
 	struct config {
 		__u32 namespace_id;
-		__u32 cdw10;
+		__u8 stc;
 	};
 
 	struct config cfg = {
 		.namespace_id  = NVME_NSID_ALL,
-		.cdw10         = 0,
+		.stc = 0,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",   'n', &cfg.namespace_id, namespace_id),
-		OPT_UINT("self-test-code", 's', &cfg.cdw10,        self_test_code),
+		OPT_UINT("self-test-code", 's', &cfg.stc,          self_test_code),
 		OPT_END()
 	};
 
@@ -2253,12 +2257,14 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 	if (fd < 0)
 		goto ret;
 
-	err = nvme_self_test_start(fd, cfg.namespace_id, cfg.cdw10);
+	err = nvme_self_test_start(fd, cfg.namespace_id, cfg.stc);
 	if (!err) {
-		if ((cfg.cdw10 & 0xf) == 0xf)
+		if (cfg.stc == 0xf)
 			printf("Aborting device self-test operation\n");
-		else
-			printf("Device self-test started\n");
+		else if (cfg.stc == 0x2)
+			printf("Extended Device self-test started\n");
+		else if (cfg.stc == 0x1)
+			printf("Short Device self-test started\n");
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else
@@ -2274,27 +2280,28 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	const char *desc = "Retrieve the self-test log for the given device and given test "\
 			"(or optionally a namespace) in either decoded format "\
 			"(default) or binary.";
-	const char *namespace_id = "Indicate the namespace from which the self-test "\
-				    "log has to be obtained";
+	const char *dst_entries = "Indicate how many DST log entries to be retrieved, "\
+			"by default all the 20 entries will be retrieved";
 	const char *verbose = "Increase output verbosity";
 
 	struct nvme_self_test_log self_test_log;
 	enum nvme_print_flags flags;
 	int err, fd;
+	__u32 log_size;
 
 	struct config {
-		__u32 namespace_id;
+		__u8 dst_entries;
 		char *output_format;
 		int verbose;
 	};
 
 	struct config cfg = {
-		.namespace_id = NVME_NSID_ALL,
+		.dst_entries = NVME_ST_REPORTS,
 		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
+		OPT_UINT("dst-entries",  'e', &cfg.dst_entries,   dst_entries),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
 		OPT_END()
@@ -2310,9 +2317,11 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
-	err = nvme_self_test_log(fd, cfg.namespace_id, &self_test_log);
+	log_size = NVME_ST_LOG_HEAD_SIZE + cfg.dst_entries * NVME_ST_LOG_ENTRY_SIZE;
+	err = nvme_self_test_log(fd, log_size, &self_test_log);
 	if (!err)
-		nvme_show_self_test_log(&self_test_log, devicename, flags);
+		nvme_show_self_test_log(&self_test_log, cfg.dst_entries, log_size,
+			devicename, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
