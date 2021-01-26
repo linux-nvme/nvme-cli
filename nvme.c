@@ -2239,17 +2239,17 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 
 	struct config {
 		__u32 namespace_id;
-		__u32 cdw10;
+		__u8 stc;
 	};
 
 	struct config cfg = {
 		.namespace_id  = NVME_NSID_ALL,
-		.cdw10         = 0,
+		.stc = 0,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",   'n', &cfg.namespace_id, namespace_id),
-		OPT_UINT("self-test-code", 's', &cfg.cdw10,        self_test_code),
+		OPT_UINT("self-test-code", 's', &cfg.stc,          self_test_code),
 		OPT_END()
 	};
 
@@ -2257,12 +2257,14 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 	if (fd < 0)
 		goto ret;
 
-	err = nvme_self_test_start(fd, cfg.namespace_id, cfg.cdw10);
+	err = nvme_self_test_start(fd, cfg.namespace_id, cfg.stc);
 	if (!err) {
-		if ((cfg.cdw10 & 0xf) == 0xf)
+		if (cfg.stc == 0xf)
 			printf("Aborting device self-test operation\n");
-		else
-			printf("Device self-test started\n");
+		else if (cfg.stc == 0x2)
+			printf("Extended Device self-test started\n");
+		else if (cfg.stc == 0x1)
+			printf("Short Device self-test started\n");
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else

@@ -166,8 +166,8 @@ int nvme_set_property(int fd, int offset, uint64_t value);
 int nvme_get_property(int fd, int offset, uint64_t *value);
 int nvme_sanitize(int fd, __u8 sanact, __u8 ause, __u8 owpass, __u8 oipbp,
 		  __u8 no_dealloc, __u32 ovrpat);
-int nvme_self_test_start(int fd, __u32 nsid, __u32 cdw10);
-int nvme_self_test_log(int fd, __u32 size, struct nvme_self_test_log *self_test_log);
+int nvme_self_test_start(int fd, __u32 nsid, __u8 stc);
+int nvme_self_test_log(int fd, __u32 nsid, struct nvme_self_test_log *self_test_log);
 int nvme_virtual_mgmt(int fd, __u32 cdw10, __u32 cdw11, __u32 *result);
 
 int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
