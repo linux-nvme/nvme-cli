@@ -37,7 +37,7 @@ OPTIONS
 	bit is set to ‘1’.
 
 -t <rtype>::
---rtyep=<rtype>::
+--rtype=<rtype>::
 	Reservation Type: This field specifies the type of reservation
 	to be created.
 +

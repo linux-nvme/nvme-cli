@@ -44,7 +44,7 @@ OPTIONS
 	this field is reserved.
 
 -t <rtype>::
---rtyep=<rtype>::
+--rtype=<rtype>::
 	Reservation Type: This field specifies the type of reservation
 	to be created.
 +
