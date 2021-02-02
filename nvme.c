@@ -1024,7 +1024,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	struct config {
 		__u32 namespace_id;
-		__u32 log_id;
+		__u8  log_id;
 		__u32 log_len;
 		__u32 aen;
 		__u64 lpo;
@@ -1036,7 +1036,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	struct config cfg = {
 		.namespace_id = NVME_NSID_ALL,
-		.log_id       = 0xffffffff,
+		.log_id       = 0xff,
 		.log_len      = 0,
 		.lpo          = NVME_NO_LOG_LPO,
 		.lsp          = NVME_NO_LOG_LSP,
@@ -1064,12 +1064,6 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	if (cfg.aen) {
 		cfg.log_len = 4096;
 		cfg.log_id = (cfg.aen >> 16) & 0xff;
-	}
-
-	if (cfg.log_id > 0xff) {
-		fprintf(stderr, "Invalid log identifier: %d. Valid range: 0-255\n", cfg.log_id);
-		err = -EINVAL;
-		goto close_fd;
 	}
 
 	if (!cfg.log_len) {
