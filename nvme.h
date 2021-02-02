@@ -41,7 +41,7 @@ struct nvme_namespace {
 	char *name;
 	struct nvme_ctrl *ctrl;
 
-	unsigned nsid;
+	int nsid;
 	struct nvme_id_ns ns;
 };
 

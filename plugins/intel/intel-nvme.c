@@ -508,7 +508,7 @@ enum FormatUnit {
 #define US_IN_S 1000000
 #define US_IN_MS 1000
 
-static const enum FormatUnit get_seconds_magnitude(__u32 microseconds)
+static enum FormatUnit get_seconds_magnitude(__u32 microseconds)
 {
 	if (microseconds > US_IN_S)
 		return S;
@@ -518,7 +518,7 @@ static const enum FormatUnit get_seconds_magnitude(__u32 microseconds)
 		return US;
 }
 
-static const float convert_seconds(__u32 microseconds)
+static float convert_seconds(__u32 microseconds)
 {
 	float divisor = 1.0;
 

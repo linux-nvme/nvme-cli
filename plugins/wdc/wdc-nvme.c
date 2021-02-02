@@ -5252,7 +5252,7 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 		fprintf(stderr, "ERROR : WDC : Get Format Corrupt Reason Failed\n");
 
 	printf("  Drive Status :- \n");
-	if (le32_to_cpu(eol_status) >= 0) {
+	if (!eol_status) {
 		printf("  Percent Used:				%"PRIu32"%%\n",
 				le32_to_cpu(eol_status));
 	}
