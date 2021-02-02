@@ -4444,8 +4444,11 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		printf("      Persistent Mem. RO[5]          : %d\n", (smart->critical_warning & 0x20) >> 5);
 	}
 
-	printf("temperature				: %d C\n",
-		temperature);
+	if (temperature <= -273) // 0 Kelvin degrees absolute zero
+		printf("temperature                             : -\n");
+	else
+		printf("temperature				: %d C\n", temperature);
+
 	printf("available_spare				: %u%%\n",
 		smart->avail_spare);
 	printf("available_spare_threshold		: %u%%\n",
