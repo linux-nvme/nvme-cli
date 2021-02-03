@@ -987,8 +987,8 @@ void nvme_show_predictable_latency_event_agg_log(
 	printf("Predictable Latency Event Aggregate Log for"\
 		" device: %s\n", devname);
 
-	printf("Number of Entries Available: %llu\n",
-		num_entries);
+	printf("Number of Entries Available: %"PRIu64"\n",
+		(uint64_t)num_entries);
 
 	num_iter = min(num_entries, log_entries);
 	for (int i = 0; i < num_iter; i++) {
