@@ -2350,7 +2350,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	struct config {
 		__u32 namespace_id;
-		__u32 feature_id;
+		__u8  feature_id;
 		__u8  sel;
 		__u32 cdw11;
 		__u32 data_len;
@@ -3268,7 +3268,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	struct config {
 		char *file;
 		__u32 namespace_id;
-		__u32 feature_id;
+		__u8  feature_id;
 		__u32 value;
 		__u32 cdw12;
 		__u32 data_len;
