@@ -74,6 +74,7 @@ static const char *nvme_cmd_to_string(int admin, __u8 opcode)
 		case nvme_admin_security_send:	return "Security Send";
 		case nvme_admin_security_recv:	return "Security Receive";
 		case nvme_admin_sanitize_nvm:	return "Sanitize";
+		case nvme_admin_get_lba_status:	return "Get LBA Status";
 		}
 	} else {
 		switch (opcode) {
@@ -88,6 +89,11 @@ static const char *nvme_cmd_to_string(int admin, __u8 opcode)
 		case nvme_cmd_resv_report:	return "Reservation Report";
 		case nvme_cmd_resv_acquire:	return "Reservation Acquire";
 		case nvme_cmd_resv_release:	return "Reservation Release";
+		case nvme_cmd_verify:		return "Verify";
+		case nvme_cmd_copy:		return "Copy";
+		case nvme_zns_cmd_mgmt_send:return "Zone Management Send";
+		case nvme_zns_cmd_mgmt_recv:return "Zone Management Receive";
+		case nvme_zns_cmd_append:	return "Zone Append";
 		}
 	}
 
