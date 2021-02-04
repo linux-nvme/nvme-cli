@@ -5254,25 +5254,47 @@ static int admin_passthru(int argc, char **argv, struct command *cmd, struct plu
 	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD, desc, cmd);
 }
 
-#ifdef LIBUUID
+#ifndef LIBUUID
+static const int uuid_size = 37;
+static int uuid_generate_random(char* out)
+{
+	const char *uuid_file = "/proc/sys/kernel/random/uuid";
+	FILE *uuid_source = fopen(uuid_file, "r");
+	if (uuid_source == NULL) {
+		fprintf(stderr, "Could not fopen '%s' with errno: %d\n", uuid_file, errno);
+		return -ENOTSUP;
+	}
+
+	int ret = 0;
+	if (fgets(out, uuid_size, uuid_source) == NULL) {
+		fprintf(stderr, "Could not fgets '%s' with errno: %d\n", uuid_file, errno);
+		ret = -ENOTSUP;
+	}
+
+	fclose(uuid_source);
+	return ret;
+}
+#endif
+
 static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
+#ifdef LIBUUID
 	uuid_t uuid;
 	char uuid_str[37]; /* e.g. 1b4e28ba-2fa1-11d2-883f-0016d3cca427 + \0 */
 
 	uuid_generate_random(uuid);
 	uuid_unparse_lower(uuid, uuid_str);
+#else
+	char uuid_str[uuid_size]; /* e.g. 1b4e28ba-2fa1-11d2-883f-0016d3cca427 + \0 */
+	const int ret = uuid_generate_random(uuid_str);
+	if (ret) {
+		return ret;
+	}
+#endif
+
 	printf("nqn.2014-08.org.nvmexpress:uuid:%s\n", uuid_str);
 	return 0;
 }
-#else
-static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
-{
-	fprintf(stderr, "\"%s\" not supported. Install lib uuid and rebuild.\n",
-		command->name);
-	return -ENOTSUP;
-}
-#endif
 
 static int show_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
@@ -5325,6 +5347,30 @@ void register_extension(struct plugin *plugin)
 	nvme.extensions->tail->next = plugin;
 	nvme.extensions->tail = plugin;
 }
+
+#ifndef LIBUUID
+static void uuid_fmt(const uuid_t uuid, char *buf, char const *restrict fmt)
+{
+	char *p = buf;
+	int i;
+
+	for (i = 0; i < 16; i++) {
+		if (i == 4 || i == 6 || i == 8 || i == 10) {
+			*p++ = '-';
+		}
+		size_t tmp = uuid[i];
+		*p++ = fmt[tmp >> 4];
+		*p++ = fmt[tmp & 15];
+	}
+	*p = '\0';
+}
+
+void uuid_unparse_lower(const uuid_t uu, char *out)
+{
+	static char const hexdigits_lower[16] = "0123456789abcdef";
+	uuid_fmt(uu, out, hexdigits_lower);
+}
+#endif
 
 int main(int argc, char **argv)
 {
