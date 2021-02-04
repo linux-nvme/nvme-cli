@@ -2984,6 +2984,7 @@ static void nvme_show_id_ns_nsfeat(__u8 nsfeat)
 {
 	__u8 rsvd = (nsfeat & 0xE0) >> 5;
 	__u8 ioopt = (nsfeat & 0x10) >> 4;
+	__u8 uidreuse = (nsfeat & 0x8) >> 3;
 	__u8 dulbe = (nsfeat & 0x4) >> 2;
 	__u8 na = (nsfeat & 0x2) >> 1;
 	__u8 thin = nsfeat & 0x1;
@@ -2991,6 +2992,8 @@ static void nvme_show_id_ns_nsfeat(__u8 nsfeat)
 		printf("  [7:5] : %#x\tReserved\n", rsvd);
 	printf("  [4:4] : %#x\tNPWG, NPWA, NPDG, NPDA, and NOWS are %sSupported\n",
 		ioopt, ioopt ? "" : "Not ");
+	printf("  [3:3] : %#x\tNGUID and EUI64 fields if non-zero, %sReused\n",
+		uidreuse, uidreuse ? "Never " : "");
 	printf("  [2:2] : %#x\tDeallocated or Unwritten Logical Block error %sSupported\n",
 		dulbe, dulbe ? "" : "Not ");
 	printf("  [1:1] : %#x\tNamespace uses %s\n",
