@@ -2666,6 +2666,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	const char *data_len = "buffer len if data is returned through host memory buffer";
 	const char *cdw11 = "dword 11 for interrupt vector config";
 	const char *human_readable = "show feature in readable format";
+	const char *uuid_index = "specify uuid index";
 	int err, fd;
 	__u32 result;
 	void *buf = NULL;
@@ -2675,6 +2676,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		__u8  feature_id;
 		__u8  sel;
 		__u32 cdw11;
+		__u8  uuid_index;
 		__u32 data_len;
 		int  raw_binary;
 		int  human_readable;
@@ -2685,6 +2687,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		.feature_id   = 0,
 		.sel          = 0,
 		.cdw11        = 0,
+		.uuid_index   = 0,
 		.data_len     = 0,
 	};
 
@@ -2695,6 +2698,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		OPT_UINT("data-len",      'l', &cfg.data_len,       data_len),
 		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw),
 		OPT_UINT("cdw11",         'c', &cfg.cdw11,          cdw11),
+		OPT_UINT("uuid-index",    'U', &cfg.uuid_index,     uuid_index),
 		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
 		OPT_END()
 	};
@@ -2745,7 +2749,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 	err = nvme_get_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.sel, cfg.cdw11,
-			cfg.data_len, buf, &result);
+			cfg.uuid_index, cfg.data_len, buf, &result);
 	if (!err) {
 		if (!cfg.raw_binary || !buf) {
 			printf("get-feature:%#02x (%s), %s value:%#08x\n", cfg.feature_id,
@@ -3561,6 +3565,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	const char *value = "new value of feature (required)";
 	const char *cdw12 = "feature cdw12, if used";
 	const char *save = "specifies that the controller shall save the attribute";
+	const char *uuid_index = "specify uuid index";
 	int err;
 	__u32 result;
 	void *buf = NULL;
@@ -3574,6 +3579,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		__u8  feature_id;
 		__u64 value;
 		__u32 cdw12;
+		__u8  uuid_index;
 		__u32 data_len;
 		int   save;
 	};
@@ -3583,6 +3589,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		.namespace_id = 0,
 		.feature_id   = 0,
 		.value        = 0,
+		.uuid_index   = 0,
 		.data_len     = 0,
 		.save         = 0,
 	};
@@ -3592,6 +3599,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		OPT_UINT("feature-id",   'f', &cfg.feature_id,   feature_id),
 		OPT_LONG("value",        'v', &cfg.value,        value),
 		OPT_UINT("cdw12",        'c', &cfg.cdw12,        cdw12),
+		OPT_UINT("uuid-index",   'U', &cfg.uuid_index,   uuid_index),
 		OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
 		OPT_FILE("data",         'd', &cfg.file,         data),
 		OPT_FLAG("save",         's', &cfg.save,         save),
@@ -3662,7 +3670,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value,
-			       cfg.cdw12, cfg.save, cfg.data_len, buf, &result);
+			       cfg.cdw12, cfg.save, cfg.uuid_index, cfg.data_len, buf, &result);
 	if (err < 0) {
 		perror("set-feature");
 	} else if (!err) {

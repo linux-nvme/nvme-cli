@@ -1051,7 +1051,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 
 	fd = parse_and_open(argc, argv, desc, opts);
 
-	err = nvme_set_feature(fd, 0, 0xE1, 0xCB, 0, cfg.save, 0, buf, &result);
+	err = nvme_set_feature(fd, 0, 0xE1, 0xCB, 0, cfg.save, 0, 0, buf, &result);
 
 	if (err < 0) {
 		perror("set-feature");

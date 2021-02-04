@@ -119,12 +119,12 @@ int nvme_lba_status_log(int fd, void *lba_status, bool rae,
 		__u32 size);
 int nvme_resv_notif_log(int fd, struct nvme_resv_notif_log *resv);
 int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10,
-		 __u32 cdw11, __u32 cdw12, __u32 data_len, void *data,
+		 __u32 cdw11, __u32 cdw12, __u32 cdw14, __u32 data_len, void *data,
 		 __u32 *result);
 int nvme_set_feature(int fd, __u32 nsid, __u8 fid, __u32 value, __u32 cdw12,
-		     bool save, __u32 data_len, void *data, __u32 *result);
+		     bool save, __u8 uuid_index, __u32 data_len, void *data, __u32 *result);
 int nvme_get_feature(int fd, __u32 nsid, __u8 fid, __u8 sel,
-		     __u32 cdw11, __u32 data_len, void *data, __u32 *result);
+		     __u32 cdw11, __u8 uuid_index, __u32 data_len, void *data, __u32 *result);
 
 int nvme_format(int fd, __u32 nsid, __u8 lbaf, __u8 ses, __u8 pi,
 		__u8 pil, __u8 ms, __u32 timeout);
