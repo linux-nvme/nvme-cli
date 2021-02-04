@@ -3071,7 +3071,6 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	int err, fd, i;
 	int block_size;
 	__u8 prev_lbaf = 0;
-	__u8 lbads = 0;
 
 	struct config {
 		__u32 namespace_id;
@@ -3184,8 +3183,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			}
 			if (cfg.lbaf == 0xff) {
 				fprintf(stderr,
-					"LBAF corresponding to block size %"PRIu64"(LBAF %u) not found\n",
-					(uint64_t)cfg.bs, lbads);
+					"LBAF corresponding to given block size %"PRIu64" not found\n",
+					(uint64_t)cfg.bs);
 				fprintf(stderr,
 					"Please correct block size, or specify LBAF directly\n");
 				err = -EINVAL;
