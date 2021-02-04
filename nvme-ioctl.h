@@ -133,7 +133,7 @@ int nvme_get_feature(int fd, __u32 nsid, __u8 fid, __u8 sel,
 		     __u32 cdw11, __u32 data_len, void *data, __u32 *result);
 
 int nvme_format(int fd, __u32 nsid, __u8 lbaf, __u8 ses, __u8 pi,
-		__u8 pil, __u8 ms, __u32 timeout);
+		__u8 pil, __u8 mset, __u32 timeout);
 
 int nvme_ns_create(int fd, __u64 nsze, __u64 ncap, __u8 flbas, __u8 dps,
 		__u8 nmic, __u32 anagrpid, __u16 nvmsetid, __u8 csi,

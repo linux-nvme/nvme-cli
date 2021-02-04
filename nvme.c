@@ -3017,7 +3017,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	const char *ses = "[0-2]: secure erase";
 	const char *pil = "[0-1]: protection info location last/first 8 bytes of metadata";
 	const char *pi = "[0-3]: protection info off/Type 1/Type 2/Type 3";
-	const char *ms = "[0-1]: extended format off/on";
+	const char *mset = "[0-1]: metadata settings extended LBA format 1/"\
+		"seperate buffer format 0";
 	const char *reset = "Automatically reset the controller after successful format";
 	const char *timeout = "timeout value, in milliseconds";
 	const char *bs = "target block size";
@@ -3027,7 +3028,6 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	int err, fd, i;
 	int block_size;
 	__u8 prev_lbaf = 0;
-	__u8 lbads = 0;
 
 	struct config {
 		__u32 namespace_id;
@@ -3036,7 +3036,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		__u8  ses;
 		__u8  pi;
 		__u8  pil;
-		__u8  ms;
+		__u8  mset;
 		__u64 bs;
 		int reset;
 		int force;
@@ -3060,7 +3060,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		OPT_BYTE("ses",          's', &cfg.ses,          ses),
 		OPT_BYTE("pi",           'i', &cfg.pi,           pi),
 		OPT_BYTE("pil",          'p', &cfg.pil,          pil),
-		OPT_BYTE("ms",           'm', &cfg.ms,           ms),
+		OPT_BYTE("mset",         'm', &cfg.mset,         mset),
 		OPT_FLAG("reset",        'r', &cfg.reset,        reset),
 		OPT_FLAG("force",        'f', &cfg.force,        force),
 		OPT_SUFFIX("block-size", 'b', &cfg.bs,           bs),
@@ -3140,8 +3140,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			}
 			if (cfg.lbaf == 0xff) {
 				fprintf(stderr,
-					"LBAF corresponding to block size %"PRIu64"(LBAF %u) not found\n",
-					(uint64_t)cfg.bs, lbads);
+					"LBAF corresponding to given block size %"PRIu64" not found\n",
+					(uint64_t)cfg.bs);
 				fprintf(stderr,
 					"Please correct block size, or specify LBAF directly\n");
 				err = -EINVAL;
@@ -3175,8 +3175,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		err = -EINVAL;
 		goto close_fd;
 	}
-	if (cfg.ms > 1) {
-		fprintf(stderr, "invalid ms:%d\n", cfg.ms);
+	if (cfg.mset > 1) {
+		fprintf(stderr, "invalid mset:%d\n", cfg.mset);
 		err = -EINVAL;
 		goto close_fd;
 	}
@@ -3194,7 +3194,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	}
 
 	err = nvme_format(fd, cfg.namespace_id, cfg.lbaf, cfg.ses, cfg.pi,
-				cfg.pil, cfg.ms, cfg.timeout);
+				cfg.pil, cfg.mset, cfg.timeout);
 	if (err < 0)
 		perror("format");
 	else if (err != 0)

@@ -14,7 +14,7 @@ SYNOPSIS
 		    [--ses=<ses> | -s <ses>]
 		    [--pil=<pil> | -p <pil>]
 		    [--pi=<pi> | -i <pi>]
-		    [--ms=<ms> | -m <ms>]
+		    [--mset=<mset> | -m <mset>]
 		    [--reset | -r ]
 		    [--force | -f ]
 		    [--timeout=<timeout> | -t <timeout> ]
@@ -115,8 +115,8 @@ cryptographically. This is accomplished by deleting the encryption key.
 |4–7|Reserved
 |=================
 
--m <ms>::
---ms=<ms>::
+-m <mset>::
+--mset=<mset>::
 	Metadata Settings: This field is set to ‘1’ if the metadata
 	is transferred as part of an extended data LBA. This field is
 	cleared to ‘0’ if the metadata is transferred as part of a

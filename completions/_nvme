@@ -338,8 +338,8 @@ _nvme () {
 			-p':alias of --pil'
 			--pi=':protection information? 0 - off, 1 - Type 1 on, 2 - Type 2 on, 3 - Type 3 on'
 			-i':alias of --pi'
-			--ms=':extended format? 0 - off (metadata in separate buffer), 1 - on (extended LBA used)'
-			-m':alias of --ms'
+			--mset=':extended format? 0 - off (metadata in separate buffer), 1 - on (extended LBA used)'
+			-m':alias of --mset'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme format options" _format

@@ -108,7 +108,7 @@ nvme_list_opts () {
 			;;
 		"format")
 		opts+=" --namespace-id= -n --timeout= -t --lbaf= -l \
-			--ses= -s --pil= -p -pi= -i --ms= -m --reset -r"
+			--ses= -s --pil= -p -pi= -i --mset= -m --reset -r"
 			;;
 		"fw-activate")
 		opts+=" --action= -a --slot= -s"
