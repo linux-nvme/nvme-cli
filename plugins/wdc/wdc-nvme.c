@@ -2814,7 +2814,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 	struct config cfg = {
 		.file = NULL,
 		.xfer_size = 0x10000,
-		.data_area = 3,
+		.data_area = 0,
 		.file_size = 0,
 		.offset = 0,
 		.type = NULL,
@@ -2874,13 +2874,18 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		snprintf(f + strlen(f), PATH_MAX, "%s", ".bin");
 	fprintf(stderr, "%s: filename = %s\n", __func__, f);
 
-	if (cfg.data_area > 5 || cfg.data_area == 0) {
-		fprintf(stderr, "ERROR : WDC: Data area must be 1-5\n");
-		return -1;
+	if (cfg.data_area) {
+		if (cfg.data_area > 5 || cfg.data_area < 1) {
+			fprintf(stderr, "ERROR : WDC: Data area must be 1-5\n");
+			return -1;
+		}
 	}
 
 	capabilities = wdc_get_drive_capabilities(fd);
 	if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG) {
+		if (cfg.data_area == 0)
+			cfg.data_area = 3;       /* Set the default DA to 3 if not specified */
+
 		if ((cfg.type == NULL) ||
 			(!strcmp(cfg.type, "NONE")) ||
 			(!strcmp(cfg.type, "none"))) {
@@ -2902,6 +2907,10 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		return wdc_do_cap_diag(fd, f, xfer_size, telemetry_type, telemetry_data_area);
 	}
 	if ((capabilities & WDC_DRIVE_CAP_DUI) == WDC_DRIVE_CAP_DUI) {
+		if (cfg.data_area == 0) {
+			cfg.data_area = 1;
+		}
+
 		/* FW requirement - xfer size must be 256k for data area 4 */
 		if (cfg.data_area >= 4)
 			xfer_size = 0x40000;
@@ -5190,7 +5199,7 @@ static int wdc_drive_status(int argc, char **argv, struct command *command,
 {
 	char *desc = "Get Drive Status.";
 	int fd;
-	int ret = -1;
+	int ret = 0;
 	__le32 system_eol_state;
 	__le32 user_eol_state;
 	__le32 format_corrupt_reason = cpu_to_le32(0xFFFFFFFF);
