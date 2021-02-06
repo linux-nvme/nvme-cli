@@ -151,7 +151,7 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 
 	struct config {
 		__u64	zslba;
-		int	namespace_id;
+		__u32	namespace_id;
 		bool	select_all;
 	};
 
@@ -243,7 +243,7 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 
 	struct config {
 		__u64	zslba;
-		int	namespace_id;
+		__u32	namespace_id;
 		bool	select_all;
 		__u8	zsa;
 		int   data_len;
@@ -391,7 +391,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 
 	struct config {
 		__u64	zslba;
-		int	namespace_id;
+		__u32	namespace_id;
 		char   *file;
 	};
 
@@ -692,7 +692,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		__u64  metadata_size;
 		int    limited_retry;
 		int    fua;
-		int    namespace_id;
+		__u32  namespace_id;
 		__u32  ref_tag;
 		__u16  lbat;
 		__u16  lbatm;
