@@ -1000,7 +1000,7 @@ int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
 }
 
 int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
-		       enum nvme_zns_recv_action zra, __u16 zrasf,
+		       enum nvme_zns_recv_action zra, __u8 zrasf,
 		       bool zras_feat, __u32 data_len, void *data)
 {
 	__u32 cdw10 = slba & 0xffffffff;

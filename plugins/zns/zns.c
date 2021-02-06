@@ -484,8 +484,8 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 		char *output_format;
 		__u64  zslba;
 		__u32  namespace_id;
-		__u16  zra;
-		__u16  zrasf;
+		__u8   zra;
+		__u8   zrasf;
 		bool   partial;
 		__u32  data_len;
 	};
@@ -498,8 +498,8 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
 		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id),
 		OPT_SUFFIX("start-lba",   's', &cfg.zslba,          zslba),
-		OPT_SHRT("zra",           'z', &cfg.zra,            zra),
-		OPT_SHRT("zrasf",         'S', &cfg.zrasf,          zrasf),
+		OPT_BYTE("zra",           'z', &cfg.zra,            zra),
+		OPT_BYTE("zrasf",         'S', &cfg.zrasf,          zrasf),
 		OPT_FLAG("partial",       'p', &cfg.partial,        partial),
 		OPT_UINT("data-len",      'l', &cfg.data_len,       data_len),
 		OPT_END()
