@@ -18,7 +18,7 @@ struct json_value {
 	union {
 		long long integer_number;
 		unsigned long long uint_number;
-		long double float_number;
+		double float_number;
 		char *string;
 		struct json_object *object;
 		struct json_array *array;

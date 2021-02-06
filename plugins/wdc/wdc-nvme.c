@@ -961,10 +961,10 @@ static double calc_percent(uint64_t numerator, uint64_t denominator)
 		(uint64_t)(((double)numerator / (double)denominator) * 100) : 0;
 }
 
-static long double int128_to_double(__u8 *data)
+static double int128_to_double(__u8 *data)
 {
 	int i;
-	long double result = 0;
+	double result = 0;
 
 	for (i = 0; i < 16; i++) {
 		result *= 256;
@@ -4284,9 +4284,9 @@ static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 
 	printf("  SMART Cloud Attributes :- \n");
 
-	printf("  Physical media units written			%.0Lf\n",
+	printf("  Physical media units written			%.0f\n",
 			int128_to_double(&log_data[SCAO_PMUW]));
-	printf("  Physical media units Read			%.0Lf\n",
+	printf("  Physical media units Read			%.0f\n",
 			int128_to_double(&log_data[SCAO_PMUR]));
 	printf("  Bad user nand blocks - Raw			%"PRIu64"\n",
 			(uint64_t)le64_to_cpu(log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
@@ -4332,9 +4332,9 @@ static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 			(uint64_t)le64_to_cpu(log_data[SCAO_SVN]));
 	printf("  NUSE - Namespace utilization			%"PRIu64"\n",
 			(uint64_t)le64_to_cpu(log_data[SCAO_NUSE]));
-	printf("  PLP start count				%.0Lf\n",
+	printf("  PLP start count				%.0f\n",
 			int128_to_double(&log_data[SCAO_PSC]));
-	printf("  Endurance estimate				%.0Lf\n",
+	printf("  Endurance estimate				%.0f\n",
 			int128_to_double(&log_data[SCAO_EEST]));
 	printf("  Log page version				 %"PRIu16"\n",
 			(uint16_t)le16_to_cpu(log_data[SCAO_LPV]));
@@ -6967,9 +6967,9 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 	{
 	case 0:
 		printf("  NAND Statistics :- \n");
-		printf("  NAND Writes TLC (Bytes)		         %.0Lf\n",
+		printf("  NAND Writes TLC (Bytes)		         %.0f\n",
 				int128_to_double(nand_stats->nand_write_tlc));
-		printf("  NAND Writes SLC (Bytes)				%.0Lf\n",
+		printf("  NAND Writes SLC (Bytes)				%.0f\n",
 				int128_to_double(nand_stats->nand_write_slc));
 		printf("  NAND Program Failures			  	 %"PRIu32"\n",
 				(uint32_t)le32_to_cpu(nand_stats->nand_prog_failure));
@@ -6988,9 +6988,9 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 		break;
 	case 3:
 		printf("  NAND Statistics V3:- \n");
-		printf("  TLC Units Written				 %.0Lf\n",
+		printf("  TLC Units Written				 %.0f\n",
 				int128_to_double(nand_stats_v3->nand_write_tlc));
-		printf("  SLC Units Written 				 %.0Lf\n",
+		printf("  SLC Units Written 				 %.0f\n",
 				int128_to_double(nand_stats_v3->nand_write_slc));
 		temp_ptr = (__u64 *)nand_stats_v3->bad_nand_block_count;
 		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
@@ -7041,7 +7041,7 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->security_version_number));
 		printf("  %% Free Blocks (System)			 %u\n",
 				nand_stats_v3->percent_free_blocks_system);
-		printf("  Data Set Management Commands			 %.0Lf\n",
+		printf("  Data Set Management Commands			 %.0f\n",
 				int128_to_double(nand_stats_v3->trim_completions));
 		printf("  Estimate of Incomplete Trim Data		 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->trim_completions[16]));
@@ -7060,7 +7060,7 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 				le16_to_cpu(temp_norm));
 		printf("  Bad System Nand Block Count - Raw	         %"PRIu64"\n",
 				le64_to_cpu(temp_raw));
-		printf("  Endurance Estimate				 %.0Lf\n",
+		printf("  Endurance Estimate				 %.0f\n",
 				int128_to_double(nand_stats_v3->endurance_estimate));
 		printf("  Thermal Throttling Count			 %u\n",
 				nand_stats_v3->thermal_throttling_st_ct[0]);
@@ -7068,7 +7068,7 @@ static void wdc_print_nand_stats_normal(__u16 version, void *data)
 				nand_stats_v3->thermal_throttling_st_ct[1]);
 		printf("  Unaligned I/O					 %"PRIu64"\n",
 				le64_to_cpu(nand_stats_v3->unaligned_IO));
-		printf("  Physical Media Units Read			 %.0Lf\n",
+		printf("  Physical Media Units Read			 %.0f\n",
 				int128_to_double(nand_stats_v3->physical_media_units));
 		printf("  log page version				 %"PRIu16"\n",
 				le16_to_cpu(nand_stats_v3->log_page_version));

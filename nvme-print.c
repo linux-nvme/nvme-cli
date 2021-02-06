@@ -15,10 +15,10 @@ static const uint8_t zero_uuid[16] = { 0 };
 static const uint8_t invalid_uuid[16] = {[0 ... 15] = 0xff };
 static const char dash[100] = {[0 ... 99] = '-'};
 
-static long double int128_to_double(__u8 *data)
+static double int128_to_double(__u8 *data)
 {
 	int i;
-	long double result = 0;
+	double result = 0;
 
 	for (i = 0; i < 16; i++) {
 		result *= 256;
@@ -1383,7 +1383,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 		printf("Log Header Length: %u\n", pevent_log_head->head_len);
 		printf("Timestamp: %"PRIu64"\n",
 			le64_to_cpu(pevent_log_head->timestamp));
-		printf("Power On Hours (POH): %'.0Lf\n",
+		printf("Power On Hours (POH): %'.0f\n",
 			int128_to_double(pevent_log_head->poh));
 		printf("Power Cycle Count: %"PRIu64"\n",
 			le64_to_cpu(pevent_log_head->pcc));
@@ -1507,7 +1507,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 					le32_to_cpu(ns_event->nsmgt_cdw10));
 				printf("Namespace Size: %"PRIu64"\n",
 					le64_to_cpu(ns_event->nsze));
-				printf("Namespace Capacity: %'.0Lf\n",
+				printf("Namespace Capacity: %'.0f\n",
 					int128_to_double(ns_event->nscap));
 				printf("Formatted LBA Size: %u\n", ns_event->flbas);
 				printf("End-to-end Data Protection Type Settings: %u\n",
@@ -3192,7 +3192,7 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	printf("nabo    : %d\n", le16_to_cpu(ns->nabo));
 	printf("nabspf  : %d\n", le16_to_cpu(ns->nabspf));
 	printf("noiob   : %d\n", le16_to_cpu(ns->noiob));
-	printf("nvmcap  : %.0Lf\n", int128_to_double(ns->nvmcap));
+	printf("nvmcap  : %.0f\n", int128_to_double(ns->nvmcap));
 	if (ns->nsfeat & 0x10) {
 		printf("npwg    : %u\n", le16_to_cpu(ns->npwg));
 		printf("npwa    : %u\n", le16_to_cpu(ns->npwa));
@@ -3530,8 +3530,8 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("mtfa      : %d\n", le16_to_cpu(ctrl->mtfa));
 	printf("hmpre     : %d\n", le32_to_cpu(ctrl->hmpre));
 	printf("hmmin     : %d\n", le32_to_cpu(ctrl->hmmin));
-	printf("tnvmcap   : %.0Lf\n", int128_to_double(ctrl->tnvmcap));
-	printf("unvmcap   : %.0Lf\n", int128_to_double(ctrl->unvmcap));
+	printf("tnvmcap   : %.0f\n", int128_to_double(ctrl->tnvmcap));
+	printf("unvmcap   : %.0f\n", int128_to_double(ctrl->unvmcap));
 	printf("rpmbs     : %#x\n", le32_to_cpu(ctrl->rpmbs));
 	if (human)
 		nvme_show_id_ctrl_rpmbs(ctrl->rpmbs);
@@ -3923,9 +3923,9 @@ void nvme_show_id_nvmset(struct nvme_id_nvmset *nvmset, unsigned nvmset_id,
 			le32_to_cpu(nvmset->ent[i].random_4k_read_typical));
 		printf("optimal_write_size      : %u\n",
 			le32_to_cpu(nvmset->ent[i].opt_write_size));
-		printf("total_nvmset_cap        : %.0Lf\n",
+		printf("total_nvmset_cap        : %.0f\n",
 			int128_to_double(nvmset->ent[i].total_nvmset_cap));
-		printf("unalloc_nvmset_cap      : %.0Lf\n",
+		printf("unalloc_nvmset_cap      : %.0f\n",
 			int128_to_double(nvmset->ent[i].unalloc_nvmset_cap));
 		printf(".................\n");
 	}
@@ -4406,21 +4406,21 @@ void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
 	printf("avl_spare_threshold	: %u\n",
 		endurance_log->avl_spare_threshold);
 	printf("percent_used		: %u%%\n", endurance_log->percent_used);
-	printf("endurance_estimate	: %'.0Lf\n",
+	printf("endurance_estimate	: %'.0f\n",
 		int128_to_double(endurance_log->endurance_estimate));
-	printf("data_units_read		: %'.0Lf\n",
+	printf("data_units_read		: %'.0f\n",
 		int128_to_double(endurance_log->data_units_read));
-	printf("data_units_written	: %'.0Lf\n",
+	printf("data_units_written	: %'.0f\n",
 		int128_to_double(endurance_log->data_units_written));
-	printf("media_units_written	: %'.0Lf\n",
+	printf("media_units_written	: %'.0f\n",
 		int128_to_double(endurance_log->media_units_written));
-	printf("host_read_cmds		: %'.0Lf\n",
+	printf("host_read_cmds		: %'.0f\n",
 		int128_to_double(endurance_log->host_read_cmds));
-	printf("host_write_cmds		: %'.0Lf\n",
+	printf("host_write_cmds		: %'.0f\n",
 		int128_to_double(endurance_log->host_write_cmds));
-	printf("media_data_integrity_err: %'.0Lf\n",
+	printf("media_data_integrity_err: %'.0f\n",
 		int128_to_double(endurance_log->media_data_integrity_err));
-	printf("num_err_info_log_entries: %'.0Lf\n",
+	printf("num_err_info_log_entries: %'.0f\n",
 		int128_to_double(endurance_log->num_err_info_log_entries));
 }
 
@@ -4460,25 +4460,25 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		smart->percent_used);
 	printf("endurance group critical warning summary: %#x\n",
 		smart->endu_grp_crit_warn_sumry);
-	printf("data_units_read				: %'.0Lf\n",
+	printf("data_units_read				: %'.0f\n",
 		int128_to_double(smart->data_units_read));
-	printf("data_units_written			: %'.0Lf\n",
+	printf("data_units_written			: %'.0f\n",
 		int128_to_double(smart->data_units_written));
-	printf("host_read_commands			: %'.0Lf\n",
+	printf("host_read_commands			: %'.0f\n",
 		int128_to_double(smart->host_reads));
-	printf("host_write_commands			: %'.0Lf\n",
+	printf("host_write_commands			: %'.0f\n",
 		int128_to_double(smart->host_writes));
-	printf("controller_busy_time			: %'.0Lf\n",
+	printf("controller_busy_time			: %'.0f\n",
 		int128_to_double(smart->ctrl_busy_time));
-	printf("power_cycles				: %'.0Lf\n",
+	printf("power_cycles				: %'.0f\n",
 		int128_to_double(smart->power_cycles));
-	printf("power_on_hours				: %'.0Lf\n",
+	printf("power_on_hours				: %'.0f\n",
 		int128_to_double(smart->power_on_hours));
-	printf("unsafe_shutdowns			: %'.0Lf\n",
+	printf("unsafe_shutdowns			: %'.0f\n",
 		int128_to_double(smart->unsafe_shutdowns));
-	printf("media_errors				: %'.0Lf\n",
+	printf("media_errors				: %'.0f\n",
 		int128_to_double(smart->media_errors));
-	printf("num_err_log_entries			: %'.0Lf\n",
+	printf("num_err_log_entries			: %'.0f\n",
 		int128_to_double(smart->num_err_log_entries));
 	printf("Warning Temperature Time		: %u\n",
 		le32_to_cpu(smart->warning_temp_time));
