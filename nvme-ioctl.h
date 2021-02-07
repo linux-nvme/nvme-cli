@@ -29,18 +29,6 @@ int nvme_io(int fd, __u8 opcode, __u64 slba, __u16 nblocks, __u16 control,
 	      __u32 dsmgmt, __u32 reftag, __u16 apptag,
 	      __u16 appmask, void *data, void *metadata);
 
-int nvme_read(int fd, __u64 slba, __u16 nblocks, __u16 control,
-	      __u32 dsmgmt, __u32 reftag, __u16 apptag,
-	      __u16 appmask, void *data, void *metadata);
-
-int nvme_write(int fd, __u64 slba, __u16 nblocks, __u16 control,
-	       __u32 dsmgmt, __u32 reftag, __u16 apptag,
-	       __u16 appmask, void *data, void *metadata);
-
-int nvme_compare(int fd, __u64 slba, __u16 nblocks, __u16 control,
-		 __u32 dsmgmt, __u32 reftag, __u16 apptag,
-		 __u16 appmask, void *data, void *metadata);
-
 /* NVME_IO_CMD */
 int nvme_passthru_io(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 		     __u32 nsid, __u32 cdw2, __u32 cdw3,
