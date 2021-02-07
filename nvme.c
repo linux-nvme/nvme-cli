@@ -4379,10 +4379,12 @@ static int submit_io(int opcode, char *command, const char *desc,
 	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
 	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
 	__u16 control = 0;
-	__u32 dsmgmt = 0;
+	__u32 dsmgmt = 0, nsid = 0;
 	int logical_block_size = 0;
-	long long buffer_size = 0;
+	long long buffer_size = 0, mbuffer_size = 0;
 	bool huge;
+	struct nvme_id_ns ns;
+	__u8 lba_index, ms = 0;
 
 	const char *start_block = "64-bit addr of first block to access";
 	const char *block_count = "number of blocks (zeroes based) on device to access";
@@ -4529,14 +4531,36 @@ static int submit_io(int opcode, char *command, const char *desc,
 	}
 
 	if (cfg.metadata_size) {
-		mbuffer = malloc(cfg.metadata_size);
+		err = nsid = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
+			goto close_mfd;
+		}
+		err = nvme_identify_ns(fd, nsid, false, &ns);
+		if (err) {
+			nvme_show_status(err);
+			goto free_buffer;
+		} else if (err < 0) {
+			perror("identify namespace");
+			goto free_buffer;
+		}
+		lba_index = ns.flbas & NVME_NS_FLBAS_LBA_MASK;
+		ms = ns.lbaf[lba_index].ms;
+		mbuffer_size = (cfg.block_count + 1) * ms;
+		if (ms && cfg.metadata_size < mbuffer_size) {
+			fprintf(stderr, "Rounding metadata size to fit block count (%lld bytes)\n",
+					mbuffer_size);
+		} else {
+			mbuffer_size = cfg.metadata_size;
+		}
+		mbuffer = malloc(mbuffer_size);
 		if (!mbuffer) {
 			fprintf(stderr, "can not allocate io metadata "
 					"payload: %s\n", strerror(errno));
 			err = -ENOMEM;
 			goto free_buffer;
 		}
-		memset(mbuffer, 0, cfg.metadata_size);
+		memset(mbuffer, 0, mbuffer_size);
 	}
 
 	if ((opcode & 1)) {
@@ -4550,7 +4574,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	}
 
 	if ((opcode & 1) && cfg.metadata_size) {
-		err = read(mfd, (void *)mbuffer, cfg.metadata_size);
+		err = read(mfd, (void *)mbuffer, mbuffer_size);
 		if (err < 0) {
 			err = -errno;
 			fprintf(stderr, "failed to read meta-data buffer from"
@@ -4593,7 +4617,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 					strerror(errno));
 			err = -EINVAL;
 		} else if (!(opcode & 1) && cfg.metadata_size &&
-				write(mfd, (void *)mbuffer, cfg.metadata_size) < 0) {
+				write(mfd, (void *)mbuffer, mbuffer_size) < 0) {
 			fprintf(stderr, "write: %s: failed to write meta-data buffer to output file\n",
 					strerror(errno));
 			err = -EINVAL;
