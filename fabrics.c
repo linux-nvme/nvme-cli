@@ -305,6 +305,11 @@ static bool ctrl_matches_connectargs(char *name, struct connect_args *args)
 		return found;
 
 	addr = nvme_get_ctrl_attr(path, "address");
+	if (!addr) {
+		fprintf(stderr, "nvme_get_ctrl_attr failed\n");
+		return found;
+	}
+
 	cargs.subsysnqn = nvme_get_ctrl_attr(path, "subsysnqn");
 	cargs.transport = nvme_get_ctrl_attr(path, "transport");
 	cargs.traddr = parse_conn_arg(addr, ' ', conarg_traddr);
