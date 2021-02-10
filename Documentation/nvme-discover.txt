@@ -16,6 +16,7 @@ SYNOPSIS
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
 		[--hostid=<hostid>        | -I <hostid>]
 		[--raw=<filename>	  | -r <filename>]
+		[--device=<device>        | -d <device>]
 		[--keep-alive-tmo=<sec>   | -k <sec>]
 		[--reconnect-delay=<#>	  | -c <#>]
 		[--ctrl-loss-tmo=<#>	  | -l <#>]
@@ -116,6 +117,11 @@ OPTIONS
 	This field will take the output of the 'nvme discover' command
 	and dump it to a raw binary file. By default 'nvme discover' will
 	dump the output to stdout.
+
+-d <device>::
+--device=<device>::
+	This field takes a device as input. Device is in the format of nvme*,
+	eg. nvme0, nvme1
 
 -k <#>::
 --keep-alive-tmo=<#>::
