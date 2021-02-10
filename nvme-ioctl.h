@@ -29,14 +29,6 @@ int nvme_io(int fd, __u8 opcode, __u64 slba, __u16 nblocks, __u16 control,
 	      __u32 dsmgmt, __u32 reftag, __u16 apptag,
 	      __u16 appmask, void *data, void *metadata);
 
-/* NVME_IO_CMD */
-int nvme_passthru_io(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
-		     __u32 nsid, __u32 cdw2, __u32 cdw3,
-		     __u32 cdw10, __u32 cdw11, __u32 cdw12,
-		     __u32 cdw13, __u32 cdw14, __u32 cdw15,
-		     __u32 data_len, void *data, __u32 metadata_len,
-		     void *metadata, __u32 timeout);
-
 int nvme_write_zeros(int fd, __u32 nsid, __u64 slba, __u16 nlb,
 		     __u16 control, __u32 reftag, __u16 apptag, __u16 appmask);
 
