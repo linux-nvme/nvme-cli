@@ -3270,7 +3270,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	void *buf = NULL;
 	int fd, ffd = STDIN_FILENO;
 	char *endptr = NULL;
-	long int number = 0;
+	uint64_t number = 0;
 
 	struct config {
 		char *file;
@@ -3376,8 +3376,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	if (err < 0) {
 		perror("set-feature");
 	} else if (!err) {
-		printf("set-feature:%02x (%s), value:%#08llx\n", cfg.feature_id,
-			nvme_feature_to_string(cfg.feature_id), cfg.value);
+		printf("set-feature:%02x (%s), value:%#08"PRIx64"\n", cfg.feature_id,
+			nvme_feature_to_string(cfg.feature_id), (uint64_t)cfg.value);
 		if (buf) {
 			if (cfg.feature_id == NVME_FEAT_LBA_RANGE)
 				nvme_show_lba_range((struct nvme_lba_range_type *)buf,
