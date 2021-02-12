@@ -48,29 +48,29 @@ static const char *nvme_cmd_to_string(int admin, __u8 opcode)
 {
 	if (admin) {
 		switch (opcode) {
-		case nvme_admin_delete_sq:	return "Delete I/O Submission Queue";
-		case nvme_admin_create_sq:	return "Create I/O Submission Queue";
+		case nvme_admin_delete_sq:		return "Delete I/O Submission Queue";
+		case nvme_admin_create_sq:		return "Create I/O Submission Queue";
 		case nvme_admin_get_log_page:	return "Get Log Page";
-		case nvme_admin_delete_cq:	return "Delete I/O Completion Queue";
-		case nvme_admin_create_cq:	return "Create I/O Completion Queue";
-		case nvme_admin_identify:	return "Identify";
-		case nvme_admin_abort_cmd:	return "Abort";
+		case nvme_admin_delete_cq:		return "Delete I/O Completion Queue";
+		case nvme_admin_create_cq:		return "Create I/O Completion Queue";
+		case nvme_admin_identify:		return "Identify";
+		case nvme_admin_abort_cmd:		return "Abort";
 		case nvme_admin_set_features:	return "Set Features";
 		case nvme_admin_get_features:	return "Get Features";
 		case nvme_admin_async_event:	return "Asynchronous Event Request";
-		case nvme_admin_ns_mgmt:	return "Namespace Management";
+		case nvme_admin_ns_mgmt:		return "Namespace Management";
 		case nvme_admin_activate_fw:	return "Firmware Commit";
 		case nvme_admin_download_fw:	return "Firmware Image Download";
 		case nvme_admin_dev_self_test:	return "Device Self-test";
-		case nvme_admin_ns_attach:	return "Namespace Attachment";
-		case nvme_admin_keep_alive:	return "Keep Alive";
+		case nvme_admin_ns_attach:		return "Namespace Attachment";
+		case nvme_admin_keep_alive:		return "Keep Alive";
 		case nvme_admin_directive_send:	return "Directive Send";
 		case nvme_admin_directive_recv:	return "Directive Receive";
 		case nvme_admin_virtual_mgmt:	return "Virtualization Management";
 		case nvme_admin_nvme_mi_send:	return "NVMEe-MI Send";
 		case nvme_admin_nvme_mi_recv:	return "NVMEe-MI Receive";
-		case nvme_admin_dbbuf:		return "Doorbell Buffer Config";
-		case nvme_admin_format_nvm:	return "Format NVM";
+		case nvme_admin_dbbuf:			return "Doorbell Buffer Config";
+		case nvme_admin_format_nvm:		return "Format NVM";
 		case nvme_admin_security_send:	return "Security Send";
 		case nvme_admin_security_recv:	return "Security Receive";
 		case nvme_admin_sanitize_nvm:	return "Sanitize";
@@ -80,17 +80,17 @@ static const char *nvme_cmd_to_string(int admin, __u8 opcode)
 		switch (opcode) {
 		case nvme_cmd_flush:		return "Flush";
 		case nvme_cmd_write:		return "Write";
-		case nvme_cmd_read:		return "Read";
+		case nvme_cmd_read:			return "Read";
 		case nvme_cmd_write_uncor:	return "Write Uncorrectable";
 		case nvme_cmd_compare:		return "Compare";
 		case nvme_cmd_write_zeroes:	return "Write Zeroes";
-		case nvme_cmd_dsm:		return "Dataset Management";
-		case nvme_cmd_resv_register:	return "Reservation Register";
+		case nvme_cmd_dsm:			return "Dataset Management";
+		case nvme_cmd_resv_register:return "Reservation Register";
 		case nvme_cmd_resv_report:	return "Reservation Report";
 		case nvme_cmd_resv_acquire:	return "Reservation Acquire";
 		case nvme_cmd_resv_release:	return "Reservation Release";
 		case nvme_cmd_verify:		return "Verify";
-		case nvme_cmd_copy:		return "Copy";
+		case nvme_cmd_copy:			return "Copy";
 		}
 	}
 
@@ -4724,35 +4724,35 @@ void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 const char *nvme_feature_to_string(enum nvme_feat feature)
 {
 	switch (feature) {
-	case NVME_FEAT_NONE:		return "None";
-	case NVME_FEAT_ARBITRATION:	return "Arbitration";
-	case NVME_FEAT_POWER_MGMT:	return "Power Management";
-	case NVME_FEAT_LBA_RANGE:	return "LBA Range Type";
-	case NVME_FEAT_TEMP_THRESH:	return "Temperature Threshold";
+	case NVME_FEAT_NONE:			return "None";
+	case NVME_FEAT_ARBITRATION:		return "Arbitration";
+	case NVME_FEAT_POWER_MGMT:		return "Power Management";
+	case NVME_FEAT_LBA_RANGE:		return "LBA Range Type";
+	case NVME_FEAT_TEMP_THRESH:		return "Temperature Threshold";
 	case NVME_FEAT_ERR_RECOVERY:	return "Error Recovery";
-	case NVME_FEAT_VOLATILE_WC:	return "Volatile Write Cache";
-	case NVME_FEAT_NUM_QUEUES:	return "Number of Queues";
+	case NVME_FEAT_VOLATILE_WC:		return "Volatile Write Cache";
+	case NVME_FEAT_NUM_QUEUES:		return "Number of Queues";
 	case NVME_FEAT_IRQ_COALESCE:	return "Interrupt Coalescing";
-	case NVME_FEAT_IRQ_CONFIG: 	return "Interrupt Vector Configuration";
+	case NVME_FEAT_IRQ_CONFIG: 		return "Interrupt Vector Configuration";
 	case NVME_FEAT_WRITE_ATOMIC:	return "Write Atomicity Normal";
-	case NVME_FEAT_ASYNC_EVENT:	return "Async Event Configuration";
-	case NVME_FEAT_AUTO_PST:	return "Autonomous Power State Transition";
+	case NVME_FEAT_ASYNC_EVENT:		return "Async Event Configuration";
+	case NVME_FEAT_AUTO_PST:		return "Autonomous Power State Transition";
 	case NVME_FEAT_HOST_MEM_BUF:	return "Host Memory Buffer";
-	case NVME_FEAT_KATO:		return "Keep Alive Timer";
-	case NVME_FEAT_NOPSC:		return "Non-Operational Power State Config";
-	case NVME_FEAT_RRL:		return "Read Recovery Level";
-	case NVME_FEAT_PLM_CONFIG:	return "Predicatable Latency Mode Config";
-	case NVME_FEAT_PLM_WINDOW:	return "Predicatable Latency Mode Window";
+	case NVME_FEAT_KATO:			return "Keep Alive Timer";
+	case NVME_FEAT_NOPSC:			return "Non-Operational Power State Config";
+	case NVME_FEAT_RRL:				return "Read Recovery Level";
+	case NVME_FEAT_PLM_CONFIG:		return "Predicatable Latency Mode Config";
+	case NVME_FEAT_PLM_WINDOW:		return "Predicatable Latency Mode Window";
 	case NVME_FEAT_IOCS_PROFILE:	return "I/O Command Set Profile";
-	case NVME_FEAT_SW_PROGRESS:	return "Software Progress";
-	case NVME_FEAT_HOST_ID:		return "Host Identifier";
-	case NVME_FEAT_RESV_MASK:	return "Reservation Notification Mask";
+	case NVME_FEAT_SW_PROGRESS:		return "Software Progress";
+	case NVME_FEAT_HOST_ID:			return "Host Identifier";
+	case NVME_FEAT_RESV_MASK:		return "Reservation Notification Mask";
 	case NVME_FEAT_RESV_PERSIST:	return "Reservation Persistence";
-	case NVME_FEAT_TIMESTAMP:	return "Timestamp";
+	case NVME_FEAT_TIMESTAMP:		return "Timestamp";
 	case NVME_FEAT_WRITE_PROTECT:	return "Namespce Write Protect";
-	case NVME_FEAT_HCTM:		return "Host Controlled Thermal Management";
-	case NVME_FEAT_HOST_BEHAVIOR:   return "Host Behavior";
-	case NVME_FEAT_SANITIZE:	return "Sanitize";
+	case NVME_FEAT_HCTM:			return "Host Controlled Thermal Management";
+	case NVME_FEAT_HOST_BEHAVIOR:	return "Host Behavior";
+	case NVME_FEAT_SANITIZE:		return "Sanitize";
 	}
 	/*
 	 * We don't use the "default:" statement to let the compiler warning if
@@ -4765,19 +4765,19 @@ const char *nvme_feature_to_string(enum nvme_feat feature)
 const char *nvme_register_to_string(int reg)
 {
 	switch (reg) {
-	case NVME_REG_CAP:	return "Controller Capabilities";
-	case NVME_REG_VS:	return "Version";
+	case NVME_REG_CAP:		return "Controller Capabilities";
+	case NVME_REG_VS:		return "Version";
 	case NVME_REG_INTMS:	return "Interrupt Vector Mask Set";
 	case NVME_REG_INTMC:	return "Interrupt Vector Mask Clear";
-	case NVME_REG_CC:	return "Controller Configuration";
-	case NVME_REG_CSTS:	return "Controller Status";
-	case NVME_REG_NSSR:	return "NVM Subsystem Reset";
-	case NVME_REG_AQA:	return "Admin Queue Attributes";
-	case NVME_REG_ASQ:	return "Admin Submission Queue Base Address";
-	case NVME_REG_ACQ:	return "Admin Completion Queue Base Address";
+	case NVME_REG_CC:		return "Controller Configuration";
+	case NVME_REG_CSTS:		return "Controller Status";
+	case NVME_REG_NSSR:		return "NVM Subsystem Reset";
+	case NVME_REG_AQA:		return "Admin Queue Attributes";
+	case NVME_REG_ASQ:		return "Admin Submission Queue Base Address";
+	case NVME_REG_ACQ:		return "Admin Completion Queue Base Address";
 	case NVME_REG_CMBLOC:	return "Controller Memory Buffer Location";
 	case NVME_REG_CMBSZ:	return "Controller Memory Buffer Size";
-	default:		return "Unknown";
+	default:				return "Unknown";
 	}
 }
 
