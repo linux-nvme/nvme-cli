@@ -111,29 +111,20 @@ static const char *fw_to_string(__u64 fw)
 
 static const char *get_sanitize_log_sstat_status_str(__u16 status)
 {
-	const char *str;
-
 	switch (status & NVME_SANITIZE_LOG_STATUS_MASK) {
 	case NVME_SANITIZE_LOG_NEVER_SANITIZED:
-		str = "NVM Subsystem has never been sanitized.";
-		break;
+		return "NVM Subsystem has never been sanitized.";
 	case NVME_SANITIZE_LOG_COMPLETED_SUCCESS:
-		str = "Most Recent Sanitize Command Completed Successfully.";
-		break;
+		return "Most Recent Sanitize Command Completed Successfully.";
 	case NVME_SANITIZE_LOG_IN_PROGESS:
-		str = "Sanitize in Progress.";
-		break;
+		return "Sanitize in Progress.";
 	case NVME_SANITIZE_LOG_COMPLETED_FAILED:
-		str = "Most Recent Sanitize Command Failed.";
-		break;
+		return "Most Recent Sanitize Command Failed.";
 	case NVME_SANITIZE_LOG_ND_COMPLETED_SUCCESS:
-		str = "Most Recent Sanitize Command (No-Deallocate After Sanitize) Completed Successfully.";
-		break;
+		return "Most Recent Sanitize Command (No-Deallocate After Sanitize) Completed Successfully.";
 	default:
-		str = "Unknown.";
+		return "Unknown";
 	}
-
-	return str;
 }
 
 static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
