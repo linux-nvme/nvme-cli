@@ -116,4 +116,9 @@ void nvme_free(void *p, bool huge);
 
 unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time);
+
+#ifndef LIBUUID
+void uuid_unparse_lower(const uuid_t uu, char *out);
+#endif
+
 #endif /* _NVME_H */

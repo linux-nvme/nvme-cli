@@ -20,9 +20,7 @@
 #ifdef LIBUUID
 #include <uuid/uuid.h>
 #else
-typedef struct {
-	uint8_t b[16];
-} uuid_t;
+typedef unsigned char uuid_t[16];
 #endif
 
 #ifdef __CHECKER__
