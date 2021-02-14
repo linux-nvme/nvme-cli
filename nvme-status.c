@@ -126,6 +126,18 @@ static inline __u8 nvme_fabrics_status_to_errno(__u16 status)
 	return EIO;
 }
 
+static inline __u8 nvme_path_status_to_errno(__u16 status)
+{
+	switch (status) {
+	case NVME_SC_ANA_PERSISTENT_LOSS:
+	case NVME_SC_ANA_INACCESSIBLE:
+	case NVME_SC_ANA_TRANSITION:
+		return EACCES;
+	}
+
+	return EIO;
+}
+
 /*
  * nvme_status_to_errno - It converts given status to errno mapped
  * @status: >= 0 for nvme status field in completion queue entry,
@@ -154,12 +166,17 @@ __u8 nvme_status_to_errno(int status, bool fabrics)
 	status &= 0x7ff;
 
 	sct = nvme_status_type(status);
-	if (sct == NVME_SCT_GENERIC)
+	switch (sct) {
+	case NVME_SCT_GENERIC:
 		return nvme_generic_status_to_errno(status);
-	else if (sct == NVME_SCT_CMD_SPECIFIC && !fabrics)
-		return nvme_cmd_specific_status_to_errno(status);
-	else if (sct == NVME_SCT_CMD_SPECIFIC && fabrics)
+	case NVME_SCT_CMD_SPECIFIC:
+		if (!fabrics) {
+			return nvme_cmd_specific_status_to_errno(status);
+		}
 		return nvme_fabrics_status_to_errno(status);
+	case NVME_SCT_PATH:
+		return nvme_path_status_to_errno(status);
+	}
 
 	/*
 	 * Media, integrity related status, and the others will be mapped to
