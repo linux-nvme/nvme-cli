@@ -1491,6 +1491,7 @@ enum {
 	NVME_SCT_GENERIC		= 0x0,
 	NVME_SCT_CMD_SPECIFIC		= 0x1,
 	NVME_SCT_MEDIA			= 0x2,
+      NVME_SCT_PATH                   = 0x3,
 };
 
 enum {
