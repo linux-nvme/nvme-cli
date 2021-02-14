@@ -5008,7 +5008,7 @@ static const char *nvme_feature_lba_type_to_string(__u8 type)
 	case 3:	return "Cache";
 	case 4:	return "Page / Swap file";
 	default:
-		if (type>=0x05 && type<=0x7f)
+		if (type >= 0x05 && type <= 0x7f)
 			return "Reserved";
 		else
 			return "Vendor Specific";
