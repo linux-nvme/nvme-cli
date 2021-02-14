@@ -4793,9 +4793,9 @@ void nvme_show_select_result(__u32 result)
 		printf("  Feature is changeable\n");
 }
 
-const char *nvme_status_to_string(__u32 status)
+const char *nvme_status_to_string(__u16 status)
 {
-	switch (status & 0x3ff) {
+	switch (status & 0x7ff) {
 	case NVME_SC_SUCCESS:
 		return "SUCCESS: The command completed successfully";
 	case NVME_SC_INVALID_OPCODE:
