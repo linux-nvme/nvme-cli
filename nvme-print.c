@@ -127,7 +127,7 @@ static const char *get_sanitize_log_sstat_status_str(__u16 status)
 	}
 }
 
-static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
+static void json_nvme_id_ns(struct nvme_id_ns *ns)
 {
 	char nguid_buf[2 * sizeof(ns->nguid) + 1],
 		eui64_buf[2 * sizeof(ns->eui64) + 1];
@@ -208,7 +208,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int mode)
 	json_free_object(root);
 }
 
-static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
+static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 			void (*vs)(__u8 *vs, struct json_object *root))
 {
 	struct json_object *root;
@@ -1019,8 +1019,7 @@ static const char *nvme_show_nss_hw_error(__u16 error_code)
 	}
 }
 
-void json_persistent_event_log(void *pevent_log_info,
-	__u32 size, enum nvme_print_flags flags)
+void json_persistent_event_log(void *pevent_log_info, __u32 size)
 {
 	struct json_object *root;
 	struct json_object *valid_attrs;
@@ -1356,8 +1355,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 	if (flags & BINARY)
 		return d_raw((unsigned char *)pevent_log_info, size);
 	if (flags & JSON)
-		return json_persistent_event_log(pevent_log_info, size,
-			flags);
+		return json_persistent_event_log(pevent_log_info, size);
 
 	offset = sizeof(*pevent_log_head);
 
@@ -3143,7 +3141,7 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ns, sizeof(*ns));
 	if (flags & JSON)
-		return json_nvme_id_ns(ns, flags);
+		return json_nvme_id_ns(ns);
 
 	printf("NVME Identify Namespace %d:\n", nsid);
 	printf("nsze    : %#"PRIx64"\n", le64_to_cpu(ns->nsze));
@@ -3464,7 +3462,7 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ctrl, sizeof(*ctrl));
 	else if (flags & JSON)
-		return json_nvme_id_ctrl(ctrl, flags, vendor_show);
+		return json_nvme_id_ctrl(ctrl, vendor_show);
 
 	printf("NVME Identify Controller:\n");
 	printf("vid       : %#x\n", le16_to_cpu(ctrl->vid));
@@ -3641,7 +3639,7 @@ void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
 	printf("dmsl   : %"PRIu64"\n", le64_to_cpu(ctrl_nvm->dmsl));
 }
 
-static void json_nvme_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode)
+static void json_nvme_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl)
 {
 	struct json_object *root;
 
@@ -3658,14 +3656,14 @@ void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode)
 	if (mode & BINARY)
 		return d_raw((unsigned char *)ctrl, sizeof(*ctrl));
 	else if (mode & JSON)
-		return json_nvme_zns_id_ctrl(ctrl, mode);
+		return json_nvme_zns_id_ctrl(ctrl);
 
 	printf("NVMe ZNS Identify Controller:\n");
 	printf("zasl    : %u\n", ctrl->zasl);
 }
 
 void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
-	struct nvme_id_ns *id_ns, unsigned long flags)
+	struct nvme_id_ns *id_ns)
 {
 	struct json_object *root;
 	struct json_array *lbafs;
@@ -3733,7 +3731,7 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ns, sizeof(*ns));
 	else if (flags & JSON)
-		return json_nvme_zns_id_ns(ns, id_ns, flags);
+		return json_nvme_zns_id_ns(ns, id_ns);
 
 	printf("ZNS Command Set Identify Namespace:\n");
 
