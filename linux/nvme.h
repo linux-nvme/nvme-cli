@@ -1686,6 +1686,16 @@ struct nvme_zns_id_ns {
 	__u8			vs[256];
 };
 
+struct nvme_id_ctrl_nvm {
+    __u8     vsl;
+    __u8     wzsl;
+    __u8     wusl;
+    __u8     dmrl;
+    __u32    dmrsl;
+    __u64    dmsl;
+    __u8     rsvd16[4080];
+};
+
 /**
  * struct nvme_zns_id_ctrl -
  * @zasl:

@@ -439,6 +439,11 @@ int nvme_identify_uuid(int fd, void *data)
 	return nvme_identify(fd, 0, NVME_ID_CNS_UUID_LIST, data);
 }
 
+int nvme_identify_ctrl_nvm(int fd, void *data)
+{
+	return nvme_identify13(fd, 0, NVME_ID_CNS_CSI_ID_CTRL, 0, data);
+}
+
 int nvme_zns_identify_ns(int fd, __u32 nsid, void *data)
 {
 	return nvme_identify13(fd, nsid, NVME_ID_CNS_CSI_ID_NS, 2 << 24, data);
