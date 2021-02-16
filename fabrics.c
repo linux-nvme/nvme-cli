@@ -88,6 +88,7 @@ static struct config {
 	bool persistent;
 	bool quiet;
 	bool matching_only;
+	bool json;
 } cfg = { .ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO };
 
 struct connect_args {
@@ -695,6 +696,58 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 			break;
 		}
 	}
+}
+
+static void json_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
+{
+	struct json_object *root;
+	struct json_array *entries;
+	int i;
+
+	root = json_create_object();
+	entries = json_create_array();
+	json_object_add_value_uint(root, "genctr", le64_to_cpu(log->genctr));
+	json_object_add_value_array(root, "records", entries);
+
+	for (i = 0; i < numrec; i++) {
+		struct nvmf_disc_rsp_page_entry *e = &log->entries[i];
+		struct json_object *entry = json_create_object();
+
+		json_object_add_value_string(entry, "trtype",
+					     trtype_str(e->trtype));
+		json_object_add_value_string(entry, "adrfam",
+					     adrfam_str(e->adrfam));
+		json_object_add_value_string(entry, "subtype",
+					     subtype_str(e->subtype));
+		json_object_add_value_string(entry,"treq",
+					     treq_str(e->treq));
+		json_object_add_value_uint(entry, "portid", e->portid);
+		json_object_add_value_string(entry, "trsvcid",
+					     e->trsvcid);
+		json_object_add_value_string(entry, "subnqn", e->subnqn);
+		json_object_add_value_string(entry, "traddr", e->traddr);
+
+		switch (e->trtype) {
+		case NVMF_TRTYPE_RDMA:
+			json_object_add_value_string(entry, "rdma_prtype",
+				prtype_str(e->tsas.rdma.prtype));
+			json_object_add_value_string(entry, "rdma_qptype",
+				qptype_str(e->tsas.rdma.qptype));
+			json_object_add_value_string(entry, "rdma_cms",
+				cms_str(e->tsas.rdma.cms));
+			json_object_add_value_uint(entry, "rdma_pkey",
+				e->tsas.rdma.pkey);
+			break;
+		case NVMF_TRTYPE_TCP:
+			json_object_add_value_string(entry, "sectype",
+				sectype_str(e->tsas.tcp.sectype));
+			break;
+		}
+		json_array_add_value_object(entries, entry);
+	}
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
 }
 
 static void save_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
@@ -1322,6 +1375,8 @@ static int do_discover(char *argstr, bool connect)
 			ret = connect_ctrls(log, numrec);
 		else if (cfg.raw)
 			save_discovery_log(log, numrec);
+		else if (cfg.json)
+			json_discovery_log(log, numrec);
 		else
 			print_discovery_log(log, numrec);
 		break;
@@ -1456,6 +1511,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_FLAG("persistent",     'p', &cfg.persistent,      "persistent discovery connection"),
 		OPT_FLAG("quiet",          'S', &cfg.quiet,           "suppress already connected errors"),
 		OPT_FLAG("matching",       'm', &cfg.matching_only,   "connect only records matching the traddr"),
+		OPT_FLAG("json",           'j', &cfg.json,            "generatej json output"),
 		OPT_END()
 	};
 
