@@ -88,7 +88,11 @@ static struct config {
 	bool persistent;
 	bool quiet;
 	bool matching_only;
-} cfg = { .ctrl_loss_tmo = -1 };
+	char *output_format;
+} cfg = {
+	.ctrl_loss_tmo = -1,
+	.output_format = "normal",
+};
 
 struct connect_args {
 	char *subsysnqn;
@@ -221,7 +225,7 @@ static const char *cms_str(__u8 cm)
 	return arg_str(cms, ARRAY_SIZE(cms), cm);
 }
 
-static int do_discover(char *argstr, bool connect);
+static int do_discover(char *argstr, bool connect, enum nvme_print_flags flags);
 
 /*
  * parse strings with connect arguments to find a particular field.
@@ -697,6 +701,58 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	}
 }
 
+static void json_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
+{
+	struct json_object *root;
+	struct json_array *entries;
+	int i;
+
+	root = json_create_object();
+	entries = json_create_array();
+	json_object_add_value_uint(root, "genctr", le64_to_cpu(log->genctr));
+	json_object_add_value_array(root, "records", entries);
+
+	for (i = 0; i < numrec; i++) {
+		struct nvmf_disc_rsp_page_entry *e = &log->entries[i];
+		struct json_object *entry = json_create_object();
+
+		json_object_add_value_string(entry, "trtype",
+					     trtype_str(e->trtype));
+		json_object_add_value_string(entry, "adrfam",
+					     adrfam_str(e->adrfam));
+		json_object_add_value_string(entry, "subtype",
+					     subtype_str(e->subtype));
+		json_object_add_value_string(entry,"treq",
+					     treq_str(e->treq));
+		json_object_add_value_uint(entry, "portid", e->portid);
+		json_object_add_value_string(entry, "trsvcid",
+					     e->trsvcid);
+		json_object_add_value_string(entry, "subnqn", e->subnqn);
+		json_object_add_value_string(entry, "traddr", e->traddr);
+
+		switch (e->trtype) {
+		case NVMF_TRTYPE_RDMA:
+			json_object_add_value_string(entry, "rdma_prtype",
+				prtype_str(e->tsas.rdma.prtype));
+			json_object_add_value_string(entry, "rdma_qptype",
+				qptype_str(e->tsas.rdma.qptype));
+			json_object_add_value_string(entry, "rdma_cms",
+				cms_str(e->tsas.rdma.cms));
+			json_object_add_value_uint(entry, "rdma_pkey",
+				e->tsas.rdma.pkey);
+			break;
+		case NVMF_TRTYPE_TCP:
+			json_object_add_value_string(entry, "sectype",
+				sectype_str(e->tsas.tcp.sectype));
+			break;
+		}
+		json_array_add_value_object(entries, entry);
+	}
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
 static void save_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 {
 	int fd;
@@ -1166,9 +1222,14 @@ retry:
 		p += len;
 	}
 
-	if (discover)
-		ret = do_discover(argstr, true);
-	else
+	if (discover) {
+		enum nvme_print_flags flags;
+
+		flags = validate_output_format(cfg.output_format);
+		if (flags < 0)
+			flags = NORMAL;
+		ret = do_discover(argstr, true, flags);
+	} else
 		ret = add_ctrl(argstr);
 	if (ret == -EINVAL && e->treq & NVMF_TREQ_DISABLE_SQFLOW) {
 		/* disable_sqflow param might not be supported, try without it */
@@ -1268,7 +1329,7 @@ static void nvmf_get_host_identifiers(int ctrl_instance)
 	cfg.hostid = nvme_get_ctrl_attr(path, "hostid");
 }
 
-static int do_discover(char *argstr, bool connect)
+static int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 {
 	struct nvmf_disc_rsp_page_hdr *log = NULL;
 	char *dev_name;
@@ -1324,8 +1385,10 @@ static int do_discover(char *argstr, bool connect)
 	case DISC_OK:
 		if (connect)
 			ret = connect_ctrls(log, numrec);
-		else if (cfg.raw)
+		else if (cfg.raw || flags == BINARY)
 			save_discovery_log(log, numrec);
+		else if (flags == JSON)
+			json_discovery_log(log, numrec);
 		else
 			print_discovery_log(log, numrec);
 		break;
@@ -1374,6 +1437,8 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 	}
 
 	while (fgets(line, sizeof(line), f) != NULL) {
+		enum nvme_print_flags flags;
+
 		if (line[0] == '#' || line[0] == '\n')
 			continue;
 
@@ -1401,6 +1466,9 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 		if (err)
 			goto free_and_continue;
 
+		err = flags = validate_output_format(cfg.output_format);
+		if (err < 0)
+			goto free_and_continue;
 		if (cfg.persistent && !cfg.keep_alive_tmo)
 			cfg.keep_alive_tmo = NVMF_DEF_DISC_TMO;
 
@@ -1419,7 +1487,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 			goto free_and_continue;
 		}
 
-		err = do_discover(argstr, connect);
+		err = do_discover(argstr, connect, flags);
 		if (err)
 			ret = err;
 
@@ -1437,6 +1505,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char argstr[BUF_SIZE];
 	int ret;
+	enum nvme_print_flags flags;
 
 	OPT_ARGS(opts) = {
 		OPT_LIST("transport",      't', &cfg.transport,       "transport type"),
@@ -1460,6 +1529,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_FLAG("persistent",     'p', &cfg.persistent,      "persistent discovery connection"),
 		OPT_FLAG("quiet",          'S', &cfg.quiet,           "suppress already connected errors"),
 		OPT_FLAG("matching",       'm', &cfg.matching_only,   "connect only records matching the traddr"),
+		OPT_FMT("output-format",   'o', &cfg.output_format,   output_format),
 		OPT_END()
 	};
 
@@ -1468,6 +1538,9 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	if (ret)
 		goto out;
 
+	ret = flags = validate_output_format(cfg.output_format);
+	if (ret < 0)
+		goto out;
 	if (cfg.device && !strcmp(cfg.device, "none"))
 		cfg.device = NULL;
 
@@ -1492,7 +1565,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		if (ret)
 			goto out;
 
-		ret = do_discover(argstr, connect);
+		ret = do_discover(argstr, connect, flags);
 	}
 
 out:
