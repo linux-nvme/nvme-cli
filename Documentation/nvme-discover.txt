@@ -28,6 +28,7 @@ SYNOPSIS
 		[--queue-size=<#>         | -Q <#>]
 		[--persistent             | -p]
 		[--quiet                  | -S]
+		[--output-format=<fmt>    | -o <fmt>]
 
 DESCRIPTION
 -----------
@@ -174,6 +175,11 @@ OPTIONS
 -S::
 --quiet::
 	Suppress already connected errors.
+
+-o <format>::
+--output-format=<format>::
+              Set the reporting format to 'normal', 'json', or
+              'binary'. Only one output format can be used at a time.
 
 EXAMPLES
 --------
