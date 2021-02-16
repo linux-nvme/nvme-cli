@@ -3606,6 +3606,40 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
 	__nvme_show_id_ctrl(ctrl, mode, NULL);
 }
 
+static void json_nvme_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
+{
+	struct json_object *root;
+
+	root = json_create_object();
+	json_object_add_value_uint(root, "vsl", ctrl_nvm->vsl);
+	json_object_add_value_uint(root, "wzsl", ctrl_nvm->wzsl);
+	json_object_add_value_uint(root, "wusl", ctrl_nvm->wusl);
+	json_object_add_value_uint(root, "dmrl", ctrl_nvm->dmrl);
+	json_object_add_value_uint(root, "dmrsl", ctrl_nvm->dmrsl);
+	json_object_add_value_uint(root, "dmsl", ctrl_nvm->dmsl);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
+	enum nvme_print_flags flags)
+{
+	if (flags & BINARY)
+		return d_raw((unsigned char *)ctrl_nvm, sizeof(*ctrl_nvm));
+	else if (flags & JSON)
+		return json_nvme_id_ctrl_nvm(ctrl_nvm);
+
+	printf("NVMe Identify Controller NVM:\n");
+	printf("vsl    : %u\n", ctrl_nvm->vsl);
+	printf("wzsl   : %u\n", ctrl_nvm->wzsl);
+	printf("wusl   : %u\n", ctrl_nvm->wusl);
+	printf("dmrl   : %u\n", ctrl_nvm->dmrl);
+	printf("dmrsl  : %u\n", le32_to_cpu(ctrl_nvm->dmrsl));
+	printf("dmsl   : %"PRIu64"\n", le64_to_cpu(ctrl_nvm->dmsl));
+}
+
 static void json_nvme_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode)
 {
 	struct json_object *root;
