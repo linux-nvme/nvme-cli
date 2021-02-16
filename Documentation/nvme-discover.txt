@@ -27,6 +27,7 @@ SYNOPSIS
 		[--queue-size=<#>         | -Q <#>]
 		[--persistent             | -p]
 		[--quiet                  | -S]
+		[--json                   | -j]
 
 DESCRIPTION
 -----------
@@ -168,6 +169,10 @@ OPTIONS
 -S::
 --quiet::
 	Suppress already connected errors.
+
+-j::
+--json::
+	Generate JSON output.
 
 EXAMPLES
 --------
