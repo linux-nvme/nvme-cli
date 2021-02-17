@@ -90,7 +90,7 @@ static struct config {
 	bool matching_only;
 	char *output_format;
 } cfg = {
-	.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO,
+	.ctrl_loss_tmo = -1,
 	.output_format = "normal",
 };
 
@@ -925,6 +925,9 @@ static int build_options(char *argstr, int max_len, bool discover)
 			fprintf(stderr, "need a address (-a) argument\n");
 			return -EINVAL;
 		}
+		/* Use the default ctrl loss timeout if unset */
+		if (cfg.ctrl_loss_tmo == -1)
+			cfg.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 	}
 
 	/* always specify nqn as first arg - this will init the string */
