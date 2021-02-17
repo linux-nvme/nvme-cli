@@ -88,7 +88,7 @@ static struct config {
 	bool persistent;
 	bool quiet;
 	bool matching_only;
-} cfg = { .ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO };
+} cfg = { .ctrl_loss_tmo = -1 };
 
 struct connect_args {
 	char *subsysnqn;
@@ -869,6 +869,9 @@ static int build_options(char *argstr, int max_len, bool discover)
 			fprintf(stderr, "need a address (-a) argument\n");
 			return -EINVAL;
 		}
+		/* Use the default ctrl loss timeout if unset */
+		if (cfg.ctrl_loss_tmo == -1)
+			cfg.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 	}
 
 	/* always specify nqn as first arg - this will init the string */
