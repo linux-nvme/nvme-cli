@@ -3195,9 +3195,7 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	printf("mssrl   : %u\n", le16_to_cpu(ns->mssrl));
 	printf("mcl     : %d\n", le32_to_cpu(ns->mcl));
 	printf("msrc    : %u\n", ns->msrc);
-	printf("reserved:\n");
 	printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
-	printf("reserved:\n");
 	printf("nsattr	: %u\n", ns->nsattr);
 	printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
 	printf("endgid  : %d\n", le16_to_cpu(ns->endgid));
@@ -3228,8 +3226,6 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 				ns->lbaf[i].rp,
 				i == (ns->flbas & 0xf) ? "(in use)" : "");
 	}
-
-	printf("reserved:\n");
 
 	if (vs) {
 		printf("vs[]:\n");
