@@ -899,9 +899,8 @@ static int build_options(char *argstr, int max_len, bool discover)
 	    (!discover &&
 	      add_int_argument(&argstr, &max_len, "queue_size",
 				cfg.queue_size, false)) ||
-	    (!discover &&
-	      add_int_argument(&argstr, &max_len, "keep_alive_tmo",
-				cfg.keep_alive_tmo, false)) ||
+	    add_int_argument(&argstr, &max_len, "keep_alive_tmo",
+				cfg.keep_alive_tmo, false) ||
 	    add_int_argument(&argstr, &max_len, "reconnect_delay",
 				cfg.reconnect_delay, false) ||
 	    add_int_argument(&argstr, &max_len, "ctrl_loss_tmo",
