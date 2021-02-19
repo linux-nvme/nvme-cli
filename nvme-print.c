@@ -4999,6 +4999,10 @@ const char *nvme_status_to_string(__u16 status)
 		return "ANA_ATTACH_FAIL: The controller is not attached to the namespace as a result of an ANA condition";
 	case NVME_SC_BAD_ATTRIBUTES:
 		return "BAD_ATTRIBUTES: Bad attributes were given";
+	case NVME_SC_INVALID_PI:
+		return "INVALID_PROTECION_INFO: The Protection Information Field settings specified in the command are invalid";
+	case NVME_SC_READ_ONLY:
+		return "WRITE_ATTEMPT_READ_ONLY_RANGE: The LBA range specified contains read-only blocks";
 	case NVME_SC_CMD_SIZE_LIMIT_EXCEEDED:
 		return "CMD_SIZE_LIMIT_EXCEEDED: Command size limit exceeded";
 	case NVME_SC_WRITE_FAULT:
