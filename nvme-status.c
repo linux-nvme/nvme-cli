@@ -129,9 +129,13 @@ static inline __u8 nvme_fabrics_status_to_errno(__u16 status)
 static inline __u8 nvme_path_status_to_errno(__u16 status)
 {
 	switch (status) {
+	case NVME_SC_INTERNAL_PATH_ERROR:
 	case NVME_SC_ANA_PERSISTENT_LOSS:
 	case NVME_SC_ANA_INACCESSIBLE:
 	case NVME_SC_ANA_TRANSITION:
+	case NVME_SC_CTRL_PATHING_ERROR:
+	case NVME_SC_HOST_PATHING_ERROR:
+	case NVME_SC_HOST_CMD_ABORT:
 		return EACCES;
 	}
 

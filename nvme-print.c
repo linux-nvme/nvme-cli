@@ -5017,12 +5017,20 @@ const char *nvme_status_to_string(__u16 status)
 		return "ACCESS_DENIED: Access to the namespace and/or LBA range is denied due to lack of access rights";
 	case NVME_SC_UNWRITTEN_BLOCK:
 		return "UNWRITTEN_BLOCK: The command failed due to an attempt to read from an LBA range containing a deallocated or unwritten logical block";
+	case NVME_SC_INTERNAL_PATH_ERROR:
+		return "INTERNAL_PATH_ERROT: The command was not completed as the result of a controller internal error";
 	case NVME_SC_ANA_PERSISTENT_LOSS:
 		return "ASYMMETRIC_NAMESPACE_ACCESS_PERSISTENT_LOSS: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace being in the ANA Persistent Loss state";
 	case NVME_SC_ANA_INACCESSIBLE:
 		return "ASYMMETRIC_NAMESPACE_ACCESS_INACCESSIBLE: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace being in the ANA Inaccessible state";
 	case NVME_SC_ANA_TRANSITION:
 		return "ASYMMETRIC_NAMESPACE_ACCESS_TRANSITION: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace transitioning between Asymmetric Namespace Access states";
+	case NVME_SC_CTRL_PATHING_ERROR:
+		return "CONTROLLER_PATHING_ERROR: A pathing error was detected by the controller";
+	case NVME_SC_HOST_PATHING_ERROR:
+		return "HOST_PATHING_ERROR: A pathing error was detected by the host";
+	case NVME_SC_HOST_CMD_ABORT:
+		return "HOST_COMMAND_ABORT: The command was aborted as a result of host action";
 	case NVME_SC_CMD_INTERRUPTED:
 		return "CMD_INTERRUPTED: Command processing was interrupted and the controller is unable to successfully complete the command. The host should retry the command.";
 	case NVME_SC_PMR_SAN_PROHIBITED:

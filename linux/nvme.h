@@ -1635,9 +1635,21 @@ enum {
 	/*
 	 * Path-related Errors:
 	 */
+	NVME_SC_INTERNAL_PATH_ERROR	= 0x300,
 	NVME_SC_ANA_PERSISTENT_LOSS	= 0x301,
 	NVME_SC_ANA_INACCESSIBLE	= 0x302,
 	NVME_SC_ANA_TRANSITION		= 0x303,
+
+	/*
+	 * Controller Detected Path errors
+	 */
+	NVME_SC_CTRL_PATHING_ERROR	= 0x360,
+
+	/*
+	 * Host Detected Path Errors
+	 */
+	NVME_SC_HOST_PATHING_ERROR	= 0x370,
+	NVME_SC_HOST_CMD_ABORT		= 0x371,
 
 	NVME_SC_CRD			= 0x1800,
 	NVME_SC_DNR			= 0x4000,
