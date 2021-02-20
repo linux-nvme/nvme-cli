@@ -935,7 +935,7 @@ void nvme_show_predictable_latency_per_nvmset(
 }
 
 void json_predictable_latency_event_agg_log(
-	struct nvme_predlat_event_agg_log_page *pea_log,
+	struct nvme_event_agg_log_page *pea_log,
 	__u64 log_entries)
 {
 	struct json_object *root;
@@ -964,7 +964,7 @@ void json_predictable_latency_event_agg_log(
 }
 
 void nvme_show_predictable_latency_event_agg_log(
-	struct nvme_predlat_event_agg_log_page *pea_log,
+	struct nvme_event_agg_log_page *pea_log,
 	__u64 log_entries, __u32 size, const char *devname,
 	enum nvme_print_flags flags)
 {
@@ -1562,6 +1562,55 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 		}
 		offset += le16_to_cpu(pevent_entry_head->el);
 		printf("\n");
+	}
+}
+
+void json_endurance_group_event_agg_log(
+	struct nvme_event_agg_log_page *endurance_log,
+	__u64 log_entries)
+{
+	struct json_object *root;
+	struct json_object *valid_attrs;
+	struct json_array *valid;
+
+	root = json_create_object();
+	json_object_add_value_uint(root, "num_entries_avail",
+		le64_to_cpu(endurance_log->num_entries));
+	valid = json_create_array();
+
+	for (int i = 0; i < log_entries; i++) {
+		valid_attrs = json_create_object();
+		json_object_add_value_uint(valid_attrs, "entry",
+			le16_to_cpu(endurance_log->entries[i]));
+		json_array_add_value_object(valid, valid_attrs);
+	}
+	json_object_add_value_array(root, "list_of_entries", valid);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_endurance_group_event_agg_log(
+	struct nvme_event_agg_log_page *endurance_log,
+	__u64 log_entries, __u32 size, const char *devname,
+	enum nvme_print_flags flags)
+{
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)endurance_log, size);
+	if (flags & JSON)
+		return json_endurance_group_event_agg_log(endurance_log,
+			log_entries);
+
+	printf("Endurance Group Event Aggregate Log for"\
+		" device: %s\n", devname);
+
+	printf("Number of Entries Available: %"PRIu64"\n",
+		le64_to_cpu(endurance_log->num_entries));
+
+	for (int i = 0; i < log_entries; i++) {
+		printf("Entry[%d]: %u\n", i + 1,
+			le16_to_cpu(endurance_log->entries[i]));
 	}
 }
 
