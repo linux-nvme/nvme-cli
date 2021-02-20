@@ -27,6 +27,7 @@ _nvme () {
 	'smart-log-add:retrieve additional SMART log'
 	'error-log:retrieve error log'
 	'endurance-event-agg-log:retrieve endurance group event aggregate log'
+	'lba-status-log:retrieve lba status log'
 	'get-feature:display a controller feature'
 	'set-feature:set a controller feature and show results'
 	'format:apply new block format to namespace'
@@ -208,6 +209,16 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme get-log options" _getlog
+			;;
+		(lba-status-log)
+			local _lbastatuslog
+			_lbastatuslog=(
+			/dev/nvme':supply a device to use (required)'
+			--rae': Retain an Asynchronous Event'
+			-r':alias to --rae
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme lba-status-log options" _lbastatuslog
 			;;
 		(persistent-event-log)
 			local _persistenteventlog
@@ -767,7 +778,7 @@ _nvme () {
 			     set-feature format fw-activate fw-download admin-passthru io-passthru
 			     security-send security-recv resv-acquire resv-register resv-release
 			     resv-report flush compare read write copy show-regs persistent-event-log
-				 pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log
+				 pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
 			   )
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
