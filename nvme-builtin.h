@@ -37,6 +37,7 @@ COMMAND_LIST(
 	ENTRY("predictable-lat-log", "Retrieve Predictable Latency per Nvmset Log, show it", get_pred_lat_per_nvmset_log)
 	ENTRY("pred-lat-event-agg-log", "Retrieve Predictable Latency Event Aggregate Log, show it", get_pred_lat_event_agg_log)
 	ENTRY("persistent-event-log", "Retrieve Presistent Event Log, show it", get_persistent_event_log)
+	ENTRY("endurance-event-agg-log", "Retrieve Endurance Group Event Aggregate Log, show it", get_endurance_event_agg_log)
 	ENTRY("get-feature", "Get feature and show the resulting value", get_feature)
 	ENTRY("device-self-test", "Perform the necessary tests to observe the performance", device_self_test)
 	ENTRY("self-test-log", "Retrieve the SELF-TEST Log, show it", self_test_log)

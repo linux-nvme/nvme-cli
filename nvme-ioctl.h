@@ -110,6 +110,8 @@ int nvme_predictable_latency_event_agg_log(int fd, void *pea_log,
 		bool rae, __u32 size);
 int nvme_persistent_event_log(int fd, __u8 action, __u32 size,
 		void *pevent_log_info);
+int nvme_endurance_group_event_agg_log(int fd, void *endurance_log,
+		bool rae, __u32 size);
 int nvme_endurance_log(int fd, __u16 group_id,
 		       struct nvme_endurance_group_log *endurance_log);
 

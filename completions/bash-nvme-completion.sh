@@ -11,7 +11,7 @@ _cmds="list id-ctrl id-ns list-ns id-iocs nvm-id-ctrl create-ns delete-ns \
 	resv-report dsm flush compare read write write-zeroes \
 	write-uncor copy reset subsystem-reset show-regs discover \
 	connect-all connect disconnect version help \
-	intel lnvm memblaze list-subsys"
+	intel lnvm memblaze list-subsys endurance-event-agg-log"
 
 nvme_list_opts () {
         local opts=""
@@ -99,6 +99,10 @@ nvme_list_opts () {
 		"error-log")
 		opts+=" --namespace-id= -n --raw-binary -b --log-entries= -e \
 			--output-format= -o"
+			;;
+		"endurance-event-agg-log")
+		opts+=" --log-entries= -e  --rae -r \
+			--raw-binary -b --output-format= -o"
 			;;
 		"get-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --sel= -s \
