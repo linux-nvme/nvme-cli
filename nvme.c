@@ -3419,8 +3419,9 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	if (err < 0) {
 		perror("set-feature");
 	} else if (!err) {
-		printf("set-feature:%02x (%s), value:%#08"PRIx64"\n", cfg.feature_id,
-			nvme_feature_to_string(cfg.feature_id), (uint64_t)cfg.value);
+		printf("set-feature:%#02x (%s), value:%#08"PRIx64", cdw12:%#08"PRIx32", \
+			save:%#x\n", cfg.feature_id, nvme_feature_to_string(cfg.feature_id),
+			(uint64_t)cfg.value, cfg.cdw12, cfg.save);
 		if (buf) {
 			if (cfg.feature_id == NVME_FEAT_LBA_RANGE)
 				nvme_show_lba_range((struct nvme_lba_range_type *)buf,
