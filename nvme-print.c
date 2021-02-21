@@ -4748,7 +4748,7 @@ void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 const char *nvme_feature_to_string(enum nvme_feat feature)
 {
 	switch (feature) {
-	case NVME_FEAT_NONE:		return "None";
+	case NVME_FEAT_NONE:		return "Reserved";
 	case NVME_FEAT_ARBITRATION:	return "Arbitration";
 	case NVME_FEAT_POWER_MGMT:	return "Power Management";
 	case NVME_FEAT_LBA_RANGE:	return "LBA Range Type";
@@ -5283,6 +5283,9 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned 
 	uint64_t ull;
 
 	switch (fid) {
+      case NVME_FEAT_NONE:
+              printf("\tFeature Identifier Reserved\n");
+              break;
 	case NVME_FEAT_ARBITRATION:
 		printf("\tHigh Priority Weight   (HPW): %u\n", ((result & 0xff000000) >> 24) + 1);
 		printf("\tMedium Priority Weight (MPW): %u\n", ((result & 0x00ff0000) >> 16) + 1);
@@ -5401,10 +5404,11 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned 
 	case NVME_FEAT_HOST_BEHAVIOR:
 		printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
 		break;
-	case NVME_FEAT_NONE:
 	case NVME_FEAT_SANITIZE:
+                printf("\tNo-Deallocate Response Mode (NODRM) : %u\n", result & 0x1);
+                break;
 	case NVME_FEAT_RRL:
-		printf("\t%s: to be implemented\n", nvme_feature_to_string(fid));
+		printf("\tRead Recovery Level (RRL): %u\n", result & 0xf);
 		break;
 	}
 }
