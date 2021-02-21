@@ -4767,6 +4767,7 @@ const char *nvme_feature_to_string(enum nvme_feat feature)
 	case NVME_FEAT_RRL:		return "Read Recovery Level";
 	case NVME_FEAT_PLM_CONFIG:	return "Predicatable Latency Mode Config";
 	case NVME_FEAT_PLM_WINDOW:	return "Predicatable Latency Mode Window";
+      case NVME_FEAT_ENDURANCE:       return "Enduarance Event Group Configuration";
 	case NVME_FEAT_IOCS_PROFILE:	return "I/O Command Set Profile";
 	case NVME_FEAT_SW_PROGRESS:	return "Software Progress";
 	case NVME_FEAT_HOST_ID:		return "Host Identifier";
@@ -5360,6 +5361,10 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned 
 	case NVME_FEAT_PLM_WINDOW:
 		printf("\tWindow Select: %s", nvme_plm_window(result));
 		break;
+      case NVME_FEAT_ENDURANCE:
+              printf("\tEndurance Group Identifier (ENDGID): %u\n", result & 0xffff);
+              printf("\tEndurance Group Critical Warnings  : %u\n", (result >> 16) & 0xff);
+              break;
 	case NVME_FEAT_IOCS_PROFILE:
 		printf("\tI/O Command Set Profile: %s\n", result & 0x1 ? "True":"False");
 		break;
