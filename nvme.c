@@ -2629,9 +2629,9 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
-static char *nvme_fw_status_reset_type(__u32 status)
+static char *nvme_fw_status_reset_type(__u16 status)
 {
-	switch (status & 0x3ff) {
+	switch (status & 0x7ff) {
 	case NVME_SC_FW_NEEDS_CONV_RESET:	return "conventional";
 	case NVME_SC_FW_NEEDS_SUBSYS_RESET:	return "subsystem";
 	case NVME_SC_FW_NEEDS_RESET:		return "any controller";
@@ -2694,7 +2694,7 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 	if (err < 0)
 		perror("fw-commit");
 	else if (err != 0)
-		switch (err & 0x3ff) {
+		switch (err & 0x7ff) {
 		case NVME_SC_FW_NEEDS_CONV_RESET:
 		case NVME_SC_FW_NEEDS_SUBSYS_RESET:
 		case NVME_SC_FW_NEEDS_RESET:
