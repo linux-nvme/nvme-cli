@@ -1312,6 +1312,8 @@ static int do_discover(char *argstr, bool connect)
 		return -errno;
 	ret = nvmf_get_log_page_discovery(dev_name, &log, &numrec, &status);
 	free(dev_name);
+	if (cfg.persistent)
+		printf("Persistent device: nvme%d\n", instance);
 	if (!cfg.device && !cfg.persistent) {
 		err = remove_ctrl(instance);
 		if (err)
