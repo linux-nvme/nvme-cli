@@ -339,9 +339,47 @@ int nvme_get_host_telemetry(int fd,  struct nvme_telemetry_log **log)
 	return nvme_get_telemetry_log(fd, false, false, false, log);
 }
 
-int nvme_get_new_host_telemetry(int fd,  struct nvme_telemetry_log  **log)
+int nvme_get_new_host_telemetry(int fd,  struct nvme_telemetry_log **log)
 {
 	return nvme_get_telemetry_log(fd, true, false, false, log);
+}
+
+int nvme_get_lba_status_log(int fd, bool rae, struct nvme_lba_status_log **log)
+{
+	__u32 size = sizeof(struct nvme_lba_status_log);
+	void *buf, *tmp;
+	int err;
+
+	buf = malloc(size);
+	if (!buf)
+		return -1;
+
+	*log = buf;
+	err = nvme_get_log_lba_status(fd, true, 0, size, buf);
+	if (err)
+		goto free;
+
+	size = le32_to_cpu((*log)->lslplen);
+	if (!size)
+		return 0;
+
+	tmp = realloc(buf, size);
+	if (!tmp) {
+		err = -1;
+		goto free;
+	}
+	buf = tmp;
+	*log = buf;
+
+	err = nvme_get_log_page(fd, NVME_NSID_NONE, NVME_LOG_LID_LBA_STATUS,
+				rae, size, buf);
+	if (!err)
+		return 0;
+
+free:
+	*log = NULL;
+	free(buf);
+	return err;
 }
 
 void nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,

@@ -166,6 +166,14 @@ int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 int nvme_get_ana_log_len(int fd, size_t *analen);
 
 /**
+ * nvme_get_lba_status_log() - Retreive the LBA Status log page
+ * @fd:	   File descriptor of the nvme device
+ * @rae:   Retain asynchronous events
+ * @log:   On success, set to the value of the allocated and retreived log.
+ */
+int nvme_get_lba_status_log(int fd, bool rae, struct nvme_lba_status_log **log);
+
+/**
  * nvme_namespace_attach_ctrls() - Attach namespace to controller(s)
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID to attach
