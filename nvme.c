@@ -1097,6 +1097,73 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int get_lba_status_log(int argc, char **argv,
+		struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve Get LBA Status Info Log " \
+			"and prints it, for the given device in either " \
+			"decoded format(default),json or binary.";
+	const char *rae = "Retain an Asynchronous Event";
+	void *lab_status;
+	enum nvme_print_flags flags;
+	int err, fd;
+	__u32 lslplen;
+
+	struct config {
+		bool rae;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.rae = false,
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("rae",          'r', &cfg.rae,           rae),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+
+	err = nvme_lba_status_log(fd, &lslplen, true, sizeof(__u32));
+	if (err < 0) {
+		perror("lba status log page");
+		goto close_fd;
+	} else if (err) {
+		nvme_show_status(err);
+		goto close_fd;
+	}
+
+	lab_status = calloc(lslplen, 1);
+	if (!lab_status) {
+		perror("could not alloc buffer for lba status log");
+		err = -ENOMEM;
+		goto close_fd;
+	}
+
+	err = nvme_lba_status_log(fd, lab_status, cfg.rae, lslplen);
+	if (!err)
+		nvme_show_lba_status_log(lab_status, lslplen, devicename, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("lba status log page");
+	free(lab_status);
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int get_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve desired number of bytes "\

@@ -1614,6 +1614,115 @@ void nvme_show_endurance_group_event_agg_log(
 	}
 }
 
+void json_lba_status_log(void *lba_status)
+{
+	struct json_object *root;
+	struct json_object *desc;
+	struct json_object *element;
+	struct json_array *desc_list;
+	struct json_array *elements_list;
+	struct nvme_lba_status_hdr *hdr;
+	struct nvme_lba_status_ns_element *ns_element;
+	struct nvme_lba_status_range_desc *range_desc;
+	int offset = sizeof(*hdr);
+	__u32 num_lba_desc, num_elements;
+
+	root = json_create_object();
+	hdr = lba_status;
+	json_object_add_value_uint(root, "lslplen", le32_to_cpu(hdr->lslplen));
+	num_elements = le32_to_cpu(hdr->nlslne);
+	json_object_add_value_uint(root, "nlslne", num_elements);
+	json_object_add_value_uint(root, "estulb", le32_to_cpu(hdr->estulb));
+	json_object_add_value_uint(root, "lsgc", le16_to_cpu(hdr->lsgc));
+
+	elements_list = json_create_array();
+	for (int ele = 0; ele < num_elements; ele++) {
+		ns_element = lba_status + offset;
+		element = json_create_object();
+		json_object_add_value_uint(element, "neid",
+			le32_to_cpu(ns_element->neid));
+		num_lba_desc = le32_to_cpu(ns_element->nlrd);
+		json_object_add_value_uint(element, "nlrd", num_lba_desc);
+		json_object_add_value_uint(element, "ratype", ns_element->ratype);
+
+		offset += sizeof(*ns_element);
+		desc_list = json_create_array();
+		if (num_lba_desc != 0xffffffff) {
+			for (int i = 0; i < num_lba_desc; i++) {
+				range_desc = lba_status + offset;
+				desc = json_create_object();
+				json_object_add_value_uint(desc, "rslba",
+					le64_to_cpu(range_desc->rslba));
+				json_object_add_value_uint(desc, "rnlb",
+					le32_to_cpu(range_desc->rnlb));
+
+				offset += sizeof(*range_desc);
+				json_array_add_value_object(desc_list, desc);
+			}
+		} else {
+			printf("Number of LBA Range Descriptors (NLRD) set to %#x for " \
+				"NS element %d", num_lba_desc, ele);
+		}
+
+		json_object_add_value_array(element, "descs", desc_list);
+		json_array_add_value_object(elements_list, element);
+    }
+
+	json_object_add_value_array(root, "ns_elements", elements_list);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_lba_status_log(void *lba_status, __u32 size,
+	const char *devname, enum nvme_print_flags flags)
+{
+	struct nvme_lba_status_hdr *hdr;
+	struct nvme_lba_status_ns_element *ns_element;
+	struct nvme_lba_status_range_desc *range_desc;
+	int offset = sizeof(*hdr);
+	__u32 num_lba_desc, num_elements;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)lba_status, size);
+	if (flags & JSON)
+		return json_lba_status_log(lba_status);
+
+	hdr = lba_status;
+	printf("LBA Status Log for device: %s\n", devname);
+	printf("LBA Status Log Page Length: %"PRIu32"\n",
+		le32_to_cpu(hdr->lslplen));
+	num_elements = le32_to_cpu(hdr->nlslne);
+	printf("Number of LBA Status Log Namespace Elements: %"PRIu32"\n",
+		num_elements);
+	printf("Estimate of Unrecoverable Logical Blocks: %"PRIu32"\n",
+		le32_to_cpu(hdr->estulb));
+	printf("LBA Status Generation Counter: %"PRIu16"\n", le16_to_cpu(hdr->lsgc));
+	for (int ele = 0; ele < num_elements; ele++) {
+		ns_element = lba_status + offset;
+		printf("Namespace Element Identifier: %"PRIu32"\n",
+			le32_to_cpu(ns_element->neid));
+		num_lba_desc = le32_to_cpu(ns_element->nlrd);
+		printf("Number of LBA Range Descriptors: %"PRIu32"\n", num_lba_desc);
+		printf("Recommended Action Type: %u\n", ns_element->ratype);
+
+		offset += sizeof(*ns_element);
+		if (num_lba_desc != 0xffffffff) {
+			for (int i = 0; i < num_lba_desc; i++) {
+				range_desc = lba_status + offset;
+				printf("RSLBA[%d]: %"PRIu64"\n", i,
+					le64_to_cpu(range_desc->rslba));
+				printf("RNLB[%d]: %"PRIu32"\n", i,
+					le32_to_cpu(range_desc->rnlb));
+				offset += sizeof(*range_desc);
+			}
+		} else {
+			printf("Number of LBA Range Descriptors (NLRD) set to %#x for "\
+				"NS element %d\n", num_lba_desc, ele);
+		}
+	}
+}
+
 static void nvme_show_subsystem(struct nvme_subsystem *s)
 {
 	int i;
