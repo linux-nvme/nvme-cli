@@ -627,6 +627,13 @@ int nvme_endurance_group_event_agg_log(int fd,
 			size, endurance_log);
 }
 
+int nvme_lba_status_log(int fd, void *lba_status, bool rae,
+		__u32 size)
+{
+	return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_LBA_STATUS,
+		rae, NVME_NO_LOG_LSP, size, lba_status);
+}
+
 int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
 		 __u32 cdw12, __u32 data_len, void *data, __u32 *result)
 {
