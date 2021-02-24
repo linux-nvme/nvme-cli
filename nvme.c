@@ -1006,6 +1006,164 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int get_endurance_event_agg_log(int argc, char **argv,
+		struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve Retrieve Predictable Latency " \
+			"Event Aggregate page and prints it, for the given " \
+			"device in either decoded format(default), " \
+			"json or binary.";
+	const char *log_entries = "Number of pending Endurance Group " \
+			"Event log Entries list";
+	const char *rae = "Retain an Asynchronous Event";
+	const char *raw = "use binary output";
+	void *endurance_log;
+	struct nvme_id_ctrl ctrl;
+	enum nvme_print_flags flags;
+	int err, fd;
+	__u32 log_size;
+
+	struct config {
+		__u64 log_entries;
+		bool rae;
+		char *output_format;
+		int raw_binary;
+	};
+
+	struct config cfg = {
+		.log_entries = 2044,
+		.rae = false,
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
+		OPT_FLAG("rae",          'r', &cfg.rae,           rae),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+	if (cfg.raw_binary)
+		flags = BINARY;
+
+	if (!cfg.log_entries) {
+		fprintf(stderr, "non-zero log-entries is required param\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	err = nvme_identify_ctrl(fd, &ctrl);
+	if (err < 0) {
+		perror("identify controller");
+		goto close_fd;
+	} else if (err) {
+		fprintf(stderr, "could not identify controller\n");
+		err = -ENODEV;
+		goto close_fd;
+	}
+
+	cfg.log_entries = min(cfg.log_entries, le16_to_cpu(ctrl.endgidmax));
+	log_size = sizeof(__u64) + cfg.log_entries * sizeof(__u16);
+	endurance_log = calloc(log_size, 1);
+	if (!endurance_log) {
+		fprintf(stderr, "could not alloc buffer for endurance group" \
+			" event agggregate log entries\n");
+		err = -ENOMEM;
+		goto close_fd;
+	}
+
+	err = nvme_endurance_group_event_agg_log(fd, endurance_log, cfg.rae,
+		log_size);
+	if (!err)
+		nvme_show_endurance_group_event_agg_log(endurance_log, cfg.log_entries,
+			log_size, devicename, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("endurance group event aggregate log page");
+	free(endurance_log);
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
+static int get_lba_status_log(int argc, char **argv,
+		struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve Get LBA Status Info Log " \
+			"and prints it, for the given device in either " \
+			"decoded format(default),json or binary.";
+	const char *rae = "Retain an Asynchronous Event";
+	void *lab_status;
+	enum nvme_print_flags flags;
+	int err, fd;
+	__u32 lslplen;
+
+	struct config {
+		bool rae;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.rae = false,
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("rae",          'r', &cfg.rae,           rae),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+
+	err = nvme_lba_status_log(fd, &lslplen, true, sizeof(__u32));
+	if (err < 0) {
+		perror("lba status log page");
+		goto close_fd;
+	} else if (err) {
+		nvme_show_status(err);
+		goto close_fd;
+	}
+
+	lab_status = calloc(lslplen, 1);
+	if (!lab_status) {
+		perror("could not alloc buffer for lba status log");
+		err = -ENOMEM;
+		goto close_fd;
+	}
+
+	err = nvme_lba_status_log(fd, lab_status, cfg.rae, lslplen);
+	if (!err)
+		nvme_show_lba_status_log(lab_status, lslplen, devicename, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("lba status log page");
+	free(lab_status);
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int get_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve desired number of bytes "\

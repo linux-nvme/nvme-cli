@@ -882,7 +882,14 @@ enum nvme_persistent_event_log_actions {
 	NVME_PEVENT_LOG_RELEASE_CTX			= 0x2,
 };
 
-struct nvme_predlat_event_agg_log_page {
+/**
+ * struct nvme_event_agg_log_page - is common for both
+ * predictable latency event aggregate log and endurance
+ * group event aggregate log
+ * @num_entries: indicates the number of entries in the list.
+ * @entries: indicates NVMSET ID or ENDURANCE Group ID entries
+ */
+struct nvme_event_agg_log_page {
 	__le64	num_entries;
 	__le16	entries[];
 };
@@ -902,6 +909,27 @@ struct nvme_predlat_per_nvmset_log_page {
 	__le64	dtwin_westimate;
 	__le64	dtwin_testimate;
 	__u8	rsvd152[360];
+};
+
+struct nvme_lba_status_range_desc {
+	__le64	rslba;
+	__le32	rnlb;
+	__u8	rsvd12[4];
+};
+
+struct nvme_lba_status_ns_element {
+	__le32	neid;
+	__le32	nlrd;
+	__u8	ratype;
+	__u8	rsvd9[7];
+};
+
+struct nvme_lba_status_hdr {
+	__le32	lslplen;
+	__le32	nlslne;
+	__le32	estulb;
+	__u8	rsvd12[2];
+	__le16	lsgc;
 };
 
 enum {
@@ -1206,6 +1234,8 @@ enum {
 	NVME_LOG_ANA		= 0x0c,
 	NVME_LOG_PRELAT_EVENT_AGG	= 0x0b,
 	NVME_LOG_PERSISTENT_EVENT   = 0x0d,
+	NVME_LOG_LBA_STATUS	= 0x0e,
+	NVME_LOG_ENDURANCE_GROUP_EVENT_AGG = 0x0f,
 	NVME_LOG_DISC		= 0x70,
 	NVME_LOG_RESERVATION	= 0x80,
 	NVME_LOG_SANITIZE	= 0x81,
