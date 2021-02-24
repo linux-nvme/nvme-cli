@@ -88,6 +88,7 @@ static struct config {
 	bool persistent;
 	bool quiet;
 	bool matching_only;
+	bool json;
 } cfg = { .ctrl_loss_tmo = -1 };
 
 struct connect_args {
@@ -653,11 +654,17 @@ static int space_strip_len(int max, const char *str)
 	return i + 1;
 }
 
-static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
+static void print_discovery_log_human(struct nvmf_disc_rsp_page_hdr *log,
+                                      int numrec, int instance)
 {
 	int i;
 
-	printf("\nDiscovery Log Number of Records %d, "
+	printf("\n");
+
+    if (cfg.persistent)
+		printf("Device: nvme%d\n", instance);
+
+	printf("Discovery Log Number of Records %d, "
 	       "Generation counter %"PRIu64"\n",
 		numrec, le64_to_cpu(log->genctr));
 
@@ -695,6 +702,66 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 			break;
 		}
 	}
+}
+
+static void print_discovery_log_json(struct nvmf_disc_rsp_page_hdr *log,
+                                     int numrec, int instance)
+{
+	int i;
+
+	printf("{\n");
+	printf("    \"log type\": \"discovery\",\n");
+	printf("    \"device\": \"nvme%d\",\n", instance);
+	printf("    \"generation counter\": %"PRIu64",\n"
+		   "    \"number of records\": %d,\n",
+		   le64_to_cpu(log->genctr), numrec);
+	printf("    \"records\": [\n");
+	for (i = 0; i < numrec; i++) {
+		struct nvmf_disc_rsp_page_entry *e = &log->entries[i];
+
+		printf("        {\n");
+		printf("            \"trtype\": \"%s\",\n", trtype_str(e->trtype));
+		printf("            \"adrfam\":  \"%s\",\n", adrfam_str(e->adrfam));
+		printf("            \"subtype\": \"%s\",\n", subtype_str(e->subtype));
+		printf("            \"treq\":    \"%s\",\n", treq_str(e->treq));
+		printf("            \"portid\":  %d,\n", e->portid);
+		printf("            \"trsvcid\": \"%.*s\",\n",
+			   space_strip_len(NVMF_TRSVCID_SIZE, e->trsvcid),
+			   e->trsvcid);
+		printf("            \"subnqn\":  \"%s\",\n", e->subnqn);
+		printf("            \"traddr\":  \"%.*s\",\n",
+			   space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
+			   e->traddr);
+
+		switch (e->trtype) {
+		case NVMF_TRTYPE_RDMA:
+			printf("            \"rdma_prtype\": \"%s\",\n",
+				prtype_str(e->tsas.rdma.prtype));
+			printf("            \"rdma_qptype\": \"%s\",\n",
+				qptype_str(e->tsas.rdma.qptype));
+			printf("            \"rdma_cms\":    \"%s\",\n",
+				cms_str(e->tsas.rdma.cms));
+			printf("            \"rdma_pkey\": 0x%04x\n",
+				e->tsas.rdma.pkey);
+			break;
+		case NVMF_TRTYPE_TCP:
+			printf("            \"sectype\": \"%s\"\n",
+				sectype_str(e->tsas.tcp.sectype));
+			break;
+		}
+		printf("        }%s\n", (i+1) == numrec? "" : ",");
+	}
+	printf("    ]\n");
+	printf("}\n");
+}
+
+static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log,
+                                int numrec, int instance)
+{
+    if (cfg.json)
+        print_discovery_log_json(log, numrec, instance);
+    else
+        print_discovery_log_human(log, numrec, instance);
 }
 
 static void save_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
@@ -1312,8 +1379,6 @@ static int do_discover(char *argstr, bool connect)
 		return -errno;
 	ret = nvmf_get_log_page_discovery(dev_name, &log, &numrec, &status);
 	free(dev_name);
-	if (cfg.persistent)
-		printf("Persistent device: nvme%d\n", instance);
 	if (!cfg.device && !cfg.persistent) {
 		err = remove_ctrl(instance);
 		if (err)
@@ -1327,7 +1392,7 @@ static int do_discover(char *argstr, bool connect)
 		else if (cfg.raw)
 			save_discovery_log(log, numrec);
 		else
-			print_discovery_log(log, numrec);
+			print_discovery_log(log, numrec, instance);
 		break;
 	case DISC_GET_NUMRECS:
 		fprintf(stderr,
@@ -1460,6 +1525,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_FLAG("persistent",     'p', &cfg.persistent,      "persistent discovery connection"),
 		OPT_FLAG("quiet",          'S', &cfg.quiet,           "suppress already connected errors"),
 		OPT_FLAG("matching",       'm', &cfg.matching_only,   "connect only records matching the traddr"),
+		OPT_FLAG("json",           'j', &cfg.json,            "dump output in json format"),
 		OPT_END()
 	};
 
