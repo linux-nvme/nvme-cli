@@ -57,6 +57,7 @@
 
 #include "argconfig.h"
 #include "fabrics.h"
+#include "monitor.h"
 
 #define CREATE_CMD
 #include "nvme-builtin.h"
@@ -5732,6 +5733,18 @@ static int disconnect_all_cmd(int argc, char **argv, struct command *command, st
 {
 	const char *desc = "Disconnect from all connected NVMeoF subsystems";
 	return fabrics_disconnect_all(desc, argc, argv);
+}
+
+static int monitor_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+#ifdef HAVE_LIBUDEV
+	const char *desc = "Monitor NVMeoF AEN events";
+
+	return aen_monitor(desc, argc, argv);
+#else
+	fprintf(stderr, "nvme-cli built without libudev doesn't support the \"monitor\" subcommand\n");
+	return EOPNOTSUPP;
+#endif
 }
 
 void register_extension(struct plugin *plugin)
