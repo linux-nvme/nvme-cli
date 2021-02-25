@@ -733,8 +733,8 @@ static void print_discovery_log_json(struct nvmf_disc_rsp_page_hdr *log,
 	struct json_object *root = NULL;
 	struct json_object *record = NULL;
 	struct json_array  *records = NULL;
-	char   trsvcid[NVMF_TRSVCID_SIZE];
-	char   traddr[NVMF_TRADDR_SIZE];
+	char   trsvcid[NVMF_TRSVCID_SIZE+1];
+	char   traddr[NVMF_TRADDR_SIZE+1];
 	char   dev_name[STRLEN("nvme") + DECIMAL_STR_MAX(int)];
 
 	root = json_create_object();
@@ -762,11 +762,11 @@ static void print_discovery_log_json(struct nvmf_disc_rsp_page_hdr *log,
 		json_object_add_value_int(record, "portid", e->portid);
 		json_object_add_value_string(record, "trsvcid",
                                      copy_and_strip(trsvcid, e->trsvcid,
-                                                    sizeof(trsvcid)));
+                                                    sizeof(trsvcid)-1));
 		json_object_add_value_string(record, "subnqn",  e->subnqn);
 		json_object_add_value_string(record, "traddr",
                                      copy_and_strip(traddr, e->traddr,
-                                                    sizeof(traddr)));
+                                                    sizeof(traddr)-1));
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
