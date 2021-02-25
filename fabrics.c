@@ -90,7 +90,7 @@ static struct config {
 	bool matching_only;
 	char *output_format;
 } cfg = {
-	.ctrl_loss_tmo = -1,
+	.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO,
 	.output_format = "normal",
 };
 
@@ -925,9 +925,6 @@ static int build_options(char *argstr, int max_len, bool discover)
 			fprintf(stderr, "need a address (-a) argument\n");
 			return -EINVAL;
 		}
-		/* Use the default ctrl loss timeout if unset */
-		if (cfg.ctrl_loss_tmo == -1)
-			cfg.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 	}
 
 	/* always specify nqn as first arg - this will init the string */
@@ -959,8 +956,9 @@ static int build_options(char *argstr, int max_len, bool discover)
 				cfg.keep_alive_tmo, false) ||
 	    add_int_argument(&argstr, &max_len, "reconnect_delay",
 				cfg.reconnect_delay, false) ||
-	    add_int_argument(&argstr, &max_len, "ctrl_loss_tmo",
-				cfg.ctrl_loss_tmo, true) ||
+	    (strncmp(cfg.transport, "loop", 4) &&
+	     add_int_argument(&argstr, &max_len, "ctrl_loss_tmo",
+				cfg.ctrl_loss_tmo, true)) ||
 	    add_int_argument(&argstr, &max_len, "tos",
 				cfg.tos, true) ||
 	    add_bool_argument(&argstr, &max_len, "duplicate_connect",
@@ -1125,7 +1123,7 @@ retry:
 		p += len;
 	}
 
-	if (cfg.ctrl_loss_tmo >= -1) {
+	if ((e->trtype != NVMF_TRTYPE_LOOP) && (cfg.ctrl_loss_tmo >= -1)) {
 		len = sprintf(p, ",ctrl_loss_tmo=%d", cfg.ctrl_loss_tmo);
 		if (len < 0)
 			return -EINVAL;
