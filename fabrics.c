@@ -57,6 +57,13 @@
 /* default to 600 seconds of reconnect attempts before giving up */
 #define NVMF_DEF_CTRL_LOSS_TMO		600
 
+#define STRLEN(x) (sizeof(""x"") - 1)
+#define DECIMAL_STR_MAX(type)                                           \
+        (2+(sizeof(type) <= 1 ? 3 :                                     \
+            sizeof(type) <= 2 ? 5 :                                     \
+            sizeof(type) <= 4 ? 10 :                                    \
+            sizeof(type) <= 8 ? 20 : sizeof(int[-2*(sizeof(type) > 8)])))
+
 const char *conarg_nqn = "nqn";
 const char *conarg_transport = "transport";
 const char *conarg_traddr = "traddr";
@@ -657,11 +664,17 @@ static int space_strip_len(int max, const char *str)
 	return i + 1;
 }
 
-static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
+static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log,
+                                int numrec, int instance)
 {
 	int i;
 
-	printf("\nDiscovery Log Number of Records %d, "
+	printf("\n");
+
+	if (cfg.persistent)
+		printf("Persistent device: nvme%d\n", instance);
+
+	printf("Discovery Log Number of Records %d, "
 	       "Generation counter %"PRIu64"\n",
 		numrec, le64_to_cpu(log->genctr));
 
@@ -701,14 +714,19 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	}
 }
 
-static void json_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
+static void json_discovery_log(struct nvmf_disc_rsp_page_hdr *log,
+                               int numrec, int instance)
 {
 	struct json_object *root;
 	struct json_array *entries;
 	int i;
+	char   dev_name[STRLEN("nvme") + DECIMAL_STR_MAX(int)];
+
+	snprintf(dev_name, sizeof(dev_name), "nvme%d", instance);
 
 	root = json_create_object();
 	entries = json_create_array();
+	json_object_add_value_string(root, "device", dev_name);
 	json_object_add_value_uint(root, "genctr", le64_to_cpu(log->genctr));
 	json_object_add_value_array(root, "records", entries);
 
@@ -1332,7 +1350,7 @@ static void nvmf_get_host_identifiers(int ctrl_instance)
 static int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 {
 	struct nvmf_disc_rsp_page_hdr *log = NULL;
-	char *dev_name;
+	char   dev_name[STRLEN("/dev/nvme") + DECIMAL_STR_MAX(int)];
 	int instance, numrec = 0, ret, err;
 	int status = 0;
 
@@ -1369,12 +1387,8 @@ static int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 	if (instance < 0)
 		return instance;
 
-	if (asprintf(&dev_name, "/dev/nvme%d", instance) < 0)
-		return -errno;
+	snprintf(dev_name, sizeof(dev_name), "/dev/nvme%d", instance);
 	ret = nvmf_get_log_page_discovery(dev_name, &log, &numrec, &status);
-	free(dev_name);
-	if (cfg.persistent)
-		printf("Persistent device: nvme%d\n", instance);
 	if (!cfg.device && !cfg.persistent) {
 		err = remove_ctrl(instance);
 		if (err)
@@ -1388,9 +1402,9 @@ static int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 		else if (cfg.raw || flags == BINARY)
 			save_discovery_log(log, numrec);
 		else if (flags == JSON)
-			json_discovery_log(log, numrec);
+			json_discovery_log(log, numrec, instance);
 		else
-			print_discovery_log(log, numrec);
+			print_discovery_log(log, numrec, instance);
 		break;
 	case DISC_GET_NUMRECS:
 		fprintf(stderr,
