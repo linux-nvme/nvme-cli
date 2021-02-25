@@ -1451,7 +1451,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 
 		argv = calloc(MAX_DISC_ARGS, BUF_SIZE);
 		if (!argv) {
-			fprintf(stderr, "failed to allocate argv vector\n");
+			perror("failed to allocate argv vector\n");
 			free(args);
 			ret = -ENOMEM;
 			goto out;
