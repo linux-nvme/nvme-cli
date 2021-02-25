@@ -46,6 +46,7 @@
 #include "util/argconfig.h"
 
 #include "common.h"
+#include "json.h"
 
 #ifdef HAVE_SYSTEMD
 #include <systemd/sd-id128.h>
@@ -56,6 +57,13 @@
 
 /* default to 600 seconds of reconnect attempts before giving up */
 #define NVMF_DEF_CTRL_LOSS_TMO		600
+
+#define STRLEN(x) (sizeof(""x"") - 1)
+#define DECIMAL_STR_MAX(type)                                           \
+        (2+(sizeof(type) <= 1 ? 3 :                                     \
+            sizeof(type) <= 2 ? 5 :                                     \
+            sizeof(type) <= 4 ? 10 :                                    \
+            sizeof(type) <= 8 ? 20 : sizeof(int[-2*(sizeof(type) > 8)])))
 
 const char *conarg_nqn = "nqn";
 const char *conarg_transport = "transport";
@@ -654,6 +662,20 @@ static int space_strip_len(int max, const char *str)
 	return i + 1;
 }
 
+static char * copy_and_strip(char * buf, const char *str, int max)
+{
+	int i;
+
+	strncpy(buf, str, max);
+	for (i = max - 1; i >= 0; i--)
+		if (buf[i] != '\0' && buf[i] != ' ')
+            break;
+		else
+            buf[i] = '\0';
+
+    return buf;
+}
+
 static void print_discovery_log_human(struct nvmf_disc_rsp_page_hdr *log,
                                       int numrec, int instance)
 {
@@ -708,51 +730,74 @@ static void print_discovery_log_json(struct nvmf_disc_rsp_page_hdr *log,
                                      int numrec, int instance)
 {
 	int i;
+	struct json_object *root = NULL;
+	struct json_object *record = NULL;
+	struct json_array  *records = NULL;
+	char   trsvcid[NVMF_TRSVCID_SIZE];
+	char   traddr[NVMF_TRADDR_SIZE];
+	char   dev_name[STRLEN("nvme") + DECIMAL_STR_MAX(int)];
 
-	printf("{\n");
-	printf("    \"log type\": \"discovery\",\n");
-	printf("    \"device\": \"nvme%d\",\n", instance);
-	printf("    \"generation counter\": %"PRIu64",\n"
-		   "    \"number of records\": %d,\n",
-		   le64_to_cpu(log->genctr), numrec);
-	printf("    \"records\": [\n");
+	root = json_create_object();
+	if (!root) goto out;
+
+	records = json_create_array();
+	if (!records) goto out;
+
+	snprintf(dev_name, sizeof(dev_name), "nvme%d", instance);
+
+	json_object_add_value_string(root, "log type", "discovery");
+	json_object_add_value_string(root, "device", dev_name);
+	json_object_add_value_int(root, "generation counter",
+	                          le64_to_cpu(log->genctr));
+	json_object_add_value_int(root, "number of records", numrec);
+
 	for (i = 0; i < numrec; i++) {
 		struct nvmf_disc_rsp_page_entry *e = &log->entries[i];
-
-		printf("        {\n");
-		printf("            \"trtype\": \"%s\",\n", trtype_str(e->trtype));
-		printf("            \"adrfam\":  \"%s\",\n", adrfam_str(e->adrfam));
-		printf("            \"subtype\": \"%s\",\n", subtype_str(e->subtype));
-		printf("            \"treq\":    \"%s\",\n", treq_str(e->treq));
-		printf("            \"portid\":  %d,\n", e->portid);
-		printf("            \"trsvcid\": \"%.*s\",\n",
-			   space_strip_len(NVMF_TRSVCID_SIZE, e->trsvcid),
-			   e->trsvcid);
-		printf("            \"subnqn\":  \"%s\",\n", e->subnqn);
-		printf("            \"traddr\":  \"%.*s\",\n",
-			   space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
-			   e->traddr);
+		record = json_create_object();
+		if (!record) goto out;
+		json_object_add_value_string(record, "trtype", trtype_str(e->trtype));
+		json_object_add_value_string(record, "adrfam", adrfam_str(e->adrfam));
+		json_object_add_value_string(record, "subtype",subtype_str(e->subtype));
+		json_object_add_value_string(record, "treq", treq_str(e->treq));
+		json_object_add_value_int(record, "portid", e->portid);
+		json_object_add_value_string(record, "trsvcid",
+                                     copy_and_strip(trsvcid, e->trsvcid,
+                                                    sizeof(trsvcid)));
+		json_object_add_value_string(record, "subnqn",  e->subnqn);
+		json_object_add_value_string(record, "traddr",
+                                     copy_and_strip(traddr, e->traddr,
+                                                    sizeof(traddr)));
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
-			printf("            \"rdma_prtype\": \"%s\",\n",
-				prtype_str(e->tsas.rdma.prtype));
-			printf("            \"rdma_qptype\": \"%s\",\n",
-				qptype_str(e->tsas.rdma.qptype));
-			printf("            \"rdma_cms\":    \"%s\",\n",
-				cms_str(e->tsas.rdma.cms));
-			printf("            \"rdma_pkey\": 0x%04x\n",
-				e->tsas.rdma.pkey);
+			json_object_add_value_string(record, "rdma_prtype",
+			                             prtype_str(e->tsas.rdma.prtype));
+			json_object_add_value_string(record, "rdma_qptype",
+			                             qptype_str(e->tsas.rdma.qptype));
+			json_object_add_value_string(record, "rdma_cms",
+			                             cms_str(e->tsas.rdma.cms));
+			json_object_add_value_int(record, "rdma_pkey", e->tsas.rdma.pkey);
 			break;
 		case NVMF_TRTYPE_TCP:
-			printf("            \"sectype\": \"%s\"\n",
-				sectype_str(e->tsas.tcp.sectype));
+			json_object_add_value_string(record, "sectype",
+			                             sectype_str(e->tsas.tcp.sectype));
 			break;
 		}
-		printf("        }%s\n", (i+1) == numrec? "" : ",");
+
+		json_array_add_value_object(records, record);
+		record = NULL;
 	}
-	printf("    ]\n");
-	printf("}\n");
+
+	json_object_add_value_array(root, "records", records);
+	records = NULL;
+
+	json_print_object(root, NULL);
+    printf("\n");
+
+out:
+	if (records) json_free_array(records);
+	if (record)  json_free_object(record);
+	if (root)    json_free_object(root);
 }
 
 static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log,
@@ -1379,8 +1424,6 @@ static int do_discover(char *argstr, bool connect)
 		return -errno;
 	ret = nvmf_get_log_page_discovery(dev_name, &log, &numrec, &status);
 	free(dev_name);
-	if (cfg.persistent)
-		printf("Persistent device: nvme%d\n", instance);
 	if (!cfg.device && !cfg.persistent) {
 		err = remove_ctrl(instance);
 		if (err)
