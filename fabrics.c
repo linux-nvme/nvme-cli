@@ -554,6 +554,7 @@ static int nvmf_get_log_page_discovery(const char *dev_path,
 	 */
 	log = calloc(1, hdr_size);
 	if (!log) {
+		perror("could not alloc memory for discovery log header");
 		error = -ENOMEM;
 		goto out_close;
 	}
@@ -588,6 +589,7 @@ static int nvmf_get_log_page_discovery(const char *dev_path,
 		/* allocate discovery log pages based on page_hdr->numrec */
 		log = calloc(1, log_size);
 		if (!log) {
+			perror("could not alloc memory for discovery log page");
 			error = -ENOMEM;
 			goto out_close;
 		}
