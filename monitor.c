@@ -477,12 +477,20 @@ static int handle_epoll_err(int errcode)
 		default:
 			break;
 		}
+
 		co = conndb_find_by_pid(pid);
 		if (!co) {
-			msg(LOG_ERR, "no connection found for discovery task %ld\n",
-			    (long)pid);
+			if (!WIFEXITED(wstatus))
+				msg(LOG_WARNING, "child %ld didn't exit normally\n",
+				    (long)pid);
+			else if (WEXITSTATUS(wstatus) != 0)
+				msg(LOG_NOTICE, "child %ld exited with status \"%s\"\n",
+				    (long)pid, strerror(WEXITSTATUS(wstatus)));
+			else
+				msg(LOG_DEBUG, "child %ld exited normally\n", (long)pid);
 			continue;
 		}
+
 		if (!WIFEXITED(wstatus)) {
 			msg(LOG_WARNING, "child %ld didn't exit normally\n",
 			    (long)pid);
@@ -572,6 +580,45 @@ static int monitor_remove_discovery_ctrl(struct nvme_connection *co,
 	return CD_CB_OK;
 }
 
+static int monitor_discover_from_conf_file(void)
+{
+	char argstr[BUF_SIZE];
+	pid_t pid;
+	int rc;
+
+	pid = fork();
+	if (pid == -1) {
+		msg(LOG_ERR, "failed to fork discovery task: %m");
+		return -errno;
+	} else if (pid > 0) {
+		msg(LOG_DEBUG, "started discovery task %ld from conf file\n",
+		    (long)pid);
+		return 0;
+	}
+
+	child_reset_signals();
+
+	msg(LOG_NOTICE, "starting discovery from conf file\n");
+
+	fabrics_cfg.nqn = NVME_DISC_SUBSYS_NAME;
+	fabrics_cfg.tos = -1;
+	fabrics_cfg.persistent = true;
+
+	rc = discover_from_conf_file("Discover NVMeoF subsystems from " PATH_NVMF_DISC,
+				     argstr, mon_cfg.autoconnect);
+
+	exit(-rc);
+	/* not reached */
+	return rc;
+}
+
+static int discovery_from_conf_file_cb(struct event *ev __attribute__((unused)),
+					unsigned int __attribute__((unused)) ep_events)
+{
+	monitor_discover_from_conf_file();
+	return EVENTCB_CLEANUP;
+}
+
 static int monitor_parse_opts(const char *desc, int argc, char **argv)
 {
 	bool quiet = false;
@@ -638,6 +685,7 @@ int aen_monitor(const char *desc, int argc, char **argv)
 	struct udev *udev __cleanup__(cleanup_udevp) = NULL;
 	struct udev_monitor *monitor __cleanup__(cleanup_monitorp) = NULL;
 	struct udev_monitor_event udev_event = { .e.fd = -1, };
+	struct event startup_discovery_event = { .fd = -1, };
 	sigset_t wait_mask;
 
 	ret = monitor_parse_opts(desc, argc, argv);
@@ -662,6 +710,12 @@ int aen_monitor(const char *desc, int argc, char **argv)
 		ret = errno ? -errno : -ENOMEM;
 		goto out;
 	}
+
+	startup_discovery_event =
+		TIMER_EVENT_ON_STACK(discovery_from_conf_file_cb, 0);
+	if ((ret = event_add(mon_dsp, &startup_discovery_event)) != 0)
+		msg(LOG_ERR, "failed to register initial discovery timer: %s\n",
+		    strerror(-ret));
 
 	ret = create_udev_monitor(udev, &monitor);
 	if (ret != 0)
