@@ -49,6 +49,7 @@
 
 #include "common.h"
 #include "util/log.h"
+#include "util/cleanup.h"
 
 #ifdef HAVE_SYSTEMD
 #include <systemd/sd-id128.h>
@@ -308,7 +309,7 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 {
 	struct connect_args cargs;
 	bool found = false;
-	char *path, *addr;
+	char *path = NULL, *addr;
 	int ret;
 	bool persistent = true;
 
@@ -366,6 +367,8 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 	free(cargs.traddr);
 	free(cargs.trsvcid);
 	free(cargs.host_traddr);
+	free(addr);
+	free(path);
 
 	return found;
 }
@@ -422,13 +425,18 @@ static struct connect_args *extract_connect_args(char *argstr)
 	return cargs;
 }
 
-static void free_connect_args(struct connect_args *cargs)
+static void destruct_connect_args(struct connect_args *cargs)
 {
 	free(cargs->subsysnqn);
 	free(cargs->transport);
 	free(cargs->traddr);
 	free(cargs->trsvcid);
 	free(cargs->host_traddr);
+}
+
+static void free_connect_args(struct connect_args *cargs)
+{
+	destruct_connect_args(cargs);
 	free(cargs);
 }
 
@@ -1283,7 +1291,7 @@ retry:
 
 static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry)
 {
-	struct connect_args cargs = {};
+	struct connect_args cargs __cleanup__(destruct_connect_args) = { NULL, };
 	struct connect_args *c = tracked_ctrls;
 
 	cargs.traddr = strdup(entry->traddr);
@@ -1369,9 +1377,11 @@ static void nvmf_get_host_identifiers(int ctrl_instance)
 	cfg.hostid = nvme_get_ctrl_attr(path, "hostid");
 }
 
+static DEFINE_CLEANUP_FUNC(cleanup_log, struct nvmf_disc_rsp_page_hdr *, free);
+
 static int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 {
-	struct nvmf_disc_rsp_page_hdr *log = NULL;
+	struct nvmf_disc_rsp_page_hdr *log __cleanup__(cleanup_log) = NULL;
 	char *dev_name;
 	int instance, numrec = 0, ret, err;
 	int status = 0;
@@ -1455,7 +1465,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 		const struct argconfig_commandline_options *opts, bool connect)
 {
 	FILE *f;
-	char line[256], *ptr, *args, **argv;
+	char line[256], *ptr, *all_args, *args, **argv;
 	int argc, err, ret = 0;
 
 	f = fopen(PATH_NVMF_DISC, "r");
@@ -1477,6 +1487,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 			ret = -ENOMEM;
 			goto out;
 		}
+		all_args = args;
 
 		argv = calloc(MAX_DISC_ARGS, BUF_SIZE);
 		if (!argv) {
@@ -1520,7 +1531,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 			ret = err;
 
 free_and_continue:
-		free(args);
+		free(all_args);
 		free(argv);
 	}
 
