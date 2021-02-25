@@ -669,11 +669,11 @@ static char * copy_and_strip(char * buf, const char *str, int max)
 	strncpy(buf, str, max);
 	for (i = max - 1; i >= 0; i--)
 		if (buf[i] != '\0' && buf[i] != ' ')
-            break;
+			break;
 		else
-            buf[i] = '\0';
+			buf[i] = '\0';
 
-    return buf;
+	return buf;
 }
 
 static void print_discovery_log_human(struct nvmf_disc_rsp_page_hdr *log,
@@ -792,7 +792,7 @@ static void print_discovery_log_json(struct nvmf_disc_rsp_page_hdr *log,
 	records = NULL;
 
 	json_print_object(root, NULL);
-    printf("\n");
+	printf("\n");
 
 out:
 	if (records) json_free_array(records);
