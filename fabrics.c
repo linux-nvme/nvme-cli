@@ -320,6 +320,27 @@ static bool ctrl_matches_connectargs(char *name, struct connect_args *args)
 	cargs.trsvcid = parse_conn_arg(addr, ' ', conarg_trsvcid);
 	cargs.host_traddr = parse_conn_arg(addr, ' ', conarg_host_traddr);
 
+	if (!strcmp(cargs.subsysnqn, NVME_DISC_SUBSYS_NAME)) {
+		char *kato_str = nvme_get_ctrl_attr(path, "kato"), *p;
+		unsigned int kato = 0;
+
+		/*
+		 * When looking up discovery controllers we have to skip
+		 * any non-persistent controllers (ie those with a zero
+		 * kato value). Otherwise the controller will vanish from
+		 * underneath us as they are owned by another program.
+		 *
+		 * The 'kato' attribute might not be present; assume a
+		 * non-persistent controller for these installations.
+		 */
+		if (kato_str) {
+			kato = strtoul(kato_str, &p, 0);
+			if (p == kato_str)
+				kato = 0;
+		}
+		if (kato == 0)
+			return found;
+	}
 	if (!strcmp(cargs.subsysnqn, args->subsysnqn) &&
 	    !strcmp(cargs.transport, args->transport) &&
 	    (!strcmp(cargs.traddr, args->traddr) ||
@@ -1337,30 +1358,15 @@ static int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 	char *dev_name;
 	int instance, numrec = 0, ret, err;
 	int status = 0;
+	struct connect_args *cargs;
 
-	if (cfg.device) {
-		struct connect_args *cargs;
+	cargs = extract_connect_args(argstr);
+	if (!cargs)
+		return -ENOMEM;
 
-		cargs = extract_connect_args(argstr);
-		if (!cargs)
-			return -ENOMEM;
-
-		/*
-		 * if the cfg.device passed in matches the connect args
-		 *    cfg.device is left as-is
-		 * else if there exists a controller that matches the
-		 *         connect args
-		 *    cfg.device is the matching ctrl name
-		 * else if no ctrl matches the connect args
-		 *    cfg.device is set to null. This will attempt to
-		 *    create a new ctrl.
-		 * endif
-		 */
-		if (!ctrl_matches_connectargs(cfg.device, cargs))
-			cfg.device = find_ctrl_with_connectargs(cargs);
-
-		free_connect_args(cargs);
-	}
+	if (!cfg.device || !ctrl_matches_connectargs(cfg.device, cargs))
+		cfg.device = find_ctrl_with_connectargs(cargs);
+	free_connect_args(cargs);
 
 	if (!cfg.device) {
 		instance = add_ctrl(argstr);
