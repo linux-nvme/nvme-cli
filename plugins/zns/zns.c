@@ -429,7 +429,8 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 
 	buf = calloc(1, data_len);
 	if (!buf) {
-		err = -1;
+		perror("could not alloc memory for zone desc");
+		err = -ENOMEM;
 		goto close_fd;
 	}
 
@@ -524,7 +525,8 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 	if (cfg.data_len) {
 		data = calloc(1, cfg.data_len);
 		if (!data) {
-			err = -1;
+			perror("could not alloc memory for zone mgmt receive data");
+			err = -ENOMEM;
 			goto close_fd;
 		}
 	}
@@ -637,7 +639,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	report = nvme_alloc(report_size, &huge);
 	if (!report) {
 		perror("alloc");
-		err = -1;
+		err = -ENOMEM;
 		goto close_fd;
 	}
 

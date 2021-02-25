@@ -1234,7 +1234,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		if (!log) {
 			fprintf(stderr, "could not alloc buffer for log: %s\n",
 					strerror(errno));
-			err = -EINVAL;
+			err = -ENOMEM;
 			goto close_fd;
 		}
 
@@ -5129,6 +5129,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 	buf_len = (cfg.mndw + 1) * 4;
 	buf = calloc(1, buf_len);
 	if (!buf) {
+		perror("could not alloc memory for get lba status");
 		err = -ENOMEM;
 		goto close_fd;
 	}
