@@ -2,7 +2,11 @@
 
 LC_ALL=C
 
-UUID=$(dmidecode -s system-uuid | tr -d '[:space:]')
+if [ -e "/proc/device-tree/ibm,partition-uuid" ] ; then
+	UUID=$(tr -d '\0' < /proc/device-tree/ibm,partition-uuid)
+else
+	UUID=$(dmidecode -s system-uuid | tr -d '[:space:]')
+fi
 
 if [ -z "$UUID" ] ; then
 	>&2 echo "No UUID found, can't determine hostnqn."
