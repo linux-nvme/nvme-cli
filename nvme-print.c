@@ -2163,12 +2163,18 @@ static void nvme_show_registers_pmrswtp(__u32 pmrswtp)
 		nvme_register_pmr_pmrszu_to_string(pmrswtp & 0x0000000f));
 }
 
-static void nvme_show_registers_pmrmsc(uint64_t pmrmsc)
+static void nvme_show_registers_pmrmscl(uint32_t pmrmscl)
 {
-	printf("\tController Base Address         (CBA): %" PRIx64 "\n",
-		(pmrmsc & 0xfffffffffffff000) >> 12);
-	printf("\tController Memory Space Enable (CMSE): %" PRIx64 "\n\n",
-		(pmrmsc & 0x0000000000000002) >> 1);
+	printf("\tController Base Address         (CBA): %#x\n",
+		(pmrmscl & 0xfffff000) >> 12);
+	printf("\tController Memory Space Enable (CMSE): %#x\n\n",
+		(pmrmscl & 0x00000002) >> 1);
+}
+
+static void nvme_show_registers_pmrmscu(uint32_t pmrmscu)
+{
+	printf("\tController Base Address         (CBA): %#x\n",
+		pmrmscu);
 }
 
 static inline uint32_t mmio_read32(void *addr)
@@ -2192,9 +2198,10 @@ static inline __u64 mmio_read64(void *addr)
 
 static void json_ctrl_registers(void *bar)
 {
-	uint64_t cap, asq, acq, bpmbl, cmbmsc, pmrmsc;
+	uint64_t cap, asq, acq, bpmbl, cmbmsc;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc,
-		bpinfo, bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp;
+		bpinfo, bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp,
+		pmrmscl, pmrmscu;
 	struct json_object *root;
 
 	cap = mmio_read64(bar + NVME_REG_CAP);
@@ -2219,7 +2226,8 @@ static void json_ctrl_registers(void *bar)
 	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
 	pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
 	pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
-	pmrmsc = mmio_read64(bar + NVME_REG_PMRMSC);
+	pmrmscl = mmio_read32(bar + NVME_REG_PMRMSCL);
+	pmrmscu = mmio_read32(bar + NVME_REG_PMRMSCU);
 
 	root = json_create_object();
 	json_object_add_value_uint(root, "cap", cap);
@@ -2244,7 +2252,8 @@ static void json_ctrl_registers(void *bar)
 	json_object_add_value_int(root, "pmrsts", pmrsts);
 	json_object_add_value_int(root, "pmrebs", pmrebs);
 	json_object_add_value_int(root, "pmrswtp", pmrswtp);
-	json_object_add_value_uint(root, "pmrmsc", pmrmsc);
+	json_object_add_value_uint(root, "pmrmscl", pmrmscl);
+	json_object_add_value_uint(root, "pmrmscu", pmrmscu);
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
@@ -2253,9 +2262,10 @@ static void json_ctrl_registers(void *bar)
 void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags)
 {
 	const unsigned int reg_size = 0x50;  /* 00h to 4Fh */
-	uint64_t cap, asq, acq, bpmbl, cmbmsc, pmrmsc;
+	uint64_t cap, asq, acq, bpmbl, cmbmsc;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc, bpinfo,
-		 bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp;
+		 bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp,
+		 pmrmscl, pmrmscu;
 	int human = flags & VERBOSE;
 
 	if (flags & BINARY)
@@ -2285,7 +2295,8 @@ void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags fla
 	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
 	pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
 	pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
-	pmrmsc = mmio_read64(bar + NVME_REG_PMRMSC);
+	pmrmscl = mmio_read32(bar + NVME_REG_PMRMSCL);
+	pmrmscu = mmio_read32(bar + NVME_REG_PMRMSCU);
 
 	if (human) {
 		if (cap != 0xffffffff) {
@@ -2364,8 +2375,11 @@ void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags fla
 			printf("pmrswtp : %x\n", pmrswtp);
 			nvme_show_registers_pmrswtp(pmrswtp);
 
-			printf("pmrmsc	: %"PRIx64"\n", pmrmsc);
-			nvme_show_registers_pmrmsc(pmrmsc);
+			printf("pmrmscl	: %#x\n", pmrmscl);
+			nvme_show_registers_pmrmscl(pmrmscl);
+
+			printf("pmrmscu	: %#x\n", pmrmscu);
+			nvme_show_registers_pmrmscu(pmrmscu);
 		}
 	} else {
 		if (cap != 0xffffffff)
@@ -2396,7 +2410,8 @@ void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags fla
 			printf("pmrsts  : %x\n", pmrsts);
 			printf("pmrebs  : %x\n", pmrebs);
 			printf("pmrswtp : %x\n", pmrswtp);
-			printf("pmrmsc	: %"PRIx64"\n", pmrmsc);
+			printf("pmrmscl	: %#x\n", pmrmscl);
+			printf("pmrmscu	: %#x\n", pmrmscu);
 		}
 	}
 }
