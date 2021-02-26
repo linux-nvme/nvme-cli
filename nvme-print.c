@@ -2261,7 +2261,7 @@ static void json_ctrl_registers(void *bar)
 
 void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags)
 {
-	const unsigned int reg_size = 0x50;  /* 00h to 4Fh */
+	const unsigned int reg_size = 0x0e1c;  /* 0x0000 to 0x0e1b */
 	uint64_t cap, asq, acq, bpmbl, cmbmsc;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc, bpinfo,
 		 bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp,
