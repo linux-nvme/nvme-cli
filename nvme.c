@@ -3681,7 +3681,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (err < 0)
 		perror("security-send");
 	else if (err != 0)
-		fprintf(stderr, "NVME Security Send Command Error:%d\n", err);
+		nvme_show_status(err);
 	else
 		printf("NVME Security Send Command Success:%d\n", result);
 
@@ -5041,8 +5041,7 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (err < 0)
 		perror("security receive");
 	else if (err != 0)
-		fprintf(stderr, "NVME Security Receive Command Error:%d\n",
-									err);
+		nvme_show_status(err);
 	else {
 		if (!cfg.raw_binary) {
 			printf("NVME Security Receive Command Success:%d\n",
