@@ -3618,7 +3618,6 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	int err, fd, sec_fd = -1;
 	void *sec_buf;
 	unsigned int sec_size;
-	__u32 result;
 
 	struct config {
 		__u32 namespace_id;
@@ -3680,13 +3679,13 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 
 	err = nvme_sec_send(fd, cfg.namespace_id, cfg.nssf, cfg.spsp, cfg.secp,
-			cfg.tl, sec_size, sec_buf, &result);
+			cfg.tl, sec_size, sec_buf);
 	if (err < 0)
 		perror("security-send");
 	else if (err != 0)
 		fprintf(stderr, "NVME Security Send Command Error:%d\n", err);
 	else
-		printf("NVME Security Send Command Success:%d\n", result);
+		printf("NVME Security Send Command Success\n");
 
 free:
 	free(sec_buf);
@@ -4997,7 +4996,6 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *nssf = "NVMe Security Specific Field";
 	int err, fd;
 	void *sec_buf = NULL;
-	__u32 result;
 
 	struct config {
 		__u32 namespace_id;
@@ -5041,16 +5039,15 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 
 	err = nvme_sec_recv(fd, cfg.namespace_id, cfg.nssf, cfg.spsp,
-			cfg.secp, cfg.al, cfg.size, sec_buf, &result);
+			cfg.secp, cfg.al, cfg.size, sec_buf);
 	if (err < 0)
 		perror("security receive");
 	else if (err != 0)
 		fprintf(stderr, "NVME Security Receive Command Error:%d\n",
 									err);
 	else {
+		printf("NVME Security Receive Command Success\n");
 		if (!cfg.raw_binary) {
-			printf("NVME Security Receive Command Success:%d\n",
-							result);
 			d(sec_buf, cfg.size, 16, 1);
 		} else if (cfg.size)
 			d_raw((unsigned char *)sec_buf, cfg.size);
