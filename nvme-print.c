@@ -5365,6 +5365,8 @@ static void nvme_directive_show_fields(__u8 dtype, __u8 doper,
 				*(__u16 *) (field + 2));
 			printf("\tNVM Subsystem Streams Open                (NSSO): %u\n",
 				*(__u16 *) (field + 4));
+			printf("\tNVM Subsystem Stream Capability           (NSSC): %u\n",
+				*(__u16 *) (field + 6));
 			printf("\tStream Write Size (in unit of LB size)     (SWS): %u\n",
 				*(__u32 *) (field + 16));
 			printf("\tStream Granularity Size (in unit of SWS)   (SGS): %u\n",
