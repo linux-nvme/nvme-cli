@@ -5321,13 +5321,13 @@ static void nvme_show_timestamp(struct nvme_timestamp *ts)
 static void nvme_show_host_mem_buffer(struct nvme_host_mem_buffer *hmb)
 {
 	printf("\tHost Memory Descriptor List Entry Count (HMDLEC): %u\n",
-		hmb->hmdlec);
+		le32_to_cpu(hmb->hmdlec));
 	printf("\tHost Memory Descriptor List Address     (HMDLAU): 0x%x\n",
-		hmb->hmdlau);
+		le32_to_cpu(hmb->hmdlau));
 	printf("\tHost Memory Descriptor List Address     (HMDLAL): 0x%x\n",
-		hmb->hmdlal);
+		le32_to_cpu(hmb->hmdlal));
 	printf("\tHost Memory Buffer Size                  (HSIZE): %u\n",
-		hmb->hsize);
+		le32_to_cpu(hmb->hsize));
 }
 
 static void nvme_directive_show_fields(__u8 dtype, __u8 doper,
@@ -5508,7 +5508,6 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned 
 		nvme_show_auto_pst((struct nvme_auto_pst *)buf);
 		break;
 	case NVME_FEAT_HOST_MEM_BUF:
-		printf("\tMemory Return       (MR): %s\n", ((result & 0x00000002) >> 1) ? "True":"False");
 		printf("\tEnable Host Memory (EHM): %s\n", (result & 0x00000001) ? "Enabled":"Disabled");
 		nvme_show_host_mem_buffer((struct nvme_host_mem_buffer *)buf);
 		break;
