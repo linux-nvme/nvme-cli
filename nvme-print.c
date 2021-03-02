@@ -298,7 +298,6 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "icsvscc", ctrl->icsvscc);
 	json_object_add_value_int(root, "nwpc", ctrl->nwpc);
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
-	json_object_add_value_int(root, "ocfs", le16_to_cpu(ctrl->ocfs));
 	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
 
 	if (strlen(subnqn))
@@ -307,8 +306,9 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "ioccsz", le32_to_cpu(ctrl->ioccsz));
 	json_object_add_value_int(root, "iorcsz", le32_to_cpu(ctrl->iorcsz));
 	json_object_add_value_int(root, "icdoff", le16_to_cpu(ctrl->icdoff));
-	json_object_add_value_int(root, "ctrattr", ctrl->ctrattr);
+	json_object_add_value_int(root, "fcatt", ctrl->fcatt);
 	json_object_add_value_int(root, "msdbd", ctrl->msdbd);
+	json_object_add_value_int(root, "ofcs", le16_to_cpu(ctrl->ofcs));
 
 	psds = json_create_array();
 	json_object_add_value_array(root, "psds", psds);
@@ -3116,15 +3116,27 @@ static void nvme_show_id_ctrl_sgls(__le32 ctrl_sgls)
 	printf("\n");
 }
 
-static void nvme_show_id_ctrl_ctrattr(__u8 ctrattr)
+static void nvme_show_id_ctrl_fcatt(__u8 fcatt)
 {
-	__u8 rsvd = (ctrattr & 0xFE) >> 1;
-	__u8 scm = ctrattr & 0x1;
+	__u8 rsvd = (fcatt & 0xFE) >> 1;
+	__u8 scm = fcatt & 0x1;
 	if (rsvd)
 		printf("  [7:1] : %#x\tReserved\n", rsvd);
 	printf("  [0:0] : %#x\t%s Controller Model\n",
 		scm, scm ? "Static" : "Dynamic");
 	printf("\n");
+}
+
+static void nvme_show_id_ctrl_ofcs(__le16 ofcs)
+{
+	__u16 rsvd = (ofcs & 0xfffe) >> 1;
+	__u8 disconn = ofcs & 0x1;
+	if (rsvd)
+		printf("  [15:1] : %#x\tReserved\n", rsvd);
+	printf("  [0:0] : %#x\tDisconnect command %s Supported\n",
+		disconn, disconn ? "" : "Not");
+	printf("\n");
+
 }
 
 static void nvme_show_id_ns_nsfeat(__u8 nsfeat)
@@ -3735,7 +3747,6 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_nwpc(ctrl->nwpc);
 	printf("acwu      : %d\n", le16_to_cpu(ctrl->acwu));
-	printf("ocfs      : %d\n", le16_to_cpu(ctrl->ocfs));
 	printf("sgls      : %#x\n", le32_to_cpu(ctrl->sgls));
 	if (human)
 		nvme_show_id_ctrl_sgls(ctrl->sgls);
@@ -3744,10 +3755,13 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("ioccsz    : %d\n", le32_to_cpu(ctrl->ioccsz));
 	printf("iorcsz    : %d\n", le32_to_cpu(ctrl->iorcsz));
 	printf("icdoff    : %d\n", le16_to_cpu(ctrl->icdoff));
-	printf("ctrattr   : %#x\n", ctrl->ctrattr);
+	printf("fcatt     : %#x\n", ctrl->fcatt);
 	if (human)
-		nvme_show_id_ctrl_ctrattr(ctrl->ctrattr);
+		nvme_show_id_ctrl_fcatt(ctrl->fcatt);
 	printf("msdbd     : %d\n", ctrl->msdbd);
+	printf("ofcs      : %d\n", le16_to_cpu(ctrl->ofcs));
+	if (human)
+		nvme_show_id_ctrl_ofcs(ctrl->ofcs);
 
 	nvme_show_id_ctrl_power(ctrl);
 	if (vendor_show)
