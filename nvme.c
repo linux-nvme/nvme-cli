@@ -395,8 +395,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	hdr = malloc(bs);
 	page_log = malloc(bs);
 	if (!hdr || !page_log) {
-		fprintf(stderr, "Failed to allocate %zu bytes for log: %s\n",
-				bs, strerror(errno));
+		perror("failed to allocate buf for log\n");
 		err = -ENOMEM;
 		goto free_mem;
 	}
@@ -632,7 +631,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 	cfg.log_entries = min(cfg.log_entries, ctrl.elpe + 1);
 	err_log = calloc(cfg.log_entries, sizeof(struct nvme_error_log_page));
 	if (!err_log) {
-		fprintf(stderr, "could not alloc buffer for error log\n");
+		perror("could not alloc buffer for error log\n");
 		err = -ENOMEM;
 		goto close_fd;
 	}
@@ -870,7 +869,7 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 	log_size = sizeof(__u64) + cfg.log_entries * sizeof(__u16);
 	pea_log = calloc(log_size, 1);
 	if (!pea_log) {
-		fprintf(stderr, "could not alloc buffer for predictable " \
+		perror("could not alloc buffer for predictable " \
 			"latency event agggregate log entries\n");
 		err = -ENOMEM;
 		goto close_fd;
@@ -942,7 +941,7 @@ static int get_persistent_event_log(int argc, char **argv,
 
 	pevent_log_head = calloc(sizeof(*pevent_log_head), 1);
 	if (!pevent_log_head) {
-		fprintf(stderr, "could not alloc buffer for persistent " \
+		perror("could not alloc buffer for persistent " \
 			"event log header\n");
 		err = -ENOMEM;
 		goto close_fd;
@@ -982,8 +981,7 @@ static int get_persistent_event_log(int argc, char **argv,
 
 	pevent_log_info = nvme_alloc(cfg.log_len, &huge);
 	if (!pevent_log_info) {
-		fprintf(stderr, "could not alloc buffer for persistent " \
-			"event log page\n");
+		perror("could not alloc buffer for persistent event log page\n");
 		err = -ENOMEM;
 		goto close_fd;
 	}
@@ -1074,7 +1072,7 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 	log_size = sizeof(__u64) + cfg.log_entries * sizeof(__u16);
 	endurance_log = calloc(log_size, 1);
 	if (!endurance_log) {
-		fprintf(stderr, "could not alloc buffer for endurance group" \
+		perror("could not alloc buffer for endurance group" \
 			" event agggregate log entries\n");
 		err = -ENOMEM;
 		goto close_fd;
@@ -1232,9 +1230,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 		log = malloc(cfg.log_len);
 		if (!log) {
-			fprintf(stderr, "could not alloc buffer for log: %s\n",
-					strerror(errno));
-			err = -EINVAL;
+			perror("could not alloc buffer for log\n");
+			err = -ENOMEM;
 			goto close_fd;
 		}
 
@@ -2747,7 +2744,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		fw_buf = nvme_alloc(fw_size, &huge);
 
 	if (!fw_buf) {
-		fprintf(stderr, "No memory for f/w size:%d\n", fw_size);
+		perror("No memory for f/w size:\n");
 		err = -ENOMEM;
 		goto close_fw_fd;
 	}
@@ -3618,7 +3615,6 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	int err, fd, sec_fd = -1;
 	void *sec_buf;
 	unsigned int sec_size;
-	__u32 result;
 
 	struct config {
 		__u32 namespace_id;
@@ -3680,13 +3676,13 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 
 	err = nvme_sec_send(fd, cfg.namespace_id, cfg.nssf, cfg.spsp, cfg.secp,
-			cfg.tl, sec_size, sec_buf, &result);
+			cfg.tl, sec_size, sec_buf);
 	if (err < 0)
 		perror("security-send");
 	else if (err != 0)
-		fprintf(stderr, "NVME Security Send Command Error:%d\n", err);
+		nvme_show_status(err);
 	else
-		printf("NVME Security Send Command Success:%d\n", result);
+		printf("NVME Security Send Command Success\n");
 
 free:
 	free(sec_buf);
@@ -4752,7 +4748,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 
 	buffer = nvme_alloc(buffer_size, &huge);
 	if (!buffer) {
-		fprintf(stderr, "can not allocate io payload\n");
+		perror("can not allocate io payload\n");
 		err = -ENOMEM;
 		goto close_mfd;
 	}
@@ -4782,8 +4778,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		}
 		mbuffer = malloc(mbuffer_size);
 		if (!mbuffer) {
-			fprintf(stderr, "can not allocate io metadata "
-					"payload: %s\n", strerror(errno));
+			perror("can not allocate buf for io metadata payload\n");
 			err = -ENOMEM;
 			goto free_buffer;
 		}
@@ -4997,7 +4992,6 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *nssf = "NVMe Security Specific Field";
 	int err, fd;
 	void *sec_buf = NULL;
-	__u32 result;
 
 	struct config {
 		__u32 namespace_id;
@@ -5041,16 +5035,14 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 
 	err = nvme_sec_recv(fd, cfg.namespace_id, cfg.nssf, cfg.spsp,
-			cfg.secp, cfg.al, cfg.size, sec_buf, &result);
+			cfg.secp, cfg.al, cfg.size, sec_buf);
 	if (err < 0)
 		perror("security receive");
 	else if (err != 0)
-		fprintf(stderr, "NVME Security Receive Command Error:%d\n",
-									err);
+		nvme_show_status(err);
 	else {
+		printf("NVME Security Receive Command Success\n");
 		if (!cfg.raw_binary) {
-			printf("NVME Security Receive Command Success:%d\n",
-							result);
 			d(sec_buf, cfg.size, 16, 1);
 		} else if (cfg.size)
 			d_raw((unsigned char *)sec_buf, cfg.size);
@@ -5129,6 +5121,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 	buf_len = (cfg.mndw + 1) * 4;
 	buf = calloc(1, buf_len);
 	if (!buf) {
+		perror("could not alloc memory for get lba status");
 		err = -ENOMEM;
 		goto close_fd;
 	}
@@ -5398,8 +5391,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	if (cfg.metadata_len) {
 		metadata = malloc(cfg.metadata_len);
 		if (!metadata) {
-			fprintf(stderr, "can not allocate metadata "
-					"payload: %s\n", strerror(errno));
+			perror("can not allocate metadata payload\n");
 			err = -ENOMEM;
 			goto close_wfd;
 		}
@@ -5408,7 +5400,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	if (cfg.data_len) {
 		data = nvme_alloc(cfg.data_len, &huge);
 		if (!data) {
-			fprintf(stderr, "can not allocate data payload\n");
+			perror("can not allocate data payload\n");
 			err = -ENOMEM;
 			goto free_metadata;
 		}

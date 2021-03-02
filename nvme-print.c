@@ -298,7 +298,6 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "icsvscc", ctrl->icsvscc);
 	json_object_add_value_int(root, "nwpc", ctrl->nwpc);
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
-	json_object_add_value_int(root, "ocfs", le16_to_cpu(ctrl->ocfs));
 	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
 
 	if (strlen(subnqn))
@@ -307,8 +306,9 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "ioccsz", le32_to_cpu(ctrl->ioccsz));
 	json_object_add_value_int(root, "iorcsz", le32_to_cpu(ctrl->iorcsz));
 	json_object_add_value_int(root, "icdoff", le16_to_cpu(ctrl->icdoff));
-	json_object_add_value_int(root, "ctrattr", ctrl->ctrattr);
+	json_object_add_value_int(root, "fcatt", ctrl->fcatt);
 	json_object_add_value_int(root, "msdbd", ctrl->msdbd);
+	json_object_add_value_int(root, "ofcs", le16_to_cpu(ctrl->ofcs));
 
 	psds = json_create_array();
 	json_object_add_value_array(root, "psds", psds);
@@ -2163,12 +2163,18 @@ static void nvme_show_registers_pmrswtp(__u32 pmrswtp)
 		nvme_register_pmr_pmrszu_to_string(pmrswtp & 0x0000000f));
 }
 
-static void nvme_show_registers_pmrmsc(uint64_t pmrmsc)
+static void nvme_show_registers_pmrmscl(uint32_t pmrmscl)
 {
-	printf("\tController Base Address         (CBA): %" PRIx64 "\n",
-		(pmrmsc & 0xfffffffffffff000) >> 12);
-	printf("\tController Memory Space Enable (CMSE): %" PRIx64 "\n\n",
-		(pmrmsc & 0x0000000000000002) >> 1);
+	printf("\tController Base Address         (CBA): %#x\n",
+		(pmrmscl & 0xfffff000) >> 12);
+	printf("\tController Memory Space Enable (CMSE): %#x\n\n",
+		(pmrmscl & 0x00000002) >> 1);
+}
+
+static void nvme_show_registers_pmrmscu(uint32_t pmrmscu)
+{
+	printf("\tController Base Address         (CBA): %#x\n",
+		pmrmscu);
 }
 
 static inline uint32_t mmio_read32(void *addr)
@@ -2192,9 +2198,10 @@ static inline __u64 mmio_read64(void *addr)
 
 static void json_ctrl_registers(void *bar)
 {
-	uint64_t cap, asq, acq, bpmbl, cmbmsc, pmrmsc;
+	uint64_t cap, asq, acq, bpmbl, cmbmsc;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc,
-		bpinfo, bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp;
+		bpinfo, bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp,
+		pmrmscl, pmrmscu;
 	struct json_object *root;
 
 	cap = mmio_read64(bar + NVME_REG_CAP);
@@ -2219,7 +2226,8 @@ static void json_ctrl_registers(void *bar)
 	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
 	pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
 	pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
-	pmrmsc = mmio_read64(bar + NVME_REG_PMRMSC);
+	pmrmscl = mmio_read32(bar + NVME_REG_PMRMSCL);
+	pmrmscu = mmio_read32(bar + NVME_REG_PMRMSCU);
 
 	root = json_create_object();
 	json_object_add_value_uint(root, "cap", cap);
@@ -2244,7 +2252,8 @@ static void json_ctrl_registers(void *bar)
 	json_object_add_value_int(root, "pmrsts", pmrsts);
 	json_object_add_value_int(root, "pmrebs", pmrebs);
 	json_object_add_value_int(root, "pmrswtp", pmrswtp);
-	json_object_add_value_uint(root, "pmrmsc", pmrmsc);
+	json_object_add_value_uint(root, "pmrmscl", pmrmscl);
+	json_object_add_value_uint(root, "pmrmscu", pmrmscu);
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
@@ -2253,9 +2262,10 @@ static void json_ctrl_registers(void *bar)
 void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags)
 {
 	const unsigned int reg_size = 0x50;  /* 00h to 4Fh */
-	uint64_t cap, asq, acq, bpmbl, cmbmsc, pmrmsc;
+	uint64_t cap, asq, acq, bpmbl, cmbmsc;
 	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc, bpinfo,
-		 bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp;
+		 bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp,
+		 pmrmscl, pmrmscu;
 	int human = flags & VERBOSE;
 
 	if (flags & BINARY)
@@ -2285,7 +2295,8 @@ void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags fla
 	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
 	pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
 	pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
-	pmrmsc = mmio_read64(bar + NVME_REG_PMRMSC);
+	pmrmscl = mmio_read32(bar + NVME_REG_PMRMSCL);
+	pmrmscu = mmio_read32(bar + NVME_REG_PMRMSCU);
 
 	if (human) {
 		if (cap != 0xffffffff) {
@@ -2364,8 +2375,11 @@ void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags fla
 			printf("pmrswtp : %x\n", pmrswtp);
 			nvme_show_registers_pmrswtp(pmrswtp);
 
-			printf("pmrmsc	: %"PRIx64"\n", pmrmsc);
-			nvme_show_registers_pmrmsc(pmrmsc);
+			printf("pmrmscl	: %#x\n", pmrmscl);
+			nvme_show_registers_pmrmscl(pmrmscl);
+
+			printf("pmrmscu	: %#x\n", pmrmscu);
+			nvme_show_registers_pmrmscu(pmrmscu);
 		}
 	} else {
 		if (cap != 0xffffffff)
@@ -2396,7 +2410,8 @@ void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags fla
 			printf("pmrsts  : %x\n", pmrsts);
 			printf("pmrebs  : %x\n", pmrebs);
 			printf("pmrswtp : %x\n", pmrswtp);
-			printf("pmrmsc	: %"PRIx64"\n", pmrmsc);
+			printf("pmrmscl	: %#x\n", pmrmscl);
+			printf("pmrmscu	: %#x\n", pmrmscu);
 		}
 	}
 }
@@ -3116,15 +3131,27 @@ static void nvme_show_id_ctrl_sgls(__le32 ctrl_sgls)
 	printf("\n");
 }
 
-static void nvme_show_id_ctrl_ctrattr(__u8 ctrattr)
+static void nvme_show_id_ctrl_fcatt(__u8 fcatt)
 {
-	__u8 rsvd = (ctrattr & 0xFE) >> 1;
-	__u8 scm = ctrattr & 0x1;
+	__u8 rsvd = (fcatt & 0xFE) >> 1;
+	__u8 scm = fcatt & 0x1;
 	if (rsvd)
 		printf("  [7:1] : %#x\tReserved\n", rsvd);
 	printf("  [0:0] : %#x\t%s Controller Model\n",
 		scm, scm ? "Static" : "Dynamic");
 	printf("\n");
+}
+
+static void nvme_show_id_ctrl_ofcs(__le16 ofcs)
+{
+	__u16 rsvd = (ofcs & 0xfffe) >> 1;
+	__u8 disconn = ofcs & 0x1;
+	if (rsvd)
+		printf("  [15:1] : %#x\tReserved\n", rsvd);
+	printf("  [0:0] : %#x\tDisconnect command %s Supported\n",
+		disconn, disconn ? "" : "Not");
+	printf("\n");
+
 }
 
 static void nvme_show_id_ns_nsfeat(__u8 nsfeat)
@@ -3735,7 +3762,6 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_nwpc(ctrl->nwpc);
 	printf("acwu      : %d\n", le16_to_cpu(ctrl->acwu));
-	printf("ocfs      : %d\n", le16_to_cpu(ctrl->ocfs));
 	printf("sgls      : %#x\n", le32_to_cpu(ctrl->sgls));
 	if (human)
 		nvme_show_id_ctrl_sgls(ctrl->sgls);
@@ -3744,10 +3770,13 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("ioccsz    : %d\n", le32_to_cpu(ctrl->ioccsz));
 	printf("iorcsz    : %d\n", le32_to_cpu(ctrl->iorcsz));
 	printf("icdoff    : %d\n", le16_to_cpu(ctrl->icdoff));
-	printf("ctrattr   : %#x\n", ctrl->ctrattr);
+	printf("fcatt     : %#x\n", ctrl->fcatt);
 	if (human)
-		nvme_show_id_ctrl_ctrattr(ctrl->ctrattr);
+		nvme_show_id_ctrl_fcatt(ctrl->fcatt);
 	printf("msdbd     : %d\n", ctrl->msdbd);
+	printf("ofcs      : %d\n", le16_to_cpu(ctrl->ofcs));
+	if (human)
+		nvme_show_id_ctrl_ofcs(ctrl->ofcs);
 
 	nvme_show_id_ctrl_power(ctrl);
 	if (vendor_show)
@@ -5321,13 +5350,13 @@ static void nvme_show_timestamp(struct nvme_timestamp *ts)
 static void nvme_show_host_mem_buffer(struct nvme_host_mem_buffer *hmb)
 {
 	printf("\tHost Memory Descriptor List Entry Count (HMDLEC): %u\n",
-		hmb->hmdlec);
+		le32_to_cpu(hmb->hmdlec));
 	printf("\tHost Memory Descriptor List Address     (HMDLAU): 0x%x\n",
-		hmb->hmdlau);
+		le32_to_cpu(hmb->hmdlau));
 	printf("\tHost Memory Descriptor List Address     (HMDLAL): 0x%x\n",
-		hmb->hmdlal);
+		le32_to_cpu(hmb->hmdlal));
 	printf("\tHost Memory Buffer Size                  (HSIZE): %u\n",
-		hmb->hsize);
+		le32_to_cpu(hmb->hsize));
 }
 
 static void nvme_directive_show_fields(__u8 dtype, __u8 doper,
@@ -5365,6 +5394,8 @@ static void nvme_directive_show_fields(__u8 dtype, __u8 doper,
 				*(__u16 *) (field + 2));
 			printf("\tNVM Subsystem Streams Open                (NSSO): %u\n",
 				*(__u16 *) (field + 4));
+			printf("\tNVM Subsystem Stream Capability           (NSSC): %u\n",
+				*(__u16 *) (field + 6));
 			printf("\tStream Write Size (in unit of LB size)     (SWS): %u\n",
 				*(__u32 *) (field + 16));
 			printf("\tStream Granularity Size (in unit of SWS)   (SGS): %u\n",
@@ -5508,7 +5539,6 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned 
 		nvme_show_auto_pst((struct nvme_auto_pst *)buf);
 		break;
 	case NVME_FEAT_HOST_MEM_BUF:
-		printf("\tMemory Return       (MR): %s\n", ((result & 0x00000002) >> 1) ? "True":"False");
 		printf("\tEnable Host Memory (EHM): %s\n", (result & 0x00000001) ? "Enabled":"Disabled");
 		nvme_show_host_mem_buffer((struct nvme_host_mem_buffer *)buf);
 		break;

@@ -180,7 +180,8 @@ enum {
 	NVME_REG_PMRSTS = 0x0e08,	/* Persistent Memory Region Status */
 	NVME_REG_PMREBS = 0x0e0c,	/* Persistent Memory Region Elasticity Buffer Size */
 	NVME_REG_PMRSWTP= 0x0e10,	/* Persistent Memory Region Sustained Write Throughput */
-	NVME_REG_PMRMSC = 0x0e14,	/* Persistent Memory Region Controller Memory Space Control */
+	NVME_REG_PMRMSCL= 0x0e14,	/* Persistent Memory Region Controller Memory Space Control Lower */
+	NVME_REG_PMRMSCU= 0x0e18,	/* Persistent Memory Region Controller Memory Space Control Upper*/
 	NVME_REG_DBS	= 0x1000,	/* SQ 0 Tail Doorbell */
 };
 
@@ -336,7 +337,7 @@ struct nvme_id_ctrl {
 	__u8			icsvscc;
 	__u8			nwpc;
 	__le16			acwu;
-	__le16			ocfs;
+	__u8			rsvd534[2];
 	__le32			sgls;
 	__le32			mnan;
 	__u8			rsvd544[224];
@@ -345,9 +346,10 @@ struct nvme_id_ctrl {
 	__le32			ioccsz;
 	__le32			iorcsz;
 	__le16			icdoff;
-	__u8			ctrattr;
+	__u8			fcatt;
 	__u8			msdbd;
-	__u8			rsvd1804[244];
+	__le16			ofcs;
+	__u8			rsvd1806[242];
 	struct nvme_id_power_state	psd[32];
 	__u8			vs[1024];
 };

@@ -1321,7 +1321,7 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		case WDC_NVME_ZN355_DEV_ID_1:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE | WDC_DRIVE_CAP_C0_LOG_PAGE |
 			        WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 |
-			        WDC_DRIVE_CAP_INFO;
+			        WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_CLOUD_SSD_VERSION;
 			break;
 		default:
 			capabilities = 0;
