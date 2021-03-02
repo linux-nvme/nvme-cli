@@ -1433,7 +1433,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 
 	f = fopen(PATH_NVMF_DISC, "r");
 	if (f == NULL) {
-		fprintf(stderr, "No discover params given and no %s conf\n",
+		fprintf(stderr, "No discover params given and no %s\n",
 			PATH_NVMF_DISC);
 		return -EINVAL;
 	}
