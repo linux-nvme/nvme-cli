@@ -974,6 +974,16 @@ static int build_options(char *argstr, int max_len, bool discover)
 	return 0;
 }
 
+static void set_discovery_kato(struct config *cfg)
+{
+	/* Set kato to NVMF_DEF_DISC_TMO for persistent controllers */
+	if (cfg->persistent && !cfg->keep_alive_tmo)
+		cfg->keep_alive_tmo = NVMF_DEF_DISC_TMO;
+	/* Set kato to zero for non-persistent controllers */
+	else if (!cfg->persistent && (cfg->keep_alive_tmo > 0))
+		cfg->keep_alive_tmo = 0;
+}
+
 static void discovery_trsvcid(struct config *cfg)
 {
 	if (!strcmp(cfg->transport, "tcp")) {
@@ -1469,8 +1479,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 		err = flags = validate_output_format(cfg.output_format);
 		if (err < 0)
 			goto free_and_continue;
-		if (cfg.persistent && !cfg.keep_alive_tmo)
-			cfg.keep_alive_tmo = NVMF_DEF_DISC_TMO;
+		set_discovery_kato(&cfg);
 
 		if (traddr_is_hostname(&cfg)) {
 			ret = hostname2traddr(&cfg);
@@ -1549,8 +1558,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	if (!cfg.transport && !cfg.traddr) {
 		ret = discover_from_conf_file(desc, argstr, opts, connect);
 	} else {
-		if (cfg.persistent && !cfg.keep_alive_tmo)
-			cfg.keep_alive_tmo = NVMF_DEF_DISC_TMO;
+		set_discovery_kato(&cfg);
 
 		if (traddr_is_hostname(&cfg)) {
 			ret = hostname2traddr(&cfg);
