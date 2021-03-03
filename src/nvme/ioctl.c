@@ -230,7 +230,7 @@ enum nvme_cmd_dword_fields {
 	NVME_LOG_CDW10_LID_MASK					= 0xff,
 	NVME_LOG_CDW10_LSP_MASK					= 0xf,
 	NVME_LOG_CDW10_RAE_MASK					= 0x1,
-	NVME_LOG_CDW10_NUMDL_MASK				= 0xff,
+	NVME_LOG_CDW10_NUMDL_MASK				= 0xffff,
 	NVME_LOG_CDW11_NUMDU_MASK				= 0xff,
 	NVME_LOG_CDW11_LSI_MASK					= 0xff,
 	NVME_LOG_CDW14_UUID_MASK				= 0x7f,
