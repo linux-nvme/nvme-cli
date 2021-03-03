@@ -1815,8 +1815,9 @@ void nvme_show_subsystem_list(struct nvme_topology *t,
 		nvme_show_subsystem(&t->subsystems[i]);
 }
 
-static void nvme_show_registers_cap(struct nvme_bar_cap *cap)
+static void nvme_show_registers_cap(uint64_t bar_cap)
 {
+	struct nvme_bar_cap *cap = (struct nvme_bar_cap *)&bar_cap;
 	printf("\tController Memory Buffer Supported (CMBS): The Controller Memory Buffer is %s\n",
 		((cap->rsvd_cmbs_pmrs & 0x02) >> 1) ? "Supported" :
 			"Not Supported");
@@ -2187,13 +2188,6 @@ static void nvme_show_registers_pmrmscu(uint32_t pmrmscu)
 		pmrmscu);
 }
 
-static inline uint32_t mmio_read32(void *addr)
-{
-	__le32 *p = addr;
-
-	return le32_to_cpu(*p);
-}
-
 /* Access 64-bit registers as 2 32-bit; Some devices fail 64-bit MMIO. */
 static inline __u64 mmio_read64(void *addr)
 {
@@ -2206,64 +2200,35 @@ static inline __u64 mmio_read64(void *addr)
 	return ((__u64) high << 32) | low;
 }
 
-static void json_ctrl_registers(void *bar)
+static void json_ctrl_registers(struct nvme_bar_reg *bar_reg)
 {
-	uint64_t cap, asq, acq, bpmbl, cmbmsc;
-	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc,
-		bpinfo, bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp,
-		pmrmscl, pmrmscu;
 	struct json_object *root;
 
-	cap = mmio_read64(bar + NVME_REG_CAP);
-	vs = mmio_read32(bar + NVME_REG_VS);
-	intms = mmio_read32(bar + NVME_REG_INTMS);
-	intmc = mmio_read32(bar + NVME_REG_INTMC);
-	cc = mmio_read32(bar + NVME_REG_CC);
-	csts = mmio_read32(bar + NVME_REG_CSTS);
-	nssr = mmio_read32(bar + NVME_REG_NSSR);
-	aqa = mmio_read32(bar + NVME_REG_AQA);
-	asq = mmio_read64(bar + NVME_REG_ASQ);
-	acq = mmio_read64(bar + NVME_REG_ACQ);
-	cmbloc = mmio_read32(bar + NVME_REG_CMBLOC);
-	cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
-	bpinfo = mmio_read32(bar + NVME_REG_BPINFO);
-	bprsel = mmio_read32(bar + NVME_REG_BPRSEL);
-	bpmbl = mmio_read64(bar + NVME_REG_BPMBL);
-	cmbmsc = mmio_read64(bar + NVME_REG_CMBMSC);
-	cmbsts = mmio_read32(bar + NVME_REG_CMBSTS);
-	pmrcap = mmio_read32(bar + NVME_REG_PMRCAP);
-	pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
-	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
-	pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
-	pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
-	pmrmscl = mmio_read32(bar + NVME_REG_PMRMSCL);
-	pmrmscu = mmio_read32(bar + NVME_REG_PMRMSCU);
-
 	root = json_create_object();
-	json_object_add_value_uint(root, "cap", cap);
-	json_object_add_value_int(root, "vs", vs);
-	json_object_add_value_int(root, "intms", intms);
-	json_object_add_value_int(root, "intmc", intmc);
-	json_object_add_value_int(root, "cc", cc);
-	json_object_add_value_int(root, "csts", csts);
-	json_object_add_value_int(root, "nssr", nssr);
-	json_object_add_value_int(root, "aqa", aqa);
-	json_object_add_value_uint(root, "asq", asq);
-	json_object_add_value_uint(root, "acq", acq);
-	json_object_add_value_int(root, "cmbloc", cmbloc);
-	json_object_add_value_int(root, "cmbsz", cmbsz);
-	json_object_add_value_int(root, "bpinfo", bpinfo);
-	json_object_add_value_int(root, "bprsel", bprsel);
-	json_object_add_value_uint(root, "bpmbl", bpmbl);
-	json_object_add_value_uint(root, "cmbmsc", cmbmsc);
-	json_object_add_value_int(root, "cmbsts", cmbsts);
-	json_object_add_value_int(root, "pmrcap", pmrcap);
-	json_object_add_value_int(root, "pmrctl", pmrctl);
-	json_object_add_value_int(root, "pmrsts", pmrsts);
-	json_object_add_value_int(root, "pmrebs", pmrebs);
-	json_object_add_value_int(root, "pmrswtp", pmrswtp);
-	json_object_add_value_uint(root, "pmrmscl", pmrmscl);
-	json_object_add_value_uint(root, "pmrmscu", pmrmscu);
+	json_object_add_value_uint(root, "cap", mmio_read64(&bar_reg->cap));
+	json_object_add_value_int(root, "vs", le32_to_cpu(bar_reg->vs));
+	json_object_add_value_int(root, "intms", le32_to_cpu(bar_reg->intms));
+	json_object_add_value_int(root, "intmc", le32_to_cpu(bar_reg->intmc));
+	json_object_add_value_int(root, "cc", le32_to_cpu(bar_reg->cc));
+	json_object_add_value_int(root, "csts", le32_to_cpu(bar_reg->csts));
+	json_object_add_value_int(root, "nssrc", le32_to_cpu(bar_reg->nssrc));
+	json_object_add_value_int(root, "aqa", le32_to_cpu(bar_reg->aqa));
+	json_object_add_value_uint(root, "asq", mmio_read64(&bar_reg->asq));
+	json_object_add_value_uint(root, "acq", mmio_read64(&bar_reg->acq));
+	json_object_add_value_int(root, "cmbloc", le32_to_cpu(bar_reg->cmbloc));
+	json_object_add_value_int(root, "cmbsz", le32_to_cpu(bar_reg->cmbsz));
+	json_object_add_value_int(root, "bpinfo", le32_to_cpu(bar_reg->bpinfo));
+	json_object_add_value_int(root, "bprsel", le32_to_cpu(bar_reg->bprsel));
+	json_object_add_value_uint(root, "bpmbl", mmio_read64(&bar_reg->bpmbl));
+	json_object_add_value_uint(root, "cmbmsc", mmio_read64(&bar_reg->cmbmsc));
+	json_object_add_value_int(root, "cmbsts", le32_to_cpu(bar_reg->cmbsts));
+	json_object_add_value_int(root, "pmrcap", le32_to_cpu(bar_reg->pmrcap));
+	json_object_add_value_int(root, "pmrctl", le32_to_cpu(bar_reg->pmrctl));
+	json_object_add_value_int(root, "pmrsts", le32_to_cpu(bar_reg->pmrsts));
+	json_object_add_value_int(root, "pmrebs", le32_to_cpu(bar_reg->pmrebs));
+	json_object_add_value_int(root, "pmrswtp", le32_to_cpu(bar_reg->pmrswtp));
+	json_object_add_value_uint(root, "pmrmscl", le32_to_cpu(bar_reg->pmrmscl));
+	json_object_add_value_uint(root, "pmrmscu", le32_to_cpu(bar_reg->pmrmscu));
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
@@ -2272,156 +2237,130 @@ static void json_ctrl_registers(void *bar)
 void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags)
 {
 	const unsigned int reg_size = 0x0e1c;  /* 0x0000 to 0x0e1b */
-	uint64_t cap, asq, acq, bpmbl, cmbmsc;
-	uint32_t vs, intms, intmc, cc, csts, nssr, aqa, cmbsz, cmbloc, bpinfo,
-		 bprsel, cmbsts, pmrcap, pmrctl, pmrsts, pmrebs, pmrswtp,
-		 pmrmscl, pmrmscu;
 	int human = flags & VERBOSE;
+	struct nvme_bar_reg *bar_reg = bar;
 
 	if (flags & BINARY)
-		return d_raw((unsigned char *)bar, reg_size);
+		return d_raw((unsigned char *)bar_reg, reg_size);
 	if (flags & JSON)
-		return json_ctrl_registers(bar);
-
-	cap = mmio_read64(bar + NVME_REG_CAP);
-	vs = mmio_read32(bar + NVME_REG_VS);
-	intms = mmio_read32(bar + NVME_REG_INTMS);
-	intmc = mmio_read32(bar + NVME_REG_INTMC);
-	cc = mmio_read32(bar + NVME_REG_CC);
-	csts = mmio_read32(bar + NVME_REG_CSTS);
-	nssr = mmio_read32(bar + NVME_REG_NSSR);
-	aqa = mmio_read32(bar + NVME_REG_AQA);
-	asq = mmio_read64(bar + NVME_REG_ASQ);
-	acq = mmio_read64(bar + NVME_REG_ACQ);
-	cmbloc = mmio_read32(bar + NVME_REG_CMBLOC);
-	cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
-	bpinfo = mmio_read32(bar + NVME_REG_BPINFO);
-	bprsel = mmio_read32(bar + NVME_REG_BPRSEL);
-	bpmbl = mmio_read64(bar + NVME_REG_BPMBL);
-	cmbmsc = mmio_read64(bar + NVME_REG_CMBMSC);
-	cmbsts = mmio_read32(bar + NVME_REG_CMBSTS);
-	pmrcap = mmio_read32(bar + NVME_REG_PMRCAP);
-	pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
-	pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
-	pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
-	pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
-	pmrmscl = mmio_read32(bar + NVME_REG_PMRMSCL);
-	pmrmscu = mmio_read32(bar + NVME_REG_PMRMSCU);
+		return json_ctrl_registers(bar_reg);
 
 	if (human) {
-		if (cap != 0xffffffff) {
-			printf("cap     : %"PRIx64"\n", cap);
-			nvme_show_registers_cap((struct nvme_bar_cap *)&cap);
+		if (mmio_read64(&bar_reg->cap) != 0xffffffff) {
+			printf("cap     : %#"PRIx64"\n", (uint64_t)mmio_read64(&bar_reg->cap));
+			nvme_show_registers_cap(mmio_read64(&bar_reg->cap));
 		}
-		if (vs != 0xffffffff) {
-			printf("version : %x\n", vs);
-			nvme_show_registers_version(vs);
+		if (le32_to_cpu(bar_reg->vs) != 0xffffffff) {
+			printf("version : %#x\n", le32_to_cpu(bar_reg->vs));
+			nvme_show_registers_version(le32_to_cpu(bar_reg->vs));
 		}
-		if (cc != 0xffffffff) {
-			printf("cc      : %x\n", cc);
-			nvme_show_registers_cc(cc);
+		if (le32_to_cpu(bar_reg->cc) != 0xffffffff) {
+			printf("cc      : %#x\n", le32_to_cpu(bar_reg->cc));
+			nvme_show_registers_cc(le32_to_cpu(bar_reg->cc));
 		}
-		if (csts != 0xffffffff) {
-			printf("csts    : %x\n", csts);
-			nvme_show_registers_csts(csts);
+		if (le32_to_cpu(bar_reg->csts) != 0xffffffff) {
+			printf("csts    : %#x\n", le32_to_cpu(bar_reg->csts));
+			nvme_show_registers_csts(le32_to_cpu(bar_reg->csts));
 		}
-		if (nssr != 0xffffffff) {
-			printf("nssr    : %x\n", nssr);
+		if (le32_to_cpu(bar_reg->nssrc) != 0xffffffff) {
+			printf("nssrc   : %#x\n", le32_to_cpu(bar_reg->nssrc));
 			printf("\tNVM Subsystem Reset Control (NSSRC): %u\n\n",
-				nssr);
+				le32_to_cpu(bar_reg->nssrc));
 		}
 		if (!fabrics) {
-			printf("intms   : %x\n", intms);
-			printf("\tInterrupt Vector Mask Set (IVMS): %x\n\n",
-					intms);
+			printf("intms   : %#x\n", le32_to_cpu(bar_reg->intms));
+			printf("\tInterrupt Vector Mask Set (IVMS): %#x\n\n",
+					le32_to_cpu(bar_reg->intms));
 
-			printf("intmc   : %x\n", intmc);
-			printf("\tInterrupt Vector Mask Clear (IVMC): %x\n\n",
-					intmc);
-			printf("aqa     : %x\n", aqa);
-			nvme_show_registers_aqa(aqa);
+			printf("intmc   : %#x\n", le32_to_cpu(bar_reg->intmc));
+			printf("\tInterrupt Vector Mask Clear (IVMC): %#x\n\n",
+					le32_to_cpu(bar_reg->intmc));
+			printf("aqa     : %#x\n", le32_to_cpu(bar_reg->aqa));
+			nvme_show_registers_aqa(le32_to_cpu(bar_reg->aqa));
 
-			printf("asq     : %"PRIx64"\n", asq);
-			printf("\tAdmin Submission Queue Base (ASQB): %"PRIx64"\n\n",
-					asq);
+			printf("asq     : %#"PRIx64"\n", (uint64_t)mmio_read64(&bar_reg->asq));
+			printf("\tAdmin Submission Queue Base (ASQB): %#"PRIx64"\n\n",
+					(uint64_t)mmio_read64(&bar_reg->asq));
 
-			printf("acq     : %"PRIx64"\n", acq);
-			printf("\tAdmin Completion Queue Base (ACQB): %"PRIx64"\n\n",
-					acq);
+			printf("acq     : %#"PRIx64"\n", (uint64_t)mmio_read64(&bar_reg->acq));
+			printf("\tAdmin Completion Queue Base (ACQB): %#"PRIx64"\n\n",
+					(uint64_t)mmio_read64(&bar_reg->acq));
 
-			printf("cmbloc  : %x\n", cmbloc);
-			nvme_show_registers_cmbloc(cmbloc, cmbsz);
+			printf("cmbloc  : %#x\n", le32_to_cpu(bar_reg->cmbloc));
+			nvme_show_registers_cmbloc(le32_to_cpu(bar_reg->cmbloc),
+				le32_to_cpu(bar_reg->cmbsz));
 
-			printf("cmbsz   : %x\n", cmbsz);
-			nvme_show_registers_cmbsz(cmbsz);
+			printf("cmbsz   : %#x\n", le32_to_cpu(bar_reg->cmbsz));
+			nvme_show_registers_cmbsz(le32_to_cpu(bar_reg->cmbsz));
 
-			printf("bpinfo  : %x\n", bpinfo);
-			nvme_show_registers_bpinfo(bpinfo);
+			printf("bpinfo  : %#x\n", le32_to_cpu(bar_reg->bpinfo));
+			nvme_show_registers_bpinfo(le32_to_cpu(bar_reg->bpinfo));
 
-			printf("bprsel  : %x\n", bprsel);
-			nvme_show_registers_bprsel(bprsel);
+			printf("bprsel  : %#x\n", le32_to_cpu(bar_reg->bprsel));
+			nvme_show_registers_bprsel(le32_to_cpu(bar_reg->bprsel));
 
-			printf("bpmbl   : %"PRIx64"\n", bpmbl);
-			nvme_show_registers_bpmbl(bpmbl);
+			printf("bpmbl   : %#"PRIx64"\n", (uint64_t)mmio_read64(&bar_reg->bpmbl));
+			nvme_show_registers_bpmbl((uint64_t)mmio_read64(&bar_reg->bpmbl));
 
-			printf("cmbmsc	: %"PRIx64"\n", cmbmsc);
-			nvme_show_registers_cmbmsc(cmbmsc);
+			printf("cmbmsc	: %#"PRIx64"\n", (uint64_t)mmio_read64(&bar_reg->cmbmsc));
+			nvme_show_registers_cmbmsc((uint64_t)mmio_read64(&bar_reg->cmbmsc));
 
-			printf("cmbsts	: %x\n", cmbsts);
-			nvme_show_registers_cmbsts(cmbsts);
+			printf("cmbsts	: %#x\n", le32_to_cpu(bar_reg->cmbsts));
+			nvme_show_registers_cmbsts(le32_to_cpu(bar_reg->cmbsts));
 
-			printf("pmrcap  : %x\n", pmrcap);
-			nvme_show_registers_pmrcap(pmrcap);
+			printf("pmrcap  : %#x\n", le32_to_cpu(bar_reg->pmrcap));
+			nvme_show_registers_pmrcap(le32_to_cpu(bar_reg->pmrcap));
 
-			printf("pmrctl  : %x\n", pmrctl);
-			nvme_show_registers_pmrctl(pmrctl);
+			printf("pmrctl  : %#x\n", le32_to_cpu(bar_reg->pmrctl));
+			nvme_show_registers_pmrctl(le32_to_cpu(bar_reg->pmrctl));
 
-			printf("pmrsts  : %x\n", pmrsts);
-			nvme_show_registers_pmrsts(pmrsts, pmrctl);
+			printf("pmrsts  : %#x\n", le32_to_cpu(bar_reg->pmrsts));
+			nvme_show_registers_pmrsts(le32_to_cpu(bar_reg->pmrsts),
+				le32_to_cpu(bar_reg->pmrctl));
 
-			printf("pmrebs  : %x\n", pmrebs);
-			nvme_show_registers_pmrebs(pmrebs);
+			printf("pmrebs  : %#x\n", le32_to_cpu(bar_reg->pmrebs));
+			nvme_show_registers_pmrebs(le32_to_cpu(bar_reg->pmrebs));
 
-			printf("pmrswtp : %x\n", pmrswtp);
-			nvme_show_registers_pmrswtp(pmrswtp);
+			printf("pmrswtp : %#x\n", le32_to_cpu(bar_reg->pmrswtp));
+			nvme_show_registers_pmrswtp(le32_to_cpu(bar_reg->pmrswtp));
 
-			printf("pmrmscl	: %#x\n", pmrmscl);
-			nvme_show_registers_pmrmscl(pmrmscl);
+			printf("pmrmscl	: %#x\n", le32_to_cpu(bar_reg->pmrmscl));
+			nvme_show_registers_pmrmscl(le32_to_cpu(bar_reg->pmrmscl));
 
-			printf("pmrmscu	: %#x\n", pmrmscu);
-			nvme_show_registers_pmrmscu(pmrmscu);
+			printf("pmrmscu	: %#x\n", le32_to_cpu(bar_reg->pmrmscu));
+			nvme_show_registers_pmrmscu(le32_to_cpu(bar_reg->pmrmscu));
 		}
 	} else {
-		if (cap != 0xffffffff)
-			printf("cap     : %"PRIx64"\n", cap);
-		if (vs != 0xffffffff)
-			printf("version : %x\n", vs);
-		if (cc != 0xffffffff)
-			printf("cc      : %x\n", cc);
-		if (csts != 0xffffffff)
-			printf("csts    : %x\n", csts);
-		if (nssr != 0xffffffff)
-			printf("nssr    : %x\n", nssr);
+		if (mmio_read64(&bar_reg->cap) != 0xffffffff)
+			printf("cap     : %#"PRIx64"\n", (uint64_t)mmio_read64(&bar_reg->cap));
+		if (le32_to_cpu(bar_reg->vs) != 0xffffffff)
+			printf("version : %#x\n", le32_to_cpu(bar_reg->vs));
+		if (le32_to_cpu(bar_reg->cc) != 0xffffffff)
+			printf("cc      : %#x\n", le32_to_cpu(bar_reg->cc));
+		if (le32_to_cpu(bar_reg->csts) != 0xffffffff)
+			printf("csts    : %#x\n", le32_to_cpu(bar_reg->csts));
+		if (le32_to_cpu(bar_reg->nssrc) != 0xffffffff)
+			printf("nssrc    : %#x\n", le32_to_cpu(bar_reg->nssrc));
 		if (!fabrics) {
-			printf("intms   : %x\n", intms);
-			printf("intmc   : %x\n", intmc);
-			printf("aqa     : %x\n", aqa);
-			printf("asq     : %"PRIx64"\n", asq);
-			printf("acq     : %"PRIx64"\n", acq);
-			printf("cmbloc  : %x\n", cmbloc);
-			printf("cmbsz   : %x\n", cmbsz);
-			printf("bpinfo  : %x\n", bpinfo);
-			printf("bprsel  : %x\n", bprsel);
-			printf("bpmbl   : %"PRIx64"\n", bpmbl);
-			printf("cmbmsc	: %"PRIx64"\n", cmbmsc);
-			printf("cmbsts	: %x\n", cmbsts);
-			printf("pmrcap  : %x\n", pmrcap);
-			printf("pmrctl  : %x\n", pmrctl);
-			printf("pmrsts  : %x\n", pmrsts);
-			printf("pmrebs  : %x\n", pmrebs);
-			printf("pmrswtp : %x\n", pmrswtp);
-			printf("pmrmscl	: %#x\n", pmrmscl);
-			printf("pmrmscu	: %#x\n", pmrmscu);
+			printf("intms   : %#x\n", le32_to_cpu(bar_reg->intms));
+			printf("intmc   : %#x\n", le32_to_cpu(bar_reg->intmc));
+			printf("aqa     : %#x\n", le32_to_cpu(bar_reg->aqa));
+			printf("asq     : %#"PRIx64"\n", (uint64_t)mmio_read64(&bar_reg->asq));
+			printf("acq     : %#"PRIx64"\n", (uint64_t)mmio_read64(&bar_reg->acq));
+			printf("cmbloc  : %#x\n", le32_to_cpu(bar_reg->cmbloc));
+			printf("cmbsz   : %#x\n", le32_to_cpu(bar_reg->cmbsz));
+			printf("bpinfo  : %#x\n", le32_to_cpu(bar_reg->bpinfo));
+			printf("bprsel  : %#x\n", le32_to_cpu(bar_reg->bprsel));
+			printf("bpmbl   : %#"PRIx64"\n", (uint64_t)mmio_read64(&bar_reg->bpmbl));
+			printf("cmbmsc	: %#"PRIx64"\n", (uint64_t) mmio_read64(&bar_reg->cmbmsc));
+			printf("cmbsts	: %#x\n", le32_to_cpu(bar_reg->cmbsts));
+			printf("pmrcap  : %#x\n", le32_to_cpu(bar_reg->pmrcap));
+			printf("pmrctl  : %#x\n", le32_to_cpu(bar_reg->pmrctl));
+			printf("pmrsts  : %#x\n", le32_to_cpu(bar_reg->pmrsts));
+			printf("pmrebs  : %#x\n", le32_to_cpu(bar_reg->pmrebs));
+			printf("pmrswtp : %#x\n", le32_to_cpu(bar_reg->pmrswtp));
+			printf("pmrmscl	: %#x\n", le32_to_cpu(bar_reg->pmrmscl));
+			printf("pmrmscu	: %#x\n", le32_to_cpu(bar_reg->pmrmscu));
 		}
 	}
 }
@@ -2448,7 +2387,7 @@ void nvme_show_single_property(int offset, uint64_t value64, int human)
 	switch (offset) {
 	case NVME_REG_CAP:
 		printf("cap : %"PRIx64"\n", value64);
-		nvme_show_registers_cap((struct nvme_bar_cap *)&value64);
+		nvme_show_registers_cap((value64));
 		break;
 
 	case NVME_REG_VS:

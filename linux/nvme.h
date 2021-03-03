@@ -157,6 +157,36 @@ enum {
  */
 #define NVME_AQ_MQ_TAG_DEPTH	(NVME_AQ_BLK_MQ_DEPTH - 1)
 
+struct nvme_bar_reg {
+    __le64    cap;
+    __le32    vs;
+    __le32    intms;
+    __le32    intmc;
+    __le32    cc;
+    __u8      rsvd24[4];
+    __le32    csts;
+    __le32    nssrc;
+    __le32    aqa;
+    __le64    asq;
+    __le64    acq;
+    __le32    cmbloc;
+    __le32    cmbsz;
+    __le32    bpinfo;
+    __le32    bprsel;
+    __le64    bpmbl;
+    __le64    cmbmsc;
+    __le32    cmbsts;
+    __u8      rsvd92[3492];
+    __le32    pmrcap;
+    __le32    pmrctl;
+    __le32    pmrsts;
+    __le32    pmrebs;
+    __le32    pmrswtp;
+    __le32    pmrmscl;
+    __le32    pmrmscu;
+    __u8      css[484];
+} __attribute__((packed));
+
 enum {
 	NVME_REG_CAP	= 0x0000,	/* Controller Capabilities */
 	NVME_REG_VS	= 0x0008,	/* Version */
