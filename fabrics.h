@@ -52,11 +52,16 @@ extern const char *const trtypes[];
 #define FILE_NVMF_DISC		"discovery.conf"
 #define PATH_NVMF_DISC		PATH_NVMF_CFG_DIR "/" FILE_NVMF_DISC
 
+struct monitor_callbacks;
+
 int build_options(char *argstr, int max_len, bool discover);
-int do_discover(char *argstr, bool connect, enum nvme_print_flags flags);
+int do_discover(char *argstr, bool connect, enum nvme_print_flags flags,
+		const struct monitor_callbacks *);
 int ctrl_instance(const char *device);
 char *parse_conn_arg(const char *conargs, const char delim, const char *field);
 int remove_ctrl(int instance);
-int discover_from_conf_file(const char *desc, char *argstr, bool connect);
+int discover_from_conf_file(const char *desc, char *argstr, bool connect,
+			    const struct monitor_callbacks *);
+
 
 #endif
