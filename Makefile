@@ -8,7 +8,7 @@ INSTALL=install
 
 default: all
 
-all:
+all: $(NAME).pc
 	@$(MAKE) -C src
 	@$(MAKE) -C test
 	@$(MAKE) -C examples
