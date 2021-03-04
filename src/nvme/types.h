@@ -778,8 +778,8 @@ struct nvme_id_psd {
  * 	       from Runtime D3
  * @rtd3e:     RTD3 Exit Latency, the typical latency in microseconds to enter
  * 	       Runtime D3.
- * @oaes:      Optional Async Events Supported, see @enum nvme_id_ctrl_oaes .
- * @ctratt:    Controller Attributes, see @enum nvme_id_ctrl_ctratt
+ * @oaes:      Optional Async Events Supported, see @enum nvme_id_ctrl_oaes.
+ * @ctratt:    Controller Attributes, see @enum nvme_id_ctrl_ctratt.
  * @rrls:      Read Recovery Levels. If a bit is set, then the corresponding
  * 	       Read Recovery Level is supported. If a bit is cleared, then the
  * 	       corresponding Read Recovery Level is not supported.
@@ -898,7 +898,7 @@ struct nvme_id_psd {
  * @nn:	       Number of Namespaces indicates the maximum value of a valid
  *	       nsid for the NVM subsystem. If the MNAN (&struct nvme_id_ctrl.mnan
  *	       field is cleared to 0h, then this field also indicates the
- *	       maximum number of namespaces supported by the NVM.  subsystem.
+ *	       maximum number of namespaces supported by the NVM subsystem.
  * @oncs:      Optional NVM Command Support, see &enum nvme_id_ctrl_oncs.
  * @fuses:     Fused Operation Support, see &enum nvme_id_ctrl_fuses.
  * @fna:       Format NVM Attributes, see &enum nvme_id_ctrl_fna.
@@ -1037,7 +1037,8 @@ struct nvme_id_ctrl {
 };
 
 /**
- * enum nvme_id_ctrl_cmic -
+ * enum nvme_id_ctrl_cmic - Controller Multipath IO and Namespace Sharing
+ *			    Capabilities of the controller and NVM subsystem.
  * @NVME_CTRL_CMIC_MULTI_PORT:
  * @NVME_CTRL_CMIC_MULTI_CTRL:
  * @NVME_CTRL_CMIC_MULTI_SRIOV:
@@ -1584,7 +1585,7 @@ enum nvme_lbaf_rp {
  * @nsfeat:   Namespace Features, see &enum nvme_id_nsfeat.
  * @nlbaf:    Number of LBA Formats defines the number of supported LBA data
  * 	      size and metadata size combinations supported by the namespace
- * 	      and the highest possible index to &struct nvme_id_ns.labf.
+ * 	      and the highest possible index to &struct nvme_id_ns.lbaf.
  * @flbas:    Formatted LBA Size, see &enum nvme_id_ns_flbas.
  * @mc:       Metadata Capabilities, see &enum nvme_id_ns_mc.
  * @dpc:      End-to-end Data Protection Capabilities, see
@@ -1708,12 +1709,12 @@ struct nvme_id_ns {
  * 			   Controller data structure.
  * @NVME_NS_FEAT_DULBE:	   If set, indicates that the controller supports the
  * 			   Deallocated or Unwritten Logical Block error for
- * 			   this namespace.  @NVME_NS_FEAT_ID_REUSE: If set,
- * 			   indicates that the value in the NGUID field for this
- * 			   namespace, if non- zero, is never reused by the
- * 			   controller and that the value in the EUI64 field for
- * 			   this namespace, if non-zero, is never reused by the
- * 			   controller.
+ * 			   this namespace.
+ * @NVME_NS_FEAT_ID_REUSE: If set, indicates that the value in the NGUID field
+ * 			   for this namespace, if non- zero, is never reused by
+ * 			   the controller and that the value in the EUI64 field
+ * 			   for this namespace, if non-zero, is never reused by
+ * 			   the controller.
  * @NVME_NS_FEAT_IO_OPT:   If set, indicates that the fields NPWG, NPWA, NPDG,
  * 			   NPDA, and NOWS are defined for this namespace and
  * 			   should be used by the host for I/O optimization
@@ -2166,7 +2167,64 @@ struct nvme_id_iocs {
 };
 
 /**
- * struct nvme_error_log_page -
+ * struct nvme_error_log_page - Error Information Log Entry (Log Identifier 01h)
+ * @error_count:	 Error Count: a 64-bit incrementing error count,
+ * 			 indicating a unique identifier for this error. The error
+ * 			 count starts at %1h, is incremented for each unique error
+ * 			 log entry, and is retained across power off conditions.
+ * 			 A value of %0h indicates an invalid entry; this value
+ * 			 is used when there are lost entries or when there are
+ * 			 fewer errors than the maximum number of entries the
+ * 			 controller supports. If the value of this field is
+ * 			 %FFFFFFFFh, then the field shall be set to 1h when
+ * 			 incremented (i.e., rolls over to %1h). Prior to NVMe
+ * 			 1.4, processing of incrementing beyond %FFFFFFFFh is
+ * 			 unspecified.
+ * @sqid:		 Submission Queue ID: indicates the Submission Queue
+ * 			 Identifier of the command that the error information is
+ * 			 associated with. If the error is not specific to
+ * 			 a particular command, then this field shall be set to
+ * 			 %FFFFh.
+ * @cmdid:		 Command ID: indicates the Command Identifier of the
+ * 			 command that the error is associated with. If the error
+ * 			 is not specific to a particular command, then this field
+ * 			 shall be set to %FFFFh.
+ * @status_field:	 Bits 15-1: Status Field: indicates the Status Field for
+ * 			 the command that completed. If the error is not specific
+ * 			 to a particular command, then this field reports the most
+ * 			 applicable status value.
+ * 			 Bit 0: Phase Tag: may indicate the Phase Tag posted for
+ * 			 the command.
+ * @parm_error_location: Parameter Error Location: indicates the byte and bit of
+ * 			 the command parameter that the error is associated with,
+ * 			 if applicable. If the parameter spans multiple bytes or
+ * 			 bits, then the location indicates the first byte and bit
+ * 			 of the parameter.
+ * 			 Bits 10-8: Bit in command that contained the error.
+ * 			 Valid values are 0 to 7.
+ *			 Bits 7-0: Byte in command that contained the error.
+ * 			 Valid values are 0 to 63.
+ * @lba:		 LBA: This field indicates the first LBA that experienced
+ * 			 the error condition, if applicable.
+ * @nsid:		 Namespace: This field indicates the NSID of the namespace
+ * 			 that the error is associated with, if applicable.
+ * @vs:			 Vendor Specific Information Available: If there is
+ * 			 additional vendor specific error information available,
+ * 			 this field provides the log page identifier associated
+ * 			 with that page. A value of %0h indicates that no additional
+ * 			 information is available. Valid values are in the range
+ * 			 of %80h to %FFh.
+ * @trtype:		 Transport Type (TRTYPE): indicates the Transport Type of
+ * 			 the transport associated with the error. The values in
+ * 			 this field are the same as the TRTYPE values in the
+ * 			 Discovery Log Page Entry. If the error is not transport
+ * 			 related, this field shall be cleared to %0h. If the error
+ * 			 is transport related, this field shall be set to the type
+ * 			 of the transport - see &enum nvme_trtype.
+ * @cs:			 Command Specific Information: This field contains command
+ * 			 specific information. If used, the command definition
+ * 			 specifies the information returned.
+ * @trtype_spec_info:
  */
 struct nvme_error_log_page {
 	__le64	error_count;
@@ -2185,7 +2243,7 @@ struct nvme_error_log_page {
 };
 
 /**
- * enum -
+ * enum - nvme_err_pel
  * @NVME_ERR_PEL_BYTE_MASK:
  * @NVME_ERR_PEL_BIT_MASK:
  */
@@ -2195,30 +2253,154 @@ enum nvme_err_pel {
 };
 
 /**
- * struct nvme_smart_log -
- * @critical_warning:
- * @temperature:
- * @avail_spare:
- * @spare_thresh:
- * @percent_used:
- * @endu_grp_crit_warn_sumry:
- * @data_units_read:
- * @data_units_written:
- * @host_reads:
- * @host_writes:
- * @ctrl_busy_time:
- * @power_cycles:
- * @power_on_hours:
- * @unsafe_shutdowns:
- * @media_errors:
- * @num_err_log_entries:
- * @warning_temp_time:
- * @critical_comp_time:
- * @temp_sensor:
- * @thm_temp1_trans_count:
- * @thm_temp2_trans_count:
- * @thm_temp1_total_time:
- * @thm_temp2_total_time:
+ * struct nvme_smart_log - SMART / Health Information Log (Log Identifier 02h)
+ * @critical_warning: 	   This field indicates critical warnings for the state
+ * 			   of the controller. Critical warnings may result in an
+ * 			   asynchronous event notification to the host. Bits in
+ * 			   this field represent the current associated state and
+ * 			   are not persistent (see &enum nvme_smart_crit).
+ * @temperature:	   Composite Temperature: Contains a value corresponding
+ * 			   to a temperature in Kelvins that represents the current
+ * 			   composite temperature of the controller and namespace(s)
+ * 			   associated with that controller. The manner in which
+ * 			   this value is computed is implementation specific and
+ * 			   may not represent the actual temperature of any physical
+ * 			   point in the NVM subsystem. Warning and critical
+ * 			   overheating composite temperature threshold values are
+ * 			   reported by the WCTEMP and CCTEMP fields in the Identify
+ * 			   Controller data structure.
+ * @avail_spare:	   Available Spare: Contains a normalized percentage (0%
+ * 			   to 100%) of the remaining spare capacity available.
+ * @spare_thresh:	   Available Spare Threshold: When the Available Spare
+ * 			   falls below the threshold indicated in this field, an
+ * 			   asynchronous event completion may occur. The value is
+ * 			   indicated as a normalized percentage (0% to 100%).
+ * 			   The values 101 to 255 are reserved.
+ * @percent_used:	   Percentage Used: Contains a vendor specific estimate
+ * 			   of the percentage of NVM subsystem life used based on
+ * 			   the actual usage and the manufacturer's prediction of
+ * 			   NVM life. A value of 100 indicates that the estimated
+ * 			   endurance of the NVM in the NVM subsystem has been
+ * 			   consumed, but may not indicate an NVM subsystem failure.
+ * 			   The value is allowed to exceed 100. Percentages greater
+ * 			   than 254 shall be represented as 255. This value shall
+ * 			   be updated once per power-on hour (when the controller
+ * 			   is not in a sleep state).
+ * @endu_grp_crit_warn_sumry: Endurance Group Critical Warning Summary: This field
+ * 			   indicates critical warnings for the state of Endurance
+ * 			   Groups. Bits in this field represent the current associated
+ * 			   state and are not persistent (see &enum nvme_smart_egcw).
+ * @data_units_read:	   Data Units Read: Contains the number of 512 byte data
+ * 			   units the host has read from the controller; this value
+ * 			   does not include metadata. This value is reported in
+ * 			   thousands (i.e., a value of 1 corresponds to 1000
+ * 			   units of 512 bytes read) and is rounded up (e.g., one
+ * 			   indicates the that number of 512 byte data units read
+ * 			   is from 1 to 1000, three indicates that the number of
+ * 			   512 byte data units read is from 2001 to 3000). When
+ * 			   the LBA size is a value other than 512 bytes, the
+ * 			   controller shall convert the amount of data read to
+ * 			   512 byte units. For the NVM command set, logical blocks
+ * 			   read as part of Compare, Read, and Verify operations
+ * 			   shall be included in this value. A value of %0h in
+ * 			   this field indicates that the number of Data Units Read
+ * 			   is not reported.
+ * @data_units_written:    Data Units Written: Contains the number of 512 byte
+ * 			   data units the host has written to the controller;
+ * 			   this value does not include metadata. This value is
+ * 			   reported in thousands (i.e., a value of 1 corresponds
+ * 			   to 1000 units of 512 bytes written) and is rounded up
+ * 			   (e.g., one indicates that the number of 512 byte data
+ * 			   units written is from 1 to 1,000, three indicates that
+ * 			   the number of 512 byte data units written is from 2001
+ * 			   to 3000). When the LBA size is a value other than 512
+ * 			   bytes, the controller shall convert the amount of data
+ * 			   written to 512 byte units. For the NVM command set,
+ * 			   logical blocks written as part of Write operations shall
+ * 			   be included in this value. Write Uncorrectable commands
+ * 			   and Write Zeroes commands shall not impact this value.
+ * 			   A value of %0h in this field indicates that the number
+ * 			   of Data Units Written is not reported.
+ * @host_reads:		   Host Read Commands: Contains the number of read commands
+ * 			   completed by the controller. For the NVM command set,
+ * 			   this value is the sum of the number of Compare commands
+ * 			   and the number of Read commands.
+ * @host_writes:	   Host Write Commands: Contains the number of write
+ * 			   commands completed by the controller. For the NVM
+ * 			   command set, this is the number of Write commands.
+ * @ctrl_busy_time:	   Controller Busy Time: Contains the amount of time the
+ * 			   controller is busy with I/O commands. The controller
+ * 			   is busy when there is a command outstanding to an I/O
+ * 			   Queue (specifically, a command was issued via an I/O
+ * 			   Submission Queue Tail doorbell write and the corresponding
+ * 			   completion queue entry has not been posted yet to the
+ * 			   associated I/O Completion Queue). This value is
+ * 			   reported in minutes.
+ * @power_cycles:	   Power Cycles: Contains the number of power cycles.
+ * @power_on_hours:	   Power On Hours: Contains the number of power-on hours.
+ * 			   This may not include time that the controller was
+ * 			   powered and in a non-operational power state.
+ * @unsafe_shutdowns:	   Unsafe Shutdowns: Contains the number of unsafe
+ * 			   shutdowns. This count is incremented when a Shutdown
+ * 			   Notification (CC.SHN) is not received prior to loss of power.
+ * @media_errors:	   Media and Data Integrity Errors: Contains the number
+ * 			   of occurrences where the controller detected an
+ * 			   unrecovered data integrity error. Errors such as
+ * 			   uncorrectable ECC, CRC checksum failure, or LBA tag
+ * 			   mismatch are included in this field. Errors introduced
+ * 			   as a result of a Write Uncorrectable command may or
+ * 			   may not be included in this field.
+ * @num_err_log_entries:   Number of Error Information Log Entries: Contains the
+ * 			   number of Error Information log entries over the life
+ * 			   of the controller.
+ * @warning_temp_time:     Warning Composite Temperature Time: Contains the amount
+ * 			   of time in minutes that the controller is operational
+ * 			   and the Composite Temperature is greater than or equal
+ * 			   to the Warning Composite Temperature Threshold (WCTEMP)
+ * 			   field and less than the Critical Composite Temperature
+ * 			   Threshold (CCTEMP) field in the Identify Controller
+ * 			   data structure. If the value of the WCTEMP or CCTEMP
+ * 			   field is %0h, then this field is always cleared to %0h
+ * 			   regardless of the Composite Temperature value.
+ * @critical_comp_time:    Critical Composite Temperature Time: Contains the amount
+ * 			   of time in minutes that the controller is operational
+ * 			   and the Composite Temperature is greater than or equal
+ * 			   to the Critical Composite Temperature Threshold (CCTEMP)
+ * 			   field in the Identify Controller data structure. If
+ * 			   the value of the CCTEMP field is %0h, then this field
+ * 			   is always cleared to 0h regardless of the Composite
+ * 			   Temperature value.
+ * @temp_sensor:	   Temperature Sensor 1-8: Contains the current temperature
+ * 			   in degrees Kelvin reported by temperature sensors 1-8.
+ * 			   The physical point in the NVM subsystem whose temperature
+ * 			   is reported by the temperature sensor and the temperature
+ * 			   accuracy is implementation specific. An implementation
+ * 			   that does not implement the temperature sensor reports
+ * 			   a value of %0h.
+ * @thm_temp1_trans_count: Thermal Management Temperature 1 Transition Count:
+ * 			   Contains the number of times the controller transitioned
+ * 			   to lower power active power states or performed vendor
+ * 			   specific thermal management actions while minimizing
+ * 			   the impact on performance in order to attempt to reduce
+ * 			   the Composite Temperature because of the host controlled
+ * 			   thermal management feature (i.e., the Composite
+ * 			   Temperature rose above the Thermal Management
+ * 			   Temperature 1). This counter shall not wrap once the
+ * 			   value %FFFFFFFFh is reached. A value of %0h, indicates
+ * 			   that this transition has never occurred or this field
+ * 			   is not implemented.
+ * @thm_temp2_trans_count: Thermal Management Temperature 2 Transition Count
+ * @thm_temp1_total_time:  Total Time For Thermal Management Temperature 1:
+ * 			   Contains the number of seconds that the controller
+ * 			   had transitioned to lower power active power states or
+ * 			   performed vendor specific thermal management actions
+ * 			   while minimizing the impact on performance in order to
+ * 			   attempt to reduce the Composite Temperature because of
+ * 			   the host controlled thermal management feature. This
+ * 			   counter shall not wrap once the value %FFFFFFFFh is
+ * 			   reached. A value of %0h, indicates that this transition
+ * 			   has never occurred or this field is not implemented.
+ * @thm_temp2_total_time:  Total Time For Thermal Management Temperature 2
  */
 struct nvme_smart_log {
 	__u8			critical_warning;
@@ -2249,13 +2431,25 @@ struct nvme_smart_log {
 };
 
 /**
- * enum - nvme_smart_crit
- * @NVME_SMART_CRIT_SPARE:
- * @NVME_SMART_CRIT_TEMPERATURE:
- * @NVME_SMART_CRIT_DEGRADED:
- * @NVME_SMART_CRIT_MEDIA:
- * @NVME_SMART_CRIT_VOLATILE_MEMORY:
- * @NVME_SMART_CRIT_PMR_RO:
+ * enum - nvme_smart_crit: Critical Warning
+ * @NVME_SMART_CRIT_SPARE: If set, then the available spare capacity has fallen
+ * 			   below the threshold.
+ * @NVME_SMART_CRIT_TEMPERATURE: If set, then a temperature is either greater
+ * 			   than or equal to an over temperature threshold; or
+ * 			   less than or equal to an under temperature threshold.
+ * @NVME_SMART_CRIT_DEGRADED: If set, then the NVM subsystem reliability has
+ * 			   been degraded due to significant media related errors
+ * 			   or any internal error that degrades NVM subsystem
+ * 			   reliability.
+ * @NVME_SMART_CRIT_MEDIA: If set, then all of the media has been placed in read
+ * 			   only mode. The controller shall not set this bit if
+ * 			   the read-only condition on the media is a result of
+ * 			   a change in the write protection state of a namespace.
+ * @NVME_SMART_CRIT_VOLATILE_MEMORY: If set, then the volatile memory backup
+ * 			   device has failed. This field is only valid if the
+ * 			   controller has a volatile memory backup solution.
+ * @NVME_SMART_CRIT_PMR_RO: If set, then the Persistent Memory Region has become
+ * 			   read-only or unreliable.
  */
 enum nvme_smart_crit {
 	NVME_SMART_CRIT_SPARE		= 1 << 0,
@@ -2267,10 +2461,17 @@ enum nvme_smart_crit {
 };
 
 /**
- * enum - nvme_smart_egcw
- * @NVME_SMART_EGCW_SPARE:
- * @NVME_SMART_EGCW_DEGRADED:
- * @NVME_SMART_EGCW_RO:
+ * enum - nvme_smart_egcw: Endurance Group Critical Warning Summary
+ * @NVME_SMART_EGCW_SPARE:    If set, then the available spare capacity of one or
+ * 			      more Endurance Groups has fallen below the threshold.
+ * @NVME_SMART_EGCW_DEGRADED: If set, then the reliability of one or more
+ * 			      Endurance Groups has been degraded due to significant
+ * 			      media related errors or any internal error that
+ * 			      degrades NVM subsystem reliability.
+ * @NVME_SMART_EGCW_RO:       If set, then the namespaces in one or more Endurance
+ * 			      Groups have been placed in read only mode not as
+ * 			      a result of a change in the write protection state
+ * 			      of a namespace.
  */
 enum nvme_smart_egcw {
 	NVME_SMART_EGCW_SPARE		= 1 << 0,

@@ -365,7 +365,7 @@ int nvme_ns_rescan(int fd);
  * for many architectures that are incapable of allowing distinguishing a
  * namespace id > 0x80000000 from a negative error number.
  *
- * Return: 0 if @nsid was set succecssfully or -1 with errno set otherwise.
+ * Return: 0 if @nsid was set successfully or -1 with errno set otherwise.
  */
 int nvme_get_nsid(int fd, __u32 *nsid);
 
