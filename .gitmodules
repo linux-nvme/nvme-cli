@@ -1,0 +1,3 @@
+[submodule "libnvme"]
+	path = libnvme
+	url = https://github.com/linux-nvme/libnvme
