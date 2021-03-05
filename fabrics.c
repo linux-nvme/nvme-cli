@@ -1431,6 +1431,10 @@ int do_discover(char *argstr, bool connect, enum nvme_print_flags flags,
 		free(fabrics_cfg.device);
 		fabrics_cfg.device = NULL;
 	}
+
+	if (!fabrics_cfg.device && monitor && monitor->query_dev)
+		monitor->query_dev(argstr, &fabrics_cfg.device);
+
 	if (!fabrics_cfg.device)
 		fabrics_cfg.device = find_ctrl_with_connectargs(cargs);
 	free_connect_args(cargs);

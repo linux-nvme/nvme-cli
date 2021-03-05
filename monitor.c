@@ -236,6 +236,19 @@ static ssize_t monitor_child_message(char *buf, size_t size, size_t len)
  *      This exchange is initiated in notify_new_discovery(), which is passed
  *      as "notify" callback for do_discover().
  *    - parent responds with MON_MSG_ACK (or MON_MSG_ERR if an error occurs).
+ *
+ * "Query existing device" exchange:
+ *   - The child sends a MON_MSG_QDEV message to the parent after determining
+ *      transport connection parameters, but before attempting to create a
+ *      discovery controller.
+ *      Payload: the transport parameter string to be sent to /dev/nvme-fabrics.
+ *      This exchange is initiated in query_device(), which is passed as
+ *      "query_dev" callback for discover_from_conf_file().
+ *    - The parent responds:
+ *       * MON_MSG_SDEV ("send device") if an existing controller device was found
+ *         Payload: the instance number of the controller ("0" for /dev/nvme0").
+ *       * MON_MSG_ACK: if no existing controller device was found.
+ *       * MON_MSG_ERR: in case of an error.
  */
 
 static const char monitor_magic[] = "NVMM";
@@ -243,6 +256,8 @@ enum {
 	MON_MSG_ACK = 0,
 	MON_MSG_ERR,
 	MON_MSG_NEW,
+	MON_MSG_QDEV,
+	MON_MSG_SDEV,
 	__MAX_MON_MSG__,
 };
 
@@ -256,6 +271,8 @@ static const char *const monitor_opcode[] = {
 	[MON_MSG_ACK] = "ACK ",
 	[MON_MSG_ERR] = "ERR ",
 	[MON_MSG_NEW] = "NEW ",
+	[MON_MSG_QDEV] = "QDEV",
+	[MON_MSG_SDEV] = "SDEV",
 };
 
 static int monitor_msg_hdr(char *buf, size_t len, int opcode)
@@ -321,6 +338,11 @@ static int monitor_check_resp(const char *buf, size_t len, int req_opcode)
 		if (resp_opcode == MON_MSG_ACK && len == 0)
 			rc = 0;
 		break;
+	case MON_MSG_QDEV:
+		if ((resp_opcode == MON_MSG_ACK && len == 0) ||
+		    (resp_opcode == MON_MSG_SDEV && len > 0))
+			rc = 0;
+		break;
 	default:
 		break;
 	}
@@ -358,10 +380,54 @@ static void notify_new_discovery(const char *argstr, int instance)
 	monitor_check_resp(buf, rc, MON_MSG_NEW);
 }
 
+static void query_device(const char *argstr, char **device)
+{
+	char buf[MSG_SIZE];
+	size_t len = 0;
+	ssize_t rc;
+	int instance;
+	char dummy;
+	char *pbuf, *dev;
+
+	if ((rc = monitor_msg_hdr(buf, sizeof(buf), MON_MSG_QDEV)) < 0) {
+		msg(LOG_ERR, "failed to create msghdr: %s\n", strerror(-rc));
+		return;
+	}
+	len += rc;
+	if ((rc = safe_snprintf(buf + len, sizeof(buf) - len, "%s", argstr)) < 0) {
+		msg(LOG_ERR, "failed to create msg: %s\n", strerror(-rc));
+		return;
+	}
+	len += rc;
+	if ((rc = monitor_child_message(buf, sizeof(buf), len)) < 0)
+		return;
+
+	len = rc;
+	pbuf = buf;
+	if ((rc = monitor_check_resp(pbuf, len, MON_MSG_QDEV)) < 0)
+		return;
+
+	pbuf += rc;
+	len -= rc;
+	if (len == 0) {
+		msg(LOG_INFO, "monitor didn't report existing device\n");
+		return;
+	} else if (sscanf(pbuf, "%d%c", &instance, &dummy) != 1) {
+		msg(LOG_WARNING, "got bad device info: %s\n", pbuf);
+		return;
+	}
+
+	if (asprintf(&dev, "nvme%d", instance) < 0)
+		return;
+
+	msg(LOG_INFO, "monitor reported existing device %s\n", dev);
+	*device = dev;
+}
+
 static const struct monitor_callbacks discover_callbacks = {
 	.notify = notify_new_discovery,
+	.query_dev = query_device,
 };
-
 struct comm_event {
 	struct event e;
 	struct sockaddr_un addr;
@@ -399,6 +465,41 @@ static int handle_child_msg_new(char *buf, size_t size, ssize_t *len, ssize_t of
 	return MON_MSG_ACK;
 }
 
+static int handle_child_msg_qdev(char *buf, size_t size, ssize_t *len, ssize_t ofs)
+{
+	ssize_t rc = MON_MSG_ERR;
+	struct nvme_connection *co;
+	char *pbuf = buf;
+
+	if (*len <= ofs) {
+		msg(LOG_ERR, "short packet (len=%zd)\n", *len);
+		return MON_MSG_ERR;
+	}
+
+	pbuf += ofs;
+	rc = conndb_add_disc_ctrl(pbuf, &co);
+	if (rc != 0 && rc != -EEXIST) {
+		msg(LOG_WARNING, "invalid address: \"%s\"\n", buf);
+		return MON_MSG_ERR;
+	}
+
+	if (co->discovery_instance != -1) {
+		rc = monitor_msg_hdr(buf, size, MON_MSG_SDEV);
+		if (rc >= 0) {
+			buf += rc;
+			if ((rc = snprintf(buf, size - rc, "%d",
+					   co->discovery_instance)) >= 0) {
+				*len = ofs + rc;
+				return MON_MSG_SDEV;
+			}
+		}
+		msg(LOG_ERR, "failed to create SDEV message: %s\n",
+		    strerror(-rc));
+	}
+
+	return MON_MSG_ACK;
+}
+
 static int handle_child_msg(struct comm_event *comm, ssize_t len)
 {
 	ssize_t rc, ofs;
@@ -418,8 +519,14 @@ static int handle_child_msg(struct comm_event *comm, ssize_t len)
 						  sizeof(comm->message),
 						  &len, ofs);
 			break;
+		case MON_MSG_QDEV:
+			rc = handle_child_msg_qdev(comm->message,
+						   sizeof(comm->message),
+						   &len, ofs);
+			break;
 		case MON_MSG_ACK:
 		case MON_MSG_ERR:
+		case MON_MSG_SDEV:
 			msg(LOG_ERR, "unexpected message: %s\n", monitor_opcode[opcode]);
 			rc = MON_MSG_ERR;
 			break;
