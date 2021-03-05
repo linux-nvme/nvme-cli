@@ -4574,7 +4574,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	if (!err)
 		nvme_show_resv_report(status, size, cfg.cdw11, flags);
 	else if (err > 0)
-		fprintf(stderr, "NVME IO command error:%04x\n", err);
+		nvme_show_status(err);
 	else
 		perror("reservation report");
 	free(status);
@@ -5131,7 +5131,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 	if (!err)
 		nvme_show_lba_status(buf, buf_len, flags);
 	else if (err > 0)
-		fprintf(stderr, "NVME command error:%04x\n", err);
+		nvme_show_status(err);
 	else
 		perror("get lba status");
 	free(buf);
