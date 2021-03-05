@@ -1506,6 +1506,9 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 		if (err)
 			goto free_and_continue;
 
+		if (!cfg.transport || !cfg.traddr)
+			goto free_and_continue;
+
 		err = flags = validate_output_format(cfg.output_format);
 		if (err < 0)
 			goto free_and_continue;
@@ -1533,6 +1536,8 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 free_and_continue:
 		free(all_args);
 		free(argv);
+		cfg.transport = cfg.traddr = cfg.trsvcid =
+			cfg.host_traddr = NULL;
 	}
 
 out:
