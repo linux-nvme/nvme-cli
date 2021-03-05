@@ -1376,7 +1376,11 @@ static int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 	if (!cargs)
 		return -ENOMEM;
 
-	if (!cfg.device || !ctrl_matches_connectargs(cfg.device, cargs))
+	if (cfg.device && !ctrl_matches_connectargs(cfg.device, cargs)) {
+		free(cfg.device);
+		cfg.device = NULL;
+	}
+	if (!cfg.device)
 		cfg.device = find_ctrl_with_connectargs(cargs);
 	free_connect_args(cargs);
 
@@ -1560,8 +1564,13 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	ret = flags = validate_output_format(cfg.output_format);
 	if (ret < 0)
 		goto out;
-	if (cfg.device && !strcmp(cfg.device, "none"))
-		cfg.device = NULL;
+	if (cfg.device && strcmp(cfg.device, "none")) {
+		cfg.device = strdup(cfg.device);
+		if (!cfg.device) {
+			ret = -ENOMEM;
+			goto out;
+		}
+	}
 
 	cfg.nqn = NVME_DISC_SUBSYS_NAME;
 
