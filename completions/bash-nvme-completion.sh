@@ -12,7 +12,7 @@ _cmds="list id-ctrl id-ns list-ns id-iocs nvm-id-ctrl create-ns delete-ns \
 	write-uncor copy reset subsystem-reset show-regs discover \
 	connect-all connect disconnect version help \
 	intel lnvm memblaze list-subsys endurance-event-agg-log \
-	lba-status-log"
+	lba-status-log resv-notif-log"
 
 nvme_list_opts () {
         local opts=""
@@ -107,6 +107,9 @@ nvme_list_opts () {
 			;;
 		"lba-status-log")
 		opts+=" --rae -r --output-format= -o"
+			;;
+		"resv-notif-log")
+		opts+=" --output-format= -o"
 			;;
 		"get-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --sel= -s \

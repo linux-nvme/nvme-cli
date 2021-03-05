@@ -634,6 +634,12 @@ int nvme_lba_status_log(int fd, void *lba_status, bool rae,
 		rae, NVME_NO_LOG_LSP, size, lba_status);
 }
 
+int nvme_resv_notif_log(int fd, struct nvme_resv_notif_log *resv)
+{
+	return nvme_get_log(fd, 0, NVME_LOG_RESERVATION, false,
+		NVME_NO_LOG_LSP, sizeof(*resv), resv);
+}
+
 int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
 		 __u32 cdw12, __u32 data_len, void *data, __u32 *result)
 {
