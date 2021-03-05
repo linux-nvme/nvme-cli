@@ -64,6 +64,8 @@ void nvme_show_endurance_group_event_agg_log(
 void json_lba_status_log(void *lba_status);
 void nvme_show_lba_status_log(void *lba_status, __u32 size,
 	const char *devname, enum nvme_print_flags flags);
+void nvme_show_resv_notif_log(struct nvme_resv_notif_log *resv,
+	const char *devname, enum nvme_print_flags flags);
 void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags);
 void nvme_show_single_property(int offset, uint64_t prop, int human);
 void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flags);

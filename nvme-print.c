@@ -1723,6 +1723,55 @@ void nvme_show_lba_status_log(void *lba_status, __u32 size,
 	}
 }
 
+static const char *resv_notif_to_string(__u8 type)
+{
+	switch (type) {
+	case 0x1: return "Empty Log Page";
+	case 0x2: return "Registration Preempted";
+	case 0x3: return "Reservation Released";
+	case 0x4: return "Reservation Preempted";
+	default:  return "Reserved";
+	}
+}
+
+static void json_resv_notif_log(struct nvme_resv_notif_log *resv)
+{
+	struct json_object *root;
+
+	root = json_create_object();
+	json_object_add_value_uint(root, "count",
+		le64_to_cpu(resv->log_page_count));
+	json_object_add_value_uint(root, "rn_log_type",
+		resv->resv_notif_log_type);
+	json_object_add_value_uint(root, "num_logs",
+		resv->num_logs);
+	json_object_add_value_uint(root, "nsid",
+		le32_to_cpu(resv->nsid));
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_resv_notif_log(struct nvme_resv_notif_log *resv,
+	const char *devname, enum nvme_print_flags flags)
+{
+	if (flags & BINARY)
+		return d_raw((unsigned char *)resv, sizeof(*resv));
+	if (flags & JSON)
+		return json_resv_notif_log(resv);
+
+	printf("Reservation Notif Log for device: %s\n", devname);
+	printf("Log Page Count				: %"PRIx64"\n",
+		le64_to_cpu(resv->log_page_count));
+	printf("Resv Notif Log Page Type	: %u (%s)\n",
+		resv->resv_notif_log_type,
+		resv_notif_to_string(resv->resv_notif_log_type));
+	printf("Num of Available Log Pages	: %u\n", resv->num_logs);
+	printf("Namespace ID:				: %"PRIx32"\n",
+		le32_to_cpu(resv->nsid));
+}
+
 static void nvme_show_subsystem(struct nvme_subsystem *s)
 {
 	int i;

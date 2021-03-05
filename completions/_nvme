@@ -28,6 +28,7 @@ _nvme () {
 	'error-log:retrieve error log'
 	'endurance-event-agg-log:retrieve endurance group event aggregate log'
 	'lba-status-log:retrieve lba status log'
+	'resv-notif-log: retrieve reservation notification log'
 	'get-feature:display a controller feature'
 	'set-feature:set a controller feature and show results'
 	'format:apply new block format to namespace'
@@ -321,6 +322,14 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme lba-status-log options" _lbastatuslog
+			;;
+		(resv-notif-log)
+			local _resvnotiflog
+			_resvnotiflog=(
+			/dev/nvme':supply a device to use (required)'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme resv-notif-log options" _resvnotiflog
 			;;
 		(get-feature)
 			local _getf
@@ -779,6 +788,7 @@ _nvme () {
 			     security-send security-recv resv-acquire resv-register resv-release
 			     resv-report flush compare read write copy show-regs persistent-event-log
 				 pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
+				 resv-notif-log
 			   )
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h

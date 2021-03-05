@@ -934,6 +934,15 @@ struct nvme_lba_status_hdr {
 	__le16	lsgc;
 };
 
+struct nvme_resv_notif_log {
+	__le64	log_page_count;
+	__u8	resv_notif_log_type;
+	__u8	num_logs;
+	__u8	rsvd10[2];
+	__le32	nsid;
+	__u8	rsvd16[48];
+};
+
 enum {
 	NVME_SMART_CRIT_SPARE		= 1 << 0,
 	NVME_SMART_CRIT_TEMPERATURE	= 1 << 1,

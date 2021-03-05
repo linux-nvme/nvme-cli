@@ -1162,6 +1162,54 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int get_resv_notif_log(int argc, char **argv,
+	struct command *cmd, struct plugin *plugin)
+{
+
+	const char *desc = "Retrieve Reservation Notification " \
+		"log page and prints it, for the given " \
+		"device in either decoded format(default), " \
+		"json or binary.";
+	struct nvme_resv_notif_log resv;
+	enum nvme_print_flags flags;
+	int err, fd;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+
+	err = nvme_resv_notif_log(fd, &resv);
+	if (!err)
+		nvme_show_resv_notif_log(&resv, devicename, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("resv notifi log");
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+
+}
+
 static int get_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve desired number of bytes "\
