@@ -3960,7 +3960,8 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *nssf = "NVMe Security Specific Field";
 	int err, fd, sec_fd = STDIN_FILENO;
 	void *sec_buf;
-	unsigned int sec_size;
+	unsigned int sec_size, buf_size;
+	int nread = 0;
 
 	struct config {
 		__u32 namespace_id;
@@ -3992,23 +3993,38 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (fd < 0)
 		goto ret;
 
-	sec_fd = open(cfg.file, O_RDONLY);
-	if (sec_fd < 0) {
-		fprintf(stderr, "Failed to open %s: %s\n",
-				cfg.file, strerror(errno));
-		err = -EINVAL;
-		goto close_fd;
+	if ((cfg.tl & 3) != 0)
+		fprintf(stderr, "WARNING: transfer length not dword-aligned; data will be truncated\n");
+
+	if (strlen(cfg.file) == 0) {
+		sec_fd = STDIN_FILENO;
+
+		if (cfg.tl || ioctl(sec_fd, FIONREAD, &nread) < 0)
+			sec_size = cfg.tl;
+		else
+			sec_size = ((unsigned int) nread + 3) & ~3; // align to avoid truncation
+	} else {
+		sec_fd = open(cfg.file, O_RDONLY);
+		if (sec_fd < 0) {
+			fprintf(stderr, "Failed to open %s: %s\n",
+					cfg.file, strerror(errno));
+			err = -EINVAL;
+			goto close_fd;
+		}
+
+		err = fstat(sec_fd, &sb);
+		if (err < 0) {
+			perror("fstat");
+			goto close_sec_fd;
+		}
+
+		sec_size = sb.st_size;
 	}
 
-	err = fstat(sec_fd, &sb);
-	if (err < 0) {
-		perror("fstat");
-		goto close_sec_fd;
-	}
+	buf_size = cfg.tl ? cfg.tl : sec_size;
 
-	sec_size = sb.st_size;
-	if (posix_memalign(&sec_buf, getpagesize(), sec_size)) {
-		fprintf(stderr, "No memory for security size:%d\n", sec_size);
+	if (posix_memalign(&sec_buf, getpagesize(), buf_size)) {
+		fprintf(stderr, "No memory for security size:%d\n", buf_size);
 		err = -ENOMEM;
 		goto close_sec_fd;
 	}
@@ -4022,7 +4038,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 
 	err = nvme_security_send(fd, cfg.namespace_id, cfg.nssf, cfg.spsp & 0xff,
-			cfg.spsp >> 8, cfg.secp, cfg.tl, sec_size, sec_buf, NULL);
+			cfg.spsp >> 8, cfg.secp, buf_size, buf_size, sec_buf, NULL);
 	if (err < 0)
 		perror("security-send");
 	else if (err != 0)
