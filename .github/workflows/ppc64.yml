@@ -1,0 +1,26 @@
+name: PowerPC CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: update
+      run: sudo apt-get update
+    - name: dependencies
+      run: sudo apt-get install gcc-10-powerpc*
+    - name: make
+      run: |
+        make clean
+        export LD=powerpc64le-linux-gnu-ld
+        export CC=powerpc64le-linux-gnu-gcc-10
+        export CFLAGS='-O2 -g -Wall -Wformat-security -Werror -m64 -mcpu=power8 -mtune=power8 -I -I/usr/powerpc64-linux-gnu/include/'
+        make

@@ -16,7 +16,9 @@ jobs:
     - name: update
       run: sudo apt-get update
     - name: dependencies
-      run: sudo apt-get install --yes libudev-dev
+      run: sudo apt-get install libudev-dev uuid-dev libsystemd-dev
     - name: make
-      run: sudo apt-get install gcc-10-powerpc* && make clean && make && make clean && make LD=powerpc64le-linux-gnu-ld CC=powerpc64le-linux-gnu-gcc-10 CFLAGS='-O2 -g -Wall -Wformat-security -Werror -m64 -mcpu=power8 -mtune=power8 -I -I/usr/powerpc64-linux-gnu/include/'
+      run: |
+        make clean
+        make
 
