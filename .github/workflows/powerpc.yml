@@ -1,0 +1,30 @@
+name: PowerPC CI / alternative
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    container: mwilck/debiandev
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: update ppc64el arch
+      run: |
+        sudo dpkg --add-architecture ppc64el
+        sudo apt-get update || true
+    - name: dependencies
+      run: |
+        sudo apt-get build-dep --yes  nvme-cli
+        sudo apt-get install --yes gcc-powerpc64le-linux-gnu libudev-dev:ppc64el libsystemd-dev:ppc64el uuid-dev:ppc64el pkg-config
+    - name: make
+      run: |
+        make clean
+        export LD=powerpc64le-linux-gnu-ld
+        export CC=powerpc64le-linux-gnu-gcc
+        export CFLAGS='-O2 -g -Wall -Wformat-security -Werror -m64 -mcpu=power8 -mtune=power8'
+        make V=1
