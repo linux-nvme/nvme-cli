@@ -3647,16 +3647,13 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (fd < 0)
 		goto ret;
 
-	if ((cfg.tl & 3) != 0)
-		fprintf(stderr, "WARNING: transfer length not dword-aligned; data will be truncated\n");
-
 	if (strlen(cfg.file) == 0) {
 		sec_fd = STDIN_FILENO;
 
 		if (cfg.tl || ioctl(sec_fd, FIONREAD, &nread) < 0)
 			sec_size = cfg.tl;
 		else
-			sec_size = ((unsigned int) nread + 3) & ~3; // align to avoid truncation
+			sec_size = (unsigned int) nread;
 	} else {
 		sec_fd = open(cfg.file, O_RDONLY);
 		if (sec_fd < 0) {
@@ -3676,12 +3673,15 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 
 	buf_size = cfg.tl ? cfg.tl : sec_size;
+	buf_size = (buf_size + 3) & ~3; // dword align to avoid truncation
 
 	if (posix_memalign(&sec_buf, getpagesize(), buf_size)) {
 		fprintf(stderr, "No memory for security size:%d\n", buf_size);
 		err = -ENOMEM;
 		goto close_sec_fd;
 	}
+
+	memset(sec_buf, 0, buf_size); // ensure zero fill if buf_size > sec_size
 
 	err = read(sec_fd, sec_buf, sec_size);
 	if (err < 0) {
