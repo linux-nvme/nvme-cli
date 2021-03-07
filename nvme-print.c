@@ -788,26 +788,36 @@ add:
 static void json_effects_log(struct nvme_effects_log_page *effects_log)
 {
 	struct json_object *root;
+	struct json_object *acs;
+	struct json_object *iocs;
 	unsigned int opcode;
 	char key[128];
 	__u32 effect;
 
 	root = json_create_object();
-
+	acs = json_create_object();
 	for (opcode = 0; opcode < 256; opcode++) {
-		sprintf(key, "ACS%d (%s)", opcode,
-			nvme_cmd_to_string(1, opcode));
 		effect = le32_to_cpu(effects_log->acs[opcode]);
-		json_object_add_value_uint(root, key, effect);
+		if (effect & NVME_CMD_EFFECTS_CSUPP) {
+			sprintf(key, "ACS_%u (%s)", opcode,
+				nvme_cmd_to_string(1, opcode));
+			json_object_add_value_uint(acs, key, effect);
+		}
 	}
 
+	json_object_add_value_object(root, "admin_cmd_set", acs);
+
+	iocs = json_create_object();
 	for (opcode = 0; opcode < 256; opcode++) {
-		sprintf(key, "IOCS%d (%s)", opcode,
-			nvme_cmd_to_string(0, opcode));
 		effect = le32_to_cpu(effects_log->iocs[opcode]);
-		json_object_add_value_uint(root, key, effect);
+		if (effect & NVME_CMD_EFFECTS_CSUPP) {
+			sprintf(key, "IOCS_%u (%s)", opcode,
+				nvme_cmd_to_string(0, opcode));
+			json_object_add_value_uint(iocs, key, effect);
+		}
 	}
 
+	json_object_add_value_object(root, "io_cmd_set", iocs);
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
