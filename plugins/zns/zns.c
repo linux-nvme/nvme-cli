@@ -756,7 +756,8 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 	meta_size = ns.lbaf[(ns.flbas & 0x0f)].ms;
-	if (meta_size && (!cfg.metadata_size || cfg.metadata_size % meta_size)) {
+	if (meta_size && !(meta_size == 8 && (cfg.prinfo & 0x8)) &&
+			(!cfg.metadata_size || cfg.metadata_size % meta_size)) {
 		fprintf(stderr,
 			"Metadata size:%#"PRIx64" not aligned to metadata size:%#x\n",
 			(uint64_t)cfg.metadata_size, meta_size);
