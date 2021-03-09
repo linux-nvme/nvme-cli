@@ -670,6 +670,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 	const char *limited_retry = "limit media access attempts";
 	const char *fua = "force unit access";
 	const char *prinfo = "protection information action and checks field";
+	const char *piremap = "protection information remap (for type 1 PI)";
 	const char *ref_tag = "reference tag (for end to end PI)";
 	const char *lbat = "logical block application tag (for end to end PI)";
 	const char *lbatm = "logical block application tag mask (for end to end PI)";
@@ -699,6 +700,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		__u16  lbat;
 		__u16  lbatm;
 		__u8   prinfo;
+		int    piremap;
 		int   latency;
 	};
 
@@ -718,6 +720,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		OPT_SHRT("app-tag-mask",      'm', &cfg.lbatm,         lbatm),
 		OPT_SHRT("app-tag",           'a', &cfg.lbat,          lbat),
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,        prinfo),
+		OPT_FLAG("piremap",           'P', &cfg.piremap,       piremap),
 		OPT_FLAG("latency",           't', &cfg.latency,       latency),
 		OPT_END()
 	};
@@ -823,6 +826,8 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		control |= NVME_RW_LR;
 	if (cfg.fua)
 		control |= NVME_RW_FUA;
+	if (cfg.piremap)
+		control |= NVME_RW_PIREMAP;
 
 	gettimeofday(&start_time, NULL);
 	err = nvme_zns_append(fd, cfg.namespace_id, cfg.zslba, nblocks,
