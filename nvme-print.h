@@ -11,7 +11,7 @@ uint64_t int48_to_long(__u8 *data);
 
 void nvme_show_status(__u16 status);
 void nvme_show_relatives(const char *name);
-
+const char *nvme_cmd_to_string(int admin, __u8 opcode);
 void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
 	void (*vendor_show)(__u8 *vs, struct json_object *root));
 void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode);
