@@ -44,7 +44,7 @@ static const char *nvme_ana_state_to_string(enum nvme_ana_state state)
 	return "invalid state";
 }
 
-static const char *nvme_cmd_to_string(int admin, __u8 opcode)
+const char *nvme_cmd_to_string(int admin, __u8 opcode)
 {
 	if (admin) {
 		switch (opcode) {

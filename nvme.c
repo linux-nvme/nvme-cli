@@ -5275,12 +5275,36 @@ static int rpmb_cmd(int argc, char **argv, struct command *cmd, struct plugin *p
 	return rpmb_cmd_option(argc, argv, cmd, plugin);
 }
 
-static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, struct command *cmd)
+static int passthru(int argc, char **argv, int ioctl_cmd, uint8_t cmd_type,
+	const char *desc, struct command *cmd)
 {
+	const char *opcode = "opcode (required)";
+	const char *flags = "command flags";
+	const char *rsvd = "value for reserved field";
+	const char *namespace_id = "desired namespace";
+	const char *data_len = "data I/O length (bytes)";
+	const char *metadata_len = "metadata seg. length (bytes)";
+	const char *timeout = "timeout value, in milliseconds";
+	const char *cdw2 = "command dword 2 value";
+	const char *cdw3 = "command dword 3 value";
+	const char *cdw10 = "command dword 10 value";
+	const char *cdw11 = "command dword 11 value";
+	const char *cdw12 = "command dword 12 value";
+	const char *cdw13 = "command dword 13 value";
+	const char *cdw14 = "command dword 14 value";
+	const char *cdw15 = "command dword 15 value";
+	const char *input = "write/send file (default stdin)";
+	const char *raw_binary = "dump output in binary format";
+	const char *show = "print command before sending";
+	const char *dry = "show command instead of sending";
+	const char *re = "set dataflow direction to receive";
+	const char *wr = "set dataflow direction to send";
+	const char *prefill = "prefill buffers with known byte-value, default 0";
 	void *data = NULL, *metadata = NULL;
 	int err = 0, wfd = STDIN_FILENO, fd;
 	__u32 result;
 	bool huge;
+	const char *cmd_name = NULL;
 
 	struct config {
 		__u8  opcode;
@@ -5327,29 +5351,6 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 		.prefill      = 0,
 	};
 
-	const char *opcode = "opcode (required)";
-	const char *flags = "command flags";
-	const char *rsvd = "value for reserved field";
-	const char *namespace_id = "desired namespace";
-	const char *data_len = "data I/O length (bytes)";
-	const char *metadata_len = "metadata seg. length (bytes)";
-	const char *timeout = "timeout value, in milliseconds";
-	const char *cdw2 = "command dword 2 value";
-	const char *cdw3 = "command dword 3 value";
-	const char *cdw10 = "command dword 10 value";
-	const char *cdw11 = "command dword 11 value";
-	const char *cdw12 = "command dword 12 value";
-	const char *cdw13 = "command dword 13 value";
-	const char *cdw14 = "command dword 14 value";
-	const char *cdw15 = "command dword 15 value";
-	const char *input = "write/send file (default stdin)";
-	const char *raw_binary = "dump output in binary format";
-	const char *show = "print command before sending";
-	const char *dry = "show command instead of sending";
-	const char *re = "set dataflow direction to receive";
-	const char *wr = "set dataflow direction to send";
-	const char *prefill = "prefill buffers with known byte-value, default 0";
-
 	OPT_ARGS(opts) = {
 		OPT_BYTE("opcode",       'o', &cfg.opcode,       opcode),
 		OPT_BYTE("flags",        'f', &cfg.flags,        flags),
@@ -5380,7 +5381,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	if (fd < 0)
 		goto ret;
 
-	if (strlen(cfg.input_file)){
+	if (strlen(cfg.input_file)) {
 		wfd = open(cfg.input_file, O_RDONLY,
 			   S_IRUSR | S_IRGRP | S_IROTH);
 		if (wfd < 0) {
@@ -5462,8 +5463,12 @@ static int passthru(int argc, char **argv, int ioctl_cmd, const char *desc, stru
 	else if (err)
 		nvme_show_status(err);
 	else  {
+		cmd_name = nvme_cmd_to_string(cmd_type, cfg.opcode);
+		fprintf(stderr, "%s Command %s is Success and result: 0x%08x\n",
+				cmd_type ? "Admin": "IO",
+				strcmp(cmd_name, "Unknown") ? cmd_name: "Vendor Specific",
+				result);
 		if (!cfg.raw_binary) {
-			fprintf(stderr, "NVMe command result:%08x\n", result);
 			if (data && cfg.read && !err)
 				d((unsigned char *)data, cfg.data_len, 16, 1);
 		} else if (data && cfg.read)
@@ -5488,14 +5493,14 @@ static int io_passthru(int argc, char **argv, struct command *cmd, struct plugin
 {
 	const char *desc = "Send a user-defined IO command to the specified "\
 		"device via IOCTL passthrough, return results.";
-	return passthru(argc, argv, NVME_IOCTL_IO_CMD, desc, cmd);
+	return passthru(argc, argv, NVME_IOCTL_IO_CMD, 0, desc, cmd);
 }
 
 static int admin_passthru(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send a user-defined Admin command to the specified "\
 		"device via IOCTL passthrough, return results.";
-	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD, desc, cmd);
+	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD, 1, desc, cmd);
 }
 
 #ifdef LIBUUID
