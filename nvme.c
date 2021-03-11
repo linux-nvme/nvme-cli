@@ -4151,6 +4151,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 			   "single consecutive destination logical block "
 			   "range.";
 
+	const char *d_nsid = "identifier of desired namespace";
 	const char *d_sdlba = "64-bit addr of first destination logical block";
 	const char *d_slbas = "64-bit addr of first block per range (comma-separated list)";
 	const char *d_nlbs = "number of blocks per range (comma-separated list, zeroes-based values)";
@@ -4170,7 +4171,6 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 
 	int err, fd;
 	uint16_t nr, nb, ns, nrts, natms, nats;
-	__u32 namespace_id;
 	int nlbs[128] = { 0 };
 	unsigned long long slbas[128] = {0,};
 	int eilbrts[128] = { 0 };
@@ -4179,6 +4179,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	struct nvme_copy_range *copy;
 
 	struct config {
+		__u32 namespace_id;
 		__u64 sdlba;
 		char  *nlbs;
 		char  *slbas;
@@ -4198,6 +4199,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	};
 
 	struct config cfg = {
+		.namespace_id = 0,
 		.nlbs    = "",
 		.slbas   = "",
 		.eilbrts = "",
@@ -4206,22 +4208,23 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,   d_sdlba),
-		OPT_LIST("slbs",                   's', &cfg.slbas,   d_slbas),
-		OPT_LIST("blocks",                 'b', &cfg.nlbs,    d_nlbs),
-		OPT_FLAG("limited-retry",          'l', &cfg.lr,      d_lr),
-		OPT_FLAG("force-unit-access",      'f', &cfg.fua,     d_fua),
-		OPT_BYTE("prinfow",                'p', &cfg.prinfow, d_prinfow),
-		OPT_BYTE("prinfor",                'P', &cfg.prinfor, d_prinfor),
-		OPT_UINT("ref-tag",                'r', &cfg.ilbrt,   d_ilbrt),
-		OPT_LIST("expected-ref-tags",      'R', &cfg.eilbrts, d_eilbrts),
-		OPT_SHRT("app-tag",                'a', &cfg.lbat,    d_lbat),
-		OPT_LIST("expected-app-tags",      'A', &cfg.elbats,  d_elbats),
-		OPT_SHRT("app-tag-mask",           'm', &cfg.lbatm,   d_lbatm),
-		OPT_LIST("expected-app-tag-masks", 'M', &cfg.elbatms, d_elbatms),
-		OPT_BYTE("dir-type",               'T', &cfg.dtype,   d_dtype),
-		OPT_SHRT("dir-spec",               'S', &cfg.dspec,   d_dspec),
-		OPT_BYTE("format",                 'F', &cfg.format,  d_format),
+		OPT_UINT("namespace-id",	   'n', &cfg.namespace_id, 	d_nsid),
+		OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,   		d_sdlba),
+		OPT_LIST("slbs",                   's', &cfg.slbas,   		d_slbas),
+		OPT_LIST("blocks",                 'b', &cfg.nlbs,    		d_nlbs),
+		OPT_FLAG("limited-retry",          'l', &cfg.lr,      		d_lr),
+		OPT_FLAG("force-unit-access",      'f', &cfg.fua,     		d_fua),
+		OPT_BYTE("prinfow",                'p', &cfg.prinfow, 		d_prinfow),
+		OPT_BYTE("prinfor",                'P', &cfg.prinfor, 		d_prinfor),
+		OPT_UINT("ref-tag",                'r', &cfg.ilbrt,   		d_ilbrt),
+		OPT_LIST("expected-ref-tags",      'R', &cfg.eilbrts, 		d_eilbrts),
+		OPT_SHRT("app-tag",                'a', &cfg.lbat,    		d_lbat),
+		OPT_LIST("expected-app-tags",      'A', &cfg.elbats,  		d_elbats),
+		OPT_SHRT("app-tag-mask",           'm', &cfg.lbatm,   		d_lbatm),
+		OPT_LIST("expected-app-tag-masks", 'M', &cfg.elbatms, 		d_elbatms),
+		OPT_BYTE("dir-type",               'T', &cfg.dtype,   		d_dtype),
+		OPT_SHRT("dir-spec",               'S', &cfg.dspec,   		d_dspec),
+		OPT_BYTE("format",                 'F', &cfg.format,  		d_format),
 		OPT_END()
 	};
 
@@ -4244,10 +4247,12 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		goto close_fd;
 	}
 
-	err = namespace_id = nvme_get_nsid(fd);
-	if (err < 0) {
-		perror("get-namespace-id");
-		goto close_fd;
+	if (!cfg.namespace_id) {
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
+			goto close_fd;
+		}
 	}
 
 	copy = nvme_setup_copy_range(nlbs, slbas, eilbrts, elbatms, elbats, nr);
@@ -4257,7 +4262,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		goto close_fd;
 	}
 
-	err = nvme_copy(fd, namespace_id, copy, cfg.sdlba, nr, cfg.prinfor,
+	err = nvme_copy(fd, cfg.namespace_id, copy, cfg.sdlba, nr, cfg.prinfor,
 			cfg.prinfow, cfg.dtype, cfg.dspec, cfg.format, cfg.lr,
 			cfg.fua, cfg.ilbrt, cfg.lbatm, cfg.lbat);
 	if (err < 0)
