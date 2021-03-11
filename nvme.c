@@ -4138,6 +4138,8 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	else
 		printf("NVMe DSM: success\n");
 
+	free(dsm);
+
 close_fd:
 	close(fd);
 ret:
@@ -4271,6 +4273,8 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		nvme_show_status(err);
 	else
 		printf("NVMe Copy: success\n");
+
+	free(copy);
 
 close_fd:
 	close(fd);
