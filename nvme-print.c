@@ -1267,9 +1267,8 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 				le32_to_cpu(ns_event->nsmgt_cdw10));
 			json_object_add_value_uint(valid_attrs, "nsze",
 				le64_to_cpu(ns_event->nsze));
-			long double nscap = int128_to_double(ns_event->nscap);
-			json_object_add_value_float(valid_attrs, "nscap",
-				nscap);
+			json_object_add_value_uint(valid_attrs, "nscap",
+				le64_to_cpu(ns_event->nscap));
 			json_object_add_value_uint(valid_attrs, "flbas",
 				ns_event->flbas);
 			json_object_add_value_uint(valid_attrs, "dps",
@@ -1506,8 +1505,8 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 				le32_to_cpu(ns_event->nsmgt_cdw10));
 			printf("Namespace Size: %"PRIu64"\n",
 				le64_to_cpu(ns_event->nsze));
-			printf("Namespace Capacity: %'.0Lf\n",
-				int128_to_double(ns_event->nscap));
+			printf("Namespace Capacity: %"PRIu64"\n",
+				le64_to_cpu(ns_event->nscap));
 			printf("Formatted LBA Size: %u\n", ns_event->flbas);
 			printf("End-to-end Data Protection Type Settings: %u\n",
 				ns_event->dps);
