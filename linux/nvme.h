@@ -781,7 +781,8 @@ struct nvme_change_ns_event {
 	__le32	nsmgt_cdw10;
 	__u8	rsvd4[4];
 	__le64	nsze;
-	__u8	nscap[16];
+	__u8	rsvd16[8];
+	__le64	nscap;
 	__u8	flbas;
 	__u8	dps;
 	__u8	nmic;
