@@ -3960,8 +3960,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *nssf = "NVMe Security Specific Field";
 	int err, fd, sec_fd = STDIN_FILENO;
 	void *sec_buf;
-	unsigned int sec_size, buf_size;
-	int nread = 0;
+	unsigned int sec_size;
 
 	struct config {
 		__u32 namespace_id;
@@ -3993,13 +3992,17 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (fd < 0)
 		goto ret;
 
+	if (cfg.tl == 0) {
+		fprintf(stderr, "--tl unspecified or zero\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+	if ((cfg.tl & 3) != 0)
+		fprintf(stderr, "WARNING: --tl not dword aligned; unaligned bytes may be truncated\n");
+
 	if (strlen(cfg.file) == 0) {
 		sec_fd = STDIN_FILENO;
-
-		if (cfg.tl || ioctl(sec_fd, FIONREAD, &nread) < 0)
-			sec_size = cfg.tl;
-		else
-			sec_size = (unsigned int) nread;
+		sec_size = cfg.tl;
 	} else {
 		sec_fd = open(cfg.file, O_RDONLY);
 		if (sec_fd < 0) {
@@ -4015,19 +4018,16 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 			goto close_sec_fd;
 		}
 
-		sec_size = sb.st_size;
+		sec_size = cfg.tl > sb.st_size ? cfg.tl : sb.st_size;
 	}
 
-	buf_size = cfg.tl ? cfg.tl : sec_size;
-	buf_size = (buf_size + 3) & ~3; // dword align to avoid truncation
-
-	if (posix_memalign(&sec_buf, getpagesize(), buf_size)) {
-		fprintf(stderr, "No memory for security size:%d\n", buf_size);
+	if (posix_memalign(&sec_buf, getpagesize(), cfg.tl)) {
+		fprintf(stderr, "No memory for security size:%d\n", cfg.tl);
 		err = -ENOMEM;
 		goto close_sec_fd;
 	}
 
-	memset(sec_buf, 0, buf_size); // ensure zero fill if buf_size > sec_size
+	memset(sec_buf, 0, cfg.tl); // ensure zero fill if buf_size > sec_size
 
 	err = read(sec_fd, sec_buf, sec_size);
 	if (err < 0) {
@@ -4038,7 +4038,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 
 	err = nvme_security_send(fd, cfg.namespace_id, cfg.nssf, cfg.spsp & 0xff,
-			cfg.spsp >> 8, cfg.secp, buf_size, buf_size, sec_buf, NULL);
+			cfg.spsp >> 8, cfg.secp, cfg.tl, cfg.tl, sec_buf, NULL);
 	if (err < 0)
 		perror("security-send");
 	else if (err != 0)
