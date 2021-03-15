@@ -106,7 +106,7 @@ int scan_subsys_filter(const struct dirent *d);
 int scan_dev_filter(const struct dirent *d);
 
 int scan_subsystems(struct nvme_topology *t, const char *subsysnqn,
-		    __u32 ns_instance, char *dev_dir);
+		    __u32 ns_instance, int nsid, char *dev_dir);
 void free_topology(struct nvme_topology *t);
 char *get_nvme_subsnqn(char *path);
 char *nvme_get_ctrl_attr(char *path, const char *attr);

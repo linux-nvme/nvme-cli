@@ -11,6 +11,7 @@
 
 static const char *dev = "/dev/";
 static const char *subsys_dir = "/sys/class/nvme-subsystem/";
+static void free_ctrl(struct nvme_ctrl *c);
 
 char *get_nvme_subsnqn(char *path)
 {
@@ -230,6 +231,19 @@ static char *get_nvme_ctrl_path_ana_state(char *path, int nsid)
 	return ana_state;
 }
 
+static bool ns_attached_to_ctrl(int nsid, struct nvme_ctrl *ctrl)
+{
+	struct nvme_namespace *n;
+	int i;
+
+	for (i = 0; i < ctrl->nr_namespaces; i++) {
+		n = &ctrl->namespaces[i];
+		if (nsid == n->nsid)
+			return true;
+	}
+	return false;
+}
+
 static int scan_ctrl(struct nvme_ctrl *c, char *p, __u32 ns_instance)
 {
 	struct nvme_namespace *n;
@@ -315,12 +329,12 @@ free:
 	return 0;
 }
 
-static int scan_subsystem(struct nvme_subsystem *s, __u32 ns_instance)
+static int scan_subsystem(struct nvme_subsystem *s, __u32 ns_instance, int nsid)
 {
 	struct dirent **ctrls, **ns;
 	struct nvme_namespace *n;
 	struct nvme_ctrl *c;
-	int i, ret;
+	int i, j = 0, ret;
 	char *path;
 
 	ret = asprintf(&path, "%s%s", subsys_dir, s->name);
@@ -336,12 +350,18 @@ static int scan_subsystem(struct nvme_subsystem *s, __u32 ns_instance)
 	s->nr_ctrls = ret;
 	s->ctrls = calloc(s->nr_ctrls, sizeof(*c));
 	for (i = 0; i < s->nr_ctrls; i++) {
-		c = &s->ctrls[i];
+		c = &s->ctrls[j];
 		c->name = strdup(ctrls[i]->d_name);
 		c->path = strdup(dev);
 		c->subsys = s;
 		scan_ctrl(c, path, ns_instance);
+
+		if (!ns_instance || ns_attached_to_ctrl(nsid, c))
+			j++;
+		else
+			free_ctrl(c);
 	}
+	s->nr_ctrls = j;
 
 	while (i--)
 		free(ctrls[i]);
@@ -550,7 +570,7 @@ static int scan_subsystem_dir(struct nvme_topology *t, char *dev_dir)
 }
 
 int scan_subsystems(struct nvme_topology *t, const char *subsysnqn,
-		    __u32 ns_instance, char *dev_dir)
+		    __u32 ns_instance, int nsid, char *dev_dir)
 {
 	struct nvme_subsystem *s;
 	struct dirent **subsys;
@@ -568,7 +588,7 @@ int scan_subsystems(struct nvme_topology *t, const char *subsysnqn,
 		for (i = 0; i < t->nr_subsystems; i++) {
 			s = &t->subsystems[j];
 			s->name = strdup(subsys[i]->d_name);
-			scan_subsystem(s, ns_instance);
+			scan_subsystem(s, ns_instance, nsid);
 
 			if (!subsysnqn || !strcmp(s->subsysnqn, subsysnqn))
 				j++;

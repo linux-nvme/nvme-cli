@@ -1733,7 +1733,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	const char *desc = "Retrieve information for subsystems";
 	const char *verbose = "Increase output verbosity";
 	__u32 ns_instance = 0;
-	int err;
+	int err, nsid = 0;
 
 	struct config {
 		char *output_format;
@@ -1758,12 +1758,28 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	devicename = NULL;
 	if (optind < argc) {
 		char path[512];
-		int id;
+		int id, fd;
 
 		devicename = basename(argv[optind]);
 		if (sscanf(devicename, "nvme%dn%d", &id, &ns_instance) != 2) {
 			fprintf(stderr, "%s is not a NVMe namespace device\n",
 				argv[optind]);
+			err = -EINVAL;
+			goto ret;
+		}
+		sprintf(path, "/dev/%s", devicename);
+		fd = open(path, O_RDONLY);
+		if (fd < 0) {
+			fprintf(stderr, "Cannot read nsid from %s\n",
+				devicename);
+			err = -EINVAL;
+			goto ret;
+		}
+		nsid = nvme_get_nsid(fd);
+		close(fd);
+		if (nsid < 0) {
+			fprintf(stderr, "Cannot read nsid from %s\n",
+				devicename);
 			err = -EINVAL;
 			goto ret;
 		}
@@ -1788,7 +1804,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
-	err = scan_subsystems(&t, subsysnqn, ns_instance, NULL);
+	err = scan_subsystems(&t, subsysnqn, ns_instance, nsid, NULL);
 	if (err) {
 		fprintf(stderr, "Failed to scan namespaces\n");
 		goto free;
@@ -1844,7 +1860,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
-	err = scan_subsystems(&t, NULL, 0, cfg.device_dir);
+	err = scan_subsystems(&t, NULL, 0, 0, cfg.device_dir);
 	if (err) {
 		fprintf(stderr, "Failed to scan namespaces\n");
 		return err;
