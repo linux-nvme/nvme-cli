@@ -88,6 +88,7 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned 
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
 	void *buf, __u32 len, enum nvme_print_flags flags);
 void nvme_show_select_result(__u32 result);
+void nvme_show_lba_status_info(__u32 result);
 
 void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode);
 void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
