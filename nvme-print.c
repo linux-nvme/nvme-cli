@@ -5012,6 +5012,7 @@ const char *nvme_feature_to_string(enum nvme_feat feature)
 	case NVME_FEAT_RRL:		return "Read Recovery Level";
 	case NVME_FEAT_PLM_CONFIG:	return "Predicatable Latency Mode Config";
 	case NVME_FEAT_PLM_WINDOW:	return "Predicatable Latency Mode Window";
+	case NVME_LBA_STATUS_INFO:	return "LBA Status Infomation Attributes";
       case NVME_FEAT_ENDURANCE:       return "Enduarance Event Group Configuration";
 	case NVME_FEAT_IOCS_PROFILE:	return "I/O Command Set Profile";
 	case NVME_FEAT_SW_PROGRESS:	return "Software Progress";
@@ -5516,6 +5517,11 @@ static const char *nvme_plm_window(__u32 plm)
 	}
 }
 
+void nvme_show_lba_status_info(__u32 result) {
+	printf("\tLBA Status Information Poll Interval (LSIPI)	: %u\n", (result >> 16) & 0xffff);
+	printf("\tLBA Status Information Report Interval (LSIRI): %u\n", result & 0xffff);
+}
+
 static void nvme_show_plm_config(struct nvme_plm_config *plmcfg)
 {
 	printf("\tEnable Event          :%04x\n", le16_to_cpu(plmcfg->enable_event));
@@ -5609,6 +5615,9 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned 
 		break;
 	case NVME_FEAT_PLM_WINDOW:
 		printf("\tWindow Select: %s", nvme_plm_window(result));
+		break;
+	case NVME_LBA_STATUS_INFO:
+		nvme_show_lba_status_info(result);
 		break;
       case NVME_FEAT_ENDURANCE:
               printf("\tEndurance Group Identifier (ENDGID): %u\n", result & 0xffff);
