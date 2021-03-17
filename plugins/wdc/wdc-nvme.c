@@ -7576,18 +7576,18 @@ static int wdc_vs_drive_info(int argc, char **argv,
 	else if ((capabilities & WDC_DRIVE_CAP_INFO_2) == WDC_DRIVE_CAP_INFO_2) {
 		memcpy(vsData, &ctrl.vs[0], 32);
 
-		major_rev = vsData[20];
-		minor_rev = vsData[21];
+		major_rev = ctrl.sn[12];
+		minor_rev = ctrl.sn[13];
 
 		if (fmt == NORMAL) {
-			printf("Drive HW Revison:   %c.%c \n", major_rev, minor_rev);
-			printf("Customer SN:        %-.*s\n", 14, &vsData[0]);
+			printf("Drive HW Revision:   %c.%c \n", major_rev, minor_rev);
+			printf("Customer SN:         %-.*s\n", 14, &ctrl.sn[0]);
 		}
 		else if (fmt == JSON) {
 	   		root = json_create_object();
 	   		sprintf(rev_str, "%c.%c", major_rev, minor_rev);
 			json_object_add_value_string(root, "Drive HW Revison", rev_str);
-			wdc_StrFormat(formatter, sizeof(formatter), &vsData[0], 14);
+			wdc_StrFormat(formatter, sizeof(formatter), &ctrl.sn[0], 14);
 			json_object_add_value_string(root, "Customer SN", formatter);
 
 			json_print_object(root, NULL);
