@@ -153,9 +153,13 @@
 /* Customer ID's */
 #define WDC_CUSTOMER_ID_GN					0x0001
 #define WDC_CUSTOMER_ID_GD					0x0101
-#define WDC_CUSTOMER_ID_0x1004				0x1004
+#define WDC_CUSTOMER_ID_BD					0x1009
+
 #define WDC_CUSTOMER_ID_0x1005				0x1005
+
+#define WDC_CUSTOMER_ID_0x1004				0x1004
 #define WDC_CUSTOMER_ID_0x1008				0x1008
+#define WDC_CUSTOMER_ID_0x1304				0x1304
 
 #define WDC_ALL_PAGE_MASK                   0xFFFF
 #define WDC_C0_PAGE_MASK                    0x0001
@@ -1235,7 +1239,8 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 
 			cust_id = (__u32*)data;
 
-			if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1008) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
+			if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1008) ||
+					(*cust_id == WDC_CUSTOMER_ID_0x1005) || (*cust_id == WDC_CUSTOMER_ID_0x1304))
 				capabilities |= (WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE |
 						WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_CLOUD_SSD_VERSION);
 			else
@@ -1384,7 +1389,8 @@ static __u64 wdc_get_enc_drive_capabilities(int fd) {
 
 			cust_id = (__u32*)data;
 
-			if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1008) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
+			if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1008) ||
+					(*cust_id == WDC_CUSTOMER_ID_0x1005) || (*cust_id == WDC_CUSTOMER_ID_0x1304))
 				capabilities |= (WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE);
 			else
 				capabilities |= (WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_CLEAR_PCIE);
@@ -4544,7 +4550,8 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 
 		cust_id = (__u32*)data;
 
-		if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1008) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
+		if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1008) ||
+				(*cust_id == WDC_CUSTOMER_ID_0x1005) || (*cust_id == WDC_CUSTOMER_ID_0x1304))
 		{
 			if (uuid_index == 0)
 			{
@@ -4811,7 +4818,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 			}
 		} else {
 
-			fprintf(stderr, "ERROR : WDC : Unsupported Customer id, id = %d\n", *cust_id);
+			fprintf(stderr, "ERROR : WDC : Unsupported Customer id, id = 0x%x\n", *cust_id);
 			return -1;
 		}
 		break;
@@ -4845,7 +4852,8 @@ static int wdc_get_ca_log_page(int fd, char *format)
 				fprintf(stderr, "ERROR : WDC : Unable to read CA Log Page data\n");
 				ret = -1;
 			}
-		} else if ((*cust_id == WDC_CUSTOMER_ID_GN) || (*cust_id == WDC_CUSTOMER_ID_GD)) {
+		} else if ((*cust_id == WDC_CUSTOMER_ID_GN) || (*cust_id == WDC_CUSTOMER_ID_GD) ||
+				(*cust_id == WDC_CUSTOMER_ID_BD)) {
 
 			if ((data = (__u8*) malloc(sizeof (__u8) * WDC_BD_CA_LOG_BUF_LEN)) == NULL) {
 				fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
@@ -4869,7 +4877,7 @@ static int wdc_get_ca_log_page(int fd, char *format)
 			break;
 		} else {
 
-			fprintf(stderr, "ERROR : WDC : Unsupported Customer id, id = %d\n", *cust_id);
+			fprintf(stderr, "ERROR : WDC : Unsupported Customer id, id = 0x%x\n", *cust_id);
 			return -1;
 		}
 		break;
