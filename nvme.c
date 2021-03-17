@@ -3605,7 +3605,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 	if (buf) {
-        if ((NVME_FEAT_TIMESTAMP == cfg.feature_id) &&  (0 != cfg.value)) { //if feature ID is 0x0E, get timestamp value by -v option
+	  /* if feature ID is 0x0E, get timestamp value by -v option */
+        if ((NVME_FEAT_TIMESTAMP == cfg.feature_id) &&  (0 != cfg.value)) {
             cfg.data_len = NVME_FEAT_TIMESTAMP_DATA_SIZE;
             memcpy(buf, &cfg.value, NVME_FEAT_TIMESTAMP_DATA_SIZE);
         }
@@ -3626,7 +3627,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
                 " file: %s\n", strerror(errno));
                 goto close_ffd;
             }
-            if (NVME_FEAT_TIMESTAMP == cfg.feature_id) { //if feature ID is 0x0E, then change string from file to integer
+	      /* if feature ID is 0x0E, then change string from file to integer */
+            if (NVME_FEAT_TIMESTAMP == cfg.feature_id) {
                 number = strtoul(buf, &endptr, STRTOUL_AUTO_BASE);
                 memset(buf, 0, cfg.data_len);
                 cfg.data_len = NVME_FEAT_TIMESTAMP_DATA_SIZE;
