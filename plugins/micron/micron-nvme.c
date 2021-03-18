@@ -126,6 +126,8 @@ static eDriveModel GetDriveModel(int idx)
             break;
         case 0x51C0:
         case 0x51C1:
+        case 0x51C2:
+        case 0x51C3:
             eModel = M51CX;
             break;
         case 0x5405:
