@@ -93,6 +93,9 @@ struct nvme_ctrl {
 	char *sqsize;
 	char *transport;
 	char *subsysnqn;
+	char *traddr;
+	char *trsvcid;
+	char *host_traddr;
 };
 
 struct nvme_subsystem {
@@ -482,6 +485,21 @@ const char *nvme_ctrl_get_transport(nvme_ctrl_t c)
 	return c->transport;
 }
 
+const char *nvme_ctrl_get_traddr(nvme_ctrl_t c)
+{
+	return c->traddr;
+}
+
+const char *nvme_ctrl_get_trsvcid(nvme_ctrl_t c)
+{
+	return c->trsvcid;
+}
+
+const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c)
+{
+	return c->host_traddr;
+}
+
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)
 {
 	return nvme_identify_ctrl(nvme_ctrl_get_fd(c), id);
@@ -537,6 +555,11 @@ void nvme_free_ctrl(nvme_ctrl_t c)
 	free(c->sysfs_dir);
 	free(c->subsysnqn);
 	free(c->address);
+	free(c->traddr);
+	if (c->trsvcid)
+		free(c->trsvcid);
+	if (c->host_traddr)
+		free(c->host_traddr);
 	free(c->firmware);
 	free(c->model);
 	free(c->state);
@@ -581,6 +604,8 @@ static nvme_ctrl_t __nvme_ctrl_alloc(const char *path, const char *name)
 {
 	DIR *d;
 	nvme_ctrl_t c;
+	char *addr, *a, *e;
+	char *traddr = NULL, *trsvcid = NULL, *host_traddr = NULL;
 
 	d = opendir(path);
 	if (!d)
@@ -612,7 +637,24 @@ static nvme_ctrl_t __nvme_ctrl_alloc(const char *path, const char *name)
 	c->serial = nvme_get_ctrl_attr(c, "serial");
 	c->sqsize = nvme_get_ctrl_attr(c, "sqsize");
 	c->transport = nvme_get_ctrl_attr(c, "transport");
-
+	/* Parse 'address' string into components */
+	addr = strdup(c->address);
+	a = strtok_r(addr, ",", &e);
+	while (a && strlen(a)) {
+		if (!strncmp(a, "traddr=", 7))
+			traddr = a + 7;
+		else if (!strncmp(a, "trsvcid=", 8))
+			trsvcid = a + 8;
+		else if (!strncmp(a, "host_traddr=", 12))
+			host_traddr = a + 12;
+		a = strtok_r(NULL, ",", &e);
+	}
+	c->traddr = strdup(traddr);
+	if (trsvcid)
+		c->trsvcid = strdup(trsvcid);
+	if (host_traddr)
+		c->host_traddr = strdup(host_traddr);
+	free(addr);
 	return c;
 
 free_ctrl:
