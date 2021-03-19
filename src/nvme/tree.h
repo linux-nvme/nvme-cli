@@ -588,6 +588,30 @@ const char *nvme_ctrl_get_subsysnqn(nvme_ctrl_t c);
 nvme_subsystem_t nvme_ctrl_get_subsystem(nvme_ctrl_t c);
 
 /**
+ * nvme_ctrl_get_traddr() -
+ * @c:
+ *
+ * Return:
+ */
+const char *nvme_ctrl_get_traddr(nvme_ctrl_t c);
+
+/**
+ * nvme_ctrl_get_trsvcid() -
+ * @c:
+ *
+ * Return:
+ */
+const char *nvme_ctrl_get_trsvcid(nvme_ctrl_t c);
+
+/**
+ * nvme_ctrl_get_host_traddr() -
+ * @c:
+ *
+ * Return:
+ */
+const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c);
+
+/**
  * nvme_ctrl_identify() -
  * @c:
  * @id:
