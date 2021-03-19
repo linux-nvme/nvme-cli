@@ -27,6 +27,10 @@ for opt do
   ;;
   --datadir=*) datadir="$optarg"
   ;;
+  --disable-systemd) disable_systemd=1
+  ;;
+  --disable-uuid) disable_uuid=1
+  ;;
   *)
     echo "ERROR: unkown option $opt"
     echo "Try '$0 --help' for more information"
@@ -62,6 +66,8 @@ Options: [defaults in brackets after descriptions]
   --libdir=PATH            install libraries in PATH [$libdir]
   --mandir=PATH            install man pages in PATH [$mandir]
   --datadir=PATH           install shared data in PATH [$datadir]
+  --disable-systemd        do not link against libsystemd
+  --disable-uuid           do not link against libuuid
 EOF
 exit 0
 fi
@@ -177,18 +183,22 @@ print_and_output_mak "datadir" "$datadir"
 ##########################################
 # check for libuuid
 libuuid="no"
-${ld} -o /dev/null -luuid >/dev/null 2>&1
-if [ $? -eq 0 ]; then
-  libuuid="yes"
+if [ -z "$disable_uuid" ] ; then
+    ${ld} -o /dev/null -luuid >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+	libuuid="yes"
+    fi
 fi
 print_config "libuuid" "${libuuid}"
 
 ##########################################
 # check for SystemD
 systemd="no"
-pkg-config --exists libsystemd --atleast-version=232
-if [ $? -eq 0 ]; then
-  systemd="yes"
+if [ -z "$disable_systemd" ] ; then
+    pkg-config --exists libsystemd --atleast-version=232
+    if [ $? -eq 0 ]; then
+	systemd="yes"
+    fi
 fi
 print_config "systemd" "${systemd}"
 

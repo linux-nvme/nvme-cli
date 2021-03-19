@@ -17,9 +17,6 @@
 #include <unistd.h>
 
 #include <ccan/list/list.h>
-
-#include <uuid/uuid.h>
-
 #include "ioctl.h"
 #include "filters.h"
 #include "tree.h"
@@ -69,7 +66,11 @@ struct nvme_ns {
 
 	uint8_t eui64[8];
 	uint8_t nguid[16];
+#ifdef CONFIG_UUID
 	uuid_t  uuid;
+#else
+	uint8_t uuid[16];
+#endif
 	enum nvme_csi csi;
 };
 
@@ -782,10 +783,17 @@ const uint8_t *nvme_ns_get_nguid(nvme_ns_t n)
 	return n->nguid;
 }
 
+#ifdef CONFIG_UUID
 void nvme_ns_get_uuid(nvme_ns_t n, uuid_t out)
 {
 	uuid_copy(out, n->uuid);
 }
+#else
+void nvme_ns_get_uuid(nvme_ns_t n, uint8_t *out)
+{
+	memcpy(out, n, 16);
+}
+#endif
 
 int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns)
 {
