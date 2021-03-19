@@ -766,15 +766,16 @@ static void json_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	json_free_object(root);
 }
 
-static void save_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
+static void save_discovery_log(struct nvmf_disc_rsp_page_hdr *log,
+			       int numrec, const char *logfile)
 {
 	int fd;
 	int len, ret;
 
-	fd = open(fabrics_cfg.raw, O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
+	fd = open(logfile, O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
 	if (fd < 0) {
 		msg(LOG_ERR, "failed to open %s: %s\n",
-			fabrics_cfg.raw, strerror(errno));
+			logfile, strerror(errno));
 		return;
 	}
 
@@ -783,9 +784,9 @@ static void save_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	ret = write(fd, log, len);
 	if (ret < 0)
 		msg(LOG_ERR, "failed to write to %s: %s\n",
-			fabrics_cfg.raw, strerror(errno));
+			logfile, strerror(errno));
 	else
-		printf("Discovery log is saved to %s\n", fabrics_cfg.raw);
+		printf("Discovery log is saved to %s\n", logfile);
 
 	close(fd);
 }
@@ -1417,7 +1418,7 @@ int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 		if (connect)
 			ret = connect_ctrls(log, numrec);
 		else if (fabrics_cfg.raw || flags == BINARY)
-			save_discovery_log(log, numrec);
+			save_discovery_log(log, numrec, fabrics_cfg.raw);
 		else if (flags == JSON)
 			json_discovery_log(log, numrec);
 		else
