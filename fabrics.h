@@ -40,14 +40,15 @@ struct fabrics_config {
 	bool matching_only;
 	const char *output_format;
 };
-extern struct fabrics_config fabrics_cfg;
 
 extern const char *const trtypes[];
 
 #define BUF_SIZE 4096
 
-int build_options(char *argstr, int max_len, bool discover);
-int do_discover(char *argstr, bool connect, enum nvme_print_flags flags);
+int build_options(struct fabrics_config *fabrics_cfg, char *argstr,
+		  int max_len, bool discover);
+int do_discover(struct fabrics_config *fabrics_cfg, char *argstr,
+		bool connect, enum nvme_print_flags flags);
 int ctrl_instance(const char *device);
 char *parse_conn_arg(const char *conargs, const char delim, const char *field);
 int remove_ctrl(int instance);
