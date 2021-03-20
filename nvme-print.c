@@ -5,8 +5,8 @@
 #include <time.h>
 #include <sys/stat.h>
 
+#include "nvme.h"
 #include "nvme-print.h"
-#include "util/json.h"
 #include "nvme-models.h"
 #include "util/suffix.h"
 #include "common.h"
@@ -133,7 +133,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns)
 		eui64_buf[2 * sizeof(ns->eui64) + 1];
 	char *nguid = nguid_buf, *eui64 = eui64_buf;
 	struct json_object *root;
-	struct json_array *lbafs;
+	struct json_object *lbafs;
 	int i;
 
 	long double nvmcap = int128_to_double(ns->nvmcap);
@@ -212,7 +212,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 			void (*vs)(__u8 *vs, struct json_object *root))
 {
 	struct json_object *root;
-	struct json_array *psds;
+	struct json_object *psds;
 
 	long double tnvmcap = int128_to_double(ctrl->tnvmcap);
 	long double unvmcap = int128_to_double(ctrl->unvmcap);
@@ -353,7 +353,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 static void json_error_log(struct nvme_error_log_page *err_log, int entries)
 {
 	struct json_object *root;
-	struct json_array *errors;
+	struct json_object *errors;
 	int i;
 
 	root = json_create_object();
@@ -396,7 +396,7 @@ static void json_nvme_resv_report(struct nvme_reservation_status *status,
 				  int bytes, __u32 cdw11)
 {
 	struct json_object *root;
-	struct json_array *rcs;
+	struct json_object *rcs;
 	int i, j, regctl, entries;
 
 	regctl = status->regctl[0] | (status->regctl[1] << 8);
@@ -678,8 +678,8 @@ static void json_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname)
 	int offset = sizeof(struct nvme_ana_rsp_hdr);
 	struct nvme_ana_rsp_hdr *hdr = ana_log;
 	struct nvme_ana_group_desc *ana_desc;
-	struct json_array *desc_list;
-	struct json_array *ns_list;
+	struct json_object *desc_list;
+	struct json_object *ns_list;
 	struct json_object *desc;
 	struct json_object *nsid;
 	struct json_object *root;
@@ -735,7 +735,7 @@ static void json_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_en
 {
 	struct json_object *valid_attrs;
 	struct json_object *root;
-	struct json_array *valid;
+	struct json_object *valid;
 	int i;
 	__u32 num_entries;
 
@@ -950,7 +950,7 @@ void json_predictable_latency_event_agg_log(
 {
 	struct json_object *root;
 	struct json_object *valid_attrs;
-	struct json_array *valid;
+	struct json_object *valid;
 	__u64 num_iter;
 	__u64 num_entries;
 
@@ -1033,7 +1033,7 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 {
 	struct json_object *root;
 	struct json_object *valid_attrs;
-	struct json_array *valid;
+	struct json_object *valid;
 	__u32 offset, por_info_len, por_info_list;
 	__u64 *fw_rev;
 	char key[128];
@@ -1580,7 +1580,7 @@ void json_endurance_group_event_agg_log(
 {
 	struct json_object *root;
 	struct json_object *valid_attrs;
-	struct json_array *valid;
+	struct json_object *valid;
 
 	root = json_create_object();
 	json_object_add_value_uint(root, "num_entries_avail",
@@ -1628,8 +1628,8 @@ void json_lba_status_log(void *lba_status)
 	struct json_object *root;
 	struct json_object *desc;
 	struct json_object *element;
-	struct json_array *desc_list;
-	struct json_array *elements_list;
+	struct json_object *desc_list;
+	struct json_object *elements_list;
 	struct nvme_lba_status_hdr *hdr;
 	struct nvme_lba_status_ns_element *ns_element;
 	struct nvme_lba_status_range_desc *range_desc;
@@ -1675,7 +1675,7 @@ void json_lba_status_log(void *lba_status)
 
 		json_object_add_value_array(element, "descs", desc_list);
 		json_array_add_value_object(elements_list, element);
-    }
+	}
 
 	json_object_add_value_array(root, "ns_elements", elements_list);
 	json_print_object(root, NULL);
@@ -1800,7 +1800,7 @@ static void nvme_show_subsystem(struct nvme_subsystem *s)
 static void json_print_nvme_subsystem_list(struct nvme_topology *t)
 {
 	struct json_object *subsystem_attrs, *path_attrs;
-	struct json_array *subsystems, *paths;
+	struct json_object *subsystems, *paths;
 	struct json_object *root;
 	int i, j;
 
@@ -3492,7 +3492,7 @@ static void json_nvme_id_ns_descs(void *data)
 	} desc;
 
 	struct json_object *root;
-	struct json_array *json_array = NULL;
+	struct json_object *json_array = NULL;
 
 	off_t off;
 	int pos, len = 0;
@@ -3911,7 +3911,7 @@ void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
 	struct nvme_id_ns *id_ns)
 {
 	struct json_object *root;
-	struct json_array *lbafs;
+	struct json_object *lbafs;
 	int i;
 
 	root = json_create_object();
@@ -4135,7 +4135,7 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 static void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset)
 {
 	__u32 nent = nvmset->nid;
-	struct json_array *entries;
+	struct json_object *entries;
 	struct json_object *root;
 	int i;
 
@@ -4205,7 +4205,7 @@ static void json_nvme_list_secondary_ctrl(const struct nvme_secondary_controller
 {
 	const struct nvme_secondary_controller_entry *sc_entry = &sc_list->sc_entry[0];
 	__u32 nent = min(sc_list->num, count);
-	struct json_array *entries;
+	struct json_object *entries;
 	struct json_object *root;
 	int i;
 
@@ -4285,7 +4285,7 @@ static void json_nvme_id_ns_granularity_list(
 {
 	int i;
 	struct json_object *root;
-	struct json_array *entries;
+	struct json_object *entries;
 
 	root = json_create_object();
 
@@ -4341,7 +4341,7 @@ void nvme_show_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *
 static void json_nvme_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 {
 	struct json_object *root;
-	struct json_array *entries;
+	struct json_object *entries;
 	int i;
 
 	root = json_create_object();
@@ -5896,7 +5896,7 @@ static void json_detail_list(struct nvme_topology *t)
 {
 	int i, j, k;
 	struct json_object *root;
-	struct json_array *devices;
+	struct json_object *devices;
 	char formatter[41] = { 0 };
 
 	root = json_create_object();
@@ -5905,7 +5905,7 @@ static void json_detail_list(struct nvme_topology *t)
 	for (i = 0; i < t->nr_subsystems; i++) {
 		struct nvme_subsystem *s = &t->subsystems[i];
 		struct json_object *subsys_attrs;
-		struct json_array *namespaces, *ctrls;
+		struct json_object *namespaces, *ctrls;
 
 		subsys_attrs = json_create_object();
 		json_object_add_value_string(subsys_attrs, "Subsystem", s->name);
@@ -5916,7 +5916,7 @@ static void json_detail_list(struct nvme_topology *t)
 		for (j = 0; j < s->nr_ctrls; j++) {
 			struct json_object *ctrl_attrs = json_create_object();
 			struct nvme_ctrl *c = &s->ctrls[j];
-			struct json_array *namespaces;
+			struct json_object *namespaces;
 
 			json_object_add_value_string(ctrl_attrs, "Controller", c->name);
 			if (c->transport)
@@ -5978,7 +5978,7 @@ static void json_detail_list(struct nvme_topology *t)
 	json_free_object(root);
 }
 
-static void json_simple_ns(struct nvme_namespace *n, struct json_array *devices)
+static void json_simple_ns(struct nvme_namespace *n, struct json_object *devices)
 {
 	struct json_object *device_attrs;
 	char formatter[41] = { 0 };
@@ -6040,7 +6040,7 @@ static void json_simple_ns(struct nvme_namespace *n, struct json_array *devices)
 static void json_simple_list(struct nvme_topology *t)
 {
 	struct json_object *root;
-	struct json_array *devices;
+	struct json_object *devices;
 	int i, j, k;
 
 	root = json_create_object();
