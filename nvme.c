@@ -3681,7 +3681,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		goto close_sec_fd;
 	}
 
-	memset(sec_buf, 0, cfg.tl); // ensure zero fill if buf_size > sec_size
+	memset(sec_buf, 0, cfg.tl); // ensure zero fill if cfg.tl > sec_size
 
 	err = read(sec_fd, sec_buf, sec_size);
 	if (err < 0) {
@@ -3692,7 +3692,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 
 	err = nvme_sec_send(fd, cfg.namespace_id, cfg.nssf, cfg.spsp, cfg.secp,
-			cfg.tl, cfg.tl, sec_buf);
+			cfg.tl, sec_buf);
 	if (err < 0)
 		perror("security-send");
 	else if (err != 0)

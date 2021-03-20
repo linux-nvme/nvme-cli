@@ -139,7 +139,7 @@ int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data);
 int nvme_fw_commit(int fd, __u8 slot, __u8 action, __u8 bpid);
 
 int nvme_sec_send(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
-		  __u8 secp, __u32 tl, __u32 data_len, void *data);
+		  __u8 secp, __u32 data_len, void *data);
 int nvme_sec_recv(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 		  __u8 secp, __u32 al, __u32 data_len, void *data);
 
