@@ -36,7 +36,6 @@
 #include "plugin.h"
 #include "argconfig.h"
 #include "suffix.h"
-#include "json.h"
 
 #define CREATE_CMD
 
@@ -132,7 +131,7 @@ static char *log_pages_supp_print(__u32 pageID)
 static void json_log_pages_supp(log_page_map *logPageMap)
 {
 	struct json_object *root;
-	struct json_array *logPages;
+	struct json_object *logPages;
 	__u32 i = 0;
 
 	root = json_create_object();
@@ -494,7 +493,7 @@ static void json_print_smart_log(struct json_object *root,
 				 EXTENDED_SMART_INFO_T *ExtdSMARTInfo )
 {
 	/*struct json_object *root; */
-	struct json_array *lbafs;
+	struct json_object *lbafs;
 	int index = 0;
 
 	static __u64 lsbGbErased = 0, msbGbErased = 0, lsbLifWrtToFlash = 0, msbLifWrtToFlash = 0,
@@ -651,7 +650,7 @@ static void json_print_smart_log_CF(struct json_object *root,
 				    vendor_log_page_CF *pLogPageCF)
 {
 	/*struct json_object *root;*/
-	struct json_array *logPages;
+	struct json_object *logPages;
 	unsigned int currentTemp, maxTemp;
 	char buf[40];
 
@@ -716,11 +715,9 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	EXTENDED_SMART_INFO_T   ExtdSMARTInfo;
 	vendor_log_page_CF      logPageCF;
 	int fd;
-	struct json_object *root;
-	struct json_array *lbafs;
+	struct json_object *root = json_create_object();
+	struct json_object *lbafs = json_create_array();
 	struct json_object *lbafs_ExtSmart, *lbafs_DramSmart;
-	root = json_create_object();
-	lbafs = json_create_array();
 
 	const char *desc = "Retrieve Seagate Extended SMART information for the given device ";
 	const char *output_format = "output in binary format";

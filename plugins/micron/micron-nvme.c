@@ -680,7 +680,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *cmd,
     };
     bool is_json = false;
     struct json_object *root;
-    struct json_array *logPages;
+    struct json_object *logPages;
     int fd;
 
     OPT_ARGS(opts) = {
@@ -870,7 +870,7 @@ static int micron_pcie_stats(int argc, char **argv,
     if (is_json) {
 
         struct json_object *root = json_create_object();
-        struct json_array  *pcieErrors = json_create_array();
+        struct json_object *pcieErrors = json_create_array();
         struct json_object *stats = json_create_object();
 
         json_object_add_value_array(root, "PCIE Stats", pcieErrors);
@@ -1207,7 +1207,7 @@ static void print_micron_vs_logs(
 static void print_smart_cloud_health_log(__u8 *buf, bool is_json)
 {
     struct json_object *root;
-    struct json_array *logPages;
+    struct json_object *logPages;
     struct json_object *stats = NULL;
     int    field_count = sizeof(ocp_c0_log_page)/sizeof(ocp_c0_log_page[0]);
 
@@ -1232,7 +1232,7 @@ static void print_smart_cloud_health_log(__u8 *buf, bool is_json)
 static void print_nand_stats_fb(__u8 *buf, __u8 *buf2, __u8 nsze, bool is_json)
 {
     struct json_object *root;
-    struct json_array *logPages;
+    struct json_object *logPages;
     struct json_object *stats = NULL;
     int    field_count = sizeof(fb_log_page)/sizeof(fb_log_page[0]);
 
@@ -1276,7 +1276,7 @@ static void print_nand_stats_d0(__u8 *buf, __u8 oacs, bool is_json)
     if (is_json) {
         struct json_object *root = json_create_object();
         struct json_object *stats = json_create_object();
-        struct json_array  *logPages = json_create_array();
+        struct json_object *logPages = json_create_array();
 
         json_object_add_value_array(root,
                                     "Extended Smart Log Page : 0xD0",
