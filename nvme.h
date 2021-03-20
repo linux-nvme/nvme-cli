@@ -22,7 +22,32 @@
 #include <sys/time.h>
 
 #include "plugin.h"
+#ifdef LIBJSONC
+#include <json-c/json.h>
+
+#define json_create_object(o) json_object_new_object(o)
+#define json_create_array(a) json_object_new_array(a)
+#define json_free_object(o) json_object_put(o)
+#define json_free_array(a) json_object_put(a)
+#define json_object_add_value_uint(o, k, v) \
+	json_object_object_add(o, k, json_object_new_int(v))
+#define json_object_add_value_int(o, k, v) \
+	json_object_object_add(o, k, json_object_new_int(v))
+#define json_object_add_value_float(o, k, v) \
+	json_object_object_add(o, k, json_object_new_double(v))
+#define json_object_add_value_string(o, k, v) \
+	json_object_object_add(o, k, json_object_new_string(v))
+#define json_object_add_value_array(o, k, v) \
+	json_object_object_add(o, k, v)
+#define json_object_add_value_object(o, k, v) \
+	json_object_object_add(o, k, v)
+#define json_array_add_value_object(o, k) \
+	json_object_array_add(o, k)
+#define json_print_object(o, u)						\
+	printf("%s", json_object_to_json_string_ext(o, JSON_C_TO_STRING_PRETTY))
+#else
 #include "util/json.h"
+#endif
 #include "util/argconfig.h"
 #include "linux/nvme.h"
 
