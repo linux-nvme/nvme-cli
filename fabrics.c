@@ -405,8 +405,9 @@ static int add_ctrl(struct port_config *port_cfg, const char *argstr)
 		case OPT_INSTANCE:
 			if (match_int(args, &token))
 				goto out_fail;
-			ret = token;
+			port_cfg->instance = token;
 			port_cfg->discovered = true;
+			ret = port_cfg->instance;
 			goto out_close;
 		default:
 			/* ignore */
@@ -776,6 +777,8 @@ static struct port_config *lookup_port(struct subsys_config *subsys_cfg,
 		return NULL;
 	memset(port_cfg, 0, sizeof(struct port_config));
 	INIT_LIST_HEAD(&port_cfg->entry);
+	port_cfg->tos = -1;
+	port_cfg->instance = -1;
 	port_cfg->transport = strdup(transport);
 	if (traddr)
 		port_cfg->traddr = strdup(traddr);
@@ -840,6 +843,7 @@ static void json_parse_port(struct subsys_config *subsys_cfg,
 	struct port_config *port_cfg;
 	const char *transport, *traddr = NULL;
 	const char *host_traddr = NULL, *trsvcid = NULL;
+	char *device;
 
 	attr_obj = json_object_object_get(port_obj, "transport");
 	if (!attr_obj)
@@ -858,6 +862,9 @@ static void json_parse_port(struct subsys_config *subsys_cfg,
 			       traddr, host_traddr, trsvcid);
 	if (port_cfg)
 		json_update_attributes(port_cfg, port_obj);
+	device = find_ctrl_from_portconfig(port_cfg);
+	if (device)
+		port_cfg->instance = ctrl_instance(device);
 }
 
 static void json_parse_subsys(struct host_config *host_cfg,
@@ -1749,6 +1756,7 @@ int do_discover(struct port_config *port_cfg, char *argstr,
 		err = remove_ctrl(instance);
 		if (err)
 			return err;
+		port_cfg->instance = -1;
 	}
 
 	switch (ret) {
@@ -1938,6 +1946,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		.device = "none",
 		.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO,
 		.tos = -1,
+		.instance = -1,
 	};
 
 	OPT_ARGS(opts) = {
@@ -2050,6 +2059,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		.host_traddr = "none",
 		.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO,
 		.tos = -1,
+		.instance = -1,
 	};
 
 	OPT_ARGS(opts) = {
@@ -2116,6 +2126,8 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	instance = add_ctrl(&static_port, argstr);
 	if (instance < 0)
 		ret = instance;
+	else
+		static_port.instance = instance;
 
 	if (fabrics_cfg.config && strcmp(fabrics_cfg.config, "none"))
 		json_update_config(&fabrics_cfg);
