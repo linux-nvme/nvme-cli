@@ -1,6 +1,8 @@
 #ifndef _DISCOVER_H
 #define _DISCOVER_H
 
+#include "util/list.h"
+
 #define NVMF_DEF_DISC_TMO	30
 
 extern char *hostnqn_read(void);
@@ -14,14 +16,17 @@ extern int fabrics_disconnect_all(const char *desc, int argc, char **argv);
 
 const char *arg_str(const char * const *strings, size_t array_size, size_t idx);
 
-struct fabrics_config {
-	const char *nqn;
-	const char *transport;
-	const char *traddr;
-	const char *trsvcid;
-	const char *host_traddr;
-	const char *hostnqn;
-	const char *hostid;
+struct subsys_config;
+struct host_config;
+struct fabrics_config;
+
+struct port_config {
+	struct list_head entry;
+	struct subsys_config *subsys;
+	char *transport;
+	char *traddr;
+	char *trsvcid;
+	char *host_traddr;
 	int  nr_io_queues;
 	int  nr_write_queues;
 	int  nr_poll_queues;
@@ -30,24 +35,45 @@ struct fabrics_config {
 	int  reconnect_delay;
 	int  ctrl_loss_tmo;
 	int  tos;
-	const char *raw;
 	char *device;
 	int  duplicate_connect;
 	int  disable_sqflow;
 	int  hdr_digest;
 	int  data_digest;
 	bool persistent;
+};
+
+struct subsys_config {
+	struct list_head entry;
+	struct host_config *host;
+	char *nqn;
+	struct list_head port_list;
+};
+
+struct host_config {
+	struct list_head entry;
+	struct fabrics_config *fabrics;
+	char *hostnqn;
+	char *hostid;
+	struct list_head subsys_list;
+};
+
+struct fabrics_config {
+	struct list_head host_list;
+	char *raw;
+	bool quiet;
 	bool matching_only;
-	const char *output_format;
+	bool writeconfig;
+	char *output_format;
 };
 
 extern const char *const trtypes[];
 
 #define BUF_SIZE 4096
 
-int build_options(struct fabrics_config *fabrics_cfg, char *argstr,
+int build_options(struct port_config *port_cfg, char *argstr,
 		  int max_len, bool discover);
-int do_discover(struct fabrics_config *fabrics_cfg, char *argstr,
+int do_discover(struct port_config *port_cfg, char *argstr,
 		bool connect, enum nvme_print_flags flags);
 int ctrl_instance(const char *device);
 char *parse_conn_arg(const char *conargs, const char delim, const char *field);

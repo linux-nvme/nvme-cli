@@ -46,7 +46,6 @@
 
 #include "nvme.h"
 #include "util/argconfig.h"
-#include "util/list.h"
 #include "common.h"
 #include "util/log.h"
 #include "util/cleanup.h"
@@ -758,6 +757,98 @@ static void json_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	json_free_object(root);
 }
 
+static struct host_config *lookup_host(struct fabrics_config *fabrics_cfg,
+				       const char *hostnqn, const char *hostid)
+{
+	struct host_config *host_cfg;
+
+	if (!hostnqn)
+		return NULL;
+	list_for_each_entry(host_cfg, &fabrics_cfg->host_list, entry) {
+		if (strcmp(host_cfg->hostnqn, hostnqn))
+			continue;
+		if (hostid && strcmp(host_cfg->hostid, hostid))
+			continue;
+		return host_cfg;
+	}
+	host_cfg = malloc(sizeof(struct host_config));
+	INIT_LIST_HEAD(&host_cfg->entry);
+	INIT_LIST_HEAD(&host_cfg->subsys_list);
+	host_cfg->hostnqn = strdup(hostnqn);
+	host_cfg->fabrics = fabrics_cfg;
+	if (hostid)
+		host_cfg->hostid = strdup(hostid);
+	list_add(&host_cfg->entry, &fabrics_cfg->host_list);
+	return host_cfg;
+}
+
+static struct subsys_config *lookup_subsys(struct host_config *host_cfg,
+					   const char *nqn)
+{
+	struct subsys_config *subsys_cfg;
+
+	if (!nqn || !strlen(nqn))
+		return NULL;
+	list_for_each_entry(subsys_cfg, &host_cfg->subsys_list, entry) {
+		if (!strcmp(subsys_cfg->nqn, nqn))
+			return subsys_cfg;
+	}
+	subsys_cfg = malloc(sizeof(struct subsys_config));
+	if (!subsys_cfg)
+		return NULL;
+	INIT_LIST_HEAD(&subsys_cfg->entry);
+	INIT_LIST_HEAD(&subsys_cfg->port_list);
+	subsys_cfg->nqn = strdup(nqn);
+	subsys_cfg->host = host_cfg;
+	list_add(&subsys_cfg->entry, &host_cfg->subsys_list);
+	return subsys_cfg;
+}
+
+static struct port_config *lookup_port(struct subsys_config *subsys_cfg,
+		const char *transport, const char *traddr,
+		const char *host_traddr, const char *trsvcid)
+{
+	struct port_config *port_cfg;
+
+	if (!transport)
+		return NULL;
+	list_for_each_entry(port_cfg, &subsys_cfg->port_list, entry) {
+		if (strcmp(port_cfg->transport, transport))
+			continue;
+		if (traddr &&
+		    strcmp(port_cfg->traddr, traddr))
+			continue;
+		if (host_traddr &&
+		    strcmp(port_cfg->host_traddr, host_traddr))
+			continue;
+		if (trsvcid &&
+		    strcmp(port_cfg->trsvcid, trsvcid))
+			continue;
+		return port_cfg;
+	}
+	port_cfg = malloc(sizeof(struct port_config));
+	if (!port_cfg)
+		return NULL;
+	memset(port_cfg, 0, sizeof(struct port_config));
+	INIT_LIST_HEAD(&port_cfg->entry);
+	port_cfg->transport = strdup(transport);
+	if (traddr)
+		port_cfg->traddr = strdup(traddr);
+	else
+		port_cfg->traddr = strdup("none");
+	if (host_traddr)
+		port_cfg->host_traddr = strdup(host_traddr);
+	else
+		port_cfg->host_traddr = strdup("none");
+	if (trsvcid)
+		port_cfg->trsvcid = strdup(trsvcid);
+	else
+		port_cfg->trsvcid = strdup("none");
+	port_cfg->subsys = subsys_cfg;
+	list_add(&port_cfg->entry, &subsys_cfg->port_list);
+	return port_cfg;
+}
+
 static void save_discovery_log(struct nvmf_disc_rsp_page_hdr *log,
 			       int numrec, const char *logfile)
 {
@@ -854,14 +945,14 @@ char *hostnqn_read(void)
 	return NULL;
 }
 
-static int nvmf_hostnqn_file(struct fabrics_config *fabrics_cfg)
+static int nvmf_hostnqn_file(struct host_config *cfg)
 {
-	fabrics_cfg->hostnqn = hostnqn_read();
+	cfg->hostnqn = hostnqn_read();
 
-	return fabrics_cfg->hostnqn != NULL;
+	return cfg->hostnqn != NULL;
 }
 
-static int nvmf_hostid_file(struct fabrics_config *fabrics_cfg)
+static int nvmf_hostid_file(struct host_config *cfg)
 {
 	FILE *f;
 	char hostid[NVMF_HOSTID_SIZE + 1];
@@ -874,8 +965,8 @@ static int nvmf_hostid_file(struct fabrics_config *fabrics_cfg)
 	if (fgets(hostid, sizeof(hostid), f) == NULL)
 		goto out;
 
-	fabrics_cfg->hostid = strdup(hostid);
-	if (!fabrics_cfg->hostid)
+	cfg->hostid = strdup(hostid);
+	if (!cfg->hostid)
 		goto out;
 
 	ret = true;
@@ -933,125 +1024,124 @@ add_argument(char **argstr, int *max_len, char *arg_str, const char *arg)
 	return 0;
 }
 
-int build_options(struct fabrics_config *fabrics_cfg, char *argstr,
-		  int max_len, bool discover)
+int build_options(struct port_config *port_cfg, char *argstr,
+			 int max_len, bool discover)
 {
 	int len;
+	struct subsys_config *subsys_cfg = port_cfg->subsys;
+	struct host_config *host_cfg = subsys_cfg->host;
 
-	if (!fabrics_cfg->transport) {
+	if (!port_cfg->transport) {
 		msg(LOG_ERR, "need a transport (-t) argument\n");
 		return -EINVAL;
 	}
 
-	if (strncmp(fabrics_cfg->transport, "loop", 4)) {
-		if (!fabrics_cfg->traddr ||
-		    !strcmp(fabrics_cfg->traddr, "none")) {
+	if (strncmp(port_cfg->transport, "loop", 4)) {
+		if (!port_cfg->traddr || !strcmp(port_cfg->traddr, "none")) {
 			msg(LOG_ERR, "need a address (-a) argument\n");
 			return -EINVAL;
 		}
-		/* Use the default ctrl loss timeout if unset */
-		if (fabrics_cfg->ctrl_loss_tmo == -1)
-			fabrics_cfg->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 	}
 
 	/* always specify nqn as first arg - this will init the string */
-	len = snprintf(argstr, max_len, "nqn=%s", fabrics_cfg->nqn);
+	len = snprintf(argstr, max_len, "nqn=%s", subsys_cfg->nqn);
 	if (len < 0)
 		return -EINVAL;
 	argstr += len;
 	max_len -= len;
 
-	if (add_argument(&argstr, &max_len, "transport", fabrics_cfg->transport) ||
-	    add_argument(&argstr, &max_len, "traddr", fabrics_cfg->traddr) ||
+	if (add_argument(&argstr, &max_len, "transport", port_cfg->transport) ||
+	    add_argument(&argstr, &max_len, "traddr", port_cfg->traddr) ||
 	    add_argument(&argstr, &max_len, "host_traddr",
-			 fabrics_cfg->host_traddr) ||
-	    add_argument(&argstr, &max_len, "trsvcid",
-			 fabrics_cfg->trsvcid) ||
-	    ((fabrics_cfg->hostnqn || nvmf_hostnqn_file(fabrics_cfg)) &&
+			 port_cfg->host_traddr) ||
+	    add_argument(&argstr, &max_len, "trsvcid", port_cfg->trsvcid) ||
+	    ((host_cfg->hostnqn || nvmf_hostnqn_file(host_cfg)) &&
 		    add_argument(&argstr, &max_len, "hostnqn",
-				 fabrics_cfg->hostnqn)) ||
-	    ((fabrics_cfg->hostid || nvmf_hostid_file(fabrics_cfg)) &&
+				 host_cfg->hostnqn)) ||
+	    ((host_cfg->hostid || nvmf_hostid_file(host_cfg)) &&
 		    add_argument(&argstr, &max_len, "hostid",
-				 fabrics_cfg->hostid)) ||
+				 host_cfg->hostid)) ||
 	    (!discover &&
 	      add_int_argument(&argstr, &max_len, "nr_io_queues",
-				fabrics_cfg->nr_io_queues, false)) ||
+				port_cfg->nr_io_queues, false)) ||
 	    add_int_argument(&argstr, &max_len, "nr_write_queues",
-				fabrics_cfg->nr_write_queues, false) ||
+				port_cfg->nr_write_queues, false) ||
 	    add_int_argument(&argstr, &max_len, "nr_poll_queues",
-				fabrics_cfg->nr_poll_queues, false) ||
+				port_cfg->nr_poll_queues, false) ||
 	    (!discover &&
 	      add_int_argument(&argstr, &max_len, "queue_size",
-				fabrics_cfg->queue_size, false)) ||
+				port_cfg->queue_size, false)) ||
 	    add_int_argument(&argstr, &max_len, "keep_alive_tmo",
-			     fabrics_cfg->keep_alive_tmo, false) ||
+				port_cfg->keep_alive_tmo, false) ||
 	    add_int_argument(&argstr, &max_len, "reconnect_delay",
-				fabrics_cfg->reconnect_delay, false) ||
-	    (strncmp(fabrics_cfg->transport, "loop", 4) &&
+				port_cfg->reconnect_delay, false) ||
+	    (strncmp(port_cfg->transport, "loop", 4) &&
 	     add_int_argument(&argstr, &max_len, "ctrl_loss_tmo",
-			      fabrics_cfg->ctrl_loss_tmo, true)) ||
+				port_cfg->ctrl_loss_tmo, true)) ||
 	    add_int_argument(&argstr, &max_len, "tos",
-				fabrics_cfg->tos, true) ||
+				port_cfg->tos, true) ||
 	    add_bool_argument(&argstr, &max_len, "duplicate_connect",
-				fabrics_cfg->duplicate_connect) ||
+				port_cfg->duplicate_connect) ||
 	    add_bool_argument(&argstr, &max_len, "disable_sqflow",
-				fabrics_cfg->disable_sqflow) ||
+				port_cfg->disable_sqflow) ||
 	    add_bool_argument(&argstr, &max_len, "hdr_digest",
-			      fabrics_cfg->hdr_digest) ||
+				port_cfg->hdr_digest) ||
 	    add_bool_argument(&argstr, &max_len, "data_digest",
-			      fabrics_cfg->data_digest))
+				port_cfg->data_digest))
 		return -EINVAL;
 
 	return 0;
 }
 
-static void set_discovery_kato(struct fabrics_config *fabrics_cfg)
+static void set_discovery_kato(struct port_config *port_cfg)
 {
 	/* Set kato to NVMF_DEF_DISC_TMO for persistent controllers */
-	if (fabrics_cfg->persistent && !fabrics_cfg->keep_alive_tmo)
-		fabrics_cfg->keep_alive_tmo = NVMF_DEF_DISC_TMO;
+	if (port_cfg->persistent && !port_cfg->keep_alive_tmo)
+		port_cfg->keep_alive_tmo = NVMF_DEF_DISC_TMO;
 	/* Set kato to zero for non-persistent controllers */
-	else if (!fabrics_cfg->persistent && (fabrics_cfg->keep_alive_tmo > 0))
-		fabrics_cfg->keep_alive_tmo = 0;
+	else if (!port_cfg->persistent && (port_cfg->keep_alive_tmo > 0))
+		port_cfg->keep_alive_tmo = 0;
 }
 
-static void discovery_trsvcid(struct fabrics_config *fabrics_cfg)
+static void discovery_trsvcid(struct port_config *port_cfg)
 {
-	if (!strcmp(fabrics_cfg->transport, "tcp")) {
+	if (!strcmp(port_cfg->transport, "tcp")) {
 		/* Default port for NVMe/TCP discovery controllers */
-		fabrics_cfg->trsvcid = __stringify(NVME_DISC_IP_PORT);
-	} else if (!strcmp(fabrics_cfg->transport, "rdma")) {
+		port_cfg->trsvcid = __stringify(NVME_DISC_IP_PORT);
+	} else if (!strcmp(port_cfg->transport, "rdma")) {
 		/* Default port for NVMe/RDMA controllers */
-		fabrics_cfg->trsvcid = __stringify(NVME_RDMA_IP_PORT);
+		port_cfg->trsvcid = __stringify(NVME_RDMA_IP_PORT);
 	}
 }
 
-static bool traddr_is_hostname(struct fabrics_config *fabrics_cfg)
+static bool traddr_is_hostname(struct port_config *port_cfg)
 {
 	char addrstr[NVMF_TRADDR_SIZE];
 
-	if (!fabrics_cfg->transport)
+	if (!port_cfg->transport)
 		return false;
-	if (!fabrics_cfg->traddr || !strcmp(fabrics_cfg->traddr, "none"))
+	if (!port_cfg->traddr || !strcmp(port_cfg->traddr, "none"))
 		return false;
-	if (strcmp(fabrics_cfg->transport, "tcp") && strcmp(fabrics_cfg->transport, "rdma"))
+	if (strcmp(port_cfg->transport, "tcp") &&
+	    strcmp(port_cfg->transport, "rdma"))
 		return false;
-	if (inet_pton(AF_INET, fabrics_cfg->traddr, addrstr) > 0 ||
-	    inet_pton(AF_INET6, fabrics_cfg->traddr, addrstr) > 0)
+	if (inet_pton(AF_INET, port_cfg->traddr, addrstr) > 0 ||
+	    inet_pton(AF_INET6, port_cfg->traddr, addrstr) > 0)
 		return false;
 	return true;
 }
 
-static int hostname2traddr(struct fabrics_config *fabrics_cfg)
+static int hostname2traddr(struct port_config *port_cfg)
 {
 	struct addrinfo *host_info, hints = {.ai_family = AF_UNSPEC};
 	char addrstr[NVMF_TRADDR_SIZE];
 	const char *p;
 	int ret;
 
-	ret = getaddrinfo(fabrics_cfg->traddr, NULL, &hints, &host_info);
+	ret = getaddrinfo(port_cfg->traddr, NULL, &hints, &host_info);
 	if (ret) {
-		msg(LOG_ERR, "failed to resolve host %s info\n", fabrics_cfg->traddr);
+		msg(LOG_ERR, "failed to resolve host %s info\n",
+			port_cfg->traddr);
 		return ret;
 	}
 
@@ -1068,27 +1158,32 @@ static int hostname2traddr(struct fabrics_config *fabrics_cfg)
 		break;
 	default:
 		msg(LOG_ERR, "unrecognized address family (%d) %s\n",
-			host_info->ai_family, fabrics_cfg->traddr);
+			host_info->ai_family, port_cfg->traddr);
 		ret = -EINVAL;
 		goto free_addrinfo;
 	}
 
 	if (!p) {
-		msg(LOG_ERR, "failed to get traddr for %s\n", fabrics_cfg->traddr);
+		msg(LOG_ERR, "failed to get traddr for %s\n",
+			port_cfg->traddr);
 		ret = -errno;
 		goto free_addrinfo;
 	}
-	fabrics_cfg->traddr = strdup(addrstr);
+	port_cfg->traddr = strdup(addrstr);
 
 free_addrinfo:
 	freeaddrinfo(host_info);
 	return ret;
 }
 
-static int connect_ctrl(struct fabrics_config *fabrics_cfg,
+static int connect_ctrl(struct host_config *host_cfg, char *host_traddr,
 			struct nvmf_disc_rsp_page_entry *e)
 {
+	struct subsys_config *subsys_cfg;
+	struct port_config *port_cfg;
 	char argstr[BUF_SIZE], *p;
+	char traddr[NVMF_TRADDR_SIZE];
+	char trsvcid[NVMF_TRSVCID_SIZE];
 	const char *transport;
 	bool discover, disable_sqflow = true;
 	int len, ret;
@@ -1108,7 +1203,13 @@ retry:
 		return -EINVAL;
 	}
 
-	len = sprintf(p, "nqn=%s", e->subnqn);
+	subsys_cfg = lookup_subsys(host_cfg, e->subnqn);
+	if (!subsys_cfg) {
+		msg(LOG_ERR, "cannot allocate subsys '%s', skipping\n",
+			e->subnqn);
+		return -ENOENT;
+	}
+	len = sprintf(p, "nqn=%s", subsys_cfg->nqn);
 	if (len < 0)
 		return -EINVAL;
 	p += len;
@@ -1130,18 +1231,20 @@ retry:
 	case NVMF_TRTYPE_TCP:
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_IP4:
-		case NVMF_ADDR_FAMILY_IP6:
 			/* FALLTHRU */
-			len = sprintf(p, ",traddr=%.*s",
-				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
-				      e->traddr);
+		case NVMF_ADDR_FAMILY_IP6:
+			sprintf(traddr, "%.*s",
+				space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
+				e->traddr);
+			len = sprintf(p, ",traddr=%s", traddr);
 			if (len < 0)
 				return -EINVAL;
 			p += len;
 
-			len = sprintf(p, ",trsvcid=%.*s",
-				      space_strip_len(NVMF_TRSVCID_SIZE, e->trsvcid),
-				      e->trsvcid);
+			sprintf(trsvcid, "%.*s",
+				space_strip_len(NVMF_TRSVCID_SIZE, e->trsvcid),
+				e->trsvcid);
+			len = sprintf(p, ",trsvcid=%s", trsvcid);
 			if (len < 0)
 				return -EINVAL;
 			p += len;
@@ -1154,9 +1257,10 @@ retry:
 	case NVMF_TRTYPE_FC:
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_FC:
-			len = sprintf(p, ",traddr=%.*s",
-				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
-				      e->traddr);
+			sprintf(traddr, "%.*s",
+				space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
+				e->traddr);
+			len = sprintf(p, ",traddr=%s", traddr);
 			if (len < 0)
 				return -EINVAL;
 			p += len;
@@ -1168,91 +1272,101 @@ retry:
 		break;
 	}
 
-	if (fabrics_cfg->hostnqn && strcmp(fabrics_cfg->hostnqn, "none")) {
-		len = sprintf(p, ",hostnqn=%s", fabrics_cfg->hostnqn);
+	port_cfg = lookup_port(subsys_cfg, transport, traddr,
+			       host_traddr, trsvcid);
+	if (!port_cfg) {
+		msg(LOG_ERR, "failed to allocate port %s/%s, skipping\n",
+			transport, traddr);
+		return -ENOMEM;
+	}
+	if (host_cfg->hostnqn && strcmp(host_cfg->hostnqn, "none")) {
+		len = sprintf(p, ",hostnqn=%s", host_cfg->hostnqn);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
 	}
 
-	if (fabrics_cfg->hostid && strcmp(fabrics_cfg->hostid, "none")) {
-		len = sprintf(p, ",hostid=%s", fabrics_cfg->hostid);
+	if (host_cfg->hostid && strcmp(host_cfg->hostid, "none")) {
+		len = sprintf(p, ",hostid=%s", host_cfg->hostid);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
 	}
 
-	if (fabrics_cfg->queue_size && !discover) {
-		len = sprintf(p, ",queue_size=%d", fabrics_cfg->queue_size);
+	if (port_cfg->queue_size && !discover) {
+		len = sprintf(p, ",queue_size=%d", port_cfg->queue_size);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
 	}
 
-	if (fabrics_cfg->nr_io_queues && !discover) {
-		len = sprintf(p, ",nr_io_queues=%d", fabrics_cfg->nr_io_queues);
+	if (port_cfg->nr_io_queues && !discover) {
+		len = sprintf(p, ",nr_io_queues=%d", port_cfg->nr_io_queues);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
 	}
 
-	if (fabrics_cfg->nr_write_queues) {
-		len = sprintf(p, ",nr_write_queues=%d", fabrics_cfg->nr_write_queues);
+	if (port_cfg->nr_write_queues) {
+		len = sprintf(p, ",nr_write_queues=%d", port_cfg->nr_write_queues);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
 	}
 
-	if (fabrics_cfg->nr_poll_queues) {
-		len = sprintf(p, ",nr_poll_queues=%d", fabrics_cfg->nr_poll_queues);
+	if (port_cfg->nr_poll_queues) {
+		len = sprintf(p, ",nr_poll_queues=%d", port_cfg->nr_poll_queues);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
 	}
 
-	if (fabrics_cfg->host_traddr && strcmp(fabrics_cfg->host_traddr, "none")) {
-		len = sprintf(p, ",host_traddr=%s", fabrics_cfg->host_traddr);
+	if (port_cfg->host_traddr && strcmp(port_cfg->host_traddr, "none")) {
+		len = sprintf(p, ",host_traddr=%s", port_cfg->host_traddr);
 		if (len < 0)
 			return -EINVAL;
 		p+= len;
 	}
 
-	if (fabrics_cfg->reconnect_delay) {
-		len = sprintf(p, ",reconnect_delay=%d", fabrics_cfg->reconnect_delay);
+	if (port_cfg->reconnect_delay) {
+		len = sprintf(p, ",reconnect_delay=%d",
+			      port_cfg->reconnect_delay);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
 	}
 
-	if ((e->trtype != NVMF_TRTYPE_LOOP) && (fabrics_cfg->ctrl_loss_tmo >= -1)) {
-		len = sprintf(p, ",ctrl_loss_tmo=%d", fabrics_cfg->ctrl_loss_tmo);
+	if ((e->trtype != NVMF_TRTYPE_LOOP) &&
+	    (port_cfg->ctrl_loss_tmo >= -1)) {
+		len = sprintf(p, ",ctrl_loss_tmo=%d", port_cfg->ctrl_loss_tmo);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
 	}
 
-	if (fabrics_cfg->tos != -1) {
-		len = sprintf(p, ",tos=%d", fabrics_cfg->tos);
+	if (port_cfg->tos != -1) {
+		len = sprintf(p, ",tos=%d", port_cfg->tos);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
 	}
 
-	if (fabrics_cfg->keep_alive_tmo) {
-		len = sprintf(p, ",keep_alive_tmo=%d", fabrics_cfg->keep_alive_tmo);
+	if (port_cfg->keep_alive_tmo) {
+		len = sprintf(p, ",keep_alive_tmo=%d",
+			      port_cfg->keep_alive_tmo);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
 	}
 
-	if (fabrics_cfg->hdr_digest) {
+	if (port_cfg->hdr_digest) {
 		len = sprintf(p, ",hdr_digest");
 		if (len < 0)
 			return -EINVAL;
 		p += len;
 	}
 
-	if (fabrics_cfg->data_digest) {
+	if (port_cfg->data_digest) {
 		len = sprintf(p, ",data_digest");
 		if (len < 0)
 			return -EINVAL;
@@ -1269,10 +1383,10 @@ retry:
 	if (discover) {
 		enum nvme_print_flags flags;
 
-		flags = validate_output_format(fabrics_cfg->output_format);
+		flags = validate_output_format(host_cfg->fabrics->output_format);
 		if (flags < 0)
 			flags = NORMAL;
-		ret = do_discover(fabrics_cfg, argstr, true, flags);
+		ret = do_discover(port_cfg, argstr, true, flags);
 	} else
 		ret = add_ctrl(argstr);
 	if (ret == -EINVAL && disable_sqflow &&
@@ -1287,7 +1401,7 @@ retry:
 static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry,
 			      const char *host_traddr)
 {
-	struct connect_args cargs __cleanup__(destruct_connect_args) = { NULL, };
+	struct connect_args cargs = {};
 	struct connect_args *c;
 
 	cargs.traddr = strdup(entry->traddr);
@@ -1310,34 +1424,40 @@ static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry,
 	return find_ctrl_with_connectargs(&cargs) != NULL;
 }
 
-static bool should_connect(struct fabrics_config *fabrics_cfg,
-			   struct nvmf_disc_rsp_page_entry *entry)
+static bool should_connect(struct port_config *port_cfg,
+			   struct nvmf_disc_rsp_page_entry *entry,
+			   bool matching_only)
 {
 	int len;
 
-	if (cargs_match_found(entry, fabrics_cfg->host_traddr))
+	if (cargs_match_found(entry, port_cfg->host_traddr))
 		return false;
 
-	if (!fabrics_cfg->matching_only || !fabrics_cfg->traddr ||
-	    !strcmp(fabrics_cfg->traddr, "none"))
+	if (!matching_only || !port_cfg->traddr ||
+	    !strcmp(port_cfg->traddr, "none"))
 		return true;
 
 	len = space_strip_len(NVMF_TRADDR_SIZE, entry->traddr);
-	return !strncmp(fabrics_cfg->traddr, entry->traddr, len);
+	return !strncmp(port_cfg->traddr, entry->traddr, len);
 }
 
-static int connect_ctrls(struct fabrics_config *fabrics_cfg,
+static int connect_ctrls(struct port_config *port_cfg,
 			 struct nvmf_disc_rsp_page_hdr *log, int numrec)
 {
+	struct subsys_config *subsys_cfg = port_cfg->subsys;
+	struct host_config *host_cfg = subsys_cfg->host;
+	struct fabrics_config *fabrics_cfg = host_cfg->fabrics;
 	int i;
 	int instance;
 	int ret = 0;
 
 	for (i = 0; i < numrec; i++) {
-		if (!should_connect(fabrics_cfg, &log->entries[i]))
+		if (!should_connect(port_cfg, &log->entries[i],
+				    fabrics_cfg->matching_only))
 			continue;
 
-		instance = connect_ctrl(fabrics_cfg, &log->entries[i]);
+		instance = connect_ctrl(host_cfg, port_cfg->host_traddr,
+					&log->entries[i]);
 
 		/* clean success */
 		if (instance >= 0)
@@ -1347,7 +1467,9 @@ static int connect_ctrls(struct fabrics_config *fabrics_cfg,
 		if (instance == -EALREADY) {
 			const char *traddr = log->entries[i].traddr;
 
-			msg(LOG_NOTICE, "traddr=%.*s is already connected\n",
+			if (!fabrics_cfg->quiet)
+				msg(LOG_ERR,
+					"traddr=%.*s is already connected\n",
 					space_strip_len(NVMF_TRADDR_SIZE,
 							traddr),
 					traddr);
@@ -1365,46 +1487,80 @@ static int connect_ctrls(struct fabrics_config *fabrics_cfg,
 	return ret;
 }
 
-static void nvmf_get_host_identifiers(struct fabrics_config *fabrics_cfg,
-				      int ctrl_instance)
+static struct host_config *nvmf_get_host_identifiers(struct fabrics_config *fabrics_cfg,
+						     int ctrl_instance)
 {
 	char *path;
+	struct host_config *host_cfg;
 
 	if (asprintf(&path, "%s/nvme%d", SYS_NVME, ctrl_instance) < 0)
-		return;
-	fabrics_cfg->hostnqn = nvme_get_ctrl_attr(path, "hostnqn");
-	fabrics_cfg->hostid = nvme_get_ctrl_attr(path, "hostid");
+		return NULL;
+	host_cfg = lookup_host(fabrics_cfg, nvme_get_ctrl_attr(path, "hostnqn"),
+			       nvme_get_ctrl_attr(path, "hostid"));
+	return host_cfg;
 }
 
-static DEFINE_CLEANUP_FUNC(cleanup_log, struct nvmf_disc_rsp_page_hdr *, free);
-
-int do_discover(struct fabrics_config *fabrics_cfg, char *argstr,
+int do_discover(struct port_config *port_cfg, char *argstr,
 		bool connect, enum nvme_print_flags flags)
 {
-	struct nvmf_disc_rsp_page_hdr *log __cleanup__(cleanup_log) = NULL;
+	struct subsys_config *subsys_cfg = port_cfg->subsys;
+	struct host_config *host_cfg = subsys_cfg->host;
+	struct fabrics_config *fabrics_cfg = host_cfg->fabrics;
+	struct nvmf_disc_rsp_page_hdr *log = NULL;
 	char *dev_name;
 	int instance, numrec = 0, ret, err;
 	int status = 0;
-	struct connect_args *cargs;
 
-	cargs = extract_connect_args(argstr);
-	if (!cargs)
-		return -ENOMEM;
+	if (port_cfg->device) {
+		struct connect_args *cargs;
 
-	if (fabrics_cfg->device &&
-	    !ctrl_matches_connectargs(fabrics_cfg->device, cargs)) {
-		free(fabrics_cfg->device);
-		fabrics_cfg->device = NULL;
+		cargs = extract_connect_args(argstr);
+		if (!cargs)
+			return -ENOMEM;
+
+		/*
+		 * if the cfg->device passed in matches the connect args
+		 *    cfg->device is left as-is
+		 * else if there exists a controller that matches the
+		 *         connect args
+		 *    cfg->device is the matching ctrl name
+		 * else if no ctrl matches the connect args
+		 *    cfg->device is set to null. This will attempt to
+		 *    create a new ctrl.
+		 * endif
+		 */
+		if (!ctrl_matches_connectargs(port_cfg->device, cargs))
+			port_cfg->device = find_ctrl_with_connectargs(cargs);
+
+		free_connect_args(cargs);
 	}
-	if (!fabrics_cfg->device)
-		fabrics_cfg->device = find_ctrl_with_connectargs(cargs);
-	free_connect_args(cargs);
 
-	if (!fabrics_cfg->device) {
+	if (!port_cfg->device) {
 		instance = add_ctrl(argstr);
 	} else {
-		instance = ctrl_instance(fabrics_cfg->device);
-		nvmf_get_host_identifiers(fabrics_cfg, instance);
+		struct host_config *tmp_host_cfg;
+
+		instance = ctrl_instance(port_cfg->device);
+		tmp_host_cfg = nvmf_get_host_identifiers(fabrics_cfg, instance);
+		if (host_cfg != tmp_host_cfg) {
+			/* Host identifiers changed, switch subtree */
+			char *subsysnqn = subsys_cfg->nqn;
+			char *transport, *traddr, *host_traddr, *trsvcid;
+
+			subsys_cfg = lookup_subsys(tmp_host_cfg, subsysnqn);
+			if (!subsys_cfg) {
+				msg(LOG_ERR,
+					"Failed to allocate subsys '%s'\n",
+					subsysnqn);
+				return -ENOMEM;
+			}
+			transport = port_cfg->transport;
+			traddr = port_cfg->traddr;
+			host_traddr = port_cfg->host_traddr;
+			trsvcid = port_cfg->trsvcid;
+			port_cfg = lookup_port(subsys_cfg, transport, traddr,
+					       host_traddr, trsvcid);
+		}
 	}
 	if (instance < 0)
 		return instance;
@@ -1413,9 +1569,9 @@ int do_discover(struct fabrics_config *fabrics_cfg, char *argstr,
 		return -errno;
 	ret = nvmf_get_log_page_discovery(dev_name, &log, &numrec, &status);
 	free(dev_name);
-	if (fabrics_cfg->persistent)
-		msg(LOG_NOTICE, "Persistent device: nvme%d\n", instance);
-	if (!fabrics_cfg->device && !fabrics_cfg->persistent) {
+	if (port_cfg && port_cfg->persistent)
+		printf("Persistent device: nvme%d\n", instance);
+	if (!port_cfg || (!port_cfg->device && !port_cfg->persistent)) {
 		err = remove_ctrl(instance);
 		if (err)
 			return err;
@@ -1423,9 +1579,12 @@ int do_discover(struct fabrics_config *fabrics_cfg, char *argstr,
 
 	switch (ret) {
 	case DISC_OK:
-		if (connect)
-			ret = connect_ctrls(fabrics_cfg, log, numrec);
-		else if (fabrics_cfg->raw || flags == BINARY)
+		if (connect) {
+			if (port_cfg)
+				ret = connect_ctrls(port_cfg, log, numrec);
+			else
+				ret = -ENOMEM;
+		} else if (fabrics_cfg->raw || flags == BINARY)
 			save_discovery_log(log, numrec, fabrics_cfg->raw);
 		else if (flags == JSON)
 			json_discovery_log(log, numrec);
@@ -1433,8 +1592,7 @@ int do_discover(struct fabrics_config *fabrics_cfg, char *argstr,
 			print_discovery_log(log, numrec);
 		break;
 	case DISC_GET_NUMRECS:
-		msg(LOG_ERR,
-			"Get number of discovery log entries failed.\n");
+		msg(LOG_ERR, "Get number of discovery log entries failed.\n");
 		ret = status;
 		break;
 	case DISC_GET_LOG:
@@ -1451,7 +1609,7 @@ int do_discover(struct fabrics_config *fabrics_cfg, char *argstr,
 		break;
 	case DISC_NOT_EQUAL:
 		msg(LOG_ERR,
-		"Numrec values of last two get discovery log page not equal\n");
+		    "Numrec values of last two get discovery log page not equal\n");
 		ret = -EBADSLT;
 		break;
 	default:
@@ -1463,11 +1621,13 @@ int do_discover(struct fabrics_config *fabrics_cfg, char *argstr,
 }
 
 static int discover_from_conf_file(struct fabrics_config *fabrics_cfg,
-		const char *desc, char *argstr,
+		struct host_config *static_host,
+		struct port_config *static_port, const char *desc, char *argstr,
 		const struct argconfig_commandline_options *opts, bool connect)
 {
+	struct subsys_config *subsys_cfg;
 	FILE *f;
-	char line[256], *ptr, *all_args, *args, **argv;
+	char line[256], *ptr, *args, **argv;
 	int argc, err, ret = 0;
 
 	f = fopen(PATH_NVMF_DISC, "r");
@@ -1477,8 +1637,16 @@ static int discover_from_conf_file(struct fabrics_config *fabrics_cfg,
 		return -EINVAL;
 	}
 
+	subsys_cfg = lookup_subsys(static_host, NVME_DISC_SUBSYS_NAME);
+	if (!subsys_cfg) {
+		msg(LOG_ERR, "Failed to allocate subsys '%s'\n",
+			NVME_DISC_SUBSYS_NAME);
+		return -ENOMEM;
+	}
+
 	while (fgets(line, sizeof(line), f) != NULL) {
 		enum nvme_print_flags flags;
+		struct port_config *port_cfg;
 
 		if (line[0] == '#' || line[0] == '\n')
 			continue;
@@ -1489,11 +1657,10 @@ static int discover_from_conf_file(struct fabrics_config *fabrics_cfg,
 			ret = -ENOMEM;
 			goto out;
 		}
-		all_args = args;
 
 		argv = calloc(MAX_DISC_ARGS, BUF_SIZE);
 		if (!argv) {
-			msg(LOG_ERR, "failed to allocate argv vector: %m\n");
+			perror("failed to allocate argv vector\n");
 			free(args);
 			ret = -ENOMEM;
 			goto out;
@@ -1508,39 +1675,70 @@ static int discover_from_conf_file(struct fabrics_config *fabrics_cfg,
 		if (err)
 			goto free_and_continue;
 
-		if (!fabrics_cfg->transport || !fabrics_cfg->traddr)
-			goto free_and_continue;
+		port_cfg = lookup_port(subsys_cfg, static_port->transport,
+				   static_port->traddr,
+				   static_port->host_traddr,
+				   static_port->trsvcid);
+		if (!port_cfg) {
+			/* Continue with static port */
+			port_cfg = static_port;
+		}
+		if (port_cfg != static_port) {
+			port_cfg->nr_io_queues =
+				static_port->nr_io_queues;
+			port_cfg->nr_write_queues =
+				static_port->nr_write_queues;
+			port_cfg->nr_poll_queues =
+				static_port->nr_poll_queues;
+			port_cfg->queue_size =
+				static_port->queue_size;
+			port_cfg->keep_alive_tmo =
+				static_port->keep_alive_tmo;
+			port_cfg->reconnect_delay =
+				static_port->reconnect_delay;
+			port_cfg->ctrl_loss_tmo =
+				static_port->ctrl_loss_tmo;
+			port_cfg->tos =
+				static_port->tos;
+			port_cfg->duplicate_connect =
+				static_port->duplicate_connect;
+			port_cfg->disable_sqflow =
+				static_port->disable_sqflow;
+			port_cfg->hdr_digest =
+				static_port->hdr_digest;
+			port_cfg->data_digest =
+				static_port->data_digest;
+			port_cfg->persistent =
+				static_port->persistent;
+		}
 
 		err = flags = validate_output_format(fabrics_cfg->output_format);
 		if (err < 0)
 			goto free_and_continue;
-		set_discovery_kato(fabrics_cfg);
+		set_discovery_kato(port_cfg);
 
-		if (traddr_is_hostname(fabrics_cfg)) {
-			ret = hostname2traddr(fabrics_cfg);
+		if (traddr_is_hostname(port_cfg)) {
+			ret = hostname2traddr(port_cfg);
 			if (ret)
 				goto out;
 		}
 
-		if (!fabrics_cfg->trsvcid ||
-		    !strcmp(fabrics_cfg->trsvcid, "none"))
-			discovery_trsvcid(fabrics_cfg);
+		if (!port_cfg->trsvcid || !strcmp(port_cfg->trsvcid, "none"))
+			discovery_trsvcid(port_cfg);
 
-		err = build_options(fabrics_cfg, argstr, BUF_SIZE, true);
+		err = build_options(port_cfg, argstr, BUF_SIZE, true);
 		if (err) {
 			ret = err;
 			goto free_and_continue;
 		}
 
-		err = do_discover(fabrics_cfg, argstr, connect, flags);
+		err = do_discover(port_cfg, argstr, connect, flags);
 		if (err)
 			ret = err;
 
 free_and_continue:
-		free(all_args);
+		free(args);
 		free(argv);
-		fabrics_cfg->transport = fabrics_cfg->traddr =
-			fabrics_cfg->trsvcid = fabrics_cfg->host_traddr = NULL;
 	}
 
 out:
@@ -1553,38 +1751,41 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	char argstr[BUF_SIZE];
 	int ret;
 	enum nvme_print_flags flags;
-	bool quiet = false;
 	struct fabrics_config fabrics_cfg = {
+		.output_format = "normal",
+	};
+	struct host_config static_host;
+	struct subsys_config *subsys_cfg;
+	struct port_config static_port = {
 		.traddr = "none",
 		.trsvcid = "none",
 		.host_traddr = "none",
+		.device = "none",
 		.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO,
-		.output_format = "normal",
 		.tos = -1,
-		.nqn = NVME_DISC_SUBSYS_NAME,
 	};
-	
+
 	OPT_ARGS(opts) = {
-		OPT_LIST("transport",      't', &fabrics_cfg.transport,       "transport type"),
-		OPT_LIST("traddr",         'a', &fabrics_cfg.traddr,          "transport address"),
-		OPT_LIST("trsvcid",        's', &fabrics_cfg.trsvcid,         "transport service id (e.g. IP port)"),
-		OPT_LIST("host-traddr",    'w', &fabrics_cfg.host_traddr,     "host traddr (e.g. FC WWN's)"),
-		OPT_LIST("hostnqn",        'q', &fabrics_cfg.hostnqn,         "user-defined hostnqn (if default not used)"),
-		OPT_LIST("hostid",         'I', &fabrics_cfg.hostid,          "user-defined hostid (if default not used)"),
+		OPT_LIST("transport",      't', &static_port.transport,       "transport type"),
+		OPT_LIST("traddr",         'a', &static_port.traddr,          "transport address"),
+		OPT_LIST("trsvcid",        's', &static_port.trsvcid,         "transport service id (e.g. IP port)"),
+		OPT_LIST("host-traddr",    'w', &static_port.host_traddr,     "host traddr (e.g. FC WWN's)"),
+		OPT_LIST("hostnqn",        'q', &static_host.hostnqn,         "user-defined hostnqn (if default not used)"),
+		OPT_LIST("hostid",         'I', &static_host.hostid,          "user-defined hostid (if default not used)"),
 		OPT_LIST("raw",            'r', &fabrics_cfg.raw,             "raw output file"),
-		OPT_LIST("device",         'd', &fabrics_cfg.device,          "existing discovery controller device"),
-		OPT_INT("keep-alive-tmo",  'k', &fabrics_cfg.keep_alive_tmo,  "keep alive timeout period in seconds"),
-		OPT_INT("reconnect-delay", 'c', &fabrics_cfg.reconnect_delay, "reconnect timeout period in seconds"),
-		OPT_INT("ctrl-loss-tmo",   'l', &fabrics_cfg.ctrl_loss_tmo,   "controller loss timeout period in seconds"),
-		OPT_INT("tos",             'T', &fabrics_cfg.tos,             "type of service"),
-		OPT_FLAG("hdr_digest",     'g', &fabrics_cfg.hdr_digest,      "enable transport protocol header digest (TCP transport)"),
-		OPT_FLAG("data_digest",    'G', &fabrics_cfg.data_digest,     "enable transport protocol data digest (TCP transport)"),
-		OPT_INT("nr-io-queues",    'i', &fabrics_cfg.nr_io_queues,    "number of io queues to use (default is core count)"),
-		OPT_INT("nr-write-queues", 'W', &fabrics_cfg.nr_write_queues, "number of write queues to use (default 0)"),
-		OPT_INT("nr-poll-queues",  'P', &fabrics_cfg.nr_poll_queues,  "number of poll queues to use (default 0)"),
-		OPT_INT("queue-size",      'Q', &fabrics_cfg.queue_size,      "number of io queue elements to use (default 128)"),
-		OPT_FLAG("persistent",     'p', &fabrics_cfg.persistent,      "persistent discovery connection"),
-		OPT_FLAG("quiet",          'S', &quiet,               "suppress already connected errors"),
+		OPT_LIST("device",         'd', &static_port.device,          "use existing discovery controller device"),
+		OPT_INT("keep-alive-tmo",  'k', &static_port.keep_alive_tmo,  "keep alive timeout period in seconds"),
+		OPT_INT("reconnect-delay", 'c', &static_port.reconnect_delay, "reconnect timeout period in seconds"),
+		OPT_INT("ctrl-loss-tmo",   'l', &static_port.ctrl_loss_tmo,   "controller loss timeout period in seconds"),
+		OPT_INT("tos",             'T', &static_port.tos,             "type of service"),
+		OPT_FLAG("hdr_digest",     'g', &static_port.hdr_digest,      "enable transport protocol header digest (TCP transport)"),
+		OPT_FLAG("data_digest",    'G', &static_port.data_digest,     "enable transport protocol data digest (TCP transport)"),
+		OPT_INT("nr-io-queues",    'i', &static_port.nr_io_queues,    "number of io queues to use (default is core count)"),
+		OPT_INT("nr-write-queues", 'W', &static_port.nr_write_queues, "number of write queues to use (default 0)"),
+		OPT_INT("nr-poll-queues",  'P', &static_port.nr_poll_queues,  "number of poll queues to use (default 0)"),
+		OPT_INT("queue-size",      'Q', &static_port.queue_size,      "number of io queue elements to use (default 128)"),
+		OPT_FLAG("persistent",     'p', &static_port.persistent,      "persistent discovery connection"),
+		OPT_FLAG("quiet",          'S', &fabrics_cfg.quiet,           "suppress already connected errors"),
 		OPT_FLAG("matching",       'm', &fabrics_cfg.matching_only,   "connect only records matching the traddr"),
 		OPT_FMT("output-format",   'o', &fabrics_cfg.output_format,   output_format),
 		OPT_END()
@@ -1597,42 +1798,51 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	ret = flags = validate_output_format(fabrics_cfg.output_format);
 	if (ret < 0)
 		goto out;
-	if (fabrics_cfg.device && strcmp(fabrics_cfg.device, "none")) {
-		fabrics_cfg.device = strdup(fabrics_cfg.device);
-		if (!fabrics_cfg.device) {
-			ret = -ENOMEM;
-			goto out;
-		}
+	if (static_port.device && !strcmp(static_port.device, "none"))
+		static_port.device = NULL;
+
+	INIT_LIST_HEAD(&fabrics_cfg.host_list);
+	INIT_LIST_HEAD(&static_host.entry);
+	static_host.fabrics = &fabrics_cfg;
+	list_add(&static_host.entry, &fabrics_cfg.host_list);
+	INIT_LIST_HEAD(&static_host.subsys_list);
+	subsys_cfg = lookup_subsys(&static_host, NVME_DISC_SUBSYS_NAME);
+	if (!subsys_cfg) {
+		msg(LOG_ERR, "Failed to allocate subsys '%s'\n",
+			NVME_DISC_SUBSYS_NAME);
+		return -ENOMEM;
 	}
+	INIT_LIST_HEAD(&static_port.entry);
+	static_port.subsys = subsys_cfg;
+	list_add(&static_port.entry, &subsys_cfg->port_list);
 
-	if (quiet)
-		log_level = LOG_WARNING;
+	if (!static_host.hostnqn)
+		nvmf_hostnqn_file(&static_host);
+	if (!static_host.hostid)
+		nvmf_hostid_file(&static_host);
 
-	if (fabrics_cfg.device && !strcmp(fabrics_cfg.device, "none"))
-		fabrics_cfg.device = NULL;
-
-	if (!fabrics_cfg.transport &&
-	    (!fabrics_cfg.traddr || !strcmp(fabrics_cfg.traddr, "none"))) {
-		ret = discover_from_conf_file(&fabrics_cfg, desc, argstr,
+	if (!static_port.transport && !static_port.traddr) {
+		ret = discover_from_conf_file(&fabrics_cfg, &static_host,
+					      &static_port, desc, argstr,
 					      opts, connect);
 	} else {
-		set_discovery_kato(&fabrics_cfg);
+		set_discovery_kato(&static_port);
 
-		if (traddr_is_hostname(&fabrics_cfg)) {
-			ret = hostname2traddr(&fabrics_cfg);
+		if (traddr_is_hostname(&static_port)) {
+			ret = hostname2traddr(&static_port);
 			if (ret)
 				goto out;
 		}
 
-		if (!fabrics_cfg.trsvcid ||
-		    !strcmp(fabrics_cfg.trsvcid, "none"))
-			discovery_trsvcid(&fabrics_cfg);
+		if (!static_port.trsvcid ||
+		    !strcmp(static_port.trsvcid, "none"))
+			discovery_trsvcid(&static_port);
 
-		ret = build_options(&fabrics_cfg, argstr, BUF_SIZE, true);
+		ret = build_options(&static_port, argstr, BUF_SIZE, true);
 		if (ret)
 			goto out;
 
-		ret = do_discover(&fabrics_cfg, argstr, connect, flags);
+		ret = do_discover(&static_port, argstr, connect, flags);
 	}
 
 out:
@@ -1644,34 +1854,43 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	char argstr[BUF_SIZE];
 	int instance, ret;
 	struct fabrics_config fabrics_cfg = {
+		.output_format = "normal",
+	};
+	struct host_config static_host = {
+		.hostnqn = NULL,
+		.hostid = NULL,
+	};
+	struct subsys_config static_subsys = {
+		.nqn = NULL,
+	};
+	struct port_config static_port = {
 		.traddr = "none",
 		.trsvcid = "none",
 		.host_traddr = "none",
 		.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO,
-		.output_format = "normal",
 		.tos = -1,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_LIST("transport",         't', &fabrics_cfg.transport,         "transport type"),
-		OPT_LIST("nqn",               'n', &fabrics_cfg.nqn,               "nqn name"),
-		OPT_LIST("traddr",            'a', &fabrics_cfg.traddr,            "transport address"),
-		OPT_LIST("trsvcid",           's', &fabrics_cfg.trsvcid,           "transport service id (e.g. IP port)"),
-		OPT_LIST("host-traddr",       'w', &fabrics_cfg.host_traddr,       "host traddr (e.g. FC WWN's)"),
-		OPT_LIST("hostnqn",           'q', &fabrics_cfg.hostnqn,           "user-defined hostnqn"),
-		OPT_LIST("hostid",            'I', &fabrics_cfg.hostid,            "user-defined hostid (if default not used)"),
-		OPT_INT("nr-io-queues",       'i', &fabrics_cfg.nr_io_queues,      "number of io queues to use (default is core count)"),
-		OPT_INT("nr-write-queues",    'W', &fabrics_cfg.nr_write_queues,   "number of write queues to use (default 0)"),
-		OPT_INT("nr-poll-queues",     'P', &fabrics_cfg.nr_poll_queues,    "number of poll queues to use (default 0)"),
-		OPT_INT("queue-size",         'Q', &fabrics_cfg.queue_size,        "number of io queue elements to use (default 128)"),
-		OPT_INT("keep-alive-tmo",     'k', &fabrics_cfg.keep_alive_tmo,    "keep alive timeout period in seconds"),
-		OPT_INT("reconnect-delay",    'c', &fabrics_cfg.reconnect_delay,   "reconnect timeout period in seconds"),
-		OPT_INT("ctrl-loss-tmo",      'l', &fabrics_cfg.ctrl_loss_tmo,     "controller loss timeout period in seconds"),
-		OPT_INT("tos",                'T', &fabrics_cfg.tos,               "type of service"),
-		OPT_FLAG("duplicate-connect", 'D', &fabrics_cfg.duplicate_connect, "allow duplicate connections between same transport host and subsystem port"),
-		OPT_FLAG("disable-sqflow",    'd', &fabrics_cfg.disable_sqflow,    "disable controller sq flow control (default false)"),
-		OPT_FLAG("hdr-digest",        'g', &fabrics_cfg.hdr_digest,        "enable transport protocol header digest (TCP transport)"),
-		OPT_FLAG("data-digest",       'G', &fabrics_cfg.data_digest,       "enable transport protocol data digest (TCP transport)"),
+		OPT_LIST("transport",         't', &static_port.transport,         "transport type"),
+		OPT_LIST("nqn",               'n', &static_subsys.nqn,               "nqn name"),
+		OPT_LIST("traddr",            'a', &static_port.traddr,            "transport address"),
+		OPT_LIST("trsvcid",           's', &static_port.trsvcid,           "transport service id (e.g. IP port)"),
+		OPT_LIST("host-traddr",       'w', &static_port.host_traddr,       "host traddr (e.g. FC WWN's)"),
+		OPT_LIST("hostnqn",           'q', &static_host.hostnqn,           "user-defined hostnqn"),
+		OPT_LIST("hostid",            'I', &static_host.hostid,            "user-defined hostid (if default not used)"),
+		OPT_INT("nr-io-queues",       'i', &static_port.nr_io_queues,      "number of io queues to use (default is core count)"),
+		OPT_INT("nr-write-queues",    'W', &static_port.nr_write_queues,   "number of write queues to use (default 0)"),
+		OPT_INT("nr-poll-queues",     'P', &static_port.nr_poll_queues,    "number of poll queues to use (default 0)"),
+		OPT_INT("queue-size",         'Q', &static_port.queue_size,        "number of io queue elements to use (default 128)"),
+		OPT_INT("keep-alive-tmo",     'k', &static_port.keep_alive_tmo,    "keep alive timeout period in seconds"),
+		OPT_INT("reconnect-delay",    'c', &static_port.reconnect_delay,   "reconnect timeout period in seconds"),
+		OPT_INT("ctrl-loss-tmo",      'l', &static_port.ctrl_loss_tmo,     "controller loss timeout period in seconds"),
+		OPT_INT("tos",                'T', &static_port.tos,               "type of service"),
+		OPT_FLAG("duplicate-connect", 'D', &static_port.duplicate_connect, "allow duplicate connections between same transport host and subsystem port"),
+		OPT_FLAG("disable-sqflow",    'd', &static_port.disable_sqflow,    "disable controller sq flow control (default false)"),
+		OPT_FLAG("hdr-digest",        'g', &static_port.hdr_digest,        "enable transport protocol header digest (TCP transport)"),
+		OPT_FLAG("data-digest",       'G', &static_port.data_digest,       "enable transport protocol data digest (TCP transport)"),
 		OPT_END()
 	};
 
@@ -1679,17 +1898,32 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	if (ret)
 		goto out;
 
-	if (traddr_is_hostname(&fabrics_cfg)) {
-		ret = hostname2traddr(&fabrics_cfg);
+	INIT_LIST_HEAD(&fabrics_cfg.host_list);
+	INIT_LIST_HEAD(&static_host.entry);
+	list_add(&static_host.entry, &fabrics_cfg.host_list);
+	INIT_LIST_HEAD(&static_host.subsys_list);
+	INIT_LIST_HEAD(&static_subsys.entry);
+	list_add(&static_subsys.entry, &static_host.subsys_list);
+	INIT_LIST_HEAD(&static_subsys.port_list);
+	INIT_LIST_HEAD(&static_port.entry);
+	list_add(&static_port.entry, &static_subsys.port_list);
+
+	if (traddr_is_hostname(&static_port)) {
+		ret = hostname2traddr(&static_port);
 		if (ret)
 			goto out;
 	}
 
-	ret = build_options(&fabrics_cfg, argstr, BUF_SIZE, false);
+	if (!static_host.hostnqn)
+		nvmf_hostnqn_file(&static_host);
+	if (!static_host.hostid)
+		nvmf_hostid_file(&static_host);
+
+	ret = build_options(&static_port, argstr, BUF_SIZE, false);
 	if (ret)
 		goto out;
 
-	if (!fabrics_cfg.nqn) {
+	if (!static_subsys.nqn) {
 		msg(LOG_ERR, "need a -n argument\n");
 		ret = -EINVAL;
 		goto out;
@@ -1790,13 +2024,13 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 	const char *nqn = "nqn name";
 	const char *device = "nvme device";
 	int ret;
-	struct fabrics_config fabrics_cfg = {
-		.output_format = "normal",
+	struct subsys_config static_subsys;
+	struct port_config static_port = {
+		.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO,
 	};
-	
 	OPT_ARGS(opts) = {
-		OPT_LIST("nqn",    'n', &fabrics_cfg.nqn,    nqn),
-		OPT_LIST("device", 'd', &fabrics_cfg.device, device),
+		OPT_LIST("nqn",    'n', &static_subsys.nqn,    nqn),
+		OPT_LIST("device", 'd', &static_port.device, device),
 		OPT_END()
 	};
 
@@ -1804,29 +2038,30 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 	if (ret)
 		goto out;
 
-	if (!fabrics_cfg.nqn && !fabrics_cfg.device) {
+	if (!static_subsys.nqn && !static_port.device) {
 		msg(LOG_ERR, "need a -n or -d argument\n");
 		ret = -EINVAL;
 		goto out;
 	}
 
-	if (fabrics_cfg.nqn) {
-		ret = disconnect_by_nqn(fabrics_cfg.nqn);
+	if (static_subsys.nqn) {
+		ret = disconnect_by_nqn(static_subsys.nqn);
 		if (ret < 0)
 			msg(LOG_ERR, "Failed to disconnect by NQN: %s\n",
-				fabrics_cfg.nqn);
+				static_subsys.nqn);
 		else {
-			printf("NQN:%s disconnected %d controller(s)\n", fabrics_cfg.nqn, ret);
+			printf("NQN:%s disconnected %d controller(s)\n",
+			       static_subsys.nqn, ret);
 			ret = 0;
 		}
 	}
 
-	if (fabrics_cfg.device) {
-		ret = disconnect_by_device(fabrics_cfg.device);
+	if (static_port.device) {
+		ret = disconnect_by_device(static_port.device);
 		if (ret)
 			msg(LOG_ERR,
 				"Failed to disconnect by device name: %s\n",
-				fabrics_cfg.device);
+				static_port.device);
 	}
 
 out:
