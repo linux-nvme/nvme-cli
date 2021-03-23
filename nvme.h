@@ -33,6 +33,8 @@
 	json_object_object_add(o, k, json_object_new_int(v))
 #define json_object_add_value_int(o, k, v) \
 	json_object_object_add(o, k, json_object_new_int(v))
+#define json_object_add_value_bool(o, k, v) \
+	json_object_object_add(o, k, json_object_new_boolean(v))
 #define json_object_add_value_float(o, k, v) \
 	json_object_object_add(o, k, json_object_new_double(v))
 #define json_object_add_value_string(o, k, v) \

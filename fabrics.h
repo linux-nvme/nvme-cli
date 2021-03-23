@@ -36,10 +36,10 @@ struct port_config {
 	int  ctrl_loss_tmo;
 	int  tos;
 	char *device;
-	int  duplicate_connect;
-	int  disable_sqflow;
-	int  hdr_digest;
-	int  data_digest;
+	bool duplicate_connect;
+	bool disable_sqflow;
+	bool hdr_digest;
+	bool data_digest;
 	bool persistent;
 };
 
@@ -60,6 +60,7 @@ struct host_config {
 
 struct fabrics_config {
 	struct list_head host_list;
+	char *config;
 	char *raw;
 	bool quiet;
 	bool matching_only;

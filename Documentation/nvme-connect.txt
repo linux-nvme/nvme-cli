@@ -16,6 +16,7 @@ SYNOPSIS
 		[--host-traddr=<traddr>   | -w <traddr>]
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
 		[--hostid=<hostid>        | -I <hostid>]
+		[--config=<cfgfile>       | -C <cfgfile>]
 		[--nr-io-queues=<#>       | -i <#>]
 		[--nr-write-queues=<#>    | -W <#>]
 		[--nr-poll-queues=<#>     | -P <#>]
@@ -83,6 +84,11 @@ OPTIONS
 --hostid=<hostid>::
 	UUID(Universally Unique Identifier) to be discovered which should be
 	formatted.
+
+-C <cfgfile>::
+--config=<cfgfile>::
+	Use specified JSON configuration instead of /etc/nvme/config.json.
+	'none' disables the use of a JSON configuration file.
 
 -i <#>::
 --nr-io-queues=<#>::

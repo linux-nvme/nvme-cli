@@ -79,6 +79,7 @@ LIST_HEAD(tracked_ctrls);
 
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
 #define PATH_NVMF_DISC		"/etc/nvme/discovery.conf"
+#define PATH_NVMF_CONFIG	"/etc/nvme/config.json"
 #define PATH_NVMF_HOSTNQN	"/etc/nvme/hostnqn"
 #define PATH_NVMF_HOSTID	"/etc/nvme/hostid"
 #define MAX_DISC_ARGS		10
@@ -847,6 +848,229 @@ static struct port_config *lookup_port(struct subsys_config *subsys_cfg,
 	port_cfg->subsys = subsys_cfg;
 	list_add(&port_cfg->entry, &subsys_cfg->port_list);
 	return port_cfg;
+}
+
+#define JSON_UPDATE_INT_OPTION(c, k, a, o)				\
+	if (!strcmp(# a, k ) && !c->a) c->a = json_object_get_int(o);
+#define JSON_UPDATE_BOOL_OPTION(c, k, a, o)				\
+	if (!strcmp(# a, k ) && !c->a) c->a = json_object_get_boolean(o);
+
+static void json_update_attributes(struct port_config *port_cfg,
+				   struct json_object *port_obj)
+{
+	json_object_object_foreach(port_obj, key_str, val_obj) {
+		JSON_UPDATE_INT_OPTION(port_cfg, key_str,
+				       nr_io_queues, val_obj);
+		JSON_UPDATE_INT_OPTION(port_cfg, key_str,
+				       nr_write_queues, val_obj);
+		JSON_UPDATE_INT_OPTION(port_cfg, key_str,
+				       nr_poll_queues, val_obj);
+		JSON_UPDATE_INT_OPTION(port_cfg, key_str,
+				       queue_size, val_obj);
+		JSON_UPDATE_INT_OPTION(port_cfg, key_str,
+				       keep_alive_tmo, val_obj);
+		JSON_UPDATE_INT_OPTION(port_cfg, key_str,
+				       reconnect_delay, val_obj);
+		if (!strcmp("ctrl_loss_tmo", key_str) &&
+		    port_cfg->ctrl_loss_tmo != NVMF_DEF_CTRL_LOSS_TMO)
+			port_cfg->ctrl_loss_tmo = json_object_get_int(val_obj);
+		if (!strcmp("tos", key_str) && port_cfg->tos != -1)
+			port_cfg->tos = json_object_get_int(val_obj);
+		JSON_UPDATE_BOOL_OPTION(port_cfg, key_str,
+					duplicate_connect, val_obj);
+		JSON_UPDATE_BOOL_OPTION(port_cfg, key_str,
+					disable_sqflow, val_obj);
+		JSON_UPDATE_BOOL_OPTION(port_cfg, key_str,
+					hdr_digest, val_obj);
+		JSON_UPDATE_BOOL_OPTION(port_cfg, key_str,
+					data_digest, val_obj);
+		JSON_UPDATE_BOOL_OPTION(port_cfg, key_str,
+					persistent, val_obj);
+	}
+}
+
+static void json_parse_port(struct subsys_config *subsys_cfg,
+			    struct json_object *port_obj)
+{
+	struct json_object *attr_obj;
+	struct port_config *port_cfg;
+	const char *transport, *traddr = NULL;
+	const char *host_traddr = NULL, *trsvcid = NULL;
+
+	attr_obj = json_object_object_get(port_obj, "transport");
+	if (!attr_obj)
+		return;
+	transport = json_object_get_string(attr_obj);
+	attr_obj = json_object_object_get(port_obj, "traddr");
+	if (attr_obj)
+		traddr = json_object_get_string(attr_obj);
+	attr_obj = json_object_object_get(port_obj, "host_traddr");
+	if (attr_obj)
+		host_traddr = json_object_get_string(attr_obj);
+	attr_obj = json_object_object_get(port_obj, "trsvcid");
+	if (attr_obj)
+		trsvcid = json_object_get_string(attr_obj);
+	port_cfg = lookup_port(subsys_cfg, transport,
+			       traddr, host_traddr, trsvcid);
+	if (port_cfg)
+		json_update_attributes(port_cfg, port_obj);
+}
+
+static void json_parse_subsys(struct host_config *host_cfg,
+			      struct json_object *subsys_obj)
+{
+	struct json_object *nqn_obj, *port_array;
+	struct subsys_config *subsys_cfg;
+	const char *nqn;
+	int p;
+
+	nqn_obj = json_object_object_get(subsys_obj, "nqn");
+	if (!nqn_obj)
+		return;
+	nqn = json_object_get_string(nqn_obj);
+	subsys_cfg = lookup_subsys(host_cfg, nqn);
+	port_array = json_object_object_get(subsys_obj, "ports");
+	if (!port_array)
+		return;
+	for (p = 0; p < json_object_array_length(port_array); p++) {
+		struct json_object *port_obj;
+
+		port_obj = json_object_array_get_idx(port_array, p);
+		json_parse_port(subsys_cfg, port_obj);
+	}
+}
+
+static void json_parse_host(struct fabrics_config *fabrics_cfg,
+			    struct json_object *host_obj)
+{
+	struct json_object *attr_obj, *subsys_array, *subsys_obj;
+	const char *hostnqn, *hostid = NULL;
+	struct host_config *host_cfg;
+	int s;
+
+	attr_obj = json_object_object_get(host_obj, "hostnqn");
+	if (!attr_obj)
+		return;
+	hostnqn = json_object_get_string(attr_obj);
+	attr_obj = json_object_object_get(host_obj, "hostid");
+	if (attr_obj)
+		hostid = json_object_get_string(attr_obj);
+	host_cfg = lookup_host(fabrics_cfg, hostnqn, hostid);
+	subsys_array = json_object_object_get(host_obj, "subsystems");
+	if (!subsys_array)
+		return;
+	for (s = 0; s < json_object_array_length(subsys_array); s++) {
+		subsys_obj = json_object_array_get_idx(subsys_array, s);
+		json_parse_subsys(host_cfg, subsys_obj);
+	}
+}
+
+static void json_read_config(struct fabrics_config *fabrics_cfg)
+{
+	struct json_object *json_root, *host_obj;
+	int h;
+
+	json_root = json_object_from_file(fabrics_cfg->config);
+	if (!json_root) {
+		fprintf(stderr, "Failed to read %s, %s\n",
+			PATH_NVMF_CONFIG, json_util_get_last_err());
+		json_root = json_object_new_array();
+		return;
+	}
+	for (h = 0; h < json_object_array_length(json_root); h++) {
+		host_obj = json_object_array_get_idx(json_root, h);
+		json_parse_host(fabrics_cfg, host_obj);
+	}
+	json_object_put(json_root);
+}
+
+#define JSON_STRING_OPTION(c, p, o)				\
+	if ((c)->o && strcmp((c)->o, "none"))			\
+		json_object_add_value_string((p), # o , (c)->o)
+#define JSON_INT_OPTION(c, p, o, d)					\
+	if ((c)->o != d) json_object_add_value_int((p), # o , (c)->o)
+#define JSON_BOOL_OPTION(c, p, o)					\
+	if ((c)->o) json_object_add_value_bool((p), # o , (c)->o)
+
+static void json_update_port(struct json_object *port_array,
+			     struct port_config *port_cfg)
+{
+	struct json_object *port_obj = json_create_object();
+
+	json_object_add_value_string(port_obj, "transport",
+				     port_cfg->transport);
+	JSON_STRING_OPTION(port_cfg, port_obj, traddr);
+	JSON_STRING_OPTION(port_cfg, port_obj, trsvcid);
+	JSON_STRING_OPTION(port_cfg, port_obj, host_traddr);
+	JSON_INT_OPTION(port_cfg, port_obj, nr_io_queues, 0);
+	JSON_INT_OPTION(port_cfg, port_obj, nr_write_queues, 0);
+	JSON_INT_OPTION(port_cfg, port_obj, nr_poll_queues, 0);
+	JSON_INT_OPTION(port_cfg, port_obj, queue_size, 0);
+	JSON_INT_OPTION(port_cfg, port_obj, keep_alive_tmo, 0);
+	JSON_INT_OPTION(port_cfg, port_obj, reconnect_delay, 0);
+	if (strcmp(port_cfg->transport, "loop"))
+		JSON_INT_OPTION(port_cfg, port_obj, ctrl_loss_tmo,
+				NVMF_DEF_CTRL_LOSS_TMO);
+	JSON_INT_OPTION(port_cfg, port_obj, tos, -1);
+	JSON_BOOL_OPTION(port_cfg, port_obj, duplicate_connect);
+	JSON_BOOL_OPTION(port_cfg, port_obj, disable_sqflow);
+	JSON_BOOL_OPTION(port_cfg, port_obj, hdr_digest);
+	JSON_BOOL_OPTION(port_cfg, port_obj, data_digest);
+	JSON_BOOL_OPTION(port_cfg, port_obj, persistent);
+	json_object_array_add(port_array, port_obj);
+}
+
+static void json_update_subsys(struct json_object *subsys_array,
+			       struct subsys_config *subsys_cfg)
+{
+	struct port_config *port_cfg;
+	struct json_object *subsys_obj = json_create_object();
+	struct json_object *port_array;
+
+	json_object_add_value_string(subsys_obj, "nqn",
+				     subsys_cfg->nqn);
+	port_array = json_create_array();
+	list_for_each_entry(port_cfg, &subsys_cfg->port_list, entry)
+		json_update_port(port_array, port_cfg);
+	if (json_object_array_length(port_array))
+		json_object_object_add(subsys_obj, "ports", port_array);
+	else
+		json_object_put(port_array);
+	json_object_array_add(subsys_array, subsys_obj);
+}
+
+static void json_update_config(struct fabrics_config *fabrics_cfg)
+{
+	struct host_config *host_cfg;
+	struct json_object *json_root, *host_obj;
+	struct json_object *subsys_array;
+
+	json_root = json_create_array();
+	list_for_each_entry(host_cfg, &fabrics_cfg->host_list, entry) {
+		struct subsys_config *subsys_cfg;
+
+		host_obj = json_create_object();
+		json_object_add_value_string(host_obj, "hostnqn",
+					     host_cfg->hostnqn);
+		if (host_cfg->hostid)
+			json_object_add_value_string(host_obj, "hostid",
+						     host_cfg->hostid);
+		subsys_array = json_create_array();
+		list_for_each_entry(subsys_cfg, &host_cfg->subsys_list, entry)
+			json_update_subsys(subsys_array, subsys_cfg);
+		if (json_object_array_length(subsys_array))
+			json_object_object_add(host_obj, "subsystems",
+					       subsys_array);
+		else
+			json_object_put(subsys_array);
+		json_object_array_add(json_root, host_obj);
+	}
+	if (json_object_to_file_ext(fabrics_cfg->config, json_root,
+				    JSON_C_TO_STRING_PRETTY) < 0) {
+		fprintf(stderr, "Failed to write %s, %s\n",
+			PATH_NVMF_CONFIG, json_util_get_last_err());
+	}
+	json_object_put(json_root);
 }
 
 static void save_discovery_log(struct nvmf_disc_rsp_page_hdr *log,
@@ -1752,6 +1976,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	int ret;
 	enum nvme_print_flags flags;
 	struct fabrics_config fabrics_cfg = {
+		.config = PATH_NVMF_CONFIG,
 		.output_format = "normal",
 	};
 	struct host_config static_host;
@@ -1774,6 +1999,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_LIST("hostid",         'I', &static_host.hostid,          "user-defined hostid (if default not used)"),
 		OPT_LIST("raw",            'r', &fabrics_cfg.raw,             "raw output file"),
 		OPT_LIST("device",         'd', &static_port.device,          "use existing discovery controller device"),
+		OPT_LIST("config",         'C', &fabrics_cfg.config,          "use JSON configuration file (if default is not used)"),
 		OPT_INT("keep-alive-tmo",  'k', &static_port.keep_alive_tmo,  "keep alive timeout period in seconds"),
 		OPT_INT("reconnect-delay", 'c', &static_port.reconnect_delay, "reconnect timeout period in seconds"),
 		OPT_INT("ctrl-loss-tmo",   'l', &static_port.ctrl_loss_tmo,   "controller loss timeout period in seconds"),
@@ -1820,6 +2046,8 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		nvmf_hostnqn_file(&static_host);
 	if (!static_host.hostid)
 		nvmf_hostid_file(&static_host);
+	if (fabrics_cfg.config && strcmp(fabrics_cfg.config, "none"))
+		json_read_config(&fabrics_cfg);
 
 	if (!static_port.transport && !static_port.traddr) {
 		ret = discover_from_conf_file(&fabrics_cfg, &static_host,
@@ -1845,6 +2073,8 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		ret = do_discover(&static_port, argstr, connect, flags);
 	}
 
+	if (fabrics_cfg.config && strcmp(fabrics_cfg.config, "none"))
+		json_update_config(&fabrics_cfg);
 out:
 	return nvme_status_to_errno(ret, true);
 }
@@ -1854,6 +2084,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	char argstr[BUF_SIZE];
 	int instance, ret;
 	struct fabrics_config fabrics_cfg = {
+		.config = PATH_NVMF_CONFIG,
 		.output_format = "normal",
 	};
 	struct host_config static_host = {
@@ -1879,6 +2110,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		OPT_LIST("host-traddr",       'w', &static_port.host_traddr,       "host traddr (e.g. FC WWN's)"),
 		OPT_LIST("hostnqn",           'q', &static_host.hostnqn,           "user-defined hostnqn"),
 		OPT_LIST("hostid",            'I', &static_host.hostid,            "user-defined hostid (if default not used)"),
+		OPT_LIST("config",            'C', &fabrics_cfg.config,            "use JSON configuration file (default /etc/nvme/config.json)"),
 		OPT_INT("nr-io-queues",       'i', &static_port.nr_io_queues,      "number of io queues to use (default is core count)"),
 		OPT_INT("nr-write-queues",    'W', &static_port.nr_write_queues,   "number of write queues to use (default 0)"),
 		OPT_INT("nr-poll-queues",     'P', &static_port.nr_poll_queues,    "number of poll queues to use (default 0)"),
@@ -1918,6 +2150,8 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		nvmf_hostnqn_file(&static_host);
 	if (!static_host.hostid)
 		nvmf_hostid_file(&static_host);
+	if (fabrics_cfg.config && strcmp(fabrics_cfg.config, "none"))
+		json_read_config(&fabrics_cfg);
 
 	ret = build_options(&static_port, argstr, BUF_SIZE, false);
 	if (ret)
@@ -1933,6 +2167,8 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	if (instance < 0)
 		ret = instance;
 
+	if (fabrics_cfg.config && strcmp(fabrics_cfg.config, "none"))
+		json_update_config(&fabrics_cfg);
 out:
 	return nvme_status_to_errno(ret, true);
 }
