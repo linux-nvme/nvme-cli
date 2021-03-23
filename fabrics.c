@@ -46,7 +46,7 @@
 
 #include "nvme.h"
 #include "util/argconfig.h"
-
+#include "util/list.h"
 #include "common.h"
 #include "util/log.h"
 #include "util/cleanup.h"
@@ -68,16 +68,15 @@ const char *conarg_trsvcid = "trsvcid";
 const char *conarg_host_traddr = "host_traddr";
 
 struct connect_args {
+	struct list_head entry;
 	char *subsysnqn;
 	char *transport;
 	char *traddr;
 	char *trsvcid;
 	char *host_traddr;
-	struct connect_args *next;
-	struct connect_args *tail;
 };
 
-struct connect_args *tracked_ctrls;
+LIST_HEAD(tracked_ctrls);
 
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
 #define PATH_NVMF_DISC		"/etc/nvme/discovery.conf"
@@ -384,6 +383,7 @@ static struct connect_args *extract_connect_args(char *argstr)
 	cargs = calloc(1, sizeof(*cargs));
 	if (!cargs)
 		return NULL;
+	INIT_LIST_HEAD(&cargs->entry);
 	cargs->subsysnqn = parse_conn_arg(argstr, ',', conarg_nqn);
 	cargs->transport = parse_conn_arg(argstr, ',', conarg_transport);
 	cargs->traddr = parse_conn_arg(argstr, ',', conarg_traddr);
@@ -394,6 +394,7 @@ static struct connect_args *extract_connect_args(char *argstr)
 
 static void destruct_connect_args(struct connect_args *cargs)
 {
+	list_del_init(&cargs->entry);
 	free(cargs->subsysnqn);
 	free(cargs->transport);
 	free(cargs->traddr);
@@ -415,11 +416,7 @@ static void track_ctrl(char *argstr)
 	if (!cargs)
 		return;
 
-	if (!tracked_ctrls)
-		tracked_ctrls = cargs;
-	else
-		tracked_ctrls->tail->next = cargs;
-	tracked_ctrls->tail = cargs;
+	list_add_tail(&cargs->entry, &tracked_ctrls);
 }
 
 static int add_ctrl(const char *argstr)
@@ -1288,7 +1285,7 @@ static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry,
 			      const char *host_traddr)
 {
 	struct connect_args cargs __cleanup__(destruct_connect_args) = { NULL, };
-	struct connect_args *c = tracked_ctrls;
+	struct connect_args *c;
 
 	cargs.traddr = strdup(entry->traddr);
 	cargs.transport = strdup(trtype_str(entry->trtype));
@@ -1297,14 +1294,13 @@ static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry,
 	cargs.host_traddr = strdup(host_traddr ?: "\0");
 
 	/* check if we have a match in the discovery recursion */
-	while (c) {
+	list_for_each_entry(c, &tracked_ctrls, entry) {
 		if (!strcmp(cargs.subsysnqn, c->subsysnqn) &&
 		    !strcmp(cargs.transport, c->transport) &&
 		    !strcmp(cargs.traddr, c->traddr) &&
 		    !strcmp(cargs.trsvcid, c->trsvcid) &&
 		    !strcmp(cargs.host_traddr, c->host_traddr))
 			return true;
-		c = c->next;
 	}
 
 	/* check if we have a matching existing controller */
