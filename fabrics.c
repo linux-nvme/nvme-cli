@@ -1241,7 +1241,8 @@ retry:
 		ret = do_discover(argstr, true, flags);
 	} else
 		ret = add_ctrl(argstr);
-	if (ret == -EINVAL && e->treq & NVMF_TREQ_DISABLE_SQFLOW) {
+	if (ret == -EINVAL && disable_sqflow &&
+	    e->treq & NVMF_TREQ_DISABLE_SQFLOW) {
 		/* disable_sqflow param might not be supported, try without it */
 		disable_sqflow = false;
 		goto retry;
