@@ -114,6 +114,9 @@ char *nvme_get_ctrl_attr(char *path, const char *attr);
 void *nvme_alloc(size_t len, bool *huge);
 void nvme_free(void *p, bool huge);
 
+int uuid_from_dmi(char *uuid);
+int uuid_from_systemd(char *uuid);
+
 unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time);
 #endif /* _NVME_H */
