@@ -5581,25 +5581,32 @@ static int admin_passthru(int argc, char **argv, struct command *cmd, struct plu
 	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD, 1, desc, cmd);
 }
 
-#ifdef LIBUUID
 static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
-	uuid_t uuid;
+	int ret;
 	char uuid_str[37]; /* e.g. 1b4e28ba-2fa1-11d2-883f-0016d3cca427 + \0 */
+#ifdef LIBUUID
+	uuid_t uuid;
+#endif
 
-	uuid_generate_random(uuid);
-	uuid_unparse_lower(uuid, uuid_str);
+	ret = uuid_from_dmi(uuid_str);
+	if (ret < 0)
+		ret = uuid_from_systemd(uuid_str);
+#ifdef LIBUUID
+	if (ret < 0) {
+		uuid_generate_random(uuid);
+		uuid_unparse_lower(uuid, uuid_str);
+		ret = 0;
+	}
+#endif
+	if (ret < 0) {
+		fprintf(stderr, "\"%s\" not supported. Install lib uuid and rebuild.\n",
+			command->name);
+		return -ENOTSUP;
+	}
 	printf("nqn.2014-08.org.nvmexpress:uuid:%s\n", uuid_str);
 	return 0;
 }
-#else
-static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
-{
-	fprintf(stderr, "\"%s\" not supported. Install lib uuid and rebuild.\n",
-		command->name);
-	return -ENOTSUP;
-}
-#endif
 
 static int show_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {

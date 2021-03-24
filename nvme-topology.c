@@ -696,3 +696,76 @@ void *mmap_registers(const char *dev)
 	return membase;
 }
 
+#define PATH_DMI_ENTRIES	"/sys/firmware/dmi/entries"
+
+int uuid_from_dmi(char *system_uuid)
+{
+	int f;
+	DIR *d;
+	struct dirent *de;
+	char buf[512];
+
+	system_uuid[0] = '\0';
+	d = opendir(PATH_DMI_ENTRIES);
+	if (!d)
+		return -ENXIO;
+	while ((de = readdir(d))) {
+		char filename[PATH_MAX];
+		int len, type;
+
+		if (de->d_name[0] == '.')
+			continue;
+		sprintf(filename, "%s/%s/type", PATH_DMI_ENTRIES, de->d_name);
+		f = open(filename, O_RDONLY);
+		if (f < 0)
+			continue;
+		len = read(f, buf, 512);
+		close(f);
+		if (len < 0)
+			continue;
+		if (sscanf(buf, "%d", &type) != 1)
+			continue;
+		if (type != 1)
+			continue;
+		sprintf(filename, "%s/%s/raw", PATH_DMI_ENTRIES, de->d_name);
+		f = open(filename, O_RDONLY);
+		if (f < 0)
+			continue;
+		len = read(f, buf, 512);
+		close(f);
+		if (len < 0)
+			continue;
+		/* Sigh. https://en.wikipedia.org/wiki/Overengineering */
+		/* DMTF SMBIOS 3.0 Section 7.2.1 System UUID */
+		sprintf(system_uuid,
+			"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-"
+			"%02x%02x%02x%02x%02x%02x",
+			(uint8_t)buf[8 + 3], (uint8_t)buf[8 + 2],
+			(uint8_t)buf[8 + 1], (uint8_t)buf[8 + 0],
+			(uint8_t)buf[8 + 5], (uint8_t)buf[8 + 4],
+			(uint8_t)buf[8 + 7], (uint8_t)buf[8 + 6],
+			(uint8_t)buf[8 + 8], (uint8_t)buf[8 + 9],
+			(uint8_t)buf[8 + 10], (uint8_t)buf[8 + 11],
+			(uint8_t)buf[8 + 12], (uint8_t)buf[8 + 13],
+			(uint8_t)buf[8 + 14], (uint8_t)buf[8 + 15]);
+		break;
+	}
+	closedir(d);
+	return strlen(system_uuid) ? 0 : -ENXIO;
+}
+
+int uuid_from_systemd(char *systemd_uuid)
+{
+#ifdef HAVE_SYSTEMD
+	sd_id128_t id;
+	char *ret;
+
+	if (sd_id128_get_machine_app_specific(NVME_HOSTNQN_ID, &id) < 0)
+		return -ENXIO;
+
+	sprintf(systemd_uuid, SD_ID128_FORMAT_STR, SD_ID128_FORMAT_VAL(id));
+	return 0;
+#else
+	return -ENOTSUP;
+#endif
+}
