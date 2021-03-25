@@ -370,7 +370,9 @@ static void json_error_log(struct nvme_error_log_page *err_log, int entries)
 		json_object_add_value_int(error, "cmdid",
 			le16_to_cpu(err_log[i].cmdid));
 		json_object_add_value_int(error, "status_field",
-			le16_to_cpu(err_log[i].status_field));
+			le16_to_cpu(err_log[i].status_field >> 0x1));
+		json_object_add_value_int(error, "phase_tag",
+			le16_to_cpu(err_log[i].status_field & 0x1));
 		json_object_add_value_int(error, "parm_error_location",
 			le16_to_cpu(err_log[i].parm_error_location));
 		json_object_add_value_uint(error, "lba",
@@ -4529,9 +4531,11 @@ void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
 			le64_to_cpu(err_log[i].error_count));
 		printf("sqid		: %d\n", err_log[i].sqid);
 		printf("cmdid		: %#x\n", err_log[i].cmdid);
-		printf("status_field	: %#x(%s)\n", err_log[i].status_field,
+		printf("status_field	: %#x(%s)\n", err_log[i].status_field >> 0x1,
 			nvme_status_to_string(
 				le16_to_cpu(err_log[i].status_field) >> 1));
+		printf("phase_tag	: %#x\n",
+			le16_to_cpu(err_log[i].status_field & 0x1));
 		printf("parm_err_loc	: %#x\n",
 			err_log[i].parm_error_location);
 		printf("lba		: %#"PRIx64"\n",
