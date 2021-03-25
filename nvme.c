@@ -84,6 +84,16 @@ static struct program nvme = {
 	.extensions = &builtin,
 };
 
+static __u16 nvme_feat_buf_len[0x100] = {
+	[NVME_FEAT_LBA_RANGE]		= 4096,
+	[NVME_FEAT_AUTO_PST]		= 256,
+	[NVME_FEAT_HOST_MEM_BUF]	= 4096,
+	[NVME_FEAT_HOST_ID]		= 8,
+	[NVME_FEAT_PLM_CONFIG]		= 512,
+	[NVME_FEAT_TIMESTAMP]		= 8,
+	[NVME_FEAT_HOST_BEHAVIOR]	= 512
+};
+
 const char *output_format = "Output format: normal|json|binary";
 static const char *output_format_no_binary = "Output format: normal|json";
 
@@ -2669,32 +2679,11 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_fd;
 	}
 
-	switch (cfg.feature_id) {
-	case NVME_FEAT_LBA_RANGE:
-		cfg.data_len = 4096;
-		break;
-	case NVME_FEAT_AUTO_PST:
-		cfg.data_len = 256;
-		break;
-	case NVME_FEAT_HOST_MEM_BUF:
-		cfg.data_len = 4096;
-		break;
-	case NVME_FEAT_HOST_ID:
-		cfg.data_len = 8;
-		/* check for Extended Host Identifier */
-		if (cfg.cdw11 & 0x1)
-			cfg.data_len = 16;
-		break;
-	case NVME_FEAT_PLM_CONFIG:
-		cfg.data_len = 512;
-		break;
-	case NVME_FEAT_TIMESTAMP:
-		cfg.data_len = 8;
-		break;
-	case NVME_FEAT_HOST_BEHAVIOR:
-		cfg.data_len = 512;
-		break;
-	}
+	cfg.data_len = nvme_feat_buf_len[cfg.feature_id];
+
+	/* check for Extended Host Identifier */
+	if (cfg.feature_id == NVME_FEAT_HOST_ID && (cfg.cdw11 & 0x1))
+		cfg.data_len = 16;
 
 	if (cfg.sel == 3)
 		cfg.data_len = 0;
@@ -3507,8 +3496,6 @@ ret:
 }
 
 #define STRTOUL_AUTO_BASE              (0)
-#define NVME_FEAT_LBA_RANGE_LEN        (4096)
-#define NVME_FEAT_TIMESTAMP_STR_LEN    (13)
 #define NVME_FEAT_TIMESTAMP_DATA_SIZE  (6)
 
 static int set_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -3588,12 +3575,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_fd;
 	}
 
-    if (NVME_FEAT_LBA_RANGE == cfg.feature_id) {
-        cfg.data_len = NVME_FEAT_LBA_RANGE_LEN;
-    }
-    else if (NVME_FEAT_TIMESTAMP == cfg.feature_id) {
-        cfg.data_len = NVME_FEAT_TIMESTAMP_STR_LEN;
-    }
+	cfg.data_len = nvme_feat_buf_len[cfg.feature_id];
 
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
