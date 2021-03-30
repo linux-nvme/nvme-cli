@@ -12,4 +12,13 @@
 #define __stringify_1(x...) #x
 #define __stringify(x...)  __stringify_1(x)
 
+#define container_of_const(ptr, type, member) ({	\
+	typeof( ((const type *)0)->member ) *__mptr = (ptr);	\
+	(const type *)( (const char *)__mptr - offsetof(type,member) );})
+#define container_of(ptr, type, member) ({		\
+	typeof( ((type *)0)->member ) *__mptr = (ptr);	\
+	(type *)( (char *)__mptr - offsetof(type,member) );})
+
+#define STEAL_PTR(p) ({ typeof(p) __tmp = (p); (p) = NULL; __tmp; })
+
 #endif
