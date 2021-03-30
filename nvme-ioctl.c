@@ -413,6 +413,11 @@ int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
 	return nvme_identify(fd, nsid, (cntid << 16) | cns, data);
 }
 
+int nvme_identify_primary_ctrl_caps(int fd, void *data)
+{
+	return nvme_identify(fd, 0, NVME_ID_CNS_PRIMARY_CTRL_CAPS, data);
+}
+
 int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
 {
 	return nvme_identify(fd, nsid, (cntid << 16) | NVME_ID_CNS_SCNDRY_CTRL_LIST, data);

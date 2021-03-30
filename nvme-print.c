@@ -4200,6 +4200,47 @@ void nvme_show_id_nvmset(struct nvme_id_nvmset *nvmset, unsigned nvmset_id,
 	}
 }
 
+static void nvme_show_primary_ctrl_caps_crt(__u8 crt)
+{
+	__u8 rsvd = (crt & 0xFC) >> 2;
+	__u8 vi = (crt & 0x2) >> 1;
+	__u8 vq = (crt & 0x1) >> 0;
+
+	if (rsvd)
+		printf("  [7:2] : %#x\tReserved\n", rsvd);
+	printf("  [1:1] %#x\tVI Resources are %ssupported\n", vi, vi ? "" : "not ");
+	printf("  [1:1] %#x\tVQ Resources are %ssupported\n", vq, vq ? "" : "not ");
+}
+
+void nvme_show_primary_ctrl_caps(const struct nvme_primary_ctrl_caps *caps,
+				 enum nvme_print_flags flags)
+{
+	int human = flags & VERBOSE;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)caps, sizeof(*caps));
+
+	printf("NVME Identify Primary Controller Capabilities:\n");
+	printf("cntlid    : %#x\n", le16_to_cpu(caps->cntlid));
+	printf("portid    : %#x\n", le16_to_cpu(caps->portid));
+	printf("crt       : %#x\n", caps->crt);
+	if (human)
+		nvme_show_primary_ctrl_caps_crt(caps->crt);
+	printf("vqfrt     : %d\n", le32_to_cpu(caps->vqfrt));
+	printf("vqrfa     : %d\n", le32_to_cpu(caps->vqrfa));
+	printf("vqrfap    : %d\n", le16_to_cpu(caps->vqrfap));
+	printf("vqprt     : %d\n", le16_to_cpu(caps->vqprt));
+	printf("vqfrsm    : %d\n", le16_to_cpu(caps->vqfrsm));
+	printf("vqgran    : %d\n", le16_to_cpu(caps->vqgran));
+	printf("vifrt     : %d\n", le32_to_cpu(caps->vifrt));
+	printf("virfa     : %d\n", le32_to_cpu(caps->virfa));
+	printf("virfap    : %d\n", le16_to_cpu(caps->virfap));
+	printf("viprt     : %d\n", le16_to_cpu(caps->viprt));
+	printf("vifrsm    : %d\n", le16_to_cpu(caps->vifrsm));
+	printf("vigran    : %d\n", le16_to_cpu(caps->vigran));
+}
+
+
 static void json_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list *sc_list,
 					  __u32 count)
 {
