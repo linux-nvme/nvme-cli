@@ -354,6 +354,27 @@ struct nvme_id_ctrl {
 	__u8			vs[1024];
 };
 
+struct nvme_pri_ctrl_caps {
+	__le16			cntlid;
+	__le16			portid;
+	__u8			crt;
+	__u8			rsvd5[27];
+	__le32			vqfrt;
+	__le32			vqrfa;
+	__le16			vqrfap;
+	__le16			vqprt;
+	__le16			vqfrsm;
+	__le16			vqgran;
+	__u8			rsvd48[16];
+	__le32			vifrt;
+	__le32			virfa;
+	__u16			virfap;
+	__u16			viprt;
+	__u16			vifrsm;
+	__u16			vigran;
+	__u8			rsvd80[4016];
+};
+
 enum {
 	NVME_CTRL_ONCS_COMPARE			= 1 << 0,
 	NVME_CTRL_ONCS_WRITE_UNCORRECTABLE	= 1 << 1,
@@ -441,6 +462,7 @@ enum {
 	NVME_ID_CNS_NS_PRESENT		= 0x11,
 	NVME_ID_CNS_CTRL_NS_LIST	= 0x12,
 	NVME_ID_CNS_CTRL_LIST		= 0x13,
+	NVME_ID_CNS_PRIMARY_CTRL_CAPS	= 0x14,
 	NVME_ID_CNS_SCNDRY_CTRL_LIST	= 0x15,
 	NVME_ID_CNS_NS_GRANULARITY	= 0x16,
 	NVME_ID_CNS_UUID_LIST		= 0x17,
@@ -1481,6 +1503,27 @@ struct nvme_timestamp {
 struct nvme_controller_list {
 	__le16 num;
 	__le16 identifier[2047];
+};
+
+struct nvme_primary_ctrl_caps {
+	__le16 cntlid;	/* Controller Identifier */
+	__le16 portid;	/* Port Identifier */
+	__u8   crt;	/* Controller Resource Types */
+	__u8   rsvd5[27];
+	__le32 vqfrt;	/* VQ Resources Flexible Total */
+	__le32 vqrfa;	/* VQ Resources Flexible Assigned */
+	__le16 vqrfap;	/* VQ Resources Flexible Allocated to Primary */
+	__le16 vqprt;	/* VQ Resources Private Total */
+	__le16 vqfrsm;	/* VQ Resources Flexible Secondary Maximum */
+	__le16 vqgran;	/* VQ Flexible Resource Preferred Granularity */
+	__u8   rsvd48[16];
+	__le32 vifrt;	/* VI Resources Flexible Total */
+	__le32 virfa;	/* VI Resources Flexible Assigned */
+	__u16  virfap;	/* VI Resources Flexible Allocated to Primary */
+	__u16  viprt;	/* VI Resources Private Total */
+	__u16  vifrsm;	/* VI Resources Flexible Secondary Maximum */
+	__u16  vigran;	/* VI Flexible Resource Preferred Granularity */
+	__u8   rsvd80[4016];
 };
 
 struct nvme_secondary_controller_entry {

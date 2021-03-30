@@ -79,6 +79,7 @@ int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data);
 int nvme_identify_ns_descs(int fd, __u32 nsid, void *data);
 int nvme_identify_nvmset(int fd, __u16 nvmset_id, void *data);
 int nvme_identify_uuid(int fd, void *data);
+int nvme_identify_primary_ctrl_caps(int fd, void *data);
 int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data);
 int nvme_identify_ns_granularity(int fd, void *data);
 int nvme_identify_ctrl_nvm(int fd, void *data);
