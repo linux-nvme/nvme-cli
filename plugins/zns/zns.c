@@ -338,8 +338,7 @@ close_ffd:
 	if (cfg.file)
 		close(ffd);
 free:
-	if (buf)
-		free(buf);
+	free(buf);
 close_fd:
 	close(fd);
 	return nvme_status_to_errno(err, false);
