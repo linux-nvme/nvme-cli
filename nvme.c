@@ -4679,7 +4679,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	void *buffer, *mbuffer = NULL;
 	int err = 0;
 	int dfd, mfd, fd;
-	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
+	int file_flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
 	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
 	__u16 control = 0;
 	__u32 dsmgmt = 0, nsid = 0;
@@ -4792,7 +4792,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	}
 
 	if (strlen(cfg.data)) {
-		dfd = open(cfg.data, flags, mode);
+		dfd = open(cfg.data, file_flags, mode);
 		if (dfd < 0) {
 			perror(cfg.data);
 			err = -EINVAL;
@@ -4801,7 +4801,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		mfd = dfd;
 	}
 	if (strlen(cfg.metadata)) {
-		mfd = open(cfg.metadata, flags, mode);
+		mfd = open(cfg.metadata, file_flags, mode);
 		if (mfd < 0) {
 			perror(cfg.metadata);
 			err = -EINVAL;
