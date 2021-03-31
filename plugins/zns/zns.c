@@ -541,8 +541,7 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 	else
 		perror("zns zone-mgmt-recv");
 
-	if (data)
-		free(data);
+	free(data);
 close_fd:
 	close(fd);
 	return nvme_status_to_errno(err, false);
