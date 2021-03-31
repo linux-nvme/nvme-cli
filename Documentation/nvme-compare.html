@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 8.6.10" />
 <title>nvme-compare(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -761,6 +764,7 @@ nvme-compare(1) Manual Page
                         [--dir-type=&lt;type&gt; | -T &lt;type&gt;]
                         [--dir-spec=&lt;spec&gt; | -S &lt;spec&gt;]
                         [--dsm=&lt;dsm&gt; | -D &lt;dsm&gt;]
+                        [--fuse=&lt;fuse&gt; | -F &lt;fuse&gt;]
                         [--show-command | -v]
                         [--dry-run | -w]
                         [--latency | -t]</pre>
@@ -1003,6 +1007,19 @@ metadata is passes.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
+-F &lt;fuse&gt;
+</dt>
+<dt class="hdlist1">
+--fuse=&lt;fuse&gt;
+</dt>
+<dd>
+<p>
+        a fused operation, a complex command is created by “fusing” together
+        two simpler commands. This field specifies whether this command is
+        part of a fused operation and if so, which command it is in the sequence.
+</p>
+</dd>
+<dt class="hdlist1">
 -v
 </dt>
 <dt class="hdlist1">
@@ -1056,7 +1073,8 @@ metadata is passes.</p></td>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-12-17 13:07:47 MST
+Last updated
+ 2021-03-31 18:49:19 IST
 </div>
 </div>
 </body>

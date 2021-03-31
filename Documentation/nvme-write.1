@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-write
-.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
-.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/20/2020
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 03/31/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WRITE" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-WRITE" "1" "03/31/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -47,6 +47,7 @@ nvme-write \- Send an NVMe write command, provide results
                         [\-\-dir\-type=<type> | \-T <type>]
                         [\-\-dir\-spec=<spec> | \-S <spec>]
                         [\-\-dsm=<dsm> | \-D <dsm>]
+                        [\-\-fuse=<fuse> | \-F <fuse>]
                         [\-\-show\-command | \-v]
                         [\-\-dry\-run | \-w]
                         [\-\-latency | \-t]
@@ -169,6 +170,11 @@ Optional field for directive specifics\&. When used with write streams, this val
 \-D <dsm>, \-\-dsm=<dsm>
 .RS 4
 The optional data set management attributes for this command\&. The argument for this is the lower 16 bits of the DSM field in a write command; the upper 16 bits of the field come from the directive specific field, if used\&. This may be used to set attributes for the LBAs being written, like access frequency, type, latency, among other things, as well as yet to be defined types\&. Please consult the NVMe specification for detailed breakdown of how to use this field\&.
+.RE
+.PP
+\-F <fuse>, \-\-fuse=<fuse>
+.RS 4
+a fused operation, a complex command is created by \(lqfusing\(rq together two simpler commands\&. This field specifies whether this command is part of a fused operation and if so, which command it is in the sequence\&.
 .RE
 .PP
 \-v, \-\-show\-cmd

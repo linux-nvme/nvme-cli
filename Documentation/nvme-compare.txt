@@ -23,6 +23,7 @@ SYNOPSIS
 			[--dir-type=<type> | -T <type>]
 			[--dir-spec=<spec> | -S <spec>]
 			[--dsm=<dsm> | -D <dsm>]
+			[--fuse=<fuse> | -F <fuse>]
 			[--show-command | -v]
 			[--dry-run | -w]
 			[--latency | -t]
@@ -124,6 +125,12 @@ metadata is passes.
 	among other things, as well as yet to be defined types. Please
 	consult the NVMe specification for detailed breakdown of how to
 	use this field.
+
+-F <fuse>::
+--fuse=<fuse>::
+	a fused operation, a complex command is created by “fusing” together
+	two simpler commands. This field specifies whether this command is
+	part of a fused operation and if so, which command it is in the sequence.
 
 -v::
 --show-cmd::

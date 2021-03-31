@@ -4690,6 +4690,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	__u8 lba_index, ms = 0;
 	__u8 flags = 0;
 
+	const char *fuse = "specifies this command is part of a fused operation";
 	const char *start_block = "64-bit addr of first block to access";
 	const char *block_count = "number of blocks (zeroes based) on device to access";
 	const char *data_size = "size of data in bytes";
@@ -4723,6 +4724,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		__u16 dsmgmt;
 		__u16 app_tag_mask;
 		__u16 app_tag;
+		__u8 fuse;
 		int   limited_retry;
 		int   force_unit_access;
 		int   show;
@@ -4741,6 +4743,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		.prinfo          = 0,
 		.app_tag_mask    = 0,
 		.app_tag         = 0,
+		.fuse            = 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -4759,6 +4762,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype),
 		OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
 		OPT_SHRT("dsm",               'D', &cfg.dsmgmt,            dsm),
+		OPT_BYTE("fuse",              'F', &cfg.fuse,              fuse),
 		OPT_FLAG("show-command",      'v', &cfg.show,              show),
 		OPT_FLAG("dry-run",           'w', &cfg.dry_run,           dry),
 		OPT_FLAG("latency",           't', &cfg.latency,           latency),
@@ -4773,6 +4777,11 @@ static int submit_io(int opcode, char *command, const char *desc,
 	if (cfg.prinfo > 0xf) {
 		err = -EINVAL;
 		goto close_fd;
+	}
+
+	if (cfg.fuse) {
+		cfg.fuse = opcode & 1 ? cfg.fuse : 0;
+		flags = cfg.fuse;
 	}
 
 	dsmgmt = cfg.dsmgmt;
