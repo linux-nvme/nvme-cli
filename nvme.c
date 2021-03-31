@@ -4688,6 +4688,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	bool huge;
 	struct nvme_id_ns ns;
 	__u8 lba_index, ms = 0;
+	__u8 flags = 0;
 
 	const char *start_block = "64-bit addr of first block to access";
 	const char *block_count = "number of blocks (zeroes based) on device to access";
@@ -4887,7 +4888,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 
 	if (cfg.show) {
 		printf("opcode       : %02x\n", opcode);
-		printf("flags        : %02x\n", 0);
+		printf("flags        : %02x\n", flags);
 		printf("control      : %04x\n", control);
 		printf("nblocks      : %04x\n", cfg.block_count);
 		printf("metadata     : %"PRIx64"\n", (uint64_t)(uintptr_t)mbuffer);
@@ -4902,8 +4903,9 @@ static int submit_io(int opcode, char *command, const char *desc,
 		goto free_mbuffer;
 
 	gettimeofday(&start_time, NULL);
-	err = nvme_io(fd, opcode, cfg.start_block, cfg.block_count, control, dsmgmt,
-			cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask, buffer, mbuffer);
+	err = nvme_io(fd, opcode, flags, cfg.start_block, cfg.block_count,
+			control, dsmgmt, cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask,
+			buffer, mbuffer);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: %s: %llu us\n",
