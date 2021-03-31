@@ -522,6 +522,11 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 		}
 	}
 
+	if (cfg.zra == NVME_ZNS_ZRA_REPORT_ZONES && !cfg.data_len) {
+		fprintf(stderr, "error: data len is needed for NVME_ZRA_ZONE_REPORT\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
 	if (cfg.data_len) {
 		data = calloc(1, cfg.data_len);
 		if (!data) {
