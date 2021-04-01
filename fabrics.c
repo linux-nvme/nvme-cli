@@ -199,7 +199,7 @@ static const char *cms_str(__u8 cm)
 /*
  * parse strings with connect arguments to find a particular field.
  * If field found, return string containing field value. If field
- * not found, return an empty string.
+ * not found, return the string "none".
  */
 char *parse_conn_arg(const char *conargs, const char delim, const char *field)
 {
@@ -242,7 +242,7 @@ char *parse_conn_arg(const char *conargs, const char delim, const char *field)
 	return strndup(s, cnt);
 
 empty_field:
-	return strdup("\0");
+	return strdup("none");
 }
 
 int ctrl_instance(const char *device)
@@ -944,7 +944,8 @@ int build_options(struct fabrics_config *fabrics_cfg, char *argstr,
 	}
 
 	if (strncmp(fabrics_cfg->transport, "loop", 4)) {
-		if (!fabrics_cfg->traddr) {
+		if (!fabrics_cfg->traddr ||
+		    !strcmp(fabrics_cfg->traddr, "none")) {
 			msg(LOG_ERR, "need a address (-a) argument\n");
 			return -EINVAL;
 		}
@@ -1029,7 +1030,9 @@ static bool traddr_is_hostname(struct fabrics_config *fabrics_cfg)
 {
 	char addrstr[NVMF_TRADDR_SIZE];
 
-	if (!fabrics_cfg->traddr || !fabrics_cfg->transport)
+	if (!fabrics_cfg->transport)
+		return false;
+	if (!fabrics_cfg->traddr || !strcmp(fabrics_cfg->traddr, "none"))
 		return false;
 	if (strcmp(fabrics_cfg->transport, "tcp") && strcmp(fabrics_cfg->transport, "rdma"))
 		return false;
@@ -1291,7 +1294,7 @@ static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry,
 	cargs.transport = strdup(trtype_str(entry->trtype));
 	cargs.subsysnqn = strdup(entry->subnqn);
 	cargs.trsvcid = strdup(entry->trsvcid);
-	cargs.host_traddr = strdup(host_traddr ?: "\0");
+	cargs.host_traddr = strdup(host_traddr ?: "none");
 
 	/* check if we have a match in the discovery recursion */
 	list_for_each_entry(c, &tracked_ctrls, entry) {
@@ -1315,7 +1318,8 @@ static bool should_connect(struct fabrics_config *fabrics_cfg,
 	if (cargs_match_found(entry, fabrics_cfg->host_traddr))
 		return false;
 
-	if (!fabrics_cfg->matching_only || !fabrics_cfg->traddr)
+	if (!fabrics_cfg->matching_only || !fabrics_cfg->traddr ||
+	    !strcmp(fabrics_cfg->traddr, "none"))
 		return true;
 
 	len = space_strip_len(NVMF_TRADDR_SIZE, entry->traddr);
@@ -1518,7 +1522,8 @@ static int discover_from_conf_file(struct fabrics_config *fabrics_cfg,
 				goto out;
 		}
 
-		if (!fabrics_cfg->trsvcid)
+		if (!fabrics_cfg->trsvcid ||
+		    !strcmp(fabrics_cfg->trsvcid, "none"))
 			discovery_trsvcid(fabrics_cfg);
 
 		err = build_options(fabrics_cfg, argstr, BUF_SIZE, true);
@@ -1550,6 +1555,9 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	enum nvme_print_flags flags;
 	bool quiet = false;
 	struct fabrics_config fabrics_cfg = {
+		.traddr = "none",
+		.trsvcid = "none",
+		.host_traddr = "none",
 		.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO,
 		.output_format = "normal",
 		.tos = -1,
@@ -1603,7 +1611,8 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	if (fabrics_cfg.device && !strcmp(fabrics_cfg.device, "none"))
 		fabrics_cfg.device = NULL;
 
-	if (!fabrics_cfg.transport && !fabrics_cfg.traddr) {
+	if (!fabrics_cfg.transport &&
+	    (!fabrics_cfg.traddr || !strcmp(fabrics_cfg.traddr, "none"))) {
 		ret = discover_from_conf_file(&fabrics_cfg, desc, argstr,
 					      opts, connect);
 	} else {
@@ -1615,7 +1624,8 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 				goto out;
 		}
 
-		if (!fabrics_cfg.trsvcid)
+		if (!fabrics_cfg.trsvcid ||
+		    !strcmp(fabrics_cfg.trsvcid, "none"))
 			discovery_trsvcid(&fabrics_cfg);
 
 		ret = build_options(&fabrics_cfg, argstr, BUF_SIZE, true);
@@ -1634,6 +1644,9 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	char argstr[BUF_SIZE];
 	int instance, ret;
 	struct fabrics_config fabrics_cfg = {
+		.traddr = "none",
+		.trsvcid = "none",
+		.host_traddr = "none",
 		.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO,
 		.output_format = "normal",
 		.tos = -1,
