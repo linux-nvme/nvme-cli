@@ -1772,7 +1772,7 @@ static int display_fw_activate_entry (
     hours = timestamp / 3600;
     minutes = (timestamp % 3600) / 60;
     seconds = (timestamp % 3600) % 60;
-    sprintf(ptr, "|%"PRIu64":%hhu:%hhu", hours, minutes, seconds);
+    sprintf(ptr, "|%"PRIu64":%hhu:%hhu", (uint64_t)hours, minutes, seconds);
     ptr += 12;
 
     sprintf(ptr, "| %"PRIu64, le64_to_cpu(entry->power_cycle_count));
