@@ -354,27 +354,6 @@ struct nvme_id_ctrl {
 	__u8			vs[1024];
 };
 
-struct nvme_pri_ctrl_caps {
-	__le16			cntlid;
-	__le16			portid;
-	__u8			crt;
-	__u8			rsvd5[27];
-	__le32			vqfrt;
-	__le32			vqrfa;
-	__le16			vqrfap;
-	__le16			vqprt;
-	__le16			vqfrsm;
-	__le16			vqgran;
-	__u8			rsvd48[16];
-	__le32			vifrt;
-	__le32			virfa;
-	__u16			virfap;
-	__u16			viprt;
-	__u16			vifrsm;
-	__u16			vigran;
-	__u8			rsvd80[4016];
-};
-
 enum {
 	NVME_CTRL_ONCS_COMPARE			= 1 << 0,
 	NVME_CTRL_ONCS_WRITE_UNCORRECTABLE	= 1 << 1,
