@@ -2,7 +2,6 @@
 #define NVME_PRINT_H
 
 #include "nvme.h"
-#include "util/json.h"
 #include <inttypes.h>
 
 void d(unsigned char *buf, int len, int width, int group);

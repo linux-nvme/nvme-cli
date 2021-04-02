@@ -37,7 +37,6 @@
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
 #include "plugin.h"
-#include "json.h"
 #include "nvme-status.h"
 
 #include "argconfig.h"

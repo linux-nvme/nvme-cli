@@ -1397,8 +1397,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 
 		for (i = 0; i < (min(num, 2048)); i++)
 			printf("[%4u]:%#x\n", i, le16_to_cpu(cntlist->identifier[i]));
-	}
-	else if (err > 0)
+	} else if (err > 0)
 		nvme_show_status(err);
 	else
 		perror("id controller list");
@@ -2309,8 +2308,7 @@ static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *pl
 	if (!err) {
 		printf("NVMe Identify I/O Command Set:\n");
 		nvme_show_id_iocs(&iocs);
-	}
-	else if (err > 0)
+	} else if (err > 0)
 		nvme_show_status(err);
 	else
 		perror("NVMe Identify I/O Command Set");
@@ -3413,8 +3411,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			}
 		} else  if (cfg.lbaf == 0xff)
 			cfg.lbaf = prev_lbaf;
-	}
-	else {
+	} else {
 		if (cfg.lbaf == 0xff) cfg.lbaf = 0;
 	}
 
@@ -3590,8 +3587,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 
     if (NVME_FEAT_LBA_RANGE == cfg.feature_id) {
         cfg.data_len = NVME_FEAT_LBA_RANGE_LEN;
-    }
-    else if (NVME_FEAT_TIMESTAMP == cfg.feature_id) {
+    } else if (NVME_FEAT_TIMESTAMP == cfg.feature_id) {
         cfg.data_len = NVME_FEAT_TIMESTAMP_STR_LEN;
     }
 
@@ -3606,11 +3602,9 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (buf) {
 	  /* if feature ID is 0x0E, get timestamp value by -v option */
-        if ((NVME_FEAT_TIMESTAMP == cfg.feature_id) &&  (0 != cfg.value)) {
-            cfg.data_len = NVME_FEAT_TIMESTAMP_DATA_SIZE;
+        if (NVME_FEAT_TIMESTAMP == cfg.feature_id && cfg.value) {
             memcpy(buf, &cfg.value, NVME_FEAT_TIMESTAMP_DATA_SIZE);
-        }
-        else {
+        } else {
             if (strlen(cfg.file)) {
                 ffd = open(cfg.file, O_RDONLY);
                 if (ffd <= 0) {
@@ -3631,7 +3625,6 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
             if (NVME_FEAT_TIMESTAMP == cfg.feature_id) {
                 number = strtoul(buf, &endptr, STRTOUL_AUTO_BASE);
                 memset(buf, 0, cfg.data_len);
-                cfg.data_len = NVME_FEAT_TIMESTAMP_DATA_SIZE;
                 memcpy(buf, &number, NVME_FEAT_TIMESTAMP_DATA_SIZE);
             }
         }
@@ -3902,8 +3895,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 			else
 				d_raw(buf, cfg.data_len);
 		}
-	}
-	else if (err > 0)
+	} else if (err > 0)
 		nvme_show_status(err);
 
 close_ffd:
@@ -5581,25 +5573,32 @@ static int admin_passthru(int argc, char **argv, struct command *cmd, struct plu
 	return passthru(argc, argv, NVME_IOCTL_ADMIN_CMD, 1, desc, cmd);
 }
 
-#ifdef LIBUUID
 static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
-	uuid_t uuid;
+	int ret;
 	char uuid_str[37]; /* e.g. 1b4e28ba-2fa1-11d2-883f-0016d3cca427 + \0 */
+#ifdef LIBUUID
+	uuid_t uuid;
+#endif
 
-	uuid_generate_random(uuid);
-	uuid_unparse_lower(uuid, uuid_str);
+	ret = uuid_from_dmi(uuid_str);
+	if (ret < 0)
+		ret = uuid_from_systemd(uuid_str);
+#ifdef LIBUUID
+	if (ret < 0) {
+		uuid_generate_random(uuid);
+		uuid_unparse_lower(uuid, uuid_str);
+		ret = 0;
+	}
+#endif
+	if (ret < 0) {
+		fprintf(stderr, "\"%s\" not supported. Install lib uuid and rebuild.\n",
+			command->name);
+		return -ENOTSUP;
+	}
 	printf("nqn.2014-08.org.nvmexpress:uuid:%s\n", uuid_str);
 	return 0;
 }
-#else
-static int gen_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
-{
-	fprintf(stderr, "\"%s\" not supported. Install lib uuid and rebuild.\n",
-		command->name);
-	return -ENOTSUP;
-}
-#endif
 
 static int show_hostnqn_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {

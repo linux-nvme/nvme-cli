@@ -706,7 +706,7 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 static void json_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 {
 	struct json_object *root;
-	struct json_array *entries;
+	struct json_object *entries;
 	int i;
 
 	root = json_create_object();
@@ -818,12 +818,28 @@ static char *hostnqn_generate_systemd(void)
 #endif
 }
 
+static char *hostnqn_read_dmi(void)
+{
+	char uuid[16];
+	char *ret = NULL;
+
+	if (uuid_from_dmi(uuid) < 0)
+		return NULL;
+	if (asprintf(&ret, "nqn.2014-08.org.nvmexpress:uuid:%s", uuid) == -1)
+		return NULL;
+	return ret;
+}
+
 /* returns an allocated string or NULL */
 char *hostnqn_read(void)
 {
 	char *ret;
 
 	ret = hostnqn_read_file();
+	if (ret)
+		return ret;
+
+	ret = hostnqn_read_dmi();
 	if (ret)
 		return ret;
 
