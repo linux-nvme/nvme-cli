@@ -4233,12 +4233,12 @@ static void nvme_show_primary_ctrl_caps_crt(__u8 crt)
 {
 	__u8 rsvd = (crt & 0xFC) >> 2;
 	__u8 vi = (crt & 0x2) >> 1;
-	__u8 vq = (crt & 0x1) >> 0;
+	__u8 vq = crt & 0x1;
 
 	if (rsvd)
 		printf("  [7:2] : %#x\tReserved\n", rsvd);
 	printf("  [1:1] %#x\tVI Resources are %ssupported\n", vi, vi ? "" : "not ");
-	printf("  [1:1] %#x\tVQ Resources are %ssupported\n", vq, vq ? "" : "not ");
+	printf("  [0:0] %#x\tVQ Resources are %ssupported\n", vq, vq ? "" : "not ");
 }
 
 void nvme_show_primary_ctrl_caps(const struct nvme_primary_ctrl_caps *caps,
@@ -4270,7 +4270,6 @@ void nvme_show_primary_ctrl_caps(const struct nvme_primary_ctrl_caps *caps,
 	printf("vifrsm    : %d\n", le16_to_cpu(caps->vifrsm));
 	printf("vigran    : %d\n", le16_to_cpu(caps->vigran));
 }
-
 
 static void json_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list *sc_list,
 					  __u32 count)
