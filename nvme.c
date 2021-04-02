@@ -209,7 +209,7 @@ int parse_and_open(int argc, char **argv, const char *desc,
 	return ret;
 }
 
-enum nvme_print_flags validate_output_format(char *format)
+enum nvme_print_flags validate_output_format(const char *format)
 {
 	if (!format)
 		return -EINVAL;

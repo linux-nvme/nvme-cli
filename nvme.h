@@ -116,7 +116,7 @@ int parse_and_open(int argc, char **argv, const char *desc,
 extern const char *devicename;
 extern const char *output_format;
 
-enum nvme_print_flags validate_output_format(char *format);
+enum nvme_print_flags validate_output_format(const char *format);
 int __id_ctrl(int argc, char **argv, struct command *cmd,
 	struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root));
 char *nvme_char_from_block(char *block);
@@ -134,7 +134,7 @@ int scan_subsystems(struct nvme_topology *t, const char *subsysnqn,
 		    __u32 ns_instance, int nsid, char *dev_dir);
 void free_topology(struct nvme_topology *t);
 char *get_nvme_subsnqn(char *path);
-char *nvme_get_ctrl_attr(char *path, const char *attr);
+char *nvme_get_ctrl_attr(const char *path, const char *attr);
 
 void *nvme_alloc(size_t len, bool *huge);
 void nvme_free(void *p, bool huge);
