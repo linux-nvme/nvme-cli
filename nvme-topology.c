@@ -9,6 +9,11 @@
 #include "nvme.h"
 #include "nvme-ioctl.h"
 
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-id128.h>
+#define NVME_HOSTNQN_ID SD_ID128_MAKE(c7,f4,61,81,12,be,49,32,8c,83,10,6f,9d,dd,d8,6b)
+#endif
+
 static const char *dev = "/dev/";
 static const char *subsys_dir = "/sys/class/nvme-subsystem/";
 static void free_ctrl(struct nvme_ctrl *c);
