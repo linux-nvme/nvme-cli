@@ -81,7 +81,8 @@ PLUGIN_OBJS :=					\
 	plugins/dera/dera-nvme.o 		\
 	plugins/scaleflux/sfx-nvme.o		\
 	plugins/transcend/transcend-nvme.o	\
-	plugins/zns/zns.o
+	plugins/zns/zns.o	        		\
+	plugins/ymtc/ymtc-nvme.o
 
 nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)
