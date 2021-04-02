@@ -4200,6 +4200,35 @@ void nvme_show_id_nvmset(struct nvme_id_nvmset *nvmset, unsigned nvmset_id,
 	}
 }
 
+static void json_nvme_primary_ctrl_caps(const struct nvme_primary_ctrl_caps *caps)
+{
+	struct json_object *root;
+
+	root = json_create_object();
+
+	json_object_add_value_uint(root, "cntlid", le16_to_cpu(caps->cntlid));
+	json_object_add_value_uint(root, "portid", le16_to_cpu(caps->portid));
+	json_object_add_value_uint(root, "crt",    caps->crt);
+
+	json_object_add_value_int(root, "vqfrt",  le32_to_cpu(caps->vqfrt));
+	json_object_add_value_int(root, "vqrfa",  le32_to_cpu(caps->vqrfa));
+	json_object_add_value_int(root, "vqrfap", le16_to_cpu(caps->vqrfap));
+	json_object_add_value_int(root, "vqprt",  le16_to_cpu(caps->vqprt));
+	json_object_add_value_int(root, "vqfrsm", le16_to_cpu(caps->vqfrsm));
+	json_object_add_value_int(root, "vqgran", le16_to_cpu(caps->vqgran));
+
+	json_object_add_value_int(root, "vifrt",  le32_to_cpu(caps->vifrt));
+	json_object_add_value_int(root, "virfa",  le32_to_cpu(caps->virfa));
+	json_object_add_value_int(root, "virfap", le16_to_cpu(caps->virfap));
+	json_object_add_value_int(root, "viprt",  le16_to_cpu(caps->viprt));
+	json_object_add_value_int(root, "vifrsm", le16_to_cpu(caps->vifrsm));
+	json_object_add_value_int(root, "vigran", le16_to_cpu(caps->vigran));
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
 static void nvme_show_primary_ctrl_caps_crt(__u8 crt)
 {
 	__u8 rsvd = (crt & 0xFC) >> 2;
@@ -4219,6 +4248,8 @@ void nvme_show_primary_ctrl_caps(const struct nvme_primary_ctrl_caps *caps,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)caps, sizeof(*caps));
+	else if (flags & JSON)
+		return json_nvme_primary_ctrl_caps(caps);
 
 	printf("NVME Identify Primary Controller Capabilities:\n");
 	printf("cntlid    : %#x\n", le16_to_cpu(caps->cntlid));
