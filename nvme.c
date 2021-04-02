@@ -2415,17 +2415,13 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct 
 {
 	const char *desc = "Send an Identify Primary Controller Capabilities "\
 		"command to the given device and report the information in a "\
-		"human-redable or binary format.";
-	const char *raw = "show capabilities in binary format";
-	const char *human_readable = "show capabilities in readable format";
-
-	enum nvme_print_flags flags = NORMAL;
+		"decoded format (default), json or binary.";
 	struct nvme_primary_ctrl_caps caps;
+
 	int err, fd;
+	enum nvme_print_flags flags;
 
 	struct config {
-		int raw_binary;
-		int human_readable;
 		char *output_format;
 	};
 
@@ -2434,9 +2430,7 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_END()
 	};
 
@@ -2447,10 +2441,6 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct 
 	err = flags = validate_output_format(cfg.output_format);
 	if (flags < 0)
 		goto close_fd;
-	if (cfg.raw_binary)
-		flags = BINARY;
-	if (cfg.human_readable)
-		flags |= VERBOSE;
 
 	err = nvme_identify_primary_ctrl_caps(fd, &caps);
 	if (!err)
