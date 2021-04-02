@@ -2455,7 +2455,7 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct 
 	err = nvme_identify_primary_ctrl_caps(fd, &caps);
 	if (!err)
 		nvme_show_primary_ctrl_caps(&caps, flags);
-	else if (err >0)
+	else if (err > 0)
 		nvme_show_status(err);
 	else
 		perror("identify primary controller capabilities");
