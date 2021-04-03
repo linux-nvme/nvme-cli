@@ -1113,6 +1113,61 @@ retry:
 		return -EINVAL;
 	p += len;
 
+	transport = trtype_str(e->trtype);
+	if (!strcmp(transport, "unrecognized")) {
+		msg(LOG_ERR, "skipping unsupported transport %d\n",
+				 e->trtype);
+		return -EINVAL;
+	}
+
+	len = sprintf(p, ",transport=%s", transport);
+	if (len < 0)
+		return -EINVAL;
+	p += len;
+
+	switch (e->trtype) {
+	case NVMF_TRTYPE_RDMA:
+	case NVMF_TRTYPE_TCP:
+		switch (e->adrfam) {
+		case NVMF_ADDR_FAMILY_IP4:
+		case NVMF_ADDR_FAMILY_IP6:
+			/* FALLTHRU */
+			len = sprintf(p, ",traddr=%.*s",
+				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
+				      e->traddr);
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+
+			len = sprintf(p, ",trsvcid=%.*s",
+				      space_strip_len(NVMF_TRSVCID_SIZE, e->trsvcid),
+				      e->trsvcid);
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+			break;
+		default:
+			msg(LOG_ERR, "skipping unsupported adrfam\n");
+			return -EINVAL;
+		}
+		break;
+	case NVMF_TRTYPE_FC:
+		switch (e->adrfam) {
+		case NVMF_ADDR_FAMILY_FC:
+			len = sprintf(p, ",traddr=%.*s",
+				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
+				      e->traddr);
+			if (len < 0)
+				return -EINVAL;
+			p += len;
+			break;
+		default:
+			msg(LOG_ERR, "skipping unsupported adrfam\n");
+			return -EINVAL;
+		}
+		break;
+	}
+
 	if (fabrics_cfg->hostnqn && strcmp(fabrics_cfg->hostnqn, "none")) {
 		len = sprintf(p, ",hostnqn=%s", fabrics_cfg->hostnqn);
 		if (len < 0)
@@ -1190,18 +1245,6 @@ retry:
 		p += len;
 	}
 
-	transport = trtype_str(e->trtype);
-	if (!strcmp(transport, "unrecognized")) {
-		msg(LOG_ERR, "skipping unsupported transport %d\n",
-				 e->trtype);
-		return -EINVAL;
-	}
-
-	len = sprintf(p, ",transport=%s", transport);
-	if (len < 0)
-		return -EINVAL;
-	p += len;
-
 	if (fabrics_cfg->hdr_digest) {
 		len = sprintf(p, ",hdr_digest");
 		if (len < 0)
@@ -1214,49 +1257,6 @@ retry:
 		if (len < 0)
 			return -EINVAL;
 		p += len;
-	}
-
-	switch (e->trtype) {
-	case NVMF_TRTYPE_RDMA:
-	case NVMF_TRTYPE_TCP:
-		switch (e->adrfam) {
-		case NVMF_ADDR_FAMILY_IP4:
-		case NVMF_ADDR_FAMILY_IP6:
-			/* FALLTHRU */
-			len = sprintf(p, ",traddr=%.*s",
-				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
-				      e->traddr);
-			if (len < 0)
-				return -EINVAL;
-			p += len;
-
-			len = sprintf(p, ",trsvcid=%.*s",
-				      space_strip_len(NVMF_TRSVCID_SIZE, e->trsvcid),
-				      e->trsvcid);
-			if (len < 0)
-				return -EINVAL;
-			p += len;
-			break;
-		default:
-			msg(LOG_ERR, "skipping unsupported adrfam\n");
-			return -EINVAL;
-		}
-		break;
-	case NVMF_TRTYPE_FC:
-		switch (e->adrfam) {
-		case NVMF_ADDR_FAMILY_FC:
-			len = sprintf(p, ",traddr=%.*s",
-				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
-				      e->traddr);
-			if (len < 0)
-				return -EINVAL;
-			p += len;
-			break;
-		default:
-			msg(LOG_ERR, "skipping unsupported adrfam\n");
-			return -EINVAL;
-		}
-		break;
 	}
 
 	if (e->treq & NVMF_TREQ_DISABLE_SQFLOW && disable_sqflow) {
