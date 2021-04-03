@@ -1191,6 +1191,31 @@ struct nvme_feat_auto_pst {
 	__le64 entries[32];
 };
 
+struct nvme_mi_host_metadata_element_desc {
+	__u8			type;	/* Element Type */
+	__u8			rev;	/* Element Revision */
+	__u16			len;	/* Element Length */
+	__u8			val[0];	/* Element Value (UTF-8) */
+};
+
+struct nvme_mi_host_metadata {
+	__u8						ndesc;
+	__u8						rsvd1;
+	struct nvme_mi_host_metadata_element_desc	descs[0];
+};
+
+enum {
+	NVME_MI_CTRL_METADATA_OS_CTRL_NAME 		= 0x01,
+	NVME_MI_CTRL_METADATA_OS_DRIVER_NAME 		= 0x02,
+	NVME_MI_CTRL_METADATA_OS_DRIVER_VER 		= 0x03,
+	NVME_MI_CTRL_METADATA_PRE_BOOT_CTRL_NAME 	= 0x04,
+	NVME_MI_CTRL_METADATA_PRE_BOOT_DRIVER_NAME 	= 0x05,
+	NVME_MI_CTRL_METADATA_PRE_BOOT_DRIVER_VER 	= 0x06,
+
+	NVME_MI_NS_METADATA_OS_NS_NAME 		= 0x01,
+	NVME_MI_NS_METADATA_PRE_BOOT_NS_NAME 	= 0x02,
+};
+
 enum {
 	NVME_HOST_MEM_ENABLE	= (1 << 0),
 	NVME_HOST_MEM_RETURN	= (1 << 1),
@@ -1284,13 +1309,17 @@ enum nvme_feat {
 	NVME_LBA_STATUS_INFO	= 0x15,
 	NVME_FEAT_HOST_BEHAVIOR	= 0x16,
 	NVME_FEAT_SANITIZE	= 0x17,
-      NVME_FEAT_ENDURANCE     = 0x18,
+	NVME_FEAT_ENDURANCE	= 0x18,
 	NVME_FEAT_IOCS_PROFILE	= 0x19,
 	NVME_FEAT_SW_PROGRESS	= 0x80,
 	NVME_FEAT_HOST_ID	= 0x81,
 	NVME_FEAT_RESV_MASK	= 0x82,
 	NVME_FEAT_RESV_PERSIST	= 0x83,
 	NVME_FEAT_WRITE_PROTECT	= 0x84,
+
+	NVME_MI_FEAT_CTRL_METADATA	= 0x7E,
+	NVME_MI_FEAT_NS_METADATA	= 0x7F,
+
 } __attribute__ ((__packed__));
 
 enum {

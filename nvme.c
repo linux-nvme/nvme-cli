@@ -91,7 +91,9 @@ static __u16 nvme_feat_buf_len[0x100] = {
 	[NVME_FEAT_HOST_ID]		= 8,
 	[NVME_FEAT_PLM_CONFIG]		= 512,
 	[NVME_FEAT_TIMESTAMP]		= 8,
-	[NVME_FEAT_HOST_BEHAVIOR]	= 512
+	[NVME_FEAT_HOST_BEHAVIOR]	= 512,
+	[NVME_MI_FEAT_CTRL_METADATA]	= 4096,
+	[NVME_MI_FEAT_NS_METADATA]	= 4096,
 };
 
 const char *output_format = "Output format: normal|json|binary";
@@ -3654,7 +3656,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
                 memset(buf, 0, cfg.data_len);
                 memcpy(buf, &number, NVME_FEAT_TIMESTAMP_DATA_SIZE);
             }
-        }
+	}
 	}
 
 	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value,
