@@ -2374,29 +2374,27 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 		"9h: Secondary Online";
 	const char *nr = "Number of Controller Resources(NR)";
 	int fd, err;
-	__u32 result;
+	__u32 result, cdw10;
 
 	struct config {
-		int     cntlid;
-		int     rt;
-		int     act;
-		__u32   cdw10;
-		__u32   cdw11;
+		__u16   cntlid;
+		__u8    rt;
+		__u8    act;
+		__u16   nr;
 	};
 
 	struct config cfg = {
 		.cntlid	  = 0,
 		.rt	  = 0,
 		.act	  = 0,
-		.cdw10	  = 0,
-		.cdw11	  = 0,
+		.nr	  = 0,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("cntlid", 'c', &cfg.cntlid, cntlid),
 		OPT_UINT("rt",     'r', &cfg.rt,     rt),
 		OPT_UINT("act",    'a', &cfg.act,    act),
-		OPT_UINT("nr",     'n', &cfg.cdw11,  nr),
+		OPT_UINT("nr",     'n', &cfg.nr,     nr),
 		OPT_END()
 	};
 
@@ -2404,13 +2402,12 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 	if (fd < 0)
 		goto ret;
 
-	cfg.cdw10 = cfg.cntlid << 16;
-	cfg.cdw10 = cfg.cdw10 | (cfg.rt << 8);
-	cfg.cdw10 = cfg.cdw10 | cfg.act;
+	cdw10 = cfg.act | (cfg.rt << 8) | (cfg.cntlid << 16);
 
-	err = nvme_virtual_mgmt(fd, cfg.cdw10, cfg.cdw11, &result);
+	err = nvme_virtual_mgmt(fd, cdw10, cfg.nr, &result);
 	if (!err) {
-		printf("success, Number of Resources allocated:%#x\n", result);
+		printf("success, Number of Controller Resources Modified "\
+			"(NRM):%#x\n", result);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else
