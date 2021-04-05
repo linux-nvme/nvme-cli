@@ -1319,6 +1319,7 @@ ret:
 static int sanitize_log(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Retrieve sanitize log and show it.";
+	const char *rae = "Retain an Asynchronous Event";
 	const char *raw = "show log in binary format";
 	const char *human_readable = "show log in readable format";
 	struct nvme_sanitize_log_page sanitize_log;
@@ -1326,16 +1327,19 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 	int fd, err;
 
 	struct config {
+		bool  rae;
 		int   raw_binary;
 		int   human_readable;
 		char *output_format;
 	};
 
 	struct config cfg = {
+		.rae = false,
 		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
+		OPT_FLAG("rae",           'r', &cfg.rae,            rae),
 		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
 		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
 		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw),
@@ -1354,7 +1358,7 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
-	err = nvme_sanitize_log(fd, &sanitize_log);
+	err = nvme_sanitize_log(fd, cfg.rae, &sanitize_log);
 	if (!err)
 		nvme_show_sanitize_log(&sanitize_log, devicename, flags);
 	else if (err > 0)

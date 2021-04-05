@@ -594,9 +594,9 @@ int nvme_discovery_log(int fd, struct nvmf_disc_rsp_page_hdr *log, __u32 size)
 	return nvme_get_log(fd, 0, NVME_LOG_DISC, false, NVME_NO_LOG_LSP, size, log);
 }
 
-int nvme_sanitize_log(int fd, struct nvme_sanitize_log_page *sanitize_log)
+int nvme_sanitize_log(int fd, bool rae, struct nvme_sanitize_log_page *sanitize_log)
 {
-	return nvme_get_log(fd, 0, NVME_LOG_SANITIZE, false,
+	return nvme_get_log(fd, 0, NVME_LOG_SANITIZE, rae,
 			NVME_NO_LOG_LSP, sizeof(*sanitize_log), sanitize_log);
 }
 
