@@ -6054,11 +6054,16 @@ static void json_simple_ns(struct nvme_namespace *n, struct json_object *devices
 	struct json_object *device_attrs;
 	char formatter[41] = { 0 };
 	double nsze, nuse;
-	int index = -1;
+	int ret, index = -1;
 	long long lba;
 	char *devnode;
+	struct stat st;
 
 	if (asprintf(&devnode, "%s%s", n->ctrl->path, n->name) < 0)
+		return;
+
+	ret = stat(devnode, &st);
+	if (ret < 0)
 		return;
 
 	device_attrs = json_create_object();
