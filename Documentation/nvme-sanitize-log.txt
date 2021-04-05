@@ -8,7 +8,7 @@ nvme-sanitize-log - Send NVMe sanitize-log Command, return result
 SYNOPSIS
 --------
 [verse]
-'nvme sanitize-log' <device> [--output-format=<fmt> | -o <fmt>]
+'nvme sanitize-log' <device> [--rae | -r] [--output-format=<fmt> | -o <fmt>]
 			     [--human-readable | -H]
 			     [--raw-binary | -b]
 
@@ -54,6 +54,10 @@ On success it returns 0, error code otherwise.
 
 OPTIONS
 -------
+-r::
+--rae::
+	Retain an Asynchronous Event.
+
 -o <format>::
 --output-format=<format>::
               Set the reporting format to 'normal', 'json', or
