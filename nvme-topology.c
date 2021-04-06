@@ -763,7 +763,6 @@ int uuid_from_systemd(char *systemd_uuid)
 {
 #ifdef HAVE_SYSTEMD
 	sd_id128_t id;
-	char *ret;
 
 	if (sd_id128_get_machine_app_specific(NVME_HOSTNQN_ID, &id) < 0)
 		return -ENXIO;
