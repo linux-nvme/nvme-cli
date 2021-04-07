@@ -40,7 +40,7 @@ static void show_zns_properties(nvme_ns_t n)
 		return;
 	}
 
-	printf("zamds:%u\n", zns_ctrl.zamds);
+	printf("zasl:%u\n", zns_ctrl.zasl);
 
 	if (nvme_zns_mgmt_recv(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), 0,
 			       NVME_ZNS_ZRA_REPORT_ZONES, NVME_ZNS_ZRAS_REPORT_ALL,

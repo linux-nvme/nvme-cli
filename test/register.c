@@ -45,7 +45,8 @@ void nvme_print_registers(void *regs)
 	__u32 pmrsts	= nvme_mmio_read32(regs + NVME_REG_PMRSTS);
 	__u32 pmrebs	= nvme_mmio_read32(regs + NVME_REG_PMREBS);
 	__u32 pmrswtp	= nvme_mmio_read32(regs + NVME_REG_PMRSWTP);
-	__u64 pmrmsc	= nvme_mmio_read64(regs + NVME_REG_PMRMSC);
+	__u64 pmrmsc	= nvme_mmio_read32(regs + NVME_REG_PMRMSCL) |
+		   (__u64)nvme_mmio_read64(regs + NVME_REG_PMRMSCU) << 32;
 
 	printf("%-10s : %llx\n", "CAP", cap);
 	printf("  %-8s : %llx\n", "MQES", NVME_CAP_MQES(cap));

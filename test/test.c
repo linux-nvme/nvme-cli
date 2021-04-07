@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <uuid/uuid.h>
 #include <libnvme.h>
 
 static char *nqn_match;

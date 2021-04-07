@@ -10,6 +10,7 @@
 #ifndef _LIBNVME_IOCTL_H
 #define _LIBNVME_IOCTL_H
 
+#include <stddef.h>
 #include <sys/ioctl.h>
 #include "types.h"
 
@@ -1112,7 +1113,7 @@ int nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u64 lpo,
 static inline int nvme_get_nsid_log(int fd, enum nvme_cmd_get_log_lid lid,
 				    __u32 nsid, __u32 len, void *log)
 {
-	return nvme_get_log(fd, lid, nsid, 0, 0, 0, false, 0, 0, len,
+	return nvme_get_log(fd, lid, nsid, 0, 0, 0, false, 0, NVME_CSI_NVM, len,
 			    log);
 }
 
@@ -1862,7 +1863,8 @@ int nvme_get_features(int fd, enum nvme_features_id fid, __u32 nsid,
 static inline int nvme_get_features_data(int fd, enum nvme_features_id fid,
 			__u32 nsid, __u32 data_len, void *data, __u32 *result)
 {
-	return nvme_get_features(fd, fid, nsid, 0, 0, 0, data_len, data, result);
+	return nvme_get_features(fd, fid, nsid, NVME_GET_FEATURES_SEL_CURRENT,
+				 0, 0, data_len, data, result);
 }
 static inline int nvme_get_features_simple(int fd, enum nvme_features_id fid,
 			__u32 nsid, __u32 *result)
