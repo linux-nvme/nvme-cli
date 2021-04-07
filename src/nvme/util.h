@@ -122,6 +122,13 @@ void nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
 			  __u32 *llbas, __u64 *slbas, __u16 nr_ranges);
 
 /**
+ * nvme_init_copy_range() -
+ */
+void nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
+			  __u64 *slbas, __u32 *eilbrts, __u32 *elbatms,
+			  __u32 *elbats, __u16 nr);
+
+/**
  * __nvme_get_log_page() -
  * @fd:	      File descriptor of nvme device
  * @nsid:     Namespace Identifier, if applicable.

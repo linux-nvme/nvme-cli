@@ -193,7 +193,8 @@ enum nvme_csi {
  * @NVME_REG_PMRSTS:	Persistent Memory Region Status
  * @NVME_REG_PMREBS:	Persistent Memory Region Elasticity Buffer Size
  * @NVME_REG_PMRSWTP:	Memory Region Sustained Write Throughput
- * @NVME_REG_PMRMSC:	Persistent Memory Region Controller Memory Space Control
+ * @NVME_REG_PMRMSCL:	Persistent Memory Region Controller Memory Space Control Lower
+ * @NVME_REG_PMRMSCU:	Persistent Memory Region Controller Memory Space Control Upper
  */
 enum nvme_register_offsets {
 	NVME_REG_CAP			= 0x0000,
@@ -218,7 +219,8 @@ enum nvme_register_offsets {
 	NVME_REG_PMRSTS 		= 0x0e08,
 	NVME_REG_PMREBS 		= 0x0e0c,
 	NVME_REG_PMRSWTP		= 0x0e10,
-	NVME_REG_PMRMSC 		= 0x0e14,
+	NVME_REG_PMRMSCL 		= 0x0e14,
+	NVME_REG_PMRMSCU 		= 0x0e18,
 };
 
 /**
@@ -241,7 +243,6 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
 	case NVME_REG_ACQ:
 	case NVME_REG_BPMBL:
 	case NVME_REG_CMBMSC:
-	case NVME_REG_PMRMSC:
 		return true;
 	default:
 		return false;
@@ -913,7 +914,7 @@ struct nvme_id_psd {
  * 	       all namespaces with any supported namespace format during a
  * 	       power fail or error condition. This field is specified in
  * 	       logical blocks and is a 0’s based value.
- * @nvscc:     NVM Vendor Specific Command Configuration, see
+ * @icsvscc:   NVM Vendor Specific Command Configuration, see
  * 	       &enum nvme_id_ctrl_nvscc.
  * @nwpc:      Namespace Write Protection Capabilities, see
  * 	       &enum nvme_id_ctrl_nwpc.
@@ -1013,7 +1014,7 @@ struct nvme_id_ctrl {
 	__u8			vwc;
 	__le16			awun;
 	__le16			awupf;
-	__u8			nvscc;
+	__u8			icsvscc;
 	__u8			nwpc;
 	__le16			acwu;
 	__u8			rsvd534[2];
@@ -1684,7 +1685,10 @@ struct nvme_id_ns {
 	__le16			npdg;
 	__le16			npda;
 	__le16			nows;
-	__u8			rsvd74[18];
+	__le16			mssrl;
+	__le32			mcl;
+	__u8			msrc;
+	__u8			rsvd81[11];
 	__le32			anagrpid;
 	__u8			rsvd96[3];
 	__u8			nsattr;
@@ -2028,7 +2032,7 @@ struct nvme_id_uuid_list {
 
 /**
  * struct nvme_ctrl_list -
- * @num;
+ * @num:
  * @identifier:
  */
 struct nvme_ctrl_list {
@@ -2042,6 +2046,25 @@ struct nvme_ctrl_list {
  */
 struct nvme_ns_list {
 	__le32 ns[NVME_ID_NS_LIST_MAX];
+};
+
+/**
+ * struct nvme_id_ctrl_nvm -
+ * vsl:
+ * wzsl:
+ * wusl:
+ * dmrl:
+ * dmrsl:
+ * dmsl:
+ */
+struct nvme_id_ctrl_nvm {
+    __u8     vsl;
+    __u8     wzsl;
+    __u8     wusl;
+    __u8     dmrl;
+    __u32    dmrsl;
+    __u64    dmsl;
+    __u8     rsvd16[4080];
 };
 
 /**
@@ -2081,10 +2104,10 @@ struct nvme_zns_id_ns {
 
 /**
  * struct nvme_zns_id_ctrl -
- * @zamds:
+ * @zasl:
  */
 struct nvme_zns_id_ctrl {
-	__u8	zamds;
+	__u8	zasl;
 	__u8	rsvd1[4095];
 };
 
@@ -2548,7 +2571,7 @@ struct nvme_st_result {
 } __attribute__((packed));
 
 /**
- * enum -
+ * enum nvme_status_result -
  * @NVME_ST_RESULT_NO_ERR:
  * @NVME_ST_RESULT_ABORTED:
  * @NVME_ST_RESULT_CLR:
@@ -2578,7 +2601,7 @@ enum nvme_status_result {
 };
 
 /**
- * enum -
+ * enum nvme_st_code -
  * @NVME_ST_CODE_NONE:
  * @NVME_ST_CODE_SHORT:
  * @NVME_ST_CODE_EXTENDED:
@@ -2593,7 +2616,7 @@ enum nvme_st_code {
 };
 
 /**
- * enum -
+ * enum nvme_st_valid_diag_info -
  * @NVME_ST_VALID_DIAG_INFO_NSID:
  * @NVME_ST_VALID_DIAG_INFO_FLBA:
  * @NVME_ST_VALID_DIAG_INFO_SCT:
@@ -2605,7 +2628,6 @@ enum nvme_st_valid_diag_info {
 	NVME_ST_VALID_DIAG_INFO_SCT		= 1 << 2,
 	NVME_ST_VALID_DIAG_INFO_SC		= 1 << 3,
 };
-
 
 /**
  * struct nvme_self_test_log -
@@ -2741,8 +2763,8 @@ struct nvme_nvmset_predictable_lat_log {
 	__le64	dtwin_rt;
 	__le64	dtwin_wt;
 	__le64	dtwin_tmax;
-	__le64	dtwin_tmin_hi;
-	__le64	dtwin_tmin_lo;
+	__le64	ndwin_tmin_hi;
+	__le64	ndwin_tmin_lo;
 	__u8	rsvd72[56];
 	__le64	dtwin_re;
 	__le64	dtwin_we;
@@ -2837,9 +2859,10 @@ struct nvme_ana_log {
 /**
  * struct nvme_persistent_event_log -
  * @lid:
- * @ttl:
+ * @tnev:
+ * @tll:
  * @rv:
- * @lht:
+ * @lhl:
  * @ts:
  * @poh:
  * @pcc:
@@ -2853,10 +2876,11 @@ struct nvme_ana_log {
 struct nvme_persistent_event_log {
 	__u8	lid;
 	__u8	rsvd1[3];
-	__le32	ttl;
+	__le32	tnev;
+	__le64	tll;
 	__u8	rv;
 	__u8	rsvd17;
-	__le16	lht;
+	__le16	lhl;
 	__le64	ts;
 	__u8	poh[16];
 	__le64	pcc;
@@ -2865,8 +2889,114 @@ struct nvme_persistent_event_log {
 	char	sn[20];
 	char	mn[40];
 	char	subnqn[NVME_NQN_LENGTH];
-	__u8	rsvd372;
+	__u8	rsvd372[108];
 	__u8	seb[32];
+} __attribute__((packed));
+
+struct nvme_persistent_event_entry {
+	__u8	etype;
+	__u8	etype_rev;
+	__u8	ehl;
+	__u8	rsvd3;
+	__le16	cntlid;
+	__le64	ets;
+	__u8	rsvd14[6];
+	__le16	vsil;
+	__le16	el;
+};
+
+enum nvme_persistent_event_types {
+    NVME_PEL_SMART_HEALTH_EVENT		= 0x01,
+    NVME_PEL_FW_COMMIT_EVENT		= 0x02,
+    NVME_PEL_TIMESTAMP_EVENT		= 0x03,
+    NVME_PEL_POWER_ON_RESET_EVENT	= 0x04,
+    NVME_PEL_NSS_HW_ERROR_EVENT		= 0x05,
+    NVME_PEL_CHANGE_NS_EVENT		= 0x06,
+    NVME_PEL_FORMAT_START_EVENT		= 0x07,
+    NVME_PEL_FORMAT_COMPLETION_EVENT	= 0x08,
+    NVME_PEL_SANITIZE_START_EVENT	= 0x09,
+    NVME_PEL_SANITIZE_COMPLETION_EVENT	= 0x0a,
+    NVME_PEL_THERMAL_EXCURSION_EVENT	= 0x0d,
+};
+
+struct nvme_fw_commit_event {
+	__le64	old_fw_rev;
+	__le64 	new_fw_rev;
+	__u8 	fw_commit_action;
+	__u8 	fw_slot;
+	__u8 	sct_fw;
+	__u8 	sc_fw;
+	__le16 	vndr_assign_fw_commit_rc;
+} __attribute__((packed));
+
+struct nvme_time_stamp_change_event {
+	__le64 	previous_timestamp;
+	__le64 	ml_secs_since_reset;
+};
+
+struct nvme_power_on_reset_info_list {
+	__le16   cid;
+	__u8     fw_act;
+	__u8     op_in_prog;
+	__u8     rsvd4[12];
+	__le32   ctrl_power_cycle;
+	__le64   power_on_ml_seconds;
+	__le64   ctrl_time_stamp;
+} __attribute__((packed));
+
+struct nvme_nss_hw_err_event {
+	__le16 	nss_hw_err_event_code;
+	__u8 	rsvd2[2];
+	__u8 	*add_hw_err_info;
+};
+
+struct nvme_change_ns_event {
+	__le32	nsmgt_cdw10;
+	__u8	rsvd4[4];
+	__le64	nsze;
+	__u8	rsvd16[8];
+	__le64	nscap;
+	__u8	flbas;
+	__u8	dps;
+	__u8	nmic;
+	__u8	rsvd35;
+	__le32	ana_grp_id;
+	__le16	nvmset_id;
+	__le16	rsvd42;
+	__le32	nsid;
+};
+
+struct nvme_format_nvm_start_event {
+	__le32 	nsid;
+	__u8 	fna;
+	__u8 	rsvd5[3];
+	__le32 	format_nvm_cdw10;
+};
+
+struct nvme_format_nvm_compln_event {
+	__le32 	nsid;
+	__u8 	smallest_fpi;
+	__u8 	format_nvm_status;
+	__le16 	compln_info;
+	__le32 	status_field;
+};
+
+struct nvme_sanitize_start_event {
+	__le32 	sani_cap;
+	__le32 	sani_cdw10;
+	__le32 	sani_cdw11;
+};
+
+struct nvme_sanitize_compln_event {
+	__le16	sani_prog;
+	__le16	sani_status;
+	__le16	cmpln_info;
+	__u8	rsvd6[2];
+};
+
+struct nvme_thermal_exc_event {
+    __u8 	over_temp;
+    __u8 	threshold;
 };
 
 /**
@@ -2883,13 +3013,13 @@ struct nvme_lba_rd {
 /**
  * struct nvme_lbas_ns_element -
  * @neid:
- * @nrld:
+ * @nlrd:
  * @ratype:
  * @lba_rd:
  */
 struct nvme_lbas_ns_element {
 	__le32	neid;
-	__le32	nrld;
+	__le32	nlrd;
 	__u8	ratype;
 	__u8	rsvd8[7];
 	struct	nvme_lba_rd lba_rd[];
@@ -3008,6 +3138,7 @@ enum nvme_sanitize_sstat {
 	NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK	= 0x1f,
 	NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_SHIFT	= 8,
 	NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_MASK	= 0x1,
+	NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED		= 1 << NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_SHIFT,
 };
 
 /**
@@ -3221,6 +3352,16 @@ struct nvme_dsm_range {
 	__le64	slba;
 };
 
+struct nvme_copy_range {
+	__u8			rsvd0[8];
+	__le64			slba;
+	__le16			nlb;
+	__u8			rsvd18[6];
+	__le32			eilbrt;
+	__le16			elbatm;
+	__le16			elbat;
+};
+
 /**
  * struct nvme_registered_ctrl -
  * @cntlid:
@@ -3253,7 +3394,7 @@ struct nvme_registered_ctrl_ext {
 };
 
 /**
- * struct nvme_resv_status -{
+ * struct nvme_resv_status -
  * @gen:
  * @rtype:
  * @regctl:
@@ -3319,12 +3460,15 @@ enum {
 };
 
 /**
- * struct nvme_host_mem_buf_desc -
+ * struct nvme_host_mem_buf_attrs -
  */
-struct nvme_host_mem_buf_desc {
-	__le64			addr;
-	__le32			size;
-	__u32			rsvd;
+struct nvme_host_mem_buf_attrs {
+	__le32	hsize;
+	__le32	hmdlal;
+	__le32	hmdlau;
+	__le32	hmdlec;
+	__u8	rsvd16[4080];
+
 };
 
 /**

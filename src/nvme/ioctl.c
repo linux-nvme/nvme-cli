@@ -494,12 +494,12 @@ int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 csi, void *data)
 			     NVME_UUID_NONE, csi, data);
 }
 
-int nvme_identify_iocs(int fd, struct nvme_id_iocs *iocs)
+int nvme_identify_iocs(int fd, __u16 cntlid, struct nvme_id_iocs *iocs)
 {
 	BUILD_ASSERT(sizeof(struct nvme_id_iocs) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_CTRL, NVME_NSID_NONE,
-			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
-			     NVME_UUID_NONE, NVME_CSI_NVM, iocs);
+			     cntlid, NVME_NVMSETID_NONE, NVME_UUID_NONE,
+			     NVME_CSI_NVM, iocs);
 }
 
 int nvme_zns_identify_ns(int fd, __u32 nsid, struct nvme_zns_id_ns *data)
@@ -510,12 +510,17 @@ int nvme_zns_identify_ns(int fd, __u32 nsid, struct nvme_zns_id_ns *data)
 			     NVME_UUID_NONE, NVME_CSI_ZNS, data);
 }
 
-int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *data)
+int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id)
 {
 	BUILD_ASSERT(sizeof(struct nvme_zns_id_ctrl) == 4096);
-	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_CTRL, NVME_NSID_NONE,
-			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
-			     NVME_UUID_NONE, NVME_CSI_ZNS, data);
+	return nvme_identify_ctrl_csi(fd, NVME_CSI_ZNS, id);
+}
+
+
+int nvme_nvm_identify_ctrl(int fd, struct nvme_id_ctrl_nvm *id) 
+{
+	BUILD_ASSERT(sizeof(struct nvme_id_ctrl_nvm ) == 4096);
+	return nvme_identify_ctrl_csi(fd, NVME_CSI_NVM, id);
 }
 
 int nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u64 lpo,
@@ -715,6 +720,13 @@ int nvme_get_log_sanitize(int fd, bool rae,
 	BUILD_ASSERT(sizeof(struct nvme_sanitize_log_page) == 512);
 	return __nvme_get_log(fd, NVME_LOG_LID_SANITIZE, rae, sizeof(*log),
 			      log);
+}
+
+int nvme_get_log_persistent_event(int fd, enum nvme_pevent_log_action action,
+				  __u32 size, void *pevent_log)
+{
+	return __nvme_get_log(fd, NVME_LOG_LID_PERSISTENT_EVENT, false, size,
+			      pevent_log);
 }
 
 int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
@@ -1284,7 +1296,7 @@ int nvme_ns_attach_ctrls(int fd, __u32 nsid, struct nvme_ctrl_list *ctrlist)
 	return nvme_ns_attach(fd, nsid, NVME_NS_ATTACH_SEL_CTRL_ATTACH, ctrlist);
 }
 
-int nvme_ns_dettach_ctrls(int fd, __u32 nsid, struct nvme_ctrl_list *ctrlist)
+int nvme_ns_detach_ctrls(int fd, __u32 nsid, struct nvme_ctrl_list *ctrlist)
 {
 	return nvme_ns_attach(fd, nsid, NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
 			      ctrlist);
@@ -1719,6 +1731,32 @@ int nvme_dsm(int fd, __u32 nsid, __u32 attrs, __u16 nr_ranges,
 		.data_len	= nr_ranges * sizeof(*dsm),
 		.cdw10		= nr_ranges - 1,
 		.cdw11		= cdw11,
+	};
+
+	return nvme_submit_io_passthru(fd, &cmd, NULL);
+}
+
+int nvme_copy(int fd, __u32 nsid, struct nvme_copy_range *copy, __u64 sdlba,
+		__u16 nr, __u8 prinfor, __u8 prinfow, __u8 dtype, __u16 dspec,
+		__u8 format, int lr, int fua, __u32 ilbrt, __u16 lbatm,
+		__u16 lbat)
+{
+	__u32 cdw12 = ((nr - 1) & 0xff) | ((format & 0xf) <<  8) |
+		((prinfor & 0xf) << 12) | ((dtype & 0xf) << 20) |
+		((prinfow & 0xf) << 26) | ((fua & 0x1) << 30) |
+		((lr & 0x1) << 31);
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode         = nvme_cmd_copy,
+		.nsid           = nsid,
+		.addr           = (__u64)(uintptr_t)copy,
+		.data_len       = nr * sizeof(*copy),
+		.cdw10          = sdlba & 0xffffffff,
+		.cdw11          = sdlba >> 32,
+		.cdw12          = cdw12,
+		.cdw13		= (dspec & 0xffff) << 16,
+		.cdw14		= ilbrt,
+		.cdw15		= (lbatm << 16) | lbat,
 	};
 
 	return nvme_submit_io_passthru(fd, &cmd, NULL);

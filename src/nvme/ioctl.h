@@ -413,6 +413,7 @@ enum nvme_admin_opcode {
 	nvme_admin_async_event		= 0x0c,
 	nvme_admin_ns_mgmt		= 0x0d,
 	nvme_admin_fw_commit		= 0x10,
+	nvme_admin_fw_activate		= nvme_admin_fw_commit,
 	nvme_admin_fw_download		= 0x11,
 	nvme_admin_dev_self_test	= 0x14,
 	nvme_admin_ns_attach		= 0x15,
@@ -938,7 +939,7 @@ int nvme_identify_ns_descs(int fd, __u32 nsid, struct nvme_ns_id_desc *descs);
  * @nvmeset_id:	NVM Set Identifier
  * @nvmset:	User space destination address to transfer the data
  *
- * Retrieves an NVM Set List, struct nvme_id_nvmset. The data structure is an
+ * Retrieves an NVM Set List, @struct nvme_id_nvmset_list. The data structure is an
  * ordered list by NVM Set Identifier, starting with the first NVM Set
  * Identifier supported by the NVM subsystem that is equal to or greater than
  * the NVM Set Identifier.
@@ -1043,8 +1044,19 @@ int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 csi, void *data);
 int nvme_identify_ctrl_csi(int fd, __u8 csi, void *data);
 
 /**
+ * nvme_identify_ctrl_nvm() -
+ * @fd:	File descriptor of nvme device
+ * @id:	User space destination address to transfer the data
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_nvm_identify_ctrl(int fd, struct nvme_id_ctrl_nvm *id);
+
+/**
  * nvme_identify_iocs() -
  * @fd:		File descriptor of nvme device
+ * @cntlid:	Controller ID
  * @iocs:	User space destination address to transfer the data
  *
  * Retrieves list of the controller's supported io command set vectors. See
@@ -1053,7 +1065,7 @@ int nvme_identify_ctrl_csi(int fd, __u8 csi, void *data);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_iocs(int fd, struct nvme_id_iocs *iocs);
+int nvme_identify_iocs(int fd, __u16 cntlid, struct nvme_id_iocs *iocs);
 
 /**
  * nvme_zns_identify_ns() -
@@ -1068,13 +1080,13 @@ int nvme_zns_identify_ns(int fd, __u32 nsid, struct nvme_zns_id_ns *data);
 
 /**
  * nvme_zns_identify_ctrl() -
- * @fd:		File descriptor of nvme device
- * @data:	User space destination address to transfer the data
+ * @fd:	File descriptor of nvme device
+ * @id:	User space destination address to transfer the data
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *data);
+int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id);
 
 /**
  * nvme_get_log() - NVMe Admin Get Log command
@@ -1096,6 +1108,19 @@ int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *data);
 int nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u64 lpo,
 		 __u8 lsp, __u16 lsi, bool rae, __u8 uuidx, enum nvme_csi csi,
 		 __u32 len, void *log);
+
+static inline int nvme_get_nsid_log(int fd, enum nvme_cmd_get_log_lid lid,
+				    __u32 nsid, __u32 len, void *log)
+{
+	return nvme_get_log(fd, lid, nsid, 0, 0, 0, false, 0, 0, len,
+			    log);
+}
+
+static inline int nvme_get_log_simple(int fd, enum nvme_cmd_get_log_lid lid,
+				      __u32 len, void *log)
+{
+	return nvme_get_nsid_log(fd, lid, NVME_NSID_ALL, len, log);
+}
 
 /**
  * nvme_get_log_error() - Retrieve nvme error log
@@ -1373,6 +1398,25 @@ int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
 				   struct nvme_zns_changed_zone_log *log);
 
 /**
+ * enum nvme_pevent_log_action -
+ */
+enum nvme_pevent_log_action {
+	NVME_PEVENT_LOG_READ			= 0x0,
+	NVME_PEVENT_LOG_EST_CTX_AND_READ	= 0x1,
+	NVME_PEVENT_LOG_RELEASE_CTX		= 0x2,
+};
+
+/**
+ * nvme_get_log_persistent_event() -
+ * &fd:
+ * &action:
+ * @size:
+ * @pevent_log:
+ */
+int nvme_get_log_persistent_event(int fd, enum nvme_pevent_log_action action,
+				  __u32 size, void *pevent_log);
+
+/**
  * nvme_set_features() - Set a feature attribute
  * @fd:		File descriptor of nvme device
  * @fid:	Feature identifier
@@ -1392,6 +1436,21 @@ int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
 int nvme_set_features(int fd, __u8 fid, __u32 nsid, __u32 cdw11, __u32 cdw12,
 		      bool save, __u8 uuidx, __u32 cdw15, __u32 data_len,
 		      void *data, __u32 *result);
+
+static inline int nvme_set_features_data(int fd, __u8 fid, __u32 nsid,
+			__u32 cdw11, bool save, __u32 data_len, void *data,
+		 	__u32 *result)
+{
+	return nvme_set_features(fd, fid, nsid, cdw11, 0, save, 0, 0, data_len,
+				data, result);
+}
+
+static inline int nvme_set_features_simple(int fd, __u8 fid, __u32 nsid,
+			__u32 cdw11, bool save, __u32 *result)
+{
+	return nvme_set_features_data(fd, fid, nsid, cdw11, save, 0, NULL,
+				 result);
+}
 
 /**
  * nvme_set_features_arbitration() -
@@ -1799,6 +1858,17 @@ int nvme_set_features_iocs_profile(int fd, __u8 iocsi, bool save);
 int nvme_get_features(int fd, enum nvme_features_id fid, __u32 nsid,
 		      enum nvme_get_features_sel sel, __u32 cdw11, __u8 uuidx,
 		      __u32 data_len, void *data, __u32 *result);
+
+static inline int nvme_get_features_data(int fd, enum nvme_features_id fid,
+			__u32 nsid, __u32 data_len, void *data, __u32 *result)
+{
+	return nvme_get_features(fd, fid, nsid, 0, 0, 0, data_len, data, result);
+}
+static inline int nvme_get_features_simple(int fd, enum nvme_features_id fid,
+			__u32 nsid, __u32 *result)
+{
+	return nvme_get_features_data(fd, fid, nsid, 0, NULL, result);
+}
 
 /**
  * nvme_get_features_arbitration() -
@@ -2296,7 +2366,7 @@ int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data);
 int nvme_fw_commit(int fd, __u8 slot, enum nvme_fw_commit_ca action, bool bpid);
 
 /**
- * nvme_security_receive() -
+ * nvme_security_send() -
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID to issue security command on
  * @nssf:	NVMe Security Specific field
@@ -2634,6 +2704,7 @@ enum nvme_io_opcode {
 	nvme_cmd_resv_report	= 0x0e,
 	nvme_cmd_resv_acquire	= 0x11,
 	nvme_cmd_resv_release	= 0x15,
+	nvme_cmd_copy		= 0x19,
 	nvme_zns_cmd_mgmt_send	= 0x79,
 	nvme_zns_cmd_mgmt_recv	= 0x7a,
 	nvme_zns_cmd_append	= 0x7d,
@@ -2903,6 +2974,17 @@ enum nvme_dsm_attributes {
  */
 int nvme_dsm(int fd, __u32 nsid, __u32 attrs, __u16 nr_ranges,
 	     struct nvme_dsm_range *dsm);
+
+/**
+ * nvme_copy() -
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_copy(int fd, __u32 nsid, struct nvme_copy_range *copy, __u64 sdlba,
+		__u16 nr, __u8 prinfor, __u8 prinfow, __u8 dtype, __u16 dspec,
+		__u8 format, int lr, int fua, __u32 ilbrt, __u16 lbatm,
+		__u16 lbat);
 
 /**
  * enum nvme_resv_rtype -

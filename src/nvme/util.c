@@ -334,12 +334,12 @@ int nvme_get_ctrl_telemetry(int fd, bool rae, struct nvme_telemetry_log **log)
 	return nvme_get_telemetry_log(fd, false, true, rae, log);
 }
 
-int nvme_get_host_telemetry(int fd,  struct nvme_telemetry_log **log)
+int nvme_get_host_telemetry(int fd, struct nvme_telemetry_log **log)
 {
 	return nvme_get_telemetry_log(fd, false, false, false, log);
 }
 
-int nvme_get_new_host_telemetry(int fd,  struct nvme_telemetry_log **log)
+int nvme_get_new_host_telemetry(int fd, struct nvme_telemetry_log **log)
 {
 	return nvme_get_telemetry_log(fd, true, false, false, log);
 }
@@ -380,6 +380,21 @@ free:
 	*log = NULL;
 	free(buf);
 	return err;
+}
+
+void nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
+			  __u64 *slbas, __u32 *eilbrts, __u32 *elbatms,
+			  __u32 *elbats, __u16 nr)
+{
+	int i;
+
+	for (i = 0; i < nr; i++) {
+		copy[i].nlb = cpu_to_le16(nlbs[i]);
+		copy[i].slba = cpu_to_le64(slbas[i]);
+		copy[i].eilbrt = cpu_to_le32(eilbrts[i]);
+		copy[i].elbatm = cpu_to_le16(elbatms[i]);
+		copy[i].elbat = cpu_to_le16(elbats[i]);
+	}
 }
 
 void nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
