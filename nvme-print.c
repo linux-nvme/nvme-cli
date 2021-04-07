@@ -2647,7 +2647,7 @@ void d_raw(unsigned char *buf, unsigned len)
 {
 	unsigned i;
 	for (i = 0; i < len; i++)
-		putchar(*(buf+i));
+		putchar(*(buf + i));
 }
 
 void nvme_show_status(__u16 status)
