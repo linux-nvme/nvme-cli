@@ -906,10 +906,10 @@ static int get_persistent_event_log(int argc, char **argv,
 		struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve Persistent Event log info for"\
-			"the given device in either decoded format(default),"\
+			" the given device in either decoded format(default),"\
 			" json or binary.";
 	const char *action = "action the controller shall take during"\
-			"processing this persistent log page command.";
+			" processing this persistent log page command.";
 	const char *log_len = "number of bytes to retrieve";
 	const char *raw = "use binary output";
 	void *pevent_log_info;
