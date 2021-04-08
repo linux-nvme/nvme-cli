@@ -156,8 +156,7 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 		bool	select_all;
 	};
 
-	struct config cfg = {
-	};
+	struct config cfg = {};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
@@ -251,8 +250,7 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 		char   *file;
 	};
 
-	struct config cfg = {
-	};
+	struct config cfg = {};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
@@ -395,8 +393,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 		char   *file;
 	};
 
-	struct config cfg = {
-	};
+	struct config cfg = {};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
@@ -708,8 +705,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		int   latency;
 	};
 
-	struct config cfg = {
-	};
+	struct config cfg = {};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
