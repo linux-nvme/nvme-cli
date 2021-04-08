@@ -126,30 +126,34 @@ int main()
 
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
+	nvme_host_t h;
 	nvme_root_t r;
 
 	r = nvme_scan();
 	if (!r)
 		return EXIT_FAILURE;
 
-	nvme_for_each_subsystem(r, s)
-		nvme_subsystem_for_each_ctrl(s, c)
-			i++;
+	nvme_for_each_host(r, h)
+		nvme_for_each_subsystem(h, s)
+			nvme_subsystem_for_each_ctrl(s, c)
+				i++;
 
 	e = calloc(i, sizeof(e));
 	FD_ZERO(&fds);
 	i = 0;
 
-	nvme_for_each_subsystem(r, s) {
-		nvme_subsystem_for_each_ctrl(s, c) {
-			int fd = open_uevent(c);
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			nvme_subsystem_for_each_ctrl(s, c) {
+				int fd = open_uevent(c);
 
-			if (fd < 0)
-				continue;
-			FD_SET(fd, &fds);
-			e[i].uevent_fd = fd;
-			e[i].c = c;
-			i++;
+				if (fd < 0)
+					continue;
+				FD_SET(fd, &fds);
+				e[i].uevent_fd = fd;
+				e[i].c = c;
+				i++;
+			}
 		}
 	}
 

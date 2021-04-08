@@ -57,6 +57,7 @@ int main()
 {
 	nvme_subsystem_t s;
 	nvme_root_t r;
+	nvme_host_t h;
 	nvme_ctrl_t c;
 	nvme_ns_t n;
 
@@ -64,16 +65,18 @@ int main()
 	if (!r)
 		return -1;
 
-	nvme_for_each_subsystem(r, s) {
-		nvme_subsystem_for_each_ctrl(s, c) {
-			nvme_ctrl_for_each_ns(c, n) {
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			nvme_subsystem_for_each_ctrl(s, c) {
+				nvme_ctrl_for_each_ns(c, n) {
+					if (nvme_ns_get_csi(n) == NVME_CSI_ZNS)
+						show_zns_properties(n);
+				}
+			}
+			nvme_subsystem_for_each_ns(s, n) {
 				if (nvme_ns_get_csi(n) == NVME_CSI_ZNS)
 					show_zns_properties(n);
 			}
-		}
-		nvme_subsystem_for_each_ns(s, n) {
-			if (nvme_ns_get_csi(n) == NVME_CSI_ZNS)
-				show_zns_properties(n);
 		}
 	}
 	nvme_free_tree(r);

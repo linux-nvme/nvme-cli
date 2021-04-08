@@ -22,13 +22,15 @@
 #include "tree.h"
 #include "filters.h"
 #include "util.h"
+#include "fabrics.h"
 
 /* XXX: Make a place for private declarations */
 extern int nvme_set_attr(const char *dir, const char *attr, const char *value);
 
+static void nvme_free_host(struct nvme_host *h);
 static void nvme_free_subsystem(struct nvme_subsystem *s);
 static int nvme_subsystem_scan_namespace(struct nvme_subsystem *s, char *name);
-static int nvme_scan_subsystem(struct nvme_root *r, char *name,
+static int nvme_scan_subsystem(struct nvme_host *h, char *name,
 			       nvme_scan_filter_t f);
 static int nvme_subsystem_scan_ctrl(struct nvme_subsystem *s, char *name);
 static int nvme_ctrl_scan_namespace(struct nvme_ctrl *c, char *name);
@@ -104,15 +106,24 @@ struct nvme_subsystem {
 	struct list_node entry;
 	struct list_head ctrls;
 	struct list_head namespaces;
-	struct nvme_root *r;
+	struct nvme_host *h;
 
 	char *name;
 	char *sysfs_dir;
 	char *subsysnqn;
 };
 
-struct nvme_root {
+struct nvme_host {
+	struct list_node entry;
 	struct list_head subsystems;
+	struct nvme_root *r;
+
+	char *hostnqn;
+	char *hostid;
+};
+
+struct nvme_root {
+	struct list_head hosts;
 };
 
 static inline void nvme_free_dirents(struct dirent **d, int i)
@@ -121,17 +132,42 @@ static inline void nvme_free_dirents(struct dirent **d, int i)
 		free(d[i]);
 	free(d);
 }
+
+nvme_host_t nvme_default_host(nvme_root_t r)
+{
+	struct nvme_host *h = calloc(1, sizeof(*h));
+
+	if (!h) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	h->hostnqn = nvmf_hostnqn_from_file();
+	h->hostid = nvmf_hostid_from_file();
+	list_head_init(&h->subsystems);
+	list_add(&r->hosts, &h->entry);
+	h->r = r;
+	return h;
+}
+
 static int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 {
+	struct nvme_host *h;
 	struct dirent **subsys;
 	int i, ret;
 
+	h = nvme_default_host(r);
+	if (!h) {
+		free(r);
+		errno = ENOMEM;
+		return -1;
+	}
 	ret = nvme_scan_subsystems(&subsys);
 	if (ret < 0)
 		return ret;
 
 	for (i = 0; i < ret; i++)
-		nvme_scan_subsystem(r, subsys[i]->d_name, f);
+		nvme_scan_subsystem(h, subsys[i]->d_name, f);
 
 	nvme_free_dirents(subsys, i);
 	return 0;
@@ -146,7 +182,7 @@ nvme_root_t nvme_scan_filter(nvme_scan_filter_t f)
 		return NULL;
 	}
 
-	list_head_init(&r->subsystems);
+	list_head_init(&r->hosts);
 	nvme_scan_topology(r, f);
 	return r;
 }
@@ -156,40 +192,65 @@ nvme_root_t nvme_scan()
 	return nvme_scan_filter(NULL);
 }
 
-nvme_subsystem_t nvme_first_subsystem(nvme_root_t r)
+nvme_host_t nvme_first_host(nvme_root_t r)
 {
-	return list_top(&r->subsystems, struct nvme_subsystem, entry);
+	return list_top(&r->hosts, struct nvme_host, entry);
 }
 
-nvme_subsystem_t nvme_next_subsystem(nvme_root_t r, nvme_subsystem_t s)
+nvme_host_t nvme_next_host(nvme_root_t r, nvme_host_t h)
 {
-	return s ? list_next(&r->subsystems, s, entry) : NULL;
+	return h ? list_next(&r->hosts, h, entry) : NULL;
+}
+
+nvme_root_t nvme_host_get_root(nvme_host_t h)
+{
+	return h->r;
+}
+
+const char *nvme_host_get_hostnqn(nvme_host_t h)
+{
+	return h->hostnqn;
+}
+
+const char *nvme_host_get_hostid(nvme_host_t h)
+{
+	return h->hostid;
+}
+
+nvme_subsystem_t nvme_first_subsystem(nvme_host_t h)
+{
+	return list_top(&h->subsystems, struct nvme_subsystem, entry);
+}
+
+nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s)
+{
+	return s ? list_next(&h->subsystems, s, entry) : NULL;
 }
 
 void nvme_refresh_topology(nvme_root_t r)
 {
-	struct nvme_subsystem *s, *_s;
+	struct nvme_host *h, *_h;
 
-	nvme_for_each_subsystem_safe(r, s, _s)
-		nvme_free_subsystem(s);
+	nvme_for_each_host_safe(r, h, _h)
+		nvme_free_host(h);
 	nvme_scan_topology(r, NULL);
 }
 
 void nvme_reset_topology(nvme_root_t r)
 {
-	struct nvme_subsystem *s, *_s;
+	struct nvme_host *h, *_h;
 
-	nvme_for_each_subsystem_safe(r, s, _s)
-		nvme_free_subsystem(s);
+	nvme_for_each_host_safe(r, h, _h)
+		nvme_free_host(h);
 	nvme_scan_topology(r, NULL);
 }
 
 void nvme_free_tree(nvme_root_t r)
 {
-	struct nvme_subsystem *s, *_s;
+	struct nvme_host *h, *_h;
 
-	nvme_for_each_subsystem_safe(r, s, _s)
-		nvme_free_subsystem(s);
+	nvme_for_each_host_safe(r, h, _h)
+		nvme_free_host(h);
 	free(r);
 }
 
@@ -216,6 +277,11 @@ nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s)
 nvme_ctrl_t nvme_subsystem_next_ctrl(nvme_subsystem_t s, nvme_ctrl_t c)
 {
 	return c ? list_next(&s->ctrls, c, entry) : NULL;
+}
+
+nvme_host_t nvme_subsystem_get_host(nvme_subsystem_t s)
+{
+	return s->h;
 }
 
 nvme_ns_t nvme_subsystem_first_ns(nvme_subsystem_t s)
@@ -255,6 +321,19 @@ static void nvme_free_subsystem(struct nvme_subsystem *s)
 	free(s);
 }
 
+void nvme_free_host(struct nvme_host *h)
+{
+	struct nvme_subsystem *s, *_s;
+
+	list_del_init(&h->entry);
+	nvme_for_each_subsystem_safe(h, s, _s)
+		nvme_free_subsystem(s);
+	free(h->hostnqn);
+	if (h->hostid)
+		free(h->hostid);
+	free(h);
+}
+
 static int nvme_subsystem_scan_namespaces(struct nvme_subsystem *s)
 {
 	struct dirent **namespaces;
@@ -287,7 +366,7 @@ static int nvme_subsystem_scan_ctrls(struct nvme_subsystem *s)
 	return 0;
 }
 
-static int nvme_scan_subsystem(struct nvme_root *r, char *name,
+static int nvme_scan_subsystem(struct nvme_host *h, char *name,
 			       nvme_scan_filter_t f)
 {
 	struct nvme_subsystem *s;
@@ -304,16 +383,16 @@ static int nvme_scan_subsystem(struct nvme_root *r, char *name,
 		goto free_path;
 	}
 
-	s->r = r;
-	s->name = strdup(name);;
+	s->h = h;
+	s->name = strdup(name);
 	s->sysfs_dir = path;
 	s->subsysnqn = nvme_get_subsys_attr(s, "subsysnqn");
 	list_head_init(&s->ctrls);
 	list_head_init(&s->namespaces);
+	list_add(&h->subsystems, &s->entry);
 
 	nvme_subsystem_scan_namespaces(s);
 	nvme_subsystem_scan_ctrls(s);
-	list_add(&r->subsystems, &s->entry);
 
 	if (f && !f(s)) {
 		nvme_free_subsystem(s);

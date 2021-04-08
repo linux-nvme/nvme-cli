@@ -16,6 +16,7 @@
 int main()
 {
 	nvme_root_t r;
+	nvme_host_t h;
 	nvme_subsystem_t s, _s;
 	nvme_ctrl_t c, _c;
 	nvme_path_t p, _p;
@@ -26,40 +27,43 @@ int main()
 		return -1;
 
 	printf(".\n");
-	nvme_for_each_subsystem_safe(r, s, _s) {
-		printf("%c-- %s - NQN=%s\n", _s ? '|' : '`',
-			nvme_subsystem_get_name(s),
-			nvme_subsystem_get_nqn(s));
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem_safe(h, s, _s) {
+			printf("%c-- %s - NQN=%s\n", _s ? '|' : '`',
+			       nvme_subsystem_get_name(s),
+			       nvme_subsystem_get_nqn(s));
 
-		nvme_subsystem_for_each_ns_safe(s, n, _n) {
-			printf("%c   |-- %s lba size:%d lba max:%lu\n",
-				_s ? '|' : ' ',
-				nvme_ns_get_name(n), nvme_ns_get_lba_size(n),
-				nvme_ns_get_lba_count(n));
-		}
+			nvme_subsystem_for_each_ns_safe(s, n, _n) {
+				printf("%c   |-- %s lba size:%d lba max:%lu\n",
+				       _s ? '|' : ' ',
+				       nvme_ns_get_name(n),
+				       nvme_ns_get_lba_size(n),
+				       nvme_ns_get_lba_count(n));
+			}
 
-		nvme_subsystem_for_each_ctrl_safe(s, c, _c) {
-			printf("%c   %c-- %s %s %s %s\n",
-				_s ? '|' : ' ', _c ? '|' : '`',
-				nvme_ctrl_get_name(c),
-				nvme_ctrl_get_transport(c),
-				nvme_ctrl_get_address(c),
-				nvme_ctrl_get_state(c));
+			nvme_subsystem_for_each_ctrl_safe(s, c, _c) {
+				printf("%c   %c-- %s %s %s %s\n",
+				       _s ? '|' : ' ', _c ? '|' : '`',
+				       nvme_ctrl_get_name(c),
+				       nvme_ctrl_get_transport(c),
+				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_state(c));
 
-			nvme_ctrl_for_each_ns_safe(c, n, _n)
-				printf("%c   %c   %c-- %s lba size:%d lba max:%lu\n",
-					_s ? '|' : ' ', _c ? '|' : ' ',
-					_n ? '|' : '`',
-					nvme_ns_get_name(n),
-					nvme_ns_get_lba_size(n),
-					nvme_ns_get_lba_count(n));
+				nvme_ctrl_for_each_ns_safe(c, n, _n)
+					printf("%c   %c   %c-- %s lba size:%d lba max:%lu\n",
+					       _s ? '|' : ' ', _c ? '|' : ' ',
+					       _n ? '|' : '`',
+					       nvme_ns_get_name(n),
+					       nvme_ns_get_lba_size(n),
+					       nvme_ns_get_lba_count(n));
 
-			nvme_ctrl_for_each_path_safe(c, p, _p)
-				printf("%c   %c   %c-- %s %s\n",
-					_s ? '|' : ' ', _c ? '|' : ' ',
-					_p ? '|' : '`',
-					nvme_path_get_name(p),
-					nvme_path_get_ana_state(p));
+				nvme_ctrl_for_each_path_safe(c, p, _p)
+					printf("%c   %c   %c-- %s %s\n",
+					       _s ? '|' : ' ', _c ? '|' : ' ',
+					       _p ? '|' : '`',
+					       nvme_path_get_name(p),
+					       nvme_path_get_ana_state(p));
+			}
 		}
 	}
 	nvme_free_tree(r);

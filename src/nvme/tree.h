@@ -47,6 +47,11 @@ typedef struct nvme_subsystem *nvme_subsystem_t;
 /**
  *
  */
+typedef struct nvme_host *nvme_host_t;
+
+/**
+ *
+ */
 typedef struct nvme_root *nvme_root_t;
 
 /**
@@ -55,21 +60,78 @@ typedef struct nvme_root *nvme_root_t;
 typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t);
 
 /**
- * nvme_first_subsystem() -
+ * nvme_first_host() -
  * @r:
  *
  * Return: 
  */
-nvme_subsystem_t nvme_first_subsystem(nvme_root_t r);
+nvme_host_t nvme_first_host(nvme_root_t r);
+
+/**
+ * nvme_next_host() -
+ * @r:
+ * @h:
+ *
+ * Return: 
+ */
+nvme_host_t nvme_next_host(nvme_root_t r, nvme_host_t h);
+
+/**
+ * nvme_host_get_root() -
+ * @h:
+ *
+ * Return:
+ */
+nvme_root_t nvme_host_get_root(nvme_host_t h);
+
+/**
+ * nvme_host_get_hostnqn() -
+ * @h:
+ *
+ * Return: 
+ */
+const char *nvme_host_get_hostnqn(nvme_host_t h);
+
+/**
+ * nvme_host_get_hostid() -
+ * @h:
+ *
+ * Return: 
+ */
+const char *nvme_host_get_hostid(nvme_host_t h);
+
+/**
+ * nvme_default_host() -
+ * @r:
+ *
+ * Return:
+ */
+nvme_host_t nvme_default_host(nvme_root_t r);
+
+/**
+ * nvme_first_subsystem() -
+ * @h:
+ *
+ * Return: 
+ */
+nvme_subsystem_t nvme_first_subsystem(nvme_host_t h);
 
 /**
  * nvme_next_subsystem() -
- * @r:
+ * @h:
  * @s:
  *
  * Return: 
  */
-nvme_subsystem_t nvme_next_subsystem(nvme_root_t r, nvme_subsystem_t s);
+nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s);
+
+/**
+ * nvme_subsystem_get_host() -
+ * @s:
+ *
+ * Return: 
+ */
+nvme_host_t nvme_subsystem_get_host(nvme_subsystem_t s);
 
 /**
  * nvme_ctrl_first_ns() -
@@ -140,20 +202,36 @@ nvme_ns_t nvme_subsystem_first_ns(nvme_subsystem_t s);
 nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 
 /**
+ * nvme_for_each_host_safe()
+ */
+#define nvme_for_each_host_safe(r, h, _h)		\
+	for (h = nvme_first_host(r),			\
+	     _h = nvme_next_host(r, h);			\
+             h != NULL; 				\
+	     h = _h, _h = nvme_next_host(r, h))
+
+/**
+ * nvme_for_each_host()
+ */
+#define nvme_for_each_host(r, h)			\
+	for (h = nvme_first_host(r); h != NULL; 	\
+	     h = nvme_next_host(r, h))
+
+/**
  * nvme_for_each_subsystem_safe()
  */
-#define nvme_for_each_subsystem_safe(r, s, _s)			\
-	for (s = nvme_first_subsystem(r), 			\
-             _s = nvme_next_subsystem(r, s); 			\
+#define nvme_for_each_subsystem_safe(h, s, _s)			\
+	for (s = nvme_first_subsystem(h), 			\
+             _s = nvme_next_subsystem(h, s); 			\
              s != NULL; 					\
-	     s = _s, _s = nvme_next_subsystem(r, s))
+	     s = _s, _s = nvme_next_subsystem(h, s))
 
 /**
  * nvme_for_each_subsystem()
  */
-#define nvme_for_each_subsystem(r, s)				\
-	for (s = nvme_first_subsystem(r); s != NULL; 		\
-		s = nvme_next_subsystem(r, s))
+#define nvme_for_each_subsystem(h, s)				\
+	for (s = nvme_first_subsystem(h); s != NULL; 		\
+		s = nvme_next_subsystem(h, s))
 
 /**
  * nvme_subsystem_for_each_ctrl_safe()
