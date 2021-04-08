@@ -1825,8 +1825,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	nvme_show_subsystem_list(&t, flags);
 free:
 	free_topology(&t);
-	if (subsysnqn)
-		free(subsysnqn);
+	free(subsysnqn);
 ret:
 	return nvme_status_to_errno(err, false);
 }
@@ -2765,8 +2764,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	} else
 		perror("get-feature");
 
-	if (buf)
-		free(buf);
+	free(buf);
 
 close_fd:
 	close(fd);
@@ -3687,8 +3685,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 close_ffd:
 	close(ffd);
 free:
-	if (buf)
-		free(buf);
+	free(buf);
 close_fd:
 	close(fd);
 ret:
@@ -3934,8 +3931,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 close_ffd:
 	close(ffd);
 free:
-	if (buf)
-		free(buf);
+	free(buf);
 close_fd:
 	close(fd);
 ret:
@@ -4952,8 +4948,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	}
 
 free_mbuffer:
-	if (cfg.metadata_size)
-		free(mbuffer);
+	free(mbuffer);
 free_buffer:
 	nvme_free(buffer, huge);
 close_mfd:
@@ -5363,8 +5358,7 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 	else if (err < 0)
 		perror("dir-receive");
 
-	if (cfg.data_len)
-		free(buf);
+	free(buf);
 close_fd:
 	close(fd);
 ret:
@@ -5578,11 +5572,9 @@ static int passthru(int argc, char **argv, int ioctl_cmd, uint8_t cmd_type,
 			d_raw((unsigned char *)data, cfg.data_len);
 	}
 free_data:
-	if (cfg.data_len)
-		nvme_free(data, huge);
+	nvme_free(data, huge);
 free_metadata:
-	if (cfg.metadata_len)
-		free(metadata);
+	free(metadata);
 close_wfd:
 	if (strlen(cfg.input_file))
 		close(wfd);
