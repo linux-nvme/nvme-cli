@@ -608,7 +608,7 @@ static char *__nvme_get_attr(const char *path)
 	return strdup(value);
 }
 
-static char *nvme_get_attr(const char *dir, const char *attr)
+char *nvme_get_attr(const char *dir, const char *attr)
 {
 	char *path, *value;
 	int ret;

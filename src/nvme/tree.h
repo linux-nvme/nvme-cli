@@ -787,6 +787,15 @@ void nvme_reset_topology(nvme_root_t r);
 void nvme_free_tree(nvme_root_t r);
 
 /**
+ * nvme_get_attr() -
+ * @dir:
+ * @attr:
+ *
+ * Return: 
+ */
+char *nvme_get_attr(const char *dir, const char *attr);
+
+/**
  * nvme_get_subsys_attr() -
  * @s:
  * @attr:
