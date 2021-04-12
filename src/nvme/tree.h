@@ -14,7 +14,7 @@
 #include <stddef.h>
 
 #include <sys/types.h>
-#ifdef CONFIG_UUID
+#ifdef CONFIG_LIBUUID
 #include <uuid/uuid.h>
 #endif
 #include "ioctl.h"
@@ -298,7 +298,7 @@ const uint8_t *nvme_ns_get_nguid(nvme_ns_t n);
  *
  * Copies the namespace's uuid to the destination buffer
  */
-#ifdef CONFIG_UUID
+#ifdef CONFIG_LIBUUID
 void nvme_ns_get_uuid(nvme_ns_t n, uuid_t out);
 #else
 void nvme_ns_get_uuid(nvme_ns_t n, uint8_t *out);

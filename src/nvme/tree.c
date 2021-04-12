@@ -66,7 +66,7 @@ struct nvme_ns {
 
 	uint8_t eui64[8];
 	uint8_t nguid[16];
-#ifdef CONFIG_UUID
+#ifdef CONFIG_LIBUUID
 	uuid_t  uuid;
 #else
 	uint8_t uuid[16];
@@ -785,7 +785,7 @@ const uint8_t *nvme_ns_get_nguid(nvme_ns_t n)
 	return n->nguid;
 }
 
-#ifdef CONFIG_UUID
+#ifdef CONFIG_LIBUUID
 void nvme_ns_get_uuid(nvme_ns_t n, uuid_t out)
 {
 	uuid_copy(out, n->uuid);

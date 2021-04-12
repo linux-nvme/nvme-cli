@@ -18,7 +18,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#ifdef CONFIG_LIBUUID
 #include <uuid/uuid.h>
+#endif
 #include <libnvme.h>
 
 static char *nqn_match;
@@ -348,9 +350,10 @@ int main()
 				nvme_ctrl_get_state(c));
 
 			nvme_ctrl_for_each_ns(c, n) {
+#ifdef CONFIG_LIBUUID
 				char uuid_str[40];
 				uuid_t uuid;
-
+#endif
 				printf("   `- %s lba size:%d lba max:%lu\n",
 					nvme_ns_get_name(n), nvme_ns_get_lba_size(n),
 					nvme_ns_get_lba_count(n));
@@ -358,9 +361,11 @@ int main()
 				print_hex(nvme_ns_get_eui64(n), 8);
 				printf(" nguid:");
 				print_hex(nvme_ns_get_nguid(n), 16);
+#ifdef CONFIG_LIBUUID
 				nvme_ns_get_uuid(n, uuid);
 				uuid_unparse_lower(uuid, uuid_str);
 				printf(" uuid:%s csi:%d\n", uuid_str, nvme_ns_get_csi(n));
+#endif
 			}
 
 			nvme_ctrl_for_each_path(c, p)
