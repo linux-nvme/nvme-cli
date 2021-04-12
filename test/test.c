@@ -300,7 +300,7 @@ static void print_hex(const uint8_t *x, int len)
 		printf("%02x", x[i]);
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	nvme_root_t r;
 	nvme_host_t h;
@@ -308,6 +308,7 @@ int main()
 	nvme_ctrl_t c;
 	nvme_path_t p;
 	nvme_ns_t n;
+	const char *ctrl = "nvme4";
 
 	printf("Test filter for common loop back target\n");
 	nqn_match = "testnqn";
@@ -327,8 +328,11 @@ int main()
 	printf("\n");
 	nvme_free_tree(r);
 
+	if (argc > 1)
+		ctrl = argv[1];
+
 	printf("Test scan specific controller\n");
-	c = nvme_scan_ctrl("nvme4");
+	c = nvme_scan_ctrl(ctrl);
 	if (c) {
 		printf("%s %s %s %s\n", nvme_ctrl_get_name(c),
 			nvme_ctrl_get_transport(c),
