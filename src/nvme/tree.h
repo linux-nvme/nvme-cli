@@ -784,6 +784,23 @@ const char *nvme_ctrl_get_trsvcid(nvme_ctrl_t c);
 const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c);
 
 /**
+ * nvme_ctrl_get_config() -
+ * @c:
+ *
+ * Return:
+ */
+struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c);
+
+/**
+ * nvme_ctrl_disable_sqflow() -
+ * @c:
+ * @disable_sqflow:
+ *
+ * Return:
+ */
+void nvme_ctrl_disable_sqflow(nvme_ctrl_t c, bool disable_sqflow);
+
+/**
  * nvme_ctrl_identify() -
  * @c:
  * @id:

@@ -105,6 +105,7 @@ struct nvme_ctrl {
 	char *traddr;
 	char *trsvcid;
 	char *host_traddr;
+	struct nvme_fabrics_config cfg;
 };
 
 struct nvme_subsystem {
@@ -681,6 +682,16 @@ const char *nvme_ctrl_get_hostid(nvme_ctrl_t c)
 	return c->s->h->hostid;
 }
 
+struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
+{
+	return &c->cfg;
+}
+
+void nvme_ctrl_disable_sqflow(nvme_ctrl_t c, bool disable_sqflow)
+{
+	c->cfg.disable_sqflow = disable_sqflow;
+}
+
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)
 {
 	return nvme_identify_ctrl(nvme_ctrl_get_fd(c), id);
@@ -789,6 +800,7 @@ struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn,
 		return NULL;
 	c = calloc(1, sizeof(*c));
 	c->fd = -1;
+	c->cfg.tos = -1;
 	list_head_init(&c->namespaces);
 	list_head_init(&c->paths);
 	list_node_init(&c->entry);
