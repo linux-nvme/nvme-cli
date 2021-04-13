@@ -32,7 +32,7 @@
 #include "ioctl.h"
 #include "util.h"
 
-#define NVMF_HOSTID_SIZE	36
+#define NVMF_HOSTID_SIZE	37
 
 const char *nvmf_dev = "/dev/nvme-fabrics";
 const char *nvmf_hostnqn_file = "/etc/nvme/hostnqn";
@@ -374,7 +374,7 @@ static char *nvmf_read_file(const char *f, int len)
 		return false;
 
 	memset(buf, 0, len);
-	ret = read(fd, buf, sizeof(buf - 1));
+	ret = read(fd, buf, len - 1);
 	close (fd);
 
 	if (ret < 0)
