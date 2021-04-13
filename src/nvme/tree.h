@@ -809,6 +809,23 @@ void nvme_ctrl_set_discovered(nvme_ctrl_t c, bool discovered);
 bool nvme_ctrl_is_discovered(nvme_ctrl_t c);
 
 /**
+ * nvme_ctrl_set_persistent() -
+ * @c:
+ * @persistent:
+ *
+ * Return:
+ */
+void nvme_ctrl_set_persistent(nvme_ctrl_t c, bool persistent);
+
+/**
+ * nvme_ctrl_is_persistent() -
+ * @c:
+ *
+ * Return:
+ */
+bool nvme_ctrl_is_persistent(nvme_ctrl_t c);
+
+/**
  * nvme_ctrl_disable_sqflow() -
  * @c:
  * @disable_sqflow:

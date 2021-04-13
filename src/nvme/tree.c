@@ -106,6 +106,7 @@ struct nvme_ctrl {
 	char *trsvcid;
 	char *host_traddr;
 	bool discovered;
+	bool persistent;
 	struct nvme_fabrics_config cfg;
 };
 
@@ -701,6 +702,16 @@ void nvme_ctrl_set_discovered(nvme_ctrl_t c, bool discovered)
 bool nvme_ctrl_is_discovered(nvme_ctrl_t c)
 {
 	return c->discovered;
+}
+
+void nvme_ctrl_set_persistent(nvme_ctrl_t c, bool persistent)
+{
+	c->persistent = persistent;
+}
+
+bool nvme_ctrl_is_persistent(nvme_ctrl_t c)
+{
+	return c->persistent;
 }
 
 void nvme_ctrl_set_verbosity(nvme_ctrl_t c, bool verbose)
