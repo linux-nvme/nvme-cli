@@ -60,6 +60,70 @@ struct nvme_fabrics_config {
 };
 
 /**
+ * nvmf_trtype_str() -
+ * @trtype:
+ *
+ * Return:
+ */
+const char *nvmf_trtype_str(__u8 trtype);
+
+/**
+ * nvmf_adrfam_str() -
+ * @adrfam:
+ *
+ * Return:
+ */
+const char *nvmf_adrfam_str(__u8 adrfam);
+
+/**
+ * nvmf_subtype_str() -
+ * @subtype:
+ *
+ * Return:
+ */
+const char *nvmf_subtype_str(__u8 subtype);
+
+/**
+ * nvmf_treq_str() -
+ * @treq:
+ *
+ * Return:
+ */
+const char *nvmf_treq_str(__u8 treq);
+
+/**
+ * nvmf_sectype_str() -
+ * @sectype:
+ *
+ * Return:
+ */
+const char *nvmf_sectype_str(__u8 sectype);
+
+/**
+ * nvmf_prtype_str() -
+ * @prtype:
+ *
+ * Return:
+ */
+const char *nvmf_prtype_str(__u8 prtype);
+
+/**
+ * nvmf_qptype_str() -
+ * @qptype:
+ *
+ * Return:
+ */
+const char *nvmf_qptype_str(__u8 qptype);
+
+/**
+ * nvmf_cms_str() -
+ * @cms:
+ *
+ * Return:
+ */
+const char *nvmf_cms_str(__u8 cms);
+
+/**
  * nvmf_add_ctrl_opts() -
  * @cfg:
  *

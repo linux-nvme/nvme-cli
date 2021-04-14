@@ -38,6 +38,104 @@ const char *nvmf_dev = "/dev/nvme-fabrics";
 const char *nvmf_hostnqn_file = "/etc/nvme/hostnqn";
 const char *nvmf_hostid_file = "/etc/nvme/hostid";
 
+const char *arg_str(const char * const *strings,
+		size_t array_size, size_t idx)
+{
+	if (idx < array_size && strings[idx])
+		return strings[idx];
+	return "unrecognized";
+}
+
+const char * const trtypes[] = {
+	[NVMF_TRTYPE_RDMA]	= "rdma",
+	[NVMF_TRTYPE_FC]	= "fc",
+	[NVMF_TRTYPE_TCP]	= "tcp",
+	[NVMF_TRTYPE_LOOP]	= "loop",
+};
+
+const char *nvmf_trtype_str(__u8 trtype)
+{
+	return arg_str(trtypes, ARRAY_SIZE(trtypes), trtype);
+}
+
+static const char * const adrfams[] = {
+	[NVMF_ADDR_FAMILY_PCI]	= "pci",
+	[NVMF_ADDR_FAMILY_IP4]	= "ipv4",
+	[NVMF_ADDR_FAMILY_IP6]	= "ipv6",
+	[NVMF_ADDR_FAMILY_IB]	= "infiniband",
+	[NVMF_ADDR_FAMILY_FC]	= "fibre-channel",
+};
+
+const char *nvmf_adrfam_str(__u8 adrfam)
+{
+	return arg_str(adrfams, ARRAY_SIZE(adrfams), adrfam);
+}
+
+static const char * const subtypes[] = {
+	[NVME_NQN_DISC]		= "discovery subsystem",
+	[NVME_NQN_NVME]		= "nvme subsystem",
+};
+
+const char *nvmf_subtype_str(__u8 subtype)
+{
+	return arg_str(subtypes, ARRAY_SIZE(subtypes), subtype);
+}
+
+static const char * const treqs[] = {
+	[NVMF_TREQ_NOT_SPECIFIED]	= "not specified",
+	[NVMF_TREQ_REQUIRED]		= "required",
+	[NVMF_TREQ_NOT_REQUIRED]	= "not required",
+	[NVMF_TREQ_DISABLE_SQFLOW]	= "not specified, "
+					  "sq flow control disable supported",
+};
+
+const char *nvmf_treq_str(__u8 treq)
+{
+	return arg_str(treqs, ARRAY_SIZE(treqs), treq);
+}
+
+static const char * const sectypes[] = {
+	[NVMF_TCP_SECTYPE_NONE]		= "none",
+	[NVMF_TCP_SECTYPE_TLS]		= "tls",
+};
+
+const char *nvmf_sectype_str(__u8 sectype)
+{
+	return arg_str(sectypes, ARRAY_SIZE(sectypes), sectype);
+}
+
+static const char * const prtypes[] = {
+	[NVMF_RDMA_PRTYPE_NOT_SPECIFIED]	= "not specified",
+	[NVMF_RDMA_PRTYPE_IB]			= "infiniband",
+	[NVMF_RDMA_PRTYPE_ROCE]			= "roce",
+	[NVMF_RDMA_PRTYPE_ROCEV2]		= "roce-v2",
+	[NVMF_RDMA_PRTYPE_IWARP]		= "iwarp",
+};
+
+const char *nvmf_prtype_str(__u8 prtype)
+{
+	return arg_str(prtypes, ARRAY_SIZE(prtypes), prtype);
+}
+
+static const char * const qptypes[] = {
+	[NVMF_RDMA_QPTYPE_CONNECTED]	= "connected",
+	[NVMF_RDMA_QPTYPE_DATAGRAM]	= "datagram",
+};
+
+const char *nvmf_qptype_str(__u8 qptype)
+{
+	return arg_str(qptypes, ARRAY_SIZE(qptypes), qptype);
+}
+
+static const char * const cms[] = {
+	[NVMF_RDMA_CMS_RDMA_CM]	= "rdma-cm",
+};
+
+const char *nvmf_cms_str(__u8 cm)
+{
+	return arg_str(cms, ARRAY_SIZE(cms), cm);
+}
+
 static int add_bool_argument(char **argstr, char *tok, bool arg)
 {
 	char *nstr;
@@ -235,23 +333,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
 		return NULL;
 	}
 
-	switch (e->trtype) {
-	case NVMF_TRTYPE_RDMA:
-		cfg.transport = "rdma";
-		break;
-	case NVMF_TRTYPE_FC:
-		cfg.transport = "fc";
-		break;
-	case NVMF_TRTYPE_TCP:
-		cfg.transport = "tcp";
-		break;
-	case NVMF_TRTYPE_LOOP:
-		cfg.transport = "loop";
-		break;
-	default:
-		break;
-	}
-
+	cfg.transport = nvmf_trtype_str(e->trtype);
 	cfg.nqn = e->subnqn;
 	if (e->treq & NVMF_TREQ_DISABLE_SQFLOW)
 		cfg.disable_sqflow = true;
