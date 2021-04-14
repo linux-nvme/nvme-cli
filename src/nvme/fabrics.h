@@ -30,6 +30,7 @@
  * @disable_sqflow:	Disable controller sq flow control
  * @hdr_digest:		Generate/verify header digest (TCP)
  * @data_digest:	Generate/verify data digest (TCP)
+ * @verbose:            Verbose output
  */
 struct nvme_fabrics_config {
 	int queue_size;
@@ -45,6 +46,7 @@ struct nvme_fabrics_config {
 	bool disable_sqflow;
 	bool hdr_digest;
 	bool data_digest;
+	bool verbose;
 };
 
 /**
