@@ -792,6 +792,23 @@ const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c);
 struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c);
 
 /**
+ * nvme_ctrl_set_discovered() -
+ * @c:
+ * @discovered:
+ *
+ * Return:
+ */
+void nvme_ctrl_set_discovered(nvme_ctrl_t c, bool discovered);
+
+/**
+ * nvme_ctrl_is_discovered() -
+ * @c:
+ *
+ * Return:
+ */
+bool nvme_ctrl_is_discovered(nvme_ctrl_t c);
+
+/**
  * nvme_ctrl_disable_sqflow() -
  * @c:
  * @disable_sqflow:

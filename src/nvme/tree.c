@@ -105,6 +105,7 @@ struct nvme_ctrl {
 	char *traddr;
 	char *trsvcid;
 	char *host_traddr;
+	bool discovered;
 	struct nvme_fabrics_config cfg;
 };
 
@@ -690,6 +691,16 @@ struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
 void nvme_ctrl_disable_sqflow(nvme_ctrl_t c, bool disable_sqflow)
 {
 	c->cfg.disable_sqflow = disable_sqflow;
+}
+
+void nvme_ctrl_set_discovered(nvme_ctrl_t c, bool discovered)
+{
+	c->discovered = discovered;
+}
+
+bool nvme_ctrl_is_discovered(nvme_ctrl_t c)
+{
+	return c->discovered;
 }
 
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)

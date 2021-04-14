@@ -325,6 +325,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 
 	cfg = merge_config(c, cfg);
 	nvme_ctrl_disable_sqflow(c, disable_sqflow);
+	nvme_ctrl_set_discovered(c, true);
 
 	ret = build_options(c, &argstr);
 	if (ret)
@@ -396,6 +397,10 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	c = nvme_create_ctrl(e->subnqn, transport, traddr, NULL, trsvcid);
 	if (!c) {
 		errno = ENOMEM;
+		return NULL;
+	}
+	if (nvme_ctrl_is_discovered(c)) {
+		errno = EAGAIN;
 		return NULL;
 	}
 
