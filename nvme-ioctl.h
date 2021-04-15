@@ -150,7 +150,7 @@ int nvme_reset_controller(int fd);
 int nvme_ns_rescan(int fd);
 
 int nvme_get_lba_status(int fd, __u32 namespace_id, __u64 slba, __u32 mndw,
-		__u8 atype, __u16 rl, void *data);
+		__u8 atype, __u16 rl, void *data, __u32 timeout_ms);
 int nvme_dir_send(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,
 		  __u32 data_len, __u32 dw12, void *data, __u32 *result);
 int nvme_dir_recv(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,

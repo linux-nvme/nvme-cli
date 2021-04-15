@@ -5175,6 +5175,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 			     " Status Descriptors to return.";
 	const char *rl = "Range Length(RL) specifies the length of the range"\
 			  " of contiguous LBAs beginning at SLBA";
+	const char *timeout = "timeout value, in milliseconds";
 
 	enum nvme_print_flags flags;
 	unsigned long buf_len;
@@ -5187,6 +5188,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		__u32 mndw;
 		__u8 atype;
 		__u16 rl;
+		__u32 timeout;
 		char *output_format;
 	};
 
@@ -5196,6 +5198,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		.mndw = 0,
 		.atype = 0,
 		.rl = 0,
+		.timeout      = 0,
 		.output_format = "normal",
 	};
 
@@ -5205,6 +5208,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		OPT_UINT("max-dw",       'm', &cfg.mndw,          mndw),
 		OPT_BYTE("action",       'a', &cfg.atype,         atype),
 		OPT_SHRT("range-len",    'l', &cfg.rl,            rl),
+		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_END()
 	};
@@ -5232,7 +5236,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 	}
 
 	err = nvme_get_lba_status(fd, cfg.namespace_id, cfg.slba, cfg.mndw,
-			cfg.atype, cfg.rl, buf);
+			cfg.atype, cfg.rl, buf, cfg.timeout);
 	if (!err)
 		nvme_show_lba_status(buf, buf_len, flags);
 	else if (err > 0)

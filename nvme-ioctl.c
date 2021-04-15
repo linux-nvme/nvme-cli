@@ -880,7 +880,7 @@ int nvme_sec_recv(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 }
 
 int nvme_get_lba_status(int fd, __u32 namespace_id, __u64 slba, __u32 mndw,
-		__u8 atype, __u16 rl, void *data)
+		__u8 atype, __u16 rl, void *data, __u32 timeout_ms)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode =  nvme_admin_get_lba_status,
@@ -891,6 +891,7 @@ int nvme_get_lba_status(int fd, __u32 namespace_id, __u64 slba, __u32 mndw,
 		.cdw11 = slba >> 32,
 		.cdw12 = mndw,
 		.cdw13 = (atype << 24) | rl,
+		.timeout_ms = timeout_ms,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);
