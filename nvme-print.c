@@ -5699,7 +5699,7 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned 
               printf("\tEndurance Group Critical Warnings  : %u\n", (result >> 16) & 0xff);
               break;
 	case NVME_FEAT_IOCS_PROFILE:
-		printf("\tI/O Command Set Profile: %s\n", result & 0x1 ? "True":"False");
+		printf("\tI/O Command Set Comination Index(IOCSCI): %u\n", result & 0x1ff);
 		break;
 	case NVME_FEAT_HOST_ID:
 		ull =  buf[7]; ull <<= 8; ull |= buf[6]; ull <<= 8; ull |= buf[5]; ull <<= 8;
