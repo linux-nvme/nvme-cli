@@ -3072,12 +3072,15 @@ static void nvme_show_id_ctrl_fuses(__le16 ctrl_fuses)
 
 static void nvme_show_id_ctrl_fna(__u8 fna)
 {
-	__u8 rsvd = (fna & 0xF8) >> 3;
+	__u8 rsvd = (fna & 0xF0) >> 4;
+	__u8 bcnsid = (fna & 0x8) >> 3;
 	__u8 cese = (fna & 0x4) >> 2;
 	__u8 cens = (fna & 0x2) >> 1;
 	__u8 fmns = fna & 0x1;
 	if (rsvd)
-		printf("  [7:3] : %#x\tReserved\n", rsvd);
+		printf("  [7:4] : %#x\tReserved\n", rsvd);
+	printf("  [3:3] : %#x\tFormatNVM Broadcast NSID (FFFFFFFFh) %sSupported\n",
+		bcnsid, bcnsid ? "Not " : "");
 	printf("  [2:2] : %#x\tCrypto Erase %sSupported as part of Secure Erase\n",
 		cese, cese ? "" : "Not ");
 	printf("  [1:1] : %#x\tCrypto Erase Applies to %s Namespace(s)\n",
