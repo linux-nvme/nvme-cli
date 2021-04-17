@@ -1889,6 +1889,9 @@ static void nvme_show_registers_cap(struct nvme_bar_cap *cap)
 		(cap->bps_css_nssrs_dstrd & 0x0020) ? "Supported" : "Not Supported");
 	printf("\t                                           One or more I/O Command Sets are %s\n",
 		(cap->bps_css_nssrs_dstrd & 0x0800) ? "Supported" : "Not Supported");
+	printf("\t                                           %s\n",
+		(cap->bps_css_nssrs_dstrd & 0x1000) ? "Only Admin Command Set Supported" :
+		"I/O Command Set is Supported");
 	printf("\tNVM Subsystem Reset Supported     (NSSRS): %s\n",
 		(cap->bps_css_nssrs_dstrd & 0x0010) ? "Yes":"No");
 	printf("\tDoorbell Stride                   (DSTRD): %u bytes\n",
