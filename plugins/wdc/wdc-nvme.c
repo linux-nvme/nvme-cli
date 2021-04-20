@@ -88,8 +88,8 @@
 #define WDC_NVME_SN730B_DEV_ID				0x3714
 #define WDC_NVME_SN730B_DEV_ID_1			0x3734
 #define WDC_NVME_SN340_DEV_ID				0x500d
-#define WDC_NVME_ZN355_DEV_ID				0x5010
-#define WDC_NVME_ZN355_DEV_ID_1 			0x5018
+#define WDC_NVME_ZN350_DEV_ID				0x5010
+#define WDC_NVME_ZN350_DEV_ID_1 			0x5018
 
 #define WDC_DRIVE_CAP_CAP_DIAG				0x0000000000000001
 #define WDC_DRIVE_CAP_INTERNAL_LOG			0x0000000000000002
@@ -275,6 +275,7 @@
 
 /* C2 Log Page */
 #define WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE		0xC2
+#define WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE_C8       0xC8
 #define WDC_C2_LOG_BUF_LEN				0x1000
 #define WDC_C2_LOG_PAGES_SUPPORTED_ID			0x08
 #define WDC_C2_CUSTOMER_ID_ID					0x15
@@ -325,13 +326,16 @@
 /* Log Page Directory defines  */
 #define NVME_LOG_PERSISTENT_EVENT               0x0D
 #define WDC_LOG_ID_C0                           0xC0
+#define WDC_LOG_ID_C1                           0xC1
 #define WDC_LOG_ID_C2                           WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE
 #define WDC_LOG_ID_C4                           0xC4
 #define WDC_LOG_ID_C5                           0xC5
 #define WDC_LOG_ID_C6                           0xC6
+#define WDC_LOG_ID_C8                           WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE_C8
 #define WDC_LOG_ID_CA                           WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE
 #define WDC_LOG_ID_CB                           WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID
 #define WDC_LOG_ID_D0                           WDC_NVME_GET_VU_SMART_LOG_OPCODE
+#define WDC_LOG_ID_D1                           0xD1
 #define WDC_LOG_ID_D6                           0xD6
 #define WDC_LOG_ID_D7                           0xD7
 #define WDC_LOG_ID_D8                           0xD8
@@ -480,15 +484,21 @@ typedef enum
     SCAO_MNUDEC             = 92,	/* Min User data erase counts */
     SCAO_NTTE               = 96,	/* Number of Thermal throttling events */
     SCAO_CTS                = 97,	/* Current throttling status */
+    SCAO_EVF                = 98,      /* Errata Version Field */
+    SCAO_PVF                = 99,      /* Point Version Field */
+    SCAO_MIVF               = 101,     /* Minor Version Field */
+    SCAO_MAVF               = 103,     /* Major Version Field */
     SCAO_PCEC               = 104,	/* PCIe correctable error count */
     SCAO_ICS                = 112,	/* Incomplete shutdowns */
     SCAO_PFB                = 120,	/* Percent free blocks */
     SCAO_CPH                = 128,	/* Capacitor health */
+    SCAO_NEV                = 130,     /* NVMe Errata Version */
     SCAO_UIO                = 136,	/* Unaligned I/O */
     SCAO_SVN                = 144,	/* Security Version Number */
     SCAO_NUSE               = 152,	/* NUSE - Namespace utilization */
     SCAO_PSC                = 160,	/* PLP start count */
     SCAO_EEST               = 176,	/* Endurance estimate */
+    SCAO_PLRC               = 192,     /* PCIe Link Retraining Count */
     SCAO_LPV                = 494,	/* Log page version */
     SCAO_LPG                = 496,	/* Log page GUID */
 } SMART_CLOUD_ATTRIBUTE_OFFSETS;
@@ -1322,12 +1332,12 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		case WDC_NVME_SN340_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI;
 			break;
-		case WDC_NVME_ZN355_DEV_ID:
+		case WDC_NVME_ZN350_DEV_ID:
 		/* FALLTHRU */
-		case WDC_NVME_ZN355_DEV_ID_1:
+		case WDC_NVME_ZN350_DEV_ID_1:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE | WDC_DRIVE_CAP_C0_LOG_PAGE |
 			        WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 |
-			        WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_CLOUD_SSD_VERSION;
+			        WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_CLOUD_SSD_VERSION | WDC_DRIVE_CAP_LOG_PAGE_DIR;
 			break;
 		default:
 			capabilities = 0;
@@ -1586,8 +1596,16 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 	__u32 length = 0;
 	bool found = false;
 	__u8 uuid_ix = 1;
-
+	__u8 lid = 0;
 	*cbs_data = NULL;
+	__u32 device_id, read_vendor_id;
+
+	ret = wdc_get_pci_ids(&device_id, &read_vendor_id);
+	if(device_id == WDC_NVME_ZN350_DEV_ID || device_id == WDC_NVME_ZN350_DEV_ID_1) {
+		lid = WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE_C8;
+	        uuid_ix = 0;
+	} else
+		lid = WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE;
 
 	if ((data = (__u8*) malloc(sizeof (__u8) * WDC_C2_LOG_BUF_LEN)) == NULL) {
 		fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
@@ -1596,10 +1614,9 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 	memset(data, 0, sizeof (__u8) * WDC_C2_LOG_BUF_LEN);
 
 	/* get the log page length */
-	ret = nvme_get_log14(fd, 0xFFFFFFFF, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
-			NVME_NO_LOG_LSP, 0, 0, false, uuid_ix, WDC_C2_LOG_BUF_LEN, data);
+	ret = nvme_get_log14(fd, 0xFFFFFFFF, lid, NVME_NO_LOG_LSP, 0, 0, false, uuid_ix, WDC_C2_LOG_BUF_LEN, data);
 	if (ret) {
-		fprintf(stderr, "ERROR : WDC : Unable to get C2 Log Page length, ret = 0x%x\n", ret);
+		fprintf(stderr, "ERROR : WDC : Unable to get 0x%x Log Page length, ret = 0x%x\n", lid, ret);
 		goto end;
 	}
 
@@ -1616,11 +1633,9 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 	}
 
 	/* get the log page data */
-	ret = nvme_get_log14(fd, 0xFFFFFFFF, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
-			NVME_NO_LOG_LSP, 0, 0, false, uuid_ix, le32_to_cpu(hdr_ptr->length), data);
-
+	ret = nvme_get_log14(fd, 0xFFFFFFFF, lid, NVME_NO_LOG_LSP, 0, 0, false, uuid_ix, le32_to_cpu(hdr_ptr->length), data);
 	if (ret) {
-		fprintf(stderr, "ERROR : WDC : Unable to read C2 Log Page data, ret = 0x%x\n", ret);
+		fprintf(stderr, "ERROR : WDC : Unable to read 0x%x Log Page data, ret = 0x%x\n", lid, ret);
 		goto end;
 	}
 
@@ -1637,9 +1652,7 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 		/* not found with uuid = 1 try with uuid = 0 */
 		uuid_ix = 0;
 		/* get the log page data */
-		ret = nvme_get_log14(fd, 0xFFFFFFFF, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
-				NVME_NO_LOG_LSP, 0, 0, false, uuid_ix, le32_to_cpu(hdr_ptr->length), data);
-
+		ret = nvme_get_log14(fd, 0xFFFFFFFF, lid, NVME_NO_LOG_LSP, 0, 0, false, uuid_ix, le32_to_cpu(hdr_ptr->length), data);
 		hdr_ptr = (struct wdc_c2_log_page_header *)data;
 		sph = (struct wdc_c2_log_subpage_header *)(data + length);
 		found = wdc_get_dev_mng_log_entry(hdr_ptr->length, log_id, hdr_ptr, &sph);
@@ -1647,7 +1660,7 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 			*cbs_data = (void *)&sph->data;
 		} else {
 			/* WD version not found  */
-			fprintf(stderr, "ERROR : WDC : Unable to find correct version of page 0xC2, entry id = %d\n", log_id);
+			fprintf(stderr, "ERROR : WDC : Unable to find correct version of page 0x%x, entry id = %d\n", lid, log_id);
 		}
 	}
 end:
@@ -4297,6 +4310,7 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries, __u32
 static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 {
 	__u8 *log_data = (__u8*)data;
+	uint16_t smart_log_ver = 0;
 
 	printf("  SMART Cloud Attributes :- \n");
 
@@ -4352,26 +4366,40 @@ static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 			int128_to_double(&log_data[SCAO_PSC]));
 	printf("  Endurance estimate				%.0Lf\n",
 			int128_to_double(&log_data[SCAO_EEST]));
-	printf("  Log page version				 %"PRIu16"\n",
-			(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]));
-
-	int i;
+	smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
+	printf("  Log page version				 %"PRIu16"\n",smart_log_ver);
 	printf("  Log page GUID					0x");
-	for (i=0; i < WDC_C2_GUID_LENGTH; i++) printf("%X", (__u8)log_data[SCAO_LPG+i]);
-	printf("\n\n");
+	printf("%lX%lX\n",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG]));
+	if(smart_log_ver > 2) {
+		printf("  Errata Version Field                          %d\n",
+				(__u8)log_data[SCAO_EVF]);
+		printf("  Point Version Field                           %"PRIu16"\n",
+				(uint16_t)log_data[SCAO_PVF]);
+		printf("  Minor Version Field                           %"PRIu16"\n",
+				(uint16_t)log_data[SCAO_MIVF]);
+		printf("  Major Version Field                           %d\n",
+				(__u8)log_data[SCAO_MAVF]);
+		printf("  NVMe Errata Version				%d\n",
+				(__u8)log_data[SCAO_NEV]);
+		printf("  PCIe Link Retraining Count			%"PRIu64"\n",
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PLRC]));
+	}
+	printf("\n");
 }
 
 static void wdc_print_smart_cloud_attr_C0_json(void *data)
 {
 	__u8 *log_data = (__u8*)data;
 	struct json_object *root;
+	uint16_t smart_log_ver = 0;
 
 	root = json_create_object();
 	json_object_add_value_float(root, "Physical media units written",
 			int128_to_double(&log_data[SCAO_PMUW]));
 	json_object_add_value_int(root, "Physical media units Read",
 			int128_to_double(&log_data[SCAO_PMUR]));
-	json_object_add_value_float(root, "Bad user nand blocks - Raw",
+	json_object_add_value_uint(root, "Bad user nand blocks - Raw",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
 	json_object_add_value_uint(root, "Bad user nand blocks - Normalized",
 			(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BUNBN]));
@@ -4419,12 +4447,28 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 			int128_to_double(&log_data[SCAO_PSC]));
 	json_object_add_value_uint(root, "Endurance estimate",
 			int128_to_double(&log_data[SCAO_EEST]));
-	json_object_add_value_uint(root, "Log page version",
-			(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]));
-
-	json_object_add_value_uint(root, "Log page GUID",
-			int128_to_double(&log_data[SCAO_LPG]));
-
+	smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
+	json_object_add_value_uint(root, "Log page version", smart_log_ver);
+	char guid[40];
+	memset((void*)guid, 0, 40);
+	sprintf((char*)guid, "0x%lX%lX",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG]));
+	printf("GUID string:%s", guid);
+	json_object_add_value_string(root, "Log page GUID", guid);
+	if(smart_log_ver > 2){
+		json_object_add_value_uint(root, "Errata Version Field",
+				(__u8)log_data[SCAO_EVF]);
+		json_object_add_value_uint(root, "Point Version Field",
+				(uint16_t)log_data[SCAO_PVF]);
+		json_object_add_value_uint(root, "Minor Version Field",
+				(uint16_t)log_data[SCAO_MIVF]);
+		json_object_add_value_uint(root, "Major Version Field",
+				(__u8)log_data[SCAO_MAVF]);
+		json_object_add_value_uint(root, "NVMe Errata Version",
+				(__u8)log_data[SCAO_NEV]);
+		json_object_add_value_uint(root, "PCIe Link Retraining Count",
+				(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PLRC]));
+	}
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
@@ -4652,8 +4696,8 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 		}
 		break;
 
-	case WDC_NVME_ZN355_DEV_ID:
-	case WDC_NVME_ZN355_DEV_ID_1:
+	case WDC_NVME_ZN350_DEV_ID:
+	case WDC_NVME_ZN350_DEV_ID_1:
 		if ((data = (__u8*) malloc(sizeof (__u8) * WDC_NVME_SMART_CLOUD_ATTR_LEN)) == NULL) {
 			fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
 			return -1;
@@ -6712,13 +6756,16 @@ static const char *nvme_log_id_to_string(__u8 log_id)
 		case NVME_LOG_SANITIZE:	        return "Sanitize Status Log ID";
 
 		case WDC_LOG_ID_C0:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_C1:             return "WDC Vendor Unique Log ID";
 		case WDC_LOG_ID_C2:             return "WDC Vendor Unique Log ID";
 		case WDC_LOG_ID_C4:             return "WDC Vendor Unique Log ID";
 		case WDC_LOG_ID_C5:             return "WDC Vendor Unique Log ID";
 		case WDC_LOG_ID_C6:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_C8:             return "WDC Vendor Unique Log ID";
 		case WDC_LOG_ID_CA:             return "WDC Vendor Unique Log ID";
 		case WDC_LOG_ID_CB:             return "WDC Vendor Unique Log ID";
 		case WDC_LOG_ID_D0:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_D1:             return "WDC Vendor Unique Log ID";
 		case WDC_LOG_ID_D6:             return "WDC Vendor Unique Log ID";
 		case WDC_LOG_ID_D7:             return "WDC Vendor Unique Log ID";
 		case WDC_LOG_ID_D8:             return "WDC Vendor Unique Log ID";
@@ -6740,7 +6787,9 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 	int ret = 0;
 	__u64 capabilities = 0;
 	struct wdc_c2_cbs_data *cbs_data = NULL;
-    int i;
+	int i;
+	__u8 log_id = 0;
+	__u32 device_id, read_vendor_id;
 
 	struct config {
 		char *output_format;
@@ -6770,10 +6819,14 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 	if ((capabilities & WDC_DRIVE_CAP_LOG_PAGE_DIR) == 0) {
 		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
 		ret = -1;
-	} else {
+	}
+	else {
+		ret = wdc_get_pci_ids(&device_id, &read_vendor_id);
+		log_id = (device_id == WDC_NVME_ZN350_DEV_ID || device_id == WDC_NVME_ZN350_DEV_ID_1) ?
+			WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE_C8 : WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE;
 		/* verify the 0xC2 Device Manageability log page is supported */
-		if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE) == false) {
-			fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page not supported\n", __func__);
+		if (wdc_nvme_check_supported_log_page(fd, log_id) == false) {
+			fprintf(stderr, "%s: ERROR : WDC : 0x%x Log Page not supported\n", __func__, log_id);
 			ret = -1;
 			goto out;
 		}
@@ -7554,7 +7607,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 			if (fmt == NORMAL) {
 				printf("Drive HW Revison: %4.1f\n", (.1 * rev));
 				printf("FTL Unit Size:     0x%x KB\n", size);
-				printf("Customer SN:        %-.*s\n", 14, &ctrl.sn[0]);
+				printf("Customer SN:        %-.*s\n", (int)sizeof(ctrl.sn), &ctrl.sn[0]);
 			}
 			else if (fmt == JSON) {
 		   		root = json_create_object();
@@ -7562,7 +7615,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 				json_object_add_value_string(root, "Drive HW Revison", rev_str);
 
 				json_object_add_value_int(root, "FTL Unit Size", le16_to_cpu(size));
-				wdc_StrFormat(formatter, sizeof(formatter), &ctrl.sn[0], sizeof(&ctrl.sn));
+				wdc_StrFormat(formatter, sizeof(formatter), &ctrl.sn[0], sizeof(ctrl.sn));
 				json_object_add_value_string(root, "Customer SN", formatter);
 
 				json_print_object(root, NULL);
