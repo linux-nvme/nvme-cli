@@ -4351,10 +4351,12 @@ static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 
 	printf("  SMART Cloud Attributes :- \n");
 
-	printf("  Physical media units written			%.0Lf\n",
-			int128_to_double(&log_data[SCAO_PMUW]));
-	printf("  Physical media units Read			%.0Lf\n",
-			int128_to_double(&log_data[SCAO_PMUR]));
+	printf("  Physical media units written -   	        %"PRIu64" %"PRIu64"\n",
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW+8] & 0xFFFFFFFFFFFFFFFF),
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW] & 0xFFFFFFFFFFFFFFFF));
+	printf("  Physical media units read    - 	        %"PRIu64" %"PRIu64"\n",
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR+8] & 0xFFFFFFFFFFFFFFFF),
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR] & 0xFFFFFFFFFFFFFFFF));
 	printf("  Bad user nand blocks - Raw			%"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
 	printf("  Bad user nand blocks - Normalized		%d\n",
