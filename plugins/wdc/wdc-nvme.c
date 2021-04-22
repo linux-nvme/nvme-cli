@@ -4453,7 +4453,6 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 	memset((void*)guid, 0, 40);
 	sprintf((char*)guid, "0x%lX%lX",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
 		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG]));
-	printf("GUID string:%s", guid);
 	json_object_add_value_string(root, "Log page GUID", guid);
 	if(smart_log_ver > 2){
 		json_object_add_value_uint(root, "Errata Version Field",
