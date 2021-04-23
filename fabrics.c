@@ -670,11 +670,17 @@ static int space_strip_len(int max, const char *str)
 	return i + 1;
 }
 
-static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
+static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec,
+				int instance)
 {
 	int i;
 
-	printf("\nDiscovery Log Number of Records %d, "
+	printf("\n");
+
+	if (fabrics_cfg.persistent)
+		printf("Persistent device: nvme%d\n", instance);
+
+	printf("Discovery Log Number of Records %d, "
 	       "Generation counter %"PRIu64"\n",
 		numrec, le64_to_cpu(log->genctr));
 
@@ -714,14 +720,20 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	}
 }
 
-static void json_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
+static void json_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec,
+			       int instance)
 {
 	struct json_object *root;
 	struct json_object *entries;
+	char *dev_name = NULL;
 	int i;
+
+	if (asprintf(&dev_name, "nvme%d", instance) < 0)
+		return;
 
 	root = json_create_object();
 	entries = json_create_array();
+	json_object_add_value_string(root, "device", dev_name);
 	json_object_add_value_uint(root, "genctr", le64_to_cpu(log->genctr));
 	json_object_add_value_array(root, "records", entries);
 
@@ -764,6 +776,7 @@ static void json_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
+	free(dev_name);
 }
 
 static void save_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
@@ -1404,8 +1417,6 @@ int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 		return -errno;
 	ret = nvmf_get_log_page_discovery(dev_name, &log, &numrec, &status);
 	free(dev_name);
-	if (fabrics_cfg.persistent)
-		msg(LOG_NOTICE, "Persistent device: nvme%d\n", instance);
 	if (!fabrics_cfg.device && !fabrics_cfg.persistent) {
 		err = remove_ctrl(instance);
 		if (err)
@@ -1419,9 +1430,9 @@ int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 		else if (fabrics_cfg.raw || flags == BINARY)
 			save_discovery_log(log, numrec);
 		else if (flags == JSON)
-			json_discovery_log(log, numrec);
+			json_discovery_log(log, numrec, instance);
 		else
-			print_discovery_log(log, numrec);
+			print_discovery_log(log, numrec, instance);
 		break;
 	case DISC_GET_NUMRECS:
 		msg(LOG_ERR,
