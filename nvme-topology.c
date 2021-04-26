@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
+#include <limits.h>
 
 #include "nvme.h"
 #include "nvme-ioctl.h"
