@@ -412,7 +412,7 @@ rpmb_read_request(int fd,
 	if (error == 0) return rsp;
 
 error_out:
-	if (rsp) free(rsp);
+	free(rsp);
 	return NULL;
 }
 
@@ -436,8 +436,8 @@ static int rpmb_read_write_counter(int fd,
 	error = 0;
 	
 out:
-	if (req) free(req);
-	if (rsp) free(rsp);
+	free(req);
+	free(rsp);
 	return error;
 }
 
@@ -477,9 +477,9 @@ static unsigned int rpmb_read_config_block(int fd, unsigned char **config_buf)
 	cfg = NULL;
 	retval = rsp->write_counter;
 out:
-	if (req) free(req);
-	if (rsp) free(rsp);
-	if (cfg) free(cfg);
+	free(req);
+	free(rsp);
+	free(cfg);
 	return retval;
 }
 
@@ -566,8 +566,8 @@ static int rpmb_program_auth_key(int fd, unsigned char target,
 		err = check_rpmb_response(req, rsp, "Failed to Program Key");
 	}
 out:
-	if (req) free(req);
-	if (rsp) free(rsp);
+	free(req);
+	free(rsp);
 	
 	return err;
 }
@@ -647,9 +647,9 @@ static int auth_data_write_chunk(int fd, unsigned char tgt, unsigned int addr,
 	else 
     		error = check_rpmb_response(req, rsp, "Failed to write-data");
 out:
-	if (req) free(req);
-	if (rsp) free(rsp);
-	if (mac) free(mac);
+	free(req);
+	free(rsp);
+	free(mac);
 
 	return error;
 }
@@ -755,9 +755,9 @@ static int rpmb_write_config_block(int fd, unsigned char *cfg_buf,
 	error = check_rpmb_response(req, rsp,
 				  "Failed to retrieve write-config response");
 out:
-	if (req) free(req);
-	if (rsp) free(rsp);
-	if (mac) free(mac);
+	free(req);
+	free(rsp);
+	free(mac);
 	
 	return error;
 }
@@ -991,8 +991,8 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 	 
 out:
 	/* release memory  */
-	if (key_buf) free(key_buf);
-	if (msg_buf) free(msg_buf);
+	free(key_buf);
+	free(msg_buf);
 	
 	/* close file descriptor */
 	if (fd > 0) close(fd);

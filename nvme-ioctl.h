@@ -79,6 +79,7 @@ int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data);
 int nvme_identify_ns_descs(int fd, __u32 nsid, void *data);
 int nvme_identify_nvmset(int fd, __u16 nvmset_id, void *data);
 int nvme_identify_uuid(int fd, void *data);
+int nvme_identify_primary_ctrl_caps(int fd, void *data);
 int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data);
 int nvme_identify_ns_granularity(int fd, void *data);
 int nvme_identify_ctrl_nvm(int fd, void *data);
@@ -103,7 +104,7 @@ int nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log *smart_log);
 int nvme_ana_log(int fd, void *ana_log, size_t ana_log_len, int rgo);
 int nvme_effects_log(int fd, struct nvme_effects_log_page *effects_log);
 int nvme_discovery_log(int fd, struct nvmf_disc_rsp_page_hdr *log, __u32 size);
-int nvme_sanitize_log(int fd, struct nvme_sanitize_log_page *sanitize_log);
+int nvme_sanitize_log(int fd, bool rae, struct nvme_sanitize_log_page *sanitize_log);
 int nvme_predictable_latency_per_nvmset_log(int fd,
 		__u16 nvmset_id, struct nvme_predlat_per_nvmset_log_page *plpns_log);
 int nvme_predictable_latency_event_agg_log(int fd, void *pea_log,
@@ -149,7 +150,7 @@ int nvme_reset_controller(int fd);
 int nvme_ns_rescan(int fd);
 
 int nvme_get_lba_status(int fd, __u32 namespace_id, __u64 slba, __u32 mndw,
-		__u8 atype, __u16 rl, void *data);
+		__u8 atype, __u16 rl, void *data, __u32 timeout_ms);
 int nvme_dir_send(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,
 		  __u32 data_len, __u32 dw12, void *data, __u32 *result);
 int nvme_dir_recv(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,

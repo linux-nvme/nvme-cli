@@ -2,7 +2,6 @@
 #define NVME_PRINT_H
 
 #include "nvme.h"
-#include "util/json.h"
 #include <inttypes.h>
 
 void d(unsigned char *buf, int len, int width, int group);
@@ -75,6 +74,8 @@ void nvme_show_list_items(struct nvme_topology *t, enum nvme_print_flags flags);
 void nvme_show_subsystem_list(struct nvme_topology *t,
       enum nvme_print_flags flags);
 void nvme_show_id_nvmset(struct nvme_id_nvmset *nvmset, unsigned nvmset_id,
+	enum nvme_print_flags flags);
+void nvme_show_primary_ctrl_caps(const struct nvme_primary_ctrl_caps *caps,
 	enum nvme_print_flags flags);
 void nvme_show_list_secondary_ctrl(const struct nvme_secondary_controllers_list *sc_list,
 	__u32 count, enum nvme_print_flags flags);

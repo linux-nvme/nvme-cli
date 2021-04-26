@@ -32,7 +32,6 @@
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
 #include "plugin.h"
-#include "json.h"
 
 #include "argconfig.h"
 #include "suffix.h"
@@ -143,7 +142,7 @@ static void huawei_json_print_list_items(struct huawei_list_item *list_items,
 					 unsigned len)
 {
 	struct json_object *root;
-	struct json_array *devices;
+	struct json_object *devices;
 	struct json_object *device_attrs;
 	char formatter[128] = { 0 };
 	int index, i = 0;

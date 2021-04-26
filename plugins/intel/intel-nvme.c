@@ -11,7 +11,6 @@
 #include "nvme.h"
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
-#include "json.h"
 #include "plugin.h"
 
 #include "argconfig.h"
@@ -492,6 +491,28 @@ struct intel_lat_stats {
 	__u32 data[1216];
 };
 
+struct __attribute__((__packed__)) optane_lat_stats {
+	__u16 maj;
+	__u16 min;
+	__u64 data[9];
+};
+
+#define MEDIA_MAJOR_IDX 0
+#define MEDIA_MINOR_IDX 1
+#define MEDIA_MAX_LEN 2
+#define OPTANE_V1000_BUCKET_LEN 8
+
+static struct intel_lat_stats stats;
+static struct optane_lat_stats v1000_stats;
+
+struct v1000_thresholds {
+	__u32 read[OPTANE_V1000_BUCKET_LEN];
+	__u32 write[OPTANE_V1000_BUCKET_LEN];
+};
+
+static struct v1000_thresholds v1000_bucket;
+static __u16 media_version[MEDIA_MAX_LEN] = {0};
+
 enum FormatUnit {
 	US,
 	MS,
@@ -601,6 +622,28 @@ static void show_lat_stats_bucket(struct intel_lat_stats *stats,
 	printf("%-*d\n", COL_WIDTH, stats->data[i]);
 }
 
+static void show_optane_lat_stats_bucket(struct optane_lat_stats *stats,
+	__u32 lower_us, enum inf_bound_type start_type,
+	__u32 upper_us, enum inf_bound_type end_type, int i)
+{
+	enum FormatUnit fu = S;
+	char buffer[BUFSIZE];
+
+	init_buffer(buffer, BUFSIZE);
+	printf("%-*d", COL_WIDTH, i);
+
+	fu = get_seconds_magnitude(lower_us);
+	set_unit_string(buffer, lower_us, fu, start_type);
+	printf("%-*s", COL_WIDTH, buffer);
+
+	fu = get_seconds_magnitude(upper_us);
+	set_unit_string(buffer, upper_us, fu, end_type);
+	printf("%-*s", COL_WIDTH, buffer);
+
+	printf("%-*lu\n", COL_WIDTH, (long unsigned int)stats->data[i]);
+}
+
+
 static void show_lat_stats_linear(struct intel_lat_stats *stats,
 	__u32 start_offset, __u32 end_offset, __u32 bytes_per,
 	__u32 us_step, bool nonzero_print)
@@ -685,6 +728,31 @@ static void json_add_bucket(struct intel_lat_stats *stats,
 	json_object_add_value_string(bucket, "end", buffer);
 
 	json_object_add_value_int(bucket, "value", val);
+}
+
+static void json_add_bucket_optane(struct json_object *bucket_list, __u32 id,
+				   __u32 lower_us, enum inf_bound_type start_type,
+				   __u32 upper_us, enum inf_bound_type end_type, __u32 val)
+{
+	char buffer[BUFSIZE];
+	struct json_object *bucket = json_create_object();
+
+	init_buffer(buffer, BUFSIZE);
+
+	json_object_add_value_object(bucket_list,
+		"bucket", bucket);
+	json_object_add_value_int(bucket, "id", id);
+
+	set_unit_string(buffer, lower_us,
+		get_seconds_magnitude(lower_us), start_type);
+	json_object_add_value_string(bucket, "start", buffer);
+
+	set_unit_string(buffer, upper_us,
+		get_seconds_magnitude(upper_us), end_type);
+	json_object_add_value_string(bucket, "end", buffer);
+
+	json_object_add_value_uint(bucket, "value", val);
+
 }
 
 static void json_lat_stats_linear(struct intel_lat_stats *stats,
@@ -779,32 +847,121 @@ static void show_lat_stats_4_0(struct intel_lat_stats *stats)
 	}
 }
 
-static void json_lat_stats(struct intel_lat_stats *stats, int write)
+static void jason_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 {
-	switch (stats->maj) {
+	int i;
+	struct json_object *root = json_create_object();
+	struct json_object *bucket_list = json_create_object();
+
+	lat_stats_make_json_root(root, bucket_list, write);
+
+	if (write) {
+		for (i = 0; i < OPTANE_V1000_BUCKET_LEN - 1; i++)
+			json_add_bucket_optane(bucket_list, i,
+					       v1000_bucket.write[i], NOINF,
+					       v1000_bucket.write[i + 1] - 1,
+					       NOINF,
+					       stats->data[i]);
+
+		json_add_bucket_optane(bucket_list,
+				       OPTANE_V1000_BUCKET_LEN - 1,
+				       v1000_bucket.write[i],
+				       NOINF,
+				       v1000_bucket.write[i],
+				       POSINF, stats->data[i]);
+	} else {
+		for (i = 0; i < OPTANE_V1000_BUCKET_LEN - 1; i++)
+			json_add_bucket_optane(bucket_list, i,
+					       v1000_bucket.read[i], NOINF,
+					       v1000_bucket.read[i + 1] - 1,
+					       NOINF,
+					       stats->data[i]);
+
+		json_add_bucket_optane(bucket_list,
+				       OPTANE_V1000_BUCKET_LEN - 1,
+				       v1000_bucket.read[i],
+				       NOINF,
+				       v1000_bucket.read[i],
+				       POSINF, stats->data[i]);
+	}
+
+	struct json_object *subroot = json_create_object();
+	json_object_add_value_object(root, "Average latency since last reset", subroot);
+
+	json_object_add_value_uint(subroot, "value in us", stats->data[8]);
+
+	json_print_object(root, NULL);
+	json_free_object(root);
+
+}
+
+static void show_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
+{
+	int i;
+	if (write) {
+		for (i = 0; i < OPTANE_V1000_BUCKET_LEN - 1; i++)
+			show_optane_lat_stats_bucket(stats,
+						     v1000_bucket.write[i],
+						     NOINF,
+						     v1000_bucket.write[i + 1] -1,
+						     NOINF, i);
+
+		show_optane_lat_stats_bucket(stats, v1000_bucket.write[i],
+					     NOINF, v1000_bucket.write[i],
+					     POSINF, i);
+	} else {
+		for (i = 0; i < OPTANE_V1000_BUCKET_LEN - 1; i++)
+			show_optane_lat_stats_bucket(stats,
+						     v1000_bucket.read[i],
+						     NOINF,
+						     v1000_bucket.read[i + 1] -1,
+						     NOINF, i);
+
+		show_optane_lat_stats_bucket(stats, v1000_bucket.read[i],
+					     NOINF, v1000_bucket.read[i],
+					     POSINF, i);
+	}
+
+	printf("Average latency since last reset: %lu us\n", (long unsigned int)stats->data[8]);
+
+}
+
+static void json_lat_stats(int write)
+{
+	switch (media_version[MEDIA_MAJOR_IDX]) {
 	case 3:
-		json_lat_stats_3_0(stats, write);
+		json_lat_stats_3_0(&stats, write);
 		break;
 	case 4:
-		switch (stats->min) {
+		switch (media_version[MEDIA_MINOR_IDX]) {
 		case 0:
 		case 1:
 		case 2:
 		case 3:
 		case 4:
 		case 5:
-			json_lat_stats_4_0(stats, write);
+			json_lat_stats_4_0(&stats, write);
 			break;
 		default:
-			printf(("Unsupported minor revision (%u.%u)\n"
-				"Defaulting to format for rev4.0"),
-				stats->maj, stats->min);
+			printf("Unsupported minor revision (%u.%u)\n",
+				stats.maj, stats.min);
+			break;
+		}
+		break;
+	case 1000:
+		switch (media_version[MEDIA_MINOR_IDX]) {
+		case 0:
+			jason_lat_stats_v1000_0(&v1000_stats, write);
+			break;
+		default:
+			printf("Unsupported minor revision (%u.%u)\n",
+				stats.maj, stats.min);
 			break;
 		}
 		break;
 	default:
 		printf("Unsupported revision (%u.%u)\n",
-			stats->maj, stats->min);
+			stats.maj, stats.min);
 		break;
 	}
 	printf("\n");
@@ -817,69 +974,79 @@ static void print_dash_separator(int count)
 	putchar('\n');
 }
 
-static void show_lat_stats(struct intel_lat_stats *stats, int write)
+static void show_lat_stats(int write)
 {
 	static const int separator_length = 50;
 
 	printf("Intel IO %s Command Latency Statistics\n",
 		write ? "Write" : "Read");
 	printf("Major Revision : %u\nMinor Revision : %u\n",
-		stats->maj, stats->min);
+		media_version[MEDIA_MAJOR_IDX], media_version[MEDIA_MINOR_IDX]);
 	print_dash_separator(separator_length);
 	printf("%-12s%-12s%-12s%-20s\n", "Bucket", "Start", "End", "Value");
 	print_dash_separator(separator_length);
 
-	switch (stats->maj) {
+	switch (media_version[MEDIA_MAJOR_IDX]) {
 	case 3:
-		show_lat_stats_3_0(stats);
+		show_lat_stats_3_0(&stats);
 		break;
 	case 4:
-		switch (stats->min) {
+		switch (media_version[MEDIA_MINOR_IDX]) {
 		case 0:
 		case 1:
 		case 2:
 		case 3:
 		case 4:
 		case 5:
-			show_lat_stats_4_0(stats);
+			show_lat_stats_4_0(&stats);
 			break;
 		default:
-			printf(("Unsupported minor revision (%u.%u)\n"
-				"Defaulting to format for rev4.0"),
-				stats->maj, stats->min);
+			printf("Unsupported minor revision (%u.%u)\n",
+				stats.maj, stats.min);
+			break;
+		}
+		break;
+	case 1000:
+		switch (media_version[MEDIA_MINOR_IDX]) {
+		case 0:
+			show_lat_stats_v1000_0(&v1000_stats, write);
+			break;
+		default:
+			printf("Unsupported minor revision (%u.%u)\n",
+				stats.maj, stats.min);
 			break;
 		}
 		break;
 	default:
 		printf("Unsupported revision (%u.%u)\n",
-				stats->maj, stats->min);
+				stats.maj, stats.min);
 		break;
 	}
 }
 
 static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	struct intel_lat_stats stats;
-	enum nvme_print_flags flags;
+
 	int err, fd;
 
 	const char *desc = "Get Intel Latency Statistics log and show it.";
-	const char *raw = "dump output in binary format";
+	const char *raw = "Dump output in binary format";
+	const char *json= "Dump output in json format";
 	const char *write = "Get write statistics (read default)";
+
 	struct config {
-		char *output_format;
 		int  raw_binary;
+		int json;
 		int  write;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_FLAG("write",      'w', &cfg.write,      write),
-		OPT_FMT("output-format", 'o', &cfg.output_format, "Output format: normal|json|binary"),
-		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+		OPT_FLAG("write",	'w', &cfg.write,	write),
+		OPT_FLAG("raw-binary",	'b', &cfg.raw_binary,	raw),
+		OPT_FLAG("json",	'j', &cfg.json,		json),
 		OPT_END()
 	};
 
@@ -887,26 +1054,54 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	if (fd < 0)
 		return fd;
 
-	err = flags = validate_output_format(cfg.output_format);
-	if (flags < 0)
+	/* Query maj and minor version first */
+	err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
+			   false, NVME_NO_LOG_LSP, sizeof(media_version),
+			   media_version);
+	if (err)
 		goto close_fd;
 
-	if (cfg.raw_binary)
-		flags = BINARY;
+	if (media_version[0] == 1000) {
+		__u32 thresholds[OPTANE_V1000_BUCKET_LEN] = {0};
+		__u32 result;
 
-	err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
-			   false, NVME_NO_LOG_LSP, sizeof(stats), &stats);
+		err = nvme_get_feature(fd, 0, 0xf7, 0, cfg.write ? 0x1 : 0x0,
+				       sizeof(thresholds), thresholds, &result);
+		if (err) {
+			fprintf(stderr, "Quering thresholds failed. NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+			goto close_fd;
+		}
+
+		/* Update bucket thresholds to be printed */
+		if (cfg.write) {
+			for (int i = 0; i < OPTANE_V1000_BUCKET_LEN; i++)
+				v1000_bucket.write[i] = thresholds[i];
+		} else {
+			for (int i = 0; i < OPTANE_V1000_BUCKET_LEN; i++)
+				v1000_bucket.read[i] = thresholds[i];
+
+		}
+
+		err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
+				   false, NVME_NO_LOG_LSP, sizeof(v1000_stats),
+				   &v1000_stats);
+	} else {
+		err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
+				   false, NVME_NO_LOG_LSP, sizeof(stats),
+				   &stats);
+	}
+
 	if (!err) {
-		if (flags & JSON)
-			json_lat_stats(&stats, cfg.write);
-		else if (flags & BINARY)
-			d_raw((unsigned char *)&stats, sizeof(stats));
+		if (cfg.json)
+			json_lat_stats(cfg.write);
+		else if (!cfg.raw_binary)
+			show_lat_stats(cfg.write);
 		else
-			show_lat_stats(&stats, cfg.write);
+			d_raw((unsigned char *)&stats, sizeof(stats));
 	} else if (err > 0)
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
-
 close_fd:
 	close(fd);
 	return err;
@@ -1379,3 +1574,84 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	}
 	return fd;
 }
+
+static int set_lat_stats_thresholds(int argc, char **argv,
+		struct command *command, struct plugin *plugin)
+{
+	int err, fd, num;
+	const char *desc = "Write Intel Bucket Thresholds for Latency Statistics Tracking";
+	const char *bucket_thresholds = "Bucket Threshold List, comma separated list: 0, 10, 20 ...";
+	const char *write = "Set write bucket Thresholds for latency tracking (read default)";
+
+	const __u32 nsid = 0;
+	const __u8 fid = 0xf7;
+	const __u32 cdw12 = 0x0;
+	const __u32 save = 0;
+	__u32 result;
+
+	struct config {
+		int write;
+		char *bucket_thresholds;
+	};
+
+	struct config cfg = {
+		.write = 0,
+		.bucket_thresholds = "",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("write",      'w', &cfg.write, write),
+		OPT_LIST("bucket-thresholds", 't', &cfg.bucket_thresholds,
+			 bucket_thresholds),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+
+	if (fd < 0)
+		return fd;
+
+	/* Query maj and minor version first to figure out the amount of
+	 * valid buckets a user is allowed to modify. Read or write doesn't
+	 * matter
+	 */
+	err = nvme_get_log(fd, NVME_NSID_ALL, 0xc2,
+			   false, NVME_NO_LOG_LSP, sizeof(media_version),
+			   media_version);
+	if (err) {
+		fprintf(stderr, "Querying media version failed. NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+		goto close_fd;
+	}
+
+	if (media_version[0] == 1000) {
+		int thresholds[OPTANE_V1000_BUCKET_LEN] = {0};
+		num = argconfig_parse_comma_sep_array(cfg.bucket_thresholds,
+						      thresholds,
+						      sizeof(thresholds));
+		if (num == -1) {
+			fprintf(stderr, "ERROR: Bucket list is malformed\n");
+			goto close_fd;
+
+		}
+
+		err = nvme_set_feature(fd, nsid, fid, cfg.write ? 0x1 : 0x0,
+				       cdw12, save, OPTANE_V1000_BUCKET_LEN,
+				       thresholds, &result);
+
+		if (err > 0) {
+			fprintf(stderr, "NVMe Status:%s(%x)\n",
+					nvme_status_to_string(err), err);
+		} else if (err < 0) {
+			perror("Enable latency tracking");
+			fprintf(stderr, "Command failed while parsing.\n");
+		}
+	} else {
+		fprintf(stderr, "Unsupported command\n");
+	}
+
+close_fd:
+	close(fd);
+	return err;
+}
+

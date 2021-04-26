@@ -10,6 +10,7 @@
 #include "nvme.h"
 #include "nvme-ioctl.h"
 #include "nvme-print.h"
+#include "nvme-status.h"
 
 #define CREATE_CMD
 #include "zns.h"
@@ -56,7 +57,7 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 		perror("zns identify controller");
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -126,7 +127,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		perror("zns identify namespace");
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int __zns_mgmt_send(int fd, __u32 namespace_id, __u64 zslba,
@@ -195,7 +196,7 @@ free:
 	free(command);
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int get_zdes_bytes(int fd, __u32 nsid)
@@ -337,11 +338,10 @@ close_ffd:
 	if (cfg.file)
 		close(ffd);
 free:
-	if (buf)
-		free(buf);
+	free(buf);
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int close_zone(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -465,7 +465,7 @@ free:
 	free(buf);
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -522,6 +522,11 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 		}
 	}
 
+	if (cfg.zra == NVME_ZNS_ZRA_REPORT_ZONES && !cfg.data_len) {
+		fprintf(stderr, "error: data len is needed for NVME_ZRA_ZONE_REPORT\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
 	if (cfg.data_len) {
 		data = calloc(1, cfg.data_len);
 		if (!data) {
@@ -541,11 +546,10 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 	else
 		perror("zns zone-mgmt-recv");
 
-	if (data)
-		free(data);
+	free(data);
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int report_zones(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -656,7 +660,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	nvme_free(report, huge);
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int zone_append(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -859,7 +863,7 @@ close_dfd:
 close_ns:
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int changed_zone_list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -915,5 +919,5 @@ static int changed_zone_list(int argc, char **argv, struct command *cmd, struct 
 
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }

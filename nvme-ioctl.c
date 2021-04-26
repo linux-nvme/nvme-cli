@@ -413,6 +413,11 @@ int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
 	return nvme_identify(fd, nsid, (cntid << 16) | cns, data);
 }
 
+int nvme_identify_primary_ctrl_caps(int fd, void *data)
+{
+	return nvme_identify(fd, 0, NVME_ID_CNS_PRIMARY_CTRL_CAPS, data);
+}
+
 int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
 {
 	return nvme_identify(fd, nsid, (cntid << 16) | NVME_ID_CNS_SCNDRY_CTRL_LIST, data);
@@ -589,9 +594,9 @@ int nvme_discovery_log(int fd, struct nvmf_disc_rsp_page_hdr *log, __u32 size)
 	return nvme_get_log(fd, 0, NVME_LOG_DISC, false, NVME_NO_LOG_LSP, size, log);
 }
 
-int nvme_sanitize_log(int fd, struct nvme_sanitize_log_page *sanitize_log)
+int nvme_sanitize_log(int fd, bool rae, struct nvme_sanitize_log_page *sanitize_log)
 {
-	return nvme_get_log(fd, 0, NVME_LOG_SANITIZE, false,
+	return nvme_get_log(fd, 0, NVME_LOG_SANITIZE, rae,
 			NVME_NO_LOG_LSP, sizeof(*sanitize_log), sanitize_log);
 }
 
@@ -875,7 +880,7 @@ int nvme_sec_recv(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 }
 
 int nvme_get_lba_status(int fd, __u32 namespace_id, __u64 slba, __u32 mndw,
-		__u8 atype, __u16 rl, void *data)
+		__u8 atype, __u16 rl, void *data, __u32 timeout_ms)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode =  nvme_admin_get_lba_status,
@@ -886,6 +891,7 @@ int nvme_get_lba_status(int fd, __u32 namespace_id, __u64 slba, __u32 mndw,
 		.cdw11 = slba >> 32,
 		.cdw12 = mndw,
 		.cdw13 = (atype << 24) | rl,
+		.timeout_ms = timeout_ms,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);

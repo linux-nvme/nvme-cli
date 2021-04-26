@@ -27,7 +27,7 @@ SYNOPSIS
 		[--queue-size=<#>         | -Q <#>]
 		[--matching               | -m]
 		[--persistent             | -p]
-		[--quiet                  | -q]
+		[--quiet                  | -S]
 
 DESCRIPTION
 -----------
@@ -154,7 +154,7 @@ OPTIONS
 	Don't remove the discovery controller after retrieving the discovery
 	log page.
 
--q::
+-S::
 --quiet::
 	Suppress error messages.
 

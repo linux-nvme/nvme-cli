@@ -22,7 +22,32 @@
 #include <sys/time.h>
 
 #include "plugin.h"
+#ifdef LIBJSONC
+#include <json-c/json.h>
+
+#define json_create_object(o) json_object_new_object(o)
+#define json_create_array(a) json_object_new_array(a)
+#define json_free_object(o) json_object_put(o)
+#define json_free_array(a) json_object_put(a)
+#define json_object_add_value_uint(o, k, v) \
+	json_object_object_add(o, k, json_object_new_int(v))
+#define json_object_add_value_int(o, k, v) \
+	json_object_object_add(o, k, json_object_new_int(v))
+#define json_object_add_value_float(o, k, v) \
+	json_object_object_add(o, k, json_object_new_double(v))
+#define json_object_add_value_string(o, k, v) \
+	json_object_object_add(o, k, json_object_new_string(v))
+#define json_object_add_value_array(o, k, v) \
+	json_object_object_add(o, k, v)
+#define json_object_add_value_object(o, k, v) \
+	json_object_object_add(o, k, v)
+#define json_array_add_value_object(o, k) \
+	json_object_array_add(o, k)
+#define json_print_object(o, u)						\
+	printf("%s", json_object_to_json_string_ext(o, JSON_C_TO_STRING_PRETTY))
+#else
 #include "util/json.h"
+#endif
 #include "util/argconfig.h"
 #include "linux/nvme.h"
 
@@ -91,7 +116,7 @@ int parse_and_open(int argc, char **argv, const char *desc,
 extern const char *devicename;
 extern const char *output_format;
 
-enum nvme_print_flags validate_output_format(char *format);
+enum nvme_print_flags validate_output_format(const char *format);
 int __id_ctrl(int argc, char **argv, struct command *cmd,
 	struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root));
 char *nvme_char_from_block(char *block);
@@ -109,10 +134,13 @@ int scan_subsystems(struct nvme_topology *t, const char *subsysnqn,
 		    __u32 ns_instance, int nsid, char *dev_dir);
 void free_topology(struct nvme_topology *t);
 char *get_nvme_subsnqn(char *path);
-char *nvme_get_ctrl_attr(char *path, const char *attr);
+char *nvme_get_ctrl_attr(const char *path, const char *attr);
 
 void *nvme_alloc(size_t len, bool *huge);
 void nvme_free(void *p, bool huge);
+
+int uuid_from_dmi(char *uuid);
+int uuid_from_systemd(char *uuid);
 
 unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time);
