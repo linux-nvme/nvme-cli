@@ -5493,6 +5493,22 @@ static void nvme_show_host_mem_buffer(struct nvme_host_mem_buffer *hmb)
 		le32_to_cpu(hmb->hsize));
 }
 
+static const char *nvme_show_ns_write_protect_config(__u8 state)
+{
+	switch (state) {
+	case NVME_NS_NO_WRITE_PROTECT:
+		return "No Write Protect";
+	case NVME_NS_WRITE_PROTECT:
+		return "Write Protect";
+	case NVME_NS_WRITE_PROTECT_POWER_CYCLE:
+		return "Write Protect Until Power Cycle";
+	case NVME_NS_WRITE_PROTECT_PERMANENT:
+		return "Permanent Write Protect";
+	default:
+		return "Reserved";
+	}
+}
+
 static void nvme_directive_show_fields(__u8 dtype, __u8 doper,
 				       unsigned int result, unsigned char *buf)
 {
@@ -5716,7 +5732,7 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned 
 		printf("\tPersist Through Power Loss (PTPL): %s\n", (result & 0x00000001) ? "True":"False");
 		break;
 	case NVME_FEAT_WRITE_PROTECT:
-		printf("\tNamespace Write Protect: %s\n", result != NVME_NS_NO_WRITE_PROTECT ? "True" :  "False");
+		printf("\tNamespace Write Protect state: %s\n", nvme_show_ns_write_protect_config(result & 0x7));
 		break;
 	case NVME_FEAT_TIMESTAMP:
 		nvme_show_timestamp((struct nvme_timestamp *)buf);
