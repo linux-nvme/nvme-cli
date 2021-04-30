@@ -195,7 +195,7 @@ print_config "libuuid" "${libuuid}"
 # check for SystemD
 systemd="no"
 if [ -z "$disable_systemd" ] ; then
-    pkg-config --exists libsystemd --atleast-version=232
+    pkg-config --exists libsystemd --atleast-version=242
     if [ $? -eq 0 ]; then
 	systemd="yes"
     fi
