@@ -85,6 +85,15 @@ nvme_host_t nvme_next_host(nvme_root_t r, nvme_host_t h);
 nvme_root_t nvme_host_get_root(nvme_host_t h);
 
 /**
+ * nvme_lookup_host() -
+ * @r:
+ *
+ * Return: 
+ */
+nvme_host_t nvme_lookup_host(nvme_root_t r, const char *hostnqn,
+			     const char *hostid);
+
+/**
  * nvme_host_get_hostnqn() -
  * @h:
  *
@@ -124,6 +133,18 @@ nvme_subsystem_t nvme_first_subsystem(nvme_host_t h);
  * Return: 
  */
 nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s);
+
+/**
+ * nvme_lookup_subsystem() -
+ * @h:
+ * @name:
+ * @subsysnqn:
+ *
+ * Return: 
+ */
+nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,
+				       const char *name,
+				       const char *subsysnqn);
 
 /**
  * nvme_subsystem_get_host() -
@@ -183,6 +204,36 @@ nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s);
  * Return: 
  */
 nvme_ctrl_t nvme_subsystem_next_ctrl(nvme_subsystem_t s, nvme_ctrl_t c);
+
+/**
+ * nvme_lookup_ctrl() -
+ * @s:
+ * @transport:
+ * @traddr:
+ * @host_traddr:
+ * @trsvcid:
+ *
+ * Return: 
+ */
+nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
+			     const char *traddr, const char *host_traddr,
+			     const char *trsvcid);
+
+
+/**
+ * nvme_create_ctrl() -
+ * @subsysnqn:
+ * @transport:
+ * @traddr:
+ * @host_traddr:
+ * @trsvcid:
+ *
+ * Return: 
+ */
+nvme_ctrl_t nvme_create_ctrl(const char *subsysnqn, const char *transport,
+			     const char *traddr, const char *host_traddr,
+			     const char *trsvcid);
+
 
 /**
  * nvme_subsystem_first_ns() -
@@ -396,6 +447,30 @@ const char *nvme_ns_get_sysfs_dir(nvme_ns_t n);
  * Return: 
  */
 const char *nvme_ns_get_name(nvme_ns_t n);
+
+/**
+ * nvme_ns_get_firmware() -
+ * @n:
+ *
+ * Return: 
+ */
+const char *nvme_ns_get_firmware(nvme_ns_t n);
+
+/**
+ * nvme_ns_get_serial() -
+ * @n:
+ *
+ * Return: 
+ */
+const char *nvme_ns_get_serial(nvme_ns_t n);
+
+/**
+ * nvme_ns_get_model() -
+ * @n:
+ *
+ * Return: 
+ */
+const char *nvme_ns_get_model(nvme_ns_t n);
 
 /**
  * nvme_ns_get_subsystem() -
@@ -661,6 +736,22 @@ const char *nvme_ctrl_get_nqn(nvme_ctrl_t c);
 const char *nvme_ctrl_get_subsysnqn(nvme_ctrl_t c);
 
 /**
+ * nvme_ctrl_get_hostnqn() -
+ * @c:
+ *
+ * Return: 
+ */
+const char *nvme_ctrl_get_hostnqn(nvme_ctrl_t c);
+
+/**
+ * nvme_ctrl_get_hostid() -
+ * @c:
+ *
+ * Return: 
+ */
+const char *nvme_ctrl_get_hostid(nvme_ctrl_t c);
+
+/**
  * nvme_ctrl_get_subsystem() -
  * @c:
  *
@@ -715,7 +806,17 @@ int nvme_ctrl_disconnect(nvme_ctrl_t c);
  *
  * Return: 
  */
-nvme_ctrl_t nvme_scan_ctrl(const char *name);
+nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name);
+
+/**
+ * nvme_init_ctrl() -
+ * @h:
+ * @c:
+ * @instance:
+ *
+ * Return: 
+ */
+int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance);
 
 /**
  * nvme_free_ctrl() -
@@ -762,11 +863,27 @@ const char *nvme_subsystem_get_name(nvme_subsystem_t s);
 nvme_root_t nvme_scan_filter(nvme_scan_filter_t f);
 
 /**
+ * nvme_host_get_hostnqn() -
+ * @h:
+ *
+ * Return: 
+ */
+const char *nvme_host_get_hostnqn(nvme_host_t h);
+
+/**
+ * nvme_host_get_hostid() -
+ * @h:
+ *
+ * Return: 
+ */
+const char *nvme_host_get_hostid(nvme_host_t h);
+
+/**
  * nvme_scan() -
  *
  * Return: 
  */
-nvme_root_t nvme_scan();
+nvme_root_t nvme_scan(void);
 
 /**
  * nvme_refresh_topology() -
@@ -822,6 +939,8 @@ char *nvme_get_ctrl_attr(nvme_ctrl_t c, const char *attr);
  */
 char *nvme_get_ns_attr(nvme_ns_t n, const char *attr);
 
+nvme_ns_t nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
+					  __u32 nsid);
 /**
  * nvme_get_path_attr() -
  * @p:

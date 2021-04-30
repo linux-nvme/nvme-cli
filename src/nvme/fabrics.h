@@ -13,15 +13,11 @@
 #include <stdint.h>
 #include "tree.h"
 
+/* default to 600 seconds of reconnect attempts before giving up */
+#define NVMF_DEF_CTRL_LOSS_TMO		600
+
 /**
  * struct nvme_fabrics_config - Defines all linux nvme fabrics initiator options
- * @transport:		The fabric transport to use, either loop, fc, tcp, or rdma
- * @traddr:		Transport Address for the target, format specific to transport type
- * @trsvcid:		Transport Service Identifier, specific to the transport type
- * @nqn:		Target NVMe Qualified Name
- * @hostnqn:		Host NVMe Qualified Name
- * @host_traddr:	Host Transport Address
- * @hostid:		Host Identifier
  * @queue_size:		Number of IO queue entries
  * @nr_io_queues:	Number of controller IO queues to establish
  * @reconnect_delay:	Time between two consecutive reconnect attempts.
@@ -36,14 +32,6 @@
  * @data_digest:	Generate/verify data digest (TCP)
  */
 struct nvme_fabrics_config {
-	const char *transport;
-	const char *traddr;
-	const char *trsvcid;
-	const char *nqn;
-	const char *hostnqn;
-	const char *host_traddr;
-	const char *hostid;
-
 	int queue_size;
 	int nr_io_queues;
 	int reconnect_delay;
@@ -125,19 +113,23 @@ const char *nvmf_cms_str(__u8 cms);
 
 /**
  * nvmf_add_ctrl_opts() -
+ * @c:
  * @cfg:
  *
  * Return:
  */
-int nvmf_add_ctrl_opts(struct nvme_fabrics_config *cfg);
+int nvmf_add_ctrl_opts(nvme_ctrl_t c, const struct nvme_fabrics_config *cfg);
 
 /**
  * nvmf_add_ctrl() -
+ * @h:
+ * @c:
  * @cfg:
  *
  * Return:
  */
-nvme_ctrl_t nvmf_add_ctrl(struct nvme_fabrics_config *cfg);
+int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
+		  const struct nvme_fabrics_config *cfg);
 
 /**
  * nvmf_get_discovery_log() -
@@ -175,13 +167,15 @@ char *nvmf_hostid_from_file();
 
 /**
  * nvmf_connect_disc_entry() -
+ * @h:
  * @e:
  * @defcfg:
  * @discover:
  *
  * Return: An 
  */
-nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
+nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
+	struct nvmf_disc_log_entry *e,
 	const struct nvme_fabrics_config *defcfg, bool *discover);
 
 #endif /* _LIBNVME_FABRICS_H */

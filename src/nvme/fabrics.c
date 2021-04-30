@@ -184,34 +184,55 @@ static int add_argument(char **argstr, const char *tok, const char *arg)
 	return 0;
 }
 
-static int build_options(char **argstr, struct nvme_fabrics_config *cfg)
+static int build_options(nvme_ctrl_t c, char **argstr,
+			 const struct nvme_fabrics_config *cfg)
 {
+	const char *transport = nvme_ctrl_get_transport(c);
+
 	/* always specify nqn as first arg - this will init the string */
-	if (asprintf(argstr, "nqn=%s", cfg->nqn) < 0) {
+	if (asprintf(argstr, "nqn=%s",
+		     nvme_ctrl_get_subsysnqn(c)) < 0) {
 		errno = ENOMEM;
 		return -1;
 	}
 
 
-	if (add_argument(argstr, "transport", cfg->transport) ||
-	    add_argument(argstr, "traddr", cfg->traddr) ||
-	    add_argument(argstr, "host_traddr", cfg->host_traddr) ||
-	    add_argument(argstr, "trsvcid", cfg->trsvcid) ||
-	    add_argument(argstr, "hostnqn", cfg->hostnqn) ||
-	    add_argument(argstr, "hostid", cfg->hostid) ||
-	    add_int_argument(argstr, "nr_write_queues", cfg->nr_write_queues, false) ||
-	    add_int_argument(argstr, "nr_poll_queues", cfg->nr_poll_queues, false) ||
-	    add_int_argument(argstr, "reconnect_delay", cfg->reconnect_delay, false) ||
-	    add_int_argument(argstr, "ctrl_loss_tmo", cfg->ctrl_loss_tmo, false) ||
+	if (add_argument(argstr, "transport", transport) ||
+	    add_argument(argstr, "traddr",
+			 nvme_ctrl_get_traddr(c)) ||
+	    add_argument(argstr, "host_traddr",
+			 nvme_ctrl_get_host_traddr(c)) ||
+	    add_argument(argstr, "trsvcid",
+			 nvme_ctrl_get_trsvcid(c)) ||
+	    add_argument(argstr, "hostnqn",
+			 nvme_ctrl_get_hostnqn(c)) ||
+	    add_argument(argstr, "hostid",
+			 nvme_ctrl_get_hostid(c)) ||
+	    add_int_argument(argstr, "nr_write_queues",
+			     cfg->nr_write_queues, false) ||
+	    add_int_argument(argstr, "nr_poll_queues",
+			     cfg->nr_poll_queues, false) ||
+	    add_int_argument(argstr, "reconnect_delay",
+			     cfg->reconnect_delay, false) ||
+	    (strcmp(transport, "loop") &&
+	     add_int_argument(argstr, "ctrl_loss_tmo",
+			      cfg->ctrl_loss_tmo, false)) ||
 	    add_int_argument(argstr, "tos", cfg->tos, true) ||
-	    add_bool_argument(argstr, "duplicate_connect", cfg->duplicate_connect) ||
-	    add_bool_argument(argstr, "disable_sqflow", cfg->disable_sqflow) ||
-	    add_bool_argument(argstr, "hdr_digest", cfg->hdr_digest) ||
-	    add_bool_argument(argstr, "data_digest", cfg->data_digest) ||
+	    add_bool_argument(argstr, "duplicate_connect",
+			      cfg->duplicate_connect) ||
+	    add_bool_argument(argstr, "disable_sqflow",
+			      cfg->disable_sqflow) ||
+	    (!strcmp(transport, "tcp") &&
+	     add_bool_argument(argstr, "hdr_digest", cfg->hdr_digest)) ||
+	    (!strcmp(transport, "tcp") &&
+	     add_bool_argument(argstr, "data_digest", cfg->data_digest)) ||
 	    add_int_argument(argstr, "queue_size", cfg->queue_size, false) ||
-	    add_int_argument(argstr, "keep_alive_tmo", cfg->keep_alive_tmo, false) ||
-	    add_int_argument(argstr, "nr_io_queues", cfg->nr_io_queues, false)) {
+	    add_int_argument(argstr, "keep_alive_tmo",
+			     cfg->keep_alive_tmo, false) ||
+	    add_int_argument(argstr, "nr_io_queues",
+			     cfg->nr_io_queues, false)) {
 		free(*argstr);
+		errno = ENOMEM;
 		return -1;
 	}
 
@@ -255,12 +276,12 @@ out_close:
 	return ret;
 }
 
-int nvmf_add_ctrl_opts(struct nvme_fabrics_config *cfg)
+int nvmf_add_ctrl_opts(nvme_ctrl_t c, const struct nvme_fabrics_config *cfg)
 {
 	char *argstr;
 	int ret;
 
-	ret = build_options(&argstr, cfg);
+	ret = build_options(c, &argstr, cfg);
 	if (ret)
 		return ret;
 
@@ -269,27 +290,34 @@ int nvmf_add_ctrl_opts(struct nvme_fabrics_config *cfg)
 	return ret;
 }
 
-nvme_ctrl_t nvmf_add_ctrl(struct nvme_fabrics_config *cfg)
+int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
+		  const struct nvme_fabrics_config *cfg)
 {
-	char d[32] = { 0 };
+	char *argstr;
 	int ret;
 
-	ret = nvmf_add_ctrl_opts(cfg);
+	ret = build_options(c, &argstr, cfg);
+	if (ret)
+		return ret;
+
+	ret = __nvmf_add_ctrl(argstr);
+	free(argstr);
 	if (ret < 0)
-		return NULL;
+		return ret;
 
-	if (snprintf(d, sizeof(d), "nvme%d", ret) < 0)
-		return NULL;
-
-	return nvme_scan_ctrl(d);
+	return nvme_init_ctrl(h, c, ret);
 }
 
-nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
+nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
+				    struct nvmf_disc_log_entry *e,
 				    const struct nvme_fabrics_config *defcfg,
 				    bool *discover)
 {
 	struct nvme_fabrics_config cfg = { 0 };
+	const char *transport;
+	char *traddr = NULL, *trsvcid = NULL;
 	nvme_ctrl_t c;
+	int ret;
 
 	memcpy(&cfg, defcfg, sizeof(cfg));
 	switch (e->subtype) {
@@ -312,8 +340,8 @@ nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
 		case NVMF_ADDR_FAMILY_IP6:
 			nvme_chomp(e->traddr, NVMF_TRADDR_SIZE);
 			nvme_chomp(e->trsvcid, NVMF_TRSVCID_SIZE);
-			cfg.traddr = e->traddr;
-			cfg.trsvcid = e->trsvcid;
+			traddr = e->traddr;
+			trsvcid = e->trsvcid;
 			break;
 		default:
 			errno = EINVAL;
@@ -324,29 +352,42 @@ nvme_ctrl_t nvmf_connect_disc_entry(struct nvmf_disc_log_entry *e,
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_FC:
 			nvme_chomp(e->traddr, NVMF_TRADDR_SIZE),
-			cfg.traddr = e->traddr;
-			cfg.trsvcid = NULL;
+			traddr = e->traddr;
+			trsvcid = NULL;
 			break;
 		}
+	case NVMF_TRTYPE_LOOP:
+		break;
 	default:
 		errno = EINVAL;
 		return NULL;
 	}
 
-	cfg.transport = nvmf_trtype_str(e->trtype);
-	cfg.nqn = e->subnqn;
+	transport = nvmf_trtype_str(e->trtype);
+	c = nvme_create_ctrl(e->subnqn, transport, traddr,
+			     NULL, trsvcid);
+	if (!c) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
 	if (e->treq & NVMF_TREQ_DISABLE_SQFLOW)
 		cfg.disable_sqflow = true;
 
-	c = nvmf_add_ctrl(&cfg);
-	if (!c && errno == EINVAL && cfg.disable_sqflow) {
+	ret = nvmf_add_ctrl(h, c, &cfg);
+	if (!ret)
+		return c;
+
+	if (errno == EINVAL && cfg.disable_sqflow) {
 		errno = 0;
 		/* disable_sqflow is unrecognized option on older kernels */
 		cfg.disable_sqflow = false;
-		c = nvmf_add_ctrl(&cfg);
+		ret = nvmf_add_ctrl(h, c, &cfg);
+		if (!ret)
+			return c;
 	}
-
-	return c;
+	nvme_free_ctrl(c);
+	return NULL;
 }
 
 static int nvme_discovery_log(int fd, __u32 len, struct nvmf_discovery_log *log)

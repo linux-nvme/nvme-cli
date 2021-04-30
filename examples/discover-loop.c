@@ -47,21 +47,31 @@ static void print_discover_log(struct nvmf_discovery_log *log)
 int main()
 {
 	struct nvmf_discovery_log *log = NULL;
+	nvme_root_t r;
+	nvme_host_t h;
 	nvme_ctrl_t c;
-	char *hnqn;
+	char *hnqn, *hid;
 	int ret;
 
 	struct nvme_fabrics_config cfg = {
-		.nqn = NVME_DISC_SUBSYS_NAME,
-		.transport = "loop",
 		.tos = -1,
 	};
 
-	hnqn = nvmf_hostnqn_from_file(),
-	cfg.hostnqn = hnqn;
-
-	c = nvmf_add_ctrl(&cfg);
+	r = nvme_scan();
+	hnqn = nvmf_hostnqn_from_file();
+	hid = nvmf_hostid_from_file();
+	h = nvme_lookup_host(r, hnqn, hid);
+	if (!h) {
+		fprintf(stderr, "Failed to allocated memory\n");
+		return ENOMEM;
+	}
+	c = nvme_create_ctrl(NVME_DISC_SUBSYS_NAME, "loop", NULL, NULL, NULL);
 	if (!c) {
+		fprintf(stderr, "Failed to allocate memory\n");
+		return ENOMEM;
+	}
+	ret = nvmf_add_ctrl(h, c, &cfg);
+	if (ret < 0) {
 		fprintf(stderr, "no controller found\n");
 		return errno;
 	}
@@ -75,6 +85,7 @@ int main()
 	else
 		print_discover_log(log);
 
+	nvme_free_tree(r);
 	free(hnqn);
 	return 0;
 }

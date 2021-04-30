@@ -326,13 +326,12 @@ int main(int argc, char **argv)
 		}
 	}
 	printf("\n");
-	nvme_free_tree(r);
 
 	if (argc > 1)
 		ctrl = argv[1];
 
 	printf("Test scan specific controller\n");
-	c = nvme_scan_ctrl(ctrl);
+	c = nvme_scan_ctrl(r, ctrl);
 	if (c) {
 		printf("%s %s %s %s\n", nvme_ctrl_get_name(c),
 			nvme_ctrl_get_transport(c),
@@ -341,6 +340,7 @@ int main(int argc, char **argv)
 		nvme_free_ctrl(c);
 	}
 	printf("\n");
+	nvme_free_tree(r);
 
 	r = nvme_scan();
 	if (!r)
