@@ -242,7 +242,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	const char *raw = "output in binary format";
 	const char *human_readable = "show info in readable format";
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		__u32 namespace_id;
@@ -297,7 +297,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 	const char *desc = "Retrieve ANA log for the given device in " \
 			    "decoded format (default), json or binary.";
 	void *ana_log;
-	int err, fd;
+	int err = -1, fd;
 	int groups = 0; /* Right now get all the per ANA group NSIDS */
 	size_t ana_log_len;
 	struct nvme_id_ctrl ctrl;
@@ -339,7 +339,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 	ana_log = malloc(ana_log_len);
 	if (!ana_log) {
 		perror("malloc");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 
@@ -367,7 +367,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	const size_t bs = 512;
 	struct nvme_telemetry_log_page_hdr *hdr;
 	size_t full_size, offset = bs;
-	int err = 0, fd, output;
+	int err = -1, fd, output;
 	void *page_log;
 
 	struct config {
@@ -397,7 +397,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 
 	if (!cfg.file_name) {
 		fprintf(stderr, "Please provide an output file!\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -406,7 +406,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 	page_log = malloc(bs);
 	if (!hdr || !page_log) {
 		perror("failed to allocate buf for log\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto free_mem;
 	}
 	memset(hdr, 0, bs);
@@ -446,7 +446,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		break;
 	default:
 		fprintf(stderr, "Invalid data area requested\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_output;
 	}
 
@@ -491,7 +491,7 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 	const char *desc = "Retrieves endurance groups log page and prints the log.";
 	const char *group_id = "The endurance group identifier";
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		char *output_format;
@@ -537,7 +537,7 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	const char *human_readable = "show log in readable format";
 	struct nvme_effects_log_page effects;
 
-	int err, fd;
+	int err = -1, fd;
 	enum nvme_print_flags flags;
 
 	struct config {
@@ -592,7 +592,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 	struct nvme_error_log_page *err_log;
 	struct nvme_id_ctrl ctrl;
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		__u32 log_entries;
@@ -624,7 +624,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 
 	if (!cfg.log_entries) {
 		fprintf(stderr, "non-zero log-entries is required param\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -634,7 +634,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		goto close_fd;
 	} else if (err) {
 		fprintf(stderr, "could not identify controller\n");
-		err = -ENODEV;
+		errno = ENODEV;
 		goto close_fd;
 	}
 
@@ -642,7 +642,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 	err_log = calloc(cfg.log_entries, sizeof(struct nvme_error_log_page));
 	if (!err_log) {
 		perror("could not alloc buffer for error log\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 
@@ -667,7 +667,7 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 	const char *raw = "use binary output";
 	struct nvme_firmware_log_page fw_log;
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		int raw_binary;
@@ -715,7 +715,7 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 			"(default) or binary.";
 	const char *raw = "output in binary format";
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		int   raw_binary;
@@ -766,7 +766,7 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 	const char *raw = "use binary output";
 	struct nvme_predlat_per_nvmset_log_page plpns_log;
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		__u16 nvmset_id;
@@ -826,7 +826,7 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 	void *pea_log;
 	struct nvme_id_ctrl ctrl;
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 	__u32 log_size;
 
 	struct config {
@@ -862,7 +862,7 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 
 	if (!cfg.log_entries) {
 		fprintf(stderr, "non-zero log-entries is required param\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -881,7 +881,7 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 	if (!pea_log) {
 		perror("could not alloc buffer for predictable " \
 			"latency event agggregate log entries\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 
@@ -915,7 +915,7 @@ static int get_persistent_event_log(int argc, char **argv,
 	void *pevent_log_info;
 	struct nvme_persistent_event_log_head *pevent_log_head;
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 	bool huge;
 
 	struct config {
@@ -953,7 +953,7 @@ static int get_persistent_event_log(int argc, char **argv,
 	if (!pevent_log_head) {
 		perror("could not alloc buffer for persistent " \
 			"event log header\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 
@@ -992,7 +992,7 @@ static int get_persistent_event_log(int argc, char **argv,
 	pevent_log_info = nvme_alloc(cfg.log_len, &huge);
 	if (!pevent_log_info) {
 		perror("could not alloc buffer for persistent event log page\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 	err = nvme_persistent_event_log(fd, cfg.action,
@@ -1028,7 +1028,7 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 	void *endurance_log;
 	struct nvme_id_ctrl ctrl;
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 	__u32 log_size;
 
 	struct config {
@@ -1064,7 +1064,7 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 
 	if (!cfg.log_entries) {
 		fprintf(stderr, "non-zero log-entries is required param\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -1074,7 +1074,7 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 		goto close_fd;
 	} else if (err) {
 		fprintf(stderr, "could not identify controller\n");
-		err = -ENODEV;
+		errno = ENODEV;
 		goto close_fd;
 	}
 
@@ -1084,7 +1084,7 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 	if (!endurance_log) {
 		perror("could not alloc buffer for endurance group" \
 			" event agggregate log entries\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 
@@ -1114,7 +1114,7 @@ static int get_lba_status_log(int argc, char **argv,
 	const char *rae = "Retain an Asynchronous Event";
 	void *lab_status;
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 	__u32 lslplen;
 
 	struct config {
@@ -1153,7 +1153,7 @@ static int get_lba_status_log(int argc, char **argv,
 	lab_status = calloc(lslplen, 1);
 	if (!lab_status) {
 		perror("could not alloc buffer for lba status log");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 
@@ -1182,7 +1182,7 @@ static int get_resv_notif_log(int argc, char **argv,
 		"json or binary.";
 	struct nvme_resv_notif_log resv;
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		char *output_format;
@@ -1234,7 +1234,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *rae = "retain an asynchronous event";
 	const char *raw = "output in raw format";
 	const char *uuid_index = "UUID index";
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		__u32 namespace_id;
@@ -1282,14 +1282,14 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	if (!cfg.log_len) {
 		fprintf(stderr, "non-zero log-len is required param\n");
-		err = -EINVAL;
+		errno = EINVAL;
 	} else {
 		unsigned char *log;
 
 		log = malloc(cfg.log_len);
 		if (!log) {
 			perror("could not alloc buffer for log\n");
-			err = -ENOMEM;
+			errno = ENOMEM;
 			goto close_fd;
 		}
 
@@ -1324,7 +1324,7 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 	const char *human_readable = "show log in readable format";
 	struct nvme_sanitize_log_page sanitize_log;
 	enum nvme_print_flags flags;
-	int fd, err;
+	int fd, err = -1;
 
 	struct config {
 		bool  rae;
@@ -1377,7 +1377,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 		"given device is part of, or optionally controllers attached to a specific namespace.";
 	const char *controller = "controller to display";
 	const char *namespace_id = "optional namespace attached to controller";
-	int err, i, fd;
+	int err = -1, i, fd;
 	struct nvme_controller_list *cntlist;
 
 	struct config {
@@ -1401,7 +1401,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000)) {
 		fprintf(stderr, "can not allocate controller list payload\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 
@@ -1430,7 +1430,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *namespace_id = "first nsid returned list should start from";
 	const char *csi = "I/O command set identifier";
 	const char *all = "show all namespaces in the subsystem, whether attached or inactive";
-	int err, i, fd;
+	int err = -1, i, fd;
 	__le32 ns_list[1024];
 
 	struct config {
@@ -1455,7 +1455,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto ret;
 
 	if (!cfg.namespace_id) {
-		err = -EINVAL;
+		errno = EINVAL;
 		fprintf(stderr, "invalid nsid parameter\n");
 		goto close_fd;
 	}
@@ -1486,7 +1486,7 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		"the namespace is not already inactive, once deleted.";
 	const char *namespace_id = "namespace to delete";
 	const char *timeout = "timeout value, in milliseconds";
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		__u32	namespace_id;
@@ -1533,7 +1533,7 @@ ret:
 
 static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, struct command *cmd)
 {
-	int err, num, i, fd, list[2048];
+	int err = -1, num, i, fd, list[2048];
 	__u16 ctrlist[2048];
 
 	const char *namespace_id = "namespace to attach";
@@ -1562,7 +1562,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	if (!cfg.namespace_id) {
 		fprintf(stderr, "%s: namespace-id parameter required\n",
 						cmd->name);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -1574,7 +1574,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	if (num == -1) {
 		fprintf(stderr, "%s: controller id list is malformed\n",
 						cmd->name);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -1635,7 +1635,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *bs = "target block size, specify only if \'FLBAS\' "\
 		"value not entered";
 
-	int err = 0, fd, i;
+	int err = -1, fd, i;
 	struct nvme_id_ns ns;
 	__u32 nsid;
 
@@ -1681,7 +1681,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	if (cfg.flbas != 0xff && cfg.bs != 0x00) {
 		fprintf(stderr,
 			"Invalid specification of both FLBAS and Block Size, please specify only one\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 	if (cfg.bs) {
@@ -1689,7 +1689,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 			fprintf(stderr,
 				"Invalid value for block size (%"PRIu64"). Block size must be a power of two\n",
 				(uint64_t)cfg.bs);
-			err = -EINVAL;
+			errno = EINVAL;
 			goto close_fd;
 		}
 		err = nvme_identify_ns(fd, NVME_NSID_ALL, 0, &ns);
@@ -1717,7 +1717,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		fprintf(stderr,
 			"Please correct block size, or specify FLBAS directly\n");
 
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -1746,7 +1746,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	const char *desc = "Retrieve information for subsystems";
 	const char *verbose = "Increase output verbosity";
 	__u32 ns_instance = 0;
-	int err, nsid = 0;
+	int err = -1, nsid = 0;
 
 	struct config {
 		char *output_format;
@@ -1777,7 +1777,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		if (sscanf(devicename, "nvme%dn%d", &id, &ns_instance) != 2) {
 			fprintf(stderr, "%s is not a NVMe namespace device\n",
 				argv[optind]);
-			err = -EINVAL;
+			errno = EINVAL;
 			goto ret;
 		}
 		sprintf(path, "/dev/%s", devicename);
@@ -1785,7 +1785,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		if (fd < 0) {
 			fprintf(stderr, "Cannot read nsid from %s\n",
 				devicename);
-			err = -EINVAL;
+			errno = EINVAL;
 			goto ret;
 		}
 		nsid = nvme_get_nsid(fd);
@@ -1793,7 +1793,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		if (nsid < 0) {
 			fprintf(stderr, "Cannot read nsid from %s\n",
 				devicename);
-			err = -EINVAL;
+			errno = EINVAL;
 			goto ret;
 		}
 		sprintf(path, "/sys/block/%s/device", devicename);
@@ -1801,7 +1801,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		if (!subsysnqn) {
 			fprintf(stderr, "Cannot read subsys NQN from %s\n",
 				devicename);
-			err = -EINVAL;
+			errno = EINVAL;
 			goto ret;
 		}
 		optind++;
@@ -1811,7 +1811,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	if (flags < 0)
 		goto free;
 	if (flags != JSON && flags != NORMAL) {
-		err = -EINVAL;
+		errno = EINVAL;
 		goto free;
 	}
 	if (cfg.verbose)
@@ -1837,7 +1837,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	const char *verbose = "Increase output verbosity";
 	struct nvme_topology t = { };
 	enum nvme_print_flags flags;
-	int err = 0;
+	int err = -1;
 
 	struct config {
 		char *device_dir;
@@ -1896,7 +1896,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	const char *human_readable = "show identify in readable format";
 	enum nvme_print_flags flags;
 	struct nvme_id_ctrl ctrl;
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		int vendor_specific;
@@ -2001,7 +2001,7 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *raw = "show descriptors in binary format";
 	const char *namespace_id = "identifier of desired namespace";
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 	void *nsdescs;
 
 	struct config {
@@ -2042,7 +2042,7 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	if (posix_memalign(&nsdescs, getpagesize(), 0x1000)) {
 		fprintf(stderr, "can not allocate controller list payload\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 
@@ -2074,7 +2074,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 
 	enum nvme_print_flags flags;
 	struct nvme_id_ns ns;
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		__u32 namespace_id;
@@ -2143,7 +2143,7 @@ static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct 
 
 	struct nvme_id_ns_granularity_list *granularity_list;
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		char *output_format;
@@ -2168,7 +2168,7 @@ static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct 
 
 	if (posix_memalign((void *)&granularity_list, getpagesize(), NVME_IDENTIFY_DATA_SIZE)) {
 		fprintf(stderr, "can not allocate granularity list payload\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 
@@ -2196,7 +2196,7 @@ static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *
 
 	struct nvme_id_nvmset nvmset;
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		__u16 nvmset_id;
@@ -2246,7 +2246,7 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	struct nvme_id_uuid_list uuid_list;
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		int   raw_binary;
@@ -2376,7 +2376,7 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 		"8h: Secondary Assign\n"\
 		"9h: Secondary Online";
 	const char *nr = "Number of Controller Resources(NR)";
-	int fd, err;
+	int fd, err = -1;
 	__u32 result, cdw10;
 
 	struct config {
@@ -2429,7 +2429,7 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct 
 	const char *human_readable = "show info in readable format";
 	struct nvme_primary_ctrl_caps caps;
 
-	int err, fd;
+	int err = -1, fd;
 	enum nvme_print_flags flags;
 
 	struct config {
@@ -2480,7 +2480,7 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 
 	struct nvme_secondary_controllers_list *sc_list;
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		__u16 cntid;
@@ -2514,13 +2514,13 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 
 	if (!cfg.num_entries) {
 		fprintf(stderr, "non-zero num-entries is required param\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
 	if (posix_memalign((void *)&sc_list, getpagesize(), sizeof(*sc_list))) {
 		fprintf(stderr, "can not allocate controller list payload\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 
@@ -2551,7 +2551,7 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 		"2h Start a extended device self-test operation\n"\
 		"eh Start a vendor specific device self-test operation\n"\
 		"fh abort the device self-test operation\n";
-	int fd, err;
+	int fd, err = -1;
 
 	struct config {
 		__u32 namespace_id;
@@ -2602,7 +2602,7 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 
 	struct nvme_self_test_log self_test_log;
 	enum nvme_print_flags flags;
-	int err, fd;
+	int err = -1, fd;
 	__u32 log_size;
 
 	struct config {
@@ -2666,7 +2666,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	const char *data_len = "buffer len if data is returned through host memory buffer";
 	const char *cdw11 = "dword 11 for interrupt vector config";
 	const char *human_readable = "show feature in readable format";
-	int err, fd;
+	int err = -1, fd;
 	__u32 result;
 	void *buf = NULL;
 
@@ -2717,12 +2717,12 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (cfg.sel > 7) {
 		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -2738,7 +2738,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
 			fprintf(stderr, "can not allocate feature payload\n");
-			err = -ENOMEM;
+			errno = ENOMEM;
 			goto close_fd;
 		}
 		memset(buf, 0, cfg.data_len);
@@ -2785,7 +2785,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	const char *fw = "firmware file (required)";
 	const char *xfer = "transfer chunksize limit";
 	const char *offset = "starting dword offset, default 0";
-	int err, fd, fw_fd = -1;
+	int err = -1, fd, fw_fd = -1;
 	unsigned int fw_size;
 	struct stat sb;
 	void *fw_buf, *buf;
@@ -2819,7 +2819,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	if (fw_fd < 0) {
 		fprintf(stderr, "Failed to open firmware file %s: %s\n",
 				cfg.fw, strerror(errno));
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -2832,7 +2832,7 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	fw_size = sb.st_size;
 	if ((fw_size & 0x3) || (fw_size == 0)) {
 		fprintf(stderr, "Invalid size:%d for f/w image\n", fw_size);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fw_fd;
 	}
 
@@ -2846,13 +2846,13 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (!fw_buf) {
 		perror("No memory for f/w size:\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fw_fd;
 	}
 
 	buf = fw_buf;
 	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size))) {
-		err = -errno;
+		errno = -errno;
 		fprintf(stderr, "read :%s :%s\n", cfg.fw, strerror(errno));
 		goto free;
 	}
@@ -2905,7 +2905,7 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *slot = "[0-7]: firmware slot for commit action";
 	const char *action = "[0-7]: commit action";
 	const char *bpid = "[0,1]: boot partition identifier, if applicable (default: 0)";
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		__u8 slot;
@@ -2932,17 +2932,17 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 
 	if (cfg.slot > 7) {
 		fprintf(stderr, "invalid slot:%d\n", cfg.slot);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 	if (cfg.action > 7 || cfg.action == 4 || cfg.action == 5) {
 		fprintf(stderr, "invalid action:%d\n", cfg.action);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 	if (cfg.bpid > 1) {
 		fprintf(stderr, "invalid boot partition id:%d\n", cfg.bpid);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -2981,7 +2981,7 @@ ret:
 static int subsystem_reset(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Resets the NVMe subsystem\n";
-	int err, fd;
+	int err = -1, fd;
 
 	OPT_ARGS(opts) = {
 		OPT_END()
@@ -3008,7 +3008,7 @@ ret:
 static int reset(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Resets the NVMe controller\n";
-	int err, fd;
+	int err = -1, fd;
 
 	OPT_ARGS(opts) = {
 		OPT_END()
@@ -3059,7 +3059,7 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *sanact_desc = "Sanitize action.";
 	const char *ovrpat_desc = "Overwrite pattern.";
 
-	int fd, ret;
+	int fd, ret = -1;
 
 	struct config {
 		int    no_dealloc;
@@ -3101,14 +3101,14 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 		break;
 	default:
 		fprintf(stderr, "Invalid Sanitize Action\n");
-		ret = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
 	if (cfg.sanact == NVME_SANITIZE_ACT_EXIT) {
 	       if (cfg.ause || cfg.no_dealloc) {
 			fprintf(stderr, "SANACT is Exit Failure Mode\n");
-			ret = -EINVAL;
+			errno = EINVAL;
 			goto close_fd;
 	       }
 	}
@@ -3116,13 +3116,13 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (cfg.sanact == NVME_SANITIZE_ACT_OVERWRITE) {
 		if (cfg.owpass >= 16) {
 			fprintf(stderr, "OWPASS out of range [0-15]\n");
-			ret = -EINVAL;
+			errno = EINVAL;
 			goto close_fd;
 		}
 	} else {
 		if (cfg.owpass || cfg.oipbp || cfg.ovrpat) {
 			fprintf(stderr, "SANACT is not Overwrite\n");
-			ret = -EINVAL;
+			errno = EINVAL;
 			goto close_fd;
 		}
 	}
@@ -3149,7 +3149,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 
 	enum nvme_print_flags flags;
 	bool fabrics = true;
-	int fd, err;
+	int fd, err = -1;
 	void *bar;
 
 	struct config {
@@ -3207,7 +3207,7 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 	const char *offset = "offset of the requested property";
 	const char *human_readable = "show property in readable format";
 
-	int fd, err;
+	int fd, err = -1;
 	uint64_t value;
 
 	struct config {
@@ -3232,7 +3232,7 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 
 	if (cfg.offset == -1) {
 		fprintf(stderr, "offset required param\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -3257,7 +3257,7 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 			   "for NVMe ove Fabric";
 	const char *offset = "the offset of the property";
 	const char *value = "the value of the property to be set";
-	int fd, err;
+	int fd, err = -1;
 
 	struct config {
 		int offset;
@@ -3281,12 +3281,12 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 
 	if (cfg.offset == -1) {
 		fprintf(stderr, "offset required param\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 	if (cfg.value == -1) {
 		fprintf(stderr, "value required param\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -3324,7 +3324,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
 	struct nvme_id_ns ns;
 	struct nvme_id_ctrl ctrl;
-	int err, fd, i;
+	int err = -1, fd, i;
 	int block_size;
 	__u8 prev_lbaf = 0;
 
@@ -3373,7 +3373,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	if (cfg.lbaf != 0xff && cfg.bs !=0) {
 		fprintf(stderr,
 			"Invalid specification of both LBAF and Block Size, please specify only one\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 	if (cfg.bs) {
@@ -3381,7 +3381,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			fprintf(stderr,
 				"Invalid value for block size (%"PRIu64"), must be a power of two\n",
 				       (uint64_t) cfg.bs);
-			err = -EINVAL;
+			errno = EINVAL;
 			goto close_fd;
 		}
 	}
@@ -3412,7 +3412,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			"Invalid namespace ID, "
 			"specify a namespace to format or use '-n 0xffffffff' "
 			"to format all namespaces on this controller.\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -3443,7 +3443,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 					(uint64_t)cfg.bs);
 				fprintf(stderr,
 					"Please correct block size, or specify LBAF directly\n");
-				err = -EINVAL;
+				errno = EINVAL;
 				goto close_fd;
 			}
 		} else  if (cfg.lbaf == 0xff)
@@ -3455,27 +3455,27 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	/* ses & pi checks set to 7 for forward-compatibility */
 	if (cfg.ses > 7) {
 		fprintf(stderr, "invalid secure erase settings:%d\n", cfg.ses);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 	if (cfg.lbaf > 15) {
 		fprintf(stderr, "invalid lbaf:%d\n", cfg.lbaf);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 	if (cfg.pi > 7) {
 		fprintf(stderr, "invalid pi:%d\n", cfg.pi);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 	if (cfg.pil > 1) {
 		fprintf(stderr, "invalid pil:%d\n", cfg.pil);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 	if (cfg.ms > 1) {
 		fprintf(stderr, "invalid ms:%d\n", cfg.ms);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -3561,7 +3561,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	const char *value = "new value of feature (required)";
 	const char *cdw12 = "feature cdw12, if used";
 	const char *save = "specifies that the controller shall save the attribute";
-	int err;
+	int err = -1;
 	__u32 result;
 	void *buf = NULL;
 	int fd, ffd = STDIN_FILENO;
@@ -3616,7 +3616,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -3625,7 +3625,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
 			fprintf(stderr, "can not allocate feature payload\n");
-			err = -ENOMEM;
+			errno = ENOMEM;
 			goto close_fd;
 		}
 		memset(buf, 0, cfg.data_len);
@@ -3641,7 +3641,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
                 if (ffd <= 0) {
                     fprintf(stderr, "Failed to open file %s: %s\n",
                     cfg.file, strerror(errno));
-                    err = -EINVAL;
+                    errno = EINVAL;
                     goto free;
                 }
             }
@@ -3706,7 +3706,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *tl = "transfer length (cf. SPC-4)";
 	const char *namespace_id = "desired namespace";
 	const char *nssf = "NVMe Security Specific Field";
-	int err, fd, sec_fd = -1;
+	int err = -1, fd, sec_fd = -1;
 	void *sec_buf;
 	unsigned int sec_size;
 
@@ -3744,7 +3744,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (sec_fd < 0) {
 		fprintf(stderr, "Failed to open %s: %s\n",
 				cfg.file, strerror(errno));
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -3757,7 +3757,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	sec_size = sb.st_size;
 	if (posix_memalign(&sec_buf, getpagesize(), sec_size)) {
 		fprintf(stderr, "No memory for security size:%d\n", sec_size);
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_sec_fd;
 	}
 
@@ -3801,7 +3801,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *endir = "directive enable";
 	const char *ttype = "target directive type to be enabled/disabled";
 	const char *human_readable = "show directive in readable format";
-	int err, fd;
+	int err = -1, fd;
 	__u32 result;
 	__u32 dw12 = 0;
 	void *buf = NULL;
@@ -3854,14 +3854,14 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		case NVME_DIR_SND_ID_OP_ENABLE:
 			if (!cfg.ttype) {
 				fprintf(stderr, "target-dir required param\n");
-				err = -EINVAL;
+				errno = EINVAL;
 				goto close_fd;
 			}
 			dw12 = cfg.ttype << 8 | cfg.endir;
 			break;
 		default:
 			fprintf(stderr, "invalid directive operations for Identify Directives\n");
-			err = -EINVAL;
+			errno = EINVAL;
 			goto close_fd;
 		}
 		break;
@@ -3872,20 +3872,20 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 			break;
 		default:
 			fprintf(stderr, "invalid directive operations for Streams Directives\n");
-			err = -EINVAL;
+			errno = EINVAL;
 			goto close_fd;
 		}
 		break;
 	default:
 		fprintf(stderr, "invalid directive type\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
 
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
-			err = -ENOMEM;
+			errno = ENOMEM;
 			goto close_fd;
 		}
 		memset(buf, 0, cfg.data_len);
@@ -3897,7 +3897,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 			if (ffd <= 0) {
 				fprintf(stderr, "Failed to open file %s: %s\n",
 						cfg.file, strerror(errno));
-				err = -EINVAL;
+				errno = EINVAL;
 				goto free;
 			}
 		}
@@ -3940,7 +3940,7 @@ ret:
 
 static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int err, fd;
+	int err = -1, fd;
 	const char *desc = "The Write Uncorrectable command is used to set a "\
 			"range of logical blocks to invalid.";
 	const char *namespace_id = "desired namespace";
@@ -3995,7 +3995,7 @@ ret:
 
 static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int err, fd;
+	int err = -1, fd;
 	__u16 control = 0;
 	const char *desc = "The Write Zeroes command is used to set a "\
 			"range of logical blocks to zero.";
@@ -4051,7 +4051,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		goto ret;
 
 	if (cfg.prinfo > 0xf) {
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -4100,7 +4100,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	const char *idr = "Attribute Integral Dataset for Read";
 	const char *cdw11 = "All the command DWORD 11 attributes. Use instead of specifying individual attributes";
 
-	int err, fd;
+	int err = -1, fd;
 	uint16_t nr, nc, nb, ns;
 	int ctx_attrs[256] = {0,};
 	int nlbs[256] = {0,};
@@ -4151,7 +4151,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	nr = max(nc, max(nb, ns));
 	if (!nr || nr > 256) {
 		fprintf(stderr, "No range definition provided\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -4168,7 +4168,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	dsm = nvme_setup_dsm_range(ctx_attrs, nlbs, slbas, nr);
 	if (!dsm) {
 		fprintf(stderr, "failed to allocate data set payload\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 
@@ -4213,7 +4213,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	const char *d_dspec = "directive specific (write part)";
 	const char *d_format = "source range entry format";
 
-	int err, fd;
+	int err = -1, fd;
 	uint16_t nr, nb, ns, nrts, natms, nats;
 	int nlbs[128] = { 0 };
 	unsigned long long slbas[128] = {0,};
@@ -4287,7 +4287,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	nr = max(nb, max(ns, max(nrts, max(natms, nats))));
 	if (!nr || nr > 128) {
 		fprintf(stderr, "invalid range\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -4302,7 +4302,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	copy = nvme_setup_copy_range(nlbs, slbas, eilbrts, elbatms, elbats, nr);
 	if (!copy) {
 		fprintf(stderr, "failed to allocate payload\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 
@@ -4332,7 +4332,7 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 		"flushed by the controller, from any namespace, depending on controller and "\
 		"associated namespace status.";
 	const char *namespace_id = "identifier of desired namespace";
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		__u32 namespace_id;
@@ -4386,7 +4386,7 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 	const char *rtype = "reservation type";
 	const char *racqa = "reservation acquire action";
 	const char *iekey = "ignore existing res. key";
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		__u32 namespace_id;
@@ -4428,7 +4428,7 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 	}
 	if (cfg.racqa > 7) {
 		fprintf(stderr, "invalid racqa:%d\n", cfg.racqa);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -4458,7 +4458,7 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 	const char *nrkey = "new reservation key";
 	const char *rrega = "reservation registration action";
 	const char *cptpl = "change persistence through power loss setting";
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		__u32 namespace_id;
@@ -4500,13 +4500,13 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 	}
 	if (cfg.cptpl > 3) {
 		fprintf(stderr, "invalid cptpl:%d\n", cfg.cptpl);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
 	if (cfg.rrega > 7) {
 		fprintf(stderr, "invalid rrega:%d\n", cfg.rrega);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -4540,7 +4540,7 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 	const char *iekey = "ignore existing res. key";
 	const char *rtype = "reservation type";
 	const char *rrela = "reservation release action";
-	int err, fd;
+	int err = -1, fd;
 
 	struct config {
 		__u32 namespace_id;
@@ -4580,7 +4580,7 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 	}
 	if (cfg.rrela > 7) {
 		fprintf(stderr, "invalid rrela:%d\n", cfg.rrela);
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -4613,7 +4613,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 
 	struct nvme_reservation_status *status;
 	enum nvme_print_flags flags;
-	int err, fd, size;
+	int err = -1, fd, size;
 
 	struct config {
 		__u32 namespace_id;
@@ -4666,7 +4666,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (posix_memalign((void **)&status, getpagesize(), size)) {
 		fprintf(stderr, "No memory for resv report:%d\n", size);
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 	memset(status, 0, size);
@@ -4698,7 +4698,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 {
 	struct timeval start_time, end_time;
 	void *buffer, *mbuffer = NULL;
-	int err = 0;
+	int err = -1;
 	int dfd, mfd, fd;
 	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
 	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
@@ -4791,7 +4791,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 
 	dfd = mfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
 	if (cfg.prinfo > 0xf) {
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -4805,7 +4805,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		if (cfg.dtype > 0xf) {
 			fprintf(stderr, "Invalid directive type, %x\n",
 				cfg.dtype);
-			err = -EINVAL;
+			errno = EINVAL;
 			goto close_fd;
 		}
 		control |= cfg.dtype << 4;
@@ -4816,7 +4816,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		dfd = open(cfg.data, flags, mode);
 		if (dfd < 0) {
 			perror(cfg.data);
-			err = -EINVAL;
+			errno = EINVAL;
 			goto close_fd;
 		}
 		mfd = dfd;
@@ -4825,14 +4825,14 @@ static int submit_io(int opcode, char *command, const char *desc,
 		mfd = open(cfg.metadata, flags, mode);
 		if (mfd < 0) {
 			perror(cfg.metadata);
-			err = -EINVAL;
+			errno = EINVAL;
 			goto close_dfd;
 		}
 	}
 
 	if (!cfg.data_size)	{
 		fprintf(stderr, "data size not provided\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_mfd;
 	}
 
@@ -4850,7 +4850,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	buffer = nvme_alloc(buffer_size, &huge);
 	if (!buffer) {
 		perror("can not allocate io payload\n");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_mfd;
 	}
 
@@ -4880,7 +4880,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		mbuffer = malloc(mbuffer_size);
 		if (!mbuffer) {
 			perror("can not allocate buf for io metadata payload\n");
-			err = -ENOMEM;
+			errno = ENOMEM;
 			goto free_buffer;
 		}
 		memset(mbuffer, 0, mbuffer_size);
@@ -4937,12 +4937,12 @@ static int submit_io(int opcode, char *command, const char *desc,
 		if (!(opcode & 1) && write(dfd, (void *)buffer, cfg.data_size) < 0) {
 			fprintf(stderr, "write: %s: failed to write buffer to output file\n",
 					strerror(errno));
-			err = -EINVAL;
+			errno = EINVAL;
 		} else if (!(opcode & 1) && cfg.metadata_size &&
 				write(mfd, (void *)mbuffer, mbuffer_size) < 0) {
 			fprintf(stderr, "write: %s: failed to write meta-data buffer to output file\n",
 					strerror(errno));
-			err = -EINVAL;
+			errno = EINVAL;
 		} else
 			fprintf(stderr, "%s: Success\n", command);
 	}
@@ -4987,7 +4987,7 @@ static int write_cmd(int argc, char **argv, struct command *cmd, struct plugin *
 
 static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int err, fd;
+	int err = -1, fd;
 	__u16 control = 0;
 	const char *desc = "Verify specified logical blocks on the given device.";
 	const char *namespace_id = "desired namespace";
@@ -5042,7 +5042,8 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		goto err;
 
 	if (cfg.prinfo > 0xf) {
-		err = EINVAL;
+		fprintf(stderr, "invalid 'prinfo' param:%u\n", cfg.prinfo);
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -5090,7 +5091,7 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *raw = "dump output in binary format";
 	const char *namespace_id = "desired namespace";
 	const char *nssf = "NVMe Security Specific Field";
-	int err, fd;
+	int err = -1, fd;
 	void *sec_buf = NULL;
 
 	struct config {
@@ -5129,7 +5130,7 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 		if (posix_memalign(&sec_buf, getpagesize(), cfg.size)) {
 			fprintf(stderr, "No memory for security size:%d\n",
 								cfg.size);
-			err = -ENOMEM;
+			errno = ENOMEM;
 			goto close_fd;
 		}
 	}
@@ -5174,7 +5175,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 
 	enum nvme_print_flags flags;
 	unsigned long buf_len;
-	int err, fd;
+	int err = -1, fd;
 	void *buf;
 
 	struct config {
@@ -5218,7 +5219,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 
 	if (!cfg.atype) {
 		fprintf(stderr, "action type (--action) has to be given\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
@@ -5226,7 +5227,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 	buf = calloc(1, buf_len);
 	if (!buf) {
 		perror("could not alloc memory for get lba status");
-		err = -ENOMEM;
+		errno = ENOMEM;
 		goto close_fd;
 	}
 
@@ -5259,7 +5260,7 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 	const char *human_readable = "show directive in readable format";
 
 	enum nvme_print_flags flags = NORMAL;
-	int err, fd;
+	int err = -1, fd;
 	__u32 result;
 	__u32 dw12 = 0;
 	void *buf = NULL;
@@ -5314,7 +5315,7 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 			break;
 		default:
 			fprintf(stderr, "invalid directive operations for Identify Directives\n");
-			err = -EINVAL;
+			errno = EINVAL;
 			goto close_fd;
 		}
 		break;
@@ -5333,19 +5334,19 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 			break;
 		default:
 			fprintf(stderr, "invalid directive operations for Streams Directives\n");
-			err = -EINVAL;
+			errno = EINVAL;
 			goto close_fd;
 		}
 		break;
 	default:
 		fprintf(stderr, "invalid directive type\n");
-		err = -EINVAL;
+		errno = EINVAL;
 		goto close_fd;
 	}
 
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
-			err = -ENOMEM;
+			errno = ENOMEM;
 			goto close_fd;
 		}
 		memset(buf, 0, cfg.data_len);
@@ -5402,7 +5403,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, uint8_t cmd_type,
 	const char *wr = "set dataflow direction to send";
 	const char *prefill = "prefill buffers with known byte-value, default 0";
 	void *data = NULL, *metadata = NULL;
-	int err = 0, wfd = STDIN_FILENO, fd;
+	int err = -1, wfd = STDIN_FILENO, fd;
 	__u32 result;
 	bool huge;
 	const char *cmd_name = NULL;
@@ -5487,7 +5488,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, uint8_t cmd_type,
 			   S_IRUSR | S_IRGRP | S_IROTH);
 		if (wfd < 0) {
 			perror(cfg.input_file);
-			err = -EINVAL;
+			errno = EINVAL;
 			goto close_fd;
 		}
 	}
@@ -5496,7 +5497,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, uint8_t cmd_type,
 		metadata = malloc(cfg.metadata_len);
 		if (!metadata) {
 			perror("can not allocate metadata payload\n");
-			err = -ENOMEM;
+			errno = ENOMEM;
 			goto close_wfd;
 		}
 		memset(metadata, cfg.prefill, cfg.metadata_len);
@@ -5505,7 +5506,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, uint8_t cmd_type,
 		data = nvme_alloc(cfg.data_len, &huge);
 		if (!data) {
 			perror("can not allocate data payload\n");
-			err = -ENOMEM;
+			errno = ENOMEM;
 			goto free_metadata;
 		}
 
@@ -5520,11 +5521,11 @@ static int passthru(int argc, char **argv, int ioctl_cmd, uint8_t cmd_type,
 		memset(data, cfg.prefill, cfg.data_len);
 		if (!cfg.read && !cfg.write) {
 			fprintf(stderr, "data direction not given\n");
-			err = -EINVAL;
+			errno = EINVAL;
 			goto free_data;
 		} else if (cfg.write) {
 			if (read(wfd, data, cfg.data_len) < 0) {
-				err = -errno;
+				errno = errno;
 				fprintf(stderr, "failed to read write buffer "
 						"%s\n", strerror(errno));
 				goto free_data;
