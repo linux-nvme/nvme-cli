@@ -9,6 +9,10 @@
 #ifndef _LIBNVME_PRIVATE_H
 #define _LIBNVME_PRIVATE_H
 
+extern const char *nvme_ctrl_sysfs_dir;
+extern const char *nvme_subsys_sysfs_dir;
+extern const char *nvme_ns_sysfs_dir;
+
 int nvme_set_attr(const char *dir, const char *attr, const char *value);
 
 void json_read_config(nvme_root_t r, const char *config_file);

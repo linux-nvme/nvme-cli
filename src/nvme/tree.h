@@ -20,10 +20,6 @@
 #include "ioctl.h"
 #include "util.h"
 
-extern const char *nvme_ctrl_sysfs_dir;
-extern const char *nvme_subsys_sysfs_dir;
-extern const char *nvme_ns_sysfs_dir;
-
 /**
  *
  */
