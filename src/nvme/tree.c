@@ -132,6 +132,7 @@ struct nvme_host {
 
 struct nvme_root {
 	struct list_head hosts;
+	bool modified;
 };
 
 static inline void nvme_free_dirents(struct dirent **d, int i)
@@ -200,6 +201,13 @@ nvme_root_t nvme_scan(const char *config_file)
 	if (r && config_file)
 		json_read_config(r, config_file);
 	return r;
+}
+
+int nvme_update_config(nvme_root_t r, const char *config_file)
+{
+	if (!r->modified)
+		return 0;
+	return json_update_config(r, config_file);
 }
 
 nvme_host_t nvme_first_host(nvme_root_t r)
@@ -360,6 +368,7 @@ struct nvme_subsystem *nvme_lookup_subsystem(struct nvme_host *h,
 	list_head_init(&s->ctrls);
 	list_head_init(&s->namespaces);
 	list_add(&h->subsystems, &s->entry);
+	h->r->modified = true;
 	return s;
 }
 
@@ -373,6 +382,7 @@ static void nvme_free_host(struct nvme_host *h)
 	free(h->hostnqn);
 	if (h->hostid)
 		free(h->hostid);
+	h->r->modified = true;
 	free(h);
 }
 
@@ -399,6 +409,7 @@ struct nvme_host *nvme_lookup_host(nvme_root_t r, const char *hostnqn,
 	list_node_init(&h->entry);
 	h->r = r;
 	list_add(&r->hosts, &h->entry);
+	r->modified = true;
 
 	return h;
 }
@@ -435,7 +446,8 @@ static int nvme_subsystem_scan_ctrls(struct nvme_subsystem *s)
 	return 0;
 }
 
-int nvme_init_subsystem(nvme_subsystem_t s, const char *name, const char *path)
+static int nvme_init_subsystem(nvme_subsystem_t s, const char *name,
+			       const char *path)
 {
 	s->model = nvme_get_attr(path, "model");
 	if (!s->model) {
@@ -693,6 +705,7 @@ struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
 void nvme_ctrl_disable_sqflow(nvme_ctrl_t c, bool disable_sqflow)
 {
 	c->cfg.disable_sqflow = disable_sqflow;
+	c->s->h->r->modified = true;
 }
 
 void nvme_ctrl_set_discovered(nvme_ctrl_t c, bool discovered)
@@ -888,6 +901,7 @@ struct nvme_ctrl *nvme_lookup_ctrl(struct nvme_subsystem *s,
 	if (c) {
 		c->s = s;
 		list_add(&s->ctrls, &c->entry);
+		s->h->r->modified = true;
 	}
 	return c;
 }

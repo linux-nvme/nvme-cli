@@ -975,6 +975,15 @@ void nvme_refresh_topology(nvme_root_t r);
 void nvme_reset_topology(nvme_root_t r);
 
 /**
+ * nvme_update_config() -
+ * @r:
+ * @config_file:
+ *
+ * Return:
+ */
+int nvme_update_config(nvme_root_t r, const char *config_file);
+
+/**
  * nvme_free_tree() -
  * @r:
  */

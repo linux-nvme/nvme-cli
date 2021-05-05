@@ -227,11 +227,12 @@ static void json_update_subsys(struct json_object *subsys_array,
 	json_object_array_add(subsys_array, subsys_obj);
 }
 
-void json_update_config(nvme_root_t r, const char *config_file)
+int json_update_config(nvme_root_t r, const char *config_file)
 {
 	nvme_host_t h;
 	struct json_object *json_root, *host_obj;
 	struct json_object *subsys_array;
+	int ret = 0;
 
 	json_root = json_object_new_array();
 	nvme_for_each_host(r, h) {
@@ -260,6 +261,10 @@ void json_update_config(nvme_root_t r, const char *config_file)
 				    JSON_C_TO_STRING_PRETTY) < 0) {
 		fprintf(stderr, "Failed to write %s, %s\n",
 			config_file, json_util_get_last_err());
+		ret = -1;
+		errno = EIO;
 	}
 	json_object_put(json_root);
+
+	return ret;
 }
