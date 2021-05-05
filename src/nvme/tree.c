@@ -23,13 +23,10 @@
 #include "filters.h"
 #include "util.h"
 #include "fabrics.h"
-
-/* XXX: Make a place for private declarations */
-extern int nvme_set_attr(const char *dir, const char *attr, const char *value);
+#include "private.h"
 
 static struct nvme_host *default_host;
 
-nvme_host_t nvme_default_host(nvme_root_t r);
 static void nvme_free_host(struct nvme_host *h);
 static void nvme_free_subsystem(struct nvme_subsystem *s);
 static int nvme_subsystem_scan_namespace(struct nvme_subsystem *s, char *name);
@@ -196,9 +193,13 @@ nvme_root_t nvme_scan_filter(nvme_scan_filter_t f)
 	return r;
 }
 
-nvme_root_t nvme_scan()
+nvme_root_t nvme_scan(const char *config_file)
 {
-	return nvme_scan_filter(NULL);
+	nvme_root_t r = nvme_scan_filter(NULL);
+
+	if (r && config_file)
+		json_read_config(r, config_file);
+	return r;
 }
 
 nvme_host_t nvme_first_host(nvme_root_t r)

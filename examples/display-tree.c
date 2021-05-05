@@ -22,7 +22,7 @@ int main()
 	nvme_path_t p, _p;
 	nvme_ns_t n, _n;
 
-	r = nvme_scan();
+	r = nvme_scan(NULL);
 	if (!r)
 		return -1;
 

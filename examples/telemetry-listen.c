@@ -129,7 +129,7 @@ int main()
 	nvme_host_t h;
 	nvme_root_t r;
 
-	r = nvme_scan();
+	r = nvme_scan(NULL);
 	if (!r)
 		return EXIT_FAILURE;
 

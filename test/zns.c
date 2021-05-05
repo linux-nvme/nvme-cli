@@ -61,7 +61,7 @@ int main()
 	nvme_ctrl_t c;
 	nvme_ns_t n;
 
-	r = nvme_scan();
+	r = nvme_scan(NULL);
 	if (!r)
 		return -1;
 

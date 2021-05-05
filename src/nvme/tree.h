@@ -947,11 +947,20 @@ const char *nvme_host_get_hostnqn(nvme_host_t h);
 const char *nvme_host_get_hostid(nvme_host_t h);
 
 /**
+ * nvme_default_host() -
+ * @root:
+ *
+ * Return:
+ */
+nvme_host_t nvme_default_host(nvme_root_t r);
+
+/**
  * nvme_scan() -
+ * @config_file:
  *
  * Return: 
  */
-nvme_root_t nvme_scan(void);
+nvme_root_t nvme_scan(const char *config_file);
 
 /**
  * nvme_refresh_topology() -

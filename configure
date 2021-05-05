@@ -31,6 +31,8 @@ for opt do
   ;;
   --disable-uuid) disable_uuid=1
   ;;
+  --disable-json) disable_json=1
+  ;;
   *)
     echo "ERROR: unkown option $opt"
     echo "Try '$0 --help' for more information"
@@ -68,6 +70,7 @@ Options: [defaults in brackets after descriptions]
   --datadir=PATH           install shared data in PATH [$datadir]
   --disable-systemd        do not link against libsystemd
   --disable-uuid           do not link against libuuid
+  --disable-json           do not link against libjson-c
 EOF
 exit 0
 fi
@@ -203,6 +206,17 @@ fi
 print_config "systemd" "${systemd}"
 
 ##########################################
+# check for libjson-c
+libjsonc="no"
+if [ -z "$disable_json" ] ; then
+    ${ld} -o /dev/null -ljson-c >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+	libjsonc="yes"
+    fi
+fi
+print_config "libjson-c" "${libjsonc}"
+
+##########################################
 # check for c++
 cpp="no"
 which g++ > /dev/null 2> /dev/null
@@ -220,6 +234,11 @@ fi
 if test "$systemd" = "yes"; then
   output_sym "CONFIG_SYSTEMD"
   echo "override LDFLAGS += -lsystemd" >> $config_host_mak
+fi
+if test "$libjsonc" = "yes"; then
+    output_sym "CONFIG_JSONC"
+    echo "override LDFLAGS += -ljson-c" >> $config_host_mak
+    echo "override LIB_DEPENDS += json-c" >> $config_host_mak
 fi
 if test "$cpp" = "yes"; then
   output_mak "CONFIG_CPLUSPLUS" "y"

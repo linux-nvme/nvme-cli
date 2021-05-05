@@ -18,7 +18,7 @@ int main()
 	nvme_path_t p;
 	nvme_ns_t n;
 
-	r = nvme_scan();
+	r = nvme_scan(NULL);
 	if (!r)
 		return -1;
 

@@ -50,17 +50,14 @@ int main()
 	nvme_root_t r;
 	nvme_host_t h;
 	nvme_ctrl_t c;
-	char *hnqn, *hid;
 	int ret;
 
 	struct nvme_fabrics_config cfg = {
 		.tos = -1,
 	};
 
-	r = nvme_scan();
-	hnqn = nvmf_hostnqn_from_file();
-	hid = nvmf_hostid_from_file();
-	h = nvme_lookup_host(r, hnqn, hid);
+	r = nvme_scan(NULL);
+	h = nvme_default_host(r);
 	if (!h) {
 		fprintf(stderr, "Failed to allocated memory\n");
 		return ENOMEM;
@@ -86,6 +83,5 @@ int main()
 		print_discover_log(log);
 
 	nvme_free_tree(r);
-	free(hnqn);
 	return 0;
 }

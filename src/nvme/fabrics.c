@@ -31,6 +31,7 @@
 #include "fabrics.h"
 #include "ioctl.h"
 #include "util.h"
+#include "private.h"
 
 #define NVMF_HOSTID_SIZE	37
 

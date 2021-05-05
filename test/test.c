@@ -342,7 +342,7 @@ int main(int argc, char **argv)
 	printf("\n");
 	nvme_free_tree(r);
 
-	r = nvme_scan();
+	r = nvme_scan(NULL);
 	if (!r)
 		return -1;
 
