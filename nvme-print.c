@@ -11,6 +11,13 @@
 #include "util/suffix.h"
 #include "common.h"
 
+#define ABSOLUTE_ZERO_CELSIUS -273
+
+static inline long kelvin_to_celsius(long t)
+{
+	return t + ABSOLUTE_ZERO_CELSIUS;
+}
+
 static const uint8_t zero_uuid[16] = { 0 };
 static const uint8_t invalid_uuid[16] = {[0 ... 15] = 0xff };
 static const char dash[100] = {[0 ... 99] = '-'};
@@ -2910,6 +2917,20 @@ static void nvme_show_id_ctrl_apsta(__u8 apsta)
 	printf("\n");
 }
 
+static void nvme_show_id_ctrl_wctemp(__le16 wctemp)
+{
+	printf(" [16:0] : %ld C (%u Kelvin)\tWarning temperature (WCTEMP)\n",
+	       kelvin_to_celsius(le16_to_cpu(wctemp)), le16_to_cpu(wctemp));
+	printf("\n");
+}
+
+static void nvme_show_id_ctrl_cctemp(__le16 cctemp)
+{
+	printf(" [16:0] : %ld C (%u Kelvin)\tCritical temperature (CCTEMP)\n",
+	       kelvin_to_celsius(le16_to_cpu(cctemp)), le16_to_cpu(cctemp));
+	printf("\n");
+}
+
 void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
 {
 	__u32 rpmbs = le32_to_cpu(ctrl_rpmbs);
@@ -3702,7 +3723,7 @@ static void nvme_show_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 			void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
-	int human = flags & VERBOSE, vs = flags & VS;
+	bool human = flags & VERBOSE, vs = flags & VS;
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ctrl, sizeof(*ctrl));
@@ -3761,7 +3782,11 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_apsta(ctrl->apsta);
 	printf("wctemp    : %d\n", le16_to_cpu(ctrl->wctemp));
+	if (human)
+		nvme_show_id_ctrl_wctemp(ctrl->wctemp);
 	printf("cctemp    : %d\n", le16_to_cpu(ctrl->cctemp));
+	if (human)
+		nvme_show_id_ctrl_cctemp(ctrl->cctemp);
 	printf("mtfa      : %d\n", le16_to_cpu(ctrl->mtfa));
 	printf("hmpre     : %d\n", le32_to_cpu(ctrl->hmpre));
 	printf("hmmin     : %d\n", le32_to_cpu(ctrl->hmmin));
@@ -4771,10 +4796,9 @@ void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
 void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 			 const char *devname, enum nvme_print_flags flags)
 {
-	/* convert temperature from Kelvin to Celsius */
-	int temperature = ((smart->temperature[1] << 8) |
-			    smart->temperature[0]) - 273;
-	int i, human = flags & VERBOSE;
+	__u16 temperature = smart->temperature[1] << 8 | smart->temperature[0];
+	int i;
+	bool human = flags & VERBOSE;
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)smart, sizeof(*smart));
@@ -4794,8 +4818,8 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		printf("      Persistent Mem. RO[5]          : %d\n", (smart->critical_warning & 0x20) >> 5);
 	}
 
-	printf("temperature				: %d C\n",
-		temperature);
+	printf("temperature				: %ld C (%u Kelvin)\n",
+		kelvin_to_celsius(temperature), temperature);
 	printf("available_spare				: %u%%\n",
 		smart->avail_spare);
 	printf("available_spare_threshold		: %u%%\n",
@@ -4833,8 +4857,8 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 
 		if (temp == 0)
 			continue;
-		printf("Temperature Sensor %d           : %d C\n", i + 1,
-			temp - 273);
+		printf("Temperature Sensor %d           : %ld C (%u Kelvin)\n",
+		       i + 1, kelvin_to_celsius(temp), temp);
 	}
 	printf("Thermal Management T1 Trans Count	: %u\n",
 		le32_to_cpu(smart->thm_temp1_trans_count));
@@ -5592,7 +5616,8 @@ static const char *nvme_plm_window(__u32 plm)
 	}
 }
 
-void nvme_show_lba_status_info(__u32 result) {
+void nvme_show_lba_status_info(__u32 result)
+{
 	printf("\tLBA Status Information Poll Interval (LSIPI)	: %u\n", (result >> 16) & 0xffff);
 	printf("\tLBA Status Information Report Interval (LSIRI): %u\n", result & 0xffff);
 }
@@ -5605,15 +5630,16 @@ static void nvme_show_plm_config(struct nvme_plm_config *plmcfg)
 	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_time_thresh));
 }
 
-void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned char *buf)
+void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result,
+			      unsigned char *buf)
 {
 	__u8 field;
 	uint64_t ull;
 
 	switch (fid) {
-      case NVME_FEAT_NONE:
-              printf("\tFeature Identifier Reserved\n");
-              break;
+	case NVME_FEAT_NONE:
+		printf("\tFeature Identifier Reserved\n");
+		break;
 	case NVME_FEAT_ARBITRATION:
 		printf("\tHigh Priority Weight   (HPW): %u\n", ((result & 0xff000000) >> 24) + 1);
 		printf("\tMedium Priority Weight (MPW): %u\n", ((result & 0x00ff0000) >> 16) + 1);
@@ -5639,7 +5665,8 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned 
 		printf("\tThreshold Type Select         (THSEL): %u - %s\n", field, nvme_feature_temp_type_to_string(field));
 		field = (result & 0x000f0000) >> 16;
 		printf("\tThreshold Temperature Select (TMPSEL): %u - %s\n", field, nvme_feature_temp_sel_to_string(field));
-		printf("\tTemperature Threshold         (TMPTH): %d C\n", (result & 0x0000ffff) - 273);
+		printf("\tTemperature Threshold         (TMPTH): %ld C (%u Kelvin)\n",
+		       kelvin_to_celsius(result & 0x0000ffff), result & 0x0000ffff);
 		break;
 	case NVME_FEAT_ERR_RECOVERY:
 		printf("\tDeallocated or Unwritten Logical Block Error Enable (DULBE): %s\n", ((result & 0x00010000) >> 16) ? "Enabled":"Disabled");
@@ -5694,10 +5721,10 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned 
 	case NVME_LBA_STATUS_INFO:
 		nvme_show_lba_status_info(result);
 		break;
-      case NVME_FEAT_ENDURANCE:
-              printf("\tEndurance Group Identifier (ENDGID): %u\n", result & 0xffff);
-              printf("\tEndurance Group Critical Warnings  : %u\n", (result >> 16) & 0xff);
-              break;
+	case NVME_FEAT_ENDURANCE:
+		printf("\tEndurance Group Identifier (ENDGID): %u\n", result & 0xffff);
+		printf("\tEndurance Group Critical Warnings  : %u\n", (result >> 16) & 0xff);
+		break;
 	case NVME_FEAT_IOCS_PROFILE:
 		printf("\tI/O Command Set Comination Index(IOCSCI): %u\n", result & 0x1ff);
 		break;
@@ -5722,8 +5749,10 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned 
 		nvme_show_timestamp((struct nvme_timestamp *)buf);
 		break;
 	case NVME_FEAT_HCTM:
-		printf("\tThermal Management Temperature 1 (TMT1) : %u Kelvin\n", (result >> 16));
-		printf("\tThermal Management Temperature 2 (TMT2) : %u Kelvin\n", (result & 0x0000ffff));
+		printf("\tThermal Management Temperature 1 (TMT1) : %u Kelvin (%ld C)\n",
+		       result >> 16, kelvin_to_celsius(result >> 16));
+		printf("\tThermal Management Temperature 2 (TMT2) : %u Kelvin (%ld C)\n",
+		       result & 0x0000ffff, kelvin_to_celsius(result & 0x0000ffff));
 		break;
 	case NVME_FEAT_KATO:
 		printf("\tKeep Alive Timeout (KATO) in milliseconds: %u\n", result);
