@@ -558,7 +558,7 @@ _nvme () {
 			-p':alias for --prkey'
 			--rtype=':hexadecimal reservation type'
 			-t':alias for --rtype'
-			--racqa=':reservation acquiry action'
+			--racqa=':reservation acquire action'
 			-a':alias for --racqa'
 			--iekey=':ignore existing reservation key'
 			-i':alias for --iekey'
@@ -611,7 +611,7 @@ _nvme () {
 			--cptpl=':change persistence through power loss setting'
 			-p':alias for --cptpl'
 			--rrega=':reservation registration action to perform'
-			-a':alias for --rrega'
+			-r':alias for --rrega'
 			--iekey':ignore existing reservation key'
 			-i':alias for --iekey'
 			)

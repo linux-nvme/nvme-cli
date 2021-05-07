@@ -4384,7 +4384,7 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 	const char *crkey = "current reservation key";
 	const char *prkey = "pre-empt reservation key";
 	const char *rtype = "reservation type";
-	const char *racqa = "reservation acquiry action";
+	const char *racqa = "reservation acquire action";
 	const char *iekey = "ignore existing res. key";
 	int err, fd;
 
