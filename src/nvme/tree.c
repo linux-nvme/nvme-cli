@@ -131,6 +131,7 @@ struct nvme_host {
 };
 
 struct nvme_root {
+	char *config_file;
 	struct list_head hosts;
 	bool modified;
 };
@@ -198,16 +199,18 @@ nvme_root_t nvme_scan(const char *config_file)
 {
 	nvme_root_t r = nvme_scan_filter(NULL);
 
-	if (r && config_file)
+	if (r && config_file) {
 		json_read_config(r, config_file);
+		r->config_file = strdup(config_file);
+	}
 	return r;
 }
 
-int nvme_update_config(nvme_root_t r, const char *config_file)
+int nvme_update_config(nvme_root_t r)
 {
-	if (!r->modified)
+	if (!r->modified || !r->config_file)
 		return 0;
-	return json_update_config(r, config_file);
+	return json_update_config(r, r->config_file);
 }
 
 nvme_host_t nvme_first_host(nvme_root_t r)
@@ -269,6 +272,8 @@ void nvme_free_tree(nvme_root_t r)
 
 	nvme_for_each_host_safe(r, h, _h)
 		nvme_free_host(h);
+	if (r->config_file)
+		free(r->config_file);
 	free(r);
 }
 
