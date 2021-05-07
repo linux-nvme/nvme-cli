@@ -856,12 +856,12 @@ void nvme_ctrl_disable_sqflow(nvme_ctrl_t c, bool disable_sqflow);
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id);
 
 /**
- * nvme_ctrl_disconnect() -
+ * nvme_disconnect_ctrl() -
  * @c:
  *
  * Return: 
  */
-int nvme_ctrl_disconnect(nvme_ctrl_t c);
+int nvme_disconnect_ctrl(nvme_ctrl_t c);
 
 /**
  * nvme_scan_ctrl() -

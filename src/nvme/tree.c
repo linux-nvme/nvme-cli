@@ -687,7 +687,7 @@ nvme_path_t nvme_ctrl_next_path(nvme_ctrl_t c, nvme_path_t p)
 
 #define FREE_CTRL_ATTR(a) \
 	do { if (a) { free(a); (a) = NULL; } } while (0)
-int nvme_ctrl_disconnect(nvme_ctrl_t c)
+int nvme_disconnect_ctrl(nvme_ctrl_t c)
 {
 	int ret;
 

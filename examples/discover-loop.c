@@ -75,7 +75,7 @@ int main()
 	}
 
 	ret = nvmf_get_discovery_log(c, &log, 4);
-	nvme_ctrl_disconnect(c);
+	nvme_disconnect_ctrl(c);
 	nvme_free_ctrl(c);
 
 	if (ret)
