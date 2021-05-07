@@ -62,7 +62,7 @@ are cleared on a power on.
 a power loss.
 |=================
 
--a <rrega>::
+-r <rrega>::
 --rrega=<rrega>::
 	Reservation Register Action: This field specifies the registration
 	action that is performed by the command.
