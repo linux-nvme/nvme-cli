@@ -5631,7 +5631,7 @@ static void nvme_show_plm_config(struct nvme_plm_config *plmcfg)
 }
 
 void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result,
-			      unsigned char *buf)
+			      unsigned char *buf, __u32 cdw11)
 {
 	__u8 field;
 	uint64_t ull;
@@ -5661,9 +5661,9 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result,
 		nvme_show_lba_range((struct nvme_lba_range_type *)buf, field);
 		break;
 	case NVME_FEAT_TEMP_THRESH:
-		field = (result & 0x00300000) >> 20;
+		field = (cdw11 & 0x00300000) >> 20;
 		printf("\tThreshold Type Select         (THSEL): %u - %s\n", field, nvme_feature_temp_type_to_string(field));
-		field = (result & 0x000f0000) >> 16;
+		field = (cdw11 & 0x000f0000) >> 16;
 		printf("\tThreshold Temperature Select (TMPSEL): %u - %s\n", field, nvme_feature_temp_sel_to_string(field));
 		printf("\tTemperature Threshold         (TMPTH): %ld C (%u Kelvin)\n",
 		       kelvin_to_celsius(result & 0x0000ffff), result & 0x0000ffff);

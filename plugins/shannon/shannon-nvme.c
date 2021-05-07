@@ -238,7 +238,8 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 				nvme_feature_to_string(cfg.feature_id),
 				nvme_select_to_string(cfg.sel), result);
 		if (cfg.human_readable)
-			nvme_feature_show_fields(cfg.feature_id, result, buf);
+			nvme_feature_show_fields(cfg.feature_id, result, buf,
+						 cfg.cdw11);
 		else {
 			if (buf) {
 				if (!cfg.raw_binary)
