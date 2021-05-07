@@ -2853,14 +2853,14 @@ static void nvme_show_id_ctrl_apsta(__u8 apsta)
 
 static void nvme_show_id_ctrl_wctemp(__le16 wctemp)
 {
-	printf(" [16:0] : %ld C (%u Kelvin)\tWarning temperature (WCTEMP)\n",
+	printf(" [15:0] : %ld C (%u Kelvin)\tWarning temperature (WCTEMP)\n",
 	       kelvin_to_celsius(le16_to_cpu(wctemp)), le16_to_cpu(wctemp));
 	printf("\n");
 }
 
 static void nvme_show_id_ctrl_cctemp(__le16 cctemp)
 {
-	printf(" [16:0] : %ld C (%u Kelvin)\tCritical temperature (CCTEMP)\n",
+	printf(" [15:0] : %ld C (%u Kelvin)\tCritical temperature (CCTEMP)\n",
 	       kelvin_to_celsius(le16_to_cpu(cctemp)), le16_to_cpu(cctemp));
 	printf("\n");
 }
