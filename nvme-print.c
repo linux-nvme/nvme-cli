@@ -2895,6 +2895,20 @@ static void nvme_show_id_ctrl_lpa(__u8 lpa)
 	printf("\n");
 }
 
+static void nvme_show_id_ctrl_elpe(__u8 elpe)
+{
+	printf("  [7:0] : %d (0's based)\tError Log Page Entries (ELPE)\n",
+	       elpe);
+	printf("\n");
+}
+
+static void nvme_show_id_ctrl_npss(__u8 npss)
+{
+	printf("  [7:0] : %d (0's based)\tNumber of Power States Support (NPSS)\n",
+	       npss);
+	printf("\n");
+}
+
 static void nvme_show_id_ctrl_avscc(__u8 avscc)
 {
 	__u8 rsvd = (avscc & 0xFE) >> 1;
@@ -2928,6 +2942,20 @@ static void nvme_show_id_ctrl_cctemp(__le16 cctemp)
 {
 	printf(" [15:0] : %ld°C (%u Kelvin)\tCritical Composite Temperature Threshold (CCTEMP)\n",
 	       kelvin_to_celsius(le16_to_cpu(cctemp)), le16_to_cpu(cctemp));
+	printf("\n");
+}
+
+static void nvme_show_id_ctrl_tnvmcap(__u8 *tnvmcap)
+{
+	printf("[127:0] : %.0Lf\tTotal NVM Capacity (TNVMCAP)\n",
+	       int128_to_double(tnvmcap));
+	printf("\n");
+}
+
+static void nvme_show_id_ctrl_unvmcap(__u8 *unvmcap)
+{
+	printf("[127:0] : %.0Lf\tUnallocated NVM Capacity (UNVMCAP)\n",
+	       int128_to_double(unvmcap));
 	printf("\n");
 }
 
@@ -3788,7 +3816,11 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_lpa(ctrl->lpa);
 	printf("elpe      : %d\n", ctrl->elpe);
+	if (human)
+		nvme_show_id_ctrl_elpe(ctrl->elpe);
 	printf("npss      : %d\n", ctrl->npss);
+	if (human)
+		nvme_show_id_ctrl_npss(ctrl->npss);
 	printf("avscc     : %#x\n", ctrl->avscc);
 	if (human)
 		nvme_show_id_ctrl_avscc(ctrl->avscc);
@@ -3805,7 +3837,11 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("hmpre     : %d\n", le32_to_cpu(ctrl->hmpre));
 	printf("hmmin     : %d\n", le32_to_cpu(ctrl->hmmin));
 	printf("tnvmcap   : %.0Lf\n", int128_to_double(ctrl->tnvmcap));
+	if (human)
+		nvme_show_id_ctrl_tnvmcap(ctrl->tnvmcap);
 	printf("unvmcap   : %.0Lf\n", int128_to_double(ctrl->unvmcap));
+	if (human)
+		nvme_show_id_ctrl_unvmcap(ctrl->unvmcap);
 	printf("rpmbs     : %#x\n", le32_to_cpu(ctrl->rpmbs));
 	if (human)
 		nvme_show_id_ctrl_rpmbs(ctrl->rpmbs);
