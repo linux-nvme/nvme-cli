@@ -2896,6 +2896,20 @@ static void nvme_show_id_ctrl_hctma(__le16 ctrl_hctma)
 	printf("\n");
 }
 
+static void nvme_show_id_ctrl_mntmt(__le16 mntmt)
+{
+	printf(" [15:0] : %ld°C (%u Kelvin)\tMinimum Thermal Management Temperature (MNTMT)\n",
+	       kelvin_to_celsius(le16_to_cpu(mntmt)), le16_to_cpu(mntmt));
+	printf("\n");
+}
+
+static void nvme_show_id_ctrl_mxtmt(__le16 mxtmt)
+{
+	printf(" [15:0] : %ld°C (%u Kelvin)\tMaximum Thermal Management Temperature (MXTMT)\n",
+	       kelvin_to_celsius(le16_to_cpu(mxtmt)), le16_to_cpu(mxtmt));
+	printf("\n");
+}
+
 static void nvme_show_id_ctrl_sanicap(__le32 ctrl_sanicap)
 {
 	__u32 sanicap = le32_to_cpu(ctrl_sanicap);
@@ -3740,7 +3754,11 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_hctma(ctrl->hctma);
 	printf("mntmt     : %d\n", le16_to_cpu(ctrl->mntmt));
+	if (human)
+		nvme_show_id_ctrl_mntmt(ctrl->mntmt);
 	printf("mxtmt     : %d\n", le16_to_cpu(ctrl->mxtmt));
+	if (human)
+		nvme_show_id_ctrl_mxtmt(ctrl->mxtmt);
 	printf("sanicap   : %#x\n", le32_to_cpu(ctrl->sanicap));
 	if (human)
 		nvme_show_id_ctrl_sanicap(ctrl->sanicap);
