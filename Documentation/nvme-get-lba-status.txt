@@ -1,0 +1,82 @@
+nvme-get-lba-status(1)
+======================
+
+NAME
+----
+nvme-get-lba-status - Get LBA Status from NVMe device
+
+SYNOPSIS
+--------
+[verse]
+'nvme get-lba-status' <device> [--namespace-id=<nsid> | -n <nsid>]
+		    [--start-lba=<slba> | -s <slba>]
+		    [--max-dw=<max-dw> | -m <max-dw>]
+		    [--action=<action-type> | -a <action-type>]
+		    [--range-len=<range-len> | -l <range-len>]
+		    [--timeout=<timeout> | -t <timeout> ]
+                   [--output-format=<format> | -o <format>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, send an nvme Get LBA Status admin command
+and provides the results.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned get lba data structure may be returned in one of
+several ways depending on the option flags; the structure may parsed by
+the program and printed in a readable format or the raw buffer may be
+printed to stdout for another program to parse.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Send the Get LBA Status command for the specified nsid. This can be
+	used to override the default value for either character device
+	(unspecified) or the block device (result from NVME_IOCTL_ID).
+
+-s <slba>::
+--start-lba=<slba>::
+	Starting LBA(SLBA) in 64-bit address of the first logical block addressed
+
+-m <max-dw>::
+--max-dw=<max-dw>::
+	Maximum Number of Dwords(MNDW) specifies maximum number of dwords to return
+
+-a <action-type>::
+--action=<action-type>::
+	Action Type(ATYPE) specifies the mechanism it uses in determining the LBA Status Descriptors.
+
+-l <range-len>::
+--range-len=<range-len>::
+	Range Length(RL) specifies the length of the range of contiguous LBAs beginning at SLBA
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
+
+-o <format>::
+--output-format=<format>::
+              Set the reporting format to 'normal', 'json', or
+              'binary'. Only one output format can be used at a time.
+
+EXAMPLES
+--------
+* Get the LBA Status of the device using all defaults:
++
+------------
+# nvme get-lba-status /dev/nvme0n1
+------------
++
+
+* Get LBA Status of the namespace 1 from SLBA 10 for the max Dwords of 0x1000
++
+------------
+# nvme get-lba-status /dev/nvme0 --namespace-id=1 --start-lba=10 --max-dw=0x1000
+------------
+
+NVME
+----
+Part of the nvme-user suite

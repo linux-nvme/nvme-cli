@@ -5165,7 +5165,7 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 			    " logical block addressed by this command";
 	const char *mndw = "Maximum Number of Dwords(MNDW) specifies maximum"\
 			    " number of dwords to return";
-	const char *atype = "Action Type(ATYPE) specifies the mechanism the"\
+	const char *atype = "Action Type(ATYPE) specifies the mechanism"\
 			     " the controller uses in determining the LBA"\
 			     " Status Descriptors to return.";
 	const char *rl = "Range Length(RL) specifies the length of the range"\
