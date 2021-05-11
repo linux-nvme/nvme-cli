@@ -242,7 +242,8 @@ static int build_options(nvme_ctrl_t c, char **argstr)
 	    (strcmp(transport, "loop") &&
 	     add_int_argument(argstr, "ctrl_loss_tmo",
 			      cfg->ctrl_loss_tmo, false)) ||
-	    add_int_argument(argstr, "tos", cfg->tos, true) ||
+	    (strcmp(transport, "loop") &&
+	     add_int_argument(argstr, "tos", cfg->tos, true)) ||
 	    add_bool_argument(argstr, "duplicate_connect",
 			      cfg->duplicate_connect) ||
 	    add_bool_argument(argstr, "disable_sqflow",
