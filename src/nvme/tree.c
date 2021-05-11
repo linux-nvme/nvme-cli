@@ -1096,7 +1096,7 @@ static int __nvme_ctrl_init(nvme_ctrl_t c, const char *path, const char *name)
 int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 {
 	nvme_subsystem_t s;
-	const char *subsys_name;
+	char *subsys_name = NULL;
 	char *path, *name;
 	int ret;
 
@@ -1128,9 +1128,18 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 	if (!s) {
 		errno = ENXIO;
 		ret = -1;
+	} else if (!s->name) {
+		ret = asprintf(&path, "%s/%s", nvme_subsys_sysfs_dir,
+			       subsys_name);
+		if (ret > 0) {
+			ret = nvme_init_subsystem(s, subsys_name, path);
+			if (ret < 0)
+				free(path);
+		}
 	}
 	c->s = s;
 	list_add(&s->ctrls, &c->entry);
+	free(subsys_name);
 	free(name);
 	return ret;
 }
