@@ -239,7 +239,7 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme pred-lat-event-agg-log options" _predlateventagglog
 			;;
-		(predictablelatlog)
+		(predictable-lat-log)
 			local _predictablelatlog
 			_predictablelatlog=(
 			/dev/nvme':supply a device to use (required)'
