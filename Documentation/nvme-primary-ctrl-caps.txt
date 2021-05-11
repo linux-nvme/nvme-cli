@@ -1,0 +1,53 @@
+nvme-primary-ctrl-caps(1)
+=========================
+
+NAME
+----
+nvme-primary-ctrl-caps - Send identify Primary Controller Caps, return result and structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme primary-ctrl-caps' <device> [-o <format> | --output-format=<format>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends an identify primary Controller caps command and
+provides the result and returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the structure may be returned in one of several ways depending
+on the option flags; the structure may be parsed by the program or the
+raw buffer may be printed to stdout.
+
+OPTIONS
+-------
+-o <format>::
+--output-format=<format>::
+              Set the reporting format to 'normal', 'json', or
+              'binary'. Only one output format can be used at a time.
+
+-H::
+--human-readable::
+	This option will parse and format many of the bit fields
+	into human-readable formats.
+
+EXAMPLES
+--------
+* Get Primary Ctrl Caps of the device in default format
++
+------------
+# nvme primary-ctrl-caps /dev/nvme0
+------------
+* Has the program interpret the returned buffer and display the known
+fields in a human readable format:
++
+------------
+# nvme primary-ctrl-caps /dev/nvme0 --human-readbale
+# nvme primary-ctrl-caps /dev/nvme0 -H
+------------
+NVME
+----
+Part of the nvme-user suite
