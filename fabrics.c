@@ -38,6 +38,8 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <net/if.h>
+#include <limits.h>
 
 #include "util/parser.h"
 #include "nvme-ioctl.h"
@@ -1038,16 +1040,115 @@ static void discovery_trsvcid(struct fabrics_config *fabrics_cfg)
 	}
 }
 
+static int inet4_pton(const char *src, uint16_t port, struct sockaddr_storage *addr)
+{
+	struct sockaddr_in *addr4 = (struct sockaddr_in *)addr;
+
+	if (strlen(src) > INET_ADDRSTRLEN)
+		return -EINVAL;
+
+	if (inet_pton(AF_INET, src, &addr4->sin_addr.s_addr) <= 0)
+		return -EINVAL;
+
+	addr4->sin_family = AF_INET;
+	addr4->sin_port = htons(port);
+
+	return 0;
+}
+
+static int inet6_pton(const char *src, uint16_t port, struct sockaddr_storage *addr)
+{
+	int ret = -EINVAL;
+	struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)addr;
+
+	if (strlen(src) > INET6_ADDRSTRLEN)
+		return -EINVAL;
+
+	char  *tmp = strdup(src);
+	if (!tmp)
+		msg(LOG_ERR, "cannot copy: %s\n", src);
+
+	const char *scope = NULL;
+	char *p = strchr(tmp, SCOPE_DELIMITER);
+	if (p) {
+		*p = '\0';
+		scope = src + (p - tmp) + 1;
+	}
+
+	if (inet_pton(AF_INET6, tmp, &addr6->sin6_addr) != 1)
+		goto free_tmp;
+
+	if (IN6_IS_ADDR_LINKLOCAL(&addr6->sin6_addr) && scope) {
+		addr6->sin6_scope_id = if_nametoindex(scope);
+		if (addr6->sin6_scope_id == 0) {
+			msg(LOG_ERR, "can't find iface index for: %s (%m)\n", scope);
+			goto free_tmp;
+		}
+	}
+
+	addr6->sin6_family = AF_INET6;
+	addr6->sin6_port = htons(port);
+	ret = 0;
+
+free_tmp:
+	free(tmp);
+	return ret;
+}
+
+/**
+ * inet_pton_with_scope - convert an IPv4/IPv6 to socket address
+ * @af: address family, AF_INET, AF_INET6 or AF_UNSPEC for either
+ * @src: the start of the address string
+ * @addr: output socket address
+ *
+ * Return 0 on success, errno otherwise.
+ */
+static int inet_pton_with_scope(int af, const char *src,
+				const char * trsvcid, struct sockaddr_storage *addr)
+{
+	int      ret  = -EINVAL;
+	uint16_t port = 0;
+
+	if (trsvcid) {
+		unsigned long long tmp = strtoull(trsvcid, NULL, 0);
+		port = (uint16_t)tmp;
+		if (tmp != port) {
+			msg(LOG_ERR, "trsvcid out of range: %s\n", trsvcid);
+			return -ERANGE;
+		}
+	} else {
+		port = 0;
+	}
+
+	switch (af) {
+	case AF_INET:
+		ret = inet4_pton(src, port, addr);
+		break;
+	case AF_INET6:
+		ret = inet6_pton(src, port, addr);
+		break;
+	case AF_UNSPEC:
+		ret = inet4_pton(src, port, addr);
+		if (ret)
+			ret = inet6_pton(src, port, addr);
+		break;
+	default:
+		msg(LOG_ERR, "unexpected address family %d\n", af);
+	}
+
+	return ret;
+}
+
 static bool traddr_is_hostname(struct fabrics_config *fabrics_cfg)
 {
-	char addrstr[NVMF_TRADDR_SIZE];
+	struct sockaddr_storage addr;
 
 	if (!fabrics_cfg->traddr || !fabrics_cfg->transport)
 		return false;
 	if (strcmp(fabrics_cfg->transport, "tcp") && strcmp(fabrics_cfg->transport, "rdma"))
 		return false;
-	if (inet_pton(AF_INET, fabrics_cfg->traddr, addrstr) > 0 ||
-	    inet_pton(AF_INET6, fabrics_cfg->traddr, addrstr) > 0)
+	if (inet_pton_with_scope(AF_UNSPEC, fabrics_cfg->traddr,
+				 fabrics_cfg->trsvcid, &addr) == 0)
 		return false;
 	return true;
 }
