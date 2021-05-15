@@ -1984,7 +1984,7 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 	} else if (type == WDC_TELEMETRY_TYPE_CONTROLLER) {
 		/* Verify the Controller Initiated Option is enabled */
 		err = nvme_get_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 0, 0,
-				4, buf, &result);
+				0, 4, buf, &result);
 		if (err == 0) {
 			if (result == 0) {
 				/* enabled */
@@ -5203,7 +5203,7 @@ static int wdc_do_clear_pcie_correctable_errors_fid(int fd)
 	__u32 value = 1 << 31; /* Bit 31 - clear PCIe correctable count */
 
 	ret = nvme_set_feature(fd, 0, WDC_NVME_CLEAR_PCIE_CORR_FEATURE_ID, value,
-				0, 0, 0, NULL, &result);
+				0, 0, 0, 0, NULL, &result);
 
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;
@@ -5637,7 +5637,7 @@ static int wdc_do_clear_fw_activate_history_fid(int fd)
 	__u32 value = 1 << 31; /* Bit 31 - Clear Firmware Update History Log */
 
 	ret = nvme_set_feature(fd, 0, WDC_NVME_CLEAR_FW_ACT_HIST_VU_FID, value,
-				0, 0, 0, NULL, &result);
+				0, 0, 0, 0, NULL, &result);
 
 	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
 	return ret;
@@ -5731,18 +5731,18 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 
 	if (cfg.disable) {
 		ret = nvme_set_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 1,
-				       0, 0, 0, buf, &result);
+				       0, 0, 0, 0, buf, &result);
 
 		wdc_clear_reason_id(fd);
 	}
 	else {
 	   if (cfg.enable) {
 			ret = nvme_set_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 0,
-					       0, 0, 0, buf, &result);
+					       0, 0, 0, 0, buf, &result);
 	   }
 	   else if (cfg.status) {
 			ret = nvme_get_feature(fd, 0, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 0, 0,
-					4, buf, &result);
+					0, 4, buf, &result);
 			if (ret == 0) {
 				if (result)
 					fprintf(stderr, "Controller Option Telemetry Log Page State: Disabled\n");
@@ -6366,7 +6366,7 @@ static int wdc_do_drive_essentials(int fd, char *dir, char *key)
 		if (deFeatureIdList[listIdx].featureId == FID_LBA_RANGE_TYPE)
 			continue;
 		ret = nvme_get_feature(fd, WDC_DE_GLOBAL_NSID, deFeatureIdList[listIdx].featureId, FS_CURRENT, 0,
-				sizeof(featureIdBuff), &featureIdBuff, &result);
+				0, sizeof(featureIdBuff), &featureIdBuff, &result);
 
 		if (ret) {
 			fprintf(stderr, "ERROR : WDC : nvme_get_feature id 0x%x failed, ret = %d\n",
@@ -7716,7 +7716,7 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 	temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]) - 273;
 
 	/* retrieve HCTM Thermal Management Temperatures */
-   	nvme_get_feature(fd, 0, 0x10, 0, 0, 0, 0, &hctm_tmt);
+	nvme_get_feature(fd, 0, 0x10, 0, 0, 0, 0, 0, &hctm_tmt);
    	temp_tmt1 = ((hctm_tmt >> 16) & 0xffff) ? ((hctm_tmt >> 16) & 0xffff) - 273 : 0;
    	temp_tmt2 = (hctm_tmt & 0xffff) ? (hctm_tmt & 0xffff) - 273 : 0;
 

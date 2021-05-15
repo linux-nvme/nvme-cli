@@ -626,7 +626,7 @@ static int micron_smbus_option(int argc, char **argv,
 
     if (!strcmp(opt.option, "enable")) {
         cdw11 = opt.value << 1 | 1;
-        err = nvme_set_feature(fd, 1, fid, cdw11, 0, opt.save, 0, 0, &result);
+        err = nvme_set_feature(fd, 1, fid, cdw11, 0, opt.save, 0, 0, 0, &result);
         if (err == 0) {
             printf("successfully enabled SMBus on drive\n");
         } else {
@@ -635,7 +635,7 @@ static int micron_smbus_option(int argc, char **argv,
     }
     else if (!strcmp(opt.option, "status")) {
         cdw10 = opt.value;
-        err = nvme_get_feature(fd, 1, fid, cdw10, 0, 0, 0, &result);
+        err = nvme_get_feature(fd, 1, fid, cdw10, 0, 0, 0, 0, &result);
         if (err == 0) {
             printf("SMBus status on the drive: %s (returns %s temperature) \n",
                     (result & 1) ? "enabled" : "disabled",
@@ -646,7 +646,7 @@ static int micron_smbus_option(int argc, char **argv,
     }
     else if (!strcmp(opt.option, "disable")) {
         cdw11 = opt.value << 1 | 0;
-        err = nvme_set_feature(fd, 1, fid, cdw11, 0, opt.save, 0, 0, &result);
+        err = nvme_set_feature(fd, 1, fid, cdw11, 0, opt.save, 0, 0, 0, &result);
         if (err == 0) {
             printf("Successfully disabled SMBus on drive\n");
         } else {
@@ -932,7 +932,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 
     /* For M51CX models, PCIe errors are cleared using 0xC3 feature */
     if (model == M51CX) {
-        err = nvme_set_feature(fd, 0, fid, (1 << 31), 0, 0, 0, 0, &result);
+        err = nvme_set_feature(fd, 0, fid, (1 << 31), 0, 0, 0, 0, 0, &result);
         if (err == 0 && (err = (int)result) == 0)
             printf("Device correctable errors cleared!\n");
         else
@@ -1727,7 +1727,7 @@ static int GetFeatureSettings(int fd, const char *dir)
             bufp = NULL;
         }
 
-        err = nvme_get_feature(fd, 1, fmap[i].id, 0, 0x0, len, bufp, &attrVal);
+        err = nvme_get_feature(fd, 1, fmap[i].id, 0, 0x0, 0, len, bufp, &attrVal);
         if (err == 0) {
             sprintf(msg, "feature: 0x%X", fmap[i].id);
             WriteData((__u8*)&attrVal, sizeof(attrVal), dir, fmap[i].file, msg);
@@ -2090,7 +2090,7 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
     }
 
     //err = nvme_set_feature(fd, 1, fid, cdw11, 0, opt.save, 0, 0, &result);
-    err = nvme_set_feature(fd, 1, fid, 0, 0, 0, 0, 0, &result);
+    err = nvme_set_feature(fd, 1, fid, 0, 0, 0, 0, 0, 0, &result);
     if (err == 0) err = (int)result;
     return err;
 }
@@ -2136,14 +2136,14 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
     }
 
     if (!strcmp(opt.option, "enable")) {
-        err = nvme_set_feature(fd, 1, fid, 1, 0, (opt.select & 0x1), 0, 0, &result);
+        err = nvme_set_feature(fd, 1, fid, 1, 0, (opt.select & 0x1), 0, 0, 0, &result);
         if (err == 0) {
             printf("successfully set controller telemetry option\n");
         } else {
             printf("Failed to set controller telemetry option\n");
         }
     } else if (!strcmp(opt.option, "disable")) {
-        err = nvme_set_feature(fd, 1, fid, 0, 0, (opt.select & 0x1), 0, 0, &result);
+        err = nvme_set_feature(fd, 1, fid, 0, 0, (opt.select & 0x1), 0, 0, 0, &result);
         if (err == 0) {
             printf("successfully disabled controller telemetry option\n");
         } else {
@@ -2151,7 +2151,7 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
         }
     } else if (!strcmp(opt.option, "status")) {
         opt.select &= 0x3;
-        err = nvme_get_feature(fd, 1, fid, opt.select, 0, 0, 0, &result);
+        err = nvme_get_feature(fd, 1, fid, opt.select, 0, 0, 0, 0, &result);
         if (err == 0) {
             printf("Controller telemetry option : %s\n",
                     (result) ? "enabled" : "disabled");

@@ -113,12 +113,12 @@ nvme_list_opts () {
 			;;
 		"get-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --sel= -s \
-			--data-len= -l --cdw11= --raw-binary -b \
+			--data-len= -l --cdw11= --uuid-index= -U --raw-binary -b \
 			--human-readable -H"
 			;;
 		"set-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --value= -v \
-			--data-len= -l -data= -d --value= --save -s"
+			--data-len= -l -data= -d --value= --save -s --uuid-index= -U"
 			;;
 		"format")
 		opts+=" --namespace-id= -n --timeout= -t --lbaf= -l \
