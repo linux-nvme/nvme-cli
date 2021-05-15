@@ -1065,7 +1065,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		__u32 thresholds[OPTANE_V1000_BUCKET_LEN] = {0};
 		__u32 result;
 
-		err = nvme_get_feature(fd, 0, 0xf7, 0, cfg.write ? 0x1 : 0x0,
+		err = nvme_get_feature(fd, 0, 0xf7, 0, cfg.write ? 0x1 : 0x0, 0,
 				       sizeof(thresholds), thresholds, &result);
 		if (err) {
 			fprintf(stderr, "Quering thresholds failed. NVMe Status:%s(%x)\n",
@@ -1542,7 +1542,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		return fd;
 	switch (option) {
 	case None:
-		err = nvme_get_feature(fd, nsid, fid, sel, cdw11, data_len, buf,
+		err = nvme_get_feature(fd, nsid, fid, sel, cdw11, 0, data_len, buf,
 					&result);
 		if (!err) {
 			printf(
@@ -1555,7 +1555,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		break;
 	case True:
 	case False:
-		err = nvme_set_feature(fd, nsid, fid, option, cdw12, save,
+		err = nvme_set_feature(fd, nsid, fid, option, cdw12, save, 0,
 				data_len, buf, &result);
 		if (err > 0) {
 			fprintf(stderr, "NVMe Status:%s(%x)\n",
@@ -1636,7 +1636,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 		}
 
 		err = nvme_set_feature(fd, nsid, fid, cfg.write ? 0x1 : 0x0,
-				       cdw12, save, OPTANE_V1000_BUCKET_LEN,
+				       cdw12, save, 0, OPTANE_V1000_BUCKET_LEN,
 				       thresholds, &result);
 
 		if (err > 0) {

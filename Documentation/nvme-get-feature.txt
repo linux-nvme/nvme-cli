@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme get-feature' <device> [--namespace-id=<nsid> | -n <nsid>]
 			  [--feature-id=<fid> | -f <fid>] [--cdw11=<cdw11>]
+			  [--uuid-index=<uuid-index> | -U <uuid_index>]
 			  [--data-len=<data-len> | -l <data-len>]
 			  [--sel=<select> | -s <select>]
 			  [--raw-binary | -b]
@@ -57,6 +58,10 @@ OPTIONS
 |4–7|Reserved
 |==================
 
+-U <uuid-index>::
+--uuid-index=<uuid-index>::
+	UUID Index of the feature
+
 -l <data-len>::
 --data-len=<data-len>::
 	The data length for the buffer returned for this feature. Most
@@ -102,6 +107,10 @@ will be displayed to the user in as a hex dump:
 # nvme get-feature /dev/nvme0 -f 0xc0 -l 512
 ------------
 +
+Get feature with UUID index
+------------
+# nvme get-feature /dev/nvme0 -f 0xc0 -l 512 -U 0x1
+------------
 
 * The following retrieves the feature for the LBA Range Type, which
 implicitly requires a buffer and will be saved to a file in its raw
