@@ -4075,6 +4075,42 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	}
 }
 
+static void json_nvme_list_ns(__u32 *ns_list)
+{
+	struct json_object *root;
+	struct json_object *valid_attrs;
+	struct json_object *valid;
+	int i;
+
+	root = json_create_object();
+	valid = json_create_array();
+
+	for (i = 0; i < 1024; i++) {
+		if (ns_list[i]) {
+			valid_attrs = json_create_object();
+			json_object_add_value_uint(valid_attrs, "nsid",
+				le32_to_cpu(ns_list[i]));
+			json_array_add_value_object(valid, valid_attrs);
+		}
+	}
+	json_object_add_value_array(root, "nsid_list", valid);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_list_ns(__u32 *ns_list, enum nvme_print_flags flags)
+{
+	int i;
+	if (flags & JSON)
+		return json_nvme_list_ns(ns_list);
+
+	for (i = 0; i < 1024; i++) {
+		if (ns_list[i])
+			printf("[%4u]:%#x\n", i, le32_to_cpu(ns_list[i]));
+	}
+}
+
 void nvme_show_zns_changed(struct nvme_zns_changed_zone_log *log,
 	unsigned long flags)
 {
