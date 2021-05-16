@@ -86,6 +86,7 @@ void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs);
 void nvme_show_list_ctrl(struct nvme_controller_list *ctrl_list,
 	enum nvme_print_flags flags);
+void nvme_show_list_ns(__u32 *ns_list, enum nvme_print_flags flags);
 
 void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned char *buf);
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,

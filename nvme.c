@@ -1443,29 +1443,41 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *namespace_id = "first nsid returned list should start from";
 	const char *csi = "I/O command set identifier";
 	const char *all = "show all namespaces in the subsystem, whether attached or inactive";
-	int err, i, fd;
+	int err, fd;
 	__le32 ns_list[1024];
+	enum nvme_print_flags flags;
 
 	struct config {
 		__u32 namespace_id;
 		int  all;
 		__u8 csi;
+		char *output_format;
 	};
 
 	struct config cfg = {
 		.namespace_id = 1,
+		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_BYTE("csi",          'y', &cfg.csi,          csi),
-		OPT_FLAG("all",          'a', &cfg.all,          all),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
+		OPT_BYTE("csi",          'y', &cfg.csi,           csi),
+		OPT_FLAG("all",          'a', &cfg.all,           all),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary),
 		OPT_END()
 	};
 
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+	if (flags != JSON && flags != NORMAL) {
+		err = -EINVAL;
+		goto close_fd;
+	}
 
 	if (!cfg.namespace_id) {
 		err = -EINVAL;
@@ -1475,11 +1487,9 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	err = nvme_identify_ns_list_csi(fd, cfg.namespace_id - 1, cfg.csi,
 					!!cfg.all, ns_list);
-	if (!err) {
-		for (i = 0; i < 1024; i++)
-			if (ns_list[i])
-				printf("[%4u]:%#x\n", i, le32_to_cpu(ns_list[i]));
-	} else if (err > 0)
+	if (!err)
+		nvme_show_list_ns(ns_list, flags);
+	else if (err > 0)
 		nvme_show_status(err);
 	else
 		perror("id namespace list");

@@ -751,7 +751,7 @@ nvme-id-ns(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme list-ns</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                         [--csi=&lt;command_set_identifier&gt; | -y &lt;command_set_identifier&gt;]
-                        [--all | -a]</pre>
+                        [--all | -a] [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -808,13 +808,44 @@ a valid nsid.</p></div>
         subsystem, whether attached or inactive.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;format&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;format&gt;
+</dt>
+<dd>
+<p>
+    Set the reporting format to <em>normal</em>, or <em>json</em>.
+    Only one output format can be used at a time.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No examples yet.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Print the namespaces present for zoned command set in JSON format
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme list-ns /dev/nvme0 -y 2 -a -o json</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Print the namespaces present for NVM Command Set in normal format
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme list-ns /dev/nvme0</code></pre>
+</div></div>
+</li>
+</ul></div>
 </div>
 </div>
 <div class="sect1">
@@ -828,7 +859,7 @@ a valid nsid.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2020-05-06 10:35:44 CEST
+ 2021-05-16 10:13:29 IST
 </div>
 </div>
 </body>
