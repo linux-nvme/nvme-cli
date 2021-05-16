@@ -1436,7 +1436,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	struct config {
 		__u32 namespace_id;
 		int  all;
-		__u16 csi;
+		__u8 csi;
 	};
 
 	struct config cfg = {
