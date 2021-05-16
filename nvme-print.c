@@ -4165,6 +4165,48 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 	}
 }
 
+static void json_nvme_list_ctrl(struct nvme_controller_list *ctrl_list, __u16 num)
+{
+	struct json_object *root;
+	struct json_object *valid_attrs;
+	struct json_object *valid;
+	int i;
+
+	root = json_create_object();
+	valid = json_create_array();
+
+	json_object_add_value_uint(root, "num_ctrl",
+		le16_to_cpu(ctrl_list->num));
+
+	for (i = 0; i < min(num, 2047); i++) {
+
+		valid_attrs = json_create_object();
+		json_object_add_value_uint(valid_attrs, "ctrl_id",
+			le16_to_cpu(ctrl_list->identifier[i]));
+		json_array_add_value_object(valid, valid_attrs);
+	}
+
+	json_object_add_value_array(root, "ctrl_list", valid);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_list_ctrl(struct nvme_controller_list *ctrl_list,
+	enum nvme_print_flags flags)
+{
+	int i;
+	__u16 num = le16_to_cpu(ctrl_list->num);
+
+	if (flags & JSON)
+		return json_nvme_list_ctrl(ctrl_list, num);
+
+	printf("num of ctrls present: %u\n", num);
+	for (i = 0; i < min(num, 2047); i++) {
+		printf("[%4u]:%#x\n", i, le16_to_cpu(ctrl_list->identifier[i]));
+	}
+}
+
 static void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset)
 {
 	__u32 nent = nvmset->nid;

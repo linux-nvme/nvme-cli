@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-id-ns
-.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
-.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/20/2020
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 05/16/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "05/16/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,7 +33,7 @@ nvme-list-ctrl \- Send NVMe Identify List Controllers, return result and structu
 .sp
 .nf
 \fInvme list\-ctrl\fR <device> [\-\-cntid=<cntid> | \-c <cntid>]
-                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>] [\-o <fmt> | \-\-output\-format=<fmt>]
 DESCRIPTION
 .fi
 .sp
@@ -61,6 +61,14 @@ Retrieve the identify list structure starting with the given controller id\&.
 \-n <nsid>, \-\-namespace\-id=<nsid>
 .RS 4
 If provided, will request the controllers attached to the specified namespace\&. If no namespace is given, or set to 0, the command requests the controller list for the entire subsystem, whether or not they are attached to namespace(s)\&.
+.RE
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+Set the reporting format to
+\fInormal\fR
+or
+\fIjson\fR\&. Only one output format can be used at a time\&.
 .RE
 .SH "EXAMPLES"
 .sp
