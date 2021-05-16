@@ -1377,27 +1377,39 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 		"given device is part of, or optionally controllers attached to a specific namespace.";
 	const char *controller = "controller to display";
 	const char *namespace_id = "optional namespace attached to controller";
-	int err, i, fd;
+	int err, fd;
 	struct nvme_controller_list *cntlist;
+	enum nvme_print_flags flags;
 
 	struct config {
 		__u16 cntid;
 		__u32 namespace_id;
+		char *output_format;
 	};
 
 	struct config cfg = {
 		.cntid = 0,
+		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_SHRT("cntid",       'c', &cfg.cntid,        controller),
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_SHRT("cntid",        'c', &cfg.cntid,         controller),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_END()
 	};
 
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+	if (flags != JSON && flags != NORMAL) {
+		err = -EINVAL;
+		goto close_fd;
+	}
 
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000)) {
 		fprintf(stderr, "can not allocate controller list payload\n");
@@ -1406,12 +1418,9 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 	}
 
 	err = nvme_identify_ctrl_list(fd, cfg.namespace_id, cfg.cntid, cntlist);
-	if (!err) {
-		__u16 num = le16_to_cpu(cntlist->num);
-
-		for (i = 0; i < (min(num, 2048)); i++)
-			printf("[%4u]:%#x\n", i, le16_to_cpu(cntlist->identifier[i]));
-	} else if (err > 0)
+	if (!err)
+		nvme_show_list_ctrl(cntlist, flags);
+	else if (err > 0)
 		nvme_show_status(err);
 	else
 		perror("id controller list");
