@@ -29,6 +29,7 @@ struct fabrics_config {
 	int  keep_alive_tmo;
 	int  reconnect_delay;
 	int  ctrl_loss_tmo;
+	int  fast_io_fail_tmo;
 	int  tos;
 	const char *raw;
 	char *device;

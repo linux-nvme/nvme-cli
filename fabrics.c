@@ -69,6 +69,7 @@ const char *conarg_host_traddr = "host_traddr";
 
 struct fabrics_config fabrics_cfg = {
 	.ctrl_loss_tmo = -1,
+	.fast_io_fail_tmo = -1,
 	.output_format = "normal",
 };
 
@@ -1004,6 +1005,8 @@ int build_options(char *argstr, int max_len, bool discover)
 	    (strncmp(fabrics_cfg.transport, "loop", 4) &&
 	     add_int_argument(&argstr, &max_len, "ctrl_loss_tmo",
 			      fabrics_cfg.ctrl_loss_tmo, true)) ||
+	    add_int_argument(&argstr, &max_len, "fast_io_fail_tmo",
+				fabrics_cfg.fast_io_fail_tmo, true) ||
 	    add_int_argument(&argstr, &max_len, "tos",
 				fabrics_cfg.tos, true) ||
 	    add_bool_argument(&argstr, &max_len, "duplicate_connect",
@@ -1180,6 +1183,13 @@ retry:
 
 	if ((e->trtype != NVMF_TRTYPE_LOOP) && (fabrics_cfg.ctrl_loss_tmo >= -1)) {
 		len = sprintf(p, ",ctrl_loss_tmo=%d", fabrics_cfg.ctrl_loss_tmo);
+		if (len < 0)
+			return -EINVAL;
+		p += len;
+	}
+
+	if (fabrics_cfg.fast_io_fail_tmo) {
+		len = sprintf(p, ",fast_io_fail_tmo=%d", fabrics_cfg.fast_io_fail_tmo);
 		if (len < 0)
 			return -EINVAL;
 		p += len;
@@ -1567,6 +1577,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_INT("keep-alive-tmo",  'k', &fabrics_cfg.keep_alive_tmo,  "keep alive timeout period in seconds"),
 		OPT_INT("reconnect-delay", 'c', &fabrics_cfg.reconnect_delay, "reconnect timeout period in seconds"),
 		OPT_INT("ctrl-loss-tmo",   'l', &fabrics_cfg.ctrl_loss_tmo,   "controller loss timeout period in seconds"),
+		OPT_INT("fast_io_fail_tmo",'f',&fabrics_cfg.fast_io_fail_tmo, "fast I/O fail timeout (default off)"),
 		OPT_INT("tos",             'T', &fabrics_cfg.tos,             "type of service"),
 		OPT_FLAG("hdr_digest",     'g', &fabrics_cfg.hdr_digest,      "enable transport protocol header digest (TCP transport)"),
 		OPT_FLAG("data_digest",    'G', &fabrics_cfg.data_digest,     "enable transport protocol data digest (TCP transport)"),
@@ -1650,6 +1661,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		OPT_INT("keep-alive-tmo",     'k', &fabrics_cfg.keep_alive_tmo,    "keep alive timeout period in seconds"),
 		OPT_INT("reconnect-delay",    'c', &fabrics_cfg.reconnect_delay,   "reconnect timeout period in seconds"),
 		OPT_INT("ctrl-loss-tmo",      'l', &fabrics_cfg.ctrl_loss_tmo,     "controller loss timeout period in seconds"),
+		OPT_INT("fast_io_fail_tmo",   'f', &fabrics_cfg.fast_io_fail_tmo,  "fast I/O fail timeout (default off)"),
 		OPT_INT("tos",                'T', &fabrics_cfg.tos,               "type of service"),
 		OPT_FLAG("duplicate-connect", 'D', &fabrics_cfg.duplicate_connect, "allow duplicate connections between same transport host and subsystem port"),
 		OPT_FLAG("disable-sqflow",    'd', &fabrics_cfg.disable_sqflow,    "disable controller sq flow control (default false)"),
