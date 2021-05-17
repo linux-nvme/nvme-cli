@@ -126,11 +126,11 @@ int nvme_passthru(int fd, unsigned long ioctl_cmd, __u8 opcode,
 
 int nvme_io(int fd, __u8 opcode, __u64 slba, __u16 nblocks, __u16 control,
 	    __u32 dsmgmt, __u32 reftag, __u16 apptag, __u16 appmask, void *data,
-	    void *metadata)
+	    void *metadata, __u8 fuse)
 {
 	struct nvme_user_io io = {
 		.opcode		= opcode,
-		.flags		= 0,
+		.flags		= fuse,
 		.control	= control,
 		.nblocks	= nblocks,
 		.rsvd		= 0,

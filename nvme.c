@@ -4728,6 +4728,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	const char *dtype = "directive type (for write-only)";
 	const char *dspec = "directive specific (for write-only)";
 	const char *dsm = "dataset management attributes (lower 16 bits)";
+	const char *fuse = "fused operation";
 
 	struct config {
 		__u64 start_block;
@@ -4748,6 +4749,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		int   show;
 		int   dry_run;
 		int   latency;
+		__u8 fuse;
 	};
 
 	struct config cfg = {
@@ -4761,6 +4763,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		.prinfo          = 0,
 		.app_tag_mask    = 0,
 		.app_tag         = 0,
+		.fuse            = 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -4782,6 +4785,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		OPT_FLAG("show-command",      'v', &cfg.show,              show),
 		OPT_FLAG("dry-run",           'w', &cfg.dry_run,           dry),
 		OPT_FLAG("latency",           't', &cfg.latency,           latency),
+		OPT_BYTE("fuse",              'F', &cfg.fuse,              fuse),
 		OPT_END()
 	};
 
@@ -4918,13 +4922,15 @@ static int submit_io(int opcode, char *command, const char *desc,
 		printf("reftag       : %08x\n", cfg.ref_tag);
 		printf("apptag       : %04x\n", cfg.app_tag);
 		printf("appmask      : %04x\n", cfg.app_tag_mask);
+		printf("fuse         : %02x\n", cfg.fuse);
 	}
 	if (cfg.dry_run)
 		goto free_mbuffer;
 
 	gettimeofday(&start_time, NULL);
 	err = nvme_io(fd, opcode, cfg.start_block, cfg.block_count, control, dsmgmt,
-			cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask, buffer, mbuffer);
+			cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask, buffer, mbuffer,
+			cfg.fuse);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: %s: %llu us\n",
