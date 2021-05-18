@@ -206,21 +206,19 @@ static int get_zdes_bytes(int fd, __u32 nsid)
 	int err;
 
 	err = nvme_identify_ns(fd, nsid,  false, &id_ns);
-	if (err > 0){
+	if (err > 0) {
 		nvme_show_status(err);
 		return err;
-	}
-	else if (err < 0){
+	} else if (err < 0) {
 		perror("identify namespace");
 		return err;
 	}
 
 	err = nvme_zns_identify_ns(fd, nsid,  &ns);
-	if (err > 0){
+	if (err > 0) {
 		nvme_show_status(err);
 		return err;
-	}
-	else if (err < 0){
+	} else if (err < 0) {
 		perror("zns identify namespace");
 		return err;
 	}
