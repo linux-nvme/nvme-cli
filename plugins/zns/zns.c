@@ -208,19 +208,19 @@ static int get_zdes_bytes(int fd, __u32 nsid)
 	err = nvme_identify_ns(fd, nsid,  false, &id_ns);
 	if (err > 0) {
 		nvme_show_status(err);
-		return err;
+		return -1;
 	} else if (err < 0) {
 		perror("identify namespace");
-		return err;
+		return -1;
 	}
 
 	err = nvme_zns_identify_ns(fd, nsid,  &ns);
 	if (err > 0) {
 		nvme_show_status(err);
-		return err;
+		return -1;
 	} else if (err < 0) {
 		perror("zns identify namespace");
-		return err;
+		return -1;
 	}
 
 	lbaf = id_ns.flbas & NVME_NS_FLBAS_LBA_MASK;
@@ -281,9 +281,9 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 	if (cfg.zsa == NVME_ZNS_ZSA_SET_DESC_EXT) {
 		if(!cfg.data_len) {
 			cfg.data_len = get_zdes_bytes(fd, cfg.namespace_id);
-			if (cfg.data_len == 0) {
+			if (!cfg.data_len || cfg.data_len < 0) {
 				fprintf(stderr, 
-				"Zone Descriptor Extensions are not supported\n");
+					"Zone Descriptor Extensions are not supported\n");
 				goto close_fd;
 			} else if (cfg.data_len < 0) {
 				err = cfg.data_len;
@@ -414,7 +414,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 
 	data_len = get_zdes_bytes(fd, cfg.namespace_id);
 
-	if (!data_len) {
+	if (!data_len || data_len < 0) {
 		fprintf(stderr,
 			"zone format does not provide descriptor extention\n");
 		errno = EINVAL;
