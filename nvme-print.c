@@ -5262,7 +5262,7 @@ const char *nvme_feature_to_string(enum nvme_feat feature)
 	case NVME_FEAT_PLM_CONFIG:	return "Predicatable Latency Mode Config";
 	case NVME_FEAT_PLM_WINDOW:	return "Predicatable Latency Mode Window";
 	case NVME_LBA_STATUS_INFO:	return "LBA Status Infomation Attributes";
-      case NVME_FEAT_ENDURANCE:       return "Enduarance Event Group Configuration";
+	case NVME_FEAT_ENDURANCE:       return "Enduarance Event Group Configuration";
 	case NVME_FEAT_IOCS_PROFILE:	return "I/O Command Set Profile";
 	case NVME_FEAT_SW_PROGRESS:	return "Software Progress";
 	case NVME_FEAT_HOST_ID:		return "Host Identifier";
@@ -5273,6 +5273,9 @@ const char *nvme_feature_to_string(enum nvme_feat feature)
 	case NVME_FEAT_HCTM:		return "Host Controlled Thermal Management";
 	case NVME_FEAT_HOST_BEHAVIOR:   return "Host Behavior";
 	case NVME_FEAT_SANITIZE:	return "Sanitize";
+	case NVME_FEAT_VENDOR_START:	return "Vendor Start";
+	case NVME_FEAT_VENDOR_END:	return "Vendor End";
+	case NVMF_FEAT_MAX:		return "Max";
 	}
 	/*
 	 * We don't use the "default:" statement to let the compiler warning if
@@ -5935,6 +5938,15 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result,
                 break;
 	case NVME_FEAT_RRL:
 		printf("\tRead Recovery Level (RRL): %u\n", result & 0xf);
+		break;
+	case NVME_FEAT_VENDOR_START:
+		printf("\tFeature Identifier Vendor Start\n");
+		break;
+	case NVME_FEAT_VENDOR_END:
+		printf("\tFeature Identifier Vendor End\n");
+		break;
+	case NVMF_FEAT_MAX:
+		printf("\tFeature Identifier Max\n");
 		break;
 	}
 }

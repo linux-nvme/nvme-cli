@@ -61,6 +61,17 @@
 #define CREATE_CMD
 #include "nvme-builtin.h"
 
+struct feat_cfg {
+	__u32 namespace_id;
+	__u8  feature_id;
+	__u8  sel;
+	__u32 cdw11;
+	__u8  uuid_index;
+	__u32 data_len;
+	int  raw_binary;
+	int  human_readable;
+};
+
 static struct stat nvme_stat;
 const char *devicename;
 
@@ -84,7 +95,7 @@ static struct program nvme = {
 	.extensions = &builtin,
 };
 
-static __u16 nvme_feat_buf_len[0x100] = {
+static __u16 nvme_feat_buf_len[NVMF_FEAT_MAX] = {
 	[NVME_FEAT_LBA_RANGE]		= 4096,
 	[NVME_FEAT_AUTO_PST]		= 256,
 	[NVME_FEAT_HOST_MEM_BUF]	= 4096,
@@ -2739,6 +2750,59 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+
+static int get_feature_id(int fd, struct feat_cfg cfg)
+{
+	int err;
+	__u32 result;
+	void *buf = NULL;
+
+	cfg.data_len = nvme_feat_buf_len[cfg.feature_id];
+
+	/* check for Extended Host Identifier */
+	if (cfg.feature_id == NVME_FEAT_HOST_ID && (cfg.cdw11 & 0x1))
+		cfg.data_len = 16;
+
+	if (cfg.sel == 3)
+		cfg.data_len = 0;
+
+	if (cfg.data_len) {
+		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
+			fprintf(stderr, "can not allocate feature payload\n");
+			errno = ENOMEM;
+			return -1;
+		}
+		memset(buf, 0, cfg.data_len);
+	}
+
+	err = nvme_get_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.sel, cfg.cdw11,
+			       cfg.uuid_index, cfg.data_len, buf, &result);
+	if (!err) {
+		if (!cfg.raw_binary || !buf) {
+			printf("get-feature:%#0*x (%s), %s value:%#0*x\n",
+			       cfg.feature_id ? 4 : 2, cfg.feature_id,
+			       nvme_feature_to_string(cfg.feature_id),
+			       nvme_select_to_string(cfg.sel), result ? 10 : 8,
+			       result);
+			if (cfg.sel == 3)
+				nvme_show_select_result(result);
+			else if (cfg.human_readable)
+				nvme_feature_show_fields(cfg.feature_id, result, buf);
+			else if (buf)
+				d(buf, cfg.data_len, 16, 1);
+		} else if (buf)
+			d_raw(buf, cfg.data_len);
+	} else if (err > 0) {
+		nvme_show_status(err);
+	} else {
+		perror("get-feature");
+	}
+
+	free(buf);
+
+	return err;
+}
+
 static int get_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Read operating parameters of the "\
@@ -2759,8 +2823,6 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	const char *human_readable = "show feature in readable format";
 	const char *uuid_index = "specify uuid index";
 	int err = -1, fd;
-	__u32 result;
-	void *buf = NULL;
 
 	struct config {
 		__u32 namespace_id;
@@ -2773,7 +2835,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		int  human_readable;
 	};
 
-	struct config cfg = {
+	struct feat_cfg cfg = {
 		.namespace_id = 0,
 		.feature_id   = 0,
 		.sel          = 0,
@@ -2816,6 +2878,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		err = -1;
 		goto close_fd;
 	}
+
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
 		errno = EINVAL;
@@ -2830,48 +2893,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_fd;
 	}
 
-	cfg.data_len = nvme_feat_buf_len[cfg.feature_id];
-
-	/* check for Extended Host Identifier */
-	if (cfg.feature_id == NVME_FEAT_HOST_ID && (cfg.cdw11 & 0x1))
-		cfg.data_len = 16;
-
-	if (cfg.sel == 3)
-		cfg.data_len = 0;
-
-	if (cfg.data_len) {
-		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
-			fprintf(stderr, "can not allocate feature payload\n");
-			errno = ENOMEM;
-			err = -1;
-			goto close_fd;
-		}
-		memset(buf, 0, cfg.data_len);
-	}
-
-	err = nvme_get_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.sel, cfg.cdw11,
-			cfg.uuid_index, cfg.data_len, buf, &result);
-	if (!err) {
-		if (!cfg.raw_binary || !buf) {
-			printf("get-feature:%#0*x (%s), %s value:%#0*x\n",
-			       cfg.feature_id ? 4 : 2, cfg.feature_id,
-			       nvme_feature_to_string(cfg.feature_id),
-			       nvme_select_to_string(cfg.sel), result ? 10 : 8,
-			       result);
-			if (cfg.sel == 3)
-				nvme_show_select_result(result);
-			else if (cfg.human_readable)
-				nvme_feature_show_fields(cfg.feature_id, result, buf);
-			else if (buf)
-				d(buf, cfg.data_len, 16, 1);
-		} else if (buf)
-			d_raw(buf, cfg.data_len);
-	} else if (err > 0) {
-		nvme_show_status(err);
-	} else
-		perror("get-feature");
-
-	free(buf);
+	err = get_feature_id(fd, cfg);
 
 close_fd:
 	close(fd);
