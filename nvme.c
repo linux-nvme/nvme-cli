@@ -61,6 +61,17 @@
 #define CREATE_CMD
 #include "nvme-builtin.h"
 
+struct feat_cfg {
+	enum nvme_features_id feature_id;
+	__u32 namespace_id;
+	enum nvme_get_features_sel sel;
+	__u32 cdw11;
+	__u8  uuid_index;
+	__u32 data_len;
+	int  raw_binary;
+	int  human_readable;
+};
+
 static struct stat nvme_stat;
 const char *devicename;
 
@@ -2703,6 +2714,60 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int get_feature_id(int fd, struct feat_cfg cfg)
+{
+	int err;
+	__u32 result;
+	void *buf = NULL;
+
+	nvme_get_feature_length(cfg.feature_id, cfg.cdw11, &cfg.data_len);
+
+	/* check for Extended Host Identifier */
+	if (cfg.feature_id == NVME_FEAT_FID_HOST_ID && (cfg.cdw11 & 0x1))
+		cfg.data_len = 16;
+
+	if (cfg.sel == 3)
+		cfg.data_len = 0;
+
+	if (cfg.data_len) {
+		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
+			fprintf(stderr, "can not allocate feature payload\n");
+			errno = ENOMEM;
+			return -1;
+		}
+		memset(buf, 0, cfg.data_len);
+	}
+
+	err = nvme_get_features(fd, cfg.feature_id, cfg.namespace_id, cfg.sel,
+				cfg.cdw11, cfg.uuid_index, cfg.data_len, buf,
+				&result);
+	if (!err) {
+		if (!cfg.raw_binary || !buf) {
+			printf("get-feature:%#0*x (%s), %s value:%#0*x\n",
+			       cfg.feature_id ? 4 : 2, cfg.feature_id,
+			       nvme_feature_to_string(cfg.feature_id),
+			       nvme_select_to_string(cfg.sel), result ? 10 : 8,
+			       result);
+			if (cfg.sel == 3)
+				nvme_show_select_result(result);
+			else if (cfg.human_readable)
+				nvme_feature_show_fields(cfg.feature_id, result,
+							 buf);
+			else if (buf)
+				d(buf, cfg.data_len, 16, 1);
+		} else if (buf)
+			d_raw(buf, cfg.data_len);
+	} else if (err > 0) {
+		nvme_show_status(err);
+	} else {
+		perror("get-feature");
+	}
+
+	free(buf);
+
+	return err;
+}
+
 static int get_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Read operating parameters of the "\
@@ -2715,31 +2780,19 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		"are vendor-specific and not changeable. Use set-feature to "\
 		"change saveable Features.";
 	const char *raw = "show feature in binary format";
-	const char *namespace_id = "identifier of desired namespace";
 	const char *feature_id = "feature identifier";
+	const char *namespace_id = "identifier of desired namespace";
 	const char *sel = "[0-3]: current/default/saved/supported";
 	const char *data_len = "buffer len if data is returned through host memory buffer";
 	const char *cdw11 = "dword 11 for interrupt vector config";
 	const char *human_readable = "show feature in readable format";
 	const char *uuid_index = "specify uuid index";
-	int err, fd;
-	__u32 result;
-	void *buf = NULL;
+	int err;
+	int fd;
 
-	struct config {
-		__u32 namespace_id;
-		__u8  feature_id;
-		__u8  sel;
-		__u32 cdw11;
-		__u8  uuid_index;
-		__u32 data_len;
-		int  raw_binary;
-		int  human_readable;
-	};
-
-	struct config cfg = {
-		.namespace_id = 0,
+	struct feat_cfg cfg = {
 		.feature_id   = 0,
+		.namespace_id = 0,
 		.sel          = 0,
 		.cdw11        = 0,
 		.uuid_index   = 0,
@@ -2747,8 +2800,8 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id),
 		OPT_BYTE("feature-id",    'f', &cfg.feature_id,     feature_id),
+		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id),
 		OPT_BYTE("sel",           's', &cfg.sel,            sel),
 		OPT_UINT("data-len",      'l', &cfg.data_len,       data_len),
 		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw),
@@ -2779,6 +2832,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		err = -EINVAL;
 		goto close_fd;
 	}
+
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
 		err = -EINVAL;
@@ -2792,44 +2846,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_fd;
 	}
 
-	nvme_get_feature_length(cfg.feature_id, cfg.cdw11, &cfg.data_len);
-
-	if (cfg.sel == 3)
-		cfg.data_len = 0;
-
-	if (cfg.data_len) {
-		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
-			fprintf(stderr, "can not allocate feature payload\n");
-			err = -ENOMEM;
-			goto close_fd;
-		}
-		memset(buf, 0, cfg.data_len);
-	}
-
-	err = nvme_get_features(fd, cfg.feature_id, cfg.namespace_id, cfg.sel,
-				cfg.cdw11, cfg.uuid_index, cfg.data_len,
-				buf, &result);
-	if (!err) {
-		if (!cfg.raw_binary || !buf) {
-			printf("get-feature:%#0*x (%s), %s value:%#0*x\n",
-			       cfg.feature_id ? 4 : 2, cfg.feature_id,
-			       nvme_feature_to_string(cfg.feature_id),
-			       nvme_select_to_string(cfg.sel), result ? 10 : 8,
-			       result);
-			if (cfg.sel == 3)
-				nvme_show_select_result(result);
-			else if (cfg.human_readable)
-				nvme_feature_show_fields(cfg.feature_id, result, buf);
-			else if (buf)
-				d(buf, cfg.data_len, 16, 1);
-		} else if (buf)
-			d_raw(buf, cfg.data_len);
-	} else if (err > 0) {
-		nvme_show_status(err);
-	} else
-		perror("get-feature");
-
-	free(buf);
+	err = get_feature_id(fd, cfg);
 
 close_fd:
 	close(fd);
