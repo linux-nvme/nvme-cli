@@ -14,6 +14,7 @@ SYNOPSIS
 		[--traddr=<traddr>        | -a <traddr>]
 		[--trsvcid=<trsvcid>      | -s <trsvcid>]
 		[--host-traddr=<traddr>   | -w <traddr>]
+		[--host-iface=<iface>     | -f <iface>]
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
 		[--hostid=<hostid>        | -I <hostid>]
 		[--nr-io-queues=<#>       | -i <#>]
@@ -69,7 +70,14 @@ OPTIONS
 -w <traddr>::
 --host-traddr=<traddr>::
 	This field specifies the network address used on the host to connect
-	to the Controller.
+	to the Controller. For TCP, this sets the source address on the socket.
+
+-f <iface>::
+--host-iface=<iface>::
+	This field specifies the network interface used on the host to connect
+	to the Controller (e.g. IP eth1, enp2s0, enx78e7d1ea46da). This forces
+	the connection to be made on a specific interface instead of letting
+	the system decide.
 
 -q <hostnqn>::
 --hostnqn=<hostnqn>::

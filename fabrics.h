@@ -20,6 +20,7 @@ struct fabrics_config {
 	const char *traddr;
 	const char *trsvcid;
 	const char *host_traddr;
+	const char *host_iface;
 	const char *hostnqn;
 	const char *hostid;
 	int  nr_io_queues;
