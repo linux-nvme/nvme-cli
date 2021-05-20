@@ -66,6 +66,7 @@ const char *conarg_transport = "transport";
 const char *conarg_traddr = "traddr";
 const char *conarg_trsvcid = "trsvcid";
 const char *conarg_host_traddr = "host_traddr";
+const char *conarg_host_iface = "host_iface";
 
 struct fabrics_config fabrics_cfg = {
 	.ctrl_loss_tmo = -1,
@@ -78,6 +79,7 @@ struct connect_args {
 	char *traddr;
 	char *trsvcid;
 	char *host_traddr;
+	char *host_iface;
 	struct connect_args *next;
 	struct connect_args *tail;
 };
@@ -300,6 +302,7 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 	cargs.traddr = parse_conn_arg(addr, ' ', conarg_traddr);
 	cargs.trsvcid = parse_conn_arg(addr, ' ', conarg_trsvcid);
 	cargs.host_traddr = parse_conn_arg(addr, ' ', conarg_host_traddr);
+	cargs.host_iface = parse_conn_arg(addr, ' ', conarg_host_iface);
 
 	if (!strcmp(cargs.subsysnqn, NVME_DISC_SUBSYS_NAME)) {
 		char *kato_str = nvme_get_ctrl_attr(path, "kato"), *p;
@@ -331,7 +334,9 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 	    (!strcmp(cargs.trsvcid, args->trsvcid) ||
 	     !strcmp(args->trsvcid, "none")) &&
 	    (!strcmp(cargs.host_traddr, args->host_traddr) ||
-	     !strcmp(args->host_traddr, "none")))
+	     !strcmp(args->host_traddr, "none")) &&
+	    (!strcmp(cargs.host_iface, args->host_iface) ||
+	     !strcmp(args->host_iface, "none")))
 		found = true;
 
 	free(cargs.subsysnqn);
@@ -339,6 +344,7 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 	free(cargs.traddr);
 	free(cargs.trsvcid);
 	free(cargs.host_traddr);
+	free(cargs.host_iface);
 	free(addr);
 	free(path);
 
@@ -394,6 +400,7 @@ static struct connect_args *extract_connect_args(char *argstr)
 	cargs->traddr = parse_conn_arg(argstr, ',', conarg_traddr);
 	cargs->trsvcid = parse_conn_arg(argstr, ',', conarg_trsvcid);
 	cargs->host_traddr = parse_conn_arg(argstr, ',', conarg_host_traddr);
+	cargs->host_iface = parse_conn_arg(argstr, ',', conarg_host_iface);
 	return cargs;
 }
 
@@ -404,6 +411,7 @@ static void destruct_connect_args(struct connect_args *cargs)
 	free(cargs->traddr);
 	free(cargs->trsvcid);
 	free(cargs->host_traddr);
+	free(cargs->host_iface);
 }
 
 static void free_connect_args(struct connect_args *cargs)
@@ -969,6 +977,7 @@ int build_options(char *argstr, int max_len, bool discover)
 	if (add_argument(&argstr, &max_len, "transport", fabrics_cfg.transport) ||
 	    add_argument(&argstr, &max_len, "traddr", fabrics_cfg.traddr) ||
 	    add_argument(&argstr, &max_len, "host_traddr", fabrics_cfg.host_traddr) ||
+	    add_argument(&argstr, &max_len, "host_iface", fabrics_cfg.host_iface) ||
 	    add_argument(&argstr, &max_len, "trsvcid", fabrics_cfg.trsvcid) ||
 	    ((fabrics_cfg.hostnqn || nvmf_hostnqn_file()) &&
 		    add_argument(&argstr, &max_len, "hostnqn", fabrics_cfg.hostnqn)) ||
@@ -1158,6 +1167,13 @@ retry:
 		p+= len;
 	}
 
+	if (fabrics_cfg.host_iface && strcmp(fabrics_cfg.host_iface, "none")) {
+		len = sprintf(p, ",host_iface=%s", fabrics_cfg.host_iface);
+		if (len < 0)
+			return -EINVAL;
+		p+= len;
+	}
+
 	if (fabrics_cfg.reconnect_delay) {
 		len = sprintf(p, ",reconnect_delay=%d", fabrics_cfg.reconnect_delay);
 		if (len < 0)
@@ -1290,6 +1306,7 @@ static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry)
 	cargs.subsysnqn = strdup(entry->subnqn);
 	cargs.trsvcid = strdup(entry->trsvcid);
 	cargs.host_traddr = strdup(fabrics_cfg.host_traddr ?: "\0");
+	cargs.host_iface = strdup(fabrics_cfg.host_iface ?: "\0");
 
 	/* check if we have a match in the discovery recursion */
 	while (c) {
@@ -1297,7 +1314,8 @@ static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry)
 		    !strcmp(cargs.transport, c->transport) &&
 		    !strcmp(cargs.traddr, c->traddr) &&
 		    !strcmp(cargs.trsvcid, c->trsvcid) &&
-		    !strcmp(cargs.host_traddr, c->host_traddr))
+		    !strcmp(cargs.host_traddr, c->host_traddr) &&
+		    !strcmp(cargs.host_iface, c->host_iface))
 			return true;
 		c = c->next;
 	}
@@ -1529,7 +1547,8 @@ free_and_continue:
 		free(all_args);
 		free(argv);
 		fabrics_cfg.transport = fabrics_cfg.traddr =
-			fabrics_cfg.trsvcid = fabrics_cfg.host_traddr = NULL;
+			fabrics_cfg.trsvcid = fabrics_cfg.host_traddr =
+			fabrics_cfg.host_iface = NULL;
 	}
 
 out:
@@ -1548,7 +1567,8 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_LIST("transport",      't', &fabrics_cfg.transport,       "transport type"),
 		OPT_LIST("traddr",         'a', &fabrics_cfg.traddr,          "transport address"),
 		OPT_LIST("trsvcid",        's', &fabrics_cfg.trsvcid,         "transport service id (e.g. IP port)"),
-		OPT_LIST("host-traddr",    'w', &fabrics_cfg.host_traddr,     "host traddr (e.g. FC WWN's)"),
+		OPT_LIST("host-traddr",    'w', &fabrics_cfg.host_traddr,     "host traddr (e.g. FC WWN's or IP source address)"),
+		OPT_LIST("host-iface",     'f', &fabrics_cfg.host_iface,      "host transport interface (e.g. IP eth1, enp2s0)"),
 		OPT_LIST("hostnqn",        'q', &fabrics_cfg.hostnqn,         "user-defined hostnqn (if default not used)"),
 		OPT_LIST("hostid",         'I', &fabrics_cfg.hostid,          "user-defined hostid (if default not used)"),
 		OPT_LIST("raw",            'r', &fabrics_cfg.raw,             "raw output file"),
@@ -1564,7 +1584,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_INT("nr-poll-queues",  'P', &fabrics_cfg.nr_poll_queues,  "number of poll queues to use (default 0)"),
 		OPT_INT("queue-size",      'Q', &fabrics_cfg.queue_size,      "number of io queue elements to use (default 128)"),
 		OPT_FLAG("persistent",     'p', &fabrics_cfg.persistent,      "persistent discovery connection"),
-		OPT_FLAG("quiet",          'S', &quiet,               "suppress already connected errors"),
+		OPT_FLAG("quiet",          'S', &quiet,                       "suppress already connected errors"),
 		OPT_FLAG("matching",       'm', &fabrics_cfg.matching_only,   "connect only records matching the traddr"),
 		OPT_FMT("output-format",   'o', &fabrics_cfg.output_format,   output_format),
 		OPT_END()
@@ -1629,7 +1649,8 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		OPT_LIST("nqn",               'n', &fabrics_cfg.nqn,               "nqn name"),
 		OPT_LIST("traddr",            'a', &fabrics_cfg.traddr,            "transport address"),
 		OPT_LIST("trsvcid",           's', &fabrics_cfg.trsvcid,           "transport service id (e.g. IP port)"),
-		OPT_LIST("host-traddr",       'w', &fabrics_cfg.host_traddr,       "host traddr (e.g. FC WWN's)"),
+		OPT_LIST("host-traddr",       'w', &fabrics_cfg.host_traddr,       "host traddr (e.g. FC WWN's or IP source address)"),
+		OPT_LIST("host-iface",        'f', &fabrics_cfg.host_iface,        "host transport interface (e.g. IP eth1, enp2s0)"),
 		OPT_LIST("hostnqn",           'q', &fabrics_cfg.hostnqn,           "user-defined hostnqn"),
 		OPT_LIST("hostid",            'I', &fabrics_cfg.hostid,            "user-defined hostid (if default not used)"),
 		OPT_INT("nr-io-queues",       'i', &fabrics_cfg.nr_io_queues,      "number of io queues to use (default is core count)"),
