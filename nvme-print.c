@@ -5311,6 +5311,7 @@ const char *nvme_select_to_string(int sel)
 	case 1:  return "Default";
 	case 2:  return "Saved";
 	case 3:  return "Supported capabilities";
+	case 8:  return "Changed";
 	default: return "Reserved";
 	}
 }
