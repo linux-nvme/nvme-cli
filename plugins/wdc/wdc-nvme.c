@@ -956,7 +956,7 @@ struct __attribute__((__packed__)) wdc_fw_act_history_log_format_c2 {
 	__u8		log_identifier;
 	__u8 		reserved[3];
 	__le32		num_entries;
-	struct 		wdc_fw_act_history_log_entry_c2 entry[20];
+	struct 		wdc_fw_act_history_log_entry_c2 entry[WDC_MAX_NUM_ACT_HIST_ENTRIES];
 	__u8 		reserved2[2790];
 	__le16 		log_page_version;
 	__u8 		log_page_guid[WDC_C2_GUID_LENGTH];
@@ -4021,17 +4021,12 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries, __u
 	char *null_fw = "--------";
 	memset((void *)time_str, 0, 11);
 
+	printf("  Firmware Activate History Log \n");
+	printf("           Power on Hour       Power Cycle     Previous    New                               \n");
+	printf("  Entry      hh:mm:ss             Count        Firmware    Firmware    Slot   Action  Result \n");
+	printf("  -----  -----------------  -----------------  ---------   ---------   -----  ------  -------\n");
+
 	if (data[0] == WDC_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID) {
-		printf("  Firmware Activate History Log \n");
-		if (cust_id == WDC_CUSTOMER_ID_0x1005) {
-			printf("           Power on Hour       Power Cycle     Previous    New                               \n");
-			printf("  Entry      hh:mm:ss             Count        Firmware    Firmware    Slot   Action  Result \n");
-			printf("  -----  -----------------  -----------------  ---------   ---------   -----  ------  -------\n");
-		} else {
-			printf("                               Power Cycle     Previous    New                               \n");
-			printf("  Entry      Timestamp            Count        Firmware    Firmware    Slot   Action  Result \n");
-			printf("  -----  -----------------  -----------------  ---------   ---------   -----  ------  -------\n");
-		}
 		struct wdc_fw_act_history_log_format_c2 *fw_act_history_entry = (struct wdc_fw_act_history_log_format_c2 *)(data);
 
 		if (num_entries == WDC_MAX_NUM_ACT_HIST_ENTRIES) {
@@ -4071,10 +4066,14 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries, __u
 				printf("%s", time_str);
 				printf("     ");
 			} else {
-				printf("   ");
-				uint64_t timestamp = (0x0000FFFFFFFFFFFF & le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp));
-				printf("%16"PRIu64"", timestamp);
-				printf("   ");
+				printf("       ");
+				memset((void *)time_str, 0, 9);
+				sprintf((char *)time_str, "%04d:%02d:%02d",
+						(int)((le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp)/(3600*1000))%24),
+						(int)((le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp)/(1000*60))%60),
+						(int)((le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp)/1000)%60));
+				printf("%s", time_str);
+				printf("     ");
 			}
 
 			printf("%16"PRIu64"", (uint64_t)le64_to_cpu(fw_act_history_entry->entry[entryIdx].power_cycle_count));
@@ -4101,10 +4100,6 @@ static void wdc_print_fw_act_history_log_normal(__u8 *data, int num_entries, __u
 	}
 	else
 	{
-		printf("  Firmware Activate History Log \n");
-		printf("         Power on Hour   Power Cycle           Previous    New                               \n");
-		printf("  Entry    hh:mm:ss      Count                 Firmware    Firmware    Slot   Action  Result \n");
-		printf("  -----  --------------  --------------------  ----------  ----------  -----  ------  -------\n");
 
 		struct wdc_fw_act_history_log_entry *fw_act_history_entry = (struct wdc_fw_act_history_log_entry *)(data + sizeof(struct wdc_fw_act_history_log_hdr));
 
@@ -4220,8 +4215,12 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries, __u32
 				json_object_add_value_string(root, "Power on Hour", time_str);
 
 			} else {
-				uint64_t timestamp = (0x0000FFFFFFFFFFFF & le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp));
-				json_object_add_value_int(root, "Timestamp", timestamp);
+				sprintf((char *)time_str, "%04d:%02d:%02d",
+						(int)((le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp)/(3600*1000))%24),
+						(int)((le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp)/(1000*60))%60),
+						(int)((le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp)/1000)%60));
+
+				json_object_add_value_int(root, "Power on Hour", time_str);
 			}
 
 			json_object_add_value_int(root, "Power Cycle Count",
@@ -5476,7 +5475,7 @@ static int wdc_get_fw_act_history_C2(int fd, char *format)
 	__u8 *data;
 	__u32 *cust_id;
 	struct wdc_fw_act_history_log_format_c2 *fw_act_history_log;
-	__u32 num_entries = 0;
+	__u32 tot_entries = 0, num_entries = 0;
 
 	if (!wdc_check_device(fd))
 		return -1;
@@ -5503,24 +5502,21 @@ static int wdc_get_fw_act_history_C2(int fd, char *format)
 	if (ret == 0) {
 		/* parse the data */
 		fw_act_history_log = (struct wdc_fw_act_history_log_format_c2*)(data);
-		num_entries = le32_to_cpu(fw_act_history_log->num_entries);
+		tot_entries = le32_to_cpu(fw_act_history_log->num_entries);
 
-		if ((num_entries > 0) && (num_entries <= WDC_MAX_NUM_ACT_HIST_ENTRIES)) {
+		if (tot_entries > 0) {
 			/* get the FW customer id */
 			if (!get_dev_mgment_cbs_data(fd, WDC_C2_CUSTOMER_ID_ID, (void*)&cust_id)) {
 				fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
 				ret = -1;
 				goto freeData;
 			}
-
+			num_entries = (tot_entries < WDC_MAX_NUM_ACT_HIST_ENTRIES) ? tot_entries :
+				WDC_MAX_NUM_ACT_HIST_ENTRIES;
 			ret = wdc_print_fw_act_history_log(data, num_entries, fmt, *cust_id);
-		} else if (num_entries == 0) {
+		} else  {
 			fprintf(stderr, "INFO : WDC : No FW Activate History entries found.\n");
 			ret = 0;
-		}
-		else {
-			fprintf(stderr, "ERROR : WDC : Invalid number entries found in FW Activate History Log Page - %d\n", num_entries);
-			ret = -1;
 		}
 	} else {
 		fprintf(stderr, "ERROR : WDC : Unable to read FW Activate History Log Page data\n");
