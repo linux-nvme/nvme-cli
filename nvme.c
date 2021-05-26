@@ -505,7 +505,7 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 
 	OPT_ARGS(opts) = {
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_UINT("group-id",     'g', &cfg.group_id,      group_id),
+		OPT_SHRT("group-id",     'g', &cfg.group_id,      group_id),
 		OPT_END()
 	};
 
@@ -780,7 +780,7 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("nvmset-id", 	 'i', &cfg.nvmset_id,     nvmset_id),
+		OPT_SHRT("nvmset-id", 	 'i', &cfg.nvmset_id,     nvmset_id),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary, 	  raw),
 		OPT_END()
@@ -932,7 +932,7 @@ static int get_persistent_event_log(int argc, char **argv,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("action",       'a', &cfg.action,        action),
+		OPT_BYTE("action",       'a', &cfg.action,        action),
 		OPT_UINT("log_len", 	 'l', &cfg.log_len,  	  log_len),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
@@ -1263,10 +1263,10 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_UINT("log-id",       'i', &cfg.log_id,       log_id),
+		OPT_BYTE("log-id",       'i', &cfg.log_id,       log_id),
 		OPT_UINT("log-len",      'l', &cfg.log_len,      log_len),
 		OPT_UINT("aen",          'a', &cfg.aen,          aen),
-		OPT_LONG("lpo",          'o', &cfg.lpo,          lpo),
+		OPT_SUFFIX("lpo",        'o', &cfg.lpo,          lpo),
 		OPT_BYTE("lsp",          's', &cfg.lsp,          lsp),
 		OPT_SHRT("lsi",          'S', &cfg.lsi,          lsi),
 		OPT_FLAG("rae",          'r', &cfg.rae,          rae),
@@ -2232,7 +2232,7 @@ static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("nvmset_id",    'i', &cfg.nvmset_id,     nvmset_id),
+		OPT_SHRT("nvmset_id",    'i', &cfg.nvmset_id,     nvmset_id),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_END()
 	};
@@ -2588,7 +2588,7 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",   'n', &cfg.namespace_id, namespace_id),
-		OPT_UINT("self-test-code", 's', &cfg.stc,          self_test_code),
+		OPT_BYTE("self-test-code", 's', &cfg.stc,          self_test_code),
 		OPT_END()
 	};
 
@@ -2640,7 +2640,7 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("dst-entries",  'e', &cfg.dst_entries,   dst_entries),
+		OPT_BYTE("dst-entries",  'e', &cfg.dst_entries,   dst_entries),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
 		OPT_END()
@@ -2716,7 +2716,7 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id),
-		OPT_UINT("feature-id",    'f', &cfg.feature_id,     feature_id),
+		OPT_BYTE("feature-id",    'f', &cfg.feature_id,     feature_id),
 		OPT_BYTE("sel",           's', &cfg.sel,            sel),
 		OPT_UINT("data-len",      'l', &cfg.data_len,       data_len),
 		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw),
@@ -3626,8 +3626,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_UINT("feature-id",   'f', &cfg.feature_id,   feature_id),
-		OPT_LONG("value",        'v', &cfg.value,        value),
+		OPT_BYTE("feature-id",   'f', &cfg.feature_id,   feature_id),
+		OPT_SUFFIX("value",      'v', &cfg.value,        value),
 		OPT_UINT("cdw12",        'c', &cfg.cdw12,        cdw12),
 		OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index),
 		OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
@@ -4452,8 +4452,8 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_LONG("crkey",        'c', &cfg.crkey,        crkey),
-		OPT_LONG("prkey",        'p', &cfg.prkey,        prkey),
+		OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
+		OPT_SUFFIX("prkey",      'p', &cfg.prkey,        prkey),
 		OPT_BYTE("rtype",        't', &cfg.rtype,        rtype),
 		OPT_BYTE("racqa",        'a', &cfg.racqa,        racqa),
 		OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey),
@@ -4524,8 +4524,8 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_LONG("crkey",        'c', &cfg.crkey,        crkey),
-		OPT_LONG("nrkey",        'k', &cfg.nrkey,        nrkey),
+		OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
+		OPT_SUFFIX("nrkey",      'k', &cfg.nrkey,        nrkey),
 		OPT_BYTE("rrega",        'r', &cfg.rrega,        rrega),
 		OPT_BYTE("cptpl",        'p', &cfg.cptpl,        cptpl),
 		OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey),
@@ -4605,7 +4605,7 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_LONG("crkey",        'c', &cfg.crkey,        crkey),
+		OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
 		OPT_BYTE("rtype",        't', &cfg.rtype,        rtype),
 		OPT_BYTE("rrela",        'a', &cfg.rrela,        rrela),
 		OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey),
