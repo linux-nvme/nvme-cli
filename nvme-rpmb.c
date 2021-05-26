@@ -266,7 +266,7 @@ struct rpmb_config_block_t {
 #define RPMB_NVME_SPSP        0x0001
 
 #define SEND_RPMB_REQ(tgt, size, req) \
-nvme_sec_send(fd, 0, tgt, RPMB_NVME_SPSP, RPMB_NVME_SECP, size, size, \
+nvme_sec_send(fd, 0, tgt, RPMB_NVME_SPSP, RPMB_NVME_SECP, size, \
 		(unsigned char *)(req))
 	
 #define RECV_RPMB_RSP(tgt, size, rsp) \
