@@ -1286,6 +1286,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *raw = "output in raw format";
 	const char *uuid_index = "UUID index";
 	int err, fd;
+	unsigned char *log;
 
 	struct config {
 		__u16 lsi;
@@ -1335,36 +1336,48 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	}
 
 	if (!cfg.log_len) {
-		fprintf(stderr, "non-zero log-len is required param\n");
+		perror("non-zero log-len is required param\n");
 		err = -EINVAL;
-	} else {
-		unsigned char *log;
-
-		log = malloc(cfg.log_len);
-		if (!log) {
-			perror("could not alloc buffer for log\n");
-			err = -ENOMEM;
-			goto close_fd;
-		}
-
-		err = nvme_get_log(fd, cfg.log_id, cfg.namespace_id,
-				   cfg.lpo, cfg.lsp, cfg.lsi, cfg.rae,
-				   cfg.uuid_index, NVME_CSI_NVM,
-				   cfg.log_len, log);
-		if (!err) {
-			if (!cfg.raw_binary) {
-				printf("Device:%s log-id:%d namespace-id:%#x\n",
-				       devicename, cfg.log_id,
-				       cfg.namespace_id);
-				d(log, cfg.log_len, 16, 1);
-			} else
-				d_raw((unsigned char *)log, cfg.log_len);
-		} else if (err > 0)
-			nvme_show_status(err);
-		else
-			perror("log page");
-		free(log);
+		goto close_fd;
 	}
+
+	if (cfg.lsp > 16) {
+		perror("invalid lsp param\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	if (cfg.uuid_index > 128) {
+		perror("invalid uuid index param\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	log = malloc(cfg.log_len);
+	if (!log) {
+		perror("could not alloc buffer for log\n");
+		err = -ENOMEM;
+		goto close_fd;
+	}
+
+	err = nvme_get_log(fd, cfg.log_id, cfg.namespace_id,
+			   cfg.lpo, cfg.lsp, cfg.lsi, cfg.rae,
+			   cfg.uuid_index, NVME_CSI_NVM,
+			   cfg.log_len, log);
+	if (!err) {
+		if (!cfg.raw_binary) {
+			printf("Device:%s log-id:%d namespace-id:%#x\n",
+				devicename, cfg.log_id,
+				cfg.namespace_id);
+			d(log, cfg.log_len, 16, 1);
+		} else
+			d_raw((unsigned char *)log, cfg.log_len);
+	} else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("log page");
+	free(log);
+
 close_fd:
 	close(fd);
 ret:
