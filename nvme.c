@@ -913,7 +913,7 @@ static int get_persistent_event_log(int argc, char **argv,
 	const char *log_len = "number of bytes to retrieve";
 	const char *raw = "use binary output";
 	void *pevent_log_info;
-	struct nvme_persistent_event_log_head *pevent_log_head;
+	struct nvme_persistent_event_log_head *pevent_log_head = NULL;
 	enum nvme_print_flags flags;
 	int err, fd;
 	bool huge;
@@ -948,6 +948,13 @@ static int get_persistent_event_log(int argc, char **argv,
 		goto close_fd;
 	if (cfg.raw_binary)
 		flags = BINARY;
+
+	if (cfg.action > 3) {
+		fprintf(stderr, "invalid action field: %u\n", cfg.action);
+		errno = EINVAL;
+		err = -1;
+		goto close_fd;
+	}
 
 	pevent_log_head = calloc(sizeof(*pevent_log_head), 1);
 	if (!pevent_log_head) {
