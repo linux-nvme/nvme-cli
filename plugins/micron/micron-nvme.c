@@ -1735,7 +1735,8 @@ static int GetFeatureSettings(int fd, const char *dir)
                 WriteData(bufp, len, dir, fmap[i].file, msg);
             }
         } else {
-            printf("Failed to retrieve feature 0x%x data !\n", fmap[i].id);
+            printf("Feature 0x%x data not retrieved, error %d (ignored)!\n",
+                    fmap[i].id, err);
             errcnt++;
         }
     }
@@ -1757,7 +1758,19 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
         unsigned char bs_ver_minor;
     } dinfo = { 0 };
     eDriveModel model = UNKNOWN_MODEL;
+    bool is_json = false;
+    struct json_object *root, *driveInfo;
+    struct format {
+        char *fmt;
+    };
+
+    const char *fmt = "output format normal";
+    struct format cfg = {
+        .fmt = "normal",
+    };
+
     OPT_ARGS(opts) = {
+        OPT_FMT("format", 'f', &cfg.fmt, fmt),
         OPT_END()
     };
 
@@ -1769,6 +1782,9 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
         return -1;
     }
 
+    if (strcmp(cfg.fmt, "json") == 0)
+        is_json = true;
+
     if (model == M5407) {
         admin_cmd.opcode = 0xD4,
         admin_cmd.addr = (__u64) (uintptr_t) &dinfo;
@@ -1779,6 +1795,40 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
             fprintf(stderr, "ERROR : drive-info opcode failed with 0x%x\n", err);
             return -1;
         }
+    } else {
+        err = nvme_identify_ctrl(fd, &ctrl);
+        if (err) {
+            fprintf(stderr, "ERROR : identify_ctrl() failed with 0x%x\n", err);
+            return -1;
+        }
+        dinfo.hw_ver_major = ctrl.vs[820];
+        dinfo.hw_ver_minor = ctrl.vs[821];
+    }
+
+    if (is_json) {
+        struct json_object *pinfo = json_create_object();
+        char tempstr[64] = { 0 };
+        root = json_create_object();
+        driveInfo = json_create_array();
+        json_object_add_value_array(root, "Micron Drive HW Information", driveInfo);
+        sprintf(tempstr, "%hhu.%hhu", dinfo.hw_ver_major, dinfo.hw_ver_minor);
+        json_object_add_value_string(pinfo, "Drive Hardware Version", tempstr);
+
+        if (dinfo.ftl_unit_size) {
+            sprintf(tempstr, "%hhu KB", dinfo.ftl_unit_size);
+            json_object_add_value_string(pinfo, "FTL_unit_size", tempstr);
+        }
+
+        if (dinfo.bs_ver_major != 0 || dinfo.bs_ver_minor != 0) {
+            sprintf(tempstr, "%hhu.%hhu", dinfo.bs_ver_major, dinfo.bs_ver_minor);
+            json_object_add_value_string(pinfo, "Boot Spec.Version", tempstr);
+        }
+
+        json_array_add_value_object(driveInfo, pinfo);
+        json_print_object(root, NULL);
+        printf("\n");
+        json_free_object(root);
+    } else {
         printf("Drive Hardware Version: %hhu.%hhu\n",
                 dinfo.hw_ver_major, dinfo.hw_ver_minor);
 
@@ -1789,13 +1839,6 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
             printf("Boot  Spec.Version: %hhu.%hhu\n",
                     dinfo.bs_ver_major, dinfo.bs_ver_minor);
         }
-    } else {
-        err = nvme_identify_ctrl(fd, &ctrl);
-        if (err) {
-            fprintf(stderr, "ERROR : identify_ctrl() failed with 0x%x\n", err);
-            return -1;
-        }
-        printf("Drive Hardware Version: %hhu.%hhu\n", ctrl.vs[820], ctrl.vs[821]);
     }
 
     return 0;
