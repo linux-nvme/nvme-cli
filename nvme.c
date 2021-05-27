@@ -2782,9 +2782,11 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 			cfg.uuid_index, cfg.data_len, buf, &result);
 	if (!err) {
 		if (!cfg.raw_binary || !buf) {
-			printf("get-feature:%#02x (%s), %s value:%#08x\n", cfg.feature_id,
-				nvme_feature_to_string(cfg.feature_id),
-				nvme_select_to_string(cfg.sel), result);
+			printf("get-feature:%#0*x (%s), %s value:%#0*x\n",
+			       cfg.feature_id ? 4 : 2, cfg.feature_id,
+			       nvme_feature_to_string(cfg.feature_id),
+			       nvme_select_to_string(cfg.sel), result ? 10 : 8,
+			       result);
 			if (cfg.sel == 3)
 				nvme_show_select_result(result);
 			else if (cfg.human_readable)
@@ -3711,9 +3713,11 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	if (err < 0) {
 		perror("set-feature");
 	} else if (!err) {
-		printf("set-feature:%#02x (%s), value:%#08"PRIx64", cdw12:%#08"PRIx32", \
-			save:%#x\n", cfg.feature_id, nvme_feature_to_string(cfg.feature_id),
-			(uint64_t)cfg.value, cfg.cdw12, cfg.save);
+		printf("set-feature:%#0*x (%s), value:%#0*"PRIx64", cdw12:%#0*x, save:%#x\n",
+		       cfg.feature_id ? 4 : 2, cfg.feature_id,
+		       nvme_feature_to_string(cfg.feature_id),
+		       cfg.value ? 10 : 8, (uint64_t)cfg.value,
+		       cfg.cdw12 ? 10 : 8, cfg.cdw12, cfg.save);
 		if (cfg.feature_id == NVME_LBA_STATUS_INFO) {
 			nvme_show_lba_status_info(result);
 		}
