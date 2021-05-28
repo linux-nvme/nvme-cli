@@ -305,6 +305,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "icsvscc", ctrl->icsvscc);
 	json_object_add_value_int(root, "nwpc", ctrl->nwpc);
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
+	json_object_add_value_int(root, "ocfs", le16_to_cpu(ctrl->ocfs));
 	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
 
 	if (strlen(subnqn))
@@ -3165,6 +3166,17 @@ static void nvme_show_id_ctrl_nwpc(__u8 nwpc)
 	printf("\n");
 }
 
+static void nvme_show_id_ctrl_ocfs(__u16 ocfs)
+{
+	__u16 rsvd = (ocfs & 0xfffe) >> 1;
+	__u8 copy_fmt_0 = ocfs & 0x1;
+	if (rsvd)
+		printf("  [15:1] : %#x\tReserved\n", rsvd);
+	printf("  [0:0] : %#x\tController Copy Format 0h %sSupported\n",
+		copy_fmt_0, copy_fmt_0 ? "" : "Not ");
+	printf("\n");
+}
+
 static void nvme_show_id_ctrl_sgls(__le32 ctrl_sgls)
 {
 	__u32 sgls = le32_to_cpu(ctrl_sgls);
@@ -3853,6 +3865,9 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_nwpc(ctrl->nwpc);
 	printf("acwu      : %d\n", le16_to_cpu(ctrl->acwu));
+	printf("ocfs      : %#x\n", le16_to_cpu(ctrl->ocfs));
+	if (human)
+		nvme_show_id_ctrl_ocfs(ctrl->ocfs);
 	printf("sgls      : %#x\n", le32_to_cpu(ctrl->sgls));
 	if (human)
 		nvme_show_id_ctrl_sgls(ctrl->sgls);
