@@ -83,7 +83,7 @@ void nvme_show_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *
 	enum nvme_print_flags flags);
 void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 	enum nvme_print_flags flags);
-void nvme_show_id_iocs(struct nvme_id_iocs *iocs);
+void nvme_show_id_iocs(struct nvme_id_iocs *iocs, enum nvme_print_flags flags);
 void nvme_show_list_ctrl(struct nvme_controller_list *ctrl_list,
 	enum nvme_print_flags flags);
 void nvme_show_list_ns(__u32 *ns_list, enum nvme_print_flags flags);

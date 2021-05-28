@@ -2318,19 +2318,26 @@ static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *pl
 		"given device, returns properties of the specified controller "\
 		"in either human-readable or binary format.";
 	const char *controller_id = "identifier of desired controller";
+	const char *human_readable = "show info in human readable format";
 	struct nvme_id_iocs iocs;
+	enum nvme_print_flags flags;
 	int err, fd;
 
 	struct config {
 		__u16 cntid;
+		char *output_format;
+		int human_readable;
 	};
 
 	struct config cfg = {
 		.cntid = 0xffff,
+		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_SHRT("controller-id", 'c', &cfg.cntid, controller_id),
+		OPT_SHRT("controller-id",  'c', &cfg.cntid,          controller_id),
+		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
 		OPT_END()
 	};
 
@@ -2340,15 +2347,22 @@ static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto ret;
 	}
 
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+	if (cfg.human_readable)
+		flags |= VERBOSE;
+
 	err = nvme_identify_iocs(fd, cfg.cntid, &iocs);
 	if (!err) {
 		printf("NVMe Identify I/O Command Set:\n");
-		nvme_show_id_iocs(&iocs);
+		nvme_show_id_iocs(&iocs, flags);
 	} else if (err > 0)
 		nvme_show_status(err);
 	else
 		perror("NVMe Identify I/O Command Set");
 
+close_fd:
 	close(fd);
 ret:
 	return nvme_status_to_errno(err, false);
