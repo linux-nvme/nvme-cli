@@ -965,7 +965,7 @@ struct nvme_id_ctrl {
 	__u8			icsvscc;
 	__u8			nwpc;
 	__le16			acwu;
-	__u8			rsvd534[2];
+	__le16			ocfs;
 	__le32			sgls;
 	__le32			mnan;
 	__u8			maxdna[16];
