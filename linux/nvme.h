@@ -147,6 +147,8 @@ enum {
 	NVME_IOCS_ZONED = 0x02,
 };
 
+#define NVME_NUM_IOCS_COMBINATIONS 512
+
 #define NVME_AQ_DEPTH		32
 #define NVME_NR_AEN_COMMANDS	1
 #define NVME_AQ_BLK_MQ_DEPTH	(NVME_AQ_DEPTH - NVME_NR_AEN_COMMANDS)
@@ -425,7 +427,7 @@ struct nvme_id_ns {
 };
 
 struct nvme_id_iocs {
-	__le64 iocs[512];
+	__le64 iocs[NVME_NUM_IOCS_COMBINATIONS];
 };
 
 enum {
