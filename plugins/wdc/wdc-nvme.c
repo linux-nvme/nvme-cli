@@ -127,6 +127,7 @@
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
 #define WDC_SN730B_CAP_VUC_LOG				0x0000000400000000
 #define WDC_DRIVE_CAP_DUI    				0x0000000800000000
+#define WDC_DRIVE_CAP_PURGE				0x0000001000000000
 #define WDC_DRIVE_CAP_SMART_LOG_MASK	(WDC_DRIVE_CAP_C0_LOG_PAGE | WDC_DRIVE_CAP_C1_LOG_PAGE | \
                                          WDC_DRIVE_CAP_CA_LOG_PAGE | WDC_DRIVE_CAP_D0_LOG_PAGE)
 #define WDC_DRIVE_CAP_CLEAR_PCIE_MASK       (WDC_DRIVE_CAP_CLEAR_PCIE | \
@@ -1183,11 +1184,13 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		switch (read_device_id) {
 		case WDC_NVME_SN100_DEV_ID:
 			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG | WDC_DRIVE_CAP_C1_LOG_PAGE |
-					WDC_DRIVE_CAP_DRIVE_LOG | WDC_DRIVE_CAP_CRASH_DUMP | WDC_DRIVE_CAP_PFAIL_DUMP);
+					WDC_DRIVE_CAP_DRIVE_LOG | WDC_DRIVE_CAP_CRASH_DUMP | WDC_DRIVE_CAP_PFAIL_DUMP |
+					WDC_DRIVE_CAP_PURGE);
 			break;
 		case WDC_NVME_SN200_DEV_ID:
 			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG | WDC_DRIVE_CAP_CLEAR_PCIE |
-					WDC_DRIVE_CAP_DRIVE_LOG | WDC_DRIVE_CAP_CRASH_DUMP | WDC_DRIVE_CAP_PFAIL_DUMP);
+					WDC_DRIVE_CAP_DRIVE_LOG | WDC_DRIVE_CAP_CRASH_DUMP | WDC_DRIVE_CAP_PFAIL_DUMP |
+					WDC_DRIVE_CAP_PURGE);
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -3267,14 +3270,11 @@ static int wdc_purge(int argc, char **argv,
 	char *err_str;
 	int fd, ret;
 	struct nvme_passthru_cmd admin_cmd;
+	__u64 capabilities = 0;
 
 	OPT_ARGS(opts) = {
 		OPT_END()
 	};
-
-	err_str = "";
-	memset(&admin_cmd, 0, sizeof (admin_cmd));
-	admin_cmd.opcode = WDC_NVME_PURGE_CMD_OPCODE;
 
 	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
@@ -3283,23 +3283,33 @@ static int wdc_purge(int argc, char **argv,
 	if (!wdc_check_device(fd))
 		return -1;
 
-	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
-	if (ret > 0) {
-		switch (ret) {
-		case WDC_NVME_PURGE_CMD_SEQ_ERR:
-			err_str = "ERROR : WDC : Cannot execute purge, "
-					"Purge operation is in progress.\n";
-			break;
-		case WDC_NVME_PURGE_INT_DEV_ERR:
-			err_str = "ERROR : WDC : Internal Device Error.\n";
-			break;
-		default:
-			err_str = "ERROR : WDC\n";
-		}
-	}
+	capabilities = wdc_get_drive_capabilities(fd);
+	if((capabilities & WDC_DRIVE_CAP_PURGE) == 0) {
+		ret = -1;
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+	} else {
+		err_str = "";
+		memset(&admin_cmd, 0, sizeof (admin_cmd));
+		admin_cmd.opcode = WDC_NVME_PURGE_CMD_OPCODE;
 
-	fprintf(stderr, "%s", err_str);
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		ret = nvme_submit_admin_passthru(fd, &admin_cmd);
+		if (ret > 0) {
+			switch (ret) {
+			case WDC_NVME_PURGE_CMD_SEQ_ERR:
+				err_str = "ERROR : WDC : Cannot execute purge, "
+						"Purge operation is in progress.\n";
+				break;
+			case WDC_NVME_PURGE_INT_DEV_ERR:
+				err_str = "ERROR : WDC : Internal Device Error.\n";
+				break;
+			default:
+				err_str = "ERROR : WDC\n";
+			}
+		}
+
+		fprintf(stderr, "%s", err_str);
+		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	}
 	return ret;
 }
 
@@ -3312,18 +3322,11 @@ static int wdc_purge_monitor(int argc, char **argv,
 	double progress_percent;
 	struct nvme_passthru_cmd admin_cmd;
 	struct wdc_nvme_purge_monitor_data *mon;
+	__u64 capabilities = 0;
 
 	OPT_ARGS(opts) = {
 		OPT_END()
 	};
-
-	memset(output, 0, sizeof (output));
-	memset(&admin_cmd, 0, sizeof (struct nvme_admin_cmd));
-	admin_cmd.opcode = WDC_NVME_PURGE_MONITOR_OPCODE;
-	admin_cmd.addr = (__u64)(uintptr_t)output;
-	admin_cmd.data_len = WDC_NVME_PURGE_MONITOR_DATA_LEN;
-	admin_cmd.cdw10 = WDC_NVME_PURGE_MONITOR_CMD_CDW10;
-	admin_cmd.timeout_ms = WDC_NVME_PURGE_MONITOR_TIMEOUT;
 
 	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
@@ -3332,20 +3335,34 @@ static int wdc_purge_monitor(int argc, char **argv,
 	if (!wdc_check_device(fd))
 		return -1;
 
-	ret = nvme_submit_admin_passthru(fd, &admin_cmd);
-	if (ret == 0) {
-		mon = (struct wdc_nvme_purge_monitor_data *) output;
-		printf("Purge state = 0x%0x\n", admin_cmd.result);
-		printf("%s\n", wdc_purge_mon_status_to_string(admin_cmd.result));
-		if (admin_cmd.result == WDC_NVME_PURGE_STATE_BUSY) {
-			progress_percent =
-				((double)le32_to_cpu(mon->entire_progress_current) * 100) /
-				le32_to_cpu(mon->entire_progress_total);
-			printf("Purge Progress = %f%%\n", progress_percent);
-		}
-	}
+	capabilities = wdc_get_drive_capabilities(fd);
+	if((capabilities & WDC_DRIVE_CAP_PURGE) == 0) {
+		ret = -1;
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+	} else {
+		memset(output, 0, sizeof (output));
+		memset(&admin_cmd, 0, sizeof (struct nvme_admin_cmd));
+		admin_cmd.opcode = WDC_NVME_PURGE_MONITOR_OPCODE;
+		admin_cmd.addr = (__u64)(uintptr_t)output;
+		admin_cmd.data_len = WDC_NVME_PURGE_MONITOR_DATA_LEN;
+		admin_cmd.cdw10 = WDC_NVME_PURGE_MONITOR_CMD_CDW10;
+		admin_cmd.timeout_ms = WDC_NVME_PURGE_MONITOR_TIMEOUT;
 
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		ret = nvme_submit_admin_passthru(fd, &admin_cmd);
+		if (ret == 0) {
+			mon = (struct wdc_nvme_purge_monitor_data *) output;
+			printf("Purge state = 0x%0x\n", admin_cmd.result);
+			printf("%s\n", wdc_purge_mon_status_to_string(admin_cmd.result));
+			if (admin_cmd.result == WDC_NVME_PURGE_STATE_BUSY) {
+				progress_percent =
+					((double)le32_to_cpu(mon->entire_progress_current) * 100) /
+					le32_to_cpu(mon->entire_progress_total);
+				printf("Purge Progress = %f%%\n", progress_percent);
+			}
+		}
+
+		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	}
 	return ret;
 }
 
@@ -7803,8 +7820,10 @@ static int wdc_capabilities(int argc, char **argv,
     printf("get-pfail-dump                : %s\n", 
             capabilities & WDC_DRIVE_CAP_PFAIL_DUMP ? "Supported" : "Not Supported");
     printf("id-ctrl                       : Supported\n");
-    printf("purge                         : Supported\n");
-    printf("purge-monitor                 : Supported\n");
+    printf("purge                         : %s\n",
+            capabilities & WDC_DRIVE_CAP_PURGE ? "Supported" : "Not Supported");
+    printf("purge-monitor                 : %s\n",
+            capabilities & WDC_DRIVE_CAP_PURGE ? "Supported" : "Not Supported");
     printf("vs-internal-log               : %s\n", 
             capabilities & WDC_DRIVE_CAP_INTERNAL_LOG_MASK ? "Supported" : "Not Supported");
     printf("vs-nand-stats                 : %s\n", 
