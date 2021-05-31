@@ -15,6 +15,7 @@ SYNOPSIS
 		      [--raw-binary | -b]
 		      [--lpo=<offset> | -o <offset>]
 		      [--lsp=<field> | -s <field>]
+		      [--lsi=<field> | -S <field>]
 		      [--rae | -r]
 
 DESCRIPTION
@@ -67,6 +68,10 @@ OPTIONS
 -s <field>::
 --lsp=<field>::
 	The log specified field of LID.
+
+-S <field>::
+--lsi=<field>::
+	The log specified field of Log Specific Identifier.
 
 -r::
 --rae::

@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc 9.0.0rc2" />
 <title>nvme-get-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -756,6 +756,7 @@ nvme-get-log(1) Manual Page
                       [--raw-binary | -b]
                       [--lpo=&lt;offset&gt; | -o &lt;offset&gt;]
                       [--lsp=&lt;field&gt; | -s &lt;field&gt;]
+                      [--lsi=&lt;field&gt; | -S &lt;field&gt;]
                       [--rae | -r]</pre>
 <div class="attribution">
 </div></div>
@@ -864,6 +865,17 @@ program to parse.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+-S &lt;field&gt;
+</dt>
+<dt class="hdlist1">
+--lsi=&lt;field&gt;
+</dt>
+<dd>
+<p>
+        The log specified field of Log Specific Identifier.
+</p>
+</dd>
+<dt class="hdlist1">
 -r
 </dt>
 <dt class="hdlist1">
@@ -918,7 +930,7 @@ Have the program return the raw log page in binary:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-09-18 00:00:58 JST
+ 2021-01-13 23:17:32 JST
 </div>
 </div>
 </body>

@@ -401,16 +401,16 @@ int nvme_identify_ns_list_csi(int fd, __u32 nsid, __u8 csi, bool all, void *data
 	return nvme_identify13(fd, nsid, cns, csi << 24, data);
 }
 
-int nvme_identify_ns_list(int fd, __u32 nsid, bool all, void *data)
-{
-	return nvme_identify_ns_list_csi(fd, nsid, 0x0, all, data);
-}
-
 int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
 {
 	int cns = nsid ? NVME_ID_CNS_CTRL_NS_LIST : NVME_ID_CNS_CTRL_LIST;
 
 	return nvme_identify(fd, nsid, (cntid << 16) | cns, data);
+}
+
+int nvme_identify_primary_ctrl_caps(int fd, void *data)
+{
+	return nvme_identify(fd, 0, NVME_ID_CNS_PRIMARY_CTRL_CAPS, data);
 }
 
 int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
@@ -589,9 +589,9 @@ int nvme_discovery_log(int fd, struct nvmf_disc_rsp_page_hdr *log, __u32 size)
 	return nvme_get_log(fd, 0, NVME_LOG_DISC, false, NVME_NO_LOG_LSP, size, log);
 }
 
-int nvme_sanitize_log(int fd, struct nvme_sanitize_log_page *sanitize_log)
+int nvme_sanitize_log(int fd, bool rae, struct nvme_sanitize_log_page *sanitize_log)
 {
-	return nvme_get_log(fd, 0, NVME_LOG_SANITIZE, false,
+	return nvme_get_log(fd, 0, NVME_LOG_SANITIZE, rae,
 			NVME_NO_LOG_LSP, sizeof(*sanitize_log), sanitize_log);
 }
 
@@ -634,8 +634,14 @@ int nvme_lba_status_log(int fd, void *lba_status, bool rae,
 		rae, NVME_NO_LOG_LSP, size, lba_status);
 }
 
+int nvme_resv_notif_log(int fd, struct nvme_resv_notif_log *resv)
+{
+	return nvme_get_log(fd, 0, NVME_LOG_RESERVATION, false,
+		NVME_NO_LOG_LSP, sizeof(*resv), resv);
+}
+
 int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
-		 __u32 cdw12, __u32 data_len, void *data, __u32 *result)
+		 __u32 cdw12, __u32 cdw14, __u32 data_len, void *data, __u32 *result)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= opcode,
@@ -643,6 +649,7 @@ int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
 		.cdw12		= cdw12,
+		.cdw14		= cdw14,
 		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= data_len,
 	};
@@ -655,12 +662,13 @@ int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
 }
 
 int nvme_set_feature(int fd, __u32 nsid, __u8 fid, __u32 value, __u32 cdw12,
-		     bool save, __u32 data_len, void *data, __u32 *result)
+		     bool save, __u8 uuid_index, __u32 data_len, void *data, __u32 *result)
 {
 	__u32 cdw10 = fid | (save ? 1 << 31 : 0);
+	__u32 cdw14 = uuid_index;
 
 	return nvme_feature(fd, nvme_admin_set_features, nsid, cdw10, value,
-			    cdw12, data_len, data, result);
+			    cdw12, cdw14, data_len, data, result);
 }
 
 
@@ -729,12 +737,13 @@ int nvme_set_property(int fd, int offset, uint64_t value)
 }
 
 int nvme_get_feature(int fd, __u32 nsid, __u8 fid, __u8 sel, __u32 cdw11,
-		     __u32 data_len, void *data, __u32 *result)
+		     __u8 uuid_index, __u32 data_len, void *data, __u32 *result)
 {
 	__u32 cdw10 = fid | sel << 8;
+	__u32 cdw14 = uuid_index;
 
 	return nvme_feature(fd, nvme_admin_get_features, nsid, cdw10, cdw11,
-			    0, data_len, data, result);
+			    0, cdw14, data_len, data, result);
 }
 
 int nvme_format(int fd, __u32 nsid, __u8 lbaf, __u8 ses, __u8 pi,
@@ -839,7 +848,7 @@ int nvme_fw_commit(int fd, __u8 slot, __u8 action, __u8 bpid)
 }
 
 int nvme_sec_send(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
-		  __u8 secp, __u32 tl, __u32 data_len, void *data, __u32 *result)
+		  __u8 secp, __u32 tl, __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_security_send,
@@ -849,16 +858,12 @@ int nvme_sec_send(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 		.cdw10		= secp << 24 | spsp << 8 | nssf,
 		.cdw11		= tl,
 	};
-	int err;
 
-	err = nvme_submit_admin_passthru(fd, &cmd);
-	if (!err && result)
-		*result = cmd.result;
-	return err;
+	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
 int nvme_sec_recv(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
-		  __u8 secp, __u32 al, __u32 data_len, void *data, __u32 *result)
+		  __u8 secp, __u32 al, __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_security_recv,
@@ -868,16 +873,12 @@ int nvme_sec_recv(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= data_len,
 	};
-	int err;
 
-	err = nvme_submit_admin_passthru(fd, &cmd);
-	if (!err && result)
-		*result = cmd.result;
-	return err;
+	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
 int nvme_get_lba_status(int fd, __u32 namespace_id, __u64 slba, __u32 mndw,
-		__u8 atype, __u16 rl, void *data)
+		__u8 atype, __u16 rl, void *data, __u32 timeout_ms)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode =  nvme_admin_get_lba_status,
@@ -888,6 +889,7 @@ int nvme_get_lba_status(int fd, __u32 namespace_id, __u64 slba, __u32 mndw,
 		.cdw11 = slba >> 32,
 		.cdw12 = mndw,
 		.cdw13 = (atype << 24) | rl,
+		.timeout_ms = timeout_ms,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);

@@ -551,7 +551,7 @@ static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 		goto end;
 
 	err = nvme_set_feature(fd, namespace_id, feature_id, value, cdw12, save,
-				0, NULL, &result);
+				0, 0, NULL, &result);
 	if (err)
 		fprintf(stderr, "%s: couldn't clear PCIe correctable errors \n",
 			__func__);

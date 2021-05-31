@@ -4,6 +4,7 @@ override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
 HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=242; echo $$?)
+LIBJSONC = $(shell $(LD) -o /dev/null -ljson-c >/dev/null 2>&1; echo $$?)
 NVME = nvme
 INSTALL ?= install
 DESTDIR =
@@ -37,6 +38,11 @@ ifeq ($(HAVE_SYSTEMD),0)
 	override CFLAGS += -DHAVE_SYSTEMD
 endif
 
+ifeq ($(LIBJSONC), 0)
+	override LDFLAGS += -ljson-c
+	override CFLAGS += -DLIBJSONC
+endif
+
 RPMBUILD = rpmbuild
 TAR = tar
 RM = rm -f
@@ -62,7 +68,11 @@ OBJS := nvme-print.o nvme-ioctl.o nvme-rpmb.o \
 	nvme-lightnvm.o fabrics.o nvme-models.o plugin.o \
 	nvme-status.o nvme-filters.o nvme-topology.o
 
-UTIL_OBJS := util/argconfig.o util/suffix.o util/json.o util/parser.o
+UTIL_OBJS := util/argconfig.o util/suffix.o util/parser.o \
+	util/cleanup.o util/log.o
+ifneq ($(LIBJSONC), 0)
+override UTIL_OBJS += util/json.o
+endif
 
 PLUGIN_OBJS :=					\
 	plugins/intel/intel-nvme.o		\
@@ -81,7 +91,9 @@ PLUGIN_OBJS :=					\
 	plugins/dera/dera-nvme.o 		\
 	plugins/scaleflux/sfx-nvme.o		\
 	plugins/transcend/transcend-nvme.o	\
-	plugins/zns/zns.o
+	plugins/zns/zns.o	        		\
+	plugins/nvidia/nvidia-nvme.o        \
+	plugins/ymtc/ymtc-nvme.o
 
 nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)

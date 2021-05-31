@@ -180,7 +180,8 @@ enum {
 	NVME_REG_PMRSTS = 0x0e08,	/* Persistent Memory Region Status */
 	NVME_REG_PMREBS = 0x0e0c,	/* Persistent Memory Region Elasticity Buffer Size */
 	NVME_REG_PMRSWTP= 0x0e10,	/* Persistent Memory Region Sustained Write Throughput */
-	NVME_REG_PMRMSC = 0x0e14,	/* Persistent Memory Region Controller Memory Space Control */
+	NVME_REG_PMRMSCL= 0x0e14,	/* Persistent Memory Region Controller Memory Space Control Lower */
+	NVME_REG_PMRMSCU= 0x0e18,	/* Persistent Memory Region Controller Memory Space Control Upper*/
 	NVME_REG_DBS	= 0x1000,	/* SQ 0 Tail Doorbell */
 };
 
@@ -336,7 +337,7 @@ struct nvme_id_ctrl {
 	__u8			icsvscc;
 	__u8			nwpc;
 	__le16			acwu;
-	__le16			ocfs;
+	__u8			rsvd534[2];
 	__le32			sgls;
 	__le32			mnan;
 	__u8			rsvd544[224];
@@ -345,9 +346,10 @@ struct nvme_id_ctrl {
 	__le32			ioccsz;
 	__le32			iorcsz;
 	__le16			icdoff;
-	__u8			ctrattr;
+	__u8			fcatt;
 	__u8			msdbd;
-	__u8			rsvd1804[244];
+	__le16			ofcs;
+	__u8			rsvd1806[242];
 	struct nvme_id_power_state	psd[32];
 	__u8			vs[1024];
 };
@@ -439,6 +441,7 @@ enum {
 	NVME_ID_CNS_NS_PRESENT		= 0x11,
 	NVME_ID_CNS_CTRL_NS_LIST	= 0x12,
 	NVME_ID_CNS_CTRL_LIST		= 0x13,
+	NVME_ID_CNS_PRIMARY_CTRL_CAPS	= 0x14,
 	NVME_ID_CNS_SCNDRY_CTRL_LIST	= 0x15,
 	NVME_ID_CNS_NS_GRANULARITY	= 0x16,
 	NVME_ID_CNS_UUID_LIST		= 0x17,
@@ -779,7 +782,8 @@ struct nvme_change_ns_event {
 	__le32	nsmgt_cdw10;
 	__u8	rsvd4[4];
 	__le64	nsze;
-	__u8	nscap[16];
+	__u8	rsvd16[8];
+	__le64	nscap;
 	__u8	flbas;
 	__u8	dps;
 	__u8	nmic;
@@ -930,6 +934,15 @@ struct nvme_lba_status_hdr {
 	__le32	estulb;
 	__u8	rsvd12[2];
 	__le16	lsgc;
+};
+
+struct nvme_resv_notif_log {
+	__le64	log_page_count;
+	__u8	resv_notif_log_type;
+	__u8	num_logs;
+	__u8	rsvd10[2];
+	__le32	nsid;
+	__u8	rsvd16[48];
 };
 
 enum {
@@ -1141,6 +1154,7 @@ enum {
 	NVME_RW_DSM_LATENCY_LOW		= 3 << 4,
 	NVME_RW_DSM_SEQ_REQ		= 1 << 6,
 	NVME_RW_DSM_COMPRESSED		= 1 << 7,
+	NVME_RW_PIREMAP			= 1 << 9,
 	NVME_RW_PRINFO_PRCHK_REF	= 1 << 10,
 	NVME_RW_PRINFO_PRCHK_APP	= 1 << 11,
 	NVME_RW_PRINFO_PRCHK_GUARD	= 1 << 12,
@@ -1267,6 +1281,7 @@ enum nvme_feat {
 	NVME_FEAT_RRL		= 0x12,
 	NVME_FEAT_PLM_CONFIG	= 0x13,
 	NVME_FEAT_PLM_WINDOW	= 0x14,
+	NVME_LBA_STATUS_INFO	= 0x15,
 	NVME_FEAT_HOST_BEHAVIOR	= 0x16,
 	NVME_FEAT_SANITIZE	= 0x17,
       NVME_FEAT_ENDURANCE     = 0x18,
@@ -1469,6 +1484,27 @@ struct nvme_controller_list {
 	__le16 identifier[2047];
 };
 
+struct nvme_primary_ctrl_caps {
+	__le16 cntlid;	/* Controller Identifier */
+	__le16 portid;	/* Port Identifier */
+	__u8   crt;	/* Controller Resource Types */
+	__u8   rsvd5[27];
+	__le32 vqfrt;	/* VQ Resources Flexible Total */
+	__le32 vqrfa;	/* VQ Resources Flexible Assigned */
+	__le16 vqrfap;	/* VQ Resources Flexible Allocated to Primary */
+	__le16 vqprt;	/* VQ Resources Private Total */
+	__le16 vqfrsm;	/* VQ Resources Flexible Secondary Maximum */
+	__le16 vqgran;	/* VQ Flexible Resource Preferred Granularity */
+	__u8   rsvd48[16];
+	__le32 vifrt;	/* VI Resources Flexible Total */
+	__le32 virfa;	/* VI Resources Flexible Assigned */
+	__u16  virfap;	/* VI Resources Flexible Allocated to Primary */
+	__u16  viprt;	/* VI Resources Private Total */
+	__u16  vifrsm;	/* VI Resources Flexible Secondary Maximum */
+	__u16  vigran;	/* VI Flexible Resource Preferred Granularity */
+	__u8   rsvd80[4016];
+};
+
 struct nvme_secondary_controller_entry {
 	__le16 scid;	/* Secondary Controller Identifier */
 	__le16 pcid;	/* Primary Controller Identifier */
@@ -1562,7 +1598,7 @@ enum {
 
 	NVME_SC_NS_WRITE_PROTECTED	= 0x20,
 	NVME_SC_CMD_INTERRUPTED		= 0x21,
-	NVME_SC_TRANSIENT_TRANSPORT	= 0x22,	
+	NVME_SC_TRANSIENT_TRANSPORT	= 0x22,
 
 	NVME_SC_LBA_RANGE		= 0x80,
 	NVME_SC_CAP_EXCEEDED		= 0x81,

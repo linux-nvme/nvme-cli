@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 8.6.10" />
 <title>nvme-set-feature(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -433,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -748,6 +751,7 @@ nvme-set-feature(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme set-feature</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                           [--feature-id=&lt;fid&gt; | -f &lt;fid&gt;] [--value=&lt;value&gt; | -v &lt;value&gt;]
+                          [--uuid-index=&lt;uuid-index&gt; | -U &lt;uuid_index&gt;]
                           [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
                           [--data=&lt;data-file&gt; | -d &lt;data-file&gt;]
                           [--save| -s]</pre>
@@ -844,6 +848,17 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
         Save the attribute so that it persists through all power states and resets.
 </p>
 </dd>
+<dt class="hdlist1">
+-U &lt;uuid-index&gt;
+</dt>
+<dt class="hdlist1">
+--uuid-index=&lt;uuid-index&gt;
+</dt>
+<dd>
+<p>
+        UUID Index of the feature
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -868,6 +883,7 @@ Sets the host id to the ascii string.
 <div class="content">
 <pre><code># echo "abcdefgh" | nvme set-feature /dev/nvme0 -f 0x81 -l 8</code></pre>
 </div></div>
+<div class="paragraph"><p>nvme set-feature /dev/nvme0 -f 0x81 -l 8 -U 0x1</p></div>
 </li>
 </ul></div>
 </div>
@@ -882,7 +898,8 @@ Sets the host id to the ascii string.
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-02-27 10:11:58 EST
+Last updated
+ 2021-05-16 00:14:28 IST
 </div>
 </div>
 </body>

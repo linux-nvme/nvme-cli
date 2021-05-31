@@ -503,7 +503,7 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd
     fd = parse_and_open(argc, argv, desc, opts);
     if (fd < 0) return fd;
 
-    err = nvme_get_feature(fd, 0, feature_id, 0, 0, 0, NULL, &result);
+    err = nvme_get_feature(fd, 0, feature_id, 0, 0, 0, 0, NULL, &result);
     if (err < 0) {
         perror("get-feature");
     }
@@ -545,7 +545,7 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
     fd = parse_and_open(argc, argv, desc, opts);
     if (fd < 0) return fd;
 
-    err = nvme_set_feature(fd, 0, cfg.feature_id, cfg.value, 0, cfg.save, 0, NULL, &result);
+    err = nvme_set_feature(fd, 0, cfg.feature_id, cfg.value, 0, cfg.save, 0, 0, NULL, &result);
     if (err < 0) {
         perror("set-feature");
     }
@@ -602,7 +602,7 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, s
     }
     cfg.value = (param1 << MB_FEAT_HIGH_LATENCY_VALUE_SHIFT) | param2;
 
-    err = nvme_set_feature(fd, 0, cfg.feature_id, cfg.value, 0, 0, 0, NULL, &result);
+    err = nvme_set_feature(fd, 0, cfg.feature_id, cfg.value, 0, 0, 0, 0, NULL, &result);
     if (err < 0) {
         perror("set-feature");
     }
@@ -1038,7 +1038,7 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, 
 
 
 
-    err = nvme_set_feature(fd, 0, cfg.feature_id, cfg.value, 0, cfg.save, 0, NULL, &result);
+    err = nvme_set_feature(fd, 0, cfg.feature_id, cfg.value, 0, cfg.save, 0, 0, NULL, &result);
     if (err < 0) {
         perror("set-feature");
     }
@@ -1115,7 +1115,7 @@ static int mb_set_lat_stats(int argc, char **argv,
 		return fd;
 	switch (option) {
 	case None:
-		err = nvme_get_feature(fd, nsid, fid, sel, cdw11, data_len, buf,
+		err = nvme_get_feature(fd, nsid, fid, sel, cdw11, 0, data_len, buf,
 					&result);
 		if (!err) {
 			printf(
@@ -1128,7 +1128,7 @@ static int mb_set_lat_stats(int argc, char **argv,
 		break;
 	case True:
 	case False:
-		err = nvme_set_feature(fd, nsid, fid, option, cdw12, save,
+		err = nvme_set_feature(fd, nsid, fid, option, cdw12, save, 0,
 				data_len, buf, &result);
 		if (err > 0) {
 			fprintf(stderr, "NVMe Status:%s(%x)\n",

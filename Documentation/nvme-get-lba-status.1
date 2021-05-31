@@ -1,0 +1,134 @@
+'\" t
+.\"     Title: nvme-get-lba-status
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 05/11/2021
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-GET\-LBA\-STAT" "1" "05/11/2021" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-get-lba-status \- Get LBA Status from NVMe device
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme get\-lba\-status\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                    [\-\-start\-lba=<slba> | \-s <slba>]
+                    [\-\-max\-dw=<max\-dw> | \-m <max\-dw>]
+                    [\-\-action=<action\-type> | \-a <action\-type>]
+                    [\-\-range\-len=<range\-len> | \-l <range\-len>]
+                    [\-\-timeout=<timeout> | \-t <timeout> ]
+                   [\-\-output\-format=<format> | \-o <format>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, send an nvme Get LBA Status admin command and provides the results\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+On success, the returned get lba data structure may be returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format or the raw buffer may be printed to stdout for another program to parse\&.
+.SH "OPTIONS"
+.PP
+\-n <nsid>, \-\-namespace\-id=<nsid>
+.RS 4
+Send the Get LBA Status command for the specified nsid\&. This can be used to override the default value for either character device (unspecified) or the block device (result from NVME_IOCTL_ID)\&.
+.RE
+.PP
+\-s <slba>, \-\-start\-lba=<slba>
+.RS 4
+Starting LBA(SLBA) in 64\-bit address of the first logical block addressed
+.RE
+.PP
+\-m <max\-dw>, \-\-max\-dw=<max\-dw>
+.RS 4
+Maximum Number of Dwords(MNDW) specifies maximum number of dwords to return
+.RE
+.PP
+\-a <action\-type>, \-\-action=<action\-type>
+.RS 4
+Action Type(ATYPE) specifies the mechanism it uses in determining the LBA Status Descriptors\&.
+.RE
+.PP
+\-l <range\-len>, \-\-range\-len=<range\-len>
+.RS 4
+Range Length(RL) specifies the length of the range of contiguous LBAs beginning at SLBA
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
+.RE
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR, or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Get the LBA Status of the device using all defaults:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme get\-lba\-status /dev/nvme0n1
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Get LBA Status of the namespace 1 from SLBA 10 for the max Dwords of 0x1000
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme get\-lba\-status /dev/nvme0 \-\-namespace\-id=1 \-\-start\-lba=10 \-\-max\-dw=0x1000
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

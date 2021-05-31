@@ -451,10 +451,10 @@ int argconfig_parse_subopt_string(char *string, char **options,
 	return 0;
 }
 
-unsigned argconfig_parse_comma_sep_array(char *string, int *val,
+int argconfig_parse_comma_sep_array(char *string, int *val,
 					 unsigned max_length)
 {
-	unsigned ret = 0;
+	int ret = 0;
 	unsigned long v;
 	char *tmp;
 	char *p;
@@ -497,11 +497,11 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
 	}
 }
 
-unsigned argconfig_parse_comma_sep_array_long(char *string,
+int argconfig_parse_comma_sep_array_long(char *string,
 					      unsigned long long *val,
 					      unsigned max_length)
 {
-	unsigned ret = 0;
+	int ret = 0;
 	char *tmp;
 	char *p;
 

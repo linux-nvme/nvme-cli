@@ -2,7 +2,6 @@
 #define NVME_PRINT_H
 
 #include "nvme.h"
-#include "util/json.h"
 #include <inttypes.h>
 
 void d(unsigned char *buf, int len, int width, int group);
@@ -11,7 +10,7 @@ uint64_t int48_to_long(__u8 *data);
 
 void nvme_show_status(__u16 status);
 void nvme_show_relatives(const char *name);
-
+const char *nvme_cmd_to_string(int admin, __u8 opcode);
 void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
 	void (*vendor_show)(__u8 *vs, struct json_object *root));
 void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode);
@@ -64,6 +63,8 @@ void nvme_show_endurance_group_event_agg_log(
 void json_lba_status_log(void *lba_status);
 void nvme_show_lba_status_log(void *lba_status, __u32 size,
 	const char *devname, enum nvme_print_flags flags);
+void nvme_show_resv_notif_log(struct nvme_resv_notif_log *resv,
+	const char *devname, enum nvme_print_flags flags);
 void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags);
 void nvme_show_single_property(int offset, uint64_t prop, int human);
 void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flags);
@@ -74,6 +75,8 @@ void nvme_show_subsystem_list(struct nvme_topology *t,
       enum nvme_print_flags flags);
 void nvme_show_id_nvmset(struct nvme_id_nvmset *nvmset, unsigned nvmset_id,
 	enum nvme_print_flags flags);
+void nvme_show_primary_ctrl_caps(const struct nvme_primary_ctrl_caps *caps,
+	enum nvme_print_flags flags);
 void nvme_show_list_secondary_ctrl(const struct nvme_secondary_controllers_list *sc_list,
 	__u32 count, enum nvme_print_flags flags);
 void nvme_show_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *glist,
@@ -81,11 +84,15 @@ void nvme_show_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *
 void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 	enum nvme_print_flags flags);
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs);
+void nvme_show_list_ctrl(struct nvme_controller_list *ctrl_list,
+	enum nvme_print_flags flags);
+void nvme_show_list_ns(__u32 *ns_list, enum nvme_print_flags flags);
 
 void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result, unsigned char *buf);
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u32 result,
 	void *buf, __u32 len, enum nvme_print_flags flags);
 void nvme_show_select_result(__u32 result);
+void nvme_show_lba_status_info(__u32 result);
 
 void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode);
 void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
