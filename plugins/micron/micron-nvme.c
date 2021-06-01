@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include "nvme.h"
 #include "nvme-print.h"
+#include "nvme-status.h"
 #include "nvme-ioctl.h"
 #include <sys/ioctl.h>
 #include <limits.h>
@@ -935,6 +936,8 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
         err = nvme_set_feature(fd, 0, fid, (1 << 31), 0, 0, 0, 0, 0, &result);
         if (err == 0 && (err = (int)result) == 0)
             printf("Device correctable errors cleared!\n");
+        else if (err > 0)
+            nvme_show_status(err);
         else
             printf("Error clearing Device correctable errors = 0x%x\n", err);
         goto out;
@@ -1265,17 +1268,19 @@ static void print_nand_stats_fb(__u8 *buf, __u8 *buf2, __u8 nsze, bool is_json, 
     print_micron_vs_logs(buf, fb_log_page, field_count, stats, spec);
 
     /* print last three entries from D0 log page */
-    init_d0_log_page(buf2, nsze);
+    if (buf2 != NULL) {
+        init_d0_log_page(buf2, nsze);
 
-    if (is_json) {
-        for (int i = 4; i < 7; i++) {
-            json_object_add_value_string(stats,
-                                         d0_log_page[i].field,
-                                         d0_log_page[i].datastr);
-        }
-    } else {
-        for (int i = 4; i < 7; i++) {
-            printf("%-40s : %s\n", d0_log_page[i].field, d0_log_page[i].datastr);
+        if (is_json) {
+            for (int i = 0; i < 7; i++) {
+                json_object_add_value_string(stats,
+                                             d0_log_page[i].field,
+                                             d0_log_page[i].datastr);
+            }
+        } else {
+            for (int i = 0; i < 7; i++) {
+                printf("%-40s : %s\n", d0_log_page[i].field, d0_log_page[i].datastr);
+            }
         }
     }
 
@@ -1355,14 +1360,16 @@ static int micron_nand_stats(int argc, char **argv,
         is_json = false;
 
     err = nvme_identify_ctrl(fd, &ctrl);
-    if (err)
+    if (err) {
+        printf("Error %d retrieving controller identification data\n", err);
         goto out;
+    }
 
     /* pull log details based on the model name */
     sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx);
     if ((eModel = GetDriveModel(ctrlIdx)) == UNKNOWN_MODEL) {
         printf ("Unsupported drive model for vs-nand-stats command\n");
-        close(fd);
+        err = -1;
         goto out;
     }
 
@@ -1371,28 +1378,29 @@ static int micron_nand_stats(int argc, char **argv,
     has_d0_log = (0 == err);
 
     /* should check for firmware version if this log is supported or not */
-    if (eModel == M5407 || eModel == M5410) {
+    if (eModel != M5407 && eModel != M5410) {
         err = nvme_get_log(fd, NVME_NSID_ALL, 0xFB, false, NVME_NO_LOG_LSP,
                            FB_log_size, logFB);
         has_fb_log = (0 == err);
     }
 
     nsze = (ctrl.vs[987] == 0x12);
+
     if (nsze == 0 && nsze_from_oacs)
         nsze = ((ctrl.oacs >> 3) & 0x1);
-    err = 0;
+
     if (has_fb_log) {
         __u8 spec = (eModel == M5410) ? 0 : 1;  /* FB spec version */
         print_nand_stats_fb((__u8 *)logFB, (__u8 *)extSmartLog, nsze, is_json, spec);
     } else if (has_d0_log) {
         print_nand_stats_d0((__u8 *)extSmartLog, nsze, is_json);
-    } else {
-        printf("Unable to retrieve extended smart log for the drive\n");
-        err = -ENOTTY;
+        err = 0;
     }
 out:
     close(fd);
-    return err;
+    if (err > 0)
+        nvme_show_status(err);
+    return nvme_status_to_errno(err, false);
 }
 
 
@@ -1538,14 +1546,14 @@ static void GetGenericLogs(int fd, const char *dir)
     err = nvme_persistent_event_log(fd, NVME_PEVENT_LOG_EST_CTX_AND_READ, 
                         sizeof(pevent_log_head), &pevent_log_head);
     if (err) {
-        fprintf(stderr, "Failed to set persistent event log read context");
+        fprintf(stderr, "Setting persistent event log read ctx failed (ignored)!\n");
         return;
     }
 
     log_len = le64_to_cpu(pevent_log_head.tll);
     pevent_log_info = nvme_alloc(log_len, &huge);
     if (!pevent_log_info) {
-        perror("could not alloc buffer for persistent event log page\n");
+        perror("could not alloc buffer for persistent event log page (ignored)!\n");
         return;
     }
     err = nvme_persistent_event_log(fd, NVME_PEVENT_LOG_READ,
@@ -1735,7 +1743,7 @@ static int GetFeatureSettings(int fd, const char *dir)
                 WriteData(bufp, len, dir, fmap[i].file, msg);
             }
         } else {
-            printf("Feature 0x%x data not retrieved, error %d (ignored)!\n",
+            fprintf(stderr, "Feature 0x%x data not retrieved, error %d (ignored)!\n",
                     fmap[i].id, err);
             errcnt++;
         }
@@ -2065,17 +2073,19 @@ static int micron_error_reason(int argc, char **argv, struct command *cmd,
 static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *cmd,
                                 struct plugin *plugin)
 {
-    const char *desc = "Retrieve Micron OCP Smart Health log for the given device ";
+    const char *desc = "Retrieve Smart or Extended Smart Health log for the given device ";
     unsigned int logC0[C0_log_size/sizeof(int)] = { 0 };
+    unsigned int logFB[FB_log_size/sizeof(int)] = { 0 };
+    struct nvme_id_ctrl ctrl;
     eDriveModel eModel = UNKNOWN_MODEL;
-    int fd, err;
-    bool is_json = false;
+    int fd, err = 0;
+    bool is_json = true;
     struct format {
         char *fmt;
     };
     const char *fmt = "output format normal|json";
     struct format cfg = {
-        .fmt = "normal",
+        .fmt = "json",
     };
 
     OPT_ARGS(opts) = {
@@ -2087,28 +2097,49 @@ static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *c
         return -1;
     }
 
-    err = -EINVAL;
-    /* check for models that support 0xC0 log */
-    if (eModel != M51CX) {
-        printf ("Unsupported drive model for vs-smart-add-log commmand\n");
-        close(fd);
+    if (strcmp(cfg.fmt, "normal") == 0)
+        is_json = false;
+
+    /* For M5410 and M5407, this option prints 0xFB log page */
+    if (eModel == M5410 || eModel == M5407) {
+        __u8 spec = (eModel == M5410) ? 0 : 1;
+        __u8 nsze;
+
+        if ((err = nvme_identify_ctrl(fd, &ctrl)) == 0)
+            err = nvme_get_log(fd, NVME_NSID_ALL, 0xFB, false, NVME_NO_LOG_LSP,
+                               FB_log_size, logFB);
+        if (err) {
+            if (err < 0)
+                printf("Unable to retrieve smart log 0xFB for the drive\n");
+            goto out;
+        }
+
+        nsze = (ctrl.vs[987] == 0x12);
+        if (nsze == 0 && nsze_from_oacs)
+            nsze = ((ctrl.oacs >> 3) & 0x1);
+        print_nand_stats_fb((__u8 *)logFB, NULL, nsze, is_json, spec);
         goto out;
     }
 
-    if (strcmp(cfg.fmt, "json") == 0)
-        is_json = true;
+    /* check for models that support 0xC0 log */
+    if (eModel != M51CX) {
+        printf ("Unsupported drive model for vs-smart-add-log commmand\n");
+        err = -1;
+        goto out;
+    }
 
     err = nvme_get_log(fd, NVME_NSID_ALL, 0xC0, false, NVME_NO_LOG_LSP,
                        C0_log_size, logC0);
-    if (err < 0) {
-        printf("Unable to retrieve extended smart log for the drive\n");
-        err = -ENOTTY;
-    } else {
+    if (err == 0) {
         print_smart_cloud_health_log((__u8 *)logC0, is_json);
+    } else if (err < 0) {
+        printf("Unable to retrieve extended smart log 0xC0 for the drive\n");
     }
 out:
     close(fd);
-    return err;
+    if (err > 0)
+        nvme_show_status(err);
+    return nvme_status_to_errno(err, false);
 }
 
 static int micron_clr_fw_activation_history(int argc, char **argv,
