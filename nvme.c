@@ -4384,7 +4384,7 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 	};
 
 	struct config cfg = {
-		.namespace_id = NVME_NSID_ALL,
+		.namespace_id = 0,
 	};
 
 	OPT_ARGS(opts) = {
