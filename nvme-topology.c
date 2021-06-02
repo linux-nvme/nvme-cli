@@ -319,10 +319,8 @@ static int scan_ctrl(struct nvme_ctrl *c, char *p, __u32 ns_instance)
 		return ret;
 
 	fd = open(path, O_RDONLY);
-	if (fd < 0) {
-		fprintf(stderr, "Failed to open %s\n", path);
+	if (fd < 0)
 		goto free;
-	}
 
 	ret = nvme_identify_ctrl(fd, &c->id);
 	if (ret < 0)
