@@ -4251,7 +4251,7 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries, __u32
 				uint64_t timestamp = (0x0000FFFFFFFFFFFF & le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp));
 				sprintf((char *)time_str, "%04d:%02d:%02d", (int)((timestamp/(3600*1000))%24), (int)((timestamp/(1000*60))%60),
 						(int)((timestamp/1000)%60));
-				json_object_add_value_int(root, "Power on Hour", time_str);
+				json_object_add_value_string(root, "Power on Hour", time_str);
 			} else {
 				uint64_t timestamp = (0x0000FFFFFFFFFFFF & le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp));
 				json_object_add_value_int(root, "Timestamp", timestamp);
