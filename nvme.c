@@ -5446,11 +5446,14 @@ static int passthru(int argc, char **argv, int ioctl_cmd, uint8_t cmd_type,
 	const char *re = "set dataflow direction to receive";
 	const char *wr = "set dataflow direction to send";
 	const char *prefill = "prefill buffers with known byte-value, default 0";
+	const char *latency = "output latency statistics";
+
 	void *data = NULL, *metadata = NULL;
 	int err = 0, wfd = STDIN_FILENO, fd;
 	__u32 result;
 	bool huge;
 	const char *cmd_name = NULL;
+	struct timeval start_time, end_time;
 
 	struct config {
 		__u8  opcode;
@@ -5475,6 +5478,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, uint8_t cmd_type,
 		int   read;
 		int   write;
 		__u8  prefill;
+		int   latency;
 	};
 
 	struct config cfg = {
@@ -5520,6 +5524,7 @@ static int passthru(int argc, char **argv, int ioctl_cmd, uint8_t cmd_type,
 		OPT_FLAG("dry-run",      'd', &cfg.dry_run,      dry),
 		OPT_FLAG("read",         'r', &cfg.read,         re),
 		OPT_FLAG("write",        'w', &cfg.write,        wr),
+		OPT_FLAG("latency",      'T', &cfg.latency,      latency),
 		OPT_END()
 	};
 
@@ -5599,17 +5604,27 @@ static int passthru(int argc, char **argv, int ioctl_cmd, uint8_t cmd_type,
 	if (cfg.dry_run)
 		goto free_data;
 
+	gettimeofday(&start_time, NULL);
+
 	err = nvme_passthru(fd, ioctl_cmd, cfg.opcode, cfg.flags, cfg.rsvd,
 				cfg.namespace_id, cfg.cdw2, cfg.cdw3, cfg.cdw10,
 				cfg.cdw11, cfg.cdw12, cfg.cdw13, cfg.cdw14, cfg.cdw15,
 				cfg.data_len, data, cfg.metadata_len, metadata,
 				cfg.timeout, &result);
+
+	gettimeofday(&end_time, NULL);
+	cmd_name = nvme_cmd_to_string(cmd_type, cfg.opcode);
+	if (cfg.latency)
+		printf("%s Command %s latency: %llu us\n",
+			cmd_type ? "Admin": "IO",
+			strcmp(cmd_name, "Unknown") ? cmd_name: "Vendor Specific",
+			elapsed_utime(start_time, end_time));
+
 	if (err < 0)
 		perror("passthru");
 	else if (err)
 		nvme_show_status(err);
 	else  {
-		cmd_name = nvme_cmd_to_string(cmd_type, cfg.opcode);
 		fprintf(stderr, "%s Command %s is Success and result: 0x%08x\n",
 				cmd_type ? "Admin": "IO",
 				strcmp(cmd_name, "Unknown") ? cmd_name: "Vendor Specific",
