@@ -23,6 +23,7 @@ SYNOPSIS
 		[--dry-run | -d]
 		[--raw-binary | -b]
 		[--prefill=<prefill> | -p <prefill>]
+		[--latency | -T]
 
 DESCRIPTION
 -----------
@@ -105,6 +106,10 @@ OPTIONS
 	than the required buffer, and you need to pad it with a known
 	value. It may also be useful if you need to confirm if a device
 	is overwriting a buffer on a data-in command.
+
+-T::
+--latency::
+	Print out the latency the IOCTL took (in us).
 
 EXAMPLES
 --------
