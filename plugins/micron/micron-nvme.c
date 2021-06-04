@@ -1794,7 +1794,7 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
         is_json = true;
 
     if (model == M5407) {
-        admin_cmd.opcode = 0xD4,
+        admin_cmd.opcode = 0xDA,
         admin_cmd.addr = (__u64) (uintptr_t) &dinfo;
         admin_cmd.data_len = (__u32)sizeof(dinfo);
         admin_cmd.cdw12 = 3;
