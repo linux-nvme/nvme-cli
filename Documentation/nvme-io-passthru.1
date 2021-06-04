@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-io-passthru
-.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
-.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/20/2020
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/04/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-IO\-PASSTHRU" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-IO\-PASSTHRU" "1" "06/04/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -47,6 +47,7 @@ nvme-io-passthru \- Submit an arbitrary io command, return results
                 [\-\-dry\-run | \-d]
                 [\-\-raw\-binary | \-b]
                 [\-\-prefill=<prefill> | \-p <prefill>]
+                [\-\-latency | \-T]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -124,6 +125,11 @@ Print the raw returned buffer to stdout if the command returns data or a structu
 \-p <prefill>, \-\-prefill <prefill>
 .RS 4
 Prefill the buffer with a predetermined byte value\&. Defaults to 0\&. This may be useful if the data you are writing is shorter than the required buffer, and you need to pad it with a known value\&. It may also be useful if you need to confirm if a device is overwriting a buffer on a data\-in command\&.
+.RE
+.PP
+\-T, \-\-latency
+.RS 4
+Print out the latency the IOCTL took (in us)\&.
 .RE
 .SH "EXAMPLES"
 .sp
