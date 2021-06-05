@@ -1354,6 +1354,10 @@ static bool should_connect(struct nvmf_disc_rsp_page_entry *entry)
 	if (cargs_match_found(entry))
 		return false;
 
+	/* skip connect if the transport type doesn't match */
+	if (strcmp(fabrics_cfg.transport, trtype_str(entry->trtype)))
+		return false;
+
 	if (!fabrics_cfg.matching_only || !fabrics_cfg.traddr)
 		return true;
 
