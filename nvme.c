@@ -3347,7 +3347,8 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		"data erase) or delete data encryption key if specified. "\
 		"Can also be used to change LBAF to change the namespaces reported physical block format.";
 	const char *namespace_id = "identifier of desired namespace";
-	const char *lbaf = "LBA format to apply (required)";
+	const char *lbaf = "[0-63]: LBA format lower (LBAFL) and upper (LBAFU), "\
+		"mention directly LBAF format that needs be applied (required)";
 	const char *ses = "[0-2]: secure erase";
 	const char *pil = "[0-1]: protection info location last/first 8 bytes of metadata";
 	const char *pi = "[0-3]: protection info off/Type 1/Type 2/Type 3";
@@ -3492,7 +3493,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		err = -EINVAL;
 		goto close_fd;
 	}
-	if (cfg.lbaf > 15) {
+	if (cfg.lbaf > 63) {
 		fprintf(stderr, "invalid lbaf:%d\n", cfg.lbaf);
 		err = -EINVAL;
 		goto close_fd;
