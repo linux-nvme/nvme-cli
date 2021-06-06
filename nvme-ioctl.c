@@ -749,7 +749,11 @@ int nvme_get_feature(int fd, __u32 nsid, __u8 fid, __u8 sel, __u32 cdw11,
 int nvme_format(int fd, __u32 nsid, __u8 lbaf, __u8 ses, __u8 pi,
 		__u8 pil, __u8 ms, __u32 timeout)
 {
-	__u32 cdw10 = lbaf | ms << 4 | pi << 5 | pil << 8 | ses << 9;
+	__u8 lbafl = lbaf & 0xf;
+	__u8 lbafu = (lbaf >> 4) & 0x3;
+	__u32 cdw10 = lbafl | ms << 4 | pi << 5 | pil << 8 | ses << 9 |
+                     lbafu << 12;
+
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_format_nvm,
 		.nsid		= nsid,
