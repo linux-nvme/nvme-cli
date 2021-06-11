@@ -1,0 +1,3 @@
+[submodule "event"]
+	path = event
+	url = git://github.com/mwilck/minivent
