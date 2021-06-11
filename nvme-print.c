@@ -219,6 +219,8 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 
 	long double tnvmcap = int128_to_double(ctrl->tnvmcap);
 	long double unvmcap = int128_to_double(ctrl->unvmcap);
+	long double megcap = int128_to_double(ctrl->megcap);
+	long double maxdna = int128_to_double(ctrl->maxdna);
 
 	char sn[sizeof(ctrl->sn) + 1], mn[sizeof(ctrl->mn) + 1],
 		fr[sizeof(ctrl->fr) + 1], subnqn[sizeof(ctrl->subnqn) + 1];
@@ -252,6 +254,9 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "crdt1", le16_to_cpu(ctrl->crdt1));
 	json_object_add_value_int(root, "crdt2", le16_to_cpu(ctrl->crdt2));
 	json_object_add_value_int(root, "crdt3", le16_to_cpu(ctrl->crdt3));
+	json_object_add_value_int(root, "nvmsr", ctrl->nvmsr);
+	json_object_add_value_int(root, "vwci", ctrl->vwci);
+	json_object_add_value_int(root, "mec", ctrl->mec);
 	json_object_add_value_int(root, "oacs", le16_to_cpu(ctrl->oacs));
 	json_object_add_value_int(root, "acl", ctrl->acl);
 	json_object_add_value_int(root, "aerl", ctrl->aerl);
@@ -288,6 +293,8 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 		le32_to_cpu(ctrl->anagrpmax));
 	json_object_add_value_int(root, "nanagrpid",
 		le32_to_cpu(ctrl->nanagrpid));
+	json_object_add_value_int(root, "domainid", le16_to_cpu(ctrl->domainid));
+	json_object_add_value_float(root, "megcap", megcap);
 	json_object_add_value_int(root, "sqes", ctrl->sqes);
 	json_object_add_value_int(root, "cqes", ctrl->cqes);
 	json_object_add_value_int(root, "maxcmd", le16_to_cpu(ctrl->maxcmd));
@@ -303,6 +310,8 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
 	json_object_add_value_int(root, "ocfs", le16_to_cpu(ctrl->ocfs));
 	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
+	json_object_add_value_float(root, "maxdna", maxdna);
+	json_object_add_value_int(root, "maxcna", le32_to_cpu(ctrl->maxcna));
 
 	if (strlen(subnqn))
 		json_object_add_value_string(root, "subnqn", subnqn);
@@ -2813,6 +2822,49 @@ static void nvme_show_id_ctrl_cntrltype(__u8 cntrltype)
 	printf("  [1:0] : %#x\t%s\n", cntrltype, type[cntrl]);
 }
 
+static void nvme_show_id_ctrl_nvmsr(__u8 nvmsr)
+{
+	__u8 rsvd = (nvmsr >> 2) & 0xfc;
+	__u8 nvmee = (nvmsr >> 1) & 0x1;
+	__u8 nvmesd = nvmsr & 0x1;
+
+	if (rsvd)
+		printf(" [7:2] : %#x\tReserved\n", rsvd);
+	printf("  [1:1] : %#x\tNVM subsystem %spart of an Enclosure\n",
+		nvmee, nvmee ? "" : "Not ");
+	printf("  [0:0] : %#x\tNVM subsystem %spart of an Storage Device\n",
+		nvmesd, nvmesd ? "" : "Not ");
+	printf("\n");
+}
+
+static void nvme_show_id_ctrl_vwci(__u8 vwci)
+{
+	__u8 vwcrv = (vwci >> 7) & 0x1;
+	__u8 vwcr = vwci & 0xfe;
+
+	printf("  [7:7] : %#x\tVPD Write Cycles Remaining field is %svalid.\n",
+		vwcrv, vwcrv ? "" : "Not ");
+	printf("  [6:0] : %#x\tVPD Write Cycles Remaining \n", vwcr);
+	printf("\n");
+
+}
+
+static void nvme_show_id_ctrl_mec(__u8 mec)
+{
+	__u8 rsvd = (mec >> 2) & 0xfc;
+	__u8 pcieme = (mec >> 1) & 0x1;
+	__u8 smbusme = mec & 0x1;
+
+	if (rsvd)
+		printf(" [7:2] : %#x\tReserved\n", rsvd);
+	printf("  [1:1] : %#x\tNVM subsystem %scontains a Management Endpoint"\
+		" on a PCIe port\n", pcieme, pcieme ? "" : "Not ");
+	printf("  [0:0] : %#x\tNVM subsystem %scontains a Management Endpoint"\
+		" on an SMBus/I2C port\n", smbusme, smbusme ? "" : "Not ");
+	printf("\n");
+
+}
+
 static void nvme_show_id_ctrl_oacs(__le16 ctrl_oacs)
 {
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
@@ -3774,6 +3826,15 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
 	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
 	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));
+	printf("nvmsr     : %u\n", ctrl->nvmsr);
+	if (human)
+		nvme_show_id_ctrl_nvmsr(ctrl->nvmsr);
+	printf("vwci      : %u\n", ctrl->vwci);
+	if (human)
+		nvme_show_id_ctrl_vwci(ctrl->vwci);
+	printf("mec       : %u\n", ctrl->mec);
+	if (human)
+		nvme_show_id_ctrl_mec(ctrl->vwci);
 
 	printf("oacs      : %#x\n", le16_to_cpu(ctrl->oacs));
 	if (human)
@@ -3831,6 +3892,8 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("anagrpmax : %d\n", ctrl->anagrpmax);
 	printf("nanagrpid : %d\n", le32_to_cpu(ctrl->nanagrpid));
 	printf("pels      : %d\n", le32_to_cpu(ctrl->pels));
+	printf("domainid  : %d\n", le16_to_cpu(ctrl->domainid));
+	printf("megcap    : %.0Lf\n", int128_to_double(ctrl->megcap));
 	printf("sqes      : %#x\n", ctrl->sqes);
 	if (human)
 		nvme_show_id_ctrl_sqes(ctrl->sqes);
@@ -3867,6 +3930,8 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_sgls(ctrl->sgls);
 	printf("mnan      : %d\n", le32_to_cpu(ctrl->mnan));
+	printf("maxdna    : %.0Lf\n", int128_to_double(ctrl->maxdna));
+	printf("maxcna    : %d\n", le32_to_cpu(ctrl->maxcna));
 	printf("subnqn    : %-.*s\n", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
 	printf("ioccsz    : %d\n", le32_to_cpu(ctrl->ioccsz));
 	printf("iorcsz    : %d\n", le32_to_cpu(ctrl->iorcsz));
