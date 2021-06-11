@@ -9,18 +9,25 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
-    container: mwilck/debiandev
+    container: debian:buster
     steps:
+    - name: install git
+      run: |
+        sed -i '/^deb/{p;s/^deb/deb-src/;}' /etc/apt/sources.list
+        apt-get update
+        apt-get install --yes git-core
     - name: checkout
       uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: update ppc64el arch
       run: |
-        sudo dpkg --add-architecture ppc64el
-        sudo apt-get update || true
-    - name: dependencies
+        dpkg --add-architecture ppc64el
+        apt-get update
+    - name: dependencies and foreign-arch setup
       run: |
-        sudo apt-get build-dep --yes  nvme-cli
-        sudo apt-get install --yes gcc-powerpc64le-linux-gnu libudev-dev:ppc64el libsystemd-dev:ppc64el uuid-dev:ppc64el pkg-config
+        apt-get build-dep --yes  nvme-cli
+        apt-get install --yes gcc-powerpc64le-linux-gnu libudev-dev:ppc64el libsystemd-dev:ppc64el uuid-dev:ppc64el pkg-config
     - name: make
       run: |
         make clean
