@@ -290,7 +290,10 @@ struct nvme_id_ctrl {
 	__le16			crdt1;
 	__le16			crdt2;
 	__le16			crdt3;
-	__u8			rsvd134[122];
+	__u8			rsvd134[119];
+	__u8			nvmsr;
+	__u8			vwci;
+	__u8			mec;
 	__le16			oacs;
 	__u8			acl;
 	__u8			aerl;
@@ -325,7 +328,10 @@ struct nvme_id_ctrl {
 	__le32			anagrpmax;
 	__le32			nanagrpid;
 	__le32			pels;
-	__u8			rsvd356[156];
+	__le16			domainid;
+	__u8			rsvd358[10];
+	__u8			megcap[16];
+	__u8			rsvd384[128];
 	__u8			sqes;
 	__u8			cqes;
 	__le16			maxcmd;
@@ -342,7 +348,9 @@ struct nvme_id_ctrl {
 	__le16			ocfs;
 	__le32			sgls;
 	__le32			mnan;
-	__u8			rsvd544[224];
+	__u8			maxdna[16];
+	__le32			maxcna;
+	__u8			rsvd564[204];
 	char			subnqn[256];
 	__u8			rsvd1024[768];
 	__le32			ioccsz;
