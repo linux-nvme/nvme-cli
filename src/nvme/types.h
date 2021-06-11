@@ -814,6 +814,10 @@ struct nvme_id_psd {
  * 	       groups supported by this controller.
  * @pels:      Persistent Event Log Size indicates the maximum reportable size
  * 	       for the Persistent Event Log.
+ * @domainid:  Domain Identifier indicates the identifier of the domain
+ *             that contains this controller.
+ * @megcap:    Max Endurance Group Capacity indicates the maximum capacity
+ *             of a single Endurance Group.
  * @sqes:      Submission Queue Entry Size, see &enum nvme_id_ctrl_sqes.
  * @cqes:      Completion Queue Entry Size, see &enum nvme_id_ctrl_cqes.
  * @maxcmd:    Maximum Outstanding Commands indicates the maximum number of
@@ -849,6 +853,12 @@ struct nvme_id_psd {
  * @sgls:      SGL Support, see &enum nvme_id_ctrl_sgls
  * @mnan:      Maximum Number of Allowed Namespaces indicates the maximum
  * 	       number of namespaces supported by the NVM subsystem.
+ * @maxdna:    Maximum Domain Namespace Attachments indicates the maximum
+ *             of the sum of the numver of namespaces attached to each I/O
+ *             controller in the Domain.
+ * @maxcna:    Maximum I/O Controller Namespace Attachments indicates the
+ *             maximum number of namespaces that are allowed to be attached to
+ *             this I/O controller.
  * @subnqn:    NVM Subsystem NVMe Qualified Name, UTF-8 null terminated string
  * @ioccsz:    I/O Queue Command Capsule Supported Size, defines the maximum
  * 	       I/O command capsule size in 16 byte units.
@@ -926,7 +936,10 @@ struct nvme_id_ctrl {
 	__le32			anagrpmax;
 	__le32			nanagrpid;
 	__le32			pels;
-	__u8			rsvd356[156];
+	__le16			domainid;
+	__u8			rsvd358[10];
+	__u8			megcap[16];
+	__u8			rsvd384[128];
 	__u8			sqes;
 	__u8			cqes;
 	__le16			maxcmd;
@@ -943,7 +956,9 @@ struct nvme_id_ctrl {
 	__u8			rsvd534[2];
 	__le32			sgls;
 	__le32			mnan;
-	__u8			rsvd544[224];
+	__u8			maxdna[16];
+	__le32			maxcna;
+	__u8			rsvd564[204];
 	char			subnqn[NVME_NQN_LENGTH];
 	__u8			rsvd1024[768];
 
