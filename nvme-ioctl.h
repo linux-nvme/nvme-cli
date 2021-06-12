@@ -88,7 +88,7 @@ int nvme_identify_iocs(int fd, __u16 cntid, void *data);
 int nvme_get_log(int fd, __u32 nsid, __u8 log_id, bool rae,
 		 __u8 lsp, __u32 data_len, void *data);
 int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
-		   __u16 group_id, bool rae, __u8 uuid_ix,
+		   __u16 group_id, bool rae, __u8 uuid_ix, __u8 csi, bool ot,
 		   __u32 data_len, void *data);
 int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp,
 		 __u64 lpo, __u16 lsi, bool rae, __u32 data_len,

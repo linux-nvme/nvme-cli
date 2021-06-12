@@ -1257,6 +1257,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *rae = "retain an asynchronous event";
 	const char *raw = "output in raw format";
 	const char *uuid_index = "UUID index";
+	const char *csi = "command set identifier";
+	const char *offset_type = "offset type";
 	int err = -1, fd;
 	unsigned char *log;
 
@@ -1269,6 +1271,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		__u64 lpo;
 		__u8  lsp;
 		__u8  uuid_index;
+		__u8  csi;
+		int   ot;
 		int   rae;
 		int   raw_binary;
 	};
@@ -1282,6 +1286,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.lsi          = 0,
 		.rae          = 0,
 		.uuid_index   = 0,
+		.csi          = 0,
+		.ot           = 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -1294,6 +1300,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		OPT_SHRT("lsi",          'S', &cfg.lsi,          lsi),
 		OPT_FLAG("rae",          'r', &cfg.rae,          rae),
 		OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index),
+		OPT_BYTE("csi",          'y', &cfg.csi,          csi),
+		OPT_FLAG("ot",           'O', &cfg.ot,           offset_type),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
 		OPT_END()
 	};
@@ -1314,7 +1322,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto close_fd;
 	}
 
-	if (cfg.lsp > 16) {
+	if (cfg.lsp > 128) {
 		fprintf(stderr, "invalid lsp param: %u\n", cfg.lsp);
 		errno = EINVAL;
 		err = -1;
@@ -1337,7 +1345,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	err = nvme_get_log14(fd, cfg.namespace_id, cfg.log_id,
 					cfg.lsp, cfg.lpo, cfg.lsi, cfg.rae,
-					cfg.uuid_index, cfg.log_len, log);
+					cfg.uuid_index, cfg.csi, cfg.ot, cfg.log_len, log);
 	if (!err) {
 		if (!cfg.raw_binary) {
 			printf("Device:%s log-id:%d namespace-id:%#x\n",
