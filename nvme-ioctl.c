@@ -460,11 +460,13 @@ int nvme_identify_iocs(int fd, __u16 cntid, void *data)
 }
 
 int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
-                 __u16 lsi, bool rae, __u8 uuid_ix, __u32 data_len, void *data)
+                 __u16 lsi, bool rae, __u8 uuid_ix, __u8 csi, bool ot,
+                 __u32 data_len, void *data)
 {
 	__u32 numd = (data_len >> 2) - 1;
 	__u16 numdu = numd >> 16, numdl = numd & 0xffff;
 	__u32 cdw10 = log_id | (numdl << 16) | (rae ? 1 << 15 : 0) | lsp << 8;
+	__u32 cdw14 = uuid_ix | (ot ? 1 << 23 : 0) | csi << 24;
 
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_get_log_page,
@@ -475,7 +477,7 @@ int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
 		.cdw11		= numdu | (lsi << 16),
 		.cdw12		= lpo & 0xffffffff,
 		.cdw13		= lpo >> 32,
-		.cdw14		= uuid_ix,
+		.cdw14		= cdw14,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);
@@ -486,7 +488,7 @@ int nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp,
 		 void *data)
 {
 	return nvme_get_log14(fd, nsid, log_id, lsp, lpo, lsi, rae, 0,
-			      data_len, data);
+			      0, false, data_len, data);
 }
 
 int nvme_get_log(int fd, __u32 nsid, __u8 log_id, bool rae,

@@ -1621,7 +1621,7 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 	memset(data, 0, sizeof (__u8) * WDC_C2_LOG_BUF_LEN);
 
 	/* get the log page length */
-	ret = nvme_get_log14(fd, 0xFFFFFFFF, lid, NVME_NO_LOG_LSP, 0, 0, false, uuid_ix, WDC_C2_LOG_BUF_LEN, data);
+	ret = nvme_get_log14(fd, 0xFFFFFFFF, lid, NVME_NO_LOG_LSP, 0, 0, false, uuid_ix, 0, false, WDC_C2_LOG_BUF_LEN, data);
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : Unable to get 0x%x Log Page length, ret = 0x%x\n", lid, ret);
 		goto end;
@@ -1640,7 +1640,7 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 	}
 
 	/* get the log page data */
-	ret = nvme_get_log14(fd, 0xFFFFFFFF, lid, NVME_NO_LOG_LSP, 0, 0, false, uuid_ix, le32_to_cpu(hdr_ptr->length), data);
+	ret = nvme_get_log14(fd, 0xFFFFFFFF, lid, NVME_NO_LOG_LSP, 0, 0, false, uuid_ix, 0, false, le32_to_cpu(hdr_ptr->length), data);
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : Unable to read 0x%x Log Page data, ret = 0x%x\n", lid, ret);
 		goto end;
@@ -1659,7 +1659,7 @@ static bool get_dev_mgment_cbs_data(int fd, __u8 log_id, void **cbs_data)
 		/* not found with uuid = 1 try with uuid = 0 */
 		uuid_ix = 0;
 		/* get the log page data */
-		ret = nvme_get_log14(fd, 0xFFFFFFFF, lid, NVME_NO_LOG_LSP, 0, 0, false, uuid_ix, le32_to_cpu(hdr_ptr->length), data);
+		ret = nvme_get_log14(fd, 0xFFFFFFFF, lid, NVME_NO_LOG_LSP, 0, 0, false, uuid_ix, 0, false, le32_to_cpu(hdr_ptr->length), data);
 		hdr_ptr = (struct wdc_c2_log_page_header *)data;
 		sph = (struct wdc_c2_log_subpage_header *)(data + length);
 		found = wdc_get_dev_mng_log_entry(hdr_ptr->length, log_id, hdr_ptr, &sph);
@@ -4641,7 +4641,7 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 
 				/* Get the 0xC0 log data */
 				ret = nvme_get_log14(fd, 0xFFFFFFFF, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE,
-						NVME_NO_LOG_LSP, 0, 0, false, uuid_index, WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
+						NVME_NO_LOG_LSP, 0, 0, false, uuid_index, 0, false, WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
 
 				if (strcmp(format, "json"))
 					fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
@@ -4688,7 +4688,7 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 
 				/* Get the 0xC0 log data */
 				ret = nvme_get_log14(fd, 0xFFFFFFFF, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE,
-						NVME_NO_LOG_LSP, 0, 0, false, uuid_index, WDC_NVME_EOL_STATUS_LOG_LEN, data);
+						NVME_NO_LOG_LSP, 0, 0, false, uuid_index, 0, false, WDC_NVME_EOL_STATUS_LOG_LEN, data);
 
 				if (strcmp(format, "json"))
 					fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
@@ -5613,7 +5613,7 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *com
 
 		/* Get the 0xC0 log data */
 		ret = nvme_get_log14(fd, 0xFFFFFFFF, WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_OPCODE,
-				NVME_NO_LOG_LSP, 0, 0, false, uuid_index, WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
+				NVME_NO_LOG_LSP, 0, 0, false, uuid_index, 0, false, WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
 
 		if (ret == 0) {
 			/* Verify GUID matches */
