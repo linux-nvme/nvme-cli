@@ -5440,6 +5440,10 @@ const char *nvme_status_to_string(__u16 status)
 		return "SANITIZE_FAILED: The most recent sanitize operation failed and no recovery actions has been successfully completed";
 	case NVME_SC_SANITIZE_IN_PROGRESS:
 		return "SANITIZE_IN_PROGRESS: The requested function is prohibited while a sanitize operation is in progress";
+	case NVME_SC_SGL_DATA_BLK_GRAN_INVALID:
+		return "NVME_SC_SGL_DATA_BLK_GRAN_INVALID: Address alignment or Length granularity for an SGL Data Block descriptor is invalid";
+	case NVME_SC_CMD_NOT_SUP_QUEUE_IN_CMB:
+		return "NVME_SC_CMD_NOT_SUP_QUEUE_IN_CMB: does not support submission of the command to a SQ or completion to a CQ in the CMB";
 	case NVME_SC_IOCS_NOT_SUPPORTED:
 		return "IOCS_NOT_SUPPORTED: The I/O command set is not supported";
 	case NVME_SC_IOCS_NOT_ENABLED:
@@ -5448,12 +5452,18 @@ const char *nvme_status_to_string(__u16 status)
 		return "IOCS_COMBINATION_REJECTED: The I/O command set combination is rejected";
 	case NVME_SC_INVALID_IOCS:
 		return "INVALID_IOCS: the I/O command set is invalid";
+	case NVME_SC_ID_UNAVAILABLE:
+		return "NVME_SC_ID_UNAVAILABLE: The number of Endurance Groups or NVM Sets supported has been exceeded.";
 	case NVME_SC_LBA_RANGE:
 		return "LBA_RANGE: The command references a LBA that exceeds the size of the namespace";
 	case NVME_SC_NS_WRITE_PROTECTED:
 		return "NS_WRITE_PROTECTED: The command is prohibited while the namespace is write protected by the host.";
 	case NVME_SC_TRANSIENT_TRANSPORT:
 		return "TRANSIENT_TRANSPORT: A transient transport error was detected.";
+	case NVME_SC_PROHIBITED_BY_CMD_AND_FEAT:
+		return "NVME_SC_PROHIBITED_BY_CMD_AND_FEAT: command was aborted due to execution being prohibited by the Command and Feature Lockdown";
+	case NVME_SC_ADMIN_CMD_MEDIA_NOT_READY:
+		return "NVME_SC_ADMIN_CMD_MEDIA_NOT_READY: Admin command requires access to media and the media is not ready";
 	case NVME_SC_CAP_EXCEEDED:
 		return "CAP_EXCEEDED: The execution of the command has caused the capacity of the namespace to be exceeded";
 	case NVME_SC_NS_NOT_READY:
@@ -5550,6 +5560,12 @@ const char *nvme_status_to_string(__u16 status)
 		return "ANA_INVALID_GROUP_ID: The specified ANA Group Identifier (ANAGRPID) is not supported in the submitted command.";
 	case NVME_SC_ANA_ATTACH_FAIL:
 		return "ANA_ATTACH_FAIL: The controller is not attached to the namespace as a result of an ANA condition";
+	case NVME_SC_INSUFFICIENT_CAP:
+		return "NVME_SC_INSUFFICIENT_CAP: Requested operation requires more free space than is currently available";
+	case NVME_SC_NS_ATTACHMENT_LIMIT_EXCEEDED:
+		return "NVME_SC_NS_ATTACHMENT_LIMIT_EXCEEDED: Attaching the ns to a controller causes max number of ns attachments allowed to be exceeded";
+	case NVME_SC_PROHIBIT_CMD_EXEC_NOT_SUPPORTED:
+		return "NVME_SC_PROHIBIT_CMD_EXEC_NOT_SUPPORTED: Prohibition of Command Execution Not Supported";
 	case NVME_SC_BAD_ATTRIBUTES:
 		return "BAD_ATTRIBUTES: Bad attributes were given";
 	case NVME_SC_INVALID_PI:
@@ -5574,6 +5590,8 @@ const char *nvme_status_to_string(__u16 status)
 		return "ACCESS_DENIED: Access to the namespace and/or LBA range is denied due to lack of access rights";
 	case NVME_SC_UNWRITTEN_BLOCK:
 		return "UNWRITTEN_BLOCK: The command failed due to an attempt to read from an LBA range containing a deallocated or unwritten logical block";
+	case NVME_SC_STORAGE_TAG_CHECK:
+		return "NVME_SC_STORAGE_TAG_CHECK: command was aborted due to an end-to-end storage tag check failure";
 	case NVME_SC_INTERNAL_PATH_ERROR:
 		return "INTERNAL_PATH_ERROT: The command was not completed as the result of a controller internal error";
 	case NVME_SC_ANA_PERSISTENT_LOSS:
