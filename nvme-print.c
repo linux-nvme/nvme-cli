@@ -2813,46 +2813,61 @@ static void nvme_show_id_ctrl_cmic(__u8 cmic)
 static void nvme_show_id_ctrl_oaes(__le32 ctrl_oaes)
 {
 	__u32 oaes = le32_to_cpu(ctrl_oaes);
-	__u32 rsvd0 = (oaes & 0xF0000000) >> 28;
+	__u32 disc = (oaes >> 31) & 0x1;
+	__u32 rsvd0 = (oaes & 0x70000000) >> 28;
 	__u32 zicn = (oaes & 0x08000000) >> 27;
-	__u32 rsvd1 = (oaes & 0x07FF8000) >> 15;
-	__u32 nace = (oaes & 0x100) >> 8;
-	__u32 fan = (oaes & 0x200) >> 9;
-	__u32 anacn = (oaes & 0x800) >> 11;
-	__u32 plealcn = (oaes & 0x1000) >> 12;
-	__u32 lbasin = (oaes & 0x2000) >> 13;
+	__u32 rsvd1 = (oaes & 0x07FF0000) >> 16;
+	__u32 normal_shn = (oaes >> 15) & 0x1;
 	__u32 egealpcn = (oaes & 0x4000) >> 14;
-	__u32 rsvd2 = oaes & 0xFF;
+	__u32 lbasin = (oaes & 0x2000) >> 13;
+	__u32 plealcn = (oaes & 0x1000) >> 12;
+	__u32 anacn = (oaes & 0x800) >> 11;
+	__u32 rsvd2 = (oaes >> 10) & 0x1;
+	__u32 fan = (oaes & 0x200) >> 9;
+	__u32 nace = (oaes & 0x100) >> 8;
+	__u32 rsvd3 = oaes & 0xFF;
 
+	printf("  [31:31] : %#x\tDiscovery Log Change Notice %sSupported\n",
+			disc, disc ? "" : "Not ");
 	if (rsvd0)
-		printf(" [31:28] : %#x\tReserved\n", rsvd0);
-	printf("[27:27] : %#x\tZone Descriptor Changed Notices %sSupported\n",
+		printf("  [30:28] : %#x\tReserved\n", rsvd0);
+	printf("  [27:27] : %#x\tZone Descriptor Changed Notices %sSupported\n",
 			zicn, zicn ? "" : "Not ");
 	if (rsvd1)
-		printf(" [26:15] : %#x\tReserved\n", rsvd1);
-	printf("[14:14] : %#x\tEndurance Group Event Aggregate Log Page"\
+		printf("  [26:16] : %#x\tReserved\n", rsvd1);
+	printf("  [15:15] : %#x\tNormal NSS Shutdown Event %sSupported\n",
+			normal_shn, normal_shn ? "" : "Not ");
+	printf("  [14:14] : %#x\tEndurance Group Event Aggregate Log Page"\
 			" Change Notice %sSupported\n",
 			egealpcn, egealpcn ? "" : "Not ");
-	printf("[13:13] : %#x\tLBA Status Information Notices %sSupported\n",
+	printf("  [13:13] : %#x\tLBA Status Information Notices %sSupported\n",
 			lbasin, lbasin ? "" : "Not ");
-	printf("[12:12] : %#x\tPredictable Latency Event Aggregate Log Change"\
+	printf("  [12:12] : %#x\tPredictable Latency Event Aggregate Log Change"\
 			" Notices %sSupported\n",
 			plealcn, plealcn ? "" : "Not ");
-	printf("[11:11] : %#x\tAsymmetric Namespace Access Change Notices"\
+	printf("  [11:11] : %#x\tAsymmetric Namespace Access Change Notices"\
 			" %sSupported\n", anacn, anacn ? "" : "Not ");
+	if (rsvd2)
+		printf("  [10:10] : %#x\tReserved\n", rsvd2);
 	printf("  [9:9] : %#x\tFirmware Activation Notices %sSupported\n",
 		fan, fan ? "" : "Not ");
 	printf("  [8:8] : %#x\tNamespace Attribute Changed Event %sSupported\n",
 		nace, nace ? "" : "Not ");
-	if (rsvd2)
-		printf("  [7:0] : %#x\tReserved\n", rsvd1);
+	if (rsvd3)
+		printf("  [7:0] : %#x\tReserved\n", rsvd3);
 	printf("\n");
 }
 
 static void nvme_show_id_ctrl_ctratt(__le32 ctrl_ctratt)
 {
 	__u32 ctratt = le32_to_cpu(ctrl_ctratt);
-	__u32 rsvd = ctratt >> 10;
+	__u32 rsvd = ctratt >> 16;
+	__u32 elbas = (ctratt >> 15) & 0x1;
+	__u32 delnvmset = (ctratt >> 14) & 0x1;
+	__u32 delegrp = (ctratt >> 13) & 0x1;
+	__u32 vcap = (ctratt >> 12) & 0x1;
+	__u32 fcap = (ctratt >> 11) & 0x1;
+	__u32 mds = (ctratt >> 10) & 0x1;
 	__u32 hostid128 = (ctratt & NVME_CTRL_CTRATT_128_ID) >> 0;
 	__u32 psp = (ctratt & NVME_CTRL_CTRATT_NON_OP_PSP) >> 1;
 	__u32 sets = (ctratt & NVME_CTRL_CTRATT_NVM_SETS) >> 2;
@@ -2865,8 +2880,19 @@ static void nvme_show_id_ctrl_ctratt(__le32 ctrl_ctratt)
 	__u32 rsvd8 = (ctratt & 0x00000100) >> 8;
 
 	if (rsvd)
-		printf(" [31:10] : %#x\tReserved\n", rsvd);
-
+		printf(" [31:16] : %#x\tReserved\n", rsvd);
+	printf("  [15:15] : %#x\tExtended LBA Formats %sSupported\n",
+		elbas, elbas ? "" : "Not ");
+	printf("  [14:14] : %#x\tDelete NVM Set %sSupported\n",
+		delnvmset, delnvmset ? "" : "Not ");
+	printf("  [13:13] : %#x\tDelete Endurance Group %sSupported\n",
+		delegrp, delegrp ? "" : "Not ");
+	printf("  [12:12] : %#x\tVariable Capacity Management %sSupported\n",
+		vcap, vcap ? "" : "Not ");
+	printf("  [11:11] : %#x\tFixed Capacity Management %sSupported\n",
+		fcap, fcap ? "" : "Not ");
+	printf("  [10:10] : %#x\tMulti Domain Subsystem %sSupported\n",
+		mds, mds ? "" : "Not ");
 	printf("  [9:9] : %#x\tUUID List %sSupported\n",
 		uuidlist, uuidlist ? "" : "Not ");
 	if (rsvd8)
@@ -2952,7 +2978,8 @@ static void nvme_show_id_ctrl_mec(__u8 mec)
 static void nvme_show_id_ctrl_oacs(__le16 ctrl_oacs)
 {
 	__u16 oacs = le16_to_cpu(ctrl_oacs);
-	__u16 rsvd = (oacs & 0xFC00) >> 10;
+	__u16 rsvd = (oacs & 0xF800) >> 11;
+	__u16 lock = (oacs >> 10) & 0x1;
 	__u16 glbas = (oacs & 0x200) >> 9;
 	__u16 dbc = (oacs & 0x100) >> 8;
 	__u16 vir = (oacs & 0x80) >> 7;
@@ -2965,7 +2992,9 @@ static void nvme_show_id_ctrl_oacs(__le16 ctrl_oacs)
 	__u16 sec = oacs & 0x1;
 
 	if (rsvd)
-		printf(" [15:9] : %#x\tReserved\n", rsvd);
+		printf(" [15:11] : %#x\tReserved\n", rsvd);
+	printf("  [10:10] : %#x\tLockdown Command and Feature %sSupported\n",
+		lock, lock ? "" : "Not ");
 	printf("  [9:9] : %#x\tGet LBA Status Capability %sSupported\n",
 		glbas, glbas ? "" : "Not ");
 	printf("  [8:8] : %#x\tDoorbell Buffer Config %sSupported\n",
@@ -2991,13 +3020,16 @@ static void nvme_show_id_ctrl_oacs(__le16 ctrl_oacs)
 
 static void nvme_show_id_ctrl_frmw(__u8 frmw)
 {
-	__u8 rsvd = (frmw & 0xE0) >> 5;
+	__u8 rsvd = (frmw & 0xC0) >> 6;
+	__u8 smud = (frmw >> 5) & 0x1;
 	__u8 fawr = (frmw & 0x10) >> 4;
 	__u8 nfws = (frmw & 0xE) >> 1;
 	__u8 s1ro = frmw & 0x1;
 
 	if (rsvd)
-		printf("  [7:5] : %#x\tReserved\n", rsvd);
+		printf("  [7:6] : %#x\tReserved\n", rsvd);
+	printf("  [5:5] : %#x\tMultiple FW or Boot Update Detection %sSupported\n",
+		smud, smud ? "" : "Not ");
 	printf("  [4:4] : %#x\tFirmware Activate Without Reset %sSupported\n",
 		fawr, fawr ? "" : "Not ");
 	printf("  [3:1] : %#x\tNumber of Firmware Slots\n", nfws);
@@ -3008,7 +3040,9 @@ static void nvme_show_id_ctrl_frmw(__u8 frmw)
 
 static void nvme_show_id_ctrl_lpa(__u8 lpa)
 {
-	__u8 rsvd = (lpa & 0xE0) >> 5;
+	__u8 rsvd = (lpa & 0x80) >> 7;
+	__u8 tel = (lpa >> 6) & 0x1;
+	__u8 lid_sup = (lpa >> 5) & 0x1;
 	__u8 persevnt = (lpa & 0x10) >> 4;
 	__u8 telem = (lpa & 0x8) >> 3;
 	__u8 ed = (lpa & 0x4) >> 2;
@@ -3016,7 +3050,11 @@ static void nvme_show_id_ctrl_lpa(__u8 lpa)
 	__u8 smlp = lpa & 0x1;
 
 	if (rsvd)
-		printf("  [7:4] : %#x\tReserved\n", rsvd);
+		printf("  [7:7] : %#x\tReserved\n", rsvd);
+	printf("  [6:6] : %#x\tTelemetry Log Data Area 4 %sSupported\n",
+			tel, tel ? "" : "Not ");
+	printf("  [5:5] : %#x\tLID 0x0, Scope of each command in LID 0x5, "\
+			"0x12, 0x13 %sSupported\n", lid_sup, lid_sup ? "" : "Not ");
 	printf("  [4:4] : %#x\tPersistent Event log %sSupported\n",
 			persevnt, persevnt ? "" : "Not ");
 	printf("  [3:3] : %#x\tTelemetry host/controller initiated log page %sSupported\n",
@@ -3339,12 +3377,16 @@ static void nvme_show_id_ctrl_nwpc(__u8 nwpc)
 	printf("\n");
 }
 
-static void nvme_show_id_ctrl_ocfs(__u16 ocfs)
+static void nvme_show_id_ctrl_ocfs(__le16 ctrl_ocfs)
 {
-	__u16 rsvd = (ocfs & 0xfffe) >> 1;
+	__u16 ocfs = le16_to_cpu(ctrl_ocfs);
+	__u16 rsvd = (ocfs & 0xfffc) >> 2;
+	__u8 copy_fmt_1 = (ocfs >> 1) & 0x1;
 	__u8 copy_fmt_0 = ocfs & 0x1;
 	if (rsvd)
-		printf("  [15:1] : %#x\tReserved\n", rsvd);
+		printf("  [15:2] : %#x\tReserved\n", rsvd);
+	printf("  [1:1] : %#x\tController Copy Format 1h %sSupported\n",
+		copy_fmt_1, copy_fmt_1 ? "" : "Not ");
 	printf("  [0:0] : %#x\tController Copy Format 0h %sSupported\n",
 		copy_fmt_0, copy_fmt_0 ? "" : "Not ");
 	printf("\n");
@@ -3360,7 +3402,8 @@ static void nvme_show_id_ctrl_sgls(__le32 ctrl_sgls)
 	__u32 sglltb = (sgls & 0x40000) >> 18;
 	__u32 bacmdb = (sgls & 0x20000) >> 17;
 	__u32 bbs = (sgls & 0x10000) >> 16;
-	__u32 rsvd1 = (sgls & 0xFFF8) >> 3;
+	__u32 sdt = (sgls >> 8) & 0xff;
+	__u32 rsvd1 = (sgls & 0xF8) >> 3;
 	__u32 key = (sgls & 0x4) >> 2;
 	__u32 sglsp = sgls & 0x3;
 
@@ -3385,8 +3428,9 @@ static void nvme_show_id_ctrl_sgls(__le32 ctrl_sgls)
 	if (sglsp || (!sglsp && bbs))
 		printf(" [16:16]: %#x\tSGL Bit-Bucket %sSupported\n",
 			bbs, bbs ? "" : "Not ");
+	printf(" [15:8] : %#x\tSGL Descriptor Threshold\n", sdt);
 	if (rsvd1)
-		printf(" [15:3] : %#x\tReserved\n", rsvd1);
+		printf(" [7:3] : %#x\tReserved\n", rsvd1);
 	if (sglsp || (!sglsp && key))
 		printf("  [2:2] : %#x\tKeyed SGL Data Block descriptor %sSupported\n",
 			key, key ? "" : "Not ");
