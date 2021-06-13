@@ -121,12 +121,13 @@ void general_help(struct plugin *plugin)
 
 int handle_plugin(int argc, char **argv, struct plugin *plugin)
 {
-	unsigned i = 0;
 	char *str = argv[0];
 	char use[0x100];
-
 	struct plugin *extension;
 	struct program *prog = plugin->parent;
+	struct command **cmd = plugin->commands;
+	struct command *cr = NULL;
+	bool cr_valid = false;
 
 	if (!argc) {
 		general_help(plugin);
@@ -148,18 +149,29 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	if (!strcmp(str, "version"))
 		return version(plugin);
 
-	for (; plugin->commands[i]; i++) {
-		struct command *cmd = plugin->commands[i];
+	while (*cmd) {
+		if (!strcmp(str, (*cmd)->name) ||
+		    ((*cmd)->alias && !strcmp(str, (*cmd)->alias)))
+			return (*cmd)->fn(argc, argv, *cmd, plugin);
+		if (!strncmp(str, (*cmd)->name, strlen(str))) {
+			if (cr) {
+				cr_valid = false;
+			} else {
+				cr = *cmd;
+				cr_valid = true;
+			}
+		}
+		cmd++;
+	}
 
-		if (strcmp(str, cmd->name))
-			if (!cmd->alias || (cmd->alias && strcmp(str, cmd->alias)))
-				continue;
-
-		return (cmd->fn(argc, argv, cmd, plugin));
+	if (cr && cr_valid) {
+		sprintf(use, "%s %s <device> [OPTIONS]", prog->name, cr->name);
+		argconfig_append_usage(use);
+		return cr->fn(argc, argv, cr, plugin);
 	}
 
 	/* Check extensions only if this is running the built-in plugin */
-	if (plugin->name) { 
+	if (plugin->name) {
 		printf("ERROR: Invalid sub-command '%s' for plugin %s\n", str, plugin->name);
 		return -ENOTTY;
         }
