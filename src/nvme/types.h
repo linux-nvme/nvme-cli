@@ -111,6 +111,7 @@ static inline uint64_t le64_to_cpu(__le64 x)
  * @NVME_NVMSETID_NONE: 	Use to omit a nvmsetid command parameter
  * @NVME_LOG_LSP_NONE:		Use to omit a log lsp command parameter
  * @NVME_LOG_LSI_NONE:		Use to omit a log lsi command parameter
+ * @NVME_LOG_LPO_NONE:		Use to omit a log lpo command parameter
  * @NVME_IDENTIFY_DATA_SIZE:	The transfer size for nvme identify commands
  * @NVME_ID_NVMSET_LIST_MAX:	The largest possible nvmset index in identify
  * 				nvmeset
@@ -141,6 +142,7 @@ enum nvme_constants {
 	NVME_NVMSETID_NONE		= 0,
 	NVME_LOG_LSP_NONE		= 0,
 	NVME_LOG_LSI_NONE		= 0,
+	NVME_LOG_LPO_NONE		= 0,
 	NVME_IDENTIFY_DATA_SIZE		= 4096,
 	NVME_ID_NVMSET_LIST_MAX		= 31,
 	NVME_ID_UUID_LIST_MAX		= 127,
