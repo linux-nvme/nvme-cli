@@ -91,6 +91,9 @@ enum argconfig_types {
 #define OPT_SHRT(l, s, v, d) \
 	{l, s, "NUM", CFG_SHORT, v, required_argument, d}
 
+#define OPT_INCR(l, s, v, d) \
+	{l, s, "NUM", CFG_INCREMENT, v, no_argument, d}
+
 #define OPT_STRING(l, s, m, v, d) \
 	{l, s, m, CFG_STRING, v, required_argument, d}
 

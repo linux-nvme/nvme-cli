@@ -228,7 +228,7 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 }
 
 static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
-		      char *raw, bool connect, bool persistent, bool quiet,
+		      char *raw, bool connect, bool persistent,
 		      enum nvme_print_flags flags)
 {
 	struct nvmf_discovery_log *log = NULL;
@@ -270,7 +270,7 @@ static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
 			if (child) {
 				if (discover)
 					__discover(child, defcfg, raw,
-						   persistent, quiet,
+						   persistent,
 						   true, flags);
 				if (!persistent) {
 					nvme_ctrl_disconnect(child);
@@ -351,7 +351,7 @@ static int discover_from_conf_file(nvme_host_t h, const char *desc,
 		errno = 0;
 		ret = nvmf_add_ctrl(h, c, &cfg, false);
 		if (!ret) {
-			__discover(c, defcfg, NULL, persistent, quiet,
+			__discover(c, defcfg, NULL, persistent,
 				   connect, 0);
 				return 0;
 			if (!persistent)
@@ -378,6 +378,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	enum nvme_print_flags flags;
 	nvme_root_t r;
 	nvme_host_t h;
+	unsigned int verbose = 0;
 	int ret;
 	char *format = "normal";
 	const char *tmp_device;
@@ -396,6 +397,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_FLAG("persistent",   'p', &persistent,    "persistent discovery connection"),
 		OPT_FLAG("quiet",        'S', &quiet,         "suppress already connected errors"),
 		OPT_STRING("config",     'C', "FILE", &config_file, nvmf_config_file),
+		OPT_INCR("verbose",      'v', &verbose,       "Increase logging verbosity"),
 		OPT_END()
 	};
 
@@ -406,6 +408,23 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	ret = flags = validate_output_format(format);
 	if (ret < 0)
 		return ret;
+
+	switch (verbose) {
+	case 0:
+		nvme_log_level = LOG_WARNING;
+		break;
+	case 1:
+		nvme_log_level = LOG_NOTICE;
+		break;
+	case 2:
+		nvme_log_level = LOG_INFO;
+		break;
+	default:
+		nvme_log_level = LOG_DEBUG;
+		break;
+	}
+	if (quiet)
+		nvme_log_level = LOG_ERR;
 
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
@@ -446,7 +465,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 
 		if (!ret) {
 			ret = __discover(c, &cfg, raw, connect,
-					 persistent, quiet, flags);
+					 persistent, flags);
 			if (!device && !persistent)
 				nvme_ctrl_disconnect(c);
 			nvme_free_ctrl(c);
@@ -473,6 +492,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	char *host_traddr = NULL, *host_iface = NULL;
 	char *trsvcid = NULL, *hostnqn = NULL, *hostid = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
+	unsigned int verbose = 0;
 	nvme_root_t r;
 	nvme_host_t h;
 	nvme_ctrl_t c;
@@ -487,12 +507,28 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		OPT_STRING("nqn", 'n', "NAME", &subsysnqn, nvmf_nqn),
 		NVMF_OPTS(cfg),
 		OPT_STRING("config", 'C', "FILE", &config_file, nvmf_config_file),
+		OPT_INCR("verbose", 'v', &verbose, "Increase logging verbosity"),
 		OPT_END()
 	};
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	switch (verbose) {
+	case 0:
+		nvme_log_level = LOG_WARNING;
+		break;
+	case 1:
+		nvme_log_level = LOG_NOTICE;
+		break;
+	case 2:
+		nvme_log_level = LOG_INFO;
+		break;
+	default:
+		nvme_log_level = LOG_DEBUG;
+		break;
+	}
 
 	if (!subsysnqn) {
 		nvme_msg(LOG_ERR,
@@ -560,6 +596,7 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 	struct config {
 		char *nqn;
 		char *device;
+		unsigned int verbose;
 	};
 
 	struct config cfg = { 0 };
@@ -567,12 +604,28 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 	OPT_ARGS(opts) = {
 		OPT_STRING("nqn",    'n', "NAME", &cfg.nqn,    nvmf_nqn),
 		OPT_STRING("device", 'd', "DEV",  &cfg.device, device),
+		OPT_INCR("verbose",  'v', &cfg.verbose, "Increase logging verbosity"),
 		OPT_END()
 	};
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	switch (cfg.verbose) {
+	case 0:
+		nvme_log_level = LOG_WARNING;
+		break;
+	case 1:
+		nvme_log_level = LOG_NOTICE;
+		break;
+	case 2:
+		nvme_log_level = LOG_INFO;
+		break;
+	default:
+		nvme_log_level = LOG_DEBUG;
+		break;
+	}
 
 	if (!cfg.nqn && !cfg.device) {
 		nvme_msg(LOG_ERR,
@@ -638,18 +691,35 @@ int nvmf_disconnect_all(const char *desc, int argc, char **argv)
 
 	struct config {
 		char *transport;
+		unsigned int verbose;
 	};
 
 	struct config cfg = { 0 };
 
 	OPT_ARGS(opts) = {
 		OPT_STRING("transport", 'r', "STR", (char *)&cfg.transport, nvmf_tport),
+		OPT_INCR("verbose",  'v', &cfg.verbose, "Increase logging verbosity"),
 		OPT_END()
 	};
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	switch (cfg.verbose) {
+	case 0:
+		nvme_log_level = LOG_WARNING;
+		break;
+	case 1:
+		nvme_log_level = LOG_NOTICE;
+		break;
+	case 2:
+		nvme_log_level = LOG_INFO;
+		break;
+	default:
+		nvme_log_level = LOG_DEBUG;
+		break;
+	}
 
 	r = nvme_scan(NULL);
 	if (!r) {
