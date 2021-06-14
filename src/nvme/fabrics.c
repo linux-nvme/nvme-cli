@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <dirent.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -568,29 +569,109 @@ out_free_log:
 	return ret;
 }
 
-#ifdef CONFIG_SYSTEMD
-char *nvmf_hostnqn_generate()
+#define PATH_DMI_ENTRIES       "/sys/firmware/dmi/entries"
+
+int uuid_from_dmi(char *system_uuid)
 {
-	char *ret = NULL;
+	int f;
+	DIR *d;
+	struct dirent *de;
+	char buf[512];
+
+	system_uuid[0] = '\0';
+	d = opendir(PATH_DMI_ENTRIES);
+	if (!d)
+		return -ENXIO;
+	while ((de = readdir(d))) {
+		char filename[PATH_MAX];
+		int len, type;
+
+		if (de->d_name[0] == '.')
+			continue;
+		sprintf(filename, "%s/%s/type", PATH_DMI_ENTRIES, de->d_name);
+		f = open(filename, O_RDONLY);
+		if (f < 0)
+			continue;
+		len = read(f, buf, 512);
+		len = read(f, buf, 512);
+		close(f);
+		if (len < 0)
+			continue;
+		if (sscanf(buf, "%d", &type) != 1)
+			continue;
+		if (type != 1)
+			continue;
+		sprintf(filename, "%s/%s/raw", PATH_DMI_ENTRIES, de->d_name);
+		f = open(filename, O_RDONLY);
+		if (f < 0)
+			continue;
+		len = read(f, buf, 512);
+		close(f);
+		if (len < 0)
+			continue;
+		/* Sigh. https://en.wikipedia.org/wiki/Overengineering */
+		/* DMTF SMBIOS 3.0 Section 7.2.1 System UUID */
+		sprintf(system_uuid,
+			"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-"
+			"%02x%02x%02x%02x%02x%02x",
+			(uint8_t)buf[8 + 3], (uint8_t)buf[8 + 2],
+			(uint8_t)buf[8 + 1], (uint8_t)buf[8 + 0],
+			(uint8_t)buf[8 + 5], (uint8_t)buf[8 + 4],
+			(uint8_t)buf[8 + 7], (uint8_t)buf[8 + 6],
+			(uint8_t)buf[8 + 8], (uint8_t)buf[8 + 9],
+			(uint8_t)buf[8 + 10], (uint8_t)buf[8 + 11],
+			(uint8_t)buf[8 + 12], (uint8_t)buf[8 + 13],
+			(uint8_t)buf[8 + 14], (uint8_t)buf[8 + 15]);
+		break;
+	}
+	closedir(d);
+	return strlen(system_uuid) ? 0 : -ENXIO;
+}
+
+#ifdef CONFIG_SYSTEMD
+#include <systemd/sd-id128.h>
+#define NVME_HOSTNQN_ID SD_ID128_MAKE(c7,f4,61,81,12,be,49,32,8c,83,10,6f,9d,dd,d8,6b)
+#endif
+
+static int uuid_from_systemd(char *system_uuid)
+{
+	int ret = -ENOTSUP;
+#ifdef CONFIG_SYSTEMD
 	sd_id128_t id;
 
-	if (sd_id128_get_machine_app_specific(NVME_HOSTNQN_ID, &id) < 0)
-		return NULL;
-
-	if (asprintf(&ret,
-		     "nqn.2014-08.org.nvmexpress:uuid:" SD_ID128_FORMAT_STR "\n",
-		     SD_ID128_FORMAT_VAL(id)) < 0)
-		ret = NULL;
-
+	ret = sd_id128_get_machine_app_specific(NVME_HOSTNQN_ID, &id);
+	if (!ret)
+		asprintf(systemd_uuid, SD_ID128_FORMAT_STR,
+			 SD_ID128_FORMAT_VAL(id));
+#endif
 	return ret;
 }
-#else
+
 char *nvmf_hostnqn_generate()
 {
-	errno = ENOTSUP;
-	return NULL;
-}
+	char *hostnqn;
+	int ret;
+	char uuid_str[37]; /* e.g. 1b4e28ba-2fa1-11d2-883f-0016d3cca427 + \0 */
+#ifdef CONFIG_LIBUUID
+	uuid_t uuid;
 #endif
+
+	ret = uuid_from_dmi(uuid_str);
+	if (ret < 0)
+		ret = uuid_from_systemd(uuid_str);
+#ifdef CONFIG_LIBUUID
+	if (ret < 0) {
+		uuid_generate_random(uuid);
+		uuid_unparse_lower(uuid, uuid_str);
+		ret = 0;
+	}
+#endif
+	if (ret < 0)
+		return NULL;
+
+	asprintf(&hostnqn, "nqn.2014-08.org.nvmexpress:uuid:%s\n", uuid_str);
+	return hostnqn;
+}
 
 static char *nvmf_read_file(const char *f, int len)
 {
