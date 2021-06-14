@@ -775,6 +775,20 @@ enum nvme_virt_mgmt_rt {
 };
 
 /**
+ * enum nvme_ns_write_protect -
+ * @NVME_NS_WP_CFG_NONE
+ * @NVME_NS_WP_CFG_PROTECT
+ * @NVME_NS_WP_CFG_PROTECT_POWER_CYCLE
+ * @NVME_NS_WP_CFG_PROTECT_PERMANENT
+ */
+enum nvme_ns_write_protect_cfg {
+	NVME_NS_WP_CFG_NONE					= 0,
+	NVME_NS_WP_CFG_PROTECT					= 1,
+	NVME_NS_WP_CFG_PROTECT_POWER_CYCLE			= 2,
+	NVME_NS_WP_CFG_PROTECT_PERMANENT			= 3,
+};
+
+/**
  * nvme_identify() - Send the NVMe Identify command
  * @fd:		File descriptor of nvme device
  * @cns:	The Controller or Namespace structure, see @enum nvme_identify_cns
