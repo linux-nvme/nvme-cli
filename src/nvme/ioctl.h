@@ -985,6 +985,7 @@ int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 /**
  * nvme_identify_secondary_ctrl_list() - Retrieves secondary controller list
  * @fd:		File descriptor of nvme device
+ * @nsid:	Namespace identifier
  * @cntid:	Return controllers starting at this identifier
  * @sc_list:	User space destination address to transfer the data
  *
@@ -999,7 +1000,7 @@ int nvme_identify_primary_ctrl(int fd, __u16 cntid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_secondary_ctrl_list(int fd, __u16 cntid,
+int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid,
 				      struct nvme_secondary_ctrl_list *list);
 
 /**
