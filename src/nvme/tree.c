@@ -23,6 +23,7 @@
 #include "filters.h"
 #include "util.h"
 #include "fabrics.h"
+#include "log.h"
 #include "private.h"
 
 static struct nvme_host *default_host;
@@ -733,16 +734,6 @@ bool nvme_ctrl_is_persistent(nvme_ctrl_t c)
 	return c->persistent;
 }
 
-void nvme_ctrl_set_verbosity(nvme_ctrl_t c, bool verbose)
-{
-	c->cfg.verbose = verbose;
-}
-
-bool nvme_ctrl_is_verbose(nvme_ctrl_t c)
-{
-	return c->cfg.verbose;
-}
-
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)
 {
 	return nvme_identify_ctrl(nvme_ctrl_get_fd(c), id);
@@ -774,16 +765,14 @@ int nvme_ctrl_disconnect(nvme_ctrl_t c)
 {
 	int ret;
 
-	if (c->cfg.verbose)
-		fprintf(stderr, "%s: disconnect\n", c->name);
 	ret = nvme_set_attr(nvme_ctrl_get_sysfs_dir(c),
 			    "delete_controller", "1");
 	if (ret < 0) {
-		if (c->cfg.verbose)
-			fprintf(stderr, "%s: failed to disconnect, error %d\n",
-				c->name, errno);
+		nvme_msg(LOG_ERR, "%s: failed to disconnect, error %d\n",
+			 c->name, errno);
 		return ret;
 	}
+	nvme_msg(LOG_INFO, "%s: disconnected\n", c->name);
 	if (c->fd >= 0) {
 		close(c->fd);
 		c->fd = -1;

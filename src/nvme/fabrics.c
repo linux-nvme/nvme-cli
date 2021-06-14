@@ -32,6 +32,7 @@
 #include "fabrics.h"
 #include "ioctl.h"
 #include "util.h"
+#include "log.h"
 #include "private.h"
 
 #define NVMF_HOSTID_SIZE	37
@@ -158,7 +159,6 @@ static struct nvme_fabrics_config *merge_config(nvme_ctrl_t c,
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, disable_sqflow, false);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, hdr_digest, false);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, data_digest, false);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, verbose, false);
 
 	return ctrl_cfg;
 }
@@ -215,6 +215,21 @@ static int build_options(nvme_ctrl_t c, char **argstr)
 {
 	struct nvme_fabrics_config *cfg = nvme_ctrl_get_config(c);
 	const char *transport = nvme_ctrl_get_transport(c);
+	const char *hostnqn, *hostid;
+
+	if (!transport) {
+		nvme_msg(LOG_ERR, "need a transport (-t) argument\n");
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (strncmp(transport, "loop", 4)) {
+		if (!nvme_ctrl_get_traddr(c)) {
+			nvme_msg(LOG_ERR, "need a address (-a) argument\n");
+			errno = EINVAL;
+			return -1;
+		}
+	}
 
 	/* always specify nqn as first arg - this will init the string */
 	if (asprintf(argstr, "nqn=%s",
@@ -273,21 +288,29 @@ static int __nvmf_add_ctrl(const char *argstr)
 	char buf[0x1000], *options, *p;
 
 	fd = open(nvmf_dev, O_RDWR);
-	if (fd < 0)
+	if (fd < 0) {
+		nvme_msg(LOG_ERR, "Failed to open %s: %s\n",
+			 nvmf_dev, strerror(errno));
 		return -1;
+	}
 
+	nvme_msg(LOG_DEBUG, "connect ctrl, '%s'\n", argstr);
 	ret = write(fd, argstr, len);
 	if (ret != len) {
+		nvme_msg(LOG_NOTICE, "Failed to write to %s: %s\n",
+			 nvmf_dev, strerror(errno));
 		ret = -1;
 		goto out_close;
 	}
 
 	len = read(fd, buf, sizeof(buf));
 	if (len < 0) {
+		nvme_msg(LOG_ERR, "Failed to read from %s: %s\n",
+			 nvmf_dev, strerror(errno));
 		ret = -1;
 		goto out_close;
 	}
-
+	nvme_msg(LOG_DEBUG, "connect ctrl, response '%s'\n", buf);
 	buf[len] = '\0';
 	options = buf;
 	while ((p = strsep(&options, ",\n")) != NULL) {
@@ -297,6 +320,7 @@ static int __nvmf_add_ctrl(const char *argstr)
 			goto out_close;
 	}
 
+	nvme_msg(LOG_ERR, "Failed to parse ctrl info for \"%s\"\n", argstr);
 	errno = EINVAL;
 	ret = -1;
 out_close:
@@ -315,16 +339,10 @@ int nvmf_add_ctrl_opts(nvme_ctrl_t c, struct nvme_fabrics_config *cfg)
 	if (ret)
 		return ret;
 
-	if (cfg->verbose)
-		fprintf(stderr, "nvmf connect %s\n", argstr);
 	ret = __nvmf_add_ctrl(argstr);
 	free(argstr);
-	if (cfg->verbose) {
-		if (ret < 0)
-			fprintf(stderr, "failed to add ctrl, error %d\n", errno);
-		else
-			fprintf(stderr, "nvme%d: added ctrl\n", ret);
-	}
+	if (ret >= 0)
+		nvme_msg(LOG_INFO, "nvme%d: ctrl connected\n", ret);
 	return ret;
 }
 
@@ -343,17 +361,12 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	if (ret)
 		return ret;
 
-	if (cfg->verbose)
-		fprintf(stderr, "nvmf connect %s\n", argstr);
 	ret = __nvmf_add_ctrl(argstr);
 	free(argstr);
-	if (ret < 0) {
-		if (cfg->verbose)
-			fprintf(stderr, "failed to add ctrl, error %d\n", ret);
+	if (ret < 0)
 		return ret;
-	}
-	if (cfg->verbose)
-		fprintf(stderr, "nvme%d: ctrl connected\n", ret);
+
+	nvme_msg(LOG_INFO, "nvme%d: ctrl connected\n", ret);
 	return nvme_init_ctrl(h, c, ret);
 }
 
@@ -376,10 +389,8 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	case NVME_NQN_NVME:
 		break;
 	default:
-		if (cfg->verbose)
-			fprintf(stderr, "skipping discovery entry, "
-			       "invalid subsystem type %d\n",
-			       e->subtype);
+		nvme_msg(LOG_ERR, "skipping unsupported subtype %d\n",
+			 e->subtype);
 		errno = EINVAL;
 		return NULL;
 	}
@@ -396,10 +407,8 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 			trsvcid = e->trsvcid;
 			break;
 		default:
-			if (cfg->verbose)
-				fprintf(stderr, "skipping discovery entry, "
-				       "invalid address family %d\n",
-				       e->trtype);
+			nvme_msg(LOG_ERR, "skipping unsupported adrfam %d\n",
+				 e->adrfam);
 			errno = EINVAL;
 			return NULL;
 		}
@@ -411,29 +420,31 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 			traddr = e->traddr;
 			trsvcid = NULL;
 			break;
+		default:
+			nvme_msg(LOG_ERR, "skipping unsupported adrfam %d\n",
+				 e->adrfam);
+			errno = EINVAL;
+			return NULL;
 		}
 	case NVMF_TRTYPE_LOOP:
 		break;
 	default:
-		if (cfg->verbose)
-			fprintf(stderr, "skipping discovery entry, "
-				"invalid transport type %d\n",
-				e->trtype);
+		nvme_msg(LOG_ERR, "skipping unsupported transport %d\n",
+			 e->trtype);
 		errno = EINVAL;
 		return NULL;
 	}
 
 	transport = nvmf_trtype_str(e->trtype);
-	if (cfg->verbose)
-		fprintf(stderr, "lookup ctrl %s %s %s\n",
-			transport, traddr, trsvcid);
 
+	nvme_msg(LOG_DEBUG, "lookup ctrl "
+		 "(transport: %s, traddr: %s, trsvcid %s)\n",
+		 transport, traddr, trsvcid);
 	c = nvme_create_ctrl(e->subnqn, transport, traddr, NULL, trsvcid);
 	if (!c) {
-		if (cfg->verbose)
-			fprintf(stderr, "skipping discovery entry, "
-				"failed to allocate controller on %s port %s\n",
-				transport, traddr);
+		nvme_msg(LOG_DEBUG, "skipping discovery entry, "
+			 "failed to allocate %s controller with traddr %s\n",
+			 transport, traddr);
 		errno = ENOMEM;
 		return NULL;
 	}
@@ -452,17 +463,14 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	if (errno == EINVAL && disable_sqflow) {
 		errno = 0;
 		/* disable_sqflow is unrecognized option on older kernels */
-		if (cfg->verbose)
-			fprintf(stderr, "failed to connect controller, "
-				"retry with disabling SQ flow control\n");
+		nvme_msg(LOG_INFO, "failed to connect controller, "
+			 "retry with disabling SQ flow control\n");
 		disable_sqflow = false;
 		ret = nvmf_add_ctrl(h, c, cfg, disable_sqflow);
 		if (!ret)
 			return c;
 	}
-	if (cfg->verbose)
-		fprintf(stderr, "failed to connect controller, "
-			"error %d\n", errno);
+	nvme_msg(LOG_ERR, "failed to connect controller, error %d\n", errno);
 	nvme_free_ctrl(c);
 	return NULL;
 }
@@ -485,18 +493,18 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 	hdr = sizeof(struct nvmf_discovery_log);
 	log = malloc(hdr);
 	if (!log) {
+		nvme_msg(LOG_ERR,
+			 "could not allocate memory for discovery log header\n");
 		errno = ENOMEM;
 		return -1;
 	}
 	memset(log, 0, hdr);
 
-	if (nvme_ctrl_is_verbose(c))
-		fprintf(stderr, "%s: discover length %d\n", name, 0x100);
+	nvme_msg(LOG_DEBUG, "%s: discover length %d\n", name, 0x100);
 	ret = nvme_discovery_log(nvme_ctrl_get_fd(c), 0x100, log);
 	if (ret) {
-		if (nvme_ctrl_is_verbose(c))
-			fprintf(stderr, "%s: discover failed, error %d\n",
-			       name, errno);
+		nvme_msg(LOG_INFO, "%s: discover failed, error %d\n",
+			 name, errno);
 		goto out_free_log;
 	}
 
@@ -515,48 +523,42 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 		free(log);
 		log = malloc(size);
 		if (!log) {
+			nvme_msg(LOG_ERR,
+				 "could not alloc memory for discovery log page\n");
 			errno = ENOMEM;
 			return -1;
 		}
 		memset(log, 0, size);
 
-		if (nvme_ctrl_is_verbose(c))
-			fprintf(stderr, "%s: discover length %d\n", name, size);
-
+		nvme_msg(LOG_DEBUG, "%s: discover length %d\n", name, size);
 		ret = nvme_discovery_log(nvme_ctrl_get_fd(c), size, log);
 		if (ret) {
-			if (nvme_ctrl_is_verbose(c))
-				fprintf(stderr, "%s: discover "
-					"try %d/%d failed, error %d\n",
-					name, retries, max_retries, errno);
+			nvme_msg(LOG_INFO,
+				 "%s: discover try %d/%d failed, error %d\n",
+				 name, retries, max_retries, errno);
 			goto out_free_log;
 		}
 
 		genctr = le64_to_cpu(log->genctr);
-		if (nvme_ctrl_is_verbose(c))
-			fprintf(stderr, "%s: discover genctr %lu, retry\n",
-				name, genctr);
+		nvme_msg(LOG_DEBUG, "%s: discover genctr %lu, retry\n",
+			 name, genctr);
 		ret = nvme_discovery_log(nvme_ctrl_get_fd(c), hdr, log);
 		if (ret) {
-			if (nvme_ctrl_is_verbose(c))
-				fprintf(stderr, "%s: discover "
-					"try %d/%d failed, error %d\n",
-					name, retries, max_retries, errno);
+			nvme_msg(LOG_INFO,
+				 "%s: discover try %d/%d failed, error %d\n",
+				 name, retries, max_retries, errno);
 			goto out_free_log;
 		}
 	} while (genctr != le64_to_cpu(log->genctr) &&
 		 ++retries < max_retries);
 
 	if (genctr != le64_to_cpu(log->genctr)) {
-		if (nvme_ctrl_is_verbose(c))
-			fprintf(stderr, "%s: discover genctr mismatch\n", name);
+		nvme_msg(LOG_INFO, "%s: discover genctr mismatch\n", name);
 		errno = EAGAIN;
 		ret = -1;
 	} else if (numrec != le64_to_cpu(log->numrec)) {
-		if (nvme_ctrl_is_verbose(c))
-			fprintf(stderr,
-				"%s: could only fetch %lu of %lu records\n",
-				name, numrec, le64_to_cpu(log->numrec));
+		nvme_msg(LOG_INFO, "%s: could only fetch %lu of %lu records\n",
+			 name, numrec, le64_to_cpu(log->numrec));
 		errno = EBADSLT;
 		ret = -1;
 	} else {

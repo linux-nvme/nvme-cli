@@ -835,23 +835,6 @@ bool nvme_ctrl_is_persistent(nvme_ctrl_t c);
 void nvme_ctrl_disable_sqflow(nvme_ctrl_t c, bool disable_sqflow);
 
 /**
- * nvme_ctrl_set_verbosity() -
- * @c:
- * @verbose:
- *
- * Return:
- */
-void nvme_ctrl_set_verbosity(nvme_ctrl_t c, bool verbose);
-
-/**
- * nvme_ctrl_is_verbose() -
- * @c:
- *
- * Return:
- */
-bool nvme_ctrl_is_verbose(nvme_ctrl_t c);
-
-/**
  * nvme_ctrl_identify() -
  * @c:
  * @id:
