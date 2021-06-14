@@ -2346,9 +2346,9 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
+	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
-		return fd;
+		goto ret;
 
 	err = flags = validate_output_format(cfg.output_format);
 	if (flags < 0)
@@ -2367,7 +2367,8 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 		perror("identify UUID list");
 close_fd:
 	close(fd);
-	return err;
+ret:
+	return nvme_status_to_errno(err, false);;
 }
 
 static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -5325,7 +5326,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
-		goto err;
+		goto ret;
 
 	if (cfg.prinfo > 0xf) {
 		err = EINVAL;
@@ -5357,8 +5358,8 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 
 close_fd:
 	close(fd);
-err:
-	return err;
+ret:
+	return nvme_status_to_errno(err, false);;
 }
 
 static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
