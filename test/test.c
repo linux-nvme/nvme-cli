@@ -18,7 +18,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#ifdef CONFIG_LIBUUID
 #include <uuid/uuid.h>
+#endif
 #include <libnvme.h>
 
 static char *nqn_match;
@@ -298,32 +300,38 @@ static void print_hex(const uint8_t *x, int len)
 		printf("%02x", x[i]);
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	nvme_root_t r;
+	nvme_host_t h;
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
 	nvme_path_t p;
 	nvme_ns_t n;
+	const char *ctrl = "nvme4";
 
 	printf("Test filter for common loop back target\n");
 	nqn_match = "testnqn";
 	r = nvme_scan_filter(nvme_match_subsysnqn_filter);
-	nvme_for_each_subsystem(r, s) {
-		printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
-			nvme_subsystem_get_nqn(s));
-		nvme_subsystem_for_each_ctrl(s, c) {
-			printf("  %s %s %s %s\n", nvme_ctrl_get_name(c),
-				nvme_ctrl_get_transport(c),
-				nvme_ctrl_get_address(c),
-				nvme_ctrl_get_state(c));
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
+			       nvme_subsystem_get_nqn(s));
+			nvme_subsystem_for_each_ctrl(s, c) {
+				printf("  %s %s %s %s\n", nvme_ctrl_get_name(c),
+				       nvme_ctrl_get_transport(c),
+				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_state(c));
+			}
 		}
 	}
 	printf("\n");
-	nvme_free_tree(r);
+
+	if (argc > 1)
+		ctrl = argv[1];
 
 	printf("Test scan specific controller\n");
-	c = nvme_scan_ctrl("nvme4");
+	c = nvme_scan_ctrl(r, ctrl);
 	if (c) {
 		printf("%s %s %s %s\n", nvme_ctrl_get_name(c),
 			nvme_ctrl_get_transport(c),
@@ -332,63 +340,76 @@ int main()
 		nvme_free_ctrl(c);
 	}
 	printf("\n");
+	nvme_free_tree(r);
 
-	r = nvme_scan();
+	r = nvme_scan(NULL);
 	if (!r)
 		return -1;
 
 	printf("Test walking the topology\n");
-	nvme_for_each_subsystem(r, s) {
-		printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
-			nvme_subsystem_get_nqn(s));
-		nvme_subsystem_for_each_ctrl(s, c) {
-			printf(" `- %s %s %s %s\n", nvme_ctrl_get_name(c),
-				nvme_ctrl_get_transport(c),
-				nvme_ctrl_get_address(c),
-				nvme_ctrl_get_state(c));
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
+			       nvme_subsystem_get_nqn(s));
+			nvme_subsystem_for_each_ctrl(s, c) {
+				printf(" `- %s %s %s %s\n",
+				       nvme_ctrl_get_name(c),
+				       nvme_ctrl_get_transport(c),
+				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_state(c));
 
-			nvme_ctrl_for_each_ns(c, n) {
-				char uuid_str[40];
-				uuid_t uuid;
+				nvme_ctrl_for_each_ns(c, n) {
+#ifdef CONFIG_LIBUUID
+					char uuid_str[40];
+					uuid_t uuid;
+#endif
+					printf("   `- %s lba size:%d lba max:%lu\n",
+					       nvme_ns_get_name(n),
+					       nvme_ns_get_lba_size(n),
+					       nvme_ns_get_lba_count(n));
+					printf("      eui:");
+					print_hex(nvme_ns_get_eui64(n), 8);
+					printf(" nguid:");
+					print_hex(nvme_ns_get_nguid(n), 16);
+#ifdef CONFIG_LIBUUID
+					nvme_ns_get_uuid(n, uuid);
+					uuid_unparse_lower(uuid, uuid_str);
+					printf(" uuid:%s csi:%d\n", uuid_str,
+					       nvme_ns_get_csi(n));
+#endif
+				}
 
-				printf("   `- %s lba size:%d lba max:%lu\n",
-					nvme_ns_get_name(n), nvme_ns_get_lba_size(n),
-					nvme_ns_get_lba_count(n));
-				printf("      eui:");
-				print_hex(nvme_ns_get_eui64(n), 8);
-				printf(" nguid:");
-				print_hex(nvme_ns_get_nguid(n), 16);
-				nvme_ns_get_uuid(n, uuid);
-				uuid_unparse_lower(uuid, uuid_str);
-				printf(" uuid:%s csi:%d\n", uuid_str, nvme_ns_get_csi(n));
+				nvme_ctrl_for_each_path(c, p)
+					printf("   `- %s %s\n",
+					       nvme_path_get_name(p),
+					       nvme_path_get_ana_state(p));
 			}
 
-			nvme_ctrl_for_each_path(c, p)
-				printf("   `- %s %s\n", nvme_path_get_name(p),
-					nvme_path_get_ana_state(p));
+			nvme_subsystem_for_each_ns(s, n) {
+				printf(" `- %s lba size:%d lba max:%lu\n",
+				       nvme_ns_get_name(n),
+				       nvme_ns_get_lba_size(n),
+				       nvme_ns_get_lba_count(n));
+			}
 		}
-
-		nvme_subsystem_for_each_ns(s, n) {
-			printf(" `- %s lba size:%d lba max:%lu\n",
-				nvme_ns_get_name(n), nvme_ns_get_lba_size(n),
-				nvme_ns_get_lba_count(n));
-		}
+		printf("\n");
 	}
-	printf("\n");
 
 	printf("Test identification, logs, and features\n");
-	nvme_for_each_subsystem(r, s) {
-		nvme_subsystem_for_each_ctrl(s, c) {
-			test_ctrl(c);
-			printf("\n");
-			nvme_ctrl_for_each_ns(c, n) {
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			nvme_subsystem_for_each_ctrl(s, c) {
+				test_ctrl(c);
+				printf("\n");
+				nvme_ctrl_for_each_ns(c, n) {
+					test_namespace(n);
+					printf("\n");
+				}
+			}
+			nvme_subsystem_for_each_ns(s, n) {
 				test_namespace(n);
 				printf("\n");
 			}
-		}
-		nvme_subsystem_for_each_ns(s, n) {
-			test_namespace(n);
-			printf("\n");
 		}
 	}
 	nvme_free_tree(r);
