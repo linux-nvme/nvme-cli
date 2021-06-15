@@ -1494,7 +1494,7 @@ int nvme_set_features_lba_range(int fd, __u32 nsid, __u32 nr_ranges, bool save,
  */
 enum nvme_feat_tmpthresh_thsel {
 	NVME_FEATURE_TEMPTHRESH_THSEL_OVER			= 0,
-	NVME_FEATURETEMPTHRESH__THSEL_UNDER			= 1,
+	NVME_FEATURE_TEMPTHRESH_THSEL_UNDER			= 1,
 };
 
 /**
