@@ -696,13 +696,13 @@ static char *nvmf_read_file(const char *f, int len)
 
 	fd = open(f, O_RDONLY);
 	if (fd < 0)
-		return false;
+		return NULL;
 
 	memset(buf, 0, len);
 	ret = read(fd, buf, len - 1);
 	close (fd);
 
-	if (ret < 0)
+	if (ret < 0 || !strlen(buf))
 		return NULL;
 	return strndup(buf, strcspn(buf, "\n"));
 }

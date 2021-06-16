@@ -564,7 +564,7 @@ static int __nvme_set_attr(const char *path, const char *value)
 
 	fd = open(path, O_WRONLY);
 	if (fd < 0) {
-		nvme_msg(LOG_ERR, "Failed to open %s: %s\n", path,
+		nvme_msg(LOG_DEBUG, "Failed to open %s: %s\n", path,
 			 strerror(errno));
 		return -1;
 	}
@@ -594,14 +594,14 @@ static char *__nvme_get_attr(const char *path)
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
-		nvme_msg(LOG_ERR, "Failed to open %s: %s\n", path,
+		nvme_msg(LOG_DEBUG, "Failed to open %s: %s\n", path,
 			 strerror(errno));
 		return NULL;
 	}
 
 	ret = read(fd, value, sizeof(value) - 1);
-	if (ret < 0) {
-		close(fd);
+	close(fd);
+	if (ret < 0 || !strlen(value)) {
 		return NULL;
 	}
 
@@ -610,8 +610,7 @@ static char *__nvme_get_attr(const char *path)
 	while (strlen(value) > 0 && value[strlen(value) - 1] == ' ')
 		value[strlen(value) - 1] = '\0';
 
-	close(fd);
-	return strdup(value);
+	return strlen(value) ? strdup(value) : NULL;
 }
 
 char *nvme_get_attr(const char *dir, const char *attr)
