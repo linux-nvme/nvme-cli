@@ -3564,6 +3564,7 @@ enum nvme_subsys_type {
 
 #define NVME_DISC_SUBSYS_NAME	"nqn.2014-08.org.nvmexpress.discovery"
 #define NVME_RDMA_IP_PORT	4420
+#define NVME_DISC_IP_PORT	8009
 
 /* However the max length of a qualified name is another size */
 #define NVMF_NQN_SIZE		223
