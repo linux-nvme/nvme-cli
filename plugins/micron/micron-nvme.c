@@ -10,6 +10,8 @@
 #include <libgen.h>
 #include <sys/stat.h>
 #include "nvme.h"
+#include "linux/nvme.h"
+#include "nvme-private.h"
 #include "nvme-print.h"
 #include "nvme-status.h"
 #include "nvme-ioctl.h"

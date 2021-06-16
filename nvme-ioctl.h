@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include "linux/nvme_ioctl.h"
 #include "nvme.h"
+#include "linux/nvme.h"
+#include "nvme-private.h"
 
 #define NVME_IOCTL_TIMEOUT 120000 /* in milliseconds */
 

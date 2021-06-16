@@ -1,7 +1,6 @@
 #ifndef NVME_PRINT_H
 #define NVME_PRINT_H
 
-#include "nvme.h"
 #include <inttypes.h>
 
 void d(unsigned char *buf, int len, int width, int group);

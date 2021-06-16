@@ -3,6 +3,8 @@
 #include <errno.h>
 
 #include "nvme.h"
+#include "linux/nvme.h"
+#include "nvme-private.h"
 #include "nvme-status.h"
 
 static inline __u8 nvme_generic_status_to_errno(__u16 status)

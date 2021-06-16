@@ -34,6 +34,8 @@
 
 #include "common.h"
 #include "nvme.h"
+#include "linux/nvme.h"
+#include "nvme-private.h"
 #include "nvme-print.h"
 #include "nvme-ioctl.h"
 #include "plugin.h"
