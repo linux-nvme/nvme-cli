@@ -107,6 +107,7 @@ struct nvme_ctrl {
 	char *traddr;
 	char *trsvcid;
 	char *host_traddr;
+	char *host_iface;
 	bool discovered;
 	bool persistent;
 	struct nvme_fabrics_config cfg;
@@ -693,6 +694,11 @@ const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c)
 	return c->host_traddr;
 }
 
+const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c)
+{
+	return c->host_iface;
+}
+
 const char *nvme_ctrl_get_hostnqn(nvme_ctrl_t c)
 {
 	if (!c->s)
@@ -828,6 +834,8 @@ void nvme_free_ctrl(nvme_ctrl_t c)
 		free(c->trsvcid);
 	if (c->host_traddr)
 		free(c->host_traddr);
+	if (c->host_iface)
+		free(c->host_iface);
 	free(c->firmware);
 	free(c->model);
 	free(c->state);
@@ -911,9 +919,9 @@ free_addrinfo:
 	freeaddrinfo(host_info);
 }
 
-struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn,
-				   const char *transport, const char *traddr,
-				   const char *host_traddr, const char *trsvcid)
+struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn, const char *transport,
+				   const char *traddr, const char *host_traddr,
+				   const char *host_iface, const char *trsvcid)
 {
 	struct nvme_ctrl *c;
 	bool discovery = false;
@@ -947,6 +955,8 @@ struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn,
 		else
 			c->host_traddr = strdup(host_traddr);
 	}
+	if (host_iface)
+		c->host_iface = strdup(host_iface);
 	if (trsvcid)
 		c->trsvcid = strdup(trsvcid);
 	else if (discovery)
@@ -962,9 +972,9 @@ struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn,
 	return c;
 }
 
-struct nvme_ctrl *nvme_lookup_ctrl(struct nvme_subsystem *s,
-				   const char *transport, const char *traddr,
-				   const char *host_traddr, const char *trsvcid)
+struct nvme_ctrl *nvme_lookup_ctrl(struct nvme_subsystem *s, const char *transport,
+				   const char *traddr, const char *host_traddr,
+				   const char *host_iface, const char *trsvcid)
 {
 	struct nvme_ctrl *c;
 
@@ -979,13 +989,16 @@ struct nvme_ctrl *nvme_lookup_ctrl(struct nvme_subsystem *s,
 		if (host_traddr && c->host_traddr &&
 		    strcmp(c->host_traddr, host_traddr))
 			continue;
+		if (host_iface && c->host_iface &&
+		    strcmp(c->host_iface, host_iface))
+			continue;
 		if (trsvcid && c->trsvcid &&
 		    strcmp(c->trsvcid, trsvcid))
 			continue;
 		return c;
 	}
-	c = nvme_create_ctrl(s->subsysnqn, transport,
-			     traddr, host_traddr, trsvcid);
+	c = nvme_create_ctrl(s->subsysnqn, transport, traddr,
+			     host_traddr, host_iface, trsvcid);
 	if (c) {
 		c->s = s;
 		list_add(&s->ctrls, &c->entry);
@@ -1122,7 +1135,8 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 {
 	nvme_ctrl_t c;
 	char *addr, *address, *a, *e;
-	char *transport, *traddr = NULL, *trsvcid = NULL, *host_traddr = NULL;
+	char *transport, *traddr = NULL, *trsvcid = NULL;
+	char *host_traddr = NULL, *host_iface = NULL;
 	int ret;
 
 	transport = nvme_get_attr(path, "transport");
@@ -1141,10 +1155,13 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 			trsvcid = a + 8;
 		else if (!strncmp(a, "host_traddr=", 12))
 			host_traddr = a + 12;
+		else if (!strncmp(a, "host_iface=", 11))
+			host_iface = a + 12;
 		a = strtok_r(NULL, ",", &e);
 	}
 
-	c = nvme_lookup_ctrl(s, transport, traddr, host_traddr, trsvcid);
+	c = nvme_lookup_ctrl(s, transport, traddr,
+			     host_traddr, host_iface, trsvcid);
 	free(addr);
 	if (!c) {
 		errno = ENOMEM;

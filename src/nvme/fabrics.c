@@ -251,6 +251,8 @@ static int build_options(nvme_ctrl_t c, char **argstr)
 			 nvme_ctrl_get_traddr(c)) ||
 	    add_argument(argstr, "host_traddr",
 			 nvme_ctrl_get_host_traddr(c)) ||
+	    add_argument(argstr, "host_iface",
+			 nvme_ctrl_get_host_iface(c)) ||
 	    add_argument(argstr, "trsvcid",
 			 nvme_ctrl_get_trsvcid(c)) ||
 	    (hostnqn && add_argument(argstr, "hostnqn", hostnqn)) ||
@@ -452,7 +454,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	nvme_msg(LOG_DEBUG, "lookup ctrl "
 		 "(transport: %s, traddr: %s, trsvcid %s)\n",
 		 transport, traddr, trsvcid);
-	c = nvme_create_ctrl(e->subnqn, transport, traddr, NULL, trsvcid);
+	c = nvme_create_ctrl(e->subnqn, transport, traddr, NULL, NULL, trsvcid);
 	if (!c) {
 		nvme_msg(LOG_DEBUG, "skipping discovery entry, "
 			 "failed to allocate %s controller with traddr %s\n",

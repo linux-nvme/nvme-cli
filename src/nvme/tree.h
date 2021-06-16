@@ -211,13 +211,14 @@ nvme_ctrl_t nvme_subsystem_next_ctrl(nvme_subsystem_t s, nvme_ctrl_t c);
  * @transport:
  * @traddr:
  * @host_traddr:
+ * @host_iface:
  * @trsvcid:
  *
  * Return: 
  */
 nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			     const char *traddr, const char *host_traddr,
-			     const char *trsvcid);
+			     const char *host_iface, const char *trsvcid);
 
 
 /**
@@ -226,13 +227,14 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
  * @transport:
  * @traddr:
  * @host_traddr:
+ * @host_iface:
  * @trsvcid:
  *
  * Return: 
  */
 nvme_ctrl_t nvme_create_ctrl(const char *subsysnqn, const char *transport,
 			     const char *traddr, const char *host_traddr,
-			     const char *trsvcid);
+			     const char *host_iface, const char *trsvcid);
 
 
 /**
@@ -782,6 +784,14 @@ const char *nvme_ctrl_get_trsvcid(nvme_ctrl_t c);
  * Return:
  */
 const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c);
+
+/**
+ * nvme_ctrl_get_host_iface() -
+ * @c:
+ *
+ * Return:
+ */
+const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c);
 
 /**
  * nvme_ctrl_get_config() -
