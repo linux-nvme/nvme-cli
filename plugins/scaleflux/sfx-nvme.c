@@ -6,19 +6,12 @@
 #include <linux/fs.h>
 #include <inttypes.h>
 #include <asm/byteorder.h>
-#include <sys/ioctl.h>
 #include <sys/sysinfo.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "linux/nvme_ioctl.h"
-
 #include "nvme.h"
-#include "linux/nvme.h"
-#include "nvme-private.h"
-#include "nvme-print.h"
-#include "nvme-ioctl.h"
-#include "nvme-status.h"
+#include "libnvme.h"
 #include "plugin.h"
 
 #include "argconfig.h"
@@ -116,38 +109,38 @@ struct nvme_additional_smart_log {
 
 int nvme_change_cap(int fd, __u32 nsid, __u64 capacity)
 {
-	struct nvme_admin_cmd cmd = {
+	struct nvme_passthru_cmd cmd = {
 	.opcode		 = nvme_admin_change_cap,
 	.nsid		 = nsid,
 	.cdw10		 = (capacity & 0xffffffff),
 	.cdw11		 = (capacity >> 32),
 	};
 
-	return nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD,&cmd);
+	return nvme_submit_admin_passthru(fd, &cmd, NULL);
 }
 
 int nvme_sfx_set_features(int fd, __u32 nsid, __u32 fid, __u32 value)
 {
-	struct nvme_admin_cmd cmd = {
+	struct nvme_passthru_cmd cmd = {
 	.opcode		 = nvme_admin_sfx_set_features,
 	.nsid		 = nsid,
 	.cdw10		 = fid,
 	.cdw11		 = value,
 	};
 
-	return nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD,&cmd);
+	return nvme_submit_admin_passthru(fd, &cmd, NULL);
 }
 
 int nvme_sfx_get_features(int fd, __u32 nsid, __u32 fid, __u32 *result)
 {
 	int err = 0;
-	struct nvme_admin_cmd cmd = {
+	struct nvme_passthru_cmd cmd = {
 	.opcode		 = nvme_admin_sfx_get_features,
 	.nsid		 = nsid,
 	.cdw10		 = fid,
 	};
 
-	err = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD,&cmd);
+	err = nvme_submit_admin_passthru(fd, &cmd, NULL);
 	if (!err && result) {
 		*result = cmd.result;
 	}
@@ -363,7 +356,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 
 	fd = parse_and_open(argc, argv, desc, opts);
 
-	err = nvme_get_log(fd, cfg.namespace_id, 0xca, false, NVME_NO_LOG_LSP,
+	err = nvme_get_nsid_log(fd, 0xca, cfg.namespace_id,
 		sizeof(smart_log), (void *)&smart_log);
 	if (!err) {
 		if (cfg.json)
@@ -445,8 +438,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 
 	fd = parse_and_open(argc, argv, desc, opts);
 
-	err = nvme_get_log(fd, 0xffffffff, cfg.write ? 0xc3 : 0xc1, false, NVME_NO_LOG_LSP,
-		sizeof(stats), (void *)&stats);
+	err = nvme_get_log_simple(fd, cfg.write ? 0xc3 : 0xc1, sizeof(stats), (void *)&stats);
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_lat_stats(&stats, cfg.write);
@@ -460,7 +452,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 
 int sfx_nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
 {
-	struct nvme_admin_cmd cmd = {
+	struct nvme_passthru_cmd cmd = {
 		.opcode		   = nvme_admin_get_log_page,
 		.nsid		 = nsid,
 		.addr		 = (__u64)(uintptr_t) data,
@@ -472,7 +464,7 @@ int sfx_nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data
 	cmd.cdw10 = log_id | (numdl << 16);
 	cmd.cdw11 = numdu;
 
-	return nvme_submit_admin_passthru(fd, &cmd);
+	return nvme_submit_admin_passthru(fd, &cmd, NULL);
 }
 
 /**
@@ -904,7 +896,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 
 	if (cfg.feature_id == SFX_FEAT_ATOMIC && cfg.value != 0) {
 		if (cfg.namespace_id != 0xffffffff) {
-			err = nvme_identify_ns(fd, cfg.namespace_id, 0, &ns);
+			err = nvme_identify_ns(fd, cfg.namespace_id, &ns);
 			if (err) {
 				if (err < 0)
 					perror("identify-namespace");

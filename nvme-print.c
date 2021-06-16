@@ -1,13 +1,14 @@
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <uuid/uuid.h>
 
 #include "nvme.h"
-#include "linux/nvme.h"
-#include "nvme-private.h"
+#include "libnvme.h"
 #include "nvme-print.h"
 #include "nvme-models.h"
 #include "util/suffix.h"
@@ -24,6 +25,15 @@ static const uint8_t zero_uuid[16] = { 0 };
 static const uint8_t invalid_uuid[16] = {[0 ... 15] = 0xff };
 static const char dash[100] = {[0 ... 99] = '-'};
 
+struct nvme_bar_cap {
+	__u16	mqes;
+	__u8	ams_cqr;
+	__u8	to;
+	__u16	bps_css_nssrs_dstrd;
+	__u8	mpsmax_mpsmin;
+	__u8	rsvd_cmbs_pmrs;
+};
+
 static long double int128_to_double(__u8 *data)
 {
 	int i;
@@ -39,15 +49,15 @@ static long double int128_to_double(__u8 *data)
 static const char *nvme_ana_state_to_string(enum nvme_ana_state state)
 {
 	switch (state) {
-	case NVME_ANA_OPTIMIZED:
+	case NVME_ANA_STATE_OPTIMIZED:
 		return "optimized";
-	case NVME_ANA_NONOPTIMIZED:
+	case NVME_ANA_STATE_NONOPTIMIZED:
 		return "non-optimized";
-	case NVME_ANA_INACCESSIBLE:
+	case NVME_ANA_STATE_INACCESSIBLE:
 		return "inaccessible";
-	case NVME_ANA_PERSISTENT_LOSS:
+	case NVME_ANA_STATE_PERSISTENT_LOSS:
 		return "persistent-loss";
-	case NVME_ANA_CHANGE:
+	case NVME_ANA_STATE_CHANGE:
 		return "change";
 	}
 	return "invalid state";
@@ -68,8 +78,8 @@ const char *nvme_cmd_to_string(int admin, __u8 opcode)
 		case nvme_admin_get_features:	return "Get Features";
 		case nvme_admin_async_event:	return "Asynchronous Event Request";
 		case nvme_admin_ns_mgmt:	return "Namespace Management";
-		case nvme_admin_activate_fw:	return "Firmware Commit";
-		case nvme_admin_download_fw:	return "Firmware Image Download";
+		case nvme_admin_fw_commit:	return "Firmware Commit";
+		case nvme_admin_fw_download:	return "Firmware Image Download";
 		case nvme_admin_dev_self_test:	return "Device Self-test";
 		case nvme_admin_ns_attach:	return "Namespace Attachment";
 		case nvme_admin_keep_alive:	return "Keep Alive";
@@ -106,10 +116,9 @@ const char *nvme_cmd_to_string(int admin, __u8 opcode)
 	return "Unknown";
 }
 
-static const char *fw_to_string(__u64 fw)
+static const char *fw_to_string(char *c)
 {
 	static char ret[9];
-	char *c = (char *)&fw;
 	int i;
 
 	for (i = 0; i < 8; i++)
@@ -120,16 +129,16 @@ static const char *fw_to_string(__u64 fw)
 
 static const char *get_sanitize_log_sstat_status_str(__u16 status)
 {
-	switch (status & NVME_SANITIZE_LOG_STATUS_MASK) {
-	case NVME_SANITIZE_LOG_NEVER_SANITIZED:
+	switch (status & NVME_SANITIZE_SSTAT_STATUS_MASK) {
+	case NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED:
 		return "NVM Subsystem has never been sanitized.";
-	case NVME_SANITIZE_LOG_COMPLETED_SUCCESS:
+	case NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS:
 		return "Most Recent Sanitize Command Completed Successfully.";
-	case NVME_SANITIZE_LOG_IN_PROGESS:
+	case NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS:
 		return "Sanitize in Progress.";
-	case NVME_SANITIZE_LOG_COMPLETED_FAILED:
+	case NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED:
 		return "Most Recent Sanitize Command Failed.";
-	case NVME_SANITIZE_LOG_ND_COMPLETED_SUCCESS:
+	case NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS:
 		return "Most Recent Sanitize Command (No-Deallocate After Sanitize) Completed Successfully.";
 	default:
 		return "Unknown";
@@ -307,7 +316,6 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "icsvscc", ctrl->icsvscc);
 	json_object_add_value_int(root, "nwpc", ctrl->nwpc);
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
-	json_object_add_value_int(root, "ocfs", le16_to_cpu(ctrl->ocfs));
 	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
 
 	if (strlen(subnqn))
@@ -327,28 +335,28 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 		struct json_object *psd = json_create_object();
 
 		json_object_add_value_int(psd, "max_power",
-			le16_to_cpu(ctrl->psd[i].max_power));
+			le16_to_cpu(ctrl->psd[i].mp));
 		json_object_add_value_int(psd, "flags", ctrl->psd[i].flags);
 		json_object_add_value_uint(psd, "entry_lat",
-			le32_to_cpu(ctrl->psd[i].entry_lat));
+			le32_to_cpu(ctrl->psd[i].enlat));
 		json_object_add_value_uint(psd, "exit_lat",
-			le32_to_cpu(ctrl->psd[i].exit_lat));
+			le32_to_cpu(ctrl->psd[i].exlat));
 		json_object_add_value_int(psd, "read_tput",
-			ctrl->psd[i].read_tput);
+			ctrl->psd[i].rrt);
 		json_object_add_value_int(psd, "read_lat",
-			ctrl->psd[i].read_lat);
+			ctrl->psd[i].rrl);
 		json_object_add_value_int(psd, "write_tput",
-			ctrl->psd[i].write_tput);
+			ctrl->psd[i].rwt);
 		json_object_add_value_int(psd, "write_lat",
-			ctrl->psd[i].write_lat);
+			ctrl->psd[i].rwl);
 		json_object_add_value_int(psd, "idle_power",
-			le16_to_cpu(ctrl->psd[i].idle_power));
+			le16_to_cpu(ctrl->psd[i].idlp));
 		json_object_add_value_int(psd, "idle_scale",
-			ctrl->psd[i].idle_scale);
+			ctrl->psd[i].ips);
 		json_object_add_value_int(psd, "active_power",
-			le16_to_cpu(ctrl->psd[i].active_power));
+			le16_to_cpu(ctrl->psd[i].actp));
 		json_object_add_value_int(psd, "active_work_scale",
-			ctrl->psd[i].active_work_scale);
+			ctrl->psd[i].aps);
 
 		json_array_add_value_object(psds, psd);
 	}
@@ -404,7 +412,7 @@ static void json_error_log(struct nvme_error_log_page *err_log, int entries)
 	json_free_object(root);
 }
 
-static void json_nvme_resv_report(struct nvme_reservation_status *status,
+static void json_nvme_resv_report(struct nvme_resv_status *status,
 				  int bytes, __u32 cdw11)
 {
 	struct json_object *root;
@@ -447,8 +455,7 @@ static void json_nvme_resv_report(struct nvme_reservation_status *status,
 			json_array_add_value_object(rcs, rc);
 		}
 	} else {
-		struct nvme_reservation_status_ext *ext_status = (struct nvme_reservation_status_ext *)status;
-		char	hostid[33];
+		char hostid[33];
 
 		/* if status buffer was too small, don't loop past the end of the buffer */
 		entries = (bytes - 64) / 64;
@@ -460,14 +467,14 @@ static void json_nvme_resv_report(struct nvme_reservation_status *status,
 			struct json_object *rc = json_create_object();
 
 			json_object_add_value_int(rc, "cntlid",
-				le16_to_cpu(ext_status->regctl_eds[i].cntlid));
+				le16_to_cpu(status->regctl_eds[i].cntlid));
 			json_object_add_value_int(rc, "rcsts",
-				ext_status->regctl_eds[i].rcsts);
+				status->regctl_eds[i].rcsts);
 			json_object_add_value_uint(rc, "rkey",
-				le64_to_cpu(ext_status->regctl_eds[i].rkey));
+				le64_to_cpu(status->regctl_eds[i].rkey));
 			for (j = 0; j < 16; j++)
 				sprintf(hostid + j * 2, "%02x",
-					ext_status->regctl_eds[i].hostid[j]);
+					status->regctl_eds[i].hostid[j]);
 
 			json_object_add_value_string(rc, "hostid", hostid);
 			json_array_add_value_object(rcs, rc);
@@ -479,7 +486,7 @@ static void json_nvme_resv_report(struct nvme_reservation_status *status,
 	json_free_object(root);
 }
 
-static void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
+static void json_fw_log(struct nvme_firmware_slot *fw_log, const char *devname)
 {
 	struct json_object *root;
 	struct json_object *fwsi;
@@ -509,7 +516,7 @@ static void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devna
 	json_free_object(root);
 }
 
-static void json_changed_ns_list_log(struct nvme_changed_ns_list_log *log,
+static void json_changed_ns_list_log(struct nvme_ns_list *log,
 				     const char *devname)
 {
 	struct json_object *root;
@@ -519,7 +526,7 @@ static void json_changed_ns_list_log(struct nvme_changed_ns_list_log *log,
 	__u32 nsid;
 	int i;
 
-	if (log->log[0] == cpu_to_le32(0xffffffff))
+	if (log->ns[0] == cpu_to_le32(0xffffffff))
 		return;
 
 	root = json_create_object();
@@ -528,8 +535,8 @@ static void json_changed_ns_list_log(struct nvme_changed_ns_list_log *log,
 	json_object_add_value_string(root, "Changed Namespace List Log",
 		devname);
 
-	for (i = 0; i < NVME_MAX_CHANGED_NAMESPACES; i++) {
-		nsid = le32_to_cpu(log->log[i]);
+	for (i = 0; i < NVME_ID_NS_LIST_MAX; i++) {
+		nsid = le32_to_cpu(log->ns[i]);
 
 		if (nsid == 0)
 			break;
@@ -685,10 +692,10 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	json_free_object(root);
 }
 
-static void json_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname)
+static void json_ana_log(struct nvme_ana_log *ana_log, const char *devname)
 {
-	int offset = sizeof(struct nvme_ana_rsp_hdr);
-	struct nvme_ana_rsp_hdr *hdr = ana_log;
+	int offset = sizeof(struct nvme_ana_log);
+	struct nvme_ana_log *hdr = ana_log;
 	struct nvme_ana_group_desc *ana_desc;
 	struct json_object *desc_list;
 	struct json_object *ns_list;
@@ -753,12 +760,12 @@ static void json_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_en
 
 	root = json_create_object();
 	json_object_add_value_int(root, "Current Device Self-Test Operation",
-		self_test->crnt_dev_selftest_oprn);
+		self_test->current_operation);
 	json_object_add_value_int(root, "Current Device Self-Test Completion",
-		self_test->crnt_dev_selftest_compln);
+		self_test->completion);
 	valid = json_create_array();
 
-	num_entries = min(dst_entries, NVME_ST_REPORTS);
+	num_entries = min(dst_entries, NVME_LOG_ST_MAX_RESULTS);
 	for (i = 0; i < num_entries; i++) {
 		valid_attrs = json_create_object();
 		json_object_add_value_int(valid_attrs, "Self test result",
@@ -773,16 +780,16 @@ static void json_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_en
 			self_test->result[i].vdi);
 		json_object_add_value_uint(valid_attrs, "Power on hours",
 			le64_to_cpu(self_test->result[i].poh));
-		if (self_test->result[i].vdi & NVME_ST_VALID_NSID)
+		if (self_test->result[i].vdi & NVME_ST_VALID_DIAG_INFO_NSID)
 			json_object_add_value_int(valid_attrs, "Namespace Identifier",
 				le32_to_cpu(self_test->result[i].nsid));
-		if (self_test->result[i].vdi & NVME_ST_VALID_FLBA)
+		if (self_test->result[i].vdi & NVME_ST_VALID_DIAG_INFO_FLBA)
 			json_object_add_value_uint(valid_attrs, "Failing LBA",
 				le64_to_cpu(self_test->result[i].flba));
-		if (self_test->result[i].vdi & NVME_ST_VALID_SCT)
+		if (self_test->result[i].vdi & NVME_ST_VALID_DIAG_INFO_SCT)
 			json_object_add_value_int(valid_attrs, "Status Code Type",
 				self_test->result[i].sct);
-		if (self_test->result[i].vdi & NVME_ST_VALID_SC)
+		if (self_test->result[i].vdi & NVME_ST_VALID_DIAG_INFO_SC)
 			json_object_add_value_int(valid_attrs, "Status Code",
 				self_test->result[i].sc);
 		json_object_add_value_int(valid_attrs, "Vendor Specific",
@@ -797,7 +804,7 @@ add:
 	json_free_object(root);
 }
 
-static void json_effects_log(struct nvme_effects_log_page *effects_log)
+static void json_effects_log(struct nvme_cmd_effects_log *effects_log)
 {
 	struct json_object *root;
 	struct json_object *acs;
@@ -843,40 +850,41 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 	struct json_object *sstat;
 	const char *status_str;
 	char str[128];
-	__u16 status = le16_to_cpu(sanitize_log->status);
+	__u16 status = le16_to_cpu(sanitize_log->sstat);
 
 	root = json_create_object();
 	dev = json_create_object();
 	sstat = json_create_object();
 
 	json_object_add_value_int(dev, "sprog",
-		le16_to_cpu(sanitize_log->progress));
+		le16_to_cpu(sanitize_log->sprog));
 	json_object_add_value_int(sstat, "global_erased",
-		(status & NVME_SANITIZE_LOG_GLOBAL_DATA_ERASED) >> 8);
+		(status & NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED) >> 8);
 	json_object_add_value_int(sstat, "no_cmplted_passes",
-		(status & NVME_SANITIZE_LOG_NUM_CMPLTED_PASS_MASK) >> 3);
+		(status >> NVME_SANITIZE_SSTAT_COMPLETED_PASSES_SHIFT) &
+			NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK);
 
 	status_str = get_sanitize_log_sstat_status_str(status);
-	sprintf(str, "(%d) %s", status & NVME_SANITIZE_LOG_STATUS_MASK,
+	sprintf(str, "(%d) %s", status & NVME_SANITIZE_SSTAT_STATUS_MASK,
 		status_str);
 	json_object_add_value_string(sstat, "status", str);
 
 	json_object_add_value_object(dev, "sstat", sstat);
 	json_object_add_value_uint(dev, "cdw10_info",
-		le32_to_cpu(sanitize_log->cdw10_info));
+		le32_to_cpu(sanitize_log->scdw10));
 	json_object_add_value_uint(dev, "time_over_write",
-		le32_to_cpu(sanitize_log->est_ovrwrt_time));
+		le32_to_cpu(sanitize_log->eto));
 	json_object_add_value_uint(dev, "time_block_erase",
-		le32_to_cpu(sanitize_log->est_blk_erase_time));
+		le32_to_cpu(sanitize_log->etbe));
 	json_object_add_value_uint(dev, "time_crypto_erase",
-		le32_to_cpu(sanitize_log->est_crypto_erase_time));
+		le32_to_cpu(sanitize_log->etce));
 
 	json_object_add_value_uint(dev, "time_over_write_no_dealloc",
-		le32_to_cpu(sanitize_log->est_ovrwrt_time_with_no_deallocate));
+		le32_to_cpu(sanitize_log->etond));
 	json_object_add_value_uint(dev, "time_block_erase_no_dealloc",
-		le32_to_cpu(sanitize_log->est_blk_erase_time_with_no_deallocate));
+		le32_to_cpu(sanitize_log->etbend));
 	json_object_add_value_uint(dev, "time_crypto_erase_no_dealloc",
-		le32_to_cpu(sanitize_log->est_crypto_erase_time_with_no_deallocate));
+		le32_to_cpu(sanitize_log->etcend));
 
 	json_object_add_value_object(root, devname, dev);
 	json_print_object(root, NULL);
@@ -885,7 +893,7 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 }
 
 void json_predictable_latency_per_nvmset(
-	struct nvme_predlat_per_nvmset_log_page *plpns_log,
+	struct nvme_nvmset_predictable_lat_log *plpns_log,
 	__u16 nvmset_id)
 {
 	struct json_object *root;
@@ -898,21 +906,21 @@ void json_predictable_latency_per_nvmset(
 	json_object_add_value_uint(root, "event_type",
 		le16_to_cpu(plpns_log->event_type));
 	json_object_add_value_uint(root, "dtwin_reads_typical",
-		le64_to_cpu(plpns_log->dtwin_rtyp));
+		le64_to_cpu(plpns_log->dtwin_rt));
 	json_object_add_value_uint(root, "dtwin_writes_typical",
-		le64_to_cpu(plpns_log->dtwin_wtyp));
+		le64_to_cpu(plpns_log->dtwin_wt));
 	json_object_add_value_uint(root, "dtwin_time_maximum",
-		le64_to_cpu(plpns_log->dtwin_timemax));
+		le64_to_cpu(plpns_log->dtwin_tmax));
 	json_object_add_value_uint(root, "ndwin_time_minimum_high",
-		le64_to_cpu(plpns_log->ndwin_timemin_high));
+		le64_to_cpu(plpns_log->ndwin_tmin_hi));
 	json_object_add_value_uint(root, "ndwin_time_minimum_low",
-		le64_to_cpu(plpns_log->ndwin_timemin_low));
+		le64_to_cpu(plpns_log->ndwin_tmin_lo));
 	json_object_add_value_uint(root, "dtwin_reads_estimate",
-		le64_to_cpu(plpns_log->dtwin_restimate));
+		le64_to_cpu(plpns_log->dtwin_re));
 	json_object_add_value_uint(root, "dtwin_writes_estimate",
-		le64_to_cpu(plpns_log->dtwin_westimate));
+		le64_to_cpu(plpns_log->dtwin_we));
 	json_object_add_value_uint(root, "dtwin_time_estimate",
-		le64_to_cpu(plpns_log->dtwin_testimate));
+		le64_to_cpu(plpns_log->dtwin_te));
 
 	json_print_object(root, NULL);
 	printf("\n");
@@ -920,7 +928,7 @@ void json_predictable_latency_per_nvmset(
 }
 
 void nvme_show_predictable_latency_per_nvmset(
-	struct nvme_predlat_per_nvmset_log_page *plpns_log,
+	struct nvme_nvmset_predictable_lat_log *plpns_log,
 	__u16 nvmset_id, const char *devname,
 	enum nvme_print_flags flags)
 {
@@ -939,25 +947,25 @@ void nvme_show_predictable_latency_per_nvmset(
 	printf("Event Type: %u\n",
 		le16_to_cpu(plpns_log->event_type));
 	printf("DTWIN Reads Typical: %"PRIu64"\n",
-		le64_to_cpu(plpns_log->dtwin_rtyp));
+		le64_to_cpu(plpns_log->dtwin_rt));
 	printf("DTWIN Writes Typical: %"PRIu64"\n",
-		le64_to_cpu(plpns_log->dtwin_wtyp));
+		le64_to_cpu(plpns_log->dtwin_wt));
 	printf("DTWIN Time Maximum: %"PRIu64"\n",
-		le64_to_cpu(plpns_log->dtwin_timemax));
+		le64_to_cpu(plpns_log->dtwin_tmax));
 	printf("NDWIN Time Minimum High: %"PRIu64" \n",
-		le64_to_cpu(plpns_log->ndwin_timemin_high));
+		le64_to_cpu(plpns_log->ndwin_tmin_hi));
 	printf("NDWIN Time Minimum Low: %"PRIu64"\n",
-		le64_to_cpu(plpns_log->ndwin_timemin_low));
+		le64_to_cpu(plpns_log->ndwin_tmin_lo));
 	printf("DTWIN Reads Estimate: %"PRIu64"\n",
-		le64_to_cpu(plpns_log->dtwin_restimate));
+		le64_to_cpu(plpns_log->dtwin_re));
 	printf("DTWIN Writes Estimate: %"PRIu64"\n",
-		le64_to_cpu(plpns_log->dtwin_westimate));
+		le64_to_cpu(plpns_log->dtwin_we));
 	printf("DTWIN Time Estimate: %"PRIu64"\n\n\n",
-		le64_to_cpu(plpns_log->dtwin_testimate));
+		le64_to_cpu(plpns_log->dtwin_te));
 }
 
 void json_predictable_latency_event_agg_log(
-	struct nvme_event_agg_log_page *pea_log,
+	struct nvme_aggregate_predictable_lat_event *pea_log,
 	__u64 log_entries)
 {
 	struct json_object *root;
@@ -986,7 +994,7 @@ void json_predictable_latency_event_agg_log(
 }
 
 void nvme_show_predictable_latency_event_agg_log(
-	struct nvme_event_agg_log_page *pea_log,
+	struct nvme_aggregate_predictable_lat_event *pea_log,
 	__u64 log_entries, __u32 size, const char *devname,
 	enum nvme_print_flags flags)
 {
@@ -1049,19 +1057,20 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 	__u32 offset, por_info_len, por_info_list;
 	__u64 *fw_rev;
 	char key[128];
+
 	struct nvme_smart_log *smart_event;
 	struct nvme_fw_commit_event *fw_commit_event;
 	struct nvme_time_stamp_change_event *ts_change_event;
 	struct nvme_power_on_reset_info_list *por_event;
 	struct nvme_nss_hw_err_event *nss_hw_err_event;
-	struct nvme_change_ns_event	*ns_event;
+	struct nvme_change_ns_event *ns_event;
 	struct nvme_format_nvm_start_event *format_start_event;
 	struct nvme_format_nvm_compln_event *format_cmpln_event;
 	struct nvme_sanitize_start_event *sanitize_start_event;
 	struct nvme_sanitize_compln_event *sanitize_cmpln_event;
 	struct nvme_thermal_exc_event *thermal_exc_event;
-	struct nvme_persistent_event_log_head *pevent_log_head;
-	struct nvme_persistent_event_entry_head *pevent_entry_head;
+	struct nvme_persistent_event_log *pevent_log_head;
+	struct nvme_persistent_event_entry *pevent_entry_head;
 
 	root = json_create_object();
 	valid = json_create_array();
@@ -1081,17 +1090,17 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			(int)sizeof(pevent_log_head->subnqn), pevent_log_head->subnqn);
 
 		json_object_add_value_uint(root, "log_id",
-			pevent_log_head->log_id);
+			pevent_log_head->lid);
 		json_object_add_value_uint(root, "total_num_of_events",
 			le32_to_cpu(pevent_log_head->tnev));
 		json_object_add_value_uint(root, "total_log_len",
 			le64_to_cpu(pevent_log_head->tll));
 		json_object_add_value_uint(root, "log_revision",
-			pevent_log_head->log_rev);
+			pevent_log_head->rv);
 		json_object_add_value_uint(root, "log_header_len",
-			le16_to_cpu(pevent_log_head->head_len));
+			le16_to_cpu(pevent_log_head->lhl));
 		json_object_add_value_uint(root, "timestamp",
-			le64_to_cpu(pevent_log_head->timestamp));
+			le64_to_cpu(pevent_log_head->ts));
 		json_object_add_value_float(root, "power_on_hours",
 			int128_to_double(pevent_log_head->poh));
 		json_object_add_value_uint(root, "power_cycle_count",
@@ -1104,11 +1113,11 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 		json_object_add_value_string(root, "mn", mn);
 		json_object_add_value_string(root, "subnqn", subnqn);
 		for (int i = 0; i < 32; i++) {
-			if (pevent_log_head->supp_event_bm[i] == 0)
+			if (pevent_log_head->seb[i] == 0)
 				continue;
 			sprintf(key, "bitmap_%d", i);
 			json_object_add_value_uint(root, key,
-				pevent_log_head->supp_event_bm[i]);
+				pevent_log_head->seb[i]);
 		}
 	} else {
 		printf("No log data can be shown with this log len at least " \
@@ -1134,9 +1143,9 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 		json_object_add_value_uint(valid_attrs, "event_header_len",
 			pevent_entry_head->ehl);
 		json_object_add_value_uint(valid_attrs, "ctrl_id",
-			le16_to_cpu(pevent_entry_head->ctrl_id));
+			le16_to_cpu(pevent_entry_head->cntlid));
 		json_object_add_value_uint(valid_attrs, "event_time_stamp",
-			le64_to_cpu(pevent_entry_head->etimestamp));
+			le64_to_cpu(pevent_entry_head->ets));
 		json_object_add_value_uint(valid_attrs, "vu_info_len",
 			le16_to_cpu(pevent_entry_head->vsil));
 		json_object_add_value_uint(valid_attrs, "event_len",
@@ -1145,7 +1154,7 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 		offset += pevent_entry_head->ehl + 3;
 
 		switch (pevent_entry_head->etype) {
-		case NVME_SMART_HEALTH_EVENT:
+		case NVME_PEL_SMART_HEALTH_EVENT:
 			smart_event = pevent_log_info + offset;
 			unsigned int temperature = ((smart_event->temperature[1] << 8) |
 				smart_event->temperature[0]);
@@ -1216,7 +1225,7 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			json_object_add_value_uint(valid_attrs, "thm_temp2_total_time",
 					le32_to_cpu(smart_event->thm_temp2_total_time));
 			break;
-		case NVME_FW_COMMIT_EVENT:
+		case NVME_PEL_FW_COMMIT_EVENT:
 			fw_commit_event = pevent_log_info + offset;
 			json_object_add_value_uint(valid_attrs, "old_fw_rev",
 				le64_to_cpu(fw_commit_event->old_fw_rev));
@@ -1234,7 +1243,7 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 				"vu_assign_fw_commit_rc",
 				le16_to_cpu(fw_commit_event->vndr_assign_fw_commit_rc));
 			break;
-		case NVME_TIMESTAMP_EVENT:
+		case NVME_PEL_TIMESTAMP_EVENT:
 			ts_change_event = pevent_log_info + offset;
 			json_object_add_value_uint(valid_attrs, "prev_ts",
 				le64_to_cpu(ts_change_event->previous_timestamp));
@@ -1242,7 +1251,7 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 				"ml_secs_since_reset",
 				le64_to_cpu(ts_change_event->ml_secs_since_reset));
 			break;
-		case NVME_POWER_ON_RESET_EVENT:
+		case NVME_PEL_POWER_ON_RESET_EVENT:
 			por_info_len = (le16_to_cpu(pevent_entry_head->el) -
 				le16_to_cpu(pevent_entry_head->vsil) - sizeof(*fw_rev));
 
@@ -1268,18 +1277,18 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 					le64_to_cpu(por_event->ctrl_time_stamp));
 			}
 			break;
-		case NVME_NSS_HW_ERROR_EVENT:
+		case NVME_PEL_NSS_HW_ERROR_EVENT:
 			nss_hw_err_event = pevent_log_info + offset;
 			json_object_add_value_uint(valid_attrs, "nss_hw_err_code",
 				le16_to_cpu(nss_hw_err_event->nss_hw_err_event_code));
 			break;
-		case NVME_CHANGE_NS_EVENT:
+		case NVME_PEL_CHANGE_NS_EVENT:
 			ns_event = pevent_log_info + offset;
 			json_object_add_value_uint(valid_attrs, "nsmgt_cdw10",
 				le32_to_cpu(ns_event->nsmgt_cdw10));
 			json_object_add_value_uint(valid_attrs, "nsze",
 				le64_to_cpu(ns_event->nsze));
-			json_object_add_value_uint(valid_attrs, "nscap",
+			json_object_add_value_float(valid_attrs, "nscap",
 				le64_to_cpu(ns_event->nscap));
 			json_object_add_value_uint(valid_attrs, "flbas",
 				ns_event->flbas);
@@ -1294,7 +1303,7 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			json_object_add_value_uint(valid_attrs, "nsid",
 				le32_to_cpu(ns_event->nsid));
 			break;
-		case NVME_FORMAT_START_EVENT:
+		case NVME_PEL_FORMAT_START_EVENT:
 			format_start_event = pevent_log_info + offset;
 			json_object_add_value_uint(valid_attrs, "nsid",
 				le32_to_cpu(format_start_event->nsid));
@@ -1303,7 +1312,7 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			json_object_add_value_uint(valid_attrs, "format_nvm_cdw10",
 				le32_to_cpu(format_start_event->format_nvm_cdw10));
 			break;
-		case NVME_FORMAT_COMPLETION_EVENT:
+		case NVME_PEL_FORMAT_COMPLETION_EVENT:
 			format_cmpln_event = pevent_log_info + offset;
 			json_object_add_value_uint(valid_attrs, "nsid",
 				le32_to_cpu(format_cmpln_event->nsid));
@@ -1316,7 +1325,7 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			json_object_add_value_uint(valid_attrs, "status_field",
 				le32_to_cpu(format_cmpln_event->status_field));
 			break;
-		case NVME_SANITIZE_START_EVENT:
+		case NVME_PEL_SANITIZE_START_EVENT:
 			sanitize_start_event = pevent_log_info + offset;
 			json_object_add_value_uint(valid_attrs, "SANICAP",
 				le32_to_cpu(sanitize_start_event->sani_cap));
@@ -1325,7 +1334,7 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			json_object_add_value_uint(valid_attrs, "sani_cdw11",
 				le32_to_cpu(sanitize_start_event->sani_cdw11));
 			break;
-		case NVME_SANITIZE_COMPLETION_EVENT:
+		case NVME_PEL_SANITIZE_COMPLETION_EVENT:
 			sanitize_cmpln_event = pevent_log_info + offset;
 			json_object_add_value_uint(valid_attrs, "sani_prog",
 				le16_to_cpu(sanitize_cmpln_event->sani_prog));
@@ -1334,7 +1343,7 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			json_object_add_value_uint(valid_attrs, "cmpln_info",
 				le16_to_cpu(sanitize_cmpln_event->cmpln_info));
 			break;
-		case NVME_THERMAL_EXCURSION_EVENT:
+		case NVME_PEL_THERMAL_EXCURSION_EVENT:
 			thermal_exc_event = pevent_log_info + offset;
 			json_object_add_value_uint(valid_attrs, "over_temp",
 				thermal_exc_event->over_temp);
@@ -1370,8 +1379,8 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 	struct nvme_sanitize_start_event *sanitize_start_event;
 	struct nvme_sanitize_compln_event *sanitize_cmpln_event;
 	struct nvme_thermal_exc_event *thermal_exc_event;
-	struct nvme_persistent_event_log_head *pevent_log_head;
-	struct nvme_persistent_event_entry_head *pevent_entry_head;
+	struct nvme_persistent_event_log *pevent_log_head;
+	struct nvme_persistent_event_entry *pevent_entry_head;
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)pevent_log_info, size);
@@ -1384,15 +1393,15 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 	printf("Action for Persistent Event Log: %u\n", action);
 	if (size >= offset) {
 		pevent_log_head = pevent_log_info;
-		printf("Log Identifier: %u\n", pevent_log_head->log_id);
+		printf("Log Identifier: %u\n", pevent_log_head->lid);
 		printf("Total Number of Events: %u\n",
 			le32_to_cpu(pevent_log_head->tnev));
 		printf("Total Log Length : %"PRIu64"\n",
 			le64_to_cpu(pevent_log_head->tll));
-		printf("Log Revision: %u\n", pevent_log_head->log_rev);
-		printf("Log Header Length: %u\n", pevent_log_head->head_len);
+		printf("Log Revision: %u\n", pevent_log_head->rv);
+		printf("Log Header Length: %u\n", pevent_log_head->lhl);
 		printf("Timestamp: %"PRIu64"\n",
-			le64_to_cpu(pevent_log_head->timestamp));
+			le64_to_cpu(pevent_log_head->ts));
 		printf("Power On Hours (POH): %'.0Lf\n",
 			int128_to_double(pevent_log_head->poh));
 		printf("Power Cycle Count: %"PRIu64"\n",
@@ -1410,10 +1419,10 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			pevent_log_head->subnqn);
 		printf("Supported Events Bitmap: ");
 		for (int i = 0; i < 32; i++) {
-			if (pevent_log_head->supp_event_bm[i] == 0)
+			if (pevent_log_head->seb[i] == 0)
 				continue;
-			printf("BitMap[%d] is 0x%x\n", i,
-				pevent_log_head->supp_event_bm[i]);
+			printf("  BitMap[%d] is 0x%x\n", i,
+				pevent_log_head->seb[i]);
 		}
 	} else {
 		printf("No log data can be shown with this log len at least " \
@@ -1437,9 +1446,9 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 		printf("Event Type Revision: %u\n", pevent_entry_head->etype_rev);
 		printf("Event Header Length: %u\n", pevent_entry_head->ehl);
 		printf("Controller Identifier: %u\n",
-			le16_to_cpu(pevent_entry_head->ctrl_id));
+			le16_to_cpu(pevent_entry_head->cntlid));
 		printf("Event Timestamp: %"PRIu64"\n",
-			le64_to_cpu(pevent_entry_head->etimestamp));
+			le64_to_cpu(pevent_entry_head->ets));
 		printf("Vendor Specific Information Length: %u\n",
 			le16_to_cpu(pevent_entry_head->vsil));
 		printf("Event Length: %u\n", le16_to_cpu(pevent_entry_head->el));
@@ -1447,12 +1456,12 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 		offset += pevent_entry_head->ehl + 3;
 
 		switch (pevent_entry_head->etype) {
-		case NVME_SMART_HEALTH_EVENT:
+		case NVME_PEL_SMART_HEALTH_EVENT:
 			smart_event = pevent_log_info + offset;
 			printf("Smart Health Event: \n");
 			nvme_show_smart_log(smart_event, NVME_NSID_ALL, devname, flags);
 			break;
-		case NVME_FW_COMMIT_EVENT:
+		case NVME_PEL_FW_COMMIT_EVENT:
 			fw_commit_event = pevent_log_info + offset;
 			printf("FW Commit Event: \n");
 			printf("Old Firmware Revision: %"PRIu64"\n",
@@ -1469,7 +1478,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			printf("Vendor Assigned Firmware Commit Result Code: %u\n",
 				le16_to_cpu(fw_commit_event->vndr_assign_fw_commit_rc));
 			break;
-		case NVME_TIMESTAMP_EVENT:
+		case NVME_PEL_TIMESTAMP_EVENT:
 			ts_change_event = pevent_log_info + offset;
 			printf("Time Stamp Change Event: \n");
 			printf("Previous Timestamp: %"PRIu64"\n",
@@ -1477,7 +1486,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			printf("Milliseconds Since Reset: %"PRIu64"\n",
 				le64_to_cpu(ts_change_event->ml_secs_since_reset));
 			break;
-		case NVME_POWER_ON_RESET_EVENT:
+		case NVME_PEL_POWER_ON_RESET_EVENT:
 			por_info_len = (le16_to_cpu(pevent_entry_head->el) -
 				le16_to_cpu(pevent_entry_head->vsil) - sizeof(*fw_rev));
 
@@ -1504,13 +1513,13 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 					le64_to_cpu(por_event->ctrl_time_stamp));
 			}
 			break;
-		case NVME_NSS_HW_ERROR_EVENT:
+		case NVME_PEL_NSS_HW_ERROR_EVENT:
 			nss_hw_err_event = pevent_log_info + offset;
 			printf("NVM Subsystem Hardware Error Event Code: %u, %s\n",
 				le16_to_cpu(nss_hw_err_event->nss_hw_err_event_code),
 				nvme_show_nss_hw_error(nss_hw_err_event->nss_hw_err_event_code));
 			break;
-		case NVME_CHANGE_NS_EVENT:
+		case NVME_PEL_CHANGE_NS_EVENT:
 			ns_event = pevent_log_info + offset;
 			printf("Change Namespace Event: \n");
 			printf("Namespace Management CDW10: %u\n",
@@ -1529,7 +1538,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			printf("NVM Set Identifier: %u\n", le16_to_cpu(ns_event->nvmset_id));
 			printf("Namespace ID: %u\n", le32_to_cpu(ns_event->nsid));
 			break;
-		case NVME_FORMAT_START_EVENT:
+		case NVME_PEL_FORMAT_START_EVENT:
 			format_start_event = pevent_log_info + offset;
 			printf("Format NVM Start Event: \n");
 			printf("Namespace Identifier: %u\n",
@@ -1539,7 +1548,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			printf("Format NVM CDW10: %u\n",
 				le32_to_cpu(format_start_event->format_nvm_cdw10));
 			break;
-		case NVME_FORMAT_COMPLETION_EVENT:
+		case NVME_PEL_FORMAT_COMPLETION_EVENT:
 			format_cmpln_event = pevent_log_info + offset;
 			printf("Format NVM Completion Event: \n");
 			printf("Namespace Identifier: %u\n",
@@ -1553,7 +1562,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			printf("Status Field: %u\n",
 				le32_to_cpu(format_cmpln_event->status_field));
 			break;
-		case NVME_SANITIZE_START_EVENT:
+		case NVME_PEL_SANITIZE_START_EVENT:
 			sanitize_start_event = pevent_log_info + offset;
 			printf("Sanitize Start Event: \n");
 			printf("SANICAP: %u\n", sanitize_start_event->sani_cap);
@@ -1562,7 +1571,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			printf("Sanitize CDW11: %u\n",
 				le32_to_cpu(sanitize_start_event->sani_cdw11));
 			break;
-		case NVME_SANITIZE_COMPLETION_EVENT:
+		case NVME_PEL_SANITIZE_COMPLETION_EVENT:
 			sanitize_cmpln_event = pevent_log_info + offset;
 			printf("Sanitize Completion Event: \n");
 			printf("Sanitize Progress: %u\n",
@@ -1572,7 +1581,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			printf("Completion Information: %u\n",
 				le16_to_cpu(sanitize_cmpln_event->cmpln_info));
 			break;
-		case NVME_THERMAL_EXCURSION_EVENT:
+		case NVME_PEL_THERMAL_EXCURSION_EVENT:
 			thermal_exc_event = pevent_log_info + offset;
 			printf("Thermal Excursion Event: \n");
 			printf("Over Temperature: %u\n", thermal_exc_event->over_temp);
@@ -1587,7 +1596,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 }
 
 void json_endurance_group_event_agg_log(
-	struct nvme_event_agg_log_page *endurance_log,
+	struct nvme_aggregate_predictable_lat_event *endurance_log,
 	__u64 log_entries)
 {
 	struct json_object *root;
@@ -1612,7 +1621,7 @@ void json_endurance_group_event_agg_log(
 }
 
 void nvme_show_endurance_group_event_agg_log(
-	struct nvme_event_agg_log_page *endurance_log,
+	struct nvme_aggregate_predictable_lat_event *endurance_log,
 	__u64 log_entries, __u32 size, const char *devname,
 	enum nvme_print_flags flags)
 {
@@ -1642,9 +1651,9 @@ void json_lba_status_log(void *lba_status)
 	struct json_object *element;
 	struct json_object *desc_list;
 	struct json_object *elements_list;
-	struct nvme_lba_status_hdr *hdr;
-	struct nvme_lba_status_ns_element *ns_element;
-	struct nvme_lba_status_range_desc *range_desc;
+	struct nvme_lba_status_log *hdr;
+	struct nvme_lbas_ns_element *ns_element;
+	struct nvme_lba_rd *range_desc;
 	int offset = sizeof(*hdr);
 	__u32 num_lba_desc, num_elements;
 
@@ -1698,9 +1707,9 @@ void json_lba_status_log(void *lba_status)
 void nvme_show_lba_status_log(void *lba_status, __u32 size,
 	const char *devname, enum nvme_print_flags flags)
 {
-	struct nvme_lba_status_hdr *hdr;
-	struct nvme_lba_status_ns_element *ns_element;
-	struct nvme_lba_status_range_desc *range_desc;
+	struct nvme_lba_status_log *hdr;
+	struct nvme_lbas_ns_element *ns_element;
+	struct nvme_lba_rd *range_desc;
 	int offset = sizeof(*hdr);
 	__u32 num_lba_desc, num_elements;
 
@@ -1755,17 +1764,17 @@ static const char *resv_notif_to_string(__u8 type)
 	}
 }
 
-static void json_resv_notif_log(struct nvme_resv_notif_log *resv)
+static void json_resv_notif_log(struct nvme_resv_notification_log *resv)
 {
 	struct json_object *root;
 
 	root = json_create_object();
 	json_object_add_value_uint(root, "count",
-		le64_to_cpu(resv->log_page_count));
+		le64_to_cpu(resv->lpc));
 	json_object_add_value_uint(root, "rn_log_type",
-		resv->resv_notif_log_type);
+		resv->rnlpt);
 	json_object_add_value_uint(root, "num_logs",
-		resv->num_logs);
+		resv->nalp);
 	json_object_add_value_uint(root, "nsid",
 		le32_to_cpu(resv->nsid));
 
@@ -1774,7 +1783,7 @@ static void json_resv_notif_log(struct nvme_resv_notif_log *resv)
 	json_free_object(root);
 }
 
-void nvme_show_resv_notif_log(struct nvme_resv_notif_log *resv,
+void nvme_show_resv_notif_log(struct nvme_resv_notification_log *resv,
 	const char *devname, enum nvme_print_flags flags)
 {
 	if (flags & BINARY)
@@ -1784,95 +1793,98 @@ void nvme_show_resv_notif_log(struct nvme_resv_notif_log *resv,
 
 	printf("Reservation Notif Log for device: %s\n", devname);
 	printf("Log Page Count				: %"PRIx64"\n",
-		le64_to_cpu(resv->log_page_count));
+		le64_to_cpu(resv->lpc));
 	printf("Resv Notif Log Page Type	: %u (%s)\n",
-		resv->resv_notif_log_type,
-		resv_notif_to_string(resv->resv_notif_log_type));
-	printf("Num of Available Log Pages	: %u\n", resv->num_logs);
+		resv->rnlpt,
+		resv_notif_to_string(resv->rnlpt));
+	printf("Num of Available Log Pages	: %u\n", resv->nalp);
 	printf("Namespace ID:				: %"PRIx32"\n",
 		le32_to_cpu(resv->nsid));
 }
 
-static void nvme_show_subsystem(struct nvme_subsystem *s)
+static void nvme_show_subsystem(nvme_root_t r)
 {
-	int i;
+	nvme_host_t h;
 
-	printf("%s - NQN=%s\n", s->name, s->subsysnqn);
-	printf("\\\n");
+	nvme_for_each_host(r, h) {
+		nvme_subsystem_t s;
 
-	for (i = 0; i < s->nr_ctrls; i++) {
-		printf(" +- %s %s %s %s %s\n", s->ctrls[i].name,
-				s->ctrls[i].transport ? : "",
-				s->ctrls[i].address ? : "",
-				s->ctrls[i].state ? : "",
-				s->ctrls[i].ana_state ? : "");
+		nvme_for_each_subsystem(h, s) {
+			nvme_ctrl_t c;
+
+			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
+			       nvme_subsystem_get_nqn(s));
+			printf("\\\n");
+
+			nvme_subsystem_for_each_ctrl(s, c) {
+				printf(" +- %s %s %s %s\n",
+				       nvme_ctrl_get_name(c),
+				       nvme_ctrl_get_transport(c),
+				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_state(c));
+			}
+		}
 	}
 }
 
-static void json_print_nvme_subsystem_list(struct nvme_topology *t)
+static void json_print_nvme_subsystem_list(nvme_root_t r)
 {
-	struct json_object *subsystem_attrs, *path_attrs;
+	struct json_object *host_attrs, *subsystem_attrs, *path_attrs;
 	struct json_object *subsystems, *paths;
 	struct json_object *root;
-	int i, j;
+	nvme_host_t h;
 
 	root = json_create_object();
-	subsystems = json_create_array();
 
-	for (i = 0; i < t->nr_subsystems; i++) {
-		struct nvme_subsystem *s = &t->subsystems[i];
+	nvme_for_each_host(r, h) {
+		nvme_subsystem_t s;
 
-		subsystem_attrs = json_create_object();
-		json_object_add_value_string(subsystem_attrs,
-					     "Name", s->name);
-		json_object_add_value_string(subsystem_attrs,
-					     "NQN", s->subsysnqn);
+		host_attrs = json_create_object();
+		json_object_add_value_string(host_attrs, "HostNQN",
+					     nvme_host_get_hostnqn(h));
+		json_object_add_value_string(host_attrs, "HostID",
+					     nvme_host_get_hostid(h));
+		subsystems = json_create_array();
+		nvme_for_each_subsystem(h, s) {
+			nvme_ctrl_t c;
 
-		json_array_add_value_object(subsystems, subsystem_attrs);
+			subsystem_attrs = json_create_object();
+			json_object_add_value_string(subsystem_attrs, "Name",
+						     nvme_subsystem_get_name(s));
+			json_object_add_value_string(subsystem_attrs, "NQN",
+						     nvme_subsystem_get_nqn(s));
 
-		paths = json_create_array();
-		for (j = 0; j < s->nr_ctrls; j++) {
-			struct nvme_ctrl *c = &s->ctrls[j];
+			json_array_add_value_object(subsystems, subsystem_attrs);
+			paths = json_create_array();
 
-			path_attrs = json_create_object();
-			json_object_add_value_string(path_attrs, "Name",
-					c->name);
-			if (c->transport)
-				json_object_add_value_string(path_attrs,
-						"Transport", c->transport);
-			if (c->address)
-				json_object_add_value_string(path_attrs,
-						"Address", c->address);
-			if (c->state)
-				json_object_add_value_string(path_attrs,
-						"State", c->state);
-			if (c->ana_state)
-				json_object_add_value_string(path_attrs,
-						"ANAState", c->ana_state);
-			json_array_add_value_object(paths, path_attrs);
-		}
-		if (j)
+			nvme_subsystem_for_each_ctrl(s, c) {
+				path_attrs = json_create_object();
+				json_object_add_value_string(path_attrs, "Name",
+							     nvme_ctrl_get_name(c));
+				json_object_add_value_string(path_attrs, "Transport",
+							     nvme_ctrl_get_transport(c));
+				json_object_add_value_string(path_attrs, "Address",
+							     nvme_ctrl_get_address(c));
+				json_object_add_value_string(path_attrs, "State",
+							     nvme_ctrl_get_state(c));
+				json_array_add_value_object(paths, path_attrs);
+			}
 			json_object_add_value_array(subsystem_attrs, "Paths",
-				paths);
+						    paths);
+		}
+		json_object_add_value_array(host_attrs, "Subsystems", subsystems);
+		json_array_add_value_object(root, host_attrs);
 	}
-
-	if (i)
-		json_object_add_value_array(root, "Subsystems", subsystems);
 	json_print_object(root, NULL);
 	printf("\n");
 	json_free_object(root);
 }
 
-void nvme_show_subsystem_list(struct nvme_topology *t,
-			      enum nvme_print_flags flags)
+void nvme_show_subsystem_list(nvme_root_t r, enum nvme_print_flags flags)
 {
-	int i;
-
 	if (flags & JSON)
-		return json_print_nvme_subsystem_list(t);
-
-	for (i = 0; i < t->nr_subsystems; i++)
-		nvme_show_subsystem(&t->subsystems[i]);
+		return json_print_nvme_subsystem_list(r);
+	nvme_show_subsystem(r);
 }
 
 static void nvme_show_registers_cap(struct nvme_bar_cap *cap)
@@ -2494,7 +2506,7 @@ void nvme_show_single_property(int offset, uint64_t value64, int human)
 	uint32_t value32;
 
 	if (!human) {
-		if (is_64bit_reg(offset))
+		if (nvme_is_64bit_reg(offset))
 			printf("property: 0x%02x (%s), value: %"PRIx64"\n",
 				offset, nvme_register_to_string(offset),
 				value64);
@@ -2544,81 +2556,7 @@ void nvme_show_single_property(int offset, uint64_t value64, int human)
 
 void nvme_show_relatives(const char *name)
 {
-	unsigned id, i, nsid = NVME_NSID_ALL;
-	char *path = NULL;
-	bool block = true;
-	int ret;
-
-	ret = sscanf(name, "nvme%dn%d", &id, &nsid);
-	switch (ret) {
-	case 1:
-		if (asprintf(&path, "/sys/class/nvme/%s", name) < 0)
-			path = NULL;
-		block = false;
-		break;
-	case 2:
-		if (asprintf(&path, "/sys/block/%s/device", name) < 0)
-			path = NULL;
-		break;
-	default:
-		return;
-	}
-
-	if (!path)
-		return;
-
-	if (block) {
-		struct nvme_topology t = { };
-		char *subsysnqn;
-		int err;
-
-		subsysnqn = get_nvme_subsnqn(path);
-		if (!subsysnqn) {
-			free(path);
-			return;
-		}
-		err = scan_subsystems(&t, subsysnqn, 0, 0, NULL);
-		if (err || t.nr_subsystems != 1) {
-			free(subsysnqn);
-			free(path);
-			return;
-		}
-
-		fprintf(stderr, "Namespace %s has parent controller(s):", name);
-		for (i = 0; i < t.subsystems[0].nr_ctrls; i++)
-			fprintf(stderr, "%s%s", i ? ", " : "",
-				t.subsystems[0].ctrls[i].name);
-		fprintf(stderr, "\n\n");
-		free(subsysnqn);
-		free_topology(&t);
-	} else {
-		struct dirent **paths;
-		bool comma = false;
-		int n, ns, cntlid;
-
-		n = scandir(path, &paths, scan_ctrl_paths_filter, alphasort);
-		if (n < 0) {
-			free(path);
-			return;
-		}
-
-		fprintf(stderr, "Controller %s has child namespace(s):", name);
-		for (i = 0; i < n; i++) {
-			if (sscanf(paths[i]->d_name, "nvme%dc%dn%d",
-				   &id, &cntlid, &ns) != 3) {
-				if (sscanf(paths[i]->d_name, "nvme%dn%d",
-					   &id, &ns) != 2) {
-					continue;
-				}
-			}
-			fprintf(stderr, "%snvme%dn%d", comma ? ", " : "", id,
-				ns);
-			comma = true;
-		}
-		fprintf(stderr, "\n\n");
-		free(paths);
-	}
-	free(path);
+	/* XXX: TBD */
 }
 
 void d(unsigned char *buf, int len, int width, int group)
@@ -2660,28 +2598,13 @@ void d_raw(unsigned char *buf, unsigned len)
 {
 	unsigned i;
 	for (i = 0; i < len; i++)
-		putchar(*(buf + i));
+		putchar(*(buf+i));
 }
 
 void nvme_show_status(__u16 status)
 {
 	fprintf(stderr, "NVMe status: %s(%#x)\n", nvme_status_to_string(status),
 		status);
-}
-
-static void format(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
-{
-
-	fmt_sz = snprintf(formatter,fmt_sz, "%-*.*s",
-		 (int)tofmtsz, (int)tofmtsz, tofmt);
-	/* trim() the obnoxious trailing white lines */
-	while (fmt_sz) {
-		if (formatter[fmt_sz - 1] != ' ' && formatter[fmt_sz - 1] != '\0') {
-			formatter[fmt_sz] = '\0';
-			break;
-		}
-		fmt_sz--;
-	}
 }
 
 static const char *nvme_uuid_to_string(uuid_t uuid)
@@ -3168,17 +3091,6 @@ static void nvme_show_id_ctrl_nwpc(__u8 nwpc)
 	printf("\n");
 }
 
-static void nvme_show_id_ctrl_ocfs(__u16 ocfs)
-{
-	__u16 rsvd = (ocfs & 0xfffe) >> 1;
-	__u8 copy_fmt_0 = ocfs & 0x1;
-	if (rsvd)
-		printf("  [15:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\tController Copy Format 0h %sSupported\n",
-		copy_fmt_0, copy_fmt_0 ? "" : "Not ");
-	printf("\n");
-}
-
 static void nvme_show_id_ctrl_sgls(__le32 ctrl_sgls)
 {
 	__u32 sgls = le32_to_cpu(ctrl_sgls);
@@ -3420,7 +3332,7 @@ static void nvme_show_id_ns_dlfeat(__u8 dlfeat)
 void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		enum nvme_print_flags flags)
 {
-	int human = flags & VERBOSE;
+	bool human = flags & VERBOSE;
 	int vs = flags & VS;
 	int i;
 
@@ -3712,29 +3624,29 @@ static void nvme_show_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 	int i;
 
 	for (i = 0; i <= ctrl->npss; i++) {
-		__u16 max_power = le16_to_cpu(ctrl->psd[i].max_power);
+		__u16 max_power = le16_to_cpu(ctrl->psd[i].mp);
 
 		printf("ps %4d : mp:", i);
 
-		if (ctrl->psd[i].flags & NVME_PS_FLAGS_MAX_POWER_SCALE)
+		if (ctrl->psd[i].flags & NVME_PSD_FLAGS_MXPS)
 			printf("%01u.%04uW ", max_power / 10000, max_power % 10000);
 		else
 			printf("%01u.%02uW ", max_power / 100, max_power % 100);
 
-		if (ctrl->psd[i].flags & NVME_PS_FLAGS_NON_OP_STATE)
+		if (ctrl->psd[i].flags & NVME_PSD_FLAGS_NOPS)
 			printf("non-");
 
 		printf("operational enlat:%d exlat:%d rrt:%d rrl:%d\n"
 			"          rwt:%d rwl:%d idle_power:",
-			le32_to_cpu(ctrl->psd[i].entry_lat),
-			le32_to_cpu(ctrl->psd[i].exit_lat),
-			ctrl->psd[i].read_tput, ctrl->psd[i].read_lat,
-			ctrl->psd[i].write_tput, ctrl->psd[i].write_lat);
-		print_ps_power_and_scale(ctrl->psd[i].idle_power,
-				 POWER_SCALE(ctrl->psd[i].idle_scale));
+			le32_to_cpu(ctrl->psd[i].enlat),
+			le32_to_cpu(ctrl->psd[i].exlat),
+			ctrl->psd[i].rrt, ctrl->psd[i].rrl,
+			ctrl->psd[i].rwt, ctrl->psd[i].rwl);
+		print_ps_power_and_scale(ctrl->psd[i].idlp,
+				 nvme_psd_power_scale(ctrl->psd[i].ips));
 		printf(" active_power:");
-		print_ps_power_and_scale(ctrl->psd[i].active_power,
-				 POWER_SCALE(ctrl->psd[i].active_work_scale));
+		print_ps_power_and_scale(ctrl->psd[i].actp,
+				 nvme_psd_power_scale(ctrl->psd[i].aps));
 		printf("\n");
 
 	}
@@ -3867,9 +3779,6 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_nwpc(ctrl->nwpc);
 	printf("acwu      : %d\n", le16_to_cpu(ctrl->acwu));
-	printf("ocfs      : %#x\n", le16_to_cpu(ctrl->ocfs));
-	if (human)
-		nvme_show_id_ctrl_ocfs(ctrl->ocfs);
 	printf("sgls      : %#x\n", le32_to_cpu(ctrl->sgls));
 	if (human)
 		nvme_show_id_ctrl_sgls(ctrl->sgls);
@@ -4092,7 +4001,7 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	}
 }
 
-static void json_nvme_list_ns(__u32 *ns_list)
+static void json_nvme_list_ns(struct nvme_ns_list *ns_list)
 {
 	struct json_object *root;
 	struct json_object *valid_attrs;
@@ -4103,10 +4012,10 @@ static void json_nvme_list_ns(__u32 *ns_list)
 	valid = json_create_array();
 
 	for (i = 0; i < 1024; i++) {
-		if (ns_list[i]) {
+		if (ns_list->ns[i]) {
 			valid_attrs = json_create_object();
 			json_object_add_value_uint(valid_attrs, "nsid",
-				le32_to_cpu(ns_list[i]));
+				le32_to_cpu(ns_list->ns[i]));
 			json_array_add_value_object(valid, valid_attrs);
 		}
 	}
@@ -4116,15 +4025,15 @@ static void json_nvme_list_ns(__u32 *ns_list)
 	json_free_object(root);
 }
 
-void nvme_show_list_ns(__u32 *ns_list, enum nvme_print_flags flags)
+void nvme_show_list_ns(struct nvme_ns_list *ns_list, enum nvme_print_flags flags)
 {
 	int i;
 	if (flags & JSON)
 		return json_nvme_list_ns(ns_list);
 
 	for (i = 0; i < 1024; i++) {
-		if (ns_list[i])
-			printf("[%4u]:%#x\n", i, le32_to_cpu(ns_list[i]));
+		if (ns_list->ns[i])
+			printf("[%4u]:%#x\n", i, le32_to_cpu(ns_list->ns[i]));
 	}
 }
 
@@ -4218,7 +4127,7 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 	}
 }
 
-static void json_nvme_list_ctrl(struct nvme_controller_list *ctrl_list, __u16 num)
+static void json_nvme_list_ctrl(struct nvme_ctrl_list *ctrl_list, __u16 num)
 {
 	struct json_object *root;
 	struct json_object *valid_attrs;
@@ -4245,7 +4154,7 @@ static void json_nvme_list_ctrl(struct nvme_controller_list *ctrl_list, __u16 nu
 	json_free_object(root);
 }
 
-void nvme_show_list_ctrl(struct nvme_controller_list *ctrl_list,
+void nvme_show_list_ctrl(struct nvme_ctrl_list *ctrl_list,
 	enum nvme_print_flags flags)
 {
 	int i;
@@ -4260,7 +4169,7 @@ void nvme_show_list_ctrl(struct nvme_controller_list *ctrl_list,
 	}
 }
 
-static void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset)
+static void json_nvme_id_nvmset(struct nvme_id_nvmset_list *nvmset)
 {
 	__u32 nent = nvmset->nid;
 	struct json_object *entries;
@@ -4276,17 +4185,17 @@ static void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset)
 		struct json_object *entry = json_create_object();
 
 		json_object_add_value_int(entry, "nvmset_id",
-			  le16_to_cpu(nvmset->ent[i].id));
+			  le16_to_cpu(nvmset->ent[i].nvmsetid));
 		json_object_add_value_int(entry, "endurance_group_id",
-			  le16_to_cpu(nvmset->ent[i].endurance_group_id));
+			  le16_to_cpu(nvmset->ent[i].endgid));
 		json_object_add_value_int(entry, "random_4k_read_typical",
-			  le32_to_cpu(nvmset->ent[i].random_4k_read_typical));
+			  le32_to_cpu(nvmset->ent[i].rr4kt));
 		json_object_add_value_int(entry, "optimal_write_size",
-			  le32_to_cpu(nvmset->ent[i].opt_write_size));
+			  le32_to_cpu(nvmset->ent[i].ows));
 		json_object_add_value_float(entry, "total_nvmset_cap",
-			    int128_to_double(nvmset->ent[i].total_nvmset_cap));
+			    int128_to_double(nvmset->ent[i].tnvmsetcap));
 		json_object_add_value_float(entry, "unalloc_nvmset_cap",
-			    int128_to_double(nvmset->ent[i].unalloc_nvmset_cap));
+			    int128_to_double(nvmset->ent[i].unvmsetcap));
 		json_array_add_value_object(entries, entry);
 	}
 
@@ -4296,7 +4205,7 @@ static void json_nvme_id_nvmset(struct nvme_id_nvmset *nvmset)
 	json_free_object(root);
 }
 
-void nvme_show_id_nvmset(struct nvme_id_nvmset *nvmset, unsigned nvmset_id,
+void nvme_show_id_nvmset(struct nvme_id_nvmset_list *nvmset, unsigned nvmset_id,
 	enum nvme_print_flags flags)
 {
 	int i;
@@ -4313,22 +4222,22 @@ void nvme_show_id_nvmset(struct nvme_id_nvmset *nvmset, unsigned nvmset_id,
 		printf(" NVM Set Attribute Entry[%2d]\n", i);
 		printf(".................\n");
 		printf("nvmset_id               : %d\n",
-			le16_to_cpu(nvmset->ent[i].id));
+			le16_to_cpu(nvmset->ent[i].endgid));
 		printf("enduracne_group_id      : %d\n",
-			le16_to_cpu(nvmset->ent[i].endurance_group_id));
+			le16_to_cpu(nvmset->ent[i].endgid));
 		printf("random_4k_read_typical  : %u\n",
-			le32_to_cpu(nvmset->ent[i].random_4k_read_typical));
+			le32_to_cpu(nvmset->ent[i].rr4kt));
 		printf("optimal_write_size      : %u\n",
-			le32_to_cpu(nvmset->ent[i].opt_write_size));
+			le32_to_cpu(nvmset->ent[i].ows));
 		printf("total_nvmset_cap        : %.0Lf\n",
-			int128_to_double(nvmset->ent[i].total_nvmset_cap));
+			int128_to_double(nvmset->ent[i].tnvmsetcap));
 		printf("unalloc_nvmset_cap      : %.0Lf\n",
-			int128_to_double(nvmset->ent[i].unalloc_nvmset_cap));
+			int128_to_double(nvmset->ent[i].unvmsetcap));
 		printf(".................\n");
 	}
 }
 
-static void json_nvme_primary_ctrl_caps(const struct nvme_primary_ctrl_caps *caps)
+static void json_nvme_primary_ctrl_cap(const struct nvme_primary_ctrl_cap *caps)
 {
 	struct json_object *root;
 
@@ -4369,15 +4278,15 @@ static void nvme_show_primary_ctrl_caps_crt(__u8 crt)
 	printf("  [0:0] %#x\tVQ Resources are %ssupported\n", vq, vq ? "" : "not ");
 }
 
-void nvme_show_primary_ctrl_caps(const struct nvme_primary_ctrl_caps *caps,
-				 enum nvme_print_flags flags)
+void nvme_show_primary_ctrl_cap(const struct nvme_primary_ctrl_cap *caps,
+				enum nvme_print_flags flags)
 {
 	int human = flags & VERBOSE;
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)caps, sizeof(*caps));
 	else if (flags & JSON)
-		return json_nvme_primary_ctrl_caps(caps);
+		return json_nvme_primary_ctrl_cap(caps);
 
 	printf("NVME Identify Primary Controller Capabilities:\n");
 	printf("cntlid    : %#x\n", le16_to_cpu(caps->cntlid));
@@ -4399,10 +4308,10 @@ void nvme_show_primary_ctrl_caps(const struct nvme_primary_ctrl_caps *caps,
 	printf("vigran    : %d\n", le16_to_cpu(caps->vigran));
 }
 
-static void json_nvme_list_secondary_ctrl(const struct nvme_secondary_controllers_list *sc_list,
+static void json_nvme_list_secondary_ctrl(const struct nvme_secondary_ctrl_list *sc_list,
 					  __u32 count)
 {
-	const struct nvme_secondary_controller_entry *sc_entry = &sc_list->sc_entry[0];
+	const struct nvme_secondary_ctrl *sc_entry = &sc_list->sc_entry[0];
 	__u32 nent = min(sc_list->num, count);
 	struct json_object *entries;
 	struct json_object *root;
@@ -4441,10 +4350,10 @@ static void json_nvme_list_secondary_ctrl(const struct nvme_secondary_controller
 }
 
 void nvme_show_list_secondary_ctrl(
-	const struct nvme_secondary_controllers_list *sc_list,
+	const struct nvme_secondary_ctrl_list *sc_list,
 	__u32 count, enum nvme_print_flags flags)
 {
-	const struct nvme_secondary_controller_entry *sc_entry =
+	const struct nvme_secondary_ctrl *sc_entry =
 		&sc_list->sc_entry[0];
 	static const char * const state_desc[] = { "Offline", "Online" };
 
@@ -4497,9 +4406,9 @@ static void json_nvme_id_ns_granularity_list(
 		struct json_object *entry = json_create_object();
 
 		json_object_add_value_uint(entry, "namespace-size-granularity",
-			le64_to_cpu(glist->entry[i].namespace_size_granularity));
+			le64_to_cpu(glist->entry[i].nszegran));
 		json_object_add_value_uint(entry, "namespace-capacity-granularity",
-			le64_to_cpu(glist->entry[i].namespace_capacity_granularity));
+			le64_to_cpu(glist->entry[i].ncapgran));
 		json_array_add_value_object(entries, entry);
 	}
 
@@ -4531,9 +4440,9 @@ void nvme_show_id_ns_granularity_list(const struct nvme_id_ns_granularity_list *
 		printf("\n     Entry[%2d] :\n", i);
 		printf("................\n");
 		printf("     NSG       : Namespace Size Granularity     : 0x%"PRIx64"\n",
-			le64_to_cpu(glist->entry[i].namespace_size_granularity));
+			le64_to_cpu(glist->entry[i].nszegran));
 		printf("     NCG       : Namespace Capacity Granularity : 0x%"PRIx64"\n",
-			le64_to_cpu(glist->entry[i].namespace_capacity_granularity));
+			le64_to_cpu(glist->entry[i].ncapgran));
 	}
 }
 
@@ -4546,7 +4455,7 @@ static void json_nvme_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 	root = json_create_object();
 	entries = json_create_array();
 	/* The 0th entry is reserved */
-	for (i = 1; i < NVME_MAX_UUID_ENTRIES; i++) {
+	for (i = 1; i < NVME_ID_UUID_LIST_MAX; i++) {
 		uuid_t uuid;
 		struct json_object *entry = json_create_object();
 
@@ -4578,7 +4487,7 @@ void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 
 	/* The 0th entry is reserved */
 	printf("NVME Identify UUID:\n");
-	for (i = 1; i < NVME_MAX_UUID_ENTRIES; i++) {
+	for (i = 1; i < NVME_ID_UUID_LIST_MAX; i++) {
 		uuid_t uuid;
 		char *association = "";
 		uint8_t identifier_association = uuid_list->entry[i].header & 0x3;
@@ -4613,67 +4522,14 @@ void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 	}
 }
 
-static void nvme_show_iocs_vector(__u64 iocs_vec)
+void nvme_show_id_iocs(struct nvme_id_iocs *iocs)
 {
-	__u64 rsvd3 = iocs_vec >> 3;
-	__u8 zns_cmd_set = (iocs_vec >> 2) & 0x1;
-	__u8 kv_cmd_set = (iocs_vec >> 1) & 0x1;
-	__u8 nvm_cmd_set = iocs_vec & 0x1;
+	__u16 i;
 
-	if (rsvd3)
-		printf("  [63:3] : %"PRIx64"\tReserved3\n", le64_to_cpu(rsvd3));
-	printf("  [2:2] : %#x\tZNS Command Set %sSelected\n",
-		zns_cmd_set, zns_cmd_set ? "" : "not ");
-	printf("  [1:1] : %#x\tKV Command Set %sSelected\n",
-		kv_cmd_set, kv_cmd_set ? "" : "not ");
-	printf("  [0:0] : %#x\tNVM Command Set %sSelected\n",
-		nvm_cmd_set, nvm_cmd_set ? "" : "not ");
-	printf("\n");
-}
-
-static void json_id_iocs(struct nvme_id_iocs *iocs)
-{
-	struct json_object *root;
-	struct json_object *entries;
-	int i;
-
-	root = json_create_object();
-	entries = json_create_array();
-
-	for (i = 0; i < NVME_NUM_IOCS_COMBINATIONS; i++) {
-		if (iocs->iocs[i]) {
-			struct json_object *entry = json_create_object();
-			json_object_add_value_uint(entry, "iocs",
-				le64_to_cpu(iocs->iocs[i]));
-			json_array_add_value_object(entries, entry);
-		}
-	}
-
-	json_object_add_value_array(root, "iocs_list", entries);
-	json_print_object(root, NULL);
-	printf("\n");
-	json_free_object(root);
-
-}
-
-void nvme_show_id_iocs(struct nvme_id_iocs *iocs, enum nvme_print_flags flags)
-{
-	if (flags & BINARY)
-		return d_raw((unsigned char *)iocs, sizeof(*iocs));
-	else if (flags & JSON)
-		return json_id_iocs(iocs);
-
-	bool human = flags & VERBOSE;
-	int i;
-
-	for (i = 0; i < NVME_NUM_IOCS_COMBINATIONS; i++) {
-		if (iocs->iocs[i]) {
-			printf("I/O Command Set Combination[%u]: %"PRIx64"\n", i,
-				(uint64_t)le64_to_cpu(iocs->iocs[i]));
-			if (human)
-				nvme_show_iocs_vector(le64_to_cpu(iocs->iocs[i]));
-		}
-	}
+	for (i = 0; i < 512; i++)
+		if (iocs->iocsc[i])
+			printf("I/O Command Set Combination[%u]:%"PRIx64"\n", i,
+				(uint64_t)le64_to_cpu(iocs->iocsc[i]));
 }
 
 static const char *nvme_trtype_to_string(__u8 trtype)
@@ -4730,7 +4586,7 @@ void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
 	}
 }
 
-void nvme_show_resv_report(struct nvme_reservation_status *status, int bytes,
+void nvme_show_resv_report(struct nvme_resv_status *status, int bytes,
 	__u32 cdw11, enum nvme_print_flags flags)
 {
 	int i, j, regctl, entries;
@@ -4770,8 +4626,6 @@ void nvme_show_resv_report(struct nvme_reservation_status *status, int bytes,
 				le64_to_cpu(status->regctl_ds[i].rkey));
 		}
 	} else {
-		struct nvme_reservation_status_ext *ext_status =
-			(struct nvme_reservation_status_ext *)status;
 		/* if status buffer was too small, don't loop past the end of the buffer */
 		entries = (bytes - 64) / 64;
 		if (entries < regctl)
@@ -4780,22 +4634,22 @@ void nvme_show_resv_report(struct nvme_reservation_status *status, int bytes,
 		for (i = 0; i < regctl; i++) {
 			printf("regctlext[%d] :\n", i);
 			printf("  cntlid     : %x\n",
-				le16_to_cpu(ext_status->regctl_eds[i].cntlid));
+				le16_to_cpu(status->regctl_eds[i].cntlid));
 			printf("  rcsts      : %x\n",
-				ext_status->regctl_eds[i].rcsts);
+				status->regctl_eds[i].rcsts);
 			printf("  rkey       : %"PRIx64"\n",
-				le64_to_cpu(ext_status->regctl_eds[i].rkey));
+				le64_to_cpu(status->regctl_eds[i].rkey));
 			printf("  hostid     : ");
 			for (j = 0; j < 16; j++)
 				printf("%x",
-					ext_status->regctl_eds[i].hostid[j]);
+					status->regctl_eds[i].hostid[j]);
 			printf("\n");
 		}
 	}
 	printf("\n");
 }
 
-void nvme_show_fw_log(struct nvme_firmware_log_page *fw_log,
+void nvme_show_fw_log(struct nvme_firmware_slot *fw_log,
 	const char *devname, enum nvme_print_flags flags)
 {
 	int i;
@@ -4815,7 +4669,7 @@ void nvme_show_fw_log(struct nvme_firmware_log_page *fw_log,
 	}
 }
 
-void nvme_show_changed_ns_list_log(struct nvme_changed_ns_list_log *log,
+void nvme_show_changed_ns_list_log(struct nvme_ns_list *log,
 				   const char *devname,
 				   enum nvme_print_flags flags)
 {
@@ -4827,9 +4681,9 @@ void nvme_show_changed_ns_list_log(struct nvme_changed_ns_list_log *log,
 	else if (flags & JSON)
 		return json_changed_ns_list_log(log, devname);
 
-	if (log->log[0] != cpu_to_le32(0XFFFFFFFF)) {
-		for (i = 0; i < NVME_MAX_CHANGED_NAMESPACES; i++) {
-			nsid = le32_to_cpu(log->log[i]);
+	if (log->ns[0] != cpu_to_le32(NVME_NSID_ALL)) {
+		for (i = 0; i < NVME_ID_NS_LIST_MAX; i++) {
+			nsid = le32_to_cpu(log->ns[i]);
 			if (nsid == 0)
 				break;
 
@@ -4837,7 +4691,7 @@ void nvme_show_changed_ns_list_log(struct nvme_changed_ns_list_log *log,
 		}
 	} else
 		printf("more than %d ns changed\n",
-			NVME_MAX_CHANGED_NAMESPACES);
+			NVME_ID_NS_LIST_MAX);
 }
 
 static void nvme_show_effects_log_human(__u32 effect)
@@ -4862,7 +4716,7 @@ static void nvme_show_effects_log_human(__u32 effect)
 		printf("  Reserved CSE\n");
 }
 
-void nvme_show_effects_log(struct nvme_effects_log_page *effects,
+void nvme_show_effects_log(struct nvme_cmd_effects_log *effects,
 			   unsigned int flags)
 {
 	int i, human = flags & VERBOSE;
@@ -5012,7 +4866,7 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		if (temp == 0)
 			continue;
 		printf("Temperature Sensor %d           : %ld C (%u Kelvin)\n",
-		       i + 1, kelvin_to_celsius(temp), temp);
+			i + 1, kelvin_to_celsius(temp), temp);
 	}
 	printf("Thermal Management T1 Trans Count	: %u\n",
 		le32_to_cpu(smart->thm_temp1_trans_count));
@@ -5024,11 +4878,11 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		le32_to_cpu(smart->thm_temp2_total_time));
 }
 
-void nvme_show_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname,
+void nvme_show_ana_log(struct nvme_ana_log *ana_log, const char *devname,
 			enum nvme_print_flags flags, size_t len)
 {
-	int offset = sizeof(struct nvme_ana_rsp_hdr);
-	struct nvme_ana_rsp_hdr *hdr = ana_log;
+	int offset = sizeof(struct nvme_ana_log);
+	struct nvme_ana_log *hdr = ana_log;
 	struct nvme_ana_group_desc *desc;
 	size_t nsid_buf_size;
 	void *base = ana_log;
@@ -5068,7 +4922,7 @@ void nvme_show_ana_log(struct nvme_ana_rsp_hdr *ana_log, const char *devname,
 	}
 }
 
-static void nvme_show_self_test_result(struct nvme_self_test_res *res,
+static void nvme_show_self_test_result(struct nvme_st_result *res,
 			     enum nvme_print_flags flags)
 {
 	static const char *const test_res[] = {
@@ -5085,17 +4939,17 @@ static void nvme_show_self_test_result(struct nvme_self_test_res *res,
 		"Operation was aborted for unknown reason",
 		"Operation was aborted due to a sanitize operation",
 		"Reserved",
-		[NVME_ST_RES_NOT_USED] = "Entry not used (does not contain a result)",
+		[NVME_ST_RESULT_NOT_USED] = "Entry not used (does not contain a result)",
 	};
 	__u8 op, code;
 
-	op = res->dsts & NVME_ST_RES_MASK;
+	op = res->dsts & NVME_ST_RESULT_MASK;
 	printf("  Operation Result             : %#x", op);
 	if (flags & VERBOSE)
 		printf(" %s", (op < ARRAY_SIZE(test_res) && test_res[op]) ?
 			test_res[op] : test_res[ARRAY_SIZE(test_res) - 1]);
 	printf("\n");
-	if (op == NVME_ST_RES_NOT_USED)
+	if (op == NVME_ST_RESULT_NOT_USED)
 		return;
 
 	code = res->dsts >> NVME_ST_CODE_SHIFT;
@@ -5103,10 +4957,10 @@ static void nvme_show_self_test_result(struct nvme_self_test_res *res,
 
 	if (flags & VERBOSE) {
 		switch (code) {
-		case NVME_ST_CODE_SHORT_OP:
+		case NVME_ST_CODE_SHORT:
 			printf(" Short device self-test operation");
 			break;
-		case NVME_ST_CODE_EXT_OP:
+		case NVME_ST_CODE_EXTENDED:
 			printf(" Extended device self-test operation");
 			break;
 		case NVME_ST_CODE_VS:
@@ -5119,22 +4973,22 @@ static void nvme_show_self_test_result(struct nvme_self_test_res *res,
 	}
 	printf("\n");
 
-	if (op == NVME_ST_RES_KNOWN_SEG_FAIL)
+	if (op == NVME_ST_RESULT_KNOWN_SEG_FAIL)
 		printf("  Segment Number               : %#x\n", res->seg);
 
 	printf("  Valid Diagnostic Information : %#x\n", res->vdi);
 	printf("  Power on hours (POH)         : %#"PRIx64"\n",
 		(uint64_t)le64_to_cpu(res->poh));
 
-	if (res->vdi & NVME_ST_VALID_NSID)
+	if (res->vdi & NVME_ST_VALID_DIAG_INFO_NSID)
 		printf("  Namespace Identifier         : %#x\n",
 			le32_to_cpu(res->nsid));
-	if (res->vdi & NVME_ST_VALID_FLBA)
+	if (res->vdi & NVME_ST_VALID_DIAG_INFO_FLBA)
 		printf("  Failing LBA                  : %#"PRIx64"\n",
 			(uint64_t)le64_to_cpu(res->flba));
-	if (res->vdi & NVME_ST_VALID_SCT)
+	if (res->vdi & NVME_ST_VALID_DIAG_INFO_SCT)
 		printf("  Status Code Type             : %#x\n", res->sct);
-	if (res->vdi & NVME_ST_VALID_SC) {
+	if (res->vdi & NVME_ST_VALID_DIAG_INFO_SC) {
 		printf("  Status Code                  : %#x", res->sc);
 		if (flags & VERBOSE)
 			printf(" %s", nvme_status_to_string(
@@ -5157,9 +5011,9 @@ void nvme_show_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entr
 		return json_self_test_log(self_test, dst_entries);
 
 	printf("Device Self Test Log for NVME device:%s\n", devname);
-	printf("Current operation  : %#x\n", self_test->crnt_dev_selftest_oprn);
-	printf("Current Completion : %u%%\n", self_test->crnt_dev_selftest_compln);
-	num_entries = min(dst_entries, NVME_ST_REPORTS);
+	printf("Current operation  : %#x\n", self_test->current_operation);
+	printf("Current Completion : %u%%\n", self_test->completion);
+	num_entries = min(dst_entries, NVME_LOG_ST_MAX_RESULTS);
 	for (i = 0; i < num_entries; i++) {
 		printf("Self Test Result[%d]:\n", i);
 		nvme_show_self_test_result(&self_test->result[i], flags);
@@ -5181,10 +5035,11 @@ static void nvme_show_sanitize_log_sstat(__u16 status)
 	printf("\t[2:0]\t%s\n", str);
 	str = "Number of completed passes if most recent operation was overwrite";
 	printf("\t[7:3]\t%s:\t%u\n", str,
-		(status & NVME_SANITIZE_LOG_NUM_CMPLTED_PASS_MASK) >> 3);
+		(status >> NVME_SANITIZE_SSTAT_COMPLETED_PASSES_SHIFT) &
+			NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK);
 
 	printf("\t  [8]\t");
-	if (status & NVME_SANITIZE_LOG_GLOBAL_DATA_ERASED)
+	if (status & NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED)
 		str = "Global Data Erased set: no NS LB in the NVM subsystem "\
 			"has been written to and no PMR in the NVM subsystem "\
 			"has been enabled";
@@ -5205,80 +5060,81 @@ void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 			    const char *devname, enum nvme_print_flags flags)
 {
 	int human = flags & VERBOSE;
-	__u16 status = le16_to_cpu(sanitize->status) & NVME_SANITIZE_LOG_STATUS_MASK;
+	__u16 status = le16_to_cpu(sanitize->sstat) & NVME_SANITIZE_SSTAT_STATUS_MASK;
 
 	if (flags & BINARY)
-		return d_raw((unsigned char *)sanitize, sizeof(*sanitize));
-	else if (flags & JSON)
-		return json_sanitize_log(sanitize, devname);
+		d_raw((unsigned char *)sanitize, sizeof(*sanitize));
+	else if (flags & JSON) {
+		json_sanitize_log(sanitize, devname);
+		return;
+	}
 
 	printf("Sanitize Progress                      (SPROG) :  %u",
-	       le16_to_cpu(sanitize->progress));
+	       le16_to_cpu(sanitize->sprog));
 
-	if (human && status == NVME_SANITIZE_LOG_IN_PROGESS)
-		nvme_show_sanitize_log_sprog(le16_to_cpu(sanitize->progress));
+	if (human && status == NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS)
+		nvme_show_sanitize_log_sprog(le16_to_cpu(sanitize->sprog));
 	else
 		printf("\n");
 
 	printf("Sanitize Status                        (SSTAT) :  %#x\n",
-		le16_to_cpu(sanitize->status));
+		le16_to_cpu(sanitize->sstat));
 	if (human)
-		nvme_show_sanitize_log_sstat(le16_to_cpu(sanitize->status));
+		nvme_show_sanitize_log_sstat(le16_to_cpu(sanitize->sstat));
 
 	printf("Sanitize Command Dword 10 Information (SCDW10) :  %#x\n",
-		le32_to_cpu(sanitize->cdw10_info));
+		le32_to_cpu(sanitize->scdw10));
 	nvme_show_estimate_sanitize_time("Estimated Time For Overwrite                   ",
-		le32_to_cpu(sanitize->est_ovrwrt_time));
+		le32_to_cpu(sanitize->eto));
 	nvme_show_estimate_sanitize_time("Estimated Time For Block Erase                 ",
-		le32_to_cpu(sanitize->est_blk_erase_time));
+		le32_to_cpu(sanitize->etbe));
 	nvme_show_estimate_sanitize_time("Estimated Time For Crypto Erase                ",
-		le32_to_cpu(sanitize->est_crypto_erase_time));
+		le32_to_cpu(sanitize->etce));
 	nvme_show_estimate_sanitize_time("Estimated Time For Overwrite (No-Deallocate)   ",
-		le32_to_cpu(sanitize->est_ovrwrt_time_with_no_deallocate));
+		le32_to_cpu(sanitize->etond));
 	nvme_show_estimate_sanitize_time("Estimated Time For Block Erase (No-Deallocate) ",
-		le32_to_cpu(sanitize->est_blk_erase_time_with_no_deallocate));
+		le32_to_cpu(sanitize->etbend));
 	nvme_show_estimate_sanitize_time("Estimated Time For Crypto Erase (No-Deallocate)",
-		le32_to_cpu(sanitize->est_crypto_erase_time_with_no_deallocate));
+		le32_to_cpu(sanitize->etcend));
 }
 
-const char *nvme_feature_to_string(enum nvme_feat feature)
+const char *nvme_feature_to_string(enum nvme_features_id feature)
 {
 	switch (feature) {
-	case NVME_FEAT_NONE:		return "Reserved";
-	case NVME_FEAT_ARBITRATION:	return "Arbitration";
-	case NVME_FEAT_POWER_MGMT:	return "Power Management";
-	case NVME_FEAT_LBA_RANGE:	return "LBA Range Type";
-	case NVME_FEAT_TEMP_THRESH:	return "Temperature Threshold";
-	case NVME_FEAT_ERR_RECOVERY:	return "Error Recovery";
-	case NVME_FEAT_VOLATILE_WC:	return "Volatile Write Cache";
-	case NVME_FEAT_NUM_QUEUES:	return "Number of Queues";
-	case NVME_FEAT_IRQ_COALESCE:	return "Interrupt Coalescing";
-	case NVME_FEAT_IRQ_CONFIG: 	return "Interrupt Vector Configuration";
-	case NVME_FEAT_WRITE_ATOMIC:	return "Write Atomicity Normal";
-	case NVME_FEAT_ASYNC_EVENT:	return "Async Event Configuration";
-	case NVME_FEAT_AUTO_PST:	return "Autonomous Power State Transition";
-	case NVME_FEAT_HOST_MEM_BUF:	return "Host Memory Buffer";
-	case NVME_FEAT_KATO:		return "Keep Alive Timer";
-	case NVME_FEAT_NOPSC:		return "Non-Operational Power State Config";
-	case NVME_FEAT_RRL:		return "Read Recovery Level";
-	case NVME_FEAT_PLM_CONFIG:	return "Predicatable Latency Mode Config";
-	case NVME_FEAT_PLM_WINDOW:	return "Predicatable Latency Mode Window";
-	case NVME_LBA_STATUS_INFO:	return "LBA Status Infomation Attributes";
-      case NVME_FEAT_ENDURANCE:       return "Enduarance Event Group Configuration";
-	case NVME_FEAT_IOCS_PROFILE:	return "I/O Command Set Profile";
-	case NVME_FEAT_SW_PROGRESS:	return "Software Progress";
-	case NVME_FEAT_HOST_ID:		return "Host Identifier";
-	case NVME_FEAT_RESV_MASK:	return "Reservation Notification Mask";
-	case NVME_FEAT_RESV_PERSIST:	return "Reservation Persistence";
-	case NVME_FEAT_TIMESTAMP:	return "Timestamp";
-	case NVME_FEAT_WRITE_PROTECT:	return "Namespce Write Protect";
-	case NVME_FEAT_HCTM:		return "Host Controlled Thermal Management";
-	case NVME_FEAT_HOST_BEHAVIOR:   return "Host Behavior";
-	case NVME_FEAT_SANITIZE:	return "Sanitize";
+	case NVME_FEAT_FID_ARBITRATION:	return "Arbitration";
+	case NVME_FEAT_FID_POWER_MGMT:	return "Power Management";
+	case NVME_FEAT_FID_LBA_RANGE:	return "LBA Range Type";
+	case NVME_FEAT_FID_TEMP_THRESH:	return "Temperature Threshold";
+	case NVME_FEAT_FID_ERR_RECOVERY:return "Error Recovery";
+	case NVME_FEAT_FID_VOLATILE_WC:	return "Volatile Write Cache";
+	case NVME_FEAT_FID_NUM_QUEUES:	return "Number of Queues";
+	case NVME_FEAT_FID_IRQ_COALESCE:return "Interrupt Coalescing";
+	case NVME_FEAT_FID_IRQ_CONFIG: 	return "Interrupt Vector Configuration";
+	case NVME_FEAT_FID_WRITE_ATOMIC:return "Write Atomicity Normal";
+	case NVME_FEAT_FID_ASYNC_EVENT:	return "Async Event Configuration";
+	case NVME_FEAT_FID_AUTO_PST:	return "Autonomous Power State Transition";
+	case NVME_FEAT_FID_HOST_MEM_BUF:return "Host Memory Buffer";
+	case NVME_FEAT_FID_KATO:	return "Keep Alive Timer";
+	case NVME_FEAT_FID_NOPSC:	return "Non-Operational Power State Config";
+	case NVME_FEAT_FID_RRL:		return "Read Recovery Level";
+	case NVME_FEAT_FID_PLM_CONFIG:	return "Predicatable Latency Mode Config";
+	case NVME_FEAT_FID_PLM_WINDOW:	return "Predicatable Latency Mode Window";
+	case NVME_FEAT_FID_ENDURANCE_EVT_CFG:	return "Enduarance Event Group Configuration";
+	case NVME_FEAT_FID_IOCS_PROFILE:return "I/O Command Set Profile";
+	case NVME_FEAT_FID_SW_PROGRESS:	return "Software Progress";
+	case NVME_FEAT_FID_HOST_ID:	return "Host Identifier";
+	case NVME_FEAT_FID_RESV_MASK:	return "Reservation Notification Mask";
+	case NVME_FEAT_FID_RESV_PERSIST:return "Reservation Persistence";
+	case NVME_FEAT_FID_TIMESTAMP:	return "Timestamp";
+	case NVME_FEAT_FID_WRITE_PROTECT:return "Namespce Write Protect";
+	case NVME_FEAT_FID_HCTM:	return "Host Controlled Thermal Management";
+	case NVME_FEAT_FID_HOST_BEHAVIOR:return "Host Behavior";
+	case NVME_FEAT_FID_SANITIZE:	return "Sanitize";
+	case NVME_FEAT_FID_LBA_STS_INTERVAL: return "LBA Status Interval";
 	}
 	/*
 	 * We don't use the "default:" statement to let the compiler warning if
-	 * some values of the enum nvme_feat are missing in the switch().
+	 * some values of the enum nvme_features_id are missing in the switch().
 	 * The following return is acting as the default: statement.
 	 */
 	return "Unknown";
@@ -5324,222 +5180,173 @@ void nvme_show_select_result(__u32 result)
 		printf("  Feature is changeable\n");
 }
 
+static const char * const generic_status[] = {
+	[NVME_SC_SUCCESS]		  = "Successful Completion: The command completed without error",
+	[NVME_SC_INVALID_OPCODE]	  = "Invalid Command Opcode: A reserved coded value or an unsupported value in the command opcode field",
+	[NVME_SC_INVALID_FIELD]		  = "Invalid Field in Command: A reserved coded value or an unsupported value in a defined field",
+	[NVME_SC_CMDID_CONFLICT]	  = "Command ID Conflict: The command identifier is already in use",
+	[NVME_SC_DATA_XFER_ERROR]	  = "Data Transfer Error: Transferring the data or metadata associated with a command experienced an error",
+	[NVME_SC_POWER_LOSS]		  = "Commands Aborted due to Power Loss Notification: Indicates that the command was aborted due to a power loss notification",
+	[NVME_SC_INTERNAL]		  = "Internal Error: The command was not completed successfully due to an internal error",
+	[NVME_SC_ABORT_REQ]		  = "Command Abort Requested: The command was aborted due to an Abort command",
+	[NVME_SC_ABORT_QUEUE]		  = "Command Aborted due to SQ Deletion: The command was aborted due to a Delete I/O Submission Queue",
+	[NVME_SC_FUSED_FAIL]		  = "Command Aborted due to Failed Fused Command: The command was aborted due to the other command in a fused operation failing",
+	[NVME_SC_FUSED_MISSING]		  = "Command Aborted due to Missing Fused Command: The fused command was aborted due to the adjacent submission queue entry not containing a fused command",
+	[NVME_SC_INVALID_NS]		  = "Invalid Namespace or Format: The namespace or the format of that namespace is invalid",
+	[NVME_SC_CMD_SEQ_ERROR]		  = "Command Sequence Error: The command was aborted due to a protocol violation in a multi- command sequence",
+	[NVME_SC_SGL_INVALID_LAST]	  = "Invalid SGL Segment Descriptor: The command includes an invalid SGL Last Segment or SGL Segment descriptor",
+	[NVME_SC_SGL_INVALID_COUNT]	  = "Invalid Number of SGL Descriptors: There is an SGL Last Segment descriptor or an SGL Segment descriptor in a location other than the last descriptor of a segment based on the length indicated",
+	[NVME_SC_SGL_INVALID_DATA]	  = "Data SGL Length Invalid: The length of a Data SGL is too short or too long and the controller does not support SGL transfers longer than the amount of data to be transferred",
+	[NVME_SC_SGL_INVALID_METADATA]	  = "Metadata SGL Length Invalid: The length of a Metadata SGL is too short or too long and the controller does not support SGL transfers longer than the amount of data to be transferred",
+	[NVME_SC_SGL_INVALID_TYPE]	  = "SGL Descriptor Type Invalid: The type of an SGL Descriptor is a type that is not supported by the controller",
+	[NVME_SC_CMB_INVALID_USE]	  = "Invalid Use of Controller Memory Buffer: The attempted use of the Controller Memory Buffer is not supported by the controller",
+	[NVME_SC_PRP_INVALID_OFFSET]	  = "PRP Offset Invalid: The Offset field for a PRP entry is invalid",
+	[NVME_SC_AWU_EXCEEDED]		  = "Atomic Write Unit Exceeded: The length specified exceeds the atomic write unit size",
+	[NVME_SC_OP_DENIED]		  = "Operation Denied: The command was denied due to lack of access rights",
+	[NVME_SC_SGL_INVALID_OFFSET]	  = "SGL Offset Invalid: The offset specified in a descriptor is invalid",
+	[NVME_SC_HOSTID_FORMAT]		  = "Host Identifier Inconsistent Format: The NVM subsystem detected the simultaneous use of 64- bit and 128-bit Host Identifier values on different controllers",
+	[NVME_SC_KAT_EXPIRED]		  = "Keep Alive Timer Expired: The Keep Alive Timer expired",
+	[NVME_SC_KAT_INVALID]		  = "Keep Alive Timeout Invalid: The Keep Alive Timeout value specified is invalid",
+	[NVME_SC_CMD_ABORTED_PREMEPT]	  = "Command Aborted due to Preempt and Abort: The command was aborted due to a Reservation Acquire command",
+	[NVME_SC_SANITIZE_FAILED]	  = "Sanitize Failed: The most recent sanitize operation failed and no recovery action has been successfully completed",
+	[NVME_SC_SANITIZE_IN_PROGRESS]	  = "Sanitize In Progress: The requested function is prohibited while a sanitize operation is in progress",
+	[NVME_SC_SGL_INVALID_GRANULARITY] = "SGL Data Block Granularity Invalid: The Address alignment or Length granularity for an SGL Data Block descriptor is invalid",
+	[NVME_SC_CMD_IN_CMBQ_NOT_SUPP]	  = "Command Not Supported for Queue in CMB: The controller does not support Submission Queue in the Controller Memory Buffer or Completion Queue in the Controller Memory Buffer",
+	[NVME_SC_NS_WRITE_PROTECTED]	  = "Namespace is Write Protected: The command is prohibited while the namespace is write protected",
+	[NVME_SC_CMD_INTERRUPTED]	  = "Command Interrupted: Command processing was interrupted and the controller is unable to successfully complete the command",
+	[NVME_SC_TRAN_TPORT_ERROR]	  = "Transient Transport Error: A transient transport error was detected",
+	[NVME_SC_LBA_RANGE]		  = "LBA Out of Range: The command references an LBA that exceeds the size of the namespace",
+	[NVME_SC_CAP_EXCEEDED]		  = "Capacity Exceeded: Execution of the command has caused the capacity of the namespace to be exceeded",
+	[NVME_SC_NS_NOT_READY]		  = "Namespace Not Ready: The namespace is not ready to be accessed",
+	[NVME_SC_RESERVATION_CONFLICT]	  = "Reservation Conflict: The command was aborted due to a conflict with a reservation held on the accessed namespace",
+	[NVME_SC_FORMAT_IN_PROGRESS]	  = "Format In Progress: A Format NVM command is in progress on the namespace",
+};
+
+static const char * const cmd_spec_status[] = {
+	[NVME_SC_CQ_INVALID]		 = "Completion Queue Invalid: The Completion Queue identifier specified in the command does not exist",
+	[NVME_SC_QID_INVALID]		 = "Invalid Queue Identifier: The creation of the I/O Completion Queue failed due to an invalid queue identifier specified as part of the command",
+	[NVME_SC_QUEUE_SIZE]		 = "Invalid Queue Size: The host attempted to create an I/O Completion Queue with an invalid number of entries",
+	[NVME_SC_ABORT_LIMIT]		 = "Abort Command Limit Exceeded: The number of concurrently outstanding Abort commands has exceeded the limit indicated in the Identify Controller data structure",
+	[NVME_SC_ASYNC_LIMIT]		 = "Asynchronous Event Request Limit Exceeded: The number of concurrently outstanding Asynchronous Event Request commands has been exceeded",
+	[NVME_SC_FIRMWARE_SLOT]		 = "Invalid Firmware Slot: The firmware slot indicated is invalid or read only",
+	[NVME_SC_FIRMWARE_IMAGE]	 = "Invalid Firmware Image: The firmware image specified for activation is invalid and not loaded by the controller",
+	[NVME_SC_INVALID_VECTOR]	 = "Invalid Interrupt Vector: The creation of the I/O Completion Queue failed due to an invalid interrupt vector specified as part of the command",
+	[NVME_SC_INVALID_LOG_PAGE]	 = "Invalid Log Page: The log page indicated is invalid",
+	[NVME_SC_INVALID_FORMAT]	 = "Invalid Format: The LBA Format specified is not supported",
+	[NVME_SC_FW_NEEDS_CONV_RESET] 	 = "Firmware Activation Requires Conventional Reset: The firmware commit was successful, however, activation of the firmware image requires a conventional reset",
+	[NVME_SC_INVALID_QUEUE]		 = "Invalid Queue Deletion: Invalid I/O Completion Queue specified to delete",
+	[NVME_SC_FEATURE_NOT_SAVEABLE]	 = "Feature Identifier Not Saveable: The Feature Identifier specified does not support a saveable value",
+	[NVME_SC_FEATURE_NOT_CHANGEABLE] = "Feature Not Changeable: The Feature Identifier is not able to be changed",
+	[NVME_SC_FEATURE_NOT_PER_NS]	 = "Feature Not Namespace Specific: The Feature Identifier specified is not namespace specific",
+	[NVME_SC_FW_NEEDS_SUBSYS_RESET]  = "Firmware Activation Requires NVM Subsystem Reset: The firmware commit was successful, however, activation of the firmware image requires an NVM Subsystem",
+	[NVME_SC_FW_NEEDS_RESET]	 = "Firmware Activation Requires Controller Level Reset: The firmware commit was successful; however, the image specified does not support being activated without a reset",
+	[NVME_SC_FW_NEEDS_MAX_TIME]	 = "Firmware Activation Requires Maximum Time Violation: The image specified if activated immediately would exceed the Maximum Time for Firmware Activation (MTFA) value reported in Identify Controller",
+	[NVME_SC_FW_ACTIVATE_PROHIBITED] = "Firmware Activation Prohibited: The image specified is being prohibited from activation by the controller for vendor specific reasons",
+	[NVME_SC_OVERLAPPING_RANGE]	 = "Overlapping Range: The downloaded firmware image has overlapping ranges",
+	[NVME_SC_NS_INSUFFICIENT_CAP]	 = "Namespace Insufficient Capacity: Creating the namespace requires more free space than is currently available",
+	[NVME_SC_NS_ID_UNAVAILABLE]	 = "Namespace Identifier Unavailable: The number of namespaces supported has been exceeded",
+	[NVME_SC_NS_ALREADY_ATTACHED]	 = "Namespace Already Attached: The controller is already attached to the namespace specified",
+	[NVME_SC_NS_IS_PRIVATE]		 = "Namespace Is Private: The namespace is private and is already attached to one controller",
+	[NVME_SC_NS_NOT_ATTACHED]	 = "Namespace Not Attached: The request to detach the controller could not be completed because the controller is not attached to the namespace",
+	[NVME_SC_THIN_PROV_NOT_SUPP]	 = "Thin Provisioning Not Supported: Thin provisioning is not supported by the controller",
+	[NVME_SC_CTRL_LIST_INVALID]	 = "Controller List Invalid: The controller list provided contains invalid controller ids",
+	[NVME_SC_SELF_TEST_IN_PROGRESS]  = "Device Self-test In Progress",
+	[NVME_SC_BP_WRITE_PROHIBITED]	 = "Boot Partition Write Prohibited: The command tried to modify a locked Boot Partition",
+	[NVME_SC_INVALID_CTRL_ID]	 = "Invalid Controller Identifier: An invalid controller id was specified",
+	[NVME_SC_INVALID_SEC_CTRL_STATE] = "Invalid Secondary Controller State: The requested secondary controller action is invalid based on the secondary and primary controllers current states",
+	[NVME_SC_INVALID_CTRL_RESOURCES] = "Invalid Number of Controller Resources: The specified number of Flexible Resources is invalid",
+	[NVME_SC_INVALID_RESOURCE_ID]	 = "Invalid Resource Identifier: At least one of the specified resource identifiers was invalid",
+	[NVME_SC_PMR_SAN_PROHIBITED]	 = "Sanitize Prohibited While Persistent Memory Region is Enabled",
+	[NVME_SC_ANA_GROUP_ID_INVALID]	 = "ANA Group Identifier Invalid",
+	[NVME_SC_ANA_ATTACH_FAILED]	 = "ANA Attach Failed: The command's specified ANA Group Identifier is not supported",
+};
+
+static const char * const nvm_status[] = {
+	[NVME_SC_BAD_ATTRIBUTES] = "Conflicting Attributes: The attributes specified in the command are conflicting",
+	[NVME_SC_INVALID_PI]	 = "Invalid Protection Information: The command's Protection Information Field settings are invalid for the namespace's Protection Information format",
+	[NVME_SC_READ_ONLY]	 = "Attempted Write to Read Only Range: The LBA range specified contains read-only blocks",
+};
+
+static const char * const nvmf_status[] = {
+	[NVME_SC_CONNECT_FORMAT]	   = "Incompatible Format: The NVM subsystem does not support the record format specified by the host",
+	[NVME_SC_CONNECT_CTRL_BUSY]	   = "Controller Busy: The controller is already associated with a host",
+	[NVME_SC_CONNECT_INVALID_PARAM]    = "Connect Invalid Parameters: One or more of the command parameters",
+	[NVME_SC_CONNECT_RESTART_DISC]	   = "Connect Restart Discovery: The NVM subsystem requested is not available",
+	[NVME_SC_CONNECT_INVALID_HOST]	   = "Connect Invalid Host: The host is not allowed to establish an association to either any controller in the NVM subsystem or the specified controller",
+	[NVME_SC_DISCONNECT_INVALID_QTYPE] = "Invalid Queue Type: The command was sent on the wrong queue type",
+	[NVME_SC_DISCOVERY_RESTART]	   = "Discover Restart: The snapshot of the records is now invalid or out of date",
+	[NVME_SC_AUTH_REQUIRED]		   = "Authentication Required: NVMe in-band authentication is required and the queue has not yet been authenticated",
+};
+
+static const char * const media_status[] = {
+	[NVME_SC_WRITE_FAULT]	  = "Write Fault: The write data could not be committed to the media",
+	[NVME_SC_READ_ERROR]	  = "Unrecovered Read Error: The read data could not be recovered from the media",
+	[NVME_SC_GUARD_CHECK]	  = "End-to-end Guard Check Error: The command was aborted due to an end-to-end guard check failure",
+	[NVME_SC_APPTAG_CHECK]	  = "End-to-end Application Tag Check Error: The command was aborted due to an end-to-end application tag check failure",
+	[NVME_SC_REFTAG_CHECK]	  = "End-to-end Reference Tag Check Error: The command was aborted due to an end-to-end reference tag check failure",
+	[NVME_SC_COMPARE_FAILED]  = "Compare Failure: The command failed due to a miscompare during a Compare command",
+	[NVME_SC_ACCESS_DENIED]	  = "Access Denied: Access to the namespace and/or LBA range is denied due to lack of access rights",
+	[NVME_SC_UNWRITTEN_BLOCK] = "Deallocated or Unwritten Logical Block: The command failed due to an attempt to read from or verify an LBA range containing a deallocated or unwritten logical block",
+};
+
+static const char * const path_status[] = {
+	[NVME_SC_ANA_INTERNAL_PATH_ERROR] = "Internal Path Error: An internal error specific to the controller processing the commmand prevented completion",
+	[NVME_SC_ANA_PERSISTENT_LOSS]	  = "Asymmetric Access Persistent Loss: The controller is in a persistent loss state with the requested namespace",
+	[NVME_SC_ANA_INACCESSIBLE]	  = "Asymmetric Access Inaccessible: The controller is in an inaccessible state with the requested namespace",
+	[NVME_SC_ANA_TRANSITION]	  = "Asymmetric Access Transition: The controller is currently transitioning states with the requested namespace",
+	[NVME_SC_CTRL_PATH_ERROR]	  = "Controller Pathing Error: A pathing error was detected by the controller",
+	[NVME_SC_HOST_PATH_ERROR]	  = "Host Pathing Error: A pathing error was detected by the host",
+	[NVME_SC_CMD_ABORTED_BY_HOST]	  = "Command Aborted By Host: The command was aborted as a result of host action",
+};
+
+#define ARGSTR(s, i) arg_str(s, ARRAY_SIZE(s), i)
+
+static const char *arg_str(const char * const *strings,
+		size_t array_size, size_t idx)
+{
+	if (idx < array_size && strings[idx])
+		return strings[idx];
+	return "unrecognized";
+}
+
 const char *nvme_status_to_string(__u16 status)
 {
-	switch (status & 0x7ff) {
-	case NVME_SC_SUCCESS:
-		return "SUCCESS: The command completed successfully";
-	case NVME_SC_INVALID_OPCODE:
-		return "INVALID_OPCODE: The associated command opcode field is not valid";
-	case NVME_SC_INVALID_FIELD:
-		return "INVALID_FIELD: A reserved coded value or an unsupported value in a defined field";
-	case NVME_SC_CMDID_CONFLICT:
-		return "CMDID_CONFLICT: The command identifier is already in use";
-	case NVME_SC_DATA_XFER_ERROR:
-		return "DATA_XFER_ERROR: Error while trying to transfer the data or metadata";
-	case NVME_SC_POWER_LOSS:
-		return "POWER_LOSS: Command aborted due to power loss notification";
-	case NVME_SC_INTERNAL:
-		return "INTERNAL: The command was not completed successfully due to an internal error";
-	case NVME_SC_ABORT_REQ:
-		return "ABORT_REQ: The command was aborted due to a Command Abort request";
-	case NVME_SC_ABORT_QUEUE:
-		return "ABORT_QUEUE: The command was aborted due to a Delete I/O Submission Queue request";
-	case NVME_SC_FUSED_FAIL:
-		return "FUSED_FAIL: The command was aborted due to the other command in a fused operation failing";
-	case NVME_SC_FUSED_MISSING:
-		return "FUSED_MISSING: The command was aborted due to a Missing Fused Command";
-	case NVME_SC_INVALID_NS:
-		return "INVALID_NS: The namespace or the format of that namespace is invalid";
-	case NVME_SC_CMD_SEQ_ERROR:
-		return "CMD_SEQ_ERROR: The command was aborted due to a protocol violation in a multicommand sequence";
-	case NVME_SC_SGL_INVALID_LAST:
-		return "SGL_INVALID_LAST: The command includes an invalid SGL Last Segment or SGL Segment descriptor.";
-	case NVME_SC_SGL_INVALID_COUNT:
-		return "SGL_INVALID_COUNT: There is an SGL Last Segment descriptor or an SGL Segment descriptor in a location other than the last descriptor of a segment based on the length indicated.";
-	case NVME_SC_SGL_INVALID_DATA:
-		return "SGL_INVALID_DATA: This may occur if the length of a Data SGL is too short.";
-	case NVME_SC_SGL_INVALID_METADATA:
-		return "SGL_INVALID_METADATA: This may occur if the length of a Metadata SGL is too short";
-	case NVME_SC_SGL_INVALID_TYPE:
-		return "SGL_INVALID_TYPE: The type of an SGL Descriptor is a type that is not supported by the controller.";
-	case NVME_SC_CMB_INVALID_USE:
-		return "CMB_INVALID_USE: The attempted use of the Controller Memory Buffer is not supported by the controller.";
-	case NVME_SC_PRP_INVALID_OFFSET:
-		return "PRP_INVALID_OFFSET: The Offset field for a PRP entry is invalid.";
-	case NVME_SC_ATOMIC_WRITE_UNIT_EXCEEDED:
-		return "ATOMIC_WRITE_UNIT_EXCEEDED: The length specified exceeds the atomic write unit size.";
-	case NVME_SC_OPERATION_DENIED:
-		return "OPERATION_DENIED: The command was denied due to lack of access rights.";
-	case NVME_SC_SGL_INVALID_OFFSET:
-		return "SGL_INVALID_OFFSET: The offset specified in a descriptor is invalid.";
-	case NVME_SC_INCONSISTENT_HOST_ID:
-		return "INCONSISTENT_HOST_ID: The NVM subsystem detected the simultaneous use of 64-bit and 128-bit Host Identifier values on different controllers.";
-	case NVME_SC_KEEP_ALIVE_EXPIRED:
-		return "KEEP_ALIVE_EXPIRED: The Keep Alive Timer expired.";
-	case NVME_SC_KEEP_ALIVE_INVALID:
-		return "KEEP_ALIVE_INVALID: The Keep Alive Timeout value specified is invalid.";
-	case NVME_SC_PREEMPT_ABORT:
-		return "PREEMPT_ABORT: The command was aborted due to a Reservation Acquire command with the Reservation Acquire Action (RACQA) set to 010b (Preempt and Abort).";
-	case NVME_SC_SANITIZE_FAILED:
-		return "SANITIZE_FAILED: The most recent sanitize operation failed and no recovery actions has been successfully completed";
-	case NVME_SC_SANITIZE_IN_PROGRESS:
-		return "SANITIZE_IN_PROGRESS: The requested function is prohibited while a sanitize operation is in progress";
-	case NVME_SC_IOCS_NOT_SUPPORTED:
-		return "IOCS_NOT_SUPPORTED: The I/O command set is not supported";
-	case NVME_SC_IOCS_NOT_ENABLED:
-		return "IOCS_NOT_ENABLED: The I/O command set is not enabled";
-	case NVME_SC_IOCS_COMBINATION_REJECTED:
-		return "IOCS_COMBINATION_REJECTED: The I/O command set combination is rejected";
-	case NVME_SC_INVALID_IOCS:
-		return "INVALID_IOCS: the I/O command set is invalid";
-	case NVME_SC_LBA_RANGE:
-		return "LBA_RANGE: The command references a LBA that exceeds the size of the namespace";
-	case NVME_SC_NS_WRITE_PROTECTED:
-		return "NS_WRITE_PROTECTED: The command is prohibited while the namespace is write protected by the host.";
-	case NVME_SC_TRANSIENT_TRANSPORT:
-		return "TRANSIENT_TRANSPORT: A transient transport error was detected.";
-	case NVME_SC_CAP_EXCEEDED:
-		return "CAP_EXCEEDED: The execution of the command has caused the capacity of the namespace to be exceeded";
-	case NVME_SC_NS_NOT_READY:
-		return "NS_NOT_READY: The namespace is not ready to be accessed as a result of a condition other than a condition that is reported as an Asymmetric Namespace Access condition";
-	case NVME_SC_RESERVATION_CONFLICT:
-		return "RESERVATION_CONFLICT: The command was aborted due to a conflict with a reservation held on the accessed namespace";
-	case NVME_SC_FORMAT_IN_PROGRESS:
-		return "FORMAT_IN_PROGRESS: A Format NVM command is in progress on the namespace.";
-	case NVME_SC_ZONE_BOUNDARY_ERROR:
-		return "ZONE_BOUNDARY_ERROR: Invalid Zone Boundary crossing";
-	case NVME_SC_ZONE_IS_FULL:
-		return "ZONE_IS_FULL: The accessed zone is in ZSF:Full state";
-	case NVME_SC_ZONE_IS_READ_ONLY:
-		return "ZONE_IS_READ_ONLY: The accessed zone is in ZSRO:Read Only state";
-	case NVME_SC_ZONE_IS_OFFLINE:
-		return "ZONE_IS_OFFLINE: The access zone is in ZSO:Offline state";
-	case NVME_SC_ZONE_INVALID_WRITE:
-		return "ZONE_INVALID_WRITE: The write to zone was not at the write pointer offset";
-	case NVME_SC_TOO_MANY_ACTIVE_ZONES:
-		return "TOO_MANY_ACTIVE_ZONES: The controller does not allow additional active zones";
-	case NVME_SC_TOO_MANY_OPEN_ZONES:
-		return "TOO_MANY_OPEN_ZONES: The controller does not allow additional open zones";
-	case NVME_SC_ZONE_INVALID_STATE_TRANSITION:
-		return "INVALID_ZONE_STATE_TRANSITION: The zone state change was invalid";
-	case NVME_SC_CQ_INVALID:
-		return "CQ_INVALID: The Completion Queue identifier specified in the command does not exist";
-	case NVME_SC_QID_INVALID:
-		return "QID_INVALID: The creation of the I/O Completion Queue failed due to an invalid queue identifier specified as part of the command. An invalid queue identifier is one that is currently in use or one that is outside the range supported by the controller";
-	case NVME_SC_QUEUE_SIZE:
-		return "QUEUE_SIZE: The host attempted to create an I/O Completion Queue with an invalid number of entries";
-	case NVME_SC_ABORT_LIMIT:
-		return "ABORT_LIMIT: The number of concurrently outstanding Abort commands has exceeded the limit indicated in the Identify Controller data structure";
-	case NVME_SC_ABORT_MISSING:
-		return "ABORT_MISSING: The abort command is missing";
-	case NVME_SC_ASYNC_LIMIT:
-		return "ASYNC_LIMIT: The number of concurrently outstanding Asynchronous Event Request commands has been exceeded";
-	case NVME_SC_FIRMWARE_SLOT:
-		return "FIRMWARE_SLOT: The firmware slot indicated is invalid or read only. This error is indicated if the firmware slot exceeds the number supported";
-	case NVME_SC_FIRMWARE_IMAGE:
-		return "FIRMWARE_IMAGE: The firmware image specified for activation is invalid and not loaded by the controller";
-	case NVME_SC_INVALID_VECTOR:
-		return "INVALID_VECTOR: The creation of the I/O Completion Queue failed due to an invalid interrupt vector specified as part of the command";
-	case NVME_SC_INVALID_LOG_PAGE:
-		return "INVALID_LOG_PAGE: The log page indicated is invalid. This error condition is also returned if a reserved log page is requested";
-	case NVME_SC_INVALID_FORMAT:
-		return "INVALID_FORMAT: The LBA Format specified is not supported. This may be due to various conditions";
-	case NVME_SC_FW_NEEDS_CONV_RESET:
-		return "FW_NEEDS_CONVENTIONAL_RESET: The firmware commit was successful, however, activation of the firmware image requires a conventional reset";
-	case NVME_SC_INVALID_QUEUE:
-		return "INVALID_QUEUE: This error indicates that it is invalid to delete the I/O Completion Queue specified. The typical reason for this error condition is that there is an associated I/O Submission Queue that has not been deleted.";
-	case NVME_SC_FEATURE_NOT_SAVEABLE:
-		return "FEATURE_NOT_SAVEABLE: The Feature Identifier specified does not support a saveable value";
-	case NVME_SC_FEATURE_NOT_CHANGEABLE:
-		return "FEATURE_NOT_CHANGEABLE: The Feature Identifier is not able to be changed";
-	case NVME_SC_FEATURE_NOT_PER_NS:
-		return "FEATURE_NOT_PER_NS: The Feature Identifier specified is not namespace specific. The Feature Identifier settings apply across all namespaces";
-	case NVME_SC_FW_NEEDS_SUBSYS_RESET:
-		return "FW_NEEDS_SUBSYSTEM_RESET: The firmware commit was successful, however, activation of the firmware image requires an NVM Subsystem";
-	case NVME_SC_FW_NEEDS_RESET:
-		return "FW_NEEDS_RESET: The firmware commit was successful; however, the image specified does not support being activated without a reset";
-	case NVME_SC_FW_NEEDS_MAX_TIME:
-		return "FW_NEEDS_MAX_TIME_VIOLATION: The image specified if activated immediately would exceed the Maximum Time for Firmware Activation (MTFA) value reported in Identify Controller. To activate the firmware, the Firmware Commit command needs to be re-issued and the image activated using a reset";
-	case NVME_SC_FW_ACTIVATE_PROHIBITED:
-		return "FW_ACTIVATION_PROHIBITED: The image specified is being prohibited from activation by the controller for vendor specific reasons";
-	case NVME_SC_OVERLAPPING_RANGE:
-		return "OVERLAPPING_RANGE: This error is indicated if the firmware image has overlapping ranges";
-	case NVME_SC_NS_INSUFFICIENT_CAP:
-		return "NS_INSUFFICIENT_CAPACITY: Creating the namespace requires more free space than is currently available. The Command Specific Information field of the Error Information Log specifies the total amount of NVM capacity required to create the namespace in bytes";
-	case NVME_SC_NS_ID_UNAVAILABLE:
-		return "NS_ID_UNAVAILABLE: The number of namespaces supported has been exceeded";
-	case NVME_SC_NS_ALREADY_ATTACHED:
-		return "NS_ALREADY_ATTACHED: The controller is already attached to the namespace specified";
-	case NVME_SC_NS_IS_PRIVATE:
-		return "NS_IS_PRIVATE: The namespace is private and is already attached to one controller";
-	case NVME_SC_NS_NOT_ATTACHED:
-		return "NS_NOT_ATTACHED: The request to detach the controller could not be completed because the controller is not attached to the namespace";
-	case NVME_SC_THIN_PROV_NOT_SUPP:
-		return "THIN_PROVISIONING_NOT_SUPPORTED: Thin provisioning is not supported by the controller";
-	case NVME_SC_CTRL_LIST_INVALID:
-		return "CONTROLLER_LIST_INVALID: The controller list provided is invalid";
-	case NVME_SC_DEVICE_SELF_TEST_IN_PROGRESS:
-		return "DEVICE_SELF_TEST_IN_PROGRESS: The controller or NVM subsystem already has a device self-test operation in process.";
-	case NVME_SC_BP_WRITE_PROHIBITED:
-		return "BOOT PARTITION WRITE PROHIBITED: The command is trying to modify a Boot Partition while it is locked";
-	case NVME_SC_INVALID_CTRL_ID:
-		return "INVALID_CTRL_ID: An invalid Controller Identifier was specified.";
-	case NVME_SC_INVALID_SECONDARY_CTRL_STATE:
-		return "INVALID_SECONDARY_CTRL_STATE: The action requested for the secondary controller is invalid based on the current state of the secondary controller and its primary controller.";
-	case NVME_SC_INVALID_NUM_CTRL_RESOURCE:
-		return "INVALID_NUM_CTRL_RESOURCE: The specified number of Flexible Resources is invalid";
-	case NVME_SC_INVALID_RESOURCE_ID:
-		return "INVALID_RESOURCE_ID: At least one of the specified resource identifiers was invalid";
-	case NVME_SC_ANA_INVALID_GROUP_ID:
-		return "ANA_INVALID_GROUP_ID: The specified ANA Group Identifier (ANAGRPID) is not supported in the submitted command.";
-	case NVME_SC_ANA_ATTACH_FAIL:
-		return "ANA_ATTACH_FAIL: The controller is not attached to the namespace as a result of an ANA condition";
-	case NVME_SC_BAD_ATTRIBUTES:
-		return "BAD_ATTRIBUTES: Bad attributes were given";
-	case NVME_SC_INVALID_PI:
-		return "INVALID_PROTECION_INFO: The Protection Information Field settings specified in the command are invalid";
-	case NVME_SC_READ_ONLY:
-		return "WRITE_ATTEMPT_READ_ONLY_RANGE: The LBA range specified contains read-only blocks";
-	case NVME_SC_CMD_SIZE_LIMIT_EXCEEDED:
-		return "CMD_SIZE_LIMIT_EXCEEDED: Command size limit exceeded";
-	case NVME_SC_WRITE_FAULT:
-		return "WRITE_FAULT: The write data could not be committed to the media";
-	case NVME_SC_READ_ERROR:
-		return "READ_ERROR: The read data could not be recovered from the media";
-	case NVME_SC_GUARD_CHECK:
-		return "GUARD_CHECK: The command was aborted due to an end-to-end guard check failure";
-	case NVME_SC_APPTAG_CHECK:
-		return "APPTAG_CHECK: The command was aborted due to an end-to-end application tag check failure";
-	case NVME_SC_REFTAG_CHECK:
-		return "REFTAG_CHECK: The command was aborted due to an end-to-end reference tag check failure";
-	case NVME_SC_COMPARE_FAILED:
-		return "COMPARE_FAILED: The command failed due to a miscompare during a Compare command";
-	case NVME_SC_ACCESS_DENIED:
-		return "ACCESS_DENIED: Access to the namespace and/or LBA range is denied due to lack of access rights";
-	case NVME_SC_UNWRITTEN_BLOCK:
-		return "UNWRITTEN_BLOCK: The command failed due to an attempt to read from an LBA range containing a deallocated or unwritten logical block";
-	case NVME_SC_INTERNAL_PATH_ERROR:
-		return "INTERNAL_PATH_ERROT: The command was not completed as the result of a controller internal error";
-	case NVME_SC_ANA_PERSISTENT_LOSS:
-		return "ASYMMETRIC_NAMESPACE_ACCESS_PERSISTENT_LOSS: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace being in the ANA Persistent Loss state";
-	case NVME_SC_ANA_INACCESSIBLE:
-		return "ASYMMETRIC_NAMESPACE_ACCESS_INACCESSIBLE: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace being in the ANA Inaccessible state";
-	case NVME_SC_ANA_TRANSITION:
-		return "ASYMMETRIC_NAMESPACE_ACCESS_TRANSITION: The requested function (e.g., command) is not able to be performed as a result of the relationship between the controller and the namespace transitioning between Asymmetric Namespace Access states";
-	case NVME_SC_CTRL_PATHING_ERROR:
-		return "CONTROLLER_PATHING_ERROR: A pathing error was detected by the controller";
-	case NVME_SC_HOST_PATHING_ERROR:
-		return "HOST_PATHING_ERROR: A pathing error was detected by the host";
-	case NVME_SC_HOST_CMD_ABORT:
-		return "HOST_COMMAND_ABORT: The command was aborted as a result of host action";
-	case NVME_SC_CMD_INTERRUPTED:
-		return "CMD_INTERRUPTED: Command processing was interrupted and the controller is unable to successfully complete the command. The host should retry the command.";
-	case NVME_SC_PMR_SAN_PROHIBITED:
-		return "Sanitize Prohibited While Persistent Memory Region is Enabled: A sanitize operation is prohibited while the Persistent Memory Region is enabled.";
+	const char *s = "Unknown status";
+	__u16 sc, sct;
+	bool fabrics = false; /* make this a parameter */
+
+	if (status < 0)
+		return strerror(errno);
+
+	sc = nvme_status_code(status);
+	sct = nvme_status_code_type(status);
+
+	switch (sct) {
+	case NVME_SCT_GENERIC:
+		s = ARGSTR(generic_status, sc);
+		break;
+	case NVME_SCT_CMD_SPECIFIC:
+		if (sc < ARRAY_SIZE(cmd_spec_status))
+			s = ARGSTR(cmd_spec_status, sc);
+		else if (fabrics)
+			s = ARGSTR(nvmf_status, sc);
+		else
+			s = ARGSTR(nvm_status, sc);
+		break;
+	case NVME_SCT_MEDIA:
+		s = ARGSTR(media_status, sc);
+		break;
+	case NVME_SCT_PATH:
+		s = ARGSTR(path_status, sc);
+		break;
+	case NVME_SCT_VS:
+		s = "Vendor Specific Status";
+		break;
 	default:
-		return "Unknown";
+		break;
 	}
+
+	return s;
 }
 
 static const char *nvme_feature_lba_type_to_string(__u8 type)
@@ -5563,20 +5370,20 @@ void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 	int i, j;
 
 	for (i = 0; i <= nr_ranges; i++) {
-		printf("\ttype       : %#x - %s\n", lbrt[i].type,
-			nvme_feature_lba_type_to_string(lbrt[i].type));
-		printf("\tattributes : %#x - %s, %s\n", lbrt[i].attributes,
-			(lbrt[i].attributes & 0x0001) ?
+		printf("\ttype       : %#x - %s\n", lbrt->entry[i].type,
+			nvme_feature_lba_type_to_string(lbrt->entry[i].type));
+		printf("\tattributes : %#x - %s, %s\n", lbrt->entry[i].attributes,
+			(lbrt->entry[i].attributes & 0x0001) ?
 				"LBA range may be overwritten" :
 				"LBA range should not be overwritten",
-			((lbrt[i].attributes & 0x0002) >> 1) ?
+			((lbrt->entry[i].attributes & 0x0002) >> 1) ?
 				"LBA range should be hidden from the OS/EFI/BIOS" :
 				"LBA range should be visible from the OS/EFI/BIOS");
-		printf("\tslba       : %#"PRIx64"\n", (uint64_t)(lbrt[i].slba));
-		printf("\tnlb        : %#"PRIx64"\n", (uint64_t)(lbrt[i].nlb));
+		printf("\tslba       : %#"PRIx64"\n", (uint64_t)(lbrt->entry[i].slba));
+		printf("\tnlb        : %#"PRIx64"\n", (uint64_t)(lbrt->entry[i].nlb));
 		printf("\tguid       : ");
 		for (j = 0; j < 16; j++)
-			printf("%02x", lbrt[i].guid[j]);
+			printf("%02x", lbrt->entry[i].guid[j]);
 		printf("\n");
 	}
 }
@@ -5617,19 +5424,22 @@ static const char *nvme_feature_temp_sel_to_string(__u8 sel)
 	}
 }
 
-static void nvme_show_auto_pst(struct nvme_auto_pst *apst)
+static void nvme_show_auto_pst(struct nvme_feat_auto_pst *apst)
 {
 	int i;
+	__u64 value;
 
 	printf( "\tAuto PST Entries");
 	printf("\t.................\n");
 	for (i = 0; i < 32; i++) {
+		value = le64_to_cpu(apst->apst_entry[i]);
+
 		printf("\tEntry[%2d]   \n", i);
 		printf("\t.................\n");
 		printf("\tIdle Time Prior to Transition (ITPT): %u ms\n",
-			(apst[i].data & 0xffffff00) >> 8);
+			(__u32)(value >> NVME_APST_ENTRY_ITPT_SHIFT) & NVME_APST_ENTRY_ITPT_MASK);
 		printf("\tIdle Transition Power State   (ITPS): %u\n",
-			(apst[i].data & 0x000000f8) >> 3);
+			(__u32)(value >> NVME_APST_ENTRY_ITPS_SHIFT ) & NVME_APST_ENTRY_ITPS_MASK);
 		printf("\t.................\n");
 	}
 }
@@ -5657,7 +5467,7 @@ static void nvme_show_timestamp(struct nvme_timestamp *ts)
 			"continuously since the Timestamp value was initialized.");
 }
 
-static void nvme_show_host_mem_buffer(struct nvme_host_mem_buffer *hmb)
+static void nvme_show_host_mem_buffer(struct nvme_host_mem_buf_attrs *hmb)
 {
 	printf("\tHost Memory Descriptor List Entry Count (HMDLEC): %u\n",
 		le32_to_cpu(hmb->hmdlec));
@@ -5669,16 +5479,16 @@ static void nvme_show_host_mem_buffer(struct nvme_host_mem_buffer *hmb)
 		le32_to_cpu(hmb->hsize));
 }
 
-static const char *nvme_show_ns_write_protect_config(__u8 state)
+static const char *nvme_show_ns_wp_cfg(enum nvme_ns_write_protect_cfg state)
 {
 	switch (state) {
-	case NVME_NS_NO_WRITE_PROTECT:
+	case NVME_NS_WP_CFG_NONE:
 		return "No Write Protect";
-	case NVME_NS_WRITE_PROTECT:
+	case NVME_NS_WP_CFG_PROTECT:
 		return "Write Protect";
-	case NVME_NS_WRITE_PROTECT_POWER_CYCLE:
+	case NVME_NS_WP_CFG_PROTECT_POWER_CYCLE:
 		return "Write Protect Until Power Cycle";
-	case NVME_NS_WRITE_PROTECT_PERMANENT:
+	case NVME_NS_WP_CFG_PROTECT_PERMANENT:
 		return "Permanent Write Protect";
 	default:
 		return "Reserved";
@@ -5692,9 +5502,9 @@ static void nvme_directive_show_fields(__u8 dtype, __u8 doper,
 	int count, i;
 
 	switch (dtype) {
-	case NVME_DIR_IDENTIFY:
+	case NVME_DIRECTIVE_DTYPE_IDENTIFY:
 		switch (doper) {
-		case NVME_DIR_RCV_ID_OP_PARAM:
+		case NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM:
 			printf("\tDirective support \n");
 			printf("\t\tIdentify Directive  : %s\n",
 				(*field & 0x1) ? "supported":"not supported");
@@ -5711,9 +5521,9 @@ static void nvme_directive_show_fields(__u8 dtype, __u8 doper,
 				"invalid directive operations for Identify Directives\n");
 		}
 		break;
-	case NVME_DIR_STREAMS:
+	case NVME_DIRECTIVE_DTYPE_STREAMS:
 		switch (doper) {
-		case NVME_DIR_RCV_ST_OP_PARAM:
+		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM:
 			printf("\tMax Streams Limit                          (MSL): %u\n",
 				*(__u16 *) field);
 			printf("\tNVM Subsystem Streams Available           (NSSA): %u\n",
@@ -5731,7 +5541,7 @@ static void nvme_directive_show_fields(__u8 dtype, __u8 doper,
 			printf("\tNamespace Streams Open                     (NSO): %u\n",
 				*(__u16 *) (field + 24));
 			break;
-		case NVME_DIR_RCV_ST_OP_STATUS:
+		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS:
 			count = *(__u16 *) field;
 			printf("\tOpen Stream Count  : %u\n", *(__u16 *) field);
 			for ( i = 0; i < count; i++ ) {
@@ -5739,7 +5549,7 @@ static void nvme_directive_show_fields(__u8 dtype, __u8 doper,
 					*(__u16 *) (field + ((i + 1) * 2)));
 			}
 			break;
-		case NVME_DIR_RCV_ST_OP_RESOURCE:
+		case NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE:
 			printf("\tNamespace Streams Allocated (NSA): %u\n",
 				result & 0xffff);
 			break;
@@ -5786,29 +5596,25 @@ static const char *nvme_plm_window(__u32 plm)
 
 void nvme_show_lba_status_info(__u32 result)
 {
-	printf("\tLBA Status Information Poll Interval (LSIPI)	: %u\n", (result >> 16) & 0xffff);
+	printf("\tLBA Status Information Poll Interval (LSIPI)  : %u\n", (result >> 16) & 0xffff);
 	printf("\tLBA Status Information Report Interval (LSIRI): %u\n", result & 0xffff);
 }
 
 static void nvme_show_plm_config(struct nvme_plm_config *plmcfg)
 {
-	printf("\tEnable Event          :%04x\n", le16_to_cpu(plmcfg->enable_event));
-	printf("\tDTWIN Reads Threshold :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_reads_thresh));
-	printf("\tDTWIN Writes Threshold:%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_writes_thresh));
-	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwin_time_thresh));
+	printf("\tEnable Event          :%04x\n", le16_to_cpu(plmcfg->ee));
+	printf("\tDTWIN Reads Threshold :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwinrt));
+	printf("\tDTWIN Writes Threshold:%"PRIu64"\n", le64_to_cpu(plmcfg->dtwinwt));
+	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwintt));
 }
 
-void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result,
-			      unsigned char *buf)
+void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf)
 {
 	__u8 field;
 	uint64_t ull;
 
 	switch (fid) {
-	case NVME_FEAT_NONE:
-		printf("\tFeature Identifier Reserved\n");
-		break;
-	case NVME_FEAT_ARBITRATION:
+	case NVME_FEAT_FID_ARBITRATION:
 		printf("\tHigh Priority Weight   (HPW): %u\n", ((result & 0xff000000) >> 24) + 1);
 		printf("\tMedium Priority Weight (MPW): %u\n", ((result & 0x00ff0000) >> 16) + 1);
 		printf("\tLow Priority Weight    (LPW): %u\n", ((result & 0x0000ff00) >> 8) + 1);
@@ -5818,125 +5624,143 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result,
 		else
 			printf("%u\n",  1 << (result & 0x00000007));
 		break;
-	case NVME_FEAT_POWER_MGMT:
+	case NVME_FEAT_FID_POWER_MGMT:
 		field = (result & 0x000000E0) >> 5;
 		printf("\tWorkload Hint (WH): %u - %s\n",  field, nvme_feature_wl_hints_to_string(field));
 		printf("\tPower State   (PS): %u\n",  result & 0x0000001f);
 		break;
-	case NVME_FEAT_LBA_RANGE:
+	case NVME_FEAT_FID_LBA_RANGE:
 		field = result & 0x0000003f;
 		printf("\tNumber of LBA Ranges (NUM): %u\n", field + 1);
 		nvme_show_lba_range((struct nvme_lba_range_type *)buf, field);
 		break;
-	case NVME_FEAT_TEMP_THRESH:
+	case NVME_FEAT_FID_TEMP_THRESH:
 		field = (result & 0x00300000) >> 20;
-		printf("\tThreshold Type Select         (THSEL): %u - %s\n", field, nvme_feature_temp_type_to_string(field));
+		printf("\tThreshold Type Select         (THSEL): %u - %s\n", field,
+			nvme_feature_temp_type_to_string(field));
 		field = (result & 0x000f0000) >> 16;
-		printf("\tThreshold Temperature Select (TMPSEL): %u - %s\n", field, nvme_feature_temp_sel_to_string(field));
+		printf("\tThreshold Temperature Select (TMPSEL): %u - %s\n", field,
+			nvme_feature_temp_sel_to_string(field));
 		printf("\tTemperature Threshold         (TMPTH): %ld C (%u Kelvin)\n",
 		       kelvin_to_celsius(result & 0x0000ffff), result & 0x0000ffff);
 		break;
-	case NVME_FEAT_ERR_RECOVERY:
-		printf("\tDeallocated or Unwritten Logical Block Error Enable (DULBE): %s\n", ((result & 0x00010000) >> 16) ? "Enabled":"Disabled");
-		printf("\tTime Limited Error Recovery                          (TLER): %u ms\n", (result & 0x0000ffff) * 100);
+	case NVME_FEAT_FID_ERR_RECOVERY:
+		printf("\tDeallocated or Unwritten Logical Block Error Enable (DULBE): %s\n",
+			((result & 0x00010000) >> 16) ? "Enabled":"Disabled");
+		printf("\tTime Limited Error Recovery                          (TLER): %u ms\n",
+			(result & 0x0000ffff) * 100);
 		break;
-	case NVME_FEAT_VOLATILE_WC:
+	case NVME_FEAT_FID_VOLATILE_WC:
 		printf("\tVolatile Write Cache Enable (WCE): %s\n", (result & 0x00000001) ? "Enabled":"Disabled");
 		break;
-	case NVME_FEAT_NUM_QUEUES:
+	case NVME_FEAT_FID_NUM_QUEUES:
 		printf("\tNumber of IO Completion Queues Allocated (NCQA): %u\n", ((result & 0xffff0000) >> 16) + 1);
 		printf("\tNumber of IO Submission Queues Allocated (NSQA): %u\n",  (result & 0x0000ffff) + 1);
 		break;
-	case NVME_FEAT_IRQ_COALESCE:
+	case NVME_FEAT_FID_IRQ_COALESCE:
 		printf("\tAggregation Time     (TIME): %u usec\n", ((result & 0x0000ff00) >> 8) * 100);
 		printf("\tAggregation Threshold (THR): %u\n",  (result & 0x000000ff) + 1);
 		break;
-	case NVME_FEAT_IRQ_CONFIG:
+	case NVME_FEAT_FID_IRQ_CONFIG:
 		printf("\tCoalescing Disable (CD): %s\n", ((result & 0x00010000) >> 16) ? "True":"False");
 		printf("\tInterrupt Vector   (IV): %u\n",  result & 0x0000ffff);
 		break;
-	case NVME_FEAT_WRITE_ATOMIC:
+	case NVME_FEAT_FID_WRITE_ATOMIC:
 		printf("\tDisable Normal (DN): %s\n", (result & 0x00000001) ? "True":"False");
 		break;
-	case NVME_FEAT_ASYNC_EVENT:
-		printf("\tZone Descriptor Changed Notices: %s\n", ((result >> 27) & 0x1) ? "Send async event":"Do not send async event");
-		printf("\tEndurance Group Event Aggregate Log Change Notices: %s\n", ((result & 0x00004000) >> 14) ? "Send async event":"Do not send async event");
-		printf("\tLBA Status Information Notices  : %s\n", ((result & 0x00002000) >> 13) ? "Send async event":"Do not send async event");
-		printf("\tPredictable Latency Event Aggregate Log Change Notices: %s\n", ((result & 0x00001000) >> 12) ? "Send async event":"Do not send async event");
-		printf("\tAsymmetric Namespace Access Change Notices: %s\n", ((result & 0x00000800) >> 11) ? "Send async event":"Do not send async event");
-		printf("\tTelemetry Log Notices           : %s\n", ((result & 0x00000400) >> 10) ? "Send async event":"Do not send async event");
-		printf("\tFirmware Activation Notices     : %s\n", ((result & 0x00000200) >> 9) ? "Send async event":"Do not send async event");
-		printf("\tNamespace Attribute Notices     : %s\n", ((result & 0x00000100) >> 8) ? "Send async event":"Do not send async event");
-		printf("\tSMART / Health Critical Warnings: %s\n", (result & 0x000000ff) ? "Send async event":"Do not send async event");
+	case NVME_FEAT_FID_ASYNC_EVENT:
+		printf("\tEndurance Group Event Aggregate Log Change Notices: %s\n",
+			((result & 0x00004000) >> 14) ? "Send async event":"Do not send async event");
+		printf("\tLBA Status Information Notices  : %s\n",
+			((result & 0x00002000) >> 13) ? "Send async event":"Do not send async event");
+		printf("\tPredictable Latency Event Aggregate Log Change Notices: %s\n",
+			((result & 0x00001000) >> 12) ? "Send async event":"Do not send async event");
+		printf("\tAsymmetric Namespace Access Change Notices: %s\n",
+			((result & 0x00000800) >> 11) ? "Send async event":"Do not send async event");
+		printf("\tTelemetry Log Notices           : %s\n",
+			((result & 0x00000400) >> 10) ? "Send async event":"Do not send async event");
+		printf("\tFirmware Activation Notices     : %s\n",
+			((result & 0x00000200) >> 9) ? "Send async event":"Do not send async event");
+		printf("\tNamespace Attribute Notices     : %s\n",
+			((result & 0x00000100) >> 8) ? "Send async event":"Do not send async event");
+		printf("\tSMART / Health Critical Warnings: %s\n",
+			(result & 0x000000ff) ? "Send async event":"Do not send async event");
 		break;
-	case NVME_FEAT_AUTO_PST:
-		printf("\tAutonomous Power State Transition Enable (APSTE): %s\n", (result & 0x00000001) ? "Enabled":"Disabled");
-		nvme_show_auto_pst((struct nvme_auto_pst *)buf);
+	case NVME_FEAT_FID_AUTO_PST:
+		printf("\tAutonomous Power State Transition Enable (APSTE): %s\n",
+			(result & 0x00000001) ? "Enabled":"Disabled");
+		nvme_show_auto_pst((struct nvme_feat_auto_pst *)buf);
 		break;
-	case NVME_FEAT_HOST_MEM_BUF:
+	case NVME_FEAT_FID_HOST_MEM_BUF:
 		printf("\tEnable Host Memory (EHM): %s\n", (result & 0x00000001) ? "Enabled":"Disabled");
-		nvme_show_host_mem_buffer((struct nvme_host_mem_buffer *)buf);
+		nvme_show_host_mem_buffer((struct nvme_host_mem_buf_attrs *)buf);
 		break;
-	case NVME_FEAT_SW_PROGRESS:
+	case NVME_FEAT_FID_SW_PROGRESS:
 		printf("\tPre-boot Software Load Count (PBSLC): %u\n", result & 0x000000ff);
 		break;
-	case NVME_FEAT_PLM_CONFIG:
+	case NVME_FEAT_FID_PLM_CONFIG:
 		printf("\tPredictable Latency Window Enabled: %s\n", result & 0x1 ? "True":"False");
 		nvme_show_plm_config((struct nvme_plm_config *)buf);
 		break;
-	case NVME_FEAT_PLM_WINDOW:
+	case NVME_FEAT_FID_PLM_WINDOW:
 		printf("\tWindow Select: %s", nvme_plm_window(result));
 		break;
-	case NVME_LBA_STATUS_INFO:
+	case NVME_FEAT_FID_LBA_STS_INTERVAL:
 		nvme_show_lba_status_info(result);
 		break;
-	case NVME_FEAT_ENDURANCE:
+	case NVME_FEAT_FID_ENDURANCE_EVT_CFG:
 		printf("\tEndurance Group Identifier (ENDGID): %u\n", result & 0xffff);
 		printf("\tEndurance Group Critical Warnings  : %u\n", (result >> 16) & 0xff);
+              break;
+	case NVME_FEAT_FID_IOCS_PROFILE:
+		printf("\tI/O Command Set Profile: %s\n", result & 0x1 ? "True":"False");
 		break;
-	case NVME_FEAT_IOCS_PROFILE:
-		printf("\tI/O Command Set Comination Index(IOCSCI): %u\n", result & 0x1ff);
-		break;
-	case NVME_FEAT_HOST_ID:
+	case NVME_FEAT_FID_HOST_ID:
 		ull =  buf[7]; ull <<= 8; ull |= buf[6]; ull <<= 8; ull |= buf[5]; ull <<= 8;
 		ull |= buf[4]; ull <<= 8; ull |= buf[3]; ull <<= 8; ull |= buf[2]; ull <<= 8;
 		ull |= buf[1]; ull <<= 8; ull |= buf[0];
 		printf("\tHost Identifier (HOSTID):  %" PRIu64 "\n", ull);
 		break;
-	case NVME_FEAT_RESV_MASK:
-		printf("\tMask Reservation Preempted Notification  (RESPRE): %s\n", ((result & 0x00000008) >> 3) ? "True":"False");
-		printf("\tMask Reservation Released Notification   (RESREL): %s\n", ((result & 0x00000004) >> 2) ? "True":"False");
-		printf("\tMask Registration Preempted Notification (REGPRE): %s\n", ((result & 0x00000002) >> 1) ? "True":"False");
+	case NVME_FEAT_FID_RESV_MASK:
+		printf("\tMask Reservation Preempted Notification  (RESPRE): %s\n",
+			((result & 0x00000008) >> 3) ? "True":"False");
+		printf("\tMask Reservation Released Notification   (RESREL): %s\n",
+			((result & 0x00000004) >> 2) ? "True":"False");
+		printf("\tMask Registration Preempted Notification (REGPRE): %s\n",
+			((result & 0x00000002) >> 1) ? "True":"False");
 		break;
-	case NVME_FEAT_RESV_PERSIST:
+	case NVME_FEAT_FID_RESV_PERSIST:
 		printf("\tPersist Through Power Loss (PTPL): %s\n", (result & 0x00000001) ? "True":"False");
 		break;
-	case NVME_FEAT_WRITE_PROTECT:
-		printf("\tNamespace Write Protect state: %s\n", nvme_show_ns_write_protect_config(result & 0x7));
+	case NVME_FEAT_FID_WRITE_PROTECT:
+		printf("\tNamespace Write Protect: %s\n", nvme_show_ns_wp_cfg(result));
 		break;
-	case NVME_FEAT_TIMESTAMP:
+	case NVME_FEAT_FID_TIMESTAMP:
 		nvme_show_timestamp((struct nvme_timestamp *)buf);
 		break;
-	case NVME_FEAT_HCTM:
+	case NVME_FEAT_FID_HCTM:
 		printf("\tThermal Management Temperature 1 (TMT1) : %u Kelvin (%ld C)\n",
 		       result >> 16, kelvin_to_celsius(result >> 16));
 		printf("\tThermal Management Temperature 2 (TMT2) : %u Kelvin (%ld C)\n",
 		       result & 0x0000ffff, kelvin_to_celsius(result & 0x0000ffff));
 		break;
-	case NVME_FEAT_KATO:
+	case NVME_FEAT_FID_KATO:
 		printf("\tKeep Alive Timeout (KATO) in milliseconds: %u\n", result);
 		break;
-	case NVME_FEAT_NOPSC:
-		printf("\tNon-Operational Power State Permissive Mode Enable (NOPPME): %s\n", (result & 1) ? "True" : "False");
+	case NVME_FEAT_FID_NOPSC:
+		printf("\tNon-Operational Power State Permissive Mode Enable (NOPPME): %s\n",
+			(result & 1) ? "True" : "False");
 		break;
-	case NVME_FEAT_HOST_BEHAVIOR:
+	case NVME_FEAT_FID_HOST_BEHAVIOR:
 		printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
 		break;
-	case NVME_FEAT_SANITIZE:
+	case NVME_FEAT_FID_SANITIZE:
                 printf("\tNo-Deallocate Response Mode (NODRM) : %u\n", result & 0x1);
                 break;
-	case NVME_FEAT_RRL:
+	case NVME_FEAT_FID_RRL:
 		printf("\tRead Recovery Level (RRL): %u\n", result & 0xf);
+		break;
+	default:
 		break;
 	}
 }
@@ -5974,393 +5798,329 @@ void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
 	}
 }
 
-static void nvme_show_list_item(struct nvme_namespace *n)
+static void nvme_show_list_item(nvme_ns_t n)
 {
-	long long lba	= 1 << n->ns.lbaf[(n->ns.flbas & 0x0f)].ds;
-	double nsze	= le64_to_cpu(n->ns.nsze) * lba;
-	double nuse	= le64_to_cpu(n->ns.nuse) * lba;
+	char usage[128] = { 0 }, format[128] = { 0 };
+
+	long long lba = nvme_ns_get_lba_size(n);
+	double nsze = nvme_ns_get_lba_count(n) * lba;
+	double nuse = nvme_ns_get_lba_util(n) * lba;
 
 	const char *s_suffix = suffix_si_get(&nsze);
 	const char *u_suffix = suffix_si_get(&nuse);
 	const char *l_suffix = suffix_binary_get(&lba);
 
-	char usage[128];
-	char format[128], path[256];
-	struct stat st;
-	int ret;
+	nvme_ctrl_t c = nvme_ns_get_ctrl(n);
 
-	sprintf(path, "%s%s", n->ctrl->path, n->name);
-	ret = stat(path, &st);
-	if (ret < 0)
-		return;
+	snprintf(usage, sizeof(usage), "%6.2f %2sB / %6.2f %2sB", nuse,
+		u_suffix, nsze, s_suffix);
+	snprintf(format, sizeof(format), "%3.0f %2sB + %2d B", (double)lba,
+		l_suffix, nvme_ns_get_meta_size(n));
 
-	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
-		nsze, s_suffix);
-	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
-		le16_to_cpu(n->ns.lbaf[(n->ns.flbas & 0x0f)].ms));
-	printf("%-21s %-*.*s %-*.*s %-9d %-26s %-16s %-.*s\n", path,
-		(int)sizeof(n->ctrl->id.sn), (int)sizeof(n->ctrl->id.sn), n->ctrl->id.sn,
-		(int)sizeof(n->ctrl->id.mn), (int)sizeof(n->ctrl->id.mn), n->ctrl->id.mn,
-		n->nsid, usage, format, (int)sizeof(n->ctrl->id.fr), n->ctrl->id.fr);
+	printf("%-21s %-20s %-40s %-9d %-26s %-16s %-8s\n",
+		nvme_ns_get_name(n), nvme_ctrl_get_serial(c),
+		nvme_ctrl_get_model(c), nvme_ns_get_nsid(n), usage, format,
+		nvme_ctrl_get_firmware(c));
 }
 
-static void nvme_show_simple_list(struct nvme_topology *t)
+static void nvme_show_simple_list(nvme_root_t r)
 {
-	int i, j, k;
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c;
+	nvme_ns_t n;
 
 	printf("%-21s %-20s %-40s %-9s %-26s %-16s %-8s\n",
 	    "Node", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
 	printf("%-.21s %-.20s %-.40s %-.9s %-.26s %-.16s %-.8s\n", dash, dash,
 		dash, dash, dash, dash, dash);
 
-	for (i = 0; i < t->nr_subsystems; i++) {
-		struct nvme_subsystem *s = &t->subsystems[i];
-
-		for (j = 0; j < s->nr_ctrls; j++) {
-			struct nvme_ctrl *c = &s->ctrls[j];
-
-			for (k = 0; k < c->nr_namespaces; k++) {
-				struct nvme_namespace *n = &c->namespaces[k];
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			nvme_subsystem_for_each_ns(s, n)
 				nvme_show_list_item(n);
-			}
-		}
 
-		for (j = 0; j < s->nr_namespaces; j++) {
-			struct nvme_namespace *n = &s->namespaces[j];
-			nvme_show_list_item(n);
+			nvme_subsystem_for_each_ctrl(s, c)
+				nvme_ctrl_for_each_ns(c, n)
+				nvme_show_list_item(n);
 		}
 	}
 }
 
-static void nvme_show_details_ns(struct nvme_namespace *n, bool ctrl)
+static void nvme_show_ns_details(nvme_ns_t n)
 {
-	long long lba	= 1 << n->ns.lbaf[(n->ns.flbas & 0x0f)].ds;
-	double nsze	= le64_to_cpu(n->ns.nsze) * lba;
-	double nuse	= le64_to_cpu(n->ns.nuse) * lba;
+	char usage[128] = { 0 }, format[128] = { 0 };
+
+	long long lba = nvme_ns_get_lba_size(n);
+	double nsze = nvme_ns_get_lba_count(n) * lba;
+	double nuse = nvme_ns_get_lba_util(n) * lba;
 
 	const char *s_suffix = suffix_si_get(&nsze);
 	const char *u_suffix = suffix_si_get(&nuse);
 	const char *l_suffix = suffix_binary_get(&lba);
 
-	char usage[128];
-	char format[128];
-
-	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
-		nsze, s_suffix);
+	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix, nsze, s_suffix);
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
-		le16_to_cpu(n->ns.lbaf[(n->ns.flbas & 0x0f)].ms));
+		nvme_ns_get_meta_size(n));
 
-	printf("%-12s %-8d %-26s %-16s ", n->name, n->nsid, usage, format);
-
-	if (ctrl)
-		printf("%s", n->ctrl->name);
-	else {
-		struct nvme_subsystem *s = n->ctrl->subsys;
-		int i, j;
-		bool comma = false;
-
-		for (i = 0; i < s->nr_ctrls; i++) {
-			struct nvme_ctrl *c = &s->ctrls[i];
-
-			for (j = 0; j < c->nr_namespaces; j++) {
-				struct nvme_namespace *ns = &c->namespaces[j];
-
-				if (ns->nsid == n->nsid) {
-					printf("%s%s", comma ? ", " : "",
-					       c->name);
-					comma = true;
-				}
-			}
-		}
-	}
-	printf("\n");
+	printf("%-12s %-8x %-26s %-16s ", nvme_ns_get_name(n),
+		nvme_ns_get_nsid(n), usage, format);
 }
 
-static void nvme_show_detailed_list(struct nvme_topology *t)
+static void nvme_show_detailed_list(nvme_root_t r)
 {
-	int i, j, k;
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c;
+	nvme_path_t p;
+	nvme_ns_t n;
 
-	printf("NVM Express Subsystems\n\n");
 	printf("%-16s %-96s %-.16s\n", "Subsystem", "Subsystem-NQN", "Controllers");
 	printf("%-.16s %-.96s %-.16s\n", dash, dash, dash);
-	for (i = 0; i < t->nr_subsystems; i++) {
-		struct nvme_subsystem *s = &t->subsystems[i];
 
-		printf("%-16s %-96s ", s->name, s->subsysnqn);
-		for (j = 0; j < s->nr_ctrls; j++) {
-			struct nvme_ctrl *c = &s->ctrls[j];
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			bool first = true;
+			printf("%-16s %-96s ", nvme_subsystem_get_name(s),
+			       nvme_subsystem_get_nqn(s));
 
-			printf("%s%s", j ? ", " : "", c->name);
-		}
-		printf("\n");
-	};
-
-	printf("\nNVM Express Controllers\n\n");
-	printf("%-8s %-20s %-40s %-8s %-6s %-14s %-12s %-16s\n", "Device",
-		"SN", "MN", "FR", "TxPort", "Address", "Subsystem", "Namespaces");
-	printf("%-.8s %-.20s %-.40s %-.8s %-.6s %-.14s %-.12s %-.16s\n", dash, dash,
-		dash, dash, dash, dash, dash, dash);
-	for (i = 0; i < t->nr_subsystems; i++) {
-		struct nvme_subsystem *s = &t->subsystems[i];
-
-		for (j = 0; j < s->nr_ctrls; j++) {
-			bool comma = false;
-			struct nvme_ctrl *c = &s->ctrls[j];
-
-			printf("%-8s %-.20s %-.40s %-.8s %-6s %-14s %-12s ",
-				c->name, c->id.sn, c->id.mn, c->id.fr,
-				c->transport ? : "", c->address ? : "", s->name);
-
-			for (k = 0; k < c->nr_namespaces; k++) {
-				struct nvme_namespace *n = &c->namespaces[k];
-
-				printf("%s%s", comma ? ", " : "", n->name);
-				comma = true;
+			nvme_subsystem_for_each_ctrl(s, c) {
+				printf("%s%s", first ? "": ", ",
+				       nvme_ctrl_get_name(c));
+				first = false;
 			}
 			printf("\n");
 		}
 	}
+	printf("\n");
 
-	printf("\nNVM Express Namespaces\n\n");
-	printf("%-12s %-8s %-26s %-16s %-16s\n", "Device", "NSID", "Usage", "Format", "Controllers");
-	printf("%-.12s %-.8s %-.26s %-.16s %-.16s\n", dash, dash, dash, dash, dash);
+	printf("%-8s %-20s %-40s %-8s %-6s %-14s %-12s %-16s\n", "Device",
+		"SN", "MN", "FR", "TxPort", "Address", "Subsystem", "Namespaces");
+	printf("%-.8s %-.20s %-.40s %-.8s %-.6s %-.14s %-.12s %-.16s\n", dash, dash,
+		dash, dash, dash, dash, dash, dash);
 
-	for (i = 0; i < t->nr_subsystems; i++) {
-		struct nvme_subsystem *s = &t->subsystems[i];
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			nvme_subsystem_for_each_ctrl(s, c) {
+				bool first = true;
 
-		if (s->nr_namespaces) {
-			for (j = 0; j < s->nr_namespaces; j++) {
-				struct nvme_namespace *n = &s->namespaces[j];
-				nvme_show_details_ns(n, false);
+				printf("%-8s %-20s %-40s %-8s %-6s %-14s %-12s ",
+				       nvme_ctrl_get_name(c),
+				       nvme_ctrl_get_serial(c),
+				       nvme_ctrl_get_model(c),
+				       nvme_ctrl_get_firmware(c),
+				       nvme_ctrl_get_transport(c),
+				       nvme_ctrl_get_address(c),
+				       nvme_subsystem_get_name(s));
+
+				nvme_ctrl_for_each_ns(c, n) {
+					printf("%s%s", first ? "": ", ",
+					       nvme_ns_get_name(n));
+					first = false;
+				}
+
+				nvme_ctrl_for_each_path(c, p) {
+					printf("%s%s", first ? "": ", ",
+					       nvme_ns_get_name(nvme_path_get_ns(p)));
+					first = false;
+				}
+				printf("\n");
 			}
-		} else {
-			for (j = 0; j < s->nr_ctrls; j++) {
-				struct nvme_ctrl *c = &s->ctrls[j];
+		}
+	}
+	printf("\n");
 
-				for (k = 0; k < c->nr_namespaces; k++) {
-					struct nvme_namespace *n = &c->namespaces[k];
-					nvme_show_details_ns(n, true);
+	printf("%-12s %-8s %-26s %-16s %-16s\n", "Device", "NSID", "Usage",
+		"Format", "Controllers");
+	printf("%-.12s %-.8s %-.26s %-.16s %-.16s\n", dash, dash, dash, dash,
+		dash);
+
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			nvme_subsystem_for_each_ctrl(s, c) {
+				nvme_ctrl_for_each_ns(c, n) {
+					nvme_show_ns_details(n);
+					printf("%s\n", nvme_ctrl_get_name(c));
 				}
 			}
-		}
-	}
-}
 
-static void json_detail_ns(struct nvme_namespace *n, struct json_object *ns_attrs)
-{
-	long long lba;
-	double nsze, nuse;
+			nvme_subsystem_for_each_ns(s, n) {
+				bool first = true;
 
-	lba = 1 << n->ns.lbaf[(n->ns.flbas & 0x0f)].ds;
-	nsze = le64_to_cpu(n->ns.nsze) * lba;
-	nuse = le64_to_cpu(n->ns.nuse) * lba;
-
-	json_object_add_value_string(ns_attrs, "NameSpace", n->name);
-	json_object_add_value_uint(ns_attrs, "NSID", n->nsid);
-
-	json_object_add_value_uint(ns_attrs, "UsedBytes", nuse);
-	json_object_add_value_uint(ns_attrs, "MaximumLBA",
-		le64_to_cpu(n->ns.nsze));
-	json_object_add_value_uint(ns_attrs, "PhysicalSize", nsze);
-	json_object_add_value_uint(ns_attrs, "SectorSize", lba);
-}
-
-static void json_detail_list(struct nvme_topology *t)
-{
-	int i, j, k;
-	struct json_object *root;
-	struct json_object *devices;
-	char formatter[41] = { 0 };
-
-	root = json_create_object();
-	devices = json_create_array();
-
-	for (i = 0; i < t->nr_subsystems; i++) {
-		struct nvme_subsystem *s = &t->subsystems[i];
-		struct json_object *subsys_attrs;
-		struct json_object *namespaces, *ctrls;
-
-		subsys_attrs = json_create_object();
-		json_object_add_value_string(subsys_attrs, "Subsystem", s->name);
-		json_object_add_value_string(subsys_attrs, "SubsystemNQN", s->subsysnqn);
-
-		ctrls = json_create_array();
-		json_object_add_value_array(subsys_attrs, "Controllers", ctrls);
-		for (j = 0; j < s->nr_ctrls; j++) {
-			struct json_object *ctrl_attrs = json_create_object();
-			struct nvme_ctrl *c = &s->ctrls[j];
-			struct json_object *namespaces;
-
-			json_object_add_value_string(ctrl_attrs, "Controller", c->name);
-			if (c->transport)
-				json_object_add_value_string(ctrl_attrs, "Transport", c->transport);
-			if (c->address)
-				json_object_add_value_string(ctrl_attrs, "Address", c->address);
-			if (c->state)
-				json_object_add_value_string(ctrl_attrs, "State", c->state);
-			if (c->hostnqn)
-				json_object_add_value_string(ctrl_attrs, "HostNQN", c->hostnqn);
-			if (c->hostid)
-				json_object_add_value_string(ctrl_attrs, "HostID", c->hostid);
-
-			format(formatter, sizeof(formatter), c->id.fr, sizeof(c->id.fr));
-			json_object_add_value_string(ctrl_attrs, "Firmware", formatter);
-
-			format(formatter, sizeof(formatter), c->id.mn, sizeof(c->id.mn));
-			json_object_add_value_string(ctrl_attrs, "ModelNumber", formatter);
-
-			format(formatter, sizeof(formatter), c->id.sn, sizeof(c->id.sn));
-			json_object_add_value_string(ctrl_attrs, "SerialNumber", formatter);
-
-			namespaces = json_create_array();
-
-			for (k = 0; k < c->nr_namespaces; k++) {
-				struct json_object *ns_attrs = json_create_object();
-				struct nvme_namespace *n = &c->namespaces[k];
-
-				json_detail_ns(n, ns_attrs);
-				json_array_add_value_object(namespaces, ns_attrs);
-			}
-			if (k)
-				json_object_add_value_array(ctrl_attrs, "Namespaces", namespaces);
-			else
-				json_free_array(namespaces);
-
-			json_array_add_value_object(ctrls, ctrl_attrs);
-		}
-
-		namespaces = json_create_array();
-		for (k = 0; k < s->nr_namespaces; k++) {
-			struct json_object *ns_attrs = json_create_object();
-			struct nvme_namespace *n = &s->namespaces[k];
-
-			json_detail_ns(n, ns_attrs);
-			json_array_add_value_object(namespaces, ns_attrs);
-		}
-		if (k)
-			json_object_add_value_array(subsys_attrs, "Namespaces", namespaces);
-		else
-			json_free_array(namespaces);
-
-		json_array_add_value_object(devices, subsys_attrs);
-	}
-
-	json_object_add_value_array(root, "Devices", devices);
-	json_print_object(root, NULL);
-	printf("\n");
-	json_free_object(root);
-}
-
-static void json_simple_ns(struct nvme_namespace *n, struct json_object *devices)
-{
-	struct json_object *device_attrs;
-	char formatter[41] = { 0 };
-	double nsze, nuse;
-	int ret, index = -1;
-	long long lba;
-	char *devnode;
-	struct stat st;
-
-	if (asprintf(&devnode, "%s%s", n->ctrl->path, n->name) < 0)
-		return;
-
-	ret = stat(devnode, &st);
-	if (ret < 0)
-		return;
-
-	device_attrs = json_create_object();
-	json_object_add_value_int(device_attrs, "NameSpace", n->nsid);
-
-	json_object_add_value_string(device_attrs, "DevicePath", devnode);
-	free(devnode);
-
-	format(formatter, sizeof(formatter),
-			   n->ctrl->id.fr,
-			   sizeof(n->ctrl->id.fr));
-
-	json_object_add_value_string(device_attrs, "Firmware", formatter);
-
-	if (sscanf(n->ctrl->name, "nvme%d", &index) == 1)
-		json_object_add_value_int(device_attrs, "Index", index);
-
-	format(formatter, sizeof(formatter),
-		       n->ctrl->id.mn,
-		       sizeof(n->ctrl->id.mn));
-
-	json_object_add_value_string(device_attrs, "ModelNumber", formatter);
-
-	if (index >= 0 && n->ctrl->transport && !strcmp(n->ctrl->transport, "pcie")) {
-		char *product = nvme_product_name(index);
-
-		json_object_add_value_string(device_attrs, "ProductName", product);
-		free((void*)product);
-	}
-
-	format(formatter, sizeof(formatter),
-	       n->ctrl->id.sn,
-	       sizeof(n->ctrl->id.sn));
-
-	json_object_add_value_string(device_attrs, "SerialNumber", formatter);
-
-	lba = 1 << n->ns.lbaf[(n->ns.flbas & 0x0f)].ds;
-	nsze = le64_to_cpu(n->ns.nsze) * lba;
-	nuse = le64_to_cpu(n->ns.nuse) * lba;
-
-	json_object_add_value_uint(device_attrs, "UsedBytes", nuse);
-	json_object_add_value_uint(device_attrs, "MaximumLBA",
-				  le64_to_cpu(n->ns.nsze));
-	json_object_add_value_uint(device_attrs, "PhysicalSize", nsze);
-	json_object_add_value_uint(device_attrs, "SectorSize", lba);
-
-	json_array_add_value_object(devices, device_attrs);
-}
-
-static void json_simple_list(struct nvme_topology *t)
-{
-	struct json_object *root;
-	struct json_object *devices;
-	int i, j, k;
-
-	root = json_create_object();
-	devices = json_create_array();
-	for (i = 0; i < t->nr_subsystems; i++) {
-		struct nvme_subsystem *s = &t->subsystems[i];
-
-		for (j = 0; j < s->nr_ctrls; j++) {
-			struct nvme_ctrl *c = &s->ctrls[j];
-
-			for (k = 0; k < c->nr_namespaces; k++) {
-				struct nvme_namespace *n = &c->namespaces[k];
-				json_simple_ns(n, devices);
+				nvme_show_ns_details(n);
+				nvme_subsystem_for_each_ctrl(s, c) {
+					printf("%s%s", first ? "" : ", ",
+					       nvme_ctrl_get_name(c));
+					first = false;
+				}
+				printf("\n");
 			}
 		}
-
-		for (j = 0; j < s->nr_namespaces; j++) {
-			struct nvme_namespace *n = &s->namespaces[j];
-			json_simple_ns(n, devices);
-		}
 	}
-	json_object_add_value_array(root, "Devices", devices);
-	json_print_object(root, NULL);
-	printf("\n");
-	json_free_object(root);
 }
 
-static void json_print_list_items(struct nvme_topology *t,
+static void json_detail_list(nvme_root_t r)
+{
+	struct json_object *jroot = json_create_object();
+	struct json_object *jsslist = json_create_array();
+
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c;
+	nvme_path_t p;
+	nvme_ns_t n;
+
+	nvme_for_each_host(r, h) {
+		struct json_object *hss = json_create_object();
+
+		json_object_add_value_string(hss, "hostnqn", nvme_host_get_hostnqn(h));
+		json_object_add_value_string(hss, "hostid", nvme_host_get_hostid(h));
+
+		nvme_for_each_subsystem(h , s) {
+			struct json_object *jss = json_create_object();
+			struct json_object *jctrls = json_create_array();
+			struct json_object *jnss = json_create_array();
+
+			json_object_add_value_string(jss, "subsystem", nvme_subsystem_get_name(s));
+			json_object_add_value_string(jss, "nqn", nvme_subsystem_get_nqn(s));
+
+			nvme_subsystem_for_each_ctrl(s, c) {
+				struct json_object *jctrl = json_create_object();
+				struct json_object *jnss = json_create_array();
+				struct json_object *jpaths = json_create_array();
+
+				json_object_add_value_string(jctrl, "controller", nvme_ctrl_get_name(c));
+				json_object_add_value_string(jctrl, "serial", nvme_ctrl_get_serial(c));
+				json_object_add_value_string(jctrl, "model", nvme_ctrl_get_model(c));
+				json_object_add_value_string(jctrl, "firmware", nvme_ctrl_get_firmware(c));
+				json_object_add_value_string(jctrl, "transport", nvme_ctrl_get_transport(c));
+				json_object_add_value_string(jctrl, "address", nvme_ctrl_get_address(c));
+
+				nvme_ctrl_for_each_ns(c, n) {
+					struct json_object *jns = json_create_object();
+					long long lba = nvme_ns_get_lba_size(n);
+					double nsze = nvme_ns_get_lba_count(n) * lba;
+					double nuse = nvme_ns_get_lba_util(n) * lba;
+
+					json_object_add_value_string(jns, "namespace", nvme_ns_get_name(n));
+					json_object_add_value_int(jns, "nsid", nvme_ns_get_nsid(n));
+					json_object_add_value_int(jns, "util", nuse);
+					json_object_add_value_int(jns, "maxlba", nvme_ns_get_lba_count(n));
+					json_object_add_value_int(jns, "capacity", nsze);
+					json_object_add_value_int(jns, "sector", lba);
+
+					json_array_add_value_object(jnss, jns);
+				}
+				json_object_add_value_object(jctrl, "namespaces", jnss);
+
+				nvme_ctrl_for_each_path(c, p) {
+					struct json_object *jpath = json_create_object();
+
+					json_object_add_value_string(jpath, "path", nvme_path_get_name(p));
+					json_object_add_value_string(jpath, "ana-state", nvme_path_get_ana_state(p));
+
+					json_array_add_value_object(jpaths, jpath);
+				}
+				json_object_add_value_object(jctrl, "paths", jpaths);
+
+				json_array_add_value_object(jctrls, jctrl);
+			}
+			json_object_add_value_object(jss, "controllers", jctrls);
+
+			nvme_subsystem_for_each_ns(s, n) {
+				struct json_object *jns = json_create_object();
+
+				long long lba = nvme_ns_get_lba_size(n);
+				double nsze = nvme_ns_get_lba_count(n) * lba;
+				double nuse = nvme_ns_get_lba_util(n) * lba;
+
+				json_object_add_value_string(jns, "namespace", nvme_ns_get_name(n));
+				json_object_add_value_int(jns, "nsid", nvme_ns_get_nsid(n));
+				json_object_add_value_int(jns, "util", nuse);
+				json_object_add_value_int(jns, "maxlba", nvme_ns_get_lba_count(n));
+				json_object_add_value_int(jns, "capacity", nsze);
+				json_object_add_value_int(jns, "sector", lba);
+
+				json_array_add_value_object(jnss, jns);
+			}
+			json_object_add_value_object(jss, "namespaces", jnss);
+
+			json_array_add_value_object(jsslist, jss);
+		}
+
+		json_object_add_value_object(hss, "subsystems", jsslist);
+		json_array_add_value_object(jroot, hss);
+	}
+	json_print_object(jroot, NULL);
+	printf("\n");
+	json_free_object(jroot);
+}
+
+static struct json_object *json_list_item(nvme_ns_t n)
+{
+	struct json_object *jdevice = json_create_object();
+	nvme_ctrl_t c = nvme_ns_get_ctrl(n);
+
+	long long lba = nvme_ns_get_lba_size(n);
+	double nsze = nvme_ns_get_lba_count(n) * lba;
+	double nuse = nvme_ns_get_lba_util(n) * lba;
+
+	json_object_add_value_int(jdevice, "namespace", nvme_ns_get_nsid(n));
+	json_object_add_value_string(jdevice, "device", nvme_ns_get_name(n));
+	json_object_add_value_string(jdevice, "firmware", nvme_ctrl_get_firmware(c));
+	json_object_add_value_string(jdevice, "model", nvme_ctrl_get_model(c));
+	json_object_add_value_string(jdevice, "serial", nvme_ctrl_get_serial(c));
+	json_object_add_value_int(jdevice, "util", nuse);
+	json_object_add_value_int(jdevice, "maxlba", nvme_ns_get_lba_count(n));
+	json_object_add_value_int(jdevice, "capacity", nsze);
+	json_object_add_value_int(jdevice, "sector", lba);
+
+	return jdevice;
+}
+
+static void json_simple_list(nvme_root_t r)
+{
+	struct json_object *jroot = json_create_object();
+	struct json_object *jdevices = json_create_array();
+
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c;
+	nvme_ns_t n;
+
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			nvme_subsystem_for_each_ns(s, n)
+				json_array_add_value_object(jdevices,
+							    json_list_item(n));
+
+			nvme_subsystem_for_each_ctrl(s, c)
+				nvme_ctrl_for_each_ns(c, n)
+				json_array_add_value_object(jdevices,
+							    json_list_item(n));
+		}
+		json_object_add_value_object(jroot, "devices", jdevices);
+	}
+	json_print_object(jroot, NULL);
+	printf("\n");
+	json_free_object(jroot);
+}
+
+static void json_print_list_items(nvme_root_t r,
 				  enum nvme_print_flags flags)
 {
 	if (flags & VERBOSE)
-		json_detail_list(t);
+		json_detail_list(r);
 	else
-		json_simple_list(t);
+		json_simple_list(r);
 }
 
-void nvme_show_list_items(struct nvme_topology *t, enum nvme_print_flags flags)
+void nvme_show_list_items(nvme_root_t r, enum nvme_print_flags flags)
 {
 	if (flags & JSON)
-		json_print_list_items(t, flags);
+		json_print_list_items(r, flags);
 	else if (flags & VERBOSE)
-		nvme_show_detailed_list(t);
+		nvme_show_detailed_list(r);
 	else
-		nvme_show_simple_list(t);
+		nvme_show_simple_list(r);
 }

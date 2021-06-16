@@ -1,6 +1,6 @@
 CFLAGS ?= -O2 -g -Wall -Werror
-override CFLAGS += -std=gnu99 -I.
-override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
+override CFLAGS += -std=gnu99
+override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__ -I. -Iutil/
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
 HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=242; echo $$?)
@@ -18,6 +18,7 @@ UDEVDIR ?= $(SYSCONFDIR)/udev
 UDEVRULESDIR ?= $(UDEVDIR)/rules.d
 DRACUTDIR ?= $(LIBDIR)/dracut
 LIBNVMEDIR = libnvme/
+LDFLAGS ?= -L$(LIBNVMEDIR)src/ -lnvme
 LIB_DEPENDS =
 
 ifeq ($(LIBUUID),0)
@@ -61,13 +62,12 @@ default: $(NVME)
 NVME-VERSION-FILE: FORCE
 	@$(SHELL_PATH) ./NVME-VERSION-GEN
 -include NVME-VERSION-FILE
-override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
+override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"' -I$(LIBNVMEDIR)src/
 
 NVME_DPKG_VERSION=1~`lsb_release -sc`
 
-OBJS := nvme-print.o nvme-ioctl.o nvme-rpmb.o \
-	fabrics.o nvme-models.o plugin.o \
-	nvme-status.o nvme-filters.o nvme-topology.o
+OBJS := nvme-print.o nvme-rpmb.o \
+	fabrics.o nvme-models.o plugin.o
 
 UTIL_OBJS := util/argconfig.o util/suffix.o util/parser.o \
 	util/cleanup.o util/log.o
@@ -104,13 +104,13 @@ nvme: nvme.c nvme.h libnvme $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FIL
 verify-no-dep: nvme.c nvme.h $(OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $@ $(OBJS) $(UTIL_OBJS) $(LDFLAGS)
 
-nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h util/argconfig.h util/suffix.h fabrics.h
+nvme.o: nvme.c nvme.h nvme-print.h util/argconfig.h util/suffix.h fabrics.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -c $<
 
-%.o: %.c %.h nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
+%.o: %.c %.h nvme.h linux/nvme.h nvme-print.h util/argconfig.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
 
-%.o: %.c nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
+%.o: %.c nvme.h linux/nvme.h nvme-print.h util/argconfig.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
 
 doc: $(NVME)

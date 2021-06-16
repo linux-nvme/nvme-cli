@@ -26,18 +26,12 @@
 
 #include <sys/stat.h>
 
-#include "linux/nvme_ioctl.h"
-
 #include "nvme.h"
-#include "linux/nvme.h"
-#include "nvme-private.h"
-#include "nvme-print.h"
-#include "nvme-ioctl.h"
+#include "libnvme.h"
 #include "plugin.h"
 
 #include "argconfig.h"
 #include "suffix.h"
-#include <sys/ioctl.h>
 
 #define CREATE_CMD
 #include "huawei-nvme.h"
@@ -52,7 +46,7 @@
 struct huawei_list_item {
 	char                node[1024];
 	struct nvme_id_ctrl ctrl;
-	int                 nsid;
+	unsigned            nsid;
 	struct nvme_id_ns   ns;
 	unsigned            block;
 	char                ns_name[NS_NAME_LEN];
@@ -89,8 +83,8 @@ static int huawei_get_nvme_info(int fd, struct huawei_list_item *item, const cha
 	}
 
 	item->huawei_device = true;
-	item->nsid = nvme_get_nsid(fd);
-	err = nvme_identify_ns(fd, item->nsid, 0, &item->ns);
+	err = nvme_get_nsid(fd, &item->nsid);
+	err = nvme_identify_ns(fd, item->nsid, &item->ns);
 	if (err)
 		return err;
 
@@ -322,7 +316,7 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	if (fmt != JSON && fmt != NORMAL)
 		return -EINVAL;
 
-	n = scandir("/dev", &devices, scan_namespace_filter, alphasort);
+	n = scandir("/dev", &devices, nvme_namespace_filter, alphasort);
 	if (n <= 0)
 		return n;
 

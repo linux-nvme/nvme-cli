@@ -78,4 +78,13 @@ void nvme_free(void *p, bool huge);
 
 unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time);
+
+/* nvme-print.c */
+const char *nvme_status_to_string(uint16_t status);
+const char *nvme_select_to_string(int sel);
+
+void d(unsigned char *buf, int len, int width, int group);
+void d_raw(unsigned char *buf, unsigned len);
+uint64_t int48_to_long(uint8_t *data);
+
 #endif /* _NVME_H */

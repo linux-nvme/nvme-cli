@@ -8,11 +8,8 @@
 #include <sys/stat.h>
 
 #include "nvme.h"
-#include "linux/nvme.h"
-#include "nvme-private.h"
-#include "nvme-ioctl.h"
+#include "libnvme.h"
 #include "nvme-print.h"
-#include "nvme-status.h"
 
 #define CREATE_CMD
 #include "zns.h"
@@ -107,14 +104,14 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
-		err = cfg.namespace_id = nvme_get_nsid(fd);
+		err = nvme_get_nsid(fd, &cfg.namespace_id);
 		if (err < 0) {
 			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
 
-	err = nvme_identify_ns(fd, cfg.namespace_id, false, &id_ns);
+	err = nvme_identify_ns(fd, cfg.namespace_id, &id_ns);
 	if (err) {
 		nvme_show_status(err);
 		goto close_fd;
@@ -176,7 +173,7 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 		goto close_fd;
 
 	if (!cfg.namespace_id) {
-		err = cfg.namespace_id = nvme_get_nsid(fd);
+		err = nvme_get_nsid(fd, &cfg.namespace_id);
 		if (err < 0) {
 			perror("get-namespace-id");
 			goto free;
@@ -207,7 +204,7 @@ static int get_zdes_bytes(int fd, __u32 nsid)
 	__u8 lbaf;
 	int err;
 
-	err = nvme_identify_ns(fd, nsid,  false, &id_ns);
+	err = nvme_identify_ns(fd, nsid, &id_ns);
 	if (err > 0) {
 		nvme_show_status(err);
 		return -1;
@@ -267,7 +264,7 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 		return errno;
 
 	if (!cfg.namespace_id) {
-		err = cfg.namespace_id = nvme_get_nsid(fd);
+		err = nvme_get_nsid(fd, &cfg.namespace_id);
 		if (err < 0) {
 			perror("get-namespace-id");
 			goto close_fd;
@@ -407,7 +404,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 		return errno;
 
 	if (!cfg.namespace_id) {
-		err = cfg.namespace_id = nvme_get_nsid(fd);
+		err = nvme_get_nsid(fd, &cfg.namespace_id);
 		if (err < 0) {
 			perror("get-namespace-id");
 			goto close_fd;
@@ -512,7 +509,7 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 		goto close_fd;
 
 	if (!cfg.namespace_id) {
-		err = cfg.namespace_id = nvme_get_nsid(fd);
+		err = nvme_get_nsid(fd, &cfg.namespace_id);
 		if (err < 0) {
 			perror("get-namespace-id");
 			goto close_fd;
@@ -604,7 +601,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
-		err = cfg.namespace_id = nvme_get_nsid(fd);
+		err = nvme_get_nsid(fd, &cfg.namespace_id);
 		if (err < 0) {
 			perror("get-namespace-id");
 			goto close_fd;
@@ -736,14 +733,14 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 	if (!cfg.namespace_id) {
-		err = cfg.namespace_id = nvme_get_nsid(fd);
+		err = nvme_get_nsid(fd, &cfg.namespace_id);
 		if (err < 0) {
 			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
 
-	err = nvme_identify_ns(fd, cfg.namespace_id, false, &ns);
+	err = nvme_identify_ns(fd, cfg.namespace_id, &ns);
 	if (err) {
 		nvme_show_status(err);
 		goto close_fd;
@@ -823,11 +820,11 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 	nblocks = (cfg.data_size / lba_size) - 1;
 	control |= (cfg.prinfo << 10);
 	if (cfg.limited_retry)
-		control |= NVME_RW_LR;
+		control |= NVME_IO_LR;
 	if (cfg.fua)
-		control |= NVME_RW_FUA;
+		control |= NVME_IO_FUA;
 	if (cfg.piremap)
-		control |= NVME_RW_PIREMAP;
+		control |= NVME_IO_ZNS_APPEND_PIREMAP;
 
 	gettimeofday(&start_time, NULL);
 	err = nvme_zns_append(fd, cfg.namespace_id, cfg.zslba, nblocks,
@@ -897,15 +894,15 @@ static int changed_zone_list(int argc, char **argv, struct command *cmd, struct 
 		goto close_fd;
 
 	if (!cfg.namespace_id) {
-		err = cfg.namespace_id = nvme_get_nsid(fd);
+		err = nvme_get_nsid(fd, &cfg.namespace_id);
 		if (err < 0) {
 			perror("get-namespace-id");
 			goto close_fd;
 		}
 	}
 
-	err = nvme_get_log(fd, cfg.namespace_id, NVME_LOG_ZONE_CHANGED_LIST, 
-						cfg.rae, NVME_NO_LOG_LSP, sizeof(log), &log);
+	err = nvme_get_nsid_log(fd, NVME_LOG_LID_ZNS_CHANGED_ZONES, cfg.namespace_id,
+				sizeof(log), &log);
 	if (!err)
 		nvme_show_zns_changed(&log, flags);
 	else if (err > 0)

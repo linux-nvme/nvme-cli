@@ -27,10 +27,7 @@
 #include <linux/socket.h>
 
 #include "nvme.h"
-#include "linux/nvme.h"
-#include "nvme-private.h"
-#include "nvme-print.h"
-#include "nvme-ioctl.h"
+#include "libnvme.h"
 
 #define CREATE_CMD
 
@@ -268,12 +265,12 @@ struct rpmb_config_block_t {
 #define RPMB_NVME_SPSP        0x0001
 
 #define SEND_RPMB_REQ(tgt, size, req) \
-nvme_sec_send(fd, 0, tgt, RPMB_NVME_SPSP, RPMB_NVME_SECP, size, size, \
-		(unsigned char *)(req))
+nvme_security_send(fd, 0, tgt, RPMB_NVME_SPSP, 0, RPMB_NVME_SECP, 0, size, \
+		(unsigned char *)(req), NULL)
 	
 #define RECV_RPMB_RSP(tgt, size, rsp) \
-nvme_sec_recv(fd, 0, tgt, RPMB_NVME_SPSP, RPMB_NVME_SECP, size, size, \
-		(unsigned char *)(rsp))
+nvme_security_receive(fd, 0, tgt, RPMB_NVME_SPSP, 0, RPMB_NVME_SECP, 0, size, \
+		(unsigned char *)(rsp), NULL)
 	
 /* Initialize nonce value in rpmb request frame */
 static void rpmb_nonce_init(struct rpmb_data_frame_t *req)
