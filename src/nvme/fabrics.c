@@ -216,6 +216,7 @@ static int build_options(nvme_ctrl_t c, char **argstr)
 	struct nvme_fabrics_config *cfg = nvme_ctrl_get_config(c);
 	const char *transport = nvme_ctrl_get_transport(c);
 	const char *hostnqn, *hostid;
+	bool discover = false;
 
 	if (!transport) {
 		nvme_msg(LOG_ERR, "need a transport (-t) argument\n");
@@ -229,6 +230,9 @@ static int build_options(nvme_ctrl_t c, char **argstr)
 			errno = EINVAL;
 			return -1;
 		}
+		/* Use the default ctrl loss timeout if unset */
+                if (cfg->ctrl_loss_tmo == -1)
+			cfg->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 	}
 
 	/* always specify nqn as first arg - this will init the string */
@@ -237,8 +241,10 @@ static int build_options(nvme_ctrl_t c, char **argstr)
 		errno = ENOMEM;
 		return -1;
 	}
-
-
+	if (!strcmp(nvme_ctrl_get_subsysnqn(c), NVME_DISC_SUBSYS_NAME))
+		discover = true;
+	hostnqn = nvme_ctrl_get_hostnqn(c);
+	hostid = nvme_ctrl_get_hostid(c);
 	if (add_argument(argstr, "transport", transport) ||
 	    add_argument(argstr, "traddr",
 			 nvme_ctrl_get_traddr(c)) ||
@@ -246,14 +252,22 @@ static int build_options(nvme_ctrl_t c, char **argstr)
 			 nvme_ctrl_get_host_traddr(c)) ||
 	    add_argument(argstr, "trsvcid",
 			 nvme_ctrl_get_trsvcid(c)) ||
-	    add_argument(argstr, "hostnqn",
-			 nvme_ctrl_get_hostnqn(c)) ||
-	    add_argument(argstr, "hostid",
-			 nvme_ctrl_get_hostid(c)) ||
-	    add_int_argument(argstr, "nr_write_queues",
-			     cfg->nr_write_queues, false) ||
-	    add_int_argument(argstr, "nr_poll_queues",
-			     cfg->nr_poll_queues, false) ||
+	    (hostnqn && add_argument(argstr, "hostnqn", hostnqn)) ||
+	    (hostid && add_argument(argstr, "hostid", hostid)) ||
+	    (!discover &&
+	     add_int_argument(argstr, "nr_io_queues",
+			      cfg->nr_io_queues, false)) ||
+	    (!discover &&
+	     add_int_argument(argstr, "nr_write_queues",
+			      cfg->nr_write_queues, false)) ||
+	    (!discover &&
+	     add_int_argument(argstr, "nr_poll_queues",
+			      cfg->nr_poll_queues, false)) ||
+	    (!discover &&
+	     add_int_argument(argstr, "queue_size",
+			      cfg->queue_size, false)) ||
+	    add_int_argument(argstr, "keep_alive_tmo",
+			     cfg->keep_alive_tmo, false) ||
 	    add_int_argument(argstr, "reconnect_delay",
 			     cfg->reconnect_delay, false) ||
 	    (strcmp(transport, "loop") &&
@@ -268,14 +282,8 @@ static int build_options(nvme_ctrl_t c, char **argstr)
 	    (!strcmp(transport, "tcp") &&
 	     add_bool_argument(argstr, "hdr_digest", cfg->hdr_digest)) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_bool_argument(argstr, "data_digest", cfg->data_digest)) ||
-	    add_int_argument(argstr, "queue_size", cfg->queue_size, false) ||
-	    add_int_argument(argstr, "keep_alive_tmo",
-			     cfg->keep_alive_tmo, false) ||
-	    add_int_argument(argstr, "nr_io_queues",
-			     cfg->nr_io_queues, false)) {
+	     add_bool_argument(argstr, "data_digest", cfg->data_digest))) {
 		free(*argstr);
-		errno = ENOMEM;
 		return -1;
 	}
 
