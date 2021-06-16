@@ -5,16 +5,11 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-#include "linux/nvme_ioctl.h"
-
 #include "common.h"
 #include "nvme.h"
-#include "nvme-print.h"
-#include "nvme-ioctl.h"
+#include "libnvme.h"
 #include "plugin.h"
-
-#include "argconfig.h"
-#include "suffix.h"
+#include "linux/types.h"
 
 #define CREATE_CMD
 #include "intel-nvme.h"
@@ -370,8 +365,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	if (fd < 0)
 		return fd;
 
-	err = nvme_get_log(fd, cfg.namespace_id, 0xca, false,
-			   NVME_NO_LOG_LSP, sizeof(smart_log), &smart_log);
+	err = nvme_get_log_simple(fd, 0xca, sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (cfg.json)
 			show_intel_smart_log_jsn(&smart_log, cfg.namespace_id, devicename);
@@ -410,8 +404,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 	if (fd < 0)
 		return fd;
 
-	err = nvme_get_log(fd, NVME_NSID_ALL, 0xdd, false,
-			   NVME_NO_LOG_LSP, sizeof(log), log);
+	err = nvme_get_log_simple(fd, 0xdd, sizeof(log), log);
 	if (!err) {
 		if (!cfg.raw_binary)
 			printf("Intel Marketing Name Log:\n%s\n", log);
@@ -472,8 +465,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	if (fd < 0)
 		return fd;
 
-	err = nvme_get_log(fd, NVME_NSID_ALL, 0xc5, false,
-			   NVME_NO_LOG_LSP, sizeof(stats), &stats);
+	err = nvme_get_log_simple(fd, 0xc5, sizeof(stats), &stats);
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_temp_stats(&stats);
@@ -1055,9 +1047,8 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		return fd;
 
 	/* Query maj and minor version first */
-	err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
-			   false, NVME_NO_LOG_LSP, sizeof(media_version),
-			   media_version);
+	err = nvme_get_log_simple(fd, cfg.write ? 0xc2 : 0xc1,
+			   sizeof(media_version), media_version);
 	if (err)
 		goto close_fd;
 
@@ -1065,7 +1056,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		__u32 thresholds[OPTANE_V1000_BUCKET_LEN] = {0};
 		__u32 result;
 
-		err = nvme_get_feature(fd, 0, 0xf7, 0, cfg.write ? 0x1 : 0x0, 0,
+		err = nvme_get_features(fd, 0xf7, 0, 0, cfg.write ? 0x1 : 0x0, 0,
 				       sizeof(thresholds), thresholds, &result);
 		if (err) {
 			fprintf(stderr, "Quering thresholds failed. NVMe Status:%s(%x)\n",
@@ -1083,13 +1074,11 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 
 		}
 
-		err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
-				   false, NVME_NO_LOG_LSP, sizeof(v1000_stats),
-				   &v1000_stats);
+		err = nvme_get_log_simple(fd, cfg.write ? 0xc2 : 0xc1,
+				   sizeof(v1000_stats), &v1000_stats);
 	} else {
-		err = nvme_get_log(fd, NVME_NSID_ALL, cfg.write ? 0xc2 : 0xc1,
-				   false, NVME_NO_LOG_LSP, sizeof(stats),
-				   &stats);
+		err = nvme_get_log_simple(fd, cfg.write ? 0xc2 : 0xc1,
+				   sizeof(stats), &stats);
 	}
 
 	if (!err) {
@@ -1213,7 +1202,7 @@ static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
 
 	dword_tfer = min(max_tfer, total_size);
 	while (total_size > 0) {
-		err = nvme_submit_admin_passthru(ioctl_fd, cmd);
+		err = nvme_submit_admin_passthru(ioctl_fd, cmd, NULL);
 		if (err) {
 			fprintf(stderr,
 				"failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n",
@@ -1542,7 +1531,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		return fd;
 	switch (option) {
 	case None:
-		err = nvme_get_feature(fd, nsid, fid, sel, cdw11, 0, data_len, buf,
+		err = nvme_get_features(fd, fid, nsid, sel, cdw11, 0, data_len, buf,
 					&result);
 		if (!err) {
 			printf(
@@ -1555,8 +1544,8 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		break;
 	case True:
 	case False:
-		err = nvme_set_feature(fd, nsid, fid, option, cdw12, save, 0,
-				data_len, buf, &result);
+		err = nvme_set_features(fd, fid, nsid, option, cdw12, save, 0,
+					0, data_len, buf, &result);
 		if (err > 0) {
 			fprintf(stderr, "NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
@@ -1615,9 +1604,8 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 	 * valid buckets a user is allowed to modify. Read or write doesn't
 	 * matter
 	 */
-	err = nvme_get_log(fd, NVME_NSID_ALL, 0xc2,
-			   false, NVME_NO_LOG_LSP, sizeof(media_version),
-			   media_version);
+	err = nvme_get_log_simple(fd, 0xc2,
+			   sizeof(media_version), media_version);
 	if (err) {
 		fprintf(stderr, "Querying media version failed. NVMe Status:%s(%x)\n",
 					nvme_status_to_string(err), err);
@@ -1635,9 +1623,10 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 
 		}
 
-		err = nvme_set_feature(fd, nsid, fid, cfg.write ? 0x1 : 0x0,
-				       cdw12, save, 0, OPTANE_V1000_BUCKET_LEN,
-				       thresholds, &result);
+		err = nvme_set_features(fd, fid, nsid, cfg.write ? 0x1 : 0x0,
+					cdw12, save, 0, 0,
+					OPTANE_V1000_BUCKET_LEN,
+					thresholds, &result);
 
 		if (err > 0) {
 			fprintf(stderr, "NVMe Status:%s(%x)\n",

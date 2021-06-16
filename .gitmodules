@@ -1,0 +1,4 @@
+[submodule "libnvme"]
+	path = libnvme
+	url = https://github.com/hreinecke/libnvme.git
+	branch = nvme-cli

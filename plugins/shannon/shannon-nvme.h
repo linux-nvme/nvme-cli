@@ -9,10 +9,10 @@
 PLUGIN(NAME("shannon", "Shannon vendor specific extensions"),
 	COMMAND_LIST(
 		ENTRY("smart-log-add", "Retrieve Shannon SMART Log, show it", get_additional_smart_log)
-		ENTRY("get-feature-add", "Get Shannon feature and show the resulting value", get_additional_feature)
-		ENTRY("set-feature-add", "Set a Shannon feature and show the resulting value", set_additional_feature)
-		ENTRY("id-ctrl", "Shannon NVMe Identify Controller", shannon_id_ctrl)
-	)
+		ENTRY("set-additioal-feature", "Set additional Shannon feature", set_additional_feature)
+		ENTRY("get-additional-feature", "Get additional Shannon feature", get_additional_feature)
+		ENTRY("id-ctrl", "Retrieve Shannon ctrl id, show it", shannon_id_ctrl)
+		     )
 );
 
 #endif

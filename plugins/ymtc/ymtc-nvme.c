@@ -4,15 +4,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "linux/nvme_ioctl.h"
-
 #include "nvme.h"
-#include "nvme-print.h"
-#include "nvme-ioctl.h"
+#include "libnvme.h"
 #include "plugin.h"
-
-#include "argconfig.h"
-#include "suffix.h"
 
 #define CREATE_CMD
 #include "ymtc-nvme.h"
@@ -133,8 +127,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
     if (fd < 0)
         return fd;
 
-    err = nvme_get_log(fd, cfg.namespace_id, 0xca, false,
-               NVME_NO_LOG_LSP, sizeof(smart_log), &smart_log);
+    err = nvme_get_nsid_log(fd, 0xca, cfg.namespace_id,
+			    sizeof(smart_log), &smart_log);
     if (!err) {
         if (!cfg.raw_binary)
             err = show_ymtc_smart_log(fd, cfg.namespace_id, devicename, &smart_log);

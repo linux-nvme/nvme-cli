@@ -10,12 +10,8 @@
 #include <sys/time.h>
 
 #include "nvme.h"
-#include "nvme-print.h"
-#include "nvme-ioctl.h"
+#include "libnvme.h"
 #include "plugin.h"
-
-#include "argconfig.h"
-#include "suffix.h"
 
 #define CREATE_CMD
 #include "dera-nvme.h"
@@ -108,7 +104,7 @@ static int nvme_dera_get_device_status(int fd, enum dera_device_status *result)
 		.cdw12 = 0x104, 
 	};
 
-	err = nvme_submit_passthru(fd, NVME_IOCTL_ADMIN_CMD, &cmd);
+	err = nvme_submit_admin_passthru(fd, &cmd, NULL);
 	if (!err && result) {
 		*result = cmd.result;
 	}
@@ -131,8 +127,7 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 	if (fd < 0)
 		return fd;
 	
-	err = nvme_get_log(fd, 0xffffffff, 0xc0, false, NVME_NO_LOG_LSP,
-		sizeof(log), &log);
+	err = nvme_get_log_simple(fd, 0xc0, sizeof(log), &log);
 	if (err) {
 		goto exit;
 	}
