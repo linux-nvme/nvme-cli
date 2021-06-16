@@ -48,7 +48,7 @@ $(libccan_objs) $(libccan_sobjs): $(libccan_headers) $(CCANDIR)config.h
 
 libnvme_priv := nvme/private.h
 libnvme_api := libnvme.h nvme/types.h nvme/ioctl.h nvme/filters.h nvme/tree.h nvme/util.h nvme/fabrics.h
-libnvme_srcs := nvme/ioctl.c nvme/filters.c nvme/fabrics.c nvme/util.c nvme/tree.c
+libnvme_srcs := nvme/ioctl.c nvme/filters.c nvme/fabrics.c nvme/util.c nvme/tree.c nvme/log.c nvme/cleanup.c
 ifneq ($(CONFIG_JSONC),0)
 override libnvme_srcs += nvme/json.c
 endif

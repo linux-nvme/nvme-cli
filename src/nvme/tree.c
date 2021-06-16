@@ -16,6 +16,10 @@
 #include <libgen.h>
 #include <unistd.h>
 
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+
 #include <ccan/list/list.h>
 #include "ioctl.h"
 #include "filters.h"
@@ -23,6 +27,7 @@
 #include "filters.h"
 #include "util.h"
 #include "fabrics.h"
+#include "log.h"
 #include "private.h"
 
 static struct nvme_host *default_host;
@@ -102,6 +107,7 @@ struct nvme_ctrl {
 	char *traddr;
 	char *trsvcid;
 	char *host_traddr;
+	char *host_iface;
 	bool discovered;
 	bool persistent;
 	struct nvme_fabrics_config cfg;
@@ -688,6 +694,11 @@ const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c)
 	return c->host_traddr;
 }
 
+const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c)
+{
+	return c->host_iface;
+}
+
 const char *nvme_ctrl_get_hostnqn(nvme_ctrl_t c)
 {
 	if (!c->s)
@@ -733,16 +744,6 @@ bool nvme_ctrl_is_persistent(nvme_ctrl_t c)
 	return c->persistent;
 }
 
-void nvme_ctrl_set_verbosity(nvme_ctrl_t c, bool verbose)
-{
-	c->cfg.verbose = verbose;
-}
-
-bool nvme_ctrl_is_verbose(nvme_ctrl_t c)
-{
-	return c->cfg.verbose;
-}
-
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)
 {
 	return nvme_identify_ctrl(nvme_ctrl_get_fd(c), id);
@@ -774,16 +775,14 @@ int nvme_ctrl_disconnect(nvme_ctrl_t c)
 {
 	int ret;
 
-	if (c->cfg.verbose)
-		fprintf(stderr, "%s: disconnect\n", c->name);
 	ret = nvme_set_attr(nvme_ctrl_get_sysfs_dir(c),
 			    "delete_controller", "1");
 	if (ret < 0) {
-		if (c->cfg.verbose)
-			fprintf(stderr, "%s: failed to disconnect, error %d\n",
-				c->name, errno);
+		nvme_msg(LOG_ERR, "%s: failed to disconnect, error %d\n",
+			 c->name, errno);
 		return ret;
 	}
+	nvme_msg(LOG_INFO, "%s: disconnected\n", c->name);
 	if (c->fd >= 0) {
 		close(c->fd);
 		c->fd = -1;
@@ -835,6 +834,8 @@ void nvme_free_ctrl(nvme_ctrl_t c)
 		free(c->trsvcid);
 	if (c->host_traddr)
 		free(c->host_traddr);
+	if (c->host_iface)
+		free(c->host_iface);
 	free(c->firmware);
 	free(c->model);
 	free(c->state);
@@ -846,14 +847,98 @@ void nvme_free_ctrl(nvme_ctrl_t c)
 	free(c);
 }
 
-struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn,
-				   const char *transport, const char *traddr,
-				   const char *host_traddr, const char *trsvcid)
+#define ____stringify(x...) #x
+#define __stringify(x...) ____stringify(x)
+
+static void discovery_trsvcid(nvme_ctrl_t c)
+{
+	if (!strcmp(c->transport, "tcp")) {
+		/* Default port for NVMe/TCP discovery controllers */
+		c->trsvcid = strdup(__stringify(NVME_DISC_IP_PORT));
+	} else if (!strcmp(c->transport, "rdma")) {
+		/* Default port for NVMe/RDMA controllers */
+		c->trsvcid = strdup(__stringify(NVME_RDMA_IP_PORT));
+	}
+}
+
+static bool traddr_is_hostname(const char *transport, const char *traddr)
+{
+	char addrstr[NVMF_TRADDR_SIZE];
+
+	if (!traddr || !transport)
+		return false;
+	if (strcmp(transport, "tcp") &&
+	    strcmp(transport, "rdma"))
+		return false;
+	if (inet_pton(AF_INET, traddr, addrstr) > 0 ||
+	    inet_pton(AF_INET6, traddr, addrstr) > 0)
+		return false;
+	return true;
+}
+
+void hostname2traddr(nvme_ctrl_t c, const char *host_traddr)
+{
+	struct addrinfo *host_info, hints = {.ai_family = AF_UNSPEC};
+	char addrstr[NVMF_TRADDR_SIZE];
+	const char *p;
+	int ret;
+
+	ret = getaddrinfo(host_traddr, NULL, &hints, &host_info);
+	if (ret) {
+		nvme_msg(LOG_DEBUG, "failed to resolve host %s info\n",
+			 host_traddr);
+		c->host_traddr = strdup(host_traddr);
+		return;
+	}
+
+	switch (host_info->ai_family) {
+	case AF_INET:
+		p = inet_ntop(host_info->ai_family,
+			&(((struct sockaddr_in *)host_info->ai_addr)->sin_addr),
+			addrstr, NVMF_TRADDR_SIZE);
+		break;
+	case AF_INET6:
+		p = inet_ntop(host_info->ai_family,
+			&(((struct sockaddr_in6 *)host_info->ai_addr)->sin6_addr),
+			addrstr, NVMF_TRADDR_SIZE);
+		break;
+	default:
+		nvme_msg(LOG_DEBUG, "unrecognized address family (%d) %s\n",
+			 host_info->ai_family, c->traddr);
+		c->host_traddr = strdup(host_traddr);
+		goto free_addrinfo;
+	}
+	if (!p) {
+		nvme_msg(LOG_DEBUG, "failed to get traddr for %s\n",
+			 c->traddr);
+		c->host_traddr = strdup(host_traddr);
+	} else
+		c->host_traddr = strdup(addrstr);
+
+free_addrinfo:
+	freeaddrinfo(host_info);
+}
+
+struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn, const char *transport,
+				   const char *traddr, const char *host_traddr,
+				   const char *host_iface, const char *trsvcid)
 {
 	struct nvme_ctrl *c;
+	bool discovery = false;
 
-	if (!transport)
+	if (!transport) {
+		nvme_msg(LOG_ERR, "No transport specified\n");
 		return NULL;
+	}
+	if (strncmp(transport, "loop", 4) && !traddr) {
+               nvme_msg(LOG_ERR, "No transport address for '%s'\n", transport);
+	       return NULL;
+	}
+	if (!subsysnqn) {
+		nvme_msg(LOG_ERR, "No subsystem NQN specified\n");
+		return NULL;
+	} else if (!strcmp(subsysnqn, NVME_DISC_SUBSYS_NAME))
+		discovery = true;
 	c = calloc(1, sizeof(*c));
 	c->fd = -1;
 	c->cfg.tos = -1;
@@ -861,27 +946,35 @@ struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn,
 	list_head_init(&c->paths);
 	list_node_init(&c->entry);
 	c->transport = strdup(transport);
-	if (subsysnqn)
-		c->subsysnqn = strdup(subsysnqn);
+	c->subsysnqn = strdup(subsysnqn);
 	if (traddr)
 		c->traddr = strdup(traddr);
-	else
-		c->traddr = strdup("none");
-	if (host_traddr)
-		c->host_traddr = strdup(host_traddr);
-	else
-		c->host_traddr = strdup("none");
+	if (host_traddr) {
+		if (traddr_is_hostname(transport, host_traddr))
+			hostname2traddr(c, host_traddr);
+		else
+			c->host_traddr = strdup(host_traddr);
+	}
+	if (host_iface)
+		c->host_iface = strdup(host_iface);
 	if (trsvcid)
 		c->trsvcid = strdup(trsvcid);
-	else
-		c->trsvcid = strdup("none");
+	else if (discovery)
+		discovery_trsvcid(c);
+	else if (!strncmp(transport, "rdma", 4) ||
+		 !strncmp(transport, "tcp", 3)) {
+		nvme_msg(LOG_ERR, "No trsvcid specified for '%s'\n",
+			 transport);
+		nvme_free_ctrl(c);
+		c = NULL;
+	}
 
 	return c;
 }
 
-struct nvme_ctrl *nvme_lookup_ctrl(struct nvme_subsystem *s,
-				   const char *transport, const char *traddr,
-				   const char *host_traddr, const char *trsvcid)
+struct nvme_ctrl *nvme_lookup_ctrl(struct nvme_subsystem *s, const char *transport,
+				   const char *traddr, const char *host_traddr,
+				   const char *host_iface, const char *trsvcid)
 {
 	struct nvme_ctrl *c;
 
@@ -890,19 +983,22 @@ struct nvme_ctrl *nvme_lookup_ctrl(struct nvme_subsystem *s,
 	nvme_subsystem_for_each_ctrl(s, c) {
 		if (strcmp(c->transport, transport))
 			continue;
-		if (traddr &&
+		if (traddr && c->traddr &&
 		    strcmp(c->traddr, traddr))
 			continue;
-		if (host_traddr &&
+		if (host_traddr && c->host_traddr &&
 		    strcmp(c->host_traddr, host_traddr))
 			continue;
-		if (trsvcid &&
+		if (host_iface && c->host_iface &&
+		    strcmp(c->host_iface, host_iface))
+			continue;
+		if (trsvcid && c->trsvcid &&
 		    strcmp(c->trsvcid, trsvcid))
 			continue;
 		return c;
 	}
-	c = nvme_create_ctrl(s->subsysnqn, transport,
-			     traddr, host_traddr, trsvcid);
+	c = nvme_create_ctrl(s->subsysnqn, transport, traddr,
+			     host_traddr, host_iface, trsvcid);
 	if (c) {
 		c->s = s;
 		list_add(&s->ctrls, &c->entry);
@@ -1039,7 +1135,8 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 {
 	nvme_ctrl_t c;
 	char *addr, *address, *a, *e;
-	char *transport, *traddr = NULL, *trsvcid = NULL, *host_traddr = NULL;
+	char *transport, *traddr = NULL, *trsvcid = NULL;
+	char *host_traddr = NULL, *host_iface = NULL;
 	int ret;
 
 	transport = nvme_get_attr(path, "transport");
@@ -1058,10 +1155,13 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 			trsvcid = a + 8;
 		else if (!strncmp(a, "host_traddr=", 12))
 			host_traddr = a + 12;
+		else if (!strncmp(a, "host_iface=", 11))
+			host_iface = a + 12;
 		a = strtok_r(NULL, ",", &e);
 	}
 
-	c = nvme_lookup_ctrl(s, transport, traddr, host_traddr, trsvcid);
+	c = nvme_lookup_ctrl(s, transport, traddr,
+			     host_traddr, host_iface, trsvcid);
 	free(addr);
 	if (!c) {
 		errno = ENOMEM;

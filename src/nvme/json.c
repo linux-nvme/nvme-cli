@@ -50,6 +50,8 @@ static void json_update_attributes(nvme_ctrl_t c,
 		if (!strcmp("ctrl_loss_tmo", key_str) &&
 		    cfg->ctrl_loss_tmo != NVMF_DEF_CTRL_LOSS_TMO)
 			cfg->ctrl_loss_tmo = json_object_get_int(val_obj);
+		JSON_UPDATE_INT_OPTION(cfg, key_str,
+				       fast_io_fail_tmo, val_obj);
 		if (!strcmp("tos", key_str) && cfg->tos != -1)
 			cfg->tos = json_object_get_int(val_obj);
 		JSON_UPDATE_BOOL_OPTION(cfg, key_str,
@@ -71,7 +73,7 @@ static void json_parse_port(nvme_subsystem_t s, struct json_object *port_obj)
 	nvme_ctrl_t c;
 	struct json_object *attr_obj;
 	const char *transport, *traddr = NULL;
-	const char *host_traddr = NULL, *trsvcid = NULL;
+	const char *host_traddr = NULL, *host_iface = NULL, *trsvcid = NULL;
 
 	attr_obj = json_object_object_get(port_obj, "transport");
 	if (!attr_obj)
@@ -83,11 +85,14 @@ static void json_parse_port(nvme_subsystem_t s, struct json_object *port_obj)
 	attr_obj = json_object_object_get(port_obj, "host_traddr");
 	if (attr_obj)
 		host_traddr = json_object_get_string(attr_obj);
+	attr_obj = json_object_object_get(port_obj, "host_iface");
+	if (attr_obj)
+		host_iface = json_object_get_string(attr_obj);
 	attr_obj = json_object_object_get(port_obj, "trsvcid");
 	if (attr_obj)
 		trsvcid = json_object_get_string(attr_obj);
-	c = nvme_lookup_ctrl(s, transport, traddr,
-			     host_traddr, trsvcid);
+	c = nvme_lookup_ctrl(s, transport, traddr, host_traddr,
+			     host_iface, trsvcid);
 	if (c) {
 		json_update_attributes(c, port_obj);
 	}
@@ -180,6 +185,9 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	value = nvme_ctrl_get_host_traddr(c);
 	if (value)
 		json_object_add_value_string(port_obj, "host_traddr", value);
+	value = nvme_ctrl_get_host_iface(c);
+	if (value)
+		json_object_add_value_string(port_obj, "host_iface", value);
 	value = nvme_ctrl_get_trsvcid(c);
 	if (value)
 		json_object_add_value_string(port_obj, "trsvcid", value);
@@ -189,9 +197,11 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	JSON_INT_OPTION(cfg, port_obj, queue_size, 0);
 	JSON_INT_OPTION(cfg, port_obj, keep_alive_tmo, 0);
 	JSON_INT_OPTION(cfg, port_obj, reconnect_delay, 0);
-	if (strcmp(transport, "loop"))
+	if (strcmp(transport, "loop")) {
 		JSON_INT_OPTION(cfg, port_obj, ctrl_loss_tmo,
 				NVMF_DEF_CTRL_LOSS_TMO);
+		JSON_INT_OPTION(cfg, port_obj, fast_io_fail_tmo, 0);
+	}
 	JSON_INT_OPTION(cfg, port_obj, tos, -1);
 	JSON_BOOL_OPTION(cfg, port_obj, duplicate_connect);
 	JSON_BOOL_OPTION(cfg, port_obj, disable_sqflow);

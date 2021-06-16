@@ -62,7 +62,8 @@ int main()
 		fprintf(stderr, "Failed to allocated memory\n");
 		return ENOMEM;
 	}
-	c = nvme_create_ctrl(NVME_DISC_SUBSYS_NAME, "loop", NULL, NULL, NULL);
+	c = nvme_create_ctrl(NVME_DISC_SUBSYS_NAME, "loop",
+			     NULL, NULL, NULL, NULL);
 	if (!c) {
 		fprintf(stderr, "Failed to allocate memory\n");
 		return ENOMEM;

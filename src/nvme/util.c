@@ -24,6 +24,7 @@
 #include "filters.h"
 #include "util.h"
 #include "tree.h"
+#include "log.h"
 
 static inline __u8 nvme_generic_status_to_errno(__u16 status)
 {
@@ -562,9 +563,11 @@ static int __nvme_set_attr(const char *path, const char *value)
 	int ret, fd;
 
 	fd = open(path, O_WRONLY);
-	if (fd < 0)
+	if (fd < 0) {
+		nvme_msg(LOG_ERR, "Failed to open %s: %s\n", path,
+			 strerror(errno));
 		return -1;
-
+	}
 	ret = write(fd, value, strlen(value));
 	close(fd);
 	return ret;
@@ -590,8 +593,11 @@ static char *__nvme_get_attr(const char *path)
 	int ret, fd;
 
 	fd = open(path, O_RDONLY);
-	if (fd < 0)
+	if (fd < 0) {
+		nvme_msg(LOG_ERR, "Failed to open %s: %s\n", path,
+			 strerror(errno));
 		return NULL;
+	}
 
 	ret = read(fd, value, sizeof(value) - 1);
 	if (ret < 0) {

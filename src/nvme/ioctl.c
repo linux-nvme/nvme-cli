@@ -456,12 +456,12 @@ int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 			     NVME_UUID_NONE, NVME_CSI_NVM, cap);
 }
 
-int nvme_identify_secondary_ctrl_list(int fd, __u16 cntid,
+int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid,
 	struct nvme_secondary_ctrl_list *list)
 {
 	BUILD_ASSERT(sizeof(struct nvme_secondary_ctrl_list) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
-			     NVME_NSID_NONE, cntid, NVME_NVMSETID_NONE,
+			     nsid, cntid, NVME_NVMSETID_NONE,
 			     NVME_UUID_NONE, NVME_CSI_NVM, list);
 }
 

@@ -775,6 +775,20 @@ enum nvme_virt_mgmt_rt {
 };
 
 /**
+ * enum nvme_ns_write_protect -
+ * @NVME_NS_WP_CFG_NONE
+ * @NVME_NS_WP_CFG_PROTECT
+ * @NVME_NS_WP_CFG_PROTECT_POWER_CYCLE
+ * @NVME_NS_WP_CFG_PROTECT_PERMANENT
+ */
+enum nvme_ns_write_protect_cfg {
+	NVME_NS_WP_CFG_NONE					= 0,
+	NVME_NS_WP_CFG_PROTECT					= 1,
+	NVME_NS_WP_CFG_PROTECT_POWER_CYCLE			= 2,
+	NVME_NS_WP_CFG_PROTECT_PERMANENT			= 3,
+};
+
+/**
  * nvme_identify() - Send the NVMe Identify command
  * @fd:		File descriptor of nvme device
  * @cns:	The Controller or Namespace structure, see @enum nvme_identify_cns
@@ -971,6 +985,7 @@ int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 /**
  * nvme_identify_secondary_ctrl_list() - Retrieves secondary controller list
  * @fd:		File descriptor of nvme device
+ * @nsid:	Namespace identifier
  * @cntid:	Return controllers starting at this identifier
  * @sc_list:	User space destination address to transfer the data
  *
@@ -985,7 +1000,7 @@ int nvme_identify_primary_ctrl(int fd, __u16 cntid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_secondary_ctrl_list(int fd, __u16 cntid,
+int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid,
 				      struct nvme_secondary_ctrl_list *list);
 
 /**

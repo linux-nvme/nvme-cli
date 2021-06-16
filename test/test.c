@@ -101,7 +101,7 @@ static int test_ctrl(nvme_ctrl_t c)
 		printf("  Identify Primary:\n");
 	else
 		printf("  ERROR: Identify Primary:%x\n", ret);
-	ret = nvme_identify_secondary_ctrl_list(fd, 0, &sec);
+	ret = nvme_identify_secondary_ctrl_list(fd, 1, 0, &sec);
 	if (!ret)
 		printf("  Identify Secondary:\n");
 	else
