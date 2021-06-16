@@ -155,12 +155,15 @@ nvme_host_t nvme_default_host(nvme_root_t r)
 	char *hostnqn, *hostid;
 
 	hostnqn = nvmf_hostnqn_from_file();
+	if (!hostnqn)
+		hostnqn = nvmf_hostnqn_generate();
 	hostid = nvmf_hostid_from_file();
 
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	default_host = h;
 	free(hostnqn);
-	free(hostid);
+	if (hostid)
+		free(hostid);
 	return h;
 }
 
@@ -402,6 +405,8 @@ struct nvme_host *nvme_lookup_host(nvme_root_t r, const char *hostnqn,
 {
 	struct nvme_host *h;
 
+	if (!hostnqn)
+		return NULL;
 	nvme_for_each_host(r, h) {
 		if (strcmp(h->hostnqn, hostnqn))
 			continue;
@@ -1147,19 +1152,23 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 	/* Parse 'address' string into components */
 	addr = nvme_get_attr(path, "address");
 	address = strdup(addr);
-	a = strtok_r(addr, ",", &e);
-	while (a && strlen(a)) {
-		if (!strncmp(a, "traddr=", 7))
-			traddr = a + 7;
-		else if (!strncmp(a, "trsvcid=", 8))
-			trsvcid = a + 8;
-		else if (!strncmp(a, "host_traddr=", 12))
-			host_traddr = a + 12;
-		else if (!strncmp(a, "host_iface=", 11))
-			host_iface = a + 12;
-		a = strtok_r(NULL, ",", &e);
+	if (!strcmp(transport, "pcie")) {
+		/* The 'address' string is the transport address */
+		traddr = address;
+	} else {
+		a = strtok_r(addr, ",", &e);
+		while (a && strlen(a)) {
+			if (!strncmp(a, "traddr=", 7))
+				traddr = a + 7;
+			else if (!strncmp(a, "trsvcid=", 8))
+				trsvcid = a + 8;
+			else if (!strncmp(a, "host_traddr=", 12))
+				host_traddr = a + 12;
+			else if (!strncmp(a, "host_iface=", 11))
+				host_iface = a + 12;
+			a = strtok_r(NULL, ",", &e);
+		}
 	}
-
 	c = nvme_lookup_ctrl(s, transport, traddr,
 			     host_traddr, host_iface, trsvcid);
 	free(addr);
@@ -1188,14 +1197,10 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 	}
 
 	hostnqn = nvme_get_attr(path, "hostnqn");
-	if (!hostnqn) {
-		free(path);
-		errno = ENODEV;
-		return NULL;
-	}
 	hostid = nvme_get_attr(path, "hostid");
 	h = nvme_lookup_host(r, hostnqn, hostid);
-	free(hostnqn);
+	if (hostnqn)
+		free(hostnqn);
 	if (hostid)
 		free(hostid);
 	if (!h) {
