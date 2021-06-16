@@ -9,9 +9,6 @@
 #include "libnvme.h"
 #include "plugin.h"
 
-#include "argconfig.h"
-#include "suffix.h"
-
 #define CREATE_CMD
 #include "memblaze-nvme.h"
 #include "memblaze-utils.h"

@@ -11,9 +11,6 @@
 #include "plugin.h"
 #include "linux/types.h"
 
-#include "argconfig.h"
-#include "suffix.h"
-
 #define CREATE_CMD
 #include "intel-nvme.h"
 

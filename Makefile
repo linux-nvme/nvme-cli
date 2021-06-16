@@ -1,6 +1,6 @@
 CFLAGS ?= -O2 -g -Wall -Werror
 override CFLAGS += -std=gnu99
-override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__ -I. -Iutil/
+override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__ -I.
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
 HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=242; echo $$?)

@@ -35,8 +35,6 @@
 #include "libnvme.h"
 #include "plugin.h"
 
-#include "argconfig.h"
-#include "suffix.h"
 #define CREATE_CMD
 #include "wdc-nvme.h"
 #include "wdc-utils.h"

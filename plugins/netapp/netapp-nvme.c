@@ -26,7 +26,7 @@
 #include "nvme.h"
 #include "libnvme.h"
 
-#include "suffix.h"
+#include "util/suffix.h"
 
 #define CREATE_CMD
 #include "netapp-nvme.h"

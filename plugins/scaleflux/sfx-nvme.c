@@ -14,9 +14,6 @@
 #include "libnvme.h"
 #include "plugin.h"
 
-#include "argconfig.h"
-#include "suffix.h"
-
 #define CREATE_CMD
 #include "sfx-nvme.h"
 
