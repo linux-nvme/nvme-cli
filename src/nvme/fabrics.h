@@ -22,6 +22,7 @@
  * @nr_io_queues:	Number of controller IO queues to establish
  * @reconnect_delay:	Time between two consecutive reconnect attempts.
  * @ctrl_loss_tmo:	Override the default controller reconnect attempt timeout in seconds
+ * @fast_io_fail_tmo:	Set the fast I/O fail timeout in seconds.
  * @keep_alive_tmo:	Override the default keep-alive-timeout to this value in seconds
  * @nr_write_queues:	Number of queues to use for exclusively for writing
  * @nr_poll_queues:	Number of queues to reserve for polling completions
@@ -36,6 +37,7 @@ struct nvme_fabrics_config {
 	int nr_io_queues;
 	int reconnect_delay;
 	int ctrl_loss_tmo;
+	int fast_io_fail_tmo;
 	int keep_alive_tmo;
 	int nr_write_queues;
 	int nr_poll_queues;

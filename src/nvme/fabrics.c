@@ -154,6 +154,7 @@ static struct nvme_fabrics_config *merge_config(nvme_ctrl_t c,
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, reconnect_delay, 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, ctrl_loss_tmo,
 			  NVMF_DEF_CTRL_LOSS_TMO);
+	UPDATE_CFG_OPTION(ctrl_cfg, cfg, fast_io_fail_tmo, 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tos, -1);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, duplicate_connect, false);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, disable_sqflow, false);
@@ -273,6 +274,9 @@ static int build_options(nvme_ctrl_t c, char **argstr)
 	    (strcmp(transport, "loop") &&
 	     add_int_argument(argstr, "ctrl_loss_tmo",
 			      cfg->ctrl_loss_tmo, false)) ||
+	    (strcmp(transport, "loop") &&
+	     add_int_argument(argstr, "fast_io_fail_tmo",
+			      cfg->fast_io_fail_tmo, false)) ||
 	    (strcmp(transport, "loop") &&
 	     add_int_argument(argstr, "tos", cfg->tos, true)) ||
 	    add_bool_argument(argstr, "duplicate_connect",

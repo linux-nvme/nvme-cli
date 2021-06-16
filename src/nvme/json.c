@@ -50,6 +50,8 @@ static void json_update_attributes(nvme_ctrl_t c,
 		if (!strcmp("ctrl_loss_tmo", key_str) &&
 		    cfg->ctrl_loss_tmo != NVMF_DEF_CTRL_LOSS_TMO)
 			cfg->ctrl_loss_tmo = json_object_get_int(val_obj);
+		JSON_UPDATE_INT_OPTION(cfg, key_str,
+				       fast_io_fail_tmo, val_obj);
 		if (!strcmp("tos", key_str) && cfg->tos != -1)
 			cfg->tos = json_object_get_int(val_obj);
 		JSON_UPDATE_BOOL_OPTION(cfg, key_str,
@@ -189,9 +191,11 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	JSON_INT_OPTION(cfg, port_obj, queue_size, 0);
 	JSON_INT_OPTION(cfg, port_obj, keep_alive_tmo, 0);
 	JSON_INT_OPTION(cfg, port_obj, reconnect_delay, 0);
-	if (strcmp(transport, "loop"))
+	if (strcmp(transport, "loop")) {
 		JSON_INT_OPTION(cfg, port_obj, ctrl_loss_tmo,
 				NVMF_DEF_CTRL_LOSS_TMO);
+		JSON_INT_OPTION(cfg, port_obj, fast_io_fail_tmo, 0);
+	}
 	JSON_INT_OPTION(cfg, port_obj, tos, -1);
 	JSON_BOOL_OPTION(cfg, port_obj, duplicate_connect);
 	JSON_BOOL_OPTION(cfg, port_obj, disable_sqflow);
