@@ -1477,15 +1477,17 @@ static void nvme_ns_parse_descriptors(struct nvme_ns *n,
 	}
 }
 
-static void nvme_ns_init(struct nvme_ns *n)
+static int nvme_ns_init(struct nvme_ns *n)
 {
 	struct nvme_id_ns ns = { };
 	uint8_t buffer[NVME_IDENTIFY_DATA_SIZE] = { };
 	struct nvme_ns_id_desc *descs = (void *)buffer;
 	int flbas;
+	int ret;
 
-	if (nvme_ns_identify(n, &ns) != 0)
-		return;
+	ret = nvme_ns_identify(n, &ns);
+	if (ret)
+		return ret;
 
 	flbas = ns.flbas & NVME_NS_FLBAS_LBA_MASK;
 	n->lba_shift = ns.lbaf[flbas].ds;
@@ -1496,6 +1498,8 @@ static void nvme_ns_init(struct nvme_ns *n)
 
 	if (!nvme_ns_identify_descs(n, descs))
 		nvme_ns_parse_descriptors(n, descs);
+
+	return 0;
 }
 
 static nvme_ns_t nvme_ns_open(const char *name)
@@ -1516,9 +1520,11 @@ static nvme_ns_t nvme_ns_open(const char *name)
 	if (nvme_get_nsid(n->fd, &n->nsid) < 0)
 		goto close_fd;
 
+	if (nvme_ns_init(n) != 0)
+		goto close_fd;
+
 	list_head_init(&n->paths);
 	list_node_init(&n->entry);
-	nvme_ns_init(n);
 
 	return n;
 
