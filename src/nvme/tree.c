@@ -32,7 +32,6 @@
 
 static struct nvme_host *default_host;
 
-static void nvme_free_host(struct nvme_host *h);
 static void nvme_free_subsystem(struct nvme_subsystem *s);
 static int nvme_subsystem_scan_namespace(struct nvme_subsystem *s, char *name);
 static int nvme_scan_subsystem(struct nvme_host *h, char *name,
@@ -290,7 +289,7 @@ struct nvme_subsystem *nvme_lookup_subsystem(struct nvme_host *h,
 	return s;
 }
 
-static void nvme_free_host(struct nvme_host *h)
+void nvme_free_host(struct nvme_host *h)
 {
 	struct nvme_subsystem *s, *_s;
 
