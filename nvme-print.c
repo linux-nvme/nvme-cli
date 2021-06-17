@@ -3875,8 +3875,8 @@ static void json_nvme_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 	json_object_add_value_uint(root, "wzsl", ctrl_nvm->wzsl);
 	json_object_add_value_uint(root, "wusl", ctrl_nvm->wusl);
 	json_object_add_value_uint(root, "dmrl", ctrl_nvm->dmrl);
-	json_object_add_value_uint(root, "dmrsl", ctrl_nvm->dmrsl);
-	json_object_add_value_uint(root, "dmsl", ctrl_nvm->dmsl);
+	json_object_add_value_uint(root, "dmrsl", le32_to_cpu(ctrl_nvm->dmrsl));
+	json_object_add_value_uint(root, "dmsl", le64_to_cpu(ctrl_nvm->dmsl));
 
 	json_print_object(root, NULL);
 	printf("\n");
@@ -5718,8 +5718,8 @@ void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
 	if (flags & BINARY)
 		return  d_raw((unsigned char *)list, len);
 
-	printf("Number of LBA Status Descriptors(NLSD): %" PRIu64 "\n",
-		le64_to_cpu(list->nlsd));
+	printf("Number of LBA Status Descriptors(NLSD): %" PRIu32 "\n",
+		le32_to_cpu(list->nlsd));
 	printf("Completion Condition(CMPC): %u\n", list->cmpc);
 
 	switch (list->cmpc) {

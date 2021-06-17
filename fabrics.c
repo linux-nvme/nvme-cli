@@ -141,7 +141,7 @@ static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
 			printf("rdma_cms:    %s\n",
 				nvmf_cms_str(e->tsas.rdma.cms));
 			printf("rdma_pkey: 0x%04x\n",
-				e->tsas.rdma.pkey);
+				le16_to_cpu(e->tsas.rdma.pkey));
 			break;
 		case NVMF_TRTYPE_TCP:
 			printf("sectype: %s\n",
@@ -189,7 +189,7 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 			json_object_add_value_string(entry, "rdma_cms",
 				nvmf_cms_str(e->tsas.rdma.cms));
 			json_object_add_value_uint(entry, "rdma_pkey",
-				e->tsas.rdma.pkey);
+				le16_to_cpu(e->tsas.rdma.pkey));
 			break;
 		case NVMF_TRTYPE_TCP:
 			json_object_add_value_string(entry, "sectype",
