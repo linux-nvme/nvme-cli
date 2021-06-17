@@ -657,8 +657,7 @@ static int uuid_from_systemd(char *system_uuid)
 
 	ret = sd_id128_get_machine_app_specific(NVME_HOSTNQN_ID, &id);
 	if (!ret)
-		asprintf(systemd_uuid, SD_ID128_FORMAT_STR,
-			 SD_ID128_FORMAT_VAL(id));
+		sd_id128_to_string(id, system_uuid);
 #endif
 	return ret;
 }
