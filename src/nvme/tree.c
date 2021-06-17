@@ -582,6 +582,10 @@ static int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name)
 	char *path, *grpid;
 	int ret;
 
+	if (!c->s) {
+		errno = ENXIO;
+		return -1;
+	}
 	ret = asprintf(&path, "%s/%s", c->sysfs_dir, name);
 	if (ret < 0) {
 		errno = ENOMEM;
@@ -726,7 +730,8 @@ struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
 void nvme_ctrl_disable_sqflow(nvme_ctrl_t c, bool disable_sqflow)
 {
 	c->cfg.disable_sqflow = disable_sqflow;
-	c->s->h->r->modified = true;
+	if (c->s && c->s->h && c->s->h->r)
+		c->s->h->r->modified = true;
 }
 
 void nvme_ctrl_set_discovered(nvme_ctrl_t c, bool discovered)
@@ -983,7 +988,7 @@ struct nvme_ctrl *nvme_lookup_ctrl(struct nvme_subsystem *s, const char *transpo
 {
 	struct nvme_ctrl *c;
 
-	if (!transport)
+	if (!s || !transport)
 		return NULL;
 	nvme_subsystem_for_each_ctrl(s, c) {
 		if (strcmp(c->transport, transport))
@@ -1584,6 +1589,10 @@ static int nvme_ctrl_scan_namespace(struct nvme_ctrl *c, char *name)
 {
 	struct nvme_ns *n;
 
+	if (!c->s) {
+		errno = EINVAL;
+		return -1;
+	}
 	n = __nvme_scan_namespace(c->sysfs_dir, name);
 	if (!n)
 		return -1;
