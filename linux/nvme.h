@@ -674,17 +674,17 @@ struct nvme_fw_slot_info_log {
 };
 
 struct nvme_lba_status_desc {
-	__u64 dslba;
-	__u32 nlb;
-	__u8 rsvd_12;
-	__u8 status;
-	__u8 rsvd_15_14[2];
+	__le64 dslba;
+	__le32 nlb;
+	__u8   rsvd_12;
+	__u8   status;
+	__u8   rsvd_15_14[2];
 };
 
 struct nvme_lba_status {
-	__u32 nlsd;
-	__u8 cmpc;
-	__u8 rsvd_7_5[3];
+	__le32 nlsd;
+	__u8   cmpc;
+	__u8   rsvd_7_5[3];
 	struct nvme_lba_status_desc descs[0];
 };
 
@@ -966,8 +966,8 @@ struct nvme_lba_range_type {
 	__u8			type;
 	__u8			attributes;
 	__u8			rsvd2[14];
-	__u64			slba;
-	__u64			nlb;
+	__le64			slba;
+	__le64			nlb;
 	__u8			guid[16];
 	__u8			rsvd48[16];
 };
@@ -1331,7 +1331,7 @@ enum {
 struct nvme_host_mem_buf_desc {
 	__le64			addr;
 	__le32			size;
-	__u32			rsvd;
+	__u8			rsvd[4];
 };
 
 /* Sanitize Log Page */
@@ -1394,7 +1394,7 @@ struct nvmf_disc_rsp_page_entry {
 			__u8	prtype;
 			__u8	cms;
 			__u8	resv3[5];
-			__u16	pkey;
+			__le16	pkey;
 			__u8	resv10[246];
 		} rdma;
 		struct tcp {
@@ -1463,16 +1463,16 @@ struct nvme_firmware_log_page {
 };
 
 struct nvme_host_mem_buffer {
-	__u32			hsize;
-	__u32			hmdlal;
-	__u32			hmdlau;
-	__u32			hmdlec;
+	__le32			hsize;
+	__le32			hmdlal;
+	__le32			hmdlau;
+	__le32			hmdlec;
 	__u8			rsvd16[4080];
 };
 
 struct nvme_auto_pst {
-	__u32	data;
-	__u32	rsvd32;
+	__le32	data;
+	__u8	rsvd[4];
 };
 
 struct nvme_timestamp {
@@ -1500,10 +1500,10 @@ struct nvme_primary_ctrl_caps {
 	__u8   rsvd48[16];
 	__le32 vifrt;	/* VI Resources Flexible Total */
 	__le32 virfa;	/* VI Resources Flexible Assigned */
-	__u16  virfap;	/* VI Resources Flexible Allocated to Primary */
-	__u16  viprt;	/* VI Resources Private Total */
-	__u16  vifrsm;	/* VI Resources Flexible Secondary Maximum */
-	__u16  vigran;	/* VI Flexible Resource Preferred Granularity */
+	__le16 virfap;	/* VI Resources Flexible Allocated to Primary */
+	__le16 viprt;	/* VI Resources Private Total */
+	__le16 vifrsm;	/* VI Resources Flexible Secondary Maximum */
+	__le16 vigran;	/* VI Flexible Resource Preferred Granularity */
 	__u8   rsvd80[4016];
 };
 
@@ -1525,10 +1525,10 @@ struct nvme_secondary_controllers_list {
 };
 
 struct nvme_bar_cap {
-	__u16	mqes;
+	__le16	mqes;
 	__u8	ams_cqr;
 	__u8	to;
-	__u16	bps_css_nssrs_dstrd;
+	__le16	bps_css_nssrs_dstrd;
 	__u8	mpsmax_mpsmin;
 	__u8	rsvd_cmbs_pmrs;
 };
@@ -1772,8 +1772,8 @@ struct nvme_id_ctrl_nvm {
     __u8     wzsl;
     __u8     wusl;
     __u8     dmrl;
-    __u32    dmrsl;
-    __u64    dmsl;
+    __le32   dmrsl;
+    __le64   dmsl;
     __u8     rsvd16[4080];
 };
 

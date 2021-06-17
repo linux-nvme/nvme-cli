@@ -3907,8 +3907,8 @@ static void json_nvme_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 	json_object_add_value_uint(root, "wzsl", ctrl_nvm->wzsl);
 	json_object_add_value_uint(root, "wusl", ctrl_nvm->wusl);
 	json_object_add_value_uint(root, "dmrl", ctrl_nvm->dmrl);
-	json_object_add_value_uint(root, "dmrsl", ctrl_nvm->dmrsl);
-	json_object_add_value_uint(root, "dmsl", ctrl_nvm->dmsl);
+	json_object_add_value_uint(root, "dmrsl", le32_to_cpu(ctrl_nvm->dmrsl));
+	json_object_add_value_uint(root, "dmsl", le64_to_cpu(ctrl_nvm->dmsl));
 
 	json_print_object(root, NULL);
 	printf("\n");
@@ -5570,8 +5570,8 @@ void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 			((lbrt[i].attributes & 0x0002) >> 1) ?
 				"LBA range should be hidden from the OS/EFI/BIOS" :
 				"LBA range should be visible from the OS/EFI/BIOS");
-		printf("\tslba       : %#"PRIx64"\n", (uint64_t)(lbrt[i].slba));
-		printf("\tnlb        : %#"PRIx64"\n", (uint64_t)(lbrt[i].nlb));
+		printf("\tslba       : %#"PRIx64"\n", le64_to_cpu(lbrt[i].slba));
+		printf("\tnlb        : %#"PRIx64"\n", le64_to_cpu(lbrt[i].nlb));
 		printf("\tguid       : ");
 		for (j = 0; j < 16; j++)
 			printf("%02x", lbrt[i].guid[j]);
@@ -5625,9 +5625,9 @@ static void nvme_show_auto_pst(struct nvme_auto_pst *apst)
 		printf("\tEntry[%2d]   \n", i);
 		printf("\t.................\n");
 		printf("\tIdle Time Prior to Transition (ITPT): %u ms\n",
-			(apst[i].data & 0xffffff00) >> 8);
+			(le32_to_cpu(apst[i].data) & 0xffffff00) >> 8);
 		printf("\tIdle Transition Power State   (ITPS): %u\n",
-			(apst[i].data & 0x000000f8) >> 3);
+			(le32_to_cpu(apst[i].data) & 0x000000f8) >> 3);
 		printf("\t.................\n");
 	}
 }
@@ -5947,8 +5947,8 @@ void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
 	if (flags & BINARY)
 		return  d_raw((unsigned char *)list, len);
 
-	printf("Number of LBA Status Descriptors(NLSD): %" PRIu64 "\n",
-		le64_to_cpu(list->nlsd));
+	printf("Number of LBA Status Descriptors(NLSD): %" PRIu32 "\n",
+		le32_to_cpu(list->nlsd));
 	printf("Completion Condition(CMPC): %u\n", list->cmpc);
 
 	switch (list->cmpc) {
