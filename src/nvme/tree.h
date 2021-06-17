@@ -143,6 +143,12 @@ nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,
 				       const char *subsysnqn);
 
 /**
+ * nvme_free_subsystem() -
+ * @s:
+ */
+void nvme_free_subsystem(struct nvme_subsystem *s);
+
+/**
  * nvme_subsystem_get_host() -
  * @s:
  *
