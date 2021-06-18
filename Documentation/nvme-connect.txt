@@ -28,6 +28,7 @@ SYNOPSIS
 		[--disable-sqflow         | -d]
 		[--hdr-digest             | -g]
 		[--data-digest            | -G]
+		[--output-format=<fmt>    | -o <fmt>]
 
 DESCRIPTION
 -----------
@@ -139,6 +140,12 @@ OPTIONS
 -G::
 --data-digest::
 	Generates/verifies data digest (TCP).
+
+-o <format>::
+--output-format=<format>::
+	Set the reporting format to 'normal' or 'json'. Only one output format can
+	be used at a time. When this option is specified, the device associated with
+	the connection will be printed. Nothing is printed otherwise.
 
 EXAMPLES
 --------
