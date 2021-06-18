@@ -27,7 +27,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("seagate", "Seagate vendor specific extensions"),
+PLUGIN(NAME("seagate", "Seagate vendor specific extensions", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("vs-temperature-stats", "Retrieve Seagate temperature statistics ",          temp_stats)
 		ENTRY("vs-log-page-sup",      "Retrieve Seagate Supported Log-pages Information ", log_pages_supp)

@@ -12,7 +12,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-PLUGIN(NAME("ymtc", "Ymtc vendor specific extensions"),
+PLUGIN(NAME("ymtc", "Ymtc vendor specific extensions", NVME_VERSION),
     COMMAND_LIST(
         ENTRY("smart-log-add", "Retrieve Ymtc SMART Log, show it", get_additional_smart_log)
     )

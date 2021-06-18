@@ -6,7 +6,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("intel", "Intel vendor specific extensions"),
+PLUGIN(NAME("intel", "Intel vendor specific extensions", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("id-ctrl", "Send NVMe Identify Controller", id_ctrl)
 		ENTRY("internal-log", "Retrieve Intel internal firmware log, save it", get_internal_log)

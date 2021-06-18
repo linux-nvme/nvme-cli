@@ -7,7 +7,7 @@
 #include "cmd.h"
 #include "plugin.h"
 
-PLUGIN(NAME("toshiba", "Toshiba NVME plugin"),
+PLUGIN(NAME("toshiba", "Toshiba NVME plugin", NVME_VERSION),
     COMMAND_LIST(
 			ENTRY("vs-smart-add-log", "Extended SMART information", vendor_log)
 			ENTRY("vs-internal-log", "Get Internal Log", internal_log)
