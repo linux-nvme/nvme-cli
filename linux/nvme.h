@@ -1458,7 +1458,7 @@ struct nvme_error_log_page {
 struct nvme_firmware_log_page {
 	__u8	afi;
 	__u8	resv[7];
-	__u64	frs[7];
+	__u8    frs[7][8];
 	__u8	resv2[448];
 };
 
