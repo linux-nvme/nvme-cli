@@ -4,9 +4,10 @@
 #if !defined(WDC_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define WDC_NVME
 
+#define WDC_PLUGIN_VERSION   "1.14.1"
 #include "cmd.h"
 
-PLUGIN(NAME("wdc", "Western Digital vendor specific extensions"),
+PLUGIN(NAME("wdc", "Western Digital vendor specific extensions", WDC_PLUGIN_VERSION),
 	COMMAND_LIST(
 		ENTRY("cap-diag", "WDC Capture-Diagnostics", wdc_cap_diag)
 		ENTRY("drive-log", "WDC Drive Log", wdc_drive_log)

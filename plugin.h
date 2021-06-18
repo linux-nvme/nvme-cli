@@ -16,6 +16,7 @@ struct program {
 struct plugin {
 	const char *name;
 	const char *desc;
+	const char *version;
 	struct command **commands;
 	struct program *parent;
 	struct plugin *next;

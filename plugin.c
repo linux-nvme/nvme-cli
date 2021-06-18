@@ -11,7 +11,7 @@ static int version(struct plugin *plugin)
 	struct program *prog = plugin->parent;
 
 	if (plugin->name)
-		printf("%s %s version %s\n", prog->name, plugin->name, prog->version);
+		printf("%s %s version %s\n", prog->name, plugin->name, plugin->version);
 	else
 		printf("%s version %s\n", prog->name, prog->version);
 	return 0;
