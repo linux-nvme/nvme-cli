@@ -5324,8 +5324,8 @@ void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 			((lbrt->entry[i].attributes & 0x0002) >> 1) ?
 				"LBA range should be hidden from the OS/EFI/BIOS" :
 				"LBA range should be visible from the OS/EFI/BIOS");
-		printf("\tslba       : %#"PRIx64"\n", (uint64_t)(lbrt->entry[i].slba));
-		printf("\tnlb        : %#"PRIx64"\n", (uint64_t)(lbrt->entry[i].nlb));
+		printf("\tslba       : %#"PRIx64"\n", le64_to_cpu(lbrt->entry[i].slba));
+		printf("\tnlb        : %#"PRIx64"\n", le64_to_cpu(lbrt->entry[i].nlb));
 		printf("\tguid       : ");
 		for (j = 0; j < 16; j++)
 			printf("%02x", lbrt->entry[i].guid[j]);
