@@ -104,16 +104,12 @@ const char *nvme_cmd_to_string(int admin, __u8 opcode)
 	return "Unknown";
 }
 
-static const char *fw_to_string(__u64 fw)
+static char *fw_to_string(__u8 fw[])
 {
-	static char ret[9];
-	char *c = (char *)&fw;
-	int i;
+	static char frs[9];
 
-	for (i = 0; i < 8; i++)
-		ret[i] = c[i] >= '!' && c[i] <= '~' ? c[i] : '.';
-	ret[i] = '\0';
-	return ret;
+	snprintf(frs, sizeof(frs), "%-.*s", 8, fw);
+	return frs;
 }
 
 static const char *get_sanitize_log_sstat_status_str(__u16 status)
@@ -479,27 +475,26 @@ static void json_nvme_resv_report(struct nvme_reservation_status *status,
 
 static void json_fw_log(struct nvme_firmware_log_page *fw_log, const char *devname)
 {
+	int i;
 	struct json_object *root;
 	struct json_object *fwsi;
 	char fmt[21];
-	char str[32];
-	int i;
 
 	root = json_create_object();
 	fwsi = json_create_object();
 
 	json_object_add_value_int(fwsi, "Active Firmware Slot (afi)",
 		fw_log->afi);
+
 	for (i = 0; i < 7; i++) {
-		if (fw_log->frs[i]) {
+		if (strcmp(fw_to_string(fw_log->frs[i]), "\0")) {
 			snprintf(fmt, sizeof(fmt), "Firmware Rev Slot %d",
 				i + 1);
-			snprintf(str, sizeof(str), "%"PRIu64" (%s)",
-				(uint64_t)fw_log->frs[i],
-			fw_to_string(fw_log->frs[i]));
-			json_object_add_value_string(fwsi, fmt, str);
+			json_object_add_value_string(fwsi, fmt,
+				fw_to_string(fw_log->frs[i]));
 		}
 	}
+
 	json_object_add_value_object(root, devname, fwsi);
 
 	json_print_object(root, NULL);
@@ -4797,7 +4792,6 @@ void nvme_show_fw_log(struct nvme_firmware_log_page *fw_log,
 	const char *devname, enum nvme_print_flags flags)
 {
 	int i;
-
 	if (flags & BINARY)
 		return d_raw((unsigned char *)fw_log, sizeof(*fw_log));
 	if (flags & JSON)
@@ -4806,10 +4800,8 @@ void nvme_show_fw_log(struct nvme_firmware_log_page *fw_log,
 	printf("Firmware Log for device:%s\n", devname);
 	printf("afi  : %#x\n", fw_log->afi);
 	for (i = 0; i < 7; i++) {
-		if (fw_log->frs[i])
-			printf("frs%d : %#016"PRIx64" (%s)\n", i + 1,
-				(uint64_t)fw_log->frs[i],
-				fw_to_string(fw_log->frs[i]));
+		if (strcmp(fw_to_string(fw_log->frs[i]), "\0"))
+			printf("frs%d : %s\n", i + 1, fw_to_string(fw_log->frs[i]));
 	}
 }
 
