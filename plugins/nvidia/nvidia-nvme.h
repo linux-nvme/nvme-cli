@@ -6,7 +6,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("nvidia", "NVIDIA vendor specific extensions"),
+PLUGIN(NAME("nvidia", "NVIDIA vendor specific extensions", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("id-ctrl", "Send NVMe Identify Controller", id_ctrl)
 	)

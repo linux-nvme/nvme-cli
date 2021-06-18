@@ -6,7 +6,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("zns", "Zoned Namespace Command Set"),
+PLUGIN(NAME("zns", "Zoned Namespace Command Set", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("id-ctrl", "Retrieve ZNS controller identification", id_ctrl)
 		ENTRY("id-ns", "Retrieve ZNS namespace identification", id_ns)
