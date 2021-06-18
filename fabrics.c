@@ -812,6 +812,28 @@ static void save_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 	close(fd);
 }
 
+static void print_connect_msg(int instance)
+{
+	printf("device: nvme%d\n", instance);
+}
+
+static void json_connect_msg(int instance)
+{
+	struct json_object *root;
+	char *dev_name = NULL;
+
+	if (asprintf(&dev_name, "nvme%d", instance) < 0)
+		return;
+
+	root = json_create_object();
+	json_object_add_value_string(root, "device", dev_name);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+	free(dev_name);
+}
+
 static char *hostnqn_read_file(void)
 {
 	FILE *f;
@@ -1669,6 +1691,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 {
 	char argstr[BUF_SIZE];
 	int instance, ret;
+	enum nvme_print_flags flags = -1;
 
 	OPT_ARGS(opts) = {
 		OPT_LIST("transport",         't', &fabrics_cfg.transport,         "transport type"),
@@ -1692,13 +1715,26 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		OPT_FLAG("disable-sqflow",    'd', &fabrics_cfg.disable_sqflow,    "disable controller sq flow control (default false)"),
 		OPT_FLAG("hdr-digest",        'g', &fabrics_cfg.hdr_digest,        "enable transport protocol header digest (TCP transport)"),
 		OPT_FLAG("data-digest",       'G', &fabrics_cfg.data_digest,       "enable transport protocol data digest (TCP transport)"),
+		OPT_FMT("output-format",      'o', &fabrics_cfg.output_format,     "Output format: normal|json"),
 		OPT_END()
 	};
 
+	fabrics_cfg.output_format = "";
 	fabrics_cfg.tos = -1;
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		goto out;
+
+	if (!strcmp(fabrics_cfg.output_format, ""))
+		flags = -1;
+	else if (!strcmp(fabrics_cfg.output_format, "normal"))
+		flags = NORMAL;
+	else if (!strcmp(fabrics_cfg.output_format, "json"))
+		flags = JSON;
+	else {
+		ret = -EINVAL;
+		goto out;
+	}
 
 	if (traddr_is_hostname(&fabrics_cfg)) {
 		ret = hostname2traddr(&fabrics_cfg);
@@ -1719,6 +1755,12 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	instance = add_ctrl(argstr);
 	if (instance < 0)
 		ret = instance;
+	else {
+		if (flags == NORMAL)
+			print_connect_msg(instance);
+		else if (flags == JSON)
+			json_connect_msg(instance);
+	}
 
 out:
 	return nvme_status_to_errno(ret, true);
