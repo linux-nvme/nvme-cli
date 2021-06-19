@@ -1107,39 +1107,45 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 	}
 	ret = asprintf(&path, "%s/nvme%d", nvme_ctrl_sysfs_dir, instance);
 	if (ret < 0) {
-		free(name);
 		errno = ENOMEM;
-		return -1;
+		goto out_free_name;
 	}
 
 	ret = __nvme_ctrl_init(c, path, name);
-	if (ret < 0)
+	if (ret < 0) {
 		free(path);
+		goto out_free_name;
+	}
 
 	c->address = nvme_get_attr(path, "address");
 	if (!c->address) {
 		free(path);
-		free(name);
-		errno = -ENXIO;
-		return -1;
+		errno = ENXIO;
+		ret = -1;
+		goto out_free_name;
 	}
 	subsys_name = nvme_ctrl_lookup_subsystem_name(c);
 	s = nvme_lookup_subsystem(h, subsys_name, c->subsysnqn);
 	if (!s) {
 		errno = ENXIO;
 		ret = -1;
-	} else if (!s->name) {
+		goto out_free_subsys;
+	}
+	if (!s->name) {
 		ret = asprintf(&path, "%s/%s", nvme_subsys_sysfs_dir,
 			       subsys_name);
-		if (ret > 0) {
+		if (ret > 0)
 			ret = nvme_init_subsystem(s, subsys_name, path);
-			if (ret < 0)
-				free(path);
+		if (ret < 0) {
+			free(path);
+			goto out_free_subsys;
 		}
 	}
 	c->s = s;
 	list_add(&s->ctrls, &c->entry);
+out_free_subsys:
 	free(subsys_name);
+ out_free_name:
 	free(name);
 	return ret;
 }
