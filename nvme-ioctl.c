@@ -68,7 +68,7 @@ int nvme_get_nsid(int fd)
 	int err = fstat(fd, &nvme_stat);
 
 	if (err < 0)
-		return -errno;
+		return err;
 
 	return ioctl(fd, NVME_IOCTL_ID);
 }
