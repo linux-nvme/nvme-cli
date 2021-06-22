@@ -155,23 +155,23 @@ static int scan_namespace(struct nvme_namespace *n)
 		return ret;
 
 	fd = open(path, O_RDONLY);
-	if (fd < 0)
+	if (fd < 0) {
+		ret = fd;
 		goto free;
-
+	}
 	if (!n->nsid) {
-		n->nsid = nvme_get_nsid(fd);
-		if (n->nsid < 0)
+		ret = nvme_get_nsid(fd);
+		if (ret < 0)
 			goto close_fd;
+		n->nsid = ret;
 	}
 
 	ret = nvme_identify_ns(fd, n->nsid, 0, &n->ns);
-	if (ret < 0)
-		goto close_fd;
 close_fd:
 	close(fd);
 free:
 	free(path);
-	return 0;
+	return ret;
 }
 
 static char *get_nvme_ctrl_path_ana_state(char *path, int nsid)
@@ -382,8 +382,11 @@ static int scan_subsystem(struct nvme_subsystem *s, __u32 ns_instance, int nsid)
 		for (i = 0; i < s->nr_namespaces; i++) {
 			n = &s->namespaces[i];
 			n->name = strdup(ns[i]->d_name);
-			n->ctrl = &s->ctrls[0];
-			scan_namespace(n);
+			for (j = 0; j < s->nr_ctrls; j++) {
+				n->ctrl = &s->ctrls[j];
+				if (!scan_namespace(n))
+					break;
+			}
 		}
 	} else {
 		i = s->nr_namespaces;
