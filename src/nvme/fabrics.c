@@ -27,6 +27,7 @@
 #define NVME_HOSTNQN_ID SD_ID128_MAKE(c7,f4,61,81,12,be,49,32,8c,83,10,6f,9d,dd,d8,6b)
 #endif
 
+#include <ccan/list/list.h>
 #include <ccan/array_size/array_size.h>
 
 #include "fabrics.h"

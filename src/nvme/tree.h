@@ -20,10 +20,6 @@
 #include "ioctl.h"
 #include "util.h"
 
-extern const char *nvme_ctrl_sysfs_dir;
-extern const char *nvme_subsys_sysfs_dir;
-extern const char *nvme_ns_sysfs_dir;
-
 /**
  *
  */
@@ -145,6 +141,12 @@ nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s);
 nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,
 				       const char *name,
 				       const char *subsysnqn);
+
+/**
+ * nvme_free_subsystem() -
+ * @s:
+ */
+void nvme_free_subsystem(struct nvme_subsystem *s);
 
 /**
  * nvme_subsystem_get_host() -
@@ -854,12 +856,12 @@ void nvme_ctrl_disable_sqflow(nvme_ctrl_t c, bool disable_sqflow);
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id);
 
 /**
- * nvme_ctrl_disconnect() -
+ * nvme_disconnect_ctrl() -
  * @c:
  *
  * Return: 
  */
-int nvme_ctrl_disconnect(nvme_ctrl_t c);
+int nvme_disconnect_ctrl(nvme_ctrl_t c);
 
 /**
  * nvme_scan_ctrl() -
@@ -868,6 +870,12 @@ int nvme_ctrl_disconnect(nvme_ctrl_t c);
  * Return: 
  */
 nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name);
+
+/**
+ * @c:
+ *
+ */
+void nvme_rescan_ctrl(nvme_ctrl_t c);
 
 /**
  * nvme_init_ctrl() -
@@ -946,6 +954,12 @@ const char *nvme_host_get_hostid(nvme_host_t h);
  * Return:
  */
 nvme_host_t nvme_default_host(nvme_root_t r);
+
+/**
+ * nvme_free_host() -
+ * @r:
+ */
+void nvme_free_host(nvme_host_t h);
 
 /**
  * nvme_scan() -
