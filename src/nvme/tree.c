@@ -90,6 +90,7 @@ nvme_root_t nvme_scan_filter(nvme_scan_filter_t f)
 	}
 
 	list_head_init(&r->hosts);
+	r->refcount = 1;
 	nvme_scan_topology(r, f);
 	return r;
 }
@@ -276,6 +277,7 @@ struct nvme_subsystem *nvme_lookup_subsystem(struct nvme_host *h,
 	s->refcount = 1;
 	list_head_init(&s->ctrls);
 	list_head_init(&s->namespaces);
+	list_node_init(&s->entry);
 	list_add(&h->subsystems, &s->entry);
 	h->r->modified = true;
 	return s;
@@ -525,6 +527,8 @@ static int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name)
 		free(grpid);
 	}
 
+	list_node_init(&p->nentry);
+	list_node_init(&p->entry);
 	list_add(&c->paths, &p->entry);
 	return 0;
 
