@@ -164,7 +164,7 @@ int nvme_self_test_log(int fd, __u32 nsid, struct nvme_self_test_log *self_test_
 int nvme_virtual_mgmt(int fd, __u32 cdw10, __u32 cdw11, __u32 *result);
 
 int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
-		       enum nvme_zns_send_action zsa, __u32 data_len,
+		       __u32 timeout, enum nvme_zns_send_action zsa, __u32 data_len,
 		       void *data);
 int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
 		       enum nvme_zns_recv_action zra, __u8 zrasf,

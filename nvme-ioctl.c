@@ -981,7 +981,7 @@ int nvme_virtual_mgmt(int fd, __u32 cdw10, __u32 cdw11, __u32 *result)
 }
 
 int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
-		       enum nvme_zns_send_action zsa, __u32 data_len,
+		       __u32 timeout, enum nvme_zns_send_action zsa, __u32 data_len,
 		       void *data)
 {
 	__u32 cdw10 = slba & 0xffffffff;
@@ -996,6 +996,7 @@ int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
 		.cdw13		= cdw13,
 		.addr		= (__u64)(uintptr_t)data,
 		.data_len	= data_len,
+		.timeout_ms	= timeout,
 	};
 
 	return nvme_submit_io_passthru(fd, &cmd);

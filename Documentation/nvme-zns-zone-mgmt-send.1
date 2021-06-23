@@ -33,11 +33,12 @@ nvme-zns-zone-mgmt-send \- Zone Management Send command
 .sp
 .nf
 \fInvme zns zone\-mgmt\-send\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
-                                   [\-\-start\-lba=<IONUM>, \-s <IONUM>]
-                                   [\-\-select\-all, \-a]
-                                   [\-\-zsa=<NUM>, \-z <NUM>]
-                                   [\-\-data\-len=<IONUM>, \-l <IONUM>]
-                                   [\-data=<FILE>, \-d <FILE>]
+                                 [\-\-start\-lba=<IONUM>, \-s <IONUM>]
+                                 [\-\-select\-all, \-a]
+                                 [\-\-zsa=<NUM>, \-z <NUM>]
+                                 [\-\-data\-len=<IONUM>, \-l <IONUM>]
+                                 [\-data=<FILE>, \-d <FILE>]
+                                 [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -77,6 +78,11 @@ Buffer length if data required
 \-d <FILE, \-data=<FILE>
 .RS 4
 Optional file for data (default stdin)
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp
