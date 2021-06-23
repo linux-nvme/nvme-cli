@@ -167,9 +167,45 @@ static int discover_err = 0;
     struct nvmf_disc_log_entry *e = &log->entries[i];
     PyObject *entry = PyDict_New(), *val;
 
-    val = PyLong_FromLong(e->trtype);
+    switch (e->trtype) {
+    case NVMF_TRTYPE_UNSPECIFIED:
+      val = PyUnicode_FromString("unspecified");
+      break;
+    case NVMF_TRTYPE_RDMA:
+      val = PyUnicode_FromString("rdma");
+      break;
+    case NVMF_TRTYPE_FC:
+      val = PyUnicode_FromString("fc");
+      break;
+    case NVMF_TRTYPE_TCP:
+      val = PyUnicode_FromString("tcp");
+      break;
+    case NVMF_TRTYPE_LOOP:
+      val = PyUnicode_FromString("loop");
+      break;
+    default:
+      val = PyLong_FromLong(e->trtype);
+    }
     PyDict_SetItemString(entry, "trtype", val);
-    val = PyLong_FromLong(e->adrfam);
+    switch (e->adrfam) {
+    case NVMF_ADDR_FAMILY_PCI:
+      val = PyUnicode_FromString("pci");
+      break;
+    case NVMF_ADDR_FAMILY_IP4:
+      val = PyUnicode_FromString("ipv4");
+      break;
+    case NVMF_ADDR_FAMILY_IP6:
+      val = PyUnicode_FromString("ipv6");
+      break;
+    case NVMF_ADDR_FAMILY_IB:
+      val = PyUnicode_FromString("infiniband");
+      break;
+    case NVMF_ADDR_FAMILY_FC:
+      val = PyUnicode_FromString("fc");
+      break;
+    default:
+      val = PyLong_FromLong(e->adrfam);
+    }
     PyDict_SetItemString(entry, "adrfam", val);
     val = PyUnicode_FromString(e->traddr);
     PyDict_SetItemString(entry, "traddr", val);
@@ -177,9 +213,33 @@ static int discover_err = 0;
     PyDict_SetItemString(entry, "trsvcid", val);
     val = PyUnicode_FromString(e->subnqn);
     PyDict_SetItemString(entry, "subnqn", val);
-    val = PyLong_FromLong(e->subtype);
+    switch (e->subtype) {
+    case NVME_NQN_DISC:
+      val = PyUnicode_FromString("discovery");
+      break;
+    case NVME_NQN_NVME:
+      val = PyUnicode_FromString("nvme");
+      break;
+    default:
+      val = PyLong_FromLong(e->subtype);
+    }
     PyDict_SetItemString(entry, "subtype", val);
-    val = PyLong_FromLong(e->treq);
+    switch (e->treq) {
+    case NVMF_TREQ_NOT_SPECIFIED:
+      val = PyUnicode_FromString("not specified");
+      break;
+    case NVMF_TREQ_REQUIRED:
+      val = PyUnicode_FromString("required");
+      break;
+    case NVMF_TREQ_NOT_REQUIRED:
+      val = PyUnicode_FromString("not required");
+      break;
+    case NVMF_TREQ_DISABLE_SQFLOW:
+      val = PyUnicode_FromString("disable sqflow");
+      break;
+    default:
+      val = PyLong_FromLong(e->treq);
+    }
     PyDict_SetItemString(entry, "treq", val);
     val = PyLong_FromLong(e->portid);
     PyDict_SetItemString(entry, "portid", val);

@@ -32,6 +32,8 @@
 
 static struct nvme_host *default_host;
 
+static void __nvme_free_host(nvme_host_t h);
+static void __nvme_free_ctrl(nvme_ctrl_t c);
 static int nvme_subsystem_scan_namespace(struct nvme_subsystem *s, char *name);
 static int nvme_scan_subsystem(struct nvme_root *r, char *name,
 			       nvme_scan_filter_t f);
@@ -152,7 +154,7 @@ void nvme_refresh_topology(nvme_root_t r)
 	struct nvme_host *h, *_h;
 
 	nvme_for_each_host_safe(r, h, _h)
-		nvme_free_host(h);
+		__nvme_free_host(h);
 	nvme_scan_topology(r, NULL);
 }
 
@@ -161,7 +163,7 @@ void nvme_reset_topology(nvme_root_t r)
 	struct nvme_host *h, *_h;
 
 	nvme_for_each_host_safe(r, h, _h)
-		nvme_free_host(h);
+		__nvme_free_host(h);
 	nvme_scan_topology(r, NULL);
 }
 
@@ -170,7 +172,7 @@ void nvme_free_tree(nvme_root_t r)
 	struct nvme_host *h, *_h;
 
 	nvme_for_each_host_safe(r, h, _h)
-		nvme_free_host(h);
+		__nvme_free_host(h);
 	if (r->config_file)
 		free(r->config_file);
 	free(r);
@@ -216,7 +218,7 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n)
 	return n ? list_next(&s->namespaces, n, entry) : NULL;
 }
 
-void nvme_free_ns(struct nvme_ns *n)
+static void __nvme_free_ns(struct nvme_ns *n)
 {
 	list_del_init(&n->entry);
 	close(n->fd);
@@ -225,20 +227,22 @@ void nvme_free_ns(struct nvme_ns *n)
 	free(n);
 }
 
-void nvme_free_subsystem(struct nvme_subsystem *s)
+/* Stub for SWIG */
+void nvme_free_ns(struct nvme_ns *n)
+{
+}
+
+static void __nvme_free_subsystem(struct nvme_subsystem *s)
 {
 	struct nvme_ctrl *c, *_c;
 	struct nvme_ns *n, *_n;
 
-	if (--s->refcount > 0)
-		return;
-
 	list_del_init(&s->entry);
 	nvme_subsystem_for_each_ctrl_safe(s, c, _c)
-		nvme_free_ctrl(c);
+		__nvme_free_ctrl(c);
 
 	nvme_subsystem_for_each_ns_safe(s, n, _n)
-		nvme_free_ns(n);
+		__nvme_free_ns(n);
 
 	free(s->name);
 	free(s->sysfs_dir);
@@ -250,6 +254,13 @@ void nvme_free_subsystem(struct nvme_subsystem *s)
 	if (s->firmware)
 		free(s->firmware);
 	free(s);
+}
+
+/*
+ * Stub for SWIG
+ */
+void nvme_free_subsystem(nvme_subsystem_t s)
+{
 }
 
 struct nvme_subsystem *nvme_lookup_subsystem(struct nvme_host *h,
@@ -264,7 +275,6 @@ struct nvme_subsystem *nvme_lookup_subsystem(struct nvme_host *h,
 		if (name && s->name &&
 		    strcmp(s->name, name))
 			continue;
-		s->refcount++;
 		return s;
 	}
 	s = calloc(1, sizeof(*s));
@@ -273,28 +283,31 @@ struct nvme_subsystem *nvme_lookup_subsystem(struct nvme_host *h,
 
 	s->h = h;
 	s->subsysnqn = strdup(subsysnqn);
-	s->refcount = 1;
 	list_head_init(&s->ctrls);
 	list_head_init(&s->namespaces);
+	list_node_init(&s->entry);
 	list_add(&h->subsystems, &s->entry);
 	h->r->modified = true;
 	return s;
 }
 
-void nvme_free_host(struct nvme_host *h)
+static void __nvme_free_host(struct nvme_host *h)
 {
 	struct nvme_subsystem *s, *_s;
 
-	if (--h->refcount > 0)
-		return;
 	list_del_init(&h->entry);
 	nvme_for_each_subsystem_safe(h, s, _s)
-		nvme_free_subsystem(s);
+		__nvme_free_subsystem(s);
 	free(h->hostnqn);
 	if (h->hostid)
 		free(h->hostid);
 	h->r->modified = true;
 	free(h);
+}
+
+/* Stub for SWIG */
+void nvme_free_host(struct nvme_host *h)
+{
 }
 
 struct nvme_host *nvme_lookup_host(nvme_root_t r, const char *hostnqn,
@@ -310,7 +323,6 @@ struct nvme_host *nvme_lookup_host(nvme_root_t r, const char *hostnqn,
 		if (hostid &&
 		    strcmp(h->hostid, hostid))
 			continue;
-		h->refcount++;
 		return h;
 	}
 	h = calloc(1,sizeof(*h));
@@ -322,7 +334,6 @@ struct nvme_host *nvme_lookup_host(nvme_root_t r, const char *hostnqn,
 	list_head_init(&h->subsystems);
 	list_node_init(&h->entry);
 	h->r = r;
-	h->refcount = 1;
 	list_add(&r->hosts, &h->entry);
 	r->modified = true;
 
@@ -426,7 +437,7 @@ static int nvme_scan_subsystem(struct nvme_root *r, char *name,
 	nvme_subsystem_scan_ctrls(s);
 
 	if (f && !f(s)) {
-		nvme_free_subsystem(s);
+		__nvme_free_subsystem(s);
 		return -1;
 	}
 
@@ -525,6 +536,8 @@ static int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name)
 		free(grpid);
 	}
 
+	list_node_init(&p->nentry);
+	list_node_init(&p->entry);
 	list_add(&c->paths, &p->entry);
 	return 0;
 
@@ -737,13 +750,10 @@ void nvme_unlink_ctrl(nvme_ctrl_t c)
 	c->s = NULL;
 }
 
-void nvme_free_ctrl(nvme_ctrl_t c)
+static void __nvme_free_ctrl(nvme_ctrl_t c)
 {
 	struct nvme_path *p, *_p;
 	struct nvme_ns *n, *_n;
-
-	if (--c->refcount > 0)
-		return;
 
 	nvme_unlink_ctrl(c);
 
@@ -751,7 +761,7 @@ void nvme_free_ctrl(nvme_ctrl_t c)
 		nvme_free_path(p);
 
 	nvme_ctrl_for_each_ns_safe(c, n, _n)
-		nvme_free_ns(n);
+		__nvme_free_ns(n);
 
 	if (c->fd >= 0)
 		close(c->fd);
@@ -778,6 +788,11 @@ void nvme_free_ctrl(nvme_ctrl_t c)
 	free(c->sqsize);
 	free(c->transport);
 	free(c);
+}
+
+/* Stub for SWIG */
+void nvme_free_ctrl(nvme_ctrl_t c)
+{
 }
 
 #define ____stringify(x...) #x
@@ -898,7 +913,7 @@ struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn, const char *transport,
 		 !strncmp(transport, "tcp", 3)) {
 		nvme_msg(LOG_ERR, "No trsvcid specified for '%s'\n",
 			 transport);
-		nvme_free_ctrl(c);
+		__nvme_free_ctrl(c);
 		c = NULL;
 	}
 
@@ -928,14 +943,12 @@ struct nvme_ctrl *nvme_lookup_ctrl(struct nvme_subsystem *s, const char *transpo
 		if (trsvcid && c->trsvcid &&
 		    strcmp(c->trsvcid, trsvcid))
 			continue;
-		c->refcount++;
 		return c;
 	}
 	c = nvme_create_ctrl(s->subsysnqn, transport, traddr,
 			     host_traddr, host_iface, trsvcid);
 	if (c) {
 		c->s = s;
-		c->refcount = 1;
 		list_add(&s->ctrls, &c->entry);
 		s->h->r->modified = true;
 	}
