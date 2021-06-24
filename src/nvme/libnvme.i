@@ -18,6 +18,7 @@
 #include "tree.h"
 #include "fabrics.h"
 #include "private.h"
+#include "log.h"
 
 static int host_iter_err = 0;
 static int subsys_iter_err = 0;
@@ -97,7 +98,10 @@ static int discover_err = 0;
     SWIG_exception(SWIG_AttributeError, "Existing controller connection");
   } else if (connect_err) {
     connect_err = 0;
-    SWIG_exception(SWIG_RuntimeError, "Connect failed");
+    if (nvme_log_message)
+      SWIG_exception(SWIG_RuntimeError, nvme_log_message);
+    else
+      SWIG_exception(SWIG_RuntimeError, "Connect failed");
   }
 }
 
@@ -314,6 +318,7 @@ struct nvme_ns {
 
 %extend nvme_root {
   nvme_root(const char *config_file = NULL) {
+    nvme_log_level = LOG_ERR;
     return nvme_scan(config_file);
   }
   ~nvme_root() {
