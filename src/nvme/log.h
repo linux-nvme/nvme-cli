@@ -23,6 +23,7 @@
 extern int nvme_log_level;
 extern bool nvme_log_timestamp;
 extern bool nvme_log_pid;
+extern char *nvme_log_message;
 
 void __attribute__((format(printf, 3, 4)))
 __nvme_msg(int lvl, const char *func, const char *format, ...);
