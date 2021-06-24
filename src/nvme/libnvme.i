@@ -324,6 +324,24 @@ struct nvme_ns {
   ~nvme_root() {
     nvme_free_tree($self);
   }
+  void log_level(const char *level) {
+    if (!strcmp(level,"debug"))
+      nvme_log_level = LOG_DEBUG;
+    else if (!strcmp(level, "info"))
+      nvme_log_level = LOG_INFO;
+    else if (!strcmp(level, "notice"))
+      nvme_log_level = LOG_NOTICE;
+    else if (!strcmp(level, "warning"))
+      nvme_log_level = LOG_WARNING;
+    else if (!strcmp(level, "err"))
+      nvme_log_level = LOG_ERR;
+    else if (!strcmp(level, "crit"))
+      nvme_log_level = LOG_CRIT;
+    else if (!strcmp(level, "alert"))
+      nvme_log_level = LOG_ALERT;
+    else if (!strcmp(level, "emerg"))
+      nvme_log_level = LOG_EMERG;
+  }
   struct nvme_host *hosts() {
     return nvme_first_host($self);
   }
