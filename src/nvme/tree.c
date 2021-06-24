@@ -1067,7 +1067,15 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		ret = -1;
 		goto out_free_name;
 	}
+	free(path);
 	subsys_name = nvme_ctrl_lookup_subsystem_name(c);
+	if (!subsys_name) {
+		nvme_msg(LOG_ERR, "Failed to lookup subsystem name for %s\n",
+			 c->name);
+		errno = ENXIO;
+		ret = -1;
+		goto out_free_name;
+	}
 	s = nvme_lookup_subsystem(h, subsys_name, c->subsysnqn);
 	if (!s) {
 		errno = ENXIO;
