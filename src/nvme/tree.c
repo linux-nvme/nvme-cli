@@ -715,18 +715,8 @@ nvme_path_t nvme_ctrl_next_path(nvme_ctrl_t c, nvme_path_t p)
 
 #define FREE_CTRL_ATTR(a) \
 	do { if (a) { free(a); (a) = NULL; } } while (0)
-int nvme_disconnect_ctrl(nvme_ctrl_t c)
+void nvme_deconfigure_ctrl(nvme_ctrl_t c)
 {
-	int ret;
-
-	ret = nvme_set_attr(nvme_ctrl_get_sysfs_dir(c),
-			    "delete_controller", "1");
-	if (ret < 0) {
-		nvme_msg(LOG_ERR, "%s: failed to disconnect, error %d\n",
-			 c->name, errno);
-		return ret;
-	}
-	nvme_msg(LOG_INFO, "%s: disconnected\n", c->name);
 	if (c->fd >= 0) {
 		close(c->fd);
 		c->fd = -1;
@@ -741,7 +731,21 @@ int nvme_disconnect_ctrl(nvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->serial);
 	FREE_CTRL_ATTR(c->sqsize);
 	FREE_CTRL_ATTR(c->address);
+}
 
+int nvme_disconnect_ctrl(nvme_ctrl_t c)
+{
+	int ret;
+
+	ret = nvme_set_attr(nvme_ctrl_get_sysfs_dir(c),
+			    "delete_controller", "1");
+	if (ret < 0) {
+		nvme_msg(LOG_ERR, "%s: failed to disconnect, error %d\n",
+			 c->name, errno);
+		return ret;
+	}
+	nvme_msg(LOG_INFO, "%s: disconnected\n", c->name);
+	nvme_deconfigure_ctrl(c);
 	return 0;
 }
 
@@ -764,30 +768,13 @@ static void __nvme_free_ctrl(nvme_ctrl_t c)
 	nvme_ctrl_for_each_ns_safe(c, n, _n)
 		__nvme_free_ns(n);
 
-	if (c->fd >= 0)
-		close(c->fd);
-	if (c->name)
-		free(c->name);
-	if (c->sysfs_dir)
-		free(c->sysfs_dir);
-	if (c->address)
-		free(c->address);
-	if (c->traddr)
-		free(c->traddr);
-	if (c->trsvcid)
-		free(c->trsvcid);
-	if (c->host_traddr)
-		free(c->host_traddr);
-	if (c->host_iface)
-		free(c->host_iface);
-	free(c->firmware);
-	free(c->model);
-	free(c->state);
-	free(c->numa_node);
-	free(c->queue_count);
-	free(c->serial);
-	free(c->sqsize);
-	free(c->transport);
+	nvme_deconfigure_ctrl(c);
+
+	FREE_CTRL_ATTR(c->transport);
+	FREE_CTRL_ATTR(c->traddr);
+	FREE_CTRL_ATTR(c->host_traddr);
+	FREE_CTRL_ATTR(c->host_iface);
+	FREE_CTRL_ATTR(c->trsvcid);
 	free(c);
 }
 
