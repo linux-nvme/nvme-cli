@@ -1010,7 +1010,8 @@ static char *nvme_ctrl_lookup_subsystem_name(nvme_ctrl_t c)
 	return subsys_name;
 }
 
-static int __nvme_ctrl_init(nvme_ctrl_t c, const char *path, const char *name)
+static int nvme_configure_ctrl(nvme_ctrl_t c, const char *path,
+			       const char *name)
 {
 	DIR *d;
 
@@ -1055,7 +1056,7 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		goto out_free_name;
 	}
 
-	ret = __nvme_ctrl_init(c, path, name);
+	ret = nvme_configure_ctrl(c, path, name);
 	if (ret < 0) {
 		free(path);
 		goto out_free_name;
@@ -1144,7 +1145,7 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 		return NULL;
 	}
 	c->address = address;
-	ret = __nvme_ctrl_init(c, path, name);
+	ret = nvme_configure_ctrl(c, path, name);
 	return (ret < 0) ? NULL : c;
 }
 
