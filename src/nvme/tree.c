@@ -17,6 +17,7 @@
 #include <unistd.h>
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 
@@ -988,7 +989,6 @@ static char *nvme_ctrl_lookup_subsystem_name(nvme_ctrl_t c)
 {
 	struct dirent **subsys;
 	char *subsys_name = NULL;
-	DIR *d;
 	int ret, i;
 	char path[PATH_MAX];
 
@@ -996,13 +996,14 @@ static char *nvme_ctrl_lookup_subsystem_name(nvme_ctrl_t c)
 	if (ret < 0)
 		return NULL;
 	for (i = 0; i < ret; i++) {
+		struct stat st;
+
 		sprintf(path, "%s/%s/%s", nvme_subsys_sysfs_dir,
 			subsys[i]->d_name, c->name);
-		d = opendir(path);
-		if (!d)
+		nvme_msg(LOG_DEBUG, "lookup subsystem %s\n", path);
+		if (stat(path, &st) < 0)
 			continue;
 		subsys_name = strdup(subsys[i]->d_name);
-		closedir(d);
 		break;
 	}
 	nvme_free_dirents(subsys, i);
