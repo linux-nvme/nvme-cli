@@ -245,7 +245,8 @@ static void __nvme_free_subsystem(struct nvme_subsystem *s)
 	nvme_subsystem_for_each_ns_safe(s, n, _n)
 		__nvme_free_ns(n);
 
-	free(s->name);
+	if (s->name)
+		free(s->name);
 	free(s->sysfs_dir);
 	free(s->subsysnqn);
 	if (s->model)
@@ -1056,7 +1057,6 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		ret = -1;
 		goto out_free_name;
 	}
-	free(path);
 	subsys_name = nvme_ctrl_lookup_subsystem_name(c);
 	if (!subsys_name) {
 		nvme_msg(LOG_ERR, "Failed to lookup subsystem name for %s\n",
