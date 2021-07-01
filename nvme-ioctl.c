@@ -953,6 +953,25 @@ int nvme_dir_recv(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,
 	return err;
 }
 
+int nvme_cap_mgmt(int fd, __u8 op, __u16 element_id, __u32 dw11,
+				  __u32 dw12, __u32 *result)
+{
+	int err;
+	__u32 dw10 = op | element_id << 16;
+
+	struct nvme_admin_cmd cmd = {
+		.opcode         = nvme_admin_capacity_mgmt,
+		.cdw10          = dw10,
+		.cdw11          = dw11,
+		.cdw12          = dw12,
+	};
+
+	err = nvme_submit_admin_passthru(fd, &cmd);
+	if (!err && result)
+			*result = cmd.result;
+	return err;
+}
+
 int nvme_sanitize(int fd, __u8 sanact, __u8 ause, __u8 owpass, __u8 oipbp,
 		  __u8 no_dealloc, __u32 ovrpat)
 {

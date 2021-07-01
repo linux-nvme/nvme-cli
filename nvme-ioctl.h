@@ -156,6 +156,8 @@ int nvme_dir_send(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,
 		  __u32 data_len, __u32 dw12, void *data, __u32 *result);
 int nvme_dir_recv(int fd, __u32 nsid, __u16 dspec, __u8 dtype, __u8 doper,
 		  __u32 data_len, __u32 dw12, void *data, __u32 *result);
+int nvme_cap_mgmt(int fd, __u8 op, __u16 element_id, __u32 dw11,
+				  __u32 dw12, __u32 *result);
 int nvme_get_properties(int fd, void **pbar);
 int nvme_set_property(int fd, int offset, uint64_t value);
 int nvme_get_property(int fd, int offset, uint64_t *value);
