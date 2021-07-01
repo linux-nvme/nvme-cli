@@ -47,6 +47,7 @@ _nvme () {
 	'compare:compare data on device to data elsewhere'
 	'read:submit a read command'
 	'write:submit a write command'
+	'capacity-mgmt: submit capacity management command'
 	'show-regs:shows the controller registers; requires admin character device'
 	'help:print brief descriptions of all nvme commands'
 	)
@@ -417,6 +418,22 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme fw-download options" _fwd
+			;;
+		(capacity-mgmt)
+			local _fwd
+			_fwd=(
+			/dev/nvme':supply a device to use (required)'
+			--operation=':Operation to be performed by the controller'
+			-o':alias of --operation'
+			--element-id=':specific to the value of the Operation field'
+			-i':alias of --element-id'
+			--cap-lower=':Least significant 32 bits of the capacity in bytes'
+			-l':alias of --cap-lower'
+			--cap-upper=':Most significant 32 bits of the capacity in bytes'
+			-u':alias of --cap-upper'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme capacity-mgmt options" _fwd
 			;;
 		(admin-passthru)
 			local _admin
@@ -792,7 +809,7 @@ _nvme () {
 			     security-send security-recv resv-acquire resv-register resv-release
 			     resv-report flush compare read write copy show-regs persistent-event-log
 				 pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
-				 resv-notif-log
+				 resv-notif-log capacity-mgmt
 			   )
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
