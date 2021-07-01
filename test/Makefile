@@ -23,10 +23,10 @@ all: $(all_targets)
 CXXFLAGS ?= -lstdc++
 
 %: %.cc
-	$(QUIET_CC)$(CC) $(CFLAGS) $(LDFLAGS) $(CXXFLAGS) -o $@ $< -lnvme
+	$(QUIET_CC)$(CC) $(CFLAGS) $(LDFLAGS) $(CXXFLAGS) -o $@ $< -lnvme $(LIBS)
 
 %: %.c
-	$(QUIET_CC)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< -lnvme
+	$(QUIET_CC)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< -lnvme $(LIBS)
 
 clean:
 	rm -f $(all_targets)

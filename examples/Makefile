@@ -12,7 +12,7 @@ all_targets += telemetry-listen display-tree display-columnar discover-loop
 all: $(all_targets)
 
 %: %.c
-	$(QUIET_CC)$(CC) $(CFLAGS) -o $@ $< -lnvme ${LDFLAGS}
+	$(QUIET_CC)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< -lnvme $(LIBS)
 
 clean:
 	rm -f $(all_targets)
