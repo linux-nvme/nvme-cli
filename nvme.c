@@ -5583,6 +5583,75 @@ err:
 	return nvme_status_to_errno(err, false);
 }
 
+static int capacity_mgmt(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Host software uses the Capacity Management command to "\
+		"configure Endurance Groups and NVM Sets in an NVM subsystem by either " \
+		"selecting one of a set of supported configurations or by specifying the "\
+		"capacity of the Endurance Group or NVM Set to be created";
+	const char *operation = "Operation to be performed by the controller";
+	const char *element_id = "Value specific to the value of the Operation field.";
+	const char *cap_lower = "Least significant 32 bits of the capacity in bytes of the "\
+		"Endurance Group or NVM Set to be created";
+	const char *cap_upper = "Most significant 32 bits of the capacity in bytes of the "\
+		"Endurance Group or NVM Set to be created";
+
+	int err = -1, fd;
+	__u32 result;
+
+	struct config {
+		__u8  operation;
+		__u16 element_id;
+		__u32 dw11;
+		__u32 dw12;
+	};
+
+	struct config cfg = {
+		.operation  = 0xff,
+		.element_id = 0xffff,
+		.dw11       = 0,
+		.dw12       = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("operation",   'o', &cfg.operation,    operation),
+		OPT_SHRT("element-id",  'i', &cfg.element_id,   element_id),
+		OPT_UINT("cap-lower",   'l', &cfg.dw11,     	cap_lower),
+		OPT_UINT("cap-upper",   'u', &cfg.dw12,         cap_upper),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	if (cfg.operation > 0xf) {
+		fprintf(stderr, "invalid operation field: %u\n", cfg.operation);
+		errno = EINVAL;
+		err = -1;
+		goto close_fd;
+	}
+
+	err = nvme_capacity_mgmt(fd, cfg.operation, cfg.element_id, cfg.dw11,
+		cfg.dw12, &result);
+	if (!err) {
+		printf("Capacity Management Command is Success\n");
+		if (cfg.operation == 1) {
+			printf("Created Element Identifier for Endurance Group is: %u\n", result);
+		} else if (cfg.operation == 3) {
+			printf("Created Element Identifier for NVM Set is: %u\n", result);
+		}
+	} else if (err > 0)
+		nvme_show_status(err);
+	else if (err < 0)
+		perror("capacity management");
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Read directive parameters of the "\

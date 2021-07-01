@@ -282,6 +282,10 @@ nvme_list_opts () {
 		"fw-download")
 		opts+=" --fw= -f --xfer= -x --offset= -o"
 			;;
+		"capacity-mgmt")
+		opts+=" --operation= -f --element-id= -i --cap-lower= -l \
+				--cap-upper= -u"
+			;;
 		"admin-passthru")
 		opts+=" --opcode= -o --flags= -f --prefil= -p --rsvd= -R \
 			--namespace-id= -n --data-len= -l --metadata-len= -m \

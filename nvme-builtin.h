@@ -55,6 +55,7 @@ COMMAND_LIST(
 	ENTRY("security-send", "Submit a Security Send command, return results", sec_send)
 	ENTRY("security-recv", "Submit a Security Receive command, return results", sec_recv)
 	ENTRY("get-lba-status", "Submit a Get LBA Status command, return results", get_lba_status)
+	ENTRY("capacity-mgmt", "Submit Capacity Management Command, return results", capacity_mgmt)
 	ENTRY("resv-acquire", "Submit a Reservation Acquire, return results", resv_acquire)
 	ENTRY("resv-register", "Submit a Reservation Register, return results", resv_register)
 	ENTRY("resv-release", "Submit a Reservation Release, return results", resv_release)
