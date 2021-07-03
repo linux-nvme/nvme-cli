@@ -843,14 +843,19 @@ int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data)
 	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
-int nvme_fw_commit(int fd, __u8 slot, __u8 action, __u8 bpid)
+int nvme_fw_commit(int fd, __u8 slot, __u8 action, __u8 bpid, __u32 *result)
 {
+	int err;
+
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_activate_fw,
 		.cdw10		= (bpid << 31) | (action << 3) | slot,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd);
+	err = nvme_submit_admin_passthru(fd, &cmd);
+	if (!err && result)
+		*result = cmd.result;
+	return err;
 }
 
 int nvme_sec_send(int fd, __u32 nsid, __u8 nssf, __u16 spsp,

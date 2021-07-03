@@ -137,7 +137,7 @@ int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls,
 		       __u16 *ctrlist, bool attach);
 
 int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data);
-int nvme_fw_commit(int fd, __u8 slot, __u8 action, __u8 bpid);
+int nvme_fw_commit(int fd, __u8 slot, __u8 action, __u8 bpid, __u32 *result);
 
 int nvme_sec_send(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 		  __u8 secp, __u32 tl, __u32 data_len, void *data);
