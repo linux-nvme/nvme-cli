@@ -3059,6 +3059,7 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *action = "[0-7]: commit action";
 	const char *bpid = "[0,1]: boot partition identifier, if applicable (default: 0)";
 	int err, fd;
+	__u32 result;
 
 	struct config {
 		__u8 slot;
@@ -3099,7 +3100,7 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 		goto close_fd;
 	}
 
-	err = nvme_fw_commit(fd, cfg.slot, cfg.action, cfg.bpid);
+	err = nvme_fw_commit(fd, cfg.slot, cfg.action, cfg.bpid, &result);
 	if (err < 0)
 		perror("fw-commit");
 	else if (err != 0)
@@ -3123,6 +3124,16 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 		if (cfg.action == 6 || cfg.action == 7)
 			printf(" bpid:%d", cfg.bpid);
 		printf("\n");
+	}
+
+	if (err >= 0) {
+		printf("Multiple Update Detected (MUD) Value: %u\n", result);
+		if (result & 0x1)
+			printf("Detected an overlapping firmware/boot partition image update command "\
+				"sequence due to processing a command from a Management Endpoint");
+		if ((result >> 1) & 0x1)
+			printf("Detected an overlapping firmware/boot partition image update command "\
+				"sequence due to processing a command from an Admin SQ on a controller");
 	}
 
 close_fd:
