@@ -23,7 +23,7 @@ all: $(all_targets)
 CXXFLAGS ?= -lstdc++
 
 %: %.cc
-	$(QUIET_CC)$(CC) $(CFLAGS) $(LDFLAGS) $(CXXFLAGS) -o $@ $< -lnvme $(LIBS)
+	$(QUIET_CC)$(CXX) $(CFLAGS) $(LDFLAGS) $(CXXFLAGS) -o $@ $< -lnvme $(LIBS)
 
 %: %.c
 	$(QUIET_CC)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< -lnvme $(LIBS)
