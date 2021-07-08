@@ -18,6 +18,7 @@ SYNOPSIS
 			[--limited-retry | -l]
 			[--force-unit-access | -f]
 			[--namespace-id=<nsid> | -n <nsid>]
+			[--storage-tag<storage-tag> | -S <storage-tag>]
 
 DESCRIPTION
 -----------
@@ -77,7 +78,11 @@ metadata is passes.
 -n <nsid>::
 	Namespace ID use in the command.
 
-EXAMPLES
+--storage-tag=<storage-tag>::
+-n <storage-tag>::
+	Variable Sized Expected Logical Block Storage Tag(ELBST) and Expected Logical
+	Block Reference Tag (ELBRT), CDW2 and CDW3 (00:47) bits.
+
 EXAMPLES
 --------
 No examples yet.
