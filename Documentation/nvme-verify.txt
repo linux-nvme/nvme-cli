@@ -17,6 +17,7 @@ SYNOPSIS
             [--ref-tag=<reftag> | -r <reftag>]
             [--app-tag-mask=<appmask> | -m <appmask>]
             [--app-tag=<apptag> | -a <apptag>]
+            [--storage-tag<storage-tag> | -S <storage-tag>]
 
 DESCRIPTION
 -----------
@@ -72,6 +73,11 @@ metadata is passes.
 --app-tag=<apptag>::
 -a <apptag>::
 	Optional application tag when used with protection information.
+
+--storage-tag=<storage-tag>::
+-S <storage-tag>::
+	Variable Sized Expected Logical Block Storage Tag(ELBST) and Expected Logical
+	Block Reference Tag (ELBRT), CDW2 and CDW3 (00:47) bits.
 
 EXAMPLES
 --------

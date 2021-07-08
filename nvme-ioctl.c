@@ -146,11 +146,14 @@ int nvme_io(int fd, __u8 opcode, __u64 slba, __u16 nblocks, __u16 control,
 }
 
 int nvme_verify(int fd, __u32 nsid, __u64 slba, __u16 nblocks,
-		__u16 control, __u32 reftag, __u16 apptag, __u16 appmask)
+		__u16 control, __u32 reftag, __u16 apptag, __u16 appmask,
+		__u64 storage_tag)
 {
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_verify,
 		.nsid		= nsid,
+		.cdw2		= storage_tag & 0xffffffff,
+		.cdw3		= (storage_tag >> 32) & 0xffff,
 		.cdw10		= slba & 0xffffffff,
 		.cdw11		= slba >> 32,
 		.cdw12		= nblocks | (control << 16),
@@ -174,11 +177,14 @@ int nvme_passthru_io(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 }
 
 int nvme_write_zeros(int fd, __u32 nsid, __u64 slba, __u16 nlb,
-		     __u16 control, __u32 reftag, __u16 apptag, __u16 appmask)
+		     __u16 control, __u32 reftag, __u16 apptag, __u16 appmask,
+			 __u64 storage_tag)
 {
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_write_zeroes,
 		.nsid		= nsid,
+		.cdw2		= storage_tag & 0xffffffff,
+		.cdw3		= (storage_tag >> 32) & 0xffff,
 		.cdw10		= slba & 0xffffffff,
 		.cdw11		= slba >> 32,
 		.cdw12		= nlb | (control << 16),

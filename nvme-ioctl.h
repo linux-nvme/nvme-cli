@@ -38,12 +38,14 @@ int nvme_passthru_io(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 		     void *metadata, __u32 timeout);
 
 int nvme_write_zeros(int fd, __u32 nsid, __u64 slba, __u16 nlb,
-		     __u16 control, __u32 reftag, __u16 apptag, __u16 appmask);
+		__u16 control, __u32 reftag, __u16 apptag, __u16 appmask,
+		__u64 storage_tag);
 
 int nvme_write_uncorrectable(int fd, __u32 nsid, __u64 slba, __u16 nlb);
 
 int nvme_verify(int fd, __u32 nsid, __u64 slba, __u16 nblocks,
-		__u16 control, __u32 reftag, __u16 apptag, __u16 appmask);
+		__u16 control, __u32 reftag, __u16 apptag, __u16 appmask,
+		__u64 storage_tag);
 
 int nvme_flush(int fd, __u32 nsid);
 
