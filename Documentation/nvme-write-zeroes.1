@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-zeroes
-.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
-.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/20/2020
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 07/08/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZEROES" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-ZEROES" "1" "07/08/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,6 +42,7 @@ nvme-write-zeroes \- Send an NVMe write zeroes command, return results
                         [\-\-limited\-retry | \-l]
                         [\-\-force\-unit\-access | \-f]
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-storage\-tag<storage\-tag> | \-S <storage\-tag>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -137,19 +138,14 @@ Set the force\-unit access flag\&.
 .RS 4
 Namespace ID use in the command\&.
 .RE
-.sp
-EXAMPLES EXAMPLES
-.sp
-.if n \{\
+.PP
+\-\-storage\-tag=<storage\-tag>, \-n <storage\-tag>
 .RS 4
-.\}
-.nf
-No examples yet\&.
-
-NVME
-.fi
-.if n \{\
+Variable Sized Expected Logical Block Storage Tag(ELBST) and Expected Logical Block Reference Tag (ELBRT), CDW2 and CDW3 (00:47) bits\&.
 .RE
-.\}
+.SH "EXAMPLES"
+.sp
+No examples yet\&.
+.SH "NVME"
 .sp
 Part of the nvme\-user suite

@@ -757,7 +757,8 @@ nvme-verify(1) Manual Page
             [--prinfo=&lt;prinfo&gt; | -p &lt;prinfo&gt;]
             [--ref-tag=&lt;reftag&gt; | -r &lt;reftag&gt;]
             [--app-tag-mask=&lt;appmask&gt; | -m &lt;appmask&gt;]
-            [--app-tag=&lt;apptag&gt; | -a &lt;apptag&gt;]</pre>
+            [--app-tag=&lt;apptag&gt; | -a &lt;apptag&gt;]
+            [--storage-tag&lt;storage-tag&gt; | -S &lt;storage-tag&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -909,6 +910,18 @@ metadata is passes.</p></td>
         Optional application tag when used with protection information.
 </p>
 </dd>
+<dt class="hdlist1">
+--storage-tag=&lt;storage-tag&gt;
+</dt>
+<dt class="hdlist1">
+-S &lt;storage-tag&gt;
+</dt>
+<dd>
+<p>
+        Variable Sized Expected Logical Block Storage Tag(ELBST) and Expected Logical
+        Block Reference Tag (ELBRT), CDW2 and CDW3 (00:47) bits.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -929,7 +942,7 @@ metadata is passes.</p></td>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2021-07-07 01:41:43 IST
+ 2021-07-07 23:04:31 IST
 </div>
 </div>
 </body>
