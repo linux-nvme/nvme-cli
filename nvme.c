@@ -4293,6 +4293,8 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	const char *storage_tag = "storage tag, CDW2 and CDW3 (00:47) bits "\
 		"(for end to end PI)";
 	const char *deac = "Set DEAC bit, requesting controller to deallocate specified logical blocks";
+	const char *storage_tag_check = "This bit specifies the Storage Tag field shall be checked as "\
+		"part of end-to-end data protection processing";
 
 	struct config {
 		__u64 start_block;
@@ -4306,16 +4308,18 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		int   deac;
 		int   limited_retry;
 		int   force_unit_access;
+		int   storage_tag_check;
 	};
 
 	struct config cfg = {
-		.start_block     = 0,
-		.block_count     = 0,
-		.prinfo          = 0,
-		.ref_tag         = 0,
-		.app_tag_mask    = 0,
-		.app_tag         = 0,
-		.storage_tag	 = 0,
+		.start_block     	= 0,
+		.block_count     	= 0,
+		.prinfo          	= 0,
+		.ref_tag         	= 0,
+		.app_tag_mask    	= 0,
+		.app_tag         	= 0,
+		.storage_tag	 	= 0,
+		.storage_tag_check 	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -4330,6 +4334,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
 		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
 		OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
+		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
 		OPT_END()
 	};
 
@@ -4349,6 +4354,8 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		control |= NVME_IO_FUA;
 	if (cfg.deac)
 		control |= NVME_IO_DEAC;
+	if (cfg.storage_tag_check)
+		control |= NVME_SC_STORAGE_TAG_CHECK;
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(fd, &cfg.namespace_id);
 		if (err < 0) {
@@ -5001,6 +5008,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 	const char *dtype = "directive type (for write-only)";
 	const char *dspec = "directive specific (for write-only)";
 	const char *dsm = "dataset management attributes (lower 16 bits)";
+	const char *storage_tag_check = "This bit specifies the Storage Tag field shall be " \
+		"checked as part of end-to-end data protection processing";
 
 	struct config {
 		__u32 namespace_id;
@@ -5019,22 +5028,24 @@ static int submit_io(int opcode, char *command, const char *desc,
 		__u16 app_tag;
 		int   limited_retry;
 		int   force_unit_access;
+		int   storage_tag_check;
 		int   show;
 		int   dry_run;
 		int   latency;
 	};
 
 	struct config cfg = {
-		.start_block     = 0,
-		.block_count     = 0,
-		.data_size       = 0,
-		.metadata_size   = 0,
-		.ref_tag         = 0,
-		.data            = "",
-		.metadata        = "",
-		.prinfo          = 0,
-		.app_tag_mask    = 0,
-		.app_tag         = 0,
+		.start_block     	= 0,
+		.block_count     	= 0,
+		.data_size       	= 0,
+		.metadata_size   	= 0,
+		.ref_tag         	= 0,
+		.data            	= "",
+		.metadata        	= "",
+		.prinfo          	= 0,
+		.app_tag_mask    	= 0,
+		.app_tag         	= 0,
+		.storage_tag_check 	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -5051,6 +5062,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
 		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force),
+		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
 		OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype),
 		OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
 		OPT_SHRT("dsm",               'D', &cfg.dsmgmt,            dsm),
@@ -5085,6 +5097,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 		control |= NVME_IO_LR;
 	if (cfg.force_unit_access)
 		control |= NVME_IO_FUA;
+	if (cfg.storage_tag_check)
+		control |= NVME_SC_STORAGE_TAG_CHECK;
 	if (cfg.dtype) {
 		if (cfg.dtype > 0xf) {
 			fprintf(stderr, "Invalid directive type, %x\n",
@@ -5293,6 +5307,8 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	const char *app_tag = "app tag (for end to end PI)";
 	const char *storage_tag = "storage tag, CDW2 and CDW3 (00:47) bits "\
 		"(for end to end PI)";
+	const char *storage_tag_check = "This bit specifies the Storage Tag field shall "\
+		"be checked as part of Verify operation";
 
 	struct config {
 		__u64 start_block;
@@ -5303,6 +5319,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		__u16 block_count;
 		__u8  prinfo;
 		__u64 storage_tag;
+		int   storage_tag_check;
 		int   limited_retry;
 		int   force_unit_access;
 	};
@@ -5318,6 +5335,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		.limited_retry     = 0,
 		.force_unit_access = 0,
 		.storage_tag	   = 0,
+		.storage_tag_check = 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -5331,6 +5349,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
 		OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
 		OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
+		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
 		OPT_END()
 	};
 
@@ -5348,6 +5367,8 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		control |= NVME_IO_LR;
 	if (cfg.force_unit_access)
 		control |= NVME_IO_FUA;
+	if (cfg.storage_tag_check)
+		control |= NVME_SC_STORAGE_TAG_CHECK;
 
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(fd, &cfg.namespace_id);

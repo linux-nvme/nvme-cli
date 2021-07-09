@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-write
-.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
-.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/20/2020
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 07/09/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WRITE" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-WRITE" "1" "07/09/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -50,6 +50,7 @@ nvme-write \- Send an NVMe write command, provide results
                         [\-\-show\-command | \-v]
                         [\-\-dry\-run | \-w]
                         [\-\-latency | \-t]
+                        [\-\-storage\-tag\-check<storage\-tag\-check> | \-C <storage\-tag\-check>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -187,6 +188,11 @@ be set\&. Otherwise \-\-dry\-run option will be
 \-t, \-\-latency
 .RS 4
 Print out the latency the IOCTL took (in us)\&.
+.RE
+.PP
+\-\-storage\-tag\-check=<storage\-tag\-check>, \-C <storage\-tag\-check>
+.RS 4
+This bit specifies the Storage Tag field shall be checked as part of end\-to\-end data protection processing\&.
 .RE
 .SH "EXAMPLES"
 .sp

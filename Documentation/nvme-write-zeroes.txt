@@ -19,6 +19,7 @@ SYNOPSIS
 			[--force-unit-access | -f]
 			[--namespace-id=<nsid> | -n <nsid>]
 			[--storage-tag<storage-tag> | -S <storage-tag>]
+			[--storage-tag-check<storage-tag-check> | -C <storage-tag-check>]
 
 DESCRIPTION
 -----------
@@ -82,6 +83,11 @@ metadata is passes.
 -n <storage-tag>::
 	Variable Sized Expected Logical Block Storage Tag(ELBST) and Expected Logical
 	Block Reference Tag (ELBRT), CDW2 and CDW3 (00:47) bits.
+
+--storage-tag-check=<storage-tag-check>::
+-C <storage-tag-check>::
+	This bit specifies the Storage Tag field shall be checked as part of end-to-end
+	data protection processing.
 
 EXAMPLES
 --------
