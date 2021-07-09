@@ -121,6 +121,7 @@ enum nvme_print_flags validate_output_format(const char *format);
 int __id_ctrl(int argc, char **argv, struct command *cmd,
 	struct plugin *plugin, void (*vs)(__u8 *vs, struct json_object *root));
 char *nvme_char_from_block(char *block);
+int nvme_logical_block_size_from_ns_char(const char *dev);
 void *mmap_registers(const char *dev);
 
 extern int current_index;

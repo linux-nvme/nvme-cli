@@ -667,6 +667,30 @@ char *nvme_char_from_block(char *dev)
 	return path;
 }
 
+int nvme_logical_block_size_from_ns_char(const char *dev)
+{
+	int ret;
+	int id, nsid;
+	char *path = NULL;
+	char *s;
+
+	ret = sscanf(dev, "ng%dn%d", &id, &nsid);
+	if (ret != 2)
+		return -EINVAL;
+
+	if (asprintf(&path, "/sys/block/nvme%dn%d/queue", id, nsid) < 0)
+		path = NULL;
+
+	if (!path)
+		return -EINVAL;
+
+	s = nvme_get_ctrl_attr(path, "logical_block_size");
+	if (!s)
+		return -EINVAL;
+
+	return atoi(s);
+}
+
 void *mmap_registers(const char *dev)
 {
 	int fd;
