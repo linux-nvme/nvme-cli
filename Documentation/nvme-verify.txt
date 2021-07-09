@@ -18,6 +18,7 @@ SYNOPSIS
             [--app-tag-mask=<appmask> | -m <appmask>]
             [--app-tag=<apptag> | -a <apptag>]
             [--storage-tag<storage-tag> | -S <storage-tag>]
+            [--storage-tag-check<storage-tag-check> | -C <storage-tag-check>]
 
 DESCRIPTION
 -----------
@@ -78,6 +79,10 @@ metadata is passes.
 -S <storage-tag>::
 	Variable Sized Expected Logical Block Storage Tag(ELBST) and Expected Logical
 	Block Reference Tag (ELBRT), CDW2 and CDW3 (00:47) bits.
+
+--storage-tag-check=<storage-tag-check>::
+-C <storage-tag-check>::
+	This bit specifies the Storage Tag field shall be checked as part of Verify operation.
 
 EXAMPLES
 --------

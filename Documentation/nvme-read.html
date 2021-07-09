@@ -766,7 +766,8 @@ nvme-read(1) Manual Page
                         [--dsm=&lt;dsm&gt; | -D &lt;dsm&gt;]
                         [--show-command | -v]
                         [--dry-run | -w]
-                        [--latency | -t]</pre>
+                        [--latency | -t]
+                        [--storage-tag-check&lt;storage-tag-check&gt; | -C &lt;storage-tag-check&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -1013,6 +1014,18 @@ metadata is passes.</p></td>
         Print out the latency the IOCTL took (in us).
 </p>
 </dd>
+<dt class="hdlist1">
+--storage-tag-check=&lt;storage-tag-check&gt;
+</dt>
+<dt class="hdlist1">
+-C &lt;storage-tag-check&gt;
+</dt>
+<dd>
+<p>
+        This bit specifies the Storage Tag field shall be checked as part of end-to-end
+        data protection processing.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1033,7 +1046,7 @@ metadata is passes.</p></td>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-10-12 00:12:24 JST
+ 2021-07-09 14:16:42 IST
 </div>
 </div>
 </body>

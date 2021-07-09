@@ -2,12 +2,12 @@
 .\"     Title: nvme-zeroes
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 07/08/2021
+.\"      Date: 07/09/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZEROES" "1" "07/08/2021" "NVMe" "NVMe Manual"
+.TH "NVME\-ZEROES" "1" "07/09/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -43,6 +43,7 @@ nvme-write-zeroes \- Send an NVMe write zeroes command, return results
                         [\-\-force\-unit\-access | \-f]
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-storage\-tag<storage\-tag> | \-S <storage\-tag>]
+                        [\-\-storage\-tag\-check<storage\-tag\-check> | \-C <storage\-tag\-check>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -142,6 +143,11 @@ Namespace ID use in the command\&.
 \-\-storage\-tag=<storage\-tag>, \-n <storage\-tag>
 .RS 4
 Variable Sized Expected Logical Block Storage Tag(ELBST) and Expected Logical Block Reference Tag (ELBRT), CDW2 and CDW3 (00:47) bits\&.
+.RE
+.PP
+\-\-storage\-tag\-check=<storage\-tag\-check>, \-C <storage\-tag\-check>
+.RS 4
+This bit specifies the Storage Tag field shall be checked as part of end\-to\-end data protection processing\&.
 .RE
 .SH "EXAMPLES"
 .sp
