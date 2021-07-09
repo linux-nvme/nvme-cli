@@ -490,9 +490,9 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	return NULL;
 }
 
-static int nvme_discovery_log(int fd, __u32 len, struct nvmf_discovery_log *log)
+static int nvme_discovery_log(int fd, __u32 len, struct nvmf_discovery_log *log, bool rae)
 {
-	return __nvme_get_log_page(fd, 0, NVME_LOG_LID_DISCOVER, true, 512,
+	return __nvme_get_log_page(fd, 0, NVME_LOG_LID_DISCOVER, rae, 512,
 				   len, log);
 }
 
@@ -516,7 +516,7 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 	memset(log, 0, hdr);
 
 	nvme_msg(LOG_DEBUG, "%s: discover length %d\n", name, 0x100);
-	ret = nvme_discovery_log(nvme_ctrl_get_fd(c), 0x100, log);
+	ret = nvme_discovery_log(nvme_ctrl_get_fd(c), 0x100, log, true);
 	if (ret) {
 		nvme_msg(LOG_INFO, "%s: discover failed, error %d\n",
 			 name, errno);
@@ -546,7 +546,7 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 		memset(log, 0, size);
 
 		nvme_msg(LOG_DEBUG, "%s: discover length %d\n", name, size);
-		ret = nvme_discovery_log(nvme_ctrl_get_fd(c), size, log);
+		ret = nvme_discovery_log(nvme_ctrl_get_fd(c), size, log, false);
 		if (ret) {
 			nvme_msg(LOG_INFO,
 				 "%s: discover try %d/%d failed, error %d\n",
@@ -557,7 +557,7 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 		genctr = le64_to_cpu(log->genctr);
 		nvme_msg(LOG_DEBUG, "%s: discover genctr %lu, retry\n",
 			 name, genctr);
-		ret = nvme_discovery_log(nvme_ctrl_get_fd(c), hdr, log);
+		ret = nvme_discovery_log(nvme_ctrl_get_fd(c), hdr, log, true);
 		if (ret) {
 			nvme_msg(LOG_INFO,
 				 "%s: discover try %d/%d failed, error %d\n",
