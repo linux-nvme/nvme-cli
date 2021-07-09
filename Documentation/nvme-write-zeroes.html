@@ -759,7 +759,8 @@ nvme-zeroes(1) Manual Page
                         [--limited-retry | -l]
                         [--force-unit-access | -f]
                         [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--storage-tag&lt;storage-tag&gt; | -S &lt;storage-tag&gt;]</pre>
+                        [--storage-tag&lt;storage-tag&gt; | -S &lt;storage-tag&gt;]
+                        [--storage-tag-check&lt;storage-tag-check&gt; | -C &lt;storage-tag-check&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -933,6 +934,18 @@ metadata is passes.</p></td>
         Block Reference Tag (ELBRT), CDW2 and CDW3 (00:47) bits.
 </p>
 </dd>
+<dt class="hdlist1">
+--storage-tag-check=&lt;storage-tag-check&gt;
+</dt>
+<dt class="hdlist1">
+-C &lt;storage-tag-check&gt;
+</dt>
+<dd>
+<p>
+        This bit specifies the Storage Tag field shall be checked as part of end-to-end
+        data protection processing.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -953,7 +966,7 @@ metadata is passes.</p></td>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2021-07-07 01:54:21 IST
+ 2021-07-09 13:42:09 IST
 </div>
 </div>
 </body>
