@@ -156,6 +156,11 @@ static bool is_blkdev(void)
 	return S_ISBLK(nvme_stat.st_mode);
 }
 
+static bool is_ns_chardev(void)
+{
+	return !strncmp(devicename, "ng", 2) && S_ISCHR(nvme_stat.st_mode);
+}
+
 static int open_dev(char *dev)
 {
 	int err, fd;
@@ -5062,8 +5067,13 @@ static int submit_io(int opcode, char *command, const char *desc,
 		goto close_mfd;
 	}
 
-	if (ioctl(fd, BLKSSZGET, &logical_block_size) < 0)
-		goto close_mfd;
+	if (is_ns_chardev()) {
+		logical_block_size =
+			nvme_logical_block_size_from_ns_char(devicename);
+	} else {
+		if (ioctl(fd, BLKSSZGET, &logical_block_size) < 0)
+			goto close_mfd;
+	}
 
 	buffer_size = (cfg.block_count + 1) * logical_block_size;
 	if (cfg.data_size < buffer_size) {
