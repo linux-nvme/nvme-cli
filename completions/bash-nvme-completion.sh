@@ -12,10 +12,68 @@ _cmds="list id-ctrl id-ns list-ns id-iocs nvm-id-ctrl create-ns delete-ns \
 	write-uncor copy reset subsystem-reset show-regs discover \
 	connect-all connect disconnect version help \
 	intel lnvm memblaze list-subsys endurance-event-agg-log \
-	lba-status-log resv-notif-log"
+	lba-status-log resv-notif-log zns"
+
+plugin_list_opts_zns () {
+	local zns_cmds="id-ctrl id-ns zone-mgmt-recv zone-mgmt-send report-zones \
+					close-zone finish-zone open-zone reset-zone offline-zone \
+					set-zone-desc zone-append changed-zone-list help"
+	local zns_opts=""
+	local compargs=""
+
+	if [[ ${#words[*]} -lt 4 ]]; then
+		COMPREPLY+=( $(compgen -W "$zns_cmds" -- $cur ) )
+		return 0
+	fi
+
+	case "${words[2]}" in
+		"id-ctrl")
+		zns_opts+=" --output-format= -o"
+		;;
+		"id-ns")
+		zns_opts+=" --namespace-id= -n --vendor-specific -v \
+			--output-format= -o --human-readable -H"
+			;;
+		"zone-mgmt-recv")
+		zns_opts+=" --output-format= -o --namespace-id= -n \
+			--start-lba= -s --zra= -z --zrasf= -S --partial -p \
+			--data-len= -l"
+			;;
+		"zone-mgmt-send")
+		zns_opts+="  --namespace-id= -n --start-lba= -s --select-all -a \
+				--zsa= -z --data-len= -l --data= -d"
+			;;
+		"report-zones")
+		zns_opts+="  --namespace-id= -n --start-lba= -s --descs= -d \
+				--state= -S --output-format= -o --extended -e --partial -p \"
+				--raw-binary -b"
+			;;
+		"close-zone"|"finish-zone"|"open-zone"|"reset-zone"|"offline-zone")		
+		zns_opts+=" --namespace-id= -n --start-lba= -s --select-all -a"
+			;;
+		"set-zone-desc")		
+		zns_opts+=" --namespace-id= -n --start-lba= -s --data= -d"
+			;;
+		"zone-append")		
+		zns_opts+=" --namespace-id= -n --zslba= -s --data-size= -z \
+				--metadata-size= -y --data= -d --metadata= -M \
+				--limited-retry -l --force-unit-access -f --ref-tag= -r \
+				--app-tag-mask= -m --app-tag= -a --prinfo= -p --latency -t"
+			;;
+		"changed-zone-list")		
+		zns_opts+=" --namespace-id= -n  --output-format= -o --rae -r"
+			;;
+		"help")
+		zns_opts=$zns_cmds
+			;;
+	esac
+	zns_opts+=" -h --help"
+	COMPREPLY+=( $( compgen $compargs -W "$zns_opts" -- $cur ) )
+	return 0
+}
 
 nvme_list_opts () {
-        local opts=""
+	local opts=""
 	local compargs=""
 
 	local nonopt_args=0
@@ -30,6 +88,13 @@ nvme_list_opts () {
 	fi
 
 	opts+=" "
+
+	# plugin completion function (plugin_list_opts_$plug_in_name)
+    declare -f "plugin_list_opts_$1" > /dev/null
+    if [ $? -eq 0 ]; then
+        "plugin_list_opts_$1" ${words[2]} $prev
+        return 0 
+    fi
 
 	case "$1" in
 		"list")
