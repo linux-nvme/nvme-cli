@@ -4896,6 +4896,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	struct nvme_id_ns ns;
 	__u8 lba_index, ms = 0;
 
+	const char *namespace_id = "desired namespace";
 	const char *start_block = "64-bit addr of first block to access";
 	const char *block_count = "number of blocks (zeroes based) on device to access";
 	const char *data_size = "size of data in bytes";
@@ -4916,8 +4917,11 @@ static int submit_io(int opcode, char *command, const char *desc,
 	const char *dsm = "dataset management attributes (lower 16 bits)";
 	const char *storage_tag_check = "This bit specifies the Storage Tag field shall be " \
 		"checked as part of end-to-end data protection processing";
+	const char *storage_tag = "storage tag, CDW2 and CDW3 (00:47) bits "\
+		"(for end to end PI)";
 
 	struct config {
+		__u32 namespace_id;
 		__u64 start_block;
 		__u16 block_count;
 		__u64 data_size;
@@ -4931,6 +4935,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		__u16 dsmgmt;
 		__u16 app_tag_mask;
 		__u16 app_tag;
+		__u64 storage_tag;
 		int   limited_retry;
 		int   force_unit_access;
 		int   storage_tag_check;
@@ -4940,6 +4945,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	};
 
 	struct config cfg = {
+		.namespace_id		= 0,
 		.start_block     	= 0,
 		.block_count     	= 0,
 		.data_size       	= 0,
@@ -4951,9 +4957,11 @@ static int submit_io(int opcode, char *command, const char *desc,
 		.app_tag_mask    	= 0,
 		.app_tag         	= 0,
 		.storage_tag_check 	= 0,
+		.storage_tag		= 0,
 	};
 
 	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,      namespace_id),
 		OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
 		OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
 		OPT_SUFFIX("data-size",       'z', &cfg.data_size,         data_size),
@@ -4964,6 +4972,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
 		OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
 		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
+		OPT_SUFFIX("storage-tag",     'g', &cfg.storage_tag,       storage_tag),
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
 		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force),
 		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
@@ -4979,6 +4988,14 @@ static int submit_io(int opcode, char *command, const char *desc,
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
 		goto ret;
+
+	if (!cfg.namespace_id) {
+		err = cfg.namespace_id = nvme_get_nsid(fd);
+		if (err < 0) {
+			perror("get-namespace-id");
+			goto close_fd;
+		}
+	}
 
 	dfd = mfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
 	if (cfg.prinfo > 0xf) {
@@ -5107,24 +5124,27 @@ static int submit_io(int opcode, char *command, const char *desc,
 	}
 
 	if (cfg.show) {
-		printf("opcode       : %02x\n", opcode);
-		printf("flags        : %02x\n", 0);
-		printf("control      : %04x\n", control);
-		printf("nblocks      : %04x\n", cfg.block_count);
-		printf("metadata     : %"PRIx64"\n", (uint64_t)(uintptr_t)mbuffer);
-		printf("addr         : %"PRIx64"\n", (uint64_t)(uintptr_t)buffer);
-		printf("slba         : %"PRIx64"\n", (uint64_t)cfg.start_block);
-		printf("dsmgmt       : %08x\n", dsmgmt);
-		printf("reftag       : %08x\n", cfg.ref_tag);
-		printf("apptag       : %04x\n", cfg.app_tag);
-		printf("appmask      : %04x\n", cfg.app_tag_mask);
+		printf("opcode       	: %02x\n", opcode);
+		printf("nsid         	: %02x\n", cfg.namespace_id);
+		printf("control      	: %04x\n", control);
+		printf("nblocks      	: %04x\n", cfg.block_count);
+		printf("metadata     	: %"PRIx64"\n", (uint64_t)(uintptr_t)mbuffer);
+		printf("addr         	: %"PRIx64"\n", (uint64_t)(uintptr_t)buffer);
+		printf("slba         	: %"PRIx64"\n", (uint64_t)cfg.start_block);
+		printf("dsmgmt       	: %08x\n", dsmgmt);
+		printf("reftag       	: %08x\n", cfg.ref_tag);
+		printf("apptag       	: %04x\n", cfg.app_tag);
+		printf("appmask      	: %04x\n", cfg.app_tag_mask);
+		printf("storagetagcheck : %04x\n", cfg.storage_tag_check);
+		printf("storagetag      : %"PRIx64"\n", (uint64_t)cfg.storage_tag);
 	}
 	if (cfg.dry_run)
 		goto free_mbuffer;
 
 	gettimeofday(&start_time, NULL);
-	err = nvme_io(fd, opcode, cfg.start_block, cfg.block_count, control, dsmgmt,
-			cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask, buffer, mbuffer);
+	err = nvme_io(fd, opcode, cfg.namespace_id, cfg.start_block, cfg.block_count,
+			 control, dsmgmt, cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask,
+			 cfg.storage_tag, buffer, mbuffer);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: %s: %llu us\n",
