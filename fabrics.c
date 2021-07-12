@@ -50,6 +50,7 @@
 #include "common.h"
 #include "util/log.h"
 #include "util/cleanup.h"
+#include "monitor.h"
 
 #ifdef HAVE_SYSTEMD
 #include <systemd/sd-id128.h>
@@ -88,7 +89,6 @@ struct connect_args {
 struct connect_args *tracked_ctrls;
 
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
-#define PATH_NVMF_DISC		"/etc/nvme/discovery.conf"
 #define PATH_NVMF_HOSTNQN	"/etc/nvme/hostnqn"
 #define PATH_NVMF_HOSTID	"/etc/nvme/hostid"
 #define MAX_DISC_ARGS		10
@@ -1129,7 +1129,8 @@ free_addrinfo:
 	return ret;
 }
 
-static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e)
+static int connect_ctrl(struct nvmf_disc_rsp_page_entry *e,
+			const struct monitor_callbacks *monitor)
 {
 	char argstr[BUF_SIZE], *p;
 	const char *transport;
@@ -1329,7 +1330,7 @@ retry:
 		flags = validate_output_format(fabrics_cfg.output_format);
 		if (flags < 0)
 			flags = NORMAL;
-		ret = do_discover(argstr, true, flags);
+		ret = do_discover(argstr, true, flags, monitor);
 	} else
 		ret = add_ctrl(argstr);
 	if (ret == -EINVAL && disable_sqflow &&
@@ -1387,7 +1388,8 @@ static bool should_connect(struct nvmf_disc_rsp_page_entry *entry)
 	return !strncmp(fabrics_cfg.traddr, entry->traddr, len);
 }
 
-static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
+static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec,
+			 const struct monitor_callbacks *monitor)
 {
 	int i;
 	int instance;
@@ -1397,7 +1399,7 @@ static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 		if (!should_connect(&log->entries[i]))
 			continue;
 
-		instance = connect_ctrl(&log->entries[i]);
+		instance = connect_ctrl(&log->entries[i], monitor);
 
 		/* clean success */
 		if (instance >= 0)
@@ -1437,7 +1439,8 @@ static void nvmf_get_host_identifiers(int ctrl_instance)
 
 static DEFINE_CLEANUP_FUNC(cleanup_log, struct nvmf_disc_rsp_page_hdr *, free);
 
-int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
+int do_discover(char *argstr, bool connect, enum nvme_print_flags flags,
+		const struct monitor_callbacks *monitor)
 {
 	struct nvmf_disc_rsp_page_hdr *log __cleanup__(cleanup_log) = NULL;
 	char *dev_name;
@@ -1454,6 +1457,10 @@ int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 		free(fabrics_cfg.device);
 		fabrics_cfg.device = NULL;
 	}
+
+	if (!fabrics_cfg.device && monitor && monitor->query_dev)
+		monitor->query_dev(argstr, &fabrics_cfg.device);
+
 	if (!fabrics_cfg.device)
 		fabrics_cfg.device = find_ctrl_with_connectargs(cargs);
 	free_connect_args(cargs);
@@ -1466,11 +1473,17 @@ int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 	}
 	if (instance < 0)
 		return instance;
+	else if (monitor && monitor->notify &&
+		 (fabrics_cfg.device || fabrics_cfg.persistent))
+		monitor->notify(argstr, instance);
 
 	if (asprintf(&dev_name, "/dev/nvme%d", instance) < 0)
 		return -errno;
 	ret = nvmf_get_log_page_discovery(dev_name, &log, &numrec, &status);
 	free(dev_name);
+	if (fabrics_cfg.persistent)
+		msg(LOG_NOTICE, "Persistent device: nvme%d\n", instance);
+
 	if (!fabrics_cfg.device && !fabrics_cfg.persistent) {
 		err = remove_ctrl(instance);
 		if (err)
@@ -1480,7 +1493,7 @@ int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 	switch (ret) {
 	case DISC_OK:
 		if (connect)
-			ret = connect_ctrls(log, numrec);
+			ret = connect_ctrls(log, numrec, monitor);
 		else if (fabrics_cfg.raw || flags == BINARY)
 			save_discovery_log(log, numrec);
 		else if (flags == JSON)
@@ -1518,8 +1531,10 @@ int do_discover(char *argstr, bool connect, enum nvme_print_flags flags)
 	return ret;
 }
 
-static int discover_from_conf_file(const char *desc, char *argstr,
-		const struct argconfig_commandline_options *opts, bool connect)
+static OPT_ARGS(discover_opts);
+
+int discover_from_conf_file(const char *desc, char *argstr, bool connect,
+			    const struct monitor_callbacks *monitor)
 {
 	FILE *f;
 	char line[256], *ptr, *all_args, *args, **argv;
@@ -1559,7 +1574,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 		while ((ptr = strsep(&args, " =\n")) != NULL)
 			argv[argc++] = ptr;
 
-		err = argconfig_parse(argc, argv, desc, opts);
+		err = argconfig_parse(argc, argv, desc, discover_opts);
 		if (err)
 			goto free_and_continue;
 
@@ -1586,7 +1601,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 			goto free_and_continue;
 		}
 
-		err = do_discover(argstr, connect, flags);
+		err = do_discover(argstr, connect, flags, monitor);
 		if (err)
 			ret = err;
 
@@ -1603,43 +1618,42 @@ out:
 	return ret;
 }
 
+static OPT_ARGS(discover_opts) = {
+	OPT_LIST("transport",      't', &fabrics_cfg.transport,       "transport type"),
+	OPT_LIST("traddr",         'a', &fabrics_cfg.traddr,          "transport address"),
+	OPT_LIST("trsvcid",        's', &fabrics_cfg.trsvcid,         "transport service id (e.g. IP port)"),
+	OPT_LIST("host-traddr",    'w', &fabrics_cfg.host_traddr,     "host traddr (e.g. FC WWN's)"),
+	OPT_LIST("host-iface",     'f', &fabrics_cfg.host_iface,      "host transport interface (e.g. IP eth1, enp2s0)"),
+	OPT_LIST("hostnqn",        'q', &fabrics_cfg.hostnqn,         "user-defined hostnqn (if default not used)"),
+	OPT_LIST("hostid",         'I', &fabrics_cfg.hostid,          "user-defined hostid (if default not used)"),
+	OPT_LIST("raw",            'r', &fabrics_cfg.raw,             "raw output file"),
+	OPT_LIST("device",         'd', &fabrics_cfg.device,          "use existing discovery controller device"),
+	OPT_INT("keep-alive-tmo",  'k', &fabrics_cfg.keep_alive_tmo,  "keep alive timeout period in seconds"),
+	OPT_INT("reconnect-delay", 'c', &fabrics_cfg.reconnect_delay, "reconnect timeout period in seconds"),
+	OPT_INT("ctrl-loss-tmo",   'l', &fabrics_cfg.ctrl_loss_tmo,   "controller loss timeout period in seconds"),
+	OPT_INT("fast_io_fail_tmo",'f',&fabrics_cfg.fast_io_fail_tmo, "fast I/O fail timeout (default off)"),
+	OPT_INT("tos",             'T', &fabrics_cfg.tos,             "type of service"),
+	OPT_FLAG("hdr_digest",     'g', &fabrics_cfg.hdr_digest,      "enable transport protocol header digest (TCP transport)"),
+	OPT_FLAG("data_digest",    'G', &fabrics_cfg.data_digest,     "enable transport protocol data digest (TCP transport)"),
+	OPT_INT("nr-io-queues",    'i', &fabrics_cfg.nr_io_queues,    "number of io queues to use (default is core count)"),
+	OPT_INT("nr-write-queues", 'W', &fabrics_cfg.nr_write_queues, "number of write queues to use (default 0)"),
+	OPT_INT("nr-poll-queues",  'P', &fabrics_cfg.nr_poll_queues,  "number of poll queues to use (default 0)"),
+	OPT_INT("queue-size",      'Q', &fabrics_cfg.queue_size,      "number of io queue elements to use (default 128)"),
+	OPT_FLAG("persistent",     'p', &fabrics_cfg.persistent,      "persistent discovery connection"),
+	OPT_FLAG("quiet",          'S', &fabrics_cfg.quiet,           "suppress already connected errors"),
+	OPT_FLAG("matching",       'm', &fabrics_cfg.matching_only,   "connect only records matching the traddr"),
+	OPT_FMT("output-format",   'o', &fabrics_cfg.output_format,   "Output format: normal|json|binary"),
+	OPT_END()
+};
+
 int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char argstr[BUF_SIZE];
 	int ret;
 	enum nvme_print_flags flags;
-	bool quiet = false;
-
-	OPT_ARGS(opts) = {
-		OPT_LIST("transport",      't', &fabrics_cfg.transport,       "transport type"),
-		OPT_LIST("traddr",         'a', &fabrics_cfg.traddr,          "transport address"),
-		OPT_LIST("trsvcid",        's', &fabrics_cfg.trsvcid,         "transport service id (e.g. IP port)"),
-		OPT_LIST("host-traddr",    'w', &fabrics_cfg.host_traddr,     "host traddr (e.g. FC WWN's or IP source address)"),
-		OPT_LIST("host-iface",     'f', &fabrics_cfg.host_iface,      "host transport interface (e.g. IP eth1, enp2s0)"),
-		OPT_LIST("hostnqn",        'q', &fabrics_cfg.hostnqn,         "user-defined hostnqn (if default not used)"),
-		OPT_LIST("hostid",         'I', &fabrics_cfg.hostid,          "user-defined hostid (if default not used)"),
-		OPT_LIST("raw",            'r', &fabrics_cfg.raw,             "raw output file"),
-		OPT_LIST("device",         'd', &fabrics_cfg.device,          "existing discovery controller device"),
-		OPT_INT("keep-alive-tmo",  'k', &fabrics_cfg.keep_alive_tmo,  "keep alive timeout period in seconds"),
-		OPT_INT("reconnect-delay", 'c', &fabrics_cfg.reconnect_delay, "reconnect timeout period in seconds"),
-		OPT_INT("ctrl-loss-tmo",   'l', &fabrics_cfg.ctrl_loss_tmo,   "controller loss timeout period in seconds"),
-		OPT_INT("fast_io_fail_tmo",'f',&fabrics_cfg.fast_io_fail_tmo, "fast I/O fail timeout (default off)"),
-		OPT_INT("tos",             'T', &fabrics_cfg.tos,             "type of service"),
-		OPT_FLAG("hdr_digest",     'g', &fabrics_cfg.hdr_digest,      "enable transport protocol header digest (TCP transport)"),
-		OPT_FLAG("data_digest",    'G', &fabrics_cfg.data_digest,     "enable transport protocol data digest (TCP transport)"),
-		OPT_INT("nr-io-queues",    'i', &fabrics_cfg.nr_io_queues,    "number of io queues to use (default is core count)"),
-		OPT_INT("nr-write-queues", 'W', &fabrics_cfg.nr_write_queues, "number of write queues to use (default 0)"),
-		OPT_INT("nr-poll-queues",  'P', &fabrics_cfg.nr_poll_queues,  "number of poll queues to use (default 0)"),
-		OPT_INT("queue-size",      'Q', &fabrics_cfg.queue_size,      "number of io queue elements to use (default 128)"),
-		OPT_FLAG("persistent",     'p', &fabrics_cfg.persistent,      "persistent discovery connection"),
-		OPT_FLAG("quiet",          'S', &quiet,                       "suppress already connected errors"),
-		OPT_FLAG("matching",       'm', &fabrics_cfg.matching_only,   "connect only records matching the traddr"),
-		OPT_FMT("output-format",   'o', &fabrics_cfg.output_format,   output_format),
-		OPT_END()
-	};
 
 	fabrics_cfg.tos = -1;
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = argconfig_parse(argc, argv, desc, discover_opts);
 	if (ret)
 		goto out;
 
@@ -1654,7 +1668,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		}
 	}
 
-	if (quiet)
+	if (fabrics_cfg.quiet)
 		log_level = LOG_WARNING;
 
 	if (fabrics_cfg.device && !strcmp(fabrics_cfg.device, "none"))
@@ -1663,7 +1677,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	fabrics_cfg.nqn = NVME_DISC_SUBSYS_NAME;
 
 	if (!fabrics_cfg.transport && !fabrics_cfg.traddr) {
-		ret = discover_from_conf_file(desc, argstr, opts, connect);
+		ret = discover_from_conf_file(desc, argstr, connect, NULL);
 	} else {
 		set_discovery_kato(&fabrics_cfg);
 
@@ -1680,7 +1694,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		if (ret)
 			goto out;
 
-		ret = do_discover(argstr, connect, flags);
+		ret = do_discover(argstr, connect, flags, NULL);
 	}
 
 out:

@@ -1,0 +1,144 @@
+nvme-monitor(1)
+===============
+
+NAME
+----
+nvme-monitor - Monitor Discovery events and Discover and Connect automatically
+
+SYNOPSIS
+--------
+[verse]
+'nvme discover'
+		[--no-auto                | -N]
+		[--hostnqn=<hostnqn>      | -q <hostnqn>]
+		[--hostid=<hostid>        | -I <hostid>]
+		[--keep-alive-tmo=<#>     | -k <#>]
+		[--reconnect-delay=<#>    | -c <#>]
+		[--ctrl-loss-tmo=<#>      | -l <#>]
+		[--hdr-digest             | -g]
+		[--data-digest            | -G]
+		[--nr-io-queues=<#>       | -i <#>]
+		[--nr-write-queues=<#>    | -W <#>]
+		[--nr-poll-queues=<#>     | -P <#>]
+		[--queue-size=<#>         | -Q <#>]
+		[--matching               | -m]
+		[--persistent             | -p]
+		[--silent                 | -S]
+		[--verbose                | -v]
+		[--debug                  | -D]
+		[--timestamps             | -t]
+
+DESCRIPTION
+-----------
+Listen to Discovery events (Asynchronous Event Notifications, AENs) on
+NVMe-over-Fabrics (NVMeoF) Discovery Controllers and for other events related
+to NVMeoF Discovery, and optionally connect to newly discovered controllers.
+
+If no parameters are given, then 'nvme monitor' listens to Discovery-related
+udev events (uevents). If an event is received, it connects to the Discovery
+Controller and performs the equivalent of an 'nvme connect-all' on the
+associated transport address. When run through a systemd service in this
+mode, the monitor can be used as an alternative to the udev-rule based
+auto-activation of NVMeoF connections. If this is done, it is recommended
+to deactivate the udev rule-based autoconnection mechanism, e.g. by creating
+a symlink `/run/udev/rules.d/70-nvmf-autoconnect.rules` to `/dev/null`.
+Otherwise both mechanisms will run discovery in parallel, which causes
+unnecessary system activity and spurious error messages.
+
+Currently, the following event types are supported:
+
+- "Discovery Log Page Change" Asynchronous Event Notifications (AENs)
+  delivered via persistent connections to NVMeoF discovery controllers
+  connected to the discovery service (`nqn.2014-08.org.nvmexpress.discovery`).
+
+- FC-NVMe auto-connect uevents sent when the FibreChannel transport discovers
+  N_Ports offering NVMe services.
+
+See the documentation for the nvme-connect-all(1) and nvme-discover(1)
+commands for further background.
+
+OPTIONS
+-------
+
+-N::
+--no-connect::
+	If this option is given, 'nvme monitor' will not  attempt to connect to
+	newly discovered controllers. Instead, information about found
+	discovery log entries will be printed to stdout (in other words, instead of
+	'nvme connect-all', the monitor only executes 'nvme discover' for
+	detected discovery controllers).
+
+-C::
+--cleanup::
+	Disconnect discovery controllers when the program exits. This affects
+	only discovery controller connections created while the program was running.
+
+-q <hostnqn>::
+--hostnqn=<hostnqn>::
+-I <hostid>::
+--hostid=<hostid>::
+-k <#>::
+--keep-alive-tmo=<#>::
+-c <#>::
+--reconnect-delay=<#>::
+-l <#>::
+--ctrl-loss-tmo=<#>::
+-g::
+--hdr-digest::
+-G::
+--data-digest::
+-i <#>::
+--nr-io-queues=<#>::
+-W <#>::
+--nr-write-queues=<#>::
+-P <#>::
+--nr-poll-queues=<#>::
+-Q <#>::
+--queue-size=<#>::
+-m::
+--matching::
+	These options have the same meaning as for 'nvme connect-all'. See the
+	man page nvme-connect-all(1) for details.
+
+-S::
+--silent::
+	Only print warnings and severe error messages. Do not log discoveries
+	and newly created controllers.
+
+-v::
+--verbose::
+	Log informational messages. This option overrides '--silent'.
+
+-D::
+--debug::
+	Log informational and debug messages. This option overrieds '--silent'
+	and '--verbose'.
+
+-t::
+--timestamps::
+	Add timestamps to log messages.
+
+EXAMPLES
+--------
+* Listen to FC-NVME events and AENs, creating persistent Discovery Controllers
+on the way, and automatically connect to all discovered controllers:
++
+-------------
+# nvme monitor
+-------------
++
+* Like the above, but print more log messages, remove created discovery controller
+connections on exit, and use a non-standard host NQN:
++
+------------
+# nvme monitor --verbose --cleanup --hostqn=host1-rogue-nqn
+------------
+
+SEE ALSO
+--------
+nvme-discover(1)
+nvme-connect-all(1)
+
+NVME
+----
+Part of the nvme-user suite

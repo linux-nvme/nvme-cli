@@ -14,5 +14,6 @@ DECLARE_CLEANUP_FUNC(name, type)		\
 }
 
 DECLARE_CLEANUP_FUNC(cleanup_charp, char *);
+DECLARE_CLEANUP_FUNC(cleanup_fd, int);
 
 #endif

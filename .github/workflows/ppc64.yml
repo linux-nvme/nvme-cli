@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: PowerPC CI
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - name: checkout
@@ -19,9 +19,11 @@ jobs:
     - name: update
       run: sudo apt-get update
     - name: dependencies
-      run: sudo apt-get install libudev-dev uuid-dev libsystemd-dev
+      run: sudo apt-get install gcc-10-powerpc*
     - name: make
       run: |
         make clean
+        export LD=powerpc64le-linux-gnu-ld
+        export CC=powerpc64le-linux-gnu-gcc-10
+        export CFLAGS='-O2 -g -Wall -Wformat-security -Werror -m64 -mcpu=power8 -mtune=power8 -I -I/usr/powerpc64-linux-gnu/include/'
         make
-

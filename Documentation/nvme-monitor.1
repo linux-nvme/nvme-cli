@@ -1,0 +1,180 @@
+'\" t
+.\"     Title: nvme-monitor
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 02/25/2021
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-MONITOR" "1" "02/25/2021" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-monitor \- Monitor Discovery events and Discover and Connect automatically
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme discover\fR
+                [\-\-no\-auto                | \-N]
+                [\-\-hostnqn=<hostnqn>      | \-q <hostnqn>]
+                [\-\-hostid=<hostid>        | \-I <hostid>]
+                [\-\-keep\-alive\-tmo=<#>     | \-k <#>]
+                [\-\-reconnect\-delay=<#>    | \-c <#>]
+                [\-\-ctrl\-loss\-tmo=<#>      | \-l <#>]
+                [\-\-hdr\-digest             | \-g]
+                [\-\-data\-digest            | \-G]
+                [\-\-nr\-io\-queues=<#>       | \-i <#>]
+                [\-\-nr\-write\-queues=<#>    | \-W <#>]
+                [\-\-nr\-poll\-queues=<#>     | \-P <#>]
+                [\-\-queue\-size=<#>         | \-Q <#>]
+                [\-\-matching               | \-m]
+                [\-\-persistent             | \-p]
+                [\-\-silent                 | \-S]
+                [\-\-verbose                | \-v]
+                [\-\-debug                  | \-D]
+                [\-\-timestamps             | \-t]
+.fi
+.SH "DESCRIPTION"
+.sp
+Listen to Discovery events (Asynchronous Event Notifications, AENs) on NVMe\-over\-Fabrics (NVMeoF) Discovery Controllers and for other events related to NVMeoF Discovery, and optionally connect to newly discovered controllers\&.
+.sp
+If no parameters are given, then \fInvme monitor\fR listens to Discovery\-related udev events (uevents)\&. If an event is received, it connects to the Discovery Controller and performs the equivalent of an \fInvme connect\-all\fR on the associated transport address\&. When run through a systemd service in rhis mode, the monitor can be used as an alternative to the udev\-rule based auto\-activation of NVMeoF connections\&. If this is done, it is recommended to deactivate the udev rule\-based autoconnection mechanism, e\&.g\&. by creating a symlink /run/udev/rules\&.d/70\-nvmf\-autoconnect\&.rules to /dev/null\&. Otherwise both mechanisms will run discovery in parallel, which causes unnecessary system activity spurious error messages\&.
+.sp
+Currently, the following event types are supported:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"Discovery Log Page Change" Asynchronous Event Notifications (AENs) delivered via persistent connections to NVMeoF discovery controllers connected to the discovery service (nqn\&.2014\-08\&.org\&.nvmexpress\&.discovery)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+FC\-NVMe auto\-connect uevents sent when the FibreChannel transport discovers N_Ports offering NVMe services\&.
+.RE
+.sp
+See the documentation for the nvme\-connect\-all(1) and nvme\-discover(1) commands for further background\&.
+.SH "OPTIONS"
+.PP
+\-N, \-\-no\-connect
+.RS 4
+If this option is given,
+\fInvme monitor\fR
+will not attempt to connect to newly discovered controllers\&. Instead, information about found discovery log entries will be printed to stdout (in other words, instead of
+\fInvme connect\-all\fR, the monitor only executes
+\fInvme discover\fR
+for detected discovery controllers)\&.
+.RE
+.PP
+\-C, \-\-cleanup
+.RS 4
+Disconnect discovery controllers when the program exits\&. This affects only discovery controller connections created while the program was running\&.
+.RE
+.PP
+\-q <hostnqn>, \-\-hostnqn=<hostnqn>, \-I <hostid>, \-\-hostid=<hostid>, \-k <#>, \-\-keep\-alive\-tmo=<#>, \-c <#>, \-\-reconnect\-delay=<#>, \-l <#>, \-\-ctrl\-loss\-tmo=<#>, \-g, \-\-hdr\-digest, \-G, \-\-data\-digest, \-i <#>, \-\-nr\-io\-queues=<#>, \-W <#>, \-\-nr\-write\-queues=<#>, \-P <#>, \-\-nr\-poll\-queues=<#>, \-Q <#>, \-\-queue\-size=<#>, \-m, \-\-matching
+.RS 4
+These options have the same meaning as for
+\fInvme connect\-all\fR\&. See the man page nvme\-connect\-all(1) for details\&.
+.RE
+.PP
+\-S, \-\-silent
+.RS 4
+Only print warnings and severe error messages\&. Do not log discoveries and newly created controllers\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Log informational messages\&. This option overrides
+\fI\-\-silent\fR\&.
+.RE
+.PP
+\-D, \-\-debug
+.RS 4
+Log informational and debug messages\&. This option overrieds
+\fI\-\-silent\fR
+and
+\fI\-\-verbose\fR\&.
+.RE
+.PP
+\-t, \-\-timestamps
+.RS 4
+Add timestamps to log messages\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Listen to FC\-NVME events and AENs, creating persistent Discovery Controllers on the way, and automatically connect to all discovered controllers:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme monitor
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Like the above, but print more log messages, remove created discovery controller connections on exit, and use a non\-standard host NQN:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme monitor \-\-verbose \-\-cleanup \-\-hostqn=host1\-rogue\-nqn
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "SEE ALSO"
+.sp
+nvme\-discover(1) nvme\-connect\-all(1)
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

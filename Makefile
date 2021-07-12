@@ -1,10 +1,11 @@
 CFLAGS ?= -O2 -g -Wall -Werror
-override CFLAGS += -std=gnu99 -I.
+override CFLAGS += -std=gnu99
 override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
 HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=242; echo $$?)
 LIBJSONC = $(shell $(LD) -o /dev/null -ljson-c >/dev/null 2>&1; echo $$?)
+HAVE_LIBUDEV = $(shell pkg-config --exists libudev; echo $$?)
 NVME = nvme
 INSTALL ?= install
 DESTDIR =
@@ -31,7 +32,12 @@ ifeq ($(LIBHUGETLBFS),0)
 	override LIB_DEPENDS += hugetlbfs
 endif
 
-INC=-Iutil
+INC=-I. -Iutil
+
+ifeq ($(HAVE_LIBUDEV),0)
+	override LDFLAGS += -ludev
+	override CFLAGS += -DHAVE_LIBUDEV
+endif
 
 ifeq ($(HAVE_SYSTEMD),0)
 	override LDFLAGS += -lsystemd
@@ -68,11 +74,16 @@ OBJS := nvme-print.o nvme-ioctl.o nvme-rpmb.o \
 	nvme-lightnvm.o fabrics.o nvme-models.o plugin.o \
 	nvme-status.o nvme-filters.o nvme-topology.o
 
+ifeq ($(HAVE_LIBUDEV),0)
+	OBJS += monitor.o conn-db.o
+endif
+
 UTIL_OBJS := util/argconfig.o util/suffix.o util/parser.o \
 	util/cleanup.o util/log.o
 ifneq ($(LIBJSONC), 0)
 override UTIL_OBJS += util/json.o
 endif
+EVENT_LIB := event/libminivent.a
 
 PLUGIN_OBJS :=					\
 	plugins/intel/intel-nvme.o		\
@@ -95,8 +106,9 @@ PLUGIN_OBJS :=					\
 	plugins/nvidia/nvidia-nvme.o        \
 	plugins/ymtc/ymtc-nvme.o
 
-nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
-	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)
+nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(EVENT_LIB) NVME-VERSION-FILE
+	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $(NVME) \
+		$(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(EVENT_LIB) $(LDFLAGS)
 
 verify-no-dep: nvme.c nvme.h $(OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $@ $(OBJS) $(UTIL_OBJS) $(LDFLAGS)
@@ -110,6 +122,14 @@ nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h util/argconfig.h util/suffix.h n
 %.o: %.c nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
 
+$(EVENT_LIB):	event/*.[hc]
+	$(MAKE) -C event INCLUDE="$(patsubst -I%,-I../%,$(INC))" DISABLE_TV=yes static
+
+event-test:
+	$(MAKE) -C event INCLUDE="$(patsubst -I%,-I../%,$(INC))" \
+		LOG_O=../../util/log.o CLEANUP_O=../../util/cleanup.o \
+		DISABLE_TV=yes run-test
+
 doc: $(NVME)
 	$(MAKE) -C Documentation
 
@@ -121,6 +141,7 @@ all: doc
 clean:
 	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb 70-nvmf-autoconnect.conf
 	$(MAKE) -C Documentation clean
+	$(MAKE) -C event clean
 	$(RM) tests/*.pyc
 	$(RM) verify-no-dep
 
