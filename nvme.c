@@ -5010,6 +5010,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 	const char *dsm = "dataset management attributes (lower 16 bits)";
 	const char *storage_tag_check = "This bit specifies the Storage Tag field shall be " \
 		"checked as part of end-to-end data protection processing";
+	const char *storage_tag = "storage tag, CDW2 and CDW3 (00:47) bits "\
+		"(for end to end PI)";
 
 	struct config {
 		__u32 namespace_id;
@@ -5026,6 +5028,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		__u16 dsmgmt;
 		__u16 app_tag_mask;
 		__u16 app_tag;
+		__u64 storage_tag;
 		int   limited_retry;
 		int   force_unit_access;
 		int   storage_tag_check;
@@ -5035,17 +5038,19 @@ static int submit_io(int opcode, char *command, const char *desc,
 	};
 
 	struct config cfg = {
-		.start_block     	= 0,
-		.block_count     	= 0,
-		.data_size       	= 0,
-		.metadata_size   	= 0,
-		.ref_tag         	= 0,
-		.data            	= "",
-		.metadata        	= "",
-		.prinfo          	= 0,
-		.app_tag_mask    	= 0,
-		.app_tag         	= 0,
-		.storage_tag_check 	= 0,
+		.namespace_id		= 0,
+		.start_block		= 0,
+		.block_count		= 0,
+		.data_size		= 0,
+		.metadata_size		= 0,
+		.ref_tag		= 0,
+		.data			= "",
+		.metadata		= "",
+		.prinfo			= 0,
+		.app_tag_mask		= 0,
+		.app_tag		= 0,
+		.storage_tag_check	= 0,
+		.storage_tag		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -5060,6 +5065,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
 		OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
 		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
+		OPT_SUFFIX("storage-tag",     'g', &cfg.storage_tag,       storage_tag),
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
 		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force),
 		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
@@ -5206,6 +5212,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 
 	if (cfg.show) {
 		printf("opcode       : %02x\n", opcode);
+		printf("nsid         : %02x\n", cfg.namespace_id);
 		printf("flags        : %02x\n", 0);
 		printf("control      : %04x\n", control);
 		printf("nblocks      : %04x\n", cfg.block_count);
@@ -5216,6 +5223,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 		printf("reftag       : %08x\n", cfg.ref_tag);
 		printf("apptag       : %04x\n", cfg.app_tag);
 		printf("appmask      : %04x\n", cfg.app_tag_mask);
+		printf("storagetagcheck : %04x\n", cfg.storage_tag_check);
+		printf("storagetag      : %"PRIx64"\n", (uint64_t)cfg.storage_tag);
 	}
 	if (cfg.dry_run)
 		goto free_mbuffer;
@@ -5224,13 +5233,13 @@ static int submit_io(int opcode, char *command, const char *desc,
 	if (opcode & 1)
 		err = nvme_write(fd, cfg.namespace_id, cfg.start_block,
 			cfg.block_count, control, dsmgmt, 0, cfg.ref_tag,
-			cfg.app_tag, cfg.app_tag_mask, buffer_size, buffer,
-			cfg.metadata_size, mbuffer);
+			cfg.app_tag, cfg.app_tag_mask, cfg.storage_tag,
+			buffer_size, buffer, cfg.metadata_size, mbuffer);
 	else
 		err = nvme_read(fd, cfg.namespace_id, cfg.start_block,
 			cfg.block_count, control, dsmgmt, cfg.ref_tag,
-			cfg.app_tag, cfg.app_tag_mask, buffer_size, buffer,
-			cfg.metadata_size, mbuffer);
+			cfg.app_tag, cfg.app_tag_mask, cfg.storage_tag,
+			buffer_size, buffer, cfg.metadata_size, mbuffer);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: %s: %llu us\n",
