@@ -23,16 +23,8 @@
 #include "suffix.h"
 
 #define CREATE_CMD
+#include "sfx-nvme-def.h"
 #include "sfx-nvme.h"
-
-#define SFX_PAGE_SHIFT						12
-#define SECTOR_SHIFT						9
-
-#define SFX_GET_FREESPACE			_IOWR('N', 0x240, struct sfx_freespace_ctx)
-#define NVME_IOCTL_CLR_CARD			_IO('N', 0x47)
-
-#define IDEMA_CAP(exp_GB)			(((__u64)exp_GB - 50ULL) * 1953504ULL + 97696368ULL)
-#define IDEMA_CAP2GB(exp_sector)		(((__u64)exp_sector - 97696368ULL) / 1953504ULL + 50ULL)
 
 enum {
 	SFX_LOG_LATENCY_READ_STATS	= 0xc1,
@@ -44,6 +36,7 @@ enum {
 	SFX_LOG_BBT			= 0xc7,
 	SFX_LOG_IDENTIFY		= 0xcc,
 	SFX_FEAT_ATOMIC			= 0x01,
+	SFX_FEAT_ACT_MODE		= 0x02,
 	SFX_FEAT_UP_P_CAP		= 0xac,
 	SFX_FEAT_CLR_CARD		= 0xdc,
 };
@@ -53,6 +46,9 @@ enum sfx_nvme_admin_opcode {
 	nvme_admin_change_cap		= 0xd4,
 	nvme_admin_sfx_set_features	= 0xd5,
 	nvme_admin_sfx_get_features	= 0xd6,
+	nvme_admin_get_keyinfo		= 0xd7,
+	nvme_admin_set_keyinfo		= 0xd8,
+	nvme_admin_geometry		= 0xe2,
 };
 
 struct sfx_freespace_ctx
@@ -111,6 +107,18 @@ struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	 read_timeout_cnt;
 	struct nvme_additional_smart_log_item	 read_ecc_cnt;//retry cnt
 };
+
+typedef struct sfx_capacity_ctx_s
+{
+	uint32_t capacity;
+	uint32_t p_capacity;
+} sfx_capacity_ctx;
+
+typedef struct sfx_phy_cap_range_ctx_s
+{
+	uint32_t max_capacity;
+	uint32_t pret_prov_cap;
+} sfx_phy_cap_range_ctx;
 
 int nvme_change_cap(int fd, __u32 nsid, __u64 capacity)
 {
@@ -594,6 +602,125 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct 
 	return 0;
 }
 
+/**
+ * @brief convert the file name to it's target file name if the input file is symbol link.
+ * Otherwise, just copy the input file name to target file name
+ *
+ * @param dir		abs dir path of input file
+ * @param link_name	input file name
+ * @param tg_name	target file name
+ * @param tg_size	size of tg_name
+ *
+ * @return 0, success; -1, fail
+ */
+static int name_from_link(const char *dir, char *link_name, char *tg_name,
+			  int tg_size)
+{
+	char path[50] = { 0 };
+	struct stat f_state;
+
+	if (!dir || !link_name || !tg_name || tg_size == 0) {
+		fprintf(stderr, "%s: Invalid params\r\n", __func__);
+		return -1;
+	}
+	memset(tg_name, 0x00, tg_size);
+	snprintf(path, sizeof(path), "%s/%s", dir, link_name);
+
+	if (lstat(path, &f_state) < 0) {
+		fprintf(stderr, "lstate fail, errno=%d\r\n", errno);
+		return -1;
+	}
+	if (S_ISLNK(f_state.st_mode)) {
+		if (readlink(path, tg_name, tg_size) < 0) {
+			fprintf(stderr, "readlink fail, errno =%d \n", errno);
+			return -1;
+		}
+	} else {
+		snprintf(tg_name, tg_size, "%s", link_name);
+	}
+	return 0;
+}
+
+static int sfx_block_from_char(char *char_dev, char *blk_dev, int blk_dev_len)
+{
+	char slen[16];
+	unsigned len;
+	char tg_name[50];
+	NVME_DEV_TYPE type;
+
+	if (name_from_link("/dev", char_dev, tg_name, sizeof(tg_name)) < 0) {
+		return -1;
+	}
+	type = sfx_dev_type(tg_name);
+
+	if (type == NVME_SFX_B_DEV_VANDA || type == NVME_SFX_B_DEV_TPLUS) {
+		snprintf(blk_dev, blk_dev_len, "%s", tg_name);
+	} else if (type == NVME_SFX_C_DEV_VANDA) {
+		sscanf(tg_name, SFX_NVME_DEV_C_VANDA "%d", &len);
+		snprintf(blk_dev, blk_dev_len, SFX_NVME_DEV_B_VANDA "%dn1", len);
+		snprintf(slen, sizeof(slen), "%d", len);
+		blk_dev[SFX_NVME_DEV_LEN_VANDA + strlen(slen) + 2] = 0;
+	} else if (type == NVME_SFX_C_DEV_TPLUS) {
+		sscanf(tg_name, SFX_NVME_DEV_C_TPLUS "%d", &len);
+		snprintf(blk_dev, blk_dev_len, SFX_NVME_DEV_B_TPLUS "%dn1", len);
+		snprintf(slen, sizeof(slen), "%dn1", len);
+		blk_dev[SFX_NVME_DEV_LEN_TPLUS + strlen(slen) + 2] = 0;
+	}
+	return 0;
+}
+
+static int sfx_blk_dev_ref()
+{
+	FILE *fd;
+	char buffer[128];
+	char blk_base[64];
+	char cmd[256];
+	int chars_read;
+	int ref_cnt = 0;
+
+	NVME_DEV_TYPE type = sfx_dev_type((char *)devicename);
+	if (type == NVME_SFX_C_DEV_VANDA || type == NVME_SFX_C_DEV_TPLUS) {
+		sfx_block_from_char((char *)devicename, blk_base, sizeof(blk_base));
+	} else {
+		snprintf(blk_base, sizeof(blk_base), "%s", (char *)devicename);
+	}
+
+	/*
+	 * lsof cannot tell which device is referenced when FS mounted
+	 * So Use mount to check if current device is mounted
+	 * Then lsof to show if current device is opened by application
+	 */
+	snprintf(cmd, sizeof(cmd), "mount | grep %s | wc -l", blk_base);
+	fd = popen(cmd, "r");
+	if (!fd) {
+		fprintf(stderr, "check mount point failed\n");
+		return -1;
+	}
+	chars_read = fread(buffer, sizeof(char), (sizeof(buffer) - 1), fd);
+	if (chars_read > 0) {
+		ref_cnt = atoi(buffer);
+	}
+	if (ref_cnt > 0) {
+		pclose(fd);
+		return ref_cnt;
+	}
+	pclose(fd);
+
+	snprintf(cmd, sizeof(cmd), "lsof | grep %s | wc -l", blk_base);
+	fd = popen(cmd, "r");
+	if (!fd) {
+		fprintf(stderr, "check lsof failed\n");
+		return -1;
+	}
+
+	chars_read = fread(buffer, sizeof(char), (sizeof(buffer) - 1), fd);
+	if (chars_read > 0) {
+		ref_cnt = atoi(buffer);
+	}
+	pclose(fd);
+	return ref_cnt;
+}
+
 static void show_cap_info(struct sfx_freespace_ctx *ctx)
 {
 
@@ -816,6 +943,41 @@ static int sfx_verify_chr(int fd)
 	return 0;
 }
 
+static int sfx_mod_loaded(char *mod_name)
+{
+	char buf[100] = { 0 };
+	int iRet = 0;
+	snprintf(buf, 100, "lsmod | grep %s >/dev/null", mod_name);
+	iRet = system(buf);
+	if (iRet == 0)
+		return 1;
+	else
+		return 0;
+}
+
+static int sfx_clean_card_wo_blk(char *misc_dev)
+{
+	char buf[100] = { 0 };
+	int iRet = 0;
+	snprintf(buf, 100, "echo ccbeefcc > /sys/class/misc/%s/device/sfxcc",
+		 misc_dev);
+	iRet = system(buf);
+	if (iRet) {
+		perror("system() fail\n");
+		return iRet;
+	}
+
+	/*load blk module*/
+	memset(buf, 0x00, sizeof(buf));
+	snprintf(buf, 100, "modprobe %s", "sfxv_bd_dev");
+	iRet = system(buf);
+	if (iRet)
+		perror("ScaleFlux clean card Fail\n");
+	else
+		printf("ScaleFlux clean card success\n");
+	return iRet;
+}
+
 static int sfx_clean_card(int fd)
 {
 	int ret;
@@ -823,6 +985,7 @@ static int sfx_clean_card(int fd)
 	ret = sfx_verify_chr(fd);
 	if (ret)
 		return ret;
+
 	ret = ioctl(fd, NVME_IOCTL_CLR_CARD);
 	if (ret)
 		perror("Ioctl Fail.");
@@ -837,6 +1000,8 @@ char *sfx_feature_to_string(int feature)
 	switch (feature) {
 		case SFX_FEAT_ATOMIC:
 			return "ATOMIC";
+		case SFX_FEAT_ACT_MODE:
+			return "ACT MODE";
 		case SFX_FEAT_UP_P_CAP:
 			return "UPDATE_PROVISION_CAPACITY";
 
@@ -845,9 +1010,124 @@ char *sfx_feature_to_string(int feature)
 	}
 }
 
+static int sfx_get_phy_cap_range(int fd, sfx_phy_cap_range_ctx *phy_cap_range)
+{
+	int ret = 0;
+	sfx_phy_cap_range_ctx ctx;
+
+	ret = ioctl(fd, SFX_BLK_FTL_IOCTL_GET_PHY_CAP_RANGE, &ctx);
+	if (ret) {
+		perror("Ioctl Fail");
+		return INVALID_PARAM;
+	}
+	phy_cap_range->max_capacity = ctx.max_capacity;
+	phy_cap_range->pret_prov_cap = ctx.pret_prov_cap;
+
+	return ret;
+}
+static int sfx_set_led(int argc, char **argv, struct command *cmd,
+		       struct plugin *plugin)
+{
+	char *desc = "Set LED status for ScaleFlux drive\n";
+	const char *status = "Turn on/off (1/0) activity LED for ScaleFlux drive\n";
+	int ret = 0;
+	int fd;
+
+	struct config {
+		__u32 status;
+	};
+
+	struct config cfg = { .status = 0 };
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("status",	's',	&cfg.status,	status),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		return fd;
+	}
+
+	if ((cfg.status != 0) && (cfg.status != 1)) {
+		fprintf(stderr, "Invalid value, only accept value [0|1]\n");
+		return INVALID_PARAM;
+	}
+	ret = ioctl(fd, SFX_IOCTL_SET_LED, &(cfg.status));
+	if (ret) {
+		perror("Ioctl Fail");
+		return INVALID_PARAM;
+	}
+	return ret;
+}
+int nvme_set_keyinfo(int fd, __u32 data_len, void *data)
+{
+	struct nvme_admin_cmd cmd = {
+		.opcode = nvme_admin_set_keyinfo,
+		.addr = (__u64)(uintptr_t)data,
+		.data_len = data_len,
+	};
+	return nvme_submit_admin_passthru(fd, &cmd);
+}
+
+int nvme_get_keyinfo(int fd, __u32 data_len, void *data)
+{
+	struct nvme_admin_cmd cmd = {
+		.opcode = nvme_admin_get_keyinfo,
+		.addr = (__u64)(uintptr_t)data,
+		.data_len = data_len,
+	};
+	return nvme_submit_admin_passthru(fd, &cmd);
+}
+
+/**
+ * @brief test bd_probe finish by test file /sys/devices/virtual/block/sfd0n1/serial
+ *
+ * @param blk_dev
+ *
+ * @return
+ */
+int sfx_wait_bd_probe_done()
+{
+	int cnt = 0;
+	char flg_file_test[100] = { 0 };
+	int dev_index = -1;
+	NVME_DEV_TYPE type = sfx_dev_type((char *)devicename);
+	if (type == NVME_SFX_C_DEV_VANDA) {
+		//vanda device
+		sscanf(devicename, SFX_NVME_DEV_C_VANDA "%d", &dev_index);
+		snprintf(flg_file_test, sizeof(flg_file_test),
+			"cat /sys/devices/virtual/block/%s%dn1/serial >/dev/null 2>&1",
+			SFX_NVME_DEV_B_VANDA, dev_index);
+	} else if (type == NVME_SFX_C_DEV_TPLUS) {
+		sscanf(devicename, SFX_NVME_DEV_C_TPLUS "%d", &dev_index);
+		snprintf(flg_file_test, sizeof(flg_file_test),
+			"cat /sys/devices/virtual/block/%s%dn1/serial >/dev/null 2>&1",
+			SFX_NVME_DEV_B_TPLUS, dev_index);
+	} else {
+		fprintf(stderr, "Invalid device name: %s.\n", devicename);
+		return -1;
+	}
+
+	while (0 != system(flg_file_test) && cnt++ < 45) {
+		sleep(1);
+	};
+
+	return 0;
+}
+
+
 static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int err = 0, fd;
+	char blk_base[64];
+	char blk_path[128];
+	int blk_fd = -1;
+	int card_cleaned = 0;
+	sfx_phy_cap_range_ctx phy_cap_range = { .max_capacity = 0,
+						.pret_prov_cap = 0 };
+	const __u32 keyinfo_len = 1024;
+	char keyinfo[keyinfo_len];
 	char *desc = "ScaleFlux internal set features\n"
 				 "feature id 1: ATOMIC\n"
 				 "value 0: Disable atomic write\n"
@@ -891,13 +1171,101 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 	}
 
 	if (cfg.feature_id == SFX_FEAT_CLR_CARD) {
-		/*Warning for clean card*/
-		if (!cfg.force && !sfx_confirm_change("Going to clean device's data, confirm umount fs and try again")) {
-			return 0;
-		} else {
-			return sfx_clean_card(fd);
+		NVME_DEV_TYPE type = sfx_dev_type((char *)devicename);
+		if (type != NVME_SFX_C_DEV_VANDA &&
+		    type != NVME_SFX_C_DEV_TPLUS) {
+			fprintf(stderr,
+				"Invalid device name, only support /dev/sfxv[X]!\n");
+			return EINVAL;
+		}
+		/* Find and open block device via sfxv[X] misc device */
+		sfx_block_from_char((char *)devicename, blk_base, sizeof(blk_base));
+		if (sfx_blk_dev_ref() > 0) {
+			fprintf(stderr,
+				"Current device %s is mounted with filesystem or opened by application, "
+				"Please umount filesystem or close the device in application first!\n",
+				blk_base);
+			return -1;
 		}
 
+		snprintf(blk_path, sizeof(blk_path), "/dev/%s", blk_base);
+		blk_fd = open(blk_path, O_RDWR);
+		if (blk_fd < 0) {
+			goto clean_card;
+		}
+
+		/* backup smart info */
+		err = nvme_get_keyinfo(blk_fd, keyinfo_len, keyinfo);
+		if (err) {
+			goto clean_card;
+		}
+		/*Warning for clean card*/
+		if (!cfg.force && !sfx_confirm_change("Going to clean device's data, confirm umount fs and try again")) {
+			close(blk_fd);
+			return 0;
+		} else {
+			/* do clean card and re-probe blk device*/
+			if (sfx_clean_card(fd) != 0) {
+				fprintf(stderr, "clean card failed!\n");
+				close(blk_fd);
+				return -1;
+			}
+			card_cleaned = 1;
+			sfx_wait_bd_probe_done();
+			/* Need to reopen block device since it's new */
+			close(blk_fd);
+
+			/*
+			 * /dev/sfdv[x]n1 is not re-created right after block
+			 * device probe done, need to add delay here to make sure
+			 * the device node was updated.
+			 */
+			sleep(1);
+
+			blk_fd = open(blk_path, O_RDWR);
+			if (blk_fd < 0) {
+				fprintf(stderr, "open block device %s failed\n",
+					blk_base);
+				return blk_fd;
+			}
+
+			err = nvme_set_keyinfo(blk_fd, keyinfo_len, keyinfo);
+			if (err) {
+				if (err < 0) {
+					fprintf(stderr,
+						"NVME Admin command set-keyinfo error:%s(%x)\n",
+						nvme_status_to_string(err),
+						err);
+				}
+				close(blk_fd);
+				return err;
+			}
+		}
+	clean_card:
+		if (blk_fd >= 0) {
+			close(blk_fd);
+		}
+		if (card_cleaned == 0) {
+			/*Warning for clean card*/
+			if (!cfg.force &&
+			    !sfx_confirm_change(
+				    "Going to clean device's data, confirm umount fs and try again")) {
+				close(blk_fd);
+				return 0;
+			}
+			fprintf(stderr,
+				"Cannot restore previous configuration, drive will be formatted to default!\n");
+			if (sfx_mod_loaded("sfxv_bd_dev") == 0) {
+				if (sfx_clean_card_wo_blk((char *)devicename))
+					return -1;
+			} else if (sfx_clean_card(fd) != 0) {
+				fprintf(stderr, "clean card failed!\n");
+				return -1;
+			} else {
+				card_cleaned = 1;
+			}
+		}
+		return 0;
 	}
 
 	if (cfg.feature_id == SFX_FEAT_ATOMIC && cfg.value != 0) {
@@ -921,9 +1289,19 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 			}
 		}
 	} else if (cfg.feature_id == SFX_FEAT_UP_P_CAP) {
-		if (cfg.value <= 0) {
-			fprintf(stderr, "Invalid Param\n");
+		if (sfx_get_phy_cap_range(fd, &phy_cap_range) != 0) {
+			fprintf(stderr, "Get physical capacity range failed\n");
 			return EINVAL;
+		} else {
+			if (cfg.value > phy_cap_range.max_capacity ||
+			    cfg.value < (phy_cap_range.pret_prov_cap / 2)) {
+				fprintf(stderr,
+					"Invalid physical capacity value %d, valid range [%dGB-%dGB]\n",
+					cfg.value,
+					(phy_cap_range.pret_prov_cap / 2),
+					phy_cap_range.max_capacity);
+				return EINVAL;
+			}
 		}
 
 		/*Warning for change pacp by GB*/
