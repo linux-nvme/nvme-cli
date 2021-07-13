@@ -543,3 +543,14 @@ void argconfig_register_help_func(argconfig_help_func * f)
 		}
 	}
 }
+
+int get_opt_flag(const char *opt_name,
+		    const struct argconfig_commandline_options *options)
+{
+	const struct argconfig_commandline_options *s;
+
+	for (s = options; (s->option != NULL) && (s != NULL); s++)
+		if (!strcmp(s->option, opt_name))
+			return (*(int *) s->default_value);
+	return -1;
+}

@@ -127,4 +127,6 @@ int argconfig_parse_comma_sep_array_long(char *string,
 void argconfig_register_help_func(argconfig_help_func * f);
 
 void print_word_wrapped(const char *s, int indent, int start);
+int get_opt_flag(const char *option_name,
+		    const struct argconfig_commandline_options *options);
 #endif
