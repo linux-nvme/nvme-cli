@@ -4406,7 +4406,7 @@ static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 	smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
 	printf("  Log page version				 %"PRIu16"\n",smart_log_ver);
 	printf("  Log page GUID					0x");
-	printf("%lX%lX\n",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
+	printf("0x%"PRIx64"%"PRIx64"\n",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG]));
 	if(smart_log_ver > 2) {
 		printf("  Errata Version Field                          %d\n",
@@ -4488,7 +4488,7 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 	json_object_add_value_uint(root, "Log page version", smart_log_ver);
 	char guid[40];
 	memset((void*)guid, 0, 40);
-	sprintf((char*)guid, "0x%lX%lX",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
+	sprintf((char*)guid, "0x%"PRIx64"%"PRIx64"",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
 		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG]));
 	json_object_add_value_string(root, "Log page GUID", guid);
 	if(smart_log_ver > 2){
