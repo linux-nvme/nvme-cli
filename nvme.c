@@ -156,12 +156,12 @@ static bool is_blkdev(void)
 	return S_ISBLK(nvme_stat.st_mode);
 }
 
-static int open_dev(char *dev)
+static int open_dev(char *dev, int flags)
 {
 	int err, fd;
 
 	devicename = basename(dev);
-	err = open(dev, O_RDONLY);
+	err = open(dev, flags);
 	if (err < 0)
 		goto perror;
 	fd = err;
@@ -192,7 +192,7 @@ static int check_arg_dev(int argc, char **argv)
 	return 0;
 }
 
-static int get_dev(int argc, char **argv)
+static int get_dev(int argc, char **argv, int flags)
 {
 	int ret;
 
@@ -200,7 +200,7 @@ static int get_dev(int argc, char **argv)
 	if (ret)
 		return ret;
 
-	return open_dev(argv[optind]);
+	return open_dev(argv[optind], flags);
 }
 
 int parse_and_open(int argc, char **argv, const char *desc,
@@ -212,9 +212,40 @@ int parse_and_open(int argc, char **argv, const char *desc,
 	if (ret)
 		return ret;
 
-	ret = get_dev(argc, argv);
+	ret = get_dev(argc, argv, O_RDONLY);
 	if (ret < 0)
 		argconfig_print_help(desc, opts);
+
+	return ret;
+}
+
+int parse_and_open_exclusive(int argc, char **argv, const char *desc,
+	const struct argconfig_commandline_options *opts)
+{
+	int ret;
+	int force;
+	int flags = O_RDONLY;
+
+	ret = argconfig_parse(argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	force = get_opt_flag("force", opts);
+	if(!force)
+        flags = O_RDONLY | O_EXCL;
+
+	ret = get_dev(argc, argv, flags);
+	if (ret < 0) {
+		if (errno == EBUSY && !force) {
+			fprintf(stderr, "Failed to open %s.\n",
+				basename(argv[optind]));
+			fprintf(stderr,
+				"Namespace is currently busy.\n"
+				"Use the force [--force|-f] option to ignore that.\n");
+		}
+		else
+			argconfig_print_help(desc, opts);
+	}
 
 	return ret;
 }
@@ -3496,7 +3527,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		OPT_END()
 	};
 
-	err = fd = parse_and_open(argc, argv, desc, opts);
+	err = fd = parse_and_open_exclusive(argc, argv, desc, opts);
 	if (fd < 0)
 		goto ret;
 
