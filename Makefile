@@ -9,7 +9,7 @@ INSTALL=install
 default: all
 
 python: all
-	@$(MAKE) -C src python
+	@$(MAKE) -C pynvme python
 
 all: $(NAME).pc
 	@$(MAKE) -C src

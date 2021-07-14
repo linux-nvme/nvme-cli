@@ -21,10 +21,10 @@
 %{
 #include <assert.h>
 #include <ccan/list/list.h>
-#include "tree.h"
-#include "fabrics.h"
-#include "private.h"
-#include "log.h"
+#include "nvme/tree.h"
+#include "nvme/fabrics.h"
+#include "nvme/private.h"
+#include "nvme/log.h"
 
 static int host_iter_err = 0;
 static int subsys_iter_err = 0;
@@ -530,6 +530,7 @@ struct nvme_ns {
   void disconnect() {
     nvme_disconnect_ctrl($self);
   }
+
   %newobject discover;
   struct nvmf_discovery_log *discover(int max_retries = 6) {
     struct nvmf_discovery_log *logp = NULL;
@@ -607,3 +608,4 @@ struct nvme_ns {
     return nvme_ns_get_name(n);
   }
 %};
+
