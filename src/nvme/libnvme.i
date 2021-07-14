@@ -161,6 +161,10 @@ static int discover_err = 0;
   $result = PyBytes_FromStringAndSize((char *)$1, 16);
 };
 
+%typemap(newfree) struct nvmf_discovery_log * {
+   if ($1) free($1);
+}
+
 %typemap(out) struct nvmf_discovery_log * {
   struct nvmf_discovery_log *log = $1;
   int numrec = log? log->numrec : 0, i;
@@ -520,6 +524,7 @@ struct nvme_ns {
   void disconnect() {
     nvme_disconnect_ctrl($self);
   }
+  %newobject discover;
   struct nvmf_discovery_log *discover(int max_retries = 6) {
     struct nvmf_discovery_log *logp = NULL;
     int ret = 0;
