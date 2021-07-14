@@ -17,6 +17,7 @@
 #include <unistd.h>
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 
@@ -244,7 +245,8 @@ static void __nvme_free_subsystem(struct nvme_subsystem *s)
 	nvme_subsystem_for_each_ns_safe(s, n, _n)
 		__nvme_free_ns(n);
 
-	free(s->name);
+	if (s->name)
+		free(s->name);
 	free(s->sysfs_dir);
 	free(s->subsysnqn);
 	if (s->model)
@@ -714,18 +716,8 @@ nvme_path_t nvme_ctrl_next_path(nvme_ctrl_t c, nvme_path_t p)
 
 #define FREE_CTRL_ATTR(a) \
 	do { if (a) { free(a); (a) = NULL; } } while (0)
-int nvme_disconnect_ctrl(nvme_ctrl_t c)
+void nvme_deconfigure_ctrl(nvme_ctrl_t c)
 {
-	int ret;
-
-	ret = nvme_set_attr(nvme_ctrl_get_sysfs_dir(c),
-			    "delete_controller", "1");
-	if (ret < 0) {
-		nvme_msg(LOG_ERR, "%s: failed to disconnect, error %d\n",
-			 c->name, errno);
-		return ret;
-	}
-	nvme_msg(LOG_INFO, "%s: disconnected\n", c->name);
 	if (c->fd >= 0) {
 		close(c->fd);
 		c->fd = -1;
@@ -740,7 +732,21 @@ int nvme_disconnect_ctrl(nvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->serial);
 	FREE_CTRL_ATTR(c->sqsize);
 	FREE_CTRL_ATTR(c->address);
+}
 
+int nvme_disconnect_ctrl(nvme_ctrl_t c)
+{
+	int ret;
+
+	ret = nvme_set_attr(nvme_ctrl_get_sysfs_dir(c),
+			    "delete_controller", "1");
+	if (ret < 0) {
+		nvme_msg(LOG_ERR, "%s: failed to disconnect, error %d\n",
+			 c->name, errno);
+		return ret;
+	}
+	nvme_msg(LOG_INFO, "%s: disconnected\n", c->name);
+	nvme_deconfigure_ctrl(c);
 	return 0;
 }
 
@@ -763,30 +769,13 @@ static void __nvme_free_ctrl(nvme_ctrl_t c)
 	nvme_ctrl_for_each_ns_safe(c, n, _n)
 		__nvme_free_ns(n);
 
-	if (c->fd >= 0)
-		close(c->fd);
-	if (c->name)
-		free(c->name);
-	if (c->sysfs_dir)
-		free(c->sysfs_dir);
-	if (c->address)
-		free(c->address);
-	if (c->traddr)
-		free(c->traddr);
-	if (c->trsvcid)
-		free(c->trsvcid);
-	if (c->host_traddr)
-		free(c->host_traddr);
-	if (c->host_iface)
-		free(c->host_iface);
-	free(c->firmware);
-	free(c->model);
-	free(c->state);
-	free(c->numa_node);
-	free(c->queue_count);
-	free(c->serial);
-	free(c->sqsize);
-	free(c->transport);
+	nvme_deconfigure_ctrl(c);
+
+	FREE_CTRL_ATTR(c->transport);
+	FREE_CTRL_ATTR(c->traddr);
+	FREE_CTRL_ATTR(c->host_traddr);
+	FREE_CTRL_ATTR(c->host_iface);
+	FREE_CTRL_ATTR(c->trsvcid);
 	free(c);
 }
 
@@ -988,7 +977,6 @@ static char *nvme_ctrl_lookup_subsystem_name(nvme_ctrl_t c)
 {
 	struct dirent **subsys;
 	char *subsys_name = NULL;
-	DIR *d;
 	int ret, i;
 	char path[PATH_MAX];
 
@@ -996,20 +984,22 @@ static char *nvme_ctrl_lookup_subsystem_name(nvme_ctrl_t c)
 	if (ret < 0)
 		return NULL;
 	for (i = 0; i < ret; i++) {
+		struct stat st;
+
 		sprintf(path, "%s/%s/%s", nvme_subsys_sysfs_dir,
 			subsys[i]->d_name, c->name);
-		d = opendir(path);
-		if (!d)
+		nvme_msg(LOG_DEBUG, "lookup subsystem %s\n", path);
+		if (stat(path, &st) < 0)
 			continue;
 		subsys_name = strdup(subsys[i]->d_name);
-		closedir(d);
 		break;
 	}
 	nvme_free_dirents(subsys, i);
 	return subsys_name;
 }
 
-static int __nvme_ctrl_init(nvme_ctrl_t c, const char *path, const char *name)
+static int nvme_configure_ctrl(nvme_ctrl_t c, const char *path,
+			       const char *name)
 {
 	DIR *d;
 
@@ -1054,7 +1044,7 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		goto out_free_name;
 	}
 
-	ret = __nvme_ctrl_init(c, path, name);
+	ret = nvme_configure_ctrl(c, path, name);
 	if (ret < 0) {
 		free(path);
 		goto out_free_name;
@@ -1068,6 +1058,13 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		goto out_free_name;
 	}
 	subsys_name = nvme_ctrl_lookup_subsystem_name(c);
+	if (!subsys_name) {
+		nvme_msg(LOG_ERR, "Failed to lookup subsystem name for %s\n",
+			 c->name);
+		errno = ENXIO;
+		ret = -1;
+		goto out_free_name;
+	}
 	s = nvme_lookup_subsystem(h, subsys_name, c->subsysnqn);
 	if (!s) {
 		errno = ENXIO;
@@ -1135,7 +1132,7 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 		return NULL;
 	}
 	c->address = address;
-	ret = __nvme_ctrl_init(c, path, name);
+	ret = nvme_configure_ctrl(c, path, name);
 	return (ret < 0) ? NULL : c;
 }
 

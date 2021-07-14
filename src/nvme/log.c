@@ -23,6 +23,7 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <time.h>
+#include <string.h>
 #define LOG_FUNCNAME 1
 #include "log.h"
 #include "cleanup.h"
@@ -34,6 +35,7 @@
 int nvme_log_level = DEFAULT_LOGLEVEL;
 bool nvme_log_timestamp;
 bool nvme_log_pid;
+char *nvme_log_message = NULL;
 
 void __attribute__((format(printf, 3, 4)))
 __nvme_msg(int lvl, const char *func, const char *format, ...)
@@ -54,9 +56,6 @@ __nvme_msg(int lvl, const char *func, const char *format, ...)
 	char *header __cleanup__(cleanup_charp) = NULL;
 	char *message __cleanup__(cleanup_charp) = NULL;
 	int idx;
-
-	if (lvl > nvme_log_level)
-		return;
 
 	if (nvme_log_timestamp) {
 		struct timespec now;
@@ -84,7 +83,12 @@ __nvme_msg(int lvl, const char *func, const char *format, ...)
 		message = NULL;
 	va_end(ap);
 
-	fprintf(stderr, "%s%s", header ? header : "<error>",
-		message ? message : "<error>");
+	if (nvme_log_message)
+		free(nvme_log_message);
+	nvme_log_message = strdup(message);
+
+	if (lvl <= nvme_log_level)
+		fprintf(stderr, "%s%s", header ? header : "<error>",
+			message ? message : "<error>");
 
 }

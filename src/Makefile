@@ -77,10 +77,10 @@ libnvme.a: $(libnvme_objs) $(libccan_objs)
 $(libname): $(libnvme_sobjs) $(libccan_sobjs) libnvme.map
 	$(QUIET_CC)$(CC) $(SO_CFLAGS) -Wl,--version-script=libnvme.map -Wl,-soname=$(soname) -o $@ $(libnvme_sobjs) $(libccan_sobjs) $(LINK_FLAGS)
 
-libnvme_wrap.c: $(libnvme_swig)
+nvme/libnvme_wrap.c: $(libnvme_swig)
 	$(SWIG) -python -py3 -outdir . $<
 
-python: libnvme_wrap.c setup.py
+python: nvme/libnvme_wrap.c setup.py
 	$(PYTHON) setup.py build
 
 install: $(all_targets)
@@ -99,5 +99,5 @@ clean:
 	rm -f $(all_targets) $(libnvme_objs) $(libnvme_sobjs) $(libccan_objs) $(libccan_sobjs) $(soname).new
 	rm -f $(CCANDIR)config.h
 	rm -f $(CCANDIR)tools/configurator/configurator
-	rm -f libnvme_wrap.c
+	rm -f nvme/libnvme_wrap.c
 	rm -f *.so* *.a *.o

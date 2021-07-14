@@ -309,7 +309,8 @@ static int __nvmf_add_ctrl(const char *argstr)
 		return -1;
 	}
 
-	nvme_msg(LOG_DEBUG, "connect ctrl, '%s'\n", argstr);
+	nvme_msg(LOG_DEBUG, "connect ctrl, '%.*s'\n",
+		 (int)strcspn(argstr,"\n"), argstr);
 	ret = write(fd, argstr, len);
 	if (ret != len) {
 		nvme_msg(LOG_NOTICE, "Failed to write to %s: %s\n",
@@ -325,7 +326,8 @@ static int __nvmf_add_ctrl(const char *argstr)
 		ret = -1;
 		goto out_close;
 	}
-	nvme_msg(LOG_DEBUG, "connect ctrl, response '%s'\n", buf);
+	nvme_msg(LOG_DEBUG, "connect ctrl, response '%.*s'\n",
+		 (int)strcspn(buf, "\n"), buf);
 	buf[len] = '\0';
 	options = buf;
 	while ((p = strsep(&options, ",\n")) != NULL) {
