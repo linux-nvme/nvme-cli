@@ -6,11 +6,17 @@
  * Authors: Hannes Reinecke <hare@suse.de>
  */
 
-%module libnvme
+%module nvme
 
 %include "exception.i"
 
 %allowexception;
+
+%rename(root)      nvme_root;
+%rename(host)      nvme_host;
+%rename(ctrl)      nvme_ctrl;
+%rename(subsystem) nvme_subsystem;
+%rename(ns)        nvme_ns;
 
 %{
 #include <assert.h>
@@ -29,29 +35,29 @@ static int discover_err = 0;
 %}
 
 %inline %{
-  struct nvme_host_iter {
+  struct host_iter {
     struct nvme_root *root;
     struct nvme_host *pos;
   };
 
-  struct nvme_subsystem_iter {
+  struct subsystem_iter {
     struct nvme_host *host;
     struct nvme_subsystem *pos;
   };
 
-  struct nvme_ctrl_iter {
+  struct ctrl_iter {
     struct nvme_subsystem *subsystem;
     struct nvme_ctrl *pos;
   };
 
-  struct nvme_ns_iter {
+  struct ns_iter {
     struct nvme_subsystem *subsystem;
     struct nvme_ctrl *ctrl;
     struct nvme_ns *pos;
   };
 %}
 
-%exception nvme_host_iter::__next__ {
+%exception host_iter::__next__ {
   assert(!host_iter_err);
   $action
   if (host_iter_err) {
@@ -61,7 +67,7 @@ static int discover_err = 0;
   }
 }
 
-%exception nvme_subsystem_iter::__next__ {
+%exception subsystem_iter::__next__ {
   assert(!subsys_iter_err);
   $action
   if (subsys_iter_err) {
@@ -71,7 +77,7 @@ static int discover_err = 0;
   }
 }
 
-%exception nvme_ctrl_iter::__next__ {
+%exception ctrl_iter::__next__ {
   assert(!ctrl_iter_err);
   $action
   if (ctrl_iter_err) {
@@ -81,7 +87,7 @@ static int discover_err = 0;
   }
 }
 
-%exception nvme_ns_iter::__next__ {
+%exception ns_iter::__next__ {
   assert(!ns_iter_err);
   $action
   if (ns_iter_err) {
@@ -357,8 +363,8 @@ struct nvme_ns {
   }
 }
 
-%extend nvme_host_iter {
-  struct nvme_host_iter *__iter__() {
+%extend host_iter {
+  struct host_iter *__iter__() {
     return $self;
   }
   struct nvme_host *__next__() {
@@ -389,8 +395,8 @@ struct nvme_ns {
     sprintf(tmp, "nvme_host(%s,%s)", $self->hostnqn, $self->hostid);
     return tmp;
   }
-  struct nvme_host_iter __iter__() {
-    struct nvme_host_iter ret = { .root = nvme_host_get_root($self),
+  struct host_iter __iter__() {
+    struct host_iter ret = { .root = nvme_host_get_root($self),
 				     .pos = $self };
     return ret;
   }
@@ -399,8 +405,8 @@ struct nvme_ns {
   }
 }
 
-%extend nvme_subsystem_iter {
-  struct nvme_subsystem_iter *__iter__() {
+%extend subsystem_iter {
+  struct subsystem_iter *__iter__() {
     return $self;
   }
   struct nvme_subsystem *__next__() {
@@ -415,8 +421,8 @@ struct nvme_ns {
   }
 }
 
-%extend nvme_ns_iter {
-  struct nvme_ns_iter *__iter__() {
+%extend ns_iter {
+  struct ns_iter *__iter__() {
     return $self;
   }
   struct nvme_ns *__next__() {
@@ -448,8 +454,8 @@ struct nvme_ns {
     sprintf(tmp, "nvme_subsystem(%s,%s)", $self->name,$self->subsysnqn);
     return tmp;
   }
-  struct nvme_subsystem_iter __iter__() {
-    struct nvme_subsystem_iter ret = { .host = nvme_subsystem_get_host($self),
+  struct subsystem_iter __iter__() {
+    struct subsystem_iter ret = { .host = nvme_subsystem_get_host($self),
 				       .pos = $self };
     return ret;
   }
@@ -474,8 +480,8 @@ struct nvme_ns {
   }
 %};
 
-%extend nvme_ctrl_iter {
-  struct nvme_ctrl_iter *__iter__() {
+%extend ctrl_iter {
+  struct ctrl_iter *__iter__() {
     return $self;
   }
   struct nvme_ctrl *__next__() {
@@ -545,8 +551,8 @@ struct nvme_ns {
       sprintf(tmp, "nvme_ctrl(transport=%s)", $self->transport);
     return tmp;
   }
-  struct nvme_ctrl_iter __iter__() {
-    struct nvme_ctrl_iter ret = { .subsystem = nvme_ctrl_get_subsystem($self),
+  struct ctrl_iter __iter__() {
+    struct ctrl_iter ret = { .subsystem = nvme_ctrl_get_subsystem($self),
 				  .pos = $self };
     return ret;
   }
@@ -586,8 +592,8 @@ struct nvme_ns {
     sprintf(tmp, "nvme_ns(%u)", $self->nsid);
     return tmp;
   }
-  struct nvme_ns_iter __iter__() {
-    struct nvme_ns_iter ret = { .ctrl = nvme_ns_get_ctrl($self),
+  struct ns_iter __iter__() {
+    struct ns_iter ret = { .ctrl = nvme_ns_get_ctrl($self),
 				.subsystem = nvme_ns_get_subsystem($self),
 				.pos = $self };
     return ret;
