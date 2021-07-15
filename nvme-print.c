@@ -4347,7 +4347,7 @@ void nvme_show_id_nvmset(struct nvme_id_nvmset_list *nvmset, unsigned nvmset_id,
 		printf(".................\n");
 		printf("nvmset_id               : %d\n",
 			le16_to_cpu(nvmset->ent[i].endgid));
-		printf("enduracne_group_id      : %d\n",
+		printf("endurance_group_id      : %d\n",
 			le16_to_cpu(nvmset->ent[i].endgid));
 		printf("random_4k_read_typical  : %u\n",
 			le32_to_cpu(nvmset->ent[i].rr4kt));
