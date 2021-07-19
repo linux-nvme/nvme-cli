@@ -11,6 +11,7 @@ _nvme () {
 	'id-ns:display information about the namespace'
 	'list-ns:identify all namespace(s) attached'
 	'id-iocs:display information about I/O command sets'
+	'id-domain:display information about domain list'
 	'create-ns:create a new namespace before attachment'
 	'delete-ns:delete a detached namespace'
 	'attach-ns:attach namespace to controller'
@@ -113,6 +114,16 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme id-iocs options" _idiocs
+			;;
+		(id-domain)
+			local _iddomain
+			_iddomain=(
+			/dev/nvme':supply a device to use (required)'
+			--dom-id=':show infos for domain id <cntid>'
+			-d':alias of --dom-id'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme id-domain options" _iddomain
 			;;
 		nvm-id-ctrl)
 			local _nvmidctrl
@@ -811,7 +822,7 @@ _nvme () {
 			     security-send security-recv resv-acquire resv-register resv-release
 			     resv-report flush compare read write copy show-regs persistent-event-log
 				 pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
-				 resv-notif-log capacity-mgmt
+				 resv-notif-log capacity-mgmt id-domain
 			   )
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
