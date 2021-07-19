@@ -466,6 +466,11 @@ int nvme_identify_iocs(int fd, __u16 cntid, void *data)
 	return nvme_identify(fd, 0, (cntid << 16) | NVME_ID_CNS_CSI, data);
 }
 
+int nvme_identify_domain_list(int fd, __u16 dom_id, void *data)
+{
+	return nvme_identify13(fd, 0, NVME_ID_CNS_DOMAIN_LIST, dom_id, data);
+}
+
 int nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
                  __u16 lsi, bool rae, __u8 uuid_ix, __u8 csi, bool ot,
                  __u32 data_len, void *data)

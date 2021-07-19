@@ -455,6 +455,7 @@ enum {
 	NVME_ID_CNS_SCNDRY_CTRL_LIST	= 0x15,
 	NVME_ID_CNS_NS_GRANULARITY	= 0x16,
 	NVME_ID_CNS_UUID_LIST		= 0x17,
+	NVME_ID_CNS_DOMAIN_LIST		= 0x18,
 	NVME_ID_CNS_CSI_NS_PRESENT_LIST = 0x1a,
 	NVME_ID_CNS_CSI_NS_PRESENT  = 0x1b,
 	NVME_ID_CNS_CSI             = 0x1c,
@@ -1895,4 +1896,20 @@ enum nvme_zns_report_options {
 	NVME_ZNS_ZRAS_REPORT_READ_ONLY		= 0x6,
 	NVME_ZNS_ZRAS_REPORT_OFFLINE		= 0x7,
 };
+
+struct nvme_id_domain_attr_entry {
+	__le16	dom_id;
+	__u8	rsvd2[14];
+	__u8	dom_cap[16];
+	__u8	unalloc_dom_cap[16];
+	__u8	max_egrp_dom_cap[16];
+	__u8	rsvd64[64];
+};
+
+struct nvme_id_domain_list {
+	__u8	num_entries;
+	__u8	rsvd1[127];
+	struct nvme_id_domain_attr_entry domain_attr[];
+};
+
 #endif /* _LINUX_NVME_H */

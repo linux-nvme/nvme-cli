@@ -2429,6 +2429,57 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int id_domain(int argc, char **argv, struct command *cmd, struct plugin *plugin) {
+	const char *desc = "Send an Identify Domain List command to the "\
+		"given device, returns properties of the specified domain "\
+		"in either normal|json|binary format.";
+	const char *domain_id = "identifier of desired domain";
+	struct nvme_id_domain_list id_domain;
+	enum nvme_print_flags flags;
+	int err, fd;
+
+	struct config {
+		__u16 dom_id;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.dom_id = 0xffff,
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_SHRT("dom-id",         'd', &cfg.dom_id,         domain_id),
+		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		err = fd;
+		goto ret;
+	}
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+
+	err = nvme_identify_domain_list(fd, cfg.dom_id, &id_domain);
+	if (!err) {
+		printf("NVMe Identify command for Domain List is successful:\n");
+		printf("NVMe Identify Domain List:\n");
+		nvme_show_id_domain_list(&id_domain, flags);
+	} else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("NVMe Identify Domain List");
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int err = 0, nsid, fd;
