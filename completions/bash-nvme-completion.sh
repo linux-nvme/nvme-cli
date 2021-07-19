@@ -12,7 +12,7 @@ _cmds="list id-ctrl id-ns list-ns id-iocs nvm-id-ctrl create-ns delete-ns \
 	write-uncor copy reset subsystem-reset show-regs discover \
 	connect-all connect disconnect version help \
 	intel lnvm memblaze list-subsys endurance-event-agg-log \
-	lba-status-log resv-notif-log capacity-mgmt"
+	lba-status-log resv-notif-log id-domain"
 
 nvme_list_opts () {
         local opts=""
@@ -49,6 +49,9 @@ nvme_list_opts () {
 			;;
 		"id-iocs")
 		opts+=" --controller-id= -c"
+			;;
+		"id-domain")
+		opts+=" --dom-id= -d --output-format= -o"
 			;;
 		"nvm-id-ctrl")
 		opts+=" --output-format= -o"

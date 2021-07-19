@@ -4764,6 +4764,61 @@ void nvme_show_id_iocs(struct nvme_id_iocs *iocs, enum nvme_print_flags flags)
 	}
 }
 
+static void json_id_domain_list(struct nvme_id_domain_list *id_dom)
+{
+	struct json_object *root;
+	struct json_object *entries;
+	struct json_object *entry;
+	int i;
+	long double dom_cap, unalloc_dom_cap, max_egrp_dom_cap;
+
+	root = json_create_object();
+	entries = json_create_array();
+
+	json_object_add_value_uint(root, "num_dom_entries", id_dom->num_entries);
+
+	for (i = 0; i < id_dom->num_entries; i++) {
+		entry = json_create_object();
+		dom_cap = int128_to_double(id_dom->domain_attr[i].dom_cap);
+		unalloc_dom_cap = int128_to_double(id_dom->domain_attr[i].unalloc_dom_cap);
+		max_egrp_dom_cap = int128_to_double(id_dom->domain_attr[i].max_egrp_dom_cap);
+
+		json_object_add_value_uint(entry, "dom_id", le16_to_cpu(id_dom->domain_attr[i].dom_id));
+		json_object_add_value_float(entry, "dom_cap", dom_cap);
+		json_object_add_value_float(entry, "unalloc_dom_cap", unalloc_dom_cap);
+		json_object_add_value_float(entry, "max_egrp_dom_cap", max_egrp_dom_cap);
+
+		json_array_add_value_object(entries, entry);
+	}
+
+	json_object_add_value_array(root, "domain_list", entries);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_id_domain_list(struct nvme_id_domain_list *id_dom,
+	enum nvme_print_flags flags)
+{
+	int i;
+	if (flags & BINARY)
+		return d_raw((unsigned char *)id_dom, sizeof(*id_dom));
+	else if (flags & JSON)
+		return json_id_domain_list(id_dom);
+
+	printf("Number of Domain Entires: %u\n", id_dom->num_entries);
+	for (i = 0; i < id_dom->num_entries; i++) {
+		printf("Domain Id for Attr Entry[%u]: %u\n", i,
+			le16_to_cpu(id_dom->domain_attr[i].dom_id));
+		printf("Domain Capacity for Attr Entry[%u]: %.0Lf\\n", i,
+			int128_to_double(id_dom->domain_attr[i].dom_cap));
+		printf("Unallocated Domain Capacity for Attr Entry[%u]: %.0Lf\n", i,
+			int128_to_double(id_dom->domain_attr[i].unalloc_dom_cap));
+		printf("Max Endurange Group Domain Capacity for Attr Entry[%u]: %.0Lf\n", i,
+			int128_to_double(id_dom->domain_attr[i].max_egrp_dom_cap));
+	}
+}
+
 static const char *nvme_trtype_to_string(__u8 trtype)
 {
 	switch (trtype) {
