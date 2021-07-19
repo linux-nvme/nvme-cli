@@ -386,7 +386,6 @@ static int scan_subsystem(struct nvme_subsystem *s, __u32 ns_instance, int nsid)
 				n->ctrl = &s->ctrls[j];
 				if (!strcmp(n->ctrl->state, "live") &&
 						!scan_namespace(n))
-
 					break;
 			}
 		}
