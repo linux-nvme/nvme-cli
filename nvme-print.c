@@ -2104,11 +2104,6 @@ static void nvme_show_registers_bpinfo_brs(__u8 brs)
 
 static void nvme_show_registers_bpinfo(__u32 bpinfo)
 {
-	if (bpinfo == 0) {
-		printf("\tBoot Partition feature is not supported\n\n");
-		return;
-	}
-
 	printf("\tActive Boot Partition ID      (ABPID): %u\n",
 		(bpinfo & 0x80000000) >> 31);
 	nvme_show_registers_bpinfo_brs((bpinfo & 0x03000000) >> 24);
@@ -2118,11 +2113,6 @@ static void nvme_show_registers_bpinfo(__u32 bpinfo)
 
 static void nvme_show_registers_bprsel(__u32 bprsel)
 {
-	if (bprsel == 0) {
-		printf("\tBoot Partition feature is not supported\n\n");
-		return;
-	}
-
 	printf("\tBoot Partition Identifier      (BPID): %u\n",
 		(bprsel & 0x80000000) >> 31);
 	printf("\tBoot Partition Read Offset    (BPROF): %x\n",
@@ -2133,10 +2123,6 @@ static void nvme_show_registers_bprsel(__u32 bprsel)
 
 static void nvme_show_registers_bpmbl(uint64_t bpmbl)
 {
-	if (bpmbl == 0) {
-		printf("\tBoot Partition feature is not supported\n\n");
-		return;
-	}
 
 	printf("\tBoot Partition Memory Buffer Base Address (BMBBA): %"PRIx64"\n",
 		bpmbl);
