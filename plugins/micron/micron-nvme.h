@@ -7,7 +7,8 @@
 #include "cmd.h"
 
 PLUGIN(NAME("micron", "Micron vendor specific extensions"),
-	COMMAND_LIST(ENTRY("select-download", "Selective Firmware Download", micron_selective_download)
+	COMMAND_LIST(
+		ENTRY("select-download", "Selective Firmware Download", micron_selective_download)
 		ENTRY("vs-temperature-stats", "Retrieve Micron temperature statistics ", micron_temp_stats)
 		ENTRY("vs-pcie-stats", "Retrieve Micron PCIe error stats", micron_pcie_stats)
 		ENTRY("clear-pcie-correctable-errors", "Clear correctable PCIe errors", micron_clear_pcie_correctable_errors)
