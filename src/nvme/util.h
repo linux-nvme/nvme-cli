@@ -22,6 +22,16 @@
 __u8 nvme_status_to_errno(int status, bool fabrics);
 
 /**
+ * nvme_status_to_string() - Returns string describing nvme return status.
+ * @status:  Return status from an nvme passthrough commmand
+ * @fabrics: Set to true if &status is to a fabrics target.
+ *
+ * Return: String representation of the nvme status if it is an nvme status field,
+ * or a standard errno string if status is < 0.
+ */
+const char *nvme_status_to_string(int status, bool fabrics);
+
+/**
  * nvme_fw_download_seq() -
  * @fd:     File descriptor of nvme device
  * @size:   Total size of the firmware image to transfer
