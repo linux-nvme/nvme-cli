@@ -4255,6 +4255,13 @@ struct nvme_mi_vpd_hdr {
  * 				      transport error that is not likely to
  * 				      succeed if retried on the same
  * 				      controller.
+ * @NVME_SC_PROHIBITED_BY_CMD_AND_FEAT: Command Prohibited by Command and Feature
+ * 				      Lockdown: The command was aborted due to
+ * 				      command execution being prohibited by
+ * 				      the Command and Feature Lockdown.
+ * @NVME_SC_ADMIN_CMD_MEDIA_NOT_READY: Admin Command Media Not Ready: The Admin
+ * 				      command requires access to media and
+ * 				      the media is not ready.
  * @NVME_SC_LBA_RANGE:		      LBA Out of Range: The command references
  * 				      an LBA that exceeds the size of the namespace.
  * @NVME_SC_CAP_EXCEEDED:	      Capacity Exceeded: Execution of the
@@ -4285,9 +4292,9 @@ struct nvme_mi_vpd_hdr {
  * 				      create an I/O Completion Queue with an
  * 				      invalid number of entries.
  * @NVME_SC_ABORT_LIMIT:	      Abort Command Limit Exceeded: The number
- * of concurrently outstanding Abort commands has exceeded the limit indicated
- * 				      in the Identify Controller data
- * 				      structure.
+ * 				      of concurrently outstanding Abort commands
+ * 				      has exceeded the limit indicated in the
+ * 				      Identify Controller data structure.
  * @NVME_SC_ABORT_MISSING:	      Abort Command is missing: The abort
  * 				      command is missing.
  * @NVME_SC_ASYNC_LIMIT:	      Asynchronous Event Request Limit
@@ -4370,7 +4377,9 @@ struct nvme_mi_vpd_hdr {
  * @NVME_SC_CTRL_LIST_INVALID:	      Controller List Invalid: The controller
  * 				      list provided contains invalid controller
  * 				      ids.
- * @NVME_SC_SELF_TEST_IN_PROGRESS:    Device Self-test In Progress:
+ * @NVME_SC_SELF_TEST_IN_PROGRESS:    Device Self-test In Progress: The controller
+ * 				      or NVM subsystem already has a device
+ * 				      self-test operation in process.
  * @NVME_SC_BP_WRITE_PROHIBITED:      Boot Partition Write Prohibited: The
  * 				      command is trying to modify a locked Boot
  * 				      Partition.
@@ -4380,11 +4389,30 @@ struct nvme_mi_vpd_hdr {
  * @NVME_SC_INVALID_RESOURCE_ID:      Invalid Resource Identifier
  * @NVME_SC_PMR_SAN_PROHIBITED:	      Sanitize Prohibited While Persistent
  * 				      Memory Region is Enabled
- * @NVME_SC_ANA_GROUP_ID_INVALID:     ANA Group Identifier Invalid
- * @NVME_SC_ANA_ATTACH_FAILED:	      ANA Attach Failed
+ * @NVME_SC_ANA_GROUP_ID_INVALID:     ANA Group Identifier Invalid: The specified
+ * 				      ANA Group Identifier (ANAGRPID) is not
+ * 				      supported in the submitted command.
+ * @NVME_SC_ANA_ATTACH_FAILED:	      ANA Attach Failed: The controller is not
+ * 				      attached to the namespace as a result
+ * 				      of an ANA condition.
+ * @NVME_SC_INSUFFICIENT_CAP:	      Insufficient Capacity: Requested operation
+ * 				      requires more free space than is currently
+ * 				      available.
+ * @NVME_SC_NS_ATTACHMENT_LIMIT_EXCEEDED: Namespace Attachment Limit Exceeded:
+ * 				      Attaching the ns to a controller causes
+ * 				      max number of ns attachments allowed
+ * 				      to be exceeded.
+ * @NVME_SC_PROHIBIT_CMD_EXEC_NOT_SUPPORTED: Prohibition of Command Execution
+ * 				      Not Supported
+ * @NVME_SC_IOCS_NOT_SUPPORTED:	      I/O Command Set Not Supported
+ * @NVME_SC_IOCS_NOT_ENABLED:	      I/O Command Set Not Enabled
+ * @NVME_SC_IOCS_COMBINATION_REJECTED:	I/O Command Set Combination Rejected
+ * @NVME_SC_INVALID_IOCS:	      Invalid I/O Command Set
+ * @NVME_SC_ID_UNAVAILABLE:	      Identifier Unavailable
  * @NVME_SC_BAD_ATTRIBUTES:	      Conflicting Dataset Management Attributes
  * @NVME_SC_INVALID_PI:		      Invalid Protection Information
  * @NVME_SC_READ_ONLY:		      Attempted Write to Read Only Range
+ * @NVME_SC_CMD_SIZE_LIMIT_EXCEEDED:  Command Size Limit Exceeded
  * @NVME_SC_CONNECT_FORMAT:	      Incompatible Format: The NVM subsystem
  * 				      does not support the record format
  * 				      specified by the host.
@@ -4429,6 +4457,9 @@ struct nvme_mi_vpd_hdr {
  * 				      read from or verify an LBA range
  * 				      containing a deallocated or unwritten
  * 				      logical block.
+ * @NVME_SC_STORAGE_TAG_CHECK:	      End-to-End Storage Tag Check Error: The
+ * 				      command was aborted due to an end-to-end
+ * 				      storage tag check failure.
  * @NVME_SC_ANA_INTERNAL_PATH_ERROR:  Internal Path Error: The command was not
  * 				      completed as the result of a controller
  * 				      internal error that is specific to the
@@ -4467,6 +4498,22 @@ struct nvme_mi_vpd_hdr {
  * 				      command is re-submitted to any controller
  * 				      in the NVM subsystem, then that
  * 				      re-submitted command is expected to fail.
+ * @NVME_SC_ZNS_BOUNDARY_ERROR:	      Zone Boundary Error: The command specifies
+ * 				      logical blocks in more than one zone.
+ * @NVME_SC_ZNS_FULL:		      Zone Is Full: The accessed zone is in the
+ * 				      ZSF:Full state.
+ * @NVME_SC_ZNS_READ_ONLY:	      Zone Is Read Only: The accessed zone is
+ * 				      in the ZSRO:Read Only state.
+ * @NVME_SC_ZNS_OFFLINE:	      Zone Is Offline: The accessed zone is
+ * 				      in the ZSO:Offline state.
+ * @NVME_SC_ZNS_INVALID_WRITE:	      Zone Invalid Write: The write to a zone
+ * 				      was not at the write pointer.
+ * @NVME_SC_ZNS_TOO_MANY_ACTIVE:      Too Many Active Zones: The controller
+ * 				      does not allow additional active zones.
+ * @NVME_SC_ZNS_TOO_MANY_OPENS:       Too Many Open Zones: The controller does
+ * 				      not allow additional open zones.
+ * @NVME_SC_ZNS_INVAL_TRANSITION:     Invalid Zone State Transition: The request
+ * 				      is not a valid zone state transition.
  */
 enum nvme_status_field {
 	/*
@@ -4487,86 +4534,100 @@ enum nvme_status_field {
 	/*
 	 * Generic Command Status Codes:
 	 */
-	NVME_SC_SUCCESS			= 0x0,
-	NVME_SC_INVALID_OPCODE		= 0x1,
-	NVME_SC_INVALID_FIELD		= 0x2,
-	NVME_SC_CMDID_CONFLICT		= 0x3,
-	NVME_SC_DATA_XFER_ERROR		= 0x4,
-	NVME_SC_POWER_LOSS		= 0x5,
-	NVME_SC_INTERNAL		= 0x6,
-	NVME_SC_ABORT_REQ		= 0x7,
-	NVME_SC_ABORT_QUEUE		= 0x8,
-	NVME_SC_FUSED_FAIL		= 0x9,
-	NVME_SC_FUSED_MISSING		= 0xa,
-	NVME_SC_INVALID_NS		= 0xb,
-	NVME_SC_CMD_SEQ_ERROR		= 0xc,
-	NVME_SC_SGL_INVALID_LAST	= 0xd,
-	NVME_SC_SGL_INVALID_COUNT	= 0xe,
-	NVME_SC_SGL_INVALID_DATA	= 0xf,
-	NVME_SC_SGL_INVALID_METADATA	= 0x10,
-	NVME_SC_SGL_INVALID_TYPE	= 0x11,
-	NVME_SC_CMB_INVALID_USE		= 0x12,
-	NVME_SC_PRP_INVALID_OFFSET	= 0x13,
-	NVME_SC_AWU_EXCEEDED		= 0x14,
-	NVME_SC_OP_DENIED		= 0x15,
-	NVME_SC_SGL_INVALID_OFFSET	= 0x16,
-	NVME_SC_HOSTID_FORMAT		= 0x18,
-	NVME_SC_KAT_EXPIRED		= 0x19,
-	NVME_SC_KAT_INVALID		= 0x1a,
-	NVME_SC_CMD_ABORTED_PREMEPT	= 0x1b,
-	NVME_SC_SANITIZE_FAILED		= 0x1c,
-	NVME_SC_SANITIZE_IN_PROGRESS	= 0x1d,
-	NVME_SC_SGL_INVALID_GRANULARITY	= 0x1e,
-	NVME_SC_CMD_IN_CMBQ_NOT_SUPP	= 0x1f,
-	NVME_SC_NS_WRITE_PROTECTED	= 0x20,
-	NVME_SC_CMD_INTERRUPTED		= 0x21,
-	NVME_SC_TRAN_TPORT_ERROR	= 0x22,
-	NVME_SC_LBA_RANGE		= 0x80,
-	NVME_SC_CAP_EXCEEDED		= 0x81,
-	NVME_SC_NS_NOT_READY		= 0x82,
-	NVME_SC_RESERVATION_CONFLICT	= 0x83,
-	NVME_SC_FORMAT_IN_PROGRESS	= 0x84,
+	NVME_SC_SUCCESS				= 0x0,
+	NVME_SC_INVALID_OPCODE			= 0x1,
+	NVME_SC_INVALID_FIELD			= 0x2,
+	NVME_SC_CMDID_CONFLICT			= 0x3,
+	NVME_SC_DATA_XFER_ERROR			= 0x4,
+	NVME_SC_POWER_LOSS			= 0x5,
+	NVME_SC_INTERNAL			= 0x6,
+	NVME_SC_ABORT_REQ			= 0x7,
+	NVME_SC_ABORT_QUEUE			= 0x8,
+	NVME_SC_FUSED_FAIL			= 0x9,
+	NVME_SC_FUSED_MISSING			= 0xa,
+	NVME_SC_INVALID_NS			= 0xb,
+	NVME_SC_CMD_SEQ_ERROR			= 0xc,
+	NVME_SC_SGL_INVALID_LAST		= 0xd,
+	NVME_SC_SGL_INVALID_COUNT		= 0xe,
+	NVME_SC_SGL_INVALID_DATA		= 0xf,
+	NVME_SC_SGL_INVALID_METADATA		= 0x10,
+	NVME_SC_SGL_INVALID_TYPE		= 0x11,
+	NVME_SC_CMB_INVALID_USE			= 0x12,
+	NVME_SC_PRP_INVALID_OFFSET		= 0x13,
+	NVME_SC_AWU_EXCEEDED			= 0x14,
+	NVME_SC_OP_DENIED			= 0x15,
+	NVME_SC_SGL_INVALID_OFFSET		= 0x16,
+	NVME_SC_HOSTID_FORMAT			= 0x18,
+	NVME_SC_KAT_EXPIRED			= 0x19,
+	NVME_SC_KAT_INVALID			= 0x1a,
+	NVME_SC_CMD_ABORTED_PREMEPT		= 0x1b,
+	NVME_SC_SANITIZE_FAILED			= 0x1c,
+	NVME_SC_SANITIZE_IN_PROGRESS		= 0x1d,
+	NVME_SC_SGL_INVALID_GRANULARITY		= 0x1e,
+	NVME_SC_CMD_IN_CMBQ_NOT_SUPP		= 0x1f,
+	NVME_SC_NS_WRITE_PROTECTED		= 0x20,
+	NVME_SC_CMD_INTERRUPTED			= 0x21,
+	NVME_SC_TRAN_TPORT_ERROR		= 0x22,
+	NVME_SC_PROHIBITED_BY_CMD_AND_FEAT	= 0x23,
+	NVME_SC_ADMIN_CMD_MEDIA_NOT_READY	= 0x24,
+	NVME_SC_LBA_RANGE			= 0x80,
+	NVME_SC_CAP_EXCEEDED			= 0x81,
+	NVME_SC_NS_NOT_READY			= 0x82,
+	NVME_SC_RESERVATION_CONFLICT		= 0x83,
+	NVME_SC_FORMAT_IN_PROGRESS		= 0x84,
 
 	/*
 	 * Command Specific Status Codes:
 	 */
-	NVME_SC_CQ_INVALID		= 0x00,
-	NVME_SC_QID_INVALID		= 0x01,
-	NVME_SC_QUEUE_SIZE		= 0x02,
-	NVME_SC_ABORT_LIMIT		= 0x03,
-	NVME_SC_ABORT_MISSING		= 0x04,
-	NVME_SC_ASYNC_LIMIT		= 0x05,
-	NVME_SC_FIRMWARE_SLOT		= 0x06,
-	NVME_SC_FIRMWARE_IMAGE		= 0x07,
-	NVME_SC_INVALID_VECTOR		= 0x08,
-	NVME_SC_INVALID_LOG_PAGE	= 0x09,
-	NVME_SC_INVALID_FORMAT		= 0x0a,
-	NVME_SC_FW_NEEDS_CONV_RESET	= 0x0b,
-	NVME_SC_INVALID_QUEUE		= 0x0c,
-	NVME_SC_FEATURE_NOT_SAVEABLE	= 0x0d,
-	NVME_SC_FEATURE_NOT_CHANGEABLE	= 0x0e,
-	NVME_SC_FEATURE_NOT_PER_NS	= 0x0f,
-	NVME_SC_FW_NEEDS_SUBSYS_RESET	= 0x10,
-	NVME_SC_FW_NEEDS_RESET		= 0x11,
-	NVME_SC_FW_NEEDS_MAX_TIME	= 0x12,
-	NVME_SC_FW_ACTIVATE_PROHIBITED	= 0x13,
-	NVME_SC_OVERLAPPING_RANGE	= 0x14,
-	NVME_SC_NS_INSUFFICIENT_CAP	= 0x15,
-	NVME_SC_NS_ID_UNAVAILABLE	= 0x16,
-	NVME_SC_NS_ALREADY_ATTACHED	= 0x18,
-	NVME_SC_NS_IS_PRIVATE		= 0x19,
-	NVME_SC_NS_NOT_ATTACHED		= 0x1a,
-	NVME_SC_THIN_PROV_NOT_SUPP	= 0x1b,
-	NVME_SC_CTRL_LIST_INVALID	= 0x1c,
-	NVME_SC_SELF_TEST_IN_PROGRESS	= 0x1d,
-	NVME_SC_BP_WRITE_PROHIBITED	= 0x1e,
-	NVME_SC_INVALID_CTRL_ID		= 0x1f,
-	NVME_SC_INVALID_SEC_CTRL_STATE	= 0x20,
-	NVME_SC_INVALID_CTRL_RESOURCES	= 0x21,
-	NVME_SC_INVALID_RESOURCE_ID	= 0x22,
-	NVME_SC_PMR_SAN_PROHIBITED	= 0x23,
-	NVME_SC_ANA_GROUP_ID_INVALID	= 0x24,
-	NVME_SC_ANA_ATTACH_FAILED	= 0x25,
+	NVME_SC_CQ_INVALID			= 0x00,
+	NVME_SC_QID_INVALID			= 0x01,
+	NVME_SC_QUEUE_SIZE			= 0x02,
+	NVME_SC_ABORT_LIMIT			= 0x03,
+	NVME_SC_ABORT_MISSING			= 0x04,
+	NVME_SC_ASYNC_LIMIT			= 0x05,
+	NVME_SC_FIRMWARE_SLOT			= 0x06,
+	NVME_SC_FIRMWARE_IMAGE			= 0x07,
+	NVME_SC_INVALID_VECTOR			= 0x08,
+	NVME_SC_INVALID_LOG_PAGE		= 0x09,
+	NVME_SC_INVALID_FORMAT			= 0x0a,
+	NVME_SC_FW_NEEDS_CONV_RESET		= 0x0b,
+	NVME_SC_INVALID_QUEUE			= 0x0c,
+	NVME_SC_FEATURE_NOT_SAVEABLE		= 0x0d,
+	NVME_SC_FEATURE_NOT_CHANGEABLE		= 0x0e,
+	NVME_SC_FEATURE_NOT_PER_NS		= 0x0f,
+	NVME_SC_FW_NEEDS_SUBSYS_RESET		= 0x10,
+	NVME_SC_FW_NEEDS_RESET			= 0x11,
+	NVME_SC_FW_NEEDS_MAX_TIME		= 0x12,
+	NVME_SC_FW_ACTIVATE_PROHIBITED		= 0x13,
+	NVME_SC_OVERLAPPING_RANGE		= 0x14,
+	NVME_SC_NS_INSUFFICIENT_CAP		= 0x15,
+	NVME_SC_NS_ID_UNAVAILABLE		= 0x16,
+	NVME_SC_NS_ALREADY_ATTACHED		= 0x18,
+	NVME_SC_NS_IS_PRIVATE			= 0x19,
+	NVME_SC_NS_NOT_ATTACHED			= 0x1a,
+	NVME_SC_THIN_PROV_NOT_SUPP		= 0x1b,
+	NVME_SC_CTRL_LIST_INVALID		= 0x1c,
+	NVME_SC_SELF_TEST_IN_PROGRESS		= 0x1d,
+	NVME_SC_BP_WRITE_PROHIBITED		= 0x1e,
+	NVME_SC_INVALID_CTRL_ID			= 0x1f,
+	NVME_SC_INVALID_SEC_CTRL_STATE		= 0x20,
+	NVME_SC_INVALID_CTRL_RESOURCES		= 0x21,
+	NVME_SC_INVALID_RESOURCE_ID		= 0x22,
+	NVME_SC_PMR_SAN_PROHIBITED		= 0x23,
+	NVME_SC_ANA_GROUP_ID_INVALID		= 0x24,
+	NVME_SC_ANA_ATTACH_FAILED		= 0x25,
+	NVME_SC_INSUFFICIENT_CAP		= 0x26,
+	NVME_SC_NS_ATTACHMENT_LIMIT_EXCEEDED	= 0x27,
+	NVME_SC_PROHIBIT_CMD_EXEC_NOT_SUPPORTED = 0x28,
+
+	/*
+	 * Command Set Specific - Namespace Types commands:
+	 */
+	NVME_SC_IOCS_NOT_SUPPORTED		= 0x29,
+	NVME_SC_IOCS_NOT_ENABLED		= 0x2a,
+	NVME_SC_IOCS_COMBINATION_REJECTED	= 0x2b,
+	NVME_SC_INVALID_IOCS			= 0x2c,
+	NVME_SC_ID_UNAVAILABLE			= 0x2d,
 
 	/*
 	 * I/O Command Set Specific - NVM commands:
@@ -4574,6 +4635,7 @@ enum nvme_status_field {
 	NVME_SC_BAD_ATTRIBUTES		= 0x80,
 	NVME_SC_INVALID_PI		= 0x81,
 	NVME_SC_READ_ONLY		= 0x82,
+	NVME_SC_CMD_SIZE_LIMIT_EXCEEDED = 0x83,
 
 	/*
 	 * I/O Command Set Specific - Fabrics commands:
@@ -4610,6 +4672,7 @@ enum nvme_status_field {
 	NVME_SC_COMPARE_FAILED		= 0x85,
 	NVME_SC_ACCESS_DENIED		= 0x86,
 	NVME_SC_UNWRITTEN_BLOCK		= 0x87,
+	NVME_SC_STORAGE_TAG_CHECK	= 0x88,
 
 	/*
 	 * Path-related Errors:
