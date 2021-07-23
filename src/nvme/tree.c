@@ -101,10 +101,12 @@ nvme_root_t nvme_scan(const char *config_file)
 {
 	nvme_root_t r = nvme_scan_filter(NULL);
 
+#ifdef CONFIG_JSONC
 	if (r && config_file) {
 		json_read_config(r, config_file);
 		r->config_file = strdup(config_file);
 	}
+#endif
 	return r;
 }
 
@@ -112,7 +114,12 @@ int nvme_update_config(nvme_root_t r)
 {
 	if (!r->modified || !r->config_file)
 		return 0;
+#ifdef CONFIG_JSONC
 	return json_update_config(r, r->config_file);
+#else
+	errno = ENOTSUP;
+	return -1;
+#endif
 }
 
 nvme_host_t nvme_first_host(nvme_root_t r)
