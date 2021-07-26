@@ -749,7 +749,8 @@ nvme-id-iocs(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme id-iocs</em> &lt;device&gt; [--controller-id=&lt;cntid&gt; | -c &lt;cntid&gt;]</pre>
+<pre class="content"><em>nvme id-iocs</em> &lt;device&gt; [--controller-id=&lt;cntid&gt; | -c &lt;cntid&gt;]
+                        [-o &lt;fmt&gt; | --output-format=&lt;fmt&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -779,6 +780,30 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
         cntid. If this value is not given, cntid will be 0xffff.
 </p>
 </dd>
+<dt class="hdlist1">
+-H
+</dt>
+<dt class="hdlist1">
+--human-readable
+</dt>
+<dd>
+<p>
+        This option will parse and format many of the bit fields
+        into human-readable formats.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;format&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;format&gt;
+</dt>
+<dd>
+<p>
+              Set the reporting format to <em>normal</em>, <em>json</em>, or
+              <em>binary</em>. Only one output format can be used at a time.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -796,6 +821,15 @@ fields in a human readable format:
 <pre><code># nvme id-iocs /dev/nvme0</code></pre>
 </div></div>
 </li>
+<li>
+<p>
+show the fields in human readable format
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme id-iocs /dev/nvme0 -H</code></pre>
+</div></div>
+</li>
 </ul></div>
 </div>
 </div>
@@ -810,7 +844,7 @@ fields in a human readable format:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2020-05-06 10:39:59 CEST
+ 2021-05-28 23:15:06 IST
 </div>
 </div>
 </body>

@@ -232,14 +232,14 @@ _nvme () {
 			--log-entries=': Number of pending NVM Set Entries log list'
 			-e':alias to --log-entries'
 			--rae': Retain an Asynchronous Event'
-			-r':alias to --rae
+			-r':alias to --rae'
 			--raw-binary':dump infos in binary format'
 			-b':alias of --raw-binary'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme pred-lat-event-agg-log options" _predlateventagglog
 			;;
-		(predictablelatlog)
+		(predictable-lat-log)
 			local _predictablelatlog
 			_predictablelatlog=(
 			/dev/nvme':supply a device to use (required)'
@@ -306,7 +306,7 @@ _nvme () {
 			--log-entries=': Number of Endurance Group Event Agg Entries log list'
 			-e':alias to --log-entries'
 			--rae': Retain an Asynchronous Event'
-			-r':alias to --rae
+			-r':alias to --rae'
 			--raw-binary':dump infos in binary format'
 			-b':alias of --raw-binary'
 			)
@@ -318,7 +318,7 @@ _nvme () {
 			_lbastatuslog=(
 			/dev/nvme':supply a device to use (required)'
 			--rae': Retain an Asynchronous Event'
-			-r':alias to --rae
+			-r':alias to --rae'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme lba-status-log options" _lbastatuslog
@@ -343,6 +343,8 @@ _nvme () {
 			-s':alias to --sel'
 			--data-len=':buffer len for returned LBA Type Range or host identifier data'
 			-l':alias for --data-len'
+			--uuid-index=':uuid index'
+			-U':alias for --uuid-index'
 			--cdw11=':dword 11 value, used for interrupt vector configuration only'
 			--raw-binary':dump infos in binary format'
 			-b':alias to --raw-binary'
@@ -364,6 +366,8 @@ _nvme () {
 			-d':alias to --data'
 			--value=':new value of feature (required)'
 			-v'alias to --value'
+			--uuid-index=':uuid index'
+			-U':alias for --uuid-index'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme set-feature options" _setf
@@ -558,7 +562,7 @@ _nvme () {
 			-p':alias for --prkey'
 			--rtype=':hexadecimal reservation type'
 			-t':alias for --rtype'
-			--racqa=':reservation acquiry action'
+			--racqa=':reservation acquire action'
 			-a':alias for --racqa'
 			--iekey=':ignore existing reservation key'
 			-i':alias for --iekey'
@@ -611,7 +615,7 @@ _nvme () {
 			--cptpl=':change persistence through power loss setting'
 			-p':alias for --cptpl'
 			--rrega=':reservation registration action to perform'
-			-a':alias for --rrega'
+			-r':alias for --rrega'
 			--iekey':ignore existing reservation key'
 			-i':alias for --iekey'
 			)

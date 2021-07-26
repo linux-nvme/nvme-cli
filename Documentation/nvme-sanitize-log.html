@@ -749,7 +749,7 @@ nvme-sanitize-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme sanitize-log</em> &lt;device&gt; [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]
+<pre class="content"><em>nvme sanitize-log</em> &lt;device&gt; [--rae | -r] [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]
                              [--human-readable | -H]
                              [--raw-binary | -b]</pre>
 <div class="attribution">
@@ -816,6 +816,17 @@ If cleared to 0, then non-volatile storage in the NVM subsystem has been written
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
+-r
+</dt>
+<dt class="hdlist1">
+--rae
+</dt>
+<dd>
+<p>
+        Retain an Asynchronous Event.
+</p>
+</dd>
+<dt class="hdlist1">
 -o &lt;format&gt;
 </dt>
 <dt class="hdlist1">
@@ -881,7 +892,7 @@ Has the program issue Sanitize-log Command :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-11-08 02:18:28 JST
+ 2021-04-05 15:38:33 IST
 </div>
 </div>
 </body>

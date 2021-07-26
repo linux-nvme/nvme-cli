@@ -6,6 +6,7 @@ Before=remote-fs-pre.target
 
 [Service]
 Type=oneshot
+ExecStartPre=/sbin/modprobe nvme-fabrics
 ExecStart=/usr/sbin/nvme connect-all
 
 [Install]

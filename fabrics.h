@@ -20,6 +20,7 @@ struct fabrics_config {
 	const char *traddr;
 	const char *trsvcid;
 	const char *host_traddr;
+	const char *host_iface;
 	const char *hostnqn;
 	const char *hostid;
 	int  nr_io_queues;
@@ -29,6 +30,7 @@ struct fabrics_config {
 	int  keep_alive_tmo;
 	int  reconnect_delay;
 	int  ctrl_loss_tmo;
+	int  fast_io_fail_tmo;
 	int  tos;
 	const char *raw;
 	char *device;

@@ -10,6 +10,7 @@
 #include "nvme.h"
 #include "nvme-ioctl.h"
 #include "nvme-print.h"
+#include "nvme-status.h"
 
 #define CREATE_CMD
 #include "zns.h"
@@ -56,7 +57,7 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 		perror("zns identify controller");
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -126,15 +127,16 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		perror("zns identify namespace");
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
-static int __zns_mgmt_send(int fd, __u32 namespace_id, __u64 zslba,
-	bool select_all, enum nvme_zns_send_action zsa, __u32 data_len, void *buf)
+static int __zns_mgmt_send(int fd, __u32 namespace_id, __u64 zslba, 
+	bool select_all, __u32 timeout, enum nvme_zns_send_action zsa, 
+	__u32 data_len, void *buf)
 {
 	int err;
 
-	err = nvme_zns_mgmt_send(fd, namespace_id, zslba, select_all, zsa,
+	err = nvme_zns_mgmt_send(fd, namespace_id, zslba, select_all, timeout, zsa,
 			data_len, buf);
 	close(fd);
 	return err;
@@ -145,6 +147,7 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 {
 	const char *zslba = "starting LBA of the zone for this command";
 	const char *select_all = "send command to all zones";
+	const char *timeout = "timeout value, in milliseconds";
 
 	int err, fd;
 	char *command;
@@ -153,15 +156,16 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 		__u64	zslba;
 		__u32	namespace_id;
 		bool	select_all;
+		__u32	timeout;
 	};
 
-	struct config cfg = {
-	};
+	struct config cfg = {};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_SUFFIX("start-lba",  's', &cfg.zslba,         zslba),
 		OPT_FLAG("select-all",   'a', &cfg.select_all,    select_all),
+		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
 		OPT_END()
 	};
 
@@ -182,7 +186,7 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 	}
 
 	err = __zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba,
-		cfg.select_all, zsa, 0, NULL);
+		cfg.select_all, cfg.timeout, zsa, 0, NULL);
 	if (!err)
 		printf("%s: Success, action:%d zone:%"PRIx64" all:%d nsid:%d\n",
 			command, zsa, (uint64_t)cfg.zslba, (int)cfg.select_all,
@@ -195,7 +199,7 @@ free:
 	free(command);
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int get_zdes_bytes(int fd, __u32 nsid)
@@ -206,23 +210,21 @@ static int get_zdes_bytes(int fd, __u32 nsid)
 	int err;
 
 	err = nvme_identify_ns(fd, nsid,  false, &id_ns);
-	if (err > 0){
+	if (err > 0) {
 		nvme_show_status(err);
-		return err;
-	}
-	else if (err < 0){
+		return -1;
+	} else if (err < 0) {
 		perror("identify namespace");
-		return err;
+		return -1;
 	}
 
 	err = nvme_zns_identify_ns(fd, nsid,  &ns);
-	if (err > 0){
+	if (err > 0) {
 		nvme_show_status(err);
-		return err;
-	}
-	else if (err < 0){
+		return -1;
+	} else if (err < 0) {
 		perror("zns identify namespace");
-		return err;
+		return -1;
 	}
 
 	lbaf = id_ns.flbas & NVME_NS_FLBAS_LBA_MASK;
@@ -237,6 +239,7 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 	const char *zsa = "zone send action";
 	const char *data_len = "buffer length if data required";
 	const char *data = "optional file for data (default stdin)";
+	const char *timeout = "timeout value, in milliseconds";
 
 	int fd, ffd = STDIN_FILENO, err = -1;
 	void *buf = NULL;
@@ -246,20 +249,21 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 		__u32	namespace_id;
 		bool	select_all;
 		__u8	zsa;
-		int   data_len;
+		int   	data_len;
 		char   *file;
+		__u32	timeout;
 	};
 
-	struct config cfg = {
-	};
+	struct config cfg = {};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_SUFFIX("start-lba",  's', &cfg.zslba,         zslba),
 		OPT_FLAG("select-all",   'a', &cfg.select_all,    select_all),
 		OPT_BYTE("zsa",          'z', &cfg.zsa,           zsa),
-		OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
-		OPT_FILE("data",         'd', &cfg.file,         data),
+		OPT_UINT("data-len",     'l', &cfg.data_len,      data_len),
+		OPT_FILE("data",         'd', &cfg.file,          data),
+		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
 		OPT_END()
 	};
 
@@ -284,9 +288,9 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 	if (cfg.zsa == NVME_ZNS_ZSA_SET_DESC_EXT) {
 		if(!cfg.data_len) {
 			cfg.data_len = get_zdes_bytes(fd, cfg.namespace_id);
-			if (cfg.data_len == 0) {
+			if (!cfg.data_len || cfg.data_len < 0) {
 				fprintf(stderr, 
-				"Zone Descriptor Extensions are not supported\n");
+					"Zone Descriptor Extensions are not supported\n");
 				goto close_fd;
 			} else if (cfg.data_len < 0) {
 				err = cfg.data_len;
@@ -322,7 +326,7 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 	}
 
 	err = __zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, cfg.select_all,
-			cfg.zsa, cfg.data_len, buf);
+			cfg.timeout, cfg.zsa, cfg.data_len, buf);
 	if (!err)
 		printf("zone-mgmt-send: Success, action:%d zone:%"PRIx64" "
 			"all:%d nsid:%d\n",
@@ -337,11 +341,10 @@ close_ffd:
 	if (cfg.file)
 		close(ffd);
 free:
-	if (buf)
-		free(buf);
+	free(buf);
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int close_zone(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -384,6 +387,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 	const char *desc = "Set Zone Descriptor Extension\n";
 	const char *zslba = "starting LBA of the zone for this command";
 	const char *data = "optional file for zone extention data (default stdin)";
+	const char *timeout = "timeout value, in milliseconds";
 
 	int fd, ffd = STDIN_FILENO, err;
 	void *buf = NULL;
@@ -393,15 +397,16 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 		__u64	zslba;
 		__u32	namespace_id;
 		char   *file;
+		__u32	timeout;
 	};
 
-	struct config cfg = {
-	};
+	struct config cfg = {};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_SUFFIX("start-lba",  's', &cfg.zslba,         zslba),
-		OPT_FILE("data",         'd', &cfg.file,         data),
+		OPT_FILE("data",         'd', &cfg.file,          data),
+		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
 		OPT_END()
 	};
 
@@ -419,7 +424,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 
 	data_len = get_zdes_bytes(fd, cfg.namespace_id);
 
-	if (!data_len) {
+	if (!data_len || data_len < 0) {
 		fprintf(stderr,
 			"zone format does not provide descriptor extention\n");
 		errno = EINVAL;
@@ -449,7 +454,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 		goto close_ffd;
 	}
 
-	err = __zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, 0,
+	err = __zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, 0, cfg.timeout,
 		NVME_ZNS_ZSA_SET_DESC_EXT, data_len, buf);
 	if (!err)
 		printf("set-zone-desc: Success, zone:%"PRIx64" nsid:%d\n",
@@ -465,7 +470,7 @@ free:
 	free(buf);
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -522,6 +527,11 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 		}
 	}
 
+	if (cfg.zra == NVME_ZNS_ZRA_REPORT_ZONES && !cfg.data_len) {
+		fprintf(stderr, "error: data len is needed for NVME_ZRA_ZONE_REPORT\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
 	if (cfg.data_len) {
 		data = calloc(1, cfg.data_len);
 		if (!data) {
@@ -541,11 +551,10 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 	else
 		perror("zns zone-mgmt-recv");
 
-	if (data)
-		free(data);
+	free(data);
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int report_zones(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -656,7 +665,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	nvme_free(report, huge);
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int zone_append(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -704,8 +713,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		int   latency;
 	};
 
-	struct config cfg = {
-	};
+	struct config cfg = {};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
@@ -859,7 +867,7 @@ close_dfd:
 close_ns:
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }
 
 static int changed_zone_list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -915,5 +923,5 @@ static int changed_zone_list(int argc, char **argv, struct command *cmd, struct 
 
 close_fd:
 	close(fd);
-	return err;
+	return nvme_status_to_errno(err, false);
 }

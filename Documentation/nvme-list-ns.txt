@@ -10,7 +10,7 @@ SYNOPSIS
 [verse]
 'nvme list-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--csi=<command_set_identifier> | -y <command_set_identifier>]
-			[--all | -a]
+			[--all | -a] [--output-format=<fmt> | -o <fmt>]
 
 DESCRIPTION
 -----------
@@ -41,9 +41,24 @@ OPTIONS
 	Retrieve the identify list structure for all namespaces in the
 	subsystem, whether attached or inactive.
 
+-o <format>::
+--output-format=<format>::
+    Set the reporting format to 'normal', or 'json'.
+    Only one output format can be used at a time.
+
 EXAMPLES
 --------
-No examples yet.
+* Print the namespaces present for zoned command set in JSON format
++
+------------
+# nvme list-ns /dev/nvme0 -y 2 -a -o json
+------------
+
+* Print the namespaces present for NVM Command Set in normal format
++
+------------
+# nvme list-ns /dev/nvme0
+------------
 
 NVME
 ----

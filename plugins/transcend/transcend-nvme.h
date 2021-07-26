@@ -7,7 +7,7 @@
 #include "cmd.h"
  
 
-PLUGIN(NAME("transcend", "Transcend vendor specific extensions"),
+PLUGIN(NAME("transcend", "Transcend vendor specific extensions", NVME_VERSION),
     COMMAND_LIST(
 			ENTRY("healthvalue", "NVME health percentage", getHealthValue)
 			ENTRY("badblock", "Get NVME bad block number", getBadblock)

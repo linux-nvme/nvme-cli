@@ -7,7 +7,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("lnvm", "LightNVM specific extensions"),
+PLUGIN(NAME("lnvm", "LightNVM specific extensions", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("list", "List available LightNVM devices", lnvm_list)
 		ENTRY("info", "List general information and available target engines", lnvm_info)

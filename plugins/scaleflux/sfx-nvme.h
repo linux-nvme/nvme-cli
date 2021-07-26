@@ -6,7 +6,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("sfx", "ScaleFlux vendor specific extensions"),
+PLUGIN(NAME("sfx", "ScaleFlux vendor specific extensions", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("smart-log-add", "Retrieve ScaleFlux SMART Log, show it", get_additional_smart_log)
 		ENTRY("lat-stats", "Retrieve ScaleFlux IO Latency Statistics log, show it", get_lat_stats_log)

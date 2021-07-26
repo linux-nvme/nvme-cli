@@ -9,6 +9,11 @@
 #include "nvme.h"
 #include "nvme-ioctl.h"
 
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-id128.h>
+#define NVME_HOSTNQN_ID SD_ID128_MAKE(c7,f4,61,81,12,be,49,32,8c,83,10,6f,9d,dd,d8,6b)
+#endif
+
 static const char *dev = "/dev/";
 static const char *subsys_dir = "/sys/class/nvme-subsystem/";
 static void free_ctrl(struct nvme_ctrl *c);
@@ -150,23 +155,23 @@ static int scan_namespace(struct nvme_namespace *n)
 		return ret;
 
 	fd = open(path, O_RDONLY);
-	if (fd < 0)
+	if (fd < 0) {
+		ret = fd;
 		goto free;
-
+	}
 	if (!n->nsid) {
-		n->nsid = nvme_get_nsid(fd);
-		if (n->nsid < 0)
+		ret = nvme_get_nsid(fd);
+		if (ret < 0)
 			goto close_fd;
+		n->nsid = ret;
 	}
 
 	ret = nvme_identify_ns(fd, n->nsid, 0, &n->ns);
-	if (ret < 0)
-		goto close_fd;
 close_fd:
 	close(fd);
 free:
 	free(path);
-	return 0;
+	return ret;
 }
 
 static char *get_nvme_ctrl_path_ana_state(char *path, int nsid)
@@ -314,10 +319,8 @@ static int scan_ctrl(struct nvme_ctrl *c, char *p, __u32 ns_instance)
 		return ret;
 
 	fd = open(path, O_RDONLY);
-	if (fd < 0) {
-		fprintf(stderr, "Failed to open %s\n", path);
+	if (fd < 0)
 		goto free;
-	}
 
 	ret = nvme_identify_ctrl(fd, &c->id);
 	if (ret < 0)
@@ -379,8 +382,12 @@ static int scan_subsystem(struct nvme_subsystem *s, __u32 ns_instance, int nsid)
 		for (i = 0; i < s->nr_namespaces; i++) {
 			n = &s->namespaces[i];
 			n->name = strdup(ns[i]->d_name);
-			n->ctrl = &s->ctrls[0];
-			scan_namespace(n);
+			for (j = 0; j < s->nr_ctrls; j++) {
+				n->ctrl = &s->ctrls[j];
+				if (!strcmp(n->ctrl->state, "live") &&
+						!scan_namespace(n))
+					break;
+			}
 		}
 	} else {
 		i = s->nr_namespaces;
@@ -758,7 +765,6 @@ int uuid_from_systemd(char *systemd_uuid)
 {
 #ifdef HAVE_SYSTEMD
 	sd_id128_t id;
-	char *ret;
 
 	if (sd_id128_get_machine_app_specific(NVME_HOSTNQN_ID, &id) < 0)
 		return -ENXIO;

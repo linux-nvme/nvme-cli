@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include "nvme.h"
 #include "nvme-print.h"
+#include "nvme-status.h"
 #include "nvme-ioctl.h"
 #include <sys/ioctl.h>
 #include <limits.h>
@@ -38,7 +39,7 @@
 /* Plugin version major_number.minor_number.patch */
 static const char *__version_major = "1";
 static const char *__version_minor = "0";
-static const char *__version_patch = "5";
+static const char *__version_patch = "6";
 
 /* supported models of micron plugin; new models should be added at the end
  * before UNKNOWN_MODEL. Make sure M5410 is first in the list !
@@ -626,7 +627,7 @@ static int micron_smbus_option(int argc, char **argv,
 
     if (!strcmp(opt.option, "enable")) {
         cdw11 = opt.value << 1 | 1;
-        err = nvme_set_feature(fd, 1, fid, cdw11, 0, opt.save, 0, 0, &result);
+        err = nvme_set_feature(fd, 1, fid, cdw11, 0, opt.save, 0, 0, 0, &result);
         if (err == 0) {
             printf("successfully enabled SMBus on drive\n");
         } else {
@@ -635,7 +636,7 @@ static int micron_smbus_option(int argc, char **argv,
     }
     else if (!strcmp(opt.option, "status")) {
         cdw10 = opt.value;
-        err = nvme_get_feature(fd, 1, fid, cdw10, 0, 0, 0, &result);
+        err = nvme_get_feature(fd, 1, fid, cdw10, 0, 0, 0, 0, &result);
         if (err == 0) {
             printf("SMBus status on the drive: %s (returns %s temperature) \n",
                     (result & 1) ? "enabled" : "disabled",
@@ -646,7 +647,7 @@ static int micron_smbus_option(int argc, char **argv,
     }
     else if (!strcmp(opt.option, "disable")) {
         cdw11 = opt.value << 1 | 0;
-        err = nvme_set_feature(fd, 1, fid, cdw11, 0, opt.save, 0, 0, &result);
+        err = nvme_set_feature(fd, 1, fid, cdw11, 0, opt.save, 0, 0, 0, &result);
         if (err == 0) {
             printf("Successfully disabled SMBus on drive\n");
         } else {
@@ -932,9 +933,11 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 
     /* For M51CX models, PCIe errors are cleared using 0xC3 feature */
     if (model == M51CX) {
-        err = nvme_set_feature(fd, 0, fid, (1 << 31), 0, 0, 0, 0, &result);
+        err = nvme_set_feature(fd, 0, fid, (1 << 31), 0, 0, 0, 0, 0, &result);
         if (err == 0 && (err = (int)result) == 0)
             printf("Device correctable errors cleared!\n");
+        else if (err > 0)
+            nvme_show_status(err);
         else
             printf("Error clearing Device correctable errors = 0x%x\n", err);
         goto out;
@@ -1056,11 +1059,12 @@ static void init_d0_log_page(__u8 *buf, __u8 nsze)
 /* OCP and Vendor specific log data format */
 struct micron_vs_logpage {
     char *field;
-    int  size;
+    int  size;  /* FB client spec version 1.0 sizes - M5410 models */
+    int  size2; /* FB client spec version 0.7 sizes - M5407 models */
 }
-/* Smart Health Log information as per OCP spec */
+/* Smart Health Log information as per OCP spec M51CX models */
 ocp_c0_log_page[] = {
-    { "Physical Media Units Written", 16 },
+    { "Physical Media Units Written", 16},
     { "Physical Media Units Read", 16 },
     { "Raw Bad User NAND Block Count", 6},
     { "Normalized Bad User NAND Block Count", 2},
@@ -1096,43 +1100,56 @@ ocp_c0_log_page[] = {
 },
 /* Vendor Specific Health Log information */
 fb_log_page[] = {
-    { "Physical Media Units Written - TLC", 16 },
-    { "Physical Media Units Written - SLC", 16 },
-    { "Normalized Bad User NAND Block Count", 2},
-    { "Raw Bad User NAND Block Count", 6},
-    { "XOR Recovery Count", 8},
-    { "Uncorrectable Read Error Count", 8},
-    { "SSD End to End Corrected Errors", 8},
-    { "SSD End to End Detected Counts", 4},
-    { "SSD End to End Uncorrected Counts", 4},
-    { "System data % life-used", 1},
-    { "Minimum User Data Erase Count - TLC", 8},
-    { "Maximum User Data Erase Count - TLC", 8},
-    { "Minimum User Data Erase Count - SLC", 8},
-    { "Maximum User Data Erase Count - SLC", 8},
-    { "Normalized Program Fail Count", 2},
-    { "Raw Program Fail Count", 6},
-    { "Normalized Erase Fail Count", 2},
-    { "Raw Erase Fail Count", 6},
-    { "Pcie Correctable Error Count", 8},
-    { "% Free Blocks (User)", 1},
-    { "Security Version Number", 8},
-    { "% Free Blocks (System)", 1},
-    { "Dataset Management (Deallocate) Commands", 16},
-    { "Incomplete TRIM Data", 8},
-    { "% Age of Completed TRIM", 1},
-    { "Background Back-Pressure Gauge", 1},
-    { "Soft ECC Error Count", 8},
-    { "Refresh Count", 8},
-    { "Normalized Bad System NAND Block Count", 2},
-    { "Raw Bad System NAND Block Count", 6},
-    { "Endurance Estimate", 16},
-    { "Thermal Throttling Count", 1},
-    { "Thermal Throttling Status", 1},
-    { "Unaligned I/O", 8},
-    { "Physical Media Units Read", 16},
-    { "Reserved", 279},
-    { "Log Page Version", 2}
+    { "Physical Media Units Written - TLC",  16, 16 },
+    { "Physical Media Units Written - SLC",  16, 16 },
+    { "Normalized Bad User NAND Block Count", 2, 2},
+    { "Raw Bad User NAND Block Count", 6, 6},
+    { "XOR Recovery Count", 8, 8},
+    { "Uncorrectable Read Error Count", 8, 8},
+    { "SSD End to End Corrected Errors", 8, 8},
+    { "SSD End to End Detected Counts", 4, 8},
+    { "SSD End to End Uncorrected Counts", 4, 8},
+    { "System data % life-used", 1, 1},
+    { "Reserved", 0, 3},
+    { "Minimum User Data Erase Count - TLC", 8, 8},
+    { "Maximum User Data Erase Count - TLC", 8, 8},
+    { "Average User Data Erase Count - TLC", 0, 8},
+    { "Minimum User Data Erase Count - SLC", 8, 8},
+    { "Maximum User Data Erase Count - SLC", 8, 8},
+    { "Average User Data Erase Count - SLC", 0, 8},
+    { "Normalized Program Fail Count", 2, 2},
+    { "Raw Program Fail Count", 6, 6},
+    { "Normalized Erase Fail Count", 2, 2},
+    { "Raw Erase Fail Count", 6, 6},
+    { "Pcie Correctable Error Count", 8, 8},
+    { "% Free Blocks (User)", 1, 1},
+    { "Reserved", 0, 3},
+    { "Security Version Number", 8, 8},
+    { "% Free Blocks (System)", 1, 1},
+    { "Reserved", 0, 3},
+    { "Dataset Management (Deallocate) Commands", 16, 16},
+    { "Incomplete TRIM Data", 8, 8},
+    { "% Age of Completed TRIM", 1, 2},
+    { "Background Back-Pressure Gauge", 1, 1},
+    { "Reserved", 0, 3},
+    { "Soft ECC Error Count", 8, 8},
+    { "Refresh Count", 8, 8},
+    { "Normalized Bad System NAND Block Count", 2, 2},
+    { "Raw Bad System NAND Block Count", 6, 6},
+    { "Endurance Estimate", 16, 16},
+    { "Thermal Throttling Count", 1, 1},
+    { "Thermal Throttling Status", 1, 1},
+    { "Unaligned I/O", 8, 8},
+    { "Physical Media Units Read", 16, 16},
+    { "Reserved", 279, 0},
+    { "Log Page Version", 2, 0},
+    { "READ CMDs exceeding threshold", 0, 4},
+    { "WRITE CMDs exceeding threshold", 0, 4},
+    { "TRIMs CMDs exceeding threshold", 0, 4},
+    { "Reserved", 0, 4},
+    { "Reserved", 0, 210},
+    { "Log Page Version", 0, 2},
+    { "Log Page GUID", 0, 16},
 };
 
 /* Common function to print Micron VS log pages */
@@ -1140,66 +1157,70 @@ static void print_micron_vs_logs(
     __u8                     *buf,             /* raw log data */
     struct micron_vs_logpage *log_page,        /* format of the data */
     int                      field_count,      /* log field count */
-    struct json_object       *stats            /* json object to add fields */
+    struct json_object       *stats,           /* json object to add fields */
+    __u8                     spec              /* ocp spec index */
 )
 {
     __u64 lval_lo, lval_hi;
     __u32 ival;
     __u16 sval;
     __u8  cval, lval[8] = { 0 };
-    int field, guid_index;
+    int field;
     int offset = 0;
 
     for (field = 0; field < field_count; field++) {
         char datastr[1024] = { 0 };
-        if (log_page[field].size == 16) {
-            if (strstr(log_page[field].field, "GUID")) {
-                char *tmpstr = datastr;
-                tmpstr += sprintf(datastr, "0x");
-                for(guid_index = 0; guid_index < 16; guid_index++)
-                    tmpstr += sprintf(tmpstr, "%01X", buf[offset + guid_index]);
+        char *sfield = NULL;
+        int size = (spec == 0) ? log_page[field].size : log_page[field].size2;
+        if (size == 0) continue;
+        sfield = log_page[field].field;
+        if (size == 16) {
+            if (strstr(sfield, "GUID")) {
+                sprintf(datastr, "0x%"PRIx64"%"PRIx64"",
+                        (uint64_t)le64_to_cpu(*(uint64_t *)(&buf[offset + 8])),
+                        (uint64_t)le64_to_cpu(*(uint64_t *)(&buf[offset])));
             } else {
                 lval_lo = *((__u64 *)(&buf[offset]));
                 lval_hi = *((__u64 *)(&buf[offset + 8]));
                 if (lval_hi)
-                    sprintf(datastr, "0x%"PRIx64"_%"PRIx64"",
+                    sprintf(datastr, "0x%"PRIx64"%016"PRIx64"",
                             le64_to_cpu(lval_hi), le64_to_cpu(lval_lo));
                 else
                     sprintf(datastr, "0x%"PRIx64"", le64_to_cpu(lval_lo));
             }
-        } else if (log_page[field].size == 8) {
+        } else if (size == 8) {
             lval_lo = *((__u64 *)(&buf[offset]));
             sprintf(datastr, "0x%"PRIx64"", le64_to_cpu(lval_lo));
-        } else if (log_page[field].size == 7) {
+        } else if (size == 7) {
             /* 7 bytes will be in little-endian format, with last byte as MSB */
             memcpy(&lval[0], &buf[offset], 7);
             memcpy((void *)&lval_lo, lval, 8);
             sprintf(datastr, "0x%"PRIx64"", le64_to_cpu(lval_lo));
-        } else if (log_page[field].size == 6) {
+        } else if (size == 6) {
             ival    = *((__u32 *)(&buf[offset]));
             sval    = *((__u16 *)(&buf[offset + 4]));
             lval_lo = (((__u64)sval << 32) | ival);
             sprintf(datastr, "0x%"PRIx64"", le64_to_cpu(lval_lo));
-        } else if (log_page[field].size == 4) {
+        } else if (size == 4) {
             ival    = *((__u32 *)(&buf[offset]));
             sprintf(datastr, "0x%x", le32_to_cpu(ival));
-        } else if (log_page[field].size == 2) {
+        } else if (size == 2) {
             sval = *((__u16 *)(&buf[offset]));
             sprintf(datastr, "0x%04x", le16_to_cpu(sval));
-        } else if (log_page[field].size == 1) {
+        } else if (size == 1) {
             cval = buf[offset];
             sprintf(datastr, "0x%02x", cval);
         } else {
             sprintf(datastr, "0");
         }
-        offset += log_page[field].size;
+        offset += size;
         /* do not print reserved values */
-        if (strstr(log_page[field].field, "Reserved"))
+        if (strstr(sfield, "Reserved"))
             continue;
         if (stats != NULL) {
-            json_object_add_value_string(stats, log_page[field].field, datastr);
+            json_object_add_value_string(stats, sfield, datastr);
         } else {
-            printf("%-40s : %-4s\n", log_page[field].field, datastr);
+            printf("%-40s : %-4s\n", sfield, datastr);
         }
     }
 }
@@ -1219,7 +1240,7 @@ static void print_smart_cloud_health_log(__u8 *buf, bool is_json)
                                     logPages);
     }
 
-    print_micron_vs_logs(buf, ocp_c0_log_page, field_count, stats);
+    print_micron_vs_logs(buf, ocp_c0_log_page, field_count, stats, 0);
 
     if (is_json) {
         json_array_add_value_object(logPages, stats);
@@ -1229,7 +1250,7 @@ static void print_smart_cloud_health_log(__u8 *buf, bool is_json)
     }
 }
 
-static void print_nand_stats_fb(__u8 *buf, __u8 *buf2, __u8 nsze, bool is_json)
+static void print_nand_stats_fb(__u8 *buf, __u8 *buf2, __u8 nsze, bool is_json, __u8 spec)
 {
     struct json_object *root;
     struct json_object *logPages;
@@ -1244,20 +1265,22 @@ static void print_nand_stats_fb(__u8 *buf, __u8 *buf2, __u8 nsze, bool is_json)
                                     logPages);
     }
 
-    print_micron_vs_logs(buf, fb_log_page, field_count, stats);
+    print_micron_vs_logs(buf, fb_log_page, field_count, stats, spec);
 
     /* print last three entries from D0 log page */
-    init_d0_log_page(buf2, nsze);
+    if (buf2 != NULL) {
+        init_d0_log_page(buf2, nsze);
 
-    if (is_json) {
-        for (int i = 4; i < 7; i++) {
-            json_object_add_value_string(stats,
-                                         d0_log_page[i].field,
-                                         d0_log_page[i].datastr);
-        }
-    } else {
-        for (int i = 4; i < 7; i++) {
-            printf("%-40s : %s\n", d0_log_page[i].field, d0_log_page[i].datastr);
+        if (is_json) {
+            for (int i = 0; i < 7; i++) {
+                json_object_add_value_string(stats,
+                                             d0_log_page[i].field,
+                                             d0_log_page[i].datastr);
+            }
+        } else {
+            for (int i = 0; i < 7; i++) {
+                printf("%-40s : %s\n", d0_log_page[i].field, d0_log_page[i].datastr);
+            }
         }
     }
 
@@ -1337,14 +1360,16 @@ static int micron_nand_stats(int argc, char **argv,
         is_json = false;
 
     err = nvme_identify_ctrl(fd, &ctrl);
-    if (err)
+    if (err) {
+        printf("Error %d retrieving controller identification data\n", err);
         goto out;
+    }
 
     /* pull log details based on the model name */
     sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx);
     if ((eModel = GetDriveModel(ctrlIdx)) == UNKNOWN_MODEL) {
         printf ("Unsupported drive model for vs-nand-stats command\n");
-        close(fd);
+        err = -1;
         goto out;
     }
 
@@ -1353,27 +1378,29 @@ static int micron_nand_stats(int argc, char **argv,
     has_d0_log = (0 == err);
 
     /* should check for firmware version if this log is supported or not */
-    if (eModel == M5407 || eModel == M5410) {
+    if (eModel != M5407 && eModel != M5410) {
         err = nvme_get_log(fd, NVME_NSID_ALL, 0xFB, false, NVME_NO_LOG_LSP,
                            FB_log_size, logFB);
         has_fb_log = (0 == err);
     }
 
     nsze = (ctrl.vs[987] == 0x12);
+
     if (nsze == 0 && nsze_from_oacs)
         nsze = ((ctrl.oacs >> 3) & 0x1);
-    err = 0;
-    if (has_fb_log)
-        print_nand_stats_fb((__u8 *)logFB, (__u8 *)extSmartLog, nsze, is_json);
-    else if (has_d0_log)
+
+    if (has_fb_log) {
+        __u8 spec = (eModel == M5410) ? 0 : 1;  /* FB spec version */
+        print_nand_stats_fb((__u8 *)logFB, (__u8 *)extSmartLog, nsze, is_json, spec);
+    } else if (has_d0_log) {
         print_nand_stats_d0((__u8 *)extSmartLog, nsze, is_json);
-    else {
-        printf("Unable to retrieve extended smart log for the drive\n");
-        err = -ENOTTY;
+        err = 0;
     }
 out:
     close(fd);
-    return err;
+    if (err > 0)
+        nvme_show_status(err);
+    return nvme_status_to_errno(err, false);
 }
 
 
@@ -1483,6 +1510,62 @@ static void GetErrorlogData(int fd, int entries, const char *dir)
     free(error_log);
 }
 
+static void GetGenericLogs(int fd, const char *dir)
+{
+    struct nvme_self_test_log self_test_log;
+    struct nvme_firmware_log_page fw_log;
+    struct nvme_effects_log_page effects;
+    struct nvme_persistent_event_log_head pevent_log_head;
+    void *pevent_log_info = NULL;
+    __u32 log_len = 0;
+    int err = 0 ;
+    bool huge = false;
+
+    /* get self test log */
+    if (nvme_self_test_log(fd, sizeof(self_test_log), &self_test_log) == 0) {
+        WriteData((__u8*)&self_test_log, sizeof(self_test_log), dir,
+                  "drive_self_test.bin", "self test log");
+    }
+
+    /* get fw slot info log */
+    if (nvme_fw_log(fd, &fw_log) == 0) {
+        WriteData((__u8*)&fw_log, sizeof(fw_log), dir,
+                  "firmware_slot_info_log.bin", "firmware log");
+    }
+
+    /* get effects log */
+    if (nvme_effects_log(fd, &effects) == 0) {
+        WriteData((__u8*)&effects, sizeof(effects), dir,
+                  "command_effects_log.bin", "effects log");
+    }
+    
+    /* get persistent event log */
+    (void)nvme_persistent_event_log(fd, NVME_PEVENT_LOG_RELEASE_CTX,
+                                    sizeof(pevent_log_head), &pevent_log_head);
+    memset(&pevent_log_head, 0, sizeof(pevent_log_head));
+    err = nvme_persistent_event_log(fd, NVME_PEVENT_LOG_EST_CTX_AND_READ, 
+                        sizeof(pevent_log_head), &pevent_log_head);
+    if (err) {
+        fprintf(stderr, "Setting persistent event log read ctx failed (ignored)!\n");
+        return;
+    }
+
+    log_len = le64_to_cpu(pevent_log_head.tll);
+    pevent_log_info = nvme_alloc(log_len, &huge);
+    if (!pevent_log_info) {
+        perror("could not alloc buffer for persistent event log page (ignored)!\n");
+        return;
+    }
+    err = nvme_persistent_event_log(fd, NVME_PEVENT_LOG_READ,
+                                    log_len, pevent_log_info);
+    if (err == 0) {
+        WriteData((__u8*)pevent_log_info, log_len, dir,
+                  "persistent_event_log.bin", "persistent event log");
+    }
+    nvme_free(pevent_log_info, huge);
+    return;
+}
+
 static void GetNSIDDInfo(int fd, const char *dir, int nsid)
 {
     char file[PATH_MAX] = { 0 };
@@ -1537,14 +1620,14 @@ static void GetOSConfig(const char *strOSDirName)
 static int micron_telemetry_log(int fd, __u8 gen, __u8 type, __u8 **data,
                                 int *logSize, int da)
 {
-    int err;
+    int err, bs = 512, offset = bs;
     unsigned short data_area[4];
     unsigned char  ctrl_init = (type == 0x8);
 
-    __u8 *buffer = (unsigned char *)calloc(512, 1);
+    __u8 *buffer = (unsigned char *)calloc(bs, 1);
     if (buffer == NULL)
         return -1;
-    err = nvme_get_telemetry_log(fd, buffer, gen, ctrl_init, 512, 0);
+    err = nvme_get_telemetry_log(fd, buffer, gen, ctrl_init, bs, 0);
     if (err != 0) {
         fprintf(stderr, "Failed to get telemetry log header for 0x%X\n", type);
         if (buffer != NULL) {
@@ -1553,10 +1636,10 @@ static int micron_telemetry_log(int fd, __u8 gen, __u8 type, __u8 **data,
         return err;
     }
 
-    // compute size of the log
-    data_area[1] = buffer[9] << 16 | buffer[8];
-    data_area[2] = buffer[11] << 16 | buffer[10];
-    data_area[3] = buffer[13] << 16 | buffer[12];
+    /* compute size of the log */
+    data_area[1] = buffer[9]  << 8 | buffer[8];
+    data_area[2] = buffer[11] << 8 | buffer[10];
+    data_area[3] = buffer[13] << 8 | buffer[12];
     data_area[0] = data_area[1] > data_area[2] ? data_area[1] : data_area[2];
     data_area[0] = data_area[3] > data_area[0] ? data_area[3] : data_area[0];
 
@@ -1569,9 +1652,14 @@ static int micron_telemetry_log(int fd, __u8 gen, __u8 type, __u8 **data,
         return -1;
     }
 
-    *logSize = data_area[da] * 512;
+    *logSize = data_area[da] * bs;
+    offset = bs;
+    err = 0;
     if ((buffer = (unsigned char *)realloc(buffer, (size_t)(*logSize))) != NULL) {
-        err = nvme_get_telemetry_log(fd, buffer, gen, ctrl_init, *logSize, 0);
+        while (err == 0 && offset != *logSize) {
+           err = nvme_get_telemetry_log(fd, buffer + offset, gen, ctrl_init, bs, offset);
+           offset += bs;
+        }
     }
 
     if (err == 0 && buffer != NULL) {
@@ -1594,12 +1682,13 @@ static int GetTelemetryData(int fd, const char *dir)
         __u8 log;
         char *file;
     } tmap[] = {
-        {0x07, "nvme_host_telemetry.bin"},
-        {0x08, "nvme_cntrl_telemetry.bin"},
+        {0x07, "nvmetelemetrylog.bin"},
+        {0x08, "nvmetelemetrylog.bin"},
     };
 
     for(i = 0; i < (int)(sizeof(tmap)/sizeof(tmap[0])); i++) {
-        err = micron_telemetry_log(fd, 0, tmap[i].log, &buffer, &logSize, 0);
+        err = micron_telemetry_log(fd, (tmap[i].log == 0x07),
+                                   tmap[i].log, &buffer, &logSize, 0);
         if (err == 0 && logSize > 0 && buffer != NULL) {
             sprintf(msg, "telemetry log: 0x%X", tmap[i].log);
             WriteData(buffer, logSize, dir, tmap[i].file, msg);
@@ -1646,7 +1735,7 @@ static int GetFeatureSettings(int fd, const char *dir)
             bufp = NULL;
         }
 
-        err = nvme_get_feature(fd, 1, fmap[i].id, 0, 0x0, len, bufp, &attrVal);
+        err = nvme_get_feature(fd, 1, fmap[i].id, 0, 0x0, 0, len, bufp, &attrVal);
         if (err == 0) {
             sprintf(msg, "feature: 0x%X", fmap[i].id);
             WriteData((__u8*)&attrVal, sizeof(attrVal), dir, fmap[i].file, msg);
@@ -1654,7 +1743,8 @@ static int GetFeatureSettings(int fd, const char *dir)
                 WriteData(bufp, len, dir, fmap[i].file, msg);
             }
         } else {
-            printf("Failed to retrieve feature 0x%x data !\n", fmap[i].id);
+            fprintf(stderr, "Feature 0x%x data not retrieved, error %d (ignored)!\n",
+                    fmap[i].id, err);
             errcnt++;
         }
     }
@@ -1667,20 +1757,98 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
     const char *desc = "Get drive HW information";
     int fd, err = 0;
     struct nvme_id_ctrl ctrl =  { 0 };
+    struct nvme_admin_cmd admin_cmd = { 0 };
+    struct fb_drive_info {
+        unsigned char hw_ver_major;
+        unsigned char hw_ver_minor;
+        unsigned char ftl_unit_size;
+        unsigned char bs_ver_major;
+        unsigned char bs_ver_minor;
+    } dinfo = { 0 };
+    eDriveModel model = UNKNOWN_MODEL;
+    bool is_json = false;
+    struct json_object *root, *driveInfo;
+    struct format {
+        char *fmt;
+    };
+
+    const char *fmt = "output format normal";
+    struct format cfg = {
+        .fmt = "normal",
+    };
+
     OPT_ARGS(opts) = {
+        OPT_FMT("format", 'f', &cfg.fmt, fmt),
         OPT_END()
     };
 
-    if ((fd = micron_parse_options(argc, argv, desc, opts, NULL)) < 0)
+    if ((fd = micron_parse_options(argc, argv, desc, opts, &model)) < 0)
         return err;
 
-    err = nvme_identify_ctrl(fd, &ctrl);
-    if (err) {
-        fprintf(stderr, "ERROR : nvme_identify_ctrl() failed with 0x%x\n", err);
+    if (model == UNKNOWN_MODEL) {
+        fprintf(stderr, "ERROR : Unsupported drive for vs-drive-info cmd");
         return -1;
     }
 
-    printf("%u.%u\n", ctrl.vs[820], ctrl.vs[821]);
+    if (strcmp(cfg.fmt, "json") == 0)
+        is_json = true;
+
+    if (model == M5407) {
+        admin_cmd.opcode = 0xDA,
+        admin_cmd.addr = (__u64) (uintptr_t) &dinfo;
+        admin_cmd.data_len = (__u32)sizeof(dinfo);
+        admin_cmd.cdw12 = 3;
+        err = ioctl(fd, NVME_IOCTL_ADMIN_CMD, &admin_cmd);
+        if (err) {
+            fprintf(stderr, "ERROR : drive-info opcode failed with 0x%x\n", err);
+            return -1;
+        }
+    } else {
+        err = nvme_identify_ctrl(fd, &ctrl);
+        if (err) {
+            fprintf(stderr, "ERROR : identify_ctrl() failed with 0x%x\n", err);
+            return -1;
+        }
+        dinfo.hw_ver_major = ctrl.vs[820];
+        dinfo.hw_ver_minor = ctrl.vs[821];
+    }
+
+    if (is_json) {
+        struct json_object *pinfo = json_create_object();
+        char tempstr[64] = { 0 };
+        root = json_create_object();
+        driveInfo = json_create_array();
+        json_object_add_value_array(root, "Micron Drive HW Information", driveInfo);
+        sprintf(tempstr, "%hhu.%hhu", dinfo.hw_ver_major, dinfo.hw_ver_minor);
+        json_object_add_value_string(pinfo, "Drive Hardware Version", tempstr);
+
+        if (dinfo.ftl_unit_size) {
+            sprintf(tempstr, "%hhu KB", dinfo.ftl_unit_size);
+            json_object_add_value_string(pinfo, "FTL_unit_size", tempstr);
+        }
+
+        if (dinfo.bs_ver_major != 0 || dinfo.bs_ver_minor != 0) {
+            sprintf(tempstr, "%hhu.%hhu", dinfo.bs_ver_major, dinfo.bs_ver_minor);
+            json_object_add_value_string(pinfo, "Boot Spec.Version", tempstr);
+        }
+
+        json_array_add_value_object(driveInfo, pinfo);
+        json_print_object(root, NULL);
+        printf("\n");
+        json_free_object(root);
+    } else {
+        printf("Drive Hardware Version: %hhu.%hhu\n",
+                dinfo.hw_ver_major, dinfo.hw_ver_minor);
+
+        if (dinfo.ftl_unit_size)
+            printf("FTL_unit_size: %hhu KB\n", dinfo.ftl_unit_size);
+
+        if (dinfo.bs_ver_major != 0 || dinfo.bs_ver_minor != 0) {
+            printf("Boot  Spec.Version: %hhu.%hhu\n",
+                    dinfo.bs_ver_major, dinfo.bs_ver_minor);
+        }
+    }
+
     return 0;
 }
 
@@ -1825,8 +1993,7 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *c
     int count = 0;
     unsigned int logC2[C2_log_size/sizeof(int)] = { 0 };
     eDriveModel eModel = UNKNOWN_MODEL;
-    struct nvme_id_ctrl ctrl;
-    int fd, err, ctrlIdx;
+    int fd, err;
     struct format {
         char *fmt;
     };
@@ -1841,9 +2008,7 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *c
         OPT_END()
     };
 
-    fd = parse_and_open(argc, argv, desc, opts);
-    if (fd < 0) {
-        printf("\nDevice not found \n");;
+    if ((fd = micron_parse_options(argc, argv, desc, opts, &eModel)) < 0) {
         return -1;
     }
 
@@ -1853,16 +2018,8 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *c
         return -1;
     }
 
-    err = nvme_identify_ctrl(fd, &ctrl);
-    if (err) {
-        fprintf(stderr, "failed get device identification data, error: %x\n", err);
-        goto out;
-    }
-
     /* check if product supports fw_history log */
     err = -EINVAL;
-    sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx);
-    eModel = GetDriveModel(ctrlIdx);
     if (eModel != M51CX) {
         fprintf(stderr, "Unsupported drive model for vs-fw-activate-history command\n");
         goto out;
@@ -1916,18 +2073,19 @@ static int micron_error_reason(int argc, char **argv, struct command *cmd,
 static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *cmd,
                                 struct plugin *plugin)
 {
-    const char *desc = "Retrieve Micron OCP Smart Health log for the given device ";
+    const char *desc = "Retrieve Smart or Extended Smart Health log for the given device ";
     unsigned int logC0[C0_log_size/sizeof(int)] = { 0 };
-    eDriveModel eModel = UNKNOWN_MODEL;
+    unsigned int logFB[FB_log_size/sizeof(int)] = { 0 };
     struct nvme_id_ctrl ctrl;
-    int fd, err, ctrlIdx;
-    bool is_json = false;
+    eDriveModel eModel = UNKNOWN_MODEL;
+    int fd, err = 0;
+    bool is_json = true;
     struct format {
         char *fmt;
     };
     const char *fmt = "output format normal|json";
     struct format cfg = {
-        .fmt = "normal",
+        .fmt = "json",
     };
 
     OPT_ARGS(opts) = {
@@ -1935,41 +2093,53 @@ static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *c
         OPT_END()
     };
 
-    fd = parse_and_open(argc, argv, desc, opts);
-    if (fd < 0) {
-        printf("\nDevice not found \n");;
+    if ((fd = micron_parse_options(argc, argv, desc, opts, &eModel)) < 0) {
         return -1;
     }
 
-    if (strcmp(cfg.fmt, "json") == 0)
-        is_json = true;
+    if (strcmp(cfg.fmt, "normal") == 0)
+        is_json = false;
 
-    err = nvme_identify_ctrl(fd, &ctrl);
-    if (err)
+    /* For M5410 and M5407, this option prints 0xFB log page */
+    if (eModel == M5410 || eModel == M5407) {
+        __u8 spec = (eModel == M5410) ? 0 : 1;
+        __u8 nsze;
+
+        if ((err = nvme_identify_ctrl(fd, &ctrl)) == 0)
+            err = nvme_get_log(fd, NVME_NSID_ALL, 0xFB, false, NVME_NO_LOG_LSP,
+                               FB_log_size, logFB);
+        if (err) {
+            if (err < 0)
+                printf("Unable to retrieve smart log 0xFB for the drive\n");
+            goto out;
+        }
+
+        nsze = (ctrl.vs[987] == 0x12);
+        if (nsze == 0 && nsze_from_oacs)
+            nsze = ((ctrl.oacs >> 3) & 0x1);
+        print_nand_stats_fb((__u8 *)logFB, NULL, nsze, is_json, spec);
         goto out;
+    }
 
-    /* pull log details based on the model name */
-    sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx);
-    if ((eModel = GetDriveModel(ctrlIdx)) == UNKNOWN_MODEL) {
+    /* check for models that support 0xC0 log */
+    if (eModel != M51CX) {
         printf ("Unsupported drive model for vs-smart-add-log commmand\n");
-        close(fd);
+        err = -1;
         goto out;
     }
 
-    /* should check for firmware version if this log is supported or not */
-    if (eModel == M5407 || eModel == M5410) {
-        err = nvme_get_log(fd, NVME_NSID_ALL, 0xC0, false, NVME_NO_LOG_LSP,
-                           C0_log_size, logC0);
-    }
-    if (err < 0) {
-        printf("Unable to retrieve extended smart log for the drive\n");
-        err = -ENOTTY;
-    } else {
+    err = nvme_get_log(fd, NVME_NSID_ALL, 0xC0, false, NVME_NO_LOG_LSP,
+                       C0_log_size, logC0);
+    if (err == 0) {
         print_smart_cloud_health_log((__u8 *)logC0, is_json);
+    } else if (err < 0) {
+        printf("Unable to retrieve extended smart log 0xC0 for the drive\n");
     }
 out:
     close(fd);
-    return err;
+    if (err > 0)
+        nvme_show_status(err);
+    return nvme_status_to_errno(err, false);
 }
 
 static int micron_clr_fw_activation_history(int argc, char **argv,
@@ -1994,7 +2164,7 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
     }
 
     //err = nvme_set_feature(fd, 1, fid, cdw11, 0, opt.save, 0, 0, &result);
-    err = nvme_set_feature(fd, 1, fid, 0, 0, 0, 0, 0, &result);
+    err = nvme_set_feature(fd, 1, fid, 0, 0, 0, 0, 0, 0, &result);
     if (err == 0) err = (int)result;
     return err;
 }
@@ -2040,14 +2210,14 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
     }
 
     if (!strcmp(opt.option, "enable")) {
-        err = nvme_set_feature(fd, 1, fid, 1, 0, (opt.select & 0x1), 0, 0, &result);
+        err = nvme_set_feature(fd, 1, fid, 1, 0, (opt.select & 0x1), 0, 0, 0, &result);
         if (err == 0) {
             printf("successfully set controller telemetry option\n");
         } else {
             printf("Failed to set controller telemetry option\n");
         }
     } else if (!strcmp(opt.option, "disable")) {
-        err = nvme_set_feature(fd, 1, fid, 0, 0, (opt.select & 0x1), 0, 0, &result);
+        err = nvme_set_feature(fd, 1, fid, 0, 0, (opt.select & 0x1), 0, 0, 0, &result);
         if (err == 0) {
             printf("successfully disabled controller telemetry option\n");
         } else {
@@ -2055,7 +2225,7 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
         }
     } else if (!strcmp(opt.option, "status")) {
         opt.select &= 0x3;
-        err = nvme_get_feature(fd, 1, fid, opt.select, 0, 0, 0, &result);
+        err = nvme_get_feature(fd, 1, fid, opt.select, 0, 0, 0, 0, &result);
         if (err == 0) {
             printf("Controller telemetry option : %s\n",
                     (result) ? "enabled" : "disabled");
@@ -2249,6 +2419,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
 
     GetSmartlogData(fd, strCtrlDirName);
     GetErrorlogData(fd, ctrl.elpe, strCtrlDirName);
+    GetGenericLogs(fd, strCtrlDirName);
 
     // pull if telemetry log data is supported
     if ((ctrl.lpa & 0x8) == 0x8)
@@ -2256,7 +2427,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
 
     GetFeatureSettings(fd, strCtrlDirName);
 
-    if (eModel != M5410) {
+    if (eModel != M5410 && eModel != M5407) {
         memcpy(aVendorLogs, aM51XXLogs, sizeof(aM51XXLogs));
         if (eModel == M51AX)
             memcpy((char *)aVendorLogs + sizeof(aM51XXLogs), aM51AXLogs, sizeof(aM51AXLogs));

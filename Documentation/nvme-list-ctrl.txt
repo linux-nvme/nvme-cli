@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme list-ctrl' <device> [--cntid=<cntid> | -c <cntid>]
-			[--namespace-id=<nsid> | -n <nsid>]
+			[--namespace-id=<nsid> | -n <nsid>] [-o <fmt> | --output-format=<fmt>]
 DESCRIPTION
 -----------
 For the NVMe device given, sends an identify command for controller list
@@ -36,6 +36,11 @@ OPTIONS
 	specified namespace. If no namespace is given, or set to 0, the
 	command requests the controller list for the entire subsystem,
 	whether or not they are attached to namespace(s).
+
+-o <format>::
+--output-format=<format>::
+	Set the reporting format to 'normal' or 'json'. Only one output
+	format can be used at a time.
 
 EXAMPLES
 --------

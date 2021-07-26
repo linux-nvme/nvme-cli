@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme id-iocs' <device> [--controller-id=<cntid> | -c <cntid>]
+                        [-o <fmt> | --output-format=<fmt>]
 
 DESCRIPTION
 -----------
@@ -24,6 +25,15 @@ OPTIONS
 --controller-id=<cntid>::
 	Retrieve the identify I/O Command set data structure for the given
 	cntid. If this value is not given, cntid will be 0xffff.
+-H::
+--human-readable::
+	This option will parse and format many of the bit fields
+	into human-readable formats.
+
+-o <format>::
+--output-format=<format>::
+              Set the reporting format to 'normal', 'json', or
+              'binary'. Only one output format can be used at a time.
 
 EXAMPLES
 --------
@@ -33,7 +43,12 @@ fields in a human readable format:
 ------------
 # nvme id-iocs /dev/nvme0
 ------------
-
++
+* show the fields in human readable format
++
+------------
+# nvme id-iocs /dev/nvme0 -H
+------------
 NVME
 ----
 Part of the nvme-user suite

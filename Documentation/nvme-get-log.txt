@@ -9,13 +9,16 @@ SYNOPSIS
 --------
 [verse]
 'nvme get-log' <device> [--log-id=<log-id> | -i <log-id>]
-		      [--log-len=<log-len> | -l <log-len>]
-		      [--aen=<aen> | -a <aen>]
-		      [--namespace-id=<nsid> | -n <nsid>]
-		      [--raw-binary | -b]
-		      [--lpo=<offset> | -o <offset>]
-		      [--lsp=<field> | -s <field>]
-		      [--rae | -r]
+                [--log-len=<log-len> | -l <log-len>]
+                [--aen=<aen> | -a <aen>]
+                [--namespace-id=<nsid> | -n <nsid>]
+                [--raw-binary | -b]
+                [--lpo=<offset> | -o <offset>]
+                [--lsp=<field> | -s <field>]
+                [--lsi=<field> | -S <field>]
+                [--rae | -r]
+                [--csi=<command_set_identifier> | -y <command_set_identifier>]
+                [--ot | -O]
 
 DESCRIPTION
 -----------
@@ -68,9 +71,22 @@ OPTIONS
 --lsp=<field>::
 	The log specified field of LID.
 
+-S <field>::
+--lsi=<field>::
+	The log specified field of Log Specific Identifier.
+
 -r::
 --rae::
 	Retain an Asynchronous Event.
+
+-y <command_set_identifier>::
+--csi=<command_set_identifier>::
+	This field specifies the identifier of command set.
+	if not issued, NVM Command Set will be selected.
+
+-O::
+--ot::
+	Offset Type
 
 EXAMPLES
 --------
