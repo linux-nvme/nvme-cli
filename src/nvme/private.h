@@ -12,6 +12,7 @@
 #include <ccan/list/list.h>
 
 #include "fabrics.h"
+#include "mi.h"
 
 #include <uuid.h>
 
@@ -152,5 +153,46 @@ __nvme_msg(nvme_root_t r, int lvl, const char *func, const char *format, ...);
 			__nvme_msg(r, lvl, __nvme_log_func,		\
 				   format, ##__VA_ARGS__);		\
 	} while (0)
+
+/* mi internal headers */
+
+/* internal transport API */
+struct nvme_mi_req {
+	struct nvme_mi_msg_hdr *hdr;
+	size_t hdr_len;
+	void *data;
+	size_t data_len;
+	__u32 mic;
+};
+
+struct nvme_mi_resp {
+	struct nvme_mi_msg_hdr *hdr;
+	size_t hdr_len;
+	void *data;
+	size_t data_len;
+	__u32 mic;
+};
+
+struct nvme_mi_transport {
+	const char *name;
+	bool mic_enabled;
+	int (*submit)(struct nvme_mi_ep *ep,
+		      struct nvme_mi_req *req,
+		      struct nvme_mi_resp *resp);
+	void (*close)(struct nvme_mi_ep *ep);
+};
+
+struct nvme_mi_ep {
+	struct nvme_root *root;
+	const struct nvme_mi_transport *transport;
+	void *transport_data;
+};
+
+struct nvme_mi_ctrl {
+	struct nvme_mi_ep	*ep;
+	__u16			id;
+};
+
+struct nvme_mi_ep *nvme_mi_init_ep(struct nvme_root *root);
 
 #endif /* _LIBNVME_PRIVATE_H */
