@@ -21,10 +21,10 @@
 %{
 #include <assert.h>
 #include <ccan/list/list.h>
-#include "tree.h"
-#include "fabrics.h"
-#include "private.h"
-#include "log.h"
+#include "nvme/tree.h"
+#include "nvme/fabrics.h"
+#include "nvme/private.h"
+#include "nvme/log.h"
 
 static int host_iter_err = 0;
 static int subsys_iter_err = 0;
@@ -125,36 +125,32 @@ static int discover_err = 0;
 %typemap(in) struct nvme_fabrics_config * ($*1_type temp) {
   Py_ssize_t pos = 0;
   PyObject *key, *value;
-  char *keystr;
-  memset(&temp, 0, sizeof(struct nvme_fabrics_config));
+  memset(&temp, 0, sizeof(temp));
   temp.tos = -1;
   temp.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
   while (PyDict_Next($input, &pos, &key, &value)) {
-    keystr = PyString_AsString(key);
-    if (!keystr)
-      continue;
-    if (!strcmp(keystr, "nr_io_queues"))
+    if (!PyUnicode_CompareWithASCIIString(key, "nr_io_queues"))
       temp.nr_io_queues = PyLong_AsLong(value);
-    if (!strcmp(keystr, "reconnect_delay"))
+    if (!PyUnicode_CompareWithASCIIString(key, "reconnect_delay"))
       temp.reconnect_delay = PyLong_AsLong(value);
-    if (!strcmp(keystr, "ctrl_loss_tmo"))
+    if (!PyUnicode_CompareWithASCIIString(key, "ctrl_loss_tmo"))
       temp.ctrl_loss_tmo = PyLong_AsLong(value);
-    if (!strcmp(keystr, "keep_alive_tmo"))
+    if (!PyUnicode_CompareWithASCIIString(key, "keep_alive_tmo"))
       temp.keep_alive_tmo = PyLong_AsLong(value);
-    if (!strcmp(keystr, "nr_write_queues"))
+    if (!PyUnicode_CompareWithASCIIString(key, "nr_write_queues"))
       temp.nr_write_queues = PyLong_AsLong(value);
-    if (!strcmp(keystr, "nr_poll_queues"))
+    if (!PyUnicode_CompareWithASCIIString(key, "nr_poll_queues"))
       temp.nr_poll_queues = PyLong_AsLong(value);
-    if (!strcmp(keystr, "tos"))
+    if (!PyUnicode_CompareWithASCIIString(key, "tos"))
       temp.tos = PyLong_AsLong(value);
-    if (!strcmp(keystr, "duplicate_connect"))
-      temp.duplicate_connect = PyLong_AsLong(value);
-    if (!strcmp(keystr, "disable_sqflow"))
-      temp.disable_sqflow = PyLong_AsLong(value);
-    if (!strcmp(keystr, "hdr_digest"))
-      temp.hdr_digest = PyLong_AsLong(value);
-    if (!strcmp(keystr, "data_digest"))
-      temp.data_digest = PyLong_AsLong(value);
+    if (!PyUnicode_CompareWithASCIIString(key, "duplicate_connect"))
+      temp.duplicate_connect = PyObject_IsTrue(value) ? true : false;
+    if (!PyUnicode_CompareWithASCIIString(key, "disable_sqflow"))
+      temp.disable_sqflow = PyObject_IsTrue(value) ? true : false;
+    if (!PyUnicode_CompareWithASCIIString(key, "hdr_digest"))
+      temp.hdr_digest = PyObject_IsTrue(value) ? true : false;
+    if (!PyUnicode_CompareWithASCIIString(key, "data_digest"))
+      temp.data_digest = PyObject_IsTrue(value) ? true : false;
   }
   $1 = &temp;
  };
@@ -530,6 +526,7 @@ struct nvme_ns {
   void disconnect() {
     nvme_disconnect_ctrl($self);
   }
+
   %newobject discover;
   struct nvmf_discovery_log *discover(int max_retries = 6) {
     struct nvmf_discovery_log *logp = NULL;
@@ -607,3 +604,4 @@ struct nvme_ns {
     return nvme_ns_get_name(n);
   }
 %};
+
