@@ -3716,8 +3716,6 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	__u32 result;
 	void *buf = NULL;
 	int fd, ffd = STDIN_FILENO;
-	char *endptr = NULL;
-	uint64_t number = 0;
 
 	struct config {
 		char *file;
@@ -3782,7 +3780,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_fd;
 	}
 
-	cfg.data_len = nvme_feat_buf_len[cfg.feature_id];
+	if (!cfg.data_len)
+		cfg.data_len = nvme_feat_buf_len[cfg.feature_id];
 
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
@@ -3795,7 +3794,12 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 	if (buf) {
-		/* if feature ID is 0x0E, get timestamp value by -v option */
+		/*
+		 * Use the '-v' value for the timestamp feature if provided as
+		 * a convenience since it can often fit in 4-bytes. The user
+		 * should use the buffer method if the value exceeds this
+		 * length.
+		 */
 		if (NVME_FEAT_TIMESTAMP == cfg.feature_id && cfg.value) {
 			memcpy(buf, &cfg.value, NVME_FEAT_TIMESTAMP_DATA_SIZE);
 		} else {
@@ -3809,19 +3813,13 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 					goto free;
 				}
 			}
+
 			err = read(ffd, (void *)buf, cfg.data_len);
 			if (err < 0) {
 				err = -errno;
 				fprintf(stderr, "failed to read data buffer from input"
 					" file: %s\n", strerror(errno));
 				goto close_ffd;
-			}
-
-			/* if feature ID is 0x0E, then change string from file to integer */
-			if (NVME_FEAT_TIMESTAMP == cfg.feature_id) {
-				number = strtoul(buf, &endptr, STRTOUL_AUTO_BASE);
-				memset(buf, 0, cfg.data_len);
-				memcpy(buf, &number, NVME_FEAT_TIMESTAMP_DATA_SIZE);
 			}
 		}
 	}
