@@ -715,7 +715,7 @@ enum nvme_directive_send_doper {
 };
 
 /**
- * enum -
+ * enum nvme_directive_send_identify_endir -
  */
 enum nvme_directive_send_identify_endir {
 	NVME_DIRECTIVE_SEND_IDENTIFY_ENDIR_DISABLE		= 0,
@@ -737,11 +737,11 @@ enum nvme_sanitize_sanact {
 };
 
 /**
- * enum nvme_dst_stc -
- * @NVME_DST_STC_SHORT:
- * @NVME_DST_STC_LONG:
- * @NVME_DST_STC_VS:
- * @NVME_DST_STC_ABORT:
+ * enum nvme_dst_stc - Action taken by the Device Self-test command
+ * @NVME_DST_STC_SHORT:	 Start a short device self-test operation
+ * @NVME_DST_STC_LONG:	 Start an extended device self-test operation
+ * @NVME_DST_STC_VS:	 Start a vendor specific device self-test operation
+ * @NVME_DST_STC_ABORT:	 Abort device self-test operation
  */
 enum nvme_dst_stc {
 	NVME_DST_STC_SHORT					= 0x1,
