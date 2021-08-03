@@ -2839,7 +2839,8 @@ static int get_feature(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_fd;
 	}
 
-	cfg.data_len = nvme_feat_buf_len[cfg.feature_id];
+	if (!cfg.data_len)
+		cfg.data_len = nvme_feat_buf_len[cfg.feature_id];
 
 	/* check for Extended Host Identifier */
 	if (cfg.feature_id == NVME_FEAT_HOST_ID && (cfg.cdw11 & 0x1))
@@ -3782,7 +3783,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_fd;
 	}
 
-	cfg.data_len = nvme_feat_buf_len[cfg.feature_id];
+	if (!cfg.data_len)
+		cfg.data_len = nvme_feat_buf_len[cfg.feature_id];
 
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
