@@ -1041,11 +1041,24 @@ struct nvme_id_ctrl {
 
 /**
  * enum nvme_id_ctrl_cmic - Controller Multipath IO and Namespace Sharing
- *			    Capabilities of the controller and NVM subsystem.
- * @NVME_CTRL_CMIC_MULTI_PORT:
- * @NVME_CTRL_CMIC_MULTI_CTRL:
- * @NVME_CTRL_CMIC_MULTI_SRIOV:
- * @NVME_CTRL_CMIC_MULTI_ANA_REPORTING:
+ * 			    Capabilities of the controller and NVM subsystem.
+ * @NVME_CTRL_CMIC_MULTI_PORT:          If set, then the NVM subsystem may contain
+ * 				        more than one NVM subsystem port, otherwise
+ * 				        the NVM subsystem contains only a single
+ * 				        NVM subsystem port.
+ * @NVME_CTRL_CMIC_MULTI_CTRL:          If set, then the NVM subsystem may contain
+ * 				        two or more controllers, otherwise the
+ * 				        NVM subsystem contains only a single
+ * 				        controller. An NVM subsystem that contains
+ * 				        multiple controllers may be used by
+ * 				        multiple hosts, or may provide multiple
+ * 				        paths for a single host.
+ * @NVME_CTRL_CMIC_MULTI_SRIOV:         If set, then the controller is associated
+ * 				        with an SR-IOV Virtual Function, otherwise
+ * 				        it is associated with a PCI Function
+ * 				        or a Fabrics connection.
+ * @NVME_CTRL_CMIC_MULTI_ANA_REPORTING: If set, then the NVM subsystem supports
+ * 				        Asymmetric Namespace Access Reporting.
  */
 enum nvme_id_ctrl_cmic {
 	NVME_CTRL_CMIC_MULTI_PORT		= 1 << 0,
@@ -2548,16 +2561,42 @@ enum nvme_cmd_effects {
 };
 
 /**
- * struct nvme_st_result -
- * @dsts:
- * @seg:
- * @vdi:
- * @poh:
- * @nsid:
- * @flba:
- * @sct:
- * @sc:
- * @vs:
+ * struct nvme_st_result - Self-test Result
+ * @dsts:  Device Self-test Status: Indicates the device self-test code and the
+ * 	   status of the operation (see &enum nvme_status_result and &enum nvme_st_code).
+ * @seg:   Segment Number: Iindicates the segment number where the first self-test
+ * 	   failure occurred. If Device Self-test Status (@dsts) is not set to
+ * 	   #NVME_ST_RESULT_KNOWN_SEG_FAIL, then this field should be ignored.
+ * @vdi:   Valid Diagnostic Information: Indicates the diagnostic failure
+ * 	   information that is reported. See &enum nvme_st_valid_diag_info.
+ * @poh:   Power On Hours (POH): Indicates the number of power-on hours at the
+ * 	   time the device self-test operation was completed or aborted. This
+ * 	   does not include time that the controller was powered and in a low
+ * 	   power state condition.
+ * @nsid:  Namespace Identifier (NSID): Indicates the namespace that the Failing
+ * 	   LBA occurred on. Valid only when the NSID Valid bit
+ * 	   (#NVME_ST_VALID_DIAG_INFO_NSID) is set in the Valid Diagnostic
+ * 	   Information (@vdi) field.
+ * @flba:  Failing LBA: indicates the LBA of the logical block that caused the
+ * 	   test to fail. If the device encountered more than one failed logical
+ * 	   block during the test, then this field only indicates one of those
+ * 	   failed logical blocks. Valid only when the NSID Valid bit
+ * 	   (#NVME_ST_VALID_DIAG_INFO_FLBA) is set in the Valid Diagnostic
+ * 	   Information (@vdi) field.
+ * @sct:   Status Code Type: This field may contain additional information related
+ * 	   to errors or conditions. Bits 2:0 may contain additional information
+ * 	   relating to errors or conditions that occurred during the device
+ * 	   self-test operation represented in the same format used in the Status
+ * 	   Code Type field of the completion queue entry (refer to &enum nvme_status_field).
+ * 	   Valid only when the NSID Valid bit (#NVME_ST_VALID_DIAG_INFO_SCT) is
+ * 	   set in the Valid Diagnostic Information (@vdi) field.
+ * @sc:	   Status Code: This field may contain additional information relating
+ * 	   to errors or conditions that occurred during the device self-test
+ * 	   operation represented in the same format used in the Status Code field
+ * 	   of the completion queue entry. Valid only when the SCT Valid bit
+ * 	   (#NVME_ST_VALID_DIAG_INFO_SC) is set in the Valid Diagnostic
+ * 	   Information (@vdi) field.
+ * @vs:	   Vendor Specific.
  */
 struct nvme_st_result {
 	__u8 			dsts;
@@ -2573,23 +2612,32 @@ struct nvme_st_result {
 } __attribute__((packed));
 
 /**
- * enum nvme_status_result -
- * @NVME_ST_RESULT_NO_ERR:
- * @NVME_ST_RESULT_ABORTED:
- * @NVME_ST_RESULT_CLR:
- * @NVME_ST_RESULT_NS_REMOVED:
- * @NVME_ST_RESULT_ABORTED_FORMAT:
- * @NVME_ST_RESULT_FATAL_ERR:
- * @NVME_ST_RESULT_UNKNOWN_SEG_FAIL:
- * @NVME_ST_RESULT_KNOWN_SEG_FAIL:
- * @NVME_ST_RESULT_ABORTED_UNKNOWN:
- * @NVME_ST_RESULT_ABORTED_SANITIZE:
- * @NVME_ST_RESULT_NOT_USED:
- * @NVME_ST_RESULT_MASK:
+ * enum nvme_status_result - Result of the device self-test operation
+ * @NVME_ST_RESULT_NO_ERR:	     Operation completed without error.
+ * @NVME_ST_RESULT_ABORTED:	     Operation was aborted by a Device Self-test command.
+ * @NVME_ST_RESULT_CLR:		     Operation was aborted by a Controller Level Reset.
+ * @NVME_ST_RESULT_NS_REMOVED:	     Operation was aborted due to a removal of
+ * 				     a namespace from the namespace inventory.
+ * @NVME_ST_RESULT_ABORTED_FORMAT:   Operation was aborted due to the processing
+ * 				     of a Format NVM command.
+ * @NVME_ST_RESULT_FATAL_ERR:	     A fatal error or unknown test error occurred
+ * 				     while the controller was executing the device
+ * 				     self-test operation and the operation did
+ * 				     not complete.
+ * @NVME_ST_RESULT_UNKNOWN_SEG_FAIL: Operation completed with a segment that failed
+ * 				     and the segment that failed is not known.
+ * @NVME_ST_RESULT_KNOWN_SEG_FAIL:   Operation completed with one or more failed
+ * 				     segments and the first segment that failed
+ * 				     is indicated in the Segment Number field.
+ * @NVME_ST_RESULT_ABORTED_UNKNOWN:  Operation was aborted for unknown reason.
+ * @NVME_ST_RESULT_ABORTED_SANITIZE: Operation was aborted due to a sanitize operation.
+ * @NVME_ST_RESULT_NOT_USED:	     Entry not used (does not contain a test result).
+ * @NVME_ST_RESULT_MASK:	     Mask to get the status result value from
+ * 				     the &struct nvme_st_result.dsts field.
  */
 enum nvme_status_result {
-	NVME_ST_RESULT_NO_ERR    	= 0x0,
-	NVME_ST_RESULT_ABORTED   	= 0x1,
+	NVME_ST_RESULT_NO_ERR		= 0x0,
+	NVME_ST_RESULT_ABORTED		= 0x1,
 	NVME_ST_RESULT_CLR		= 0x2,
 	NVME_ST_RESULT_NS_REMOVED	= 0x3,
 	NVME_ST_RESULT_ABORTED_FORMAT	= 0x4,
@@ -2603,26 +2651,54 @@ enum nvme_status_result {
 };
 
 /**
- * enum nvme_st_code -
- * @NVME_ST_CODE_NONE:
- * @NVME_ST_CODE_SHORT:
- * @NVME_ST_CODE_EXTENDED:
- * @NVME_ST_CODE_VS:
+ * enum nvme_st_code - Self-test Code value
+ * @NVME_ST_CODE_RESERVED: Reserved.
+ * @NVME_ST_CODE_SHORT:	   Short device self-test operation.
+ * @NVME_ST_CODE_EXTENDED: Extended device self-test operation.
+ * @NVME_ST_CODE_VS:	   Vendor specific.
+ * @NVME_ST_CODE_SHIFT:	   Shift amount to get the code value from the
+ * 			   &struct nvme_st_result.dsts field.
  */
 enum nvme_st_code {
-	NVME_ST_CODE_SHIFT		= 4,
-	NVME_ST_CODE_RESRVED		= 0x0,
+	NVME_ST_CODE_RESERVED		= 0x0,
 	NVME_ST_CODE_SHORT		= 0x1,
 	NVME_ST_CODE_EXTENDED		= 0x2,
 	NVME_ST_CODE_VS			= 0xe,
+	NVME_ST_CODE_SHIFT		= 4,
 };
 
 /**
- * enum nvme_st_valid_diag_info -
- * @NVME_ST_VALID_DIAG_INFO_NSID:
- * @NVME_ST_VALID_DIAG_INFO_FLBA:
- * @NVME_ST_VALID_DIAG_INFO_SCT:
- * @NVME_ST_VALID_DIAG_INFO_SC:
+ * enum nvme_st_curr_op - Current Device Self-Test Operation
+ * @NVME_ST_CURR_OP_NOT_RUNNING: No device self-test operation in progress.
+ * @NVME_ST_CURR_OP_SHORT:	 Short device self-test operation in progress.
+ * @NVME_ST_CURR_OP_EXTENDED:	 Extended device self-test operation in progress.
+ * @NVME_ST_CURR_OP_VS:		 Vendor specific.
+ * @NVME_ST_CURR_OP_RESERVED:	 Reserved.
+ * @NVME_ST_CURR_OP_MASK:	 Mask to get the current operation value from the
+ * 				 &struct nvme_self_test_log.current_operation field.
+ * @NVME_ST_CURR_OP_CMPL_MASK:	 Mask to get the current operation completion value
+ * 				 from the &struct nvme_self_test_log.completion field.
+ */
+enum nvme_st_curr_op {
+	NVME_ST_CURR_OP_NOT_RUNNING	= 0x0,
+	NVME_ST_CURR_OP_SHORT		= 0x1,
+	NVME_ST_CURR_OP_EXTENDED	= 0x2,
+	NVME_ST_CURR_OP_VS		= 0xe,
+	NVME_ST_CURR_OP_RESERVED	= 0xf,
+	NVME_ST_CURR_OP_MASK		= 0xf,
+	NVME_ST_CURR_OP_CMPL_MASK	= 0x7f,
+};
+
+/**
+ * enum nvme_st_valid_diag_info - Valid Diagnostic Information
+ * @NVME_ST_VALID_DIAG_INFO_NSID:  NSID Valid: if set, then the contents of
+ * 				   the Namespace Identifier field are valid.
+ * @NVME_ST_VALID_DIAG_INFO_FLBA:  FLBA Valid: if set, then the contents of
+ * 				   the Failing LBA field are valid.
+ * @NVME_ST_VALID_DIAG_INFO_SCT:   SCT Valid: if set, then the contents of
+ * 				   the Status Code Type field are valid.
+ * @NVME_ST_VALID_DIAG_INFO_SC:    SC Valid: if set, then the contents of
+ * 				   the Status Code field are valid.
  */
 enum nvme_st_valid_diag_info {
 	NVME_ST_VALID_DIAG_INFO_NSID		= 1 << 0,
@@ -2632,10 +2708,26 @@ enum nvme_st_valid_diag_info {
 };
 
 /**
- * struct nvme_self_test_log -
- * @current_operation:
- * @completion:
- * @result:
+ * struct nvme_self_test_log - Device Self-test (Log Identifier 06h)
+ * @current_operation: Current Device Self-Test Operation: indicates the status
+ * 		       of the current device self-test operation. If a device
+ * 		       self-test operation is in process (i.e., this field is set
+ * 		       to #NVME_ST_CURR_OP_SHORT or #NVME_ST_CURR_OP_EXTENDED),
+ * 		       then the controller shall not set this field to
+ * 		       #NVME_ST_CURR_OP_NOT_RUNNING until a new Self-test Result
+ * 		       Data Structure is created (i.e., if a device self-test
+ * 		       operation completes or is aborted, then the controller
+ * 		       shall create a Self-test Result Data Structure prior to
+ * 		       setting this field to #NVME_ST_CURR_OP_NOT_RUNNING).
+ * 		       See &enum nvme_st_curr_op.
+ * @completion:	       Current Device Self-Test Completion: indicates the percentage
+ * 		       of the device self-test operation that is complete (e.g.,
+ * 		       a value of 25 indicates that 25% of the device self-test
+ * 		       operation is complete and 75% remains to be tested).
+ * 		       If the @current_operation field is cleared to
+ * 		       #NVME_ST_CURR_OP_NOT_RUNNING (indicating there is no device
+ * 		       self-test operation in progress), then this field is ignored.
+ * @result:	       Self-test Result Data Structures, see &struct nvme_st_result.
  */
 struct nvme_self_test_log {
 	__u8			current_operation;
