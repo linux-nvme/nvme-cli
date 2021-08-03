@@ -166,6 +166,10 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		struct nvmf_disc_log_entry *e = &log->entries[i];
 		struct json_object *entry = json_create_object();
 
+		nvme_strip_spaces(e->trsvcid, NVMF_TRSVCID_SIZE);
+		nvme_strip_spaces(e->subnqn, NVMF_NQN_SIZE);
+		nvme_strip_spaces(e->traddr, NVMF_TRADDR_SIZE);
+
 		json_object_add_value_string(entry, "trtype",
 					     nvmf_trtype_str(e->trtype));
 		json_object_add_value_string(entry, "adrfam",
@@ -175,8 +179,7 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		json_object_add_value_string(entry,"treq",
 					     nvmf_treq_str(e->treq));
 		json_object_add_value_uint(entry, "portid", e->portid);
-		json_object_add_value_string(entry, "trsvcid",
-					     e->trsvcid);
+		json_object_add_value_string(entry, "trsvcid", e->trsvcid);
 		json_object_add_value_string(entry, "subnqn", e->subnqn);
 		json_object_add_value_string(entry, "traddr", e->traddr);
 
