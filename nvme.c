@@ -3795,34 +3795,35 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	}
 
 	if (buf) {
-	  /* if feature ID is 0x0E, get timestamp value by -v option */
-        if (NVME_FEAT_TIMESTAMP == cfg.feature_id && cfg.value) {
-            memcpy(buf, &cfg.value, NVME_FEAT_TIMESTAMP_DATA_SIZE);
-        } else {
-            if (strlen(cfg.file)) {
-                ffd = open(cfg.file, O_RDONLY);
-                if (ffd <= 0) {
-                    errno = EINVAL;
-                    fprintf(stderr, "Failed to open file %s: %s\n",
-                    cfg.file, strerror(errno));
-                    err = -1;
-                    goto free;
-                }
-            }
-            err = read(ffd, (void *)buf, cfg.data_len);
-            if (err < 0) {
-                err = -errno;
-                fprintf(stderr, "failed to read data buffer from input"
-                " file: %s\n", strerror(errno));
-                goto close_ffd;
-            }
-	      /* if feature ID is 0x0E, then change string from file to integer */
-            if (NVME_FEAT_TIMESTAMP == cfg.feature_id) {
-                number = strtoul(buf, &endptr, STRTOUL_AUTO_BASE);
-                memset(buf, 0, cfg.data_len);
-                memcpy(buf, &number, NVME_FEAT_TIMESTAMP_DATA_SIZE);
-            }
-        }
+		/* if feature ID is 0x0E, get timestamp value by -v option */
+		if (NVME_FEAT_TIMESTAMP == cfg.feature_id && cfg.value) {
+			memcpy(buf, &cfg.value, NVME_FEAT_TIMESTAMP_DATA_SIZE);
+		} else {
+			if (strlen(cfg.file)) {
+				ffd = open(cfg.file, O_RDONLY);
+				if (ffd <= 0) {
+					errno = EINVAL;
+					fprintf(stderr, "Failed to open file %s: %s\n",
+					cfg.file, strerror(errno));
+					err = -1;
+					goto free;
+				}
+			}
+			err = read(ffd, (void *)buf, cfg.data_len);
+			if (err < 0) {
+				err = -errno;
+				fprintf(stderr, "failed to read data buffer from input"
+					" file: %s\n", strerror(errno));
+				goto close_ffd;
+			}
+
+			/* if feature ID is 0x0E, then change string from file to integer */
+			if (NVME_FEAT_TIMESTAMP == cfg.feature_id) {
+				number = strtoul(buf, &endptr, STRTOUL_AUTO_BASE);
+				memset(buf, 0, cfg.data_len);
+				memcpy(buf, &number, NVME_FEAT_TIMESTAMP_DATA_SIZE);
+			}
+		}
 	}
 
 	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value,
