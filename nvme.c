@@ -90,7 +90,7 @@ static __u16 nvme_feat_buf_len[0x100] = {
 	[NVME_FEAT_HOST_MEM_BUF]	= 4096,
 	[NVME_FEAT_HOST_ID]		= 8,
 	[NVME_FEAT_PLM_CONFIG]		= 512,
-	[NVME_FEAT_TIMESTAMP]		= 12,
+	[NVME_FEAT_TIMESTAMP]		= 8,
 	[NVME_FEAT_HOST_BEHAVIOR]	= 512
 };
 
@@ -3692,6 +3692,7 @@ ret:
 
 #define STRTOUL_AUTO_BASE              (0)
 #define NVME_FEAT_TIMESTAMP_DATA_SIZE  (6)
+#define NVME_FEAT_TIMESTAMP_FILE_DATA_LEN    (13)
 
 static int set_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
@@ -3809,7 +3810,7 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
                     goto free;
                 }
             }
-            err = read(ffd, (void *)buf, cfg.data_len);
+            err = read(ffd, (void *)buf, NVME_FEAT_TIMESTAMP_FILE_DATA_LEN);
             if (err < 0) {
                 err = -errno;
                 fprintf(stderr, "failed to read data buffer from input"
