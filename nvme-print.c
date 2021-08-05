@@ -6092,6 +6092,9 @@ static void nvme_show_list_item(struct nvme_namespace *n)
 	struct stat st;
 	int ret;
 
+	if (!n->ctrl)
+		return;
+
 	sprintf(path, "%s%s", n->ctrl->path, n->name);
 	ret = stat(path, &st);
 	if (ret < 0)
@@ -6147,6 +6150,9 @@ static void nvme_show_details_ns(struct nvme_namespace *n, bool ctrl)
 
 	char usage[128];
 	char format[128];
+
+	if (!n->ctrl)
+		return;
 
 	sprintf(usage,"%6.2f %2sB / %6.2f %2sB", nuse, u_suffix,
 		nsze, s_suffix);
@@ -6363,6 +6369,9 @@ static void json_simple_ns(struct nvme_namespace *n, struct json_object *devices
 	long long lba;
 	char *devnode;
 	struct stat st;
+
+	if (!n->ctrl)
+		return;
 
 	if (asprintf(&devnode, "%s%s", n->ctrl->path, n->name) < 0)
 		return;
