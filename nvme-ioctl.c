@@ -871,7 +871,7 @@ int nvme_fw_commit(int fd, __u8 slot, __u8 action, __u8 bpid, __u32 *result)
 }
 
 int nvme_sec_send(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
-		  __u8 secp, __u32 tl, __u32 data_len, void *data)
+		  __u8 secp, __u32 data_len, void *data)
 {
 	struct nvme_admin_cmd cmd = {
 		.opcode		= nvme_admin_security_send,
@@ -879,7 +879,7 @@ int nvme_sec_send(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 		.data_len	= data_len,
 		.nsid		= nsid,
 		.cdw10		= secp << 24 | spsp << 8 | nssf,
-		.cdw11		= tl,
+		.cdw11		= data_len,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd);

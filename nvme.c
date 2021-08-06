@@ -3962,6 +3962,12 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	if (fd < 0)
 		goto ret;
 
+	if (cfg.tl == 0) {
+		fprintf(stderr, "--tl unspecified or zero\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+
 	sec_fd = open(cfg.file, O_RDONLY);
 	if (sec_fd < 0) {
 		fprintf(stderr, "Failed to open %s: %s\n",
@@ -3971,10 +3977,28 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		goto close_fd;
 	}
 
-	err = fstat(sec_fd, &sb);
-	if (err < 0) {
-		perror("fstat");
-		goto close_sec_fd;
+	if ((cfg.tl & 3) != 0)
+		fprintf(stderr, "WARNING: --tl not dword aligned; unaligned bytes may be truncated\n");
+
+	if (strlen(cfg.file) == 0) {
+		sec_fd = STDIN_FILENO;
+		sec_size = cfg.tl;
+	} else {
+		sec_fd = open(cfg.file, O_RDONLY);
+		if (sec_fd < 0) {
+			fprintf(stderr, "Failed to open %s: %s\n",
+					cfg.file, strerror(errno));
+			err = -EINVAL;
+			goto close_fd;
+		}
+
+		err = fstat(sec_fd, &sb);
+		if (err < 0) {
+			perror("fstat");
+			goto close_sec_fd;
+		}
+
+		sec_size = cfg.tl > sb.st_size ? cfg.tl : sb.st_size;
 	}
 
 	sec_size = sb.st_size;
@@ -3985,6 +4009,8 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		goto close_sec_fd;
 	}
 
+	memset(sec_buf, 0, cfg.tl); // ensure zero fill if cfg.tl > sec_size
+
 	err = read(sec_fd, sec_buf, sec_size);
 	if (err < 0) {
 		err = -errno;
@@ -3994,7 +4020,7 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 
 	err = nvme_sec_send(fd, cfg.namespace_id, cfg.nssf, cfg.spsp, cfg.secp,
-			cfg.tl, sec_size, sec_buf);
+			cfg.tl, sec_buf);
 	if (err < 0)
 		perror("security-send");
 	else if (err != 0)
