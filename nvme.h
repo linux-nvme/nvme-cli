@@ -30,9 +30,9 @@
 #define json_free_object(o) json_object_put(o)
 #define json_free_array(a) json_object_put(a)
 #define json_object_add_value_uint(o, k, v) \
-	json_object_object_add(o, k, json_object_new_uint64(v))
+	json_object_object_add(o, k, json_object_new_int(v))
 #define json_object_add_value_int(o, k, v) \
-	json_object_object_add(o, k, json_object_new_int64(v))
+	json_object_object_add(o, k, json_object_new_int(v))
 #define json_object_add_value_float(o, k, v) \
 	json_object_object_add(o, k, json_object_new_double(v))
 #define json_object_add_value_string(o, k, v) \
