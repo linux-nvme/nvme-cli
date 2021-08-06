@@ -5961,9 +5961,9 @@ static void nvme_show_plm_config(struct nvme_plm_config *plmcfg)
 static char* nvme_show_mi_host_metadata_type_to_string(enum nvme_feat fid, __u8 type)
 {
 	switch (fid) {
-	case NVME_MI_FEAT_CTRL_METADATA:	
+	case NVME_MI_FEAT_CTRL_METADATA:
 		switch (type) {
-		case NVME_MI_CTRL_METADATA_OS_CTRL_NAME: 
+		case NVME_MI_CTRL_METADATA_OS_CTRL_NAME:
 			return "Operating System Controller Name";
 		case NVME_MI_CTRL_METADATA_OS_DRIVER_NAME:
 			return "Operating System Driver Name";
@@ -5992,14 +5992,14 @@ static char* nvme_show_mi_host_metadata_type_to_string(enum nvme_feat fid, __u8 
 	}
 }
 
-static void nvme_show_mi_host_metadata(enum nvme_feat fid, 
+static void nvme_show_mi_host_metadata(enum nvme_feat fid,
 				       struct nvme_mi_host_metadata *data)
 {
 	struct nvme_mi_host_metadata_element_desc *desc = &data->descs[0];
 	int i;
 	char val[4096];
 	__u16 len;
-	
+
 	printf("\tNum Metadata Element Descriptors: %d\n", data->ndesc);
 	for (i = 0; i < data->ndesc; i++) {
 		len = le16_to_cpu(desc->len);
