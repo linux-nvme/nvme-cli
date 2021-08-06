@@ -1064,11 +1064,16 @@ static void set_discovery_kato(struct fabrics_config *cfg)
 		cfg->keep_alive_tmo = 0;
 }
 
-static void discovery_trsvcid(struct fabrics_config *fabrics_cfg)
+static void discovery_trsvcid(struct fabrics_config *fabrics_cfg, bool discover)
 {
 	if (!strcmp(fabrics_cfg->transport, "tcp")) {
-		/* Default port for NVMe/TCP discovery controllers */
-		fabrics_cfg->trsvcid = __stringify(NVME_DISC_IP_PORT);
+		if (discover) {
+			/* Default port for NVMe/TCP discovery controllers */
+			fabrics_cfg->trsvcid = __stringify(NVME_DISC_IP_PORT);
+		} else {
+			/* Default port for NVMe/TCP io controllers */
+			fabrics_cfg->trsvcid = __stringify(NVME_RDMA_IP_PORT);
+		}
 	} else if (!strcmp(fabrics_cfg->transport, "rdma")) {
 		/* Default port for NVMe/RDMA controllers */
 		fabrics_cfg->trsvcid = __stringify(NVME_RDMA_IP_PORT);
@@ -1581,7 +1586,7 @@ static int discover_from_conf_file(const char *desc, char *argstr,
 		}
 
 		if (!fabrics_cfg.trsvcid)
-			discovery_trsvcid(&fabrics_cfg);
+			discovery_trsvcid(&fabrics_cfg, true);
 
 		err = build_options(argstr, BUF_SIZE, true);
 		if (err) {
@@ -1677,7 +1682,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		}
 
 		if (!fabrics_cfg.trsvcid)
-			discovery_trsvcid(&fabrics_cfg);
+			discovery_trsvcid(&fabrics_cfg, true);
 
 		ret = build_options(argstr, BUF_SIZE, true);
 		if (ret)
@@ -1744,6 +1749,9 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		if (ret)
 			goto out;
 	}
+
+	if (!fabrics_cfg.trsvcid)
+		discovery_trsvcid(&fabrics_cfg, false);
 
 	ret = build_options(argstr, BUF_SIZE, false);
 	if (ret)
