@@ -228,16 +228,16 @@ print_config "cpp" "${cpp}"
 
 if test "$libuuid" = "yes"; then
   output_sym "CONFIG_LIBUUID"
-  echo "override LDFLAGS += -luuid" >> $config_host_mak
+  echo "override LIBS += -luuid" >> $config_host_mak
   echo "override LIB_DEPENDS += uuid" >> $config_host_mak 
 fi
 if test "$systemd" = "yes"; then
   output_sym "CONFIG_SYSTEMD"
-  echo "override LDFLAGS += -lsystemd" >> $config_host_mak
+  echo "override LIBS += -lsystemd" >> $config_host_mak
 fi
 if test "$libjsonc" = "yes"; then
     output_sym "CONFIG_JSONC"
-    echo "override LDFLAGS += -ljson-c" >> $config_host_mak
+    echo "override LIBS += -ljson-c" >> $config_host_mak
     echo "override LIB_DEPENDS += json-c" >> $config_host_mak
 fi
 if test "$cpp" = "yes"; then

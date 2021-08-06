@@ -72,7 +72,7 @@ libnvme.a: $(libnvme_objs) $(libccan_objs)
 	$(QUIET_RANLIB)$(RANLIB) libnvme.a
 
 $(libname): $(libnvme_sobjs) $(libccan_sobjs) libnvme.map
-	$(QUIET_CC)$(CC) $(SO_CFLAGS) -Wl,--version-script=libnvme.map -Wl,-soname=$(soname) -o $@ $(libnvme_sobjs) $(libccan_sobjs) $(LINK_FLAGS)
+	$(QUIET_CC)$(CC) $(SO_CFLAGS) -Wl,--version-script=libnvme.map -Wl,-soname=$(soname) -o $@ $(libnvme_sobjs) $(libccan_sobjs) $(LINK_FLAGS) $(LIBS)
 
 install: $(all_targets)
 	$(INSTALL) -D -m 644 libnvme.a $(libdir)/libnvme.a

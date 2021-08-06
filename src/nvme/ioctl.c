@@ -755,7 +755,7 @@ int nvme_set_features(int fd, __u8 fid, __u32 nsid, __u32 cdw11, __u32 cdw12,
 		.cdw11		= cdw11,
 		.cdw12		= cdw12,
 		.cdw14		= cdw14,
-		.cdw14		= cdw15,
+		.cdw15		= cdw15,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd, result);
