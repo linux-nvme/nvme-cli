@@ -273,7 +273,7 @@ static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
 						   persistent,
 						   true, flags);
 				if (!persistent) {
-					nvme_ctrl_disconnect(child);
+					nvme_disconnect_ctrl(child);
 					nvme_free_ctrl(child);
 				}
 			} else if (errno == EALREADY && !quiet) {
@@ -355,7 +355,7 @@ static int discover_from_conf_file(nvme_host_t h, const char *desc,
 				   connect, 0);
 				return 0;
 			if (!persistent)
-				ret = nvme_ctrl_disconnect(c);
+				ret = nvme_disconnect_ctrl(c);
 			nvme_free_ctrl(c);
 		}
 next:
@@ -467,7 +467,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 			ret = __discover(c, &cfg, raw, connect,
 					 persistent, flags);
 			if (!device && !persistent)
-				nvme_ctrl_disconnect(c);
+				nvme_disconnect_ctrl(c);
 			nvme_free_ctrl(c);
 		} else {
 			nvme_msg(LOG_ERR, "no controller found\n");
@@ -645,7 +645,7 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 					if (strcmp(nvme_subsystem_get_nqn(s), p))
 						continue;
 					nvme_subsystem_for_each_ctrl(s, c) {
-						if (!nvme_ctrl_disconnect(c))
+						if (!nvme_disconnect_ctrl(c))
 							i++;
 					}
 				}
@@ -666,7 +666,7 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 				nvme_free_tree(r);
 				return errno;
 			}
-			ret = nvme_ctrl_disconnect(c);
+			ret = nvme_disconnect_ctrl(c);
 			if (!ret)
 				printf("Disconnected %s\n",
 					nvme_ctrl_get_name(c));
@@ -738,7 +738,7 @@ int nvmf_disconnect_all(const char *desc, int argc, char **argv)
 				else if (!strcmp(nvme_ctrl_get_transport(c),
 						 "pcie"))
 					continue;
-				if (nvme_ctrl_disconnect(c))
+				if (nvme_disconnect_ctrl(c))
 					nvme_msg(LOG_ERR,
 						 "failed to disconnect %s\n",
 						 nvme_ctrl_get_name(c));
