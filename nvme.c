@@ -5744,7 +5744,7 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *command, stru
 		return ENOENT;
 	}
 
-	fprintf(stdout, hostnqn);
+	fprintf(stdout, "%s\n", hostnqn);
 	free(hostnqn);
 
 	return 0;
