@@ -2603,8 +2603,8 @@ void d_raw(unsigned char *buf, unsigned len)
 
 void nvme_show_status(__u16 status)
 {
-	fprintf(stderr, "NVMe status: %s(%#x)\n", nvme_status_to_string(status),
-		status);
+	fprintf(stderr, "NVMe status: %s(%#x)\n",
+		nvme_status_to_string(status, false), status);
 }
 
 static const char *nvme_uuid_to_string(uuid_t uuid)
@@ -4560,15 +4560,16 @@ void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
 								entries);
 	printf(".................\n");
 	for (i = 0; i < entries; i++) {
+		__u16 status = le16_to_cpu(err_log[i].status_field) >> 0x1;
+
 		printf(" Entry[%2d]   \n", i);
 		printf(".................\n");
 		printf("error_count	: %"PRIu64"\n",
 			le64_to_cpu(err_log[i].error_count));
 		printf("sqid		: %d\n", err_log[i].sqid);
 		printf("cmdid		: %#x\n", err_log[i].cmdid);
-		printf("status_field	: %#x(%s)\n", err_log[i].status_field >> 0x1,
-			nvme_status_to_string(
-				le16_to_cpu(err_log[i].status_field) >> 1));
+		printf("status_field	: %#x(%s)\n", status,
+			nvme_status_to_string(status, false));
 		printf("phase_tag	: %#x\n",
 			le16_to_cpu(err_log[i].status_field & 0x1));
 		printf("parm_err_loc	: %#x\n",
@@ -4992,7 +4993,7 @@ static void nvme_show_self_test_result(struct nvme_st_result *res,
 		printf("  Status Code                  : %#x", res->sc);
 		if (flags & VERBOSE)
 			printf(" %s", nvme_status_to_string(
-				(res->sct & 7) << 8 | res->sc));
+				(res->sct & 7) << 8 | res->sc, false));
 		printf("\n");
 	}
 	printf("  Vendor Specific              : %#x %#x\n",
@@ -5178,175 +5179,6 @@ void nvme_show_select_result(__u32 result)
 		printf("  Feature is per-namespace\n");
 	if (result & 0x4)
 		printf("  Feature is changeable\n");
-}
-
-static const char * const generic_status[] = {
-	[NVME_SC_SUCCESS]		  = "Successful Completion: The command completed without error",
-	[NVME_SC_INVALID_OPCODE]	  = "Invalid Command Opcode: A reserved coded value or an unsupported value in the command opcode field",
-	[NVME_SC_INVALID_FIELD]		  = "Invalid Field in Command: A reserved coded value or an unsupported value in a defined field",
-	[NVME_SC_CMDID_CONFLICT]	  = "Command ID Conflict: The command identifier is already in use",
-	[NVME_SC_DATA_XFER_ERROR]	  = "Data Transfer Error: Transferring the data or metadata associated with a command experienced an error",
-	[NVME_SC_POWER_LOSS]		  = "Commands Aborted due to Power Loss Notification: Indicates that the command was aborted due to a power loss notification",
-	[NVME_SC_INTERNAL]		  = "Internal Error: The command was not completed successfully due to an internal error",
-	[NVME_SC_ABORT_REQ]		  = "Command Abort Requested: The command was aborted due to an Abort command",
-	[NVME_SC_ABORT_QUEUE]		  = "Command Aborted due to SQ Deletion: The command was aborted due to a Delete I/O Submission Queue",
-	[NVME_SC_FUSED_FAIL]		  = "Command Aborted due to Failed Fused Command: The command was aborted due to the other command in a fused operation failing",
-	[NVME_SC_FUSED_MISSING]		  = "Command Aborted due to Missing Fused Command: The fused command was aborted due to the adjacent submission queue entry not containing a fused command",
-	[NVME_SC_INVALID_NS]		  = "Invalid Namespace or Format: The namespace or the format of that namespace is invalid",
-	[NVME_SC_CMD_SEQ_ERROR]		  = "Command Sequence Error: The command was aborted due to a protocol violation in a multi- command sequence",
-	[NVME_SC_SGL_INVALID_LAST]	  = "Invalid SGL Segment Descriptor: The command includes an invalid SGL Last Segment or SGL Segment descriptor",
-	[NVME_SC_SGL_INVALID_COUNT]	  = "Invalid Number of SGL Descriptors: There is an SGL Last Segment descriptor or an SGL Segment descriptor in a location other than the last descriptor of a segment based on the length indicated",
-	[NVME_SC_SGL_INVALID_DATA]	  = "Data SGL Length Invalid: The length of a Data SGL is too short or too long and the controller does not support SGL transfers longer than the amount of data to be transferred",
-	[NVME_SC_SGL_INVALID_METADATA]	  = "Metadata SGL Length Invalid: The length of a Metadata SGL is too short or too long and the controller does not support SGL transfers longer than the amount of data to be transferred",
-	[NVME_SC_SGL_INVALID_TYPE]	  = "SGL Descriptor Type Invalid: The type of an SGL Descriptor is a type that is not supported by the controller",
-	[NVME_SC_CMB_INVALID_USE]	  = "Invalid Use of Controller Memory Buffer: The attempted use of the Controller Memory Buffer is not supported by the controller",
-	[NVME_SC_PRP_INVALID_OFFSET]	  = "PRP Offset Invalid: The Offset field for a PRP entry is invalid",
-	[NVME_SC_AWU_EXCEEDED]		  = "Atomic Write Unit Exceeded: The length specified exceeds the atomic write unit size",
-	[NVME_SC_OP_DENIED]		  = "Operation Denied: The command was denied due to lack of access rights",
-	[NVME_SC_SGL_INVALID_OFFSET]	  = "SGL Offset Invalid: The offset specified in a descriptor is invalid",
-	[NVME_SC_HOSTID_FORMAT]		  = "Host Identifier Inconsistent Format: The NVM subsystem detected the simultaneous use of 64- bit and 128-bit Host Identifier values on different controllers",
-	[NVME_SC_KAT_EXPIRED]		  = "Keep Alive Timer Expired: The Keep Alive Timer expired",
-	[NVME_SC_KAT_INVALID]		  = "Keep Alive Timeout Invalid: The Keep Alive Timeout value specified is invalid",
-	[NVME_SC_CMD_ABORTED_PREMEPT]	  = "Command Aborted due to Preempt and Abort: The command was aborted due to a Reservation Acquire command",
-	[NVME_SC_SANITIZE_FAILED]	  = "Sanitize Failed: The most recent sanitize operation failed and no recovery action has been successfully completed",
-	[NVME_SC_SANITIZE_IN_PROGRESS]	  = "Sanitize In Progress: The requested function is prohibited while a sanitize operation is in progress",
-	[NVME_SC_SGL_INVALID_GRANULARITY] = "SGL Data Block Granularity Invalid: The Address alignment or Length granularity for an SGL Data Block descriptor is invalid",
-	[NVME_SC_CMD_IN_CMBQ_NOT_SUPP]	  = "Command Not Supported for Queue in CMB: The controller does not support Submission Queue in the Controller Memory Buffer or Completion Queue in the Controller Memory Buffer",
-	[NVME_SC_NS_WRITE_PROTECTED]	  = "Namespace is Write Protected: The command is prohibited while the namespace is write protected",
-	[NVME_SC_CMD_INTERRUPTED]	  = "Command Interrupted: Command processing was interrupted and the controller is unable to successfully complete the command",
-	[NVME_SC_TRAN_TPORT_ERROR]	  = "Transient Transport Error: A transient transport error was detected",
-	[NVME_SC_LBA_RANGE]		  = "LBA Out of Range: The command references an LBA that exceeds the size of the namespace",
-	[NVME_SC_CAP_EXCEEDED]		  = "Capacity Exceeded: Execution of the command has caused the capacity of the namespace to be exceeded",
-	[NVME_SC_NS_NOT_READY]		  = "Namespace Not Ready: The namespace is not ready to be accessed",
-	[NVME_SC_RESERVATION_CONFLICT]	  = "Reservation Conflict: The command was aborted due to a conflict with a reservation held on the accessed namespace",
-	[NVME_SC_FORMAT_IN_PROGRESS]	  = "Format In Progress: A Format NVM command is in progress on the namespace",
-};
-
-static const char * const cmd_spec_status[] = {
-	[NVME_SC_CQ_INVALID]		 = "Completion Queue Invalid: The Completion Queue identifier specified in the command does not exist",
-	[NVME_SC_QID_INVALID]		 = "Invalid Queue Identifier: The creation of the I/O Completion Queue failed due to an invalid queue identifier specified as part of the command",
-	[NVME_SC_QUEUE_SIZE]		 = "Invalid Queue Size: The host attempted to create an I/O Completion Queue with an invalid number of entries",
-	[NVME_SC_ABORT_LIMIT]		 = "Abort Command Limit Exceeded: The number of concurrently outstanding Abort commands has exceeded the limit indicated in the Identify Controller data structure",
-	[NVME_SC_ASYNC_LIMIT]		 = "Asynchronous Event Request Limit Exceeded: The number of concurrently outstanding Asynchronous Event Request commands has been exceeded",
-	[NVME_SC_FIRMWARE_SLOT]		 = "Invalid Firmware Slot: The firmware slot indicated is invalid or read only",
-	[NVME_SC_FIRMWARE_IMAGE]	 = "Invalid Firmware Image: The firmware image specified for activation is invalid and not loaded by the controller",
-	[NVME_SC_INVALID_VECTOR]	 = "Invalid Interrupt Vector: The creation of the I/O Completion Queue failed due to an invalid interrupt vector specified as part of the command",
-	[NVME_SC_INVALID_LOG_PAGE]	 = "Invalid Log Page: The log page indicated is invalid",
-	[NVME_SC_INVALID_FORMAT]	 = "Invalid Format: The LBA Format specified is not supported",
-	[NVME_SC_FW_NEEDS_CONV_RESET] 	 = "Firmware Activation Requires Conventional Reset: The firmware commit was successful, however, activation of the firmware image requires a conventional reset",
-	[NVME_SC_INVALID_QUEUE]		 = "Invalid Queue Deletion: Invalid I/O Completion Queue specified to delete",
-	[NVME_SC_FEATURE_NOT_SAVEABLE]	 = "Feature Identifier Not Saveable: The Feature Identifier specified does not support a saveable value",
-	[NVME_SC_FEATURE_NOT_CHANGEABLE] = "Feature Not Changeable: The Feature Identifier is not able to be changed",
-	[NVME_SC_FEATURE_NOT_PER_NS]	 = "Feature Not Namespace Specific: The Feature Identifier specified is not namespace specific",
-	[NVME_SC_FW_NEEDS_SUBSYS_RESET]  = "Firmware Activation Requires NVM Subsystem Reset: The firmware commit was successful, however, activation of the firmware image requires an NVM Subsystem",
-	[NVME_SC_FW_NEEDS_RESET]	 = "Firmware Activation Requires Controller Level Reset: The firmware commit was successful; however, the image specified does not support being activated without a reset",
-	[NVME_SC_FW_NEEDS_MAX_TIME]	 = "Firmware Activation Requires Maximum Time Violation: The image specified if activated immediately would exceed the Maximum Time for Firmware Activation (MTFA) value reported in Identify Controller",
-	[NVME_SC_FW_ACTIVATE_PROHIBITED] = "Firmware Activation Prohibited: The image specified is being prohibited from activation by the controller for vendor specific reasons",
-	[NVME_SC_OVERLAPPING_RANGE]	 = "Overlapping Range: The downloaded firmware image has overlapping ranges",
-	[NVME_SC_NS_INSUFFICIENT_CAP]	 = "Namespace Insufficient Capacity: Creating the namespace requires more free space than is currently available",
-	[NVME_SC_NS_ID_UNAVAILABLE]	 = "Namespace Identifier Unavailable: The number of namespaces supported has been exceeded",
-	[NVME_SC_NS_ALREADY_ATTACHED]	 = "Namespace Already Attached: The controller is already attached to the namespace specified",
-	[NVME_SC_NS_IS_PRIVATE]		 = "Namespace Is Private: The namespace is private and is already attached to one controller",
-	[NVME_SC_NS_NOT_ATTACHED]	 = "Namespace Not Attached: The request to detach the controller could not be completed because the controller is not attached to the namespace",
-	[NVME_SC_THIN_PROV_NOT_SUPP]	 = "Thin Provisioning Not Supported: Thin provisioning is not supported by the controller",
-	[NVME_SC_CTRL_LIST_INVALID]	 = "Controller List Invalid: The controller list provided contains invalid controller ids",
-	[NVME_SC_SELF_TEST_IN_PROGRESS]  = "Device Self-test In Progress",
-	[NVME_SC_BP_WRITE_PROHIBITED]	 = "Boot Partition Write Prohibited: The command tried to modify a locked Boot Partition",
-	[NVME_SC_INVALID_CTRL_ID]	 = "Invalid Controller Identifier: An invalid controller id was specified",
-	[NVME_SC_INVALID_SEC_CTRL_STATE] = "Invalid Secondary Controller State: The requested secondary controller action is invalid based on the secondary and primary controllers current states",
-	[NVME_SC_INVALID_CTRL_RESOURCES] = "Invalid Number of Controller Resources: The specified number of Flexible Resources is invalid",
-	[NVME_SC_INVALID_RESOURCE_ID]	 = "Invalid Resource Identifier: At least one of the specified resource identifiers was invalid",
-	[NVME_SC_PMR_SAN_PROHIBITED]	 = "Sanitize Prohibited While Persistent Memory Region is Enabled",
-	[NVME_SC_ANA_GROUP_ID_INVALID]	 = "ANA Group Identifier Invalid",
-	[NVME_SC_ANA_ATTACH_FAILED]	 = "ANA Attach Failed: The command's specified ANA Group Identifier is not supported",
-};
-
-static const char * const nvm_status[] = {
-	[NVME_SC_BAD_ATTRIBUTES] = "Conflicting Attributes: The attributes specified in the command are conflicting",
-	[NVME_SC_INVALID_PI]	 = "Invalid Protection Information: The command's Protection Information Field settings are invalid for the namespace's Protection Information format",
-	[NVME_SC_READ_ONLY]	 = "Attempted Write to Read Only Range: The LBA range specified contains read-only blocks",
-};
-
-static const char * const nvmf_status[] = {
-	[NVME_SC_CONNECT_FORMAT]	   = "Incompatible Format: The NVM subsystem does not support the record format specified by the host",
-	[NVME_SC_CONNECT_CTRL_BUSY]	   = "Controller Busy: The controller is already associated with a host",
-	[NVME_SC_CONNECT_INVALID_PARAM]    = "Connect Invalid Parameters: One or more of the command parameters",
-	[NVME_SC_CONNECT_RESTART_DISC]	   = "Connect Restart Discovery: The NVM subsystem requested is not available",
-	[NVME_SC_CONNECT_INVALID_HOST]	   = "Connect Invalid Host: The host is not allowed to establish an association to either any controller in the NVM subsystem or the specified controller",
-	[NVME_SC_DISCONNECT_INVALID_QTYPE] = "Invalid Queue Type: The command was sent on the wrong queue type",
-	[NVME_SC_DISCOVERY_RESTART]	   = "Discover Restart: The snapshot of the records is now invalid or out of date",
-	[NVME_SC_AUTH_REQUIRED]		   = "Authentication Required: NVMe in-band authentication is required and the queue has not yet been authenticated",
-};
-
-static const char * const media_status[] = {
-	[NVME_SC_WRITE_FAULT]	  = "Write Fault: The write data could not be committed to the media",
-	[NVME_SC_READ_ERROR]	  = "Unrecovered Read Error: The read data could not be recovered from the media",
-	[NVME_SC_GUARD_CHECK]	  = "End-to-end Guard Check Error: The command was aborted due to an end-to-end guard check failure",
-	[NVME_SC_APPTAG_CHECK]	  = "End-to-end Application Tag Check Error: The command was aborted due to an end-to-end application tag check failure",
-	[NVME_SC_REFTAG_CHECK]	  = "End-to-end Reference Tag Check Error: The command was aborted due to an end-to-end reference tag check failure",
-	[NVME_SC_COMPARE_FAILED]  = "Compare Failure: The command failed due to a miscompare during a Compare command",
-	[NVME_SC_ACCESS_DENIED]	  = "Access Denied: Access to the namespace and/or LBA range is denied due to lack of access rights",
-	[NVME_SC_UNWRITTEN_BLOCK] = "Deallocated or Unwritten Logical Block: The command failed due to an attempt to read from or verify an LBA range containing a deallocated or unwritten logical block",
-};
-
-static const char * const path_status[] = {
-	[NVME_SC_ANA_INTERNAL_PATH_ERROR] = "Internal Path Error: An internal error specific to the controller processing the commmand prevented completion",
-	[NVME_SC_ANA_PERSISTENT_LOSS]	  = "Asymmetric Access Persistent Loss: The controller is in a persistent loss state with the requested namespace",
-	[NVME_SC_ANA_INACCESSIBLE]	  = "Asymmetric Access Inaccessible: The controller is in an inaccessible state with the requested namespace",
-	[NVME_SC_ANA_TRANSITION]	  = "Asymmetric Access Transition: The controller is currently transitioning states with the requested namespace",
-	[NVME_SC_CTRL_PATH_ERROR]	  = "Controller Pathing Error: A pathing error was detected by the controller",
-	[NVME_SC_HOST_PATH_ERROR]	  = "Host Pathing Error: A pathing error was detected by the host",
-	[NVME_SC_CMD_ABORTED_BY_HOST]	  = "Command Aborted By Host: The command was aborted as a result of host action",
-};
-
-#define ARGSTR(s, i) arg_str(s, ARRAY_SIZE(s), i)
-
-static const char *arg_str(const char * const *strings,
-		size_t array_size, size_t idx)
-{
-	if (idx < array_size && strings[idx])
-		return strings[idx];
-	return "unrecognized";
-}
-
-const char *nvme_status_to_string(__u16 status)
-{
-	const char *s = "Unknown status";
-	__u16 sc, sct;
-	bool fabrics = false; /* make this a parameter */
-
-	if (status < 0)
-		return strerror(errno);
-
-	sc = nvme_status_code(status);
-	sct = nvme_status_code_type(status);
-
-	switch (sct) {
-	case NVME_SCT_GENERIC:
-		s = ARGSTR(generic_status, sc);
-		break;
-	case NVME_SCT_CMD_SPECIFIC:
-		if (sc < ARRAY_SIZE(cmd_spec_status))
-			s = ARGSTR(cmd_spec_status, sc);
-		else if (fabrics)
-			s = ARGSTR(nvmf_status, sc);
-		else
-			s = ARGSTR(nvm_status, sc);
-		break;
-	case NVME_SCT_MEDIA:
-		s = ARGSTR(media_status, sc);
-		break;
-	case NVME_SCT_PATH:
-		s = ARGSTR(path_status, sc);
-		break;
-	case NVME_SCT_VS:
-		s = "Vendor Specific Status";
-		break;
-	default:
-		break;
-	}
-
-	return s;
 }
 
 static const char *nvme_feature_lba_type_to_string(__u8 type)

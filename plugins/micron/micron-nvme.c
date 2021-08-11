@@ -12,6 +12,9 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include <limits.h>
+#include "linux/types.h"
+#include "nvme-print.h"
+
 #define CREATE_CMD
 #include "micron-nvme.h"
 
@@ -555,8 +558,7 @@ static int micron_selective_download(int argc, char **argv,
             perror("fw-download");
             goto out;
         } else if (err != 0) {
-            fprintf(stderr, "NVME Admin command error:%s(%x)\n",
-                    nvme_status_to_string(err), err);
+	    nvme_show_status(err);
             goto out;
         }
         fw_buf += xfer;
@@ -933,8 +935,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
         if (err == 0 && (err = (int)result) == 0)
             printf("Device correctable errors cleared!\n");
 	else if (err > 0)
-	    fprintf(stderr, "NVMe status: %s(%#x)\n",
-		    nvme_status_to_string(err), err);
+	    nvme_show_status(err);
         else
             printf("Error clearing Device correctable errors = 0x%x\n", err);
         goto out;
@@ -1395,8 +1396,8 @@ static int micron_nand_stats(int argc, char **argv,
 out:
     close(fd);
     if (err > 0)
-	fprintf(stderr, "NVMe status: %s(%#x)\n", nvme_status_to_string(err),
-		err);
+	nvme_show_status(err);
+
     return nvme_status_to_errno(err, false);
 }
 
@@ -2139,8 +2140,7 @@ static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *c
 out:
     close(fd);
     if (err > 0)
-	fprintf(stderr, "NVMe status: %s(%#x)\n", nvme_status_to_string(err),
-		err);
+	nvme_show_status(err);
     return nvme_status_to_errno(err, false);
 }
 

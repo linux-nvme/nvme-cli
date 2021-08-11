@@ -7,6 +7,8 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "plugin.h"
+#include "linux/types.h"
+#include "nvme-print.h"
 
 #define CREATE_CMD
 #include "ymtc-nvme.h"
@@ -136,7 +138,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
             d_raw((unsigned char *)&smart_log, sizeof(smart_log));
     }
     if (err > 0)
-        fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+        nvme_show_status(err);
 
     return err;
 }

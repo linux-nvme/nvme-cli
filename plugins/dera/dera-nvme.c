@@ -12,6 +12,8 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "plugin.h"
+#include "linux/types.h"
+#include "nvme-print.h"
 
 #define CREATE_CMD
 #include "dera-nvme.h"
@@ -200,7 +202,7 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 
 exit:
 	if (err > 0)
-		fprintf(stderr, "\nNVMe status:%s(0x%x)\n",	nvme_status_to_string(err), err);
+		nvme_show_status(err);
 
 	return err;
 }

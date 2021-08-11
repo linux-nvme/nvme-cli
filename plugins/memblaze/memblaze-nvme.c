@@ -8,6 +8,8 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "plugin.h"
+#include "linux/types.h"
+#include "nvme-print.h"
 
 #define CREATE_CMD
 #include "memblaze-nvme.h"
@@ -468,7 +470,7 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *cm
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}
 	if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+		nvme_show_status(err);
 
 	return err;
 }
@@ -506,7 +508,7 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd
             mb_feature_to_string(feature_id),
             nvme_select_to_string(0), result);
     } else if (err > 0)
-    fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+	    nvme_show_status(err);
     return err;
 }
 
@@ -548,7 +550,7 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
         printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
             mb_feature_to_string(cfg.feature_id), cfg.value);
     } else if (err > 0)
-        fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+	nvme_show_status(err);
 
     return err;
 }
@@ -606,7 +608,7 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, s
         printf("set-feature:0x%02X (%s), value:%#08x\n", cfg.feature_id,
             mb_feature_to_string(cfg.feature_id), cfg.value);
     } else if (err > 0)
-        fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+	nvme_show_status(err);
 
     return err;
 }
@@ -723,7 +725,7 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *cmd,
         if (!glp_high_latency(fdi, buf, LOG_PAGE_SIZE, DO_PRINT_FLAG)) break;
         err = nvme_get_log_simple(fd, GLP_ID_VU_GET_HIGH_LATENCY_LOG, sizeof(buf), &buf);
         if ( err) {
-            fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+	    nvme_show_status(err);
             break;
         }
     }
@@ -840,8 +842,7 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 			perror("fw-download");
 			goto out;
 		} else if (err != 0) {
-			fprintf(stderr, "NVME Admin command error:%s(%x)\n",
-					nvme_status_to_string(err), err);
+			nvme_show_status(err);
 			goto out;
 		}
 		fw_buf     += xfer;
@@ -995,7 +996,7 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, st
         io_latency_histogram(cfg.write ? f2 : f1, stats, DO_PRINT_FLAG,
          cfg.write ? GLP_ID_VU_GET_WRITE_LATENCY_HISTOGRAM : GLP_ID_VU_GET_READ_LATENCY_HISTOGRAM);
     else
-        fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+	nvme_show_status(err);
 
     close(fd);
     return err;
@@ -1042,7 +1043,8 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, 
     if (!err) {
         printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id, mb_feature_to_string(cfg.feature_id), cfg.value);
     } else if (err > 0)
-        fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+	nvme_show_status(err);
+
 /*
 	struct nvme_admin_cmd admin_cmd = {
 		.opcode		= OP,
@@ -1128,8 +1130,7 @@ static int mb_set_lat_stats(int argc, char **argv,
 	        err = nvme_set_features(fd, fid, nsid, option, cdw12, save,
 					0, 0, data_len, buf, &result);
 		if (err > 0) {
-			fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+			nvme_show_status(err);
 		} else if (err < 0) {
 			perror("Enable latency tracking");
 			fprintf(stderr, "Command failed while parsing.\n");

@@ -13,6 +13,8 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "plugin.h"
+#include "linux/types.h"
+#include "nvme-print.h"
 
 #define CREATE_CMD
 #include "sfx-nvme.h"
@@ -364,8 +366,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	return err;
 }
 
@@ -442,8 +443,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		else
 			d_raw((unsigned char *)&stats, sizeof(stats));
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	return err;
 }
 
@@ -574,8 +574,7 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct 
 	if (err < 0) {
 		perror("get-bad-block");
 	} else if (err != 0) {
-		fprintf(stderr, "NVMe IO command error:%s(%x)\n",
-				nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	} else {
 		bd_table_show(data_buf, buf_size);
 		printf("ScaleFlux get bad block table: success\n");
@@ -781,8 +780,7 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 	if (err < 0)
 		perror("sfx-change-cap");
 	else if (err != 0)
-		fprintf(stderr, "NVMe IO command error:%s(%x)\n",
-				nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	else {
 		printf("ScaleFlux change-capacity: success\n");
 		ioctl(fd, BLKRRPART);
@@ -898,9 +896,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 				if (err < 0)
 					perror("identify-namespace");
 				else
-					fprintf(stderr,
-						"NVMe Admin command error:%s(%x)\n",
-						nvme_status_to_string(err), err);
+					nvme_show_status(err);
 				return err;
 			}
 			/*
@@ -932,8 +928,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 		printf("ScaleFlux set-feature:%#02x (%s), value:%d\n", cfg.feature_id,
 			sfx_feature_to_string(cfg.feature_id), cfg.value);
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+		nvme_show_status(err);
 
 	return err;
 }
@@ -981,8 +976,7 @@ static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct pl
 		printf("ScaleFlux get-feature:%02x (%s), value:%d\n", cfg.feature_id,
 			sfx_feature_to_string(cfg.feature_id), result);
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+		nvme_show_status(err);
 
 	return err;
 
