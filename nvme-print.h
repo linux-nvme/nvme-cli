@@ -105,7 +105,6 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 	__u8 ext_size, __u32 report_size, unsigned long flags);
 
 const char *nvme_cmd_to_string(int admin, __u8 opcode);
-const char *nvme_status_to_string(__u16 status);
 const char *nvme_select_to_string(int sel);
 const char *nvme_feature_to_string(enum nvme_features_id feature);
 const char *nvme_register_to_string(int reg);

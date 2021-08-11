@@ -10,6 +10,7 @@
 #include "libnvme.h"
 #include "plugin.h"
 #include "linux/types.h"
+#include "nvme-print.h"
 
 #define CREATE_CMD
 #include "intel-nvme.h"
@@ -375,8 +376,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	return err;
 }
 
@@ -411,8 +411,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 		else
 			d_raw((unsigned char *)&log, sizeof(log));
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	return err;
 }
 
@@ -472,8 +471,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 		else
 			d_raw((unsigned char *)&stats, sizeof(stats));
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	return err;
 }
 
@@ -1059,8 +1057,8 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		err = nvme_get_features(fd, 0xf7, 0, 0, cfg.write ? 0x1 : 0x0, 0,
 				       sizeof(thresholds), thresholds, &result);
 		if (err) {
-			fprintf(stderr, "Quering thresholds failed. NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+			fprintf(stderr, "Quering thresholds failed. ");
+			nvme_show_status(err);
 			goto close_fd;
 		}
 
@@ -1089,8 +1087,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		else
 			d_raw((unsigned char *)&stats, sizeof(stats));
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+		nvme_show_status(err);
 close_fd:
 	close(fd);
 	return err;
@@ -1467,8 +1464,7 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 	err = 0;
  out:
 	if (err > 0) {
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	} else if (err < 0) {
 		perror("intel log");
 		err = EIO;
@@ -1547,8 +1543,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		err = nvme_set_features(fd, fid, nsid, option, cdw12, save, 0,
 					0, data_len, buf, &result);
 		if (err > 0) {
-			fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+			nvme_show_status(err);
 		} else if (err < 0) {
 			perror("Enable latency tracking");
 			fprintf(stderr, "Command failed while parsing.\n");
@@ -1607,8 +1602,8 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 	err = nvme_get_log_simple(fd, 0xc2,
 			   sizeof(media_version), media_version);
 	if (err) {
-		fprintf(stderr, "Querying media version failed. NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+		fprintf(stderr, "Querying media version failed. ");
+		nvme_show_status(err);
 		goto close_fd;
 	}
 
@@ -1629,8 +1624,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 					thresholds, &result);
 
 		if (err > 0) {
-			fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+			nvme_show_status(err);
 		} else if (err < 0) {
 			perror("Enable latency tracking");
 			fprintf(stderr, "Command failed while parsing.\n");

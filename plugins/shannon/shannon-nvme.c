@@ -9,6 +9,8 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "plugin.h"
+#include "linux/types.h"
+#include "nvme-print.h"
 
 #define CREATE_CMD
 #include "shannon-nvme.h"
@@ -144,8 +146,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	return err;
 }
 
@@ -244,8 +245,7 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 		}
 #endif
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	if (buf)
 		free(buf);
 	return err;
@@ -353,8 +353,7 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 		if (buf)
 			d(buf, cfg.data_len, 16, 1);
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+		nvme_show_status(err);
 
 free:
 	if (buf)

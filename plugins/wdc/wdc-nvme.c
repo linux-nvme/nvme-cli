@@ -34,6 +34,8 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "plugin.h"
+#include "linux/types.h"
+#include "nvme-print.h"
 
 #define CREATE_CMD
 #include "wdc-nvme.h"
@@ -1724,7 +1726,7 @@ static int wdc_do_clear_dump(int fd, __u8 opcode, __u32 cdw12)
 	if (ret != 0) {
 		fprintf(stdout, "ERROR : WDC : Crash dump erase failed\n");
 	}
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	nvme_show_status(ret);
 	return ret;
 }
 
@@ -1748,7 +1750,7 @@ static __u32 wdc_dump_length(int fd, __u32 opcode, __u32 cdw10, __u32 cdw12, __u
 		l->log_size = 0;
 		ret = -1;
 		fprintf(stderr, "ERROR : WDC : reading dump length failed\n");
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 		return ret;
 	}
 
@@ -1774,7 +1776,7 @@ static __u32 wdc_dump_length_e6(int fd, __u32 opcode, __u32 cdw10, __u32 cdw12, 
 	ret = nvme_submit_admin_passthru(fd, &admin_cmd, NULL);
 	if (ret != 0) {
 		fprintf(stderr, "ERROR : WDC : reading dump length failed\n");
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 	}
 
 	return ret;
@@ -1801,7 +1803,7 @@ static __u32 wdc_dump_dui_data(int fd, __u32 dataLen, __u32 offset, __u8 *dump_d
 	ret = nvme_submit_admin_passthru(fd, &admin_cmd, NULL);
 	if (ret != 0) {
 		fprintf(stderr, "ERROR : WDC : reading DUI data failed\n");
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 	}
 
 	return ret;
@@ -1832,7 +1834,7 @@ static __u32 wdc_dump_dui_data_v2(int fd, __u32 dataLen, __u64 offset, __u8 *dum
 	ret = nvme_submit_admin_passthru(fd, &admin_cmd, NULL);
 	if (ret != 0) {
 		fprintf(stderr, "ERROR : WDC : reading DUI data V2 failed\n");
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 	}
 
 	return ret;
@@ -1869,8 +1871,7 @@ static int wdc_do_dump(int fd, __u32 opcode,__u32 data_len,
 	while (curr_data_offset < data_len) {
 		ret = nvme_submit_admin_passthru(fd, &admin_cmd, NULL);
 		if (ret != 0) {
-			fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n",
-				__func__, nvme_status_to_string(ret), ret);
+			nvme_show_status(ret);
 			fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%x, offset = 0x%x, addr = 0x%lx\n",
 				__func__, i, admin_cmd.data_len, curr_data_offset, (long unsigned int)admin_cmd.addr);
 			break;
@@ -1890,7 +1891,7 @@ static int wdc_do_dump(int fd, __u32 opcode,__u32 data_len,
 	}
 
 	if (ret == 0) {
-		fprintf(stderr, "%s:  NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 		ret = wdc_create_log_file(file, dump_data, dump_length);
 	}
 	free(dump_data);
@@ -1934,7 +1935,7 @@ static int wdc_do_dump_e6(int fd, __u32 opcode,__u32 data_len,
 
 		ret = nvme_submit_admin_passthru(fd, &admin_cmd, NULL);
 		if (ret != 0) {
-			fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+			nvme_show_status(ret);
 			fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%x, offset = 0x%x, addr = 0x%lx\n",
 					__func__, i, admin_cmd.data_len, curr_data_offset, (long unsigned int)admin_cmd.addr);
 			break;
@@ -1946,9 +1947,11 @@ static int wdc_do_dump_e6(int fd, __u32 opcode,__u32 data_len,
 	}
 
 	if (ret == 0) {
-		fprintf(stderr, "%s:  NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+		fprintf(stderr, "%s:  ", __func__);
+		nvme_show_status(ret);
 	} else {
-		fprintf(stderr, "%s:  FAILURE: NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+		fprintf(stderr, "%s:  FAILURE: ", __func__);
+		nvme_show_status(ret);
 		fprintf(stderr, "%s:  Partial data may have been captured\n", __func__);
 		snprintf(file + strlen(file), PATH_MAX, "%s", "-PARTIAL");
 	}
@@ -1990,8 +1993,8 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 				goto close_fd;
 			}
 		} else {
-			fprintf(stderr, "ERROR : WDC: Get telemetry option feature failed.  NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+			fprintf(stderr, "ERROR : WDC: Get telemetry option feature failed.");
+			nvme_show_status(err);
 			err = -EPERM;
 			goto close_fd;
 		}
@@ -2035,7 +2038,7 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 	if (err < 0)
 		perror("get-telemetry-log");
 	else if (err > 0) {
-		fprintf(stderr, "NVMe status: %s(%#x)\n", nvme_status_to_string(err), err);
+		nvme_show_status(err);
 		fprintf(stderr, "%s: Failed to acquire telemetry header!\n", __func__);
 		goto close_output;
 	}
@@ -2079,7 +2082,7 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 			perror("get-telemetry-log");
 			break;
 		} else if (err > 0) {
-			fprintf(stderr, "NVMe status: %s(%#x)\n", nvme_status_to_string(err), err);
+			nvme_show_status(err);
 			fprintf(stderr, "%s: Failed to acquire full telemetry log!\n", __func__);
 			break;
 		}
@@ -2184,7 +2187,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 	ret = wdc_dump_dui_data(fd, WDC_NVME_CAP_DUI_HEADER_SIZE, 0x00,	(__u8 *)log_hdr, last_xfer);
 	if (ret != 0) {
 		fprintf(stderr, "%s: ERROR : WDC : Get DUI headers failed\n", __func__);
-		fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+		fprintf(stderr, "%s: ERROR : WDC : ", __func__);
+		nvme_show_status(ret);
 		goto out;
 	}
 
@@ -2265,7 +2269,9 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				if (ret != 0) {
 					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%"PRIx64", offset = 0x%x, addr = %p\n",
 							__func__, i, (uint64_t)log_size, curr_data_offset, buffer_addr);
-					fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+					fprintf(stderr, "%s: ERROR : WDC : ",
+						__func__);
+					nvme_show_status(ret);
 					break;
 				}
 
@@ -2377,7 +2383,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				if (ret != 0) {
 					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%"PRIx64", offset = 0x%"PRIx64", addr = %p\n",
 							__func__, i, (uint64_t)total_size, (uint64_t)curr_data_offset, buffer_addr);
-					fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+					fprintf(stderr, "%s: ERROR : WDC : ", __func__);
+					nvme_show_status(ret);
 					break;
 				}
 
@@ -2491,7 +2498,8 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
 				if (ret != 0) {
 					fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%"PRIx64", offset = 0x%"PRIx64", addr = %p\n",
 							__func__, i, (uint64_t)log_size, (uint64_t)curr_data_offset, buffer_addr);
-					fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+					fprintf(stderr, "%s: ERROR : WDC :", __func__);
+					nvme_show_status(ret);
 					break;
 				}
 
@@ -2513,8 +2521,7 @@ static int wdc_do_cap_dui(int fd, char *file, __u32 xfer_size, int data_area, in
         goto out;
 	}
 
-
-	fprintf(stderr, "%s:  NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(ret), ret);
+	nvme_show_status(ret);
 	if (verbose)
 		fprintf(stderr, "INFO : WDC : Capture Device Unit Info log, length = 0x%"PRIx64"\n", (uint64_t)total_size);
 
@@ -2717,22 +2724,22 @@ static int wdc_do_sn730_get_and_tar(int fd, char * outputName)
 
 	ret = wdc_do_get_sn730_log_len(fd, &full_log_len, SN730_GET_FULL_LOG_LENGTH);
 	if (ret) {
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 		goto free_buf;
 	}
 	ret = wdc_do_get_sn730_log_len(fd, &key_log_len, SN730_GET_KEY_LOG_LENGTH);
 	if (ret) {
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 		goto free_buf;
 	}
 	ret = wdc_do_get_sn730_log_len(fd, &core_dump_log_len, SN730_GET_COREDUMP_LOG_LENGTH);
 	if (ret) {
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 		goto free_buf;
 	}
 	ret = wdc_do_get_sn730_log_len(fd, &extended_log_len, SN730_GET_EXTENDED_LOG_LENGTH);
 	if (ret) {
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 		goto free_buf;
 	}
 
@@ -2750,28 +2757,28 @@ static int wdc_do_sn730_get_and_tar(int fd, char * outputName)
 	/* Get the full log */
 	ret = get_sn730_log_chunks(fd, full_log_buf, full_log_len, SN730_GET_FULL_LOG_SUBOPCODE);
 	if (ret) {
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 		goto free_buf;
 	}
 
 	/* Get the key log */
 	ret = get_sn730_log_chunks(fd, key_log_buf, key_log_len, SN730_GET_KEY_LOG_SUBOPCODE);
 	if (ret) {
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 		goto free_buf;
 	}
 
 	/* Get the core dump log */
 	ret = get_sn730_log_chunks(fd, core_dump_log_buf, core_dump_log_len, SN730_GET_CORE_LOG_SUBOPCODE);
 	if (ret) {
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 		goto free_buf;
 	}
 
 	/* Get the extended log */
 	ret = get_sn730_log_chunks(fd, extended_log_buf, extended_log_len, SN730_GET_EXTEND_LOG_SUBOPCODE);
 	if (ret) {
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 		goto free_buf;
 	}
 
@@ -3086,8 +3093,7 @@ static int wdc_do_drive_log(int fd, char *file)
 				WDC_NVME_SUBCMD_SHIFT) | WDC_NVME_DRIVE_LOG_SIZE_CMD);
 
 	ret = nvme_submit_admin_passthru(fd, &admin_cmd, NULL);
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret),
-			ret);
+	nvme_show_status(ret);
 	if (ret == 0) {
 		ret = wdc_create_log_file(file, drive_log_data, drive_log_length);
 	}
@@ -3342,7 +3348,7 @@ static int wdc_purge(int argc, char **argv,
 		}
 
 		fprintf(stderr, "%s", err_str);
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 	}
 	nvme_free_tree(r);
 	return ret;
@@ -3400,7 +3406,7 @@ static int wdc_purge_monitor(int argc, char **argv,
 			}
 		}
 
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 	}
 	nvme_free_tree(r);
 	return ret;
@@ -4684,7 +4690,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 						NVME_LOG_LSP_NONE, 0, false, uuid_index, 0, WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
 
 				if (strcmp(format, "json"))
-					fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+					nvme_show_status(ret);
 
 				if (ret == 0) {
 
@@ -4731,7 +4737,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 						NVME_LOG_LSP_NONE, 0, false, uuid_index, 0, WDC_NVME_EOL_STATUS_LOG_LEN, data);
 
 				if (strcmp(format, "json"))
-					fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+					nvme_show_status(ret);
 
 				if (ret == 0) {
 					/* parse the data */
@@ -4758,7 +4764,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 					   WDC_NVME_EOL_STATUS_LOG_LEN, data);
 
 			if (strcmp(format, "json"))
-				fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+				nvme_show_status(ret);
 
 			if (ret == 0) {
 				/* parse the data */
@@ -4784,7 +4790,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 					WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
 
 		if (strcmp(format, "json"))
-			fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+			nvme_show_status(ret);
 
 		if (ret == 0) {
 			/* parse the data */
@@ -4925,7 +4931,7 @@ static int wdc_get_ca_log_page(nvme_root_t r, int fd, char *format)
 			ret = nvme_get_log_simple(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE,
 					   WDC_FB_CA_LOG_BUF_LEN, data);
 			if (strcmp(format, "json"))
-				fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+				nvme_show_status(ret);
 
 			if (ret == 0) {
 				/* parse the data */
@@ -4961,7 +4967,7 @@ static int wdc_get_ca_log_page(nvme_root_t r, int fd, char *format)
 			ret = nvme_get_log_simple(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE,
 					   WDC_FB_CA_LOG_BUF_LEN, data);
 			if (strcmp(format, "json"))
-				fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+				nvme_show_status(ret);
 
 			if (ret == 0) {
 				/* parse the data */
@@ -4983,7 +4989,7 @@ static int wdc_get_ca_log_page(nvme_root_t r, int fd, char *format)
 			ret = nvme_get_log_simple(fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE,
 					   WDC_BD_CA_LOG_BUF_LEN, data);
 			if (strcmp(format, "json"))
-				fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+				nvme_show_status(ret);
 
 			if (ret == 0) {
 				/* parse the data */
@@ -5048,7 +5054,7 @@ static int wdc_get_c1_log_page(nvme_root_t r, int fd,
 	ret = nvme_get_log_simple(fd, WDC_NVME_ADD_LOG_OPCODE,
 			   WDC_ADD_LOG_BUF_LEN, data);
 	if (strcmp(format, "json"))
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 	if (ret == 0) {
 		l = (struct wdc_log_page_header*)data;
 		total_subpages = l->num_subpages + WDC_NVME_GET_STAT_PERF_INTERVAL_LIFETIME - 1;
@@ -5101,7 +5107,7 @@ static int wdc_get_d0_log_page(nvme_root_t r, int fd, char *format)
 	ret = nvme_get_log_simple(fd, WDC_NVME_GET_VU_SMART_LOG_OPCODE,
 			   WDC_NVME_VU_SMART_LOG_LEN, data);
 	if (strcmp(format, "json"))
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 
 	if (ret == 0) {
 		/* parse the data */
@@ -5255,7 +5261,7 @@ static int wdc_do_clear_pcie_correctable_errors(int fd)
 			WDC_NVME_CLEAR_PCIE_CORR_CMD);
 
 	ret = nvme_submit_admin_passthru(fd, &admin_cmd, NULL);
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	nvme_show_status(ret);
 	return ret;
 }
 
@@ -5268,7 +5274,7 @@ static int wdc_do_clear_pcie_correctable_errors_vuc(int fd)
 	admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE_VUC;
 
 	ret = nvme_submit_admin_passthru(fd, &admin_cmd, NULL);
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	nvme_show_status(ret);
 	return ret;
 }
 
@@ -5281,7 +5287,7 @@ static int wdc_do_clear_pcie_correctable_errors_fid(int fd)
 	ret = nvme_set_features_simple(fd, WDC_NVME_CLEAR_PCIE_CORR_FEATURE_ID, 0, value,
 				false, &result);
 
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	nvme_show_status(ret);
 	return ret;
 }
 
@@ -5487,7 +5493,7 @@ static int wdc_clear_assert_dump(int argc, char **argv, struct command *command,
 				WDC_NVME_CLEAR_ASSERT_DUMP_CMD);
 
 		ret = nvme_submit_admin_passthru(fd, &admin_cmd, NULL);
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 	} else
 		fprintf(stderr, "INFO : WDC : No Assert Dump Present\n");
 
@@ -5529,7 +5535,7 @@ static int wdc_get_fw_act_history(nvme_root_t r, int fd, char *format)
 			   WDC_FW_ACT_HISTORY_LOG_BUF_LEN, data);
 
 	if (strcmp(format, "json"))
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 
 	if (ret == 0) {
 		/* parse the data */
@@ -5586,7 +5592,7 @@ static int wdc_get_fw_act_history_C2(nvme_root_t r, int fd, char *format)
 			   WDC_FW_ACT_HISTORY_C2_LOG_BUF_LEN, data);
 
 	if (strcmp(format, "json"))
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 
 	if (ret == 0) {
 		/* parse the data */
@@ -5714,7 +5720,7 @@ static int wdc_do_clear_fw_activate_history_vuc(int fd)
 			WDC_NVME_CLEAR_FW_ACT_HIST_CMD);
 
 	ret = nvme_submit_admin_passthru(fd, &admin_cmd, NULL);
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	nvme_show_status(ret);
 
 	return ret;
 }
@@ -5728,7 +5734,7 @@ static int wdc_do_clear_fw_activate_history_fid(int fd)
 	ret = nvme_set_features_simple(fd, WDC_NVME_CLEAR_FW_ACT_HIST_VU_FID, 0, value,
 				false, &result);
 
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	nvme_show_status(ret);
 	return ret;
 }
 
@@ -5842,7 +5848,7 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 				else
 					fprintf(stderr, "Controller Option Telemetry Log Page State: Enabled\n");
 			} else {
-				fprintf(stderr, "ERROR : WDC: NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+				nvme_show_status(ret);
 			}
 	   }
 	   else {
@@ -5928,8 +5934,10 @@ static int wdc_de_VU_read_size(int fd, __u32 fileId, __u16 spiDestn, __u32* logS
 
 	if (!ret && logSize)
 		*logSize = cmd.result;
-	if( ret != WDC_STATUS_SUCCESS)
-		fprintf(stderr, "ERROR : WDC : VUReadSize() failed, status:%s(0x%x)\n", nvme_status_to_string(ret), ret);
+	if( ret != WDC_STATUS_SUCCESS) {
+		fprintf(stderr, "ERROR : WDC : VUReadSize() failed, ");
+		nvme_show_status(ret);
+	}
 
 	end:
 	return ret;
@@ -5961,8 +5969,10 @@ static int wdc_de_VU_read_buffer(int fd, __u32 fileId, __u16 spiDestn, __u32 off
 
 	ret = nvme_submit_admin_passthru(fd, &cmd, NULL);
 
-	if( ret != WDC_STATUS_SUCCESS)
-		fprintf(stderr, "ERROR : WDC : VUReadBuffer() failed, status:%s(0x%x)\n", nvme_status_to_string(ret), ret);
+	if( ret != WDC_STATUS_SUCCESS) {
+		fprintf(stderr, "ERROR : WDC : VUReadBuffer() failed, ");
+		nvme_show_status(ret);
+	}
 
 	end:
 	return ret;
@@ -6692,7 +6702,7 @@ static int wdc_drive_resize(int argc, char **argv,
 	if (!ret)
 		printf("New size: %" PRIu64 " GB\n", cfg.size);
 
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	nvme_show_status(ret);
 	nvme_free_tree(r);
 	return ret;
 }
@@ -6749,7 +6759,7 @@ static int wdc_namespace_resize(int argc, char **argv,
 		ret = -1;
 	}
 
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	nvme_show_status(ret);
 	nvme_free_tree(r);
 	return ret;
 }
@@ -6840,7 +6850,7 @@ static int wdc_reason_identifier(int argc, char **argv,
 		ret = -1;
 	}
 
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	nvme_show_status(ret);
 
  close_fd:
 	close(fd);
@@ -7091,7 +7101,7 @@ static int wdc_dump_telemetry_hdr(int fd, int log_id, struct nvme_telemetry_log 
 	if (ret < 0)
 		perror("get-telemetry-log");
 	else if (ret > 0) {
-		fprintf(stderr, "NVMe status: %s(%#x)\n", nvme_status_to_string(ret), ret);
+		nvme_show_status(ret);
 		fprintf(stderr, "%s: ERROR : Failed to acquire telemetry header, ret = %d!\n", __func__, ret);
 	}
 
@@ -7769,7 +7779,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 	}
 
 
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	nvme_show_status(ret);
 	nvme_free_tree(r);
 	return ret;
 }
@@ -7885,7 +7895,7 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
    	   	printf("%s: Invalid format\n", __func__);
 
 END:
-	fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret), ret);
+	nvme_show_status(ret);
 	nvme_free_tree(r);
 	return ret;
 }
@@ -8157,8 +8167,8 @@ static int wdc_enc_submit_move_data(int fd, char *cmd, int len, int xfer_size, F
 			__func__, log_id);
 	}
 	else if (err != 0) {
-		fprintf(stderr, "%s: ERROR : WDC : NVMe Snd Mgmt Status:%s(x%x)\n",
-			__func__, nvme_status_to_string(err), err );
+		fprintf(stderr, "%s: ERROR : WDC : NVMe Snd Mgmt\n", __func__);
+		nvme_show_status(err);
 	} else {
 		if (nvme_cmd.result == WDC_RESULT_NOT_AVAILABLE)
 		{
@@ -8182,8 +8192,8 @@ static int wdc_enc_submit_move_data(int fd, char *cmd, int len, int xfer_size, F
 			err = nvme_submit_admin_passthru(fd, &nvme_cmd, NULL);
 			if (err != 0) {
 				more = 0;
-				fprintf(stderr, "%s: ERROR : WDC : NVMe Rcv Mgmt Status:%s(x%x)\n",
-					__func__, nvme_status_to_string(err), err);
+				fprintf(stderr, "%s: ERROR : WDC : NVMe Rcv Mgmt ", __func__);
+				nvme_show_status(err);
 			} else {
 				more = nvme_cmd.result & WDC_RESULT_MORE_DATA;
 				response_size = nvme_cmd.result & ~WDC_RESULT_MORE_DATA;
@@ -8238,7 +8248,7 @@ static int wdc_enc_get_nic_log(int fd, __u8 log_id, __u32 xfer_size, __u32 data_
 #endif
 		ret = nvme_submit_admin_passthru(fd, &admin_cmd, NULL);
 		if (ret !=0 ) {
-			fprintf(stderr, "%s: ERROR : WDC : NVMe Status:%s(%x)\n",__func__, nvme_status_to_string(ret), ret);
+			nvme_show_status(ret);
 			fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%x, offset = 0x%x, addr = 0x%lx\n",
 				 __func__, i, admin_cmd.data_len, curr_data_offset, (long unsigned int)admin_cmd.addr);
 			break;

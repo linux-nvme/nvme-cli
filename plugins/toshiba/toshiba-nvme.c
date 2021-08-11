@@ -10,6 +10,8 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "plugin.h"
+#include "linux/types.h"
+#include "nvme-print.h"
 
 #define CREATE_CMD
 #include "toshiba-nvme.h"
@@ -471,7 +473,7 @@ static int vendor_log(int argc, char **argv, struct command *cmd, struct plugin 
 		fprintf(stderr, "%s: couldn't get vendor log 0x%x\n", __func__, cfg.log);
 end:
 	if (err > 0)
-		fprintf(stderr, "%s: NVMe Status:%s(%x)\n", __func__, nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	return err;
 }
 
@@ -513,8 +515,8 @@ static int internal_log(int argc, char **argv, struct command *cmd, struct plugi
 	if (err < 0)
 		fprintf(stderr, "%s: couldn't get fw log \n", __func__);
 	if (err > 0)
-		fprintf(stderr, "%s: NVMe Status:%s(%x)\n", __func__,
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
+
 	return err;
 }
 
@@ -552,7 +554,6 @@ static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 			__func__);
 end:
 	if (err > 0)
-		fprintf(stderr, "%s: NVMe Status:%s(%x)\n", __func__,
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	return err;
 }
