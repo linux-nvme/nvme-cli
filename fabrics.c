@@ -353,7 +353,6 @@ static int discover_from_conf_file(nvme_host_t h, const char *desc,
 		if (!ret) {
 			__discover(c, defcfg, NULL, persistent,
 				   connect, 0);
-				return 0;
 			if (!persistent)
 				ret = nvme_disconnect_ctrl(c);
 			nvme_free_ctrl(c);
