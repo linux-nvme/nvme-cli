@@ -31,6 +31,8 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "plugin.h"
+#include "linux/types.h"
+#include "nvme-print.h"
 
 #define CREATE_CMD
 
@@ -195,8 +197,7 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 	}
 
 	if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	return err;
 }
 
@@ -770,8 +771,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 		} else if (!strcmp(cfg.output_format, "json"))
 			json_print_object(root, NULL);
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
 
 	return err;
 }
@@ -871,8 +871,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 		}
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
 
 	cf_err = nvme_get_log_simple(fd, 0xCF, sizeof(ExtdSMARTInfo), &logPageCF);
 
@@ -1011,7 +1010,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 			json_vs_pcie_error_log(pcieErrorLog);
 
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+		nvme_show_status(err);
 
 	return err;
 }
@@ -1106,8 +1105,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		} else
 			seaget_d_raw((unsigned char *)(&tele_log), sizeof(tele_log), dump_fd);
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	else
 		perror("log page");
 
@@ -1140,8 +1138,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 			} else
 				seaget_d_raw((unsigned char *)log, blksToGet * 512, dump_fd);
 		} else if (err > 0)
-			fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+			nvme_show_status(err);
 		else
 			perror("log page");
 
@@ -1204,8 +1201,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 		} else
 			seaget_d_raw((unsigned char *)(&tele_log), sizeof(tele_log), dump_fd);
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	else
 		perror("log page");
 
@@ -1238,8 +1234,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 			} else
 				seaget_d_raw((unsigned char *)log, blksToGet * 512, dump_fd);
 		} else if (err > 0)
-			fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+			nvme_show_status(err);
 		else
 			perror("log page");
 
@@ -1323,8 +1318,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 		*/
 		seaget_d_raw((unsigned char *)(&tele_log), sizeof(tele_log), dump_fd);
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	else
 		perror("log page");
 
@@ -1354,8 +1348,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 			seaget_d_raw((unsigned char *)log, blksToGet * 512, dump_fd);
 
 		} else if (err > 0)
-			fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+			nvme_show_status(err);
 		else
 			perror("log page");
 
