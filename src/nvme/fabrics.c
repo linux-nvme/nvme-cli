@@ -77,8 +77,9 @@ const char *nvmf_adrfam_str(__u8 adrfam)
 }
 
 static const char * const subtypes[] = {
-	[NVME_NQN_DISC]		= "discovery subsystem",
+	[NVME_NQN_DISC]		= "discovery subsystem referral",
 	[NVME_NQN_NVME]		= "nvme subsystem",
+	[NVME_NQN_CURR]		= "current discovery subsystem",
 };
 
 const char *nvmf_subtype_str(__u8 subtype)
@@ -571,6 +572,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 
 	switch (e->subtype) {
 	case NVME_NQN_DISC:
+	case NVME_NQN_CURR:
 		if (discover)
 			*discover = true;
 		break;

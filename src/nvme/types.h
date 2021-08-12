@@ -3831,10 +3831,12 @@ enum nvme_ae_info_notice {
  * enum nvme_subsys_type -
  * @NVME_NQN_DISC:		Discovery type target subsystem
  * @NVME_NQN_NVME:		NVME type target subsystem
+ * @NVME_NQN_CURR:		Current Discovery type target subsystem
  */
 enum nvme_subsys_type {
 	NVME_NQN_DISC	= 1,
 	NVME_NQN_NVME	= 2,
+	NVME_NQN_CURR	= 3,
 };
 
 #define NVME_DISC_SUBSYS_NAME	"nqn.2014-08.org.nvmexpress.discovery"
