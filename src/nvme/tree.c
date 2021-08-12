@@ -652,14 +652,14 @@ const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c)
 
 const char *nvme_ctrl_get_hostnqn(nvme_ctrl_t c)
 {
-	if (!c->s)
+	if (!c->s || !c->s->h)
 		return default_host->hostnqn;
 	return c->s->h->hostnqn;
 }
 
 const char *nvme_ctrl_get_hostid(nvme_ctrl_t c)
 {
-	if (!c->s)
+	if (!c->s || !c->s->h)
 		return default_host->hostid;
 	return c->s->h->hostid;
 }
