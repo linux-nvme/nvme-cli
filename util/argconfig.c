@@ -282,7 +282,17 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			}
 			*((uint32_t *) value_addr) = tmp;
 		} else if (s->config_type == CFG_INCREMENT) {
-			(*((int *)value_addr))++;
+			/*
+			 * Extreme getopt_long fiddling.
+			 *
+			 * As per man page:
+			 * If flag is non-NULL, getopt_long() returns 0,
+			 * and flag  points to a variable which is set to
+			 * val if the option is found.
+			 *
+			 * So we need to increase 'val', not 'value_addr'.
+			 */
+			long_opts[option_index].val++;
 		} else if (s->config_type == CFG_LONG) {
 			*((unsigned long *)value_addr) = strtoul(optarg, &endptr, 0);
 			if (errno || optarg == endptr) {
