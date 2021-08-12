@@ -724,14 +724,6 @@ const char *nvme_ctrl_get_sqsize(nvme_ctrl_t c);
 const char *nvme_ctrl_get_transport(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_nqn() -
- * @c:
- *
- * Return: 
- */
-const char *nvme_ctrl_get_nqn(nvme_ctrl_t c);
-
-/**
  * nvme_ctrl_get_subsysnqn() -
  * @c:
  *

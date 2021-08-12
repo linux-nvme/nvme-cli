@@ -13,6 +13,7 @@
 #include <json-c/json.h>
 
 #include "fabrics.h"
+#include "log.h"
 
 #define json_object_add_value_string(o, k, v)			\
 	json_object_object_add(o, k, json_object_new_string(v))
@@ -151,7 +152,7 @@ void json_read_config(nvme_root_t r, const char *config_file)
 
 	json_root = json_object_from_file(config_file);
 	if (!json_root) {
-		fprintf(stderr, "Failed to read %s, %s\n",
+		nvme_msg(LOG_DEBUG, "Failed to read %s, %s\n",
 			config_file, json_util_get_last_err());
 		return;
 	}
@@ -268,7 +269,7 @@ int json_update_config(nvme_root_t r, const char *config_file)
 	}
 	if (json_object_to_file_ext(config_file, json_root,
 				    JSON_C_TO_STRING_PRETTY) < 0) {
-		fprintf(stderr, "Failed to write %s, %s\n",
+		nvme_msg(LOG_ERR, "Failed to write %s, %s\n",
 			config_file, json_util_get_last_err());
 		ret = -1;
 		errno = EIO;

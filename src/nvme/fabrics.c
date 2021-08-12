@@ -213,7 +213,7 @@ static int add_argument(char **argstr, const char *tok, const char *arg)
 	return 0;
 }
 
-static int build_options(nvme_ctrl_t c, char **argstr)
+static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 {
 	struct nvme_fabrics_config *cfg = nvme_ctrl_get_config(c);
 	const char *transport = nvme_ctrl_get_transport(c);
@@ -245,8 +245,8 @@ static int build_options(nvme_ctrl_t c, char **argstr)
 	}
 	if (!strcmp(nvme_ctrl_get_subsysnqn(c), NVME_DISC_SUBSYS_NAME))
 		discover = true;
-	hostnqn = nvme_ctrl_get_hostnqn(c);
-	hostid = nvme_ctrl_get_hostid(c);
+	hostnqn = nvme_host_get_hostnqn(h);
+	hostid = nvme_host_get_hostid(h);
 	if (add_argument(argstr, "transport", transport) ||
 	    add_argument(argstr, "traddr",
 			 nvme_ctrl_get_traddr(c)) ||
@@ -347,12 +347,14 @@ out_close:
 
 int nvmf_add_ctrl_opts(nvme_ctrl_t c, struct nvme_fabrics_config *cfg)
 {
+	nvme_subsystem_t s = nvme_ctrl_get_subsystem(c);
+	nvme_host_t h = nvme_subsystem_get_host(s);
 	char *argstr;
 	int ret;
 
 	cfg = merge_config(c, cfg);
 
-	ret = build_options(c, &argstr);
+	ret = build_options(h, c, &argstr);
 	if (ret)
 		return ret;
 
@@ -374,7 +376,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	nvme_ctrl_disable_sqflow(c, disable_sqflow);
 	nvme_ctrl_set_discovered(c, true);
 
-	ret = build_options(c, &argstr);
+	ret = build_options(h, c, &argstr);
 	if (ret)
 		return ret;
 
