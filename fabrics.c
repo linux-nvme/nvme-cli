@@ -439,8 +439,12 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		ret = ENOMEM;
 		goto out_free;
 	}
-	if (device && !strcmp(device, "none"))
-		device = NULL;
+	if (device) {
+		if (!strcmp(device, "none"))
+			device = NULL;
+		else if (!strncmp(device, "/dev/", 5))
+			device += 5;
+	}
 
 	if (!device && !transport && !traddr) {
 		ret = discover_from_conf_file(h, desc, connect, &cfg);
