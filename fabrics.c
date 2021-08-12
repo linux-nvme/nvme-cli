@@ -667,12 +667,11 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 			}
 			ret = nvme_disconnect_ctrl(c);
 			if (!ret)
-				printf("Disconnected %s\n",
-					nvme_ctrl_get_name(c));
+				printf("Disconnected %s\n", p);
 			else
 				nvme_msg(LOG_ERR,
 					 "Failed to disconnect %s: %s\n",
-					 nvme_ctrl_get_name(c), strerror(errno));
+					 p, strerror(errno));
 		}
 	}
 	nvme_free_tree(r);
