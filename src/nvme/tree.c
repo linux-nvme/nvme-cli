@@ -872,18 +872,25 @@ struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn, const char *transport,
 
 	if (!transport) {
 		nvme_msg(LOG_ERR, "No transport specified\n");
+		errno = EINVAL;
 		return NULL;
 	}
 	if (strncmp(transport, "loop", 4) && !traddr) {
                nvme_msg(LOG_ERR, "No transport address for '%s'\n", transport);
+	       errno = EINVAL;
 	       return NULL;
 	}
 	if (!subsysnqn) {
 		nvme_msg(LOG_ERR, "No subsystem NQN specified\n");
+		errno = EINVAL;
 		return NULL;
 	} else if (!strcmp(subsysnqn, NVME_DISC_SUBSYS_NAME))
 		discovery = true;
 	c = calloc(1, sizeof(*c));
+	if (!c) {
+		errno = ENOMEM;
+		return NULL;
+	}
 	c->fd = -1;
 	c->cfg.tos = -1;
 	list_head_init(&c->namespaces);
@@ -909,6 +916,7 @@ struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn, const char *transport,
 		 !strncmp(transport, "tcp", 3)) {
 		nvme_msg(LOG_ERR, "No trsvcid specified for '%s'\n",
 			 transport);
+		errno = EINVAL;
 		__nvme_free_ctrl(c);
 		c = NULL;
 	}
