@@ -524,6 +524,16 @@ typedef enum
     EOL_RRER                = 108,	/* Raw Read Error Rate */
 } EOL_LOG_PAGE_C0_OFFSETS;
 
+static __u16 nvme_wdc_feat_buf_len[0x100] = {
+	[NVME_FEAT_LBA_RANGE]       = 4096,
+	[NVME_FEAT_AUTO_PST]        = 256,
+	[NVME_FEAT_HOST_MEM_BUF]    = 4096,
+	[NVME_FEAT_HOST_ID]         = 8,
+	[NVME_FEAT_PLM_CONFIG]      = 512,
+	[NVME_FEAT_TIMESTAMP]       = 8,
+	[NVME_FEAT_HOST_BEHAVIOR]   = 512
+};
+
 
 typedef struct __attribute__((__packed__)) _WDC_DE_VU_FILE_META_DATA
 {
@@ -1974,6 +1984,7 @@ static int wdc_do_dump_e6(int fd, __u32 opcode,__u32 data_len,
 static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int data_area)
 {
 	struct nvme_telemetry_log_page_hdr *hdr;
+	struct nvme_id_ctrl ctrl;
 	size_t full_size, offset = WDC_TELEMETRY_HEADER_LENGTH;
 	int err = 0, output;
 	void *page_log;
@@ -2061,6 +2072,46 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 		break;
 	case 3:
 		full_size = (le16_to_cpu(hdr->dalb3) * WDC_TELEMETRY_BLOCK_SIZE) + WDC_TELEMETRY_HEADER_LENGTH;
+		break;
+	case 4:
+		err = nvme_identify_ctrl(fd, &ctrl);
+		if (err) {
+			perror("identify-ctrl");
+			goto close_output;
+		}
+		
+		if (posix_memalign(&buf, getpagesize(), nvme_wdc_feat_buf_len[NVME_FEAT_HOST_BEHAVIOR])) {
+			fprintf(stderr, "can not allocate feature payload\n");
+			errno = ENOMEM;
+			err = -1;
+			goto close_output;
+		}
+		memset(buf, 0, nvme_wdc_feat_buf_len[NVME_FEAT_HOST_BEHAVIOR]);
+
+		err = nvme_get_feature(fd, NVME_NSID_ALL, NVME_FEAT_HOST_BEHAVIOR, 0, 0,
+				0, nvme_wdc_feat_buf_len[NVME_FEAT_HOST_BEHAVIOR], buf, &result);
+		if (err > 0) {
+			nvme_show_status(err);
+		} else if (err < 0) {
+			perror("get-feature");
+		} else {
+			if ((ctrl.lpa & 64)) {
+				if (((unsigned char *)buf)[1] == 1)
+					full_size = (le32_to_cpu(hdr->dalb4) * WDC_TELEMETRY_BLOCK_SIZE) + WDC_TELEMETRY_HEADER_LENGTH;
+				else {
+					fprintf(stderr, "Data area 4 unsupported, Host Behavior Support ETDAS not set to 1\n");
+					errno = EINVAL;
+					err = -1;
+				}
+			} else {
+				fprintf(stderr, "Data area 4 unsupported, bit 6 of Log Page Attributes not set\n");
+				errno = EINVAL;
+				err = -1;
+			}
+		}
+		free(buf);
+		if (err)
+			goto close_output;
 		break;
 	default:
 		fprintf(stderr, "%s: Invalid data area requested, data area = %d\n", __func__, data_area);

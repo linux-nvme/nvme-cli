@@ -6468,7 +6468,9 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result,
 		printf("\tNon-Operational Power State Permissive Mode Enable (NOPPME): %s\n", (result & 1) ? "True" : "False");
 		break;
 	case NVME_FEAT_HOST_BEHAVIOR:
-		printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
+		printf("\tHost Behavior Support Advanced Command Retry Enable (ACRE): %s\n", (buf[0] == 1) ? "True" : "False");
+		printf("\tHost Behavior Support Extended Telemetry Data Area 4 Supported (ETDAS): %s\n", (buf[1] == 1) ? "True" : "False");
+		printf("\tHost Behavior Support LBA Format Extension Enable (LBAFEE): %s\n", (buf[2] == 1) ? "True" : "False");
 		break;
 	case NVME_FEAT_SANITIZE:
 		printf("\tNo-Deallocate Response Mode (NODRM) : %u\n", result & 0x1);

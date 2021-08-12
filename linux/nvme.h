@@ -576,6 +576,7 @@ struct nvme_id_uuid_list {
  * @dalb1: Data area 1 last block
  * @dalb2: Data area 2 last block
  * @dalb3: Data area 3 last block
+ * @dalb4: Data area 4 last block
  * @ctrlavail: Controller initiated data available
  * @ctrldgn: Controller initiated telemetry Data Generation Number
  * @rsnident: Reason Identifier
@@ -591,7 +592,9 @@ struct nvme_telemetry_log_page_hdr {
 	__le16	dalb1;
 	__le16	dalb2;
 	__le16	dalb3;
-	__u8	rsvd1[368];
+	__u8	rsvd1[2];
+	__le32	dalb4;
+	__u8	rsvd2[362];
 	__u8	ctrlavail;
 	__u8	ctrldgn;
 	__u8	rsnident[128];
