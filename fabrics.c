@@ -377,10 +377,10 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	enum nvme_print_flags flags;
 	nvme_root_t r;
 	nvme_host_t h;
+	nvme_ctrl_t c = NULL;
 	unsigned int verbose = 0;
 	int ret;
 	char *format = "normal";
-	const char *tmp_device;
 
 	struct nvme_fabrics_config cfg = {
 		.tos = -1,
@@ -442,38 +442,75 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	if (device && !strcmp(device, "none"))
 		device = NULL;
 
-	if (!device && !transport && !traddr)
+	if (!device && !transport && !traddr) {
 		ret = discover_from_conf_file(h, desc, connect, &cfg);
-	else {
-		nvme_ctrl_t c;
+		goto out_free;
+	}
 
+	if (device) {
+		c = nvme_scan_ctrl(r, device);
+		if (c) {
+			/* Check if device matches command-line options */
+			if (strcmp(nvme_ctrl_get_subsysnqn(c), nqn) ||
+			    strcmp(nvme_ctrl_get_transport(c), transport) ||
+			    strcmp(nvme_ctrl_get_traddr(c), traddr) ||
+			    (host_traddr && nvme_ctrl_get_host_traddr(c) &&
+			     strcmp(nvme_ctrl_get_host_traddr(c),
+				    host_traddr)) ||
+			    (host_iface && nvme_ctrl_get_host_iface(c) &&
+			     strcmp(nvme_ctrl_get_host_iface(c),
+				    host_iface)) ||
+			    (trsvcid && nvme_ctrl_get_trsvcid(c) &&
+			     strcmp(nvme_ctrl_get_trsvcid(c), trsvcid))) {
+				nvme_msg(LOG_WARNING,
+					 "ignoring ctrl device %s, "
+					 "command-line options do not match\n",
+					 device);
+				c = NULL;
+				persistent = false;
+			} else {
+				/*
+				 * If the controller device is found it must
+				 * be persistent, and shouldn't be disconnected
+				 * on exit.
+				 */
+				persistent = true;
+			}
+		} else {
+			/*
+			 * No controller found, fall back to create one.
+			 * But that controller cannot be persistent.
+			 */
+			nvme_msg(LOG_WARNING,
+				 "ctrl device %s not found%s\n", device,
+				 persistent ? ", ignoring --persistent" : "");
+			persistent = false;
+		}
+	}
+	if (!c) {
+		/* No device or non-matching device, create a new controller */
 		c = nvme_create_ctrl(nqn, transport, traddr,
 				     host_traddr, host_iface, trsvcid);
 		if (!c) {
-			ret = ENOMEM;
+			ret = errno;
 			goto out_free;
 		}
-		tmp_device = nvme_ctrl_get_name(c);
-		if (!tmp_device) {
-			errno = 0;
-			ret = nvmf_add_ctrl(h, c, &cfg, false);
-		} else if (strcmp(tmp_device, device)) {
-			device = NULL;
-			ret = 0;
-		}
-
-		if (!ret) {
-			ret = __discover(c, &cfg, raw, connect,
-					 persistent, flags);
-			if (!device && !persistent)
-				nvme_disconnect_ctrl(c);
-			nvme_free_ctrl(c);
-		} else {
-			nvme_msg(LOG_ERR, "no controller found\n");
+		ret = nvmf_add_ctrl(h, c, &cfg, false);
+		if (ret) {
+			nvme_msg(LOG_ERR,
+				 "failed to add controller, error %d\n", errno);
 			ret = errno;
-			nvme_free_ctrl(c);
+			goto out_free_ctrl;
 		}
 	}
+
+	ret = __discover(c, &cfg, raw, connect,
+			 persistent, flags);
+	if (!persistent)
+		nvme_disconnect_ctrl(c);
+
+out_free_ctrl:
+	nvme_free_ctrl(c);
 out_free:
 	if (hnqn)
 		free(hnqn);
@@ -661,7 +698,8 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 			c = nvme_scan_ctrl(r, p);
 			if (!c) {
 				nvme_msg(LOG_ERR,
-					 "Did not find device: %s\n", p);
+					 "Did not find device %s: %s\n",
+					 p, strerror(errno));
 				nvme_free_tree(r);
 				return errno;
 			}
