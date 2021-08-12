@@ -695,6 +695,8 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 
 		d = cfg.device;
 		while ((p = strsep(&d, ",")) != NULL) {
+			if (!strncmp(p, "/dev/", 5))
+				p += 5;
 			c = nvme_scan_ctrl(r, p);
 			if (!c) {
 				nvme_msg(LOG_ERR,
