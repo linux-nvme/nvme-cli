@@ -385,10 +385,8 @@ static int nvme_init_subsystem(nvme_subsystem_t s, const char *name,
 			       const char *path)
 {
 	s->model = nvme_get_attr(path, "model");
-	if (!s->model) {
-		errno = ENODEV;
-		return -1;
-	}
+	if (!s->model)
+		s->model = strdup("undefined");
 	s->serial = nvme_get_attr(path, "serial");
 	s->firmware = nvme_get_attr(path, "firmware_rev");
 	s->name = strdup(name);
@@ -1092,6 +1090,7 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		if (ret > 0)
 			ret = nvme_init_subsystem(s, subsys_name, path);
 		if (ret < 0) {
+			nvme_msg(LOG_ERR, "Failed to init subsystem %s\n", path);
 			free(path);
 			goto out_free_subsys;
 		}
