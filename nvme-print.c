@@ -5195,6 +5195,101 @@ void nvme_print_effects_log_pages(struct list_head *list,
 	}
 }
 
+const char *nvme_log_to_string(__u8 lid)
+{
+	switch (lid) {
+	case NVME_LOG_LID_SUPPORTED_LOG_PAGES:		return "Supported Log Pages";
+	case NVME_LOG_LID_ERROR:			return "Error Information";
+	case NVME_LOG_LID_SMART:			return "SMART Information";
+	case NVME_LOG_LID_FW_SLOT:			return "Firmware Slot Information";
+	case NVME_LOG_LID_CHANGED_NS:			return "Changed Namespace List";
+	case NVME_LOG_LID_CMD_EFFECTS:			return "Commands Supported and Effects";
+	case NVME_LOG_LID_DEVICE_SELF_TEST:		return "Device Self-test";
+	case NVME_LOG_LID_TELEMETRY_HOST:		return "Telemetry Host-Initiated";
+	case NVME_LOG_LID_TELEMETRY_CTRL:		return "Telemetry Controller-Initiated";
+	case NVME_LOG_LID_ENDURANCE_GROUP:		return "Endurance Group Information";
+	case NVME_LOG_LID_PREDICTABLE_LAT_NVMSET:	return "Predictable Latency Per NVM Set";
+	case NVME_LOG_LID_ANA:				return "Asymmetric Namespace Access";
+	case NVME_LOG_LID_PREDICTABLE_LAT_AGG:		return "Predictable Latency Event Aggregate";
+	case NVME_LOG_LID_PERSISTENT_EVENT:		return "Persistent Event Log";
+	case NVME_LOG_LID_LBA_STATUS:			return "LBA Status Information";
+	case NVME_LOG_LID_ENDURANCE_GRP_EVT:		return "Endurance Group Event Aggregate";
+	case NVME_LOG_LID_BOOT_PARTITION:		return "Boot Partition";
+	case NVME_LOG_LID_FID_SUPPORTED_EFFECTS:	return "FID Supported and Effects";
+	case NVME_LOG_LID_DISCOVER:			return "Discovery";
+	case NVME_LOG_LID_RESERVATION:			return "Reservation Notification";
+	case NVME_LOG_LID_SANITIZE:			return "Sanitize Status";
+	case NVME_LOG_LID_ZNS_CHANGED_ZONES:		return "Host Identifier";
+	default:					return "Unknown";
+	}
+}
+
+static void nvme_show_support_log_human(__u32 support, __u8 lid)
+{
+	const char *set = "supported";
+	const char *clr = "not supported";
+
+	printf("  LSUPP is %s\n", (support & 0x1) ? set : clr);
+	printf("  IOS is %s\n", ((support >> 0x1) & 0x1) ? set : clr);
+	if (lid == NVME_LOG_LID_PERSISTENT_EVENT) {
+		printf("  Establish Context and Read 512 Bytes of Header is %s\n",
+			((support >> 0x16) & 0x1) ? set : clr);
+	}
+}
+
+static void json_support_log(struct nvme_supported_log_pages *support_log)
+{
+	struct json_object *root;
+	struct json_object *valid;
+	struct json_object *valid_attrs;
+	unsigned int lid;
+	char key[128];
+	__u32 support;
+
+	root = json_create_object();
+	valid = json_create_object();
+
+	for (lid = 0; lid < 256; lid++) {
+		support = le32_to_cpu(support_log->lid_support[lid]);
+		if (support & 0x1) {
+			valid_attrs = json_create_object();
+			sprintf(key, "lid_0x%x ", lid);
+			json_object_add_value_uint(valid_attrs, key, support);
+			json_array_add_value_object(valid, valid_attrs);
+		}
+	}
+
+	json_object_add_value_object(root, "supported_logs", valid);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_supported_log(struct nvme_supported_log_pages *support_log,
+	const char *devname, enum nvme_print_flags flags)
+{
+	int lid, human = flags & VERBOSE;
+	__u32 support = 0;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)support_log, sizeof(*support_log));
+	else if (flags & JSON)
+		return json_support_log(support_log);
+
+	printf("Support Log Pages Deatils for %s:\n", devname);
+	for (lid = 0; lid < 256; lid++) {
+		support = le32_to_cpu(support_log->lid_support[lid]);
+		if (support & 0x1) {
+			printf("LID 0x%x (%s), supports 0x%x\n", lid, nvme_log_to_string(lid),
+				support);
+			if (human)
+				nvme_show_support_log_human(support, lid);
+			else
+				printf("\n");
+		}
+	}
+}
+
 uint64_t int48_to_long(__u8 *data)
 {
 	int i;

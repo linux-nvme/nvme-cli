@@ -32,6 +32,8 @@ void nvme_show_cmd_set_independent_id_ns(
 void nvme_show_resv_report(struct nvme_resv_status *status, int bytes, bool eds,
 	enum nvme_print_flags flags);
 void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges);
+void nvme_show_supported_log(struct nvme_supported_log_pages *support,
+	const char *devname, enum nvme_print_flags flags);
 void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
 	const char *devname, enum nvme_print_flags flags);
 void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,

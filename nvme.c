@@ -632,6 +632,56 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int get_supported_log_pages(int argc, char **argv, struct command *cmd,
+	struct plugin *plugin)
+{
+	const char *desc = "Retrieve supported logs and print the table.";
+	const char *verbose = "Increase output verbosity";
+	struct nvme_supported_log_pages supports;
+
+	int err = -1, fd;
+	enum nvme_print_flags flags;
+
+	struct config {
+		int   verbose;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
+		OPT_FLAG("verbose",       'v', &cfg.verbose,        verbose),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+
+	if (cfg.verbose)
+		flags |= VERBOSE;
+
+	err = nvme_get_log_supported_log_pages(fd, false, &supports);
+	if (!err)
+		nvme_show_supported_log(&supports, devicename, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("supported log pages");
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int get_error_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve specified number of "\

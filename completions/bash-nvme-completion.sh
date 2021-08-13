@@ -100,7 +100,8 @@ _cmds="list list-subsys id-ctrl id-ns \
 	ns-rescan show-regs discover connect-all \
 	connect disconnect disconnect-all gen-hostnqn \
 	show-hostnqn dir-receive dir-send virt-mgmt \
-	rpmb boot-part-log fid-support-effects-log"
+	rpmb boot-part-log fid-support-effects-log \
+	supported-log-pages"
 
 # Add plugins:
 for plugin in "${!_plugin_subcmds[@]}"; do
@@ -202,6 +203,9 @@ nvme_list_opts () {
 			--aen= -a --lpo= -o --lsp= -s --lsi= -S \
 			--rae -r --uuid-index= -U --csi= -y --ot -O \
 			--raw-binary -b"
+			;;
+		"supported-log-pages")
+		opts+=" --output-format= -o --human-readable -H"
 			;;
 		"telemetry-log")
 		opts+=" --output-file= -o --host-generate= -g \
