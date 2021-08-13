@@ -87,6 +87,12 @@ int nvme_subsys_filter(const struct dirent *d)
 	return 0;
 }
 
+int nvme_scan_ctrls(struct dirent ***ctrls)
+{
+	return scandir(nvme_ctrl_sysfs_dir, ctrls, nvme_ctrls_filter,
+		       alphasort);
+}
+
 int nvme_scan_subsystems(struct dirent ***subsys)
 {
 	return scandir(nvme_subsys_sysfs_dir, subsys, nvme_subsys_filter,
