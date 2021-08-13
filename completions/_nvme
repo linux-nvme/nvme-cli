@@ -53,6 +53,7 @@ _nvme () {
 	'show-regs:shows the controller registers; requires admin character device'
 	'boot-part-log: retrieve boot partition log'
 	'fid-support-effects-log:retrieve fid support and effects log'
+	'supported-log-pages: retrieve support log pages details'
 	'help:print brief descriptions of all nvme commands'
 	)
 
@@ -475,6 +476,16 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme capacity-mgmt options" _fwd
 			;;
+		(supported-log-pages)
+			local _support
+			_support=(
+			/dev/nvme':supply a device to use (required)'
+			--human-readable':show infos in readable format'
+			-H':alias of --human-readable'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme supported-log-pages options" _support
+			;;
 		(admin-passthru)
 			local _admin
 			_admin=(
@@ -857,11 +868,8 @@ _nvme () {
 			     security-send security-recv resv-acquire resv-register resv-release
 			     resv-report flush compare read write copy show-regs persistent-event-log
 				 pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
-<<<<<<< HEAD
-				 resv-notif-log capacity-mgmt id-domain boot-part-log
-=======
-				 resv-notif-log capacity-mgmt id-domain fid-support-effects-log
->>>>>>> nvme: add support for fid supported and effects log(lid = 0x12)
+				 resv-notif-log capacity-mgmt id-domain boot-part-log fid-support-effects-log
+				 supported-log-pages
 			   )
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
