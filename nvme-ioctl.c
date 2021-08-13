@@ -603,6 +603,12 @@ int nvme_effects_log(int fd, struct nvme_effects_log_page *effects_log)
 			NVME_NO_LOG_LSP, sizeof(*effects_log), effects_log);
 }
 
+int nvme_supported_log(int fd, struct nvme_support_log_pages *supports)
+{
+	return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_SUPPORTED_PAGES, false,
+		NVME_NO_LOG_LSP, sizeof(*supports), supports);
+}
+
 int nvme_discovery_log(int fd, struct nvmf_disc_rsp_page_hdr *log, __u32 size)
 {
 	return nvme_get_log(fd, 0, NVME_LOG_DISC, false, NVME_NO_LOG_LSP, size, log);

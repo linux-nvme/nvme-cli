@@ -1297,6 +1297,7 @@ enum {
 	NVME_SQ_PRIO_HIGH	= (1 << 1),
 	NVME_SQ_PRIO_MEDIUM	= (2 << 1),
 	NVME_SQ_PRIO_LOW	= (3 << 1),
+	NVME_LOG_SUPPORTED_PAGES	= 0x00,
 	NVME_LOG_ERROR		= 0x01,
 	NVME_LOG_SMART		= 0x02,
 	NVME_LOG_FW_SLOT	= 0x03,
@@ -1987,6 +1988,10 @@ enum {
 
 struct nvme_fid_support_effects {
 	__le32	fid_support[256];
+};
+
+struct nvme_support_log_pages {
+	__le32	lid_support[256];
 };
 
 #endif /* _LINUX_NVME_H */
