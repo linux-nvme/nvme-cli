@@ -100,7 +100,7 @@ _cmds="list list-subsys id-ctrl id-ns \
 	ns-rescan show-regs discover connect-all \
 	connect disconnect disconnect-all gen-hostnqn \
 	show-hostnqn dir-receive dir-send virt-mgmt \
-	rpmb"
+	rpmb boot-part-log"
 
 # Add plugins:
 for plugin in "${!_plugin_subcmds[@]}"; do
@@ -252,6 +252,10 @@ nvme_list_opts () {
 			;;
 		"resv-notif-log")
 		opts+=" --output-format= -o"
+			;;
+		"boot-part-log")
+		opts+=" --lsp -s --output-file= -f \
+			--output-format= -o"
 			;;
 		"get-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --sel= -s \

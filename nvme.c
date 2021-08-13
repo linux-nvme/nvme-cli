@@ -1287,6 +1287,116 @@ ret:
 
 }
 
+static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Retrieve Boot Partition " \
+		"log page and prints it, for the given " \
+		"device in either decoded format(default), " \
+		"json or binary.";
+	const char *lsp = "log specific field";
+	const char *fname = "boot partition data output file name";
+	struct nvme_boot_partition boot;
+	__u8 *bp_log;
+	enum nvme_print_flags flags;
+	int err = -1, fd = 0, output = 0;
+	__u32 bpsz = 0;
+
+	struct config {
+		__u8 lsp;
+		char *output_format;
+		char *file_name;
+	};
+
+	struct config cfg = {
+		.lsp = 0,
+		.file_name = NULL,
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("lsp",          's', &cfg.lsp,           lsp),
+		OPT_FILE("output-file",  'f', &cfg.file_name,     fname),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+
+	if (!cfg.file_name) {
+		fprintf(stderr, "Please provide an output file!\n");
+		errno = EINVAL;
+		err = -1;
+		goto close_fd;
+	}
+
+	if (cfg.lsp > 128) {
+		fprintf(stderr, "invalid lsp param: %u\n", cfg.lsp);
+		errno = EINVAL;
+		err = -1;
+		goto close_fd;
+	}
+
+	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	if (output < 0) {
+		fprintf(stderr, "Failed to open output file %s: %s!\n",
+				cfg.file_name, strerror(errno));
+		err = output;
+		goto close_fd;
+	}
+
+	err = nvme_get_log_boot_partition(fd, false, cfg.lsp,
+					  sizeof(boot), &boot);
+	if (err < 0) {
+		perror("boot partition log");
+		goto close_output;
+	} else if (err) {
+		nvme_show_status(err);
+		goto close_output;
+	}
+
+	bpsz = (boot.bpinfo & 0x7fff) * 128 * 1024;
+	bp_log = calloc(sizeof(boot) + bpsz, 1);
+	if (!bp_log) {
+		perror("could not alloc buffer for boot partition log");
+		errno = ENOMEM;
+		err = -1;
+		goto close_output;
+	}
+
+	err = nvme_get_log_boot_partition(fd, false, cfg.lsp,
+					  sizeof(boot) + bpsz,
+					  (struct nvme_boot_partition *)bp_log);
+	if (!err)
+		nvme_show_boot_part_log(&bp_log, devicename, flags, sizeof(boot) + bpsz);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("boot partition log");
+
+	err = write(output, (void *) bp_log + sizeof(boot), bpsz);
+	if (err != bpsz) {
+		fprintf(stderr, "Failed to flush all data to file!\n");
+	} else {
+		printf("Data flushed into file %s\n", cfg.file_name);
+	}
+	err = 0;
+
+	free(bp_log);
+
+close_output:
+	close(output);
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int get_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve desired number of bytes "\
