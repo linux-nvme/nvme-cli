@@ -55,7 +55,7 @@ endif
 libnvme_objs := $(patsubst %.c,%.ol,$(libnvme_srcs))
 libnvme_sobjs := $(patsubst %.c,%.os,$(libnvme_srcs))
 
-$(libnvme_objs) $(libnvme_sobjs): $(libnvme_api) $(libnvme_private) $(libccan_objs)
+$(libnvme_objs) $(libnvme_sobjs): $(libnvme_api) $(libnvme_priv) $(libccan_objs)
 
 %.os: %.c
 	$(QUIET_CC)$(CC) $(SO_CFLAGS) -c -o $@ $<

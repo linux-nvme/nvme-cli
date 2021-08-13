@@ -71,8 +71,6 @@ struct nvme_ctrl {
 	char *queue_count;
 	char *serial;
 	char *sqsize;
-	char *hostnqn;
-	char *hostid;
 	char *transport;
 	char *subsysnqn;
 	char *traddr;
