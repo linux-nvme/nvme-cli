@@ -956,6 +956,13 @@ struct nvme_resv_notif_log {
 	__u8	rsvd16[48];
 };
 
+struct nvme_boot_part_hdr {
+	__u8 	lid;
+	__u8	rsvd1[3];
+	__le32	bpinfo;
+	__u8    rsvd8[8];
+};
+
 enum {
 	NVME_SMART_CRIT_SPARE		= 1 << 0,
 	NVME_SMART_CRIT_TEMPERATURE	= 1 << 1,
@@ -1288,6 +1295,7 @@ enum {
 	NVME_LOG_PERSISTENT_EVENT   = 0x0d,
 	NVME_LOG_LBA_STATUS	= 0x0e,
 	NVME_LOG_ENDURANCE_GROUP_EVENT_AGG = 0x0f,
+	NVME_LOG_BOOT_PARTITION	= 0x15,
 	NVME_LOG_DISC		= 0x70,
 	NVME_LOG_RESERVATION	= 0x80,
 	NVME_LOG_SANITIZE	= 0x81,

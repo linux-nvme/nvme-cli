@@ -1795,6 +1795,41 @@ void nvme_show_resv_notif_log(struct nvme_resv_notif_log *resv,
 		le32_to_cpu(resv->nsid));
 }
 
+static void json_boot_part_log(void *bp_log)
+{
+	struct nvme_boot_part_hdr *hdr;
+	struct json_object *root;
+
+	hdr = bp_log;
+	root = json_create_object();
+
+	json_object_add_value_uint(root, "count", hdr->lid);
+	json_object_add_value_uint(root, "abpid",
+		(le32_to_cpu(hdr->bpinfo) >> 31) & 0x1);
+	json_object_add_value_uint(root, "bpsz",
+		le32_to_cpu(hdr->bpinfo) & 0x7fff);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_boot_part_log(void *bp_log, const char *devname,
+	__u32 size, enum nvme_print_flags flags)
+{
+	struct nvme_boot_part_hdr *hdr;
+	if (flags & BINARY)
+		return d_raw((unsigned char *)bp_log, size);
+	if (flags & JSON)
+		return json_boot_part_log(bp_log);
+
+	hdr = bp_log;
+	printf("Boot Partition Log for device: %s\n", devname);
+	printf("Log ID: %u\n", hdr->lid);
+	printf("Boot Partition Size: %u KiB\n", le32_to_cpu(hdr->bpinfo) & 0x7fff);
+	printf("Active BPID: %u\n", (le32_to_cpu(hdr->bpinfo) >> 31) & 0x1);
+}
+
 static void nvme_show_subsystem(struct nvme_subsystem *s)
 {
 	int i;

@@ -50,6 +50,7 @@ _nvme () {
 	'write:submit a write command'
 	'capacity-mgmt: submit capacity management command'
 	'show-regs:shows the controller registers; requires admin character device'
+	'boot-part-log: retrieve boot partition log'
 	'help:print brief descriptions of all nvme commands'
 	)
 
@@ -342,6 +343,18 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme resv-notif-log options" _resvnotiflog
+			;;
+		(boot-part-log)
+			local _bootpartlog
+			_bootpartlog=(
+			/dev/nvme':supply a device to use (required)'
+			--lsp=': log specific field'
+			-s':alias to --lsp'
+			--output-file=': boot partition data output write'
+			-f':alias for --output-file'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme boot-part-log options" _bootpartlog
 			;;
 		(get-feature)
 			local _getf
@@ -820,7 +833,7 @@ _nvme () {
 			     security-send security-recv resv-acquire resv-register resv-release
 			     resv-report flush compare read write copy show-regs persistent-event-log
 				 pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
-				 resv-notif-log capacity-mgmt id-domain
+				 resv-notif-log capacity-mgmt id-domain boot-part-log
 			   )
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h

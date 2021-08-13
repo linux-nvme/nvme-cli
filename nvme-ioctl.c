@@ -654,6 +654,12 @@ int nvme_resv_notif_log(int fd, struct nvme_resv_notif_log *resv)
 		NVME_NO_LOG_LSP, sizeof(*resv), resv);
 }
 
+int nvme_boot_part_log(int fd, __u8 lsp, void *data, __u32 size)
+{
+	return nvme_get_log(fd, NVME_NSID_ALL, NVME_LOG_BOOT_PARTITION,
+			false, lsp, size, data);
+}
+
 int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
 		 __u32 cdw12, __u32 cdw14, __u32 data_len, void *data, __u32 *result)
 {
