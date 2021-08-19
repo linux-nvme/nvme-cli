@@ -475,16 +475,15 @@ static int nvme_scan_subsystem(struct nvme_host *h, char *name,
 		goto free_path;
 	}
 	s = nvme_lookup_subsystem(h, name, subsysnqn);
+	free(subsysnqn);
 	if (!s) {
-		free(subsysnqn);
 		errno = ENOMEM;
 		goto free_path;
 	}
-	free(subsysnqn);
 	if (!s->name) {
 		ret = nvme_init_subsystem(s, name, path);
 		if (ret < 0)
-			return ret;
+			goto free_path;
 	}
 
 	nvme_subsystem_scan_namespaces(s);
@@ -1112,7 +1111,6 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 
 	c->address = nvme_get_attr(path, "address");
 	if (!c->address) {
-		free(path);
 		errno = ENXIO;
 		ret = -1;
 		goto out_free_name;
@@ -1136,9 +1134,12 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 			       subsys_name);
 		if (ret > 0)
 			ret = nvme_init_subsystem(s, subsys_name, path);
+		else
+			path = NULL;
 		if (ret < 0) {
 			nvme_msg(LOG_ERR, "Failed to init subsystem %s\n", path);
-			free(path);
+			if (path)
+				free(path);
 			goto out_free_subsys;
 		}
 	}
@@ -1235,6 +1236,7 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 		return NULL;
 	}
 	s = nvme_lookup_subsystem(h, NULL, subsysnqn);
+	free(subsysnqn);
 	if (!s) {
 		free(path);
 		errno = ENOMEM;
@@ -1285,7 +1287,6 @@ static int nvme_subsystem_scan_ctrl(struct nvme_subsystem *s, char *name)
 	}
 	nvme_ctrl_scan_namespaces(c);
 	nvme_ctrl_scan_paths(c);
-	free(path);
 	return 0;
 }
 
