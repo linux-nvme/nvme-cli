@@ -79,22 +79,10 @@ static int compare_fw_version(const char *fw1, const char *fw2)
 
 #define STR_VER_SIZE            (5)
 
-int getlogpage_format_type(char *fw_ver)
+int getlogpage_format_type(char *model_name)
 {
-    char fw_ver_local[STR_VER_SIZE];
-    strncpy(fw_ver_local, fw_ver, STR_VER_SIZE);
-    *(fw_ver_local + STR_VER_SIZE - 1) = '\0';
-    if ( IS_RAISIN(fw_ver_local)
-        || IS_KUMQUAT(fw_ver_local)
-        || IS_LOQUAT(fw_ver_local)
-        )
-    {
-        return INTEL_FORMAT;
-    }
-    else
-    {
-        return MEMBLAZE_FORMAT;
-    }
+    const char *boundary_model_name = "P5920";
+    return (strncmp(model_name, boundary_model_name, strlen(boundary_model_name)) < 0) ? MEMBLAZE_FORMAT : INTEL_FORMAT;
 }
 
 static __u32 item_id_2_u32(struct nvme_memblaze_smart_log_item *item)
@@ -392,7 +380,7 @@ static int show_memblaze_smart_log(int fd, __u32 nsid, const char *devname,
         ctrl.fr[0], ctrl.fr[1], ctrl.fr[2], ctrl.fr[3],
         ctrl.fr[4], ctrl.fr[5], ctrl.fr[6]);
 
-    if (getlogpage_format_type(fw_ver)) // Intel Format & new format
+    if (getlogpage_format_type(ctrl.mn)) // Intel Format & new format
     {
         show_memblaze_smart_log_new(smart, nsid, devname);
     }
