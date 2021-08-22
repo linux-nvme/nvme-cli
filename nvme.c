@@ -1566,6 +1566,53 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int get_fid_support_effects_log(int argc, char **argv, struct command *cmd,
+	struct plugin *plugin)
+{
+	const char *desc = "Retrieve FID Support and Effects log and show it.";
+	const char *human_readable = "show log in readable format";
+	struct nvme_fid_supported_effects_log fid_support_log;
+	enum nvme_print_flags flags;
+	int fd, err = -1;
+
+	struct config {
+		int   human_readable;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
+		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+	if (cfg.human_readable)
+		flags |= VERBOSE;
+
+	err = nvme_get_log_fid_supported_effects(fd, false, &fid_support_log);
+	if (!err)
+		nvme_show_fid_support_effects_log(&fid_support_log, devicename, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("fid support effects log");
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Show controller list information for the subsystem the "\

@@ -80,6 +80,8 @@ void nvme_show_resv_notif_log(struct nvme_resv_notification_log *resv,
 	const char *devname, enum nvme_print_flags flags);
 void nvme_show_boot_part_log(void *bp_log, const char *devname,
 	__u32 size, enum nvme_print_flags flags);
+void nvme_show_fid_support_effects_log(struct nvme_fid_supported_effects_log *fid_log,
+	const char *devname, enum nvme_print_flags flags);
 void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags);
 void nvme_show_single_property(int offset, uint64_t prop, int human);
 void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flags);
