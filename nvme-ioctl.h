@@ -122,6 +122,7 @@ int nvme_lba_status_log(int fd, void *lba_status, bool rae,
 		__u32 size);
 int nvme_resv_notif_log(int fd, struct nvme_resv_notif_log *resv);
 int nvme_boot_part_log(int fd, __u8 lsp, void *data, __u32 size);
+int nvme_fid_support_effects_log(int fd, struct nvme_fid_support_effects *fid_log);
 int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10,
 		 __u32 cdw11, __u32 cdw12, __u32 cdw14, __u32 data_len, void *data,
 		 __u32 *result);
