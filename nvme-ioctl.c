@@ -665,6 +665,12 @@ int nvme_boot_part_log(int fd, __u8 lsp, void *data, __u32 size)
 			false, lsp, size, data);
 }
 
+int nvme_fid_support_effects_log(int fd, struct nvme_fid_support_effects *fid_log)
+{
+	return nvme_get_log(fd, 0, NVME_LOG_FID_SUPPORT_EFFECTS, false,
+		NVME_NO_LOG_LSP, sizeof(*fid_log), fid_log);
+}
+
 int nvme_feature(int fd, __u8 opcode, __u32 nsid, __u32 cdw10, __u32 cdw11,
 		 __u32 cdw12, __u32 cdw14, __u32 data_len, void *data, __u32 *result)
 {
