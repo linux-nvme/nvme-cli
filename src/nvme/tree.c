@@ -830,9 +830,9 @@ static void __nvme_free_ctrl(nvme_ctrl_t c)
 	free(c);
 }
 
-/* Stub for SWIG */
 void nvme_free_ctrl(nvme_ctrl_t c)
 {
+	__nvme_free_ctrl(c);
 }
 
 #define ____stringify(x...) #x
