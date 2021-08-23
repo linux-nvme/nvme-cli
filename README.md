@@ -1,6 +1,20 @@
 # nvme-cli
 NVM-Express user space tooling for Linux.
 
+When cloning from source, you will need the libnvme submodule, so use:
+
+    $ git clone --recurse-submodules https://github.com/linux-nvme/nvme-cli
+
+If you already cloned without recursing submodules, you will need to initialize
+and update it:
+
+    $ git submodule init --update
+
+Or as two commands:
+
+    $ git submodule init
+    $ git submodule update
+
 To install, run:
 
     $ make
