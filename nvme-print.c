@@ -5380,6 +5380,7 @@ const char *nvme_feature_to_string(enum nvme_features_id feature)
 	case NVME_FEAT_FID_HOST_BEHAVIOR:return "Host Behavior";
 	case NVME_FEAT_FID_SANITIZE:	return "Sanitize";
 	case NVME_FEAT_FID_LBA_STS_INTERVAL: return "LBA Status Interval";
+	case NVME_FEAT_FID_SPINUP_CONTROL:	return "Spinup Control";
 	}
 	/*
 	 * We don't use the "default:" statement to let the compiler warning if
@@ -5840,6 +5841,9 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		break;
 	case NVME_FEAT_FID_RRL:
 		printf("\tRead Recovery Level (RRL): %u\n", result & 0xf);
+		break;
+	case NVME_FEAT_FID_SPINUP_CONTROL:
+		printf("\tSpinup control feature Enabled: %s\n", (result & 1) ? "True" : "False");
 		break;
 	default:
 		break;
