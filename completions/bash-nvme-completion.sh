@@ -154,6 +154,10 @@ nvme_list_opts () {
 		opts+=" --namespace-id= -n --cntid= -c \
 			--output-format= -o"
 			;;
+		"cmdset-ind-id-ns")
+		opts+=" --namespace-id= -n --raw-binary -b \
+			--human-readable -H --output-format= -o"
+			;;
 		"id-domain")
 		opts+=" --dom-id= -d --output-format= -o"
 			;;
