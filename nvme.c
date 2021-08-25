@@ -2233,6 +2233,73 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int cmd_set_independent_id_ns(int argc, char **argv,
+    struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Send an I/O Command Set Independent Identify "\
+		"Namespace command to the given device, returns properties of the "\
+		"specified namespace in human-readable or binary or json format.";
+	const char *raw = "show identify in binary format";
+	const char *human_readable = "show identify in readable format";
+	const char *namespace_id = "identifier of desired namespace";
+
+	enum nvme_print_flags flags;
+	struct nvme_id_independent_id_ns ns;
+	int err = -1, fd;
+
+	struct config {
+		__u32 namespace_id;
+		int   raw_binary;
+		int   human_readable;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.namespace_id    = 0,
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id),
+		OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw),
+		OPT_FMT("output-format",    'o', &cfg.output_format,   output_format),
+		OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+	if (cfg.raw_binary)
+		flags = BINARY;
+	if (cfg.human_readable)
+		flags |= VERBOSE;
+
+	if (!cfg.namespace_id) {
+		err = cfg.namespace_id = nvme_get_nsid(fd, &cfg.namespace_id);
+		if (err < 0) {
+			perror("get-namespace-id");
+			goto close_fd;
+		}
+	}
+
+	err = nvme_identify_independent_identify_ns(fd, cfg.namespace_id, &ns);
+	if (!err)
+		nvme_show_cmd_set_independent_id_ns(&ns, cfg.namespace_id, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("I/O command set independent identify namespace");
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send an Identify Namespace Granularity List command to the "\
