@@ -5417,6 +5417,7 @@ const char *nvme_feature_to_string(enum nvme_feat feature)
 	case NVME_FEAT_SANITIZE:	return "Sanitize";
 	case NVME_MI_FEAT_CTRL_METADATA:return "MI Controller Metadata";
 	case NVME_MI_FEAT_NS_METADATA:	return "MI Namespace Metadata";
+	case NVME_FEAT_SPINUP_CONTROL: return "Spinup Control";
 	}
 	/*
 	 * We don't use the "default:" statement to let the compiler warning if
@@ -6160,6 +6161,9 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result,
 	case NVME_MI_FEAT_CTRL_METADATA:
 	case NVME_MI_FEAT_NS_METADATA:
 		nvme_show_mi_host_metadata(fid, (struct nvme_mi_host_metadata *)buf);
+		break;
+	case NVME_FEAT_SPINUP_CONTROL:
+		printf("\tSpinup control feature Enabled: %s\n", (result & 1) ? "True" : "False");
 		break;
 	}
 }
