@@ -434,6 +434,20 @@ struct nvme_id_ns {
 	__u8			vs[3712];
 };
 
+struct nvme_cmd_set_independent_id_ns {
+	__u8			nsfeat;
+	__u8			nmic;
+	__u8			rescap;
+	__u8			fpi;
+	__le32			anagrpid;
+	__u8			nsattr;
+	__u8			rsvd9;
+	__le16			nvmsetid;
+	__le16			endgid;
+	__u8			nstat;
+	__u8			rsvd15[4081];
+};
+
 struct nvme_id_iocs {
 	__le64 iocs[NVME_NUM_IOCS_COMBINATIONS];
 };
@@ -447,6 +461,7 @@ enum {
 	NVME_ID_CNS_CSI_ID_NS		= 0x05,
 	NVME_ID_CNS_CSI_ID_CTRL		= 0x06,
 	NVME_ID_CNS_CSI_NS_ACTIVE_LIST = 0x07,
+	NVME_ID_CNS_CS_INDEPENDENT_ID_NS = 0x08,
 	NVME_ID_CNS_NS_PRESENT_LIST	= 0x10,
 	NVME_ID_CNS_NS_PRESENT		= 0x11,
 	NVME_ID_CNS_CTRL_NS_LIST	= 0x12,

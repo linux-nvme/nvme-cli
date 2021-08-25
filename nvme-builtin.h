@@ -17,6 +17,7 @@ COMMAND_LIST(
 	ENTRY("nvm-id-ctrl", "Send NVMe Identify Controller NVM Command Set, display structure", nvm_id_ctrl)
 	ENTRY("primary-ctrl-caps", "Send NVMe Identify Primary Controller Capabilities", primary_ctrl_caps)
 	ENTRY("list-secondary", "List Secondary Controllers associated with a Primary Controller", list_secondary_ctrl)
+	ENTRY("cmdset-ind-id-ns", "I/O Command Set Independent Identify Namespace", cmd_set_independent_id_ns)
 	ENTRY("ns-descs", "Send NVMe Namespace Descriptor List, display structure", ns_descs)
 	ENTRY("id-nvmset", "Send NVMe Identify NVM Set List, display structure", id_nvmset)
 	ENTRY("id-uuid", "Send NVMe Identify UUID List, display structure", id_uuid)
