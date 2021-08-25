@@ -10,6 +10,7 @@ _nvme () {
 	'id-ctrl:display information about the controller'
 	'id-ns:display information about the namespace'
 	'list-ns:identify all namespace(s) attached'
+	'cmdset-ind-id-ns':display I/O Command Set Independent information about the namespace'
 	'id-iocs:display information about I/O command sets'
 	'id-domain:display information about domain list'
 	'create-ns:create a new namespace before attachment'
@@ -104,6 +105,20 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme list-ns options" _listns
+			;;
+		(cmdset-ind-id-ns)
+			local _cmdset_ind_idns
+			_cmdset_ind_idns=(
+			/dev/nvme':supply a device to use (required)'
+			--namespace-id=':show infos for namespace <nsid>'
+			-n':alias of --namespace-id'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			--human-readable':show infos in readable format'
+			-H':alias of --human-readable'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme cmdset-ind-id-ns options" _cmdset_ind_idns
 			;;
 		(id-iocs)
 			local _idiocs
