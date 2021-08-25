@@ -6152,8 +6152,8 @@ void nvme_feature_show_fields(enum nvme_feat fid, unsigned int result,
 		printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
 		break;
 	case NVME_FEAT_SANITIZE:
-                printf("\tNo-Deallocate Response Mode (NODRM) : %u\n", result & 0x1);
-                break;
+		printf("\tNo-Deallocate Response Mode (NODRM) : %u\n", result & 0x1);
+		break;
 	case NVME_FEAT_RRL:
 		printf("\tRead Recovery Level (RRL): %u\n", result & 0xf);
 		break;
