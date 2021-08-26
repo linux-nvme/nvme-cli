@@ -14,6 +14,7 @@ SYNOPSIS
 				   [--zsa=<NUM>, -z <NUM>]
 				   [--data-len=<IONUM>, -l <IONUM>]
 				   [-data=<FILE>, -d <FILE>]
+				   [--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -54,6 +55,9 @@ OPTIONS
 -data=<FILE>::
 	Optional file for data (default stdin)
 
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

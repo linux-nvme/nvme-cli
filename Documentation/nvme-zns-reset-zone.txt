@@ -9,8 +9,9 @@ SYNOPSIS
 --------
 [verse]
 'nvme zns reset-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
-			       [--start-lba=<LBA> | -s <LBA>]
-			       [--select-all | -a]
+				    [--start-lba=<LBA> | -s <LBA>]
+				    [--select-all | -a]
+				    [--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -36,6 +37,10 @@ OPTIONS
 -a::
 --select-all::
 	Select all zones for this action
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------
