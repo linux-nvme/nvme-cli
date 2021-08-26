@@ -873,7 +873,9 @@ struct nvme_persistent_event_log_head {
 	__u8	sn[20];
 	__u8	mn[40];
 	__u8	subnqn[256];
-	__u8    rsvd372[108];
+	__le16  gen_number;
+	__le32  rci;
+	__u8    rsvd378[102];
 	__u8	supp_event_bm[32];
 } __attribute__((packed));
 

@@ -1105,6 +1105,10 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 		json_object_add_value_string(root, "sn", sn);
 		json_object_add_value_string(root, "mn", mn);
 		json_object_add_value_string(root, "subnqn", subnqn);
+		json_object_add_value_uint(root, "gen_number",
+			le16_to_cpu(pevent_log_head->gen_number));
+		json_object_add_value_uint(root, "rci",
+			le32_to_cpu(pevent_log_head->rci));
 		for (int i = 0; i < 32; i++) {
 			if (pevent_log_head->supp_event_bm[i] == 0)
 				continue;
@@ -1355,6 +1359,25 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 	json_free_object(root);
 }
 
+static void nvme_show_persistent_event_log_rci(__le32 pel_header_rci)
+{
+	__u32 rci = le32_to_cpu(pel_header_rci);
+	__u32 rsvd19 = (rci & 0xfff80000) >> 19;
+	__u8 rce = (rci & 0x40000) >> 18;
+	__u8 rcpit = (rci & 0x30000) >> 16;
+	__u16 rcpid = rci & 0xffff;
+
+	if(rsvd19)
+		printf("  [31:19] : %#x\tReserved\n", rsvd19);
+	printf("\tReporting Context Exists (RCE): %s(%u)\n",
+		rce ? "true" : "false", rce);
+	printf("\tReporting Context Port Identifier Type (RCPIT): %u(%s)\n", rcpit,
+		(rcpit == 0x00) ? "Does not already exist" :
+		(rcpit == 0x01) ? "NVM subsystem port" :
+		(rcpit == 0x10) ? "NVMe-MI port" : "Reserved");
+	printf("\tReporting Context Port Identifier (RCPID): %#x\n\n", rcpid);
+}
+
 void nvme_show_persistent_event_log(void *pevent_log_info,
 	__u8 action, __u32 size, const char *devname,
 	enum nvme_print_flags flags)
@@ -1375,6 +1398,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 	struct nvme_persistent_event_log_head *pevent_log_head;
 	struct nvme_persistent_event_entry_head *pevent_entry_head;
 
+	int human = flags & VERBOSE;
 	if (flags & BINARY)
 		return d_raw((unsigned char *)pevent_log_info, size);
 	if (flags & JSON)
@@ -1410,6 +1434,12 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 		printf("NVM Subsystem NVMe Qualified Name (SUBNQN): %-.*s\n",
 			(int)sizeof(pevent_log_head->subnqn),
 			pevent_log_head->subnqn);
+		printf("Generation Number: %u\n",
+			le16_to_cpu(pevent_log_head->gen_number));
+		printf("Reporting Context Information (RCI): %u\n",
+			le32_to_cpu(pevent_log_head->rci));
+		if(human)
+			nvme_show_persistent_event_log_rci(pevent_log_head->rci);
 		printf("Supported Events Bitmap: ");
 		for (int i = 0; i < 32; i++) {
 			if (pevent_log_head->supp_event_bm[i] == 0)
