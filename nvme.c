@@ -929,7 +929,7 @@ static int get_persistent_event_log(int argc, char **argv,
 	const char *log_len = "number of bytes to retrieve";
 	const char *raw = "use binary output";
 	void *pevent_log_info;
-	struct nvme_persistent_event_log_head *pevent_log_head = NULL;
+	struct nvme_persistent_event_log_head *pevent_log_head, *collected_head;
 	enum nvme_print_flags flags;
 	int err = -1, fd;
 	bool huge;
@@ -985,22 +985,22 @@ static int get_persistent_event_log(int argc, char **argv,
 			sizeof(*pevent_log_head), pevent_log_head);
 	if (err < 0) {
 		perror("persistent event log");
-		goto close_fd;
+		goto free_head;
 	} else if (err) {
 		nvme_show_status(err);
-		goto close_fd;
+		goto free_head;
 	}
 
 	if (cfg.action == NVME_PEVENT_LOG_RELEASE_CTX) {
 		printf("Releasing Persistent Event Log Context\n");
-		goto close_fd;
+		goto free_head;
 	}
 
 	if (!cfg.log_len && cfg.action != NVME_PEVENT_LOG_EST_CTX_AND_READ) {
 		cfg.log_len = le64_to_cpu(pevent_log_head->tll);
 	} else if (!cfg.log_len && cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ) {
 		printf("Establishing Persistent Event Log Context\n");
-		goto close_fd;
+		goto free_head;
 	}
 
 	/*
@@ -1018,22 +1018,39 @@ static int get_persistent_event_log(int argc, char **argv,
 		perror("could not alloc buffer for persistent event log page\n");
 		errno = ENOMEM;
 		err = -1;
-		goto close_fd;
+		goto free_head;
 	}
 	err = nvme_persistent_event_log(fd, cfg.action,
 		cfg.log_len, pevent_log_info);
-	if (!err)
+	if (!err) {
+		err = nvme_persistent_event_log(fd, cfg.action,
+				sizeof(*pevent_log_head), pevent_log_head);
+		if (err < 0) {
+			perror("persistent event log");
+			goto free;
+		} else if (err) {
+			nvme_show_status(err);
+			goto free;
+		}
+		collected_head = pevent_log_info;
+		if(collected_head->gen_number != pevent_log_head->gen_number) {
+			printf("Collected Persistent Event Log may be invalid, "\
+				"Re-read the log is reiquired\n");
+			goto free;
+		}
 		nvme_show_persistent_event_log(pevent_log_info, cfg.action,
 			cfg.log_len, devicename, flags);
+	}
 	else if (err > 0)
 		nvme_show_status(err);
 	else
 		perror("persistent event log");
 
+free:
 	nvme_free(pevent_log_info, huge);
-
-close_fd:
+free_head:
 	free(pevent_log_head);
+close_fd:
 	close(fd);
 ret:
 	return nvme_status_to_errno(err, false);
