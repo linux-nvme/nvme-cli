@@ -1105,6 +1105,10 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 		json_object_add_value_string(root, "sn", sn);
 		json_object_add_value_string(root, "mn", mn);
 		json_object_add_value_string(root, "subnqn", subnqn);
+		json_object_add_value_uint(root, "gen_number",
+			le16_to_cpu(pevent_log_head->gen_number));
+		json_object_add_value_uint(root, "rci",
+			le32_to_cpu(pevent_log_head->rci));
 		for (int i = 0; i < 32; i++) {
 			if (pevent_log_head->supp_event_bm[i] == 0)
 				continue;
@@ -1355,6 +1359,25 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 	json_free_object(root);
 }
 
+static void nvme_show_persistent_event_log_rci(__le32 pel_header_rci)
+{
+	__u32 rci = le32_to_cpu(pel_header_rci);
+	__u32 rsvd19 = (rci & 0xfff80000) >> 19;
+	__u8 rce = (rci & 0x40000) >> 18;
+	__u8 rcpit = (rci & 0x30000) >> 16;
+	__u16 rcpid = rci & 0xffff;
+
+	if(rsvd19)
+		printf("  [31:19] : %#x\tReserved\n", rsvd19);
+	printf("\tReporting Context Exists (RCE): %s(%u)\n",
+		rce ? "true" : "false", rce);
+	printf("\tReporting Context Port Identifier Type (RCPIT): %u(%s)\n", rcpit,
+		(rcpit == 0x00) ? "Does not already exist" :
+		(rcpit == 0x01) ? "NVM subsystem port" :
+		(rcpit == 0x10) ? "NVMe-MI port" : "Reserved");
+	printf("\tReporting Context Port Identifier (RCPID): %#x\n\n", rcpid);
+}
+
 void nvme_show_persistent_event_log(void *pevent_log_info,
 	__u8 action, __u32 size, const char *devname,
 	enum nvme_print_flags flags)
@@ -1375,6 +1398,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 	struct nvme_persistent_event_log_head *pevent_log_head;
 	struct nvme_persistent_event_entry_head *pevent_entry_head;
 
+	int human = flags & VERBOSE;
 	if (flags & BINARY)
 		return d_raw((unsigned char *)pevent_log_info, size);
 	if (flags & JSON)
@@ -1410,6 +1434,12 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 		printf("NVM Subsystem NVMe Qualified Name (SUBNQN): %-.*s\n",
 			(int)sizeof(pevent_log_head->subnqn),
 			pevent_log_head->subnqn);
+		printf("Generation Number: %u\n",
+			le16_to_cpu(pevent_log_head->gen_number));
+		printf("Reporting Context Information (RCI): %u\n",
+			le32_to_cpu(pevent_log_head->rci));
+		if(human)
+			nvme_show_persistent_event_log_rci(pevent_log_head->rci);
 		printf("Supported Events Bitmap: ");
 		for (int i = 0; i < 32; i++) {
 			if (pevent_log_head->supp_event_bm[i] == 0)
@@ -3592,6 +3622,88 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	}
 }
 
+static void nvme_show_cmd_set_independent_id_ns_nsfeat(__u8 nsfeat)
+{
+	__u8 rsvd5 = (nsfeat & 0xE0) >> 5;
+	__u8 rmedia = (nsfeat & 0x10) >> 4;
+	__u8 uidreuse = (nsfeat & 0x8) >> 3;
+	__u8 rsvd0 = (nsfeat & 0x7);
+	if (rsvd5)
+		printf("  [7:5] : %#x\tReserved\n", rsvd5);
+	printf("  [4:4] : %#x\tNamespace %sstore data on rotational media\n",
+		rmedia, rmedia ? "" : "does not ");
+	printf("  [3:3] : %#x\tNGUID and EUI64 fields if non-zero, %sReused\n",
+		uidreuse, uidreuse ? "Never " : "");
+	if (rsvd0)
+		printf("  [2:0] : %#x\tReserved\n", rsvd0);
+	printf("\n");
+}
+
+static void nvme_show_cmd_set_independent_id_ns_nstat(__u8 nstat)
+{
+	__u8 rsvd1 = (nstat & 0xfe) >> 1;
+	__u8 nrdy = nstat & 0x1;
+	if (rsvd1)
+		printf("  [7:1] : %#x\tReserved\n", rsvd1);
+	printf("  [0:0] : %#x\tName space is %sready\n",
+		nrdy, nrdy ? "" : "not ");
+	printf("\n");
+}
+
+static void json_nvme_cmd_set_independent_id_ns(
+	struct nvme_cmd_set_independent_id_ns *ns)
+{
+	struct json_object *root;
+	root = json_create_object();
+
+	json_object_add_value_int(root, "nsfeat", ns->nsfeat);
+	json_object_add_value_int(root, "nmic", ns->nmic);
+	json_object_add_value_int(root, "rescap", ns->rescap);
+	json_object_add_value_int(root, "fpi", ns->fpi);
+	json_object_add_value_int(root, "anagrpid", le32_to_cpu(ns->anagrpid));
+	json_object_add_value_int(root, "nsattr", ns->nsattr);
+	json_object_add_value_int(root, "nvmsetid", le16_to_cpu(ns->nvmsetid));
+	json_object_add_value_int(root, "endgid", le16_to_cpu(ns->endgid));
+	json_object_add_value_int(root, "nstat", ns->nstat);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_cmd_set_independent_id_ns(
+	struct nvme_cmd_set_independent_id_ns *ns, unsigned int nsid,
+	enum nvme_print_flags flags)
+{
+	int human = flags & VERBOSE;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)ns, sizeof(*ns));
+	if (flags & JSON)
+		return json_nvme_cmd_set_independent_id_ns(ns);
+
+	printf("NVME Identify Command Set Idependent Namespace %d:\n", nsid);
+	printf("nsfeat  : %#x\n", ns->nsfeat);
+	if (human)
+		nvme_show_cmd_set_independent_id_ns_nsfeat(ns->nsfeat);
+	printf("nmic    : %#x\n", ns->nmic);
+	if (human)
+		nvme_show_id_ns_nmic(ns->nmic);
+	printf("rescap  : %#x\n", ns->rescap);
+	if (human)
+		nvme_show_id_ns_rescap(ns->rescap);
+	printf("fpi     : %#x\n", ns->fpi);
+	if (human)
+		nvme_show_id_ns_fpi(ns->fpi);
+	printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
+	printf("nsattr	: %u\n", ns->nsattr);
+	printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
+	printf("endgid  : %d\n", le16_to_cpu(ns->endgid));
+
+	printf("nstat   : %#x\n", ns->nstat);
+	if (human)
+		nvme_show_cmd_set_independent_id_ns_nstat(ns->nstat);
+}
 
 static void json_nvme_id_ns_descs(void *data)
 {

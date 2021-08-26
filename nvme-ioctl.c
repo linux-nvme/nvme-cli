@@ -408,6 +408,11 @@ int nvme_identify_ns_list_csi(int fd, __u32 nsid, __u8 csi, bool all, void *data
 	return nvme_identify13(fd, nsid, cns, csi << 24, data);
 }
 
+int nvme_cmd_set_independent_identify_ns(int fd, __u32 nsid, void *data)
+{
+	return nvme_identify(fd, nsid, NVME_ID_CNS_CS_INDEPENDENT_ID_NS, data);
+}
+
 int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data)
 {
 	int cns = nsid ? NVME_ID_CNS_CTRL_NS_LIST : NVME_ID_CNS_CTRL_LIST;

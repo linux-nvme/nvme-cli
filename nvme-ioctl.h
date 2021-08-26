@@ -76,6 +76,7 @@ int nvme_identify(int fd, __u32 nsid, __u32 cdw10, void *data);
 int nvme_identify_ctrl(int fd, void *data);
 int nvme_identify_ns(int fd, __u32 nsid, bool present, void *data);
 int nvme_identify_ns_list_csi(int fd, __u32 nsid, __u8 csi, bool all, void *data);
+int nvme_cmd_set_independent_identify_ns(int fd, __u32 nsid, void *data);
 int nvme_identify_ctrl_list(int fd, __u32 nsid, __u16 cntid, void *data);
 int nvme_identify_ns_descs(int fd, __u32 nsid, void *data);
 int nvme_identify_nvmset(int fd, __u16 nvmset_id, void *data);
