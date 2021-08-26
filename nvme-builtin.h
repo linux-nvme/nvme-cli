@@ -43,6 +43,7 @@ COMMAND_LIST(
 	ENTRY("endurance-event-agg-log", "Retrieve Endurance Group Event Aggregate Log, show it", get_endurance_event_agg_log)
 	ENTRY("lba-status-log", "Retrieve LBA Status Information Log, show it", get_lba_status_log)
 	ENTRY("resv-notif-log", "Retrieve Reservation Notification Log, show it", get_resv_notif_log)
+	ENTRY("boot-part-log", "Retrieve Boot Partition Log, show it", get_boot_part_log)
 	ENTRY("get-feature", "Get feature and show the resulting value", get_feature)
 	ENTRY("device-self-test", "Perform the necessary tests to observe the performance", device_self_test)
 	ENTRY("self-test-log", "Retrieve the SELF-TEST Log, show it", self_test_log)
@@ -88,6 +89,7 @@ COMMAND_LIST(
 	ENTRY("dir-send", "Submit a Directive Send command, return results", dir_send)
 	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller ", virtual_mgmt)
 	ENTRY("rpmb", "Replay Protection Memory Block commands", rpmb_cmd)
+	ENTRY("fid-support-effects-log", "Submit Feature ID Support and Effects Log, Return result", get_fid_support_effects_log)
 );
 
 #endif

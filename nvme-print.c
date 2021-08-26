@@ -1825,6 +1825,117 @@ void nvme_show_resv_notif_log(struct nvme_resv_notif_log *resv,
 		le32_to_cpu(resv->nsid));
 }
 
+static void json_boot_part_log(void *bp_log)
+{
+	struct nvme_boot_part_hdr *hdr;
+	struct json_object *root;
+
+	hdr = bp_log;
+	root = json_create_object();
+
+	json_object_add_value_uint(root, "count", hdr->lid);
+	json_object_add_value_uint(root, "abpid",
+		(le32_to_cpu(hdr->bpinfo) >> 31) & 0x1);
+	json_object_add_value_uint(root, "bpsz",
+		le32_to_cpu(hdr->bpinfo) & 0x7fff);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+static void json_fid_support_effects_log(struct nvme_fid_support_effects *fid_log)
+{
+	struct json_object *root;
+	struct json_object *fids;
+	struct json_object *fids_list;
+	unsigned int fid;
+	char key[128];
+	__u32 fid_support;
+
+	root = json_create_object();
+	fids_list = json_create_array();
+	for (fid = 0; fid < 256; fid++) {
+		fid_support = le32_to_cpu(fid_log->fid_support[fid]);
+		if (fid_support & NVME_FID_EFFECTS_FSUPP) {
+			fids = json_create_object();
+			sprintf(key, "fid_%u", fid);
+			json_object_add_value_uint(fids, key, fid_support);
+			json_array_add_value_object(fids_list, fids);
+		}
+	}
+
+	json_object_add_value_object(root, "fid_support", fids_list);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_boot_part_log(void *bp_log, const char *devname,
+	__u32 size, enum nvme_print_flags flags)
+{
+	struct nvme_boot_part_hdr *hdr;
+	if (flags & BINARY)
+		return d_raw((unsigned char *)bp_log, size);
+	if (flags & JSON)
+		return json_boot_part_log(bp_log);
+
+	hdr = bp_log;
+	printf("Boot Partition Log for device: %s\n", devname);
+	printf("Log ID: %u\n", hdr->lid);
+	printf("Boot Partition Size: %u KiB\n", le32_to_cpu(hdr->bpinfo) & 0x7fff);
+	printf("Active BPID: %u\n", (le32_to_cpu(hdr->bpinfo) >> 31) & 0x1);
+}
+
+static void nvme_show_fid_support_effects_log_human(__u32 fid_support)
+{
+	const char *set = "+";
+	const char *clr = "-";
+	__u16 fsp;
+
+	printf("  FSUPP+");
+	printf("  UDCC%s", (fid_support & NVME_FID_EFFECTS_UDCC) ? set : clr);
+	printf("  NCC%s", (fid_support & NVME_FID_EFFECTS_NCC) ? set : clr);
+	printf("  NIC%s", (fid_support & NVME_FID_EFFECTS_NIC) ? set : clr);
+	printf("  CCC%s", (fid_support & NVME_FID_EFFECTS_CCC) ? set : clr);
+	printf("  USS%s", (fid_support & NVME_FID_EFFECTS_UUID_SEL) ? set : clr);
+
+	fsp = (fid_support >> NVME_FID_SCOPE_SHIFT) & NVME_FID_SCOPE_MASK;
+
+	printf("  NAMESPACE SCOPE%s", (fsp & NVME_FID_SCOPE_NS) ? set : clr);
+	printf("  CONTROLLER SCOPE%s", (fsp & NVME_FID_SCOPE_CTRL) ? set : clr);
+	printf("  NVM SET SCOPE%s", (fsp & NVME_FID_SCOPE_NVM_SET) ? set : clr);
+	printf("  ENDURANCE GROUP SCOPE%s", (fsp & NVME_FID_SCOPE_ENDGRP) ? set : clr);
+	printf("  DOMAIN SCOPE%s", (fsp & NVME_FID_SCOPE_DOMAIN) ? set : clr);
+	printf("  NVM Subsystem SCOPE%s", (fsp & NVME_FID_SCOPE_NSS) ? set : clr);
+}
+
+void nvme_show_fid_support_effects_log(struct nvme_fid_support_effects *fid_log,
+	const char *devname, enum nvme_print_flags flags)
+{
+	__u32 fid_effect;
+	int i, human = flags & VERBOSE;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)fid_log, sizeof(*fid_log));
+	if (flags & JSON)
+		return json_fid_support_effects_log(fid_log);
+
+	printf("FID Supports Effects Log for device: %s\n", devname);
+	printf("Admin Command Set\n");
+	for (i = 0; i < 256; i++) {
+		fid_effect = le32_to_cpu(fid_log->fid_support[i]);
+		if (fid_effect & NVME_FID_EFFECTS_FSUPP) {
+			printf("FID %02x -> Support Effects Log: %08x", i,
+				fid_effect);
+			if (human)
+				nvme_show_fid_support_effects_log_human(fid_effect);
+			else
+				printf("\n");
+		}
+	}
+}
+
 static void nvme_show_subsystem(struct nvme_subsystem *s)
 {
 	int i;

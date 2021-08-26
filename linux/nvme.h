@@ -973,6 +973,13 @@ struct nvme_resv_notif_log {
 	__u8	rsvd16[48];
 };
 
+struct nvme_boot_part_hdr {
+	__u8 	lid;
+	__u8	rsvd1[3];
+	__le32	bpinfo;
+	__u8    rsvd8[8];
+};
+
 enum {
 	NVME_SMART_CRIT_SPARE		= 1 << 0,
 	NVME_SMART_CRIT_TEMPERATURE	= 1 << 1,
@@ -1305,6 +1312,8 @@ enum {
 	NVME_LOG_PERSISTENT_EVENT   = 0x0d,
 	NVME_LOG_LBA_STATUS	= 0x0e,
 	NVME_LOG_ENDURANCE_GROUP_EVENT_AGG = 0x0f,
+	NVME_LOG_BOOT_PARTITION	= 0x15,
+	NVME_LOG_FID_SUPPORT_EFFECTS	   = 0x12,
 	NVME_LOG_DISC		= 0x70,
 	NVME_LOG_RESERVATION	= 0x80,
 	NVME_LOG_SANITIZE	= 0x81,
@@ -1957,6 +1966,27 @@ struct nvme_id_domain_list {
 	__u8	num_entries;
 	__u8	rsvd1[127];
 	struct nvme_id_domain_attr_entry domain_attr[];
+};
+
+enum {
+	NVME_FID_EFFECTS_FSUPP      = 1 << 0,
+	NVME_FID_EFFECTS_UDCC       = 1 << 1,
+	NVME_FID_EFFECTS_NCC        = 1 << 2,
+	NVME_FID_EFFECTS_NIC        = 1 << 3,
+	NVME_FID_EFFECTS_CCC        = 1 << 4,
+	NVME_FID_EFFECTS_UUID_SEL   = 1 << 19,
+	NVME_FID_SCOPE_SHIFT        = 20,
+	NVME_FID_SCOPE_MASK         = 0xfff,
+	NVME_FID_SCOPE_NS           = 1 << 0,
+	NVME_FID_SCOPE_CTRL         = 1 << 1,
+	NVME_FID_SCOPE_NVM_SET      = 1 << 2,
+	NVME_FID_SCOPE_ENDGRP       = 1 << 3,
+	NVME_FID_SCOPE_DOMAIN       = 1 << 4,
+	NVME_FID_SCOPE_NSS          = 1 << 5,
+};
+
+struct nvme_fid_support_effects {
+	__le32	fid_support[256];
 };
 
 #endif /* _LINUX_NVME_H */
