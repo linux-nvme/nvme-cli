@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
-<title>nvme-zns-id-ctrl(1)</title>
+<meta name="generator" content="AsciiDoc 8.6.8" />
+<title>nvme-zns-id-ns(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -95,9 +94,7 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-pre {
-  white-space: pre-wrap;
-}
+
 
 #author {
   color: #527bbd;
@@ -226,7 +223,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; vertical-align: text-bottom; }
+span.image img { border-style: none; }
 a.image:visited { color: white; }
 
 dl {
@@ -735,11 +732,11 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-zns-id-ctrl(1) Manual Page
+nvme-zns-id-ns(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-zns-id-ctrl -
+<p>nvme-zns-id-ns -
    Send NVMe Zoned Command Set Identify Controller, return                    result and structure
 </p>
 </div>
@@ -749,7 +746,7 @@ nvme-zns-id-ctrl(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme zns id-ctrl</em> &lt;device&gt;  [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
+<pre class="content"><em>nvme zns id-ns</em> &lt;device&gt;  [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
                              [-o &lt;fmt&gt; | --output-format=&lt;fmt&gt;]
                              [-v | --verbose]</pre>
 <div class="attribution">
@@ -830,7 +827,7 @@ Show the output in json format with extra details
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme zns id-ctrl /dev/nvme0 -o json -v</code></pre>
+<pre><code># nvme zns id-ns /dev/nvme0 -o json -v</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -846,8 +843,7 @@ Show the output in json format with extra details
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated
- 2020-06-16 08:05:24 PDT
+Last updated 2020-06-28 19:43:32 KST
 </div>
 </div>
 </body>
