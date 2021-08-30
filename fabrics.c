@@ -377,6 +377,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	enum nvme_print_flags flags;
 	nvme_root_t r;
 	nvme_host_t h;
+	nvme_host_t default_h = NULL;
 	nvme_ctrl_t c = NULL;
 	unsigned int verbose = 0;
 	int ret;
@@ -492,6 +493,14 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		}
 	}
 	if (!c) {
+		if (!device) {
+			default_h = nvme_default_host(r);
+			if (!default_h) {
+				ret = errno;
+				goto out_free;
+			}
+		}
+
 		/* No device or non-matching device, create a new controller */
 		c = nvme_create_ctrl(nqn, transport, traddr,
 				     host_traddr, host_iface, trsvcid);
@@ -520,7 +529,7 @@ out_free:
 		free(hnqn);
 	if (hid)
 		free(hid);
-
+	nvme_free_tree(r);
 	return ret;
 }
 
@@ -535,6 +544,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	unsigned int verbose = 0;
 	nvme_root_t r;
 	nvme_host_t h;
+	nvme_host_t default_h = NULL;
 	nvme_ctrl_t c;
 	int ret;
 
@@ -598,8 +608,9 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		hostnqn = hnqn = nvmf_hostnqn_from_file();
 	if (!hostid)
 		hostid = hid = nvmf_hostid_from_file();
+	default_h = nvme_default_host(r);
 	h = nvme_lookup_host(r, hostnqn, hostid);
-	if (!h) {
+	if (!h || !default_h) {
 		errno = ENOMEM;
 		goto out_free;
 	}
