@@ -19,9 +19,9 @@ struct json_object *json_create_object(void)
 	return test;
 }
 
-struct json_array *json_create_array(void)
+struct json_object *json_create_array(void)
 {
-	void *test = calloc(1, sizeof(struct json_array));
+	void *test = calloc(1, sizeof(struct json_object));
 	if (!test)
 		fail_and_notify();
 	return test;
@@ -146,7 +146,7 @@ static struct json_value *json_create_value_object(struct json_object *obj)
 	return value;
 }
 
-static struct json_value *json_create_value_array(struct json_array *array)
+static struct json_value *json_create_value_array(struct json_object *array)
 {
 	struct json_value *value = malloc(sizeof(struct json_value));
 
@@ -173,7 +173,7 @@ void json_free_object(struct json_object *obj)
 	free(obj);
 }
 
-void json_free_array(struct json_array *array)
+void json_free_array(struct json_object *array)
 {
 	int i;
 
@@ -206,7 +206,7 @@ static void json_free_value(struct json_value *value)
 	free(value);
 }
 
-static int json_array_add_value(struct json_array *array, struct json_value *value)
+static int json_array_add_value(struct json_object *array, struct json_value *value)
 {
 	struct json_value **values = realloc(array->values,
 		sizeof(struct json_value *) * (array->value_cnt + 1));
@@ -255,7 +255,7 @@ int json_object_add_value_type(struct json_object *obj, const char *name, int ty
 	else if (type == JSON_TYPE_OBJECT)
 		value = json_create_value_object(va_arg(args, struct json_object *));
 	else
-		value = json_create_value_array(va_arg(args, struct json_array *));
+		value = json_create_value_array(va_arg(args, struct json_object *));
 	va_end(args);
 
 	if (!value)
@@ -274,8 +274,8 @@ int json_object_add_value_type(struct json_object *obj, const char *name, int ty
 	return 0;
 }
 
-static void json_print_array(struct json_array *array, void *);
-int json_array_add_value_type(struct json_array *array, int type, ...)
+static void json_print_array(struct json_object *array, void *);
+int json_array_add_value_type(struct json_object *array, int type, ...)
 {
 	struct json_value *value;
 	va_list args;
@@ -293,7 +293,7 @@ int json_array_add_value_type(struct json_array *array, int type, ...)
 	else if (type == JSON_TYPE_OBJECT)
 		value = json_create_value_object(va_arg(args, struct json_object *));
 	else
-		value = json_create_value_array(va_arg(args, struct json_array *));
+		value = json_create_value_array(va_arg(args, struct json_object *));
 	va_end(args);
 
 	if (!value)
@@ -309,7 +309,7 @@ int json_array_add_value_type(struct json_array *array, int type, ...)
 
 static int json_value_level(struct json_value *value);
 static int json_pair_level(struct json_pair *pair);
-static int json_array_level(struct json_array *array);
+static int json_array_level(struct json_object *array);
 static int json_object_level(struct json_object *object)
 {
 	if (object->parent == NULL)
@@ -322,7 +322,7 @@ static int json_pair_level(struct json_pair *pair)
 	return json_object_level(pair->parent) + 1;
 }
 
-static int json_array_level(struct json_array *array)
+static int json_array_level(struct json_object *array)
 {
 	return json_value_level(array->parent);
 }
@@ -342,7 +342,7 @@ static void json_print_level(int level, void *out)
 }
 
 static void json_print_pair(struct json_pair *pair, void *);
-static void json_print_array(struct json_array *array, void *);
+static void json_print_array(struct json_object *array, void *);
 static void json_print_value(struct json_value *value, void *);
 void json_print_object(struct json_object *obj, void *out)
 {
@@ -366,7 +366,7 @@ static void json_print_pair(struct json_pair *pair, void *out)
 	json_print_value(pair->value, out);
 }
 
-static void json_print_array(struct json_array *array, void *out)
+static void json_print_array(struct json_object *array, void *out)
 {
 	int i;
 

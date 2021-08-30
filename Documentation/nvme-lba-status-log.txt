@@ -1,0 +1,54 @@
+nvme-lba-status-log(1)
+======================
+
+NAME
+----
+nvme-lba-status-log - Send LBA Status Log Page request returns result and log
+
+SYNOPSIS
+--------
+[verse]
+'nvme lba-status-log' <device> [--rae | -r] [--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+Retrieves the NVMe LBA Status Log Page from an NVMe device and provides
+the returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned LBA Status Log Page structure may be returned
+in one of several ways depending on the option flags; the structure may
+parsed by the program and printed in a readable format or the raw buffer
+may be printed to stdout for another program to parse.
+
+OPTIONS
+-------
+-r::
+--rae::
+	Retain an Asynchronous Event.
+
+-o <format>::
+--output-format=<format>::
+    Set the reporting format to 'normal', 'json', or 'binary'.
+    Only one output format can be used at a time.
+
+EXAMPLES
+--------
+* Print the LBA Status Log page in a normal readable format:
++
+------------
+# nvme lba-status-log /dev/nvme0
+------------
++
+
+* Show the output in json format
++
+------------
+# nvme lba-status-log /dev/nvme0 -o json
++
+
+NVME
+----
+Part of the nvme-user suite

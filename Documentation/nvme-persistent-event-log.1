@@ -1,0 +1,118 @@
+'\" t
+.\"     Title: persistent-event-log
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 01/11/2021
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "PERSISTENT\-EVENT\-L" "1" "01/11/2021" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-persistent-event-log \- Send NVMe persistent event log page request, returns result and log
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme persistent\-event\-log\fR <device> [\-\-action=<action> | \-a <action>]
+            [\-\-log\-len=<log\-len> | \-l <log\-len>]
+            [\-\-raw\-binary | \-b]
+            [\-\-output\-format=<fmt> | \-o <fmt>]
+.fi
+.SH "DESCRIPTION"
+.sp
+Retrieves the NVMe persistent event log page from an NVMe device and provides the returned structure\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+On success, the returned persistent event log structure may be returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format or the raw buffer may be printed to stdout for another program to parse\&.
+.SH "OPTIONS"
+.PP
+\-a <action>, \-\-action=<action>
+.RS 4
+While try to retrieve this log action the controller shall take during processing this persistent log page command\&. This mandatory field, based on the value issued it may Read Log Data, Establish Context and Read Log Data or Release Context can occur\&. For More details see NVM Express 1\&.4 Spec\&. Section 5\&.14\&.1\&.13 Persistent Event Log (Log Identifier 0Dh)
+.RE
+.PP
+\-l <log\-len>, \-\-log\-len=<log\-len>
+.RS 4
+Allocates a buffer of <log\-len> bytes size and requests this many bytes be returned in the constructed NVMe command\&. This param is mandatory\&. If <log\-len> given is 0 and action is 0, it will read the Total Log Length(TLL) of the page\&.
+.RE
+.PP
+\-b, \-\-raw\-binary
+.RS 4
+Print the raw persistent event log buffer to stdout\&.
+.RE
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR, or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Print the persistent event log page in a human readable format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme persistent\-event\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Print the raw persistent event log to a file:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme persistent\-event\-log /dev/nvme0 \-\-raw\-binary > persistent_log\&.raw
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+It is probably a bad idea to not redirect stdout when using this mode\&.
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

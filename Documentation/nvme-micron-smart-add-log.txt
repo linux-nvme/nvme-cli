@@ -1,0 +1,54 @@
+nvme-micron-smart-add-log(1)
+============================
+
+NAME
+----
+nvme-micron-smart-add-log - Retrieves NAND statistics (2200 model drives)
+or Extended SMART information (OCP complaint models) of given micron device
+
+SYNOPSIS
+--------
+[verse]
+'nvme micron vs-smart-add-log' <device>  -f <json|normal>
+
+DESCRIPTION
+-----------
+This command prints NAND information (Total bytes written, Bad block count and 
+Erase failures etc) for the given micron device if its of 2200 model controller.
+For OCP complaint controllers this command print extended SMART health data
+along with NAND information (if available)
+
+The <device> parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1). 
+
+The '-f' option controls the displayed output data format based on the option
+value. If the option value is 'json' (which is enabled by default), output data
+is printed in JSON format. If option value is 'normal' the output is displayed
+in non-JSON format.
+
+This will only work on Micron devices devices of model numbers 54XX and OCP
+complaint controllers. Support for new devices may be added subsequently.
+
+OPTIONS
+-------
+-f <json|normal> controls the format of displayed output.
+
+
+EXAMPLES
+--------
+* Retrieve NAND/extended SMART data and display in json format
++
+------------
+# nvme micron vs-nand-stats /dev/nvme0
+
+* Retrieve NAND/extended SMART data and display in non-json format
++
+------------
+# nvme micron vs-nand-stats /dev/nvme0 -f normal
+
+------------
+
+NVME
+----
+Part of the nvme-user suite

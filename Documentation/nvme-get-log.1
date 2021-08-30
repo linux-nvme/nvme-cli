@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/24/2020
+.\"      Date: 01/13/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-LOG" "1" "04/24/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-LOG" "1" "01/13/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,6 +39,7 @@ nvme-get-log \- Retrieves a log page from an NVMe device
                       [\-\-raw\-binary | \-b]
                       [\-\-lpo=<offset> | \-o <offset>]
                       [\-\-lsp=<field> | \-s <field>]
+                      [\-\-lsi=<field> | \-S <field>]
                       [\-\-rae | \-r]
 .fi
 .SH "DESCRIPTION"
@@ -83,6 +84,11 @@ The log page offset specifies the location within a log page to start returning 
 \-s <field>, \-\-lsp=<field>
 .RS 4
 The log specified field of LID\&.
+.RE
+.PP
+\-S <field>, \-\-lsi=<field>
+.RS 4
+The log specified field of Log Specific Identifier\&.
 .RE
 .PP
 \-r, \-\-rae

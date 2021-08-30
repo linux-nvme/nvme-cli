@@ -2,12 +2,12 @@
 .\"     Title: nvme-resv-release
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/24/2020
+.\"      Date: 10/20/2020
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RESV\-RELEASE" "1" "04/24/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-RESV\-RELEASE" "1" "10/20/2020" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -53,7 +53,7 @@ Override the nsid field\&. If using the admin character device, this parameter i
 Current Reservation Key: If the Reservation Register Action is 001b (i\&.e\&., Unregister Reservation Key) or 010b (i\&.e\&., Replace Reservation Key), then this field contains the current reservation key associated with the host\&. For all other Reservation Register Action values, this field is reserved\&. The controller ignores the value of this field when the Ignore Existing Key (IEKEY) bit is set to \(oq1\(cq\&.
 .RE
 .PP
-\-t <rtype>, \-\-rtyep=<rtype>
+\-t <rtype>, \-\-rtype=<rtype>
 .RS 4
 Reservation Type: This field specifies the type of reservation to be created\&.
 .TS

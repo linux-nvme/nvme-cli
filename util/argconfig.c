@@ -31,13 +31,14 @@
 #include "argconfig.h"
 #include "suffix.h"
 
-#include <string.h>
+#include <errno.h>
+#include <inttypes.h>
 #include <getopt.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <stdarg.h>
-#include <inttypes.h>
+#include <string.h>
 
 static argconfig_help_func *help_funcs[MAX_HELP_FUNC] = { NULL };
 
@@ -281,7 +282,17 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			}
 			*((uint32_t *) value_addr) = tmp;
 		} else if (s->config_type == CFG_INCREMENT) {
-			(*((int *)value_addr))++;
+			/*
+			 * Extreme getopt_long fiddling.
+			 *
+			 * As per man page:
+			 * If flag is non-NULL, getopt_long() returns 0,
+			 * and flag  points to a variable which is set to
+			 * val if the option is found.
+			 *
+			 * So we need to increase 'val', not 'value_addr'.
+			 */
+			long_opts[option_index].val++;
 		} else if (s->config_type == CFG_LONG) {
 			*((unsigned long *)value_addr) = strtoul(optarg, &endptr, 0);
 			if (errno || optarg == endptr) {
@@ -450,10 +461,11 @@ int argconfig_parse_subopt_string(char *string, char **options,
 	return 0;
 }
 
-unsigned argconfig_parse_comma_sep_array(char *string, int *val,
+int argconfig_parse_comma_sep_array(char *string, int *val,
 					 unsigned max_length)
 {
-	unsigned ret = 0;
+	int ret = 0;
+	unsigned long v;
 	char *tmp;
 	char *p;
 
@@ -464,9 +476,14 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
 	if (!tmp)
 		return 0;
 
-	val[ret] = strtol(tmp, &p, 0);
+	v = strtoul(tmp, &p, 0);
 	if (*p != 0)
 		return -1;
+	if (v > UINT_MAX) {
+		fprintf(stderr, "%s out of range\n", tmp);
+		return -1;
+	}
+	val[ret] = v;
 
 	ret++;
 	while (1) {
@@ -478,19 +495,23 @@ unsigned argconfig_parse_comma_sep_array(char *string, int *val,
 		if (ret >= max_length)
 			return -1;
 
-		val[ret] = strtol(tmp, &p, 0);
-
+		v = strtoul(tmp, &p, 0);
 		if (*p != 0)
 			return -1;
+		if (v > UINT_MAX) {
+			fprintf(stderr, "%s out of range\n", tmp);
+			return -1;
+		}
+		val[ret] = v;
 		ret++;
 	}
 }
 
-unsigned argconfig_parse_comma_sep_array_long(char *string,
+int argconfig_parse_comma_sep_array_long(char *string,
 					      unsigned long long *val,
 					      unsigned max_length)
 {
-	unsigned ret = 0;
+	int ret = 0;
 	char *tmp;
 	char *p;
 

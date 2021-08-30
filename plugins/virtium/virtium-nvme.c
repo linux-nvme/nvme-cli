@@ -9,13 +9,9 @@
 #include <time.h>
 #include <locale.h>
 
-#include "linux/nvme_ioctl.h"
 #include "nvme.h"
-#include "nvme-print.h"
-#include "nvme-ioctl.h"
+#include "libnvme.h"
 #include "plugin.h"
-#include "argconfig.h"
-#include "suffix.h"
 
 #define CREATE_CMD
 #include "virtium-nvme.h"
@@ -35,7 +31,7 @@ struct vtview_log_header {
 	char			test_name[256];
 	long int		time_stamp;
 	struct nvme_id_ctrl	raw_ctrl;
-	struct nvme_firmware_log_page   raw_fw;
+	struct nvme_firmware_slot raw_fw;
 };
 
 struct vtview_smart_log_entry {
@@ -273,7 +269,7 @@ static int vt_add_entry_to_log(const int fd, const char *path, const struct vtvi
 	struct vtview_smart_log_entry smart;
 	char filename[256] = "";
 	int ret = 0;
-	int nsid = 0;
+	unsigned nsid = 0;
 
 	memset(smart.path, 0, sizeof(smart.path));
 	strcpy(smart.path, path);
@@ -283,14 +279,14 @@ static int vt_add_entry_to_log(const int fd, const char *path, const struct vtvi
 		strcpy(filename, cfg->output_file);
 
 	smart.time_stamp = time(NULL);
-	nsid = nvme_get_nsid(fd);
+	ret = nvme_get_nsid(fd, &nsid);
 
-	if (nsid <= 0) {
+	if (ret < 0) {
 		printf("Cannot read namespace-id\n");
 		return -1;
 	}
 
-	ret = nvme_identify_ns(fd, nsid, 0, &smart.raw_ns);
+	ret = nvme_identify_ns(fd, nsid, &smart.raw_ns);
 	if (ret) {
 		printf("Cannot read namespace identify\n");
 		return -1;
@@ -302,7 +298,7 @@ static int vt_add_entry_to_log(const int fd, const char *path, const struct vtvi
 		return -1;
 	}
 
-	ret = nvme_smart_log(fd, NVME_NSID_ALL, &smart.raw_smart);
+	ret = nvme_get_log_smart(fd, NVME_NSID_ALL, true, &smart.raw_smart);
 	if (ret) {
 		printf("Cannot read device SMART log\n");
 		return -1;
@@ -343,7 +339,7 @@ static int vt_update_vtview_log_header(const int fd, const char *path, const str
 		return -1;
 	}
 
-	ret = nvme_fw_log(fd, &header.raw_fw);
+	ret = nvme_get_log_fw_slot(fd, true, &header.raw_fw);
 	if (ret) {
 		printf("Cannot read device firmware log\n");
 		return -1;
@@ -445,7 +441,7 @@ static void vt_build_power_state_descriptor(const struct nvme_id_ctrl *ctrl)
 		vt_convert_data_buffer_to_hex_string(&buf[16], 4, true, s);
 		printf("%9sh", s);
 
-		temp = ctrl->psd[i].idle_scale;
+		temp = ctrl->psd[i].ips;
 		snprintf(s, sizeof(s), "%u%u", (((unsigned char)temp >> 6) & 0x01), (((unsigned char)temp >> 7) & 0x01));
 		printf("%3sb", s);
 
@@ -454,7 +450,7 @@ static void vt_build_power_state_descriptor(const struct nvme_id_ctrl *ctrl)
 		vt_convert_data_buffer_to_hex_string(&buf[20], 4, true, s);
 		printf("%9sh", s);
 
-		temp = ctrl->psd[i].active_work_scale;
+		temp = ctrl->psd[i].aps;
 		snprintf(s, sizeof(s), "%u%u", (((unsigned char)temp >> 6) & 0x01), (((unsigned char)temp >> 7) & 0x01));
 		printf("%3sb", s);
 		snprintf(s, sizeof(s), "%u%u%u", (((unsigned char)temp) & 0x01), (((unsigned char)temp >> 1) & 0x01), (((unsigned char)temp >> 2) & 0x01));
@@ -633,7 +629,7 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	const char *VWCtable[2] = {"0 = a volatile write cache is not present",
 							   "1 = a volatile write cache is present"};
 
-	const char *NVSCCtable[2] = {"0 = the format of all NVM Vendor Specific Commands are vendor specific",
+	const char *ICSVSCCtable[2] = {"0 = the format of all NVM Vendor Specific Commands are vendor specific",
 								 "1 = all NVM Vendor Specific Commands use the format defined in NVM Express specification"};
 
 	const char *SGLSSubtable[4] =  {"00b = SGLs are not supported",
@@ -883,11 +879,11 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	vt_convert_data_buffer_to_hex_string(&buf[528], 2, true, s);
 	printf("    \"Atomic Write Unit Power Fail\":\"%sh\",\n", s);
 
-	temp = ctrl->nvscc;
+	temp = ctrl->icsvscc;
 	printf("    \"NVM Vendor Specific Command Configuration\":{\n");
 	vt_convert_data_buffer_to_hex_string(&buf[530], 1, true, s);
 	printf("        \"Value\":\"%sh\",\n", s);
-	vt_build_identify_lv2(temp, 0, 1, NVSCCtable, true);
+	vt_build_identify_lv2(temp, 0, 1, ICSVSCCtable, true);
 
 	vt_convert_data_buffer_to_hex_string(&buf[532], 2, true, s);
 	printf("    \"Atomic Compare 0 Write Unit\":\"%sh\",\n", s);

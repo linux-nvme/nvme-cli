@@ -10,17 +10,25 @@ _nvme () {
 	'id-ctrl:display information about the controller'
 	'id-ns:display information about the namespace'
 	'list-ns:identify all namespace(s) attached'
+	'id-iocs:display information about I/O command sets'
 	'create-ns:create a new namespace before attachment'
 	'delete-ns:delete a detached namespace'
 	'attach-ns:attach namespace to controller'
 	'detach-ns:detach namespace from controller'
 	'list-ctrl:identify all controller(s) attached'
+	'nvm-id-ctrl:display information about the nvm command set'
 	'get-ns-id:get namespace id of opened block device'
 	'get-log:retrieve any log in raw format'
+	'predictable-lat-log:retrieve predictable latency per nvmset log'
+	'pred-lat-event-agg-log:retrieve predictable latency event aggregate log'
+	'persistent-event-log:retrieve presistent event log'
 	'fw-log:retrieve fw log'
 	'smart-log:retrieve SMART log'
 	'smart-log-add:retrieve additional SMART log'
 	'error-log:retrieve error log'
+	'endurance-event-agg-log:retrieve endurance group event aggregate log'
+	'lba-status-log:retrieve lba status log'
+	'resv-notif-log: retrieve reservation notification log'
 	'get-feature:display a controller feature'
 	'set-feature:set a controller feature and show results'
 	'format:apply new block format to namespace'
@@ -34,6 +42,7 @@ _nvme () {
 	'resv-register:register reservation on a namespace'
 	'resv-release:release reservation on a namespace'
 	'resv-report:report reservation on a namespace'
+	'copy:submit a simple copy command'
 	'flush:submit a flush'
 	'compare:compare data on device to data elsewhere'
 	'read:submit a read command'
@@ -88,9 +97,29 @@ _nvme () {
 			/dev/nvme':supply a device to use (required)'
 			--namespace-id=':start namespace infos listing with this nsid'
 			-n':alias of --namespace-id'
+			--csi=':command set identifier'
+			-y':alias of --csi'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme list-ns options" _listns
+			;;
+		(id-iocs)
+			local _idiocs
+			_idiocs=(
+			/dev/nvme':supply a device to use (required)'
+			--controller-id=':show infos for controller <cntid>'
+			-c':alias of --controller-id'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme id-iocs options" _idiocs
+			;;
+		nvm-id-ctrl)
+			local _nvmidctrl
+			_nvmidctrl=(
+			/dev/nvme':supply a device to use (required)'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme nvm-id-ctrl options" _nvmidctrl
 			;;
 		(create-ns)
 			local _createns
@@ -106,6 +135,8 @@ _nvme () {
 			-d':alias of --dps'
 			--nmic=':multipath and sharing'
 			-n':alias of --nmic'
+			--csi=':command set identifier'
+			-y':alias of --csi'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme create-ns options" _createns
@@ -180,6 +211,46 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme get-log options" _getlog
 			;;
+		(persistent-event-log)
+			local _persistenteventlog
+			_persistenteventlog=(
+			/dev/nvme':supply a device to use (required)'
+			--action=': action the controller shall take for this log page'
+			-a':alias to --action'
+			--log-len=':number of bytes to show for requested log'
+			-l':alias of --log-len'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "persistent-event-log options" _persistenteventlog
+			;;
+		(pred-lat-event-agg-log)
+			local _predlateventagglog
+			_predlateventagglog=(
+			/dev/nvme':supply a device to use (required)'
+			--log-entries=': Number of pending NVM Set Entries log list'
+			-e':alias to --log-entries'
+			--rae': Retain an Asynchronous Event'
+			-r':alias to --rae'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme pred-lat-event-agg-log options" _predlateventagglog
+			;;
+		(predictable-lat-log)
+			local _predictablelatlog
+			_predictablelatlog=(
+			/dev/nvme':supply a device to use (required)'
+			--nvmset-id=': NVM Set Identifier on which log page retrieve info'
+			-i':alias to --nvmset-id'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme predictable-lat-log options" _predictablelatlog
+			;;
 		(fw-log)
 			local _fwlog
 			_fwlog=(
@@ -228,6 +299,38 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme error-log options" _errlog
 			;;
+		(endurance-event-agg-log)
+			local _enduranceeventagglog
+			_enduranceeventagglog=(
+			/dev/nvme':supply a device to use (required)'
+			--log-entries=': Number of Endurance Group Event Agg Entries log list'
+			-e':alias to --log-entries'
+			--rae': Retain an Asynchronous Event'
+			-r':alias to --rae'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme endurance-event-agg-log options" _enduranceeventagglog
+			;;
+		(lba-status-log)
+			local _lbastatuslog
+			_lbastatuslog=(
+			/dev/nvme':supply a device to use (required)'
+			--rae': Retain an Asynchronous Event'
+			-r':alias to --rae'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme lba-status-log options" _lbastatuslog
+			;;
+		(resv-notif-log)
+			local _resvnotiflog
+			_resvnotiflog=(
+			/dev/nvme':supply a device to use (required)'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme resv-notif-log options" _resvnotiflog
+			;;
 		(get-feature)
 			local _getf
 			_getf=(
@@ -240,6 +343,8 @@ _nvme () {
 			-s':alias to --sel'
 			--data-len=':buffer len for returned LBA Type Range or host identifier data'
 			-l':alias for --data-len'
+			--uuid-index=':uuid index'
+			-U':alias for --uuid-index'
 			--cdw11=':dword 11 value, used for interrupt vector configuration only'
 			--raw-binary':dump infos in binary format'
 			-b':alias to --raw-binary'
@@ -261,6 +366,8 @@ _nvme () {
 			-d':alias to --data'
 			--value=':new value of feature (required)'
 			-v'alias to --value'
+			--uuid-index=':uuid index'
+			-U':alias for --uuid-index'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme set-feature options" _setf
@@ -455,7 +562,7 @@ _nvme () {
 			-p':alias for --prkey'
 			--rtype=':hexadecimal reservation type'
 			-t':alias for --rtype'
-			--racqa=':reservation acquiry action'
+			--racqa=':reservation acquire action'
 			-a':alias for --racqa'
 			--iekey=':ignore existing reservation key'
 			-i':alias for --iekey'
@@ -508,13 +615,53 @@ _nvme () {
 			--cptpl=':change persistence through power loss setting'
 			-p':alias for --cptpl'
 			--rrega=':reservation registration action to perform'
-			-a':alias for --rrega'
+			-r':alias for --rrega'
 			--iekey':ignore existing reservation key'
 			-i':alias for --iekey'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme resv-register options" _reg
 			;;
+		(copy)
+			local _copy
+			_copy=(
+			/dev/nvme':supply a device to use (required)'
+			--sdlba=':64-bit addr of first destination logical block'
+			-d':alias of --sdlba'
+			--slbs=':64-bit addr of first block per range (comma-separated list)'
+			-s':alias of --slbs'
+			--blocks=':number of blocks per range (comma-separated list, zeroes-based values)'
+			-b':alias of --blocks'
+			--limited-retry':if included, controller should try less hard to retrieve data from media (if not included, all available data recovery means used)'
+			-l':alias of --limited-retry'
+			--force-unit-access':if included, the data shall be read from non-volatile media'
+			-f':alias of --force-unit access'
+			--prinfow=':protection information and check field (write part)'
+			-p':alias of --prinfow'
+			--prinfor=':protection information and check field (read part)'
+			-P':alias of --prinfor'
+			--ref-tag=':initial lba reference tag (write part)'
+			-r':alias of --ref-tag'
+			--expected-ref-tags=':expected lba reference tags (read part, comma-separated list)'
+			-R':alias of --expected-ref-tags'
+			--app-tag=':lba application tag (write part)'
+			-a':alias of --app-tag'
+			--expected-app-tags=':expected lba application tags (read part, comma-separated list)'
+			-A':alias of --expected-app-tags'
+			--app-tag-mask=':lba application tag mask (write part)'
+			-m':alias of --app-tag-mask'
+			--expected-app-tag-masks=':expected lba application tag masks (read part, comma-separated list)'
+			-M':alias of --expected-app-tag-masks'
+			--dir-type':directive type (write part)'
+			-T':alias of --dir-type'
+			--dir-spec':directive specific (write part)'
+			-S':alias of --dir-spec'
+			--format':source range entry format'
+			-F':alias of --format'
+			)
+			_arguments '*:: :->subcmds'
+                       _describe -t commands "nvme copy options" _copy
+		       ;;
 		(flush)
 			local _flush
 			_flush=(
@@ -639,11 +786,13 @@ _nvme () {
 			;;
 		(help)
 			local _h
-			_h=( id-ctrl id-ns list-ns create-ns delete-ns attach-ns detach-ns
+			_h=( id-ctrl id-ns list-ns id-iocs create-ns delete-ns attach-ns detach-ns
 			     list-ctrl get-ns-id get-log fw-log smart-log error-log get-feature
 			     set-feature format fw-activate fw-download admin-passthru io-passthru
 			     security-send security-recv resv-acquire resv-register resv-release
-			     resv-report flush compare read write show-regs
+			     resv-report flush compare read write copy show-regs persistent-event-log
+				 pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
+				 resv-notif-log
 			   )
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h

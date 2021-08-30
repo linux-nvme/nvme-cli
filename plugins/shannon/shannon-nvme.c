@@ -5,17 +5,12 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-#include "linux/nvme_ioctl.h"
-
 #include "common.h"
 #include "nvme.h"
-#include "nvme-print.h"
-#include "nvme-ioctl.h"
-#include "json.h"
+#include "libnvme.h"
 #include "plugin.h"
-
-#include "argconfig.h"
-#include "suffix.h"
+#include "linux/types.h"
+#include "nvme-print.h"
 
 #define CREATE_CMD
 #include "shannon-nvme.h"
@@ -142,7 +137,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
-	err = nvme_get_log(fd, cfg.namespace_id, 0xca, false,
+	err = nvme_get_nsid_log(fd, 0xca, cfg.namespace_id,
 		   sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -151,8 +146,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-					nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	return err;
 }
 
@@ -182,7 +176,7 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 
 	struct config {
 		__u32 namespace_id;
-		__u32 feature_id;
+		enum nvme_features_id feature_id;
 		__u8  sel;
 		__u32 cdw11;
 		__u32 data_len;
@@ -232,9 +226,10 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 		memset(buf, 0, cfg.data_len);
 	}
 
-	err = nvme_get_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.sel, cfg.cdw11,
-			cfg.data_len, buf, &result);
+	err = nvme_get_features(fd, cfg.feature_id, cfg.namespace_id, cfg.sel,
+				cfg.cdw11, 0, cfg.data_len, buf, &result);
 	if (!err) {
+#if 0
 		printf("get-feature:0x%02x (%s), %s value: %#08x\n", cfg.feature_id,
 				nvme_feature_to_string(cfg.feature_id),
 				nvme_select_to_string(cfg.sel), result);
@@ -248,9 +243,9 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 					d_raw(buf, cfg.data_len);
 			}
 		}
+#endif
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	if (buf)
 		free(buf);
 	return err;
@@ -344,20 +339,21 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 		}
 	}
 
-	err = nvme_set_feature(fd, cfg.namespace_id, cfg.feature_id, cfg.value,
-				0, cfg.save, cfg.data_len, buf, &result);
+	err = nvme_set_features(fd, cfg.feature_id, cfg.namespace_id, cfg.value,
+				0, cfg.save, 0, 0, cfg.data_len, buf, &result);
 	if (err < 0) {
 		perror("set-feature");
 		goto free;
 	}
 	if (!err) {
+#if 0
 		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
 			nvme_feature_to_string(cfg.feature_id), cfg.value);
+#endif
 		if (buf)
 			d(buf, cfg.data_len, 16, 1);
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+		nvme_show_status(err);
 
 free:
 	if (buf)

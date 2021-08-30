@@ -1,0 +1,104 @@
+'\" t
+.\"     Title: nvme-wdc-enc-get-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/20/2020
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-WDC\-ENC\-GET\" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-wdc-enc-get-log \- Send NVMe WDC enc\-get\-log Vendor Unique Command, return result\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme wdc enc\-get\-log\fR <device> [\-\-log\-id=<NUM>, \-l <NUM>] [\-\-output\-file=<FILE>, \-o <FILE>] [\-\-transfer\-size=<SIZE>, \-s <SIZE>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, send a Vendor Unique WDC enc\-get\-log command and output the Enclosure logs\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0)\&.
+.sp
+The \-\-log\-id=<NUM>, \-l <NUM> parameter is mandatory and may be either 0xd1, 0xd2, 0xd3, 0xd4, 0xe2 and 0xe4\&.
+.sp
+This will only work on WDC devices supporting this feature\&. Results for any other device are undefined\&.
+.sp
+On success it returns the enclosure log data, error code otherwise\&.
+.SH "OPTIONS"
+.PP
+\-o <FILE>, \-\-output\-file=<FILE>
+.RS 4
+Output file pathname
+.RE
+.PP
+\-s <SIZE>, \-\-transfer\-size=<NUM>
+.RS 4
+Data retrieval transfer size, maximum transfer size should be 0x2000 (decimal 8192)
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Gets the enclosure log from the device based on the log id(0xd1) with transfer size(0x2000) and saves to defined file in current directory:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme wdc enc\-get\-log /dev/nvme0 \-l 0xd1 \-o d1_log\&.bin \-s 0x2000
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Gets the enclosure log from the device based on the log id(0xd2) with default transfer size(0x1000) and saves to defined file in current directory:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme wdc enc\-get\-log /dev/nvme0 \-l 0xd2 \-o d1_log\&.bin
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite\&.

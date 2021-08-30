@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme set-feature' <device> [--namespace-id=<nsid> | -n <nsid>]
 			  [--feature-id=<fid> | -f <fid>] [--value=<value> | -v <value>]
+			  [--uuid-index=<uuid-index> | -U <uuid_index>]
 			  [--data-len=<data-len> | -l <data-len>]
 			  [--data=<data-file> | -d <data-file>]
 			  [--save| -s]
@@ -59,6 +60,10 @@ OPTIONS
 --save::
 	Save the attribute so that it persists through all power states and resets.	
 
+-U <uuid-index>::
+--uuid-index=<uuid-index>::
+	UUID Index of the feature
+
 EXAMPLES
 --------
 * Sets the Power State (PS) to 1  in feature id 2:
@@ -73,6 +78,8 @@ EXAMPLES
 ------------
 # echo "abcdefgh" | nvme set-feature /dev/nvme0 -f 0x81 -l 8
 ------------
++
+nvme set-feature /dev/nvme0 -f 0x81 -l 8 -U 0x1
 
 NVME
 ----

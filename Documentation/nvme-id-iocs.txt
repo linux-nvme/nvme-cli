@@ -1,0 +1,54 @@
+nvme-id-iocs(1)
+===============
+
+NAME
+----
+nvme-id-iocs - Send NVMe Identify I/O Command Set, return result and structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme id-iocs' <device> [--controller-id=<cntid> | -c <cntid>]
+                        [-o <fmt> | --output-format=<fmt>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, send an identify command and return the Identify I/O
+Command Set data structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+-c <cntid>::
+--controller-id=<cntid>::
+	Retrieve the identify I/O Command set data structure for the given
+	cntid. If this value is not given, cntid will be 0xffff.
+-H::
+--human-readable::
+	This option will parse and format many of the bit fields
+	into human-readable formats.
+
+-o <format>::
+--output-format=<format>::
+              Set the reporting format to 'normal', 'json', or
+              'binary'. Only one output format can be used at a time.
+
+EXAMPLES
+--------
+* Have the program interpret the returned buffer and display the known
+fields in a human readable format:
++
+------------
+# nvme id-iocs /dev/nvme0
+------------
++
+* show the fields in human readable format
++
+------------
+# nvme id-iocs /dev/nvme0 -H
+------------
+NVME
+----
+Part of the nvme-user suite

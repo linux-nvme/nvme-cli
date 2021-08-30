@@ -1,0 +1,117 @@
+'\" t
+.\"     Title: nvme-pred-lat-event-agg-log
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 01/12/2021
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-PRED\-LAT\-EVE" "1" "01/12/2021" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-pred-lat-event-agg-log \- Send Predictable Latency Event Aggregate Log Page request, returns result and log
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme pred\-lat\-event\-agg\-log\fR <device> [\-\-log\-entries=<log_entries> | \-e <log_entries>]
+                        [\-\-rae | \-r] [\-\-raw\-binary | \-b]
+                        [\-\-output\-format=<fmt> | \-o <fmt>]
+.fi
+.SH "DESCRIPTION"
+.sp
+Retrieves the NVMe Predictable Latency Event Aggregate Log Page from an NVMe device and provides the returned structure\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+On success, the returned Predictable Latency Event Aggregate Log Page structure may be returned in one ofseveral ways depending on the option flags; the structure may parsed by the program and printed in a readable format or the raw buffer may be printed to stdout for another program to parse\&.
+.SH "OPTIONS"
+.PP
+\-e <log_entries>, \-\-log\-entries=<log_entries>
+.RS 4
+Retrieve the Predictable Latency Event Aggregate Log pending entries\&. This argument is mandatory and its success may depend on the device\(cqs statistics to provide this log For More details see NVM Express 1\&.4 Spec\&. Section 5\&.14\&.1\&.11\&. The maximum number of log entries supported is 2044 for the device\&.
+.RE
+.PP
+\-r, \-\-rae
+.RS 4
+Retain an Asynchronous Event\&.
+.RE
+.PP
+\-b, \-\-raw\-binary
+.RS 4
+Print the raw Predectible Latency Event Aggregate log buffer to stdout\&.
+.RE
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR, or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Print the Predictable Latency Event Aggregate Log page in a human readable format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme pred\-lat\-event\-agg\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Print the raw Predectible Latency Event Aggregate log to a file:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme pred\-lat\-event\-agg\-log /dev/nvme0 \-\-raw\-binary > pred_lat_agg_log\&.raw
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+It is probably a bad idea to not redirect stdout when using this mode\&.
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

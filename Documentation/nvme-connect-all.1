@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect-all
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/29/2020
+.\"      Date: 01/20/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT\-ALL" "1" "04/29/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT\-ALL" "1" "01/20/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,7 +51,7 @@ nvme-connect-all \- Discover and Connect to Fabrics controllers\&.
                 [\-\-queue\-size=<#>         | \-Q <#>]
                 [\-\-matching               | \-m]
                 [\-\-persistent             | \-p]
-                [\-\-quiet                  | \-q]
+                [\-\-quiet                  | \-S]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -72,6 +72,7 @@ allbox tab(:);
 lt lt
 lt lt
 lt lt
+lt lt
 lt lt.
 T{
 Value
@@ -88,6 +89,11 @@ fc
 T}:T{
 \fBWIP\fR
 The network fabric is a Fibre Channel network\&.
+T}
+T{
+tcp
+T}:T{
+The network fabric is a TCP/IP network\&.
 T}
 T{
 loop
@@ -187,7 +193,7 @@ If a traddr was specified on the command line or in the configuration file, only
 Don\(cqt remove the discovery controller after retrieving the discovery log page\&.
 .RE
 .PP
-\-q, \-\-quiet
+\-S, \-\-quiet
 .RS 4
 Suppress error messages\&.
 .RE

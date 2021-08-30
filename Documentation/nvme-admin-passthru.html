@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 8.6.10" />
 <title>nvme-admin-passthru(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -759,7 +762,8 @@ nvme-admin-passthru(1) Manual Page
                 [--show-command | -s]
                 [--dry-run | -d]
                 [--raw-binary | -b]
-                [--prefill=&lt;prefill&gt; | -p &lt;prefill&gt;]</pre>
+                [--prefill=&lt;prefill&gt; | -p &lt;prefill&gt;]
+                [--latency | -T]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -941,6 +945,17 @@ printed to stdout for another program to parse.</p></div>
         is overwriting a buffer for a data-in command.
 </p>
 </dd>
+<dt class="hdlist1">
+-T
+</dt>
+<dt class="hdlist1">
+--latency
+</dt>
+<dd>
+<p>
+        Print out the latency the IOCTL took (in us).
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -982,7 +997,8 @@ Or if you want to save that structure to a file:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-09-06 10:35:44 MDT
+Last updated
+ 2021-06-04 10:59:04 IST
 </div>
 </div>
 </body>

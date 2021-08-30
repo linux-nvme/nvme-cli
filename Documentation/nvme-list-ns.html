@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.9" />
+<meta name="generator" content="AsciiDoc 8.6.10" />
 <title>nvme-id-ns(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -435,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -749,7 +750,8 @@ nvme-id-ns(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme list-ns</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--all | -a]</pre>
+                        [--csi=&lt;command_set_identifier&gt; | -y &lt;command_set_identifier&gt;]
+                        [--all | -a] [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -783,6 +785,18 @@ a valid nsid.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+-y &lt;command_set_identifier&gt;
+</dt>
+<dt class="hdlist1">
+--csi=&lt;command_set_identifier&gt;
+</dt>
+<dd>
+<p>
+        If this value is given, retrieve the identify list structure associated
+        with the speicified I/O command set.
+</p>
+</dd>
+<dt class="hdlist1">
 -a
 </dt>
 <dt class="hdlist1">
@@ -794,13 +808,44 @@ a valid nsid.</p></div>
         subsystem, whether attached or inactive.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;format&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;format&gt;
+</dt>
+<dd>
+<p>
+    Set the reporting format to <em>normal</em>, or <em>json</em>.
+    Only one output format can be used at a time.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No examples yet.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Print the namespaces present for zoned command set in JSON format
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme list-ns /dev/nvme0 -y 2 -a -o json</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Print the namespaces present for NVM Command Set in normal format
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme list-ns /dev/nvme0</code></pre>
+</div></div>
+</li>
+</ul></div>
 </div>
 </div>
 <div class="sect1">
@@ -814,7 +859,7 @@ a valid nsid.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2018-01-30 19:28:39 KST
+ 2021-05-16 10:13:29 IST
 </div>
 </div>
 </body>

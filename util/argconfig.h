@@ -91,6 +91,9 @@ enum argconfig_types {
 #define OPT_SHRT(l, s, v, d) \
 	{l, s, "NUM", CFG_SHORT, v, required_argument, d}
 
+#define OPT_INCR(l, s, v, d) \
+	{l, s, "NUM", CFG_INCREMENT, v, no_argument, d}
+
 #define OPT_STRING(l, s, m, v, d) \
 	{l, s, m, CFG_STRING, v, required_argument, d}
 
@@ -119,9 +122,9 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    const struct argconfig_commandline_options *options);
 int argconfig_parse_subopt_string(char *string, char **options,
 				  size_t max_options);
-unsigned argconfig_parse_comma_sep_array(char *string, int *ret,
+int argconfig_parse_comma_sep_array(char *string, int *ret,
 					 unsigned max_length);
-unsigned argconfig_parse_comma_sep_array_long(char *string,
+int argconfig_parse_comma_sep_array_long(char *string,
 					      unsigned long long *ret,
 					      unsigned max_length);
 void argconfig_register_help_func(argconfig_help_func * f);

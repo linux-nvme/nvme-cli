@@ -1,0 +1,133 @@
+'\" t
+.\"     Title: nvme-zns-zone-append
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/20/2020
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-ZNS\-ZONE\-APP" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-zns-zone-append \- Send an NVMe write command, provide results
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\-zns\-zone\-append\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
+                                [\-\-zslba=<IONUM> | \-s <IONUM>]
+                                [\-\-data\-size=<IONUM> | \-z <IONUM>]
+                                [\-\-metadata\-size=<IONUM> | \-y <IONUM>]
+                                [\-\-data=<FILE> | \-d <FILE>]
+                                [\-\-metadata=<FILE> | \-M <FILE>]
+                                [\-\-limited\-retry | \-l]
+                                [\-\-force\-unit\-access | \-f]
+                                [\-\-ref\-tag=<NUM> | \-r <NUM>]
+                                [\-\-app\-tag\-mask=<NUM> | \-m <NUM>]
+                                [\-\-app\-tag=<NUM> | \-a <NUM>]
+                                [\-\-prinfo=<NUM> | \-p <NUM>]
+.fi
+.SH "DESCRIPTION"
+.sp
+The zone append command writes the logical blocks specified by the command to the medium from the data data buffer provided\&. Will use stdin by default if you don\(cqt provide a file\&.
+.sp
+On sucess, the program will report the LBA that was assigned to the data for the append operation\&.
+.SH "OPTIONS"
+.PP
+\-n <NUM>, \-\-namespace\-id=<NUM>
+.RS 4
+Use the provided namespace id for the command\&. If not provided, the namespace id of the block device will be used\&. If the command is issued to a non\-block device, the parameter is required\&.
+.RE
+.PP
+\-s <IONUM>, \-\-zslba=<IONUM>, \-z <IONUM>, \-\-data\-size=<IONUM>
+.RS 4
+Size of data, in bytes\&.
+.RE
+.PP
+\-y <IONUM>, \-\-metadata\-size=<IONUM>
+.RS 4
+Size of metadata in bytes\&.
+.RE
+.PP
+\-d <FILE>, \-\-data=<FILE>
+.RS 4
+Data file providing the data to write\&. If none provided, contents are sent from STDIN\&.
+.RE
+.PP
+\-M <FILE>, \-\-metadata=<FILE>
+.RS 4
+Metadata file, if necessary\&.
+.RE
+.PP
+\-l, \-\-limited\-retry
+.RS 4
+Sets the limited retry flag\&.
+.RE
+.PP
+\-f, \-\-force\-unit\-access
+.RS 4
+Set the force\-unit access flag\&.
+.RE
+.PP
+\-r <NUM>, \-\-ref\-tag=<NUM>
+.RS 4
+Optional reftag when used with protection information\&.
+.RE
+.PP
+\-m <NUM>, \-\-app\-tag\-mask=<NUM>
+.RS 4
+Optional application tag mask when used with protection information\&.
+.RE
+.PP
+\-a <NUM>, \-\-app\-tag=<NUM>
+.RS 4
+Optional application tag when used with protection information\&.
+.RE
+.PP
+\-p <NUM>, \-\-prinfo=<NUM>
+.RS 4
+Protection Information field definition\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Append the data "hello world" into 4k worth of blocks into the zone starting at block 0 for namespace 1:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# echo "hello world" | nvme zns zone\-append /dev/nvme0 \-n 1 \-s 0 \-z 4k
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 8.6.10" />
 <title>nvme-wdc-vs-smart-add-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -746,7 +749,8 @@ nvme-wdc-vs-smart-add-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme wdc vs-smart-add-log</em> &lt;device&gt; [--interval=&lt;NUM&gt;, -i &lt;NUM&gt;] [--output-format=&lt;normal|json&gt; -o &lt;normal|json&gt;]</pre>
+<pre class="content"><em>nvme wdc vs-smart-add-log</em> &lt;device&gt; [--interval=&lt;NUM&gt;, -i &lt;NUM&gt;] [--output-format=&lt;normal|json&gt; -o &lt;normal|json&gt;]
+    [--log-page-version=&lt;NUM&gt;, -l &lt;NUM&gt;] [--log-page-mask=&lt;LIST&gt;, -p &lt;LIST&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -755,10 +759,9 @@ nvme-wdc-vs-smart-add-log(1) Manual Page
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>For the NVMe device given, send a Vendor Unique WDC vs-smart-add-log command and
-provide the additional smart log. The --interval option will return performance
-statistics from the specified reporting interval.</p></div>
+provide the additional smart log.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0).</p></div>
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).</p></div>
 <div class="paragraph"><p>This will only work on WDC devices supporting this feature.
 Results for any other device are undefined.</p></div>
 <div class="paragraph"><p>On success it returns 0, error code otherwise.</p></div>
@@ -776,7 +779,8 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-        Return the statistics from specific interval, defaults to 14
+        Return the statistics from specific interval, defaults to 14.  This parameter is only valid for the 0xC1 log page
+        and ignored for all other log pages.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -790,6 +794,32 @@ Results for any other device are undefined.</p></div>
         Set the reporting format to <em>normal</em>, or
         <em>json</em>. Only one output format can be used at a time.
         Default is normal.
+</p>
+</dd>
+<dt class="hdlist1">
+-l &lt;NUM&gt;
+</dt>
+<dt class="hdlist1">
+--log-page-version=&lt;NUM&gt;
+</dt>
+<dd>
+<p>
+    Log Page Version: 0 = vendor, 1 = WDC.  This parameter is only valid for the 0xC0 log page and ignored for all
+    other log pages.
+</p>
+</dd>
+<dt class="hdlist1">
+-p &lt;LIST&gt;
+</dt>
+<dt class="hdlist1">
+--log-page-mask=&lt;LIST&gt;
+</dt>
+<dd>
+<p>
+    Supply a comma separated list of desired log pages to display.
+    The possible values are 0xc0, 0xc1, 0xca, 0xd0.
+    Note: Not all pages are supported on all drives.
+    The default is to display all supported log pages.
 </p>
 </dd>
 </dl></div>
@@ -836,274 +866,6 @@ accumulated statistics.</p></td>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ca_log_page_data_output_explanation">CA Log Page Data Output Explanation</h2>
-<div class="sectionbody">
-<div class="tableblock">
-<table rules="all"
-style="margin-left:auto; margin-right:auto;"
-width="100%"
-frame="hsides"
-cellspacing="0" cellpadding="4">
-<col width="50%" />
-<col width="50%" />
-<thead>
-<tr>
-<th align="left" valign="top">Field </th>
-<th align="left" valign="top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Physical NAND bytes written.</strong></p></td>
-<td align="left" valign="top"><p class="table">The number of bytes written to NAND.  16 bytes - hi/lo</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Physical NAND bytes read</strong></p></td>
-<td align="left" valign="top"><p class="table">The number of bytes read from NAND.  16 bytes - hi/lo</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Bad NAND Block Count</strong></p></td>
-<td align="left" valign="top"><p class="table">Raw and normalized count of the number of NAND blocks that have been
-retired after the drives manufacturing tests (i.e. grown back blocks).
-2 bytes normalized, 6 bytes raw count</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Uncorrectable Read Error Count</strong></p></td>
-<td align="left" valign="top"><p class="table">Total count of NAND reads that were not correctable by read retries, all
-levels of ECC, or XOR (as applicable).  8 bytes</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Soft ECC Error Count</strong></p></td>
-<td align="left" valign="top"><p class="table">Total count of NAND reads that were not correctable by read retries, or
-first-level ECC.  8 bytes</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>SSD End to End Detection Count</strong></p></td>
-<td align="left" valign="top"><p class="table">A count of the detected errors by the SSD end to end error correction which
-includes DRAM, SRAM, or other storage element ECC/CRC protection mechanism (not
-NAND ECC).  4 bytes</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>SSD End to End Correction Count</strong></p></td>
-<td align="left" valign="top"><p class="table">A count of the corrected errors by the SSD end to end error correction which
-includes DRAM, SRAM, or other storage element ECC/CRC protection mechanism (not
-NAND ECC).  4 bytes</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>System Data % Used</strong></p></td>
-<td align="left" valign="top"><p class="table">A normalized cumulative count of the number of erase cycles per block since
-leaving the factory for the system (FW and metadata) area. Starts at 0 and
-increments. 100 indicates that the estimated endurance has been consumed.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>User Data Max Erase Count</strong></p></td>
-<td align="left" valign="top"><p class="table">The maximum erase count across all NAND blocks in the drive.  4 bytes</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>User Data Min Erase Count</strong></p></td>
-<td align="left" valign="top"><p class="table">The minimum erase count across all NAND blocks in the drive.  4 bytes</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Refresh Count</strong></p></td>
-<td align="left" valign="top"><p class="table">A count of the number of blocks that have been re-allocated due to
-background operations only.  8 bytes</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Program Fail Count</strong></p></td>
-<td align="left" valign="top"><p class="table">Raw and normalized count of total program failures. Normalized count
-starts at 100 and shows the percent of remaining allowable failures.
-2 bytes normalized, 6 bytes raw count</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>User Data Erase Fail Count</strong></p></td>
-<td align="left" valign="top"><p class="table">Raw and normalized count of total erase failures in the user area.
-Normalized count starts at 100 and shows the percent of remaining
-allowable failures.  2 bytes normalized, 6 bytes raw count</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>System Area Erase Fail Count</strong></p></td>
-<td align="left" valign="top"><p class="table">Raw and normalized count of total erase failures in the system area.
-Normalized count starts at 100 and shows the percent of remaining
-allowable failures.  2 bytes normalized, 6 bytes raw count</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Thermal Throttling Status</strong></p></td>
-<td align="left" valign="top"><p class="table">The current status of thermal throttling (enabled or disabled).
-2 bytes</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Thermal Throttling Count</strong></p></td>
-<td align="left" valign="top"><p class="table">A count of the number of thermal throttling events.  2 bytes</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>PCIe Correctable Error Count</strong></p></td>
-<td align="left" valign="top"><p class="table">Summation counter of all PCIe correctable errors (Bad TLP, Bad
-DLLP, Receiver error, Replay timeouts, Replay rollovers).  8 bytes</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_c1_log_page_data_output_explanation">C1 Log Page Data Output Explanation</h2>
-<div class="sectionbody">
-<div class="tableblock">
-<table rules="all"
-style="margin-left:auto; margin-right:auto;"
-width="100%"
-frame="hsides"
-cellspacing="0" cellpadding="4">
-<col width="50%" />
-<col width="50%" />
-<thead>
-<tr>
-<th align="left" valign="top">Field </th>
-<th align="left" valign="top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Read Commands</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of host read commands received during the reporting period.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Read Blocks</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of 512-byte blocks requested during the reporting period.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Average Read Size</strong></p></td>
-<td align="left" valign="top"><p class="table">Average Read size is calculated using (Host Read Blocks/Host Read Commands).</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Read Cache Hit Commands</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of host read commands that serviced entirely from the on-board read
-cache during the reporting period. No access to the NAND flash memory was required.
-This count is only updated if the entire command was serviced from the cache memory.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Read Cache Hit Percentage</strong></p></td>
-<td align="left" valign="top"><p class="table">Percentage of host read commands satisfied from the cache.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Read Cache Hit Blocks</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of 512-byte blocks of data that have been returned for Host Read Cache Hit
-Commands during the reporting period. This count is only updated with the blocks
-returned for host read commands that were serviced entirely from cache memory.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Average Read Cache Hit Size</strong></p></td>
-<td align="left" valign="top"><p class="table">Average size of read commands satisfied from the cache.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Read Commands Stalled</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of host read commands that were stalled due to a lack of resources within
-the SSD during the reporting period (NAND flash command queue full, low cache page count,
-cache page contention, etc.). Commands are not considered stalled if the only reason for
-the delay was waiting for the data to be physically read from the NAND flash. It is normal
-to expect this count to equal zero on heavily utilized systems.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Read Commands Stalled Percentage</strong></p></td>
-<td align="left" valign="top"><p class="table">Percentage of read commands that were stalled. If the figure is consistently high,
-then consideration should be given to spreading the data across multiple SSDs.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Write Commands</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of host write commands received during the reporting period.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Write Blocks</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of 512-byte blocks written during the reporting period.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Average Write Size</strong></p></td>
-<td align="left" valign="top"><p class="table">Average Write size calculated using (Host Write Blocks/Host Write Commands).</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Write Odd Start Commands</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of host write commands that started on a non-aligned boundary during
-the reporting period. The size of the boundary alignment is normally 4K; therefore
-this returns the number of commands that started on a non-4K aligned boundary.
-The SSD requires slightly more time to process non-aligned write commands than it
-does to process aligned write commands.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Write Odd Start Commands Percentage</strong></p></td>
-<td align="left" valign="top"><p class="table">Percentage of host write commands that started on a non-aligned boundary. If this
-figure is equal to or near 100%, and the NAND Read Before Write value is also high,
-then the user should investigate the possibility of offsetting the file system. For
-Microsoft Windows systems, the user can use Diskpart. For Unix-based operating systems,
-there is normally a method whereby file system partitions can be placed where required.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Write Odd End Commands</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of host write commands that ended on a non-aligned boundary during the
-reporting period. The size of the boundary alignment is normally 4K; therefore this
-returns the number of commands that ended on a non-4K aligned boundary.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Write Odd End Commands Percentage</strong></p></td>
-<td align="left" valign="top"><p class="table">Percentage of host write commands that ended on a non-aligned boundary.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Write Commands Stalled</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of host write commands that were stalled due to a lack of resources within the
-SSD during the reporting period. The most likely cause is that the write data was being
-received faster than it could be saved to the NAND flash memory. If there was a large
-volume of read commands being processed simultaneously, then other causes might include
-the NAND flash command queue being full, low cache page count, or cache page contention, etc.
-It is normal to expect this count to be non-zero on heavily utilized systems.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Host Write Commands Stalled Percentage</strong></p></td>
-<td align="left" valign="top"><p class="table">Percentage of write commands that were stalled. If the figure is consistently high, then
-consideration should be given to spreading the data across multiple SSDs.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>NAND Read Commands</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of read commands issued to the NAND devices during the reporting period.
-This figure will normally be much higher than the host read commands figure, as the data
-needed to satisfy a single host read command may be spread across several NAND flash devices.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>NAND Read Blocks</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of 512-byte blocks requested from NAND flash devices during the reporting period.
-This figure would normally be about the same as the host read blocks figure</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Average NAND Read Size</strong></p></td>
-<td align="left" valign="top"><p class="table">Average size of NAND read commands.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>NAND Write Commands</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of write commands issued to the NAND devices during the reporting period.
-There is no real correlation between the number of host write commands issued and the
-number of NAND Write Commands.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>NAND Write Blocks</strong></p></td>
-<td align="left" valign="top"><p class="table">Number of 512-byte blocks written to the NAND flash devices during the reporting period.
-This figure would normally be about the same as the host write blocks figure.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>Average NAND Write Size</strong></p></td>
-<td align="left" valign="top"><p class="table">Average size of NAND write commands. This figure should never be greater than 128K, as
-this is the maximum size write that is ever issued to a NAND device.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>NAND Read Before Write</strong></p></td>
-<td align="left" valign="top"><p class="table">This is the number of read before write operations that were required to process
-non-aligned host write commands during the reporting period. See Host Write Odd Start
-Commands and Host Write Odd End Commands. NAND Read Before Write operations have
-a detrimental effect on the overall performance of the device.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-<div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
@@ -1114,6 +876,24 @@ Has the program issue WDC vs-smart-add-log Vendor Unique Command with default in
 <div class="listingblock">
 <div class="content">
 <pre><code># nvme wdc vs-smart-add-log /dev/nvme0</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Has the program issue WDC vs-smart-add-log Vendor Unique Command for just the 0xCA log page :
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme wdc vs-smart-add-log /dev/nvme0 -p 0xCA</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Has the program issue WDC vs-smart-add-log Vendor Unique Command for 0xC0 and 0xCA log pages :
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme wdc vs-smart-add-log /dev/nvme0 -p 0xCA,0xC0</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -1129,7 +909,8 @@ Has the program issue WDC vs-smart-add-log Vendor Unique Command with default in
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2019-01-11 13:56:35 MST
+Last updated
+ 2020-08-06 15:54:37 PDT
 </div>
 </div>
 </body>

@@ -2,16 +2,17 @@
 # (unfortunately, bash won't let me add descriptions to cmds)
 # Kelly Kaoudis kelly.n.kaoudis at intel.com, Aug. 2015
 
-_cmds="list id-ctrl id-ns list-ns create-ns delete-ns \
-	attach-ns detach-ns list-ctrl get-ns-id get-log \
-	fw-log smart-log smart-log-add error-log \
-	get-feature set-feature format fw-activate \
+_cmds="list id-ctrl id-ns list-ns id-iocs nvm-id-ctrl create-ns delete-ns \
+	attach-ns detach-ns list-ctrl get-ns-id get-log persistent-event-log \
+	pred-lat-event-agg-log fw-log smart-log smart-log-add error-log \
+	predictable-lat-log get-feature set-feature format fw-activate \
 	fw-download admin-passthru io-passthru security-send \
 	security-recv resv-acquire resv-register resv-release \
 	resv-report dsm flush compare read write write-zeroes \
-	write-uncor reset subsystem-reset show-regs discover \
+	write-uncor copy reset subsystem-reset show-regs discover \
 	connect-all connect disconnect version help \
-	intel lnvm memblaze list-subsys"
+	intel lnvm memblaze list-subsys endurance-event-agg-log \
+	lba-status-log resv-notif-log"
 
 nvme_list_opts () {
         local opts=""
@@ -44,11 +45,17 @@ nvme_list_opts () {
 			--force -f --output-format= -o"
 			;;
 		"list-ns")
-		opts+=" --namespace-id= -n --al -a"
+		opts+=" --namespace-id= -n --al -a --csi= -y"
+			;;
+		"id-iocs")
+		opts+=" --controller-id= -c"
+			;;
+		"nvm-id-ctrl")
+		opts+=" --output-format= -o"
 			;;
 		"create-ns")
 		opts+=" --nsze= -s --ncap= -c --flbas= -f \
-			--dps= -d --nmic= -n"
+			--dps= -d --nmic= -n --csi= -y"
 			;;
 		"delete-ns")
 		opts+=" -namespace-id= -n"
@@ -68,6 +75,18 @@ nvme_list_opts () {
 		opts+=" --log-id= -i --log-len= -l --namespace-id= -n \
 			--raw-binary= -b"
 			;;
+		"persistent-event-log")
+		opts+=" --action= -a --log-len= -l \
+			--raw-binary -b --output-format= -o"
+			;;
+		"pred-lat-event-agg-log")
+		opts+=" --log-entries= -e  --rae -r \
+			--raw-binary -b --output-format= -o"
+			;;
+		"predictable-lat-log")
+		opts+=" --nvmset-id= -i --raw-binary -b \
+			--output-format= -o"
+			;;
 		"fw-log")
 		opts+=" --raw-binary -b --output-format= -o"
 			;;
@@ -82,14 +101,24 @@ nvme_list_opts () {
 		opts+=" --namespace-id= -n --raw-binary -b --log-entries= -e \
 			--output-format= -o"
 			;;
+		"endurance-event-agg-log")
+		opts+=" --log-entries= -e  --rae -r \
+			--raw-binary -b --output-format= -o"
+			;;
+		"lba-status-log")
+		opts+=" --rae -r --output-format= -o"
+			;;
+		"resv-notif-log")
+		opts+=" --output-format= -o"
+			;;
 		"get-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --sel= -s \
-			--data-len= -l --cdw11= --raw-binary -b \
+			--data-len= -l --cdw11= --uuid-index= -U --raw-binary -b \
 			--human-readable -H"
 			;;
 		"set-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --value= -v \
-			--data-len= -l -data= -d --value= --save -s"
+			--data-len= -l -data= -d --value= --save -s --uuid-index= -U"
 			;;
 		"format")
 		opts+=" --namespace-id= -n --timeout= -t --lbaf= -l \
@@ -144,6 +173,15 @@ nvme_list_opts () {
 		"dsm")
 		opts+=" --namespace-id= -n --ctx-attrs= -a --blocks= -b\
 			-slbs= -s --ad -d --idw -w --idr -r --cdw11= -c"
+			;;
+		"copy")
+		opts+=" --sdlba= -d --blocks= -b --slbs= -s \
+			--limited-retry -l --force-unit-access -f \
+			--prinfow= -p --prinfor= -P \
+			--ref-tag= -r --expected-ref-tag= -R \
+			--app-tag= -a --expected-app-tag= -A \
+			--app-tag-mask= -m --expected-app-tag-mask= -M \
+			--dir-type= -T --dir-spec= -S --format= -F"
 			;;
 		"flush")
 		opts+=" --namespace-id= -n"

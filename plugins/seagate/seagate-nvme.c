@@ -26,17 +26,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <inttypes.h>
-#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <ctype.h>
-#include "linux/nvme_ioctl.h"
 #include "nvme.h"
-#include "nvme-print.h"
-#include "nvme-ioctl.h"
+#include "libnvme.h"
 #include "plugin.h"
-#include "argconfig.h"
-#include "suffix.h"
-#include "json.h"
+#include "linux/types.h"
+#include "nvme-print.h"
 
 #define CREATE_CMD
 
@@ -132,7 +128,7 @@ static char *log_pages_supp_print(__u32 pageID)
 static void json_log_pages_supp(log_page_map *logPageMap)
 {
 	struct json_object *root;
-	struct json_array *logPages;
+	struct json_object *logPages;
 	__u32 i = 0;
 
 	root = json_create_object();
@@ -177,7 +173,7 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
-	err = nvme_get_log(fd, 1, 0xc5, false, sizeof(logPageMap), &logPageMap);
+	err = nvme_get_log_simple(fd, 0xc5, sizeof(logPageMap), &logPageMap);
 	if (!err) {
 		if (strcmp(cfg.output_format,"json")) {
 			printf ("Seagate Supported Log-pages count :%d\n",
@@ -201,8 +197,7 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 	}
 
 	if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	return err;
 }
 
@@ -312,7 +307,7 @@ static char *print_ext_smart_id(__u8 attrId)
 		return "RAIS_ECC_CORRECT_ERR_COUNT";
 		break;
 	case VS_ATTR_ID_UNCORRECTABLE_RAISE_ERRORS:
-		return "Uncorrectable read error count";/*VS_ATTR_ID_UNCORRECTABLE_RAISE_ERRORS*/
+		return "Uncorrectable RAISE error count";/*VS_ATTR_ID_UNCORRECTABLE_RAISE_ERRORS*/
 		break;
 	case VS_ATTR_ID_DRIVE_LIFE_PROTECTION_STATUS:
 		return "DRIVE_LIFE_PROTECTION_STATUS";
@@ -493,7 +488,7 @@ static void json_print_smart_log(struct json_object *root,
 				 EXTENDED_SMART_INFO_T *ExtdSMARTInfo )
 {
 	/*struct json_object *root; */
-	struct json_array *lbafs;
+	struct json_object *lbafs;
 	int index = 0;
 
 	static __u64 lsbGbErased = 0, msbGbErased = 0, lsbLifWrtToFlash = 0, msbLifWrtToFlash = 0,
@@ -650,7 +645,7 @@ static void json_print_smart_log_CF(struct json_object *root,
 				    vendor_log_page_CF *pLogPageCF)
 {
 	/*struct json_object *root;*/
-	struct json_array *logPages;
+	struct json_object *logPages;
 	unsigned int currentTemp, maxTemp;
 	char buf[40];
 
@@ -715,11 +710,9 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	EXTENDED_SMART_INFO_T   ExtdSMARTInfo;
 	vendor_log_page_CF      logPageCF;
 	int fd;
-	struct json_object *root;
-	struct json_array *lbafs;
+	struct json_object *root = json_create_object();
+	struct json_object *lbafs = json_create_array();
 	struct json_object *lbafs_ExtSmart, *lbafs_DramSmart;
-	root = json_create_object();
-	lbafs = json_create_array();
 
 	const char *desc = "Retrieve Seagate Extended SMART information for the given device ";
 	const char *output_format = "output in binary format";
@@ -741,7 +734,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	if (strcmp(cfg.output_format,"json"))
 		printf("Seagate Extended SMART Information :\n");
 
-	err = nvme_get_log(fd, 1, 0xC4, false, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
+	err = nvme_get_log_simple(fd, 0xC4, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
 	if (!err) {
 		if (strcmp(cfg.output_format,"json")) {
 			printf("%-39s %-15s %-19s \n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
@@ -763,7 +756,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 		 * Next get Log Page 0xCF
 		 */
 
-		err = nvme_get_log(fd, 1, 0xCF, false, sizeof(logPageCF), &logPageCF);
+		err = nvme_get_log_simple(fd, 0xCF, sizeof(logPageCF), &logPageCF);
 		if (!err) {
 			if(strcmp(cfg.output_format,"json")) {
 				/*printf("Seagate DRAM Supercap SMART Attributes :\n");*/
@@ -778,8 +771,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 		} else if (!strcmp(cfg.output_format, "json"))
 			json_print_object(root, NULL);
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
 
 	return err;
 }
@@ -844,7 +836,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	if(strcmp(cfg.output_format,"json"))
 		printf("Seagate Temperature Stats Information :\n");
 	/*STEP-1 : Get Current Temperature from SMART */
-	err = nvme_smart_log(fd, 0xffffffff, &smart_log);
+	err = nvme_get_log_smart(fd, 0xffffffff, true, &smart_log);
 	if (!err) {
 		temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]);
 		temperature = temperature ? temperature - 273 : 0;
@@ -860,7 +852,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	}
 
 	/* STEP-2 : Get Max temperature form Ext SMART-id 194 */
-	err = nvme_get_log(fd, 1, 0xC4, false, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
+	err = nvme_get_log_simple(fd, 0xC4, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
 	if (!err) {
 		for(index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++) {
 			if (ExtdSMARTInfo.vendorData[index].AttributeNumber == VS_ATTR_ID_MAX_LIFE_TEMPERATURE) {
@@ -879,10 +871,9 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 		}
 	}
 	else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
 
-	cf_err = nvme_get_log(fd, 1, 0xCF, false, sizeof(ExtdSMARTInfo), &logPageCF);
+	cf_err = nvme_get_log_simple(fd, 0xCF, sizeof(ExtdSMARTInfo), &logPageCF);
 
 	if(!cf_err) {
 		scCurrentTemp = logPageCF.AttrCF.SuperCapCurrentTemperature;
@@ -1011,7 +1002,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 	if(strcmp(cfg.output_format,"json"))
 		printf("Seagate PCIe error counters Information :\n");
 
-	err = nvme_get_log(fd, 1, 0xCB, false, sizeof(pcieErrorLog), &pcieErrorLog);
+	err = nvme_get_log_simple(fd, 0xCB, sizeof(pcieErrorLog), &pcieErrorLog);
 	if (!err) {
 		if(strcmp(cfg.output_format,"json")) {
 			print_vs_pcie_error_log(pcieErrorLog);
@@ -1019,7 +1010,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 			json_vs_pcie_error_log(pcieErrorLog);
 
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
+		nvme_show_status(err);
 
 	return err;
 }
@@ -1031,7 +1022,6 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 	const char *save = "specifies that the controller shall save the attribute";
 	int err, fd;
 	__u32 result;
-	void *buf = NULL;
 
 	struct config {
 		int   save;
@@ -1048,7 +1038,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 
 	fd = parse_and_open(argc, argv, desc, opts);
 
-	err = nvme_set_feature(fd, 0, 0xE1, 0xCB, 0, cfg.save, 0, buf, &result);
+	err = nvme_set_features_simple(fd, 0xE1, 0, 0xCB, cfg.save, &result);
 
 	if (err < 0) {
 		perror("set-feature");
@@ -1098,8 +1088,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 	dump_fd = STDOUT_FILENO;
 	cfg.log_id = (cfg.log_id << 8) | 0x07;
-	err = nvme_get_log13(fd, cfg.namespace_id, cfg.log_id,
-			     NVME_NO_LOG_LSP, offset, 0, false,
+	err = nvme_get_nsid_log(fd, cfg.log_id, cfg.namespace_id,
 			     sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
@@ -1116,8 +1105,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		} else
 			seaget_d_raw((unsigned char *)(&tele_log), sizeof(tele_log), dump_fd);
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	else
 		perror("log page");
 
@@ -1138,9 +1126,8 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		memset(log, 0, blksToGet * 512);
 
-		err = nvme_get_log13(fd, cfg.namespace_id, cfg.log_id,
-				     NVME_NO_LOG_LSP, offset, 0, false,
-				     blksToGet * 512, (void *)log);
+		err = nvme_get_log(fd, cfg.log_id, cfg.namespace_id, offset, 0, 0, true,
+				   0, 0, blksToGet * 512, (void *)log);
 		if (!err) {
 			offset += blksToGet * 512;
 
@@ -1151,8 +1138,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 			} else
 				seaget_d_raw((unsigned char *)log, blksToGet * 512, dump_fd);
 		} else if (err > 0)
-			fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+			nvme_show_status(err);
 		else
 			perror("log page");
 
@@ -1199,8 +1185,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 	dump_fd = STDOUT_FILENO;
 
 	log_id = 0x08;
-	err = nvme_get_log13(fd, cfg.namespace_id, log_id,
-			     NVME_NO_LOG_LSP, offset, 0, false,
+	err = nvme_get_nsid_log(fd, log_id, cfg.namespace_id,
 			     sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
@@ -1216,8 +1201,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 		} else
 			seaget_d_raw((unsigned char *)(&tele_log), sizeof(tele_log), dump_fd);
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	else
 		perror("log page");
 
@@ -1238,9 +1222,8 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		memset(log, 0, blksToGet * 512);
 
-		err = nvme_get_log13(fd, cfg.namespace_id, log_id,
-				     NVME_NO_LOG_LSP, offset, 0, false,
-				     blksToGet * 512, (void *)log);
+		err = nvme_get_log(fd, log_id, cfg.namespace_id, offset, 0, 0, true,
+				   0, 0, blksToGet * 512, (void *)log);
 		if (!err) {
 			offset += blksToGet * 512;
 
@@ -1251,8 +1234,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 			} else
 				seaget_d_raw((unsigned char *)log, blksToGet * 512, dump_fd);
 		} else if (err > 0)
-			fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+			nvme_show_status(err);
 		else
 			perror("log page");
 
@@ -1324,8 +1306,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 	}
 
 	log_id = 0x08;
-	err = nvme_get_log13(fd, cfg.namespace_id, log_id,
-			     NVME_NO_LOG_LSP, offset, 0, false,
+	err = nvme_get_nsid_log(fd, log_id, cfg.namespace_id,
 			     sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
@@ -1337,8 +1318,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 		*/
 		seaget_d_raw((unsigned char *)(&tele_log), sizeof(tele_log), dump_fd);
 	} else if (err > 0)
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
-			nvme_status_to_string(err), err);
+		nvme_show_status(err);
 	else
 		perror("log page");
 
@@ -1360,17 +1340,15 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 
 		memset(log, 0, blksToGet * 512);
 
-		err = nvme_get_log13(fd, cfg.namespace_id, log_id,
-				     NVME_NO_LOG_LSP, offset, 0, false,
-				     blksToGet * 512, (void *)log);
+		err = nvme_get_log(fd, log_id, cfg.namespace_id, offset, 0, 0, true,
+				   0, 0, blksToGet * 512, (void *)log);
 		if (!err) {
 			offset += blksToGet * 512;
 
 			seaget_d_raw((unsigned char *)log, blksToGet * 512, dump_fd);
 
 		} else if (err > 0)
-			fprintf(stderr, "NVMe Status:%s(%x)\n",
-				nvme_status_to_string(err), err);
+			nvme_show_status(err);
 		else
 			perror("log page");
 

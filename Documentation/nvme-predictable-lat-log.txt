@@ -1,0 +1,66 @@
+nvme-predictable-lat-log(1)
+===========================
+
+NAME
+----
+nvme-predictable-lat-log - Send Predectible latency per NVM set log page request,
+returns result and log
+
+SYNOPSIS
+--------
+[verse]
+'nvme predictable-lat-log' <device> [--nvmset-id=<nvmset_id> | -i <nvmset_id>]
+			[--raw-binary | -b]
+			[--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+Retrieves the NVMe Predectible latency per NVM set log page from an NVMe device
+and provides the returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned Predectible latency per NVM set log structure
+may be returned in one ofseveral ways depending on the option flags; the
+structure may parsed by the program and printed in a readable format or
+the raw buffer may be printed to stdout for another program to parse.
+
+OPTIONS
+-------
+-i <nvmset_id>::
+--nvmset-id=<nvmset_id>::
+    Retrieve the Predectible latency per NVM set log for the given nvmset id.
+    This argument is mandatory and its success may depend on the device's
+    statistics to provide this log For More details see NVM Express 1.4 Spec.
+    Section 5.14.1.10. The default nvmset id to use is 1 for the device.
+
+-b::
+--raw-binary::
+	Print the raw Predectible latency per NVM set log buffer to stdout.
+
+-o <format>::
+--output-format=<format>::
+              Set the reporting format to 'normal', 'json', or
+              'binary'. Only one output format can be used at a time.
+
+EXAMPLES
+--------
+* Print the Predectible latency per NVM set log page in a human readable format:
++
+------------
+# nvme predictable-lat-log /dev/nvme0
+------------
++
+
+* Print the raw Predectible latency per NVM set log to a file:
++
+------------
+# nvme predictable-lat-log /dev/nvme0 --raw-binary > nvmset_log.raw
+------------
++
+It is probably a bad idea to not redirect stdout when using this mode.
+
+NVME
+----
+Part of the nvme-user suite

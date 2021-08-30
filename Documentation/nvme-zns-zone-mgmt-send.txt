@@ -1,0 +1,77 @@
+nvme-zns-zone-mgmt-send(1)
+==========================
+
+NAME
+----
+nvme-zns-zone-mgmt-send - Zone Management Send command
+
+SYNOPSIS
+--------
+[verse]
+'nvme zns zone-mgmt-send' <device> [--namespace-id=<NUM> | -n <NUM>]
+				   [--start-lba=<IONUM>, -s <IONUM>]
+				   [--select-all, -a]
+				   [--zsa=<NUM>, -z <NUM>]
+				   [--data-len=<IONUM>, -l <IONUM>]
+				   [-data=<FILE>, -d <FILE>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, issues the Zone Management Send command with the
+requested send action. If the send requires additional data, you may specify
+the data length. If data is required, the input will default to stdin.
+Alternatively, the data may come from a file that can be specified.
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+	Use the provided namespace id for the command. If not provided, the
+	namespace id of the block device will be used. If the command is issued
+	to a non-block device, the parameter is required.
+
+-s <lba>::
+--start-lba=<lba>::
+	The starting LBA of the zone to manage send.
+
+-l <NUM>::
+--data-len=<NUM>::
+	Send data buffer length
+
+--select-all::
+-a::
+	Send command to all zones
+
+-z <NUM>::
+--zsa=<NUM>::
+	Zone send action.
+
+-l <IONUM>::
+--data-len=<IONUM>::
+	Buffer length if data required
+
+-d <FILE::
+-data=<FILE>::
+	Optional file for data (default stdin)
+
+
+EXAMPLES
+--------
+* Send a zone management command with action set to 1 (close zone) to namespace
+  1's first zone:
++
+------------
+# nvme zns zone-mgmt-send /dev/nvme0 -n 1 -s 0 -z 1
+------------
++
+
+* Write "hello world" into the zone descriptor for namespace 1's first zone
+  (requires device supports a large enough zone extended data) 
++
+------------
+# echo "hello world" | nvme zns zone-mgmt-send /dev/nvme0 -n 1 -s 0 -z 0x10
+------------
+
+NVME
+----
+Part of nvme-cli

@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
-.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/24/2020
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 12/01/2020
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "04/24/2020" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "12/01/2020" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -85,7 +85,12 @@ Format namespace(s)
 .PP
 \fBnvme-fw-activate\fR(1)
 .RS 4
-F/W Activate
+F/W Activate (in old version < 1\&.2)
+.RE
+.PP
+\fBnvme-fw-commit\fR(1)
+.RS 4
+F/W Commit (in > 1\&.2)
 .RE
 .PP
 \fBnvme-fw-download\fR(1)
@@ -113,9 +118,19 @@ Generic Get Log
 Telemetry Host\-Initiated Log
 .RE
 .PP
+\fBnvme-changed-ns-list-log\fR(1)
+.RS 4
+Retrieve Changed Namespace List Log
+.RE
+.PP
 \fBnvme-smart-log\fR(1)
 .RS 4
 Retrieve Smart Log
+.RE
+.PP
+\fBnvme-ana-log\fR(1)
+.RS 4
+Retreive ANA(Asymmetric Namespace Access) Log
 .RE
 .PP
 \fBnvme-endurance-log\fR(1)
@@ -126,6 +141,11 @@ Retrieve endurance Log
 \fBnvme-effects-log\fR(1)
 .RS 4
 Retrieve effects Log
+.RE
+.PP
+\fBnvme-self-test-log\fR(1)
+.RS 4
+Retrieve Device Self\-test Log
 .RE
 .PP
 \fBnvme-get-ns-id\fR(1)
@@ -146,6 +166,16 @@ Identify Controller
 \fBnvme-id-ns\fR(1)
 .RS 4
 Identify Namespace
+.RE
+.PP
+\fBnvme-id-nvmset\fR(1)
+.RS 4
+Identify NVM Set List
+.RE
+.PP
+\fBnvme-id-iocs\fR(1)
+.RS 4
+Identify I/O Command Set
 .RE
 .PP
 \fBnvme-create-ns\fR(1)
@@ -191,6 +221,21 @@ List all nvme controllers
 \fBnvme-list-ctrl\fR(1)
 .RS 4
 List controller in NVMe subsystem
+.RE
+.PP
+\fBnvme-list-subsys\fR(1)
+.RS 4
+List NVMe subsystems
+.RE
+.PP
+\fBnvme-reset\fR(1)
+.RS 4
+Reset a NVMe controller
+.RE
+.PP
+\fBnvme-device-self-test\fR(1)
+.RS 4
+Issue Device Self\-test Command
 .RE
 .PP
 \fBnvme-read\fR(1)
@@ -241,6 +286,16 @@ Security Receive
 \fBnvme-security-send\fR(1)
 .RS 4
 Security Send
+.RE
+.PP
+\fBnvme-dsm\fR(1)
+.RS 4
+Issue Data Set Management Command
+.RE
+.PP
+\fBnvme-copy\fR(1)
+.RS 4
+Issue Simple Copy Command
 .RE
 .PP
 \fBnvme-set-feature\fR(1)

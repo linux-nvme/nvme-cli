@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-self-test-log
-.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
-.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/24/2020
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 01/23/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SELF\-TEST\-LO" "1" "04/24/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-SELF\-TEST\-LO" "1" "01/23/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,8 @@ nvme-self-test-log \- Retrieve the log information initited by device\-self\-tes
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme self\-test\fR\-log <device> [\-\-output\-format=<FMT> | \-o <FMT>]
+\fInvme self\-test\fR\-log <device> [\-\-log\-entries=<entries> | \-e <entries>]
+                    [\-\-output\-format=<FMT> | \-o <FMT>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -44,6 +45,11 @@ On success, the returned log structure may be returned in one of several ways de
 .sp
 By default the log is printed out in the normal readable format\&.
 .SH "OPTION"
+.PP
+\-e <entries>, \-\-log\-entries=<entries>
+.RS 4
+Specifies how many DST log entries the program should request from the device\&. This must be at least one, and shouldn\(cqt exceed the 20 entries\&. Defaults to 20 DST log entries\&.
+.RE
 .PP
 \-o <format>, \-\-output\-format=<format>
 .RS 4

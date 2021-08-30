@@ -1,9 +1,10 @@
 CFLAGS ?= -O2 -g -Wall -Werror
-override CFLAGS += -std=gnu99 -I.
-override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__
+override CFLAGS += -std=gnu99
+override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__ -I.
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
-HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=232; echo $$?)
+HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=242; echo $$?)
+LIBJSONC = $(shell $(LD) -o /dev/null -ljson-c >/dev/null 2>&1; echo $$?)
 NVME = nvme
 INSTALL ?= install
 DESTDIR =
@@ -16,6 +17,8 @@ SYSTEMDDIR ?= $(LIBDIR)/systemd
 UDEVDIR ?= $(SYSCONFDIR)/udev
 UDEVRULESDIR ?= $(UDEVDIR)/rules.d
 DRACUTDIR ?= $(LIBDIR)/dracut
+LIBNVMEDIR = libnvme/
+LDFLAGS ?= -L$(LIBNVMEDIR)src/ -lnvme
 LIB_DEPENDS =
 
 ifeq ($(LIBUUID),0)
@@ -37,6 +40,11 @@ ifeq ($(HAVE_SYSTEMD),0)
 	override CFLAGS += -DHAVE_SYSTEMD
 endif
 
+ifeq ($(LIBJSONC), 0)
+	override LDFLAGS += -ljson-c
+	override CFLAGS += -DLIBJSONC
+endif
+
 RPMBUILD = rpmbuild
 TAR = tar
 RM = rm -f
@@ -54,19 +62,22 @@ default: $(NVME)
 NVME-VERSION-FILE: FORCE
 	@$(SHELL_PATH) ./NVME-VERSION-GEN
 -include NVME-VERSION-FILE
-override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
+override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"' -I$(LIBNVMEDIR)src/
 
 NVME_DPKG_VERSION=1~`lsb_release -sc`
 
-OBJS := nvme-print.o nvme-ioctl.o \
-	nvme-lightnvm.o fabrics.o nvme-models.o plugin.o \
-	nvme-status.o nvme-filters.o nvme-topology.o
+OBJS := nvme-print.o nvme-rpmb.o \
+	fabrics.o nvme-models.o plugin.o
 
-UTIL_OBJS := util/argconfig.o util/suffix.o util/json.o util/parser.o
+UTIL_OBJS := util/argconfig.o util/suffix.o util/parser.o \
+	util/cleanup.o
+ifneq ($(LIBJSONC), 0)
+override UTIL_OBJS += util/json.o
+endif
 
 PLUGIN_OBJS :=					\
 	plugins/intel/intel-nvme.o		\
-	plugins/lnvm/lnvm-nvme.o		\
+	plugins/amzn/amzn-nvme.o		\
 	plugins/memblaze/memblaze-nvme.o	\
 	plugins/wdc/wdc-nvme.o			\
 	plugins/wdc/wdc-utils.o			\
@@ -77,22 +88,29 @@ PLUGIN_OBJS :=					\
 	plugins/seagate/seagate-nvme.o 		\
 	plugins/virtium/virtium-nvme.o		\
 	plugins/shannon/shannon-nvme.o		\
-	plugins/dera/dera-nvme.o            \
-    plugins/transcend/transcend-nvme.o
+	plugins/dera/dera-nvme.o 		\
+	plugins/scaleflux/sfx-nvme.o		\
+	plugins/transcend/transcend-nvme.o	\
+	plugins/zns/zns.o	        		\
+	plugins/nvidia/nvidia-nvme.o        \
+	plugins/ymtc/ymtc-nvme.o
 
-nvme: nvme.c nvme.h $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
+libnvme:
+	$(MAKE) -C $(LIBNVMEDIR)
+
+nvme: nvme.c nvme.h libnvme $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)
 
-verify-no-dep: nvme.c nvme.h $(OBJS) NVME-VERSION-FILE
-	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@ $(OBJS) $(LDFLAGS)
+verify-no-dep: nvme.c nvme.h $(OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
+	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $@ $(OBJS) $(UTIL_OBJS) $(LDFLAGS)
 
-nvme.o: nvme.c nvme.h nvme-print.h nvme-ioctl.h util/argconfig.h util/suffix.h nvme-lightnvm.h fabrics.h
+nvme.o: nvme.c nvme.h nvme-print.h util/argconfig.h util/suffix.h fabrics.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -c $<
 
-%.o: %.c %.h nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
+%.o: %.c %.h nvme.h linux/nvme.h nvme-print.h util/argconfig.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
 
-%.o: %.c nvme.h linux/nvme.h linux/nvme_ioctl.h nvme-ioctl.h nvme-print.h util/argconfig.h
+%.o: %.c nvme.h linux/nvme.h nvme-print.h util/argconfig.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
 
 doc: $(NVME)
@@ -106,6 +124,7 @@ all: doc
 clean:
 	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb 70-nvmf-autoconnect.conf
 	$(MAKE) -C Documentation clean
+	$(MAKE) -C libnvme clean
 	$(RM) tests/*.pyc
 	$(RM) verify-no-dep
 
@@ -228,7 +247,10 @@ deb-light: $(NVME) pkg nvme.control.in
 	dpkg-deb --build nvme-$(NVME_VERSION)
 
 rpm: dist
-	$(RPMBUILD) --define '_libdir ${LIBDIR}' -ta nvme-$(NVME_VERSION).tar.gz
+	$(RPMBUILD) --define '_prefix $(DESTDIR)$(PREFIX)' \
+	--define '_libdir $(DESTDIR)${LIBDIR}' \
+	--define '_sysconfdir $(DESTDIR)$(SYSCONFDIR)' \
+	-ta nvme-$(NVME_VERSION).tar.gz
 
 .PHONY: default doc all clean clobber install-man install-bin install
-.PHONY: dist pkg dist-orig deb deb-light rpm FORCE test
+.PHONY: dist pkg dist-orig deb deb-light rpm FORCE test libnvme

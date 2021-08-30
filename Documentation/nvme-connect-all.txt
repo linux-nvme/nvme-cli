@@ -13,6 +13,7 @@ SYNOPSIS
 		[--traddr=<traddr>        | -a <traddr>]
 		[--trsvcid=<trsvcid>      | -s <trsvcid>]
 		[--host-traddr=<traddr>   | -w <traddr>]
+		[--host-iface=<iface>     | -f <iface>]
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
 		[--hostid=<hostid>        | -I <hostid>]
 		[--raw=<filename>         | -r <filename>]
@@ -27,7 +28,7 @@ SYNOPSIS
 		[--queue-size=<#>         | -Q <#>]
 		[--matching               | -m]
 		[--persistent             | -p]
-		[--quiet                  | -q]
+		[--quiet                  | -S]
 
 DESCRIPTION
 -----------
@@ -58,6 +59,7 @@ OPTIONS
 |Value|Definition
 |rdma|The network fabric is an rdma network (RoCE, iWARP, Infiniband, basic rdma, etc)
 |fc  |*WIP* The network fabric is a Fibre Channel network.
+|tcp |The network fabric is a TCP/IP network.
 |loop|Connect to a NVMe over Fabrics target on the local host
 |=================
 
@@ -76,7 +78,14 @@ OPTIONS
 -w <traddr>::
 --host-traddr=<traddr>::
 	This field specifies the network address used on the host to connect
-	to the Discovery Controller.
+	to the Controller. For TCP, this sets the source address on the socket.
+
+-f <iface>::
+--host-iface=<iface>::
+	This field specifies the network interface used on the host to connect
+	to the Controller (e.g. IP eth1, enp2s0, enx78e7d1ea46da). This forces
+	the connection to be made on a specific interface instead of letting
+	the system decide.
 
 -q <hostnqn>::
 --hostnqn=<hostnqn>::
@@ -153,7 +162,7 @@ OPTIONS
 	Don't remove the discovery controller after retrieving the discovery
 	log page.
 
--q::
+-S::
 --quiet::
 	Suppress error messages.
 

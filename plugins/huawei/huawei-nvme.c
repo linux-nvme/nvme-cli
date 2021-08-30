@@ -26,21 +26,16 @@
 
 #include <sys/stat.h>
 
-#include "linux/nvme_ioctl.h"
-
 #include "nvme.h"
-#include "nvme-print.h"
-#include "nvme-ioctl.h"
+#include "libnvme.h"
 #include "plugin.h"
-#include "json.h"
 
-#include "argconfig.h"
-#include "suffix.h"
-#include <sys/ioctl.h>
+#include "util/suffix.h"
 
 #define CREATE_CMD
 #include "huawei-nvme.h"
 
+#define HW_SSD_PCI_VENDOR_ID 0x19E5
 #define ARRAY_NAME_LEN 80
 #define NS_NAME_LEN    40
 
@@ -50,7 +45,7 @@
 struct huawei_list_item {
 	char                node[1024];
 	struct nvme_id_ctrl ctrl;
-	int                 nsid;
+	unsigned            nsid;
 	struct nvme_id_ns   ns;
 	unsigned            block;
 	char                ns_name[NS_NAME_LEN];
@@ -80,16 +75,15 @@ static int huawei_get_nvme_info(int fd, struct huawei_list_item *item, const cha
 		return err;
 
 	/*identify huawei device*/
-	if (strstr(item->ctrl.mn, "Huawei") == NULL) {
+	if (strstr(item->ctrl.mn, "Huawei") == NULL &&
+	    le16_to_cpu(item->ctrl.vid) != HW_SSD_PCI_VENDOR_ID) {
 		item->huawei_device = false;
 		return 0;
 	}
-	else
-		item->huawei_device = true;
 
-	item->nsid = nvme_get_nsid(fd);
-	err = nvme_identify_ns(fd, item->nsid,
-							0, &item->ns);
+	item->huawei_device = true;
+	err = nvme_get_nsid(fd, &item->nsid);
+	err = nvme_identify_ns(fd, item->nsid, &item->ns);
 	if (err)
 		return err;
 
@@ -143,7 +137,7 @@ static void huawei_json_print_list_items(struct huawei_list_item *list_items,
 					 unsigned len)
 {
 	struct json_object *root;
-	struct json_array *devices;
+	struct json_object *devices;
 	struct json_object *device_attrs;
 	char formatter[128] = { 0 };
 	int index, i = 0;
@@ -321,7 +315,7 @@ static int huawei_list(int argc, char **argv, struct command *command,
 	if (fmt != JSON && fmt != NORMAL)
 		return -EINVAL;
 
-	n = scandir("/dev", &devices, scan_namespace_filter, alphasort);
+	n = scandir("/dev", &devices, nvme_namespace_filter, alphasort);
 	if (n <= 0)
 		return n;
 

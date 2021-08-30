@@ -1,0 +1,139 @@
+'\" t
+.\"     Title: nvme-micron-selective-download
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/20/2020
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-MICRON\-SELECT" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-micron-selective-download \- Performs selective firmware download that allows user to select which firmware binary to update for 9200 devices\&. This requires power cycle once the update completes\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme micron selective\-download\fR <device> [\-\-fw=<FILE>, \-f <FILE>] [\-\-select=<flag>, \-s <flag>]
+.fi
+.SH "DESCRIPTION"
+.sp
+This command uses micron vendor specific nvme commands to download given firmware image to the specified 9200 device to update selected or all portions of firmware image\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+This will only work on Micron devices devices of model number 9200\&. Support for new devices may be added subsequently\&. Results for any other device are undefined\&.
+.SH "OPTIONS"
+.PP
+\-f <FILE>, \-\-fw=<FILE>
+.RS 4
+name of the firmware image file
+.RE
+.PP
+\-s <flag>, \-\-select=<flag>
+.RS 4
+flag that has following values
+.RE
+.PP
+OOB
+.RS 4
+This updates the OOB and main firmware\en"
+.RE
+.PP
+EEP
+.RS 4
+This updates the eeprom and main firmware\en"
+.RE
+.PP
+ALL
+.RS 4
+This updates the eeprom, OOB, and main firmware";
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Update OOB and main firmware
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme micron selective\-download /dev/nvme0 \-\-fw=firmware_bin \-\-select=OOB
+# nvme micron selective\-download /dev/nvme0 \-f firmware_bin \-s OOB
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Update OOB and main firmware
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme micron selective\-download /dev/nvme0 \-\-fw=firmware_bin \-\-select=EEP
+# nvme micron selective\-download /dev/nvme0 \-f firmware_bin \-\-s EEP
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Update eeprom, OOB and main firmware
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme micron selective\-download /dev/nvme0 \-\-fw=firmware_bin \-\-select=ALL
+# nvme micron selective\-download /dev/nvme0 \-f firmware_bin \-\-s ALL
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

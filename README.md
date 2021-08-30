@@ -1,6 +1,20 @@
 # nvme-cli
 NVM-Express user space tooling for Linux.
 
+When cloning from source, you will need the libnvme submodule, so use:
+
+    $ git clone --recurse-submodules https://github.com/linux-nvme/nvme-cli
+
+If you already cloned without recursing submodules, you will need to initialize
+and update it:
+
+    $ git submodule init --update
+
+Or as two commands:
+
+    $ git submodule init
+    $ git submodule update
+
 To install, run:
 
     $ make
@@ -40,6 +54,13 @@ nvme-cli is available in the `[community]` repository. It can be installed with:
 The development version can be installed from AUR, e.g.:
 
     $ yay -S nvme-cli-git
+
+### Debian
+
+nvme-cli is available in Debian 9 and up.  Install it with your favorite
+package manager.  For example:
+
+    $ sudo apt install nvme-cli
 
 ### Fedora
 

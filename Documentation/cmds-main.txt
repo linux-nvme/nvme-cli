@@ -17,7 +17,10 @@ linknvme:nvme-format[1]::
 	Format namespace(s)
 
 linknvme:nvme-fw-activate[1]::
-	F/W Activate
+	F/W Activate (in old version < 1.2)
+
+linknvme:nvme-fw-commit[1]::
+	F/W Commit (in > 1.2)
 
 linknvme:nvme-fw-download[1]::
 	F/W Download
@@ -34,14 +37,23 @@ linknvme:nvme-get-log[1]::
 linknvme:nvme-telemetry-log[1]::
 	Telemetry Host-Initiated Log
 
+linknvme:nvme-changed-ns-list-log[1]::
+	Retrieve Changed Namespace List Log
+
 linknvme:nvme-smart-log[1]::
 	Retrieve Smart Log
+
+linknvme:nvme-ana-log[1]::
+	Retreive ANA(Asymmetric Namespace Access) Log
 
 linknvme:nvme-endurance-log[1]::
 	Retrieve endurance Log
 
 linknvme:nvme-effects-log[1]::
 	Retrieve effects Log
+
+linknvme:nvme-self-test-log[1]::
+	Retrieve Device Self-test Log
 
 linknvme:nvme-get-ns-id[1]::
 	Retrieve namespace identifier
@@ -54,6 +66,12 @@ linknvme:nvme-id-ctrl[1]::
 
 linknvme:nvme-id-ns[1]::
 	Identify Namespace
+
+linknvme:nvme-id-nvmset[1]::
+	Identify NVM Set List
+
+linknvme:nvme-id-iocs[1]::
+	Identify I/O Command Set
 
 linknvme:nvme-create-ns[1]::
 	Create a new namespace
@@ -81,6 +99,15 @@ linknvme:nvme-list[1]::
 
 linknvme:nvme-list-ctrl[1]::
 	List controller in NVMe subsystem
+
+linknvme:nvme-list-subsys[1]::
+	List NVMe subsystems
+
+linknvme:nvme-reset[1]::
+	Reset a NVMe controller
+
+linknvme:nvme-device-self-test[1]::
+	Issue Device Self-test Command
 
 linknvme:nvme-read[1]::
 	Issue IO Read Command
@@ -111,6 +138,12 @@ linknvme:nvme-security-recv[1]::
 
 linknvme:nvme-security-send[1]::
 	Security Send
+
+linknvme:nvme-dsm[1]::
+	Issue Data Set Management Command
+
+linknvme:nvme-copy[1]::
+	Issue Simple Copy Command
 
 linknvme:nvme-set-feature[1]::
 	Set Feature

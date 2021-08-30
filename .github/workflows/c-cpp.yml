@@ -1,0 +1,20 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Checkout libnvme
+      run: git submodule update --init
+    - name: make
+      run: sudo apt-get install libjson-c-dev && make clean && make && make clean 
+

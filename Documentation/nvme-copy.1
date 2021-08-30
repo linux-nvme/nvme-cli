@@ -1,0 +1,141 @@
+'\" t
+.\"     Title: nvme-copy
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 10/20/2020
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-COPY" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-copy \- Send an NVMe Simple Copy command, provide results
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\-copy\fR <device> [\-\-sdlba=<sdlba> | \-d <sdlba>]
+                        [\-\-blocks=<nlb\-list,> | \-b <nlb\-list,>]
+                        [\-\-slbs=<slbas,> | \-s <slbas,>]
+                        [\-\-limited\-retry | \-l]
+                        [\-\-force\-unit\-access | \-f]
+                        [\-\-prinfow=<prinfow> | \-p <prinfow>]
+                        [\-\-prinfor=<prinfor> | \-P <prinfor>]
+                        [\-\-ref\-tag=<reftag> | \-r <reftag>]
+                        [\-\-expected\-ref\-tags=<reftag,> | \-R <reftag,>]
+                        [\-\-app\-tag=<apptag> | \-a <apptag>]
+                        [\-\-expected\-app\-tags=<apptag,> | \-A <apptag,>]
+                        [\-\-app\-mask=<appmask> | \-m <appmask>]
+                        [\-\-expected\-app\-masks=<appmask,> | \-M <appmask,>]
+                        [\-\-dir\-type=<type> | \-T <type>]
+                        [\-\-dir\-spec=<spec> | \-S <spec>]
+                        [\-\-format=<entry\-format> | \-F <entry\-format>]
+.fi
+.SH "DESCRIPTION"
+.sp
+The Copy command is used by the host to copy data from one or more source logical block ranges to a single consecutive destination logical block range\&.
+.SH "OPTIONS"
+.PP
+\-\-sdlba=<sdlba>, \-d <sdlba>
+.RS 4
+64\-bit addr of first destination logical block
+.RE
+.PP
+\-\-blocks=<nlb\-list,>, \-b <nlb\-list,>
+.RS 4
+Comma separated list of the number of blocks in each range
+.RE
+.PP
+\-\-slbs=<slbas,>, \-s <slbas,>
+.RS 4
+Comma separated list of the starting blocks in each range
+.RE
+.PP
+\-\-limited\-retry, \-l
+.RS 4
+Sets the limited retry flag\&.
+.RE
+.PP
+\-\-force\-unit\-access, \-f
+.RS 4
+Set the force\-unit access flag\&.
+.RE
+.PP
+\-\-prinfow=<prinfow>, \-p <prinfow>
+.RS 4
+Protection Information field write definition\&.
+.RE
+.PP
+\-\-prinfor=<prinfor>, \-P <prinfor>
+.RS 4
+Protection Information field read definition\&.
+.RE
+.PP
+\-\-ref\-tag=<reftag>, \-r <reftag>
+.RS 4
+initial lba reference tag\&.
+.RE
+.PP
+\-\-expected\-ref\-tags=<reftag,>, \-R <reftag,>
+.RS 4
+expected lba reference tags (comma\-separated list)\&.
+.RE
+.PP
+\-\-app\-tag=<apptag>, \-a <apptag>
+.RS 4
+lba app tag
+.RE
+.PP
+\-\-expected\-app\-tags=<apptag,>, \-A <apptag,>
+.RS 4
+expected lba app tags (comma\-separated list)
+.RE
+.PP
+\-\-app\-mask=<appmask>, \-m <appmask>
+.RS 4
+lba tag mask
+.RE
+.PP
+\-\-expected\-app\-masks=<appmask,>, \-M <appmask,>
+.RS 4
+expected lba tag masks (comma\-separated list)
+.RE
+.PP
+\-\-dir\-type=<type>, \-T <type>
+.RS 4
+Optional directive type\&. The nvme\-cli only enforces the value be in the defined range for the directive type, though the NVMe specifcation (1\&.3a) defines only one directive, 01h, for write stream idenfiers\&.
+.RE
+.PP
+\-\-dir\-spec=<spec>, \-S <spec>
+.RS 4
+Optional field for directive specifics\&. When used with write streams, this value is defined to be the write stream identifier\&. The nvme\-cli will not validate the stream requested is within the controller\(cqs capabilities\&.
+.RE
+.PP
+\-\-format=<entry\-format>, \-F <entry\-format>
+.RS 4
+source range entry format
+.RE
+.SH "EXAMPLES"
+.sp
+No examples yet\&.
+.SH "NVME"
+.sp
+Part of the nvme\-user suite
