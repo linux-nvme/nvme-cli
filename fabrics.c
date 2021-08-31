@@ -520,6 +520,7 @@ out_free:
 		free(hnqn);
 	if (hid)
 		free(hid);
+	nvme_free_tree(r);
 
 	return ret;
 }
