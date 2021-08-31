@@ -365,6 +365,10 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+__u16 get_feat_buf_len(unsigned short feature) {
+	return nvme_feat_buf_len[feature];
+}
+
 static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve telemetry log and write to binary file";

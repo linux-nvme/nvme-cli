@@ -524,17 +524,6 @@ typedef enum
     EOL_RRER                = 108,	/* Raw Read Error Rate */
 } EOL_LOG_PAGE_C0_OFFSETS;
 
-static __u16 nvme_wdc_feat_buf_len[0x100] = {
-	[NVME_FEAT_LBA_RANGE]       = 4096,
-	[NVME_FEAT_AUTO_PST]        = 256,
-	[NVME_FEAT_HOST_MEM_BUF]    = 4096,
-	[NVME_FEAT_HOST_ID]         = 8,
-	[NVME_FEAT_PLM_CONFIG]      = 512,
-	[NVME_FEAT_TIMESTAMP]       = 8,
-	[NVME_FEAT_HOST_BEHAVIOR]   = 512
-};
-
-
 typedef struct __attribute__((__packed__)) _WDC_DE_VU_FILE_META_DATA
 {
     __u8 fileName[WDC_DE_FILE_NAME_SIZE];
@@ -2080,16 +2069,16 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 			goto close_output;
 		}
 		
-		if (posix_memalign(&buf, getpagesize(), nvme_wdc_feat_buf_len[NVME_FEAT_HOST_BEHAVIOR])) {
+		if (posix_memalign(&buf, getpagesize(), get_feat_buf_len(NVME_FEAT_HOST_BEHAVIOR))) {
 			fprintf(stderr, "can not allocate feature payload\n");
 			errno = ENOMEM;
 			err = -1;
 			goto close_output;
 		}
-		memset(buf, 0, nvme_wdc_feat_buf_len[NVME_FEAT_HOST_BEHAVIOR]);
+		memset(buf, 0, get_feat_buf_len(NVME_FEAT_HOST_BEHAVIOR));
 
 		err = nvme_get_feature(fd, NVME_NSID_ALL, NVME_FEAT_HOST_BEHAVIOR, 0, 0,
-				0, nvme_wdc_feat_buf_len[NVME_FEAT_HOST_BEHAVIOR], buf, &result);
+				0, get_feat_buf_len(NVME_FEAT_HOST_BEHAVIOR), buf, &result);
 		if (err > 0) {
 			nvme_show_status(err);
 		} else if (err < 0) {

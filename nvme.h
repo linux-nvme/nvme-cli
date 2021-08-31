@@ -152,5 +152,5 @@ static inline void nvme_strip_spaces(char *s, int l)
         while (l && (s[l] == '\0' || s[l] == ' '))
                 s[l--] = '\0';
 }
-
+__u16 get_feat_buf_len(unsigned short feature);
 #endif /* _NVME_H */
