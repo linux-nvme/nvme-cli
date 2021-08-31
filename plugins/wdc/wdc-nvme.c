@@ -2096,7 +2096,7 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 		} else if (err < 0) {
 			perror("get-feature");
 		} else {
-			if ((ctrl.lpa & 64)) {
+			if ((ctrl.lpa & 0x40)) {
 				if (((unsigned char *)buf)[1] == 1)
 					full_size = (le32_to_cpu(hdr->dalb4) * WDC_TELEMETRY_BLOCK_SIZE) + WDC_TELEMETRY_HEADER_LENGTH;
 				else {

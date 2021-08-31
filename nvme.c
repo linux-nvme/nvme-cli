@@ -479,7 +479,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		} else if (err < 0) {
 			perror("get-feature");
 		} else {
-			if ((ctrl.lpa & 64)) {
+			if ((ctrl.lpa & 0x40)) {
 				if (((unsigned char *)buf)[1] == 1)
 					total_size = (le32_to_cpu(log->dalb4) * bs) + NVME_LOG_TELEM_BLOCK_SIZE;
 				else {
