@@ -8,7 +8,7 @@ When cloning from source, you will need the libnvme submodule, so use:
 If you already cloned without recursing submodules, you will need to initialize
 and update it:
 
-    $ git submodule init --update
+    $ git submodule update --init
 
 Or as two commands:
 
