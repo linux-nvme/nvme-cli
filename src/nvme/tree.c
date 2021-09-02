@@ -34,10 +34,9 @@
 static struct nvme_host *default_host;
 
 static void __nvme_free_host(nvme_host_t h);
-static void __nvme_free_subsystem(nvme_subsystem_t c);
 static void __nvme_free_ctrl(nvme_ctrl_t c);
 static int nvme_subsystem_scan_namespace(struct nvme_subsystem *s, char *name);
-static int nvme_scan_subsystem(struct nvme_host *h, char *name,
+static int nvme_scan_subsystem(struct nvme_root *r, char *name,
 			       nvme_scan_filter_t f);
 static int nvme_subsystem_scan_ctrl(struct nvme_subsystem *s, char *name);
 static int nvme_ctrl_scan_namespace(struct nvme_ctrl *c, char *name);
@@ -68,65 +67,19 @@ nvme_host_t nvme_default_host(nvme_root_t r)
 	return h;
 }
 
-static int nvme_scan_hosts(struct nvme_root *r)
-{
-	struct dirent **ctrls;
-	int ret, i;
-
-	ret = nvme_scan_ctrls(&ctrls);
-	if (ret < 0)
-		return ret;
-
-	for (i = 0; i < ret; i++) {
-		char *path, *hostnqn, *hostid;
-
-		if (asprintf(&path, "%s/%s", nvme_ctrl_sysfs_dir,
-			     ctrls[i]->d_name) < 0) {
-			errno = ENOMEM;
-			return -1;
-		}
-		hostnqn = nvme_get_attr(path, "hostnqn");
-		hostid = nvme_get_attr(path, "hostid");
-		nvme_lookup_host(r, hostnqn, hostid);
-		free(hostnqn);
-		if (hostid)
-			free(hostid);
-		free(path);
-	}
-	return 0;
-}
-
 static int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 {
 	struct dirent **subsys;
 	int i, ret;
-	struct nvme_host *h, *_h;
 
-	ret = nvme_scan_hosts(r);
-	if (ret < 0)
-		return ret;
 	ret = nvme_scan_subsystems(&subsys);
 	if (ret < 0)
 		return ret;
 
-	nvme_for_each_host(r, h) {
-		for (i = 0; i < ret; i++)
-			nvme_scan_subsystem(h, subsys[i]->d_name, f);
-	}
+	for (i = 0; i < ret; i++)
+		nvme_scan_subsystem(r, subsys[i]->d_name, f);
 
-	nvme_free_dirents(subsys, ret);
-
-	/* Prune hosts with empty subsystems */
-	nvme_for_each_host_safe(r, h, _h) {
-		nvme_subsystem_t s, _s;
-		nvme_for_each_subsystem_safe(h, s, _s) {
-			if (list_empty(&s->ctrls) &&
-			    list_empty(&s->namespaces))
-				__nvme_free_subsystem(s);
-		}
-		if (list_empty(&h->subsystems))
-			__nvme_free_host(h);
-	}
+	nvme_free_dirents(subsys, i);
 	return 0;
 }
 
@@ -442,33 +395,33 @@ static int nvme_init_subsystem(nvme_subsystem_t s, const char *name,
 	return 0;
 }
 
-/*
- * nvme_scan_subsystem
- *
- * This is slightly non-obvious, as the underlying topology is
- * _not_ a tree.
- * Rather we're having 'hosts' which have several 'controllers',
- * each controller is exposed by a 'subsystem'.
- * Note that each 'subsystem' may expose several 'controllers',
- * but these do not necessarily belong to the same 'host'.
- * In our abstraction we have a tree host->subsystem->controller,
- * so to flatten the underlying topology into our tree we have
- * to duplicate the 'subsystem' objects, one for each host.
- * But that doesn't matter as the 'subsystem' list is per-host
- * anyway, so the duplicate objects will never be seen by
- * other hosts.
- */
-static int nvme_scan_subsystem(struct nvme_host *h, char *name,
+static int nvme_scan_subsystem(struct nvme_root *r, char *name,
 			       nvme_scan_filter_t f)
 {
 	struct nvme_subsystem *s;
 	char *path, *subsysnqn;
+	char *hostnqn, *hostid = NULL;
+	nvme_host_t h = NULL;
 	int ret;
 
 	ret = asprintf(&path, "%s/%s", nvme_subsys_sysfs_dir, name);
 	if (ret < 0)
 		return ret;
 
+	hostnqn = nvme_get_attr(path, "hostnqn");
+	if (hostnqn) {
+		hostid = nvme_get_attr(path, "hostid");
+		h = nvme_lookup_host(r, hostnqn, hostid);
+		free(hostnqn);
+		if (hostid)
+			free(hostid);
+	}
+	if (!h)
+		h = nvme_default_host(r);
+	if (!h) {
+		errno = ENOMEM;
+		return -1;
+	}
 	subsysnqn = nvme_get_attr(path, "subsysnqn");
 	if (!subsysnqn) {
 		errno = ENODEV;
@@ -1252,34 +1205,13 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 static int nvme_subsystem_scan_ctrl(struct nvme_subsystem *s, char *name)
 {
 	nvme_ctrl_t c;
-	char *path, *hostnqn, *hostid;
+	char *path;
 
 	if (asprintf(&path, "%s/%s", s->sysfs_dir, name) < 0) {
 		errno = ENOMEM;
 		return -1;
 	}
-	hostnqn = nvme_get_attr(path, "hostnqn");
-	if (hostnqn) {
-		if (strcmp(s->h->hostnqn, hostnqn)) {
-			nvme_msg(LOG_DEBUG,
-				 "%s: skip ctrl %s for non-matching host %s\n",
-				 __func__, name, s->h->hostnqn);
-			free(path);
-			return 0;
-		}
-		free(hostnqn);
-	}
-	hostid = nvme_get_attr(path, "hostid");
-	if (hostid) {
-		if (s->h->hostid && strcmp(s->h->hostid, hostid)) {
-			nvme_msg(LOG_DEBUG,
-				 "%s: skip ctrl %s for non-matching host %s\n",
-				 __func__, name, s->h->hostid);
-			free(path);
-			return 0;
-		}
-		free(hostid);
-	}
+
 	c = nvme_ctrl_alloc(s, path, name);
 	if (!c) {
 		free(path);

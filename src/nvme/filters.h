@@ -37,14 +37,6 @@ int nvme_paths_filter(const struct dirent *d);
 int nvme_ctrls_filter(const struct dirent *d);
 
 /**
- * nvme_scan_ctrls() -
- * @ctrls:
- *
- * Return: 
- */
-int nvme_scan_ctrls(struct dirent ***ctrls);
-
-/**
  * nvme_subsys_filter() -
  * @d:
  *
