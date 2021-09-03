@@ -632,7 +632,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	}
 
 	report_size = sizeof(struct nvme_zone_report) + cfg.num_descs *
-		(sizeof(struct nvme_zns_desc) + cfg.num_descs * zdes);
+		(sizeof(struct nvme_zns_desc) + zdes);
 
 	report = nvme_alloc(report_size, &huge);
 	if (!report) {
