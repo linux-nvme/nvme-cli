@@ -1824,15 +1824,16 @@ struct nvme_zns_lbafe {
 };
 
 /**
- * struct nvme_zns_id_ns -
- * @zoc:
- * @ozcs:
- * @mar:
- * @mor:
- * @rrl:
- * @frl:
- * @lbafe:
- * @vs:
+ * struct nvme_zns_id_ns -  Zoned Namespace Command Set Specific
+ *                          Identify Namespace Data Structure
+ * @zoc: Zone Operation Characteristics
+ * @ozcs: Optional Zoned Command Support
+ * @mar: Maximum Active Resources
+ * @mor: Maximum Open Resources
+ * @rrl: Reset Recommended Limit
+ * @frl: Finish Recommended Limit
+ * @lbafe: LBA Format Extension
+ * @vs: Vendor Specific
  */
 struct nvme_zns_id_ns {
 	__le16			zoc;
@@ -1841,9 +1842,14 @@ struct nvme_zns_id_ns {
 	__le32			mor;
 	__le32			rrl;
 	__le32			frl;
-	__u8			rsvd20[2796];
-	struct nvme_zns_lbafe	lbafe[16];
-	__u8			rsvd3072[768];
+	__le32			rrl1;
+	__le32			rrl2;
+	__le32			rrl3;
+	__le32			frl1;
+	__le32			frl2;
+	__le32			frl3;
+	__u8			rsvd44[2772];
+	struct nvme_zns_lbafe lbafe[64];
 	__u8			vs[256];
 };
 
