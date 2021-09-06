@@ -4211,6 +4211,12 @@ void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
 	json_object_add_value_int(root, "mor", le32_to_cpu(ns->mor));
 	json_object_add_value_int(root, "rrl", le32_to_cpu(ns->rrl));
 	json_object_add_value_int(root, "frl", le32_to_cpu(ns->frl));
+	json_object_add_value_int(root, "rrl1", le32_to_cpu(ns->rrl1));
+	json_object_add_value_int(root, "rrl2", le32_to_cpu(ns->rrl2));
+	json_object_add_value_int(root, "rrl3", le32_to_cpu(ns->rrl3));
+	json_object_add_value_int(root, "frl1", le32_to_cpu(ns->frl1));
+	json_object_add_value_int(root, "frl2", le32_to_cpu(ns->frl2));
+	json_object_add_value_int(root, "frl3", le32_to_cpu(ns->frl3));
 
 	lbafs = json_create_array();
 	json_object_add_value_array(root, "lbafe", lbafs);
@@ -4254,6 +4260,16 @@ static void show_nvme_id_ns_zoned_ozcs(__le16 ns_ozcs)
 		printf(" [15:1] : %#x\tReserved\n", rsvd);
 	printf("  [0:0] : %#x\t  Read Across Zone Boundaries: %s\n",
 		razb, razb ? "Yes" : "No");
+}
+
+static void nvme_show_zns_id_ns_recommandeded_limit(__le32 ns_rl, int human, 
+	const char *target_limit)
+{
+	unsigned int recommandeded_limit = le32_to_cpu(ns_rl);
+	if (!recommandeded_limit && human)
+		printf("%s    : Not Reported\n", target_limit);
+	else
+		printf("%s    : %u\n", target_limit, recommandeded_limit);	
 }
 
 void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
@@ -4304,15 +4320,14 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 		printf("mor     : %#x\n", le32_to_cpu(ns->mor));
 	}
 
-	if (!le32_to_cpu(ns->rrl) && human)
-		printf("rrl     : Not Reported\n");
-	else
-		printf("rrl     : %d\n", le32_to_cpu(ns->rrl));
-
-	if (!le32_to_cpu(ns->frl) && human)
-		printf("frl     : Not Reported\n");
-	else
-		printf("frl     : %d\n", le32_to_cpu(ns->frl));
+	nvme_show_zns_id_ns_recommandeded_limit(ns->rrl,  human, "rrl ");
+	nvme_show_zns_id_ns_recommandeded_limit(ns->frl,  human, "frl ");
+	nvme_show_zns_id_ns_recommandeded_limit(ns->rrl1, human, "rrl1");
+	nvme_show_zns_id_ns_recommandeded_limit(ns->rrl2, human, "rrl2");
+	nvme_show_zns_id_ns_recommandeded_limit(ns->rrl3, human, "rrl3");
+	nvme_show_zns_id_ns_recommandeded_limit(ns->frl,  human, "frl1");
+	nvme_show_zns_id_ns_recommandeded_limit(ns->frl,  human, "frl2");
+	nvme_show_zns_id_ns_recommandeded_limit(ns->frl,  human, "frl3");
 
 	for (i = 0; i <= id_ns->nlbaf; i++){
 		if (human)
