@@ -126,7 +126,8 @@ int nvme_passthru(int fd, unsigned long ioctl_cmd, __u8 opcode,
 
 int nvme_io(int fd, __u8 opcode, __u32 nsid, __u64 slba, __u16 nblocks,
 		__u16 control, __u32 dsmgmt, __u32 reftag, __u16 apptag,
-		__u16 appmask, __u64 storage_tag, void *data, void *metadata)
+		__u16 appmask, __u64 storage_tag, void *data, __u32 buffer_size,
+		void *metadata, __u32 mbuffer_size)
 {
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= opcode,
@@ -141,6 +142,8 @@ int nvme_io(int fd, __u8 opcode, __u32 nsid, __u64 slba, __u16 nblocks,
 		.cdw13		= dsmgmt,
 		.cdw14		= reftag,
 		.cdw15		= apptag | (appmask << 16),
+		.data_len	= buffer_size,
+		.metadata_len	= mbuffer_size,
 	};
 
 	return nvme_submit_io_passthru(fd, &cmd);

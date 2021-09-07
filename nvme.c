@@ -5579,7 +5579,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	gettimeofday(&start_time, NULL);
 	err = nvme_io(fd, opcode, cfg.namespace_id, cfg.start_block, cfg.block_count,
 			 control, dsmgmt, cfg.ref_tag, cfg.app_tag, cfg.app_tag_mask,
-			 cfg.storage_tag, buffer, mbuffer);
+			 cfg.storage_tag, buffer, buffer_size, mbuffer, mbuffer_size);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: %s: %llu us\n",

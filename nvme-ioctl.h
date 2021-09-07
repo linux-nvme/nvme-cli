@@ -26,8 +26,9 @@ int nvme_passthru(int fd, unsigned long ioctl_cmd, __u8 opcode, __u8 flags,
 
 /* NVME_SUBMIT_IO */
 int nvme_io(int fd, __u8 opcode, __u32 nsid, __u64 slba, __u16 nblocks,
-	      __u16 control, __u32 dsmgmt, __u32 reftag, __u16 apptag,
-	      __u16 appmask, __u64 storage_tag, void *data, void *metadata);
+		__u16 control, __u32 dsmgmt, __u32 reftag, __u16 apptag,
+		__u16 appmask, __u64 storage_tag, void *data, __u32 buffer_size,
+		void *metadata, __u32 mbuffer_size);
 
 /* NVME_IO_CMD */
 int nvme_passthru_io(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
