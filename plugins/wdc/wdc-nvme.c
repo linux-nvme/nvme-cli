@@ -79,6 +79,7 @@
 #define WDC_NVME_SN650_DEV_ID_1             0x2701
 #define WDC_NVME_SN650_DEV_ID_2             0x2702
 #define WDC_NVME_SN650_DEV_ID_3             0x2720
+#define WDC_NVME_SN650_DEV_ID_4             0x2721
 #define WDC_NVME_SN450_DEV_ID_1             0x2712
 #define WDC_NVME_SN450_DEV_ID_2             0x2713
 #define WDC_NVME_SXSLCL_DEV_ID				0x2001
@@ -1292,6 +1293,7 @@ static __u64 wdc_get_drive_capabilities(int fd) {
 		case WDC_NVME_SN650_DEV_ID_1:
 		case WDC_NVME_SN650_DEV_ID_2:
 		case WDC_NVME_SN650_DEV_ID_3:
+		case WDC_NVME_SN650_DEV_ID_4:
 		case WDC_NVME_SN450_DEV_ID_1:
 		case WDC_NVME_SN450_DEV_ID_2:
 			/* verify the 0xC0 log page is supported */
