@@ -101,7 +101,7 @@ _cmds="list list-subsys id-ctrl id-ns \
 	connect disconnect disconnect-all gen-hostnqn \
 	show-hostnqn dir-receive dir-send virt-mgmt \
 	rpmb boot-part-log fid-support-effects-log \
-	supported-log-pages"
+	supported-log-pages list-endgrp"
 
 # Add plugins:
 for plugin in "${!_plugin_subcmds[@]}"; do
@@ -180,6 +180,9 @@ nvme_list_opts () {
 			;;
 		"id-uuid")
 		opts+=" --output-format= -o --raw-binary -b --human-readable -H"
+			;;
+		"list-endgrp")
+		opts+=" --endgrp-id= -i --output-format= -o"
 			;;
 		"id-iocs")
 		opts+=" --controller-id= -c --output-format= -o --human-readable -H"
