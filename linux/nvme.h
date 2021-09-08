@@ -471,6 +471,7 @@ enum {
 	NVME_ID_CNS_NS_GRANULARITY	= 0x16,
 	NVME_ID_CNS_UUID_LIST		= 0x17,
 	NVME_ID_CNS_DOMAIN_LIST		= 0x18,
+	NVME_ID_CNS_ENDURANCE_GROUP_ID  = 0x19,
 	NVME_ID_CNS_CSI_NS_PRESENT_LIST = 0x1a,
 	NVME_ID_CNS_CSI_NS_PRESENT  = 0x1b,
 	NVME_ID_CNS_CSI             = 0x1c,
@@ -1602,6 +1603,11 @@ struct nvme_bar_cap {
 	__le16	bps_css_nssrs_dstrd;
 	__u8	mpsmax_mpsmin;
 	__u8	rsvd_cmbs_pmrs;
+};
+
+struct nvme_endurance_group_list {
+	__le16 num;
+	__le16 identifier[2047];
 };
 
 /*
