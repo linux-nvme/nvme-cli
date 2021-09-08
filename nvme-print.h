@@ -105,6 +105,8 @@ void nvme_show_list_ctrl(struct nvme_ctrl_list *ctrl_list,
 	 enum nvme_print_flags flags);
 void nvme_show_id_domain_list(struct nvme_id_domain_list *id_dom,
 	enum nvme_print_flags flags);
+void nvme_show_endurance_group_list(struct nvme_id_endurance_group_list *endgrp_list,
+	enum nvme_print_flags flags);
 void nvme_show_list_ns(struct nvme_ns_list *ns_list,
 	enum nvme_print_flags flags);
 

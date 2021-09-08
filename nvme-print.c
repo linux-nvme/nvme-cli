@@ -4925,6 +4925,47 @@ void nvme_show_id_domain_list(struct nvme_id_domain_list *id_dom,
 	}
 }
 
+static void json_nvme_endurance_group_list(struct nvme_id_endurance_group_list *endgrp_list)
+{
+	struct json_object *root;
+	struct json_object *valid_attrs;
+	struct json_object *valid;
+	int i;
+
+	root = json_create_object();
+	valid = json_create_array();
+
+	json_object_add_value_uint(root, "num_endgrp_id",
+		le16_to_cpu(endgrp_list->num));
+
+	for (i = 0; i < min(le16_to_cpu(endgrp_list->num), 2047); i++) {
+		valid_attrs = json_create_object();
+		json_object_add_value_uint(valid_attrs, "endgrp_id",
+			le16_to_cpu(endgrp_list->identifier[i]));
+		json_array_add_value_object(valid, valid_attrs);
+	}
+
+	json_object_add_value_array(root, "endgrp_list", valid);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_endurance_group_list(struct nvme_id_endurance_group_list *endgrp_list,
+	enum nvme_print_flags flags)
+{
+	int i;
+	__u16 num = le16_to_cpu(endgrp_list->num);
+
+	if (flags & JSON)
+		return json_nvme_endurance_group_list(endgrp_list);
+
+	printf("num of endurance group ids: %u\n", num);
+	for (i = 0; i < min(num, 2047); i++) {
+		printf("[%4u]:%#x\n", i, le16_to_cpu(endgrp_list->identifier[i]));
+	}
+}
+
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs)
 {
 	__u16 i;

@@ -178,6 +178,9 @@ nvme_list_opts () {
 		"id-uuid")
 		opts+=" --output-format= -o --raw-binary -b --human-readable -H"
 			;;
+		"list-endgrp")
+		opts+=" --endgrp-id= -i --output-format= -o"
+			;;
 		"id-iocs")
 		opts+=" --controller-id= -c --output-format= -o --human-readable -H"
 			;;

@@ -1834,6 +1834,67 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int id_endurance_grp_list(int argc, char **argv, struct command *cmd,
+	struct plugin *plugin)
+{
+	const char *desc = "Show endurance group list information for the given endurance "\
+		"group id";
+	const char *endurance_grp_id = "Endurance Group ID";
+	int err = -1, fd;
+	struct nvme_id_endurance_group_list *endgrp_list;
+	enum nvme_print_flags flags;
+
+	struct config {
+		__u16 endgrp_id;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.endgrp_id = 0,
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_SHRT("endgrp-id",    'i', &cfg.endgrp_id,     endurance_grp_id),
+		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+	if (flags != JSON && flags != NORMAL) {
+		err = -EINVAL;
+		fprintf(stderr, "invalid output format\n");
+		goto close_fd;
+	}
+
+	if (posix_memalign((void *)&endgrp_list, getpagesize(), 0x1000)) {
+		fprintf(stderr, "can not allocate memory for endurance gropu list\n");
+		errno = ENOMEM;
+		err = -1;
+		goto close_fd;
+	}
+
+	err = nvme_identify_endurance_group_list(fd, cfg.endgrp_id, endgrp_list);
+	if (!err)
+		nvme_show_endurance_group_list(endgrp_list, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("id endurance group list");
+
+	free(endgrp_list);
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Delete the given namespace by "\

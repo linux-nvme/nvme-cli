@@ -19,6 +19,7 @@ _nvme () {
 	'detach-ns:detach namespace from controller'
 	'list-ctrl:identify all controller(s) attached'
 	'nvm-id-ctrl:display information about the nvm command set'
+	'list-endgrp:display information about nvme endurance group list'
 	'get-ns-id:get namespace id of opened block device'
 	'get-log:retrieve any log in raw format'
 	'predictable-lat-log:retrieve predictable latency per nvmset log'
@@ -151,6 +152,16 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme nvm-id-ctrl options" _nvmidctrl
+			;;
+		(list-endgrp)
+			local _listendgrp
+			_listendgrp=(
+			/dev/nvme':supply a device to use (required)'
+			--endgrp-id=':endurance group id'
+			-i':alias of --endgrp-id'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme list-ns options" _listendgrp
 			;;
 		(create-ns)
 			local _createns
