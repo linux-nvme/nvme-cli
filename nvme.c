@@ -24,6 +24,8 @@
  * This program uses NVMe IOCTLs to run native nvme commands to a device.
  */
 
+#include "nvme/tree.h"
+#include "nvme/types.h"
 #include <errno.h>
 #include <getopt.h>
 #include <fcntl.h>
@@ -85,8 +87,9 @@ static struct program nvme = {
 const char *output_format = "Output format: normal|json|binary";
 static const char *output_format_no_binary = "Output format: normal|json";
 
-static void *__nvme_alloc(size_t len, bool *huge)
-{
+static void *mmap_registers(nvme_root_t r, const char *dev);
+
+static void *__nvme_alloc(size_t len, bool *huge) {
 	void *p;
 
 	if (!posix_memalign(&p, getpagesize(), len)) {
@@ -489,30 +492,60 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+void collect_effects_log(int fd, enum nvme_csi csi, struct list_head *list, int flags)
+{
+	int err;
+	nvme_effects_log_node_t *node = malloc(sizeof(nvme_effects_log_node_t));
+	if (!node) {
+		perror("Failed to allocate memory");
+		return;
+	}
+	node->csi = csi;
+
+	err = nvme_get_log_cmd_effects(fd, csi, &node->effects);
+	if (!err) {
+		list_add(list, &node->node);
+		return;
+	}
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("effects log page");
+
+	free(node);
+}
+
 static int get_effects_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve command effects log page and print the table.";
 	const char *raw = "show log in binary format";
 	const char *human_readable = "show log in readable format";
-	struct nvme_cmd_effects_log effects;
+	const char *csi = "";
+	struct list_head log_pages;
+	nvme_effects_log_node_t *node;
+
+	void *bar = NULL;
 
 	int err = -1, fd;
 	enum nvme_print_flags flags;
 
 	struct config {
-		int   raw_binary;
-		int   human_readable;
-		char *output_format;
+		int      raw_binary;
+		int      human_readable;
+		char    *output_format;
+		int      csi;
 	};
 
 	struct config cfg = {
 		.output_format = "normal",
+		.csi = -1,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
 		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
 		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw),
+		OPT_INT("csi",            'c', &cfg.csi,            csi),
 		OPT_END()
 	};
 
@@ -528,14 +561,49 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
-	err = nvme_get_log_cmd_effects(fd, NVME_CSI_NVM, &effects);
-	if (!err)
-		nvme_show_effects_log(&effects, flags);
-	else if (err > 0)
-		nvme_show_status(err);
-	else
-		perror("effects log page");
+	list_head_init(&log_pages);
+
+	if (cfg.csi < 0) {
+		nvme_root_t nvme_root;
+		uint64_t cap_value;
+		int nvme_command_set_supported;
+		int other_command_sets_supported;
+		nvme_root = nvme_scan(NULL);
+		bar = mmap_registers(nvme_root, devicename);
+		nvme_free_tree(nvme_root);
+
+		if (!bar) {
+			goto close_fd;
+		}
+		cap_value = nvme_mmio_read64(bar + NVME_REG_CAP);
+		munmap(bar, getpagesize());
+
+		nvme_command_set_supported = (cap_value & (1UL << 37)) != 0;
+		other_command_sets_supported = (cap_value & (1UL << (37+6))) != 0;
+
+
+		if (nvme_command_set_supported) {
+			collect_effects_log(fd, NVME_CSI_NVM, &log_pages, flags);
+		}
+
+		if (other_command_sets_supported) {
+			collect_effects_log(fd, NVME_CSI_ZNS, &log_pages, flags);
+		}
+
+		nvme_print_effects_log_pages(&log_pages, flags);
+
+	}
+	else {
+		collect_effects_log(fd, cfg.csi, &log_pages, flags);
+		nvme_print_effects_log_pages(&log_pages, flags);
+	}
+
+
 close_fd:
+	while ((node = list_pop(&log_pages, nvme_effects_log_node_t, node))) {
+		free(node);
+	}
+
 	close(fd);
 ret:
 	return nvme_status_to_errno(err, false);
