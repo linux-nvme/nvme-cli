@@ -110,6 +110,9 @@ const char *nvme_cmd_to_string(int admin, __u8 opcode)
 		case nvme_cmd_resv_release:	return "Reservation Release";
 		case nvme_cmd_verify:		return "Verify";
 		case nvme_cmd_copy:		return "Copy";
+		case nvme_zns_cmd_mgmt_send:	return "Zone Management Send";
+		case nvme_zns_cmd_mgmt_recv:	return "Zone Management Receive";
+		case nvme_zns_cmd_append:	return "Zone Append";
 		}
 	}
 
@@ -4717,11 +4720,27 @@ static void nvme_show_effects_log_human(__u32 effect)
 		printf("  Reserved CSE\n");
 }
 
+void nvme_print_effects_entry(int admin, int index, __le32 entry, unsigned int human) {
+	__u32 effect;
+	char *format_string;
+
+	format_string = admin ? "ACS%-6d[%-32s] %08x" : "IOCS%-5d[%-32s] %08x";
+
+	effect = le32_to_cpu(entry);
+	if (effect & NVME_CMD_EFFECTS_CSUPP) {
+		printf(format_string, index, nvme_cmd_to_string(admin, index),
+		       effect);
+		if (human)
+			nvme_show_effects_log_human(effect);
+		else
+			printf("\n");
+	}
+}
+
 void nvme_show_effects_log(struct nvme_cmd_effects_log *effects,
 			   unsigned int flags)
 {
 	int i, human = flags & VERBOSE;
-	__u32 effect;
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)effects, sizeof(*effects));
@@ -4730,27 +4749,22 @@ void nvme_show_effects_log(struct nvme_cmd_effects_log *effects,
 
 	printf("Admin Command Set\n");
 	for (i = 0; i < 256; i++) {
-		effect = le32_to_cpu(effects->acs[i]);
-		if (effect & NVME_CMD_EFFECTS_CSUPP) {
-			printf("ACS%-6d[%-32s] %08x", i,
-					nvme_cmd_to_string(1, i), effect);
-			if (human)
-				nvme_show_effects_log_human(effect);
-			else
-				printf("\n");
-		}
+		nvme_print_effects_entry(1, i, effects->acs[i], human);
 	}
+
 	printf("\nNVM Command Set\n");
-	for (i = 0; i < 256; i++) {
-		effect = le32_to_cpu(effects->iocs[i]);
-		if (effect & NVME_CMD_EFFECTS_CSUPP) {
-			printf("IOCS%-5d[%-32s] %08x", i,
-					nvme_cmd_to_string(0, i), effect);
-			if (human)
-				nvme_show_effects_log_human(effect);
-			else
-				printf("\n");
-		}
+	for (i = 0; i < 121; i++) {
+		nvme_print_effects_entry(0, i, effects->iocs[i], human);
+	}
+
+	printf("\nZNS Command Set I/O Commands\n");
+	for (i = 121; i < 128; i++) {
+		nvme_print_effects_entry(0, i, effects->iocs[i], human);
+	}
+
+	printf("\nVendor Specific I/O Commands\n");
+	for (i = 128; i < 256; i++) {
+		nvme_print_effects_entry(0, i, effects->iocs[i], human);
 	}
 }
 
