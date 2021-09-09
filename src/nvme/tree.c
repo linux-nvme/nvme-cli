@@ -534,7 +534,6 @@ static int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name)
 	p->name = strdup(name);
 	p->sysfs_dir = path;
 	p->ana_state = nvme_get_path_attr(p, "ana_state");
-	nvme_subsystem_set_path_ns(c->s, p);
 
 	grpid = nvme_get_path_attr(p, "ana_grpid");
 	if (grpid) {
@@ -543,6 +542,7 @@ static int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name)
 	}
 
 	list_node_init(&p->nentry);
+	nvme_subsystem_set_path_ns(c->s, p);
 	list_node_init(&p->entry);
 	list_add(&c->paths, &p->entry);
 	return 0;
