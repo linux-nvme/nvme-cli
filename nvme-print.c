@@ -807,7 +807,8 @@ add:
 	json_free_object(root);
 }
 
-static void json_effects_log(struct nvme_cmd_effects_log *effects_log)
+struct json_object* json_effects_log(enum nvme_csi csi,
+			     struct nvme_cmd_effects_log *effects_log)
 {
 	struct json_object *root;
 	struct json_object *acs;
@@ -817,6 +818,8 @@ static void json_effects_log(struct nvme_cmd_effects_log *effects_log)
 	__u32 effect;
 
 	root = json_create_object();
+	json_object_add_value_uint(root, "command_set_identifier", csi);
+
 	acs = json_create_object();
 	for (opcode = 0; opcode < 256; opcode++) {
 		effect = le32_to_cpu(effects_log->acs[opcode]);
@@ -840,9 +843,24 @@ static void json_effects_log(struct nvme_cmd_effects_log *effects_log)
 	}
 
 	json_object_add_value_object(root, "io_cmd_set", iocs);
-	json_print_object(root, NULL);
+	return root;
+}
+
+void json_effects_log_list(struct list_head *list) {
+	struct json_object *json_list;
+	nvme_effects_log_node_t *node;
+
+	json_list = json_create_array();
+	
+	list_for_each(list, node, node) {
+		json_object *json_page =
+			json_effects_log(node->csi, &node->effects);
+		json_array_add_value_object(json_list, json_page);
+	}
+
+	json_print_object(json_list, NULL);
 	printf("\n");
-	json_free_object(root);
+	json_free_object(json_list);
 }
 
 static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
@@ -4769,8 +4787,23 @@ void nvme_print_effects_log_segment(int admin, int a, int b, struct nvme_cmd_eff
 	free(stream_location);
 }
 
-void nvme_print_effects_log_page(struct nvme_cmd_effects_log *effects, int flags) {
+void nvme_print_effects_log_page(enum nvme_csi csi, struct nvme_cmd_effects_log *effects, int flags) {
 	int human = flags & VERBOSE;
+
+	switch (csi) {
+	case NVME_CSI_NVM:
+		printf("NVM Command Set Log Page\n");
+		printf("%-.80s\n", dash);
+		break;
+	case NVME_CSI_ZNS:
+		printf("ZNS Command Set Log Page\n");
+		printf("%-.80s\n", dash);
+		break;
+	default:
+		printf("Unknown Command Set Log Page\n");
+		printf("%-.80s\n", dash);
+		break;
+	}
 
 	nvme_print_effects_log_segment(1, 0, 0xbf, effects, "Admin Commands", human);
 	nvme_print_effects_log_segment(1, 0xc0, 0xff, effects, "Vendor Specific Admin Commands", human);
@@ -4778,15 +4811,21 @@ void nvme_print_effects_log_page(struct nvme_cmd_effects_log *effects, int flags
 	nvme_print_effects_log_segment(0, 0x80, 0x100, effects, "Vendor Specific I/O Commands", human);
 }
 
-void nvme_show_effects_log(struct nvme_cmd_effects_log *effects,
-			   unsigned int flags)
+void nvme_print_effects_log_pages(struct list_head *list,
+			   int flags)
 {
-	if (flags & BINARY)
-		return d_raw((unsigned char *)effects, sizeof(*effects));
-	else if (flags & JSON)
-		return json_effects_log(effects);
+	if (flags & JSON)
+		return json_effects_log_list(list);
 
-	nvme_print_effects_log_page(effects, flags);
+	nvme_effects_log_node_t *node;
+	list_for_each(list, node, node) {
+		if (flags & BINARY) {
+			d_raw((unsigned char *)&node->effects, sizeof(node->effects));
+		}
+		else {
+			nvme_print_effects_log_page(node->csi, &node->effects, flags);
+		}
+	}
 }
 
 uint64_t int48_to_long(__u8 *data)
