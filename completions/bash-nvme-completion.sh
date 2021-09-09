@@ -101,7 +101,7 @@ _cmds="list list-subsys id-ctrl id-ns \
 	connect disconnect disconnect-all gen-hostnqn \
 	show-hostnqn dir-receive dir-send virt-mgmt \
 	rpmb boot-part-log fid-support-effects-log \
-	supported-log-pages"
+	supported-log-pages lockdown"
 
 # Add plugins:
 for plugin in "${!_plugin_subcmds[@]}"; do
@@ -300,6 +300,10 @@ nvme_list_opts () {
 		"capacity-mgmt")
 		opts+=" --operation= -f --element-id= -i --cap-lower= -l \
 				--cap-upper= -u"
+			;;
+		"lockdown")
+		opts+=" --ofi= -O --ifc= -F --prhbt= -P \
+			-scp= -S --uuid -U"
 			;;
 		"admin-passthru")
 		opts+=" --opcode= -o --flags= -f --prefil= -p --rsvd= -R \
@@ -584,7 +588,7 @@ plugin_amzn_opts () {
 		"id-ctrl")
 		opts+=" --raw-binary -b --human-readable -H \
 			--vendor-specific -v --output-format= -o"
-			;;	
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -636,7 +640,7 @@ plugin_lnvm_opts () {
 		opts+=" --target-name= -n"
 			;;
 		"factory")
-		opts+=" --device-name= -d --erase-only-marked -e 
+		opts+=" --device-name= -d --erase-only-marked -e
 			--clear-host-side-blks -s --clear-bb-blks -b"
 			;;
 		"diag-bbtbl")
@@ -848,7 +852,7 @@ plugin_huawei_opts () {
 		"id-ctrl")
 		opts+=" --raw-binary -b --human-readable -H \
 			--vendor-specific -v --output-format= -o"
-			;;	
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -890,7 +894,7 @@ plugin_toshiba_opts () {
 		opts+=$NO_OPTS
 			;;
 	esac
-	
+
 	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
 
 	return 0
@@ -1093,12 +1097,12 @@ plugin_shannon_opts () {
 		"id-ctrl")
 		opts+=" --raw-binary -b --human-readable -H \
 			--vendor-specific -v --output-format= -o"
-			;;	
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
 	esac
-	
+
 	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
 
 	return 0
@@ -1124,12 +1128,12 @@ plugin_dera_opts () {
 	case "$1" in
 		"smart-log-add")
 		opts+=$NO_OPTS
-			;;	
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
 	esac
-	
+
 	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
 
 	return 0
@@ -1178,7 +1182,7 @@ plugin_sfx_opts () {
 		opts+=$NO_OPTS
 			;;
 	esac
-	
+
 	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
 
 	return 0
@@ -1324,7 +1328,7 @@ plugin_nvidia_opts () {
 		"id-ctrl")
 		opts+=" --raw-binary -b --human-readable -H \
 			--vendor-specific -v --output-format= -o"
-			;;	
+			;;
 		"help")
 		opts+=$NO_OPTS
 			;;
@@ -1355,12 +1359,12 @@ plugin_ymtc_opts () {
 	case "$1" in
 		"smart-log-add")
 		opts+=" --namespace-id= -n --raw-binary -b"
-			;;	
+			;;
 		"help")
 		opts+=NO_OPTS
 			;;
 	esac
-	
+
 	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
 
 	return 0
