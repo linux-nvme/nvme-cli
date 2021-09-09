@@ -467,7 +467,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 			perror("identify-ctrl");
 			goto close_output;
 		}
-		
+
 		if (posix_memalign(&buf, getpagesize(), nvme_feat_buf_len[NVME_FEAT_HOST_BEHAVIOR])) {
 			fprintf(stderr, "can not allocate feature payload\n");
 			errno = ENOMEM;
@@ -6121,6 +6121,100 @@ extern int rpmb_cmd_option(int, char **, struct command *, struct plugin *);
 static int rpmb_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	return rpmb_cmd_option(argc, argv, cmd, plugin);
+}
+
+static int lockdown_cmd(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "The Lockdown command is used to control the "\
+		"Command and Feature Lockdown capability which configures the "\
+		"prohibition or allowance of execution of the specified command "\
+		"or Set Features command targeting a specific Feature Identifier.";
+	const char *ofi_desc = "Opcode or Feature Identifier(OFI) "\
+		"specifies the command opcode or Set Features Feature Identifier "\
+		"identified by the Scope field.";
+	const char *ifc_desc = "[0-3] Interface (INF) field identifies the "\
+		"interfaces affected by this command.";
+	const char *prhbt_desc = "[0-1]Prohibit(PRHBT) bit specifies whether "\
+		"to prohibit or allow the command opcode or Set Features Feature "\
+		"Identifier specified by this command.";
+	const char *scp_desc = "[0-15]Scope(SCP) field specifies the contents "\
+		"of the Opcode or Feature Identifier field.";
+	const char *uuid_desc = "UUID Index - If this field is set to a non-zero "\
+		"value, then the value of this field is the index of a UUID in the UUID "\
+		"List that is used by the command.If this field is cleared to 0h,"\
+		"then no UUID index is specified";
+
+	int fd, err = -1;
+
+	struct config {
+		__u8    ofi;
+		__u8    ifc;
+		__u8    prhbt;
+		__u8    scp;
+		__u8    uuid;
+	};
+
+	struct config cfg = {
+		.ofi = 0,
+		.ifc = 0,
+		.prhbt = 0,
+		.scp = 0,
+		.uuid = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_BYTE("ofi",		'o', &cfg.ofi, 		ofi_desc),
+		OPT_BYTE("ifc",		'f', &cfg.ifc,      ifc_desc),
+		OPT_BYTE("prhbt",	'p', &cfg.prhbt,    prhbt_desc),
+		OPT_BYTE("scp",		's', &cfg.scp,      scp_desc),
+		OPT_BYTE("uuid",	'U', &cfg.uuid,     uuid_desc),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	/* check for input arguement limit */
+	if (cfg.ifc > 3) {
+		fprintf(stderr, "invalid interface settings:%d\n", cfg.ifc);
+		errno = EINVAL;
+		err = -1;
+		goto close_fd;
+	}
+	if (cfg.prhbt > 1) {
+		fprintf(stderr, "invalid prohibit settings:%d\n", cfg.prhbt);
+		errno = EINVAL;
+		err = -1;
+		goto close_fd;
+	}
+	if (cfg.scp > 15) {
+		fprintf(stderr, "invalid scope settings:%d\n", cfg.scp);
+		errno = EINVAL;
+		err = -1;
+		goto close_fd;
+	}
+	if (cfg.uuid > 127) {
+		fprintf(stderr, "invalid UUID index settings:%d\n", cfg.uuid);
+		errno = EINVAL;
+		err = -1;
+		goto close_fd;
+	}
+
+	err = nvme_lockdown(fd, cfg.scp,cfg.prhbt,cfg.ifc,cfg.ofi,
+			cfg.uuid);
+
+	if (err < 0)
+		perror("lockdown");
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		printf("Lockdown Command is Successful\n");
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
 }
 
 static int passthru(int argc, char **argv, int ioctl_cmd, uint8_t cmd_type,

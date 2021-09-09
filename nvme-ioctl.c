@@ -926,6 +926,20 @@ int nvme_sec_recv(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 	return nvme_submit_admin_passthru(fd, &cmd);
 }
 
+int nvme_lockdown(int fd, __u8 scp, __u8 prhbt, __u8 ifc, __u8 ofi,
+		  __u8 uuid)
+{
+	__u32 cdw10 =  ofi << 8 | (ifc & 0x3) << 5 | (prhbt & 0x1) << 4 | (scp & 0xF);
+
+	struct nvme_admin_cmd cmd = {
+		.opcode		= nvme_admin_lockdown_cmd,
+		.cdw10 		= cdw10,
+		.cdw14		= uuid & 0x3F,
+	};
+
+	return nvme_submit_admin_passthru(fd, &cmd);
+}
+
 int nvme_get_lba_status(int fd, __u32 namespace_id, __u64 slba, __u32 mndw,
 		__u8 atype, __u16 rl, void *data, __u32 timeout_ms)
 {
