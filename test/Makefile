@@ -22,10 +22,10 @@ all: $(all_targets)
 
 CXXFLAGS ?= -lstdc++
 
-%: %.cc
+%: %.cc ../src/libnvme.a
 	$(QUIET_CC)$(CXX) $(CFLAGS) $(LDFLAGS) $(CXXFLAGS) -o $@ $< -lnvme $(LIBS)
 
-%: %.c
+%: %.c ../src/libnvme.a
 	$(QUIET_CC)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< -lnvme $(LIBS)
 
 clean:
