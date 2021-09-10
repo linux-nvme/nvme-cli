@@ -872,7 +872,8 @@ struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn, const char *transport,
 		errno = EINVAL;
 		return NULL;
 	}
-	if (strncmp(transport, "loop", 4) && !traddr) {
+	if (strncmp(transport, "loop", 4) &&
+	    strncmp(transport, "pcie", 4) && !traddr) {
                nvme_msg(LOG_ERR, "No transport address for '%s'\n", transport);
 	       errno = EINVAL;
 	       return NULL;
@@ -1109,7 +1110,7 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 				   const char *name)
 {
 	nvme_ctrl_t c;
-	char *addr, *address, *a, *e;
+	char *addr, *address = NULL, *a, *e;
 	char *transport, *traddr = NULL, *trsvcid = NULL;
 	char *host_traddr = NULL, *host_iface = NULL;
 	int ret;
@@ -1121,7 +1122,14 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 	}
 	/* Parse 'address' string into components */
 	addr = nvme_get_attr(path, "address");
-	address = strdup(addr);
+	if (!addr) {
+		/* Older kernel don't support pcie transport addresses */
+		if (strcmp(transport, "pcie")) {
+			errno = ENXIO;
+			return NULL;
+		}
+	} else
+		address = strdup(addr);
 	if (!strcmp(transport, "pcie")) {
 		/* The 'address' string is the transport address */
 		traddr = address;
