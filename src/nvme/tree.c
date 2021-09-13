@@ -802,6 +802,7 @@ static void __nvme_free_ctrl(nvme_ctrl_t c)
 	nvme_deconfigure_ctrl(c);
 
 	FREE_CTRL_ATTR(c->transport);
+	FREE_CTRL_ATTR(c->subsysnqn);
 	FREE_CTRL_ATTR(c->traddr);
 	FREE_CTRL_ATTR(c->host_traddr);
 	FREE_CTRL_ATTR(c->host_iface);
