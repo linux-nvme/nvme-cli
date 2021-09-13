@@ -1152,18 +1152,39 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 	/* Parse 'address' string into components */
 	addr = nvme_get_attr(path, "address");
 	if (!addr) {
+		char *rpath = NULL, *p = NULL, *_a = NULL;
+
 		/* Older kernel don't support pcie transport addresses */
 		if (strcmp(transport, "pcie")) {
+			free(transport);
 			errno = ENXIO;
 			return NULL;
 		}
-	} else
-		address = strdup(addr);
-	if (!strcmp(transport, "pcie")) {
+		/* Figure out the PCI address from the attribute path */
+		rpath = realpath(path, NULL);
+		if (!rpath) {
+			free(transport);
+			errno = ENOMEM;
+			return NULL;
+		}
+		a = strtok_r(rpath, "/", &e);
+		while(a && strlen(a)) {
+		    if (_a)
+			p = _a;
+		    _a = a;
+		    if (!strncmp(a, "nvme", 4))
+			break;
+		    a = strtok_r(NULL, "/", &e);
+		}
+		if (p)
+			addr = strdup(p);
+		free(rpath);
+	} else if (!strcmp(transport, "pcie")) {
 		/* The 'address' string is the transport address */
-		traddr = address;
+		traddr = addr;
 	} else {
-		a = strtok_r(addr, ",", &e);
+		address = strdup(addr);
+		a = strtok_r(address, ",", &e);
 		while (a && strlen(a)) {
 			if (!strncmp(a, "traddr=", 7))
 				traddr = a + 7;
@@ -1178,12 +1199,14 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 	}
 	c = nvme_lookup_ctrl(s, transport, traddr,
 			     host_traddr, host_iface, trsvcid);
-	free(addr);
+	free(transport);
+	if (address)
+		free(address);
 	if (!c) {
 		errno = ENOMEM;
 		return NULL;
 	}
-	c->address = address;
+	c->address = addr;
 	ret = nvme_configure_ctrl(c, path, name);
 	return (ret < 0) ? NULL : c;
 }
