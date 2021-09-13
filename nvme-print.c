@@ -4698,63 +4698,95 @@ void nvme_show_changed_ns_list_log(struct nvme_ns_list *log,
 			NVME_ID_NS_LIST_MAX);
 }
 
-static void nvme_show_effects_log_human(__u32 effect)
+static void nvme_show_effects_log_human(FILE *stream, __u32 effect)
 {
 	const char *set = "+";
 	const char *clr = "-";
 
-	printf("  CSUPP+");
-	printf("  LBCC%s", (effect & NVME_CMD_EFFECTS_LBCC) ? set : clr);
-	printf("  NCC%s", (effect & NVME_CMD_EFFECTS_NCC) ? set : clr);
-	printf("  NIC%s", (effect & NVME_CMD_EFFECTS_NIC) ? set : clr);
-	printf("  CCC%s", (effect & NVME_CMD_EFFECTS_CCC) ? set : clr);
-	printf("  USS%s", (effect & NVME_CMD_EFFECTS_UUID_SEL) ? set : clr);
+	fprintf(stream, "  CSUPP+");
+	fprintf(stream, "  LBCC%s", (effect & NVME_CMD_EFFECTS_LBCC) ? set : clr);
+	fprintf(stream, "  NCC%s", (effect & NVME_CMD_EFFECTS_NCC) ? set : clr);
+	fprintf(stream, "  NIC%s", (effect & NVME_CMD_EFFECTS_NIC) ? set : clr);
+	fprintf(stream, "  CCC%s", (effect & NVME_CMD_EFFECTS_CCC) ? set : clr);
+	fprintf(stream, "  USS%s", (effect & NVME_CMD_EFFECTS_UUID_SEL) ? set : clr);
 
 	if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 0)
-		printf("  No command restriction\n");
+		fprintf(stream, "  No command restriction\n");
 	else if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 1)
-		printf("  No other command for same namespace\n");
+		fprintf(stream, "  No other command for same namespace\n");
 	else if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 2)
-		printf("  No other command for any namespace\n");
+		fprintf(stream, "  No other command for any namespace\n");
 	else
-		printf("  Reserved CSE\n");
+		fprintf(stream, "  Reserved CSE\n");
+}
+
+void nvme_print_effects_entry(FILE* stream, int admin, int index, __le32 entry, unsigned int human) {
+	__u32 effect;
+	char *format_string;
+
+	format_string = admin ? "ACS%-6d[%-32s] %08x" : "IOCS%-5d[%-32s] %08x";
+
+	effect = le32_to_cpu(entry);
+	if (effect & NVME_CMD_EFFECTS_CSUPP) {
+		fprintf(stream, format_string, index, nvme_cmd_to_string(admin, index),
+		       effect);
+		if (human)
+			nvme_show_effects_log_human(stream, effect);
+		else
+			fprintf(stream, "\n");
+	}
+}
+
+void nvme_print_effects_log_segment(int admin, int a, int b, struct nvme_cmd_effects_log *effects, char* header, int human) {
+	FILE *stream;
+	char *stream_location;
+	size_t stream_size;
+
+	stream = open_memstream(&stream_location, &stream_size);
+	if (!stream) {
+		perror("Failed to open stream");
+		return;
+	}
+
+	for (int i = a; i < b; i++) {
+		if (admin) {
+			nvme_print_effects_entry(stream, admin, i, effects->acs[i], human);
+		}
+		else {
+			nvme_print_effects_entry(stream, admin, i,
+						 effects->iocs[i], human);
+		}
+	}
+
+	fclose(stream);
+
+	if (stream_size && header) {
+		printf("%s\n", header);
+		fwrite(stream_location, stream_size, 1, stdout);
+		printf("\n");
+	}
+
+	free(stream_location);
+}
+
+void nvme_print_effects_log_page(struct nvme_cmd_effects_log *effects, int flags) {
+	int human = flags & VERBOSE;
+
+	nvme_print_effects_log_segment(1, 0, 0xbf, effects, "Admin Commands", human);
+	nvme_print_effects_log_segment(1, 0xc0, 0xff, effects, "Vendor Specific Admin Commands", human);
+	nvme_print_effects_log_segment(0, 0, 0x80, effects, "I/O Commands", human);
+	nvme_print_effects_log_segment(0, 0x80, 0x100, effects, "Vendor Specific I/O Commands", human);
 }
 
 void nvme_show_effects_log(struct nvme_cmd_effects_log *effects,
 			   unsigned int flags)
 {
-	int i, human = flags & VERBOSE;
-	__u32 effect;
-
 	if (flags & BINARY)
 		return d_raw((unsigned char *)effects, sizeof(*effects));
 	else if (flags & JSON)
 		return json_effects_log(effects);
 
-	printf("Admin Command Set\n");
-	for (i = 0; i < 256; i++) {
-		effect = le32_to_cpu(effects->acs[i]);
-		if (effect & NVME_CMD_EFFECTS_CSUPP) {
-			printf("ACS%-6d[%-32s] %08x", i,
-					nvme_cmd_to_string(1, i), effect);
-			if (human)
-				nvme_show_effects_log_human(effect);
-			else
-				printf("\n");
-		}
-	}
-	printf("\nNVM Command Set\n");
-	for (i = 0; i < 256; i++) {
-		effect = le32_to_cpu(effects->iocs[i]);
-		if (effect & NVME_CMD_EFFECTS_CSUPP) {
-			printf("IOCS%-5d[%-32s] %08x", i,
-					nvme_cmd_to_string(0, i), effect);
-			if (human)
-				nvme_show_effects_log_human(effect);
-			else
-				printf("\n");
-		}
-	}
+	nvme_print_effects_log_page(effects, flags);
 }
 
 uint64_t int48_to_long(__u8 *data)
