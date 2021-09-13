@@ -103,6 +103,7 @@ void nvme_show_zns_changed( struct nvme_zns_changed_zone_log *log,
 	unsigned long flags);
 void nvme_show_zns_report_zones(void *report, __u32 descs,
 	__u8 ext_size, __u32 report_size, unsigned long flags);
+void nvme_show_list_item(nvme_ns_t n);
 
 const char *nvme_cmd_to_string(int admin, __u8 opcode);
 const char *nvme_select_to_string(int sel);

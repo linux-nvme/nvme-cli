@@ -15,6 +15,101 @@
 #include "zns.h"
 
 static const char *namespace_id = "Namespace identifier to use";
+static const char dash[100] = { [0 ... 99] = '-' };
+
+static int detect_zns(nvme_ns_t ns, int *out_supported)
+{
+	int err = 0;
+	char *zoned;
+
+	*out_supported = 0;
+
+	zoned = nvme_get_attr(nvme_ns_get_sysfs_dir(ns), "queue/zoned");
+	if (!zoned) {
+		*out_supported = 0;
+		return err;
+	}
+
+	*out_supported = strcmp("host-managed", zoned) == 0;
+	free(zoned);
+
+	return err;
+}
+
+static int print_zns_list_ns(nvme_ns_t ns)
+{
+	int supported;
+	int err = 0;
+
+	err = detect_zns(ns, &supported);
+	if (err) {
+		perror("Failed to enumerate namespace");
+		return err;
+	}
+
+	if (supported) {
+		nvme_show_list_item(ns);
+	}
+
+	return err;
+}
+
+static int print_zns_list(nvme_root_t nvme_root)
+{
+	int err = 0;
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c;
+	nvme_ns_t n;
+	nvme_for_each_host(nvme_root, h)
+	{
+		nvme_for_each_subsystem(h, s)
+		{
+			nvme_subsystem_for_each_ns(s, n)
+			{
+				err = print_zns_list_ns(n);
+				if (err)
+					return err;
+			}
+
+			nvme_subsystem_for_each_ctrl(s, c)
+			{
+				nvme_ctrl_for_each_ns(c, n)
+				{
+					err = print_zns_list_ns(n);
+					if (err)
+						return err;
+				}
+			}
+		}
+	}
+
+	return err;
+}
+
+static int list(int argc, char **argv, struct command *cmd,
+		struct plugin *plugin)
+{
+	int err = 0;
+	nvme_root_t nvme_root;
+
+	printf("%-21s %-20s %-40s %-9s %-26s %-16s %-8s\n", "Node", "SN",
+	       "Model", "Namespace", "Usage", "Format", "FW Rev");
+	printf("%-.21s %-.20s %-.40s %-.9s %-.26s %-.16s %-.8s\n", dash, dash,
+	       dash, dash, dash, dash, dash);
+
+	nvme_root = nvme_scan(NULL);
+	if (nvme_root) {
+		err = print_zns_list(nvme_root);
+	} else {
+		fprintf(stderr, "Failed to scan nvme subsystems\n");
+		err = -errno;
+	}
+
+	nvme_free_tree(nvme_root);
+
+	return err;
+}
 
 static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {

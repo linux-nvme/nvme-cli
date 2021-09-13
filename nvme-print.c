@@ -5632,7 +5632,7 @@ void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
 	}
 }
 
-static void nvme_show_list_item(nvme_ns_t n)
+void nvme_show_list_item(nvme_ns_t n)
 {
 	char usage[128] = { 0 }, format[128] = { 0 };
 
