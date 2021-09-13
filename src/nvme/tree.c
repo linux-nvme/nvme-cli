@@ -70,14 +70,22 @@ nvme_host_t nvme_default_host(nvme_root_t r)
 static int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 {
 	struct dirent **subsys;
-	int i, ret;
+	int i, num_subsys, ret;
 
-	ret = nvme_scan_subsystems(&subsys);
-	if (ret < 0)
-		return ret;
+	num_subsys = nvme_scan_subsystems(&subsys);
+	if (num_subsys < 0) {
+		nvme_msg(LOG_DEBUG, "failed to scan subsystems: %s\n",
+			 strerror(errno));
+		return num_subsys;
+	}
 
-	for (i = 0; i < ret; i++)
-		nvme_scan_subsystem(r, subsys[i]->d_name, f);
+	for (i = 0; i < num_subsys; i++) {
+		ret = nvme_scan_subsystem(r, subsys[i]->d_name, f);
+		if (ret < 0) {
+			nvme_msg(LOG_DEBUG, "failed to scan subsystem %s: %s\n",
+				 subsys[i]->d_name, strerror(errno));
+		}
+	}
 
 	nvme_free_dirents(subsys, i);
 	return 0;
@@ -352,14 +360,23 @@ struct nvme_host *nvme_lookup_host(nvme_root_t r, const char *hostnqn,
 static int nvme_subsystem_scan_namespaces(struct nvme_subsystem *s)
 {
 	struct dirent **namespaces;
-	int i, ret;
+	int i, num_ns, ret;
 
-	ret = nvme_scan_subsystem_namespaces(s, &namespaces);
-	if (ret < 0)
-		return ret;
+	num_ns = nvme_scan_subsystem_namespaces(s, &namespaces);
+	if (num_ns < 0) {
+		nvme_msg(LOG_DEBUG,
+			 "failed to scan namespaces for subsys %s: %s\n",
+			 s->subsysnqn, strerror(errno));
+		return num_ns;
+	}
 
-	for (i = 0; i < ret; i++)
-		nvme_subsystem_scan_namespace(s, namespaces[i]->d_name);
+	for (i = 0; i < num_ns; i++) {
+		ret = nvme_subsystem_scan_namespace(s, namespaces[i]->d_name);
+		if (ret < 0)
+			nvme_msg(LOG_DEBUG,
+				 "failed to scan namespace %s: %s\n",
+				 namespaces[i]->d_name, strerror(errno));
+	}
 
 	nvme_free_dirents(namespaces, i);
 	return 0;
@@ -368,14 +385,23 @@ static int nvme_subsystem_scan_namespaces(struct nvme_subsystem *s)
 static int nvme_subsystem_scan_ctrls(struct nvme_subsystem *s)
 {
 	struct dirent **ctrls;
-	int i, ret;
+	int i, num_ctrls, ret;
 
-	ret = nvme_scan_subsystem_ctrls(s, &ctrls);
-	if (ret < 0)
-		return ret;
+	num_ctrls = nvme_scan_subsystem_ctrls(s, &ctrls);
+	if (num_ctrls < 0) {
+		nvme_msg(LOG_DEBUG,
+			 "failed to scan ctrls for subsys %s: %s\n",
+			 s->subsysnqn, strerror(errno));
+		return num_ctrls;
+	}
 
-	for (i = 0; i < ret; i++)
-		nvme_subsystem_scan_ctrl(s, ctrls[i]->d_name);
+	for (i = 0; i < num_ctrls; i++) {
+		ret = nvme_subsystem_scan_ctrl(s, ctrls[i]->d_name);
+		if (ret < 0)
+			nvme_msg(LOG_DEBUG,
+				 "failed to scan ctrl %s: %s\n",
+				 ctrls[i]->d_name, strerror(errno));
+	}
 
 	nvme_free_dirents(ctrls, i);
 	return 0;
@@ -1557,12 +1583,17 @@ static int nvme_ctrl_scan_namespace(struct nvme_ctrl *c, char *name)
 	struct nvme_ns *n;
 
 	if (!c->s) {
+		nvme_msg(LOG_DEBUG, "%s: no subsystem for %s\n",
+			 __func__, name);
 		errno = EINVAL;
 		return -1;
 	}
 	n = __nvme_scan_namespace(c->sysfs_dir, name);
-	if (!n)
+	if (!n) {
+		nvme_msg(LOG_DEBUG, "%s: failed to scan namespace %s\n",
+			 __func__, name);
 		return -1;
+	}
 
 	n->s = c->s;
 	n->c = c;
@@ -1575,8 +1606,11 @@ static int nvme_subsystem_scan_namespace(struct nvme_subsystem *s, char *name)
 	struct nvme_ns *n;
 
 	n = __nvme_scan_namespace(s->sysfs_dir, name);
-	if (!n)
+	if (!n) {
+		nvme_msg(LOG_DEBUG, "%s: failed to scan namespace %s\n",
+			 __func__, name);
 		return -1;
+	}
 
 	n->s = s;
 	list_add(&s->namespaces, &n->entry);
@@ -1595,6 +1629,8 @@ struct nvme_ns *nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
 		return NULL;
 	n = __nvme_scan_namespace(s->sysfs_dir, name);
 	if (!n) {
+		nvme_msg(LOG_DEBUG, "%s: failed to scan namespace %d\n",
+			 __func__, nsid);
 		free(name);
 		return NULL;
 	}
