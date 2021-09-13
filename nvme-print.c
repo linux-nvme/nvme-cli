@@ -110,6 +110,9 @@ const char *nvme_cmd_to_string(int admin, __u8 opcode)
 		case nvme_cmd_resv_release:	return "Reservation Release";
 		case nvme_cmd_verify:		return "Verify";
 		case nvme_cmd_copy:		return "Copy";
+		case nvme_zns_cmd_mgmt_send:	return "Zone Management Send";
+		case nvme_zns_cmd_mgmt_recv:	return "Zone Management Receive";
+		case nvme_zns_cmd_append:	return "Zone Append";
 		}
 	}
 
