@@ -560,6 +560,8 @@ static int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name)
 	p->name = strdup(name);
 	p->sysfs_dir = path;
 	p->ana_state = nvme_get_path_attr(p, "ana_state");
+	if (!p->ana_state)
+		p->ana_state = strdup("optimized");
 
 	grpid = nvme_get_path_attr(p, "ana_grpid");
 	if (grpid) {
