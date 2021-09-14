@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-list-ctrl
+.\"     Title: nvme-list-endgrp
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
 .\"      Date: 09/08/2021
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LIST\-CTRL" "1" "09/08/2021" "NVMe" "NVMe Manual"
+.TH "NVME\-LIST\-ENDGRP" "1" "09/08/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,39 +28,23 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-list-ctrl \- Send NVMe Identify List Controllers, return result and structure
+nvme-list-endgrp \- Send NVMe Identify Endurance Group List, return result and structure
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme list\-ctrl\fR <device> [\-\-cntid=<cntid> | \-c <cntid>]
-                        [\-\-namespace\-id=<nsid> | \-n <nsid>] [\-o <fmt> | \-\-output\-format=<fmt>]
-DESCRIPTION
+\fInvme list\-endgrp\fR <device> [\-\-endgrp\-id=<endgrp\-id> | \-i <endgrp\-id>]
+                        [\-o <fmt> | \-\-output\-format=<fmt>]
 .fi
+.SH "DESCRIPTION"
 .sp
-.nf
-For the NVMe device given, sends an identify command for controller list
-and provides the result and returned structure\&. This uses either mode
-12h or 13h depending on the requested namespace identifier\&.
-
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
-The starting controller in the list always begins with 0 unless the
-`\*(Aq\-\-cntid\*(Aq` option is given to override\&.
-
-On success, the controller array is printed for each index and controller
-identifier\&.
-
-OPTIONS
-.fi
+For the NVMe device given, sends an identify command for endurance group list and provides the result and returned structure\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. An Endurance Group List of up to 2,047 Endurance Group Identifiers in increasing order is returned containing an Endurance Group Identifier greater than or equal to the value specified in the CDW11\&.ENDGID field\&.
+.SH "OPTIONS"
 .PP
-\-c <cntid>, \-\-cntid=<cntid>
+\-i <endgrp\-id>, \-\-endgrp\-id=<endgrp\-id>
 .RS 4
-Retrieve the identify list structure starting with the given controller id\&.
-.RE
-.PP
-\-n <nsid>, \-\-namespace\-id=<nsid>
-.RS 4
-If provided, will request the controllers attached to the specified namespace\&. If no namespace is given, or set to 0, the command requests the controller list for the entire subsystem, whether or not they are attached to namespace(s)\&.
+Retrieve the identify endurance group list structure starting for the given endurance group id\&.
 .RE
 .PP
 \-o <format>, \-\-output\-format=<format>

@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.10" />
-<title>nvme-list-ctrl(1)</title>
+<title>nvme-list-endgrp(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -735,12 +735,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-list-ctrl(1) Manual Page
+nvme-list-endgrp(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-list-ctrl -
-   Send NVMe Identify List Controllers, return result and structure
+<p>nvme-list-endgrp -
+   Send NVMe Identify Endurance Group List, return result and structure
 </p>
 </div>
 </div>
@@ -749,51 +749,38 @@ nvme-list-ctrl(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme list-ctrl</em> &lt;device&gt; [--cntid=&lt;cntid&gt; | -c &lt;cntid&gt;]
-                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;] [-o &lt;fmt&gt; | --output-format=&lt;fmt&gt;]
-DESCRIPTION</pre>
+<pre class="content"><em>nvme list-endgrp</em> &lt;device&gt; [--endgrp-id=&lt;endgrp-id&gt; | -i &lt;endgrp-id&gt;]
+                        [-o &lt;fmt&gt; | --output-format=&lt;fmt&gt;]</pre>
 <div class="attribution">
 </div></div>
-<div class="listingblock">
-<div class="content">
-<pre><code>For the NVMe device given, sends an identify command for controller list
-and provides the result and returned structure. This uses either mode
-12h or 13h depending on the requested namespace identifier.
-
-The &lt;device&gt; parameter is mandatory and may be either the NVMe character
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>For the NVMe device given, sends an identify command for endurance group list
+and provides the result and returned structure.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
-The starting controller in the list always begins with 0 unless the
-`'--cntid'` option is given to override.
-
-On success, the controller array is printed for each index and controller
-identifier.
-
-OPTIONS</code></pre>
-</div></div>
+An Endurance Group List of up to 2,047 Endurance Group Identifiers in
+increasing order is returned containing an Endurance Group Identifier greater
+than or equal to the value specified in the CDW11.ENDGID field.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">OPTIONS</h2>
+<div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--c &lt;cntid&gt;
+-i &lt;endgrp-id&gt;
 </dt>
 <dt class="hdlist1">
---cntid=&lt;cntid&gt;
+--endgrp-id=&lt;endgrp-id&gt;
 </dt>
 <dd>
 <p>
-        Retrieve the identify list structure starting with the given controller id.
-</p>
-</dd>
-<dt class="hdlist1">
--n &lt;nsid&gt;
-</dt>
-<dt class="hdlist1">
---namespace-id=&lt;nsid&gt;
-</dt>
-<dd>
-<p>
-        If provided, will request the controllers attached to the
-        specified namespace. If no namespace is given, or set to 0, the
-        command requests the controller list for the entire subsystem,
-        whether or not they are attached to namespace(s).
+        Retrieve the identify endurance group list structure starting for the given
+    endurance group id.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -828,7 +815,7 @@ OPTIONS</code></pre>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2021-09-08 14:24:09 IST
+ 2021-09-08 14:12:47 IST
 </div>
 </div>
 </body>

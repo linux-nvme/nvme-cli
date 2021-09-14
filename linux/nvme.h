@@ -471,6 +471,7 @@ enum {
 	NVME_ID_CNS_NS_GRANULARITY	= 0x16,
 	NVME_ID_CNS_UUID_LIST		= 0x17,
 	NVME_ID_CNS_DOMAIN_LIST		= 0x18,
+	NVME_ID_CNS_ENDURANCE_GROUP_ID  = 0x19,
 	NVME_ID_CNS_CSI_NS_PRESENT_LIST = 0x1a,
 	NVME_ID_CNS_CSI_NS_PRESENT  = 0x1b,
 	NVME_ID_CNS_CSI             = 0x1c,
@@ -1605,6 +1606,11 @@ struct nvme_bar_cap {
 	__u8	rsvd_cmbs_pmrs;
 };
 
+struct nvme_endurance_group_list {
+	__le16 num;
+	__le16 identifier[2047];
+};
+
 /*
  * is_64bit_reg - It checks whether given offset of the controller register is
  *                64bit or not.
@@ -1825,15 +1831,16 @@ struct nvme_zns_lbafe {
 };
 
 /**
- * struct nvme_zns_id_ns -
- * @zoc:
- * @ozcs:
- * @mar:
- * @mor:
- * @rrl:
- * @frl:
- * @lbafe:
- * @vs:
+ * struct nvme_zns_id_ns -  Zoned Namespace Command Set Specific
+ *                          Identify Namespace Data Structure
+ * @zoc: Zone Operation Characteristics
+ * @ozcs: Optional Zoned Command Support
+ * @mar: Maximum Active Resources
+ * @mor: Maximum Open Resources
+ * @rrl: Reset Recommended Limit
+ * @frl: Finish Recommended Limit
+ * @lbafe: LBA Format Extension
+ * @vs: Vendor Specific
  */
 struct nvme_zns_id_ns {
 	__le16			zoc;
@@ -1842,9 +1849,14 @@ struct nvme_zns_id_ns {
 	__le32			mor;
 	__le32			rrl;
 	__le32			frl;
-	__u8			rsvd20[2796];
-	struct nvme_zns_lbafe	lbafe[16];
-	__u8			rsvd3072[768];
+	__le32			rrl1;
+	__le32			rrl2;
+	__le32			rrl3;
+	__le32			frl1;
+	__le32			frl2;
+	__le32			frl3;
+	__u8			rsvd44[2772];
+	struct nvme_zns_lbafe lbafe[64];
 	__u8			vs[256];
 };
 
