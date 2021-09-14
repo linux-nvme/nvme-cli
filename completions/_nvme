@@ -55,6 +55,7 @@ _nvme () {
 	'boot-part-log: retrieve boot partition log'
 	'fid-support-effects-log:retrieve fid support and effects log'
 	'supported-log-pages: retrieve support log pages details'
+	'lockdown:submit a lockdown command'
 	'help:print brief descriptions of all nvme commands'
 	)
 
@@ -404,6 +405,24 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme get-feature options" _getf
+			;;
+		(lockdown)
+			local _lockdown
+			_lockdown=(
+			/dev/nvme':supply a device to use (required)'
+			--ofi=': Opcode or Feature Identifier(OFI) (required)'
+			-o':alias of --ofi'
+			--ifc=':Interface (INF) field Information (required)'
+			-f':alias of --ifc'
+			--prhbt=':Prohibit(PRHBT) bit field (required)'
+			-p':alias of --prhbt'
+			--scp=':Scope(SCP) field for identifying opcode or feature id (required)'
+			-s':alias of --scp'
+			--uuid=':UUID Index field required aligned with Scope'
+			-U':alias of --uuid'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme lockdown options" _lockdown
 			;;
 		(set-feature)
 			local _setf
@@ -880,6 +899,7 @@ _nvme () {
 			     resv-report flush compare read write copy show-regs persistent-event-log
 				 pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
 				 resv-notif-log capacity-mgmt id-domain boot-part-log fid-support-effects-log
+				 supported-log-pages lockdown
 				 supported-log-pages list-endgrp
 			   )
 			_arguments '*:: :->subcmds'

@@ -92,6 +92,7 @@ COMMAND_LIST(
 	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller ", virtual_mgmt)
 	ENTRY("rpmb", "Replay Protection Memory Block commands", rpmb_cmd)
 	ENTRY("fid-support-effects-log", "Submit Feature ID Support and Effects Log, Return result", get_fid_support_effects_log)
+	ENTRY("lockdown", "Submit a Lockdown command,return result", lockdown_cmd)
 );
 
 #endif
