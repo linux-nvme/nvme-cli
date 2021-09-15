@@ -204,6 +204,43 @@ int nvme_mi_mi_read_mi_data_port(nvme_mi_ep_t ep, __u8 portid,
 	return 0;
 }
 
+int nvme_mi_mi_read_mi_data_ctrl_list(nvme_mi_ep_t ep, __u8 start_portid,
+				       struct nvme_ctrl_list *list)
+{
+	size_t len;
+	__u32 cdw0;
+	int rc;
+
+	cdw0 = ((__u8)nvme_mi_dtyp_ctrl_list << 24) | (start_portid << 16);
+	len = sizeof(*list);
+
+	rc = nvme_mi_read_data(ep, cdw0, list, &len);
+	if (rc)
+		return rc;
+
+	return 0;
+}
+
+int nvme_mi_mi_read_mi_data_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id,
+				       struct nvme_mi_read_ctrl_info *ctrl)
+{
+	size_t len;
+	__u32 cdw0;
+	int rc;
+
+	cdw0 = ((__u8)nvme_mi_dtyp_ctrl_info << 24) | cpu_to_le16(ctrl_id);
+	len = sizeof(*ctrl);
+
+	rc = nvme_mi_read_data(ep, cdw0, ctrl, &len);
+	if (rc)
+		return rc;
+
+	if (len != sizeof(*ctrl))
+		return -EPROTO;
+
+	return 0;
+}
+
 int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 					    struct nvme_mi_nvm_ss_health_status *sshs)
 {

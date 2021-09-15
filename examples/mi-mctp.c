@@ -115,8 +115,56 @@ int do_info(nvme_mi_ep_t ep)
 	return 0;
 }
 
+static int show_ctrl(nvme_mi_ep_t ep, uint16_t ctrl_id)
+{
+	struct nvme_mi_read_ctrl_info ctrl;
+	int rc;
+
+	rc = nvme_mi_mi_read_mi_data_ctrl(ep, ctrl_id, &ctrl);
+	if (rc)
+		return rc;
+
+	printf("  Controller id: %d\n", ctrl_id);
+	printf("    port id: %d\n", ctrl.portid);
+	if (ctrl.prii & 0x1) {
+		uint16_t bdfn = le16_to_cpu(ctrl.pri);
+		printf("    PCIe routing valid\n");
+		printf("    PCIe bus: 0x%02x\n", bdfn >> 8);
+		printf("    PCIe dev: 0x%02x\n", bdfn >> 3 & 0x1f);
+		printf("    PCIe fn : 0x%02x\n", bdfn & 0x7);
+	} else {
+		printf("    PCIe routing invalid\n");
+	}
+	printf("    PCI vendor: %04x\n", le16_to_cpu(ctrl.vid));
+	printf("    PCI device: %04x\n", le16_to_cpu(ctrl.did));
+	printf("    PCI subsys vendor: %04x\n", le16_to_cpu(ctrl.ssvid));
+	printf("    PCI subsys device: %04x\n", le16_to_cpu(ctrl.ssvid));
+
+	return 0;
+}
+
+static int do_controllers(nvme_mi_ep_t ep)
+{
+	struct nvme_ctrl_list ctrl_list;
+	int rc, i;
+
+	rc = nvme_mi_mi_read_mi_data_ctrl_list(ep, 0, &ctrl_list);
+	if (rc) {
+		warnx("Can't perform Controller List operation");
+		return rc;
+	}
+
+	printf("NVMe controller list:\n");
+	for (i = 0; i < le16_to_cpu(ctrl_list.num); i++) {
+		uint16_t id = le16_to_cpu(ctrl_list.identifier[i]);
+		show_ctrl(ep, id);
+	}
+	return 0;
+}
+
 enum action {
 	ACTION_INFO,
+	ACTION_CONTROLLERS,
 };
 
 int main(int argc, char **argv)
@@ -132,7 +180,8 @@ int main(int argc, char **argv)
 			"usage: %s <net> <eid> [action] [action args]\n",
 			argv[0]);
 		fprintf(stderr, "where action is:\n"
-			"  info\n");
+			"  info\n"
+			"  controllers\n");
 		return EXIT_FAILURE;
 	}
 
@@ -150,6 +199,8 @@ int main(int argc, char **argv)
 
 		if (!strcmp(action_str, "info")) {
 			action = ACTION_INFO;
+		} else if (!strcmp(action_str, "controllers")) {
+			action = ACTION_CONTROLLERS;
 		} else {
 			fprintf(stderr, "invalid action '%s'\n", action_str);
 			return EXIT_FAILURE;
@@ -167,6 +218,9 @@ int main(int argc, char **argv)
 	switch (action) {
 	case ACTION_INFO:
 		rc = do_info(ep);
+		break;
+	case ACTION_CONTROLLERS:
+		rc = do_controllers(ep);
 		break;
 	}
 
