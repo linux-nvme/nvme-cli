@@ -1813,26 +1813,22 @@ ret:
 static int list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve basic information for all NVMe namespaces";
-	const char *device_dir = "Additional directory to search for devices";
 	const char *verbose = "Increase output verbosity";
 	enum nvme_print_flags flags;
 	nvme_root_t r;
 	int err = 0;
 
 	struct config {
-		char *device_dir;
 		char *output_format;
 		int verbose;
 	};
 
 	struct config cfg = {
-		.device_dir = NULL,
 		.output_format = "normal",
 		.verbose = 0,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_STRING("directory",  'd', "DIR",             &cfg.device_dir, device_dir),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary),
 		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
 		OPT_END()
