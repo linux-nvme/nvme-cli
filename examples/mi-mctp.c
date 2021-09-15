@@ -13,6 +13,7 @@
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <libnvme-mi.h>
 
@@ -79,36 +80,17 @@ static int show_port(nvme_mi_ep_t ep, int portid)
 	return 0;
 }
 
-int main(int argc, char **argv)
+int do_info(nvme_mi_ep_t ep)
 {
 	struct nvme_mi_nvm_ss_health_status ss_health;
 	struct nvme_mi_read_nvm_ss_info ss_info;
-	nvme_root_t root;
-	nvme_mi_ep_t ep;
-	uint8_t eid;
-	int net;
-	int rc;
-	int i;
-
-	if (argc != 3) {
-		fprintf(stderr, "usage: %s <net> <eid>\n", argv[0]);
-		return EXIT_FAILURE;
-	}
-
-	net = atoi(argv[1]);
-	eid = atoi(argv[2]) & 0xff;
-
-	root = nvme_mi_create_root(stderr, DEFAULT_LOGLEVEL);
-	if (!root)
-		err(EXIT_FAILURE, "can't create NVMe root");
-
-	ep = nvme_mi_open_mctp(root, net, eid);
-	if (!ep)
-		err(EXIT_FAILURE, "can't open MCTP endpoint %d:%d", net, eid);
+	int i, rc;
 
 	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
-	if (rc)
-		err(EXIT_FAILURE, "can't perform Read MI Data operation");
+	if (rc) {
+		warn("can't perform Read MI Data operation");
+		return -1;
+	}
 
 	printf("NVMe MI subsys info:\n");
 	printf(" num ports: %d\n", ss_info.nump + 1);
@@ -130,11 +112,69 @@ int main(int argc, char **argv)
 	printf(" drive life used:   %d%%\n", ss_health.pdlu);
 	printf(" controller status: 0x%04x\n", le16_to_cpu(ss_health.pdlu));
 
+	return 0;
+}
+
+enum action {
+	ACTION_INFO,
+};
+
+int main(int argc, char **argv)
+{
+	enum action action;
+	nvme_root_t root;
+	nvme_mi_ep_t ep;
+	uint8_t eid;
+	int rc, net;
+
+	if (argc < 3) {
+		fprintf(stderr,
+			"usage: %s <net> <eid> [action] [action args]\n",
+			argv[0]);
+		fprintf(stderr, "where action is:\n"
+			"  info\n");
+		return EXIT_FAILURE;
+	}
+
+	net = atoi(argv[1]);
+	eid = atoi(argv[2]) & 0xff;
+	argv += 2;
+	argc -= 2;
+
+	if (argc == 1) {
+		action = ACTION_INFO;
+	} else {
+		char *action_str = argv[1];
+		argc--;
+		argv++;
+
+		if (!strcmp(action_str, "info")) {
+			action = ACTION_INFO;
+		} else {
+			fprintf(stderr, "invalid action '%s'\n", action_str);
+			return EXIT_FAILURE;
+		}
+	}
+
+	root = nvme_mi_create_root(stderr, DEFAULT_LOGLEVEL);
+	if (!root)
+		err(EXIT_FAILURE, "can't create NVMe root");
+
+	ep = nvme_mi_open_mctp(root, net, eid);
+	if (!ep)
+		err(EXIT_FAILURE, "can't open MCTP endpoint %d:%d", net, eid);
+
+	switch (action) {
+	case ACTION_INFO:
+		rc = do_info(ep);
+		break;
+	}
+
 	nvme_mi_close(ep);
 
 	nvme_mi_free_root(root);
 
-	return EXIT_SUCCESS;
+	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 
