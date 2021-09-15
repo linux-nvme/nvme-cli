@@ -1928,7 +1928,8 @@ struct nvme_zns_desc {
 	__u8	zt;
 	__u8	zs;
 	__u8	za;
-	__u8	rsvd3[5];
+	__u8	zai;
+	__u8	rsvd4[4];
 	__le64	zcap;
 	__le64	zslba;
 	__le64	wp;
