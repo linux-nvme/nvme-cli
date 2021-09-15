@@ -590,6 +590,27 @@ out_free_log:
 	return ret;
 }
 
+#define PATH_UUID_IBM	"/proc/device-tree/ibm,partition-uuid"
+
+int uuid_from_device_tree(char *system_uuid)
+{
+	char filename[PATH_MAX];
+	int f, len, ret;
+
+	sprintf(filename, "%s", PATH_UUID_IBM);
+	f = open(filename, O_RDONLY);
+	if (f < 0)
+		goto out_close;
+	len = read(f, system_uuid, 512);
+	if (len < 0)
+		goto out_close;
+
+out_close:
+	close(f);
+	ret = -ENXIO;
+	return strlen(system_uuid) ? 0 : ret;
+}
+
 #define PATH_DMI_ENTRIES       "/sys/firmware/dmi/entries"
 
 int uuid_from_dmi(char *system_uuid)
@@ -677,8 +698,11 @@ char *nvmf_hostnqn_generate()
 #endif
 
 	ret = uuid_from_dmi(uuid_str);
-	if (ret < 0)
-		ret = uuid_from_systemd(uuid_str);
+	if (ret < 0) {
+		ret = uuid_from_device_tree(uuid_str);
+		if (ret < 0)
+			ret = uuid_from_systemd(uuid_str);
+	}
 #ifdef CONFIG_LIBUUID
 	if (ret < 0) {
 		uuid_generate_random(uuid);
