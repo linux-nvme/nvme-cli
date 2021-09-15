@@ -1384,7 +1384,7 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 
 	err = nvme_identify_nsid_ctrl_list(fd, cfg.namespace_id,
 					   cfg.cntid, cntlist);
-	if (err)
+	if (!err)
 		nvme_show_list_ctrl(cntlist, flags);
 	else if (err > 0)
 		nvme_show_status(err);
