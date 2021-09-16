@@ -852,9 +852,12 @@ static char *hostnqn_read_file(void)
 		goto out;
 
 	ret = strndup(hostnqn, strcspn(hostnqn, "\n"));
-
 out:
 	fclose(f);
+	if (ret && strcmp(ret, "") == 0) {
+		free(ret);
+		ret = NULL;
+	}
 	return ret;
 }
 
