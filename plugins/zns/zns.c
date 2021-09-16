@@ -261,7 +261,7 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
-		return errno;
+		goto ret;
 
 	err = asprintf(&command, "%s-%s", plugin->name, cmd->name);
 	if (err < 0)
@@ -289,6 +289,7 @@ free:
 	free(command);
 close_fd:
 	close(fd);
+ret:
 	return nvme_status_to_errno(err, false);
 }
 
