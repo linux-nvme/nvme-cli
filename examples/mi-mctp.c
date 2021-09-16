@@ -10,9 +10,11 @@
  * mi-mctp: open a MI connection over MCTP, and query controller info
  */
 
+#include <assert.h>
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 
 #include <libnvme-mi.h>
@@ -162,9 +164,66 @@ static int do_controllers(nvme_mi_ep_t ep)
 	return 0;
 }
 
+static const char *__copy_id_str(const void *field, size_t size,
+				 char *buf, size_t buf_size)
+{
+	assert(size < buf_size);
+	strncpy(buf, field, size);
+	buf[size] = '\0';
+	return buf;
+}
+
+#define copy_id_str(f,b) __copy_id_str(f, sizeof(f), b, sizeof(b))
+
+int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
+{
+	struct nvme_mi_ctrl *ctrl;
+	struct nvme_id_ctrl id;
+	uint16_t ctrl_id;
+	char buf[41];
+	int rc, tmp;
+
+	if (argc != 2) {
+		fprintf(stderr, "no controller ID specified\n");
+		return -1;
+	}
+
+	tmp = atoi(argv[1]);
+	if (tmp < 0 || tmp > 0xffff) {
+		fprintf(stderr, "invalid controller ID\n");
+		return -1;
+	}
+
+	ctrl_id = tmp & 0xffff;
+
+	ctrl = nvme_mi_init_ctrl(ep, tmp);
+	if (!ctrl) {
+		warn("can't create controller");
+		return -1;
+	}
+
+	/* we only use the fields before rab; just request partial ID data */
+	rc = nvme_mi_admin_identify_ctrl_partial(ctrl, &id, 0,
+					 offsetof(struct nvme_id_ctrl, rab));
+	if (rc) {
+		warn("can't perform Admin Identify command");
+		return -1;
+	}
+
+	printf("NVMe Controller %d identify\n", ctrl_id);
+	printf(" PCI vendor: %04x\n", le16_to_cpu(id.vid));
+	printf(" PCI subsys vendor: %04x\n", le16_to_cpu(id.ssvid));
+	printf(" Serial number: %s\n", copy_id_str(id.sn, buf));
+	printf(" Model number: %s\n", copy_id_str(id.mn, buf));
+	printf(" Firmware rev: %s\n", copy_id_str(id.fr, buf));
+
+	return 0;
+}
+
 enum action {
 	ACTION_INFO,
 	ACTION_CONTROLLERS,
+	ACTION_IDENTIFY,
 };
 
 int main(int argc, char **argv)
@@ -181,7 +240,8 @@ int main(int argc, char **argv)
 			argv[0]);
 		fprintf(stderr, "where action is:\n"
 			"  info\n"
-			"  controllers\n");
+			"  controllers\n"
+			"  identify <controller-id>\n");
 		return EXIT_FAILURE;
 	}
 
@@ -201,6 +261,8 @@ int main(int argc, char **argv)
 			action = ACTION_INFO;
 		} else if (!strcmp(action_str, "controllers")) {
 			action = ACTION_CONTROLLERS;
+		} else if (!strcmp(action_str, "identify")) {
+			action = ACTION_IDENTIFY;
 		} else {
 			fprintf(stderr, "invalid action '%s'\n", action_str);
 			return EXIT_FAILURE;
@@ -221,6 +283,9 @@ int main(int argc, char **argv)
 		break;
 	case ACTION_CONTROLLERS:
 		rc = do_controllers(ep);
+		break;
+	case ACTION_IDENTIFY:
+		rc = do_identify(ep, argc, argv);
 		break;
 	}
 
