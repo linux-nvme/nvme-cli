@@ -4160,6 +4160,8 @@ void nvme_show_list_ctrl(struct nvme_ctrl_list *ctrl_list,
 	int i;
 	__u16 num = le16_to_cpu(ctrl_list->num);
 
+	if (flags & BINARY)
+		return d_raw((unsigned char *)ctrl_list, sizeof(*ctrl_list));
 	if (flags & JSON)
 		return json_nvme_list_ctrl(ctrl_list, num);
 

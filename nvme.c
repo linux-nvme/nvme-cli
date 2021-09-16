@@ -1371,10 +1371,6 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 	err = flags = validate_output_format(cfg.output_format);
 	if (flags < 0)
 		goto close_fd;
-	if (flags != JSON && flags != NORMAL) {
-		err = -EINVAL;
-		goto close_fd;
-	}
 
 	if (posix_memalign((void *)&cntlist, getpagesize(), 0x1000)) {
 		fprintf(stderr, "can not allocate controller list payload\n");
