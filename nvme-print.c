@@ -4427,7 +4427,7 @@ void nvme_show_zns_changed(struct nvme_zns_changed_zone_log *log,
 		printf("zid %03d: %"PRIu64"\n", i, (uint64_t)le64_to_cpu(log->zid[i]));
 }
 
-char *zone_type_to_string(__u8 cond)
+static char *zone_type_to_string(__u8 cond)
 {
 	switch (cond) {
 	case NVME_ZONE_TYPE_SEQWRITE_REQ:
@@ -4437,7 +4437,7 @@ char *zone_type_to_string(__u8 cond)
 	}
 }
 
-char *zone_state_to_string(__u8 state)
+static char *zone_state_to_string(__u8 state)
 {
 	switch (state) {
 	case NVME_ZNS_ZS_EMPTY:
@@ -4488,6 +4488,7 @@ static void json_nvme_zns_report_zones(void *report, __u32 descs,
 		json_object_add_value_string(zone, "type",
 			zone_type_to_string(desc->zt));
 		json_object_add_value_uint(zone, "attrs", desc->za);
+		json_object_add_value_uint(zone, "attrs", desc->zai);
 
 		if (ext_size) {
 			if (desc->za & NVME_ZNS_ZA_ZDEV) {
@@ -4510,13 +4511,30 @@ static void json_nvme_zns_report_zones(void *report, __u32 descs,
 	json_free_object(root);
 }
 
+static void nvme_show_zns_report_zone_attributes(__u8 za, __u8 zai)
+{
+	const char *const recommanded_limit[4] = {"","1","2","3"};
+	printf("Attrs: Zone Descriptor Extension is %sVaild\n", 
+		(za & NVME_ZNS_ZA_ZDEV)? "" : "Not ");
+	if(za & NVME_ZNS_ZA_RZR) {
+		printf("       Reset Zone Recommended with Reset Recommended Limit%s\n",
+			recommanded_limit[(zai&0xd)>>2]);
+	}
+	if (za & NVME_ZNS_ZA_FZR) {
+		printf("       Finish Zone Recommended with Finish Recommended Limit%s\n",
+			recommanded_limit[zai&0x3]);
+	}
+	if (za & NVME_ZNS_ZA_ZFC) {
+		printf("       Zone Finished by Controller\n");
+	}
+}
+
 void nvme_show_zns_report_zones(void *report, __u32 descs,
 	__u8 ext_size, __u32 report_size, unsigned long flags)
 {
 	struct nvme_zone_report *r = report;
 	struct nvme_zns_desc *desc;
-	int i;
-
+	int i, verbose = flags & VERBOSE;
 	__u64 nr_zones = le64_to_cpu(r->nr_zones);
 
 	if (nr_zones < descs)
@@ -4532,19 +4550,24 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 	for (i = 0; i < descs; i++) {
 		desc = (struct nvme_zns_desc *)
 			(report + sizeof(*r) + i * (sizeof(*desc) + ext_size));
-		printf("SLBA: 0x%-8"PRIx64" WP: 0x%-8"PRIx64" Cap: 0x%-8"PRIx64" State: %-12s Type: %-14s Attrs: 0x%-x\n",
-		(uint64_t)le64_to_cpu(desc->zslba), (uint64_t)le64_to_cpu(desc->wp),
-		(uint64_t)le64_to_cpu(desc->zcap), zone_state_to_string(desc->zs >> 4),
-		zone_type_to_string(desc->zt), desc->za);
+		if(verbose) {
+			printf("SLBA: %#-10"PRIx64" WP: %#-10"PRIx64" Cap: %#-10"PRIx64" State: %-12s Type: %-14s\n",
+				(uint64_t)le64_to_cpu(desc->zslba), (uint64_t)le64_to_cpu(desc->wp),
+				(uint64_t)le64_to_cpu(desc->zcap), zone_state_to_string(desc->zs >> 4),
+				zone_type_to_string(desc->zt));
+			nvme_show_zns_report_zone_attributes(desc->za, desc->zai);
+		}
+		else {
+			printf("SLBA: %#-10"PRIx64" WP: %#-10"PRIx64" Cap: %#-10"PRIx64" State: %#-4x Type: %#-4x Attrs: %#-4x AttrsInfo: %#-4x\n",
+				(uint64_t)le64_to_cpu(desc->zslba), (uint64_t)le64_to_cpu(desc->wp),
+				(uint64_t)le64_to_cpu(desc->zcap), desc->zs, desc->zt,
+				desc->za, desc->zai);
+		}
 
-		if (ext_size) {
+		if (ext_size && (desc->za & NVME_ZNS_ZA_ZDEV)) {
 			printf("Extension Data: ");
-			if (desc->za & NVME_ZNS_ZA_ZDEV) {
-				d((unsigned char *)desc + sizeof(*desc), ext_size, 16, 1);
-				printf("..\n");
-			} else {
-				printf(" Not valid\n");
-			}
+			d((unsigned char *)desc + sizeof(*desc), ext_size, 16, 1);
+			printf("..\n");
 		}
 	}
 }
