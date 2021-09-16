@@ -565,7 +565,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	const char *state = "state of zones to list";
 	const char *ext = "set to use the extended report zones";
 	const char *part = "set to use the partial report";
-	const char *human_readable = "show report zones in readable format";
+	const char *verbose = "show report zones verbosity";
 
 	enum nvme_print_flags flags;
 	int fd, zdes = 0, err = -1;
@@ -579,7 +579,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 		__u32 namespace_id;
 		int   num_descs;
 		int   state;
-		int   human_readable;
+		int   verbose;
 		bool  extended;
 		bool  partial;
 	};
@@ -595,7 +595,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_UINT("descs",         'd', &cfg.num_descs,      num_descs),
 		OPT_UINT("state",         'S', &cfg.state,          state),
 		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
-		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
+		OPT_FLAG("verbose",       'v', &cfg.verbose,        verbose),
 		OPT_FLAG("extended",      'e', &cfg.extended,       ext),
 		OPT_FLAG("partial",       'p', &cfg.partial,        part),
 		OPT_END()
@@ -608,7 +608,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	flags = validate_output_format(cfg.output_format);
 	if (flags < 0)
 		goto close_fd;
-	if (cfg.human_readable)
+	if (cfg.verbose)
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
