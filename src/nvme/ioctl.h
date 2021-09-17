@@ -2279,17 +2279,19 @@ int nvme_format_nvm(int fd, __u32 nsid, __u8 lbaf,
 /**
  * nvme_ns_mgmt() -
  * @fd:		File descriptor of nvme device
+ * @csi:		Command Set Identifier
  */
 int nvme_ns_mgmt(int fd, __u32 nsid, enum nvme_ns_mgmt_sel sel,
-		 struct nvme_id_ns *ns, __u32 *result, __u32 timeout);
+		 struct nvme_id_ns *ns, __u32 *result, __u32 timeout, __u8 csi);
 
 /**
  * nvme_ns_mgmt_create() -
  * @fd:		File descriptor of nvme device
- * @ns:		Namespace identifiaction that defines creation parameters
- * @nsid:	On success, set to the namespace id that was created
- * @timeout:	Overide the default timeout to this value in milliseconds;
- * 		set to 0 to use the system default.
+ * @ns:		Namespace identification that defines ns creation parameters
+ * @nsid:		On success, set to the namespace id that was created
+ * @timeout:		Overide the default timeout to this value in milliseconds;
+ * 			set to 0 to use the system default.
+ * @csi:		Command Set Identifier
  *
  * On successful creation, the namespace exists in the subsystem, but is not
  * attached to any controller. Use the &nvme_ns_attach_ctrls() to assign the
@@ -2299,7 +2301,7 @@ int nvme_ns_mgmt(int fd, __u32 nsid, enum nvme_ns_mgmt_sel sel,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns, __u32 *nsid,
-			__u32 timeout);
+			__u32 timeout, __u8 csi);
 
 /**
  * nvme_ns_mgmt_delete() -
