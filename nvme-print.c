@@ -6276,11 +6276,13 @@ static void nvme_show_simple_list(nvme_root_t r)
 
 static void nvme_show_ns_details(nvme_ns_t n)
 {
-	char usage[128] = { 0 }, format[128] = { 0 };
+	char usage[128] = { 0 }, format[128] = { 0 }, generic[128] = { 0 };
 
 	long long lba = nvme_ns_get_lba_size(n);
 	double nsze = nvme_ns_get_lba_count(n) * lba;
 	double nuse = nvme_ns_get_lba_util(n) * lba;
+	int instance;
+	int head_instance;
 
 	const char *s_suffix = suffix_si_get(&nsze);
 	const char *u_suffix = suffix_si_get(&nuse);
@@ -6290,8 +6292,11 @@ static void nvme_show_ns_details(nvme_ns_t n)
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		nvme_ns_get_meta_size(n));
 
-	printf("%-12s %-8x %-26s %-16s ", nvme_ns_get_name(n),
-		nvme_ns_get_nsid(n), usage, format);
+	sscanf(nvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance);
+	sprintf(generic, "ng%dn%d", instance, head_instance);
+
+	printf("%-12s %-12s %-8x %-26s %-16s ", nvme_ns_get_name(n),
+		generic, nvme_ns_get_nsid(n), usage, format);
 }
 
 static void nvme_show_detailed_list(nvme_root_t r)
@@ -6357,10 +6362,10 @@ static void nvme_show_detailed_list(nvme_root_t r)
 	}
 	printf("\n");
 
-	printf("%-12s %-8s %-26s %-16s %-16s\n", "Device", "NSID", "Usage",
-		"Format", "Controllers");
-	printf("%-.12s %-.8s %-.26s %-.16s %-.16s\n", dash, dash, dash, dash,
-		dash);
+	printf("%-12s %-12s %-8s %-26s %-16s %-16s\n", "Device", "Generic",
+		"NSID", "Usage", "Format", "Controllers");
+	printf("%-.12s %-.12s %-.8s %-.26s %-.16s %-.16s\n", dash, dash, dash,
+		dash, dash, dash);
 
 	nvme_for_each_host(r, h) {
 		nvme_for_each_subsystem(h, s) {
