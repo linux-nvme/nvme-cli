@@ -594,21 +594,18 @@ out_free_log:
 
 int uuid_from_device_tree(char *system_uuid)
 {
-	char filename[PATH_MAX];
-	int f, len, ret;
+	ssize_t len;
+	int f;
 
-	sprintf(filename, "%s", PATH_UUID_IBM);
-	f = open(filename, O_RDONLY);
+	f = open(PATH_UUID_IBM, O_RDONLY);
 	if (f < 0)
-		goto out_close;
+		return -ENXIO;
 	len = read(f, system_uuid, 512);
-	if (len < 0)
-		goto out_close;
-
-out_close:
 	close(f);
-	ret = -ENXIO;
-	return strlen(system_uuid) ? 0 : ret;
+	if (len < 0)
+		return -ENXIO;
+
+	return strlen(system_uuid) ? 0 : -ENXIO;
 }
 
 #define PATH_DMI_ENTRIES       "/sys/firmware/dmi/entries"
