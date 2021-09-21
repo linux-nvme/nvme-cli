@@ -54,6 +54,9 @@ install: $(NAME).pc
 install-tests:
 	@$(MAKE) -C test install prefix=$(DESTDIR)$(prefix) datadir=$(DESTDIR)$(datadir)
 
+install-python:
+	@$(MAKE) -C pynvme install prefix=$(DESTDIR)$(prefix)
+
 clean:
 	@rm -f config-host.mak config-host.h cscope.out $(NAME).pc
 	@$(MAKE) -C src clean
