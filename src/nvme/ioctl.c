@@ -497,7 +497,7 @@ int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 csi, void *data)
 int nvme_identify_iocs(int fd, __u16 cntlid, struct nvme_id_iocs *iocs)
 {
 	BUILD_ASSERT(sizeof(struct nvme_id_iocs) == 4096);
-	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_CTRL, NVME_NSID_NONE,
+	return nvme_identify(fd, NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE, NVME_NSID_NONE,
 			     cntlid, NVME_NVMSETID_NONE, NVME_UUID_NONE,
 			     NVME_CSI_NVM, iocs);
 }
