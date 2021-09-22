@@ -451,6 +451,7 @@ enum nvme_admin_opcode {
  * @NVME_IDENTIFY_CNS_NS_GRANULARITY:
  * @NVME_IDENTIFY_CNS_UUID_LIST:
  * @NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS:
+ * @NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE: Base Specification 2.0a section 5.17.2.21
  */
 enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_NS					= 0x00,
@@ -469,6 +470,7 @@ enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_NS_GRANULARITY			= 0x16,
 	NVME_IDENTIFY_CNS_UUID_LIST				= 0x17,
 	NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS			= 0x18, /* XXX: Placeholder until assigned */
+	NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE			= 0x1C,
 };
 
 /**
