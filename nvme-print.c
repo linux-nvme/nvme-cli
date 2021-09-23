@@ -2698,6 +2698,28 @@ void nvme_show_relatives(const char *name)
 	/* XXX: TBD */
 }
 
+void d_json(unsigned char *buf, int len, int width, int group,
+	    struct json_object *array)
+{
+	int i, line_done = 0;
+	char ascii[32 + 1];
+	assert(width < sizeof(ascii));
+
+	for (i = 0; i < len; i++) {
+		line_done = 0;
+		ascii[i % width] = (buf[i] >= '!' && buf[i] <= '~') ? buf[i] : '.';
+		if (((i + 1) % width) == 0) {
+			ascii[i % width + 1] = '\0';
+			json_array_add_value_string(array, ascii);
+			line_done = 1;
+		}
+	}
+	if (!line_done) {
+		ascii[i % width + 1] = '\0';
+		json_array_add_value_string(array, ascii);
+	}
+}
+
 void d(unsigned char *buf, int len, int width, int group)
 {
 	int i, offset = 0, line_done = 0;
@@ -4437,6 +4459,57 @@ char *zone_state_to_string(__u8 state)
 	}
 }
 
+static void json_nvme_zns_report_zones(void *report, __u32 descs,
+	__u8 ext_size, __u32 report_size, __u64 nr_zones) {
+	struct json_object *root;
+	struct json_object *zone_list;
+	struct json_object *zone;
+	struct json_object *ext_data;
+	struct nvme_zone_report *r = report;
+	struct nvme_zns_desc *desc;
+	int i;
+
+	root = json_create_object();
+	zone_list = json_create_array();
+
+
+	json_object_add_value_uint(root, "nr_zones", nr_zones);
+
+	for (i = 0; i < descs; i++) {
+		desc = (struct nvme_zns_desc *)
+			(report + sizeof(*r) + i * (sizeof(*desc) + ext_size));
+		zone = json_create_object();
+
+		json_object_add_value_uint(zone, "slba", le64_to_cpu(desc->zslba));
+		json_object_add_value_uint(zone, "wp", le64_to_cpu(desc->wp));
+		json_object_add_value_uint(zone, "cap", le64_to_cpu(desc->zcap));
+		json_object_add_value_string(zone, "state",
+			zone_state_to_string(desc->zs >> 4));
+		json_object_add_value_string(zone, "type",
+			zone_type_to_string(desc->zt));
+		json_object_add_value_uint(zone, "attrs", desc->za);
+
+		if (ext_size) {
+			if (desc->za & NVME_ZNS_ZA_ZDEV) {
+				ext_data = json_create_array();
+				d_json((unsigned char *)desc + sizeof(*desc),
+					ext_size, 16, 1, ext_data);
+				json_object_add_value_array(zone, "ext_data",
+					ext_data);
+			} else {
+				json_object_add_value_string(zone, "ext_data", "Not valid");
+			}
+		}
+
+		json_array_add_value_object(zone_list, zone);
+	}
+
+	json_object_add_value_array(root, "zone_list", zone_list);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
 void nvme_show_zns_report_zones(void *report, __u32 descs,
 	__u8 ext_size, __u32 report_size, unsigned long flags)
 {
@@ -4451,6 +4524,9 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)report, report_size);
+	else if (flags & JSON)
+		return json_nvme_zns_report_zones(report, descs,
+				ext_size, report_size, nr_zones);
 
 	printf("nr_zones: %"PRIu64"\n", (uint64_t)le64_to_cpu(r->nr_zones));
 	for (i = 0; i < descs; i++) {
