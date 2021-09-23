@@ -487,10 +487,13 @@ struct __attribute__((__packed__)) optane_lat_stats {
 	__u64 data[9];
 };
 
-#define MEDIA_MAJOR_IDX 0
-#define MEDIA_MINOR_IDX 1
-#define MEDIA_MAX_LEN 2
-#define OPTANE_V1000_BUCKET_LEN 8
+#define MEDIA_MAJOR_IDX			0
+#define MEDIA_MINOR_IDX			1
+#define MEDIA_MAX_LEN			2
+#define OPTANE_V1000_BUCKET_LEN		8
+#define OPTANE_V1000_BUCKET_LEN		8
+#define NAND_LAT_STATS_LEN		4868
+
 
 static struct intel_lat_stats stats;
 static struct optane_lat_stats v1000_stats;
@@ -837,7 +840,7 @@ static void show_lat_stats_4_0(struct intel_lat_stats *stats)
 	}
 }
 
-static void jason_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
+static void json_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 {
 	int i;
 	struct json_object *root = json_create_object();
@@ -941,7 +944,7 @@ static void json_lat_stats(int write)
 	case 1000:
 		switch (media_version[MEDIA_MINOR_IDX]) {
 		case 0:
-			jason_lat_stats_v1000_0(&v1000_stats, write);
+			json_lat_stats_v1000_0(&v1000_stats, write);
 			break;
 		default:
 			printf("Unsupported minor revision (%u.%u)\n",
@@ -988,6 +991,7 @@ static void show_lat_stats(int write)
 		case 3:
 		case 4:
 		case 5:
+		case 6:
 			show_lat_stats_4_0(&stats);
 			break;
 		default:
@@ -1018,6 +1022,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 {
 
 	int err, fd;
+	__u8 data[NAND_LAT_STATS_LEN];
 
 	const char *desc = "Get Intel Latency Statistics log and show it.";
 	const char *raw = "Dump output in binary format";
@@ -1044,9 +1049,15 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	if (fd < 0)
 		return fd;
 
-	/* Query maj and minor version first */
+	/* For optate, latency stats are deleted every time their LID is pulled.
+	 * Therefore, we query the longest lat_stats log page first.
+	 */
 	err = nvme_get_log_simple(fd, cfg.write ? 0xc2 : 0xc1,
-			   sizeof(media_version), media_version);
+			   sizeof(data), &data);
+
+	media_version[0] = (data[1] << 8) | data[0];
+	media_version[1] = (data[3] << 8) | data[2];
+
 	if (err)
 		goto close_fd;
 
@@ -1072,11 +1083,14 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 
 		}
 
-		err = nvme_get_log_simple(fd, cfg.write ? 0xc2 : 0xc1,
-				   sizeof(v1000_stats), &v1000_stats);
+		/* Move counter values to optate stats struct which has a
+		 * smaller size
+		 */
+		memcpy(&v1000_stats, (struct optane_lat_stats *)data,
+		       sizeof(struct optane_lat_stats));
 	} else {
-		err = nvme_get_log_simple(fd, cfg.write ? 0xc2 : 0xc1,
-				   sizeof(stats), &stats);
+		memcpy(&stats, (struct intel_lat_stats *)data,
+		       sizeof(struct intel_lat_stats));
 	}
 
 	if (!err) {
@@ -1084,8 +1098,14 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 			json_lat_stats(cfg.write);
 		else if (!cfg.raw_binary)
 			show_lat_stats(cfg.write);
-		else
-			d_raw((unsigned char *)&stats, sizeof(stats));
+		else {
+			if (media_version[0] == 1000)
+				d_raw((unsigned char *)&v1000_stats,
+				      sizeof(v1000_stats));
+			else
+				d_raw((unsigned char *)&stats,
+				      sizeof(stats));
+		}
 	} else if (err > 0)
 		nvme_show_status(err);
 close_fd:
@@ -1619,8 +1639,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 		}
 
 		err = nvme_set_features(fd, fid, nsid, cfg.write ? 0x1 : 0x0,
-					cdw12, save, 0, 0,
-					OPTANE_V1000_BUCKET_LEN,
+					cdw12, save, 0, 0, sizeof(thresholds),
 					thresholds, &result);
 
 		if (err > 0) {
