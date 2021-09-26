@@ -21,6 +21,8 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
 #ifdef CONFIG_SYSTEMD
 #include <systemd/sd-id128.h>
@@ -213,6 +215,63 @@ static int add_argument(char **argstr, const char *tok, const char *arg)
 	return 0;
 }
 
+static bool traddr_is_hostname(nvme_ctrl_t c)
+{
+	char addrstr[NVMF_TRADDR_SIZE];
+
+	if (!c->traddr)
+		return false;
+	if (strcmp(c->transport, "tcp") && strcmp(c->transport, "rdma"))
+		return false;
+	if (inet_pton(AF_INET, c->traddr, addrstr) > 0 ||
+	    inet_pton(AF_INET6, c->traddr, addrstr) > 0)
+		return false;
+	return true;
+}
+
+static int hostname2traddr(nvme_ctrl_t c)
+{
+	struct addrinfo *host_info, hints = {.ai_family = AF_UNSPEC};
+	char addrstr[NVMF_TRADDR_SIZE];
+	const char *p;
+	int ret;
+
+	ret = getaddrinfo(c->traddr, NULL, &hints, &host_info);
+	if (ret) {
+		fprintf(stderr, "failed to resolve host %s info\n", c->traddr);
+		return ret;
+	}
+
+	switch (host_info->ai_family) {
+	case AF_INET:
+		p = inet_ntop(host_info->ai_family,
+			&(((struct sockaddr_in *)host_info->ai_addr)->sin_addr),
+			addrstr, NVMF_TRADDR_SIZE);
+		break;
+	case AF_INET6:
+		p = inet_ntop(host_info->ai_family,
+			&(((struct sockaddr_in6 *)host_info->ai_addr)->sin6_addr),
+			addrstr, NVMF_TRADDR_SIZE);
+		break;
+	default:
+		fprintf(stderr, "unrecognized address family (%d) %s\n",
+			host_info->ai_family, c->traddr);
+		ret = -EINVAL;
+		goto free_addrinfo;
+	}
+
+	if (!p) {
+		fprintf(stderr, "failed to get traddr for %s\n", c->traddr);
+		ret = -errno;
+		goto free_addrinfo;
+	}
+	c->traddr = strdup(addrstr);
+
+free_addrinfo:
+	freeaddrinfo(host_info);
+	return ret;
+}
+
 static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 {
 	struct nvme_fabrics_config *cfg = nvme_ctrl_get_config(c);
@@ -353,6 +412,11 @@ int nvmf_add_ctrl_opts(nvme_ctrl_t c, struct nvme_fabrics_config *cfg)
 	int ret;
 
 	cfg = merge_config(c, cfg);
+	if (traddr_is_hostname(c)) {
+		ret = hostname2traddr(c);
+		if (ret)
+			return ret;
+	}
 
 	ret = build_options(h, c, &argstr);
 	if (ret)
@@ -375,6 +439,11 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	cfg = merge_config(c, cfg);
 	nvme_ctrl_disable_sqflow(c, disable_sqflow);
 	nvme_ctrl_set_discovered(c, true);
+	if (traddr_is_hostname(c)) {
+		ret = hostname2traddr(c);
+		if (ret)
+			return ret;
+	}
 
 	ret = build_options(h, c, &argstr);
 	if (ret)
