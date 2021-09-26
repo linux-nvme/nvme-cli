@@ -299,7 +299,10 @@ static int discover_from_conf_file(nvme_host_t h, const char *desc,
 	char *hostnqn = NULL, *hostid = NULL;
 	char *ptr, **argv, *p, line[4096];
 	int argc, ret = 0;
+	unsigned int verbose = 0;
 	FILE *f;
+	enum nvme_print_flags flags;
+	char *format = "normal";
 
 	struct nvme_fabrics_config cfg = {
 		.tos = -1,
@@ -308,7 +311,17 @@ static int discover_from_conf_file(nvme_host_t h, const char *desc,
 
 	OPT_ARGS(opts) = {
 		NVMF_OPTS(cfg),
+		OPT_FMT("output-format", 'o', &format,        output_format),
+		OPT_FILE("raw",          'r', &raw,           "save raw output to file"),
+		OPT_FLAG("persistent",   'p', &persistent,    "persistent discovery connection"),
+		OPT_FLAG("quiet",        'S', &quiet,         "suppress already connected errors"),
+		OPT_INCR("verbose",      'v', &verbose,       "Increase logging verbosity"),
+		OPT_END()
 	};
+
+	ret = flags = validate_output_format(format);
+	if (ret < 0)
+		return ret;
 
 	f = fopen(PATH_NVMF_DISC, "r");
 	if (f == NULL) {
@@ -340,7 +353,8 @@ static int discover_from_conf_file(nvme_host_t h, const char *desc,
 		ret = argconfig_parse(argc, argv, desc, opts);
 		if (ret)
 			goto next;
-
+		if (persistent && !cfg.keep_alive_tmo)
+			cfg.keep_alive_tmo = 30;
 		if (!transport && !traddr)
 			goto next;
 
@@ -351,8 +365,8 @@ static int discover_from_conf_file(nvme_host_t h, const char *desc,
 		errno = 0;
 		ret = nvmf_add_ctrl(h, c, &cfg, false);
 		if (!ret) {
-			__discover(c, defcfg, NULL, persistent,
-				   connect, 0);
+			__discover(c, &cfg, raw, connect,
+				   persistent, flags);
 			if (!persistent)
 				ret = nvme_disconnect_ctrl(c);
 			nvme_free_ctrl(c);
