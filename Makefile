@@ -107,10 +107,7 @@ verify-no-dep: nvme.c nvme.h $(OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
 nvme.o: nvme.c nvme.h nvme-print.h util/argconfig.h util/suffix.h fabrics.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -c $<
 
-%.o: %.c %.h nvme.h linux/nvme.h nvme-print.h util/argconfig.h
-	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
-
-%.o: %.c nvme.h linux/nvme.h nvme-print.h util/argconfig.h
+%.o: %.c
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
 
 doc: $(NVME)
