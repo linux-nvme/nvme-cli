@@ -17,8 +17,9 @@ SYSTEMDDIR ?= $(LIBDIR)/systemd
 UDEVDIR ?= $(SYSCONFDIR)/udev
 UDEVRULESDIR ?= $(UDEVDIR)/rules.d
 DRACUTDIR ?= $(LIBDIR)/dracut
+LIBNVME_DEPS =
 LIBNVMEDIR = libnvme/
-LDFLAGS ?= -L$(LIBNVMEDIR)src/ -lnvme
+LDFLAGS ?=
 LIB_DEPENDS =
 
 ifeq ($(LIBUUID),0)
@@ -45,6 +46,19 @@ ifeq ($(LIBJSONC), 0)
 	override CFLAGS += -DLIBJSONC
 endif
 
+ifneq ("$(wildcard $(LIBNVMEDIR)/Makefile)","")
+	override LDFLAGS += -L$(LIBNVMEDIR)src -lnvme
+	override CFLAGS += -I$(LIBNVMEDIR)src
+	override LIBNVME_DEPS += libnvme
+else
+ifeq ($(shell pkg-config --exists libnvme; echo $$?),0)
+	override LDFLAGS += $(shell pkg-config --libs libnvme)
+	override CFLAGS += $(shell pkg-config --cflags libnvme)
+else
+$(error "No libnvme found")
+endif
+endif
+
 RPMBUILD = rpmbuild
 TAR = tar
 RM = rm -f
@@ -62,7 +76,7 @@ default: $(NVME)
 NVME-VERSION-FILE: FORCE
 	@$(SHELL_PATH) ./NVME-VERSION-GEN
 -include NVME-VERSION-FILE
-override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"' -I$(LIBNVMEDIR)src/
+override CFLAGS += -DNVME_VERSION='"$(NVME_VERSION)"'
 
 NVME_DPKG_VERSION=1~`lsb_release -sc`
 
@@ -98,7 +112,7 @@ PLUGIN_OBJS :=					\
 libnvme:
 	$(MAKE) -C $(LIBNVMEDIR)
 
-nvme: nvme.o libnvme $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
+nvme: nvme.o $(LIBNVME_DEPS) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)
 
 verify-no-dep: nvme.c nvme.h $(OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
@@ -119,9 +133,9 @@ test:
 all: doc
 
 clean:
-	$(RM) $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb 70-nvmf-autoconnect.conf
+	$(RM) $(NVME) nvme.o $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb 70-nvmf-autoconnect.conf
 	$(MAKE) -C Documentation clean
-	$(MAKE) -C libnvme clean
+	-$(MAKE) -C libnvme clean
 	$(RM) tests/*.pyc
 	$(RM) verify-no-dep
 
