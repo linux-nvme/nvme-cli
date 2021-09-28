@@ -444,9 +444,13 @@ static int nvme_subsystem_scan_ctrls(struct nvme_subsystem *s)
 	return 0;
 }
 
-static int nvme_init_subsystem(nvme_subsystem_t s, const char *name,
-			       const char *path)
+static int nvme_init_subsystem(nvme_subsystem_t s, const char *name)
 {
+	char *path;
+
+	if (asprintf(&path, "%s/%s", nvme_subsys_sysfs_dir, name) < 0)
+		return -1;
+
 	s->model = nvme_get_attr(path, "model");
 	if (!s->model)
 		s->model = strdup("undefined");
@@ -509,7 +513,7 @@ static int nvme_scan_subsystem(struct nvme_root *r, char *name,
 		goto free_path;
 	}
 	if (!s->name) {
-		ret = nvme_init_subsystem(s, name, path);
+		ret = nvme_init_subsystem(s, name);
 		if (ret < 0)
 			goto free_path;
 	}
@@ -1177,17 +1181,10 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		goto out_free_subsys;
 	}
 	if (!s->name) {
-		ret = asprintf(&path, "%s/%s", nvme_subsys_sysfs_dir,
-			       subsys_name);
-		if (ret > 0)
-			ret = nvme_init_subsystem(s, subsys_name, path);
-		else
-			path = NULL;
+		ret = nvme_init_subsystem(s, subsys_name);
 		if (ret < 0) {
-			nvme_msg(LOG_ERR, "Failed to init subsystem %s/%s\n",
-				 nvme_subsys_sysfs_dir, subsys_name);
-			if (path)
-				free(path);
+			nvme_msg(LOG_ERR, "Failed to init subsystem %s\n",
+				 subsys_name);
 			goto out_free_subsys;
 		}
 	}
