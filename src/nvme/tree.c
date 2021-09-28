@@ -1075,7 +1075,7 @@ static int nvme_ctrl_scan_namespaces(struct nvme_ctrl *c)
 	return 0;
 }
 
-static char *nvme_ctrl_lookup_subsystem_name(nvme_ctrl_t c)
+static char *nvme_ctrl_lookup_subsystem_name(char *ctrl_name)
 {
 	struct dirent **subsys;
 	char *subsys_name = NULL;
@@ -1089,7 +1089,7 @@ static char *nvme_ctrl_lookup_subsystem_name(nvme_ctrl_t c)
 		struct stat st;
 
 		sprintf(path, "%s/%s/%s", nvme_subsys_sysfs_dir,
-			subsys[i]->d_name, c->name);
+			subsys[i]->d_name, ctrl_name);
 		nvme_msg(LOG_DEBUG, "lookup subsystem %s\n", path);
 		if (stat(path, &st) < 0)
 			continue;
@@ -1162,7 +1162,7 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		}
 	}
 
-	subsys_name = nvme_ctrl_lookup_subsystem_name(c);
+	subsys_name = nvme_ctrl_lookup_subsystem_name(name);
 	if (!subsys_name) {
 		nvme_msg(LOG_ERR, "Failed to lookup subsystem name for %s\n",
 			 c->name);
