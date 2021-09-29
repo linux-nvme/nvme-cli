@@ -572,6 +572,8 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	__u32 report_size;
 	void *report;
 	bool huge = false;
+	struct nvme_zone_report *buff;
+
 	unsigned int nr_zones_chunks = 128,
 			nr_zones_retrieved = 0,
 			nr_zones,
@@ -655,7 +657,6 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	}
 
 	log_len = sizeof(struct nvme_zone_report);
-	struct nvme_zone_report *buff;
 	buff = calloc(1, log_len);
 	if (!buff) {
 		err = -ENOMEM;
@@ -696,7 +697,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	offset = cfg.zslba;
 	printf("nr_zones: %"PRIu64"\n", (uint64_t)le64_to_cpu(total_nr_zones));
 
-    while (nr_zones_retrieved < nr_zones) {
+	while (nr_zones_retrieved < nr_zones) {
 		if (nr_zones_retrieved >= nr_zones)
 			break;
 
