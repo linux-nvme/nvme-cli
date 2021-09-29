@@ -670,6 +670,18 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	__u32 report_size;
 	void *report;
 	bool huge = false;
+	struct nvme_zone_report *buff;
+
+	unsigned int nr_zones_chunks = 1024,   /* 1024 entries * 64 bytes per entry = 64k byte transfer */
+			nr_zones_retrieved = 0,
+			nr_zones,
+			offset,
+			log_len;
+	int total_nr_zones = 0;
+	struct nvme_zns_id_ns id_zns;
+	struct nvme_id_ns id_ns;
+	uint8_t lbaf;
+	__le64	zsze;
 
 	struct config {
 		char *output_format;
@@ -725,23 +737,53 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 		}
 	}
 
-	if (cfg.num_descs == -1) {
-		struct nvme_zone_report r;
-
-		err = nvme_zns_report_zones(fd, cfg.namespace_id, 0,
-			0, cfg.state, 0, sizeof(r), &r);
-		if (err > 0) {
-			nvme_show_status(err);
-			goto close_fd;
-		} else if (err < 0) {
-			perror("zns report-zones");
-			goto close_fd;
-		}
-		cfg.num_descs = le64_to_cpu(r.nr_zones);
+	err = nvme_identify_ns(fd, cfg.namespace_id, &id_ns);
+	if (err) {
+		nvme_show_status(err);
+		goto close_fd;
 	}
 
-	report_size = sizeof(struct nvme_zone_report) + cfg.num_descs *
-		(sizeof(struct nvme_zns_desc) + zdes);
+	err = nvme_zns_identify_ns(fd, cfg.namespace_id, &id_zns);
+	if (!err) {
+		/* get zsze field from zns id ns data - needed for offset calculation */
+		lbaf = id_ns.flbas & NVME_NS_FLBAS_LBA_MASK;
+	    zsze = le64_to_cpu(id_zns.lbafe[lbaf].zsze);
+	}
+	else {
+		nvme_show_status(err);
+		goto close_fd;
+	}
+
+	log_len = sizeof(struct nvme_zone_report);
+	buff = calloc(1, log_len);
+	if (!buff) {
+		err = -ENOMEM;
+		goto close_fd;
+	}
+
+	err = nvme_zns_report_zones(fd, cfg.namespace_id, 0,
+		0, cfg.state, 0, log_len, buff);
+	if (err > 0) {
+		nvme_show_status(err);
+		goto free_buff;
+	}
+	else if (err < 0) {
+		perror("zns report-zones");
+		goto free_buff;
+	}
+
+	total_nr_zones = le64_to_cpu(buff->nr_zones);
+
+	if (cfg.num_descs == -1) {
+		cfg.num_descs = total_nr_zones;
+	}
+
+	nr_zones = cfg.num_descs;
+	if (nr_zones < nr_zones_chunks)
+		nr_zones_chunks = nr_zones;
+
+	log_len = sizeof(struct nvme_zone_report) + ((sizeof(struct nvme_zns_desc) * nr_zones_chunks) + (nr_zones_chunks * zdes));
+	report_size = log_len;
 
 	report = nvme_alloc(report_size, &huge);
 	if (!report) {
@@ -750,17 +792,37 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 		goto close_fd;
 	}
 
-	err = nvme_zns_report_zones(fd, cfg.namespace_id, cfg.zslba,
-		cfg.extended, cfg.state, cfg.partial, report_size, report);
-	if (!err)
-		nvme_show_zns_report_zones(report, cfg.num_descs, zdes,
-			report_size, flags);
-	else if (err > 0)
-		nvme_show_status(err);
-	else
-		perror("zns report-zones");
+	offset = cfg.zslba;
+	printf("nr_zones: %"PRIu64"\n", (uint64_t)le64_to_cpu(total_nr_zones));
+
+	while (nr_zones_retrieved < nr_zones) {
+		if (nr_zones_retrieved >= nr_zones)
+			break;
+
+		if (nr_zones_retrieved + nr_zones_chunks > nr_zones) {
+			nr_zones_chunks = nr_zones - nr_zones_retrieved;
+			log_len = sizeof(struct nvme_zone_report) + ((sizeof(struct nvme_zns_desc) * nr_zones_chunks) + (nr_zones_chunks * zdes));
+		}
+
+		err = nvme_zns_report_zones(fd, cfg.namespace_id, offset,
+			cfg.extended, cfg.state, cfg.partial, log_len, report);
+		if (err > 0) {
+			nvme_show_status(err);
+			break;
+		}
+
+		if (!err)
+			 nvme_show_zns_report_zones(report, nr_zones_chunks, zdes,
+					 log_len, flags);
+
+		nr_zones_retrieved += nr_zones_chunks;
+		offset = (nr_zones_retrieved * zsze);
+    }
 
 	nvme_free(report, huge);
+
+free_buff:
+	free(buff);
 close_fd:
 	close(fd);
 	return nvme_status_to_errno(err, false);

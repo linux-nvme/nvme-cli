@@ -4546,7 +4546,6 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 		return json_nvme_zns_report_zones(report, descs,
 				ext_size, report_size, nr_zones);
 
-	printf("nr_zones: %"PRIu64"\n", (uint64_t)le64_to_cpu(r->nr_zones));
 	for (i = 0; i < descs; i++) {
 		desc = (struct nvme_zns_desc *)
 			(report + sizeof(*r) + i * (sizeof(*desc) + ext_size));
