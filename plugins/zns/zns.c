@@ -574,7 +574,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	bool huge = false;
 	struct nvme_zone_report *buff;
 
-	unsigned int nr_zones_chunks = 128,
+	unsigned int nr_zones_chunks = 1024,   /* 1024 entries * 64 bytes per entry = 64k byte transfer */
 			nr_zones_retrieved = 0,
 			nr_zones,
 			offset,
