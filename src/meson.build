@@ -10,6 +10,7 @@ sources = [
     'nvme/fabrics.c',
     'nvme/filters.c',
     'nvme/ioctl.c',
+    'nvme/linux.c',
     'nvme/log.c',
     'nvme/tree.c',
     'nvme/util.c',

@@ -29,6 +29,7 @@
 #include <ccan/array_size/array_size.h>
 
 #include "fabrics.h"
+#include "linux.h"
 #include "ioctl.h"
 #include "util.h"
 #include "log.h"

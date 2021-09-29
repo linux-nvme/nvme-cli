@@ -182,4 +182,15 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	struct nvmf_disc_log_entry *e,
 	const struct nvme_fabrics_config *defcfg, bool *discover);
 
+/**
+ * nvme_chomp() - Strip trailing white space
+ * &s: String to strip
+ * @l: Maximum length of string
+ */
+static inline void nvme_chomp(char *s, int l)
+{
+	while (l && (s[l] == '\0' || s[l] == ' '))
+		s[l--] = '\0';
+}
+
 #endif /* _LIBNVME_FABRICS_H */

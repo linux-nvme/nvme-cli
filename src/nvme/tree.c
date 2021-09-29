@@ -23,6 +23,7 @@
 
 #include <ccan/list/list.h>
 #include "ioctl.h"
+#include "linux.h"
 #include "filters.h"
 #include "tree.h"
 #include "filters.h"
