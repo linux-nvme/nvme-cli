@@ -21,7 +21,9 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+#include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
+
 #include "ioctl.h"
 #include "linux.h"
 #include "filters.h"

@@ -7,7 +7,7 @@
 #
 main = executable(
     'main-test',
-    ['test.c'],
+    ['test.c', ccan_config_h],
     dependencies: libuuid,
     link_with: libnvme,
     include_directories: incdir
@@ -22,14 +22,14 @@ cpp = executable(
 
 register = executable(
     'test-register',
-    ['register.c'],
+    ['register.c', ccan_config_h],
     link_with: libnvme,
     include_directories: incdir
 )
 
 zns = executable(
     'test-zns',
-    ['zns.c'],
+    ['zns.c', ccan_config_h],
     link_with: libnvme,
     include_directories: incdir
 )

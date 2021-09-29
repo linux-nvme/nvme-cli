@@ -1,5 +1,5 @@
 CFLAGS ?= -g -O2
-override CFLAGS += -Wall -D_GNU_SOURCE -I ../src -L ../src
+override CFLAGS += -Wall -D_GNU_SOURCE -I ../src -L ../src -I../ccan
 
 include ../Makefile.quiet
 

@@ -20,6 +20,8 @@
 #include <time.h>
 #include <libnvme.h>
 
+#include <ccan/endian/endian.h>
+
 struct events {
 	nvme_ctrl_t c;
 	int uevent_fd;

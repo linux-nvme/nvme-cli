@@ -25,6 +25,7 @@
 #include <netdb.h>
 #include <net/if.h>
 
+#include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
 #include <ccan/array_size/array_size.h>
 

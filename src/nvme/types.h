@@ -10,17 +10,10 @@
 #ifndef _LIBNVME_TYPES_H
 #define _LIBNVME_TYPES_H
 
-#include <endian.h>
 #include <stdbool.h>
 #include <stdint.h>
 
 #include <linux/types.h>
-
-#ifdef __CHECKER__
-#define __force       __attribute__((force))
-#else
-#define __force
-#endif
 
 /**
  * NVME_GET() - extract field from complex value
@@ -45,60 +38,6 @@
  */
 #define NVME_SET(value, name) \
 	(((value) & NVME_##name##_MASK) << NVME_##name##_SHIFT)
-
-/**
- * cpu_to_le16() -
- * @x: 16-bit CPU value to turn to little endian.
- */
-static inline __le16 cpu_to_le16(uint16_t x)
-{
-	return (__force __le16)htole16(x);
-}
-
-/**
- * cpu_to_le32() -
- * @x: 32-bit CPU value to turn little endian.
- */
-static inline __le32 cpu_to_le32(uint32_t x)
-{
-	return (__force __le32)htole32(x);
-}
-
-/**
- * cpu_to_le64() -
- * @x: 64-bit CPU value to turn little endian.
- */
-static inline __le64 cpu_to_le64(uint64_t x)
-{
-	return (__force __le64)htole64(x);
-}
-
-/**
- * le16_to_cpu() -
- * @x: 16-bit little endian value to turn to CPU.
- */
-static inline uint16_t le16_to_cpu(__le16 x)
-{
-	return le16toh((__force __u16)x);
-}
-
-/**
- * le32_to_cpu() -
- * @x: 32-bit little endian value to turn to CPU.
- */
-static inline uint32_t le32_to_cpu(__le32 x)
-{
-	return le32toh((__force __u32)x);
-}
-
-/**
- * le64_to_cpu() -
- * @x: 64-bit little endian value to turn to CPU.
- */
-static inline uint64_t le64_to_cpu(__le64 x)
-{
-	return le64toh((__force __u64)x);
-}
 
 /**
  * enum nvme_constants - A place to stash various constant nvme values
@@ -249,24 +188,6 @@ static inline bool nvme_is_64bit_reg(__u32 offset)
 	default:
 		return false;
 	}
-}
-
-static inline uint32_t nvme_mmio_read32(volatile void *addr)
-{
-        uint32_t *p = (__le32 *)addr;
-
-        return le32_to_cpu(*p);
-}
-
-static inline uint64_t nvme_mmio_read64(volatile void *addr)
-{
-        volatile __u32 *p = (__u32 *)addr;
-        uint32_t low, high;
-
-        low = nvme_mmio_read32(p);
-        high = nvme_mmio_read32(p + 1);
-
-        return low + ((uint64_t)high << 32);
 }
 
 enum nvme_cap {

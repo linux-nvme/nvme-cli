@@ -18,6 +18,8 @@
 #include <errno.h>
 #include <libnvme.h>
 
+#include <ccan/endian/endian.h>
+
 static void print_discover_log(struct nvmf_discovery_log *log)
 {
 	int i, numrec = le64_to_cpu(log->numrec);

@@ -23,6 +23,8 @@
 #endif
 #include <libnvme.h>
 
+#include <ccan/endian/endian.h>
+
 static char *nqn_match;
 
 static bool nvme_match_subsysnqn_filter(nvme_subsystem_t s)

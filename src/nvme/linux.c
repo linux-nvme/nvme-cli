@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <ccan/endian/endian.h>
+
 #include "linux.h"
 #include "tree.h"
 #include "log.h"

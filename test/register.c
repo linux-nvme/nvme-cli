@@ -21,6 +21,26 @@
 
 #include <sys/mman.h>
 
+#include <ccan/endian/endian.h>
+
+static inline uint32_t nvme_mmio_read32(volatile void *addr)
+{
+        uint32_t *p = (__le32 *)addr;
+
+        return le32_to_cpu(*p);
+}
+
+static inline uint64_t nvme_mmio_read64(volatile void *addr)
+{
+        volatile __u32 *p = (__u32 *)addr;
+        uint32_t low, high;
+
+        low = nvme_mmio_read32(p);
+        high = nvme_mmio_read32(p + 1);
+
+        return low + ((uint64_t)high << 32);
+}
+
 void nvme_print_registers(void *regs)
 {
 	__u64 cap	= nvme_mmio_read64(regs + NVME_REG_CAP);

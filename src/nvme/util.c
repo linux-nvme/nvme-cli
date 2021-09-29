@@ -12,6 +12,8 @@
 
 #include <sys/types.h>
 
+#include <ccan/endian/endian.h>
+
 #include "util.h"
 
 static inline __u8 nvme_generic_status_to_errno(__u16 status)

@@ -16,6 +16,8 @@
 #include <libnvme.h>
 #include <inttypes.h>
 
+#include <ccan/endian/endian.h>
+
 static void show_zns_properties(nvme_ns_t n)
 {
 	struct nvme_zns_id_ns zns_ns;
