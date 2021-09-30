@@ -3600,7 +3600,6 @@ static int wdc_print_log(struct wdc_ssd_perf_stats *perf, int fmt)
 
 static int wdc_convert_ts(time_t time, char *ts_buf)
 {
-
 	struct tm  gmTimeInfo;
 	time_t     time_Human, time_ms;
 	char       buf[80];
@@ -3701,6 +3700,9 @@ static int wdc_print_latency_monitor_log_normal(int fd, struct wdc_ssd_latency_m
 
 static void wdc_print_latency_monitor_log_json(struct wdc_ssd_latency_monitor_log *log_data)
 {
+	int i, j;
+	char	buf[128];
+	char	*operation[3] = {"Read", "Write", "Trim"};
 	struct json_object *root;
 	root = json_create_object();
 
@@ -3717,83 +3719,42 @@ static void wdc_print_latency_monitor_log_json(struct wdc_ssd_latency_monitor_lo
 	json_object_add_value_int(root, "Static Latency Stamp Units", le16_to_cpu(log_data->static_latency_stamp_units));
 	json_object_add_value_int(root, "Debug Log Trigger Enable", le16_to_cpu(log_data->debug_log_trigger_enable));
 
-	json_object_add_value_int(root, "Active Bucket Counter: Bucket 0 Read", le32_to_cpu(log_data->active_bucket_counter[0][READ]));
-	json_object_add_value_int(root, "Active Bucket Counter: Bucket 0 Write", le32_to_cpu(log_data->active_bucket_counter[0][WRITE]));
-	json_object_add_value_int(root, "Active Bucket Counter: Bucket 0 Trim", le32_to_cpu(log_data->active_bucket_counter[0][TRIM]));
-	json_object_add_value_int(root, "Active Bucket Counter: Bucket 1 Read", le32_to_cpu(log_data->active_bucket_counter[1][READ]));
-	json_object_add_value_int(root, "Active Bucket Counter: Bucket 1 Write", le32_to_cpu(log_data->active_bucket_counter[1][WRITE]));
-	json_object_add_value_int(root, "Active Bucket Counter: Bucket 1 Trim", le32_to_cpu(log_data->active_bucket_counter[1][TRIM]));
-	json_object_add_value_int(root, "Active Bucket Counter: Bucket 2 Read", le32_to_cpu(log_data->active_bucket_counter[2][READ]));
-	json_object_add_value_int(root, "Active Bucket Counter: Bucket 2 Write", le32_to_cpu(log_data->active_bucket_counter[2][WRITE]));
-	json_object_add_value_int(root, "Active Bucket Counter: Bucket 2 Trim", le32_to_cpu(log_data->active_bucket_counter[2][TRIM]));
-	json_object_add_value_int(root, "Active Bucket Counter: Bucket 3 Read", le32_to_cpu(log_data->active_bucket_counter[3][READ]));
-	json_object_add_value_int(root, "Active Bucket Counter: Bucket 3 Write", le32_to_cpu(log_data->active_bucket_counter[3][WRITE]));
-	json_object_add_value_int(root, "Active Bucket Counter: Bucket 3 Trim", le32_to_cpu(log_data->active_bucket_counter[3][TRIM]));
-
-	json_object_add_value_int(root, "Active Latency Time Stamp: Bucket 0 Read", le64_to_cpu(log_data->active_latency_timestamp[0][READ]));
-	json_object_add_value_int(root, "Active Latency Time Stamp: Bucket 0 Write", le64_to_cpu(log_data->active_latency_timestamp[0][WRITE]));
-	json_object_add_value_int(root, "Active Latency Time Stamp: Bucket 0 Trim", le64_to_cpu(log_data->active_latency_timestamp[0][TRIM]));
-	json_object_add_value_int(root, "Active Latency Time Stamp: Bucket 1 Read", le64_to_cpu(log_data->active_latency_timestamp[1][READ]));
-	json_object_add_value_int(root, "Active Latency Time Stamp: Bucket 1 Write", le64_to_cpu(log_data->active_latency_timestamp[1][WRITE]));
-	json_object_add_value_int(root, "Active Latency Time Stamp: Bucket 1 Trim", le64_to_cpu(log_data->active_latency_timestamp[1][TRIM]));
-	json_object_add_value_int(root, "Active Latency Time Stamp: Bucket 2 Read", le64_to_cpu(log_data->active_latency_timestamp[2][READ]));
-	json_object_add_value_int(root, "Active Latency Time Stamp: Bucket 2 Write", le64_to_cpu(log_data->active_latency_timestamp[2][WRITE]));
-	json_object_add_value_int(root, "Active Latency Time Stamp: Bucket 2 Trim", le64_to_cpu(log_data->active_latency_timestamp[2][TRIM]));
-	json_object_add_value_int(root, "Active Latency Time Stamp: Bucket 3 Read", le64_to_cpu(log_data->active_latency_timestamp[2][READ]));
-	json_object_add_value_int(root, "Active Latency Time Stamp: Bucket 3 Write", le64_to_cpu(log_data->active_latency_timestamp[2][WRITE]));
-	json_object_add_value_int(root, "Active Latency Time Stamp: Bucket 3 Trim", le64_to_cpu(log_data->active_latency_timestamp[2][TRIM]));
-
-	json_object_add_value_int(root, "Active Measured Latency: Bucket 0 Read", le16_to_cpu(log_data->active_measured_latency[0][READ]));
-	json_object_add_value_int(root, "Active Measured Latency: Bucket 0 Write", le16_to_cpu(log_data->active_measured_latency[0][WRITE]));
-	json_object_add_value_int(root, "Active Measured Latency: Bucket 0 Trim", le16_to_cpu(log_data->active_measured_latency[0][TRIM]));
-	json_object_add_value_int(root, "Active Measured Latency: Bucket 1 Read", le16_to_cpu(log_data->active_measured_latency[1][READ]));
-	json_object_add_value_int(root, "Active Measured Latency: Bucket 1 Write", le16_to_cpu(log_data->active_measured_latency[1][WRITE]));
-	json_object_add_value_int(root, "Active Measured Latency: Bucket 1 Trim", le16_to_cpu(log_data->active_measured_latency[1][TRIM]));
-	json_object_add_value_int(root, "Active Measured Latency: Bucket 2 Read", le16_to_cpu(log_data->active_measured_latency[2][READ]));
-	json_object_add_value_int(root, "Active Measured Latency: Bucket 2 Write", le16_to_cpu(log_data->active_measured_latency[2][WRITE]));
-	json_object_add_value_int(root, "Active Measured Latency: Bucket 2 Trim", le16_to_cpu(log_data->active_measured_latency[2][TRIM]));
-	json_object_add_value_int(root, "Active Measured Latency: Bucket 3 Read", le16_to_cpu(log_data->active_measured_latency[3][READ]));
-	json_object_add_value_int(root, "Active Measured Latency: Bucket 3 Write", le16_to_cpu(log_data->active_measured_latency[3][WRITE]));
-	json_object_add_value_int(root, "Active Measured Latency: Bucket 3 Trim", le16_to_cpu(log_data->active_measured_latency[3][TRIM]));
-
-	json_object_add_value_int(root, "Static Bucket Counter: Bucket 0 Read", le32_to_cpu(log_data->static_bucket_counter[0][READ]));
-	json_object_add_value_int(root, "Static Bucket Counter: Bucket 0 Write", le32_to_cpu(log_data->static_bucket_counter[0][WRITE]));
-	json_object_add_value_int(root, "Static Bucket Counter: Bucket 0 Trim", le32_to_cpu(log_data->static_bucket_counter[0][TRIM]));
-	json_object_add_value_int(root, "Static Bucket Counter: Bucket 1 Read", le32_to_cpu(log_data->static_bucket_counter[1][READ]));
-	json_object_add_value_int(root, "Static Bucket Counter: Bucket 1 Write", le32_to_cpu(log_data->static_bucket_counter[1][WRITE]));
-	json_object_add_value_int(root, "Static Bucket Counter: Bucket 1 Trim", le32_to_cpu(log_data->static_bucket_counter[1][TRIM]));
-	json_object_add_value_int(root, "Static Bucket Counter: Bucket 2 Read", le32_to_cpu(log_data->static_bucket_counter[2][READ]));
-	json_object_add_value_int(root, "Static Bucket Counter: Bucket 2 Write", le32_to_cpu(log_data->static_bucket_counter[2][WRITE]));
-	json_object_add_value_int(root, "Static Bucket Counter: Bucket 2 Trim", le32_to_cpu(log_data->static_bucket_counter[2][TRIM]));
-	json_object_add_value_int(root, "Static Bucket Counter: Bucket 3 Read", le32_to_cpu(log_data->static_bucket_counter[3][READ]));
-	json_object_add_value_int(root, "Static Bucket Counter: Bucket 3 Write", le32_to_cpu(log_data->static_bucket_counter[3][WRITE]));
-	json_object_add_value_int(root, "Static Bucket Counter: Bucket 3 Trim", le32_to_cpu(log_data->static_bucket_counter[3][TRIM]));
-
-	json_object_add_value_int(root, "Static Latency Time Stamp: Bucket 0 Read", le64_to_cpu(log_data->static_latency_timestamp[0][READ]));
-	json_object_add_value_int(root, "Static Latency Time Stamp: Bucket 0 Write", le64_to_cpu(log_data->static_latency_timestamp[0][WRITE]));
-	json_object_add_value_int(root, "Static Latency Time Stamp: Bucket 0 Trim", le64_to_cpu(log_data->static_latency_timestamp[0][TRIM]));
-	json_object_add_value_int(root, "Static Latency Time Stamp: Bucket 1 Read", le64_to_cpu(log_data->static_latency_timestamp[1][READ]));
-	json_object_add_value_int(root, "Static Latency Time Stamp: Bucket 1 Write", le64_to_cpu(log_data->static_latency_timestamp[1][WRITE]));
-	json_object_add_value_int(root, "Static Latency Time Stamp: Bucket 1 Trim", le64_to_cpu(log_data->static_latency_timestamp[1][TRIM]));
-	json_object_add_value_int(root, "Static Latency Time Stamp: Bucket 2 Read", le64_to_cpu(log_data->static_latency_timestamp[2][READ]));
-	json_object_add_value_int(root, "Static Latency Time Stamp: Bucket 2 Write", le64_to_cpu(log_data->static_latency_timestamp[2][WRITE]));
-	json_object_add_value_int(root, "Static Latency Time Stamp: Bucket 2 Trim", le64_to_cpu(log_data->static_latency_timestamp[2][TRIM]));
-	json_object_add_value_int(root, "Static Latency Time Stamp: Bucket 3 Read", le64_to_cpu(log_data->static_latency_timestamp[3][READ]));
-	json_object_add_value_int(root, "Static Latency Time Stamp: Bucket 3 Write", le64_to_cpu(log_data->static_latency_timestamp[3][WRITE]));
-	json_object_add_value_int(root, "Static Latency Time Stamp: Bucket 3 Trim", le64_to_cpu(log_data->static_latency_timestamp[3][TRIM]));
-
-	json_object_add_value_int(root, "Static Measured Latency: Bucket 0 Read", le16_to_cpu(log_data->static_measured_latency[0][READ]));
-	json_object_add_value_int(root, "Static Measured Latency: Bucket 0 Write", le16_to_cpu(log_data->static_measured_latency[0][WRITE]));
-	json_object_add_value_int(root, "Static Measured Latency: Bucket 0 Trim", le16_to_cpu(log_data->static_measured_latency[0][TRIM]));
-	json_object_add_value_int(root, "Static Measured Latency: Bucket 1 Read", le16_to_cpu(log_data->static_measured_latency[1][READ]));
-	json_object_add_value_int(root, "Static Measured Latency: Bucket 1 Write", le16_to_cpu(log_data->static_measured_latency[1][WRITE]));
-	json_object_add_value_int(root, "Static Measured Latency: Bucket 1 Trim", le16_to_cpu(log_data->static_measured_latency[1][TRIM]));
-	json_object_add_value_int(root, "Static Measured Latency: Bucket 2 Read", le16_to_cpu(log_data->static_measured_latency[2][READ]));
-	json_object_add_value_int(root, "Static Measured Latency: Bucket 2 Write", le16_to_cpu(log_data->static_measured_latency[2][WRITE]));
-	json_object_add_value_int(root, "Static Measured Latency: Bucket 2 Trim", le16_to_cpu(log_data->static_measured_latency[2][TRIM]));
-	json_object_add_value_int(root, "Static Measured Latency: Bucket 3 Read", le16_to_cpu(log_data->static_measured_latency[3][READ]));
-	json_object_add_value_int(root, "Static Measured Latency: Bucket 3 Write", le16_to_cpu(log_data->static_measured_latency[3][WRITE]));
-	json_object_add_value_int(root, "Static Measured Latency: Bucket 3 Trim", le16_to_cpu(log_data->static_measured_latency[3][TRIM]));
+	for (i = 0; i <= 3; i++) {
+		for (j = 0; j <= 2; j++) {
+			sprintf(buf, "Active Bucket Counter: Bucket %d %s", i, operation[j]);
+			json_object_add_value_int(root, buf, le32_to_cpu(log_data->active_bucket_counter[i][j]));
+		}
+	}
+	for (i = 0; i <= 3; i++) {
+		for (j = 0; j <= 2; j++) {
+			sprintf(buf, "Active Measured Latency: Bucket %d %s", i, operation[j]);
+			json_object_add_value_int(root, buf, le16_to_cpu(log_data->active_measured_latency[i][j]));
+		}
+	}
+	for (i = 0; i <= 3; i++) {
+		for (j = 0; j <= 2; j++) {
+			sprintf(buf, "Active Latency Time Stamp: Bucket %d %s", i, operation[j]);
+			json_object_add_value_int(root, buf, le64_to_cpu(log_data->active_latency_timestamp[i][j]));
+		}
+	}
+	for (i = 0; i <= 3; i++) {
+		for (j = 0; j <= 2; j++) {
+			sprintf(buf, "Static Bucket Counter: Bucket %d %s", i, operation[j]);
+			json_object_add_value_int(root, buf, le32_to_cpu(log_data->static_bucket_counter[i][j]));
+		}
+	}
+	for (i = 0; i <= 3; i++) {
+		for (j = 0; j <= 2; j++) {
+			sprintf(buf, "Static Measured Latency: Bucket %d %s", i, operation[j]);
+			json_object_add_value_int(root, buf, le16_to_cpu(log_data->static_measured_latency[i][j]));
+		}
+	}
+	for (i = 0; i <= 3; i++) {
+		for (j = 0; j <= 2; j++) {
+			sprintf(buf, "Static Latency Time Stamp: Bucket %d %s", i, operation[j]);
+			json_object_add_value_int(root, buf, le64_to_cpu(log_data->static_latency_timestamp[i][j]));
+		}
+	}
 
 	json_print_object(root, NULL);
 	printf("\n");
