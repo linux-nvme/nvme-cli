@@ -956,6 +956,14 @@ void nvme_reset_topology(nvme_root_t r);
 int nvme_update_config(nvme_root_t r);
 
 /**
+ * nvme_dump_config() -
+ * @r:
+ *
+ * Return:
+ */
+int nvme_dump_config(nvme_root_t r);
+
+/**
  * nvme_free_tree() -
  * @r:
  */
