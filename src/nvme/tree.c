@@ -675,20 +675,6 @@ const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c)
 	return c->host_iface;
 }
 
-const char *nvme_ctrl_get_hostnqn(nvme_ctrl_t c)
-{
-	if (!c->s || !c->s->h)
-		return default_host->hostnqn;
-	return c->s->h->hostnqn;
-}
-
-const char *nvme_ctrl_get_hostid(nvme_ctrl_t c)
-{
-	if (!c->s || !c->s->h)
-		return default_host->hostid;
-	return c->s->h->hostid;
-}
-
 struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
 {
 	return &c->cfg;

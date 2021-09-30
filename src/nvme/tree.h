@@ -732,22 +732,6 @@ const char *nvme_ctrl_get_transport(nvme_ctrl_t c);
 const char *nvme_ctrl_get_subsysnqn(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_hostnqn() -
- * @c:
- *
- * Return: 
- */
-const char *nvme_ctrl_get_hostnqn(nvme_ctrl_t c);
-
-/**
- * nvme_ctrl_get_hostid() -
- * @c:
- *
- * Return: 
- */
-const char *nvme_ctrl_get_hostid(nvme_ctrl_t c);
-
-/**
  * nvme_ctrl_get_subsystem() -
  * @c:
  *
