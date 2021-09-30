@@ -267,10 +267,15 @@ int json_update_config(nvme_root_t r, const char *config_file)
 			json_object_put(subsys_array);
 		json_object_array_add(json_root, host_obj);
 	}
-	if (json_object_to_file_ext(config_file, json_root,
-				    JSON_C_TO_STRING_PRETTY) < 0) {
-		nvme_msg(LOG_ERR, "Failed to write %s, %s\n",
-			config_file, json_util_get_last_err());
+	if (!config_file)
+		ret = json_object_to_fd(1, json_root, JSON_C_TO_STRING_PRETTY);
+	else
+		ret = json_object_to_file_ext(config_file, json_root,
+					      JSON_C_TO_STRING_PRETTY);
+	if (ret < 0) {
+		nvme_msg(LOG_ERR, "Failed to write to %s, %s\n",
+			 config_file ? "stdout" : config_file,
+			 json_util_get_last_err());
 		ret = -1;
 		errno = EIO;
 	}
