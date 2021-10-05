@@ -3511,7 +3511,7 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 		err = -1;
 		goto close_fd;
 	}
-	if (cfg.action > 7 || cfg.action == 4 || cfg.action == 5) {
+	if (cfg.action > 7) {
 		fprintf(stderr, "invalid action:%d\n", cfg.action);
 		errno = EINVAL;
 		err = -1;
