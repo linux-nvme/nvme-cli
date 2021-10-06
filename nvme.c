@@ -1779,7 +1779,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 
 	nvme_init_id_ns(&ns, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic,
 			 cfg.anagrpid, cfg.nvmsetid);
-	err = nvme_ns_mgmt_create(fd, &ns, &nsid, cfg.timeout);
+	err = nvme_ns_mgmt_create(fd, &ns, &nsid, cfg.timeout, cfg.csi);
 	if (!err)
 		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
 	else if (err > 0)
