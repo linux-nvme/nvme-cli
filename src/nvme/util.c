@@ -754,8 +754,10 @@ static int __nvme_set_attr(const char *path, const char *value)
 
 	fd = open(path, O_WRONLY);
 	if (fd < 0) {
+#if 0
 		nvme_msg(LOG_DEBUG, "Failed to open %s: %s\n", path,
 			 strerror(errno));
+#endif
 		return -1;
 	}
 	ret = write(fd, value, strlen(value));
@@ -784,8 +786,10 @@ static char *__nvme_get_attr(const char *path)
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
+#if 0
 		nvme_msg(LOG_DEBUG, "Failed to open %s: %s\n", path,
 			 strerror(errno));
+#endif
 		return NULL;
 	}
 

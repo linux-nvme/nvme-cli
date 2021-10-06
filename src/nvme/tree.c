@@ -70,14 +70,22 @@ nvme_host_t nvme_default_host(nvme_root_t r)
 static int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 {
 	struct dirent **subsys;
-	int i, ret;
+	int i, num_subsys, ret;
 
-	ret = nvme_scan_subsystems(&subsys);
-	if (ret < 0)
-		return ret;
+	num_subsys = nvme_scan_subsystems(&subsys);
+	if (num_subsys < 0) {
+		nvme_msg(LOG_DEBUG, "failed to scan subsystems: %s\n",
+			 strerror(errno));
+		return num_subsys;
+	}
 
-	for (i = 0; i < ret; i++)
-		nvme_scan_subsystem(r, subsys[i]->d_name, f);
+	for (i = 0; i < num_subsys; i++) {
+		ret = nvme_scan_subsystem(r, subsys[i]->d_name, f);
+		if (ret < 0) {
+			nvme_msg(LOG_DEBUG, "failed to scan subsystem %s: %s\n",
+				 subsys[i]->d_name, strerror(errno));
+		}
+	}
 
 	nvme_free_dirents(subsys, i);
 	return 0;
@@ -352,14 +360,23 @@ struct nvme_host *nvme_lookup_host(nvme_root_t r, const char *hostnqn,
 static int nvme_subsystem_scan_namespaces(struct nvme_subsystem *s)
 {
 	struct dirent **namespaces;
-	int i, ret;
+	int i, num_ns, ret;
 
-	ret = nvme_scan_subsystem_namespaces(s, &namespaces);
-	if (ret < 0)
-		return ret;
+	num_ns = nvme_scan_subsystem_namespaces(s, &namespaces);
+	if (num_ns < 0) {
+		nvme_msg(LOG_DEBUG,
+			 "failed to scan namespaces for subsys %s: %s\n",
+			 s->subsysnqn, strerror(errno));
+		return num_ns;
+	}
 
-	for (i = 0; i < ret; i++)
-		nvme_subsystem_scan_namespace(s, namespaces[i]->d_name);
+	for (i = 0; i < num_ns; i++) {
+		ret = nvme_subsystem_scan_namespace(s, namespaces[i]->d_name);
+		if (ret < 0)
+			nvme_msg(LOG_DEBUG,
+				 "failed to scan namespace %s: %s\n",
+				 namespaces[i]->d_name, strerror(errno));
+	}
 
 	nvme_free_dirents(namespaces, i);
 	return 0;
@@ -368,14 +385,23 @@ static int nvme_subsystem_scan_namespaces(struct nvme_subsystem *s)
 static int nvme_subsystem_scan_ctrls(struct nvme_subsystem *s)
 {
 	struct dirent **ctrls;
-	int i, ret;
+	int i, num_ctrls, ret;
 
-	ret = nvme_scan_subsystem_ctrls(s, &ctrls);
-	if (ret < 0)
-		return ret;
+	num_ctrls = nvme_scan_subsystem_ctrls(s, &ctrls);
+	if (num_ctrls < 0) {
+		nvme_msg(LOG_DEBUG,
+			 "failed to scan ctrls for subsys %s: %s\n",
+			 s->subsysnqn, strerror(errno));
+		return num_ctrls;
+	}
 
-	for (i = 0; i < ret; i++)
-		nvme_subsystem_scan_ctrl(s, ctrls[i]->d_name);
+	for (i = 0; i < num_ctrls; i++) {
+		ret = nvme_subsystem_scan_ctrl(s, ctrls[i]->d_name);
+		if (ret < 0)
+			nvme_msg(LOG_DEBUG,
+				 "failed to scan ctrl %s: %s\n",
+				 ctrls[i]->d_name, strerror(errno));
+	}
 
 	nvme_free_dirents(ctrls, i);
 	return 0;
@@ -534,6 +560,8 @@ static int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name)
 	p->name = strdup(name);
 	p->sysfs_dir = path;
 	p->ana_state = nvme_get_path_attr(p, "ana_state");
+	if (!p->ana_state)
+		p->ana_state = strdup("optimized");
 
 	grpid = nvme_get_path_attr(p, "ana_grpid");
 	if (grpid) {
@@ -776,6 +804,7 @@ static void __nvme_free_ctrl(nvme_ctrl_t c)
 	nvme_deconfigure_ctrl(c);
 
 	FREE_CTRL_ATTR(c->transport);
+	FREE_CTRL_ATTR(c->subsysnqn);
 	FREE_CTRL_ATTR(c->traddr);
 	FREE_CTRL_ATTR(c->host_traddr);
 	FREE_CTRL_ATTR(c->host_iface);
@@ -872,7 +901,8 @@ struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn, const char *transport,
 		errno = EINVAL;
 		return NULL;
 	}
-	if (strncmp(transport, "loop", 4) && !traddr) {
+	if (strncmp(transport, "loop", 4) &&
+	    strncmp(transport, "pcie", 4) && !traddr) {
                nvme_msg(LOG_ERR, "No transport address for '%s'\n", transport);
 	       errno = EINVAL;
 	       return NULL;
@@ -1109,7 +1139,7 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 				   const char *name)
 {
 	nvme_ctrl_t c;
-	char *addr, *address, *a, *e;
+	char *addr, *address = NULL, *a, *e;
 	char *transport, *traddr = NULL, *trsvcid = NULL;
 	char *host_traddr = NULL, *host_iface = NULL;
 	int ret;
@@ -1121,12 +1151,40 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 	}
 	/* Parse 'address' string into components */
 	addr = nvme_get_attr(path, "address");
-	address = strdup(addr);
-	if (!strcmp(transport, "pcie")) {
+	if (!addr) {
+		char *rpath = NULL, *p = NULL, *_a = NULL;
+
+		/* Older kernel don't support pcie transport addresses */
+		if (strcmp(transport, "pcie")) {
+			free(transport);
+			errno = ENXIO;
+			return NULL;
+		}
+		/* Figure out the PCI address from the attribute path */
+		rpath = realpath(path, NULL);
+		if (!rpath) {
+			free(transport);
+			errno = ENOMEM;
+			return NULL;
+		}
+		a = strtok_r(rpath, "/", &e);
+		while(a && strlen(a)) {
+		    if (_a)
+			p = _a;
+		    _a = a;
+		    if (!strncmp(a, "nvme", 4))
+			break;
+		    a = strtok_r(NULL, "/", &e);
+		}
+		if (p)
+			addr = strdup(p);
+		free(rpath);
+	} else if (!strcmp(transport, "pcie")) {
 		/* The 'address' string is the transport address */
-		traddr = address;
+		traddr = addr;
 	} else {
-		a = strtok_r(addr, ",", &e);
+		address = strdup(addr);
+		a = strtok_r(address, ",", &e);
 		while (a && strlen(a)) {
 			if (!strncmp(a, "traddr=", 7))
 				traddr = a + 7;
@@ -1141,12 +1199,14 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 	}
 	c = nvme_lookup_ctrl(s, transport, traddr,
 			     host_traddr, host_iface, trsvcid);
-	free(addr);
+	free(transport);
+	if (address)
+		free(address);
 	if (!c) {
 		errno = ENOMEM;
 		return NULL;
 	}
-	c->address = address;
+	c->address = addr;
 	ret = nvme_configure_ctrl(c, path, name);
 	return (ret < 0) ? NULL : c;
 }
@@ -1549,12 +1609,17 @@ static int nvme_ctrl_scan_namespace(struct nvme_ctrl *c, char *name)
 	struct nvme_ns *n;
 
 	if (!c->s) {
+		nvme_msg(LOG_DEBUG, "%s: no subsystem for %s\n",
+			 __func__, name);
 		errno = EINVAL;
 		return -1;
 	}
 	n = __nvme_scan_namespace(c->sysfs_dir, name);
-	if (!n)
+	if (!n) {
+		nvme_msg(LOG_DEBUG, "%s: failed to scan namespace %s\n",
+			 __func__, name);
 		return -1;
+	}
 
 	n->s = c->s;
 	n->c = c;
@@ -1567,8 +1632,11 @@ static int nvme_subsystem_scan_namespace(struct nvme_subsystem *s, char *name)
 	struct nvme_ns *n;
 
 	n = __nvme_scan_namespace(s->sysfs_dir, name);
-	if (!n)
+	if (!n) {
+		nvme_msg(LOG_DEBUG, "%s: failed to scan namespace %s\n",
+			 __func__, name);
 		return -1;
+	}
 
 	n->s = s;
 	list_add(&s->namespaces, &n->entry);
@@ -1587,6 +1655,8 @@ struct nvme_ns *nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
 		return NULL;
 	n = __nvme_scan_namespace(s->sysfs_dir, name);
 	if (!n) {
+		nvme_msg(LOG_DEBUG, "%s: failed to scan namespace %d\n",
+			 __func__, nsid);
 		free(name);
 		return NULL;
 	}

@@ -11,7 +11,7 @@ all_targets += telemetry-listen display-tree display-columnar discover-loop
 
 all: $(all_targets)
 
-%: %.c
+%: %.c ../src/libnvme.a
 	$(QUIET_CC)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< -lnvme $(LIBS)
 
 clean:
