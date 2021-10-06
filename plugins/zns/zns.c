@@ -375,15 +375,17 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 
 	if (cfg.zsa == NVME_ZNS_ZSA_SET_DESC_EXT) {
 		if(!cfg.data_len) {
-			cfg.data_len = get_zdes_bytes(fd, cfg.namespace_id);
-			if (!cfg.data_len || cfg.data_len < 0) {
+			int data_len = get_zdes_bytes(fd, cfg.namespace_id);
+
+			if (data_len == 0) {
 				fprintf(stderr, 
 					"Zone Descriptor Extensions are not supported\n");
 				goto close_fd;
-			} else if (cfg.data_len < 0) {
-				err = cfg.data_len;
+			} else if (data_len < 0) {
+				err = data_len;
 				goto close_fd;
 			}
+			cfg.data_len = data_len;
 		}
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
 			fprintf(stderr, "can not allocate feature payload\n");
@@ -478,7 +480,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 
 	int fd, ffd = STDIN_FILENO, err;
 	void *buf = NULL;
-	__u32 data_len;
+	int data_len;
 
 	struct config {
 		__u64	zslba;

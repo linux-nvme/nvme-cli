@@ -186,7 +186,7 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 	printf("fw_loader_version                   : %.*s\n", 8, log.fw_loader_version);
 	printf("uefi_driver_version                 : %.*s\n", 8, log.uefi_driver_version);
 
-	if (log.pcie_volt_status >= 0 && log.pcie_volt_status <= sizeof(volt_status) / sizeof(const char *)){
+	if (log.pcie_volt_status <= sizeof(volt_status) / sizeof(const char *)){
 		printf("pcie_volt_status                    : %s\n", volt_status[log.pcie_volt_status]);
 	}
 	else{
