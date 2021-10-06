@@ -249,6 +249,8 @@ enum nvme_cmd_dword_fields {
 	NVME_NAMESPACE_ATTACH_CDW10_SEL_MASK			= 0xf,
 	NVME_NAMESPACE_MGMT_CDW10_SEL_SHIFT			= 0,
 	NVME_NAMESPACE_MGMT_CDW10_SEL_MASK			= 0xf,
+	NVME_NAMESPACE_MGMT_CDW11_CSI_SHIFT			= 24,
+	NVME_NAMESPACE_MGMT_CDW11_CSI_MASK			= 0xff,
 	NVME_VIRT_MGMT_CDW10_ACT_SHIFT				= 0,
 	NVME_VIRT_MGMT_CDW10_RT_SHIFT				= 8,
 	NVME_VIRT_MGMT_CDW10_CNTLID_SHIFT			= 16,
@@ -1246,33 +1248,36 @@ int nvme_format_nvm(int fd, __u32 nsid, __u8 lbaf,
 }
 
 int nvme_ns_mgmt(int fd, __u32 nsid, enum nvme_ns_mgmt_sel sel,
-		 struct nvme_id_ns *ns, __u32 *result, __u32 timeout)
+		 struct nvme_id_ns *ns, __u32 *result, __u32 timeout, __u8 csi)
 {
-	__u32 cdw10 = NVME_SET(sel, NAMESPACE_MGMT_CDW10_SEL);
+	__u32 cdw10    = NVME_SET(sel, NAMESPACE_MGMT_CDW10_SEL);
+	__u32 cdw11    = NVME_SET(csi, NAMESPACE_MGMT_CDW11_CSI);
 	__u32 data_len = ns ? sizeof(*ns) : 0;
 
 	struct nvme_passthru_cmd cmd = {
-		.nsid		= nsid,
-		.opcode		= nvme_admin_ns_mgmt,
-		.cdw10		= cdw10,
-		.timeout_ms	= timeout,
-		.data_len	= data_len,
-		.addr		= (__u64)(uintptr_t)ns,
+		.nsid	    = nsid,
+		.opcode	    = nvme_admin_ns_mgmt,
+		.cdw10	    = cdw10,
+		.cdw11	    = cdw11,
+		.timeout_ms = timeout,
+		.data_len   = data_len,
+		.addr	    = (__u64)(uintptr_t)ns,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd, result);
 }
 
 int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns, __u32 *nsid,
-			__u32 timeout)
+			__u32 timeout, __u8 csi)
 {
-	return nvme_ns_mgmt(fd, NVME_NSID_NONE, NVME_NS_MGMT_SEL_CREATE, ns, nsid,
-			    timeout);
+	return nvme_ns_mgmt(fd, NVME_NSID_NONE, NVME_NS_MGMT_SEL_CREATE, ns,
+			    nsid, timeout, csi);
 }
 
 int nvme_ns_mgmt_delete(int fd, __u32 nsid)
 {
-	return nvme_ns_mgmt(fd, nsid, NVME_NS_MGMT_SEL_DELETE, NULL, NULL, 0);
+	return nvme_ns_mgmt(fd, nsid, NVME_NS_MGMT_SEL_DELETE, NULL, NULL, 0,
+			    0);
 }
 
 int nvme_ns_attach(int fd, __u32 nsid, enum nvme_ns_attach_sel sel,
