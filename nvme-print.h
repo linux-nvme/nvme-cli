@@ -4,12 +4,9 @@
 #include "nvme.h"
 #include <inttypes.h>
 
-#include <ccan/list/list.h>
-
 typedef struct nvme_effects_log_node {
 	enum nvme_csi csi;
 	struct nvme_cmd_effects_log effects;
-	struct list_node node;
 } nvme_effects_log_node_t;
 
 void d(unsigned char *buf, int len, int width, int group);
@@ -39,7 +36,7 @@ void nvme_show_self_test_log(struct nvme_self_test_log *self_test, __u8 dst_entr
 	__u32 size, const char *devname, enum nvme_print_flags flags);
 void nvme_show_fw_log(struct nvme_firmware_slot *fw_log, const char *devname,
 	enum nvme_print_flags flags);
-void nvme_print_effects_log_pages(struct list_head *list, int flags);
+void nvme_print_effects_log_pages(nvme_effects_log_node_t *nodes[], int flags);
 void nvme_show_changed_ns_list_log(struct nvme_ns_list *log,
 	const char *devname, enum nvme_print_flags flags);
 void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
