@@ -1120,7 +1120,8 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		else
 			path = NULL;
 		if (ret < 0) {
-			nvme_msg(LOG_ERR, "Failed to init subsystem %s\n", path);
+			nvme_msg(LOG_ERR, "Failed to init subsystem %s/%s\n",
+				 nvme_subsys_sysfs_dir, subsys_name);
 			if (path)
 				free(path);
 			goto out_free_subsys;
