@@ -496,6 +496,24 @@ int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 csi, void *data)
 			     NVME_UUID_NONE, csi, data);
 }
 
+int nvme_identify_active_ns_list_csi(int fd, __u32 nsid, __u8 csi,
+				     struct nvme_ns_list *list)
+{
+	BUILD_ASSERT(sizeof(struct nvme_ns_list) == 4096);
+	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST, nsid,
+			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
+			     NVME_UUID_NONE, csi, list);
+}
+
+int nvme_identify_allocated_ns_list_css(int fd, __u32 nsid, __u8 csi,
+					struct nvme_ns_list *list)
+{
+	return nvme_identify(fd, NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST, nsid,
+			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
+			     NVME_UUID_NONE, csi, list);
+}
+
+
 int nvme_identify_iocs(int fd, __u16 cntlid, struct nvme_id_iocs *iocs)
 {
 	BUILD_ASSERT(sizeof(struct nvme_id_iocs) == 4096);
