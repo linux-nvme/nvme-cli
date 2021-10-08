@@ -732,22 +732,6 @@ const char *nvme_ctrl_get_transport(nvme_ctrl_t c);
 const char *nvme_ctrl_get_subsysnqn(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_hostnqn() -
- * @c:
- *
- * Return: 
- */
-const char *nvme_ctrl_get_hostnqn(nvme_ctrl_t c);
-
-/**
- * nvme_ctrl_get_hostid() -
- * @c:
- *
- * Return: 
- */
-const char *nvme_ctrl_get_hostid(nvme_ctrl_t c);
-
-/**
  * nvme_ctrl_get_subsystem() -
  * @c:
  *
@@ -868,16 +852,6 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name);
  *
  */
 void nvme_rescan_ctrl(nvme_ctrl_t c);
-
-/**
- * nvme_init_ctrl() -
- * @h:
- * @c:
- * @instance:
- *
- * Return: 
- */
-int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance);
 
 /**
  * nvme_free_ctrl() -

@@ -763,7 +763,7 @@ out_free_log:
 
 #define PATH_UUID_IBM	"/proc/device-tree/ibm,partition-uuid"
 
-int uuid_from_device_tree(char *system_uuid)
+static int uuid_from_device_tree(char *system_uuid)
 {
 	ssize_t len;
 	int f;
@@ -781,7 +781,7 @@ int uuid_from_device_tree(char *system_uuid)
 
 #define PATH_DMI_ENTRIES       "/sys/firmware/dmi/entries"
 
-int uuid_from_dmi(char *system_uuid)
+static int uuid_from_dmi(char *system_uuid)
 {
 	int f;
 	DIR *d;
