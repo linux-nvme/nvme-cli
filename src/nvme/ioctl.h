@@ -442,6 +442,7 @@ enum nvme_admin_opcode {
  * @NVME_IDENTIFY_CNS_NVMSET_LIST:
  * @NVME_IDENTIFY_CNS_CSI_NS:
  * @NVME_IDENTIFY_CNS_CSI_CTRL:
+ * @NVME_IDENTIFY_CNS_CSI_CSI_NS_ACTIVE_LIST:
  * @NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST:
  * @NVME_IDENTIFY_CNS_ALLOCATED_NS:
  * @NVME_IDENTIFY_CNS_NS_CTRL_LIST:
@@ -450,7 +451,7 @@ enum nvme_admin_opcode {
  * @NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST:
  * @NVME_IDENTIFY_CNS_NS_GRANULARITY:
  * @NVME_IDENTIFY_CNS_UUID_LIST:
- * @NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS:
+ * @NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST:
  * @NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE: Base Specification 2.0a section 5.17.2.21
  */
 enum nvme_identify_cns {
@@ -459,8 +460,9 @@ enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_NS_ACTIVE_LIST			= 0x02,
 	NVME_IDENTIFY_CNS_NS_DESC_LIST				= 0x03,
 	NVME_IDENTIFY_CNS_NVMSET_LIST				= 0x04,
-	NVME_IDENTIFY_CNS_CSI_NS				= 0x05, /* XXX: Placeholder until assigned */
-	NVME_IDENTIFY_CNS_CSI_CTRL				= 0x06, /* XXX: Placeholder until assigned */
+	NVME_IDENTIFY_CNS_CSI_NS				= 0x05,
+	NVME_IDENTIFY_CNS_CSI_CTRL				= 0x06,
+	NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST			= 0x07,
 	NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST			= 0x10,
 	NVME_IDENTIFY_CNS_ALLOCATED_NS				= 0x11,
 	NVME_IDENTIFY_CNS_NS_CTRL_LIST				= 0x12,
@@ -469,7 +471,7 @@ enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST			= 0x15,
 	NVME_IDENTIFY_CNS_NS_GRANULARITY			= 0x16,
 	NVME_IDENTIFY_CNS_UUID_LIST				= 0x17,
-	NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS			= 0x18, /* XXX: Placeholder until assigned */
+	NVME_IDENTIFY_CNS_CSS_ALLOCATED_NS_LIST			= 0x1A,
 	NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE			= 0x1C,
 };
 
@@ -1060,6 +1062,46 @@ int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 csi, void *data);
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_identify_ctrl_csi(int fd, __u8 csi, void *data);
+
+/**
+ * nvme_identify_active_ns_list_csi() -
+ * @fd:		File descriptor of nvme device
+ * @nsid:	Return namespaces greater than this identifier
+ * @csi:	Command Set Identifier
+ * @ns_list:	User space destination address to transfer the data
+ *
+ * A list of 1024 namespace IDs is returned to the host containing active
+ * NSIDs in increasing order that are greater than the value specified in
+ * the Namespace Identifier (nsid) field of the command and matching the
+ * I/O Command Set specified in the @csi argument.
+ *
+ * See &struct nvme_ns_list for the definition of the returned structure.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_identify_active_ns_list_csi(int fd, __u32 nsid, __u8 csi,
+				     struct nvme_ns_list *list);
+
+/**
+ * nvme_identify_allocated_ns_list_csi() -
+ * @fd:		File descriptor of nvme device
+ * @nsid:	Return namespaces greater than this identifier
+ * @csi:	Command Set Identifier
+ * @ns_list:	User space destination address to transfer the data
+ *
+ * A list of 1024 namespace IDs is returned to the host containing allocated
+ * NSIDs in increasing order that are greater than the value specified in
+ * the @nsid field of the command and matching the I/O Command Set
+ * specified in the @csi argument.
+ *
+ * See &struct nvme_ns_list for the definition of the returned structure.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid, __u8 csi,
+					struct nvme_ns_list *list);
 
 /**
  * nvme_identify_ctrl_nvm() -
