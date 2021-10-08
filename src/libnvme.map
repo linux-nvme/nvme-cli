@@ -48,6 +48,7 @@
 		nvme_disconnect_ctrl;
 		nvme_dsm;
 		nvme_dsm_range;
+		nvme_dump_config;
 		nvme_first_host;
 		nvme_first_subsystem;
 		nvme_flush;

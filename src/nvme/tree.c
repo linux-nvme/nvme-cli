@@ -130,6 +130,16 @@ int nvme_update_config(nvme_root_t r)
 #endif
 }
 
+int nvme_dump_config(nvme_root_t r)
+{
+#ifdef CONFIG_JSONC
+	return json_update_config(r, NULL);
+#else
+	errno = ENOTSUP;
+	return -1;
+#endif
+}
+
 nvme_host_t nvme_first_host(nvme_root_t r)
 {
 	return list_top(&r->hosts, struct nvme_host, entry);
