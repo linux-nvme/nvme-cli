@@ -59,6 +59,7 @@
 		nvme_fw_download;
 		nvme_fw_download_seq;
 		nvme_get_ana_log_len;
+		nvme_get_attr;
 		nvme_get_ctrl_attr;
 		nvme_get_ctrl_telemetry;
 		nvme_get_directive_receive_length;
