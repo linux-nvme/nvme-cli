@@ -1,0 +1,7 @@
+# -*- mode: meson -*-
+
+option('pkgconfiglibdir', type : 'string', value : '', description : 'directory for standard pkg-config files')
+
+option('man', type : 'boolean', value : false, description : 'build and install man pages (requires sphinx-build)')
+
+option('systemd', type : 'combo', choices : ['auto', 'true', 'false'], description : 'libsystemd support')

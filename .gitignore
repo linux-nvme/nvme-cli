@@ -29,3 +29,5 @@ config-host.mak
 config.log
 
 cscope.*
+
+.build
