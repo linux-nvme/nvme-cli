@@ -297,6 +297,7 @@ struct nvme_ctrl {
   %immutable queue_count;
   %immutable serial;
   %immutable sqsize;
+  %immutable persistent;
   char *transport;
   char *subsysnqn;
   char *traddr;
@@ -309,6 +310,7 @@ struct nvme_ctrl {
   char *queue_count;
   char *serial;
   char *sqsize;
+  bool persistent;
 };
 
 struct nvme_ns {
@@ -520,6 +522,9 @@ struct nvme_ns {
   bool connected() {
     return nvme_ctrl_get_name($self) != NULL;
   }
+  void persistent_set(bool persistent) {
+    nvme_ctrl_set_persistent($self, persistent);
+  }
   void rescan() {
     nvme_rescan_ctrl($self);
   }
@@ -605,3 +610,15 @@ struct nvme_ns {
   }
 %};
 
+
+// We want to swig all the #define and enum from types.h, but none of the structs.
+%{
+#include "nvme/types.h"
+%}
+#define __attribute__(x)
+%rename($ignore, %$isclass) "";     // ignore all classes/structs
+%rename($ignore, %$isfunction) "";  // ignore all functions
+%rename($ignore, %$isunion) "";     // ignore all unions
+%rename($ignore, %$isvariable ) ""; // ignore all variables
+
+%include "../src/nvme/types.h"
