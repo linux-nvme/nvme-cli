@@ -1,0 +1,26 @@
+name: libnvme meson CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+
+jobs:
+  meson-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: install libraries
+        run: sudo apt-get install libjson-c-dev
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+      # - name: install python dependencies
+      #   run: |
+      #     python -m pip install --upgrade pip
+      #     pip install nose nose2
+      - uses: BSFishy/meson-build@v1.0.3
+        with:
+          action: test
