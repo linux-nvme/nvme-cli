@@ -19,7 +19,6 @@
 %rename(ns)        nvme_ns;
 
 %{
-#include <assert.h>
 #include <ccan/list/list.h>
 #include "nvme/tree.h"
 #include "nvme/fabrics.h"
@@ -58,52 +57,47 @@ static int discover_err = 0;
 %}
 
 %exception host_iter::__next__ {
-  assert(!host_iter_err);
-  $action
+  host_iter_err = 0;
+  $action  /* $action sets host_iter_err to non-zero value on failure */
   if (host_iter_err) {
-    host_iter_err = 0;
     PyErr_SetString(PyExc_StopIteration, "End of list");
     return NULL;
   }
 }
 
 %exception subsystem_iter::__next__ {
-  assert(!subsys_iter_err);
-  $action
+  subsys_iter_err = 0;
+  $action  /* $action sets subsys_iter_err to non-zero value on failure */
   if (subsys_iter_err) {
-    subsys_iter_err = 0;
     PyErr_SetString(PyExc_StopIteration, "End of list");
     return NULL;
   }
 }
 
 %exception ctrl_iter::__next__ {
-  assert(!ctrl_iter_err);
-  $action
+  ctrl_iter_err = 0;
+  $action  /* $action sets ctrl_iter_err to non-zero value on failure */
   if (ctrl_iter_err) {
-    ctrl_iter_err = 0;
     PyErr_SetString(PyExc_StopIteration, "End of list");
     return NULL;
   }
 }
 
 %exception ns_iter::__next__ {
-  assert(!ns_iter_err);
-  $action
+  ns_iter_err = 0;
+  $action  /* $action sets ns_iter_err to non-zero value on failure */
   if (ns_iter_err) {
-    ns_iter_err = 0;
     PyErr_SetString(PyExc_StopIteration, "End of list");
     return NULL;
   }
 }
 
 %exception nvme_ctrl::connect {
-  $action
+  connect_err = 0;
+  $action  /* $action sets connect_err to non-zero value on failure */
   if (connect_err == 1) {
-    connect_err = 0;
     SWIG_exception(SWIG_AttributeError, "Existing controller connection");
   } else if (connect_err) {
-    connect_err = 0;
     if (nvme_log_message)
       SWIG_exception(SWIG_RuntimeError, nvme_log_message);
     else
@@ -112,9 +106,9 @@ static int discover_err = 0;
 }
 
 %exception nvme_ctrl::discover {
-  $action
+  discover_err = 0;
+  $action  /* $action sets discover_err to non-zero value on failure */
   if (discover_err) {
-    discover_err = 0;
     SWIG_exception(SWIG_RuntimeError,"Discover failed");
   }
 }
@@ -393,7 +387,7 @@ struct nvme_ns {
   }
   struct host_iter __iter__() {
     struct host_iter ret = { .root = nvme_host_get_root($self),
-				     .pos = $self };
+			     .pos = $self };
     return ret;
   }
   struct nvme_subsystem *subsystems() {
@@ -452,7 +446,7 @@ struct nvme_ns {
   }
   struct subsystem_iter __iter__() {
     struct subsystem_iter ret = { .host = nvme_subsystem_get_host($self),
-				       .pos = $self };
+				  .pos = $self };
     return ret;
   }
   struct nvme_ctrl *controllers() {
@@ -550,7 +544,7 @@ struct nvme_ns {
   }
   struct ctrl_iter __iter__() {
     struct ctrl_iter ret = { .subsystem = nvme_ctrl_get_subsystem($self),
-				  .pos = $self };
+			     .pos = $self };
     return ret;
   }
   struct nvme_ns *namespaces() {
@@ -591,8 +585,8 @@ struct nvme_ns {
   }
   struct ns_iter __iter__() {
     struct ns_iter ret = { .ctrl = nvme_ns_get_ctrl($self),
-				.subsystem = nvme_ns_get_subsystem($self),
-				.pos = $self };
+			   .subsystem = nvme_ns_get_subsystem($self),
+			   .pos = $self };
     return ret;
   }
   %immutable name;
