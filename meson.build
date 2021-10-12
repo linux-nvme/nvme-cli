@@ -185,8 +185,8 @@ conf.set10(
     description: 'Is isblank() available?'
 )
 
-configure_file(
-    output: 'config-host.h',
+config_h = configure_file(
+    output: 'config.h',
     configuration: conf
 )
 
@@ -214,12 +214,11 @@ pkg.generate(
 )
 
 ################################################################################
-add_project_arguments('-include', 'config-host.h', language : 'c')
+add_project_arguments('-include', 'config.h', language : 'c')
 add_global_arguments(['-fomit-frame-pointer', '-D_GNU_SOURCE'], language : 'c')
-incdir = include_directories(['ccan', 'src'])
+incdir = include_directories(['.', 'ccan', 'src'])
 
 ################################################################################
-subdir('ccan')
 subdir('src')
 subdir('pynvme')
 subdir('test')
