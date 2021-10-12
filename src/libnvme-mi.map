@@ -5,6 +5,8 @@ LIBNVME_MI_1_1 {
 		nvme_mi_init_ctrl;
 		nvme_mi_close_ctrl;
 		nvme_mi_close;
+		nvme_mi_mi_config_get;
+		nvme_mi_mi_config_set;
 		nvme_mi_mi_read_mi_data_subsys;
 		nvme_mi_mi_read_mi_data_port;
 		nvme_mi_mi_read_mi_data_ctrl_list;

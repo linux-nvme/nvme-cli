@@ -732,6 +732,77 @@ int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 	return 0;
 }
 
+int nvme_mi_mi_config_get(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1,
+			  __u32 *nmresp)
+{
+	struct nvme_mi_mi_resp_hdr resp_hdr;
+	struct nvme_mi_mi_req_hdr req_hdr;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+
+	memset(&req_hdr, 0, sizeof(req_hdr));
+	req_hdr.hdr.type = NVME_MI_MSGTYPE_NVME;
+	req_hdr.hdr.nmp = (NVME_MI_ROR_REQ << 7) | (NVME_MI_MT_MI << 3);
+	req_hdr.opcode = nvme_mi_mi_opcode_configuration_get;
+	req_hdr.cdw0 = cpu_to_le32(dw0);
+	req_hdr.cdw1 = cpu_to_le32(dw1);
+
+	memset(&req, 0, sizeof(req));
+	req.hdr = &req_hdr.hdr;
+	req.hdr_len = sizeof(req_hdr);
+
+	memset(&resp, 0, sizeof(resp));
+	resp.hdr = &resp_hdr.hdr;
+	resp.hdr_len = sizeof(resp_hdr);
+
+	rc = nvme_mi_submit(ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
+	*nmresp = resp_hdr.nmresp[0] |
+		  resp_hdr.nmresp[1] << 8 |
+		  resp_hdr.nmresp[2] << 16;
+
+	return 0;
+}
+
+int nvme_mi_mi_config_set(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1)
+{
+	struct nvme_mi_mi_resp_hdr resp_hdr;
+	struct nvme_mi_mi_req_hdr req_hdr;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+
+	memset(&req_hdr, 0, sizeof(req_hdr));
+	req_hdr.hdr.type = NVME_MI_MSGTYPE_NVME;
+	req_hdr.hdr.nmp = (NVME_MI_ROR_REQ << 7) | (NVME_MI_MT_MI << 3);
+	req_hdr.opcode = nvme_mi_mi_opcode_configuration_set;
+	req_hdr.cdw0 = cpu_to_le32(dw0);
+	req_hdr.cdw1 = cpu_to_le32(dw1);
+
+	memset(&req, 0, sizeof(req));
+	req.hdr = &req_hdr.hdr;
+	req.hdr_len = sizeof(req_hdr);
+
+	memset(&resp, 0, sizeof(resp));
+	resp.hdr = &resp_hdr.hdr;
+	resp.hdr_len = sizeof(resp_hdr);
+
+	rc = nvme_mi_submit(ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
+	return 0;
+}
+
 void nvme_mi_close(nvme_mi_ep_t ep)
 {
 	struct nvme_mi_ctrl *ctrl, *tmp;

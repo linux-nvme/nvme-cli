@@ -643,6 +643,110 @@ static void test_resp_csi(nvme_mi_ep_t ep)
 	assert(rc != 0);
 }
 
+/* test: config get MTU request & response layout, ensure we're handling
+ * endianness in the 3-byte NMRESP field correctly */
+static int test_mi_config_get_mtu_cb(struct nvme_mi_ep *ep,
+			    struct nvme_mi_req *req,
+			    struct nvme_mi_resp *resp,
+			    void *data)
+{
+	struct nvme_mi_mi_resp_hdr *mi_resp;
+	uint8_t *buf;
+
+	assert(req->hdr_len == sizeof(struct nvme_mi_mi_req_hdr));
+	assert(req->data_len == 0);
+
+	/* validate req as raw bytes */
+	buf = (void *)req->hdr;
+	assert(buf[4] == nvme_mi_mi_opcode_configuration_get);
+	/* dword 0: port and config id */
+	assert(buf[11] == 0x5);
+	assert(buf[8] == NVME_MI_CONFIG_MCTP_MTU);
+
+	/* set MTU in response */
+	mi_resp = (void *)resp->hdr;
+	mi_resp->nmresp[1] = 0x12;
+	mi_resp->nmresp[0] = 0x34;
+	resp->hdr_len = sizeof(*mi_resp);
+	resp->data_len = 0;
+
+	test_transport_resp_calc_mic(resp);
+	return 0;
+}
+
+static void test_mi_config_get_mtu(nvme_mi_ep_t ep)
+{
+	uint16_t mtu;
+	int rc;
+
+	test_set_transport_callback(ep, test_mi_config_get_mtu_cb, NULL);
+
+	rc = nvme_mi_mi_config_get_mctp_mtu(ep, 5, &mtu);
+	assert(rc == 0);
+	assert(mtu == 0x1234);
+}
+
+/* test: config set SMBus freq, both valid and invalid */
+static int test_mi_config_set_freq_cb(struct nvme_mi_ep *ep,
+			    struct nvme_mi_req *req,
+			    struct nvme_mi_resp *resp,
+			    void *data)
+{
+	struct nvme_mi_mi_resp_hdr *mi_resp;
+	uint8_t *buf;
+
+	assert(req->hdr_len == sizeof(struct nvme_mi_mi_req_hdr));
+	assert(req->data_len == 0);
+
+	/* validate req as raw bytes */
+	buf = (void *)req->hdr;
+	assert(buf[4] == nvme_mi_mi_opcode_configuration_set);
+	/* dword 0: port and config id */
+	assert(buf[11] == 0x5);
+	assert(buf[8] == NVME_MI_CONFIG_SMBUS_FREQ);
+
+	mi_resp = (void *)resp->hdr;
+	resp->hdr_len = sizeof(*mi_resp);
+	resp->data_len = 0;
+
+	/* accept 100 & 400, reject others */
+	switch (buf[9]) {
+	case NVME_MI_CONFIG_SMBUS_FREQ_100kHz:
+	case NVME_MI_CONFIG_SMBUS_FREQ_400kHz:
+		mi_resp->status = 0;
+		break;
+	case NVME_MI_CONFIG_SMBUS_FREQ_1MHz:
+	default:
+		mi_resp->status = 0x4;
+		break;
+	}
+
+	test_transport_resp_calc_mic(resp);
+	return 0;
+}
+
+static void test_mi_config_set_freq(nvme_mi_ep_t ep)
+{
+	int rc;
+
+	test_set_transport_callback(ep, test_mi_config_set_freq_cb, NULL);
+
+	rc = nvme_mi_mi_config_set_smbus_freq(ep, 5,
+					      NVME_MI_CONFIG_SMBUS_FREQ_100kHz);
+	assert(rc == 0);
+}
+
+static void test_mi_config_set_freq_invalid(nvme_mi_ep_t ep)
+{
+	int rc;
+
+	test_set_transport_callback(ep, test_mi_config_set_freq_cb, NULL);
+
+	rc = nvme_mi_mi_config_set_smbus_freq(ep, 5,
+					      NVME_MI_CONFIG_SMBUS_FREQ_1MHz);
+	assert(rc == 4);
+}
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -662,6 +766,9 @@ struct test {
 	DEFINE_TEST(resp_hdr_small),
 	DEFINE_TEST(resp_invalid_type),
 	DEFINE_TEST(resp_csi),
+	DEFINE_TEST(mi_config_get_mtu),
+	DEFINE_TEST(mi_config_set_freq),
+	DEFINE_TEST(mi_config_set_freq_invalid),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)
