@@ -106,56 +106,84 @@ else
 endif
 conf.set('CONFIG_SYSTEMD', have, description: 'Is libsystemd required?')
 
-################################################################################
-# The following commented-out text is the beginning of an effort to replace
-# ccan/tools/configurator. It is not complete yet. Eventually we would like
-# to replace everything that ccan/tools/configurator does with meson.
-# To be continued...
-################################################################################
-#args = ['-g3', '-ggdb', '-Wall', '-Wundef', '-Wmissing-prototypes', '-Wmissing-declarations', '-Wstrict-prototypes', '-Wold-style-definition']
-#conf.set10(
-#    'HAVE_STRUCT_TIMESPEC',
-#    cc.compiles(
-#        '''
-#            #include <time.h>
-#            static void func(void) {
-#                struct timespec ts;
-#                ts.tv_sec = ts.tv_nsec = 1;
-#            }
-#            int main(int argc, char *argv[]) {
-#                (void)func();
-#                return 0;
-#            }
-#        ''',
-#        no_builtin_args: true,
-#        args: args,
-#        name: 'struct timespec'
-#    ),
-#    description: 'Is struct timespec defined?'
-#)
-#conf.set10(
-#    'HAVE_ASPRINTF',
-#    cc.compiles(
-#        '''
-#            #define _GNU_SOURCE
-#            #include <stdio.h>
-#            static char *func(int x) {
-#                char *p;
-#                if (asprintf(&p, "%u", x) == -1)
-#                    p = NULL;
-#                return p;
-#            }
-#            int main(int argc, char *argv[]) {
-#                (void)func(1000);
-#                return 0;
-#            }
-#        ''',
-#        no_builtin_args: true,
-#        args: args,
-#        name: 'asprintf()'
-#    ),
-#    description: 'Is asprintf() supported?'
-#)
+# local (cross-compilable) implementations of ccan configure steps
+conf.set10(
+    'HAVE_BUILTIN_TYPES_COMPATIBLE_P',
+    cc.compiles(
+        '''int main(void) {
+               return __builtin_types_compatible_p(int, long);
+           }
+        ''',
+        name: '__builtin_type_compatible_p'
+    ),
+    description: 'Is __builtin_types_compatible_p available?'
+)
+conf.set10(
+    'HAVE_TYPEOF',
+    cc.compiles(
+        '''int main(void) {
+                int a = 1;
+                typeof(a) b;
+                b = a;
+           }
+        ''',
+        name: 'typeof'
+    ),
+    description: 'Is typeof available?'
+)
+conf.set10(
+    'HAVE_BYTESWAP_H',
+    cc.compiles(
+        '''#include <byteswap.h>''',
+        name: 'byteswap.h'
+    ),
+    description: 'Is byteswap.h include-able?'
+)
+conf.set10(
+    'HAVE_BSWAP64',
+    cc.links(
+        '''#include <byteswap.h>
+            int main(void) {
+                return bswap_64(0);
+            }
+        ''',
+        name: 'bswap64'
+    ),
+    description: 'Is bswap_64 available?'
+)
+conf.set10(
+    'HAVE_LITTLE_ENDIAN',
+    build_machine.endian() == 'little',
+    description: 'Building for little-endian'
+)
+conf.set10(
+    'HAVE_BIG_ENDIAN',
+    build_machine.endian() == 'big',
+    description: 'Building for big-endian'
+)
+conf.set10(
+    'HAVE_STATEMENT_EXPR',
+    cc.compiles(
+        '''int main(int argc, char **argv) {
+               return ({ int x = argc; x == 1; });
+           }
+        ''',
+        name: 'statement-expr'
+    ),
+    description: 'Can we use a statement as an expression?'
+)
+conf.set10(
+    'HAVE_ISBLANK',
+    cc.links(
+        '''#include <ctype.h>
+           int main(int argc, char **argv) {
+               return isblank(argv[0][0]);
+           }
+        ''',
+        name: 'isblank'
+    ),
+    description: 'Is isblank() available?'
+)
 
 configure_file(
     output: 'config-host.h',
