@@ -22,7 +22,6 @@ endif
 
 deps = [
     libuuid,
-    libsystemd,
     libjson,
 ]
 
