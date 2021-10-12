@@ -40,6 +40,7 @@
 #include "private.h"
 
 #define NVMF_HOSTID_SIZE	37
+#define UUID_SIZE		37  /* 1b4e28ba-2fa1-11d2-883f-0016d3cca427 + \0 */
 
 const char *nvmf_dev = "/dev/nvme-fabrics";
 const char *nvmf_hostnqn_file = "/etc/nvme/hostnqn";
@@ -771,7 +772,9 @@ static int uuid_from_device_tree(char *system_uuid)
 	f = open(PATH_UUID_IBM, O_RDONLY);
 	if (f < 0)
 		return -ENXIO;
-	len = read(f, system_uuid, 512);
+
+	memset(system_uuid, 0, UUID_SIZE);
+	len = read(f, system_uuid, UUID_SIZE - 1);
 	close(f);
 	if (len < 0)
 		return -ENXIO;
@@ -860,7 +863,7 @@ char *nvmf_hostnqn_generate()
 {
 	char *hostnqn;
 	int ret;
-	char uuid_str[37]; /* e.g. 1b4e28ba-2fa1-11d2-883f-0016d3cca427 + \0 */
+	char uuid_str[UUID_SIZE];
 #ifdef CONFIG_LIBUUID
 	uuid_t uuid;
 #endif
