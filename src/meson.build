@@ -51,6 +51,16 @@ libnvme_static = static_library(
     install : false
 )
 
+libnvme_shared_dep = declare_dependency(
+    include_directories: incdir,
+    link_with: libnvme_shared,
+)
+
+libnvme_static_dep = declare_dependency(
+    include_directories: incdir,
+    link_with: libnvme_static,
+)
+
 mode = ['rw-r--r--', 0, 0]
 install_headers('libnvme.h', install_mode: mode)
 install_headers([
