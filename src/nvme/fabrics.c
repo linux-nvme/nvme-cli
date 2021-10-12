@@ -25,11 +25,6 @@
 #include <netdb.h>
 #include <net/if.h>
 
-#ifdef CONFIG_SYSTEMD
-#include <systemd/sd-id128.h>
-#define NVME_HOSTNQN_ID SD_ID128_MAKE(c7,f4,61,81,12,be,49,32,8c,83,10,6f,9d,dd,d8,6b)
-#endif
-
 #include <ccan/list/list.h>
 #include <ccan/array_size/array_size.h>
 
@@ -841,24 +836,6 @@ static int uuid_from_dmi(char *system_uuid)
 	return strlen(system_uuid) ? 0 : -ENXIO;
 }
 
-#ifdef CONFIG_SYSTEMD
-#include <systemd/sd-id128.h>
-#define NVME_HOSTNQN_ID SD_ID128_MAKE(c7,f4,61,81,12,be,49,32,8c,83,10,6f,9d,dd,d8,6b)
-#endif
-
-static int uuid_from_systemd(char *system_uuid)
-{
-	int ret = -ENOTSUP;
-#ifdef CONFIG_SYSTEMD
-	sd_id128_t id;
-
-	ret = sd_id128_get_machine_app_specific(NVME_HOSTNQN_ID, &id);
-	if (!ret)
-		sd_id128_to_string(id, system_uuid);
-#endif
-	return ret;
-}
-
 char *nvmf_hostnqn_generate()
 {
 	char *hostnqn;
@@ -871,8 +848,6 @@ char *nvmf_hostnqn_generate()
 	ret = uuid_from_dmi(uuid_str);
 	if (ret < 0) {
 		ret = uuid_from_device_tree(uuid_str);
-		if (ret < 0)
-			ret = uuid_from_systemd(uuid_str);
 	}
 #ifdef CONFIG_LIBUUID
 	if (ret < 0) {

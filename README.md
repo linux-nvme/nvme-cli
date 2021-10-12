@@ -142,16 +142,8 @@ A few build options can be specified on the command line when invoking meson.
 
 | Option  | Values [default]    | Description                                                  |
 | ------- | ------------------- | ------------------------------------------------------------ |
-| systemd | [auto], true, false | Whether to link libsystemd to libnvme. When set to `auto`, the default, meson will check for the presence of library and will only link to it if it is found. When set to `true`, meson will make this library a mandatory dependency. When set to `false`, meson will not link the library to libnvme, even if the library is available. |
 
 ### Changing the build options from the command-line (i.e. w/o modifying any files)
-
-Here's an example where we tell meson that we do not want to link
-against the `systemd` library:
-
-```bash
-meson .build -Dsystemd=false
-```
 
 To configure a build for debugging purposes (i.e. optimization turned
 off and debug symbols enabled):

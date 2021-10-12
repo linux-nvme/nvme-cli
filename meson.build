@@ -95,17 +95,6 @@ if not libjson.found()
 endif
 conf.set('CONFIG_JSONC', libjson.found(), description: 'Is json-c required?')
 
-# Check for libsystemd availability
-want_systemd = get_option('systemd')
-if want_systemd != 'false'
-    libsystemd = dependency('libsystemd', required: want_systemd == 'true')
-    have = libsystemd.found()
-else
-    libsystemd = []
-    have = false
-endif
-conf.set('CONFIG_SYSTEMD', have, description: 'Is libsystemd required?')
-
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
     'HAVE_BUILTIN_TYPES_COMPATIBLE_P',
@@ -210,7 +199,7 @@ pkg.generate(
     description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express)',
     url: 'http://github.com/linux-nvme/libnvme/',
     libraries: ['-L${libdir}', '-lnvme'],
-    requires: [libuuid, libjson, libsystemd],
+    requires: [libuuid, libjson],
 )
 
 ################################################################################

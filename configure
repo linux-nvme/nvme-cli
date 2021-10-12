@@ -27,8 +27,6 @@ for opt do
   ;;
   --datadir=*) datadir="$optarg"
   ;;
-  --disable-systemd) disable_systemd=1
-  ;;
   --disable-uuid) disable_uuid=1
   ;;
   --disable-json) disable_json=1
@@ -68,7 +66,6 @@ Options: [defaults in brackets after descriptions]
   --libdir=PATH            install libraries in PATH [$libdir]
   --mandir=PATH            install man pages in PATH [$mandir]
   --datadir=PATH           install shared data in PATH [$datadir]
-  --disable-systemd        do not link against libsystemd
   --disable-uuid           do not link against libuuid
   --disable-json           do not link against libjson-c
 EOF
@@ -198,17 +195,6 @@ fi
 print_config "libuuid" "${libuuid}"
 
 ##########################################
-# check for SystemD
-systemd="no"
-if [ -z "$disable_systemd" ] ; then
-    pkg-config --exists libsystemd --atleast-version=242
-    if [ $? -eq 0 ]; then
-	systemd="yes"
-    fi
-fi
-print_config "systemd" "${systemd}"
-
-##########################################
 # check for libjson-c
 libjsonc="no"
 if [ -z "$disable_json" ] ; then
@@ -233,10 +219,6 @@ if test "$libuuid" = "yes"; then
   output_sym "CONFIG_LIBUUID"
   echo "override LIBS += -luuid" >> $config_host_mak
   echo "override LIB_DEPENDS += uuid" >> $config_host_mak 
-fi
-if test "$systemd" = "yes"; then
-  output_sym "CONFIG_SYSTEMD"
-  echo "override LIBS += -lsystemd" >> $config_host_mak
 fi
 if test "$libjsonc" = "yes"; then
     output_sym "CONFIG_JSONC"
