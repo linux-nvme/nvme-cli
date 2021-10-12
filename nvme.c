@@ -105,8 +105,10 @@ static void *__nvme_alloc(size_t len, bool *huge) {
 #ifdef LIBHUGETLBFS
 void nvme_free(void *p, bool huge)
 {
-	if (huge)
-		free_hugepage_region(p);
+	if (huge) {
+		if (p)
+			free_hugepage_region(p);
+	}
 	else
 		free(p);
 }
@@ -5747,7 +5749,7 @@ static int passthru(int argc, char **argv, bool admin,
 			d_raw((unsigned char *)data, cfg.data_len);
 	}
 free_data:
-	nvme_free(data, huge);
+		nvme_free(data, huge);
 free_metadata:
 	free(metadata);
 close_wfd:
