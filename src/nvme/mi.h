@@ -222,6 +222,40 @@ enum nvme_mi_dtyp {
 	nvme_mi_dtyp_meb_support = 0x05,
 };
 
+/**
+ * enum nvme_mi_config_id - NVMe-MI Configuration identifier.
+ * @NVME_MI_CONFIG_SMBUS_FREQ: Current SMBus/I2C frequency
+ * @NVME_MI_CONFIG_HEALTH_STATUS_CHANGE: Health Status change - used to clear
+ *                                       health status bits in CCS bits of
+ *                                       status poll. Only for Set ops.
+ * @NVME_MI_CONFIG_MCTP_MTU: MCTP maximum transmission unit size of port
+ *                           specified in dw 0
+ *
+ * Configuration parameters for the MI Get/Set Configuration commands.
+ *
+ * See &nvme_mi_mi_config_get() and &nvme_mi_config_set().
+ */
+enum nvme_mi_config_id {
+	NVME_MI_CONFIG_SMBUS_FREQ = 0x1,
+	NVME_MI_CONFIG_HEALTH_STATUS_CHANGE = 0x2,
+	NVME_MI_CONFIG_MCTP_MTU = 0x3,
+};
+
+/**
+ * enum nvme_mi_config_smbus_freq - SMBus/I2C frequency values
+ * @NVME_MI_CONFIG_SMBUS_FREQ_100kHz: 100kHz
+ * @NVME_MI_CONFIG_SMBUS_FREQ_400kHz: 400kHz
+ * @NVME_MI_CONFIG_SMBUS_FREQ_1MHz: 1MHz
+ *
+ * Values used in the SMBus Frequency device configuration. See
+ * &nvme_mi_mi_config_get_smbus_freq() and &nvme_mi_mi_config_set_smbus_freq().
+ */
+enum nvme_mi_config_smbus_freq {
+	NVME_MI_CONFIG_SMBUS_FREQ_100kHz = 0x1,
+	NVME_MI_CONFIG_SMBUS_FREQ_400kHz = 0x2,
+	NVME_MI_CONFIG_SMBUS_FREQ_1MHz = 0x3,
+};
+
 /* Admin command definitions */
 
 /**
