@@ -5749,7 +5749,7 @@ static int passthru(int argc, char **argv, bool admin,
 			d_raw((unsigned char *)data, cfg.data_len);
 	}
 free_data:
-		nvme_free(data, huge);
+	nvme_free(data, huge);
 free_metadata:
 	free(metadata);
 close_wfd:
