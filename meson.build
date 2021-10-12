@@ -203,8 +203,7 @@ pkg.generate(
 )
 
 ################################################################################
-add_project_arguments('-include', 'config.h', language : 'c')
-add_global_arguments(['-fomit-frame-pointer', '-D_GNU_SOURCE'], language : 'c')
+add_project_arguments(['-fomit-frame-pointer', '-D_GNU_SOURCE', '-include', 'config.h'], language : 'c')
 incdir = include_directories(['.', 'ccan', 'src'])
 
 ################################################################################
