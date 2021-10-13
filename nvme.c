@@ -105,8 +105,10 @@ static void *__nvme_alloc(size_t len, bool *huge) {
 #ifdef LIBHUGETLBFS
 void nvme_free(void *p, bool huge)
 {
-	if (huge)
-		free_hugepage_region(p);
+	if (huge) {
+		if (p)
+			free_hugepage_region(p);
+	}
 	else
 		free(p);
 }
