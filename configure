@@ -199,9 +199,8 @@ print_config "libuuid" "${libuuid}"
 # check for libjson-c
 libjsonc="no"
 if [ -z "$disable_json" ] ; then
-    ${ld} -o /dev/null -ljson-c >/dev/null 2>&1
-    if [ $? -eq 0 ]; then
-	libjsonc="yes"
+    if pkg-config --atleast-version=0.13 json-c; then
+        libjsonc="yes"
     fi
 fi
 print_config "libjson-c" "${libjsonc}"
