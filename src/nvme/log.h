@@ -5,6 +5,7 @@
 #ifndef _LOG_H
 #define _LOG_H
 
+#include <stdbool.h>
 #include <syslog.h>
 
 #ifndef MAX_LOGLEVEL
