@@ -22,7 +22,7 @@ if swig.found()
         pymod_swig[1],
         dependencies : python3.dependency(),
         include_directories: incdir,
-        link_with: libnvme_static,
+        link_with: libnvme,
         install: true,
         subdir: 'libnvme',
     )

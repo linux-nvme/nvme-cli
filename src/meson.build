@@ -29,7 +29,7 @@ source_dir = meson.current_source_dir()
 mapfile = 'libnvme.map'
 version_script_arg = join_paths(source_dir, mapfile)
 
-libnvme_shared = shared_library(
+libnvme = library(
     'nvme', # produces libnvme.so
     sources,
     version: meson.project_version(),
@@ -41,24 +41,18 @@ libnvme_shared = shared_library(
     install: true,
 )
 
-libnvme_static = static_library(
-    'nvme', # produces libnvme.a
-    sources,
-    link_args: ['-Wl,--version-script=' + version_script_arg],
-    dependencies: deps,
-    link_depends: mapfile,
-    include_directories: incdir,
-    install : false
+pkg = import('pkgconfig')
+pkg.generate(libnvme,
+  filebase: meson.project_name(),
+  name: meson.project_name(),
+  version: meson.project_version(),
+  description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express)',
+  url: 'http://github.com/linux-nvme/libnvme/',
 )
 
-libnvme_shared_dep = declare_dependency(
+libnvme_dep = declare_dependency(
     include_directories: incdir,
-    link_with: libnvme_shared,
-)
-
-libnvme_static_dep = declare_dependency(
-    include_directories: incdir,
-    link_with: libnvme_static,
+    link_with: libnvme,
 )
 
 mode = ['rw-r--r--', 0, 0]
@@ -75,6 +69,3 @@ install_headers([
     subdir: 'nvme',
     install_mode: mode,
 )
-
-
-

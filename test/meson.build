@@ -8,28 +8,29 @@
 main = executable(
     'main-test',
     ['test.c'],
-    link_with: libnvme_static,
+    dependencies: libuuid,
+    link_with: libnvme,
     include_directories: incdir
 )
 
 cpp = executable(
     'test-cpp',
     ['cpp.cc'],
-    link_with: libnvme_static,
+    link_with: libnvme,
     include_directories: incdir
 )
 
 register = executable(
     'test-register',
     ['register.c'],
-    link_with: libnvme_static,
+    link_with: libnvme,
     include_directories: incdir
 )
 
 zns = executable(
     'test-zns',
     ['zns.c'],
-    link_with: libnvme_static,
+    link_with: libnvme,
     include_directories: incdir
 )
 
