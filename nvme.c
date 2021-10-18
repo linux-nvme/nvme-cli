@@ -55,7 +55,7 @@
 #include "nvme-print.h"
 #include "plugin.h"
 
-#include "argconfig.h"
+#include "util/argconfig.h"
 #include "fabrics.h"
 
 #define CREATE_CMD

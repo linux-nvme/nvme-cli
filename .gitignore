@@ -9,6 +9,8 @@ nvme.spec
 nvme-*.tar.gz
 version
 
+subprojects/libnvme
+
 cscope.*
 
 /debian/files
