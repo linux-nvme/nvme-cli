@@ -89,10 +89,7 @@ libuuid = dependency('uuid', required: true)
 conf.set('CONFIG_LIBUUID', libuuid.found(), description: 'Is libuuid required?')
 
 # Check for libjson-c availability
-libjson = dependency('json-c', required: false)
-if not libjson.found()
-    libjson = cc.find_library('json-c', required: true)
-endif
+libjson = dependency('json-c', version: '>=0.13', required: true)
 conf.set('CONFIG_JSONC', libjson.found(), description: 'Is json-c required?')
 
 # local (cross-compilable) implementations of ccan configure steps
