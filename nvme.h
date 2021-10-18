@@ -23,7 +23,7 @@
 
 #include "plugin.h"
 #ifdef LIBJSONC
-#include <json-c/json.h>
+#include <json.h>
 
 #define json_create_object(o) json_object_new_object(o)
 #define json_create_array(a) json_object_new_array(a)
