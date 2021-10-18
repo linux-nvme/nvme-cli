@@ -25,6 +25,7 @@
 #include <sys/socket.h>
 #include <linux/if_alg.h>
 #include <linux/socket.h>
+#include <limits.h>
 
 #include "nvme.h"
 #include "libnvme.h"
