@@ -124,7 +124,7 @@ OPTIONS
 
 -D::
 --duplicate-connect::
-	Allows duplicated connections between same trnsport host and subsystem
+	Allows duplicated connections between same transport host and subsystem
 	port.
 
 -d::
