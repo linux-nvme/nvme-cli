@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include <json-c/json.h>
+#include <json.h>
 
 #include "fabrics.h"
 #include "log.h"

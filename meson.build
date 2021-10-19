@@ -104,9 +104,9 @@ conf = configuration_data()
 libuuid = dependency('uuid', required: true)
 conf.set('CONFIG_LIBUUID', libuuid.found(), description: 'Is libuuid required?')
 
-# Check for libjson-c availability
-libjson = dependency('json-c', version: '>=0.13', required: true)
-conf.set('CONFIG_JSONC', libjson.found(), description: 'Is json-c required?')
+# Check for json-c availability
+json_c = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c'])
+conf.set('CONFIG_JSONC', json_c.found(), description: 'Is json-c required?')
 
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
@@ -213,4 +213,3 @@ subdir('pynvme')
 subdir('test')
 subdir('examples')
 subdir('doc')
-
