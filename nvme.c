@@ -4802,7 +4802,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	}
 	memset(status, 0, size);
 
-	err = nvme_resv_report(fd, cfg.namespace_id, cfg.numd, cfg.cdw11, status);
+	err = nvme_resv_report(fd, cfg.namespace_id, cfg.cdw11, size, status);
 	if (!err)
 		nvme_show_resv_report(status, size, cfg.cdw11, flags);
 	else if (err > 0)
