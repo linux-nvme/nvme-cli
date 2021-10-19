@@ -24,15 +24,15 @@ bindir     = join_paths(prefixdir, get_option('bindir'))
 ###############################################################################
 conf = configuration_data()
 
-libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_static_dep'])
+libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
 
 # Check for libuuid availability
 libuuid = dependency('uuid', required: true)
 conf.set('LIBUUID', libuuid.found(), description: 'Is libuuid required?')
 
 # Check for libjson-c availability
-libjson = dependency('json-c', required: true)
-conf.set('LIBJSONC', libjson.found(), description: 'Is json-c required?')
+json_c = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c'])
+conf.set('CONFIG_JSONC', json_c.found(), description: 'Is json-c required?')
 
 # Check for libhugetlbfs  availability
 libhugetlbfs = dependency('hugetlbfs', required: false)
@@ -78,5 +78,5 @@ subdir('util')
 executable(
     'nvme',
     sources,
-    dependencies: [ libnvme_dep, libuuid, libjson ],
+    dependencies: [ libnvme_dep, libuuid, json_c ],
 )
