@@ -32,7 +32,7 @@ version_script_arg = join_paths(source_dir, mapfile)
 libnvme = library(
     'nvme', # produces libnvme.so
     sources,
-    version: meson.project_version(),
+    version: libnvme_version,
     soversion: '1',
     link_args: ['-Wl,--version-script=' + version_script_arg],
     dependencies: deps,

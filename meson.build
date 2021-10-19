@@ -61,12 +61,28 @@
 project(
     'libnvme', ['c', 'cpp'],
     meson_version: '>= 0.47.0',
-    version: '1.0.1',
+    version: 'v0.1',
     license: 'LGPLv2+',
     default_options: [
         'buildtype=release',
         'prefix=/usr',
     ]
+)
+
+# https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+# https://autotools.io/libtool/version.html
+# The relation between libtool's current:revison:age interface versioning
+# and the .so filename, .so.x.y.z, is
+# x = current - age
+# y = age
+# z = revision
+# If libtool_soversion is updated as described in libtool's documentation,
+# x.y.z will usually *not* be equal to meson.project_version().
+libtool_soversion = [0, 0, 0]
+libnvme_version = '@0@.@1@.@2@'.format(
+  libtool_soversion[0] - libtool_soversion[2],
+  libtool_soversion[2],
+  libtool_soversion[1]
 )
 
 ################################################################################
