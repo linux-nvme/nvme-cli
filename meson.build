@@ -24,7 +24,7 @@ bindir     = join_paths(prefixdir, get_option('bindir'))
 ###############################################################################
 conf = configuration_data()
 
-libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_static_dep'])
+libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
 
 # Check for libuuid availability
 libuuid = dependency('uuid', required: true)
