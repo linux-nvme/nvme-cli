@@ -10,7 +10,7 @@ swig = find_program('swig', required: false)
 if swig.found()
     pymod_swig = custom_target(
         'nvme.py',
-        input:   ['nvme.i', config_h],
+        input:   ['nvme.i', config_host_h, ccan_config_h],
         output:  ['nvme.py', 'nvme_wrap.c'],
         command: [swig, '-python', '-py3', '-o', '@OUTPUT1@', '@INPUT0@'],
         install: true,

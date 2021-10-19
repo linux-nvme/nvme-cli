@@ -11,7 +11,7 @@ configurator = executable(
     c_args: ['-D_GNU_SOURCE'],
 )
 
-config_h = custom_target(
+ccan_config_h = custom_target(
     'config.h',
     output:  'config.h',
     capture: true,
