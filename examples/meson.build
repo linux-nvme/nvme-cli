@@ -8,18 +8,18 @@
 executable(
     'telemetry-listen',
     ['telemetry-listen.c'],
-    link_with: libnvme_static,
+    link_with: libnvme,
     include_directories: incdir)
 
 executable(
     'display-columnar',
     ['display-columnar.c'],
-    link_with: libnvme_static,
+    link_with: libnvme,
     include_directories: incdir)
 
 executable(
     'discover-loop',
     ['discover-loop.c'],
-    link_with: libnvme_static,
+    link_with: libnvme,
     include_directories: incdir)
 

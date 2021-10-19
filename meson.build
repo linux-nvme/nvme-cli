@@ -188,18 +188,6 @@ configure_file(
 )
 
 ################################################################################
-pkg = import('pkgconfig')
-pkg.generate(
-    filebase: meson.project_name(),
-    name: meson.project_name(),
-    version: meson.project_version(),
-    description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express)',
-    url: 'http://github.com/linux-nvme/libnvme/',
-    libraries: ['-L${libdir}', '-lnvme'],
-    requires: [libuuid, libjson],
-)
-
-################################################################################
 add_project_arguments(['-fomit-frame-pointer', '-D_GNU_SOURCE', '-include', 'config.h'], language : 'c')
 incdir = include_directories(['.', 'ccan', 'src'])
 
