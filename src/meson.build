@@ -22,7 +22,7 @@ endif
 
 deps = [
     libuuid,
-    libjson,
+    json_c,
 ]
 
 source_dir = meson.current_source_dir()
@@ -43,11 +43,11 @@ libnvme = library(
 
 pkg = import('pkgconfig')
 pkg.generate(libnvme,
-  filebase: meson.project_name(),
-  name: meson.project_name(),
-  version: meson.project_version(),
-  description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express)',
-  url: 'http://github.com/linux-nvme/libnvme/',
+    filebase: meson.project_name(),
+    name: meson.project_name(),
+    version: meson.project_version(),
+    description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express)',
+    url: 'http://github.com/linux-nvme/libnvme/',
 )
 
 libnvme_dep = declare_dependency(
