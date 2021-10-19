@@ -120,6 +120,7 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 void json_nvme_finish_zone_list(__u64 nr_zones, 
 	struct json_object *zone_list);
 void nvme_show_list_item(nvme_ns_t n);
+void nvme_show_busy_namespace(char *namespace);
 
 const char *nvme_cmd_to_string(int admin, __u8 opcode);
 const char *nvme_select_to_string(int sel);
