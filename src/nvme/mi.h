@@ -68,6 +68,27 @@ enum nvme_mi_dtyp {
 	nvme_mi_dtyp_meb_support = 0x05,
 };
 
+/* Admin command definitions */
+
+struct nvme_mi_admin_req_hdr {
+	struct nvme_mi_msg_hdr hdr;
+	__u8	opcode;
+	__u8	flags;
+	__le16	ctrl_id;
+	__le32	cdw1, cdw2, cdw3, cdw4, cdw5;
+	__le32	doff;
+	__le32	dlen;
+	__le32	rsvd0, rsvd1;
+	__le32	cdw10, cdw11, cdw12, cdw13, cdw14, cdw15;
+} __attribute((packed));
+
+struct nvme_mi_admin_resp_hdr {
+	struct nvme_mi_msg_hdr hdr;
+	__u8	status;
+	__u8	rsvd0[3];
+	__le32	cdw0, cdw1, cdw3;
+} __attribute__((packed));
+
 /* MI Command API */
 
 /* library-level API object */
@@ -102,5 +123,13 @@ int nvme_mi_mi_read_mi_data_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id,
 int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 					    struct nvme_mi_nvm_ss_health_status *nshds);
 
+/* Admin channel functions */
+int nvme_mi_admin_identify_ctrl(nvme_mi_ctrl_t ctrl,
+				struct nvme_id_ctrl *id);
+int nvme_mi_admin_identify_ctrl_partial(nvme_mi_ctrl_t ctrl,
+					struct nvme_id_ctrl *id,
+					off_t offset, size_t size);
+int nvme_mi_admin_identify_ctrl_list(nvme_mi_ctrl_t ctrl,
+				     struct nvme_ctrl_list *ctrllist);
 
 #endif /* _LIBNVME_MI_MI_H */
