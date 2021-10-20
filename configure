@@ -103,6 +103,7 @@ cat > $config_h <<EOF
  * Configured with:
  * $cmdstr
  */
+#include "ccan-config.h"
 EOF
 
 cat > $config_host_mak <<EOF
