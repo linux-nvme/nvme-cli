@@ -167,8 +167,8 @@ nvme_list_opts () {
 			--rrela= -a --iekey -i"
 			;;
 		"resv-report")
-		opts+=" --namespace-id= -n --numd= -d --raw-binary= -b \
-			--output-format= -o"
+		opts+=" --namespace-id= -n --numd= -d --eds -e \
+			--raw-binary= -b --output-format= -o"
 			;;
 		"dsm")
 		opts+=" --namespace-id= -n --ctx-attrs= -a --blocks= -b\

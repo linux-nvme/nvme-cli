@@ -23,7 +23,7 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
 void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode);
 void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	enum nvme_print_flags flags);
-void nvme_show_resv_report(struct nvme_resv_status *status, int bytes, __u32 cdw11,
+void nvme_show_resv_report(struct nvme_resv_status *status, int bytes, bool eds,
 	enum nvme_print_flags flags);
 void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges);
 void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,

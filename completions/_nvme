@@ -596,6 +596,8 @@ _nvme () {
 			-n':alias of --namespace-id'
 			--numd=':number of dwords of reservation status to xfer'
 			-d':alias of --numd'
+			--eds':request extended data structure'
+			-e':alias of --eds'
 			--raw-binary':dump output in binary format'
 			-b':alias of --raw-binary'
 			)

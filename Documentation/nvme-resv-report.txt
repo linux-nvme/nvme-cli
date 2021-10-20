@@ -10,7 +10,7 @@ SYNOPSIS
 [verse]
 'nvme resv-report' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--numd=<num-dwords> | -d <num-dwords>]
-			[--cdw11=<cdw11> | -c <cdw11>]
+			[--eds | -e]
 			[--raw-binary | -b]
 			[--output-format=<fmt> | -o <fmt>]
 
@@ -38,9 +38,9 @@ OPTIONS
 	Specify the number of Dwords of the Reservation Status structure
 	to transfer. Defaults to 4k.
 
--c <cdw11>::
---cdw11=<cdw11>::
-	The value for command dword 11. Setting bit 0 specifies that the 
+-e::
+--eds::
+	Request extended Data Structure: If this bit is set to a '1', then the
 	controller returns the Extended Data Structure.
 
 -b::

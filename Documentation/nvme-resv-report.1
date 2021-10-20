@@ -34,7 +34,7 @@ nvme-resv-report \- Send NVMe Reservation Report, parse the result
 .nf
 \fInvme resv\-report\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-numd=<num\-dwords> | \-d <num\-dwords>]
-                        [\-\-cdw11=<cdw11> | \-c <cdw11>]
+                        [\-\-eds | \-e]
                         [\-\-raw\-binary | \-b]
                         [\-\-output\-format=<fmt> | \-o <fmt>]
 .fi
@@ -55,9 +55,10 @@ Retrieve the reservation report structure for the given nsid\&. This is required
 Specify the number of Dwords of the Reservation Status structure to transfer\&. Defaults to 4k\&.
 .RE
 .PP
-\-c <cdw11>, \-\-cdw11=<cdw11>
+\-e, \-\-eds
 .RS 4
-The value for command dword 11\&. Setting bit 0 specifies that the controller returns the Extended Data Structure\&.
+Request extended Data Structure: If this bit is set to a
+\fI1\fR, then the controller returns the Extended Data Structure\&.
 .RE
 .PP
 \-b, \-\-raw\-binary

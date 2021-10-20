@@ -751,7 +751,7 @@ nvme-resv-report(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme resv-report</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                         [--numd=&lt;num-dwords&gt; | -d &lt;num-dwords&gt;]
-                        [--cdw11=&lt;cdw11&gt; | -c &lt;cdw11&gt;]
+                        [--eds | -e]
                         [--raw-binary | -b]
                         [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]</pre>
 <div class="attribution">
@@ -800,14 +800,14 @@ Controller data structure for each such controller).</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
--c &lt;cdw11&gt;
+-e
 </dt>
 <dt class="hdlist1">
---cdw11=&lt;cdw11&gt;
+--eds
 </dt>
 <dd>
 <p>
-        The value for command dword 11. Setting bit 0 specifies that the
+        Request extended Data Structure: If this bit is set to a '1', then the
         controller returns the Extended Data Structure.
 </p>
 </dd>
