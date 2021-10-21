@@ -7,7 +7,7 @@
 #
 executable(
     'telemetry-listen',
-    ['telemetry-listen.c', ccan_config_h],
+    ['telemetry-listen.c', config_h],
     link_with: libnvme,
     include_directories: incdir)
 
@@ -19,7 +19,7 @@ executable(
 
 executable(
     'discover-loop',
-    ['discover-loop.c', ccan_config_h],
+    ['discover-loop.c', config_h],
     link_with: libnvme,
     include_directories: incdir)
 
