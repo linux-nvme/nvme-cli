@@ -14,8 +14,7 @@ sources = [
     'nvme/log.c',
     'nvme/tree.c',
     'nvme/util.c',
-    ccan_config_h,
-    config_host_h,
+    config_h,
 ]
 
 if conf.get('CONFIG_JSONC')
