@@ -416,7 +416,7 @@ static void json_error_log(struct nvme_error_log_page *err_log, int entries)
 }
 
 static void json_nvme_resv_report(struct nvme_resv_status *status,
-				  int bytes, __u32 cdw11)
+				  int bytes, bool eds)
 {
 	struct json_object *root;
 	struct json_object *rcs;
@@ -433,7 +433,7 @@ static void json_nvme_resv_report(struct nvme_resv_status *status,
 
 	rcs = json_create_array();
 	/* check Extended Data Structure bit */
-	if ((cdw11 & 0x1) == 0) {
+	if (!eds) {
 		/*
 		 * if status buffer was too small, don't loop past the end of
 		 * the buffer
@@ -4613,14 +4613,14 @@ void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
 }
 
 void nvme_show_resv_report(struct nvme_resv_status *status, int bytes,
-	__u32 cdw11, enum nvme_print_flags flags)
+	bool eds, enum nvme_print_flags flags)
 {
 	int i, j, regctl, entries;
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)status, bytes);
 	else if (flags & JSON)
-		return json_nvme_resv_report(status, bytes, cdw11);
+		return json_nvme_resv_report(status, bytes, eds);
 
 	regctl = status->regctl[0] | (status->regctl[1] << 8);
 
@@ -4631,7 +4631,7 @@ void nvme_show_resv_report(struct nvme_resv_status *status, int bytes,
 	printf("ptpls     : %d\n", status->ptpls);
 
 	/* check Extended Data Structure bit */
-	if ((cdw11 & 0x1) == 0) {
+	if (!eds) {
 		/*
 		 * if status buffer was too small, don't loop past the end of
 		 * the buffer

@@ -4767,7 +4767,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 		"namespace.";
 	const char *namespace_id = "identifier of desired namespace";
 	const char *numd = "number of dwords to transfer";
-	const char *cdw11 = "command dword 11 value";
+	const char *eds = "request extended data structure";
 	const char *raw = "dump output in binary format";
 
 	struct nvme_resv_status *status;
@@ -4777,7 +4777,7 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	struct config {
 		__u32 namespace_id;
 		__u32 numd;
-		__u32 cdw11;
+		__u8  eds;
 		int   raw_binary;
 		char *output_format;
 	};
@@ -4785,14 +4785,14 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	struct config cfg = {
 		.namespace_id = 0,
 		.numd         = 0,
-		.cdw11	      = 0,
+		.eds	      = 0,
 		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id),
 		OPT_UINT("numd",          'd', &cfg.numd,           numd),
-		OPT_UINT("cdw11",         'c', &cfg.cdw11,          cdw11),
+		OPT_FLAG("eds",           'e', &cfg.eds,            eds),
 		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
 		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw),
 		OPT_END()
@@ -4830,9 +4830,9 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	}
 	memset(status, 0, size);
 
-	err = nvme_resv_report(fd, cfg.namespace_id, cfg.numd, cfg.cdw11, status);
+	err = nvme_resv_report(fd, cfg.namespace_id, cfg.eds, size, status);
 	if (!err)
-		nvme_show_resv_report(status, size, cfg.cdw11, flags);
+		nvme_show_resv_report(status, size, cfg.eds, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
