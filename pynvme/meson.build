@@ -5,9 +5,18 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-python3 = import('python').find_installation('python3')
-swig = find_program('swig', required: false)
-if swig.found()
+
+want_python = get_option('python')
+if want_python != 'false'
+    python3 = import('python').find_installation('python3')
+    py3_dep = python3.dependency(required: want_python == 'true')
+    swig = find_program('swig', required: want_python == 'true')
+    have_python_support = py3_dep.found() and swig.found()
+else
+    have_python_support = false
+endif
+
+if have_python_support
     pymod_swig = custom_target(
         'nvme.py',
         input:   ['nvme.i', config_h],
@@ -20,7 +29,7 @@ if swig.found()
     pynvme_clib = python3.extension_module(
         '_nvme',
         pymod_swig[1],
-        dependencies : python3.dependency(),
+        dependencies : py3_dep,
         include_directories: incdir,
         link_with: libnvme,
         install: true,
