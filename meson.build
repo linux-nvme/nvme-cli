@@ -142,7 +142,7 @@ conf.set10(
     description: 'Is byteswap.h include-able?'
 )
 conf.set10(
-    'HAVE_BSWAP64',
+    'HAVE_BSWAP_64',
     cc.links(
         '''#include <byteswap.h>
             int main(void) {
