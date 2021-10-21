@@ -9,6 +9,7 @@
 #include <time.h>
 #include <locale.h>
 
+#include "common.h"
 #include "nvme.h"
 #include "libnvme.h"
 #include "plugin.h"

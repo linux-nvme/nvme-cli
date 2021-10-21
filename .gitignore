@@ -9,6 +9,9 @@ nvme.spec
 nvme-*.tar.gz
 version
 
+ccan/config.h
+ccan/tools/configurator/configurator
+
 subprojects/libnvme
 
 cscope.*

@@ -23,6 +23,7 @@
 #include <string.h>
 #include <uuid/uuid.h>
 
+#include "common.h"
 #include "nvme.h"
 #include "libnvme.h"
 

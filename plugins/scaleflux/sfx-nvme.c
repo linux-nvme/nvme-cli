@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "common.h"
 #include "nvme.h"
 #include "libnvme.h"
 #include "plugin.h"
