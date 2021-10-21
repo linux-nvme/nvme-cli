@@ -41,6 +41,37 @@ conf.set('LIBHUGETLBFS', libhugetlbfs.found(), description: 'Is libhugetlbfs req
 # Set the nvme-cli version
 conf.set('NVME_VERSION', '"' + meson.project_version() + '"')
 
+conf.set10(
+    'HAVE_BYTESWAP_H',
+    cc.compiles(
+        '''#include <byteswap.h>''',
+        name: 'byteswap.h'
+    ),
+    description: 'Is byteswap.h include-able?'
+)
+conf.set10(
+    'HAVE_BSWAP_64',
+    cc.links(
+        '''#include <byteswap.h>
+            int main(void) {
+                return bswap_64(0);
+            }
+        ''',
+        name: 'bswap64'
+    ),
+    description: 'Is bswap_64 available?'
+)
+conf.set10(
+    'HAVE_LITTLE_ENDIAN',
+    build_machine.endian() == 'little',
+    description: 'Building for little-endian'
+)
+conf.set10(
+    'HAVE_BIG_ENDIAN',
+    build_machine.endian() == 'big',
+    description: 'Building for big-endian'
+)
+
 configure_file(
     output: 'config-host.h',
     configuration: conf
@@ -60,6 +91,7 @@ configure_file(
 ################################################################################
 add_project_arguments(['-fomit-frame-pointer', '-D_GNU_SOURCE',
                        '-include', 'config-host.h'], language : 'c')
+incdir = include_directories(['ccan'])
 
 ################################################################################
 sources = [
@@ -79,4 +111,5 @@ executable(
     'nvme',
     sources,
     dependencies: [ libnvme_dep, libuuid, json_c ],
+    include_directories: incdir,
 )

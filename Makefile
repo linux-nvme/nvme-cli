@@ -22,6 +22,9 @@ LIBNVMEDIR = libnvme/
 LDFLAGS ?=
 LIB_DEPENDS =
 
+CCANDIR=ccan/
+override CFLAGS += -I$(CCANDIR)
+
 ifeq ($(LIBUUID),0)
 	override LDFLAGS += -luuid
 	override CFLAGS += -DLIBUUID
@@ -113,16 +116,22 @@ PLUGIN_OBJS :=					\
 libnvme:
 	$(MAKE) -C $(LIBNVMEDIR)
 
+$(CCANDIR)config.h: $(CCANDIR)tools/configurator/configurator
+	$< > $@
+
+$(CCANDIR)tools/configurator/configurator: $(CCANDIR)tools/configurator/configurator.c
+	$(QUIET_CC)$(CC) -D_GNU_SOURCE $< -o $@
+
 nvme: nvme.o $(LIBNVME_DEPS) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $(NVME) $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) $(LDFLAGS)
 
 verify-no-dep: nvme.c nvme.h $(OBJS) $(UTIL_OBJS) NVME-VERSION-FILE
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) $< -o $@ $(OBJS) $(UTIL_OBJS) $(LDFLAGS)
 
-nvme.o: nvme.c nvme.h nvme-print.h util/argconfig.h util/suffix.h fabrics.h
+nvme.o: nvme.c nvme.h nvme-print.h util/argconfig.h util/suffix.h fabrics.h $(CCANDIR)config.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -c $<
 
-%.o: %.c
+%.o: %.c $(CCANDIR)config.h
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) $(INC) -o $@ -c $<
 
 doc: $(NVME)
@@ -137,6 +146,8 @@ clean:
 	$(RM) $(NVME) nvme.o $(OBJS) $(PLUGIN_OBJS) $(UTIL_OBJS) *~ a.out NVME-VERSION-FILE *.tar* nvme.spec version control nvme-*.deb 70-nvmf-autoconnect.conf
 	$(MAKE) -C Documentation clean
 	-$(MAKE) -C libnvme clean
+	$(RM) $(CCANDIR)/config.h
+	$(RM) $(CCANDIR)/tools/configurator/configurator
 	$(RM) tests/*.pyc
 	$(RM) verify-no-dep
 

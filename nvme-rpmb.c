@@ -27,6 +27,7 @@
 #include <linux/socket.h>
 #include <limits.h>
 
+#include "common.h"
 #include "nvme.h"
 #include "libnvme.h"
 

@@ -2285,25 +2285,6 @@ static void nvme_show_registers_pmrmscu(uint32_t pmrmscu)
 		pmrmscu);
 }
 
-static inline uint32_t mmio_read32(void *addr)
-{
-	__le32 *p = addr;
-
-	return le32_to_cpu(*p);
-}
-
-/* Access 64-bit registers as 2 32-bit; Some devices fail 64-bit MMIO. */
-static inline __u64 mmio_read64(void *addr)
-{
-	const volatile __u32 *p = addr;
-	__u32 low, high;
-
-	low = le32_to_cpu(*p);
-	high = le32_to_cpu(*(p + 1));
-
-	return ((__u64) high << 32) | low;
-}
-
 static void json_ctrl_registers(void *bar)
 {
 	uint64_t cap, asq, acq, bpmbl, cmbmsc;

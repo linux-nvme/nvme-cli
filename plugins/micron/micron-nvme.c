@@ -9,6 +9,7 @@
 #include <string.h>
 #include <libgen.h>
 #include <sys/stat.h>
+#include "common.h"
 #include "nvme.h"
 #include "libnvme.h"
 #include <limits.h>

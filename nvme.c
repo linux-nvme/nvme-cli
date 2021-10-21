@@ -587,7 +587,7 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 		if (!bar) {
 			goto close_fd;
 		}
-		cap_value = nvme_mmio_read64(bar + NVME_REG_CAP);
+		cap_value = mmio_read64(bar + NVME_REG_CAP);
 		munmap(bar, getpagesize());
 
 		nvme_command_set_supported = (cap_value & (1UL << 37)) != 0;
