@@ -28,7 +28,7 @@ libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
 
 # Check for libuuid availability
 libuuid = dependency('uuid', required: true)
-conf.set('LIBUUID', libuuid.found(), description: 'Is libuuid required?')
+conf.set('CONFIG_LIBUUID', libuuid.found(), description: 'Is libuuid required?')
 
 # Check for libjson-c availability
 json_c = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c'])
@@ -73,7 +73,7 @@ conf.set10(
 )
 
 configure_file(
-    output: 'config-host.h',
+    output: 'config.h',
     configuration: conf
 )
 
@@ -90,7 +90,7 @@ configure_file(
 
 ################################################################################
 add_project_arguments(['-fomit-frame-pointer', '-D_GNU_SOURCE',
-                       '-include', 'config-host.h'], language : 'c')
+                       '-include', 'config.h'], language : 'c')
 incdir = include_directories(['ccan'])
 
 ################################################################################

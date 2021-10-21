@@ -27,7 +27,7 @@ override CFLAGS += -I$(CCANDIR)
 
 ifeq ($(LIBUUID),0)
 	override LDFLAGS += -luuid
-	override CFLAGS += -DLIBUUID
+	override CFLAGS += -DCONFIG_LIBUUID
 	override LIB_DEPENDS += uuid
 endif
 
