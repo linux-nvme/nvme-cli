@@ -854,6 +854,16 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name);
 void nvme_rescan_ctrl(nvme_ctrl_t c);
 
 /**
+ * nvme_init_ctrl() - Initialize control for an existing nvme device.
+ * @h: host
+ * @c: ctrl
+ * @instance: Instance number (e.g. 1 for nvme1)
+ *
+ * Return: The ioctl() return code. Typically 0 on success.
+ */
+int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance);
+
+/**
  * nvme_free_ctrl() -
  * @c:
  */

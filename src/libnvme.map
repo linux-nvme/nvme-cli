@@ -143,6 +143,7 @@
 		nvme_identify_secondary_ctrl_list;
 		nvme_identify_uuid;
 		nvme_init_copy_range;
+		nvme_init_ctrl;
 		nvme_init_ctrl_list;
 		nvme_init_dsm_range;
 		nvme_init_id_ns;
