@@ -25,10 +25,12 @@
 #include <netdb.h>
 #include <net/if.h>
 
+#include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
 #include <ccan/array_size/array_size.h>
 
 #include "fabrics.h"
+#include "linux.h"
 #include "ioctl.h"
 #include "util.h"
 #include "log.h"

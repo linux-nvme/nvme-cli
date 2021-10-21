@@ -12,7 +12,7 @@ libdir ?= $(prefix)/lib
 
 CCANDIR=../ccan/
 
-CFLAGS ?= -g -fomit-frame-pointer -O2 -I/usr/include -Invme/ -I$(CCANDIR) -I.. -include ../config.h -D_GNU_SOURCE
+CFLAGS ?= -g -fomit-frame-pointer -O2 -I/usr/include -Invme/ -I$(CCANDIR) -include ../config-host.h -D_GNU_SOURCE
 override CFLAGS += -Wall -fPIC
 SO_CFLAGS=-shared $(CFLAGS)
 L_CFLAGS=$(CFLAGS)
@@ -36,7 +36,7 @@ include ../Makefile.quiet
 
 all: $(all_targets)
 
-$(CCANDIR)ccan-config.h: $(CCANDIR)tools/configurator/configurator
+$(CCANDIR)config.h: $(CCANDIR)tools/configurator/configurator
 	$< > $@
 $(CCANDIR)tools/configurator/configurator: CFLAGS = -D_GNU_SOURCE
 
@@ -45,11 +45,11 @@ libccan_srcs := $(wildcard $(CCANDIR)ccan/*/*.c)
 libccan_objs := $(patsubst %.c,%.ol,$(libccan_srcs))
 libccan_sobjs := $(patsubst %.c,%.os,$(libccan_srcs))
 
-$(libccan_objs) $(libccan_sobjs): $(libccan_headers) $(CCANDIR)ccan-config.h
+$(libccan_objs) $(libccan_sobjs): $(libccan_headers) $(CCANDIR)config.h
 
 libnvme_priv := nvme/private.h
-libnvme_api := libnvme.h nvme/types.h nvme/ioctl.h nvme/filters.h nvme/tree.h nvme/util.h nvme/fabrics.h nvme/log.h
-libnvme_srcs := nvme/ioctl.c nvme/filters.c nvme/fabrics.c nvme/util.c nvme/tree.c nvme/log.c nvme/cleanup.c
+libnvme_api := libnvme.h nvme/types.h nvme/linux.h nvme/ioctl.h nvme/filters.h nvme/tree.h nvme/util.h nvme/fabrics.h nvme/log.h
+libnvme_srcs := nvme/linux.c nvme/ioctl.c nvme/filters.c nvme/fabrics.c nvme/util.c nvme/tree.c nvme/log.c nvme/cleanup.c
 ifeq ($(CONFIG_JSONC),y)
 override LDFLAGS += $(shell pkg-config --libs json-c)
 override CFLAGS += $(shell pkg-config --cflags json-c)
@@ -87,10 +87,10 @@ ifeq ($(ENABLE_SHARED),1)
 endif
 
 $(libnvme_objs): $(libnvme_api) $(libnvme_private)
-$(libccan_objs): $(libccan_headers) $(CCANDIR)ccan-config.h
+$(libccan_objs): $(libccan_headers) $(CCANDIR)config.h
 
 clean:
 	rm -f $(all_targets) $(libnvme_objs) $(libnvme_sobjs) $(libccan_objs) $(libccan_sobjs) $(soname).new
-	rm -f $(CCANDIR)ccan-config.h
+	rm -f $(CCANDIR)config.h
 	rm -f $(CCANDIR)tools/configurator/configurator
 	rm -f *.so* *.a *.o

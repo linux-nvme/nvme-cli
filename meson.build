@@ -108,87 +108,8 @@ conf.set('CONFIG_LIBUUID', libuuid.found(), description: 'Is libuuid required?')
 json_c = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c'])
 conf.set('CONFIG_JSONC', json_c.found(), description: 'Is json-c required?')
 
-# local (cross-compilable) implementations of ccan configure steps
-conf.set10(
-    'HAVE_BUILTIN_TYPES_COMPATIBLE_P',
-    cc.compiles(
-        '''int main(void) {
-               return __builtin_types_compatible_p(int, long);
-           }
-        ''',
-        name: '__builtin_type_compatible_p'
-    ),
-    description: 'Is __builtin_types_compatible_p available?'
-)
-conf.set10(
-    'HAVE_TYPEOF',
-    cc.compiles(
-        '''int main(void) {
-                int a = 1;
-                typeof(a) b;
-                b = a;
-           }
-        ''',
-        name: 'typeof'
-    ),
-    description: 'Is typeof available?'
-)
-conf.set10(
-    'HAVE_BYTESWAP_H',
-    cc.compiles(
-        '''#include <byteswap.h>''',
-        name: 'byteswap.h'
-    ),
-    description: 'Is byteswap.h include-able?'
-)
-conf.set10(
-    'HAVE_BSWAP64',
-    cc.links(
-        '''#include <byteswap.h>
-            int main(void) {
-                return bswap_64(0);
-            }
-        ''',
-        name: 'bswap64'
-    ),
-    description: 'Is bswap_64 available?'
-)
-conf.set10(
-    'HAVE_LITTLE_ENDIAN',
-    build_machine.endian() == 'little',
-    description: 'Building for little-endian'
-)
-conf.set10(
-    'HAVE_BIG_ENDIAN',
-    build_machine.endian() == 'big',
-    description: 'Building for big-endian'
-)
-conf.set10(
-    'HAVE_STATEMENT_EXPR',
-    cc.compiles(
-        '''int main(int argc, char **argv) {
-               return ({ int x = argc; x == 1; });
-           }
-        ''',
-        name: 'statement-expr'
-    ),
-    description: 'Can we use a statement as an expression?'
-)
-conf.set10(
-    'HAVE_ISBLANK',
-    cc.links(
-        '''#include <ctype.h>
-           int main(int argc, char **argv) {
-               return isblank(argv[0][0]);
-           }
-        ''',
-        name: 'isblank'
-    ),
-    description: 'Is isblank() available?'
-)
-
-config_h = configure_file(
-    output: 'config.h',
+config_host_h = configure_file(
+    output: 'config-host.h',
     configuration: conf
 )
 
@@ -204,10 +125,11 @@ configure_file(
 )
 
 ################################################################################
-add_project_arguments(['-fomit-frame-pointer', '-D_GNU_SOURCE', '-include', 'config.h'], language : 'c')
+add_project_arguments(['-fomit-frame-pointer', '-D_GNU_SOURCE', '-include', 'config-host.h'], language : 'c')
 incdir = include_directories(['.', 'ccan', 'src'])
 
 ################################################################################
+subdir('ccan')
 subdir('src')
 subdir('pynvme')
 subdir('test')

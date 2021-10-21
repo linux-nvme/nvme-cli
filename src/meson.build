@@ -10,10 +10,12 @@ sources = [
     'nvme/fabrics.c',
     'nvme/filters.c',
     'nvme/ioctl.c',
+    'nvme/linux.c',
     'nvme/log.c',
     'nvme/tree.c',
     'nvme/util.c',
-    config_h,
+    ccan_config_h,
+    config_host_h,
 ]
 
 if conf.get('CONFIG_JSONC')

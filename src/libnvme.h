@@ -15,6 +15,7 @@ extern "C" {
 #endif
 
 #include "nvme/types.h"
+#include "nvme/linux.h"
 #include "nvme/ioctl.h"
 #include "nvme/fabrics.h"
 #include "nvme/filters.h"

@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 
 #include <ccan/build_assert/build_assert.h>
+#include <ccan/endian/endian.h>
 
 #include "ioctl.h"
 #include "util.h"
