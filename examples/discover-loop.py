@@ -16,10 +16,10 @@ License for the specific language governing permissions and limitations
 under the License.
 '''
 
-import libnvme
-r = libnvme.nvme_root()
-h = libnvme.nvme_host(r)
-c = libnvme.nvme_ctrl('nqn.2014-08.org.nvmexpress.discovery','loop')
+from libnvme import nvme
+r = nvme.root()
+h = nvme.host(r)
+c = nvme.ctrl(nvme.NVME_DISC_SUBSYS_NAME, 'loop')
 try:
     c.connect(h)
 except:
