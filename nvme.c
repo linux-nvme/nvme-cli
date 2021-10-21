@@ -504,29 +504,27 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
-static int collect_effects_log(int fd, enum nvme_csi csi, nvme_effects_log_node_t **node, int flags)
+void collect_effects_log(int fd, enum nvme_csi csi, struct list_head *list, int flags)
 {
 	int err;
-	nvme_effects_log_node_t *n;
-
-	n = malloc(sizeof(nvme_effects_log_node_t));
-	if (!n) {
+	nvme_effects_log_node_t *node = malloc(sizeof(nvme_effects_log_node_t));
+	if (!node) {
 		perror("Failed to allocate memory");
-		return -1;
+		return;
 	}
-	n->csi = csi;
+	node->csi = csi;
 
-	err = nvme_get_log_cmd_effects(fd, csi, &n->effects);
+	err = nvme_get_log_cmd_effects(fd, csi, &node->effects);
 	if (!err) {
-		*node = n;
-		return 0;
-	} else if (err > 0)
+		list_add(list, &node->node);
+		return;
+	}
+	else if (err > 0)
 		nvme_show_status(err);
 	else
 		perror("effects log page");
 
-	free(n);
-	return -1;
+	free(node);
 }
 
 static int get_effects_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -535,8 +533,8 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	const char *raw = "show log in binary format";
 	const char *human_readable = "show log in readable format";
 	const char *csi = "";
-	nvme_effects_log_node_t *nodes[3] = { NULL };
-	int idx = 0;
+	struct list_head log_pages;
+	nvme_effects_log_node_t *node;
 
 	void *bar = NULL;
 
@@ -575,6 +573,8 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
+	list_head_init(&log_pages);
+
 	if (cfg.csi < 0) {
 		nvme_root_t nvme_root;
 		uint64_t cap_value;
@@ -593,26 +593,29 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 		nvme_command_set_supported = (cap_value & (1UL << 37)) != 0;
 		other_command_sets_supported = (cap_value & (1UL << (37+6))) != 0;
 
+
 		if (nvme_command_set_supported) {
-			if (collect_effects_log(fd, NVME_CSI_NVM, &nodes[idx], flags) == 0)
-				idx++;
+			collect_effects_log(fd, NVME_CSI_NVM, &log_pages, flags);
 		}
 
 		if (other_command_sets_supported) {
-			collect_effects_log(fd, NVME_CSI_ZNS, &nodes[idx], flags);
+			collect_effects_log(fd, NVME_CSI_ZNS, &log_pages, flags);
 		}
 
-		nvme_print_effects_log_pages(nodes, flags);
+		nvme_print_effects_log_pages(&log_pages, flags);
+
 	}
 	else {
-		collect_effects_log(fd, cfg.csi, &nodes[0], flags);
-		nvme_print_effects_log_pages(nodes, flags);
+		collect_effects_log(fd, cfg.csi, &log_pages, flags);
+		nvme_print_effects_log_pages(&log_pages, flags);
 	}
 
-	for (idx = 0; nodes[idx]; idx++)
-		free(nodes[idx]);
 
 close_fd:
+	while ((node = list_pop(&log_pages, nvme_effects_log_node_t, node))) {
+		free(node);
+	}
+
 	close(fd);
 ret:
 	return nvme_status_to_errno(err, false);

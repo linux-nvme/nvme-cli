@@ -846,18 +846,16 @@ struct json_object* json_effects_log(enum nvme_csi csi,
 	return root;
 }
 
-void json_effects_log_list(nvme_effects_log_node_t *nodes[]) {
+void json_effects_log_list(struct list_head *list) {
 	struct json_object *json_list;
 	nvme_effects_log_node_t *node;
-	int idx = 0;
 
 	json_list = json_create_array();
 
-	while ((node = nodes[idx])) {
+	list_for_each(list, node, node) {
 		struct json_object *json_page =
 			json_effects_log(node->csi, &node->effects);
 		json_array_add_value_object(json_list, json_page);
-		idx++;
 	}
 
 	json_print_object(json_list, NULL);
@@ -4796,23 +4794,20 @@ void nvme_print_effects_log_page(enum nvme_csi csi, struct nvme_cmd_effects_log 
 	nvme_print_effects_log_segment(0, 0x80, 0x100, effects, "Vendor Specific I/O Commands", human);
 }
 
-void nvme_print_effects_log_pages(nvme_effects_log_node_t *nodes[],
+void nvme_print_effects_log_pages(struct list_head *list,
 			   int flags)
 {
-	int idx = 0;
-
 	if (flags & JSON)
-		return json_effects_log_list(nodes);
+		return json_effects_log_list(list);
 
 	nvme_effects_log_node_t *node;
-	while ((node = nodes[idx])) {
+	list_for_each(list, node, node) {
 		if (flags & BINARY) {
 			d_raw((unsigned char *)&node->effects, sizeof(node->effects));
 		}
 		else {
 			nvme_print_effects_log_page(node->csi, &node->effects, flags);
 		}
-		idx++;
 	}
 }
 
