@@ -62,6 +62,7 @@ install_headers([
         'nvme/fabrics.h',
         'nvme/filters.h',
         'nvme/ioctl.h',
+        'nvme/linux.h',
         'nvme/log.h',
         'nvme/tree.h',
         'nvme/types.h',
