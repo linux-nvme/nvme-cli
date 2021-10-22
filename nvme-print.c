@@ -173,6 +173,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns)
 	json_object_add_value_int(root, "nmic", ns->nmic);
 	json_object_add_value_int(root, "rescap", ns->rescap);
 	json_object_add_value_int(root, "fpi", ns->fpi);
+	json_object_add_value_int(root, "dlfeat", ns->dlfeat);
 	json_object_add_value_int(root, "nawun", le16_to_cpu(ns->nawun));
 	json_object_add_value_int(root, "nawupf", le16_to_cpu(ns->nawupf));
 	json_object_add_value_int(root, "nacwu", le16_to_cpu(ns->nacwu));
