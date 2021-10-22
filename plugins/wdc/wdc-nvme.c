@@ -4867,7 +4867,7 @@ static int wdc_print_c0_eol_log(void *data, int fmt)
 	return 0;
 }
 
-static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
+static int wdc_get_c0_log_page(int fd, char *format, int uuid_index, __u32 namespace_id)
 {
 	int ret = 0;
 	int fmt = -1;
@@ -4911,8 +4911,15 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 					return -1;
 				}
 
+				if (namespace_id == NVME_NSID_ALL) {
+					ret = namespace_id = nvme_get_nsid(fd);
+					if (ret < 0) {
+						namespace_id = NVME_NSID_ALL;
+					}
+				}
+
 				/* Get the 0xC0 log data */
-				ret = nvme_get_log14(fd, 0xFFFFFFFF, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE,
+				ret = nvme_get_log14(fd, namespace_id, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE,
 						NVME_NO_LOG_LSP, 0, 0, false, uuid_index, 0, false, WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
 
 				if (strcmp(format, "json"))
@@ -4959,7 +4966,7 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 				}
 
 				/* Get the 0xC0 log data */
-				ret = nvme_get_log14(fd, 0xFFFFFFFF, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE,
+				ret = nvme_get_log14(fd, NVME_NSID_ALL, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE,
 						NVME_NO_LOG_LSP, 0, 0, false, uuid_index, 0, false, WDC_NVME_EOL_STATUS_LOG_LEN, data);
 
 				if (strcmp(format, "json"))
@@ -4986,7 +4993,7 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 			}
 
 			/* Get the 0xC0 log data */
-			ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE,
+			ret = nvme_get_log(fd, NVME_NSID_ALL, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE,
 					   false, NVME_NO_LOG_LSP, WDC_NVME_EOL_STATUS_LOG_LEN, data);
 
 			if (strcmp(format, "json"))
@@ -5012,7 +5019,7 @@ static int wdc_get_c0_log_page(int fd, char *format, int uuid_index)
 		}
 
 		/* Get the 0xC0 log data */
-		ret = nvme_get_log(fd, 0xFFFFFFFF, WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_OPCODE,
+		ret = nvme_get_log(fd, NVME_NSID_ALL, WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_OPCODE,
 					false, NVME_NO_LOG_LSP, WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
 
 		if (strcmp(format, "json"))
@@ -5443,6 +5450,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 	int fd;
 	const char *log_page_version = "Log Page Version: 0 = vendor, 1 = WDC";
 	const char *log_page_mask = "Log Page Mask, comma separated list: 0xC0, 0xC1, 0xCA, 0xD0";
+	const char *namespace_id = "desired namespace id";
 	int ret = 0;
 	int uuid_index = 0;
 	int page_mask = 0, num, i;
@@ -5454,6 +5462,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 		char *output_format;
 		__u8  log_page_version;
 		char *log_page_mask;
+		__u32 namespace_id;
 	};
 
 	struct config cfg = {
@@ -5461,6 +5470,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 		.output_format = "normal",
 		.log_page_version   = 0,
 		.log_page_mask   = "",
+		.namespace_id = NVME_NSID_ALL,
 	};
 
 	OPT_ARGS(opts) = {
@@ -5468,6 +5478,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 		OPT_FMT("output-format",      'o', &cfg.output_format,    "Output Format: normal|json"),
 		OPT_BYTE("log-page-version",  'l', &cfg.log_page_version, log_page_version),
 		OPT_LIST("log-page-mask",     'p', &cfg.log_page_mask,    log_page_mask),
+		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,     namespace_id),
 		OPT_END()
 	};
 
@@ -5530,7 +5541,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 	if (((capabilities & WDC_DRIVE_CAP_C0_LOG_PAGE) == WDC_DRIVE_CAP_C0_LOG_PAGE) &&
 		(page_mask & WDC_C0_PAGE_MASK))	{
 		/* Get 0xC0 log page if possible. */
-		ret = wdc_get_c0_log_page(fd, cfg.output_format, uuid_index);
+		ret = wdc_get_c0_log_page(fd, cfg.output_format, uuid_index, cfg.namespace_id);
 		if (ret)
 			fprintf(stderr, "ERROR : WDC : Failure reading the C0 Log Page, ret = %d\n", ret);
 	}
