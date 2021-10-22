@@ -34,6 +34,7 @@
 		nvme_ctrl_next_ns;
 		nvme_ctrl_next_path;
 		nvme_ctrl_reset;
+		nvme_ctrl_set_persistent;
 		nvme_ctrls_filter;
 		nvme_default_host;
 		nvme_dev_self_test;
@@ -55,7 +56,9 @@
 		nvme_flush;
 		nvme_format_nvm;
 		nvme_free_ctrl;
+		nvme_free_host;
 		nvme_free_ns;
+		nvme_free_subsystem;
 		nvme_free_tree;
 		nvme_fw_commit;
 		nvme_fw_download;
@@ -129,6 +132,7 @@
 		nvme_get_telemetry_log;
 		nvme_host_get_hostid;
 		nvme_host_get_hostnqn;
+		nvme_host_get_root;
 		nvme_identify;
 		nvme_identify_active_ns_list;
 		nvme_identify_allocated_ns;
@@ -151,7 +155,9 @@
 		nvme_io_passthru64;
 		nvme_io_passthru;
 		nvme_log_level;
+		nvme_log_message;
 		nvme_lookup_host;
+		nvme_lookup_subsystem;
 		nvme_namespace_attach_ctrls;
 		nvme_namespace_detach_ctrls;
 		nvme_namespace_filter;
@@ -202,6 +208,7 @@
 		nvme_paths_filter;
 		nvme_read;
 		nvme_refresh_topology;
+		nvme_rescan_ctrl;
 		nvme_reset_topology;
 		nvme_resv_acquire;
 		nvme_resv_register;
@@ -267,10 +274,12 @@
 		nvme_subsystem_get_nqn;
 		nvme_subsystem_get_nqn;
 		nvme_subsystem_get_sysfs_dir;
+		nvme_subsystem_lookup_namespace;
 		nvme_subsystem_next_ctrl;
 		nvme_subsystem_next_ns;
 		nvme_subsystem_reset;
 		nvme_unlink_ctrl;
+		nvme_update_config;
 		nvme_verify;
 		nvme_virtual_mgmt;
 		nvme_write;
