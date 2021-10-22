@@ -5,6 +5,13 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
+
+sources += files([
+    'ccan/list/list.c',
+    'ccan/str/debug.c',
+    'ccan/str/str.c',
+])
+
 configurator = executable(
     'configurator',
     ['tools/configurator/configurator.c'],

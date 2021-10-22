@@ -208,6 +208,8 @@ add_project_arguments(['-fomit-frame-pointer', '-D_GNU_SOURCE', '-include', 'con
 incdir = include_directories(['.', 'ccan', 'src'])
 
 ################################################################################
+sources = []
+subdir('ccan')
 subdir('src')
 subdir('pynvme')
 subdir('test')
