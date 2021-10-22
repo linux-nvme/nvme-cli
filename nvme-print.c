@@ -2929,7 +2929,7 @@ static void nvme_show_id_ctrl_sanicap(__le32 ctrl_sanicap)
 static void nvme_show_id_ctrl_anacap(__u8 anacap)
 {
 	__u8 nz = (anacap & 0x80) >> 7;
-	__u8 grpid_change = (anacap & 0x40) >> 6;
+	__u8 grpid_static = (anacap & 0x40) >> 6;
 	__u8 rsvd = (anacap & 0x20) >> 5;
 	__u8 ana_change = (anacap & 0x10) >> 4;
 	__u8 ana_persist_loss = (anacap & 0x08) >> 3;
@@ -2940,7 +2940,7 @@ static void nvme_show_id_ctrl_anacap(__u8 anacap)
 	printf("  [7:7] : %#x\tNon-zero group ID %sSupported\n",
 			nz, nz ? "" : "Not ");
 	printf("  [6:6] : %#x\tGroup ID does %schange\n",
-			grpid_change, grpid_change ? "" : "not ");
+			grpid_static, grpid_static ? "not " : "");
 	if (rsvd)
 		printf(" [5:5] : %#x\tReserved\n", rsvd);
 	printf("  [4:4] : %#x\tANA Change state %sSupported\n",
