@@ -8,8 +8,11 @@ nvme-wdc-vs-smart-add-log - Send NVMe WDC vs-smart-add-log Vendor Unique Command
 SYNOPSIS
 --------
 [verse]
-'nvme wdc vs-smart-add-log' <device> [--interval=<NUM>, -i <NUM>] [--output-format=<normal|json> -o <normal|json>]
-    [--log-page-version=<NUM>, -l <NUM>] [--log-page-mask=<LIST>, -p <LIST>] 
+'nvme wdc vs-smart-add-log' <device> [--interval=<NUM>, -i <NUM>] 
+			[--output-format=<normal|json> -o <normal|json>]
+			[--log-page-version=<NUM>, -l <NUM>] 
+			[--log-page-mask=<LIST>, -p <LIST>] 
+			[--namespace-id=<nsid> | -n <nsid>]
 
 DESCRIPTION
 -----------
@@ -48,6 +51,13 @@ OPTIONS
     The possible values are 0xc0, 0xc1, 0xca, 0xd0.  
     Note: Not all pages are supported on all drives.  
     The default is to display all supported log pages.  
+
+-n <nsid>::
+--namespace-id=<nsid>::
+	Sets the command's nsid value to the given nsid. Defaults to
+	0xffffffff if not given. This option may not affect anything
+	depending on the log page, which may or may not be specific to
+	a namespace.
 
 Valid Interval values and description :-
 
