@@ -749,8 +749,11 @@ nvme-wdc-vs-smart-add-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme wdc vs-smart-add-log</em> &lt;device&gt; [--interval=&lt;NUM&gt;, -i &lt;NUM&gt;] [--output-format=&lt;normal|json&gt; -o &lt;normal|json&gt;]
-    [--log-page-version=&lt;NUM&gt;, -l &lt;NUM&gt;] [--log-page-mask=&lt;LIST&gt;, -p &lt;LIST&gt;]</pre>
+<pre class="content"><em>nvme wdc vs-smart-add-log</em> &lt;device&gt; [--interval=&lt;NUM&gt;, -i &lt;NUM&gt;]
+                        [--output-format=&lt;normal|json&gt; -o &lt;normal|json&gt;]
+                        [--log-page-version=&lt;NUM&gt;, -l &lt;NUM&gt;]
+                        [--log-page-mask=&lt;LIST&gt;, -p &lt;LIST&gt;]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -820,6 +823,20 @@ Results for any other device are undefined.</p></div>
     The possible values are 0xc0, 0xc1, 0xca, 0xd0.
     Note: Not all pages are supported on all drives.
     The default is to display all supported log pages.
+</p>
+</dd>
+<dt class="hdlist1">
+-n &lt;nsid&gt;
+</dt>
+<dt class="hdlist1">
+--namespace-id=&lt;nsid&gt;
+</dt>
+<dd>
+<p>
+        Sets the command&#8217;s nsid value to the given nsid. Defaults to
+        0xffffffff if not given. This option may not affect anything
+        depending on the log page, which may or may not be specific to
+        a namespace.
 </p>
 </dd>
 </dl></div>
@@ -910,7 +927,7 @@ Has the program issue WDC vs-smart-add-log Vendor Unique Command for 0xC0 and 0x
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2020-08-06 15:54:37 PDT
+ 2021-10-22 12:29:47 CDT
 </div>
 </div>
 </body>
