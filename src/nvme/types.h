@@ -3916,7 +3916,7 @@ enum nvme_mi_css {
 };
 
 /**
- * struct nvme_mi_ctrl_heal_status -
+ * struct nvme_mi_ctrl_health_status -
  * @ctlid:
  * @csts:
  * @ctemp:
@@ -3924,7 +3924,7 @@ enum nvme_mi_css {
  * @spare:
  * @cwarn:
  */
-struct nvme_mi_ctrl_heal_status {
+struct nvme_mi_ctrl_health_status {
 	__le16	ctlid;
 	__le16	csts;
 	__le16	ctemp;
