@@ -81,13 +81,19 @@
 #define WDC_NVME_SN520_DEV_ID				0x5003
 #define WDC_NVME_SN520_DEV_ID_1				0x5004
 #define WDC_NVME_SN520_DEV_ID_2				0x5005
+#define WDC_NVME_SN530_DEV_ID				0x5009
 #define WDC_NVME_SN720_DEV_ID				0x5002
 #define WDC_NVME_SN730A_DEV_ID				0x5006
 #define WDC_NVME_SN730B_DEV_ID				0x3714
 #define WDC_NVME_SN730B_DEV_ID_1			0x3734
+#define WDC_NVME_SN740_DEV_ID				0x5015
+#define WDC_NVME_SN740_DEV_ID_1 			0x5016
+#define WDC_NVME_SN740_DEV_ID_2 			0x5017
+#define WDC_NVME_SN740_DEV_ID_3 			0x5025
 #define WDC_NVME_SN340_DEV_ID				0x500d
 #define WDC_NVME_ZN350_DEV_ID				0x5010
 #define WDC_NVME_ZN350_DEV_ID_1 			0x5018
+#define WDC_NVME_SN810_DEV_ID				0x5011
 
 #define WDC_DRIVE_CAP_CAP_DIAG				0x0000000000000001
 #define WDC_DRIVE_CAP_INTERNAL_LOG			0x0000000000000002
@@ -1317,6 +1323,8 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 		case WDC_NVME_SN520_DEV_ID_1:
 		/* FALLTHRU */
 		case WDC_NVME_SN520_DEV_ID_2:
+		case WDC_NVME_SN530_DEV_ID:
+		case WDC_NVME_SN810_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA;
 			break;
 		case WDC_NVME_SN720_DEV_ID:
@@ -1326,6 +1334,10 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 			capabilities =  WDC_DRIVE_CAP_DUI | WDC_DRIVE_CAP_NAND_STATS | WDC_DRIVE_CAP_INFO_2
 			| WDC_DRIVE_CAP_TEMP_STATS | WDC_DRIVE_CAP_VUC_CLEAR_PCIE | WDC_DRIVE_CAP_PCIE_STATS;
 			break;
+                case WDC_NVME_SN740_DEV_ID:
+                case WDC_NVME_SN740_DEV_ID_1:
+                case WDC_NVME_SN740_DEV_ID_2:
+                case WDC_NVME_SN740_DEV_ID_3:
 		case WDC_NVME_SN340_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI;
 			break;
