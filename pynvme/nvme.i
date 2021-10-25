@@ -498,6 +498,11 @@ struct nvme_ns {
   ~nvme_ctrl() {
     nvme_free_ctrl($self);
   }
+
+  bool init(struct nvme_host *h, int instance) {
+      return nvme_init_ctrl(h, $self, instance) == 0;
+  }
+
   void connect(struct nvme_host *h, struct nvme_fabrics_config *cfg = NULL) {
     int ret;
     const char *dev;
