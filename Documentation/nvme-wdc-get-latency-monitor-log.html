@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.10" />
-<title>nvme-wdc-vs-smart-add-log(1)</title>
+<title>nvme-wdc-get-latency-monitor-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -735,12 +735,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-wdc-vs-smart-add-log(1) Manual Page
+nvme-wdc-get-latency-monitor-log(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-wdc-vs-smart-add-log -
-   Send NVMe WDC vs-smart-add-log Vendor Unique Command, return result
+<p>nvme-wdc-get-latency-monitor-log -
+   Display latency monitor log page data in human readable format
 </p>
 </div>
 </div>
@@ -749,11 +749,7 @@ nvme-wdc-vs-smart-add-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme wdc vs-smart-add-log</em> &lt;device&gt; [--interval=&lt;NUM&gt;, -i &lt;NUM&gt;]
-                        [--output-format=&lt;normal|json&gt; -o &lt;normal|json&gt;]
-                        [--log-page-version=&lt;NUM&gt;, -l &lt;NUM&gt;]
-                        [--log-page-mask=&lt;LIST&gt;, -p &lt;LIST&gt;]
-                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
+<pre class="content"><em>nvme wdc get-latency-monitor-log</em> &lt;device&gt; [--output-format=&lt;normal|json&gt; -o &lt;normal|json&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -761,11 +757,9 @@ nvme-wdc-vs-smart-add-log(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, send a Vendor Unique WDC vs-smart-add-log command and
-provide the additional smart log.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>This will only work on WDC devices supporting this feature.
+<div class="paragraph"><p>For the NVMe device given, latency monitor log page data.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory NVMe character device (ex: /dev/nvme0).</p></div>
+<div class="paragraph"><p>This will only work on WDC devices supporting this log page.
 Results for any other device are undefined.</p></div>
 <div class="paragraph"><p>On success it returns 0, error code otherwise.</p></div>
 </div>
@@ -775,18 +769,6 @@ Results for any other device are undefined.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--i &lt;NUM&gt;
-</dt>
-<dt class="hdlist1">
---interval=&lt;NUM&gt;
-</dt>
-<dd>
-<p>
-        Return the statistics from specific interval, defaults to 14.  This parameter is only valid for the 0xC1 log page
-        and ignored for all other log pages.
-</p>
-</dd>
-<dt class="hdlist1">
 -o &lt;format&gt;
 </dt>
 <dt class="hdlist1">
@@ -794,92 +776,11 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-        Set the reporting format to <em>normal</em>, or
-        <em>json</em>. Only one output format can be used at a time.
-        Default is normal.
-</p>
-</dd>
-<dt class="hdlist1">
--l &lt;NUM&gt;
-</dt>
-<dt class="hdlist1">
---log-page-version=&lt;NUM&gt;
-</dt>
-<dd>
-<p>
-    Log Page Version: 0 = vendor, 1 = WDC.  This parameter is only valid for the 0xC0 log page and ignored for all
-    other log pages.
-</p>
-</dd>
-<dt class="hdlist1">
--p &lt;LIST&gt;
-</dt>
-<dt class="hdlist1">
---log-page-mask=&lt;LIST&gt;
-</dt>
-<dd>
-<p>
-    Supply a comma separated list of desired log pages to display.
-    The possible values are 0xc0, 0xc1, 0xca, 0xd0.
-    Note: Not all pages are supported on all drives.
-    The default is to display all supported log pages.
-</p>
-</dd>
-<dt class="hdlist1">
--n &lt;nsid&gt;
-</dt>
-<dt class="hdlist1">
---namespace-id=&lt;nsid&gt;
-</dt>
-<dd>
-<p>
-        Sets the command&#8217;s nsid value to the given nsid. Defaults to
-        0xffffffff if not given. This option may not affect anything
-        depending on the log page, which may or may not be specific to
-        a namespace.
+        Set the reporting format to <em>normal</em> or <em>json</em>. Only one output format
+        can be used at a time. The default is normal.
 </p>
 </dd>
 </dl></div>
-<div class="paragraph"><p>Valid Interval values and description :-</p></div>
-<div class="tableblock">
-<table rules="all"
-style="margin-left:auto; margin-right:auto;"
-width="100%"
-frame="hsides"
-cellspacing="0" cellpadding="4">
-<col width="50%" />
-<col width="50%" />
-<thead>
-<tr>
-<th align="left" valign="top">Value </th>
-<th align="left" valign="top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>1</strong></p></td>
-<td align="left" valign="top"><p class="table">Most recent five (5) minute accumulated set.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>2-12</strong></p></td>
-<td align="left" valign="top"><p class="table">Previous five (5) minute accumulated sets.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>13</strong></p></td>
-<td align="left" valign="top"><p class="table">The accumulated total of sets 1 through 12 that contain the previous hour of
-accumulated statistics.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>14</strong></p></td>
-<td align="left" valign="top"><p class="table">The statistical set accumulated since power-up.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table"><strong>15</strong></p></td>
-<td align="left" valign="top"><p class="table">The statistical set accumulated during the entire lifetime of the device.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
 </div>
 </div>
 <div class="sect1">
@@ -888,29 +789,11 @@ accumulated statistics.</p></td>
 <div class="ulist"><ul>
 <li>
 <p>
-Has the program issue WDC vs-smart-add-log Vendor Unique Command with default interval (14) :
+Displays the get latency monitor log for the device:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme wdc vs-smart-add-log /dev/nvme0</code></pre>
-</div></div>
-</li>
-<li>
-<p>
-Has the program issue WDC vs-smart-add-log Vendor Unique Command for just the 0xCA log page :
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme wdc vs-smart-add-log /dev/nvme0 -p 0xCA</code></pre>
-</div></div>
-</li>
-<li>
-<p>
-Has the program issue WDC vs-smart-add-log Vendor Unique Command for 0xC0 and 0xCA log pages :
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme wdc vs-smart-add-log /dev/nvme0 -p 0xCA,0xC0</code></pre>
+<pre><code># nvme wdc get-latency-monitor-log /dev/nvme0</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -927,7 +810,7 @@ Has the program issue WDC vs-smart-add-log Vendor Unique Command for 0xC0 and 0x
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2021-10-22 12:29:47 CDT
+ 2021-10-22 16:48:14 CDT
 </div>
 </div>
 </body>
