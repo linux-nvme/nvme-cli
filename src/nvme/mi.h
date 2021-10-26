@@ -181,4 +181,18 @@ static inline int nvme_mi_admin_identify_ctrl_list(nvme_mi_ctrl_t ctrl,
 	return nvme_mi_admin_identify(ctrl, &args);
 }
 
+/**
+ * Retreives log page data as specified by @args. On return, @args->len is
+ * updated to the amount of log data written to @args->log.
+ *
+ * This request may be implemented as multiple log page commands, in order
+ * to fit within MI message-size limits.
+ *
+ * @ctrl:	MI controller
+ * @args:	Log page request parameters
+ */
+int nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
+			       struct nvme_get_log_args *args);
+
+
 #endif /* _LIBNVME_MI_MI_H */

@@ -196,6 +196,108 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 	return 0;
 }
 
+/* retrieves a MCTP-messsage-sized chunk of log page data. offset and len are
+ * specified within the args->data area */
+static int __nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
+					const struct nvme_get_log_args *args,
+					off_t offset, size_t *lenp, bool final)
+{
+	struct nvme_mi_admin_resp_hdr resp_hdr;
+	struct nvme_mi_admin_req_hdr req_hdr;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	size_t len;
+	__u32 ndw;
+	int rc;
+
+	/* MI spec requires that the data length field is less than or equal
+	 * to 4096 */
+	len = *lenp;
+	if (!len || len > 4096 || len < 4)
+		return -EINVAL;
+
+	if (offset < 0 || offset >= len)
+		return -EINVAL;
+
+	ndw = (len >> 2) - 1;
+
+	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id, nvme_admin_get_log_page);
+	req_hdr.cdw1 = cpu_to_le32(args->nsid);
+	req_hdr.cdw10 = cpu_to_le32((ndw & 0xffff) << 16 |
+				    ((!final || args->rae) ? 1 : 0) << 15 |
+				    args->lsp << 8 |
+				    (args->lid & 0xff));
+	req_hdr.cdw11 = cpu_to_le32(args->lsi << 16 |
+				    ndw >> 16);
+	req_hdr.cdw12 = cpu_to_le32(args->lpo & 0xffffffff);
+	req_hdr.cdw13 = cpu_to_le32(args->lpo >> 32);
+	req_hdr.cdw14 = cpu_to_le32(args->csi << 24 |
+				    (args->ot ? 1 : 0) << 23 |
+				    args->uuidx);
+	req_hdr.flags = 0x1;
+	req_hdr.dlen = cpu_to_le32(len & 0xffffffff);
+	if (offset) {
+		req_hdr.flags |= 0x2;
+		req_hdr.doff = cpu_to_le32(offset);
+	}
+
+	nvme_mi_calc_req_mic(&req);
+
+	nvme_mi_admin_init_resp(&resp, &resp_hdr);
+	resp.data = args->log + offset;
+	resp.data_len = len;
+
+	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
+	*lenp = resp.data_len;
+
+	return 0;
+}
+
+int nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
+			       struct nvme_get_log_args *args)
+{
+	const size_t xfer_size = 4096;
+	off_t xfer_offset;
+	int rc = 0;
+
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+
+	for (xfer_offset = 0; xfer_offset < args->len;) {
+		size_t tmp, cur_xfer_size = xfer_size;
+		bool final;
+
+		if (xfer_offset + cur_xfer_size > args->len)
+			cur_xfer_size = args->len - xfer_offset;
+
+		tmp = cur_xfer_size;
+
+		final = xfer_offset + cur_xfer_size >= args->len;
+
+		rc = __nvme_mi_admin_get_log_page(ctrl, args, xfer_offset,
+						  &tmp, final);
+		if (rc)
+			break;
+
+		xfer_offset += tmp;
+		/* if we returned less data than expected, consider that
+		 * the end of the log page */
+		if (tmp != cur_xfer_size)
+			break;
+	}
+
+	if (!rc)
+		args->len = xfer_offset;
+
+	return rc;
+}
+
 static int nvme_mi_read_data(nvme_mi_ep_t ep, __u32 cdw0,
 			     void *data, size_t *data_len)
 {
