@@ -11,6 +11,7 @@
  */
 
 #include <assert.h>
+#include <ctype.h>
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -240,10 +241,93 @@ int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 	return 0;
 }
 
+void fhexdump(FILE *fp, const unsigned char *buf, int len)
+{
+	const int row_len = 16;
+	int i, j;
+
+	for (i = 0; i < len; i += row_len) {
+		char hbuf[row_len * strlen("00 ") + 1];
+		char cbuf[row_len + strlen("|") + 1];
+
+		for (j = 0; (j < row_len) && ((i+j) < len); j++) {
+			unsigned char c = buf[i + j];
+
+			sprintf(hbuf + j * 3, "%02x ", c);
+
+			if (!isprint(c))
+				c = '.';
+
+			sprintf(cbuf + j, "%c", c);
+		}
+
+		strcat(cbuf, "|");
+
+		fprintf(fp, "%08x  %*s |%s\n", i,
+				0 - (int)sizeof(hbuf) + 1, hbuf, cbuf);
+	}
+}
+
+void hexdump(const unsigned char *buf, int len)
+{
+	fhexdump(stdout, buf, len);
+}
+
+int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
+{
+	struct nvme_get_log_args args = { 0 };
+	struct nvme_mi_ctrl *ctrl;
+	uint8_t buf[512];
+	uint16_t ctrl_id;
+	int rc, tmp;
+
+	if (argc < 2) {
+		fprintf(stderr, "no controller ID specified\n");
+		return -1;
+	}
+
+	tmp = atoi(argv[1]);
+	if (tmp < 0 || tmp > 0xffff) {
+		fprintf(stderr, "invalid controller ID\n");
+		return -1;
+	}
+
+	ctrl_id = tmp & 0xffff;
+
+	args.args_size = sizeof(args);
+	args.log = buf;
+	args.len = sizeof(buf);
+
+	if (argc > 2) {
+		tmp = atoi(argv[2]);
+		args.lid = tmp & 0xff;
+	} else {
+		args.lid = 0x1;
+	}
+
+	ctrl = nvme_mi_init_ctrl(ep, ctrl_id);
+	if (!ctrl) {
+		warn("can't create controller");
+		return -1;
+	}
+
+	rc = nvme_mi_admin_get_log_page(ctrl, &args);
+	if (rc) {
+		warn("can't perform Get Log page command");
+		return -1;
+	}
+
+	printf("Get log page (log id = 0x%02x) data:\n", args.lid);
+	hexdump(buf, args.len);
+
+	return 0;
+}
+
 enum action {
 	ACTION_INFO,
 	ACTION_CONTROLLERS,
 	ACTION_IDENTIFY,
+	ACTION_GET_LOG_PAGE,
 };
 
 int main(int argc, char **argv)
@@ -261,7 +345,9 @@ int main(int argc, char **argv)
 		fprintf(stderr, "where action is:\n"
 			"  info\n"
 			"  controllers\n"
-			"  identify <controller-id> [--partial]\n");
+			"  identify <controller-id> [--partial]\n"
+			"  get-log-page <controller-id> [<log-id>]\n"
+			);
 		return EXIT_FAILURE;
 	}
 
@@ -283,6 +369,8 @@ int main(int argc, char **argv)
 			action = ACTION_CONTROLLERS;
 		} else if (!strcmp(action_str, "identify")) {
 			action = ACTION_IDENTIFY;
+		} else if (!strcmp(action_str, "get-log-page")) {
+			action = ACTION_GET_LOG_PAGE;
 		} else {
 			fprintf(stderr, "invalid action '%s'\n", action_str);
 			return EXIT_FAILURE;
@@ -306,6 +394,9 @@ int main(int argc, char **argv)
 		break;
 	case ACTION_IDENTIFY:
 		rc = do_identify(ep, argc, argv);
+		break;
+	case ACTION_GET_LOG_PAGE:
+		rc = do_get_log_page(ep, argc, argv);
 		break;
 	}
 
