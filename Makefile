@@ -9,7 +9,7 @@ INSTALL=install
 default: all
 
 python: all
-	@$(MAKE) -C pynvme python
+	@$(MAKE) -C libnvme python
 
 all: $(NAME).pc
 	@$(MAKE) -C src
@@ -55,7 +55,7 @@ install-tests:
 	@$(MAKE) -C test install prefix=$(DESTDIR)$(prefix) datadir=$(DESTDIR)$(datadir)
 
 install-python:
-	@$(MAKE) -C pynvme install prefix=$(DESTDIR)$(prefix)
+	@$(MAKE) -C libnvme install prefix=$(DESTDIR)$(prefix)
 
 clean:
 	@rm -f config-host.mak config-host.h cscope.out $(NAME).pc

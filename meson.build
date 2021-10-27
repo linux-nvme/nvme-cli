@@ -209,7 +209,7 @@ incdir = include_directories(['.', 'ccan', 'src'])
 
 ################################################################################
 subdir('src')
-subdir('pynvme')
+subdir('libnvme')
 subdir('test')
 subdir('examples')
 subdir('doc')
