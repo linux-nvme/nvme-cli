@@ -2829,6 +2829,20 @@ static void nvme_show_id_ctrl_lpa(__u8 lpa)
 	printf("\n");
 }
 
+static void nvme_show_id_ctrl_elpe(__u8 elpe)
+{
+	printf("  [7:0] : %d (0's based)\tError Log Page Entries (ELPE)\n",
+	       elpe);
+	printf("\n");
+}
+
+static void nvme_show_id_ctrl_npss(__u8 npss)
+{
+	printf("  [7:0] : %d (0's based)\tNumber of Power States Support (NPSS)\n",
+	       npss);
+	printf("\n");
+}
+
 static void nvme_show_id_ctrl_avscc(__u8 avscc)
 {
 	__u8 rsvd = (avscc & 0xFE) >> 1;
@@ -2853,15 +2867,29 @@ static void nvme_show_id_ctrl_apsta(__u8 apsta)
 
 static void nvme_show_id_ctrl_wctemp(__le16 wctemp)
 {
-	printf(" [16:0] : %ld C (%u Kelvin)\tWarning temperature (WCTEMP)\n",
+	printf(" [15:0] : %ld°C (%u Kelvin)\tWarning Composite Temperature Threshold (WCTEMP)\n",
 	       kelvin_to_celsius(le16_to_cpu(wctemp)), le16_to_cpu(wctemp));
 	printf("\n");
 }
 
 static void nvme_show_id_ctrl_cctemp(__le16 cctemp)
 {
-	printf(" [16:0] : %ld C (%u Kelvin)\tCritical temperature (CCTEMP)\n",
+	printf(" [15:0] : %ld°C (%u Kelvin)\tCritical Composite Temperature Threshold (CCTEMP)\n",
 	       kelvin_to_celsius(le16_to_cpu(cctemp)), le16_to_cpu(cctemp));
+	printf("\n");
+}
+
+static void nvme_show_id_ctrl_tnvmcap(__u8 *tnvmcap)
+{
+	printf("[127:0] : %.0Lf\tTotal NVM Capacity (TNVMCAP)\n",
+	       int128_to_double(tnvmcap));
+	printf("\n");
+}
+
+static void nvme_show_id_ctrl_unvmcap(__u8 *unvmcap)
+{
+	printf("[127:0] : %.0Lf\tUnallocated NVM Capacity (UNVMCAP)\n",
+	       int128_to_double(unvmcap));
 	printf("\n");
 }
 
@@ -2893,6 +2921,20 @@ static void nvme_show_id_ctrl_hctma(__le16 ctrl_hctma)
 		printf(" [15:1] : %#x\tReserved\n", rsvd);
 	printf("  [0:0] : %#x\tHost Controlled Thermal Management %sSupported\n",
 		hctm, hctm ? "" : "Not ");
+	printf("\n");
+}
+
+static void nvme_show_id_ctrl_mntmt(__le16 mntmt)
+{
+	printf(" [15:0] : %ld°C (%u Kelvin)\tMinimum Thermal Management Temperature (MNTMT)\n",
+	       kelvin_to_celsius(le16_to_cpu(mntmt)), le16_to_cpu(mntmt));
+	printf("\n");
+}
+
+static void nvme_show_id_ctrl_mxtmt(__le16 mxtmt)
+{
+	printf(" [15:0] : %ld°C (%u Kelvin)\tMaximum Thermal Management Temperature (MXTMT)\n",
+	       kelvin_to_celsius(le16_to_cpu(mxtmt)), le16_to_cpu(mxtmt));
 	printf("\n");
 }
 
@@ -3711,7 +3753,11 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_lpa(ctrl->lpa);
 	printf("elpe      : %d\n", ctrl->elpe);
+	if (human)
+		nvme_show_id_ctrl_elpe(ctrl->elpe);
 	printf("npss      : %d\n", ctrl->npss);
+	if (human)
+		nvme_show_id_ctrl_npss(ctrl->npss);
 	printf("avscc     : %#x\n", ctrl->avscc);
 	if (human)
 		nvme_show_id_ctrl_avscc(ctrl->avscc);
@@ -3728,7 +3774,11 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	printf("hmpre     : %d\n", le32_to_cpu(ctrl->hmpre));
 	printf("hmmin     : %d\n", le32_to_cpu(ctrl->hmmin));
 	printf("tnvmcap   : %.0Lf\n", int128_to_double(ctrl->tnvmcap));
+	if (human)
+		nvme_show_id_ctrl_tnvmcap(ctrl->tnvmcap);
 	printf("unvmcap   : %.0Lf\n", int128_to_double(ctrl->unvmcap));
+	if (human)
+		nvme_show_id_ctrl_unvmcap(ctrl->unvmcap);
 	printf("rpmbs     : %#x\n", le32_to_cpu(ctrl->rpmbs));
 	if (human)
 		nvme_show_id_ctrl_rpmbs(ctrl->rpmbs);
@@ -3740,7 +3790,11 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	if (human)
 		nvme_show_id_ctrl_hctma(ctrl->hctma);
 	printf("mntmt     : %d\n", le16_to_cpu(ctrl->mntmt));
+	if (human)
+		nvme_show_id_ctrl_mntmt(ctrl->mntmt);
 	printf("mxtmt     : %d\n", le16_to_cpu(ctrl->mxtmt));
+	if (human)
+		nvme_show_id_ctrl_mxtmt(ctrl->mxtmt);
 	printf("sanicap   : %#x\n", le32_to_cpu(ctrl->sanicap));
 	if (human)
 		nvme_show_id_ctrl_sanicap(ctrl->sanicap);
@@ -4890,7 +4944,7 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 		printf("      Persistent Mem. RO[5]          : %d\n", (smart->critical_warning & 0x20) >> 5);
 	}
 
-	printf("temperature				: %ld C (%u Kelvin)\n",
+	printf("temperature				: %ld°C (%u Kelvin)\n",
 		kelvin_to_celsius(temperature), temperature);
 	printf("available_spare				: %u%%\n",
 		smart->avail_spare);
@@ -4929,8 +4983,8 @@ void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 
 		if (temp == 0)
 			continue;
-		printf("Temperature Sensor %d           : %ld C (%u Kelvin)\n",
-			i + 1, kelvin_to_celsius(temp), temp);
+		printf("Temperature Sensor %d           : %ld°C (%u Kelvin)\n",
+		       i + 1, kelvin_to_celsius(temp), temp);
 	}
 	printf("Thermal Management T1 Trans Count	: %u\n",
 		le32_to_cpu(smart->thm_temp1_trans_count));
@@ -5534,9 +5588,9 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		printf("\tThreshold Type Select         (THSEL): %u - %s\n", field,
 			nvme_feature_temp_type_to_string(field));
 		field = (result & 0x000f0000) >> 16;
-		printf("\tThreshold Temperature Select (TMPSEL): %u - %s\n", field,
-			nvme_feature_temp_sel_to_string(field));
-		printf("\tTemperature Threshold         (TMPTH): %ld C (%u Kelvin)\n",
+		printf("\tThreshold Temperature Select (TMPSEL): %u - %s\n",
+		       field, nvme_feature_temp_sel_to_string(field));
+		printf("\tTemperature Threshold         (TMPTH): %ld°C (%u Kelvin)\n",
 		       kelvin_to_celsius(result & 0x0000ffff), result & 0x0000ffff);
 		break;
 	case NVME_FEAT_FID_ERR_RECOVERY:
@@ -5634,9 +5688,9 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		nvme_show_timestamp((struct nvme_timestamp *)buf);
 		break;
 	case NVME_FEAT_FID_HCTM:
-		printf("\tThermal Management Temperature 1 (TMT1) : %u Kelvin (%ld C)\n",
+		printf("\tThermal Management Temperature 1 (TMT1) : %u Kelvin (%ld°C)\n",
 		       result >> 16, kelvin_to_celsius(result >> 16));
-		printf("\tThermal Management Temperature 2 (TMT2) : %u Kelvin (%ld C)\n",
+		printf("\tThermal Management Temperature 2 (TMT2) : %u Kelvin (%ld°C)\n",
 		       result & 0x0000ffff, kelvin_to_celsius(result & 0x0000ffff));
 		break;
 	case NVME_FEAT_FID_KATO:
