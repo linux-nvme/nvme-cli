@@ -6280,9 +6280,8 @@ Returns true if given offset is 64bit register, otherwise it returns false.
     __u8 ips;
     __u8 rsvd19;
     __le16 actp;
-    __u8 apw;
-    __u8 aps;
-    __u8 rsvd23[8];
+    __u8 apws;
+    __u8 rsvd23[9];
   };
 
 **Members**
@@ -6340,14 +6339,12 @@ Returns true if given offset is 64bit register, otherwise it returns false.
   NVM subsystem over a 10 second period in this power state with
   the workload indicated in the Active Power Workload field.
 
-``apw``
-  Active Power Workload indicates the workload used to calculate
+``apws``
+  Bits 7-6: Active Power Scale(APS) indicates the scale for the :c:type:`struct
+  nvme_id_psd <nvme_id_psd>`.actp, see :c:type:`enum nvme_psd_ps <nvme_psd_ps>` for decoding this value.
+  Bits 2-0: Active Power Workload(APW) indicates the workload used to calculate
   maximum power for this power state. See :c:type:`enum nvme_psd_workload <nvme_psd_workload>` for
   decoding this field.
-
-``aps``
-  Active Power Scale indicates the scale for the :c:type:`struct
-  nvme_id_psd <nvme_id_psd>`.actp, see :c:type:`enum nvme_psd_ps <nvme_psd_ps>` for decoding this value.
 
 
 
