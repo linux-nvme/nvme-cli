@@ -5284,6 +5284,7 @@ const char *nvme_select_to_string(int sel)
 	case 1:  return "Default";
 	case 2:  return "Saved";
 	case 3:  return "Supported capabilities";
+	case 8:  return "Changed";
 	default: return "Reserved";
 	}
 }
@@ -5660,7 +5661,7 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 	case NVME_FEAT_FID_ENDURANCE_EVT_CFG:
 		printf("\tEndurance Group Identifier (ENDGID): %u\n", result & 0xffff);
 		printf("\tEndurance Group Critical Warnings  : %u\n", (result >> 16) & 0xff);
-              break;
+		break;
 	case NVME_FEAT_FID_IOCS_PROFILE:
 		printf("\tI/O Command Set Profile: %s\n", result & 0x1 ? "True":"False");
 		break;
@@ -5704,8 +5705,8 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
 		break;
 	case NVME_FEAT_FID_SANITIZE:
-                printf("\tNo-Deallocate Response Mode (NODRM) : %u\n", result & 0x1);
-                break;
+		printf("\tNo-Deallocate Response Mode (NODRM) : %u\n", result & 0x1);
+		break;
 	case NVME_FEAT_FID_RRL:
 		printf("\tRead Recovery Level (RRL): %u\n", result & 0xf);
 		break;
