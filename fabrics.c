@@ -305,6 +305,9 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 	cargs.host_traddr = parse_conn_arg(addr, ' ', conarg_host_traddr);
 	cargs.host_iface = parse_conn_arg(addr, ' ', conarg_host_iface);
 
+	if (!cargs.subsysnqn || !cargs.transport)
+		goto out;
+
 	if (!strcmp(cargs.subsysnqn, NVME_DISC_SUBSYS_NAME)) {
 		char *kato_str = nvme_get_ctrl_attr(path, "kato"), *p;
 		unsigned int kato = 0;
@@ -340,6 +343,7 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 	     !strcmp(args->host_iface, "none")))
 		found = true;
 
+out:
 	free(cargs.subsysnqn);
 	free(cargs.transport);
 	free(cargs.traddr);
