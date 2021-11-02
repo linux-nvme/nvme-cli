@@ -5,7 +5,7 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-sources = [
+sources += [
     'nvme/cleanup.c',
     'nvme/fabrics.c',
     'nvme/filters.c',
