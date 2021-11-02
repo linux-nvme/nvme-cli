@@ -124,6 +124,18 @@ int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 					    struct nvme_mi_nvm_ss_health_status *nshds);
 
 /* Admin channel functions */
+
+/* "raw" admin transfer. req_data_size and resp_data_size are the sizes of
+ * the data portion of the payload, so do not include the length of
+ * the header, and start at 0 for no payload.
+ */
+int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
+		       struct nvme_mi_admin_req_hdr *admin_req,
+		       size_t req_data_size,
+		       struct nvme_mi_admin_resp_hdr *admin_resp,
+		       off_t resp_data_offset,
+		       size_t *resp_data_size);
+
 int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 				   struct nvme_identify_args *args,
 				   off_t offset, size_t size);

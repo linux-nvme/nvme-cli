@@ -146,6 +146,53 @@ static void nvme_mi_admin_init_resp(struct nvme_mi_resp *resp,
 	resp->hdr_len = sizeof(*hdr);
 }
 
+int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
+		       struct nvme_mi_admin_req_hdr *admin_req,
+		       size_t req_data_size,
+		       struct nvme_mi_admin_resp_hdr *admin_resp,
+		       off_t resp_data_offset,
+		       size_t *resp_data_size)
+{
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+
+	if (*resp_data_size > 0xffffffff)
+		return -EINVAL;
+	if (resp_data_offset > 0xffffffff)
+		return -EINVAL;
+
+	admin_req->hdr.type = NVME_MI_MSGTYPE_NVME;
+	admin_req->hdr.nmp = (NVME_MI_ROR_REQ << 7) |
+				(NVME_MI_MT_ADMIN << 3);
+	memset(&req, 0, sizeof(req));
+	req.hdr = &admin_req->hdr;
+	req.hdr_len = sizeof(*admin_req);
+	req.data = admin_req + 1;
+	req.data_len = req_data_size;
+
+	nvme_mi_calc_req_mic(&req);
+
+	memset(&resp, 0, sizeof(resp));
+	resp.hdr = &admin_resp->hdr;
+	resp.hdr_len = sizeof(*admin_resp);
+	resp.data = admin_resp + 1;
+	resp.data_len = *resp_data_size;
+
+	/* limit the response size, specify offset */
+	admin_req->flags = 0x3;
+	admin_req->dlen = cpu_to_le32(resp.data_len & 0xffffffff);
+	admin_req->doff = cpu_to_le32(resp_data_offset & 0xffffffff);
+
+	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	*resp_data_size = resp.data_len;
+
+	return 0;
+}
+
 int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 				   struct nvme_identify_args *args,
 				   off_t offset, size_t size)

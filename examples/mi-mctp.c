@@ -323,11 +323,104 @@ int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 	return 0;
 }
 
+int do_admin_raw(nvme_mi_ep_t ep, int argc, char **argv)
+{
+	struct nvme_mi_admin_req_hdr req;
+	struct nvme_mi_admin_resp_hdr *resp;
+	struct nvme_mi_ctrl *ctrl;
+	size_t resp_data_len;
+	unsigned long tmp;
+	uint8_t buf[512];
+	uint16_t ctrl_id;
+	uint8_t opcode;
+	__le32 *cdw;
+	int i, rc;
+
+	if (argc < 2) {
+		fprintf(stderr, "no controller ID specified\n");
+		return -1;
+	}
+
+	if (argc < 3) {
+		fprintf(stderr, "no opcode specified\n");
+		return -1;
+	}
+
+	tmp = atoi(argv[1]);
+	if (tmp < 0 || tmp > 0xffff) {
+		fprintf(stderr, "invalid controller ID\n");
+		return -1;
+	}
+	ctrl_id = tmp & 0xffff;
+
+	tmp = atoi(argv[2]);
+	if (tmp < 0 || tmp > 0xff) {
+		fprintf(stderr, "invalid opcode\n");
+		return -1;
+	}
+	opcode = tmp & 0xff;
+
+	memset(&req, 0, sizeof(req));
+	req.opcode = opcode;
+	req.ctrl_id = cpu_to_le16(ctrl_id);
+
+	/* The cdw10 - cdw16 fields are contiguous in req; set from argv. */
+	cdw = (void *)&req + offsetof(typeof(req), cdw10);
+	for (i = 0; i < 6; i++) {
+		if (argc >= 4 + i)
+			tmp = strtoul(argv[3 + i], NULL, 0);
+		else
+			tmp = 0;
+		*cdw = cpu_to_le32(tmp & 0xffffffff);
+		cdw++;
+	}
+
+	printf("Admin request:\n");
+	printf(" opcode: 0x%02x\n", req.opcode);
+	printf(" ctrl:   0x%04x\n", le16_to_cpu(req.ctrl_id));
+	printf(" cdw10:   0x%08x\n", le32_to_cpu(req.cdw10));
+	printf(" cdw11:   0x%08x\n", le32_to_cpu(req.cdw11));
+	printf(" cdw12:   0x%08x\n", le32_to_cpu(req.cdw12));
+	printf(" cdw13:   0x%08x\n", le32_to_cpu(req.cdw13));
+	printf(" cdw14:   0x%08x\n", le32_to_cpu(req.cdw14));
+	printf(" cdw15:   0x%08x\n", le32_to_cpu(req.cdw15));
+	printf(" raw:\n");
+	hexdump((void *)&req, sizeof(req));
+
+	memset(buf, 0, sizeof(buf));
+	resp = (void *)buf;
+
+	ctrl = nvme_mi_init_ctrl(ep, ctrl_id);
+	if (!ctrl) {
+		warn("can't create controller");
+		return -1;
+	}
+
+	resp_data_len = sizeof(buf) - sizeof(*resp);
+
+	rc = nvme_mi_admin_xfer(ctrl, &req, 0, resp, 0, &resp_data_len);
+	if (rc) {
+		warn("nvme_admin_xfer failed: %d", rc);
+		return -1;
+	}
+
+	printf("Admin response:\n");
+	printf(" Status: 0x%02x\n", resp->status);
+	printf(" cdw0:   0x%08x\n", le32_to_cpu(resp->cdw0));
+	printf(" cdw1:   0x%08x\n", le32_to_cpu(resp->cdw1));
+	printf(" cdw3:   0x%08x\n", le32_to_cpu(resp->cdw3));
+	printf(" data [%zd bytes]\n", resp_data_len);
+
+	hexdump(buf + sizeof(*resp), resp_data_len);
+	return 0;
+}
+
 enum action {
 	ACTION_INFO,
 	ACTION_CONTROLLERS,
 	ACTION_IDENTIFY,
 	ACTION_GET_LOG_PAGE,
+	ACTION_ADMIN_RAW,
 };
 
 int main(int argc, char **argv)
@@ -347,6 +440,7 @@ int main(int argc, char **argv)
 			"  controllers\n"
 			"  identify <controller-id> [--partial]\n"
 			"  get-log-page <controller-id> [<log-id>]\n"
+			"  admin <controller-id> <opcode> [<cdw10>, <cdw11>, ...]\n"
 			);
 		return EXIT_FAILURE;
 	}
@@ -371,6 +465,8 @@ int main(int argc, char **argv)
 			action = ACTION_IDENTIFY;
 		} else if (!strcmp(action_str, "get-log-page")) {
 			action = ACTION_GET_LOG_PAGE;
+		} else if (!strcmp(action_str, "admin")) {
+			action = ACTION_ADMIN_RAW;
 		} else {
 			fprintf(stderr, "invalid action '%s'\n", action_str);
 			return EXIT_FAILURE;
@@ -397,6 +493,9 @@ int main(int argc, char **argv)
 		break;
 	case ACTION_GET_LOG_PAGE:
 		rc = do_get_log_page(ep, argc, argv);
+		break;
+	case ACTION_ADMIN_RAW:
+		rc = do_admin_raw(ep, argc, argv);
 		break;
 	}
 
