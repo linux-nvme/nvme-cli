@@ -110,7 +110,7 @@ conf.set10(
 )
 
 configure_file(
-    output: 'config-host.h',
+    output: 'config.h',
     configuration: conf
 )
 
@@ -127,7 +127,7 @@ configure_file(
 
 ################################################################################
 add_project_arguments(['-fomit-frame-pointer', '-D_GNU_SOURCE',
-                       '-include', 'config-host.h'], language : 'c')
+                       '-include', 'config.h'], language : 'c')
 incdir = include_directories(['ccan'])
 
 ################################################################################
