@@ -41,6 +41,31 @@ conf.set('LIBHUGETLBFS', libhugetlbfs.found(), description: 'Is libhugetlbfs req
 # Set the nvme-cli version
 conf.set('NVME_VERSION', '"' + meson.project_version() + '"')
 
+# local (cross-compilable) implementations of ccan configure steps
+conf.set10(
+    'HAVE_BUILTIN_TYPES_COMPATIBLE_P',
+    cc.compiles(
+        '''int main(void) {
+               return __builtin_types_compatible_p(int, long);
+           }
+        ''',
+        name: '__builtin_type_compatible_p'
+    ),
+    description: 'Is __builtin_types_compatible_p available?'
+)
+conf.set10(
+    'HAVE_TYPEOF',
+    cc.compiles(
+        '''int main(void) {
+                int a = 1;
+                typeof(a) b;
+                b = a;
+           }
+        ''',
+        name: 'typeof'
+    ),
+    description: 'Is typeof available?'
+)
 conf.set10(
     'HAVE_BYTESWAP_H',
     cc.compiles(
@@ -70,6 +95,18 @@ conf.set10(
     'HAVE_BIG_ENDIAN',
     build_machine.endian() == 'big',
     description: 'Building for big-endian'
+)
+conf.set10(
+    'HAVE_ISBLANK',
+    cc.links(
+        '''#include <ctype.h>
+           int main(int argc, char **argv) {
+               return isblank(argv[0][0]);
+           }
+        ''',
+        name: 'isblank'
+    ),
+    description: 'Is isblank() available?'
 )
 
 configure_file(
@@ -103,6 +140,7 @@ sources = [
   'plugin.c',
 ]
 
+subdir('ccan')
 subdir('plugins')
 subdir('tests')
 subdir('util')
