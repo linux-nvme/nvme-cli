@@ -27,7 +27,7 @@ override CFLAGS += -I$(CCANDIR)
 
 ifeq ($(LIBUUID),0)
 	override LDFLAGS += -luuid
-	override CFLAGS += -DLIBUUID
+	override CFLAGS += -DCONFIG_LIBUUID
 	override LIB_DEPENDS += uuid
 endif
 
@@ -47,7 +47,7 @@ endif
 ifeq ($(LIBJSONC), 0)
 	override LDFLAGS += $(shell pkg-config --libs json-c)
 	override CFLAGS += $(shell pkg-config --cflags json-c)
-	override CFLAGS += -DLIBJSONC
+	override CFLAGS += -DCONFIG_LIBJSONC
 endif
 
 ifneq ("$(wildcard $(LIBNVMEDIR)/Makefile)","")

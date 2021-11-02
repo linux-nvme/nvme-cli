@@ -22,7 +22,7 @@
 #include <sys/time.h>
 
 #include "plugin.h"
-#ifdef LIBJSONC
+#ifdef CONFIG_LIBJSONC
 #include <json.h>
 
 #define json_create_object(o) json_object_new_object(o)

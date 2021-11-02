@@ -2614,7 +2614,7 @@ static const char *nvme_uuid_to_string(uuid_t uuid)
 {
 	/* large enough to hold uuid str (37) + null-termination byte */
 	static char uuid_str[40];
-#ifdef LIBUUID
+#ifdef CONFIG_LIBUUID
 	uuid_unparse_lower(uuid, uuid_str);
 #else
 	static const char *hex_digits = "0123456789abcdef";
@@ -3485,7 +3485,7 @@ static void json_nvme_id_ns_descs(void *data)
 		__u8 eui64[NVME_NIDT_EUI64_LEN];
 		__u8 nguid[NVME_NIDT_NGUID_LEN];
 
-#ifdef LIBUUID
+#ifdef CONFIG_LIBUUID
 		uuid_t uuid;
 #endif
 		__u8 csi;
@@ -3526,7 +3526,7 @@ static void json_nvme_id_ns_descs(void *data)
 			nidt_name = "nguid";
 			break;
 
-#ifdef LIBUUID
+#ifdef CONFIG_LIBUUID
 		case NVME_NIDT_UUID:
 			memcpy(desc.uuid, data + off, sizeof(desc.uuid));
 			uuid_unparse_lower(desc.uuid, json_str);
@@ -3579,7 +3579,7 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 {
 	int pos, len = 0;
 	int i;
-#ifdef LIBUUID
+#ifdef CONFIG_LIBUUID
 	uuid_t uuid;
 	char uuid_str[37];
 #endif
@@ -3616,7 +3616,7 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 			printf("\n");
 			len = sizeof(nguid);
 			break;
-#ifdef LIBUUID
+#ifdef CONFIG_LIBUUID
 		case NVME_NIDT_UUID:
 			memcpy(uuid, data + pos + sizeof(*cur), 16);
 			uuid_unparse_lower(uuid, uuid_str);
