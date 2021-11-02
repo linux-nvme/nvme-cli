@@ -28,7 +28,7 @@ libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
 
 # Check for libuuid availability
 libuuid = dependency('uuid', required: true)
-conf.set('LIBUUID', libuuid.found(), description: 'Is libuuid required?')
+conf.set('CONFIG_LIBUUID', libuuid.found(), description: 'Is libuuid required?')
 
 # Check for libjson-c availability
 json_c = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c'])
