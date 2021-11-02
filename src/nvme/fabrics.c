@@ -803,7 +803,6 @@ static int uuid_from_dmi(char *system_uuid)
 		if (f < 0)
 			continue;
 		len = read(f, buf, 512);
-		len = read(f, buf, 512);
 		close(f);
 		if (len < 0)
 			continue;
