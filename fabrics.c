@@ -293,13 +293,14 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 		return found;
 
 	addr = nvme_get_ctrl_attr(path, "address");
-	if (!addr) {
-		fprintf(stderr, "nvme_get_ctrl_attr failed\n");
-		return found;
-	}
-
 	cargs.subsysnqn = nvme_get_ctrl_attr(path, "subsysnqn");
 	cargs.transport = nvme_get_ctrl_attr(path, "transport");
+
+	if (!addr || !cargs.subsysnqn || !cargs.transport) {
+		fprintf(stderr, "nvme_get_ctrl_attr failed\n");
+		goto out;
+	}
+
 	cargs.traddr = parse_conn_arg(addr, ' ', conarg_traddr);
 	cargs.trsvcid = parse_conn_arg(addr, ' ', conarg_trsvcid);
 	cargs.host_traddr = parse_conn_arg(addr, ' ', conarg_host_traddr);
@@ -340,6 +341,7 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 	     !strcmp(args->host_iface, "none")))
 		found = true;
 
+out:
 	free(cargs.subsysnqn);
 	free(cargs.transport);
 	free(cargs.traddr);
