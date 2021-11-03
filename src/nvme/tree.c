@@ -1418,7 +1418,7 @@ int nvme_ns_verify(nvme_ns_t n, off_t offset, size_t count)
 		return -1;
 
 	return nvme_verify(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba, nlb,
-			   0, 0, 0, 0);
+			   0, 0, 0, 0, 0);
 }
 
 int nvme_ns_write_uncorrectable(nvme_ns_t n, off_t offset, size_t count)
@@ -1442,7 +1442,7 @@ int nvme_ns_write_zeros(nvme_ns_t n, off_t offset, size_t count)
 		return -1;
 
 	return nvme_write_zeros(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba,
-				nlb, 0, 0, 0, 0);
+				nlb, 0, 0, 0, 0, 0);
 }
 
 int nvme_ns_write(nvme_ns_t n, void *buf, off_t offset, size_t count)

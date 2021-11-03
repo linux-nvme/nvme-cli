@@ -1666,8 +1666,11 @@ int nvme_flush(int fd, __u32 nsid)
 
 static int nvme_io(int fd, __u8 opcode, __u32 nsid, __u64 slba, __u16 nlb,
 	__u16 control, __u32 flags, __u32 reftag, __u16 apptag, __u16 appmask,
-	__u32 data_len, void *data, __u32 metadata_len, void *metadata)
+	__u64 storage_tag, __u32 data_len, void *data, __u32 metadata_len,
+	void *metadata)
 {
+	__u32 cdw2  = storage_tag & 0xffffffff;
+	__u32 cdw3  = (storage_tag >> 32) & 0xffff;
 	__u32 cdw10 = slba & 0xffffffff;
 	__u32 cdw11 = slba >> 32;
 	__u32 cdw12 = nlb | (control << 16);
@@ -1678,6 +1681,8 @@ static int nvme_io(int fd, __u8 opcode, __u32 nsid, __u64 slba, __u16 nlb,
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= opcode,
 		.nsid		= nsid,
+		.cdw2		= cdw2,
+		.cdw3		= cdw3,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
 		.cdw12		= cdw12,
@@ -1698,7 +1703,7 @@ int nvme_read(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
 	      __u32 data_len, void *data, __u32 metadata_len, void *metadata)
 {
 	return nvme_io(fd, nvme_cmd_read, nsid, slba, nlb, control, dsm,
-		       reftag, apptag, appmask, data_len, data, metadata_len,
+		       reftag, apptag, appmask, 0, data_len, data, metadata_len,
 		       metadata);
 }
 
@@ -1710,7 +1715,7 @@ int nvme_write(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
 	__u32 flags = dsm | dspec << 16;
 
 	return nvme_io(fd, nvme_cmd_write, nsid, slba, nlb, control, flags,
-		       reftag, apptag, appmask, data_len, data, metadata_len,
+		       reftag, apptag, appmask, 0, data_len, data, metadata_len,
 		       metadata);
 }
 
@@ -1719,28 +1724,29 @@ int nvme_compare(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
 		 void *data, __u32 metadata_len, void *metadata)
 {
 	return nvme_io(fd, nvme_cmd_compare, nsid, slba, nlb, control, 0,
-		       reftag, apptag, appmask, data_len, data, metadata_len,
+		       reftag, apptag, appmask, 0, data_len, data, metadata_len,
 		       metadata);
 }
 
 int nvme_write_zeros(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-		     __u32 reftag, __u16 apptag, __u16 appmask)
+		     __u32 reftag, __u16 apptag, __u16 appmask,
+		     __u64 storage_tag)
 {
 	return nvme_io(fd, nvme_cmd_write_zeroes, nsid, slba, nlb, control, 0,
-		       reftag, apptag, appmask, 0, NULL, 0, NULL);
+		       reftag, apptag, appmask, storage_tag, 0, NULL, 0, NULL);
 }
 
 int nvme_verify(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-		__u32 reftag, __u16 apptag, __u16 appmask)
+		__u32 reftag, __u16 apptag, __u16 appmask, __u64 storage_tag)
 {
 	return nvme_io(fd, nvme_cmd_verify, nsid, slba, nlb, control, 0,
-		       reftag, apptag, appmask, 0, NULL, 0, NULL);
+		       reftag, apptag, appmask, 0, 0, NULL, 0, NULL);
 }
 
 int nvme_write_uncorrectable(int fd, __u32 nsid, __u64 slba, __u16 nlb)
 {
 	return nvme_io(fd, nvme_cmd_write_uncor, nsid, slba, nlb, 0, 0, 0, 0,
-		       0, 0, NULL, 0, NULL);
+		       0, 0, 0, NULL, 0, NULL);
 }
 
 int nvme_dsm(int fd, __u32 nsid, __u32 attrs, __u16 nr_ranges,

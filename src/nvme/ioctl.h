@@ -2338,6 +2338,9 @@ int nvme_compare(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * @appmask:	This field specifies the Application Tag expected value. Used
  * 		only if the namespace is formatted to use end-to-end protection
  * 		information.
+ * @storage_tag: This filed specifies Variable Sized Expected Logical Block
+ *		Storage Tag (ELBST) and Expected Logical Block Reference
+ *		Tag (ELBRT)
  *
  * The Write Zeroes command sets a range of logical blocks to zero.  After
  * successful completion of this command, the value returned by subsequent
@@ -2348,7 +2351,8 @@ int nvme_compare(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_write_zeros(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-		     __u32 reftag, __u16 apptag, __u16 appmask);
+		     __u32 reftag, __u16 apptag, __u16 appmask,
+		     __u64 storage_tag);
 
 /**
  * nvme_write_uncorrectable() - Submit an nvme write uncorrectable command
@@ -2383,6 +2387,9 @@ int nvme_write_uncorrectable(int fd, __u32 nsid, __u64 slba, __u16 nlb);
  * @appmask:	This field specifies the Application Tag expected value. Used
  * 		only if the namespace is formatted to use end-to-end protection
  * 		information.
+ * @storage_tag: This filed specifies Variable Sized Expected Logical Block
+ *		Storage Tag (ELBST) and Expected Logical Block Reference
+ *		Tag (ELBRT)
  *
  * The Verify command verifies integrity of stored information by reading data
  * and metadata, if applicable, for the LBAs indicated without transferring any
@@ -2392,7 +2399,7 @@ int nvme_write_uncorrectable(int fd, __u32 nsid, __u64 slba, __u16 nlb);
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_verify(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-		__u32 reftag, __u16 apptag, __u16 appmask);
+		__u32 reftag, __u16 apptag, __u16 appmask, __u64 storage_tag);
 
 /**
  * nvme_dsm() - Send an nvme data set management command
