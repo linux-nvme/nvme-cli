@@ -1917,6 +1917,7 @@ int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data);
  * @slot:	Firmware slot to commit the downloaded image
  * @action:	Action to use for the firmware image, see &enum nvme_fw_commit_ca
  * @bpid:	Set to true to select the boot partition id
+ * @result:	The command completion result from CQE dword0
  *
  * The Firmware Commit command modifies the firmware image or Boot Partitions.
  *
@@ -1926,7 +1927,8 @@ int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data);
  * 	   response may specify additional
  * 	   reset actions required to complete the commit process.
  */
-int nvme_fw_commit(int fd, __u8 slot, enum nvme_fw_commit_ca action, bool bpid);
+int nvme_fw_commit(int fd, __u8 slot, enum nvme_fw_commit_ca action, bool bpid,
+		   __u32 *result);
 
 /**
  * nvme_security_send() -
