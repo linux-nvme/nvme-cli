@@ -2251,6 +2251,9 @@ int nvme_flush(int fd, __u32 nsid);
  * @appmask:	This field specifies the Application Tag expected value. Used
  * 		only if the namespace is formatted to use end-to-end protection
  * 		information.
+ * @storage_tag: This filed specifies Variable Sized Expected Logical Block
+ *		Storage Tag (ELBST) and Expected Logical Block Reference
+ *		Tag (ELBRT)
  * @data_len:	Length of user buffer, @data, in bytes
  * @data:	Pointer to user address of the data buffer
  * metadata_len:Length of user buffer, @metadata, in bytes
@@ -2261,7 +2264,8 @@ int nvme_flush(int fd, __u32 nsid);
  */
 int nvme_read(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
 	      __u8 dsm, __u32 reftag, __u16 apptag, __u16 appmask,
-	      __u32 data_len, void *data, __u32 metadata_len, void *metadata);
+	      __u64 storage_tag, __u32 data_len, void *data,
+	      __u32 metadata_len, void *metadata);
 
 /**
  * nvme_write() - Submit an nvme user write command
@@ -2281,6 +2285,9 @@ int nvme_read(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * @appmask:	This field specifies the Application Tag expected value. Used
  * 		only if the namespace is formatted to use end-to-end protection
  * 		information.
+ * @storage_tag: This filed specifies Variable Sized Expected Logical Block
+ *		Storage Tag (ELBST) and Expected Logical Block Reference
+ *		Tag (ELBRT)
  * @data_len:	Length of user buffer, @data, in bytes
  * @data:	Pointer to user address of the data buffer
  * metadata_len:Length of user buffer, @metadata, in bytes
@@ -2291,8 +2298,8 @@ int nvme_read(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  */
 int nvme_write(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
 	       __u8 dsm, __u16 dspec, __u32 reftag, __u16 apptag,
-	       __u16 appmask, __u32 data_len, void *data, __u32 metadata_len,
-	       void *metadata);
+	       __u16 appmask, __u64 storage_tag, __u32 data_len, void *data,
+	       __u32 metadata_len, void *metadata);
 
 /**
  * nvme_compare() - Submit an nvme user compare command

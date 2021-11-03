@@ -1700,23 +1700,24 @@ static int nvme_io(int fd, __u8 opcode, __u32 nsid, __u64 slba, __u16 nlb,
 
 int nvme_read(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
 	      __u8 dsm, __u32 reftag, __u16 apptag, __u16 appmask,
-	      __u32 data_len, void *data, __u32 metadata_len, void *metadata)
+	     __u64 storage_tag, __u32 data_len, void *data,
+	     __u32 metadata_len, void *metadata)
 {
 	return nvme_io(fd, nvme_cmd_read, nsid, slba, nlb, control, dsm,
-		       reftag, apptag, appmask, 0, data_len, data, metadata_len,
-		       metadata);
+		       reftag, apptag, appmask, storage_tag, data_len, data,
+		       metadata_len, metadata);
 }
 
 int nvme_write(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
 	       __u8 dsm, __u16 dspec, __u32 reftag, __u16 apptag,
-	       __u16 appmask, __u32 data_len, void *data, __u32 metadata_len,
-	       void *metadata)
+	       __u16 appmask, __u64 storage_tag, __u32 data_len, void *data,
+	       __u32 metadata_len, void *metadata)
 {
 	__u32 flags = dsm | dspec << 16;
 
 	return nvme_io(fd, nvme_cmd_write, nsid, slba, nlb, control, flags,
-		       reftag, apptag, appmask, 0, data_len, data, metadata_len,
-		       metadata);
+		       reftag, apptag, appmask, storage_tag, data_len, data,
+		       metadata_len, metadata);
 }
 
 int nvme_compare(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,

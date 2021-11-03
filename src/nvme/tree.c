@@ -1454,7 +1454,7 @@ int nvme_ns_write(nvme_ns_t n, void *buf, off_t offset, size_t count)
 		return -1;
 
 	return nvme_write(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba, nlb, 0,
-			  0, 0, 0, 0, 0, count, buf, 0, NULL);
+			  0, 0, 0, 0, 0, 0, count, buf, 0, NULL);
 }
 
 int nvme_ns_read(nvme_ns_t n, void *buf, off_t offset, size_t count)
@@ -1466,7 +1466,7 @@ int nvme_ns_read(nvme_ns_t n, void *buf, off_t offset, size_t count)
 		return -1;
 
 	return nvme_read(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba, nlb, 0,
-			 0, 0, 0, 0, count, buf, 0, NULL);
+			 0, 0, 0, 0, 0, count, buf, 0, NULL);
 }
 
 int nvme_ns_compare(nvme_ns_t n, void *buf, off_t offset, size_t count)
