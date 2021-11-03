@@ -1542,6 +1542,21 @@ int nvme_directive_recv_stream_allocate(int fd, __u32 nsid, __u16 nsr,
 				   dtype, nsr, 0, NULL, result);
 }
 
+int nvme_capacity_mgmt(int fd, __u8 op, __u16 element_id, __u32 dw11, __u32 dw12,
+		       __u32 *result)
+{
+	__u32 dw10 = op | element_id << 16;
+
+        struct nvme_passthru_cmd cmd = {
+		.opcode		= nvme_admin_capacity_mgmt,
+		.cdw10		= dw10,
+		.cdw11		= dw11,
+		.cdw12		= dw12,
+	};
+
+	return nvme_submit_admin_passthru(fd, &cmd, result);
+}
+
 int nvme_set_property(int fd, int offset, __u64 value)
 {
 	__u32 cdw10 = nvme_is_64bit_reg(offset);

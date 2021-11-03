@@ -2124,6 +2124,23 @@ int nvme_directive_recv_stream_allocate(int fd, __u32 nsid, __u16 nsr,
 					__u32 *result);
 
 /**
+ * nvme_capacity_mgmt() -
+ * @fd:		File descriptor of nvme device
+ * @op:		Operation to be performed by the controller
+ * @element_id:	Value specific to the value of the Operation field
+ * @dw11:	Least significant 32 bits of the capacity in bytes of the
+ *		Endurance Group or NVM Set to be created
+ * @dw12:	Most significant 32 bits of the capacity in bytes of the
+ *		Endurance Group or NVM Set to be created
+ * @result:	If successful, the CQE dword0 value
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_capacity_mgmt(int fd, __u8 op, __u16 element_id, __u32 dw11, __u32 dw12,
+		       __u32 *result);
+
+/**
  * nvme_set_property() - Set controller property
  * @fd:		File descriptor of nvme device
  * @offset:	Property offset from the base to set
