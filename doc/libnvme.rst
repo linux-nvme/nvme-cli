@@ -9535,24 +9535,6 @@ bytes, in size. This log captures the controller’s internal state.
 
 
 
-.. c:type:: struct nvme_host_mem_buf_desc
-
-
-**Definition**
-
-::
-
-  struct nvme_host_mem_buf_desc {
-    __le64 addr;
-    __le32 size;
-    __u32 rsvd;
-  };
-
-**Members**
-
-
-
-
 
 .. c:type:: enum nvme_ae_type
 
