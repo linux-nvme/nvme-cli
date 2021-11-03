@@ -20,3 +20,10 @@ jobs:
       - uses: BSFishy/meson-build@v1.0.3
         with:
           action: test
+          options: --verbose
+      # Preserve meson's log file on failure
+      - uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: Linux_Meson_Testlog
+          path: build/meson-logs/testlog.txt

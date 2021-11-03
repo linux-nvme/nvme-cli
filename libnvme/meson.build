@@ -54,7 +54,7 @@ if have_python_support
     # tests directly from the build directory.
     test_env = environment()
     test_env.append('MALLOC_PERTURB_', '0')
-    test_env.append('PYTHONPATH', meson.build_root())
+    test_env.append('PYTHONPATH', join_paths(meson.current_build_dir(), '..'))
 
     # Test section
     test('[Python] import libnvme', python3, args: ['-c', 'from libnvme import nvme'], env: test_env)
