@@ -1005,6 +1005,20 @@ int nvme_get_log_endurance_grp_evt(int fd, bool rae, __u32 offset, __u32 len,
 				   void *log);
 
 /**
+ * nvme_get_log_boot_partition() -
+ * @fd:		File descriptor of nvme device
+ * @rae:	Retain asynchronous events
+ * @lsp:	The log specified field of LID
+ * @len:	The allocated size, minimum
+ *		struct nvme_boot_partition
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+int nvme_get_log_boot_partition(int fd, bool rae, __u8 lsp, __u32 len,
+			        struct nvme_boot_partition *part);
+
+/**
  * nvme_get_log_discovery() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events

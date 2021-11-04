@@ -3155,6 +3155,20 @@ struct nvme_eg_event_aggregate_log {
 };
 
 /**
+ * struct nvme_boot_paritition -
+ * @lid:
+ * @bpinfo:
+ * @boot_partitiion_data:
+ */
+struct nvme_boot_partition {
+	__u8	lid;
+	__u8	rsvd1[3];
+	__le32	bpinfo;
+	__u8	rsvd8[8];
+	__u8	boot_partition_data[];
+};
+
+/**
  * struct nvme_resv_notification_log -
  * @lpc:
  * @rnlpt: See &enum nvme_resv_notify_rnlpt.
@@ -5021,6 +5035,7 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_PERSISTENT_EVENT:
  * @NVME_LOG_LID_LBA_STATUS:
  * @NVME_LOG_LID_ENDURANCE_GRP_EVT:
+ * @NVME_LOG_LID_BOOT_PARTITION:
  * @NVME_LOG_LID_DISCOVER:
  * @NVME_LOG_LID_RESERVATION:
  * @NVME_LOG_LID_SANITIZE:
@@ -5042,6 +5057,7 @@ enum nvme_cmd_get_log_lid {
 	NVME_LOG_LID_PERSISTENT_EVENT				= 0x0d,
 	NVME_LOG_LID_LBA_STATUS					= 0x0e,
 	NVME_LOG_LID_ENDURANCE_GRP_EVT				= 0x0f,
+	NVME_LOG_LID_BOOT_PARTITION				= 0x15,
 	NVME_LOG_LID_DISCOVER					= 0x70,
 	NVME_LOG_LID_RESERVATION				= 0x80,
 	NVME_LOG_LID_SANITIZE					= 0x81,
