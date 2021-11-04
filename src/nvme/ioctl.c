@@ -239,11 +239,13 @@ enum nvme_cmd_dword_fields {
 	NVME_IDENTIFY_CDW10_CNS_SHIFT				= 0,
 	NVME_IDENTIFY_CDW10_CNTID_SHIFT				= 16,
 	NVME_IDENTIFY_CDW11_NVMSETID_SHIFT			= 0,
+	NVME_IDENTIFY_CDW11_DOMID_SHIFT				= 0,
 	NVME_IDENTIFY_CDW14_UUID_SHIFT				= 0,
 	NVME_IDENTIFY_CDW11_CSI_SHIFT				= 24,
 	NVME_IDENTIFY_CDW10_CNS_MASK				= 0xff,
 	NVME_IDENTIFY_CDW10_CNTID_MASK				= 0xffff,
 	NVME_IDENTIFY_CDW11_NVMSETID_MASK			= 0xffff,
+	NVME_IDENTIFY_CDW11_DOMID_MASK				= 0xffff,
 	NVME_IDENTIFY_CDW14_UUID_MASK				= 0x7f,
 	NVME_IDENTIFY_CDW11_CSI_MASK				= 0xff,
 	NVME_NAMESPACE_ATTACH_CDW10_SEL_SHIFT			= 0,
@@ -360,11 +362,12 @@ enum features {
 };
 
 int nvme_identify(int fd, enum nvme_identify_cns cns, __u32 nsid, __u16 cntid,
-		  __u16 nvmsetid, __u8 uuidx, __u8 csi, void *data)
+		  __u16 nvmsetid, __u16 domid, __u8 uuidx, __u8 csi, void *data)
 {
 	__u32 cdw10 = NVME_SET(cntid, IDENTIFY_CDW10_CNTID) |
 			NVME_SET(cns, IDENTIFY_CDW10_CNS);
 	__u32 cdw11 = NVME_SET(nvmsetid, IDENTIFY_CDW11_NVMSETID) |
+			NVME_SET(domid, IDENTIFY_CDW11_DOMID) |
 			NVME_SET(csi, IDENTIFY_CDW11_CSI);
 	__u32 cdw14 = NVME_SET(uuidx, IDENTIFY_CDW14_UUID);
 
@@ -384,7 +387,8 @@ int nvme_identify(int fd, enum nvme_identify_cns cns, __u32 nsid, __u16 cntid,
 static int __nvme_identify(int fd, __u8 cns, __u32 nsid, void *data)
 {
 	return nvme_identify(fd, cns, nsid, NVME_CNTLID_NONE,
-			     NVME_NVMSETID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
+			     NVME_NVMSETID_NONE, NVME_DOMID_NONE,
+			     NVME_UUID_NONE, NVME_CSI_NVM,
 			     data);
 }
 
@@ -425,15 +429,16 @@ int nvme_identify_ctrl_list(int fd, __u16 cntid,
 	BUILD_ASSERT(sizeof(struct nvme_ctrl_list) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CTRL_LIST,
 			     NVME_NSID_NONE, cntid, NVME_NVMSETID_NONE,
-			     NVME_UUID_NONE, NVME_CSI_NVM, ctrlist);
+			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
+			     ctrlist);
 }
 
 int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
 				 struct nvme_ctrl_list *ctrlist)
 {
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_NS_CTRL_LIST, nsid,
-			     cntid, NVME_NVMSETID_NONE, NVME_UUID_NONE,
-			     NVME_CSI_NVM, ctrlist);
+			     cntid, NVME_NVMSETID_NONE, NVME_DOMID_NONE,
+			     NVME_UUID_NONE, NVME_CSI_NVM, ctrlist);
 }
 
 int nvme_identify_ns_descs(int fd, __u32 nsid, struct nvme_ns_id_desc *descs)
@@ -447,7 +452,8 @@ int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 	BUILD_ASSERT(sizeof(struct nvme_id_nvmset_list) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_NVMSET_LIST,
 			     NVME_NSID_NONE, NVME_CNTLID_NONE, nvmsetid,
-			     NVME_UUID_NONE, NVME_CSI_NVM, nvmset);
+			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
+			     nvmset);
 }
 
 int nvme_identify_primary_ctrl(int fd, __u16 cntid,
@@ -456,7 +462,8 @@ int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 	BUILD_ASSERT(sizeof(struct nvme_primary_ctrl_cap) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP,
 			     NVME_NSID_NONE, cntid, NVME_NVMSETID_NONE,
-			     NVME_UUID_NONE, NVME_CSI_NVM, cap);
+			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
+			     cap);
 }
 
 int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid,
@@ -465,7 +472,8 @@ int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid,
 	BUILD_ASSERT(sizeof(struct nvme_secondary_ctrl_list) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
 			     nsid, cntid, NVME_NVMSETID_NONE,
-			     NVME_UUID_NONE, NVME_CSI_NVM, list);
+			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
+			     list);
 }
 
 int nvme_identify_ns_granularity(int fd,
@@ -487,14 +495,14 @@ int nvme_identify_ctrl_csi(int fd, __u8 csi, void *data)
 {
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_CTRL, NVME_NSID_NONE,
 			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
-			     NVME_UUID_NONE, csi, data);
+			     NVME_DOMID_NONE, NVME_UUID_NONE, csi, data);
 }
 
 int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 csi, void *data)
 {
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_NS, nsid,
 			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
-			     NVME_UUID_NONE, csi, data);
+			     NVME_DOMID_NONE, NVME_UUID_NONE, csi, data);
 }
 
 int nvme_identify_active_ns_list_csi(int fd, __u32 nsid, __u8 csi,
@@ -503,7 +511,7 @@ int nvme_identify_active_ns_list_csi(int fd, __u32 nsid, __u8 csi,
 	BUILD_ASSERT(sizeof(struct nvme_ns_list) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST, nsid,
 			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
-			     NVME_UUID_NONE, csi, list);
+			     NVME_DOMID_NONE, NVME_UUID_NONE, csi, list);
 }
 
 int nvme_identify_allocated_ns_list_css(int fd, __u32 nsid, __u8 csi,
@@ -511,16 +519,25 @@ int nvme_identify_allocated_ns_list_css(int fd, __u32 nsid, __u8 csi,
 {
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST, nsid,
 			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
-			     NVME_UUID_NONE, csi, list);
+			     NVME_DOMID_NONE, NVME_UUID_NONE, csi, list);
 }
 
+int nvme_identify_domain_list(int fd, __u16 domid,
+			      struct nvme_id_domain_list *list)
+{
+	BUILD_ASSERT(sizeof(struct nvme_id_domain_list) == 4096);
+	return nvme_identify(fd, NVME_IDENTIFY_CNS_DOMAIN_LIST, NVME_NSID_NONE,
+			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
+			     domid, NVME_UUID_NONE, NVME_CSI_NVM, list);
+}
 
 int nvme_identify_iocs(int fd, __u16 cntlid, struct nvme_id_iocs *iocs)
 {
 	BUILD_ASSERT(sizeof(struct nvme_id_iocs) == 4096);
-	return nvme_identify(fd, NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE, NVME_NSID_NONE,
-			     cntlid, NVME_NVMSETID_NONE, NVME_UUID_NONE,
-			     NVME_CSI_NVM, iocs);
+	return nvme_identify(fd, NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE,
+			     NVME_NSID_NONE, cntlid, NVME_NVMSETID_NONE,
+			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
+			     iocs);
 }
 
 int nvme_zns_identify_ns(int fd, __u32 nsid, struct nvme_zns_id_ns *data)
@@ -528,7 +545,8 @@ int nvme_zns_identify_ns(int fd, __u32 nsid, struct nvme_zns_id_ns *data)
 	BUILD_ASSERT(sizeof(struct nvme_zns_id_ns) == 4096);
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_NS, nsid,
 			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
-			     NVME_UUID_NONE, NVME_CSI_ZNS, data);
+			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_ZNS,
+			     data);
 }
 
 int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id)

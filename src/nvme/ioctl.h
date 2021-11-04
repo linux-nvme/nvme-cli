@@ -375,6 +375,7 @@ int nvme_get_nsid(int fd, __u32 *nsid);
  * @fd:		File descriptor of nvme device
  * @cns:	The Controller or Namespace structure, see @enum nvme_identify_cns
  * @nsid:	Namespace identifier, if applicable
+ * @domid:	Domain identifier, if applicable
  * @cntid:	The Controller Identifier, if applicable
  * @nvmsetid:	The NVMe Set ID if CNS is 04h
  * @uuidx:	UUID Index if controller supports this id selection method
@@ -388,8 +389,8 @@ int nvme_get_nsid(int fd, __u32 *nsid);
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_identify(int fd, enum nvme_identify_cns cns, __u32 nsid,
-		  __u16 cntid, __u16 nvmsetid, __u8 uuidx, __u8 csi,
-		  void *data);
+		  __u16 cntid, __u16 nvmsetid, __u16 domid,
+		  __u8 uuidx, __u8 csi, void *data);
 
 /**
  * nvme_identify_ctrl() - Retrieves nvme identify controller
@@ -690,6 +691,25 @@ int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid, __u8 csi,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_nvm_identify_ctrl(int fd, struct nvme_id_ctrl_nvm *id);
+
+/**
+ * nvme_idnetifY_domain_list() -
+ * @fd:		File descriptor of nvme device
+ * @domid:	Domain ID
+ * @list:	User space destiantion address to transfer data
+ *
+ * A list of 31 domain IDs is returned to the host containing domain
+ * attributes in increasing order that are greater than the value
+ * specified in the @domid field.
+ *
+ * See @struct nvme_identify_domain_attr for the definition of the
+ * returned structure.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_identify_domain_list(int fd, __u16 domid,
+			      struct nvme_id_domain_list *list);
 
 /**
  * nvme_identify_iocs() -

@@ -48,6 +48,7 @@
  * @NVME_UUID_NONE:		Use to omit a uuid command parameter
  * @NVME_CNTLID_NONE:		Use to omit a cntlid command parameter
  * @NVME_NVMSETID_NONE: 	Use to omit a nvmsetid command parameter
+ * @NVME_DOMID_NONE:		Use to omit a domid command parameter
  * @NVME_LOG_LSP_NONE:		Use to omit a log lsp command parameter
  * @NVME_LOG_LSI_NONE:		Use to omit a log lsi command parameter
  * @NVME_LOG_LPO_NONE:		Use to omit a log lpo command parameter
@@ -62,6 +63,8 @@
  * 				identify namespace list
  * @NVME_ID_SECONDARY_CTRL_MAX:	The largest possible secondary controller index
  * 				in identify secondary controller
+ * @NMVE_ID_DOMAIN_LIST_MAX:	The largest possible domain index in the
+ *				in domain list
  * @NVME_FEAT_LBA_RANGE_MAX:	The largest possible LBA range index in feature
  * 				lba range type
  * @NVME_LOG_ST_MAX_RESULTS:	The largest possible self test result index in the
@@ -79,6 +82,7 @@ enum nvme_constants {
 	NVME_UUID_NONE			= 0,
 	NVME_CNTLID_NONE		= 0,
 	NVME_NVMSETID_NONE		= 0,
+	NVME_DOMID_NONE			= 0,
 	NVME_LOG_LSP_NONE		= 0,
 	NVME_LOG_LSI_NONE		= 0,
 	NVME_LOG_LPO_NONE		= 0,
@@ -88,6 +92,7 @@ enum nvme_constants {
 	NVME_ID_CTRL_LIST_MAX		= 2047,
 	NVME_ID_NS_LIST_MAX		= 1024,
 	NVME_ID_SECONDARY_CTRL_MAX	= 127,
+	NVME_ID_DOMAIN_LIST_MAX		= 31,
 	NVME_ID_ND_DESCRIPTOR_MAX	= 16,
 	NVME_FEAT_LBA_RANGE_MAX		= 64,
 	NVME_LOG_ST_MAX_RESULTS		= 20,
@@ -2138,6 +2143,33 @@ struct nvme_secondary_ctrl_list {
  */
 struct nvme_id_iocs {
 	__u64 iocsc[512];
+};
+
+/**
+ * struct nvme_id_domain_attr - Domain Attributes Entry
+ * @dom_id:
+ * @dom_cap:
+ * @unalloc_dom_cap:
+ * @max_egrp_dom_cap:
+ */
+struct nvme_id_domain_attr {
+	__le16	dom_id;
+	__u8	rsvd2[14];
+	__u8	dom_cap[16];
+	__u8	unalloc_dom_cap[16];
+	__u8	max_egrp_dom_cap[16];
+	__u8	rsvd64[64];
+};
+
+/**
+ * struct nvme_id_domain_list -
+ * @num:
+ * @domain_attr: List of domain attributes
+ */
+struct nvme_id_domain_list {
+	__u8	num;
+	__u8	rsvd[127];
+	struct nvme_id_domain_attr domain_attr[NVME_ID_DOMAIN_LIST_MAX];
 };
 
 /**
@@ -4914,6 +4946,7 @@ enum nvme_admin_opcode {
  * @NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST:
  * @NVME_IDENTIFY_CNS_NS_GRANULARITY:
  * @NVME_IDENTIFY_CNS_UUID_LIST:
+ * @NVME_IDENTIFY_CNS_DOMAIN_LIST:
  * @NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST:
  * @NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE: Base Specification 2.0a section 5.17.2.21
  */
@@ -4934,6 +4967,7 @@ enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST			= 0x15,
 	NVME_IDENTIFY_CNS_NS_GRANULARITY			= 0x16,
 	NVME_IDENTIFY_CNS_UUID_LIST				= 0x17,
+	NVME_IDENTIFY_CNS_DOMAIN_LIST				= 0x18,
 	NVME_IDENTIFY_CNS_CSS_ALLOCATED_NS_LIST			= 0x1A,
 	NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE			= 0x1C,
 };
