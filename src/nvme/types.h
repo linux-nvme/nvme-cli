@@ -5064,11 +5064,11 @@ enum nvme_get_features_sel {
 /**
  * enum nvme_cmd_format_mset -
  * @NVME_FORMAT_MSET_SEPARATE:
- * @NVME_FORMAT_MSET_EXTENEDED:
+ * @NVME_FORMAT_MSET_EXTENDED:
  */
 enum nvme_cmd_format_mset {
 	NVME_FORMAT_MSET_SEPARATE				= 0,
-	NVME_FORMAT_MSET_EXTENEDED				= 1,
+	NVME_FORMAT_MSET_EXTENDED				= 1,
 };
 
 /**
