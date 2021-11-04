@@ -608,8 +608,8 @@ static int __nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, bool rae,
 			  __u32 len, void *log)
 {
 	return nvme_get_log(fd, lid, NVME_NSID_ALL, 0, NVME_LOG_LSP_NONE,
-			    NVME_LOG_LSI_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
-			    rae, len, log);
+			    NVME_LOG_LSI_NONE, rae, NVME_UUID_NONE,
+			    NVME_CSI_NVM, len, log);
 }
 
 int nvme_get_log_error(int fd, unsigned nr_entries, bool rae,
