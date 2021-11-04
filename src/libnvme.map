@@ -140,6 +140,7 @@
 		nvme_identify_ctrl;
 		nvme_identify_ctrl_list;
 		nvme_identify_domain_list;
+		nvme_identify_independent_identify_ns;
 		nvme_identify_iocs;
 		nvme_identify_ns;
 		nvme_identify_ns_descs;

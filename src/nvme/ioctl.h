@@ -683,6 +683,19 @@ int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid, __u8 csi,
 					struct nvme_ns_list *list);
 
 /**
+ * nvme_identify_independent_identify_ns() -
+ * @fd:		File descriptor of nvme device
+ * @nsid:	Return namespaces greater than this identifier
+ * @ns:		I/O Command Set Independent Identify Namespace data
+ *		structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
+					  struct nvme_id_independent_id_ns *ns);
+
+/**
  * nvme_identify_ctrl_nvm() -
  * @fd:	File descriptor of nvme device
  * @id:	User space destination address to transfer the data

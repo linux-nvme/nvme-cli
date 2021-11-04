@@ -531,6 +531,16 @@ int nvme_identify_domain_list(int fd, __u16 domid,
 			     domid, NVME_UUID_NONE, NVME_CSI_NVM, list);
 }
 
+int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
+					  struct nvme_id_independent_id_ns *ns)
+{
+	BUILD_ASSERT(sizeof(struct nvme_id_independent_id_ns) == 4096);
+	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS,
+			     nsid, NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
+			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
+			     ns);
+}
+
 int nvme_identify_iocs(int fd, __u16 cntlid, struct nvme_id_iocs *iocs)
 {
 	BUILD_ASSERT(sizeof(struct nvme_id_iocs) == 4096);
@@ -554,7 +564,6 @@ int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id)
 	BUILD_ASSERT(sizeof(struct nvme_zns_id_ctrl) == 4096);
 	return nvme_identify_ctrl_csi(fd, NVME_CSI_ZNS, id);
 }
-
 
 int nvme_nvm_identify_ctrl(int fd, struct nvme_id_ctrl_nvm *id) 
 {

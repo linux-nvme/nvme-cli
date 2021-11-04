@@ -1929,6 +1929,32 @@ struct nvme_id_nvmset_list {
 };
 
 /**
+ * struct nvme_id_independent_id_ns -
+ * @nsfeat:
+ * @nmic:
+ * @rescap:
+ * @fpi:
+ * @anagrpid:
+ * @nsattr:
+ * @nvmsetid:
+ * @endgid:
+ * @nstat:
+ */
+struct nvme_id_independent_id_ns {
+	__u8	nsfeat;
+	__u8	nmic;
+	__u8	rescap;
+	__u8	fpi;
+	__le32	anagrpid;
+	__u8	nsattr;
+	__u8	rsvd9;
+	__le16	nvmsetid;
+	__le16	endgid;
+	__u8	nstat;
+	__u8	rsvd15[4081];
+};
+
+/**
  * struct nvme_id_ns_granularity_desc -
  * @nszegran:
  * @ncapgran:
@@ -4942,6 +4968,7 @@ enum nvme_admin_opcode {
  * @NVME_IDENTIFY_CNS_CSI_NS:
  * @NVME_IDENTIFY_CNS_CSI_CTRL:
  * @NVME_IDENTIFY_CNS_CSI_CSI_NS_ACTIVE_LIST:
+ * @NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS:
  * @NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST:
  * @NVME_IDENTIFY_CNS_ALLOCATED_NS:
  * @NVME_IDENTIFY_CNS_NS_CTRL_LIST:
@@ -4963,6 +4990,7 @@ enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_CSI_NS				= 0x05,
 	NVME_IDENTIFY_CNS_CSI_CTRL				= 0x06,
 	NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST			= 0x07,
+	NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS			= 0x08,
 	NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST			= 0x10,
 	NVME_IDENTIFY_CNS_ALLOCATED_NS				= 0x11,
 	NVME_IDENTIFY_CNS_NS_CTRL_LIST				= 0x12,
