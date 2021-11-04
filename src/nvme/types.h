@@ -2933,6 +2933,8 @@ struct nvme_ana_log {
  * @sn:
  * @mn:
  * @subnqn:
+ * @gen_number:
+ * @rci:
  * @seb:
  */
 struct nvme_persistent_event_log {
@@ -2951,7 +2953,9 @@ struct nvme_persistent_event_log {
 	char	sn[20];
 	char	mn[40];
 	char	subnqn[NVME_NQN_LENGTH];
-	__u8	rsvd372[108];
+	__le16  gen_number;
+	__le32  rci;
+	__u8    rsvd378[102];
 	__u8	seb[32];
 } __attribute__((packed));
 
