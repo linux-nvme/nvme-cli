@@ -531,6 +531,16 @@ int nvme_identify_domain_list(int fd, __u16 domid,
 			     domid, NVME_UUID_NONE, NVME_CSI_NVM, list);
 }
 
+int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
+				struct nvme_id_endurance_group_list *list)
+{
+	BUILD_ASSERT(sizeof(struct nvme_id_endurance_group_list) == 4096);
+	return nvme_identify(fd, NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID,
+			     NVME_NSID_NONE, NVME_CNTLID_NONE,
+			     NVME_NVMSETID_NONE, endgrp_id, NVME_UUID_NONE,
+			     NVME_CSI_NVM, list);
+}
+
 int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
 					  struct nvme_id_independent_id_ns *ns)
 {

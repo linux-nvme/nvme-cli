@@ -725,6 +725,18 @@ int nvme_identify_domain_list(int fd, __u16 domid,
 			      struct nvme_id_domain_list *list);
 
 /**
+ * nvme_identifiy_endurance_group_list() -
+ * @fd:		File descriptor of nvme device
+ * @endgrp_id:	Endurance group identifier
+ * @list:	Array of endurance group identifiers
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
+				struct nvme_id_endurance_group_list *list);
+
+/**
  * nvme_identify_iocs() -
  * @fd:		File descriptor of nvme device
  * @cntlid:	Controller ID
