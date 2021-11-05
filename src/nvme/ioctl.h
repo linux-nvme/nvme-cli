@@ -2600,6 +2600,7 @@ int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
  * @nsid:	Namespace ID
  * @slba:
  * @select_all:
+ * @timeout:	timeout in ms
  * @zsa:
  * @data_len:
  * @data:
@@ -2608,8 +2609,9 @@ int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
-		       enum nvme_zns_send_action zsa, __u32 data_len,
-		       void *data);
+		       __u32 timeout, enum nvme_zns_send_action zsa,
+		       __u32 data_len, void *data);
+
 
 /**
  * nvme_zns_mgmt_recv() -
