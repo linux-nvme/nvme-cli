@@ -612,6 +612,14 @@ static int __nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, bool rae,
 			    NVME_CSI_NVM, len, log);
 }
 
+int nvme_get_log_supported_log_pages(int fd, bool rae,
+				     struct nvme_supported_log_pages *log)
+{
+	BUILD_ASSERT(sizeof(struct nvme_supported_log_pages) == 1024);
+	return __nvme_get_log(fd, NVME_LOG_LID_SUPPORTED_LOG_PAGES, rae,
+			      sizeof(*log), log);
+}
+
 int nvme_get_log_error(int fd, unsigned nr_entries, bool rae,
 		       struct nvme_error_log_page *log)
 {

@@ -53,6 +53,8 @@
  * @NVME_LOG_LSI_NONE:		Use to omit a log lsi command parameter
  * @NVME_LOG_LPO_NONE:		Use to omit a log lpo command parameter
  * @NVME_IDENTIFY_DATA_SIZE:	The transfer size for nvme identify commands
+ * @NVME_LOG_SUPPORTED_LOG_PAGES_MAX: The lagest possible index in the supported
+ *				log pages log.
  * @NVME_ID_NVMSET_LIST_MAX:	The largest possible nvmset index in identify
  * 				nvmeset
  * @NVME_ID_UUID_LIST_MAX:	The largest possible uuid index in identify
@@ -89,6 +91,7 @@ enum nvme_constants {
 	NVME_LOG_LSI_NONE			= 0,
 	NVME_LOG_LPO_NONE			= 0,
 	NVME_IDENTIFY_DATA_SIZE			= 4096,
+	NVME_LOG_SUPPORTED_LOG_PAGES_MAX	= 256,
 	NVME_ID_NVMSET_LIST_MAX			= 31,
 	NVME_ID_UUID_LIST_MAX			= 127,
 	NVME_ID_CTRL_LIST_MAX			= 2047,
@@ -2199,6 +2202,16 @@ struct nvme_id_domain_list {
 	__u8	num;
 	__u8	rsvd[127];
 	struct nvme_id_domain_attr domain_attr[NVME_ID_DOMAIN_LIST_MAX];
+};
+
+/**
+ * struct nvme_supported_log_pages -
+ * @lid_support:
+ *
+ * Supported Log Pages (Log Identifier 00h)
+ */
+struct nvme_supported_log_pages {
+	__le32	lid_support[NVME_LOG_SUPPORTED_LOG_PAGES_MAX];
 };
 
 /**
@@ -5069,6 +5082,7 @@ enum nvme_identify_cns {
 
 /**
  * enum nvme_cmd_get_log_lid -
+ * @NVME_LOG_LID_SUPPORTED_LOG_PAGES:
  * @NVME_LOG_LID_ERROR:
  * @NVME_LOG_LID_SMART:
  * @NVME_LOG_LID_FW_SLOT:
@@ -5092,6 +5106,7 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_ZNS_CHANGED_ZONES:
  */
 enum nvme_cmd_get_log_lid {
+	NVME_LOG_LID_SUPPORTED_LOG_PAGES			= 0x00,
 	NVME_LOG_LID_ERROR					= 0x01,
 	NVME_LOG_LID_SMART					= 0x02,
 	NVME_LOG_LID_FW_SLOT					= 0x03,

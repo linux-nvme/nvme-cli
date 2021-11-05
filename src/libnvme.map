@@ -123,6 +123,7 @@
 		nvme_get_log_reservation;
 		nvme_get_log_sanitize;
 		nvme_get_log_smart;
+		nvme_get_log_supported_log_pages;
 		nvme_get_log_telemetry_ctrl;
 		nvme_get_log_telemetry_host;
 		nvme_get_new_host_telemetry;

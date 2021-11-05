@@ -793,6 +793,17 @@ static inline int nvme_get_log_simple(int fd, enum nvme_cmd_get_log_lid lid,
 	return nvme_get_nsid_log(fd, lid, NVME_NSID_ALL, len, log);
 }
 
+/** nvme_get_log_supported_log_pages() - Retrieve nmve supported log pages
+ * @fd:		File descriptor of nvme device
+ * @rae:	Retain asynchronous events
+ * @log:	Array of LID supported and Effects data structures
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_get_log_supported_log_pages(int fd, bool rae,
+				     struct nvme_supported_log_pages *log);
+
 /**
  * nvme_get_log_error() - Retrieve nvme error log
  * @fd:		File descriptor of nvme device
