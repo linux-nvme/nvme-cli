@@ -2759,6 +2759,8 @@ struct nvme_self_test_log {
  * 	       the value of the last block in this area.
  * @dalb3:     Telemetry Controller-Initiated Data Area 1 Last Block is
  * 	       the value of the last block in this area.
+ * @dalb4:     Telemetry Controller-Initiated Data Area 4 Last Block is
+ * 	       the value of the last block in this area.
  * @ctrlavail: Telemetry Controller-Initiated Data Available, if cleared,
  * 	       then the controller telemetry log does not contain saved
  * 	       internal controller state. If this field is set to 1h, the
@@ -2784,7 +2786,9 @@ struct nvme_telemetry_log {
 	__le16	dalb1;
 	__le16	dalb2;
 	__le16	dalb3;
-	__u8	rsvd14[368];
+	__u8    rsvd14[2];
+	__le32  dalb4;
+	__u8    rsvd20[362];
 	__u8	ctrlavail;
 	__u8	ctrldgn;
 	__u8	rsnident[128];
