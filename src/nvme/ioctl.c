@@ -747,6 +747,16 @@ int nvme_get_log_endurance_grp_evt(int fd, bool rae, __u32 offset, __u32 len,
 			    NVME_CSI_NVM, len, log);
 }
 
+int nvme_get_log_fid_supported_effects(int fd, bool rae,
+				       struct nvme_fid_supported_effects_log *log)
+{
+	BUILD_ASSERT(sizeof(struct nvme_fid_supported_effects_log) == 1024);
+	return nvme_get_log(fd, NVME_LOG_LID_FID_SUPPORTED_EFFECTS,
+			    NVME_NSID_NONE, 0, NVME_LOG_LSP_NONE,
+			    NVME_LOG_LSI_NONE, rae, NVME_UUID_NONE,
+			    NVME_CSI_NVM, sizeof(*log), log);
+}
+
 int nvme_get_log_boot_partition(int fd, bool rae, __u8 lsp, __u32 len,
 			        struct nvme_boot_partition *part)
 {

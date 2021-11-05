@@ -1005,6 +1005,18 @@ int nvme_get_log_endurance_grp_evt(int fd, bool rae, __u32 offset, __u32 len,
 				   void *log);
 
 /**
+ * nvme_get_log_fid_supported_effects() -
+ * @fd:		File descriptor of nvme device
+ * @rae:	Retain asynchronous events
+ * @log:	FID Supported and Effects data structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+int nvme_get_log_fid_supported_effects(int fd, bool rae,
+				       struct nvme_fid_supported_effects_log *log);
+
+/**
  * nvme_get_log_boot_partition() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events

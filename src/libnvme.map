@@ -113,6 +113,7 @@
 		nvme_get_log_endurance_group;
 		nvme_get_log_endurance_grp_evt;
 		nvme_get_log_error;
+		nvme_get_log_fid_supported_effects;
 		nvme_get_log_fw_slot;
 		nvme_get_log_lba_status;
 		nvme_get_log_page;
