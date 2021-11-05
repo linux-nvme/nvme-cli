@@ -1613,6 +1613,20 @@ int nvme_capacity_mgmt(int fd, __u8 op, __u16 element_id, __u32 dw11, __u32 dw12
 	return nvme_submit_admin_passthru(fd, &cmd, result);
 }
 
+int nvme_lockdown(int fd, __u8 scp, __u8 prhbt, __u8 ifc, __u8 ofi,
+		  __u8 uuid)
+{
+	__u32 cdw10 =  ofi << 8 | (ifc & 0x3) << 5 | (prhbt & 0x1) << 4 | (scp & 0xF);
+
+	struct nvme_passthru_cmd cmd = {
+		.opcode         = nvme_admin_lockdown,
+		.cdw10          = cdw10,
+		.cdw14          = uuid & 0x3F,
+	};
+
+	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+}
+
 int nvme_set_property(int fd, int offset, __u64 value)
 {
 	__u32 cdw10 = nvme_is_64bit_reg(offset);

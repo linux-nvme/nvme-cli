@@ -2211,6 +2211,21 @@ int nvme_capacity_mgmt(int fd, __u8 op, __u16 element_id, __u32 dw11, __u32 dw12
 		       __u32 *result);
 
 /**
+ * nvme_lockdown() - Issue lockdown command
+ * @fd:		File descriptor of nvme device
+ * @scp:
+ * @prhbt:
+ * @ifc:
+ * @ofi:
+ * @uuid:
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_lockdown(int fd, __u8 scp, __u8 prhbt, __u8 ifc, __u8 ofi,
+		  __u8 uuid);
+
+/**
  * nvme_set_property() - Set controller property
  * @fd:		File descriptor of nvme device
  * @offset:	Property offset from the base to set

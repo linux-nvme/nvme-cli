@@ -160,6 +160,7 @@
 		nvme_init_id_ns;
 		nvme_io_passthru64;
 		nvme_io_passthru;
+		nvme_lockdown;
 		nvme_log_level;
 		nvme_log_message;
 		nvme_lookup_host;
