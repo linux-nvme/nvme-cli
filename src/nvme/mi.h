@@ -206,5 +206,11 @@ static inline int nvme_mi_admin_identify_ctrl_list(nvme_mi_ctrl_t ctrl,
 int nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
 			       struct nvme_get_log_args *args);
 
+int nvme_mi_admin_security_send(nvme_mi_ctrl_t ctrl,
+				struct nvme_security_send_args *args);
+
+int nvme_mi_admin_security_recv(nvme_mi_ctrl_t ctrl,
+				struct nvme_security_receive_args *args);
+
 
 #endif /* _LIBNVME_MI_MI_H */

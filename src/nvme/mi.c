@@ -345,6 +345,104 @@ int nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
 	return rc;
 }
 
+int nvme_mi_admin_security_send(nvme_mi_ctrl_t ctrl,
+				struct nvme_security_send_args *args)
+{
+
+	struct nvme_mi_admin_resp_hdr resp_hdr;
+	struct nvme_mi_admin_req_hdr req_hdr;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+
+	if (args->data_len > 4096)
+		return -EINVAL;
+
+	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id,
+			       nvme_admin_security_send);
+
+	req_hdr.cdw10 = cpu_to_le32(args->secp << 24 |
+				    args->spsp0 << 16 |
+				    args->spsp1 << 8 |
+				    args->nssf);
+
+	req_hdr.cdw11 = cpu_to_le32(args->data_len & 0xffffffff);
+
+	req_hdr.flags = 0x1;
+	req_hdr.dlen = cpu_to_le32(args->data_len & 0xffffffff);
+	req.data = args->data;
+	req.data_len = args->data_len;
+
+	nvme_mi_calc_req_mic(&req);
+
+	nvme_mi_admin_init_resp(&resp, &resp_hdr);
+
+	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
+	if (args->result)
+		*args->result = le32_to_cpu(resp_hdr.cdw0);
+
+	return 0;
+}
+
+int nvme_mi_admin_security_recv(nvme_mi_ctrl_t ctrl,
+				struct nvme_security_receive_args *args)
+{
+
+	struct nvme_mi_admin_resp_hdr resp_hdr;
+	struct nvme_mi_admin_req_hdr req_hdr;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+
+	if (args->data_len > 4096)
+		return -EINVAL;
+
+	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id,
+			       nvme_admin_security_recv);
+
+	req_hdr.cdw10 = cpu_to_le32(args->secp << 24 |
+				    args->spsp0 << 16 |
+				    args->spsp1 << 8 |
+				    args->nssf);
+
+	req_hdr.cdw11 = cpu_to_le32(args->data_len & 0xffffffff);
+
+	req_hdr.flags = 0x1;
+	req_hdr.dlen = cpu_to_le32(args->data_len & 0xffffffff);
+
+	nvme_mi_calc_req_mic(&req);
+
+	nvme_mi_admin_init_resp(&resp, &resp_hdr);
+	resp.data = args->data;
+	resp.data_len = args->data_len;
+
+	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
+	if (args->result)
+		*args->result = resp_hdr.cdw0;
+
+	args->data_len = resp.data_len;
+
+	return 0;
+}
+
 static int nvme_mi_read_data(nvme_mi_ep_t ep, __u32 cdw0,
 			     void *data, size_t *data_len)
 {

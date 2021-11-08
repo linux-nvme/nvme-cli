@@ -415,12 +415,106 @@ int do_admin_raw(nvme_mi_ep_t ep, int argc, char **argv)
 	return 0;
 }
 
+static struct {
+	uint8_t id;
+	const char *name;
+} sec_protos[] = {
+	{ 0x00, "Security protocol information" },
+	{ 0xea, "NVMe" },
+	{ 0xec, "JEDEC Universal Flash Storage" },
+	{ 0xed, "SDCard TrustedFlash Security" },
+	{ 0xee, "IEEE 1667" },
+	{ 0xef, "ATA Device Server Password Security" },
+};
+
+static const char *sec_proto_description(uint8_t id)
+{
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(sec_protos); i++) {
+		if (sec_protos[i].id == id)
+			return sec_protos[i].name;
+	}
+
+	if (id >= 0xf0)
+		return "Vendor specific";
+
+	return "unknown";
+}
+
+int do_security_info(nvme_mi_ep_t ep, int argc, char **argv)
+{
+	struct nvme_security_receive_args args = { 0 };
+	nvme_mi_ctrl_t ctrl;
+	int i, rc, n_proto;
+	unsigned long tmp;
+	uint16_t ctrl_id;
+	struct {
+		uint8_t		rsvd[6];
+		uint16_t	len;
+		uint8_t		protocols[256];
+	} proto_info;
+
+	if (argc != 2) {
+		fprintf(stderr, "no controller ID specified\n");
+		return -1;
+	}
+
+	tmp = atoi(argv[1]);
+	if (tmp < 0 || tmp > 0xffff) {
+		fprintf(stderr, "invalid controller ID\n");
+		return -1;
+	}
+
+	ctrl_id = tmp & 0xffff;
+
+	ctrl = nvme_mi_init_ctrl(ep, ctrl_id);
+	if (!ctrl) {
+		warn("can't create controller");
+		return -1;
+	}
+
+	/* protocol 0x00, spsp 0x0000: retrieve supported protocols */
+	args.args_size = sizeof(args);
+	args.data = &proto_info;
+	args.data_len = sizeof(proto_info);
+
+	rc = nvme_mi_admin_security_recv(ctrl, &args);
+	if (rc) {
+		warnx("can't perform Security Receive command: rc %d", rc);
+		return -1;
+	}
+
+	if (args.data_len < 6) {
+		warnx("Short response in security receive command (%d bytes)",
+		      args.data_len);
+		return -1;
+	}
+
+	n_proto = be16_to_cpu(proto_info.len);
+	if (args.data_len < 6 + n_proto) {
+		warnx("Short response in security receive command (%d bytes), "
+		      "for %d protocols", args.data_len, n_proto);
+		return -1;
+	}
+
+	printf("Supported protocols:\n");
+	for (i = 0; i < n_proto; i++) {
+		uint8_t id = proto_info.protocols[i];
+		printf("  0x%02x: %s\n", id, sec_proto_description(id));
+	}
+
+	return 0;
+}
+
+
 enum action {
 	ACTION_INFO,
 	ACTION_CONTROLLERS,
 	ACTION_IDENTIFY,
 	ACTION_GET_LOG_PAGE,
 	ACTION_ADMIN_RAW,
+	ACTION_SECURITY_INFO,
 };
 
 int main(int argc, char **argv)
@@ -441,6 +535,7 @@ int main(int argc, char **argv)
 			"  identify <controller-id> [--partial]\n"
 			"  get-log-page <controller-id> [<log-id>]\n"
 			"  admin <controller-id> <opcode> [<cdw10>, <cdw11>, ...]\n"
+			"  security-info <controller-id>\n"
 			);
 		return EXIT_FAILURE;
 	}
@@ -467,6 +562,8 @@ int main(int argc, char **argv)
 			action = ACTION_GET_LOG_PAGE;
 		} else if (!strcmp(action_str, "admin")) {
 			action = ACTION_ADMIN_RAW;
+		} else if (!strcmp(action_str, "security-info")) {
+			action = ACTION_SECURITY_INFO;
 		} else {
 			fprintf(stderr, "invalid action '%s'\n", action_str);
 			return EXIT_FAILURE;
@@ -496,6 +593,9 @@ int main(int argc, char **argv)
 		break;
 	case ACTION_ADMIN_RAW:
 		rc = do_admin_raw(ep, argc, argv);
+		break;
+	case ACTION_SECURITY_INFO:
+		rc = do_security_info(ep, argc, argv);
 		break;
 	}
 
