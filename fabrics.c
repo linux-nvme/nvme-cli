@@ -341,13 +341,13 @@ static bool ctrl_matches_connectargs(const char *name, struct connect_args *args
 	     !strcmp(args->host_iface, "none")))
 		found = true;
 
-out:
-	free(cargs.subsysnqn);
-	free(cargs.transport);
 	free(cargs.traddr);
 	free(cargs.trsvcid);
 	free(cargs.host_traddr);
 	free(cargs.host_iface);
+out:
+	free(cargs.subsysnqn);
+	free(cargs.transport);
 	free(addr);
 	free(path);
 
