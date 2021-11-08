@@ -47,7 +47,7 @@ endif
 ifeq ($(LIBJSONC), 0)
 	override LDFLAGS += $(shell pkg-config --libs json-c)
 	override CFLAGS += $(shell pkg-config --cflags json-c)
-	override CFLAGS += -DCONFIG_LIBJSONC
+	override CFLAGS += -DCONFIG_JSONC
 endif
 
 ifneq ("$(wildcard $(LIBNVMEDIR)/Makefile)","")
