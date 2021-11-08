@@ -3109,16 +3109,71 @@ enum nvme_resv_notify_rnlpt {
 };
 
 /**
- * struct nvme_sanitize_log_page -
- * @sprog:
- * @sstat:
- * @scdw10:
- * @eto:
- * @etbe:
- * @etce:
- * @etond:
- * @etbend:
- * @etcend:
+ * struct nvme_sanitize_log_page - Sanitize Status (Log Identifier 81h)
+ * @sprog:	Sanitize Progress (SPROG): indicates the fraction complete of the
+ * 		sanitize operation. The value is a numerator of the fraction
+ * 		complete that has 65,536 (10000h) as its denominator. This value
+ * 		shall be set to FFFFh if the @sstat field is not set to
+ * 		%NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS.
+ * @sstat:	Sanitize Status (SSTAT): indicates the status associated with
+ * 		the most recent sanitize operation. See &enum nvme_sanitize_sstat.
+ * @scdw10:	Sanitize Command Dword 10 Information (SCDW10): contains the value
+ * 		of the Command Dword 10 field of the Sanitize command that started
+ * 		the sanitize operation.
+ * @eto:	Estimated Time For Overwrite: indicates the number of seconds required
+ * 		to complete an Overwrite sanitize operation with 16 passes in
+ * 		the background when the No-Deallocate Modifies Media After Sanitize
+ * 		field is not set to 10b. A value of 0h indicates that the sanitize
+ * 		operation is expected to be completed in the background when the
+ * 		Sanitize command that started that operation is completed. A value
+ * 		of FFFFFFFFh indicates that no time period is reported.
+ * @etbe:	Estimated Time For Block Erase: indicates the number of seconds
+ * 		required to complete a Block Erase sanitize operation in the
+ * 		background when the No-Deallocate Modifies Media After Sanitize
+ * 		field is not set to 10b. A value of 0h indicates that the sanitize
+ * 		operation is expected to be completed in the background when the
+ * 		Sanitize command that started that operation is completed.
+ * 		A value of FFFFFFFFh indicates that no time period is reported.
+ * @etce:	Estimated Time For Crypto Erase: indicates the number of seconds
+ * 		required to complete a Crypto Erase sanitize operation in the
+ * 		background when the No-Deallocate Modifies Media After Sanitize
+ * 		field is not set to 10b. A value of 0h indicates that the sanitize
+ * 		operation is expected to be completed in the background when the
+ * 		Sanitize command that started that operation is completed.
+ * 		A value of FFFFFFFFh indicates that no time period is reported.
+ * @etond:	Estimated Time For Overwrite With No-Deallocate Media Modification:
+ * 		indicates the number of seconds required to complete an Overwrite
+ * 		sanitize operation and the associated additional media modification
+ * 		after the Overwrite sanitize operation in the background when
+ * 		the No-Deallocate After Sanitize bit was set to 1 in the Sanitize
+ * 		command that requested the Overwrite sanitize operation; and
+ * 		the No-Deallocate Modifies Media After Sanitize field is set to 10b.
+ * 		A value of 0h indicates that the sanitize operation is expected
+ * 		to be completed in the background when the Sanitize command that
+ * 		started that operation is completed. A value of FFFFFFFFh indicates
+ * 		that no time period is reported.
+ * @etbend:	Estimated Time For Block Erase With No-Deallocate Media Modification:
+ * 		indicates the number of seconds required to complete a Block Erase
+ * 		sanitize operation and the associated additional media modification
+ * 		after the Block Erase sanitize operation in the background when
+ * 		the No-Deallocate After Sanitize bit was set to 1 in the Sanitize
+ * 		command that requested the Overwrite sanitize operation; and
+ * 		the No-Deallocate Modifies Media After Sanitize field is set to 10b.
+ * 		A value of 0h indicates that the sanitize operation is expected
+ * 		to be completed in the background when the Sanitize command that
+ * 		started that operation is completed. A value of FFFFFFFFh indicates
+ * 		that no time period is reported.
+ * @etcend:	Estimated Time For Crypto Erase With No-Deallocate Media Modification:
+ * 		indicates the number of seconds required to complete a Crypto Erase
+ * 		sanitize operation and the associated additional media modification
+ * 		after the Crypto Erase sanitize operation in the background when
+ * 		the No-Deallocate After Sanitize bit was set to 1 in the Sanitize
+ * 		command that requested the Overwrite sanitize operation; and
+ * 		the No-Deallocate Modifies Media After Sanitize field is set to 10b.
+ * 		A value of 0h indicates that the sanitize operation is expected
+ * 		to be completed in the background when the Sanitize command that
+ * 		started that operation is completed. A value of FFFFFFFFh indicates
+ * 		that no time period is reported.
  */
 struct nvme_sanitize_log_page {
 	__le16	sprog;
@@ -3134,13 +3189,46 @@ struct nvme_sanitize_log_page {
 };
 
 /**
- * enum nvme_sanitize_sstat -
- * @NVME_SANITIZE_SSTAT_STATUS_MASK:
- * @NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED:
- * @NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS:
- * @NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS:
- * @NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED:
- * @NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS:
+ * enum nvme_sanitize_sstat - Sanitize Status (SSTAT)
+ * @NVME_SANITIZE_SSTAT_STATUS_SHIFT:	 Shift amount to get the status value of
+ * 					 the most recent sanitize operation from
+ * 					 the &struct nvme_sanitize_log_page.sstat
+ * 					 field.
+ * @NVME_SANITIZE_SSTAT_STATUS_MASK:	 Mask to get the status value of the most
+ * 					 recent sanitize operation.
+ * @NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED: The NVM subsystem has never been
+ * 					 sanitized.
+ * @NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS: The most recent sanitize operation
+ * 					 completed successfully including any
+ * 					 additional media modification.
+ * @NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS: A sanitize operation is currently in progress.
+ * @NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED: The most recent sanitize operation
+ * 					 failed.
+ * @NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS: The most recent sanitize operation
+ * 					 for which No-Deallocate After Sanitize was
+ * 					 requested has completed successfully with
+ * 					 deallocation of all user data.
+ * @NVME_SANITIZE_SSTAT_COMPLETED_PASSES_SHIFT: Shift amount to get the number
+ * 					 of completed passes if the most recent
+ * 					 sanitize operation was an Overwrite. This
+ * 					 value shall be cleared to 0h if the most
+ * 					 recent sanitize operation was not
+ * 					 an Overwrite.
+ * @NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK: Mask to get the number of completed
+ * 					 passes.
+ * @NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_SHIFT: Shift amount to get the Global
+ * 					 Data Erased value from the
+ * 					 &struct nvme_sanitize_log_page.sstat field.
+ * @NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_MASK: Mask to get the Global Data Erased
+ * 					 value.
+ * @NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED: Global Data Erased: if set, then no
+ * 					 namespace user data in the NVM subsystem
+ * 					 has been written to and no Persistent
+ * 					 Memory Region in the NVM subsystem has
+ * 					 been enabled since being manufactured and
+ * 					 the NVM subsystem has never been sanitized;
+ * 					 or since the most recent successful sanitize
+ * 					 operation.
  */
 enum nvme_sanitize_sstat {
 	NVME_SANITIZE_SSTAT_STATUS_SHIFT		= 0,
@@ -5062,21 +5150,23 @@ enum nvme_get_features_sel {
 };
 
 /**
- * enum nvme_cmd_format_mset -
- * @NVME_FORMAT_MSET_SEPARATE:
- * @NVME_FORMAT_MSET_EXTENEDED:
+ * enum nvme_cmd_format_mset - Format NVM - Metadata Settings
+ * @NVME_FORMAT_MSET_SEPARATE:	indicates that the metadata is transferred
+ * 				as part of a separate buffer.
+ * @NVME_FORMAT_MSET_EXTENDED:	indicates that the metadata is transferred
+ * 				as part of an extended data LBA.
  */
 enum nvme_cmd_format_mset {
 	NVME_FORMAT_MSET_SEPARATE				= 0,
-	NVME_FORMAT_MSET_EXTENEDED				= 1,
+	NVME_FORMAT_MSET_EXTENDED				= 1,
 };
 
 /**
- * enum nvme_cmd_format_pi -
- * @NVME_FORMAT_PI_DISABLE:
- * @NVME_FORMAT_PI_TYPE1:
- * @NVME_FORMAT_PI_TYPE2:
- * @NVME_FORMAT_PI_TYPE3:
+ * enum nvme_cmd_format_pi - Format NVM - Protection Information
+ * @NVME_FORMAT_PI_DISABLE: Protection information is not enabled.
+ * @NVME_FORMAT_PI_TYPE1:   Protection information is enabled, Type 1.
+ * @NVME_FORMAT_PI_TYPE2:   Protection information is enabled, Type 2.
+ * @NVME_FORMAT_PI_TYPE3:   Protection information is enabled, Type 3.
  */
 enum nvme_cmd_format_pi {
 	NVME_FORMAT_PI_DISABLE					= 0,
@@ -5086,9 +5176,11 @@ enum nvme_cmd_format_pi {
 };
 
 /**
- * @enum nvme_cmd_format_pil -
- * @NVME_FORMAT_PIL_LAST:
- * @NVME_FORMAT_PIL_FIRST:
+ * @enum nvme_cmd_format_pil - Format NVM - Protection Information Location
+ * @NVME_FORMAT_PIL_LAST:  Protection information is transferred as the last
+ * 			   bytes of metadata.
+ * @NVME_FORMAT_PIL_FIRST: Protection information is transferred as the first
+ * 			   bytes of metadata.
  */
 enum nvme_cmd_format_pil {
 	NVME_FORMAT_PIL_LAST					= 0,
@@ -5096,10 +5188,19 @@ enum nvme_cmd_format_pil {
 };
 
 /**
- * enum nvme_cmd_format_ses -
- * @NVME_FORMAT_SES_NONE:
- * @NVME_FORMAT_SES_USER_DATA_ERASE:
- * @NVME_FORMAT_SES_CRYPTO_ERASE:
+ * enum nvme_cmd_format_ses - Format NVM - Secure Erase Settings
+ * @NVME_FORMAT_SES_NONE:	     No secure erase operation requested.
+ * @NVME_FORMAT_SES_USER_DATA_ERASE: User Data Erase: All user data shall be erased,
+ * 				     contents of the user data after the erase is
+ * 				     indeterminate (e.g. the user data may be zero
+ * 				     filled, one filled, etc.). If a User Data Erase
+ * 				     is requested and all affected user data is
+ * 				     encrypted, then the controller is allowed
+ * 				     to use a cryptographic erase to perform
+ * 				     the requested User Data Erase.
+ * @NVME_FORMAT_SES_CRYPTO_ERASE:    Cryptographic Erase: All user data shall
+ * 				     be erased cryptographically. This is
+ * 				     accomplished by deleting the encryption key.
  */
 enum nvme_cmd_format_ses {
 	NVME_FORMAT_SES_NONE					= 0,
@@ -5190,11 +5291,11 @@ enum nvme_directive_send_identify_endir {
 };
 
 /**
- * enum nvme_sanitize_sanact -
- * @NVME_SANITIZE_SANACT_EXIT_FAILURE:
- * @NVME_SANITIZE_SANACT_START_BLOCK_ERASE:
- * @NVME_SANITIZE_SANACT_START_OVERWRITE:
- * @NVME_SANITIZE_SANACT_START_CRYPTO_ERASE:
+ * enum nvme_sanitize_sanact - Sanitize Action
+ * @NVME_SANITIZE_SANACT_EXIT_FAILURE:       Exit Failure Mode.
+ * @NVME_SANITIZE_SANACT_START_BLOCK_ERASE:  Start a Block Erase sanitize operation.
+ * @NVME_SANITIZE_SANACT_START_OVERWRITE:    Start an Overwrite sanitize operation.
+ * @NVME_SANITIZE_SANACT_START_CRYPTO_ERASE: Start a Crypto Erase sanitize operation.
  */
 enum nvme_sanitize_sanact {
 	NVME_SANITIZE_SANACT_EXIT_FAILURE			= 1,
