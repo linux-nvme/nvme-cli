@@ -1,10 +1,10 @@
-name: C/C++ CI
+gname: C/C++ CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master nvme-cli-monolithic ]
   pull_request:
-    branches: [ master ]
+    branches: [ master nvme-cli-monolithic ]
 
 jobs:
   build:
