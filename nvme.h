@@ -43,6 +43,8 @@
 	json_object_object_add(o, k, v)
 #define json_array_add_value_object(o, k) \
 	json_object_array_add(o, k)
+#define json_array_add_value_string(o, v) \
+	json_object_array_add(o, json_object_new_string(v))
 #define json_print_object(o, u)						\
 	printf("%s", json_object_to_json_string_ext(o, JSON_C_TO_STRING_PRETTY))
 #else
