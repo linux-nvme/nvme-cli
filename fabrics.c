@@ -69,7 +69,7 @@ const char *conarg_host_traddr = "host_traddr";
 const char *conarg_host_iface = "host_iface";
 
 struct fabrics_config fabrics_cfg = {
-	.ctrl_loss_tmo = -1,
+	.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO,
 	.fast_io_fail_tmo = -1,
 	.output_format = "normal",
 };
@@ -965,7 +965,7 @@ add_int_argument(char **argstr, int *max_len, char *arg_str, int arg,
 {
 	int len;
 
-	if ((arg && !allow_zero) || (arg != -1 && allow_zero)) {
+	if (arg || allow_zero) {
 		len = snprintf(*argstr, *max_len, ",%s=%d", arg_str, arg);
 		if (len < 0)
 			return -EINVAL;
@@ -1006,9 +1006,6 @@ int build_options(char *argstr, int max_len, bool discover)
 			msg(LOG_ERR, "need a address (-a) argument\n");
 			return -EINVAL;
 		}
-		/* Use the default ctrl loss timeout if unset */
-		if (fabrics_cfg.ctrl_loss_tmo == -1)
-			fabrics_cfg.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 	}
 
 	/* always specify nqn as first arg - this will init the string */
@@ -1044,10 +1041,12 @@ int build_options(char *argstr, int max_len, bool discover)
 	    (strncmp(fabrics_cfg.transport, "loop", 4) &&
 	     add_int_argument(&argstr, &max_len, "ctrl_loss_tmo",
 			      fabrics_cfg.ctrl_loss_tmo, true)) ||
+	    (fabrics_cfg.fast_io_fail_tmo != -1 &&
 	    add_int_argument(&argstr, &max_len, "fast_io_fail_tmo",
-				fabrics_cfg.fast_io_fail_tmo, true) ||
+				fabrics_cfg.fast_io_fail_tmo, true)) ||
+	    (fabrics_cfg.tos != -1 &&
 	    add_int_argument(&argstr, &max_len, "tos",
-				fabrics_cfg.tos, true) ||
+				fabrics_cfg.tos, true)) ||
 	    add_bool_argument(&argstr, &max_len, "duplicate_connect",
 				fabrics_cfg.duplicate_connect) ||
 	    add_bool_argument(&argstr, &max_len, "disable_sqflow",
