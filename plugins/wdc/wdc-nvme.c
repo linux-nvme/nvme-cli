@@ -4617,77 +4617,71 @@ static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 
 	printf("  SMART Cloud Attributes :- \n");
 
-	printf("  Physical media units written -   	        %"PRIu64" %"PRIu64"\n",
+	printf("  Physical media units written     	      	: %"PRIu64" %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW+8] & 0xFFFFFFFFFFFFFFFF),
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW] & 0xFFFFFFFFFFFFFFFF));
-	printf("  Physical media units read    - 	        %"PRIu64" %"PRIu64"\n",
+	printf("  Physical media units read      	      	: %"PRIu64" %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR+8] & 0xFFFFFFFFFFFFFFFF),
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR] & 0xFFFFFFFFFFFFFFFF));
-	printf("  Bad user nand blocks - Raw			%"PRIu64"\n",
+	printf("  Bad user nand blocks Raw			: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
-	printf("  Bad user nand blocks - Normalized		%d\n",
+	printf("  Bad user nand blocks Normalized		: %d\n",
 			(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BUNBN]));
-	printf("  Bad system nand blocks - Raw			%"PRIu64"\n",
+	printf("  Bad system nand blocks Raw			: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BSNBR] & 0x0000FFFFFFFFFFFF));
-	printf("  Bad system nand blocks - Normalized		%d\n",
+	printf("  Bad system nand blocks Normalized		: %d\n",
 			(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BSNBN]));
-	printf("  XOR recovery count				%"PRIu64"\n",
+	printf("  XOR recovery count			  	: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_XRC]));
-	printf("  Uncorrectable read error count		%"PRIu64"\n",
+	printf("  Uncorrectable read error count		: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_UREC]));
-	printf("  Soft ecc error count				%"PRIu64"\n",
+	printf("  Soft ecc error count				: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SEEC]));
-	printf("  End to end corrected errors			%"PRIu32"\n",
+	printf("  End to end corrected errors			: %"PRIu32"\n",
 			(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EECE]));
-	printf("  End to end detected errors			%"PRIu32"\n",
+	printf("  End to end detected errors			: %"PRIu32"\n",
 			(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EEDC]));
-	printf("  System data percent used			%d\n",
-			(__u8)log_data[SCAO_SDPU]);
-	printf("  Refresh counts				%"PRIu64"\n",
+	printf("  System data percent used			: %d\n", (__u8)log_data[SCAO_SDPU]);
+	printf("  Refresh counts				: %"PRIu64"\n",
 			(uint64_t)(le64_to_cpu(*(uint64_t *)&log_data[SCAO_RFSC])& 0x00FFFFFFFFFFFFFF));
-	printf("  Max User data erase counts			%"PRIu32"\n",
+	printf("  Max User data erase counts			: %"PRIu32"\n",
 			(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_MXUDEC]));
-	printf("  Min User data erase counts			%"PRIu32"\n",
+	printf("  Min User data erase counts			: %"PRIu32"\n",
 			(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_MNUDEC]));
-	printf("  Number of Thermal throttling events		%d\n",
-			(__u8)log_data[SCAO_NTTE]);
-	printf("  Current throttling status		  	0x%x\n",
-			(__u8)log_data[SCAO_CTS]);
-	printf("  PCIe correctable error count			%"PRIu64"\n",
+	printf("  Number of Thermal throttling events		: %d\n", (__u8)log_data[SCAO_NTTE]);
+	printf("  Current throttling status			: 0x%x\n", (__u8)log_data[SCAO_CTS]);
+	printf("  PCIe correctable error count			: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PCEC]));
-	printf("  Incomplete shutdowns				%"PRIu32"\n",
+	printf("  Incomplete shutdowns				: %"PRIu32"\n",
 			(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_ICS]));
-	printf("  Percent free blocks				%d\n",
-			(__u8)log_data[SCAO_PFB]);
-	printf("  Capacitor health				%"PRIu16"\n",
+	printf("  Percent free blocks				: %d\n", (__u8)log_data[SCAO_PFB]);
+	printf("  Capacitor health				: %"PRIu16"\n",
 			(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_CPH]));
-	printf("  Unaligned I/O					%"PRIu64"\n",
+	printf("  Unaligned I/O					: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_UIO]));
-	printf("  Security Version Number			%"PRIu64"\n",
+	printf("  Security Version Number			: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SVN]));
-	printf("  NUSE - Namespace utilization			%"PRIu64"\n",
+	printf("  NUSE Namespace utilization			: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_NUSE]));
-	printf("  PLP start count				%.0Lf\n",
-			int128_to_double(&log_data[SCAO_PSC]));
-	printf("  Endurance estimate				%.0Lf\n",
-			int128_to_double(&log_data[SCAO_EEST]));
+	printf("  PLP start count				: %.0Lf\n", int128_to_double(&log_data[SCAO_PSC]));
+	printf("  Endurance estimate				: %.0Lf\n", int128_to_double(&log_data[SCAO_EEST]));
 	smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
-	printf("  Log page version				 %"PRIu16"\n",smart_log_ver);
-	printf("  Log page GUID					0x");
+	printf("  Log page version				: %"PRIu16"\n",smart_log_ver);
+	printf("  Log page GUID					: 0x");
 	printf("0x%"PRIx64"%"PRIx64"\n",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG]));
 	if(smart_log_ver > 2) {
-		printf("  Errata Version Field                          %d\n",
+		printf("  Errata Version Field				: %d\n",
 				(__u8)log_data[SCAO_EVF]);
-		printf("  Point Version Field                           %"PRIu16"\n",
+		printf("  Point Version Field				: %"PRIu16"\n",
 				(uint16_t)log_data[SCAO_PVF]);
-		printf("  Minor Version Field                           %"PRIu16"\n",
+		printf("  Minor Version Field				: %"PRIu16"\n",
 				(uint16_t)log_data[SCAO_MIVF]);
-		printf("  Major Version Field                           %d\n",
+		printf("  Major Version Field				: %d\n",
 				(__u8)log_data[SCAO_MAVF]);
-		printf("  NVMe Errata Version				%d\n",
+		printf("  NVMe Errata Version				: %d\n",
 				(__u8)log_data[SCAO_NEV]);
-		printf("  PCIe Link Retraining Count			%"PRIu64"\n",
+		printf("  PCIe Link Retraining Count			: %"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PLRC]));
 	}
 	printf("\n");
