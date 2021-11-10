@@ -5,59 +5,6 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-
-################################################################################
-# Building libnvme using meson and ninja:
-#   meson .build
-#   ninja -C .build
-#
-# Installing the code after building:
-#   cd .build
-#   sudo meson install
-#
-# Running unit tests:
-#   cd .build
-#   meson test
-#
-# In these examples, ".build" is the name of the directory where the build
-# artifacts are saved. The directory need not be called ".build", but it must
-# be a unique (non-existing) directory.
-#
-# Changing build options from the command line:
-#   Build options can be changed at the command line without modifying the
-#   "meson.build" files. This is particularly useful during debugging. For
-#   example, the "buildtype" option allows to disable optimization to
-#   facilitate debugging. This option can be specified on the command line as
-#   follows:
-#
-#     meson .build -Dbuildtype=debug
-#
-#   Doing so overrides the value found in the meson.build, which is set to
-#   "buildtype=release" below. The buildtype option can take any of the
-#   following values.
-#
-#     plain:          no extra build flags are used, even for compiler warnings,
-#                     useful for distro packagers and other cases where you need
-#                     to specify all arguments by yourself
-#
-#     debug:          debug info is generated but the result is not optimized,
-#                     this is the default
-#
-#     debugoptimized: debug info is generated and the code is optimized (on most
-#                     compilers this means -g -O2)
-#
-#     release:        full optimization, no debug info
-#
-#   default_options:  https://mesonbuild.com/Builtin-options.html#compiler-options
-#
-#   Examples: meson .build -Dbuildtype=debug
-#             meson .build -Db_sanitize=address
-#             meson .build -Djson-c=true
-#
-# References: https://mesonbuild.com/
-#             https://ninja-build.org/
-#
-################################################################################
 project(
     'libnvme', ['c', 'cpp'],
     meson_version: '>= 0.47.0',
