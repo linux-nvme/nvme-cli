@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc" />
+<meta name="generator" content="AsciiDoc 8.6.10" />
 <title>nvme-discover(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -754,9 +754,11 @@ nvme-discover(1) Manual Page
                 [--traddr=&lt;traddr&gt;        | -a &lt;traddr&gt;]
                 [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
                 [--host-traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
+                [--host-iface=&lt;iface&gt;     | -f &lt;iface&gt;]
                 [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
                 [--hostid=&lt;hostid&gt;        | -I &lt;hostid&gt;]
                 [--raw=&lt;filename&gt;         | -r &lt;filename&gt;]
+                [--device=&lt;device&gt;        | -d &lt;device&gt;]
                 [--keep-alive-tmo=&lt;sec&gt;   | -k &lt;sec&gt;]
                 [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]
                 [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]
@@ -767,7 +769,8 @@ nvme-discover(1) Manual Page
                 [--nr-poll-queues=&lt;#&gt;     | -P &lt;#&gt;]
                 [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]
                 [--persistent             | -p]
-                [--quiet                  | -S]</pre>
+                [--quiet                  | -S]
+                [--output-format=&lt;fmt&gt;    | -o &lt;fmt&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -892,7 +895,21 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         This field specifies the network address used on the host to connect
-        to the Discovery Controller.
+        to the Controller. For TCP, this sets the source address on the socket.
+</p>
+</dd>
+<dt class="hdlist1">
+-f &lt;iface&gt;
+</dt>
+<dt class="hdlist1">
+--host-iface=&lt;iface&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the network interface used on the host to connect
+        to the Controller (e.g. IP eth1, enp2s0, enx78e7d1ea46da). This forces
+        the connection to be made on a specific interface instead of letting
+        the system decide.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -932,6 +949,18 @@ cellspacing="0" cellpadding="4">
         This field will take the output of the <em>nvme discover</em> command
         and dump it to a raw binary file. By default <em>nvme discover</em> will
         dump the output to stdout.
+</p>
+</dd>
+<dt class="hdlist1">
+-d &lt;device&gt;
+</dt>
+<dt class="hdlist1">
+--device=&lt;device&gt;
+</dt>
+<dd>
+<p>
+        This field takes a device as input. Device is in the format of nvme*,
+        eg. nvme0, nvme1
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1063,6 +1092,18 @@ cellspacing="0" cellpadding="4">
         Suppress already connected errors.
 </p>
 </dd>
+<dt class="hdlist1">
+-o &lt;format&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;format&gt;
+</dt>
+<dd>
+<p>
+              Set the reporting format to <em>normal</em>, <em>json</em>, or
+              <em>binary</em>. Only one output format can be used at a time.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1126,7 +1167,7 @@ nvme-connect-all(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2020-07-14 17:46:53 -03
+ 2021-07-19 10:10:19 PDT
 </div>
 </div>
 </body>

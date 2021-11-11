@@ -2,12 +2,12 @@
 .\"     Title: nvme-discover
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/20/2020
+.\"      Date: 11/11/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCOVER" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCOVER" "1" "11/11/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,9 +37,11 @@ nvme-discover \- Send Get Log Page request to Discovery Controller\&.
                 [\-\-traddr=<traddr>        | \-a <traddr>]
                 [\-\-trsvcid=<trsvcid>      | \-s <trsvcid>]
                 [\-\-host\-traddr=<traddr>   | \-w <traddr>]
+                [\-\-host\-iface=<iface>     | \-f <iface>]
                 [\-\-hostnqn=<hostnqn>      | \-q <hostnqn>]
                 [\-\-hostid=<hostid>        | \-I <hostid>]
                 [\-\-raw=<filename>         | \-r <filename>]
+                [\-\-device=<device>        | \-d <device>]
                 [\-\-keep\-alive\-tmo=<sec>   | \-k <sec>]
                 [\-\-reconnect\-delay=<#>    | \-c <#>]
                 [\-\-ctrl\-loss\-tmo=<#>      | \-l <#>]
@@ -51,6 +53,7 @@ nvme-discover \- Send Get Log Page request to Discovery Controller\&.
                 [\-\-queue\-size=<#>         | \-Q <#>]
                 [\-\-persistent             | \-p]
                 [\-\-quiet                  | \-S]
+                [\-\-output\-format=<fmt>    | \-o <fmt>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -120,7 +123,12 @@ This field specifies the transport service id\&. For transports using IP address
 .PP
 \-w <traddr>, \-\-host\-traddr=<traddr>
 .RS 4
-This field specifies the network address used on the host to connect to the Discovery Controller\&.
+This field specifies the network address used on the host to connect to the Controller\&. For TCP, this sets the source address on the socket\&.
+.RE
+.PP
+\-f <iface>, \-\-host\-iface=<iface>
+.RS 4
+This field specifies the network interface used on the host to connect to the Controller (e\&.g\&. IP eth1, enp2s0, enx78e7d1ea46da)\&. This forces the connection to be made on a specific interface instead of letting the system decide\&.
 .RE
 .PP
 \-q <hostnqn>, \-\-hostnqn=<hostnqn>
@@ -140,6 +148,11 @@ This field will take the output of the
 command and dump it to a raw binary file\&. By default
 \fInvme discover\fR
 will dump the output to stdout\&.
+.RE
+.PP
+\-d <device>, \-\-device=<device>
+.RS 4
+This field takes a device as input\&. Device is in the format of nvme*, eg\&. nvme0, nvme1
 .RE
 .PP
 \-k <#>, \-\-keep\-alive\-tmo=<#>
@@ -195,6 +208,14 @@ Persistent discovery connection\&.
 \-S, \-\-quiet
 .RS 4
 Suppress already connected errors\&.
+.RE
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fIjson\fR, or
+\fIbinary\fR\&. Only one output format can be used at a time\&.
 .RE
 .SH "EXAMPLES"
 .sp

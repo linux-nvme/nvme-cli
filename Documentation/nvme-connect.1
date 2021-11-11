@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/20/2020
+.\"      Date: 11/11/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "11/11/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,6 +38,7 @@ nvme-connect \- Connect to a Fabrics controller\&.
                 [\-\-traddr=<traddr>        | \-a <traddr>]
                 [\-\-trsvcid=<trsvcid>      | \-s <trsvcid>]
                 [\-\-host\-traddr=<traddr>   | \-w <traddr>]
+                [\-\-host\-iface=<iface>     | \-f <iface>]
                 [\-\-hostnqn=<hostnqn>      | \-q <hostnqn>]
                 [\-\-hostid=<hostid>        | \-I <hostid>]
                 [\-\-nr\-io\-queues=<#>       | \-i <#>]
@@ -51,6 +52,7 @@ nvme-connect \- Connect to a Fabrics controller\&.
                 [\-\-disable\-sqflow         | \-d]
                 [\-\-hdr\-digest             | \-g]
                 [\-\-data\-digest            | \-G]
+                [\-\-output\-format=<fmt>    | \-o <fmt>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -114,7 +116,12 @@ This field specifies the transport service id\&. For transports using IP address
 .PP
 \-w <traddr>, \-\-host\-traddr=<traddr>
 .RS 4
-This field specifies the network address used on the host to connect to the Controller\&.
+This field specifies the network address used on the host to connect to the Controller\&. For TCP, this sets the source address on the socket\&.
+.RE
+.PP
+\-f <iface>, \-\-host\-iface=<iface>
+.RS 4
+This field specifies the network interface used on the host to connect to the Controller (e\&.g\&. IP eth1, enp2s0, enx78e7d1ea46da)\&. This forces the connection to be made on a specific interface instead of letting the system decide\&.
 .RE
 .PP
 \-q <hostnqn>, \-\-hostnqn=<hostnqn>
@@ -180,6 +187,14 @@ Generates/verifies header digest (TCP)\&.
 \-G, \-\-data\-digest
 .RS 4
 Generates/verifies data digest (TCP)\&.
+.RE
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+Set the reporting format to
+\fInormal\fR
+or
+\fIjson\fR\&. Only one output format can be used at a time\&. When this option is specified, the device associated with the connection will be printed\&. Nothing is printed otherwise\&.
 .RE
 .SH "EXAMPLES"
 .sp
