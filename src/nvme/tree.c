@@ -1193,7 +1193,7 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 			else if (!strncmp(a, "host_traddr=", 12))
 				host_traddr = a + 12;
 			else if (!strncmp(a, "host_iface=", 11))
-				host_iface = a + 12;
+				host_iface = a + 11;
 			a = strtok_r(NULL, ",", &e);
 		}
 	}
