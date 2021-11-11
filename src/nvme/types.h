@@ -2919,7 +2919,7 @@ struct nvme_persistent_event_entry {
 	__u8	rsvd14[6];
 	__le16	vsil;
 	__le16	el;
-};
+} __attribute__((packed));
 
 enum nvme_persistent_event_types {
     NVME_PEL_SMART_HEALTH_EVENT		= 0x01,
