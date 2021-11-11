@@ -3040,9 +3040,16 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 		"commit to specific firmware slot. Device is not automatically "\
 		"reset following firmware activation. A reset may be issued "\
 		"with an 'echo 1 > /sys/class/nvme/nvmeX/reset_controller'. "\
-		"Ensure nvmeX is the device you just activated before reset.";
-	const char *slot = "[0-7]: firmware slot for commit action";
-	const char *action = "[0-7]: commit action";
+		"Ensure nvmeX is the device you just activated before reset.\n\n"\
+		"Commit Action:\n"\
+		" 0: downloaded image replaces existing image.\n"\
+		" 1: downloaded image replaces existing image and activates at next controller level reset.\n"\
+		" 2: existing slot is activated at next controller level reset.\n"\
+		" 3: downloaded image replaces the existing slot image and is then activated immediately.\n"\
+		" 6: downloaded image replaces boot partition image specified by the bpid field.\n"\
+		" 7: mark the boot partition specified by bpid as active.";
+	const char *slot = "[0-7]: firmware slot for commit action\n(default: 0 - controller chooses firmware slot)";
+	const char *action = "[0-7]: commit action (default: 0)";
 	const char *bpid = "[0,1]: boot partition identifier, if applicable (default: 0)";
 	int err, fd;
 
