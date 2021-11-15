@@ -28,6 +28,7 @@ SYNOPSIS
 		[--disable-sqflow         | -d]
 		[--hdr-digest             | -g]
 		[--data-digest            | -G]
+		[--dump-config            | -O]
 
 DESCRIPTION
 -----------
@@ -139,6 +140,10 @@ OPTIONS
 -G::
 --data-digest::
 	Generates/verifies data digest (TCP).
+
+-O::
+--dump-config::
+	Print out resulting JSON configuration file to stdout.
 
 EXAMPLES
 --------

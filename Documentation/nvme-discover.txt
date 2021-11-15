@@ -29,6 +29,7 @@ SYNOPSIS
 		[--queue-size=<#>         | -Q <#>]
 		[--persistent             | -p]
 		[--quiet                  | -S]
+		[--dump-config            | -O]
 		[--output-format=<fmt>    | -o <fmt>]
 
 DESCRIPTION
@@ -183,6 +184,10 @@ OPTIONS
 -S::
 --quiet::
 	Suppress already connected errors.
+
+-O::
+--dump-config::
+	Print out resulting JSON configuration file to stdout.
 
 -o <format>::
 --output-format=<format>::

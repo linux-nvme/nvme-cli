@@ -51,6 +51,7 @@
 static char *raw;
 static bool persistent;
 static bool quiet;
+static bool dump_config;
 
 static const char *nvmf_tport		= "transport type";
 static const char *nvmf_traddr		= "transport address";
@@ -409,6 +410,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_FLAG("quiet",        'S', &quiet,         "suppress already connected errors"),
 		OPT_STRING("config",     'C', "FILE", &config_file, nvmf_config_file),
 		OPT_INCR("verbose",      'v', &verbose,       "Increase logging verbosity"),
+		OPT_FLAG("dump-config",  'O', &dump_config,   "Dump configuration file to stdout"),
 		OPT_END()
 	};
 
@@ -441,6 +443,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
+
 	r = nvme_scan(config_file);
 	if (persistent && !cfg.keep_alive_tmo)
 		cfg.keep_alive_tmo = 30;
@@ -534,6 +537,8 @@ out_free:
 		free(hnqn);
 	if (hid)
 		free(hid);
+	if (dump_config)
+		nvme_dump_config(r);
 	nvme_free_tree(r);
 
 	return ret;
@@ -559,6 +564,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		NVMF_OPTS(cfg),
 		OPT_STRING("config", 'C', "FILE", &config_file, nvmf_config_file),
 		OPT_INCR("verbose", 'v', &verbose, "Increase logging verbosity"),
+		OPT_FLAG("dump-config", 'O', &dump_config, "Dump JSON configuration to stdout"),
 		OPT_END()
 	};
 
@@ -604,8 +610,9 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		}
 	}
 
-	if (strcmp(config_file, "none"))
+	if (!strcmp(config_file, "none"))
 		config_file = NULL;
+
 	r = nvme_scan(config_file);
 	if (!hostnqn)
 		hostnqn = hnqn = nvmf_hostnqn_from_file();
@@ -632,6 +639,8 @@ out_free:
 		free(hnqn);
 	if (hid)
 		free(hid);
+	if (dump_config)
+		nvme_dump_config(r);
 	nvme_free_tree(r);
 	return errno;
 }

@@ -29,6 +29,7 @@ SYNOPSIS
 		[--matching               | -m]
 		[--persistent             | -p]
 		[--quiet                  | -S]
+		[--dump-config            | -O]
 
 DESCRIPTION
 -----------
@@ -165,6 +166,10 @@ OPTIONS
 -S::
 --quiet::
 	Suppress error messages.
+
+-O::
+--dump-config::
+	Print out resulting JSON configuration file to stdout.
 
 
 EXAMPLES
