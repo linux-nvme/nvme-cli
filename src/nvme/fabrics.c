@@ -417,6 +417,8 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 		return -1;
 	}
 	if (!strcmp(nvme_ctrl_get_subsysnqn(c), NVME_DISC_SUBSYS_NAME))
+		nvme_ctrl_set_discovery_ctrl(c, true);
+	if (nvme_ctrl_is_discovery_ctrl(c))
 		discover = true;
 	hostnqn = nvme_host_get_hostnqn(h);
 	hostid = nvme_host_get_hostid(h);
@@ -583,21 +585,6 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	bool disable_sqflow = false;
 	int ret;
 
-	switch (e->subtype) {
-	case NVME_NQN_DISC:
-	case NVME_NQN_CURR:
-		if (discover)
-			*discover = true;
-		break;
-	case NVME_NQN_NVME:
-		break;
-	default:
-		nvme_msg(LOG_ERR, "skipping unsupported subtype %d\n",
-			 e->subtype);
-		errno = EINVAL;
-		return NULL;
-	}
-
 	switch (e->trtype) {
 	case NVMF_TRTYPE_RDMA:
 	case NVMF_TRTYPE_TCP:
@@ -651,6 +638,23 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 		errno = ENOMEM;
 		return NULL;
 	}
+
+	switch (e->subtype) {
+	case NVME_NQN_DISC:
+	case NVME_NQN_CURR:
+		if (discover)
+			*discover = true;
+		nvme_ctrl_set_discovery_ctrl(c, true);
+		break;
+	default:
+		nvme_msg(LOG_ERR, "unsupported subtype %d\n",
+			 e->subtype);
+		/* fallthrough */
+	case NVME_NQN_NVME:
+		nvme_ctrl_set_discovery_ctrl(c, false);
+		break;
+	}
+
 	if (nvme_ctrl_is_discovered(c)) {
 		errno = EAGAIN;
 		return NULL;
