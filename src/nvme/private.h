@@ -45,6 +45,7 @@ struct nvme_ns {
 	int fd;
 	__u32 nsid;
 	char *name;
+	char *generic_name;
 	char *sysfs_dir;
 
 	int lba_shift;
