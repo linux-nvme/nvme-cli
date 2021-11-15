@@ -41,7 +41,6 @@ static void __nvme_free_ctrl(nvme_ctrl_t c);
 static int nvme_subsystem_scan_namespace(struct nvme_subsystem *s, char *name);
 static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 			       nvme_scan_filter_t f);
-static int nvme_subsystem_scan_ctrl(struct nvme_subsystem *s, char *name);
 static int nvme_ctrl_scan_namespace(struct nvme_ctrl *c, char *name);
 static int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name);
 
@@ -72,8 +71,28 @@ nvme_host_t nvme_default_host(nvme_root_t r)
 
 static int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 {
-	struct dirent **subsys;
-	int i, num_subsys, ret;
+	struct dirent **subsys, **ctrls;
+	int i, num_subsys, num_ctrls, ret;
+
+	num_ctrls = nvme_scan_ctrls(&ctrls);
+	if (num_ctrls < 0) {
+		nvme_msg(LOG_DEBUG, "failed to scan ctrls: %s\n",
+			 strerror(errno));
+		return num_ctrls;
+	}
+
+	for (i = 0; i < num_ctrls; i++) {
+		nvme_ctrl_t c = nvme_scan_ctrl(r, ctrls[i]->d_name);
+		if (!c) {
+			nvme_msg(LOG_DEBUG, "failed to scan ctrl %s: %s\n",
+				 ctrls[i]->d_name, strerror(errno));
+		}
+		if ((f) && !f(c->s)) {
+			nvme_free_ctrl(c);
+		}
+	}
+
+	nvme_free_dirents(ctrls, i);
 
 	num_subsys = nvme_scan_subsystems(&subsys);
 	if (num_subsys < 0) {
@@ -91,6 +110,7 @@ static int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 	}
 
 	nvme_free_dirents(subsys, i);
+
 	return 0;
 }
 
@@ -419,31 +439,6 @@ static int nvme_subsystem_scan_namespaces(struct nvme_subsystem *s)
 	return 0;
 }
 
-static int nvme_subsystem_scan_ctrls(struct nvme_subsystem *s)
-{
-	struct dirent **ctrls;
-	int i, num_ctrls, ret;
-
-	num_ctrls = nvme_scan_subsystem_ctrls(s, &ctrls);
-	if (num_ctrls < 0) {
-		nvme_msg(LOG_DEBUG,
-			 "failed to scan ctrls for subsys %s: %s\n",
-			 s->subsysnqn, strerror(errno));
-		return num_ctrls;
-	}
-
-	for (i = 0; i < num_ctrls; i++) {
-		ret = nvme_subsystem_scan_ctrl(s, ctrls[i]->d_name);
-		if (ret < 0)
-			nvme_msg(LOG_DEBUG,
-				 "failed to scan ctrl %s: %s\n",
-				 ctrls[i]->d_name, strerror(errno));
-	}
-
-	nvme_free_dirents(ctrls, i);
-	return 0;
-}
-
 static int nvme_init_subsystem(nvme_subsystem_t s, const char *name)
 {
 	char *path;
@@ -519,7 +514,6 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 	}
 
 	nvme_subsystem_scan_namespaces(s);
-	nvme_subsystem_scan_ctrls(s);
 
 	if (f && !f(s)) {
 		__nvme_free_subsystem(s);
@@ -1331,30 +1325,14 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 		return NULL;
 	}
 	c = nvme_ctrl_alloc(s, path, name);
-	if (!c)
-		free(path);
-
-	return c;
-}
-
-static int nvme_subsystem_scan_ctrl(struct nvme_subsystem *s, char *name)
-{
-	nvme_ctrl_t c;
-	char *path;
-
-	if (asprintf(&path, "%s/%s", s->sysfs_dir, name) < 0) {
-		errno = ENOMEM;
-		return -1;
-	}
-
-	c = nvme_ctrl_alloc(s, path, name);
 	if (!c) {
 		free(path);
-		return -1;
+		return NULL;
 	}
+
 	nvme_ctrl_scan_namespaces(c);
 	nvme_ctrl_scan_paths(c);
-	return 0;
+	return c;
 }
 
 void nvme_rescan_ctrl(struct nvme_ctrl *c)
