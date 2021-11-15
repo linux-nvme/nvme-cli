@@ -17,6 +17,7 @@ SYNOPSIS
 		[--host-iface=<iface>     | -f <iface>]
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
 		[--hostid=<hostid>        | -I <hostid>]
+		[--config-file=<cfg>      | -C <cfg> ]
 		[--nr-io-queues=<#>       | -i <#>]
 		[--nr-write-queues=<#>    | -W <#>]
 		[--nr-poll-queues=<#>     | -P <#>]
@@ -92,6 +93,14 @@ OPTIONS
 --hostid=<hostid>::
 	UUID(Universally Unique Identifier) to be discovered which should be
 	formatted.
+
+-C <cfg>::
+--config-file=<cfg>::
+	Use the specified JSON configuration file instead of the
+	default /etc/nvme/config.json file or 'none' to not read in
+	an existing configuration file. The JSON configuration file
+	format is documented in
+	https://github.com/linux-nvme/libnvme/doc/config-schema.json
 
 -i <#>::
 --nr-io-queues=<#>::

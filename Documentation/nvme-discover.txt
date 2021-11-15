@@ -18,6 +18,7 @@ SYNOPSIS
 		[--hostid=<hostid>        | -I <hostid>]
 		[--raw=<filename>	  | -r <filename>]
 		[--device=<device>        | -d <device>]
+		[--cfg-file=<cfg>         | -C <cfg> ]
 		[--keep-alive-tmo=<sec>   | -k <sec>]
 		[--reconnect-delay=<#>	  | -c <#>]
 		[--ctrl-loss-tmo=<#>	  | -l <#>]
@@ -132,6 +133,14 @@ OPTIONS
 --device=<device>::
 	This field takes a device as input. Device is in the format of nvme*,
 	eg. nvme0, nvme1
+
+-C <cfg>::
+--config-file=<cfg>::
+	Use the specified JSON configuration file instead of the
+	default /etc/nvme/config.json file or 'none' to not read in
+	an existing configuration file. The JSON configuration file
+	format is documented in
+	https://github.com/linux-nvme/libnvme/doc/config-schema.json
 
 -k <#>::
 --keep-alive-tmo=<#>::
