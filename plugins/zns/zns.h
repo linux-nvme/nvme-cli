@@ -8,24 +8,23 @@
 
 PLUGIN(NAME("zns", "Zoned Namespace Command Set"),
 	COMMAND_LIST(
-		ENTRY("id-ctrl", "Retrieve ZNS controller identification", id_ctrl)
-		ENTRY("id-ns", "Retrieve ZNS namespace identification", id_ns)
-		ENTRY("zone-mgmt-recv", "Sends the zone management receive command", zone_mgmt_recv)
-		ENTRY("zone-mgmt-send", "Sends the zone management send command", zone_mgmt_send)
-		ENTRY("report-zones", "Retrieve the Report Zones report", report_zones)
-		ENTRY("close-zone", "Closes one or more zones", close_zone)
-		ENTRY("finish-zone", "Finishes one or more zones", finish_zone)
-		ENTRY("open-zone", "Opens one or more zones", open_zone)
-		ENTRY("reset-zone", "Resets one or more zones", reset_zone)
-		ENTRY("offline-zone", "Offlines one or more zones", offline_zone)
-		ENTRY("set-zone-desc", "Attaches zone descriptor extension data", set_zone_desc)
-		ENTRY("zone-append", "Writes data and metadata (if applicable), appended to the end of the requested zone", zone_append)
-		ENTRY("changed-zone-list", "Retrieves the changed zone list log", changed_zone_list)
-		ENTRY("list", "List ZNS enabled devices", list)
+		ENTRY("list", "List all NVMe devices with Zoned Namespace Command Set support", list)
+		ENTRY("id-ctrl", "Send NVMe Identify Zoned Namespace Controller, display structure", id_ctrl)
+		ENTRY("id-ns", "Send NVMe Identify Zoned Namespace Namespace, display structure", id_ns)
+		ENTRY("report-zones", "Report zones associated to a Zoned Namespace", report_zones)
+		ENTRY("reset-zone", "Reset one or more zones", reset_zone)
+		ENTRY("close-zone", "Close one or more zones", close_zone)
+		ENTRY("finish-zone", "Finishe one or more zones", finish_zone)
+		ENTRY("open-zone", "Open one or more zones", open_zone)
+		ENTRY("offline-zone", "Offline one or more zones", offline_zone)
+		ENTRY("set-zone-desc", "Attach zone descriptor extension data to a zone", set_zone_desc)
+		ENTRY("changed-zone-list", "Retrieve the changed zone list log", changed_zone_list)
+		ENTRY("zone-mgmt-recv", "Send the zone management receive command", zone_mgmt_recv)
+		ENTRY("zone-mgmt-send", "Send the zone management send command", zone_mgmt_send)
+		ENTRY("zone-append", "Append data and metadata (if applicable) to a zone", zone_append)
 	)
 );
 
 #endif
 
 #include "define_cmd.h"
-
