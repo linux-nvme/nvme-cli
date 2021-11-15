@@ -100,6 +100,19 @@ const char *nvmf_treq_str(__u8 treq)
 	return arg_str(treqs, ARRAY_SIZE(treqs), treq);
 }
 
+static const char * const eflags_strings[] = {
+	[NVMF_DISC_EFLAGS_NONE]		= "not specified",
+	[NVMF_DISC_EFLAGS_EPCSD]	= "explicit discovery connections",
+	[NVMF_DISC_EFLAGS_DUPRETINFO]	= "duplicate discovery information",
+	[NVMF_DISC_EFLAGS_BOTH]		= "explicit discovery connections, "
+					  "duplicate discovery information",
+};
+
+const char *nvmf_eflags_str(__u16 eflags)
+{
+	return arg_str(eflags_strings, ARRAY_SIZE(eflags_strings), eflags);
+}
+
 static const char * const sectypes[] = {
 	[NVMF_TCP_SECTYPE_NONE]		= "none",
 	[NVMF_TCP_SECTYPE_TLS]		= "tls",
