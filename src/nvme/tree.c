@@ -1035,7 +1035,7 @@ static char *nvme_ctrl_lookup_subsystem_name(nvme_ctrl_t c)
 		subsys_name = strdup(subsys[i]->d_name);
 		break;
 	}
-	nvme_free_dirents(subsys, i);
+	nvme_free_dirents(subsys, ret);
 	return subsys_name;
 }
 
