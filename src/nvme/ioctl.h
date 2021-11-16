@@ -375,6 +375,7 @@ int nvme_get_nsid(int fd, __u32 *nsid);
  * @fd:		File descriptor of nvme device
  * @cns:	The Controller or Namespace structure, see @enum nvme_identify_cns
  * @nsid:	Namespace identifier, if applicable
+ * @domid:	Domain identifier, if applicable
  * @cntid:	The Controller Identifier, if applicable
  * @nvmsetid:	The NVMe Set ID if CNS is 04h
  * @uuidx:	UUID Index if controller supports this id selection method
@@ -388,8 +389,8 @@ int nvme_get_nsid(int fd, __u32 *nsid);
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_identify(int fd, enum nvme_identify_cns cns, __u32 nsid,
-		  __u16 cntid, __u16 nvmsetid, __u8 uuidx, __u8 csi,
-		  void *data);
+		  __u16 cntid, __u16 nvmsetid, __u16 domid,
+		  __u8 uuidx, __u8 csi, void *data);
 
 /**
  * nvme_identify_ctrl() - Retrieves nvme identify controller
@@ -682,6 +683,19 @@ int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid, __u8 csi,
 					struct nvme_ns_list *list);
 
 /**
+ * nvme_identify_independent_identify_ns() -
+ * @fd:		File descriptor of nvme device
+ * @nsid:	Return namespaces greater than this identifier
+ * @ns:		I/O Command Set Independent Identify Namespace data
+ *		structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
+					  struct nvme_id_independent_id_ns *ns);
+
+/**
  * nvme_identify_ctrl_nvm() -
  * @fd:	File descriptor of nvme device
  * @id:	User space destination address to transfer the data
@@ -690,6 +704,37 @@ int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid, __u8 csi,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_nvm_identify_ctrl(int fd, struct nvme_id_ctrl_nvm *id);
+
+/**
+ * nvme_idnetifY_domain_list() -
+ * @fd:		File descriptor of nvme device
+ * @domid:	Domain ID
+ * @list:	User space destiantion address to transfer data
+ *
+ * A list of 31 domain IDs is returned to the host containing domain
+ * attributes in increasing order that are greater than the value
+ * specified in the @domid field.
+ *
+ * See @struct nvme_identify_domain_attr for the definition of the
+ * returned structure.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_identify_domain_list(int fd, __u16 domid,
+			      struct nvme_id_domain_list *list);
+
+/**
+ * nvme_identifiy_endurance_group_list() -
+ * @fd:		File descriptor of nvme device
+ * @endgrp_id:	Endurance group identifier
+ * @list:	Array of endurance group identifiers
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
+				struct nvme_id_endurance_group_list *list);
 
 /**
  * nvme_identify_iocs() -
@@ -759,6 +804,17 @@ static inline int nvme_get_log_simple(int fd, enum nvme_cmd_get_log_lid lid,
 {
 	return nvme_get_nsid_log(fd, lid, NVME_NSID_ALL, len, log);
 }
+
+/** nvme_get_log_supported_log_pages() - Retrieve nmve supported log pages
+ * @fd:		File descriptor of nvme device
+ * @rae:	Retain asynchronous events
+ * @log:	Array of LID supported and Effects data structures
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_get_log_supported_log_pages(int fd, bool rae,
+				     struct nvme_supported_log_pages *log);
 
 /**
  * nvme_get_log_error() - Retrieve nvme error log
@@ -970,6 +1026,32 @@ int nvme_get_log_lba_status(int fd, bool rae, __u64 offset, __u32 len,
  */
 int nvme_get_log_endurance_grp_evt(int fd, bool rae, __u32 offset, __u32 len,
 				   void *log);
+
+/**
+ * nvme_get_log_fid_supported_effects() -
+ * @fd:		File descriptor of nvme device
+ * @rae:	Retain asynchronous events
+ * @log:	FID Supported and Effects data structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+int nvme_get_log_fid_supported_effects(int fd, bool rae,
+				       struct nvme_fid_supported_effects_log *log);
+
+/**
+ * nvme_get_log_boot_partition() -
+ * @fd:		File descriptor of nvme device
+ * @rae:	Retain asynchronous events
+ * @lsp:	The log specified field of LID
+ * @len:	The allocated size, minimum
+ *		struct nvme_boot_partition
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+int nvme_get_log_boot_partition(int fd, bool rae, __u8 lsp, __u32 len,
+			        struct nvme_boot_partition *part);
 
 /**
  * nvme_get_log_discovery() -
@@ -1917,6 +1999,7 @@ int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data);
  * @slot:	Firmware slot to commit the downloaded image
  * @action:	Action to use for the firmware image, see &enum nvme_fw_commit_ca
  * @bpid:	Set to true to select the boot partition id
+ * @result:	The command completion result from CQE dword0
  *
  * The Firmware Commit command modifies the firmware image or Boot Partitions.
  *
@@ -1926,7 +2009,8 @@ int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data);
  * 	   response may specify additional
  * 	   reset actions required to complete the commit process.
  */
-int nvme_fw_commit(int fd, __u8 slot, enum nvme_fw_commit_ca action, bool bpid);
+int nvme_fw_commit(int fd, __u8 slot, enum nvme_fw_commit_ca action, bool bpid,
+		   __u32 *result);
 
 /**
  * nvme_security_send() -
@@ -2122,6 +2206,38 @@ int nvme_directive_recv_stream_allocate(int fd, __u32 nsid, __u16 nsr,
 					__u32 *result);
 
 /**
+ * nvme_capacity_mgmt() -
+ * @fd:		File descriptor of nvme device
+ * @op:		Operation to be performed by the controller
+ * @element_id:	Value specific to the value of the Operation field
+ * @dw11:	Least significant 32 bits of the capacity in bytes of the
+ *		Endurance Group or NVM Set to be created
+ * @dw12:	Most significant 32 bits of the capacity in bytes of the
+ *		Endurance Group or NVM Set to be created
+ * @result:	If successful, the CQE dword0 value
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_capacity_mgmt(int fd, __u8 op, __u16 element_id, __u32 dw11, __u32 dw12,
+		       __u32 *result);
+
+/**
+ * nvme_lockdown() - Issue lockdown command
+ * @fd:		File descriptor of nvme device
+ * @scp:
+ * @prhbt:
+ * @ifc:
+ * @ofi:
+ * @uuid:
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_lockdown(int fd, __u8 scp, __u8 prhbt, __u8 ifc, __u8 ofi,
+		  __u8 uuid);
+
+/**
  * nvme_set_property() - Set controller property
  * @fd:		File descriptor of nvme device
  * @offset:	Property offset from the base to set
@@ -2251,6 +2367,9 @@ int nvme_flush(int fd, __u32 nsid);
  * @appmask:	This field specifies the Application Tag expected value. Used
  * 		only if the namespace is formatted to use end-to-end protection
  * 		information.
+ * @storage_tag: This filed specifies Variable Sized Expected Logical Block
+ *		Storage Tag (ELBST) and Expected Logical Block Reference
+ *		Tag (ELBRT)
  * @data_len:	Length of user buffer, @data, in bytes
  * @data:	Pointer to user address of the data buffer
  * metadata_len:Length of user buffer, @metadata, in bytes
@@ -2261,7 +2380,8 @@ int nvme_flush(int fd, __u32 nsid);
  */
 int nvme_read(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
 	      __u8 dsm, __u32 reftag, __u16 apptag, __u16 appmask,
-	      __u32 data_len, void *data, __u32 metadata_len, void *metadata);
+	      __u64 storage_tag, __u32 data_len, void *data,
+	      __u32 metadata_len, void *metadata);
 
 /**
  * nvme_write() - Submit an nvme user write command
@@ -2281,6 +2401,9 @@ int nvme_read(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * @appmask:	This field specifies the Application Tag expected value. Used
  * 		only if the namespace is formatted to use end-to-end protection
  * 		information.
+ * @storage_tag: This filed specifies Variable Sized Expected Logical Block
+ *		Storage Tag (ELBST) and Expected Logical Block Reference
+ *		Tag (ELBRT)
  * @data_len:	Length of user buffer, @data, in bytes
  * @data:	Pointer to user address of the data buffer
  * metadata_len:Length of user buffer, @metadata, in bytes
@@ -2291,8 +2414,8 @@ int nvme_read(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  */
 int nvme_write(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
 	       __u8 dsm, __u16 dspec, __u32 reftag, __u16 apptag,
-	       __u16 appmask, __u32 data_len, void *data, __u32 metadata_len,
-	       void *metadata);
+	       __u16 appmask, __u64 storage_tag, __u32 data_len, void *data,
+	       __u32 metadata_len, void *metadata);
 
 /**
  * nvme_compare() - Submit an nvme user compare command
@@ -2338,6 +2461,9 @@ int nvme_compare(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * @appmask:	This field specifies the Application Tag expected value. Used
  * 		only if the namespace is formatted to use end-to-end protection
  * 		information.
+ * @storage_tag: This filed specifies Variable Sized Expected Logical Block
+ *		Storage Tag (ELBST) and Expected Logical Block Reference
+ *		Tag (ELBRT)
  *
  * The Write Zeroes command sets a range of logical blocks to zero.  After
  * successful completion of this command, the value returned by subsequent
@@ -2348,7 +2474,8 @@ int nvme_compare(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_write_zeros(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-		     __u32 reftag, __u16 apptag, __u16 appmask);
+		     __u32 reftag, __u16 apptag, __u16 appmask,
+		     __u64 storage_tag);
 
 /**
  * nvme_write_uncorrectable() - Submit an nvme write uncorrectable command
@@ -2383,6 +2510,9 @@ int nvme_write_uncorrectable(int fd, __u32 nsid, __u64 slba, __u16 nlb);
  * @appmask:	This field specifies the Application Tag expected value. Used
  * 		only if the namespace is formatted to use end-to-end protection
  * 		information.
+ * @storage_tag: This filed specifies Variable Sized Expected Logical Block
+ *		Storage Tag (ELBST) and Expected Logical Block Reference
+ *		Tag (ELBRT)
  *
  * The Verify command verifies integrity of stored information by reading data
  * and metadata, if applicable, for the LBAs indicated without transferring any
@@ -2392,7 +2522,7 @@ int nvme_write_uncorrectable(int fd, __u32 nsid, __u64 slba, __u16 nlb);
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_verify(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-		__u32 reftag, __u16 apptag, __u16 appmask);
+		__u32 reftag, __u16 apptag, __u16 appmask, __u64 storage_tag);
 
 /**
  * nvme_dsm() - Send an nvme data set management command
@@ -2508,6 +2638,7 @@ int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
  * @nsid:	Namespace ID
  * @slba:
  * @select_all:
+ * @timeout:	timeout in ms
  * @zsa:
  * @data_len:
  * @data:
@@ -2516,8 +2647,9 @@ int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
-		       enum nvme_zns_send_action zsa, __u32 data_len,
-		       void *data);
+		       __u32 timeout, enum nvme_zns_send_action zsa,
+		       __u32 data_len, void *data);
+
 
 /**
  * nvme_zns_mgmt_recv() -

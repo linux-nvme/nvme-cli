@@ -1,10 +1,11 @@
-{
+LIBNVME_1_0 {
 	global:
 		__nvme_get_log_page;
 		__nvme_msg;
 		nvme_admin_passthru64;
 		nvme_admin_passthru;
 		nvme_attach_ns;
+		nvme_capacity_mgmt;
 		nvme_compare;
 		nvme_copy;
 		nvme_create_ctrl;
@@ -103,6 +104,7 @@
 		nvme_get_log;
 		nvme_get_log_ana;
 		nvme_get_log_ana_groups;
+		nvme_get_log_boot_partition;
 		nvme_get_log_changed_ns_list;
 		nvme_get_log_cmd_effects;
 		nvme_get_log_create_telemetry_host;
@@ -111,6 +113,7 @@
 		nvme_get_log_endurance_group;
 		nvme_get_log_endurance_grp_evt;
 		nvme_get_log_error;
+		nvme_get_log_fid_supported_effects;
 		nvme_get_log_fw_slot;
 		nvme_get_log_lba_status;
 		nvme_get_log_page;
@@ -120,6 +123,7 @@
 		nvme_get_log_reservation;
 		nvme_get_log_sanitize;
 		nvme_get_log_smart;
+		nvme_get_log_supported_log_pages;
 		nvme_get_log_telemetry_ctrl;
 		nvme_get_log_telemetry_host;
 		nvme_get_new_host_telemetry;
@@ -138,6 +142,9 @@
 		nvme_identify_allocated_ns_list;
 		nvme_identify_ctrl;
 		nvme_identify_ctrl_list;
+		nvme_identify_domain_list;
+		nvme_identify_endurance_group_list;
+		nvme_identify_independent_identify_ns;
 		nvme_identify_iocs;
 		nvme_identify_ns;
 		nvme_identify_ns_descs;
@@ -154,6 +161,7 @@
 		nvme_init_id_ns;
 		nvme_io_passthru64;
 		nvme_io_passthru;
+		nvme_lockdown;
 		nvme_log_level;
 		nvme_log_message;
 		nvme_lookup_host;

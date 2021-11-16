@@ -33,8 +33,7 @@ version_script_arg = join_paths(source_dir, mapfile)
 libnvme = library(
     'nvme', # produces libnvme.so
     sources,
-    version: libnvme_version,
-    soversion: '1',
+    version: library_version,
     link_args: ['-Wl,--version-script=' + version_script_arg],
     dependencies: deps,
     link_depends: mapfile,
