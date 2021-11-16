@@ -368,6 +368,7 @@ static int discover_from_conf_file(nvme_host_t h, const char *desc,
 				     traddr, host_traddr, host_iface, trsvcid);
 		if (!c)
 			goto next;
+		nvme_ctrl_set_discovery_ctrl(c, true);
 		errno = 0;
 		ret = nvmf_add_ctrl(h, c, &cfg, false);
 		if (!ret) {
@@ -519,6 +520,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 			ret = errno;
 			goto out_free;
 		}
+		nvme_ctrl_set_discovery_ctrl(c, true);
 		ret = nvmf_add_ctrl(h, c, &cfg, false);
 		if (ret) {
 			nvme_msg(LOG_ERR,
