@@ -5763,14 +5763,6 @@ The nvme command status if a response was received (see
 ``nvme_ctrl_t c``
 
 
-.. c:function:: const char * nvme_ctrl_get_nqn (nvme_ctrl_t c)
-
-
-**Parameters**
-
-``nvme_ctrl_t c``
-
-
 .. c:function:: const char * nvme_ctrl_get_subsysnqn (nvme_ctrl_t c)
 
 

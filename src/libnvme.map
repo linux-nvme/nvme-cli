@@ -18,7 +18,6 @@
 		nvme_ctrl_get_host_traddr;
 		nvme_ctrl_get_model;
 		nvme_ctrl_get_name;
-		nvme_ctrl_get_nqn;
 		nvme_ctrl_get_numa_node;
 		nvme_ctrl_get_queue_count;
 		nvme_ctrl_get_serial;
