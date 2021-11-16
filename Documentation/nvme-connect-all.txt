@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme connect-all'
 		[--transport=<trtype>     | -t <trtype>]
+		[--nqn=<subnqn>           | -n <subnqn>]
 		[--traddr=<traddr>        | -a <traddr>]
 		[--trsvcid=<trsvcid>      | -s <trsvcid>]
 		[--host-traddr=<traddr>   | -w <traddr>]
@@ -64,6 +65,10 @@ OPTIONS
 |tcp |The network fabric is a TCP/IP network.
 |loop|Connect to a NVMe over Fabrics target on the local host
 |=================
+
+-n <subnqn>::
+--nqn <subnqn>::
+	This field specifies the name for the NVMe subsystem to connect to.
 
 -a <traddr>::
 --traddr=<traddr>::
