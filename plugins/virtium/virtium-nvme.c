@@ -451,7 +451,7 @@ static void vt_build_power_state_descriptor(const struct nvme_id_ctrl *ctrl)
 		vt_convert_data_buffer_to_hex_string(&buf[20], 4, true, s);
 		printf("%9sh", s);
 
-		temp = ctrl->psd[i].aps;
+		temp = ctrl->psd[i].apws;
 		snprintf(s, sizeof(s), "%u%u", (((unsigned char)temp >> 6) & 0x01), (((unsigned char)temp >> 7) & 0x01));
 		printf("%3sb", s);
 		snprintf(s, sizeof(s), "%u%u%u", (((unsigned char)temp) & 0x01), (((unsigned char)temp >> 1) & 0x01), (((unsigned char)temp >> 2) & 0x01));

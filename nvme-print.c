@@ -369,7 +369,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 		json_object_add_value_int(psd, "active_power",
 			le16_to_cpu(ctrl->psd[i].actp));
 		json_object_add_value_int(psd, "active_work_scale",
-			ctrl->psd[i].aps);
+			nvme_psd_power_scale(ctrl->psd[i].apws));
 
 		json_array_add_value_object(psds, psd);
 	}
@@ -3974,7 +3974,7 @@ static void nvme_show_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 				 nvme_psd_power_scale(ctrl->psd[i].ips));
 		printf(" active_power:");
 		print_ps_power_and_scale(ctrl->psd[i].actp,
-				 nvme_psd_power_scale(ctrl->psd[i].aps));
+				 nvme_psd_power_scale(ctrl->psd[i].apws));
 		printf("\n");
 
 	}
