@@ -1,9 +1,12 @@
 [wrap-file]
-directory = json-c-0.13.1
-source_url = https://s3.amazonaws.com/json-c_releases/releases/json-c-0.13.1.tar.gz
-source_filename = json-c-0.13.1.tar.gz
-source_hash = b87e608d4d3f7bfdd36ef78d56d53c74e66ab278d318b71e6002a369d36f4873
-patch_url = https://wrapdb.mesonbuild.com/v2/json-c_0.13.1-1/get_patch
-patch_filename = json-c-0.13.1-1-wrap.zip
-patch_hash = 213a735c3c5f7ff4aa38850cd7bf236337c47fd553b9fcded64e709cab66b9fd
+directory = json-c-0.15
+source_url = https://s3.amazonaws.com/json-c_releases/releases/json-c-0.15.tar.gz
+source_filename = json-c-0.15.tar.gz
+source_hash = b8d80a1ddb718b3ba7492916237bbf86609e9709fb007e7f7d4322f02341a4c6
+patch_filename = json-c_0.15-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/json-c_0.15-1/get_patch
+patch_hash = 002b44f87063a129b5f518ffb2dba7d107ecc665ba29f97e5547ffcae41de3a9
+
+[provide]
+json-c = json_c_dep
 
