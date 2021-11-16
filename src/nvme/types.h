@@ -652,11 +652,11 @@ enum nvme_psd_workload {
  * @actp:  Active Power indicates the largest average power consumed by the
  * 	   NVM subsystem over a 10 second period in this power state with
  * 	   the workload indicated in the Active Power Workload field.
- * @apw:   Active Power Workload indicates the workload used to calculate
- * 	   maximum power for this power state. See &enum nvme_psd_workload for
- * 	   decoding this field.
- * @aps:   Active Power Scale indicates the scale for the &struct
+ * @apws:  Bits 7-6: Active Power Scale(APS) indicates the scale for the &struct
  * 	   nvme_id_psd.actp, see &enum nvme_psd_ps for decoding this value.
+ *     Bits 2-0: Active Power Workload(APW) indicates the workload
+ * 	   used to calculate maximum power for this power state.
+ *     See &enum nvme_psd_workload for decoding this field.
  */
 struct nvme_id_psd {
 	__le16			mp;
@@ -672,9 +672,8 @@ struct nvme_id_psd {
 	__u8			ips;
 	__u8			rsvd19;
 	__le16			actp;
-	__u8			apw;
-	__u8			aps;
-	__u8			rsvd23[8];
+	__u8			apws;
+	__u8			rsvd23[9];
 };
 
 /**

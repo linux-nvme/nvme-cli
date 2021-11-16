@@ -30,11 +30,9 @@ struct nvme_id_psd {
 .br
 .BI "    __le16 actp;"
 .br
-.BI "    __u8 apw;"
+.BI "    __u8 apws;"
 .br
-.BI "    __u8 aps;"
-.br
-.BI "    __u8 rsvd23[8];"
+.BI "    __u8 rsvd23[9];"
 .br
 .BI "
 };
@@ -83,10 +81,9 @@ see \fIenum nvme_psd_ps\fP for decoding this field.
 Active Power indicates the largest average power consumed by the
 NVM subsystem over a 10 second period in this power state with
 the workload indicated in the Active Power Workload field.
-.IP "apw" 12
-Active Power Workload indicates the workload used to calculate
+.IP "apws" 12
+Bits 7-6: Active Power Scale(APS) indicates the scale for the \fIstruct
+nvme_id_psd\fP.actp, see \fIenum nvme_psd_ps\fP for decoding this value.
+Bits 2-0: Active Power Workload(APW) indicates the workload used to calculate
 maximum power for this power state. See \fIenum nvme_psd_workload\fP for
 decoding this field.
-.IP "aps" 12
-Active Power Scale indicates the scale for the \fIstruct
-nvme_id_psd\fP.actp, see \fIenum nvme_psd_ps\fP for decoding this value.
