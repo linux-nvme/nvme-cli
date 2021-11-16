@@ -65,6 +65,9 @@ static void json_update_attributes(nvme_ctrl_t c,
 		if (!strcmp("persistent", key_str) &&
 		    !nvme_ctrl_is_persistent(c))
 			nvme_ctrl_set_persistent(c, true);
+		if (!strcmp("discovery", key_str) &&
+		    !nvme_ctrl_is_discovery_ctrl(c))
+			nvme_ctrl_set_discovery_ctrl(c, true);
 	}
 }
 
@@ -209,6 +212,8 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	JSON_BOOL_OPTION(cfg, port_obj, data_digest);
 	if (nvme_ctrl_is_persistent(c))
 		json_object_add_value_bool(port_obj, "persistent", true);
+	if (nvme_ctrl_is_discovery_ctrl(c))
+		json_object_add_value_bool(port_obj, "discovery", true);
 	json_object_array_add(ctrl_array, port_obj);
 }
 

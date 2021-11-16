@@ -391,7 +391,7 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	struct nvme_fabrics_config *cfg = nvme_ctrl_get_config(c);
 	const char *transport = nvme_ctrl_get_transport(c);
 	const char *hostnqn, *hostid;
-	bool discover = false;
+	bool discover = false, discovery_nqn = false;
 
 	if (!transport) {
 		nvme_msg(LOG_ERR, "need a transport (-t) argument\n");
@@ -416,8 +416,10 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 		errno = ENOMEM;
 		return -1;
 	}
-	if (!strcmp(nvme_ctrl_get_subsysnqn(c), NVME_DISC_SUBSYS_NAME))
+	if (!strcmp(nvme_ctrl_get_subsysnqn(c), NVME_DISC_SUBSYS_NAME)) {
 		nvme_ctrl_set_discovery_ctrl(c, true);
+		discovery_nqn = true;
+	}
 	if (nvme_ctrl_is_discovery_ctrl(c))
 		discover = true;
 	hostnqn = nvme_host_get_hostnqn(h);
@@ -433,6 +435,8 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 			 nvme_ctrl_get_trsvcid(c)) ||
 	    (hostnqn && add_argument(argstr, "hostnqn", hostnqn)) ||
 	    (hostid && add_argument(argstr, "hostid", hostid)) ||
+	    (discover && !discovery_nqn &&
+	     add_bool_argument(argstr, "discovery", true)) ||
 	    (!discover &&
 	     add_int_argument(argstr, "nr_io_queues",
 			      cfg->nr_io_queues, false)) ||
