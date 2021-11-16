@@ -1206,7 +1206,7 @@ static void print_micron_vs_logs(
         sfield = log_page[field].field;
         if (size == 16) {
             if (strstr(sfield, "GUID")) {
-                sprintf(datastr, "0x%lX%lX",
+                sprintf(datastr, "0x%"PRIx64"%"PRIx64"",
                         (uint64_t)le64_to_cpu(*(uint64_t *)(&buf[offset + 8])),
                         (uint64_t)le64_to_cpu(*(uint64_t *)(&buf[offset])));
             } else {

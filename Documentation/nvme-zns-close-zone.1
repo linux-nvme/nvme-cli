@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-zns-close-zone
-.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
-.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/20/2020
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 08/26/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZNS\-CLOSE\-ZO" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-ZNS\-CLOSE\-ZO" "1" "08/26/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,10 @@ nvme-zns-close-zone \- Closes one or all zones
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme zns close\-zone nvme zns id\-ctrl\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
+\fInvme zns close\-zone\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
                                                 [\-\-start\-lba=<LBA> | \-s <LBA>]
                                                 [\-\-select\-all | \-a]
+                                                [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -56,6 +57,11 @@ The starting LBA of the zone to close\&.
 \-a, \-\-select\-all
 .RS 4
 Select all zones for this action
+.RE
+.PP
+\-t <timeout>, \-\-timeout=<timeout>
+.RS 4
+Override default timeout value\&. In milliseconds\&.
 .RE
 .SH "EXAMPLES"
 .sp

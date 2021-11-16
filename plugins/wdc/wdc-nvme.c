@@ -124,6 +124,7 @@
 #define WDC_DRIVE_CAP_CLOUD_SSD_VERSION		0x0000000004000000
 #define WDC_DRIVE_CAP_PCIE_STATS			0x0000000008000000
 #define WDC_DRIVE_CAP_INFO_2				0x0000000010000000
+#define WDC_DRIVE_CAP_C3_LOG_PAGE			0x0000000020000000
 
 #define WDC_DRIVE_CAP_DRIVE_ESSENTIALS      0x0000000100000000
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
@@ -323,6 +324,15 @@
 #define WDC_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID   0xC2
 #define WDC_FW_ACT_HISTORY_C2_LOG_BUF_LEN       0x1000
 #define WDC_MAX_NUM_ACT_HIST_ENTRIES            20
+
+/* C3 Latency Monitor Log Page */
+#define WDC_LATENCY_MON_LOG_BUF_LEN             0x200
+#define WDC_LATENCY_MON_OPCODE                  0xC3
+#define WDC_LATENCY_MON_VERSION                 0x0001
+
+#define WDC_C3_GUID_LENGTH                      16
+static __u8 wdc_lat_mon_guid[WDC_C3_GUID_LENGTH]    = { 0x92, 0x7a, 0xc0, 0x8c, 0xd0, 0x84, 0x6c, 0x9c,
+		0x70, 0x43, 0xe6, 0xd4, 0x58, 0x5e, 0xd4, 0x85 };
 
 /* D0 Smart Log Page */
 #define WDC_NVME_GET_VU_SMART_LOG_OPCODE		0xD0
@@ -524,7 +534,6 @@ typedef enum
     EOL_EFC                 = 100,	/* Erase Fail Count */
     EOL_RRER                = 108,	/* Raw Read Error Rate */
 } EOL_LOG_PAGE_C0_OFFSETS;
-
 
 typedef struct __attribute__((__packed__)) _WDC_DE_VU_FILE_META_DATA
 {
@@ -799,6 +808,48 @@ struct wdc_bd_ca_log_format {
 	__u8	normalized_value;
 	__u8	reserved2;
 	__u8	raw_value[7];
+};
+
+#define READ         0
+#define WRITE        1
+#define TRIM         2
+#define RESERVED     3
+
+struct __attribute__((__packed__)) wdc_ssd_latency_monitor_log {
+	__u8    feature_status;                         /* 0x00  */
+	__u8    rsvd1;                                  /* 0x01  */
+	__le16  active_bucket_timer;                    /* 0x02  */
+	__le16  active_bucket_timer_threshold;          /* 0x04  */
+	__u8    active_threshold_a;                     /* 0x06  */
+	__u8    active_threshold_b;                     /* 0x07  */
+	__u8    active_threshold_c;                     /* 0x08  */
+	__u8    active_threshold_d;                     /* 0x09  */
+	__le16  active_latency_config;                  /* 0x0A  */
+	__u8    active_latency_min_window;              /* 0x0C  */
+	__u8    rsvd2[0x13];                            /* 0x0D  */
+
+	__le32  active_bucket_counter[4][4] ;           /* 0x20 - 0x5F  */
+	__le64  active_latency_timestamp[4][3];         /* 0x60 - 0xBF  */
+	__le16  active_measured_latency[4][3];          /* 0xC0 - 0xD7  */
+	__le16  active_latency_stamp_units;             /* 0xD8  */
+	__u8    rsvd3[0x16];                            /* 0xDA  */
+
+	__le32  static_bucket_counter[4][4] ;           /* 0xF0  - 0x12F  */
+	__le64  static_latency_timestamp[4][3];         /* 0x130 - 0x18F */
+	__le16  static_measured_latency[4][3];          /* 0x190 - 0x1A7 */
+	__le16  static_latency_stamp_units;             /* 0x1A8 */
+	__u8    rsvd4[0x16];                            /* 0x1AA */
+
+	__le16  debug_log_trigger_enable;               /* 0x1C0 */
+	__le16  debug_log_measured_latency;             /* 0x1C2 */
+	__le64  debug_log_latency_stamp;                /* 0x1C4 */
+	__le16  debug_log_ptr;                          /* 0x1CC */
+	__le16  debug_log_counter_trigger;              /* 0x1CE */
+	__u8    debug_log_stamp_units;                  /* 0x1D0 */
+	__u8    rsvd5[0x1D];                            /* 0x1D1 */
+
+	__le16  log_page_version;                       /* 0x1EE */
+	__u8    log_page_guid[0x10];                    /* 0x1F0 */
 };
 
 struct __attribute__((__packed__)) wdc_ssd_ca_perf_stats {
@@ -1375,6 +1426,10 @@ static __u64 wdc_get_enc_drive_capabilities(nvme_root_t r, int fd) {
 			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG | WDC_DRIVE_CAP_CLEAR_PCIE |
 				WDC_DRIVE_CAP_DRIVE_LOG | WDC_DRIVE_CAP_CRASH_DUMP | WDC_DRIVE_CAP_PFAIL_DUMP);
 
+			/* verify the 0xC3 log page is supported */
+			if (wdc_nvme_check_supported_log_page(r, fd, WDC_LATENCY_MON_OPCODE) == true)
+				capabilities |= WDC_DRIVE_CAP_C3_LOG_PAGE;
+
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
 				capabilities |= WDC_DRIVE_CAP_CA_LOG_PAGE;
@@ -1387,6 +1442,10 @@ static __u64 wdc_get_enc_drive_capabilities(nvme_root_t r, int fd) {
 			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
 				WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
 				WDC_DRIVE_CAP_RESIZE);
+
+			/* verify the 0xC3 log page is supported */
+			if (wdc_nvme_check_supported_log_page(r, fd, WDC_LATENCY_MON_OPCODE) == true)
+				capabilities |= WDC_DRIVE_CAP_C3_LOG_PAGE;
 
 			/* verify the 0xCB log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID) == true)
@@ -1979,12 +2038,13 @@ static int wdc_do_dump_e6(int fd, __u32 opcode,__u32 data_len,
 static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int data_area)
 {
 	struct nvme_telemetry_log *hdr;
+	struct nvme_id_ctrl ctrl;
 	size_t full_size, offset = WDC_TELEMETRY_HEADER_LENGTH;
 	int err = 0, output;
 	void *page_log;
 	__u32 host_gen = 1;
 	int ctrl_init = 0;
-	__u32 result;
+	__u32 result, len;
 	void *buf = NULL;
 
 
@@ -2072,6 +2132,47 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 		break;
 	case 3:
 		full_size = (le16_to_cpu(hdr->dalb3) * WDC_TELEMETRY_BLOCK_SIZE) + WDC_TELEMETRY_HEADER_LENGTH;
+		break;
+	case 4:
+		err = nvme_identify_ctrl(fd, &ctrl);
+		if (err) {
+			perror("identify-ctrl");
+			goto close_output;
+		}
+
+		len = nvme_get_feature_length(NVME_FEAT_FID_HOST_BEHAVIOR, 0, &len);
+		if (posix_memalign(&buf, getpagesize(), len)) {
+			fprintf(stderr, "can not allocate feature payload\n");
+			errno = ENOMEM;
+			err = -1;
+			goto close_output;
+		}
+		memset(buf, 0, len);
+
+		err = nvme_get_features(fd, NVME_NSID_ALL, NVME_FEAT_FID_HOST_BEHAVIOR, 0, 0,
+				0, len, buf, &result);
+		if (err > 0) {
+			nvme_show_status(err);
+		} else if (err < 0) {
+			perror("get-feature");
+		} else {
+			if ((ctrl.lpa & 0x40)) {
+				if (((unsigned char *)buf)[1] == 1)
+					full_size = (le32_to_cpu(hdr->dalb4) * WDC_TELEMETRY_BLOCK_SIZE) + WDC_TELEMETRY_HEADER_LENGTH;
+				else {
+					fprintf(stderr, "Data area 4 unsupported, Host Behavior Support ETDAS not set to 1\n");
+					errno = EINVAL;
+					err = -1;
+				}
+			} else {
+				fprintf(stderr, "Data area 4 unsupported, bit 6 of Log Page Attributes not set\n");
+				errno = EINVAL;
+				err = -1;
+			}
+		}
+		free(buf);
+		if (err)
+			goto close_output;
 		break;
 	default:
 		fprintf(stderr, "%s: Invalid data area requested, data area = %d\n", __func__, data_area);
@@ -3556,6 +3657,170 @@ static int wdc_print_log(struct wdc_ssd_perf_stats *perf, int fmt)
 	return 0;
 }
 
+static int wdc_convert_ts(time_t time, char *ts_buf)
+{
+	struct tm  gmTimeInfo;
+	time_t     time_Human, time_ms;
+	char       buf[80];
+
+	time_Human = time/1000;
+	time_ms = time % 1000;
+
+	gmtime_r((const time_t *)&time_Human, &gmTimeInfo);
+
+	strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &gmTimeInfo);
+	sprintf(ts_buf, "%s.%03ld GMT", buf, time_ms);
+
+	return 0;
+}
+
+static int wdc_print_latency_monitor_log_normal(int fd, struct wdc_ssd_latency_monitor_log *log_data)
+{
+	printf("Latency Monitor/C3 Log Page Data \n");
+	printf("  Controller   :  %s\n", devicename);
+	int err = -1, i, j;
+	struct nvme_id_ctrl ctrl;
+	char       ts_buf[128];
+
+	err = nvme_identify_ctrl(fd, &ctrl);
+	if (!err)
+		printf("  Serial Number:  %-.*s\n", (int)sizeof(ctrl.sn), ctrl.sn);
+	else {
+		fprintf(stderr, "ERROR : WDC : latency monitor read id ctrl failure, err = %d\n", err);
+		return err;
+	}
+
+	printf("  Feature Status                     0x%x \n", log_data->feature_status);
+	printf("  Active Bucket Timer                %d min \n", 5*le16_to_cpu(log_data->active_bucket_timer));
+	printf("  Active Bucket Timer Threshold      %d min \n", 5*le16_to_cpu(log_data->active_bucket_timer_threshold));
+	printf("  Active Threshold A                 %d ms \n", 5*(le16_to_cpu(log_data->active_threshold_a+1)));
+	printf("  Active Threshold B                 %d ms \n", 5*(le16_to_cpu(log_data->active_threshold_b+1)));
+	printf("  Active Threshold C                 %d ms \n", 5*(le16_to_cpu(log_data->active_threshold_c+1)));
+	printf("  Active Threshold D                 %d ms \n", 5*(le16_to_cpu(log_data->active_threshold_d+1)));
+	printf("  Active Latency Config              0x%x \n", le16_to_cpu(log_data->active_latency_config));
+	printf("  Active Latency Minimum Window      %d ms \n", 100*log_data->active_latency_min_window);
+	printf("  Active Latency Stamp Units         %d \n", le16_to_cpu(log_data->active_latency_stamp_units));
+	printf("  Static Latency Stamp Units         %d \n", le16_to_cpu(log_data->static_latency_stamp_units));
+	printf("  Debug Log Trigger Enable           %d \n", le16_to_cpu(log_data->debug_log_trigger_enable));
+
+	printf("                                                            Read                           Write                 Deallocate/Trim \n");
+	for (i = 0; i <= 3; i++) {
+	    printf("  Active Bucket Counter: Bucket %d    %27d     %27d     %27d \n",
+			i, le32_to_cpu(log_data->active_bucket_counter[i][READ]), le32_to_cpu(log_data->active_bucket_counter[i][WRITE]),
+			le32_to_cpu(log_data->active_bucket_counter[i][TRIM]));
+	}
+
+	for (i = 0; i <= 3; i++) {
+	    printf("  Active Measured Latency: Bucket %d  %27d ms  %27d ms  %27d ms \n",
+			i, le16_to_cpu(log_data->active_measured_latency[i][READ]), le16_to_cpu(log_data->active_measured_latency[i][WRITE]),
+			le16_to_cpu(log_data->active_measured_latency[i][TRIM]));
+	}
+
+	for (i = 0; i <= 3; i++) {
+		printf("  Active Latency Time Stamp: Bucket %d    ", i);
+		for (j = 0; j <= 2; j++) {
+		    if (le64_to_cpu(log_data->active_latency_timestamp[i][j]) == -1)
+		    	printf("                    N/A         ");
+		    else {
+		    	wdc_convert_ts(le64_to_cpu(log_data->active_latency_timestamp[i][j]), ts_buf);
+		    	printf("%s     ",	ts_buf);
+		    }
+		}
+		printf("\n");
+	}
+
+	for (i = 0; i <= 3; i++) {
+	    printf("  Static Bucket Counter: Bucket %d    %27d     %27d     %27d \n",
+			i, le32_to_cpu(log_data->static_bucket_counter[i][READ]), le32_to_cpu(log_data->static_bucket_counter[i][WRITE]),
+			le32_to_cpu(log_data->static_bucket_counter[i][TRIM]));
+	}
+
+	for (i = 0; i <= 3; i++) {
+	    printf("  Static Measured Latency: Bucket %d  %27d ms  %27d ms  %27d ms \n",
+			i, le16_to_cpu(log_data->static_measured_latency[i][READ]), le16_to_cpu(log_data->static_measured_latency[i][WRITE]),
+			le16_to_cpu(log_data->static_measured_latency[i][TRIM]));
+	}
+
+	for (i = 0; i <= 3; i++) {
+		printf("  Static Latency Time Stamp: Bucket %d    ", i);
+		for (j = 0; j <= 2; j++) {
+		    if (le64_to_cpu(log_data->static_latency_timestamp[i][j]) == -1)
+		    	printf("                    N/A         ");
+		    else {
+		    	wdc_convert_ts(le64_to_cpu(log_data->static_latency_timestamp[i][j]), ts_buf);
+		    	printf("%s     ",	ts_buf);
+		    }
+		}
+		printf("\n");
+	}
+
+	return 0;
+}
+
+static void wdc_print_latency_monitor_log_json(struct wdc_ssd_latency_monitor_log *log_data)
+{
+	int i, j;
+	char	buf[128];
+	char	*operation[3] = {"Read", "Write", "Trim"};
+	struct json_object *root;
+	root = json_create_object();
+
+	json_object_add_value_int(root, "Feature Status", log_data->feature_status);
+	json_object_add_value_int(root, "Active Bucket Timer", 5*le16_to_cpu(log_data->active_bucket_timer));
+	json_object_add_value_int(root, "Active Bucket Timer Threshold", 5*le16_to_cpu(log_data->active_bucket_timer_threshold));
+	json_object_add_value_int(root, "Active Threshold A", 5*le16_to_cpu(log_data->active_threshold_a+1));
+	json_object_add_value_int(root, "Active Threshold B", 5*le16_to_cpu(log_data->active_threshold_b+1));
+	json_object_add_value_int(root, "Active Threshold C", 5*le16_to_cpu(log_data->active_threshold_c+1));
+	json_object_add_value_int(root, "Active Threshold D", 5*le16_to_cpu(log_data->active_threshold_d+1));
+	json_object_add_value_int(root, "Active Latency Config", le16_to_cpu(log_data->active_latency_config));
+	json_object_add_value_int(root, "Active Lantency Minimum Window", 100*log_data->active_latency_min_window);
+	json_object_add_value_int(root, "Active Latency Stamp Units", le16_to_cpu(log_data->active_latency_stamp_units));
+	json_object_add_value_int(root, "Static Latency Stamp Units", le16_to_cpu(log_data->static_latency_stamp_units));
+	json_object_add_value_int(root, "Debug Log Trigger Enable", le16_to_cpu(log_data->debug_log_trigger_enable));
+
+	for (i = 0; i <= 3; i++) {
+		for (j = 0; j <= 2; j++) {
+			sprintf(buf, "Active Bucket Counter: Bucket %d %s", i, operation[j]);
+			json_object_add_value_int(root, buf, le32_to_cpu(log_data->active_bucket_counter[i][j]));
+		}
+	}
+	for (i = 0; i <= 3; i++) {
+		for (j = 0; j <= 2; j++) {
+			sprintf(buf, "Active Measured Latency: Bucket %d %s", i, operation[j]);
+			json_object_add_value_int(root, buf, le16_to_cpu(log_data->active_measured_latency[i][j]));
+		}
+	}
+	for (i = 0; i <= 3; i++) {
+		for (j = 0; j <= 2; j++) {
+			sprintf(buf, "Active Latency Time Stamp: Bucket %d %s", i, operation[j]);
+			json_object_add_value_int(root, buf, le64_to_cpu(log_data->active_latency_timestamp[i][j]));
+		}
+	}
+	for (i = 0; i <= 3; i++) {
+		for (j = 0; j <= 2; j++) {
+			sprintf(buf, "Static Bucket Counter: Bucket %d %s", i, operation[j]);
+			json_object_add_value_int(root, buf, le32_to_cpu(log_data->static_bucket_counter[i][j]));
+		}
+	}
+	for (i = 0; i <= 3; i++) {
+		for (j = 0; j <= 2; j++) {
+			sprintf(buf, "Static Measured Latency: Bucket %d %s", i, operation[j]);
+			json_object_add_value_int(root, buf, le16_to_cpu(log_data->static_measured_latency[i][j]));
+		}
+	}
+	for (i = 0; i <= 3; i++) {
+		for (j = 0; j <= 2; j++) {
+			sprintf(buf, "Static Latency Time Stamp: Bucket %d %s", i, operation[j]);
+			json_object_add_value_int(root, buf, le64_to_cpu(log_data->static_latency_timestamp[i][j]));
+		}
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+
+	json_free_object(root);
+}
+
 static void wdc_print_fb_ca_log_normal(struct wdc_ssd_ca_perf_stats *perf)
 {
 	uint64_t converted = 0;
@@ -4411,10 +4676,12 @@ static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 
 	printf("  SMART Cloud Attributes :- \n");
 
-	printf("  Physical media units written			%.0Lf\n",
-			int128_to_double(&log_data[SCAO_PMUW]));
-	printf("  Physical media units Read			%.0Lf\n",
-			int128_to_double(&log_data[SCAO_PMUR]));
+	printf("  Physical media units written -   	        %"PRIu64" %"PRIu64"\n",
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW+8] & 0xFFFFFFFFFFFFFFFF),
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW] & 0xFFFFFFFFFFFFFFFF));
+	printf("  Physical media units read    - 	        %"PRIu64" %"PRIu64"\n",
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR+8] & 0xFFFFFFFFFFFFFFFF),
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR] & 0xFFFFFFFFFFFFFFFF));
 	printf("  Bad user nand blocks - Raw			%"PRIu64"\n",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
 	printf("  Bad user nand blocks - Normalized		%d\n",
@@ -4466,7 +4733,7 @@ static void wdc_print_smart_cloud_attr_C0_normal(void *data)
 	smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
 	printf("  Log page version				 %"PRIu16"\n",smart_log_ver);
 	printf("  Log page GUID					0x");
-	printf("%lX%lX\n",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
+	printf("0x%"PRIx64"%"PRIx64"\n",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG]));
 	if(smart_log_ver > 2) {
 		printf("  Errata Version Field                          %d\n",
@@ -4492,10 +4759,14 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 	uint16_t smart_log_ver = 0;
 
 	root = json_create_object();
-	json_object_add_value_float(root, "Physical media units written",
-			int128_to_double(&log_data[SCAO_PMUW]));
-	json_object_add_value_int(root, "Physical media units Read",
-			int128_to_double(&log_data[SCAO_PMUR]));
+	json_object_add_value_int(root, "Physical media units written hi",
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW+8] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_int(root, "Physical media units written lo",
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_int(root, "Physical media units read hi",
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR+8] & 0xFFFFFFFFFFFFFFFF));
+	json_object_add_value_int(root, "Physical media units read lo",
+			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR] & 0xFFFFFFFFFFFFFFFF));
 	json_object_add_value_uint(root, "Bad user nand blocks - Raw",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
 	json_object_add_value_uint(root, "Bad user nand blocks - Normalized",
@@ -4548,7 +4819,7 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 	json_object_add_value_uint(root, "Log page version", smart_log_ver);
 	char guid[40];
 	memset((void*)guid, 0, 40);
-	sprintf((char*)guid, "0x%lX%lX",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
+	sprintf((char*)guid, "0x%"PRIx64"%"PRIx64"",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG + 8]),
 		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_LPG]));
 	json_object_add_value_string(root, "Log page GUID", guid);
 	if(smart_log_ver > 2){
@@ -4656,7 +4927,7 @@ static int wdc_print_c0_eol_log(void *data, int fmt)
 }
 
 static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
-			       int uuid_index)
+			int uuid_index, __u32 namespace_id)
 {
 	int ret = 0;
 	int fmt = -1;
@@ -4699,8 +4970,15 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 					return -1;
 				}
 
+				if (namespace_id == NVME_NSID_ALL) {
+					ret = nvme_get_nsid(fd, &namespace_id);
+					if (ret < 0) {
+						namespace_id = NVME_NSID_ALL;
+					}
+				}
+
 				/* Get the 0xC0 log data */
-				ret = nvme_get_log(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE, 0xFFFFFFFF, 0,
+				ret = nvme_get_log(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE, namespace_id, 0,
 						NVME_LOG_LSP_NONE, 0, false, uuid_index, 0, WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
 
 				if (strcmp(format, "json"))
@@ -4747,7 +5025,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 				}
 
 				/* Get the 0xC0 log data */
-				ret = nvme_get_log(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE, 0xFFFFFFFF, 0,
+				ret = nvme_get_log(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE, NVME_NSID_ALL, 0,
 						NVME_LOG_LSP_NONE, 0, false, uuid_index, 0, WDC_NVME_EOL_STATUS_LOG_LEN, data);
 
 				if (strcmp(format, "json"))
@@ -4826,6 +5104,23 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 	}
 
 	return ret;
+}
+
+static int wdc_print_latency_monitor_log(int fd, struct wdc_ssd_latency_monitor_log *log_data, int fmt)
+{
+	if (!log_data) {
+		fprintf(stderr, "ERROR : WDC : Invalid C3 log data buffer\n");
+		return -1;
+	}
+	switch (fmt) {
+	case NORMAL:
+		wdc_print_latency_monitor_log_normal(fd, log_data);
+		break;
+	case JSON:
+		wdc_print_latency_monitor_log_json(log_data);
+		break;
+	}
+	return 0;
 }
 
 static int wdc_print_fb_ca_log(struct wdc_ssd_ca_perf_stats *perf, int fmt)
@@ -5091,6 +5386,77 @@ static int wdc_get_c1_log_page(nvme_root_t r, int fd,
 	return ret;
 }
 
+static int wdc_get_c3_log_page(nvme_root_t r, int fd, char *format)
+{
+	int ret = 0;
+	int fmt = -1;
+	__u8 *data;
+	int i;
+	struct wdc_ssd_latency_monitor_log *log_data;
+
+	if (!wdc_check_device(r, fd))
+		return -1;
+	fmt = validate_output_format(format);
+	if (fmt < 0) {
+		fprintf(stderr, "ERROR : WDC : invalid output format\n");
+		return fmt;
+	}
+
+	if ((data = (__u8 *) malloc(sizeof(__u8) * WDC_LATENCY_MON_LOG_BUF_LEN)) == NULL) {
+		fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
+		return -1;
+	}
+	memset(data, 0, sizeof (__u8) * WDC_LATENCY_MON_LOG_BUF_LEN);
+
+	ret = nvme_get_log_simple(fd, WDC_LATENCY_MON_OPCODE,
+				  WDC_LATENCY_MON_LOG_BUF_LEN, data);
+
+	if (strcmp(format, "json"))
+		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret, false), ret);
+
+	if (ret == 0) {
+		log_data = (struct wdc_ssd_latency_monitor_log*)data;
+
+		/* check log page version */
+		if (log_data->log_page_version != WDC_LATENCY_MON_VERSION) {
+			fprintf(stderr, "ERROR : WDC : invalid latency monitor version\n");
+			ret = -1;
+            goto out;
+		}
+
+		/* check log page guid */
+		/* Verify GUID matches */
+		for (i=0; i<16; i++) {
+			if (wdc_lat_mon_guid[i] != log_data->log_page_guid[i])	{
+				fprintf(stderr, "ERROR : WDC : Unknown GUID in C3 Log Page data\n");
+				int j;
+				fprintf(stderr, "ERROR : WDC : Expected GUID:  0x");
+				for (j = 0; j<16; j++) {
+					fprintf(stderr, "%x", wdc_lat_mon_guid[j]);
+				}
+				fprintf(stderr, "\nERROR : WDC : Actual GUID:    0x");
+				for (j = 0; j<16; j++) {
+					fprintf(stderr, "%x", log_data->log_page_guid[j]);
+				}
+				fprintf(stderr, "\n");
+
+				ret = -1;
+				goto out;
+			}
+		}
+
+	/* parse the data */
+		wdc_print_latency_monitor_log(fd, log_data, fmt);
+	} else {
+		fprintf(stderr, "ERROR : WDC : Unable to read C3 data from buffer\n");
+	}
+
+out:
+	free(data);
+	return ret;
+
+}
+
 static int wdc_get_d0_log_page(nvme_root_t r, int fd, char *format)
 {
 	int ret = 0;
@@ -5144,6 +5510,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 	int fd;
 	const char *log_page_version = "Log Page Version: 0 = vendor, 1 = WDC";
 	const char *log_page_mask = "Log Page Mask, comma separated list: 0xC0, 0xC1, 0xCA, 0xD0";
+	const char *namespace_id = "desired namespace id";
 	nvme_root_t r;
 	int ret = 0;
 	int uuid_index = 0;
@@ -5156,6 +5523,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 		char *output_format;
 		__u8  log_page_version;
 		char *log_page_mask;
+		__u32 namespace_id;
 	};
 
 	struct config cfg = {
@@ -5163,6 +5531,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 		.output_format = "normal",
 		.log_page_version   = 0,
 		.log_page_mask   = "",
+		.namespace_id = NVME_NSID_ALL,
 	};
 
 	OPT_ARGS(opts) = {
@@ -5170,6 +5539,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 		OPT_FMT("output-format",      'o', &cfg.output_format,    "Output Format: normal|json"),
 		OPT_BYTE("log-page-version",  'l', &cfg.log_page_version, log_page_version),
 		OPT_LIST("log-page-mask",     'p', &cfg.log_page_mask,    log_page_mask),
+		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,     namespace_id),
 		OPT_END()
 	};
 
@@ -5233,7 +5603,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 	if (((capabilities & WDC_DRIVE_CAP_C0_LOG_PAGE) == WDC_DRIVE_CAP_C0_LOG_PAGE) &&
 		(page_mask & WDC_C0_PAGE_MASK))	{
 		/* Get 0xC0 log page if possible. */
-		ret = wdc_get_c0_log_page(r, fd, cfg.output_format, uuid_index);
+		ret = wdc_get_c0_log_page(r, fd, cfg.output_format, uuid_index, cfg.namespace_id);
 		if (ret)
 			fprintf(stderr, "ERROR : WDC : Failure reading the C0 Log Page, ret = %d\n", ret);
 	}
@@ -5261,6 +5631,50 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *command,
 
 out:
 	nvme_free_tree(r);
+	return ret;
+}
+
+static int wdc_get_latency_monitor_log(int argc, char **argv, struct command *command,
+		struct plugin *plugin)
+{
+	const char *desc = "Retrieve latency monitor log data.";
+	nvme_root_t r;
+	int fd;
+	int ret = 0;
+	__u64 capabilities = 0;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format",      'o', &cfg.output_format,    "Output Format: normal|json"),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	r = nvme_scan(NULL);
+	capabilities = wdc_get_drive_capabilities(r, fd);
+
+	if ((capabilities & WDC_DRIVE_CAP_C3_LOG_PAGE) == 0) {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+		goto out;
+	}
+
+	ret = wdc_get_c3_log_page(r, fd, cfg.output_format);
+	if (ret)
+		fprintf(stderr, "ERROR : WDC : Failure reading the C3 Log Page, ret = %d\n", ret);
+
+out:
+
 	return ret;
 }
 
@@ -7961,6 +8375,8 @@ static int wdc_capabilities(int argc, char **argv,
             capabilities & WDC_DRIVE_CAP_C0_LOG_PAGE ? "Supported" : "Not Supported");
     printf("--C1 Log Page                 : %s\n",
             capabilities & WDC_DRIVE_CAP_C1_LOG_PAGE ? "Supported" : "Not Supported");
+    printf("--C3 Log Page                 : %s\n",
+            capabilities & WDC_DRIVE_CAP_C3_LOG_PAGE ? "Supported" : "Not Supported");
     printf("--CA Log Page                 : %s\n",
             capabilities & WDC_DRIVE_CAP_CA_LOG_PAGE ? "Supported" : "Not Supported");
     printf("--D0 Log Page                 : %s\n",

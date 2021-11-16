@@ -8,9 +8,10 @@ nvme-zns-offline-zone - Offlines one or all zones
 SYNOPSIS
 --------
 [verse]
-'nvme zns offline-zone nvme zns id-ctrl' <device> [--namespace-id=<NUM> | -n <NUM>]
+'nvme zns offline-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
 						[--start-lba=<LBA> | -s <LBA>]
 						[--select-all | -a]
+						[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -35,6 +36,10 @@ OPTIONS
 -a::
 --select-all::
 	Select all zones for this action
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

@@ -6,7 +6,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("netapp", "NetApp vendor specific extensions"),
+PLUGIN(NAME("netapp", "NetApp vendor specific extensions", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("smdevices", "NetApp SMdevices", netapp_smdevices)
 		ENTRY("ontapdevices", "NetApp ONTAPdevices", netapp_ontapdevices)

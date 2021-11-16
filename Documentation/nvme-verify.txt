@@ -1,0 +1,93 @@
+nvme-verify(1)
+==============
+
+NAME
+----
+nvme-verify - Send an NVMe Verify command, return results
+
+SYNOPSIS
+--------
+[verse]
+'nvme-verify' <device> [--namespace-id=<nsid> | -n <nsid>]
+            [--start-block=<slba> | -s <slba>]
+            [--block-count=<nlb> | -c <nlb>]
+            [--limited-retry | -l]
+            [--force-unit-access | -f]
+            [--prinfo=<prinfo> | -p <prinfo>]
+            [--ref-tag=<reftag> | -r <reftag>]
+            [--app-tag-mask=<appmask> | -m <appmask>]
+            [--app-tag=<apptag> | -a <apptag>]
+            [--storage-tag<storage-tag> | -S <storage-tag>]
+            [--storage-tag-check<storage-tag-check> | -C <storage-tag-check>]
+
+DESCRIPTION
+-----------
+The Verify command verifies the integrity of the stored information by
+reading data and metadata.
+
+OPTIONS
+-------
+--namespace-id=<nsid>::
+-n <nsid>::
+	Namespace ID use in the command.
+
+--start-block=<slba>::
+-s <slba>::
+	Start block address.
+
+--block-count=<nlb>::
+-c <nlb>::
+	Number of logical blocks to Verify.
+
+--limited-retry::
+-l::
+	Sets the limited retry flag.
+
+--force-unit-access::
+-f::
+	Set the force-unit access flag.
+
+--prinfo=<prinfo>::
+-p <prinfo>::
+	Protection Information field definition.
++
+[]
+|=================
+|Bit|Description
+|3|PRACT: Protection Information Action. When set to 1, PI is stripped/inserted
+on read/write when the block format's metadata size is 8. When set to 0,
+metadata is passes.
+|2:0|PRCHK: Protection Information Check:
+|2|Set to 1 enables checking the guard tag
+|1|Set to 1 enables checking the application tag
+|0|Set to 1 enables checking the reference tag
+|=================
+
+--ref-tag=<reftag>::
+-r <reftag>::
+	Optional reftag when used with protection information.
+
+--app-tag-mask=<appmask>::
+-m <appmask>::
+	Optional application tag mask when used with protection information.
+
+--app-tag=<apptag>::
+-a <apptag>::
+	Optional application tag when used with protection information.
+
+--storage-tag=<storage-tag>::
+-S <storage-tag>::
+	Variable Sized Expected Logical Block Storage Tag(ELBST) and Expected Logical
+	Block Reference Tag (ELBRT), CDW2 and CDW3 (00:47) bits.
+
+--storage-tag-check=<storage-tag-check>::
+-C <storage-tag-check>::
+	This bit specifies the Storage Tag field shall be checked as part of Verify operation.
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

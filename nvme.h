@@ -30,9 +30,9 @@
 #define json_free_object(o) json_object_put(o)
 #define json_free_array(a) json_object_put(a)
 #define json_object_add_value_uint(o, k, v) \
-	json_object_object_add(o, k, json_object_new_int(v))
+	json_object_object_add(o, k, json_object_new_uint64(v))
 #define json_object_add_value_int(o, k, v) \
-	json_object_object_add(o, k, json_object_new_int(v))
+	json_object_object_add(o, k, json_object_new_int64(v))
 #define json_object_add_value_float(o, k, v) \
 	json_object_object_add(o, k, json_object_new_double(v))
 #define json_object_add_value_string(o, k, v) \
@@ -43,6 +43,8 @@
 	json_object_object_add(o, k, v)
 #define json_array_add_value_object(o, k) \
 	json_object_array_add(o, k)
+#define json_array_add_value_string(o, v) \
+	json_object_array_add(o, json_object_new_string(v))
 #define json_print_object(o, u)						\
 	printf("%s", json_object_to_json_string_ext(o, JSON_C_TO_STRING_PRETTY))
 #else
@@ -78,6 +80,12 @@ void nvme_free(void *p, bool huge);
 
 unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time);
+
+static inline void nvme_strip_spaces(char *s, int l)
+{
+        while (l && (s[l] == '\0' || s[l] == ' '))
+                s[l--] = '\0';
+}
 
 /* nvme-print.c */
 const char *nvme_select_to_string(int sel);

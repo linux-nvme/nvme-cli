@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 8.6.10" />
 <title>nvme-compare(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -763,7 +766,8 @@ nvme-compare(1) Manual Page
                         [--dsm=&lt;dsm&gt; | -D &lt;dsm&gt;]
                         [--show-command | -v]
                         [--dry-run | -w]
-                        [--latency | -t]</pre>
+                        [--latency | -t]
+                        [--storage-tag-check&lt;storage-tag-check&gt; | -C &lt;storage-tag-check&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -1037,6 +1041,18 @@ metadata is passes.</p></td>
         Print out the latency the IOCTL took (in us).
 </p>
 </dd>
+<dt class="hdlist1">
+--storage-tag-check=&lt;storage-tag-check&gt;
+</dt>
+<dt class="hdlist1">
+-C &lt;storage-tag-check&gt;
+</dt>
+<dd>
+<p>
+        This bit specifies the Storage Tag field shall be checked as part of end-to-end
+        data protection processing.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1056,7 +1072,8 @@ metadata is passes.</p></td>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-12-17 13:07:47 MST
+Last updated
+ 2021-07-09 14:16:50 IST
 </div>
 </div>
 </body>

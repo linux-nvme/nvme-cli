@@ -26,9 +26,14 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
 void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode);
 void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	enum nvme_print_flags flags);
+void nvme_show_cmd_set_independent_id_ns(
+	struct nvme_id_independent_id_ns *ns, unsigned int nsid,
+	enum nvme_print_flags flags);
 void nvme_show_resv_report(struct nvme_resv_status *status, int bytes, bool eds,
 	enum nvme_print_flags flags);
 void nvme_show_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges);
+void nvme_show_supported_log(struct nvme_supported_log_pages *support,
+	const char *devname, enum nvme_print_flags flags);
 void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
 	const char *devname, enum nvme_print_flags flags);
 void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
@@ -75,6 +80,10 @@ void nvme_show_lba_status_log(void *lba_status, __u32 size,
 	const char *devname, enum nvme_print_flags flags);
 void nvme_show_resv_notif_log(struct nvme_resv_notification_log *resv,
 	const char *devname, enum nvme_print_flags flags);
+void nvme_show_boot_part_log(void *bp_log, const char *devname,
+	__u32 size, enum nvme_print_flags flags);
+void nvme_show_fid_support_effects_log(struct nvme_fid_supported_effects_log *fid_log,
+	const char *devname, enum nvme_print_flags flags);
 void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags);
 void nvme_show_single_property(int offset, uint64_t prop, int human);
 void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flags);
@@ -94,6 +103,10 @@ void nvme_show_id_uuid_list(const struct nvme_id_uuid_list *uuid_list,
 	enum nvme_print_flags flags);
 void nvme_show_list_ctrl(struct nvme_ctrl_list *ctrl_list,
 	 enum nvme_print_flags flags);
+void nvme_show_id_domain_list(struct nvme_id_domain_list *id_dom,
+	enum nvme_print_flags flags);
+void nvme_show_endurance_group_list(struct nvme_id_endurance_group_list *endgrp_list,
+	enum nvme_print_flags flags);
 void nvme_show_list_ns(struct nvme_ns_list *ns_list,
 	enum nvme_print_flags flags);
 

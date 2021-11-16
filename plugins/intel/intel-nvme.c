@@ -446,7 +446,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	struct intel_temp_stats stats;
 	int err, fd;
 
-	const char *desc = "Get Intel Marketing Name log and show it.";
+	const char *desc = "Get Temperature Statistics log and show it.";
 	const char *raw = "dump output in binary format";
 	struct config {
 		int  raw_binary;

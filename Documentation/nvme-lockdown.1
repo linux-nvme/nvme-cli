@@ -1,0 +1,75 @@
+'\" t
+.\"     Title: nvme-lockdown
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 09/09/2021
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-LOCKDOWN" "1" "09/09/2021" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-lockdown \- Send an NVMe Lockdown command to prohibit or allow the execution of command
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\-lockdown\fR <device> [\-\-ofi=<ofi> | \-o <ofi>]
+                        [\-\-ifc=<ifc> | \-f <ifc>]
+                        [\-\-prhbt=<prhbt> | \-p <prhbt>]
+                        [\-\-scp=<scp> | \-s <scp>]
+                        [\-\-uuid=<UUID_Index> | \-U <UUID_Index>]
+.fi
+.SH "DESCRIPTION"
+.sp
+The Lockdown command is used to control the Command and Feature Lockdown capability which configures the prohibition or allowance of execution of the specified commandor Set Features command targeting a specific Feature Identifier\&.
+.SH "OPTIONS"
+.PP
+\-\-ofi=<ofi>, \-o <ofi>
+.RS 4
+Opcode or Feature Identifier(OFI) specifies the command opcode or Set Features Feature Identifier identified by the Scope field\&.
+.RE
+.PP
+\-\-ifc=<ifc>, \-f <ifc>
+.RS 4
+Interface (INF) field identifies the interfaces affected by this command\&.
+.RE
+.PP
+\-\-prhbt=<prhbt>, \-p <prhbt>
+.RS 4
+Prohibit(PRHBT) bit specifies whether to prohibit or allow the command opcode or Set Features Feature Identifier specified by this command\&.
+.RE
+.PP
+\-\-scp=<scp>, \-s <scp>
+.RS 4
+Scope(SCP) field specifies the contents of the Opcode or Feature Identifier field\&.
+.RE
+.PP
+\-\-uuid=<UUID_Index>, \-U <UUID_Index>
+.RS 4
+UUID Index \- If this field is set to a non\-zerovalue, then the value of this field is the index of a UUID in the UUIDList that is used by the command\&. If this field is cleared to 0h,then no UUID index is specified\&.
+.RE
+.SH "EXAMPLES"
+.sp
+No examples yet\&.
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

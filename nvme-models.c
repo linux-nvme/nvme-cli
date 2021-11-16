@@ -76,22 +76,34 @@ static char *locate_info(char *data, bool is_inner, bool is_class)
 static void format_and_print(char *save)
 {
 
-	if (!class_mid)
-		snprintf(save, 1024, "%s %s %s",
-		       locate_info(device_top, false, false),
-		       locate_info(device_mid, false, false),
-		       locate_info(device_final, true, false));
-	else
-		snprintf(save, 1024, "%s: %s %s %s",
-			 locate_info(class_mid, false, true),
-			 locate_info(device_top, false, false),
-			 locate_info(device_mid, false, false),
-			 locate_info(device_final, true, false));
+	if (!class_mid) {
+		if (device_final)
+			snprintf(save, 1024, "%s %s %s",
+				 locate_info(device_top, false, false),
+				 locate_info(device_mid, false, false),
+				 locate_info(device_final, true, false));
+		else
+			snprintf(save, 1024, "%s %s",
+				 locate_info(device_top, false, false),
+				 locate_info(device_mid, false, false));
+	} else {
+		if (device_final)
+			snprintf(save, 1024, "%s: %s %s %s",
+				 locate_info(class_mid, false, true),
+				 locate_info(device_top, false, false),
+				 locate_info(device_mid, false, false),
+				 locate_info(device_final, true, false));
+		else
+			snprintf(save, 1024, "%s: %s %s",
+				 locate_info(class_mid, false, true),
+				 locate_info(device_top, false, false),
+				 locate_info(device_mid, false, false));
+	}
 }
 
 static void format_all(char *save, char *vendor, char *device)
 {
-	if (device_top && device_mid && device_final)
+	if (device_top && device_mid)
 		format_and_print(save);
 
 	else if (device_top && !device_mid && class_mid)

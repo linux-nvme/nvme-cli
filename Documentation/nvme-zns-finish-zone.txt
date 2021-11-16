@@ -8,9 +8,10 @@ nvme-zns-finish-zone - Finishes one or all zones
 SYNOPSIS
 --------
 [verse]
-'nvme zns finish-zone nvme zns id-ctrl' <device> [--namespace-id=<NUM> | -n <NUM>]
+'nvme zns finish-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
 						[--start-lba=<LBA> | -s <LBA>]
 						[--select-all | -a]
+						[--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -36,6 +37,10 @@ OPTIONS
 -a::
 --select-all::
 	Select all zones for this action.
+
+-t <timeout>::
+--timeout=<timeout>::
+	Override default timeout value. In milliseconds.
 
 EXAMPLES
 --------

@@ -758,7 +758,9 @@ nvme-zeroes(1) Manual Page
                         [--deac | -d]
                         [--limited-retry | -l]
                         [--force-unit-access | -f]
-                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]</pre>
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--storage-tag&lt;storage-tag&gt; | -S &lt;storage-tag&gt;]
+                        [--storage-tag-check&lt;storage-tag-check&gt; | -C &lt;storage-tag-check&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -920,15 +922,42 @@ metadata is passes.</p></td>
         Namespace ID use in the command.
 </p>
 </dd>
+<dt class="hdlist1">
+--storage-tag=&lt;storage-tag&gt;
+</dt>
+<dt class="hdlist1">
+-n &lt;storage-tag&gt;
+</dt>
+<dd>
+<p>
+        Variable Sized Expected Logical Block Storage Tag(ELBST) and Expected Logical
+        Block Reference Tag (ELBRT), CDW2 and CDW3 (00:47) bits.
+</p>
+</dd>
+<dt class="hdlist1">
+--storage-tag-check=&lt;storage-tag-check&gt;
+</dt>
+<dt class="hdlist1">
+-C &lt;storage-tag-check&gt;
+</dt>
+<dd>
+<p>
+        This bit specifies the Storage Tag field shall be checked as part of end-to-end
+        data protection processing.
+</p>
+</dd>
 </dl></div>
-<div class="paragraph"><p>EXAMPLES
-EXAMPLES</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><code>No examples yet.
-
-NVME</code></pre>
-</div></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_examples">EXAMPLES</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>No examples yet.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_nvme">NVME</h2>
+<div class="sectionbody">
 <div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
@@ -937,7 +966,7 @@ NVME</code></pre>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2019-09-18 00:00:58 JST
+ 2021-07-09 13:42:09 IST
 </div>
 </div>
 </body>
