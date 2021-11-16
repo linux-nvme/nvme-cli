@@ -338,7 +338,7 @@ static int hostname2traddr(nvme_ctrl_t c)
 
 	ret = getaddrinfo(c->traddr, NULL, &hints, &host_info);
 	if (ret) {
-		fprintf(stderr, "failed to resolve host %s info\n", c->traddr);
+		nvme_msg(LOG_ERR, "failed to resolve host %s info\n", c->traddr);
 		return ret;
 	}
 
@@ -354,14 +354,14 @@ static int hostname2traddr(nvme_ctrl_t c)
 			addrstr, NVMF_TRADDR_SIZE);
 		break;
 	default:
-		fprintf(stderr, "unrecognized address family (%d) %s\n",
+		nvme_msg(LOG_ERR, "unrecognized address family (%d) %s\n",
 			host_info->ai_family, c->traddr);
 		ret = -EINVAL;
 		goto free_addrinfo;
 	}
 
 	if (!p) {
-		fprintf(stderr, "failed to get traddr for %s\n", c->traddr);
+		nvme_msg(LOG_ERR, "failed to get traddr for %s\n", c->traddr);
 		ret = -errno;
 		goto free_addrinfo;
 	}
