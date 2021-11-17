@@ -133,6 +133,7 @@ static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		printf("trsvcid: %s\n", e->trsvcid);
 		printf("subnqn:  %s\n", e->subnqn);
 		printf("traddr:  %s\n", e->traddr);
+		printf("eflags:  %s\n", nvmf_eflags_str(e->eflags));
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
@@ -185,6 +186,7 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		json_object_add_value_string(entry, "trsvcid", e->trsvcid);
 		json_object_add_value_string(entry, "subnqn", e->subnqn);
 		json_object_add_value_string(entry, "traddr", e->traddr);
+		json_object_add_value_uint(entry, "eflags", e->eflags);
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
