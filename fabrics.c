@@ -159,7 +159,7 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 
 	root = json_create_object();
 	entries = json_create_array();
-	json_object_add_value_uint(root, "genctr", le64_to_cpu(log->genctr));
+	json_object_add_value_uint64(root, "genctr", le64_to_cpu(log->genctr));
 	json_object_add_value_array(root, "records", entries);
 
 	for (i = 0; i < numrec; i++) {
@@ -178,7 +178,8 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 					     nvmf_subtype_str(e->subtype));
 		json_object_add_value_string(entry,"treq",
 					     nvmf_treq_str(e->treq));
-		json_object_add_value_uint(entry, "portid", e->portid);
+		json_object_add_value_uint(entry, "portid",
+					   le16_to_cpu(e->portid));
 		json_object_add_value_string(entry, "trsvcid", e->trsvcid);
 		json_object_add_value_string(entry, "subnqn", e->subnqn);
 		json_object_add_value_string(entry, "traddr", e->traddr);

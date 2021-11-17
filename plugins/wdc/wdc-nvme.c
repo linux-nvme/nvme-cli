@@ -4759,27 +4759,27 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 	uint16_t smart_log_ver = 0;
 
 	root = json_create_object();
-	json_object_add_value_int(root, "Physical media units written hi",
+	json_object_add_value_uint64(root, "Physical media units written hi",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW+8] & 0xFFFFFFFFFFFFFFFF));
-	json_object_add_value_int(root, "Physical media units written lo",
+	json_object_add_value_uint64(root, "Physical media units written lo",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUW] & 0xFFFFFFFFFFFFFFFF));
-	json_object_add_value_int(root, "Physical media units read hi",
+	json_object_add_value_uint64(root, "Physical media units read hi",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR+8] & 0xFFFFFFFFFFFFFFFF));
-	json_object_add_value_int(root, "Physical media units read lo",
+	json_object_add_value_uint64(root, "Physical media units read lo",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PMUR] & 0xFFFFFFFFFFFFFFFF));
-	json_object_add_value_uint(root, "Bad user nand blocks - Raw",
+	json_object_add_value_uint64(root, "Bad user nand blocks - Raw",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
 	json_object_add_value_uint(root, "Bad user nand blocks - Normalized",
 			(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BUNBN]));
-	json_object_add_value_uint(root, "Bad system nand blocks - Raw",
+	json_object_add_value_uint64(root, "Bad system nand blocks - Raw",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BSNBR] & 0x0000FFFFFFFFFFFF));
 	json_object_add_value_uint(root, "Bad system nand blocks - Normalized",
 			(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_BSNBN]));
-	json_object_add_value_uint(root, "XOR recovery count",
+	json_object_add_value_uint64(root, "XOR recovery count",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_XRC]));
-	json_object_add_value_uint(root, "Uncorrectable read error count",
+	json_object_add_value_uint64(root, "Uncorrectable read error count",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_UREC]));
-	json_object_add_value_uint(root, "Soft ecc error count",
+	json_object_add_value_uint64(root, "Soft ecc error count",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SEEC]));
 	json_object_add_value_uint(root, "End to end corrected errors",
 			(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EECE]));
@@ -4787,7 +4787,7 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 			(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_EEDC]));
 	json_object_add_value_uint(root, "System data percent used",
 			(__u8)log_data[SCAO_SDPU]);
-	json_object_add_value_uint(root, "Refresh counts",
+	json_object_add_value_uint64(root, "Refresh counts",
 			(uint64_t)(le64_to_cpu(*(uint64_t *)&log_data[SCAO_RFSC])& 0x00FFFFFFFFFFFFFF));
 	json_object_add_value_uint(root, "Max User data erase counts",
 			(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_MXUDEC]));
@@ -4797,7 +4797,7 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 			(__u8)log_data[SCAO_NTTE]);
 	json_object_add_value_uint(root, "Current throttling status",
 			(__u8)log_data[SCAO_CTS]);
-	json_object_add_value_uint(root, "PCIe correctable error count",
+	json_object_add_value_uint64(root, "PCIe correctable error count",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PCEC]));
 	json_object_add_value_uint(root, "Incomplete shutdowns",
 			(uint32_t)le32_to_cpu(*(uint32_t *)&log_data[SCAO_ICS]));
@@ -4805,11 +4805,11 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 			(__u8)log_data[SCAO_PFB]);
 	json_object_add_value_uint(root, "Capacitor health",
 			(uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_CPH]));
-	json_object_add_value_uint(root, "Unaligned I/O",
+	json_object_add_value_uint64(root, "Unaligned I/O",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_UIO]));
-	json_object_add_value_uint(root, "Security Version Number",
+	json_object_add_value_uint64(root, "Security Version Number",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SVN]));
-	json_object_add_value_uint(root, "NUSE - Namespace utilization",
+	json_object_add_value_uint64(root, "NUSE - Namespace utilization",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_NUSE]));
 	json_object_add_value_uint(root, "PLP start count",
 			int128_to_double(&log_data[SCAO_PSC]));
@@ -4833,7 +4833,7 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 				(__u8)log_data[SCAO_MAVF]);
 		json_object_add_value_uint(root, "NVMe Errata Version",
 				(__u8)log_data[SCAO_NEV]);
-		json_object_add_value_uint(root, "PCIe Link Retraining Count",
+		json_object_add_value_uint64(root, "PCIe Link Retraining Count",
 				(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_PLRC]));
 	}
 	json_print_object(root, NULL);
@@ -7721,11 +7721,11 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				le32_to_cpu(nand_stats->nand_erase_failure));
 		json_object_add_value_uint(root, "Bad Block Count",
 				le32_to_cpu(nand_stats->bad_block_count));
-		json_object_add_value_uint(root, "NAND XOR/RAID Recovery Trigger Events",
+		json_object_add_value_uint64(root, "NAND XOR/RAID Recovery Trigger Events",
 				le64_to_cpu(nand_stats->nand_rec_trigger_event));
-		json_object_add_value_uint(root, "E2E Error Counter",
+		json_object_add_value_uint64(root, "E2E Error Counter",
 				le64_to_cpu(nand_stats->e2e_error_counter));
-		json_object_add_value_uint(root, "Number Successful NS Resizing Events",
+		json_object_add_value_uint64(root, "Number Successful NS Resizing Events",
 				le64_to_cpu(nand_stats->successful_ns_resize_event));
 
 		json_print_object(root, NULL);
@@ -7743,13 +7743,13 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
 		json_object_add_value_uint(root, "Bad NAND Blocks Count - Normalized",
 				le16_to_cpu(temp_norm));
-		json_object_add_value_uint(root, "Bad NAND Blocks Count - Raw",
+		json_object_add_value_uint64(root, "Bad NAND Blocks Count - Raw",
 				le64_to_cpu(temp_raw));
-		json_object_add_value_uint(root, "NAND XOR Recovery count",
+		json_object_add_value_uint64(root, "NAND XOR Recovery count",
 				le64_to_cpu(nand_stats_v3->xor_recovery_count));
-		json_object_add_value_uint(root, "UECC Read Error count",
+		json_object_add_value_uint64(root, "UECC Read Error count",
 				le64_to_cpu(nand_stats_v3->uecc_read_error_count));
-		json_object_add_value_uint(root, "SSD End to End corrected errors",
+		json_object_add_value_uint64(root, "SSD End to End corrected errors",
 				le64_to_cpu(nand_stats_v3->ssd_correction_counts[0]));
 		json_object_add_value_uint(root, "SSD End to End detected errors",
 				le32_to_cpu(nand_stats_v3->ssd_correction_counts[8]));
@@ -7757,54 +7757,54 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				le32_to_cpu(nand_stats_v3->ssd_correction_counts[12]));
 		json_object_add_value_uint(root, "System data % life-used",
 				nand_stats_v3->percent_life_used);
-		json_object_add_value_uint(root, "User Data Erase Counts - SLC Min",
+		json_object_add_value_uint64(root, "User Data Erase Counts - SLC Min",
 				le64_to_cpu(nand_stats_v3->user_data_erase_counts[0]));
-		json_object_add_value_uint(root, "User Data Erase Counts - SLC Max",
+		json_object_add_value_uint64(root, "User Data Erase Counts - SLC Max",
 				le64_to_cpu(nand_stats_v3->user_data_erase_counts[1]));
-		json_object_add_value_uint(root, "User Data Erase Counts - TLC Min",
+		json_object_add_value_uint64(root, "User Data Erase Counts - TLC Min",
 				le64_to_cpu(nand_stats_v3->user_data_erase_counts[2]));
-		json_object_add_value_uint(root, "User Data Erase Counts - TLC Max",
+		json_object_add_value_uint64(root, "User Data Erase Counts - TLC Max",
 				le64_to_cpu(nand_stats_v3->user_data_erase_counts[3]));
 		temp_ptr = (__u64 *)nand_stats_v3->program_fail_count;
 		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
 		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
 		json_object_add_value_uint(root, "Program Fail Count - Normalized",
 				le16_to_cpu(temp_norm));
-		json_object_add_value_uint(root, "Program Fail Count - Raw",
+		json_object_add_value_uint64(root, "Program Fail Count - Raw",
 				le64_to_cpu(temp_raw));
 		temp_ptr = (__u64 *)nand_stats_v3->erase_fail_count;
 		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
 		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
 		json_object_add_value_uint(root, "Erase Fail Count - Normalized",
 				le16_to_cpu(temp_norm));
-		json_object_add_value_uint(root, "Erase Fail Count - Raw",
+		json_object_add_value_uint64(root, "Erase Fail Count - Raw",
 				le64_to_cpu(temp_raw));
 		json_object_add_value_uint(root, "PCIe Correctable Error Count",
 				le16_to_cpu(nand_stats_v3->correctable_error_count));
 		json_object_add_value_uint(root, "% Free Blocks (User)",
 				nand_stats_v3->percent_free_blocks_user);
-		json_object_add_value_uint(root, "Security Version Number",
+		json_object_add_value_uint64(root, "Security Version Number",
 				le64_to_cpu(nand_stats_v3->security_version_number));
 		json_object_add_value_uint(root, "% Free Blocks (System)",
 				nand_stats_v3->percent_free_blocks_system);
 		json_object_add_value_float(root, "Data Set Management Commands",
 				int128_to_double(nand_stats_v3->trim_completions));
-		json_object_add_value_uint(root, "Estimate of Incomplete Trim Data",
+		json_object_add_value_uint64(root, "Estimate of Incomplete Trim Data",
 				le64_to_cpu(nand_stats_v3->trim_completions[16]));
 		json_object_add_value_uint(root, "%% of completed trim",
 				nand_stats_v3->trim_completions[24]);
 		json_object_add_value_uint(root, "Background Back-Pressure-Guage",
 				nand_stats_v3->back_pressure_guage);
-		json_object_add_value_uint(root, "Soft ECC Error Count",
+		json_object_add_value_uint64(root, "Soft ECC Error Count",
 				le64_to_cpu(nand_stats_v3->soft_ecc_error_count));
-		json_object_add_value_uint(root, "Refresh Count",
+		json_object_add_value_uint64(root, "Refresh Count",
 				le64_to_cpu(nand_stats_v3->refresh_count));
 		temp_ptr = (__u64 *)nand_stats_v3->bad_sys_nand_block_count;
 		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
 		temp_raw = ((*temp_ptr & 0xFFFFFFFFFFFF0000) >> 16);
 		json_object_add_value_uint(root, "Bad System Nand Block Count - Normalized",
 				le16_to_cpu(temp_norm));
-		json_object_add_value_uint(root, "Bad System Nand Block Count - Raw",
+		json_object_add_value_uint64(root, "Bad System Nand Block Count - Raw",
 				le64_to_cpu(temp_raw));
 		json_object_add_value_float(root, "Endurance Estimate",
 				int128_to_double(nand_stats_v3->endurance_estimate));
@@ -7812,7 +7812,7 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				nand_stats_v3->thermal_throttling_st_ct[0]);
 		json_object_add_value_uint(root, "Thermal Throttling Count",
 				nand_stats_v3->thermal_throttling_st_ct[1]);
-		json_object_add_value_uint(root, "Unaligned I/O",
+		json_object_add_value_uint64(root, "Unaligned I/O",
 				le64_to_cpu(nand_stats_v3->unaligned_IO));
 		json_object_add_value_float(root, "Physical Media Units Read",
 				int128_to_double(nand_stats_v3->physical_media_units));
@@ -7876,38 +7876,38 @@ static void wdc_print_pcie_stats_json(struct wdc_vs_pcie_stats *pcie_stats)
 	struct json_object *root;
 	root = json_create_object();
 
-	json_object_add_value_uint(root, "Unsupported Request Error Counter",
+	json_object_add_value_uint64(root, "Unsupported Request Error Counter",
 			le64_to_cpu(pcie_stats->unsupportedRequestErrorCount));
-	json_object_add_value_uint(root, "ECRC Error Status Counter",
+	json_object_add_value_uint64(root, "ECRC Error Status Counter",
 			le64_to_cpu(pcie_stats->ecrcErrorStatusCount));
-	json_object_add_value_uint(root, "Malformed TLP Status Counter",
+	json_object_add_value_uint64(root, "Malformed TLP Status Counter",
 			le64_to_cpu(pcie_stats->malformedTlpStatusCount));
 
-	json_object_add_value_uint(root, "Receiver Overflow Status Counter",
+	json_object_add_value_uint64(root, "Receiver Overflow Status Counter",
 			le64_to_cpu(pcie_stats->receiverOverflowStatusCount));
-	json_object_add_value_uint(root, "Unexpected Completion Status Counter",
+	json_object_add_value_uint64(root, "Unexpected Completion Status Counter",
 			le64_to_cpu(pcie_stats->unexpectedCmpltnStatusCount));
-	json_object_add_value_uint(root, "Complete Abort Status Counter",
+	json_object_add_value_uint64(root, "Complete Abort Status Counter",
 			le64_to_cpu(pcie_stats->completeAbortStatusCount));
-	json_object_add_value_uint(root, "Completion Timeout Status Counter",
+	json_object_add_value_uint64(root, "Completion Timeout Status Counter",
 			le64_to_cpu(pcie_stats->cmpltnTimoutStatusCount));
-	json_object_add_value_uint(root, "Flow Control Error Status Counter",
+	json_object_add_value_uint64(root, "Flow Control Error Status Counter",
 			le64_to_cpu(pcie_stats->flowControlErrorStatusCount));
-	json_object_add_value_uint(root, "Poisoned TLP Status Counter",
+	json_object_add_value_uint64(root, "Poisoned TLP Status Counter",
 			le64_to_cpu(pcie_stats->poisonedTlpStatusCount));
-	json_object_add_value_uint(root, "Dlink Protocol Error Status Counter",
+	json_object_add_value_uint64(root, "Dlink Protocol Error Status Counter",
 			le64_to_cpu(pcie_stats->dLinkPrtclErrorStatusCount));
-	json_object_add_value_uint(root, "Advisory Non Fatal Error Status Counter",
+	json_object_add_value_uint64(root, "Advisory Non Fatal Error Status Counter",
 			le64_to_cpu(pcie_stats->advsryNFatalErrStatusCount));
-	json_object_add_value_uint(root, "Replay Timer TO Status Counter",
+	json_object_add_value_uint64(root, "Replay Timer TO Status Counter",
 			le64_to_cpu(pcie_stats->replayTimerToStatusCount));
-	json_object_add_value_uint(root, "Replay Number Rollover Status Counter",
+	json_object_add_value_uint64(root, "Replay Number Rollover Status Counter",
 			le64_to_cpu(pcie_stats->replayNumRolloverStCount));
-	json_object_add_value_uint(root, "Bad DLLP Status Counter",
+	json_object_add_value_uint64(root, "Bad DLLP Status Counter",
 			le64_to_cpu(pcie_stats->badDllpStatusCount));
-	json_object_add_value_uint(root, "Bad TLP Status Counter",
+	json_object_add_value_uint64(root, "Bad TLP Status Counter",
 			le64_to_cpu(pcie_stats->badTlpStatusCount));
-	json_object_add_value_uint(root, "Receiver Error Status Counter",
+	json_object_add_value_uint64(root, "Receiver Error Status Counter",
 			le64_to_cpu(pcie_stats->receiverErrStatusCount));
 
 	json_print_object(root, NULL);
