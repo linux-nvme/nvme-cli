@@ -35,6 +35,7 @@ make install-spec DESTDIR=%{buildroot} PREFIX=/usr
 %{_sysconfdir}/nvme/hostnqn
 %{_sysconfdir}/nvme/hostid
 %{_sysconfdir}/nvme/discovery.conf
+%ghost %{_sysconfdir}/nvme/config.json
 %{_sysconfdir}/udev/rules.d/70-nvmf-autoconnect.rules
 %{_sysconfdir}/udev/rules.d/71-nvmf-iopolicy-netapp.rules
 %{_libdir}/dracut/dracut.conf.d/70-nvmf-autoconnect.conf

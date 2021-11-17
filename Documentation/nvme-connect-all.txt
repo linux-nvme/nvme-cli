@@ -17,6 +17,7 @@ SYNOPSIS
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
 		[--hostid=<hostid>        | -I <hostid>]
 		[--raw=<filename>         | -r <filename>]
+		[--cfg-file=<cfg>         | -C <cfg>]
 		[--keep-alive-tmo=<#>     | -k <#>]
 		[--reconnect-delay=<#>    | -c <#>]
 		[--ctrl-loss-tmo=<#>	  | -l <#>]
@@ -29,6 +30,7 @@ SYNOPSIS
 		[--matching               | -m]
 		[--persistent             | -p]
 		[--quiet                  | -S]
+		[--dump-config            | -O]
 
 DESCRIPTION
 -----------
@@ -108,6 +110,14 @@ OPTIONS
 	and dump it to a raw binary file. By default 'nvme connect-all' will
 	dump the output to stdout.
 
+-C <cfg>::
+--config-file=<cfg>::
+	Use the specified JSON configuration file instead of the
+	default /etc/nvme/config.json file or 'none' to not read in
+	an existing configuration file. The JSON configuration file
+	format is documented in
+	https://github.com/linux-nvme/libnvme/doc/config-schema.json
+
 -k <#>::
 --keep-alive-tmo=<#>::
 	Overrides the default keep alive timeout (in seconds). This
@@ -165,6 +175,10 @@ OPTIONS
 -S::
 --quiet::
 	Suppress error messages.
+
+-O::
+--dump-config::
+	Print out resulting JSON configuration file to stdout.
 
 
 EXAMPLES
