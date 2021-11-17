@@ -36,6 +36,7 @@ LIBNVME_1_0 {
 		nvme_ctrl_next_ns;
 		nvme_ctrl_next_path;
 		nvme_ctrl_reset;
+		nvme_ctrl_set_discovery_ctrl;
 		nvme_ctrl_set_persistent;
 		nvme_ctrls_filter;
 		nvme_default_host;

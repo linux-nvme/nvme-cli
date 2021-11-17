@@ -295,6 +295,7 @@ struct nvme_ctrl {
   %immutable serial;
   %immutable sqsize;
   %immutable persistent;
+  %immutable discovery_ctrl;
   char *transport;
   char *subsysnqn;
   char *traddr;
@@ -308,6 +309,7 @@ struct nvme_ctrl {
   char *serial;
   char *sqsize;
   bool persistent;
+  bool discovery_ctrl;
 };
 
 struct nvme_ns {
@@ -500,6 +502,10 @@ struct nvme_ns {
   }
   ~nvme_ctrl() {
     nvme_free_ctrl($self);
+  }
+
+  void discovery_ctrl_set(bool discovery) {
+      nvme_ctrl_set_discovery_ctrl($self, discovery);
   }
 
   bool init(struct nvme_host *h, int instance) {
