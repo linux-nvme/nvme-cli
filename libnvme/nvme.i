@@ -219,10 +219,13 @@ static int discover_err = 0;
     PyDict_SetItemString(entry, "subnqn", val);
     switch (e->subtype) {
     case NVME_NQN_DISC:
-      val = PyUnicode_FromString("discovery");
+      val = PyUnicode_FromString("referral");
       break;
     case NVME_NQN_NVME:
       val = PyUnicode_FromString("nvme");
+      break;
+    case NVME_NQN_CURR:
+      val = PyUnicode_FromString("discovery");
       break;
     default:
       val = PyLong_FromLong(e->subtype);

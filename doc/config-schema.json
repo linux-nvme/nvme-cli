@@ -135,6 +135,10 @@
 		"persistent": {
 		    "description": "Create persistent discovery connection",
 		    "type": "boolean"
+		},
+		"discovery": {
+		    "description": "Connect to a discovery controller",
+		    "type": "boolean"
 		}
 	    },
 	    "required": [ "transport" ]

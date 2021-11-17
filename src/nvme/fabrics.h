@@ -82,6 +82,17 @@ const char *nvmf_subtype_str(__u8 subtype);
 const char *nvmf_treq_str(__u8 treq);
 
 /**
+ * nvmf_eflags_str() - Decode EFLAGS field
+ * @eflags: value to be decoded
+ *
+ * Decode the EFLAGS field in the discovery log page
+ * entry.
+ *
+ * Return: decoded string
+ */
+const char *nvmf_eflags_str(__u16 eflags);
+
+/**
  * nvmf_sectype_str() -
  * @sectype:
  *

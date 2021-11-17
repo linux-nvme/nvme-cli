@@ -222,6 +222,11 @@ const char *nvme_subsystem_get_name(nvme_subsystem_t s)
 	return s->name;
 }
 
+const char *nvme_subsystem_get_type(nvme_subsystem_t s)
+{
+	return s->subsystype;
+}
+
 nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s)
 {
 	return list_top(&s->ctrls, struct nvme_ctrl, entry);
@@ -283,6 +288,8 @@ static void __nvme_free_subsystem(struct nvme_subsystem *s)
 		free(s->serial);
 	if (s->firmware)
 		free(s->firmware);
+	if (s->subsystype)
+		free(s->subsystype);
 	free(s);
 }
 
@@ -428,6 +435,13 @@ static int nvme_init_subsystem(nvme_subsystem_t s, const char *name,
 		s->model = strdup("undefined");
 	s->serial = nvme_get_attr(path, "serial");
 	s->firmware = nvme_get_attr(path, "firmware_rev");
+	s->subsystype = nvme_get_attr(path, "subsystype");
+	if (!s->subsystype) {
+		if (!strcmp(s->subsysnqn, NVME_DISC_SUBSYS_NAME))
+			s->subsystype = strdup("discovery");
+		else
+			s->subsystype = strdup("nvm");
+	}
 	s->name = strdup(name);
 	s->sysfs_dir = (char *)path;
 
@@ -718,6 +732,16 @@ void nvme_ctrl_set_persistent(nvme_ctrl_t c, bool persistent)
 bool nvme_ctrl_is_persistent(nvme_ctrl_t c)
 {
 	return c->persistent;
+}
+
+void nvme_ctrl_set_discovery_ctrl(nvme_ctrl_t c, bool discovery)
+{
+	c->discovery_ctrl = discovery;
+}
+
+bool nvme_ctrl_is_discovery_ctrl(nvme_ctrl_t c)
+{
+	return c->discovery_ctrl;
 }
 
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)
@@ -1126,6 +1150,8 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 			goto out_free_subsys;
 		}
 	}
+	if (s->subsystype && !strcmp(s->subsystype, "discovery"))
+		c->discovery_ctrl = true;
 	c->s = s;
 	list_add(&s->ctrls, &c->entry);
 out_free_subsys:
@@ -1207,6 +1233,8 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 		return NULL;
 	}
 	c->address = addr;
+	if (s->subsystype && !strcmp(s->subsystype, "discovery"))
+		c->discovery_ctrl = true;
 	ret = nvme_configure_ctrl(c, path, name);
 	return (ret < 0) ? NULL : c;
 }

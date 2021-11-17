@@ -77,8 +77,9 @@ const char *nvmf_adrfam_str(__u8 adrfam)
 }
 
 static const char * const subtypes[] = {
-	[NVME_NQN_DISC]		= "discovery subsystem",
+	[NVME_NQN_DISC]		= "discovery subsystem referral",
 	[NVME_NQN_NVME]		= "nvme subsystem",
+	[NVME_NQN_CURR]		= "current discovery subsystem",
 };
 
 const char *nvmf_subtype_str(__u8 subtype)
@@ -97,6 +98,19 @@ static const char * const treqs[] = {
 const char *nvmf_treq_str(__u8 treq)
 {
 	return arg_str(treqs, ARRAY_SIZE(treqs), treq);
+}
+
+static const char * const eflags_strings[] = {
+	[NVMF_DISC_EFLAGS_NONE]		= "not specified",
+	[NVMF_DISC_EFLAGS_EPCSD]	= "explicit discovery connections",
+	[NVMF_DISC_EFLAGS_DUPRETINFO]	= "duplicate discovery information",
+	[NVMF_DISC_EFLAGS_BOTH]		= "explicit discovery connections, "
+					  "duplicate discovery information",
+};
+
+const char *nvmf_eflags_str(__u16 eflags)
+{
+	return arg_str(eflags_strings, ARRAY_SIZE(eflags_strings), eflags);
 }
 
 static const char * const sectypes[] = {
@@ -377,7 +391,7 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	struct nvme_fabrics_config *cfg = nvme_ctrl_get_config(c);
 	const char *transport = nvme_ctrl_get_transport(c);
 	const char *hostnqn, *hostid;
-	bool discover = false;
+	bool discover = false, discovery_nqn = false;
 
 	if (!transport) {
 		nvme_msg(LOG_ERR, "need a transport (-t) argument\n");
@@ -402,7 +416,11 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 		errno = ENOMEM;
 		return -1;
 	}
-	if (!strcmp(nvme_ctrl_get_subsysnqn(c), NVME_DISC_SUBSYS_NAME))
+	if (!strcmp(nvme_ctrl_get_subsysnqn(c), NVME_DISC_SUBSYS_NAME)) {
+		nvme_ctrl_set_discovery_ctrl(c, true);
+		discovery_nqn = true;
+	}
+	if (nvme_ctrl_is_discovery_ctrl(c))
 		discover = true;
 	hostnqn = nvme_host_get_hostnqn(h);
 	hostid = nvme_host_get_hostid(h);
@@ -417,6 +435,8 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 			 nvme_ctrl_get_trsvcid(c)) ||
 	    (hostnqn && add_argument(argstr, "hostnqn", hostnqn)) ||
 	    (hostid && add_argument(argstr, "hostid", hostid)) ||
+	    (discover && !discovery_nqn &&
+	     add_bool_argument(argstr, "discovery", true)) ||
 	    (!discover &&
 	     add_int_argument(argstr, "nr_io_queues",
 			      cfg->nr_io_queues, false)) ||
@@ -569,20 +589,6 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	bool disable_sqflow = false;
 	int ret;
 
-	switch (e->subtype) {
-	case NVME_NQN_DISC:
-		if (discover)
-			*discover = true;
-		break;
-	case NVME_NQN_NVME:
-		break;
-	default:
-		nvme_msg(LOG_ERR, "skipping unsupported subtype %d\n",
-			 e->subtype);
-		errno = EINVAL;
-		return NULL;
-	}
-
 	switch (e->trtype) {
 	case NVMF_TRTYPE_RDMA:
 	case NVMF_TRTYPE_TCP:
@@ -636,6 +642,23 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 		errno = ENOMEM;
 		return NULL;
 	}
+
+	switch (e->subtype) {
+	case NVME_NQN_DISC:
+	case NVME_NQN_CURR:
+		if (discover)
+			*discover = true;
+		nvme_ctrl_set_discovery_ctrl(c, true);
+		break;
+	default:
+		nvme_msg(LOG_ERR, "unsupported subtype %d\n",
+			 e->subtype);
+		/* fallthrough */
+	case NVME_NQN_NVME:
+		nvme_ctrl_set_discovery_ctrl(c, false);
+		break;
+	}
+
 	if (nvme_ctrl_is_discovered(c)) {
 		errno = EAGAIN;
 		return NULL;

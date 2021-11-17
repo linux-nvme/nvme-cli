@@ -3831,10 +3831,12 @@ enum nvme_ae_info_notice {
  * enum nvme_subsys_type -
  * @NVME_NQN_DISC:		Discovery type target subsystem
  * @NVME_NQN_NVME:		NVME type target subsystem
+ * @NVME_NQN_CURR:		Current Discovery type target subsystem
  */
 enum nvme_subsys_type {
 	NVME_NQN_DISC	= 1,
 	NVME_NQN_NVME	= 2,
+	NVME_NQN_CURR	= 3,
 };
 
 #define NVME_DISC_SUBSYS_NAME	"nqn.2014-08.org.nvmexpress.discovery"
@@ -3845,6 +3847,11 @@ enum nvme_subsys_type {
 #define NVMF_NQN_SIZE		223
 #define NVMF_TRSVCID_SIZE	32
 
+#define NVMF_DISC_EFLAGS_NONE		0
+#define NVMF_DISC_EFLAGS_DUPRETINFO	1
+#define NVMF_DISC_EFLAGS_EPCSD		2
+#define NVMF_DISC_EFLAGS_BOTH		3
+
 /**
  * struct nvmf_disc_log_entry - Discovery log page entry
  * @trtype:
@@ -3854,6 +3861,7 @@ enum nvme_subsys_type {
  * @portid:
  * @cntlid:
  * @asqsz:
+ * @eflags:
  * @trsvcid:
  * @subnqn:
  * @traddr:
@@ -3872,7 +3880,8 @@ struct nvmf_disc_log_entry {
 	__le16		portid;
 	__le16		cntlid;
 	__le16		asqsz;
-	__u8		rsvd10[22];
+	__le16		eflags;
+	__u8		rsvd12[20];
 	char		trsvcid[NVMF_TRSVCID_SIZE];
 	__u8		rsvd64[192];
 	char		subnqn[NVME_NQN_LENGTH];

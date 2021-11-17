@@ -86,6 +86,7 @@ struct nvme_ctrl {
 	char *trsvcid;
 	char *host_traddr;
 	char *host_iface;
+	bool discovery_ctrl;
 	bool discovered;
 	bool persistent;
 	struct nvme_fabrics_config cfg;
@@ -103,6 +104,7 @@ struct nvme_subsystem {
 	char *model;
 	char *serial;
 	char *firmware;
+	char *subsystype;
 };
 
 struct nvme_host {

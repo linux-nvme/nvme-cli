@@ -814,6 +814,28 @@ void nvme_ctrl_set_persistent(nvme_ctrl_t c, bool persistent);
 bool nvme_ctrl_is_persistent(nvme_ctrl_t c);
 
 /**
+ * nvme_ctrl_set_discovery_ctrl() - Set the 'discovery_ctrl' flag
+ * @c: Controller to be modified
+ * @discovery: value of the discovery_ctrl flag
+ *
+ * Sets the 'discovery_ctrl' flag in @c to specify whether
+ * @c connects to a discovery subsystem.
+ *
+ */
+void nvme_ctrl_set_discovery_ctrl(nvme_ctrl_t c, bool discovery);
+
+/**
+ * nvme_ctrl_is_discovery_ctrl() - Check the 'discovery_ctrl' flag
+ * @c: Controller to be checked
+ *
+ * Returns the value of the 'discovery_ctrl' flag which specifies whether
+ * @c connects to a discovery subsystem.
+ *
+ * Return: value of the 'discover_ctrl' flag
+ */
+bool nvme_ctrl_is_discovery_ctrl(nvme_ctrl_t c);
+
+/**
  * nvme_ctrl_disable_sqflow() -
  * @c:
  * @disable_sqflow:
@@ -898,6 +920,16 @@ const char *nvme_subsystem_get_sysfs_dir(nvme_subsystem_t s);
  * Return: 
  */
 const char *nvme_subsystem_get_name(nvme_subsystem_t s);
+
+/**
+ * nvme_subsystem_get_type() - Returns the type of a subsystem
+ * @s: Subsystem
+ *
+ * Returns the subsystem type of @s.
+ *
+ * Return: 'nvm' or 'discovery'
+ */
+const char *nvme_subsystem_get_type(nvme_subsystem_t s);
 
 /**
  * nvme_scan_filter() -
