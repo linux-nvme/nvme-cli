@@ -13,6 +13,7 @@ LIBNVME_1_0 {
 		nvme_ctrl_first_ns;
 		nvme_ctrl_first_path;
 		nvme_ctrl_get_address;
+		nvme_ctrl_get_discovery_ctrl;
 		nvme_ctrl_get_fd;
 		nvme_ctrl_get_firmware;
 		nvme_ctrl_get_host_iface;
@@ -31,6 +32,7 @@ LIBNVME_1_0 {
 		nvme_ctrl_get_transport;
 		nvme_ctrl_get_trsvcid;
 		nvme_ctrl_identify;
+		nvme_ctrl_is_discovery_ctrl;
 		nvme_ctrl_next_ns;
 		nvme_ctrl_next_path;
 		nvme_ctrl_reset;
@@ -280,7 +282,7 @@ LIBNVME_1_0 {
 		nvme_subsystem_get_host;
 		nvme_subsystem_get_name;
 		nvme_subsystem_get_nqn;
-		nvme_subsystem_get_nqn;
+		nvme_subsystem_get_type;
 		nvme_subsystem_get_sysfs_dir;
 		nvme_subsystem_lookup_namespace;
 		nvme_subsystem_next_ctrl;
