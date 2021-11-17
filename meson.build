@@ -36,8 +36,11 @@ libuuid = dependency('uuid', required: true)
 conf.set('CONFIG_LIBUUID', libuuid.found(), description: 'Is libuuid required?')
 
 # Check for libjson-c availability
-json_c = dependency('json-c', version: '>=0.14', fallback : ['json-c', 'json_c_dep'])
-conf.set('CONFIG_JSONC', json_c.found(), description: 'Is json-c required?')
+json_c = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c_dep'])
+if json_c.found()
+  conf.set('CONFIG_JSONC', true, description: 'Is json-c required?')
+  conf.set('LIBJSONC_14', json_c.version().version_compare('>=0.14'), description: 'Is json-c at least 0.14?')
+endif
 
 # Check for libhugetlbfs  availability
 libhugetlbfs = dependency('hugetlbfs', required: false)
