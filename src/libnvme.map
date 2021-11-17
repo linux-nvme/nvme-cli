@@ -305,6 +305,7 @@ LIBNVME_1_0 {
 		nvmf_adrfam_str;
 		nvmf_cms_str;
 		nvmf_connect_disc_entry;
+		nvmf_default_config;
 		nvmf_get_discovery_log;
 		nvmf_hostid_from_file;
 		nvmf_hostnqn_from_file;
