@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: install libraries
+        run: sudo apt-get install libjson-c-dev
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
       - uses: BSFishy/meson-build@v1.0.3
