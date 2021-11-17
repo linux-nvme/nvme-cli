@@ -125,6 +125,14 @@ const char *nvmf_qptype_str(__u8 qptype);
 const char *nvmf_cms_str(__u8 cms);
 
 /**
+ * nvmf_default_config - Default values for fabrics configuration
+ * @cfg: config values to set
+ *
+ * Initializes @cfg with default values.
+ */
+void nvmf_default_config(struct nvme_fabrics_config *cfg);
+
+/**
  * nvmf_add_ctrl_opts() -
  * @c:
  * @cfg:

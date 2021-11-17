@@ -53,10 +53,9 @@ int main()
 	nvme_host_t h;
 	nvme_ctrl_t c;
 	int ret;
+	struct nvme_fabrics_config cfg;
 
-	struct nvme_fabrics_config cfg = {
-		.tos = -1,
-	};
+	nvmf_default_config(&cfg);
 
 	r = nvme_scan(NULL);
 	h = nvme_default_host(r);

@@ -942,7 +942,7 @@ struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn, const char *transport,
 		return NULL;
 	}
 	c->fd = -1;
-	c->cfg.tos = -1;
+	nvmf_default_config(&c->cfg);
 	list_head_init(&c->namespaces);
 	list_head_init(&c->paths);
 	list_node_init(&c->entry);
