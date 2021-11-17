@@ -4,7 +4,8 @@ override CPPFLAGS += -D_GNU_SOURCE -D__CHECK_ENDIAN__ -I.
 LIBUUID = $(shell $(LD) -o /dev/null -luuid >/dev/null 2>&1; echo $$?)
 LIBHUGETLBFS = $(shell $(LD) -o /dev/null -lhugetlbfs >/dev/null 2>&1; echo $$?)
 HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=242; echo $$?)
-LIBJSONC = $(shell pkg-config --atleast-version=0.14 json-c; echo $$?)
+LIBJSONC_14 = $(shell pkg-config --atleast-version=0.14 json-c; echo $$?)
+LIBJSONC = $(shell pkg-config json-c; echo $$?)
 NVME = nvme
 INSTALL ?= install
 DESTDIR =
