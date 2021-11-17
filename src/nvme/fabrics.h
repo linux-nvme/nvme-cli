@@ -50,34 +50,46 @@ struct nvme_fabrics_config {
 };
 
 /**
- * nvmf_trtype_str() -
- * @trtype:
+ * nvmf_trtype_str() - Decode TRTYPE field
+ * @trtype: value to be decoded
  *
- * Return:
+ * Decode the transport type field in the discovery
+ * log page entry.
+ *
+ * Return: decoded string
  */
 const char *nvmf_trtype_str(__u8 trtype);
 
 /**
- * nvmf_adrfam_str() -
- * @adrfam:
+ * nvmf_adrfam_str() - Decode ADRFAM field
+ * @adrfam: value to be decoded
  *
- * Return:
+ * Decode the address family field in the discovery
+ * log page entry.
+ *
+ * Return: decoded string
  */
 const char *nvmf_adrfam_str(__u8 adrfam);
 
 /**
- * nvmf_subtype_str() -
- * @subtype:
+ * nvmf_subtype_str() - Decode SUBTYPE field
+ * @subtype: value to be decoded
  *
- * Return:
+ * Decode the subsystem type field in the discovery
+ * log page entry.
+ *
+ * Return: decoded string
  */
 const char *nvmf_subtype_str(__u8 subtype);
 
 /**
- * nvmf_treq_str() -
- * @treq:
+ * nvmf_treq_str() - Decode TREQ field
+ * @treq: value to be decoded
  *
- * Return:
+ * Decode the transport requirements field in the
+ * discovery log page entry.
+ *
+ * Return: decoded string
  */
 const char *nvmf_treq_str(__u8 treq);
 
