@@ -453,6 +453,14 @@ const char *nvme_ns_get_sysfs_dir(nvme_ns_t n);
 const char *nvme_ns_get_name(nvme_ns_t n);
 
 /**
+ * nvme_ns_get_generic_name() - Returns name of generic namesapce chardev.
+ * @n: Namespace instance
+ *
+ * Return: Name of generic namespace chardev
+ */
+const char *nvme_ns_get_generic_name(nvme_ns_t n);
+
+/**
  * nvme_ns_get_firmware() -
  * @n:
  *

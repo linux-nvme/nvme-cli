@@ -192,6 +192,7 @@ LIBNVME_1_0 {
 		nvme_ns_get_model;
 		nvme_ns_get_model;
 		nvme_ns_get_name;
+		nvme_ns_get_generic_name;
 		nvme_ns_get_nguid;
 		nvme_ns_get_nsid;
 		nvme_ns_get_serial;
