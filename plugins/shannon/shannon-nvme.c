@@ -227,7 +227,8 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 	}
 
 	err = nvme_get_features(fd, cfg.feature_id, cfg.namespace_id, cfg.sel,
-				cfg.cdw11, 0, cfg.data_len, buf, &result);
+				cfg.cdw11, 0, cfg.data_len, buf,
+				NVME_DEFAULT_IOCTL_TIMEOUT, &result);
 	if (!err) {
 #if 0
 		printf("get-feature:0x%02x (%s), %s value: %#08x\n", cfg.feature_id,
@@ -340,7 +341,8 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 	}
 
 	err = nvme_set_features(fd, cfg.feature_id, cfg.namespace_id, cfg.value,
-				0, cfg.save, 0, 0, cfg.data_len, buf, &result);
+				0, cfg.save, 0, 0, cfg.data_len, buf,
+				NVME_DEFAULT_IOCTL_TIMEOUT, &result);
 	if (err < 0) {
 		perror("set-feature");
 		goto free;

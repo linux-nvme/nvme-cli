@@ -231,8 +231,8 @@ static int __zns_mgmt_send(int fd, __u32 namespace_id, __u64 zslba,
 {
 	int err;
 
-	err = nvme_zns_mgmt_send(fd, namespace_id, zslba, select_all, timeout, zsa,
-			data_len, buf);
+	err = nvme_zns_mgmt_send(fd, namespace_id, zslba, select_all, timeout,
+				 zsa, data_len, buf, NULL);
 	close(fd);
 	return err;
 }
@@ -639,8 +639,10 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 		}
 	}
 
-	err = nvme_zns_mgmt_recv(fd, cfg.namespace_id, cfg.zslba, cfg.zra,
-		cfg.zrasf, cfg.partial, cfg.data_len, data);
+	err = nvme_zns_mgmt_recv(fd, cfg.namespace_id,
+				 NVME_DEFAULT_IOCTL_TIMEOUT, cfg.zslba, cfg.zra,
+				 cfg.zrasf, cfg.partial, cfg.data_len, data,
+				 NULL);
 	if (!err)
 		printf("zone-mgmt-recv: Success, action:%d zone:%"PRIx64" nsid:%d\n",
 			cfg.zra, (uint64_t)cfg.zslba, cfg.namespace_id);
@@ -761,8 +763,9 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 		goto close_fd;
 	}
 
-	err = nvme_zns_report_zones(fd, cfg.namespace_id, 0,
-		0, cfg.state, 0, log_len, buff);
+	err = nvme_zns_report_zones(fd, cfg.namespace_id,
+				    NVME_DEFAULT_IOCTL_TIMEOUT, 0, 0,
+				    cfg.state, 0, log_len, buff, NULL);
 	if (err > 0) {
 		nvme_show_status(err);
 		goto free_buff;
@@ -804,8 +807,10 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 			log_len = sizeof(struct nvme_zone_report) + ((sizeof(struct nvme_zns_desc) * nr_zones_chunks) + (nr_zones_chunks * zdes));
 		}
 
-		err = nvme_zns_report_zones(fd, cfg.namespace_id, offset,
-			cfg.extended, cfg.state, cfg.partial, log_len, report);
+		err = nvme_zns_report_zones(fd, cfg.namespace_id,
+					    NVME_DEFAULT_IOCTL_TIMEOUT, offset,
+					    cfg.extended, cfg.state,
+					    cfg.partial, log_len, report, NULL);
 		if (err > 0) {
 			nvme_show_status(err);
 			break;
@@ -1001,7 +1006,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 	err = nvme_zns_append(fd, cfg.namespace_id, cfg.zslba, nblocks,
 			      control, cfg.ref_tag, cfg.lbat, cfg.lbatm,
 			      cfg.data_size, buf, cfg.metadata_size, mbuf,
-			      &result);
+			      NVME_DEFAULT_IOCTL_TIMEOUT, &result);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: zone append: %llu us\n",
