@@ -1066,7 +1066,8 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		__u32 result;
 
 		err = nvme_get_features(fd, 0xf7, 0, 0, cfg.write ? 0x1 : 0x0, 0,
-				       sizeof(thresholds), thresholds, &result);
+				       sizeof(thresholds), thresholds,
+					NVME_DEFAULT_IOCTL_TIMEOUT, &result);
 		if (err) {
 			fprintf(stderr, "Quering thresholds failed. ");
 			nvme_show_status(err);
@@ -1548,7 +1549,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	switch (option) {
 	case None:
 		err = nvme_get_features(fd, fid, nsid, sel, cdw11, 0, data_len, buf,
-					&result);
+					NVME_DEFAULT_IOCTL_TIMEOUT, &result);
 		if (!err) {
 			printf(
 				"Latency Statistics Tracking (FID 0x%X) is currently (%i).\n",
@@ -1561,7 +1562,8 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	case True:
 	case False:
 		err = nvme_set_features(fd, fid, nsid, option, cdw12, save, 0,
-					0, data_len, buf, &result);
+					0, data_len, buf,
+					NVME_DEFAULT_IOCTL_TIMEOUT, &result);
 		if (err > 0) {
 			nvme_show_status(err);
 		} else if (err < 0) {
@@ -1640,7 +1642,8 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 
 		err = nvme_set_features(fd, fid, nsid, cfg.write ? 0x1 : 0x0,
 					cdw12, save, 0, 0, sizeof(thresholds),
-					thresholds, &result);
+					thresholds, NVME_DEFAULT_IOCTL_TIMEOUT,
+					&result);
 
 		if (err > 0) {
 			nvme_show_status(err);
