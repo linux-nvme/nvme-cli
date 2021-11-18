@@ -363,7 +363,7 @@ enum features {
 
 int nvme_identify(int fd, enum nvme_identify_cns cns, __u32 nsid, __u16 cntid,
 		  __u16 nvmsetid, __u16 domid, __u8 uuidx, __u8 csi,
-		  void *data, __u32 timeout)
+		  void *data, __u32 timeout, __u32 *result)
 {
 	__u32 cdw10 = NVME_SET(cntid, IDENTIFY_CDW10_CNTID) |
 			NVME_SET(cns, IDENTIFY_CDW10_CNS);
@@ -383,7 +383,7 @@ int nvme_identify(int fd, enum nvme_identify_cns cns, __u32 nsid, __u16 cntid,
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(fd, &cmd, result);
 }
 
 static int __nvme_identify(int fd, __u8 cns, __u32 nsid, void *data)
@@ -391,7 +391,7 @@ static int __nvme_identify(int fd, __u8 cns, __u32 nsid, void *data)
 	return nvme_identify(fd, cns, nsid, NVME_CNTLID_NONE,
 			     NVME_NVMSETID_NONE, NVME_DOMID_NONE,
 			     NVME_UUID_NONE, NVME_CSI_NVM,
-			     data, NVME_DEFAULT_IOCTL_TIMEOUT);
+			     data, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_identify_ctrl(int fd, struct nvme_id_ctrl *id)
@@ -432,7 +432,7 @@ int nvme_identify_ctrl_list(int fd, __u16 cntid,
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CTRL_LIST,
 			     NVME_NSID_NONE, cntid, NVME_NVMSETID_NONE,
 			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
-			     ctrlist, NVME_DEFAULT_IOCTL_TIMEOUT);
+			     ctrlist, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
@@ -441,7 +441,7 @@ int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_NS_CTRL_LIST, nsid,
 			     cntid, NVME_NVMSETID_NONE, NVME_DOMID_NONE,
 			     NVME_UUID_NONE, NVME_CSI_NVM, ctrlist,
-			     NVME_DEFAULT_IOCTL_TIMEOUT);
+			     NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_identify_ns_descs(int fd, __u32 nsid, struct nvme_ns_id_desc *descs)
@@ -456,7 +456,7 @@ int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_NVMSET_LIST,
 			     NVME_NSID_NONE, NVME_CNTLID_NONE, nvmsetid,
 			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
-			     nvmset, NVME_DEFAULT_IOCTL_TIMEOUT);
+			     nvmset, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_identify_primary_ctrl(int fd, __u16 cntid,
@@ -466,7 +466,7 @@ int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP,
 			     NVME_NSID_NONE, cntid, NVME_NVMSETID_NONE,
 			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
-			     cap, NVME_DEFAULT_IOCTL_TIMEOUT);
+			     cap, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid,
@@ -476,7 +476,7 @@ int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid,
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
 			     nsid, cntid, NVME_NVMSETID_NONE,
 			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
-			     list, NVME_DEFAULT_IOCTL_TIMEOUT);
+			     list, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_identify_ns_granularity(int fd,
@@ -499,7 +499,7 @@ int nvme_identify_ctrl_csi(int fd, __u8 csi, void *data)
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_CTRL, NVME_NSID_NONE,
 			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
 			     NVME_DOMID_NONE, NVME_UUID_NONE, csi, data,
-			     NVME_DEFAULT_IOCTL_TIMEOUT);
+			     NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 csi, void *data)
@@ -507,7 +507,7 @@ int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 csi, void *data)
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_NS, nsid,
 			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
 			     NVME_DOMID_NONE, NVME_UUID_NONE, csi, data,
-			     NVME_DEFAULT_IOCTL_TIMEOUT);
+			     NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_identify_active_ns_list_csi(int fd, __u32 nsid, __u8 csi,
@@ -517,7 +517,7 @@ int nvme_identify_active_ns_list_csi(int fd, __u32 nsid, __u8 csi,
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST, nsid,
 			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
 			     NVME_DOMID_NONE, NVME_UUID_NONE, csi, list,
-			     NVME_DEFAULT_IOCTL_TIMEOUT);
+			     NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_identify_allocated_ns_list_css(int fd, __u32 nsid, __u8 csi,
@@ -526,7 +526,7 @@ int nvme_identify_allocated_ns_list_css(int fd, __u32 nsid, __u8 csi,
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST, nsid,
 			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
 			     NVME_DOMID_NONE, NVME_UUID_NONE, csi, list,
-			     NVME_DEFAULT_IOCTL_TIMEOUT);
+			     NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_identify_domain_list(int fd, __u16 domid,
@@ -536,7 +536,7 @@ int nvme_identify_domain_list(int fd, __u16 domid,
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_DOMAIN_LIST, NVME_NSID_NONE,
 			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
 			     domid, NVME_UUID_NONE, NVME_CSI_NVM, list,
-			     NVME_DEFAULT_IOCTL_TIMEOUT);
+			     NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
@@ -546,7 +546,8 @@ int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID,
 			     NVME_NSID_NONE, NVME_CNTLID_NONE,
 			     NVME_NVMSETID_NONE, endgrp_id, NVME_UUID_NONE,
-			     NVME_CSI_NVM, list, NVME_DEFAULT_IOCTL_TIMEOUT);
+			     NVME_CSI_NVM, list, NVME_DEFAULT_IOCTL_TIMEOUT,
+			     NULL);
 }
 
 int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
@@ -556,7 +557,7 @@ int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS,
 			     nsid, NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
 			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
-			     ns, NVME_DEFAULT_IOCTL_TIMEOUT);
+			     ns, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_identify_iocs(int fd, __u16 cntlid, struct nvme_id_iocs *iocs)
@@ -565,7 +566,7 @@ int nvme_identify_iocs(int fd, __u16 cntlid, struct nvme_id_iocs *iocs)
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE,
 			     NVME_NSID_NONE, cntlid, NVME_NVMSETID_NONE,
 			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_NVM,
-			     iocs, NVME_DEFAULT_IOCTL_TIMEOUT);
+			     iocs, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_zns_identify_ns(int fd, __u32 nsid, struct nvme_zns_id_ns *data)
@@ -574,7 +575,7 @@ int nvme_zns_identify_ns(int fd, __u32 nsid, struct nvme_zns_id_ns *data)
 	return nvme_identify(fd, NVME_IDENTIFY_CNS_CSI_NS, nsid,
 			     NVME_CNTLID_NONE, NVME_NVMSETID_NONE,
 			     NVME_DOMID_NONE, NVME_UUID_NONE, NVME_CSI_ZNS,
-			     data, NVME_DEFAULT_IOCTL_TIMEOUT);
+			     data, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id)
@@ -591,7 +592,7 @@ int nvme_nvm_identify_ctrl(int fd, struct nvme_id_ctrl_nvm *id)
 
 int nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u64 lpo,
 		 __u8 lsp, __u16 lsi, bool rae, __u8 uuidx, enum nvme_csi csi,
-		 __u32 len, void *log, __u32 timeout)
+		 __u32 len, void *log, __u32 timeout, __u32 *result)
 {
 	__u32 numd = (len >> 2) - 1;
 	__u16 numdu = numd >> 16, numdl = numd & 0xffff;
@@ -620,7 +621,7 @@ int nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u64 lpo,
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(fd, &cmd, result);
 }
 
 static int __nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, bool rae,
@@ -628,7 +629,8 @@ static int __nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, bool rae,
 {
 	return nvme_get_log(fd, lid, NVME_NSID_ALL, 0, NVME_LOG_LSP_NONE,
 			    NVME_LOG_LSI_NONE, rae, NVME_UUID_NONE,
-			    NVME_CSI_NVM, len, log, NVME_DEFAULT_IOCTL_TIMEOUT);
+			    NVME_CSI_NVM, len, log, NVME_DEFAULT_IOCTL_TIMEOUT,
+			    NULL);
 }
 
 int nvme_get_log_supported_log_pages(int fd, bool rae,
@@ -653,7 +655,7 @@ int nvme_get_log_smart(int fd, __u32 nsid, bool rae, struct nvme_smart_log *log)
 	return nvme_get_log(fd, NVME_LOG_LID_SMART,  nsid, 0,
 			    NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE, rae,
 			    NVME_UUID_NONE, NVME_CSI_NVM, sizeof(*log), log,
-			    NVME_DEFAULT_IOCTL_TIMEOUT);
+			    NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_get_log_fw_slot(int fd, bool rae, struct nvme_firmware_slot *log)
@@ -676,7 +678,7 @@ int nvme_get_log_cmd_effects(int fd, enum nvme_csi csi,
 	return nvme_get_log(fd, NVME_LOG_LID_CMD_EFFECTS, NVME_NSID_ALL, 0,
 			    NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE,
 			    NVME_UUID_NONE, csi, false, sizeof(*log),
-			    log, NVME_DEFAULT_IOCTL_TIMEOUT);
+			    log, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_get_log_device_self_test(int fd, struct nvme_self_test_log *log)
@@ -697,7 +699,7 @@ int nvme_get_log_create_telemetry_host(int fd, struct nvme_telemetry_log *log)
 	return nvme_get_log(fd, NVME_LOG_LID_TELEMETRY_HOST, NVME_NSID_NONE, 0,
 			    NVME_LOG_TELEM_HOST_LSP_CREATE, NVME_LOG_LSI_NONE,
 			    false, NVME_UUID_NONE, NVME_CSI_NVM, sizeof(*log),
-			    log, NVME_DEFAULT_IOCTL_TIMEOUT);
+			    log, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_get_log_telemetry_host(int fd, __u64 offset, __u32 len, void *log)
@@ -705,7 +707,8 @@ int nvme_get_log_telemetry_host(int fd, __u64 offset, __u32 len, void *log)
 	return nvme_get_log(fd, NVME_LOG_LID_TELEMETRY_HOST, NVME_NSID_NONE,
 			    offset, NVME_LOG_TELEM_HOST_LSP_RETAIN,
 			    NVME_LOG_LSI_NONE, false, NVME_UUID_NONE,
-			    NVME_CSI_NVM, len, log, NVME_DEFAULT_IOCTL_TIMEOUT);
+			    NVME_CSI_NVM, len, log, NVME_DEFAULT_IOCTL_TIMEOUT,
+			    NULL);
 }
 
 int nvme_get_log_telemetry_ctrl(int fd, bool rae, __u64 offset, __u32 len,
@@ -714,7 +717,7 @@ int nvme_get_log_telemetry_ctrl(int fd, bool rae, __u64 offset, __u32 len,
 	return nvme_get_log(fd, NVME_LOG_LID_TELEMETRY_CTRL, NVME_NSID_NONE,
 			    offset, NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE, rae,
 			    NVME_UUID_NONE, NVME_CSI_NVM, len, log,
-			    NVME_DEFAULT_IOCTL_TIMEOUT);
+			    NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_get_log_endurance_group(int fd, __u16 endgid,
@@ -724,7 +727,7 @@ int nvme_get_log_endurance_group(int fd, __u16 endgid,
 	return nvme_get_log(fd, NVME_LOG_LID_ENDURANCE_GROUP, NVME_NSID_NONE,
 			    0, NVME_LOG_LSP_NONE, endgid, false, NVME_UUID_NONE,
 			    NVME_CSI_NVM, sizeof(*log), log,
-			    NVME_DEFAULT_IOCTL_TIMEOUT);
+			    NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
@@ -734,24 +737,26 @@ int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
 	return nvme_get_log(fd, NVME_LOG_LID_PREDICTABLE_LAT_NVMSET,
 			    NVME_NSID_NONE, 0, NVME_LOG_LSP_NONE, nvmsetid,
 			    false, NVME_UUID_NONE, NVME_CSI_NVM, sizeof(*log),
-			    log, NVME_DEFAULT_IOCTL_TIMEOUT);
+			    log, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_get_log_predictable_lat_event(int fd, bool rae, __u32 offset,
 				       __u32 len, void *log)
 {
 	return nvme_get_log(fd, NVME_LOG_LID_PREDICTABLE_LAT_AGG,
-		NVME_NSID_NONE, offset, NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE,
-			    rae, NVME_UUID_NONE, NVME_CSI_NVM, len, log,
-			    NVME_DEFAULT_IOCTL_TIMEOUT);
+			    NVME_NSID_NONE, offset, NVME_LOG_LSP_NONE,
+			    NVME_LOG_LSI_NONE, rae, NVME_UUID_NONE,
+			    NVME_CSI_NVM, len, log,
+			    NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae, __u64 offset,
 		     __u32 len, void *log)
 {
 	return nvme_get_log(fd, NVME_LOG_LID_ANA, NVME_NSID_NONE, offset,
-			    lsp,NVME_LOG_LSI_NONE, false, NVME_UUID_NONE,
-			    NVME_CSI_NVM, len, log, NVME_DEFAULT_IOCTL_TIMEOUT);
+			    lsp, NVME_LOG_LSI_NONE, false, NVME_UUID_NONE,
+			    NVME_CSI_NVM, len, log, NVME_DEFAULT_IOCTL_TIMEOUT,
+			    NULL);
 }
 
 int nvme_get_log_ana_groups(int fd, bool rae, __u32 len,
@@ -767,7 +772,7 @@ int nvme_get_log_lba_status(int fd, bool rae, __u64 offset, __u32 len,
 	return nvme_get_log(fd, NVME_LOG_LID_LBA_STATUS, NVME_NSID_NONE,
 			    offset, NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE, rae,
 			    NVME_UUID_NONE, NVME_CSI_NVM, len, log,
-			    NVME_DEFAULT_IOCTL_TIMEOUT);
+			    NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_get_log_endurance_grp_evt(int fd, bool rae, __u32 offset, __u32 len,
@@ -776,7 +781,8 @@ int nvme_get_log_endurance_grp_evt(int fd, bool rae, __u32 offset, __u32 len,
 	return nvme_get_log(fd, NVME_LOG_LID_ENDURANCE_GRP_EVT,
 			    NVME_NSID_NONE, offset, NVME_LOG_LSP_NONE,
 			    NVME_LOG_LSI_NONE, rae, NVME_UUID_NONE,
-			    NVME_CSI_NVM, len, log, NVME_DEFAULT_IOCTL_TIMEOUT);
+			    NVME_CSI_NVM, len, log, NVME_DEFAULT_IOCTL_TIMEOUT,
+			    NULL);
 }
 
 int nvme_get_log_fid_supported_effects(int fd, bool rae,
@@ -787,7 +793,7 @@ int nvme_get_log_fid_supported_effects(int fd, bool rae,
 			    NVME_NSID_NONE, 0, NVME_LOG_LSP_NONE,
 			    NVME_LOG_LSI_NONE, rae, NVME_UUID_NONE,
 			    NVME_CSI_NVM, sizeof(*log), log,
-			    NVME_DEFAULT_IOCTL_TIMEOUT);
+			    NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_get_log_boot_partition(int fd, bool rae, __u8 lsp, __u32 len,
@@ -798,7 +804,7 @@ int nvme_get_log_boot_partition(int fd, bool rae, __u8 lsp, __u32 len,
 			    NVME_NSID_NONE, 0, NVME_LOG_LSP_NONE,
 			    NVME_LOG_LSI_NONE, rae, NVME_UUID_NONE,
 			    NVME_CSI_NVM, len, part,
-			    NVME_DEFAULT_IOCTL_TIMEOUT);
+			    NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 
 }
 
@@ -807,7 +813,7 @@ int nvme_get_log_discovery(int fd, bool rae, __u32 offset, __u32 len, void *log)
 	return nvme_get_log(fd, NVME_LOG_LID_DISCOVER, NVME_NSID_NONE, offset,
 			    NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE, rae,
 			    NVME_UUID_NONE, NVME_CSI_NVM, len, log,
-			    NVME_DEFAULT_IOCTL_TIMEOUT);
+			    NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_get_log_reservation(int fd, bool rae,
@@ -840,7 +846,7 @@ int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
 	return nvme_get_log(fd, NVME_LOG_LID_ZNS_CHANGED_ZONES, nsid, 0,
 			    NVME_LOG_LSP_NONE, NVME_LOG_LSI_NONE, rae,
 			    NVME_UUID_NONE, NVME_CSI_ZNS, sizeof(*log), log,
-			    NVME_DEFAULT_IOCTL_TIMEOUT);
+			    NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 int nvme_set_features(int fd, __u8 fid, __u32 nsid, __u32 cdw11, __u32 cdw12,
@@ -1347,7 +1353,7 @@ int nvme_get_features_iocs_profile(int fd, enum nvme_get_features_sel sel,
 int nvme_format_nvm(int fd, __u32 nsid, __u8 lbaf,
 		    enum nvme_cmd_format_mset mset, enum nvme_cmd_format_pi pi,
 		    enum nvme_cmd_format_pil pil, enum nvme_cmd_format_ses ses,
-		    __u32 timeout)
+		    __u32 timeout, __u32 *result)
 {
 	__u32 cdw10 = NVME_SET(lbaf, FORMAT_CDW10_LBAF) |
 			NVME_SET(mset, FORMAT_CDW10_MSET) |
@@ -1362,7 +1368,7 @@ int nvme_format_nvm(int fd, __u32 nsid, __u8 lbaf,
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(fd, &cmd, result);
 }
 
 int nvme_ns_mgmt(int fd, __u32 nsid, enum nvme_ns_mgmt_sel sel,
@@ -1428,7 +1434,7 @@ int nvme_ns_detach_ctrls(int fd, __u32 nsid, struct nvme_ctrl_list *ctrlist)
 }
 
 int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data,
-		     __u32 timeout)
+		     __u32 timeout, __u32 *result)
 {
 	__u32 cdw10 = (data_len >> 2) - 1;
 	__u32 cdw11 = offset >> 2;
@@ -1442,7 +1448,7 @@ int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data,
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(fd, &cmd, result);
 }
 
 int nvme_fw_commit(int fd, __u8 slot, enum nvme_fw_commit_ca action, bool bpid,
@@ -1508,7 +1514,7 @@ int nvme_security_receive(int fd, __u32 nsid, __u8 nssf, __u8 spsp0,
 
 int nvme_get_lba_status(int fd, __u32 nsid, __u64 slba, __u32 mndw, __u16 rl,
 			enum nvme_lba_status_atype atype, __u32 timeout,
-			struct nvme_lba_status *lbas)
+			struct nvme_lba_status *lbas, __u32 *result)
 {
 	__u32 cdw10 = slba & 0xffffffff;
 	__u32 cdw11 = slba >> 32;
@@ -1527,7 +1533,7 @@ int nvme_get_lba_status(int fd, __u32 nsid, __u64 slba, __u32 mndw, __u16 rl,
 		.timeout_ms = timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(fd, &cmd, result);
 }
 
 int nvme_directive_send(int fd, __u32 nsid, __u16 dspec,
@@ -1690,7 +1696,8 @@ int nvme_lockdown(int fd, __u8 scp, __u8 prhbt, __u8 ifc, __u8 ofi,
 	return nvme_submit_admin_passthru(fd, &cmd, NULL);
 }
 
-int nvme_set_property(int fd, int offset, __u64 value, __u32 timeout)
+int nvme_set_property(int fd, int offset, __u64 value,
+		      __u32 timeout, __u32 *result)
 {
 	__u32 cdw10 = nvme_is_64bit_reg(offset);
 
@@ -1704,7 +1711,7 @@ int nvme_set_property(int fd, int offset, __u64 value, __u32 timeout)
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(fd, &cmd, result);
 }
 
 int nvme_get_property(int fd, int offset, __u64 *value, __u32 timeout)
@@ -1724,7 +1731,7 @@ int nvme_get_property(int fd, int offset, __u64 *value, __u32 timeout)
 
 int nvme_sanitize_nvm(int fd, enum nvme_sanitize_sanact sanact, bool ause,
 		      __u8 owpass, bool oipbp, bool nodas, __u32 ovrpat,
-		      __u32 timeout)
+		      __u32 timeout, __u32 *result)
 {
 	__u32 cdw10 = NVME_SET(sanact, SANITIZE_CDW10_SANACT) |
 			NVME_SET(!!ause, SANITIZE_CDW10_AUSE) |
@@ -1740,7 +1747,7 @@ int nvme_sanitize_nvm(int fd, enum nvme_sanitize_sanact sanact, bool ause,
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(fd, &cmd, result);
 }
 
 int nvme_dev_self_test(int fd, __u32 nsid, enum nvme_dst_stc stc)
@@ -1908,7 +1915,7 @@ int nvme_write_uncorrectable(int fd, __u32 nsid, __u64 slba, __u16 nlb,
 }
 
 int nvme_dsm(int fd, __u32 nsid, __u32 attrs, __u16 nr_ranges,
-	     struct nvme_dsm_range *dsm, __u32 timeout)
+	     struct nvme_dsm_range *dsm, __u32 timeout, __u32 *result)
 {
 	__u32 cdw11 = attrs;
 
@@ -1922,13 +1929,13 @@ int nvme_dsm(int fd, __u32 nsid, __u32 attrs, __u16 nr_ranges,
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, NULL);
+	return nvme_submit_io_passthru(fd, &cmd, result);
 }
 
 int nvme_copy(int fd, __u32 nsid, struct nvme_copy_range *copy, __u64 sdlba,
 	      __u16 nr, __u8 prinfor, __u8 prinfow, __u8 dtype, __u16 dspec,
 	      __u8 format, int lr, int fua, __u32 ilbrt, __u16 lbatm,
-	      __u16 lbat, __u32 timeout)
+	      __u16 lbat, __u32 timeout, __u32 *result)
 {
 	__u32 cdw12 = ((nr - 1) & 0xff) | ((format & 0xf) <<  8) |
 		((prinfor & 0xf) << 12) | ((dtype & 0xf) << 20) |
@@ -1949,12 +1956,12 @@ int nvme_copy(int fd, __u32 nsid, struct nvme_copy_range *copy, __u64 sdlba,
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, NULL);
+	return nvme_submit_io_passthru(fd, &cmd, result);
 }
 
 int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
 		      enum nvme_resv_racqa racqa, bool iekey,
-		      __u64 crkey, __u64 nrkey, __u32 timeout)
+		      __u64 crkey, __u64 nrkey, __u32 timeout, __u32 *result)
 {
 	__le64 payload[2] = { cpu_to_le64(crkey), cpu_to_le64(nrkey) };
 	__u32 cdw10 = (racqa & 0x7) | (iekey ? 1 << 3 : 0) | rtype << 8;
@@ -1968,12 +1975,12 @@ int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, NULL);
+	return nvme_submit_io_passthru(fd, &cmd, result);
 }
 
 int nvme_resv_register(int fd, __u32 nsid, enum nvme_resv_rrega rrega,
 		       enum nvme_resv_cptpl cptpl, bool iekey,
-		       __u64 crkey, __u64 nrkey, __u32 timeout)
+		       __u64 crkey, __u64 nrkey, __u32 timeout, __u32 *result)
 {
 	__le64 payload[2] = { cpu_to_le64(crkey), cpu_to_le64(nrkey) };
 	__u32 cdw10 = (rrega & 0x7) | (iekey ? 1 << 3 : 0) | cptpl << 30;
@@ -1987,12 +1994,12 @@ int nvme_resv_register(int fd, __u32 nsid, enum nvme_resv_rrega rrega,
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, NULL);
+	return nvme_submit_io_passthru(fd, &cmd, result);
 }
 
 int nvme_resv_release(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
 		      enum nvme_resv_rrela rrela, bool iekey,
-		      __u64 crkey, __u32 timeout)
+		      __u64 crkey, __u32 timeout, __u32 *result)
 {
 	__le64 payload[1] = { cpu_to_le64(crkey) };
 	__u32 cdw10 = (rrela & 0x7) | (iekey ? 1 << 3 : 0) | rtype << 8;
@@ -2006,11 +2013,12 @@ int nvme_resv_release(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, NULL);
+	return nvme_submit_io_passthru(fd, &cmd, result);
 }
 
 int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
-		     struct nvme_resv_status *report, __u32 timeout)
+		     struct nvme_resv_status *report, __u32 timeout,
+		     __u32 *result)
 {
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_report,
@@ -2022,12 +2030,12 @@ int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, NULL);
+	return nvme_submit_io_passthru(fd, &cmd, result);
 }
 
 int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
 		       __u32 timeout, enum nvme_zns_send_action zsa,
-		       __u32 data_len, void *data)
+		       __u32 data_len, void *data, __u32 *result)
 {
 	__u32 cdw10 = slba & 0xffffffff;
 	__u32 cdw11 = slba >> 32;
@@ -2045,12 +2053,13 @@ int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, NULL);
+	return nvme_submit_io_passthru(fd, &cmd, result);
 }
 
 int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba, __u32 timeout,
 		       enum nvme_zns_recv_action zra, __u16 zrasf,
-		       bool zras_feat, __u32 data_len, void *data)
+		       bool zras_feat, __u32 data_len, void *data,
+		       __u32 *result)
 {
 	__u32 cdw10 = slba & 0xffffffff;
 	__u32 cdw11 = slba >> 32;
@@ -2071,12 +2080,13 @@ int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba, __u32 timeout,
 		.timeout_ms	= timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, NULL);
+	return nvme_submit_io_passthru(fd, &cmd, result);
 }
 
 int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba, __u32 timeout,
 			  bool extended, enum nvme_zns_report_options opts,
-			  bool partial, __u32 data_len, void *data)
+			  bool partial, __u32 data_len, void *data,
+			  __u32 *result)
 {
 	BUILD_ASSERT(sizeof(struct nvme_zns_desc) == 64);
 	enum nvme_zns_recv_action zra;
@@ -2087,7 +2097,7 @@ int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba, __u32 timeout,
 		zra = NVME_ZNS_ZRA_REPORT_ZONES;
 
 	return nvme_zns_mgmt_recv(fd, nsid, slba, timeout, zra, opts, partial,
-		data_len, data);
+				  data_len, data, result);
 }
 
 int nvme_zns_append(int fd, __u32 nsid, __u64 zslba, __u16 nlb, __u16 control,

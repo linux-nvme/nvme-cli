@@ -23,6 +23,7 @@ static void show_zns_properties(nvme_ns_t n)
 	struct nvme_zns_id_ns zns_ns;
 	struct nvme_zns_id_ctrl zns_ctrl;
 	struct nvme_zone_report *zr;
+	__u32 result;
 
 	zr = calloc(1, 0x1000);
 	if (!zr)
@@ -48,8 +49,9 @@ static void show_zns_properties(nvme_ns_t n)
 			       NVME_DEFAULT_IOCTL_TIMEOUT,
 			       NVME_ZNS_ZRA_REPORT_ZONES,
 			       NVME_ZNS_ZRAS_REPORT_ALL,
-			       0, 0x1000, (void *)zr)) {
-		fprintf(stderr, "failed to report zones\n");;
+			       0, 0x1000, (void *)zr, &result)) {
+		fprintf(stderr, "failed to report zones, result %x\n",
+			le32_to_cpu(result));
 		return;
 	}
 

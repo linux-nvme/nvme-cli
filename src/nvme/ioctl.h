@@ -385,6 +385,7 @@ int nvme_get_nsid(int fd, __u32 *nsid);
  * @csi:	Command Set Identifier
  * @data:	User space destination address to transfer the data
  * @timeout:	Timeout in ms (0 for default timeout)
+ * @result:	The command completion result from CQE dword0
  *
  * The Identify command returns a data buffer that describes information about
  * the NVM subsystem, the controller or the namespace(s).
@@ -394,7 +395,8 @@ int nvme_get_nsid(int fd, __u32 *nsid);
  */
 int nvme_identify(int fd, enum nvme_identify_cns cns, __u32 nsid,
 		  __u16 cntid, __u16 nvmsetid, __u16 domid,
-		  __u8 uuidx, __u8 csi, void *data, __u32 timeout);
+		  __u8 uuidx, __u8 csi, void *data, __u32 timeout,
+		  __u32 *result);
 
 /**
  * nvme_identify_ctrl() - Retrieves nvme identify controller
@@ -789,19 +791,20 @@ int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id);
  * @len:	Length of provided user buffer to hold the log data in bytes
  * @log:	User space destination address to transfer the data
  * @timeout:	Timeout in ms
+ * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u64 lpo,
 		 __u8 lsp, __u16 lsi, bool rae, __u8 uuidx, enum nvme_csi csi,
-		 __u32 len, void *log, __u32 timeout);
+		 __u32 len, void *log, __u32 timeout, __u32 *result);
 
 static inline int nvme_get_nsid_log(int fd, enum nvme_cmd_get_log_lid lid,
 				    __u32 nsid, __u32 len, void *log)
 {
 	return nvme_get_log(fd, lid, nsid, 0, 0, 0, false, 0, NVME_CSI_NVM, len,
-			    log, NVME_DEFAULT_IOCTL_TIMEOUT);
+			    log, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 }
 
 static inline int nvme_get_log_simple(int fd, enum nvme_cmd_get_log_lid lid,
@@ -1892,6 +1895,7 @@ int nvme_get_features_iocs_profile(int fd, enum nvme_get_features_sel sel,
  * @ses:	Secure erase settings
  * @timeout:	Set to override default timeout to this value in milliseconds;
  * 		useful for long running formats. 0 will use system default.
+ * @result:	The command completion result from CQE dword0
  *
  * The Format NVM command low level formats the NVM media. This command is used
  * by the host to change the LBA data size and/or metadata size. A low level
@@ -1906,7 +1910,7 @@ int nvme_format_nvm(int fd, __u32 nsid, __u8 lbaf,
 		    enum nvme_cmd_format_pi pi,
 		    enum nvme_cmd_format_pil pil,
 		    enum nvme_cmd_format_ses ses,
-		    __u32 timeout);
+		    __u32 timeout, __u32 *result);
 
 /**
  * nvme_ns_mgmt() -
@@ -1989,6 +1993,7 @@ int nvme_ns_detach_ctrls(int fd, __u32 nsid, struct nvme_ctrl_list *ctrlist);
  * @data_len:	Length of data in this command in bytes
  * @data:	Userspace address of the firmware data
  * @timeout:	Timeout in ms
+ * @result:	The command completion result from CQE dword0
  *
  * The Firmware Image Download command downloads all or a portion of an image
  * for a future update to the controller. The Firmware Image Download command
@@ -2007,7 +2012,7 @@ int nvme_ns_detach_ctrls(int fd, __u32 nsid, struct nvme_ctrl_list *ctrlist);
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data,
-		     __u32 timeout);
+		     __u32 timeout, __u32 *result);
 
 /**
  * nvme_fw_commit() - Commit firmware using the specified action
@@ -2090,6 +2095,7 @@ int nvme_security_receive(int fd, __u32 nsid, __u8 nssf, __u8 spsp0,
  * @rl:		Range length from slba to perform the action
  * @timeout:	Timeout in ms
  * @lbas:	Data payload to return status descriptors
+ * @result:	The command completion result from CQE dword0
  *
  * The Get LBA Status command requests information about Potentially
  * Unrecoverable LBAs. Refer to the specification for action type descriptions.
@@ -2099,7 +2105,7 @@ int nvme_security_receive(int fd, __u32 nsid, __u8 nssf, __u8 spsp0,
  */
 int nvme_get_lba_status(int fd, __u32 nsid, __u64 slba, __u32 mndw, __u16 rl,
 			enum nvme_lba_status_atype atype, __u32 timeout,
-			struct nvme_lba_status *lbas);
+			struct nvme_lba_status *lbas, __u32 *result);
 
 /**
  * nvme_directive_send() - Send directive command
@@ -2268,6 +2274,7 @@ int nvme_lockdown(int fd, __u8 scp, __u8 prhbt, __u8 ifc, __u8 ofi,
  * @offset:	Property offset from the base to set
  * @value:	The value to set the property
  * @timeout:	Timeout in ms
+ * @result:	The command completion result from CQE dword0
  *
  * This is an NVMe-over-Fabrics specific command, not applicable to PCIe. These
  * properties align to the PCI MMIO controller registers.
@@ -2275,7 +2282,8 @@ int nvme_lockdown(int fd, __u8 scp, __u8 prhbt, __u8 ifc, __u8 ofi,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_set_property(int fd, int offset, __u64 value, __u32 timeout);
+int nvme_set_property(int fd, int offset, __u64 value,
+		      __u32 timeout, __u32 *result);
 
 /**
  * nvme_get_property() - Get a controller property
@@ -2302,6 +2310,7 @@ int nvme_get_property(int fd, int offset, __u64 *value, __u32 timeout);
  * @nodas:	Set to not deallocate blocks after sanitizing
  * @ovrpat:	Overwrite pattern
  * @timeout:	Timeout in ms
+ * @result:	The command completion result from CQE dword0
  *
  * A sanitize operation alters all user data in the NVM subsystem such that
  * recovery of any previous user data from any cache, the non-volatile media,
@@ -2318,7 +2327,7 @@ int nvme_get_property(int fd, int offset, __u64 *value, __u32 timeout);
  */
 int nvme_sanitize_nvm(int fd, enum nvme_sanitize_sanact sanact, bool ause,
 		      __u8 owpass, bool oipbp, bool nodas, __u32 ovrpat,
-		      __u32 timeout);
+		      __u32 timeout, __u32 *result);
 
 /**
  * nvme_dev_self_test() - Start or abort a self test
@@ -2569,6 +2578,7 @@ int nvme_verify(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * @nr_ranges:	Number of block ranges in the data set management attributes
  * @dsm:	The data set management attributes
  * @timeout:	Timeout in ms
+ * @result:	The command completion result from CQE dword0
  *
  * The Dataset Management command is used by the host to indicate attributes
  * for ranges of logical blocks. This includes attributes like frequency that
@@ -2580,7 +2590,7 @@ int nvme_verify(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_dsm(int fd, __u32 nsid, __u32 attrs, __u16 nr_ranges,
-	     struct nvme_dsm_range *dsm, __u32 timeout);
+	     struct nvme_dsm_range *dsm, __u32 timeout, __u32 *result);
 
 /**
  * nvme_copy() -
@@ -2601,14 +2611,15 @@ int nvme_dsm(int fd, __u32 nsid, __u32 attrs, __u16 nr_ranges,
  * @lbatm:	Logical block application tag mask
  * @lbat:	Logical block application tag
  * @timeout:	Timeout in ms
+ * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_copy(int fd, __u32 nsid, struct nvme_copy_range *copy, __u64 sdlba,
-		__u16 nr, __u8 prinfor, __u8 prinfow, __u8 dtype, __u16 dspec,
-		__u8 format, int lr, int fua, __u32 ilbrt, __u16 lbatm,
-		__u16 lbat, __u32 timeout);
+	      __u16 nr, __u8 prinfor, __u8 prinfow, __u8 dtype, __u16 dspec,
+	      __u8 format, int lr, int fua, __u32 ilbrt, __u16 lbatm,
+	      __u16 lbat, __u32 timeout, __u32 *result);
 
 /**
  * nvme_resv_acquire() - Send an nvme reservation acquire
@@ -2621,6 +2632,7 @@ int nvme_copy(int fd, __u32 nsid, struct nvme_copy_range *copy, __u64 sdlba,
  * @nrkey:	The reservation key to be unregistered from the namespace if
  * 		the action is preempt
  * @timeout:	Timeout in ms
+ * @result:	The command completion result from CQE dword0
  *
  * The Reservation Acquire command acquires a reservation on a namespace,
  * preempt a reservation held on a namespace, and abort a reservation held on a
@@ -2631,7 +2643,7 @@ int nvme_copy(int fd, __u32 nsid, struct nvme_copy_range *copy, __u64 sdlba,
  */
 int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
 		      enum nvme_resv_racqa racqa, bool iekey,
-		      __u64 crkey, __u64 nrkey, __u32 timeout);
+		      __u64 crkey, __u64 nrkey, __u32 timeout, __u32 *result);
 
 /**
  * nvme_resv_register() - Send an nvme reservation register
@@ -2653,7 +2665,7 @@ int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
  */
 int nvme_resv_register(int fd, __u32 nsid, enum nvme_resv_rrega rrega,
 		       enum nvme_resv_cptpl cptpl, bool iekey,
-		       __u64 crkey, __u64 nrkey, __u32 timeout);
+		       __u64 crkey, __u64 nrkey, __u32 timeout, __u32 *result);
 
 /**
  * nvme_resv_release() - Send an nvme reservation release
@@ -2664,13 +2676,14 @@ int nvme_resv_register(int fd, __u32 nsid, enum nvme_resv_rrega rrega,
  * @iekey:	Set to ignore the existing key
  * @crkey:	The current reservation key to release
  * @timeout:	Timeout in ms
+ * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_resv_release(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
 		      enum nvme_resv_rrela rrela, bool iekey,
-		      __u64 crkey, __u32 timeout);
+		      __u64 crkey, __u32 timeout, __u32 *result);
 
 /**
  * nvme_resv_report() - Send an nvme reservation report
@@ -2681,6 +2694,7 @@ int nvme_resv_release(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
  * @report:	The user space destination address to store the reservation
  *		report
  * @timeout:	Timeout in ms
+ * @result:	The command completion result from CQE dword0
  *
  * Returns a Reservation Status data structure to memory that describes the
  * registration and reservation status of a namespace. See the defintion for
@@ -2690,7 +2704,8 @@ int nvme_resv_release(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
-		     struct nvme_resv_status *report, __u32 timeout);
+		     struct nvme_resv_status *report,
+		     __u32 timeout, __u32 *result);
 
 /**
  * nvme_zns_mgmt_send() -
@@ -2702,13 +2717,14 @@ int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
  * @zsa:
  * @data_len:
  * @data:
+ * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
 		       __u32 timeout, enum nvme_zns_send_action zsa,
-		       __u32 data_len, void *data);
+		       __u32 data_len, void *data, __u32 *result);
 
 
 /**
@@ -2722,13 +2738,15 @@ int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
  * @zras_feat:
  * @data_len:
  * @data:
+ * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba, __u32 timeout,
 		       enum nvme_zns_recv_action zra, __u16 zrasf,
-		       bool zras_feat, __u32 data_len, void *data);
+		       bool zras_feat, __u32 data_len, void *data,
+		       __u32 *result);
 
 /**
  * nvme_zns_report_zones() - Return the list of zones
@@ -2741,13 +2759,15 @@ int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba, __u32 timeout,
  * @partial:	Partial report requested
  * @data_len:	Length of the data buffer
  * @data:	Data buffer
+ * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba, __u32 timeout,
 			  bool extended, enum nvme_zns_report_options opts,
-			  bool partial, __u32 data_len, void *data);
+			  bool partial, __u32 data_len, void *data,
+			  __u32 *result);
 
 /**
  * nvme_zns_append() -

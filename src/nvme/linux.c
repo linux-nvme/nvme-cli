@@ -85,7 +85,7 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 	while (size > 0) {
 		xfer = MIN(xfer, size);
 		err = nvme_fw_download(fd, offset, xfer, buf,
-				       NVME_DEFAULT_IOCTL_TIMEOUT);
+				       NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 		if (err)
 			break;
 
@@ -125,7 +125,7 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 		ret = nvme_get_log(fd, log_id, nsid, offset, NVME_LOG_LSP_NONE,
 				   NVME_LOG_LSI_NONE, retain, NVME_UUID_NONE,
 				   NVME_CSI_NVM, xfer, ptr,
-				   NVME_DEFAULT_IOCTL_TIMEOUT);
+				   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 		if (ret)
 			return ret;
 
