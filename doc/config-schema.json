@@ -74,6 +74,14 @@
 		    "description": "Transport service identifier",
 		    "type": "string"
 		},
+		"dhchap_key": {
+		    "description": "Host DH-HMAC-CHAP key",
+		    "type": "string"
+		},
+		"dhchap_ctrl_key": {
+		    "description": "Controller DH-HMAC-CHAP key",
+		    "type": "string"
+		},
 		"nr_io_queues": {
 		    "description": "Number of I/O queues",
 		    "type": "integer"
