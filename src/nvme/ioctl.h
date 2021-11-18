@@ -2711,80 +2711,82 @@ int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
  * nvme_zns_mgmt_send() -
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
- * @slba:
- * @select_all:
+ * @slba:	Starting logical block address
+ * @zsa:	Zone send action
+ * @select_all:	Select all flag
+ * @data_len:	Length of @data
+ * @data:	Userspace address of the data
  * @timeout:	timeout in ms
- * @zsa:
- * @data_len:
- * @data:
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba, bool select_all,
-		       __u32 timeout, enum nvme_zns_send_action zsa,
-		       __u32 data_len, void *data, __u32 *result);
+int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba,
+		       enum nvme_zns_send_action zsa, bool select_all,
+		       __u32 data_len, void *data,
+		       __u32 timeout, __u32 *result);
 
 
 /**
  * nvme_zns_mgmt_recv() -
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
- * @slba:
+ * @slba:	Starting logical block address
+ * @zra:	zone receive action
+ * @zrasf:	Zone receive action specific field
+ * @zras_feat:	Zone receive action specific features
+ * @data_len:	Length of @data
+ * @data:	Userspace address of the data
  * @timeout:	timeout in ms
- * @zra:
- * @zrasf:
- * @zras_feat:
- * @data_len:
- * @data:
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba, __u32 timeout,
+int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
 		       enum nvme_zns_recv_action zra, __u16 zrasf,
 		       bool zras_feat, __u32 data_len, void *data,
-		       __u32 *result);
+		       __u32 timeout, __u32 *result);
 
 /**
  * nvme_zns_report_zones() - Return the list of zones
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
  * @slba:	Starting LBA
- * @timeout:	timeout in ms
- * @extended:	Extended report
  * @opts:	Reporting options
+ * @extended:	Extended report
  * @partial:	Partial report requested
  * @data_len:	Length of the data buffer
- * @data:	Data buffer
+ * @data:	Userspace address of the report zones data
+ * @timeout:	timeout in ms
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba, __u32 timeout,
-			  bool extended, enum nvme_zns_report_options opts,
-			  bool partial, __u32 data_len, void *data,
-			  __u32 *result);
+int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
+			  enum nvme_zns_report_options opts,
+			  bool extended, bool partial,
+			  __u32 data_len, void *data,
+			  __u32 timeout, __u32 *result);
 
 /**
- * nvme_zns_append() -
+ * nvme_zns_append() - Append data to a zone
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
- * @zslba:
- * @nlb:
+ * @zslba:	Zone start logical block address
+ * @nlb:	Number of logical blocks
  * @control:
- * @ilbrt:
- * @lbat:
- * @lbam:
- * @data_len:
- * @data:
- * @metadata_len:
- * @metadata:
- * @timeout:
- * @result:
+ * @ilbrt:	Initial logical block reference tag
+ * @lbat:	Logical block application tag
+ * @lbatm:	Logical block application tag mask
+ * @data_len:	Length of @data
+ * @data:	Userspace address of the data
+ * @metadata_len: Length of @metadata
+ * @metadata:	Userspace address of the metadata
+ * @timeout:	Timeout in ms
+ * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
