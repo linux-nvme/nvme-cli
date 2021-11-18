@@ -1577,7 +1577,7 @@ static int nvme_ns_init(struct nvme_ns *n)
 	return 0;
 }
 
-static void nvme_ns_set_chrdev_name(struct nvme_ns *n, const char *name)
+static void nvme_ns_set_generic_name(struct nvme_ns *n, const char *name)
 {
 	char generic_name[PATH_MAX];
 	int instance, head_instance;
@@ -1606,7 +1606,7 @@ static nvme_ns_t nvme_ns_open(const char *name)
 	if (n->fd < 0)
 		goto free_ns;
 
-	nvme_ns_set_chrdev_name(n, name);
+	nvme_ns_set_generic_name(n, name);
 
 	if (nvme_get_nsid(n->fd, &n->nsid) < 0)
 		goto close_fd;
