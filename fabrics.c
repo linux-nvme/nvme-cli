@@ -1070,6 +1070,8 @@ static void set_discovery_kato(struct fabrics_config *cfg)
 
 static void discovery_trsvcid(struct fabrics_config *fabrics_cfg, bool discover)
 {
+	if (!fabrics_cfg->transport)
+		return;
 	if (!strcmp(fabrics_cfg->transport, "tcp")) {
 		if (discover) {
 			/* Default port for NVMe/TCP discovery controllers */
