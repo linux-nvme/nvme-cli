@@ -61,6 +61,8 @@ static const char *nvmf_htraddr		= "host traddr (e.g. FC WWN's)";
 static const char *nvmf_hiface		= "host interface (for tcp transport)";
 static const char *nvmf_hostnqn		= "user-defined hostnqn";
 static const char *nvmf_hostid		= "user-defined hostid (if default not used)";
+static const char *nvmf_hostkey		= "user-defined dhchap key (if default not used)";
+static const char *nvmf_ctrlkey		= "user-defined dhchap controller key (for bi-directional authentication)";
 static const char *nvmf_nr_io_queues	= "number of io queues to use (default is core count)";
 static const char *nvmf_nr_write_queues	= "number of write queues to use (default 0)";
 static const char *nvmf_nr_poll_queues	= "number of poll queues to use (default 0)";
@@ -84,6 +86,8 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 	OPT_STRING("hostnqn",         'q', "STR", &hostnqn,	nvmf_hostnqn), \
 	OPT_STRING("hostid",          'I', "STR", &hostid,	nvmf_hostid), \
 	OPT_STRING("nqn",             'n', "STR", &subsysnqn,	nvmf_nqn), \
+	OPT_STRING("dhchap-secret",   'S', "STR", &hostkey,     nvmf_hostkey), \
+	OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &ctrlkey,  nvmf_ctrlkey), \
 	OPT_INT("nr-io-queues",       'i', &c.nr_io_queues,       nvmf_nr_io_queues),	\
 	OPT_INT("nr-write-queues",    'W', &c.nr_write_queues,    nvmf_nr_write_queues),\
 	OPT_INT("nr-poll-queues",     'P', &c.nr_poll_queues,     nvmf_nr_poll_queues),	\
@@ -95,7 +99,7 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 	OPT_FLAG("duplicate-connect", 'D', &c.duplicate_connect,  nvmf_dup_connect),	\
 	OPT_FLAG("disable-sqflow",    'd', &c.disable_sqflow,     nvmf_disable_sqflow),	\
 	OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),	\
-	OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest)     \
+	OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest)	\
 
 
 static void space_strip_len(int max, char *str)
@@ -304,7 +308,7 @@ static int discover_from_conf_file(nvme_host_t h, const char *desc,
 {
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
 	char *host_traddr = NULL, *host_iface = NULL;
-	char *hostnqn = NULL, *hostid = NULL;
+	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL, *ctrlkey = NULL;
 	char *subsysnqn = NULL;
 	char *ptr, **argv, *p, line[4096];
 	int argc, ret = 0;
@@ -392,7 +396,7 @@ out:
 int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char *subsysnqn = NVME_DISC_SUBSYS_NAME;
-	char *hostnqn = NULL, *hostid = NULL;
+	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL, *ctrlkey = NULL;
 	char *host_traddr = NULL, *host_iface = NULL;
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
 	char *hnqn = NULL, *hid = NULL;
@@ -414,7 +418,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_FILE("raw",          'r', &raw,           "save raw output to file"),
 		OPT_FLAG("persistent",   'p', &persistent,    "persistent discovery connection"),
 		OPT_FLAG("quiet",        'S', &quiet,         "suppress already connected errors"),
-		OPT_STRING("config",     'C', "FILE", &config_file, nvmf_config_file),
+		OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
 		OPT_INCR("verbose",      'v', &verbose,       "Increase logging verbosity"),
 		OPT_FLAG("dump-config",  'O', &dump_config,   "Dump configuration file to stdout"),
 		OPT_END()
@@ -468,6 +472,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		else if (!strncmp(device, "/dev/", 5))
 			device += 5;
 	}
+	if (hostkey)
+		nvme_host_set_dhchap_key(h, hostkey);
 
 	if (!device && !transport && !traddr) {
 		ret = discover_from_conf_file(h, desc, connect, &cfg);
@@ -558,6 +564,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	char *transport = NULL, *traddr = NULL;
 	char *host_traddr = NULL, *host_iface = NULL;
 	char *trsvcid = NULL, *hostnqn = NULL, *hostid = NULL;
+	char *hostkey = NULL, *ctrlkey = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
 	unsigned int verbose = 0;
 	nvme_root_t r;
@@ -568,7 +575,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 
 	OPT_ARGS(opts) = {
 		NVMF_OPTS(cfg),
-		OPT_STRING("config", 'C', "FILE", &config_file, nvmf_config_file),
+		OPT_STRING("config", 'J', "FILE", &config_file, nvmf_config_file),
 		OPT_INCR("verbose", 'v', &verbose, "Increase logging verbosity"),
 		OPT_FLAG("dump-config", 'O', &dump_config, "Dump JSON configuration to stdout"),
 		OPT_END()
@@ -629,12 +636,16 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		errno = ENOMEM;
 		goto out_free;
 	}
+	if (hostkey)
+		nvme_host_set_dhchap_key(h, hostkey);
 	c = nvme_create_ctrl(subsysnqn, transport, traddr,
 			     host_traddr, host_iface, trsvcid);
 	if (!c) {
 		errno = ENOMEM;
 		goto out_free;
 	}
+	if (ctrlkey)
+		nvme_ctrl_set_dhchap_key(c, ctrlkey);
 
 	errno = 0;
 	ret = nvmf_add_ctrl(h, c, &cfg, cfg.disable_sqflow);

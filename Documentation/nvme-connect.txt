@@ -17,7 +17,9 @@ SYNOPSIS
 		[--host-iface=<iface>     | -f <iface>]
 		[--hostnqn=<hostnqn>      | -q <hostnqn>]
 		[--hostid=<hostid>        | -I <hostid>]
-		[--config-file=<cfg>      | -C <cfg> ]
+		[--config-file=<cfg>      | -J <cfg> ]
+		[--dhchap-secret=<secret> | -S <secret>]
+		[--dhchap-ctrl-secret=<secret> | -C <secret>]
 		[--nr-io-queues=<#>       | -i <#>]
 		[--nr-write-queues=<#>    | -W <#>]
 		[--nr-poll-queues=<#>     | -P <#>]
@@ -94,13 +96,28 @@ OPTIONS
 	UUID(Universally Unique Identifier) to be discovered which should be
 	formatted.
 
--C <cfg>::
+-J <cfg>::
 --config-file=<cfg>::
 	Use the specified JSON configuration file instead of the
 	default /etc/nvme/config.json file or 'none' to not read in
 	an existing configuration file. The JSON configuration file
 	format is documented in
 	https://github.com/linux-nvme/libnvme/doc/config-schema.json
+
+-S <secret>::
+--dhchap-secret=<secret>::
+	NVMe In-band authentication secret; needs to be in ASCII format as
+	specified in NVMe 2.0 section 8.13.5.8 'Secret representation'.
+	If this option is not specified, the default is read from
+	/etc/nvme/hostkey. If that does not exist no in-band authentication
+	is attempted.
+
+-C <secret>::
+--dhchap-ctrl-secret=<secret>::
+	NVMe In-band authentication controller secret for bi-directional
+	authentication; needs to be in ASCII format as
+	specified in NVMe 2.0 section 8.13.5.8 'Secret representation'.
+	If not present bi-directional authentication is not attempted.
 
 -i <#>::
 --nr-io-queues=<#>::
