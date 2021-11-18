@@ -807,8 +807,8 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 			log_len = sizeof(struct nvme_zone_report) + ((sizeof(struct nvme_zns_desc) * nr_zones_chunks) + (nr_zones_chunks * zdes));
 		}
 
-		err = nvme_zns_report_zones(fd, cfg.namespace_id,
-					    NVME_DEFAULT_IOCTL_TIMEOUT, offset,
+		err = nvme_zns_report_zones(fd, cfg.namespace_id, offset,
+					    NVME_DEFAULT_IOCTL_TIMEOUT,
 					    cfg.extended, cfg.state,
 					    cfg.partial, log_len, report, NULL);
 		if (err > 0) {
