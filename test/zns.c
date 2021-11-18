@@ -45,7 +45,9 @@ static void show_zns_properties(nvme_ns_t n)
 	printf("zasl:%u\n", zns_ctrl.zasl);
 
 	if (nvme_zns_mgmt_recv(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), 0,
-			       NVME_ZNS_ZRA_REPORT_ZONES, NVME_ZNS_ZRAS_REPORT_ALL,
+			       NVME_DEFAULT_IOCTL_TIMEOUT,
+			       NVME_ZNS_ZRA_REPORT_ZONES,
+			       NVME_ZNS_ZRAS_REPORT_ALL,
 			       0, 0x1000, (void *)zr)) {
 		fprintf(stderr, "failed to report zones\n");;
 		return;

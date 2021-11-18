@@ -84,7 +84,8 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 
 	while (size > 0) {
 		xfer = MIN(xfer, size);
-		err = nvme_fw_download(fd, offset, xfer, buf);
+		err = nvme_fw_download(fd, offset, xfer, buf,
+				       NVME_DEFAULT_IOCTL_TIMEOUT);
 		if (err)
 			break;
 
@@ -123,7 +124,8 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 
 		ret = nvme_get_log(fd, log_id, nsid, offset, NVME_LOG_LSP_NONE,
 				   NVME_LOG_LSI_NONE, retain, NVME_UUID_NONE,
-				   NVME_CSI_NVM, xfer, ptr);
+				   NVME_CSI_NVM, xfer, ptr,
+				   NVME_DEFAULT_IOCTL_TIMEOUT);
 		if (ret)
 			return ret;
 
@@ -251,7 +253,7 @@ free:
 }
 
 static int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls,
-			      __u16 *ctrlist, bool attach)
+			      __u16 *ctrlist, bool attach, __u32 timeout)
 {
 	enum nvme_ns_attach_sel sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH;
 	struct nvme_ctrl_list cntlist = { 0 };
@@ -260,19 +262,21 @@ static int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls,
 		sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH;
 
 	nvme_init_ctrl_list(&cntlist, num_ctrls, ctrlist);
-	return nvme_ns_attach(fd, nsid, sel, &cntlist);
+	return nvme_ns_attach(fd, nsid, sel, &cntlist, timeout);
 }
 
 int nvme_namespace_attach_ctrls(int fd, __u32 nsid, __u16 num_ctrls,
 				__u16 *ctrlist)
 {
-	return nvme_ns_attachment(fd, nsid, num_ctrls, ctrlist, true);
+	return nvme_ns_attachment(fd, nsid, num_ctrls, ctrlist, true,
+				  NVME_DEFAULT_IOCTL_TIMEOUT);
 }
 
 int nvme_namespace_detach_ctrls(int fd, __u32 nsid, __u16 num_ctrls,
 				__u16 *ctrlist)
 {
-	return nvme_ns_attachment(fd, nsid, num_ctrls, ctrlist, false);
+	return nvme_ns_attachment(fd, nsid, num_ctrls, ctrlist, false,
+				  NVME_DEFAULT_IOCTL_TIMEOUT);
 }
 
 int nvme_get_ana_log_len(int fd, size_t *analen)
