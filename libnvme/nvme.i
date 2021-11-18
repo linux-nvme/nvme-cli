@@ -268,6 +268,7 @@ struct nvme_host {
   %immutable hostid;
   char *hostnqn;
   char *hostid;
+  char *dhchap_key;
 };
 
 struct nvme_subsystem {
@@ -301,6 +302,7 @@ struct nvme_ctrl {
   char *traddr;
   char *host_traddr;
   char *trsvcid;
+  char *dhchap_key;
   char *address;
   char *firmware;
   char *model;

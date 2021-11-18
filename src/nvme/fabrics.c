@@ -397,7 +397,7 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 {
 	struct nvme_fabrics_config *cfg = nvme_ctrl_get_config(c);
 	const char *transport = nvme_ctrl_get_transport(c);
-	const char *hostnqn, *hostid;
+	const char *hostnqn, *hostid, *hostkey, *ctrlkey;
 	bool discover = false, discovery_nqn = false;
 
 	if (!transport) {
@@ -431,6 +431,8 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 		discover = true;
 	hostnqn = nvme_host_get_hostnqn(h);
 	hostid = nvme_host_get_hostid(h);
+	hostkey = nvme_host_get_dhchap_key(h);
+	ctrlkey = nvme_ctrl_get_dhchap_key(c);
 	if (add_argument(argstr, "transport", transport) ||
 	    add_argument(argstr, "traddr",
 			 nvme_ctrl_get_traddr(c)) ||
@@ -444,6 +446,10 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	    (hostid && add_argument(argstr, "hostid", hostid)) ||
 	    (discover && !discovery_nqn &&
 	     add_bool_argument(argstr, "discovery", true)) ||
+	    (!discover && hostkey &&
+	     add_argument(argstr, "dhchap_secret", hostkey)) ||
+	    (!discover && ctrlkey &&
+	     add_argument(argstr, "dhchap_ctrl_secret", ctrlkey)) ||
 	    (!discover &&
 	     add_int_argument(argstr, "nr_io_queues",
 			      cfg->nr_io_queues, false)) ||

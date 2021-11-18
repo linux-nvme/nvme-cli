@@ -168,6 +168,21 @@ const char *nvme_host_get_hostid(nvme_host_t h)
 	return h->hostid;
 }
 
+const char *nvme_host_get_dhchap_key(nvme_host_t h)
+{
+	return h->dhchap_key;
+}
+
+void nvme_host_set_dhchap_key(nvme_host_t h, const char *key)
+{
+	if (h->dhchap_key) {
+		free(h->dhchap_key);
+		h->dhchap_key = NULL;
+	}
+	if (key)
+		h->dhchap_key = strdup(key);
+}
+
 nvme_subsystem_t nvme_first_subsystem(nvme_host_t h)
 {
 	return list_top(&h->subsystems, struct nvme_subsystem, entry);
@@ -338,6 +353,8 @@ static void __nvme_free_host(struct nvme_host *h)
 	free(h->hostnqn);
 	if (h->hostid)
 		free(h->hostid);
+	if (h->dhchap_key)
+		free(h->dhchap_key);
 	h->r->modified = true;
 	free(h);
 }
@@ -468,6 +485,11 @@ static int nvme_scan_subsystem(struct nvme_root *r, char *name,
 		free(hostnqn);
 		if (hostid)
 			free(hostid);
+		if (h) {
+			if (h->dhchap_key)
+				free(h->dhchap_key);
+			h->dhchap_key = nvme_get_attr(path, "dhchap_secret");
+		}
 	}
 	if (!h)
 		h = nvme_default_host(r);
@@ -705,6 +727,21 @@ const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c)
 struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
 {
 	return &c->cfg;
+}
+
+const char *nvme_ctrl_get_dhchap_key(nvme_ctrl_t c)
+{
+	return c->dhchap_key;
+}
+
+void nvme_ctrl_set_dhchap_key(nvme_ctrl_t c, const char *key)
+{
+	if (c->dhchap_key) {
+		free(c->dhchap_key);
+		c->dhchap_key = NULL;
+	}
+	if (key)
+		c->dhchap_key = strdup(key);
 }
 
 void nvme_ctrl_disable_sqflow(nvme_ctrl_t c, bool disable_sqflow)
@@ -1088,6 +1125,7 @@ static int nvme_configure_ctrl(nvme_ctrl_t c, const char *path,
 	c->queue_count = nvme_get_ctrl_attr(c, "queue_count");
 	c->serial = nvme_get_ctrl_attr(c, "serial");
 	c->sqsize = nvme_get_ctrl_attr(c, "sqsize");
+	c->dhchap_key = nvme_get_ctrl_attr(c, "dhchap_ctrl_secret");
 	return 0;
 }
 
@@ -1261,6 +1299,11 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 		free(hostnqn);
 	if (hostid)
 		free(hostid);
+	if (h) {
+		if (h->dhchap_key)
+			free(h->dhchap_key);
+		h->dhchap_key = nvme_get_attr(path, "dhchap_secret");
+	}
 	if (!h) {
 		h = nvme_default_host(r);
 		if (!h) {

@@ -106,6 +106,21 @@ const char *nvme_host_get_hostnqn(nvme_host_t h);
 const char *nvme_host_get_hostid(nvme_host_t h);
 
 /**
+ * nvme_host_get_dhchap_key() - return host key
+ * @h: Host for which the key should be returned
+ *
+ * Return: DH-HMAC-CHAP host key or NULL if not set
+ */
+const char *nvme_host_get_dhchap_key(nvme_host_t h);
+
+/**
+ * nvme_host_set_dhchap_key() - set host key
+ * @h: Host for which the key should be set
+ * @key: DH-HMAC-CHAP Key to set or NULL to clear existing key
+ */
+void nvme_host_set_dhchap_key(nvme_host_t h, const char *key);
+
+/**
  * nvme_default_host() -
  * @r:
  *
@@ -778,6 +793,21 @@ const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c);
  * Return:
  */
 const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c);
+
+/**
+ * nvme_ctrl_get_dhchap_key() - return controller key
+ * @c: controller for which the key should be returned
+ *
+ * Return: DH-HMAC-CHAP controller key or NULL if not set
+ */
+const char *nvme_ctrl_get_dhchap_key(nvme_ctrl_t c);
+
+/**
+ * nvme_ctrl_set_dhchap_key() - set controller key
+ * @c: Controller for which the key should be set
+ * @key: DH-HMAC-CHAP Key to set or NULL to clear existing key
+ */
+void nvme_ctrl_set_dhchap_key(nvme_ctrl_t c, const char *key);
 
 /**
  * nvme_ctrl_get_config() -

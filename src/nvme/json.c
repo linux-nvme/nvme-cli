@@ -97,6 +97,9 @@ static void json_parse_port(nvme_subsystem_t s, struct json_object *port_obj)
 	c = nvme_lookup_ctrl(s, transport, traddr, host_traddr,
 			     host_iface, trsvcid);
 	if (c) {
+		attr_obj = json_object_object_get(port_obj, "dhchap_key");
+		if (attr_obj)
+			nvme_ctrl_set_dhchap_key(c, json_object_get_string(attr_obj));
 		json_update_attributes(c, port_obj);
 	}
 }
@@ -139,6 +142,9 @@ static void json_parse_host(nvme_root_t r, struct json_object *host_obj)
 	if (attr_obj)
 		hostid = json_object_get_string(attr_obj);
 	h = nvme_lookup_host(r, hostnqn, hostid);
+	attr_obj = json_object_object_get(host_obj, "dhchap_key");
+	if (attr_obj)
+		nvme_host_set_dhchap_key(h, json_object_get_string(attr_obj));
 	subsys_array = json_object_object_get(host_obj, "subsystems");
 	if (!subsys_array)
 		return;
@@ -194,6 +200,10 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	value = nvme_ctrl_get_trsvcid(c);
 	if (value)
 		json_object_add_value_string(port_obj, "trsvcid", value);
+	value = nvme_ctrl_get_dhchap_key(c);
+	if (value)
+		json_object_add_value_string(port_obj, "dhchap_key",
+					     value);
 	JSON_INT_OPTION(cfg, port_obj, nr_io_queues, 0);
 	JSON_INT_OPTION(cfg, port_obj, nr_write_queues, 0);
 	JSON_INT_OPTION(cfg, port_obj, nr_poll_queues, 0);
@@ -252,7 +262,7 @@ int json_update_config(nvme_root_t r, const char *config_file)
 	json_root = json_object_new_array();
 	nvme_for_each_host(r, h) {
 		nvme_subsystem_t s;
-		const char *hostid;
+		const char *hostid, *dhchap_key;
 
 		host_obj = json_object_new_object();
 		json_object_add_value_string(host_obj, "hostnqn",
@@ -261,6 +271,10 @@ int json_update_config(nvme_root_t r, const char *config_file)
 		if (hostid)
 			json_object_add_value_string(host_obj, "hostid",
 						     hostid);
+		dhchap_key = nvme_host_get_dhchap_key(h);
+		if (dhchap_key)
+			json_object_add_value_string(host_obj, "dhchap_key",
+						     dhchap_key);
 		subsys_array = json_object_new_array();
 		nvme_for_each_subsystem(h, s) {
 			json_update_subsys(subsys_array, s);
