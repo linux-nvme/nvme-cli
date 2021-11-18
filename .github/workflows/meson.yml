@@ -1,4 +1,4 @@
-name: libnvme meson CI
+name: nvme-cli meson CI
 
 on:
   push:
@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: install libraries
+        run: sudo apt-get install libjson-c-dev
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
       # - name: install python dependencies
