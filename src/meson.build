@@ -5,6 +5,11 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
+configure_file(
+    output: 'config.h',
+    configuration: conf
+)
+
 sources += [
     'nvme/cleanup.c',
     'nvme/fabrics.c',
@@ -14,7 +19,6 @@ sources += [
     'nvme/log.c',
     'nvme/tree.c',
     'nvme/util.c',
-    config_h,
 ]
 
 if conf.get('CONFIG_JSONC')

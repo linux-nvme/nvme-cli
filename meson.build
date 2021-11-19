@@ -120,11 +120,6 @@ conf.set10(
     description: 'Is isblank() available?'
 )
 
-configure_file(
-    output: 'libnvme-config.h',
-    configuration: conf
-)
-
 ################################################################################
 substs = configuration_data()
 substs.set('NAME',    meson.project_name())
@@ -138,8 +133,8 @@ configure_file(
 
 ################################################################################
 add_project_arguments(['-fomit-frame-pointer', '-D_GNU_SOURCE',
-                       '-include', 'libnvme-config.h'], language : 'c')
-incdir = include_directories(['.', 'ccan', 'src'])
+                       '-include', 'config.h'], language : 'c')
+incdir = include_directories(['ccan', 'src'])
 
 ################################################################################
 sources = []

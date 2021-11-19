@@ -11,19 +11,3 @@ sources += files([
     'ccan/str/debug.c',
     'ccan/str/str.c',
 ])
-
-configurator = executable(
-    'configurator',
-    ['tools/configurator/configurator.c'],
-    c_args: ['-D_GNU_SOURCE'],
-    include_directories: incdir,
-)
-
-config_h = custom_target(
-    'config.h',
-    output:  'config.h',
-    capture: true,
-    command: [configurator, ]
-)
-
-
