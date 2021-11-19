@@ -19,7 +19,7 @@ endif
 if have_python_support
     pymod_swig = custom_target(
         'nvme.py',
-        input:   ['nvme.i', config_h],
+        input:   ['nvme.i'],
         output:  ['nvme.py', 'nvme_wrap.c'],
         command: [swig, '-python', '-py3', '-o', '@OUTPUT1@', '@INPUT0@'],
         install: true,
