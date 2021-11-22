@@ -50,7 +50,7 @@ conf.set('LIBHUGETLBFS', libhugetlbfs.found(), description: 'Is libhugetlbfs req
 libz_dep = dependency('zlib', required: true)
 
 # Check for open-ssl availability
-libopenssl = dependency('openssl', required: false)
+libopenssl = dependency('openssl', version: '>=1.1.0', required: false)
 conf.set('OPENSSL', libopenssl.found(), description: 'Is open-ssl required?')
 
 # Set the nvme-cli version
