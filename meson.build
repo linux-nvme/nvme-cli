@@ -123,6 +123,14 @@ conf.set10(
     ),
     description: 'Is isblank() available?'
 )
+conf.set10(
+    'HAVE_SYS_RANDOM',
+    cc.compiles(
+        '''#include <sys/random.h>''',
+        name: 'sys/random.h'
+    ),
+    description: 'Is sys/random.h(getrandom) include-able?'
+)
 
 configure_file(
     output: 'config.h',
