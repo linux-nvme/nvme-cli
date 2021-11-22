@@ -1153,12 +1153,15 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		goto out_free_name;
 	}
 
-	c->address = nvme_get_attr(path, "address");
-	if (!c->address) {
-		errno = ENXIO;
-		ret = -1;
-		goto out_free_name;
+	if (strcmp(c->transport, "loop")) {
+		c->address = nvme_get_attr(path, "address");
+		if (!c->address) {
+			errno = ENXIO;
+			ret = -1;
+			goto out_free_name;
+		}
 	}
+
 	subsys_name = nvme_ctrl_lookup_subsystem_name(c);
 	if (!subsys_name) {
 		nvme_msg(LOG_ERR, "Failed to lookup subsystem name for %s\n",
@@ -1203,7 +1206,7 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 				   const char *name)
 {
 	nvme_ctrl_t c;
-	char *addr, *address = NULL, *a, *e;
+	char *addr = NULL, *address = NULL, *a, *e;
 	char *transport, *traddr = NULL, *trsvcid = NULL;
 	char *host_traddr = NULL, *host_iface = NULL;
 	int ret;
@@ -1213,6 +1216,8 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 		errno = ENXIO;
 		return NULL;
 	}
+	if (!strcmp(transport, "loop"))
+		goto skip_address;
 	/* Parse 'address' string into components */
 	addr = nvme_get_attr(path, "address");
 	if (!addr) {
@@ -1261,6 +1266,7 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_subsystem_t s, const char *path,
 			a = strtok_r(NULL, ",", &e);
 		}
 	}
+skip_address:
 	c = nvme_lookup_ctrl(s, transport, traddr,
 			     host_traddr, host_iface, trsvcid);
 	free(transport);
