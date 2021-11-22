@@ -23,7 +23,7 @@
 /**
  * This program uses NVMe IOCTLs to run native nvme commands to a device.
  */
-
+#include "config.h"
 #include "nvme/tree.h"
 #include "nvme/types.h"
 #include <errno.h>
@@ -55,7 +55,10 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/random.h>
+
+#if HAVE_SYS_RANDOM
+	#include <sys/random.h>
+#endif
 
 #include "common.h"
 #include "nvme.h"
@@ -158,6 +161,22 @@ void *nvme_alloc(size_t len, bool *huge)
 	return __nvme_alloc(len, huge);
 }
 #endif
+
+static int getrandom_bytes(void *buf, size_t buflen)
+{
+#if HAVE_SYS_RANDOM
+	return getrandom(buf, buflen, GRND_NONBLOCK);
+#else
+	int result = 0;
+	int fd = open("/dev/urandom", O_RDONLY);
+	if (fd < 0)
+		return fd;
+	else
+		result = read(fd, buf, buflen);
+	close(fd);
+	return result;
+#endif
+}
 
 static bool is_chardev(void)
 {
@@ -6757,7 +6776,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *command, struct
 	if (!raw_secret)
 		return -ENOMEM;
 	if (!cfg.secret) {
-		if (getrandom(raw_secret, cfg.key_len, GRND_NONBLOCK) < 0)
+		if (getrandom_bytes(raw_secret, cfg.key_len) < 0)
 			return errno;
 	} else {
 		int secret_len = 0, i;
