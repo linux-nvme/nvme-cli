@@ -6425,7 +6425,7 @@ Returns true if given offset is 64bit register, otherwise it returns false.
     __u8 nvscc;
     __u8 nwpc;
     __le16 acwu;
-    __u8 rsvd534[2];
+    __le16 ocfs;
     __le32 sgls;
     __le32 mnan;
     __u8 rsvd544[224];
@@ -6749,6 +6749,10 @@ Returns true if given offset is 64bit register, otherwise it returns false.
   all namespaces with any supported namespace format for a Compare
   and Write fused operation. This field is specified in logical
   blocks and is a 0’s based value.
+
+``ocfs``
+  Optional Copy Formats Supported, each bit n means controller supports
+  Copy Format n.
 
 ``sgls``
   SGL Support, see :c:type:`enum nvme_id_ctrl_sgls <nvme_id_ctrl_sgls>`

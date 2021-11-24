@@ -862,6 +862,8 @@ struct nvme_id_psd {
  * 	       all namespaces with any supported namespace format for a Compare
  * 	       and Write fused operation. This field is specified in logical
  * 	       blocks and is a 0’s based value.
+ * @ocfs:      Optional Copy Formats Supported, each bit n means controller
+ *         supports Copy Format n.
  * @sgls:      SGL Support, see &enum nvme_id_ctrl_sgls
  * @mnan:      Maximum Number of Allowed Namespaces indicates the maximum
  * 	       number of namespaces supported by the NVM subsystem.
