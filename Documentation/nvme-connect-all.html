@@ -1,10 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
 <title>nvme-connect-all(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -95,9 +94,7 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-pre {
-  white-space: pre-wrap;
-}
+
 
 #author {
   color: #527bbd;
@@ -226,7 +223,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; vertical-align: text-bottom; }
+span.image img { border-style: none; }
 a.image:visited { color: white; }
 
 dl {
@@ -436,7 +433,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overridden by CSS in most browsers. */
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -751,12 +748,15 @@ nvme-connect-all(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme connect-all</em>
                 [--transport=&lt;trtype&gt;     | -t &lt;trtype&gt;]
+                [--nqn=&lt;subnqn&gt;           | -n &lt;subnqn&gt;]
                 [--traddr=&lt;traddr&gt;        | -a &lt;traddr&gt;]
                 [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
                 [--host-traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
+                [--host-iface=&lt;iface&gt;     | -f &lt;iface&gt;]
                 [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
                 [--hostid=&lt;hostid&gt;        | -I &lt;hostid&gt;]
                 [--raw=&lt;filename&gt;         | -r &lt;filename&gt;]
+                [--cfg-file=&lt;cfg&gt;         | -C &lt;cfg&gt;]
                 [--keep-alive-tmo=&lt;#&gt;     | -k &lt;#&gt;]
                 [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]
                 [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]
@@ -768,7 +768,8 @@ nvme-connect-all(1) Manual Page
                 [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]
                 [--matching               | -m]
                 [--persistent             | -p]
-                [--quiet                  | -S]</pre>
+                [--quiet                  | -S]
+                [--dump-config            | -O]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -837,6 +838,17 @@ cellspacing="0" cellpadding="4">
 </div>
 </dd>
 <dt class="hdlist1">
+-n &lt;subnqn&gt;
+</dt>
+<dt class="hdlist1">
+--nqn &lt;subnqn&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the name for the NVMe subsystem to connect to.
+</p>
+</dd>
+<dt class="hdlist1">
 -a &lt;traddr&gt;
 </dt>
 <dt class="hdlist1">
@@ -871,7 +883,21 @@ cellspacing="0" cellpadding="4">
 <dd>
 <p>
         This field specifies the network address used on the host to connect
-        to the Discovery Controller.
+        to the Controller. For TCP, this sets the source address on the socket.
+</p>
+</dd>
+<dt class="hdlist1">
+-f &lt;iface&gt;
+</dt>
+<dt class="hdlist1">
+--host-iface=&lt;iface&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the network interface used on the host to connect
+        to the Controller (e.g. IP eth1, enp2s0, enx78e7d1ea46da). This forces
+        the connection to be made on a specific interface instead of letting
+        the system decide.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -914,6 +940,21 @@ cellspacing="0" cellpadding="4">
         This field will take the output of the <em>nvme connect-all</em> command
         and dump it to a raw binary file. By default <em>nvme connect-all</em> will
         dump the output to stdout.
+</p>
+</dd>
+<dt class="hdlist1">
+-C &lt;cfg&gt;
+</dt>
+<dt class="hdlist1">
+--config-file=&lt;cfg&gt;
+</dt>
+<dd>
+<p>
+        Use the specified JSON configuration file instead of the
+        default /etc/nvme/config.json file or <em>none</em> to not read in
+        an existing configuration file. The JSON configuration file
+        format is documented in
+        <a href="https://github.com/linux-nvme/libnvme/doc/config-schema.json">https://github.com/linux-nvme/libnvme/doc/config-schema.json</a>
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1058,6 +1099,17 @@ cellspacing="0" cellpadding="4">
         Suppress error messages.
 </p>
 </dd>
+<dt class="hdlist1">
+-O
+</dt>
+<dt class="hdlist1">
+--dump-config
+</dt>
+<dd>
+<p>
+        Print out resulting JSON configuration file to stdout.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1114,8 +1166,7 @@ nvme-connect(1)</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated
- 2021-01-20 23:40:57 CET
+Last updated 2021-11-25 14:00:47 KST
 </div>
 </div>
 </body>

@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
-.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/20/2020
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 11/25/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "11/25/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,8 +38,12 @@ nvme-connect \- Connect to a Fabrics controller\&.
                 [\-\-traddr=<traddr>        | \-a <traddr>]
                 [\-\-trsvcid=<trsvcid>      | \-s <trsvcid>]
                 [\-\-host\-traddr=<traddr>   | \-w <traddr>]
+                [\-\-host\-iface=<iface>     | \-f <iface>]
                 [\-\-hostnqn=<hostnqn>      | \-q <hostnqn>]
                 [\-\-hostid=<hostid>        | \-I <hostid>]
+                [\-\-config\-file=<cfg>      | \-J <cfg> ]
+                [\-\-dhchap\-secret=<secret> | \-S <secret>]
+                [\-\-dhchap\-ctrl\-secret=<secret> | \-C <secret>]
                 [\-\-nr\-io\-queues=<#>       | \-i <#>]
                 [\-\-nr\-write\-queues=<#>    | \-W <#>]
                 [\-\-nr\-poll\-queues=<#>     | \-P <#>]
@@ -51,6 +55,7 @@ nvme-connect \- Connect to a Fabrics controller\&.
                 [\-\-disable\-sqflow         | \-d]
                 [\-\-hdr\-digest             | \-g]
                 [\-\-data\-digest            | \-G]
+                [\-\-dump\-config            | \-O]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -114,7 +119,12 @@ This field specifies the transport service id\&. For transports using IP address
 .PP
 \-w <traddr>, \-\-host\-traddr=<traddr>
 .RS 4
-This field specifies the network address used on the host to connect to the Controller\&.
+This field specifies the network address used on the host to connect to the Controller\&. For TCP, this sets the source address on the socket\&.
+.RE
+.PP
+\-f <iface>, \-\-host\-iface=<iface>
+.RS 4
+This field specifies the network interface used on the host to connect to the Controller (e\&.g\&. IP eth1, enp2s0, enx78e7d1ea46da)\&. This forces the connection to be made on a specific interface instead of letting the system decide\&.
 .RE
 .PP
 \-q <hostnqn>, \-\-hostnqn=<hostnqn>
@@ -125,6 +135,26 @@ Overrides the default Host NQN that identifies the NVMe Host\&. If this option i
 \-I <hostid>, \-\-hostid=<hostid>
 .RS 4
 UUID(Universally Unique Identifier) to be discovered which should be formatted\&.
+.RE
+.PP
+\-J <cfg>, \-\-config\-file=<cfg>
+.RS 4
+Use the specified JSON configuration file instead of the default /etc/nvme/config\&.json file or
+\fInone\fR
+to not read in an existing configuration file\&. The JSON configuration file format is documented in
+\m[blue]\fBhttps://github\&.com/linux\-nvme/libnvme/doc/config\-schema\&.json\fR\m[]
+.RE
+.PP
+\-S <secret>, \-\-dhchap\-secret=<secret>
+.RS 4
+NVMe In\-band authentication secret; needs to be in ASCII format as specified in NVMe 2\&.0 section 8\&.13\&.5\&.8
+\fISecret representation\fR\&. If this option is not specified, the default is read from /etc/nvme/hostkey\&. If that does not exist no in\-band authentication is attempted\&.
+.RE
+.PP
+\-C <secret>, \-\-dhchap\-ctrl\-secret=<secret>
+.RS 4
+NVMe In\-band authentication controller secret for bi\-directional authentication; needs to be in ASCII format as specified in NVMe 2\&.0 section 8\&.13\&.5\&.8
+\fISecret representation\fR\&. If not present bi\-directional authentication is not attempted\&.
 .RE
 .PP
 \-i <#>, \-\-nr\-io\-queues=<#>
@@ -180,6 +210,11 @@ Generates/verifies header digest (TCP)\&.
 \-G, \-\-data\-digest
 .RS 4
 Generates/verifies data digest (TCP)\&.
+.RE
+.PP
+\-O, \-\-dump\-config
+.RS 4
+Print out resulting JSON configuration file to stdout\&.
 .RE
 .SH "EXAMPLES"
 .sp

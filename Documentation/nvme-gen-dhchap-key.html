@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.8" />
-<title>nvme-discover(1)</title>
+<title>nvme-gen-dhchap-key(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -732,12 +732,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-discover(1) Manual Page
+nvme-gen-dhchap-key(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-discover -
-   Send Get Log Page request to Discovery Controller.
+<p>nvme-gen-dhchap-key -
+   Generate a host DH-HMAC-CHAP key
 </p>
 </div>
 </div>
@@ -746,31 +746,10 @@ nvme-discover(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme discover</em>
-                [--transport=&lt;trtype&gt;     | -t &lt;trtype&gt;]
-                [--nqn=&lt;subnqn&gt;           | -n &lt;subnqn&gt;]
-                [--traddr=&lt;traddr&gt;        | -a &lt;traddr&gt;]
-                [--trsvcid=&lt;trsvcid&gt;      | -s &lt;trsvcid&gt;]
-                [--host-traddr=&lt;traddr&gt;   | -w &lt;traddr&gt;]
-                [--host-iface=&lt;iface&gt;     | -f &lt;iface&gt;]
-                [--hostnqn=&lt;hostnqn&gt;      | -q &lt;hostnqn&gt;]
-                [--hostid=&lt;hostid&gt;        | -I &lt;hostid&gt;]
-                [--raw=&lt;filename&gt;         | -r &lt;filename&gt;]
-                [--device=&lt;device&gt;        | -d &lt;device&gt;]
-                [--cfg-file=&lt;cfg&gt;         | -C &lt;cfg&gt; ]
-                [--keep-alive-tmo=&lt;sec&gt;   | -k &lt;sec&gt;]
-                [--reconnect-delay=&lt;#&gt;    | -c &lt;#&gt;]
-                [--ctrl-loss-tmo=&lt;#&gt;      | -l &lt;#&gt;]
-                [--hdr_digest             | -g]
-                [--data_digest            | -G]
-                [--nr-io-queues=&lt;#&gt;       | -i &lt;#&gt;]
-                [--nr-write-queues=&lt;#&gt;    | -W &lt;#&gt;]
-                [--nr-poll-queues=&lt;#&gt;     | -P &lt;#&gt;]
-                [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]
-                [--persistent             | -p]
-                [--quiet                  | -S]
-                [--dump-config            | -O]
-                [--output-format=&lt;fmt&gt;    | -o &lt;fmt&gt;]</pre>
+<pre class="content"><em>nvme gen-dhchap-key</em> [--hmac=&lt;hmac-id&gt; | -h &lt;hmac-id&gt;]
+                      [--secret=&lt;secret&gt; | -s &lt;secret&gt; ]
+                      [--key-length=&lt;len&gt; | -l &lt;len&gt; ]
+                      [--nqn=&lt;host-nqn&gt; | -n &lt;host-nqn&gt; ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -778,39 +757,9 @@ nvme-discover(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Send one or more Get Log Page requests to a NVMe-over-Fabrics Discovery
-Controller.</p></div>
-<div class="paragraph"><p>If no parameters are given, then <em>nvme discover</em> will attempt to
-find a /etc/nvme/discovery.conf file to use to supply a list of
-Discovery commands to run.  If no /etc/nvme/discovery.conf file
-exists, the command will quit with an error.</p></div>
-<div class="paragraph"><p>Otherwise, a specific Discovery Controller should be specified using the
---transport, --traddr, and if necessary the --trsvcid flags. A Diѕcovery
-request will then be sent to the specified Discovery Controller.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_background">BACKGROUND</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>The NVMe-over-Fabrics specification defines the concept of a
-Discovery Controller that an NVMe Host can query on a fabric
-network to discover NVMe subsystems contained in NVMe Targets
-which it can connect to on the network.  The Discovery Controller
-will return Discovery Log Pages that provide the NVMe Host
-with specific information (such as network address and unique
-subsystem NQN) the NVMe Host can use to issue an
-NVMe connect command to connect itself to a storage resource
-contained in that NVMe subsystem on the NVMe Target.</p></div>
-<div class="paragraph"><p>Note that the base NVMe specification defines the NQN (NVMe Qualified
-Name) format which an NVMe endpoint (device, subsystem, etc) must
-follow to guarantee a unique name under the NVMe standard.
-In particular, the Host NQN uniquely identifies the NVMe Host, and
-may be used by the the Discovery Controller to control what NVMe Target
-resources are allocated to the NVMe Host for a connection.</p></div>
-<div class="paragraph"><p>A Discovery Controller has it&#8217;s own NQN defined in the NVMe-over-Fabrics
-specification, <strong>nqn.2014-08.org.nvmexpress.discovery</strong>.  All Discovery
-Controllers must use this NQN name. This NQN is used by default by
-nvme-cli for the <em>discover</em> command.</p></div>
+<div class="paragraph"><p>Generate a base64-encoded DH-HMAC-CHAP host key in the form:
+DHHC-1:00:ia6zGodOr4SEG0Zzaw398rpY0wqipUWj4jWjUh4HWUz6aQ2n:
+and prints it to stdout.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -818,327 +767,53 @@ nvme-cli for the <em>discover</em> command.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--t &lt;trtype&gt;
+-h &lt;hmac-id&gt;
 </dt>
 <dt class="hdlist1">
---transport=&lt;trtype&gt;
+--hmac=&lt;hmac-id&gt;
 </dt>
 <dd>
 <p>
-        This field specifies the network fabric being used for
-        a NVMe-over-Fabrics network.  Current string values include:
-</p>
-<div class="tableblock">
-<table rules="all"
-width="100%"
-frame="border"
-cellspacing="0" cellpadding="4">
-<col width="50%" />
-<col width="50%" />
-<tbody>
-<tr>
-<td align="left" valign="top"><p class="table">Value</p></td>
-<td align="left" valign="top"><p class="table">Definition</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">rdma</p></td>
-<td align="left" valign="top"><p class="table">The network fabric is an rdma network (RoCE, iWARP, Infiniband, basic rdma, etc)</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">fc</p></td>
-<td align="left" valign="top"><p class="table"><strong>WIP</strong> The network fabric is a Fibre Channel network.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">tcp</p></td>
-<td align="left" valign="top"><p class="table">The network fabric is a TCP/IP network.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">loop</p></td>
-<td align="left" valign="top"><p class="table">Connect to a NVMe over Fabrics target on the local host</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</dd>
-<dt class="hdlist1">
--n &lt;subnqn&gt;
-</dt>
-<dt class="hdlist1">
---nqn &lt;subnqn&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the name for the NVMe subsystem to connect to.
+        Select a HMAC algorithm to use. Possible values are:
+        0 - No HMAC algorithm
+        1 - SHA-256
+        2 - SHA-384
+        3 - SHA-512
 </p>
 </dd>
 <dt class="hdlist1">
--a &lt;traddr&gt;
+-s &lt;secret&gt;
 </dt>
 <dt class="hdlist1">
---traddr=&lt;traddr&gt;
+--secret=&lt;secret&gt;
 </dt>
 <dd>
 <p>
-        This field specifies the network address of the Discovery Controller.
-        For transports using IP addressing (e.g. rdma) this should be an
-        IP-based (ex. IPv4) address.
+        Secret value (in hexadecimal) to be used for the key. If none are
+        provided a random value is used.
 </p>
 </dd>
 <dt class="hdlist1">
--s &lt;trsvcid&gt;
+-l &lt;len&gt;
 </dt>
 <dt class="hdlist1">
---trsvcid=&lt;trsvcid&gt;
+--key-length=&lt;len&gt;
 </dt>
 <dd>
 <p>
-        This field specifies the transport service id.  For transports using IP
-        addressing (e.g. rdma) this field is the port number. By default, the IP
-        port number for the RDMA transport is 4420.
+        Length of the resulting key. Possible values are 32, 48, or 64.
 </p>
 </dd>
 <dt class="hdlist1">
--w &lt;traddr&gt;
+-n &lt;hostnqn&gt;
 </dt>
 <dt class="hdlist1">
---host-traddr=&lt;traddr&gt;
+--nqn=&lt;hostnqn&gt;
 </dt>
 <dd>
 <p>
-        This field specifies the network address used on the host to connect
-        to the Controller. For TCP, this sets the source address on the socket.
-</p>
-</dd>
-<dt class="hdlist1">
--f &lt;iface&gt;
-</dt>
-<dt class="hdlist1">
---host-iface=&lt;iface&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the network interface used on the host to connect
-        to the Controller (e.g. IP eth1, enp2s0, enx78e7d1ea46da). This forces
-        the connection to be made on a specific interface instead of letting
-        the system decide.
-</p>
-</dd>
-<dt class="hdlist1">
--q &lt;hostnqn&gt;
-</dt>
-<dt class="hdlist1">
---hostnqn=&lt;hostnqn&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default host NQN that identifies the NVMe Host.
-        If this option is not specified, the default is read from
-        /etc/nvme/hostnqn first. If that does not exist, the autogenerated
-        NQN value from the NVMe Host kernel module is used next.
-</p>
-</dd>
-<dt class="hdlist1">
--I &lt;hostid&gt;
-</dt>
-<dt class="hdlist1">
---hostid=&lt;hostid&gt;
-</dt>
-<dd>
-<p>
-        UUID(Universally Unique Identifier) to be discovered which should be
-        formatted.
-</p>
-</dd>
-<dt class="hdlist1">
--r &lt;filename&gt;
-</dt>
-<dt class="hdlist1">
---raw=&lt;filename&gt;
-</dt>
-<dd>
-<p>
-        This field will take the output of the <em>nvme discover</em> command
-        and dump it to a raw binary file. By default <em>nvme discover</em> will
-        dump the output to stdout.
-</p>
-</dd>
-<dt class="hdlist1">
--d &lt;device&gt;
-</dt>
-<dt class="hdlist1">
---device=&lt;device&gt;
-</dt>
-<dd>
-<p>
-        This field takes a device as input. Device is in the format of nvme*,
-        eg. nvme0, nvme1
-</p>
-</dd>
-<dt class="hdlist1">
--C &lt;cfg&gt;
-</dt>
-<dt class="hdlist1">
---config-file=&lt;cfg&gt;
-</dt>
-<dd>
-<p>
-        Use the specified JSON configuration file instead of the
-        default /etc/nvme/config.json file or <em>none</em> to not read in
-        an existing configuration file. The JSON configuration file
-        format is documented in
-        <a href="https://github.com/linux-nvme/libnvme/doc/config-schema.json">https://github.com/linux-nvme/libnvme/doc/config-schema.json</a>
-</p>
-</dd>
-<dt class="hdlist1">
--k &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---keep-alive-tmo=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default dealy (in seconds) for keep alive.
-        This option will be ignored for the discovery, and it is only
-        implemented for completeness.
-</p>
-</dd>
-<dt class="hdlist1">
--c &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---reconnect-delay=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default delay (in seconds) before reconnect is attempted
-        after a connect loss.
-</p>
-</dd>
-<dt class="hdlist1">
--l &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---ctrl-loss-tmo=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default controller loss timeout period (in seconds).
-</p>
-</dd>
-<dt class="hdlist1">
--g
-</dt>
-<dt class="hdlist1">
---hdr_digest
-</dt>
-<dd>
-<p>
-        Generates/verifies header digest (TCP).
-</p>
-</dd>
-<dt class="hdlist1">
--G
-</dt>
-<dt class="hdlist1">
---data_digest
-</dt>
-<dd>
-<p>
-        Generates/verifies data digest (TCP).
-</p>
-</dd>
-<dt class="hdlist1">
--i &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---nr-io-queues=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default number of I/O queues create by the driver.
-        This option will be ignored for the discovery, and it is only
-        implemented for completeness.
-</p>
-</dd>
-<dt class="hdlist1">
--W &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---nr-write-queues=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Adds additional queues that will be used for write I/O.
-</p>
-</dd>
-<dt class="hdlist1">
--P &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---nr-poll-queues=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Adds additional queues that will be used for polling latency sensitive I/O.
-</p>
-</dd>
-<dt class="hdlist1">
--Q &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---queue-size=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default number of elements in the I/O queues created
-        by the driver which can be found at drivers/nvme/host/fabrics.h.
-        This option will be ignored for the discovery, and it is only
-        implemented for completeness.
-</p>
-</dd>
-<dt class="hdlist1">
--p
-</dt>
-<dt class="hdlist1">
---persistent
-</dt>
-<dd>
-<p>
-        Persistent discovery connection.
-</p>
-</dd>
-<dt class="hdlist1">
--S
-</dt>
-<dt class="hdlist1">
---quiet
-</dt>
-<dd>
-<p>
-        Suppress already connected errors.
-</p>
-</dd>
-<dt class="hdlist1">
--O
-</dt>
-<dt class="hdlist1">
---dump-config
-</dt>
-<dd>
-<p>
-        Print out resulting JSON configuration file to stdout.
-</p>
-</dd>
-<dt class="hdlist1">
--o &lt;format&gt;
-</dt>
-<dt class="hdlist1">
---output-format=&lt;format&gt;
-</dt>
-<dd>
-<p>
-              Set the reporting format to <em>normal</em>, <em>json</em>, or
-              <em>binary</em>. Only one output format can be used at a time.
+        Host-NQN to be used for the transformation. This parameter is only
+        valid if a non-zero HMAC function has been specified.
 </p>
 </dd>
 </dl></div>
@@ -1147,50 +822,7 @@ cellspacing="0" cellpadding="4">
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="ulist"><ul>
-<li>
-<p>
-Query the Discover Controller with IP4 address 192.168.1.3 for all
-resources allocated for NVMe Host name host1-rogue-nqn on the RDMA network.
-Port 4420 is used by default:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme discover --transport=rdma --traddr=192.168.1.3 \
---hostnqn=host1-rogue-nqn</code></pre>
-</div></div>
-</li>
-<li>
-<p>
-Issue a <em>nvme discover</em> command using a /etc/nvme/discovery.conf file:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># Machine default 'nvme discover' commands.  Query the
-# Discovery Controller's two ports (some resources may only
-# be accessible on a single port).  Note an official
-# nqn (Host) name defined in the NVMe specification is being used
-# in this example.
--t rdma -a 192.168.69.33 -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
--t rdma -a 192.168.1.4   -s 4420 -q nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432
-
-At the prompt type "nvme discover".</code></pre>
-</div></div>
-</li>
-</ul></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_see_also">SEE ALSO</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>nvme-connect(1)
-nvme-connect-all(1)</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_authors">AUTHORS</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>This was written by <a href="mailto:james.p.freyensee@intel.com">Jay Freyensee</a></p></div>
+<div class="paragraph"><p>No Examples</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -1203,7 +835,7 @@ nvme-connect-all(1)</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-11-25 14:00:47 KST
+Last updated 2021-11-25 14:12:38 KST
 </div>
 </div>
 </body>
