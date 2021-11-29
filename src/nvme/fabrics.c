@@ -657,8 +657,10 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	}
 
 	switch (e->subtype) {
-	case NVME_NQN_DISC:
 	case NVME_NQN_CURR:
+		nvme_ctrl_set_discovered(c, true);
+		break;
+	case NVME_NQN_DISC:
 		if (discover)
 			*discover = true;
 		nvme_ctrl_set_discovery_ctrl(c, true);
