@@ -152,7 +152,7 @@ struct nvme_id_ctrl {
 .br
 .BI "    __le16 acwu;"
 .br
-.BI "    __u8 rsvd534[2];"
+.BI "    __le16 ocfs;"
 .br
 .BI "    __le32 sgls;"
 .br
@@ -424,6 +424,9 @@ operation guaranteed to be written atomically to the NVM across
 all namespaces with any supported namespace format for a Compare
 and Write fused operation. This field is specified in logical
 blocks and is a 0’s based value.
+.IP "ocfs" 12
+Optional Copy Formats Supported, each bit n means controller
+supports Copy Format n.
 .IP "sgls" 12
 SGL Support, see \fIenum nvme_id_ctrl_sgls\fP
 .IP "mnan" 12
