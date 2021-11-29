@@ -59,6 +59,10 @@ ifeq ($(HAVE_SYSTEMD),0)
 	override CFLAGS += -DHAVE_SYSTEMD
 endif
 
+ifeq ($(LIBJSONC_14), 0)
+	override CFLAGS += -DLIBJSONC_14
+endif
+
 ifeq ($(LIBJSONC), 0)
 	override LDFLAGS += $(shell pkg-config --libs json-c)
 	override CFLAGS += $(shell pkg-config --cflags json-c)
