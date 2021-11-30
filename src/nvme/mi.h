@@ -285,6 +285,38 @@ struct nvme_mi_ep;
  */
 typedef struct nvme_mi_ep * nvme_mi_ep_t;
 
+/**
+ * nvme_mi_first_endpoint - Start endpoint iterator
+ * @m: &nvme_root_t object
+ *
+ * Return: first MI endpoint object under this root, or NULL if no endpoints
+ *         are present.
+ *
+ * See: &nvme_mi_next_endpoint, &nvme_mi_for_each_endpoint
+ */
+nvme_mi_ep_t nvme_mi_first_endpoint(nvme_root_t m);
+
+/**
+ * nvme_mi_next_endpoint - Continue endpoint iterator
+ * @m: &nvme_root_t object
+ * @e: &nvme_mi_ep_t current position of iterator
+ *
+ * Return: next endpoint MI endpoint object after @e under this root, or NULL
+ *         if no further endpoints are present.
+ *
+ * See: &nvme_mi_first_endpoint, &nvme_mi_for_each_endpoint
+ */
+nvme_mi_ep_t nvme_mi_next_endpoint(nvme_root_t m, nvme_mi_ep_t e);
+
+/**
+ * nvme_mi_for_each_endpoint - Iterator for NVMe-MI endpoints.
+ * @m: &nvme_root_t containing endpoints
+ * @e: &nvme_mi_ep_t object, set on each iteration
+ */
+#define nvme_mi_for_each_endpoint(m, e)			\
+	for (e = nvme_mi_first_endpoint(m); e != NULL;	\
+	     e = nvme_mi_next_endpoint(m, e))
+
 struct nvme_mi_ctrl;
 
 /**

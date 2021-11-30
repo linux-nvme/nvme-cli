@@ -118,6 +118,7 @@ struct nvme_host {
 struct nvme_root {
 	char *config_file;
 	struct list_head hosts;
+	struct list_head endpoints; /* MI endpoints */
 	FILE *fp;
 	int log_level;
 	bool log_pid;
@@ -187,6 +188,7 @@ struct nvme_mi_ep {
 	struct nvme_root *root;
 	const struct nvme_mi_transport *transport;
 	void *transport_data;
+	struct list_node root_entry;
 };
 
 struct nvme_mi_ctrl {

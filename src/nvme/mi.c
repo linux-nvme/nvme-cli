@@ -32,6 +32,8 @@ nvme_root_t nvme_mi_create_root(FILE *fp, int log_level)
 	r->fp = stderr;
 	if (fp)
 		r->fp = fp;
+	list_head_init(&r->hosts);
+	list_head_init(&r->endpoints);
 	return r;
 }
 
@@ -44,7 +46,8 @@ struct nvme_mi_ep *nvme_mi_init_ep(nvme_root_t root)
 {
 	struct nvme_mi_ep *ep;
 
-	ep = malloc(sizeof(*ep));
+	ep = calloc(1, sizeof(*ep));
+	list_node_init(&ep->root_entry);
 	ep->root = root;
 
 	return ep;
@@ -610,6 +613,7 @@ void nvme_mi_close(nvme_mi_ep_t ep)
 {
 	if (ep->transport->close)
 		ep->transport->close(ep);
+	list_del(&ep->root_entry);
 	free(ep);
 }
 
@@ -646,4 +650,14 @@ char *nvme_mi_endpoint_desc(nvme_mi_ep_t ep)
 		return NULL;
 
 	return s;
+}
+
+nvme_mi_ep_t nvme_mi_first_endpoint(nvme_root_t m)
+{
+	return list_top(&m->endpoints, struct nvme_mi_ep, root_entry);
+}
+
+nvme_mi_ep_t nvme_mi_next_endpoint(nvme_root_t m, nvme_mi_ep_t ep)
+{
+	return ep ? list_next(&m->endpoints, ep, root_entry) : NULL;
 }
