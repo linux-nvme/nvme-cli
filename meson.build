@@ -78,6 +78,10 @@ if openssl_dep.found()
            description: 'OpenSSL version 3.x')
 endif
 
+# Check for libsystemd availability. Optional, only required for MCTP dbus scan
+libsystemd_dep = dependency('libsystemd', required: false)
+conf.set('CONFIG_LIBSYSTEMD', libsystemd_dep.found(), description: 'Is libsystemd available?')
+
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
     'HAVE_BUILTIN_TYPES_COMPATIBLE_P',

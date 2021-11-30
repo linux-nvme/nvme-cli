@@ -21,6 +21,12 @@
 
 #include <ccan/endian/endian.h>
 
+#ifdef CONFIG_LIBSYSTEMD
+#include <systemd/sd-event.h>
+#include <systemd/sd-bus.h>
+#include <systemd/sd-id128.h>
+#endif
+
 #include "private.h"
 #include "log.h"
 #include "mi.h"
@@ -73,6 +79,10 @@ struct nvme_mi_transport_mctp {
 	__u8	eid;
 	int	sd;
 };
+
+#define MCTP_DBUS_PATH "/xyz/openbmc_project/mctp"
+#define MCTP_DBUS_IFACE "xyz.openbmc_project.MCTP"
+#define MCTP_DBUS_IFACE_ENDPOINT "xyz.openbmc_project.MCTP.Endpoint"
 
 static const struct nvme_mi_transport nvme_mi_transport_mctp;
 
@@ -245,3 +255,294 @@ err_free_ep:
 	free(ep);
 	return NULL;
 }
+
+#ifdef CONFIG_LIBSYSTEMD
+
+static void _dbus_err(nvme_root_t root, int rc, int line) {
+	nvme_msg(root, LOG_ERR, "MCTP D-Bus failed line %d: %s %d\n",
+		line, strerror(-rc), rc);
+}
+
+#define dbus_err(r, rc) _dbus_err(r, rc, __LINE__)
+
+/* Returns -EEXISTS on duplicate */
+static int nvme_mi_mctp_add(nvme_root_t root, unsigned int netid, __u8 eid)
+{
+	nvme_mi_ep_t ep = NULL;
+
+	/* ensure we don't already have an endpoint with the same net/eid */
+	list_for_each(&root->endpoints, ep, root_entry) {
+		if (ep->transport != &nvme_mi_transport_mctp) {
+			continue;
+		}
+		const struct nvme_mi_transport_mctp *t = ep->transport_data;
+		if (t->eid == eid && t->net == netid) {
+			return -EEXIST;
+		}
+	}
+
+	ep = nvme_mi_open_mctp(root, netid, eid);
+	if (!ep) {
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+/* We can't rely on sd_bus_message_enter_container() == 0 at the end of
+   a dictionary (it returns -ENXIO) so we test separately */
+static bool container_end(sd_bus_message *m)
+{
+	return sd_bus_message_peek_type(m, NULL, NULL) == 0;
+}
+
+static int handle_mctp_endpoint(nvme_root_t root, const char* objpath,
+	sd_bus_message *m)
+{
+	bool have_eid = false, have_net = false, have_nvmemi = false;
+	mctp_eid_t eid;
+	int net;
+	int rc;
+
+	/* Iterate properties on this interface */
+	while (!container_end(m)) {
+		/* Enter property dict */
+		rc = sd_bus_message_enter_container(m, 'a', "{sv}");
+		if (rc < 0) {
+			dbus_err(root, rc);
+			return rc;
+		}
+
+		while (!container_end(m)) {
+			char *propname = NULL;
+			size_t sz;
+			const uint8_t *types = NULL;
+			/* Enter property item */
+			rc = sd_bus_message_enter_container(m, 'e', "sv");
+			if (rc < 0) {
+				dbus_err(root, rc);
+				return rc;
+			}
+
+			rc = sd_bus_message_read(m, "s", &propname);
+			if (rc < 0) {
+				dbus_err(root, rc);
+				return rc;
+			}
+
+			if (strcmp(propname, "EID") == 0) {
+				rc = sd_bus_message_read(m, "v", "y", &eid);
+				have_eid = true;
+			} else if (strcmp(propname, "NetworkId") == 0) {
+				rc = sd_bus_message_read(m, "v", "i", &net);
+				have_net = true;
+			} else if (strcmp(propname, "SupportedMessageTypes") == 0) {
+				sd_bus_message_enter_container(m, 'v', "ay");
+				rc = sd_bus_message_read_array(m, 'y', (const void**)&types, &sz);
+				if (rc >= 0)
+					for (size_t s = 0; s < sz; s++)
+						if (types[s] == MCTP_TYPE_NVME)
+							have_nvmemi = true;
+				sd_bus_message_exit_container(m);
+			} else {
+				rc = sd_bus_message_skip(m, "v");
+			}
+
+			if (rc < 0) {
+				dbus_err(root, rc);
+				return rc;
+			}
+
+			/* Exit prop item */
+			rc = sd_bus_message_exit_container(m);
+			if (rc < 0) {
+				dbus_err(root, rc);
+				return rc;
+			}
+		}
+
+		/* Exit property dict */
+		rc = sd_bus_message_exit_container(m);
+		if (rc < 0) {
+			dbus_err(root, rc);
+			return rc;
+		}
+	}
+
+	if (have_nvmemi) {
+		if (!(have_eid && have_net)) {
+			nvme_msg(root, LOG_ERR,
+				 "Missing property for %s\n", objpath);
+			return -ENOENT;
+		}
+		rc = nvme_mi_mctp_add(root, net, eid);
+		if (rc < 0) {
+			nvme_msg(root, LOG_ERR,
+				 "Error adding net %d eid %d: %s\n",
+				net, eid, strerror(-rc));
+		}
+	} else {
+		/* Ignore other endpoints */
+		rc = 0;
+	}
+	return rc;
+}
+
+static int handle_mctp_obj(nvme_root_t root, sd_bus_message *m)
+{
+	char *objpath = NULL;
+	char *ifname = NULL;
+	int rc;
+
+	rc = sd_bus_message_read(m, "o", &objpath);
+	if (rc < 0) {
+		dbus_err(root, rc);
+		return rc;
+	}
+
+	/* Enter response object: our array of (string, property dict)
+	 * values */
+	rc = sd_bus_message_enter_container(m, 'a', "{sa{sv}}");
+	if (rc < 0) {
+		dbus_err(root, rc);
+		return rc;
+	}
+
+
+	/* for each interface */
+	while (!container_end(m)) {
+		/* Enter interface item */
+		rc = sd_bus_message_enter_container(m, 'e', "sa{sv}");
+		if (rc < 0) {
+			dbus_err(root, rc);
+			return rc;
+		}
+
+		rc = sd_bus_message_read(m, "s", &ifname);
+		if (rc < 0) {
+			dbus_err(root, rc);
+			return rc;
+		}
+
+		if (!strcmp(ifname, MCTP_DBUS_IFACE_ENDPOINT)) {
+
+			rc = handle_mctp_endpoint(root, objpath, m);
+			if (rc < 0) {
+				/* continue to next object */
+			}
+		} else {
+			/* skip the interfaces we don't care about */
+			rc = sd_bus_message_skip(m, "a{sv}");
+			if (rc < 0) {
+				dbus_err(root, rc);
+				return rc;
+			}
+		}
+
+		/* Exit interface item */
+		rc = sd_bus_message_exit_container(m);
+		if (rc < 0) {
+			dbus_err(root, rc);
+			return rc;
+		}
+	}
+
+	/* Exit response object */
+	rc = sd_bus_message_exit_container(m);
+	if (rc < 0) {
+		dbus_err(root, rc);
+		return rc;
+	}
+
+	return 0;
+}
+
+nvme_root_t nvme_mi_scan_mctp(void)
+{
+	sd_bus *bus = NULL;
+	sd_bus_message *resp = NULL;
+	sd_bus_error berr = SD_BUS_ERROR_NULL;
+	nvme_root_t root;
+	int rc;
+
+	root = nvme_mi_create_root(NULL, DEFAULT_LOGLEVEL);
+	if (!root) {
+		rc = -ENOMEM;
+		goto out;
+	}
+
+	rc = sd_bus_default_system(&bus);
+	if (rc < 0) {
+		nvme_msg(root, LOG_ERR, "Failed opening D-Bus: %s\n",
+			 strerror(-rc));
+		goto out;
+	}
+
+	rc = sd_bus_call_method(bus,
+			       MCTP_DBUS_IFACE,
+			       MCTP_DBUS_PATH,
+			       "org.freedesktop.DBus.ObjectManager",
+			       "GetManagedObjects",
+			       &berr,
+			       &resp,
+			       "");
+	if (rc < 0) {
+		nvme_msg(root, LOG_ERR, "Failed querying MCTP D-Bus: %s (%s)\n",
+			 berr.message, berr.name);
+		goto out;
+	}
+
+	rc = sd_bus_message_enter_container(resp, 'a', "{oa{sa{sv}}}");
+	if (rc != 1) {
+		dbus_err(root, rc);
+		if (rc == 0)
+			rc = -EPROTO;
+		goto out;
+	}
+
+	/* Iterate over all managed objects */
+	while (!container_end(resp)) {
+		rc = sd_bus_message_enter_container(resp, 'e', "oa{sa{sv}}");
+		if (rc < 0) {
+			dbus_err(root, rc);
+			goto out;
+		}
+
+		handle_mctp_obj(root, resp);
+
+		rc = sd_bus_message_exit_container(resp);
+		if (rc < 0) {
+			dbus_err(root, rc);
+			goto out;
+		}
+	}
+
+	rc = sd_bus_message_exit_container(resp);
+	if (rc < 0) {
+		dbus_err(root, rc);
+		goto out;
+	}
+	rc = 0;
+
+out:
+	sd_bus_error_free(&berr);
+	sd_bus_message_unref(resp);
+	sd_bus_unref(bus);
+
+	if (rc < 0) {
+		if (root) {
+			nvme_mi_free_root(root);
+		}
+		root = NULL;
+	}
+	return root;
+}
+
+#else /* CONFIG_LIBSYSTEMD */
+
+nvme_root_t nvme_mi_scan_mctp(void)
+{
+	return NULL;
+}
+
+#endif /* CONFIG_LIBSYSTEMD */

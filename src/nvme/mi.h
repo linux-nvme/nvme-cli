@@ -361,6 +361,20 @@ nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, uint8_t eid
 void nvme_mi_close(nvme_mi_ep_t ep);
 
 /**
+ * nvme_mi_scan_mctp - look for MCTP-connected NVMe-MI endpoints.
+ *
+ * This function queries the system mctp daemon ("mctpd") over dbus, to find
+ * MCTP endpoints that report support for NVMe-MI over MCTP.
+ *
+ * This requires libvnme-mi to be compiled with D-Bus support; if not, this
+ * will return NULL.
+ *
+ * Return: A @nvme_root_t populated with a set of MCTP-connected endpoints,
+ *         or NULL on failure
+ */
+nvme_root_t nvme_mi_scan_mctp(void);
+
+/**
  * nvme_mi_init_ctrl() - initialise a NVMe controller.
  * @ep: Endpoint to create under
  * @ctrl_id: ID of controller to initialise.

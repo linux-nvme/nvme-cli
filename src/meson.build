@@ -35,6 +35,7 @@ deps = [
 
 mi_deps = [
     libuuid_dep,
+    libsystemd_dep,
 ]
 
 source_dir = meson.current_source_dir()
