@@ -517,18 +517,60 @@ enum action {
 	ACTION_SECURITY_INFO,
 };
 
+static int do_action_endpoint(enum action action, nvme_mi_ep_t ep, int argc, char** argv)
+{
+	int rc;
+
+	switch (action) {
+	case ACTION_INFO:
+		rc = do_info(ep);
+		break;
+	case ACTION_CONTROLLERS:
+		rc = do_controllers(ep);
+		break;
+	case ACTION_IDENTIFY:
+		rc = do_identify(ep, argc, argv);
+		break;
+	case ACTION_GET_LOG_PAGE:
+		rc = do_get_log_page(ep, argc, argv);
+		break;
+	case ACTION_ADMIN_RAW:
+		rc = do_admin_raw(ep, argc, argv);
+		break;
+	case ACTION_SECURITY_INFO:
+		rc = do_security_info(ep, argc, argv);
+		break;
+	}
+	return rc;
+}
+
 int main(int argc, char **argv)
 {
 	enum action action;
 	nvme_root_t root;
 	nvme_mi_ep_t ep;
+	bool dbus = false, usage = true;
 	uint8_t eid;
-	int rc, net;
+	int rc = 0, net;
 
-	if (argc < 3) {
+	if (argc >= 2 && strcmp(argv[1], "dbus") == 0) {
+		usage = false;
+		dbus= true;
+		argv += 1;
+		argc -= 1;
+	} else if (argc >= 3) {
+		usage = false;
+		net = atoi(argv[1]);
+		eid = atoi(argv[2]) & 0xff;
+		argv += 2;
+		argc -= 2;
+	}
+
+	if (usage) {
 		fprintf(stderr,
-			"usage: %s <net> <eid> [action] [action args]\n",
-			argv[0]);
+			"usage: %s <net> <eid> [action] [action args]\n"
+			"       %s 'dbus'      [action] [action args]\n",
+			argv[0], argv[0]);
 		fprintf(stderr, "where action is:\n"
 			"  info\n"
 			"  controllers\n"
@@ -536,14 +578,11 @@ int main(int argc, char **argv)
 			"  get-log-page <controller-id> [<log-id>]\n"
 			"  admin <controller-id> <opcode> [<cdw10>, <cdw11>, ...]\n"
 			"  security-info <controller-id>\n"
+			"\n"
+			"  'dbus' target will query D-Bus for known MCTP endpoints\n"
 			);
 		return EXIT_FAILURE;
 	}
-
-	net = atoi(argv[1]);
-	eid = atoi(argv[2]) & 0xff;
-	argv += 2;
-	argc -= 2;
 
 	if (argc == 1) {
 		action = ACTION_INFO;
@@ -569,39 +608,36 @@ int main(int argc, char **argv)
 			return EXIT_FAILURE;
 		}
 	}
+	if (dbus) {
+		nvme_root_t root;
+		int i = 0;
 
-	root = nvme_mi_create_root(stderr, DEFAULT_LOGLEVEL);
-	if (!root)
-		err(EXIT_FAILURE, "can't create NVMe root");
+		root = nvme_mi_scan_mctp();
+		if (!root)
+			errx(EXIT_FAILURE, "can't scan D-Bus entries");
 
-	ep = nvme_mi_open_mctp(root, net, eid);
-	if (!ep)
-		err(EXIT_FAILURE, "can't open MCTP endpoint %d:%d", net, eid);
+		nvme_mi_for_each_endpoint(root, ep) i++;
+		printf("Found %d endpoints in D-Bus:\n", i);
+		nvme_mi_for_each_endpoint(root, ep) {
+			char *desc = nvme_mi_endpoint_desc(ep);
+			printf("%s\n", desc);
+			rc = do_action_endpoint(action, ep, argc, argv);
+			printf("---\n");
+			free(desc);
+		}
+		nvme_mi_free_root(root);
+	} else {
+		root = nvme_mi_create_root(stderr, DEFAULT_LOGLEVEL);
+		if (!root)
+			err(EXIT_FAILURE, "can't create NVMe root");
 
-	switch (action) {
-	case ACTION_INFO:
-		rc = do_info(ep);
-		break;
-	case ACTION_CONTROLLERS:
-		rc = do_controllers(ep);
-		break;
-	case ACTION_IDENTIFY:
-		rc = do_identify(ep, argc, argv);
-		break;
-	case ACTION_GET_LOG_PAGE:
-		rc = do_get_log_page(ep, argc, argv);
-		break;
-	case ACTION_ADMIN_RAW:
-		rc = do_admin_raw(ep, argc, argv);
-		break;
-	case ACTION_SECURITY_INFO:
-		rc = do_security_info(ep, argc, argv);
-		break;
+		ep = nvme_mi_open_mctp(root, net, eid);
+		if (!ep)
+			errx(EXIT_FAILURE, "can't open MCTP endpoint %d:%d", net, eid);
+		rc = do_action_endpoint(action, ep, argc, argv);
+		nvme_mi_close(ep);
+		nvme_mi_free_root(root);
 	}
-
-	nvme_mi_close(ep);
-
-	nvme_mi_free_root(root);
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
