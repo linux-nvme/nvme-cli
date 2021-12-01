@@ -3054,6 +3054,8 @@ enum nvme_persistent_event_types {
     NVME_PEL_FORMAT_COMPLETION_EVENT	= 0x08,
     NVME_PEL_SANITIZE_START_EVENT	= 0x09,
     NVME_PEL_SANITIZE_COMPLETION_EVENT	= 0x0a,
+    NVME_PEL_SET_FEATURE_EVENT		= 0x0b,
+    NVME_PEL_TELEMETRY_CRT		= 0x0c,
     NVME_PEL_THERMAL_EXCURSION_EVENT	= 0x0d,
 };
 
@@ -3130,6 +3132,12 @@ struct nvme_sanitize_compln_event {
 	__le16	sani_status;
 	__le16	cmpln_info;
 	__u8	rsvd6[2];
+};
+
+/* persistent event type 0Bh */
+struct nvme_set_feature_event {
+	__le32	layout;
+	__le32	cdw_mem[0];
 };
 
 struct nvme_thermal_exc_event {
