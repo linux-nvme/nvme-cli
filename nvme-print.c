@@ -1053,6 +1053,26 @@ void nvme_show_predictable_latency_event_agg_log(
 	}
 }
 
+const char *nvme_pel_event_to_string(int type)
+{
+	switch (type) {
+	case NVME_PEL_SMART_HEALTH_EVENT:	return "SMART/Health Log Snapshot Event(0x1)";
+	case NVME_PEL_FW_COMMIT_EVENT:	return "Firmware Commit Event(0x2)";
+	case NVME_PEL_TIMESTAMP_EVENT:	return "Timestamp Change Event(0x3)";
+	case NVME_PEL_POWER_ON_RESET_EVENT:	return "Power-on or Reset Event(0x4)";
+	case NVME_PEL_NSS_HW_ERROR_EVENT:	return "NVM Subsystem Hardware Error Event(0x5)";
+	case NVME_PEL_CHANGE_NS_EVENT:	return "Change Namespace Event(0x6)";
+	case NVME_PEL_FORMAT_START_EVENT:	return "Format NVM Start Event(0x7)";
+	case NVME_PEL_FORMAT_COMPLETION_EVENT:	return "Format NVM Completion Event(0x8)";
+	case NVME_PEL_SANITIZE_START_EVENT:	return "Sanitize Start Event(0x9)";
+	case NVME_PEL_SANITIZE_COMPLETION_EVENT:	return "Sanitize Completion Event(0xa)";
+	case NVME_PEL_SET_FEATURE_EVENT:	return "Set Feature Event(0xb)";
+	case NVME_PEL_TELEMETRY_CRT:		return "Set Telemetry CRT  Event(0xc)";
+	case NVME_PEL_THERMAL_EXCURSION_EVENT:	return "Thermal Excursion Event(0xd)";
+	default:			return NULL;
+	}
+}
+
 static const char *nvme_show_nss_hw_error(__u16 error_code)
 {
 	switch (error_code) {
@@ -1078,6 +1098,29 @@ static const char *nvme_show_nss_hw_error(__u16 error_code)
 		return "Media and Data Integrity Status";
 	default:
 		return "Reserved";
+	}
+}
+
+void add_bitmap(int i, __u8 seb, struct json_object *root, int json_flag)
+{
+	char evt_str[50];
+	char key[128];
+
+	for (int bit = 0; bit < 8; bit++) {
+		if (nvme_pel_event_to_string(bit + i * 8)) {
+			if (json_flag == 1) {
+				sprintf(key, "bitmap_%x", (bit + i * 8));
+				if ((seb >> bit) & 0x1)
+					snprintf(evt_str, sizeof(evt_str), "Support %s",
+						nvme_pel_event_to_string(bit + i * 8));
+				json_object_add_value_string(root, key, evt_str);
+			} else {
+				if (nvme_pel_event_to_string(bit + i * 8))
+					if ((seb >> bit) & 0x1)
+						printf("	Support %s\n",
+							nvme_pel_event_to_string(bit + i * 8));
+			}
+		}
 	}
 }
 
@@ -1151,9 +1194,7 @@ void json_persistent_event_log(void *pevent_log_info, __u32 size)
 		for (int i = 0; i < 32; i++) {
 			if (pevent_log_head->seb[i] == 0)
 				continue;
-			sprintf(key, "bitmap_%d", i);
-			json_object_add_value_uint(root, key,
-				pevent_log_head->seb[i]);
+			add_bitmap(i, pevent_log_head->seb[i], root, 1);
 		}
 	} else {
 		printf("No log data can be shown with this log len at least " \
@@ -1479,12 +1520,11 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			le32_to_cpu(pevent_log_head->rci));
 		if (human)
 			nvme_show_persistent_event_log_rci(pevent_log_head->rci);
-		printf("Supported Events Bitmap: ");
+		printf("Supported Events Bitmap: \n");
 		for (int i = 0; i < 32; i++) {
 			if (pevent_log_head->seb[i] == 0)
 				continue;
-			printf("  BitMap[%d] is 0x%x\n", i,
-				pevent_log_head->seb[i]);
+			add_bitmap(i, pevent_log_head->seb[i], NULL, 0);
 		}
 	} else {
 		printf("No log data can be shown with this log len at least " \
