@@ -3830,7 +3830,7 @@ enum nvme_ae_info_notice {
 };
 
 /**
- * enum nvme_subsys_type -
+ * enum nvme_subsys_type - Type of the NVM subsystem.
  * @NVME_NQN_DISC:		Discovery type target subsystem
  * @NVME_NQN_NVME:		NVME type target subsystem
  * @NVME_NQN_CURR:		Current Discovery type target subsystem
@@ -3855,24 +3855,54 @@ enum nvme_subsys_type {
 #define NVMF_DISC_EFLAGS_BOTH		3
 
 /**
- * struct nvmf_disc_log_entry - Discovery log page entry
- * @trtype:
- * @adrfam:
- * @subtype:
- * @treq:
- * @portid:
- * @cntlid:
- * @asqsz:
+ * struct nvmf_disc_log_entry - Discovery Log Page entry
+ * @trtype:  Transport Type (TRTYPE): Specifies the NVMe Transport type.
+ * 	     See &enum nvmf_trtype.
+ * @adrfam:  Address Family (ADRFAM): Specifies the address family.
+ * 	     See &enum nvmf_addr_family.
+ * @subtype: Subsystem Type (SUBTYPE): Specifies the type of the NVM subsystem
+ * 	     that is indicated in this entry. See &enum nvme_subsys_type.
+ * @treq:    Transport Requirements (TREQ): Indicates requirements for the NVMe
+ * 	     Transport. See &enum nvmf_treq.
+ * @portid:  Port ID (PORTID): Specifies a particular NVM subsystem port.
+ * 	     Different NVMe Transports or address families may utilize the same
+ * 	     Port ID value (e.g. a Port ID may support both iWARP and RoCE).
+ * @cntlid:  Controller ID (CNTLID): Specifies the controller ID. If the NVM
+ * 	     subsystem uses a dynamic controller model, then this field shall
+ * 	     be set to FFFFh. If the NVM subsystem uses a static controller model,
+ * 	     then this field may be set to a specific controller ID (values 0h
+ * 	     to FFEFh are valid). If the NVM subsystem uses a static controller
+ * 	     model and the value indicated is FFFEh, then the host should remember
+ * 	     the Controller ID returned as part of the Fabrics Connect command
+ * 	     in order to re-establish an association in the future with the same
+ * 	     controller.
+ * @asqsz:   Admin Max SQ Size (ASQSZ): Specifies the maximum size of an Admin
+ * 	     Submission Queue. This applies to all controllers in the NVM
+ * 	     subsystem. The value shall be a minimum of 32 entries.
  * @eflags:
- * @trsvcid:
- * @subnqn:
- * @traddr:
+ * @trsvcid: Transport Service Identifier (TRSVCID): Specifies the NVMe Transport
+ * 	     service identifier as an ASCII string. The NVMe Transport service
+ * 	     identifier is specified by the associated NVMe Transport binding
+ * 	     specification.
+ * @subnqn:  NVM Subsystem Qualified Name (SUBNQN): NVMe Qualified Name (NQN)
+ * 	     that uniquely identifies the NVM subsystem. For a Discovery Service,
+ * 	     the value returned shall be the well-known Discovery Service NQN
+ * 	     (nqn.2014-08.org.nvmexpress.discovery).
+ * @traddr:  Transport Address (TRADDR): Specifies the address of the NVM subsystem
+ * 	     that may be used for a Connect command as an ASCII string. The
+ * 	     Address Family field describes the reference for parsing this field.
  * @common:
- * @qptype:
- * @prtype:
- * @cms:
- * @pkey:
- * @sectype:
+ * @qptype:  RDMA QP Service Type (RDMA_QPTYPE): Specifies the type of RDMA
+ * 	     Queue Pair. See &enum nvmf_rdma_qptype.
+ * @prtype:  RDMA Provider Type (RDMA_PRTYPE): Specifies the type of RDMA
+ * 	     provider. See &enum nvmf_rdma_prtype.
+ * @cms:     RDMA Connection Management Service (RDMA_CMS): Specifies the type
+ * 	     of RDMA IP Connection Management Service. See &enum nvmf_rdma_cms.
+ * @pkey:    RDMA_PKEY: Specifies the Partition Key when AF_IB (InfiniBand)
+ * 	     address family type is used.
+ * @sectype: Security Type (SECTYPE): Specifies the type of security used by the
+ * 	     NVMe/TCP port. If SECTYPE is a value of 0h (No Security), then the
+ * 	     host shall set up a normal TCP connection. See &enum nvmf_tcp_sectype.
  */
 struct nvmf_disc_log_entry {
 	__u8		trtype;
@@ -3905,14 +3935,15 @@ struct nvmf_disc_log_entry {
 };
 
 /**
- * enum - Transport Type codes for Discovery Log Page entry TRTYPE field
+ * enum nvmf_trtype - Transport Type codes for Discovery Log Page entry TRTYPE field
  * @NVMF_TRTYPE_UNSPECIFIED:	Not indicated
  * @NVMF_TRTYPE_RDMA:		RDMA
  * @NVMF_TRTYPE_FC:		Fibre Channel
  * @NVMF_TRTYPE_TCP:		TCP
- * @NVMF_TRTYPE_LOOP:		Reserved for host usage
+ * @NVMF_TRTYPE_LOOP:		Intra-host Transport (i.e., loopback), reserved
+ * 				for host usage.
  */
-enum nvme_trtype {
+enum nvmf_trtype {
 	NVMF_TRTYPE_UNSPECIFIED	= 0,
 	NVMF_TRTYPE_RDMA	= 1,
 	NVMF_TRTYPE_FC		= 2,
@@ -3922,23 +3953,26 @@ enum nvme_trtype {
 };
 
 /**
- * enum - Address Family codes for Discovery Log Page entry ADRFAM field
+ * enum nvmf_addr_family - Address Family codes for Discovery Log Page entry ADRFAM field
  * @NVMF_ADDR_FAMILY_PCI:	PCIe
- * @NVMF_ADDR_FAMILY_IP4:	IPv4
- * @NVMF_ADDR_FAMILY_IP6:	IPv6
- * @NVMF_ADDR_FAMILY_IB:	InfiniBand
- * @NVMF_ADDR_FAMILY_FC:	Fibre Channel
+ * @NVMF_ADDR_FAMILY_IP4:	AF_INET: IPv4 address family.
+ * @NVMF_ADDR_FAMILY_IP6:	AF_INET6: IPv6 address family.
+ * @NVMF_ADDR_FAMILY_IB:	AF_IB: InfiniBand address family.
+ * @NVMF_ADDR_FAMILY_FC:	Fibre Channel address family.
+ * @NVMF_ADDR_FAMILY_LOOP:	Intra-host Transport (i.e., loopback), reserved
+ * 				for host usage.
  */
-enum nvmf_addr_familiy {
+enum nvmf_addr_family {
 	NVMF_ADDR_FAMILY_PCI	= 0,
 	NVMF_ADDR_FAMILY_IP4	= 1,
 	NVMF_ADDR_FAMILY_IP6	= 2,
 	NVMF_ADDR_FAMILY_IB	= 3,
 	NVMF_ADDR_FAMILY_FC	= 4,
+	NVMF_ADDR_FAMILY_LOOP	= 254,
 };
 
 /**
- * enum - Transport Requirements codes for Discovery Log Page entry TREQ field
+ * enum nvmf_treq - Transport Requirements codes for Discovery Log Page entry TREQ field
  * @NVMF_TREQ_NOT_SPECIFIED:	Not specified
  * @NVMF_TREQ_REQUIRED:		Required
  * @NVMF_TREQ_NOT_REQUIRED:	Not Required
@@ -3952,26 +3986,26 @@ enum nvmf_treq {
 };
 
 /**
- * enum - RDMA QP Service Type codes for Discovery Log Page entry TSAS
- *	  RDMA_QPTYPE field
+ * enum nvmf_rdma_qptype - RDMA QP Service Type codes for Discovery Log Page
+ *	   entry TSAS RDMA_QPTYPE field
  * @NVMF_RDMA_QPTYPE_CONNECTED:	Reliable Connected
  * @NVMF_RDMA_QPTYPE_DATAGRAM:	Reliable Datagram
  */
-enum {
+enum nvmf_rdma_qptype {
 	NVMF_RDMA_QPTYPE_CONNECTED	= 1,
 	NVMF_RDMA_QPTYPE_DATAGRAM	= 2,
 };
 
 /**
- * enum - RDMA Provider Type codes for Discovery Log Page entry TSAS
- * 	  RDMA_PRTYPE field
+ * enum nvmf_rdma_prtype - RDMA Provider Type codes for Discovery Log Page
+ * 	  entry TSAS RDMA_PRTYPE field
  * @NVMF_RDMA_PRTYPE_NOT_SPECIFIED: No Provider Specified
  * @NVMF_RDMA_PRTYPE_IB:	    InfiniBand
  * @NVMF_RDMA_PRTYPE_ROCE:	    InfiniBand RoCE
  * @NVMF_RDMA_PRTYPE_ROCEV2:	    InfiniBand RoCEV2
  * @NVMF_RDMA_PRTYPE_IWARP:	    iWARP
  */
-enum  nvme_rdma_prtype {
+enum nvmf_rdma_prtype {
 	NVMF_RDMA_PRTYPE_NOT_SPECIFIED	= 1,
 	NVMF_RDMA_PRTYPE_IB		= 2,
 	NVMF_RDMA_PRTYPE_ROCE		= 3,
@@ -3980,31 +4014,43 @@ enum  nvme_rdma_prtype {
 };
 
 /**
- * enum - RDMA Connection Management Service Type codes for Discovery Log Page
- * 	  entry TSAS RDMA_CMS field
+ * enum nvmf_rdma_cms - RDMA Connection Management Service Type codes for
+ * 	  Discovery Log Page entry TSAS RDMA_CMS field
  * @NVMF_RDMA_CMS_RDMA_CM: Sockets based endpoint addressing
  *
  */
-enum {
+enum nvmf_rdma_cms {
 	NVMF_RDMA_CMS_RDMA_CM	= 1,
 };
 
 /**
- * enum -
- * @NVMF_TCP_SECTYPE_NONE: No Security
- * @NVMF_TCP_SECTYPE_TLS:  Transport Layer Security
+ * enum nvmf_tcp_sectype - Transport Specific Address Subtype Definition for
+ * 	  NVMe/TCP Transport
+ * @NVMF_TCP_SECTYPE_NONE:  No Security
+ * @NVMF_TCP_SECTYPE_TLS:   Transport Layer Security version 1.2
+ * @NVMF_TCP_SECTYPE_TLS13: Transport Layer Security version 1.3 or a subsequent
+ * 			    version. The TLS protocol negotiates the version and
+ * 			    cipher suite for each TCP connection.
  */
-enum {
+enum nvmf_tcp_sectype {
 	NVMF_TCP_SECTYPE_NONE	= 0,
 	NVMF_TCP_SECTYPE_TLS	= 1,
+	NVMF_TCP_SECTYPE_TLS13	= 2,
 };
 
 /**
- * struct nvmf_discovery_log -
- * @genctr:
- * @numrec:
- * @recfmt:
- * @entries:
+ * struct nvmf_discovery_log - Discovery Log Page (Log Identifier 70h)
+ * @genctr:  Generation Counter (GENCTR): Indicates the version of the discovery
+ * 	     information, starting at a value of 0h. For each change in the
+ * 	     Discovery Log Page, this counter is incremented by one. If the value
+ * 	     of this field is FFFFFFFF_FFFFFFFFh, then the field shall be cleared
+ * 	     to 0h when incremented (i.e., rolls over to 0h).
+ * @numrec:  Number of Records (NUMREC): Indicates the number of records
+ * 	     contained in the log.
+ * @recfmt:  Record Format (RECFMT): Specifies the format of the Discovery Log
+ * 	     Page. If a new format is defined, this value is incremented by one.
+ * 	     The format of the record specified in this definition shall be 0h.
+ * @entries: Discovery Log Page Entries - see &struct nvmf_disc_log_entry.
  */
 struct nvmf_discovery_log {
 	__le64		genctr;
