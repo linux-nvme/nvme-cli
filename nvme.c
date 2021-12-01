@@ -4945,7 +4945,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 
 	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, (int *)ctx_attrs, ARRAY_SIZE(ctx_attrs));
 	nb = argconfig_parse_comma_sep_array(cfg.blocks, (int *)nlbs, ARRAY_SIZE(nlbs));
-	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, slbas, ARRAY_SIZE(slbas));
+	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, (long long unsigned int *)slbas, ARRAY_SIZE(slbas));
 	nr = max(nc, max(nb, ns));
 	if (!nr || nr > 256) {
 		fprintf(stderr, "No range definition provided\n");
@@ -5090,7 +5090,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		}
 	}
 
-	nvme_init_copy_range(copy, nlbs, slbas, eilbrts, elbatms, elbats, nr);
+	nvme_init_copy_range(copy, nlbs, (__u64 *)slbas, eilbrts, elbatms, elbats, nr);
 
 	err = nvme_copy(fd, cfg.namespace_id, copy, cfg.sdlba, nr, cfg.prinfor,
 			cfg.prinfow, cfg.dtype, cfg.dspec, cfg.format, cfg.lr,
