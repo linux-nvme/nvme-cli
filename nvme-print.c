@@ -1712,6 +1712,9 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 
 			nvme_feature_show_fields(fid, cdw11, mem_buf);
 			break;
+		case NVME_PEL_TELEMETRY_CRT:
+			d(pevent_log_info + offset, 512, 16, 1);
+			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
 			thermal_exc_event = pevent_log_info + offset;
 			printf("Thermal Excursion Event Entry: \n");
