@@ -161,6 +161,13 @@ static int discover_err = 0;
    if ($1) free($1);
 }
 
+%{
+static void PyDict_SetItemStringDecRef(PyObject *p, const char *key, PyObject *val) {
+    PyDict_SetItemString(p, key, val); /* Does NOT steal reference to val .. */
+    Py_XDECREF(val);                   /* .. therefore decrement ref. count. */
+}
+%}
+
 %typemap(out) struct nvmf_discovery_log * {
   struct nvmf_discovery_log *log = $1;
   int numrec = log? log->numrec : 0, i;
@@ -190,7 +197,7 @@ static int discover_err = 0;
     default:
       val = PyLong_FromLong(e->trtype);
     }
-    PyDict_SetItemString(entry, "trtype", val);
+    PyDict_SetItemStringDecRef(entry, "trtype", val);
     switch (e->adrfam) {
     case NVMF_ADDR_FAMILY_PCI:
       val = PyUnicode_FromString("pci");
@@ -210,13 +217,13 @@ static int discover_err = 0;
     default:
       val = PyLong_FromLong(e->adrfam);
     }
-    PyDict_SetItemString(entry, "adrfam", val);
+    PyDict_SetItemStringDecRef(entry, "adrfam", val);
     val = PyUnicode_FromString(e->traddr);
-    PyDict_SetItemString(entry, "traddr", val);
+    PyDict_SetItemStringDecRef(entry, "traddr", val);
     val = PyUnicode_FromString(e->trsvcid);
-    PyDict_SetItemString(entry, "trsvcid", val);
+    PyDict_SetItemStringDecRef(entry, "trsvcid", val);
     val = PyUnicode_FromString(e->subnqn);
-    PyDict_SetItemString(entry, "subnqn", val);
+    PyDict_SetItemStringDecRef(entry, "subnqn", val);
     switch (e->subtype) {
     case NVME_NQN_DISC:
       val = PyUnicode_FromString("referral");
@@ -230,7 +237,7 @@ static int discover_err = 0;
     default:
       val = PyLong_FromLong(e->subtype);
     }
-    PyDict_SetItemString(entry, "subtype", val);
+    PyDict_SetItemStringDecRef(entry, "subtype", val);
     switch (e->treq) {
     case NVMF_TREQ_NOT_SPECIFIED:
       val = PyUnicode_FromString("not specified");
@@ -247,14 +254,14 @@ static int discover_err = 0;
     default:
       val = PyLong_FromLong(e->treq);
     }
-    PyDict_SetItemString(entry, "treq", val);
+    PyDict_SetItemStringDecRef(entry, "treq", val);
     val = PyLong_FromLong(e->portid);
-    PyDict_SetItemString(entry, "portid", val);
+    PyDict_SetItemStringDecRef(entry, "portid", val);
     val = PyLong_FromLong(e->cntlid);
-    PyDict_SetItemString(entry, "cntlid", val);
+    PyDict_SetItemStringDecRef(entry, "cntlid", val);
     val = PyLong_FromLong(e->asqsz);
-    PyDict_SetItemString(entry, "asqsz", val);
-    PyList_SetItem(obj, i, entry);
+    PyDict_SetItemStringDecRef(entry, "asqsz", val);
+    PyList_SetItem(obj, i, entry); /* steals ref. to entry */
   }
   $result = obj;
  };
