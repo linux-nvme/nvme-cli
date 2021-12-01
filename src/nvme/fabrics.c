@@ -958,7 +958,7 @@ char *nvmf_hostnqn_generate()
 	if (ret < 0)
 		return NULL;
 
-	if (asprintf(&hostnqn, "nqn.2014-08.org.nvmexpress:uuid:%s\n", uuid_str) < 0)
+	if (asprintf(&hostnqn, "nqn.2014-08.org.nvmexpress:uuid:%s", uuid_str) < 0)
 		return NULL;
 
 	return hostnqn;
