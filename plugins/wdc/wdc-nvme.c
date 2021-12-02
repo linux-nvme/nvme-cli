@@ -7310,25 +7310,25 @@ static const char *nvme_log_id_to_string(__u8 log_id)
 		case NVME_LOG_LID_RESERVATION:      return "Reservation Notification Log ID";
 		case NVME_LOG_LID_SANITIZE:	    return "Sanitize Status Log ID";
 
-		case WDC_LOG_ID_C0:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_C1:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_C2:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_C4:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_C5:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_C6:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_C8:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_CA:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_CB:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_D0:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_D1:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_D6:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_D7:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_D8:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_DE:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_F0:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_F1:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_F2:             return "WDC Vendor Unique Log ID";
-		case WDC_LOG_ID_FA:             return "WDC Vendor Unique Log ID";
+		case WDC_LOG_ID_C0:             return "WDC Vendor Unique Log ID C0";
+		case WDC_LOG_ID_C1:             return "WDC Vendor Unique Log ID C1";
+		case WDC_LOG_ID_C2:             return "WDC Vendor Unique Log ID C2";
+		case WDC_LOG_ID_C4:             return "WDC Vendor Unique Log ID C4";
+		case WDC_LOG_ID_C5:             return "WDC Vendor Unique Log ID C5";
+		case WDC_LOG_ID_C6:             return "WDC Vendor Unique Log ID C6";
+		case WDC_LOG_ID_C8:             return "WDC Vendor Unique Log ID C8";
+		case WDC_LOG_ID_CA:             return "WDC Vendor Unique Log ID CA";
+		case WDC_LOG_ID_CB:             return "WDC Vendor Unique Log ID CB";
+		case WDC_LOG_ID_D0:             return "WDC Vendor Unique Log ID D0";
+		case WDC_LOG_ID_D1:             return "WDC Vendor Unique Log ID D1";
+		case WDC_LOG_ID_D6:             return "WDC Vendor Unique Log ID D6";
+		case WDC_LOG_ID_D7:             return "WDC Vendor Unique Log ID D7";
+		case WDC_LOG_ID_D8:             return "WDC Vendor Unique Log ID D8";
+		case WDC_LOG_ID_DE:             return "WDC Vendor Unique Log ID DE";
+		case WDC_LOG_ID_F0:             return "WDC Vendor Unique Log ID F0";
+		case WDC_LOG_ID_F1:             return "WDC Vendor Unique Log ID F1";
+		case WDC_LOG_ID_F2:             return "WDC Vendor Unique Log ID F2";
+		case WDC_LOG_ID_FA:             return "WDC Vendor Unique Log ID FA";
 
 		default:                        return "Unknown Log ID";
 	}
@@ -7367,6 +7367,7 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 		fprintf(stderr, "%s: ERROR : WDC : invalid output format\n", __func__);
 		return ret;
 	}
+	ret = 0;
 
 	r = nvme_scan(NULL);
 	capabilities = wdc_get_drive_capabilities(r, fd);
