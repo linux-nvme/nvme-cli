@@ -294,6 +294,8 @@ enum nvme_cmd_dword_fields {
 	NVME_GET_LBA_STATUS_CDW13_ATYPE_SHIFT			= 24,
 	NVME_GET_LBA_STATUS_CDW13_RL_MASK			= 0xffff,
 	NVME_GET_LBA_STATUS_CDW13_ATYPE_MASK			= 0xff,
+	NVME_ZNS_MGMT_SEND_ZSASO_SHIFT				= 9,
+	NVME_ZNS_MGMT_SEND_ZSASO_MASK				= 0x1,
 	NVME_ZNS_MGMT_SEND_SEL_SHIFT				= 8,
 	NVME_ZNS_MGMT_SEND_SEL_MASK				= 0x1,
 	NVME_ZNS_MGMT_SEND_ZSA_SHIFT				= 0,
@@ -2034,13 +2036,14 @@ int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
 }
 
 int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba,
-		       enum nvme_zns_send_action zsa,
-		       bool select_all, __u32 data_len,
+		       enum nvme_zns_send_action zsa, bool select_all,
+		       __u8 zsaso, __u32 data_len,
 		       void *data, __u32 timeout, __u32 *result)
 {
 	__u32 cdw10 = slba & 0xffffffff;
 	__u32 cdw11 = slba >> 32;
-	__u32 cdw13 = NVME_SET(!!select_all, ZNS_MGMT_SEND_SEL) |
+	__u32 cdw13 = NVME_SET(zsaso, ZNS_MGMT_SEND_ZSASO) |
+			NVME_SET(!!select_all, ZNS_MGMT_SEND_SEL) |
 			NVME_SET(zsa, ZNS_MGMT_SEND_ZSA);
 
 	struct nvme_passthru_cmd cmd = {

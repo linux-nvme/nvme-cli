@@ -2714,6 +2714,7 @@ int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
  * @slba:	Starting logical block address
  * @zsa:	Zone send action
  * @select_all:	Select all flag
+ * @zsaso:	Zone Send Action Specific Option
  * @data_len:	Length of @data
  * @data:	Userspace address of the data
  * @timeout:	timeout in ms
@@ -2723,7 +2724,7 @@ int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba,
-		       enum nvme_zns_send_action zsa, bool select_all,
+		       enum nvme_zns_send_action zsa, bool select_all, __u8 zsaso,
 		       __u32 data_len, void *data,
 		       __u32 timeout, __u32 *result);
 
