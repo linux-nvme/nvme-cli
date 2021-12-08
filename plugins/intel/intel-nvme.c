@@ -560,13 +560,15 @@ enum inf_bound_type {
  * either of "-INF" or "+INF", respectively.
  */
 static void set_unit_string(char *buffer, __u32 microseconds,
-	enum FormatUnit unit, enum inf_bound_type bound_type)
+			    enum FormatUnit unit,
+			    enum inf_bound_type bound_type)
 {
+	char *string;
+
 	if (bound_type != NOINF) {
-		snprintf(buffer, 5, "%s", bound_type ? "+INF" : "-INF");
+		snprintf(buffer, BUFSIZE, "%s", bound_type ? "+INF" : "-INF");
 		return;
 	}
-	char *string;
 
 	switch (unit) {
 	case US:
@@ -582,8 +584,9 @@ static void set_unit_string(char *buffer, __u32 microseconds,
 		string = "_s";
 		break;
 	}
-	snprintf(buffer, 11, "%4.2f%s",
-		convert_seconds(microseconds), string);
+
+	snprintf(buffer, BUFSIZE, "%4.2f%s", convert_seconds(microseconds),
+		 string);
 }
 
 static void init_buffer(char *buffer, size_t size)
