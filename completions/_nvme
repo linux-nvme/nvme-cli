@@ -10,7 +10,7 @@ _nvme () {
 	'id-ctrl:display information about the controller'
 	'id-ns:display information about the namespace'
 	'list-ns:identify all namespace(s) attached'
-	'cmdset-ind-id-ns':display I/O Command Set Independent information about the namespace'
+	'cmdset-ind-id-ns:display I/O Command Set Independent information about the namespace'
 	'id-iocs:display information about I/O command sets'
 	'id-domain:display information about domain list'
 	'create-ns:create a new namespace before attachment'
