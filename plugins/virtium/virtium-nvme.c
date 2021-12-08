@@ -1,53 +1,53 @@
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
+#include <locale.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <stddef.h>
-#include <inttypes.h>
-#include <stdbool.h>
 #include <time.h>
-#include <locale.h>
+#include <unistd.h>
 
 #include "common.h"
-#include "nvme.h"
 #include "libnvme.h"
+#include "nvme.h"
 #include "plugin.h"
 
 #define CREATE_CMD
 #include "virtium-nvme.h"
 
-#define MIN2(a, b) ( ((a) < (b))? (a) : (b))
+#define MIN2(a, b) (((a) < (b)) ? (a) : (b))
 
-#define HOUR_IN_SECONDS     3600
+#define HOUR_IN_SECONDS 3600
 
-#define MAX_HEADER_BUFF     (20 * 1024)
-#define MAX_LOG_BUFF        4096
-#define DEFAULT_TEST_NAME   "Put the name of your test here"
+#define MAX_HEADER_BUFF (20 * 1024)
+#define MAX_LOG_BUFF 4096
+#define DEFAULT_TEST_NAME "Put the name of your test here"
 
 static char vt_default_log_file_name[256];
 
 struct vtview_log_header {
-	char			path[256];
-	char			test_name[256];
-	long int		time_stamp;
-	struct nvme_id_ctrl	raw_ctrl;
+	char path[256];
+	char test_name[256];
+	long int time_stamp;
+	struct nvme_id_ctrl raw_ctrl;
 	struct nvme_firmware_slot raw_fw;
 };
 
 struct vtview_smart_log_entry {
-	char	path[256];
-	long int	time_stamp;
-	struct nvme_id_ns	raw_ns;
-	struct nvme_id_ctrl	raw_ctrl;
-	struct nvme_smart_log	raw_smart;
+	char path[256];
+	long int time_stamp;
+	struct nvme_id_ns raw_ns;
+	struct nvme_id_ctrl raw_ctrl;
+	struct nvme_smart_log raw_smart;
 };
 
 struct vtview_save_log_settings {
-	double	run_time_hrs;
-	double	log_record_frequency_hrs;
-	const char*	output_file;
-	const char*	test_name;
+	double run_time_hrs;
+	double log_record_frequency_hrs;
+	const char *output_file;
+	const char *test_name;
 };
 
 static long double int128_to_double(__u8 *data)
@@ -69,20 +69,20 @@ static void vt_initialize_header_buffer(struct vtview_log_header *pbuff)
 }
 
 static void vt_convert_data_buffer_to_hex_string(const unsigned char *bufPtr,
-		const unsigned int size, const bool isReverted, char *output)
+						 const unsigned int size,
+						 const bool isReverted,
+						 char *output)
 {
 	unsigned int i, pos;
 	const char hextable[16] = {
-		'0', '1', '2', '3',
-		'4', '5', '6', '7',
-		'8', '9', 'A', 'B',
-		'C', 'D', 'E', 'F',
+	    '0', '1', '2', '3', '4', '5', '6', '7',
+	    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F',
 	};
 
 	memset(output, 0, (size * 2) + 1);
 
 	for (i = 0; i < size; i++) {
-		if(isReverted)
+		if (isReverted)
 			pos = size - 1 - i;
 		else
 			pos = i;
@@ -93,14 +93,14 @@ static void vt_convert_data_buffer_to_hex_string(const unsigned char *bufPtr,
 
 /*
  * Generate log file name.
- * Log file name will be generated automatically if user leave log file option blank.
- * Log file name will be generated as vtView-Smart-log-date-time.txt
+ * Log file name will be generated automatically if user leave log file option
+ * blank. Log file name will be generated as vtView-Smart-log-date-time.txt
  */
-static void vt_generate_vtview_log_file_name(char* fname)
+static void vt_generate_vtview_log_file_name(char *fname)
 {
-	time_t     current;
-	struct tm  tstamp;
-	char       temp[256];
+	time_t current;
+	struct tm tstamp;
+	char temp[256];
 
 	time(&current);
 
@@ -113,11 +113,14 @@ static void vt_generate_vtview_log_file_name(char* fname)
 	strcat(fname, temp);
 }
 
-static void vt_convert_smart_data_to_human_readable_format(struct vtview_smart_log_entry *smart, char *text)
+static void vt_convert_smart_data_to_human_readable_format(
+    struct vtview_smart_log_entry *smart, char *text)
 {
 	char tempbuff[1024] = "";
 	int i;
-	int temperature = ((smart->raw_smart.temperature[1] << 8) | smart->raw_smart.temperature[0]) - 273;
+	int temperature = ((smart->raw_smart.temperature[1] << 8) |
+			   smart->raw_smart.temperature[0]) -
+			  273;
 	double capacity;
 	char *curlocale;
 	char *templocale;
@@ -130,67 +133,98 @@ static void vt_convert_smart_data_to_human_readable_format(struct vtview_smart_l
 
 	setlocale(LC_ALL, "C");
 
-	long long int lba = 1 << smart->raw_ns.lbaf[(smart->raw_ns.flbas & 0x0f)].ds;
+	long long int lba =
+	    1 << smart->raw_ns.lbaf[(smart->raw_ns.flbas & 0x0f)].ds;
 	capacity = le64_to_cpu(smart->raw_ns.nsze) * lba;
 
-	snprintf(tempbuff, sizeof(tempbuff), "log;%s;%lu;%s;%s;%-.*s;", smart->raw_ctrl.sn, smart->time_stamp, smart->path,
-		smart->raw_ctrl.mn, (int)sizeof(smart->raw_ctrl.fr), smart->raw_ctrl.fr);
+	snprintf(tempbuff, sizeof(tempbuff), "log;%s;%lu;%s;%s;%-.*s;",
+		 smart->raw_ctrl.sn, smart->time_stamp, smart->path,
+		 smart->raw_ctrl.mn, (int)sizeof(smart->raw_ctrl.fr),
+		 smart->raw_ctrl.fr);
 	strcpy(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Capacity;%lf;", capacity / 1000000000);
+	snprintf(tempbuff, sizeof(tempbuff), "Capacity;%lf;",
+		 capacity / 1000000000);
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Critical_Warning;%u;", smart->raw_smart.critical_warning);
+	snprintf(tempbuff, sizeof(tempbuff), "Critical_Warning;%u;",
+		 smart->raw_smart.critical_warning);
 	strcat(text, tempbuff);
 	snprintf(tempbuff, sizeof(tempbuff), "Temperature;%u;", temperature);
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Available_Spare;%u;", smart->raw_smart.avail_spare);
+	snprintf(tempbuff, sizeof(tempbuff), "Available_Spare;%u;",
+		 smart->raw_smart.avail_spare);
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Available_Spare_Threshold;%u;", smart->raw_smart.spare_thresh);
+	snprintf(tempbuff, sizeof(tempbuff), "Available_Spare_Threshold;%u;",
+		 smart->raw_smart.spare_thresh);
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Percentage_Used;%u;", smart->raw_smart.percent_used);
+	snprintf(tempbuff, sizeof(tempbuff), "Percentage_Used;%u;",
+		 smart->raw_smart.percent_used);
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Data_Units_Read;%0.Lf;", int128_to_double(smart->raw_smart.data_units_read));
+	snprintf(tempbuff, sizeof(tempbuff), "Data_Units_Read;%0.Lf;",
+		 int128_to_double(smart->raw_smart.data_units_read));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Data_Units_Written;%0.Lf;", int128_to_double(smart->raw_smart.data_units_written));
+	snprintf(tempbuff, sizeof(tempbuff), "Data_Units_Written;%0.Lf;",
+		 int128_to_double(smart->raw_smart.data_units_written));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Host_Read_Commands;%0.Lf;", int128_to_double(smart->raw_smart.host_reads));
+	snprintf(tempbuff, sizeof(tempbuff), "Host_Read_Commands;%0.Lf;",
+		 int128_to_double(smart->raw_smart.host_reads));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Host_Write_Commands;%0.Lf;", int128_to_double(smart->raw_smart.host_writes));
+	snprintf(tempbuff, sizeof(tempbuff), "Host_Write_Commands;%0.Lf;",
+		 int128_to_double(smart->raw_smart.host_writes));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Controller_Busy_Time;%0.Lf;", int128_to_double(smart->raw_smart.ctrl_busy_time));
+	snprintf(tempbuff, sizeof(tempbuff), "Controller_Busy_Time;%0.Lf;",
+		 int128_to_double(smart->raw_smart.ctrl_busy_time));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Power_Cycles;%0.Lf;", int128_to_double(smart->raw_smart.power_cycles));
+	snprintf(tempbuff, sizeof(tempbuff), "Power_Cycles;%0.Lf;",
+		 int128_to_double(smart->raw_smart.power_cycles));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Power_On_Hours;%0.Lf;", int128_to_double(smart->raw_smart.power_on_hours));
+	snprintf(tempbuff, sizeof(tempbuff), "Power_On_Hours;%0.Lf;",
+		 int128_to_double(smart->raw_smart.power_on_hours));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Unsafe_Shutdowns;%0.Lf;", int128_to_double(smart->raw_smart.unsafe_shutdowns));
+	snprintf(tempbuff, sizeof(tempbuff), "Unsafe_Shutdowns;%0.Lf;",
+		 int128_to_double(smart->raw_smart.unsafe_shutdowns));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Media_Errors;%0.Lf;", int128_to_double(smart->raw_smart.media_errors));
+	snprintf(tempbuff, sizeof(tempbuff), "Media_Errors;%0.Lf;",
+		 int128_to_double(smart->raw_smart.media_errors));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Num_Err_Log_Entries;%0.Lf;", int128_to_double(smart->raw_smart.num_err_log_entries));
+	snprintf(tempbuff, sizeof(tempbuff), "Num_Err_Log_Entries;%0.Lf;",
+		 int128_to_double(smart->raw_smart.num_err_log_entries));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Warning_Temperature_Time;%u;", le32_to_cpu(smart->raw_smart.warning_temp_time));
+	snprintf(tempbuff, sizeof(tempbuff), "Warning_Temperature_Time;%u;",
+		 le32_to_cpu(smart->raw_smart.warning_temp_time));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Critical_Composite_Temperature_Time;%u;", le32_to_cpu(smart->raw_smart.critical_comp_time));
+	snprintf(tempbuff, sizeof(tempbuff),
+		 "Critical_Composite_Temperature_Time;%u;",
+		 le32_to_cpu(smart->raw_smart.critical_comp_time));
 	strcat(text, tempbuff);
 
 	for (i = 0; i < 8; i++) {
 		__s32 temp = le16_to_cpu(smart->raw_smart.temp_sensor[i]);
 		if (0 == temp) {
-			snprintf(tempbuff, sizeof(tempbuff), "Temperature_Sensor_%d;NC;", i);
+			snprintf(tempbuff, sizeof(tempbuff),
+				 "Temperature_Sensor_%d;NC;", i);
 			strcat(text, tempbuff);
 			continue;
 		}
-		snprintf(tempbuff, sizeof(tempbuff), "Temperature_Sensor_%d;%d;", i, temp - 273);
+		snprintf(tempbuff, sizeof(tempbuff),
+			 "Temperature_Sensor_%d;%d;", i, temp - 273);
 		strcat(text, tempbuff);
 	}
 
-	snprintf(tempbuff, sizeof(tempbuff), "Thermal_Management_T1_Trans_Count;%u;", le32_to_cpu(smart->raw_smart.thm_temp1_trans_count));
+	snprintf(tempbuff, sizeof(tempbuff),
+		 "Thermal_Management_T1_Trans_Count;%u;",
+		 le32_to_cpu(smart->raw_smart.thm_temp1_trans_count));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Thermal_Management_T2_Trans_Count;%u;", le32_to_cpu(smart->raw_smart.thm_temp2_trans_count));
+	snprintf(tempbuff, sizeof(tempbuff),
+		 "Thermal_Management_T2_Trans_Count;%u;",
+		 le32_to_cpu(smart->raw_smart.thm_temp2_trans_count));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Thermal_Management_T1_Total_Time;%u;", le32_to_cpu(smart->raw_smart.thm_temp1_total_time));
+	snprintf(tempbuff, sizeof(tempbuff),
+		 "Thermal_Management_T1_Total_Time;%u;",
+		 le32_to_cpu(smart->raw_smart.thm_temp1_total_time));
 	strcat(text, tempbuff);
-	snprintf(tempbuff, sizeof(tempbuff), "Thermal_Management_T2_Total_Time;%u;", le32_to_cpu(smart->raw_smart.thm_temp2_total_time));
+	snprintf(tempbuff, sizeof(tempbuff),
+		 "Thermal_Management_T2_Total_Time;%u;",
+		 le32_to_cpu(smart->raw_smart.thm_temp2_total_time));
 	strcat(text, tempbuff);
 
 	snprintf(tempbuff, sizeof(tempbuff), "NandWrites;%d;\n", 0);
@@ -200,23 +234,34 @@ static void vt_convert_smart_data_to_human_readable_format(struct vtview_smart_l
 	free(templocale);
 }
 
-static void vt_header_to_string(const struct vtview_log_header *header, char *text)
+static void vt_header_to_string(const struct vtview_log_header *header,
+				char *text)
 {
 	char timebuff[50] = "";
 	char tempbuff[MAX_HEADER_BUFF] = "";
 	char identext[16384] = "";
 	char fwtext[2048] = "";
 
-	strftime(timebuff, 50, "%Y-%m-%d %H:%M:%S", localtime(&(header->time_stamp)));
-	snprintf(tempbuff, MAX_HEADER_BUFF, "header;{\"session\":{\"testName\":\"%s\",\"dateTime\":\"%s\"},",
-		header->test_name, timebuff);
+	strftime(timebuff, 50, "%Y-%m-%d %H:%M:%S",
+		 localtime(&(header->time_stamp)));
+	snprintf(
+	    tempbuff, MAX_HEADER_BUFF,
+	    "header;{\"session\":{\"testName\":\"%s\",\"dateTime\":\"%s\"},",
+	    header->test_name, timebuff);
 	strcpy(text, tempbuff);
 
-	vt_convert_data_buffer_to_hex_string((unsigned char *)&(header->raw_ctrl), sizeof(header->raw_ctrl), false, identext);
-	vt_convert_data_buffer_to_hex_string((unsigned char *)&(header->raw_fw), sizeof(header->raw_fw), false, fwtext);
+	vt_convert_data_buffer_to_hex_string(
+	    (unsigned char *)&(header->raw_ctrl), sizeof(header->raw_ctrl),
+	    false, identext);
+	vt_convert_data_buffer_to_hex_string((unsigned char *)&(header->raw_fw),
+					     sizeof(header->raw_fw), false,
+					     fwtext);
 	snprintf(tempbuff, MAX_HEADER_BUFF,
-		"\"devices\":[{\"model\":\"%s\",\"port\":\"%s\",\"SN\":\"%s\",\"type\":\"NVMe\",\"identify\":\"%s\",\"firmwareSlot\":\"%s\"}]}\n",
-		header->raw_ctrl.mn, header->path, header->raw_ctrl.sn, identext, fwtext);
+		 "\"devices\":[{\"model\":\"%s\",\"port\":\"%s\",\"SN\":\"%s\","
+		 "\"type\":\"NVMe\",\"identify\":\"%s\",\"firmwareSlot\":\"%"
+		 "s\"}]}\n",
+		 header->raw_ctrl.mn, header->path, header->raw_ctrl.sn,
+		 identext, fwtext);
 	strcat(text, tempbuff);
 }
 
@@ -225,7 +270,7 @@ static int vt_append_text_file(const char *text, const char *filename)
 	FILE *f;
 
 	f = fopen(filename, "a");
-	if(NULL == f) {
+	if (NULL == f) {
 		printf("Cannot open %s\n", filename);
 		return -1;
 	}
@@ -235,7 +280,8 @@ static int vt_append_text_file(const char *text, const char *filename)
 	return 0;
 }
 
-static int vt_append_log(struct vtview_smart_log_entry *smart, const char *filename)
+static int vt_append_log(struct vtview_smart_log_entry *smart,
+			 const char *filename)
 {
 	char sm_log_text[MAX_LOG_BUFF] = "";
 
@@ -243,7 +289,8 @@ static int vt_append_log(struct vtview_smart_log_entry *smart, const char *filen
 	return vt_append_text_file(sm_log_text, filename);
 }
 
-static int vt_append_header(const struct vtview_log_header *header, const char *filename)
+static int vt_append_header(const struct vtview_log_header *header,
+			    const char *filename)
 {
 	char header_text[MAX_HEADER_BUFF] = "";
 
@@ -265,7 +312,8 @@ static void vt_process_string(char *str, const size_t size)
 	}
 }
 
-static int vt_add_entry_to_log(const int fd, const char *path, const struct vtview_save_log_settings *cfg)
+static int vt_add_entry_to_log(const int fd, const char *path,
+			       const struct vtview_save_log_settings *cfg)
 {
 	struct vtview_smart_log_entry smart;
 	char filename[256] = "";
@@ -274,7 +322,7 @@ static int vt_add_entry_to_log(const int fd, const char *path, const struct vtvi
 
 	memset(smart.path, 0, sizeof(smart.path));
 	strcpy(smart.path, path);
-	if(NULL == cfg->output_file)
+	if (NULL == cfg->output_file)
 		strcpy(filename, vt_default_log_file_name);
 	else
 		strcpy(filename, cfg->output_file);
@@ -312,7 +360,9 @@ static int vt_add_entry_to_log(const int fd, const char *path, const struct vtvi
 	return (ret);
 }
 
-static int vt_update_vtview_log_header(const int fd, const char *path, const struct vtview_save_log_settings *cfg)
+static int
+vt_update_vtview_log_header(const int fd, const char *path,
+			    const struct vtview_save_log_settings *cfg)
 {
 	struct vtview_log_header header;
 	char filename[256] = "";
@@ -326,7 +376,7 @@ static int vt_update_vtview_log_header(const int fd, const char *path, const str
 	else
 		strcpy(header.test_name, cfg->test_name);
 
-	if(NULL == cfg->output_file)
+	if (NULL == cfg->output_file)
 		strcpy(filename, vt_default_log_file_name);
 	else
 		strcpy(filename, cfg->output_file);
@@ -368,13 +418,13 @@ static void vt_build_identify_lv2(unsigned int data, unsigned int start,
 		printf("        \"bit %u\":\"%ub  %s\"\n", i, temp, table[pos]);
 		printf("                     %s", table[pos + 1]);
 
-		if((end - 1) != i || !isEnd)
+		if ((end - 1) != i || !isEnd)
 			printf(",\n");
 		else
 			printf("\n");
 	}
 
-	if(isEnd)
+	if (isEnd)
 		printf("    },\n");
 }
 
@@ -386,12 +436,15 @@ static void vt_build_power_state_descriptor(const struct nvme_id_ctrl *ctrl)
 	printf("{\n");
 	printf("\"Power State Descriptors\":{\n");
 	printf("    \"NOPS\":\"Non-Operational State,\"\n");
-	printf("    \"MPS\":\"Max Power Scale (0: in 0.01 Watts; 1: in 0.0001 Watts),\"\n");
+	printf("    \"MPS\":\"Max Power Scale (0: in 0.01 Watts; 1: in 0.0001 "
+	       "Watts),\"\n");
 	printf("    \"ENLAT\":\"Entry Latency in microseconds,\"\n");
 	printf("    \"RWL\":\"Relative Write Latency,\"\n");
 	printf("    \"RRL\":\"Relative Read Latency,\"\n");
-	printf("    \"IPS\":\"Idle Power Scale (00b: Not reported; 01b: 0.0001 W; 10b: 0.01 W; 11b: Reserved),\"\n");
-	printf("    \"APS\":\"Active Power Scale (00b: Not reported; 01b: 0.0001 W; 10b: 0.01 W; 11b: Reserved),\"\n");
+	printf("    \"IPS\":\"Idle Power Scale (00b: Not reported; 01b: 0.0001 "
+	       "W; 10b: 0.01 W; 11b: Reserved),\"\n");
+	printf("    \"APS\":\"Active Power Scale (00b: Not reported; 01b: "
+	       "0.0001 W; 10b: 0.01 W; 11b: Reserved),\"\n");
 	printf("    \"ACTP\":\"Active Power,\"\n");
 	printf("    \"MP\":\"Maximum Power,\"\n");
 	printf("    \"EXLAT\":\"Exit Latency in microsecond,\"\n");
@@ -403,19 +456,24 @@ static void vt_build_power_state_descriptor(const struct nvme_id_ctrl *ctrl)
 
 	printf("    \"Power State Descriptors\":\"\n");
 
-	printf("%6s%10s%5s%4s%6s%10s%10s%10s%4s%4s%4s%4s%10s%4s%6s%10s%4s%5s%6s\n", "Entry", "0fs 00-03", "NOPS", "MPS", "MP", "ENLAT", "EXLAT", "0fs 12-15",
-			"RWL", "RWT", "RRL", "RRT", "0fs 16-19", "IPS", "IDLP", "0fs 20-23", "APS", "APW", "ACTP");
+	printf(
+	    "%6s%10s%5s%4s%6s%10s%10s%10s%4s%4s%4s%4s%10s%4s%6s%10s%4s%5s%6s\n",
+	    "Entry", "0fs 00-03", "NOPS", "MPS", "MP", "ENLAT", "EXLAT",
+	    "0fs 12-15", "RWL", "RWT", "RRL", "RRT", "0fs 16-19", "IPS", "IDLP",
+	    "0fs 20-23", "APS", "APW", "ACTP");
 
-
-	printf("%6s%10s%5s%4s%6s%10s%10s%10s%4s%4s%4s%4s%10s%4s%6s%10s%4s%5s%6s\n", "=====", "=========", "====", "===", "=====", "=========", "=========",
-			"=========", "===", "===", "===", "===", "=========", "===", "=====", "=========", "===", "====", "=====");
+	printf(
+	    "%6s%10s%5s%4s%6s%10s%10s%10s%4s%4s%4s%4s%10s%4s%6s%10s%4s%5s%6s\n",
+	    "=====", "=========", "====", "===", "=====", "=========",
+	    "=========", "=========", "===", "===", "===", "===", "=========",
+	    "===", "=====", "=========", "===", "====", "=====");
 
 	for (i = 0; i < 32; i++) {
 		char s[100];
 		unsigned int temp;
 
 		printf("%6d", i);
-		buf = (unsigned char*) (&ctrl->psd[i]);
+		buf = (unsigned char *)(&ctrl->psd[i]);
 		vt_convert_data_buffer_to_hex_string(&buf[0], 4, true, s);
 		printf("%9sh", s);
 
@@ -443,7 +501,9 @@ static void vt_build_power_state_descriptor(const struct nvme_id_ctrl *ctrl)
 		printf("%9sh", s);
 
 		temp = ctrl->psd[i].ips;
-		snprintf(s, sizeof(s), "%u%u", (((unsigned char)temp >> 6) & 0x01), (((unsigned char)temp >> 7) & 0x01));
+		snprintf(s, sizeof(s), "%u%u",
+			 (((unsigned char)temp >> 6) & 0x01),
+			 (((unsigned char)temp >> 7) & 0x01));
 		printf("%3sb", s);
 
 		vt_convert_data_buffer_to_hex_string(&buf[16], 2, true, s);
@@ -452,9 +512,13 @@ static void vt_build_power_state_descriptor(const struct nvme_id_ctrl *ctrl)
 		printf("%9sh", s);
 
 		temp = ctrl->psd[i].apws;
-		snprintf(s, sizeof(s), "%u%u", (((unsigned char)temp >> 6) & 0x01), (((unsigned char)temp >> 7) & 0x01));
+		snprintf(s, sizeof(s), "%u%u",
+			 (((unsigned char)temp >> 6) & 0x01),
+			 (((unsigned char)temp >> 7) & 0x01));
 		printf("%3sb", s);
-		snprintf(s, sizeof(s), "%u%u%u", (((unsigned char)temp) & 0x01), (((unsigned char)temp >> 1) & 0x01), (((unsigned char)temp >> 2) & 0x01));
+		snprintf(s, sizeof(s), "%u%u%u", (((unsigned char)temp) & 0x01),
+			 (((unsigned char)temp >> 1) & 0x01),
+			 (((unsigned char)temp >> 2) & 0x01));
 		printf("%4sb", s);
 
 		vt_convert_data_buffer_to_hex_string(&buf[20], 2, true, s);
@@ -463,10 +527,10 @@ static void vt_build_power_state_descriptor(const struct nvme_id_ctrl *ctrl)
 	}
 
 	printf("    \"}\n}\n");
-
 }
 
-static void vt_dump_hex_data(const unsigned char *pbuff, size_t pbuffsize) {
+static void vt_dump_hex_data(const unsigned char *pbuff, size_t pbuffsize)
+{
 
 	char textbuf[33];
 	unsigned long int i, j;
@@ -476,26 +540,25 @@ static void vt_dump_hex_data(const unsigned char *pbuff, size_t pbuffsize) {
 	for (i = 0; i < pbuffsize; i++) {
 		printf("%02X ", pbuff[i]);
 
-		if (pbuff[i] >= ' ' && pbuff[i] <= '~') 
+		if (pbuff[i] >= ' ' && pbuff[i] <= '~')
 			textbuf[i % 32] = pbuff[i];
-		else 
+		else
 			textbuf[i % 32] = '.';
 
 		if ((((i + 1) % 8) == 0) || ((i + 1) == pbuffsize)) {
 			printf(" ");
 			if ((i + 1) % 32 == 0) {
 				printf(" %s\n", textbuf);
-				if((i + 1) != pbuffsize)
-				    printf("[%08lX] ", (i + 1));
-			} 
-			else if (i + 1 == pbuffsize) {
+				if ((i + 1) != pbuffsize)
+					printf("[%08lX] ", (i + 1));
+			} else if (i + 1 == pbuffsize) {
 				textbuf[(i + 1) % 32] = '\0';
-				if(((i + 1) % 8) == 0)
+				if (((i + 1) % 8) == 0)
 					printf(" ");
 
 				for (j = ((i + 1) % 32); j < 32; j++) {
 					printf("   ");
-					if(((j + 1) % 8) == 0)
+					if (((j + 1) % 8) == 0)
 						printf(" ");
 				}
 
@@ -511,175 +574,232 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	unsigned int temp, pos;
 	char s[1024] = "";
 
-	const char *CMICtable[6] = {"0 = the NVM subsystem contains only a single NVM subsystem port",
-								"1 = the NVM subsystem may contain more than one subsystem ports",
-								"0 = the NVM subsystem contains only a single controller",
-								"1 = the NVM subsystem may contain two or more controllers (see section 1.4.1)",
-								"0 = the controller is associated with a PCI Function or a Fabrics connection",
-								"1 = the controller is associated with an SR-IOV Virtual Function"};
+	const char *CMICtable[6] = {
+	    "0 = the NVM subsystem contains only a single NVM subsystem port",
+	    "1 = the NVM subsystem may contain more than one subsystem ports",
+	    "0 = the NVM subsystem contains only a single controller",
+	    "1 = the NVM subsystem may contain two or more controllers (see "
+	    "section 1.4.1)",
+	    "0 = the controller is associated with a PCI Function or a Fabrics "
+	    "connection",
+	    "1 = the controller is associated with an SR-IOV Virtual Function"};
 
-	const char *OAEStable[20] = {"Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "0 = does not support sending the Namespace Attribute Notices event nor the associated Changed Namespace List log page",
-								 "1 = supports sending the Namespace Attribute Notices  & the associated Changed Namespace List log page",
-								 "0 = does not support sending Firmware Activation Notices event",
-								 "1 = supports sending Firmware Activation Notices"};
+	const char *OAEStable[20] = {
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "0 = does not support sending the Namespace Attribute Notices "
+	    "event nor the associated Changed Namespace List log page",
+	    "1 = supports sending the Namespace Attribute Notices  & the "
+	    "associated Changed Namespace List log page",
+	    "0 = does not support sending Firmware Activation Notices event",
+	    "1 = supports sending Firmware Activation Notices"};
 
-	const char *CTRATTtable[4] = {"0 = does not support a 128-bit Host Identifier",
-								  "1 = supports a 128-bit Host Identifier",
-								  "0 = does not support Non-Operational Power State Permissive Mode",
-								  "1 = supports Non-Operational Power State Permissive Mode"};
+	const char *CTRATTtable[4] = {
+	    "0 = does not support a 128-bit Host Identifier",
+	    "1 = supports a 128-bit Host Identifier",
+	    "0 = does not support Non-Operational Power State Permissive Mode",
+	    "1 = supports Non-Operational Power State Permissive Mode"};
 
-	const char *OACStable[18] = {"0 = does not support the Security Send and Security Receive commands",
-								 "1 = supports the Security Send and Security Receive commands",
-								 "0 = does not support the Format NVM command",
-								 "1 = supports the Format NVM command",
-								 "0 = does not support the Firmware Commit and Firmware Image Download commands",
-								 "1 = supports the Firmware Commit and Firmware Image Download commands",
-								 "0 = does not support the Namespace Management capability",
-								 "1 = supports the Namespace Management capability",
-								 "0 = does not support the Device Self-test command",
-								 "1 = supports the Device Self-test command",
-								 "0 = does not support Directives",
-								 "1 = supports Directive Send & Directive Receive commands",
-								 "0 = does not support the NVMe-MI Send and NVMe-MI Receive commands",
-								 "1 = supports the NVMe-MI Send and NVMe-MI Receive commands",
-								 "0 = does not support the Virtualization Management command",
-								 "1 = supports the Virtualization Management command",
-								 "0 = does not support the Doorbell Buffer Config command",
-								 "1 = supports the Doorbell Buffer Config command"};
+	const char *OACStable[18] = {
+	    "0 = does not support the Security Send and Security Receive "
+	    "commands",
+	    "1 = supports the Security Send and Security Receive commands",
+	    "0 = does not support the Format NVM command",
+	    "1 = supports the Format NVM command",
+	    "0 = does not support the Firmware Commit and Firmware Image "
+	    "Download commands",
+	    "1 = supports the Firmware Commit and Firmware Image Download "
+	    "commands",
+	    "0 = does not support the Namespace Management capability",
+	    "1 = supports the Namespace Management capability",
+	    "0 = does not support the Device Self-test command",
+	    "1 = supports the Device Self-test command",
+	    "0 = does not support Directives",
+	    "1 = supports Directive Send & Directive Receive commands",
+	    "0 = does not support the NVMe-MI Send and NVMe-MI Receive "
+	    "commands",
+	    "1 = supports the NVMe-MI Send and NVMe-MI Receive commands",
+	    "0 = does not support the Virtualization Management command",
+	    "1 = supports the Virtualization Management command",
+	    "0 = does not support the Doorbell Buffer Config command",
+	    "1 = supports the Doorbell Buffer Config command"};
 
-	const char *FRMWtable[10] = {"0 = the 1st firmware slot (slot 1) is read/write",
-								 "1 = the 1st firmware slot (slot 1) is read only",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "Reserved",
-								 "0 = requires a reset for firmware to be activated",
-								 "1 = supports firmware activation without a reset"};
+	const char *FRMWtable[10] = {
+	    "0 = the 1st firmware slot (slot 1) is read/write",
+	    "1 = the 1st firmware slot (slot 1) is read only",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "0 = requires a reset for firmware to be activated",
+	    "1 = supports firmware activation without a reset"};
 
-	const char *LPAtable[8] = {"0 = does not support the SMART / Health information log page on a per namespace basis",
-							   "1 = supports the SMART / Health information log page on a per namespace basis",
-							   "0 = does not support the Commands Supported & Effects log page",
-							   "1 = supports the Commands Supported Effects log page",
-							   "0 = does not support extended data for Get Log Page",
-							   "1 = supports extended data for Get Log Page (including extended Number of Dwords and Log Page Offset fields)",
-							   "0 = does not support the Telemetry Host-Initiated and Telemetry Controller-Initiated log pages and Telemetry Log Notices events",
-							   "1 = supports the Telemetry Host-Initiated and Telemetry Controller-Initiated log pages and sending Telemetry Log Notices"							   };
+	const char *LPAtable[8] = {
+	    "0 = does not support the SMART / Health information log page on a "
+	    "per namespace basis",
+	    "1 = supports the SMART / Health information log page on a per "
+	    "namespace basis",
+	    "0 = does not support the Commands Supported & Effects log page",
+	    "1 = supports the Commands Supported Effects log page",
+	    "0 = does not support extended data for Get Log Page",
+	    "1 = supports extended data for Get Log Page (including extended "
+	    "Number of Dwords and Log Page Offset fields)",
+	    "0 = does not support the Telemetry Host-Initiated and Telemetry "
+	    "Controller-Initiated log pages and Telemetry Log Notices events",
+	    "1 = supports the Telemetry Host-Initiated and Telemetry "
+	    "Controller-Initiated log pages and sending Telemetry Log Notices"};
 
-	const char *AVSCCtable[2] = {"0 = the format of all Admin Vendor Specific Commands are vendor specific",
-								 "1 = all Admin Vendor Specific Commands use the format defined in NVM Express specification"};
+	const char *AVSCCtable[2] = {
+	    "0 = the format of all Admin Vendor Specific Commands are vendor "
+	    "specific",
+	    "1 = all Admin Vendor Specific Commands use the format defined in "
+	    "NVM Express specification"};
 
-	const char *APSTAtable[2] = {"0 = does not support autonomous power state transitions",
-								 "1 = supports autonomous power state transitions"};
+	const char *APSTAtable[2] = {
+	    "0 = does not support autonomous power state transitions",
+	    "1 = supports autonomous power state transitions"};
 
-	const char *DSTOtable[2] =  {"0 = the NVM subsystem supports one device self-test operation per controller at a time",
-								 "1 = the NVM subsystem supports only one device self-test operation in progress at a time"};
+	const char *DSTOtable[2] = {
+	    "0 = the NVM subsystem supports one device self-test operation per "
+	    "controller at a time",
+	    "1 = the NVM subsystem supports only one device self-test "
+	    "operation in progress at a time"};
 
-	const char *HCTMAtable[2] = {"0 = does not support host controlled thermal management",
-								 "1 = supports host controlled thermal management. Supports Set Features & Get Features commands with the Feature Identifier field set to 10h"};
+	const char *HCTMAtable[2] = {
+	    "0 = does not support host controlled thermal management",
+	    "1 = supports host controlled thermal management. Supports Set "
+	    "Features & Get Features commands with the Feature Identifier "
+	    "field set to 10h"};
 
-	const char *SANICAPtable[6] =  {"0 = does not support the Crypto Erase sanitize operation",
-									"1 = supports the Crypto Erase sanitize operation",
-									"0 = does not support the Block Erase sanitize operation",
-									"1 = supports the Block Erase sanitize operation",
-									"0 = does not support the Overwrite sanitize operation",
-									"1 = supports the Overwrite sanitize operation"};
+	const char *SANICAPtable[6] = {
+	    "0 = does not support the Crypto Erase sanitize operation",
+	    "1 = supports the Crypto Erase sanitize operation",
+	    "0 = does not support the Block Erase sanitize operation",
+	    "1 = supports the Block Erase sanitize operation",
+	    "0 = does not support the Overwrite sanitize operation",
+	    "1 = supports the Overwrite sanitize operation"};
 
-	const char *ONCStable[14] =  {"0 = does not support the Compare command",
-								  "1 = supports the Compare command",
-								  "0 = does not support the Write Uncorrectable command",
-								  "1 = supports the Write Uncorrectable command",
-								  "0 = does not support the Dataset Management command",
-								  "1 = supports the Dataset Management command",
-								  "0 = does not support the Write Zeroes command",
-								  "1 = supports the Write Zeroes command",
-								  "0 = does not support the Save field set to a non-zero value in the Set Features and the Get Features commands",
-								  "1 = supports the Save field set to a non-zero value in the Set Features and the Get Features commands", \
-								  "0 = does not support reservations",
-								  "1 = supports reservations",
-								  "0 = does not support the Timestamp feature (refer to section 5.21.1.14)",
-								  "1 = supports the Timestamp feature"};
+	const char *ONCStable[14] = {
+	    "0 = does not support the Compare command",
+	    "1 = supports the Compare command",
+	    "0 = does not support the Write Uncorrectable command",
+	    "1 = supports the Write Uncorrectable command",
+	    "0 = does not support the Dataset Management command",
+	    "1 = supports the Dataset Management command",
+	    "0 = does not support the Write Zeroes command",
+	    "1 = supports the Write Zeroes command",
+	    "0 = does not support the Save field set to a non-zero value in "
+	    "the Set Features and the Get Features commands",
+	    "1 = supports the Save field set to a non-zero value in the Set "
+	    "Features and the Get Features commands",
+	    "0 = does not support reservations",
+	    "1 = supports reservations",
+	    "0 = does not support the Timestamp feature (refer to section "
+	    "5.21.1.14)",
+	    "1 = supports the Timestamp feature"};
 
-	const char *FUSEStable[2] = {"0 =  does not support the Compare and Write fused operation",
-								 "1 =  supports the Compare and Write fused operation"};
+	const char *FUSEStable[2] = {
+	    "0 =  does not support the Compare and Write fused operation",
+	    "1 =  supports the Compare and Write fused operation"};
 
-	const char *FNAtable[6] = {"0 = supports format on a per namespace basis",
-							   "1 = all namespaces shall be configured with the same attributes and a format (excluding secure erase) of any namespace results in a format of all namespaces in an NVM subsystem",
-							   "0 = any secure erase performed as part of a format results in a secure erase of a particular namespace specified",
-							   "1 = any secure erase performed as part of a format operation results in a secure erase of all namespaces in the NVM subsystem",
-							   "0 = cryptographic erase is not supported",
-							   "1 = cryptographic erase is supported as part of the secure erase functionality"};
+	const char *FNAtable[6] = {
+	    "0 = supports format on a per namespace basis",
+	    "1 = all namespaces shall be configured with the same attributes "
+	    "and a format (excluding secure erase) of any namespace results in "
+	    "a format of all namespaces in an NVM subsystem",
+	    "0 = any secure erase performed as part of a format results in a "
+	    "secure erase of a particular namespace specified",
+	    "1 = any secure erase performed as part of a format operation "
+	    "results in a secure erase of all namespaces in the NVM subsystem",
+	    "0 = cryptographic erase is not supported",
+	    "1 = cryptographic erase is supported as part of the secure erase "
+	    "functionality"};
 
 	const char *VWCtable[2] = {"0 = a volatile write cache is not present",
-							   "1 = a volatile write cache is present"};
+				   "1 = a volatile write cache is present"};
 
-	const char *ICSVSCCtable[2] = {"0 = the format of all NVM Vendor Specific Commands are vendor specific",
-								 "1 = all NVM Vendor Specific Commands use the format defined in NVM Express specification"};
+	const char *ICSVSCCtable[2] = {
+	    "0 = the format of all NVM Vendor Specific Commands are vendor "
+	    "specific",
+	    "1 = all NVM Vendor Specific Commands use the format defined in "
+	    "NVM Express specification"};
 
-	const char *SGLSSubtable[4] =  {"00b = SGLs are not supported",
-									"01b = SGLs are supported. There is no alignment nor granularity requirement for Data Blocks",
-									"10b = SGLs are supported. There is a Dword alignment and granularity requirement for Data Blocks",
-									"11b = Reserved"};
+	const char *SGLSSubtable[4] = {
+	    "00b = SGLs are not supported",
+	    "01b = SGLs are supported. There is no alignment nor granularity "
+	    "requirement for Data Blocks",
+	    "10b = SGLs are supported. There is a Dword alignment and "
+	    "granularity requirement for Data Blocks",
+	    "11b = Reserved"};
 
-	const char *SGLStable[42] =  {"Used",
-								  "Used",
-								  "Used",
-								  "Used",
-								  "0 = does not support the Keyed SGL Data Block descriptor",
-								  "1 = supports the Keyed SGL Data Block descriptor",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "Reserved",
-								  "0 = the SGL Bit Bucket descriptor is not supported",
-								  "1 = the SGL Bit Bucket descriptor is supported",
-								  "0 = use of a byte aligned contiguous physical buffer of metadata is not supported",
-								  "1 = use of a byte aligned contiguous physical buffer of metadata is supported",
-								  "0 = the SGL length shall be equal to the amount of data to be transferred",
-								  "1 = supports commands that contain a data or metadata SGL of a length larger than the amount of data to be transferred",
-								  "0 = use of Metadata Pointer (MPTR) that contains an address of an SGL segment containing exactly one SGL Descriptor that is Qword aligned is not supported",
-								  "1 = use of Metadata Pointer (MPTR) that contains an address of an SGL segment containing exactly one SGL Descriptor that is Qword aligned is supported",
-								  "0 = the Address field specifying an offset is not supported",
-	                              "1 = supports the Address field in SGL Data Block, SGL Segment, and SGL Last Segment descriptor types specifying an offset"};
+	const char *SGLStable[42] = {
+	    "Used",
+	    "Used",
+	    "Used",
+	    "Used",
+	    "0 = does not support the Keyed SGL Data Block descriptor",
+	    "1 = supports the Keyed SGL Data Block descriptor",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "Reserved",
+	    "0 = the SGL Bit Bucket descriptor is not supported",
+	    "1 = the SGL Bit Bucket descriptor is supported",
+	    "0 = use of a byte aligned contiguous physical buffer of metadata "
+	    "is not supported",
+	    "1 = use of a byte aligned contiguous physical buffer of metadata "
+	    "is supported",
+	    "0 = the SGL length shall be equal to the amount of data to be "
+	    "transferred",
+	    "1 = supports commands that contain a data or metadata SGL of a "
+	    "length larger than the amount of data to be transferred",
+	    "0 = use of Metadata Pointer (MPTR) that contains an address of an "
+	    "SGL segment containing exactly one SGL Descriptor that is Qword "
+	    "aligned is not supported",
+	    "1 = use of Metadata Pointer (MPTR) that contains an address of an "
+	    "SGL segment containing exactly one SGL Descriptor that is Qword "
+	    "aligned is supported",
+	    "0 = the Address field specifying an offset is not supported",
+	    "1 = supports the Address field in SGL Data Block, SGL Segment, "
+	    "and SGL Last Segment descriptor types specifying an offset"};
 
 	buf = (unsigned char *)(ctrl);
 
@@ -687,17 +807,19 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	vt_convert_data_buffer_to_hex_string(buf, 2, true, s);
 	printf("    \"PCI Vendor ID\":\"%sh\",\n", s);
 	vt_convert_data_buffer_to_hex_string(&buf[2], 2, true, s);
-	printf("    \"PCI Subsystem Vendor ID\":\"%sh\",\n",  s);
+	printf("    \"PCI Subsystem Vendor ID\":\"%sh\",\n", s);
 	printf("    \"Serial Number\":\"%s\",\n", ctrl->sn);
 	printf("    \"Model Number\":\"%s\",\n", ctrl->mn);
-	printf("    \"Firmware Revision\":\"%-.*s\",\n", (int)sizeof(ctrl->fr), ctrl->fr);
+	printf("    \"Firmware Revision\":\"%-.*s\",\n", (int)sizeof(ctrl->fr),
+	       ctrl->fr);
 	vt_convert_data_buffer_to_hex_string(&buf[72], 1, true, s);
 	printf("    \"Recommended Arbitration Burst\":\"%sh\",\n", s);
 	vt_convert_data_buffer_to_hex_string(&buf[73], 3, true, s);
 	printf("    \"IEEE OUI Identifier\":\"%sh\",\n", s);
 
 	temp = ctrl->cmic;
-	printf("    \"Controller Multi-Path I/O and Namespace Sharing Capabilities\":{\n");
+	printf("    \"Controller Multi-Path I/O and Namespace Sharing "
+	       "Capabilities\":{\n");
 	vt_convert_data_buffer_to_hex_string(&buf[76], 1, true, s);
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 3, CMICtable, true);
@@ -747,7 +869,8 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	printf("        \"Value\":\"%sh\",\n", s);
 	vt_build_identify_lv2(temp, 0, 1, FRMWtable, false);
 	vt_convert_data_buffer_to_hex_string(&buf[260], 1, true, s);
-	printf("        \"Firmware Slot\":\"%uh\",\n", ((ctrl->frmw >> 1) & 0x07));
+	printf("        \"Firmware Slot\":\"%uh\",\n",
+	       ((ctrl->frmw >> 1) & 0x07));
 	vt_build_identify_lv2(temp, 4, 1, FRMWtable, true);
 
 	temp = ctrl->lpa;
@@ -776,7 +899,8 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	vt_convert_data_buffer_to_hex_string(&buf[266], 2, true, s);
 	printf("    \"Warning Composite Temperature Threshold\":\"%sh\",\n", s);
 	vt_convert_data_buffer_to_hex_string(&buf[268], 2, true, s);
-	printf("    \"Critical Composite Temperature Threshold\":\"%sh\",\n", s);
+	printf("    \"Critical Composite Temperature Threshold\":\"%sh\",\n",
+	       s);
 	vt_convert_data_buffer_to_hex_string(&buf[270], 2, true, s);
 	printf("    \"Maximum Time for Firmware Activation\":\"%sh\",\n", s);
 	vt_convert_data_buffer_to_hex_string(&buf[272], 4, true, s);
@@ -788,15 +912,19 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	vt_convert_data_buffer_to_hex_string(&buf[296], 16, true, s);
 	printf("    \"Unallocated NVM Capacity\":\"%sh\",\n", s);
 
-	temp = le32_to_cpu(ctrl->rpmbs); 
+	temp = le32_to_cpu(ctrl->rpmbs);
 	printf("    \"Replay Protected Memory Block Support\":{\n");
 	vt_convert_data_buffer_to_hex_string(&buf[312], 4, true, s);
 	printf("        \"Value\":\"%sh\",\n", s);
-	printf("        \"Number of RPMB Units\":\"%u\",\n", (temp & 0x00000003));
-	snprintf(s, sizeof(s), ((temp >> 3) & 0x00000007)? "Reserved" : "HMAC SHA-256");
-	printf("        \"Authentication Method\":\"%u: %s\",\n", ((temp >> 3) & 0x00000007), s);
+	printf("        \"Number of RPMB Units\":\"%u\",\n",
+	       (temp & 0x00000003));
+	snprintf(s, sizeof(s),
+		 ((temp >> 3) & 0x00000007) ? "Reserved" : "HMAC SHA-256");
+	printf("        \"Authentication Method\":\"%u: %s\",\n",
+	       ((temp >> 3) & 0x00000007), s);
 	printf("        \"Total Size\":\"%u\",\n", ((temp >> 16) & 0x000000FF));
-	printf("        \"Access Size\":\"%u\",\n", ((temp >> 24) & 0x000000FF));
+	printf("        \"Access Size\":\"%u\",\n",
+	       ((temp >> 24) & 0x000000FF));
 	printf("    },\n");
 
 	vt_convert_data_buffer_to_hex_string(&buf[316], 2, true, s);
@@ -835,7 +963,8 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	vt_convert_data_buffer_to_hex_string(&buf[512], 1, true, s);
 	printf("        \"Value\":\"%sh\",\n", s);
 	printf("        \"Maximum Size\":\"%u\",\n", (temp & 0x0000000F));
-	printf("        \"Required Size\":\"%u\",\n", ((temp >> 4) & 0x0000000F));
+	printf("        \"Required Size\":\"%u\",\n",
+	       ((temp >> 4) & 0x0000000F));
 	printf("    }\n");
 
 	temp = ctrl->cqes;
@@ -843,7 +972,8 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 	vt_convert_data_buffer_to_hex_string(&buf[513], 1, true, s);
 	printf("        \"Value\":\"%sh\",\n", s);
 	printf("        \"Maximum Size\":\"%u\",\n", (temp & 0x0000000F));
-	printf("        \"Required Size\":\"%u\",\n", ((temp >> 4) & 0x0000000F));
+	printf("        \"Required Size\":\"%u\",\n",
+	       ((temp >> 4) & 0x0000000F));
 	printf("    }\n");
 
 	vt_convert_data_buffer_to_hex_string(&buf[514], 2, true, s);
@@ -904,14 +1034,15 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 
 	vt_build_power_state_descriptor(ctrl);
 
-
 	printf("\n{\n");
 	printf("\"Vendor Specific\":\"\n");
 	vt_dump_hex_data(&buf[3072], 1024);
 	printf("\"}\n");
 }
 
-static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int vt_save_smart_to_vtview_log(int argc, char **argv,
+				       struct command *cmd,
+				       struct plugin *plugin)
 {
 	int err = 0;
 	int fd, ret;
@@ -922,34 +1053,45 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 	long int start_time = 0;
 	long int end_time = 0;
 	char path[256] = "";
-	char *desc = "Save SMART data into log file with format that is easy to analyze (comma delimited). Maximum log file will be 4K.\n\n"
-		"Typical usages:\n\n"
-		"Temperature characterization: \n"
-		"\tvirtium save-smart-to-vtview-log /dev/yourDevice --run-time=100 --record-frequency=0.25 --test-name=burn-in-at-(-40)\n\n"
-		"Endurance testing : \n"
-		"\tvirtium save-smart-to-vtview-log /dev/yourDevice --run-time=100 --record-frequency=1 --test-name=Endurance-test-JEDEG-219-workload\n\n"
-		"Just logging :\n"
-		"\tvirtium save-smart-to-vtview-log /dev/yourDevice";
+	char *desc =
+	    "Save SMART data into log file with format that is easy to analyze "
+	    "(comma delimited). Maximum log file will be 4K.\n\n"
+	    "Typical usages:\n\n"
+	    "Temperature characterization: \n"
+	    "\tvirtium save-smart-to-vtview-log /dev/yourDevice --run-time=100 "
+	    "--record-frequency=0.25 --test-name=burn-in-at-(-40)\n\n"
+	    "Endurance testing : \n"
+	    "\tvirtium save-smart-to-vtview-log /dev/yourDevice --run-time=100 "
+	    "--record-frequency=1 "
+	    "--test-name=Endurance-test-JEDEG-219-workload\n\n"
+	    "Just logging :\n"
+	    "\tvirtium save-smart-to-vtview-log /dev/yourDevice";
 
-	const char *run_time = "(optional) Number of hours to log data (default = 20 hours)";
-	const char *freq = "(optional) How often you want to log SMART data (0.25 = 15' , 0.5 = 30' , 1 = 1 hour, 2 = 2 hours, etc.). Default = 10 hours.";
-	const char *output_file = "(optional) Name of the log file (give it a name that easy for you to remember what the test is). You can leave it blank too, we will take care it for you.";
-	const char *test_name = "(optional) Name of the test you are doing. We use this as part of the name of the log file.";
+	const char *run_time =
+	    "(optional) Number of hours to log data (default = 20 hours)";
+	const char *freq =
+	    "(optional) How often you want to log SMART data (0.25 = 15' , 0.5 "
+	    "= 30' , 1 = 1 hour, 2 = 2 hours, etc.). Default = 10 hours.";
+	const char *output_file =
+	    "(optional) Name of the log file (give it a name that easy for you "
+	    "to remember what the test is). You can leave it blank too, we "
+	    "will take care it for you.";
+	const char *test_name = "(optional) Name of the test you are doing. We "
+				"use this as part of the name of the log file.";
 
 	struct vtview_save_log_settings cfg = {
-		.run_time_hrs = 20,
-		.log_record_frequency_hrs = 10,
-		.output_file = NULL,
-		.test_name = NULL,
+	    .run_time_hrs = 20,
+	    .log_record_frequency_hrs = 10,
+	    .output_file = NULL,
+	    .test_name = NULL,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_DOUBLE("run-time",  'r', &cfg.run_time_hrs,             run_time),
-		OPT_DOUBLE("freq",      'f', &cfg.log_record_frequency_hrs, freq),
-		OPT_FILE("output-file", 'o', &cfg.output_file,              output_file),
-		OPT_STRING("test-name", 'n', "NAME", &cfg.test_name,        test_name),
-		OPT_END()
-	};
+	    OPT_DOUBLE("run-time", 'r', &cfg.run_time_hrs, run_time),
+	    OPT_DOUBLE("freq", 'f', &cfg.log_record_frequency_hrs, freq),
+	    OPT_FILE("output-file", 'o', &cfg.output_file, output_file),
+	    OPT_STRING("test-name", 'n', "NAME", &cfg.test_name, test_name),
+	    OPT_END()};
 
 	vt_generate_vtview_log_file_name(vt_default_log_file_name);
 
@@ -965,7 +1107,8 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 	printf("Running...\n");
 	printf("Collecting data for device %s\n", path);
 	printf("Running for %lf hour(s)\n", cfg.run_time_hrs);
-	printf("Logging SMART data for every %lf hour(s)\n", cfg.log_record_frequency_hrs);
+	printf("Logging SMART data for every %lf hour(s)\n",
+	       cfg.log_record_frequency_hrs);
 
 	ret = vt_update_vtview_log_header(fd, path, &cfg);
 	if (ret) {
@@ -977,7 +1120,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 	total_time = cfg.run_time_hrs * (float)HOUR_IN_SECONDS;
 	freq_time = cfg.log_record_frequency_hrs * (float)HOUR_IN_SECONDS;
 
-	if(freq_time == 0)
+	if (freq_time == 0)
 		freq_time = 1;
 
 	start_time = time(NULL);
@@ -987,7 +1130,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 
 	while (1) {
 		cur_time = time(NULL);
-		if(cur_time >= end_time)
+		if (cur_time >= end_time)
 			break;
 
 		ret = vt_add_entry_to_log(fd, path, &cfg);
@@ -1002,22 +1145,21 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 		fflush(stdout);
 	}
 
-	close (fd);
+	close(fd);
 	return (err);
 }
 
-static int vt_show_identify(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int vt_show_identify(int argc, char **argv, struct command *cmd,
+			    struct plugin *plugin)
 {
 	int err = 0;
-	int fd ,ret;
+	int fd, ret;
 	struct nvme_id_ctrl ctrl;
 	char *desc = "Parse identify data to json format\n\n"
-		"Typical usages:\n\n"
-		"virtium show-identify /dev/yourDevice\n";
+		     "Typical usages:\n\n"
+		     "virtium show-identify /dev/yourDevice\n";
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	OPT_ARGS(opts) = {OPT_END()};
 
 	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0) {
@@ -1028,7 +1170,7 @@ static int vt_show_identify(int argc, char **argv, struct command *cmd, struct p
 	ret = nvme_identify_ctrl(fd, &ctrl);
 	if (ret) {
 		printf("Cannot read identify device\n");
-		close (fd);
+		close(fd);
 		return (-1);
 	}
 

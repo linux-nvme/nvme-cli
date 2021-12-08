@@ -1,13 +1,13 @@
+#include "nvme-models.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <errno.h>
-#include "nvme-models.h"
 
 static char *_fmt1 = "/sys/class/nvme/nvme%d/device/subsystem_vendor";
 static char *_fmt2 = "/sys/class/nvme/nvme%d/device/subsystem_device";
@@ -27,8 +27,6 @@ static char *device_final;
 static char *class_top;
 static char *class_mid;
 static char *class_final;
-
-
 
 static void free_all(void)
 {
@@ -109,14 +107,11 @@ static void format_all(char *save, char *vendor, char *device)
 	else if (device_top && !device_mid && class_mid)
 		snprintf(save, 1024, "%s: %s Device %s",
 			 locate_info(class_mid, false, true),
-			 locate_info(device_top, false, false),
-			 device);
+			 locate_info(device_top, false, false), device);
 
 	else if (!device_top && class_mid)
 		snprintf(save, 1024, "%s: Vendor %s Device %s",
-			 locate_info(class_mid, false, true),
-			 vendor,
-			 device);
+			 locate_info(class_mid, false, true), vendor, device);
 	else
 		snprintf(save, 1024, "Unknown device");
 }
@@ -130,7 +125,7 @@ static int is_inner_sub_vendev(char *line, char *search, char *search2)
 {
 	char combine[10];
 	snprintf(combine, sizeof(combine), "%s %s", &search[2], &search2[2]);
-       	if (line[0] != '\t' && line[1] != '\t')
+	if (line[0] != '\t' && line[1] != '\t')
 		return 0;
 
 	return !memcmp(combine, &line[2], 9);
@@ -144,12 +139,9 @@ static int is_mid_level_match(char *line, char *device, bool class)
 	return !memcmp(&line[1], device, 2);
 }
 
-static inline bool is_comment(char *line)
-{
-	return line[0] == '#';
-}
+static inline bool is_comment(char *line) { return line[0] == '#'; }
 
-static int is_top_level_match(char *line, const char* device, bool class)
+static int is_top_level_match(char *line, const char *device, bool class)
 {
 	if (line[0] == '\t')
 		return false;
@@ -163,19 +155,15 @@ static int is_top_level_match(char *line, const char* device, bool class)
 	return !memcmp(&line[2], &device[2], 2);
 }
 
-static inline int is_tab(char *line)
-{
-	return line[0] == '\t';
-}
+static inline int is_tab(char *line) { return line[0] == '\t'; }
 
 static inline int is_class_info(char *line)
 {
 	return !memcmp(line, "# C class", 9);
 }
 
-static void parse_vendor_device(char **line, FILE *file,
-			       char *device, char *subdev,
-			       char *subven)
+static void parse_vendor_device(char **line, FILE *file, char *device,
+				char *subdev, char *subven)
 {
 	bool device_single_found = false;
 	size_t amnt = 1024;
@@ -190,13 +178,15 @@ static void parse_vendor_device(char **line, FILE *file,
 			return;
 
 		newline[found - 1] = '\0';
-		if (!device_single_found && is_mid_level_match(newline, device, false)) {
+		if (!device_single_found &&
+		    is_mid_level_match(newline, device, false)) {
 			device_single_found = true;
 			device_mid = strdup(newline);
 			continue;
 		}
 
-		if (device_single_found && is_inner_sub_vendev(newline, subven, subdev)) {
+		if (device_single_found &&
+		    is_inner_sub_vendev(newline, subven, subdev)) {
 			device_final = strdup(newline);
 			break;
 		}
@@ -220,7 +210,7 @@ static void pull_class_info(char **_newline, FILE *file, char *class)
 			continue;
 		}
 		if (!mid_found && top_found &&
-		    is_mid_level_match(newline,  &class[4], true)) {
+		    is_mid_level_match(newline, &class[4], true)) {
 			class_mid = strdup(newline);
 			mid_found = true;
 			continue;
@@ -239,12 +229,12 @@ static int read_sys_node(char *where, char *save, size_t savesz)
 	int fd, ret = 0;
 	fd = open(where, O_RDONLY);
 	if (fd < 0) {
-		fprintf(stderr, "Failed to open %s with errno %s\n",
-			where, strerror(errno));
+		fprintf(stderr, "Failed to open %s with errno %s\n", where,
+			strerror(errno));
 		return 1;
 	}
 	/* -1 so we can safely use strstr below */
-	if(!read(fd, save, savesz - 1))
+	if (!read(fd, save, savesz - 1))
 		ret = 1;
 
 	new = strstr(save, "\n");
@@ -261,19 +251,18 @@ static FILE *open_pci_ids(void)
 	char *pci_ids_path;
 	FILE *fp;
 
-	const char* pci_ids[] = {
-		"/usr/share/hwdata/pci.ids",  /* RHEL */
-		"/usr/share/pci.ids",		  /* SLES */
-		"/usr/share/misc/pci.ids",	  /* Ubuntu */
-		NULL
-	};
+	const char *pci_ids[] = {"/usr/share/hwdata/pci.ids", /* RHEL */
+				 "/usr/share/pci.ids",	      /* SLES */
+				 "/usr/share/misc/pci.ids",   /* Ubuntu */
+				 NULL};
 
 	/* First check if user gave pci ids in environment */
 	if ((pci_ids_path = getenv("PCI_IDS_PATH")) != NULL) {
 		if ((fp = fopen(pci_ids_path, "r")) != NULL) {
 			return fp;
 		} else {
-			/* fail if user provided environment variable but could not open */
+			/* fail if user provided environment variable but could
+			 * not open */
 			perror(pci_ids_path);
 			return NULL;
 		}
@@ -293,11 +282,11 @@ char *nvme_product_name(int id)
 {
 	char *line = NULL;
 	ssize_t amnt;
-	char vendor[7] = { 0 };
-	char device[7] = { 0 };
-	char sub_device[7] = { 0 };
-	char sub_vendor[7] = { 0 };
-	char class[13] = { 0 };
+	char vendor[7] = {0};
+	char device[7] = {0};
+	char sub_device[7] = {0};
+	char sub_vendor[7] = {0};
+	char class[13] = {0};
 	size_t size = 1024;
 	char ret;
 	FILE *file = open_pci_ids();
@@ -331,10 +320,8 @@ char *nvme_product_name(int id)
 		if (is_top_level_match(line, vendor, false)) {
 			line[amnt - 1] = '\0';
 			device_top = strdup(line);
-			parse_vendor_device(&line, file,
-						device,
-						sub_device,
-						sub_vendor);
+			parse_vendor_device(&line, file, device, sub_device,
+					    sub_vendor);
 		}
 		if (is_class_info(line))
 			pull_class_info(&line, file, class);

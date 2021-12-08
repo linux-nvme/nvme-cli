@@ -1,7 +1,7 @@
 /* CC0 (Public domain) - see LICENSE file for details */
 #include "config.h"
-#include <ccan/str/str_debug.h>
 #include <assert.h>
+#include <ccan/str/str_debug.h>
 #include <ctype.h>
 #include <string.h>
 
@@ -96,13 +96,7 @@ char *str_strstr(const char *haystack, const char *needle)
 	return strstr(haystack, needle);
 }
 
-char *str_strchr(const char *haystack, int c)
-{
-	return strchr(haystack, c);
-}
+char *str_strchr(const char *haystack, int c) { return strchr(haystack, c); }
 
-char *str_strrchr(const char *haystack, int c)
-{
-	return strrchr(haystack, c);
-}
+char *str_strrchr(const char *haystack, int c) { return strrchr(haystack, c); }
 #endif

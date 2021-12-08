@@ -7,6 +7,8 @@
  * parsing is required.
  */
 
+#include <stdbool.h>
+#include <stdlib.h>
 
 /* associates an integer enumerator with a pattern string. */
 struct match_token {

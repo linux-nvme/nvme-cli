@@ -5,14 +5,12 @@
  * Version 2.  See the file COPYING for more details.
  */
 
+#include "parser.h"
 #include <ctype.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
 #include <errno.h>
 #include <limits.h>
+#include <string.h>
 #include <sys/types.h>
-#include "parser.h"
 
 /**
  * match_one: - Determines if a string matches a simple pattern
@@ -33,20 +31,20 @@ static int match_one(char *s, const char *p, substring_t args[])
 	if (!p)
 		return 1;
 
-	while(1) {
+	while (1) {
 		int len = -1;
 		meta = strchr(p, '%');
 		if (!meta)
 			return strcmp(p, s) == 0;
 
-		if (strncmp(p, s, meta-p))
+		if (strncmp(p, s, meta - p))
 			return 0;
 
 		s += meta - p;
 		p = meta + 1;
 
 		if (isdigit(*p))
-			len = strtoul(p, (char **) &p, 10);
+			len = strtoul(p, (char **)&p, 10);
 		else if (*p == '%') {
 			if (*s++ != '%')
 				return 0;
@@ -110,7 +108,7 @@ int match_token(char *s, const match_table_t table, substring_t args[])
 {
 	const struct match_token *p;
 
-	for (p = table; !match_one(s, p->pattern, args) ; p++)
+	for (p = table; !match_one(s, p->pattern, args); p++)
 		;
 
 	return p->token;
@@ -147,7 +145,7 @@ static int match_number(substring_t *s, int *result, int base)
 	else if (val < (long)INT_MIN || val > (long)INT_MAX)
 		ret = -ERANGE;
 	else
-		*result = (int) val;
+		*result = (int)val;
 	free(buf);
 	return ret;
 }
