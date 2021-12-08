@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: nvme-zns-open-zone
+.\"     Title: nvme-zns-flush-zone
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
 .\"      Date: 12/08/2021
@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZNS\-OPEN\-ZON" "1" "12/08/2021" "NVMe" "NVMe Manual"
+.TH "NVME\-ZNS\-FLUSH\-ZO" "1" "12/08/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,19 +28,17 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-zns-open-zone \- Opens one or all zones
+nvme-zns-flush-zone \- flush zone
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme zns open\-zone\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
-                                                [\-\-start\-lba=<LBA> | \-s <LBA>]
-                                                [\-\-zrwa | \-r]
-                                                [\-\-select\-all | \-a]
-                                                [\-\-timeout=<timeout> | \-t <timeout>]
+\fInvme zns flush\-zone\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
+                               [\-\-last\-lba=<LBA> | \-l <LBA>]
+                                   [\-\-timeout=<timeout> | \-t <timeout> ]
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, issues the Zone Management Send command with the "Open Zone" action\&. This will transition the zone to the opened state\&.
+For the NVMe device given, issues the Zone Management Send command with the "flush Zone" action\&. This will flush the zone that is opened as zone random write area\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .SH "OPTIONS"
@@ -50,19 +48,9 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 Use the provided namespace id for the command\&. If not provided, the namespace id of the block device will be used\&. If the command is issued to a non\-block device, the parameter is required\&.
 .RE
 .PP
-\-s <lba>, \-\-start\-lba=<lba>
+\-l <lba>, \-\-last\-lba=<lba>
 .RS 4
-The starting LBA of the zone to open\&.
-.RE
-.PP
-\-r, \-\-zrwa
-.RS 4
-Zone Random Write Area Allocation
-.RE
-.PP
-\-a, \-\-select\-all
-.RS 4
-Select all zones for this action
+The last LBA of the zone to be flushed\&.
 .RE
 .PP
 \-t <timeout>, \-\-timeout=<timeout>
@@ -79,13 +67,13 @@ Override default timeout value\&. In milliseconds\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-Open the first zone on namespace 1:
+flush the first zwra of first zone for zrwacg(15) on namespace 1:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# nvme zns open\-zone /dev/nvme0 \-n 1 \-s 0
+# nvme zns flush\-zone /dev/nvme0 \-n 1 \-l 15
 .fi
 .if n \{\
 .RE

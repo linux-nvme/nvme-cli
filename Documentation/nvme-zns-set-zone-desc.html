@@ -748,6 +748,7 @@ nvme-zns-set-zone-desc(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme zns setzone-desc</em> &lt;device&gt; [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
                                  [--start-lba=&lt;IONUM&gt;, -s &lt;IONUM&gt;]
+                                 [--zrwa | -r]
                                  [-data=&lt;FILE&gt;, -d &lt;FILE&gt;]
                                  [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
 <div class="attribution">
@@ -789,6 +790,17 @@ length will automatically be calculated from the zns identify namesapce.</p></di
 <dd>
 <p>
         The starting LBA of the zone to manage send.
+</p>
+</dd>
+<dt class="hdlist1">
+-r
+</dt>
+<dt class="hdlist1">
+--zrwa
+</dt>
+<dd>
+<p>
+        Zone Random Write Area Allocation
 </p>
 </dd>
 <dt class="hdlist1">
@@ -843,7 +855,7 @@ Write "hello world" into the zone descriptor for namespace 1&#8217;s first zone
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-08-26 14:39:19 KST
+Last updated 2021-12-08 15:17:18 KST
 </div>
 </div>
 </body>

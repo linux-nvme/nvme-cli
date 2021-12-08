@@ -18,6 +18,7 @@ PLUGIN(NAME("zns", "Zoned Namespace Command Set", NVME_VERSION),
 		ENTRY("open-zone", "Open one or more zones", open_zone)
 		ENTRY("offline-zone", "Offline one or more zones", offline_zone)
 		ENTRY("set-zone-desc", "Attach zone descriptor extension data to a zone", set_zone_desc)
+		ENTRY("flush-zone", "Flushes a range of logical blocks from a ZRWA to a zone.", flush_zone)
 		ENTRY("changed-zone-list", "Retrieve the changed zone list log", changed_zone_list)
 		ENTRY("zone-mgmt-recv", "Send the zone management receive command", zone_mgmt_recv)
 		ENTRY("zone-mgmt-send", "Send the zone management send command", zone_mgmt_send)
