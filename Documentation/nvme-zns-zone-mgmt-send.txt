@@ -10,10 +10,11 @@ SYNOPSIS
 [verse]
 'nvme zns zone-mgmt-send' <device> [--namespace-id=<NUM> | -n <NUM>]
 				   [--start-lba=<IONUM>, -s <IONUM>]
+				   [--zsaso, -o]
 				   [--select-all, -a]
 				   [--zsa=<NUM>, -z <NUM>]
 				   [--data-len=<IONUM>, -l <IONUM>]
-				   [-data=<FILE>, -d <FILE>]
+				   [--data=<FILE>, -d <FILE>]
 				   [--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
@@ -39,6 +40,10 @@ OPTIONS
 --data-len=<NUM>::
 	Send data buffer length
 
+-o::
+--zsaso::
+	Zone Send Action Specific Option
+
 --select-all::
 -a::
 	Send command to all zones
@@ -52,7 +57,7 @@ OPTIONS
 	Buffer length if data required
 
 -d <FILE::
--data=<FILE>::
+--data=<FILE>::
 	Optional file for data (default stdin)
 
 -t <timeout>::

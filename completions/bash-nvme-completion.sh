@@ -1257,7 +1257,7 @@ plugin_zns_opts () {
 			--data-len= -l"
 			;;
 		"zone-mgmt-send")
-		opts+=" --namespace-id= -n --start-lba= -s \
+		opts+=" --namespace-id= -n --start-lba= -s --zsaso -o \
 			--select-all -a --zsa= -z --data-len= -l \
 			--data= -d --timeout= -t"
 			;;
@@ -1276,7 +1276,7 @@ plugin_zns_opts () {
 			;;
 		"open-zone")
 		opts+=" --namespace-id= -n --start-lba= -s \
-			--select-all -a --timeout= -t"
+			--select-all -a --timeout= -t --zrwa -r"
 			;;
 		"reset-zone")
 		opts+=" --namespace-id= -n --start-lba= -s \
@@ -1288,7 +1288,10 @@ plugin_zns_opts () {
 			;;
 		"set-zone-desc")
 		opts+=" --namespace-id= -n --start-lba= -s \
-			--data= -d --timeout= -t"
+			--data= -d --timeout= -t  --zrwa -r"
+			;;
+		"flush-zone")
+		opts+=" --namespace-id= -n --last-lba= -l --timeout= -t"
 			;;
 		"zone-append")
 		opts+=" --namespace-id= -n --zslba= -s --data-size= -z \

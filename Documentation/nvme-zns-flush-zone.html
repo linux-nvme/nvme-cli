@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.8" />
-<title>nvme-zns-zone-mgmt-send(1)</title>
+<title>nvme-zns-flush-zone(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -732,12 +732,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-zns-zone-mgmt-send(1) Manual Page
+nvme-zns-flush-zone(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-zns-zone-mgmt-send -
-   Zone Management Send command
+<p>nvme-zns-flush-zone -
+   flush zone
 </p>
 </div>
 </div>
@@ -746,14 +746,9 @@ nvme-zns-zone-mgmt-send(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme zns zone-mgmt-send</em> &lt;device&gt; [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
-                                   [--start-lba=&lt;IONUM&gt;, -s &lt;IONUM&gt;]
-                                   [--zsaso, -o]
-                                   [--select-all, -a]
-                                   [--zsa=&lt;NUM&gt;, -z &lt;NUM&gt;]
-                                   [--data-len=&lt;IONUM&gt;, -l &lt;IONUM&gt;]
-                                   [--data=&lt;FILE&gt;, -d &lt;FILE&gt;]
-                                   [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
+<pre class="content"><em>nvme zns flush-zone</em> &lt;device&gt; [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
+                               [--last-lba=&lt;LBA&gt; | -l &lt;LBA&gt;]
+                                   [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt; ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -762,9 +757,10 @@ nvme-zns-zone-mgmt-send(1) Manual Page
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>For the NVMe device given, issues the Zone Management Send command with the
-requested send action. If the send requires additional data, you may specify
-the data length. If data is required, the input will default to stdin.
-Alternatively, the data may come from a file that can be specified.</p></div>
+"flush Zone" action. This will flush the zone that is opened as
+zone random write area.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -785,80 +781,14 @@ Alternatively, the data may come from a file that can be specified.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
--s &lt;lba&gt;
+-l &lt;lba&gt;
 </dt>
 <dt class="hdlist1">
---start-lba=&lt;lba&gt;
+--last-lba=&lt;lba&gt;
 </dt>
 <dd>
 <p>
-        The starting LBA of the zone to manage send.
-</p>
-</dd>
-<dt class="hdlist1">
--l &lt;NUM&gt;
-</dt>
-<dt class="hdlist1">
---data-len=&lt;NUM&gt;
-</dt>
-<dd>
-<p>
-        Send data buffer length
-</p>
-</dd>
-<dt class="hdlist1">
--o
-</dt>
-<dt class="hdlist1">
---zsaso
-</dt>
-<dd>
-<p>
-        Zone Send Action Specific Option
-</p>
-</dd>
-<dt class="hdlist1">
---select-all
-</dt>
-<dt class="hdlist1">
--a
-</dt>
-<dd>
-<p>
-        Send command to all zones
-</p>
-</dd>
-<dt class="hdlist1">
--z &lt;NUM&gt;
-</dt>
-<dt class="hdlist1">
---zsa=&lt;NUM&gt;
-</dt>
-<dd>
-<p>
-        Zone send action.
-</p>
-</dd>
-<dt class="hdlist1">
--l &lt;IONUM&gt;
-</dt>
-<dt class="hdlist1">
---data-len=&lt;IONUM&gt;
-</dt>
-<dd>
-<p>
-        Buffer length if data required
-</p>
-</dd>
-<dt class="hdlist1">
--d &lt;FILE
-</dt>
-<dt class="hdlist1">
---data=&lt;FILE&gt;
-</dt>
-<dd>
-<p>
-        Optional file for data (default stdin)
+        The last LBA of the zone to be flushed.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -881,22 +811,11 @@ Alternatively, the data may come from a file that can be specified.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Send a zone management command with action set to 1 (close zone) to namespace
-  1&#8217;s first zone:
+flush the first zwra of first zone for zrwacg(15) on namespace 1:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme zns zone-mgmt-send /dev/nvme0 -n 1 -s 0 -z 1</code></pre>
-</div></div>
-</li>
-<li>
-<p>
-Write "hello world" into the zone descriptor for namespace 1&#8217;s first zone
-  (requires device supports a large enough zone extended data)
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># echo "hello world" | nvme zns zone-mgmt-send /dev/nvme0 -n 1 -s 0 -z 0x10</code></pre>
+<pre><code># nvme zns flush-zone /dev/nvme0 -n 1 -l 15</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -912,7 +831,7 @@ Write "hello world" into the zone descriptor for namespace 1&#8217;s first zone
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-12-07 17:53:10 KST
+Last updated 2021-12-07 17:49:58 KST
 </div>
 </div>
 </body>
