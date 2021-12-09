@@ -925,7 +925,7 @@ static void json_sanitize_log(struct nvme_sanitize_log_page *sanitize_log,
 	json_free_object(root);
 }
 
-void json_predictable_latency_per_nvmset(
+static void json_predictable_latency_per_nvmset(
 	struct nvme_nvmset_predictable_lat_log *plpns_log,
 	__u16 nvmset_id)
 {
@@ -997,7 +997,7 @@ void nvme_show_predictable_latency_per_nvmset(
 		le64_to_cpu(plpns_log->dtwin_te));
 }
 
-void json_predictable_latency_event_agg_log(
+static void json_predictable_latency_event_agg_log(
 	struct nvme_aggregate_predictable_lat_event *pea_log,
 	__u64 log_entries)
 {
@@ -1082,7 +1082,7 @@ static const char *nvme_show_nss_hw_error(__u16 error_code)
 	}
 }
 
-void json_persistent_event_log(void *pevent_log_info, __u32 size)
+static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 {
 	struct json_object *root;
 	struct json_object *valid_attrs;
@@ -1707,7 +1707,7 @@ void nvme_show_endurance_group_event_agg_log(
 	}
 }
 
-void json_lba_status_log(void *lba_status)
+static void json_lba_status_log(void *lba_status)
 {
 	struct json_object *root;
 	struct json_object *desc;
@@ -2700,7 +2700,7 @@ void nvme_show_relatives(const char *name)
 	/* XXX: TBD */
 }
 
-void d_json(unsigned char *buf, int len, int width, int group,
+static void d_json(unsigned char *buf, int len, int width, int group,
 	    struct json_object *array)
 {
 	int i, line_done = 0;
@@ -4279,7 +4279,7 @@ void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode)
 	printf("zasl    : %u\n", ctrl->zasl);
 }
 
-void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
+static void json_nvme_zns_id_ns(struct nvme_zns_id_ns *ns,
 	struct nvme_id_ns *id_ns)
 {
 	struct json_object *root;

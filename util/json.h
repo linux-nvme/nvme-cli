@@ -54,6 +54,7 @@ int json_object_add_value_type(struct json_object *obj, const char *name, int ty
 	json_object_add_value_type((obj), name, JSON_TYPE_INTEGER, (long long) (val))
 #define json_object_add_value_uint(obj, name, val) \
 	json_object_add_value_type((obj), name, JSON_TYPE_UINT, (unsigned long long) (val))
+#define json_object_add_value_uint64 json_object_add_value_uint
 #define json_object_add_value_float(obj, name, val) \
 	json_object_add_value_type((obj), name, JSON_TYPE_FLOAT, (val))
 #define json_object_add_value_string(obj, name, val) \
