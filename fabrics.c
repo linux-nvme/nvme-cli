@@ -883,7 +883,7 @@ static char *hostnqn_generate_systemd(void)
 
 static char *hostnqn_read_dmi(void)
 {
-	char uuid[16];
+	char uuid[37];
 	char *ret = NULL;
 
 	if (uuid_from_dmi(uuid) < 0)
