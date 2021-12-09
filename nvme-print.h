@@ -51,20 +51,13 @@ void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
 	__u16 group_id, const char *devname, enum nvme_print_flags flags);
 void nvme_show_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 	const char *devname, enum nvme_print_flags flags);
-void json_predictable_latency_per_nvmset(
-	struct nvme_nvmset_predictable_lat_log *plpns_log,
-	__u16 nvmset_id);
 void nvme_show_predictable_latency_per_nvmset(
 	struct nvme_nvmset_predictable_lat_log *plpns_log,
 	__u16 nvmset_id, const char *devname, enum nvme_print_flags flags);
-void json_predictable_latency_event_agg_log(
-	struct nvme_aggregate_predictable_lat_event *pea_log,
-	__u64 log_entries);
 void nvme_show_predictable_latency_event_agg_log(
 	struct nvme_aggregate_predictable_lat_event *pea_log,
 	__u64 log_entries, __u32 size, const char *devname,
 	enum nvme_print_flags flags);
-void json_persistent_event_log(void *pevent_log_info, __u32 size);
 void nvme_show_persistent_event_log(void *pevent_log_info,
 	__u8 action, __u32 size, const char *devname,
 	enum nvme_print_flags flags);
@@ -75,7 +68,6 @@ void nvme_show_endurance_group_event_agg_log(
 	struct nvme_aggregate_predictable_lat_event *endurance_log,
 	__u64 log_entries, __u32 size, const char *devname,
 	enum nvme_print_flags flags);
-void json_lba_status_log(void *lba_status);
 void nvme_show_lba_status_log(void *lba_status, __u32 size,
 	const char *devname, enum nvme_print_flags flags);
 void nvme_show_resv_notif_log(struct nvme_resv_notification_log *resv,
