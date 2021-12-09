@@ -101,8 +101,7 @@ _cmds="list list-subsys id-ctrl id-ns \
 	connect disconnect disconnect-all gen-hostnqn \
 	show-hostnqn dir-receive dir-send virt-mgmt \
 	rpmb boot-part-log fid-support-effects-log \
-	supported-log-pages lockdown"
-	supported-log-pages list-endgrp"
+	supported-log-pages lockdown list-endgrp"
 
 # Add plugins:
 for plugin in "${!_plugin_subcmds[@]}"; do
@@ -1368,7 +1367,7 @@ plugin_ymtc_opts () {
 		opts+=" --namespace-id= -n --raw-binary -b"
 			;;
 		"help")
-		opts+=NO_OPTS
+		opts+=$NO_OPTS
 			;;
 	esac
 
