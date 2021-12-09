@@ -407,7 +407,7 @@ int parse_params(char *str, int number, ...)
             exit(EINVAL);
         }
 
-        if (isalnum(*c) == 0) {
+        if (isalnum((int)*c) == 0) {
             printf("%s is not a valid number\n", c);
             return 1;
         }
