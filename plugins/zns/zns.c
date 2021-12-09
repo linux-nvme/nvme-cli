@@ -928,7 +928,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 			"Data size:%#"PRIx64" not aligned to lba size:%#x\n",
 			(uint64_t)cfg.data_size, lba_size);
 		errno = EINVAL;
-		goto close_ns;
+		goto close_fd;
 	}
 
 	meta_size = ns.lbaf[(ns.flbas & 0x0f)].ms;
@@ -938,20 +938,20 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 			"Metadata size:%#"PRIx64" not aligned to metadata size:%#x\n",
 			(uint64_t)cfg.metadata_size, meta_size);
 		errno = EINVAL;
-		goto close_ns;
+		goto close_fd;
 	}
 
 	if (cfg.prinfo > 0xf) {
 	        fprintf(stderr, "Invalid value for prinfo:%#x\n", cfg.prinfo);
 		errno = EINVAL;
-		goto close_ns;
+		goto close_fd;
 	}
 
 	if (cfg.data) {
 		dfd = open(cfg.data, O_RDONLY);
 		if (dfd < 0) {
 			perror(cfg.data);
-			goto close_ns;
+			goto close_fd;
 		}
 	}
 
@@ -973,7 +973,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		if (mfd < 0) {
 			perror(cfg.metadata);
 			err = -1;
-			goto close_dfd;
+			goto free_data;
 		}
 	}
 
@@ -1029,7 +1029,6 @@ free_data:
 close_dfd:
 	if (cfg.data)
 		close(dfd);
-close_ns:
 close_fd:
 	close(fd);
 	return nvme_status_to_errno(err, false);
