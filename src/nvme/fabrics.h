@@ -179,7 +179,7 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 
 /**
  * nvmf_hostnqn_generate() - Generate a machine specific host nqn
- * Returns: An nvm namespace qualifieid name string based on the machine
+ * Returns: An nvm namespace qualified name string based on the machine
  * identifier, or NULL if not successful.
  */
 char *nvmf_hostnqn_generate();

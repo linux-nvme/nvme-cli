@@ -374,8 +374,8 @@ struct nvme_host *nvme_lookup_host(nvme_root_t r, const char *hostnqn,
 	nvme_for_each_host(r, h) {
 		if (strcmp(h->hostnqn, hostnqn))
 			continue;
-		if (hostid &&
-		    strcmp(h->hostid, hostid))
+		if (hostid && (!h->hostid ||
+		    strcmp(h->hostid, hostid)))
 			continue;
 		return h;
 	}
