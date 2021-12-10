@@ -2513,7 +2513,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
     // trim spaces out of serial number string */
     int i, j = 0;
     for (i = 0; i < sizeof(ctrl.sn); i++) {
-        if (isblank(ctrl.sn[i]))
+        if (isblank((int)ctrl.sn[i]))
             continue;
         sn[j++] = ctrl.sn[i];
     }
