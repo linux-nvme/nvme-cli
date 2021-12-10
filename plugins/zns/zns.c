@@ -234,6 +234,7 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 
 	int err, fd;
 	char *command;
+	__u32 result;
 
 	struct config {
 		__u64	zslba;
@@ -269,11 +270,16 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 	}
 
 	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, zsa,
-		cfg.select_all, 0, 0, NULL, cfg.timeout, NULL);
-	if (!err)
+		cfg.select_all, 0, 0, NULL, cfg.timeout, &result);
+	if (!err) {
 		printf("%s: Success, action:%d zone:%"PRIx64" all:%d nsid:%d\n",
 			command, zsa, (uint64_t)cfg.zslba, (int)cfg.select_all,
 			cfg.namespace_id);
+		if(result && zsa == NVME_ZNS_ZSA_RESET) {
+			if(result & 0x1)
+				printf("Zone Capacity has Changed by the command\n");
+		}
+	}
 	else if (err > 0)
 		nvme_show_status(err);
 	else
