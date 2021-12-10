@@ -1054,6 +1054,26 @@ void nvme_show_predictable_latency_event_agg_log(
 	}
 }
 
+const char *nvme_pel_event_to_string(int type)
+{
+	switch (type) {
+	case NVME_PEL_SMART_HEALTH_EVENT:	return "SMART/Health Log Snapshot Event(0x1)";
+	case NVME_PEL_FW_COMMIT_EVENT:	return "Firmware Commit Event(0x2)";
+	case NVME_PEL_TIMESTAMP_EVENT:	return "Timestamp Change Event(0x3)";
+	case NVME_PEL_POWER_ON_RESET_EVENT:	return "Power-on or Reset Event(0x4)";
+	case NVME_PEL_NSS_HW_ERROR_EVENT:	return "NVM Subsystem Hardware Error Event(0x5)";
+	case NVME_PEL_CHANGE_NS_EVENT:	return "Change Namespace Event(0x6)";
+	case NVME_PEL_FORMAT_START_EVENT:	return "Format NVM Start Event(0x7)";
+	case NVME_PEL_FORMAT_COMPLETION_EVENT:	return "Format NVM Completion Event(0x8)";
+	case NVME_PEL_SANITIZE_START_EVENT:	return "Sanitize Start Event(0x9)";
+	case NVME_PEL_SANITIZE_COMPLETION_EVENT:	return "Sanitize Completion Event(0xa)";
+	case NVME_PEL_SET_FEATURE_EVENT:	return "Set Feature Event(0xb)";
+	case NVME_PEL_TELEMETRY_CRT:		return "Set Telemetry CRT  Event(0xc)";
+	case NVME_PEL_THERMAL_EXCURSION_EVENT:	return "Thermal Excursion Event(0xd)";
+	default:			return NULL;
+	}
+}
+
 static const char *nvme_show_nss_hw_error(__u16 error_code)
 {
 	switch (error_code) {
@@ -1082,6 +1102,29 @@ static const char *nvme_show_nss_hw_error(__u16 error_code)
 	}
 }
 
+static void add_bitmap(int i, __u8 seb, struct json_object *root, int json_flag)
+{
+	char evt_str[50];
+	char key[128];
+
+	for (int bit = 0; bit < 8; bit++) {
+		if (nvme_pel_event_to_string(bit + i * 8)) {
+			if (json_flag == 1) {
+				sprintf(key, "bitmap_%x", (bit + i * 8));
+				if ((seb >> bit) & 0x1)
+					snprintf(evt_str, sizeof(evt_str), "Support %s",
+						nvme_pel_event_to_string(bit + i * 8));
+				json_object_add_value_string(root, key, evt_str);
+			} else {
+				if (nvme_pel_event_to_string(bit + i * 8))
+					if ((seb >> bit) & 0x1)
+						printf("	Support %s\n",
+							nvme_pel_event_to_string(bit + i * 8));
+			}
+		}
+	}
+}
+
 static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 {
 	struct json_object *root;
@@ -1090,6 +1133,7 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 	__u32 offset, por_info_len, por_info_list;
 	__u64 *fw_rev;
 	char key[128];
+	char fw_str[50];
 
 	struct nvme_smart_log *smart_event;
 	struct nvme_fw_commit_event *fw_commit_event;
@@ -1152,9 +1196,7 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 		for (int i = 0; i < 32; i++) {
 			if (pevent_log_head->seb[i] == 0)
 				continue;
-			sprintf(key, "bitmap_%d", i);
-			json_object_add_value_uint(root, key,
-				pevent_log_head->seb[i]);
+			add_bitmap(i, pevent_log_head->seb[i], root, 1);
 		}
 	} else {
 		printf("No log data can be shown with this log len at least " \
@@ -1172,9 +1214,10 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			le16_to_cpu(pevent_entry_head->el)) >= size)
 			break;
 		valid_attrs = json_create_object();
-
-		json_object_add_value_uint(valid_attrs, "event_type",
-			pevent_entry_head->etype);
+		
+		json_object_add_value_uint(valid_attrs, "event_number", i);
+		json_object_add_value_string(valid_attrs, "event_type",
+			nvme_pel_event_to_string(pevent_entry_head->etype));
 		json_object_add_value_uint(valid_attrs, "event_type_rev",
 			pevent_entry_head->etype_rev);
 		json_object_add_value_uint(valid_attrs, "event_header_len",
@@ -1264,10 +1307,14 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			break;
 		case NVME_PEL_FW_COMMIT_EVENT:
 			fw_commit_event = pevent_log_info + offset;
-			json_object_add_value_uint64(valid_attrs, "old_fw_rev",
-				le64_to_cpu(fw_commit_event->old_fw_rev));
-			json_object_add_value_uint64(valid_attrs, "new_fw_rev",
-				le64_to_cpu(fw_commit_event->new_fw_rev));
+			snprintf(fw_str, sizeof(fw_str), "%"PRIu64" (%s)",
+				le64_to_cpu(fw_commit_event->old_fw_rev),
+				fw_to_string((char *)&fw_commit_event->old_fw_rev));
+			json_object_add_value_string(valid_attrs, "old_fw_rev", fw_str);
+			snprintf(fw_str, sizeof(fw_str), "%"PRIu64" (%s)",
+				le64_to_cpu(fw_commit_event->new_fw_rev),
+				fw_to_string((char *)&fw_commit_event->new_fw_rev));
+			json_object_add_value_string(valid_attrs, "new_fw_rev", fw_str);
 			json_object_add_value_uint(valid_attrs, "fw_commit_action",
 				fw_commit_event->fw_commit_action);
 			json_object_add_value_uint(valid_attrs, "fw_slot",
@@ -1295,8 +1342,10 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			por_info_list = por_info_len / sizeof(*por_event);
 
 			fw_rev = pevent_log_info + offset;
-			json_object_add_value_uint64(valid_attrs, "fw_rev",
-				le64_to_cpu(*fw_rev));
+			snprintf(fw_str, sizeof(fw_str), "%"PRIu64" (%s)",
+				le64_to_cpu(*fw_rev),
+				fw_to_string((char *)fw_rev));
+			json_object_add_value_string(valid_attrs, "fw_rev", fw_str);
 			for (int i = 0; i < por_info_list; i++) {
 				por_event = pevent_log_info + offset +
 					sizeof(*fw_rev) + i * sizeof(*por_event);
@@ -1424,6 +1473,8 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 {
 	__u32 offset, por_info_len, por_info_list;
 	__u64 *fw_rev;
+	int fid, cdw11, dword_cnt;
+	unsigned char *mem_buf = NULL;
 	struct nvme_smart_log *smart_event;
 	struct nvme_fw_commit_event *fw_commit_event;
 	struct nvme_time_stamp_change_event *ts_change_event;
@@ -1434,6 +1485,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 	struct nvme_format_nvm_compln_event *format_cmpln_event;
 	struct nvme_sanitize_start_event *sanitize_start_event;
 	struct nvme_sanitize_compln_event *sanitize_cmpln_event;
+	struct nvme_set_feature_event *set_feat_event;
 	struct nvme_thermal_exc_event *thermal_exc_event;
 	struct nvme_persistent_event_log *pevent_log_head;
 	struct nvme_persistent_event_entry *pevent_entry_head;
@@ -1480,12 +1532,11 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			le32_to_cpu(pevent_log_head->rci));
 		if (human)
 			nvme_show_persistent_event_log_rci(pevent_log_head->rci);
-		printf("Supported Events Bitmap: ");
+		printf("Supported Events Bitmap: \n");
 		for (int i = 0; i < 32; i++) {
 			if (pevent_log_head->seb[i] == 0)
 				continue;
-			printf("  BitMap[%d] is 0x%x\n", i,
-				pevent_log_head->seb[i]);
+			add_bitmap(i, pevent_log_head->seb[i], NULL, 0);
 		}
 	} else {
 		printf("No log data can be shown with this log len at least " \
@@ -1504,8 +1555,8 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 		if ((offset + pevent_entry_head->ehl + 3 +
 			le16_to_cpu(pevent_entry_head->el)) >= size)
 			break;
-
-		printf("Event Type: %u\n", pevent_entry_head->etype);
+		printf("Event Number: %u\n", i);
+		printf("Event Type: %s\n", nvme_pel_event_to_string(pevent_entry_head->etype));
 		printf("Event Type Revision: %u\n", pevent_entry_head->etype_rev);
 		printf("Event Header Length: %u\n", pevent_entry_head->ehl);
 		printf("Controller Identifier: %u\n",
@@ -1521,16 +1572,18 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 		switch (pevent_entry_head->etype) {
 		case NVME_PEL_SMART_HEALTH_EVENT:
 			smart_event = pevent_log_info + offset;
-			printf("Smart Health Event: \n");
+			printf("Smart Health Event Entry: \n");
 			nvme_show_smart_log(smart_event, NVME_NSID_ALL, devname, flags);
 			break;
 		case NVME_PEL_FW_COMMIT_EVENT:
 			fw_commit_event = pevent_log_info + offset;
-			printf("FW Commit Event: \n");
-			printf("Old Firmware Revision: %"PRIu64"\n",
-				le64_to_cpu(fw_commit_event->old_fw_rev));
-			printf("New Firmware Revision: %"PRIu64"\n",
-				le64_to_cpu(fw_commit_event->new_fw_rev));
+			printf("FW Commit Event Entry: \n");
+			printf("Old Firmware Revision: %"PRIu64" (%s)\n",
+				le64_to_cpu(fw_commit_event->old_fw_rev),
+				fw_to_string((char *)&fw_commit_event->old_fw_rev));
+			printf("New Firmware Revision: %"PRIu64" (%s)\n",
+				le64_to_cpu(fw_commit_event->new_fw_rev),
+				fw_to_string((char *)&fw_commit_event->new_fw_rev));
 			printf("FW Commit Action: %u\n",
 				fw_commit_event->fw_commit_action);
 			printf("FW Slot: %u\n", fw_commit_event->fw_slot);
@@ -1543,7 +1596,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			break;
 		case NVME_PEL_TIMESTAMP_EVENT:
 			ts_change_event = pevent_log_info + offset;
-			printf("Time Stamp Change Event: \n");
+			printf("Time Stamp Change Event Entry: \n");
 			printf("Previous Timestamp: %"PRIu64"\n",
 				le64_to_cpu(ts_change_event->previous_timestamp));
 			printf("Milliseconds Since Reset: %"PRIu64"\n",
@@ -1555,9 +1608,10 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 
 			por_info_list = por_info_len / sizeof(*por_event);
 
-			printf("Power On Reset Event: \n");
+			printf("Power On Reset Event Entry: \n");
 			fw_rev = pevent_log_info + offset;
-			printf("Firmware Revision: %"PRIu64"\n", le64_to_cpu(*fw_rev));
+			printf("Firmware Revision: %"PRIu64" (%s)\n", le64_to_cpu(*fw_rev),
+				fw_to_string((char *)fw_rev));
 			printf("Reset Information List: \n");
 
 			for (int i = 0; i < por_info_list; i++) {
@@ -1578,13 +1632,13 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			break;
 		case NVME_PEL_NSS_HW_ERROR_EVENT:
 			nss_hw_err_event = pevent_log_info + offset;
-			printf("NVM Subsystem Hardware Error Event Code: %u, %s\n",
+			printf("NVM Subsystem Hardware Error Event Code Entry: %u, %s\n",
 				le16_to_cpu(nss_hw_err_event->nss_hw_err_event_code),
 				nvme_show_nss_hw_error(nss_hw_err_event->nss_hw_err_event_code));
 			break;
 		case NVME_PEL_CHANGE_NS_EVENT:
 			ns_event = pevent_log_info + offset;
-			printf("Change Namespace Event: \n");
+			printf("Change Namespace Event Entry: \n");
 			printf("Namespace Management CDW10: %u\n",
 				le32_to_cpu(ns_event->nsmgt_cdw10));
 			printf("Namespace Size: %"PRIu64"\n",
@@ -1603,7 +1657,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			break;
 		case NVME_PEL_FORMAT_START_EVENT:
 			format_start_event = pevent_log_info + offset;
-			printf("Format NVM Start Event: \n");
+			printf("Format NVM Start Event Entry: \n");
 			printf("Namespace Identifier: %u\n",
 				le32_to_cpu(format_start_event->nsid));
 			printf("Format NVM Attributes: %u\n",
@@ -1613,7 +1667,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			break;
 		case NVME_PEL_FORMAT_COMPLETION_EVENT:
 			format_cmpln_event = pevent_log_info + offset;
-			printf("Format NVM Completion Event: \n");
+			printf("Format NVM Completion Event Entry: \n");
 			printf("Namespace Identifier: %u\n",
 				le32_to_cpu(format_cmpln_event->nsid));
 			printf("Smallest Format Progress Indicator: %u\n",
@@ -1627,7 +1681,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			break;
 		case NVME_PEL_SANITIZE_START_EVENT:
 			sanitize_start_event = pevent_log_info + offset;
-			printf("Sanitize Start Event: \n");
+			printf("Sanitize Start Event Entry: \n");
 			printf("SANICAP: %u\n", sanitize_start_event->sani_cap);
 			printf("Sanitize CDW10: %u\n",
 				le32_to_cpu(sanitize_start_event->sani_cdw10));
@@ -1636,7 +1690,7 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			break;
 		case NVME_PEL_SANITIZE_COMPLETION_EVENT:
 			sanitize_cmpln_event = pevent_log_info + offset;
-			printf("Sanitize Completion Event: \n");
+			printf("Sanitize Completion Event Entry: \n");
 			printf("Sanitize Progress: %u\n",
 				le16_to_cpu(sanitize_cmpln_event->sani_prog));
 			printf("Sanitize Status: %u\n",
@@ -1644,9 +1698,27 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			printf("Completion Information: %u\n",
 				le16_to_cpu(sanitize_cmpln_event->cmpln_info));
 			break;
+		case NVME_PEL_SET_FEATURE_EVENT:
+			set_feat_event = pevent_log_info + offset;
+			printf("Set Feature Event Entry: \n");
+			dword_cnt =  set_feat_event->layout & 0x03;
+			fid = le32_to_cpu(set_feat_event->cdw_mem[0]) & 0x000f;
+			cdw11 = le32_to_cpu(set_feat_event->cdw_mem[1]);
+
+			if (((set_feat_event->layout & 0xff) >> 2) != 0)
+				mem_buf = (unsigned char *)(set_feat_event + 4 + dword_cnt * 4);
+
+			printf("Set Feature ID  :%#02x (%s),  value:%#08x\n", fid,
+				nvme_feature_to_string(fid), cdw11);
+
+			nvme_feature_show_fields(fid, cdw11, mem_buf);
+			break;
+		case NVME_PEL_TELEMETRY_CRT:
+			d(pevent_log_info + offset, 512, 16, 1);
+			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
 			thermal_exc_event = pevent_log_info + offset;
-			printf("Thermal Excursion Event: \n");
+			printf("Thermal Excursion Event Entry: \n");
 			printf("Over Temperature: %u\n", thermal_exc_event->over_temp);
 			printf("Threshold: %u\n", thermal_exc_event->threshold);
 			break;
