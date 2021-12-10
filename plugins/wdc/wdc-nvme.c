@@ -1671,7 +1671,7 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 	ret = wdc_get_pci_ids(r, &device_id, &read_vendor_id);
 	if(device_id == WDC_NVME_ZN350_DEV_ID || device_id == WDC_NVME_ZN350_DEV_ID_1) {
 		lid = WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE_C8;
-	        uuid_ix = 0;
+		uuid_ix = 0;
 	} else
 		lid = WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE;
 
@@ -1703,13 +1703,12 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 	}
 
 	/* get the log page data */
-	ret = nvme_get_log(fd, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
-			   0xFFFFFFFF, 0, NVME_LOG_LSP_NONE, 0, false,
+	ret = nvme_get_log(fd, lid, 0xFFFFFFFF, 0, NVME_LOG_LSP_NONE, 0, false,
 			   uuid_ix, 0, le32_to_cpu(hdr_ptr->length), data,
 			   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 
 	if (ret) {
-		fprintf(stderr, "ERROR : WDC : Unable to read C2 Log Page data, ret = 0x%x\n", ret);
+		fprintf(stderr, "ERROR : WDC : Unable to read 0x%x Log Page data, ret = 0x%x\n", lid, ret);
 		goto end;
 	}
 
@@ -1726,8 +1725,7 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 		/* not found with uuid = 1 try with uuid = 0 */
 		uuid_ix = 0;
 		/* get the log page data */
-		ret = nvme_get_log(fd, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE,
-				   0xFFFFFFFF, 0, NVME_LOG_LSP_NONE, 0, false,
+		ret = nvme_get_log(fd, lid, 0xFFFFFFFF, 0, NVME_LOG_LSP_NONE, 0, false,
 				   uuid_ix, 0, le32_to_cpu(hdr_ptr->length),
 				   data, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 
@@ -7344,6 +7342,8 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 	__u64 capabilities = 0;
 	struct wdc_c2_cbs_data *cbs_data = NULL;
     int i;
+	__u8 log_id = 0;
+	__u32 device_id, read_vendor_id;
 
 	struct config {
 		char *output_format;
@@ -7376,9 +7376,12 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
 		ret = -1;
 	} else {
+		ret = wdc_get_pci_ids(r, &device_id, &read_vendor_id);
+		log_id = (device_id == WDC_NVME_ZN350_DEV_ID || device_id == WDC_NVME_ZN350_DEV_ID_1) ?
+			WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE_C8 : WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE;
 		/* verify the 0xC2 Device Manageability log page is supported */
-		if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE) == false) {
-			fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page not supported\n", __func__);
+		if (wdc_nvme_check_supported_log_page(r, fd, log_id) == false) {
+			fprintf(stderr, "%s: ERROR : WDC : 0x%x Log Page not supported\n", __func__, log_id);
 			ret = -1;
 			goto out;
 		}
