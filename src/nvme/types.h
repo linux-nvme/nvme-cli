@@ -2071,14 +2071,18 @@ struct nvme_zns_lbafe {
 /**
  * struct nvme_zns_id_ns -  Zoned Namespace Command Set Specific
  *			    Identify Namespace Data Structure
- * @zoc: Zone Operation Characteristics
- * @ozcs: Optional Zoned Command Support
- * @mar: Maximum Active Resources
- * @mor: Maximum Open Resources
- * @rrl: Reset Recommended Limit
- * @frl: Finish Recommended Limit
- * @lbafe: LBA Format Extension
- * @vs: Vendor Specific * struct nvme_zns_id_ns -
+ * @zoc:     Zone Operation Characteristics
+ * @ozcs:    Optional Zoned Command Support
+ * @mar:     Maximum Active Resources
+ * @mor:     Maximum Open Resources
+ * @rrl:     Reset Recommended Limit
+ * @frl:     Finish Recommended Limit
+ * @numzrwa: Number of ZRWA Resources
+ * @zrwafg:  ZRWA Flush Granularity
+ * @zrwasz:  ZRWA Size
+ * @zrwacap: ZRWA Capability
+ * @lbafe:   LBA Format Extension
+ * @vs:      Vendor Specific
  */
 struct nvme_zns_id_ns {
 	__le16			zoc;
@@ -2093,7 +2097,11 @@ struct nvme_zns_id_ns {
 	__le32			frl1;
 	__le32			frl2;
 	__le32			frl3;
-	__u8			rsvd44[2772];
+	__le32			numzrwa;
+	__le16			zrwafg;
+	__le16			zrwasz;
+	__u8			zrwacap;
+	__u8			rsvd53[2763];
 	struct nvme_zns_lbafe	lbafe[64];
 	__u8			vs[256];
 };
@@ -3444,6 +3452,7 @@ enum nvme_zns_za {
 	NVME_ZNS_ZA_ZFC			= 1 << 0,
 	NVME_ZNS_ZA_FZR			= 1 << 1,
 	NVME_ZNS_ZA_RZR			= 1 << 2,
+	NVME_ZNS_ZA_ZRWAV		= 1 << 3,
 	NVME_ZNS_ZA_ZDEV		= 1 << 7,
 };
 
@@ -4830,6 +4839,14 @@ struct nvme_mi_vpd_hdr {
  * 				      command is re-submitted to any controller
  * 				      in the NVM subsystem, then that
  * 				      re-submitted command is expected to fail.
+ * @NVME_SC_ZNS_INVALID_OP_REQUEST:	Invalid Zone Operation Request:
+ * 				      The operation requested is invalid. This may be due to
+ * 				      various conditions, including: attempting to allocate a
+ * 				      ZRWA when a zone is not in the ZSE:Empty state; or
+ * 				      invalid Flush Explicit ZRWA Range Send Zone Action
+ * 				      operation.
+ * @NVME_SC_ZNS_ZRWA_RESOURCES_UNAVAILABLE: ZRWA Resources Unavailable:
+ * 				      No ZRWAs are available.
  * @NVME_SC_ZNS_BOUNDARY_ERROR:	      Zone Boundary Error: The command specifies
  * 				      logical blocks in more than one zone.
  * @NVME_SC_ZNS_FULL:		      Zone Is Full: The accessed zone is in the
@@ -4984,14 +5001,16 @@ enum nvme_status_field {
 	/*
 	 * I/O Command Set Specific - ZNS commands:
 	 */
-	NVME_SC_ZNS_BOUNDARY_ERROR     = 0xb8,
-	NVME_SC_ZNS_FULL               = 0xb9,
-	NVME_SC_ZNS_READ_ONLY          = 0xba,
-	NVME_SC_ZNS_OFFLINE            = 0xbb,
-	NVME_SC_ZNS_INVALID_WRITE      = 0xbc,
-	NVME_SC_ZNS_TOO_MANY_ACTIVE    = 0xbd,
-	NVME_SC_ZNS_TOO_MANY_OPENS     = 0xbe,
-	NVME_SC_ZNS_INVAL_TRANSITION   = 0xbf,
+	NVME_SC_ZNS_INVALID_OP_REQUEST         = 0xb6,
+	NVME_SC_ZNS_ZRWA_RESOURCES_UNAVAILABLE = 0xb7,
+	NVME_SC_ZNS_BOUNDARY_ERROR             = 0xb8,
+	NVME_SC_ZNS_FULL                       = 0xb9,
+	NVME_SC_ZNS_READ_ONLY                  = 0xba,
+	NVME_SC_ZNS_OFFLINE                    = 0xbb,
+	NVME_SC_ZNS_INVALID_WRITE              = 0xbc,
+	NVME_SC_ZNS_TOO_MANY_ACTIVE            = 0xbd,
+	NVME_SC_ZNS_TOO_MANY_OPENS             = 0xbe,
+	NVME_SC_ZNS_INVAL_TRANSITION           = 0xbf,
 
 	/*
 	 * Media and Data Integrity Errors:
@@ -5877,6 +5896,7 @@ enum nvme_zns_send_action {
 	NVME_ZNS_ZSA_RESET		= 0x4,
 	NVME_ZNS_ZSA_OFFLINE		= 0x5,
 	NVME_ZNS_ZSA_SET_DESC_EXT	= 0x10,
+	NVME_ZNS_ZSA_ZRWA_FLUSH		= 0x11,
 };
 
 /**
