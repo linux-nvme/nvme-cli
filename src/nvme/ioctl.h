@@ -788,6 +788,13 @@ int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id);
  * @lsi:	Endurance group information
  * @rae:	Retain asynchronous events
  * @uuidx:	UUID selection, if supported
+ * @csi:        Command Set Identifier
+ * @ot:		Offset Type. If set to false, the Log Page Offset Lower
+ *		field and the Log Page Offset Upper field specify the
+ *		byte offset into the log page to be returned.
+ *		If set to true, the Log Page Offset Lower field and the
+ *		Log Page Offset Upper field specify the index into the
+ *		list of data structures in the log page to be returned.
  * @len:	Length of provided user buffer to hold the log data in bytes
  * @log:	User space destination address to transfer the data
  * @timeout:	Timeout in ms
@@ -798,13 +805,14 @@ int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id);
  */
 int nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u64 lpo,
 		 __u8 lsp, __u16 lsi, bool rae, __u8 uuidx, enum nvme_csi csi,
-		 __u32 len, void *log, __u32 timeout, __u32 *result);
+		 bool ot, __u32 len, void *log, __u32 timeout, __u32 *result);
 
 static inline int nvme_get_nsid_log(int fd, enum nvme_cmd_get_log_lid lid,
 				    __u32 nsid, __u32 len, void *log)
 {
-	return nvme_get_log(fd, lid, nsid, 0, 0, 0, false, 0, NVME_CSI_NVM, len,
-			    log, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	return nvme_get_log(fd, lid, nsid, 0, 0, 0, false, 0, NVME_CSI_NVM,
+			    false, len, log, NVME_DEFAULT_IOCTL_TIMEOUT,
+			    NULL);
 }
 
 static inline int nvme_get_log_simple(int fd, enum nvme_cmd_get_log_lid lid,
