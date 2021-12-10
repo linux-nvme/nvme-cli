@@ -498,6 +498,9 @@ static const struct test base_tests[] = {
 	  "	return __builtin_cpu_supports(\"mmx\");\n"
 	  "}"
 	},
+	{ "HAVE_SYS_RANDOM", "<sys/random.h>",
+	  "OUTSIDE_MAIN", NULL, NULL,
+	  "#include <sys/random.h>\n" },
 };
 
 static void c12r_err(int eval, const char *fmt, ...)
