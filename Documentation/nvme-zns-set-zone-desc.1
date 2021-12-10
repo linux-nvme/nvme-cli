@@ -2,12 +2,12 @@
 .\"     Title: nvme-zns-set-zone-desc
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 08/26/2021
+.\"      Date: 12/08/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZNS\-SET\-ZONE" "1" "08/26/2021" "NVMe" "NVMe Manual"
+.TH "NVME\-ZNS\-SET\-ZONE" "1" "12/08/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,6 +34,7 @@ nvme-zns-set-zone-desc \- Set extended descriptor data for a zone
 .nf
 \fInvme zns setzone\-desc\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
                                  [\-\-start\-lba=<IONUM>, \-s <IONUM>]
+                                 [\-\-zrwa | \-r]
                                  [\-data=<FILE>, \-d <FILE>]
                                  [\-\-timeout=<timeout> | \-t <timeout>]
 .fi
@@ -50,6 +51,11 @@ Use the provided namespace id for the command\&. If not provided, the namespace 
 \-s <lba>, \-\-start\-lba=<lba>
 .RS 4
 The starting LBA of the zone to manage send\&.
+.RE
+.PP
+\-r, \-\-zrwa
+.RS 4
+Zone Random Write Area Allocation
 .RE
 .PP
 \-d <FILE, \-data=<FILE>

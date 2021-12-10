@@ -1,23 +1,22 @@
-nvme-zns-open-zone(1)
+nvme-zns-flush-zone(1)
 ======================
 
 NAME
 ----
-nvme-zns-open-zone - Opens one or all zones
+nvme-zns-flush-zone - flush zone
 
 SYNOPSIS
 --------
 [verse]
-'nvme zns open-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
-						[--start-lba=<LBA> | -s <LBA>]
-						[--zrwa | -r]
-						[--select-all | -a]
-						[--timeout=<timeout> | -t <timeout>]
+'nvme zns flush-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
+			       [--last-lba=<LBA> | -l <LBA>]
+				   [--timeout=<timeout> | -t <timeout> ]
 
 DESCRIPTION
 -----------
 For the NVMe device given, issues the Zone Management Send command with the
-"Open Zone" action. This will transition the zone to the opened state.
+"flush Zone" action. This will flush the zone that is opened as
+zone random write area.
 
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
@@ -30,17 +29,9 @@ OPTIONS
 	namespace id of the block device will be used. If the command is issued
 	to a non-block device, the parameter is required.
 
--s <lba>::
---start-lba=<lba>::
-	The starting LBA of the zone to open. 
-
--r::
---zrwa::
-	Zone Random Write Area Allocation
-
--a::
---select-all::
-	Select all zones for this action
+-l <lba>::
+--last-lba=<lba>::
+	The last LBA of the zone to be flushed. 
 
 -t <timeout>::
 --timeout=<timeout>::
@@ -48,10 +39,10 @@ OPTIONS
 
 EXAMPLES
 --------
-* Open the first zone on namespace 1:
+* flush the first zwra of first zone for zrwacg(15) on namespace 1:
 +
 ------------
-# nvme zns open-zone /dev/nvme0 -n 1 -s 0
+# nvme zns flush-zone /dev/nvme0 -n 1 -l 15
 ------------
 
 NVME
