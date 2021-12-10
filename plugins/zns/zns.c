@@ -225,18 +225,6 @@ close_fd:
 	return nvme_status_to_errno(err, false);
 }
 
-static int __zns_mgmt_send(int fd, __u32 namespace_id, __u64 zslba, __u8 zsaso,
-	bool select_all, __u32 timeout, enum nvme_zns_send_action zsa, 
-	__u32 data_len, void *buf)
-{
-	int err;
-	err = nvme_zns_mgmt_send(fd, namespace_id, zslba, zsa, select_all, zsaso,
-				 data_len, buf, timeout, NULL);
-
-	close(fd);
-	return err;
-}
-
 static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	const char *desc, enum nvme_zns_send_action zsa)
 {
@@ -280,8 +268,8 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 		}
 	}
 
-	err = __zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, 0,
-		cfg.select_all, cfg.timeout, zsa, 0, NULL);
+	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, zsa,
+		cfg.select_all, 0, 0, NULL, cfg.timeout, NULL);
 	if (!err)
 		printf("%s: Success, action:%d zone:%"PRIx64" all:%d nsid:%d\n",
 			command, zsa, (uint64_t)cfg.zslba, (int)cfg.select_all,
@@ -427,8 +415,8 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 		}
 	}
 
-	err = __zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, cfg.zsaso,
-			cfg.select_all, cfg.timeout, cfg.zsa, cfg.data_len, buf);
+	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, cfg.zsa,
+			cfg.select_all, cfg.zsaso, cfg.data_len, buf, cfg.timeout, NULL);
 	if (!err)
 		printf("zone-mgmt-send: Success, action:%d zone:%"PRIx64" "
 			"all:%d nsid:%d\n",
@@ -505,8 +493,8 @@ static int open_zone(int argc, char **argv, struct command *cmd, struct plugin *
 		}
 	}
 
-	err = __zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, cfg.zrwa,
-		cfg.select_all, cfg.timeout, NVME_ZNS_ZSA_OPEN, 0, NULL);
+	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, NVME_ZNS_ZSA_OPEN,
+		cfg.select_all, cfg.zrwa, 0, NULL, cfg.timeout, NULL);
 	if (!err)
 		printf("zns-open-zone: Success zone slba:%"PRIx64" nsid:%d\n",
 			(uint64_t)cfg.zslba, cfg.namespace_id);
@@ -606,8 +594,9 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 		goto close_ffd;
 	}
 
-	err = __zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, cfg.zrwa, 0,
-		cfg.timeout, NVME_ZNS_ZSA_SET_DESC_EXT, data_len, buf);
+	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba,
+		NVME_ZNS_ZSA_SET_DESC_EXT, 0, cfg.zrwa, data_len, buf,
+		cfg.timeout, NULL);
 	if (!err)
 		printf("set-zone-desc: Success, zone:%"PRIx64" nsid:%d\n",
 			(uint64_t)cfg.zslba, cfg.namespace_id);
@@ -661,8 +650,8 @@ static int flush_zone(int argc, char **argv, struct command *cmd, struct plugin 
 		}
 	}
 
-	err = __zns_mgmt_send(fd, cfg.namespace_id, cfg.zllba, 0, 0, cfg.timeout,
-		NVME_ZNS_ZSA_ZRWA_FLUSH, 0, NULL);
+	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zllba,
+		NVME_ZNS_ZSA_ZRWA_FLUSH, 0, 0, 0, NULL, cfg.timeout, NULL);
 	if (!err)
 		printf("zns-flush-zone: Success, last lba:%"PRIx64" nsid:%d\n",
 			(uint64_t)cfg.zllba, cfg.namespace_id);
