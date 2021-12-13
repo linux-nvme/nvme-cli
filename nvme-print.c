@@ -5986,6 +5986,8 @@ const char *nvme_feature_to_string(enum nvme_features_id feature)
 	case NVME_FEAT_FID_SANITIZE:	return "Sanitize";
 	case NVME_FEAT_FID_LBA_STS_INTERVAL: return "LBA Status Interval";
 	case NVME_FEAT_FID_SPINUP_CONTROL:	return "Spinup Control";
+	case NVME_MI_FEAT_CTRL_METADATA:return "MI Controller Metadata";
+	case NVME_MI_FEAT_NS_METADATA:	return "MI Namespace Metadata";
 	}
 	/*
 	 * We don't use the "default:" statement to let the compiler warning if
@@ -6295,6 +6297,65 @@ static void nvme_show_plm_config(struct nvme_plm_config *plmcfg)
 	printf("\tDTWIN Time Threshold  :%"PRIu64"\n", le64_to_cpu(plmcfg->dtwintt));
 }
 
+static char* nvme_show_mi_host_metadata_type_to_string(enum nvme_features_id fid, __u8 type)
+{
+	switch (fid) {
+	case NVME_MI_FEAT_CTRL_METADATA:
+		switch (type) {
+		case NVME_MI_CTRL_METADATA_OS_CTRL_NAME:
+			return "Operating System Controller Name";
+		case NVME_MI_CTRL_METADATA_OS_DRIVER_NAME:
+			return "Operating System Driver Name";
+		case NVME_MI_CTRL_METADATA_OS_DRIVER_VER:
+			return "Operating System Driver Version";
+		case NVME_MI_CTRL_METADATA_PRE_BOOT_CTRL_NAME:
+			return "Pre-boot Controller Name";
+		case NVME_MI_CTRL_METADATA_PRE_BOOT_DRIVER_NAME:
+			return "Pre-boot Driver Name";
+		case NVME_MI_CTRL_METADATA_PRE_BOOT_DRIVER_VER:
+			return "Pre-boot Driver Version";
+		default:
+			return "Unknown Controller Type";
+		}
+	case NVME_MI_FEAT_NS_METADATA:
+		switch (type) {
+		case NVME_MI_NS_METADATA_OS_NS_NAME:
+			return "Operating System Namespace Name";
+		case NVME_MI_NS_METADATA_PRE_BOOT_NS_NAME:
+			return "Pre-boot Namespace Name";
+		default:
+			return "Unknown Namespace Type";
+		}
+	default:
+		return "Unknown Feature";
+	}
+}
+
+static void nvme_show_mi_host_metadata(enum nvme_feat fid,
+				       struct nvme_host_metadata *data)
+{
+	struct nvme_host_metadata_element_desc *desc = &data->descs[0];
+	int i;
+	char val[4096];
+	__u16 len;
+
+	printf("\tNum Metadata Element Descriptors: %d\n", data->ndesc);
+	for (i = 0; i < data->ndesc; i++) {
+		len = le16_to_cpu(desc->len);
+		strncpy(val, (char *)desc->val, min(sizeof(val) - 1, len));
+
+		printf("\tElement[%-3d]:\n", i);
+		printf("\t\tType     : 0x%02x (%s)\n", desc->type,
+			nvme_show_mi_host_metadata_type_to_string(fid, desc->type));
+		printf("\t\tRevision : %d\n", desc->rev);
+		printf("\t\tLength   : %d\n", len);
+		printf("\t\tValue    : %s\n", val);
+
+		desc = (struct nvme_host_metadata_element_desc *)
+			&desc->val[desc->len];
+	}
+}
+
 void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf)
 {
 	__u8 field;
@@ -6449,6 +6510,10 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		break;
 	case NVME_FEAT_FID_SPINUP_CONTROL:
 		printf("\tSpinup control feature Enabled: %s\n", (result & 1) ? "True" : "False");
+		break;
+	case NVME_MI_FEAT_CTRL_METADATA:
+	case NVME_MI_FEAT_NS_METADATA:
+		nvme_show_mi_host_metadata(fid, (struct nvme_host_metadata *)buf);
 		break;
 	default:
 		break;
