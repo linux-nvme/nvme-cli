@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 9.0.0rc2" />
+<meta name="generator" content="AsciiDoc" />
 <title>nvme-get-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -750,14 +750,16 @@ nvme-get-log(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme get-log</em> &lt;device&gt; [--log-id=&lt;log-id&gt; | -i &lt;log-id&gt;]
-                      [--log-len=&lt;log-len&gt; | -l &lt;log-len&gt;]
-                      [--aen=&lt;aen&gt; | -a &lt;aen&gt;]
-                      [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                      [--raw-binary | -b]
-                      [--lpo=&lt;offset&gt; | -o &lt;offset&gt;]
-                      [--lsp=&lt;field&gt; | -s &lt;field&gt;]
-                      [--lsi=&lt;field&gt; | -S &lt;field&gt;]
-                      [--rae | -r]</pre>
+              [--log-len=&lt;log-len&gt; | -l &lt;log-len&gt;]
+              [--aen=&lt;aen&gt; | -a &lt;aen&gt;]
+              [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+              [--raw-binary | -b]
+              [--lpo=&lt;offset&gt; | -o &lt;offset&gt;]
+              [--lsp=&lt;field&gt; | -s &lt;field&gt;]
+              [--lsi=&lt;field&gt; | -S &lt;field&gt;]
+              [--rae | -r]
+              [--csi=&lt;command_set_identifier&gt; | -y &lt;command_set_identifier&gt;]
+              [--ot=&lt;offset_type&gt; | -O &lt;offset_type&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -886,6 +888,36 @@ program to parse.</p></div>
         Retain an Asynchronous Event.
 </p>
 </dd>
+<dt class="hdlist1">
+-y &lt;command_set_identifier&gt;
+</dt>
+<dt class="hdlist1">
+--csi=&lt;command_set_identifier&gt;
+</dt>
+<dd>
+<p>
+        This field specifies the identifier of command set.
+        if not issued, NVM Command Set will be selected.
+</p>
+</dd>
+<dt class="hdlist1">
+-O
+</dt>
+<dt class="hdlist1">
+--ot
+</dt>
+<dd>
+<p>
+        This field specifies the offset type. If set to false, the
+        Log Page Offset Lower field and the Log Page Offset Upper
+        field specify the byte offset into the log page to be returned.
+        If set to true, the Log Page Offset Lower field and the Log
+        Page Offset Upper field specify the index into the list of
+        data structures in the log page to be returned.
+        The default is byte offset. If the option is specified
+        the index mode is used.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -930,7 +962,7 @@ Have the program return the raw log page in binary:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2021-01-13 23:17:32 JST
+ 2021-12-14 15:16:07 CET
 </div>
 </div>
 </body>

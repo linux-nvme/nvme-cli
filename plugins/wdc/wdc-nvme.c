@@ -1683,7 +1683,8 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 
 	/* get the log page length */
 	ret = nvme_get_log(fd, lid, 0xFFFFFFFF, NVME_LOG_LSP_NONE, 0, 0,
-			   false, uuid_ix, 0, WDC_C2_LOG_BUF_LEN, data,
+			   false, uuid_ix, NVME_CSI_NVM, false,
+			   WDC_C2_LOG_BUF_LEN, data,
 			   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : Unable to get 0x%x Log Page length, ret = 0x%x\n", lid, ret);
@@ -1704,7 +1705,8 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 
 	/* get the log page data */
 	ret = nvme_get_log(fd, lid, 0xFFFFFFFF, 0, NVME_LOG_LSP_NONE, 0, false,
-			   uuid_ix, 0, le32_to_cpu(hdr_ptr->length), data,
+			   uuid_ix, NVME_CSI_NVM, false,
+			   le32_to_cpu(hdr_ptr->length), data,
 			   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 
 	if (ret) {
@@ -1726,7 +1728,8 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 		uuid_ix = 0;
 		/* get the log page data */
 		ret = nvme_get_log(fd, lid, 0xFFFFFFFF, 0, NVME_LOG_LSP_NONE, 0, false,
-				   uuid_ix, 0, le32_to_cpu(hdr_ptr->length),
+				   uuid_ix, NVME_CSI_NVM, false,
+				   le32_to_cpu(hdr_ptr->length),
 				   data, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 
 		hdr_ptr = (struct wdc_c2_log_page_header *)data;
@@ -4979,7 +4982,8 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 
 				/* Get the 0xC0 log data */
 				ret = nvme_get_log(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE, namespace_id, 0,
-						   NVME_LOG_LSP_NONE, 0, false, uuid_index, 0, WDC_NVME_SMART_CLOUD_ATTR_LEN, data,
+						   NVME_LOG_LSP_NONE, 0, false, uuid_index, NVME_CSI_NVM,
+						   false, WDC_NVME_SMART_CLOUD_ATTR_LEN, data,
 						   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 
 				if (strcmp(format, "json"))
@@ -5027,7 +5031,9 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 
 				/* Get the 0xC0 log data */
 				ret = nvme_get_log(fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE, NVME_NSID_ALL, 0,
-						   NVME_LOG_LSP_NONE, 0, false, uuid_index, 0, WDC_NVME_EOL_STATUS_LOG_LEN, data,
+						   NVME_LOG_LSP_NONE, 0, false, uuid_index,
+						   NVME_CSI_NVM, false,
+						   WDC_NVME_EOL_STATUS_LOG_LEN, data,
 						   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 
 				if (strcmp(format, "json"))
@@ -6105,8 +6111,9 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *com
 		/* Get the 0xC0 log data */
 		ret = nvme_get_log(fd, WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_OPCODE,
 				   0xFFFFFFFF, 0, NVME_LOG_LSP_NONE, 0, false,
-				   uuid_index, 0, WDC_NVME_SMART_CLOUD_ATTR_LEN,
-				   data, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+				   uuid_index, NVME_CSI_NVM, false,
+				   WDC_NVME_SMART_CLOUD_ATTR_LEN, data,
+				   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 
 		if (ret == 0) {
 			/* Verify GUID matches */
