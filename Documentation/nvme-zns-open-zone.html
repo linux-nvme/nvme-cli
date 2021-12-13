@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc" />
 <title>nvme-zns-open-zone(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -433,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -747,10 +750,10 @@ nvme-zns-open-zone(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme zns open-zone</em> &lt;device&gt; [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
-                                                [--start-lba=&lt;LBA&gt; | -s &lt;LBA&gt;]
-                                                [--zrwa | -r]
-                                                [--select-all | -a]
-                                                [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
+                              [--start-lba=&lt;LBA&gt; | -s &lt;LBA&gt;]
+                              [--zrwaa | -r]
+                              [--select-all | -a]
+                              [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -796,11 +799,11 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 -r
 </dt>
 <dt class="hdlist1">
---zrwa
+--zrwaa
 </dt>
 <dd>
 <p>
-        Zone Random Write Area Allocation
+        Allocate Zone Random Write Area to zone
 </p>
 </dd>
 <dt class="hdlist1">
@@ -854,7 +857,8 @@ Open the first zone on namespace 1:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-12-08 15:16:54 KST
+Last updated
+ 2021-12-13 19:32:34 CET
 </div>
 </div>
 </body>

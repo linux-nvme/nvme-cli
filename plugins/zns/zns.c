@@ -272,12 +272,12 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, zsa,
 		cfg.select_all, 0, 0, NULL, cfg.timeout, &result);
 	if (!err) {
-    if (zsa == NVME_ZNS_ZSA_RESET)
-      zcapc = result & 0x1;
+		if (zsa == NVME_ZNS_ZSA_RESET)
+			zcapc = result & 0x1;
 
 		printf("%s: Success, action:%d zone:%"PRIx64" all:%d zcapc:%u nsid:%d\n",
 			command, zsa, (uint64_t)cfg.zslba, (int)cfg.select_all,
-      zcapc, cfg.namespace_id);
+			zcapc, cfg.namespace_id);
 	}
 	else if (err > 0)
 		nvme_show_status(err);
@@ -469,7 +469,7 @@ static int open_zone(int argc, char **argv, struct command *cmd, struct plugin *
 	struct config {
 		__u64	zslba;
 		__u32	namespace_id;
-		bool  zrwaa;
+		bool	zrwaa;
 		bool	select_all;
 		__u32	timeout;
 	};
@@ -549,7 +549,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_SUFFIX("start-lba",  's', &cfg.zslba,         zslba),
-		OPT_FLAG("zrwaa",         'r', &cfg.zrwaa,          zrwaa),
+		OPT_FLAG("zrwaa",        'r', &cfg.zrwaa,         zrwaa),
 		OPT_FILE("data",         'd', &cfg.file,          data),
 		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
 		OPT_END()
@@ -638,7 +638,7 @@ static int zrwa_flush_zone(int argc, char **argv, struct command *cmd, struct pl
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
-		OPT_SUFFIX("lba",   'l', &cfg.lba,         slba),
+		OPT_SUFFIX("lba",        'l', &cfg.lba,           slba),
 		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
 		OPT_END()
 	};
