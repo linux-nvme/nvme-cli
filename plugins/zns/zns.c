@@ -232,7 +232,7 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 	const char *select_all = "send command to all zones";
 	const char *timeout = "timeout value, in milliseconds";
 
-	int err, fd;
+	int err, fd, zcapc = 0;
 	char *command;
 	__u32 result;
 
@@ -272,13 +272,12 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, zsa,
 		cfg.select_all, 0, 0, NULL, cfg.timeout, &result);
 	if (!err) {
-		printf("%s: Success, action:%d zone:%"PRIx64" all:%d nsid:%d\n",
+    if (zsa == NVME_ZNS_ZSA_RESET)
+      zcapc = result & 0x1;
+
+		printf("%s: Success, action:%d zone:%"PRIx64" all:%d zcapc:%u nsid:%d\n",
 			command, zsa, (uint64_t)cfg.zslba, (int)cfg.select_all,
-			cfg.namespace_id);
-		if(result && zsa == NVME_ZNS_ZSA_RESET) {
-			if(result & 0x1)
-				printf("Zone Capacity has Changed by the command\n");
-		}
+      zcapc, cfg.namespace_id);
 	}
 	else if (err > 0)
 		nvme_show_status(err);
@@ -461,7 +460,7 @@ static int open_zone(int argc, char **argv, struct command *cmd, struct plugin *
 {
 	const char *desc = "Open zones\n";
 	const char *zslba = "starting LBA of the zone for this command";
-	const char *zrwa = "Zone Random Write Area Allocation";
+	const char *zrwaa = "Allocate Zone Random Write Area to zone";
 	const char *select_all = "send command to all zones";
 	const char *timeout = "timeout value, in milliseconds";
 
@@ -470,7 +469,7 @@ static int open_zone(int argc, char **argv, struct command *cmd, struct plugin *
 	struct config {
 		__u64	zslba;
 		__u32	namespace_id;
-		bool    zrwa;
+		bool  zrwaa;
 		bool	select_all;
 		__u32	timeout;
 	};
@@ -481,7 +480,7 @@ static int open_zone(int argc, char **argv, struct command *cmd, struct plugin *
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_SUFFIX("start-lba",  's', &cfg.zslba,         zslba),
-		OPT_FLAG("zrwa",         'r', &cfg.zrwa,          zrwa),
+		OPT_FLAG("zrwaa",         'r', &cfg.zrwaa,          zrwaa),
 		OPT_FLAG("select-all",   'a', &cfg.select_all,    select_all),
 		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
 		OPT_END()
@@ -500,7 +499,7 @@ static int open_zone(int argc, char **argv, struct command *cmd, struct plugin *
 	}
 
 	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, NVME_ZNS_ZSA_OPEN,
-		cfg.select_all, cfg.zrwa, 0, NULL, cfg.timeout, NULL);
+		cfg.select_all, cfg.zrwaa, 0, NULL, cfg.timeout, NULL);
 	if (!err)
 		printf("zns-open-zone: Success zone slba:%"PRIx64" nsid:%d\n",
 			(uint64_t)cfg.zslba, cfg.namespace_id);
@@ -529,7 +528,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 {
 	const char *desc = "Set Zone Descriptor Extension\n";
 	const char *zslba = "starting LBA of the zone for this command";
-	const char *zrwa = "Zone Random Write Area Allocation";
+	const char *zrwaa = "Allocate Zone Random Write Area to zone";
 	const char *data = "optional file for zone extention data (default stdin)";
 	const char *timeout = "timeout value, in milliseconds";
 
@@ -539,7 +538,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 
 	struct config {
 		__u64	zslba;
-		bool	zrwa;
+		bool	zrwaa;
 		__u32	namespace_id;
 		char   *file;
 		__u32	timeout;
@@ -550,7 +549,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_SUFFIX("start-lba",  's', &cfg.zslba,         zslba),
-		OPT_FLAG("zrwa",         'r', &cfg.zrwa,          zrwa),
+		OPT_FLAG("zrwaa",         'r', &cfg.zrwaa,          zrwaa),
 		OPT_FILE("data",         'd', &cfg.file,          data),
 		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
 		OPT_END()
@@ -601,7 +600,7 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 	}
 
 	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba,
-		NVME_ZNS_ZSA_SET_DESC_EXT, 0, cfg.zrwa, data_len, buf,
+		NVME_ZNS_ZSA_SET_DESC_EXT, 0, cfg.zrwaa, data_len, buf,
 		cfg.timeout, NULL);
 	if (!err)
 		printf("set-zone-desc: Success, zone:%"PRIx64" nsid:%d\n",
@@ -621,16 +620,16 @@ close_fd:
 }
 
 
-static int flush_zone(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int zrwa_flush_zone(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Flush Explicit ZRWA Range";
-	const char *zllba = "The last LBA of the zone to be flushed";
+	const char *slba = "LBA to flush up to";
 	const char *timeout = "timeout value, in milliseconds";
 
 	int err, fd;
 
 	struct config {
-		__u64	zllba;
+		__u64	lba;
 		__u32	namespace_id;
 		__u32	timeout;
 	};
@@ -639,7 +638,7 @@ static int flush_zone(int argc, char **argv, struct command *cmd, struct plugin 
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
-		OPT_SUFFIX("last-lba",   'l', &cfg.zllba,         zllba),
+		OPT_SUFFIX("lba",   'l', &cfg.lba,         slba),
 		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
 		OPT_END()
 	};
@@ -656,11 +655,11 @@ static int flush_zone(int argc, char **argv, struct command *cmd, struct plugin 
 		}
 	}
 
-	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zllba,
+	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.lba,
 		NVME_ZNS_ZSA_ZRWA_FLUSH, 0, 0, 0, NULL, cfg.timeout, NULL);
 	if (!err)
-		printf("zns-flush-zone: Success, last lba:%"PRIx64" nsid:%d\n",
-			(uint64_t)cfg.zllba, cfg.namespace_id);
+		printf("zrwa-flush-zone: Success, lba:%"PRIx64" nsid:%d\n",
+			(uint64_t)cfg.lba, cfg.namespace_id);
 	else
 		nvme_show_status(err);
 close_fd:
