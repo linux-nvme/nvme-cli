@@ -3548,6 +3548,96 @@ enum nvme_apst_entry {
 };
 
 /**
+ * struct nvme_metadata_element_desc - Metadata Element Descriptor
+ * @type:	Element Type (ET)
+ * @rev:	Element Revision (ER)
+ * @len:	Element Length (ELEN)
+ * @val:	Element Value (EVAL), UTF-8 string
+ */
+struct nvme_metadata_element_desc {
+	__u8	type;
+	__u8	rev;
+	__u16	len;
+	__u8	val[0];
+};
+
+/**
+ * struct nvme_host_metadata - Host Metadata Data Structure
+ * @ndesc:	Number of metadata element descriptors
+ * @descs:	Metadata element descriptors
+ */
+struct nvme_host_metadata {
+	__u8	ndesc;
+	__u8	rsvd1;
+	union {
+		struct nvme_metadata_element_desc descs[0];
+		__u8 descs_buf[4094];
+	};
+};
+
+/**
+ * enum nvme_ctrl_metadata_type - Controller Metadata Element Types
+ * @NVME_CTRL_METADATA_OS_CTRL_NAME:		Name of the controller in
+ *						the operating system.
+ * @NVME_CTRL_METADATA_OS_DRIVER_NAME:		Name of the driver in the
+ *						operating system.
+ * @NVME_CTRL_METADATA_OS_DRIVER_VER:		Version of the driver in
+ *						the operating system.
+ * @NVME_CTRL_METADATA_PRE_BOOT_CTRL_NAME:	Name of the controller in
+ *						the pre-boot environment.
+ * @NVME_CTRL_METADATA_PRE_BOOT_DRIVER_NAME:	Name of the driver in the
+ *						pre-boot environment.
+ * @NVME_CTRL_METADATA_PRE_BOOT_DRIVER_VER:	Version of the driver in the
+ *						pre-boot environment.
+ * @NVME_CTRL_METADATA_SYS_PROC_MODEL:		Model of the processor.
+ * @NVME_CTRL_METADATA_CHIPSET_DRV_NAME:	Chipset driver name.
+ * @NVME_CTRL_METADATA_CHIPSET_DRV_VERSION:	Chipsset driver version.
+ * @NVME_CTRL_METADATA_OS_NAME_AND_BUILD:	Operating system name and build.
+ * @NVME_CTRL_METADATA_SYS_PROD_NAME:		System product name.
+ * @NVME_CTRL_METADATA_FIRMWARE_VERSION:        Host firmware (e.g UEFI) version.
+ * @NVME_CTRL_METADATA_OS_DRIVER_FILENAME:	Operating system driver filename.
+ * @NVME_CTRL_METADATA_DISPLAY_DRV_NAME:	Display driver name.
+ * @NVME_CTRL_METADATA_DISPLAY_DRV_VERSION:	Display driver version.
+ * @NVME_CTRL_METADATA_HOST_DET_FAIL_REC:	Failure record.
+ */
+enum nvme_ctrl_metadata_type {
+	NVME_CTRL_METADATA_OS_CTRL_NAME		= 0x01,
+	NVME_CTRL_METADATA_OS_DRIVER_NAME	= 0x02,
+	NVME_CTRL_METADATA_OS_DRIVER_VER	= 0x03,
+	NVME_CTRL_METADATA_PRE_BOOT_CTRL_NAME	= 0x04,
+	NVME_CTRL_METADATA_PRE_BOOT_DRIVER_NAME	= 0x05,
+	NVME_CTRL_METADATA_PRE_BOOT_DRIVER_VER	= 0x06,
+	NVME_CTRL_METADATA_SYS_PROC_MODEL	= 0x07,
+	NVME_CTRL_METADATA_CHIPSET_DRV_NAME	= 0x08,
+	NVME_CTRL_METADATA_CHIPSET_DRV_VERSION	= 0x09,
+	NVME_CTRL_METADATA_OS_NAME_AND_BUILD	= 0x0a,
+	NVME_CTRL_METADATA_SYS_PROD_NAME	= 0x0b,
+	NVME_CTRL_METADATA_FIRMWARE_VERSION	= 0x0c,
+	NVME_CTRL_METADATA_OS_DRIVER_FILENAME	= 0x0d,
+	NVME_CTRL_METADATA_DISPLAY_DRV_NAME	= 0x0e,
+	NVME_CTRL_METADATA_DISPLAY_DRV_VERSION	= 0x0f,
+	NVME_CTRL_METADATA_HOST_DET_FAIL_REC	= 0x10,
+};
+
+/**
+ * enum nvme_ns_metadata_type - Namespace Metadata Element Types
+ * @NVME_NS_METADATA_OS_NS_NAME:	Name of the namespace in the the
+ *					operating system
+ * @NVME_NS_METADATA_PRE_BOOT_NS_NAME:	Name of the namespace in the pre-boot
+ *					environment.
+ * @NVME_NS_METADATA_OS_NS_QUAL_1:	First qualifier of the Operating System
+ *					Namespace Name.
+ * @NVME_NS_METADATA_OS_NS_QUAL_2:	Second qualifier of the Operating System
+ *					Namespace Name.
+ */
+enum nvme_ns_metadata_type {
+	NVME_NS_METADATA_OS_NS_NAME		= 0x01,
+	NVME_NS_METADATA_PRE_BOOT_NS_NAME	= 0x02,
+	NVME_NS_METADATA_OS_NS_QUAL_1		= 0x03,
+	NVME_NS_METADATA_OS_NS_QUAL_2		= 0x04,
+};
+
+/**
  * struct nvme_timestamp -
  * timestamp:
  * @attr:
@@ -5268,6 +5358,8 @@ enum nvme_cmd_get_log_lid {
  * @NVME_FEAT_FID_ENDURANCE_EVT_CFG:
  * @NVME_FEAT_FID_IOCS_PROFILE:
  * @NVME_FEAT_FID_SPINUP_CONTROL:
+ * @NVME_FEAT_FID_CTRL_METADATA:	Controller Metadata
+ * @NVME_FEAT_FID_NS_METADATA:		Namespace Metadata
  * @NVME_FEAT_FID_SW_PROGRESS:
  * @NVME_FEAT_FID_HOST_ID:
  * @NVME_FEAT_FID_RESV_MASK:
@@ -5301,6 +5393,8 @@ enum nvme_features_id {
 	NVME_FEAT_FID_ENDURANCE_EVT_CFG				= 0x18,
 	NVME_FEAT_FID_IOCS_PROFILE				= 0x19, /* XXX: Placeholder until assigned */
 	NVME_FEAT_FID_SPINUP_CONTROL				= 0x1a,
+	NVME_FEAT_FID_CTRL_METADATA				= 0x7e,
+	NVME_FEAT_FID_NS_METADATA				= 0x7f,
 	NVME_FEAT_FID_SW_PROGRESS				= 0x80,
 	NVME_FEAT_FID_HOST_ID					= 0x81,
 	NVME_FEAT_FID_RESV_MASK					= 0x82,
