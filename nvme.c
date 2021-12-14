@@ -4379,17 +4379,10 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		fprintf(stderr, "WARNING: --tl not dword aligned; unaligned bytes may be truncated\n");
 
 	if (strlen(cfg.file) == 0) {
+		close(sec_fd);
 		sec_fd = STDIN_FILENO;
 		sec_size = cfg.tl;
 	} else {
-		sec_fd = open(cfg.file, O_RDONLY);
-		if (sec_fd < 0) {
-			fprintf(stderr, "Failed to open %s: %s\n",
-					cfg.file, strerror(errno));
-			err = -EINVAL;
-			goto close_fd;
-		}
-
 		err = fstat(sec_fd, &sb);
 		if (err < 0) {
 			perror("fstat");
