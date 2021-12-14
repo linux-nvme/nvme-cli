@@ -686,10 +686,13 @@ int nvme_logical_block_size_from_ns_char(const char *dev)
 		return -EINVAL;
 
 	s = nvme_get_ctrl_attr(path, "logical_block_size");
+	free(path);
 	if (!s)
 		return -EINVAL;
 
-	return atoi(s);
+	ret = atoi(s);
+	free(s);
+	return ret;
 }
 
 void *mmap_registers(const char *dev)
