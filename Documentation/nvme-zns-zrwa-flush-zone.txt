@@ -1,16 +1,16 @@
-nvme-zns-flush-zone(1)
-======================
+nvme-zns-zrwa-flush-zone(1)
+===========================
 
 NAME
 ----
-nvme-zns-flush-zone - flush zone
+nvme-zns-zrwa-flush-zone - Flush LBAs associated with a ZRWA to a zone
 
 SYNOPSIS
 --------
 [verse]
-'nvme zns flush-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
-			       [--last-lba=<LBA> | -l <LBA>]
-				   [--timeout=<timeout> | -t <timeout> ]
+'nvme zns zrwa-flush-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
+			            [--lba=<LBA> | -l <LBA>]
+				    [--timeout=<timeout> | -t <timeout> ]
 
 DESCRIPTION
 -----------
@@ -30,8 +30,8 @@ OPTIONS
 	to a non-block device, the parameter is required.
 
 -l <lba>::
---last-lba=<lba>::
-	The last LBA of the zone to be flushed. 
+--lba=<lba>::
+	The LBA to flush up to.
 
 -t <timeout>::
 --timeout=<timeout>::
@@ -42,7 +42,7 @@ EXAMPLES
 * flush the first zwra of first zone for zrwacg(15) on namespace 1:
 +
 ------------
-# nvme zns flush-zone /dev/nvme0 -n 1 -l 15
+# nvme zns zrwa-flush-zone /dev/nvme0 -n 1 -l 15
 ------------
 
 NVME

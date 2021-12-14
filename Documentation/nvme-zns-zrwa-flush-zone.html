@@ -1,10 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
-<title>nvme-zns-flush-zone(1)</title>
+<meta name="generator" content="AsciiDoc" />
+<title>nvme-zns-zrwa-flush-zone(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -433,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -732,12 +735,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-zns-flush-zone(1) Manual Page
+nvme-zns-zrwa-flush-zone(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-zns-flush-zone -
-   flush zone
+<p>nvme-zns-zrwa-flush-zone -
+   Flush LBAs associated with a ZRWA to a zone
 </p>
 </div>
 </div>
@@ -746,9 +749,9 @@ nvme-zns-flush-zone(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme zns flush-zone</em> &lt;device&gt; [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
-                               [--last-lba=&lt;LBA&gt; | -l &lt;LBA&gt;]
-                                   [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt; ]</pre>
+<pre class="content"><em>nvme zns zrwa-flush-zone</em> &lt;device&gt; [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
+                                    [--lba=&lt;LBA&gt; | -l &lt;LBA&gt;]
+                                    [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt; ]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -784,11 +787,11 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 -l &lt;lba&gt;
 </dt>
 <dt class="hdlist1">
---last-lba=&lt;lba&gt;
+--lba=&lt;lba&gt;
 </dt>
 <dd>
 <p>
-        The last LBA of the zone to be flushed.
+        The LBA to flush up to.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -815,7 +818,7 @@ flush the first zwra of first zone for zrwacg(15) on namespace 1:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme zns flush-zone /dev/nvme0 -n 1 -l 15</code></pre>
+<pre><code># nvme zns zrwa-flush-zone /dev/nvme0 -n 1 -l 15</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -831,7 +834,8 @@ flush the first zwra of first zone for zrwacg(15) on namespace 1:
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-12-07 17:49:58 KST
+Last updated
+ 2021-12-13 19:30:31 CET
 </div>
 </div>
 </body>

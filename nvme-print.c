@@ -4419,8 +4419,8 @@ static void show_nvme_id_ns_zoned_ozcs(__le16 ns_ozcs)
 		printf(" [15:1] : %#x\tReserved\n", rsvd);
 	printf("  [0:0] : %#x\t  Read Across Zone Boundaries: %s\n",
 		razb, razb ? "Yes" : "No");
-	printf("  [1:1] : %#x\tZone Random Write Area: %sSupported\n", zrwasup,
-				zrwasup ? "" : "Not ");
+	printf("  [1:1] : %#x\t  Zone Random Write Area: %s\n", zrwasup,
+				zrwasup ? "Yes" : "No");
 }
 
 static void nvme_show_zns_id_ns_recommandeded_limit(__le32 ns_rl, int human, 
@@ -4440,8 +4440,8 @@ static void nvme_show_zns_id_ns_zrwacap(__u8 zrwacap)
 
 	if (rsvd)
 		printf(" [7:1] : %#x\tReserved\n", rsvd);
-	printf("  [0:0] : %#x\t  Explicit ZRWA Flush %sSupported\n",
-		expflushsup, expflushsup ? "" : "Not ");
+	printf("  [0:0] : %#x\t  Explicit ZRWA Flush Operations: %s\n",
+		expflushsup, expflushsup ? "Yes" : "No");
 }
 
 void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
@@ -4501,9 +4501,9 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	nvme_show_zns_id_ns_recommandeded_limit(ns->frl,  human, "frl2");
 	nvme_show_zns_id_ns_recommandeded_limit(ns->frl,  human, "frl3");
 
-	printf("numzrwa : %u\n", le32_to_cpu(ns->numzrwa));
+	printf("numzrwa : %#x\n", le32_to_cpu(ns->numzrwa));
 	printf("zrwafg  : %u\n", le16_to_cpu(ns->zrwafg));
-	printf("zrwasz   : %u\n", le16_to_cpu(ns->zrwasz));
+	printf("zrwasz  : %u\n", le16_to_cpu(ns->zrwasz));
 	if (human) {
 		printf("zrwacap : %u\tZone Random Write Area Capability\n", ns->zrwacap);
 		nvme_show_zns_id_ns_zrwacap(ns->zrwacap);

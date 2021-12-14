@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: nvme-zns-flush-zone
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 12/08/2021
+.\"     Title: nvme-zns-zrwa-flush-zone
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 12/13/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZNS\-FLUSH\-ZO" "1" "12/08/2021" "NVMe" "NVMe Manual"
+.TH "NVME\-ZNS\-ZRWA\-FLU" "1" "12/13/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,13 +28,13 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-zns-flush-zone \- flush zone
+nvme-zns-zrwa-flush-zone \- Flush LBAs associated with a ZRWA to a zone
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme zns flush\-zone\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
-                               [\-\-last\-lba=<LBA> | \-l <LBA>]
-                                   [\-\-timeout=<timeout> | \-t <timeout> ]
+\fInvme zns zrwa\-flush\-zone\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
+                                    [\-\-lba=<LBA> | \-l <LBA>]
+                                    [\-\-timeout=<timeout> | \-t <timeout> ]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -48,9 +48,9 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 Use the provided namespace id for the command\&. If not provided, the namespace id of the block device will be used\&. If the command is issued to a non\-block device, the parameter is required\&.
 .RE
 .PP
-\-l <lba>, \-\-last\-lba=<lba>
+\-l <lba>, \-\-lba=<lba>
 .RS 4
-The last LBA of the zone to be flushed\&.
+The LBA to flush up to\&.
 .RE
 .PP
 \-t <timeout>, \-\-timeout=<timeout>
@@ -73,7 +73,7 @@ flush the first zwra of first zone for zrwacg(15) on namespace 1:
 .RS 4
 .\}
 .nf
-# nvme zns flush\-zone /dev/nvme0 \-n 1 \-l 15
+# nvme zns zrwa\-flush\-zone /dev/nvme0 \-n 1 \-l 15
 .fi
 .if n \{\
 .RE

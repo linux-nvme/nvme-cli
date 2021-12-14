@@ -9,10 +9,10 @@ SYNOPSIS
 --------
 [verse]
 'nvme zns open-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
-						[--start-lba=<LBA> | -s <LBA>]
-						[--zrwa | -r]
-						[--select-all | -a]
-						[--timeout=<timeout> | -t <timeout>]
+			      [--start-lba=<LBA> | -s <LBA>]
+			      [--zrwaa | -r]
+			      [--select-all | -a]
+			      [--timeout=<timeout> | -t <timeout>]
 
 DESCRIPTION
 -----------
@@ -32,11 +32,11 @@ OPTIONS
 
 -s <lba>::
 --start-lba=<lba>::
-	The starting LBA of the zone to open. 
+	The starting LBA of the zone to open.
 
 -r::
---zrwa::
-	Zone Random Write Area Allocation
+--zrwaa::
+	Allocate Zone Random Write Area to zone
 
 -a::
 --select-all::

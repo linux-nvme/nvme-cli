@@ -10,7 +10,7 @@ SYNOPSIS
 [verse]
 'nvme zns setzone-desc' <device> [--namespace-id=<NUM> | -n <NUM>]
 				 [--start-lba=<IONUM>, -s <IONUM>]
-				 [--zrwa | -r]
+				 [--zrwaa | -r]
 				 [-data=<FILE>, -d <FILE>]
 				 [--timeout=<timeout> | -t <timeout>]
 
@@ -34,8 +34,8 @@ OPTIONS
 	The starting LBA of the zone to manage send.
 
 -r::
---zrwa::
-	Zone Random Write Area Allocation
+--zrwaa::
+	Allocate Zone Random Write Area to zone.
 
 -d <FILE::
 -data=<FILE>::
