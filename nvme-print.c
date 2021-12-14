@@ -4619,21 +4619,26 @@ static char *zone_state_to_string(__u8 state)
 	}
 }
 
+void json_nvme_finish_zone_list(__u64 nr_zones, 
+	struct json_object *zone_list)
+{
+	struct json_object *root = json_create_object();
+	json_object_add_value_uint(root, "nr_zones", nr_zones);
+	json_object_add_value_array(root, "zone_list", zone_list);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
 static void json_nvme_zns_report_zones(void *report, __u32 descs,
-	__u8 ext_size, __u32 report_size, __u64 nr_zones) {
-	struct json_object *root;
-	struct json_object *zone_list;
+	__u8 ext_size, __u32 report_size, 
+	struct json_object *zone_list)
+{
 	struct json_object *zone;
 	struct json_object *ext_data;
 	struct nvme_zone_report *r = report;
 	struct nvme_zns_desc *desc;
 	int i;
-
-	root = json_create_object();
-	zone_list = json_create_array();
-
-
-	json_object_add_value_uint(root, "nr_zones", nr_zones);
 
 	for (i = 0; i < descs; i++) {
 		desc = (struct nvme_zns_desc *)
@@ -4667,11 +4672,6 @@ static void json_nvme_zns_report_zones(void *report, __u32 descs,
 
 		json_array_add_value_object(zone_list, zone);
 	}
-
-	json_object_add_value_array(root, "zone_list", zone_list);
-	json_print_object(root, NULL);
-	printf("\n");
-	json_free_object(root);
 }
 
 static void nvme_show_zns_report_zone_attributes(__u8 za, __u8 zai)
@@ -4693,7 +4693,8 @@ static void nvme_show_zns_report_zone_attributes(__u8 za, __u8 zai)
 }
 
 void nvme_show_zns_report_zones(void *report, __u32 descs,
-	__u8 ext_size, __u32 report_size, unsigned long flags)
+	__u8 ext_size, __u32 report_size, unsigned long flags,
+	struct json_object *zone_list)
 {
 	struct nvme_zone_report *r = report;
 	struct nvme_zns_desc *desc;
@@ -4707,7 +4708,7 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 		return d_raw((unsigned char *)report, report_size);
 	else if (flags & JSON)
 		return json_nvme_zns_report_zones(report, descs,
-				ext_size, report_size, nr_zones);
+				ext_size, report_size, zone_list);
 
 	for (i = 0; i < descs; i++) {
 		desc = (struct nvme_zns_desc *)
