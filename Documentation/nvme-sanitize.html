@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.9" />
+<meta name="generator" content="AsciiDoc" />
 <title>nvme-sanitize(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -753,7 +754,8 @@ nvme-sanitize(1) Manual Page
               [--owpass=&lt;overwrite-pass-count&gt; | -n &lt;overwrite-pass-count&gt;]
               [--ause | -u]
               [--sanact=&lt;action&gt; | -a &lt;action&gt;]
-              [--ovrpat=&lt;overwrite-pattern&gt; | -p &lt;overwrite-pattern&gt;]</pre>
+              [--ovrpat=&lt;overwrite-pattern&gt; | -p &lt;overwrite-pattern&gt;]
+              [--force]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -865,6 +867,15 @@ provides the result.</p></div>
     sanitize operation.
 </p>
 </dd>
+<dt class="hdlist1">
+--force
+</dt>
+<dd>
+<p>
+    Ignore namespace is currently busy and perfome the operation
+    even though.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -896,7 +907,7 @@ Has the program issue Sanitize Command :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2017-06-28 18:52:37 PDT
+ 2021-12-15 10:25:04 CET
 </div>
 </div>
 </body>

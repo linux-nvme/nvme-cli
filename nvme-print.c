@@ -6909,10 +6909,3 @@ void nvme_show_list_items(nvme_root_t r, enum nvme_print_flags flags)
 	else
 		nvme_show_simple_list(r);
 }
-
-void nvme_show_busy_namespace(char *namespace) {
-	fprintf(stderr, "Failed to open %s.\n"\
-		"Namespace is currently busy.\n"\
-		"Use the force [--force] option to ignore that.\n",
-		namespace);
-}

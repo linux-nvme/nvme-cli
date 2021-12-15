@@ -250,9 +250,9 @@ int parse_and_open(int argc, char **argv, const char *desc,
 	if (ret)
 		return ret;
 
-	for (s = opts; (s->option != NULL) && (s != NULL); s++) {
+	for (s = opts; s && s->option; s++) {
 		if (!strcmp(s->option, "force")) {
-			if (! *(int *) s->default_value)
+			if (! *(int *)s->default_value)
 				flags |= O_EXCL;
 			break;
 		}
@@ -260,9 +260,12 @@ int parse_and_open(int argc, char **argv, const char *desc,
 
 	ret = get_dev(argc, argv, flags);
 	if (ret < 0) {
-		if (errno == EBUSY)
-			nvme_show_busy_namespace(basename(argv[optind]));
-		else
+		if (errno == EBUSY) {
+			fprintf(stderr, "Failed to open %s.\n" \
+				"Namespace is currently busy.\n" \
+				"Use the force [--force] option to ignore that.\n",
+				basename(argv[optind]));
+		} else
 			argconfig_print_help(desc, opts);
 	}
 	return ret;
@@ -2544,7 +2547,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id),
-		OPT_FLAG("force",           'f', &cfg.force,           force),
+		OPT_FLAG("force",             0, &cfg.force,           force),
 		OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
 		OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw),
 		OPT_FMT("output-format",    'o', &cfg.output_format,   output_format),
@@ -3750,7 +3753,7 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 		OPT_FLAG("ause",       'u', &cfg.ause,       ause_desc),
 		OPT_BYTE("sanact",     'a', &cfg.sanact,     sanact_desc),
 		OPT_UINT("ovrpat",     'p', &cfg.ovrpat,     ovrpat_desc),
-		OPT_FLAG("force",      'f', &cfg.force,      force_desc),
+		OPT_FLAG("force",        0, &cfg.force,      force_desc),
 		OPT_END()
 	};
 
@@ -4109,7 +4112,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		OPT_BYTE("pil",          'p', &cfg.pil,          pil),
 		OPT_BYTE("ms",           'm', &cfg.ms,           ms),
 		OPT_FLAG("reset",        'r', &cfg.reset,        reset),
-		OPT_FLAG("force",        'f', &cfg.force,        force),
+		OPT_FLAG("force",          0, &cfg.force,        force),
 		OPT_SUFFIX("block-size", 'b', &cfg.bs,           bs),
 		OPT_END()
 	};
@@ -4747,7 +4750,7 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 		OPT_UINT("namespace-id",  'n', &cfg.namespace_id, namespace_id),
 		OPT_SUFFIX("start-block", 's', &cfg.start_block,  start_block),
 		OPT_SHRT("block-count",   'c', &cfg.block_count,  block_count),
-		OPT_FLAG("force",         'f', &cfg.force,        force_desc),
+		OPT_FLAG("force",           0, &cfg.force,        force_desc),
 		OPT_END()
 	};
 

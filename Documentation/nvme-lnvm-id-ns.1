@@ -2,12 +2,12 @@
 .\"     Title: nvme-lnvm-id-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/20/2020
+.\"      Date: 12/15/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LNVM\-ID\-NS" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-LNVM\-ID\-NS" "1" "12/15/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,7 +33,7 @@ nvme-lnvm-id-ns \- Identify Geometry for LightNVM NVMe device
 .sp
 .nf
 \fInvme lnvm\-id\-ns\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                        [\-\-force | \-f]
+                        [\-\-force ]
                         [\-\-raw\-binary | \-b]
                         [\-\-human\-readable | \-H]
 .fi
@@ -47,7 +47,7 @@ Send an Identify Geometry command to the given LightNVM device, returns properti
 Retrieve the geometry from the selected namespace\&.
 .RE
 .PP
-\-\-force, \-f
+\-\-force
 .RS 4
 Try to read the data and assume it is a LightNVM device
 .RE

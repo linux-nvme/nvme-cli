@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme lnvm-id-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
-			[--force | -f]
+			[--force ]
 			[--raw-binary | -b]
 			[--human-readable | -H]
 
@@ -26,7 +26,6 @@ OPTIONS
 	Retrieve the geometry from the selected namespace.
 
 --force::
--f::
 	Try to read the data and assume it is a LightNVM device
 
 --raw-binary::

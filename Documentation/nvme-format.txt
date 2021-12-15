@@ -16,7 +16,7 @@ SYNOPSIS
 		    [--pi=<pi> | -i <pi>]
 		    [--ms=<ms> | -m <ms>]
 		    [--reset | -r ]
-		    [--force | -f ]
+		    [--force ]
 		    [--timeout=<timeout> | -t <timeout> ]
 
 DESCRIPTION
@@ -128,7 +128,6 @@ cryptographically. This is accomplished by deleting the encryption key.
 	Issue a reset after successful format. Must use the character
 	device for this.
 
--f::
 --force::
 	Just send the command immediately without warning of the implications.
 

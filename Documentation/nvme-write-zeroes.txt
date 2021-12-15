@@ -20,6 +20,7 @@ SYNOPSIS
 			[--namespace-id=<nsid> | -n <nsid>]
 			[--storage-tag<storage-tag> | -S <storage-tag>]
 			[--storage-tag-check<storage-tag-check> | -C <storage-tag-check>]
+			[--force]
 
 DESCRIPTION
 -----------
@@ -88,6 +89,10 @@ metadata is passes.
 -C <storage-tag-check>::
 	This bit specifies the Storage Tag field shall be checked as part of end-to-end
 	data protection processing.
+
+--force::
+    Ignore namespace is currently busy and perfome the operation
+    even though.
 
 EXAMPLES
 --------
