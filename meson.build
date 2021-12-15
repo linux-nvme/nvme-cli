@@ -47,7 +47,7 @@ libhugetlbfs = dependency('hugetlbfs', required: false)
 conf.set('LIBHUGETLBFS', libhugetlbfs.found(), description: 'Is libhugetlbfs required?')
 
 # Check for zlib availability
-libz_dep = dependency('zlib', required: true)
+libz_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'])
 
 # Check for OpenSSL availability
 want_openssl = get_option('openssl')
