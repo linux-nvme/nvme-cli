@@ -49,9 +49,18 @@ conf.set('LIBHUGETLBFS', libhugetlbfs.found(), description: 'Is libhugetlbfs req
 # Check for zlib availability
 libz_dep = dependency('zlib', required: true)
 
-# Check for open-ssl availability
-libopenssl = dependency('openssl', version: '>=1.1.0', required: false)
-conf.set('OPENSSL', libopenssl.found(), description: 'Is open-ssl required?')
+# Check for OpenSSL availability
+want_openssl = get_option('openssl')
+if want_openssl != 'false'
+  openssl_dep = dependency('openssl', version: '>=1.1.0',
+                           required: want_openssl == 'true',
+                           fallback : ['openssl', 'openssl_dep'])
+  have_openssl = openssl_dep.found()
+else
+  openssl_dep = []
+  have_openssl = false
+endif
+conf.set('OPENSSL', have_openssl, description: 'Is OpenSSL required?')
 
 # Set the nvme-cli version
 conf.set('NVME_VERSION', '"' + meson.project_version() + '"')
@@ -184,7 +193,7 @@ subdir('Documentation')
 executable(
   'nvme',
   sources,
-  dependencies: [ libnvme_dep, libuuid, json_c, libz_dep, libopenssl ],
+  dependencies: [ libnvme_dep, libuuid, json_c, libz_dep, openssl_dep ],
   include_directories: incdir,
   install: true,
   install_dir: get_option('sbindir')
