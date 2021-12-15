@@ -114,6 +114,7 @@ enum nvme_constants {
 /**
  * enum nvme_csi - Defined command set indicators
  * @NVME_CSI_NVM:	NVM Command Set Indicator
+ * @NVME_CSI_ZNS:	Zoned Namespace Command Set
  */
 enum nvme_csi {
 	NVME_CSI_NVM			= 0,
