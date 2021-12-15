@@ -33,12 +33,12 @@ libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
 
 # Check for libuuid availability
 libuuid = dependency('uuid', required: true)
-conf.set('CONFIG_LIBUUID', libuuid.found(), description: 'Is libuuid required?')
+conf.set('CONFIG_LIBUUID', libuuid.found(), description: 'Is libuuid available?')
 
 # Check for libjson-c availability
 json_c = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c_dep'])
 if json_c.found()
-  conf.set('CONFIG_JSONC', true, description: 'Is json-c required?')
+  conf.set('CONFIG_JSONC', true, description: 'Is json-c available?')
   conf.set('LIBJSONC_14', json_c.version().version_compare('>=0.14'), description: 'Is json-c at least 0.14?')
 endif
 
@@ -67,7 +67,7 @@ else
   openssl_dep = []
   have_openssl = false
 endif
-conf.set('OPENSSL', have_openssl, description: 'Is OpenSSL required?')
+conf.set('OPENSSL', have_openssl, description: 'Is OpenSSL available?')
 
 # Set the nvme-cli version
 conf.set('NVME_VERSION', '"' + meson.project_version() + '"')
