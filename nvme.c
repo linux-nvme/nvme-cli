@@ -1541,6 +1541,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *rae = "retain an asynchronous event";
 	const char *raw = "output in raw format";
 	const char *uuid_index = "UUID index";
+	const char *csi = "command set identifier";
+	const char *offset_type = "offset type";
 	int err, fd;
 	unsigned char *log;
 
@@ -1553,6 +1555,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		__u64 lpo;
 		__u8  lsp;
 		__u8  uuid_index;
+		__u8  csi;
+		int   ot;
 		int   rae;
 		int   raw_binary;
 	};
@@ -1566,6 +1570,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.lsi          = NVME_LOG_LSI_NONE,
 		.rae          = 0,
 		.uuid_index   = 0,
+		.csi          = NVME_CSI_NVM,
+		.ot           = 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -1579,6 +1585,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		OPT_FLAG("rae",          'r', &cfg.rae,          rae),
 		OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
+		OPT_BYTE("csi",          'y', &cfg.csi,          csi),
+		OPT_FLAG("ot",           'O', &cfg.ot,           offset_type),
 		OPT_END()
 	};
 
@@ -1597,7 +1605,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto close_fd;
 	}
 
-	if (cfg.lsp > 16) {
+	if (cfg.lsp > 128) {
 		perror("invalid lsp param\n");
 		err = -EINVAL;
 		goto close_fd;
@@ -1618,7 +1626,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	err = nvme_get_log(fd, cfg.log_id, cfg.namespace_id,
 			   cfg.lpo, cfg.lsp, cfg.lsi, cfg.rae,
-			   cfg.uuid_index, NVME_CSI_NVM,
+			   cfg.uuid_index, cfg.csi, cfg.ot,
 			   cfg.log_len, log, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
 	if (!err) {
 		if (!cfg.raw_binary) {

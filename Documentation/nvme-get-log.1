@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 01/13/2021
+.\"      Date: 12/14/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-LOG" "1" "01/13/2021" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-LOG" "1" "12/14/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,14 +33,16 @@ nvme-get-log \- Retrieves a log page from an NVMe device
 .sp
 .nf
 \fInvme get\-log\fR <device> [\-\-log\-id=<log\-id> | \-i <log\-id>]
-                      [\-\-log\-len=<log\-len> | \-l <log\-len>]
-                      [\-\-aen=<aen> | \-a <aen>]
-                      [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                      [\-\-raw\-binary | \-b]
-                      [\-\-lpo=<offset> | \-o <offset>]
-                      [\-\-lsp=<field> | \-s <field>]
-                      [\-\-lsi=<field> | \-S <field>]
-                      [\-\-rae | \-r]
+              [\-\-log\-len=<log\-len> | \-l <log\-len>]
+              [\-\-aen=<aen> | \-a <aen>]
+              [\-\-namespace\-id=<nsid> | \-n <nsid>]
+              [\-\-raw\-binary | \-b]
+              [\-\-lpo=<offset> | \-o <offset>]
+              [\-\-lsp=<field> | \-s <field>]
+              [\-\-lsi=<field> | \-S <field>]
+              [\-\-rae | \-r]
+              [\-\-csi=<command_set_identifier> | \-y <command_set_identifier>]
+              [\-\-ot=<offset_type> | \-O <offset_type>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -94,6 +96,16 @@ The log specified field of Log Specific Identifier\&.
 \-r, \-\-rae
 .RS 4
 Retain an Asynchronous Event\&.
+.RE
+.PP
+\-y <command_set_identifier>, \-\-csi=<command_set_identifier>
+.RS 4
+This field specifies the identifier of command set\&. if not issued, NVM Command Set will be selected\&.
+.RE
+.PP
+\-O, \-\-ot
+.RS 4
+This field specifies the offset type\&. If set to false, the Log Page Offset Lower field and the Log Page Offset Upper field specify the byte offset into the log page to be returned\&. If set to true, the Log Page Offset Lower field and the Log Page Offset Upper field specify the index into the list of data structures in the log page to be returned\&. The default is byte offset\&. If the option is specified the index mode is used\&.
 .RE
 .SH "EXAMPLES"
 .sp
