@@ -42,9 +42,16 @@ if json_c.found()
   conf.set('LIBJSONC_14', json_c.version().version_compare('>=0.14'), description: 'Is json-c at least 0.14?')
 endif
 
-# Check for libhugetlbfs  availability
-libhugetlbfs = dependency('hugetlbfs', required: false)
-conf.set('LIBHUGETLBFS', libhugetlbfs.found(), description: 'Is libhugetlbfs required?')
+# Check for libhugetlbfs availability
+if cc.has_header(['hugetlbfs.h'])
+  libhugetlbfs_dep = cc.find_library('hugetlbfs',
+                                     required : false)
+  have_libhugetlbfs = libhugetlbfs_dep.found()
+else
+  libhugetlbfs_dep = []
+  have_libhugetlbfs = false
+endif
+conf.set('LIBHUGETLBFS', have_libhugetlbfs, description: 'Is libhugetlbfs available?')
 
 # Check for zlib availability
 libz_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'])
@@ -193,7 +200,8 @@ subdir('Documentation')
 executable(
   'nvme',
   sources,
-  dependencies: [ libnvme_dep, libuuid, json_c, libz_dep, openssl_dep ],
+  dependencies: [ libnvme_dep, libuuid, json_c, libz_dep, openssl_dep,
+                  libhugetlbfs_dep ],
   include_directories: incdir,
   install: true,
   install_dir: get_option('sbindir')
