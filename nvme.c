@@ -4117,10 +4117,6 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		goto ret;
 	}
 
-	err = fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)
-		goto ret;
-
 	if (cfg.lbaf != 0xff && cfg.bs !=0) {
 		fprintf(stderr,
 			"Invalid specification of both LBAF and Block Size, please specify only one\n");
