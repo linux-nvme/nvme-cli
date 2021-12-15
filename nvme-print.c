@@ -5518,7 +5518,7 @@ const char *nvme_log_to_string(__u8 lid)
 	switch (lid) {
 	case NVME_LOG_LID_SUPPORTED_LOG_PAGES:		return "Supported Log Pages";
 	case NVME_LOG_LID_ERROR:			return "Error Information";
-	case NVME_LOG_LID_SMART:			return "SMART Information";
+	case NVME_LOG_LID_SMART:			return "SMART / Health Information";
 	case NVME_LOG_LID_FW_SLOT:			return "Firmware Slot Information";
 	case NVME_LOG_LID_CHANGED_NS:			return "Changed Namespace List";
 	case NVME_LOG_LID_CMD_EFFECTS:			return "Commands Supported and Effects";
@@ -5527,17 +5527,17 @@ const char *nvme_log_to_string(__u8 lid)
 	case NVME_LOG_LID_TELEMETRY_CTRL:		return "Telemetry Controller-Initiated";
 	case NVME_LOG_LID_ENDURANCE_GROUP:		return "Endurance Group Information";
 	case NVME_LOG_LID_PREDICTABLE_LAT_NVMSET:	return "Predictable Latency Per NVM Set";
-	case NVME_LOG_LID_ANA:				return "Asymmetric Namespace Access";
 	case NVME_LOG_LID_PREDICTABLE_LAT_AGG:		return "Predictable Latency Event Aggregate";
+	case NVME_LOG_LID_ANA:				return "Asymmetric Namespace Access";
 	case NVME_LOG_LID_PERSISTENT_EVENT:		return "Persistent Event Log";
 	case NVME_LOG_LID_LBA_STATUS:			return "LBA Status Information";
 	case NVME_LOG_LID_ENDURANCE_GRP_EVT:		return "Endurance Group Event Aggregate";
+	case NVME_LOG_LID_FID_SUPPORTED_EFFECTS:	return "Feature Identifiers Supported and Effects";
 	case NVME_LOG_LID_BOOT_PARTITION:		return "Boot Partition";
-	case NVME_LOG_LID_FID_SUPPORTED_EFFECTS:	return "FID Supported and Effects";
 	case NVME_LOG_LID_DISCOVER:			return "Discovery";
 	case NVME_LOG_LID_RESERVATION:			return "Reservation Notification";
 	case NVME_LOG_LID_SANITIZE:			return "Sanitize Status";
-	case NVME_LOG_LID_ZNS_CHANGED_ZONES:		return "Host Identifier";
+	case NVME_LOG_LID_ZNS_CHANGED_ZONES:		return "Changed Zone List";
 	default:					return "Unknown";
 	}
 }

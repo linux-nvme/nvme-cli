@@ -164,7 +164,7 @@ void *nvme_alloc(size_t len, bool *huge)
 
 static ssize_t getrandom_bytes(void *buf, size_t buflen)
 {
-#if !HAVE_SYS_RANDOM
+#if HAVE_SYS_RANDOM
 	return getrandom(buf, buflen, GRND_NONBLOCK);
 #else
 	ssize_t result;
