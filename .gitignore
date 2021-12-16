@@ -33,3 +33,6 @@ config.log
 cscope.*
 
 .build
+
+subprojects
+!subprojects/*.wrap
