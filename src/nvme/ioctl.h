@@ -414,6 +414,27 @@ struct nvme_identify_args {
  */
 int nvme_identify(struct nvme_identify_args *args);
 
+static int nvme_identify_cns_nsid(int fd, enum nvme_identify_cns cns,
+			__u32 nsid, void *data)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = cns,
+		.nsid = nsid,
+		.cntid = NVME_CNTLID_NONE,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = NVME_DOMID_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.csi = NVME_CSI_NVM,
+		.data = data,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
+
 /**
  * nvme_identify_ctrl() - Retrieves nvme identify controller
  * @fd:		File descriptor of nvme device
@@ -426,7 +447,11 @@ int nvme_identify(struct nvme_identify_args *args);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_ctrl(int fd, struct nvme_id_ctrl *id);
+static inline int nvme_identify_ctrl(int fd, struct nvme_id_ctrl *id)
+{
+	return nvme_identify_cns_nsid(fd, NVME_IDENTIFY_CNS_CTRL,
+				      NVME_NSID_NONE, id);
+}
 
 /**
  * nvme_identify_ns() - Retrieves nvme identify namespace
@@ -448,7 +473,10 @@ int nvme_identify_ctrl(int fd, struct nvme_id_ctrl *id);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_ns(int fd, __u32 nsid, struct nvme_id_ns *ns);
+static inline int nvme_identify_ns(int fd, __u32 nsid, struct nvme_id_ns *ns)
+{
+	return nvme_identify_cns_nsid(fd, NVME_IDENTIFY_CNS_NS, nsid, ns);
+}
 
 /**
  * nvme_identify_allocated_ns() - Same as nvme_identify_ns, but only for
@@ -460,7 +488,12 @@ int nvme_identify_ns(int fd, __u32 nsid, struct nvme_id_ns *ns);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_allocated_ns(int fd, __u32 nsid, struct nvme_id_ns *ns);
+static inline int nvme_identify_allocated_ns(int fd, __u32 nsid,
+			struct nvme_id_ns *ns)
+{
+	return nvme_identify_cns_nsid(fd, NVME_IDENTIFY_CNS_ALLOCATED_NS,
+				      nsid, ns);
+}
 
 /**
  * nvme_identify_active_ns_list() - Retrieves active namespaces id list
@@ -477,7 +510,12 @@ int nvme_identify_allocated_ns(int fd, __u32 nsid, struct nvme_id_ns *ns);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_active_ns_list(int fd, __u32 nsid, struct nvme_ns_list *list);
+static inline int nvme_identify_active_ns_list(int fd, __u32 nsid,
+			struct nvme_ns_list *list)
+{
+	return nvme_identify_cns_nsid(fd, NVME_IDENTIFY_CNS_NS_ACTIVE_LIST,
+				      nsid, list);
+}
 
 /**
  * nvme_identify_allocated_ns_list() - Retrieves allocated namespace id list
@@ -494,8 +532,12 @@ int nvme_identify_active_ns_list(int fd, __u32 nsid, struct nvme_ns_list *list);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_allocated_ns_list(int fd, __u32 nsid,
-				    struct nvme_ns_list *list);
+static inline int nvme_identify_allocated_ns_list(int fd, __u32 nsid,
+			struct nvme_ns_list *list)
+{
+	return nvme_identify_cns_nsid(fd, NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST,
+				      nsid, list);
+}
 
 /**
  * nvme_identify_ctrl_list() - Retrieves identify controller list
@@ -512,8 +554,26 @@ int nvme_identify_allocated_ns_list(int fd, __u32 nsid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_ctrl_list(int fd, __u16 cntid,
-			    struct nvme_ctrl_list *ctrlist);
+static inline int nvme_identify_ctrl_list(int fd, __u16 cntid,
+			struct nvme_ctrl_list *ctrlist)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_CTRL_LIST,
+		.nsid = NVME_NSID_NONE,
+		.cntid = cntid,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = NVME_DOMID_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.csi = NVME_CSI_NVM,
+		.data = ctrlist,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_identify_nsid_ctrl_list() -
@@ -531,8 +591,26 @@ int nvme_identify_ctrl_list(int fd, __u16 cntid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1
  */
-int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
-				 struct nvme_ctrl_list *ctrlist);
+static inline int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
+			struct nvme_ctrl_list *ctrlist)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_NS_CTRL_LIST,
+		.nsid = nsid,
+		.cntid = cntid,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = NVME_DOMID_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.csi = NVME_CSI_NVM,
+		.data = ctrlist,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_identify_ns_descs() - Retrieves namespace descriptor list
@@ -551,7 +629,12 @@ int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_ns_descs(int fd, __u32 nsid, struct nvme_ns_id_desc *descs);
+static inline int nvme_identify_ns_descs(int fd, __u32 nsid,
+			struct nvme_ns_id_desc *descs)
+{
+	return nvme_identify_cns_nsid(fd, NVME_IDENTIFY_CNS_NS_DESC_LIST,
+				      nsid, descs);
+}
 
 /**
  * nvme_identify_nvmset_list() - Retrieves NVM Set List
@@ -569,8 +652,26 @@ int nvme_identify_ns_descs(int fd, __u32 nsid, struct nvme_ns_id_desc *descs);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
-			      struct nvme_id_nvmset_list *nvmset);
+static inline int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
+			struct nvme_id_nvmset_list *nvmset)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_NVMSET_LIST,
+		.nsid = NVME_NSID_NONE,
+		.cntid = NVME_CNTLID_NONE,
+		.nvmsetid = nvmsetid,
+		.domid = NVME_DOMID_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.csi = NVME_CSI_NVM,
+		.data = nvmset,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_identify_primary_ctrl() - Retrieve NVMe Primary Controller
@@ -584,8 +685,26 @@ int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_primary_ctrl(int fd, __u16 cntid,
-			       struct nvme_primary_ctrl_cap *cap);
+static inline int nvme_identify_primary_ctrl(int fd, __u16 cntid,
+			struct nvme_primary_ctrl_cap *cap)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP,
+		.nsid = NVME_NSID_NONE,
+		.cntid = cntid,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = NVME_DOMID_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.csi = NVME_CSI_NVM,
+		.data = cap,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_identify_secondary_ctrl_list() - Retrieves secondary controller list
@@ -605,8 +724,26 @@ int nvme_identify_primary_ctrl(int fd, __u16 cntid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid,
-				      struct nvme_secondary_ctrl_list *list);
+static inline int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid,
+			__u16 cntid, struct nvme_secondary_ctrl_list *list)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
+		.nsid = nsid,
+		.cntid = cntid,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = NVME_DOMID_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.csi = NVME_CSI_NVM,
+		.data = list,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_identify_ns_granularity() - Retrieves namespace granularity
@@ -624,7 +761,12 @@ int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid, __u16 cntid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_ns_granularity(int fd, struct nvme_id_ns_granularity_list *list);
+static inline int nvme_identify_ns_granularity(int fd,
+			struct nvme_id_ns_granularity_list *list)
+{
+	return nvme_identify_cns_nsid(fd, NVME_IDENTIFY_CNS_NS_GRANULARITY,
+				      NVME_NSID_NONE, list);
+}
 
 /**
  * nvme_identify_uuid() - Retrieves device's UUIDs
@@ -639,7 +781,11 @@ int nvme_identify_ns_granularity(int fd, struct nvme_id_ns_granularity_list *lis
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_uuid(int fd, struct nvme_id_uuid_list *list);
+static inline int nvme_identify_uuid(int fd, struct nvme_id_uuid_list *list)
+{
+	return nvme_identify_cns_nsid(fd, NVME_IDENTIFY_CNS_UUID_LIST,
+				      NVME_NSID_NONE, list);
+}
 
 /**
  * nvme_identify_ns_csi() -
@@ -651,7 +797,26 @@ int nvme_identify_uuid(int fd, struct nvme_id_uuid_list *list);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 csi, void *data);
+static inline int nvme_identify_ns_csi(int fd, __u32 nsid,
+			enum nvme_csi csi, void *data)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_CSI_NS,
+		.nsid = nsid,
+		.cntid = NVME_CNTLID_NONE,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = NVME_DOMID_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.csi = csi,
+		.data = data,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_identify_ctrl_csi() -
@@ -662,7 +827,25 @@ int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 csi, void *data);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_ctrl_csi(int fd, __u8 csi, void *data);
+static inline int nvme_identify_ctrl_csi(int fd, enum nvme_csi csi, void *data)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_CSI_CTRL,
+		.nsid = NVME_NSID_NONE,
+		.cntid = NVME_CNTLID_NONE,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = NVME_DOMID_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.csi = csi,
+		.data = data,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_identify_active_ns_list_csi() -
@@ -681,8 +864,26 @@ int nvme_identify_ctrl_csi(int fd, __u8 csi, void *data);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_active_ns_list_csi(int fd, __u32 nsid, __u8 csi,
-				     struct nvme_ns_list *list);
+static inline int nvme_identify_active_ns_list_csi(int fd, __u32 nsid,
+			enum nvme_csi csi, struct nvme_ns_list *list)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_NS_ACTIVE_LIST,
+		.nsid = nsid,
+		.cntid = NVME_CNTLID_NONE,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = NVME_DOMID_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.csi = csi,
+		.data = list,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_identify_allocated_ns_list_csi() -
@@ -701,8 +902,26 @@ int nvme_identify_active_ns_list_csi(int fd, __u32 nsid, __u8 csi,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid, __u8 csi,
-					struct nvme_ns_list *list);
+static inline int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid,
+			enum nvme_csi csi, struct nvme_ns_list *list)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST,
+		.nsid = nsid,
+		.cntid = NVME_CNTLID_NONE,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = NVME_DOMID_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.csi = csi,
+		.data = list,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_identify_independent_identify_ns() -
@@ -714,8 +933,26 @@ int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid, __u8 csi,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
-					  struct nvme_id_independent_id_ns *ns);
+static inline int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
+			struct nvme_id_independent_id_ns *ns)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS,
+		.nsid = nsid,
+		.cntid = NVME_CNTLID_NONE,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = NVME_DOMID_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.csi = NVME_CSI_NVM,
+		.data = ns,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_identify_ctrl_nvm() -
@@ -725,7 +962,10 @@ int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_nvm_identify_ctrl(int fd, struct nvme_id_ctrl_nvm *id);
+static inline int nvme_nvm_identify_ctrl(int fd, struct nvme_id_ctrl_nvm *id)
+{
+	return nvme_identify_ctrl_csi(fd, NVME_CSI_NVM, id);
+}
 
 /**
  * nvme_idnetifY_domain_list() -
@@ -743,8 +983,26 @@ int nvme_nvm_identify_ctrl(int fd, struct nvme_id_ctrl_nvm *id);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_domain_list(int fd, __u16 domid,
-			      struct nvme_id_domain_list *list);
+static inline int nvme_identify_domain_list(int fd, __u16 domid,
+			struct nvme_id_domain_list *list)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_DOMAIN_LIST,
+		.nsid = NVME_NSID_NONE,
+		.cntid = NVME_CNTLID_NONE,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = domid,
+		.uuidx = NVME_UUID_NONE,
+		.csi = NVME_CSI_NVM,
+		.data = list,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_identifiy_endurance_group_list() -
@@ -755,8 +1013,26 @@ int nvme_identify_domain_list(int fd, __u16 domid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
-				struct nvme_id_endurance_group_list *list);
+static inline int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
+			struct nvme_id_endurance_group_list *list)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID,
+		.nsid = NVME_NSID_NONE,
+		.cntid = NVME_CNTLID_NONE,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = endgrp_id,
+		.uuidx = NVME_UUID_NONE,
+		.csi = NVME_CSI_NVM,
+		.data = list,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_identify_iocs() -
@@ -770,7 +1046,26 @@ int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify_iocs(int fd, __u16 cntlid, struct nvme_id_iocs *iocs);
+static inline int nvme_identify_iocs(int fd, __u16 cntlid,
+			struct nvme_id_iocs *iocs)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE,
+		.nsid = NVME_NSID_NONE,
+		.cntid = cntlid,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = NVME_DOMID_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.csi = NVME_CSI_NVM,
+		.data = iocs,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_zns_identify_ns() -
@@ -781,7 +1076,26 @@ int nvme_identify_iocs(int fd, __u16 cntlid, struct nvme_id_iocs *iocs);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_zns_identify_ns(int fd, __u32 nsid, struct nvme_zns_id_ns *data);
+static inline int nvme_zns_identify_ns(int fd, __u32 nsid,
+			struct nvme_zns_id_ns *data)
+{
+	struct nvme_identify_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.cns = NVME_IDENTIFY_CNS_CSI_NS,
+		.nsid = nsid,
+		.cntid = NVME_CNTLID_NONE,
+		.nvmsetid = NVME_NVMSETID_NONE,
+		.domid = NVME_DOMID_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.csi = NVME_CSI_ZNS,
+		.data = data,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_identify(&args);
+}
 
 /**
  * nvme_zns_identify_ctrl() -
@@ -791,7 +1105,10 @@ int nvme_zns_identify_ns(int fd, __u32 nsid, struct nvme_zns_id_ns *data);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id);
+static inline int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id)
+{
+	return nvme_identify_ctrl_csi(fd, NVME_CSI_ZNS, id);
+}
 
 /**
  * nvme_get_log_args - Arguments for the NVMe Admin Get Log command
