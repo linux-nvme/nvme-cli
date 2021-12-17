@@ -1288,28 +1288,28 @@ int nvme_security_receive(struct nvme_security_receive_args *args)
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_get_lba_status(int fd, __u32 nsid, __u64 slba, __u32 mndw, __u16 rl,
-			enum nvme_lba_status_atype atype, __u32 timeout,
-			struct nvme_lba_status *lbas, __u32 *result)
+int nvme_get_lba_status(struct nvme_get_lba_status_args *args)
 {
-	__u32 cdw10 = slba & 0xffffffff;
-	__u32 cdw11 = slba >> 32;
-	__u32 cdw12 = mndw;
-	__u32 cdw13 = NVME_SET(rl, GET_LBA_STATUS_CDW13_RL) |
-			NVME_SET(atype, GET_LBA_STATUS_CDW13_ATYPE);
+	__u32 cdw10 = args->slba & 0xffffffff;
+	__u32 cdw11 = args->slba >> 32;
+	__u32 cdw12 = args->mndw;
+	__u32 cdw13 = NVME_SET(args->rl, GET_LBA_STATUS_CDW13_RL) |
+			NVME_SET(args->atype, GET_LBA_STATUS_CDW13_ATYPE);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode =  nvme_admin_get_lba_status,
-		.nsid = nsid,
-		.addr = (__u64)(uintptr_t)lbas,
+		.nsid = args->nsid,
+		.addr = (__u64)(uintptr_t)args->lbas,
 		.cdw10 = cdw10,
 		.cdw11 = cdw11,
 		.cdw12 = cdw12,
 		.cdw13 = cdw13,
-		.timeout_ms = timeout,
+		.timeout_ms = args->timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_directive_send(int fd, __u32 nsid, __u16 dspec,

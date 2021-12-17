@@ -3018,7 +3018,7 @@ struct nvme_security_receive_args {
 int nvme_security_receive(struct nvme_security_receive_args *args);
 
 /**
- * nvme_get_lba_status() - Retrieve information on possibly unrecoverable LBAs
+ * nvme_get_lba_status_args - Arguments for the NVMe Get LBA Status command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID to retrieve LBA status
  * @slba:	Starting logical block address to check statuses
@@ -3029,6 +3029,23 @@ int nvme_security_receive(struct nvme_security_receive_args *args);
  * @timeout:	Timeout in ms
  * @lbas:	Data payload to return status descriptors
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_get_lba_status_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	__u64 slba;
+	__u32 mndw;
+	__u16 rl;
+	enum nvme_lba_status_atype atype;
+	__u32 timeout;
+	struct nvme_lba_status *lbas;
+	__u32 *result;
+};
+
+/**
+ * nvme_get_lba_status() - Retrieve information on possibly unrecoverable LBAs
+ * @args:	&struct nvme_get_lba_status_args argument structure
  *
  * The Get LBA Status command requests information about Potentially
  * Unrecoverable LBAs. Refer to the specification for action type descriptions.
@@ -3036,9 +3053,7 @@ int nvme_security_receive(struct nvme_security_receive_args *args);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_lba_status(int fd, __u32 nsid, __u64 slba, __u32 mndw, __u16 rl,
-			enum nvme_lba_status_atype atype, __u32 timeout,
-			struct nvme_lba_status *lbas, __u32 *result);
+int nvme_get_lba_status(struct nvme_get_lba_status_args *args);
 
 /**
  * nvme_directive_send() - Send directive command
