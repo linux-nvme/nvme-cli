@@ -92,17 +92,25 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 			 void *buf)
 {
 	int err = 0;
+	struct nvme_fw_download_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.offset = offset,
+		.data_len = xfer,
+		.data = buf,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
 
 	while (size > 0) {
-		xfer = MIN(xfer, size);
-		err = nvme_fw_download(fd, offset, xfer, buf,
-				       NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+		args.data_len = MIN(xfer, size);
+		err = nvme_fw_download(&args);
 		if (err)
 			break;
 
-		buf += xfer;
+		args.data += xfer;
 		size -= xfer;
-		offset += xfer;
+		args.offset += xfer;
 	}
 
 	return err;

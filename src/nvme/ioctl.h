@@ -2859,14 +2859,28 @@ static inline int nvme_ns_detach_ctrls(int fd, __u32 nsid,
 }
 
 /**
- * nvme_fw_download() - Download part or all of a firmware image to the
- * 			controller
+ * nvme_fw_download_args - Arguments for the NVMe Firmware Download command
  * @fd:		File descriptor of nvme device
  * @offset:	Offset in the firmware data
  * @data_len:	Length of data in this command in bytes
  * @data:	Userspace address of the firmware data
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_fw_download_args {
+	int args_size;
+	int fd;
+	__u32 offset;
+	__u32 data_len;
+	void *data;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_fw_download() - Download part or all of a firmware image to the
+ * 			controller
+ * @args:	&struct nvme_fw_download_args argument structure
  *
  * The Firmware Image Download command downloads all or a portion of an image
  * for a future update to the controller. The Firmware Image Download command
@@ -2884,8 +2898,7 @@ static inline int nvme_ns_detach_ctrls(int fd, __u32 nsid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data,
-		     __u32 timeout, __u32 *result);
+int nvme_fw_download(struct nvme_fw_download_args *args);
 
 /**
  * nvme_fw_commit() - Commit firmware using the specified action

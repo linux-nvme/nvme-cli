@@ -1206,22 +1206,23 @@ int nvme_ns_attach(struct nvme_ns_attach_args *args)
 	return nvme_submit_admin_passthru(args->fd, &cmd, NULL);
 }
 
-int nvme_fw_download(int fd, __u32 offset, __u32 data_len, void *data,
-		     __u32 timeout, __u32 *result)
+int nvme_fw_download(struct nvme_fw_download_args *args)
 {
-	__u32 cdw10 = (data_len >> 2) - 1;
-	__u32 cdw11 = offset >> 2;
+	__u32 cdw10 = (args->data_len >> 2) - 1;
+	__u32 cdw11 = args->offset >> 2;
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_fw_download,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
-		.data_len	= data_len,
-		.addr		= (__u64)(uintptr_t)data,
-		.timeout_ms	= timeout,
+		.data_len	= args->data_len,
+		.addr		= (__u64)(uintptr_t)args->data,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_fw_commit(int fd, __u8 slot, enum nvme_fw_commit_ca action, bool bpid,
