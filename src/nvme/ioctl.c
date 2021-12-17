@@ -1225,19 +1225,21 @@ int nvme_fw_download(struct nvme_fw_download_args *args)
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_fw_commit(int fd, __u8 slot, enum nvme_fw_commit_ca action, bool bpid,
-		   __u32 *result)
+int nvme_fw_commit(struct nvme_fw_commit_args *args)
 {
-	__u32 cdw10 = NVME_SET(slot, FW_COMMIT_CDW10_FS) |
-			NVME_SET(action, FW_COMMIT_CDW10_CA) |
-			NVME_SET(bpid, FW_COMMIT_CDW10_BPID);
+	__u32 cdw10 = NVME_SET(args->slot, FW_COMMIT_CDW10_FS) |
+			NVME_SET(args->action, FW_COMMIT_CDW10_CA) |
+			NVME_SET(args->bpid, FW_COMMIT_CDW10_BPID);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_fw_commit,
 		.cdw10		= cdw10,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_security_send(int fd, __u32 nsid, __u8 nssf, __u8 spsp0, __u8 spsp1,

@@ -2901,23 +2901,36 @@ struct nvme_fw_download_args {
 int nvme_fw_download(struct nvme_fw_download_args *args);
 
 /**
- * nvme_fw_commit() - Commit firmware using the specified action
+ * nvme_fw_commit_args - Arguments for the NVMe Firmware Commit command
  * @fd:		File descriptor of nvme device
  * @slot:	Firmware slot to commit the downloaded image
  * @action:	Action to use for the firmware image, see &enum nvme_fw_commit_ca
  * @bpid:	Set to true to select the boot partition id
+ * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_fw_commit_args {
+	int args_size;
+	int fd;
+	__u8 slot;
+	enum nvme_fw_commit_ca action;
+	bool bpid;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_fw_commit() - Commit firmware using the specified action
+ * @args:	&struct nvme_fw_commit_args argument structure
  *
  * The Firmware Commit command modifies the firmware image or Boot Partitions.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise. The command
- * 	   status
- * 	   response may specify additional
- * 	   reset actions required to complete the commit process.
+ * status response may specify additional reset actions required to complete
+ * the commit process.
  */
-int nvme_fw_commit(int fd, __u8 slot, enum nvme_fw_commit_ca action, bool bpid,
-		   __u32 *result);
+int nvme_fw_commit(struct nvme_fw_commit_args *args);
 
 /**
  * nvme_security_send() -
