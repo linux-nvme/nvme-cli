@@ -33,25 +33,41 @@ libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
 
 # Check for libuuid availability
 libuuid = dependency('uuid', required: true)
-conf.set('CONFIG_LIBUUID', libuuid.found(), description: 'Is libuuid required?')
+conf.set('CONFIG_LIBUUID', libuuid.found(), description: 'Is libuuid available?')
 
 # Check for libjson-c availability
 json_c = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c_dep'])
 if json_c.found()
-  conf.set('CONFIG_JSONC', true, description: 'Is json-c required?')
+  conf.set('CONFIG_JSONC', true, description: 'Is json-c available?')
   conf.set('LIBJSONC_14', json_c.version().version_compare('>=0.14'), description: 'Is json-c at least 0.14?')
 endif
 
-# Check for libhugetlbfs  availability
-libhugetlbfs = dependency('hugetlbfs', required: false)
-conf.set('LIBHUGETLBFS', libhugetlbfs.found(), description: 'Is libhugetlbfs required?')
+# Check for libhugetlbfs availability
+if cc.has_header(['hugetlbfs.h'])
+  libhugetlbfs_dep = cc.find_library('hugetlbfs',
+                                     required : false)
+  have_libhugetlbfs = libhugetlbfs_dep.found()
+else
+  libhugetlbfs_dep = []
+  have_libhugetlbfs = false
+endif
+conf.set('LIBHUGETLBFS', have_libhugetlbfs, description: 'Is libhugetlbfs available?')
 
 # Check for zlib availability
-libz_dep = dependency('zlib', required: true)
+libz_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'])
 
-# Check for open-ssl availability
-libopenssl = dependency('openssl', version: '>=1.1.0', required: false)
-conf.set('OPENSSL', libopenssl.found(), description: 'Is open-ssl required?')
+# Check for OpenSSL availability
+want_openssl = get_option('openssl')
+if want_openssl != 'false'
+  openssl_dep = dependency('openssl', version: '>=1.1.0',
+                           required: want_openssl == 'true',
+                           fallback : ['openssl', 'openssl_dep'])
+  have_openssl = openssl_dep.found()
+else
+  openssl_dep = []
+  have_openssl = false
+endif
+conf.set('OPENSSL', have_openssl, description: 'Is OpenSSL available?')
 
 # Set the nvme-cli version
 conf.set('NVME_VERSION', '"' + meson.project_version() + '"')
@@ -184,7 +200,8 @@ subdir('Documentation')
 executable(
   'nvme',
   sources,
-  dependencies: [ libnvme_dep, libuuid, json_c, libz_dep, libopenssl ],
+  dependencies: [ libnvme_dep, libuuid, json_c, libz_dep, openssl_dep,
+                  libhugetlbfs_dep ],
   include_directories: incdir,
   install: true,
   install_dir: get_option('sbindir')

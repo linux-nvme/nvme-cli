@@ -12,9 +12,8 @@ version
 ccan/config.h
 ccan/tools/configurator/configurator
 
-subprojects/libnvme
-subprojects/json-c-*
-subprojects/packagecache
+subprojects
+!subprojects/*.wrap
 
 cscope.*
 
