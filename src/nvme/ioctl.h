@@ -3327,13 +3327,26 @@ static inline int nvme_directive_recv_stream_allocate(int fd, __u32 nsid,
  *		Endurance Group or NVM Set to be created
  * @timeout:	Timeout in ms
  * @result:	If successful, the CQE dword0 value
+ */
+struct nvme_capacity_mgmt_args {
+	int args_size;
+	int fd;
+	__u8 op;
+	__u16 element_id;
+	__u32 cdw11;
+	__u32 cdw12;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_capacity_mgmt() -
+ * @args:	&struct nvme_capacity_mgmt_args argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_capacity_mgmt(int fd, __u8 op, __u16 element_id,
-		       __u32 dw11, __u32 dw12,
-		       __u32 timeout, __u32 *result);
+int nvme_capacity_mgmt(struct nvme_capacity_mgmt_args *args);
 
 /**
  * nvme_lockdown() - Issue lockdown command

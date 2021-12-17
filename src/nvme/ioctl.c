@@ -1381,21 +1381,21 @@ int nvme_directive_recv(struct nvme_directive_recv_args *args)
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_capacity_mgmt(int fd, __u8 op, __u16 element_id,
-		       __u32 dw11, __u32 dw12,
-		       __u32 timeout, __u32 *result)
+int nvme_capacity_mgmt(struct nvme_capacity_mgmt_args *args)
 {
-	__u32 dw10 = op | element_id << 16;
+	__u32 cdw10 = args->op | args->element_id << 16;
 
         struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_capacity_mgmt,
-		.cdw10		= dw10,
-		.cdw11		= dw11,
-		.cdw12		= dw12,
-		.timeout_ms	= timeout,
+		.cdw10		= cdw10,
+		.cdw11		= args->cdw11,
+		.cdw12		= args->cdw12,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_lockdown(int fd, __u8 scp, __u8 prhbt, __u8 ifc, __u8 ofi,
