@@ -5964,29 +5964,29 @@ const char *nvme_feature_to_string(enum nvme_features_id feature)
 	case NVME_FEAT_FID_VOLATILE_WC:	return "Volatile Write Cache";
 	case NVME_FEAT_FID_NUM_QUEUES:	return "Number of Queues";
 	case NVME_FEAT_FID_IRQ_COALESCE:return "Interrupt Coalescing";
-	case NVME_FEAT_FID_IRQ_CONFIG: 	return "Interrupt Vector Configuration";
+	case NVME_FEAT_FID_IRQ_CONFIG:	return "Interrupt Vector Configuration";
 	case NVME_FEAT_FID_WRITE_ATOMIC:return "Write Atomicity Normal";
 	case NVME_FEAT_FID_ASYNC_EVENT:	return "Async Event Configuration";
 	case NVME_FEAT_FID_AUTO_PST:	return "Autonomous Power State Transition";
 	case NVME_FEAT_FID_HOST_MEM_BUF:return "Host Memory Buffer";
+	case NVME_FEAT_FID_TIMESTAMP:	return "Timestamp";
 	case NVME_FEAT_FID_KATO:	return "Keep Alive Timer";
+	case NVME_FEAT_FID_HCTM:	return "Host Controlled Thermal Management";
 	case NVME_FEAT_FID_NOPSC:	return "Non-Operational Power State Config";
 	case NVME_FEAT_FID_RRL:		return "Read Recovery Level";
 	case NVME_FEAT_FID_PLM_CONFIG:	return "Predicatable Latency Mode Config";
 	case NVME_FEAT_FID_PLM_WINDOW:	return "Predicatable Latency Mode Window";
+	case NVME_FEAT_FID_LBA_STS_INTERVAL:	return "LBA Status Interval";
+	case NVME_FEAT_FID_HOST_BEHAVIOR:	return "Host Behavior";
+	case NVME_FEAT_FID_SANITIZE:	return "Sanitize";
 	case NVME_FEAT_FID_ENDURANCE_EVT_CFG:	return "Enduarance Event Group Configuration";
-	case NVME_FEAT_FID_IOCS_PROFILE:return "I/O Command Set Profile";
+	case NVME_FEAT_FID_IOCS_PROFILE:	return "I/O Command Set Profile";
+	case NVME_FEAT_FID_SPINUP_CONTROL:	return "Spinup Control";
 	case NVME_FEAT_FID_SW_PROGRESS:	return "Software Progress";
 	case NVME_FEAT_FID_HOST_ID:	return "Host Identifier";
 	case NVME_FEAT_FID_RESV_MASK:	return "Reservation Notification Mask";
 	case NVME_FEAT_FID_RESV_PERSIST:return "Reservation Persistence";
-	case NVME_FEAT_FID_TIMESTAMP:	return "Timestamp";
-	case NVME_FEAT_FID_WRITE_PROTECT:return "Namespce Write Protect";
-	case NVME_FEAT_FID_HCTM:	return "Host Controlled Thermal Management";
-	case NVME_FEAT_FID_HOST_BEHAVIOR:return "Host Behavior";
-	case NVME_FEAT_FID_SANITIZE:	return "Sanitize";
-	case NVME_FEAT_FID_LBA_STS_INTERVAL: return "LBA Status Interval";
-	case NVME_FEAT_FID_SPINUP_CONTROL:	return "Spinup Control";
+	case NVME_FEAT_FID_WRITE_PROTECT:	return "Namespce Write Protect";
 	}
 	/*
 	 * We don't use the "default:" statement to let the compiler warning if
@@ -6383,8 +6383,24 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		printf("\tEnable Host Memory (EHM): %s\n", (result & 0x00000001) ? "Enabled":"Disabled");
 		nvme_show_host_mem_buffer((struct nvme_host_mem_buf_attrs *)buf);
 		break;
-	case NVME_FEAT_FID_SW_PROGRESS:
-		printf("\tPre-boot Software Load Count (PBSLC): %u\n", result & 0x000000ff);
+	case NVME_FEAT_FID_TIMESTAMP:
+		nvme_show_timestamp((struct nvme_timestamp *)buf);
+		break;
+	case NVME_FEAT_FID_KATO:
+		printf("\tKeep Alive Timeout (KATO) in milliseconds: %u\n", result);
+		break;
+	case NVME_FEAT_FID_HCTM:
+		printf("\tThermal Management Temperature 1 (TMT1) : %u Kelvin (%ld°C)\n",
+		       result >> 16, kelvin_to_celsius(result >> 16));
+		printf("\tThermal Management Temperature 2 (TMT2) : %u Kelvin (%ld°C)\n",
+		       result & 0x0000ffff, kelvin_to_celsius(result & 0x0000ffff));
+		break;
+	case NVME_FEAT_FID_NOPSC:
+		printf("\tNon-Operational Power State Permissive Mode Enable (NOPPME): %s\n",
+			(result & 1) ? "True" : "False");
+		break;
+	case NVME_FEAT_FID_RRL:
+		printf("\tRead Recovery Level (RRL): %u\n", result & 0xf);
 		break;
 	case NVME_FEAT_FID_PLM_CONFIG:
 		printf("\tPredictable Latency Window Enabled: %s\n", result & 0x1 ? "True":"False");
@@ -6396,12 +6412,24 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 	case NVME_FEAT_FID_LBA_STS_INTERVAL:
 		nvme_show_lba_status_info(result);
 		break;
+	case NVME_FEAT_FID_HOST_BEHAVIOR:
+		printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
+		break;
+	case NVME_FEAT_FID_SANITIZE:
+		printf("\tNo-Deallocate Response Mode (NODRM) : %u\n", result & 0x1);
+		break;
 	case NVME_FEAT_FID_ENDURANCE_EVT_CFG:
 		printf("\tEndurance Group Identifier (ENDGID): %u\n", result & 0xffff);
 		printf("\tEndurance Group Critical Warnings  : %u\n", (result >> 16) & 0xff);
 		break;
 	case NVME_FEAT_FID_IOCS_PROFILE:
 		printf("\tI/O Command Set Profile: %s\n", result & 0x1 ? "True":"False");
+		break;
+	case NVME_FEAT_FID_SPINUP_CONTROL:
+		printf("\tSpinup control feature Enabled: %s\n", (result & 1) ? "True" : "False");
+		break;
+	case NVME_FEAT_FID_SW_PROGRESS:
+		printf("\tPre-boot Software Load Count (PBSLC): %u\n", result & 0x000000ff);
 		break;
 	case NVME_FEAT_FID_HOST_ID:
 		ull =  buf[7]; ull <<= 8; ull |= buf[6]; ull <<= 8; ull |= buf[5]; ull <<= 8;
@@ -6422,34 +6450,6 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		break;
 	case NVME_FEAT_FID_WRITE_PROTECT:
 		printf("\tNamespace Write Protect: %s\n", nvme_show_ns_wp_cfg(result));
-		break;
-	case NVME_FEAT_FID_TIMESTAMP:
-		nvme_show_timestamp((struct nvme_timestamp *)buf);
-		break;
-	case NVME_FEAT_FID_HCTM:
-		printf("\tThermal Management Temperature 1 (TMT1) : %u Kelvin (%ld°C)\n",
-		       result >> 16, kelvin_to_celsius(result >> 16));
-		printf("\tThermal Management Temperature 2 (TMT2) : %u Kelvin (%ld°C)\n",
-		       result & 0x0000ffff, kelvin_to_celsius(result & 0x0000ffff));
-		break;
-	case NVME_FEAT_FID_KATO:
-		printf("\tKeep Alive Timeout (KATO) in milliseconds: %u\n", result);
-		break;
-	case NVME_FEAT_FID_NOPSC:
-		printf("\tNon-Operational Power State Permissive Mode Enable (NOPPME): %s\n",
-			(result & 1) ? "True" : "False");
-		break;
-	case NVME_FEAT_FID_HOST_BEHAVIOR:
-		printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
-		break;
-	case NVME_FEAT_FID_SANITIZE:
-		printf("\tNo-Deallocate Response Mode (NODRM) : %u\n", result & 0x1);
-		break;
-	case NVME_FEAT_FID_RRL:
-		printf("\tRead Recovery Level (RRL): %u\n", result & 0xf);
-		break;
-	case NVME_FEAT_FID_SPINUP_CONTROL:
-		printf("\tSpinup control feature Enabled: %s\n", (result & 1) ? "True" : "False");
 		break;
 	default:
 		break;
