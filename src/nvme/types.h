@@ -2773,6 +2773,11 @@ struct nvme_self_test_log {
 	struct nvme_st_result	result[NVME_LOG_ST_MAX_RESULTS];
 } __attribute__((packed));
 
+enum nvme_cmd_get_log_telemetry_host_lsp {
+	NVME_LOG_TELEM_HOST_LSP_RETAIN			= 0,
+	NVME_LOG_TELEM_HOST_LSP_CREATE			= 1,
+};
+
 /**
  * struct nvme_telemetry_log - Retrieve internal data specific to the
  * 			       manufacturer.

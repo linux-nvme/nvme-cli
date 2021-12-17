@@ -826,8 +826,9 @@ struct nvme_get_log_args {
  */
 int nvme_get_log(struct nvme_get_log_args *args);
 
-static inline int nvme_get_nsid_log(int fd, enum nvme_cmd_get_log_lid lid,
-				    __u32 nsid, __u32 len, void *log)
+static inline int nvme_get_nsid_log(int fd, bool rae,
+			enum nvme_cmd_get_log_lid lid,
+			__u32 nsid, __u32 len, void *log)
 {
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
@@ -853,7 +854,7 @@ static inline int nvme_get_nsid_log(int fd, enum nvme_cmd_get_log_lid lid,
 static inline int nvme_get_log_simple(int fd, enum nvme_cmd_get_log_lid lid,
 				      __u32 len, void *log)
 {
-	return nvme_get_nsid_log(fd, lid, NVME_NSID_ALL, len, log);
+	return nvme_get_nsid_log(fd, false, lid, NVME_NSID_ALL, len, log);
 }
 
 /** nvme_get_log_supported_log_pages() - Retrieve nmve supported log pages
@@ -864,8 +865,12 @@ static inline int nvme_get_log_simple(int fd, enum nvme_cmd_get_log_lid lid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_supported_log_pages(int fd, bool rae,
-				     struct nvme_supported_log_pages *log);
+static inline int nvme_get_log_supported_log_pages(int fd, bool rae,
+			struct nvme_supported_log_pages *log)
+{
+	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_SUPPORTED_LOG_PAGES,
+				 NVME_NSID_ALL, sizeof(*log), log);
+}
 
 /**
  * nvme_get_log_error() - Retrieve nvme error log
@@ -881,8 +886,13 @@ int nvme_get_log_supported_log_pages(int fd, bool rae,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_error(int fd, unsigned nr_entries, bool rae,
-		       struct nvme_error_log_page *log);
+static inline int nvme_get_log_error(int fd, unsigned nr_entries, bool rae,
+		       struct nvme_error_log_page *log)
+{
+	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_ERROR,
+				 NVME_NSID_ALL, sizeof(*log) * nr_entries, log);
+}
+
 
 /**
  * nvme_get_log_smart() - Retrieve nvme smart log
@@ -901,7 +911,12 @@ int nvme_get_log_error(int fd, unsigned nr_entries, bool rae,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_smart(int fd, __u32 nsid, bool rae, struct nvme_smart_log *log);
+static inline int nvme_get_log_smart(int fd, __u32 nsid, bool rae,
+				     struct nvme_smart_log *log)
+{
+	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_SMART,
+				 nsid, sizeof(*log), log);
+}
 
 /**
  * nvme_get_log_fw_slot() - Retrieves the controller firmware log
@@ -916,7 +931,13 @@ int nvme_get_log_smart(int fd, __u32 nsid, bool rae, struct nvme_smart_log *log)
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_fw_slot(int fd, bool rae, struct nvme_firmware_slot *log);
+static inline int nvme_get_log_fw_slot(int fd, bool rae,
+			struct nvme_firmware_slot *log)
+{
+	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_SMART,
+				 NVME_NSID_ALL, sizeof(*log), log);
+}
+
 
 /**
  * nvme_get_log_changed_ns_list() - Retrieve namespace changed list
@@ -931,7 +952,13 @@ int nvme_get_log_fw_slot(int fd, bool rae, struct nvme_firmware_slot *log);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_changed_ns_list(int fd, bool rae, struct nvme_ns_list *log);
+static inline int nvme_get_log_changed_ns_list(int fd, bool rae,
+			struct nvme_ns_list *log)
+{
+	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_CHANGED_NS,
+				 NVME_NSID_ALL, sizeof(*log), log);
+}
+
 
 /**
  * nvme_get_log_cmd_effects() - Retrieve nvme command effects log
@@ -945,8 +972,28 @@ int nvme_get_log_changed_ns_list(int fd, bool rae, struct nvme_ns_list *log);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_cmd_effects(int fd, enum nvme_csi csi,
-			     struct nvme_cmd_effects_log *log);
+static inline int nvme_get_log_cmd_effects(int fd, enum nvme_csi csi,
+					   struct nvme_cmd_effects_log *log)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_CMD_EFFECTS,
+		.nsid = NVME_NSID_ALL,
+		.lpo = 0,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.rae = false,
+		.uuidx = NVME_UUID_NONE,
+		.len = sizeof(*log),
+		.log = log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = csi,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
 
 /**
  * nvme_get_log_device_self_test() - Retrieve the device self test log
@@ -961,12 +1008,40 @@ int nvme_get_log_cmd_effects(int fd, enum nvme_csi csi,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_device_self_test(int fd, struct nvme_self_test_log *log);
+static inline int nvme_get_log_device_self_test(int fd,
+			struct nvme_self_test_log *log)
+{
+	return nvme_get_nsid_log(fd, false, NVME_LOG_LID_DEVICE_SELF_TEST,
+				 NVME_NSID_ALL, sizeof(*log), log);
+}
+
 
 /**
  * nvme_get_log_create_telemetry_host() -
  */
-int nvme_get_log_create_telemetry_host(int fd, struct nvme_telemetry_log *log);
+static inline int nvme_get_log_create_telemetry_host(int fd,
+			struct nvme_telemetry_log *log)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_TELEMETRY_HOST,
+		.nsid = NVME_NSID_NONE,
+		.lpo = 0,
+		.lsp = NVME_LOG_TELEM_HOST_LSP_CREATE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.rae = false,
+		.uuidx = NVME_UUID_NONE,
+		.len = sizeof(*log),
+		.log = log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
+
 
 /**
  * nvme_get_log_telemetry_host() -
@@ -981,7 +1056,28 @@ int nvme_get_log_create_telemetry_host(int fd, struct nvme_telemetry_log *log);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_telemetry_host(int fd, __u64 offset, __u32 len, void *log);
+static inline int nvme_get_log_telemetry_host(int fd, __u64 offset,
+			__u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_TELEMETRY_HOST,
+		.nsid = NVME_NSID_NONE,
+		.lpo = 0,
+		.lsp = NVME_LOG_TELEM_HOST_LSP_RETAIN,
+		.lsi = NVME_LOG_LSI_NONE,
+		.rae = false,
+		.uuidx = NVME_UUID_NONE,
+		.len = len,
+		.log = log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
 
 /**
  * nvme_get_log_telemetry_ctrl() -
@@ -991,8 +1087,28 @@ int nvme_get_log_telemetry_host(int fd, __u64 offset, __u32 len, void *log);
  * @len:	Length of provided user buffer to hold the log data in bytes
  * @log:	User address for log page data
  */
-int nvme_get_log_telemetry_ctrl(int fd, bool rae, __u64 offset, __u32 len,
-				void *log);
+static inline int nvme_get_log_telemetry_ctrl(int fd, bool rae,
+			__u64 offset, __u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_TELEMETRY_CTRL,
+		.nsid = NVME_NSID_NONE,
+		.lpo = offset,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.rae = rae,
+		.uuidx = NVME_UUID_NONE,
+		.len = len,
+		.log = log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
 
 /**
  * nvme_get_log_endurance_group() -
@@ -1010,8 +1126,28 @@ int nvme_get_log_telemetry_ctrl(int fd, bool rae, __u64 offset, __u32 len,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_endurance_group(int fd, __u16 endgid,
-				 struct nvme_endurance_group_log *log);
+static inline int nvme_get_log_endurance_group(int fd, __u16 endgid,
+			struct nvme_endurance_group_log *log)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_ENDURANCE_GROUP,
+		.nsid = NVME_NSID_NONE,
+		.lpo = 0,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = endgid,
+		.rae = false,
+		.uuidx = NVME_UUID_NONE,
+		.len = sizeof(*log),
+		.log = log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
 
 /**
  * nvme_get_log_predictable_lat_nvmset() -
@@ -1021,16 +1157,56 @@ int nvme_get_log_endurance_group(int fd, __u16 endgid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
-					struct nvme_nvmset_predictable_lat_log *log);
+static inline int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
+			struct nvme_nvmset_predictable_lat_log *log)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_PREDICTABLE_LAT_NVMSET,
+		.nsid = NVME_NSID_NONE,
+		.lpo = 0,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = nvmsetid,
+		.rae = false,
+		.uuidx = NVME_UUID_NONE,
+		.len = sizeof(*log),
+		.log = log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
 
 /**
  * nvme_get_log_predictable_lat_event() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
  */
-int nvme_get_log_predictable_lat_event(int fd, bool rae, __u32 offset,
-				       __u32 len, void *log);
+static inline int nvme_get_log_predictable_lat_event(int fd, bool rae,
+			__u32 offset, __u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_PREDICTABLE_LAT_AGG,
+		.nsid = NVME_NSID_NONE,
+		.lpo = offset,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.rae = rae,
+		.uuidx = NVME_UUID_NONE,
+		.len = len,
+		.log = log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
 
 /**
  * nvme_get_log_ana() -
@@ -1049,8 +1225,29 @@ int nvme_get_log_predictable_lat_event(int fd, bool rae, __u32 offset,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae, __u64 offset,
-		     __u32 len, void *log);
+static int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae,
+			__u64 offset, __u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_ANA,
+		.nsid = NVME_NSID_NONE,
+		.lpo = offset,
+		.lsp = lsp,
+		.lsi = NVME_LOG_LSI_NONE,
+		.rae = false,
+		.uuidx = NVME_UUID_NONE,
+		.len = len,
+		.log = log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
+
 
 /**
  * nvme_get_log_ana_groups() -
@@ -1059,24 +1256,69 @@ int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae, __u64 offset,
  *
  * See &struct nvme_ana_group_desc for the defintion of the returned structure.
  */
-int nvme_get_log_ana_groups(int fd, bool rae, __u32 len,
-			    struct nvme_ana_group_desc *log);
+static inline int nvme_get_log_ana_groups(int fd, bool rae, __u32 len,
+			    struct nvme_ana_group_desc *log)
+{
+	return nvme_get_log_ana(fd, NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY, rae, 0,
+				len, log);
+}
+
 
 /**
  * nvme_get_log_lba_status() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
  */
-int nvme_get_log_lba_status(int fd, bool rae, __u64 offset, __u32 len,
-			    void *log);
+static inline int nvme_get_log_lba_status(int fd, bool rae,
+			__u64 offset, __u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_LBA_STATUS,
+		.nsid = NVME_NSID_NONE,
+		.lpo = offset,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.rae = rae,
+		.uuidx = NVME_UUID_NONE,
+		.len = len,
+		.log = log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
 
 /**
  * nvme_get_log_endurance_grp_evt() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
  */
-int nvme_get_log_endurance_grp_evt(int fd, bool rae, __u32 offset, __u32 len,
-				   void *log);
+static inline int nvme_get_log_endurance_grp_evt(int fd, bool rae,
+			__u32 offset, __u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_ENDURANCE_GRP_EVT,
+		.nsid = NVME_NSID_NONE,
+		.lpo = offset,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.rae = rae,
+		.uuidx = NVME_UUID_NONE,
+		.len = len,
+		.log = log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
 
 /**
  * nvme_get_log_fid_supported_effects() -
@@ -1087,8 +1329,13 @@ int nvme_get_log_endurance_grp_evt(int fd, bool rae, __u32 offset, __u32 len,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise
  */
-int nvme_get_log_fid_supported_effects(int fd, bool rae,
-				       struct nvme_fid_supported_effects_log *log);
+static inline int nvme_get_log_fid_supported_effects(int fd, bool rae,
+			struct nvme_fid_supported_effects_log *log)
+{
+	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_FID_SUPPORTED_EFFECTS,
+				 NVME_NSID_NONE, sizeof(*log), log);
+}
+
 
 /**
  * nvme_get_log_boot_partition() -
@@ -1101,8 +1348,29 @@ int nvme_get_log_fid_supported_effects(int fd, bool rae,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise
  */
-int nvme_get_log_boot_partition(int fd, bool rae, __u8 lsp, __u32 len,
-			        struct nvme_boot_partition *part);
+static inline int nvme_get_log_boot_partition(int fd, bool rae,
+			__u8 lsp, __u32 len, struct nvme_boot_partition *part)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_BOOT_PARTITION,
+		.nsid = NVME_NSID_NONE,
+		.lpo = 0,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.rae = rae,
+		.uuidx = NVME_UUID_NONE,
+		.len = len,
+		.log = part,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
+
 
 /**
  * nvme_get_log_discovery() -
@@ -1118,15 +1386,42 @@ int nvme_get_log_boot_partition(int fd, bool rae, __u8 lsp, __u32 len,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_discovery(int fd, bool rae, __u32 offset, __u32 len, void *log);
+static inline int nvme_get_log_discovery(int fd, bool rae,
+			__u32 offset, __u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_DISCOVER,
+		.nsid = NVME_NSID_NONE,
+		.lpo = offset,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.rae = rae,
+		.uuidx = NVME_UUID_NONE,
+		.len = len,
+		.log = log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
+
 
 /**
  * nvme_get_log_reservation() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
  */
-int nvme_get_log_reservation(int fd, bool rae,
-			     struct nvme_resv_notification_log *log);
+static inline int nvme_get_log_reservation(int fd, bool rae,
+			struct nvme_resv_notification_log *log)
+{
+	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_RESERVATION,
+				 NVME_NSID_ALL, sizeof(*log), log);
+}
+
 
 /**
  * nvme_get_log_sanitize() -
@@ -1140,8 +1435,13 @@ int nvme_get_log_reservation(int fd, bool rae,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_sanitize(int fd, bool rae,
-			  struct nvme_sanitize_log_page *log);
+static inline int nvme_get_log_sanitize(int fd, bool rae,
+			struct nvme_sanitize_log_page *log)
+{
+	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_SANITIZE,
+				 NVME_NSID_ALL, sizeof(*log), log);
+}
+
 
 /**
  * nvme_get_log_zns_changed_zones() -
@@ -1155,18 +1455,61 @@ int nvme_get_log_sanitize(int fd, bool rae,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
-				   struct nvme_zns_changed_zone_log *log);
+static inline int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
+			struct nvme_zns_changed_zone_log *log)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_ZNS_CHANGED_ZONES,
+		.nsid = nsid,
+		.lpo = 0,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.rae = rae,
+		.uuidx = NVME_UUID_NONE,
+		.len = sizeof(*log),
+		.log = log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_ZNS,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
+
 
 /**
  * nvme_get_log_persistent_event() -
- * &fd:
- * &action:
- * @size:
- * @pevent_log:
+ * @fd:		File descriptor of nvme device
+ * @action:	Action the controller should take during processing this command
+ * @size:	Size of @pevent_log
+ * @pevent_log:	User address to store the persistent event log
  */
-int nvme_get_log_persistent_event(int fd, enum nvme_pevent_log_action action,
-				  __u32 size, void *pevent_log);
+static inline int nvme_get_log_persistent_event(int fd,
+			enum nvme_pevent_log_action action,
+			__u32 size, void *pevent_log)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = NVME_LOG_LID_PERSISTENT_EVENT,
+		.nsid = NVME_NSID_ALL,
+		.lpo = 0,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.rae = false,
+		.uuidx = NVME_UUID_NONE,
+		.len = size,
+		.log = pevent_log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
+
 
 /**
  * nvme_set_features() - Set a feature attribute
