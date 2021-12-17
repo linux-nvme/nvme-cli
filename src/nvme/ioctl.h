@@ -3481,10 +3481,25 @@ struct nvme_sanitize_nvm_args {
 int nvme_sanitize_nvm(struct nvme_sanitize_nvm_args *args);
 
 /**
- * nvme_dev_self_test() - Start or abort a self test
+ * nvme_dev_self_test_args - Arguments for the NVMe Device Self Test command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID to test
  * @stc:	Self test code, see &enum nvme_dst_stc
+ * @timeout:	Timeout in ms
+ * @result:	The command completion result from CQE dword0
+ */
+struct nvme_dev_self_test_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	enum nvme_dst_stc stc;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_dev_self_test() - Start or abort a self test
+ * @args:	&struct nvme_dev_self_test argument structure
  *
  * The Device Self-test command starts a device self-test operation or abort a
  * device self-test operation. A device self-test operation is a diagnostic
@@ -3500,7 +3515,7 @@ int nvme_sanitize_nvm(struct nvme_sanitize_nvm_args *args);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_dev_self_test(int fd, __u32 nsid, enum nvme_dst_stc stc);
+int nvme_dev_self_test(struct nvme_dev_self_test_args *args);
 
 /**
  * nvme_virtual_mgmt() - Virtualization resource management
