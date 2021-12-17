@@ -34,6 +34,7 @@
 #include <stddef.h>
 #include <syslog.h>
 #include <time.h>
+#include <ctype.h>
 
 #include <sys/types.h>
 #include <arpa/inet.h>
@@ -679,6 +680,12 @@ static int space_strip_len(int max, const char *str)
 			break;
 
 	return i + 1;
+}
+
+static void strtolower(char *str)
+{
+	for ( ; *str; str++)
+		*str = tolower(*str);
 }
 
 static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec,
@@ -1385,7 +1392,9 @@ static bool cargs_match_found(struct nvmf_disc_rsp_page_entry *entry)
 
 static bool should_connect(struct nvmf_disc_rsp_page_entry *entry)
 {
+	char *dctrl_traddr, *log_traddr;
 	int len;
+	bool connect = true;
 
 	if (cargs_match_found(entry))
 		return false;
@@ -1398,7 +1407,22 @@ static bool should_connect(struct nvmf_disc_rsp_page_entry *entry)
 		return true;
 
 	len = space_strip_len(NVMF_TRADDR_SIZE, entry->traddr);
-	return !strncmp(fabrics_cfg.traddr, entry->traddr, len);
+
+	dctrl_traddr = strdup(fabrics_cfg.traddr);
+	log_traddr = strndup(entry->traddr, len);
+	if (!dctrl_traddr || !log_traddr)
+		goto free_exit;
+
+	strtolower(dctrl_traddr);
+	strtolower(log_traddr);
+
+	connect = (strlen(dctrl_traddr) == len) &&
+		  !strcmp(dctrl_traddr, log_traddr);
+
+free_exit:
+	free(log_traddr);
+	free(dctrl_traddr);
+	return connect;
 }
 
 static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
