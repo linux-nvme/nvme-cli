@@ -3567,7 +3567,14 @@ int nvme_virtual_mgmt(struct nvme_virtual_mgmt_args *args);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_flush(int fd, __u32 nsid);
+static inline int nvme_flush(int fd, __u32 nsid) {
+	struct nvme_passthru_cmd cmd = {};
+
+	cmd.opcode = nvme_cmd_flush;
+	cmd.nsid = nsid;
+
+	return nvme_submit_io_passthru(fd, &cmd, NULL);
+}
 
 /**
  * nvme_io_args - Arguments for NVMe I/O commands

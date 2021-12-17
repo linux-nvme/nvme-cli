@@ -1542,16 +1542,6 @@ int nvme_io_passthru(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 		data, metadata_len, metadata, timeout_ms, result);
 }
 
-int nvme_flush(int fd, __u32 nsid)
-{
-	struct nvme_passthru_cmd cmd = {
-		.opcode		= nvme_cmd_flush,
-		.nsid		= nsid,
-	};
-
-	return nvme_submit_io_passthru(fd, &cmd, NULL);
-}
-
 int nvme_io(struct nvme_io_args *args, __u8 opcode)
 {
 	__u32 cdw2  = args->storage_tag & 0xffffffff;
