@@ -3381,12 +3381,25 @@ struct nvme_lockdown_args {
 int nvme_lockdown(struct nvme_lockdown_args *args);
 
 /**
- * nvme_set_property() - Set controller property
+ * nvme_set_property_args - Arguments for NVMe Set Property command
  * @fd:		File descriptor of nvme device
  * @offset:	Property offset from the base to set
  * @value:	The value to set the property
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_set_property_args {
+	int args_size;
+	int fd;
+	int offset;
+	__u64 value;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_set_property() - Set controller property
+ * @args:	&struct nvme_set_property_args argument structure
  *
  * This is an NVMe-over-Fabrics specific command, not applicable to PCIe. These
  * properties align to the PCI MMIO controller registers.
@@ -3394,15 +3407,26 @@ int nvme_lockdown(struct nvme_lockdown_args *args);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_set_property(int fd, int offset, __u64 value,
-		      __u32 timeout, __u32 *result);
+int nvme_set_property(struct nvme_set_property_args *args);
 
 /**
- * nvme_get_property() - Get a controller property
+ * nvme_get_property_args - Arguments for NVMe Get Property command
  * @fd:		File descriptor of nvme device
  * @offset:	Property offset from the base to retrieve
  * @value:	Where the property's value will be stored on success
  * @timeout:	Timeout in ms
+ */
+struct nvme_get_property_args {
+	int args_size;
+	int fd;
+	int offset;
+	__u64 *value;
+	__u32 timeout;
+};
+
+/**
+ * nvme_get_property() - Get a controller property
+ * @args:	&struct nvme_get_propert_args argument structure
  *
  * This is an NVMe-over-Fabrics specific command, not applicable to PCIe. These
  * properties align to the PCI MMIO controller registers.
@@ -3410,7 +3434,7 @@ int nvme_set_property(int fd, int offset, __u64 value,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_property(int fd, int offset, __u64 *value, __u32 timeout);
+int nvme_get_property(struct nvme_get_property_args *args);
 
 /**
  * nvme_sanitize_nvm() - Start a sanitize operation

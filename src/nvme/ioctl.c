@@ -1417,37 +1417,40 @@ int nvme_lockdown(struct nvme_lockdown_args *args)
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_set_property(int fd, int offset, __u64 value,
-		      __u32 timeout, __u32 *result)
+int nvme_set_property(struct nvme_set_property_args *args)
 {
-	__u32 cdw10 = nvme_is_64bit_reg(offset);
+	__u32 cdw10 = nvme_is_64bit_reg(args->offset);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_fabrics,
 		.nsid		= nvme_fabrics_type_property_set,
 		.cdw10		= cdw10,
-		.cdw11		= offset,
-		.cdw12		= value & 0xffffffff,
-		.cdw13		= value >> 32,
-		.timeout_ms	= timeout,
+		.cdw11		= args->offset,
+		.cdw12		= args->value & 0xffffffff,
+		.cdw13		= args->value >> 32,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_get_property(int fd, int offset, __u64 *value, __u32 timeout)
+int nvme_get_property(struct nvme_get_property_args *args)
 {
-	__u32 cdw10 = nvme_is_64bit_reg(offset);
+	__u32 cdw10 = nvme_is_64bit_reg(args->offset);
 
 	struct nvme_passthru_cmd64 cmd = {
 		.opcode		= nvme_admin_fabrics,
 		.nsid		= nvme_fabrics_type_property_get,
 		.cdw10		= cdw10,
-		.cdw11		= offset,
-		.timeout_ms	= timeout,
+		.cdw11		= args->offset,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_admin_passthru64(fd, &cmd, value);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_admin_passthru64(args->fd, &cmd, args->value);
 }
 
 int nvme_sanitize_nvm(int fd, enum nvme_sanitize_sanact sanact, bool ause,
