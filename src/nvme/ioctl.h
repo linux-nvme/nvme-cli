@@ -3712,7 +3712,7 @@ static inline int nvme_verify(struct nvme_io_args *args)
 }
 
 /**
- * nvme_dsm() - Send an nvme data set management command
+ * nvme_dsm_args - Arguments for the NVMe Dataset Management command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace identifier
  * @attrs:	DSM attributes, see &enum nvme_dsm_attributes
@@ -3720,6 +3720,21 @@ static inline int nvme_verify(struct nvme_io_args *args)
  * @dsm:	The data set management attributes
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_dsm_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	__u32 attrs;
+	__u16 nr_ranges;
+	struct nvme_dsm_range *dsm;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_dsm() - Send an nvme data set management command
+ * @args:	&struct nvme_dsm_args argument structure
  *
  * The Dataset Management command is used by the host to indicate attributes
  * for ranges of logical blocks. This includes attributes like frequency that
@@ -3730,8 +3745,7 @@ static inline int nvme_verify(struct nvme_io_args *args)
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_dsm(int fd, __u32 nsid, __u32 attrs, __u16 nr_ranges,
-	     struct nvme_dsm_range *dsm, __u32 timeout, __u32 *result);
+int nvme_dsm(struct nvme_dsm_args *args);
 
 /**
  * nvme_copy() -

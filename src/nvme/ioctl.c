@@ -1586,22 +1586,21 @@ int nvme_io(struct nvme_io_args *args, __u8 opcode)
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_dsm(int fd, __u32 nsid, __u32 attrs, __u16 nr_ranges,
-	     struct nvme_dsm_range *dsm, __u32 timeout, __u32 *result)
+int nvme_dsm(struct nvme_dsm_args *args)
 {
-	__u32 cdw11 = attrs;
-
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_dsm,
-		.nsid		= nsid,
-		.addr		= (__u64)(uintptr_t)dsm,
-		.data_len	= nr_ranges * sizeof(*dsm),
-		.cdw10		= nr_ranges - 1,
-		.cdw11		= cdw11,
-		.timeout_ms	= timeout,
+		.nsid		= args->nsid,
+		.addr		= (__u64)(uintptr_t)args->dsm,
+		.data_len	= args->nr_ranges * sizeof(*args->dsm),
+		.cdw10		= args->nr_ranges - 1,
+		.cdw11		= args->attrs,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_copy(int fd, __u32 nsid, struct nvme_copy_range *copy, __u64 sdlba,
