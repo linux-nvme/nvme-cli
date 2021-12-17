@@ -2933,7 +2933,7 @@ struct nvme_fw_commit_args {
 int nvme_fw_commit(struct nvme_fw_commit_args *args);
 
 /**
- * nvme_security_send() -
+ * nvme_security_send_args - Arguments for the NVMe Security Send command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID to issue security command on
  * @nssf:	NVMe Security Specific field
@@ -2945,6 +2945,25 @@ int nvme_fw_commit(struct nvme_fw_commit_args *args);
  * @data:	Security data payload to send
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_security_send_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	__u8 nssf;
+	__u8 spsp0;
+	__u8 spsp1;
+	__u8 secp;
+	__u32 tl;
+	__u32 data_len;
+	void *data;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_security_send() -
+ * @args:	&struct nvme_security_send argument structure
  *
  * The Security Send command transfers security protocol data to the
  * controller. The data structure transferred to the controller as part of this
@@ -2958,12 +2977,10 @@ int nvme_fw_commit(struct nvme_fw_commit_args *args);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_security_send(int fd, __u32 nsid, __u8 nssf, __u8 spsp0, __u8 spsp1,
-		       __u8 secp, __u32 tl, __u32 data_len, void *data,
-		       __u32 timeout, __u32 *result);
+int nvme_security_send(struct nvme_security_send_args *args);
 
 /**
- * nvme_security_receive() -
+ * nvme_security_receive_args - Arguments for the NVMe Security Receive command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID to issue security command on
  * @nssf:	NVMe Security Specific field
@@ -2975,13 +2992,30 @@ int nvme_security_send(int fd, __u32 nsid, __u8 nssf, __u8 spsp0, __u8 spsp1,
  * @data:	Security data payload to send
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_security_receive_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	__u8 nssf;
+	__u8 spsp0;
+	__u8 spsp1;
+	__u8 secp;
+	__u32 al;
+	__u32 data_len;
+	void *data;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_security_receive() -
+ * @args:	&struct nvme_security_recevice argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_security_receive(int fd, __u32 nsid, __u8 nssf, __u8 spsp0,
-			  __u8 spsp1, __u8 secp, __u32 al, __u32 data_len,
-			  void *data, __u32 timeout, __u32 *result);
+int nvme_security_receive(struct nvme_security_receive_args *args);
 
 /**
  * nvme_get_lba_status() - Retrieve information on possibly unrecoverable LBAs

@@ -1242,50 +1242,50 @@ int nvme_fw_commit(struct nvme_fw_commit_args *args)
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_security_send(int fd, __u32 nsid, __u8 nssf, __u8 spsp0, __u8 spsp1,
-		       __u8 secp, __u32 tl, __u32 data_len, void *data,
-		       __u32 timeout, __u32 *result)
+int nvme_security_send(struct nvme_security_send_args *args)
 {
-	__u32 cdw10 = NVME_SET(secp, SECURITY_SECP) |
-			NVME_SET(spsp0, SECURITY_SPSP0)  |
-			NVME_SET(spsp1, SECURITY_SPSP1) |
-			NVME_SET(nssf, SECURITY_NSSF);
-	__u32 cdw11 = tl;
+	__u32 cdw10 = NVME_SET(args->secp, SECURITY_SECP) |
+			NVME_SET(args->spsp0, SECURITY_SPSP0)  |
+			NVME_SET(args->spsp1, SECURITY_SPSP1) |
+			NVME_SET(args->nssf, SECURITY_NSSF);
+	__u32 cdw11 = args->tl;
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_security_send,
-		.nsid		= nsid,
+		.nsid		= args->nsid,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
-		.data_len	= data_len,
-		.addr		= (__u64)(uintptr_t)data,
-		.timeout_ms	= timeout,
+		.data_len	= args->data_len,
+		.addr		= (__u64)(uintptr_t)args->data,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_security_receive(int fd, __u32 nsid, __u8 nssf, __u8 spsp0,
-			  __u8 spsp1, __u8 secp, __u32 al, __u32 data_len,
-			  void *data, __u32 timeout, __u32 *result)
+int nvme_security_receive(struct nvme_security_receive_args *args)
 {
-	__u32 cdw10 = NVME_SET(secp, SECURITY_SECP) |
-			NVME_SET(spsp0, SECURITY_SPSP0)  |
-			NVME_SET(spsp1, SECURITY_SPSP1) |
-			NVME_SET(nssf, SECURITY_NSSF);
-	__u32 cdw11 = al;
+	__u32 cdw10 = NVME_SET(args->secp, SECURITY_SECP) |
+			NVME_SET(args->spsp0, SECURITY_SPSP0)  |
+			NVME_SET(args->spsp1, SECURITY_SPSP1) |
+			NVME_SET(args->nssf, SECURITY_NSSF);
+	__u32 cdw11 = args->al;
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_security_recv,
-		.nsid		= nsid,
+		.nsid		= args->nsid,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
-		.data_len	= data_len,
-		.addr		= (__u64)(uintptr_t)data,
-		.timeout_ms	= timeout,
+		.data_len	= args->data_len,
+		.addr		= (__u64)(uintptr_t)args->data,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_get_lba_status(int fd, __u32 nsid, __u64 slba, __u32 mndw, __u16 rl,
