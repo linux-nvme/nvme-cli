@@ -32,6 +32,7 @@ SYNOPSIS
 		[--hdr-digest             | -g]
 		[--data-digest            | -G]
 		[--dump-config            | -O]
+		[--output-format=<fmt>    | -o <fmt>]
 
 DESCRIPTION
 -----------
@@ -170,6 +171,12 @@ OPTIONS
 -O::
 --dump-config::
 	Print out resulting JSON configuration file to stdout.
+
+-o <format>::
+--output-format=<format>::
+	Set the reporting format to 'normal' or 'json'. Only one output format can
+	be used at a time. When this option is specified, the device associated with
+	the connection will be printed. Nothing is printed otherwise.
 
 EXAMPLES
 --------

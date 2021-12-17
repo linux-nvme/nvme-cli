@@ -101,7 +101,6 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 	OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),	\
 	OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest)	\
 
-
 static void space_strip_len(int max, char *str)
 {
 	int i;
@@ -239,6 +238,23 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 		printf("Discovery log is saved to %s\n", raw);
 
 	close(fd);
+}
+
+static void print_connect_msg(nvme_ctrl_t c)
+{
+	printf("device: %s\n", nvme_ctrl_get_name(c));
+}
+
+static void json_connect_msg(nvme_ctrl_t c)
+{
+	struct json_object *root;
+
+	root = json_create_object();
+	json_object_add_value_string(root, "device", nvme_ctrl_get_name(c));
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
 }
 
 static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
@@ -574,12 +590,15 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	nvme_ctrl_t c;
 	int ret;
 	struct nvme_fabrics_config cfg;
+	enum nvme_print_flags flags = -1;
+	char *format = "";
 
 	OPT_ARGS(opts) = {
 		NVMF_OPTS(cfg),
 		OPT_STRING("config", 'J', "FILE", &config_file, nvmf_config_file),
 		OPT_INCR("verbose", 'v', &verbose, "Increase logging verbosity"),
 		OPT_FLAG("dump-config", 'O', &dump_config, "Dump JSON configuration to stdout"),
+		OPT_FMT("output-format", 'o', &format, "Output format: normal|json"),
 		OPT_END()
 	};
 
@@ -588,6 +607,16 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	if (!strcmp(format, ""))
+		flags = -1;
+	else if (!strcmp(format, "normal"))
+		flags = NORMAL;
+	else if (!strcmp(format, "json"))
+		flags = JSON;
+	else {
+		return EINVAL;
+	}
 
 	switch (verbose) {
 	case 0:
@@ -653,6 +682,13 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	ret = nvmf_add_ctrl(h, c, &cfg, cfg.disable_sqflow);
 	if (ret)
 		nvme_msg(LOG_ERR, "no controller found\n");
+	else {
+		if (flags == NORMAL)
+			print_connect_msg(c);
+		else if (flags == JSON)
+			json_connect_msg(c);
+	}
+
 out_free:
 	if (hnqn)
 		free(hnqn);
