@@ -115,6 +115,19 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 	bool retain = true;
 	void *ptr = data;
 	int ret;
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.lid = log_id,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
 
 	/*
 	 * 4k is the smallest possible transfer unit, so restricting to 4k
@@ -133,10 +146,11 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 		if (offset + xfer == data_len)
 			retain = rae;
 
-		ret = nvme_get_log(fd, log_id, nsid, offset, NVME_LOG_LSP_NONE,
-				   NVME_LOG_LSI_NONE, retain, NVME_UUID_NONE,
-				   NVME_CSI_NVM, false, xfer, ptr,
-				   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+		args.lpo = offset;
+		args.len = xfer;
+		args.log = ptr;
+		args.rae = retain;
+		ret = nvme_get_log(&args);
 		if (ret)
 			return ret;
 

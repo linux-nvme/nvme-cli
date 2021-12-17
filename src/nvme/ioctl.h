@@ -778,7 +778,8 @@ int nvme_zns_identify_ns(int fd, __u32 nsid, struct nvme_zns_id_ns *data);
 int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id);
 
 /**
- * nvme_get_log() - NVMe Admin Get Log command
+ * nvme_get_log_args - Arguments for the NVMe Admin Get Log command
+ * @args_size:	Length of the structure
  * @fd:		File descriptor of nvme device
  * @lid:	Log page identifier, see &enum nvme_cmd_get_log_lid for known
  * 		values
@@ -788,31 +789,65 @@ int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id);
  * @lsi:	Endurance group information
  * @rae:	Retain asynchronous events
  * @uuidx:	UUID selection, if supported
- * @csi:        Command Set Identifier
- * @ot:		Offset Type. If set to false, the Log Page Offset Lower
- *		field and the Log Page Offset Upper field specify the
- *		byte offset into the log page to be returned.
- *		If set to true, the Log Page Offset Lower field and the
- *		Log Page Offset Upper field specify the index into the
- *		list of data structures in the log page to be returned.
  * @len:	Length of provided user buffer to hold the log data in bytes
  * @log:	User space destination address to transfer the data
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ * @csi:	Command set identifier, see &enum nvme_csi for known values
+ * @ot:		Offset Type; if set @lpo specifies the index into the list
+ *		of data structures, otherwise @lpo specifies the byte offset
+ *		into the log page.
+ *
+ */
+struct nvme_get_log_args {
+	int args_size;
+	int fd;
+	enum nvme_cmd_get_log_lid lid;
+	__u32 nsid;
+	__u64 lpo;
+	__u8 lsp;
+	__u16 lsi;
+	bool rae;
+	__u8 uuidx;
+	__u32 len;
+	void *log;
+	__u32 timeout;
+	__u32 *result;
+	enum nvme_csi csi;
+	bool ot;
+};
+
+/**
+ * nvme_get_log() - NVMe Admin Get Log command
+ * @args:	&struct nvme_get_log_args argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log(int fd, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u64 lpo,
-		 __u8 lsp, __u16 lsi, bool rae, __u8 uuidx, enum nvme_csi csi,
-		 bool ot, __u32 len, void *log, __u32 timeout, __u32 *result);
+int nvme_get_log(struct nvme_get_log_args *args);
 
 static inline int nvme_get_nsid_log(int fd, enum nvme_cmd_get_log_lid lid,
 				    __u32 nsid, __u32 len, void *log)
 {
-	return nvme_get_log(fd, lid, nsid, 0, 0, 0, false, 0, NVME_CSI_NVM,
-			    false, len, log, NVME_DEFAULT_IOCTL_TIMEOUT,
-			    NULL);
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.lid = lid,
+		.nsid = nsid,
+		.lpo = 0,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.rae = false,
+		.uuidx = NVME_UUID_NONE,
+		.len = len,
+		.log = log,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
+
+	return nvme_get_log(&args);
 }
 
 static inline int nvme_get_log_simple(int fd, enum nvme_cmd_get_log_lid lid,
