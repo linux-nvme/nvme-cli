@@ -1453,25 +1453,25 @@ int nvme_get_property(struct nvme_get_property_args *args)
 	return nvme_submit_admin_passthru64(args->fd, &cmd, args->value);
 }
 
-int nvme_sanitize_nvm(int fd, enum nvme_sanitize_sanact sanact, bool ause,
-		      __u8 owpass, bool oipbp, bool nodas, __u32 ovrpat,
-		      __u32 timeout, __u32 *result)
+int nvme_sanitize_nvm(struct nvme_sanitize_nvm_args *args)
 {
-	__u32 cdw10 = NVME_SET(sanact, SANITIZE_CDW10_SANACT) |
-			NVME_SET(!!ause, SANITIZE_CDW10_AUSE) |
-			NVME_SET(owpass, SANITIZE_CDW10_OWPASS) |
-			NVME_SET(!!oipbp, SANITIZE_CDW10_OIPBP) |
-			NVME_SET(!!nodas, SANITIZE_CDW10_NODAS);
-	__u32 cdw11 = ovrpat;
+	__u32 cdw10 = NVME_SET(args->sanact, SANITIZE_CDW10_SANACT) |
+			NVME_SET(!!args->ause, SANITIZE_CDW10_AUSE) |
+			NVME_SET(args->owpass, SANITIZE_CDW10_OWPASS) |
+			NVME_SET(!!args->oipbp, SANITIZE_CDW10_OIPBP) |
+			NVME_SET(!!args->nodas, SANITIZE_CDW10_NODAS);
+	__u32 cdw11 = args->ovrpat;
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_sanitize_nvm,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
-		.timeout_ms	= timeout,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_dev_self_test(int fd, __u32 nsid, enum nvme_dst_stc stc)

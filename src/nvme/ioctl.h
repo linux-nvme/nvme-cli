@@ -3437,7 +3437,7 @@ struct nvme_get_property_args {
 int nvme_get_property(struct nvme_get_property_args *args);
 
 /**
- * nvme_sanitize_nvm() - Start a sanitize operation
+ * nvme_sanitize_nvm_args - Arguments for the NVMe Sanitize NVM command
  * @fd:		File descriptor of nvme device
  * @sanact:	Sanitize action, see &enum nvme_sanitize_sanact
  * @ause:	Set to allow unrestriced sanitize exit
@@ -3447,6 +3447,23 @@ int nvme_get_property(struct nvme_get_property_args *args);
  * @ovrpat:	Overwrite pattern
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_sanitize_nvm_args {
+	int args_size;
+	int fd;
+	enum nvme_sanitize_sanact sanact;
+	bool ause;
+	__u8 owpass;
+	bool oipbp;
+	bool nodas;
+	__u32 ovrpat;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_sanitize_nvm() - Start a sanitize operation
+ * @args:	&struct nvme_sanitize_nvm_args argument structure
  *
  * A sanitize operation alters all user data in the NVM subsystem such that
  * recovery of any previous user data from any cache, the non-volatile media,
@@ -3461,9 +3478,7 @@ int nvme_get_property(struct nvme_get_property_args *args);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_sanitize_nvm(int fd, enum nvme_sanitize_sanact sanact, bool ause,
-		      __u8 owpass, bool oipbp, bool nodas, __u32 ovrpat,
-		      __u32 timeout, __u32 *result);
+int nvme_sanitize_nvm(struct nvme_sanitize_nvm_args *args);
 
 /**
  * nvme_dev_self_test() - Start or abort a self test
