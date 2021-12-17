@@ -614,9 +614,8 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		flags = NORMAL;
 	else if (!strcmp(format, "json"))
 		flags = JSON;
-	else {
+	else
 		return EINVAL;
-	}
 
 	switch (verbose) {
 	case 0:
