@@ -374,7 +374,7 @@ int nvme_ns_rescan(int fd);
 int nvme_get_nsid(int fd, __u32 *nsid);
 
 /**
- * nvme_identify() - Send the NVMe Identify command
+ * nvme_identify_args - Arguments for the NVMe Identify command
  * @fd:		File descriptor of nvme device
  * @cns:	The Controller or Namespace structure, see @enum nvme_identify_cns
  * @nsid:	Namespace identifier, if applicable
@@ -386,6 +386,25 @@ int nvme_get_nsid(int fd, __u32 *nsid);
  * @data:	User space destination address to transfer the data
  * @timeout:	Timeout in ms (0 for default timeout)
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_identify_args {
+	int args_size;
+	int fd;
+	enum nvme_identify_cns cns;
+	__u32 nsid;
+	__u16 cntid;
+	__u16 nvmsetid;
+	__u16 domid;
+	__u8 uuidx;
+	enum nvme_csi csi;
+	void *data;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_identify() - Send the NVMe Identify command
+ * @args:	&struct nvme_identify_args argument structure
  *
  * The Identify command returns a data buffer that describes information about
  * the NVM subsystem, the controller or the namespace(s).
@@ -393,10 +412,7 @@ int nvme_get_nsid(int fd, __u32 *nsid);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_identify(int fd, enum nvme_identify_cns cns, __u32 nsid,
-		  __u16 cntid, __u16 nvmsetid, __u16 domid,
-		  __u8 uuidx, __u8 csi, void *data, __u32 timeout,
-		  __u32 *result);
+int nvme_identify(struct nvme_identify_args *args);
 
 /**
  * nvme_identify_ctrl() - Retrieves nvme identify controller
