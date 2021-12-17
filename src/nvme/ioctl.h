@@ -3942,7 +3942,7 @@ struct nvme_resv_report_args {
 int nvme_resv_report(struct nvme_resv_report_args *args);
 
 /**
- * nvme_zns_mgmt_send() -
+ * nvme_zns_mgmt_send_args - Arguments for the NVMe ZNS Management Send command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
  * @slba:	Starting logical block address
@@ -3953,18 +3953,33 @@ int nvme_resv_report(struct nvme_resv_report_args *args);
  * @data:	Userspace address of the data
  * @timeout:	timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_zns_mgmt_send_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	__u64 slba;
+	enum nvme_zns_send_action zsa;
+	bool select_all;
+	__u8 zsaso;
+	__u32 data_len;
+	void *data;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_zns_mgmt_send() -
+ * @args:	&struct nvme_zns_mgmt_send_args argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba,
-		       enum nvme_zns_send_action zsa, bool select_all, __u8 zsaso,
-		       __u32 data_len, void *data,
-		       __u32 timeout, __u32 *result);
+int nvme_zns_mgmt_send(struct nvme_zns_mgmt_send_args *args);
 
 
 /**
- * nvme_zns_mgmt_recv() -
+ * nvme_zns_mgmt_recv_args - Arguments for the NVMe ZNS Management Receive command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
  * @slba:	Starting logical block address
@@ -3975,14 +3990,29 @@ int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba,
  * @data:	Userspace address of the data
  * @timeout:	timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_zns_mgmt_recv_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	__u64 slba;
+	enum nvme_zns_recv_action zra;
+	__u16 zrasf;
+	bool zras_feat;
+	__u32 data_len;
+	void *data;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_zns_mgmt_recv() -
+ * @args:	&struct nvme_zns_mgmt_recv_args argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
-		       enum nvme_zns_recv_action zra, __u16 zrasf,
-		       bool zras_feat, __u32 data_len, void *data,
-		       __u32 timeout, __u32 *result);
+int nvme_zns_mgmt_recv(struct nvme_zns_mgmt_recv_args *args);
 
 /**
  * nvme_zns_report_zones() - Return the list of zones
@@ -4000,11 +4030,29 @@ int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
+static inline int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
 			  enum nvme_zns_report_options opts,
 			  bool extended, bool partial,
 			  __u32 data_len, void *data,
-			  __u32 timeout, __u32 *result);
+			  __u32 timeout, __u32 *result)
+{
+	struct nvme_zns_mgmt_recv_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.slba = slba,
+		.zra = extended ? NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES :
+		NVME_ZNS_ZRA_REPORT_ZONES,
+		.zrasf = opts,
+		.zras_feat = partial,
+		.data_len = data_len,
+		.data = data,
+		.timeout = timeout,
+		.result = result,
+	};
+
+	return nvme_zns_mgmt_recv(&args);
+}
 
 /**
  * nvme_zns_append() - Append data to a zone

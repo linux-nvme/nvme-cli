@@ -1715,74 +1715,54 @@ int nvme_resv_report(struct nvme_resv_report_args *args)
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba,
-		       enum nvme_zns_send_action zsa, bool select_all,
-		       __u8 zsaso, __u32 data_len,
-		       void *data, __u32 timeout, __u32 *result)
+int nvme_zns_mgmt_send(struct nvme_zns_mgmt_send_args *args)
 {
-	__u32 cdw10 = slba & 0xffffffff;
-	__u32 cdw11 = slba >> 32;
-	__u32 cdw13 = NVME_SET(zsaso, ZNS_MGMT_SEND_ZSASO) |
-			NVME_SET(!!select_all, ZNS_MGMT_SEND_SEL) |
-			NVME_SET(zsa, ZNS_MGMT_SEND_ZSA);
+	__u32 cdw10 = args->slba & 0xffffffff;
+	__u32 cdw11 = args->slba >> 32;
+	__u32 cdw13 = NVME_SET(args->zsaso, ZNS_MGMT_SEND_ZSASO) |
+			NVME_SET(!!args->select_all, ZNS_MGMT_SEND_SEL) |
+			NVME_SET(args->zsa, ZNS_MGMT_SEND_ZSA);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_zns_cmd_mgmt_send,
-		.nsid		= nsid,
+		.nsid		= args->nsid,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
 		.cdw13		= cdw13,
-		.addr		= (__u64)(uintptr_t)data,
-		.data_len	= data_len,
-		.timeout_ms	= timeout,
+		.addr		= (__u64)(uintptr_t)args->data,
+		.data_len	= args->data_len,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_zns_mgmt_recv(int fd, __u32 nsid, __u64 slba,
-		       enum nvme_zns_recv_action zra, __u16 zrasf,
-		       bool zras_feat, __u32 data_len, void *data,
-		       __u32 timeout, __u32 *result)
+int nvme_zns_mgmt_recv(struct nvme_zns_mgmt_recv_args *args)
 {
-	__u32 cdw10 = slba & 0xffffffff;
-	__u32 cdw11 = slba >> 32;
-	__u32 cdw12 = (data_len >> 2) - 1;
-	__u32 cdw13 = NVME_SET(zra, ZNS_MGMT_RECV_ZRA) |
-			NVME_SET(zrasf, ZNS_MGMT_RECV_ZRASF) |
-			NVME_SET(zras_feat, ZNS_MGMT_RECV_ZRAS_FEAT);
+	__u32 cdw10 = args->slba & 0xffffffff;
+	__u32 cdw11 = args->slba >> 32;
+	__u32 cdw12 = (args->data_len >> 2) - 1;
+	__u32 cdw13 = NVME_SET(args->zra, ZNS_MGMT_RECV_ZRA) |
+			NVME_SET(args->zrasf, ZNS_MGMT_RECV_ZRASF) |
+			NVME_SET(args->zras_feat, ZNS_MGMT_RECV_ZRAS_FEAT);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_zns_cmd_mgmt_recv,
-		.nsid		= nsid,
+		.nsid		= args->nsid,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
 		.cdw12		= cdw12,
 		.cdw13		= cdw13,
-		.addr		= (__u64)(uintptr_t)data,
-		.data_len	= data_len,
-		.timeout_ms	= timeout,
+		.addr		= (__u64)(uintptr_t)args->data,
+		.data_len	= args->data_len,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, result);
-}
-
-int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
-			  enum nvme_zns_report_options opts,
-			  bool extended, bool partial,
-			  __u32 data_len, void *data,
-			  __u32 timeout, __u32 *result)
-{
-	BUILD_ASSERT(sizeof(struct nvme_zns_desc) == 64);
-	enum nvme_zns_recv_action zra;
-
-	if (extended)
-		zra = NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES;
-	else
-		zra = NVME_ZNS_ZRA_REPORT_ZONES;
-
-	return nvme_zns_mgmt_recv(fd, nsid, slba, zra, opts, partial,
-				  data_len, data, timeout, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_zns_append(int fd, __u32 nsid, __u64 zslba, __u16 nlb, __u16 control,
