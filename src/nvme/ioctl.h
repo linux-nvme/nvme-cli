@@ -3748,8 +3748,7 @@ struct nvme_dsm_args {
 int nvme_dsm(struct nvme_dsm_args *args);
 
 /**
- * nvme_copy() -
- *
+ * nvme_copy_args - Arguments for the NVMe Copy command
  * @fd:		File descriptor of the nvme device
  * @nsid:	Namespace identifier
  * @copy:	Range descriptior
@@ -3767,14 +3766,37 @@ int nvme_dsm(struct nvme_dsm_args *args);
  * @lbat:	Logical block application tag
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_copy_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	struct nvme_copy_range *copy;
+	__u64 sdlba;
+	__u16 nr;
+	__u8 prinfor;
+	__u8 prinfow;
+	__u8 dtype;
+	__u16 dspec;
+	__u8 format;
+	int lr;
+	int fua;
+	__u32 ilbrt;
+	__u16 lbatm;
+	__u16 lbat;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_copy() -
+ *
+ * @args:	&struct nvme_copy_args argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_copy(int fd, __u32 nsid, struct nvme_copy_range *copy, __u64 sdlba,
-	      __u16 nr, __u8 prinfor, __u8 prinfow, __u8 dtype, __u16 dspec,
-	      __u8 format, int lr, int fua, __u32 ilbrt, __u16 lbatm,
-	      __u16 lbat, __u32 timeout, __u32 *result);
+int nvme_copy(struct nvme_copy_args *args);
 
 /**
  * nvme_resv_acquire() - Send an nvme reservation acquire

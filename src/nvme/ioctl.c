@@ -1603,31 +1603,30 @@ int nvme_dsm(struct nvme_dsm_args *args)
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_copy(int fd, __u32 nsid, struct nvme_copy_range *copy, __u64 sdlba,
-	      __u16 nr, __u8 prinfor, __u8 prinfow, __u8 dtype, __u16 dspec,
-	      __u8 format, int lr, int fua, __u32 ilbrt, __u16 lbatm,
-	      __u16 lbat, __u32 timeout, __u32 *result)
+int nvme_copy(struct nvme_copy_args *args)
 {
-	__u32 cdw12 = ((nr - 1) & 0xff) | ((format & 0xf) <<  8) |
-		((prinfor & 0xf) << 12) | ((dtype & 0xf) << 20) |
-		((prinfow & 0xf) << 26) | ((fua & 0x1) << 30) |
-		((lr & 0x1) << 31);
+	__u32 cdw12 = ((args->nr - 1) & 0xff) | ((args->format & 0xf) <<  8) |
+		((args->prinfor & 0xf) << 12) | ((args->dtype & 0xf) << 20) |
+		((args->prinfow & 0xf) << 26) | ((args->fua & 0x1) << 30) |
+		((args->lr & 0x1) << 31);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode         = nvme_cmd_copy,
-		.nsid           = nsid,
-		.addr           = (__u64)(uintptr_t)copy,
-		.data_len       = nr * sizeof(*copy),
-		.cdw10          = sdlba & 0xffffffff,
-		.cdw11          = sdlba >> 32,
+		.nsid           = args->nsid,
+		.addr           = (__u64)(uintptr_t)args->copy,
+		.data_len       = args->nr * sizeof(*args->copy),
+		.cdw10          = args->sdlba & 0xffffffff,
+		.cdw11          = args->sdlba >> 32,
 		.cdw12          = cdw12,
-		.cdw13		= (dspec & 0xffff) << 16,
-		.cdw14		= ilbrt,
-		.cdw15		= (lbatm << 16) | lbat,
-		.timeout_ms	= timeout,
+		.cdw13		= (args->dspec & 0xffff) << 16,
+		.cdw14		= args->ilbrt,
+		.cdw15		= (args->lbatm << 16) | args->lbat,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
