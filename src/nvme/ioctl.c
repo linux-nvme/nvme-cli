@@ -1398,18 +1398,23 @@ int nvme_capacity_mgmt(struct nvme_capacity_mgmt_args *args)
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_lockdown(int fd, __u8 scp, __u8 prhbt, __u8 ifc, __u8 ofi,
-		  __u8 uuid)
+int nvme_lockdown(struct nvme_lockdown_args *args)
 {
-	__u32 cdw10 =  ofi << 8 | (ifc & 0x3) << 5 | (prhbt & 0x1) << 4 | (scp & 0xF);
+	__u32 cdw10 =  args->ofi << 8 |
+		(args->ifc & 0x3) << 5 |
+		(args->prhbt & 0x1) << 4 |
+		(args->scp & 0xF);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode         = nvme_admin_lockdown,
 		.cdw10          = cdw10,
-		.cdw14          = uuid & 0x3F,
+		.cdw14          = args->uuidx & 0x3F,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, NULL);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_set_property(int fd, int offset, __u64 value,
