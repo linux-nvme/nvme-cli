@@ -1312,29 +1312,27 @@ int nvme_get_lba_status(struct nvme_get_lba_status_args *args)
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_directive_send(int fd, __u32 nsid, __u16 dspec,
-			enum nvme_directive_send_doper doper,
-			enum nvme_directive_dtype dtype, __u32 cdw12,
-			__u32 data_len, void *data, __u32 timeout,
-			__u32 *result)
+int nvme_directive_send(struct nvme_directive_send_args *args)
 {
-	__u32 cdw10 = data_len ? (data_len >> 2) - 1 : 0;
-	__u32 cdw11 = NVME_SET(doper, DIRECTIVE_CDW11_DOPER) |
-			NVME_SET(dtype, DIRECTIVE_CDW11_DTYPE) |
-			NVME_SET(dspec, DIRECTIVE_CDW11_DPSEC);
+	__u32 cdw10 = args->data_len ? (args->data_len >> 2) - 1 : 0;
+	__u32 cdw11 = NVME_SET(args->doper, DIRECTIVE_CDW11_DOPER) |
+			NVME_SET(args->dtype, DIRECTIVE_CDW11_DTYPE) |
+			NVME_SET(args->dspec, DIRECTIVE_CDW11_DPSEC);
 
         struct nvme_passthru_cmd cmd = {
                 .opcode         = nvme_admin_directive_send,
-                .nsid           = nsid,
+                .nsid           = args->nsid,
                 .cdw10          = cdw10,
                 .cdw11          = cdw11,
-                .cdw12          = cdw12,
-                .data_len       = data_len,
-                .addr           = (__u64)(uintptr_t)data,
-		.timeout_ms	= timeout,
+                .cdw12          = args->cdw12,
+                .data_len       = args->data_len,
+                .addr           = (__u64)(uintptr_t)args->data,
+		.timeout_ms	= args->timeout,
         };
 
-        return nvme_submit_admin_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+        return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_directive_send_id_endir(int fd, __u32 nsid, bool endir,
@@ -1343,102 +1341,44 @@ int nvme_directive_send_id_endir(int fd, __u32 nsid, bool endir,
 {
 	__u32 cdw12 = NVME_SET(dtype, DIRECTIVE_SEND_IDENTIFY_CDW12_DTYPE) |
 		NVME_SET(endir, DIRECTIVE_SEND_IDENTIFY_CDW12_ENDIR);
+	struct nvme_directive_send_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.dspec = 0,
+		.dtype = NVME_DIRECTIVE_DTYPE_IDENTIFY,
+		.doper = NVME_DIRECTIVE_SEND_IDENTIFY_DOPER_ENDIR,
+		.cdw12 = cdw12,
+		.data_len = sizeof(*id),
+		.data = id,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
 
-	return nvme_directive_send(fd, nsid, 0, NVME_DIRECTIVE_DTYPE_IDENTIFY,
-				   NVME_DIRECTIVE_SEND_IDENTIFY_DOPER_ENDIR,
-				   cdw12, sizeof(*id), id,
-				   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	return nvme_directive_send(&args);
 }
 
-int nvme_directive_send_stream_release_identifier(int fd, __u32 nsid,
-						  __u16 stream_id)
+int nvme_directive_recv(struct nvme_directive_recv_args *args)
 {
-	enum nvme_directive_dtype dtype =
-			NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_IDENTIFIER;
-
-	return nvme_directive_send(fd, nsid, stream_id,
-				   NVME_DIRECTIVE_DTYPE_STREAMS,
-				   dtype, 0, 0, NULL,
-				   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
-}
-
-int nvme_directive_send_stream_release_resource(int fd, __u32 nsid)
-{
-	enum nvme_directive_dtype dtype =
-		NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE;
-
-	return nvme_directive_send(fd, nsid, 0, NVME_DIRECTIVE_DTYPE_STREAMS,
-				   dtype, 0, 0, NULL,
-				   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
-}
-
-int nvme_directive_recv(int fd, __u32 nsid, __u16 dspec,
-			enum nvme_directive_receive_doper doper,
-			enum nvme_directive_dtype dtype, __u32 cdw12,
-			__u32 data_len, void *data, __u32 timeout,
-			__u32 *result)
-{
-	__u32 cdw10 = data_len ? (data_len >> 2) - 1 : 0;
-	__u32 cdw11 = NVME_SET(doper, DIRECTIVE_CDW11_DOPER) |
-			NVME_SET(dtype, DIRECTIVE_CDW11_DTYPE) |
-			NVME_SET(dspec, DIRECTIVE_CDW11_DPSEC);
+	__u32 cdw10 = args->data_len ? (args->data_len >> 2) - 1 : 0;
+	__u32 cdw11 = NVME_SET(args->doper, DIRECTIVE_CDW11_DOPER) |
+			NVME_SET(args->dtype, DIRECTIVE_CDW11_DTYPE) |
+			NVME_SET(args->dspec, DIRECTIVE_CDW11_DPSEC);
 
         struct nvme_passthru_cmd cmd = {
                 .opcode         = nvme_admin_directive_recv,
-                .nsid           = nsid,
+                .nsid           = args->nsid,
                 .cdw10          = cdw10,
                 .cdw11          = cdw11,
-                .cdw12          = cdw12,
-                .data_len       = data_len,
-                .addr           = (__u64)(uintptr_t)data,
-		.timeout_ms	= timeout,
+                .cdw12          = args->cdw12,
+                .data_len       = args->data_len,
+                .addr           = (__u64)(uintptr_t)args->data,
+		.timeout_ms	= args->timeout,
         };
 
-	return nvme_submit_admin_passthru(fd, &cmd, result);
-}
-
-int nvme_directive_recv_identify_parameters(int fd, __u32 nsid,
-					    struct nvme_id_directives *id)
-{
-	enum nvme_directive_dtype dtype =
-		NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM;
-
-	return nvme_directive_recv(fd, nsid, 0, NVME_DIRECTIVE_DTYPE_IDENTIFY,
-				   dtype, 0, sizeof(*id), id,
-				   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
-}
-
-int nvme_directive_recv_stream_parameters(int fd, __u32 nsid,
-					  struct nvme_streams_directive_params *parms)
-{
-	enum nvme_directive_dtype dtype =
-		NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM;
-
-	return nvme_directive_recv(fd, nsid, 0, NVME_DIRECTIVE_DTYPE_STREAMS,
-				   dtype, 0, sizeof(*parms), parms,
-				   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
-}
-
-int nvme_directive_recv_stream_status(int fd, __u32 nsid, unsigned nr_entries,
-				      struct nvme_streams_directive_status *id)
-{
-	enum nvme_directive_dtype dtype =
-		NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS;
-
-	return nvme_directive_recv(fd, nsid, 0, NVME_DIRECTIVE_DTYPE_STREAMS,
-				   dtype, 0, sizeof(*id), id,
-				   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
-}
-
-int nvme_directive_recv_stream_allocate(int fd, __u32 nsid, __u16 nsr,
-					__u32 *result)
-{
-	enum nvme_directive_dtype dtype =
-		NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE;
-
-	return nvme_directive_recv(fd, nsid, 0, NVME_DIRECTIVE_DTYPE_STREAMS,
-				   dtype, nsr, 0, NULL,
-				   NVME_DEFAULT_IOCTL_TIMEOUT, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_capacity_mgmt(int fd, __u8 op, __u16 element_id,

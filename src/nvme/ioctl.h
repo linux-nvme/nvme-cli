@@ -3056,7 +3056,7 @@ struct nvme_get_lba_status_args {
 int nvme_get_lba_status(struct nvme_get_lba_status_args *args);
 
 /**
- * nvme_directive_send() - Send directive command
+ * nvme_directive_send_args - Arguments for the NVMe Directive Send command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID, if applicable
  * @dspec:	Directive specific field
@@ -3067,6 +3067,24 @@ int nvme_get_lba_status(struct nvme_get_lba_status_args *args);
  * @data:	Usespace address of data payload
  * @timeout:	Timeout in ms
  * @result:	If successful, the CQE dword0 value
+ */
+struct nvme_directive_send_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	__u16 dspec;
+	enum nvme_directive_send_doper doper;
+	enum nvme_directive_dtype dtype;
+	__u32 cdw12;
+	__u32 data_len;
+	void *data;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_directive_send() - Send directive command
+ * @args:	&struct nvme_directive_send_args argument structure
  *
  * Directives is a mechanism to enable host and NVM subsystem or controller
  * information exchange. The Directive Send command transfers data related to a
@@ -3077,11 +3095,7 @@ int nvme_get_lba_status(struct nvme_get_lba_status_args *args);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_directive_send(int fd, __u32 nsid, __u16 dspec,
-			enum nvme_directive_send_doper doper,
-			enum nvme_directive_dtype dtype, __u32 cdw12,
-			__u32 data_len, void *data, __u32 timeout,
-			__u32 *result);
+int nvme_directive_send(struct nvme_directive_send_args *args);
 
 /**
  * nvme_directive_send_id_endir() -
@@ -3103,8 +3117,25 @@ int nvme_directive_send_id_endir(int fd, __u32 nsid, bool endir,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_directive_send_stream_release_identifier(int fd, __u32 nsid,
-						  __u16 stream_id);
+static inline int nvme_directive_send_stream_release_identifier(int fd,
+			__u32 nsid, __u16 stream_id)
+{
+	struct nvme_directive_send_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.dspec = stream_id,
+		.doper = NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_IDENTIFIER,
+		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
+		.cdw12 = 0,
+		.data_len = 0,
+		.data = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_directive_send(&args);
+}
 
 /**
  * nvme_directive_send_stream_release_resource() -
@@ -3114,29 +3145,60 @@ int nvme_directive_send_stream_release_identifier(int fd, __u32 nsid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_directive_send_stream_release_resource(int fd, __u32 nsid);
+static inline int nvme_directive_send_stream_release_resource(int fd, __u32 nsid)
+{
+	struct nvme_directive_send_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.dspec = 0,
+		.doper = NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE,
+		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
+		.cdw12 = 0,
+		.data_len = 0,
+		.data = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_directive_send(&args);
+}
 
 /**
- * nvme_directive_recv() - Receive directive specific data
+ * nvme_directive_recv_args - Arguments for the NVMe Directive Receive command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID, if applicable
  * @dspec:	Directive specific field
- * @doper:	Directive receive operation, see &enum nvme_directive_receive_doper
+ * @doper:	Directive send operation, see &enum nvme_directive_send_doper
  * @dtype:	Directive type, see &enum nvme_directive_dtype
  * @dw12:	Directive specific command dword12
- * @data_len:	Length of data payload
- * @data:	Usespace address of data payload in bytes
+ * @data_len:	Length of data payload in bytes
+ * @data:	Usespace address of data payload
  * @timeout:	Timeout in ms
  * @result:	If successful, the CQE dword0 value
+ */
+struct nvme_directive_recv_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	__u16 dspec;
+	enum nvme_directive_receive_doper doper;
+	enum nvme_directive_dtype dtype;
+	__u32 cdw12;
+	__u32 data_len;
+	void *data;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_directive_recv() - Receive directive specific data
+ * @args:	&struct nvme_directive_recv_args argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_directive_recv(int fd, __u32 nsid, __u16 dspec,
-			enum nvme_directive_receive_doper doper,
-			enum nvme_directive_dtype dtype, __u32 cdw12,
-			__u32 data_len, void *data, __u32 timeout,
-			__u32 *result);
+int nvme_directive_recv(struct nvme_directive_recv_args *args);
 
 /**
  * nvme_directive_recv_identify_parameters() -
@@ -3146,8 +3208,25 @@ int nvme_directive_recv(int fd, __u32 nsid, __u16 dspec,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_directive_recv_identify_parameters(int fd, __u32 nsid,
-					    struct nvme_id_directives *id);
+static inline int nvme_directive_recv_identify_parameters(int fd, __u32 nsid,
+			struct nvme_id_directives *id)
+{
+	struct nvme_directive_recv_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.dspec = 0,
+		.doper = NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM,
+		.dtype = NVME_DIRECTIVE_DTYPE_IDENTIFY,
+		.cdw12 = 0,
+		.data_len = sizeof(*id),
+		.data = id,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_directive_recv(&args);
+}
 
 /**
  * nvme_directive_recv_stream_parameters() -
@@ -3157,8 +3236,26 @@ int nvme_directive_recv_identify_parameters(int fd, __u32 nsid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_directive_recv_stream_parameters(int fd, __u32 nsid,
-					  struct nvme_streams_directive_params *parms);
+static inline int nvme_directive_recv_stream_parameters(int fd, __u32 nsid,
+			struct nvme_streams_directive_params *parms)
+{
+	struct nvme_directive_recv_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.dspec = 0,
+		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM,
+		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
+		.cdw12 = 0,
+		.data_len = sizeof(*parms),
+		.data = parms,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_directive_recv(&args);
+}
+
 
 /**
  * nvme_directive_recv_stream_status() -
@@ -3168,8 +3265,27 @@ int nvme_directive_recv_stream_parameters(int fd, __u32 nsid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_directive_recv_stream_status(int fd, __u32 nsid, unsigned nr_entries,
-				      struct nvme_streams_directive_status *id);
+static inline int nvme_directive_recv_stream_status(int fd, __u32 nsid,
+			unsigned nr_entries,
+			struct nvme_streams_directive_status *id)
+{
+	struct nvme_directive_recv_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.dspec = 0,
+		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS,
+		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
+		.cdw12 = 0,
+		.data_len = sizeof(*id),
+		.data = id,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
+
+	return nvme_directive_recv(&args);
+}
+
 
 /**
  * nvme_directive_recv_stream_allocate() -
@@ -3179,8 +3295,26 @@ int nvme_directive_recv_stream_status(int fd, __u32 nsid, unsigned nr_entries,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_directive_recv_stream_allocate(int fd, __u32 nsid, __u16 nsr,
-					__u32 *result);
+static inline int nvme_directive_recv_stream_allocate(int fd, __u32 nsid,
+			__u16 nsr, __u32 *result)
+{
+	struct nvme_directive_recv_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.dspec = 0,
+		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE,
+		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
+		.cdw12 = nsr,
+		.data_len = 0,
+		.data = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = result,
+	};
+
+	return nvme_directive_recv(&args);
+}
+
 
 /**
  * nvme_capacity_mgmt_args - Arguments for the NVMe Capacity Management command
