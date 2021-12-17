@@ -2666,7 +2666,7 @@ int nvme_get_features_iocs_profile(int fd, enum nvme_get_features_sel sel,
 				   __u32 *result);
 
 /**
- * nvme_format_nvm() - Format nvme namespace(s)
+ * nvme_format_nvm_args - Arguments for the Format Nvme Namespace command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID to format
  * @lbaf:	Logical block address format
@@ -2677,6 +2677,23 @@ int nvme_get_features_iocs_profile(int fd, enum nvme_get_features_sel sel,
  * @timeout:	Set to override default timeout to this value in milliseconds;
  * 		useful for long running formats. 0 will use system default.
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_format_nvm_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	__u8 lbaf;
+	enum nvme_cmd_format_mset mset;
+	enum nvme_cmd_format_pi pi;
+	enum nvme_cmd_format_pil pil;
+	enum nvme_cmd_format_ses ses;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_format_nvm() - Format nvme namespace(s)
+ * @args:	&struct nvme_format_nvme_args argument structure
  *
  * The Format NVM command low level formats the NVM media. This command is used
  * by the host to change the LBA data size and/or metadata size. A low level
@@ -2686,25 +2703,34 @@ int nvme_get_features_iocs_profile(int fd, enum nvme_get_features_sel sel,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_format_nvm(int fd, __u32 nsid, __u8 lbaf,
-		    enum nvme_cmd_format_mset mset,
-		    enum nvme_cmd_format_pi pi,
-		    enum nvme_cmd_format_pil pil,
-		    enum nvme_cmd_format_ses ses,
-		    __u32 timeout, __u32 *result);
+int nvme_format_nvm(struct nvme_format_nvm_args *args);
 
 /**
- * nvme_ns_mgmt() -
+ * nvme_ns_mgmt_args - Arguments for NVMe Namespace Management command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace identifier
- * @sel:
+ * @sel:	Type of management operation to perform
  * @ns:		Namespace identication descriptors
  * @result:	NVMe command result
  * @timeout:	Timeout in ms
  * @csi:	Command Set Identifier
  */
-int nvme_ns_mgmt(int fd, __u32 nsid, enum nvme_ns_mgmt_sel sel,
-		 struct nvme_id_ns *ns, __u32 *result, __u32 timeout, __u8 csi);
+struct nvme_ns_mgmt_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	enum nvme_ns_mgmt_sel sel;
+	struct nvme_id_ns *ns;
+	__u32 *result;
+	__u32 timeout;
+	__u8 csi;
+};
+
+/**
+ * nvme_ns_mgmt() -
+ * @args:	&struct nvme_ns_mgmt_args Argument structure
+ */
+int nvme_ns_mgmt(struct nvme_ns_mgmt_args *args);
 
 /**
  * nvme_ns_mgmt_create() -
@@ -2722,8 +2748,22 @@ int nvme_ns_mgmt(int fd, __u32 nsid, enum nvme_ns_mgmt_sel sel,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns, __u32 *nsid,
-			__u32 timeout, __u8 csi);
+static inline int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns,
+			__u32 *nsid, __u32 timeout, __u8 csi)
+{
+	struct nvme_ns_mgmt_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = NVME_NSID_NONE,
+		.sel = NVME_NS_MGMT_SEL_CREATE,
+		.ns = ns,
+		.result = nsid,
+		.timeout = timeout,
+		.csi = csi,
+	};
+
+	return nvme_ns_mgmt(&args);
+}
 
 /**
  * nvme_ns_mgmt_delete() -
@@ -2737,18 +2777,44 @@ int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns, __u32 *nsid,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_ns_mgmt_delete(int fd, __u32 nsid);
+static inline int nvme_ns_mgmt_delete(int fd, __u32 nsid)
+{
+	struct nvme_ns_mgmt_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.sel = NVME_NS_MGMT_SEL_DELETE,
+		.ns = NULL,
+		.result = NULL,
+		.timeout = 0,
+		.csi = 0,
+	};
+
+	return nvme_ns_mgmt(&args);
+}
 
 /**
- * nvme_ns_attach() - Attach or detach namespace to controller(s)
+ * nvme_ns_attach_args - Arguments for Nvme Namespace Management command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID to execute attach selection
  * @sel:	Attachment selection, see &enum nvme_ns_attach_sel
  * @ctrlist:	Controller list to modify attachment state of nsid
  * @timeout:	Timeout in ms
  */
-int nvme_ns_attach(int fd, __u32 nsid, enum nvme_ns_attach_sel sel,
-		   struct nvme_ctrl_list *ctrlist, __u32 timeout);
+struct nvme_ns_attach_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	enum nvme_ns_attach_sel sel;
+	struct nvme_ctrl_list *ctrlist;
+	__u32 timeout;
+};
+
+/**
+ * nvme_ns_attach_args - Attach or detach namespace to controller(s)
+ * @args:	&struct nvme_ns_attach_args Argument structure
+ */
+int nvme_ns_attach(struct nvme_ns_attach_args *args);
 
 /**
  * nvme_ns_attach_ctrls() -
@@ -2756,7 +2822,20 @@ int nvme_ns_attach(int fd, __u32 nsid, enum nvme_ns_attach_sel sel,
  * @nsid:	Namespace ID to attach
  * @ctrlist:	Controller list to modify attachment state of nsid
  */
-int nvme_ns_attach_ctrls(int fd, __u32 nsid, struct nvme_ctrl_list *ctrlist);
+static inline int nvme_ns_attach_ctrls(int fd, __u32 nsid,
+			struct nvme_ctrl_list *ctrlist)
+{
+	struct nvme_ns_attach_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH,
+		.ctrlist = ctrlist,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+	};
+
+	return nvme_ns_attach(&args);
+}
 
 /**
  * nvme_ns_detach_ctrls() -
@@ -2764,7 +2843,20 @@ int nvme_ns_attach_ctrls(int fd, __u32 nsid, struct nvme_ctrl_list *ctrlist);
  * @nsid:	Namespace ID to detach
  * @ctrlist:	Controller list to modify attachment state of nsid
  */
-int nvme_ns_detach_ctrls(int fd, __u32 nsid, struct nvme_ctrl_list *ctrlist);
+static inline int nvme_ns_detach_ctrls(int fd, __u32 nsid,
+			struct nvme_ctrl_list *ctrlist)
+{
+	struct nvme_ns_attach_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
+		.ctrlist = ctrlist,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+	};
+
+	return nvme_ns_attach(&args);
+}
 
 /**
  * nvme_fw_download() - Download part or all of a firmware image to the
@@ -3016,7 +3108,7 @@ int nvme_directive_recv_stream_allocate(int fd, __u32 nsid, __u16 nsr,
 					__u32 *result);
 
 /**
- * nvme_capacity_mgmt() -
+ * nvme_capacity_mgmt_args - Arguments for the NVMe Capacity Management command
  * @fd:		File descriptor of nvme device
  * @op:		Operation to be performed by the controller
  * @element_id:	Value specific to the value of the Operation field

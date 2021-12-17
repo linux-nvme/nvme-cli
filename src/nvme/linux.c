@@ -280,14 +280,21 @@ free:
 static int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls,
 			      __u16 *ctrlist, bool attach, __u32 timeout)
 {
-	enum nvme_ns_attach_sel sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH;
 	struct nvme_ctrl_list cntlist = { 0 };
+	struct nvme_ns_attach_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
+		.ctrlist = &cntlist,
+		.timeout = timeout,
+	};
 
 	if (attach)
-		sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH;
+		args.sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH;
 
-	nvme_init_ctrl_list(&cntlist, num_ctrls, ctrlist);
-	return nvme_ns_attach(fd, nsid, sel, &cntlist, timeout);
+	nvme_init_ctrl_list(args.ctrlist, num_ctrls, ctrlist);
+	return nvme_ns_attach(&args);
 }
 
 int nvme_namespace_attach_ctrls(int fd, __u32 nsid, __u16 num_ctrls,
