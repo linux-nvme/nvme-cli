@@ -1512,7 +1512,7 @@ static inline int nvme_get_log_persistent_event(int fd,
 
 
 /**
- * nvme_set_features() - Set a feature attribute
+ * nvme_set_features_args - Arguments for the NVMe Admin Set Feature command
  * @fd:		File descriptor of nvme device
  * @fid:	Feature identifier
  * @nsid:	Namespace ID, if applicable
@@ -1525,20 +1525,53 @@ static inline int nvme_get_log_persistent_event(int fd,
  * @data:	User address of feature data, if applicable
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+
+struct nvme_set_features_args {
+	int args_size;
+	int fd;
+	__u8 fid;
+	__u32 nsid;
+	__u32 cdw11;
+	__u32 cdw12;
+	bool save;
+	__u8 uuidx;
+	__u32 cdw15;
+	__u32 data_len;
+	void *data;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_set_features_args() - Set a feature attribute
+ * @args:	&struct nvme_set_features_args argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_set_features(int fd, __u8 fid, __u32 nsid, __u32 cdw11, __u32 cdw12,
-		      bool save, __u8 uuidx, __u32 cdw15, __u32 data_len,
-		      void *data, __u32 timeout, __u32 *result);
+int nvme_set_features(struct nvme_set_features_args *args);
 
 static inline int nvme_set_features_data(int fd, __u8 fid, __u32 nsid,
 			__u32 cdw11, bool save, __u32 data_len, void *data,
 		 	__u32 *result)
 {
-	return nvme_set_features(fd, fid, nsid, cdw11, 0, save, 0, 0, data_len,
-				 data, NVME_DEFAULT_IOCTL_TIMEOUT, result);
+	struct nvme_set_features_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.fid = fid,
+		.nsid = nsid,
+		.cdw11 = cdw11,
+		.cdw12 = 0,
+		.save = save,
+		.uuidx = 0,
+		.cdw15 = 0,
+		.data_len = data_len,
+		.data = data,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = result,
+	};
+	return nvme_set_features(&args);
 }
 
 static inline int nvme_set_features_simple(int fd, __u8 fid, __u32 nsid,
@@ -1878,31 +1911,60 @@ int nvme_set_features_write_protect(int fd, enum nvme_feat_nswpcfg_state state,
 int nvme_set_features_iocs_profile(int fd, __u8 iocsi, bool save);
 
 /**
- * nvme_get_features() - Retrieve a feature attribute
+ * nvme_get_features_args - Arguments for the NVMe Admin Get Feature command
  * @fd:		File descriptor of nvme device
  * @fid:	Feature identifier, see &enum nvme_features_id
  * @nsid:	Namespace ID, if applicable
- * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * @sel:	Select which type of attribute to return,
+ * 		see &enum nvme_get_features_sel
  * @cdw11:	Feature specific command dword11 field
  * @uuidx:	UUID Index for differentiating vendor specific encoding
  * @data_len:	Length of feature data, if applicable, in bytes
  * @data:	User address of feature data, if applicable
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_get_features_args {
+	int args_size;
+	int fd;
+	__u8 fid;
+	__u32 nsid;
+	enum nvme_get_features_sel sel;
+	__u32 cdw11;
+	__u8 uuidx;
+	__u32 data_len;
+	void *data;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_get_features() - Retrieve a feature attribute
+ * @args:	&struct nvme_get_features_args argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_features(int fd, enum nvme_features_id fid, __u32 nsid,
-		      enum nvme_get_features_sel sel, __u32 cdw11, __u8 uuidx,
-		      __u32 data_len, void *data, __u32 timeout, __u32 *result);
+int nvme_get_features(struct nvme_get_features_args *args);
 
 static inline int nvme_get_features_data(int fd, enum nvme_features_id fid,
 			__u32 nsid, __u32 data_len, void *data, __u32 *result)
 {
-	return nvme_get_features(fd, fid, nsid, NVME_GET_FEATURES_SEL_CURRENT,
-				 0, 0, data_len, data,
-				 NVME_DEFAULT_IOCTL_TIMEOUT, result);
+	struct nvme_get_features_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.fid = fid,
+		.nsid = nsid,
+		.sel = NVME_GET_FEATURES_SEL_CURRENT,
+		.cdw11 = 0,
+		.uuidx = NVME_UUID_NONE,
+		.data_len = data_len,
+		.data = data,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = result,
+	};
+
+	return nvme_get_features(&args);
 }
 static inline int nvme_get_features_simple(int fd, enum nvme_features_id fid,
 			__u32 nsid, __u32 *result)
