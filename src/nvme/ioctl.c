@@ -1629,78 +1629,90 @@ int nvme_copy(struct nvme_copy_args *args)
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
-		      enum nvme_resv_racqa racqa, bool iekey,
-		      __u64 crkey, __u64 nrkey, __u32 timeout, __u32 *result)
+int nvme_resv_acquire(struct nvme_resv_acquire_args *args)
 {
-	__le64 payload[2] = { cpu_to_le64(crkey), cpu_to_le64(nrkey) };
-	__u32 cdw10 = (racqa & 0x7) | (iekey ? 1 << 3 : 0) | rtype << 8;
+	__le64 payload[2] = {
+		cpu_to_le64(args->crkey),
+		cpu_to_le64(args->nrkey)
+	};
+	__u32 cdw10 = (args->racqa & 0x7) |
+		(args->iekey ? 1 << 3 : 0) |
+		(args->rtype << 8);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_acquire,
-		.nsid		= nsid,
+		.nsid		= args->nsid,
 		.cdw10		= cdw10,
 		.data_len	= sizeof(payload),
 		.addr		= (__u64)(uintptr_t)(payload),
-		.timeout_ms	= timeout,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_resv_register(int fd, __u32 nsid, enum nvme_resv_rrega rrega,
-		       enum nvme_resv_cptpl cptpl, bool iekey,
-		       __u64 crkey, __u64 nrkey, __u32 timeout, __u32 *result)
+int nvme_resv_register(struct nvme_resv_register_args *args)
 {
-	__le64 payload[2] = { cpu_to_le64(crkey), cpu_to_le64(nrkey) };
-	__u32 cdw10 = (rrega & 0x7) | (iekey ? 1 << 3 : 0) | cptpl << 30;
+	__le64 payload[2] = {
+		cpu_to_le64(args->crkey),
+		cpu_to_le64(args->nrkey)
+	};
+	__u32 cdw10 = (args->rrega & 0x7) |
+		(args->iekey ? 1 << 3 : 0) |
+		(args->cptpl << 30);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_register,
-		.nsid		= nsid,
+		.nsid		= args->nsid,
 		.cdw10		= cdw10,
 		.data_len	= sizeof(payload),
 		.addr		= (__u64)(uintptr_t)(payload),
-		.timeout_ms	= timeout,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_resv_release(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
-		      enum nvme_resv_rrela rrela, bool iekey,
-		      __u64 crkey, __u32 timeout, __u32 *result)
+int nvme_resv_release(struct nvme_resv_release_args *args)
 {
-	__le64 payload[1] = { cpu_to_le64(crkey) };
-	__u32 cdw10 = (rrela & 0x7) | (iekey ? 1 << 3 : 0) | rtype << 8;
+	__le64 payload[1] = { cpu_to_le64(args->crkey) };
+	__u32 cdw10 = (args->rrela & 0x7) |
+		(args->iekey ? 1 << 3 : 0) |
+		(args->rtype << 8);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_release,
-		.nsid		= nsid,
+		.nsid		= args->nsid,
 		.cdw10		= cdw10,
 		.addr		= (__u64)(uintptr_t)(payload),
 		.data_len	= sizeof(payload),
-		.timeout_ms	= timeout,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
-		     struct nvme_resv_status *report, __u32 timeout,
-		     __u32 *result)
+int nvme_resv_report(struct nvme_resv_report_args *args)
 {
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_cmd_resv_report,
-		.nsid		= nsid,
-		.cdw10		= (len >> 2) - 1,
-		.cdw11		= eds ? 1 : 0,
-		.addr		= (__u64)(uintptr_t)report,
-		.data_len	= len,
-		.timeout_ms	= timeout,
+		.nsid		= args->nsid,
+		.cdw10		= (args->len >> 2) - 1,
+		.cdw11		= args->eds ? 1 : 0,
+		.addr		= (__u64)(uintptr_t)args->report,
+		.data_len	= args->len,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_zns_mgmt_send(int fd, __u32 nsid, __u64 slba,

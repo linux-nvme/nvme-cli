@@ -3799,7 +3799,7 @@ struct nvme_copy_args {
 int nvme_copy(struct nvme_copy_args *args);
 
 /**
- * nvme_resv_acquire() - Send an nvme reservation acquire
+ * nvme_resv_acquire_args - Arguments for the NVMe Reservation Acquire Comand
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace identifier
  * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
@@ -3810,6 +3810,23 @@ int nvme_copy(struct nvme_copy_args *args);
  * 		the action is preempt
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_resv_acquire_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	enum nvme_resv_rtype rtype;
+	enum nvme_resv_racqa racqa;
+	bool iekey;
+	__u64 crkey;
+	__u64 nrkey;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_resv_acquire() - Send an nvme reservation acquire
+ * @args:	&struct nvme_resv_acquire argument structure
  *
  * The Reservation Acquire command acquires a reservation on a namespace,
  * preempt a reservation held on a namespace, and abort a reservation held on a
@@ -3818,12 +3835,10 @@ int nvme_copy(struct nvme_copy_args *args);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
-		      enum nvme_resv_racqa racqa, bool iekey,
-		      __u64 crkey, __u64 nrkey, __u32 timeout, __u32 *result);
+int nvme_resv_acquire(struct nvme_resv_acquire_args *args);
 
 /**
- * nvme_resv_register() - Send an nvme reservation register
+ * nvme_resv_register_args - Arguments for the NVMe Reservation Register command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace identifier
  * @rrega:	The registration action, see &enum nvme_resv_rrega
@@ -3833,6 +3848,23 @@ int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
  * @nrkey:	The new reservation key to be register if action is register or
  * 		replace
  * @timeout:	Timeout in ms
+ */
+struct nvme_resv_register_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	enum nvme_resv_rrega rrega;
+	enum nvme_resv_cptpl cptpl;
+	bool iekey;
+	__u64 crkey;
+	__u64 nrkey;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_resv_register() - Send an nvme reservation register
+ * @args:	&struct nvme_resv_register_args argument structure
  *
  * The Reservation Register command registers, unregisters, or replaces a
  * reservation key.
@@ -3840,12 +3872,10 @@ int nvme_resv_acquire(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_resv_register(int fd, __u32 nsid, enum nvme_resv_rrega rrega,
-		       enum nvme_resv_cptpl cptpl, bool iekey,
-		       __u64 crkey, __u64 nrkey, __u32 timeout, __u32 *result);
+int nvme_resv_register(struct nvme_resv_register_args *args);
 
 /**
- * nvme_resv_release() - Send an nvme reservation release
+ * nvme_resv_release_args - Arguments for the NVMe Reservation Release Command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace identifier
  * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
@@ -3854,16 +3884,30 @@ int nvme_resv_register(int fd, __u32 nsid, enum nvme_resv_rrega rrega,
  * @crkey:	The current reservation key to release
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_resv_release_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	enum nvme_resv_rtype rtype;
+	enum nvme_resv_rrela rrela;
+	bool iekey;
+	__u64 crkey;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_resv_release() - Send an nvme reservation release
+ * @args:	&struct nvme_resv_release_args argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_resv_release(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
-		      enum nvme_resv_rrela rrela, bool iekey,
-		      __u64 crkey, __u32 timeout, __u32 *result);
+int nvme_resv_release(struct nvme_resv_release_args *args);
 
 /**
- * nvme_resv_report() - Send an nvme reservation report
+ * nvme_resv_report_args - Arguments for the NVMe Reservation Report command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace identifier
  * @eds:	Request extended Data Structure
@@ -3872,6 +3916,21 @@ int nvme_resv_release(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
  *		report
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_resv_report_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	bool eds;
+	__u32 len;
+	struct nvme_resv_status *report;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_resv_report() - Send an nvme reservation report
+ * @args:	struct nvme_resv_report_args argument structure
  *
  * Returns a Reservation Status data structure to memory that describes the
  * registration and reservation status of a namespace. See the defintion for
@@ -3880,9 +3939,7 @@ int nvme_resv_release(int fd, __u32 nsid, enum nvme_resv_rtype rtype,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_resv_report(int fd, __u32 nsid, bool eds, __u32 len,
-		     struct nvme_resv_status *report,
-		     __u32 timeout, __u32 *result);
+int nvme_resv_report(struct nvme_resv_report_args *args);
 
 /**
  * nvme_zns_mgmt_send() -
