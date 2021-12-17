@@ -1490,22 +1490,23 @@ int nvme_dev_self_test(struct nvme_dev_self_test_args *args)
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_virtual_mgmt(int fd, enum nvme_virt_mgmt_act act,
-		      enum nvme_virt_mgmt_rt rt, __u16 cntlid, __u16 nr,
-		      __u32 *result)
+int nvme_virtual_mgmt(struct nvme_virtual_mgmt_args *args)
 {
-	__u32 cdw10 = NVME_SET(act, VIRT_MGMT_CDW10_ACT) |
-			NVME_SET(rt, VIRT_MGMT_CDW10_RT) |
-			NVME_SET(cntlid, VIRT_MGMT_CDW10_CNTLID);
-	__u32 cdw11 = NVME_SET(nr, VIRT_MGMT_CDW11_NR);
+	__u32 cdw10 = NVME_SET(args->act, VIRT_MGMT_CDW10_ACT) |
+			NVME_SET(args->rt, VIRT_MGMT_CDW10_RT) |
+			NVME_SET(args->cntlid, VIRT_MGMT_CDW10_CNTLID);
+	__u32 cdw11 = NVME_SET(args->nr, VIRT_MGMT_CDW11_NR);
 
 	struct nvme_passthru_cmd cmd = {
-		.opcode = nvme_admin_virtual_mgmt,
-		.cdw10  = cdw10,
-		.cdw11  = cdw11,
+		.opcode		= nvme_admin_virtual_mgmt,
+		.cdw10		= cdw10,
+		.cdw11		= cdw11,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_admin_passthru(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_submit_io_passthru64(int fd, struct nvme_passthru_cmd64 *cmd,

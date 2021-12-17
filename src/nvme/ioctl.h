@@ -3518,13 +3518,30 @@ struct nvme_dev_self_test_args {
 int nvme_dev_self_test(struct nvme_dev_self_test_args *args);
 
 /**
- * nvme_virtual_mgmt() - Virtualization resource management
+ * nvme_virtual_mgmt_args - Arguments for the NVMe Virtualization
+ * 			    resource management command
  * @fd:		File descriptor of nvme device
  * @act:	Virtual resource action, see &enum nvme_virt_mgmt_act
  * @rt:		Resource type to modify, see &enum nvme_virt_mgmt_rt
  * @cntlid:	Controller id for which resources are bing modified
  * @nr:		Number of resources being allocated or assigned
+ * @timeout:	Timeout in ms
  * @result:	If successful, the CQE dword0
+ */
+struct nvme_virtual_mgmt_args {
+	int args_size;
+	int fd;
+	enum nvme_virt_mgmt_act act;
+	enum nvme_virt_mgmt_rt rt;
+	__u16 cntlid;
+	__u16 nr;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_virtual_mgmt() - Virtualization resource management
+ * @args:	&struct nvme_virtual_mgmt_args argument structure
  *
  * The Virtualization Management command is supported by primary controllers
  * that support the Virtualization Enhancements capability. This command is
@@ -3537,9 +3554,7 @@ int nvme_dev_self_test(struct nvme_dev_self_test_args *args);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_virtual_mgmt(int fd, enum nvme_virt_mgmt_act act,
-		      enum nvme_virt_mgmt_rt rt, __u16 cntlid, __u16 nr,
-		      __u32 *result);
+int nvme_virtual_mgmt(struct nvme_virtual_mgmt_args *args);
 
 /**
  * nvme_flush() - Send an nvme flush command
