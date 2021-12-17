@@ -4055,7 +4055,7 @@ static inline int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
 }
 
 /**
- * nvme_zns_append() - Append data to a zone
+ * nvme_zns_append_args - Arguments for the NVMe ZNS Append command
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
  * @zslba:	Zone start logical block address
@@ -4070,13 +4070,32 @@ static inline int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
  * @metadata:	Userspace address of the metadata
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ */
+struct nvme_zns_append_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	__u64 zslba;
+	__u16 nlb;
+	__u16 control;
+	__u32 ilbrt;
+	__u16 lbat;
+	__u16 lbatm;
+	__u32 data_len;
+	void *data;
+	__u32 metadata_len;
+	void *metadata;
+	__u32 timeout;
+	__u64 *result;
+};
+
+/**
+ * nvme_zns_append() - Append data to a zone
+ * @args:	&struct nvme_zns_append_args argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_zns_append(int fd, __u32 nsid, __u64 zslba, __u16 nlb, __u16 control,
-		    __u32 ilbrt, __u16 lbat, __u16 lbatm, __u32 data_len,
-		    void *data, __u32 metadata_len, void *metadata,
-		    __u32 timeout, __u64 *result);
+int nvme_zns_append(struct nvme_zns_append_args *args);
 
 #endif /* _LIBNVME_IOCTL_H */

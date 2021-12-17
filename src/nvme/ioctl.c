@@ -1765,31 +1765,30 @@ int nvme_zns_mgmt_recv(struct nvme_zns_mgmt_recv_args *args)
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
-int nvme_zns_append(int fd, __u32 nsid, __u64 zslba, __u16 nlb, __u16 control,
-		    __u32 ilbrt, __u16 lbat, __u16 lbatm, __u32 data_len,
-		    void *data, __u32 metadata_len, void *metadata,
-		    __u32 timeout, __u64 *result)
+int nvme_zns_append(struct nvme_zns_append_args *args)
 {
-	__u32 cdw10 = zslba & 0xffffffff;
-	__u32 cdw11 = zslba >> 32;
-	__u32 cdw12 = nlb | (control << 16);
-	__u32 cdw14 = ilbrt;
-	__u32 cdw15 = lbat | (lbatm << 16);
+	__u32 cdw10 = args->zslba & 0xffffffff;
+	__u32 cdw11 = args->zslba >> 32;
+	__u32 cdw12 = args->nlb | (args->control << 16);
+	__u32 cdw14 = args->ilbrt;
+	__u32 cdw15 = args->lbat | (args->lbatm << 16);
 
 	struct nvme_passthru_cmd64 cmd = {
 		.opcode		= nvme_zns_cmd_append,
-		.nsid		= nsid,
+		.nsid		= args->nsid,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
 		.cdw12		= cdw12,
 		.cdw14		= cdw14,
 		.cdw15		= cdw15,
-		.metadata	= (__u64)(uintptr_t)metadata,
-		.addr		= (__u64)(uintptr_t)data,
-		.metadata_len	= metadata_len,
-		.data_len	= data_len,
-		.timeout_ms	= timeout,
+		.data_len	= args->data_len,
+		.addr		= (__u64)(uintptr_t)args->data,
+		.metadata_len	= args->metadata_len,
+		.metadata	= (__u64)(uintptr_t)args->metadata,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_io_passthru64(fd, &cmd, result);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_io_passthru64(args->fd, &cmd, args->result);
 }
