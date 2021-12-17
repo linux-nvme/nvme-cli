@@ -1552,23 +1552,20 @@ int nvme_flush(int fd, __u32 nsid)
 	return nvme_submit_io_passthru(fd, &cmd, NULL);
 }
 
-static int nvme_io(int fd, __u8 opcode, __u32 nsid, __u64 slba, __u16 nlb,
-	__u16 control, __u32 flags, __u32 reftag, __u16 apptag, __u16 appmask,
-	__u64 storage_tag, __u32 data_len, void *data, __u32 metadata_len,
-	void *metadata, __u32 timeout)
+int nvme_io(struct nvme_io_args *args, __u8 opcode)
 {
-	__u32 cdw2  = storage_tag & 0xffffffff;
-	__u32 cdw3  = (storage_tag >> 32) & 0xffff;
-	__u32 cdw10 = slba & 0xffffffff;
-	__u32 cdw11 = slba >> 32;
-	__u32 cdw12 = nlb | (control << 16);
-	__u32 cdw13 = flags;
-	__u32 cdw14 = reftag;
-	__u32 cdw15 = apptag | (appmask << 16);
+	__u32 cdw2  = args->storage_tag & 0xffffffff;
+	__u32 cdw3  = (args->storage_tag >> 32) & 0xffff;
+	__u32 cdw10 = args->slba & 0xffffffff;
+	__u32 cdw11 = args->slba >> 32;
+	__u32 cdw12 = args->nlb | (args->control << 16);
+	__u32 cdw13 = args->dsm | (args->dspec << 16);
+	__u32 cdw14 = args->reftag;
+	__u32 cdw15 = args->apptag | (args->appmask << 16);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= opcode,
-		.nsid		= nsid,
+		.nsid		= args->nsid,
 		.cdw2		= cdw2,
 		.cdw3		= cdw3,
 		.cdw10		= cdw10,
@@ -1577,69 +1574,16 @@ static int nvme_io(int fd, __u8 opcode, __u32 nsid, __u64 slba, __u16 nlb,
 		.cdw13		= cdw13,
 		.cdw14		= cdw14,
 		.cdw15		= cdw15,
-		.data_len	= data_len,
-		.metadata_len	= metadata_len,
-		.addr		= (__u64)(uintptr_t)data,
-		.metadata	= (__u64)(uintptr_t)metadata,
-		.timeout_ms	= timeout,
+		.data_len	= args->data_len,
+		.metadata_len	= args->metadata_len,
+		.addr		= (__u64)(uintptr_t)args->data,
+		.metadata	= (__u64)(uintptr_t)args->metadata,
+		.timeout_ms	= args->timeout,
 	};
 
-	return nvme_submit_io_passthru(fd, &cmd, NULL);
-}
-
-int nvme_read(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-	      __u8 dsm, __u32 reftag, __u16 apptag, __u16 appmask,
-	      __u64 storage_tag, __u32 data_len, void *data,
-	      __u32 metadata_len, void *metadata, __u32 timeout)
-{
-	return nvme_io(fd, nvme_cmd_read, nsid, slba, nlb, control, dsm,
-		       reftag, apptag, appmask, storage_tag, data_len, data,
-		       metadata_len, metadata, timeout);
-}
-
-int nvme_write(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-	       __u8 dsm, __u16 dspec, __u32 reftag, __u16 apptag,
-	       __u16 appmask, __u64 storage_tag, __u32 data_len, void *data,
-	       __u32 metadata_len, void *metadata, __u32 timeout)
-{
-	__u32 flags = dsm | dspec << 16;
-
-	return nvme_io(fd, nvme_cmd_write, nsid, slba, nlb, control, flags,
-		       reftag, apptag, appmask, storage_tag, data_len, data,
-		       metadata_len, metadata, timeout);
-}
-
-int nvme_compare(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-		 __u32 reftag, __u16 apptag, __u16 appmask, __u32 data_len,
-		 void *data, __u32 metadata_len, void *metadata, __u32 timeout)
-{
-	return nvme_io(fd, nvme_cmd_compare, nsid, slba, nlb, control, 0,
-		       reftag, apptag, appmask, 0, data_len, data, metadata_len,
-		       metadata, timeout);
-}
-
-int nvme_write_zeros(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-		     __u32 reftag, __u16 apptag, __u16 appmask,
-		     __u64 storage_tag, __u32 timeout)
-{
-	return nvme_io(fd, nvme_cmd_write_zeroes, nsid, slba, nlb, control, 0,
-		       reftag, apptag, appmask, storage_tag, 0, NULL, 0, NULL,
-		       timeout);
-}
-
-int nvme_verify(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-		__u32 reftag, __u16 apptag, __u16 appmask, __u64 storage_tag,
-		__u32 timeout)
-{
-	return nvme_io(fd, nvme_cmd_verify, nsid, slba, nlb, control, 0,
-		       reftag, apptag, appmask, 0, 0, NULL, 0, NULL, timeout);
-}
-
-int nvme_write_uncorrectable(int fd, __u32 nsid, __u64 slba, __u16 nlb,
-			     __u32 timeout)
-{
-	return nvme_io(fd, nvme_cmd_write_uncor, nsid, slba, nlb, 0, 0, 0, 0,
-		       0, 0, 0, NULL, 0, NULL, timeout);
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_dsm(int fd, __u32 nsid, __u32 attrs, __u16 nr_ranges,

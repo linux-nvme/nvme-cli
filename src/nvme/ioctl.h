@@ -3570,7 +3570,7 @@ int nvme_virtual_mgmt(struct nvme_virtual_mgmt_args *args);
 int nvme_flush(int fd, __u32 nsid);
 
 /**
- * nvme_read() - Submit an nvme user read command
+ * nvme_io_args - Arguments for NVMe I/O commands
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
  * @slba:	Starting logical block
@@ -3594,99 +3594,76 @@ int nvme_flush(int fd, __u32 nsid);
  * @metadata_len:Length of user buffer, @metadata, in bytes
  * @metadata:	Pointer to user address of the metadata buffer
  * @timeout:	Timeout in ms
+ */
+struct nvme_io_args {
+	int args_size;
+	int fd;
+	__u32 nsid;
+	__u64 slba;
+	__u16 nlb;
+	__u16 control;
+	__u8 dsm;
+	__u8 dspec;
+	__u32 reftag;
+	__u16 apptag;
+	__u16 appmask;
+	__u64 storage_tag;
+	__u32 data_len;
+	void *data;
+	__u32 metadata_len;
+	void *metadata;
+	__u32 timeout;
+	__u32 *result;
+};
+
+/**
+ * nvme_io() - Submit an nvme user I/O command
+ * @args:	&struct nvme_io_args argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_read(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-	      __u8 dsm, __u32 reftag, __u16 apptag, __u16 appmask,
-	      __u64 storage_tag, __u32 data_len, void *data,
-	      __u32 metadata_len, void *metadata, __u32 timeout);
+int nvme_io(struct nvme_io_args *args, __u8 opcode);
+
+/**
+ * nvme_read() - Submit an nvme user read command
+ * @args:	&struct nvme_io_args argument structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+static inline int nvme_read(struct nvme_io_args *args)
+{
+	return nvme_io(args, nvme_cmd_read);
+}
 
 /**
  * nvme_write() - Submit an nvme user write command
- * @fd:		File descriptor of nvme device
- * @nsid:	Namespace ID
- * @slba:	Starting logical block
- * @nblocks:	Number of logical blocks to send (0's based value)
- * @control:	Command control flags, see &enum nvme_io_control_flags.
- * @dsm:	Data set management attributes, see &enum nvme_io_dsm_flags
- * @dspec:	Directive specific command, eg: stream identifier
- * @reftag:	This field specifies the Initial Logical Block Reference Tag
- * 		expected value. Used only if the namespace is formatted to use
- * 		end-to-end protection information.
- * @apptag:	This field specifies the Application Tag Mask expected value.
- * 		Used only if the namespace is formatted to use end-to-end
- * 		protection information.
- * @appmask:	This field specifies the Application Tag expected value. Used
- * 		only if the namespace is formatted to use end-to-end protection
- * 		information.
- * @storage_tag: This filed specifies Variable Sized Expected Logical Block
- *		Storage Tag (ELBST) and Expected Logical Block Reference
- *		Tag (ELBRT)
- * @data_len:	Length of user buffer, @data, in bytes
- * @data:	Pointer to user address of the data buffer
- * @metadata_len:Length of user buffer, @metadata, in bytes
- * @metadata:	Pointer to user address of the metadata buffer
- * @timeout:	Timeout in ms
+ * @args:	&struct nvme_io_args argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_write(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-	       __u8 dsm, __u16 dspec, __u32 reftag, __u16 apptag,
-	       __u16 appmask, __u64 storage_tag, __u32 data_len, void *data,
-	       __u32 metadata_len, void *metadata, __u32 timeout);
+static inline int nvme_write(struct nvme_io_args *args)
+{
+	return nvme_io(args, nvme_cmd_write);
+}
 
 /**
  * nvme_compare() - Submit an nvme user compare command
- * @fd:		File descriptor of nvme device
- * @nsid:	Namespace ID
- * @slba:	Starting logical block
- * @nblocks:	Number of logical blocks to send (0's based value)
- * @control:	Command control flags, see &enum nvme_io_control_flags.
- * @reftag:	This field specifies the Initial Logical Block Reference Tag
- * 		expected value. Used only if the namespace is formatted to use
- * 		end-to-end protection information.
- * @apptag:	This field specifies the Application Tag Mask expected value.
- * 		Used only if the namespace is formatted to use end-to-end
- * 		protection information.
- * @appmask:	This field specifies the Application Tag expected value. Used
- * 		only if the namespace is formatted to use end-to-end protection
- * 		information.
- * @data_len:	Length of user buffer, @data, in bytes
- * @data:	Pointer to user address of the data buffer
- * @metadata_len:Length of user buffer, @metadata, in bytes
- * @metadata:	Pointer to user address of the metadata buffer
- * @timeout:	Timeout in ms
+ * @args:	&struct nvme_io_args argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_compare(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-		 __u32 reftag, __u16 apptag, __u16 appmask, __u32 data_len,
-		 void *data, __u32 metadata_len, void *metadata, __u32 timeout);
+static inline int nvme_compare(struct nvme_io_args *args)
+{
+	return nvme_io(args, nvme_cmd_compare);
+}
 
 /**
  * nvme_write_zeros() - Submit an nvme write zeroes command
- * @fd:		File descriptor of nvme device
- * @nsid:	Namespace identifier
- * @slba:	Starting logical block
- * @nlb:	Number of logical blocks to clear (0's based value)
- * @control:	Command control flags, see &enum nvme_io_control_flags.
- * @reftag:	This field specifies the Initial Logical Block Reference Tag
- * 		expected value. Used only if the namespace is formatted to use
- * 		end-to-end protection information.
- * @apptag:	This field specifies the Application Tag Mask expected value.
- * 		Used only if the namespace is formatted to use end-to-end
- * 		protection information.
- * @appmask:	This field specifies the Application Tag expected value. Used
- * 		only if the namespace is formatted to use end-to-end protection
- * 		information.
- * @storage_tag: This filed specifies Variable Sized Expected Logical Block
- *		Storage Tag (ELBST) and Expected Logical Block Reference
- *		Tag (ELBRT)
- * @timeout:	Timeout in ms
+ * @args:	&struct nvme_io_args argument structure
  *
  * The Write Zeroes command sets a range of logical blocks to zero.  After
  * successful completion of this command, the value returned by subsequent
@@ -3696,17 +3673,14 @@ int nvme_compare(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_write_zeros(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-		     __u32 reftag, __u16 apptag, __u16 appmask,
-		     __u64 storage_tag, __u32 timeout);
+static inline int nvme_write_zeros(struct nvme_io_args *args)
+{
+	return nvme_io(args, nvme_cmd_write_zeroes);
+}
 
 /**
  * nvme_write_uncorrectable() - Submit an nvme write uncorrectable command
- * @fd:		File descriptor of nvme device
- * @nsid:	Namespace identifier
- * @slba:	Starting logical block
- * @nlb:	Number of logical blocks to invalidate (0's based value)
- * @timeout:	Timeout in ms
+ * @args:	&struct nvme_io_args argument structure
  *
  * The Write Uncorrectable command marks a range of logical blocks as invalid.
  * When the specified logical block(s) are read after this operation, a failure
@@ -3716,29 +3690,14 @@ int nvme_write_zeros(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_write_uncorrectable(int fd, __u32 nsid, __u64 slba, __u16 nlb,
-			     __u32 timeout);
+static inline int nvme_write_uncorrectable(struct nvme_io_args *args)
+{
+	return nvme_io(args, nvme_cmd_write_uncor);
+}
 
 /**
  * nvme_verify() - Send an nvme verify command
- * @fd:		File descriptor of nvme device
- * @nsid:	Namespace identifier
- * @slba:	Starting logical block
- * @nlb:	Number of logical blocks to verify (0's based value)
- * @control:	Command control flags, see &enum nvme_io_control_flags.
- * @reftag:	This field specifies the Initial Logical Block Reference Tag
- * 		expected value. Used only if the namespace is formatted to use
- * 		end-to-end protection information.
- * @apptag:	This field specifies the Application Tag Mask expected value.
- * 		Used only if the namespace is formatted to use end-to-end
- * 		protection information.
- * @appmask:	This field specifies the Application Tag expected value. Used
- * 		only if the namespace is formatted to use end-to-end protection
- * 		information.
- * @storage_tag: This filed specifies Variable Sized Expected Logical Block
- *		Storage Tag (ELBST) and Expected Logical Block Reference
- *		Tag (ELBRT)
- * @timeout:	Timeout in ms
+ * @args:	&struct nvme_io_args argument structure
  *
  * The Verify command verifies integrity of stored information by reading data
  * and metadata, if applicable, for the LBAs indicated without transferring any
@@ -3747,9 +3706,10 @@ int nvme_write_uncorrectable(int fd, __u32 nsid, __u64 slba, __u16 nlb,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_verify(int fd, __u32 nsid, __u64 slba, __u16 nlb, __u16 control,
-		__u32 reftag, __u16 apptag, __u16 appmask, __u64 storage_tag,
-		__u32 timeout);
+static inline int nvme_verify(struct nvme_io_args *args)
+{
+	return nvme_io(args, nvme_cmd_verify);
+}
 
 /**
  * nvme_dsm() - Send an nvme data set management command

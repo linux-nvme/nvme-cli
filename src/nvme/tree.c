@@ -1493,77 +1493,164 @@ int nvme_ns_identify_descs(nvme_ns_t n, struct nvme_ns_id_desc *descs)
 
 int nvme_ns_verify(nvme_ns_t n, off_t offset, size_t count)
 {
-	__u64 slba;
-	__u16 nlb;
+	struct nvme_io_args args = {
+		.args_size = sizeof(args),
+		.fd = nvme_ns_get_fd(n),
+		.nsid = nvme_ns_get_nsid(n),
+		.control = 0,
+		.dsm = 0,
+		.dspec = 0,
+		.reftag = 0,
+		.apptag = 0,
+		.appmask = 0,
+		.storage_tag = 0,
+		.data_len = 0,
+		.data = NULL,
+		.metadata_len = 0,
+		.metadata = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
 
-	if (nvme_bytes_to_lba(n, offset, count, &slba, &nlb))
+	if (nvme_bytes_to_lba(n, offset, count, &args.slba, &args.nlb))
 		return -1;
 
-	return nvme_verify(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba, nlb,
-			   0, 0, 0, 0, 0, NVME_DEFAULT_IOCTL_TIMEOUT);
+	return nvme_verify(&args);
 }
 
 int nvme_ns_write_uncorrectable(nvme_ns_t n, off_t offset, size_t count)
 {
-	__u64 slba;
-	__u16 nlb;
+	struct nvme_io_args args = {
+		.args_size = sizeof(args),
+		.fd = nvme_ns_get_fd(n),
+		.nsid = nvme_ns_get_nsid(n),
+		.control = 0,
+		.dsm = 0,
+		.dspec = 0,
+		.reftag = 0,
+		.apptag = 0,
+		.appmask = 0,
+		.storage_tag = 0,
+		.data_len = 0,
+		.data = NULL,
+		.metadata_len = 0,
+		.metadata = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
 
-	if (nvme_bytes_to_lba(n, offset, count, &slba, &nlb))
+	if (nvme_bytes_to_lba(n, offset, count, &args.slba, &args.nlb))
 		return -1;
 
-	return nvme_write_uncorrectable(nvme_ns_get_fd(n), nvme_ns_get_nsid(n),
-					slba, nlb, NVME_DEFAULT_IOCTL_TIMEOUT);
+	return nvme_write_uncorrectable(&args);
 }
 
 int nvme_ns_write_zeros(nvme_ns_t n, off_t offset, size_t count)
 {
-	__u64 slba;
-	__u16 nlb;
+	struct nvme_io_args args = {
+		.args_size = sizeof(args),
+		.fd = nvme_ns_get_fd(n),
+		.nsid = nvme_ns_get_nsid(n),
+		.control = 0,
+		.dsm = 0,
+		.dspec = 0,
+		.reftag = 0,
+		.apptag = 0,
+		.appmask = 0,
+		.storage_tag = 0,
+		.data_len = 0,
+		.data = NULL,
+		.metadata_len = 0,
+		.metadata = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
 
-	if (nvme_bytes_to_lba(n, offset, count, &slba, &nlb))
+	if (nvme_bytes_to_lba(n, offset, count, &args.slba, &args.nlb))
 		return -1;
 
-	return nvme_write_zeros(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba,
-				nlb, 0, 0, 0, 0, 0, NVME_DEFAULT_IOCTL_TIMEOUT);
+	return nvme_write_zeros(&args);
 }
 
 int nvme_ns_write(nvme_ns_t n, void *buf, off_t offset, size_t count)
 {
-	__u64 slba;
-	__u16 nlb;
+	struct nvme_io_args args = {
+		.args_size = sizeof(args),
+		.fd = nvme_ns_get_fd(n),
+		.nsid = nvme_ns_get_nsid(n),
+		.control = 0,
+		.dsm = 0,
+		.dspec = 0,
+		.reftag = 0,
+		.apptag = 0,
+		.appmask = 0,
+		.storage_tag = 0,
+		.data_len = count,
+		.data = buf,
+		.metadata_len = 0,
+		.metadata = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
 
-	if (nvme_bytes_to_lba(n, offset, count, &slba, &nlb))
+	if (nvme_bytes_to_lba(n, offset, count, &args.slba, &args.nlb))
 		return -1;
 
-	return nvme_write(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba, nlb, 0,
-			  0, 0, 0, 0, 0, 0, count, buf, 0, NULL,
-			  NVME_DEFAULT_IOCTL_TIMEOUT);
+	return nvme_write(&args);
 }
 
 int nvme_ns_read(nvme_ns_t n, void *buf, off_t offset, size_t count)
 {
-	__u64 slba;
-	__u16 nlb;
+	struct nvme_io_args args = {
+		.args_size = sizeof(args),
+		.fd = nvme_ns_get_fd(n),
+		.nsid = nvme_ns_get_nsid(n),
+		.control = 0,
+		.dsm = 0,
+		.dspec = 0,
+		.reftag = 0,
+		.apptag = 0,
+		.appmask = 0,
+		.storage_tag = 0,
+		.data_len = count,
+		.data = buf,
+		.metadata_len = 0,
+		.metadata = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
 
-	if (nvme_bytes_to_lba(n, offset, count, &slba, &nlb))
+	if (nvme_bytes_to_lba(n, offset, count, &args.slba, &args.nlb))
 		return -1;
 
-	return nvme_read(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba, nlb, 0,
-			 0, 0, 0, 0, 0, count, buf, 0, NULL,
-			 NVME_DEFAULT_IOCTL_TIMEOUT);
+	return nvme_read(&args);
 }
 
 int nvme_ns_compare(nvme_ns_t n, void *buf, off_t offset, size_t count)
 {
-	__u64 slba;
-	__u16 nlb;
+	struct nvme_io_args args = {
+		.args_size = sizeof(args),
+		.fd = nvme_ns_get_fd(n),
+		.nsid = nvme_ns_get_nsid(n),
+		.control = 0,
+		.dsm = 0,
+		.dspec = 0,
+		.reftag = 0,
+		.apptag = 0,
+		.appmask = 0,
+		.storage_tag = 0,
+		.data_len = count,
+		.data = buf,
+		.metadata_len = 0,
+		.metadata = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
 
-	if (nvme_bytes_to_lba(n, offset, count, &slba, &nlb))
+	if (nvme_bytes_to_lba(n, offset, count, &args.slba, &args.nlb))
 		return -1;
 
-	return nvme_compare(nvme_ns_get_fd(n), nvme_ns_get_nsid(n), slba, nlb,
-			    0, 0, 0, 0, count, buf, 0, NULL,
-			    NVME_DEFAULT_IOCTL_TIMEOUT);
+	return nvme_compare(&args);
 }
 
 int nvme_ns_flush(nvme_ns_t n)
