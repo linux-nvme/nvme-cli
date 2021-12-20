@@ -294,6 +294,22 @@ int nvme_get_ana_log_len(int fd, size_t *analen)
 	return 0;
 }
 
+int nvme_get_logical_block_size(int fd, __u32 nsid, int *blksize)
+{
+	struct nvme_id_ns ns;
+	int flbas;
+	int ret;
+
+	ret = nvme_identify_ns(fd, nsid, &ns);
+	if (ret)
+		return ret;
+
+	flbas = ns.flbas & NVME_NS_FLBAS_LBA_MASK;
+	*blksize = 1 << ns.lbaf[flbas].ds;
+
+	return 0;
+}
+
 static int __nvme_set_attr(const char *path, const char *value)
 {
 	int ret, fd;

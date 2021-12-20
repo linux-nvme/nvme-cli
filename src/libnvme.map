@@ -132,6 +132,7 @@ LIBNVME_1_0 {
 		nvme_get_log_telemetry_ctrl;
 		nvme_get_log_telemetry_host;
 		nvme_get_log_zns_changed_zones;
+		nvme_get_logical_block_size;
 		nvme_get_new_host_telemetry;
 		nvme_get_ns_attr;
 		nvme_get_nsid;
