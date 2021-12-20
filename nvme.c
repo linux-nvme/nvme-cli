@@ -5665,8 +5665,9 @@ static int submit_io(int opcode, char *command, const char *desc,
 		goto close_mfd;
 	}
 
-	if (ioctl(fd, BLKSSZGET, &logical_block_size) < 0)
-		goto close_mfd;
+	if (nvme_get_logical_block_size(fd, cfg.namespace_id,
+					&logical_block_size) < 0)
+			goto close_mfd;
 
 	buffer_size = (cfg.block_count + 1) * logical_block_size;
 	if (cfg.data_size < buffer_size) {
