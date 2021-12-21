@@ -263,6 +263,10 @@ static bool should_connect(nvme_ctrl_t c, struct nvmf_disc_log_entry *entry)
 	if (!matching_only)
 		return true;
 
+	/* skip connect if the transport type doesn't match */
+	if (strcmp(nvme_ctrl_get_transport(c), nvmf_trtype_str(entry->trtype)))
+		return false;
+
 	space_strip_len(NVMF_TRADDR_SIZE, entry->traddr);
 	return !strcmp(nvme_ctrl_get_traddr(c), entry->traddr);
 }
