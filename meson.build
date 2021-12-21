@@ -57,17 +57,10 @@ conf.set('LIBHUGETLBFS', have_libhugetlbfs, description: 'Is libhugetlbfs availa
 libz_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'])
 
 # Check for OpenSSL availability
-want_openssl = get_option('openssl')
-if want_openssl != 'false'
-  openssl_dep = dependency('openssl', version: '>=1.1.0',
-                           required: want_openssl == 'true',
-                           fallback : ['openssl', 'openssl_dep'])
-  have_openssl = openssl_dep.found()
-else
-  openssl_dep = []
-  have_openssl = false
-endif
-conf.set('OPENSSL', have_openssl, description: 'Is OpenSSL available?')
+openssl_dep = dependency('openssl', version: '>=1.1.0',
+                         required: get_option('openssl'),
+                         fallback : ['openssl', 'openssl_dep'])
+conf.set('OPENSSL', openssl_dep.found(), description: 'Is OpenSSL available?')
 
 # Set the nvme-cli version
 conf.set('NVME_VERSION', '"' + meson.project_version() + '"')
