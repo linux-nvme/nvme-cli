@@ -114,6 +114,12 @@ static void space_strip_len(int max, char *str)
 	}
 }
 
+static void strtolower(char *str)
+{
+	for ( ; *str; str++)
+		*str = tolower(*str);
+}
+
 static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
 {
 	int i;
@@ -260,6 +266,9 @@ static void json_connect_msg(nvme_ctrl_t c)
 
 static bool should_connect(nvme_ctrl_t c, struct nvmf_disc_log_entry *entry)
 {
+	char *dctrl_traddr, *log_traddr;
+	bool connect = true;
+
 	if (!matching_only)
 		return true;
 
@@ -268,7 +277,20 @@ static bool should_connect(nvme_ctrl_t c, struct nvmf_disc_log_entry *entry)
 		return false;
 
 	space_strip_len(NVMF_TRADDR_SIZE, entry->traddr);
-	return !strcmp(nvme_ctrl_get_traddr(c), entry->traddr);
+	dctrl_traddr = strdup(nvme_ctrl_get_traddr(c));
+	log_traddr = strdup(entry->traddr);
+	if (!dctrl_traddr || !log_traddr)
+		goto free_exit;
+
+	strtolower(dctrl_traddr);
+	strtolower(log_traddr);
+
+	connect = !strcmp(dctrl_traddr, log_traddr);
+
+free_exit:
+	free(log_traddr);
+	free(dctrl_traddr);
+	return connect;
 }
 
 static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
