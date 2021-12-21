@@ -7,7 +7,7 @@ HAVE_SYSTEMD = $(shell pkg-config --exists libsystemd  --atleast-version=242; ec
 LIBJSONC_14 = $(shell pkg-config --atleast-version=0.14 json-c; echo $$?)
 LIBJSONC = $(shell pkg-config json-c; echo $$?)
 LIBZ = $(shell $(LD) -o /dev/null -lz >/dev/null 2>&1; echo $$?)
-LIBOPENSSL = $(shell pkg-config --atleast-version=1.1.0 openssl; echo $$?)
+LIBOPENSSL = $(shell pkg-config --max-version=1.1.0 openssl; echo $$?)
 NVME = nvme
 INSTALL ?= install
 DESTDIR =
