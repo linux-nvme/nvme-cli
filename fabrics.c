@@ -52,6 +52,7 @@ static char *raw;
 static bool persistent;
 static bool quiet;
 static bool dump_config;
+static bool matching_only;
 
 static const char *nvmf_tport		= "transport type";
 static const char *nvmf_traddr		= "transport address";
@@ -257,6 +258,15 @@ static void json_connect_msg(nvme_ctrl_t c)
 	json_free_object(root);
 }
 
+static bool should_connect(nvme_ctrl_t c, struct nvmf_disc_log_entry *entry)
+{
+	if (!matching_only)
+		return true;
+
+	space_strip_len(NVMF_TRADDR_SIZE, entry->traddr);
+	return !strcmp(nvme_ctrl_get_traddr(c), entry->traddr);
+}
+
 static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
 		      char *raw, bool connect, bool persistent,
 		      enum nvme_print_flags flags)
@@ -293,6 +303,9 @@ static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
 			struct nvmf_disc_log_entry *e = &log->entries[i];
 			bool discover = false;
 			nvme_ctrl_t child;
+
+			if (!should_connect(c, e))
+				continue;
 
 			errno = 0;
 			child = nvmf_connect_disc_entry(h, e, defcfg,
@@ -439,6 +452,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
 		OPT_INCR("verbose",      'v', &verbose,       "Increase logging verbosity"),
 		OPT_FLAG("dump-config",  'O', &dump_config,   "Dump configuration file to stdout"),
+		OPT_FLAG("matching",     'm', &matching_only, "connect only records matching the traddr"),
 		OPT_END()
 	};
 
