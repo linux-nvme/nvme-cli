@@ -116,6 +116,7 @@ const char *nvmf_eflags_str(__u16 eflags)
 static const char * const sectypes[] = {
 	[NVMF_TCP_SECTYPE_NONE]		= "none",
 	[NVMF_TCP_SECTYPE_TLS]		= "tls",
+	[NVMF_TCP_SECTYPE_TLS13]	= "tls13",
 };
 
 const char *nvmf_sectype_str(__u8 sectype)
