@@ -57,7 +57,7 @@ conf.set('LIBHUGETLBFS', have_libhugetlbfs, description: 'Is libhugetlbfs availa
 libz_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'])
 
 # Check for OpenSSL availability
-openssl_dep = dependency('openssl', version: '<=1.1.0',
+openssl_dep = dependency('openssl', version: '<=1.1.1k',
                          required: get_option('openssl'),
                          fallback : ['openssl', 'openssl_dep'])
 conf.set('OPENSSL', openssl_dep.found(), description: 'Is OpenSSL available?')
