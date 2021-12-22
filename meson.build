@@ -32,14 +32,14 @@ conf = configuration_data()
 libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
 
 # Check for libuuid availability
-libuuid = dependency('uuid', required: true)
-conf.set('CONFIG_LIBUUID', libuuid.found(), description: 'Is libuuid available?')
+libuuid_dep = dependency('uuid', required: true)
+conf.set('CONFIG_LIBUUID', libuuid_dep.found(), description: 'Is libuuid available?')
 
 # Check for libjson-c availability
-json_c = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c_dep'])
-if json_c.found()
+json_c_dep = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c_dep'])
+if json_c_dep.found()
   conf.set('CONFIG_JSONC', true, description: 'Is json-c available?')
-  conf.set('CONFIG_JSONC_14', json_c.version().version_compare('>=0.14'), description: 'Is json-c at least 0.14?')
+  conf.set('CONFIG_JSONC_14', json_c_dep.version().version_compare('>=0.14'), description: 'Is json-c at least 0.14?')
 endif
 
 # Check for libhugetlbfs availability
@@ -193,7 +193,7 @@ subdir('Documentation')
 executable(
   'nvme',
   sources,
-  dependencies: [ libnvme_dep, libuuid, json_c, libz_dep, openssl_dep,
+  dependencies: [ libnvme_dep, libuuid_dep, json_c_dep, libz_dep, openssl_dep,
                   libhugetlbfs_dep ],
   include_directories: incdir,
   install: true,
