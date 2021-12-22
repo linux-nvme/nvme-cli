@@ -225,8 +225,6 @@ static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s,
     printf("%-32s: %3d%%       %s%u%s%u%s%u\n", STR17_01,  *nm, STR17_03, *raw,
         STR17_04, *(raw+2), STR17_05, *(raw+4));
     /* 18 RAISIN_SI_VD_POWER_LOSS_PROTECTION */
-    // get_memblaze_new_smart_info(smart, RAISIN_SI_VD_POWER_LOSS_PROTECTION, nm, raw);
-    // printf("%-32s: %3d%%       %"PRIu64"\n", STR18_01, *nm, int48_to_long(raw));
     /* 19 RAISIN_SI_VD_READ_FAIL */
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_READ_FAIL, nm, raw);
     printf("%-32s: %3d%%       %"PRIu64"\n", STR19_01, *nm, int48_to_long(raw));
