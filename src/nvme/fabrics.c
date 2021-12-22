@@ -907,9 +907,12 @@ static int uuid_from_product_uuid(char *system_uuid)
 				20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,
 				-1 /* sentinel */
 			};
-			for (unsigned int i = 0; swaptbl[i] != -1; i++)
+			int i;
+
+			for (i = 0; swaptbl[i] != -1; i++)
 				system_uuid[i] = line[swaptbl[i]];
 			system_uuid[UUID_SIZE-1] = '\0';
+
 			ret = 0;
 		}
 
