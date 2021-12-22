@@ -40,11 +40,11 @@
 #include <libgen.h>
 #include <zlib.h>
 
-#ifdef LIBHUGETLBFS
+#ifdef CONFIG_LIBHUGETLBFS
 #include <hugetlbfs.h>
 #endif
 
-#ifdef OPENSSL
+#ifdef CONFIG_OPENSSL
 #include <openssl/engine.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
@@ -125,7 +125,7 @@ static void *__nvme_alloc(size_t len, bool *huge) {
 
 #define HUGE_MIN 0x80000
 
-#ifdef LIBHUGETLBFS
+#ifdef CONFIG_LIBHUGETLBFS
 void nvme_free(void *p, bool huge)
 {
 	if (huge) {
@@ -6698,7 +6698,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *command, struct
 	char encoded_key[128];
 	unsigned long crc = crc32(0L, NULL, 0);
 	int err = 0;
-#ifdef OPENSSL
+#ifdef CONFIG_OPENSSL
 	const EVP_MD *md = NULL;
 	const char *hostnqn;
 #else
@@ -6735,7 +6735,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *command, struct
 		return -EINVAL;
 	}
 	if (cfg.hmac > 0) {
-#ifdef OPENSSL
+#ifdef CONFIG_OPENSSL
 		if (!cfg.nqn) {
 			hostnqn = nvmf_hostnqn_from_file();
 			if (!hostnqn) {
@@ -6817,7 +6817,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *command, struct
 	}
 
 	if (md) {
-#ifdef OPENSSL
+#ifdef CONFIG_OPENSSL
 		HMAC_CTX *hmac_ctx = HMAC_CTX_new();
 		const char hmac_seed[] = "NVMe-over-Fabrics";
 		unsigned int key_len;

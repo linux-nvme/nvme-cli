@@ -36,7 +36,7 @@ endif
 
 ifeq ($(LIBHUGETLBFS),0)
 	override LDFLAGS += -lhugetlbfs
-	override CFLAGS += -DLIBHUGETLBFS
+	override CFLAGS += -DCONFIG_LIBHUGETLBFS
 	override LIB_DEPENDS += hugetlbfs
 endif
 
@@ -48,7 +48,7 @@ endif
 
 ifeq ($(LIBOPENSSL),0)
 	override LDFLAGS += -lssl -lcrypto
-	override CFLAGS += -DOPENSSL
+	override CFLAGS += -DCONFIG_OPENSSL
 	override LIB_DEPENDS += openssl
 endif
 

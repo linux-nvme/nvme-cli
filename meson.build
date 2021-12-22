@@ -39,7 +39,7 @@ conf.set('CONFIG_LIBUUID', libuuid.found(), description: 'Is libuuid available?'
 json_c = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c_dep'])
 if json_c.found()
   conf.set('CONFIG_JSONC', true, description: 'Is json-c available?')
-  conf.set('LIBJSONC_14', json_c.version().version_compare('>=0.14'), description: 'Is json-c at least 0.14?')
+  conf.set('CONFIG_JSONC_14', json_c.version().version_compare('>=0.14'), description: 'Is json-c at least 0.14?')
 endif
 
 # Check for libhugetlbfs availability
@@ -51,7 +51,7 @@ else
   libhugetlbfs_dep = []
   have_libhugetlbfs = false
 endif
-conf.set('LIBHUGETLBFS', have_libhugetlbfs, description: 'Is libhugetlbfs available?')
+conf.set('CONFIG_LIBHUGETLBFS', have_libhugetlbfs, description: 'Is libhugetlbfs available?')
 
 # Check for zlib availability
 libz_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'])
@@ -60,7 +60,7 @@ libz_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'])
 openssl_dep = dependency('openssl', version: '>=1.1.0',
                          required: get_option('openssl'),
                          fallback : ['openssl', 'openssl_dep'])
-conf.set('OPENSSL', openssl_dep.found(), description: 'Is OpenSSL available?')
+conf.set('CONFIG_OPENSSL', openssl_dep.found(), description: 'Is OpenSSL available?')
 
 # Set the nvme-cli version
 conf.set('NVME_VERSION', '"' + meson.project_version() + '"')
