@@ -78,9 +78,14 @@ static int compare_fw_version(const char *fw1, const char *fw2)
 int getlogpage_format_type(char *model_name)
 {
     int logpage_format_type = INTEL_FORMAT;
-    const char *boundary_model_name = "P5920"; // Use INTEL_FORMAT from Raisin P5920.
-    if (strncmp(model_name, boundary_model_name, strlen(boundary_model_name)) < 0) {
-        logpage_format_type = MEMBLAZE_FORMAT;
+    const char *boundary_model_name1 = "P"; // MEMBLAZE P7936DT0640M00
+    const char *boundary_model_name2 = "P5920"; // Use INTEL_FORMAT from Raisin P5920.
+    if (0 == strncmp(model_name, boundary_model_name1, strlen(boundary_model_name1)))
+    {
+        if (strncmp(model_name, boundary_model_name2, strlen(boundary_model_name2)) < 0)
+        {
+            logpage_format_type = MEMBLAZE_FORMAT;
+        }
     }
     return logpage_format_type;
 }
@@ -220,8 +225,6 @@ static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s,
     printf("%-32s: %3d%%       %s%u%s%u%s%u\n", STR17_01,  *nm, STR17_03, *raw,
         STR17_04, *(raw+2), STR17_05, *(raw+4));
     /* 18 RAISIN_SI_VD_POWER_LOSS_PROTECTION */
-    get_memblaze_new_smart_info(smart, RAISIN_SI_VD_POWER_LOSS_PROTECTION, nm, raw);
-    printf("%-32s: %3d%%       %"PRIu64"\n", STR18_01, *nm, int48_to_long(raw));
     /* 19 RAISIN_SI_VD_READ_FAIL */
     get_memblaze_new_smart_info(smart, RAISIN_SI_VD_READ_FAIL, nm, raw);
     printf("%-32s: %3d%%       %"PRIu64"\n", STR19_01, *nm, int48_to_long(raw));
