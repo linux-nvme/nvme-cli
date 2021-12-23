@@ -14,6 +14,7 @@ SYNOPSIS
               [--ause | -u]
               [--sanact=<action> | -a <action>]
               [--ovrpat=<overwrite-pattern> | -p <overwrite-pattern>]
+	      [--force]
 
 DESCRIPTION
 -----------
@@ -77,6 +78,10 @@ OPTIONS
     Command Dword 10 is set to 011b (i.e., Overwrite). This field
     specifies a 32-bit pattern that is used for the Overwrite
     sanitize operation.
+
+--force::
+    Ignore namespace is currently busy and perfome the operation
+    even though.
 
 EXAMPLES
 --------

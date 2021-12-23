@@ -2,12 +2,12 @@
 .\"     Title: nvme-format
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/20/2020
+.\"      Date: 12/15/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FORMAT" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-FORMAT" "1" "12/15/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -40,7 +40,7 @@ nvme-format \- Format an NVMe device
                     [\-\-pi=<pi> | \-i <pi>]
                     [\-\-ms=<ms> | \-m <ms>]
                     [\-\-reset | \-r ]
-                    [\-\-force | \-f ]
+                    [\-\-force ]
                     [\-\-timeout=<timeout> | \-t <timeout> ]
 .fi
 .SH "DESCRIPTION"
@@ -168,7 +168,7 @@ Metadata Settings: This field is set to \(oq1\(cq if the metadata is transferred
 Issue a reset after successful format\&. Must use the character device for this\&.
 .RE
 .PP
-\-f, \-\-force
+\-\-force
 .RS 4
 Just send the command immediately without warning of the implications\&.
 .RE

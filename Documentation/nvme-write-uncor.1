@@ -2,12 +2,12 @@
 .\"     Title: nvme-uncor
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/20/2020
+.\"      Date: 12/15/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-UNCOR" "1" "10/20/2020" "NVMe" "NVMe Manual"
+.TH "NVME\-UNCOR" "1" "12/15/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,6 +35,7 @@ nvme-write-uncor \- Send an NVMe write uncorrectable command, return results
 \fInvme\-write\-uncorr\fR <device> [\-\-start\-block=<slba> | \-s <slba>]
                         [\-\-block\-count=<nlb> | \-c <nlb>]
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-force]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -54,6 +55,11 @@ Number of logical blocks to write uncorrectable\&.
 \-\-namespace\-id=<nsid>, \-n <nsid>
 .RS 4
 Namespace ID use in the command\&.
+.RE
+.PP
+\-\-force
+.RS 4
+Ignore namespace is currently busy and perfome the operation even though\&.
 .RE
 .SH "EXAMPLES"
 .sp

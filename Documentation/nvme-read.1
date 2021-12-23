@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-read
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 07/09/2021
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 12/15/2021
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-READ" "1" "07/09/2021" "NVMe" "NVMe Manual"
+.TH "NVME\-READ" "1" "12/15/2021" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,6 +51,7 @@ nvme-read \- Send an NVMe Read command, provide results
                         [\-\-dry\-run | \-w]
                         [\-\-latency | \-t]
                         [\-\-storage\-tag\-check<storage\-tag\-check> | \-C <storage\-tag\-check>]
+                        [\-\-force]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -183,6 +184,11 @@ Print out the latency the IOCTL took (in us)\&.
 \-\-storage\-tag\-check=<storage\-tag\-check>, \-C <storage\-tag\-check>
 .RS 4
 This bit specifies the Storage Tag field shall be checked as part of end\-to\-end data protection processing\&.
+.RE
+.PP
+\-\-force
+.RS 4
+Ignore namespace is currently busy and perfome the operation even though\&.
 .RE
 .SH "EXAMPLES"
 .sp

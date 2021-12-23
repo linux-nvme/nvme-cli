@@ -11,6 +11,7 @@ SYNOPSIS
 'nvme-write-uncorr' <device> [--start-block=<slba> | -s <slba>]
 			[--block-count=<nlb> | -c <nlb>]
 			[--namespace-id=<nsid> | -n <nsid>]
+			[--force]
 
 DESCRIPTION
 -----------
@@ -30,6 +31,10 @@ OPTIONS
 --namespace-id=<nsid>::
 -n <nsid>::
 	Namespace ID use in the command.
+
+--force::
+    Ignore namespace is currently busy and perfome the operation
+    even though.
 
 EXAMPLES
 --------
