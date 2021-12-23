@@ -5,11 +5,6 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-configure_file(
-    output: 'config.h',
-    configuration: conf
-)
-
 sources += [
     'nvme/cleanup.c',
     'nvme/fabrics.c',
@@ -41,7 +36,7 @@ libnvme = library(
     link_args: ['-Wl,--version-script=' + version_script_arg],
     dependencies: deps,
     link_depends: mapfile,
-    include_directories: incdir,
+    include_directories: [incdir, internal_incdir],
     install: true,
 )
 
