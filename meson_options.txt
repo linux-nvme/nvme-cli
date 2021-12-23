@@ -4,3 +4,4 @@ option('pkgconfiglibdir', type : 'string', value : '', description : 'directory 
 
 option('man', type : 'boolean', value : false, description : 'build and install man pages (requires sphinx-build)')
 option('python', type : 'combo', choices : ['auto', 'true', 'false'], description : 'Generate libnvme python bindings')
+option('openssl', type : 'feature', value: 'auto', description : 'OpenSSL support')

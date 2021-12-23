@@ -153,4 +153,33 @@ int nvme_namespace_detach_ctrls(int fd, __u32 nsid, __u16 num_ctrls, __u16 *ctrl
  */
 int nvme_open(const char *name);
 
+/**
+ * enum nvme_hmac_alg - HMAC algorithm
+ * NVME_HMAC_ALG_NONE:		No HMAC algorithm
+ * NVME_HMAC_ALG_SHA2_256:	SHA2-256
+ * NVME_HMAC_ALG_SHA2_384:	SHA2-384
+ * NVME_HMAC_ALG_SHA2_512:	SHA2-512
+ */
+enum nvme_hmac_alg {
+	NVME_HMAC_ALG_NONE	= 0,
+	NVME_HMAC_ALG_SHA2_256	= 1,
+	NVME_HMAC_ALG_SHA2_384	= 2,
+	NVME_HMAC_ALG_SHA2_512	= 3,
+};
+
+/**
+ * nvme_gen_dhchap_key() - DH-HMAC-CHAP key generation
+ * @hostnqn:	Host NVMe Qualified Name
+ * @hmac:	HMAC algorithm
+ * @key_len:	Output key lenght
+ * @secret:	Secret to used for digest
+ * @key:	Generated DH-HMAC-CHAP key
+ *
+ * Return: If key generation was successful the function returns 0 or
+ * -1 with errno set otherwise.
+ */
+int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
+			unsigned int key_len, unsigned char *secret,
+			unsigned char *key);
+
 #endif /* _LIBNVME_LINUX_H */
