@@ -101,7 +101,7 @@ _cmds="list list-subsys id-ctrl id-ns \
 	connect disconnect disconnect-all gen-hostnqn \
 	show-hostnqn dir-receive dir-send virt-mgmt \
 	rpmb boot-part-log fid-support-effects-log \
-	supported-log-pages lockdown"
+	supported-log-pages lockdown media-unit-stat-log"
 
 # Add plugins:
 for plugin in "${!_plugin_subcmds[@]}"; do
@@ -266,6 +266,10 @@ nvme_list_opts () {
 		"boot-part-log")
 		opts+=" --lsp -s --output-file= -f \
 			--output-format= -o"
+			;;
+		"media-unit-stat-log")
+		opts+=" --dom-id= -d --output-format= -o \
+			--raw-binary -b"
 			;;
 		"get-feature")
 		opts+=" --namespace-id= -n --feature-id= -f --sel= -s \

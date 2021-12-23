@@ -1,0 +1,67 @@
+'\" t
+.\"     Title: nvme-media-unit-stat-log
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 11/11/2021
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-MEDIA\-LOG" "1" "11/11/2021" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-media-unit-stat-log \- Send NVMe Media unit status log pages request, returns result and log
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme media\-log\-pages\fR <device> [\-d | \-\-dom\-id]
+                            [\-\-output\-format=<fmt> | \-o <fmt>]
+                            [\-\-raw\-binary | \-b]
+.fi
+.SH "DESCRIPTION"
+.sp
+Retrieves the NVMe Media unit status log pages details from an NVMe device and provides the returned structure\&.
+.sp
+The <device> parameter is mandatory and should be the NVMe character device (ex: /dev/nvme0)\&.
+.sp
+On success, the returned Media unit status log pages log structure will be printed \&.
+.SH "OPTIONS"
+.PP
+\-o <format>, \-\-output\-format=<format>
+.RS 4
+This option will set the reporting format to normal, json, or binary\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-d, \-\-dom\-id
+.RS 4
+This option is to get the domain ID\&.
+.RE
+.PP
+\-b, \-\-raw\-binary
+.RS 4
+This option is to get raw binary data\&.
+.RE
+.SH "EXAMPLES"
+.sp
+No examples provided yet\&.
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

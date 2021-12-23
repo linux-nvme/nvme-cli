@@ -2048,6 +2048,73 @@ void nvme_show_boot_part_log(void *bp_log, const char *devname,
 	printf("Active BPID: %u\n", (le32_to_cpu(hdr->bpinfo) >> 31) & 0x1);
 }
 
+static void json_media_unit_stat_log(struct nvme_media_unit_stat_log *mus)
+{
+	struct json_object *root;
+	struct json_object *entries;
+	struct json_object *entry;
+	int i;
+
+	root = json_create_object();
+	entries = json_create_array();
+
+	json_object_add_value_uint(root, "nmu", le16_to_cpu(mus->nmu));
+	json_object_add_value_uint(root, "cchans", le16_to_cpu(mus->cchans));
+	json_object_add_value_uint(root, "sel_config", le16_to_cpu(mus->sel_config));
+
+	for (i = 0; i < mus->nmu; i++) {
+		entry = json_create_object();
+		json_object_add_value_uint(entry, "muid", le16_to_cpu(mus->mus_desc[i].muid));
+		json_object_add_value_uint(entry, "domainid", le16_to_cpu(mus->mus_desc[i].domainid));
+		json_object_add_value_uint(entry, "endgid", le16_to_cpu(mus->mus_desc[i].endgid));
+		json_object_add_value_uint(entry, "nvmsetid", le16_to_cpu(mus->mus_desc[i].nvmsetid));
+		json_object_add_value_uint(entry, "cap_adj_fctr", le16_to_cpu(mus->mus_desc[i].cap_adj_fctr));
+		json_object_add_value_uint(entry, "avl_spare", mus->mus_desc[i].avl_spare);
+		json_object_add_value_uint(entry, "percent_used", mus->mus_desc[i].percent_used);
+		json_object_add_value_uint(entry, "mucs", mus->mus_desc[i].mucs);
+		json_object_add_value_uint(entry, "cio", mus->mus_desc[i].cio);
+		json_array_add_value_object(entries, entry);
+	}
+
+	json_object_add_value_array(root, "mus_list", entries);
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+void nvme_show_media_unit_stat_log(struct nvme_media_unit_stat_log *mus_log,
+				   enum nvme_print_flags flags)
+{
+	int i;
+	int nmu = le16_to_cpu(mus_log->nmu);
+	
+	if (flags & BINARY)
+		return d_raw((unsigned char *)mus_log, sizeof(*mus_log));
+	else if (flags & JSON)
+		return json_media_unit_stat_log(mus_log);
+
+	printf("Number of Media Unit Status Descriptors: %u\n", nmu);
+	printf("Number of Channels: %u\n", le16_to_cpu(mus_log->cchans));
+	printf("Selected Configuration: %u\n", le16_to_cpu(mus_log->sel_config));
+	for (i = 0; i < nmu; i++) {
+		printf("Media Unit Status Descriptor: %u\n", i);
+		printf("Media Unit Identifier: %u\n",
+			le16_to_cpu(mus_log->mus_desc[i].muid));
+		printf("Domain Identifier: %u\n",
+			le16_to_cpu(mus_log->mus_desc[i].domainid));
+		printf("Endurance Group Identifier: %u\n",
+			le16_to_cpu(mus_log->mus_desc[i].endgid));
+		printf("NVM Set Identifier: %u\n",
+			le16_to_cpu(mus_log->mus_desc[i].nvmsetid));
+		printf("Capacity Adjustment Factor: %u\n",
+			le16_to_cpu(mus_log->mus_desc[i].cap_adj_fctr));
+		printf("Available Spare: %u\n", mus_log->mus_desc[i].avl_spare);
+		printf("Percentage Used: %u\n", mus_log->mus_desc[i].percent_used);
+		printf("Number of Channels: %u\n", mus_log->mus_desc[i].mucs);
+		printf("Channel Identifiers Offset: %u\n", mus_log->mus_desc[i].cio);
+	}
+}
+
 static void nvme_show_subsystem(nvme_root_t r)
 {
 	nvme_host_t h;

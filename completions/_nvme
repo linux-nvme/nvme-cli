@@ -56,6 +56,7 @@ _nvme () {
 	'fid-support-effects-log:retrieve fid support and effects log'
 	'supported-log-pages: retrieve support log pages details'
 	'lockdown:submit a lockdown command'
+	'media-unit-stat-log: retrieve media unit status log pages details'
 	'help:print brief descriptions of all nvme commands'
 	)
 
@@ -516,6 +517,18 @@ _nvme () {
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme supported-log-pages options" _support
 			;;
+		(media-unit-stat-log)
+			local _medialog
+			_medialog=(
+			/dev/nvme':supply a device to use (required)'
+			--dom-id=':show infos for domain id'
+			-d':alias of --dom-id'
+			--raw-binary':dump infos in binary format'
+			-b':alias of --raw-binary'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme media-unit-stat-log" _medialog
+			;;
 		(admin-passthru)
 			local _admin
 			_admin=(
@@ -901,7 +914,7 @@ _nvme () {
 			     resv-report flush compare read write copy show-regs persistent-event-log
 				 pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
 				 resv-notif-log capacity-mgmt id-domain boot-part-log fid-support-effects-log
-				 supported-log-pages lockdown
+				 supported-log-pages lockdown media-unit-stat-log
 			   )
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
