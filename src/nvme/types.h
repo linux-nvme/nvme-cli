@@ -1651,10 +1651,20 @@ enum nvme_lbaf_rp {
  * @nows:     Namespace Optimal Write Size indicates the size in logical blocks
  * 	      for optimal write performance for this namespace. This is a 0's
  * 	      based value.
- * @mssrl:
- * @mcl:
- * @msrc:
+ * @mssrl:    Maximum Single Source Range Length indicates the maximum number
+ *        of logical blocks that may be specified in each valid Source Range
+ *        field of a Copy command.
+ * @mcl:      Maximum Copy Length indicates the maximum number of logical
+ *        blocks that may be specified in a Copy command.
+ * @msrc:     Maximum Source Range Count indicates the maximum number of Source
+ *        Range entries that may be used to specify source data in a Copy
+ *        command. This is a 0’s based value.
  * @rsvd81:   Reserved
+ * @nulbaf:   Number of Unique Capability LBA Formats defines the number of
+ *        supported user data size and metadata size combinations supported
+ *        by the namespace that may not share the same capabilities. LBA
+ *        formats shall be allocated in order and packed sequentially.
+ * @rsvd83:   Reserved
  * @anagrpid: ANA Group Identifier indicates the ANA Group Identifier of the
  * 	      ANA group of which the namespace is a member.
  * @rsvd96:   Reserved
@@ -1706,7 +1716,9 @@ struct nvme_id_ns {
 	__le16			mssrl;
 	__le32			mcl;
 	__u8			msrc;
-	__u8			rsvd81[11];
+	__u8			rsvd81;
+	__u8			nulbaf;
+	__u8			rsvd83[9];
 	__le32			anagrpid;
 	__u8			rsvd96[3];
 	__u8			nsattr;
