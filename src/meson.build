@@ -21,8 +21,8 @@ if conf.get('CONFIG_JSONC')
 endif
 
 deps = [
-    libuuid,
-    json_c,
+    libuuid_dep,
+    json_c_dep,
 ]
 
 source_dir = meson.current_source_dir()

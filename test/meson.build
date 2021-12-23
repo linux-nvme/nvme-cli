@@ -8,7 +8,7 @@
 main = executable(
     'main-test',
     ['test.c'],
-    dependencies: libuuid,
+    dependencies: libuuid_dep,
     link_with: libnvme,
     include_directories: [incdir, internal_incdir]
 )

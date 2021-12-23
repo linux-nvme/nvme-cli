@@ -34,12 +34,12 @@ pkgconfiglibdir = get_option('pkgconfiglibdir') == '' ? join_paths(libdir, 'pkgc
 conf = configuration_data()
 
 # Check for libuuid availability
-libuuid = dependency('uuid', required: true)
-conf.set('CONFIG_LIBUUID', libuuid.found(), description: 'Is libuuid required?')
+libuuid_dep = dependency('uuid', required: true)
+conf.set('CONFIG_LIBUUID', libuuid_dep.found(), description: 'Is libuuid required?')
 
 # Check for json-c availability
-json_c = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c_dep'])
-conf.set('CONFIG_JSONC', json_c.found(), description: 'Is json-c required?')
+json_c_dep = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c_dep'])
+conf.set('CONFIG_JSONC', json_c_dep.found(), description: 'Is json-c required?')
 
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
