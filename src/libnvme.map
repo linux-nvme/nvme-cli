@@ -190,6 +190,7 @@ LIBNVME_1_0 {
 		nvme_ns_get_eui64;
 		nvme_ns_get_fd;
 		nvme_ns_get_firmware;
+		nvme_ns_get_generic_name;
 		nvme_ns_get_lba_count;
 		nvme_ns_get_lba_size;
 		nvme_ns_get_lba_util;
@@ -197,7 +198,6 @@ LIBNVME_1_0 {
 		nvme_ns_get_model;
 		nvme_ns_get_model;
 		nvme_ns_get_name;
-		nvme_ns_get_generic_name;
 		nvme_ns_get_nguid;
 		nvme_ns_get_nsid;
 		nvme_ns_get_serial;
@@ -289,8 +289,8 @@ LIBNVME_1_0 {
 		nvme_subsystem_get_host;
 		nvme_subsystem_get_name;
 		nvme_subsystem_get_nqn;
-		nvme_subsystem_get_type;
 		nvme_subsystem_get_sysfs_dir;
+		nvme_subsystem_get_type;
 		nvme_subsystem_lookup_namespace;
 		nvme_subsystem_next_ctrl;
 		nvme_subsystem_next_ns;
@@ -315,6 +315,7 @@ LIBNVME_1_0 {
 		nvmf_cms_str;
 		nvmf_connect_disc_entry;
 		nvmf_default_config;
+		nvmf_eflags_str;
 		nvmf_get_discovery_log;
 		nvmf_hostid_from_file;
 		nvmf_hostnqn_from_file;
@@ -325,7 +326,6 @@ LIBNVME_1_0 {
 		nvmf_subtype_str;
 		nvmf_treq_str;
 		nvmf_trtype_str;
-		nvmf_eflags_str;
 	local:
 		*;
 };
