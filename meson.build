@@ -8,6 +8,7 @@ project(
       'c_std=gnu99',
       'buildtype=release',
       'prefix=/usr',
+      'warning_level=1',
     ]
 )
 
