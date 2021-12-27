@@ -11,6 +11,8 @@ project(
     version: '1.0',
     license: 'LGPLv2+',
     default_options: [
+        'c_std=gnu99',
+        'warning_level=1',
         'buildtype=release',
         'prefix=/usr',
     ]
