@@ -222,11 +222,11 @@ install-spec: install-bin install-man install-bash-completion install-zsh-comple
 install: install-spec install-hostparams
 
 nvme.spec: nvme.spec.in NVME-VERSION-FILE
-	sed -e 's/@@VERSION@@/$(NVME_VERSION)/g' < $< > $@+
+	sed -e 's/@VERSION@/$(NVME_VERSION)/g' < $< > $@+
 	mv $@+ $@
 
 70-nvmf-autoconnect.conf: nvmf-autoconnect/dracut-conf/70-nvmf-autoconnect.conf.in
-	sed -e 's#@@UDEVRULESDIR@@#$(UDEVRULESDIR)#g' < $< > $@+
+	sed -e 's#@UDEVRULESDIR@#$(UDEVRULESDIR)#g' < $< > $@+
 	mv $@+ $@
 
 dist: nvme.spec
@@ -236,9 +236,9 @@ dist: nvme.spec
 	gzip -f -9 nvme-$(NVME_VERSION).tar
 
 control: nvme.control.in NVME-VERSION-FILE
-	sed -e 's/@@VERSION@@/$(NVME_VERSION)/g' < $< > $@+
+	sed -e 's/@VERSION@/$(NVME_VERSION)/g' < $< > $@+
 	mv $@+ $@
-	sed -e 's/@@DEPENDS@@/$(LIB_DEPENDS)/g' < $@ > $@+
+	sed -e 's/@DEPENDS@/$(LIB_DEPENDS)/g' < $@ > $@+
 	mv $@+ $@
 
 pkg: control nvme.control.in

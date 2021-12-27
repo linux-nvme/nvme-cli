@@ -1,11 +1,11 @@
 Name: 		nvme
-Version: 	@@VERSION@@
+Version: 	@VERSION@
 Release: 	1%{?dist}
 Summary:  	Core nvme tools
 License: 	GPL
 Group: 		Development/Tools
 URL: 		https://github.com/linux-nvme/nvme-cli/
-Source: 	nvme-@@VERSION@@.tar.gz
+Source: 	nvme-@VERSION@.tar.gz
 Provides:	nvme
 Requires(post): util-linux systemd systemd-udev
 BuildRoot:	%{_tmppath}/%{name}-%{version}-root

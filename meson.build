@@ -43,7 +43,7 @@ if json_c.found()
 endif
 
 # Check for libhugetlbfs availability
-if cc.has_header(['hugetlbfs.h'])
+if cc.has_header('hugetlbfs.h')
   libhugetlbfs_dep = cc.find_library('hugetlbfs',
                                      required : false)
   have_libhugetlbfs = libhugetlbfs_dep.found()
