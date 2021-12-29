@@ -5,11 +5,6 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-configure_file(
-    output: 'config.h',
-    configuration: conf
-)
-
 sources += [
     'nvme/cleanup.c',
     'nvme/fabrics.c',
@@ -26,8 +21,8 @@ if conf.get('CONFIG_JSONC')
 endif
 
 deps = [
-    libuuid,
-    json_c,
+    libuuid_dep,
+    json_c_dep,
 ]
 
 source_dir = meson.current_source_dir()
@@ -41,7 +36,7 @@ libnvme = library(
     link_args: ['-Wl,--version-script=' + version_script_arg],
     dependencies: deps,
     link_depends: mapfile,
-    include_directories: incdir,
+    include_directories: [incdir, internal_incdir],
     install: true,
 )
 

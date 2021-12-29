@@ -5,6 +5,10 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
+configure_file(
+    output: 'config.h',
+    configuration: conf
+)
 
 want_python = get_option('python')
 if want_python != 'false'
