@@ -5644,6 +5644,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		}
 		mfd = dfd;
 	}
+
 	if (strlen(cfg.metadata)) {
 		mfd = open(cfg.metadata, flags, mode);
 		if (mfd < 0) {
@@ -6398,11 +6399,12 @@ static int passthru(int argc, char **argv, bool admin,
 		const char *desc, struct command *cmd)
 {
 	const char *opcode = "opcode (required)";
-	const char *flags = "command flags";
+	const char *cflags = "command flags";
 	const char *rsvd = "value for reserved field";
 	const char *namespace_id = "desired namespace";
 	const char *data_len = "data I/O length (bytes)";
 	const char *metadata_len = "metadata seg. length (bytes)";
+	const char *metadata = "metadata input or output file";
 	const char *timeout = "timeout value, in milliseconds";
 	const char *cdw2 = "command dword 2 value";
 	const char *cdw3 = "command dword 3 value";
@@ -6412,7 +6414,7 @@ static int passthru(int argc, char **argv, bool admin,
 	const char *cdw13 = "command dword 13 value";
 	const char *cdw14 = "command dword 14 value";
 	const char *cdw15 = "command dword 15 value";
-	const char *input = "write/send file (default stdin)";
+	const char *input = "data input or output file";
 	const char *raw_binary = "dump output in binary format";
 	const char *show = "print command before sending";
 	const char *dry = "show command instead of sending";
@@ -6421,8 +6423,10 @@ static int passthru(int argc, char **argv, bool admin,
 	const char *prefill = "prefill buffers with known byte-value, default 0";
 	const char *latency = "output latency statistics";
 
-	void *data = NULL, *metadata = NULL;
-	int err = 0, wfd = STDIN_FILENO, fd;
+	int flags;
+	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
+	void *data = NULL, *mdata = NULL;
+	int err = 0, dfd, mfd, fd;
 	__u32 result;
 	bool huge;
 	const char *cmd_name = NULL;
@@ -6445,6 +6449,7 @@ static int passthru(int argc, char **argv, bool admin,
 		__u32 cdw14;
 		__u32 cdw15;
 		char  *input_file;
+		char  *metadata;
 		int   raw_binary;
 		int   show_command;
 		int   dry_run;
@@ -6476,7 +6481,7 @@ static int passthru(int argc, char **argv, bool admin,
 
 	OPT_ARGS(opts) = {
 		OPT_BYTE("opcode",       'o', &cfg.opcode,       opcode),
-		OPT_BYTE("flags",        'f', &cfg.flags,        flags),
+		OPT_BYTE("flags",        'f', &cfg.flags,        cflags),
 		OPT_BYTE("prefill",      'p', &cfg.prefill,      prefill),
 		OPT_SHRT("rsvd",         'R', &cfg.rsvd,         rsvd),
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
@@ -6492,6 +6497,7 @@ static int passthru(int argc, char **argv, bool admin,
 		OPT_UINT("cdw14",        '8', &cfg.cdw14,        cdw14),
 		OPT_UINT("cdw15",        '9', &cfg.cdw15,        cdw15),
 		OPT_FILE("input-file",   'i', &cfg.input_file,   input),
+		OPT_FILE("metadata",     'M', &cfg.metadata,     metadata),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_binary),
 		OPT_FLAG("show-command", 's', &cfg.show_command, show),
 		OPT_FLAG("dry-run",      'd', &cfg.dry_run,      dry),
@@ -6505,25 +6511,44 @@ static int passthru(int argc, char **argv, bool admin,
 	if (fd < 0)
 		goto ret;
 
+	flags = cfg.opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
+	dfd = mfd = cfg.opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
 	if (strlen(cfg.input_file)) {
-		wfd = open(cfg.input_file, O_RDONLY,
-			   S_IRUSR | S_IRGRP | S_IROTH);
-		if (wfd < 0) {
+		mfd = open(cfg.input_file, flags, mode);
+		if (dfd < 0) {
 			perror(cfg.input_file);
 			err = -EINVAL;
 			goto close_fd;
 		}
 	}
 
+	if (cfg.metadata && strlen(cfg.metadata)) {
+		mfd = open(cfg.metadata, flags, mode);
+		if (mfd < 0) {
+			perror(cfg.metadata);
+			err = -EINVAL;
+			goto close_fd;
+		}
+	}
+
 	if (cfg.metadata_len) {
-		metadata = malloc(cfg.metadata_len);
-		if (!metadata) {
-			perror("can not allocate metadata payload\n");
+		mdata = malloc(cfg.metadata_len);
+		if (!mdata) {
+			perror("can not allocate mdata payload\n");
 			err = -ENOMEM;
 			goto close_wfd;
 		}
-		memset(metadata, cfg.prefill, cfg.metadata_len);
+
+		if (cfg.write) {
+			if (read(mfd, mdata, cfg.metadata_len) < 0) {
+				err = -errno;
+				perror("failed to read metadata write buffer");
+				goto free_data;
+			}
+		} else
+			memset(mdata, cfg.prefill, cfg.metadata_len);
 	}
+
 	if (cfg.data_len) {
 		data = nvme_alloc(cfg.data_len, &huge);
 		if (!data) {
@@ -6546,7 +6571,7 @@ static int passthru(int argc, char **argv, bool admin,
 			err = -EINVAL;
 			goto free_data;
 		} else if (cfg.write) {
-			if (read(wfd, data, cfg.data_len) < 0) {
+			if (read(dfd, data, cfg.data_len) < 0) {
 				err = -errno;
 				fprintf(stderr, "failed to read write buffer "
 						"%s\n", strerror(errno));
@@ -6565,7 +6590,7 @@ static int passthru(int argc, char **argv, bool admin,
 		printf("data_len     : %08x\n", cfg.data_len);
 		printf("metadata_len : %08x\n", cfg.metadata_len);
 		printf("addr         : %"PRIx64"\n", (uint64_t)(uintptr_t)data);
-		printf("metadata     : %"PRIx64"\n", (uint64_t)(uintptr_t)metadata);
+		printf("metadata     : %"PRIx64"\n", (uint64_t)(uintptr_t)mdata);
 		printf("cdw10        : %08x\n", cfg.cdw10);
 		printf("cdw11        : %08x\n", cfg.cdw11);
 		printf("cdw12        : %08x\n", cfg.cdw12);
@@ -6584,13 +6609,13 @@ static int passthru(int argc, char **argv, bool admin,
 				cfg.namespace_id, cfg.cdw2, cfg.cdw3, cfg.cdw10,
 				cfg.cdw11, cfg.cdw12, cfg.cdw13, cfg.cdw14,
 				cfg.cdw15, cfg.data_len, data, cfg.metadata_len,
-				metadata, cfg.timeout, &result);
+				mdata, cfg.timeout, &result);
 	else
 		err = nvme_io_passthru(fd, cfg.opcode, cfg.flags, cfg.rsvd,
 				cfg.namespace_id, cfg.cdw2, cfg.cdw3, cfg.cdw10,
 				cfg.cdw11, cfg.cdw12, cfg.cdw13, cfg.cdw14,
 				cfg.cdw15, cfg.data_len, data, cfg.metadata_len,
-				metadata, cfg.timeout, &result);
+				mdata, cfg.timeout, &result);
 
 	gettimeofday(&end_time, NULL);
 	cmd_name = nvme_cmd_to_string(admin, cfg.opcode);
@@ -6609,7 +6634,13 @@ static int passthru(int argc, char **argv, bool admin,
 				admin ? "Admin": "IO",
 				strcmp(cmd_name, "Unknown") ? cmd_name: "Vendor Specific",
 				result);
-		if (!cfg.raw_binary) {
+		if (cfg.read && cfg.input_file) {
+			if (write(dfd, (void *)data, cfg.data_len) < 0)
+				perror("failed to write data buffer");
+			if (cfg.metadata_len && cfg.metadata)
+				if (write(mfd, (void *)mdata, cfg.metadata_len) < 0)
+					perror("failed to write metadata buffer");
+		} else if (!cfg.raw_binary) {
 			if (data && cfg.read && !err)
 				d((unsigned char *)data, cfg.data_len, 16, 1);
 		} else if (data && cfg.read)
@@ -6618,10 +6649,10 @@ static int passthru(int argc, char **argv, bool admin,
 free_data:
 	nvme_free(data, huge);
 free_metadata:
-	free(metadata);
+	free(mdata);
 close_wfd:
 	if (strlen(cfg.input_file))
-		close(wfd);
+		close(dfd);
 close_fd:
 	close(fd);
 ret:
