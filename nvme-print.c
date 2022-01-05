@@ -196,6 +196,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns)
 	json_object_add_value_int(root, "mssrl", le16_to_cpu(ns->mssrl));
 	json_object_add_value_int(root, "mcl", le32_to_cpu(ns->mcl));
 	json_object_add_value_int(root, "msrc", ns->msrc);
+	json_object_add_value_int(root, "nulbaf", ns->nulbaf);
 
 	json_object_add_value_int(root, "anagrpid", le32_to_cpu(ns->anagrpid));
 	json_object_add_value_int(root, "endgid", le16_to_cpu(ns->endgid));
@@ -3841,6 +3842,7 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	printf("mssrl   : %u\n", le16_to_cpu(ns->mssrl));
 	printf("mcl     : %d\n", le32_to_cpu(ns->mcl));
 	printf("msrc    : %u\n", ns->msrc);
+	printf("nulbaf  : %u\n", ns->nulbaf);
 	printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
 	printf("nsattr	: %u\n", ns->nsattr);
 	printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
