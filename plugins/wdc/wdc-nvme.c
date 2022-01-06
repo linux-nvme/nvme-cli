@@ -5205,9 +5205,10 @@ static int wdc_get_ca_log_page(nvme_root_t r, int fd, char *format)
 	int ret = 0;
 	int fmt = -1;
 	__u8 *data;
-	__u32 *cust_id;
 	struct wdc_ssd_ca_perf_stats *perf;
 	uint32_t read_device_id, read_vendor_id;
+	__u32 *cust_id_ptr;
+	__u32 cust_id;
 
 	if (!wdc_check_device(r, fd))
 		return -1;
@@ -5223,20 +5224,20 @@ static int wdc_get_ca_log_page(nvme_root_t r, int fd, char *format)
 		return -1;
 	}
 
-	if (!get_dev_mgment_cbs_data(r, fd, WDC_C2_CUSTOMER_ID_ID, (void*)&data)) {
+	if (!get_dev_mgment_cbs_data(r, fd, WDC_C2_CUSTOMER_ID_ID, (void*)&cust_id_ptr)) {
 		fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
 		return -1;
 	}
 
-	ret = wdc_get_pci_ids(r, &read_device_id, &read_vendor_id);
+	cust_id = *cust_id_ptr;
 
-	cust_id = (__u32*)data;
+	ret = wdc_get_pci_ids(r, &read_device_id, &read_vendor_id);
 
 	switch (read_device_id) {
 
 	case WDC_NVME_SN200_DEV_ID:
 
-		if (*cust_id == WDC_CUSTOMER_ID_0x1005) {
+		if (cust_id == WDC_CUSTOMER_ID_0x1005) {
 
 			if ((data = (__u8*) malloc(sizeof (__u8) * WDC_FB_CA_LOG_BUF_LEN)) == NULL) {
 				fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
@@ -5260,7 +5261,7 @@ static int wdc_get_ca_log_page(nvme_root_t r, int fd, char *format)
 			}
 		} else {
 
-			fprintf(stderr, "ERROR : WDC : Unsupported Customer id, id = 0x%x\n", *cust_id);
+			fprintf(stderr, "ERROR : WDC : Unsupported Customer id, id = 0x%x\n", cust_id);
 			return -1;
 		}
 		break;
@@ -5272,7 +5273,7 @@ static int wdc_get_ca_log_page(nvme_root_t r, int fd, char *format)
 	case WDC_NVME_SN840_DEV_ID:
 	case WDC_NVME_SN840_DEV_ID_1:
 
-		if (*cust_id == WDC_CUSTOMER_ID_0x1005) {
+		if (cust_id == WDC_CUSTOMER_ID_0x1005) {
 
 			if ((data = (__u8*) malloc(sizeof (__u8) * WDC_FB_CA_LOG_BUF_LEN)) == NULL) {
 				fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
@@ -5294,9 +5295,8 @@ static int wdc_get_ca_log_page(nvme_root_t r, int fd, char *format)
 				fprintf(stderr, "ERROR : WDC : Unable to read CA Log Page data\n");
 				ret = -1;
 			}
-		} else if ((*cust_id == WDC_CUSTOMER_ID_GN) || (*cust_id == WDC_CUSTOMER_ID_GD) ||
-				(*cust_id == WDC_CUSTOMER_ID_BD)) {
-
+		} else if ((cust_id == WDC_CUSTOMER_ID_GN) || (cust_id == WDC_CUSTOMER_ID_GD) ||
+				(cust_id == WDC_CUSTOMER_ID_BD)) {
 			if ((data = (__u8*) malloc(sizeof (__u8) * WDC_BD_CA_LOG_BUF_LEN)) == NULL) {
 				fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
 				return -1;
@@ -5319,7 +5319,7 @@ static int wdc_get_ca_log_page(nvme_root_t r, int fd, char *format)
 			break;
 		} else {
 
-			fprintf(stderr, "ERROR : WDC : Unsupported Customer id, id = 0x%x\n", *cust_id);
+			fprintf(stderr, "ERROR : WDC : Unsupported Customer id, id = 0x%x\n", cust_id);
 			return -1;
 		}
 		break;
