@@ -4424,6 +4424,86 @@ void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
 	printf("dmsl   : %"PRIu64"\n", le64_to_cpu(ctrl_nvm->dmsl));
 }
 
+static void json_nvme_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns,
+								struct nvme_id_ns *ns)
+{
+	struct json_object *root;
+	struct json_object *elbafs;
+	int i;
+
+	root = json_create_object();
+
+	json_object_add_value_uint64(root, "lbstm", le64_to_cpu(nvm_ns->lbstm));
+	json_object_add_value_int(root, "pic", nvm_ns->pic);
+
+	elbafs = json_create_array();
+	json_object_add_value_array(root, "elbafs", elbafs);
+
+	for (i = 0; i <= ns->nlbaf; i++) {
+		struct json_object *elbaf = json_create_object();
+		unsigned int elbaf_val = le32_to_cpu(nvm_ns->elbaf[i]);
+
+		json_object_add_value_int(elbaf, "sts", elbaf_val & 0x7F);
+		json_object_add_value_int(elbaf, "pif", (elbaf_val >> 7) & 0x3);
+
+		json_array_add_value_object(elbafs, elbaf);
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+static void nvme_show_nvm_id_ns_pic(__u8 pic)
+{
+	__u8 rsvd = (pic & 0xFC) >> 2;
+	__u8 pic_16bpistm = (pic & 0x2) >> 1;
+	__u8 pic_16bpists = pic & 0x1;
+
+	if (rsvd)
+		printf("  [7:2] : %#x\tReserved\n", rsvd);
+	printf("  [1:1] : %#x\t16b Guard Protection Information Storage Tag Mask\n",
+		pic_16bpistm);
+	printf("  [0:0] : %#x\t16b Guard Protection Information Storage Tag Support\n",
+		pic_16bpists);
+	printf("\n");
+}
+
+void nvme_show_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
+						struct nvme_id_ns *ns, enum nvme_print_flags flags)
+{
+	int i, verbose = flags & VERBOSE;
+	__u32 elbaf;
+	int pif, sts;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)nvm_ns, sizeof(*nvm_ns));
+	else if (flags & JSON)
+		return json_nvme_nvm_id_ns(nvm_ns, ns);
+
+	printf("NVMe NVM Identify Namespace %d:\n", nsid);
+	printf("lbstm : %#"PRIx64"\n", le64_to_cpu(nvm_ns->lbstm));
+	printf("pic   : %#x\n", nvm_ns->pic);
+	if (verbose)
+		nvme_show_nvm_id_ns_pic(nvm_ns->pic);
+
+	for (i = 0; i <= ns->nlbaf; i++) {
+		elbaf = le32_to_cpu(nvm_ns->elbaf[i]);
+		pif = (elbaf >> 7) & 0x3;
+		sts = elbaf & 0x7f;
+		if (verbose)
+			printf("Extended LBA Format %2d : Protection Information Format: "
+				"%s(%d) - Storage Tag Size (MSB): %-2d %s\n",
+				i, pif == 3 ? "Reserved" :
+					pif == 2 ? "64b Guard" :
+					pif == 1 ? "32b Guard" : "16b Guard",
+					pif, sts, i == (ns->flbas & 0xf) ? "(in use)" : "");
+		else
+			printf("elbaf %2d : pif:%d lbads:%-2d %s\n", i,
+				pif, sts, i == (ns->flbas & 0xf) ? "(in use)" : "");
+	}
+}
+
 static void json_nvme_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl)
 {
 	struct json_object *root;

@@ -2655,6 +2655,81 @@ ret:
 	return err;
 }
 
+static int nvm_id_ns(int argc, char **argv, struct command *cmd,
+	struct plugin *plugin)
+{
+	const char *desc = "Send an Identify Namespace NVM Command Set "\
+		"command to the given device and report information about "\
+		"the specified namespace in various formats.";
+	const char *namespace_id = "identifier of desired namespace";
+	const char *uuid_index = "UUID index";
+	const char *verbose = "Increase output verbosity";
+	enum nvme_print_flags flags;
+	struct nvme_nvm_id_ns id_ns;
+	struct nvme_id_ns ns;
+	int fd, err = -1;
+
+	struct config {
+		__u32 namespace_id;
+		__u8  uuid_index;
+		char *output_format;
+		int verbose;
+	};
+
+	struct config cfg = {
+		.namespace_id = 0,
+		.uuid_index = NVME_UUID_NONE,
+		.output_format = "normal",
+		.verbose = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,    namespace_id),
+		OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,      uuid_index),
+		OPT_FMT("output-format", 'o', &cfg.output_format,   output_format),
+		OPT_FLAG("verbose",      'v', &cfg.verbose,         verbose),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+
+	if (cfg.verbose)
+		flags |= VERBOSE;
+
+	if (!cfg.namespace_id) {
+		err = nvme_get_nsid(fd, &cfg.namespace_id);
+		if (err < 0) {
+			perror("get-namespace-id");
+			goto close_fd;
+		}
+	}
+
+	err = nvme_identify_ns(fd, cfg.namespace_id, &ns);
+	if (err) {
+		nvme_show_status(err);
+		goto close_fd;
+	}
+
+	err = nvme_identify_ns_csi(fd, cfg.namespace_id, cfg.uuid_index,
+							NVME_CSI_NVM, &id_ns);
+	if (!err)
+		nvme_show_nvm_id_ns(&id_ns, cfg.namespace_id, &ns, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("nvm identify namespace");
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Send Namespace Identification Descriptors command to the "\
