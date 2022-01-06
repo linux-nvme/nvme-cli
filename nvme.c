@@ -2010,6 +2010,66 @@ ret:
 	return err;
 }
 
+static int id_ns_lba_format(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	const char *desc = "Send an Identify Namespace command to the given "\
+		"device, returns capability field properties of the specified "\
+		"LBA Format index in  various formats.";
+	const char *lba_format_index = "The index into the LBA Format list "\
+		"identifying the LBA Format capabilities that are to be returned";
+	const char *uuid_index = "UUID index";
+	const char *verbose = "Increase output verbosity";
+	enum nvme_print_flags flags;
+	struct nvme_id_ns ns;
+	int err = -1, fd;
+
+	struct config {
+		__u16 lba_format_index;
+		__u8  uuid_index;
+		int verbose;
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.lba_format_index = 0,
+		.uuid_index = NVME_UUID_NONE,
+		.verbose = 0,
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, lba_format_index),
+		OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index),
+		OPT_FLAG("verbose",          'v', &cfg.verbose,          verbose),
+		OPT_FMT("output-format",     'o', &cfg.output_format,    output_format),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+
+	if (cfg.verbose)
+		flags |= VERBOSE;
+
+	err = nvme_identify_ns_csi_user_data_format(fd, cfg.lba_format_index,
+										cfg.uuid_index, NVME_CSI_NVM, &ns);
+	if (!err)
+		nvme_show_id_ns(&ns, 0, cfg.lba_format_index, true, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("identify namespace for specific LBA format");
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int id_endurance_grp_list(int argc, char **argv, struct command *cmd,
 	struct plugin *plugin)
 {
@@ -2729,7 +2789,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		err = nvme_identify_ns(fd, cfg.namespace_id, &ns);
 
 	if (!err)
-		nvme_show_id_ns(&ns, cfg.namespace_id, flags);
+		nvme_show_id_ns(&ns, cfg.namespace_id, 0, false, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else

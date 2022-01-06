@@ -25,7 +25,7 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
 	void (*vendor_show)(__u8 *vs, struct json_object *root));
 void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode);
 void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
-	enum nvme_print_flags flags);
+		unsigned int lba_index, bool cap_only, enum nvme_print_flags flags);
 void nvme_show_cmd_set_independent_id_ns(
 	struct nvme_id_independent_id_ns *ns, unsigned int nsid,
 	enum nvme_print_flags flags);

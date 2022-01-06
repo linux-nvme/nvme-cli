@@ -12,6 +12,7 @@ COMMAND_LIST(
 	ENTRY("id-ctrl", "Send NVMe Identify Controller", id_ctrl)
 	ENTRY("id-ns", "Send NVMe Identify Namespace, display structure", id_ns)
 	ENTRY("id-ns-granularity", "Send NVMe Identify Namespace Granularity List, display structure", id_ns_granularity)
+	ENTRY("id-ns-lba-format", "Send NVMe Identify Namespace for the specified LBA Format index, display structure", id_ns_lba_format)
 	ENTRY("list-ns", "Send NVMe Identify List, display structure", list_ns)
 	ENTRY("list-ctrl", "Send NVMe Identify Controller List, display structure", list_ctrl)
 	ENTRY("nvm-id-ctrl", "Send NVMe Identify Controller NVM Command Set, display structure", nvm_id_ctrl)

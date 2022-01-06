@@ -78,6 +78,7 @@ readonly _plugin_funcs=(
 # Top level commands
 _cmds="list list-subsys id-ctrl id-ns \
 	id-ns-granularity list-ns list-ctrl \
+	id-ns-lba-format \
 	nvm-id-ctrl primary-ctrl-caps list-secondary \
 	ns-descs id-nvmset id-uuid id-iocs create-ns \
 	delete-ns get-ns-id get-log telemetry-log \
@@ -143,6 +144,10 @@ nvme_list_opts () {
 			;;
 		"id-ns-granularity")
 		opts+=" --output-format= -o"
+			;;
+		"id-ns-lba-format")
+		opts+=" --lba-format-index= -i --uuid-index= -U \
+			--verbose -v --output-format= -o"
 			;;
 		"list-ns")
 		opts+=" --namespace-id= -n --al -a --csi= -y \
