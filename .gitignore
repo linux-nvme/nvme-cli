@@ -4,23 +4,12 @@ a.out
 *.o
 *~
 *.swp
-NVME-VERSION-FILE
-nvme.spec
 nvme-*.tar.gz
-version
-
-ccan/config.h
-ccan/tools/configurator/configurator
 
 subprojects/*
 !subprojects/*.wrap
 
 cscope.*
-
-/debian/files
-/debian/nvme-cli.debhelper.log
-/debian/nvme-cli.substvars
-/debian/nvme-cli
 
 tests/__pycache__
 tests/nvmetests
