@@ -106,7 +106,9 @@ static void netapp_nguid_to_str(char *str, __u8 *nguid)
 static void netapp_get_ns_size(char *size, long long *lba,
 		struct nvme_id_ns *ns)
 {
-	*lba = 1 << ns->lbaf[(ns->flbas & 0x0F)].ds;
+	__u8 lba_index;
+	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
+	*lba = 1 << ns->lbaf[lba_index].ds;
 	double nsze = le64_to_cpu(ns->nsze) * (*lba);
 	const char *s_suffix = suffix_si_get(&nsze);
 
@@ -250,6 +252,7 @@ static void netapp_smdevices_print(struct smdevice_info *devices, int count, int
 			"Volume ID %s, Controller %c, Access State %s, %s\n";
 	char columnstr[] = "%-16s %-30s %-30s %4d %32s  %c   %-12s %9s\n";
 	char *formatstr = basestr; /* default to "normal" output format */
+	__u8 lba_index;
 
 	if (format == NCOLUMN) {
 		/* for column output, change output string and print column headers */
@@ -270,7 +273,8 @@ static void netapp_smdevices_print(struct smdevice_info *devices, int count, int
 	}
 
 	for (i = 0; i < count; i++) {
-		long long int lba = 1 << devices[i].ns.lbaf[(devices[i].ns.flbas & 0x0F)].ds;
+		nvme_id_ns_flbas_to_lbaf_inuse(devices[i].ns.flbas, &lba_index);
+		long long int lba = 1 << devices[i].ns.lbaf[lba_index].ds;
 		double nsze = le64_to_cpu(devices[i].ns.nsze) * lba;
 		const char *s_suffix = suffix_si_get(&nsze);
 		char size[128];

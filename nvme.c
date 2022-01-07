@@ -4270,7 +4270,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 			}
 			goto close_fd;
 		}
-		prev_lbaf = ns.flbas & 0xf;
+		nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &prev_lbaf);
 
 		if (cfg.bs) {
 			for (i = 0; i < 16; ++i) {
@@ -5919,7 +5919,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 			perror("identify namespace");
 			goto free_buffer;
 		}
-		lba_index = ns.flbas & NVME_NS_FLBAS_LBA_MASK;
+		nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &lba_index);
 		ms = ns.lbaf[lba_index].ms;
 		mbuffer_size = (cfg.block_count + 1) * ms;
 		if (ms && cfg.metadata_size < mbuffer_size) {
