@@ -7,24 +7,6 @@ a.out
 *.a
 *.so.*
 
-libnvme.pc
-
-test/register
-test/test
-test/cpp
-test/zns
-
-examples/display-tree
-examples/display-columnar
-examples/telemetry-listen
-examples/discover-loop
-
-doc/_build
-
-config-host.h
-config-host.mak
-config.log
-
 cscope.*
 
 .build
