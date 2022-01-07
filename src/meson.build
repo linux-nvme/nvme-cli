@@ -23,6 +23,7 @@ endif
 deps = [
     libuuid_dep,
     json_c_dep,
+    openssl_dep,
 ]
 
 source_dir = meson.current_source_dir()
@@ -51,6 +52,7 @@ pkg.generate(libnvme,
 
 libnvme_dep = declare_dependency(
     include_directories: incdir,
+    dependencies: deps,
     link_with: libnvme,
 )
 

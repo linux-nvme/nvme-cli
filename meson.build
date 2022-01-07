@@ -43,6 +43,21 @@ conf.set('CONFIG_LIBUUID', libuuid_dep.found(), description: 'Is libuuid require
 json_c_dep = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c_dep'])
 conf.set('CONFIG_JSONC', json_c_dep.found(), description: 'Is json-c required?')
 
+# Check for OpenSSL availability
+openssl_dep = dependency('openssl',
+                         required: get_option('openssl'),
+                         fallback : ['openssl', 'openssl_dep'])
+if openssl_dep.found()
+  conf.set('CONFIG_OPENSSL', true, description: 'Is OpenSSL available?')
+  conf.set('CONFIG_OPENSSL_1',
+           openssl_dep.version().version_compare('<2.0.0') and
+           openssl_dep.version().version_compare('>=1.1.0'),
+           description: 'OpenSSL version 1.x')
+  conf.set('CONFIG_OPENSSL_3',
+           openssl_dep.version().version_compare('>=3.0.0'),
+           description: 'OpenSSL version 3.x')
+endif
+
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
     'HAVE_BUILTIN_TYPES_COMPATIBLE_P',
