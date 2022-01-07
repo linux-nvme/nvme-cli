@@ -15,7 +15,8 @@ if want_python != 'false'
     python3 = import('python').find_installation('python3')
     py3_dep = python3.dependency(required: want_python == 'true')
     swig = find_program('swig', required: want_python == 'true')
-    have_python_support = py3_dep.found() and swig.found()
+    header_found = cc.has_header('Python.h', dependencies: py3_dep)
+    have_python_support = py3_dep.found() and swig.found() and header_found
 else
     have_python_support = false
 endif
