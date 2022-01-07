@@ -49,6 +49,7 @@ COMMAND_LIST(
 	ENTRY("device-self-test", "Perform the necessary tests to observe the performance", device_self_test)
 	ENTRY("self-test-log", "Retrieve the SELF-TEST Log, show it", self_test_log)
 	ENTRY("supported-log-pages", "Retrieve the Supported Log pages details, show it", get_supported_log_pages)
+	ENTRY("fid-support-effects-log", "Retrieve FID Support and Effects log and show it", get_fid_support_effects_log)
 	ENTRY("set-feature", "Set a feature and show the resulting value", set_feature)
 	ENTRY("set-property", "Set a property and show the resulting value", set_property)
 	ENTRY("get-property", "Get a property and show the resulting value", get_property)
@@ -93,7 +94,6 @@ COMMAND_LIST(
 	ENTRY("dir-send", "Submit a Directive Send command, return results", dir_send)
 	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller ", virtual_mgmt)
 	ENTRY("rpmb", "Replay Protection Memory Block commands", rpmb_cmd)
-	ENTRY("fid-support-effects-log", "Submit Feature ID Support and Effects Log, Return result", get_fid_support_effects_log)
 	ENTRY("lockdown", "Submit a Lockdown command,return result", lockdown_cmd)
 );
 
