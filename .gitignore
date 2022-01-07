@@ -12,7 +12,7 @@ version
 ccan/config.h
 ccan/tools/configurator/configurator
 
-subprojects
+subprojects/*
 !subprojects/*.wrap
 
 cscope.*
