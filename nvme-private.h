@@ -63,7 +63,6 @@ int scan_subsystems(struct nvme_topology *t, const char *subsysnqn,
 		    __u32 ns_instance, int nsid, char *dev_dir);
 void free_topology(struct nvme_topology *t);
 char *get_nvme_subsnqn(char *path);
-char *nvme_get_ctrl_attr(const char *path, const char *attr);
 
 int uuid_from_dmi(char *uuid);
 int uuid_from_systemd(char *uuid);
