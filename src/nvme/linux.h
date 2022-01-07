@@ -110,6 +110,16 @@ int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 int nvme_get_ana_log_len(int fd, size_t *analen);
 
 /**
+ * nvme_get_logical_block_size() - Retrieve block size
+ * @fd:		File descriptor of nvme device
+ * @blksize:	Pointer to where the block size will be set on success
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+int nvme_get_logical_block_size(int fd, __u32 nsid, int *blksize);
+
+/**
  * nvme_get_lba_status_log() - Retreive the LBA Status log page
  * @fd:	   File descriptor of the nvme device
  * @rae:   Retain asynchronous events
