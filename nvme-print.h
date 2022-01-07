@@ -113,7 +113,8 @@ void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode);
 void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
 	enum nvme_print_flags flags);
 void nvme_show_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
-						struct nvme_id_ns *ns, enum nvme_print_flags flags);
+						struct nvme_id_ns *ns, unsigned int lba_index,
+						bool cap_only, enum nvme_print_flags flags);
 void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	struct nvme_id_ns *id_ns, unsigned long flags);
 void nvme_show_zns_changed( struct nvme_zns_changed_zone_log *log,

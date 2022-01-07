@@ -21,6 +21,7 @@ _nvme () {
 	'list-ctrl:identify all controller(s) attached'
 	'nvm-id-ctrl:display information about the nvm command set'
 	'nvm-id-ns:display information about the namespace of nvm command set'
+	'id-ns-lba-format:display information about the namespace of nvm command set capability fields for specific LBA format'
 	'list-endgrp:display information about nvme endurance group list'
 	'get-ns-id:get namespace id of opened block device'
 	'get-log:retrieve any log in raw format'
@@ -187,6 +188,22 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme nvm-id-ns options" _nvmidns
+			;;
+		(id-ns-lba-format)
+			local _nvm_idns_lba_format
+			_nvm_idns_lba_format=(
+			/dev/nvme':supply a device to use (required)'
+			--lba-format-index=':show infos for lba format index <lba-format-index>'
+			-i':alias of --lba-format-index'
+			--uuid-index=':uuid index'
+			-U':alias for --uuid-index'
+			--output-format=':Output format: normal|json|binary'
+			-o':alias for --output-format'
+			--verbose':show infos verbosely'
+			-v':alias of --verbose'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme nvm-id-ns-lba-format options" _nvm_idns_lba_format
 			;;
 		(list-endgrp)
 			local _listendgrp
@@ -949,6 +966,7 @@ _nvme () {
 				 pred-lat-event-agg-log nvm-id-ctrl endurance-event-agg-log lba-status-log
 				 resv-notif-log capacity-mgmt id-domain boot-part-log fid-support-effects-log
 				 supported-log-pages lockdown media-unit-stat-log id-ns-lba-format nvm-id-ns
+				 nvm-id-ns-lba-format
 			   )
 			_arguments '*:: :->subcmds'
 			_describe -t commands "help: infos on a specific nvme command, or provide no option to see a synopsis of all nvme commands" _h
