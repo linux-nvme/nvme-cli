@@ -1,21 +1,17 @@
 # nvme-cli
 NVM-Express user space tooling for Linux.
 
-When cloning from source, you will need the libnvme submodule, so use:
+nvme-cli uses meson as build system. In order to build nvme-cli
+run following commands
 
-    $ git clone --recurse-submodules https://github.com/linux-nvme/nvme-cli
-
-If you already cloned without recursing submodules, you will need to initialize
-and update it:
-
-    $ git submodule update --init
-
-Or as two commands:
-
-    $ git submodule init
-    $ git submodule update
+	$ meson .build
+	$ ninja -C .build
 
 To install, run:
+
+	# meson install -C .build
+
+There is a Makefile wrapper for meson for backwards compatiblily
 
     $ make
     # make install
@@ -233,4 +229,4 @@ File: foo-plugin.c
 ```
 
 After that, you just need to implement the functions you defined in each
-ENTRY, then append the object file name to the Makefile's "OBJS".
+ENTRY, then append the object file name to the meson.build "sources".
