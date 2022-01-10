@@ -555,8 +555,16 @@ static int micron_selective_download(int argc, char **argv,
     while (fw_size > 0) {
         xfer = min(xfer, fw_size);
 
-        err = nvme_fw_download(fd, offset, xfer, fw_buf,
-			       NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	struct nvme_fw_download_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.offset		= offset,
+		.data_len	= xfer,
+		.data		= fw_buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+        err = nvme_fw_download(&args);
         if (err < 0) {
             perror("fw-download");
             goto out;
@@ -585,7 +593,6 @@ static int micron_smbus_option(int argc, char **argv,
                                struct command *cmd, struct plugin *plugin)
 {
     __u32 result = 0;
-    __u32 cdw10 = 0;
     __u32 cdw11 = 0;
     const char *desc = "Enable/Disable/Get status of SMBUS option on controller";
     const char *option = "enable or disable or status";
@@ -636,9 +643,20 @@ static int micron_smbus_option(int argc, char **argv,
         }
     }
     else if (!strcmp(opt.option, "status")) {
-        cdw10 = opt.value;
-        err = nvme_get_features(fd, fid, 1, 0, cdw10, 0, 0, NULL,
-				NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+	struct nvme_get_features_args args = {
+                .args_size      = sizeof(args),
+                .fd             = fd,
+                .fid            = fid,
+                .nsid           = 1,
+                .sel            = opt.value,
+                .cdw11          = 0,
+                .uuidx          = 0,
+                .data_len       = 0,
+                .data           = NULL,
+                .timeout        = NVME_DEFAULT_IOCTL_TIMEOUT,
+                .result         = &result,
+        };
+        err = nvme_get_features(&args);
         if (err == 0) {
             printf("SMBus status on the drive: %s (returns %s temperature) \n",
                     (result & 1) ? "enabled" : "disabled",
@@ -1845,8 +1863,20 @@ static int GetFeatureSettings(int fd, const char *dir)
             bufp = NULL;
         }
 
-        err = nvme_get_features(fd, fmap[i].id, 1, 0, 0x0, 0, len, bufp,
-				NVME_DEFAULT_IOCTL_TIMEOUT, &attrVal);
+	struct nvme_get_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.fid		= fmap[i].id,
+		.nsid		= 1,
+		.sel		= 0,
+		.cdw11		= 0x0,
+		.uuidx		= 0,
+		.data_len	= len,
+		.data		= bufp,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &attrVal,
+	};
+        err = nvme_get_features(&args);
         if (err == 0) {
             sprintf(msg, "feature: 0x%X", fmap[i].id);
             WriteData((__u8*)&attrVal, sizeof(attrVal), dir, fmap[i].file, msg);
@@ -2320,25 +2350,65 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
     }
 
     if (!strcmp(opt.option, "enable")) {
-        err = nvme_set_features(fd, fid, 1, 1, 0, (opt.select & 0x1),
-				0, 0, 0, 0, NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+        struct nvme_set_features_args args = {
+                .args_size      = sizeof(args),
+                .fd             = fd,
+                .fid            = fid,
+                .nsid           = 1,
+                .cdw11          = 1,
+                .cdw12          = 0,
+                .save           = (opt.select & 0x1),
+                .uuidx          = 0,
+                .cdw15          = 0,
+                .data_len       = 0,
+                .data           = NULL,
+                .timeout        = NVME_DEFAULT_IOCTL_TIMEOUT,
+                .result         = &result,
+        };
+        err = nvme_set_features(&args);
         if (err == 0) {
             printf("successfully set controller telemetry option\n");
         } else {
             printf("Failed to set controller telemetry option\n");
         }
     } else if (!strcmp(opt.option, "disable")) {
-        err = nvme_set_features(fd, fid, 1, 0, 0, (opt.select & 0x1),
-				0, 0, 0, 0, NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+        struct nvme_set_features_args args = {
+                .args_size      = sizeof(args),
+                .fd             = fd,
+                .fid            = fid,
+                .nsid           = 1,
+                .cdw11          = 0,
+                .cdw12          = 0,
+                .save           = (opt.select & 0x1),
+                .uuidx          = 0,
+                .cdw15          = 0,
+                .data_len       = 0,
+                .data           = NULL,
+                .timeout        = NVME_DEFAULT_IOCTL_TIMEOUT,
+                .result         = &result,
+        };
+	err = nvme_set_features(&args);
         if (err == 0) {
             printf("successfully disabled controller telemetry option\n");
         } else {
             printf("Failed to disable controller telemetry option\n");
         }
     } else if (!strcmp(opt.option, "status")) {
-        opt.select &= 0x3;
-        err = nvme_get_features(fd, fid, 1, opt.select, 0, 0, 0, 0,
-				NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+        ;
+	struct nvme_get_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.fid		= fid,
+		.nsid		= 1,
+		.sel		= opt.select & 0x3,
+		.cdw11		= 0,
+		.uuidx		= 0,
+		.data_len	= 0,
+		.data		= NULL,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+        err = nvme_get_features(&args);
         if (err == 0) {
             printf("Controller telemetry option : %s\n",
                     (result) ? "enabled" : "disabled");

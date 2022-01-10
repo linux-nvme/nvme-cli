@@ -137,7 +137,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
-	err = nvme_get_nsid_log(fd, 0xca, cfg.namespace_id,
+	err = nvme_get_nsid_log(fd, false, 0xca, cfg.namespace_id,
 		   sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -226,9 +226,20 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 		memset(buf, 0, cfg.data_len);
 	}
 
-	err = nvme_get_features(fd, cfg.feature_id, cfg.namespace_id, cfg.sel,
-				cfg.cdw11, 0, cfg.data_len, buf,
-				NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+	struct nvme_get_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.fid		= cfg.feature_id,
+		.nsid		= cfg.namespace_id,
+		.sel		= cfg.sel,
+		.cdw11		= cfg.cdw11,
+		.uuidx		= 0,
+		.data_len	= cfg.data_len,
+		.data		= buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+	err = nvme_get_features(&args);
 	if (!err) {
 #if 0
 		printf("get-feature:0x%02x (%s), %s value: %#08x\n", cfg.feature_id,
@@ -340,9 +351,22 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 		}
 	}
 
-	err = nvme_set_features(fd, cfg.feature_id, cfg.namespace_id, cfg.value,
-				0, cfg.save, 0, 0, cfg.data_len, buf,
-				NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+	struct nvme_set_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.fid		= cfg.feature_id,
+		.nsid		= cfg.namespace_id,
+		.cdw11		= cfg.value,
+		.cdw12		= 0,
+		.save		= cfg.save,
+		.uuidx		= 0,
+		.cdw15		= 0,
+		.data_len	= cfg.data_len,
+		.data		= buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+	err = nvme_set_features(&args);
 	if (err < 0) {
 		perror("set-feature");
 		goto free;

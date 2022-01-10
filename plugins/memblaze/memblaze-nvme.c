@@ -456,7 +456,7 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *cm
 	if (fd < 0)
 		return fd;
 
-	err = nvme_get_nsid_log(fd, 0xca, cfg.namespace_id,
+	err = nvme_get_nsid_log(fd, false, 0xca, cfg.namespace_id,
 		sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -494,8 +494,20 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd
     fd = parse_and_open(argc, argv, desc, opts);
     if (fd < 0) return fd;
 
-    err = nvme_get_features(fd, feature_id, 0, 0, 0, 0, 0, NULL,
-			    NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+    struct nvme_get_features_args args = {
+	    .args_size		= sizeof(args),
+	    .fd			= fd,
+	    .fid		= feature_id,
+	    .nsid		= 0,
+	    .sel		= 0,
+	    .cdw11		= 0,
+	    .uuidx		= 0,
+	    .data_len		= 0,
+	    .data		= NULL,
+	    .timeout		= NVME_DEFAULT_IOCTL_TIMEOUT,
+	    .result		= &result,
+    };
+    err = nvme_get_features(&args);
     if (err < 0) {
         perror("get-feature");
     }
@@ -537,8 +549,22 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
     fd = parse_and_open(argc, argv, desc, opts);
     if (fd < 0) return fd;
 
-    err = nvme_set_features(fd, cfg.feature_id, 0, cfg.value, 0, cfg.save,
-			    0, 0, 0, NULL, NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+    struct nvme_set_features_args args = {
+	    .args_size		= sizeof(args),
+	    .fd			= fd,
+	    .fid		= cfg.feature_id,
+	    .nsid		= 0,
+	    .cdw11		= cfg.value,
+	    .cdw12		= 0,
+	    .save		= cfg.save,
+	    .uuidx		= 0,
+	    .cdw15		= 0,
+	    .data_len		= 0,
+	    .data		= NULL,
+	    .timeout		= NVME_DEFAULT_IOCTL_TIMEOUT,
+	    .result		= &result,
+    };
+    err = nvme_set_features(&args);
     if (err < 0) {
         perror("set-feature");
     }
@@ -595,8 +621,22 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, s
     }
     cfg.value = (param1 << MB_FEAT_HIGH_LATENCY_VALUE_SHIFT) | param2;
 
-    err = nvme_set_features(fd, cfg.feature_id, 0, cfg.value, 0, 0, 0, 0, 0,
-			    NULL, NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+    struct nvme_set_features_args args = {
+	    .args_size		= sizeof(args),
+	    .fd			= fd,
+	    .fid		= cfg.feature_id,
+	    .nsid		= 0,
+	    .cdw11		= cfg.value,
+	    .cdw12		= 0,
+	    .save		= false,
+	    .uuidx		= 0,
+	    .cdw15		= 0,
+	    .data_len		= 0,
+	    .data		= NULL,
+	    .timeout		= NVME_DEFAULT_IOCTL_TIMEOUT,
+	    .result		= &result,
+    };
+    err = nvme_set_features(&args);
     if (err < 0) {
         perror("set-feature");
     }
@@ -833,8 +873,16 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 	while (fw_size > 0) {
 		xfer = min(xfer, fw_size);
 
-		err = nvme_fw_download(fd, offset, xfer, fw_buf,
-				       NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+		struct nvme_fw_download_args args = {
+			.args_size	= sizeof(args),
+			.fd		= fd,
+			.offset		= offset,
+			.data_len	= xfer,
+			.data		= fw_buf,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
+		};
+		err = nvme_fw_download(&args);
 		if (err < 0) {
 			perror("fw-download");
 			goto out;
@@ -1030,10 +1078,22 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, 
     if (fd < 0)
         return fd;
 
-
-
-    err = nvme_set_features(fd, cfg.feature_id, 0, cfg.value, 0, cfg.save,
-			    0, 0, 0, NULL, NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+    struct nvme_set_features_args args = {
+        .args_size      = sizeof(args),
+        .fd             = fd,
+        .fid            = cfg.feature_id,
+        .nsid           = 0,
+        .cdw11          = cfg.value,
+        .cdw12          = 0,
+        .save           = cfg.save,
+        .uuidx          = 0,
+        .cdw15          = 0,
+        .data_len       = 0,
+        .data           = NULL,
+        .timeout        = NVME_DEFAULT_IOCTL_TIMEOUT,
+        .result         = &result,
+    };
+    err = nvme_set_features(&args);
     if (err < 0) {
         perror("set-feature");
     }
@@ -1107,13 +1167,41 @@ static int mb_set_lat_stats(int argc, char **argv,
 	else if (cfg.enable || cfg.disable)
 		option = cfg.enable;
 
+	struct nvme_get_features_args args_get = {
+		.args_size	= sizeof(args_get),
+		.fd		= fd,
+		.fid		= fid,
+		.nsid		= nsid,
+		.sel		= sel,
+		.cdw11		= cdw11,
+		.uuidx		= 0,
+		.data_len	= data_len,
+		.data		= buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+
+	struct nvme_set_features_args args_set = {
+		.args_size	= sizeof(args_set),
+		.fd		= fd,
+		.fid		= fid,
+		.nsid		= nsid,
+		.cdw11		= option,
+		.cdw12		= cdw12,
+		.save		= save,
+		.uuidx		= 0,
+		.cdw15		= 0,
+		.data_len	= data_len,
+		.data		= buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+
 	if (fd < 0)
 		return fd;
 	switch (option) {
 	case None:
-		err = nvme_get_features(fd, nsid, fid, sel, cdw11, 0,
-					data_len, buf,
-					NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+		err = nvme_get_features(&args_get);
 		if (!err) {
 			printf(
 				"Latency Statistics Tracking (FID 0x%X) is currently (%i).\n",
@@ -1125,9 +1213,7 @@ static int mb_set_lat_stats(int argc, char **argv,
 		break;
 	case True:
 	case False:
-	        err = nvme_set_features(fd, fid, nsid, option, cdw12, save,
-					0, 0, data_len, buf,
-					NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+	        err = nvme_set_features(&args_set);
 		if (err > 0) {
 			nvme_show_status(err);
 		} else if (err < 0) {

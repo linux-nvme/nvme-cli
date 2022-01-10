@@ -266,14 +266,49 @@ struct rpmb_config_block_t {
 #define RPMB_NVME_SECP        0xEA 
 #define RPMB_NVME_SPSP        0x0001
 
-#define SEND_RPMB_REQ(tgt, size, req) \
-nvme_security_send(fd, 0, tgt, RPMB_NVME_SPSP, 0, RPMB_NVME_SECP, 0, size, \
-		   (unsigned char *)(req), NVME_DEFAULT_IOCTL_TIMEOUT, NULL)
-	
-#define RECV_RPMB_RSP(tgt, size, rsp) \
-nvme_security_receive(fd, 0, tgt, RPMB_NVME_SPSP, 0, RPMB_NVME_SECP, 0, size, \
-		      (unsigned char *)(rsp), NVME_DEFAULT_IOCTL_TIMEOUT, NULL)
-	
+static int send_rpmb_req(int fd, unsigned char tgt, int size,
+			 struct rpmb_data_frame_t *req)
+{
+	struct nvme_security_send_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= 0,
+		.nssf		= tgt,
+		.spsp0		= RPMB_NVME_SPSP,
+		.spsp1		= 0,
+		.secp		= RPMB_NVME_SECP,
+		.tl		= 0,
+		.data_len	= size,
+		.data		= (void *)req,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+
+	return nvme_security_send(&args);
+}
+
+static int recv_rpmb_rsp(int fd, int tgt, int size,
+			 struct rpmb_data_frame_t *rsp)
+{
+
+	struct nvme_security_receive_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= 0,
+		.nssf		= tgt,
+		.spsp0		= RPMB_NVME_SPSP,
+		.spsp1		= 0,
+		.secp		= RPMB_NVME_SECP,
+		.al		= 0,
+		.data_len	= size,
+		.data		= (void *)rsp,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+
+	return nvme_security_receive(&args);
+}
+
 /* Initialize nonce value in rpmb request frame */
 static void rpmb_nonce_init(struct rpmb_data_frame_t *req)
 {
@@ -386,7 +421,7 @@ rpmb_read_request(int fd,
 	sprintf((char *)msg, "RPMB request 0x%04x to target 0x%x",
 		req->type, req->target);
 
-	error = SEND_RPMB_REQ(req->target, req_size, req);
+	error = send_rpmb_req(fd, req->target, req_size, req);
 	if (error != 0) {
 		fprintf(stderr, "%s failed with error = 0x%x\n",
 			msg, error);
@@ -401,7 +436,7 @@ rpmb_read_request(int fd,
 	}
 
 	/* Read result of previous request */
-	error = RECV_RPMB_RSP(req->target, rsp_size, rsp);
+	error = recv_rpmb_rsp(fd, req->target, rsp_size, rsp);
 	if (error) {
 		fprintf(stderr, "error 0x%x receiving response for %s\n",
 			error, msg);
@@ -562,7 +597,7 @@ static int rpmb_program_auth_key(int fd, unsigned char target,
 
 	/* re-use response buffer */
 	memset(rsp, 0, rsp_size);
-	err = RECV_RPMB_RSP(req->target, rsp_size, (unsigned char *)rsp);
+	err = recv_rpmb_rsp(fd, req->target, rsp_size, rsp);
 	if (err != 0) {
 		err = check_rpmb_response(req, rsp, "Failed to Program Key");
 	}
@@ -622,7 +657,7 @@ static int auth_data_write_chunk(int fd, unsigned char tgt, unsigned int addr,
 	memcpy(req->mac, mac, 32);
 	
 	/* send the request and get response */
-	error = SEND_RPMB_REQ(tgt, req_size, (unsigned char *)req);
+	error = send_rpmb_req(fd, tgt, req_size, req);
 	if (error != 0) {
 	    fprintf(stderr, "RPMB request 0x%04x for 0x%x, error: %d\n",
 		    req->type, tgt, error);
@@ -633,7 +668,7 @@ static int auth_data_write_chunk(int fd, unsigned char tgt, unsigned int addr,
         rsp = (struct rpmb_data_frame_t *)calloc(rsp_size, 1);
 	rsp->target = req->target;
 	rsp->type = RPMB_REQ_READ_RESULT;
-	error = SEND_RPMB_REQ(tgt, rsp_size, (unsigned char *)rsp);
+	error = send_rpmb_req(fd, tgt, rsp_size, rsp);
 	if (error != 0 || rsp->result != 0) {
 		fprintf(stderr, "Write-data read result 0x%x, error = 0x%x\n",
 			rsp->result, error);
@@ -642,7 +677,7 @@ static int auth_data_write_chunk(int fd, unsigned char tgt, unsigned int addr,
 
 	/* Read final response */
 	memset(rsp, 0, rsp_size);
-	error = RECV_RPMB_RSP(tgt, rsp_size, (unsigned char *)rsp);
+	error = recv_rpmb_rsp(fd, tgt, rsp_size, rsp);
 	if (error != 0)
 		fprintf(stderr, "Auth data write recv error = 0x%x\n", error);
 	else 
@@ -727,7 +762,7 @@ static int rpmb_write_config_block(int fd, unsigned char *cfg_buf,
 	
 	memcpy(req->mac, mac, sizeof(req->mac)); 
 	
-	error = SEND_RPMB_REQ(0, req_size, (unsigned char *)req);
+	error = send_rpmb_req(fd, 0, req_size, req);
 	if (error != 0) {
 		fprintf(stderr, "Write-config RPMB request, error = 0x%x\n",
 			error);
@@ -747,7 +782,7 @@ static int rpmb_write_config_block(int fd, unsigned char *cfg_buf,
 	rsp->target = req->target;
 	rsp->type = RPMB_REQ_READ_RESULT;
 	/* get the response and validate */
-	error = RECV_RPMB_RSP(req->target, rsp_size, rsp);
+	error = recv_rpmb_rsp(fd, req->target, rsp_size, rsp);
 	if (error != 0) {
 		fprintf(stderr,"Failed getting write-config response\
 			error = 0x%x\n", error);
