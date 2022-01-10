@@ -6428,7 +6428,7 @@ static int passthru(int argc, char **argv, bool admin,
 	void *data = NULL, *mdata = NULL;
 	int err = 0, dfd, mfd, fd;
 	__u32 result;
-	bool huge;
+	bool huge = false;
 	const char *cmd_name = NULL;
 	struct timeval start_time, end_time;
 
