@@ -18,6 +18,7 @@ SYNOPSIS
 		[--metadata-len=<len> | -m <len>]
 		[--read | -r ] [--write | -w]
 		[--input-file=<file> | -i <file>]
+		[--metadata=<file> | -M <file>]
 		[--timeout=<to> | -t <to>]
 		[--show-command | -s]
 		[--dry-run | -d]
@@ -73,8 +74,16 @@ OPTIONS
 -i <file>::
 --input-file=<file>::
 	If the command is a data-out (write) command, use this file
-	to fill the buffer sent to the device. If no file is given,
-	assumed to use STDIN.
+	to fill the buffer sent to the device. If no file is given, assumed to
+	use STDIN. If the command is a data-in (read) command, the data
+	returned from the device will be saved here.
+
+-M <file>::
+--metadata=<file>::
+	If the command is a data-out (write) command, use this file
+	to fill the metadata buffer sent to the device. If no file is given,
+	assumed to use STDIN. If the command is a data-in (read) command, the
+	metadata returned from the device will be saved here.
 
 -l <data-len>::
 --data-len=<data-len>::
