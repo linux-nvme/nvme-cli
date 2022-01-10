@@ -20,6 +20,7 @@
 project = 'libnvme'
 copyright = '2020, Keith Busch'
 author = 'Keith Busch <kbusch@kernel.org>'
+master_doc = 'libnvme'
 
 # The full version, including alpha/beta/rc tags
 release = '0.1'
