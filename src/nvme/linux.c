@@ -92,17 +92,25 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 			 void *buf)
 {
 	int err = 0;
+	struct nvme_fw_download_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.offset = offset,
+		.data_len = xfer,
+		.data = buf,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+	};
 
 	while (size > 0) {
-		xfer = MIN(xfer, size);
-		err = nvme_fw_download(fd, offset, xfer, buf,
-				       NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+		args.data_len = MIN(xfer, size);
+		err = nvme_fw_download(&args);
 		if (err)
 			break;
 
-		buf += xfer;
+		args.data += xfer;
 		size -= xfer;
-		offset += xfer;
+		args.offset += xfer;
 	}
 
 	return err;
@@ -115,6 +123,19 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 	bool retain = true;
 	void *ptr = data;
 	int ret;
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.lid = log_id,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.ot = false,
+	};
 
 	/*
 	 * 4k is the smallest possible transfer unit, so restricting to 4k
@@ -133,10 +154,11 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 		if (offset + xfer == data_len)
 			retain = rae;
 
-		ret = nvme_get_log(fd, log_id, nsid, offset, NVME_LOG_LSP_NONE,
-				   NVME_LOG_LSI_NONE, retain, NVME_UUID_NONE,
-				   NVME_CSI_NVM, false, xfer, ptr,
-				   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+		args.lpo = offset;
+		args.len = xfer;
+		args.log = ptr;
+		args.rae = retain;
+		ret = nvme_get_log(&args);
 		if (ret)
 			return ret;
 
@@ -266,14 +288,21 @@ free:
 static int nvme_ns_attachment(int fd, __u32 nsid, __u16 num_ctrls,
 			      __u16 *ctrlist, bool attach, __u32 timeout)
 {
-	enum nvme_ns_attach_sel sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH;
 	struct nvme_ctrl_list cntlist = { 0 };
+	struct nvme_ns_attach_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = nsid,
+		.sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
+		.ctrlist = &cntlist,
+		.timeout = timeout,
+	};
 
 	if (attach)
-		sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH;
+		args.sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH;
 
-	nvme_init_ctrl_list(&cntlist, num_ctrls, ctrlist);
-	return nvme_ns_attach(fd, nsid, sel, &cntlist, timeout);
+	nvme_init_ctrl_list(args.ctrlist, num_ctrls, ctrlist);
+	return nvme_ns_attach(&args);
 }
 
 int nvme_namespace_attach_ctrls(int fd, __u32 nsid, __u16 num_ctrls,
