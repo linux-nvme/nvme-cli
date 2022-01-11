@@ -356,7 +356,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 
 	fd = parse_and_open(argc, argv, desc, opts);
 
-	err = nvme_get_nsid_log(fd, 0xca, cfg.namespace_id,
+	err = nvme_get_nsid_log(fd, false, 0xca, cfg.namespace_id,
 		sizeof(smart_log), (void *)&smart_log);
 	if (!err) {
 		if (cfg.json)

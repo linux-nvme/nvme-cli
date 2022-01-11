@@ -390,7 +390,7 @@ static int nvme_get_vendor_log(int fd, __u32 namespace_id, int log_page,
 	if (err) {
 		goto end;
 	}
-	err = nvme_get_nsid_log(fd, log_page, namespace_id, log_len, log);
+	err = nvme_get_nsid_log(fd, false, log_page, namespace_id, log_len, log);
 	if (err) {
 		fprintf(stderr, "%s: couldn't get log 0x%x\n", __func__,
 			log_page);
@@ -547,9 +547,22 @@ static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 	if (err)
 		goto end;
 
-	err = nvme_set_features(fd, feature_id, namespace_id, value, cdw12,
-				save, 0, 0, 0, NULL,
-				NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+	struct nvme_set_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.fid		= feature_id,
+		.nsid		= namespace_id,
+		.cdw11		= value,
+		.cdw12		= cdw12,
+		.save		= save,
+		.uuidx		= 0,
+		.cdw15		= 0,
+		.data_len	= 0,
+		.data		= NULL,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+	err = nvme_set_features(&args);
 	if (err)
 		fprintf(stderr, "%s: couldn't clear PCIe correctable errors \n",
 			__func__);

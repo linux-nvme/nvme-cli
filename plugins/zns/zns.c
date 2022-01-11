@@ -269,8 +269,20 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 		}
 	}
 
-	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, zsa,
-		cfg.select_all, 0, 0, NULL, cfg.timeout, &result);
+	struct nvme_zns_mgmt_send_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.slba		= cfg.zslba,
+		.zsa		= zsa,
+		.select_all	= cfg.select_all,
+		.zsaso		= 0,
+		.data_len	= 0,
+		.data		= NULL,
+		.timeout	= cfg.timeout,
+		.result		= &result,
+	};
+	err = nvme_zns_mgmt_send(&args);
 	if (!err) {
 		if (zsa == NVME_ZNS_ZSA_RESET)
 			zcapc = result & 0x1;
@@ -420,8 +432,20 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 		}
 	}
 
-	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, cfg.zsa,
-			cfg.select_all, cfg.zsaso, cfg.data_len, buf, cfg.timeout, NULL);
+	struct nvme_zns_mgmt_send_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.slba		= cfg.zslba,
+		.zsa		= cfg.zsa,
+		.select_all	= cfg.select_all,
+		.zsaso		= cfg.zsaso,
+		.data_len	= cfg.data_len,
+		.data		= buf,
+		.timeout	= cfg.timeout,
+		.result		= NULL,
+	};
+	err = nvme_zns_mgmt_send(&args);
 	if (!err)
 		printf("zone-mgmt-send: Success, action:%d zone:%"PRIx64" "
 			"all:%d nsid:%d\n",
@@ -498,8 +522,20 @@ static int open_zone(int argc, char **argv, struct command *cmd, struct plugin *
 		}
 	}
 
-	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba, NVME_ZNS_ZSA_OPEN,
-		cfg.select_all, cfg.zrwaa, 0, NULL, cfg.timeout, NULL);
+	struct nvme_zns_mgmt_send_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.slba		= cfg.zslba,
+		.zsa		= NVME_ZNS_ZSA_OPEN,
+		.select_all	= cfg.select_all,
+		.zsaso		= cfg.zrwaa,
+		.data_len	= 0,
+		.data		= NULL,
+		.timeout	= cfg.timeout,
+		.result		= NULL,
+	};
+	err = nvme_zns_mgmt_send(&args);
 	if (!err)
 		printf("zns-open-zone: Success zone slba:%"PRIx64" nsid:%d\n",
 			(uint64_t)cfg.zslba, cfg.namespace_id);
@@ -599,9 +635,20 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 		goto close_ffd;
 	}
 
-	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.zslba,
-		NVME_ZNS_ZSA_SET_DESC_EXT, 0, cfg.zrwaa, data_len, buf,
-		cfg.timeout, NULL);
+	struct nvme_zns_mgmt_send_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.slba		= cfg.zslba,
+		.zsa		= NVME_ZNS_ZSA_SET_DESC_EXT,
+		.select_all	= 0,
+		.zsaso		= cfg.zrwaa,
+		.data_len	= data_len,
+		.data		= buf,
+		.timeout	= cfg.timeout,
+		.result		= NULL,
+	};
+	err = nvme_zns_mgmt_send(&args);
 	if (!err)
 		printf("set-zone-desc: Success, zone:%"PRIx64" nsid:%d\n",
 			(uint64_t)cfg.zslba, cfg.namespace_id);
@@ -655,8 +702,20 @@ static int zrwa_flush_zone(int argc, char **argv, struct command *cmd, struct pl
 		}
 	}
 
-	err = nvme_zns_mgmt_send(fd, cfg.namespace_id, cfg.lba,
-		NVME_ZNS_ZSA_ZRWA_FLUSH, 0, 0, 0, NULL, cfg.timeout, NULL);
+	struct nvme_zns_mgmt_send_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.slba		= cfg.lba,
+		.zsa		= NVME_ZNS_ZSA_ZRWA_FLUSH,
+		.select_all	= 0,
+		.zsaso		= 0,
+		.data_len	= 0,
+		.data		= NULL,
+		.timeout	= cfg.timeout,
+		.result		= NULL,
+	};
+	err = nvme_zns_mgmt_send(&args);
 	if (!err)
 		printf("zrwa-flush-zone: Success, lba:%"PRIx64" nsid:%d\n",
 			(uint64_t)cfg.lba, cfg.namespace_id);
@@ -735,9 +794,20 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 		}
 	}
 
-	err = nvme_zns_mgmt_recv(fd, cfg.namespace_id, cfg.zslba, cfg.zra,
-				 cfg.zrasf, cfg.partial, cfg.data_len, data,
-				 NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	struct nvme_zns_mgmt_recv_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.slba		= cfg.zslba,
+		.zra		= cfg.zra,
+		.zrasf		= cfg.zrasf,
+		.zras_feat	= cfg.partial,
+		.data_len	= cfg.data_len,
+		.data		= data,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_zns_mgmt_recv(&args);
 	if (!err)
 		printf("zone-mgmt-recv: Success, action:%d zone:%"PRIx64" nsid:%d\n",
 			cfg.zra, (uint64_t)cfg.zslba, cfg.namespace_id);
@@ -1105,11 +1175,26 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 	if (cfg.piremap)
 		control |= NVME_IO_ZNS_APPEND_PIREMAP;
 
+	struct nvme_zns_append_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.zslba		= cfg.zslba,
+		.nlb		= nblocks,
+		.control	= control,
+		.ilbrt		= cfg.ref_tag,
+		.lbat		= cfg.lbat,
+		.lbatm		= cfg.lbatm,
+		.data_len	= cfg.data_size,
+		.data		= buf,
+		.metadata_len	= cfg.metadata_size,
+		.metadata	= mbuf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+
 	gettimeofday(&start_time, NULL);
-	err = nvme_zns_append(fd, cfg.namespace_id, cfg.zslba, nblocks,
-			      control, cfg.ref_tag, cfg.lbat, cfg.lbatm,
-			      cfg.data_size, buf, cfg.metadata_size, mbuf,
-			      NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+	err = nvme_zns_append(&args);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: zone append: %llu us\n",

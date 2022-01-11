@@ -1068,9 +1068,20 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		__u32 thresholds[OPTANE_V1000_BUCKET_LEN] = {0};
 		__u32 result;
 
-		err = nvme_get_features(fd, 0xf7, 0, 0, cfg.write ? 0x1 : 0x0, 0,
-				       sizeof(thresholds), thresholds,
-					NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+		struct nvme_get_features_args args = {
+			.args_size	= sizeof(args),
+			.fd		= fd,
+			.fid		= 0xf7,
+			.nsid		= 0,
+			.sel		= 0,
+			.cdw11		= cfg.write ? 0x1 : 0x0,
+			.uuidx		= 0,
+			.data_len	= sizeof(thresholds),
+			.data		= thresholds,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= &result,
+		};
+		err = nvme_get_features(&args);
 		if (err) {
 			fprintf(stderr, "Quering thresholds failed. ");
 			nvme_show_status(err);
@@ -1549,10 +1560,40 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 
 	if (fd < 0)
 		return fd;
+
+	struct nvme_get_features_args args_get = {
+		.args_size	= sizeof(args_get),
+		.fd		= fd,
+		.fid		= fid,
+		.nsid		= nsid,
+		.sel		= sel,
+		.cdw11		= cdw11,
+		.uuidx		= 0,
+		.data_len	= data_len,
+		.data		= buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+
+	struct nvme_set_features_args args_set = {
+		.args_size	= sizeof(args_set),
+		.fd		= fd,
+		.fid		= fid,
+		.nsid		= nsid,
+		.cdw11		= option,
+		.cdw12		= cdw12,
+		.save		= save,
+		.uuidx		= 0,
+		.cdw15		= 0,
+		.data_len	= data_len,
+		.data		= buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+
 	switch (option) {
 	case None:
-		err = nvme_get_features(fd, fid, nsid, sel, cdw11, 0, data_len, buf,
-					NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+		err = nvme_get_features(&args_get);
 		if (!err) {
 			printf(
 				"Latency Statistics Tracking (FID 0x%X) is currently (%i).\n",
@@ -1564,9 +1605,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		break;
 	case True:
 	case False:
-		err = nvme_set_features(fd, fid, nsid, option, cdw12, save, 0,
-					0, data_len, buf,
-					NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+		err = nvme_set_features(&args_set);
 		if (err > 0) {
 			nvme_show_status(err);
 		} else if (err < 0) {
@@ -1643,10 +1682,22 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 
 		}
 
-		err = nvme_set_features(fd, fid, nsid, cfg.write ? 0x1 : 0x0,
-					cdw12, save, 0, 0, sizeof(thresholds),
-					thresholds, NVME_DEFAULT_IOCTL_TIMEOUT,
-					&result);
+		struct nvme_set_features_args args = {
+			.args_size	= sizeof(args),
+			.fd		= fd,
+			.fid		= fid,
+			.nsid		= nsid,
+			.cdw11		= cfg.write ? 0x1 : 0x0,
+			.cdw12		= cdw12,
+			.save		= save,
+			.uuidx		= 0,
+			.cdw15		= 0,
+			.data_len	= sizeof(thresholds),
+			.data		= thresholds,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= &result,
+		};
+		err = nvme_set_features(&args);
 
 		if (err > 0) {
 			nvme_show_status(err);

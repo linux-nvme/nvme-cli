@@ -504,10 +504,20 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		}
 		memset(buf, 0, len);
 
-		err = nvme_get_features(fd, NVME_NSID_ALL,
-					NVME_FEAT_FID_HOST_BEHAVIOR, 0, 0, 0,
-					len, buf, NVME_DEFAULT_IOCTL_TIMEOUT,
-					&result);
+		struct nvme_get_features_args args = {
+			.args_size	= sizeof(args),
+			.fd		= fd,
+			.fid		= NVME_FEAT_FID_HOST_BEHAVIOR,
+			.nsid		= NVME_NSID_ALL,
+			.sel		= 0,
+			.cdw11		= 0,
+			.uuidx		= 0,
+			.data_len	= len,
+			.data		= buf,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= &result,
+		};
+		err = nvme_get_features(&args);
 		if (err > 0) {
 			nvme_show_status(err);
 		} else if (err < 0) {
@@ -1624,10 +1634,24 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto close_fd;
 	}
 
-	err = nvme_get_log(fd, cfg.log_id, cfg.namespace_id,
-			   cfg.lpo, cfg.lsp, cfg.lsi, cfg.rae,
-			   cfg.uuid_index, cfg.csi, cfg.ot,
-			   cfg.log_len, log, NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	struct nvme_get_log_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.lid		= cfg.log_id,
+		.nsid		= cfg.namespace_id,
+		.lpo		= cfg.lpo,
+		.lsp		= cfg.lsp,
+		.lsi		= cfg.lsi,
+		.rae		= cfg.rae,
+		.uuidx		= cfg.uuid_index,
+		.csi		= cfg.csi,
+		.ot		= cfg.ot,
+		.len		= cfg.log_len,
+		.log		= log,
+		.timeout        = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_get_log(&args);
 	if (!err) {
 		if (!cfg.raw_binary) {
 			printf("Device:%s log-id:%d namespace-id:%#x\n",
@@ -2978,7 +3002,17 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 	if (fd < 0)
 		goto ret;
 
-	err = nvme_virtual_mgmt(fd, cfg.act, cfg.rt, cfg.cntlid, cfg.nr, &result);
+	struct nvme_virtual_mgmt_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.act		= cfg.act,
+		.rt		= cfg.rt,
+		.cntlid		= cfg.cntlid,
+		.nr		= cfg.nr,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+	err = nvme_virtual_mgmt(&args);
 	if (!err) {
 		printf("success, Number of Controller Resources Modified "\
 			"(NRM):%#x\n", result);
@@ -3148,7 +3182,15 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 	if (fd < 0)
 		goto ret;
 
-	err = nvme_dev_self_test(fd, cfg.namespace_id, cfg.stc);
+	struct nvme_dev_self_test_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.stc		= cfg.stc,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_dev_self_test(&args);
 	if (!err) {
 		if (cfg.stc == 0xf)
 			printf("Aborting device self-test operation\n");
@@ -3244,10 +3286,20 @@ static int get_feature_id(int fd, struct feat_cfg *cfg, void **buf,
 		memset(*buf, 0, cfg->data_len);
 	}
 
-	return nvme_get_features(fd, cfg->feature_id, cfg->namespace_id,
-				 cfg->sel, cfg->cdw11, cfg->uuid_index,
-				 cfg->data_len, *buf,
-				 NVME_DEFAULT_IOCTL_TIMEOUT, result);
+	struct nvme_get_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.fid		= cfg->feature_id,
+		.nsid		= cfg->namespace_id,
+		.sel		= cfg->sel,
+		.cdw11		= cfg->cdw11,
+		.uuidx		= cfg->uuid_index,
+		.data_len	= cfg->data_len,
+		.data		= *buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= result,
+	};
+	return nvme_get_features(&args);
 }
 
 static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
@@ -3506,8 +3558,16 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	while (fw_size > 0) {
 		cfg.xfer = min(cfg.xfer, fw_size);
 
-		err = nvme_fw_download(fd, cfg.offset, cfg.xfer, fw_buf,
-				       NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+		struct nvme_fw_download_args args = {
+			.args_size	= sizeof(args),
+			.fd		= fd,
+			.offset		= cfg.offset,
+			.data_len	= cfg.xfer,
+			.data		= fw_buf,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
+		};
+		err = nvme_fw_download(&args);
 		if (err < 0) {
 			perror("fw-download");
 			break;
@@ -3594,7 +3654,16 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 		goto close_fd;
 	}
 
-	err = nvme_fw_commit(fd, cfg.slot, cfg.action, cfg.bpid, &result);
+	struct nvme_fw_commit_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.slot		= cfg.slot,
+		.action		= cfg.action,
+		.bpid		= cfg.bpid,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+	err = nvme_fw_commit(&args);
 	if (err < 0)
 		perror("fw-commit");
 	else if (err != 0)
@@ -3789,9 +3858,19 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 		}
 	}
 
-	ret = nvme_sanitize_nvm(fd, cfg.sanact, cfg.ause, cfg.owpass, cfg.oipbp,
-				cfg.no_dealloc, cfg.ovrpat,
-				NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	struct nvme_sanitize_nvm_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.sanact		= cfg.sanact,
+		.ause		= cfg.ause,
+		.owpass		= cfg.owpass,
+		.oipbp		= cfg.oipbp,
+		.nodas		= cfg.no_dealloc,
+		.ovrpat		= cfg.ovrpat,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	ret = nvme_sanitize_nvm(&args);
 	if (ret < 0)
 		perror("sanitize");
 	else if (ret > 0)
@@ -3816,8 +3895,14 @@ static int nvme_get_properties(int fd, void **pbar)
 
 	memset(*pbar, 0xff, size);
 	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ;) {
-		err = nvme_get_property(fd, offset, &value,
-					NVME_DEFAULT_IOCTL_TIMEOUT);
+		struct nvme_get_property_args args = {
+			.args_size	= sizeof(args),
+			.fd		= fd,
+			.offset		= offset,
+			.value		= &value,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		};
+		err = nvme_get_property(&args);
 		if (err > 0 && (err & 0xff) == NVME_SC_INVALID_FIELD) {
 			err = 0;
 			value = -1;
@@ -3979,8 +4064,14 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 		goto close_fd;
 	}
 
-	err = nvme_get_property(fd, cfg.offset, &value,
-				NVME_DEFAULT_IOCTL_TIMEOUT);
+	struct nvme_get_property_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.offset		= cfg.offset,
+		.value		= &value,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+	};
+	err = nvme_get_property(&args);
 	if (err < 0) {
 		perror("get-property");
 	} else if (!err) {
@@ -4034,8 +4125,15 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 		goto close_fd;
 	}
 
-	err = nvme_set_property(fd, cfg.offset, cfg.value,
-				NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	struct nvme_set_property_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.offset		= cfg.offset,
+		.value		= cfg.value,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_set_property(&args);
 	if (err < 0) {
 		perror("set-property");
 	} else if (!err) {
@@ -4236,8 +4334,19 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		fprintf(stderr, "Sending format operation ... \n");
 	}
 
-	err = nvme_format_nvm(fd, cfg.namespace_id, cfg.lbaf, cfg.ms, cfg.pi,
-			      cfg.pil, cfg.ses, cfg.timeout, NULL);
+	struct nvme_format_nvm_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.lbaf		= cfg.lbaf,
+		.mset		= cfg.ms,
+		.pi		= cfg.pi,
+		.pil		= cfg.pil,
+		.ses		= cfg.ses,
+		.timeout	= cfg.timeout,
+		.result		= NULL,
+	};
+	err = nvme_format_nvm(&args);
 	if (err < 0)
 		perror("format");
 	else if (err != 0)
@@ -4417,9 +4526,22 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		}
 	}
 
-	err = nvme_set_features(fd, cfg.feature_id, cfg.namespace_id, cfg.value,
-				cfg.cdw12, cfg.save, cfg.uuid_index, 0,
-				cfg.data_len, buf, NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+	struct nvme_set_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.fid		= cfg.feature_id,
+		.nsid		= cfg.namespace_id,
+		.cdw11		= cfg.value,
+		.cdw12		= cfg.cdw12,
+		.save		= cfg.save,
+		.uuidx		= cfg.uuid_index,
+		.cdw15		= 0,
+		.data_len	= cfg.data_len,
+		.data		= buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+	err = nvme_set_features(&args);
 	if (err < 0) {
 		perror("set-feature");
 	} else if (!err) {
@@ -4544,10 +4666,21 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		goto free;
 	}
 
-	err = nvme_security_send(fd, cfg.namespace_id, cfg.nssf,
-				 cfg.spsp & 0xff, cfg.spsp >> 8, cfg.secp,
-				 cfg.tl, cfg.tl, sec_buf,
-				 NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	struct nvme_security_send_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.nssf		= cfg.nssf,
+		.spsp0		= cfg.spsp & 0xff,
+		.spsp1		= cfg.spsp >> 8,
+		.secp		= cfg.secp,
+		.tl		= cfg.tl,
+		.data_len	= cfg.tl,
+		.data		= sec_buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_security_send(&args);
 	if (err < 0)
 		perror("security-send");
 	else if (err != 0)
@@ -4687,9 +4820,20 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		}
 	}
 
-	err = nvme_directive_send(fd, cfg.namespace_id, cfg.dspec, cfg.doper,
-				  cfg.dtype, dw12, cfg.data_len, buf,
-				  NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+	struct nvme_directive_send_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.dspec		= cfg.dspec,
+		.doper		= cfg.doper,
+		.dtype		= cfg.dtype,
+		.cdw12		= dw12,
+		.data_len	= cfg.data_len,
+		.data		= buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+	err = nvme_directive_send(&args);
 	if (err < 0) {
 		perror("dir-send");
 		goto close_ffd;
@@ -4760,8 +4904,16 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 		}
 	}
 
-	err = nvme_write_uncorrectable(fd, cfg.namespace_id, cfg.start_block,
-				       cfg.block_count, NVME_DEFAULT_IOCTL_TIMEOUT);
+	struct nvme_io_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.slba		= cfg.start_block,
+		.nlb		= cfg.block_count,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_write_uncorrectable(&args);
 	if (err < 0)
 		perror("write uncorrectable");
 	else if (err != 0)
@@ -4868,10 +5020,21 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		}
 	}
 
-	err = nvme_write_zeros(fd, cfg.namespace_id, cfg.start_block,
-			       cfg.block_count, control, cfg.ref_tag,
-			       cfg.app_tag, cfg.app_tag_mask, cfg.storage_tag,
-			       NVME_DEFAULT_IOCTL_TIMEOUT);
+	struct nvme_io_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.slba		= cfg.start_block,
+		.nlb		= cfg.block_count,
+		.control	= control,
+		.reftag		= cfg.ref_tag,
+		.apptag		= cfg.app_tag,
+		.appmask	= cfg.app_tag_mask,
+		.storage_tag	= cfg.storage_tag,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_write_zeros(&args);
 	if (err < 0)
 		perror("write-zeroes");
 	else if (err != 0)
@@ -4966,8 +5129,17 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 		cfg.cdw11 = (cfg.ad << 2) | (cfg.idw << 1) | (cfg.idr << 0);
 
 	nvme_init_dsm_range(dsm, ctx_attrs, nlbs, slbas, nr);
-	err = nvme_dsm(fd, cfg.namespace_id, cfg.cdw11, nr, dsm,
-		       NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	struct nvme_dsm_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.attrs		= cfg.cdw11,
+		.nr_ranges	= nr,
+		.dsm		= dsm,
+		.timeout        = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_dsm(&args);
 	if (err < 0)
 		perror("data-set management");
 	else if (err != 0)
@@ -5094,10 +5266,26 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 
 	nvme_init_copy_range(copy, nlbs, (__u64 *)slbas, eilbrts, elbatms, elbats, nr);
 
-	err = nvme_copy(fd, cfg.namespace_id, copy, cfg.sdlba, nr, cfg.prinfor,
-			cfg.prinfow, cfg.dtype, cfg.dspec, cfg.format, cfg.lr,
-			cfg.fua, cfg.ilbrt, cfg.lbatm, cfg.lbat,
-			NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	struct nvme_copy_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.copy		= copy,
+		.sdlba		= cfg.sdlba,
+		.nr		= nr,
+		.prinfor	= cfg.prinfor,
+		.dtype		= cfg.dtype,
+		.dspec		= cfg.dspec,
+		.format		= cfg.format,
+		.lr		= cfg.lr,
+		.fua		= cfg.fua,
+		.ilbrt		= cfg.ilbrt,
+		.lbatm		= cfg.lbatm,
+		.lbat		= cfg.lbat,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_copy(&args);
 	if (err < 0)
 		perror("NVMe Copy");
 	else if (err != 0)
@@ -5219,9 +5407,19 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 		goto close_fd;
 	}
 
-	err = nvme_resv_acquire(fd, cfg.namespace_id, cfg.rtype, cfg.racqa,
-				!!cfg.iekey, cfg.crkey, cfg.prkey,
-				NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	struct nvme_resv_acquire_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.rtype		= cfg.rtype,
+		.racqa		= cfg.racqa,
+		.iekey		= !!cfg.iekey,
+		.crkey		= cfg.crkey,
+		.nrkey		= cfg.prkey,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_resv_acquire(&args);
 	if (err < 0)
 		perror("reservation acquire");
 	else if (err != 0)
@@ -5298,9 +5496,19 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 		goto close_fd;
 	}
 
-	err = nvme_resv_register(fd, cfg.namespace_id, cfg.rrega, cfg.cptpl,
-				 !!cfg.iekey, cfg.crkey, cfg.nrkey,
-				 NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	struct nvme_resv_register_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.rrega		= cfg.rrega,
+		.cptpl		= cfg.cptpl,
+		.iekey		= !!cfg.iekey,
+		.crkey		= cfg.crkey,
+		.nrkey		= cfg.nrkey,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_resv_register(&args);
 	if (err < 0)
 		perror("reservation register");
 	else if (err != 0)
@@ -5373,9 +5581,18 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 		goto close_fd;
 	}
 
-	err = nvme_resv_release(fd, cfg.namespace_id, cfg.rtype, cfg.rrela,
-				!!cfg.iekey, cfg.crkey,
-				NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	struct nvme_resv_release_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.rtype		= cfg.rtype,
+		.rrela		= cfg.rrela,
+		.iekey		= !!cfg.iekey,
+		.crkey		= cfg.crkey,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_resv_release(&args);
 	if (err < 0)
 		perror("reservation release");
 	else if (err != 0)
@@ -5461,8 +5678,17 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	}
 	memset(status, 0, size);
 
-	err = nvme_resv_report(fd, cfg.namespace_id, cfg.eds, size, status,
-			       NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	struct nvme_resv_report_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.eds		= cfg.eds,
+		.len		= size,
+		.report		= status,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_resv_report(&args);
 	if (!err)
 		nvme_show_resv_report(status, size, cfg.eds, flags);
 	else if (err > 0)
@@ -5750,19 +5976,31 @@ static int submit_io(int opcode, char *command, const char *desc,
 	if (cfg.dry_run)
 		goto free_mbuffer;
 
+	struct nvme_io_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.slba		= cfg.start_block,
+		.nlb		= cfg.block_count,
+		.control	= control,
+		.dsm		= dsmgmt,
+		.dspec		= 0,
+		.reftag		= cfg.ref_tag,
+		.apptag		= cfg.app_tag,
+		.appmask	= cfg.app_tag_mask,
+		.storage_tag	= cfg.storage_tag,
+		.data_len	= buffer_size,
+		.data		= buffer,
+		.metadata_len	= cfg.metadata_size,
+		.metadata	= mbuffer,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
 	gettimeofday(&start_time, NULL);
 	if (opcode & 1)
-		err = nvme_write(fd, cfg.namespace_id, cfg.start_block,
-			cfg.block_count, control, dsmgmt, 0, cfg.ref_tag,
-			cfg.app_tag, cfg.app_tag_mask, cfg.storage_tag,
-			buffer_size, buffer, cfg.metadata_size, mbuffer,
-			NVME_DEFAULT_IOCTL_TIMEOUT);
+		err = nvme_write(&args);
 	else
-		err = nvme_read(fd, cfg.namespace_id, cfg.start_block,
-			cfg.block_count, control, dsmgmt, cfg.ref_tag,
-			cfg.app_tag, cfg.app_tag_mask, cfg.storage_tag,
-			buffer_size, buffer, cfg.metadata_size, mbuffer,
-			NVME_DEFAULT_IOCTL_TIMEOUT);
+		err = nvme_read(&args);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: %s: %llu us\n",
@@ -5910,10 +6148,21 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		}
 	}
 
-	err = nvme_verify(fd, cfg.namespace_id, cfg.start_block,
-			  cfg.block_count, control, cfg.ref_tag,
-			  cfg.app_tag, cfg.app_tag_mask, cfg.storage_tag,
-			  NVME_DEFAULT_IOCTL_TIMEOUT);
+	struct nvme_io_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.slba		= cfg.start_block,
+		.nlb		= cfg.block_count,
+		.control	= control,
+		.reftag		= cfg.ref_tag,
+		.apptag		= cfg.app_tag,
+		.appmask	= cfg.app_tag_mask,
+		.storage_tag	= cfg.storage_tag,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_verify(&args);
 	if (err < 0)
 		perror("verify");
 	else if (err != 0)
@@ -5986,10 +6235,21 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 		}
 	}
 
-	err = nvme_security_receive(fd, cfg.namespace_id, cfg.nssf,
-				    cfg.spsp & 0xff, cfg.spsp >> 8,
-				    cfg.secp, cfg.al, cfg.size, sec_buf,
-				    NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+	struct nvme_security_receive_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.nssf		= cfg.nssf,
+		.spsp0		= cfg.spsp & 0xff,
+		.spsp1		= cfg.spsp >> 8,
+		.secp		= cfg.secp,
+		.al		= cfg.al,
+		.data_len	= cfg.size,
+		.data		= sec_buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_security_receive(&args);
 	if (err < 0)
 		perror("security receive");
 	else if (err != 0)
@@ -6084,9 +6344,19 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 		goto close_fd;
 	}
 
-	err = nvme_get_lba_status(fd, cfg.namespace_id, cfg.slba, cfg.mndw,
-				  cfg.atype, cfg.rl, NVME_DEFAULT_IOCTL_TIMEOUT,
-				  buf, NULL);
+	struct nvme_get_lba_status_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.slba		= cfg.slba,
+		.mndw		= cfg.mndw,
+		.rl		= cfg.rl,
+		.atype		= cfg.atype,
+		.lbas		= buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_get_lba_status(&args);
 	if (!err)
 		nvme_show_lba_status(buf, buf_len, flags);
 	else if (err > 0)
@@ -6149,8 +6419,17 @@ static int capacity_mgmt(int argc, char **argv, struct command *cmd, struct plug
 		goto close_fd;
 	}
 
-	err = nvme_capacity_mgmt(fd, cfg.operation, cfg.element_id, cfg.dw11,
-			cfg.dw12, NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+	struct nvme_capacity_mgmt_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.op		= cfg.operation,
+		.element_id	= cfg.element_id,
+		.cdw11		= cfg.dw11,
+		.cdw12		= cfg.dw12,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+	err = nvme_capacity_mgmt(&args);
 	if (!err) {
 		printf("Capacity Management Command is Success\n");
 		if (cfg.operation == 1) {
@@ -6275,9 +6554,20 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 		memset(buf, 0, cfg.data_len);
 	}
 
-	err = nvme_directive_recv(fd, cfg.namespace_id, cfg.dspec, cfg.doper,
-			cfg.dtype, dw12, cfg.data_len, buf,
-			NVME_DEFAULT_IOCTL_TIMEOUT, &result);
+	struct nvme_directive_recv_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.nsid		= cfg.namespace_id,
+		.dspec		= cfg.dspec,
+		.doper		= cfg.doper,
+		.dtype		= cfg.dtype,
+		.cdw12		= dw12,
+		.data_len	= cfg.data_len,
+		.data		= buf,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+	err = nvme_directive_recv(&args);
 	if (!err)
 		nvme_directive_show(cfg.dtype, cfg.doper, cfg.dspec,
 				    cfg.namespace_id, result, buf, cfg.data_len,
@@ -6379,9 +6669,18 @@ static int lockdown_cmd(int argc, char **argv, struct command *cmd, struct plugi
 		goto close_fd;
 	}
 
-	err = nvme_lockdown(fd, cfg.scp,cfg.prhbt,cfg.ifc,cfg.ofi,
-			cfg.uuid);
-
+	struct nvme_lockdown_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.scp		= cfg.scp,
+		.prhbt		= cfg.prhbt,
+		.ifc		= cfg.ifc,
+		.ofi		= cfg.ofi,
+		.uuidx		= cfg.uuid,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
+	};
+	err = nvme_lockdown(&args);
 	if (err < 0)
 		perror("lockdown");
 	else if (err > 0)

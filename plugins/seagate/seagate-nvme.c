@@ -1089,7 +1089,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 	dump_fd = STDOUT_FILENO;
 	cfg.log_id = (cfg.log_id << 8) | 0x07;
-	err = nvme_get_nsid_log(fd, cfg.log_id, cfg.namespace_id,
+	err = nvme_get_nsid_log(fd, false, cfg.log_id, cfg.namespace_id,
 			     sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
@@ -1127,10 +1127,24 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		memset(log, 0, blksToGet * 512);
 
-		err = nvme_get_log(fd, cfg.log_id, cfg.namespace_id, offset,
-				   0, 0, true, 0, NVME_CSI_NVM, false,
-				   blksToGet * 512, (void *)log,
-				   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+		struct nvme_get_log_args args = {
+			.args_size	= sizeof(args),
+			.fd		= fd,
+			.lid		= cfg.log_id,
+			.nsid		= cfg.namespace_id,
+			.lpo		= offset,
+			.lsp		= 0,
+			.lsi		= 0,
+			.rae		= true,
+			.uuidx		= 0,
+			.csi		= NVME_CSI_NVM,
+			.ot		= false,
+			.len		= blksToGet * 512,
+			.log		= (void *)log,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
+		};
+		err = nvme_get_log(&args);
 		if (!err) {
 			offset += blksToGet * 512;
 
@@ -1188,7 +1202,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 	dump_fd = STDOUT_FILENO;
 
 	log_id = 0x08;
-	err = nvme_get_nsid_log(fd, log_id, cfg.namespace_id,
+	err = nvme_get_nsid_log(fd, false, log_id, cfg.namespace_id,
 			     sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
@@ -1225,10 +1239,24 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		memset(log, 0, blksToGet * 512);
 
-		err = nvme_get_log(fd, log_id, cfg.namespace_id, offset, 0, 0,
-				   true, 0, NVME_CSI_NVM, false,
-				   blksToGet * 512, (void *)log,
-				   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+		struct nvme_get_log_args args = {
+			.args_size	= sizeof(args),
+			.fd		= fd,
+			.lid		= log_id,
+			.nsid		= cfg.namespace_id,
+			.lpo		= offset,
+			.lsp		= 0,
+			.lsi		= 0,
+			.rae		= true,
+			.uuidx		= 0,
+			.csi		= NVME_CSI_NVM,
+			.ot		= false,
+			.len		= blksToGet * 512,
+			.log		= (void *)log,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
+		};
+		err = nvme_get_log(&args);
 		if (!err) {
 			offset += blksToGet * 512;
 
@@ -1311,7 +1339,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 	}
 
 	log_id = 0x08;
-	err = nvme_get_nsid_log(fd, log_id, cfg.namespace_id,
+	err = nvme_get_nsid_log(fd, false, log_id, cfg.namespace_id,
 			     sizeof(tele_log), (void *)(&tele_log));
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
@@ -1345,10 +1373,24 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 
 		memset(log, 0, blksToGet * 512);
 
-		err = nvme_get_log(fd, log_id, cfg.namespace_id, offset, 0, 0,
-				   true, 0, NVME_CSI_NVM, false,
-				   blksToGet * 512, (void *)log,
-				   NVME_DEFAULT_IOCTL_TIMEOUT, NULL);
+		struct nvme_get_log_args args = {
+			.args_size	= sizeof(args),
+			.fd		= fd,
+			.lid		= log_id,
+			.nsid		= cfg.namespace_id,
+			.lpo		= offset,
+			.lsp		= 0,
+			.lsi		= 0,
+			.rae		= true,
+			.uuidx		= 0,
+			.csi		= NVME_CSI_NVM,
+			.ot		= false,
+			.len		= blksToGet * 512,
+			.log		= (void *)log,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
+		};
+		err = nvme_get_log(&args);
 		if (!err) {
 			offset += blksToGet * 512;
 
