@@ -307,7 +307,7 @@
 /* CA Log Page */
 #define WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE		0xCA
 #define WDC_FB_CA_LOG_BUF_LEN					0x80
-#define WDC_BD_CA_LOG_BUF_LEN					0x9C
+#define WDC_BD_CA_LOG_BUF_LEN					0xA0    /* Added 4 padding bytes to resolve build warning messages */
 
 /* C0 EOL Status Log Page */
 #define WDC_NVME_GET_EOL_STATUS_LOG_OPCODE		0xC0
@@ -803,12 +803,11 @@ struct wdc_c2_cbs_data {
 	__u8	data[];
 };
 
-struct wdc_bd_ca_log_format {
+struct __attribute__((__packed__)) wdc_bd_ca_log_format {
 	__u8	field_id;
 	__u8	reserved1[2];
 	__u8	normalized_value;
-	__u8	reserved2;
-	__u8	raw_value[7];
+	__u8	raw_value[8];
 };
 
 #define READ         0
@@ -2090,7 +2089,7 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 {
 	struct nvme_telemetry_log *hdr;
 	struct nvme_id_ctrl ctrl;
-	size_t full_size, offset = WDC_TELEMETRY_HEADER_LENGTH;
+	size_t full_size = 0, offset = WDC_TELEMETRY_HEADER_LENGTH;
 	int err = 0, output;
 	void *page_log;
 	__u32 host_gen = 1;
@@ -4018,7 +4017,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	__u8  *byte_raw;
 
 	if (bd_data->field_id == 0x00) {
-		raw = (__u64*)bd_data->raw_value;
+		raw = (__u64*)&bd_data->raw_value[1];
 		printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
 			devicename, WDC_DE_GLOBAL_NSID);
 		printf("key                               normalized raw\n");
@@ -4029,7 +4028,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x01) {
-		raw = (__u64*)bd_data->raw_value;
+		raw = (__u64*)&bd_data->raw_value[1];
 		printf("erase_fail_count                : %3"PRIu8"%%       %"PRIu64"\n",
 				bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
@@ -4037,9 +4036,9 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x02) {
-		word_raw1 = (__u16*)bd_data->raw_value;
-		word_raw2 = (__u16*)&bd_data->raw_value[2];
-		word_raw3 = (__u16*)&bd_data->raw_value[4];
+		word_raw1 = (__u16*)&bd_data->raw_value[1];
+		word_raw2 = (__u16*)&bd_data->raw_value[3];
+		word_raw3 = (__u16*)&bd_data->raw_value[5];
 		printf("wear_leveling                   : %3"PRIu8"%%       min: %"PRIu16", max: %"PRIu16", avg: %"PRIu16"\n",
 				bd_data->normalized_value,
 				le16_to_cpu(*word_raw1),
@@ -4050,7 +4049,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x03) {
-		raw = (__u64*)bd_data->raw_value;
+		raw = (__u64*)&bd_data->raw_value[1];
 		printf("end_to_end_error_detection_count: %3"PRIu8"%%       %"PRIu64"\n",
 				bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
@@ -4058,7 +4057,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x04) {
-		raw = (__u64*)bd_data->raw_value;
+		raw = (__u64*)&bd_data->raw_value[1];
 		printf("crc_error_count                 : %3"PRIu8"%%       %"PRIu64"\n",
 			   bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
@@ -4066,7 +4065,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x05) {
-		raw = (__u64*)bd_data->raw_value;
+		raw = (__u64*)&bd_data->raw_value[1];
 		printf("timed_workload_media_wear       : %3"PRIu8"%%       %-.3f%%\n",
 			   bd_data->normalized_value, 
 			   safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 1024.0));
@@ -4075,7 +4074,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x06) {
-		raw = (__u64*)bd_data->raw_value;
+		raw = (__u64*)&bd_data->raw_value[1];
 		printf("timed_workload_host_reads       : %3"PRIu8"%%       %"PRIu64"%%\n",
 			   bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
@@ -4083,7 +4082,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x07) {
-		raw = (__u64*)bd_data->raw_value;
+		raw = (__u64*)&bd_data->raw_value[1];
 		printf("timed_workload_timer            : %3"PRIu8"%%       %"PRIu64"\n",
 			   bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
@@ -4091,8 +4090,8 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x08) {
-		byte_raw = (__u8*)bd_data->raw_value;
-		dword_raw = (__u32*)&bd_data->raw_value[1];
+		byte_raw = (__u8*)&bd_data->raw_value[1];
+		dword_raw = (__u32*)&bd_data->raw_value[2];
 		printf("thermal_throttle_status         : %3"PRIu8"%%       %"PRIu16"%%, cnt: %"PRIu16"\n",
 				bd_data->normalized_value, *byte_raw, le32_to_cpu(*dword_raw));
 	} else {
@@ -4100,7 +4099,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x09) {
-		raw = (__u64*)bd_data->raw_value;
+		raw = (__u64*)&bd_data->raw_value[1];
 		printf("retry_buffer_overflow_count     : %3"PRIu8"%%       %"PRIu64"\n",
 			   bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
@@ -4108,7 +4107,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x0A) {
-		raw = (__u64*)bd_data->raw_value;
+		raw = (__u64*)&bd_data->raw_value[1];
 		printf("pll_lock_loss_count             : %3"PRIu8"%%       %"PRIu64"\n",
 			   bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
@@ -4116,19 +4115,17 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x0B) {
-		raw = (__u64*)bd_data->raw_value;
+		raw = (__u64*)&bd_data->raw_value[1];
 		printf("nand_bytes_written              : %3"PRIu8"%%       sectors: %.f\n",
 			   bd_data->normalized_value, safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
-		raw = (__u64*)bd_data->raw_value;
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x0C) {
-		raw = (__u64*)bd_data->raw_value;
+		raw = (__u64*)&bd_data->raw_value[1];
 		printf("host_bytes_written              : %3"PRIu8"%%       sectors: %.f\n",
 			   bd_data->normalized_value, safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
-		raw = (__u64*)bd_data->raw_value;
 	} else {
 		goto invalid_id;
 	}
@@ -4154,71 +4151,81 @@ static void wdc_print_bd_ca_log_json(void *data)
 
 	root = json_create_object();
 	if (bd_data->field_id == 0x00) {
-		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "program_fail_count",
-				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-		json_object_add_value_int(root, "normalized",
+		raw = (__u64*)&bd_data->raw_value[1];
+		json_object_add_value_int(root, "program_fail_count normalized",
 				bd_data->normalized_value);
+		json_object_add_value_int(root, "program_fail_count raw",
+				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x01) {
-		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "erase_fail_count",
-				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
-		json_object_add_value_int(root, "normalized",
+		raw = (__u64*)&bd_data->raw_value[1];
+		json_object_add_value_int(root, "erase_fail_count normalized",
 				bd_data->normalized_value);
+		json_object_add_value_int(root, "erase_fail_count raw",
+				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x02) {
-		word_raw = (__u16*)bd_data->raw_value;
-		json_object_add_value_int(root, "min", le16_to_cpu(*word_raw));
-		word_raw = (__u16*)&bd_data->raw_value[2];
-		json_object_add_value_int(root, "max", le16_to_cpu(*word_raw));
-		word_raw = (__u16*)&bd_data->raw_value[4];
-		json_object_add_value_int(root, "avg", le16_to_cpu(*word_raw));
-		json_object_add_value_int(root, "wear_leveling-normalized",	bd_data->normalized_value);
+		word_raw = (__u16*)&bd_data->raw_value[1];
+		json_object_add_value_int(root, "wear_leveling normalized",	bd_data->normalized_value);
+		json_object_add_value_int(root, "wear_leveling min", le16_to_cpu(*word_raw));
+		word_raw = (__u16*)&bd_data->raw_value[3];
+		json_object_add_value_int(root, "wear_leveling max", le16_to_cpu(*word_raw));
+		word_raw = (__u16*)&bd_data->raw_value[5];
+		json_object_add_value_int(root, "wear_leveling avg", le16_to_cpu(*word_raw));
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x03) {
-		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "end_to_end_error_detection_count",
+		raw = (__u64*)&bd_data->raw_value[1];
+		json_object_add_value_int(root, "end_to_end_error_detection_count normalized",
+				bd_data->normalized_value);
+		json_object_add_value_int(root, "end_to_end_error_detection_count raw",
 				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x04) {
-		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "crc_error_count",
+		raw = (__u64*)&bd_data->raw_value[1];
+		json_object_add_value_int(root, "crc_error_count normalized",
+				bd_data->normalized_value);
+		json_object_add_value_int(root, "crc_error_count raw",
 				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x05) {
-		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_float(root, "timed_workload_media_wear",
+		raw = (__u64*)&bd_data->raw_value[1];
+		json_object_add_value_int(root, "timed_workload_media_wear normalized",
+				bd_data->normalized_value);
+		json_object_add_value_float(root, "timed_workload_media_wear raw",
 				safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 1024.0));
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x06) {
-		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "timed_workload_host_reads",
+		raw = (__u64*)&bd_data->raw_value[1];
+		json_object_add_value_int(root, "timed_workload_host_reads normalized",
+				bd_data->normalized_value);
+		json_object_add_value_int(root, "timed_workload_host_reads raw",
 				le64_to_cpu(*raw & 0x00000000000000FF));
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x07) {
-		raw = (__u64*)bd_data->raw_value;
+		raw = (__u64*)&bd_data->raw_value[1];
+		json_object_add_value_int(root, "timed_workload_timer normalized",
+				bd_data->normalized_value);
 		json_object_add_value_int(root, "timed_workload_timer",
 				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
@@ -4226,54 +4233,67 @@ static void wdc_print_bd_ca_log_json(void *data)
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x08) {
-		byte_raw = (__u8*)bd_data->raw_value;
+		byte_raw = (__u8*)&bd_data->raw_value[1];
+		json_object_add_value_int(root, "thermal_throttle_status normalized",
+				bd_data->normalized_value);
 		json_object_add_value_int(root, "thermal_throttle_status", *byte_raw);
-		dword_raw = (__u32*)&bd_data->raw_value[1];
-		json_object_add_value_int(root, "cnt",	le32_to_cpu(*dword_raw));
+		dword_raw = (__u32*)&bd_data->raw_value[2];
+		json_object_add_value_int(root, "thermal_throttle_cnt",	le32_to_cpu(*dword_raw));
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x09) {
-		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "retry_buffer_overflow_count",
+		raw = (__u64*)&bd_data->raw_value[1];
+		json_object_add_value_int(root, "retry_buffer_overflow_count normalized",
+				bd_data->normalized_value);
+		json_object_add_value_int(root, "retry_buffer_overflow_count raw",
 				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x0A) {
-		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_int(root, "pll_lock_loss_count",
+		raw = (__u64*)&bd_data->raw_value[1];
+		json_object_add_value_int(root, "pll_lock_loss_count normalized",
+				bd_data->normalized_value);
+		json_object_add_value_int(root, "pll_lock_loss_count raw",
 				le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x0B) {
-		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_float(root, "nand_bytes_written",
+		raw = (__u64*)&bd_data->raw_value[1];
+		json_object_add_value_int(root, "nand_bytes_written normalized",
+				bd_data->normalized_value);
+		json_object_add_value_float(root, "nand_bytes_written raw",
 				safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
 	} else {
 		goto invalid_id;
 	}
 	bd_data++;
 	if (bd_data->field_id == 0x0C) {
-		raw = (__u64*)bd_data->raw_value;
-		json_object_add_value_float(root, "host_bytes_written",
+		raw = (__u64*)&bd_data->raw_value[1];
+		json_object_add_value_int(root, "host_bytes_written normalized",
+				bd_data->normalized_value);
+		json_object_add_value_float(root, "host_bytes_written raw",
 				safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
-		raw = (__u64*)bd_data->raw_value;
 	} else {
 		goto invalid_id;
 	}
 
 	goto done;
 
-	invalid_id:
-		printf("  Invalid Field ID = %d\n", bd_data->field_id);
+ invalid_id:
+	printf("  Invalid Field ID = %d\n", bd_data->field_id);
 
-	done:
-		return;
+ done:
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+
+	return;
 
 }
 
@@ -5243,6 +5263,9 @@ static int wdc_print_bd_ca_log(void *bd_data, int fmt)
 	case JSON:
 		wdc_print_bd_ca_log_json(bd_data);
 		break;
+	default:
+		fprintf(stderr, "ERROR : WDC : Unknown format - %d\n", fmt);
+		return -1;
 	}
 	return 0;
 }
@@ -8757,7 +8780,7 @@ static int wdc_enc_get_nic_log(int fd, __u8 log_id, __u32 xfer_size, __u32 data_
 {
 	__u8 *dump_data;
 	__u32 curr_data_offset, curr_data_len;
-	int i, ret;
+	int i, ret = -1;
 	struct nvme_passthru_cmd admin_cmd;
 	__u32 dump_length = data_len;
 	__u32 numd;
@@ -8789,7 +8812,7 @@ static int wdc_enc_get_nic_log(int fd, __u8 log_id, __u32 xfer_size, __u32 data_
 		fprintf(stderr, "nsid 0x%08x addr 0x%08llx, data_len 0x%08x, cdw10 0x%08x, cdw11 0x%08x, cdw12 0x%08x, cdw13 0x%08x, cdw14 0x%08x \n", admin_cmd.nsid, admin_cmd.addr, admin_cmd.data_len, admin_cmd.cdw10, admin_cmd.cdw11, admin_cmd.cdw12, admin_cmd.cdw13, admin_cmd.cdw14);
 #endif
 		ret = nvme_submit_admin_passthru(fd, &admin_cmd, NULL);
-		if (ret !=0 ) {
+		if (ret != 0) {
 			nvme_show_status(ret);
 			fprintf(stderr, "%s: ERROR : WDC : Get chunk %d, size = 0x%x, offset = 0x%x, addr = 0x%lx\n",
 				 __func__, i, admin_cmd.data_len, curr_data_offset, (long unsigned int)admin_cmd.addr);
