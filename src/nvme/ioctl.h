@@ -3068,7 +3068,7 @@ struct nvme_directive_send_args {
 	__u32 data_len;
 	void *data;
 	__u16 dspec;
-} __attribute__((__packed__));
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_directive_send() - Send directive command
@@ -3155,29 +3155,29 @@ static inline int nvme_directive_send_stream_release_resource(int fd, __u32 nsid
 /**
  * nvme_directive_recv_args - Arguments for the NVMe Directive Receive command
  * @fd:		File descriptor of nvme device
+ * @result:	If successful, the CQE dword0 value
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID, if applicable
- * @dspec:	Directive specific field
  * @doper:	Directive send operation, see &enum nvme_directive_send_doper
  * @dtype:	Directive type, see &enum nvme_directive_dtype
  * @dw12:	Directive specific command dword12
  * @data_len:	Length of data payload in bytes
  * @data:	Usespace address of data payload
- * @timeout:	Timeout in ms
- * @result:	If successful, the CQE dword0 value
+ * @dspec:	Directive specific field
  */
 struct nvme_directive_recv_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
-	__u16 dspec;
 	enum nvme_directive_receive_doper doper;
 	enum nvme_directive_dtype dtype;
 	__u32 cdw12;
 	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u16 dspec;
+} __attribute__((__packed__));
 
 /**
  * nvme_directive_recv() - Receive directive specific data
@@ -3202,15 +3202,15 @@ static inline int nvme_directive_recv_identify_parameters(int fd, __u32 nsid,
 	struct nvme_directive_recv_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
-		.dspec = 0,
 		.doper = NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM,
 		.dtype = NVME_DIRECTIVE_DTYPE_IDENTIFY,
 		.cdw12 = 0,
 		.data_len = sizeof(*id),
 		.data = id,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
+		.dspec = 0,
 	};
 
 	return nvme_directive_recv(&args);
@@ -3230,20 +3230,19 @@ static inline int nvme_directive_recv_stream_parameters(int fd, __u32 nsid,
 	struct nvme_directive_recv_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
-		.dspec = 0,
 		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM,
 		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
 		.cdw12 = 0,
 		.data_len = sizeof(*parms),
 		.data = parms,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
+		.dspec = 0,
 	};
 
 	return nvme_directive_recv(&args);
 }
-
 
 /**
  * nvme_directive_recv_stream_status() -
@@ -3260,20 +3259,19 @@ static inline int nvme_directive_recv_stream_status(int fd, __u32 nsid,
 	struct nvme_directive_recv_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
-		.dspec = 0,
 		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS,
 		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
 		.cdw12 = 0,
 		.data_len = sizeof(*id),
 		.data = id,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
+		.dspec = 0,
 	};
 
 	return nvme_directive_recv(&args);
 }
-
 
 /**
  * nvme_directive_recv_stream_allocate() -
@@ -3289,15 +3287,15 @@ static inline int nvme_directive_recv_stream_allocate(int fd, __u32 nsid,
 	struct nvme_directive_recv_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = result,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
-		.dspec = 0,
 		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE,
 		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
 		.cdw12 = nsr,
 		.data_len = 0,
 		.data = NULL,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = result,
+		.dspec = 0,
 	};
 
 	return nvme_directive_recv(&args);
