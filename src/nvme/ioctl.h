@@ -3030,7 +3030,7 @@ struct nvme_get_lba_status_args {
 	__u64 slba;
 	struct nvme_lba_status *lbas;
 	__u16 rl;
-} __attribute__((__packed__));
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_get_lba_status() - Retrieve information on possibly unrecoverable LBAs
@@ -3047,29 +3047,28 @@ int nvme_get_lba_status(struct nvme_get_lba_status_args *args);
 /**
  * nvme_directive_send_args - Arguments for the NVMe Directive Send command
  * @fd:		File descriptor of nvme device
+ * @result:	If successful, the CQE dword0 value
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID, if applicable
- * @dspec:	Directive specific field
  * @doper:	Directive send operation, see &enum nvme_directive_send_doper
  * @dtype:	Directive type, see &enum nvme_directive_dtype
  * @dw12:	Directive specific command dword12
  * @data_len:	Length of data payload in bytes
- * @data:	Usespace address of data payload
- * @timeout:	Timeout in ms
- * @result:	If successful, the CQE dword0 value
+ * @dspec:	Directive specific field
  */
 struct nvme_directive_send_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
-	__u16 dspec;
 	enum nvme_directive_send_doper doper;
 	enum nvme_directive_dtype dtype;
 	__u32 cdw12;
 	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u16 dspec;
+} __attribute__((__packed__));
 
 /**
  * nvme_directive_send() - Send directive command
@@ -3112,15 +3111,15 @@ static inline int nvme_directive_send_stream_release_identifier(int fd,
 	struct nvme_directive_send_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
-		.dspec = stream_id,
 		.doper = NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_IDENTIFIER,
 		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
 		.cdw12 = 0,
 		.data_len = 0,
 		.data = NULL,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
+		.dspec = stream_id,
 	};
 
 	return nvme_directive_send(&args);
@@ -3139,15 +3138,15 @@ static inline int nvme_directive_send_stream_release_resource(int fd, __u32 nsid
 	struct nvme_directive_send_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
-		.dspec = 0,
 		.doper = NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE,
 		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
 		.cdw12 = 0,
 		.data_len = 0,
 		.data = NULL,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
+		.dspec = 0,
 	};
 
 	return nvme_directive_send(&args);
