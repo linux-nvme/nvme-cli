@@ -716,12 +716,12 @@ const char *nvme_ctrl_get_trsvcid(nvme_ctrl_t c)
 
 const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c)
 {
-	return c->host_traddr;
+	return c->cfg.host_traddr;
 }
 
 const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c)
 {
-	return c->host_iface;
+	return c->cfg.host_iface;
 }
 
 struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
@@ -866,8 +866,8 @@ static void __nvme_free_ctrl(nvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->transport);
 	FREE_CTRL_ATTR(c->subsysnqn);
 	FREE_CTRL_ATTR(c->traddr);
-	FREE_CTRL_ATTR(c->host_traddr);
-	FREE_CTRL_ATTR(c->host_iface);
+	FREE_CTRL_ATTR(c->cfg.host_traddr);
+	FREE_CTRL_ATTR(c->cfg.host_iface);
 	FREE_CTRL_ATTR(c->trsvcid);
 	free(c);
 }
@@ -917,7 +917,7 @@ void hostname2traddr(nvme_ctrl_t c, const char *host_traddr)
 	if (ret) {
 		nvme_msg(LOG_DEBUG, "failed to resolve host %s info\n",
 			 host_traddr);
-		c->host_traddr = strdup(host_traddr);
+		c->cfg.host_traddr = strdup(host_traddr);
 		return;
 	}
 
@@ -935,15 +935,15 @@ void hostname2traddr(nvme_ctrl_t c, const char *host_traddr)
 	default:
 		nvme_msg(LOG_DEBUG, "unrecognized address family (%d) %s\n",
 			 host_info->ai_family, c->traddr);
-		c->host_traddr = strdup(host_traddr);
+		c->cfg.host_traddr = strdup(host_traddr);
 		goto free_addrinfo;
 	}
 	if (!p) {
 		nvme_msg(LOG_DEBUG, "failed to get traddr for %s\n",
 			 c->traddr);
-		c->host_traddr = strdup(host_traddr);
+		c->cfg.host_traddr = strdup(host_traddr);
 	} else
-		c->host_traddr = strdup(addrstr);
+		c->cfg.host_traddr = strdup(addrstr);
 
 free_addrinfo:
 	freeaddrinfo(host_info);
@@ -991,10 +991,10 @@ struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn, const char *transport,
 		if (traddr_is_hostname(transport, host_traddr))
 			hostname2traddr(c, host_traddr);
 		else
-			c->host_traddr = strdup(host_traddr);
+			c->cfg.host_traddr = strdup(host_traddr);
 	}
 	if (host_iface)
-		c->host_iface = strdup(host_iface);
+		c->cfg.host_iface = strdup(host_iface);
 	if (trsvcid)
 		c->trsvcid = strdup(trsvcid);
 	else if (discovery)
@@ -1025,11 +1025,11 @@ struct nvme_ctrl *nvme_lookup_ctrl(struct nvme_subsystem *s, const char *transpo
 		if (traddr && c->traddr &&
 		    strcmp(c->traddr, traddr))
 			continue;
-		if (host_traddr && c->host_traddr &&
-		    strcmp(c->host_traddr, host_traddr))
+		if (host_traddr && c->cfg.host_traddr &&
+		    strcmp(c->cfg.host_traddr, host_traddr))
 			continue;
-		if (host_iface && c->host_iface &&
-		    strcmp(c->host_iface, host_iface))
+		if (host_iface && c->cfg.host_iface &&
+		    strcmp(c->cfg.host_iface, host_iface))
 			continue;
 		if (trsvcid && c->trsvcid &&
 		    strcmp(c->trsvcid, trsvcid))

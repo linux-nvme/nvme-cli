@@ -170,6 +170,8 @@ static struct nvme_fabrics_config *merge_config(nvme_ctrl_t c,
 {
 	struct nvme_fabrics_config *ctrl_cfg = nvme_ctrl_get_config(c);
 
+	UPDATE_CFG_OPTION(ctrl_cfg, cfg, host_traddr, NULL);
+	UPDATE_CFG_OPTION(ctrl_cfg, cfg, host_iface, NULL);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, nr_io_queues, 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, nr_write_queues, 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, nr_poll_queues, 0);
@@ -438,9 +440,9 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	    add_argument(argstr, "traddr",
 			 nvme_ctrl_get_traddr(c)) ||
 	    add_argument(argstr, "host_traddr",
-			 nvme_ctrl_get_host_traddr(c)) ||
+			 cfg->host_traddr) ||
 	    add_argument(argstr, "host_iface",
-			 nvme_ctrl_get_host_iface(c)) ||
+			 cfg->host_iface) ||
 	    add_argument(argstr, "trsvcid",
 			 nvme_ctrl_get_trsvcid(c)) ||
 	    (hostnqn && add_argument(argstr, "hostnqn", hostnqn)) ||
@@ -648,7 +650,8 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	nvme_msg(LOG_DEBUG, "lookup ctrl "
 		 "(transport: %s, traddr: %s, trsvcid %s)\n",
 		 transport, traddr, trsvcid);
-	c = nvme_create_ctrl(e->subnqn, transport, traddr, NULL, NULL, trsvcid);
+	c = nvme_create_ctrl(e->subnqn, transport, traddr,
+			     cfg->host_traddr, cfg->host_iface, trsvcid);
 	if (!c) {
 		nvme_msg(LOG_DEBUG, "skipping discovery entry, "
 			 "failed to allocate %s controller with traddr %s\n",

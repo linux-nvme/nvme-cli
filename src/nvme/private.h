@@ -85,8 +85,6 @@ struct nvme_ctrl {
 	char *subsysnqn;
 	char *traddr;
 	char *trsvcid;
-	char *host_traddr;
-	char *host_iface;
 	char *dhchap_key;
 	bool discovery_ctrl;
 	bool discovered;
