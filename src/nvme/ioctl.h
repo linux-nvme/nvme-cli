@@ -3976,29 +3976,29 @@ int nvme_zns_mgmt_send(struct nvme_zns_mgmt_send_args *args);
 /**
  * nvme_zns_mgmt_recv_args - Arguments for the NVMe ZNS Management Receive command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	timeout in ms
  * @nsid:	Namespace ID
  * @slba:	Starting logical block address
  * @zra:	zone receive action
- * @zrasf:	Zone receive action specific field
- * @zras_feat:	Zone receive action specific features
  * @data_len:	Length of @data
  * @data:	Userspace address of the data
- * @timeout:	timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @zrasf:	Zone receive action specific field
+ * @zras_feat:	Zone receive action specific features
  */
 struct nvme_zns_mgmt_recv_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	__u64 slba;
 	enum nvme_zns_recv_action zra;
-	__u16 zrasf;
-	bool zras_feat;
 	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u16 zrasf;
+	bool zras_feat;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_zns_mgmt_recv() -
@@ -4034,16 +4034,16 @@ static inline int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
 	struct nvme_zns_mgmt_recv_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = result,
+		.timeout = timeout,
 		.nsid = nsid,
 		.slba = slba,
 		.zra = extended ? NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES :
 		NVME_ZNS_ZRA_REPORT_ZONES,
-		.zrasf = opts,
-		.zras_feat = partial,
 		.data_len = data_len,
 		.data = data,
-		.timeout = timeout,
-		.result = result,
+		.zrasf = opts,
+		.zras_feat = partial,
 	};
 
 	return nvme_zns_mgmt_recv(&args);
