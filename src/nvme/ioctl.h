@@ -376,31 +376,31 @@ int nvme_get_nsid(int fd, __u32 *nsid);
 /**
  * nvme_identify_args - Arguments for the NVMe Identify command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms (0 for default timeout)
  * @cns:	The Controller or Namespace structure, see @enum nvme_identify_cns
+ * @data:	User space destination address to transfer the data
+ * @csi:	Command Set Identifier
  * @nsid:	Namespace identifier, if applicable
  * @domid:	Domain identifier, if applicable
  * @cntid:	The Controller Identifier, if applicable
  * @nvmsetid:	The NVMe Set ID if CNS is 04h
  * @uuidx:	UUID Index if controller supports this id selection method
- * @csi:	Command Set Identifier
- * @data:	User space destination address to transfer the data
- * @timeout:	Timeout in ms (0 for default timeout)
- * @result:	The command completion result from CQE dword0
  */
 struct nvme_identify_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	enum nvme_identify_cns cns;
+	void *data;
+	enum nvme_csi csi;
 	__u32 nsid;
 	__u16 cntid;
 	__u16 nvmsetid;
 	__u16 domid;
 	__u8 uuidx;
-	enum nvme_csi csi;
-	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_identify() - Send the NVMe Identify command
@@ -420,16 +420,16 @@ static int nvme_identify_cns_nsid(int fd, enum nvme_identify_cns cns,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = cns,
+		.data = data,
+		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = data,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -560,16 +560,16 @@ static inline int nvme_identify_ctrl_list(int fd, __u16 cntid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_CTRL_LIST,
+		.data = ctrlist,
+		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = cntid,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = ctrlist,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -597,16 +597,16 @@ static inline int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_NS_CTRL_LIST,
+		.data = ctrlist,
+		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = cntid,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = ctrlist,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -658,16 +658,16 @@ static inline int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_NVMSET_LIST,
+		.data = nvmset,
+		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = nvmsetid,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = nvmset,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -691,16 +691,16 @@ static inline int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP,
+		.data = cap,
+		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = cntid,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = cap,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -730,16 +730,16 @@ static inline int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
+		.data = list,
+		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = cntid,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = list,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -803,16 +803,16 @@ static inline int nvme_identify_ns_csi(int fd, __u32 nsid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_CSI_NS,
+		.data = data,
+		.csi = csi,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = csi,
-		.data = data,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -832,16 +832,16 @@ static inline int nvme_identify_ctrl_csi(int fd, enum nvme_csi csi, void *data)
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_CSI_CTRL,
+		.data = data,
+		.csi = csi,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = csi,
-		.data = data,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -870,16 +870,16 @@ static inline int nvme_identify_active_ns_list_csi(int fd, __u32 nsid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_NS_ACTIVE_LIST,
+		.data = list,
+		.csi = csi,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = csi,
-		.data = list,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -908,16 +908,16 @@ static inline int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST,
+		.data = list,
+		.csi = csi,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = csi,
-		.data = list,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -939,16 +939,16 @@ static inline int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS,
+		.data = ns,
+		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = ns,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -989,16 +989,16 @@ static inline int nvme_identify_domain_list(int fd, __u16 domid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_DOMAIN_LIST,
+		.data = list,
+		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = domid,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = list,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -1019,16 +1019,16 @@ static inline int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID,
+		.data = list,
+		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = endgrp_id,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = list,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -1052,16 +1052,16 @@ static inline int nvme_identify_iocs(int fd, __u16 cntlid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE,
+		.data = iocs,
+		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = cntlid,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = iocs,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -1082,16 +1082,15 @@ static inline int nvme_zns_identify_ns(int fd, __u32 nsid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_CSI_NS,
+		.data = data,
+		.csi = NVME_CSI_ZNS,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_ZNS,
-		.data = data,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
