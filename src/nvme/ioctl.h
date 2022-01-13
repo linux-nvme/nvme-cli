@@ -3507,23 +3507,23 @@ int nvme_dev_self_test(struct nvme_dev_self_test_args *args);
  * nvme_virtual_mgmt_args - Arguments for the NVMe Virtualization
  * 			    resource management command
  * @fd:		File descriptor of nvme device
+ * @result:	If successful, the CQE dword0
+ * @timeout:	Timeout in ms
  * @act:	Virtual resource action, see &enum nvme_virt_mgmt_act
  * @rt:		Resource type to modify, see &enum nvme_virt_mgmt_rt
  * @cntlid:	Controller id for which resources are bing modified
  * @nr:		Number of resources being allocated or assigned
- * @timeout:	Timeout in ms
- * @result:	If successful, the CQE dword0
  */
 struct nvme_virtual_mgmt_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	enum nvme_virt_mgmt_act act;
 	enum nvme_virt_mgmt_rt rt;
 	__u16 cntlid;
 	__u16 nr;
-	__u32 timeout;
-	__u32 *result;
-};
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_virtual_mgmt() - Virtualization resource management
