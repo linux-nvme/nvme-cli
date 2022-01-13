@@ -3796,28 +3796,28 @@ int nvme_copy(struct nvme_copy_args *args);
 /**
  * nvme_resv_acquire_args - Arguments for the NVMe Reservation Acquire Comand
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
  * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
  * @racqa:	The action that is performed by the command, see &enum nvme_resv_racqa
- * @iekey:	Set to ignore the existing key
  * @crkey:	The current reservation key associated with the host
  * @nrkey:	The reservation key to be unregistered from the namespace if
- * 		the action is preempt
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ *		the action is preempt
+ * @iekey:	Set to ignore the existing key
  */
 struct nvme_resv_acquire_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	enum nvme_resv_rtype rtype;
 	enum nvme_resv_racqa racqa;
-	bool iekey;
 	__u64 crkey;
 	__u64 nrkey;
-	__u32 timeout;
-	__u32 *result;
-};
+	bool iekey;
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_resv_acquire() - Send an nvme reservation acquire
