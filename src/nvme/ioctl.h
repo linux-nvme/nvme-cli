@@ -3904,24 +3904,24 @@ int nvme_resv_release(struct nvme_resv_release_args *args);
 /**
  * nvme_resv_report_args - Arguments for the NVMe Reservation Report command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
- * @eds:	Request extended Data Structure
- * @len:	Number of bytes to request transfered with this command
  * @report:	The user space destination address to store the reservation
  *		report
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @len:	Number of bytes to request transfered with this command
+ * @eds:	Request extended Data Structure
  */
 struct nvme_resv_report_args {
 	int args_size;
 	int fd;
-	__u32 nsid;
-	bool eds;
-	__u32 len;
-	struct nvme_resv_status *report;
-	__u32 timeout;
 	__u32 *result;
-};
+	__u32 timeout;
+	__u32 nsid;
+	struct nvme_resv_status *report;
+	__u32 len;
+	bool eds;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_resv_report() - Send an nvme reservation report
