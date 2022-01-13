@@ -2231,30 +2231,30 @@ int nvme_set_features_write_protect(int fd, enum nvme_feat_nswpcfg_state state,
 /**
  * nvme_get_features_args - Arguments for the NVMe Admin Get Feature command
  * @fd:		File descriptor of nvme device
- * @fid:	Feature identifier, see &enum nvme_features_id
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID, if applicable
  * @sel:	Select which type of attribute to return,
  * 		see &enum nvme_get_features_sel
  * @cdw11:	Feature specific command dword11 field
- * @uuidx:	UUID Index for differentiating vendor specific encoding
  * @data_len:	Length of feature data, if applicable, in bytes
  * @data:	User address of feature data, if applicable
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @fid:	Feature identifier, see &enum nvme_features_id
+ * @uuidx:	UUID Index for differentiating vendor specific encoding
  */
 struct nvme_get_features_args {
 	int args_size;
 	int fd;
-	__u8 fid;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	enum nvme_get_features_sel sel;
 	__u32 cdw11;
-	__u8 uuidx;
 	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u8 fid;
+	__u8 uuidx;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_get_features() - Retrieve a feature attribute
@@ -2271,15 +2271,15 @@ static inline int nvme_get_features_data(int fd, enum nvme_features_id fid,
 	struct nvme_get_features_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.fid = fid,
+		.result = result,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
 		.sel = NVME_GET_FEATURES_SEL_CURRENT,
 		.cdw11 = 0,
-		.uuidx = NVME_UUID_NONE,
 		.data_len = data_len,
 		.data = data,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = result,
+		.fid = fid,
+		.uuidx = NVME_UUID_NONE,
 	};
 
 	return nvme_get_features(&args);
