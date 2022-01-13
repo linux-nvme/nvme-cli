@@ -1845,34 +1845,33 @@ static inline int nvme_get_log_persistent_event(int fd,
 /**
  * nvme_set_features_args - Arguments for the NVMe Admin Set Feature command
  * @fd:		File descriptor of nvme device
- * @fid:	Feature identifier
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID, if applicable
  * @cdw11:	Value to set the feature to
  * @cdw12:	Feature specific command dword12 field
- * @save:	Save value across power states
- * @uuidx:	UUID Index for differentiating vendor specific encoding
  * @cdw14:	Feature specific command dword15 field
  * @data_len:	Length of feature data, if applicable, in bytes
  * @data:	User address of feature data, if applicable
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @save:	Save value across power states
+ * @uuidx:	UUID Index for differentiating vendor specific encoding
+ * @fid:	Feature identifier
  */
-
 struct nvme_set_features_args {
 	int args_size;
 	int fd;
-	__u8 fid;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	__u32 cdw11;
 	__u32 cdw12;
-	bool save;
-	__u8 uuidx;
 	__u32 cdw15;
 	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	bool save;
+	__u8 uuidx;
+	__u8 fid;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_set_features_args() - Set a feature attribute
@@ -1885,22 +1884,22 @@ int nvme_set_features(struct nvme_set_features_args *args);
 
 static inline int nvme_set_features_data(int fd, __u8 fid, __u32 nsid,
 			__u32 cdw11, bool save, __u32 data_len, void *data,
-		 	__u32 *result)
+			__u32 *result)
 {
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.fid = fid,
+		.result = result,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
 		.cdw11 = cdw11,
 		.cdw12 = 0,
-		.save = save,
-		.uuidx = 0,
 		.cdw15 = 0,
 		.data_len = data_len,
 		.data = data,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = result,
+		.save = save,
+		.uuidx = 0,
+		.fid = fid,
 	};
 	return nvme_set_features(&args);
 }
