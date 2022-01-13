@@ -1071,6 +1071,8 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		struct nvme_get_features_args args = {
 			.args_size	= sizeof(args),
 			.fd		= fd,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= &result,
 			.fid		= 0xf7,
 			.nsid		= 0,
 			.sel		= 0,
@@ -1078,8 +1080,6 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 			.uuidx		= 0,
 			.data_len	= sizeof(thresholds),
 			.data		= thresholds,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= &result,
 		};
 		err = nvme_get_features(&args);
 		if (err) {
@@ -1564,6 +1564,8 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	struct nvme_get_features_args args_get = {
 		.args_size	= sizeof(args_get),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
 		.fid		= fid,
 		.nsid		= nsid,
 		.sel		= sel,
@@ -1571,13 +1573,13 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		.uuidx		= 0,
 		.data_len	= data_len,
 		.data		= buf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
 	};
 
 	struct nvme_set_features_args args_set = {
 		.args_size	= sizeof(args_set),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
 		.fid		= fid,
 		.nsid		= nsid,
 		.cdw11		= option,
@@ -1587,8 +1589,6 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		.cdw15		= 0,
 		.data_len	= data_len,
 		.data		= buf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
 	};
 
 	switch (option) {
@@ -1685,6 +1685,8 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 		struct nvme_set_features_args args = {
 			.args_size	= sizeof(args),
 			.fd		= fd,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= &result,
 			.fid		= fid,
 			.nsid		= nsid,
 			.cdw11		= cfg.write ? 0x1 : 0x0,
@@ -1694,8 +1696,6 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 			.cdw15		= 0,
 			.data_len	= sizeof(thresholds),
 			.data		= thresholds,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= &result,
 		};
 		err = nvme_set_features(&args);
 

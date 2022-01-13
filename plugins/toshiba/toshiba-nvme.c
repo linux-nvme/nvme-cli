@@ -550,6 +550,8 @@ static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 	struct nvme_set_features_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
 		.fid		= feature_id,
 		.nsid		= namespace_id,
 		.cdw11		= value,
@@ -559,8 +561,6 @@ static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 		.cdw15		= 0,
 		.data_len	= 0,
 		.data		= NULL,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
 	};
 	err = nvme_set_features(&args);
 	if (err)

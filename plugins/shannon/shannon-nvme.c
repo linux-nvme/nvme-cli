@@ -229,6 +229,8 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 	struct nvme_get_features_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
 		.fid		= cfg.feature_id,
 		.nsid		= cfg.namespace_id,
 		.sel		= cfg.sel,
@@ -236,8 +238,6 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 		.uuidx		= 0,
 		.data_len	= cfg.data_len,
 		.data		= buf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
 	};
 	err = nvme_get_features(&args);
 	if (!err) {
@@ -354,6 +354,8 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 	struct nvme_set_features_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
 		.fid		= cfg.feature_id,
 		.nsid		= cfg.namespace_id,
 		.cdw11		= cfg.value,
@@ -363,8 +365,6 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 		.cdw15		= 0,
 		.data_len	= cfg.data_len,
 		.data		= buf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
 	};
 	err = nvme_set_features(&args);
 	if (err < 0) {

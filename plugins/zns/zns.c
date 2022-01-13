@@ -272,6 +272,8 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 	struct nvme_zns_mgmt_send_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= cfg.timeout,
+		.result		= &result,
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.zslba,
 		.zsa		= zsa,
@@ -279,8 +281,6 @@ static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plug
 		.zsaso		= 0,
 		.data_len	= 0,
 		.data		= NULL,
-		.timeout	= cfg.timeout,
-		.result		= &result,
 	};
 	err = nvme_zns_mgmt_send(&args);
 	if (!err) {
@@ -435,6 +435,8 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 	struct nvme_zns_mgmt_send_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= cfg.timeout,
+		.result		= NULL,
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.zslba,
 		.zsa		= cfg.zsa,
@@ -442,8 +444,6 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 		.zsaso		= cfg.zsaso,
 		.data_len	= cfg.data_len,
 		.data		= buf,
-		.timeout	= cfg.timeout,
-		.result		= NULL,
 	};
 	err = nvme_zns_mgmt_send(&args);
 	if (!err)
@@ -525,6 +525,8 @@ static int open_zone(int argc, char **argv, struct command *cmd, struct plugin *
 	struct nvme_zns_mgmt_send_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= cfg.timeout,
+		.result		= NULL,
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.zslba,
 		.zsa		= NVME_ZNS_ZSA_OPEN,
@@ -532,8 +534,6 @@ static int open_zone(int argc, char **argv, struct command *cmd, struct plugin *
 		.zsaso		= cfg.zrwaa,
 		.data_len	= 0,
 		.data		= NULL,
-		.timeout	= cfg.timeout,
-		.result		= NULL,
 	};
 	err = nvme_zns_mgmt_send(&args);
 	if (!err)
@@ -638,6 +638,8 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 	struct nvme_zns_mgmt_send_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= cfg.timeout,
+		.result		= NULL,
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.zslba,
 		.zsa		= NVME_ZNS_ZSA_SET_DESC_EXT,
@@ -645,8 +647,6 @@ static int set_zone_desc(int argc, char **argv, struct command *cmd, struct plug
 		.zsaso		= cfg.zrwaa,
 		.data_len	= data_len,
 		.data		= buf,
-		.timeout	= cfg.timeout,
-		.result		= NULL,
 	};
 	err = nvme_zns_mgmt_send(&args);
 	if (!err)
@@ -705,6 +705,8 @@ static int zrwa_flush_zone(int argc, char **argv, struct command *cmd, struct pl
 	struct nvme_zns_mgmt_send_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= cfg.timeout,
+		.result		= NULL,
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.lba,
 		.zsa		= NVME_ZNS_ZSA_ZRWA_FLUSH,
@@ -712,8 +714,6 @@ static int zrwa_flush_zone(int argc, char **argv, struct command *cmd, struct pl
 		.zsaso		= 0,
 		.data_len	= 0,
 		.data		= NULL,
-		.timeout	= cfg.timeout,
-		.result		= NULL,
 	};
 	err = nvme_zns_mgmt_send(&args);
 	if (!err)
@@ -797,6 +797,8 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 	struct nvme_zns_mgmt_recv_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
 		.nsid		= cfg.namespace_id,
 		.slba		= cfg.zslba,
 		.zra		= cfg.zra,
@@ -804,8 +806,6 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 		.zras_feat	= cfg.partial,
 		.data_len	= cfg.data_len,
 		.data		= data,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= NULL,
 	};
 	err = nvme_zns_mgmt_recv(&args);
 	if (!err)
@@ -1178,6 +1178,8 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 	struct nvme_zns_append_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
 		.nsid		= cfg.namespace_id,
 		.zslba		= cfg.zslba,
 		.nlb		= nblocks,
@@ -1189,8 +1191,6 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		.data		= buf,
 		.metadata_len	= cfg.metadata_size,
 		.metadata	= mbuf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
 	};
 
 	gettimeofday(&start_time, NULL);

@@ -1758,6 +1758,8 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 		struct nvme_get_log_args args = {
 			.args_size	= sizeof(args),
 			.fd		= fd,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
 			.lid		= lid,
 			.nsid		= 0xFFFFFFFF,
 			.lpo		= 0,
@@ -1769,8 +1771,6 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 			.ot		= false,
 			.len		= le32_to_cpu(hdr_ptr->length),
 			.log		= data,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= NULL,
 		};
 		ret = nvme_get_log(&args);
 
@@ -2175,13 +2175,13 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 	struct nvme_get_features_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
 		.fid		= NVME_FEAT_FID_HOST_BEHAVIOR,
 		.nsid		= NVME_NSID_ALL,
 		.sel		= 0,
 		.cdw11		= 0,
 		.uuidx		= 0,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
 	};
 
 	switch (data_area) {
@@ -5037,6 +5037,8 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 				struct nvme_get_log_args args = {
 					.args_size	= sizeof(args),
 					.fd		= fd,
+					.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+					.result		= NULL,
 					.lid		= WDC_NVME_GET_EOL_STATUS_LOG_OPCODE,
 					.nsid		= namespace_id,
 					.lpo		= 0,
@@ -5048,8 +5050,6 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 					.ot		= false,
 					.len		= WDC_NVME_SMART_CLOUD_ATTR_LEN,
 					.log		= data,
-					.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-					.result		= NULL,
 				};
 				ret = nvme_get_log(&args);
 
@@ -5100,6 +5100,8 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 				struct nvme_get_log_args args = {
 					.args_size	= sizeof(args),
 					.fd		= fd,
+					.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+					.result		= NULL,
 					.lid		= WDC_NVME_GET_EOL_STATUS_LOG_OPCODE,
 					.nsid		= NVME_NSID_ALL,
 					.lpo		= 0,
@@ -5111,8 +5113,6 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 					.ot		= false,
 					.len		= WDC_NVME_EOL_STATUS_LOG_LEN,
 					.log		= data,
-					.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-					.result		= NULL,
 				};
 				ret = nvme_get_log(&args);
 
@@ -6192,6 +6192,8 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *com
 		struct nvme_get_log_args args = {
 			.args_size	= sizeof(args),
 			.fd		= fd,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
 			.lid		= WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_OPCODE,
 			.nsid		= 0xFFFFFFFF,
 			.lpo		= 0,
@@ -6203,8 +6205,6 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *com
 			.ot		= false,
 			.len		= WDC_NVME_SMART_CLOUD_ATTR_LEN,
 			.log		= data,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= NULL,
 		};
 		ret = nvme_get_log(&args);
 

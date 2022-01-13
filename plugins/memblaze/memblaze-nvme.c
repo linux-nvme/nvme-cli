@@ -497,6 +497,8 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd
     struct nvme_get_features_args args = {
 	    .args_size		= sizeof(args),
 	    .fd			= fd,
+	    .timeout		= NVME_DEFAULT_IOCTL_TIMEOUT,
+	    .result		= &result,
 	    .fid		= feature_id,
 	    .nsid		= 0,
 	    .sel		= 0,
@@ -504,8 +506,6 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd
 	    .uuidx		= 0,
 	    .data_len		= 0,
 	    .data		= NULL,
-	    .timeout		= NVME_DEFAULT_IOCTL_TIMEOUT,
-	    .result		= &result,
     };
     err = nvme_get_features(&args);
     if (err < 0) {
@@ -552,6 +552,8 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
     struct nvme_set_features_args args = {
 	    .args_size		= sizeof(args),
 	    .fd			= fd,
+	    .timeout		= NVME_DEFAULT_IOCTL_TIMEOUT,
+	    .result		= &result,
 	    .fid		= cfg.feature_id,
 	    .nsid		= 0,
 	    .cdw11		= cfg.value,
@@ -561,8 +563,6 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
 	    .cdw15		= 0,
 	    .data_len		= 0,
 	    .data		= NULL,
-	    .timeout		= NVME_DEFAULT_IOCTL_TIMEOUT,
-	    .result		= &result,
     };
     err = nvme_set_features(&args);
     if (err < 0) {
@@ -624,6 +624,8 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, s
     struct nvme_set_features_args args = {
 	    .args_size		= sizeof(args),
 	    .fd			= fd,
+	    .timeout		= NVME_DEFAULT_IOCTL_TIMEOUT,
+	    .result		= &result,
 	    .fid		= cfg.feature_id,
 	    .nsid		= 0,
 	    .cdw11		= cfg.value,
@@ -633,8 +635,6 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, s
 	    .cdw15		= 0,
 	    .data_len		= 0,
 	    .data		= NULL,
-	    .timeout		= NVME_DEFAULT_IOCTL_TIMEOUT,
-	    .result		= &result,
     };
     err = nvme_set_features(&args);
     if (err < 0) {
@@ -876,11 +876,11 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 		struct nvme_fw_download_args args = {
 			.args_size	= sizeof(args),
 			.fd		= fd,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
 			.offset		= offset,
 			.data_len	= xfer,
 			.data		= fw_buf,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= NULL,
 		};
 		err = nvme_fw_download(&args);
 		if (err < 0) {
@@ -1081,6 +1081,8 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, 
     struct nvme_set_features_args args = {
         .args_size      = sizeof(args),
         .fd             = fd,
+        .timeout        = NVME_DEFAULT_IOCTL_TIMEOUT,
+        .result         = &result,
         .fid            = cfg.feature_id,
         .nsid           = 0,
         .cdw11          = cfg.value,
@@ -1090,8 +1092,6 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, 
         .cdw15          = 0,
         .data_len       = 0,
         .data           = NULL,
-        .timeout        = NVME_DEFAULT_IOCTL_TIMEOUT,
-        .result         = &result,
     };
     err = nvme_set_features(&args);
     if (err < 0) {
@@ -1170,6 +1170,8 @@ static int mb_set_lat_stats(int argc, char **argv,
 	struct nvme_get_features_args args_get = {
 		.args_size	= sizeof(args_get),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
 		.fid		= fid,
 		.nsid		= nsid,
 		.sel		= sel,
@@ -1177,13 +1179,13 @@ static int mb_set_lat_stats(int argc, char **argv,
 		.uuidx		= 0,
 		.data_len	= data_len,
 		.data		= buf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
 	};
 
 	struct nvme_set_features_args args_set = {
 		.args_size	= sizeof(args_set),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
 		.fid		= fid,
 		.nsid		= nsid,
 		.cdw11		= option,
@@ -1193,8 +1195,6 @@ static int mb_set_lat_stats(int argc, char **argv,
 		.cdw15		= 0,
 		.data_len	= data_len,
 		.data		= buf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
 	};
 
 	if (fd < 0)

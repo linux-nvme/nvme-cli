@@ -558,11 +558,11 @@ static int micron_selective_download(int argc, char **argv,
 	struct nvme_fw_download_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
 		.offset		= offset,
 		.data_len	= xfer,
 		.data		= fw_buf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= NULL,
 	};
         err = nvme_fw_download(&args);
         if (err < 0) {
@@ -646,6 +646,8 @@ static int micron_smbus_option(int argc, char **argv,
 	struct nvme_get_features_args args = {
                 .args_size      = sizeof(args),
                 .fd             = fd,
+                .timeout        = NVME_DEFAULT_IOCTL_TIMEOUT,
+                .result         = &result,
                 .fid            = fid,
                 .nsid           = 1,
                 .sel            = opt.value,
@@ -653,8 +655,6 @@ static int micron_smbus_option(int argc, char **argv,
                 .uuidx          = 0,
                 .data_len       = 0,
                 .data           = NULL,
-                .timeout        = NVME_DEFAULT_IOCTL_TIMEOUT,
-                .result         = &result,
         };
         err = nvme_get_features(&args);
         if (err == 0) {

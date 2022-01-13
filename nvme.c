@@ -507,6 +507,8 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 		struct nvme_get_features_args args = {
 			.args_size	= sizeof(args),
 			.fd		= fd,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= &result,
 			.fid		= NVME_FEAT_FID_HOST_BEHAVIOR,
 			.nsid		= NVME_NSID_ALL,
 			.sel		= 0,
@@ -514,8 +516,6 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd, struct 
 			.uuidx		= 0,
 			.data_len	= len,
 			.data		= buf,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= &result,
 		};
 		err = nvme_get_features(&args);
 		if (err > 0) {
@@ -1637,6 +1637,8 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	struct nvme_get_log_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout        = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
 		.lid		= cfg.log_id,
 		.nsid		= cfg.namespace_id,
 		.lpo		= cfg.lpo,
@@ -1648,8 +1650,6 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 		.ot		= cfg.ot,
 		.len		= cfg.log_len,
 		.log		= log,
-		.timeout        = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= NULL,
 	};
 	err = nvme_get_log(&args);
 	if (!err) {
@@ -3005,12 +3005,12 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 	struct nvme_virtual_mgmt_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
 		.act		= cfg.act,
 		.rt		= cfg.rt,
 		.cntlid		= cfg.cntlid,
 		.nr		= cfg.nr,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
 	};
 	err = nvme_virtual_mgmt(&args);
 	if (!err) {
@@ -3185,10 +3185,10 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 	struct nvme_dev_self_test_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
-		.nsid		= cfg.namespace_id,
-		.stc		= cfg.stc,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
+		.nsid		= cfg.namespace_id,
+		.stc		= cfg.stc,
 	};
 	err = nvme_dev_self_test(&args);
 	if (!err) {

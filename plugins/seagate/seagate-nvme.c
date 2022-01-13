@@ -1130,6 +1130,8 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		struct nvme_get_log_args args = {
 			.args_size	= sizeof(args),
 			.fd		= fd,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
 			.lid		= cfg.log_id,
 			.nsid		= cfg.namespace_id,
 			.lpo		= offset,
@@ -1141,8 +1143,6 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 			.ot		= false,
 			.len		= blksToGet * 512,
 			.log		= (void *)log,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= NULL,
 		};
 		err = nvme_get_log(&args);
 		if (!err) {
@@ -1242,6 +1242,8 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 		struct nvme_get_log_args args = {
 			.args_size	= sizeof(args),
 			.fd		= fd,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
 			.lid		= log_id,
 			.nsid		= cfg.namespace_id,
 			.lpo		= offset,
@@ -1253,8 +1255,6 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 			.ot		= false,
 			.len		= blksToGet * 512,
 			.log		= (void *)log,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= NULL,
 		};
 		err = nvme_get_log(&args);
 		if (!err) {
@@ -1376,6 +1376,8 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 		struct nvme_get_log_args args = {
 			.args_size	= sizeof(args),
 			.fd		= fd,
+			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+			.result		= NULL,
 			.lid		= log_id,
 			.nsid		= cfg.namespace_id,
 			.lpo		= offset,
@@ -1387,8 +1389,6 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 			.ot		= false,
 			.len		= blksToGet * 512,
 			.log		= (void *)log,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-			.result		= NULL,
 		};
 		err = nvme_get_log(&args);
 		if (!err) {

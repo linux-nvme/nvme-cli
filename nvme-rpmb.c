@@ -272,6 +272,8 @@ static int send_rpmb_req(int fd, unsigned char tgt, int size,
 	struct nvme_security_send_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
 		.nsid		= 0,
 		.nssf		= tgt,
 		.spsp0		= RPMB_NVME_SPSP,
@@ -280,8 +282,6 @@ static int send_rpmb_req(int fd, unsigned char tgt, int size,
 		.tl		= 0,
 		.data_len	= size,
 		.data		= (void *)req,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= NULL,
 	};
 
 	return nvme_security_send(&args);
@@ -294,6 +294,8 @@ static int recv_rpmb_rsp(int fd, int tgt, int size,
 	struct nvme_security_receive_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= NULL,
 		.nsid		= 0,
 		.nssf		= tgt,
 		.spsp0		= RPMB_NVME_SPSP,
@@ -302,8 +304,6 @@ static int recv_rpmb_rsp(int fd, int tgt, int size,
 		.al		= 0,
 		.data_len	= size,
 		.data		= (void *)rsp,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= NULL,
 	};
 
 	return nvme_security_receive(&args);
