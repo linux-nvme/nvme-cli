@@ -3847,15 +3847,15 @@ int nvme_resv_acquire(struct nvme_resv_acquire_args *args);
 struct nvme_resv_register_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	enum nvme_resv_rrega rrega;
 	enum nvme_resv_cptpl cptpl;
-	bool iekey;
 	__u64 crkey;
 	__u64 nrkey;
-	__u32 timeout;
-	__u32 *result;
-};
+	bool iekey;
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_resv_register() - Send an nvme reservation register
