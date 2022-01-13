@@ -123,6 +123,10 @@ static int discover_err = 0;
   temp.tos = -1;
   temp.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
   while (PyDict_Next($input, &pos, &key, &value)) {
+    if (!PyUnicode_CompareWithASCIIString(key, "host_traddr"))
+      temp.host_traddr = PyBytes_AsString(value);
+    if (!PyUnicode_CompareWithASCIIString(key, "host_iface"))
+      temp.host_iface = PyBytes_AsString(value);
     if (!PyUnicode_CompareWithASCIIString(key, "nr_io_queues"))
       temp.nr_io_queues = PyLong_AsLong(value);
     if (!PyUnicode_CompareWithASCIIString(key, "reconnect_delay"))
@@ -293,7 +297,6 @@ struct nvme_ctrl {
   %immutable transport;
   %immutable subsysnqn;
   %immutable traddr;
-  %immutable host_traddr;
   %immutable trsvcid;
   %immutable address;
   %immutable firmware;
@@ -307,7 +310,6 @@ struct nvme_ctrl {
   char *transport;
   char *subsysnqn;
   char *traddr;
-  char *host_traddr;
   char *trsvcid;
   char *dhchap_key;
   char *address;

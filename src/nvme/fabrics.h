@@ -18,6 +18,8 @@
 
 /**
  * struct nvme_fabrics_config - Defines all linux nvme fabrics initiator options
+ * @host_traddr:	Host transport address
+ * @host_iface:		Host interface name
  * @queue_size:		Number of IO queue entries
  * @nr_io_queues:	Number of controller IO queues to establish
  * @reconnect_delay:	Time between two consecutive reconnect attempts.
@@ -33,6 +35,8 @@
  * @data_digest:	Generate/verify data digest (TCP)
  */
 struct nvme_fabrics_config {
+	char *host_traddr;
+	char *host_iface;
 	int queue_size;
 	int nr_io_queues;
 	int reconnect_delay;
