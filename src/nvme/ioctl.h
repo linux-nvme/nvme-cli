@@ -3565,49 +3565,51 @@ static inline int nvme_flush(int fd, __u32 nsid) {
 /**
  * nvme_io_args - Arguments for NVMe I/O commands
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID
+ * @data:	Pointer to user address of the data buffer
+ * @metadata:	Pointer to user address of the metadata buffer
  * @slba:	Starting logical block
- * @nblocks:	Number of logical blocks to send (0's based value)
+ * @nbl:	Number of logical blocks to send (0's based value)
  * @control:	Command control flags, see &enum nvme_io_control_flags.
- * @dsm:	Data set management attributes, see &enum nvme_io_dsm_flags
- * @reftag:	This field specifies the Initial Logical Block Reference Tag
- * 		expected value. Used only if the namespace is formatted to use
- * 		end-to-end protection information.
  * @apptag:	This field specifies the Application Tag Mask expected value.
- * 		Used only if the namespace is formatted to use end-to-end
- * 		protection information.
+ *		Used only if the namespace is formatted to use end-to-end
+ *		protection information.
  * @appmask:	This field specifies the Application Tag expected value. Used
- * 		only if the namespace is formatted to use end-to-end protection
- * 		information.
+ *		only if the namespace is formatted to use end-to-end protection
+ *		information.
+ * @reftag:	This field specifies the Initial Logical Block Reference Tag
+ *		expected value. Used only if the namespace is formatted to use
+ *		end-to-end protection information.
+ * @data_len:	Length of user buffer, @data, in bytes
  * @storage_tag: This filed specifies Variable Sized Expected Logical Block
  *		Storage Tag (ELBST) and Expected Logical Block Reference
  *		Tag (ELBRT)
- * @data_len:	Length of user buffer, @data, in bytes
- * @data:	Pointer to user address of the data buffer
  * @metadata_len:Length of user buffer, @metadata, in bytes
- * @metadata:	Pointer to user address of the metadata buffer
- * @timeout:	Timeout in ms
+ * @dsm:	Data set management attributes, see &enum nvme_io_dsm_flags
+ * @dspec:	Directive specific value
  */
 struct nvme_io_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
+	void *data;
+	void *metadata;
 	__u64 slba;
 	__u16 nlb;
 	__u16 control;
-	__u8 dsm;
-	__u8 dspec;
-	__u32 reftag;
 	__u16 apptag;
 	__u16 appmask;
-	__u64 storage_tag;
+	__u32 reftag;
 	__u32 data_len;
-	void *data;
+	__u64 storage_tag;
 	__u32 metadata_len;
-	void *metadata;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u8 dsm;
+	__u8 dspec;
+} __attribute__((__packed__, aligned(__alignof__(__u64))));
 
 /**
  * nvme_io() - Submit an nvme user I/O command
