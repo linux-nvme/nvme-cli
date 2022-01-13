@@ -3709,23 +3709,23 @@ static inline int nvme_verify(struct nvme_io_args *args)
 /**
  * nvme_dsm_args - Arguments for the NVMe Dataset Management command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
+ * @dsm:	The data set management attributes
  * @attrs:	DSM attributes, see &enum nvme_dsm_attributes
  * @nr_ranges:	Number of block ranges in the data set management attributes
- * @dsm:	The data set management attributes
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
  */
 struct nvme_dsm_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
+	struct nvme_dsm_range *dsm;
 	__u32 attrs;
 	__u16 nr_ranges;
-	struct nvme_dsm_range *dsm;
-	__u32 timeout;
-	__u32 *result;
-};
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_dsm() - Send an nvme data set management command
