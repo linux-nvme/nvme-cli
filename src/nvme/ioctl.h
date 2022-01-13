@@ -3745,43 +3745,43 @@ int nvme_dsm(struct nvme_dsm_args *args);
 /**
  * nvme_copy_args - Arguments for the NVMe Copy command
  * @fd:		File descriptor of the nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
  * @copy:	Range descriptior
  * @sdlba:	Start destination LBA
  * @nr:		Number of ranges
+ * @dspec:	Directive specific value
  * @prinfor:	Protection information field for read
  * @prinfow:	Protection information field for write
  * @dtype:	Directive type
- * @dspec:	Directive specific value
  * @format:	Descriptor format
  * @lr:		Limited retry
  * @fua:	Force unit access
  * @ilbrt:	Initial logical block reference tag
  * @lbatm:	Logical block application tag mask
  * @lbat:	Logical block application tag
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
  */
 struct nvme_copy_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	struct nvme_copy_range *copy;
 	__u64 sdlba;
 	__u16 nr;
+	__u16 dspec;
 	__u8 prinfor;
 	__u8 prinfow;
 	__u8 dtype;
-	__u16 dspec;
 	__u8 format;
 	int lr;
 	int fua;
 	__u32 ilbrt;
 	__u16 lbatm;
 	__u16 lbat;
-	__u32 timeout;
-	__u32 *result;
-};
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_copy() -
