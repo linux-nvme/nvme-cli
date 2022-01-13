@@ -3177,7 +3177,7 @@ struct nvme_directive_recv_args {
 	__u32 data_len;
 	void *data;
 	__u16 dspec;
-} __attribute__((__packed__));
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_directive_recv() - Receive directive specific data
@@ -3305,25 +3305,25 @@ static inline int nvme_directive_recv_stream_allocate(int fd, __u32 nsid,
 /**
  * nvme_capacity_mgmt_args - Arguments for the NVMe Capacity Management command
  * @fd:		File descriptor of nvme device
- * @op:		Operation to be performed by the controller
- * @element_id:	Value specific to the value of the Operation field
  * @dw11:	Least significant 32 bits of the capacity in bytes of the
  *		Endurance Group or NVM Set to be created
  * @dw12:	Most significant 32 bits of the capacity in bytes of the
  *		Endurance Group or NVM Set to be created
- * @timeout:	Timeout in ms
  * @result:	If successful, the CQE dword0 value
+ * @timeout:	Timeout in ms
+ * @element_id:	Value specific to the value of the Operation field
+ * @op:		Operation to be performed by the controller
  */
 struct nvme_capacity_mgmt_args {
 	int args_size;
 	int fd;
-	__u8 op;
-	__u16 element_id;
+	__u32 *result;
+	__u32 timeout;
 	__u32 cdw11;
 	__u32 cdw12;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u16 element_id;
+	__u8 op;
+} __attribute__((__packed__));
 
 /**
  * nvme_capacity_mgmt() -
