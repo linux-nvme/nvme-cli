@@ -2781,19 +2781,21 @@ static inline int nvme_ns_mgmt_delete(int fd, __u32 nsid)
 /**
  * nvme_ns_attach_args - Arguments for Nvme Namespace Management command
  * @fd:		File descriptor of nvme device
- * @nsid:	Namespace ID to execute attach selection
- * @sel:	Attachment selection, see &enum nvme_ns_attach_sel
- * @ctrlist:	Controller list to modify attachment state of nsid
+ * @result:	NVMe command result
  * @timeout:	Timeout in ms
+ * @nsid:	Namespace ID to execute attach selection
+ * @ctrlist:	Controller list to modify attachment state of nsid
+ * @sel:	Attachment selection, see &enum nvme_ns_attach_sel
  */
 struct nvme_ns_attach_args {
 	int args_size;
 	int fd;
-	__u32 nsid;
-	enum nvme_ns_attach_sel sel;
-	struct nvme_ctrl_list *ctrlist;
+	__u32 *result;
 	__u32 timeout;
-};
+	__u32 nsid;
+	struct nvme_ctrl_list *ctrlist;
+	enum nvme_ns_attach_sel sel;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_ns_attach_args - Attach or detach namespace to controller(s)
@@ -2813,10 +2815,11 @@ static inline int nvme_ns_attach_ctrls(int fd, __u32 nsid,
 	struct nvme_ns_attach_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.nsid = nsid,
-		.sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH,
-		.ctrlist = ctrlist,
+		.result = NULL,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.nsid = nsid,
+		.ctrlist = ctrlist,
+		.sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH,
 	};
 
 	return nvme_ns_attach(&args);
@@ -2834,10 +2837,11 @@ static inline int nvme_ns_detach_ctrls(int fd, __u32 nsid,
 	struct nvme_ns_attach_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.nsid = nsid,
-		.sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
-		.ctrlist = ctrlist,
+		.result = NULL,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.nsid = nsid,
+		.ctrlist = ctrlist,
+		.sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
 	};
 
 	return nvme_ns_attach(&args);

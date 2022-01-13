@@ -1203,7 +1203,7 @@ int nvme_ns_attach(struct nvme_ns_attach_args *args)
 
 	if (args->args_size < sizeof(*args))
 		return -EINVAL;
-	return nvme_submit_admin_passthru(args->fd, &cmd, NULL);
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
 int nvme_fw_download(struct nvme_fw_download_args *args)
