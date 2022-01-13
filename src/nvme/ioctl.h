@@ -2892,21 +2892,21 @@ int nvme_fw_download(struct nvme_fw_download_args *args);
 /**
  * nvme_fw_commit_args - Arguments for the NVMe Firmware Commit command
  * @fd:		File descriptor of nvme device
- * @slot:	Firmware slot to commit the downloaded image
  * @action:	Action to use for the firmware image, see &enum nvme_fw_commit_ca
- * @bpid:	Set to true to select the boot partition id
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ * @slot:	Firmware slot to commit the downloaded image
+ * @bpid:	Set to true to select the boot partition id
  */
 struct nvme_fw_commit_args {
 	int args_size;
 	int fd;
-	__u8 slot;
-	enum nvme_fw_commit_ca action;
-	bool bpid;
-	__u32 timeout;
 	__u32 *result;
-};
+	__u32 timeout;
+	enum nvme_fw_commit_ca action;
+	__u8 slot;
+	bool bpid;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_fw_commit() - Commit firmware using the specified action
