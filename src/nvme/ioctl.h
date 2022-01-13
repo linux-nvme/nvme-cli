@@ -2924,31 +2924,31 @@ int nvme_fw_commit(struct nvme_fw_commit_args *args);
 /**
  * nvme_security_send_args - Arguments for the NVMe Security Send command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID to issue security command on
  * @nssf:	NVMe Security Specific field
  * @spsp0:	Security Protocol Specific field
  * @spsp1:	Security Protocol Specific field
  * @secp:	Security Protocol
  * @tl:		Protocol specific transfer length
- * @data_len:	Data length of the payload in bytes
  * @data:	Security data payload to send
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @data_len:	Data length of the payload in bytes
  */
 struct nvme_security_send_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	__u8 nssf;
 	__u8 spsp0;
 	__u8 spsp1;
 	__u8 secp;
 	__u32 tl;
-	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u32 data_len;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_security_send() -
