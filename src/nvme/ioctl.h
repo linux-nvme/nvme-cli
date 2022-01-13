@@ -4052,6 +4052,8 @@ static inline int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
 /**
  * nvme_zns_append_args - Arguments for the NVMe ZNS Append command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID
  * @zslba:	Zone start logical block address
  * @nlb:	Number of logical blocks
@@ -4061,14 +4063,14 @@ static inline int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
  * @lbatm:	Logical block application tag mask
  * @data_len:	Length of @data
  * @data:	Userspace address of the data
- * @metadata_len: Length of @metadata
  * @metadata:	Userspace address of the metadata
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @metadata_len: Length of @metadata
  */
 struct nvme_zns_append_args {
 	int args_size;
 	int fd;
+	__u64 *result;
+	__u32 timeout;
 	__u32 nsid;
 	__u64 zslba;
 	__u16 nlb;
@@ -4078,11 +4080,9 @@ struct nvme_zns_append_args {
 	__u16 lbatm;
 	__u32 data_len;
 	void *data;
-	__u32 metadata_len;
 	void *metadata;
-	__u32 timeout;
-	__u64 *result;
-};
+	__u32 metadata_len;
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_zns_append() - Append data to a zone
