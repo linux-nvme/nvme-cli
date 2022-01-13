@@ -2850,21 +2850,21 @@ static inline int nvme_ns_detach_ctrls(int fd, __u32 nsid,
 /**
  * nvme_fw_download_args - Arguments for the NVMe Firmware Download command
  * @fd:		File descriptor of nvme device
- * @offset:	Offset in the firmware data
- * @data_len:	Length of data in this command in bytes
- * @data:	Userspace address of the firmware data
- * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
+ * @offset:	Offset in the firmware data
+ * @data:	Userspace address of the firmware data
+ * @data_len:	Length of data in this command in bytes
  */
 struct nvme_fw_download_args {
 	int args_size;
 	int fd;
-	__u32 offset;
-	__u32 data_len;
-	void *data;
-	__u32 timeout;
 	__u32 *result;
-};
+	__u32 timeout;
+	__u32 offset;
+	void *data;
+	__u32 data_len;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_fw_download() - Download part or all of a firmware image to the
