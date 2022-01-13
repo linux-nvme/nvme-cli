@@ -3323,7 +3323,7 @@ struct nvme_capacity_mgmt_args {
 	__u32 cdw12;
 	__u16 element_id;
 	__u8 op;
-} __attribute__((__packed__));
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_capacity_mgmt() -
@@ -3337,25 +3337,25 @@ int nvme_capacity_mgmt(struct nvme_capacity_mgmt_args *args);
 /**
  * nvme_lockdown_args - Arguments for the NVME Lockdown command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms (0 for default timeout)
  * @scp:	Scope of the command
  * @prhbt:	Prohibit or allow the command opcode or Set Features command
  * @ifc:	Affected interface
  * @ofi:	Opcode or Feature Identifier
  * @uuid:	UUID Index if controller supports this id selection method
- * @timeout:	Timeout in ms (0 for default timeout)
- * @result:	The command completion result from CQE dword0
  */
 struct nvme_lockdown_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u8 scp;
 	__u8 prhbt;
 	__u8 ifc;
 	__u8 ofi;
 	__u8 uuidx;
-	__u32 timeout;
-	__u32 *result;
-};
+} __attribute__((__packed__));
 
 /**
  * nvme_lockdown() - Issue lockdown command
