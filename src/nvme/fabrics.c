@@ -361,7 +361,7 @@ static int hostname2traddr(nvme_ctrl_t c)
 	ret = getaddrinfo(c->traddr, NULL, &hints, &host_info);
 	if (ret) {
 		nvme_msg(LOG_ERR, "failed to resolve host %s info\n", c->traddr);
-		return ret;
+		return -ENVME_CONNECT_RESOLVE;
 	}
 
 	switch (host_info->ai_family) {
@@ -378,13 +378,13 @@ static int hostname2traddr(nvme_ctrl_t c)
 	default:
 		nvme_msg(LOG_ERR, "unrecognized address family (%d) %s\n",
 			host_info->ai_family, c->traddr);
-		ret = -EINVAL;
+		ret = -ENVME_CONNECT_ADDRFAM;
 		goto free_addrinfo;
 	}
 
 	if (!p) {
 		nvme_msg(LOG_ERR, "failed to get traddr for %s\n", c->traddr);
-		ret = -errno;
+		ret = -ENVME_CONNECT_TRADDR;
 		goto free_addrinfo;
 	}
 	c->traddr = strdup(addrstr);
@@ -403,15 +403,13 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 
 	if (!transport) {
 		nvme_msg(LOG_ERR, "need a transport (-t) argument\n");
-		errno = EINVAL;
-		return -1;
+		return -ENVME_CONNECT_TARG;
 	}
 
 	if (strncmp(transport, "loop", 4)) {
 		if (!nvme_ctrl_get_traddr(c)) {
 			nvme_msg(LOG_ERR, "need a address (-a) argument\n");
-			errno = EINVAL;
-			return -1;
+			return -ENVME_CONNECT_AARG;
 		}
 		/* Use the default ctrl loss timeout if unset */
                 if (cfg->ctrl_loss_tmo == -1)
@@ -421,8 +419,7 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	/* always specify nqn as first arg - this will init the string */
 	if (asprintf(argstr, "nqn=%s",
 		     nvme_ctrl_get_subsysnqn(c)) < 0) {
-		errno = ENOMEM;
-		return -1;
+		return -ENOMEM;
 	}
 	if (!strcmp(nvme_ctrl_get_subsysnqn(c), NVME_DISC_SUBSYS_NAME)) {
 		nvme_ctrl_set_discovery_ctrl(c, true);
@@ -499,7 +496,7 @@ static int __nvmf_add_ctrl(const char *argstr)
 	if (fd < 0) {
 		nvme_msg(LOG_ERR, "Failed to open %s: %s\n",
 			 nvmf_dev, strerror(errno));
-		return -1;
+		return -ENVME_CONNECT_OPEN;
 	}
 
 	nvme_msg(LOG_DEBUG, "connect ctrl, '%.*s'\n",
@@ -508,7 +505,7 @@ static int __nvmf_add_ctrl(const char *argstr)
 	if (ret != len) {
 		nvme_msg(LOG_NOTICE, "Failed to write to %s: %s\n",
 			 nvmf_dev, strerror(errno));
-		ret = -1;
+		ret = -ENVME_CONNECT_WRITE;
 		goto out_close;
 	}
 
@@ -516,7 +513,7 @@ static int __nvmf_add_ctrl(const char *argstr)
 	if (len < 0) {
 		nvme_msg(LOG_ERR, "Failed to read from %s: %s\n",
 			 nvmf_dev, strerror(errno));
-		ret = -1;
+		ret = -ENVME_CONNECT_READ;
 		goto out_close;
 	}
 	nvme_msg(LOG_DEBUG, "connect ctrl, response '%.*s'\n",
@@ -531,8 +528,7 @@ static int __nvmf_add_ctrl(const char *argstr)
 	}
 
 	nvme_msg(LOG_ERR, "Failed to parse ctrl info for \"%s\"\n", argstr);
-	errno = EINVAL;
-	ret = -1;
+	ret = -ENVME_CONNECT_PARSE;
 out_close:
 	close(fd);
 	return ret;
@@ -548,18 +544,26 @@ int nvmf_add_ctrl_opts(nvme_ctrl_t c, struct nvme_fabrics_config *cfg)
 	cfg = merge_config(c, cfg);
 	if (traddr_is_hostname(c)) {
 		ret = hostname2traddr(c);
-		if (ret)
-			return ret;
+		if (ret) {
+			errno = -ret;
+			return -1;
+		}
 	}
 
 	ret = build_options(h, c, &argstr);
-	if (ret)
-		return ret;
+	if (ret) {
+		errno = -ret;
+		return -1;
+	}
 
 	ret = __nvmf_add_ctrl(argstr);
 	free(argstr);
-	if (ret >= 0)
+	if (ret < 0) {
+		errno = -ret;
+		ret = -1;
+	} else {
 		nvme_msg(LOG_INFO, "nvme%d: ctrl connected\n", ret);
+	}
 	return ret;
 }
 
@@ -575,8 +579,10 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	nvme_ctrl_set_discovered(c, true);
 	if (traddr_is_hostname(c)) {
 		ret = hostname2traddr(c);
-		if (ret)
-			return ret;
+		if (ret) {
+			errno = -ret;
+			return -1;
+		}
 	}
 
 	ret = build_options(h, c, &argstr);
@@ -585,8 +591,10 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 
 	ret = __nvmf_add_ctrl(argstr);
 	free(argstr);
-	if (ret < 0)
-		return ret;
+	if (ret < 0) {
+		errno = -ret;
+		return -1;
+	}
 
 	nvme_msg(LOG_INFO, "nvme%d: ctrl connected\n", ret);
 	return nvme_init_ctrl(h, c, ret);

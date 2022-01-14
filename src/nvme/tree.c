@@ -1156,7 +1156,7 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 	if (strcmp(c->transport, "loop")) {
 		c->address = nvme_get_attr(path, "address");
 		if (!c->address) {
-			errno = ENXIO;
+			errno = ENVME_CONNECT_INVAL_TR;
 			ret = -1;
 			goto out_free_name;
 		}
@@ -1166,13 +1166,13 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 	if (!subsys_name) {
 		nvme_msg(LOG_ERR, "Failed to lookup subsystem name for %s\n",
 			 c->name);
-		errno = ENXIO;
+		errno = ENVME_CONNECT_LOOKUP_SUBSYS_NAME;
 		ret = -1;
 		goto out_free_name;
 	}
 	s = nvme_lookup_subsystem(h, subsys_name, c->subsysnqn);
 	if (!s) {
-		errno = ENXIO;
+		errno = ENVME_CONNECT_LOOKUP_SUBSYS;
 		ret = -1;
 		goto out_free_subsys;
 	}
