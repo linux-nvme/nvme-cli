@@ -390,31 +390,31 @@ int nvme_get_nsid(int fd, __u32 *nsid);
 /**
  * nvme_identify_args - Arguments for the NVMe Identify command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms (0 for default timeout)
  * @cns:	The Controller or Namespace structure, see @enum nvme_identify_cns
+ * @data:	User space destination address to transfer the data
+ * @csi:	Command Set Identifier
  * @nsid:	Namespace identifier, if applicable
  * @domid:	Domain identifier, if applicable
  * @cntid:	The Controller Identifier, if applicable
  * @nvmsetid:	The NVMe Set ID if CNS is 04h
  * @uuidx:	UUID Index if controller supports this id selection method
- * @csi:	Command Set Identifier
- * @data:	User space destination address to transfer the data
- * @timeout:	Timeout in ms (0 for default timeout)
- * @result:	The command completion result from CQE dword0
  */
 struct nvme_identify_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	enum nvme_identify_cns cns;
+	void *data;
+	enum nvme_csi csi;
 	__u32 nsid;
 	__u16 cntid;
 	__u16 nvmsetid;
 	__u16 domid;
 	__u8 uuidx;
-	enum nvme_csi csi;
-	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_identify() - Send the NVMe Identify command
@@ -434,16 +434,16 @@ static int nvme_identify_cns_nsid(int fd, enum nvme_identify_cns cns,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = cns,
+		.data = data,
+		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = data,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -574,16 +574,16 @@ static inline int nvme_identify_ctrl_list(int fd, __u16 cntid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_CTRL_LIST,
+		.data = ctrlist,
+		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = cntid,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = ctrlist,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -611,16 +611,16 @@ static inline int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_NS_CTRL_LIST,
+		.data = ctrlist,
+		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = cntid,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = ctrlist,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -672,16 +672,16 @@ static inline int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_NVMSET_LIST,
+		.data = nvmset,
+		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = nvmsetid,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = nvmset,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -705,16 +705,16 @@ static inline int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP,
+		.data = cap,
+		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = cntid,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = cap,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -744,16 +744,16 @@ static inline int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
+		.data = list,
+		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = cntid,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = list,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -817,16 +817,16 @@ static inline int nvme_identify_ns_csi(int fd, __u32 nsid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_CSI_NS,
+		.data = data,
+		.csi = csi,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = csi,
-		.data = data,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -846,16 +846,16 @@ static inline int nvme_identify_ctrl_csi(int fd, enum nvme_csi csi, void *data)
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_CSI_CTRL,
+		.data = data,
+		.csi = csi,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = csi,
-		.data = data,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -884,16 +884,16 @@ static inline int nvme_identify_active_ns_list_csi(int fd, __u32 nsid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_NS_ACTIVE_LIST,
+		.data = list,
+		.csi = csi,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = csi,
-		.data = list,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -922,16 +922,16 @@ static inline int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST,
+		.data = list,
+		.csi = csi,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = csi,
-		.data = list,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -953,16 +953,16 @@ static inline int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS,
+		.data = ns,
+		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = ns,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -1003,16 +1003,16 @@ static inline int nvme_identify_domain_list(int fd, __u16 domid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_DOMAIN_LIST,
+		.data = list,
+		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = domid,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = list,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -1033,16 +1033,16 @@ static inline int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID,
+		.data = list,
+		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = endgrp_id,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = list,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -1066,16 +1066,16 @@ static inline int nvme_identify_iocs(int fd, __u16 cntlid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE,
+		.data = iocs,
+		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = cntlid,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_NVM,
-		.data = iocs,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -1096,16 +1096,15 @@ static inline int nvme_zns_identify_ns(int fd, __u32 nsid,
 	struct nvme_identify_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.cns = NVME_IDENTIFY_CNS_CSI_NS,
+		.data = data,
+		.csi = NVME_CSI_ZNS,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
 		.nvmsetid = NVME_NVMSETID_NONE,
 		.domid = NVME_DOMID_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.csi = NVME_CSI_ZNS,
-		.data = data,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
 	};
 
 	return nvme_identify(&args);
@@ -1128,41 +1127,40 @@ static inline int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id)
  * nvme_get_log_args - Arguments for the NVMe Admin Get Log command
  * @args_size:	Length of the structure
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @lid:	Log page identifier, see &enum nvme_cmd_get_log_lid for known
  * 		values
- * @nsid: 	Namespace identifier, if applicable
  * @lpo:	Log page offset for partial log transfers
+ * @log:	User space destination address to transfer the data
+ * @len:	Length of provided user buffer to hold the log data in bytes
+ * @nsid:	Namespace identifier, if applicable
+ * @csi:	Command set identifier, see &enum nvme_csi for known values
  * @lsp:	Log specific field
  * @lsi:	Endurance group information
- * @rae:	Retain asynchronous events
  * @uuidx:	UUID selection, if supported
- * @len:	Length of provided user buffer to hold the log data in bytes
- * @log:	User space destination address to transfer the data
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
- * @csi:	Command set identifier, see &enum nvme_csi for known values
+ * @rae:	Retain asynchronous events
  * @ot:		Offset Type; if set @lpo specifies the index into the list
  *		of data structures, otherwise @lpo specifies the byte offset
  *		into the log page.
- *
  */
 struct nvme_get_log_args {
 	int args_size;
 	int fd;
-	enum nvme_cmd_get_log_lid lid;
-	__u32 nsid;
-	__u64 lpo;
-	__u8 lsp;
-	__u16 lsi;
-	bool rae;
-	__u8 uuidx;
-	__u32 len;
-	void *log;
-	__u32 timeout;
 	__u32 *result;
+	__u32 timeout;
+	enum nvme_cmd_get_log_lid lid;
+	__u64 lpo;
+	void *log;
+	__u32 len;
+	__u32 nsid;
 	enum nvme_csi csi;
+	__u16 lsi;
+	__u8 lsp;
+	__u8 uuidx;
+	bool rae;
 	bool ot;
-};
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_get_log() - NVMe Admin Get Log command
@@ -1180,18 +1178,18 @@ static inline int nvme_get_nsid_log(int fd, bool rae,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = lid,
-		.nsid = nsid,
-		.lpo = 0,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.rae = false,
-		.uuidx = NVME_UUID_NONE,
-		.len = len,
-		.log = log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = lid,
+		.lpo = 0,
+		.log = log,
+		.len = len,
+		.nsid = nsid,
 		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
 		.ot = false,
 	};
 
@@ -1325,18 +1323,18 @@ static inline int nvme_get_log_cmd_effects(int fd, enum nvme_csi csi,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_CMD_EFFECTS,
-		.nsid = NVME_NSID_ALL,
-		.lpo = 0,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.rae = false,
-		.uuidx = NVME_UUID_NONE,
-		.len = sizeof(*log),
-		.log = log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_CMD_EFFECTS,
+		.lpo = 0,
+		.log = log,
+		.len = sizeof(*log),
+		.nsid = NVME_NSID_ALL,
 		.csi = csi,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1372,18 +1370,18 @@ static inline int nvme_get_log_create_telemetry_host(int fd,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_TELEMETRY_HOST,
-		.nsid = NVME_NSID_NONE,
-		.lpo = 0,
-		.lsp = NVME_LOG_TELEM_HOST_LSP_CREATE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.rae = false,
-		.uuidx = NVME_UUID_NONE,
-		.len = sizeof(*log),
-		.log = log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_TELEMETRY_HOST,
+		.lpo = 0,
+		.log = log,
+		.len = sizeof(*log),
+		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_TELEM_HOST_LSP_CREATE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1409,18 +1407,18 @@ static inline int nvme_get_log_telemetry_host(int fd, __u64 offset,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_TELEMETRY_HOST,
-		.nsid = NVME_NSID_NONE,
-		.lpo = 0,
-		.lsp = NVME_LOG_TELEM_HOST_LSP_RETAIN,
-		.lsi = NVME_LOG_LSI_NONE,
-		.rae = false,
-		.uuidx = NVME_UUID_NONE,
-		.len = len,
-		.log = log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_TELEMETRY_HOST,
+		.lpo = 0,
+		.log = log,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_TELEM_HOST_LSP_RETAIN,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1440,18 +1438,18 @@ static inline int nvme_get_log_telemetry_ctrl(int fd, bool rae,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_TELEMETRY_CTRL,
-		.nsid = NVME_NSID_NONE,
-		.lpo = offset,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.rae = rae,
-		.uuidx = NVME_UUID_NONE,
-		.len = len,
-		.log = log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_TELEMETRY_CTRL,
+		.lpo = offset,
+		.log = log,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1479,18 +1477,18 @@ static inline int nvme_get_log_endurance_group(int fd, __u16 endgid,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_ENDURANCE_GROUP,
-		.nsid = NVME_NSID_NONE,
-		.lpo = 0,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = endgid,
-		.rae = false,
-		.uuidx = NVME_UUID_NONE,
-		.len = sizeof(*log),
-		.log = log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_ENDURANCE_GROUP,
+		.lpo = 0,
+		.log = log,
+		.len = sizeof(*log),
+		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
+		.lsi = endgid,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1510,18 +1508,18 @@ static inline int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_PREDICTABLE_LAT_NVMSET,
-		.nsid = NVME_NSID_NONE,
-		.lpo = 0,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = nvmsetid,
-		.rae = false,
-		.uuidx = NVME_UUID_NONE,
-		.len = sizeof(*log),
-		.log = log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_PREDICTABLE_LAT_NVMSET,
+		.lpo = 0,
+		.log = log,
+		.len = sizeof(*log),
+		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
+		.lsi = nvmsetid,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1538,18 +1536,18 @@ static inline int nvme_get_log_predictable_lat_event(int fd, bool rae,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_PREDICTABLE_LAT_AGG,
-		.nsid = NVME_NSID_NONE,
-		.lpo = offset,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.rae = rae,
-		.uuidx = NVME_UUID_NONE,
-		.len = len,
-		.log = log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_PREDICTABLE_LAT_AGG,
+		.lpo = offset,
+		.log = log,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1578,18 +1576,18 @@ static int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_ANA,
-		.nsid = NVME_NSID_NONE,
-		.lpo = offset,
-		.lsp = lsp,
-		.lsi = NVME_LOG_LSI_NONE,
-		.rae = false,
-		.uuidx = NVME_UUID_NONE,
-		.len = len,
-		.log = log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_ANA,
+		.lpo = offset,
+		.log = log,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = lsp,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1622,18 +1620,18 @@ static inline int nvme_get_log_lba_status(int fd, bool rae,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_LBA_STATUS,
-		.nsid = NVME_NSID_NONE,
-		.lpo = offset,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.rae = rae,
-		.uuidx = NVME_UUID_NONE,
-		.len = len,
-		.log = log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_LBA_STATUS,
+		.lpo = offset,
+		.log = log,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1650,18 +1648,18 @@ static inline int nvme_get_log_endurance_grp_evt(int fd, bool rae,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_ENDURANCE_GRP_EVT,
-		.nsid = NVME_NSID_NONE,
-		.lpo = offset,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.rae = rae,
-		.uuidx = NVME_UUID_NONE,
-		.len = len,
-		.log = log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_ENDURANCE_GRP_EVT,
+		.lpo = offset,
+		.log = log,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1701,18 +1699,18 @@ static inline int nvme_get_log_boot_partition(int fd, bool rae,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_BOOT_PARTITION,
-		.nsid = NVME_NSID_NONE,
-		.lpo = 0,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.rae = rae,
-		.uuidx = NVME_UUID_NONE,
-		.len = len,
-		.log = part,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_BOOT_PARTITION,
+		.lpo = 0,
+		.log = part,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1739,18 +1737,18 @@ static inline int nvme_get_log_discovery(int fd, bool rae,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_DISCOVER,
-		.nsid = NVME_NSID_NONE,
-		.lpo = offset,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.rae = rae,
-		.uuidx = NVME_UUID_NONE,
-		.len = len,
-		.log = log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_DISCOVER,
+		.lpo = offset,
+		.log = log,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1808,18 +1806,18 @@ static inline int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_ZNS_CHANGED_ZONES,
-		.nsid = nsid,
-		.lpo = 0,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.rae = rae,
-		.uuidx = NVME_UUID_NONE,
-		.len = sizeof(*log),
-		.log = log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_ZNS_CHANGED_ZONES,
+		.lpo = 0,
+		.log = log,
+		.len = sizeof(*log),
+		.nsid = nsid,
 		.csi = NVME_CSI_ZNS,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1840,18 +1838,18 @@ static inline int nvme_get_log_persistent_event(int fd,
 	struct nvme_get_log_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.lid = NVME_LOG_LID_PERSISTENT_EVENT,
-		.nsid = NVME_NSID_ALL,
-		.lpo = 0,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.rae = false,
-		.uuidx = NVME_UUID_NONE,
-		.len = size,
-		.log = pevent_log,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_PERSISTENT_EVENT,
+		.lpo = 0,
+		.log = pevent_log,
+		.len = size,
+		.nsid = NVME_NSID_ALL,
 		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
 		.ot = false,
 	};
 	return nvme_get_log(&args);
@@ -1861,34 +1859,33 @@ static inline int nvme_get_log_persistent_event(int fd,
 /**
  * nvme_set_features_args - Arguments for the NVMe Admin Set Feature command
  * @fd:		File descriptor of nvme device
- * @fid:	Feature identifier
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID, if applicable
  * @cdw11:	Value to set the feature to
  * @cdw12:	Feature specific command dword12 field
- * @save:	Save value across power states
- * @uuidx:	UUID Index for differentiating vendor specific encoding
  * @cdw14:	Feature specific command dword15 field
  * @data_len:	Length of feature data, if applicable, in bytes
  * @data:	User address of feature data, if applicable
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @save:	Save value across power states
+ * @uuidx:	UUID Index for differentiating vendor specific encoding
+ * @fid:	Feature identifier
  */
-
 struct nvme_set_features_args {
 	int args_size;
 	int fd;
-	__u8 fid;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	__u32 cdw11;
 	__u32 cdw12;
-	bool save;
-	__u8 uuidx;
 	__u32 cdw15;
 	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	bool save;
+	__u8 uuidx;
+	__u8 fid;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_set_features_args() - Set a feature attribute
@@ -1901,22 +1898,22 @@ int nvme_set_features(struct nvme_set_features_args *args);
 
 static inline int nvme_set_features_data(int fd, __u8 fid, __u32 nsid,
 			__u32 cdw11, bool save, __u32 data_len, void *data,
-		 	__u32 *result)
+			__u32 *result)
 {
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.fid = fid,
+		.result = result,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
 		.cdw11 = cdw11,
 		.cdw12 = 0,
-		.save = save,
-		.uuidx = 0,
 		.cdw15 = 0,
 		.data_len = data_len,
 		.data = data,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = result,
+		.save = save,
+		.uuidx = 0,
+		.fid = fid,
 	};
 	return nvme_set_features(&args);
 }
@@ -2245,45 +2242,33 @@ int nvme_set_features_resv_persist(int fd, bool ptpl, bool save, __u32 *result);
  */
 int nvme_set_features_write_protect(int fd, enum nvme_feat_nswpcfg_state state,
 				    bool save, __u32 *result);
-
-/**
- * nvme_set_features_iocs_profile() -
- * @fd:		File descriptor of nvme device
- * @iocsi:	IO Command Set Combination Index
- * @save:	Save value across power states
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
- */
-int nvme_set_features_iocs_profile(int fd, __u8 iocsi, bool save);
-
 /**
  * nvme_get_features_args - Arguments for the NVMe Admin Get Feature command
  * @fd:		File descriptor of nvme device
- * @fid:	Feature identifier, see &enum nvme_features_id
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID, if applicable
  * @sel:	Select which type of attribute to return,
  * 		see &enum nvme_get_features_sel
  * @cdw11:	Feature specific command dword11 field
- * @uuidx:	UUID Index for differentiating vendor specific encoding
  * @data_len:	Length of feature data, if applicable, in bytes
  * @data:	User address of feature data, if applicable
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @fid:	Feature identifier, see &enum nvme_features_id
+ * @uuidx:	UUID Index for differentiating vendor specific encoding
  */
 struct nvme_get_features_args {
 	int args_size;
 	int fd;
-	__u8 fid;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	enum nvme_get_features_sel sel;
 	__u32 cdw11;
-	__u8 uuidx;
 	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u8 fid;
+	__u8 uuidx;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_get_features() - Retrieve a feature attribute
@@ -2300,15 +2285,15 @@ static inline int nvme_get_features_data(int fd, enum nvme_features_id fid,
 	struct nvme_get_features_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.fid = fid,
+		.result = result,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
 		.sel = NVME_GET_FEATURES_SEL_CURRENT,
 		.cdw11 = 0,
-		.uuidx = NVME_UUID_NONE,
 		.data_len = data_len,
 		.data = data,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = result,
+		.fid = fid,
+		.uuidx = NVME_UUID_NONE,
 	};
 
 	return nvme_get_features(&args);
@@ -2682,28 +2667,28 @@ int nvme_get_features_iocs_profile(int fd, enum nvme_get_features_sel sel,
 /**
  * nvme_format_nvm_args - Arguments for the Format Nvme Namespace command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Set to override default timeout to this value in milliseconds;
+ *		useful for long running formats. 0 will use system default.
  * @nsid:	Namespace ID to format
- * @lbaf:	Logical block address format
  * @mset:	Metadata settings (extended or separated), true if extended
  * @pi:		Protection information type
  * @pil:	Protection information location (beginning or end), true if end
  * @ses:	Secure erase settings
- * @timeout:	Set to override default timeout to this value in milliseconds;
- * 		useful for long running formats. 0 will use system default.
- * @result:	The command completion result from CQE dword0
+ * @lbaf:	Logical block address format
  */
 struct nvme_format_nvm_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
-	__u8 lbaf;
 	enum nvme_cmd_format_mset mset;
 	enum nvme_cmd_format_pi pi;
 	enum nvme_cmd_format_pil pil;
 	enum nvme_cmd_format_ses ses;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u8 lbaf;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_format_nvm() - Format nvme namespace(s)
@@ -2722,23 +2707,23 @@ int nvme_format_nvm(struct nvme_format_nvm_args *args);
 /**
  * nvme_ns_mgmt_args - Arguments for NVMe Namespace Management command
  * @fd:		File descriptor of nvme device
- * @nsid:	Namespace identifier
- * @sel:	Type of management operation to perform
- * @ns:		Namespace identication descriptors
  * @result:	NVMe command result
  * @timeout:	Timeout in ms
+ * @nsid:	Namespace identifier
+ * @ns:		Namespace identication descriptors
+ * @sel:	Type of management operation to perform
  * @csi:	Command Set Identifier
  */
 struct nvme_ns_mgmt_args {
 	int args_size;
 	int fd;
-	__u32 nsid;
-	enum nvme_ns_mgmt_sel sel;
-	struct nvme_id_ns *ns;
 	__u32 *result;
 	__u32 timeout;
+	__u32 nsid;
+	struct nvme_id_ns *ns;
+	enum nvme_ns_mgmt_sel sel;
 	__u8 csi;
-};
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_ns_mgmt() -
@@ -2768,11 +2753,11 @@ static inline int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns,
 	struct nvme_ns_mgmt_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.nsid = NVME_NSID_NONE,
-		.sel = NVME_NS_MGMT_SEL_CREATE,
-		.ns = ns,
 		.result = nsid,
 		.timeout = timeout,
+		.nsid = NVME_NSID_NONE,
+		.ns = ns,
+		.sel = NVME_NS_MGMT_SEL_CREATE,
 		.csi = csi,
 	};
 
@@ -2796,11 +2781,11 @@ static inline int nvme_ns_mgmt_delete(int fd, __u32 nsid)
 	struct nvme_ns_mgmt_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.nsid = nsid,
-		.sel = NVME_NS_MGMT_SEL_DELETE,
-		.ns = NULL,
 		.result = NULL,
 		.timeout = 0,
+		.nsid = nsid,
+		.ns = NULL,
+		.sel = NVME_NS_MGMT_SEL_DELETE,
 		.csi = 0,
 	};
 
@@ -2810,19 +2795,21 @@ static inline int nvme_ns_mgmt_delete(int fd, __u32 nsid)
 /**
  * nvme_ns_attach_args - Arguments for Nvme Namespace Management command
  * @fd:		File descriptor of nvme device
- * @nsid:	Namespace ID to execute attach selection
- * @sel:	Attachment selection, see &enum nvme_ns_attach_sel
- * @ctrlist:	Controller list to modify attachment state of nsid
+ * @result:	NVMe command result
  * @timeout:	Timeout in ms
+ * @nsid:	Namespace ID to execute attach selection
+ * @ctrlist:	Controller list to modify attachment state of nsid
+ * @sel:	Attachment selection, see &enum nvme_ns_attach_sel
  */
 struct nvme_ns_attach_args {
 	int args_size;
 	int fd;
-	__u32 nsid;
-	enum nvme_ns_attach_sel sel;
-	struct nvme_ctrl_list *ctrlist;
+	__u32 *result;
 	__u32 timeout;
-};
+	__u32 nsid;
+	struct nvme_ctrl_list *ctrlist;
+	enum nvme_ns_attach_sel sel;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_ns_attach_args - Attach or detach namespace to controller(s)
@@ -2842,10 +2829,11 @@ static inline int nvme_ns_attach_ctrls(int fd, __u32 nsid,
 	struct nvme_ns_attach_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.nsid = nsid,
-		.sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH,
-		.ctrlist = ctrlist,
+		.result = NULL,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.nsid = nsid,
+		.ctrlist = ctrlist,
+		.sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH,
 	};
 
 	return nvme_ns_attach(&args);
@@ -2863,10 +2851,11 @@ static inline int nvme_ns_detach_ctrls(int fd, __u32 nsid,
 	struct nvme_ns_attach_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
-		.nsid = nsid,
-		.sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
-		.ctrlist = ctrlist,
+		.result = NULL,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.nsid = nsid,
+		.ctrlist = ctrlist,
+		.sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
 	};
 
 	return nvme_ns_attach(&args);
@@ -2875,21 +2864,21 @@ static inline int nvme_ns_detach_ctrls(int fd, __u32 nsid,
 /**
  * nvme_fw_download_args - Arguments for the NVMe Firmware Download command
  * @fd:		File descriptor of nvme device
- * @offset:	Offset in the firmware data
- * @data_len:	Length of data in this command in bytes
- * @data:	Userspace address of the firmware data
- * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
+ * @offset:	Offset in the firmware data
+ * @data:	Userspace address of the firmware data
+ * @data_len:	Length of data in this command in bytes
  */
 struct nvme_fw_download_args {
 	int args_size;
 	int fd;
-	__u32 offset;
-	__u32 data_len;
-	void *data;
-	__u32 timeout;
 	__u32 *result;
-};
+	__u32 timeout;
+	__u32 offset;
+	void *data;
+	__u32 data_len;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_fw_download() - Download part or all of a firmware image to the
@@ -2917,21 +2906,21 @@ int nvme_fw_download(struct nvme_fw_download_args *args);
 /**
  * nvme_fw_commit_args - Arguments for the NVMe Firmware Commit command
  * @fd:		File descriptor of nvme device
- * @slot:	Firmware slot to commit the downloaded image
  * @action:	Action to use for the firmware image, see &enum nvme_fw_commit_ca
- * @bpid:	Set to true to select the boot partition id
  * @timeout:	Timeout in ms
  * @result:	The command completion result from CQE dword0
+ * @slot:	Firmware slot to commit the downloaded image
+ * @bpid:	Set to true to select the boot partition id
  */
 struct nvme_fw_commit_args {
 	int args_size;
 	int fd;
-	__u8 slot;
-	enum nvme_fw_commit_ca action;
-	bool bpid;
-	__u32 timeout;
 	__u32 *result;
-};
+	__u32 timeout;
+	enum nvme_fw_commit_ca action;
+	__u8 slot;
+	bool bpid;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_fw_commit() - Commit firmware using the specified action
@@ -2949,31 +2938,31 @@ int nvme_fw_commit(struct nvme_fw_commit_args *args);
 /**
  * nvme_security_send_args - Arguments for the NVMe Security Send command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID to issue security command on
  * @nssf:	NVMe Security Specific field
  * @spsp0:	Security Protocol Specific field
  * @spsp1:	Security Protocol Specific field
  * @secp:	Security Protocol
  * @tl:		Protocol specific transfer length
- * @data_len:	Data length of the payload in bytes
  * @data:	Security data payload to send
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @data_len:	Data length of the payload in bytes
  */
 struct nvme_security_send_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	__u8 nssf;
 	__u8 spsp0;
 	__u8 spsp1;
 	__u8 secp;
 	__u32 tl;
-	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u32 data_len;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_security_send() -
@@ -2996,31 +2985,31 @@ int nvme_security_send(struct nvme_security_send_args *args);
 /**
  * nvme_security_receive_args - Arguments for the NVMe Security Receive command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID to issue security command on
  * @nssf:	NVMe Security Specific field
  * @spsp0:	Security Protocol Specific field
  * @spsp1:	Security Protocol Specific field
  * @secp:	Security Protocol
  * @al:		Protocol specific allocation length
- * @data_len:	Data length of the payload in bytes
  * @data:	Security data payload to send
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @data_len:	Data length of the payload in bytes
  */
 struct nvme_security_receive_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	__u8 nssf;
 	__u8 spsp0;
 	__u8 spsp1;
 	__u8 secp;
 	__u32 al;
-	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u32 data_len;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_security_receive() -
@@ -3034,28 +3023,28 @@ int nvme_security_receive(struct nvme_security_receive_args *args);
 /**
  * nvme_get_lba_status_args - Arguments for the NVMe Get LBA Status command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID to retrieve LBA status
- * @slba:	Starting logical block address to check statuses
  * @mndw:	Maximum number of dwords to return
  * @atype:	Action type mechanism to determine LBA status desctriptors to
- * 		return, see &enum nvme_lba_status_atype
- * @rl:		Range length from slba to perform the action
- * @timeout:	Timeout in ms
+ *		return, see &enum nvme_lba_status_atype
+ * @slba:	Starting logical block address to check statuses
  * @lbas:	Data payload to return status descriptors
- * @result:	The command completion result from CQE dword0
+ * @rl:		Range length from slba to perform the action
  */
 struct nvme_get_lba_status_args {
 	int args_size;
 	int fd;
-	__u32 nsid;
-	__u64 slba;
-	__u32 mndw;
-	__u16 rl;
-	enum nvme_lba_status_atype atype;
-	__u32 timeout;
-	struct nvme_lba_status *lbas;
 	__u32 *result;
-};
+	__u32 timeout;
+	__u32 nsid;
+	__u32 mndw;
+	enum nvme_lba_status_atype atype;
+	__u64 slba;
+	struct nvme_lba_status *lbas;
+	__u16 rl;
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_get_lba_status() - Retrieve information on possibly unrecoverable LBAs
@@ -3072,29 +3061,28 @@ int nvme_get_lba_status(struct nvme_get_lba_status_args *args);
 /**
  * nvme_directive_send_args - Arguments for the NVMe Directive Send command
  * @fd:		File descriptor of nvme device
+ * @result:	If successful, the CQE dword0 value
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID, if applicable
- * @dspec:	Directive specific field
  * @doper:	Directive send operation, see &enum nvme_directive_send_doper
  * @dtype:	Directive type, see &enum nvme_directive_dtype
  * @dw12:	Directive specific command dword12
  * @data_len:	Length of data payload in bytes
- * @data:	Usespace address of data payload
- * @timeout:	Timeout in ms
- * @result:	If successful, the CQE dword0 value
+ * @dspec:	Directive specific field
  */
 struct nvme_directive_send_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
-	__u16 dspec;
 	enum nvme_directive_send_doper doper;
 	enum nvme_directive_dtype dtype;
 	__u32 cdw12;
 	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u16 dspec;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_directive_send() - Send directive command
@@ -3137,15 +3125,15 @@ static inline int nvme_directive_send_stream_release_identifier(int fd,
 	struct nvme_directive_send_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
-		.dspec = stream_id,
 		.doper = NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_IDENTIFIER,
 		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
 		.cdw12 = 0,
 		.data_len = 0,
 		.data = NULL,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
+		.dspec = stream_id,
 	};
 
 	return nvme_directive_send(&args);
@@ -3164,15 +3152,15 @@ static inline int nvme_directive_send_stream_release_resource(int fd, __u32 nsid
 	struct nvme_directive_send_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
-		.dspec = 0,
 		.doper = NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE,
 		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
 		.cdw12 = 0,
 		.data_len = 0,
 		.data = NULL,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
+		.dspec = 0,
 	};
 
 	return nvme_directive_send(&args);
@@ -3181,29 +3169,29 @@ static inline int nvme_directive_send_stream_release_resource(int fd, __u32 nsid
 /**
  * nvme_directive_recv_args - Arguments for the NVMe Directive Receive command
  * @fd:		File descriptor of nvme device
+ * @result:	If successful, the CQE dword0 value
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID, if applicable
- * @dspec:	Directive specific field
  * @doper:	Directive send operation, see &enum nvme_directive_send_doper
  * @dtype:	Directive type, see &enum nvme_directive_dtype
  * @dw12:	Directive specific command dword12
  * @data_len:	Length of data payload in bytes
  * @data:	Usespace address of data payload
- * @timeout:	Timeout in ms
- * @result:	If successful, the CQE dword0 value
+ * @dspec:	Directive specific field
  */
 struct nvme_directive_recv_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
-	__u16 dspec;
 	enum nvme_directive_receive_doper doper;
 	enum nvme_directive_dtype dtype;
 	__u32 cdw12;
 	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u16 dspec;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_directive_recv() - Receive directive specific data
@@ -3228,15 +3216,15 @@ static inline int nvme_directive_recv_identify_parameters(int fd, __u32 nsid,
 	struct nvme_directive_recv_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
-		.dspec = 0,
 		.doper = NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM,
 		.dtype = NVME_DIRECTIVE_DTYPE_IDENTIFY,
 		.cdw12 = 0,
 		.data_len = sizeof(*id),
 		.data = id,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
+		.dspec = 0,
 	};
 
 	return nvme_directive_recv(&args);
@@ -3256,20 +3244,19 @@ static inline int nvme_directive_recv_stream_parameters(int fd, __u32 nsid,
 	struct nvme_directive_recv_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
-		.dspec = 0,
 		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM,
 		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
 		.cdw12 = 0,
 		.data_len = sizeof(*parms),
 		.data = parms,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
+		.dspec = 0,
 	};
 
 	return nvme_directive_recv(&args);
 }
-
 
 /**
  * nvme_directive_recv_stream_status() -
@@ -3286,20 +3273,19 @@ static inline int nvme_directive_recv_stream_status(int fd, __u32 nsid,
 	struct nvme_directive_recv_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
-		.dspec = 0,
 		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS,
 		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
 		.cdw12 = 0,
 		.data_len = sizeof(*id),
 		.data = id,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
+		.dspec = 0,
 	};
 
 	return nvme_directive_recv(&args);
 }
-
 
 /**
  * nvme_directive_recv_stream_allocate() -
@@ -3315,15 +3301,15 @@ static inline int nvme_directive_recv_stream_allocate(int fd, __u32 nsid,
 	struct nvme_directive_recv_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = result,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.nsid = nsid,
-		.dspec = 0,
 		.doper = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE,
 		.dtype = NVME_DIRECTIVE_DTYPE_STREAMS,
 		.cdw12 = nsr,
 		.data_len = 0,
 		.data = NULL,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = result,
+		.dspec = 0,
 	};
 
 	return nvme_directive_recv(&args);
@@ -3333,25 +3319,25 @@ static inline int nvme_directive_recv_stream_allocate(int fd, __u32 nsid,
 /**
  * nvme_capacity_mgmt_args - Arguments for the NVMe Capacity Management command
  * @fd:		File descriptor of nvme device
- * @op:		Operation to be performed by the controller
- * @element_id:	Value specific to the value of the Operation field
  * @dw11:	Least significant 32 bits of the capacity in bytes of the
  *		Endurance Group or NVM Set to be created
  * @dw12:	Most significant 32 bits of the capacity in bytes of the
  *		Endurance Group or NVM Set to be created
- * @timeout:	Timeout in ms
  * @result:	If successful, the CQE dword0 value
+ * @timeout:	Timeout in ms
+ * @element_id:	Value specific to the value of the Operation field
+ * @op:		Operation to be performed by the controller
  */
 struct nvme_capacity_mgmt_args {
 	int args_size;
 	int fd;
-	__u8 op;
-	__u16 element_id;
+	__u32 *result;
+	__u32 timeout;
 	__u32 cdw11;
 	__u32 cdw12;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u16 element_id;
+	__u8 op;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_capacity_mgmt() -
@@ -3365,25 +3351,25 @@ int nvme_capacity_mgmt(struct nvme_capacity_mgmt_args *args);
 /**
  * nvme_lockdown_args - Arguments for the NVME Lockdown command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms (0 for default timeout)
  * @scp:	Scope of the command
  * @prhbt:	Prohibit or allow the command opcode or Set Features command
  * @ifc:	Affected interface
  * @ofi:	Opcode or Feature Identifier
  * @uuid:	UUID Index if controller supports this id selection method
- * @timeout:	Timeout in ms (0 for default timeout)
- * @result:	The command completion result from CQE dword0
  */
 struct nvme_lockdown_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u8 scp;
 	__u8 prhbt;
 	__u8 ifc;
 	__u8 ofi;
 	__u8 uuidx;
-	__u32 timeout;
-	__u32 *result;
-};
+} __attribute__((__packed__));
 
 /**
  * nvme_lockdown() - Issue lockdown command
@@ -3397,19 +3383,19 @@ int nvme_lockdown(struct nvme_lockdown_args *args);
 /**
  * nvme_set_property_args - Arguments for NVMe Set Property command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @offset:	Property offset from the base to set
  * @value:	The value to set the property
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
  */
 struct nvme_set_property_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	int offset;
 	__u64 value;
-	__u32 timeout;
-	__u32 *result;
-};
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_set_property() - Set controller property
@@ -3426,17 +3412,17 @@ int nvme_set_property(struct nvme_set_property_args *args);
 /**
  * nvme_get_property_args - Arguments for NVMe Get Property command
  * @fd:		File descriptor of nvme device
- * @offset:	Property offset from the base to retrieve
  * @value:	Where the property's value will be stored on success
+ * @offset:	Property offset from the base to retrieve
  * @timeout:	Timeout in ms
  */
 struct nvme_get_property_args {
 	int args_size;
 	int fd;
-	int offset;
 	__u64 *value;
 	__u32 timeout;
-};
+	int offset;
+} __attribute__((packed, aligned(__alignof__(__u64*))));
 
 /**
  * nvme_get_property() - Get a controller property
@@ -3453,27 +3439,27 @@ int nvme_get_property(struct nvme_get_property_args *args);
 /**
  * nvme_sanitize_nvm_args - Arguments for the NVMe Sanitize NVM command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @sanact:	Sanitize action, see &enum nvme_sanitize_sanact
  * @ause:	Set to allow unrestriced sanitize exit
  * @owpass:	Overwrite pass count
  * @oipbp:	Set to overwrite invert pattern between passes
  * @nodas:	Set to not deallocate blocks after sanitizing
  * @ovrpat:	Overwrite pattern
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
  */
 struct nvme_sanitize_nvm_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	enum nvme_sanitize_sanact sanact;
 	bool ause;
 	__u8 owpass;
 	bool oipbp;
 	bool nodas;
 	__u32 ovrpat;
-	__u32 timeout;
-	__u32 *result;
-};
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_sanitize_nvm() - Start a sanitize operation
@@ -3505,11 +3491,11 @@ int nvme_sanitize_nvm(struct nvme_sanitize_nvm_args *args);
 struct nvme_dev_self_test_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	enum nvme_dst_stc stc;
-	__u32 timeout;
-	__u32 *result;
-};
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_dev_self_test() - Start or abort a self test
@@ -3535,23 +3521,23 @@ int nvme_dev_self_test(struct nvme_dev_self_test_args *args);
  * nvme_virtual_mgmt_args - Arguments for the NVMe Virtualization
  * 			    resource management command
  * @fd:		File descriptor of nvme device
+ * @result:	If successful, the CQE dword0
+ * @timeout:	Timeout in ms
  * @act:	Virtual resource action, see &enum nvme_virt_mgmt_act
  * @rt:		Resource type to modify, see &enum nvme_virt_mgmt_rt
  * @cntlid:	Controller id for which resources are bing modified
  * @nr:		Number of resources being allocated or assigned
- * @timeout:	Timeout in ms
- * @result:	If successful, the CQE dword0
  */
 struct nvme_virtual_mgmt_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	enum nvme_virt_mgmt_act act;
 	enum nvme_virt_mgmt_rt rt;
 	__u16 cntlid;
 	__u16 nr;
-	__u32 timeout;
-	__u32 *result;
-};
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_virtual_mgmt() - Virtualization resource management
@@ -3593,49 +3579,51 @@ static inline int nvme_flush(int fd, __u32 nsid) {
 /**
  * nvme_io_args - Arguments for NVMe I/O commands
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID
+ * @data:	Pointer to user address of the data buffer
+ * @metadata:	Pointer to user address of the metadata buffer
  * @slba:	Starting logical block
- * @nblocks:	Number of logical blocks to send (0's based value)
+ * @nbl:	Number of logical blocks to send (0's based value)
  * @control:	Command control flags, see &enum nvme_io_control_flags.
- * @dsm:	Data set management attributes, see &enum nvme_io_dsm_flags
- * @reftag:	This field specifies the Initial Logical Block Reference Tag
- * 		expected value. Used only if the namespace is formatted to use
- * 		end-to-end protection information.
  * @apptag:	This field specifies the Application Tag Mask expected value.
- * 		Used only if the namespace is formatted to use end-to-end
- * 		protection information.
+ *		Used only if the namespace is formatted to use end-to-end
+ *		protection information.
  * @appmask:	This field specifies the Application Tag expected value. Used
- * 		only if the namespace is formatted to use end-to-end protection
- * 		information.
+ *		only if the namespace is formatted to use end-to-end protection
+ *		information.
+ * @reftag:	This field specifies the Initial Logical Block Reference Tag
+ *		expected value. Used only if the namespace is formatted to use
+ *		end-to-end protection information.
+ * @data_len:	Length of user buffer, @data, in bytes
  * @storage_tag: This filed specifies Variable Sized Expected Logical Block
  *		Storage Tag (ELBST) and Expected Logical Block Reference
  *		Tag (ELBRT)
- * @data_len:	Length of user buffer, @data, in bytes
- * @data:	Pointer to user address of the data buffer
  * @metadata_len:Length of user buffer, @metadata, in bytes
- * @metadata:	Pointer to user address of the metadata buffer
- * @timeout:	Timeout in ms
+ * @dsm:	Data set management attributes, see &enum nvme_io_dsm_flags
+ * @dspec:	Directive specific value
  */
 struct nvme_io_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
+	void *data;
+	void *metadata;
 	__u64 slba;
 	__u16 nlb;
 	__u16 control;
-	__u8 dsm;
-	__u8 dspec;
-	__u32 reftag;
 	__u16 apptag;
 	__u16 appmask;
-	__u64 storage_tag;
+	__u32 reftag;
 	__u32 data_len;
-	void *data;
+	__u64 storage_tag;
 	__u32 metadata_len;
-	void *metadata;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u8 dsm;
+	__u8 dspec;
+} __attribute__((__packed__, aligned(__alignof__(__u64))));
 
 /**
  * nvme_io() - Submit an nvme user I/O command
@@ -3735,23 +3723,23 @@ static inline int nvme_verify(struct nvme_io_args *args)
 /**
  * nvme_dsm_args - Arguments for the NVMe Dataset Management command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
+ * @dsm:	The data set management attributes
  * @attrs:	DSM attributes, see &enum nvme_dsm_attributes
  * @nr_ranges:	Number of block ranges in the data set management attributes
- * @dsm:	The data set management attributes
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
  */
 struct nvme_dsm_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
+	struct nvme_dsm_range *dsm;
 	__u32 attrs;
 	__u16 nr_ranges;
-	struct nvme_dsm_range *dsm;
-	__u32 timeout;
-	__u32 *result;
-};
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_dsm() - Send an nvme data set management command
@@ -3771,43 +3759,43 @@ int nvme_dsm(struct nvme_dsm_args *args);
 /**
  * nvme_copy_args - Arguments for the NVMe Copy command
  * @fd:		File descriptor of the nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
  * @copy:	Range descriptior
  * @sdlba:	Start destination LBA
  * @nr:		Number of ranges
+ * @dspec:	Directive specific value
  * @prinfor:	Protection information field for read
  * @prinfow:	Protection information field for write
  * @dtype:	Directive type
- * @dspec:	Directive specific value
  * @format:	Descriptor format
  * @lr:		Limited retry
  * @fua:	Force unit access
  * @ilbrt:	Initial logical block reference tag
  * @lbatm:	Logical block application tag mask
  * @lbat:	Logical block application tag
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
  */
 struct nvme_copy_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	struct nvme_copy_range *copy;
 	__u64 sdlba;
 	__u16 nr;
+	__u16 dspec;
 	__u8 prinfor;
 	__u8 prinfow;
 	__u8 dtype;
-	__u16 dspec;
 	__u8 format;
 	int lr;
 	int fua;
 	__u32 ilbrt;
 	__u16 lbatm;
 	__u16 lbat;
-	__u32 timeout;
-	__u32 *result;
-};
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_copy() -
@@ -3822,28 +3810,28 @@ int nvme_copy(struct nvme_copy_args *args);
 /**
  * nvme_resv_acquire_args - Arguments for the NVMe Reservation Acquire Comand
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
  * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
  * @racqa:	The action that is performed by the command, see &enum nvme_resv_racqa
- * @iekey:	Set to ignore the existing key
  * @crkey:	The current reservation key associated with the host
  * @nrkey:	The reservation key to be unregistered from the namespace if
- * 		the action is preempt
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ *		the action is preempt
+ * @iekey:	Set to ignore the existing key
  */
 struct nvme_resv_acquire_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	enum nvme_resv_rtype rtype;
 	enum nvme_resv_racqa racqa;
-	bool iekey;
 	__u64 crkey;
 	__u64 nrkey;
-	__u32 timeout;
-	__u32 *result;
-};
+	bool iekey;
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_resv_acquire() - Send an nvme reservation acquire
@@ -3873,15 +3861,15 @@ int nvme_resv_acquire(struct nvme_resv_acquire_args *args);
 struct nvme_resv_register_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	enum nvme_resv_rrega rrega;
 	enum nvme_resv_cptpl cptpl;
-	bool iekey;
 	__u64 crkey;
 	__u64 nrkey;
-	__u32 timeout;
-	__u32 *result;
-};
+	bool iekey;
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_resv_register() - Send an nvme reservation register
@@ -3898,25 +3886,25 @@ int nvme_resv_register(struct nvme_resv_register_args *args);
 /**
  * nvme_resv_release_args - Arguments for the NVMe Reservation Release Command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
  * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
  * @rrela:	Reservation releast action, see &enum nvme_resv_rrela
- * @iekey:	Set to ignore the existing key
  * @crkey:	The current reservation key to release
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @iekey:	Set to ignore the existing key
  */
 struct nvme_resv_release_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	enum nvme_resv_rtype rtype;
 	enum nvme_resv_rrela rrela;
-	bool iekey;
 	__u64 crkey;
-	__u32 timeout;
-	__u32 *result;
-};
+	bool iekey;
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_resv_release() - Send an nvme reservation release
@@ -3930,24 +3918,24 @@ int nvme_resv_release(struct nvme_resv_release_args *args);
 /**
  * nvme_resv_report_args - Arguments for the NVMe Reservation Report command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
- * @eds:	Request extended Data Structure
- * @len:	Number of bytes to request transfered with this command
  * @report:	The user space destination address to store the reservation
  *		report
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @len:	Number of bytes to request transfered with this command
+ * @eds:	Request extended Data Structure
  */
 struct nvme_resv_report_args {
 	int args_size;
 	int fd;
-	__u32 nsid;
-	bool eds;
-	__u32 len;
-	struct nvme_resv_status *report;
-	__u32 timeout;
 	__u32 *result;
-};
+	__u32 timeout;
+	__u32 nsid;
+	struct nvme_resv_status *report;
+	__u32 len;
+	bool eds;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_resv_report() - Send an nvme reservation report
@@ -3965,29 +3953,29 @@ int nvme_resv_report(struct nvme_resv_report_args *args);
 /**
  * nvme_zns_mgmt_send_args - Arguments for the NVMe ZNS Management Send command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	timeout in ms
  * @nsid:	Namespace ID
  * @slba:	Starting logical block address
  * @zsa:	Zone send action
- * @select_all:	Select all flag
- * @zsaso:	Zone Send Action Specific Option
  * @data_len:	Length of @data
  * @data:	Userspace address of the data
- * @timeout:	timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @select_all:	Select all flag
+ * @zsaso:	Zone Send Action Specific Option
  */
 struct nvme_zns_mgmt_send_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	__u64 slba;
 	enum nvme_zns_send_action zsa;
-	bool select_all;
-	__u8 zsaso;
 	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	bool select_all;
+	__u8 zsaso;
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_zns_mgmt_send() -
@@ -4002,29 +3990,29 @@ int nvme_zns_mgmt_send(struct nvme_zns_mgmt_send_args *args);
 /**
  * nvme_zns_mgmt_recv_args - Arguments for the NVMe ZNS Management Receive command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	timeout in ms
  * @nsid:	Namespace ID
  * @slba:	Starting logical block address
  * @zra:	zone receive action
- * @zrasf:	Zone receive action specific field
- * @zras_feat:	Zone receive action specific features
  * @data_len:	Length of @data
  * @data:	Userspace address of the data
- * @timeout:	timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @zrasf:	Zone receive action specific field
+ * @zras_feat:	Zone receive action specific features
  */
 struct nvme_zns_mgmt_recv_args {
 	int args_size;
 	int fd;
+	__u32 *result;
+	__u32 timeout;
 	__u32 nsid;
 	__u64 slba;
 	enum nvme_zns_recv_action zra;
-	__u16 zrasf;
-	bool zras_feat;
 	__u32 data_len;
 	void *data;
-	__u32 timeout;
-	__u32 *result;
-};
+	__u16 zrasf;
+	bool zras_feat;
+} __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
  * nvme_zns_mgmt_recv() -
@@ -4060,16 +4048,16 @@ static inline int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
 	struct nvme_zns_mgmt_recv_args args = {
 		.args_size = sizeof(args),
 		.fd = fd,
+		.result = result,
+		.timeout = timeout,
 		.nsid = nsid,
 		.slba = slba,
 		.zra = extended ? NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES :
 		NVME_ZNS_ZRA_REPORT_ZONES,
-		.zrasf = opts,
-		.zras_feat = partial,
 		.data_len = data_len,
 		.data = data,
-		.timeout = timeout,
-		.result = result,
+		.zrasf = opts,
+		.zras_feat = partial,
 	};
 
 	return nvme_zns_mgmt_recv(&args);
@@ -4078,6 +4066,8 @@ static inline int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
 /**
  * nvme_zns_append_args - Arguments for the NVMe ZNS Append command
  * @fd:		File descriptor of nvme device
+ * @result:	The command completion result from CQE dword0
+ * @timeout:	Timeout in ms
  * @nsid:	Namespace ID
  * @zslba:	Zone start logical block address
  * @nlb:	Number of logical blocks
@@ -4087,14 +4077,14 @@ static inline int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
  * @lbatm:	Logical block application tag mask
  * @data_len:	Length of @data
  * @data:	Userspace address of the data
- * @metadata_len: Length of @metadata
  * @metadata:	Userspace address of the metadata
- * @timeout:	Timeout in ms
- * @result:	The command completion result from CQE dword0
+ * @metadata_len: Length of @metadata
  */
 struct nvme_zns_append_args {
 	int args_size;
 	int fd;
+	__u64 *result;
+	__u32 timeout;
 	__u32 nsid;
 	__u64 zslba;
 	__u16 nlb;
@@ -4104,11 +4094,9 @@ struct nvme_zns_append_args {
 	__u16 lbatm;
 	__u32 data_len;
 	void *data;
-	__u32 metadata_len;
 	void *metadata;
-	__u32 timeout;
-	__u64 *result;
-};
+	__u32 metadata_len;
+} __attribute__((packed, aligned(__alignof__(__u64))));
 
 /**
  * nvme_zns_append() - Append data to a zone
