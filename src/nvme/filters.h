@@ -53,15 +53,6 @@ int nvme_subsys_filter(const struct dirent *d);
 int nvme_scan_subsystems(struct dirent ***subsys);
 
 /**
- * nvme_scan_subsystem_ctrls() -
- * @s:
- * @ctrls:
- *
- * Return: 
- */
-int nvme_scan_subsystem_ctrls(nvme_subsystem_t s, struct dirent ***ctrls);
-
-/**
  * nvme_scan_subsystem_namespaces() -
  * @s:
  * @namespaces:
@@ -69,6 +60,14 @@ int nvme_scan_subsystem_ctrls(nvme_subsystem_t s, struct dirent ***ctrls);
  * Return: 
  */
 int nvme_scan_subsystem_namespaces(nvme_subsystem_t s, struct dirent ***namespaces);
+
+/**
+ * nvme_scan_ctrls() -
+ * @ctrls:
+ *
+ * Return: 
+ */
+int nvme_scan_ctrls(struct dirent ***ctrls);
 
 /**
  * nvme_scan_ctrl_namespace_paths() -

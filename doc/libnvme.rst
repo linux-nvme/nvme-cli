@@ -38,17 +38,6 @@
 ``struct dirent *** subsys``
 
 
-.. c:function:: int nvme_scan_subsystem_ctrls (nvme_subsystem_t s, struct dirent *** ctrls)
-
-
-**Parameters**
-
-``nvme_subsystem_t s``
-  *undescribed*
-
-``struct dirent *** ctrls``
-
-
 .. c:function:: int nvme_scan_subsystem_namespaces (nvme_subsystem_t s, struct dirent *** namespaces)
 
 

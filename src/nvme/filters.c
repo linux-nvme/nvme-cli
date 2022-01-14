@@ -93,16 +93,16 @@ int nvme_scan_subsystems(struct dirent ***subsys)
 		       alphasort);
 }
 
-int nvme_scan_subsystem_ctrls(nvme_subsystem_t s, struct dirent ***ctrls)
-{
-	return scandir(nvme_subsystem_get_sysfs_dir(s), ctrls,
-		       nvme_ctrls_filter, alphasort);
-}
-
 int nvme_scan_subsystem_namespaces(nvme_subsystem_t s, struct dirent ***namespaces)
 {
 	return scandir(nvme_subsystem_get_sysfs_dir(s), namespaces,
 		       nvme_namespace_filter, alphasort);
+}
+
+int nvme_scan_ctrls(struct dirent ***ctrls)
+{
+	return scandir(nvme_ctrl_sysfs_dir, ctrls, nvme_ctrls_filter,
+		       alphasort);
 }
 
 int nvme_scan_ctrl_namespace_paths(nvme_ctrl_t c, struct dirent ***namespaces)
