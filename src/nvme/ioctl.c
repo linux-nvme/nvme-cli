@@ -589,7 +589,7 @@ int nvme_set_features_timestamp(int fd, bool save, __u64 timestamp)
 		.result = NULL,
 	};
 
-	memcpy(&t, ts.timestamp, sizeof(ts.timestamp));
+	memcpy(ts.timestamp, &t, sizeof(ts.timestamp));
 	return nvme_set_features(&args);
 }
 

@@ -86,6 +86,7 @@ static int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 		if (!c) {
 			nvme_msg(LOG_DEBUG, "failed to scan ctrl %s: %s\n",
 				 ctrls[i]->d_name, strerror(errno));
+			continue;
 		}
 		if ((f) && !f(c->s)) {
 			nvme_free_ctrl(c);
