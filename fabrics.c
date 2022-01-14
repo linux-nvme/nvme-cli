@@ -81,8 +81,8 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 	OPT_STRING("transport",       't', "STR", &transport,	nvmf_tport), \
 	OPT_STRING("traddr",          'a', "STR", &traddr,	nvmf_traddr), \
 	OPT_STRING("trsvcid",         's', "STR", &trsvcid,	nvmf_trsvcid), \
-	OPT_STRING("host-traddr",     'w', "STR", &host_traddr,	nvmf_htraddr), \
-	OPT_STRING("host-iface",      'f', "STR", &host_iface,	nvmf_hiface), \
+	OPT_STRING("host-traddr",     'w', "STR", &c.host_traddr,	nvmf_htraddr), \
+	OPT_STRING("host-iface",      'f', "STR", &c.host_iface,	nvmf_hiface), \
 	OPT_STRING("hostnqn",         'q', "STR", &hostnqn,	nvmf_hostnqn), \
 	OPT_STRING("hostid",          'I', "STR", &hostid,	nvmf_hostid), \
 	OPT_STRING("nqn",             'n', "STR", &subsysnqn,	nvmf_nqn), \
@@ -325,7 +325,6 @@ static int discover_from_conf_file(nvme_host_t h, const char *desc,
 	bool connect, const struct nvme_fabrics_config *defcfg)
 {
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
-	char *host_traddr = NULL, *host_iface = NULL;
 	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL, *ctrlkey = NULL;
 	char *subsysnqn = NULL;
 	char *ptr, **argv, *p, line[4096];
@@ -388,8 +387,8 @@ static int discover_from_conf_file(nvme_host_t h, const char *desc,
 		if (!transport && !traddr)
 			goto next;
 
-		c = nvme_create_ctrl(subsysnqn, transport,
-				     traddr, host_traddr, host_iface, trsvcid);
+		c = nvme_create_ctrl(subsysnqn, transport, traddr,
+				     cfg.host_traddr, cfg.host_iface, trsvcid);
 		if (!c)
 			goto next;
 		nvme_ctrl_set_discovery_ctrl(c, true);
@@ -415,7 +414,6 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char *subsysnqn = NVME_DISC_SUBSYS_NAME;
 	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL, *ctrlkey = NULL;
-	char *host_traddr = NULL, *host_iface = NULL;
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
 	char *hnqn = NULL, *hid = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
@@ -505,12 +503,12 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 			if (strcmp(nvme_ctrl_get_subsysnqn(c), subsysnqn) ||
 			    strcmp(nvme_ctrl_get_transport(c), transport) ||
 			    strcmp(nvme_ctrl_get_traddr(c), traddr) ||
-			    (host_traddr && nvme_ctrl_get_host_traddr(c) &&
+			    (cfg.host_traddr && nvme_ctrl_get_host_traddr(c) &&
 			     strcmp(nvme_ctrl_get_host_traddr(c),
-				    host_traddr)) ||
-			    (host_iface && nvme_ctrl_get_host_iface(c) &&
+				    cfg.host_traddr)) ||
+			    (cfg.host_iface && nvme_ctrl_get_host_iface(c) &&
 			     strcmp(nvme_ctrl_get_host_iface(c),
-				    host_iface)) ||
+				    cfg.host_iface)) ||
 			    (trsvcid && nvme_ctrl_get_trsvcid(c) &&
 			     strcmp(nvme_ctrl_get_trsvcid(c), trsvcid))) {
 				nvme_msg(LOG_WARNING,
@@ -541,7 +539,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	if (!c) {
 		/* No device or non-matching device, create a new controller */
 		c = nvme_create_ctrl(subsysnqn, transport, traddr,
-				     host_traddr, host_iface, trsvcid);
+				     cfg.host_traddr, cfg.host_iface, trsvcid);
 		if (!c) {
 			ret = errno;
 			goto out_free;
@@ -580,7 +578,6 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	char *hnqn = NULL, *hid = NULL;
 	char *subsysnqn = NULL;
 	char *transport = NULL, *traddr = NULL;
-	char *host_traddr = NULL, *host_iface = NULL;
 	char *trsvcid = NULL, *hostnqn = NULL, *hostid = NULL;
 	char *hostkey = NULL, *ctrlkey = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
@@ -669,7 +666,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	if (hostkey)
 		nvme_host_set_dhchap_key(h, hostkey);
 	c = nvme_create_ctrl(subsysnqn, transport, traddr,
-			     host_traddr, host_iface, trsvcid);
+			     cfg.host_traddr, cfg.host_iface, trsvcid);
 	if (!c) {
 		errno = ENOMEM;
 		goto out_free;

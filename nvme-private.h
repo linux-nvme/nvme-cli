@@ -23,8 +23,6 @@ struct nvme_ctrl {
 	char *ana_state;
 	char *traddr;
 	char *trsvcid;
-	char *host_traddr;
-	char *host_iface;
 	char *hostnqn;
 	char *hostid;
 
