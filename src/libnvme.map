@@ -1,7 +1,6 @@
 LIBNVME_1_0 {
 	global:
 		__nvme_get_log_page;
-		__nvme_msg;
 		nvme_admin_passthru64;
 		nvme_admin_passthru;
 		nvme_attach_ns;
@@ -174,7 +173,6 @@ LIBNVME_1_0 {
 		nvme_io_passthru;
 		nvme_lockdown;
 		nvme_log_level;
-		nvme_log_message;
 		nvme_lookup_host;
 		nvme_lookup_subsystem;
 		nvme_namespace_attach_ctrls;

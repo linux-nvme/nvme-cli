@@ -24,6 +24,20 @@
 #ifndef _LINUX_NVME_IOCTL_H
 #define _LINUX_NVME_IOCTL_H
 
+/* libnvme errno error codes */
+#define ENVME_CONNECT_RESOLVE			1000 /* "failed to resolve host" */
+#define ENVME_CONNECT_ADDRFAM			1001 /* "unrecognized address family" */
+#define ENVME_CONNECT_TRADDR			1002 /* "failed to get traddr" */
+#define ENVME_CONNECT_TARG			1003 /* "need a transport (-t) argument" */
+#define ENVME_CONNECT_AARG			1004 /* "need a address (-a) argument\n" */
+#define ENVME_CONNECT_OPEN			1005 /* "failed to open nvme-fabrics device" */
+#define ENVME_CONNECT_WRITE			1006 /* "failed to write to nvme-fabrics device" */
+#define ENVME_CONNECT_READ			1007 /* "failed to read from nvme-fabrics device" */
+#define ENVME_CONNECT_PARSE			1008 /* "failed to parse ctrl info" */
+#define ENVME_CONNECT_INVAL_TR			1009 /* "invalid transport type" */
+#define ENVME_CONNECT_LOOKUP_SUBSYS_NAME	1010 /* "failed to lookup subsystem name" */
+#define ENVME_CONNECT_LOOKUP_SUBSYS		1011 /* "failed to lookup subsystem */
+
 /* '0' is interpreted by the kernel to mean 'apply the default timeout' */
 #define NVME_DEFAULT_IOCTL_TIMEOUT 0
 

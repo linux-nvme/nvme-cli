@@ -35,7 +35,6 @@
 int nvme_log_level = DEFAULT_LOGLEVEL;
 bool nvme_log_timestamp;
 bool nvme_log_pid;
-char *nvme_log_message = NULL;
 
 void __attribute__((format(printf, 3, 4)))
 __nvme_msg(int lvl, const char *func, const char *format, ...)
@@ -82,10 +81,6 @@ __nvme_msg(int lvl, const char *func, const char *format, ...)
 	if (vasprintf(&message, format, ap) == -1)
 		message = NULL;
 	va_end(ap);
-
-	if (nvme_log_message)
-		free(nvme_log_message);
-	nvme_log_message = strdup(message);
 
 	if (lvl <= nvme_log_level)
 		fprintf(stderr, "%s%s", header ? header : "<error>",
