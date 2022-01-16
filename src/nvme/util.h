@@ -11,6 +11,20 @@
 
 #include "types.h"
 
+/* nvme connect error codes */
+#define ENVME_CONNECT_RESOLVE			1000 /* "failed to resolve host" */
+#define ENVME_CONNECT_ADDRFAM			1001 /* "unrecognized address family" */
+#define ENVME_CONNECT_TRADDR			1002 /* "failed to get traddr" */
+#define ENVME_CONNECT_TARG			1003 /* "need a transport (-t) argument" */
+#define ENVME_CONNECT_AARG			1004 /* "need a address (-a) argument\n" */
+#define ENVME_CONNECT_OPEN			1005 /* "failed to open nvme-fabrics device" */
+#define ENVME_CONNECT_WRITE			1006 /* "failed to write to nvme-fabrics device" */
+#define ENVME_CONNECT_READ			1007 /* "failed to read from nvme-fabrics device" */
+#define ENVME_CONNECT_PARSE			1008 /* "failed to parse ctrl info" */
+#define ENVME_CONNECT_INVAL_TR			1009 /* "invalid transport type" */
+#define ENVME_CONNECT_LOOKUP_SUBSYS_NAME	1010 /* "failed to lookup subsystem name" */
+#define ENVME_CONNECT_LOOKUP_SUBSYS		1011 /* "failed to lookup subsystem */
+
 /**
  * nvme_status_to_errno() - Converts nvme return status to errno
  * @status:  Return status from an nvme passthrough commmand
@@ -30,6 +44,14 @@ __u8 nvme_status_to_errno(int status, bool fabrics);
  * or a standard errno string if status is < 0.
  */
 const char *nvme_status_to_string(int status, bool fabrics);
+
+/**
+ * nvme_errno_to_string() - Returns string describing nvme connect failures
+ * @err: Returned error code from nvme_add_ctrl()
+ *
+ * Return: String representation of the nvme connect error codes
+ */
+const char *nvme_errno_to_string(int err);
 
 /**
  * nvme_init_id_ns() - Initialize an Identify Namepsace structure for creation.

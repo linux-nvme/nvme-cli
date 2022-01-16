@@ -56,6 +56,7 @@ LIBNVME_1_0 {
 		nvme_dsm;
 		nvme_dsm_range;
 		nvme_dump_config;
+		nvme_errno_to_string;
 		nvme_first_host;
 		nvme_first_subsystem;
 		nvme_flush;
