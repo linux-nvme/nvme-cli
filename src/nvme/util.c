@@ -476,3 +476,25 @@ int nvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
 		return -EINVAL;
 	}
 }
+
+static const char * const libnvme_status[] = {
+	[ENVME_CONNECT_RESOLVE] = "failed to resolve host",
+	[ENVME_CONNECT_ADDRFAM] = "unrecognized address family",
+	[ENVME_CONNECT_TRADDR] = "failed to get transport address",
+	[ENVME_CONNECT_TARG] = "no transport specified",
+	[ENVME_CONNECT_AARG] = "no transport address specified",
+	[ENVME_CONNECT_OPEN] = "failed to open nvme-fabrics device",
+	[ENVME_CONNECT_WRITE] = "failed to write to nvme-fabrics device",
+	[ENVME_CONNECT_READ] = "failed to read from nvme-fabrics device",
+	[ENVME_CONNECT_PARSE] = "failed to parse ctrl info",
+	[ENVME_CONNECT_INVAL_TR] = "invalid transport type",
+	[ENVME_CONNECT_LOOKUP_SUBSYS_NAME] = "failed to lookup subsystem name",
+	[ENVME_CONNECT_LOOKUP_SUBSYS] = "failed to lookup subsystem",
+};
+
+const char *nvme_errno_to_string(int status)
+{
+	const char *s = ARGSTR(libnvme_status, status);
+
+	return s;
+}

@@ -99,45 +99,11 @@ static int discover_err = 0;
   if (connect_err == 1) {
     SWIG_exception(SWIG_AttributeError, "Existing controller connection");
   } else if (connect_err) {
-    switch (errno) {
-    case ENVME_CONNECT_RESOLVE:
-	    SWIG_exception(SWIG_RuntimeError, "failed to resolve host");
-	    break;
-    case ENVME_CONNECT_ADDRFAM:
-	    SWIG_exception(SWIG_RuntimeError, "unrecognized address family");
-	    break;
-    case ENVME_CONNECT_TRADDR:
-	    SWIG_exception(SWIG_RuntimeError, "failed to get traddr");
-	    break;
-    case ENVME_CONNECT_TARG:
-	    SWIG_exception(SWIG_RuntimeError, "need a transport (-t) argument");
-	    break;
-    case ENVME_CONNECT_AARG:
-	    SWIG_exception(SWIG_RuntimeError, "need a address (-a) argument\n");
-	    break;
-    case ENVME_CONNECT_OPEN:
-	    SWIG_exception(SWIG_RuntimeError, "failed to open nvme-fabrics device");
-	    break;
-    case ENVME_CONNECT_WRITE:
-	    SWIG_exception(SWIG_RuntimeError, "failed to write to nvme-fabrics device");
-	    break;
-    case ENVME_CONNECT_READ:
-	    SWIG_exception(SWIG_RuntimeError, "failed to read from nvme-fabrics device");
-	    break;
-    case ENVME_CONNECT_PARSE:
-	    SWIG_exception(SWIG_RuntimeError, "failed to parse ctrl info");
-	    break;
-    case ENVME_CONNECT_INVAL_TR:
-	    SWIG_exception(SWIG_RuntimeError, "invalid transport type");
-	    break;
-    case ENVME_CONNECT_LOOKUP_SUBSYS_NAME:
-	    SWIG_exception(SWIG_RuntimeError, "failed to lookup subsystem name");
-	    break;
-    case ENVME_CONNECT_LOOKUP_SUBSYS:
-	    SWIG_exception(SWIG_RuntimeError, "failed to lookup subsystem");
-	    break;
-    default:
-	SWIG_exception(SWIG_RuntimeError, "Connect failed");
+    const char *errstr = nvme_errno_to_string(errno);
+    if (errstr) {
+      SWIG_exception(SWIG_RuntimeError, errstr);
+    } else {
+      SWIG_exception(SWIG_RuntimeError, "Connect failed");
     }
   }
 }
