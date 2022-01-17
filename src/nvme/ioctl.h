@@ -790,13 +790,14 @@ static inline int nvme_identify_uuid(int fd, struct nvme_id_uuid_list *uuid_list
  * nvme_identify_ns_csi() -
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace to identify
+ * @uuidx:	UUID Index for differentiating vendor specific encoding
  * @csi:	Command Set Identifier
  * @data:	User space destination address to transfer the data
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-static inline int nvme_identify_ns_csi(int fd, __u32 nsid,
+static inline int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 uuidx,
 			enum nvme_csi csi, void *data)
 {
 	struct nvme_identify_args args = {
@@ -810,7 +811,7 @@ static inline int nvme_identify_ns_csi(int fd, __u32 nsid,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
 		.cns_specific_id = NVME_CNSSPECID_NONE,
-		.uuidx = NVME_UUID_NONE,
+		.uuidx = uuidx,
 	};
 
 	return nvme_identify(&args);

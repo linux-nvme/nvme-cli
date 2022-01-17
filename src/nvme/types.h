@@ -2130,6 +2130,22 @@ struct nvme_id_ctrl_nvm {
 };
 
 /**
+ * struct nvme_nvm_id_ns -
+ * @lbstm:	Logical Block Storage Tag Mask
+ * @pic:	Protection Information Capabilities
+ * @rsvd9:	Reserved
+ * @elbaf:	List of Extended LBA Format Support
+ * @rsvd268:	Reserved
+ */
+struct nvme_nvm_id_ns {
+	__le64	lbstm;
+	__u8	pic;
+	__u8	rsvd9[3];
+	__le32	elbaf[64];
+	__u8	rsvd268[3828];
+};
+
+/**
  * struct nvme_zns_lbafe -
  * @zsze:
  * @zdes:
