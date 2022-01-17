@@ -222,6 +222,22 @@ static int add_int_argument(char **argstr, char *tok, int arg, bool allow_zero)
 	return 0;
 }
 
+static int add_int_or_minus_one_argument(char **argstr, char *tok, int arg)
+{
+	char *nstr;
+
+	if (arg < -1)
+		return 0;
+	if (asprintf(&nstr, "%s,%s=%d", *argstr, tok, arg) < 0) {
+		errno = ENOMEM;
+		return -1;
+	}
+	free(*argstr);
+	*argstr = nstr;
+
+	return 0;
+}
+
 static int add_argument(char **argstr, const char *tok, const char *arg)
 {
 	char *nstr;
@@ -413,9 +429,6 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 			nvme_msg(LOG_ERR, "need a address (-a) argument\n");
 			return -ENVME_CONNECT_AARG;
 		}
-		/* Use the default ctrl loss timeout if unset */
-                if (cfg->ctrl_loss_tmo == -1)
-			cfg->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 	}
 
 	/* always specify nqn as first arg - this will init the string */
@@ -467,8 +480,8 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	    add_int_argument(argstr, "reconnect_delay",
 			     cfg->reconnect_delay, false) ||
 	    (strcmp(transport, "loop") &&
-	     add_int_argument(argstr, "ctrl_loss_tmo",
-			      cfg->ctrl_loss_tmo, false)) ||
+	     add_int_or_minus_one_argument(argstr, "ctrl_loss_tmo",
+			      cfg->ctrl_loss_tmo)) ||
 	    (strcmp(transport, "loop") &&
 	     add_int_argument(argstr, "fast_io_fail_tmo",
 			      cfg->fast_io_fail_tmo, false)) ||
