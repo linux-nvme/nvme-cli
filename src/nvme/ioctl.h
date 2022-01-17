@@ -950,6 +950,75 @@ static inline int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
 }
 
 /**
+ * nvme_identify_ns_csi_user_data_format() -
+ * @fd:		File descriptor of nvme device
+ * @user_data_format: Return namespaces capability of identifier
+ * @uuidx:	UUID selection, if supported
+ * @csi:	Command Set Identifier
+ *
+ * Identify Namespace data structure for the specified User Data Format
+ * index containing the namespace capabilities for the NVM Command Set.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+static inline int nvme_identify_ns_csi_user_data_format(int fd,
+			__u16 user_data_format, __u8 uuidx,
+			enum nvme_csi csi, void *data)
+{
+	struct nvme_identify_args args = {
+		.result = NULL,
+		.data = data,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.cns = NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT,
+		.csi = csi,
+		.nsid = NVME_NSID_NONE,
+		.cntid = NVME_CNTLID_NONE,
+		.cns_specific_id = user_data_format,
+		.uuidx = uuidx,
+	};
+
+	return nvme_identify(&args);
+}
+
+/**
+ * nvme_identify_iocs_ns_csi_user_data_format() -
+ * @fd:		File descriptor of nvme device
+ * @user_data_format: Return namespaces capability of identifier
+ * @uuidx:	UUID selection, if supported
+ * @csi:	Command Set Identifier
+ *
+ * I/O Command Set specific Identify Namespace data structure for
+ * the specified User Data Format index containing the namespace
+ * capabilities for the I/O Command Set specified in the CSI field.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+static inline int nvme_identify_iocs_ns_csi_user_data_format(int fd,
+			__u16 user_data_format, __u8 uuidx,
+			enum nvme_csi csi, void *data)
+{
+	struct nvme_identify_args args = {
+		.result = NULL,
+		.data = data,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.cns = NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT,
+		.csi = csi,
+		.nsid = NVME_NSID_NONE,
+		.cntid = NVME_CNTLID_NONE,
+		.cns_specific_id = user_data_format,
+		.uuidx = uuidx,
+	};
+
+	return nvme_identify(&args);
+}
+
+/**
  * nvme_nvm_identify_ctrl() -
  * @fd:	File descriptor of nvme device
  * @id:	User space destination address to transfer the data
