@@ -3944,9 +3944,22 @@ enum nvme_ae_info_notice {
 
 /**
  * enum nvme_subsys_type - Type of the NVM subsystem.
- * @NVME_NQN_DISC:		Discovery type target subsystem
- * @NVME_NQN_NVME:		NVME type target subsystem
- * @NVME_NQN_CURR:		Current Discovery type target subsystem
+ * @NVME_NQN_DISC: Discovery type target subsystem. Describes a referral to another
+ * 		   Discovery Service composed of Discovery controllers that provide
+ * 		   additional discovery records. Multiple Referral entries may
+ * 		   be reported for each Discovery Service (if that Discovery Service
+ * 		   has multiple NVM subsystem ports or supports multiple protocols).
+ * @NVME_NQN_NVME: NVME type target subsystem. Describes an NVM subsystem whose
+ * 		   controllers may have attached namespaces (an NVM subsystem
+ * 		   that is not composed of Discovery controllers). Multiple NVM
+ * 		   Subsystem entries may be reported for each NVM subsystem if
+ * 		   that NVM subsystem has multiple NVM subsystem ports.
+ * @NVME_NQN_CURR: Current Discovery type target subsystem. Describes this Discovery
+ * 		   subsystem (the Discovery Service that contains the controller
+ * 		   processing the Get Log Page command). Multiple Current Discovery
+ * 		   Subsystem entries may be reported for this Discovery subsystem
+ * 		   if the current Discovery subsystem has multiple NVM subsystem
+ * 		   ports.
  */
 enum nvme_subsys_type {
 	NVME_NQN_DISC	= 1,
@@ -3962,10 +3975,28 @@ enum nvme_subsys_type {
 #define NVMF_NQN_SIZE		223
 #define NVMF_TRSVCID_SIZE	32
 
-#define NVMF_DISC_EFLAGS_NONE		0
-#define NVMF_DISC_EFLAGS_DUPRETINFO	1
-#define NVMF_DISC_EFLAGS_EPCSD		2
-#define NVMF_DISC_EFLAGS_BOTH		3
+/**
+ * enum nvmf_disc_eflags - Discovery Log Page entry flags.
+ * @NVMF_DISC_EFLAGS_NONE:	 Indicates that none of the DUPRETINFO or EPCSD
+ * 				 features are supported.
+ * @NVMF_DISC_EFLAGS_DUPRETINFO: Duplicate Returned Information (DUPRETINFO):
+ * 				 Indicates that using the content of this entry
+ * 				 to access this Discovery Service returns the same
+ * 				 information that is returned by using the content
+ * 				 of other entries in this log page that also have
+ * 				 this flag set.
+ * @NVMF_DISC_EFLAGS_EPCSD:	 Explicit Persistent Connection Support for Discovery (EPCSD):
+ * 				 Indicates that Explicit Persistent Connections are
+ * 				 supported for the Discovery controller.
+ * @NVMF_DISC_EFLAGS_BOTH:	 Indicates that both the DUPRETINFO and EPCSD
+ * 				 features are supported.
+ */
+enum nvmf_disc_eflags {
+	NVMF_DISC_EFLAGS_NONE		= 0,
+	NVMF_DISC_EFLAGS_DUPRETINFO	= 1,
+	NVMF_DISC_EFLAGS_EPCSD		= 2,
+	NVMF_DISC_EFLAGS_BOTH		= 3,
+};
 
 /**
  * struct nvmf_disc_log_entry - Discovery Log Page entry
@@ -3992,15 +4023,20 @@ enum nvme_subsys_type {
  * @asqsz:   Admin Max SQ Size (ASQSZ): Specifies the maximum size of an Admin
  * 	     Submission Queue. This applies to all controllers in the NVM
  * 	     subsystem. The value shall be a minimum of 32 entries.
- * @eflags:
+ * @eflags:  Entry Flags (EFLAGS): Indicates additional information related to
+ * 	     the current entry. See &enum nvmf_disc_eflags.
  * @trsvcid: Transport Service Identifier (TRSVCID): Specifies the NVMe Transport
  * 	     service identifier as an ASCII string. The NVMe Transport service
  * 	     identifier is specified by the associated NVMe Transport binding
  * 	     specification.
  * @subnqn:  NVM Subsystem Qualified Name (SUBNQN): NVMe Qualified Name (NQN)
- * 	     that uniquely identifies the NVM subsystem. For a Discovery Service,
- * 	     the value returned shall be the well-known Discovery Service NQN
- * 	     (nqn.2014-08.org.nvmexpress.discovery).
+ * 	     that uniquely identifies the NVM subsystem. For a subsystem, if that
+ * 	     Discovery subsystem has a unique NQN (i.e., the NVM Subsystem NVMe
+ * 	     Qualified Name (SUBNQN) field in that Discovery subsystem's Identify
+ * 	     Controller data structure contains a unique NQN value), then the
+ * 	     value returned shall be that unique NQN. If the Discovery subsystem
+ * 	     does not have a unique NQN, then the value returned shall be the
+ * 	     well-known Discovery Service NQN (nqn.2014-08.org.nvmexpress.discovery).
  * @traddr:  Transport Address (TRADDR): Specifies the address of the NVM subsystem
  * 	     that may be used for a Connect command as an ASCII string. The
  * 	     Address Family field describes the reference for parsing this field.
