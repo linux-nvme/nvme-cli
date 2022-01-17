@@ -53,7 +53,7 @@
  * 				parameter is not used in a command
  * @NVME_UUID_NONE:		Use to omit a uuid command parameter
  * @NVME_CNTLID_NONE:		Use to omit a cntlid command parameter
- * @NVME_NVMSETID_NONE: 	Use to omit a nvmsetid command parameter
+ * @NVME_CNSSPECID_NONE: 	Use to omit a cns_specific_id command parameter
  * @NVME_DOMID_NONE:		Use to omit a domid command parameter
  * @NVME_LOG_LSP_NONE:		Use to omit a log lsp command parameter
  * @NVME_LOG_LSI_NONE:		Use to omit a log lsi command parameter
@@ -98,8 +98,8 @@ enum nvme_constants {
 	NVME_NSID_NONE				= 0,
 	NVME_UUID_NONE				= 0,
 	NVME_CNTLID_NONE			= 0,
-	NVME_NVMSETID_NONE			= 0,
-	NVME_DOMID_NONE				= 0,
+	NVME_CNSSPECID_NONE			= 0,
+	NVME_DOMID_NONE                         = 0,
 	NVME_LOG_LSP_NONE			= 0,
 	NVME_LOG_LSI_NONE			= 0,
 	NVME_LOG_LPO_NONE			= 0,

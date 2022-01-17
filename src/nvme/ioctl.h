@@ -381,18 +381,17 @@ int nvme_get_nsid(int fd, __u32 *nsid);
 
 /**
  * struct nvme_identify_args - Arguments for the NVMe Identify command
- * @result:	The command completion result from CQE dword0
- * @data:	User space destination address to transfer the data
- * @args_size:	Size of &struct nvme_identify_args
- * @fd:		File descriptor of nvme device
- * @timeout:	Timeout in ms (0 for default timeout)
- * @cns:	The Controller or Namespace structure, see @enum nvme_identify_cns
- * @csi:	Command Set Identifier
- * @nsid:	Namespace identifier, if applicable
- * @cntid:	The Controller Identifier, if applicable
- * @nvmsetid:	The NVMe Set ID if CNS is 04h
- * @domid:	Domain identifier, if applicable
- * @uuidx:	UUID Index if controller supports this id selection method
+ * @result:		The command completion result from CQE dword0
+ * @data:		User space destination address to transfer the data
+ * @args_size:		Size of &struct nvme_identify_args
+ * @fd:			File descriptor of nvme device
+ * @timeout:		Timeout in ms (0 for default timeout)
+ * @cns:		The Controller or Namespace structure, see @enum nvme_identify_cns
+ * @csi:		Command Set Identifier
+ * @nsid:		Namespace identifier, if applicable
+ * @cntid:		The Controller Identifier, if applicable
+ * @cns_specific_id:	Identifier that is required for a particular CNS value
+ * @uuidx:		UUID Index if controller supports this id selection method
  */
 struct nvme_identify_args {
 	__u32 *result;
@@ -404,8 +403,7 @@ struct nvme_identify_args {
 	enum nvme_csi csi;
 	__u32 nsid;
 	__u16 cntid;
-	__u16 nvmsetid;
-	__u16 domid;
+	__u16 cns_specific_id;
 	__u8 uuidx;
 } __attribute__((packed, aligned(__alignof__(__u32*))));
 
@@ -434,8 +432,7 @@ static int nvme_identify_cns_nsid(int fd, enum nvme_identify_cns cns,
 		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -574,8 +571,7 @@ static inline int nvme_identify_ctrl_list(int fd, __u16 cntid,
 		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = cntid,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -611,8 +607,7 @@ static inline int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
 		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = cntid,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -672,8 +667,7 @@ static inline int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = nvmsetid,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = nvmsetid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -705,8 +699,7 @@ static inline int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = cntid,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -744,8 +737,7 @@ static inline int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid,
 		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = cntid,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -817,8 +809,7 @@ static inline int nvme_identify_ns_csi(int fd, __u32 nsid,
 		.csi = csi,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -846,8 +837,7 @@ static inline int nvme_identify_ctrl_csi(int fd, enum nvme_csi csi, void *data)
 		.csi = csi,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -884,8 +874,7 @@ static inline int nvme_identify_active_ns_list_csi(int fd, __u32 nsid,
 		.csi = csi,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -922,8 +911,7 @@ static inline int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid,
 		.csi = csi,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -953,8 +941,7 @@ static inline int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
 		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -1003,8 +990,7 @@ static inline int nvme_identify_domain_list(int fd, __u16 domid,
 		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = domid,
+		.cns_specific_id = domid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -1033,8 +1019,7 @@ static inline int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
 		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = endgrp_id,
+		.cns_specific_id = endgrp_id,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -1066,8 +1051,7 @@ static inline int nvme_identify_iocs(int fd, __u16 cntlid,
 		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = cntlid,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -1096,8 +1080,7 @@ static inline int nvme_zns_identify_ns(int fd, __u32 nsid,
 		.csi = NVME_CSI_ZNS,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 	};
 
 	return nvme_identify(&args);
