@@ -9,6 +9,8 @@
 #ifndef _LIBNVME_LINUX_H
 #define _LIBNVME_LINUX_H
 
+#include <stddef.h>
+
 #include "types.h"
 
 /**
