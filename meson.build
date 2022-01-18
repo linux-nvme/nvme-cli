@@ -45,6 +45,7 @@ conf.set('CONFIG_JSONC', json_c_dep.found(), description: 'Is json-c required?')
 
 # Check for OpenSSL availability
 openssl_dep = dependency('openssl',
+                         version: '>=1.1.0',
                          required: get_option('openssl'),
                          fallback : ['openssl', 'openssl_dep'])
 if openssl_dep.found()
