@@ -5,11 +5,6 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-configure_file(
-    output: 'config.h',
-    configuration: conf
-)
-
 want_python = get_option('python')
 if want_python != 'false'
     python3 = import('python').find_installation('python3')
@@ -35,8 +30,8 @@ if have_python_support
         '_nvme',
         pymod_swig[1],
         dependencies : py3_dep,
-        include_directories: incdir,
-        link_with: libnvme,
+        include_directories: [incdir, internal_incdir],
+        link_with: [libnvme, libccan],
         install: true,
         subdir: 'libnvme',
     )

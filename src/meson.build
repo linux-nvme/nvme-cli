@@ -5,7 +5,7 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-sources += [
+sources = [
     'nvme/cleanup.c',
     'nvme/fabrics.c',
     'nvme/filters.c',
@@ -39,6 +39,7 @@ libnvme = library(
     link_depends: mapfile,
     include_directories: [incdir, internal_incdir],
     install: true,
+    link_with: libccan,
 )
 
 pkg = import('pkgconfig')
