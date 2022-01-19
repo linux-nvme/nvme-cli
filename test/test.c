@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <inttypes.h>
 #ifdef CONFIG_LIBUUID
 #include <uuid/uuid.h>
 #endif
@@ -274,7 +275,8 @@ static int test_namespace(nvme_ns_t n)
 		return ret;
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &flbas);
-	printf("%s: nsze:%lx lba size:%d\n", nvme_ns_get_name(n), le64_to_cpu(ns.nsze),
+	printf("%s: nsze:%" PRIu64 " lba size:%d\n",
+		nvme_ns_get_name(n), le64_to_cpu(ns.nsze),
 		1 << ns.lbaf[flbas].ds);
 
 	ret = nvme_identify_allocated_ns(fd, nsid, &allocated);
@@ -367,7 +369,7 @@ int main(int argc, char **argv)
 					char uuid_str[40];
 					uuid_t uuid;
 #endif
-					printf("   `- %s lba size:%d lba max:%lu\n",
+					printf("   `- %s lba size:%d lba max:%" PRIu64 "\n",
 					       nvme_ns_get_name(n),
 					       nvme_ns_get_lba_size(n),
 					       nvme_ns_get_lba_count(n));
@@ -390,7 +392,7 @@ int main(int argc, char **argv)
 			}
 
 			nvme_subsystem_for_each_ns(s, n) {
-				printf(" `- %s lba size:%d lba max:%lu\n",
+				printf(" `- %s lba size:%d lba max:%" PRIu64 "\n",
 				       nvme_ns_get_name(n),
 				       nvme_ns_get_lba_size(n),
 				       nvme_ns_get_lba_count(n));
