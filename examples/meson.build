@@ -25,4 +25,3 @@ executable(
     link_with: libnvme,
     include_directories: [incdir, internal_incdir]
 )
-

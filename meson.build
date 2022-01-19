@@ -150,13 +150,18 @@ configure_file(
 )
 
 ################################################################################
-add_project_arguments(['-fomit-frame-pointer', '-D_GNU_SOURCE',
-                       '-include', 'libnvme/config.h'], language : 'c')
+add_project_arguments(
+    [
+        '-fomit-frame-pointer',
+        '-D_GNU_SOURCE',
+        '-include', 'internal/config.h',
+    ],
+    language : 'c',
+)
 incdir = include_directories(['.', 'ccan', 'src'])
-internal_incdir = include_directories('libnvme')
 
 ################################################################################
-sources = []
+subdir('internal')
 subdir('ccan')
 subdir('src')
 subdir('libnvme')
