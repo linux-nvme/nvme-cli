@@ -267,13 +267,15 @@ static int test_namespace(nvme_ns_t n)
 	struct nvme_id_ns ns = { 0 }, allocated = { 0 };
 	struct nvme_ns_id_desc descs = { 0 };
 	__u32 result = 0;
+	__u8 flbas;
 
 	ret = nvme_ns_identify(n, &ns);
 	if (ret)
 		return ret;
 
+	nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &flbas);
 	printf("%s: nsze:%lx lba size:%d\n", nvme_ns_get_name(n), le64_to_cpu(ns.nsze),
-		1 << ns.lbaf[ns.flbas & NVME_NS_FLBAS_LBA_MASK].ds);
+		1 << ns.lbaf[flbas].ds);
 
 	ret = nvme_identify_allocated_ns(fd, nsid, &allocated);
 	if (!ret)

@@ -7745,9 +7745,9 @@ Returns true if given offset is 64bit register, otherwise it returns false.
 
 **Constants**
 
-``NVME_NS_FLBAS_LBA_MASK``
-  Mask to get the index of one of the 16 supported
-  LBA Formats indicated in :c:type:`struct nvme_id_ns <nvme_id_ns>`.lbaf.
+``NVME_NS_FLBAS_LOWER_MASK``
+  Mask to get the index of one of the supported LBA Formats's least significant
+  4bits indicated in :c:type:`struct nvme_id_ns <nvme_id_ns>`.lbaf.
 
 ``NVME_NS_FLBAS_META_EXT``
   Applicable only if format contains metadata. If
@@ -7757,7 +7757,9 @@ Returns true if given offset is 64bit register, otherwise it returns false.
   of the metadata for a command is transferred as a
   separate contiguous buffer of data.
 
-
+``NVME_NS_FLBAS_HIGHER_MASK``
+  Mask to get the index of one of the supported LBA Formats's most significant
+  2bits indicated in :c:type:`struct nvme_id_ns <nvme_id_ns>`.lbaf.
 
 
 .. c:type:: enum nvme_id_ns_mc

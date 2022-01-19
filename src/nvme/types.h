@@ -1700,18 +1700,25 @@ enum nvme_id_nsfeat {
  * enum nvme_id_ns_flbas - This field indicates the LBA data size & metadata
  * 			   size combination that the namespace has been
  * 			   formatted with
- * @NVME_NS_FLBAS_LBA_MASK: Mask to get the index of one of the 16 supported
- * 			    LBA Formats indicated in &struct nvme_id_ns.lbaf.
- * @NVME_NS_FLBAS_META_EXT: Applicable only if format contains metadata. If
- * 			    this bit is set, indicates that the metadata is
- * 			    transferred at the end of the data LBA, creating an
- * 			    extended data LBA. If cleared, indicates that all
- * 			    of the metadata for a command is transferred as a
- * 			    separate contiguous buffer of data.
+ * @NVME_NS_FLBAS_LOWER_MASK:	Mask to get the index of one of the supported
+ *				LBA Formats's least significant
+ *				4bits indicated in
+ *				:c:type:`struct nvme_id_ns <nvme_id_ns>`.lbaf.
+ * @NVME_NS_FLBAS_META_EXT:	Applicable only if format contains metadata. If
+ *				this bit is set, indicates that the metadata is
+ *				transferred at the end of the data LBA, creating an
+ *				extended data LBA. If cleared, indicates that all
+ *				of the metadata for a command is transferred as a
+ *				separate contiguous buffer of data.
+ * @NVME_NS_FLBAS_HIGHER_MASK:  Mask to get the index of one of
+ *				the supported LBA Formats's most significant
+ *				2bits indicated in
+ *				:c:type:`struct nvme_id_ns <nvme_id_ns>`.lbaf.
  */
 enum nvme_id_ns_flbas {
-	NVME_NS_FLBAS_LBA_MASK		= 15 << 0,
+	NVME_NS_FLBAS_LOWER_MASK	= 15 << 0,
 	NVME_NS_FLBAS_META_EXT		= 1 << 4,
+	NVME_NS_FLBAS_HIGHER_MASK	= 3 << 5,
 };
 
 /**
