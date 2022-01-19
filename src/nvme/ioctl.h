@@ -1124,6 +1124,7 @@ static inline int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id)
  * @csi:	Command set identifier, see &enum nvme_csi for known values
  * @lsp:	Log specific field
  * @lsi:	Endurance group information
+ * @domid:	Domain Identifier selection, if supported
  * @uuidx:	UUID selection, if supported
  * @rae:	Retain asynchronous events
  * @ot:		Offset Type; if set @lpo specifies the index into the list
@@ -1143,6 +1144,7 @@ struct nvme_get_log_args {
 	enum nvme_csi csi;
 	__u16 lsi;
 	__u8 lsp;
+	__u16 domid;
 	__u8 uuidx;
 	bool rae;
 	bool ot;
@@ -1174,6 +1176,7 @@ static inline int nvme_get_nsid_log(int fd, bool rae,
 		.csi = NVME_CSI_NVM,
 		.lsi = NVME_LOG_LSI_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
+		.domid = NVME_DOMID_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = false,
 		.ot = false,
@@ -1735,6 +1738,39 @@ static inline int nvme_get_log_discovery(int fd, bool rae,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = rae,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
+
+
+/**
+ * nvme_get_log_media_unit_stat() -
+ * @fd:		File descriptor of nvme device
+ * @domid:	Domain Identifier selection, if supported
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+static inline int nvme_get_log_media_unit_stat(int fd, __u16 domid,
+			struct nvme_media_unit_stat_log *mus)
+{
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.result = NULL,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_MEDIA_UNIT_STATUS,
+		.lpo = 0,
+		.log = mus,
+		.len = sizeof(*mus),
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.domid = domid,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
 		.ot = false,
 	};
 	return nvme_get_log(&args);

@@ -3282,6 +3282,44 @@ struct nvme_boot_partition {
 };
 
 /**
+ * struct nvme_media_unit_stat_desc -
+ * @muid:         Media Unit Identifier
+ * @domainid:     Domain Identifier
+ * @endgid:       Endurance Group Identifier
+ * @nvmsetid:     NVM Set Identifier
+ * @cap_adj_fctr: Capacity Adjustment Factor
+ * @avl_spare:    Available Spare
+ * @percent_used: Percentage Used
+ * @mucs:         Number of Channels attached to media units
+ * @cio:          Channel Identifiers Offset
+ */
+struct nvme_media_unit_stat_desc {
+	__le16	muid;
+	__le16	domainid;
+	__le16	endgid;
+	__le16	nvmsetid;
+	__le16	cap_adj_fctr;
+	__u8	avl_spare;
+	__u8	percent_used;
+	__u8	mucs;
+	__u8	cio;
+};
+
+/**
+ * struct nvme_media_unit_stat_log -
+ * @nmu:        Number unit status descriptor
+ * @cchans:     Number of Channels
+ * @sel_config: Selected Configuration
+ */
+struct nvme_media_unit_stat_log {
+	__le16	nmu;
+	__le16	cchans;
+	__le16	sel_config;
+	__u8	rsvd6[10];
+	struct nvme_media_unit_stat_desc mus_desc[];
+};
+
+/**
  * struct nvme_resv_notification_log -
  * @lpc:
  * @rnlpt: See &enum nvme_resv_notify_rnlpt.
@@ -5346,6 +5384,7 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_PERSISTENT_EVENT:
  * @NVME_LOG_LID_LBA_STATUS:
  * @NVME_LOG_LID_ENDURANCE_GRP_EVT:
+ * @NVME_LOG_LID_MEDIA_UNIT_STATUS:
  * @NVME_LOG_LID_FID_SUPPORTED_EFFECTS:
  * @NVME_LOG_LID_BOOT_PARTITION:
  * @NVME_LOG_LID_DISCOVER:
@@ -5370,6 +5409,7 @@ enum nvme_cmd_get_log_lid {
 	NVME_LOG_LID_PERSISTENT_EVENT				= 0x0d,
 	NVME_LOG_LID_LBA_STATUS					= 0x0e,
 	NVME_LOG_LID_ENDURANCE_GRP_EVT				= 0x0f,
+	NVME_LOG_LID_MEDIA_UNIT_STATUS				= 0x10,
 	NVME_LOG_LID_FID_SUPPORTED_EFFECTS			= 0x12,
 	NVME_LOG_LID_BOOT_PARTITION				= 0x15,
 	NVME_LOG_LID_DISCOVER					= 0x70,

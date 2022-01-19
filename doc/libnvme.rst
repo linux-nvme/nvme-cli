@@ -921,6 +921,9 @@ otherwise.
 ``NVME_LOG_LID_ENDURANCE_GRP_EVT``
   *undescribed*
 
+``NVME_LOG_LID_MEDIA_UNIT_STATUS``
+  *undescribed*
+
 ``NVME_LOG_LID_DISCOVER``
   *undescribed*
 
