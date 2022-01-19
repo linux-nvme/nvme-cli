@@ -13,8 +13,6 @@ readonly _plugin_subcmds=(
 		set-bucket-thresholds lat-stats-tracking \
 		market-name smart-log-add temp-stats"
 	[amzn]="id-ctrl"
-	[lnvm]="list info id-ns chunk-log init create \
-		remove factory diag-bbtbl diag-set-bbtbl"
 	[memblaze]="smart-log-add get-pm-status set-pm-status \
 		select-download lat-stats lat-stats-print lat-log \
 		lat-log-print clear-error-log"
@@ -61,7 +59,6 @@ typeset -A _plugin_funcs
 readonly _plugin_funcs=(
 	[intel]="plugin_intel_opts"
 	[amzn]="plugin_amzn_opts"
-	[lnvm]="plugin_lnvm_opts"
 	[memblaze]="plugin_memblaze_opts"
 	[wdc]="plugin_wdc_opts"
 	[huawei]="plugin_huawei_opts"
@@ -591,68 +588,6 @@ plugin_amzn_opts () {
 		"id-ctrl")
 		opts+=" --raw-binary -b --human-readable -H \
 			--vendor-specific -v --output-format= -o"
-			;;
-		"help")
-		opts+=$NO_OPTS
-			;;
-	esac
-
-	COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
-
-	return 0
-}
-
-plugin_lnvm_opts () {
-    local opts=""
-	local compargs=""
-
-	local nonopt_args=0
-	for (( i=0; i < ${#words[@]}-1; i++ )); do
-		if [[ ${words[i]} != -* ]]; then
-			let nonopt_args+=1
-		fi
-	done
-
-	if [ $nonopt_args -eq 3 ]; then
-		opts="/dev/nvme* "
-	fi
-
-	opts+=" "
-
-	case "$1" in
-		"list")
-		opts+=$NO_OPTS
-			;;
-		"info")
-		opts+=$NO_OPTS
-			;;
-		"id-ns")
-		opts+=" --namespace-id= -n --raw-binary -b --human-readable -H"
-			;;
-		"chunk-log")
-		opts+=" --output-format= -o --human-readable -H"
-			;;
-		"init")
-		opts+=" --device-name= -d --mediamgr-name -m"
-			;;
-		"create")
-		opts+=" --device-name= -d --target-name= -n --target-type= -t \
-			--lun-begin= -b --lun-end= -e --over-prov= -o --factory -f"
-			;;
-		"remove")
-		opts+=" --target-name= -n"
-			;;
-		"factory")
-		opts+=" --device-name= -d --erase-only-marked -e
-			--clear-host-side-blks -s --clear-bb-blks -b"
-			;;
-		"diag-bbtbl")
-		opts+=" --namespace-id= -n --channel-id= -c --lun-id= -l \
-			--raw-binary -b"
-			;;
-		"diag-set-bbtbl")
-		opts+=" --namespace-id= -n --channel-id= -c --lun-id= -l \
-			--plane-id= -p --block-id= -b --value= -v"
 			;;
 		"help")
 		opts+=$NO_OPTS
