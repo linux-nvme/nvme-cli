@@ -337,14 +337,14 @@ int nvme_get_ana_log_len(int fd, size_t *analen)
 int nvme_get_logical_block_size(int fd, __u32 nsid, int *blksize)
 {
 	struct nvme_id_ns ns;
-	int flbas;
+	__u8 flbas;
 	int ret;
 
 	ret = nvme_identify_ns(fd, nsid, &ns);
 	if (ret)
 		return ret;
 
-	flbas = ns.flbas & NVME_NS_FLBAS_LBA_MASK;
+	nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &flbas);
 	*blksize = 1 << ns.lbaf[flbas].ds;
 
 	return 0;

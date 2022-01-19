@@ -1670,14 +1670,14 @@ static int nvme_ns_init(struct nvme_ns *n)
 	struct nvme_id_ns ns = { };
 	uint8_t buffer[NVME_IDENTIFY_DATA_SIZE] = { };
 	struct nvme_ns_id_desc *descs = (void *)buffer;
-	int flbas;
+	uint8_t flbas;
 	int ret;
 
 	ret = nvme_ns_identify(n, &ns);
 	if (ret)
 		return ret;
 
-	flbas = ns.flbas & NVME_NS_FLBAS_LBA_MASK;
+	nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &flbas);
 	n->lba_shift = ns.lbaf[flbas].ds;
 	n->lba_size = 1 << n->lba_shift;
 	n->lba_count = le64_to_cpu(ns.nsze);
