@@ -140,6 +140,11 @@
 		    "type": "boolean",
 		    "default": false
 		},
+		"tls": {
+		    "description": "Enable TLS encryption",
+		    "type": "boolean",
+		    "default": false
+		},
 		"persistent": {
 		    "description": "Create persistent discovery connection",
 		    "type": "boolean"

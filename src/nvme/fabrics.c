@@ -187,6 +187,7 @@ static struct nvme_fabrics_config *merge_config(nvme_ctrl_t c,
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, disable_sqflow, false);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, hdr_digest, false);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, data_digest, false);
+	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tls, false);
 
 	return ctrl_cfg;
 }
@@ -495,7 +496,9 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	    (!strcmp(transport, "tcp") &&
 	     add_bool_argument(argstr, "hdr_digest", cfg->hdr_digest)) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_bool_argument(argstr, "data_digest", cfg->data_digest))) {
+	     add_bool_argument(argstr, "data_digest", cfg->data_digest)) ||
+	    (!strcmp(transport, "tcp") &&
+	     add_bool_argument(argstr, "tls", cfg->tls))) {
 		free(*argstr);
 		return -1;
 	}
@@ -707,6 +710,11 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 
 	if (e->treq & NVMF_TREQ_DISABLE_SQFLOW)
 		disable_sqflow = true;
+
+	if (e->trtype == NVMF_TRTYPE_TCP &&
+	    (e->treq & NVMF_TREQ_REQUIRED ||
+	     e->treq & NVMF_TREQ_NOT_REQUIRED))
+		c->cfg.tls = true;
 
 	ret = nvmf_add_ctrl(h, c, cfg, disable_sqflow);
 	if (!ret)
