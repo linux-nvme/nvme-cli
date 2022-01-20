@@ -18,6 +18,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <inttypes.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -791,7 +792,7 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 		}
 
 		genctr = le64_to_cpu(log->genctr);
-		nvme_msg(LOG_DEBUG, "%s: discover genctr %lu, retry\n",
+		nvme_msg(LOG_DEBUG, "%s: discover genctr %" PRIu64 ", retry\n",
 			 name, genctr);
 		ret = nvme_discovery_log(nvme_ctrl_get_fd(c), hdr, log, true);
 		if (ret) {
@@ -808,7 +809,7 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 		errno = EAGAIN;
 		ret = -1;
 	} else if (numrec != le64_to_cpu(log->numrec)) {
-		nvme_msg(LOG_INFO, "%s: could only fetch %lu of %lu records\n",
+		nvme_msg(LOG_INFO, "%s: could only fetch %" PRIu64 " of %" PRIu64 " records\n",
 			 name, numrec, le64_to_cpu(log->numrec));
 		errno = EBADSLT;
 		ret = -1;
