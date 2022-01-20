@@ -68,7 +68,7 @@ typedef struct _LogPageHeader_t {
 
 static void WriteData(__u8 *data, __u32 len, const char *dir, const char *file, const char *msg)
 {
-    char tempFolder[PATH_MAX] = { 0 };
+    char tempFolder[8192] = { 0 };
     FILE *fpOutFile = NULL;
     sprintf(tempFolder, "%s/%s", dir, file);
     if ((fpOutFile = fopen(tempFolder, "ab+")) != NULL) {
