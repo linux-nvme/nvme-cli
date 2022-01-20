@@ -1536,6 +1536,60 @@ ret:
 	return nvme_status_to_errno(err, false);
 }
 
+static int get_media_unit_stat_log(int argc, char **argv, struct command *cmd,
+				   struct plugin *plugin)
+{
+	const char *desc = "Retrieve the configuration and wear of media units and print it";
+	const char *domainid = "Domain Identifier";
+	const char *raw = "use binary output";
+	struct nvme_media_unit_stat_log mus;
+
+	int err = -1, fd;
+	enum nvme_print_flags flags;
+
+	struct config {
+		int   raw_binary;
+		char *output_format;
+		__u16	domainid;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+		.domainid = 0
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("domain-id",  'd', &cfg.domainid,  domainid),
+		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
+		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+
+	if (cfg.raw_binary)
+		flags = BINARY;
+
+	err = nvme_get_log_media_unit_stat(fd, cfg.domainid, &mus);
+	if (!err)
+		nvme_show_media_unit_stat_log(&mus, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("media unit status log");
+
+close_fd:
+	close(fd);
+ret:
+	return nvme_status_to_errno(err, false);
+}
+
 static int get_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve desired number of bytes "\
