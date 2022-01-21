@@ -121,6 +121,8 @@ static void vt_convert_smart_data_to_human_readable_format(struct vtview_smart_l
 	double capacity;
 	char *curlocale;
 	char *templocale;
+	__u8 lba_index;
+	nvme_id_ns_flbas_to_lbaf_inuse(smart->raw_ns.flbas, &lba_index);
 
 	curlocale = setlocale(LC_ALL, NULL);
 	templocale = strdup(curlocale);
@@ -130,7 +132,7 @@ static void vt_convert_smart_data_to_human_readable_format(struct vtview_smart_l
 
 	setlocale(LC_ALL, "C");
 
-	long long int lba = 1 << smart->raw_ns.lbaf[(smart->raw_ns.flbas & 0x0f)].ds;
+	long long int lba = 1 << smart->raw_ns.lbaf[lba_index].ds;
 	capacity = le64_to_cpu(smart->raw_ns.nsze) * lba;
 
 	snprintf(tempbuff, sizeof(tempbuff), "log;%s;%lu;%s;%s;%-.*s;", smart->raw_ctrl.sn, smart->time_stamp, smart->path,

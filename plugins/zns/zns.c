@@ -328,7 +328,7 @@ static int get_zdes_bytes(int fd, __u32 nsid)
 		return -1;
 	}
 
-	lbaf = id_ns.flbas & NVME_NS_FLBAS_LBA_MASK;
+	nvme_id_ns_flbas_to_lbaf_inuse(id_ns.flbas, &lbaf);
 	return ns.lbafe[lbaf].zdes << 6;
 }
 
@@ -914,7 +914,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 	err = nvme_zns_identify_ns(fd, cfg.namespace_id, &id_zns);
 	if (!err) {
 		/* get zsze field from zns id ns data - needed for offset calculation */
-		lbaf = id_ns.flbas & NVME_NS_FLBAS_LBA_MASK;
+		nvme_id_ns_flbas_to_lbaf_inuse(id_ns.flbas, &lbaf);
 	    zsze = le64_to_cpu(id_zns.lbafe[lbaf].zsze);
 	}
 	else {
@@ -1030,6 +1030,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 	void *buf = NULL, *mbuf = NULL;
 	__u16 nblocks, control = 0;
 	__u64 result;
+	__u8 lba_index;
 	struct timeval start_time, end_time;
 
 	struct nvme_id_ns ns;
@@ -1095,7 +1096,8 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_fd;
 	}
 
-	lba_size = 1 << ns.lbaf[(ns.flbas & 0x0f)].ds;
+	nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &lba_index);
+	lba_size = 1 << ns.lbaf[lba_index].ds;
 	if (cfg.data_size & (lba_size - 1)) {
 		fprintf(stderr,
 			"Data size:%#"PRIx64" not aligned to lba size:%#x\n",
@@ -1104,7 +1106,7 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		goto close_fd;
 	}
 
-	meta_size = ns.lbaf[(ns.flbas & 0x0f)].ms;
+	meta_size = ns.lbaf[lba_index].ms;
 	if (meta_size && !(meta_size == 8 && (cfg.prinfo & 0x8)) &&
 			(!cfg.metadata_size || cfg.metadata_size % meta_size)) {
 		fprintf(stderr,

@@ -3567,14 +3567,19 @@ static void nvme_show_id_ns_nsfeat(__u8 nsfeat)
 
 static void nvme_show_id_ns_flbas(__u8 flbas)
 {
-	__u8 rsvd = (flbas & 0xE0) >> 5;
+	__u8 rsvd = (flbas & 0x80) >> 7;
+	__u8 msb2_lbaf = (flbas & NVME_NS_FLBAS_HIGHER_MASK) >> 5;
 	__u8 mdedata = (flbas & 0x10) >> 4;
-	__u8 lbaf = flbas & 0xF;
+	__u8 lsb4_lbaf = flbas & NVME_NS_FLBAS_LOWER_MASK;
+
 	if (rsvd)
-		printf("  [7:5] : %#x\tReserved\n", rsvd);
+		printf("  [7:7] : %#x\tReserved\n", rsvd);
+	printf("  [6:5] : %#x\tMost significant 2 bits of Current LBA Format Selected\n",
+		msb2_lbaf);
 	printf("  [4:4] : %#x\tMetadata Transferred %s\n",
 		mdedata, mdedata ? "at End of Data LBA" : "in Separate Contiguous Buffer");
-	printf("  [3:0] : %#x\tCurrent LBA Format Selected\n", lbaf);
+	printf("  [3:0] : %#x\tLeast significant 4 bits of Current LBA Format Selected\n",
+		lsb4_lbaf);
 	printf("\n");
 }
 
@@ -3710,6 +3715,7 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	bool human = flags & VERBOSE;
 	int vs = flags & VS;
 	int i;
+	__u8 flbas;
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ns, sizeof(*ns));
@@ -3780,7 +3786,7 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	for (i = 0; i < 8; i++)
 		printf("%02x", ns->eui64[i]);
 	printf("\n");
-
+	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
 	for (i = 0; i <= ns->nlbaf; i++) {
 		if (human)
 			printf("LBA Format %2d : Metadata Size: %-3d bytes - "
@@ -3790,12 +3796,11 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 				ns->lbaf[i].rp == 3 ? "Degraded" :
 					ns->lbaf[i].rp == 2 ? "Good" :
 					ns->lbaf[i].rp == 1 ? "Better" : "Best",
-				i == (ns->flbas & 0xf) ? "(in use)" : "");
+				i == flbas ? "(in use)" : "");
 		else
 			printf("lbaf %2d : ms:%-3d lbads:%-2d rp:%#x %s\n", i,
 				le16_to_cpu(ns->lbaf[i].ms), ns->lbaf[i].ds,
-				ns->lbaf[i].rp,
-				i == (ns->flbas & 0xf) ? "(in use)" : "");
+				ns->lbaf[i].rp,	i == flbas ? "(in use)" : "");
 	}
 
 	if (vs) {
@@ -4448,8 +4453,10 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	struct nvme_id_ns *id_ns, unsigned long flags)
 {
 	int human = flags & VERBOSE, vs = flags & VS;
-	uint8_t lbaf = id_ns->flbas & NVME_NS_FLBAS_LBA_MASK;
+	uint8_t lbaf;
 	int i;
+
+	nvme_id_ns_flbas_to_lbaf_inuse(id_ns->flbas, &lbaf);
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ns, sizeof(*ns));
