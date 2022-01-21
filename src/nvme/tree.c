@@ -630,6 +630,12 @@ free_path:
 
 int nvme_ctrl_get_fd(nvme_ctrl_t c)
 {
+	if (c->fd < 0) {
+		c->fd = nvme_open(c->name);
+		if (c->fd < 0)
+			nvme_msg(LOG_ERR, "Failed to open ctrl %s, errno %d\n",
+				 c->name, errno);
+	}
 	return c->fd;
 }
 
@@ -1106,15 +1112,14 @@ static int nvme_configure_ctrl(nvme_ctrl_t c, const char *path,
 
 	d = opendir(path);
 	if (!d) {
+		nvme_msg(LOG_ERR, "Failed to open ctrl dir %s, error %d\n",
+			 path, errno);
 		errno = ENODEV;
 		return -1;
 	}
 	closedir(d);
 
-	c->fd = nvme_open(name);
-	if (c->fd < 0)
-		return c->fd;
-
+	c->fd = -1;
 	c->name = strdup(name);
 	c->sysfs_dir = (char *)path;
 	c->firmware = nvme_get_ctrl_attr(c, "firmware_rev");
