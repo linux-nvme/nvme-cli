@@ -587,14 +587,12 @@ int nvmf_add_ctrl_opts(nvme_ctrl_t c, struct nvme_fabrics_config *cfg)
 }
 
 int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
-		  const struct nvme_fabrics_config *cfg,
-		  bool disable_sqflow)
+		  const struct nvme_fabrics_config *cfg)
 {
 	char *argstr;
 	int ret;
 
 	cfg = merge_config(c, cfg);
-	nvme_ctrl_disable_sqflow(c, disable_sqflow);
 	nvme_ctrl_set_discovered(c, true);
 	if (traddr_is_hostname(c)) {
 		ret = hostname2traddr(c);
@@ -627,7 +625,6 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	const char *transport;
 	char *traddr = NULL, *trsvcid = NULL;
 	nvme_ctrl_t c;
-	bool disable_sqflow = false;
 	int ret;
 
 	switch (e->trtype) {
@@ -709,24 +706,24 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	}
 
 	if (e->treq & NVMF_TREQ_DISABLE_SQFLOW)
-		disable_sqflow = true;
+		c->cfg.disable_sqflow = true;
 
 	if (e->trtype == NVMF_TRTYPE_TCP &&
 	    (e->treq & NVMF_TREQ_REQUIRED ||
 	     e->treq & NVMF_TREQ_NOT_REQUIRED))
 		c->cfg.tls = true;
 
-	ret = nvmf_add_ctrl(h, c, cfg, disable_sqflow);
+	ret = nvmf_add_ctrl(h, c, cfg);
 	if (!ret)
 		return c;
 
-	if (errno == EINVAL && disable_sqflow) {
+	if (errno == EINVAL && c->cfg.disable_sqflow) {
 		errno = 0;
 		/* disable_sqflow is unrecognized option on older kernels */
 		nvme_msg(LOG_INFO, "failed to connect controller, "
 			 "retry with disabling SQ flow control\n");
-		disable_sqflow = false;
-		ret = nvmf_add_ctrl(h, c, cfg, disable_sqflow);
+		c->cfg.disable_sqflow = false;
+		ret = nvmf_add_ctrl(h, c, cfg);
 		if (!ret)
 			return c;
 	}

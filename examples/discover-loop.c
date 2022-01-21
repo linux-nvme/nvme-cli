@@ -69,7 +69,7 @@ int main()
 		fprintf(stderr, "Failed to allocate memory\n");
 		return ENOMEM;
 	}
-	ret = nvmf_add_ctrl(h, c, &cfg, false);
+	ret = nvmf_add_ctrl(h, c, &cfg);
 	if (ret < 0) {
 		fprintf(stderr, "no controller found\n");
 		return errno;
