@@ -7242,6 +7242,179 @@ static int check_dhchap_key(int argc, char **argv, struct command *command, stru
 	return 0;
 }
 
+static int gen_tls_key(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Generate a TLS key in NVMe PSK Interchange format.";
+	const char *secret = "Optional secret (in hexadecimal characters) "\
+		"to be used for the TLS key.";
+	const char *hmac = "HMAC function to use for the retained key "\
+		"(1 = SHA-256, 2 = SHA-384).";
+
+	unsigned char *raw_secret;
+	char encoded_key[128];
+	int key_len = 32;
+	unsigned long crc = crc32(0L, NULL, 0);
+	int err = 0;
+
+	struct config {
+		char *secret;
+		unsigned int hmac;
+	};
+
+	struct config cfg = {
+		.secret = NULL,
+		.hmac = 1,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_STR("secret", 's', &cfg.secret, secret),
+		OPT_UINT("hmac", 'm', &cfg.hmac, hmac),
+		OPT_END()
+	};
+
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err)
+		return err;
+	if (cfg.hmac < 1 || cfg.hmac > 3) {
+		fprintf(stderr, "Invalid HMAC identifier %u\n", cfg.hmac);
+		return -EINVAL;
+	}
+
+	if (cfg.hmac == 2)
+		key_len = 48;
+
+	raw_secret = malloc(key_len + 4);
+	if (!raw_secret)
+		return -ENOMEM;
+	if (!cfg.secret) {
+		if (getrandom_bytes(raw_secret, key_len) < 0)
+			return -errno;
+	} else {
+		int secret_len = 0, i;
+		unsigned int c;
+
+		for (i = 0; i < strlen(cfg.secret); i+=2) {
+			if (sscanf(&cfg.secret[i], "%02x", &c) != 1) {
+				fprintf(stderr, "Invalid secret '%s'\n",
+					cfg.secret);
+				return -EINVAL;
+			}
+			if (i >= key_len) {
+				fprintf(stderr,
+					"Skipping excess secret bytes\n");
+				break;
+			}
+			raw_secret[secret_len++] = (unsigned char)c;
+		}
+		if (secret_len != key_len) {
+			fprintf(stderr, "Invalid key length (%d bytes)\n",
+				secret_len);
+			return -EINVAL;
+		}
+	}
+
+	crc = crc32(crc, raw_secret, key_len);
+	raw_secret[key_len++] = crc & 0xff;
+	raw_secret[key_len++] = (crc >> 8) & 0xff;
+	raw_secret[key_len++] = (crc >> 16) & 0xff;
+	raw_secret[key_len++] = (crc >> 24) & 0xff;
+
+	memset(encoded_key, 0, sizeof(encoded_key));
+	base64_encode(raw_secret, key_len, encoded_key);
+
+	printf("NVMeTLSkey-1:%02x:%s:\n", cfg.hmac, encoded_key);
+	return 0;
+}
+
+static int check_tls_key(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Check a TLS key for NVMe PSK Interchange format.\n";
+	const char *key = "TLS key (in PSK Interchange format) "\
+		"to be validated.";
+
+	unsigned char decoded_key[128];
+	unsigned int decoded_len;
+	u_int32_t crc = crc32(0L, NULL, 0);
+	u_int32_t key_crc;
+	int err = 0, hmac;
+	struct config {
+		char *key;
+	};
+
+	struct config cfg = {
+		.key = NULL,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_STR("key", 'k', &cfg.key, key),
+		OPT_END()
+	};
+
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	if (!cfg.key) {
+		fprintf(stderr, "Key not specified\n");
+		return -EINVAL;
+	}
+
+	if (sscanf(cfg.key, "NVMeTLSkey-1:%02x:*s", &hmac) != 1) {
+		fprintf(stderr, "Invalid key header '%s'\n", cfg.key);
+		return -EINVAL;
+	}
+	switch (hmac) {
+	case 1:
+		if (strlen(cfg.key) != 59) {
+			fprintf(stderr, "Invalid key length for SHA(256)\n");
+			return -EINVAL;
+		}
+		break;
+	case 2:
+		if (strlen(cfg.key) != 83) {
+			fprintf(stderr, "Invalid key length for SHA(384)\n");
+			return -EINVAL;
+		}
+		break;
+	default:
+		fprintf(stderr, "Invalid HMAC identifier %d\n", hmac);
+		return -EINVAL;
+		break;
+	}
+
+	err = base64_decode(cfg.key + 10, strlen(cfg.key) - 11,
+			    decoded_key);
+	if (err < 0) {
+		fprintf(stderr, "Base64 decoding failed, error %d\n",
+			err);
+		return err;
+	}
+	decoded_len = err;
+	if (decoded_len < 32) {
+		fprintf(stderr, "Base64 decoding failed (%s, size %u)\n",
+			cfg.key + 10, decoded_len);
+		return -EINVAL;
+	}
+	decoded_len -= 4;
+	if (decoded_len != 32 && decoded_len != 48 && decoded_len != 64) {
+		fprintf(stderr, "Invalid key length %d\n", decoded_len);
+		return -EINVAL;
+	}
+	crc = crc32(crc, decoded_key, decoded_len);
+	key_crc = ((u_int32_t)decoded_key[decoded_len]) |
+		((u_int32_t)decoded_key[decoded_len + 1] << 8) |
+		((u_int32_t)decoded_key[decoded_len + 2] << 16) |
+		((u_int32_t)decoded_key[decoded_len + 3] << 24);
+	if (key_crc != crc) {
+		fprintf(stderr, "CRC mismatch (key %08x, crc %08x)\n",
+			key_crc, crc);
+		return -EINVAL;
+	}
+	printf("Key is valid (HMAC %d, length %d, CRC %08x)\n",
+	       hmac, decoded_len, crc);
+	return 0;
+}
+
 static int discover_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Send Get Log Page request to Discovery Controller.";

@@ -1,0 +1,40 @@
+nvme-gen-tls-key(1)
+======================
+
+NAME
+----
+nvme-gen-tls-key - Generate a NVMe TLS PSK
+
+SYNOPSIS
+--------
+[verse]
+'nvme gen-tls-key' [--hmac=<hmac-id> | -h <hmac-id>]
+		      [--secret=<secret> | -s <secret> ]
+
+DESCRIPTION
+-----------
+Generate a base64-encoded NVMe TLS pre-shared key (PSK) in
+the PSK interchange format
+NVMeTLSkey-1:01:VRLbtnN9AQb2WXW3c9+wEf/DRLz0QuLdbYvEhwtdWwNf9LrZ:
+and prints it to stdout.
+
+OPTIONS
+-------
+-h <hmac-id>::
+--hmac=<hmac-id>::
+	Select a HMAC algorithm to use. Possible values are:
+	1 - SHA-256 (default)
+	2 - SHA-384
+
+-s <secret>::
+--secret=<secret>::
+	Secret value (in hexadecimal) to be used for the key. If none are
+	provided a random value is used.
+
+EXAMPLES
+--------
+No Examples
+
+NVME
+----
+Part of the nvme-user suite
