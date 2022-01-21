@@ -677,7 +677,7 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 
 	if (cfg.csi < 0) {
 		nvme_root_t nvme_root;
-		uint64_t cap_value;
+		uint64_t cap;
 		int nvme_command_set_supported;
 		int other_command_sets_supported;
 		nvme_root = nvme_scan(NULL);
@@ -687,11 +687,11 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 		if (!bar) {
 			goto close_fd;
 		}
-		cap_value = mmio_read64(bar + NVME_REG_CAP);
+		cap = mmio_read64(bar + NVME_REG_CAP);
 		munmap(bar, getpagesize());
 
-		nvme_command_set_supported = (cap_value & (1UL << 37)) != 0;
-		other_command_sets_supported = (cap_value & (1UL << (37+6))) != 0;
+		nvme_command_set_supported = NVME_CAP_CSS(cap) & NVME_CAP_CSS_NVM;
+		other_command_sets_supported = NVME_CAP_CSS(cap) & NVME_CAP_CSS_CSI;
 
 
 		if (nvme_command_set_supported) {
