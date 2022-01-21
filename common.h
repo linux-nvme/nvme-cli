@@ -33,4 +33,10 @@ static inline uint64_t mmio_read64(void *addr)
 	return ((uint64_t) high << 32) | low;
 }
 
+#if __has_attribute(__fallthrough__)
+# define fallthrough                    __attribute__((__fallthrough__))
+#else
+# define fallthrough                    do {} while (0)  /* fallthrough */
+#endif
+
 #endif
