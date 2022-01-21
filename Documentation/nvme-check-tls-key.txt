@@ -1,0 +1,31 @@
+nvme-check-tls-key(1)
+========================
+
+NAME
+----
+nvme-check-tls-key - Check a generated NVMe TLS PSK
+
+SYNOPSIS
+--------
+[verse]
+'nvme check-tls-key' [--key=<key> ]
+
+DESCRIPTION
+-----------
+Checks if the key is a valid NVMe TLS PSK in the PSK interchange format
+NVMeTLSkey-1:01:VRLbtnN9AQb2WXW3c9+wEf/DRLz0QuLdbYvEhwtdWwNf9LrZ:
+
+
+OPTIONS
+-------
+-k <key>::
+--key=<key>::
+	Key to be checked.
+
+EXAMPLES
+--------
+No Examples
+
+NVME
+----
+Part of the nvme-user suite
