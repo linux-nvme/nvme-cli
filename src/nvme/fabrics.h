@@ -151,15 +151,6 @@ const char *nvmf_cms_str(__u8 cms);
 void nvmf_default_config(struct nvme_fabrics_config *cfg);
 
 /**
- * nvmf_add_ctrl_opts() -
- * @c:
- * @cfg:
- *
- * Return:
- */
-int nvmf_add_ctrl_opts(nvme_ctrl_t c, struct nvme_fabrics_config *cfg);
-
-/**
  * nvmf_add_ctrl() - Connect a controller and update topology
  * @h: Host to which the controller should be attached
  * @c: Controller to be connected

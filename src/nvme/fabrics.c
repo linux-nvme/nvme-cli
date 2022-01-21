@@ -553,39 +553,6 @@ out_close:
 	return ret;
 }
 
-int nvmf_add_ctrl_opts(nvme_ctrl_t c, struct nvme_fabrics_config *cfg)
-{
-	nvme_subsystem_t s = nvme_ctrl_get_subsystem(c);
-	nvme_host_t h = nvme_subsystem_get_host(s);
-	char *argstr;
-	int ret;
-
-	cfg = merge_config(c, cfg);
-	if (traddr_is_hostname(c)) {
-		ret = hostname2traddr(c);
-		if (ret) {
-			errno = -ret;
-			return -1;
-		}
-	}
-
-	ret = build_options(h, c, &argstr);
-	if (ret) {
-		errno = -ret;
-		return -1;
-	}
-
-	ret = __nvmf_add_ctrl(argstr);
-	free(argstr);
-	if (ret < 0) {
-		errno = -ret;
-		ret = -1;
-	} else {
-		nvme_msg(LOG_INFO, "nvme%d: ctrl connected\n", ret);
-	}
-	return ret;
-}
-
 int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		  const struct nvme_fabrics_config *cfg)
 {
