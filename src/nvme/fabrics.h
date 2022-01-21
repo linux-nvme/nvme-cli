@@ -111,34 +111,46 @@ const char *nvmf_treq_str(__u8 treq);
 const char *nvmf_eflags_str(__u16 eflags);
 
 /**
- * nvmf_sectype_str() -
- * @sectype:
+ * nvmf_sectype_str() - Decode SECTYPE field
+ * @sectype: value to be decoded
  *
- * Return:
+ * Decode the SECTYPE field in the discovery log page
+ * entry.
+ *
+ * Return: decoded string
  */
 const char *nvmf_sectype_str(__u8 sectype);
 
 /**
- * nvmf_prtype_str() -
- * @prtype:
+ * nvmf_prtype_str() - Decode RDMA Provider type field
+ * @prtype: value to be decoded
  *
- * Return:
+ * Decode the RDMA Provider type field in the discovery
+ * log page entry.
+ *
+ * Return: decoded string
  */
 const char *nvmf_prtype_str(__u8 prtype);
 
 /**
- * nvmf_qptype_str() -
- * @qptype:
+ * nvmf_qptype_str() - Decode RDMA QP Service type field
+ * @qptype: value to be decoded
  *
- * Return:
+ * Decode the RDMA QP Service type field in the discovery log page
+ * entry.
+ *
+ * Return: decoded string
  */
 const char *nvmf_qptype_str(__u8 qptype);
 
 /**
- * nvmf_cms_str() -
- * @cms:
+ * nvmf_cms_str() - Decode RDMA connection management service field
+ * @cms: value to be decoded
  *
- * Return:
+ * Decode the RDMA connection management service field in the discovery
+ * log page entry.
+ *
+ * Return: decoded string
  */
 const char *nvmf_cms_str(__u8 cms);
 
@@ -166,12 +178,12 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		  const struct nvme_fabrics_config *cfg);
 
 /**
- * nvmf_get_discovery_log() -
- * @c:
- * @logp:
- * @max_retries:
+ * nvmf_get_discovery_log() - Return the discovery log page
+ * @c: Discover controller to use 
+ * @logp: Pointer to the log page to be returned
+ * @max_retries: maximum number of log page entries to be returned
  *
- * Return:
+ * Return: 0 on success; on failure -1 is returned and errno is set
  */
 int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 			   int max_retries);
@@ -200,13 +212,13 @@ char *nvmf_hostnqn_from_file();
 char *nvmf_hostid_from_file();
 
 /**
- * nvmf_connect_disc_entry() -
- * @h:
- * @e:
- * @defcfg:
- * @discover:
+ * nvmf_connect_disc_entry() - Connect controller based on the discovery log page entry
+ * @h: Host to which the controller should be connected
+ * @e: Discovery log page entry
+ * @defcfg: Default configurationn to be used for the new controller
+ * @discover: Set to 'true' if the new controller is a discovery controller
  *
- * Return: An 
+ * Return: Pointer to the new controller
  */
 nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	struct nvmf_disc_log_entry *e,
@@ -214,7 +226,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 
 /**
  * nvme_chomp() - Strip trailing white space
- * &s: String to strip
+ * @s: String to strip
  * @l: Maximum length of string
  */
 static inline void nvme_chomp(char *s, int l)
