@@ -1816,8 +1816,11 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 		err = -ENOMEM;
 		goto close_fd;
 	}
-
-	err = nvme_identify_nsid_ctrl_list(fd, cfg.namespace_id,
+	
+	if (cfg.namespace_id == NVME_NSID_NONE)
+                 err = nvme_identify_ctrl_list(fd, cfg.cntid, cntlist);
+        else
+                 err = nvme_identify_nsid_ctrl_list(fd, cfg.namespace_id,
 					   cfg.cntid, cntlist);
 	if (!err)
 		nvme_show_list_ctrl(cntlist, flags);
