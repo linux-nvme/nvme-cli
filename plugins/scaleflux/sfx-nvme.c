@@ -20,44 +20,44 @@
 #define CREATE_CMD
 #include "sfx-nvme.h"
 
-#define SFX_PAGE_SHIFT						12
-#define SECTOR_SHIFT						9
+#define SFX_PAGE_SHIFT 12
+#define SECTOR_SHIFT 9
 
-#define SFX_GET_FREESPACE			_IOWR('N', 0x240, struct sfx_freespace_ctx)
-#define NVME_IOCTL_CLR_CARD			_IO('N', 0x47)
+#define SFX_GET_FREESPACE _IOWR('N', 0x240, struct sfx_freespace_ctx)
+#define NVME_IOCTL_CLR_CARD _IO('N', 0x47)
 
-#define IDEMA_CAP(exp_GB)			(((__u64)exp_GB - 50ULL) * 1953504ULL + 97696368ULL)
-#define IDEMA_CAP2GB(exp_sector)		(((__u64)exp_sector - 97696368ULL) / 1953504ULL + 50ULL)
+#define IDEMA_CAP(exp_GB) (((__u64)exp_GB - 50ULL) * 1953504ULL + 97696368ULL)
+#define IDEMA_CAP2GB(exp_sector)                                               \
+	(((__u64)exp_sector - 97696368ULL) / 1953504ULL + 50ULL)
 
 enum {
-	SFX_LOG_LATENCY_READ_STATS	= 0xc1,
-	SFX_LOG_SMART			= 0xc2,
-	SFX_LOG_LATENCY_WRITE_STATS	= 0xc3,
-	SFX_LOG_QUAL			= 0xc4,
-	SFX_LOG_MISMATCHLBA		= 0xc5,
-	SFX_LOG_MEDIA			= 0xc6,
-	SFX_LOG_BBT			= 0xc7,
-	SFX_LOG_IDENTIFY		= 0xcc,
-	SFX_FEAT_ATOMIC			= 0x01,
-	SFX_FEAT_UP_P_CAP		= 0xac,
-	SFX_FEAT_CLR_CARD		= 0xdc,
+	SFX_LOG_LATENCY_READ_STATS = 0xc1,
+	SFX_LOG_SMART = 0xc2,
+	SFX_LOG_LATENCY_WRITE_STATS = 0xc3,
+	SFX_LOG_QUAL = 0xc4,
+	SFX_LOG_MISMATCHLBA = 0xc5,
+	SFX_LOG_MEDIA = 0xc6,
+	SFX_LOG_BBT = 0xc7,
+	SFX_LOG_IDENTIFY = 0xcc,
+	SFX_FEAT_ATOMIC = 0x01,
+	SFX_FEAT_UP_P_CAP = 0xac,
+	SFX_FEAT_CLR_CARD = 0xdc,
 };
 
 enum sfx_nvme_admin_opcode {
-	nvme_admin_query_cap_info	= 0xd3,
-	nvme_admin_change_cap		= 0xd4,
-	nvme_admin_sfx_set_features	= 0xd5,
-	nvme_admin_sfx_get_features	= 0xd6,
+	nvme_admin_query_cap_info = 0xd3,
+	nvme_admin_change_cap = 0xd4,
+	nvme_admin_sfx_set_features = 0xd5,
+	nvme_admin_sfx_get_features = 0xd6,
 };
 
-struct sfx_freespace_ctx
-{
+struct sfx_freespace_ctx {
 	__u64 free_space;
-	__u64 phy_cap;		/* physical capacity, in unit of sector */
-	__u64 phy_space;	/* physical space considering OP, in unit of sector */
-	__u64 user_space;	/* user required space, in unit of sector*/
-	__u64 hw_used;		/* hw space used in 4K */
-	__u64 app_written;	/* app data written in 4K */
+	__u64 phy_cap; /* physical capacity, in unit of sector */
+	__u64 phy_space; /* physical space considering OP, in unit of sector */
+	__u64 user_space; /* user required space, in unit of sector*/
+	__u64 hw_used; /* hw space used in 4K */
+	__u64 app_written; /* app data written in 4K */
 };
 
 struct nvme_capacity_info {
@@ -66,54 +66,55 @@ struct nvme_capacity_info {
 	__u64 used_space;
 	__u64 free_space;
 };
-struct	__attribute__((packed)) nvme_additional_smart_log_item {
-	uint8_t			   key;
-	uint8_t			   _kp[2];
-	uint8_t			   norm;
-	uint8_t			   _np;
+struct __attribute__((packed)) nvme_additional_smart_log_item {
+	uint8_t key;
+	uint8_t _kp[2];
+	uint8_t norm;
+	uint8_t _np;
 	union {
-		uint8_t		   raw[6];
+		uint8_t raw[6];
 		struct wear_level {
-			uint16_t	min;
-			uint16_t	max;
-			uint16_t	avg;
-		} wear_level ;
+			uint16_t min;
+			uint16_t max;
+			uint16_t avg;
+		} wear_level;
 		struct thermal_throttle {
-			uint8_t    pct;
-			uint32_t	count;
+			uint8_t pct;
+			uint32_t count;
 		} thermal_throttle;
 	};
-	uint8_t			   _rp;
+	uint8_t _rp;
 };
 
 struct nvme_additional_smart_log {
-	struct nvme_additional_smart_log_item	 program_fail_cnt;
-	struct nvme_additional_smart_log_item	 erase_fail_cnt;
-	struct nvme_additional_smart_log_item	 wear_leveling_cnt;
-	struct nvme_additional_smart_log_item	 e2e_err_cnt;
-	struct nvme_additional_smart_log_item	 crc_err_cnt;
-	struct nvme_additional_smart_log_item	 timed_workload_media_wear;
-	struct nvme_additional_smart_log_item	 timed_workload_host_reads;
-	struct nvme_additional_smart_log_item	 timed_workload_timer;
-	struct nvme_additional_smart_log_item	 thermal_throttle_status;
-	struct nvme_additional_smart_log_item	 retry_buffer_overflow_cnt;
-	struct nvme_additional_smart_log_item	 pll_lock_loss_cnt;
-	struct nvme_additional_smart_log_item	 nand_bytes_written;
-	struct nvme_additional_smart_log_item	 host_bytes_written;
-	struct nvme_additional_smart_log_item	 raid_recover_cnt; // errors which can be recovered by RAID
-	struct nvme_additional_smart_log_item	 prog_timeout_cnt;
-	struct nvme_additional_smart_log_item	 erase_timeout_cnt;
-	struct nvme_additional_smart_log_item	 read_timeout_cnt;
-	struct nvme_additional_smart_log_item	 read_ecc_cnt;//retry cnt
+	struct nvme_additional_smart_log_item program_fail_cnt;
+	struct nvme_additional_smart_log_item erase_fail_cnt;
+	struct nvme_additional_smart_log_item wear_leveling_cnt;
+	struct nvme_additional_smart_log_item e2e_err_cnt;
+	struct nvme_additional_smart_log_item crc_err_cnt;
+	struct nvme_additional_smart_log_item timed_workload_media_wear;
+	struct nvme_additional_smart_log_item timed_workload_host_reads;
+	struct nvme_additional_smart_log_item timed_workload_timer;
+	struct nvme_additional_smart_log_item thermal_throttle_status;
+	struct nvme_additional_smart_log_item retry_buffer_overflow_cnt;
+	struct nvme_additional_smart_log_item pll_lock_loss_cnt;
+	struct nvme_additional_smart_log_item nand_bytes_written;
+	struct nvme_additional_smart_log_item host_bytes_written;
+	struct nvme_additional_smart_log_item
+		raid_recover_cnt; // errors which can be recovered by RAID
+	struct nvme_additional_smart_log_item prog_timeout_cnt;
+	struct nvme_additional_smart_log_item erase_timeout_cnt;
+	struct nvme_additional_smart_log_item read_timeout_cnt;
+	struct nvme_additional_smart_log_item read_ecc_cnt; //retry cnt
 };
 
 int nvme_change_cap(int fd, __u32 nsid, __u64 capacity)
 {
 	struct nvme_passthru_cmd cmd = {
-	.opcode		 = nvme_admin_change_cap,
-	.nsid		 = nsid,
-	.cdw10		 = (capacity & 0xffffffff),
-	.cdw11		 = (capacity >> 32),
+		.opcode = nvme_admin_change_cap,
+		.nsid = nsid,
+		.cdw10 = (capacity & 0xffffffff),
+		.cdw11 = (capacity >> 32),
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd, NULL);
@@ -122,10 +123,10 @@ int nvme_change_cap(int fd, __u32 nsid, __u64 capacity)
 int nvme_sfx_set_features(int fd, __u32 nsid, __u32 fid, __u32 value)
 {
 	struct nvme_passthru_cmd cmd = {
-	.opcode		 = nvme_admin_sfx_set_features,
-	.nsid		 = nsid,
-	.cdw10		 = fid,
-	.cdw11		 = value,
+		.opcode = nvme_admin_sfx_set_features,
+		.nsid = nsid,
+		.cdw10 = fid,
+		.cdw11 = value,
 	};
 
 	return nvme_submit_admin_passthru(fd, &cmd, NULL);
@@ -135,9 +136,9 @@ int nvme_sfx_get_features(int fd, __u32 nsid, __u32 fid, __u32 *result)
 {
 	int err = 0;
 	struct nvme_passthru_cmd cmd = {
-	.opcode		 = nvme_admin_sfx_get_features,
-	.nsid		 = nsid,
-	.cdw10		 = fid,
+		.opcode = nvme_admin_sfx_get_features,
+		.nsid = nsid,
+		.cdw10 = fid,
 	};
 
 	err = nvme_submit_admin_passthru(fd, &cmd, NULL);
@@ -149,7 +150,7 @@ int nvme_sfx_get_features(int fd, __u32 nsid, __u32 fid, __u32 *result)
 }
 
 static void show_sfx_smart_log_jsn(struct nvme_additional_smart_log *smart,
-		unsigned int nsid, const char *devname)
+				   unsigned int nsid, const char *devname)
 {
 	struct json_object *root, *entry_stats, *dev_stats, *multi;
 
@@ -159,100 +160,164 @@ static void show_sfx_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	dev_stats = json_create_object();
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->program_fail_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->program_fail_cnt.raw));
-	json_object_add_value_object(dev_stats, "program_fail_count", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->program_fail_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw",
+				  int48_to_long(smart->program_fail_cnt.raw));
+	json_object_add_value_object(dev_stats, "program_fail_count",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->erase_fail_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->erase_fail_cnt.raw));
-	json_object_add_value_object(dev_stats, "erase_fail_count", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->erase_fail_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw",
+				  int48_to_long(smart->erase_fail_cnt.raw));
+	json_object_add_value_object(dev_stats, "erase_fail_count",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->wear_leveling_cnt.norm);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->wear_leveling_cnt.norm);
 	multi = json_create_object();
-	json_object_add_value_int(multi, "min", le16_to_cpu(smart->wear_leveling_cnt.wear_level.min));
-	json_object_add_value_int(multi, "max", le16_to_cpu(smart->wear_leveling_cnt.wear_level.max));
-	json_object_add_value_int(multi, "avg", le16_to_cpu(smart->wear_leveling_cnt.wear_level.avg));
+	json_object_add_value_int(
+		multi, "min",
+		le16_to_cpu(smart->wear_leveling_cnt.wear_level.min));
+	json_object_add_value_int(
+		multi, "max",
+		le16_to_cpu(smart->wear_leveling_cnt.wear_level.max));
+	json_object_add_value_int(
+		multi, "avg",
+		le16_to_cpu(smart->wear_leveling_cnt.wear_level.avg));
 	json_object_add_value_object(entry_stats, "raw", multi);
 	json_object_add_value_object(dev_stats, "wear_leveling", entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->e2e_err_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->e2e_err_cnt.raw));
-	json_object_add_value_object(dev_stats, "end_to_end_error_detection_count", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->e2e_err_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw",
+				  int48_to_long(smart->e2e_err_cnt.raw));
+	json_object_add_value_object(
+		dev_stats, "end_to_end_error_detection_count", entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->crc_err_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->crc_err_cnt.raw));
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->crc_err_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw",
+				  int48_to_long(smart->crc_err_cnt.raw));
 	json_object_add_value_object(dev_stats, "crc_error_count", entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->timed_workload_media_wear.norm);
-	json_object_add_value_float(entry_stats, "raw", ((float)int48_to_long(smart->timed_workload_media_wear.raw)) / 1024);
-	json_object_add_value_object(dev_stats, "timed_workload_media_wear", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->timed_workload_media_wear.norm);
+	json_object_add_value_float(
+		entry_stats, "raw",
+		((float)int48_to_long(smart->timed_workload_media_wear.raw)) /
+			1024);
+	json_object_add_value_object(dev_stats, "timed_workload_media_wear",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->timed_workload_host_reads.norm);
-	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->timed_workload_host_reads.raw));
-	json_object_add_value_object(dev_stats, "timed_workload_host_reads", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->timed_workload_host_reads.norm);
+	json_object_add_value_int(
+		entry_stats, "raw",
+		int48_to_long(smart->timed_workload_host_reads.raw));
+	json_object_add_value_object(dev_stats, "timed_workload_host_reads",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->timed_workload_timer.norm);
-	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->timed_workload_timer.raw));
-	json_object_add_value_object(dev_stats, "timed_workload_timer", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->timed_workload_timer.norm);
+	json_object_add_value_int(
+		entry_stats, "raw",
+		int48_to_long(smart->timed_workload_timer.raw));
+	json_object_add_value_object(dev_stats, "timed_workload_timer",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->thermal_throttle_status.norm);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->thermal_throttle_status.norm);
 	multi = json_create_object();
-	json_object_add_value_int(multi, "pct", smart->thermal_throttle_status.thermal_throttle.pct);
-	json_object_add_value_int(multi, "cnt", smart->thermal_throttle_status.thermal_throttle.count);
+	json_object_add_value_int(
+		multi, "pct",
+		smart->thermal_throttle_status.thermal_throttle.pct);
+	json_object_add_value_int(
+		multi, "cnt",
+		smart->thermal_throttle_status.thermal_throttle.count);
 	json_object_add_value_object(entry_stats, "raw", multi);
-	json_object_add_value_object(dev_stats, "thermal_throttle_status", entry_stats);
+	json_object_add_value_object(dev_stats, "thermal_throttle_status",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->retry_buffer_overflow_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw",	  int48_to_long(smart->retry_buffer_overflow_cnt.raw));
-	json_object_add_value_object(dev_stats, "retry_buffer_overflow_count", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->retry_buffer_overflow_cnt.norm);
+	json_object_add_value_int(
+		entry_stats, "raw",
+		int48_to_long(smart->retry_buffer_overflow_cnt.raw));
+	json_object_add_value_object(dev_stats, "retry_buffer_overflow_count",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->pll_lock_loss_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw",	  int48_to_long(smart->pll_lock_loss_cnt.raw));
-	json_object_add_value_object(dev_stats, "pll_lock_loss_count", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->pll_lock_loss_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw",
+				  int48_to_long(smart->pll_lock_loss_cnt.raw));
+	json_object_add_value_object(dev_stats, "pll_lock_loss_count",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->nand_bytes_written.norm);
-	json_object_add_value_int(entry_stats, "raw",	  int48_to_long(smart->nand_bytes_written.raw));
-	json_object_add_value_object(dev_stats, "nand_bytes_written", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->nand_bytes_written.norm);
+	json_object_add_value_int(entry_stats, "raw",
+				  int48_to_long(smart->nand_bytes_written.raw));
+	json_object_add_value_object(dev_stats, "nand_bytes_written",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->host_bytes_written.norm);
-	json_object_add_value_int(entry_stats, "raw",	  int48_to_long(smart->host_bytes_written.raw));
-	json_object_add_value_object(dev_stats, "host_bytes_written", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->host_bytes_written.norm);
+	json_object_add_value_int(entry_stats, "raw",
+				  int48_to_long(smart->host_bytes_written.raw));
+	json_object_add_value_object(dev_stats, "host_bytes_written",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->raid_recover_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw",	  int48_to_long(smart->raid_recover_cnt.raw));
-	json_object_add_value_object(dev_stats, "raid_recover_cnt", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->raid_recover_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw",
+				  int48_to_long(smart->raid_recover_cnt.raw));
+	json_object_add_value_object(dev_stats, "raid_recover_cnt",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->prog_timeout_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw",	  int48_to_long(smart->prog_timeout_cnt.raw));
-	json_object_add_value_object(dev_stats, "prog_timeout_cnt", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->prog_timeout_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw",
+				  int48_to_long(smart->prog_timeout_cnt.raw));
+	json_object_add_value_object(dev_stats, "prog_timeout_cnt",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->erase_timeout_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw",	  int48_to_long(smart->erase_timeout_cnt.raw));
-	json_object_add_value_object(dev_stats, "erase_timeout_cnt", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->erase_timeout_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw",
+				  int48_to_long(smart->erase_timeout_cnt.raw));
+	json_object_add_value_object(dev_stats, "erase_timeout_cnt",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->read_timeout_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw",	  int48_to_long(smart->read_timeout_cnt.raw));
-	json_object_add_value_object(dev_stats, "read_timeout_cnt", entry_stats);
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->read_timeout_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw",
+				  int48_to_long(smart->read_timeout_cnt.raw));
+	json_object_add_value_object(dev_stats, "read_timeout_cnt",
+				     entry_stats);
 
 	entry_stats = json_create_object();
-	json_object_add_value_int(entry_stats, "normalized", smart->read_ecc_cnt.norm);
-	json_object_add_value_int(entry_stats, "raw",	  int48_to_long(smart->read_ecc_cnt.raw));
+	json_object_add_value_int(entry_stats, "normalized",
+				  smart->read_ecc_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw",
+				  int48_to_long(smart->read_ecc_cnt.raw));
 	json_object_add_value_object(dev_stats, "read_ecc_cnt", entry_stats);
 
 	json_object_add_value_object(root, "Device stats", dev_stats);
@@ -263,130 +328,133 @@ static void show_sfx_smart_log_jsn(struct nvme_additional_smart_log *smart,
 }
 
 static void show_sfx_smart_log(struct nvme_additional_smart_log *smart,
-		unsigned int nsid, const char *devname)
+			       unsigned int nsid, const char *devname)
 {
 	printf("Additional Smart Log for ScaleFlux device:%s namespace-id:%x\n",
-			devname, nsid);
+	       devname, nsid);
 	printf("key                               normalized raw\n");
-	printf("program_fail_count              : %3d%%       %"PRIu64"\n",
-			smart->program_fail_cnt.norm,
-			int48_to_long(smart->program_fail_cnt.raw));
-	printf("erase_fail_count                : %3d%%       %"PRIu64"\n",
-			smart->erase_fail_cnt.norm,
-			int48_to_long(smart->erase_fail_cnt.raw));
+	printf("program_fail_count              : %3d%%       %" PRIu64 "\n",
+	       smart->program_fail_cnt.norm,
+	       int48_to_long(smart->program_fail_cnt.raw));
+	printf("erase_fail_count                : %3d%%       %" PRIu64 "\n",
+	       smart->erase_fail_cnt.norm,
+	       int48_to_long(smart->erase_fail_cnt.raw));
 	printf("wear_leveling                   : %3d%%       min: %u, max: %u, avg: %u\n",
-			smart->wear_leveling_cnt.norm,
-			le16_to_cpu(smart->wear_leveling_cnt.wear_level.min),
-			le16_to_cpu(smart->wear_leveling_cnt.wear_level.max),
-			le16_to_cpu(smart->wear_leveling_cnt.wear_level.avg));
-	printf("end_to_end_error_detection_count: %3d%%       %"PRIu64"\n",
-			smart->e2e_err_cnt.norm,
-			int48_to_long(smart->e2e_err_cnt.raw));
-	printf("crc_error_count                 : %3d%%       %"PRIu64"\n",
-			smart->crc_err_cnt.norm,
-			int48_to_long(smart->crc_err_cnt.raw));
+	       smart->wear_leveling_cnt.norm,
+	       le16_to_cpu(smart->wear_leveling_cnt.wear_level.min),
+	       le16_to_cpu(smart->wear_leveling_cnt.wear_level.max),
+	       le16_to_cpu(smart->wear_leveling_cnt.wear_level.avg));
+	printf("end_to_end_error_detection_count: %3d%%       %" PRIu64 "\n",
+	       smart->e2e_err_cnt.norm, int48_to_long(smart->e2e_err_cnt.raw));
+	printf("crc_error_count                 : %3d%%       %" PRIu64 "\n",
+	       smart->crc_err_cnt.norm, int48_to_long(smart->crc_err_cnt.raw));
 	printf("timed_workload_media_wear       : %3d%%       %.3f%%\n",
-			smart->timed_workload_media_wear.norm,
-			((float)int48_to_long(smart->timed_workload_media_wear.raw)) / 1024);
-	printf("timed_workload_host_reads       : %3d%%       %"PRIu64"%%\n",
-			smart->timed_workload_host_reads.norm,
-			int48_to_long(smart->timed_workload_host_reads.raw));
-	printf("timed_workload_timer            : %3d%%       %"PRIu64" min\n",
-			smart->timed_workload_timer.norm,
-			int48_to_long(smart->timed_workload_timer.raw));
+	       smart->timed_workload_media_wear.norm,
+	       ((float)int48_to_long(smart->timed_workload_media_wear.raw)) /
+		       1024);
+	printf("timed_workload_host_reads       : %3d%%       %" PRIu64 "%%\n",
+	       smart->timed_workload_host_reads.norm,
+	       int48_to_long(smart->timed_workload_host_reads.raw));
+	printf("timed_workload_timer            : %3d%%       %" PRIu64
+	       " min\n",
+	       smart->timed_workload_timer.norm,
+	       int48_to_long(smart->timed_workload_timer.raw));
 	printf("thermal_throttle_status         : %3d%%       %u%%, cnt: %u\n",
-			smart->thermal_throttle_status.norm,
-			smart->thermal_throttle_status.thermal_throttle.pct,
-			smart->thermal_throttle_status.thermal_throttle.count);
-	printf("retry_buffer_overflow_count     : %3d%%       %"PRIu64"\n",
-			smart->retry_buffer_overflow_cnt.norm,
-			int48_to_long(smart->retry_buffer_overflow_cnt.raw));
-	printf("pll_lock_loss_count             : %3d%%       %"PRIu64"\n",
-			smart->pll_lock_loss_cnt.norm,
-			int48_to_long(smart->pll_lock_loss_cnt.raw));
-	printf("nand_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
-			smart->nand_bytes_written.norm,
-			int48_to_long(smart->nand_bytes_written.raw));
-	printf("host_bytes_written              : %3d%%       sectors: %"PRIu64"\n",
-			smart->host_bytes_written.norm,
-			int48_to_long(smart->host_bytes_written.raw));
-	printf("raid_recover_cnt                : %3d%%       %"PRIu64"\n",
-			smart->raid_recover_cnt.norm,
-			int48_to_long(smart->raid_recover_cnt.raw));
-	printf("read_ecc_cnt                    : %3d%%       %"PRIu64"\n",
-			smart->read_ecc_cnt.norm,
-			int48_to_long(smart->read_ecc_cnt.raw));
-	printf("prog_timeout_cnt                : %3d%%       %"PRIu64"\n",
-			smart->prog_timeout_cnt.norm,
-			int48_to_long(smart->prog_timeout_cnt.raw));
-	printf("erase_timeout_cnt               : %3d%%       %"PRIu64"\n",
-			smart->erase_timeout_cnt.norm,
-			int48_to_long(smart->erase_timeout_cnt.raw));
-	printf("read_timeout_cnt                : %3d%%       %"PRIu64"\n",
-			smart->read_timeout_cnt.norm,
-			int48_to_long(smart->read_timeout_cnt.raw));
+	       smart->thermal_throttle_status.norm,
+	       smart->thermal_throttle_status.thermal_throttle.pct,
+	       smart->thermal_throttle_status.thermal_throttle.count);
+	printf("retry_buffer_overflow_count     : %3d%%       %" PRIu64 "\n",
+	       smart->retry_buffer_overflow_cnt.norm,
+	       int48_to_long(smart->retry_buffer_overflow_cnt.raw));
+	printf("pll_lock_loss_count             : %3d%%       %" PRIu64 "\n",
+	       smart->pll_lock_loss_cnt.norm,
+	       int48_to_long(smart->pll_lock_loss_cnt.raw));
+	printf("nand_bytes_written              : %3d%%       sectors: %" PRIu64
+	       "\n",
+	       smart->nand_bytes_written.norm,
+	       int48_to_long(smart->nand_bytes_written.raw));
+	printf("host_bytes_written              : %3d%%       sectors: %" PRIu64
+	       "\n",
+	       smart->host_bytes_written.norm,
+	       int48_to_long(smart->host_bytes_written.raw));
+	printf("raid_recover_cnt                : %3d%%       %" PRIu64 "\n",
+	       smart->raid_recover_cnt.norm,
+	       int48_to_long(smart->raid_recover_cnt.raw));
+	printf("read_ecc_cnt                    : %3d%%       %" PRIu64 "\n",
+	       smart->read_ecc_cnt.norm,
+	       int48_to_long(smart->read_ecc_cnt.raw));
+	printf("prog_timeout_cnt                : %3d%%       %" PRIu64 "\n",
+	       smart->prog_timeout_cnt.norm,
+	       int48_to_long(smart->prog_timeout_cnt.raw));
+	printf("erase_timeout_cnt               : %3d%%       %" PRIu64 "\n",
+	       smart->erase_timeout_cnt.norm,
+	       int48_to_long(smart->erase_timeout_cnt.raw));
+	printf("read_timeout_cnt                : %3d%%       %" PRIu64 "\n",
+	       smart->read_timeout_cnt.norm,
+	       int48_to_long(smart->read_timeout_cnt.raw));
 }
 
-static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_additional_smart_log(int argc, char **argv, struct command *cmd,
+				    struct plugin *plugin)
 {
 	struct nvme_additional_smart_log smart_log;
 	int err, fd;
-	char *desc = "Get ScaleFlux vendor specific additional smart log (optionally, "\
-			  "for the specified namespace), and show it.";
+	char *desc =
+		"Get ScaleFlux vendor specific additional smart log (optionally, "
+		"for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
-	const char *json= "Dump output in json format";
+	const char *json = "Dump output in json format";
 	struct config {
 		__u32 namespace_id;
-		int   raw_binary;
-		int   json;
+		int raw_binary;
+		int json;
 	};
 
 	struct config cfg = {
 		.namespace_id = 0xffffffff,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
-		OPT_FLAG("raw-binary",	 'b', &cfg.raw_binary,	 raw),
-		OPT_FLAG("json",		 'j', &cfg.json,		 json),
-		OPT_END()
-	};
-
+	OPT_ARGS(opts) = { OPT_UINT("namespace-id", 'n', &cfg.namespace_id,
+				    namespace),
+			   OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+			   OPT_FLAG("json", 'j', &cfg.json, json), OPT_END() };
 
 	fd = parse_and_open(argc, argv, desc, opts);
 
 	err = nvme_get_nsid_log(fd, false, 0xca, cfg.namespace_id,
-		sizeof(smart_log), (void *)&smart_log);
+				sizeof(smart_log), (void *)&smart_log);
 	if (!err) {
 		if (cfg.json)
-			show_sfx_smart_log_jsn(&smart_log, cfg.namespace_id, devicename);
+			show_sfx_smart_log_jsn(&smart_log, cfg.namespace_id,
+					       devicename);
 		else if (!cfg.raw_binary)
-			show_sfx_smart_log(&smart_log, cfg.namespace_id, devicename);
+			show_sfx_smart_log(&smart_log, cfg.namespace_id,
+					   devicename);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
-	}
-	else if (err > 0)
+	} else if (err > 0)
 		nvme_show_status(err);
 	return err;
 }
 
 struct sfx_lat_stats {
-	__u16	 maj;
-	__u16	 min;
-	__u32	 bucket_1[32];	/* 0~1ms, step 32us */
-	__u32	 bucket_2[31];	/* 1~32ms, step 1ms */
-	__u32	 bucket_3[31];	/* 32ms~1s, step 32ms */
-	__u32	 bucket_4[1];	/* 1s~2s, specifically 1024ms~2047ms */
-	__u32	 bucket_5[1];	/* 2s~4s, specifically 2048ms~4095ms */
-	__u32	 bucket_6[1];	/* 4s+, specifically 4096ms+ */
+	__u16 maj;
+	__u16 min;
+	__u32 bucket_1[32]; /* 0~1ms, step 32us */
+	__u32 bucket_2[31]; /* 1~32ms, step 1ms */
+	__u32 bucket_3[31]; /* 32ms~1s, step 32ms */
+	__u32 bucket_4[1]; /* 1s~2s, specifically 1024ms~2047ms */
+	__u32 bucket_5[1]; /* 2s~4s, specifically 2048ms~4095ms */
+	__u32 bucket_6[1]; /* 4s+, specifically 4096ms+ */
 };
 
 static void show_lat_stats(struct sfx_lat_stats *stats, int write)
 {
 	int i;
 
-	printf(" ScaleFlux IO %s Command Latency Statistics\n", write ? "Write" : "Read");
+	printf(" ScaleFlux IO %s Command Latency Statistics\n",
+	       write ? "Write" : "Read");
 	printf("-------------------------------------\n");
 	printf("Major Revision : %u\n", stats->maj);
 	printf("Minor Revision : %u\n", stats->min);
@@ -413,7 +481,8 @@ static void show_lat_stats(struct sfx_lat_stats *stats, int write)
 	printf("Bucket %2d: %u\n", 0, stats->bucket_6[0]);
 }
 
-static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int get_lat_stats_log(int argc, char **argv, struct command *cmd,
+			     struct plugin *plugin)
 {
 	struct sfx_lat_stats stats;
 	int err, fd;
@@ -422,22 +491,20 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	const char *raw = "dump output in binary format";
 	const char *write = "Get write statistics (read default)";
 	struct config {
-		int  raw_binary;
-		int  write;
+		int raw_binary;
+		int write;
 	};
 
-	struct config cfg = {
-	};
+	struct config cfg = {};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("write",	   'w', &cfg.write,		 write),
-		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
-		OPT_END()
-	};
+	OPT_ARGS(opts) = { OPT_FLAG("write", 'w', &cfg.write, write),
+			   OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+			   OPT_END() };
 
 	fd = parse_and_open(argc, argv, desc, opts);
 
-	err = nvme_get_log_simple(fd, cfg.write ? 0xc3 : 0xc1, sizeof(stats), (void *)&stats);
+	err = nvme_get_log_simple(fd, cfg.write ? 0xc3 : 0xc1, sizeof(stats),
+				  (void *)&stats);
 	if (!err) {
 		if (!cfg.raw_binary)
 			show_lat_stats(&stats, cfg.write);
@@ -448,13 +515,14 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	return err;
 }
 
-int sfx_nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
+int sfx_nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len,
+		     void *data)
 {
 	struct nvme_passthru_cmd cmd = {
-		.opcode		   = nvme_admin_get_log_page,
-		.nsid		 = nsid,
-		.addr		 = (__u64)(uintptr_t) data,
-		.data_len	 = data_len,
+		.opcode = nvme_admin_get_log_page,
+		.nsid = nsid,
+		.addr = (__u64)(uintptr_t)data,
+		.data_len = data_len,
 	};
 	__u32 numd = (data_len >> 2) - 1;
 	__u16 numdu = numd >> 16, numdl = numd & 0xffff;
@@ -476,7 +544,7 @@ int sfx_nvme_get_log(int fd, __u32 nsid, __u8 log_id, __u32 data_len, void *data
  */
 static int get_bb_table(int fd, __u32 nsid, unsigned char *buf, __u64 size)
 {
-	if (fd < 0 || !buf || size != 256*4096*sizeof(unsigned char)) {
+	if (fd < 0 || !buf || size != 256 * 4096 * sizeof(unsigned char)) {
 		fprintf(stderr, "Invalid Param \r\n");
 		return EINVAL;
 	}
@@ -522,7 +590,7 @@ static void bd_table_show(unsigned char *bd_table, __u64 table_size)
 	printf("REMAP_MFBB_TABLE [");
 	i = 0;
 	while (bb_elem < elem_end && i < remap_mfbb_count) {
-		printf(" 0x%"PRIx64"", (uint64_t)*(bb_elem++));
+		printf(" 0x%" PRIx64 "", (uint64_t) * (bb_elem++));
 		i++;
 	}
 	printf(" ]\n");
@@ -530,7 +598,7 @@ static void bd_table_show(unsigned char *bd_table, __u64 table_size)
 	printf("REMAP_GBB_TABLE [");
 	i = 0;
 	while (bb_elem < elem_end && i < remap_gbb_count) {
-		printf(" 0x%"PRIx64"", (uint64_t)*(bb_elem++));
+		printf(" 0x%" PRIx64 "", (uint64_t) * (bb_elem++));
 		i++;
 	}
 	printf(" ]\n");
@@ -546,18 +614,17 @@ static void bd_table_show(unsigned char *bd_table, __u64 table_size)
  *
  * @return
  */
-static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int sfx_get_bad_block(int argc, char **argv, struct command *cmd,
+			     struct plugin *plugin)
 {
 	int fd;
 	unsigned char *data_buf;
-	const __u64 buf_size = 256*4096*sizeof(unsigned char);
+	const __u64 buf_size = 256 * 4096 * sizeof(unsigned char);
 	int err = 0;
 
 	char *desc = "Get bad block table of sfx block device.";
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	OPT_ARGS(opts) = { OPT_END() };
 
 	fd = parse_and_open(argc, argv, desc, opts);
 
@@ -587,36 +654,33 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct 
 
 static void show_cap_info(struct sfx_freespace_ctx *ctx)
 {
-
-	printf("logic            capacity:%5lluGB(0x%"PRIx64")\n",
-			IDEMA_CAP2GB(ctx->user_space), (uint64_t)ctx->user_space);
-	printf("provisioned      capacity:%5lluGB(0x%"PRIx64")\n",
-			IDEMA_CAP2GB(ctx->phy_space), (uint64_t)ctx->phy_space);
-	printf("free provisioned capacity:%5lluGB(0x%"PRIx64")\n",
-			IDEMA_CAP2GB(ctx->free_space), (uint64_t)ctx->free_space);
-	printf("used provisioned capacity:%5lluGB(0x%"PRIx64")\n",
-			IDEMA_CAP2GB(ctx->phy_space) - IDEMA_CAP2GB(ctx->free_space),
-			(uint64_t)(ctx->phy_space - ctx->free_space));
+	printf("logic            capacity:%5lluGB(0x%" PRIx64 ")\n",
+	       IDEMA_CAP2GB(ctx->user_space), (uint64_t)ctx->user_space);
+	printf("provisioned      capacity:%5lluGB(0x%" PRIx64 ")\n",
+	       IDEMA_CAP2GB(ctx->phy_space), (uint64_t)ctx->phy_space);
+	printf("free provisioned capacity:%5lluGB(0x%" PRIx64 ")\n",
+	       IDEMA_CAP2GB(ctx->free_space), (uint64_t)ctx->free_space);
+	printf("used provisioned capacity:%5lluGB(0x%" PRIx64 ")\n",
+	       IDEMA_CAP2GB(ctx->phy_space) - IDEMA_CAP2GB(ctx->free_space),
+	       (uint64_t)(ctx->phy_space - ctx->free_space));
 }
 
-static int query_cap_info(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int query_cap_info(int argc, char **argv, struct command *cmd,
+			  struct plugin *plugin)
 {
 	struct sfx_freespace_ctx ctx = { 0 };
 	int err = 0, fd;
 	char *desc = "query current capacity info of vanda";
 	const char *raw = "dump output in binary format";
-	const char *json= "Dump output in json format";
+	const char *json = "Dump output in json format";
 	struct config {
-		int   raw_binary;
-		int   json;
+		int raw_binary;
+		int json;
 	};
 	struct config cfg;
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
-		OPT_FLAG("json",	   'j', &cfg.json,		 json),
-		OPT_END()
-	};
+	OPT_ARGS(opts) = { OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+			   OPT_FLAG("json", 'j', &cfg.json, json), OPT_END() };
 
 	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0) {
@@ -643,7 +707,7 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 	int extend = 0;
 
 	while (ioctl(fd, SFX_GET_FREESPACE, &freespace_ctx)) {
-		if (cnt_ms++ > 600) {//1min
+		if (cnt_ms++ > 600) { //1min
 			return -1;
 		}
 		usleep(100000);
@@ -652,8 +716,8 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 	/*
 	 * capacity illegal check
 	 */
-	provisoned_cap_4k = freespace_ctx.phy_space >>
-			    (SFX_PAGE_SHIFT - SECTOR_SHIFT);
+	provisoned_cap_4k =
+		freespace_ctx.phy_space >> (SFX_PAGE_SHIFT - SECTOR_SHIFT);
 	if (trg_in_4k < provisoned_cap_4k ||
 	    trg_in_4k > ((__u64)provisoned_cap_4k * 4)) {
 		fprintf(stderr,
@@ -667,7 +731,7 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 		}
 		return -1;
 	}
-	if (trg_in_4k > ((__u64)provisoned_cap_4k*4)) {
+	if (trg_in_4k > ((__u64)provisoned_cap_4k * 4)) {
 		fprintf(stderr, "WARNING: the target capacity is too large\n");
 		return -1;
 	}
@@ -687,7 +751,8 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 			fprintf(stderr,
 				"WARNING: Free memory is not enough! "
 				"Please drop cache or extend more memory and retry\n"
-				"WARNING: Memory needed is %"PRIu64", free memory is %"PRIu64"\n",
+				"WARNING: Memory needed is %" PRIu64
+				", free memory is %" PRIu64 "\n",
 				(uint64_t)mem_need, (uint64_t)s_info.freeram);
 			return -1;
 		}
@@ -707,8 +772,10 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 static int sfx_confirm_change(const char *str)
 {
 	char confirm;
-	fprintf(stderr, "WARNING: %s.\n"
-			"Use the force [--force] option to suppress this warning.\n", str);
+	fprintf(stderr,
+		"WARNING: %s.\n"
+		"Use the force [--force] option to suppress this warning.\n",
+		str);
 
 	fprintf(stderr, "Confirm Y/y, Others cancel:\n");
 	confirm = fgetc(stdin);
@@ -720,15 +787,17 @@ static int sfx_confirm_change(const char *str)
 	return 1;
 }
 
-static int change_cap(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int change_cap(int argc, char **argv, struct command *cmd,
+		      struct plugin *plugin)
 {
 	int err = -1, fd;
 	char *desc = "query current capacity info of vanda";
 	const char *raw = "dump output in binary format";
-	const char *json= "Dump output in json format";
+	const char *json = "Dump output in json format";
 	const char *cap_gb = "cap size in GB";
 	const char *cap_byte = "cap size in byte";
-	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
+	const char *force =
+		"The \"I know what I'm doing\" flag, skip confirmation before sending command";
 	__u64 cap_in_4k = 0;
 	__u64 cap_in_sec = 0;
 	int shrink = 0;
@@ -736,25 +805,24 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 	struct config {
 		__u64 cap_in_byte;
 		__u32 capacity_in_gb;
-		int   raw_binary;
-		int   json;
-		int   force;
+		int raw_binary;
+		int json;
+		int force;
 	};
 
 	struct config cfg = {
-	.cap_in_byte = 0,
-	.capacity_in_gb = 0,
-	.force = 0,
+		.cap_in_byte = 0,
+		.capacity_in_gb = 0,
+		.force = 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("cap",			'c',	&cfg.capacity_in_gb,	cap_gb),
-		OPT_SUFFIX("cap-byte",	'z',	&cfg.cap_in_byte,		cap_byte),
-		OPT_FLAG("force",		'f',	&cfg.force,				force),
-		OPT_FLAG("raw-binary",	'b',	&cfg.raw_binary,		raw),
-		OPT_FLAG("json",		'j',	&cfg.json,				json),
-		OPT_END()
-	};
+	OPT_ARGS(opts) = { OPT_UINT("cap", 'c', &cfg.capacity_in_gb, cap_gb),
+			   OPT_SUFFIX("cap-byte", 'z', &cfg.cap_in_byte,
+				      cap_byte),
+			   OPT_FLAG("force", 'f', &cfg.force, force),
+			   OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
+			   OPT_FLAG("json", 'j', &cfg.json, json),
+			   OPT_END() };
 
 	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0) {
@@ -765,15 +833,17 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 	cap_in_4k = cap_in_sec >> 3;
 	if (cfg.cap_in_byte)
 		cap_in_4k = cfg.cap_in_byte >> 12;
-	printf("%dG %"PRIu64"B %"PRIu64" 4K\n",
-		cfg.capacity_in_gb, (uint64_t)cfg.cap_in_byte, (uint64_t)cap_in_4k);
+	printf("%dG %" PRIu64 "B %" PRIu64 " 4K\n", cfg.capacity_in_gb,
+	       (uint64_t)cfg.cap_in_byte, (uint64_t)cap_in_4k);
 
 	if (change_sanity_check(fd, cap_in_4k, &shrink)) {
 		printf("ScaleFlux change-capacity: fail\n");
 		return err;
 	}
 
-	if (!cfg.force && shrink && !sfx_confirm_change("Changing Cap may irrevocably delete this device's data")) {
+	if (!cfg.force && shrink &&
+	    !sfx_confirm_change(
+		    "Changing Cap may irrevocably delete this device's data")) {
 		return 0;
 	}
 
@@ -825,27 +895,29 @@ static int sfx_clean_card(int fd)
 char *sfx_feature_to_string(int feature)
 {
 	switch (feature) {
-		case SFX_FEAT_ATOMIC:
-			return "ATOMIC";
-		case SFX_FEAT_UP_P_CAP:
-			return "UPDATE_PROVISION_CAPACITY";
+	case SFX_FEAT_ATOMIC:
+		return "ATOMIC";
+	case SFX_FEAT_UP_P_CAP:
+		return "UPDATE_PROVISION_CAPACITY";
 
-		default:
-			return "Unknown";
+	default:
+		return "Unknown";
 	}
 }
 
-static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int sfx_set_feature(int argc, char **argv, struct command *cmd,
+			   struct plugin *plugin)
 {
 	int err = 0, fd;
 	char *desc = "ScaleFlux internal set features\n"
-				 "feature id 1: ATOMIC\n"
-				 "value 0: Disable atomic write\n"
-				 "	1: Enable atomic write";
+		     "feature id 1: ATOMIC\n"
+		     "value 0: Disable atomic write\n"
+		     "	1: Enable atomic write";
 	const char *value = "new value of feature (required)";
 	const char *feature_id = "hex feature name (required)";
 	const char *namespace_id = "desired namespace";
-	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
+	const char *force =
+		"The \"I know what I'm doing\" flag, skip confirmation before sending command";
 
 	struct nvme_id_ns ns;
 
@@ -863,11 +935,10 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",		'n',	&cfg.namespace_id,		namespace_id),
-		OPT_UINT("feature-id",			'f',	&cfg.feature_id,		feature_id),
-		OPT_UINT("value",			'v',	&cfg.value,			value),
-		OPT_FLAG("force",			's',	&cfg.force,			force),
-		OPT_END()
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_UINT("feature-id", 'f', &cfg.feature_id, feature_id),
+		OPT_UINT("value", 'v', &cfg.value, value),
+		OPT_FLAG("force", 's', &cfg.force, force), OPT_END()
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
@@ -882,12 +953,13 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 
 	if (cfg.feature_id == SFX_FEAT_CLR_CARD) {
 		/*Warning for clean card*/
-		if (!cfg.force && !sfx_confirm_change("Going to clean device's data, confirm umount fs and try again")) {
+		if (!cfg.force &&
+		    !sfx_confirm_change(
+			    "Going to clean device's data, confirm umount fs and try again")) {
 			return 0;
 		} else {
 			return sfx_clean_card(fd);
 		}
-
 	}
 
 	if (cfg.feature_id == SFX_FEAT_ATOMIC && cfg.value != 0) {
@@ -915,30 +987,35 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 		}
 
 		/*Warning for change pacp by GB*/
-		if (!cfg.force && !sfx_confirm_change("Changing physical capacity may irrevocably delete this device's data")) {
+		if (!cfg.force &&
+		    !sfx_confirm_change(
+			    "Changing physical capacity may irrevocably delete this device's data")) {
 			return 0;
 		}
 	}
 
-	err = nvme_sfx_set_features(fd, cfg.namespace_id, cfg.feature_id, cfg.value);
+	err = nvme_sfx_set_features(fd, cfg.namespace_id, cfg.feature_id,
+				    cfg.value);
 
 	if (err < 0) {
 		perror("ScaleFlux-set-feature");
 		return errno;
 	} else if (!err) {
-		printf("ScaleFlux set-feature:%#02x (%s), value:%d\n", cfg.feature_id,
-			sfx_feature_to_string(cfg.feature_id), cfg.value);
+		printf("ScaleFlux set-feature:%#02x (%s), value:%d\n",
+		       cfg.feature_id, sfx_feature_to_string(cfg.feature_id),
+		       cfg.value);
 	} else if (err > 0)
 		nvme_show_status(err);
 
 	return err;
 }
 
-static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+static int sfx_get_feature(int argc, char **argv, struct command *cmd,
+			   struct plugin *plugin)
 {
 	int err = 0, fd;
 	char *desc = "ScaleFlux internal set features\n"
-				 "feature id 1: ATOMIC";
+		     "feature id 1: ATOMIC";
 	const char *feature_id = "hex feature name (required)";
 	const char *namespace_id = "desired namespace";
 	__u32 result = 0;
@@ -953,8 +1030,8 @@ static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct pl
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",		'n',	&cfg.namespace_id,		namespace_id),
-		OPT_UINT("feature-id",			'f',	&cfg.feature_id,		feature_id),
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
+		OPT_UINT("feature-id", 'f', &cfg.feature_id, feature_id),
 		OPT_END()
 	};
 
@@ -969,16 +1046,17 @@ static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct pl
 		return EINVAL;
 	}
 
-	err = nvme_sfx_get_features(fd, cfg.namespace_id, cfg.feature_id, &result);
+	err = nvme_sfx_get_features(fd, cfg.namespace_id, cfg.feature_id,
+				    &result);
 	if (err < 0) {
 		perror("ScaleFlux-get-feature");
 		return errno;
 	} else if (!err) {
-		printf("ScaleFlux get-feature:%02x (%s), value:%d\n", cfg.feature_id,
-			sfx_feature_to_string(cfg.feature_id), result);
+		printf("ScaleFlux get-feature:%02x (%s), value:%d\n",
+		       cfg.feature_id, sfx_feature_to_string(cfg.feature_id),
+		       result);
 	} else if (err > 0)
 		nvme_show_status(err);
 
 	return err;
-
 }

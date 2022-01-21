@@ -39,20 +39,10 @@
 static struct si_suffix {
 	double magnitude;
 	const char *suffix;
-} si_suffixes[] = {
-	{1e15, "P"},
-	{1e12, "T"},
-	{1e9, "G"},
-	{1e6, "M"},
-	{1e3, "k"},
-	{1e0, ""},
-	{1e-3, "m"},
-	{1e-6, "u"},
-	{1e-9, "n"},
-	{1e-12, "p"},
-	{1e-15, "f"},
-	{0}
-};
+} si_suffixes[] = { { 1e15, "P" },  { 1e12, "T" },  { 1e9, "G" },
+		    { 1e6, "M" },   { 1e3, "k" },   { 1e0, "" },
+		    { 1e-3, "m" },  { 1e-6, "u" },  { 1e-9, "n" },
+		    { 1e-12, "p" }, { 1e-15, "f" }, { 0 } };
 
 const char *suffix_si_get(double *value)
 {
@@ -71,14 +61,8 @@ const char *suffix_si_get(double *value)
 static struct binary_suffix {
 	int shift;
 	const char *suffix;
-} binary_suffixes[] = {
-	{50, "Pi"},
-	{40, "Ti"},
-	{30, "Gi"},
-	{20, "Mi"},
-	{10, "Ki"},
-	{0, ""}
-};
+} binary_suffixes[] = { { 50, "Pi" }, { 40, "Ti" }, { 30, "Gi" },
+			{ 20, "Mi" }, { 10, "Ki" }, { 0, "" } };
 
 const char *suffix_binary_get(long long *value)
 {
@@ -86,8 +70,8 @@ const char *suffix_binary_get(long long *value)
 
 	for (s = binary_suffixes; s->shift != 0; s++) {
 		if (llabs(*value) >= (1LL << s->shift)) {
-			*value =
-			    (*value + (1LL << (s->shift - 1))) / (1LL << s->shift);
+			*value = (*value + (1LL << (s->shift - 1))) /
+				 (1LL << s->shift);
 			return s->suffix;
 		}
 	}

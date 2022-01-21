@@ -7,7 +7,8 @@
 
 static inline void fail_and_notify(void)
 {
-	fprintf(stderr, "Allocation of memory for json object failed, aborting.\n");
+	fprintf(stderr,
+		"Allocation of memory for json object failed, aborting.\n");
 	abort();
 }
 
@@ -27,7 +28,8 @@ struct json_object *json_create_array(void)
 	return test;
 }
 
-static struct json_pair *json_create_pair(const char *name, struct json_value *value)
+static struct json_pair *json_create_pair(const char *name,
+					  struct json_value *value)
 {
 	struct json_pair *pair = malloc(sizeof(struct json_pair));
 	if (pair) {
@@ -75,7 +77,7 @@ static struct json_value *json_create_value_float(long double number)
 	if (value) {
 		value->type = JSON_TYPE_FLOAT;
 		value->float_number = number;
-	}  else
+	} else
 		fail_and_notify();
 
 	return value;
@@ -206,10 +208,12 @@ static void json_free_value(struct json_value *value)
 	free(value);
 }
 
-static int json_array_add_value(struct json_object *array, struct json_value *value)
+static int json_array_add_value(struct json_object *array,
+				struct json_value *value)
 {
-	struct json_value **values = realloc(array->values,
-		sizeof(struct json_value *) * (array->value_cnt + 1));
+	struct json_value **values =
+		realloc(array->values,
+			sizeof(struct json_value *) * (array->value_cnt + 1));
 
 	if (!values)
 		return ENOMEM;
@@ -224,8 +228,8 @@ static int json_array_add_value(struct json_object *array, struct json_value *va
 
 static int json_object_add_pair(struct json_object *obj, struct json_pair *pair)
 {
-	struct json_pair **pairs = realloc(obj->pairs,
-		sizeof(struct json_pair *) * (obj->pair_cnt + 1));
+	struct json_pair **pairs = realloc(
+		obj->pairs, sizeof(struct json_pair *) * (obj->pair_cnt + 1));
 	if (!pairs)
 		return ENOMEM;
 	pairs[obj->pair_cnt] = pair;
@@ -236,7 +240,8 @@ static int json_object_add_pair(struct json_object *obj, struct json_pair *pair)
 	return 0;
 }
 
-int json_object_add_value_type(struct json_object *obj, const char *name, int type, ...)
+int json_object_add_value_type(struct json_object *obj, const char *name,
+			       int type, ...)
 {
 	struct json_value *value;
 	struct json_pair *pair;
@@ -249,13 +254,16 @@ int json_object_add_value_type(struct json_object *obj, const char *name, int ty
 	else if (type == JSON_TYPE_INTEGER)
 		value = json_create_value_int(va_arg(args, long long));
 	else if (type == JSON_TYPE_UINT)
-		value = json_create_value_uint(va_arg(args, unsigned long long));
+		value = json_create_value_uint(
+			va_arg(args, unsigned long long));
 	else if (type == JSON_TYPE_FLOAT)
 		value = json_create_value_float(va_arg(args, long double));
 	else if (type == JSON_TYPE_OBJECT)
-		value = json_create_value_object(va_arg(args, struct json_object *));
+		value = json_create_value_object(
+			va_arg(args, struct json_object *));
 	else
-		value = json_create_value_array(va_arg(args, struct json_object *));
+		value = json_create_value_array(
+			va_arg(args, struct json_object *));
 	va_end(args);
 
 	if (!value)
@@ -287,13 +295,16 @@ int json_array_add_value_type(struct json_object *array, int type, ...)
 	else if (type == JSON_TYPE_INTEGER)
 		value = json_create_value_int(va_arg(args, long long));
 	else if (type == JSON_TYPE_UINT)
-		value = json_create_value_uint(va_arg(args, unsigned long long));
+		value = json_create_value_uint(
+			va_arg(args, unsigned long long));
 	else if (type == JSON_TYPE_FLOAT)
 		value = json_create_value_float(va_arg(args, double));
 	else if (type == JSON_TYPE_OBJECT)
-		value = json_create_value_object(va_arg(args, struct json_object *));
+		value = json_create_value_object(
+			va_arg(args, struct json_object *));
 	else
-		value = json_create_value_array(va_arg(args, struct json_object *));
+		value = json_create_value_array(
+			va_arg(args, struct json_object *));
 	va_end(args);
 
 	if (!value)
@@ -386,16 +397,16 @@ static void json_print_value(struct json_value *value, void *out)
 {
 	switch (value->type) {
 	case JSON_TYPE_STRING:
-		printf( "\"%s\"", value->string);
+		printf("\"%s\"", value->string);
 		break;
 	case JSON_TYPE_INTEGER:
-		printf( "%lld", value->integer_number);
+		printf("%lld", value->integer_number);
 		break;
 	case JSON_TYPE_UINT:
-		printf( "%llu", value->uint_number);
+		printf("%llu", value->uint_number);
 		break;
 	case JSON_TYPE_FLOAT:
-		printf( "%.0Lf", value->float_number);
+		printf("%.0Lf", value->float_number);
 		break;
 	case JSON_TYPE_OBJECT:
 		json_print_object(value->object, out);

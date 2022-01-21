@@ -3,14 +3,11 @@
 #include <stdlib.h>
 #include "list.h"
 
-static void *corrupt(const char *abortstr,
-		     const struct list_node *head,
-		     const struct list_node *node,
-		     unsigned int count)
+static void *corrupt(const char *abortstr, const struct list_node *head,
+		     const struct list_node *node, unsigned int count)
 {
 	if (abortstr) {
-		fprintf(stderr,
-			"%s: prev corrupt in node %p (%u) of %p\n",
+		fprintf(stderr, "%s: prev corrupt in node %p (%u) of %p\n",
 			abortstr, node, count, head);
 		abort();
 	}

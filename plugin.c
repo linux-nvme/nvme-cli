@@ -11,7 +11,8 @@ static int version(struct plugin *plugin)
 	struct program *prog = plugin->parent;
 
 	if (plugin->name)
-		printf("%s %s version %s\n", prog->name, plugin->name, plugin->version);
+		printf("%s %s version %s\n", prog->name, plugin->name,
+		       plugin->version);
 	else
 		printf("%s version %s\n", prog->name, prog->version);
 	return 0;
@@ -33,11 +34,13 @@ static int help(int argc, char **argv, struct plugin *plugin)
 		struct command *cmd = plugin->commands[i];
 
 		if (strcmp(str, cmd->name))
-			if (!cmd->alias || (cmd->alias && strcmp(str, cmd->alias)))
+			if (!cmd->alias ||
+			    (cmd->alias && strcmp(str, cmd->alias)))
 				continue;
 
 		if (plugin->name)
-			sprintf(man, "%s-%s-%s", prog->name, plugin->name, cmd->name);
+			sprintf(man, "%s-%s-%s", prog->name, plugin->name,
+				cmd->name);
 		else
 			sprintf(man, "%s-%s", prog->name, cmd->name);
 		if (execlp("man", "man", man, (char *)NULL))
@@ -51,7 +54,8 @@ void usage(struct plugin *plugin)
 	struct program *prog = plugin->parent;
 
 	if (plugin->name)
-		printf("usage: %s %s %s\n", prog->name, plugin->name, prog->usage);
+		printf("usage: %s %s %s\n", prog->name, plugin->name,
+		       prog->usage);
 	else
 		printf("usage: %s %s\n", prog->name, prog->usage);
 }
@@ -82,13 +86,14 @@ void general_help(struct plugin *plugin)
 	/* iterate through all commands to get maximum length */
 	/* Still need to handle the case of ultra long strings, help messages, etc */
 	for (; plugin->commands[i]; i++)
-		if (padding < (curr_length = 2 + strlen(plugin->commands[i]->name)))
+		if (padding <
+		    (curr_length = 2 + strlen(plugin->commands[i]->name)))
 			padding = curr_length;
 
 	i = 0;
 	for (; plugin->commands[i]; i++)
 		printf("  %-*s %s\n", padding, plugin->commands[i]->name,
-					plugin->commands[i]->help);
+		       plugin->commands[i]->help);
 
 	printf("  %-*s %s\n", padding, "version", "Shows the program version");
 	printf("  %-*s %s\n", padding, "help", "Display this help");
@@ -96,10 +101,10 @@ void general_help(struct plugin *plugin)
 
 	if (plugin->name)
 		printf("See '%s %s help <command>' for more information on a specific command\n",
-			prog->name, plugin->name);
+		       prog->name, plugin->name);
 	else
 		printf("See '%s help <command>' for more information on a specific command\n",
-			prog->name);
+		       prog->name);
 
 	/* The first plugin is the built-in. If we're not showing help for the
 	 * built-in, don't show the program's other extensions */
@@ -116,7 +121,7 @@ void general_help(struct plugin *plugin)
 		extension = extension->next;
 	}
 	printf("\nSee '%s <plugin> help' for more information on a plugin\n",
-			prog->name);
+	       prog->name);
 }
 
 int handle_plugin(int argc, char **argv, struct plugin *plugin)
@@ -137,7 +142,8 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	if (!plugin->name)
 		sprintf(use, "%s %s <device> [OPTIONS]", prog->name, str);
 	else
-		sprintf(use, "%s %s %s <device> [OPTIONS]", prog->name, plugin->name, str);
+		sprintf(use, "%s %s %s <device> [OPTIONS]", prog->name,
+			plugin->name, str);
 	argconfig_append_usage(use);
 
 	/* translate --help and --version into commands */
@@ -172,9 +178,10 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 
 	/* Check extensions only if this is running the built-in plugin */
 	if (plugin->name) {
-		printf("ERROR: Invalid sub-command '%s' for plugin %s\n", str, plugin->name);
+		printf("ERROR: Invalid sub-command '%s' for plugin %s\n", str,
+		       plugin->name);
 		return -ENOTTY;
-        }
+	}
 
 	extension = plugin->next;
 	while (extension) {
