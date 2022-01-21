@@ -33,6 +33,7 @@
  * @disable_sqflow:	Disable controller sq flow control
  * @hdr_digest:		Generate/verify header digest (TCP)
  * @data_digest:	Generate/verify data digest (TCP)
+ * @tls:		Start TLS on the connection (TCP)
  */
 struct nvme_fabrics_config {
 	char *host_traddr;
@@ -51,6 +52,7 @@ struct nvme_fabrics_config {
 	bool disable_sqflow;
 	bool hdr_digest;
 	bool data_digest;
+	bool tls;
 };
 
 /**
