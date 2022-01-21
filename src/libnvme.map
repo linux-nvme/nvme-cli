@@ -312,7 +312,6 @@ LIBNVME_1_0 {
 		nvme_zns_mgmt_send;
 		nvme_zns_report_zones;
 		nvmf_add_ctrl;
-		nvmf_add_ctrl_opts;
 		nvmf_adrfam_str;
 		nvmf_cms_str;
 		nvmf_connect_disc_entry;
