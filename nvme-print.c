@@ -507,6 +507,7 @@ static void json_fw_log(struct nvme_firmware_slot *fw_log, const char *devname)
 	char fmt[21];
 	char str[32];
 	int i;
+	__le64 *frs;
 
 	root = json_create_object();
 	fwsi = json_create_object();
@@ -517,8 +518,9 @@ static void json_fw_log(struct nvme_firmware_slot *fw_log, const char *devname)
 		if (fw_log->frs[i]) {
 			snprintf(fmt, sizeof(fmt), "Firmware Rev Slot %d",
 				i + 1);
+			frs = (__le64 *)&fw_log->frs[i];
 			snprintf(str, sizeof(str), "%"PRIu64" (%s)",
-				(uint64_t)fw_log->frs[i],
+				le64_to_cpu(*frs),
 			fw_to_string(fw_log->frs[i]));
 			json_object_add_value_string(fwsi, fmt, str);
 		}
@@ -5360,6 +5362,7 @@ void nvme_show_fw_log(struct nvme_firmware_slot *fw_log,
 	const char *devname, enum nvme_print_flags flags)
 {
 	int i;
+	__le64 *frs;
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)fw_log, sizeof(*fw_log));
@@ -5369,10 +5372,12 @@ void nvme_show_fw_log(struct nvme_firmware_slot *fw_log,
 	printf("Firmware Log for device:%s\n", devname);
 	printf("afi  : %#x\n", fw_log->afi);
 	for (i = 0; i < 7; i++) {
-		if (fw_log->frs[i])
+		if (fw_log->frs[i]) {
+			frs = (__le64 *)&fw_log->frs[i];
 			printf("frs%d : %#016"PRIx64" (%s)\n", i + 1,
-				(uint64_t)fw_log->frs[i],
+				le64_to_cpu(*frs),
 				fw_to_string(fw_log->frs[i]));
+		}
 	}
 }
 
