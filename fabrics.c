@@ -394,7 +394,7 @@ static int discover_from_conf_file(nvme_host_t h, const char *desc,
 			goto next;
 		nvme_ctrl_set_discovery_ctrl(c, true);
 		errno = 0;
-		ret = nvmf_add_ctrl(h, c, &cfg, false);
+		ret = nvmf_add_ctrl(h, c, &cfg);
 		if (!ret) {
 			__discover(c, &cfg, raw, connect,
 				   persistent, flags);
@@ -546,7 +546,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 			goto out_free;
 		}
 		nvme_ctrl_set_discovery_ctrl(c, true);
-		ret = nvmf_add_ctrl(h, c, &cfg, false);
+		ret = nvmf_add_ctrl(h, c, &cfg);
 		if (ret) {
 			nvme_msg(LOG_ERR,
 				 "failed to add controller, error %d\n", errno);
@@ -676,7 +676,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		nvme_ctrl_set_dhchap_key(c, ctrlkey);
 
 	errno = 0;
-	ret = nvmf_add_ctrl(h, c, &cfg, cfg.disable_sqflow);
+	ret = nvmf_add_ctrl(h, c, &cfg);
 	if (ret)
 		nvme_msg(LOG_ERR, "no controller found\n");
 	else {
