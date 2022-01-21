@@ -6704,8 +6704,11 @@ static void nvme_show_detailed_list(nvme_root_t r)
 				}
 
 				nvme_ctrl_for_each_path(c, p) {
+					n = nvme_path_get_ns(p);
+					if (!n)
+						continue;
 					printf("%s%s", first ? "": ", ",
-					       nvme_ns_get_name(nvme_path_get_ns(p)));
+					       nvme_ns_get_name(n));
 					first = false;
 				}
 				printf("\n");
