@@ -749,13 +749,6 @@ void nvme_ctrl_set_dhchap_key(nvme_ctrl_t c, const char *key)
 		c->dhchap_key = strdup(key);
 }
 
-void nvme_ctrl_disable_sqflow(nvme_ctrl_t c, bool disable_sqflow)
-{
-	c->cfg.disable_sqflow = disable_sqflow;
-	if (c->s && c->s->h && c->s->h->r)
-		c->s->h->r->modified = true;
-}
-
 void nvme_ctrl_set_discovered(nvme_ctrl_t c, bool discovered)
 {
 	c->discovered = discovered;

@@ -535,7 +535,7 @@ struct nvme_ns {
       connect_err = 1;
       return;
     }
-    ret = nvmf_add_ctrl(h, $self, cfg, cfg->disable_sqflow);
+    ret = nvmf_add_ctrl(h, $self, cfg);
     if (ret < 0) {
       connect_err = 2;
       return;

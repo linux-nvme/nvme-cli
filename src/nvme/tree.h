@@ -874,15 +874,6 @@ void nvme_ctrl_set_discovery_ctrl(nvme_ctrl_t c, bool discovery);
 bool nvme_ctrl_is_discovery_ctrl(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_disable_sqflow() -
- * @c:
- * @disable_sqflow:
- *
- * Return:
- */
-void nvme_ctrl_disable_sqflow(nvme_ctrl_t c, bool disable_sqflow);
-
-/**
  * nvme_ctrl_identify() -
  * @c:
  * @id:

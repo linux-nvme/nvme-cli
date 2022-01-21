@@ -160,17 +160,19 @@ void nvmf_default_config(struct nvme_fabrics_config *cfg);
 int nvmf_add_ctrl_opts(nvme_ctrl_t c, struct nvme_fabrics_config *cfg);
 
 /**
- * nvmf_add_ctrl() -
- * @h:
- * @c:
- * @cfg:
- * @disable_sqflow:
+ * nvmf_add_ctrl() - Connect a controller and update topology
+ * @h: Host to which the controller should be attached
+ * @c: Controller to be connected
+ * @cfg: Default configuration for the controller
  *
- * Return:
+ * Issues a 'connect' command to the NVMe-oF controller and inserts @c
+ * into the topology using @h as parent.
+ * @c must be initialized and not connected to the topology.
+ *
+ * Return: 0 on success; on failure errno is set and -1 is returned.
  */
 int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
-		  const struct nvme_fabrics_config *cfg,
-		  bool disable_sqflow);
+		  const struct nvme_fabrics_config *cfg);
 
 /**
  * nvmf_get_discovery_log() -
