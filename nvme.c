@@ -7422,14 +7422,16 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	}
 	switch (hmac) {
 	case 1:
-		if (strlen(cfg.key) != 59) {
-			fprintf(stderr, "Invalid key length for SHA(256)\n");
+		if (strlen(cfg.key) != 65) {
+			fprintf(stderr, "Invalid key length %lu for SHA(256)\n",
+				strlen(cfg.key));
 			return -EINVAL;
 		}
 		break;
 	case 2:
-		if (strlen(cfg.key) != 83) {
-			fprintf(stderr, "Invalid key length for SHA(384)\n");
+		if (strlen(cfg.key) != 89) {
+			fprintf(stderr, "Invalid key length %lu for SHA(384)\n",
+				strlen(cfg.key));
 			return -EINVAL;
 		}
 		break;
@@ -7439,21 +7441,16 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 		break;
 	}
 
-	err = base64_decode(cfg.key + 10, strlen(cfg.key) - 11,
+	err = base64_decode(cfg.key + 16, strlen(cfg.key) - 17,
 			    decoded_key);
 	if (err < 0) {
-		fprintf(stderr, "Base64 decoding failed, error %d\n",
-			err);
+		fprintf(stderr, "Base64 decoding failed (%s, error %d)\n",
+			cfg.key + 16, err);
 		return err;
 	}
 	decoded_len = err;
-	if (decoded_len < 32) {
-		fprintf(stderr, "Base64 decoding failed (%s, size %u)\n",
-			cfg.key + 10, decoded_len);
-		return -EINVAL;
-	}
 	decoded_len -= 4;
-	if (decoded_len != 32 && decoded_len != 48 && decoded_len != 64) {
+	if (decoded_len != 32 && decoded_len != 48) {
 		fprintf(stderr, "Invalid key length %d\n", decoded_len);
 		return -EINVAL;
 	}
