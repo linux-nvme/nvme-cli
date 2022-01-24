@@ -39,7 +39,7 @@
 #else
 #define json_object_add_value_uint64(o, k, v) \
 	if ((v) > UINT_MAX) {						\
-		nvme_msg(LOG_ERR, "Value overflow in %s", k);		\
+		fprintf(stderr, "Value overflow in %s", k);		\
 		json_object_object_add(o, k, json_object_new_int(-1));	\
 	} else								\
 		json_object_object_add(o, k, json_object_new_int(v))
