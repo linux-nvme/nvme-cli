@@ -78,6 +78,7 @@
 #define WDC_NVME_SN655_DEV_ID               0x2722
 #define WDC_NVME_SN450_DEV_ID_1             0x2712
 #define WDC_NVME_SN450_DEV_ID_2             0x2713
+#define WDC_NVME_SN450_DEV_ID_3             0x2714
 #define WDC_NVME_SXSLCL_DEV_ID				0x2001
 #define WDC_NVME_SN520_DEV_ID				0x5003
 #define WDC_NVME_SN520_DEV_ID_1				0x5004
@@ -1342,6 +1343,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 		case WDC_NVME_SN655_DEV_ID:
 		case WDC_NVME_SN450_DEV_ID_1:
 		case WDC_NVME_SN450_DEV_ID_2:
+		case WDC_NVME_SN450_DEV_ID_3:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
