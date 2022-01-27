@@ -147,6 +147,7 @@ substs.set('NAME',    meson.project_name())
 substs.set('VERSION', meson.project_version())
 substs.set('LICENSE', meson.project_license()[0])
 substs.set('UDEVRULESDIR', udevrulesdir)
+substs.set('DRACUTRILESDIR', dracutrulesdir)
 
 configure_file(
   input:         'nvme.spec.in',

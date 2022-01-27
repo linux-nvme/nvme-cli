@@ -5,7 +5,6 @@ Summary:  	Core nvme tools
 License: 	GPL
 Group: 		Development/Tools
 URL: 		https://github.com/linux-nvme/nvme-cli/
-Source: 	nvme-@VERSION@.tar.gz
 Provides:	nvme
 Requires(post): util-linux systemd systemd-udev
 BuildRoot:	%{_tmppath}/%{name}-%{version}-root
@@ -14,19 +13,13 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-root
 NVMe is a fast, scalable, direct attached storage interface. The nvme
 cli rpm installs core management tools with minimal dependencies.
 
-%prep
-%setup
-
-%build
-make
-
 %install
-rm -rf $RPM_BUILD_ROOT
-make install-spec DESTDIR=%{buildroot} PREFIX=/usr
+meson install --destdir %{buildroot} --skip-subprojects
+touch %{buildroot}/%{_sysconfdir}/nvme/hostnqn
+touch %{buildroot}/%{_sysconfdir}/nvme/hostid
 
 %files
 %defattr(-,root,root)
-%doc Documentation/nvme*.1
 %{_sbindir}/nvme
 %{_mandir}/man1/nvme*.1*
 %{_datadir}/bash-completion/completions/nvme
@@ -36,13 +29,13 @@ make install-spec DESTDIR=%{buildroot} PREFIX=/usr
 %{_sysconfdir}/nvme/hostid
 %{_sysconfdir}/nvme/discovery.conf
 %ghost %{_sysconfdir}/nvme/config.json
-%{_sysconfdir}/udev/rules.d/70-nvmf-autoconnect.rules
-%{_sysconfdir}/udev/rules.d/71-nvmf-iopolicy-netapp.rules
-%{_libdir}/dracut/dracut.conf.d/70-nvmf-autoconnect.conf
-%{_libdir}/systemd/system/nvmf-connect@.service
-%{_libdir}/systemd/system/nvmefc-boot-connections.service
-%{_libdir}/systemd/system/nvmf-connect.target
-%{_libdir}/systemd/system/nvmf-autoconnect.service
+%{_udevrulesdir}/70-nvmf-autoconnect.rules
+%{_udevrulesdir}/71-nvmf-iopolicy-netapp.rules
+@DRACUTRILESDIR@/70-nvmf-autoconnect.conf
+%{_unitdir}/nvmf-connect@.service
+%{_unitdir}/nvmefc-boot-connections.service
+%{_unitdir}/nvmf-connect.target
+%{_unitdir}/nvmf-autoconnect.service
 
 %clean
 rm -rf $RPM_BUILD_ROOT

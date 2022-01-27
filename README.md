@@ -16,6 +16,10 @@ There is a Makefile wrapper for meson for backwards compatiblily
     $ make
     # make install
 
+RPM build support via Makefile that uses meson
+
+    $ make rpm
+
 If not sure how to use, find the top-level documentation with:
 
     $ man nvme
