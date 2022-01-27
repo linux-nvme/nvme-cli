@@ -3013,7 +3013,7 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 {
 	const char *desc = "Get namespce ID of a the block device.";
 	int err = 0, fd;
-	unsigned nsid;
+	unsigned int nsid;
 
 	OPT_ARGS(opts) = {
 		OPT_END()
@@ -5192,7 +5192,7 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 
 	nc = argconfig_parse_comma_sep_array(cfg.ctx_attrs, (int *)ctx_attrs, ARRAY_SIZE(ctx_attrs));
 	nb = argconfig_parse_comma_sep_array(cfg.blocks, (int *)nlbs, ARRAY_SIZE(nlbs));
-	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, (long long unsigned int *)slbas, ARRAY_SIZE(slbas));
+	ns = argconfig_parse_comma_sep_array_long(cfg.slbas, (unsigned long long *)slbas, ARRAY_SIZE(slbas));
 	nr = max(nc, max(nb, ns));
 	if (!nr || nr > 256) {
 		fprintf(stderr, "No range definition provided\n");
