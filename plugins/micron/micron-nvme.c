@@ -1451,7 +1451,7 @@ out:
     if (err > 0)
 	nvme_show_status(err);
 
-    return nvme_status_to_errno(err, false);
+    return err;
 }
 
 static void print_ext_smart_logs_e1(__u8 *buf, bool is_json)
@@ -1524,7 +1524,7 @@ out:
     close(fd);
     if (err > 0)
         nvme_show_status(err);
-    return nvme_status_to_errno(err, false);
+    return err;
 }
 
 static void GetDriveInfo(const char *strOSDirName, int nFD,
@@ -2279,7 +2279,7 @@ out:
     close(fd);
     if (err > 0)
 	nvme_show_status(err);
-    return nvme_status_to_errno(err, false);
+    return err;
 }
 
 static int micron_clr_fw_activation_history(int argc, char **argv,

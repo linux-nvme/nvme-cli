@@ -152,7 +152,7 @@ static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *pl
 		perror("zns identify controller");
 close_fd:
 	close(fd);
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -222,7 +222,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		perror("zns identify namespace");
 close_fd:
 	close(fd);
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 static int zns_mgmt_send(int argc, char **argv, struct command *cmd, struct plugin *plugin,
@@ -300,7 +300,7 @@ free:
 close_fd:
 	close(fd);
 ret:
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 static int get_zdes_bytes(int fd, __u32 nsid)
@@ -463,7 +463,7 @@ free:
 	free(buf);
 close_fd:
 	close(fd);
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 static int close_zone(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -543,7 +543,7 @@ static int open_zone(int argc, char **argv, struct command *cmd, struct plugin *
 		nvme_show_status(err);
 close_fd:
 	close(fd);
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 static int reset_zone(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -663,7 +663,7 @@ free:
 	free(buf);
 close_fd:
 	close(fd);
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 
@@ -723,7 +723,7 @@ static int zrwa_flush_zone(int argc, char **argv, struct command *cmd, struct pl
 		nvme_show_status(err);
 close_fd:
 	close(fd);
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -819,7 +819,7 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *cmd, struct plu
 	free(data);
 close_fd:
 	close(fd);
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 static int report_zones(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -1003,7 +1003,7 @@ free_buff:
 	free(buff);
 close_fd:
 	close(fd);
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 static int zone_append(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -1221,7 +1221,7 @@ close_dfd:
 		close(dfd);
 close_fd:
 	close(fd);
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 static int changed_zone_list(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -1276,5 +1276,5 @@ static int changed_zone_list(int argc, char **argv, struct command *cmd, struct 
 
 close_fd:
 	close(fd);
-	return nvme_status_to_errno(err, false);
+	return err;
 }

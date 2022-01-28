@@ -265,16 +265,16 @@ static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
 	nvme_subsystem_t s = nvme_ctrl_get_subsystem(c);
 	nvme_host_t h = nvme_subsystem_get_host(s);
 	uint64_t numrec;
-	int ret;
+	int err;
 
-	ret = nvmf_get_discovery_log(c, &log, MAX_DISC_RETRIES);
-	if (ret) {
-		if (ret > 0)
-			nvme_show_status(ret);
+	err = nvmf_get_discovery_log(c, &log, MAX_DISC_RETRIES);
+	if (err) {
+		if (err > 0)
+			nvme_show_status(err);
 		else
 			fprintf(stderr, "Failed to get discovery log: %d\n",
 				ret);
-		return nvme_status_to_errno(ret, false);
+		return err;
 	}
 
 
