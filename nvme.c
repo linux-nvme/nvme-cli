@@ -385,7 +385,6 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 
 	ana_log = malloc(ana_log_len);
 	if (!ana_log) {
-		perror("malloc");
 		err = -ENOMEM;
 		goto close_fd;
 	}
@@ -438,11 +437,8 @@ static int get_telemetry_log_total_size_dalb4(int fd,
 
 	len = nvme_get_feature_length(NVME_FEAT_FID_HOST_BEHAVIOR, 0,
 				      &len);
-	if (posix_memalign(&buf, getpagesize(), len)) {
-		fprintf(stderr, "can not allocate feature payload\n");
-		errno = ENOMEM;
+	if (posix_memalign(&buf, getpagesize(), len))
 		return -1;
-	}
 	memset(buf, 0, len);
 
 	args.data_len = len,
@@ -466,8 +462,6 @@ static int get_telemetry_log_total_size_dalb4(int fd,
 				"Data area 4 unsupported, bit 6 of Log Page Attributes not set\n");
 			err = -1;
 		}
-		if (err)
-			errno = EINVAL;
 	}
 	free(buf);
 	return err;
@@ -633,10 +627,8 @@ void collect_effects_log(int fd, enum nvme_csi csi, struct list_head *list, int 
 {
 	int err;
 	nvme_effects_log_node_t *node = malloc(sizeof(nvme_effects_log_node_t));
-	if (!node) {
-		perror("Failed to allocate memory");
+	if (!node)
 		return;
-	}
 	node->csi = csi;
 
 	err = nvme_get_log_cmd_effects(fd, csi, &node->effects);
@@ -838,7 +830,6 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 
 	if (!cfg.log_entries) {
 		fprintf(stderr, "non-zero log-entries is required param\n");
-		errno = EINVAL;
 		err = -1;
 		goto close_fd;
 	}
@@ -849,7 +840,6 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		goto close_fd;
 	} else if (err) {
 		fprintf(stderr, "could not identify controller\n");
-		errno = ENODEV;
 		err = -1;
 		goto close_fd;
 	}
@@ -857,8 +847,6 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 	cfg.log_entries = min(cfg.log_entries, ctrl.elpe + 1);
 	err_log = calloc(cfg.log_entries, sizeof(struct nvme_error_log_page));
 	if (!err_log) {
-		perror("could not alloc buffer for error log\n");
-		errno = ENOMEM;
 		err = -1;
 		goto close_fd;
 	}
@@ -1095,8 +1083,6 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 	log_size = sizeof(__u64) + cfg.log_entries * sizeof(__u16);
 	pea_log = calloc(log_size, 1);
 	if (!pea_log) {
-		perror("could not alloc buffer for predictable " \
-			"latency event agggregate log entries\n");
 		err = -ENOMEM;
 		goto close_fd;
 	}
@@ -1166,8 +1152,6 @@ static int get_persistent_event_log(int argc, char **argv,
 
 	pevent = calloc(sizeof(*pevent), 1);
 	if (!pevent) {
-		perror("could not alloc buffer for persistent " \
-			"event log header\n");
 		err = -ENOMEM;
 		goto close_fd;
 	}
@@ -1206,7 +1190,6 @@ static int get_persistent_event_log(int argc, char **argv,
 
 	pevent_log_info = nvme_alloc(cfg.log_len, &huge);
 	if (!pevent_log_info) {
-		perror("could not alloc buffer for persistent event log page\n");
 		err = -ENOMEM;
 		goto free_pevent;
 	}
@@ -1314,8 +1297,6 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 	log_size = sizeof(__u64) + cfg.log_entries * sizeof(__u16);
 	endurance_log = calloc(log_size, 1);
 	if (!endurance_log) {
-		perror("could not alloc buffer for endurance group" \
-			" event agggregate log entries\n");
 		err = -ENOMEM;
 		goto close_fd;
 	}
@@ -1383,7 +1364,6 @@ static int get_lba_status_log(int argc, char **argv,
 
 	lab_status = calloc(lslplen, 1);
 	if (!lab_status) {
-		perror("could not alloc buffer for lba status log");
 		err = -ENOMEM;
 		goto close_fd;
 	}
@@ -1494,14 +1474,12 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 
 	if (!cfg.file_name) {
 		fprintf(stderr, "Please provide an output file!\n");
-		errno = EINVAL;
 		err = -1;
 		goto close_fd;
 	}
 
 	if (cfg.lsp > 128) {
 		fprintf(stderr, "invalid lsp param: %u\n", cfg.lsp);
-		errno = EINVAL;
 		err = -1;
 		goto close_fd;
 	}
@@ -1527,8 +1505,6 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 	bpsz = (boot.bpinfo & 0x7fff) * 128 * 1024;
 	bp_log = calloc(sizeof(boot) + bpsz, 1);
 	if (!bp_log) {
-		perror("could not alloc buffer for boot partition log");
-		errno = ENOMEM;
 		err = -1;
 		goto close_output;
 	}
@@ -2022,8 +1998,6 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *cmd,
 	}
 
 	if (posix_memalign((void *)&endgrp_list, getpagesize(), 0x1000)) {
-		fprintf(stderr, "can not allocate memory for endurance gropu list\n");
-		errno = ENOMEM;
 		err = -1;
 		goto close_fd;
 	}
@@ -2596,7 +2570,6 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 	}
 
 	if (posix_memalign(&nsdescs, getpagesize(), 0x1000)) {
-		fprintf(stderr, "can not allocate controller list payload\n");
 		err = -ENOMEM;
 		goto close_fd;
 	}
@@ -3361,8 +3334,6 @@ static int get_feature_id(int fd, struct feat_cfg *cfg, void **buf,
 
 	if (cfg->data_len) {
 		if (posix_memalign(buf, getpagesize(), cfg->data_len)) {
-			fprintf(stderr, "can not allocate feature payload\n");
-			errno = ENOMEM;
 			return -1;
 		}
 		memset(*buf, 0, cfg->data_len);
@@ -3538,7 +3509,6 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 
 	if (cfg.uuid_index > 128) {
 		fprintf(stderr, "invalid uuid index param: %u\n", cfg.uuid_index);
-		errno = EINVAL;
 		err = -1;
 		goto close_fd;
 	}
@@ -3625,7 +3595,6 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 		fw_buf = nvme_alloc(fw_size, &huge);
 
 	if (!fw_buf) {
-		perror("No memory for f/w size:\n");
 		err = -ENOMEM;
 		goto close_fw_fd;
 	}
@@ -4560,7 +4529,6 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 
 	if (cfg.uuid_index > 128) {
 		fprintf(stderr, "invalid uuid index param: %u\n", cfg.uuid_index);
-		errno = EINVAL;
 		err = -1;
 		goto close_fd;
 	}
@@ -5982,7 +5950,6 @@ static int submit_io(int opcode, char *command, const char *desc,
 
 	buffer = nvme_alloc(buffer_size, &huge);
 	if (!buffer) {
-		perror("can not allocate io payload\n");
 		err = -ENOMEM;
 		goto close_mfd;
 	}
@@ -6012,7 +5979,6 @@ static int submit_io(int opcode, char *command, const char *desc,
 		}
 		mbuffer = malloc(mbuffer_size);
 		if (!mbuffer) {
-			perror("can not allocate buf for io metadata payload\n");
 			err = -ENOMEM;
 			goto free_buffer;
 		}
@@ -6421,7 +6387,6 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 	buf_len = (cfg.mndw + 1) * 4;
 	buf = calloc(1, buf_len);
 	if (!buf) {
-		perror("could not alloc memory for get lba status");
 		err = -ENOMEM;
 		goto close_fd;
 	}
@@ -6496,7 +6461,6 @@ static int capacity_mgmt(int argc, char **argv, struct command *cmd, struct plug
 
 	if (cfg.operation > 0xf) {
 		fprintf(stderr, "invalid operation field: %u\n", cfg.operation);
-		errno = EINVAL;
 		err = -1;
 		goto close_fd;
 	}
@@ -6728,25 +6692,21 @@ static int lockdown_cmd(int argc, char **argv, struct command *cmd, struct plugi
 	/* check for input arguement limit */
 	if (cfg.ifc > 3) {
 		fprintf(stderr, "invalid interface settings:%d\n", cfg.ifc);
-		errno = EINVAL;
 		err = -1;
 		goto close_fd;
 	}
 	if (cfg.prhbt > 1) {
 		fprintf(stderr, "invalid prohibit settings:%d\n", cfg.prhbt);
-		errno = EINVAL;
 		err = -1;
 		goto close_fd;
 	}
 	if (cfg.scp > 15) {
 		fprintf(stderr, "invalid scope settings:%d\n", cfg.scp);
-		errno = EINVAL;
 		err = -1;
 		goto close_fd;
 	}
 	if (cfg.uuid > 127) {
 		fprintf(stderr, "invalid UUID index settings:%d\n", cfg.uuid);
-		errno = EINVAL;
 		err = -1;
 		goto close_fd;
 	}
@@ -6915,7 +6875,6 @@ static int passthru(int argc, char **argv, bool admin,
 	if (cfg.metadata_len) {
 		mdata = malloc(cfg.metadata_len);
 		if (!mdata) {
-			perror("can not allocate mdata payload\n");
 			err = -ENOMEM;
 			goto close_wfd;
 		}
@@ -6933,7 +6892,6 @@ static int passthru(int argc, char **argv, bool admin,
 	if (cfg.data_len) {
 		data = nvme_alloc(cfg.data_len, &huge);
 		if (!data) {
-			perror("can not allocate data payload\n");
 			err = -ENOMEM;
 			goto free_metadata;
 		}
