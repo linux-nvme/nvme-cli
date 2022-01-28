@@ -470,10 +470,12 @@ int nvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
 			*len = 0;
 			return 0;
 		default:
-			return -EINVAL;
+			errno = EINVAL;
+			return -1;
 		}
 	default:
-		return -EINVAL;
+		errno = EINVAL;
+		return -1;
 	}
 }
 
