@@ -87,6 +87,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd,
 extern int current_index;
 void *nvme_alloc(size_t len, bool *huge);
 void nvme_free(void *p, bool huge);
+const char *nvme_strerror(int errnum);
 
 unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time);

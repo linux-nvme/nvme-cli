@@ -272,8 +272,8 @@ static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
 		if (err > 0)
 			nvme_show_status(err);
 		else
-			fprintf(stderr, "Failed to get discovery log: %d\n",
-				ret);
+			fprintf(stderr, "failed to get discovery log: %s\n",
+				nvme_strerror(errno));
 		return err;
 	}
 
@@ -549,7 +549,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		ret = nvmf_add_ctrl(h, c, &cfg);
 		if (ret) {
 			fprintf(stderr,
-				"failed to add controller, error %d\n", errno);
+				"failed to add controller, error %s\n",
+				nvme_strerror(errno));
 			ret = errno;
 			goto out_free_ctrl;
 		}
@@ -678,7 +679,8 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	errno = 0;
 	ret = nvmf_add_ctrl(h, c, &cfg);
 	if (ret)
-		fprintf(stderr, "no controller found\n");
+		fprintf(stderr, "no controller found: %s\n",
+			nvme_strerror(errno));
 	else {
 		if (flags == NORMAL)
 			print_connect_msg(c);
@@ -779,7 +781,7 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 			if (!c) {
 				fprintf(stderr,
 					"Did not find device %s: %s\n",
-					p, strerror(errno));
+					p, nvme_strerror(errno));
 				nvme_free_tree(r);
 				return errno;
 			}
@@ -789,7 +791,7 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 			else
 				fprintf(stderr,
 					"Failed to disconnect %s: %s\n",
-					p, strerror(errno));
+					p, nvme_strerror(errno));
 		}
 	}
 	nvme_free_tree(r);
@@ -840,7 +842,7 @@ int nvmf_disconnect_all(const char *desc, int argc, char **argv)
 	r = nvme_scan(NULL);
 	if (!r) {
 		fprintf(stderr, "Failed to scan nvme subsystem: %s\n",
-			 strerror(errno));
+			 nvme_strerror(errno));
 		return errno;
 	}
 
