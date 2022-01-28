@@ -1965,10 +1965,10 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	}
 
 	if (cfg.all)
-		err = nvme_identify_allocated_ns_list(fd, cfg.namespace_id,
+		err = nvme_identify_allocated_ns_list(fd, cfg.namespace_id - 1,
 						      &ns_list);
 	else
-		err = nvme_identify_active_ns_list(fd, cfg.namespace_id,
+		err = nvme_identify_active_ns_list(fd, cfg.namespace_id - 1,
 						   &ns_list);
 	if (!err)
 		nvme_show_list_ns(&ns_list, flags);
