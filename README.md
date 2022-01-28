@@ -74,6 +74,12 @@ To `configure` the project:
 meson .build
 ```
 
+Which will default to build a shared library. To configure for static libraries call
+
+```
+meson .build --default-library=static
+```
+
 One nice feature of meson is that it doesn't mix build artifacts
 (e.g. `*.o`, `*.so`, etc.) with source code. In the above example,
 "`.build`" is the name of the directory where the build configuration
