@@ -163,7 +163,7 @@ void json_read_config(nvme_root_t r, const char *config_file)
 
 	json_root = json_object_from_file(config_file);
 	if (!json_root) {
-		nvme_msg(LOG_DEBUG, "Failed to read %s, %s\n",
+		nvme_msg(r, LOG_DEBUG, "Failed to read %s, %s\n",
 			config_file, json_util_get_last_err());
 		return;
 	}
@@ -295,7 +295,7 @@ int json_update_config(nvme_root_t r, const char *config_file)
 		ret = json_object_to_file_ext(config_file, json_root,
 					      JSON_C_TO_STRING_PRETTY);
 	if (ret < 0) {
-		nvme_msg(LOG_ERR, "Failed to write to %s, %s\n",
+		nvme_msg(r, LOG_ERR, "Failed to write to %s, %s\n",
 			 config_file ? "stdout" : config_file,
 			 json_util_get_last_err());
 		ret = -1;

@@ -318,7 +318,7 @@ int main(int argc, char **argv)
 
 	printf("Test filter for common loop back target\n");
 	nqn_match = "testnqn";
-	r = nvme_scan_filter(nvme_match_subsysnqn_filter);
+	r = nvme_scan_filter(nvme_match_subsysnqn_filter, NULL);
 	nvme_for_each_host(r, h) {
 		nvme_for_each_subsystem(h, s) {
 			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),

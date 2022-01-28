@@ -25,6 +25,7 @@
 #include <time.h>
 #include <string.h>
 #define LOG_FUNCNAME 1
+#include "private.h"
 #include "log.h"
 #include "cleanup.h"
 
@@ -36,9 +37,11 @@ int nvme_log_level = DEFAULT_LOGLEVEL;
 bool nvme_log_timestamp;
 bool nvme_log_pid;
 
-void __attribute__((format(printf, 3, 4)))
-__nvme_msg(int lvl, const char *func, const char *format, ...)
+void __attribute__((format(printf, 4, 5)))
+__nvme_msg(nvme_root_t r, int lvl,
+	   const char *func, const char *format, ...)
 {
+	FILE *fp = r ? r->fp : stderr;
 	va_list ap;
 	char pidbuf[16];
 	char timebuf[32];
@@ -83,7 +86,7 @@ __nvme_msg(int lvl, const char *func, const char *format, ...)
 	va_end(ap);
 
 	if (lvl <= nvme_log_level)
-		fprintf(stderr, "%s%s", header ? header : "<error>",
+		fprintf(fp, "%s%s", header ? header : "<error>",
 			message ? message : "<error>");
 
 }

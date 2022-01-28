@@ -273,7 +273,7 @@ static int inet4_pton(const char *src, uint16_t port,
 	return 0;
 }
 
-static int inet6_pton(const char *src, uint16_t port,
+static int inet6_pton(nvme_root_t r, const char *src, uint16_t port,
 		      struct sockaddr_storage *addr)
 {
 	int ret = -EINVAL;
@@ -284,7 +284,7 @@ static int inet6_pton(const char *src, uint16_t port,
 
 	char  *tmp = strdup(src);
 	if (!tmp)
-		nvme_msg(LOG_ERR, "cannot copy: %s\n", src);
+		nvme_msg(r, LOG_ERR, "cannot copy: %s\n", src);
 
 	const char *scope = NULL;
 	char *p = strchr(tmp, SCOPE_DELIMITER);
@@ -299,7 +299,7 @@ static int inet6_pton(const char *src, uint16_t port,
 	if (IN6_IS_ADDR_LINKLOCAL(&addr6->sin6_addr) && scope) {
 		addr6->sin6_scope_id = if_nametoindex(scope);
 		if (addr6->sin6_scope_id == 0) {
-			nvme_msg(LOG_ERR,
+			nvme_msg(r, LOG_ERR,
 				 "can't find iface index for: %s (%m)\n", scope);
 			goto free_tmp;
 		}
@@ -322,7 +322,8 @@ free_tmp:
  *
  * Return 0 on success, errno otherwise.
  */
-static int inet_pton_with_scope(int af, const char *src, const char * trsvcid,
+static int inet_pton_with_scope(nvme_root_t r, int af,
+				const char *src, const char * trsvcid,
 				struct sockaddr_storage *addr)
 {
 	int      ret  = -EINVAL;
@@ -332,7 +333,8 @@ static int inet_pton_with_scope(int af, const char *src, const char * trsvcid,
 		unsigned long long tmp = strtoull(trsvcid, NULL, 0);
 		port = (uint16_t)tmp;
 		if (tmp != port) {
-			nvme_msg(LOG_ERR, "trsvcid out of range: %s\n", trsvcid);
+			nvme_msg(r, LOG_ERR, "trsvcid out of range: %s\n",
+				 trsvcid);
 			return -ERANGE;
 		}
 	} else {
@@ -344,21 +346,21 @@ static int inet_pton_with_scope(int af, const char *src, const char * trsvcid,
 		ret = inet4_pton(src, port, addr);
 		break;
 	case AF_INET6:
-		ret = inet6_pton(src, port, addr);
+		ret = inet6_pton(r, src, port, addr);
 		break;
 	case AF_UNSPEC:
 		ret = inet4_pton(src, port, addr);
 		if (ret)
-			ret = inet6_pton(src, port, addr);
+			ret = inet6_pton(r, src, port, addr);
 		break;
 	default:
-		nvme_msg(LOG_ERR, "unexpected address family %d\n", af);
+		nvme_msg(r, LOG_ERR, "unexpected address family %d\n", af);
 	}
 
 	return ret;
 }
 
-static bool traddr_is_hostname(nvme_ctrl_t c)
+static bool traddr_is_hostname(nvme_root_t r, nvme_ctrl_t c)
 {
 	struct sockaddr_storage addr;
 
@@ -366,7 +368,7 @@ static bool traddr_is_hostname(nvme_ctrl_t c)
 		return false;
 	if (strcmp(c->transport, "tcp") && strcmp(c->transport, "rdma"))
 		return false;
-	if (inet_pton_with_scope(AF_UNSPEC, c->traddr, c->trsvcid, &addr) == 0)
+	if (inet_pton_with_scope(r, AF_UNSPEC, c->traddr, c->trsvcid, &addr) == 0)
 		return false;
 	return true;
 }
@@ -379,13 +381,13 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	bool discover = false, discovery_nqn = false;
 
 	if (!transport) {
-		nvme_msg(LOG_ERR, "need a transport (-t) argument\n");
+		nvme_msg(h->r, LOG_ERR, "need a transport (-t) argument\n");
 		return -ENVME_CONNECT_TARG;
 	}
 
 	if (strncmp(transport, "loop", 4)) {
 		if (!nvme_ctrl_get_traddr(c)) {
-			nvme_msg(LOG_ERR, "need a address (-a) argument\n");
+			nvme_msg(h->r, LOG_ERR, "need a address (-a) argument\n");
 			return -ENVME_CONNECT_AARG;
 		}
 	}
@@ -463,23 +465,23 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	return 0;
 }
 
-static int __nvmf_add_ctrl(const char *argstr)
+static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
 {
 	int ret, fd, len = strlen(argstr);
 	char buf[0x1000], *options, *p;
 
 	fd = open(nvmf_dev, O_RDWR);
 	if (fd < 0) {
-		nvme_msg(LOG_ERR, "Failed to open %s: %s\n",
+		nvme_msg(r, LOG_ERR, "Failed to open %s: %s\n",
 			 nvmf_dev, strerror(errno));
 		return -ENVME_CONNECT_OPEN;
 	}
 
-	nvme_msg(LOG_DEBUG, "connect ctrl, '%.*s'\n",
+	nvme_msg(r, LOG_DEBUG, "connect ctrl, '%.*s'\n",
 		 (int)strcspn(argstr,"\n"), argstr);
 	ret = write(fd, argstr, len);
 	if (ret != len) {
-		nvme_msg(LOG_NOTICE, "Failed to write to %s: %s\n",
+		nvme_msg(r, LOG_NOTICE, "Failed to write to %s: %s\n",
 			 nvmf_dev, strerror(errno));
 		ret = -ENVME_CONNECT_WRITE;
 		goto out_close;
@@ -487,12 +489,12 @@ static int __nvmf_add_ctrl(const char *argstr)
 
 	len = read(fd, buf, sizeof(buf));
 	if (len < 0) {
-		nvme_msg(LOG_ERR, "Failed to read from %s: %s\n",
+		nvme_msg(r, LOG_ERR, "Failed to read from %s: %s\n",
 			 nvmf_dev, strerror(errno));
 		ret = -ENVME_CONNECT_READ;
 		goto out_close;
 	}
-	nvme_msg(LOG_DEBUG, "connect ctrl, response '%.*s'\n",
+	nvme_msg(r, LOG_DEBUG, "connect ctrl, response '%.*s'\n",
 		 (int)strcspn(buf, "\n"), buf);
 	buf[len] = '\0';
 	options = buf;
@@ -503,7 +505,7 @@ static int __nvmf_add_ctrl(const char *argstr)
 			goto out_close;
 	}
 
-	nvme_msg(LOG_ERR, "Failed to parse ctrl info for \"%s\"\n", argstr);
+	nvme_msg(r, LOG_ERR, "Failed to parse ctrl info for \"%s\"\n", argstr);
 	ret = -ENVME_CONNECT_PARSE;
 out_close:
 	close(fd);
@@ -518,10 +520,10 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 
 	cfg = merge_config(c, cfg);
 	nvme_ctrl_set_discovered(c, true);
-	if (traddr_is_hostname(c)) {
+	if (traddr_is_hostname(h->r, c)) {
 		const char *traddr = c->traddr;
 
-		c->traddr = hostname2traddr(traddr);
+		c->traddr = hostname2traddr(h->r, traddr);
 		if (!c->traddr) {
 			c->traddr = (char *)traddr;
 			errno = ENVME_CONNECT_TRADDR;
@@ -534,14 +536,14 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	if (ret)
 		return ret;
 
-	ret = __nvmf_add_ctrl(argstr);
+	ret = __nvmf_add_ctrl(h->r, argstr);
 	free(argstr);
 	if (ret < 0) {
 		errno = -ret;
 		return -1;
 	}
 
-	nvme_msg(LOG_INFO, "nvme%d: ctrl connected\n", ret);
+	nvme_msg(h->r, LOG_INFO, "nvme%d: ctrl connected\n", ret);
 	return nvme_init_ctrl(h, c, ret);
 }
 
@@ -567,7 +569,8 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 			trsvcid = e->trsvcid;
 			break;
 		default:
-			nvme_msg(LOG_ERR, "skipping unsupported adrfam %d\n",
+			nvme_msg(h->r, LOG_ERR,
+				 "skipping unsupported adrfam %d\n",
 				 e->adrfam);
 			errno = EINVAL;
 			return NULL;
@@ -581,7 +584,8 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 			trsvcid = NULL;
 			break;
 		default:
-			nvme_msg(LOG_ERR, "skipping unsupported adrfam %d\n",
+			nvme_msg(h->r, LOG_ERR,
+				 "skipping unsupported adrfam %d\n",
 				 e->adrfam);
 			errno = EINVAL;
 			return NULL;
@@ -589,7 +593,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	case NVMF_TRTYPE_LOOP:
 		break;
 	default:
-		nvme_msg(LOG_ERR, "skipping unsupported transport %d\n",
+		nvme_msg(h->r, LOG_ERR, "skipping unsupported transport %d\n",
 			 e->trtype);
 		errno = EINVAL;
 		return NULL;
@@ -597,13 +601,13 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 
 	transport = nvmf_trtype_str(e->trtype);
 
-	nvme_msg(LOG_DEBUG, "lookup ctrl "
+	nvme_msg(h->r, LOG_DEBUG, "lookup ctrl "
 		 "(transport: %s, traddr: %s, trsvcid %s)\n",
 		 transport, traddr, trsvcid);
-	c = nvme_create_ctrl(e->subnqn, transport, traddr,
+	c = nvme_create_ctrl(h->r, e->subnqn, transport, traddr,
 			     cfg->host_traddr, cfg->host_iface, trsvcid);
 	if (!c) {
-		nvme_msg(LOG_DEBUG, "skipping discovery entry, "
+		nvme_msg(h->r, LOG_DEBUG, "skipping discovery entry, "
 			 "failed to allocate %s controller with traddr %s\n",
 			 transport, traddr);
 		errno = ENOMEM;
@@ -620,7 +624,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 		nvme_ctrl_set_discovery_ctrl(c, true);
 		break;
 	default:
-		nvme_msg(LOG_ERR, "unsupported subtype %d\n",
+		nvme_msg(h->r, LOG_ERR, "unsupported subtype %d\n",
 			 e->subtype);
 		/* fallthrough */
 	case NVME_NQN_NVME:
@@ -648,14 +652,15 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	if (errno == EINVAL && c->cfg.disable_sqflow) {
 		errno = 0;
 		/* disable_sqflow is unrecognized option on older kernels */
-		nvme_msg(LOG_INFO, "failed to connect controller, "
+		nvme_msg(h->r, LOG_INFO, "failed to connect controller, "
 			 "retry with disabling SQ flow control\n");
 		c->cfg.disable_sqflow = false;
 		ret = nvmf_add_ctrl(h, c, cfg);
 		if (!ret)
 			return c;
 	}
-	nvme_msg(LOG_ERR, "failed to connect controller, error %d\n", errno);
+	nvme_msg(h->r, LOG_ERR, "failed to connect controller, error %d\n",
+		 errno);
 	nvme_free_ctrl(c);
 	return NULL;
 }
@@ -669,6 +674,7 @@ static int nvme_discovery_log(int fd, __u32 len, struct nvmf_discovery_log *log,
 int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 			   int max_retries)
 {
+	nvme_root_t r = c->s && c->s->h ? c->s->h->r : NULL;
 	struct nvmf_discovery_log *log;
 	int hdr, ret, retries = 0;
 	const char *name = nvme_ctrl_get_name(c);
@@ -678,17 +684,17 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 	hdr = sizeof(struct nvmf_discovery_log);
 	log = malloc(hdr);
 	if (!log) {
-		nvme_msg(LOG_ERR,
+		nvme_msg(r, LOG_ERR,
 			 "could not allocate memory for discovery log header\n");
 		errno = ENOMEM;
 		return -1;
 	}
 	memset(log, 0, hdr);
 
-	nvme_msg(LOG_DEBUG, "%s: discover length %d\n", name, 0x100);
+	nvme_msg(r, LOG_DEBUG, "%s: discover length %d\n", name, 0x100);
 	ret = nvme_discovery_log(nvme_ctrl_get_fd(c), 0x100, log, true);
 	if (ret) {
-		nvme_msg(LOG_INFO, "%s: discover failed, error %d\n",
+		nvme_msg(r, LOG_INFO, "%s: discover failed, error %d\n",
 			 name, errno);
 		goto out_free_log;
 	}
@@ -708,28 +714,29 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 		free(log);
 		log = malloc(size);
 		if (!log) {
-			nvme_msg(LOG_ERR,
+			nvme_msg(r, LOG_ERR,
 				 "could not alloc memory for discovery log page\n");
 			errno = ENOMEM;
 			return -1;
 		}
 		memset(log, 0, size);
 
-		nvme_msg(LOG_DEBUG, "%s: discover length %d\n", name, size);
+		nvme_msg(r, LOG_DEBUG, "%s: discover length %d\n", name, size);
 		ret = nvme_discovery_log(nvme_ctrl_get_fd(c), size, log, false);
 		if (ret) {
-			nvme_msg(LOG_INFO,
+			nvme_msg(r, LOG_INFO,
 				 "%s: discover try %d/%d failed, error %d\n",
 				 name, retries, max_retries, errno);
 			goto out_free_log;
 		}
 
 		genctr = le64_to_cpu(log->genctr);
-		nvme_msg(LOG_DEBUG, "%s: discover genctr %" PRIu64 ", retry\n",
+		nvme_msg(r, LOG_DEBUG,
+			 "%s: discover genctr %" PRIu64 ", retry\n",
 			 name, genctr);
 		ret = nvme_discovery_log(nvme_ctrl_get_fd(c), hdr, log, true);
 		if (ret) {
-			nvme_msg(LOG_INFO,
+			nvme_msg(r, LOG_INFO,
 				 "%s: discover try %d/%d failed, error %d\n",
 				 name, retries, max_retries, errno);
 			goto out_free_log;
@@ -738,11 +745,12 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 		 ++retries < max_retries);
 
 	if (genctr != le64_to_cpu(log->genctr)) {
-		nvme_msg(LOG_INFO, "%s: discover genctr mismatch\n", name);
+		nvme_msg(r, LOG_INFO, "%s: discover genctr mismatch\n", name);
 		errno = EAGAIN;
 		ret = -1;
 	} else if (numrec != le64_to_cpu(log->numrec)) {
-		nvme_msg(LOG_INFO, "%s: could only fetch %" PRIu64 " of %" PRIu64 " records\n",
+		nvme_msg(r, LOG_INFO,
+			 "%s: could only fetch %" PRIu64 " of %" PRIu64 " records\n",
 			 name, numrec, le64_to_cpu(log->numrec));
 		errno = EBADSLT;
 		ret = -1;

@@ -120,6 +120,7 @@ struct nvme_host {
 struct nvme_root {
 	char *config_file;
 	struct list_head hosts;
+	FILE *fp;
 	bool modified;
 };
 

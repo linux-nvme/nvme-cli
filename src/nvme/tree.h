@@ -10,6 +10,7 @@
 #ifndef _LIBNVME_TREE_H
 #define _LIBNVME_TREE_H
 
+#include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -239,17 +240,22 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 
 
 /**
- * nvme_create_ctrl() -
- * @subsysnqn:
- * @transport:
- * @traddr:
- * @host_traddr:
- * @host_iface:
- * @trsvcid:
+ * nvme_create_ctrl() - Allocate an unconnected NVMe controller
+ * @r: NVMe root element
+ * @subsysnqn: Subsystem NQN
+ * @transport: Transport type
+ * @traddr: Transport address
+ * @host_traddr: Host transport address
+ * @host_iface: Host interface name
+ * @trsvcid: Transport service ID
  *
- * Return: 
+ * Creates an unconnected nvme_ctrl_t structure to be used for
+ * nvme_add_ctrl().
+ *
+ * Return: nvme_ctrl_t structure
  */
-nvme_ctrl_t nvme_create_ctrl(const char *subsysnqn, const char *transport,
+nvme_ctrl_t nvme_create_ctrl(nvme_root_t r,
+			     const char *subsysnqn, const char *transport,
 			     const char *traddr, const char *host_traddr,
 			     const char *host_iface, const char *trsvcid);
 
@@ -961,12 +967,16 @@ const char *nvme_subsystem_get_name(nvme_subsystem_t s);
 const char *nvme_subsystem_get_type(nvme_subsystem_t s);
 
 /**
- * nvme_scan_filter() -
- * @f:
+ * nvme_scan_filter() - Scan NVMe topology and apply filter
+ * @f: filter to apply
+ * @fp: filepointer for error messages
  *
- * Return: 
+ * Scans the NVMe topology and filters out the resulting elements
+ * by applying @f.
+ *
+ * Return: nvme_root_t structure holding the resulting elements.
  */
-nvme_root_t nvme_scan_filter(nvme_scan_filter_t f);
+nvme_root_t nvme_scan_filter(nvme_scan_filter_t f, FILE *fp);
 
 /**
  * nvme_host_get_hostnqn() -
@@ -999,10 +1009,10 @@ nvme_host_t nvme_default_host(nvme_root_t r);
 void nvme_free_host(nvme_host_t h);
 
 /**
- * nvme_scan() -
- * @config_file:
+ * nvme_scan() - Scan NVMe topology
+ * @config_file: configuration file
  *
- * Return: 
+ * Return: nvme_root_t structure of found elements
  */
 nvme_root_t nvme_scan(const char *config_file);
 

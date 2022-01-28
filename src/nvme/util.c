@@ -7,6 +7,7 @@
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 
@@ -16,8 +17,10 @@
 
 #include <ccan/endian/endian.h>
 
+#include "private.h"
 #include "util.h"
 #include "log.h"
+
 static inline __u8 nvme_generic_status_to_errno(__u16 status)
 {
 	switch (status) {
@@ -503,7 +506,7 @@ const char *nvme_errno_to_string(int status)
 	return s;
 }
 
-char *hostname2traddr(const char *traddr)
+char *hostname2traddr(struct nvme_root *r, const char *traddr)
 {
 	struct addrinfo *host_info, hints = {.ai_family = AF_UNSPEC};
 	char addrstr[NVMF_TRADDR_SIZE];
@@ -513,7 +516,7 @@ char *hostname2traddr(const char *traddr)
 
 	ret = getaddrinfo(traddr, NULL, &hints, &host_info);
 	if (ret) {
-		nvme_msg(LOG_ERR, "failed to resolve host %s info\n",
+		nvme_msg(r, LOG_ERR, "failed to resolve host %s info\n",
 			 traddr);
 		return NULL;
 	}
@@ -530,13 +533,13 @@ char *hostname2traddr(const char *traddr)
 			addrstr, NVMF_TRADDR_SIZE);
 		break;
 	default:
-		nvme_msg(LOG_ERR, "unrecognized address family (%d) %s\n",
+		nvme_msg(r, LOG_ERR, "unrecognized address family (%d) %s\n",
 			 host_info->ai_family, traddr);
 		goto free_addrinfo;
 	}
 
 	if (!p) {
-		nvme_msg(LOG_ERR, "failed to get traddr for %s\n",
+		nvme_msg(r, LOG_ERR, "failed to get traddr for %s\n",
 			 traddr);
 		goto free_addrinfo;
 	}

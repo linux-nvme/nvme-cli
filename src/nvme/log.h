@@ -26,13 +26,13 @@ extern bool nvme_log_timestamp;
 extern bool nvme_log_pid;
 extern char *nvme_log_message;
 
-void __attribute__((format(printf, 3, 4)))
-__nvme_msg(int lvl, const char *func, const char *format, ...);
+void __attribute__((format(printf, 4, 5)))
+__nvme_msg(nvme_root_t r, int lvl, const char *func, const char *format, ...);
 
-#define nvme_msg(lvl, format, ...)					\
+#define nvme_msg(r, lvl, format, ...)					\
 	do {								\
 		if ((lvl) <= MAX_LOGLEVEL)				\
-			__nvme_msg(lvl, __nvme_log_func,		\
+			__nvme_msg(r, lvl, __nvme_log_func,		\
 				   format, ##__VA_ARGS__);		\
 	} while (0)
 
