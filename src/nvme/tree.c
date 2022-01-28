@@ -904,49 +904,6 @@ static bool traddr_is_hostname(const char *transport, const char *traddr)
 	return true;
 }
 
-void hostname2traddr(nvme_ctrl_t c, const char *host_traddr)
-{
-	struct addrinfo *host_info, hints = {.ai_family = AF_UNSPEC};
-	char addrstr[NVMF_TRADDR_SIZE];
-	const char *p;
-	int ret;
-
-	ret = getaddrinfo(host_traddr, NULL, &hints, &host_info);
-	if (ret) {
-		nvme_msg(LOG_DEBUG, "failed to resolve host %s info\n",
-			 host_traddr);
-		c->cfg.host_traddr = strdup(host_traddr);
-		return;
-	}
-
-	switch (host_info->ai_family) {
-	case AF_INET:
-		p = inet_ntop(host_info->ai_family,
-			&(((struct sockaddr_in *)host_info->ai_addr)->sin_addr),
-			addrstr, NVMF_TRADDR_SIZE);
-		break;
-	case AF_INET6:
-		p = inet_ntop(host_info->ai_family,
-			&(((struct sockaddr_in6 *)host_info->ai_addr)->sin6_addr),
-			addrstr, NVMF_TRADDR_SIZE);
-		break;
-	default:
-		nvme_msg(LOG_DEBUG, "unrecognized address family (%d) %s\n",
-			 host_info->ai_family, c->traddr);
-		c->cfg.host_traddr = strdup(host_traddr);
-		goto free_addrinfo;
-	}
-	if (!p) {
-		nvme_msg(LOG_DEBUG, "failed to get traddr for %s\n",
-			 c->traddr);
-		c->cfg.host_traddr = strdup(host_traddr);
-	} else
-		c->cfg.host_traddr = strdup(addrstr);
-
-free_addrinfo:
-	freeaddrinfo(host_info);
-}
-
 struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn, const char *transport,
 				   const char *traddr, const char *host_traddr,
 				   const char *host_iface, const char *trsvcid)
@@ -987,8 +944,8 @@ struct nvme_ctrl *nvme_create_ctrl(const char *subsysnqn, const char *transport,
 		c->traddr = strdup(traddr);
 	if (host_traddr) {
 		if (traddr_is_hostname(transport, host_traddr))
-			hostname2traddr(c, host_traddr);
-		else
+			c->cfg.host_traddr = hostname2traddr(host_traddr);
+		if (!c->cfg.host_traddr)
 			c->cfg.host_traddr = strdup(host_traddr);
 	}
 	if (host_iface)

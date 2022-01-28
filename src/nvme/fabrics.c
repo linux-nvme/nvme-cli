@@ -371,49 +371,6 @@ static bool traddr_is_hostname(nvme_ctrl_t c)
 	return true;
 }
 
-static int hostname2traddr(nvme_ctrl_t c)
-{
-	struct addrinfo *host_info, hints = {.ai_family = AF_UNSPEC};
-	char addrstr[NVMF_TRADDR_SIZE];
-	const char *p;
-	int ret;
-
-	ret = getaddrinfo(c->traddr, NULL, &hints, &host_info);
-	if (ret) {
-		nvme_msg(LOG_ERR, "failed to resolve host %s info\n", c->traddr);
-		return -ENVME_CONNECT_RESOLVE;
-	}
-
-	switch (host_info->ai_family) {
-	case AF_INET:
-		p = inet_ntop(host_info->ai_family,
-			&(((struct sockaddr_in *)host_info->ai_addr)->sin_addr),
-			addrstr, NVMF_TRADDR_SIZE);
-		break;
-	case AF_INET6:
-		p = inet_ntop(host_info->ai_family,
-			&(((struct sockaddr_in6 *)host_info->ai_addr)->sin6_addr),
-			addrstr, NVMF_TRADDR_SIZE);
-		break;
-	default:
-		nvme_msg(LOG_ERR, "unrecognized address family (%d) %s\n",
-			host_info->ai_family, c->traddr);
-		ret = -ENVME_CONNECT_ADDRFAM;
-		goto free_addrinfo;
-	}
-
-	if (!p) {
-		nvme_msg(LOG_ERR, "failed to get traddr for %s\n", c->traddr);
-		ret = -ENVME_CONNECT_TRADDR;
-		goto free_addrinfo;
-	}
-	c->traddr = strdup(addrstr);
-
-free_addrinfo:
-	freeaddrinfo(host_info);
-	return ret;
-}
-
 static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 {
 	struct nvme_fabrics_config *cfg = nvme_ctrl_get_config(c);
@@ -562,11 +519,15 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	cfg = merge_config(c, cfg);
 	nvme_ctrl_set_discovered(c, true);
 	if (traddr_is_hostname(c)) {
-		ret = hostname2traddr(c);
-		if (ret) {
-			errno = -ret;
+		const char *traddr = c->traddr;
+
+		c->traddr = hostname2traddr(traddr);
+		if (!c->traddr) {
+			c->traddr = (char *)traddr;
+			errno = ENVME_CONNECT_TRADDR;
 			return -1;
 		}
+		free(c->traddr);
 	}
 
 	ret = build_options(h, c, &argstr);
