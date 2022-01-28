@@ -1227,7 +1227,6 @@ static inline int nvme_get_log_error(int fd, unsigned nr_entries, bool rae,
 				 NVME_NSID_ALL, sizeof(*log) * nr_entries, log);
 }
 
-
 /**
  * nvme_get_log_smart() - Retrieve nvme smart log
  * @fd:		File descriptor of nvme device
@@ -1272,7 +1271,6 @@ static inline int nvme_get_log_fw_slot(int fd, bool rae,
 				 NVME_NSID_ALL, sizeof(*log), log);
 }
 
-
 /**
  * nvme_get_log_changed_ns_list() - Retrieve namespace changed list
  * @fd:		File descriptor of nvme device
@@ -1292,7 +1290,6 @@ static inline int nvme_get_log_changed_ns_list(int fd, bool rae,
 	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_CHANGED_NS,
 				 NVME_NSID_ALL, sizeof(*log), log);
 }
-
 
 /**
  * nvme_get_log_cmd_effects() - Retrieve nvme command effects log
@@ -1350,7 +1347,6 @@ static inline int nvme_get_log_device_self_test(int fd,
 				 NVME_NSID_ALL, sizeof(*log), log);
 }
 
-
 /**
  * nvme_get_log_create_telemetry_host() -
  */
@@ -1377,7 +1373,6 @@ static inline int nvme_get_log_create_telemetry_host(int fd,
 	};
 	return nvme_get_log(&args);
 }
-
 
 /**
  * nvme_get_log_telemetry_host() -
@@ -1590,7 +1585,6 @@ static int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae,
 	return nvme_get_log(&args);
 }
 
-
 /**
  * nvme_get_log_ana_groups() -
  * @fd:		File descriptor of nvme device
@@ -1604,7 +1598,6 @@ static inline int nvme_get_log_ana_groups(int fd, bool rae, __u32 len,
 	return nvme_get_log_ana(fd, NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY, rae, 0,
 				len, log);
 }
-
 
 /**
  * nvme_get_log_lba_status() -
@@ -1680,7 +1673,6 @@ static inline int nvme_get_log_fid_supported_effects(int fd, bool rae,
 				 NVME_NSID_NONE, sizeof(*log), log);
 }
 
-
 /**
  * nvme_get_log_boot_partition() -
  * @fd:		File descriptor of nvme device
@@ -1715,7 +1707,6 @@ static inline int nvme_get_log_boot_partition(int fd, bool rae,
 	};
 	return nvme_get_log(&args);
 }
-
 
 /**
  * nvme_get_log_discovery() -
@@ -1755,7 +1746,6 @@ static inline int nvme_get_log_discovery(int fd, bool rae,
 	return nvme_get_log(&args);
 }
 
-
 /**
  * nvme_get_log_media_unit_stat() -
  * @fd:		File descriptor of nvme device
@@ -1788,7 +1778,6 @@ static inline int nvme_get_log_media_unit_stat(int fd, __u16 domid,
 	return nvme_get_log(&args);
 }
 
-
 /**
  * nvme_get_log_reservation() -
  * @fd:		File descriptor of nvme device
@@ -1800,7 +1789,6 @@ static inline int nvme_get_log_reservation(int fd, bool rae,
 	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_RESERVATION,
 				 NVME_NSID_ALL, sizeof(*log), log);
 }
-
 
 /**
  * nvme_get_log_sanitize() -
@@ -1820,7 +1808,6 @@ static inline int nvme_get_log_sanitize(int fd, bool rae,
 	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_SANITIZE,
 				 NVME_NSID_ALL, sizeof(*log), log);
 }
-
 
 /**
  * nvme_get_log_zns_changed_zones() -
@@ -1858,7 +1845,6 @@ static inline int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
 	return nvme_get_log(&args);
 }
 
-
 /**
  * nvme_get_log_persistent_event() -
  * @fd:		File descriptor of nvme device
@@ -1890,7 +1876,6 @@ static inline int nvme_get_log_persistent_event(int fd,
 	};
 	return nvme_get_log(&args);
 }
-
 
 /**
  * nvme_set_features_args - Arguments for the NVMe Admin Set Feature command
@@ -2229,7 +2214,6 @@ int nvme_set_features_endurance_evt_cfg(int fd, __u16 endgid, __u8 egwarn,
 int nvme_set_features_sw_progress(int fd, __u8 pbslc, bool save,
 				  __u32 *result);
 
-
 /**
  * nvme_set_features_host_id() -
  * @fd:		File descriptor of nvme device
@@ -2376,6 +2360,7 @@ int nvme_get_features_power_mgmt(int fd, enum nvme_get_features_sel sel,
 int nvme_get_features_lba_range(int fd, enum nvme_get_features_sel sel,
 				struct nvme_lba_range_type *data,
 				__u32 *result);
+
 /**
  * nvme_get_features_temp_thresh() -
  * @fd:		File descriptor of nvme device
@@ -3350,7 +3335,6 @@ static inline int nvme_directive_recv_stream_allocate(int fd, __u32 nsid,
 
 	return nvme_directive_recv(&args);
 }
-
 
 /**
  * nvme_capacity_mgmt_args - Arguments for the NVMe Capacity Management command

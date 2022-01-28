@@ -3923,6 +3923,7 @@ enum nvme_ae_type {
         NVME_AER_CSS				= 6,
         NVME_AER_VS				= 7,
 };
+
 /**
  * enum nvme_ae_info_error -
  * @NVME_AER_ERROR_INVALID_DB_REG:
