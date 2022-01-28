@@ -7505,5 +7505,5 @@ int main(int argc, char **argv)
 	if (err == -ENOTTY)
 		general_help(&builtin);
 
-	return err;
+	return err ? 1 : 0;
 }
