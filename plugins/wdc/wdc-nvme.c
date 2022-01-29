@@ -8674,7 +8674,7 @@ static int wdc_enc_get_log(int argc, char **argv, struct command *command,
 closed_fd:
 	close(fd);
 ret:
-	return nvme_status_to_errno(err, false);
+	return err;
 }
 
 static int wdc_enc_submit_move_data(int fd, char *cmd, int len, int xfer_size, FILE *out, int log_id, int cdw14, int cdw15)
