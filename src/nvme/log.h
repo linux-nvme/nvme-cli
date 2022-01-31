@@ -15,22 +15,6 @@
 #  define DEFAULT_LOGLEVEL LOG_NOTICE
 #endif
 
-#if (LOG_FUNCNAME == 1)
-#define __nvme_log_func __func__
-#else
-#define __nvme_log_func NULL
-#endif
-
-void __attribute__((format(printf, 4, 5)))
-__nvme_msg(nvme_root_t r, int lvl, const char *func, const char *format, ...);
-
-#define nvme_msg(r, lvl, format, ...)					\
-	do {								\
-		if ((lvl) <= MAX_LOGLEVEL)				\
-			__nvme_msg(r, lvl, __nvme_log_func,		\
-				   format, ##__VA_ARGS__);		\
-	} while (0)
-
 /**
  * nvme_init_logging() - initialize logging
  * @r: nvme_root_t context
