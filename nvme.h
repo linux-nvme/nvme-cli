@@ -105,4 +105,5 @@ void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
 uint64_t int48_to_long(uint8_t *data);
 
+int map_log_level(int verbose, bool quiet);
 #endif /* _NVME_H */
