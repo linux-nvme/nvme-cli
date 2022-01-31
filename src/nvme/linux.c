@@ -176,15 +176,18 @@ int nvme_get_log_page_padded(int fd, __u32 nsid, __u8 log_id, bool rae,
 }
 
 static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
-				  struct nvme_telemetry_log **buf)
+				  struct nvme_telemetry_log **buf, enum nvme_telemetry_da da,
+				  size_t *size)
 {
 	static const __u32 xfer = NVME_LOG_TELEM_BLOCK_SIZE;
 
 	struct nvme_telemetry_log *telem;
 	enum nvme_cmd_get_log_lid lid;
+	struct nvme_id_ctrl id_ctrl;
 	void *log, *tmp;
-	__u32 size;
 	int err;
+
+	*size = 0;
 
 	log = malloc(xfer);
 	if (!log) {
@@ -212,9 +215,38 @@ static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
 		return 0;
 	}
 
-	/* dalb3 >= dalb2 >= dalb1 */
-	size = (le16_to_cpu(telem->dalb3) + 1) * xfer;
-	tmp = realloc(log, size);
+	switch (da) {
+	case NVME_TELEMETRY_DA_1:
+	case NVME_TELEMETRY_DA_2:
+	case NVME_TELEMETRY_DA_3:
+		/* dalb3 >= dalb2 >= dalb1 */
+		*size = (le16_to_cpu(telem->dalb3) + 1) * xfer;
+		break;
+	case NVME_TELEMETRY_DA_4:
+		err = nvme_identify_ctrl(fd, &id_ctrl);
+		if (err) {
+			perror("identify-ctrl");
+			errno = EINVAL;
+			goto free;
+		}
+
+		if (id_ctrl.lpa & 0x40) {
+			*size = (le32_to_cpu(telem->dalb4) + 1) * xfer;
+		} else {
+			fprintf(stderr, "Data area 4 unsupported, bit 6 of Log Page Attributes not set\n");
+			errno = EINVAL;
+			err = -1;
+			goto free;
+		}
+		break;
+	default:
+		fprintf(stderr, "Invalid data area parameter - %d\n", da);
+		errno = EINVAL;
+		err = -1;
+		goto free;
+	}
+
+	tmp = realloc(log, *size);
 	if (!tmp) {
 		errno = ENOMEM;
 		err = -1;
@@ -222,7 +254,7 @@ static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
 	}
 	log = tmp;
 
-	err = nvme_get_log_page_padded(fd, NVME_NSID_NONE, lid, rae, size,
+	err = nvme_get_log_page_padded(fd, NVME_NSID_NONE, lid, rae, (__u32)*size,
 				       (void *)log);
 	if (!err) {
 		*buf = log;
@@ -233,19 +265,22 @@ free:
 	return err;
 }
 
-int nvme_get_ctrl_telemetry(int fd, bool rae, struct nvme_telemetry_log **log)
+int nvme_get_ctrl_telemetry(int fd, bool rae, struct nvme_telemetry_log **log,
+		enum nvme_telemetry_da da, size_t *size)
 {
-	return nvme_get_telemetry_log(fd, false, true, rae, log);
+	return nvme_get_telemetry_log(fd, false, true, rae, log, da, size);
 }
 
-int nvme_get_host_telemetry(int fd, struct nvme_telemetry_log **log)
+int nvme_get_host_telemetry(int fd, struct nvme_telemetry_log **log,
+		enum nvme_telemetry_da da, size_t *size)
 {
-	return nvme_get_telemetry_log(fd, false, false, false, log);
+	return nvme_get_telemetry_log(fd, false, false, false, log, da, size);
 }
 
-int nvme_get_new_host_telemetry(int fd, struct nvme_telemetry_log **log)
+int nvme_get_new_host_telemetry(int fd, struct nvme_telemetry_log **log,
+		enum nvme_telemetry_da da, size_t *size)
 {
-	return nvme_get_telemetry_log(fd, true, false, false, log);
+	return nvme_get_telemetry_log(fd, true, false, false, log, da, size);
 }
 
 int nvme_get_lba_status_log(int fd, bool rae, struct nvme_lba_status_log **log)
