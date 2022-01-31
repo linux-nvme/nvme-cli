@@ -509,7 +509,7 @@ struct nvme_ns {
 }
 
 %extend nvme_ctrl {
-  nvme_ctrl(nvme_root_t r, const char *subsysnqn, const char *transport,
+  nvme_ctrl(struct nvme_root *r, const char *subsysnqn, const char *transport,
 	    const char *traddr = NULL, const char *host_traddr = NULL,
 	    const char *host_iface = NULL, const char *trsvcid = NULL) {
     return nvme_create_ctrl(r, subsysnqn, transport, traddr,
