@@ -385,8 +385,10 @@ int nvme_identify(struct nvme_identify_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -420,8 +422,10 @@ int nvme_get_log(struct nvme_get_log_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(struct nvme_get_log_args))
-		return -EINVAL;
+	if (args->args_size < sizeof(struct nvme_get_log_args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -443,8 +447,10 @@ int nvme_set_features(struct nvme_set_features_args *args)
 		.cdw15		= args->cdw15,
 		.timeout_ms	= args->timeout,
 	};
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -799,8 +805,10 @@ int nvme_get_features(struct nvme_get_features_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1162,8 +1170,10 @@ int nvme_format_nvm(struct nvme_format_nvm_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1183,8 +1193,10 @@ int nvme_ns_mgmt(struct nvme_ns_mgmt_args *args)
 		.addr	    = (__u64)(uintptr_t)args->ns,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1201,8 +1213,10 @@ int nvme_ns_attach(struct nvme_ns_attach_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1220,8 +1234,10 @@ int nvme_fw_download(struct nvme_fw_download_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1237,8 +1253,10 @@ int nvme_fw_commit(struct nvme_fw_commit_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1260,8 +1278,10 @@ int nvme_security_send(struct nvme_security_send_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1283,8 +1303,10 @@ int nvme_security_receive(struct nvme_security_receive_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1307,8 +1329,10 @@ int nvme_get_lba_status(struct nvme_get_lba_status_args *args)
 		.timeout_ms = args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1330,8 +1354,10 @@ int nvme_directive_send(struct nvme_directive_send_args *args)
 		.timeout_ms	= args->timeout,
         };
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
         return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1376,8 +1402,10 @@ int nvme_directive_recv(struct nvme_directive_recv_args *args)
 		.timeout_ms	= args->timeout,
         };
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1393,8 +1421,10 @@ int nvme_capacity_mgmt(struct nvme_capacity_mgmt_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1412,8 +1442,10 @@ int nvme_lockdown(struct nvme_lockdown_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1431,8 +1463,10 @@ int nvme_set_property(struct nvme_set_property_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1448,8 +1482,10 @@ int nvme_get_property(struct nvme_get_property_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru64(args->fd, &cmd, args->value);
 }
 
@@ -1469,8 +1505,10 @@ int nvme_sanitize_nvm(struct nvme_sanitize_nvm_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1485,8 +1523,10 @@ int nvme_dev_self_test(struct nvme_dev_self_test_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1504,8 +1544,10 @@ int nvme_virtual_mgmt(struct nvme_virtual_mgmt_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1571,8 +1613,10 @@ int nvme_io(struct nvme_io_args *args, __u8 opcode)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1588,8 +1632,10 @@ int nvme_dsm(struct nvme_dsm_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1614,8 +1660,10 @@ int nvme_copy(struct nvme_copy_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1638,8 +1686,10 @@ int nvme_resv_acquire(struct nvme_resv_acquire_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1662,8 +1712,10 @@ int nvme_resv_register(struct nvme_resv_register_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1683,8 +1735,10 @@ int nvme_resv_release(struct nvme_resv_release_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1700,8 +1754,10 @@ int nvme_resv_report(struct nvme_resv_report_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1724,8 +1780,10 @@ int nvme_zns_mgmt_send(struct nvme_zns_mgmt_send_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1750,8 +1808,10 @@ int nvme_zns_mgmt_recv(struct nvme_zns_mgmt_recv_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1778,7 +1838,9 @@ int nvme_zns_append(struct nvme_zns_append_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 	return nvme_submit_io_passthru64(args->fd, &cmd, args->result);
 }
