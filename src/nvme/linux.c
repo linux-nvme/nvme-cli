@@ -116,8 +116,8 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 	return err;
 }
 
-int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
-			__u32 xfer_len, __u32 data_len, void *data)
+int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
+		      __u32 xfer_len, __u32 data_len, void *data)
 {
 	__u64 offset = 0, xfer;
 	bool retain = true;
@@ -169,10 +169,10 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 	return 0;
 }
 
-int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
-		      __u32 data_len, void *data)
+int nvme_get_log_page_padded(int fd, __u32 nsid, __u8 log_id, bool rae,
+			     __u32 data_len, void *data)
 {
-	return __nvme_get_log_page(fd, nsid, log_id, rae, 4096, data_len, data);
+	return nvme_get_log_page(fd, nsid, log_id, rae, 4096, data_len, data);
 }
 
 static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
@@ -222,7 +222,8 @@ static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
 	}
 	log = tmp;
 
-	err = nvme_get_log_page(fd, NVME_NSID_NONE, lid, rae, size, (void *)log);
+	err = nvme_get_log_page_padded(fd, NVME_NSID_NONE, lid, rae, size,
+				       (void *)log);
 	if (!err) {
 		*buf = log;
 		return 0;
@@ -274,8 +275,8 @@ int nvme_get_lba_status_log(int fd, bool rae, struct nvme_lba_status_log **log)
 	buf = tmp;
 	*log = buf;
 
-	err = nvme_get_log_page(fd, NVME_NSID_NONE, NVME_LOG_LID_LBA_STATUS,
-				rae, size, buf);
+	err = nvme_get_log_page_padded(fd, NVME_NSID_NONE, NVME_LOG_LID_LBA_STATUS,
+				       rae, size, buf);
 	if (!err)
 		return 0;
 
