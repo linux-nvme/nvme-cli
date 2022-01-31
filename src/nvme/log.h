@@ -21,9 +21,6 @@
 #define __nvme_log_func NULL
 #endif
 
-extern int nvme_log_level;
-extern bool nvme_log_timestamp;
-extern bool nvme_log_pid;
 extern char *nvme_log_message;
 
 void __attribute__((format(printf, 4, 5)))
@@ -35,5 +32,16 @@ __nvme_msg(nvme_root_t r, int lvl, const char *func, const char *format, ...);
 			__nvme_msg(r, lvl, __nvme_log_func,		\
 				   format, ##__VA_ARGS__);		\
 	} while (0)
+
+/**
+ * nvme_init_logging() - initialize logging
+ * @r: nvme_root_t context
+ * @lvl: logging level to set
+ * @log_pid: boolean to enable logging of the PID
+ * @log_tstamp: boolean to enable logging of the timestamp
+ *
+ * Sets the default logging variables for the library.
+ */
+void nvme_init_logging(nvme_root_t r, int lvl, bool log_pid, bool log_tstamp);
 
 #endif /* _LOG_H */

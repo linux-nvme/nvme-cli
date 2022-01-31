@@ -970,13 +970,14 @@ const char *nvme_subsystem_get_type(nvme_subsystem_t s);
  * nvme_scan_filter() - Scan NVMe topology and apply filter
  * @f: filter to apply
  * @fp: filepointer for error messages
+ * @log_level: logging level for this structure
  *
  * Scans the NVMe topology and filters out the resulting elements
  * by applying @f.
  *
  * Return: nvme_root_t structure holding the resulting elements.
  */
-nvme_root_t nvme_scan_filter(nvme_scan_filter_t f, FILE *fp);
+nvme_root_t nvme_scan_filter(nvme_scan_filter_t f, FILE *fp, int log_level);
 
 /**
  * nvme_host_get_hostnqn() -
@@ -1015,6 +1016,16 @@ void nvme_free_host(nvme_host_t h);
  * Return: nvme_root_t structure of found elements
  */
 nvme_root_t nvme_scan(const char *config_file);
+
+/**
+ * nvme_read_config() - Read NVMe json configuration file
+ * @r: nvme_root_t object
+ * @config_file: json configuration file
+ *
+ * Read in the contents of @config_file and merge them with
+ * the elements in @r.
+ */
+void nvme_read_config(nvme_root_t r, const char *config_file);
 
 /**
  * nvme_refresh_topology() -

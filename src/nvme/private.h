@@ -121,6 +121,9 @@ struct nvme_root {
 	char *config_file;
 	struct list_head hosts;
 	FILE *fp;
+	int log_level;
+	bool log_pid;
+	bool log_timestamp;
 	bool modified;
 };
 

@@ -118,7 +118,7 @@ static int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 	return 0;
 }
 
-nvme_root_t nvme_scan_filter(nvme_scan_filter_t f, FILE *fp)
+nvme_root_t nvme_scan_filter(nvme_scan_filter_t f, FILE *fp, int log_level)
 {
 	struct nvme_root *r = calloc(1, sizeof(*r));
 
@@ -126,6 +126,7 @@ nvme_root_t nvme_scan_filter(nvme_scan_filter_t f, FILE *fp)
 		errno = ENOMEM;
 		return NULL;
 	}
+	r->log_level = log_level;
 	r->fp = stderr;
 	if (fp)
 		r->fp = fp;
@@ -134,16 +135,22 @@ nvme_root_t nvme_scan_filter(nvme_scan_filter_t f, FILE *fp)
 	return r;
 }
 
-nvme_root_t nvme_scan(const char *config_file)
+void nvme_read_config(nvme_root_t r, const char *config_file)
 {
-	nvme_root_t r = nvme_scan_filter(NULL, NULL);
-
 #ifdef CONFIG_JSONC
 	if (r && config_file) {
 		json_read_config(r, config_file);
 		r->config_file = strdup(config_file);
 	}
 #endif
+}
+
+nvme_root_t nvme_scan(const char *config_file)
+{
+	nvme_root_t r = nvme_scan_filter(NULL, NULL, DEFAULT_LOGLEVEL);
+
+	nvme_read_config(r, config_file);
+
 	return r;
 }
 
