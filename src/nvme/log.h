@@ -21,8 +21,6 @@
 #define __nvme_log_func NULL
 #endif
 
-extern char *nvme_log_message;
-
 void __attribute__((format(printf, 4, 5)))
 __nvme_msg(nvme_root_t r, int lvl, const char *func, const char *format, ...);
 
