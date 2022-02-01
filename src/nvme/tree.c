@@ -137,14 +137,19 @@ nvme_root_t nvme_create_root(FILE *fp, int log_level)
 	return r;
 }
 
-void nvme_read_config(nvme_root_t r, const char *config_file)
+int nvme_read_config(nvme_root_t r, const char *config_file)
 {
+	int err = -1;
 #ifdef CONFIG_JSONC
 	if (r && config_file) {
-		json_read_config(r, config_file);
-		r->config_file = strdup(config_file);
+		err = json_read_config(r, config_file);
+		if (!err)
+			r->config_file = strdup(config_file);
 	}
+#else
+	errno = ENOTSUP;
 #endif
+	return err;
 }
 
 nvme_root_t nvme_scan(const char *config_file)

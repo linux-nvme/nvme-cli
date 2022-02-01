@@ -1040,8 +1040,10 @@ nvme_root_t nvme_scan(const char *config_file);
  *
  * Read in the contents of @config_file and merge them with
  * the elements in @r.
+ *
+ * Returns: 0 on success, -1 on failure with errno set.
  */
-void nvme_read_config(nvme_root_t r, const char *config_file);
+int nvme_read_config(nvme_root_t r, const char *config_file);
 
 /**
  * nvme_refresh_topology() -
