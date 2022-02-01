@@ -61,7 +61,7 @@ typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t);
  * @fp: filedescriptor for logging messages
  * @log_level: logging level to use
  *
- * Return: initialized nvme_root_t structure
+ * Return: initialized nvme_root_t object
  */
 nvme_root_t nvme_create_root(FILE *fp, int log_level);
 
@@ -74,52 +74,57 @@ nvme_root_t nvme_create_root(FILE *fp, int log_level);
 void nvme_free_tree(nvme_root_t r);
 
 /**
- * nvme_first_host() -
- * @r:
+ * nvme_first_host() - Start host iterator
+ * @r: nvme_root_t object
  *
- * Return: 
+ * Return: first nvme_host_t object in an iterator
  */
 nvme_host_t nvme_first_host(nvme_root_t r);
 
 /**
- * nvme_next_host() -
- * @r:
- * @h:
+ * nvme_next_host() - Next host iterator
+ * @r: nvme_root_t object
+ * @h: previous nvme_host_t iterator
  *
- * Return: 
+ * Return: next nvme_host_t object in an iterator
  */
 nvme_host_t nvme_next_host(nvme_root_t r, nvme_host_t h);
 
 /**
- * nvme_host_get_root() -
- * @h:
+ * nvme_host_get_root() - Returns nvme_root_t object
+ * @h: host
  *
- * Return:
+ * Return: nvme_root_t object from @h
  */
 nvme_root_t nvme_host_get_root(nvme_host_t h);
 
 /**
- * nvme_lookup_host() -
- * @r:
+ * nvme_lookup_host() - Lookup nvme_host_t object
+ * @r: nvme_root_t object
+ * @hostnqn: Host NQN
+ * @hostid: Host ID
  *
- * Return: 
+ * Lookup a nvme_host_t object based on @hostnqn and @hostid
+ * or create one if not found.
+ *
+ * Return: nvme_host_t object
  */
 nvme_host_t nvme_lookup_host(nvme_root_t r, const char *hostnqn,
 			     const char *hostid);
 
 /**
- * nvme_host_get_hostnqn() -
- * @h:
+ * nvme_host_get_hostnqn() - Returns the host NQN
+ * @h: host
  *
- * Return: 
+ * Return: NVMe host NQN
  */
 const char *nvme_host_get_hostnqn(nvme_host_t h);
 
 /**
- * nvme_host_get_hostid() -
- * @h:
+ * nvme_host_get_hostid() - Returns the host ID
+ * @h: host
  *
- * Return: 
+ * Return: NVMe Host ID
  */
 const char *nvme_host_get_hostid(nvme_host_t h);
 
@@ -139,117 +144,130 @@ const char *nvme_host_get_dhchap_key(nvme_host_t h);
 void nvme_host_set_dhchap_key(nvme_host_t h, const char *key);
 
 /**
- * nvme_default_host() -
- * @r:
+ * nvme_default_host() - Initializes the default host
+ * @root: nvme_root_t object
  *
- * Return:
+ * Initializes the default host object based on the values in
+ * /etc/nvme/hostnqn and /etc/nvme/hostid and attaches it to @r.
+ *
+ * Return: nvme_host_t object
  */
 nvme_host_t nvme_default_host(nvme_root_t r);
 
 /**
- * nvme_first_subsystem() -
- * @h:
+ * nvme_first_subsystem() - Start subsystem iterator
+ * @h: nvme_host_t object
  *
- * Return: 
+ * Return: first nvme_subsystem_t object in an iterator
  */
 nvme_subsystem_t nvme_first_subsystem(nvme_host_t h);
 
 /**
- * nvme_next_subsystem() -
- * @h:
- * @s:
+ * nvme_next_subsystem() - Next subsystem iterator
+ * @h: nvme_host_t object
+ * @s: previous nvme_subsystem_t iterator
  *
- * Return: 
+ * Return: next nvme_subsystem_t object in an iterator
  */
 nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s);
 
 /**
- * nvme_lookup_subsystem() -
- * @h:
- * @name:
- * @subsysnqn:
+ * nvme_lookup_subsystem() - Lookup nvme_subsystem_t object
+ * @h: nvme_host_t object
+ * @name: Name of the subsystem (may be NULL)
+ * @subsysnqn: Subsystem NQN
  *
- * Return: 
+ * Lookup a nvme_subsystem_t object in @h base on @name (if present)
+ * and @subsystemnqn or create one if not found.
+ *
+ * Return: nvme_subsystme_t object
  */
 nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,
 				       const char *name,
 				       const char *subsysnqn);
 
 /**
- * nvme_free_subsystem() -
- * @s:
+ * nvme_free_subsystem() - Free a subsystem
+ * @s: subsystem
+ *
+ * Frees @s and all related objects.
  */
 void nvme_free_subsystem(struct nvme_subsystem *s);
 
 /**
- * nvme_subsystem_get_host() -
- * @s:
+ * nvme_subsystem_get_host() - Returns nvme_host_t object
+ * @s: subsystem
  *
- * Return: 
+ * Return: nvme_host_t object from @s
  */
 nvme_host_t nvme_subsystem_get_host(nvme_subsystem_t s);
 
 /**
- * nvme_ctrl_first_ns() -
- * @c:
+ * nvme_ctrl_first_ns() - Start namespace iterator
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: first nvme_ns_t object of an @c iterator
  */
 nvme_ns_t nvme_ctrl_first_ns(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_next_ns() -
- * @c:
- * @n:
+ * nvme_ctrl_next_ns() - Next namespace iterator
+ * @c: nvme_ctrl_t object
+ * @n: previous nvme_ns_t iterator
  *
- * Return: 
+ * Return: next nvme_ns_t object of an @c iterator
  */
 nvme_ns_t nvme_ctrl_next_ns(nvme_ctrl_t c, nvme_ns_t n);
 
 /**
- * nvme_ctrl_first_path() -
- * @c:
+ * nvme_ctrl_first_path() - Start path iterator
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: First nvme_path_t object of an @c iterator
  */
 nvme_path_t nvme_ctrl_first_path(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_next_path() -
- * @c:
- * @p:
+ * nvme_ctrl_next_path() - Next path iterator
+ * @c: nvme_ctrl_t object
+ * @p: previous nvme_path_t object of an @c iterator
  *
  * Return: 
  */
 nvme_path_t nvme_ctrl_next_path(nvme_ctrl_t c, nvme_path_t p);
 
 /**
- * nvme_subsystem_first_ctrl() -
- * @s:
+ * nvme_subsystem_first_ctrl() - First ctrl iterator
+ * @s: nvme_subsystem_t object
  *
- * Return: 
+ * Return: First nvme_ctrl_t object of an @s iterator
  */
 nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s);
 
 /**
- * nvme_subsystem_next_ctrl() -
- * @s:
- * @c:
+ * nvme_subsystem_next_ctrl() - Next ctrl iterator
+ * @s: nvme_subsystem_t object
+ * @c: previous nvme_ctrl_t object of an @s iterator
  *
- * Return: 
+ * Return: next nvme_ctrl_t object of an @s iterator
  */
 nvme_ctrl_t nvme_subsystem_next_ctrl(nvme_subsystem_t s, nvme_ctrl_t c);
 
 /**
- * nvme_lookup_ctrl() -
- * @s:
- * @transport:
- * @traddr:
- * @host_traddr:
- * @host_iface:
- * @trsvcid:
+ * nvme_lookup_ctrl() - Lookup nvme_ctrl_t object
+ * @s: nvme_subsystem_t object
+ * @transport: transport name
+ * @traddr: transport address
+ * @host_traddr: host transport address
+ * @host_iface: host interface name
+ * @trsvcid: transport service identifier
  *
- * Return: 
+ * Lookup a nvme_ctrl_t object in @s based on @transport, @traddr,
+ * @host_traddr, @host_iface, and @trsvcid. @transport must be specified,
+ * other fields may be required depending on the transport. A new
+ * object is created if none is found.
+ *
+ * Return: nvme_ctrl_t object
  */
 nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			     const char *traddr, const char *host_traddr,
@@ -266,10 +284,10 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
  * @host_iface: Host interface name
  * @trsvcid: Transport service ID
  *
- * Creates an unconnected nvme_ctrl_t structure to be used for
+ * Creates an unconnected nvme_ctrl_t object to be used for
  * nvme_add_ctrl().
  *
- * Return: nvme_ctrl_t structure
+ * Return: nvme_ctrl_t object
  */
 nvme_ctrl_t nvme_create_ctrl(nvme_root_t r,
 			     const char *subsysnqn, const char *transport,
@@ -278,19 +296,19 @@ nvme_ctrl_t nvme_create_ctrl(nvme_root_t r,
 
 
 /**
- * nvme_subsystem_first_ns() -
- * @s:
+ * nvme_subsystem_first_ns() - Start namespace iterator
+ * @s: nvme_subsystem_t object
  *
- * Return: 
+ * Return: First nvme_ns_t object of an @s iterator
  */
 nvme_ns_t nvme_subsystem_first_ns(nvme_subsystem_t s);
 
 /**
- * nvme_subsystem_next_ns() -
- * @s:
- * @n:
+ * nvme_subsystem_next_ns() - Next namespace iterator
+ * @s: nvme_subsystem_t object
+ * @n: previous nvme_ns_t iterator
  *
- * Return: 
+ * Return: Next nvme_ns_t object of an @s iterator
  */
 nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 
@@ -391,102 +409,103 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 		n = nvme_subsystem_next_ns(s, n))
 
 /**
- * nvme_ns_get_fd() -
- * @n:
+ * nvme_ns_get_fd() - Get associated filedescriptor
+ * @n: nvme_ns_t object
  *
- * Return: 
+ * Return: Filedescriptor associated with @n or -1
  */
 int nvme_ns_get_fd(nvme_ns_t n);
 
 /**
- * nvme_ns_get_nsid() -
- * @n:
+ * nvme_ns_get_nsid() - NSID of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
- * Return: 
+ * Return: NSID of @n
  */
 int nvme_ns_get_nsid(nvme_ns_t n);
 
 /**
- * nvme_ns_get_lba_size() -
- * @n:
+ * nvme_ns_get_lba_size() - LBA size of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
- * Return: 
+ * Return: LBA size of @n
  */
 int nvme_ns_get_lba_size(nvme_ns_t n);
 
 /**
- * nvme_ns_get_meta_size() -
- * @n:
+ * nvme_ns_get_meta_size() - Metadata size of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
- * Return:
+ * Return: Metadata size of @n
  */
 int nvme_ns_get_meta_size(nvme_ns_t n);
 
 /**
- * nvme_ns_get_lba_count() -
- * @n:
+ * nvme_ns_get_lba_count() - LBA count of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
- * Return: 
+ * Return: LBA count of @n
  */
 uint64_t nvme_ns_get_lba_count(nvme_ns_t n);
 
 /**
- * nvme_ns_get_lba_util() -
- * @n:
+ * nvme_ns_get_lba_util() - LBA utilisation of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
- * Return: 
+ * Return: LBA utilisation of @n
  */
 uint64_t nvme_ns_get_lba_util(nvme_ns_t n);
 
 /**
- * nvme_ns_get_csi() -
- * @n:
+ * nvme_ns_get_csi() - Command set identifier of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
  * Return: The namespace's command set identifier in use
  */
 enum nvme_csi nvme_ns_get_csi(nvme_ns_t n);
 
 /**
- * nvme_ns_get_eui64() -
- * @n:
+ * nvme_ns_get_eui64() - 64-bit eui of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
  * Returns a pointer to the 64-bit eui
  */
 const uint8_t *nvme_ns_get_eui64(nvme_ns_t n);
 
 /**
- * nvme_ns_get_nguid() -
- * @n:
+ * nvme_ns_get_nguid() - 128-bit nguid of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
  * Returns a pointer to the 128-bit nguid
  */
 const uint8_t *nvme_ns_get_nguid(nvme_ns_t n);
 
 /**
- * nvme_ns_get_uuid() -
- * @n:
- * @out:
+ * nvme_ns_get_uuid() - UUID of an nvme_ns_t object
+ * @n: nvme_ns_t object
+ * @out: buffer for the UUID
  *
- * Copies the namespace's uuid to the destination buffer
+ * Copies the namespace's uuid into @out
  */
 #ifdef CONFIG_LIBUUID
 void nvme_ns_get_uuid(nvme_ns_t n, uuid_t out);
 #else
 void nvme_ns_get_uuid(nvme_ns_t n, uint8_t *out);
 #endif
+
 /**
- * nvme_ns_get_sysfs_dir() -
- * @n:
+ * nvme_ns_get_sysfs_dir() - sysfs directory of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
- * Return: 
+ * Return: sysfs directory name of @n
  */
 const char *nvme_ns_get_sysfs_dir(nvme_ns_t n);
 
 /**
- * nvme_ns_get_name() -
- * @n:
+ * nvme_ns_get_name() - sysfs name of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
- * Return: 
+ * Return: sysfs name of @n
  */
 const char *nvme_ns_get_name(nvme_ns_t n);
 
@@ -499,321 +518,329 @@ const char *nvme_ns_get_name(nvme_ns_t n);
 const char *nvme_ns_get_generic_name(nvme_ns_t n);
 
 /**
- * nvme_ns_get_firmware() -
- * @n:
+ * nvme_ns_get_firmware() - Firmware string of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
- * Return: 
+ * Return: Firmware string of @n
  */
 const char *nvme_ns_get_firmware(nvme_ns_t n);
 
 /**
- * nvme_ns_get_serial() -
- * @n:
+ * nvme_ns_get_serial() - Serial number of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
- * Return: 
+ * Return: Serial number string of @n
  */
 const char *nvme_ns_get_serial(nvme_ns_t n);
 
 /**
- * nvme_ns_get_model() -
- * @n:
+ * nvme_ns_get_model() - Model of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
- * Return: 
+ * Return: Model string of @n
  */
 const char *nvme_ns_get_model(nvme_ns_t n);
 
 /**
- * nvme_ns_get_subsystem() -
- * @n:
+ * nvme_ns_get_subsystem() - nvme_subsystem_t of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
- * Return: 
+ * Return: nvme_subsystem_t object of @n
  */
 nvme_subsystem_t nvme_ns_get_subsystem(nvme_ns_t n);
 
 /**
- * nvme_ns_get_ctrl() -
- * @n:
+ * nvme_ns_get_ctrl() - nvme_ctrl_t of an nvme_ns_t object
+ * @n: nvme_ns_t object
  *
- * Return: 
+ * nvme_ctrl_t object may be NULL for a multipathed namespace
+ *
+ * Return: nvme_ctrl_t object of @n if present
  */
 nvme_ctrl_t nvme_ns_get_ctrl(nvme_ns_t n);
 
 /**
- * nvme_free_ns() -
- * @ns:
+ * nvme_free_ns() - free an nvme_ns_t object
+ * @ns: nvme_ns_t object
  */
 void nvme_free_ns(struct nvme_ns *n);
 
 /**
- * nvme_ns_read() -
- * @n:
- * @buf:
- * @offset:
- * @count:
+ * nvme_ns_read() - Read from a namespace
+ * @n: nvme_ns_t object
+ * @buf: buffer into which the data will be transferred
+ * @offset: LBA offset of @n
+ * @count: Number of sectors in @buf
  *
- * Return: 
+ * Return: Number of sectors read or -1 on error.
  */
 int nvme_ns_read(nvme_ns_t n, void *buf, off_t offset, size_t count);
 
 /**
- * nvme_ns_write() -
- * @n:
- * @buf:
- * @offset:
- * @count:
+ * nvme_ns_write() - Write to a namespace
+ * @n: nvme_ns_t object
+ * @buf: buffer with data to be written
+ * @offset: LBA offset of @n
+ * @count: Number of sectors in @buf
  *
- * Return: 
+ * Return: Number of sectors written or -1 on error
  */
 int nvme_ns_write(nvme_ns_t n, void *buf, off_t offset, size_t count);
 
 /**
- * nvme_ns_verify() -
- * @n:
- * @offset:
- * @count:
+ * nvme_ns_verify() - Verify data on a namespace
+ * @n: nvme_ns_t object
+ * @offset: LBA offset of @n
+ * @count: Number of sectors to be verified
  *
- * Return: 
+ * Return: Number of sectors verified
  */
 int nvme_ns_verify(nvme_ns_t n, off_t offset, size_t count);
 
 /**
- * nvme_ns_compare() -
- * @n:
- * @buf:
- * @offset:
- * @count:
+ * nvme_ns_compare() - Compare data on a namespace
+ * @n: nvme_ns_t object
+ * @buf: buffer with data to be compared
+ * @offset: LBA offset of @n
+ * @count: Number of sectors in @buf
  *
- * Return: 
+ * Return: Number of sectors compared
  */
 int nvme_ns_compare(nvme_ns_t n, void *buf, off_t offset, size_t count);
 
 /**
- * nvme_ns_write_zeros() -
- * @n:
- * @offset:
- * @count:
+ * nvme_ns_write_zeros() - Write zeros to a namespace
+ * @n: nvme_ns_t object
+ * @offset: LBA offset in @n
+ * @count: Number of sectors to be written
  *
- * Return: 
+ * Return: Number of sectors written
  */
 int nvme_ns_write_zeros(nvme_ns_t n, off_t offset, size_t count);
 
 /**
- * nvme_ns_write_uncorrectable() -
- * @n:
- * @offset:
- * @count:
+ * nvme_ns_write_uncorrectable() - Issus a 'write uncorrectable' command
+ * @n: nvme_ns_t object
+ * @offset: LBA offset in @n
+ * @count: Number of sectors to be written
  *
- * Return: 
+ * Return: Number of sectors written
  */
 int nvme_ns_write_uncorrectable(nvme_ns_t n, off_t offset, size_t count);
 
 /**
- * nvme_ns_flush() -
- * @n:
+ * nvme_ns_flush() - Flush data to a namespace
+ * @n: nvme_ns_t object
  *
- * Return: 
+ * Return: 0 on success, -1 on error.
  */
 int nvme_ns_flush(nvme_ns_t n);
 
 /**
- * nvme_ns_identify() -
- * @n:
- * @ns:
+ * nvme_ns_identify() - Issue an 'identify namespace' command
+ * @n: nvme_ns_t object
+ * @ns: nvme_id_ns buffer
  *
- * Return: 
+ * Writes the data returned by the 'identify namespace' command
+ * into @ns.
+ *
+ * Return: 0 on success, -1 on error.
  */
 int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns);
 
 /**
- * nvme_ns_identify_descs() -
- * @n:
- * @descs:
+ * nvme_ns_identify_descs() - Issue an 'identify descriptors' command
+ * @n: nvme_ns_t object
+ * @descs: list of identify descriptors
  *
- * Return: 
+ * Writes the data returned by the 'identify descriptors' command
+ * into @descs.
+ *
+ * Return: 0 on success, -1 on error.
  */
 int nvme_ns_identify_descs(nvme_ns_t n, struct nvme_ns_id_desc *descs);
 
 /**
- * nvme_path_get_name() -
- * @p:
+ * nvme_path_get_name() - sysfs name of an nvme_path_t object
+ * @p: nvme_path_t object
  *
- * Return: 
+ * Return: sysfs name of @p
  */
 const char *nvme_path_get_name(nvme_path_t p);
 
 /**
- * nvme_path_get_sysfs_dir() -
- * @p:
+ * nvme_path_get_sysfs_dir() - sysfs directory of an nvme_path_t object
+ * @p: nvme_path_t object
  *
- * Return: 
+ * Return: sysfs directory of @p
  */
 const char *nvme_path_get_sysfs_dir(nvme_path_t p);
 
 /**
- * nvme_path_get_ana_state() -
- * @p:
+ * nvme_path_get_ana_state() - ANA state of an nvme_path_t object
+ * @p: nvme_path_t object
  *
- * Return: 
+ * Return: ANA (Asynchronous Namespace Access) state of @p
  */
 const char *nvme_path_get_ana_state(nvme_path_t p);
 
 /**
- * nvme_path_get_ctrl() -
- * @p:
+ * nvme_path_get_ctrl() - parent controller of an nvme_path_t object
+ * @p: nvme_path_t object
  *
- * Return: 
+ * Return: parent controller if present
  */
 nvme_ctrl_t nvme_path_get_ctrl(nvme_path_t p);
 
 /**
- * nvme_path_get_ns() -
- * @p:
+ * nvme_path_get_ns() - parent namespace of an nvme_path_t object
+ * @p: nvme_path_t object
  *
- * Return: 
+ * Return: parent namespace if present
  */
 nvme_ns_t nvme_path_get_ns(nvme_path_t p);
 
 /**
- * nvme_ctrl_get_fd() -
- * @c:
+ * nvme_ctrl_get_fd() - Get associated filedescriptor
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: Filedescriptor associated with @c or -1
  */
 int nvme_ctrl_get_fd(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_name() -
- * @c:
+ * nvme_ctrl_get_name() - sysfs name of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: sysfs name of @c
  */
 const char *nvme_ctrl_get_name(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_sysfs_dir() -
- * @c:
+ * nvme_ctrl_get_sysfs_dir() - sysfs directory of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: sysfs directory name of @c
  */
 const char *nvme_ctrl_get_sysfs_dir(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_address() -
- * @c:
+ * nvme_ctrl_get_address() - Address string of an nvme_ctrl_t
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: NVMe-over-Fabrics address string of @c
  */
 const char *nvme_ctrl_get_address(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_firmware() -
- * @c:
+ * nvme_ctrl_get_firmware() - Firmware string of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: Firmware string of @c
  */
 const char *nvme_ctrl_get_firmware(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_model() -
- * @c:
+ * nvme_ctrl_get_model() - Model of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: Model string of @c
  */
 const char *nvme_ctrl_get_model(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_state() -
- * @c:
+ * nvme_ctrl_get_state() - Running state of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: string indicating the running state of @c
  */
 const char *nvme_ctrl_get_state(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_numa_node() -
- * @c:
+ * nvme_ctrl_get_numa_node() - NUMA node of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: string indicating the NUMA node
  */
 const char *nvme_ctrl_get_numa_node(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_queue_count() -
- * @c:
+ * nvme_ctrl_get_queue_count() - Queue count of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: Queue count of @c
  */
 const char *nvme_ctrl_get_queue_count(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_serial() -
- * @c:
+ * nvme_ctrl_get_serial() - Serial number of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: Serial number string of @c
  */
 const char *nvme_ctrl_get_serial(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_sqsize() -
- * @c:
+ * nvme_ctrl_get_sqsize() - SQ size of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: SQ size (as string) of @c
  */
 const char *nvme_ctrl_get_sqsize(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_transport() -
- * @c:
+ * nvme_ctrl_get_transport() - Transport type of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: Transport type of @c
  */
 const char *nvme_ctrl_get_transport(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_subsysnqn() -
- * @c:
+ * nvme_ctrl_get_subsysnqn() - Subsystem NQN of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: Subsystem NQN of @c
  */
 const char *nvme_ctrl_get_subsysnqn(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_subsystem() -
- * @c:
+ * nvme_ctrl_get_subsystem() - Parent subsystem of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Return: Parent nvme_subsystem_t object
  */
 nvme_subsystem_t nvme_ctrl_get_subsystem(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_traddr() -
- * @c:
+ * nvme_ctrl_get_traddr() - Transport address of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return:
+ * Return: Transport address of @c
  */
 const char *nvme_ctrl_get_traddr(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_trsvcid() -
- * @c:
+ * nvme_ctrl_get_trsvcid() - Transport service identifier of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return:
+ * Return: Transport service identifier of @c (if present)
  */
 const char *nvme_ctrl_get_trsvcid(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_host_traddr() -
- * @c:
+ * nvme_ctrl_get_host_traddr() - Host transport address of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return:
+ * Return: Host transport address of @c (if present)
  */
 const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_host_iface() -
- * @c:
+ * nvme_ctrl_get_host_iface() - Host interface name of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return:
+ * Return: Host interface name of @c (if present)
  */
 const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c);
 
@@ -833,44 +860,44 @@ const char *nvme_ctrl_get_dhchap_key(nvme_ctrl_t c);
 void nvme_ctrl_set_dhchap_key(nvme_ctrl_t c, const char *key);
 
 /**
- * nvme_ctrl_get_config() -
- * @c:
+ * nvme_ctrl_get_config() - Fabrics configuration of an nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  *
- * Return:
+ * Return: Fabrics configuration of @c
  */
 struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_set_discovered() -
- * @c:
- * @discovered:
+ * nvme_ctrl_set_discovered() - Set the 'discovered' flag
+ * @c: nvme_ctrl_t object
+ * @discovered: value of the 'discovered' flag
  *
- * Return:
+ * Set the 'discovered' flag of @c to @discovered
  */
 void nvme_ctrl_set_discovered(nvme_ctrl_t c, bool discovered);
 
 /**
- * nvme_ctrl_is_discovered() -
- * @c:
+ * nvme_ctrl_is_discovered() - Returns the value of the 'discovered' flag
+ * @c: nvme_ctrl_t object
  *
- * Return:
+ * Return: Value of the 'discovered' flag of @c
  */
 bool nvme_ctrl_is_discovered(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_set_persistent() -
- * @c:
- * @persistent:
+ * nvme_ctrl_set_persistent() - Set the 'persistent' flag
+ * @c: nvme_ctrl_t object
+ * @persistent: value of the 'persistent' flag
  *
- * Return:
+ * Set the 'persistent' flag of @c to @persistent
  */
 void nvme_ctrl_set_persistent(nvme_ctrl_t c, bool persistent);
 
 /**
- * nvme_ctrl_is_persistent() -
- * @c:
+ * nvme_ctrl_is_persistent() - Returns the value of the 'persistent' flag
+ * @c: nvme_ctrl_t object
  *
- * Return:
+ * Return: Value of the 'persistent' flag of @c
  */
 bool nvme_ctrl_is_persistent(nvme_ctrl_t c);
 
@@ -897,40 +924,48 @@ void nvme_ctrl_set_discovery_ctrl(nvme_ctrl_t c, bool discovery);
 bool nvme_ctrl_is_discovery_ctrl(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_identify() -
- * @c:
- * @id:
+ * nvme_ctrl_identify() - Issues an 'identify controller' command
+ * @c: nvme_ctrl_t object
+ * @id: identify controller data structure
  *
- * Return: 
+ * Issues an 'identify controller' command to @c and copies the
+ * data into @id.
+ *
+ * Return: 0 on success or -1 on failure.
  */
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id);
 
 /**
- * nvme_disconnect_ctrl() -
- * @c:
+ * nvme_disconnect_ctrl() - Disconnect a controller
+ * @c: nvme_ctrl_t object
  *
- * Return: 
+ * Issues a 'disconnect' fabrics command to @c
+ *
+ * Return: 0 on success, -1 on failure.
  */
 int nvme_disconnect_ctrl(nvme_ctrl_t c);
 
 /**
- * nvme_scan_ctrl() -
- * @name:
+ * nvme_scan_ctrl() - Scan on a controller
+ * @r: nvme_root_t object
+ * @name: name of the controller
  *
- * Return: 
+ * Scans a controller with sysfs name @name and add it to @r.
+ *
+ * Return: nvme_ctrl_t object
  */
 nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name);
 
 /**
- * @c:
- *
+ * nvme_rescan_ctrl() - Rescan an existing nvme_ctrl_t object
+ * @c: nvme_ctrl_t object
  */
 void nvme_rescan_ctrl(nvme_ctrl_t c);
 
 /**
- * nvme_init_ctrl() - Initialize control for an existing nvme device.
- * @h: host
- * @c: ctrl
+ * nvme_init_ctrl() - Initialize nvme_ctrl_t object for an existing nvme controller.
+ * @h: nvme_host_t object
+ * @c: nvme_ctrl_t object
  * @instance: Instance number (e.g. 1 for nvme1)
  *
  * Return: The ioctl() return code. Typically 0 on success.
@@ -958,18 +993,18 @@ void nvme_unlink_ctrl(struct nvme_ctrl *c);
 const char *nvme_subsystem_get_nqn(nvme_subsystem_t s);
 
 /**
- * nvme_subsystem_get_sysfs_dir() -
- * @s:
+ * nvme_subsystem_get_sysfs_dir() - sysfs directory of an nvme_subsystem_t object
+ * @s: nvme_subsystem_t object
  *
- * Return: 
+ * Return: sysfs directory name of @s
  */
 const char *nvme_subsystem_get_sysfs_dir(nvme_subsystem_t s);
 
 /**
- * nvme_subsystem_get_name() -
- * @s:
+ * nvme_subsystem_get_name() - sysfs name of an nvme_subsystem_t object
+ * @s: nvme_subsystem_t object
  *
- * Return: 
+ * Return: sysfs name of @s
  */
 const char *nvme_subsystem_get_name(nvme_subsystem_t s);
 
@@ -996,32 +1031,24 @@ const char *nvme_subsystem_get_type(nvme_subsystem_t s);
 int nvme_scan_topology(nvme_root_t r, nvme_scan_filter_t f);
 
 /**
- * nvme_host_get_hostnqn() -
- * @h:
+ * nvme_host_get_hostnqn() - Host NQN of an nvme_host_t object
+ * @h: nvme_host_t object
  *
- * Return: 
+ * Return: Host NQN of @h
  */
 const char *nvme_host_get_hostnqn(nvme_host_t h);
 
 /**
- * nvme_host_get_hostid() -
- * @h:
+ * nvme_host_get_hostid() - Host ID of an nvme_host_t object
+ * @h: nvme_host_t object
  *
- * Return: 
+ * Return: Host ID of @h
  */
 const char *nvme_host_get_hostid(nvme_host_t h);
 
 /**
- * nvme_default_host() -
- * @root:
- *
- * Return:
- */
-nvme_host_t nvme_default_host(nvme_root_t r);
-
-/**
- * nvme_free_host() -
- * @r:
+ * nvme_free_host() - Free nvme_host_t object
+ * @h: nvme_host_t object
  */
 void nvme_free_host(nvme_host_t h);
 
@@ -1029,7 +1056,7 @@ void nvme_free_host(nvme_host_t h);
  * nvme_scan() - Scan NVMe topology
  * @config_file: configuration file
  *
- * Return: nvme_root_t structure of found elements
+ * Return: nvme_root_t object of found elements
  */
 nvme_root_t nvme_scan(const char *config_file);
 
@@ -1044,74 +1071,95 @@ nvme_root_t nvme_scan(const char *config_file);
 void nvme_read_config(nvme_root_t r, const char *config_file);
 
 /**
- * nvme_refresh_topology() -
- * @r:
+ * nvme_refresh_topology() - refresh nvme_root_t object contents
+ * @r: nvme_root_t object
+ *
+ * Removes all elements in @r and rescans the existing topology.
  */
 void nvme_refresh_topology(nvme_root_t r);
 
 /**
- * nvme_update_config() -
- * @r:
+ * nvme_update_config() - Update JSON configuration
+ * @r: nvme_root_t object
  *
- * Return:
+ * Updates the JSON configuration file with the contents of @r.
+ *
+ * Return: 0 on success, -1 on failure.
  */
 int nvme_update_config(nvme_root_t r);
 
 /**
- * nvme_dump_config() -
- * @r:
+ * nvme_dump_config() - Print the JSON configuration
+ * @r: nvme_root_t object
  *
- * Return:
+ * Prints the current contents of the JSON configuration
+ * file to stdout.
+ *
+ * Return: 0 on success, -1 on failure.
  */
 int nvme_dump_config(nvme_root_t r);
 
 /**
- * nvme_get_attr() -
- * @dir:
- * @attr:
+ * nvme_get_attr() - Read sysfs attribute
+ * @dir: sysfs directory
+ * @attr: sysfs attribute name
  *
- * Return: 
+ * Return: string with the contents of @attr
  */
 char *nvme_get_attr(const char *dir, const char *attr);
 
 /**
- * nvme_get_subsys_attr() -
- * @s:
- * @attr:
+ * nvme_get_subsys_attr() - Read subsystem sysfs attribute
+ * @s: nvme_subsystem_t object
+ * @attr: sysfs attribute name
  *
- * Return: 
+ * Return: string with the contents of @attr
  */
 char *nvme_get_subsys_attr(nvme_subsystem_t s, const char *attr);
 
 /**
- * nvme_get_ctrl_attr() -
- * @c:
- * @attr:
+ * nvme_get_ctrl_attr() - Read controller sysfs attribute
+ * @c: nvme_ctrl_t object
+ * @attr: sysfs attribute name
  *
- * Return: 
+ * Return: string with the contents of @attr
  */
 char *nvme_get_ctrl_attr(nvme_ctrl_t c, const char *attr);
 
 /**
- * nvme_get_ns_attr() -
- * @n:
- * @attr:
+ * nvme_get_ns_attr() - Read namespace sysfs attribute
+ * @n: nvme_ns_t object
+ * @attr: sysfs attribute name
  *
- * Return: 
+ * Return: string with the contents of @attr
  */
 char *nvme_get_ns_attr(nvme_ns_t n, const char *attr);
 
+/**
+ * nvme_subsystem_lookup_namespace - lookup namespace by NSID
+ * @s: nvme_subsystem_t object
+ * @nsid: namespace id
+ *
+ * Return: nvme_ns_t of the namespace with id @nsid in subsystem @s
+ */
 nvme_ns_t nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
 					  __u32 nsid);
+
 /**
- * nvme_get_path_attr() -
- * @p:
- * @attr:
+ * nvme_get_path_attr() - Read path sysfs attribute
+ * @p: nvme_path_t object
+ * @attr: sysfs attribute name
  *
- * Return: 
+ * Return:  string with the contents of @attr
  */
 char *nvme_get_path_attr(nvme_path_t p, const char *attr);
 
+/**
+ * nvme_scan_namespace() - scan namespace based on sysfs name
+ * @name: sysfs name of the namespace to scan
+ *
+ * Return: nvme_ns_t object or NULL if not found.
+ */
 nvme_ns_t nvme_scan_namespace(const char *name);
 
 #endif /* _LIBNVME_TREE_H */
