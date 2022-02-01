@@ -11,4 +11,4 @@ subsysnqn = nvme.NVME_DISC_SUBSYS_NAME
 transport = 'loop'
 traddr    = '127.0.0.1'
 trsvcid   = '8009'
-ctrl = nvme.ctrl(subsysnqn=subsysnqn, transport=transport, traddr=traddr, trsvcid=trsvcid)
+ctrl = nvme.ctrl(root, subsysnqn=subsysnqn, transport=transport, traddr=traddr, trsvcid=trsvcid)

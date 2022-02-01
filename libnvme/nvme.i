@@ -339,29 +339,30 @@ struct nvme_ns {
 
 %extend nvme_root {
   nvme_root(const char *config_file = NULL) {
-    nvme_log_level = LOG_ERR;
     return nvme_scan(config_file);
   }
   ~nvme_root() {
     nvme_free_tree($self);
   }
   void log_level(const char *level) {
+    int log_level = DEFAULT_LOGLEVEL;
     if (!strcmp(level,"debug"))
-      nvme_log_level = LOG_DEBUG;
+      log_level = LOG_DEBUG;
     else if (!strcmp(level, "info"))
-      nvme_log_level = LOG_INFO;
+      log_level = LOG_INFO;
     else if (!strcmp(level, "notice"))
-      nvme_log_level = LOG_NOTICE;
+      log_level = LOG_NOTICE;
     else if (!strcmp(level, "warning"))
-      nvme_log_level = LOG_WARNING;
+      log_level = LOG_WARNING;
     else if (!strcmp(level, "err"))
-      nvme_log_level = LOG_ERR;
+      log_level = LOG_ERR;
     else if (!strcmp(level, "crit"))
-      nvme_log_level = LOG_CRIT;
+      log_level = LOG_CRIT;
     else if (!strcmp(level, "alert"))
-      nvme_log_level = LOG_ALERT;
+      log_level = LOG_ALERT;
     else if (!strcmp(level, "emerg"))
-      nvme_log_level = LOG_EMERG;
+      log_level = LOG_EMERG;
+    nvme_init_logging($self, log_level, false, false);
   }
   struct nvme_host *hosts() {
     return nvme_first_host($self);
@@ -508,10 +509,10 @@ struct nvme_ns {
 }
 
 %extend nvme_ctrl {
-  nvme_ctrl(const char *subsysnqn, const char *transport,
+  nvme_ctrl(struct nvme_root *r, const char *subsysnqn, const char *transport,
 	    const char *traddr = NULL, const char *host_traddr = NULL,
 	    const char *host_iface = NULL, const char *trsvcid = NULL) {
-    return nvme_create_ctrl(subsysnqn, transport, traddr,
+    return nvme_create_ctrl(r, subsysnqn, transport, traddr,
 			    host_traddr, host_iface, trsvcid);
   }
   ~nvme_ctrl() {

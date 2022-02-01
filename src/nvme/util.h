@@ -391,4 +391,8 @@ static inline void nvme_id_ns_flbas_to_lbaf_inuse(__u8 flbas, __u8 *lbaf_inuse)
 	*lbaf_inuse = (((flbas & NVME_NS_FLBAS_HIGHER_MASK) >> 1) \
 		| (flbas & NVME_NS_FLBAS_LOWER_MASK));
 }
+
+struct nvme_root;
+
+char *hostname2traddr(struct nvme_root *r, const char *traddr);
 #endif /* _LIBNVME_UTIL_H */

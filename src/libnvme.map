@@ -8,6 +8,7 @@ LIBNVME_1_0 {
 		nvme_capacity_mgmt;
 		nvme_compare;
 		nvme_copy;
+		nvme_create_root;
 		nvme_create_ctrl;
 		nvme_ctrl_disconnect;
 		nvme_ctrl_first_ns;
@@ -169,12 +170,12 @@ LIBNVME_1_0 {
 		nvme_init_ctrl;
 		nvme_init_ctrl_list;
 		nvme_init_dsm_range;
+		nvme_init_logging;
 		nvme_init_id_ns;
 		nvme_io;
 		nvme_io_passthru64;
 		nvme_io_passthru;
 		nvme_lockdown;
-		nvme_log_level;
 		nvme_lookup_host;
 		nvme_lookup_subsystem;
 		nvme_namespace_attach_ctrls;
@@ -227,6 +228,7 @@ LIBNVME_1_0 {
 		nvme_path_get_sysfs_dir;
 		nvme_paths_filter;
 		nvme_read;
+		nvme_read_config;
 		nvme_refresh_topology;
 		nvme_rescan_ctrl;
 		nvme_reset_topology;
@@ -240,7 +242,7 @@ LIBNVME_1_0 {
 		nvme_scan_ctrl;
 		nvme_scan_ctrl_namespace_paths;
 		nvme_scan_ctrl_namespaces;
-		nvme_scan_filter;
+		nvme_scan_topology;
 		nvme_scan_namespace;
 		nvme_scan_subsystem_namespaces;
 		nvme_scan_subsystems;

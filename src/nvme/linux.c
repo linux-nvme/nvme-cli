@@ -449,7 +449,7 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 			unsigned char *key)
 {
 	if (hmac != NVME_HMAC_ALG_NONE) {
-		nvme_msg(LOG_ERR, "HMAC transformation not supported; " \
+		nvme_msg(NULL, LOG_ERR, "HMAC transformation not supported; " \
 			"recompile with OpenSSL support.\n");
 		errno = -EINVAL;
 		return -1;
@@ -475,8 +475,7 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 
 	hmac_ctx = HMAC_CTX_new();
 	if (!hmac_ctx) {
-		nvme_msg(LOG_ERR, "OpenSSL: could not create HMAC context\n");
-		errno = ENOENT;
+		errno = ENOMEM;
 		return err;
 	}
 
@@ -500,34 +499,29 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 	}
 
 	if (!md) {
-		nvme_msg(LOG_ERR, "OpenSSL: could not fetch hash function\n");
-		errno = ENOENT;
+		errno = EINVAL;
 		goto out;
 	}
 
 	if (!HMAC_Init_ex(hmac_ctx, secret, key_len, md, NULL)) {
-		nvme_msg(LOG_ERR, "OpenSSL: initializing HMAC context failed\n");
-		errno = ENOENT;
+		errno = ENOMEM;
 		goto out;
 	}
 
 	if (!HMAC_Update(hmac_ctx, (unsigned char *)hostnqn,
 			 strlen(hostnqn))) {
-		nvme_msg(LOG_ERR, "OpenSSL: HMAC for hostnqn failed\n");
-		errno = ENOENT;
+		errno = ENOKEY;
 		goto out;
 	}
 
 	if (!HMAC_Update(hmac_ctx, (unsigned char *)hmac_seed,
 			 strlen(hmac_seed))) {
-		nvme_msg(LOG_ERR, "OpenSSL: HMAC for seed failed\n");
-		errno = ENOENT;
+		errno = ENOKEY;
 		goto out;
 	}
 
 	if (!HMAC_Final(hmac_ctx, key, &key_len)) {
-		nvme_msg(LOG_ERR, "OpenSSL: finializing MAC failed\n");
-		errno = ENOENT;
+		errno = ENOKEY;
 		goto out;
 	}
 
@@ -556,22 +550,19 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 
 	lib_ctx = OSSL_LIB_CTX_new();
 	if (!lib_ctx) {
-		nvme_msg(LOG_ERR, "OpenSSL: Library initializing failed\n");
-		errno = ENOENT;
+		errno = ENOMEM;
 		return err;
 	}
 
 	mac = EVP_MAC_fetch(lib_ctx, OSSL_MAC_NAME_HMAC, progq);
 	if (!mac) {
-		nvme_msg(LOG_ERR, "OpenSSL: could not fetch HMAC algorithm\n");
-		errno = EINVAL;
+		errno = ENOMEM;
 		goto out;
 	}
 
 	mac_ctx = EVP_MAC_CTX_new(mac);
 	if (!mac_ctx) {
-		nvme_msg(LOG_ERR, "OpenSSL: could not create HMAC context\n");
-		errno = ENOENT;
+		errno = ENOMEM;
 		goto out;
 	}
 
@@ -599,34 +590,29 @@ int nvme_gen_dhchap_key(char *hostnqn, enum nvme_hmac_alg hmac,
 	*p = OSSL_PARAM_construct_end();
 
 	if (!EVP_MAC_init(mac_ctx, secret, key_len, params)) {
-		nvme_msg(LOG_ERR, "OpenSSL: could not initialize HMAC context\n");
-		errno = EINVAL;
+		errno = ENOKEY;
 		goto out;
 	}
 
 	if (!EVP_MAC_update(mac_ctx, (unsigned char *)hostnqn,
 			    strlen(hostnqn))) {
-		nvme_msg(LOG_ERR, "OpenSSL: HMAC for hostnqn failed\n");
-		errno = ENOENT;
+		errno = ENOKEY;
 		goto out;
 	}
 
 	if (!EVP_MAC_update(mac_ctx, (unsigned char *)hmac_seed,
 			    strlen(hmac_seed))) {
-		nvme_msg(LOG_ERR, "OpenSSL: HMAC for seed failed\n");
-		errno = ENOENT;
+		errno = ENOKEY;
 		goto out;
 	}
 
 	if (!EVP_MAC_final(mac_ctx, key, &len, key_len)) {
-		nvme_msg(LOG_ERR, "OpenSSL: finializing MAC failed\n");
-		errno = ENOENT;
+		errno = ENOKEY;
 		goto out;
 	}
 
 	if (len != key_len) {
-		nvme_msg(LOG_ERR, "OpenSSL: generated HMAC has an unexpected lenght\n");
-		errno = EINVAL;
+		errno = EMSGSIZE;
 		goto out;
 	}
 

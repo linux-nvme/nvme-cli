@@ -10,6 +10,7 @@
 #ifndef _LIBNVME_TREE_H
 #define _LIBNVME_TREE_H
 
+#include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -54,6 +55,23 @@ typedef struct nvme_root *nvme_root_t;
  *
  */
 typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t);
+
+/**
+ * nvme_create_root() - Initialize root object
+ * @fp: filedescriptor for logging messages
+ * @log_level: logging level to use
+ *
+ * Return: initialized nvme_root_t structure
+ */
+nvme_root_t nvme_create_root(FILE *fp, int log_level);
+
+/**
+ * nvme_free_tree() - Free root object
+ * @r: nvme_root_t object
+ *
+ * Free an nvme_root_t object and all attached objects
+ */
+void nvme_free_tree(nvme_root_t r);
 
 /**
  * nvme_first_host() -
@@ -239,17 +257,22 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 
 
 /**
- * nvme_create_ctrl() -
- * @subsysnqn:
- * @transport:
- * @traddr:
- * @host_traddr:
- * @host_iface:
- * @trsvcid:
+ * nvme_create_ctrl() - Allocate an unconnected NVMe controller
+ * @r: NVMe root element
+ * @subsysnqn: Subsystem NQN
+ * @transport: Transport type
+ * @traddr: Transport address
+ * @host_traddr: Host transport address
+ * @host_iface: Host interface name
+ * @trsvcid: Transport service ID
  *
- * Return: 
+ * Creates an unconnected nvme_ctrl_t structure to be used for
+ * nvme_add_ctrl().
+ *
+ * Return: nvme_ctrl_t structure
  */
-nvme_ctrl_t nvme_create_ctrl(const char *subsysnqn, const char *transport,
+nvme_ctrl_t nvme_create_ctrl(nvme_root_t r,
+			     const char *subsysnqn, const char *transport,
 			     const char *traddr, const char *host_traddr,
 			     const char *host_iface, const char *trsvcid);
 
@@ -961,12 +984,16 @@ const char *nvme_subsystem_get_name(nvme_subsystem_t s);
 const char *nvme_subsystem_get_type(nvme_subsystem_t s);
 
 /**
- * nvme_scan_filter() -
- * @f:
+ * nvme_scan_topology() - Scan NVMe topology and apply filter
+ * @r: nvme_root_t object
+ * @f: filter to apply
  *
- * Return: 
+ * Scans the NVMe topology and filters out the resulting elements
+ * by applying @f.
+ *
+ * Return: Number of elements scanned
  */
-nvme_root_t nvme_scan_filter(nvme_scan_filter_t f);
+int nvme_scan_topology(nvme_root_t r, nvme_scan_filter_t f);
 
 /**
  * nvme_host_get_hostnqn() -
@@ -999,12 +1026,22 @@ nvme_host_t nvme_default_host(nvme_root_t r);
 void nvme_free_host(nvme_host_t h);
 
 /**
- * nvme_scan() -
- * @config_file:
+ * nvme_scan() - Scan NVMe topology
+ * @config_file: configuration file
  *
- * Return: 
+ * Return: nvme_root_t structure of found elements
  */
 nvme_root_t nvme_scan(const char *config_file);
+
+/**
+ * nvme_read_config() - Read NVMe json configuration file
+ * @r: nvme_root_t object
+ * @config_file: json configuration file
+ *
+ * Read in the contents of @config_file and merge them with
+ * the elements in @r.
+ */
+void nvme_read_config(nvme_root_t r, const char *config_file);
 
 /**
  * nvme_refresh_topology() -
@@ -1033,12 +1070,6 @@ int nvme_update_config(nvme_root_t r);
  * Return:
  */
 int nvme_dump_config(nvme_root_t r);
-
-/**
- * nvme_free_tree() -
- * @r:
- */
-void nvme_free_tree(nvme_root_t r);
 
 /**
  * nvme_get_attr() -

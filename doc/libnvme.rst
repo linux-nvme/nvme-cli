@@ -5840,14 +5840,6 @@ The nvme command status if a response was received (see
 ``nvme_subsystem_t s``
 
 
-.. c:function:: nvme_root_t nvme_scan_filter (nvme_scan_filter_t f)
-
-
-**Parameters**
-
-``nvme_scan_filter_t f``
-
-
 .. c:function:: nvme_root_t nvme_scan ()
 
 
