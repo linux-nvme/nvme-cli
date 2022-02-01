@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include <json.h>
 
@@ -162,13 +164,20 @@ static void json_parse_host(nvme_root_t r, struct json_object *host_obj)
 int json_read_config(nvme_root_t r, const char *config_file)
 {
 	struct json_object *json_root, *host_obj;
-	int h;
+	int fd, h;
 
-	json_root = json_object_from_file(config_file);
+	fd = open(config_file, O_RDONLY);
+	if (fd < 0) {
+		nvme_msg(r, LOG_DEBUG, "Error opening %s, %s\n",
+			 config_file, strerror(errno));
+		return fd;
+	}
+	json_root = json_object_from_fd(fd);
 	if (!json_root) {
 		nvme_msg(r, LOG_DEBUG, "Failed to read %s, %s\n",
 			config_file, json_util_get_last_err());
-		errno = EAGAIN;
+		errno = EPROTO;
+		close(fd);
 		return -1;
 	}
 	for (h = 0; h < json_object_array_length(json_root); h++) {
@@ -177,6 +186,7 @@ int json_read_config(nvme_root_t r, const char *config_file)
 			json_parse_host(r, host_obj);
 	}
 	json_object_put(json_root);
+	close(fd);
 	return 0;
 }
 
