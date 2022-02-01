@@ -1,7 +1,5 @@
 LIBNVME_1_0 {
 	global:
-		__nvme_get_log_page;
-		__nvme_msg;
 		nvme_admin_passthru64;
 		nvme_admin_passthru;
 		nvme_attach_ns;
@@ -125,6 +123,7 @@ LIBNVME_1_0 {
 		nvme_get_log_fw_slot;
 		nvme_get_log_lba_status;
 		nvme_get_log_page;
+		nvme_get_log_page_padded;
 		nvme_get_log_persistent_event;
 		nvme_get_log_predictable_lat_event;
 		nvme_get_log_predictable_lat_nvmset;

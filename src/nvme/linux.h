@@ -68,7 +68,7 @@ int nvme_get_host_telemetry(int fd,  struct nvme_telemetry_log **log);
 int nvme_get_new_host_telemetry(int fd,  struct nvme_telemetry_log **log);
 
 /**
- * __nvme_get_log_page() -
+ * nvme_get_log_page() -
  * @fd:	      File descriptor of nvme device
  * @nsid:     Namespace Identifier, if applicable.
  * @log_id:   Log Identifier, see &enum nvme_cmd_get_log_lid.
@@ -80,11 +80,11 @@ int nvme_get_new_host_telemetry(int fd,  struct nvme_telemetry_log **log);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
-			__u32 xfer_len, __u32 data_len, void *data);
+int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
+		      __u32 xfer_len, __u32 data_len, void *data);
 
 /**
- * nvme_get_log_page() -
+ * nvme_get_log_page_padded() -
  * @fd:	      File descriptor of nvme device
  * @nsid:     Namespace Identifier, if applicable.
  * @log_id:   Log Identifier, see &enum nvme_cmd_get_log_lid.
@@ -92,14 +92,14 @@ int __nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
  * @data_len: Total length of the log to transfer.
  * @data:     User address of at least &data_len to store the log.
  *
- * Calls __nvme_get_log_page() with a default 4k transfer length, as that is
+ * Calls nvme_get_log_page() with a default 4k transfer length, as that is
  * guarnateed by the protocol to be a safe transfer size.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
-		      __u32 data_len, void *data);
+int nvme_get_log_page_padded(int fd, __u32 nsid, __u8 log_id, bool rae,
+			     __u32 data_len, void *data);
 
 /**
  * nvme_get_ana_log_len() - Retreive size of the current ANA log

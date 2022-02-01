@@ -14,6 +14,7 @@
 
 #include "fabrics.h"
 #include "log.h"
+#include "private.h"
 
 #define json_object_add_value_string(o, k, v)			\
 	json_object_object_add(o, k, json_object_new_string(v))
