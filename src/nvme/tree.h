@@ -57,6 +57,23 @@ typedef struct nvme_root *nvme_root_t;
 typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t);
 
 /**
+ * nvme_create_root() - Initialize root object
+ * @fp: filedescriptor for logging messages
+ * @log_level: logging level to use
+ *
+ * Return: initialized nvme_root_t structure
+ */
+nvme_root_t nvme_create_root(FILE *fp, int log_level);
+
+/**
+ * nvme_free_tree() - Free root object
+ * @r: nvme_root_t object
+ *
+ * Free an nvme_root_t object and all attached objects
+ */
+void nvme_free_tree(nvme_root_t r);
+
+/**
  * nvme_first_host() -
  * @r:
  *
@@ -967,17 +984,16 @@ const char *nvme_subsystem_get_name(nvme_subsystem_t s);
 const char *nvme_subsystem_get_type(nvme_subsystem_t s);
 
 /**
- * nvme_scan_filter() - Scan NVMe topology and apply filter
+ * nvme_scan_topology() - Scan NVMe topology and apply filter
+ * @r: nvme_root_t object
  * @f: filter to apply
- * @fp: filepointer for error messages
- * @log_level: logging level for this structure
  *
  * Scans the NVMe topology and filters out the resulting elements
  * by applying @f.
  *
- * Return: nvme_root_t structure holding the resulting elements.
+ * Return: Number of elements scanned
  */
-nvme_root_t nvme_scan_filter(nvme_scan_filter_t f, FILE *fp, int log_level);
+int nvme_scan_topology(nvme_root_t r, nvme_scan_filter_t f);
 
 /**
  * nvme_host_get_hostnqn() -
@@ -1054,12 +1070,6 @@ int nvme_update_config(nvme_root_t r);
  * Return:
  */
 int nvme_dump_config(nvme_root_t r);
-
-/**
- * nvme_free_tree() -
- * @r:
- */
-void nvme_free_tree(nvme_root_t r);
 
 /**
  * nvme_get_attr() -

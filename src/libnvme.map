@@ -8,6 +8,7 @@ LIBNVME_1_0 {
 		nvme_capacity_mgmt;
 		nvme_compare;
 		nvme_copy;
+		nvme_create_root;
 		nvme_create_ctrl;
 		nvme_ctrl_disconnect;
 		nvme_ctrl_first_ns;
@@ -241,7 +242,7 @@ LIBNVME_1_0 {
 		nvme_scan_ctrl;
 		nvme_scan_ctrl_namespace_paths;
 		nvme_scan_ctrl_namespaces;
-		nvme_scan_filter;
+		nvme_scan_topology;
 		nvme_scan_namespace;
 		nvme_scan_subsystem_namespaces;
 		nvme_scan_subsystems;

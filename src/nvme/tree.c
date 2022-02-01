@@ -71,10 +71,13 @@ nvme_host_t nvme_default_host(nvme_root_t r)
 	return h;
 }
 
-static int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
+int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 {
 	struct dirent **subsys, **ctrls;
 	int i, num_subsys, num_ctrls, ret;
+
+	if (!r)
+		return 0;
 
 	num_ctrls = nvme_scan_ctrls(&ctrls);
 	if (num_ctrls < 0) {
@@ -118,7 +121,7 @@ static int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 	return 0;
 }
 
-nvme_root_t nvme_scan_filter(nvme_scan_filter_t f, FILE *fp, int log_level)
+nvme_root_t nvme_create_root(FILE *fp, int log_level)
 {
 	struct nvme_root *r = calloc(1, sizeof(*r));
 
@@ -131,7 +134,6 @@ nvme_root_t nvme_scan_filter(nvme_scan_filter_t f, FILE *fp, int log_level)
 	if (fp)
 		r->fp = fp;
 	list_head_init(&r->hosts);
-	nvme_scan_topology(r, f);
 	return r;
 }
 
@@ -147,10 +149,10 @@ void nvme_read_config(nvme_root_t r, const char *config_file)
 
 nvme_root_t nvme_scan(const char *config_file)
 {
-	nvme_root_t r = nvme_scan_filter(NULL, NULL, DEFAULT_LOGLEVEL);
+	nvme_root_t r = nvme_create_root(NULL, DEFAULT_LOGLEVEL);
 
+	nvme_scan_topology(r, NULL);
 	nvme_read_config(r, config_file);
-
 	return r;
 }
 
