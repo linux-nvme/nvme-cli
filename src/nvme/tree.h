@@ -658,12 +658,12 @@ const char *nvme_path_get_sysfs_dir(nvme_path_t p);
 const char *nvme_path_get_ana_state(nvme_path_t p);
 
 /**
- * nvme_path_get_subsystem() -
+ * nvme_path_get_ctrl() -
  * @p:
  *
  * Return: 
  */
-nvme_ctrl_t nvme_path_get_subsystem(nvme_path_t p);
+nvme_ctrl_t nvme_path_get_ctrl(nvme_path_t p);
 
 /**
  * nvme_path_get_ns() -

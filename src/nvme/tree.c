@@ -533,7 +533,7 @@ free_path:
 	return -1;
 }
 
-nvme_ctrl_t nvme_path_get_subsystem(nvme_path_t p)
+nvme_ctrl_t nvme_path_get_ctrl(nvme_path_t p)
 {
 	return p->c;
 }

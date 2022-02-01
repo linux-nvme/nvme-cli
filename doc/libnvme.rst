@@ -5643,7 +5643,7 @@ The nvme command status if a response was received (see
 ``nvme_path_t p``
 
 
-.. c:function:: nvme_ctrl_t nvme_path_get_subsystem (nvme_path_t p)
+.. c:function:: nvme_ctrl_t nvme_path_get_ctrl (nvme_path_t p)
 
 
 **Parameters**
