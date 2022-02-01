@@ -1050,12 +1050,6 @@ void nvme_read_config(nvme_root_t r, const char *config_file);
 void nvme_refresh_topology(nvme_root_t r);
 
 /**
- * nvme_reset_topology() -
- * @r:
- */
-void nvme_reset_topology(nvme_root_t r);
-
-/**
  * nvme_update_config() -
  * @r:
  *

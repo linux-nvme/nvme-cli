@@ -231,7 +231,6 @@ LIBNVME_1_0 {
 		nvme_read_config;
 		nvme_refresh_topology;
 		nvme_rescan_ctrl;
-		nvme_reset_topology;
 		nvme_resv_acquire;
 		nvme_resv_register;
 		nvme_resv_release;

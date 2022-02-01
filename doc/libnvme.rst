@@ -5855,15 +5855,6 @@ The nvme command status if a response was received (see
   *undescribed*
 
 
-.. c:function:: void nvme_reset_topology (nvme_root_t r)
-
-
-**Parameters**
-
-``nvme_root_t r``
-  *undescribed*
-
-
 .. c:function:: void nvme_free_tree (nvme_root_t r)
 
 
