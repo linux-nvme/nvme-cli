@@ -163,6 +163,30 @@ const char *nvme_strerror(int errnum)
 	return strerror(errnum);
 }
 
+int map_log_level(int verbose, bool quiet)
+{
+	int log_level;
+
+	switch (verbose) {
+	case 0:
+		log_level = LOG_WARNING;
+		break;
+	case 1:
+		log_level = LOG_NOTICE;
+		break;
+	case 2:
+		log_level = LOG_INFO;
+		break;
+	default:
+		log_level = LOG_DEBUG;
+		break;
+	}
+	if (quiet)
+		log_level = LOG_ERR;
+
+	return log_level;
+}
+
 static ssize_t getrandom_bytes(void *buf, size_t buflen)
 {
 #if HAVE_SYS_RANDOM
@@ -2338,6 +2362,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	enum nvme_print_flags flags;
 	const char *desc = "Retrieve information for subsystems";
 	const char *verbose = "Increase output verbosity";
+	nvme_scan_filter_t filter = NULL;
 	int err;
 
 	struct config {
@@ -2374,21 +2399,31 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
-	if (devicename)
-		r = nvme_scan_filter(nvme_match_device_filter);
-	else
-		r = nvme_scan(NULL);
-
-	if (r) {
-		nvme_show_subsystem_list(r, flags);
-		nvme_free_tree(r);
-	} else {
+	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
+	if (!r) {
 		if (devicename)
-			fprintf(stderr, "Failed to scan nvme subsystem for %s\n", devicename);
+			fprintf(stderr,
+				"Failed to scan nvme subsystem for %s\n",
+				devicename);
 		else
 			fprintf(stderr, "Failed to scan nvme subsystem\n");
 		err = -errno;
+		goto ret;
 	}
+
+	if (devicename)
+		filter = nvme_match_device_filter;
+
+	err = nvme_scan_topology(r, filter);
+	if (err) {
+		fprintf(stderr, "Failed to scan topology: %s\n",
+			nvme_strerror(errno));
+		goto ret;
+	}
+
+	nvme_show_subsystem_list(r, flags);
+	nvme_free_tree(r);
+
 ret:
 	return err;
 }
@@ -2431,14 +2466,21 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
-	r = nvme_scan(NULL);
-	if (r) {
-		nvme_show_list_items(r, flags);
-		nvme_free_tree(r);
-	} else {
-		fprintf(stderr, "Failed to scan nvme subsystems\n");
-		err = -errno;
+	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
+	if (!r) {
+		fprintf(stderr, "Failed to create topology root: %s\n",
+			nvme_strerror(errno));
+		return -errno;
 	}
+	err = nvme_scan_topology(r, NULL);
+	if (err < 0) {
+		fprintf(stderr, "Failed to scan topoplogy: %s\n",
+			 nvme_strerror(errno));
+		return err;
+	}
+
+	nvme_show_list_items(r, flags);
+	nvme_free_tree(r);
 
 	return err;
 }

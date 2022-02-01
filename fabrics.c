@@ -322,8 +322,9 @@ static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
 	return 0;
 }
 
-static int discover_from_conf_file(nvme_host_t h, const char *desc,
-	bool connect, const struct nvme_fabrics_config *defcfg)
+static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
+				   const char *desc, bool connect,
+				   const struct nvme_fabrics_config *defcfg)
 {
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
 	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL, *ctrlkey = NULL;
@@ -388,7 +389,7 @@ static int discover_from_conf_file(nvme_host_t h, const char *desc,
 		if (!transport && !traddr)
 			goto next;
 
-		c = nvme_create_ctrl(subsysnqn, transport, traddr,
+		c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
 				     cfg.host_traddr, cfg.host_iface, trsvcid);
 		if (!c)
 			goto next;
@@ -451,27 +452,22 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	if (ret < 0)
 		return ret;
 
-	switch (verbose) {
-	case 0:
-		nvme_log_level = LOG_WARNING;
-		break;
-	case 1:
-		nvme_log_level = LOG_NOTICE;
-		break;
-	case 2:
-		nvme_log_level = LOG_INFO;
-		break;
-	default:
-		nvme_log_level = LOG_DEBUG;
-		break;
-	}
-	if (quiet)
-		nvme_log_level = LOG_ERR;
-
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
 
-	r = nvme_scan(config_file);
+	r = nvme_create_root(stderr, map_log_level(verbose, quiet));
+	if (!r) {
+		fprintf(stderr, "Failed to create topology root: %s\n",
+			nvme_strerror(errno));
+		return -errno;
+	}
+	ret = nvme_scan_topology(r, NULL);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to scan topoplogy: %s\n",
+			 nvme_strerror(errno));
+		return ret;
+	}
+
 	if (persistent && !cfg.keep_alive_tmo)
 		cfg.keep_alive_tmo = 30;
 	if (!hostnqn)
@@ -493,7 +489,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		nvme_host_set_dhchap_key(h, hostkey);
 
 	if (!device && !transport && !traddr) {
-		ret = discover_from_conf_file(h, desc, connect, &cfg);
+		ret = discover_from_conf_file(r, h, desc, connect, &cfg);
 		goto out_free;
 	}
 
@@ -539,7 +535,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	}
 	if (!c) {
 		/* No device or non-matching device, create a new controller */
-		c = nvme_create_ctrl(subsysnqn, transport, traddr,
+		c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
 				     cfg.host_traddr, cfg.host_iface, trsvcid);
 		if (!c) {
 			ret = errno;
@@ -616,21 +612,6 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	else
 		return EINVAL;
 
-	switch (verbose) {
-	case 0:
-		nvme_log_level = LOG_WARNING;
-		break;
-	case 1:
-		nvme_log_level = LOG_NOTICE;
-		break;
-	case 2:
-		nvme_log_level = LOG_INFO;
-		break;
-	default:
-		nvme_log_level = LOG_DEBUG;
-		break;
-	}
-
 	if (!subsysnqn) {
 		fprintf(stderr,
 			"required argument [--nqn | -n] not specified\n");
@@ -655,7 +636,20 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
 
-	r = nvme_scan(config_file);
+	r = nvme_create_root(stderr, map_log_level(verbose, quiet));
+	if (!r) {
+		fprintf(stderr, "Failed to create topology root: %s\n",
+			nvme_strerror(errno));
+		return -errno;
+	}
+	ret = nvme_scan_topology(r, NULL);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to scan topoplogy: %s\n",
+			 nvme_strerror(errno));
+		return ret;
+	}
+	nvme_read_config(r, config_file);
+
 	if (!hostnqn)
 		hostnqn = hnqn = nvmf_hostnqn_from_file();
 	if (!hostid)
@@ -667,7 +661,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	}
 	if (hostkey)
 		nvme_host_set_dhchap_key(h, hostkey);
-	c = nvme_create_ctrl(subsysnqn, transport, traddr,
+	c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
 			     cfg.host_traddr, cfg.host_iface, trsvcid);
 	if (!c) {
 		errno = ENOMEM;
@@ -728,27 +722,25 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 	if (ret)
 		return ret;
 
-	switch (cfg.verbose) {
-	case 0:
-		nvme_log_level = LOG_WARNING;
-		break;
-	case 1:
-		nvme_log_level = LOG_NOTICE;
-		break;
-	case 2:
-		nvme_log_level = LOG_INFO;
-		break;
-	default:
-		nvme_log_level = LOG_DEBUG;
-		break;
-	}
-
 	if (!cfg.nqn && !cfg.device) {
 		fprintf(stderr,
 			"Neither device name [--device | -d] nor NQN [--nqn | -n] provided\n");
 		return EINVAL;
 	}
-	r = nvme_scan(NULL);
+
+	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
+	if (!r) {
+		fprintf(stderr, "Failed to create topology root: %s\n",
+			nvme_strerror(errno));
+		return -errno;
+	}
+	ret = nvme_scan_topology(r, NULL);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to scan topoplogy: %s\n",
+			 nvme_strerror(errno));
+		return ret;
+	}
+
 	if (cfg.nqn) {
 		int i = 0;
 		char *n = cfg.nqn;
@@ -824,26 +816,17 @@ int nvmf_disconnect_all(const char *desc, int argc, char **argv)
 	if (ret)
 		return ret;
 
-	switch (cfg.verbose) {
-	case 0:
-		nvme_log_level = LOG_WARNING;
-		break;
-	case 1:
-		nvme_log_level = LOG_NOTICE;
-		break;
-	case 2:
-		nvme_log_level = LOG_INFO;
-		break;
-	default:
-		nvme_log_level = LOG_DEBUG;
-		break;
-	}
-
-	r = nvme_scan(NULL);
+	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
 	if (!r) {
-		fprintf(stderr, "Failed to scan nvme subsystem: %s\n",
+		fprintf(stderr, "Failed to create topology root: %s\n",
+			nvme_strerror(errno));
+		return -errno;
+	}
+	ret = nvme_scan_topology(r, NULL);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
-		return errno;
+		return ret;
 	}
 
 	nvme_for_each_host(r, h) {
