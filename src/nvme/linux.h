@@ -114,6 +114,7 @@ int nvme_get_ana_log_len(int fd, size_t *analen);
 /**
  * nvme_get_logical_block_size() - Retrieve block size
  * @fd:		File descriptor of nvme device
+ * @nsid:	Namespace id
  * @blksize:	Pointer to where the block size will be set on success
  *
  * Return: The nvme command status if a response was received (see
@@ -167,10 +168,10 @@ int nvme_open(const char *name);
 
 /**
  * enum nvme_hmac_alg - HMAC algorithm
- * NVME_HMAC_ALG_NONE:		No HMAC algorithm
- * NVME_HMAC_ALG_SHA2_256:	SHA2-256
- * NVME_HMAC_ALG_SHA2_384:	SHA2-384
- * NVME_HMAC_ALG_SHA2_512:	SHA2-512
+ * @NVME_HMAC_ALG_NONE:		No HMAC algorithm
+ * @NVME_HMAC_ALG_SHA2_256:	SHA2-256
+ * @NVME_HMAC_ALG_SHA2_384:	SHA2-384
+ * @NVME_HMAC_ALG_SHA2_512:	SHA2-512
  */
 enum nvme_hmac_alg {
 	NVME_HMAC_ALG_NONE	= 0,
