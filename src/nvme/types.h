@@ -677,9 +677,9 @@ enum nvme_psd_workload {
  * 	   the workload indicated in the Active Power Workload field.
  * @apws:  Bits 7-6: Active Power Scale(APS) indicates the scale for the &struct
  * 	   nvme_id_psd.actp, see &enum nvme_psd_ps for decoding this value.
- *     Bits 2-0: Active Power Workload(APW) indicates the workload
+ * 	   Bits 2-0: Active Power Workload(APW) indicates the workload
  * 	   used to calculate maximum power for this power state.
- *     See &enum nvme_psd_workload for decoding this field.
+ * 	   See &enum nvme_psd_workload for decoding this field.
  * @rsvd23: Reserved
  */
 struct nvme_id_psd {
@@ -773,7 +773,7 @@ struct nvme_id_psd {
  * 	       condition during which controller operation continues.
  * @cctemp:    Critical Composite Temperature Threshold, field indicates the
  * 	       minimum Composite Temperature field value (see &struct
-* 	       nvme_smart_log.critical_comp_time) that indicates a critical
+ * 	       nvme_smart_log.critical_comp_time) that indicates a critical
  * 	       overheating condition.
  * @mtfa:      Maximum Time for Firmware Activation indicates the maximum time
  * 	       the controller temporarily stops processing commands to activate

@@ -81,7 +81,7 @@ const char *nvme_errno_to_string(int err);
  * @nvmsetid: NVM Set identifer
  *
  * This is intended to be used with a namespace management "create", see
- * &nvme_ns_mgmt_create().
+ * nvme_ns_mgmt_create().
  */
 void nvme_init_id_ns(struct nvme_id_ns *ns, __u64 nsze, __u64 ncap, __u8 flbas,
 		     __u8 dps, __u8 nmic, __u32 anagrpid, __u16 nvmsetid);
@@ -93,7 +93,7 @@ void nvme_init_id_ns(struct nvme_id_ns *ns, __u64 nsze, __u64 ncap, __u8 flbas,
  * @ctrlist:   An array of controller identifiers in CPU native endian.
  *
  * This is intended to be used with any command that takes a controller list
- * argument. See &nvme_ns_attach_ctrls() and &nvme_ns_detach().
+ * argument. See nvme_ns_attach_ctrls() and nvme_ns_detach().
  */
 void nvme_init_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
 			 __u16 *ctrlist);
@@ -107,7 +107,7 @@ void nvme_init_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
  * @nr_ranges:	The size of the dsm arrays
  *
  * Each array must be the same size of size 'nr_ranges'. This is intended to be
- * used with constructing a payload for &nvme_dsm().
+ * used with constructing a payload for nvme_dsm().
  *
  * Return: The nvme command status if a response was received or -errno
  * otherwise.
