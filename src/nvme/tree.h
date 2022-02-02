@@ -1146,7 +1146,7 @@ char *nvme_get_ctrl_attr(nvme_ctrl_t c, const char *attr);
 char *nvme_get_ns_attr(nvme_ns_t n, const char *attr);
 
 /**
- * nvme_subsystem_lookup_namespace - lookup namespace by NSID
+ * nvme_subsystem_lookup_namespace() - lookup namespace by NSID
  * @s: nvme_subsystem_t object
  * @nsid: namespace id
  *

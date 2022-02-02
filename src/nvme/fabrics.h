@@ -161,7 +161,7 @@ const char *nvmf_qptype_str(__u8 qptype);
 const char *nvmf_cms_str(__u8 cms);
 
 /**
- * nvmf_default_config - Default values for fabrics configuration
+ * nvmf_default_config() - Default values for fabrics configuration
  * @cfg: config values to set
  *
  * Initializes @cfg with default values.
