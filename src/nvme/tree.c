@@ -237,15 +237,6 @@ void nvme_refresh_topology(nvme_root_t r)
 	nvme_scan_topology(r, NULL);
 }
 
-void nvme_reset_topology(nvme_root_t r)
-{
-	struct nvme_host *h, *_h;
-
-	nvme_for_each_host_safe(r, h, _h)
-		__nvme_free_host(h);
-	nvme_scan_topology(r, NULL);
-}
-
 void nvme_free_tree(nvme_root_t r)
 {
 	struct nvme_host *h, *_h;
@@ -542,7 +533,7 @@ free_path:
 	return -1;
 }
 
-nvme_ctrl_t nvme_path_get_subsystem(nvme_path_t p)
+nvme_ctrl_t nvme_path_get_ctrl(nvme_path_t p)
 {
 	return p->c;
 }
