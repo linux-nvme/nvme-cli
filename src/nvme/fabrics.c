@@ -316,8 +316,10 @@ free_tmp:
 
 /**
  * inet_pton_with_scope - convert an IPv4/IPv6 to socket address
+ * @r: nvme_root_t object
  * @af: address family, AF_INET, AF_INET6 or AF_UNSPEC for either
  * @src: the start of the address string
+ * @trsvcid: transport service identifier
  * @addr: output socket address
  *
  * Return 0 on success, errno otherwise.
@@ -842,15 +844,17 @@ static int uuid_from_dmi_entries(char *system_uuid)
 	return strlen(system_uuid) ? 0 : -ENXIO;
 }
 
-/**
- * @brief Get system UUID from /sys/class/dmi/id/product_uuid and fix
- *        endianess.
- *
- * @param system_uuid - Where to save the system UUID.
- *
- * @return 0 on success, -ENXIO otherwise.
- */
 #define PATH_DMI_PROD_UUID  "/sys/class/dmi/id/product_uuid"
+
+/**
+ * uuid_from_product_uuid() - Get system UUID from product_uuid
+ * @system_uuid: Where to save the system UUID.
+ *
+ * Get system UUID from /sys/class/dmi/id/product_uuid and fix
+ * endianess.
+ *
+ * Return: 0 on success, -ENXIO otherwise.
+ */
 static int uuid_from_product_uuid(char *system_uuid)
 {
 	FILE *stream = NULL;
@@ -890,12 +894,17 @@ static int uuid_from_product_uuid(char *system_uuid)
 }
 
 /**
- * @brief The system UUID can be read from two different locations:
+ * uuid_from_dmi() - read system UUID
+ * @system_uuid: buffer for the UUID
+ *
+ * The system UUID can be read from two different locations:
  *
  *     1) /sys/class/dmi/id/product_uuid
  *     2) /sys/firmware/dmi/entries
  *
  * Note that the second location is not present on Debian-based systems.
+ *
+ * Return: 0 on success, negative errno otherwise.
  */
 static int uuid_from_dmi(char *system_uuid)
 {
