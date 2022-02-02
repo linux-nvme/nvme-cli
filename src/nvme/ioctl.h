@@ -374,17 +374,18 @@ int nvme_ns_rescan(int fd);
 int nvme_get_nsid(int fd, __u32 *nsid);
 
 /**
- * nvme_identify_args - Arguments for the NVMe Identify command
- * @data:	User space destination address to transfer the data
- * @timeout:	Timeout in ms (0 for default timeout)
- * @fd:		File descriptor of nvme device
+ * struct nvme_identify_args - Arguments for the NVMe Identify command
  * @result:	The command completion result from CQE dword0
+ * @data:	User space destination address to transfer the data
+ * @args_size:	Size of &struct nvme_identify_args
+ * @fd:		File descriptor of nvme device
+ * @timeout:	Timeout in ms (0 for default timeout)
  * @cns:	The Controller or Namespace structure, see @enum nvme_identify_cns
  * @csi:	Command Set Identifier
  * @nsid:	Namespace identifier, if applicable
- * @domid:	Domain identifier, if applicable
  * @cntid:	The Controller Identifier, if applicable
  * @nvmsetid:	The NVMe Set ID if CNS is 04h
+ * @domid:	Domain identifier, if applicable
  * @uuidx:	UUID Index if controller supports this id selection method
  */
 struct nvme_identify_args {
@@ -438,7 +439,7 @@ static int nvme_identify_cns_nsid(int fd, enum nvme_identify_cns cns,
 /**
  * nvme_identify_ctrl() - Retrieves nvme identify controller
  * @fd:		File descriptor of nvme device
- * id:		User space destination address to transfer the data,
+ * @id:		User space destination address to transfer the data,
  *
  * Sends nvme identify with CNS value %NVME_IDENTIFY_CNS_CTRL.
  *
@@ -499,7 +500,7 @@ static inline int nvme_identify_allocated_ns(int fd, __u32 nsid,
  * nvme_identify_active_ns_list() - Retrieves active namespaces id list
  * @fd:		File descriptor of nvme device
  * @nsid:	Return namespaces greater than this identifer
- * @ns_list:	User space destination address to transfer the data
+ * @list:	User space destination address to transfer the data
  *
  * A list of 1024 namespace IDs is returned to the host containing NSIDs in
  * increasing order that are greater than the value specified in the Namespace
@@ -521,7 +522,7 @@ static inline int nvme_identify_active_ns_list(int fd, __u32 nsid,
  * nvme_identify_allocated_ns_list() - Retrieves allocated namespace id list
  * @fd:		File descriptor of nvme device
  * @nsid:	Return namespaces greater than this identifer
- * @ns_list:	User space destination address to transfer the data
+ * @list:	User space destination address to transfer the data
  *
  * A list of 1024 namespace IDs is returned to the host containing NSIDs in
  * increasing order that are greater than the value specified in the Namespace
@@ -542,7 +543,7 @@ static inline int nvme_identify_allocated_ns_list(int fd, __u32 nsid,
 /**
  * nvme_identify_ctrl_list() - Retrieves identify controller list
  * @fd:		File descriptor of nvme device
- * @cntlid:	Starting CNTLID to return in the list
+ * @cntid:	Starting CNTLID to return in the list
  * @cntlist:	User space destination address to transfer the data
  *
  * Up to 2047 controller identifiers is returned containing a controller
@@ -555,11 +556,11 @@ static inline int nvme_identify_allocated_ns_list(int fd, __u32 nsid,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_identify_ctrl_list(int fd, __u16 cntid,
-			struct nvme_ctrl_list *ctrlist)
+			struct nvme_ctrl_list *cntlist)
 {
 	struct nvme_identify_args args = {
 		.result = NULL,
-		.data = ctrlist,
+		.data = cntlist,
 		.args_size = sizeof(args),
 		.fd = fd,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
@@ -579,7 +580,7 @@ static inline int nvme_identify_ctrl_list(int fd, __u16 cntid,
  * nvme_identify_nsid_ctrl_list() -
  * @fd:		File descriptor of nvme device
  * @nsid:	Return controllers that are attached to this nsid
- * @cntlid:	Starting CNTLID to return in the list
+ * @cntid:	Starting CNTLID to return in the list
  * @cntlist:	User space destination address to transfer the data
  *
  * Up to 2047 controller identifiers is returned containing a controller
@@ -592,11 +593,11 @@ static inline int nvme_identify_ctrl_list(int fd, __u16 cntid,
  * &enum nvme_status_field) or -1
  */
 static inline int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
-			struct nvme_ctrl_list *ctrlist)
+			struct nvme_ctrl_list *cntlist)
 {
 	struct nvme_identify_args args = {
 		.result = NULL,
-		.data = ctrlist,
+		.data = cntlist,
 		.args_size = sizeof(args),
 		.fd = fd,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
@@ -639,11 +640,11 @@ static inline int nvme_identify_ns_descs(int fd, __u32 nsid,
 /**
  * nvme_identify_nvmset_list() - Retrieves NVM Set List
  * @fd:		File descriptor of nvme device
- * @nvmeset_id:	NVM Set Identifier
+ * @nvmsetid:	NVM Set Identifier
  * @nvmset:	User space destination address to transfer the data
  *
- * Retrieves an NVM Set List, @struct nvme_id_nvmset_list. The data structure is an
- * ordered list by NVM Set Identifier, starting with the first NVM Set
+ * Retrieves an NVM Set List, &struct nvme_id_nvmset_list. The data structure
+ * is an ordered list by NVM Set Identifier, starting with the first NVM Set
  * Identifier supported by the NVM subsystem that is equal to or greater than
  * the NVM Set Identifier.
  *
@@ -725,11 +726,11 @@ static inline int nvme_identify_primary_ctrl(int fd, __u16 cntid,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid,
-			__u16 cntid, struct nvme_secondary_ctrl_list *list)
+			__u16 cntid, struct nvme_secondary_ctrl_list *sc_list)
 {
 	struct nvme_identify_args args = {
 		.result = NULL,
-		.data = list,
+		.data = sc_list,
 		.args_size = sizeof(args),
 		.fd = fd,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
@@ -762,10 +763,10 @@ static inline int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_identify_ns_granularity(int fd,
-			struct nvme_id_ns_granularity_list *list)
+			struct nvme_id_ns_granularity_list *gr_list)
 {
 	return nvme_identify_cns_nsid(fd, NVME_IDENTIFY_CNS_NS_GRANULARITY,
-				      NVME_NSID_NONE, list);
+				      NVME_NSID_NONE, gr_list);
 }
 
 /**
@@ -781,10 +782,10 @@ static inline int nvme_identify_ns_granularity(int fd,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-static inline int nvme_identify_uuid(int fd, struct nvme_id_uuid_list *list)
+static inline int nvme_identify_uuid(int fd, struct nvme_id_uuid_list *uuid_list)
 {
 	return nvme_identify_cns_nsid(fd, NVME_IDENTIFY_CNS_UUID_LIST,
-				      NVME_NSID_NONE, list);
+				      NVME_NSID_NONE, uuid_list);
 }
 
 /**
@@ -865,11 +866,11 @@ static inline int nvme_identify_ctrl_csi(int fd, enum nvme_csi csi, void *data)
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_identify_active_ns_list_csi(int fd, __u32 nsid,
-			enum nvme_csi csi, struct nvme_ns_list *list)
+			enum nvme_csi csi, struct nvme_ns_list *ns_list)
 {
 	struct nvme_identify_args args = {
 		.result = NULL,
-		.data = list,
+		.data = ns_list,
 		.args_size = sizeof(args),
 		.fd = fd,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
@@ -903,11 +904,11 @@ static inline int nvme_identify_active_ns_list_csi(int fd, __u32 nsid,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid,
-			enum nvme_csi csi, struct nvme_ns_list *list)
+			enum nvme_csi csi, struct nvme_ns_list *ns_list)
 {
 	struct nvme_identify_args args = {
 		.result = NULL,
-		.data = list,
+		.data = ns_list,
 		.args_size = sizeof(args),
 		.fd = fd,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
@@ -955,7 +956,7 @@ static inline int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
 }
 
 /**
- * nvme_identify_ctrl_nvm() -
+ * nvme_nvm_identify_ctrl() -
  * @fd:	File descriptor of nvme device
  * @id:	User space destination address to transfer the data
  *
@@ -968,7 +969,7 @@ static inline int nvme_nvm_identify_ctrl(int fd, struct nvme_id_ctrl_nvm *id)
 }
 
 /**
- * nvme_idnetifY_domain_list() -
+ * nvme_identify_domain_list() -
  * @fd:		File descriptor of nvme device
  * @domid:	Domain ID
  * @list:	User space destiantion address to transfer data
@@ -977,7 +978,7 @@ static inline int nvme_nvm_identify_ctrl(int fd, struct nvme_id_ctrl_nvm *id)
  * attributes in increasing order that are greater than the value
  * specified in the @domid field.
  *
- * See @struct nvme_identify_domain_attr for the definition of the
+ * See &struct nvme_identify_domain_attr for the definition of the
  * returned structure.
  *
  * Return: The nvme command status if a response was received (see
@@ -1005,7 +1006,7 @@ static inline int nvme_identify_domain_list(int fd, __u16 domid,
 }
 
 /**
- * nvme_identifiy_endurance_group_list() -
+ * nvme_identify_endurance_group_list() -
  * @fd:		File descriptor of nvme device
  * @endgrp_id:	Endurance group identifier
  * @list:	Array of endurance group identifiers
@@ -1041,7 +1042,7 @@ static inline int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
  * @iocs:	User space destination address to transfer the data
  *
  * Retrieves list of the controller's supported io command set vectors. See
- * @struct nvme_id_iocs.
+ * &struct nvme_id_iocs.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -1110,7 +1111,7 @@ static inline int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id)
 }
 
 /**
- * nvme_get_log_args - Arguments for the NVMe Admin Get Log command
+ * struct nvme_get_log_args - Arguments for the NVMe Admin Get Log command
  * @lpo:	Log page offset for partial log transfers
  * @result:	The command completion result from CQE dword0
  * @log:	User space destination address to transfer the data
@@ -1191,7 +1192,8 @@ static inline int nvme_get_log_simple(int fd, enum nvme_cmd_get_log_lid lid,
 	return nvme_get_nsid_log(fd, false, lid, NVME_NSID_ALL, len, log);
 }
 
-/** nvme_get_log_supported_log_pages() - Retrieve nmve supported log pages
+/**
+ * nvme_get_log_supported_log_pages() - Retrieve nmve supported log pages
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
  * @log:	Array of LID supported and Effects data structures
@@ -1209,7 +1211,7 @@ static inline int nvme_get_log_supported_log_pages(int fd, bool rae,
 /**
  * nvme_get_log_error() - Retrieve nvme error log
  * @fd:		File descriptor of nvme device
- * @entries:	Number of error log entries allocated
+ * @nr_entries:	Number of error log entries allocated
  * @rae:	Retain asynchronous events
  * @err_log:	Array of error logs of size 'entries'
  *
@@ -1221,10 +1223,11 @@ static inline int nvme_get_log_supported_log_pages(int fd, bool rae,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_get_log_error(int fd, unsigned nr_entries, bool rae,
-		       struct nvme_error_log_page *log)
+		       struct nvme_error_log_page *err_log)
 {
 	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_ERROR,
-				 NVME_NSID_ALL, sizeof(*log) * nr_entries, log);
+				 NVME_NSID_ALL, sizeof(*err_log) * nr_entries,
+				 err_log);
 }
 
 /**
@@ -1245,10 +1248,10 @@ static inline int nvme_get_log_error(int fd, unsigned nr_entries, bool rae,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_get_log_smart(int fd, __u32 nsid, bool rae,
-				     struct nvme_smart_log *log)
+				     struct nvme_smart_log *smart_log)
 {
 	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_SMART,
-				 nsid, sizeof(*log), log);
+				 nsid, sizeof(*smart_log), smart_log);
 }
 
 /**
@@ -1265,17 +1268,17 @@ static inline int nvme_get_log_smart(int fd, __u32 nsid, bool rae,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_get_log_fw_slot(int fd, bool rae,
-			struct nvme_firmware_slot *log)
+			struct nvme_firmware_slot *fw_log)
 {
 	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_SMART,
-				 NVME_NSID_ALL, sizeof(*log), log);
+				 NVME_NSID_ALL, sizeof(*fw_log), fw_log);
 }
 
 /**
  * nvme_get_log_changed_ns_list() - Retrieve namespace changed list
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
- * @ns_list:	User address to store the log page
+ * @ns_log:	User address to store the log page
  *
  * This log page describes namespaces attached to this controller that have
  * changed since the last time the namespace was identified, been added, or
@@ -1285,10 +1288,10 @@ static inline int nvme_get_log_fw_slot(int fd, bool rae,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_get_log_changed_ns_list(int fd, bool rae,
-			struct nvme_ns_list *log)
+			struct nvme_ns_list *ns_log)
 {
 	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_CHANGED_NS,
-				 NVME_NSID_ALL, sizeof(*log), log);
+				 NVME_NSID_ALL, sizeof(*ns_log), ns_log);
 }
 
 /**
@@ -1304,17 +1307,17 @@ static inline int nvme_get_log_changed_ns_list(int fd, bool rae,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_get_log_cmd_effects(int fd, enum nvme_csi csi,
-					   struct nvme_cmd_effects_log *log)
+			struct nvme_cmd_effects_log *effects_log)
 {
 	struct nvme_get_log_args args = {
 		.lpo = 0,
 		.result = NULL,
-		.log = log,
+		.log = effects_log,
 		.args_size = sizeof(args),
 		.fd = fd,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lid = NVME_LOG_LID_CMD_EFFECTS,
-		.len = sizeof(*log),
+		.len = sizeof(*effects_log),
 		.nsid = NVME_NSID_ALL,
 		.csi = csi,
 		.lsi = NVME_LOG_LSI_NONE,
@@ -1330,7 +1333,6 @@ static inline int nvme_get_log_cmd_effects(int fd, enum nvme_csi csi,
 /**
  * nvme_get_log_device_self_test() - Retrieve the device self test log
  * @fd:		File descriptor of nvme device
- * @nsid:	Namespace ID being tested
  * @log:	Userspace address of the log payload
  *
  * The log page indicates the status of an in progress self test and the
@@ -1348,7 +1350,9 @@ static inline int nvme_get_log_device_self_test(int fd,
 }
 
 /**
- * nvme_get_log_create_telemetry_host() -
+ * nvme_get_log_create_telemetry_host() - Create host telemetry log
+ * @fd:		File descriptor of nvme device
+ * @log:	Userspace address of the log payload
  */
 static inline int nvme_get_log_create_telemetry_host(int fd,
 			struct nvme_telemetry_log *log)
@@ -1485,8 +1489,9 @@ static inline int nvme_get_log_endurance_group(int fd, __u16 endgid,
 
 /**
  * nvme_get_log_predictable_lat_nvmset() -
- * @fd:
- * @nvmsetid:
+ * @fd:		File descriptor of nvme device
+ * @nvmsetid:	NVM set id
+ * @log:	User address to store the predictable latency log
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -1519,6 +1524,9 @@ static inline int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
  * nvme_get_log_predictable_lat_event() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
+ * @offset:
+ * @len:
+ * @log:
  */
 static inline int nvme_get_log_predictable_lat_event(int fd, bool rae,
 			__u32 offset, __u32 len, void *log)
@@ -1549,6 +1557,7 @@ static inline int nvme_get_log_predictable_lat_event(int fd, bool rae,
  * @fd:		File descriptor of nvme device
  * @lsp:	Log specific, see &enum nvme_get_log_ana_lsp
  * @rae:	Retain asynchronous events
+ * @offset:	Offset to the start of the log page
  * @len:	The allocated length of the log page
  * @log: 	User address to store the ana log
  *
@@ -1589,6 +1598,8 @@ static int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae,
  * nvme_get_log_ana_groups() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
+ * @len:	The allocated length of the log page
+ * @log: 	User address to store the ana group log
  *
  * See &struct nvme_ana_group_desc for the defintion of the returned structure.
  */
@@ -1603,6 +1614,9 @@ static inline int nvme_get_log_ana_groups(int fd, bool rae, __u32 len,
  * nvme_get_log_lba_status() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
+ * @offset:	Offset to the start of the log page
+ * @len:	The allocated length of the log page
+ * @log: 	User address to store the log page
  */
 static inline int nvme_get_log_lba_status(int fd, bool rae,
 			__u64 offset, __u32 len, void *log)
@@ -1632,6 +1646,9 @@ static inline int nvme_get_log_lba_status(int fd, bool rae,
  * nvme_get_log_endurance_grp_evt() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
+ * @offset:	Offset to the start of the log page
+ * @len:	The allocated length of the log page
+ * @log: 	User address to store the log page
  */
 static inline int nvme_get_log_endurance_grp_evt(int fd, bool rae,
 			__u32 offset, __u32 len, void *log)
@@ -1680,6 +1697,7 @@ static inline int nvme_get_log_fid_supported_effects(int fd, bool rae,
  * @lsp:	The log specified field of LID
  * @len:	The allocated size, minimum
  *		struct nvme_boot_partition
+ * @part: 	User address to store the log page
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise
@@ -1750,6 +1768,7 @@ static inline int nvme_get_log_discovery(int fd, bool rae,
  * nvme_get_log_media_unit_stat() -
  * @fd:		File descriptor of nvme device
  * @domid:	Domain Identifier selection, if supported
+ * @mus:	User address to store the Media Unit statistics log
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise
@@ -1782,6 +1801,7 @@ static inline int nvme_get_log_media_unit_stat(int fd, __u16 domid,
  * nvme_get_log_reservation() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
+ * @log:	User address to store the reservation log
  */
 static inline int nvme_get_log_reservation(int fd, bool rae,
 			struct nvme_resv_notification_log *log)
@@ -1878,15 +1898,16 @@ static inline int nvme_get_log_persistent_event(int fd,
 }
 
 /**
- * nvme_set_features_args - Arguments for the NVMe Admin Set Feature command
+ * struct nvme_set_features_args - Arguments for the NVMe Admin Set Feature command
  * @result:	The command completion result from CQE dword0
  * @data:	User address of feature data, if applicable
+ * @args_size:	Size of &struct nvme_set_features_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace ID, if applicable
  * @cdw11:	Value to set the feature to
  * @cdw12:	Feature specific command dword12 field
- * @cdw14:	Feature specific command dword15 field
+ * @cdw15:	Feature specific command dword15 field
  * @data_len:	Length of feature data, if applicable, in bytes
  * @save:	Save value across power states
  * @uuidx:	UUID Index for differentiating vendor specific encoding
@@ -1909,7 +1930,7 @@ struct nvme_set_features_args {
 } __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
- * nvme_set_features_args() - Set a feature attribute
+ * nvme_set_features() - Set a feature attribute
  * @args:	&struct nvme_set_features_args argument structure
  *
  * Return: The nvme command status if a response was received (see
@@ -1917,6 +1938,17 @@ struct nvme_set_features_args {
  */
 int nvme_set_features(struct nvme_set_features_args *args);
 
+/**
+ * nvme_set_features_data() - Helper function for @nvme_set_features()
+ * @fd:		File descriptor of nvme device
+ * @fid:	Feature identifier
+ * @nsid:	Namespace ID, if applicable
+ * @cdw11:	Value to set the feature to
+ * @save:	Save value across power states
+ * @data_len:	Length of feature data, if applicable, in bytes
+ * @data:	User address of feature data, if applicable
+ * @result:	The command completion result from CQE dword0
+ */
 static inline int nvme_set_features_data(int fd, __u8 fid, __u32 nsid,
 			__u32 cdw11, bool save, __u32 data_len, void *data,
 			__u32 *result)
@@ -1939,6 +1971,15 @@ static inline int nvme_set_features_data(int fd, __u8 fid, __u32 nsid,
 	return nvme_set_features(&args);
 }
 
+/**
+ * nvme_set_features_simple() - Helper functionn for @nvme_set_features()
+ * @fd:		File descriptor of nvme device
+ * @fid:	Feature identifier
+ * @nsid:	Namespace ID, if applicable
+ * @cdw11:	Value to set the feature to
+ * @save:	Save value across power states
+ * @result:	The command completion result from CQE dword0
+ */
 static inline int nvme_set_features_simple(int fd, __u8 fid, __u32 nsid,
 			__u32 cdw11, bool save, __u32 *result)
 {
@@ -1949,6 +1990,10 @@ static inline int nvme_set_features_simple(int fd, __u8 fid, __u32 nsid,
 /**
  * nvme_set_features_arbitration() -
  * @fd:		File descriptor of nvme device
+ * @ab:
+ * @lpw:
+ * @mpw:
+ * @hpw:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -1961,6 +2006,8 @@ int nvme_set_features_arbitration(int fd, __u8 ab, __u8 lpw, __u8 mpw,
 /**
  * nvme_set_features_power_mgmt() -
  * @fd:		File descriptor of nvme device
+ * @ps:
+ * @wh:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -1973,7 +2020,10 @@ int nvme_set_features_power_mgmt(int fd, __u8 ps, __u8 wh, bool save,
 /**
  * nvme_set_features_lba_range() -
  * @fd:		File descriptor of nvme device
+ * @nsid:	Namespace ID
+ * @nr_ranges:	Number of ranges in @data
  * @save:	Save value across power states
+ * @data:	User address of feature data
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -1985,6 +2035,9 @@ int nvme_set_features_lba_range(int fd, __u32 nsid, __u32 nr_ranges, bool save,
 /**
  * nvme_set_features_temp_thresh() -
  * @fd:		File descriptor of nvme device
+ * @tmpth:
+ * @tmpsel:
+ * @thsel:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -1998,6 +2051,9 @@ int nvme_set_features_temp_thresh(int fd, __u16 tmpth, __u8 tmpsel,
 /**
  * nvme_set_features_err_recovery() -
  * @fd:		File descriptor of nvme device
+ * @nsid:	Namespace ID
+ * @tler:	Time-limited error recovery value
+ * @dulbe:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2010,6 +2066,7 @@ int nvme_set_features_err_recovery(int fd, __u32 nsid, __u16 tler,
 /**
  * nvme_set_features_volatile_wc() -
  * @fd:		File descriptor of nvme device
+ * @wce:	Write cache enable
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2022,6 +2079,8 @@ int nvme_set_features_volatile_wc(int fd, bool wce, bool save,
 /**
  * nvme_set_features_irq_coalesce() -
  * @fd:		File descriptor of nvme device
+ * @thr:
+ * @time:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2034,6 +2093,8 @@ int nvme_set_features_irq_coalesce(int fd, __u8 thr, __u8 time,
 /**
  * nvme_set_features_irq_config() -
  * @fd:		File descriptor of nvme device
+ * @iv:
+ * @cd:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2046,6 +2107,7 @@ int nvme_set_features_irq_config(int fd, __u16 iv, bool cd, bool save,
 /**
  * nvme_set_features_write_atomic() -
  * @fd:		File descriptor of nvme device
+ * @dn:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2058,6 +2120,7 @@ int nvme_set_features_write_atomic(int fd, bool dn, bool save,
 /**
  * nvme_set_features_async_event() -
  * @fd:		File descriptor of nvme device
+ * @events:	Events to enable
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2070,6 +2133,8 @@ int nvme_set_features_async_event(int fd, __u32 events, bool save,
 /**
  * nvme_set_features_auto_pst() -
  * @fd:		File descriptor of nvme device
+ * @apste:
+ * @apst:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2094,6 +2159,8 @@ int nvme_set_features_timestamp(int fd, bool save, __u64 timestamp);
 /**
  * nvme_set_features_hctm() -
  * @fd:		File descriptor of nvme device
+ * @tmt2:
+ * @tmt1:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2106,6 +2173,7 @@ int nvme_set_features_hctm(int fd, __u16 tmt2, __u16 tmt1, bool save,
 /**
  * nvme_set_features_nopsc() -
  * @fd:		File descriptor of nvme device
+ * @noppme:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2117,6 +2185,8 @@ int nvme_set_features_nopsc(int fd, bool noppme, bool save, __u32 *result);
 /**
  * nvme_set_features_rrl() -
  * @fd:		File descriptor of nvme device
+ * @rrl:	Read recovery level setting
+ * @nvmsetid:	NVM set id
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2129,7 +2199,10 @@ int nvme_set_features_rrl(int fd, __u8 rrl, __u16 nvmsetid, bool save,
 /**
  * nvme_set_features_plm_config() -
  * @fd:		File descriptor of nvme device
+ * @enable:
+ * @nvmsetid:
  * @save:	Save value across power states
+ * @data:
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -2142,6 +2215,8 @@ int nvme_set_features_plm_config(int fd, bool enable, __u16 nvmsetid,
 /**
  * nvme_set_features_plm_window() -
  * @fd:		File descriptor of nvme device
+ * @sel:
+ * @nvmsetid:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2155,6 +2230,8 @@ int nvme_set_features_plm_window(int fd, enum nvme_feat_plm_window_select sel,
  * nvme_set_features_lba_sts_interval() -
  * @fd:		File descriptor of nvme device
  * @save:	Save value across power states
+ * @lsiri:
+ * @lsipi:
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -2178,7 +2255,7 @@ int nvme_set_features_host_behavior(int fd, bool save,
 /**
  * nvme_set_features_sanitize() -
  * @fd:		File descriptor of nvme device
- * @nodrm:	
+ * @nodrm:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2204,7 +2281,7 @@ int nvme_set_features_endurance_evt_cfg(int fd, __u16 endgid, __u8 egwarn,
 /**
  * nvme_set_features_sw_progress() -
  * @fd:		File descriptor of nvme device
- * @pbslc:	
+ * @pbslc:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2217,9 +2294,9 @@ int nvme_set_features_sw_progress(int fd, __u8 pbslc, bool save,
 /**
  * nvme_set_features_host_id() -
  * @fd:		File descriptor of nvme device
- * @exhid:	
+ * @exhid:
  * @save:	Save value across power states
- * @result:	The command completion result from CQE dword0
+ * @hostid:	Host ID to set
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -2229,7 +2306,7 @@ int nvme_set_features_host_id(int fd, bool exhid, bool save, __u8 *hostid);
 /**
  * nvme_set_features_resv_mask() -
  * @fd:		File descriptor of nvme device
- * @mask:	
+ * @mask:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2241,7 +2318,7 @@ int nvme_set_features_resv_mask(int fd, __u32 mask, bool save, __u32 *result);
 /**
  * nvme_set_features_resv_persist() -
  * @fd:		File descriptor of nvme device
- * @ptpl:	
+ * @ptpl:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2253,7 +2330,7 @@ int nvme_set_features_resv_persist(int fd, bool ptpl, bool save, __u32 *result);
 /**
  * nvme_set_features_write_protect() -
  * @fd:		File descriptor of nvme device
- * @stat:	
+ * @state:
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2263,7 +2340,8 @@ int nvme_set_features_resv_persist(int fd, bool ptpl, bool save, __u32 *result);
 int nvme_set_features_write_protect(int fd, enum nvme_feat_nswpcfg_state state,
 				    bool save, __u32 *result);
 /**
- * nvme_get_features_args - Arguments for the NVMe Admin Get Feature command
+ * struct nvme_get_features_args - Arguments for the NVMe Admin Get Feature command
+ * @args_size:	Size of &struct nvme_get_features_args
  * @fd:		File descriptor of nvme device
  * @result:	The command completion result from CQE dword0
  * @timeout:	Timeout in ms
@@ -2299,6 +2377,15 @@ struct nvme_get_features_args {
  */
 int nvme_get_features(struct nvme_get_features_args *args);
 
+/**
+ * nvme_get_features_data() - Helper function for @nvme_get_features()
+ * @fd:		File descriptor of nvme device
+ * @fid:	Feature identifier
+ * @nsid:	Namespace ID, if applicable
+ * @data_len:	Length of feature data, if applicable, in bytes
+ * @data:	User address of feature data, if applicable
+ * @result:	The command completion result from CQE dword0
+ */
 static inline int nvme_get_features_data(int fd, enum nvme_features_id fid,
 			__u32 nsid, __u32 data_len, void *data, __u32 *result)
 {
@@ -2318,6 +2405,14 @@ static inline int nvme_get_features_data(int fd, enum nvme_features_id fid,
 
 	return nvme_get_features(&args);
 }
+
+/**
+ * nvme_get_features_simple() - Helper function for @nvme_get_features()
+ * @fd:		File descriptor of nvme device
+ * @fid:	Feature identifier
+ * @nsid:	Namespace ID, if applicable
+ * @result:	The command completion result from CQE dword0
+ */
 static inline int nvme_get_features_simple(int fd, enum nvme_features_id fid,
 			__u32 nsid, __u32 *result)
 {
@@ -2352,6 +2447,7 @@ int nvme_get_features_power_mgmt(int fd, enum nvme_get_features_sel sel,
  * nvme_get_features_lba_range() -
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * @data:	User address of feature data, if applicable
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -2425,6 +2521,7 @@ int nvme_get_features_irq_coalesce(int fd, enum nvme_get_features_sel sel,
  * nvme_get_features_irq_config() -
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * @iv:
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -2461,6 +2558,7 @@ int nvme_get_features_async_event(int fd, enum nvme_get_features_sel sel,
  * nvme_get_features_auto_pst() -
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * @apst:
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -2485,7 +2583,7 @@ int nvme_get_features_host_mem_buf(int fd, enum nvme_get_features_sel sel,
  * nvme_get_features_timestamp() -
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * @ts:		Current timestamp
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -2541,6 +2639,8 @@ int nvme_get_features_rrl(int fd, enum nvme_get_features_sel sel, __u32 *result)
  * nvme_get_features_plm_config() -
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * @nvmsetid:	NVM set id
+ * @data:
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -2554,6 +2654,7 @@ int nvme_get_features_plm_config(int fd, enum nvme_get_features_sel sel,
  * nvme_get_features_plm_window() -
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * @nvmsetid:	NVM set id
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -2578,6 +2679,7 @@ int nvme_get_features_lba_sts_interval(int fd, enum nvme_get_features_sel sel,
  * nvme_get_features_host_behavior() -
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * @data:
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -2603,6 +2705,7 @@ int nvme_get_features_sanitize(int fd, enum nvme_get_features_sel sel,
  * nvme_get_features_endurance_event_cfg() -
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
+ * @endgid:
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -2627,7 +2730,9 @@ int nvme_get_features_sw_progress(int fd, enum nvme_get_features_sel sel,
  * nvme_get_features_host_id() -
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @result:	The command completion result from CQE dword0
+ * @exhid:
+ * @len:	Length of @hostid
+ * @hostid:	Buffer for returned host ID
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -2686,8 +2791,9 @@ int nvme_get_features_iocs_profile(int fd, enum nvme_get_features_sel sel,
 				   __u32 *result);
 
 /**
- * nvme_format_nvm_args - Arguments for the Format Nvme Namespace command
+ * struct nvme_format_nvm_args - Arguments for the Format Nvme Namespace command
  * @result:	The command completion result from CQE dword0
+ * @args_size:	Size of &struct nvme_format_nvm_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Set to override default timeout to this value in milliseconds;
  *		useful for long running formats. 0 will use system default.
@@ -2726,9 +2832,10 @@ struct nvme_format_nvm_args {
 int nvme_format_nvm(struct nvme_format_nvm_args *args);
 
 /**
- * nvme_ns_mgmt_args - Arguments for NVMe Namespace Management command
+ * struct nvme_ns_mgmt_args - Arguments for NVMe Namespace Management command
  * @result:	NVMe command result
  * @ns:		Namespace identication descriptors
+ * @args_size:	Size of &struct nvme_ns_mgmt_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
@@ -2747,7 +2854,7 @@ struct nvme_ns_mgmt_args {
 } __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
- * nvme_ns_mgmt() -
+ * nvme_ns_mgmt() - Issue a Namespace management command
  * @args:	&struct nvme_ns_mgmt_args Argument structure
  */
 int nvme_ns_mgmt(struct nvme_ns_mgmt_args *args);
@@ -2762,7 +2869,7 @@ int nvme_ns_mgmt(struct nvme_ns_mgmt_args *args);
  * @csi:		Command Set Identifier
  *
  * On successful creation, the namespace exists in the subsystem, but is not
- * attached to any controller. Use the &nvme_ns_attach_ctrls() to assign the
+ * attached to any controller. Use the nvme_ns_attach_ctrls() to assign the
  * namespace to one or more controllers.
  *
  * Return: The nvme command status if a response was received (see
@@ -2791,7 +2898,7 @@ static inline int nvme_ns_mgmt_create(int fd, struct nvme_id_ns *ns,
  * @nsid:	Namespace identifier to delete
  *
  * It is recommended that a namespace being deleted is not attached to any
- * controller. Use the &nvme_ns_detach_ctrls() first if the namespace is still
+ * controller. Use the nvme_ns_detach_ctrls() first if the namespace is still
  * attached.
  *
  * Return: The nvme command status if a response was received (see
@@ -2814,9 +2921,10 @@ static inline int nvme_ns_mgmt_delete(int fd, __u32 nsid)
 }
 
 /**
- * nvme_ns_attach_args - Arguments for Nvme Namespace Management command
+ * struct nvme_ns_attach_args - Arguments for Nvme Namespace Management command
  * @result:	NVMe command result
  * @ctrlist:	Controller list to modify attachment state of nsid
+ * @args_size:	Size of &struct nvme_ns_attach_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace ID to execute attach selection
@@ -2833,7 +2941,7 @@ struct nvme_ns_attach_args {
 } __attribute__((packed, aligned(__alignof__(__u32*))));
 
 /**
- * nvme_ns_attach_args - Attach or detach namespace to controller(s)
+ * nvme_ns_attach() - Attach or detach namespace to controller(s)
  * @args:	&struct nvme_ns_attach_args Argument structure
  */
 int nvme_ns_attach(struct nvme_ns_attach_args *args);
@@ -2883,7 +2991,8 @@ static inline int nvme_ns_detach_ctrls(int fd, __u32 nsid,
 }
 
 /**
- * nvme_fw_download_args - Arguments for the NVMe Firmware Download command
+ * struct nvme_fw_download_args - Arguments for the NVMe Firmware Download command
+ * @args_size:	Size of &struct nvme_fw_download_args
  * @fd:		File descriptor of nvme device
  * @result:	The command completion result from CQE dword0
  * @timeout:	Timeout in ms
@@ -2925,7 +3034,8 @@ struct nvme_fw_download_args {
 int nvme_fw_download(struct nvme_fw_download_args *args);
 
 /**
- * nvme_fw_commit_args - Arguments for the NVMe Firmware Commit command
+ * struct nvme_fw_commit_args - Arguments for the NVMe Firmware Commit command
+ * @args_size:	Size of &struct nvme_fw_commit_args
  * @fd:		File descriptor of nvme device
  * @action:	Action to use for the firmware image, see &enum nvme_fw_commit_ca
  * @timeout:	Timeout in ms
@@ -2957,9 +3067,10 @@ struct nvme_fw_commit_args {
 int nvme_fw_commit(struct nvme_fw_commit_args *args);
 
 /**
- * nvme_security_send_args - Arguments for the NVMe Security Send command
+ * struct nvme_security_send_args - Arguments for the NVMe Security Send command
  * @result:	The command completion result from CQE dword0
  * @data:	Security data payload to send
+ * @args_size:	Size of &struct nvme_security_send_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace ID to issue security command on
@@ -3004,9 +3115,10 @@ struct nvme_security_send_args {
 int nvme_security_send(struct nvme_security_send_args *args);
 
 /**
- * nvme_security_receive_args - Arguments for the NVMe Security Receive command
+ * struct nvme_security_receive_args - Arguments for the NVMe Security Receive command
  * @result:	The command completion result from CQE dword0
  * @data:	Security data payload to send
+ * @args_size:	Size of &struct nvme_security_receive_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace ID to issue security command on
@@ -3042,10 +3154,11 @@ struct nvme_security_receive_args {
 int nvme_security_receive(struct nvme_security_receive_args *args);
 
 /**
- * nvme_get_lba_status_args - Arguments for the NVMe Get LBA Status command
+ * struct nvme_get_lba_status_args - Arguments for the NVMe Get LBA Status command
  * @lbas:	Data payload to return status descriptors
  * @result:	The command completion result from CQE dword0
  * @slba:	Starting logical block address to check statuses
+ * @args_size:	Size of &struct nvme_get_lba_status_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace ID to retrieve LBA status
@@ -3080,15 +3193,16 @@ struct nvme_get_lba_status_args {
 int nvme_get_lba_status(struct nvme_get_lba_status_args *args);
 
 /**
- * nvme_directive_send_args - Arguments for the NVMe Directive Send command
+ * struct nvme_directive_send_args - Arguments for the NVMe Directive Send command
  * @result:	If successful, the CQE dword0 value
  * @data:	Data payload to to be send
+ * @args_size:	Size of &struct nvme_directive_send_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace ID, if applicable
  * @doper:	Directive send operation, see &enum nvme_directive_send_doper
  * @dtype:	Directive type, see &enum nvme_directive_dtype
- * @dw12:	Directive specific command dword12
+ * @cdw12:	Directive specific command dword12
  * @data_len:	Length of data payload in bytes
  * @dspec:	Directive specific field
  */
@@ -3124,7 +3238,10 @@ int nvme_directive_send(struct nvme_directive_send_args *args);
 /**
  * nvme_directive_send_id_endir() -
  * @fd:		File descriptor of nvme device
- * @nsid:	Namespace ID
+ * @nsid:
+ * @endir:
+ * @dtype:
+ * @id:
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -3137,6 +3254,7 @@ int nvme_directive_send_id_endir(int fd, __u32 nsid, bool endir,
  * nvme_directive_send_stream_release_identifier() -
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
+ * @stream_id:	Stream identifier
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -3189,15 +3307,16 @@ static inline int nvme_directive_send_stream_release_resource(int fd, __u32 nsid
 }
 
 /**
- * nvme_directive_recv_args - Arguments for the NVMe Directive Receive command
+ * struct nvme_directive_recv_args - Arguments for the NVMe Directive Receive command
  * @result:	If successful, the CQE dword0 value
  * @data:	Usespace address of data payload
+ * @args_size:	Size of &struct nvme_directive_recv_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace ID, if applicable
  * @doper:	Directive send operation, see &enum nvme_directive_send_doper
  * @dtype:	Directive type, see &enum nvme_directive_dtype
- * @dw12:	Directive specific command dword12
+ * @cdw12:	Directive specific command dword12
  * @data_len:	Length of data payload in bytes
  * @dspec:	Directive specific field
  */
@@ -3228,6 +3347,7 @@ int nvme_directive_recv(struct nvme_directive_recv_args *args);
  * nvme_directive_recv_identify_parameters() -
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
+ * @id:		Identify parameters buffer
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -3256,6 +3376,7 @@ static inline int nvme_directive_recv_identify_parameters(int fd, __u32 nsid,
  * nvme_directive_recv_stream_parameters() -
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
+ * @parms:	Streams directive parameters buffer
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -3284,6 +3405,8 @@ static inline int nvme_directive_recv_stream_parameters(int fd, __u32 nsid,
  * nvme_directive_recv_stream_status() -
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
+ * @nr_entries: Number of streams to receive
+ * @id:		Stream status buffer
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -3313,6 +3436,8 @@ static inline int nvme_directive_recv_stream_status(int fd, __u32 nsid,
  * nvme_directive_recv_stream_allocate() -
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
+ * @nsr:
+ * @result:
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -3338,12 +3463,13 @@ static inline int nvme_directive_recv_stream_allocate(int fd, __u32 nsid,
 }
 
 /**
- * nvme_capacity_mgmt_args - Arguments for the NVMe Capacity Management command
+ * struct nvme_capacity_mgmt_args - Arguments for the NVMe Capacity Management command
  * @result:	If successful, the CQE dword0 value
+ * @args_size:	Size of &struct nvme_capacity_mgmt_args
  * @fd:		File descriptor of nvme device
- * @dw11:	Least significant 32 bits of the capacity in bytes of the
+ * @cdw11:	Least significant 32 bits of the capacity in bytes of the
  *		Endurance Group or NVM Set to be created
- * @dw12:	Most significant 32 bits of the capacity in bytes of the
+ * @cdw12:	Most significant 32 bits of the capacity in bytes of the
  *		Endurance Group or NVM Set to be created
  * @timeout:	Timeout in ms
  * @element_id:	Value specific to the value of the Operation field
@@ -3370,7 +3496,8 @@ struct nvme_capacity_mgmt_args {
 int nvme_capacity_mgmt(struct nvme_capacity_mgmt_args *args);
 
 /**
- * nvme_lockdown_args - Arguments for the NVME Lockdown command
+ * struct nvme_lockdown_args - Arguments for the NVME Lockdown command
+ * @args_size:	Size of &struct nvme_lockdown_args
  * @fd:		File descriptor of nvme device
  * @result:	The command completion result from CQE dword0
  * @timeout:	Timeout in ms (0 for default timeout)
@@ -3378,7 +3505,7 @@ int nvme_capacity_mgmt(struct nvme_capacity_mgmt_args *args);
  * @prhbt:	Prohibit or allow the command opcode or Set Features command
  * @ifc:	Affected interface
  * @ofi:	Opcode or Feature Identifier
- * @uuid:	UUID Index if controller supports this id selection method
+ * @uuidx:	UUID Index if controller supports this id selection method
  */
 struct nvme_lockdown_args {
 	__u32 *result;
@@ -3402,7 +3529,8 @@ struct nvme_lockdown_args {
 int nvme_lockdown(struct nvme_lockdown_args *args);
 
 /**
- * nvme_set_property_args - Arguments for NVMe Set Property command
+ * struct nvme_set_property_args - Arguments for NVMe Set Property command
+ * @args_size:	Size of &struct nvme_set_property_args
  * @fd:		File descriptor of nvme device
  * @result:	The command completion result from CQE dword0
  * @timeout:	Timeout in ms
@@ -3431,8 +3559,9 @@ struct nvme_set_property_args {
 int nvme_set_property(struct nvme_set_property_args *args);
 
 /**
- * nvme_get_property_args - Arguments for NVMe Get Property command
+ * struct nvme_get_property_args - Arguments for NVMe Get Property command
  * @value:	Where the property's value will be stored on success
+ * @args_size:	Size of &struct nvme_get_property_args
  * @fd:		File descriptor of nvme device
  * @offset:	Property offset from the base to retrieve
  * @timeout:	Timeout in ms
@@ -3458,8 +3587,9 @@ struct nvme_get_property_args {
 int nvme_get_property(struct nvme_get_property_args *args);
 
 /**
- * nvme_sanitize_nvm_args - Arguments for the NVMe Sanitize NVM command
+ * struct nvme_sanitize_nvm_args - Arguments for the NVMe Sanitize NVM command
  * @result:	The command completion result from CQE dword0
+ * @args_size:	Size of &struct nvme_sanitize_nvm_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @ovrpat:	Overwrite pattern
@@ -3502,8 +3632,9 @@ struct nvme_sanitize_nvm_args {
 int nvme_sanitize_nvm(struct nvme_sanitize_nvm_args *args);
 
 /**
- * nvme_dev_self_test_args - Arguments for the NVMe Device Self Test command
+ * struct nvme_dev_self_test_args - Arguments for the NVMe Device Self Test command
  * @result:	The command completion result from CQE dword0
+ * @args_size:	Size of &struct nvme_dev_self_test_args
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID to test
  * @stc:	Self test code, see &enum nvme_dst_stc
@@ -3539,8 +3670,9 @@ struct nvme_dev_self_test_args {
 int nvme_dev_self_test(struct nvme_dev_self_test_args *args);
 
 /**
- * nvme_virtual_mgmt_args - Arguments for the NVMe Virtualization
+ * struct nvme_virtual_mgmt_args - Arguments for the NVMe Virtualization
  * 			    resource management command
+ * @args_size:	Size of &struct nvme_virtual_mgmt_args
  * @fd:		File descriptor of nvme device
  * @result:	If successful, the CQE dword0
  * @timeout:	Timeout in ms
@@ -3598,7 +3730,7 @@ static inline int nvme_flush(int fd, __u32 nsid) {
 }
 
 /**
- * nvme_io_args - Arguments for NVMe I/O commands
+ * struct nvme_io_args - Arguments for NVMe I/O commands
  * @slba:	Starting logical block
  * @storage_tag: This filed specifies Variable Sized Expected Logical Block
  *		Storage Tag (ELBST) and Expected Logical Block Reference
@@ -3606,12 +3738,13 @@ static inline int nvme_flush(int fd, __u32 nsid) {
  * @result:	The command completion result from CQE dword0
  * @data:	Pointer to user address of the data buffer
  * @metadata:	Pointer to user address of the metadata buffer
+ * @args_size:	Size of &struct nvme_io_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace ID
  * @data_len:	Length of user buffer, @data, in bytes
  * @metadata_len:Length of user buffer, @metadata, in bytes
- * @nbl:	Number of logical blocks to send (0's based value)
+ * @nlb:	Number of logical blocks to send (0's based value)
  * @control:	Command control flags, see &enum nvme_io_control_flags.
  * @apptag:	This field specifies the Application Tag Mask expected value.
  *		Used only if the namespace is formatted to use end-to-end
@@ -3649,6 +3782,7 @@ struct nvme_io_args {
 /**
  * nvme_io() - Submit an nvme user I/O command
  * @args:	&struct nvme_io_args argument structure
+ * @opcode:	Opcode to execute
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -3742,9 +3876,10 @@ static inline int nvme_verify(struct nvme_io_args *args)
 }
 
 /**
- * nvme_dsm_args - Arguments for the NVMe Dataset Management command
+ * struct nvme_dsm_args - Arguments for the NVMe Dataset Management command
  * @result:	The command completion result from CQE dword0
  * @dsm:	The data set management attributes
+ * @args_size:	Size of &struct nvme_dsm_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
@@ -3778,10 +3913,11 @@ struct nvme_dsm_args {
 int nvme_dsm(struct nvme_dsm_args *args);
 
 /**
- * nvme_copy_args - Arguments for the NVMe Copy command
+ * struct nvme_copy_args - Arguments for the NVMe Copy command
  * @sdlba:	Start destination LBA
  * @result:	The command completion result from CQE dword0
  * @copy:	Range descriptior
+ * @args_size:	Size of &struct nvme_copy_args
  * @fd:		File descriptor of the nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
@@ -3829,11 +3965,12 @@ struct nvme_copy_args {
 int nvme_copy(struct nvme_copy_args *args);
 
 /**
- * nvme_resv_acquire_args - Arguments for the NVMe Reservation Acquire Comand
+ * struct nvme_resv_acquire_args - Arguments for the NVMe Reservation Acquire Comand
  * @nrkey:	The reservation key to be unregistered from the namespace if
  *		the action is preempt
  * @iekey:	Set to ignore the existing key
  * @result:	The command completion result from CQE dword0
+ * @args_size:	Size of &struct nvme_resv_acquire_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
@@ -3868,11 +4005,12 @@ struct nvme_resv_acquire_args {
 int nvme_resv_acquire(struct nvme_resv_acquire_args *args);
 
 /**
- * nvme_resv_register_args - Arguments for the NVMe Reservation Register command
+ * struct nvme_resv_register_args - Arguments for the NVMe Reservation Register command
  * @crkey:	The current reservation key associated with the host
  * @nrkey:	The new reservation key to be register if action is register or
  *		replace
  * @result:	The command completion result from CQE dword0
+ * @args_size:	Size of &struct nvme_resv_register_args
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace identifier
  * @rrega:	The registration action, see &enum nvme_resv_rrega
@@ -3906,9 +4044,10 @@ struct nvme_resv_register_args {
 int nvme_resv_register(struct nvme_resv_register_args *args);
 
 /**
- * nvme_resv_release_args - Arguments for the NVMe Reservation Release Command
+ * struct nvme_resv_release_args - Arguments for the NVMe Reservation Release Command
  * @crkey:	The current reservation key to release
  * @result:	The command completion result from CQE dword0
+ * @args_size:	Size of &struct nvme_resv_release_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
@@ -3938,10 +4077,11 @@ struct nvme_resv_release_args {
 int nvme_resv_release(struct nvme_resv_release_args *args);
 
 /**
- * nvme_resv_report_args - Arguments for the NVMe Reservation Report command
+ * struct nvme_resv_report_args - Arguments for the NVMe Reservation Report command
  * @result:	The command completion result from CQE dword0
  * @report:	The user space destination address to store the reservation
  *		report
+ * @args_size:	Size of &struct nvme_resv_report_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
@@ -3973,10 +4113,11 @@ struct nvme_resv_report_args {
 int nvme_resv_report(struct nvme_resv_report_args *args);
 
 /**
- * nvme_zns_mgmt_send_args - Arguments for the NVMe ZNS Management Send command
+ * struct nvme_zns_mgmt_send_args - Arguments for the NVMe ZNS Management Send command
  * @slba:	Starting logical block address
  * @result:	The command completion result from CQE dword0
  * @data:	Userspace address of the data
+ * @args_size:	Size of &struct nvme_zns_mgmt_send_args
  * @fd:		File descriptor of nvme device
  * @timeout:	timeout in ms
  * @nsid:	Namespace ID
@@ -4010,10 +4151,11 @@ int nvme_zns_mgmt_send(struct nvme_zns_mgmt_send_args *args);
 
 
 /**
- * nvme_zns_mgmt_recv_args - Arguments for the NVMe ZNS Management Receive command
+ * struct nvme_zns_mgmt_recv_args - Arguments for the NVMe ZNS Management Receive command
  * @slba:	Starting logical block address
  * @result:	The command completion result from CQE dword0
  * @data:	Userspace address of the data
+ * @args_size:	Size of &struct nvme_zns_mgmt_recv_args
  * @fd:		File descriptor of nvme device
  * @timeout:	timeout in ms
  * @nsid:	Namespace ID
@@ -4086,12 +4228,13 @@ static inline int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
 }
 
 /**
- * nvme_zns_append_args - Arguments for the NVMe ZNS Append command
+ * struct nvme_zns_append_args - Arguments for the NVMe ZNS Append command
  * @zslba:	Zone start logical block address
- * @fd:		File descriptor of nvme device
  * @result:	The command completion result from CQE dword0
  * @data:	Userspace address of the data
  * @metadata:	Userspace address of the metadata
+ * @args_size:	Size of &struct nvme_zns_append_args
+ * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace ID
  * @ilbrt:	Initial logical block reference tag

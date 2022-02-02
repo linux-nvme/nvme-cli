@@ -11,19 +11,35 @@
 
 #include "types.h"
 
-/* nvme connect error codes */
-#define ENVME_CONNECT_RESOLVE			1000 /* "failed to resolve host" */
-#define ENVME_CONNECT_ADDRFAM			1001 /* "unrecognized address family" */
-#define ENVME_CONNECT_TRADDR			1002 /* "failed to get traddr" */
-#define ENVME_CONNECT_TARG			1003 /* "need a transport (-t) argument" */
-#define ENVME_CONNECT_AARG			1004 /* "need a address (-a) argument\n" */
-#define ENVME_CONNECT_OPEN			1005 /* "failed to open nvme-fabrics device" */
-#define ENVME_CONNECT_WRITE			1006 /* "failed to write to nvme-fabrics device" */
-#define ENVME_CONNECT_READ			1007 /* "failed to read from nvme-fabrics device" */
-#define ENVME_CONNECT_PARSE			1008 /* "failed to parse ctrl info" */
-#define ENVME_CONNECT_INVAL_TR			1009 /* "invalid transport type" */
-#define ENVME_CONNECT_LOOKUP_SUBSYS_NAME	1010 /* "failed to lookup subsystem name" */
-#define ENVME_CONNECT_LOOKUP_SUBSYS		1011 /* "failed to lookup subsystem */
+/**
+ * enum nvme_connect_err - nvme connect error codes
+ * @ENVME_CONNECT_RESOLVE:	failed to resolve host
+ * @ENVME_CONNECT_ADDRFAM:	unrecognized address family
+ * @ENVME_CONNECT_TRADDR:	failed to get traddr
+ * @ENVME_CONNECT_TARG:		need a transport (-t) argument
+ * @ENVME_CONNECT_AARG:		need a address (-a) argument
+ * @ENVME_CONNECT_OPEN:		failed to open nvme-fabrics device
+ * @ENVME_CONNECT_WRITE:	failed to write to nvme-fabrics device
+ * @ENVME_CONNECT_READ:		failed to read from nvme-fabrics device
+ * @ENVME_CONNECT_PARSE:	failed to parse ctrl info
+ * @ENVME_CONNECT_INVAL_TR:	invalid transport type
+ * @ENVME_CONNECT_LOOKUP_SUBSYS_NAME:	failed to lookup subsystem name
+ * @ENVME_CONNECT_LOOKUP_SUBSYS: failed to lookup subsystem
+ */
+enum nvme_connect_err {
+	ENVME_CONNECT_RESOLVE	= 1000,
+	ENVME_CONNECT_ADDRFAM,
+	ENVME_CONNECT_TRADDR,
+	ENVME_CONNECT_TARG,
+	ENVME_CONNECT_AARG,
+	ENVME_CONNECT_OPEN,
+	ENVME_CONNECT_WRITE,
+	ENVME_CONNECT_READ,
+	ENVME_CONNECT_PARSE,
+	ENVME_CONNECT_INVAL_TR,
+	ENVME_CONNECT_LOOKUP_SUBSYS_NAME,
+	ENVME_CONNECT_LOOKUP_SUBSYS,
+};
 
 /**
  * nvme_status_to_errno() - Converts nvme return status to errno
@@ -65,7 +81,7 @@ const char *nvme_errno_to_string(int err);
  * @nvmsetid: NVM Set identifer
  *
  * This is intended to be used with a namespace management "create", see
- * &nvme_ns_mgmt_create().
+ * nvme_ns_mgmt_create().
  */
 void nvme_init_id_ns(struct nvme_id_ns *ns, __u64 nsze, __u64 ncap, __u8 flbas,
 		     __u8 dps, __u8 nmic, __u32 anagrpid, __u16 nvmsetid);
@@ -77,7 +93,7 @@ void nvme_init_id_ns(struct nvme_id_ns *ns, __u64 nsze, __u64 ncap, __u8 flbas,
  * @ctrlist:   An array of controller identifiers in CPU native endian.
  *
  * This is intended to be used with any command that takes a controller list
- * argument. See &nvme_ns_attach_ctrls() and &nvme_ns_detach().
+ * argument. See nvme_ns_attach_ctrls() and nvme_ns_detach().
  */
 void nvme_init_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
 			 __u16 *ctrlist);
@@ -91,7 +107,7 @@ void nvme_init_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
  * @nr_ranges:	The size of the dsm arrays
  *
  * Each array must be the same size of size 'nr_ranges'. This is intended to be
- * used with constructing a payload for &nvme_dsm().
+ * used with constructing a payload for nvme_dsm().
  *
  * Return: The nvme command status if a response was received or -errno
  * otherwise.
@@ -100,7 +116,14 @@ void nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
 			  __u32 *llbas, __u64 *slbas, __u16 nr_ranges);
 
 /**
- * nvme_init_copy_range() -
+ * nvme_init_copy_range() - Constructs a copy range structure
+ * @copy:	Copy range array
+ * @nlbs:	Number of logical blocks
+ * @slbas:	Starting LBA
+ * @eilbrts:	Expected initial logical block reference tag
+ * @elbatms:	Expected logical block application tag mask
+ * @elbats:	Expected logical block application tag
+ * @nr:		Number of descriptors to construct
  */
 void nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
 			  __u64 *slbas, __u32 *eilbrts, __u32 *elbatms,

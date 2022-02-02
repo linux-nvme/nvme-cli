@@ -21,39 +21,13 @@
 #include "ioctl.h"
 #include "util.h"
 
-/**
- *
- */
 typedef struct nvme_ns *nvme_ns_t;
-
-/**
- *
- */
 typedef struct nvme_path *nvme_path_t;
-
-/**
- *
- */
 typedef struct nvme_ctrl *nvme_ctrl_t;
-
-/**
- *
- */
 typedef struct nvme_subsystem *nvme_subsystem_t;
-
-/**
- *
- */
 typedef struct nvme_host *nvme_host_t;
-
-/**
- *
- */
 typedef struct nvme_root *nvme_root_t;
 
-/**
- *
- */
 typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t);
 
 /**
@@ -145,7 +119,7 @@ void nvme_host_set_dhchap_key(nvme_host_t h, const char *key);
 
 /**
  * nvme_default_host() - Initializes the default host
- * @root: nvme_root_t object
+ * @r: nvme_root_t object
  *
  * Initializes the default host object based on the values in
  * /etc/nvme/hostnqn and /etc/nvme/hostid and attaches it to @r.
@@ -313,7 +287,10 @@ nvme_ns_t nvme_subsystem_first_ns(nvme_subsystem_t s);
 nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 
 /**
- * nvme_for_each_host_safe()
+ * nvme_for_each_host_safe() - Traverse host list
+ * @r: nvme_root_t object
+ * @h: nvme_host_t object
+ * @_h: temporary nvme_host_t object
  */
 #define nvme_for_each_host_safe(r, h, _h)		\
 	for (h = nvme_first_host(r),			\
@@ -322,14 +299,19 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 	     h = _h, _h = nvme_next_host(r, h))
 
 /**
- * nvme_for_each_host()
+ * nvme_for_each_host() - Traverse host list
+ * @r: nvme_root_t object
+ * @h: nvme_host_t object
  */
 #define nvme_for_each_host(r, h)			\
 	for (h = nvme_first_host(r); h != NULL; 	\
 	     h = nvme_next_host(r, h))
 
 /**
- * nvme_for_each_subsystem_safe()
+ * nvme_for_each_subsystem_safe() - Traverse subsystems
+ * @h: nvme_host_t object
+ * @s: nvme_subsystem_t object
+ * @_s: temporary nvme_subsystem_t object
  */
 #define nvme_for_each_subsystem_safe(h, s, _s)			\
 	for (s = nvme_first_subsystem(h), 			\
@@ -338,14 +320,19 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 	     s = _s, _s = nvme_next_subsystem(h, s))
 
 /**
- * nvme_for_each_subsystem()
+ * nvme_for_each_subsystem() - Traverse subsystems
+ * @h: nvme_host_t object
+ * @s: nvme_subsystem_t object
  */
 #define nvme_for_each_subsystem(h, s)				\
 	for (s = nvme_first_subsystem(h); s != NULL; 		\
 		s = nvme_next_subsystem(h, s))
 
 /**
- * nvme_subsystem_for_each_ctrl_safe()
+ * nvme_subsystem_for_each_ctrl_safe() - Traverse controllers
+ * @s: nvme_subsystem_t object
+ * @c: nvme_ctrl_t object
+ * @_c: temporary nvme_ctrl_t object
  */
 #define nvme_subsystem_for_each_ctrl_safe(s, c, _c)		\
 	for (c = nvme_subsystem_first_ctrl(s), 			\
@@ -354,14 +341,19 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 	     c = _c, _c = nvme_subsystem_next_ctrl(s, c))
 
 /**
- * nvme_subsystem_for_each_ctrl()
+ * nvme_subsystem_for_each_ctrl() - traverse controllers
+ * @s: nvme_subsystem_t object
+ * @c: nvme_ctrl_t object
  */
 #define nvme_subsystem_for_each_ctrl(s, c)			\
 	for (c = nvme_subsystem_first_ctrl(s); c != NULL; 	\
 		c = nvme_subsystem_next_ctrl(s, c))
 
 /**
- * nvme_ctrl_for_each_ns_safe()
+ * nvme_ctrl_for_each_ns_safe() - traverse namespaces
+ * @c: nvme_ctrl_t object
+ * @n: nvme_ns_t object
+ * @_n: temporary nvme_ns_t object
  */
 #define nvme_ctrl_for_each_ns_safe(c, n, _n)			\
 	for (n = nvme_ctrl_first_ns(c), 			\
@@ -370,14 +362,19 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 	     n = _n, _n = nvme_ctrl_next_ns(c, n))
 
 /**
- * nvme_ctrl_for_each_ns()
+ * nvme_ctrl_for_each_ns() - traverse namespaces
+ * @c: nvme_ctrl_t object
+ * @n: nvme_ns_t object
  */
 #define nvme_ctrl_for_each_ns(c, n)				\
 	for (n = nvme_ctrl_first_ns(c); n != NULL; 		\
 		n = nvme_ctrl_next_ns(c, n))
 
 /**
- * nvme_ctrl_for_each_path_safe()
+ * nvme_ctrl_for_each_path_safe() - Traverse paths
+ * @c: nvme_ctrl_t object
+ * @p: nvme_path_t object
+ * @_p: temporary nvme_path_t object
  */
 #define nvme_ctrl_for_each_path_safe(c, p, _p)			\
 	for (p = nvme_ctrl_first_path(c), 			\
@@ -386,14 +383,19 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 	     p = _p, _p = nvme_ctrl_next_path(c, p))
 
 /**
- * nvme_ctrl_for_each_path()
+ * nvme_ctrl_for_each_path() - Traverse paths
+ * @c: nvme_ctrl_t object
+ * @p: nvme_path_t object
  */
 #define nvme_ctrl_for_each_path(c, p)				\
 	for (p = nvme_ctrl_first_path(c); p != NULL; 		\
 		p = nvme_ctrl_next_path(c, p))
 
 /**
- * nvme_subsystem_for_each_ns_safe()
+ * nvme_subsystem_for_each_ns_safe() - Traverse namespaces
+ * @s: nvme_subsystem_t object
+ * @n: nvme_ns_t object
+ * @_n: temporary nvme_ns_t object
  */
 #define nvme_subsystem_for_each_ns_safe(s, n, _n)		\
 	for (n = nvme_subsystem_first_ns(s), 			\
@@ -402,7 +404,9 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 	     n = _n, _n = nvme_subsystem_next_ns(s, n))
 
 /**
- * nvme_subsystem_for_each_ns()
+ * nvme_subsystem_for_each_ns() - Traverse namespaces
+ * @s: nvme_subsystem_t object
+ * @n: nvme_ns_t object
  */
 #define nvme_subsystem_for_each_ns(s, n)			\
 	for (n = nvme_subsystem_first_ns(s); n != NULL; 	\
@@ -561,7 +565,7 @@ nvme_ctrl_t nvme_ns_get_ctrl(nvme_ns_t n);
 
 /**
  * nvme_free_ns() - free an nvme_ns_t object
- * @ns: nvme_ns_t object
+ * @n: nvme_ns_t object
  */
 void nvme_free_ns(struct nvme_ns *n);
 
@@ -1101,12 +1105,12 @@ int nvme_dump_config(nvme_root_t r);
 
 /**
  * nvme_get_attr() - Read sysfs attribute
- * @dir: sysfs directory
+ * @d: sysfs directory
  * @attr: sysfs attribute name
  *
  * Return: string with the contents of @attr
  */
-char *nvme_get_attr(const char *dir, const char *attr);
+char *nvme_get_attr(const char *d, const char *attr);
 
 /**
  * nvme_get_subsys_attr() - Read subsystem sysfs attribute
