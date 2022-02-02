@@ -1,7 +1,7 @@
-# SPDX-License-Identifier: BSD-3
+# SPDX-License-Identifier: LGPL-2.1-or-later
 #
-# This file is part of STorage Appliance Services (STAS).
-# Copyright (c) 2021 Dell Inc.
+# This file is part of libnvme.
+# Copyright (c) 2022 Dell Inc.
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
