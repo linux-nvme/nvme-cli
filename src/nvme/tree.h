@@ -21,6 +21,12 @@
 #include "ioctl.h"
 #include "util.h"
 
+/**
+ * DOC: tree.h
+ *
+ * libnvme tree object interface
+ */
+
 typedef struct nvme_ns *nvme_ns_t;
 typedef struct nvme_path *nvme_path_t;
 typedef struct nvme_ctrl *nvme_ctrl_t;

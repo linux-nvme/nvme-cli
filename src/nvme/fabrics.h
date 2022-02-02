@@ -13,6 +13,12 @@
 #include <stdint.h>
 #include "tree.h"
 
+/**
+ * DOC: fabrics.h
+ *
+ * Fabrics-specific definitions.
+ */
+
 /* default to 600 seconds of reconnect attempts before giving up */
 #define NVMF_DEF_CTRL_LOSS_TMO		600
 

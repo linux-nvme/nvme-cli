@@ -13,6 +13,12 @@
 #include "tree.h"
 
 /**
+ * DOC: filters.h
+ *
+ * libnvme directory filter
+ */
+
+/**
  * nvme_namespace_filter() -
  * @d:
  *
