@@ -90,8 +90,8 @@ $ nix-env -f '<nixpkgs>' -iA nvme-cli
 
 ### openSUSE
 
-nvme-cli is available in openSUSE Leap 42.2 or later and Tumbleweed. You can install it using zypper.
-For example:
+nvme-cli is available in openSUSE Leap 42.2 or later and Tumbleweed. You can
+install it using zypper. For example:
 
     $ sudo zypper install nvme-cli
 
