@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include <json.h>
 
@@ -130,7 +132,8 @@ static void json_parse_subsys(nvme_host_t h, struct json_object *subsys_obj)
 		struct json_object *port_obj;
 
 		port_obj = json_object_array_get_idx(port_array, p);
-		json_parse_port(s, port_obj);
+		if (port_obj)
+			json_parse_port(s, port_obj);
 	}
 }
 
@@ -157,26 +160,38 @@ static void json_parse_host(nvme_root_t r, struct json_object *host_obj)
 		return;
 	for (s = 0; s < json_object_array_length(subsys_array); s++) {
 		subsys_obj = json_object_array_get_idx(subsys_array, s);
-		json_parse_subsys(h, subsys_obj);
+		if (subsys_obj)
+			json_parse_subsys(h, subsys_obj);
 	}
 }
 
-void json_read_config(nvme_root_t r, const char *config_file)
+int json_read_config(nvme_root_t r, const char *config_file)
 {
 	struct json_object *json_root, *host_obj;
-	int h;
+	int fd, h;
 
-	json_root = json_object_from_file(config_file);
+	fd = open(config_file, O_RDONLY);
+	if (fd < 0) {
+		nvme_msg(r, LOG_DEBUG, "Error opening %s, %s\n",
+			 config_file, strerror(errno));
+		return fd;
+	}
+	json_root = json_object_from_fd(fd);
 	if (!json_root) {
 		nvme_msg(r, LOG_DEBUG, "Failed to read %s, %s\n",
 			config_file, json_util_get_last_err());
-		return;
+		errno = EPROTO;
+		close(fd);
+		return -1;
 	}
 	for (h = 0; h < json_object_array_length(json_root); h++) {
 		host_obj = json_object_array_get_idx(json_root, h);
-		json_parse_host(r, host_obj);
+		if (host_obj)
+			json_parse_host(r, host_obj);
 	}
 	json_object_put(json_root);
+	close(fd);
+	return 0;
 }
 
 #define JSON_STRING_OPTION(c, p, o)				\
