@@ -97,29 +97,31 @@ For example:
 
 ### Ubuntu
 
-nvme-cli is supported in the Universe package sources for Xenial for
+nvme-cli is supported in the Universe package sources for
 many architectures. For a complete list try running:
   ```
   rmadison nvme-cli
-   nvme-cli | 0.3-1 | xenial/universe | source, amd64, arm64, armhf, i386, powerpc, ppc64el, s390x
+   nvme-cli | 0.5-1          | xenial/universe         | source, amd64, arm64, armhf, i386, powerpc, ppc64el, s390x
+   nvme-cli | 0.5-1ubuntu0.2 | xenial-updates/universe | source, amd64, arm64,       armhf, i386, powerpc, ppc64el, s390x
+   nvme-cli | 1.5-1          | bionic/universe         | source, amd64, arm64,       armhf, i386, ppc64el, s390x
+   nvme-cli | 1.5-1ubuntu1.2 | bionic-updates          | source, amd64, arm64,       armhf, i386, ppc64el, s390x
+   nvme-cli | 1.9-1          | focal/universe          | source, amd64, arm64,       armhf, ppc64el, riscv64, s390x
+   nvme-cli | 1.9-1ubuntu0.1 | focal-updates           | source, amd64, arm64,       armhf, ppc64el, riscv64, s390x
+   nvme-cli | 1.14-1         | impish                  | source, amd64, arm64,       armhf, ppc64el, riscv64, s390x
+   nvme-cli | 1.16-3         | jammy                   | source, amd64, arm64,       armhf, ppc64el, riscv64, s390x
   ```
 A Debian based package for nvme-cli is currently maintained as a
-Ubuntu PPA. Right now there is support for Trusty, Vivid and Wiley. To
-install nvme-cli using this approach please perform the following
+Ubuntu PPA. To install nvme-cli using this approach please perform the following
 steps:
-   1. Add the sbates PPA to your sources. One way to do this is to run
-   ```
-   sudo add-apt-repository ppa:sbates
-   ```
-   2. Perform an update of your repository list:
+   1. Perform an update of your repository list:
    ```
    sudo apt-get update
    ```
-   3. Get nvme-cli!
+   2. Get nvme-cli!
    ```
    sudo apt-get install nvme-cli
    ```
-   4. Test the code.
+   3. Test the code.
    ```
    sudo nvme list
    ```
