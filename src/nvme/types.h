@@ -3544,6 +3544,101 @@ struct nvme_media_unit_stat_log {
 };
 
 /**
+ * struct nvme_media_unit_config_desc -
+ * @muid: Media Unit Identifier
+ * @mudl: Media Unit Descriptor Length
+ *
+ * Media Unit Configuration Descriptor
+ * Structure Definitions
+ */
+struct nvme_media_unit_config_desc {
+	__le16	muid;
+	__u8	rsvd2[4];
+	__le16	mudl;
+};
+
+/**
+ * struct nvme_channel_config_desc -
+ * @chanid:	Channel Identifier
+ * @chmus:	Number Channel Media Units
+ *
+ * Channel Configuration Descriptor
+ * Structure Definitions
+ */
+struct nvme_channel_config_desc {
+	__le16	chanid;
+	__le16	chmus;
+	struct nvme_media_unit_config_desc mu_config_desc[];
+};
+
+/**
+ * struct nvme_channel_config_desc -
+ * @egchans:	Number of Channels
+ *
+ * Endurance group Channel Configuration Descriptor
+ * Structure Definitions
+ */
+struct nvme_end_grp_chan_desc {
+	__le16	egchans;
+	struct nvme_channel_config_desc chan_config_desc[];
+};
+
+/**
+ * struct nvme_end_grp_config_desc -
+ * @endgid:		Endurance Group Identifier
+ * @cap_adj_factor:	Capacity Adjustment Factor
+ * @tegcap:		Total Endurance Group Capacity
+ * @segcap:		Spare Endurance Group Capacity
+ * @end_est:		Endurance Estimate
+ * @egsets:		Number of NVM Sets
+ * @nvmsetid:		NVM Set Identifier
+ *
+ * Endurance Group Configuration Descriptor
+ * Structure Definitions
+ */
+struct nvme_end_grp_config_desc {
+	__le16	endgid;
+	__le16	cap_adj_factor;
+	__u8	rsvd4[12];
+	__u8	tegcap[16];
+	__u8	segcap[16];
+	__u8	end_est[16];
+	__u8	rsvd64[16];
+	__le16	egsets;
+	__le16	nvmsetid[];
+};
+
+/**
+ * struct nvme_cap_config_desc -
+ * @cap_config_id:	Capacity Configuration Identifier
+ * @domainid:		Domain Identifier
+ * @egcn:		Number Endurance Group Configuration
+ *			Descriptors
+ *
+ * Capacity Configuration structure definitions
+ */
+struct nvme_capacity_config_desc {
+	__le16	cap_config_id;
+	__le16	domainid;
+	__le16	egcn;
+	__u8	rsvd6[26];
+	struct nvme_end_grp_config_desc egcd[];
+};
+
+/**
+ * struct nvme_supported_cap_config_list_log -
+ * @sccn: number of capacity configuration
+ *
+ * Supported Capacity Configuration list log page
+ * structure definitions
+ */
+struct nvme_supported_cap_config_list_log {
+	__u8	sccn;
+	__u8	rsvd1[15];
+	struct nvme_capacity_config_desc cap_config_desc[];
+};
+
+/**
  * struct nvme_resv_notification_log -
  * @lpc:
  * @rnlpt: See &enum nvme_resv_notify_rnlpt.
@@ -5718,6 +5813,7 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_LBA_STATUS:
  * @NVME_LOG_LID_ENDURANCE_GRP_EVT:
  * @NVME_LOG_LID_MEDIA_UNIT_STATUS:
+ * @NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST:
  * @NVME_LOG_LID_FID_SUPPORTED_EFFECTS:
  * @NVME_LOG_LID_BOOT_PARTITION:
  * @NVME_LOG_LID_DISCOVER:
@@ -5743,6 +5839,7 @@ enum nvme_cmd_get_log_lid {
 	NVME_LOG_LID_LBA_STATUS					= 0x0e,
 	NVME_LOG_LID_ENDURANCE_GRP_EVT				= 0x0f,
 	NVME_LOG_LID_MEDIA_UNIT_STATUS				= 0x10,
+	NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST			= 0x11,
 	NVME_LOG_LID_FID_SUPPORTED_EFFECTS			= 0x12,
 	NVME_LOG_LID_BOOT_PARTITION				= 0x15,
 	NVME_LOG_LID_DISCOVER					= 0x70,
