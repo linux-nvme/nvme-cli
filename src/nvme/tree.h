@@ -235,17 +235,20 @@ nvme_ctrl_t nvme_subsystem_next_ctrl(nvme_subsystem_t s, nvme_ctrl_t c);
  * @host_traddr: host transport address
  * @host_iface: host interface name
  * @trsvcid: transport service identifier
+ * @p: previous nvme_ctrl_t object
  *
  * Lookup a nvme_ctrl_t object in @s based on @transport, @traddr,
  * @host_traddr, @host_iface, and @trsvcid. @transport must be specified,
  * other fields may be required depending on the transport. A new
- * object is created if none is found.
+ * object is created if none is found. If @p is specified the lookup
+ * will start at @p instead of the first controller.
  *
  * Return: nvme_ctrl_t object
  */
 nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			     const char *traddr, const char *host_traddr,
-			     const char *host_iface, const char *trsvcid);
+			     const char *host_iface, const char *trsvcid,
+			     nvme_ctrl_t p);
 
 
 /**

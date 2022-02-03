@@ -977,16 +977,18 @@ struct nvme_ctrl *nvme_create_ctrl(nvme_root_t r,
 	return c;
 }
 
-struct nvme_ctrl *nvme_lookup_ctrl(struct nvme_subsystem *s, const char *transport,
-				   const char *traddr, const char *host_traddr,
-				   const char *host_iface, const char *trsvcid)
+nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
+			     const char *traddr, const char *host_traddr,
+			     const char *host_iface, const char *trsvcid,
+			     nvme_ctrl_t p)
 {
 	nvme_root_t r = s->h ? s->h->r : NULL;
 	struct nvme_ctrl *c;
 
 	if (!s || !transport)
 		return NULL;
-	nvme_subsystem_for_each_ctrl(s, c) {
+	c = p ? nvme_subsystem_next_ctrl(s, p) : nvme_subsystem_first_ctrl(s);
+	for (; c != NULL; c = nvme_subsystem_next_ctrl(s, c)) {
 		if (strcmp(c->transport, transport))
 			continue;
 		if (traddr && c->traddr &&
@@ -1166,7 +1168,7 @@ out_free_subsys:
 static nvme_ctrl_t nvme_ctrl_alloc(nvme_root_t r, nvme_subsystem_t s,
 				   const char *path, const char *name)
 {
-	nvme_ctrl_t c;
+	nvme_ctrl_t c, p;
 	char *addr = NULL, *address = NULL, *a, *e;
 	char *transport, *traddr = NULL, *trsvcid = NULL;
 	char *host_traddr = NULL, *host_iface = NULL;
@@ -1228,13 +1230,36 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_root_t r, nvme_subsystem_t s,
 		}
 	}
 skip_address:
-	c = nvme_lookup_ctrl(s, transport, traddr,
-			     host_traddr, host_iface, trsvcid);
+	p = NULL;
+	do {
+		c = nvme_lookup_ctrl(s, transport, traddr,
+				     host_traddr, host_iface, trsvcid, p);
+		if (c) {
+			if (!c->name)
+				break;
+			if (!strcmp(c->name, name)) {
+				nvme_msg(r, LOG_DEBUG,
+					 "%s: found existing ctrl %s\n",
+					 __func__, c->name);
+				break;
+			}
+			nvme_msg(r, LOG_DEBUG, "%s: skipping ctrl %s\n",
+				 __func__, c->name);
+			p = c;
+		}
+	} while (c);
+	if (!c)
+		c = p;
 	free(transport);
 	if (address)
 		free(address);
 	if (!c) {
-		errno = ENOMEM;
+		if (!p) {
+			nvme_msg(r, LOG_ERR, "%s: failed to lookup ctrl\n",
+				 __func__);
+			errno = ENODEV;
+		} else
+			errno = ENOMEM;
 		return NULL;
 	}
 	c->address = addr;
