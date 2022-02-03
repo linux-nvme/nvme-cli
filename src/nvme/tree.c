@@ -1122,13 +1122,11 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		goto out_free_name;
 	}
 
-	if (strcmp(c->transport, "loop")) {
-		c->address = nvme_get_attr(path, "address");
-		if (!c->address) {
-			errno = ENVME_CONNECT_INVAL_TR;
-			ret = -1;
-			goto out_free_name;
-		}
+	c->address = nvme_get_attr(path, "address");
+	if (!c->address && strcmp(c->transport, "loop")) {
+		errno = ENVME_CONNECT_INVAL_TR;
+		ret = -1;
+		goto out_free_name;
 	}
 
 	subsys_name = nvme_ctrl_lookup_subsystem_name(h->r, name);
@@ -1179,12 +1177,14 @@ static nvme_ctrl_t nvme_ctrl_alloc(nvme_root_t r, nvme_subsystem_t s,
 		errno = ENXIO;
 		return NULL;
 	}
-	if (!strcmp(transport, "loop"))
-		goto skip_address;
 	/* Parse 'address' string into components */
 	addr = nvme_get_attr(path, "address");
 	if (!addr) {
 		char *rpath = NULL, *p = NULL, *_a = NULL;
+
+		/* loop transport might not have an address */
+		if (!strcmp(transport, "loop"))
+			goto skip_address;
 
 		/* Older kernel don't support pcie transport addresses */
 		if (strcmp(transport, "pcie")) {
