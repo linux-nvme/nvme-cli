@@ -581,9 +581,8 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
         case NVMF_TRTYPE_FC:
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_FC:
-			nvme_chomp(e->traddr, NVMF_TRADDR_SIZE),
+			nvme_chomp(e->traddr, NVMF_TRADDR_SIZE);
 			traddr = e->traddr;
-			trsvcid = NULL;
 			break;
 		default:
 			nvme_msg(h->r, LOG_ERR,
@@ -593,6 +592,8 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 			return NULL;
 		}
 	case NVMF_TRTYPE_LOOP:
+		nvme_chomp(e->traddr, NVMF_TRADDR_SIZE);
+		traddr = strlen(e->traddr) ? e->traddr : NULL;
 		break;
 	default:
 		nvme_msg(h->r, LOG_ERR, "skipping unsupported transport %d\n",
