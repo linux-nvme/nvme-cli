@@ -1095,6 +1095,17 @@ int nvme_update_config(nvme_root_t r);
 int nvme_dump_config(nvme_root_t r);
 
 /**
+ * nvme_dump_tree() - Dump internal object tree
+ * @r: nvme_root_t object
+ *
+ * Prints the internal object tree in JSON format
+ * to stdout.
+ *
+ * Return: 0 on success, -1 on failure.
+ */
+int nvme_dump_tree(nvme_root_t r);
+
+/**
  * nvme_get_attr() - Read sysfs attribute
  * @d: sysfs directory
  * @attr: sysfs attribute name

@@ -127,6 +127,8 @@ int json_read_config(nvme_root_t r, const char *config_file);
 
 int json_update_config(nvme_root_t r, const char *config_file);
 
+int json_dump_tree(nvme_root_t r);
+
 #if (LOG_FUNCNAME == 1)
 #define __nvme_log_func __func__
 #else

@@ -331,3 +331,133 @@ int json_update_config(nvme_root_t r, const char *config_file)
 
 	return ret;
 }
+
+static void json_dump_ctrl(struct json_object *ctrl_array, nvme_ctrl_t c)
+{
+	struct nvme_fabrics_config *cfg = nvme_ctrl_get_config(c);
+	struct json_object *ctrl_obj = json_object_new_object();
+	const char *name, *transport, *value;
+
+	name = nvme_ctrl_get_name(c);
+	if (name && strlen(name))
+		json_object_object_add(ctrl_obj, "name",
+				       json_object_new_string(name));
+	transport = nvme_ctrl_get_transport(c);
+	json_object_object_add(ctrl_obj, "transport",
+			       json_object_new_string(transport));
+	value = nvme_ctrl_get_traddr(c);
+	if (value)
+		json_object_object_add(ctrl_obj, "traddr",
+				       json_object_new_string(value));
+	value = nvme_ctrl_get_host_traddr(c);
+	if (value)
+		json_object_object_add(ctrl_obj, "host_traddr",
+				       json_object_new_string(value));
+	value = nvme_ctrl_get_host_iface(c);
+	if (value)
+		json_object_object_add(ctrl_obj, "host_iface",
+				       json_object_new_string(value));
+	value = nvme_ctrl_get_trsvcid(c);
+	if (value)
+		json_object_object_add(ctrl_obj, "trsvcid",
+				       json_object_new_string(value));
+	value = nvme_ctrl_get_dhchap_key(c);
+	if (value)
+		json_object_object_add(ctrl_obj, "dhchap_key",
+				       json_object_new_string(value));
+	JSON_INT_OPTION(cfg, ctrl_obj, nr_io_queues, 0);
+	JSON_INT_OPTION(cfg, ctrl_obj, nr_write_queues, 0);
+	JSON_INT_OPTION(cfg, ctrl_obj, nr_poll_queues, 0);
+	JSON_INT_OPTION(cfg, ctrl_obj, queue_size, 0);
+	JSON_INT_OPTION(cfg, ctrl_obj, keep_alive_tmo, 0);
+	JSON_INT_OPTION(cfg, ctrl_obj, reconnect_delay, 0);
+	if (strcmp(transport, "loop")) {
+		JSON_INT_OPTION(cfg, ctrl_obj, ctrl_loss_tmo,
+				NVMF_DEF_CTRL_LOSS_TMO);
+		JSON_INT_OPTION(cfg, ctrl_obj, fast_io_fail_tmo, 0);
+	}
+	JSON_INT_OPTION(cfg, ctrl_obj, tos, -1);
+	JSON_BOOL_OPTION(cfg, ctrl_obj, duplicate_connect);
+	JSON_BOOL_OPTION(cfg, ctrl_obj, disable_sqflow);
+	JSON_BOOL_OPTION(cfg, ctrl_obj, hdr_digest);
+	JSON_BOOL_OPTION(cfg, ctrl_obj, data_digest);
+	JSON_BOOL_OPTION(cfg, ctrl_obj, tls);
+	if (nvme_ctrl_is_persistent(c))
+		json_object_object_add(ctrl_obj, "persistent",
+				       json_object_new_boolean(true));
+	if (nvme_ctrl_is_discovery_ctrl(c))
+		json_object_object_add(ctrl_obj, "discovery",
+				       json_object_new_boolean(true));
+	json_object_array_add(ctrl_array, ctrl_obj);
+}
+
+static void json_dump_subsys(struct json_object *subsys_array,
+			       nvme_subsystem_t s)
+{
+	nvme_ctrl_t c;
+	struct json_object *subsys_obj = json_object_new_object();
+	struct json_object *ctrl_array;
+
+	json_object_object_add(subsys_obj, "name",
+			       json_object_new_string(nvme_subsystem_get_name(s)));
+	json_object_object_add(subsys_obj, "nqn",
+			       json_object_new_string(nvme_subsystem_get_nqn(s)));
+	ctrl_array = json_object_new_array();
+	nvme_subsystem_for_each_ctrl(s, c) {
+		json_dump_ctrl(ctrl_array, c);
+	}
+	if (json_object_array_length(ctrl_array))
+		json_object_object_add(subsys_obj, "controllers", ctrl_array);
+	else
+		json_object_put(ctrl_array);
+	json_object_array_add(subsys_array, subsys_obj);
+}
+
+int json_dump_tree(nvme_root_t r)
+{
+	nvme_host_t h;
+	struct json_object *json_root, *host_obj;
+	struct json_object *host_array, *subsys_array;
+	int ret = 0;
+
+	json_root = json_object_new_object();
+	host_array = json_object_new_array();
+	nvme_for_each_host(r, h) {
+		nvme_subsystem_t s;
+		const char *hostid, *dhchap_key;
+
+		host_obj = json_object_new_object();
+		json_object_object_add(host_obj, "hostnqn",
+				       json_object_new_string(nvme_host_get_hostnqn(h)));
+		hostid = nvme_host_get_hostid(h);
+		if (hostid)
+			json_object_object_add(host_obj, "hostid",
+					       json_object_new_string(hostid));
+		dhchap_key = nvme_host_get_dhchap_key(h);
+		if (dhchap_key)
+			json_object_object_add(host_obj, "dhchap_key",
+					       json_object_new_string(dhchap_key));
+		subsys_array = json_object_new_array();
+		nvme_for_each_subsystem(h, s) {
+			json_dump_subsys(subsys_array, s);
+		}
+		if (json_object_array_length(subsys_array))
+			json_object_object_add(host_obj, "subsystems",
+					       subsys_array);
+		else
+			json_object_put(subsys_array);
+		json_object_array_add(host_array, host_obj);
+	}
+	json_object_object_add(json_root, "hosts", host_array);
+
+	ret = json_object_to_fd(1, json_root, JSON_C_TO_STRING_PRETTY);
+	if (ret < 0) {
+		nvme_msg(r, LOG_ERR, "Failed to write to stdout, %s\n",
+			 json_util_get_last_err());
+		ret = -1;
+		errno = EIO;
+	}
+	json_object_put(json_root);
+
+	return ret;
+}
