@@ -12,6 +12,12 @@
 #include "types.h"
 
 /**
+ * DOC: util.h
+ *
+ * libnvme utility functions
+ */
+
+/**
  * enum nvme_connect_err - nvme connect error codes
  * @ENVME_CONNECT_RESOLVE:	failed to resolve host
  * @ENVME_CONNECT_ADDRFAM:	unrecognized address family

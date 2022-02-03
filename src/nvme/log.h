@@ -16,6 +16,12 @@
 #endif
 
 /**
+ * DOC: log.h
+ *
+ * logging functions
+ */
+
+/**
  * nvme_init_logging() - initialize logging
  * @r: nvme_root_t context
  * @lvl: logging level to set

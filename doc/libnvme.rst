@@ -1,3 +1,10 @@
+.. _filters.h:
+
+**filters.h**
+
+
+libnvme directory filter
+
 .. c:function:: int nvme_namespace_filter (const struct dirent *d)
 
 
@@ -75,6 +82,13 @@
 
 ``struct dirent ***namespaces``
 
+
+.. _ioctl.h:
+
+**ioctl.h**
+
+
+Linux NVMe ioctl interface functions
 
 
 
@@ -6105,6 +6119,13 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
+.. _linux.h:
+
+**linux.h**
+
+
+linux-specific utility functions
+
 .. c:function:: int nvme_fw_download_seq (int fd, __u32 size, __u32 xfer, __u32 offset, void *buf)
 
 
@@ -6437,6 +6458,13 @@ If key generation was successful the function returns 0 or
 -1 with errno set otherwise.
 
 
+.. _log.h:
+
+**log.h**
+
+
+logging functions
+
 .. c:function:: void nvme_init_logging (nvme_root_t r, int lvl, bool log_pid, bool log_tstamp)
 
    initialize logging
@@ -6459,6 +6487,13 @@ If key generation was successful the function returns 0 or
 
 Sets the default logging variables for the library.
 
+
+.. _tree.h:
+
+**tree.h**
+
+
+libnvme tree object interface
 
 .. c:function:: nvme_root_t nvme_create_root (FILE *fp, int log_level)
 
@@ -8423,6 +8458,13 @@ string with the contents of **attr**
 
 nvme_ns_t object or NULL if not found.
 
+
+.. _types.h:
+
+**types.h**
+
+
+NVMe standard definitions
 
 .. c:function:: NVME_GET (value, name)
 
@@ -17488,6 +17530,13 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 ``NVME_ZNS_ZRAS_REPORT_OFFLINE``
 
 
+.. _fabrics.h:
+
+**fabrics.h**
+
+
+Fabrics-specific definitions.
+
 
 
 .. c:type:: struct nvme_fabrics_config
@@ -17871,6 +17920,13 @@ Pointer to the new controller
 ``int l``
   Maximum length of string
 
+
+.. _util.h:
+
+**util.h**
+
+
+libnvme utility functions
 
 
 

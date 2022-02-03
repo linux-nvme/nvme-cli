@@ -13,6 +13,12 @@
 #include <stdint.h>
 #include "tree.h"
 
+/**
+ * DOC: fabrics.h
+ *
+ * Fabrics-specific definitions.
+ */
+
 /* default to 600 seconds of reconnect attempts before giving up */
 #define NVMF_DEF_CTRL_LOSS_TMO		600
 
@@ -155,7 +161,7 @@ const char *nvmf_qptype_str(__u8 qptype);
 const char *nvmf_cms_str(__u8 cms);
 
 /**
- * nvmf_default_config - Default values for fabrics configuration
+ * nvmf_default_config() - Default values for fabrics configuration
  * @cfg: config values to set
  *
  * Initializes @cfg with default values.

@@ -24,6 +24,12 @@
 #ifndef _LINUX_NVME_IOCTL_H
 #define _LINUX_NVME_IOCTL_H
 
+/**
+ * DOC: ioctl.h
+ *
+ * Linux NVMe ioctl interface functions
+ */
+
 /* '0' is interpreted by the kernel to mean 'apply the default timeout' */
 #define NVME_DEFAULT_IOCTL_TIMEOUT 0
 

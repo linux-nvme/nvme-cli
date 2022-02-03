@@ -16,6 +16,12 @@
 #include <linux/types.h>
 
 /**
+ * DOC: types.h
+ *
+ * NVMe standard definitions
+ */
+
+/**
  * NVME_GET() - extract field from complex value
  * @value: The original value of a complex field
  * @name: The name of the sub-field within an nvme value

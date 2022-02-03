@@ -14,6 +14,12 @@
 #include "types.h"
 
 /**
+ * DOC: linux.h
+ *
+ * linux-specific utility functions
+ */
+
+/**
  * nvme_fw_download_seq() -
  * @fd:     File descriptor of nvme device
  * @size:   Total size of the firmware image to transfer
