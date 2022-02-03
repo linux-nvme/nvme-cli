@@ -1287,7 +1287,10 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 		return NULL;
 	}
 	subsysname = nvme_ctrl_lookup_subsystem_name(r, name);
+	/* subsysname might be NULL here */
 	s = nvme_lookup_subsystem(h, subsysname, subsysnqn);
+	if (subsysname)
+		free(subsysname);
 	free(subsysnqn);
 	if (!s) {
 		free(path);
