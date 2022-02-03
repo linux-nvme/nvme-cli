@@ -669,7 +669,7 @@ const char *nvme_ctrl_get_subsysnqn(nvme_ctrl_t c)
 
 const char *nvme_ctrl_get_address(nvme_ctrl_t c)
 {
-	return c->address;
+	return c->address ? c->address : "";
 }
 
 const char *nvme_ctrl_get_firmware(nvme_ctrl_t c)

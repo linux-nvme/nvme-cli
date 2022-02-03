@@ -735,7 +735,8 @@ const char *nvme_ctrl_get_sysfs_dir(nvme_ctrl_t c);
  * nvme_ctrl_get_address() - Address string of an nvme_ctrl_t
  * @c: nvme_ctrl_t object
  *
- * Return: NVMe-over-Fabrics address string of @c
+ * Return: NVMe-over-Fabrics address string of @c or empty string
+ * of no address is present.
  */
 const char *nvme_ctrl_get_address(nvme_ctrl_t c);
 
