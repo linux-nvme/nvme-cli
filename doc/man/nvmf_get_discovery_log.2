@@ -1,15 +1,17 @@
-.TH "nvmf_get_discovery_log" 2 "nvmf_get_discovery_log" "February 2020" "libnvme Manual"
+.TH "nvmf_get_discovery_log" 9 "nvmf_get_discovery_log" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvmf_get_discovery_log \- 
+nvmf_get_discovery_log \- Return the discovery log page
 .SH SYNOPSIS
 .B "int" nvmf_get_discovery_log
-.BI "(nvme_ctrl_t " c ","
-.BI "struct nvmf_discovery_log **" logp ","
-.BI "int " max_retries ");"
+.BI "(nvme_ctrl_t c "  ","
+.BI "struct nvmf_discovery_log **logp "  ","
+.BI "int max_retries "  ");"
 .SH ARGUMENTS
 .IP "c" 12
--- undescribed --
+Discover controller to use 
 .IP "logp" 12
--- undescribed --
+Pointer to the log page to be returned
 .IP "max_retries" 12
--- undescribed --
+maximum number of log page entries to be returned
+.SH "RETURN"
+0 on success; on failure -1 is returned and errno is set

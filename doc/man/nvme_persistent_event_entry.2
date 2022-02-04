@@ -1,0 +1,38 @@
+.TH "libnvme" 9 "struct nvme_persistent_event_entry" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_persistent_event_entry \- 
+.SH SYNOPSIS
+struct nvme_persistent_event_entry {
+.br
+.BI "    __u8 etype;"
+.br
+.BI "    __u8 etype_rev;"
+.br
+.BI "    __u8 ehl;"
+.br
+.BI "    __u8 rsvd3;"
+.br
+.BI "    __le16 cntlid;"
+.br
+.BI "    __le64 ets;"
+.br
+.BI "    __u8 rsvd14[6];"
+.br
+.BI "    __le16 vsil;"
+.br
+.BI "    __le16 el;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "etype" 12
+.IP "etype_rev" 12
+.IP "ehl" 12
+.IP "rsvd3" 12
+.IP "cntlid" 12
+.IP "ets" 12
+.IP "rsvd14" 12
+.IP "vsil" 12
+.IP "el" 12

@@ -1,8 +1,11 @@
-.TH "nvme_subsystem_first_ctrl" 2 "nvme_subsystem_first_ctrl" "February 2020" "libnvme Manual"
+.TH "nvme_subsystem_first_ctrl" 9 "nvme_subsystem_first_ctrl" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_subsystem_first_ctrl \- 
+nvme_subsystem_first_ctrl \- First ctrl iterator
 .SH SYNOPSIS
 .B "nvme_ctrl_t" nvme_subsystem_first_ctrl
-.BI "(nvme_subsystem_t " s ");"
+.BI "(nvme_subsystem_t s "  ");"
 .SH ARGUMENTS
 .IP "s" 12
+nvme_subsystem_t object
+.SH "RETURN"
+First nvme_ctrl_t object of an \fIs\fP iterator

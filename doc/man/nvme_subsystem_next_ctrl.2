@@ -1,11 +1,14 @@
-.TH "nvme_subsystem_next_ctrl" 2 "nvme_subsystem_next_ctrl" "February 2020" "libnvme Manual"
+.TH "nvme_subsystem_next_ctrl" 9 "nvme_subsystem_next_ctrl" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_subsystem_next_ctrl \- 
+nvme_subsystem_next_ctrl \- Next ctrl iterator
 .SH SYNOPSIS
 .B "nvme_ctrl_t" nvme_subsystem_next_ctrl
-.BI "(nvme_subsystem_t " s ","
-.BI "nvme_ctrl_t " c ");"
+.BI "(nvme_subsystem_t s "  ","
+.BI "nvme_ctrl_t c "  ");"
 .SH ARGUMENTS
 .IP "s" 12
--- undescribed --
+nvme_subsystem_t object
 .IP "c" 12
+previous nvme_ctrl_t object of an \fIs\fP iterator
+.SH "RETURN"
+next nvme_ctrl_t object of an \fIs\fP iterator

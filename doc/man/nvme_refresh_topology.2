@@ -1,9 +1,11 @@
-.TH "nvme_refresh_topology" 2 "nvme_refresh_topology" "February 2020" "libnvme Manual"
+.TH "nvme_refresh_topology" 9 "nvme_refresh_topology" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_refresh_topology \- 
+nvme_refresh_topology \- refresh nvme_root_t object contents
 .SH SYNOPSIS
 .B "void" nvme_refresh_topology
-.BI "(nvme_root_t " r ");"
+.BI "(nvme_root_t r "  ");"
 .SH ARGUMENTS
 .IP "r" 12
--- undescribed --
+nvme_root_t object
+.SH "DESCRIPTION"
+Removes all elements in \fIr\fP and rescans the existing topology.

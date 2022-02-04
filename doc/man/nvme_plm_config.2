@@ -1,0 +1,29 @@
+.TH "libnvme" 9 "struct nvme_plm_config" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_plm_config \- 
+.SH SYNOPSIS
+struct nvme_plm_config {
+.br
+.BI "    __le16 ee;"
+.br
+.BI "    __u8 rsvd2[30];"
+.br
+.BI "    __le64 dtwinrt;"
+.br
+.BI "    __le64 dtwinwt;"
+.br
+.BI "    __le64 dtwintt;"
+.br
+.BI "    __u8 rsvd56[456];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ee" 12
+.IP "rsvd2" 12
+.IP "dtwinrt" 12
+.IP "dtwinwt" 12
+.IP "dtwintt" 12
+.IP "rsvd56" 12

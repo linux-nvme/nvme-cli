@@ -1,0 +1,38 @@
+.TH "libnvme" 9 "struct nvme_mi_read_ctrl_info" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_mi_read_ctrl_info \- 
+.SH SYNOPSIS
+struct nvme_mi_read_ctrl_info {
+.br
+.BI "    __u8 portid;"
+.br
+.BI "    __u8 rsvd1[4];"
+.br
+.BI "    __u8 prii;"
+.br
+.BI "    __le16 pri;"
+.br
+.BI "    __le16 vid;"
+.br
+.BI "    __le16 did;"
+.br
+.BI "    __le16 ssvid;"
+.br
+.BI "    __le16 ssid;"
+.br
+.BI "    __u8 rsvd16[16];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "portid" 12
+.IP "rsvd1" 12
+.IP "prii" 12
+.IP "pri" 12
+.IP "vid" 12
+.IP "did" 12
+.IP "ssvid" 12
+.IP "ssid" 12
+.IP "rsvd16" 12

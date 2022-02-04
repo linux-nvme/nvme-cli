@@ -1,0 +1,53 @@
+.TH "libnvme" 9 "struct nvme_nvmset_predictable_lat_log" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_nvmset_predictable_lat_log \- 
+.SH SYNOPSIS
+struct nvme_nvmset_predictable_lat_log {
+.br
+.BI "    __u8 status;"
+.br
+.BI "    __u8 rsvd1;"
+.br
+.BI "    __le16 event_type;"
+.br
+.BI "    __u8 rsvd4[28];"
+.br
+.BI "    __le64 dtwin_rt;"
+.br
+.BI "    __le64 dtwin_wt;"
+.br
+.BI "    __le64 dtwin_tmax;"
+.br
+.BI "    __le64 ndwin_tmin_hi;"
+.br
+.BI "    __le64 ndwin_tmin_lo;"
+.br
+.BI "    __u8 rsvd72[56];"
+.br
+.BI "    __le64 dtwin_re;"
+.br
+.BI "    __le64 dtwin_we;"
+.br
+.BI "    __le64 dtwin_te;"
+.br
+.BI "    __u8 rsvd152[360];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "status" 12
+.IP "rsvd1" 12
+.IP "event_type" 12
+.IP "rsvd4" 12
+.IP "dtwin_rt" 12
+.IP "dtwin_wt" 12
+.IP "dtwin_tmax" 12
+.IP "ndwin_tmin_hi" 12
+.IP "ndwin_tmin_lo" 12
+.IP "rsvd72" 12
+.IP "dtwin_re" 12
+.IP "dtwin_we" 12
+.IP "dtwin_te" 12
+.IP "rsvd152" 12

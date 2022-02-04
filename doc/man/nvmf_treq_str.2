@@ -1,9 +1,14 @@
-.TH "nvmf_treq_str" 2 "nvmf_treq_str" "February 2020" "libnvme Manual"
+.TH "nvmf_treq_str" 9 "nvmf_treq_str" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvmf_treq_str \- 
+nvmf_treq_str \- Decode TREQ field
 .SH SYNOPSIS
 .B "const char *" nvmf_treq_str
-.BI "(__u8 " treq ");"
+.BI "(__u8 treq "  ");"
 .SH ARGUMENTS
 .IP "treq" 12
--- undescribed --
+value to be decoded
+.SH "DESCRIPTION"
+Decode the transport requirements field in the
+discovery log page entry.
+.SH "RETURN"
+decoded string

@@ -1,11 +1,14 @@
-.TH "nvme_get_subsys_attr" 2 "nvme_get_subsys_attr" "February 2020" "libnvme Manual"
+.TH "nvme_get_subsys_attr" 9 "nvme_get_subsys_attr" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_get_subsys_attr \- 
+nvme_get_subsys_attr \- Read subsystem sysfs attribute
 .SH SYNOPSIS
 .B "char *" nvme_get_subsys_attr
-.BI "(nvme_subsystem_t " s ","
-.BI "const char *" attr ");"
+.BI "(nvme_subsystem_t s "  ","
+.BI "const char *attr "  ");"
 .SH ARGUMENTS
 .IP "s" 12
--- undescribed --
+nvme_subsystem_t object
 .IP "attr" 12
+sysfs attribute name
+.SH "RETURN"
+string with the contents of \fIattr\fP

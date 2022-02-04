@@ -1,25 +1,30 @@
-.TH "nvme_get_log_page" 2 "nvme_get_log_page" "February 2020" "libnvme Manual"
+.TH "nvme_get_log_page" 9 "nvme_get_log_page" "February 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_get_log_page \- 
 .SH SYNOPSIS
 .B "int" nvme_get_log_page
-.BI "(int " fd ","
-.BI "__u32 " nsid ","
-.BI "__u8 " log_id ","
-.BI "bool " rae ","
-.BI "__u32 " data_len ","
-.BI "void *" data ");"
+.BI "(int fd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u8 log_id "  ","
+.BI "bool rae "  ","
+.BI "__u32 xfer_len "  ","
+.BI "__u32 data_len "  ","
+.BI "void *data "  ");"
 .SH ARGUMENTS
 .IP "fd" 12
--- undescribed --
+File descriptor of nvme device
 .IP "nsid" 12
--- undescribed --
+Namespace Identifier, if applicable.
 .IP "log_id" 12
--- undescribed --
+Log Identifier, see \fIenum nvme_cmd_get_log_lid\fP.
 .IP "rae" 12
--- undescribed --
+Retain asynchronous events
+.IP "xfer_len" 12
+Max log transfer size per request to split the total.
 .IP "data_len" 12
--- undescribed --
+Total length of the log to transfer.
 .IP "data" 12
-.SH "DESCRIPTION"
-Calls \fB__nvme_get_log_page\fP with a default 4k transfer length.
+User address of at least \fIdata_len\fP to store the log.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

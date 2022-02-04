@@ -1,8 +1,11 @@
-.TH "nvme_ctrl_get_serial" 2 "nvme_ctrl_get_serial" "February 2020" "libnvme Manual"
+.TH "nvme_ctrl_get_serial" 9 "nvme_ctrl_get_serial" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_ctrl_get_serial \- 
+nvme_ctrl_get_serial \- Serial number of an nvme_ctrl_t object
 .SH SYNOPSIS
 .B "const char *" nvme_ctrl_get_serial
-.BI "(nvme_ctrl_t " c ");"
+.BI "(nvme_ctrl_t c "  ");"
 .SH ARGUMENTS
 .IP "c" 12
+nvme_ctrl_t object
+.SH "RETURN"
+Serial number string of \fIc\fP

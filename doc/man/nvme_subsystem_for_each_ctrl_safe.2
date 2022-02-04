@@ -1,15 +1,15 @@
-.TH "nvme_subsystem_for_each_ctrl_safe" 2 "nvme_subsystem_for_each_ctrl_safe" "February 2020" "libnvme Manual"
+.TH "nvme_subsystem_for_each_ctrl_safe" 9 "nvme_subsystem_for_each_ctrl_safe" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_subsystem_for_each_ctrl_safe \- 
+nvme_subsystem_for_each_ctrl_safe \- Traverse controllers
 .SH SYNOPSIS
 .B "nvme_subsystem_for_each_ctrl_safe
-.BI "(" s ","
-.BI "" c ","
-.BI "" _c ");"
+.BI "(s "  ","
+.BI "c "  ","
+.BI "_c "  ");"
 .SH ARGUMENTS
 .IP "s" 12
--- undescribed --
+nvme_subsystem_t object
 .IP "c" 12
--- undescribed --
+nvme_ctrl_t object
 .IP "_c" 12
--- undescribed --
+temporary nvme_ctrl_t object

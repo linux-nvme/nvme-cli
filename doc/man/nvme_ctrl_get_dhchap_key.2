@@ -1,0 +1,11 @@
+.TH "nvme_ctrl_get_dhchap_key" 9 "nvme_ctrl_get_dhchap_key" "February 2022" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_get_dhchap_key \- return controller key
+.SH SYNOPSIS
+.B "const char *" nvme_ctrl_get_dhchap_key
+.BI "(nvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+controller for which the key should be returned
+.SH "RETURN"
+DH-HMAC-CHAP controller key or NULL if not set

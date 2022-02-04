@@ -1,0 +1,32 @@
+.TH "libnvme" 9 "struct nvme_copy_range" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_copy_range \- 
+.SH SYNOPSIS
+struct nvme_copy_range {
+.br
+.BI "    __u8 rsvd0[8];"
+.br
+.BI "    __le64 slba;"
+.br
+.BI "    __le16 nlb;"
+.br
+.BI "    __u8 rsvd18[6];"
+.br
+.BI "    __le32 eilbrt;"
+.br
+.BI "    __le16 elbatm;"
+.br
+.BI "    __le16 elbat;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "rsvd0" 12
+.IP "slba" 12
+.IP "nlb" 12
+.IP "rsvd18" 12
+.IP "eilbrt" 12
+.IP "elbatm" 12
+.IP "elbat" 12

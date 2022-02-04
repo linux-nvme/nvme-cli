@@ -1,0 +1,62 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_oaes" "February 2022" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_oaes \- Optional Asynchronous Events Supported
+.SH SYNOPSIS
+enum nvme_id_ctrl_oaes {
+.br
+.BI "    NVME_CTRL_OAES_NA"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_FA"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ANA"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_PLEA"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_LBAS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_EGE"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_NS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_ZD"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OAES_DL"
+
+};
+.SH Constants
+.IP "NVME_CTRL_OAES_NA" 12
+Namespace Attribute Notices event supported
+.IP "NVME_CTRL_OAES_FA" 12
+Firmware Activation Notices event supported
+.IP "NVME_CTRL_OAES_ANA" 12
+ANA Change Notices supported
+.IP "NVME_CTRL_OAES_PLEA" 12
+Predictable Latency Event Aggregate Log
+Change Notices event supported
+.IP "NVME_CTRL_OAES_LBAS" 12
+LBA Status Information Notices event supported
+.IP "NVME_CTRL_OAES_EGE" 12
+Endurance Group Events Aggregate Log Change
+Notices event supported
+.IP "NVME_CTRL_OAES_NS" 12
+Normal NVM Subsystem Shutdown event supported
+.IP "NVME_CTRL_OAES_ZD" 12
+Zone Descriptor Change Notifications supported
+.IP "NVME_CTRL_OAES_DL" 12
+Discover Log Page Change Notifications supported

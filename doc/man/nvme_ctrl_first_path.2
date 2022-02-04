@@ -1,8 +1,11 @@
-.TH "nvme_ctrl_first_path" 2 "nvme_ctrl_first_path" "February 2020" "libnvme Manual"
+.TH "nvme_ctrl_first_path" 9 "nvme_ctrl_first_path" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_ctrl_first_path \- 
+nvme_ctrl_first_path \- Start path iterator
 .SH SYNOPSIS
 .B "nvme_path_t" nvme_ctrl_first_path
-.BI "(nvme_ctrl_t " c ");"
+.BI "(nvme_ctrl_t c "  ");"
 .SH ARGUMENTS
 .IP "c" 12
+nvme_ctrl_t object
+.SH "RETURN"
+First nvme_path_t object of an \fIc\fP iterator

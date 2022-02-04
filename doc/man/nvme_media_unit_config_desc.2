@@ -1,0 +1,24 @@
+.TH "libnvme" 9 "struct nvme_media_unit_config_desc" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_media_unit_config_desc \- 
+.SH SYNOPSIS
+struct nvme_media_unit_config_desc {
+.br
+.BI "    __le16 muid;"
+.br
+.BI "    __u8 rsvd2[4];"
+.br
+.BI "    __le16 mudl;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "muid" 12
+Media Unit Identifier
+.IP "mudl" 12
+Media Unit Descriptor Length
+.SH "Description"
+Media Unit Configuration Descriptor
+Structure Definitions

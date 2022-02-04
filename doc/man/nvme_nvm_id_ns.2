@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "struct nvme_nvm_id_ns" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_nvm_id_ns \- 
+.SH SYNOPSIS
+struct nvme_nvm_id_ns {
+.br
+.BI "    __le64 lbstm;"
+.br
+.BI "    __u8 pic;"
+.br
+.BI "    __u8 rsvd9[3];"
+.br
+.BI "    __le32 elbaf[64];"
+.br
+.BI "    __u8 rsvd268[3828];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "lbstm" 12
+Logical Block Storage Tag Mask
+.IP "pic" 12
+Protection Information Capabilities
+.IP "rsvd9" 12
+Reserved
+.IP "elbaf" 12
+List of Extended LBA Format Support
+.IP "rsvd268" 12
+Reserved

@@ -1,0 +1,17 @@
+.TH "libnvme" 9 "struct nvme_time_stamp_change_event" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_time_stamp_change_event \- 
+.SH SYNOPSIS
+struct nvme_time_stamp_change_event {
+.br
+.BI "    __le64 previous_timestamp;"
+.br
+.BI "    __le64 ml_secs_since_reset;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "previous_timestamp" 12
+.IP "ml_secs_since_reset" 12

@@ -1,0 +1,32 @@
+.TH "libnvme" 9 "struct nvme_lba_range_type_entry" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_lba_range_type_entry \- 
+.SH SYNOPSIS
+struct nvme_lba_range_type_entry {
+.br
+.BI "    __u8 type;"
+.br
+.BI "    __u8 attributes;"
+.br
+.BI "    __u8 rsvd2[14];"
+.br
+.BI "    __u64 slba;"
+.br
+.BI "    __u64 nlb;"
+.br
+.BI "    __u8 guid[16];"
+.br
+.BI "    __u8 rsvd48[16];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "type" 12
+.IP "attributes" 12
+.IP "rsvd2" 12
+.IP "slba" 12
+.IP "nlb" 12
+.IP "guid" 12
+.IP "rsvd48" 12

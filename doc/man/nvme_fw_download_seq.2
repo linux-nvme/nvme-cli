@@ -1,20 +1,24 @@
-.TH "nvme_fw_download_seq" 2 "nvme_fw_download_seq" "February 2020" "libnvme Manual"
+.TH "nvme_fw_download_seq" 9 "nvme_fw_download_seq" "February 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_fw_download_seq \- 
 .SH SYNOPSIS
 .B "int" nvme_fw_download_seq
-.BI "(int " fd ","
-.BI "__u32 " size ","
-.BI "__u32 " xfer ","
-.BI "__u32 " offset ","
-.BI "void *" buf ");"
+.BI "(int fd "  ","
+.BI "__u32 size "  ","
+.BI "__u32 xfer "  ","
+.BI "__u32 offset "  ","
+.BI "void *buf "  ");"
 .SH ARGUMENTS
 .IP "fd" 12
--- undescribed --
+File descriptor of nvme device
 .IP "size" 12
--- undescribed --
+Total size of the firmware image to transfer
 .IP "xfer" 12
--- undescribed --
+Maximum size to send with each partial transfer
 .IP "offset" 12
--- undescribed --
+Starting offset to send with this firmware downlaod
 .IP "buf" 12
+Address of buffer containing all or part of the firmware image.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

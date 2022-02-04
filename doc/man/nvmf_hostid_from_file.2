@@ -1,6 +1,9 @@
-.TH "nvmf_hostid_from_file" 2 "nvmf_hostid_from_file" "February 2020" "libnvme Manual"
+.TH "nvmf_hostid_from_file" 9 "nvmf_hostid_from_file" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvmf_hostid_from_file \- 
+nvmf_hostid_from_file \- Reads the host identifier from the config default location in /etc/nvme/.
 .SH SYNOPSIS
 .B "char *" nvmf_hostid_from_file
 .SH ARGUMENTS
+.SH "RETURN"
+The host identifier, or NULL if unsuccessful. If found, the caller
+is responsible to free the string.

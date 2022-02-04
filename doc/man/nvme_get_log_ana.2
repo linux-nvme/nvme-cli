@@ -1,14 +1,14 @@
-.TH "nvme_get_log_ana" 2 "nvme_get_log_ana" "February 2020" "libnvme Manual"
+.TH "nvme_get_log_ana" 9 "nvme_get_log_ana" "February 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_get_log_ana \- 
 .SH SYNOPSIS
 .B "int" nvme_get_log_ana
-.BI "(int " fd ","
-.BI "enum nvme_log_ana_lsp " lsp ","
-.BI "bool " rae ","
-.BI "__u64 " offset ","
-.BI "__u32 " len ","
-.BI "void *" log ");"
+.BI "(int fd "  ","
+.BI "enum nvme_log_ana_lsp lsp "  ","
+.BI "bool rae "  ","
+.BI "__u64 offset "  ","
+.BI "__u32 len "  ","
+.BI "void *log "  ");"
 .SH ARGUMENTS
 .IP "fd" 12
 File descriptor of nvme device
@@ -17,7 +17,7 @@ Log specific, see \fIenum nvme_get_log_ana_lsp\fP
 .IP "rae" 12
 Retain asynchronous events
 .IP "offset" 12
--- undescribed --
+Offset to the start of the log page
 .IP "len" 12
 The allocated length of the log page
 .IP "log" 12
@@ -29,5 +29,5 @@ namespaces that are attached to the controller processing the command.
 
 See \fIstruct nvme_ana_rsp_hdr\fP for the defintion of the returned structure.
 .SH "RETURN"
-The nvme command status if a response was received or -1 with errno
-set otherwise.
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

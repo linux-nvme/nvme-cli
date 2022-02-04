@@ -1,9 +1,11 @@
-.TH "nvme_free_tree" 2 "nvme_free_tree" "February 2020" "libnvme Manual"
+.TH "nvme_free_tree" 9 "nvme_free_tree" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_free_tree \- 
+nvme_free_tree \- Free root object
 .SH SYNOPSIS
 .B "void" nvme_free_tree
-.BI "(nvme_root_t " r ");"
+.BI "(nvme_root_t r "  ");"
 .SH ARGUMENTS
 .IP "r" 12
--- undescribed --
+nvme_root_t object
+.SH "DESCRIPTION"
+Free an nvme_root_t object and all attached objects

@@ -1,11 +1,14 @@
-.TH "nvme_get_path_attr" 2 "nvme_get_path_attr" "February 2020" "libnvme Manual"
+.TH "nvme_get_path_attr" 9 "nvme_get_path_attr" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_get_path_attr \- 
+nvme_get_path_attr \- Read path sysfs attribute
 .SH SYNOPSIS
 .B "char *" nvme_get_path_attr
-.BI "(nvme_path_t " p ","
-.BI "const char *" attr ");"
+.BI "(nvme_path_t p "  ","
+.BI "const char *attr "  ");"
 .SH ARGUMENTS
 .IP "p" 12
--- undescribed --
+nvme_path_t object
 .IP "attr" 12
+sysfs attribute name
+.SH "RETURN"
+string with the contents of \fIattr\fP

@@ -1,11 +1,12 @@
-.TH "nvme_ctrl_next_path" 2 "nvme_ctrl_next_path" "February 2020" "libnvme Manual"
+.TH "nvme_ctrl_next_path" 9 "nvme_ctrl_next_path" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_ctrl_next_path \- 
+nvme_ctrl_next_path \- Next path iterator
 .SH SYNOPSIS
 .B "nvme_path_t" nvme_ctrl_next_path
-.BI "(nvme_ctrl_t " c ","
-.BI "nvme_path_t " p ");"
+.BI "(nvme_ctrl_t c "  ","
+.BI "nvme_path_t p "  ");"
 .SH ARGUMENTS
 .IP "c" 12
--- undescribed --
+nvme_ctrl_t object
 .IP "p" 12
+previous nvme_path_t object of an \fIc\fP iterator

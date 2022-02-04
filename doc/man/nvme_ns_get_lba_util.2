@@ -1,8 +1,11 @@
-.TH "nvme_ns_get_lba_util" 2 "nvme_ns_get_lba_util" "February 2020" "libnvme Manual"
+.TH "nvme_ns_get_lba_util" 9 "nvme_ns_get_lba_util" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_ns_get_lba_util \- 
+nvme_ns_get_lba_util \- LBA utilisation of an nvme_ns_t object
 .SH SYNOPSIS
 .B "uint64_t" nvme_ns_get_lba_util
-.BI "(nvme_ns_t " n ");"
+.BI "(nvme_ns_t n "  ");"
 .SH ARGUMENTS
 .IP "n" 12
+nvme_ns_t object
+.SH "RETURN"
+LBA utilisation of \fIn\fP

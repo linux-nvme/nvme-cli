@@ -1,0 +1,38 @@
+.TH "libnvme" 9 "struct nvme_zns_desc" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_zns_desc \- 
+.SH SYNOPSIS
+struct nvme_zns_desc {
+.br
+.BI "    __u8 zt;"
+.br
+.BI "    __u8 zs;"
+.br
+.BI "    __u8 za;"
+.br
+.BI "    __u8 zai;"
+.br
+.BI "    __u8 rsvd4[4];"
+.br
+.BI "    __le64 zcap;"
+.br
+.BI "    __le64 zslba;"
+.br
+.BI "    __le64 wp;"
+.br
+.BI "    __u8 rsvd32[32];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "zt" 12
+.IP "zs" 12
+.IP "za" 12
+.IP "zai" 12
+.IP "rsvd4" 12
+.IP "zcap" 12
+.IP "zslba" 12
+.IP "wp" 12
+.IP "rsvd32" 12

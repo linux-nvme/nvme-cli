@@ -1,27 +1,27 @@
-.TH "nvme_set_features_lba_range" 2 "nvme_set_features_lba_range" "February 2020" "libnvme Manual"
+.TH "nvme_set_features_lba_range" 9 "nvme_set_features_lba_range" "February 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_set_features_lba_range \- 
 .SH SYNOPSIS
 .B "int" nvme_set_features_lba_range
-.BI "(int " fd ","
-.BI "__u32 " nsid ","
-.BI "__u32 " nr_ranges ","
-.BI "bool " save ","
-.BI "struct nvme_lba_range_type *" data ","
-.BI "__u32 *" result ");"
+.BI "(int fd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u32 nr_ranges "  ","
+.BI "bool save "  ","
+.BI "struct nvme_lba_range_type *data "  ","
+.BI "__u32 *result "  ");"
 .SH ARGUMENTS
 .IP "fd" 12
 File descriptor of nvme device
 .IP "nsid" 12
--- undescribed --
+Namespace ID
 .IP "nr_ranges" 12
--- undescribed --
+Number of ranges in \fIdata\fP
 .IP "save" 12
 Save value across power states
 .IP "data" 12
--- undescribed --
+User address of feature data
 .IP "result" 12
 The command completion result from CQE dword0
 .SH "RETURN"
-The nvme command status if a response was received or -1 with errno
-set otherwise.
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

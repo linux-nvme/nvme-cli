@@ -1,0 +1,46 @@
+.TH "libnvme" 9 "struct nvme_end_grp_config_desc" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_end_grp_config_desc \- 
+.SH SYNOPSIS
+struct nvme_end_grp_config_desc {
+.br
+.BI "    __le16 endgid;"
+.br
+.BI "    __le16 cap_adj_factor;"
+.br
+.BI "    __u8 rsvd4[12];"
+.br
+.BI "    __u8 tegcap[16];"
+.br
+.BI "    __u8 segcap[16];"
+.br
+.BI "    __u8 end_est[16];"
+.br
+.BI "    __u8 rsvd64[16];"
+.br
+.BI "    __le16 egsets;"
+.br
+.BI "    __le16 nvmsetid[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "endgid" 12
+Endurance Group Identifier
+.IP "cap_adj_factor" 12
+Capacity Adjustment Factor
+.IP "tegcap" 12
+Total Endurance Group Capacity
+.IP "segcap" 12
+Spare Endurance Group Capacity
+.IP "end_est" 12
+Endurance Estimate
+.IP "egsets" 12
+Number of NVM Sets
+.IP "nvmsetid" 12
+NVM Set Identifier
+.SH "Description"
+Endurance Group Configuration Descriptor
+Structure Definitions

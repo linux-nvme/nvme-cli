@@ -1,8 +1,11 @@
-.TH "nvme_ctrl_get_sysfs_dir" 2 "nvme_ctrl_get_sysfs_dir" "February 2020" "libnvme Manual"
+.TH "nvme_ctrl_get_sysfs_dir" 9 "nvme_ctrl_get_sysfs_dir" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_ctrl_get_sysfs_dir \- 
+nvme_ctrl_get_sysfs_dir \- sysfs directory of an nvme_ctrl_t object
 .SH SYNOPSIS
 .B "const char *" nvme_ctrl_get_sysfs_dir
-.BI "(nvme_ctrl_t " c ");"
+.BI "(nvme_ctrl_t c "  ");"
 .SH ARGUMENTS
 .IP "c" 12
+nvme_ctrl_t object
+.SH "RETURN"
+sysfs directory name of \fIc\fP

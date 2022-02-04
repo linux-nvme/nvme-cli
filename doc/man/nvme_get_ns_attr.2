@@ -1,11 +1,14 @@
-.TH "nvme_get_ns_attr" 2 "nvme_get_ns_attr" "February 2020" "libnvme Manual"
+.TH "nvme_get_ns_attr" 9 "nvme_get_ns_attr" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_get_ns_attr \- 
+nvme_get_ns_attr \- Read namespace sysfs attribute
 .SH SYNOPSIS
 .B "char *" nvme_get_ns_attr
-.BI "(nvme_ns_t " n ","
-.BI "const char *" attr ");"
+.BI "(nvme_ns_t n "  ","
+.BI "const char *attr "  ");"
 .SH ARGUMENTS
 .IP "n" 12
--- undescribed --
+nvme_ns_t object
 .IP "attr" 12
+sysfs attribute name
+.SH "RETURN"
+string with the contents of \fIattr\fP
