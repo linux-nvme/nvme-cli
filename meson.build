@@ -29,6 +29,7 @@ systemddir     = join_paths(prefixdir, get_option('systemddir'))
 
 ###############################################################################
 conf = configuration_data()
+requires = ''
 
 libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
 
@@ -40,7 +41,12 @@ conf.set('CONFIG_LIBUUID', libuuid_dep.found(), description: 'Is libuuid availab
 json_c_dep = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c_dep'])
 if json_c_dep.found()
   conf.set('CONFIG_JSONC', true, description: 'Is json-c available?')
-  conf.set('CONFIG_JSONC_14', json_c_dep.version().version_compare('>=0.14'), description: 'Is json-c at least 0.14?')
+  if json_c_dep.version().version_compare('>=0.14')
+    conf.set('CONFIG_JSONC_14', true, description: 'Is json-c at least 0.14?')
+    requires = 'Requires: json-c >= 0.14'
+  else
+    requires = 'Requires: json-c >= 0.13'
+  endif
 endif
 
 # Check for libhugetlbfs availability
@@ -147,6 +153,8 @@ substs.set('NAME',    meson.project_name())
 substs.set('VERSION', meson.project_version())
 substs.set('LICENSE', meson.project_license()[0])
 substs.set('UDEVRULESDIR', udevrulesdir)
+substs.set('DRACUTRILESDIR', dracutrulesdir)
+substs.set('REQUIRES', requires)
 
 configure_file(
   input:         'nvme.spec.in',
