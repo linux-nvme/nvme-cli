@@ -1,11 +1,11 @@
-.TH "nvme_identify_ns_descs" 2 "nvme_identify_ns_descs" "February 2020" "libnvme Manual"
+.TH "nvme_identify_ns_descs" 9 "nvme_identify_ns_descs" "February 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_identify_ns_descs \- Retrieves namespace descriptor list
 .SH SYNOPSIS
 .B "int" nvme_identify_ns_descs
-.BI "(int " fd ","
-.BI "__u32 " nsid ","
-.BI "struct nvme_ns_id_desc *" descs ");"
+.BI "(int fd "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_ns_id_desc *descs "  ");"
 .SH ARGUMENTS
 .IP "fd" 12
 File descriptor of nvme device
@@ -22,5 +22,5 @@ The data returned is in the form of an arrray of 'struct nvme_ns_id_desc'.
 
 See \fIstruct nvme_ns_id_desc\fP for the definition of the returned structure.
 .SH "RETURN"
-The nvme command status if a response was received or -1 with errno
-set otherwise.
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

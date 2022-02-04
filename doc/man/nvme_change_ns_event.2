@@ -1,0 +1,50 @@
+.TH "libnvme" 9 "struct nvme_change_ns_event" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_change_ns_event \- 
+.SH SYNOPSIS
+struct nvme_change_ns_event {
+.br
+.BI "    __le32 nsmgt_cdw10;"
+.br
+.BI "    __u8 rsvd4[4];"
+.br
+.BI "    __le64 nsze;"
+.br
+.BI "    __u8 rsvd16[8];"
+.br
+.BI "    __le64 nscap;"
+.br
+.BI "    __u8 flbas;"
+.br
+.BI "    __u8 dps;"
+.br
+.BI "    __u8 nmic;"
+.br
+.BI "    __u8 rsvd35;"
+.br
+.BI "    __le32 ana_grp_id;"
+.br
+.BI "    __le16 nvmset_id;"
+.br
+.BI "    __le16 rsvd42;"
+.br
+.BI "    __le32 nsid;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nsmgt_cdw10" 12
+.IP "rsvd4" 12
+.IP "nsze" 12
+.IP "rsvd16" 12
+.IP "nscap" 12
+.IP "flbas" 12
+.IP "dps" 12
+.IP "nmic" 12
+.IP "rsvd35" 12
+.IP "ana_grp_id" 12
+.IP "nvmset_id" 12
+.IP "rsvd42" 12
+.IP "nsid" 12

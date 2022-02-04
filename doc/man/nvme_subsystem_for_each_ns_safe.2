@@ -1,15 +1,15 @@
-.TH "nvme_subsystem_for_each_ns_safe" 2 "nvme_subsystem_for_each_ns_safe" "February 2020" "libnvme Manual"
+.TH "nvme_subsystem_for_each_ns_safe" 9 "nvme_subsystem_for_each_ns_safe" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_subsystem_for_each_ns_safe \- 
+nvme_subsystem_for_each_ns_safe \- Traverse namespaces
 .SH SYNOPSIS
 .B "nvme_subsystem_for_each_ns_safe
-.BI "(" s ","
-.BI "" n ","
-.BI "" _n ");"
+.BI "(s "  ","
+.BI "n "  ","
+.BI "_n "  ");"
 .SH ARGUMENTS
 .IP "s" 12
--- undescribed --
+nvme_subsystem_t object
 .IP "n" 12
--- undescribed --
+nvme_ns_t object
 .IP "_n" 12
--- undescribed --
+temporary nvme_ns_t object

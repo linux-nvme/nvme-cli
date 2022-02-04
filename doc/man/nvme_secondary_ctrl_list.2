@@ -1,0 +1,20 @@
+.TH "libnvme" 9 "struct nvme_secondary_ctrl_list" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_secondary_ctrl_list \- 
+.SH SYNOPSIS
+struct nvme_secondary_ctrl_list {
+.br
+.BI "    __u8 num;"
+.br
+.BI "    __u8 rsvd[31];"
+.br
+.BI "    struct nvme_secondary_ctrl sc_entry[NVME_ID_SECONDARY_CTRL_MAX];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "num" 12
+.IP "rsvd" 12
+.IP "sc_entry" 12

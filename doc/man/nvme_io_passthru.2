@@ -1,27 +1,27 @@
-.TH "nvme_io_passthru" 2 "nvme_io_passthru" "February 2020" "libnvme Manual"
+.TH "nvme_io_passthru" 9 "nvme_io_passthru" "February 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_io_passthru \- Submit an nvme io passthrough command
 .SH SYNOPSIS
 .B "int" nvme_io_passthru
-.BI "(int " fd ","
-.BI "__u8 " opcode ","
-.BI "__u8 " flags ","
-.BI "__u16 " rsvd ","
-.BI "__u32 " nsid ","
-.BI "__u32 " cdw2 ","
-.BI "__u32 " cdw3 ","
-.BI "__u32 " cdw10 ","
-.BI "__u32 " cdw11 ","
-.BI "__u32 " cdw12 ","
-.BI "__u32 " cdw13 ","
-.BI "__u32 " cdw14 ","
-.BI "__u32 " cdw15 ","
-.BI "__u32 " data_len ","
-.BI "void *" data ","
-.BI "__u32 " metadata_len ","
-.BI "void *" metadata ","
-.BI "__u32 " timeout_ms ","
-.BI "__u32 *" result ");"
+.BI "(int fd "  ","
+.BI "__u8 opcode "  ","
+.BI "__u8 flags "  ","
+.BI "__u16 rsvd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u32 cdw2 "  ","
+.BI "__u32 cdw3 "  ","
+.BI "__u32 cdw10 "  ","
+.BI "__u32 cdw11 "  ","
+.BI "__u32 cdw12 "  ","
+.BI "__u32 cdw13 "  ","
+.BI "__u32 cdw14 "  ","
+.BI "__u32 cdw15 "  ","
+.BI "__u32 data_len "  ","
+.BI "void *data "  ","
+.BI "__u32 metadata_len "  ","
+.BI "void *metadata "  ","
+.BI "__u32 timeout_ms "  ","
+.BI "__u32 *result "  ");"
 .SH ARGUMENTS
 .IP "fd" 12
 File descriptor of nvme device
@@ -67,5 +67,5 @@ a \fIstruct nvme_passthru_cmd\fP.
 
 Known values for \fIopcode\fP are defined in \fIenum nvme_io_opcode\fP.
 .SH "RETURN"
-The nvme command status if a response was received or -1
-with errno set otherwise.
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

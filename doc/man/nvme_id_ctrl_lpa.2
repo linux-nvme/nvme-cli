@@ -1,0 +1,31 @@
+.TH "libnvme" 9 "enum nvme_id_ctrl_lpa" "February 2022" "API Manual" LINUX
+.SH NAME
+enum nvme_id_ctrl_lpa \- Flags indicating optional attributes for log pages that are accessed via the Get Log Page command.
+.SH SYNOPSIS
+enum nvme_id_ctrl_lpa {
+.br
+.BI "    NVME_CTRL_LPA_SMART_PER_NS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_CMD_EFFECTS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_EXTENDED"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_TELEMETRY"
+, 
+.br
+.br
+.BI "    NVME_CTRL_LPA_PERSETENT_EVENT"
+
+};
+.SH Constants
+.IP "NVME_CTRL_LPA_SMART_PER_NS" 12
+.IP "NVME_CTRL_LPA_CMD_EFFECTS" 12
+.IP "NVME_CTRL_LPA_EXTENDED" 12
+.IP "NVME_CTRL_LPA_TELEMETRY" 12
+.IP "NVME_CTRL_LPA_PERSETENT_EVENT" 12

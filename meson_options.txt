@@ -1,7 +1,9 @@
 # -*- mode: meson -*-
-
 option('pkgconfiglibdir', type : 'string', value : '', description : 'directory for standard pkg-config files')
+option('htmldir', type : 'string', value : '', description : 'directory for HTML documentation')
 
-option('man', type : 'boolean', value : false, description : 'build and install man pages (requires sphinx-build)')
+option('docs', type : 'combo', choices : ['false', 'html', 'man', 'all'], description : 'install documentation')
+option('docs-build', type : 'boolean', value : 'false',  description : 'build documentation')
+
 option('python', type : 'combo', choices : ['auto', 'true', 'false'], description : 'Generate libnvme python bindings')
 option('openssl', type : 'feature', value: 'auto', description : 'OpenSSL support')

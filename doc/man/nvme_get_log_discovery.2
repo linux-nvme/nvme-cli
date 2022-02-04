@@ -1,13 +1,13 @@
-.TH "nvme_get_log_discovery" 2 "nvme_get_log_discovery" "February 2020" "libnvme Manual"
+.TH "nvme_get_log_discovery" 9 "nvme_get_log_discovery" "February 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_get_log_discovery \- 
 .SH SYNOPSIS
 .B "int" nvme_get_log_discovery
-.BI "(int " fd ","
-.BI "bool " rae ","
-.BI "__u32 " offset ","
-.BI "__u32 " len ","
-.BI "void *" log ");"
+.BI "(int fd "  ","
+.BI "bool rae "  ","
+.BI "__u32 offset "  ","
+.BI "__u32 len "  ","
+.BI "void *log "  ");"
 .SH ARGUMENTS
 .IP "fd" 12
 File descriptor of nvme device
@@ -23,5 +23,5 @@ User address to store the discovery log
 Supported only by fabrics discovery controllers, returning discovery
 records.
 .SH "RETURN"
-The nvme command status if a response was received or -1 with errno
-set otherwise.
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

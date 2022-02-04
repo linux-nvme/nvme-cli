@@ -1,0 +1,14 @@
+.TH "nvme_create_root" 9 "nvme_create_root" "February 2022" "libnvme API manual" LINUX
+.SH NAME
+nvme_create_root \- Initialize root object
+.SH SYNOPSIS
+.B "nvme_root_t" nvme_create_root
+.BI "(FILE *fp "  ","
+.BI "int log_level "  ");"
+.SH ARGUMENTS
+.IP "fp" 12
+filedescriptor for logging messages
+.IP "log_level" 12
+logging level to use
+.SH "RETURN"
+initialized nvme_root_t object

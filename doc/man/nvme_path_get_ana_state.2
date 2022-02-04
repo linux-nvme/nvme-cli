@@ -1,8 +1,11 @@
-.TH "nvme_path_get_ana_state" 2 "nvme_path_get_ana_state" "February 2020" "libnvme Manual"
+.TH "nvme_path_get_ana_state" 9 "nvme_path_get_ana_state" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_path_get_ana_state \- 
+nvme_path_get_ana_state \- ANA state of an nvme_path_t object
 .SH SYNOPSIS
 .B "const char *" nvme_path_get_ana_state
-.BI "(nvme_path_t " p ");"
+.BI "(nvme_path_t p "  ");"
 .SH ARGUMENTS
 .IP "p" 12
+nvme_path_t object
+.SH "RETURN"
+ANA (Asynchronous Namespace Access) state of \fIp\fP

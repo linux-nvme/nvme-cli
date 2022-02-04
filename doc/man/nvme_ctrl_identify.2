@@ -1,11 +1,17 @@
-.TH "nvme_ctrl_identify" 2 "nvme_ctrl_identify" "February 2020" "libnvme Manual"
+.TH "nvme_ctrl_identify" 9 "nvme_ctrl_identify" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_ctrl_identify \- 
+nvme_ctrl_identify \- Issues an 'identify controller' command
 .SH SYNOPSIS
 .B "int" nvme_ctrl_identify
-.BI "(nvme_ctrl_t " c ","
-.BI "struct nvme_id_ctrl *" id ");"
+.BI "(nvme_ctrl_t c "  ","
+.BI "struct nvme_id_ctrl *id "  ");"
 .SH ARGUMENTS
 .IP "c" 12
--- undescribed --
+nvme_ctrl_t object
 .IP "id" 12
+identify controller data structure
+.SH "DESCRIPTION"
+Issues an 'identify controller' command to \fIc\fP and copies the
+data into \fIid\fP.
+.SH "RETURN"
+0 on success or -1 on failure.

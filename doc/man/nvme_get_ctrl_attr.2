@@ -1,11 +1,14 @@
-.TH "nvme_get_ctrl_attr" 2 "nvme_get_ctrl_attr" "February 2020" "libnvme Manual"
+.TH "nvme_get_ctrl_attr" 9 "nvme_get_ctrl_attr" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_get_ctrl_attr \- 
+nvme_get_ctrl_attr \- Read controller sysfs attribute
 .SH SYNOPSIS
 .B "char *" nvme_get_ctrl_attr
-.BI "(nvme_ctrl_t " c ","
-.BI "const char *" attr ");"
+.BI "(nvme_ctrl_t c "  ","
+.BI "const char *attr "  ");"
 .SH ARGUMENTS
 .IP "c" 12
--- undescribed --
+nvme_ctrl_t object
 .IP "attr" 12
+sysfs attribute name
+.SH "RETURN"
+string with the contents of \fIattr\fP

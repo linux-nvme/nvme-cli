@@ -1,0 +1,14 @@
+.TH "nvme_get_attr" 9 "nvme_get_attr" "February 2022" "libnvme API manual" LINUX
+.SH NAME
+nvme_get_attr \- Read sysfs attribute
+.SH SYNOPSIS
+.B "char *" nvme_get_attr
+.BI "(const char *d "  ","
+.BI "const char *attr "  ");"
+.SH ARGUMENTS
+.IP "d" 12
+sysfs directory
+.IP "attr" 12
+sysfs attribute name
+.SH "RETURN"
+string with the contents of \fIattr\fP

@@ -1,0 +1,17 @@
+.TH "nvme_scan_topology" 9 "nvme_scan_topology" "February 2022" "libnvme API manual" LINUX
+.SH NAME
+nvme_scan_topology \- Scan NVMe topology and apply filter
+.SH SYNOPSIS
+.B "int" nvme_scan_topology
+.BI "(nvme_root_t r "  ","
+.BI "nvme_scan_filter_t f "  ");"
+.SH ARGUMENTS
+.IP "r" 12
+nvme_root_t object
+.IP "f" 12
+filter to apply
+.SH "DESCRIPTION"
+Scans the NVMe topology and filters out the resulting elements
+by applying \fIf\fP.
+.SH "RETURN"
+Number of elements scanned

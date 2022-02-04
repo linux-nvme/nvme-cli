@@ -1,15 +1,15 @@
-.TH "nvme_ctrl_for_each_ns_safe" 2 "nvme_ctrl_for_each_ns_safe" "February 2020" "libnvme Manual"
+.TH "nvme_ctrl_for_each_ns_safe" 9 "nvme_ctrl_for_each_ns_safe" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_ctrl_for_each_ns_safe \- 
+nvme_ctrl_for_each_ns_safe \- traverse namespaces
 .SH SYNOPSIS
 .B "nvme_ctrl_for_each_ns_safe
-.BI "(" c ","
-.BI "" n ","
-.BI "" _n ");"
+.BI "(c "  ","
+.BI "n "  ","
+.BI "_n "  ");"
 .SH ARGUMENTS
 .IP "c" 12
--- undescribed --
+nvme_ctrl_t object
 .IP "n" 12
--- undescribed --
+nvme_ns_t object
 .IP "_n" 12
--- undescribed --
+temporary nvme_ns_t object

@@ -1,17 +1,20 @@
-.TH "nvme_ns_write" 2 "nvme_ns_write" "February 2020" "libnvme Manual"
+.TH "nvme_ns_write" 9 "nvme_ns_write" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_ns_write \- 
+nvme_ns_write \- Write to a namespace
 .SH SYNOPSIS
 .B "int" nvme_ns_write
-.BI "(nvme_ns_t " n ","
-.BI "void *" buf ","
-.BI "off_t " offset ","
-.BI "size_t " count ");"
+.BI "(nvme_ns_t n "  ","
+.BI "void *buf "  ","
+.BI "off_t offset "  ","
+.BI "size_t count "  ");"
 .SH ARGUMENTS
 .IP "n" 12
--- undescribed --
+nvme_ns_t object
 .IP "buf" 12
--- undescribed --
+buffer with data to be written
 .IP "offset" 12
--- undescribed --
+LBA offset of \fIn\fP
 .IP "count" 12
+Number of sectors in \fIbuf\fP
+.SH "RETURN"
+Number of sectors written or -1 on error

@@ -1,6 +1,11 @@
-.TH "nvme_scan" 2 "nvme_scan" "February 2020" "libnvme Manual"
+.TH "nvme_scan" 9 "nvme_scan" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_scan \- 
+nvme_scan \- Scan NVMe topology
 .SH SYNOPSIS
 .B "nvme_root_t" nvme_scan
+.BI "(const char *config_file "  ");"
 .SH ARGUMENTS
+.IP "config_file" 12
+configuration file
+.SH "RETURN"
+nvme_root_t object of found elements

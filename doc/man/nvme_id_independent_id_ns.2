@@ -1,0 +1,44 @@
+.TH "libnvme" 9 "struct nvme_id_independent_id_ns" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_id_independent_id_ns \- 
+.SH SYNOPSIS
+struct nvme_id_independent_id_ns {
+.br
+.BI "    __u8 nsfeat;"
+.br
+.BI "    __u8 nmic;"
+.br
+.BI "    __u8 rescap;"
+.br
+.BI "    __u8 fpi;"
+.br
+.BI "    __le32 anagrpid;"
+.br
+.BI "    __u8 nsattr;"
+.br
+.BI "    __u8 rsvd9;"
+.br
+.BI "    __le16 nvmsetid;"
+.br
+.BI "    __le16 endgid;"
+.br
+.BI "    __u8 nstat;"
+.br
+.BI "    __u8 rsvd15[4081];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nsfeat" 12
+.IP "nmic" 12
+.IP "rescap" 12
+.IP "fpi" 12
+.IP "anagrpid" 12
+.IP "nsattr" 12
+.IP "rsvd9" 12
+.IP "nvmsetid" 12
+.IP "endgid" 12
+.IP "nstat" 12
+.IP "rsvd15" 12

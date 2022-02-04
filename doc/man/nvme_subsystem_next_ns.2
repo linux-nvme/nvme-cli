@@ -1,11 +1,14 @@
-.TH "nvme_subsystem_next_ns" 2 "nvme_subsystem_next_ns" "February 2020" "libnvme Manual"
+.TH "nvme_subsystem_next_ns" 9 "nvme_subsystem_next_ns" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_subsystem_next_ns \- 
+nvme_subsystem_next_ns \- Next namespace iterator
 .SH SYNOPSIS
 .B "nvme_ns_t" nvme_subsystem_next_ns
-.BI "(nvme_subsystem_t " s ","
-.BI "nvme_ns_t " n ");"
+.BI "(nvme_subsystem_t s "  ","
+.BI "nvme_ns_t n "  ");"
 .SH ARGUMENTS
 .IP "s" 12
--- undescribed --
+nvme_subsystem_t object
 .IP "n" 12
+previous nvme_ns_t iterator
+.SH "RETURN"
+Next nvme_ns_t object of an \fIs\fP iterator

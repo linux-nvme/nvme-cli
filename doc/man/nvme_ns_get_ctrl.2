@@ -1,8 +1,13 @@
-.TH "nvme_ns_get_ctrl" 2 "nvme_ns_get_ctrl" "February 2020" "libnvme Manual"
+.TH "nvme_ns_get_ctrl" 9 "nvme_ns_get_ctrl" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_ns_get_ctrl \- 
+nvme_ns_get_ctrl \- nvme_ctrl_t of an nvme_ns_t object
 .SH SYNOPSIS
 .B "nvme_ctrl_t" nvme_ns_get_ctrl
-.BI "(nvme_ns_t " n ");"
+.BI "(nvme_ns_t n "  ");"
 .SH ARGUMENTS
 .IP "n" 12
+nvme_ns_t object
+.SH "DESCRIPTION"
+nvme_ctrl_t object may be NULL for a multipathed namespace
+.SH "RETURN"
+nvme_ctrl_t object of \fIn\fP if present

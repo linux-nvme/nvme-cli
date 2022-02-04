@@ -93,22 +93,6 @@ nvme_host_t nvme_lookup_host(nvme_root_t r, const char *hostnqn,
 			     const char *hostid);
 
 /**
- * nvme_host_get_hostnqn() - Returns the host NQN
- * @h: host
- *
- * Return: NVMe host NQN
- */
-const char *nvme_host_get_hostnqn(nvme_host_t h);
-
-/**
- * nvme_host_get_hostid() - Returns the host ID
- * @h: host
- *
- * Return: NVMe Host ID
- */
-const char *nvme_host_get_hostid(nvme_host_t h);
-
-/**
  * nvme_host_get_dhchap_key() - return host key
  * @h: Host for which the key should be returned
  *

@@ -1,0 +1,20 @@
+.TH "libnvme" 9 "struct nvme_nss_hw_err_event" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_nss_hw_err_event \- 
+.SH SYNOPSIS
+struct nvme_nss_hw_err_event {
+.br
+.BI "    __le16 nss_hw_err_event_code;"
+.br
+.BI "    __u8 rsvd2[2];"
+.br
+.BI "    __u8 *add_hw_err_info;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "nss_hw_err_event_code" 12
+.IP "rsvd2" 12
+.IP "add_hw_err_info" 12

@@ -1,0 +1,68 @@
+.TH "libnvme" 9 "struct nvme_persistent_event_log" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_persistent_event_log \- 
+.SH SYNOPSIS
+struct nvme_persistent_event_log {
+.br
+.BI "    __u8 lid;"
+.br
+.BI "    __u8 rsvd1[3];"
+.br
+.BI "    __le32 tnev;"
+.br
+.BI "    __le64 tll;"
+.br
+.BI "    __u8 rv;"
+.br
+.BI "    __u8 rsvd17;"
+.br
+.BI "    __le16 lhl;"
+.br
+.BI "    __le64 ts;"
+.br
+.BI "    __u8 poh[16];"
+.br
+.BI "    __le64 pcc;"
+.br
+.BI "    __le16 vid;"
+.br
+.BI "    __le16 ssvid;"
+.br
+.BI "    char sn[20];"
+.br
+.BI "    char mn[40];"
+.br
+.BI "    char subnqn[NVME_NQN_LENGTH];"
+.br
+.BI "    __le16 gen_number;"
+.br
+.BI "    __le32 rci;"
+.br
+.BI "    __u8 rsvd378[102];"
+.br
+.BI "    __u8 seb[32];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "lid" 12
+.IP "rsvd1" 12
+.IP "tnev" 12
+.IP "tll" 12
+.IP "rv" 12
+.IP "rsvd17" 12
+.IP "lhl" 12
+.IP "ts" 12
+.IP "poh" 12
+.IP "pcc" 12
+.IP "vid" 12
+.IP "ssvid" 12
+.IP "sn" 12
+.IP "mn" 12
+.IP "subnqn" 12
+.IP "gen_number" 12
+.IP "rci" 12
+.IP "rsvd378" 12
+.IP "seb" 12

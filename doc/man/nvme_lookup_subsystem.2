@@ -1,0 +1,20 @@
+.TH "nvme_lookup_subsystem" 9 "nvme_lookup_subsystem" "February 2022" "libnvme API manual" LINUX
+.SH NAME
+nvme_lookup_subsystem \- Lookup nvme_subsystem_t object
+.SH SYNOPSIS
+.B "nvme_subsystem_t" nvme_lookup_subsystem
+.BI "(struct nvme_host *h "  ","
+.BI "const char *name "  ","
+.BI "const char *subsysnqn "  ");"
+.SH ARGUMENTS
+.IP "h" 12
+nvme_host_t object
+.IP "name" 12
+Name of the subsystem (may be NULL)
+.IP "subsysnqn" 12
+Subsystem NQN
+.SH "DESCRIPTION"
+Lookup a nvme_subsystem_t object in \fIh\fP base on \fIname\fP (if present)
+and \fIsubsystemnqn\fP or create one if not found.
+.SH "RETURN"
+nvme_subsystme_t object

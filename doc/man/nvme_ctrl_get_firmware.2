@@ -1,8 +1,11 @@
-.TH "nvme_ctrl_get_firmware" 2 "nvme_ctrl_get_firmware" "February 2020" "libnvme Manual"
+.TH "nvme_ctrl_get_firmware" 9 "nvme_ctrl_get_firmware" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_ctrl_get_firmware \- 
+nvme_ctrl_get_firmware \- Firmware string of an nvme_ctrl_t object
 .SH SYNOPSIS
 .B "const char *" nvme_ctrl_get_firmware
-.BI "(nvme_ctrl_t " c ");"
+.BI "(nvme_ctrl_t c "  ");"
 .SH ARGUMENTS
 .IP "c" 12
+nvme_ctrl_t object
+.SH "RETURN"
+Firmware string of \fIc\fP

@@ -1,15 +1,15 @@
-.TH "nvme_ctrl_for_each_path_safe" 2 "nvme_ctrl_for_each_path_safe" "February 2020" "libnvme Manual"
+.TH "nvme_ctrl_for_each_path_safe" 9 "nvme_ctrl_for_each_path_safe" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_ctrl_for_each_path_safe \- 
+nvme_ctrl_for_each_path_safe \- Traverse paths
 .SH SYNOPSIS
 .B "nvme_ctrl_for_each_path_safe
-.BI "(" c ","
-.BI "" p ","
-.BI "" _p ");"
+.BI "(c "  ","
+.BI "p "  ","
+.BI "_p "  ");"
 .SH ARGUMENTS
 .IP "c" 12
--- undescribed --
+nvme_ctrl_t object
 .IP "p" 12
--- undescribed --
+nvme_path_t object
 .IP "_p" 12
--- undescribed --
+temporary nvme_path_t object

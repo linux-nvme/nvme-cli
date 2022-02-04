@@ -1,0 +1,26 @@
+.TH "libnvme" 9 "struct nvme_boot_partition" "February 2022" "API Manual" LINUX
+.SH NAME
+struct nvme_boot_partition \- 
+.SH SYNOPSIS
+struct nvme_boot_partition {
+.br
+.BI "    __u8 lid;"
+.br
+.BI "    __u8 rsvd1[3];"
+.br
+.BI "    __le32 bpinfo;"
+.br
+.BI "    __u8 rsvd8[8];"
+.br
+.BI "    __u8 boot_partition_data[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "lid" 12
+.IP "rsvd1" 12
+.IP "bpinfo" 12
+.IP "rsvd8" 12
+.IP "boot_partition_data" 12

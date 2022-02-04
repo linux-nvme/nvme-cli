@@ -1,8 +1,11 @@
-.TH "nvme_ctrl_first_ns" 2 "nvme_ctrl_first_ns" "February 2020" "libnvme Manual"
+.TH "nvme_ctrl_first_ns" 9 "nvme_ctrl_first_ns" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_ctrl_first_ns \- 
+nvme_ctrl_first_ns \- Start namespace iterator
 .SH SYNOPSIS
 .B "nvme_ns_t" nvme_ctrl_first_ns
-.BI "(nvme_ctrl_t " c ");"
+.BI "(nvme_ctrl_t c "  ");"
 .SH ARGUMENTS
 .IP "c" 12
+nvme_ctrl_t object
+.SH "RETURN"
+first nvme_ns_t object of an \fIc\fP iterator

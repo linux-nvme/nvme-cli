@@ -3604,7 +3604,7 @@ struct nvme_channel_config_desc {
 };
 
 /**
- * struct nvme_channel_config_desc -
+ * struct nvme_end_grp_chan_desc -
  * @egchans:	Number of Channels
  *
  * Endurance group Channel Configuration Descriptor
@@ -4165,10 +4165,10 @@ struct nvme_feat_host_behavior {
 };
 
 /**
- * enum -
+ * enum nvme_host_behavior_support -
  * @NVME_ENABLE_ACRE:
  */
-enum {
+enum nvme_host_behavior_support {
 	NVME_ENABLE_ACRE        = 1 << 0,
 };
 
@@ -4315,11 +4315,11 @@ struct nvme_id_directives {
 };
 
 /**
- * enum -
+ * enum nvme_directive_types -
  * @NVME_ID_DIR_ID_BIT: Identify directive is supported
  * @NVME_ID_DIR_SD_BIT: Streams directive is supported
  */
-enum {
+enum nvme_directive_types {
 	NVME_ID_DIR_ID_BIT	= 0,
 	NVME_ID_DIR_SD_BIT	= 1,
 };

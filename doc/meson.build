@@ -2,36 +2,107 @@
 #
 # This file is part of libnvme.
 # Copyright (c) 2022 Dell Inc.
+# Copyright (c) 2022 SUSE LLC
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
+# Authors: Daniel Wagner <dwagner@suse.de>
 #
 
-# Requires python3-sphinx and python3-sphinx-rtd-theme
+api_files = [
+  'filters.h',
+  'ioctl.h',
+  'linux.h',
+  'log.h',
+  'tree.h',
+  'types.h',
+  'fabrics.h',
+  'util.h'
+]
 
 sphinx_sources = [
     'conf.py',
-    'libnvme.rst',
-    'index.rst'
+    'index.rst',
+    'config-schema.json'
 ]
 
-man_pages = [
-    'libnvme.1'
-]
+want_docs = get_option('docs')
+want_docs_build = get_option('docs-build')
+if want_docs != 'false'
+  kernel_doc = find_program('kernel-doc')
 
-mandir1 = join_paths(get_option('mandir'), 'man1')
+  if want_docs == 'all' or want_docs == 'man'
+    mandir = join_paths(get_option('mandir'), 'man2')
+    list_man_pages = find_program('list-man-pages.sh')
+    if want_docs_build
+      foreach apif : api_files
+        afile = files('../src/nvme/' + apif)
+        c = run_command(list_man_pages, afile)
+        man_pages = c.stdout().split()
+        foreach page : man_pages
+          custom_target(
+            page.underscorify() + '_man',
+            input: afile,
+            output: page + '.2',
+            capture: true,
+            command: [kernel_doc,
+                      '-module', 'libnvme',
+                      '-man',
+                      '-function',
+                      page,
+                      afile],
+            install: true,
+            install_dir: mandir)
+        endforeach
+      endforeach
+    else
+      if want_docs == 'all' or want_docs == 'man'
+        install_subdir('man', install_dir: mandir)
+      endif
+    endif
+  endif
 
-if get_option('man')
+  if want_docs == 'all' or want_docs == 'html'
+    htmldir = join_paths(get_option('htmldir'), 'nvme')
     sphinx_build = find_program('sphinx-build-3', 'sphinx-build')
-
-    custom_target(
-        'man',
+    if sphinx_build.found() and want_docs_build
+      cat = find_program('cat')
+      rsts = []
+      foreach apif : api_files
+        afile = files('../src/nvme/' + apif)
+        rst = custom_target(
+          apif.underscorify() + '_rst',
+          input: afile,
+          output: '@BASENAME@._rst',
+          capture: true,
+          command: [kernel_doc,
+                    '-rst',
+                    '@INPUT@'])
+        rsts += rst
+      endforeach
+      libnvme = custom_target(
+	'libnvme',
+        command: [ cat, '@INPUT@' ],
+        capture: true,
+        input: rsts,
+        output: 'libnvme.rst')
+      static_sources = []
+      foreach file : sphinx_sources
+	static_sources += configure_file(input: file, output: file, copy: true)
+      endforeach
+      custom_target(
+        'generate_doc_html',
+        input: [static_sources, libnvme],
+        output: 'html',
         command: [sphinx_build,
-                   '-b', 'man',
-                   meson.current_source_dir(),
-                   meson.current_build_dir()],
-        input: sphinx_sources,
-        output: man_pages,
+                  '-b', 'html',
+                   '@OUTDIR@',
+                   '@OUTDIR@' + '/html'],
         install: true,
-        install_dir: mandir1,
-    )
+        install_dir: htmldir)
+    else
+      if want_docs == 'all' or want_docs == 'html'
+        install_subdir('html', install_dir: htmldir)
+      endif
+    endif
+  endif
 endif
