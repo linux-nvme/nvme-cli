@@ -40,7 +40,10 @@ libuuid_dep = dependency('uuid', required: true)
 conf.set('CONFIG_LIBUUID', libuuid_dep.found(), description: 'Is libuuid required?')
 
 # Check for json-c availability
-json_c_dep = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c_dep'])
+json_c_dep = dependency('json-c',
+			version: '>=0.13',
+			required: true,
+			fallback : ['json-c', 'json_c_dep'])
 conf.set('CONFIG_JSONC', json_c_dep.found(), description: 'Is json-c required?')
 
 # Check for OpenSSL availability
