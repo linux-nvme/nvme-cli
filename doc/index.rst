@@ -10,7 +10,6 @@ Welcome to libnvme's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   index
    libnvme
 
 
