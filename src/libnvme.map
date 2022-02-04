@@ -156,6 +156,8 @@ LIBNVME_1_0 {
 		nvme_identify_domain_list;
 		nvme_identify_endurance_group_list;
 		nvme_identify_independent_identify_ns;
+		nvme_identify_ns_csi_user_data_format;
+		nvme_identify_iocs_ns_csi_user_data_format;
 		nvme_identify_iocs;
 		nvme_identify_ns;
 		nvme_identify_ns_descs;

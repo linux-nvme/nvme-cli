@@ -53,8 +53,7 @@
  * 				parameter is not used in a command
  * @NVME_UUID_NONE:		Use to omit a uuid command parameter
  * @NVME_CNTLID_NONE:		Use to omit a cntlid command parameter
- * @NVME_NVMSETID_NONE: 	Use to omit a nvmsetid command parameter
- * @NVME_DOMID_NONE:		Use to omit a domid command parameter
+ * @NVME_CNSSPECID_NONE: 	Use to omit a cns_specific_id command parameter
  * @NVME_LOG_LSP_NONE:		Use to omit a log lsp command parameter
  * @NVME_LOG_LSI_NONE:		Use to omit a log lsi command parameter
  * @NVME_LOG_LPO_NONE:		Use to omit a log lpo command parameter
@@ -98,8 +97,7 @@ enum nvme_constants {
 	NVME_NSID_NONE				= 0,
 	NVME_UUID_NONE				= 0,
 	NVME_CNTLID_NONE			= 0,
-	NVME_NVMSETID_NONE			= 0,
-	NVME_DOMID_NONE				= 0,
+	NVME_CNSSPECID_NONE			= 0,
 	NVME_LOG_LSP_NONE			= 0,
 	NVME_LOG_LSI_NONE			= 0,
 	NVME_LOG_LPO_NONE			= 0,
@@ -1651,10 +1649,20 @@ enum nvme_lbaf_rp {
  * @nows:     Namespace Optimal Write Size indicates the size in logical blocks
  * 	      for optimal write performance for this namespace. This is a 0's
  * 	      based value.
- * @mssrl:
- * @mcl:
- * @msrc:
+ * @mssrl:    Maximum Single Source Range Length indicates the maximum number
+ *        of logical blocks that may be specified in each valid Source Range
+ *        field of a Copy command.
+ * @mcl:      Maximum Copy Length indicates the maximum number of logical
+ *        blocks that may be specified in a Copy command.
+ * @msrc:     Maximum Source Range Count indicates the maximum number of Source
+ *        Range entries that may be used to specify source data in a Copy
+ *        command. This is a 0’s based value.
  * @rsvd81:   Reserved
+ * @nulbaf:   Number of Unique Capability LBA Formats defines the number of
+ *        supported user data size and metadata size combinations supported
+ *        by the namespace that may not share the same capabilities. LBA
+ *        formats shall be allocated in order and packed sequentially.
+ * @rsvd83:   Reserved
  * @anagrpid: ANA Group Identifier indicates the ANA Group Identifier of the
  * 	      ANA group of which the namespace is a member.
  * @rsvd96:   Reserved
@@ -1706,7 +1714,9 @@ struct nvme_id_ns {
 	__le16			mssrl;
 	__le32			mcl;
 	__u8			msrc;
-	__u8			rsvd81[11];
+	__u8			rsvd81;
+	__u8			nulbaf;
+	__u8			rsvd83[9];
 	__le32			anagrpid;
 	__u8			rsvd96[3];
 	__u8			nsattr;
@@ -2127,6 +2137,22 @@ struct nvme_id_ctrl_nvm {
     __u32    dmrsl;
     __u64    dmsl;
     __u8     rsvd16[4080];
+};
+
+/**
+ * struct nvme_nvm_id_ns -
+ * @lbstm:	Logical Block Storage Tag Mask
+ * @pic:	Protection Information Capabilities
+ * @rsvd9:	Reserved
+ * @elbaf:	List of Extended LBA Format Support
+ * @rsvd268:	Reserved
+ */
+struct nvme_nvm_id_ns {
+	__le64	lbstm;
+	__u8	pic;
+	__u8	rsvd9[3];
+	__le32	elbaf[64];
+	__u8	rsvd268[3828];
 };
 
 /**
@@ -5786,6 +5812,8 @@ enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_CSI_CTRL				= 0x06,
 	NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST			= 0x07,
 	NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS			= 0x08,
+	NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT			= 0x09,
+	NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT		= 0x0A,
 	NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST			= 0x10,
 	NVME_IDENTIFY_CNS_ALLOCATED_NS				= 0x11,
 	NVME_IDENTIFY_CNS_NS_CTRL_LIST				= 0x12,

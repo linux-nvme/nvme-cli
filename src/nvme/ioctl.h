@@ -381,18 +381,17 @@ int nvme_get_nsid(int fd, __u32 *nsid);
 
 /**
  * struct nvme_identify_args - Arguments for the NVMe Identify command
- * @result:	The command completion result from CQE dword0
- * @data:	User space destination address to transfer the data
- * @args_size:	Size of &struct nvme_identify_args
- * @fd:		File descriptor of nvme device
- * @timeout:	Timeout in ms (0 for default timeout)
- * @cns:	The Controller or Namespace structure, see @enum nvme_identify_cns
- * @csi:	Command Set Identifier
- * @nsid:	Namespace identifier, if applicable
- * @cntid:	The Controller Identifier, if applicable
- * @nvmsetid:	The NVMe Set ID if CNS is 04h
- * @domid:	Domain identifier, if applicable
- * @uuidx:	UUID Index if controller supports this id selection method
+ * @result:		The command completion result from CQE dword0
+ * @data:		User space destination address to transfer the data
+ * @args_size:		Size of &struct nvme_identify_args
+ * @fd:			File descriptor of nvme device
+ * @timeout:		Timeout in ms (0 for default timeout)
+ * @cns:		The Controller or Namespace structure, see @enum nvme_identify_cns
+ * @csi:		Command Set Identifier
+ * @nsid:		Namespace identifier, if applicable
+ * @cntid:		The Controller Identifier, if applicable
+ * @cns_specific_id:	Identifier that is required for a particular CNS value
+ * @uuidx:		UUID Index if controller supports this id selection method
  */
 struct nvme_identify_args {
 	__u32 *result;
@@ -404,8 +403,7 @@ struct nvme_identify_args {
 	enum nvme_csi csi;
 	__u32 nsid;
 	__u16 cntid;
-	__u16 nvmsetid;
-	__u16 domid;
+	__u16 cns_specific_id;
 	__u8 uuidx;
 } __attribute__((packed, aligned(__alignof__(__u32*))));
 
@@ -434,8 +432,7 @@ static int nvme_identify_cns_nsid(int fd, enum nvme_identify_cns cns,
 		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -574,8 +571,7 @@ static inline int nvme_identify_ctrl_list(int fd, __u16 cntid,
 		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = cntid,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -611,8 +607,7 @@ static inline int nvme_identify_nsid_ctrl_list(int fd, __u32 nsid, __u16 cntid,
 		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = cntid,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -672,8 +667,7 @@ static inline int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = nvmsetid,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = nvmsetid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -705,8 +699,7 @@ static inline int nvme_identify_primary_ctrl(int fd, __u16 cntid,
 		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = cntid,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -744,8 +737,7 @@ static inline int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid,
 		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = cntid,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -798,13 +790,14 @@ static inline int nvme_identify_uuid(int fd, struct nvme_id_uuid_list *uuid_list
  * nvme_identify_ns_csi() -
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace to identify
+ * @uuidx:	UUID Index for differentiating vendor specific encoding
  * @csi:	Command Set Identifier
  * @data:	User space destination address to transfer the data
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-static inline int nvme_identify_ns_csi(int fd, __u32 nsid,
+static inline int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 uuidx,
 			enum nvme_csi csi, void *data)
 {
 	struct nvme_identify_args args = {
@@ -817,9 +810,8 @@ static inline int nvme_identify_ns_csi(int fd, __u32 nsid,
 		.csi = csi,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
-		.uuidx = NVME_UUID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
+		.uuidx = uuidx,
 	};
 
 	return nvme_identify(&args);
@@ -846,8 +838,7 @@ static inline int nvme_identify_ctrl_csi(int fd, enum nvme_csi csi, void *data)
 		.csi = csi,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -884,8 +875,7 @@ static inline int nvme_identify_active_ns_list_csi(int fd, __u32 nsid,
 		.csi = csi,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -922,8 +912,7 @@ static inline int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid,
 		.csi = csi,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -953,9 +942,77 @@ static inline int nvme_identify_independent_identify_ns(int fd, __u32 nsid,
 		.csi = NVME_CSI_NVM,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
+	};
+
+	return nvme_identify(&args);
+}
+
+/**
+ * nvme_identify_ns_csi_user_data_format() -
+ * @fd:		File descriptor of nvme device
+ * @user_data_format: Return namespaces capability of identifier
+ * @uuidx:	UUID selection, if supported
+ * @csi:	Command Set Identifier
+ *
+ * Identify Namespace data structure for the specified User Data Format
+ * index containing the namespace capabilities for the NVM Command Set.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+static inline int nvme_identify_ns_csi_user_data_format(int fd,
+			__u16 user_data_format, __u8 uuidx,
+			enum nvme_csi csi, void *data)
+{
+	struct nvme_identify_args args = {
+		.result = NULL,
+		.data = data,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.cns = NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT,
+		.csi = csi,
+		.nsid = NVME_NSID_NONE,
+		.cntid = NVME_CNTLID_NONE,
+		.cns_specific_id = user_data_format,
+		.uuidx = uuidx,
+	};
+
+	return nvme_identify(&args);
+}
+
+/**
+ * nvme_identify_iocs_ns_csi_user_data_format() -
+ * @fd:		File descriptor of nvme device
+ * @user_data_format: Return namespaces capability of identifier
+ * @uuidx:	UUID selection, if supported
+ * @csi:	Command Set Identifier
+ *
+ * I/O Command Set specific Identify Namespace data structure for
+ * the specified User Data Format index containing the namespace
+ * capabilities for the I/O Command Set specified in the CSI field.
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
+ */
+static inline int nvme_identify_iocs_ns_csi_user_data_format(int fd,
+			__u16 user_data_format, __u8 uuidx,
+			enum nvme_csi csi, void *data)
+{
+	struct nvme_identify_args args = {
+		.result = NULL,
+		.data = data,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.cns = NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT,
+		.csi = csi,
+		.nsid = NVME_NSID_NONE,
+		.cntid = NVME_CNTLID_NONE,
+		.cns_specific_id = user_data_format,
+		.uuidx = uuidx,
 	};
 
 	return nvme_identify(&args);
@@ -1003,8 +1060,7 @@ static inline int nvme_identify_domain_list(int fd, __u16 domid,
 		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = domid,
+		.cns_specific_id = domid,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -1033,8 +1089,7 @@ static inline int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
 		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = endgrp_id,
+		.cns_specific_id = endgrp_id,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -1066,8 +1121,7 @@ static inline int nvme_identify_iocs(int fd, __u16 cntlid,
 		.csi = NVME_CSI_NVM,
 		.nsid = NVME_NSID_NONE,
 		.cntid = cntlid,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 		.uuidx = NVME_UUID_NONE,
 	};
 
@@ -1096,8 +1150,7 @@ static inline int nvme_zns_identify_ns(int fd, __u32 nsid,
 		.csi = NVME_CSI_ZNS,
 		.nsid = nsid,
 		.cntid = NVME_CNTLID_NONE,
-		.nvmsetid = NVME_NVMSETID_NONE,
-		.domid = NVME_DOMID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
 	};
 
 	return nvme_identify(&args);
@@ -1129,8 +1182,7 @@ static inline int nvme_zns_identify_ctrl(int fd, struct nvme_zns_id_ctrl *id)
  * @len:	Length of provided user buffer to hold the log data in bytes
  * @nsid:	Namespace identifier, if applicable
  * @csi:	Command set identifier, see &enum nvme_csi for known values
- * @lsi:	Endurance group information
- * @domid:	Domain Identifier selection, if supported
+ * @lsi:	Log Specific Identifier
  * @lsp:	Log specific field
  * @uuidx:	UUID selection, if supported
  * @rae:	Retain asynchronous events
@@ -1150,7 +1202,6 @@ struct nvme_get_log_args {
 	__u32 nsid;
 	enum nvme_csi csi;
 	__u16 lsi;
-	__u16 domid;
 	__u8 lsp;
 	__u8 uuidx;
 	bool rae;
@@ -1182,7 +1233,6 @@ static inline int nvme_get_nsid_log(int fd, bool rae,
 		.nsid = nsid,
 		.csi = NVME_CSI_NVM,
 		.lsi = NVME_LOG_LSI_NONE,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = false,
@@ -1327,7 +1377,6 @@ static inline int nvme_get_log_cmd_effects(int fd, enum nvme_csi csi,
 		.nsid = NVME_NSID_ALL,
 		.csi = csi,
 		.lsi = NVME_LOG_LSI_NONE,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = false,
@@ -1375,7 +1424,6 @@ static inline int nvme_get_log_create_telemetry_host(int fd,
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
 		.lsi = NVME_LOG_LSI_NONE,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_TELEM_HOST_LSP_CREATE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = false,
@@ -1412,7 +1460,6 @@ static inline int nvme_get_log_telemetry_host(int fd, __u64 offset,
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
 		.lsi = NVME_LOG_LSI_NONE,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_TELEM_HOST_LSP_RETAIN,
 		.uuidx = NVME_UUID_NONE,
 		.rae = false,
@@ -1444,7 +1491,6 @@ static inline int nvme_get_log_telemetry_ctrl(int fd, bool rae,
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
 		.lsi = NVME_LOG_LSI_NONE,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = rae,
@@ -1484,7 +1530,6 @@ static inline int nvme_get_log_endurance_group(int fd, __u16 endgid,
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
 		.lsi = endgid,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = false,
@@ -1517,7 +1562,6 @@ static inline int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
 		.lsi = nvmsetid,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = false,
@@ -1549,7 +1593,6 @@ static inline int nvme_get_log_predictable_lat_event(int fd, bool rae,
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
 		.lsi = NVME_LOG_LSI_NONE,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = rae,
@@ -1591,7 +1634,6 @@ static int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae,
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
 		.lsi = NVME_LOG_LSI_NONE,
-		.domid = NVME_DOMID_NONE,
 		.lsp = lsp,
 		.uuidx = NVME_UUID_NONE,
 		.rae = false,
@@ -1639,7 +1681,6 @@ static inline int nvme_get_log_lba_status(int fd, bool rae,
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
 		.lsi = NVME_LOG_LSI_NONE,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = rae,
@@ -1671,7 +1712,6 @@ static inline int nvme_get_log_endurance_grp_evt(int fd, bool rae,
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
 		.lsi = NVME_LOG_LSI_NONE,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = rae,
@@ -1723,7 +1763,6 @@ static inline int nvme_get_log_boot_partition(int fd, bool rae,
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
 		.lsi = NVME_LOG_LSI_NONE,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = rae,
@@ -1761,7 +1800,6 @@ static inline int nvme_get_log_discovery(int fd, bool rae,
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
 		.lsi = NVME_LOG_LSI_NONE,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = rae,
@@ -1793,8 +1831,7 @@ static inline int nvme_get_log_media_unit_stat(int fd, __u16 domid,
 		.len = sizeof(*mus),
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.domid = domid,
+		.lsi = domid,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = false,
@@ -1825,8 +1862,7 @@ static inline int nvme_get_log_support_cap_config_list(int fd, __u16 domid,
 		.len = sizeof(*cap),
 		.nsid = NVME_NSID_NONE,
 		.csi = NVME_CSI_NVM,
-		.lsi = NVME_LOG_LSI_NONE,
-		.domid = domid,
+		.lsi = domid,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = false,
@@ -1894,7 +1930,6 @@ static inline int nvme_get_log_zns_changed_zones(int fd, __u32 nsid, bool rae,
 		.nsid = nsid,
 		.csi = NVME_CSI_ZNS,
 		.lsi = NVME_LOG_LSI_NONE,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = rae,
@@ -1926,7 +1961,6 @@ static inline int nvme_get_log_persistent_event(int fd,
 		.nsid = NVME_NSID_ALL,
 		.csi = NVME_CSI_NVM,
 		.lsi = NVME_LOG_LSI_NONE,
-		.domid = NVME_DOMID_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
 		.rae = false,
