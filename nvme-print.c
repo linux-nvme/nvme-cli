@@ -6489,6 +6489,7 @@ static char *nvme_show_host_metadata_type_to_string(enum nvme_features_id fid,
 						    __u8 type)
 {
        switch (fid) {
+       case NVME_FEAT_FID_ENH_CTRL_METADATA:
        case NVME_FEAT_FID_CTRL_METADATA:
 	       switch (type) {
 	       case NVME_CTRL_METADATA_OS_CTRL_NAME:
@@ -6701,6 +6702,7 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 	case NVME_FEAT_FID_SPINUP_CONTROL:
 		printf("\tSpinup control feature Enabled: %s\n", (result & 1) ? "True" : "False");
 		break;
+	case NVME_FEAT_FID_ENH_CTRL_METADATA:
 	case NVME_FEAT_FID_CTRL_METADATA:
 	case NVME_FEAT_FID_NS_METADATA:
 		nvme_show_host_metadata(fid, (struct nvme_host_metadata *)buf);
