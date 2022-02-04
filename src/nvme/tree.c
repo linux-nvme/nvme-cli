@@ -1258,12 +1258,10 @@ skip_address:
 				break;
 			if (!strcmp(c->name, name)) {
 				nvme_msg(r, LOG_DEBUG,
-					 "%s: found existing ctrl %s\n",
-					 __func__, c->name);
+					 "found existing ctrl %s\n", c->name);
 				break;
 			}
-			nvme_msg(r, LOG_DEBUG, "%s: skipping ctrl %s\n",
-				 __func__, c->name);
+			nvme_msg(r, LOG_DEBUG, "skipping ctrl %s\n", c->name);
 			p = c;
 		}
 	} while (c);
@@ -1274,8 +1272,7 @@ skip_address:
 		free(address);
 	if (!c) {
 		if (!p) {
-			nvme_msg(r, LOG_ERR, "%s: failed to lookup ctrl\n",
-				 __func__);
+			nvme_msg(r, LOG_ERR, "failed to lookup ctrl\n");
 			errno = ENODEV;
 		} else
 			errno = ENOMEM;
@@ -1796,15 +1793,13 @@ static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
 	struct nvme_ns *n;
 
 	if (!c->s) {
-		nvme_msg(r, LOG_DEBUG, "%s: no subsystem for %s\n",
-			 __func__, name);
+		nvme_msg(r, LOG_DEBUG, "no subsystem for %s\n", name);
 		errno = EINVAL;
 		return -1;
 	}
 	n = __nvme_scan_namespace(c->sysfs_dir, name);
 	if (!n) {
-		nvme_msg(r, LOG_DEBUG, "%s: failed to scan namespace %s\n",
-			 __func__, name);
+		nvme_msg(r, LOG_DEBUG, "failed to scan namespace %s\n", name);
 		return -1;
 	}
 
@@ -1821,8 +1816,7 @@ static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
 
 	n = __nvme_scan_namespace(s->sysfs_dir, name);
 	if (!n) {
-		nvme_msg(r, LOG_DEBUG, "%s: failed to scan namespace %s\n",
-			 __func__, name);
+		nvme_msg(r, LOG_DEBUG, "failed to scan namespace %s\n", name);
 		return -1;
 	}
 
@@ -1844,8 +1838,7 @@ struct nvme_ns *nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
 		return NULL;
 	n = __nvme_scan_namespace(s->sysfs_dir, name);
 	if (!n) {
-		nvme_msg(r, LOG_DEBUG, "%s: failed to scan namespace %d\n",
-			 __func__, nsid);
+		nvme_msg(r, LOG_DEBUG, "failed to scan namespace %d\n", nsid);
 		free(name);
 		return NULL;
 	}
