@@ -6168,6 +6168,7 @@ const char *nvme_feature_to_string(enum nvme_features_id feature)
 	case NVME_FEAT_FID_ENDURANCE_EVT_CFG:	return "Enduarance Event Group Configuration";
 	case NVME_FEAT_FID_IOCS_PROFILE:	return "I/O Command Set Profile";
 	case NVME_FEAT_FID_SPINUP_CONTROL:	return "Spinup Control";
+	case NVME_FEAT_FID_ENH_CTRL_METADATA:	return "Enhanced Controller Metadata";
 	case NVME_FEAT_FID_CTRL_METADATA:	return "Controller Metadata";
 	case NVME_FEAT_FID_NS_METADATA: return "Namespace Metadata";
 	case NVME_FEAT_FID_SW_PROGRESS:	return "Software Progress";
