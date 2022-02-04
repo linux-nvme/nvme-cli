@@ -1804,6 +1804,38 @@ static inline int nvme_get_log_media_unit_stat(int fd, __u16 domid,
 }
 
 /**
+ * nvme_get_log_support_cap_config_list() -
+ * @fd:		File descriptor of nvme device
+ * @domid:	Domain Identifier selection, if supported
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+static inline int nvme_get_log_support_cap_config_list(int fd, __u16 domid,
+			struct nvme_supported_cap_config_list_log *cap)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = cap,
+		.args_size = sizeof(args),
+		.fd = fd,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lid = NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST,
+		.len = sizeof(*cap),
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.domid = domid,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	return nvme_get_log(&args);
+}
+
+/**
  * nvme_get_log_reservation() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
