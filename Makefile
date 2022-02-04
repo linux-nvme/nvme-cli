@@ -42,7 +42,6 @@ test: ${BUILD-DIR}
 rpm:
 	meson ${BUILD-DIR} \
 		-Dudevrulesdir=$(shell rpm --eval '%{_udevrulesdir}') \
-		-Ddracutrulesdir=lib/dracut/dracut.conf.d \
 		-Dsystemddir=$(shell rpm --eval '%{_unitdir}') \
 		-Ddocs=man
 	rpmbuild -ba ${BUILD-DIR}/nvme.spec --define "_builddir ${BUILD-DIR}" -v
