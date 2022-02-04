@@ -4206,7 +4206,7 @@ static void nvme_show_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 	}
 }
 
-void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
+void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 			void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
 	bool human = flags & VERBOSE, vs = flags & VS;
@@ -4384,11 +4384,6 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 		printf("vs[]:\n");
 		d(ctrl->vs, sizeof(ctrl->vs), 16, 1);
 	}
-}
-
-void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
-{
-	__nvme_show_id_ctrl(ctrl, mode, NULL);
 }
 
 static void json_nvme_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)

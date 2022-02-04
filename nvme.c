@@ -2595,7 +2595,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 
 	err = nvme_identify_ctrl(fd, &ctrl);
 	if (!err)
-		__nvme_show_id_ctrl(&ctrl, flags, vs);
+		nvme_show_id_ctrl(&ctrl, flags, vs);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
