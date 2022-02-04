@@ -148,7 +148,7 @@ static const char *get_sanitize_log_sstat_status_str(__u16 status)
 	}
 }
 
-static void json_nvme_id_ns(struct nvme_id_ns *ns)
+static void json_nvme_id_ns(struct nvme_id_ns *ns, bool cap_only)
 {
 	char nguid_buf[2 * sizeof(ns->nguid) + 1],
 		eui64_buf[2 * sizeof(ns->eui64) + 1];
@@ -161,55 +161,63 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns)
 
 	root = json_create_object();
 
-	json_object_add_value_uint64(root, "nsze", le64_to_cpu(ns->nsze));
-	json_object_add_value_uint64(root, "ncap", le64_to_cpu(ns->ncap));
-	json_object_add_value_uint64(root, "nuse", le64_to_cpu(ns->nuse));
-	json_object_add_value_int(root, "nsfeat", ns->nsfeat);
+	if (!cap_only) {
+		json_object_add_value_uint64(root, "nsze", le64_to_cpu(ns->nsze));
+		json_object_add_value_uint64(root, "ncap", le64_to_cpu(ns->ncap));
+		json_object_add_value_uint64(root, "nuse", le64_to_cpu(ns->nuse));
+		json_object_add_value_int(root, "nsfeat", ns->nsfeat);
+	}
 	json_object_add_value_int(root, "nlbaf", ns->nlbaf);
-	json_object_add_value_int(root, "flbas", ns->flbas);
+	if (!cap_only)
+		json_object_add_value_int(root, "flbas", ns->flbas);
 	json_object_add_value_int(root, "mc", ns->mc);
 	json_object_add_value_int(root, "dpc", ns->dpc);
-	json_object_add_value_int(root, "dps", ns->dps);
-	json_object_add_value_int(root, "nmic", ns->nmic);
-	json_object_add_value_int(root, "rescap", ns->rescap);
-	json_object_add_value_int(root, "fpi", ns->fpi);
-	json_object_add_value_int(root, "dlfeat", ns->dlfeat);
-	json_object_add_value_int(root, "nawun", le16_to_cpu(ns->nawun));
-	json_object_add_value_int(root, "nawupf", le16_to_cpu(ns->nawupf));
-	json_object_add_value_int(root, "nacwu", le16_to_cpu(ns->nacwu));
-	json_object_add_value_int(root, "nabsn", le16_to_cpu(ns->nabsn));
-	json_object_add_value_int(root, "nabo", le16_to_cpu(ns->nabo));
-	json_object_add_value_int(root, "nabspf", le16_to_cpu(ns->nabspf));
-	json_object_add_value_int(root, "noiob", le16_to_cpu(ns->noiob));
-	json_object_add_value_float(root, "nvmcap", nvmcap);
-	json_object_add_value_int(root, "nsattr", ns->nsattr);
-	json_object_add_value_int(root, "nvmsetid", le16_to_cpu(ns->nvmsetid));
+	if (!cap_only) {
+		json_object_add_value_int(root, "dps", ns->dps);
+		json_object_add_value_int(root, "nmic", ns->nmic);
+		json_object_add_value_int(root, "rescap", ns->rescap);
+		json_object_add_value_int(root, "fpi", ns->fpi);
+		json_object_add_value_int(root, "dlfeat", ns->dlfeat);
+		json_object_add_value_int(root, "nawun", le16_to_cpu(ns->nawun));
+		json_object_add_value_int(root, "nawupf", le16_to_cpu(ns->nawupf));
+		json_object_add_value_int(root, "nacwu", le16_to_cpu(ns->nacwu));
+		json_object_add_value_int(root, "nabsn", le16_to_cpu(ns->nabsn));
+		json_object_add_value_int(root, "nabo", le16_to_cpu(ns->nabo));
+		json_object_add_value_int(root, "nabspf", le16_to_cpu(ns->nabspf));
+		json_object_add_value_int(root, "noiob", le16_to_cpu(ns->noiob));
+		json_object_add_value_float(root, "nvmcap", nvmcap);
+		json_object_add_value_int(root, "nsattr", ns->nsattr);
+		json_object_add_value_int(root, "nvmsetid", le16_to_cpu(ns->nvmsetid));
 
-	if (ns->nsfeat & 0x10) {
-		json_object_add_value_int(root, "npwg", le16_to_cpu(ns->npwg));
-		json_object_add_value_int(root, "npwa", le16_to_cpu(ns->npwa));
-		json_object_add_value_int(root, "npdg", le16_to_cpu(ns->npdg));
-		json_object_add_value_int(root, "npda", le16_to_cpu(ns->npda));
-		json_object_add_value_int(root, "nows", le16_to_cpu(ns->nows));
+		if (ns->nsfeat & 0x10) {
+			json_object_add_value_int(root, "npwg", le16_to_cpu(ns->npwg));
+			json_object_add_value_int(root, "npwa", le16_to_cpu(ns->npwa));
+			json_object_add_value_int(root, "npdg", le16_to_cpu(ns->npdg));
+			json_object_add_value_int(root, "npda", le16_to_cpu(ns->npda));
+			json_object_add_value_int(root, "nows", le16_to_cpu(ns->nows));
+		}
+
+		json_object_add_value_int(root, "mssrl", le16_to_cpu(ns->mssrl));
+		json_object_add_value_int(root, "mcl", le32_to_cpu(ns->mcl));
+		json_object_add_value_int(root, "msrc", ns->msrc);
 	}
+	json_object_add_value_int(root, "nulbaf", ns->nulbaf);
 
-	json_object_add_value_int(root, "mssrl", le16_to_cpu(ns->mssrl));
-	json_object_add_value_int(root, "mcl", le32_to_cpu(ns->mcl));
-	json_object_add_value_int(root, "msrc", ns->msrc);
+	if (!cap_only) {
+		json_object_add_value_int(root, "anagrpid", le32_to_cpu(ns->anagrpid));
+		json_object_add_value_int(root, "endgid", le16_to_cpu(ns->endgid));
 
-	json_object_add_value_int(root, "anagrpid", le32_to_cpu(ns->anagrpid));
-	json_object_add_value_int(root, "endgid", le16_to_cpu(ns->endgid));
+		memset(eui64, 0, sizeof(eui64_buf));
+		for (i = 0; i < sizeof(ns->eui64); i++)
+			eui64 += sprintf(eui64, "%02x", ns->eui64[i]);
 
-	memset(eui64, 0, sizeof(eui64_buf));
-	for (i = 0; i < sizeof(ns->eui64); i++)
-		eui64 += sprintf(eui64, "%02x", ns->eui64[i]);
+		memset(nguid, 0, sizeof(nguid_buf));
+		for (i = 0; i < sizeof(ns->nguid); i++)
+			nguid += sprintf(nguid, "%02x", ns->nguid[i]);
 
-	memset(nguid, 0, sizeof(nguid_buf));
-	for (i = 0; i < sizeof(ns->nguid); i++)
-		nguid += sprintf(nguid, "%02x", ns->nguid[i]);
-
-	json_object_add_value_string(root, "eui64", eui64_buf);
-	json_object_add_value_string(root, "nguid", nguid_buf);
+		json_object_add_value_string(root, "eui64", eui64_buf);
+		json_object_add_value_string(root, "nguid", nguid_buf);
+	}
 
 	lbafs = json_create_array();
 	json_object_add_value_array(root, "lbafs", lbafs);
@@ -3779,84 +3787,99 @@ static void nvme_show_id_ns_dlfeat(__u8 dlfeat)
 }
 
 void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
-		enum nvme_print_flags flags)
+		unsigned int lba_index, bool cap_only, enum nvme_print_flags flags)
 {
 	bool human = flags & VERBOSE;
 	int vs = flags & VS;
 	int i;
 	__u8 flbas;
+	char *in_use = "(in use)";
 
 	if (flags & BINARY)
 		return d_raw((unsigned char *)ns, sizeof(*ns));
 	if (flags & JSON)
-		return json_nvme_id_ns(ns);
+		return json_nvme_id_ns(ns, cap_only);
 
-	printf("NVME Identify Namespace %d:\n", nsid);
-	printf("nsze    : %#"PRIx64"\n", le64_to_cpu(ns->nsze));
-	printf("ncap    : %#"PRIx64"\n", le64_to_cpu(ns->ncap));
-	printf("nuse    : %#"PRIx64"\n", le64_to_cpu(ns->nuse));
-	printf("nsfeat  : %#x\n", ns->nsfeat);
-	if (human)
-		nvme_show_id_ns_nsfeat(ns->nsfeat);
+	if (!cap_only) {
+		printf("NVME Identify Namespace %d:\n", nsid);
+		printf("nsze    : %#"PRIx64"\n", le64_to_cpu(ns->nsze));
+		printf("ncap    : %#"PRIx64"\n", le64_to_cpu(ns->ncap));
+		printf("nuse    : %#"PRIx64"\n", le64_to_cpu(ns->nuse));
+		printf("nsfeat  : %#x\n", ns->nsfeat);
+		if (human)
+			nvme_show_id_ns_nsfeat(ns->nsfeat);
+	} else
+		printf("NVMe Identify Namespace for LBA format[%d]:\n", lba_index);
+
 	printf("nlbaf   : %d\n", ns->nlbaf);
-	printf("flbas   : %#x\n", ns->flbas);
-	if (human)
-		nvme_show_id_ns_flbas(ns->flbas);
+	if (!cap_only) {
+		printf("flbas   : %#x\n", ns->flbas);
+		if (human)
+			nvme_show_id_ns_flbas(ns->flbas);
+	} else
+		in_use = "";
+
 	printf("mc      : %#x\n", ns->mc);
 	if (human)
 		nvme_show_id_ns_mc(ns->mc);
 	printf("dpc     : %#x\n", ns->dpc);
 	if (human)
 		nvme_show_id_ns_dpc(ns->dpc);
-	printf("dps     : %#x\n", ns->dps);
-	if (human)
-		nvme_show_id_ns_dps(ns->dps);
-	printf("nmic    : %#x\n", ns->nmic);
-	if (human)
-		nvme_show_id_ns_nmic(ns->nmic);
-	printf("rescap  : %#x\n", ns->rescap);
-	if (human)
-		nvme_show_id_ns_rescap(ns->rescap);
-	printf("fpi     : %#x\n", ns->fpi);
-	if (human)
-		nvme_show_id_ns_fpi(ns->fpi);
-	printf("dlfeat  : %d\n", ns->dlfeat);
-	if (human)
-		nvme_show_id_ns_dlfeat(ns->dlfeat);
-	printf("nawun   : %d\n", le16_to_cpu(ns->nawun));
-	printf("nawupf  : %d\n", le16_to_cpu(ns->nawupf));
-	printf("nacwu   : %d\n", le16_to_cpu(ns->nacwu));
-	printf("nabsn   : %d\n", le16_to_cpu(ns->nabsn));
-	printf("nabo    : %d\n", le16_to_cpu(ns->nabo));
-	printf("nabspf  : %d\n", le16_to_cpu(ns->nabspf));
-	printf("noiob   : %d\n", le16_to_cpu(ns->noiob));
-	printf("nvmcap  : %.0Lf\n", int128_to_double(ns->nvmcap));
-	if (ns->nsfeat & 0x10) {
-		printf("npwg    : %u\n", le16_to_cpu(ns->npwg));
-		printf("npwa    : %u\n", le16_to_cpu(ns->npwa));
-		printf("npdg    : %u\n", le16_to_cpu(ns->npdg));
-		printf("npda    : %u\n", le16_to_cpu(ns->npda));
-		printf("nows    : %u\n", le16_to_cpu(ns->nows));
+	if (!cap_only) {
+		printf("dps     : %#x\n", ns->dps);
+		if (human)
+			nvme_show_id_ns_dps(ns->dps);
+		printf("nmic    : %#x\n", ns->nmic);
+		if (human)
+			nvme_show_id_ns_nmic(ns->nmic);
+		printf("rescap  : %#x\n", ns->rescap);
+		if (human)
+			nvme_show_id_ns_rescap(ns->rescap);
+		printf("fpi     : %#x\n", ns->fpi);
+		if (human)
+			nvme_show_id_ns_fpi(ns->fpi);
+		printf("dlfeat  : %d\n", ns->dlfeat);
+		if (human)
+			nvme_show_id_ns_dlfeat(ns->dlfeat);
+		printf("nawun   : %d\n", le16_to_cpu(ns->nawun));
+		printf("nawupf  : %d\n", le16_to_cpu(ns->nawupf));
+		printf("nacwu   : %d\n", le16_to_cpu(ns->nacwu));
+		printf("nabsn   : %d\n", le16_to_cpu(ns->nabsn));
+		printf("nabo    : %d\n", le16_to_cpu(ns->nabo));
+		printf("nabspf  : %d\n", le16_to_cpu(ns->nabspf));
+		printf("noiob   : %d\n", le16_to_cpu(ns->noiob));
+		printf("nvmcap  : %.0Lf\n", int128_to_double(ns->nvmcap));
+		if (ns->nsfeat & 0x10) {
+			printf("npwg    : %u\n", le16_to_cpu(ns->npwg));
+			printf("npwa    : %u\n", le16_to_cpu(ns->npwa));
+			printf("npdg    : %u\n", le16_to_cpu(ns->npdg));
+			printf("npda    : %u\n", le16_to_cpu(ns->npda));
+			printf("nows    : %u\n", le16_to_cpu(ns->nows));
+		}
+		printf("mssrl   : %u\n", le16_to_cpu(ns->mssrl));
+		printf("mcl     : %d\n", le32_to_cpu(ns->mcl));
+		printf("msrc    : %u\n", ns->msrc);
 	}
-	printf("mssrl   : %u\n", le16_to_cpu(ns->mssrl));
-	printf("mcl     : %d\n", le32_to_cpu(ns->mcl));
-	printf("msrc    : %u\n", ns->msrc);
-	printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
-	printf("nsattr	: %u\n", ns->nsattr);
-	printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
-	printf("endgid  : %d\n", le16_to_cpu(ns->endgid));
+	printf("nulbaf  : %u\n", ns->nulbaf);
+	if (!cap_only) {
+		printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
+		printf("nsattr	: %u\n", ns->nsattr);
+		printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
+		printf("endgid  : %d\n", le16_to_cpu(ns->endgid));
 
-	printf("nguid   : ");
-	for (i = 0; i < 16; i++)
-		printf("%02x", ns->nguid[i]);
-	printf("\n");
+		printf("nguid   : ");
+		for (i = 0; i < 16; i++)
+			printf("%02x", ns->nguid[i]);
+		printf("\n");
 
-	printf("eui64   : ");
-	for (i = 0; i < 8; i++)
-		printf("%02x", ns->eui64[i]);
-	printf("\n");
+		printf("eui64   : ");
+		for (i = 0; i < 8; i++)
+			printf("%02x", ns->eui64[i]);
+		printf("\n");
+	}
+
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
-	for (i = 0; i <= ns->nlbaf; i++) {
+	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
 		if (human)
 			printf("LBA Format %2d : Metadata Size: %-3d bytes - "
 				"Data Size: %-2d bytes - Relative Performance: %#x %s %s\n",
@@ -3865,14 +3888,14 @@ void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 				ns->lbaf[i].rp == 3 ? "Degraded" :
 					ns->lbaf[i].rp == 2 ? "Good" :
 					ns->lbaf[i].rp == 1 ? "Better" : "Best",
-				i == flbas ? "(in use)" : "");
+					i == flbas ? in_use : "");
 		else
 			printf("lbaf %2d : ms:%-3d lbads:%-2d rp:%#x %s\n", i,
 				le16_to_cpu(ns->lbaf[i].ms), ns->lbaf[i].ds,
-				ns->lbaf[i].rp,	i == flbas ? "(in use)" : "");
+				ns->lbaf[i].rp,	i == flbas ? in_use : "");
 	}
 
-	if (vs) {
+	if (vs && !cap_only) {
 		printf("vs[]:\n");
 		d(ns->vs, sizeof(ns->vs), 16, 1);
 	}
@@ -4183,7 +4206,7 @@ static void nvme_show_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 	}
 }
 
-void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
+void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 			void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
 	bool human = flags & VERBOSE, vs = flags & VS;
@@ -4363,11 +4386,6 @@ void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 	}
 }
 
-void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode)
-{
-	__nvme_show_id_ctrl(ctrl, mode, NULL);
-}
-
 static void json_nvme_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 {
 	struct json_object *root;
@@ -4400,6 +4418,95 @@ void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
 	printf("dmrl   : %u\n", ctrl_nvm->dmrl);
 	printf("dmrsl  : %u\n", le32_to_cpu(ctrl_nvm->dmrsl));
 	printf("dmsl   : %"PRIu64"\n", le64_to_cpu(ctrl_nvm->dmsl));
+}
+
+static void json_nvme_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns,
+								struct nvme_id_ns *ns, bool cap_only)
+{
+	struct json_object *root;
+	struct json_object *elbafs;
+	int i;
+
+	root = json_create_object();
+
+	if (!cap_only) {
+		json_object_add_value_uint64(root, "lbstm", le64_to_cpu(nvm_ns->lbstm));
+	}
+	json_object_add_value_int(root, "pic", nvm_ns->pic);
+
+	elbafs = json_create_array();
+	json_object_add_value_array(root, "elbafs", elbafs);
+
+	for (i = 0; i <= ns->nlbaf; i++) {
+		struct json_object *elbaf = json_create_object();
+		unsigned int elbaf_val = le32_to_cpu(nvm_ns->elbaf[i]);
+
+		json_object_add_value_int(elbaf, "sts", elbaf_val & 0x7F);
+		json_object_add_value_int(elbaf, "pif", (elbaf_val >> 7) & 0x3);
+
+		json_array_add_value_object(elbafs, elbaf);
+	}
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+static void nvme_show_nvm_id_ns_pic(__u8 pic)
+{
+	__u8 rsvd = (pic & 0xFC) >> 2;
+	__u8 pic_16bpistm = (pic & 0x2) >> 1;
+	__u8 pic_16bpists = pic & 0x1;
+
+	if (rsvd)
+		printf("  [7:2] : %#x\tReserved\n", rsvd);
+	printf("  [1:1] : %#x\t16b Guard Protection Information Storage Tag Mask\n",
+		pic_16bpistm);
+	printf("  [0:0] : %#x\t16b Guard Protection Information Storage Tag Support\n",
+		pic_16bpists);
+	printf("\n");
+}
+
+void nvme_show_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
+						struct nvme_id_ns *ns, unsigned int lba_index,
+						bool cap_only, enum nvme_print_flags flags)
+{
+	int i, verbose = flags & VERBOSE;
+	__u32 elbaf;
+	int pif, sts;
+	char *in_use = "(in use)";
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)nvm_ns, sizeof(*nvm_ns));
+	else if (flags & JSON)
+		return json_nvme_nvm_id_ns(nvm_ns, ns, cap_only);
+
+	if (!cap_only) {
+		printf("NVMe NVM Identify Namespace %d:\n", nsid);
+		printf("lbstm : %#"PRIx64"\n", le64_to_cpu(nvm_ns->lbstm));
+	} else {
+		printf("NVMe NVM Identify Namespace for LBA format[%d]:\n", lba_index);
+		in_use = "";
+	}
+	printf("pic   : %#x\n", nvm_ns->pic);
+	if (verbose)
+		nvme_show_nvm_id_ns_pic(nvm_ns->pic);
+
+	for (i = 0; i <= ns->nlbaf + ns->nulbaf; i++) {
+		elbaf = le32_to_cpu(nvm_ns->elbaf[i]);
+		pif = (elbaf >> 7) & 0x3;
+		sts = elbaf & 0x7f;
+		if (verbose)
+			printf("Extended LBA Format %2d : Protection Information Format: "
+				"%s(%d) - Storage Tag Size (MSB): %-2d %s\n",
+				i, pif == 3 ? "Reserved" :
+					pif == 2 ? "64b Guard" :
+					pif == 1 ? "32b Guard" : "16b Guard",
+					pif, sts, i == (ns->flbas & 0xf) ? in_use : "");
+		else
+			printf("elbaf %2d : pif:%d lbads:%-2d %s\n", i,
+				pif, sts, i == (ns->flbas & 0xf) ? in_use : "");
+	}
 }
 
 static void json_nvme_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl)

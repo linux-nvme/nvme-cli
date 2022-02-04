@@ -21,11 +21,10 @@ void nvme_show_lba_status_info(__u32 result);
 void nvme_show_relatives(const char *name);
 
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs);
-void __nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
+void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode,
 	void (*vendor_show)(__u8 *vs, struct json_object *root));
-void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, unsigned int mode);
 void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
-	enum nvme_print_flags flags);
+		unsigned int lba_index, bool cap_only, enum nvme_print_flags flags);
 void nvme_show_cmd_set_independent_id_ns(
 	struct nvme_id_independent_id_ns *ns, unsigned int nsid,
 	enum nvme_print_flags flags);
@@ -112,6 +111,9 @@ void nvme_show_select_result(__u32 result);
 void nvme_show_zns_id_ctrl(struct nvme_zns_id_ctrl *ctrl, unsigned int mode);
 void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
 	enum nvme_print_flags flags);
+void nvme_show_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns, unsigned int nsid,
+						struct nvme_id_ns *ns, unsigned int lba_index,
+						bool cap_only, enum nvme_print_flags flags);
 void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 	struct nvme_id_ns *id_ns, unsigned long flags);
 void nvme_show_zns_changed( struct nvme_zns_changed_zone_log *log,
