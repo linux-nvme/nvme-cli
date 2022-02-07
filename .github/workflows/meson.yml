@@ -19,8 +19,9 @@ jobs:
       - uses: actions/setup-python@v1
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          action: test
+          setup-options: --werror
           options: --verbose
+          action: test
       # Preserve meson's log file on failure
       - uses: actions/upload-artifact@v1
         if: failure()
