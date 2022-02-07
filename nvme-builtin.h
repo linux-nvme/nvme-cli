@@ -54,6 +54,7 @@ COMMAND_LIST(
 	ENTRY("supported-log-pages", "Retrieve the Supported Log pages details, show it", get_supported_log_pages)
 	ENTRY("fid-support-effects-log", "Retrieve FID Support and Effects log and show it", get_fid_support_effects_log)
 	ENTRY("media-unit-stat-log", "Retrieve the configuration and wear of media units, show it", get_media_unit_stat_log)
+	ENTRY("supported-cap-config-log", "Retrieve the list of Supported Capacity Configuration Descriptors", get_supp_cap_config_log)
 	ENTRY("set-feature", "Set a feature and show the resulting value", set_feature)
 	ENTRY("set-property", "Set a property and show the resulting value", set_property)
 	ENTRY("get-property", "Get a property and show the resulting value", get_property)
