@@ -3260,7 +3260,7 @@ ret:
 
 static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Get namespce ID of a the block device.";
+	const char *desc = "Get namespace ID of a the block device.";
 	int err = 0, fd;
 	unsigned int nsid;
 
@@ -3274,7 +3274,7 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 
 	err = nvme_get_nsid(fd, &nsid);
 	if (err <= 0) {
-		fprintf(stderr, devicename);
+		fprintf(stderr, "get namespace ID: %s\n", nvme_strerror(errno));
 		err = errno;
 		goto close_fd;
 	}
