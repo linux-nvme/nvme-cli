@@ -13,9 +13,7 @@
 
 #include "fabrics.h"
 
-#ifdef CONFIG_LIBUUID
 #include <uuid/uuid.h>
-#endif
 
 
 extern const char *nvme_ctrl_sysfs_dir;
@@ -56,11 +54,7 @@ struct nvme_ns {
 
 	uint8_t eui64[8];
 	uint8_t nguid[16];
-#ifdef CONFIG_LIBUUID
 	uuid_t  uuid;
-#else
-	uint8_t uuid[16];
-#endif
 	enum nvme_csi csi;
 };
 
