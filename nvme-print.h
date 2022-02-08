@@ -77,6 +77,8 @@ void nvme_show_fid_support_effects_log(struct nvme_fid_supported_effects_log *fi
 	const char *devname, enum nvme_print_flags flags);
 void nvme_show_media_unit_stat_log(struct nvme_media_unit_stat_log *mus,
 	enum nvme_print_flags flags);
+void nvme_show_supported_cap_config_log(struct nvme_supported_cap_config_list_log *caplog,
+				enum nvme_print_flags flags);
 void nvme_show_ctrl_registers(void *bar, bool fabrics, enum nvme_print_flags flags);
 void nvme_show_single_property(int offset, uint64_t prop, int human);
 void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flags);
