@@ -33,7 +33,7 @@
 	json_object_object_add(o, k, json_object_new_int(v))
 #define json_object_add_value_int(o, k, v) \
 	json_object_object_add(o, k, json_object_new_int(v))
-#ifdef LIBJSONC_14
+#ifdef CONFIG_JSONC_14
 #define json_object_add_value_uint64(o, k, v) \
 	json_object_object_add(o, k, json_object_new_uint64(v))
 #else
