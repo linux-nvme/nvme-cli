@@ -235,4 +235,4 @@ File: foo-plugin.c
 ```
 
 After that, you just need to implement the functions you defined in each
-ENTRY, then append the object file name to the meson.build "sources".
+ENTRY, then append the object file name to the [meson.build](./plugins/meson.build) "sources".
