@@ -464,7 +464,7 @@ nvme_list_opts () {
 			--tos= -T --hdr-digest= -g --data-digest -G \
 			--nr-io-queues= -i --nr-write-queues= -W \
 			--nr-poll-queues= -P --queue-size= -Q \
-			--persistent -p --quiet -S --matching -m \
+			--persistent -p --quiet -S \
 			--output-format= -o"
 			;;
 		"connect-all")
@@ -476,7 +476,7 @@ nvme_list_opts () {
 			--tos= -T --hdr-digest= -g --data-digest -G \
 			--nr-io-queues= -i --nr-write-queues= -W \
 			--nr-poll-queues= -P --queue-size= -Q \
-			--persistent -p --quiet -S --matching -m \
+			--persistent -p --quiet -S \
 			--output-format= -o"
 			;;
 		"connect")
