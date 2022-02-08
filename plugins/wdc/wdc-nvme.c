@@ -515,7 +515,7 @@ typedef enum
     SCAO_NUSE               = 152,	/* NUSE - Namespace utilization */
     SCAO_PSC                = 160,	/* PLP start count */
     SCAO_EEST               = 176,	/* Endurance estimate */
-    SCAO_PLRC               = 192,     /* PCIe Link Retraining Count */
+    SCAO_PLRC               = 192,	/* PCIe Link Retraining Count */
     SCAO_LPV                = 494,	/* Log page version */
     SCAO_LPG                = 496,	/* Log page GUID */
 } SMART_CLOUD_ATTRIBUTE_OFFSETS;
@@ -2089,16 +2089,15 @@ static int wdc_do_dump_e6(int fd, __u32 opcode,__u32 data_len,
 
 static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int data_area)
 {
-	struct nvme_telemetry_log *hdr;
-	struct nvme_id_ctrl ctrl;
-	size_t full_size = 0, offset = WDC_TELEMETRY_HEADER_LENGTH;
+	struct nvme_telemetry_log *log;
+	size_t full_size = 0;
 	int err = 0, output;
-	void *page_log;
 	__u32 host_gen = 1;
 	int ctrl_init = 0;
-	__u32 result, len;
+	__u32 result;
 	void *buf = NULL;
-
+	__u8 *data_ptr = NULL;
+	int data_written = 0, data_remaining = 0;
 
 	if (type == WDC_TELEMETRY_TYPE_HOST) {
 		host_gen = 1;
@@ -2136,30 +2135,20 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 		goto close_fd;
 	}
 
-	hdr = malloc(bs);
-	page_log = malloc(bs);
-	if (!hdr || !page_log) {
-		fprintf(stderr, "%s: Failed to allocate 0x%x bytes for log: %s\n",
-				__func__, bs, strerror(errno));
-		err = -ENOMEM;
-		goto free_mem;
-	}
-	memset(hdr, 0, bs);
-
 	output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
 				__func__, file, strerror(errno));
 		err = output;
-		goto free_mem;
+		goto close_fd;
 	}
 
 	if (ctrl_init)
-		err = nvme_get_log_telemetry_ctrl(fd, true, 0, WDC_TELEMETRY_HEADER_LENGTH, hdr);
+		err = nvme_get_ctrl_telemetry(fd, true, &log, data_area, &full_size);
 	else if (host_gen)
-		err = nvme_get_log_create_telemetry_host(fd, hdr);
+		err = nvme_get_new_host_telemetry(fd, &log, data_area, &full_size);
 	else
-		err = nvme_get_log_telemetry_host(fd, 0, WDC_TELEMETRY_HEADER_LENGTH, hdr);
+		err = nvme_get_host_telemetry(fd, &log, data_area, &full_size);
 
 	if (err < 0)
 		perror("get-telemetry-log");
@@ -2169,118 +2158,39 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 		goto close_output;
 	}
 
-	err = write(output, (void *) hdr, WDC_TELEMETRY_HEADER_LENGTH);
-	if (err != WDC_TELEMETRY_HEADER_LENGTH) {
-		fprintf(stderr, "%s: Failed to flush header data to file!, err = %d\n", __func__, err);
-		goto close_output;
-	}
-
-	struct nvme_get_features_args args = {
-		.args_size	= sizeof(args),
-		.fd		= fd,
-		.fid		= NVME_FEAT_FID_HOST_BEHAVIOR,
-		.nsid		= NVME_NSID_ALL,
-		.sel		= 0,
-		.cdw11		= 0,
-		.uuidx		= 0,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
-	};
-
-	switch (data_area) {
-	case 1:
-		full_size = (le16_to_cpu(hdr->dalb1) * WDC_TELEMETRY_BLOCK_SIZE) + WDC_TELEMETRY_HEADER_LENGTH;
-		break;
-	case 2:
-		full_size = (le16_to_cpu(hdr->dalb2) * WDC_TELEMETRY_BLOCK_SIZE) + WDC_TELEMETRY_HEADER_LENGTH;
-		break;
-	case 3:
-		full_size = (le16_to_cpu(hdr->dalb3) * WDC_TELEMETRY_BLOCK_SIZE) + WDC_TELEMETRY_HEADER_LENGTH;
-		break;
-	case 4:
-		err = nvme_identify_ctrl(fd, &ctrl);
-		if (err) {
-			perror("identify-ctrl");
-			goto close_output;
-		}
-
-		len = nvme_get_feature_length(NVME_FEAT_FID_HOST_BEHAVIOR, 0, &len);
-		if (posix_memalign(&buf, getpagesize(), len)) {
-			fprintf(stderr, "can not allocate feature payload\n");
-			errno = ENOMEM;
-			err = -1;
-			goto close_output;
-		}
-		memset(buf, 0, len);
-
-		args.data_len = len;
-		args.data = buf;
-		err = nvme_get_features(&args);
-		if (err > 0) {
-			nvme_show_status(err);
-		} else if (err < 0) {
-			perror("get-feature");
-		} else {
-			if ((ctrl.lpa & 0x40)) {
-				if (((unsigned char *)buf)[1] == 1)
-					full_size = (le32_to_cpu(hdr->dalb4) * WDC_TELEMETRY_BLOCK_SIZE) + WDC_TELEMETRY_HEADER_LENGTH;
-				else {
-					fprintf(stderr, "Data area 4 unsupported, Host Behavior Support ETDAS not set to 1\n");
-					errno = EINVAL;
-					err = -1;
-				}
-			} else {
-				fprintf(stderr, "Data area 4 unsupported, bit 6 of Log Page Attributes not set\n");
-				errno = EINVAL;
-				err = -1;
-			}
-		}
-		free(buf);
-		if (err)
-			goto close_output;
-		break;
-	default:
-		fprintf(stderr, "%s: Invalid data area requested, data area = %d\n", __func__, data_area);
-		err = -EINVAL;
-		goto close_output;
-	}
-
 	/*
 	 * Continuously pull data until the offset hits the end of the last
 	 * block.
 	 */
-	while (offset < full_size) {
-		if ((full_size - offset) < bs)
-			bs = (full_size - offset);
+	data_written = 0;
+	data_remaining = full_size;
+	data_ptr = (__u8 *)log;
 
-		if (ctrl_init)
-			err = nvme_get_log_telemetry_ctrl(fd, true, offset, bs, page_log);
-		else
-			err = nvme_get_log_telemetry_host(fd, offset, bs, page_log);
+	while (data_remaining) {
+		data_written = write(output, data_ptr, data_remaining);
 
-		if (err < 0) {
-			perror("get-telemetry-log");
+		if (data_written < 0) {
+			data_remaining = data_written;
 			break;
-		} else if (err > 0) {
-			nvme_show_status(err);
-			fprintf(stderr, "%s: Failed to acquire full telemetry log!\n", __func__);
-			break;
-		}
-
-		err = write(output, (void *) page_log, bs);
-		if (err != bs) {
-			fprintf(stderr, "%s: Failed to flush telemetry data to file!, err = %d\n", __func__, err);
+		} else if (data_written <= data_remaining) {
+			data_remaining -= data_written;
+			data_ptr += data_written;
+		} else {
+			/* Unexpected overwrite */
+			fprintf(stderr, "Failure: Unexpected telemetry log overwrite - data_remaining = 0x%x, data_written = 0x%x\n",
+					data_remaining, data_written);
 			break;
 		}
-		err = 0;
-		offset += bs;
 	}
 
+	if (fsync(output) < 0) {
+		fprintf(stderr, "ERROR : %s: fsync : %s\n", __func__, strerror(errno));
+		return -1;
+	}
+
+	free(log);
 close_output:
 	close(output);
-free_mem:
-	free(hdr);
-	free(page_log);
 close_fd:
 	close(fd);
 

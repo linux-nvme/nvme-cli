@@ -437,94 +437,6 @@ ret:
 	return err;
 }
 
-static int get_telemetry_log_total_size_dalb4(int fd,
-					      struct nvme_telemetry_log *log,
-					      unsigned int *total_size)
-{
-	const size_t bs = 512;
-	int err;
-	int block_size = NVME_LOG_TELEM_BLOCK_SIZE;
-	__u32 result, len;
-	void *buf = NULL;
-	struct nvme_id_ctrl ctrl;
-	struct nvme_get_features_args args = {
-		.args_size	= sizeof(args),
-		.fd		= fd,
-		.fid		= NVME_FEAT_FID_HOST_BEHAVIOR,
-		.nsid		= NVME_NSID_ALL,
-		.sel		= 0,
-		.cdw11		= 0,
-		.uuidx		= 0,
-		.data		= buf,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result		= &result,
-	};
-
-	err = nvme_identify_ctrl(fd, &ctrl);
-	if (err) {
-		fprintf(stderr, "identify-ctrl: %s\n", nvme_strerror(errno));
-		return err;
-	}
-
-	len = nvme_get_feature_length(NVME_FEAT_FID_HOST_BEHAVIOR, 0,
-				      &len);
-	if (posix_memalign(&buf, getpagesize(), len))
-		return -1;
-	memset(buf, 0, len);
-
-	args.data_len = len,
-
-	err = nvme_get_features(&args);
-	if (err > 0) {
-		nvme_show_status(err);
-	} else if (err < 0) {
-		fprintf(stderr, "get-features: %s\n", nvme_strerror(errno));
-	} else {
-		if (ctrl.lpa & 0x40) {
-			if (((unsigned char *)buf)[1] == 1) {
-				*total_size = le32_to_cpu(log->dalb4) * bs + block_size;
-			} else {
-				fprintf(stderr,
-					"Data area 4 unsupported, Host Behavior Support ETDAS not set to 1\n");
-				err = -1;
-			}
-		} else {
-			fprintf(stderr,
-				"Data area 4 unsupported, bit 6 of Log Page Attributes not set\n");
-			err = -1;
-		}
-	}
-	free(buf);
-	return err;
-}
-
-static int get_telemetry_log_total_size(int fd, int data_area,
-					struct nvme_telemetry_log *log,
-					unsigned int *total_size)
-{
-	int err = 0;
-	int block_size = NVME_LOG_TELEM_BLOCK_SIZE;
-
-	switch (data_area) {
-	case 1:
-		*total_size = (le16_to_cpu(log->dalb1) + 1) * block_size;
-		break;
-	case 2:
-		*total_size = (le16_to_cpu(log->dalb2) + 1) * block_size;
-		break;
-	case 3:
-		fallthrough;
-	default:
-		*total_size = (le16_to_cpu(log->dalb3) + 1) * block_size;
-		break;
-	case 4:
-		err = get_telemetry_log_total_size_dalb4(fd, log, total_size);
-		break;
-	}
-
-	return err;
-}
-
 static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 			     struct plugin *plugin)
 {
@@ -535,7 +447,9 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 	const char *dgen = "Pick which telemetry data area to report. Default is 3 to fetch areas 1-3. Valid options are 1, 2, 3, 4.";
 	struct nvme_telemetry_log *log;
 	int err = 0, fd, output;
-	unsigned int total_size = 0;
+	size_t total_size;
+	__u8 *data_ptr = NULL;
+	int data_written = 0, data_remaining = 0;
 
 	struct config {
 		char *file_name;
@@ -578,11 +492,11 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 	}
 
 	if (cfg.ctrl_init)
-		err = nvme_get_ctrl_telemetry(fd, true, &log);
+		err = nvme_get_ctrl_telemetry(fd, true, &log, cfg.data_area, &total_size);
 	else if (cfg.host_gen)
-		err = nvme_get_new_host_telemetry(fd, &log);
+		err = nvme_get_new_host_telemetry(fd, &log, cfg.data_area, &total_size);
 	else
-		err = nvme_get_host_telemetry(fd, &log);
+		err = nvme_get_host_telemetry(fd, &log, cfg.data_area, &total_size);
 
 	if (err < 0) {
 		fprintf(stderr, "get-telemetry-log: %s\n",
@@ -593,11 +507,29 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 		goto close_output;
 	}
 
-	err = get_telemetry_log_total_size(fd, cfg.data_area, log, &total_size);
-	if (total_size) {
-		err = write(output, (void *)log, total_size);
-		if (err < 0 || err != total_size)
-			fprintf(stderr, "Failed to flush all data to file!\n");
+	data_written = 0;
+	data_remaining = total_size;
+	data_ptr = (__u8 *)log;
+
+	while (data_remaining) {
+		data_written = write(output, data_ptr, data_remaining);
+		if (data_written < 0) {
+			data_remaining = data_written;
+			break;
+		} else if (data_written <= data_remaining) {
+			data_remaining -= data_written;
+			data_ptr += data_written;
+		} else {
+			/* Unexpected overwrite */
+			fprintf(stderr, "Failure: Unexpected telemetry log overwrite - data_remaining = 0x%x, data_written = 0x%x\n",
+					data_remaining, data_written);
+			break;
+		}
+	}
+
+	if (fsync(output) < 0) {
+		fprintf(stderr, "ERROR : %s: : fsync : %s\n", __func__, strerror(errno));
+		return -1;
 	}
 
 close_output:
