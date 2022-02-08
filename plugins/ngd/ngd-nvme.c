@@ -73,7 +73,7 @@ struct nvme_vu_id_ctrl_field { /* CDR MR5 */
 	__u8			mic_fw[4];
 };
 
-static void json_intel_id_ctrl(struct nvme_vu_id_ctrl_field *id,
+static void json_ngd_id_ctrl(struct nvme_vu_id_ctrl_field *id,
 	char *health, char *bl, char *ww, char *mic_bl, char *mic_fw,
 	struct json_object *root)
 {
@@ -89,7 +89,7 @@ static void json_intel_id_ctrl(struct nvme_vu_id_ctrl_field *id,
 	json_object_add_value_string(root, "mic_fw", mic_fw);
 }
 
-static void intel_id_ctrl(__u8 *vs, struct json_object *root)
+static void ngd_id_ctrl(__u8 *vs, struct json_object *root)
 {
 	struct nvme_vu_id_ctrl_field* id = (struct nvme_vu_id_ctrl_field *)vs;
 
@@ -117,7 +117,7 @@ static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 	snprintf(mic_fw, 5, "%s", id->mic_fw);
 
 	if (root) {
-		json_intel_id_ctrl(id, health, bl, ww, mic_bl, mic_fw, root);
+		json_ngd_id_ctrl(id, health, bl, ww, mic_bl, mic_fw, root);
 		return;
 	}
 
@@ -135,16 +135,16 @@ static void intel_id_ctrl(__u8 *vs, struct json_object *root)
 
 static int id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	return __id_ctrl(argc, argv, cmd, plugin, intel_id_ctrl);
+	return __id_ctrl(argc, argv, cmd, plugin, ngd_id_ctrl);
 }
 
-static void show_intel_smart_log_jsn(struct nvme_additional_smart_log *smart,
+static void show_ngd_smart_log_jsn(struct nvme_additional_smart_log *smart,
 		unsigned int nsid, const char *devname)
 {
 	struct json_object *root, *entry_stats, *dev_stats, *multi;
 
 	root = json_create_object();
-	json_object_add_value_string(root, "Intel Smart log", devname);
+	json_object_add_value_string(root, "Ngd Smart log", devname);
 
 	dev_stats = json_create_object();
 
@@ -309,7 +309,7 @@ static char *id_to_key(__u8 id)
 	}
 }
 
-static void print_intel_smart_log_items(struct nvme_additional_smart_log_item *item)
+static void print_ngd_smart_log_items(struct nvme_additional_smart_log_item *item)
 {
 	if (!item->key)
 		return;
@@ -319,7 +319,7 @@ static void print_intel_smart_log_items(struct nvme_additional_smart_log_item *i
 		item->norm, int48_to_long(item->raw));
 }
 
-static void show_intel_smart_log(struct nvme_additional_smart_log *smart,
+static void show_ngd_smart_log(struct nvme_additional_smart_log *smart,
 		unsigned int nsid, const char *devname)
 {
 	struct nvme_additional_smart_log_item *iter = &smart->program_fail_cnt;
@@ -331,12 +331,12 @@ static void show_intel_smart_log(struct nvme_additional_smart_log *smart,
 	printf("ID             KEY                                 Normalized     Raw\n");
 
 	for (int i = 0; i < num_items; i++, iter++)
-		print_intel_smart_log_items(iter);
+		print_ngd_smart_log_items(iter);
 }
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Get Intel vendor specific additional smart log (optionally, "\
+	const char *desc = "Get Ngd vendor specific additional smart log (optionally, "\
 		      "for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "Dump output in binary format";
@@ -369,9 +369,9 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	err = nvme_get_log_simple(fd, 0xca, sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (cfg.json)
-			show_intel_smart_log_jsn(&smart_log, cfg.namespace_id, devicename);
+			show_ngd_smart_log_jsn(&smart_log, cfg.namespace_id, devicename);
 		else if (!cfg.raw_binary)
-			show_intel_smart_log(&smart_log, cfg.namespace_id, devicename);
+			show_ngd_smart_log(&smart_log, cfg.namespace_id, devicename);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}
@@ -382,7 +382,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 
 static int get_market_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	const char *desc = "Get Intel Marketing Name log and show it.";
+	const char *desc = "Get Ngd Marketing Name log and show it.";
 	const char *raw = "dump output in binary format";
 
 	char log[512];
@@ -407,7 +407,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 	err = nvme_get_log_simple(fd, 0xdd, sizeof(log), log);
 	if (!err) {
 		if (!cfg.raw_binary)
-			printf("Intel Marketing Name Log:\n%s\n", log);
+			printf("Ngd Marketing Name Log:\n%s\n", log);
 		else
 			d_raw((unsigned char *)&log, sizeof(log));
 	} else if (err > 0)
@@ -415,7 +415,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 	return err;
 }
 
-struct intel_temp_stats {
+struct ngd_temp_stats {
 	__le64	curr;
 	__le64	last_overtemp;
 	__le64	life_overtemp;
@@ -427,9 +427,9 @@ struct intel_temp_stats {
 	__le64	est_offset;
 };
 
-static void show_temp_stats(struct intel_temp_stats *stats)
+static void show_temp_stats(struct ngd_temp_stats *stats)
 {
-	printf("  Intel Temperature Statistics\n");
+	printf("  Ngd Temperature Statistics\n");
 	printf("--------------------------------\n");
 	printf("Current temperature         : %"PRIu64"\n", le64_to_cpu(stats->curr));
 	printf("Last critical overtemp flag : %"PRIu64"\n", le64_to_cpu(stats->last_overtemp));
@@ -443,7 +443,7 @@ static void show_temp_stats(struct intel_temp_stats *stats)
 
 static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	struct intel_temp_stats stats;
+	struct ngd_temp_stats stats;
 	int err, fd;
 
 	const char *desc = "Get Temperature Statistics log and show it.";
@@ -475,7 +475,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	return err;
 }
 
-struct intel_lat_stats {
+struct ngd_lat_stats {
 	__u16 maj;
 	__u16 min;
 	__u32 data[1216];
@@ -495,7 +495,7 @@ struct __attribute__((__packed__)) optane_lat_stats {
 #define NAND_LAT_STATS_LEN		4868
 
 
-static struct intel_lat_stats stats;
+static struct ngd_lat_stats stats;
 static struct optane_lat_stats v1000_stats;
 
 struct v1000_thresholds {
@@ -597,7 +597,7 @@ static void init_buffer(char *buffer, size_t size)
 		buffer[i] = i + '0';
 }
 
-static void show_lat_stats_bucket(struct intel_lat_stats *stats,
+static void show_lat_stats_bucket(struct ngd_lat_stats *stats,
 	__u32 lower_us, enum inf_bound_type start_type,
 	__u32 upper_us, enum inf_bound_type end_type, int i)
 {
@@ -640,7 +640,7 @@ static void show_optane_lat_stats_bucket(struct optane_lat_stats *stats,
 }
 
 
-static void show_lat_stats_linear(struct intel_lat_stats *stats,
+static void show_lat_stats_linear(struct ngd_lat_stats *stats,
 	__u32 start_offset, __u32 end_offset, __u32 bytes_per,
 	__u32 us_step, bool nonzero_print)
 {
@@ -701,7 +701,7 @@ static void lat_stats_make_json_root(
  *     "value" : 0,
  *   },
  */
-static void json_add_bucket(struct intel_lat_stats *stats,
+static void json_add_bucket(struct ngd_lat_stats *stats,
 	struct json_object *bucket_list, __u32 id,
 	__u32 lower_us, enum inf_bound_type start_type,
 	__u32 upper_us, enum inf_bound_type end_type, __u32 val)
@@ -751,7 +751,7 @@ static void json_add_bucket_optane(struct json_object *bucket_list, __u32 id,
 
 }
 
-static void json_lat_stats_linear(struct intel_lat_stats *stats,
+static void json_lat_stats_linear(struct ngd_lat_stats *stats,
 	struct json_object *bucket_list, __u32 start_offset,
 	__u32 end_offset, __u32 bytes_per,
 	__u32 us_step, bool nonzero_print)
@@ -767,7 +767,7 @@ static void json_lat_stats_linear(struct intel_lat_stats *stats,
 	}
 }
 
-static void json_lat_stats_3_0(struct intel_lat_stats *stats,
+static void json_lat_stats_3_0(struct ngd_lat_stats *stats,
 	int write)
 {
 	struct json_object *root = json_create_object();
@@ -786,7 +786,7 @@ static void json_lat_stats_3_0(struct intel_lat_stats *stats,
 	json_free_object(root);
 }
 
-static void json_lat_stats_4_0(struct intel_lat_stats *stats,
+static void json_lat_stats_4_0(struct ngd_lat_stats *stats,
 	int write)
 {
 	struct json_object *root = json_create_object();
@@ -814,7 +814,7 @@ static void json_lat_stats_4_0(struct intel_lat_stats *stats,
 	json_free_object(root);
 }
 
-static void show_lat_stats_3_0(struct intel_lat_stats *stats)
+static void show_lat_stats_3_0(struct ngd_lat_stats *stats)
 {
 	show_lat_stats_linear(stats, 4, 131, 4, 32, false);
 	show_lat_stats_linear(stats, 132, 255, 4, 1024, false);
@@ -824,7 +824,7 @@ static void show_lat_stats_3_0(struct intel_lat_stats *stats)
 	show_lat_stats_linear(stats, 388, 391, 4, 32, true);
 }
 
-static void show_lat_stats_4_0(struct intel_lat_stats *stats)
+static void show_lat_stats_4_0(struct ngd_lat_stats *stats)
 {
 	int lower_us = 0;
 	int upper_us = 1;
@@ -974,7 +974,7 @@ static void show_lat_stats(int write)
 {
 	static const int separator_length = 50;
 
-	printf("Intel IO %s Command Latency Statistics\n",
+	printf("Ngd IO %s Command Latency Statistics\n",
 		write ? "Write" : "Read");
 	printf("Major Revision : %u\nMinor Revision : %u\n",
 		media_version[MEDIA_MAJOR_IDX], media_version[MEDIA_MINOR_IDX]);
@@ -1027,7 +1027,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	int err, fd;
 	__u8 data[NAND_LAT_STATS_LEN];
 
-	const char *desc = "Get Intel Latency Statistics log and show it.";
+	const char *desc = "Get Ngd Latency Statistics log and show it.";
 	const char *raw = "Dump output in binary format";
 	const char *json= "Dump output in json format";
 	const char *write = "Get write statistics (read default)";
@@ -1104,8 +1104,8 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		memcpy(&v1000_stats, (struct optane_lat_stats *)data,
 		       sizeof(struct optane_lat_stats));
 	} else {
-		memcpy(&stats, (struct intel_lat_stats *)data,
-		       sizeof(struct intel_lat_stats));
+		memcpy(&stats, (struct ngd_lat_stats *)data,
+		       sizeof(struct ngd_lat_stats));
 	}
 
 	if (!err) {
@@ -1128,7 +1128,7 @@ close_fd:
 	return err;
 }
 
-struct intel_assert_dump {
+struct ngd_assert_dump {
 	__u32 coreoffset;
 	__u32 assertsize;
 	__u8  assertdumptype;
@@ -1136,7 +1136,7 @@ struct intel_assert_dump {
 	__u8  reserved[2];
 };
 
-struct intel_event_dump {
+struct ngd_event_dump {
 	__u32 numeventdumps;
 	__u32 coresize;
 	__u32 coreoffset;
@@ -1144,26 +1144,26 @@ struct intel_event_dump {
 	__u8  eventIdValidity[16];
 };
 
-struct intel_vu_version {
+struct ngd_vu_version {
 	__u16    major;
 	__u16    minor;
 };
 
-struct intel_event_header {
+struct ngd_event_header {
 	__u32 eventidsize;
-	struct intel_event_dump edumps[0];
+	struct ngd_event_dump edumps[0];
 };
 
-struct intel_vu_log {
-    struct intel_vu_version ver;
+struct ngd_vu_log {
+    struct ngd_vu_version ver;
     __u32    header;
     __u32    size;
     __u32    numcores;
     __u8     reserved[4080];
 };
 
-struct intel_vu_nlog {
-	struct intel_vu_version ver;
+struct ngd_vu_nlog {
+	struct ngd_vu_version ver;
 	__u32 logselect;
 	__u32 totalnlogs;
 	__u32 nlognum;
@@ -1182,7 +1182,7 @@ struct intel_vu_nlog {
 	__u32 reserved[3];
 };
 
-struct intel_cd_log {
+struct ngd_cd_log {
 	union {
 		struct {
 			__u32 selectLog  : 3;
@@ -1196,7 +1196,7 @@ struct intel_cd_log {
     } u;
 };
 
-static void print_intel_nlog(struct intel_vu_nlog *intel_nlog)
+static void print_ngd_nlog(struct ngd_vu_nlog *ngd_nlog)
 {
 	printf("Version Major %u\n"
 	       "Version Minor %u\n"
@@ -1215,14 +1215,14 @@ static void print_intel_nlog(struct intel_vu_nlog *intel_nlog)
 	       "nlogbufnum %u\n"
 	       "nlogbufnummax %u\n"
 	       "coreselected %u\n",
-	       intel_nlog->ver.major, intel_nlog->ver.minor,
-	       intel_nlog->logselect, intel_nlog->totalnlogs, intel_nlog->nlognum,
-	       intel_nlog->nlogname, intel_nlog->nlogbytesize,
-	       intel_nlog->nlogprimarybuffsize, intel_nlog->tickspersecond,
-	       intel_nlog->corecount, intel_nlog->nlogpausestatus,
-	       intel_nlog->selectoffsetref, intel_nlog->selectnlogpause,
-	       intel_nlog->selectaddedoffset, intel_nlog->nlogbufnum,
-	       intel_nlog->nlogbufnummax, intel_nlog->coreselected);
+	       ngd_nlog->ver.major, ngd_nlog->ver.minor,
+	       ngd_nlog->logselect, ngd_nlog->totalnlogs, ngd_nlog->nlognum,
+	       ngd_nlog->nlogname, ngd_nlog->nlogbytesize,
+	       ngd_nlog->nlogprimarybuffsize, ngd_nlog->tickspersecond,
+	       ngd_nlog->corecount, ngd_nlog->nlogpausestatus,
+	       ngd_nlog->selectoffsetref, ngd_nlog->selectnlogpause,
+	       ngd_nlog->selectaddedoffset, ngd_nlog->nlogbufnum,
+	       ngd_nlog->nlogbufnummax, ngd_nlog->coreselected);
 }
 
 static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
@@ -1306,26 +1306,26 @@ static int setup_file(char *f, char *file, int fd, int type)
 static int get_internal_log_old(__u8 *buf, int output, int fd,
 				struct nvme_passthru_cmd *cmd)
 {
-	struct intel_vu_log *intel;
+	struct ngd_vu_log *ngd;
 	int err = 0;
 	const int dwmax = 0x400;
 	const int dmamax = 0x1000;
 
-	intel = (struct intel_vu_log *)buf;
+	ngd = (struct ngd_vu_log *)buf;
 
 	printf("Log major:%d minor:%d header:%d size:%d\n",
-		intel->ver.major, intel->ver.minor, intel->header, intel->size);
+		ngd->ver.major, ngd->ver.minor, ngd->header, ngd->size);
 
 	err = write(output, buf, 0x1000);
 	if (err < 0) {
 		perror("write failure");
 		goto out;
 	}
-	intel->size -= 0x400;
+	ngd->size -= 0x400;
 	cmd->opcode = 0xd2;
-	cmd->cdw10 = min(dwmax, intel->size);
-	cmd->data_len = min(dmamax, intel->size);
-	err = read_entire_cmd(cmd, intel->size, dwmax, output, fd, buf);
+	cmd->cdw10 = min(dwmax, ngd->size);
+	cmd->data_len = min(dmamax, ngd->size);
+	err = read_entire_cmd(cmd, ngd->size, dwmax, output, fd, buf);
 	if (err)
 		goto out;
 
@@ -1341,13 +1341,13 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 	char f[0x100];
 	int err, fd, output, i, j, count = 0, core_num = 1;
 	struct nvme_passthru_cmd cmd;
-	struct intel_cd_log cdlog;
-	struct intel_vu_log *intel = malloc(sizeof(struct intel_vu_log));
-	struct intel_vu_nlog *intel_nlog = (struct intel_vu_nlog *)buf;
-	struct intel_assert_dump *ad = (struct intel_assert_dump *) intel->reserved;
-	struct intel_event_header *ehdr = (struct intel_event_header *)intel->reserved;
+	struct ngd_cd_log cdlog;
+	struct ngd_vu_log *ngd = malloc(sizeof(struct ngd_vu_log));
+	struct ngd_vu_nlog *ngd_nlog = (struct ngd_vu_nlog *)buf;
+	struct ngd_assert_dump *ad = (struct ngd_assert_dump *) ngd->reserved;
+	struct ngd_event_header *ehdr = (struct ngd_event_header *)ngd->reserved;
 
-	const char *desc = "Get Intel Firmware Log and save it.";
+	const char *desc = "Get Ngd Firmware Log and save it.";
 	const char *log = "Log type: 0, 1, or 2 for nlog, event log, and assert log, respectively.";
 	const char *core = "Select which region log should come from. -1 for all";
 	const char *nlognum = "Select which nlog to read. -1 for all nlogs";
@@ -1383,12 +1383,12 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 
 	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0) {
-		free(intel);
+		free(ngd);
 		return fd;
 	}
 
 	if (cfg.log > 2 || cfg.core > 4 || cfg.lnum > 255) {
-		free(intel);
+		free(ngd);
 		return EINVAL;
 	}
 
@@ -1410,11 +1410,11 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 	err = read_header(&cmd, buf, fd, cdlog.u.entireDword, cfg.namespace_id);
 	if (err)
 		goto out;
-	memcpy(intel, buf, sizeof(*intel));
+	memcpy(ngd, buf, sizeof(*ngd));
 
 	/* for 1.1 Fultondales will use old nlog, but current assert/event */
-	if ((intel->ver.major < 1 && intel->ver.minor < 1) ||
-	    (intel->ver.major <= 1 && intel->ver.minor <= 1 && cfg.log == 0)) {
+	if ((ngd->ver.major < 1 && ngd->ver.minor < 1) ||
+	    (ngd->ver.major <= 1 && ngd->ver.minor <= 1 && cfg.log == 0)) {
 		cmd.addr = (unsigned long)(void *)buf;
 		err = get_internal_log_old(buf, output, fd, &cmd);
 		goto out;
@@ -1423,8 +1423,8 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 	if (cfg.log == 2) {
 		if (cfg.verbose)
 			printf("Log major:%d minor:%d header:%d size:%d numcores:%d\n",
-			       intel->ver.major, intel->ver.minor,
-				intel->header, intel->size, intel->numcores);
+			       ngd->ver.major, ngd->ver.minor,
+				ngd->header, ngd->size, ngd->numcores);
 
 		err = write_header(buf, output, 0x1000);
 		if (err) {
@@ -1432,18 +1432,18 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 			goto out;
 		}
 
-		count = intel->numcores;
+		count = ngd->numcores;
 	} else if (cfg.log == 0) {
 		if (cfg.lnum < 0)
-			count = intel_nlog->totalnlogs;
+			count = ngd_nlog->totalnlogs;
 		else
 			count = 1;
 		if (cfg.core < 0)
-			core_num = intel_nlog->corecount;
+			core_num = ngd_nlog->corecount;
 	} else if (cfg.log == 1) {
-		core_num = intel->numcores;
+		core_num = ngd->numcores;
 		count = 1;
-		err = write_header(buf, output, sizeof(*intel));
+		err = write_header(buf, output, sizeof(*ngd));
 		if (err)
 			goto out;
 	}
@@ -1473,15 +1473,15 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 						cfg.namespace_id);
 				if (err)
 					goto out;
-				err = write_header(buf, output, sizeof(*intel_nlog));
+				err = write_header(buf, output, sizeof(*ngd_nlog));
 				if (err)
 					goto out;
 				if (cfg.verbose)
-					print_intel_nlog(intel_nlog);
+					print_ngd_nlog(ngd_nlog);
 				cmd.cdw13 = 0x400;
 				cmd.cdw10 = 0x400;
-				cmd.data_len = min(0x1000, intel_nlog->nlogbytesize);
-				err = read_entire_cmd(&cmd, intel_nlog->nlogbytesize / 4,
+				cmd.data_len = min(0x1000, ngd_nlog->nlogbytesize);
+				err = read_entire_cmd(&cmd, ngd_nlog->nlogbytesize / 4,
 						      0x400, output, fd, buf);
 				if (err)
 					goto out;
@@ -1501,11 +1501,11 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 	if (err > 0) {
 		nvme_show_status(err);
 	} else if (err < 0) {
-		perror("intel log");
+		perror("ngd log");
 		err = EIO;
 	} else
 		printf("Successfully wrote log to %s\n", cfg.file);
-	free(intel);
+	free(ngd);
 	return err;
 }
 
@@ -1514,7 +1514,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 {
 	int err, fd;
 	const char *desc = (
-			"Enable/Disable Intel Latency Statistics Tracking.\n"
+			"Enable/Disable Ngd Latency Statistics Tracking.\n"
 			"No argument prints current status.");
 	const char *enable_desc = "Enable LST";
 	const char *disable_desc = "Disable LST";
@@ -1627,7 +1627,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
 	int err, fd, num;
-	const char *desc = "Write Intel Bucket Thresholds for Latency Statistics Tracking";
+	const char *desc = "Write Ngd Bucket Thresholds for Latency Statistics Tracking";
 	const char *bucket_thresholds = "Bucket Threshold List, comma separated list: 0, 10, 20 ...";
 	const char *write = "Set write bucket Thresholds for latency tracking (read default)";
 
