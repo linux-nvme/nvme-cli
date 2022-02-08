@@ -20,7 +20,7 @@
  */
 
 /**
- * nvme_fw_download_seq() -
+ * nvme_fw_download_seq() - firmware download sequence
  * @fd:     File descriptor of nvme device
  * @size:   Total size of the firmware image to transfer
  * @xfer:   Maximum size to send with each partial transfer
@@ -34,47 +34,70 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 			 void *buf);
 
 /**
- * nvme_get_ctrl_telemetry() -
+ * enum nvme_telemetry_da - Telemetry Log Data Area
+ * @NVME_TELEMETRY_DA_1:	Data Area 1
+ * @NVME_TELEMETRY_DA_2:	Data Area 2
+ * @NVME_TELEMETRY_DA_3:	Data Area 3
+ * @NVME_TELEMETRY_DA_4:	Data Area 4
+ */
+enum nvme_telemetry_da {
+	NVME_TELEMETRY_DA_1	= 1,
+	NVME_TELEMETRY_DA_2	= 2,
+	NVME_TELEMETRY_DA_3	= 3,
+	NVME_TELEMETRY_DA_4	= 4,
+};
+
+/**
+ * nvme_get_ctrl_telemetry() - get controller telemetry log
  * @fd:	   File descriptor of nvme device
  * @rae:   Retain asynchronous events
- * @log:   On success, set to the value of the allocated and retreived log.
+ * @log:   On success, set to the value of the allocated and retrieved log.
+ * @da:    log page data area, valid values: &enum nvme_telemetry_da
+ * @size:  Ptr to the telemetry log size, so it can be returned
  *
  * The total size allocated can be calculated as:
- *   (&struct nvme_telemetry_log.dalb3 + 1) * %NVME_LOG_TELEM_BLOCK_SIZE.
+ *   (nvme_telemetry_log da size  + 1) * NVME_LOG_TELEM_BLOCK_SIZE.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_ctrl_telemetry(int fd, bool rae, struct nvme_telemetry_log **log);
+int nvme_get_ctrl_telemetry(int fd, bool rae, struct nvme_telemetry_log **log,
+		enum nvme_telemetry_da da, size_t *size);
 
 /**
- * nvme_get_host_telemetry() -
- * @fd:	 File descriptor of nvme device
- * @log: On success, set to the value of the allocated and retreived log.
+ * nvme_get_host_telemetry() - get host telemetry log
+ * @fd:	  File descriptor of nvme device
+ * @log:  On success, set to the value of the allocated and retrieved log.
+ * @da:   log page data area, valid values: &enum nvme_telemetry_da
+ * @size: Ptr to the telemetry log size, so it can be returned
  *
  * The total size allocated can be calculated as:
- *   (&struct nvme_telemetry_log.dalb3 + 1) * %NVME_LOG_TELEM_BLOCK_SIZE.
+ *   (nvme_telemetry_log da size  + 1) * NVME_LOG_TELEM_BLOCK_SIZE.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_host_telemetry(int fd,  struct nvme_telemetry_log **log);
+int nvme_get_host_telemetry(int fd,  struct nvme_telemetry_log **log,
+		enum nvme_telemetry_da da, size_t *size);
 
 /**
- * nvme_get_new_host_telemetry() -
- * @fd:  File descriptor of nvme device
- * @log: On success, set to the value of the allocated and retreived log.
+ * nvme_get_new_host_telemetry() - get new host telemetry log
+ * @fd:   File descriptor of nvme device
+ * @log:  On success, set to the value of the allocated and retrieved log.
+ * @da:   log page data area, valid values: &enum nvme_telemetry_da
+ * @size: Ptr to the telemetry log size, so it can be returned
  *
  * The total size allocated can be calculated as:
- *   (&struct nvme_telemetry_log.dalb3 + 1) * %NVME_LOG_TELEM_BLOCK_SIZE.
+ *   (nvme_telemetry_log da size  + 1) * NVME_LOG_TELEM_BLOCK_SIZE.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_new_host_telemetry(int fd,  struct nvme_telemetry_log **log);
+int nvme_get_new_host_telemetry(int fd,  struct nvme_telemetry_log **log,
+		enum nvme_telemetry_da da, size_t *size);
 
 /**
- * nvme_get_log_page() -
+ * nvme_get_log_page() - get log page data
  * @fd:	      File descriptor of nvme device
  * @nsid:     Namespace Identifier, if applicable.
  * @log_id:   Log Identifier, see &enum nvme_cmd_get_log_lid.
@@ -90,7 +113,7 @@ int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 		      __u32 xfer_len, __u32 data_len, void *data);
 
 /**
- * nvme_get_log_page_padded() -
+ * nvme_get_log_page_padded() - get log page data with 4k xfer length
  * @fd:	      File descriptor of nvme device
  * @nsid:     Namespace Identifier, if applicable.
  * @log_id:   Log Identifier, see &enum nvme_cmd_get_log_lid.
@@ -99,7 +122,7 @@ int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
  * @data:     User address of at least &data_len to store the log.
  *
  * Calls nvme_get_log_page() with a default 4k transfer length, as that is
- * guarnateed by the protocol to be a safe transfer size.
+ * guaranteed by the protocol to be a safe transfer size.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -133,6 +156,9 @@ int nvme_get_logical_block_size(int fd, __u32 nsid, int *blksize);
  * @fd:	   File descriptor of the nvme device
  * @rae:   Retain asynchronous events
  * @log:   On success, set to the value of the allocated and retreived log.
+  *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 int nvme_get_lba_status_log(int fd, bool rae, struct nvme_lba_status_log **log);
 
@@ -190,7 +216,7 @@ enum nvme_hmac_alg {
  * nvme_gen_dhchap_key() - DH-HMAC-CHAP key generation
  * @hostnqn:	Host NVMe Qualified Name
  * @hmac:	HMAC algorithm
- * @key_len:	Output key lenght
+ * @key_len:	Output key length
  * @secret:	Secret to used for digest
  * @key:	Generated DH-HMAC-CHAP key
  *

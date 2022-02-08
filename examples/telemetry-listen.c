@@ -38,13 +38,13 @@ static int open_uevent(nvme_ctrl_t c)
 static void save_telemetry(nvme_ctrl_t c)
 {
 	char buf[0x1000];
-	__u32 log_size;
+	size_t log_size;
 	int ret, fd;
 	struct nvme_telemetry_log *log;
 	time_t s;
 
 	/* Clear the log (rae == false) at the end to see new telemetry events later */
-	ret = nvme_get_ctrl_telemetry(nvme_ctrl_get_fd(c), false, &log);
+	ret = nvme_get_ctrl_telemetry(nvme_ctrl_get_fd(c), false, &log, NVME_TELEMETRY_DA_3, &log_size);
 	if (ret)
 		return;
 
@@ -67,7 +67,7 @@ static void save_telemetry(nvme_ctrl_t c)
 	if (ret < 0)
 		printf("failed to write telemetry log\n");
 	else
-		printf("telemetry log save as %s, wrote:%d size:%d\n", buf,
+		printf("telemetry log save as %s, wrote:%d size:%ld\n", buf,
 			ret, log_size);
 	close(fd);
 	free(log);
