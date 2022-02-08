@@ -18,15 +18,6 @@
 #include "log.h"
 #include "private.h"
 
-#define json_object_add_value_string(o, k, v)			\
-	json_object_object_add(o, k, json_object_new_string(v))
-#define json_object_add_value_int(o, k, v) \
-	json_object_object_add(o, k, json_object_new_int(v))
-#define json_object_add_value_bool(o, k, v) \
-	json_object_object_add(o, k, json_object_new_boolean(v))
-#define json_object_add_value_string(o, k, v) \
-	json_object_object_add(o, k, json_object_new_string(v))
-
 #define JSON_UPDATE_INT_OPTION(c, k, a, o)				\
 	if (!strcmp(# a, k ) && !c->a) c->a = json_object_get_int(o);
 #define JSON_UPDATE_BOOL_OPTION(c, k, a, o)				\
@@ -194,13 +185,18 @@ int json_read_config(nvme_root_t r, const char *config_file)
 	return 0;
 }
 
-#define JSON_STRING_OPTION(c, p, o)				\
-	if ((c)->o && strcmp((c)->o, "none"))			\
-		json_object_add_value_string((p), # o , (c)->o)
+#define JSON_STRING_OPTION(c, p, o)					\
+	if ((c)->o && strcmp((c)->o, "none"))				\
+		json_object_object_add((p), # o ,			\
+				       json_object_new_string((c)->o))
 #define JSON_INT_OPTION(c, p, o, d)					\
-	if ((c)->o != d) json_object_add_value_int((p), # o , (c)->o)
+	if ((c)->o != d)						\
+		json_object_object_add((p), # o ,			\
+				       json_object_new_int((c)->o))
 #define JSON_BOOL_OPTION(c, p, o)					\
-	if ((c)->o) json_object_add_value_bool((p), # o , (c)->o)
+	if ((c)->o)							\
+		json_object_object_add((p), # o ,			\
+				       json_object_new_boolean((c)->o))
 
 static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 {
@@ -209,23 +205,28 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	const char *transport, *value;
 
 	transport = nvme_ctrl_get_transport(c);
-	json_object_add_value_string(port_obj, "transport", transport);
+	json_object_object_add(port_obj, "transport",
+			       json_object_new_string(transport));
 	value = nvme_ctrl_get_traddr(c);
 	if (value)
-		json_object_add_value_string(port_obj, "traddr", value);
+		json_object_object_add(port_obj, "traddr",
+				       json_object_new_string(value));
 	value = nvme_ctrl_get_host_traddr(c);
 	if (value)
-		json_object_add_value_string(port_obj, "host_traddr", value);
+		json_object_object_add(port_obj, "host_traddr",
+				       json_object_new_string(value));
 	value = nvme_ctrl_get_host_iface(c);
 	if (value)
-		json_object_add_value_string(port_obj, "host_iface", value);
+		json_object_object_add(port_obj, "host_iface",
+				       json_object_new_string(value));
 	value = nvme_ctrl_get_trsvcid(c);
 	if (value)
-		json_object_add_value_string(port_obj, "trsvcid", value);
+		json_object_object_add(port_obj, "trsvcid",
+				       json_object_new_string(value));
 	value = nvme_ctrl_get_dhchap_key(c);
 	if (value)
-		json_object_add_value_string(port_obj, "dhchap_key",
-					     value);
+		json_object_object_add(port_obj, "dhchap_key",
+				       json_object_new_string(value));
 	JSON_INT_OPTION(cfg, port_obj, nr_io_queues, 0);
 	JSON_INT_OPTION(cfg, port_obj, nr_write_queues, 0);
 	JSON_INT_OPTION(cfg, port_obj, nr_poll_queues, 0);
@@ -244,9 +245,11 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	JSON_BOOL_OPTION(cfg, port_obj, data_digest);
 	JSON_BOOL_OPTION(cfg, port_obj, tls);
 	if (nvme_ctrl_is_persistent(c))
-		json_object_add_value_bool(port_obj, "persistent", true);
+		json_object_object_add(port_obj, "persistent",
+				       json_object_new_boolean(true));
 	if (nvme_ctrl_is_discovery_ctrl(c))
-		json_object_add_value_bool(port_obj, "discovery", true);
+		json_object_object_add(port_obj, "discovery",
+				       json_object_new_boolean(true));
 	json_object_array_add(ctrl_array, port_obj);
 }
 
@@ -262,8 +265,8 @@ static void json_update_subsys(struct json_object *subsys_array,
 	if (!strcmp(subsysnqn, NVME_DISC_SUBSYS_NAME))
 		return;
 
-	json_object_add_value_string(subsys_obj, "nqn",
-				     nvme_subsystem_get_nqn(s));
+	json_object_object_add(subsys_obj, "nqn",
+			       json_object_new_string(subsysnqn));
 	port_array = json_object_new_array();
 	nvme_subsystem_for_each_ctrl(s, c) {
 		json_update_port(port_array, c);
@@ -285,19 +288,22 @@ int json_update_config(nvme_root_t r, const char *config_file)
 	json_root = json_object_new_array();
 	nvme_for_each_host(r, h) {
 		nvme_subsystem_t s;
-		const char *hostid, *dhchap_key;
+		const char *hostnqn, *hostid, *dhchap_key;
 
 		host_obj = json_object_new_object();
-		json_object_add_value_string(host_obj, "hostnqn",
-					     nvme_host_get_hostnqn(h));
+		if (!host_obj)
+			continue;
+		hostnqn = nvme_host_get_hostnqn(h);
+		json_object_object_add(host_obj, "hostnqn",
+				       json_object_new_string(hostnqn));
 		hostid = nvme_host_get_hostid(h);
 		if (hostid)
-			json_object_add_value_string(host_obj, "hostid",
-						     hostid);
+			json_object_object_add(host_obj, "hostid",
+					       json_object_new_string(hostid));
 		dhchap_key = nvme_host_get_dhchap_key(h);
 		if (dhchap_key)
-			json_object_add_value_string(host_obj, "dhchap_key",
-						     dhchap_key);
+			json_object_object_add(host_obj, "dhchap_key",
+					       json_object_new_string(dhchap_key));
 		subsys_array = json_object_new_array();
 		nvme_for_each_subsystem(h, s) {
 			json_update_subsys(subsys_array, s);
