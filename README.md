@@ -7,6 +7,8 @@ run following commands
 	$ meson .build
 	$ ninja -C .build
 
+nvme-cli depends on zlib, json-c and libuuid.
+
 To install, run:
 
 	# meson install -C .build
@@ -236,3 +238,15 @@ File: foo-plugin.c
 
 After that, you just need to implement the functions you defined in each
 ENTRY, then append the object file name to the meson.build "sources".
+
+## meson tips
+
+In case meson doesn't find libnvme header files (via pkg-config) it
+will fallback using subprojects. meson checks out libnvme in
+subprojects directory as git tree once and will not modify libnvme
+unless explicitly told. That means the current branch is updated via
+git, the subprojects/libnvme branch will not updated accordingly. So
+either update it via normal git operations or
+
+    $ meson subprojects update
+
