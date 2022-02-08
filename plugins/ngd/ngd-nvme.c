@@ -13,7 +13,7 @@
 #include "nvme-print.h"
 
 #define CREATE_CMD
-#include "intel-nvme.h"
+#include "ngd-nvme.h"
 
 struct  __attribute__((packed)) nvme_additional_smart_log_item {
 	__u8			key;
