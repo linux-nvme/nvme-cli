@@ -1,4 +1,4 @@
-//NGD
+//NGD add  by command line
 #undef CMD_INC_FILE
 #define CMD_INC_FILE plugins/ngd/ngd-nvme
 
