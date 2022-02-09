@@ -6,6 +6,7 @@ sources += [
   'plugins/memblaze/memblaze-nvme.c',
   'plugins/micron/micron-nvme.c',
   'plugins/netapp/netapp-nvme.c',
+  'plugins/ngd/ngd-nvme.c',
   'plugins/nvidia/nvidia-nvme.c',
   'plugins/scaleflux/sfx-nvme.c',
   'plugins/seagate/seagate-nvme.c',
