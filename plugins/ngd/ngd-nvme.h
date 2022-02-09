@@ -8,7 +8,7 @@
 
 PLUGIN(NAME("ngd", "NGDSysytems vendor specific extensions", NVME_VERSION),
 	COMMAND_LIST(
-		ENTRY("internal-log", "Retrieve Ngd internal firmware log, save it", get_internal_log)
+		ENTRY("internal-log", "Retrieve Ngd internal firmware log, save it", get_internal_log_old)
 	)
 );
 
