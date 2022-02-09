@@ -1,3 +1,4 @@
+//NGD
 #undef CMD_INC_FILE
 #define CMD_INC_FILE plugins/ngd/ngd-nvme
 
