@@ -1308,7 +1308,7 @@ static int get_internal_log_old(__u8 *buf, int output, int fd,
 {
 	struct ngd_vu_log *ngd;
 	int err = 0;
-	const int dwmax = 0x400;
+	const int dwmax = 0x1000;
 	const int dmamax = 0x1000;
 
 	ngd = (struct ngd_vu_log *)buf;
@@ -1321,9 +1321,10 @@ static int get_internal_log_old(__u8 *buf, int output, int fd,
 		perror("write failure");
 		goto out;
 	}
-	ngd->size -= 0x400;
-	cmd->opcode = 0xd2;
-	cmd->cdw10 = min(dwmax, ngd->size);
+	ngd->size -= 0x1000;
+	cmd->opcode = 0x2;
+	cmd->cdw10 =0x3ff00c4; //min(dwmax, ngd->size);
+	cmd->cdw11 =0;
 	cmd->data_len = min(dmamax, ngd->size);
 	err = read_entire_cmd(cmd, ngd->size, dwmax, output, fd, buf);
 	if (err)
@@ -1456,11 +1457,11 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 			if (cfg.log == 2) {
 				if (!ad[i].assertvalid)
 					continue;
-				cmd.cdw13 = ad[i].coreoffset;
-				cmd.cdw10 = 0x400;
-				cmd.data_len = min(0x400, ad[i].assertsize) * 4;
+				cmd.cdw11 = ad[i].coreoffset;
+				cmd.cdw10 = 0x3ff00c4;
+				cmd.data_len = min(0x1000, ad[i].assertsize) * 4;
 				err = read_entire_cmd(&cmd, ad[i].assertsize,
-						      0x400, output, fd, buf);
+						      0x1000, output, fd, buf);
 				if (err)
 					goto out;
 
@@ -1478,19 +1479,19 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 					goto out;
 				if (cfg.verbose)
 					print_ngd_nlog(ngd_nlog);
-				cmd.cdw13 = 0x400;
-				cmd.cdw10 = 0x400;
+				cmd.cdw11 = 0x0;
+				cmd.cdw10 = 0x3ff00c4;
 				cmd.data_len = min(0x1000, ngd_nlog->nlogbytesize);
 				err = read_entire_cmd(&cmd, ngd_nlog->nlogbytesize / 4,
-						      0x400, output, fd, buf);
+						      0x1000, output, fd, buf);
 				if (err)
 					goto out;
 			} else if (cfg.log == 1) {
-				cmd.cdw13 = ehdr->edumps[j].coreoffset;
-				cmd.cdw10 = 0x400;
-				cmd.data_len = 0x400;
+				cmd.cdw11 = ehdr->edumps[j].coreoffset;
+				cmd.cdw10 = 0x3ff00c4;
+				cmd.data_len = 0x1000;
 				err = read_entire_cmd(&cmd, ehdr->edumps[j].coresize,
-						      0x400, output, fd, buf);
+						      0x1000, output, fd, buf);
 				if (err)
 					goto out;
 			}
