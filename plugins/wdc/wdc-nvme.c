@@ -4990,6 +4990,11 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 	case WDC_NVME_SN640_DEV_ID_3:
 	case WDC_NVME_SN840_DEV_ID:
 	case WDC_NVME_SN840_DEV_ID_1:
+	case WDC_NVME_SN650_DEV_ID:
+	case WDC_NVME_SN650_DEV_ID_1:
+	case WDC_NVME_SN650_DEV_ID_2:
+	case WDC_NVME_SN650_DEV_ID_3:
+	case WDC_NVME_SN650_DEV_ID_4:
 		if (!get_dev_mgment_cbs_data(r, fd, WDC_C2_CUSTOMER_ID_ID, (void*)&data)) {
 			fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
 			return -1;
