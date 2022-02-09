@@ -2098,30 +2098,57 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 	void *buf = NULL;
 	__u8 *data_ptr = NULL;
 	int data_written = 0, data_remaining = 0;
+	struct nvme_id_ctrl ctrl;
+	__u64 capabilities = 0;
+	nvme_root_t r;
+
+	memset(&ctrl, 0, sizeof (struct nvme_id_ctrl));
+	err = nvme_identify_ctrl(fd, &ctrl);
+	if (err) {
+		fprintf(stderr, "ERROR : WDC : nvme_identify_ctrl() failed "
+				"0x%x\n", err);
+		goto close_fd;
+	}
+
+	if (!(ctrl.lpa & 0x8)) {
+		fprintf(stderr, "Telemetry Host-Initiated and Telemetry Controller-Initiated log pages not supported\n");
+		err = -EINVAL;
+		goto close_fd;
+	}
+
+	r = nvme_scan(NULL);
+	capabilities = wdc_get_drive_capabilities(r, fd);
 
 	if (type == WDC_TELEMETRY_TYPE_HOST) {
 		host_gen = 1;
 		ctrl_init = 0;
 	} else if (type == WDC_TELEMETRY_TYPE_CONTROLLER) {
-		/* Verify the Controller Initiated Option is enabled */
-		err = nvme_get_features_data(fd, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 0,
-				4, buf, &result);
-		if (err == 0) {
-			if (result == 0) {
-				/* enabled */
-				host_gen = 0;
-				ctrl_init = 1;
+		if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG) {
+			/* Verify the Controller Initiated Option is enabled */
+			err = nvme_get_features_data(fd, WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID, 0,
+					4, buf, &result);
+			if (err == 0) {
+				if (result == 0) {
+					/* enabled */
+					host_gen = 0;
+					ctrl_init = 1;
+				}
+				else {
+					fprintf(stderr, "%s: Controller initiated option telemetry log page disabled\n", __func__);
+					err = -EINVAL;
+					goto close_fd;
+				}
 			}
 			else {
-				fprintf(stderr, "%s: Controller initiated option telemetry log page disabled\n", __func__);
-				err = -EINVAL;
+				fprintf(stderr, "ERROR : WDC: Get telemetry option feature failed.");
+				nvme_show_status(err);
+				err = -EPERM;
 				goto close_fd;
 			}
-		} else {
-			fprintf(stderr, "ERROR : WDC: Get telemetry option feature failed.");
-			nvme_show_status(err);
-			err = -EPERM;
-			goto close_fd;
+		}
+		else {
+			host_gen = 0;
+			ctrl_init = 1;
 		}
 	} else {
 		fprintf(stderr, "%s: Invalid type parameter; type = %d\n", __func__, type);
@@ -3013,45 +3040,64 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		}
 	}
 
+	if ((cfg.type == NULL) ||
+		(!strcmp(cfg.type, "NONE")) ||
+		(!strcmp(cfg.type, "none"))) {
+		telemetry_type = WDC_TELEMETRY_TYPE_NONE;
+		data_area = 0;
+	} else if ((!strcmp(cfg.type, "HOST")) ||
+			(!strcmp(cfg.type, "host"))) {
+		telemetry_type = WDC_TELEMETRY_TYPE_HOST;
+		telemetry_data_area = cfg.data_area;
+	} else if ((!strcmp(cfg.type, "CONTROLLER")) ||
+			(!strcmp(cfg.type, "controller"))) {
+		telemetry_type = WDC_TELEMETRY_TYPE_CONTROLLER;
+		telemetry_data_area = cfg.data_area;
+	} else {
+		fprintf(stderr, "ERROR : WDC: Invalid type - Must be NONE, HOST or CONTROLLER\n");
+		return -1;
+	}
+
 	capabilities = wdc_get_drive_capabilities(r, fd);
 	if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG) {
-		if (cfg.data_area == 0)
-			cfg.data_area = 3;       /* Set the default DA to 3 if not specified */
-
-		if ((cfg.type == NULL) ||
-			(!strcmp(cfg.type, "NONE")) ||
-			(!strcmp(cfg.type, "none"))) {
-			telemetry_type = WDC_TELEMETRY_TYPE_NONE;
-			data_area = 0;
-		} else if ((!strcmp(cfg.type, "HOST")) ||
-				(!strcmp(cfg.type, "host"))) {
-			telemetry_type = WDC_TELEMETRY_TYPE_HOST;
-			telemetry_data_area = cfg.data_area;
-		} else if ((!strcmp(cfg.type, "CONTROLLER")) ||
-				(!strcmp(cfg.type, "controller"))) {
-			telemetry_type = WDC_TELEMETRY_TYPE_CONTROLLER;
-			telemetry_data_area = cfg.data_area;
-		} else {
-			fprintf(stderr, "ERROR : WDC: Invalid type - Must be NONE, HOST or CONTROLLER\n");
-			return -1;
-		}
+		if (telemetry_data_area == 0)
+			telemetry_data_area = 3;       /* Set the default DA to 3 if not specified */
 
 		return wdc_do_cap_diag(r, fd, f, xfer_size,
 				       telemetry_type, telemetry_data_area);
 	}
 	if ((capabilities & WDC_DRIVE_CAP_DUI) == WDC_DRIVE_CAP_DUI) {
-		if (cfg.data_area == 0) {
-			cfg.data_area = 1;
+		if ((telemetry_type == WDC_TELEMETRY_TYPE_HOST) ||
+			(telemetry_type == WDC_TELEMETRY_TYPE_CONTROLLER)) {
+			if (telemetry_data_area == 0)
+				telemetry_data_area = 3;       /* Set the default DA to 3 if not specified */
+			/* Get the desired telemetry log page */
+			return wdc_do_cap_telemetry_log(fd, f, xfer_size, telemetry_type, telemetry_data_area);
 		}
+		else {
+			if (cfg.data_area == 0) {
+				cfg.data_area = 1;
+			}
 
-		/* FW requirement - xfer size must be 256k for data area 4 */
-		if (cfg.data_area >= 4)
-			xfer_size = 0x40000;
-		return wdc_do_cap_dui(fd, f, xfer_size, cfg.data_area,
-				      cfg.verbose, cfg.file_size, cfg.offset);
+			/* FW requirement - xfer size must be 256k for data area 4 */
+			if (cfg.data_area >= 4)
+				xfer_size = 0x40000;
+			return wdc_do_cap_dui(fd, f, xfer_size, cfg.data_area,
+					      cfg.verbose, cfg.file_size, cfg.offset);
+		}
 	}
-	if ((capabilities & WDC_DRIVE_CAP_DUI_DATA) == WDC_DRIVE_CAP_DUI_DATA)
-		return wdc_do_cap_dui(fd, f, xfer_size, WDC_NVME_DUI_MAX_DATA_AREA, cfg.verbose, 0, 0);
+	if ((capabilities & WDC_DRIVE_CAP_DUI_DATA) == WDC_DRIVE_CAP_DUI_DATA){
+		if ((telemetry_type == WDC_TELEMETRY_TYPE_HOST) ||
+			(telemetry_type == WDC_TELEMETRY_TYPE_CONTROLLER)) {
+			if (telemetry_data_area == 0)
+				telemetry_data_area = 3;       /* Set the default DA to 3 if not specified */
+			/* Get the desired telemetry log page */
+			return wdc_do_cap_telemetry_log(fd, f, xfer_size, telemetry_type, telemetry_data_area);
+		}
+		else {
+			return wdc_do_cap_dui(fd, f, xfer_size, WDC_NVME_DUI_MAX_DATA_AREA, cfg.verbose, 0, 0);
+		}
+	}
 	if ((capabilities & WDC_SN730B_CAP_VUC_LOG) == WDC_SN730B_CAP_VUC_LOG)
 		return wdc_do_sn730_get_and_tar(fd, f);
 
