@@ -151,12 +151,13 @@ adoc_sources = [
 ]
 
 want_docs = get_option('docs')
+want_docs_build = get_option('docs-build')
 if want_docs != 'false'
   mandir = join_paths(get_option('mandir'), 'man1')
   htmldir = join_paths(get_option('htmldir'), 'nvme')
 
   asciidoctor = find_program('asciidoc', required : false)
-  if asciidoctor.found()
+  if want_docs_build and asciidoctor.found()
     # Build documentation before installing
 
     # man pages
