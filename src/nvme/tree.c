@@ -1464,17 +1464,10 @@ const uint8_t *nvme_ns_get_nguid(nvme_ns_t n)
 	return n->nguid;
 }
 
-#ifdef CONFIG_LIBUUID
 void nvme_ns_get_uuid(nvme_ns_t n, uuid_t out)
 {
 	uuid_copy(out, n->uuid);
 }
-#else
-void nvme_ns_get_uuid(nvme_ns_t n, uint8_t *out)
-{
-	memcpy(out, n, 16);
-}
-#endif
 
 int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns)
 {

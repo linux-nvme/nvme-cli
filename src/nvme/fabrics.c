@@ -920,23 +920,16 @@ char *nvmf_hostnqn_generate()
 	char *hostnqn;
 	int ret;
 	char uuid_str[UUID_SIZE];
-#ifdef CONFIG_LIBUUID
 	uuid_t uuid;
-#endif
 
 	ret = uuid_from_dmi(uuid_str);
 	if (ret < 0) {
 		ret = uuid_from_device_tree(uuid_str);
 	}
-#ifdef CONFIG_LIBUUID
 	if (ret < 0) {
 		uuid_generate_random(uuid);
 		uuid_unparse_lower(uuid, uuid_str);
-		ret = 0;
 	}
-#endif
-	if (ret < 0)
-		return NULL;
 
 	if (asprintf(&hostnqn, "nqn.2014-08.org.nvmexpress:uuid:%s", uuid_str) < 0)
 		return NULL;
