@@ -277,7 +277,7 @@ int parse_and_open(int argc, char **argv, const char *desc,
 
 	for (s = opts; s && s->option; s++) {
 		if (!strcmp(s->option, "force")) {
-			if (! *(int *)s->default_value)
+			if (*(int *)s->default_value)
 				flags |= O_EXCL;
 			break;
 		}
