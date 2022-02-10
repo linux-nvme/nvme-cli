@@ -2423,7 +2423,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 
 	OPT_ARGS(opts) = {
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary),
-		OPT_FLAG("verbose",      'v', &cfg.verbose,       verbose),
+		OPT_INCR("verbose",      'v', &cfg.verbose,       verbose),
 		OPT_END()
 	};
 
