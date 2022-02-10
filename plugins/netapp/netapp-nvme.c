@@ -117,13 +117,11 @@ static void netapp_get_ns_size(char *size, long long *lba,
 
 static void netapp_uuid_to_str(char *str, void *data)
 {
-#ifdef LIBUUID
 	uuid_t uuid;
 	struct nvme_ns_id_desc *desc = data;
 
 	memcpy(uuid, data + sizeof(*desc), 16);
 	uuid_unparse_lower(uuid, str);
-#endif
 }
 
 static void ontap_labels_to_str(char *dst, char *src, int count)
