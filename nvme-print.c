@@ -2307,7 +2307,7 @@ static void json_print_nvme_subsystem_list(nvme_root_t r)
 	struct json_object *root;
 	nvme_host_t h;
 
-	root = json_create_object();
+	root = json_create_array();
 
 	nvme_for_each_host(r, h) {
 		nvme_subsystem_t s;
