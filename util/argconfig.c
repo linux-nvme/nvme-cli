@@ -219,7 +219,8 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			}
 			if (option_index == options_count)
 				continue;
-			if (long_opts[option_index].flag) {
+			if (long_opts[option_index].flag &&
+	                    options[option_index].config_type == CFG_NONE) {
 				*(uint8_t *)(long_opts[option_index].flag) = 1;
 				continue;
 			}
@@ -292,7 +293,10 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			 *
 			 * So we need to increase 'val', not 'value_addr'.
 			 */
-			long_opts[option_index].val++;
+			if (!c)
+				long_opts[option_index].val++;
+			else
+				*((int *)value_addr) += 1;
 		} else if (s->config_type == CFG_LONG) {
 			*((unsigned long *)value_addr) = strtoul(optarg, &endptr, 0);
 			if (errno || optarg == endptr) {
