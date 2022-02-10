@@ -140,21 +140,22 @@ nvme_root_t nvme_create_root(FILE *fp, int log_level)
 int nvme_read_config(nvme_root_t r, const char *config_file)
 {
 	int err = -1;
-#ifdef CONFIG_JSONC
-	if (r && config_file) {
-		err = json_read_config(r, config_file);
-		if (!err)
-			r->config_file = strdup(config_file);
-		/*
-		 * The json configuration file is optional,
-		 * so ignore errors when opening the file.
-		 */
-		if (err < 0 && errno != EPROTO)
-			err = 0;
+
+	if (!r || !config_file) {
+		errno = ENODEV;
+		return err;
 	}
-#else
-	errno = ENOTSUP;
-#endif
+
+	err = json_read_config(r, config_file);
+	if (!err)
+		r->config_file = strdup(config_file);
+	/*
+	 * The json configuration file is optional,
+	 * so ignore errors when opening the file.
+	 */
+	if (err < 0 && errno != EPROTO)
+		err = 0;
+
 	return err;
 }
 
@@ -171,32 +172,18 @@ int nvme_update_config(nvme_root_t r)
 {
 	if (!r->modified || !r->config_file)
 		return 0;
-#ifdef CONFIG_JSONC
+
 	return json_update_config(r, r->config_file);
-#else
-	errno = ENOTSUP;
-	return -1;
-#endif
 }
 
 int nvme_dump_config(nvme_root_t r)
 {
-#ifdef CONFIG_JSONC
 	return json_update_config(r, NULL);
-#else
-	errno = ENOTSUP;
-	return -1;
-#endif
 }
 
 int nvme_dump_tree(nvme_root_t r)
 {
-#ifdef CONFIG_JSONC
 	return json_dump_tree(r);
-#else
-	errno = ENOTSUP;
-	return -1;
-#endif
 }
 
 nvme_host_t nvme_first_host(nvme_root_t r)
