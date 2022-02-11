@@ -6031,7 +6031,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
 	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
 	__u16 control = 0;
-	__u32 dsmgmt = 0, nsid = 0;
+	__u32 dsmgmt = 0;
 	int logical_block_size = 0;
 	long long buffer_size = 0, mbuffer_size = 0;
 	bool huge;
@@ -6144,7 +6144,6 @@ static int submit_io(int opcode, char *command, const char *desc,
 			fprintf(stderr, "get-namespace-id: %s\n", nvme_strerror(errno));
 			goto close_fd;
 		}
-		err = -1;
 	}
 
 	dfd = mfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
@@ -6216,12 +6215,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	}
 
 	if (cfg.metadata_size) {
-		err = nvme_get_nsid(fd, &nsid);
-		if (err < 0) {
-			fprintf(stderr, "get-namespace-id: %s\n", nvme_strerror(errno));
-			goto close_mfd;
-		}
-		err = nvme_identify_ns(fd, nsid, &ns);
+		err = nvme_identify_ns(fd, cfg.namespace_id, &ns);
 		if (err) {
 			nvme_show_status(err);
 			goto free_buffer;
