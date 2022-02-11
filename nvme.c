@@ -6266,7 +6266,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		}
 	}
 
-	if (cfg.show) {
+	if (cfg.show || cfg.dry_run) {
 		printf("opcode       : %02x\n", opcode);
 		printf("nsid         : %02x\n", cfg.namespace_id);
 		printf("flags        : %02x\n", 0);
@@ -7180,7 +7180,7 @@ static int passthru(int argc, char **argv, bool admin,
 		}
 	}
 
-	if (cfg.show_command) {
+	if (cfg.show_command || cfg.dry_run) {
 		printf("opcode       : %02x\n", cfg.opcode);
 		printf("flags        : %02x\n", cfg.flags);
 		printf("rsvd1        : %04x\n", cfg.rsvd);
