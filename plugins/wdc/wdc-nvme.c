@@ -76,9 +76,9 @@
 #define WDC_NVME_SN650_DEV_ID_3             0x2720
 #define WDC_NVME_SN650_DEV_ID_4             0x2721
 #define WDC_NVME_SN655_DEV_ID               0x2722
-#define WDC_NVME_SN450_DEV_ID_1             0x2712
-#define WDC_NVME_SN450_DEV_ID_2             0x2713
-#define WDC_NVME_SN450_DEV_ID_3             0x2714
+#define WDC_NVME_SN560_DEV_ID_1             0x2712
+#define WDC_NVME_SN560_DEV_ID_2             0x2713
+#define WDC_NVME_SN560_DEV_ID_3             0x2714
 #define WDC_NVME_SXSLCL_DEV_ID				0x2001
 #define WDC_NVME_SN520_DEV_ID				0x5003
 #define WDC_NVME_SN520_DEV_ID_1				0x5004
@@ -1341,9 +1341,9 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 		case WDC_NVME_SN650_DEV_ID_3:
 		case WDC_NVME_SN650_DEV_ID_4:
 		case WDC_NVME_SN655_DEV_ID:
-		case WDC_NVME_SN450_DEV_ID_1:
-		case WDC_NVME_SN450_DEV_ID_2:
-		case WDC_NVME_SN450_DEV_ID_3:
+		case WDC_NVME_SN560_DEV_ID_1:
+		case WDC_NVME_SN560_DEV_ID_2:
+		case WDC_NVME_SN560_DEV_ID_3:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
@@ -1352,7 +1352,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 			capabilities |= (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
 					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
 					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE |
-					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY |
+					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY |
 					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG | WDC_DRIVE_CAP_REASON_ID |
 					WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_INFO |
 					WDC_DRIVE_CAP_CLOUD_SSD_VERSION);
@@ -4995,6 +4995,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 	case WDC_NVME_SN650_DEV_ID_2:
 	case WDC_NVME_SN650_DEV_ID_3:
 	case WDC_NVME_SN650_DEV_ID_4:
+	case WDC_NVME_SN655_DEV_ID:
 		if (!get_dev_mgment_cbs_data(r, fd, WDC_C2_CUSTOMER_ID_ID, (void*)&data)) {
 			fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
 			return -1;
