@@ -107,9 +107,9 @@ metadata is passes.
 
 -D <dsm>::
 --dsm=<dsm>::
-	The optional data set management attributes for this command. The
-	argument for this is the lower 16 bits of the DSM field in a write
-	command; the upper 16 bits of the field come from the directive
+	The optional data set management attributes for this command. The argument
+	for this is the least significant 8 bits of the DSM field in a write
+	command; the most significant 16 bits of the field come from the directive
 	specific field, if used. This may be used to set attributes for
 	the LBAs being written, like access frequency, type, latency,
 	among other things, as well as yet to be defined types. Please

@@ -6031,7 +6031,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	int flags = opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
 	int mode = S_IRUSR | S_IWUSR |S_IRGRP | S_IWGRP| S_IROTH;
 	__u16 control = 0;
-	__u32 dsmgmt = 0, nsid = 0;
+	__u32 dsmgmt = 0;
 	int logical_block_size = 0;
 	long long buffer_size = 0, mbuffer_size = 0;
 	bool huge;
@@ -6056,7 +6056,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	const char *dry = "show command instead of sending";
 	const char *dtype = "directive type (for write-only)";
 	const char *dspec = "directive specific (for write-only)";
-	const char *dsm = "dataset management attributes (lower 16 bits)";
+	const char *dsm = "dataset management attributes (lower 8 bits)";
 	const char *storage_tag_check = "This bit specifies the Storage Tag field shall be " \
 		"checked as part of end-to-end data protection processing";
 	const char *storage_tag = "storage tag, CDW2 and CDW3 (00:47) bits "\
@@ -6073,9 +6073,9 @@ static int submit_io(int opcode, char *command, const char *desc,
 		char  *data;
 		char  *metadata;
 		__u8  prinfo;
-		__u8 dtype;
+		__u8  dtype;
 		__u16 dspec;
-		__u16 dsmgmt;
+		__u8  dsmgmt;
 		__u16 app_tag_mask;
 		__u16 app_tag;
 		__u64 storage_tag;
@@ -6123,7 +6123,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
 		OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype),
 		OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
-		OPT_SHRT("dsm",               'D', &cfg.dsmgmt,            dsm),
+		OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            dsm),
 		OPT_FLAG("show-command",      'v', &cfg.show,              show),
 		OPT_FLAG("dry-run",           'w', &cfg.dry_run,           dry),
 		OPT_FLAG("latency",           't', &cfg.latency,           latency),
@@ -6144,7 +6144,6 @@ static int submit_io(int opcode, char *command, const char *desc,
 			fprintf(stderr, "get-namespace-id: %s\n", nvme_strerror(errno));
 			goto close_fd;
 		}
-		err = -1;
 	}
 
 	dfd = mfd = opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
@@ -6216,12 +6215,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	}
 
 	if (cfg.metadata_size) {
-		err = nvme_get_nsid(fd, &nsid);
-		if (err < 0) {
-			fprintf(stderr, "get-namespace-id: %s\n", nvme_strerror(errno));
-			goto close_mfd;
-		}
-		err = nvme_identify_ns(fd, nsid, &ns);
+		err = nvme_identify_ns(fd, cfg.namespace_id, &ns);
 		if (err) {
 			nvme_show_status(err);
 			goto free_buffer;
@@ -6266,7 +6260,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		}
 	}
 
-	if (cfg.show) {
+	if (cfg.show || cfg.dry_run) {
 		printf("opcode       : %02x\n", opcode);
 		printf("nsid         : %02x\n", cfg.namespace_id);
 		printf("flags        : %02x\n", 0);
@@ -6292,8 +6286,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 		.slba		= cfg.start_block,
 		.nlb		= cfg.block_count,
 		.control	= control,
-		.dsm		= dsmgmt,
-		.dspec		= 0,
+		.dsm		= cfg.dsmgmt,
+		.dspec		= cfg.dspec,
 		.reftag		= cfg.ref_tag,
 		.apptag		= cfg.app_tag,
 		.appmask	= cfg.app_tag_mask,
@@ -7180,7 +7174,7 @@ static int passthru(int argc, char **argv, bool admin,
 		}
 	}
 
-	if (cfg.show_command) {
+	if (cfg.show_command || cfg.dry_run) {
 		printf("opcode       : %02x\n", cfg.opcode);
 		printf("flags        : %02x\n", cfg.flags);
 		printf("rsvd1        : %04x\n", cfg.rsvd);
