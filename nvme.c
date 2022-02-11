@@ -6056,7 +6056,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	const char *dry = "show command instead of sending";
 	const char *dtype = "directive type (for write-only)";
 	const char *dspec = "directive specific (for write-only)";
-	const char *dsm = "dataset management attributes (lower 16 bits)";
+	const char *dsm = "dataset management attributes (lower 8 bits)";
 	const char *storage_tag_check = "This bit specifies the Storage Tag field shall be " \
 		"checked as part of end-to-end data protection processing";
 	const char *storage_tag = "storage tag, CDW2 and CDW3 (00:47) bits "\
@@ -6073,9 +6073,9 @@ static int submit_io(int opcode, char *command, const char *desc,
 		char  *data;
 		char  *metadata;
 		__u8  prinfo;
-		__u8 dtype;
+		__u8  dtype;
 		__u16 dspec;
-		__u16 dsmgmt;
+		__u8  dsmgmt;
 		__u16 app_tag_mask;
 		__u16 app_tag;
 		__u64 storage_tag;
@@ -6123,7 +6123,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
 		OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype),
 		OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
-		OPT_SHRT("dsm",               'D', &cfg.dsmgmt,            dsm),
+		OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            dsm),
 		OPT_FLAG("show-command",      'v', &cfg.show,              show),
 		OPT_FLAG("dry-run",           'w', &cfg.dry_run,           dry),
 		OPT_FLAG("latency",           't', &cfg.latency,           latency),
@@ -6292,8 +6292,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 		.slba		= cfg.start_block,
 		.nlb		= cfg.block_count,
 		.control	= control,
-		.dsm		= dsmgmt,
-		.dspec		= 0,
+		.dsm		= cfg.dsmgmt,
+		.dspec		= cfg.dspec,
 		.reftag		= cfg.ref_tag,
 		.apptag		= cfg.app_tag,
 		.appmask	= cfg.app_tag_mask,
