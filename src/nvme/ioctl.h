@@ -3827,8 +3827,8 @@ static inline int nvme_flush(int fd, __u32 nsid) {
  * @reftag:	This field specifies the Initial Logical Block Reference Tag
  *		expected value. Used only if the namespace is formatted to use
  *		end-to-end protection information.
- * @dsm:	Data set management attributes, see &enum nvme_io_dsm_flags
  * @dspec:	Directive specific value
+ * @dsm:	Data set management attributes, see &enum nvme_io_dsm_flags
  */
 struct nvme_io_args {
 	__u64 slba;
@@ -3847,8 +3847,8 @@ struct nvme_io_args {
 	__u16 control;
 	__u16 apptag;
 	__u16 appmask;
+	__u16 dspec;
 	__u8 dsm;
-	__u8 dspec;
 } __attribute__((__packed__, aligned(__alignof__(__u64))));
 
 /**
