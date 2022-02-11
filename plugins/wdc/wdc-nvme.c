@@ -1750,10 +1750,15 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 	length = sizeof(struct wdc_c2_log_page_header);
 	hdr_ptr = (struct wdc_c2_log_page_header *)data;
 	sph = (struct wdc_c2_log_subpage_header *)(data + length);
-	found = wdc_get_dev_mng_log_entry(hdr_ptr->length, log_id, hdr_ptr, &sph);
+	found = wdc_get_dev_mng_log_entry(le32_to_cpu(hdr_ptr->length), log_id, hdr_ptr, &sph);
 
 	if (found) {
-		*cbs_data = (void *)&sph->data;
+		*cbs_data = calloc(le32_to_cpu(sph->length), sizeof(__u8));
+		if (*cbs_data == NULL) {
+			fprintf(stderr, "ERROR : WDC : calloc : %s\n", strerror(errno));
+			goto end;
+		}
+		memcpy((void *)*cbs_data, (void *)&sph->data, le32_to_cpu(sph->length));
 	} else {
 		/* not found with uuid = 1 try with uuid = 0 */
 		uuid_ix = 0;
@@ -1779,9 +1784,14 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 
 		hdr_ptr = (struct wdc_c2_log_page_header *)data;
 		sph = (struct wdc_c2_log_subpage_header *)(data + length);
-		found = wdc_get_dev_mng_log_entry(hdr_ptr->length, log_id, hdr_ptr, &sph);
+		found = wdc_get_dev_mng_log_entry(le32_to_cpu(hdr_ptr->length), log_id, hdr_ptr, &sph);
 		if (found) {
-			*cbs_data = (void *)&sph->data;
+			*cbs_data = calloc(le32_to_cpu(sph->length), sizeof(__u8));
+			if (*cbs_data == NULL) {
+				fprintf(stderr, "ERROR : WDC : calloc : %s\n", strerror(errno));
+				goto end;
+			}
+			memcpy((void *)*cbs_data, (void *)&sph->data, le32_to_cpu(sph->length));
 		} else {
 			/* WD version not found  */
 			fprintf(stderr, "ERROR : WDC : Unable to find correct version of page 0x%x, entry id = %d\n", lid, log_id);
@@ -1815,6 +1825,7 @@ static bool wdc_nvme_check_supported_log_page(nvme_root_t r, int fd, __u8 log_id
 				d((__u8 *)cbs_data->data, le32_to_cpu(cbs_data->length), 16, 1);
 			}
 #endif
+			free(cbs_data);
 		} else
 			fprintf(stderr, "ERROR : WDC : cbs_data ptr = NULL\n");
 	} else
@@ -1831,6 +1842,8 @@ static bool wdc_nvme_get_dev_status_log_data(nvme_root_t r, int fd, __le32 *ret_
 	if (get_dev_mgment_cbs_data(r, fd, log_id, (void *)&cbs_data)) {
 		if (cbs_data != NULL) {
 			memcpy((void *)ret_data, (void *)cbs_data, 4);
+			free(cbs_data);
+
 			return true;
 		}
 	}
