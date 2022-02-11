@@ -305,6 +305,7 @@ static void __nvme_free_ns(struct nvme_ns *n)
 {
 	list_del_init(&n->entry);
 	close(n->fd);
+	free(n->generic_name);
 	free(n->name);
 	free(n->sysfs_dir);
 	free(n);
@@ -511,24 +512,26 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 	if (!h)
 		h = nvme_default_host(r);
 	if (!h) {
+		free(path);
 		errno = ENOMEM;
 		return -1;
 	}
 	subsysnqn = nvme_get_attr(path, "subsysnqn");
+	free(path);
 	if (!subsysnqn) {
 		errno = ENODEV;
-		goto free_path;
+		return -1;
 	}
 	s = nvme_lookup_subsystem(h, name, subsysnqn);
 	free(subsysnqn);
 	if (!s) {
 		errno = ENOMEM;
-		goto free_path;
+		return -1;
 	}
 	if (!s->name) {
 		ret = nvme_init_subsystem(s, name);
 		if (ret < 0)
-			goto free_path;
+			return -1;
 	}
 
 	nvme_subsystem_scan_namespaces(r, s);
@@ -539,10 +542,6 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 	}
 
 	return 0;
-
-free_path:
-	free(path);
-	return -1;
 }
 
 nvme_ctrl_t nvme_path_get_ctrl(nvme_path_t p)
