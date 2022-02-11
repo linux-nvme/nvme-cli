@@ -55,6 +55,7 @@ if have_python_support
     test_env = environment()
     test_env.append('MALLOC_PERTURB_', '0')
     test_env.append('PYTHONPATH', join_paths(meson.current_build_dir(), '..'))
+    test_env.append('PYTHONMALLOC', 'malloc')
 
     # Test section
     test('[Python] import libnvme', python3, args: ['-c', 'from libnvme import nvme'], env: test_env)
