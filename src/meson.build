@@ -52,7 +52,7 @@ pkg.generate(libnvme,
 )
 
 libnvme_dep = declare_dependency(
-    include_directories: incdir,
+    include_directories: ['.'],
     dependencies: deps,
     link_with: libnvme,
 )
