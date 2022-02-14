@@ -1326,7 +1326,7 @@ static inline int nvme_get_log_smart(int fd, __u32 nsid, bool rae,
 static inline int nvme_get_log_fw_slot(int fd, bool rae,
 			struct nvme_firmware_slot *fw_log)
 {
-	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_SMART,
+	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_FW_SLOT,
 				 NVME_NSID_ALL, sizeof(*fw_log), fw_log);
 }
 
