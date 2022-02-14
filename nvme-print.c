@@ -523,7 +523,7 @@ static void json_fw_log(struct nvme_firmware_slot *fw_log, const char *devname)
 	json_object_add_value_int(fwsi, "Active Firmware Slot (afi)",
 		fw_log->afi);
 	for (i = 0; i < 7; i++) {
-		if (fw_log->frs[i]) {
+		if (fw_log->frs[i][0]) {
 			snprintf(fmt, sizeof(fmt), "Firmware Rev Slot %d",
 				i + 1);
 			frs = (__le64 *)&fw_log->frs[i];
@@ -5683,7 +5683,7 @@ void nvme_show_fw_log(struct nvme_firmware_slot *fw_log,
 	printf("Firmware Log for device:%s\n", devname);
 	printf("afi  : %#x\n", fw_log->afi);
 	for (i = 0; i < 7; i++) {
-		if (fw_log->frs[i]) {
+		if (fw_log->frs[i][0]) {
 			frs = (__le64 *)&fw_log->frs[i];
 			printf("frs%d : %#016"PRIx64" (%s)\n", i + 1,
 				le64_to_cpu(*frs),
