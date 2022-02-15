@@ -280,11 +280,11 @@ int parse_and_open(int argc, char **argv, const char *desc,
 	return ret;
 }
 
-int open_exclusive(int argc, char **argv, int force)
+int open_exclusive(int argc, char **argv, int ignore_exclusive)
 {
     int flags = O_RDONLY;
 
-	if (!force)
+	if (!ignore_exclusive)
 		flags |= O_EXCL;
 
     return get_dev(argc, argv, flags);
@@ -4519,19 +4519,17 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	if (fd < 0) {
 		if (errno == EBUSY) {
 			fprintf(stderr, "Failed to open %s.\n",
-                basename(argv[optind]));
+		                basename(argv[optind]));
 			fprintf(stderr,
-				"Namespace is currently busy.\n"
+				"Namespace is currently busy.\n");
+			if (!cfg.force)
+				fprintf(stderr,
 				"Use the force [--force|-f] option to ignore that.\n");
 		} else {
 			argconfig_print_help(desc, opts);
 		}
 		goto ret;
 	}
-
-	err = fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)
-		goto ret;
 
 	if (cfg.lbaf != 0xff && cfg.bs !=0) {
 		fprintf(stderr,
