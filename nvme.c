@@ -6059,6 +6059,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		"checked as part of end-to-end data protection processing";
 	const char *storage_tag = "storage tag, CDW2 and CDW3 (00:47) bits "\
 		"(for end to end PI)";
+	const char *force = "The \"I know what I'm doing\" flag, do not enforce exclusive access for write";
 
 	struct config {
 		__u32 namespace_id;
@@ -6082,6 +6083,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		int   show;
 		int   dry_run;
 		int   latency;
+		int   force;
 	};
 
 	struct config cfg = {
@@ -6098,6 +6100,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		.app_tag		= 0,
 		.storage_tag_check	= 0,
 		.storage_tag		= 0,
+		.force			= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -6122,12 +6125,28 @@ static int submit_io(int opcode, char *command, const char *desc,
 		OPT_FLAG("show-command",      'v', &cfg.show,              show),
 		OPT_FLAG("dry-run",           'w', &cfg.dry_run,           dry),
 		OPT_FLAG("latency",           't', &cfg.latency,           latency),
+		OPT_FLAG("force",	        0, &cfg.force,             force),
 		OPT_END()
 	};
 
-	err = fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)
-		goto ret;
+	if (opcode != nvme_cmd_write) {
+		err = fd = parse_and_open(argc, argv, desc, opts);
+		if (fd < 0)
+			goto ret;
+	} else {
+		err = fd = open_exclusive(argc, argv, cfg.force);
+		if (errno == EBUSY) {
+			fprintf(stderr, "Failed to open %s.\n",
+		                basename(argv[optind]));
+			fprintf(stderr,
+				"Namespace is currently busy.\n");
+			if (!cfg.force)
+				fprintf(stderr,
+				"Use the force [--force] option to ignore that.\n");
+		} else {
+			argconfig_print_help(desc, opts);
+		}
+	}
 
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(fd, &cfg.namespace_id);
