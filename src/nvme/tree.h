@@ -1167,4 +1167,20 @@ char *nvme_get_path_attr(nvme_path_t p, const char *attr);
  */
 nvme_ns_t nvme_scan_namespace(const char *name);
 
+/**
+ * nvme_host_get_hostsymname() - Get the host's symbolic name
+ * @h:	Host for which the symbolic name should be returned.
+ *
+ * Return: The symbolic name or NULL if a symbolic name hasn't been
+ * configure.
+ */
+const char *nvme_host_get_hostsymname(nvme_host_t h);
+
+/**
+ * nvme_host_set_hostsymname() - Set the host's symbolic name
+ * @h:			Host for which the symbolic name should be set.
+ * @hostsymname:	Symbolic name
+ */
+void nvme_host_set_hostsymname(nvme_host_t h, const char *hostsymname);
+
 #endif /* _LIBNVME_TREE_H */

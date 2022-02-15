@@ -280,8 +280,10 @@ struct nvme_root {
 struct nvme_host {
   %immutable hostnqn;
   %immutable hostid;
+  %immutable hostsymname;
   char *hostnqn;
   char *hostid;
+  char *hostsymname;
   char *dhchap_key;
 };
 
@@ -396,13 +398,27 @@ struct nvme_ns {
 
 %extend nvme_host {
   nvme_host(struct nvme_root *r, const char *hostnqn = NULL,
-	    const char *hostid = NULL) {
-    if (!hostnqn)
-      return nvme_default_host(r);
-    return nvme_lookup_host(r, hostnqn, hostid);
+	    const char *hostid = NULL, const char *hostsymname = NULL) {
+
+    nvme_host_t h = hostnqn ? nvme_lookup_host(r, hostnqn, hostid) : nvme_default_host(r);
+    if (hostsymname)
+        nvme_host_set_hostsymname(h, hostsymname);
+    return h;
   }
   ~nvme_host() {
     nvme_free_host($self);
+  }
+%define SET_SYMNAME_DOCSTRING
+"@brief Set or Clear Host's Symbolic Name
+
+@param hostsymname: A symbolic name, or None to clear the symbolic name.
+@type hostsymname: str|None
+
+@return: None"
+%enddef
+  %feature("autodoc", SET_SYMNAME_DOCSTRING) set_symname;
+  void set_symname(const char *hostsymname) {
+    nvme_host_set_hostsymname($self, hostsymname);
   }
   char *__str__() {
     static char tmp[2048];

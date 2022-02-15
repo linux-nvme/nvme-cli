@@ -109,6 +109,7 @@ struct nvme_host {
 	char *hostnqn;
 	char *hostid;
 	char *dhchap_key;
+	char *hostsymname;
 };
 
 struct nvme_root {

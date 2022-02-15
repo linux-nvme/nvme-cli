@@ -64,6 +64,9 @@ nvme_host_t nvme_default_host(nvme_root_t r)
 	hostid = nvmf_hostid_from_file();
 
 	h = nvme_lookup_host(r, hostnqn, hostid);
+
+	nvme_host_set_hostsymname(h, NULL);
+
 	default_host = h;
 	free(hostnqn);
 	if (hostid)
@@ -209,6 +212,21 @@ const char *nvme_host_get_hostnqn(nvme_host_t h)
 const char *nvme_host_get_hostid(nvme_host_t h)
 {
 	return h->hostid;
+}
+
+const char *nvme_host_get_hostsymname(nvme_host_t h)
+{
+	return h->hostsymname;
+}
+
+void nvme_host_set_hostsymname(nvme_host_t h, const char *hostsymname)
+{
+	if (h->hostsymname) {
+		free(h->hostsymname);
+		h->hostsymname = NULL;
+	}
+	if (hostsymname)
+		h->hostsymname = strdup(hostsymname);
 }
 
 const char *nvme_host_get_dhchap_key(nvme_host_t h)
@@ -390,6 +408,7 @@ static void __nvme_free_host(struct nvme_host *h)
 		free(h->hostid);
 	if (h->dhchap_key)
 		free(h->dhchap_key);
+	nvme_host_set_hostsymname(h, NULL);
 	h->r->modified = true;
 	free(h);
 }

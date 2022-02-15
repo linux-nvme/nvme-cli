@@ -146,6 +146,9 @@ static void json_parse_host(nvme_root_t r, struct json_object *host_obj)
 	attr_obj = json_object_object_get(host_obj, "dhchap_key");
 	if (attr_obj)
 		nvme_host_set_dhchap_key(h, json_object_get_string(attr_obj));
+	attr_obj = json_object_object_get(host_obj, "hostsymname");
+	if (attr_obj)
+		nvme_host_set_hostsymname(h, json_object_get_string(attr_obj));
 	subsys_array = json_object_object_get(host_obj, "subsystems");
 	if (!subsys_array)
 		return;
@@ -288,7 +291,7 @@ int json_update_config(nvme_root_t r, const char *config_file)
 	json_root = json_object_new_array();
 	nvme_for_each_host(r, h) {
 		nvme_subsystem_t s;
-		const char *hostnqn, *hostid, *dhchap_key;
+		const char *hostnqn, *hostid, *dhchap_key, *hostsymname;
 
 		host_obj = json_object_new_object();
 		if (!host_obj)
@@ -304,6 +307,10 @@ int json_update_config(nvme_root_t r, const char *config_file)
 		if (dhchap_key)
 			json_object_object_add(host_obj, "dhchap_key",
 					       json_object_new_string(dhchap_key));
+		hostsymname = nvme_host_get_hostsymname(h);
+		if (hostsymname)
+			json_object_object_add(host_obj, "hostsymname",
+					       json_object_new_string(hostsymname));
 		subsys_array = json_object_new_array();
 		nvme_for_each_subsystem(h, s) {
 			json_update_subsys(subsys_array, s);

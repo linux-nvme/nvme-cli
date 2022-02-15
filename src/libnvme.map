@@ -144,8 +144,10 @@ LIBNVME_1_0 {
 		nvme_host_get_dhchap_key;
 		nvme_host_get_hostid;
 		nvme_host_get_hostnqn;
+		nvme_host_get_hostsymname;
 		nvme_host_get_root;
 		nvme_host_set_dhchap_key;
+		nvme_host_set_hostsymname;
 		nvme_identify;
 		nvme_identify_active_ns_list;
 		nvme_identify_allocated_ns;
