@@ -2013,17 +2013,18 @@ struct nvme_id_nvmset_list {
 
 /**
  * struct nvme_id_independent_id_ns -
- * @nsfeat:
- * @nmic:
- * @rescap:
- * @fpi:
- * @anagrpid:
- * @nsattr:
- * @rsvd9:
- * @nvmsetid:
- * @endgid:
- * @nstat:
- * @rsvd15:
+ * @nsfeat:	common namespace features
+ * @nmic:	Namespace Multi-path I/O and Namespace
+ * 		Sharing Capabilities
+ * @rescap:	Reservation Capabilities
+ * @fpi:	Format Progress Indicator
+ * @anagrpid:	ANA Group Identifier
+ * @nsattr:	Namespace Attributes
+ * @rsvd9:	reserved
+ * @nvmsetid:	NVM Set Identifier
+ * @endgid:	Endurance Group Identifier
+ * @nstat:	Namespace Status
+ * @rsvd15:	reserved
  */
 struct nvme_id_independent_id_ns {
 	__u8	nsfeat;
@@ -2041,8 +2042,8 @@ struct nvme_id_independent_id_ns {
 
 /**
  * struct nvme_id_ns_granularity_desc -
- * @nszegran:
- * @ncapgran:
+ * @nszegran:	Namespace Size Granularity
+ * @ncapgran:	Namespace Capacity Granularity
  */
 struct nvme_id_ns_granularity_desc {
 	__le64			nszegran;
@@ -2051,11 +2052,11 @@ struct nvme_id_ns_granularity_desc {
 
 /**
  * struct nvme_id_ns_granularity_list -
- * @attributes:
- * @num_descriptors:
- * @rsvd5:
- * @entry:
- * @rsvd288:
+ * @attributes:		Namespace Granularity Attributes
+ * @num_descriptors:	Number of Descriptors
+ * @rsvd5:		reserved
+ * @entry:		Namespace Granularity Descriptor
+ * @rsvd288:		reserved
  */
 struct nvme_id_ns_granularity_list {
 	__le32			attributes;
@@ -2067,9 +2068,9 @@ struct nvme_id_ns_granularity_list {
 
 /**
  * struct nvme_id_uuid_list_entry -
- * @header:
- * @rsvd1:
- * @uuid:
+ * @header:	UUID Lists Entry Header
+ * @rsvd1:	reserved
+ * @uuid:	128-bit Universally Unique Identifier
  */
 struct nvme_id_uuid_list_entry {
 	__u8			header;
@@ -2093,8 +2094,8 @@ enum nvme_id_uuid {
 
 /**
  * struct nvme_id_uuid_list -
- * @rsvd0:
- * @entry:
+ * @rsvd0:	reserved
+ * @entry:	UUID list entry
  */
 struct nvme_id_uuid_list {
 	__u8	rsvd0[32];
@@ -2103,8 +2104,8 @@ struct nvme_id_uuid_list {
 
 /**
  * struct nvme_ctrl_list -
- * @num:
- * @identifier:
+ * @num:	Number of Identifiers
+ * @identifier:	NVM subsystem unique controller identifier
  */
 struct nvme_ctrl_list {
 	__le16 num;
@@ -2113,7 +2114,7 @@ struct nvme_ctrl_list {
 
 /**
  * struct nvme_ns_list -
- * @ns:
+ * @ns:	Namespace Identifier
  */
 struct nvme_ns_list {
 	__le32 ns[NVME_ID_NS_LIST_MAX];
@@ -2121,13 +2122,13 @@ struct nvme_ns_list {
 
 /**
  * struct nvme_id_ctrl_nvm -
- * @vsl:
- * @wzsl:
- * @wusl:
- * @dmrl:
- * @dmrsl:
- * @dmsl:
- * @rsvd16:
+ * @vsl:	Verify Size Limit
+ * @wzsl:	Write Zeroes Size Limit
+ * @wusl:	Write Uncorrectable Size Limit
+ * @dmrl:	Dataset Management Ranges Limit
+ * @dmrsl:	Dataset Management Range Size Limit
+ * @dmsl:	Dataset Management Size Limit
+ * @rsvd16:	reserved
  */
 struct nvme_id_ctrl_nvm {
     __u8     vsl;
@@ -2157,9 +2158,9 @@ struct nvme_nvm_id_ns {
 
 /**
  * struct nvme_zns_lbafe -
- * @zsze:
- * @zdes:
- * @rsvd9:
+ * @zsze:	Zone Size
+ * @zdes:	Zone Descriptor Extension Size
+ * @rsvd9:	reserved
  */
 struct nvme_zns_lbafe {
 	__le64	zsze;
@@ -2224,24 +2225,24 @@ struct nvme_zns_id_ctrl {
 
 /**
  * struct nvme_primary_ctrl_cap -
- * @cntlid:
- * @portid:
- * @crt:
- * @rsvd5:
- * @vqfrt:
- * @vqrfa:
- * @vqrfap:
- * @vqprt:
- * @vqfrsm:
- * @vqgran:
- * @rsvd48:
- * @vifrt:
- * @virfa:
- * @virfap:
- * @viprt:
- * @vifrsm:
- * @vigran:
- * @rsvd80:
+ * @cntlid:	Controller Identifier
+ * @portid:	Port Identifier
+ * @crt:	Controller Resource Types
+ * @rsvd5:	reserved
+ * @vqfrt:	VQ Resources Flexible Total
+ * @vqrfa:	VQ Resources Flexible Assigned
+ * @vqrfap:	VQ Resources Flexible Allocated to Primary
+ * @vqprt:	VQ Resources Private Total
+ * @vqfrsm:	VQ Resources Flexible Secondary Maximum
+ * @vqgran:	VQ Flexible Resource Preferred Granularity
+ * @rsvd48:	reserved
+ * @vifrt:	VI Resources Flexible Total
+ * @virfa:	VI Resources Flexible Assigned
+ * @virfap:	VI Resources Flexible Allocated to Primary
+ * @viprt:	VI Resources Private Total
+ * @vifrsm:	VI Resources Flexible Secondary Maximum
+ * @vigran:	VI Flexible Resource Preferred Granularity
+ * @rsvd80:	reserved
  */
 struct nvme_primary_ctrl_cap {
 	__le16	cntlid;
