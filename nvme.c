@@ -4524,7 +4524,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 				"Namespace is currently busy.\n");
 			if (!cfg.force)
 				fprintf(stderr,
-				"Use the force [--force|-f] option to ignore that.\n");
+				"Use the force [--force] option to ignore that.\n");
 		} else {
 			argconfig_print_help(desc, opts);
 		}
@@ -4647,7 +4647,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		nvme_show_relatives(devicename);
 		fprintf(stderr, "WARNING: Format may irrevocably delete this device's data.\n"
 			"You have 10 seconds to press Ctrl-C to cancel this operation.\n\n"
-			"Use the force [--force|-f] option to suppress this warning.\n");
+			"Use the force [--force] option to suppress this warning.\n");
 		sleep(10);
 		fprintf(stderr, "Sending format operation ... \n");
 	}
