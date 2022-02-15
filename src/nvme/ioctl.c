@@ -440,6 +440,7 @@ int nvme_set_features(struct nvme_set_features_args *args)
 		.cdw10		= cdw10,
 		.cdw11		= args->cdw11,
 		.cdw12		= args->cdw12,
+		.cdw13		= args->cdw13,
 		.cdw14		= cdw14,
 		.cdw15		= args->cdw15,
 		.timeout_ms	= args->timeout,
