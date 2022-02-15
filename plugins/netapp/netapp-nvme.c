@@ -334,7 +334,7 @@ static void netapp_ontapdevices_print(struct ontapdevice_info *devices,
 	} else if (format == NJSON) {
 		/* prepare for json output */
 		root = json_create_object();
-		json_devices = json_create_object();
+		json_devices = json_create_array();
 	}
 
 	for (i = 0; i < count; i++) {
@@ -357,6 +357,8 @@ static void netapp_ontapdevices_print(struct ontapdevice_info *devices,
 		/* complete the json output */
 		json_object_add_value_array(root, "ONTAPdevices", json_devices);
 		json_print_object(root, NULL);
+		printf("\n");
+		json_free_object(root);
 	}
 }
 
