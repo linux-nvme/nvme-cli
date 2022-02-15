@@ -670,8 +670,24 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 
 static int nvme_discovery_log(int fd, __u32 len, struct nvmf_discovery_log *log, bool rae)
 {
-	return nvme_get_log_page(fd, 0, NVME_LOG_LID_DISCOVER, rae, 512,
-				 len, log);
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = NVME_NSID_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.lid = NVME_LOG_LID_DISCOVER,
+		.log = log,
+		.len = len,
+		.csi = NVME_CSI_NVM,
+		.rae = rae,
+		.ot = false,
+	};
+
+	return nvme_get_log_page(fd, 4096, &args);
 }
 
 int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,

@@ -116,33 +116,19 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 	return err;
 }
 
-int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
-		      __u32 xfer_len, __u32 data_len, void *data)
+int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 {
 	__u64 offset = 0, xfer;
 	bool retain = true;
-	void *ptr = data;
+	void *ptr = args->log;
 	int ret;
-	struct nvme_get_log_args args = {
-		.args_size = sizeof(args),
-		.fd = fd,
-		.nsid = nsid,
-		.lid = log_id,
-		.lsp = NVME_LOG_LSP_NONE,
-		.lsi = NVME_LOG_LSI_NONE,
-		.uuidx = NVME_UUID_NONE,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.result = NULL,
-		.csi = NVME_CSI_NVM,
-		.ot = false,
-	};
 
 	/*
 	 * 4k is the smallest possible transfer unit, so restricting to 4k
 	 * avoids having to check the MDTS value of the controller.
 	 */
 	do {
-		xfer = data_len - offset;
+		xfer = args->len - offset;
 		if (xfer > xfer_len)
 			xfer  = xfer_len;
 
@@ -151,28 +137,22 @@ int nvme_get_log_page(int fd, __u32 nsid, __u8 log_id, bool rae,
 		 * last portion of this log page so the data remains latched
 		 * during the fetch sequence.
 		 */
-		if (offset + xfer == data_len)
-			retain = rae;
+		if (offset + xfer == args->len)
+			retain = args->rae;
 
-		args.lpo = offset;
-		args.len = xfer;
-		args.log = ptr;
-		args.rae = retain;
-		ret = nvme_get_log(&args);
+		args->lpo = offset;
+		args->len = xfer;
+		args->log = ptr;
+		args->rae = retain;
+		ret = nvme_get_log(args);
 		if (ret)
 			return ret;
 
 		offset += xfer;
 		ptr += xfer;
-	} while (offset < data_len);
+	} while (offset < args->len);
 
 	return 0;
-}
-
-int nvme_get_log_page_padded(int fd, __u32 nsid, __u8 log_id, bool rae,
-			     __u32 data_len, void *data)
-{
-	return nvme_get_log_page(fd, nsid, log_id, rae, 4096, data_len, data);
 }
 
 static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
@@ -186,6 +166,19 @@ static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
 	struct nvme_id_ctrl id_ctrl;
 	void *log, *tmp;
 	int err;
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = NVME_NSID_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.rae = rae,
+		.ot = false,
+	};
 
 	*size = 0;
 
@@ -254,8 +247,10 @@ static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
 	}
 	log = tmp;
 
-	err = nvme_get_log_page_padded(fd, NVME_NSID_NONE, lid, rae, (__u32)*size,
-				       (void *)log);
+	args.lid = lid;
+	args.log = log;
+	args.len = *size;
+	err = nvme_get_log_page(fd, 4096, &args);
 	if (!err) {
 		*buf = log;
 		return 0;
@@ -288,6 +283,19 @@ int nvme_get_lba_status_log(int fd, bool rae, struct nvme_lba_status_log **log)
 	__u32 size = sizeof(struct nvme_lba_status_log);
 	void *buf, *tmp;
 	int err;
+	struct nvme_get_log_args args = {
+		.args_size = sizeof(args),
+		.fd = fd,
+		.nsid = NVME_NSID_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.lsi = NVME_LOG_LSI_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result = NULL,
+		.csi = NVME_CSI_NVM,
+		.rae = rae,
+		.ot = false,
+	};
 
 	buf = malloc(size);
 	if (!buf)
@@ -310,8 +318,10 @@ int nvme_get_lba_status_log(int fd, bool rae, struct nvme_lba_status_log **log)
 	buf = tmp;
 	*log = buf;
 
-	err = nvme_get_log_page_padded(fd, NVME_NSID_NONE, NVME_LOG_LID_LBA_STATUS,
-				       rae, size, buf);
+	args.lid = NVME_LOG_LID_LBA_STATUS;
+	args.log = buf;
+	args.len = size;
+	err = nvme_get_log_page(fd, 4096, &args);
 	if (!err)
 		return 0;
 
