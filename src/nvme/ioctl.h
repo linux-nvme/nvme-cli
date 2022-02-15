@@ -1994,6 +1994,7 @@ struct nvme_set_features_args {
 	__u32 nsid;
 	__u32 cdw11;
 	__u32 cdw12;
+	__u32 cdw13;
 	__u32 cdw15;
 	__u32 data_len;
 	bool save;
@@ -2034,6 +2035,7 @@ static inline int nvme_set_features_data(int fd, __u8 fid, __u32 nsid,
 		.nsid = nsid,
 		.cdw11 = cdw11,
 		.cdw12 = 0,
+		.cdw13 = 0,
 		.cdw15 = 0,
 		.data_len = data_len,
 		.save = save,
