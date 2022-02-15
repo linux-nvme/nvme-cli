@@ -5252,7 +5252,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	const char *start_block = "64-bit LBA of first block to access";
 	const char *block_count = "number of blocks (zeroes based) on device to access";
 	const char *limited_retry = "limit media access attempts";
-	const char *force = "force device to commit data before command completes";
+	const char *force_unit_access = "force device to commit data before command completes";
 	const char *prinfo = "PI and check field";
 	const char *ref_tag = "reference tag (for end to end PI)";
 	const char *app_tag_mask = "app tag mask (for end to end PI)";
@@ -5295,7 +5295,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
 		OPT_FLAG("deac",              'd', &cfg.deac,              deac),
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
-		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force),
+		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
 		OPT_UINT("ref-tag",           'r', &cfg.ref_tag,           ref_tag),
 		OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
@@ -6051,7 +6051,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	const char *app_tag = "app tag (for end to end PI)";
 	const char *limited_retry = "limit num. media access attempts";
 	const char *latency = "output latency statistics";
-	const char *force = "force device to commit data before command completes";
+	const char *force_unit_access = "force device to commit data before command completes";
 	const char *show = "show command before sending";
 	const char *dry = "show command instead of sending";
 	const char *dtype = "directive type (for write-only)";
@@ -6116,7 +6116,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
 		OPT_SUFFIX("storage-tag",     'g', &cfg.storage_tag,       storage_tag),
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
-		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force),
+		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
 		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
 		OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype),
 		OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
@@ -6366,7 +6366,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	const char *start_block = "64-bit LBA of first block to access";
 	const char *block_count = "number of blocks (zeroes based) on device to access";
 	const char *limited_retry = "limit media access attempts";
-	const char *force = "force device to commit cached data before performing the verify operation";
+	const char *force_unit_access = "force device to commit cached data before performing the verify operation";
 	const char *prinfo = "PI and check field";
 	const char *ref_tag = "reference tag (for end to end PI)";
 	const char *app_tag_mask = "app tag mask (for end to end PI)";
@@ -6409,7 +6409,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
 		OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
-		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force),
+		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
 		OPT_UINT("ref-tag",           'r', &cfg.ref_tag,           ref_tag),
 		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
