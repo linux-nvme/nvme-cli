@@ -267,33 +267,27 @@ static int get_dev(int argc, char **argv, int flags)
 int parse_and_open(int argc, char **argv, const char *desc,
 	const struct argconfig_commandline_options *opts)
 {
-	const struct argconfig_commandline_options *s;
-	int flags = O_RDONLY;
 	int ret;
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
-	for (s = opts; s && s->option; s++) {
-		if (!strcmp(s->option, "force")) {
-			if (*(int *)s->default_value)
-				flags |= O_EXCL;
-			break;
-		}
-	}
+	ret = get_dev(argc, argv, O_RDONLY);
+	if (ret < 0)
+		argconfig_print_help(desc, opts);
 
-	ret = get_dev(argc, argv, flags);
-	if (ret < 0) {
-		if (errno == EBUSY) {
-			fprintf(stderr, "Failed to open %s.\n" \
-				"Namespace is currently busy.\n" \
-				"Use the force [--force] option to ignore that.\n",
-				basename(argv[optind]));
-		} else
-			argconfig_print_help(desc, opts);
-	}
 	return ret;
+}
+
+int open_exclusive(int argc, char **argv, int force)
+{
+    int flags = O_RDONLY;
+
+	if (!force)
+		flags |= O_EXCL;
+
+    return get_dev(argc, argv, flags);
 }
 
 enum nvme_print_flags validate_output_format(const char *format)
@@ -4098,7 +4092,6 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *ause_desc = "Allow unrestricted sanitize exit.";
 	const char *sanact_desc = "Sanitize action.";
 	const char *ovrpat_desc = "Overwrite pattern.";
-	const char *force_desc = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
 	int fd, err;
 
 	struct config {
@@ -4108,7 +4101,6 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 		int    ause;
 		__u8   sanact;
 		__u32  ovrpat;
-		int    force;
 	};
 
 	struct config cfg = {
@@ -4118,7 +4110,6 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 		.ause = 0,
 		.sanact = 0,
 		.ovrpat = 0,
-		.force = 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -4128,7 +4119,6 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 		OPT_FLAG("ause",       'u', &cfg.ause,       ause_desc),
 		OPT_BYTE("sanact",     'a', &cfg.sanact,     sanact_desc),
 		OPT_UINT("ovrpat",     'p', &cfg.ovrpat,     ovrpat_desc),
-		OPT_FLAG("force",        0, &cfg.force,      force_desc),
 		OPT_END()
 	};
 
@@ -4520,6 +4510,24 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		OPT_SUFFIX("block-size", 'b', &cfg.bs,           bs),
 		OPT_END()
 	};
+
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err)
+		goto ret;
+
+	err = fd = open_exclusive(argc, argv, cfg.force);
+	if (fd < 0) {
+		if (errno == EBUSY) {
+			fprintf(stderr, "Failed to open %s.\n",
+                basename(argv[optind]));
+			fprintf(stderr,
+				"Namespace is currently busy.\n"
+				"Use the force [--force|-f] option to ignore that.\n");
+		} else {
+			argconfig_print_help(desc, opts);
+		}
+		goto ret;
+	}
 
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
@@ -5179,27 +5187,23 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 	const char *namespace_id = "desired namespace";
 	const char *start_block = "64-bit LBA of first block to access";
 	const char *block_count = "number of blocks (zeroes based) on device to access";
-	const char *force_desc = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
 
 	struct config {
 		__u64 start_block;
 		__u32 namespace_id;
 		__u16 block_count;
-		int force;
 	};
 
 	struct config cfg = {
 		.start_block     = 0,
 		.namespace_id    = 0,
 		.block_count     = 0,
-		.force           = 0,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",  'n', &cfg.namespace_id, namespace_id),
 		OPT_SUFFIX("start-block", 's', &cfg.start_block,  start_block),
 		OPT_SHRT("block-count",   'c', &cfg.block_count,  block_count),
-		OPT_FLAG("force",           0, &cfg.force,        force_desc),
 		OPT_END()
 	};
 
@@ -5248,7 +5252,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	const char *start_block = "64-bit LBA of first block to access";
 	const char *block_count = "number of blocks (zeroes based) on device to access";
 	const char *limited_retry = "limit media access attempts";
-	const char *force_unit_access = "force device to commit data before command completes";
+	const char *force = "force device to commit data before command completes";
 	const char *prinfo = "PI and check field";
 	const char *ref_tag = "reference tag (for end to end PI)";
 	const char *app_tag_mask = "app tag mask (for end to end PI)";
@@ -5258,7 +5262,6 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	const char *deac = "Set DEAC bit, requesting controller to deallocate specified logical blocks";
 	const char *storage_tag_check = "This bit specifies the Storage Tag field shall be checked as "\
 		"part of end-to-end data protection processing";
-	const char *force = "The \"I know what I'm doing\" flag, open device even it is already used";
 
 	struct config {
 		__u64 start_block;
@@ -5273,7 +5276,6 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		int   limited_retry;
 		int   force_unit_access;
 		int   storage_tag_check;
-		int   force;
 	};
 
 	struct config cfg = {
@@ -5285,7 +5287,6 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		.app_tag         	= 0,
 		.storage_tag	 	= 0,
 		.storage_tag_check 	= 0,
-		.force        		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -5294,14 +5295,13 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
 		OPT_FLAG("deac",              'd', &cfg.deac,              deac),
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
-		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
+		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force),
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
 		OPT_UINT("ref-tag",           'r', &cfg.ref_tag,           ref_tag),
 		OPT_SHRT("app-tag-mask",      'm', &cfg.app_tag_mask,      app_tag_mask),
 		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
 		OPT_SUFFIX("storage-tag",     'S', &cfg.storage_tag,       storage_tag),
 		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
-		OPT_FLAG("force",               0, &cfg.force,             force),
 		OPT_END()
 	};
 
@@ -6051,7 +6051,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	const char *app_tag = "app tag (for end to end PI)";
 	const char *limited_retry = "limit num. media access attempts";
 	const char *latency = "output latency statistics";
-	const char *force_unit_access = "force device to commit data before command completes";
+	const char *force = "force device to commit data before command completes";
 	const char *show = "show command before sending";
 	const char *dry = "show command instead of sending";
 	const char *dtype = "directive type (for write-only)";
@@ -6061,7 +6061,6 @@ static int submit_io(int opcode, char *command, const char *desc,
 		"checked as part of end-to-end data protection processing";
 	const char *storage_tag = "storage tag, CDW2 and CDW3 (00:47) bits "\
 		"(for end to end PI)";
-	const char *force = "The \"I know what I'm doing\" flag, open device even it is already in use";
 
 	struct config {
 		__u32 namespace_id;
@@ -6085,24 +6084,22 @@ static int submit_io(int opcode, char *command, const char *desc,
 		int   show;
 		int   dry_run;
 		int   latency;
-		int   force;
 	};
 
 	struct config cfg = {
 		.namespace_id		= 0,
 		.start_block		= 0,
 		.block_count		= 0,
-		.data_size			= 0,
+		.data_size		= 0,
 		.metadata_size		= 0,
-		.ref_tag			= 0,
-		.data				= "",
-		.metadata			= "",
-		.prinfo				= 0,
+		.ref_tag		= 0,
+		.data			= "",
+		.metadata		= "",
+		.prinfo			= 0,
 		.app_tag_mask		= 0,
-		.app_tag			= 0,
+		.app_tag		= 0,
 		.storage_tag_check	= 0,
 		.storage_tag		= 0,
-		.force			 	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -6119,7 +6116,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		OPT_SHRT("app-tag",           'a', &cfg.app_tag,           app_tag),
 		OPT_SUFFIX("storage-tag",     'g', &cfg.storage_tag,       storage_tag),
 		OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
-		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
+		OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force),
 		OPT_FLAG("storage-tag-check", 'C', &cfg.storage_tag_check, storage_tag_check),
 		OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype),
 		OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
@@ -6127,12 +6124,8 @@ static int submit_io(int opcode, char *command, const char *desc,
 		OPT_FLAG("show-command",      'v', &cfg.show,              show),
 		OPT_FLAG("dry-run",           'w', &cfg.dry_run,           dry),
 		OPT_FLAG("latency",           't', &cfg.latency,           latency),
-		OPT_FLAG("force",               0, &cfg.force,             force),
 		OPT_END()
 	};
-
-	if (opcode != nvme_cmd_write)
-		cfg.force = 1;
 
 	err = fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0)
