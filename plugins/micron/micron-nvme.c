@@ -41,7 +41,7 @@
 /* Plugin version major_number.minor_number.patch */
 static const char *__version_major = "1";
 static const char *__version_minor = "0";
-static const char *__version_patch = "7";
+static const char *__version_patch = "8";
 
 /* supported models of micron plugin; new models should be added at the end
  * before UNKNOWN_MODEL. Make sure M5410 is first in the list !
@@ -117,6 +117,7 @@ static eDriveModel GetDriveModel(int idx)
     }
     if (vendor_id == MICRON_VENDOR_ID) {
         switch (device_id) {
+        case 0x5196:
         case 0x51A0:
         case 0x51A1:
         case 0x51A2:
@@ -1187,8 +1188,8 @@ fb_log_page[] = {
     { "Normalized Bad System NAND Block Count", 2, 2},
     { "Raw Bad System NAND Block Count", 6, 6},
     { "Endurance Estimate", 16, 16},
-    { "Thermal Throttling Count", 1, 1},
     { "Thermal Throttling Status", 1, 1},
+    { "Thermal Throttling Count", 1, 1},
     { "Unaligned I/O", 8, 8},
     { "Physical Media Units Read", 16, 16},
     { "Reserved", 279, 0},
@@ -1661,7 +1662,7 @@ static void GetGenericLogs(int fd, const char *dir)
         WriteData((__u8*)&effects, sizeof(effects), dir,
                   "command_effects_log.bin", "effects log");
     }
-    
+
     /* get persistent event log */
     (void)nvme_get_log_persistent_event(fd, NVME_PEVENT_LOG_RELEASE_CTX,
                                     sizeof(pevent_log), &pevent_log);
@@ -2204,11 +2205,320 @@ out:
     return err;
 }
 
-static int micron_error_reason(int argc, char **argv, struct command *cmd,
+#define MICRON_FID_LATENCY_MONITOR 0xD0
+#define MICRON_LOG_LATENCY_MONITOR 0xD1
+
+static int micron_latency_stats_track(int argc, char **argv, struct command *cmd,
                                 struct plugin *plugin)
 {
-    printf("This command is not implemented for the drive\n");
-    return 0;
+    int err = 0;
+    __u32 result = 0;
+    const char *desc = "Enable, Disable or Get cmd latency monitoring stats";
+    const char *option  = "enable or disable or status, default is status";
+    const char *command = "commands to monitor for - all|read|write|trim,"
+                          " default is all i.e, enabled for all commands";
+    const char *thrtime = "The threshold value to use for latency monitoring in"
+                          " milliseconds, default is 800ms";
+
+    int fd = 0;
+    int fid = MICRON_FID_LATENCY_MONITOR;
+    eDriveModel model = UNKNOWN_MODEL;
+    uint32_t command_mask = 0x7;       /* 1:read 2:write 4:trim 7:all */
+    uint32_t timing_mask = 0x08080800; /* R[31-24]:W[23:16]:T[15:8]:0 */
+    uint32_t enable = 2;
+    struct {
+        char *option;
+        char *command;
+        uint32_t threshold;
+    } opt = {
+        .option = "status",
+        .command = "all",
+        .threshold = 0
+    };
+
+    OPT_ARGS(opts) = {
+        OPT_STRING("option", 'o', "option", &opt.option, option),
+        OPT_STRING("command", 'c', "command", &opt.command, command),
+        OPT_UINT("threshold", 't', &opt.threshold, thrtime),
+        OPT_END()
+    };
+
+
+    if ((fd = micron_parse_options(argc, argv, desc, opts, &model)) < 0) {
+        return -1;
+    }
+
+    if (!strcmp(opt.option, "enable")) {
+        enable = 1;
+    } else if (!strcmp(opt.option, "disable")) {
+        enable = 0;
+    } else if (strcmp(opt.option, "status")) {
+        printf("Invalid control option %s specified\n", opt.option);
+        return -1;
+    }
+
+    struct nvme_get_features_args g_args = {
+        .args_size	= sizeof(g_args),
+        .fd		= fd,
+        .fid            = fid,
+        .nsid		= 0,
+        .sel		= 0,
+	.cdw11		= 0,
+	.uuidx		= 0,
+	.data_len	= 0,
+	.data		= NULL,
+	.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+	.result		= &result,
+    };
+
+    err = nvme_get_features(&g_args);
+    if (err != 0) {
+        printf("Failed to retrieve latency monitoring feature status\n");
+	return err;
+    }
+
+    /* If it is to retrieve the status only */
+    if (enable == 2) {
+        printf("Latency Tracking Statistics is currently %s",
+                (result & 0xFFFF0000) ? "enabled" : "disabled");
+        if ((result & 7) == 7) {
+            printf(" for All commands\n");
+        } else if ((result & 7) >  0) {
+            printf(" for");
+            if (result & 1) {
+                printf(" Read");
+            }
+            if (result & 2) {
+                printf(" Write");
+            }
+            if (result & 4) {
+                printf(" Trim");
+            }
+            printf(" commands\n");
+        } else if (result == 0) {
+		printf("\n");
+        }
+        return err;
+    }
+
+    /* read and validate threshold values if enable option is specified */
+    if (enable == 1) {
+        if (opt.threshold > 2550) {
+            printf("The maximum threshold value cannot be more than 2550 ms\n");
+            return -1;
+        }
+	/* timing mask is in terms of 10ms units, so min allowed is 10ms */
+	else if ((opt.threshold % 10) != 0) {
+            printf("The threshold value should be multiple of 10 ms\n");
+            return -1;
+	}
+	opt.threshold /= 10;
+    }
+
+    /* read-in command(s) to be monitored */
+    if (!strcmp(opt.command, "read")) {
+        command_mask = 0x1;
+        timing_mask = (opt.threshold << 24);
+    } else if (!strcmp(opt.command, "write")) {
+        command_mask = 0x2;
+        timing_mask = (opt.threshold << 16);
+    } else if (!strcmp(opt.command, "read")) {
+        command_mask = 0x4;
+        timing_mask = (opt.threshold << 8);
+    } else if (strcmp(opt.command, "all")) {
+        printf("Invalid command %s specified for option %s\n",
+		opt.command, opt.option);
+        return -1;
+    }
+
+    struct nvme_set_features_args args = {
+            .args_size      = sizeof(args),
+            .fd             = fd,
+            .fid            = MICRON_FID_LATENCY_MONITOR,
+            .nsid           = 0,
+            .cdw11          = enable,
+            .cdw12          = command_mask,
+            .save           = 1,
+            .uuidx          = 0,
+            .cdw13          = timing_mask,
+            .cdw15          = 0,
+            .data_len       = 0,
+            .data           = NULL,
+            .timeout        = NVME_DEFAULT_IOCTL_TIMEOUT,
+            .result         = &result,
+    };
+    err = nvme_set_features(&args);
+    if (err == 0) {
+        printf("Successfully %sed latency monitoring for %s commands\n",
+	        opt.option, opt.command);
+    } else {
+        printf("Failed to %s latency monitoring for %s commands\n",
+		opt.option, opt.command);
+    }
+
+    close(fd);
+    return err;
+}
+
+
+static int micron_latency_stats_logs(int argc, char **argv, struct command *cmd,
+                                struct plugin *plugin)
+{
+#define  LATENCY_LOG_ENTRIES 16
+    struct latency_log_entry {
+        uint64_t   timestamp;
+        uint32_t   latency;
+        uint32_t   cmdtag;
+	union {
+	    struct {
+                uint32_t opcode:8;
+		uint32_t fuse:2;
+		uint32_t rsvd1:4;
+		uint32_t psdt:2;
+		uint32_t cid:16;
+	    };
+            uint32_t   dw0;
+	};
+	uint32_t nsid;
+	uint32_t slba_low;
+	uint32_t slba_high;
+	union {
+            struct {
+	        uint32_t nlb:16;
+	        uint32_t rsvd2:9;
+	        uint32_t deac:1;
+	        uint32_t prinfo:4;
+	        uint32_t fua:1;
+	        uint32_t lr:1;
+	    };
+            uint32_t   dw12;
+	};
+        uint32_t   dsm;
+        uint32_t   rfu[6];
+    } log[LATENCY_LOG_ENTRIES];
+    eDriveModel model = UNKNOWN_MODEL;
+    int err = -1;
+    int fd = -1;
+    const char *desc = "Display Latency tracking log information";
+    OPT_ARGS(opts) = {
+        OPT_END()
+    };
+
+    if ((fd = micron_parse_options(argc, argv, desc, opts, &model)) < 0)
+        return err;
+    memset(&log, 0, sizeof(log));
+    err = nvme_get_log_simple(fd, 0xD1, sizeof(log), &log);
+    if (err) {
+        if (err < 0)
+            printf("Unable to retrieve latency stats log the drive\n");
+        return err;
+    }
+    /* print header and each log entry */
+    printf("Timestamp, Latency, CmdTag, Opcode, Fuse, Psdt,Cid, Nsid,"
+	   "Slba_L, Slba_H, Nlb, DEAC, PRINFO, FUA,LR\n");
+    for (int i = 0; i < LATENCY_LOG_ENTRIES; i++) {
+	printf("%"PRIu64",%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
+	       log[i].timestamp,log[i].latency, log[i].cmdtag, log[i].opcode,
+	       log[i].fuse, log[i].psdt, log[i].cid, log[i].nsid,
+	       log[i].slba_low, log[i].slba_high, log[i].nlb,
+	       log[i].deac, log[i].prinfo, log[i].fua, log[i].lr);
+    }
+    printf("\n");
+    return err;
+}
+
+static int micron_latency_stats_info(int argc, char **argv, struct command *cmd,
+                                struct plugin *plugin)
+{
+    const char *desc = "display command latency statistics";
+    const char *command = "command to display stats - all|read|write|trim"
+	                  "default is all";
+    int err = 0;
+    int fd = -1;
+    eDriveModel model = UNKNOWN_MODEL;
+    #define LATENCY_BUCKET_COUNT 32
+    struct micron_latency_stats {
+       uint64_t    version; /* major << 32 | minior */
+       uint64_t    all_cmds[LATENCY_BUCKET_COUNT];
+       uint64_t    read_cmds[LATENCY_BUCKET_COUNT];
+       uint64_t    write_cmds[LATENCY_BUCKET_COUNT];
+       uint64_t    trim_cmds[LATENCY_BUCKET_COUNT];
+       uint32_t    reserved[765]; /* round up to 4K */
+    } log;
+
+    struct latency_thresholds {
+      uint32_t start;
+      uint32_t end;
+      char    *unit;
+    } thresholds[LATENCY_BUCKET_COUNT] = {
+      {0, 50, "us"}, {50, 100, "us"}, {100, 150, "us"}, {150, 200, "us"},
+      {200, 300, "us"}, {300, 400, "us"}, {400, 500, "us"}, {500, 600, "us"},
+      {600, 700, "us"}, {700, 800, "us"}, {800, 900, "us"}, {900, 1000, "us"},
+      {1, 5, "ms"}, {5, 10, "ms"}, {10, 20, "ms"}, {20, 50, "ms"}, {50, 100, "ms"},
+      {100, 200, "ms"}, {200, 300, "ms"}, {300, 400, "ms"}, {400, 500, "ms"},
+      {500, 600, "ms"}, {600, 700, "ms"}, {700, 800, "ms"}, {800, 900, "ms"},
+      {900, 1000, "ms"}, {1, 2, "s"}, {2, 3, "s"}, {3, 4, "s"}, {4, 5, "s"},
+      {5,8, "s"},
+      {8, INT_MAX, "s"},
+    };
+
+    struct {
+        char *command;
+    } opt = {
+        .command="all"
+    };
+
+    uint64_t *cmd_stats = &log.all_cmds[0];
+    char *cmd_str = "All";
+
+    OPT_ARGS(opts) = {
+        OPT_STRING("command", 'c', "command", &opt.command, command),
+        OPT_END()
+    };
+
+    if ((fd = micron_parse_options(argc, argv, desc, opts, &model)) < 0)
+        return err;
+    if (!strcmp(opt.command, "read")) {
+        cmd_stats = &log.read_cmds[0];
+	cmd_str = "Read";
+    } else if (!strcmp(opt.command, "write")) {
+        cmd_stats = &log.write_cmds[0];
+	cmd_str = "Write";
+    } else if (!strcmp(opt.command, "trim")) {
+        cmd_stats = &log.trim_cmds[0];
+	cmd_str = "Trim";
+    } else if (strcmp(opt.command, "all")) {
+        printf("Invalid command option %s to display latency stats\n", opt.command);
+	return -1;
+    }
+
+    memset(&log, 0, sizeof(log));
+    err = nvme_get_log_simple(fd, 0xD0, sizeof(log), &log);
+    if (err) {
+        if (err < 0)
+            printf("Unable to retrieve latency stats log the drive\n");
+        return err;
+    }
+    printf("Micron IO %s Command Latency Statistics\n"
+	   "Major Revision : %d\nMinor Revision : %d\n",
+	   cmd_str, (int)(log.version >> 32), (int)(log.version & 0xFFFFFFFF));
+    printf("=============================================\n");
+    printf("Bucket    Start     End        Command Count\n");
+    printf("=============================================\n");
+
+    for (int b = 0; b < LATENCY_BUCKET_COUNT; b++) {
+       int bucket = b + 1;
+       char start[32] = { 0 };
+       char end[32] = { 0 };
+       sprintf(start, "%u%s", thresholds[b].start, thresholds[b].unit);
+       if (thresholds[b].end == INT_MAX)
+           sprintf(end, "INF");
+       else
+           sprintf(end, "%u%s", thresholds[b].end, thresholds[b].unit);
+       printf("%2d   %8s    %8s    %8"PRIu64"\n",
+              bucket, start, end, cmd_stats[b]);
+    }
+    return err;
 }
 
 static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *cmd,
@@ -2303,7 +2613,6 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
         return err;
     }
 
-    //err = nvme_set_feature(fd, 1, fid, cdw11, 0, opt.save, 0, 0, &result);
     err = nvme_set_features_simple(fd, fid, 1, 0, 0, &result);
     if (err == 0) err = (int)result;
     return err;
@@ -2394,7 +2703,6 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
             printf("Failed to disable controller telemetry option\n");
         }
     } else if (!strcmp(opt.option, "status")) {
-        ;
 	struct nvme_get_features_args args = {
 		.args_size	= sizeof(args),
 		.fd		= fd,
@@ -2580,7 +2888,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
 
     printf("Preparing log package. This will take a few seconds...\n");
 
-    // trim spaces out of serial number string */
+    /* trim spaces out of serial number string */
     int i, j = 0;
     for (i = 0; i < sizeof(ctrl.sn); i++) {
         if (isblank((int)ctrl.sn[i]))
@@ -2603,7 +2911,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
     GetSmartlogData(fd, strCtrlDirName);
     GetErrorlogData(fd, ctrl.elpe, strCtrlDirName);
     GetGenericLogs(fd, strCtrlDirName);
-    // pull if telemetry log data is supported
+    /* pull if telemetry log data is supported */
     if ((ctrl.lpa & 0x8) == 0x8)
         GetTelemetryData(fd, strCtrlDirName);
 
