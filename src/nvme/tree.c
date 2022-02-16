@@ -860,6 +860,8 @@ void nvme_deconfigure_ctrl(nvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->serial);
 	FREE_CTRL_ATTR(c->sqsize);
 	FREE_CTRL_ATTR(c->address);
+	FREE_CTRL_ATTR(c->dctype);
+	FREE_CTRL_ATTR(c->cntrltype);
 }
 
 int nvme_disconnect_ctrl(nvme_ctrl_t c)
@@ -1129,6 +1131,9 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 		free(c->dhchap_key);
 		c->dhchap_key = NULL;
 	}
+	c->cntrltype = nvme_get_ctrl_attr(c, "cntrltype");
+	c->dctype = nvme_get_ctrl_attr(c, "dctype");
+
 	return 0;
 }
 
