@@ -1574,9 +1574,9 @@ static inline int nvme_get_log_predictable_lat_nvmset(int fd, __u16 nvmsetid,
  * nvme_get_log_predictable_lat_event() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
- * @offset:
- * @len:
- * @log:
+ * @offset:	Offset into the predictable latency event
+ * @len:	Length of provided user buffer to hold the log data in bytes
+ * @log:	User address for log page data
  */
 static inline int nvme_get_log_predictable_lat_event(int fd, bool rae,
 			__u32 offset, __u32 len, void *log)
@@ -2064,10 +2064,10 @@ static inline int nvme_set_features_simple(int fd, __u8 fid, __u32 nsid,
 /**
  * nvme_set_features_arbitration() -
  * @fd:		File descriptor of nvme device
- * @ab:
- * @lpw:
- * @mpw:
- * @hpw:
+ * @ab:		Arbitration Burst
+ * @lpw:	Low Priority Weight
+ * @mpw:	Medium Priority Weight
+ * @hpw:	High Priority Weight
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2080,8 +2080,8 @@ int nvme_set_features_arbitration(int fd, __u8 ab, __u8 lpw, __u8 mpw,
 /**
  * nvme_set_features_power_mgmt() -
  * @fd:		File descriptor of nvme device
- * @ps:
- * @wh:
+ * @ps:		Power State
+ * @wh:		Workload Hint
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2109,9 +2109,9 @@ int nvme_set_features_lba_range(int fd, __u32 nsid, __u32 nr_ranges, bool save,
 /**
  * nvme_set_features_temp_thresh() -
  * @fd:		File descriptor of nvme device
- * @tmpth:
- * @tmpsel:
- * @thsel:
+ * @tmpth:	Temperature Threshold
+ * @tmpsel:	Threshold Temperature Select
+ * @thsel:	Threshold Type Select
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2127,7 +2127,7 @@ int nvme_set_features_temp_thresh(int fd, __u16 tmpth, __u8 tmpsel,
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
  * @tler:	Time-limited error recovery value
- * @dulbe:
+ * @dulbe:	Deallocated or Unwritten Logical Block Error Enable
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2153,8 +2153,8 @@ int nvme_set_features_volatile_wc(int fd, bool wce, bool save,
 /**
  * nvme_set_features_irq_coalesce() -
  * @fd:		File descriptor of nvme device
- * @thr:
- * @time:
+ * @thr:	Aggregation Threshold
+ * @time:	Aggregation Time
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2167,8 +2167,8 @@ int nvme_set_features_irq_coalesce(int fd, __u8 thr, __u8 time,
 /**
  * nvme_set_features_irq_config() -
  * @fd:		File descriptor of nvme device
- * @iv:
- * @cd:
+ * @iv:		Interrupt Vector
+ * @cd:		Coalescing Disable
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2181,7 +2181,7 @@ int nvme_set_features_irq_config(int fd, __u16 iv, bool cd, bool save,
 /**
  * nvme_set_features_write_atomic() -
  * @fd:		File descriptor of nvme device
- * @dn:
+ * @dn:		Disable Normal
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2207,8 +2207,8 @@ int nvme_set_features_async_event(int fd, __u32 events, bool save,
 /**
  * nvme_set_features_auto_pst() -
  * @fd:		File descriptor of nvme device
- * @apste:
- * @apst:
+ * @apste:	Autonomous Power State Transition Enable
+ * @apst:	Autonomous Power State Transition
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2233,8 +2233,8 @@ int nvme_set_features_timestamp(int fd, bool save, __u64 timestamp);
 /**
  * nvme_set_features_hctm() -
  * @fd:		File descriptor of nvme device
- * @tmt2:
- * @tmt1:
+ * @tmt2:	Thermal Management Temperature 2
+ * @tmt1:	Thermal Management Temperature 1
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2247,7 +2247,7 @@ int nvme_set_features_hctm(int fd, __u16 tmt2, __u16 tmt1, bool save,
 /**
  * nvme_set_features_nopsc() -
  * @fd:		File descriptor of nvme device
- * @noppme:
+ * @noppme:	Non-Operational Power State Permissive Mode Enable
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2273,10 +2273,10 @@ int nvme_set_features_rrl(int fd, __u8 rrl, __u16 nvmsetid, bool save,
 /**
  * nvme_set_features_plm_config() -
  * @fd:		File descriptor of nvme device
- * @enable:
- * @nvmsetid:
+ * @enable:	Predictable Latency Enable
+ * @nvmsetid:	NVM Set Identifier
  * @save:	Save value across power states
- * @data:
+ * @data:	Pointer to structure nvme_plm_config
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -2289,8 +2289,8 @@ int nvme_set_features_plm_config(int fd, bool enable, __u16 nvmsetid,
 /**
  * nvme_set_features_plm_window() -
  * @fd:		File descriptor of nvme device
- * @sel:
- * @nvmsetid:
+ * @sel:	Window Select
+ * @nvmsetid:	NVM Set Identifier
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2304,8 +2304,8 @@ int nvme_set_features_plm_window(int fd, enum nvme_feat_plm_window_select sel,
  * nvme_set_features_lba_sts_interval() -
  * @fd:		File descriptor of nvme device
  * @save:	Save value across power states
- * @lsiri:
- * @lsipi:
+ * @lsiri:	LBA Status Information Report Interval
+ * @lsipi:	LBA Status Information Poll Interval
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -2318,7 +2318,7 @@ int nvme_set_features_lba_sts_interval(int fd, __u16 lsiri, __u16 lsipi,
  * nvme_set_features_host_behavior() -
  * @fd:		File descriptor of nvme device
  * @save:	Save value across power states
- * @data:	
+ * @data:	Pointer to structure nvme_feat_host_behavior
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -2329,7 +2329,7 @@ int nvme_set_features_host_behavior(int fd, bool save,
 /**
  * nvme_set_features_sanitize() -
  * @fd:		File descriptor of nvme device
- * @nodrm:
+ * @nodrm:	No-Deallocate Response Mode
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2341,7 +2341,7 @@ int nvme_set_features_sanitize(int fd, bool nodrm, bool save, __u32 *result);
 /**
  * nvme_set_features_endurance_evt_cfg() -
  * @fd:		File descriptor of nvme device
- * @endgid:
+ * @endgid:	Endurance Group Identifier
  * @egwarn:	Flags to enable warning, see &enum nvme_eg_critical_warning_flags
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
@@ -2355,7 +2355,7 @@ int nvme_set_features_endurance_evt_cfg(int fd, __u16 endgid, __u8 egwarn,
 /**
  * nvme_set_features_sw_progress() -
  * @fd:		File descriptor of nvme device
- * @pbslc:
+ * @pbslc:	Pre-boot Software Load Count
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2368,7 +2368,7 @@ int nvme_set_features_sw_progress(int fd, __u8 pbslc, bool save,
 /**
  * nvme_set_features_host_id() -
  * @fd:		File descriptor of nvme device
- * @exhid:
+ * @exhid:	Enable Extended Host Identifier
  * @save:	Save value across power states
  * @hostid:	Host ID to set
  *
@@ -2380,7 +2380,7 @@ int nvme_set_features_host_id(int fd, bool exhid, bool save, __u8 *hostid);
 /**
  * nvme_set_features_resv_mask() -
  * @fd:		File descriptor of nvme device
- * @mask:
+ * @mask:	Reservation Notification Mask Field
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2392,7 +2392,7 @@ int nvme_set_features_resv_mask(int fd, __u32 mask, bool save, __u32 *result);
 /**
  * nvme_set_features_resv_persist() -
  * @fd:		File descriptor of nvme device
- * @ptpl:
+ * @ptpl:	Persist Through Power Loss
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2404,7 +2404,7 @@ int nvme_set_features_resv_persist(int fd, bool ptpl, bool save, __u32 *result);
 /**
  * nvme_set_features_write_protect() -
  * @fd:		File descriptor of nvme device
- * @state:
+ * @state:	Write Protection State
  * @save:	Save value across power states
  * @result:	The command completion result from CQE dword0
  *
@@ -2753,7 +2753,7 @@ int nvme_get_features_lba_sts_interval(int fd, enum nvme_get_features_sel sel,
  * nvme_get_features_host_behavior() -
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @data:
+ * @data:	Poniter to structure nvme_feat_host_behavior
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -2779,7 +2779,7 @@ int nvme_get_features_sanitize(int fd, enum nvme_get_features_sel sel,
  * nvme_get_features_endurance_event_cfg() -
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @endgid:
+ * @endgid:	Endurance Group Identifier
  * @result:	The command completion result from CQE dword0
  *
  * Return: The nvme command status if a response was received (see
@@ -2804,7 +2804,7 @@ int nvme_get_features_sw_progress(int fd, enum nvme_get_features_sel sel,
  * nvme_get_features_host_id() -
  * @fd:		File descriptor of nvme device
  * @sel:	Select which type of attribute to return, see &enum nvme_get_features_sel
- * @exhid:
+ * @exhid:	Enable Extended Host Identifier
  * @len:	Length of @hostid
  * @hostid:	Buffer for returned host ID
  *
@@ -3312,10 +3312,10 @@ int nvme_directive_send(struct nvme_directive_send_args *args);
 /**
  * nvme_directive_send_id_endir() -
  * @fd:		File descriptor of nvme device
- * @nsid:
- * @endir:
- * @dtype:
- * @id:
+ * @nsid:	Namespace Identifier
+ * @endir:	Enable Directive
+ * @dtype:	Directive Type
+ * @id:		Pointer to structure nvme_id_directives
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -3510,8 +3510,8 @@ static inline int nvme_directive_recv_stream_status(int fd, __u32 nsid,
  * nvme_directive_recv_stream_allocate() -
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace ID
- * @nsr:
- * @result:
+ * @nsr:	Namespace Streams Requested
+ * @result:	If successful, the CQE dword0 value
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
