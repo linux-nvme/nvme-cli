@@ -167,6 +167,7 @@
 #define WDC_CUSTOMER_ID_0x1004				0x1004
 #define WDC_CUSTOMER_ID_0x1008				0x1008
 #define WDC_CUSTOMER_ID_0x1304				0x1304
+#define WDC_INVALID_CUSTOMER_ID				-1
 
 #define WDC_ALL_PAGE_MASK                   0xFFFF
 #define WDC_C0_PAGE_MASK                    0x0001
@@ -667,6 +668,7 @@ static __u64 wdc_get_enc_drive_capabilities(nvme_root_t r, int fd);
 static int wdc_enc_get_nic_log(int fd, __u8 log_id, __u32 xfer_size, __u32 data_len, FILE *out);
 static int wdc_enc_submit_move_data(int fd, char *cmd, int len, int xfer_size, FILE *out, int data_id, int cdw14, int cdw15);
 static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **cbs_data);
+static __u32 wdc_get_fw_cust_id(nvme_root_t r, int fd);
 
 /* Drive log data size */
 struct wdc_log_size {
@@ -1209,8 +1211,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 	int ret;
 	uint32_t read_device_id = -1, read_vendor_id = -1;
 	__u64 capabilities = 0;
-	__u8 *data;
-	__u32 *cust_id;
+	__u32 cust_id;
 
 	ret = wdc_get_pci_ids(r, &read_device_id, &read_vendor_id);
 	if (ret < 0)
@@ -1285,6 +1286,10 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG | WDC_DRIVE_CAP_REASON_ID |
 					WDC_DRIVE_CAP_LOG_PAGE_DIR);
 
+			/* verify the 0xC3 log page is supported */
+			if (wdc_nvme_check_supported_log_page(r, fd, WDC_LATENCY_MON_OPCODE) == true)
+				capabilities |= WDC_DRIVE_CAP_C3_LOG_PAGE;
+
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
 				capabilities |= WDC_DRIVE_CAP_CA_LOG_PAGE;
@@ -1293,15 +1298,14 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_VU_SMART_LOG_OPCODE) == true)
 				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
 
-			if (!get_dev_mgment_cbs_data(r, fd, WDC_C2_CUSTOMER_ID_ID, (void*)&data)) {
-				fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
+			cust_id = wdc_get_fw_cust_id(r, fd);
+			if (cust_id == WDC_INVALID_CUSTOMER_ID) {
+				fprintf(stderr, "%s: ERROR : WDC : invalid customer id\n", __func__);
 				return -1;
 			}
 
-			cust_id = (__u32*)data;
-
-			if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1008) ||
-					(*cust_id == WDC_CUSTOMER_ID_0x1005) || (*cust_id == WDC_CUSTOMER_ID_0x1304))
+			if ((cust_id == WDC_CUSTOMER_ID_0x1004) || (cust_id == WDC_CUSTOMER_ID_0x1008) ||
+					(cust_id == WDC_CUSTOMER_ID_0x1005) || (cust_id == WDC_CUSTOMER_ID_0x1304))
 				capabilities |= (WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE |
 						WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_CLOUD_SSD_VERSION);
 			else
@@ -1417,8 +1421,7 @@ static __u64 wdc_get_enc_drive_capabilities(nvme_root_t r, int fd) {
 	int ret;
 	uint32_t read_vendor_id;
 	__u64 capabilities = 0;
-	__u8 *data;
-	__u32 *cust_id;
+	__u32 cust_id;
 
 	ret = wdc_get_vendor_id(fd, &read_vendor_id);
 	if (ret < 0)
@@ -1428,10 +1431,6 @@ static __u64 wdc_get_enc_drive_capabilities(nvme_root_t r, int fd) {
 		case WDC_NVME_VID:
 			capabilities = (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG | WDC_DRIVE_CAP_CLEAR_PCIE |
 				WDC_DRIVE_CAP_DRIVE_LOG | WDC_DRIVE_CAP_CRASH_DUMP | WDC_DRIVE_CAP_PFAIL_DUMP);
-
-			/* verify the 0xC3 log page is supported */
-			if (wdc_nvme_check_supported_log_page(r, fd, WDC_LATENCY_MON_OPCODE) == true)
-				capabilities |= WDC_DRIVE_CAP_C3_LOG_PAGE;
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -1462,15 +1461,14 @@ static __u64 wdc_get_enc_drive_capabilities(nvme_root_t r, int fd) {
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_VU_SMART_LOG_OPCODE) == true)
 				capabilities |= WDC_DRIVE_CAP_D0_LOG_PAGE;
 
-			if (!get_dev_mgment_cbs_data(r, fd, WDC_C2_CUSTOMER_ID_ID, (void*)&data)) {
-				fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
+			cust_id = wdc_get_fw_cust_id(r, fd);
+			if (cust_id == WDC_INVALID_CUSTOMER_ID) {
+				fprintf(stderr, "%s: ERROR : WDC : invalid customer id\n", __func__);
 				return -1;
 			}
 
-			cust_id = (__u32*)data;
-
-			if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1008) ||
-					(*cust_id == WDC_CUSTOMER_ID_0x1005) || (*cust_id == WDC_CUSTOMER_ID_0x1304))
+			if ((cust_id == WDC_CUSTOMER_ID_0x1004) || (cust_id == WDC_CUSTOMER_ID_0x1008) ||
+					(cust_id == WDC_CUSTOMER_ID_0x1005) || (cust_id == WDC_CUSTOMER_ID_0x1304))
 				capabilities |= (WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE);
 			else
 				capabilities |= (WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_CLEAR_PCIE);
@@ -1750,10 +1748,14 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 	length = sizeof(struct wdc_c2_log_page_header);
 	hdr_ptr = (struct wdc_c2_log_page_header *)data;
 	sph = (struct wdc_c2_log_subpage_header *)(data + length);
-	found = wdc_get_dev_mng_log_entry(hdr_ptr->length, log_id, hdr_ptr, &sph);
-
+	found = wdc_get_dev_mng_log_entry(le32_to_cpu(hdr_ptr->length), log_id, hdr_ptr, &sph);
 	if (found) {
-		*cbs_data = (void *)&sph->data;
+		*cbs_data = calloc(le32_to_cpu(sph->length), sizeof(__u8));
+		if (*cbs_data == NULL) {
+			fprintf(stderr, "ERROR : WDC : calloc : %s\n", strerror(errno));
+			goto end;
+		}
+		memcpy((void *)*cbs_data, (void *)&sph->data, le32_to_cpu(sph->length));
 	} else {
 		/* not found with uuid = 1 try with uuid = 0 */
 		uuid_ix = 0;
@@ -1779,9 +1781,15 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 
 		hdr_ptr = (struct wdc_c2_log_page_header *)data;
 		sph = (struct wdc_c2_log_subpage_header *)(data + length);
-		found = wdc_get_dev_mng_log_entry(hdr_ptr->length, log_id, hdr_ptr, &sph);
+		found = wdc_get_dev_mng_log_entry(le32_to_cpu(hdr_ptr->length), log_id, hdr_ptr, &sph);
 		if (found) {
-			*cbs_data = (void *)&sph->data;
+			*cbs_data = calloc(le32_to_cpu(sph->length), sizeof(__u8));
+			if (*cbs_data == NULL) {
+				fprintf(stderr, "ERROR : WDC : calloc : %s\n", strerror(errno));
+				goto end;
+			}
+			memcpy((void *)*cbs_data, (void *)&sph->data, le32_to_cpu(sph->length));
+
 		} else {
 			/* WD version not found  */
 			fprintf(stderr, "ERROR : WDC : Unable to find correct version of page 0x%x, entry id = %d\n", lid, log_id);
@@ -1815,6 +1823,7 @@ static bool wdc_nvme_check_supported_log_page(nvme_root_t r, int fd, __u8 log_id
 				d((__u8 *)cbs_data->data, le32_to_cpu(cbs_data->length), 16, 1);
 			}
 #endif
+			free(cbs_data);
 		} else
 			fprintf(stderr, "ERROR : WDC : cbs_data ptr = NULL\n");
 	} else
@@ -1831,6 +1840,8 @@ static bool wdc_nvme_get_dev_status_log_data(nvme_root_t r, int fd, __le32 *ret_
 	if (get_dev_mgment_cbs_data(r, fd, log_id, (void *)&cbs_data)) {
 		if (cbs_data != NULL) {
 			memcpy((void *)ret_data, (void *)cbs_data, 4);
+			free(cbs_data);
+
 			return true;
 		}
 	}
@@ -4969,7 +4980,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 	int fmt = -1;
 	int i = 0;
 	__u8 *data;
-	__u32 *cust_id;
+	__u32 cust_id;
 	uint32_t device_id, read_vendor_id;
 
 	if (!wdc_check_device(r, fd))
@@ -4996,14 +5007,13 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 	case WDC_NVME_SN650_DEV_ID_3:
 	case WDC_NVME_SN650_DEV_ID_4:
 	case WDC_NVME_SN655_DEV_ID:
-		if (!get_dev_mgment_cbs_data(r, fd, WDC_C2_CUSTOMER_ID_ID, (void*)&data)) {
-			fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
+		cust_id = wdc_get_fw_cust_id(r, fd);
+		if (cust_id == WDC_INVALID_CUSTOMER_ID) {
+			fprintf(stderr, "%s: ERROR : WDC : invalid customer id\n", __func__);
 			return -1;
 		}
 
-		cust_id = (__u32*)data;
-
-		if ((*cust_id == WDC_CUSTOMER_ID_0x1004) || (*cust_id == WDC_CUSTOMER_ID_0x1008) || (*cust_id == WDC_CUSTOMER_ID_0x1005))
+		if ((cust_id == WDC_CUSTOMER_ID_0x1004) || (cust_id == WDC_CUSTOMER_ID_0x1008) || (cust_id == WDC_CUSTOMER_ID_0x1005))
 		{
 			if (uuid_index == 0)
 			{
@@ -5276,7 +5286,6 @@ static int wdc_get_ca_log_page(nvme_root_t r, int fd, char *format)
 	__u8 *data;
 	struct wdc_ssd_ca_perf_stats *perf;
 	uint32_t read_device_id, read_vendor_id;
-	__u32 *cust_id_ptr;
 	__u32 cust_id;
 
 	if (!wdc_check_device(r, fd))
@@ -5293,12 +5302,12 @@ static int wdc_get_ca_log_page(nvme_root_t r, int fd, char *format)
 		return -1;
 	}
 
-	if (!get_dev_mgment_cbs_data(r, fd, WDC_C2_CUSTOMER_ID_ID, (void*)&cust_id_ptr)) {
-		fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
+	/* get the FW customer id */
+	cust_id = wdc_get_fw_cust_id(r, fd);
+	if (cust_id == WDC_INVALID_CUSTOMER_ID) {
+		fprintf(stderr, "%s: ERROR : WDC : invalid customer id\n", __func__);
 		return -1;
 	}
-
-	cust_id = *cust_id_ptr;
 
 	ret = wdc_get_pci_ids(r, &read_device_id, &read_vendor_id);
 
@@ -6065,12 +6074,28 @@ static int wdc_get_fw_act_history(nvme_root_t r, int fd, char *format)
 	return ret;
 }
 
+static __u32 wdc_get_fw_cust_id(nvme_root_t r, int fd)
+{
+
+	__u32 cust_id = WDC_INVALID_CUSTOMER_ID;
+	__u32 *cust_id_ptr = NULL;
+
+	if (!(get_dev_mgment_cbs_data(r, fd, WDC_C2_CUSTOMER_ID_ID, (void*)&cust_id_ptr))) {
+		fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
+	} else {
+		cust_id = *cust_id_ptr;
+	}
+
+	free(cust_id_ptr);
+	return cust_id;
+}
+
 static int wdc_get_fw_act_history_C2(nvme_root_t r, int fd, char *format)
 {
 	int ret = 0;
 	int fmt = -1;
 	__u8 *data;
-	__u32 *cust_id;
+	__u32 cust_id;
 	struct wdc_fw_act_history_log_format_c2 *fw_act_history_log;
 	__u32 tot_entries = 0, num_entries = 0;
 	__u32 vendor_id = 0, device_id = 0;
@@ -6106,14 +6131,15 @@ static int wdc_get_fw_act_history_C2(nvme_root_t r, int fd, char *format)
 
 		if (tot_entries > 0) {
 			/* get the FW customer id */
-			if (!get_dev_mgment_cbs_data(r, fd, WDC_C2_CUSTOMER_ID_ID, (void*)&cust_id)) {
-				fprintf(stderr, "%s: ERROR : WDC : 0xC2 Log Page entry ID 0x%x not found\n", __func__, WDC_C2_CUSTOMER_ID_ID);
+			cust_id = wdc_get_fw_cust_id(r, fd);
+			if (cust_id == WDC_INVALID_CUSTOMER_ID) {
+				fprintf(stderr, "%s: ERROR : WDC : invalid customer id\n", __func__);
 				ret = -1;
 				goto freeData;
 			}
 			num_entries = (tot_entries < WDC_MAX_NUM_ACT_HIST_ENTRIES) ? tot_entries :
 				WDC_MAX_NUM_ACT_HIST_ENTRIES;
-			ret = wdc_print_fw_act_history_log(data, num_entries, fmt, *cust_id, vendor_id);
+			ret = wdc_print_fw_act_history_log(data, num_entries, fmt, cust_id, vendor_id);
 		} else  {
 			fprintf(stderr, "INFO : WDC : No FW Activate History entries found.\n");
 			ret = 0;
@@ -7500,6 +7526,8 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *command
 					json_free_object(root);
 				} else
 					fprintf(stderr, "%s: ERROR : WDC : Invalid format, format = %s\n", __func__, cfg.output_format);
+
+				free(cbs_data);
 			} else
 				fprintf(stderr, "%s: ERROR : WDC : NULL_data ptr\n", __func__);
 		} else
