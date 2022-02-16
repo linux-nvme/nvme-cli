@@ -67,7 +67,7 @@ struct ontapdevice_info {
 	unsigned		nsid;
 	struct nvme_id_ctrl	ctrl;
 	struct nvme_id_ns	ns;
-	struct nvme_ns_id_desc  nsdesc;
+	uuid_t			uuid;
 	unsigned char		log_data[ONTAP_C2_LOG_SIZE];
 	char			dev[265];
 };
@@ -113,15 +113,6 @@ static void netapp_get_ns_size(char *size, long long *lba,
 	const char *s_suffix = suffix_si_get(&nsze);
 
 	sprintf(size, "%.2f%sB", nsze, s_suffix);
-}
-
-static void netapp_uuid_to_str(char *str, void *data)
-{
-	uuid_t uuid;
-	struct nvme_ns_id_desc *desc = data;
-
-	memcpy(uuid, data + sizeof(*desc), 16);
-	uuid_unparse_lower(uuid, str);
 }
 
 static void ontap_labels_to_str(char *dst, char *src, int count)
@@ -340,7 +331,7 @@ static void netapp_ontapdevices_print(struct ontapdevice_info *devices,
 	for (i = 0; i < count; i++) {
 
 		netapp_get_ns_size(size, &lba, &devices[i].ns);
-		netapp_uuid_to_str(uuid_str, &devices[i].nsdesc);
+		uuid_unparse_lower(devices[i].uuid, uuid_str);
 		netapp_get_ontap_labels(vsname, nspath, devices[i].log_data);
 
 		if (format == NJSON) {
@@ -423,6 +414,7 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 		const char *dev)
 {
 	int err;
+	void *nsdescs;
 
 	err = nvme_identify_ctrl(fd, &item->ctrl);
 	if (err) {
@@ -444,12 +436,19 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 		return 0;
 	}
 
-	err = nvme_identify_ns_descs(fd, item->nsid, &item->nsdesc);
+	if (posix_memalign(&nsdescs, getpagesize(), 0x1000)) {
+		fprintf(stderr, "Cannot allocate controller list payload\n");
+		return 0;
+	}
+
+	err = nvme_identify_ns_descs(fd, item->nsid, nsdescs);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace descriptor for %s (%s)\n",
 				dev, strerror(err));
 		return 0;
 	}
+
+	memcpy(item->uuid, nsdescs + sizeof(struct nvme_ns_id_desc), sizeof(item->uuid));
 
 	err = nvme_get_ontap_c2_log(fd, item->nsid, item->log_data, ONTAP_C2_LOG_SIZE);
 	if (err) {
