@@ -22,11 +22,11 @@
  */
 
 /**
- * nvme_init_logging() - initialize logging
- * @r: nvme_root_t context
- * @lvl: logging level to set
- * @log_pid: boolean to enable logging of the PID
- * @log_tstamp: boolean to enable logging of the timestamp
+ * nvme_init_logging() - Initialize logging
+ * @r:		nvme_root_t context
+ * @lvl:	Logging level to set
+ * @log_pid:	Boolean to enable logging of the PID
+ * @log_tstamp:	Boolean to enable logging of the timestamp
  *
  * Sets the default logging variables for the library.
  */
