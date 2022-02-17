@@ -909,7 +909,10 @@ struct nvme_id_psd {
  * 	       that a host is allowed to place in a capsule. A value of 0h
  * 	       indicates no limit.
  * @ofcs:      Optional Fabric Commands Support, see &enum nvme_id_ctrl_ofcs.
- * @rsvd1806:  Reserved
+ * @dctype:    Discovery Controller Type (DCTYPE). This field indicates what
+ *             type of Discovery controller the controller is (see enum
+ *             nvme_id_ctrl_dctype)
+ * @rsvd1807:  Reserved
  * @psd:       Power State Descriptors, see &struct nvme_id_psd.
  * @vs:	       Vendor Specific
  */
@@ -1007,7 +1010,8 @@ struct nvme_id_ctrl {
 	__u8			fcatt;
 	__u8			msdbd;
 	__le16			ofcs;
-	__u8			rsvd1806[242];
+	__u8			dctype;
+	__u8			rsvd1807[241];
 
 	struct nvme_id_psd	psd[32];
 	__u8			vs[1024];
@@ -1117,6 +1121,18 @@ enum nvme_id_ctrl_cntrltype {
 	NVME_CTRL_CNTRLTYPE_IO			= 1,
 	NVME_CTRL_CNTRLTYPE_DISCOVERY		= 2,
 	NVME_CTRL_CNTRLTYPE_ADMIN		= 3,
+};
+
+/**
+ * enum nvme_id_ctrl_dctype - Discovery Controller types
+ * @NVME_CTRL_DCTYPE_NOT_REPORTED: Not reported (I/O, Admin, and pre-TP8010)
+ * @NVME_CTRL_DCTYPE_DDC:          Direct Discovery controller
+ * @NVME_CTRL_DCTYPE_CDC:          Central Discovery controller
+ */
+enum nvme_id_ctrl_dctype {
+	NVME_CTRL_DCTYPE_NOT_REPORTED	= 0,
+	NVME_CTRL_DCTYPE_DDC		= 1,
+	NVME_CTRL_DCTYPE_CDC		= 2,
 };
 
 /**
