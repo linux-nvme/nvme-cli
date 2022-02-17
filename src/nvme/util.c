@@ -241,6 +241,12 @@ static const char * const cmd_spec_status[] = {
 	[NVME_SC_IOCS_COMBINATION_REJECTED]	  = "The I/O command set combination is rejected",
 	[NVME_SC_INVALID_IOCS]			  = "The I/O command set is invalid",
 	[NVME_SC_ID_UNAVAILABLE]		  = "Identifier Unavailable: The number of Endurance Groups or NVM Sets supported has been exceeded",
+	[NVME_SC_INVALID_DISCOVERY_INFO]	  = "Discovery Info Entry not applicable to selected entity",
+	[NVME_SC_ZONING_DATA_STRUCT_LOCKED]       = "The requested Zoning data structure is locked on the CDC",
+	[NVME_SC_ZONING_DATA_STRUCT_NOTFND]       = "The requested Zoning data structure does not exist on the CDC",
+	[NVME_SC_INSUFFICIENT_DISC_RES]		  = "Discovery Info entries exceed Discovery Controller's capacity",
+	[NVME_SC_REQSTD_FUNCTION_DISABLED]        = "Fabric Zoning is not enabled on the CDC",
+	[NVME_SC_ZONEGRP_ORIGINATOR_INVLD]        = "The NQN contained in the ZoneGroup Originator field does not match the Host NQN used by the DDC to connect to the CDC",
 };
 
 static const char * const nvm_status[] = {
