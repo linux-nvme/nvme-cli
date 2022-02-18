@@ -2955,7 +2955,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 	char *data_area = "Data area to retrieve up to. Currently only supported on the SN340, SN640, SN730, and SN840 devices.";
 	char *file_size = "Output file size.  Currently only supported on the SN340 device.";
 	char *offset = "Output file data offset. Currently only supported on the SN340 device.";
-	char *type = "Telemetry type - NONE, HOST, or CONTROLLER. Currently only supported on the SN640 and SN840 devices.";
+	char *type = "Telemetry type - NONE, HOST, or CONTROLLER. Currently only supported on the SN530, SN640, SN730, SN740, SN810, SN840 and ZN350 devices.";
 	char *verbose = "Display more debug messages.";
 	char f[PATH_MAX] = {0};
 	char fileSuffix[PATH_MAX] = {0};
