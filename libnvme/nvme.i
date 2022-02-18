@@ -373,6 +373,9 @@ struct nvme_ns {
   void update_config() {
     nvme_update_config($self);
   }
+  void dump_config() {
+    nvme_dump_config($self);
+  }
 }
 
 %extend host_iter {
