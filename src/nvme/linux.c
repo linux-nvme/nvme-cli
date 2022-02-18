@@ -205,6 +205,7 @@ static int nvme_get_telemetry_log(int fd, bool create, bool ctrl, bool rae,
 	telem = log;
 	if (ctrl && !telem->ctrlavail) {
 		*buf = log;
+		*size = xfer;
 		return 0;
 	}
 
