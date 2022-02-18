@@ -2267,14 +2267,14 @@ struct nvme_primary_ctrl_cap {
 
 /**
  * struct nvme_secondary_ctrl -
- * @scid:
- * @pcid:
- * @scs:
- * @rsvd5:
- * @vfn:
- * @nvq:
- * @nvi:
- * @rsvd14:
+ * @scid:	Secondary Controller Identifier
+ * @pcid:	Primary Controller Identifier
+ * @scs:	Secondary Controller State
+ * @rsvd5:	Reserved
+ * @vfn:	Virtual Function Number
+ * @nvq:	Number of VQ Flexible Resources Assigned
+ * @nvi:	Number of VI Flexible Resources Assigned
+ * @rsvd14:	Reserved
  */
 struct nvme_secondary_ctrl {
 	__le16 scid;
@@ -2289,9 +2289,9 @@ struct nvme_secondary_ctrl {
 
 /**
  * struct nvme_secondary_ctrl_list -
- * @num:
- * @rsvd:
- * @sc_entry:
+ * @num:	Number of Identifiers
+ * @rsvd:	Reserved
+ * @sc_entry:	Secondary Controller Entry
  */
 struct nvme_secondary_ctrl_list {
 	__u8   num;
@@ -2309,12 +2309,12 @@ struct nvme_id_iocs {
 
 /**
  * struct nvme_id_domain_attr - Domain Attributes Entry
- * @dom_id:
- * @rsvd2:
- * @dom_cap:
- * @unalloc_dom_cap:
- * @max_egrp_dom_cap:
- * @rsvd64:
+ * @dom_id:		Domain Identifier
+ * @rsvd2:		Reserved
+ * @dom_cap:		Total Domain Capacity
+ * @unalloc_dom_cap:	Unallocated Domain Capacity
+ * @max_egrp_dom_cap:	Max Endurance Group Domain Capacity
+ * @rsvd64:		Reserved
  */
 struct nvme_id_domain_attr {
 	__le16	dom_id;
@@ -2327,9 +2327,9 @@ struct nvme_id_domain_attr {
 
 /**
  * struct nvme_id_domain_list -
- * @num: Number of domain attributes
- * @rsvd: Reserved
- * @domain_attr: List of domain attributes
+ * @num:		Number of domain attributes
+ * @rsvd:		Reserved
+ * @domain_attr:	List of domain attributes
  */
 struct nvme_id_domain_list {
 	__u8	num;
@@ -2339,8 +2339,8 @@ struct nvme_id_domain_list {
 
 /**
  * struct nvme_id_endurance_group_list -
- * @num:
- * @identifier:
+ * @num:	Number of Identifiers
+ * @identifier: Endurance Group Identifier
  */
 struct nvme_id_endurance_group_list {
 	__le16	num;
@@ -2349,7 +2349,7 @@ struct nvme_id_endurance_group_list {
 
 /**
  * struct nvme_supported_log_pages -
- * @lid_support:
+ * @lid_support: Log Page Identifier Supported
  *
  * Supported Log Pages (Log Identifier 00h)
  */
@@ -2416,8 +2416,8 @@ struct nvme_supported_log_pages {
  * @cs:			 Command Specific Information: This field contains command
  * 			 specific information. If used, the command definition
  * 			 specifies the information returned.
- * @trtype_spec_info:
- * @rsvd2:
+ * @trtype_spec_info:	 Transport Type Specific Information
+ * @rsvd2:		 Reserved
  */
 struct nvme_error_log_page {
 	__le64	error_count;
@@ -2676,10 +2676,10 @@ enum nvme_smart_egcw {
 
 /**
  * struct nvme_firmware_slot -
- * @afi:
- * @rsvd1:
- * @frs:
- * @rsvd2:
+ * @afi:	Active Firmware Info
+ * @rsvd1:	Reserved
+ * @frs:	Firmware Revision for Slot
+ * @rsvd2:	Reserved
  */
 struct nvme_firmware_slot {
 	__u8	afi;
@@ -2690,9 +2690,9 @@ struct nvme_firmware_slot {
 
 /**
  * struct nvme_cmd_effects_log -
- * @acs:
- * @iocs:
- * @rsvd:
+ * @acs:	Admin Command Supported
+ * @iocs:	I/O Command Supported
+ * @rsvd:	Reserved
  */
 struct nvme_cmd_effects_log {
 	__le32 acs[256];
@@ -2702,13 +2702,13 @@ struct nvme_cmd_effects_log {
 
 /**
  * enum nvme_cmd_effects -
- * @NVME_CMD_EFFECTS_CSUPP:
- * @NVME_CMD_EFFECTS_LBCC:
- * @NVME_CMD_EFFECTS_NCC:
- * @NVME_CMD_EFFECTS_NIC:
- * @NVME_CMD_EFFECTS_CCC:
- * @NVME_CMD_EFFECTS_CSE_MASK:
- * @NVME_CMD_EFFECTS_UUID_SEL:
+ * @NVME_CMD_EFFECTS_CSUPP:	Command Supported
+ * @NVME_CMD_EFFECTS_LBCC:	Logical Block Content Change
+ * @NVME_CMD_EFFECTS_NCC:	Namespace Capability Change
+ * @NVME_CMD_EFFECTS_NIC:	Namespace Inventory Change
+ * @NVME_CMD_EFFECTS_CCC:	Controller Capability Change
+ * @NVME_CMD_EFFECTS_CSE_MASK:	Command Submission and Execution
+ * @NVME_CMD_EFFECTS_UUID_SEL:	UUID Selection Supported
  */
 enum nvme_cmd_effects {
 	NVME_CMD_EFFECTS_CSUPP		= 1 << 0,
@@ -2962,21 +2962,21 @@ struct nvme_telemetry_log {
 
 /**
  * struct nvme_endurance_group_log -
- * @critical_warning:
- * @rsvd1:
- * @avl_spare:
- * @avl_spare_threshold:
- * @percent_used:
- * @rsvd6:
- * @endurance_estimate:
- * @data_units_read:
- * @data_units_written:
- * @media_units_written:
- * @host_read_cmds:
- * @host_write_cmds:
- * @media_data_integrity_err:
- * @num_err_info_log_entries:
- * @rsvd160:
+ * @critical_warning:		Critical Warning
+ * @rsvd1:			Reserved
+ * @avl_spare:			Available Spare
+ * @avl_spare_threshold:	Available Spare Threshold
+ * @percent_used:		Percentage Used
+ * @rsvd6:			Reserved
+ * @endurance_estimate:		Endurance Estimate
+ * @data_units_read:		Data Units Read
+ * @data_units_written:		Data Units Written
+ * @media_units_written:	Media Units Written
+ * @host_read_cmds:		Host Read Commands
+ * @host_write_cmds:		Host Write Commands
+ * @media_data_integrity_err:	Media and Data Integrity Errors
+ * @num_err_info_log_entries:	Number of Error Information Log Entries
+ * @rsvd160:			Reserved
  */
 struct nvme_endurance_group_log {
 	__u8	critical_warning;
@@ -3010,8 +3010,8 @@ enum nvme_eg_critical_warning_flags {
 
 /**
  * struct nvme_aggregate_endurance_group_event - 
- * @num_entries: Number or entries
- * @entries: List of entries
+ * @num_entries:	Number or entries
+ * @entries:		List of entries
  */
 struct nvme_aggregate_endurance_group_event {
 	__le64	num_entries;
@@ -3020,20 +3020,20 @@ struct nvme_aggregate_endurance_group_event {
 
 /**
  * struct nvme_nvmset_predictable_lat_log -
- * @status:
- * @rsvd1:
- * @event_type:
- * @rsvd4:
- * @dtwin_rt:
- * @dtwin_wt:
- * @dtwin_tmax:
- * @ndwin_tmin_hi:
- * @ndwin_tmin_lo:
- * @rsvd72:
- * @dtwin_re:
- * @dtwin_we:
- * @dtwin_te:
- * @rsvd152:
+ * @status:		Status
+ * @rsvd1:		Reserved
+ * @event_type:		Event Type
+ * @rsvd4:		Reserved
+ * @dtwin_rt:		DTWIN Reads Typical
+ * @dtwin_wt:		DTWIN Writes Typical
+ * @dtwin_tmax:		DTWIN Time Maximum
+ * @ndwin_tmin_hi:	NDWIN Time Minimum High
+ * @ndwin_tmin_lo:	NDWIN Time Minimum Low
+ * @rsvd72:		Reserved
+ * @dtwin_re:		DTWIN Reads Estimate
+ * @dtwin_we:		DTWIN Writes Estimate
+ * @dtwin_te:		DTWIN Time Estimate
+ * @rsvd152:		Reserved
  */
 struct nvme_nvmset_predictable_lat_log {
 	__u8	status;
@@ -3082,8 +3082,8 @@ enum nvme_nvmset_pl_events {
 
 /**
  * struct nvme_aggregate_predictable_lat_event -
- * @num_entries: Number of entries
- * @entries: Entry list
+ * @num_entries:	Number of entries
+ * @entries:		Entry list
  */
 struct nvme_aggregate_predictable_lat_event {
 	__le64	num_entries;
@@ -3092,12 +3092,12 @@ struct nvme_aggregate_predictable_lat_event {
 
 /**
  * struct nvme_ana_group_desc -
- * @grpid: ANA group id
- * @nnsids: Number of namespaces in @nsids
- * @chgcnt: Change counter
- * @state: ANA state
- * @rsvd17: Reserved
- * @nsids: List of namespaces
+ * @grpid:	ANA group id
+ * @nnsids:	Number of namespaces in @nsids
+ * @chgcnt:	Change counter
+ * @state:	ANA state
+ * @rsvd17:	Reserved
+ * @nsids:	List of namespaces
  */
 struct nvme_ana_group_desc {
 	__le32  grpid;
@@ -3126,10 +3126,10 @@ enum nvme_ana_state {
 
 /**
  * struct nvme_ana_log -
- * @chgcnt:
- * @ngrps:
- * @rsvd10:
- * @descs:
+ * @chgcnt:	Change Count
+ * @ngrps:	Number of ANA Group Descriptors
+ * @rsvd10:	Reserved
+ * @descs:	ANA Group Descriptor
  */
 struct nvme_ana_log {
 	__le64	chgcnt;
@@ -3140,25 +3140,25 @@ struct nvme_ana_log {
 
 /**
  * struct nvme_persistent_event_log -
- * @lid:
- * @rsvd1:
- * @tnev:
- * @tll:
- * @rv:
- * @rsvd17:
- * @lhl:
- * @ts:
- * @poh:
- * @pcc:
- * @vid:
- * @ssvid:
- * @sn:
- * @mn:
- * @subnqn:
- * @gen_number:
- * @rci:
- * @rsvd378:
- * @seb:
+ * @lid:	Log Identifier
+ * @rsvd1:	Reserved
+ * @tnev:	Total Number of Events
+ * @tll:	Total Log Length
+ * @rv:		Log Revision
+ * @rsvd17:	Reserved
+ * @lhl:	Log Header Length
+ * @ts:		Timestamp
+ * @poh:	Power on Hours
+ * @pcc:	Power Cycle Count
+ * @vid:	PCI Vendor ID
+ * @ssvid:	PCI Subsystem Vendor ID
+ * @sn:		Serial Number
+ * @mn:		Model Number
+ * @subnqn:	NVM Subsystem NVMe Qualified Name
+ * @gen_number: Generation Number
+ * @rci:	Reporting Context Information
+ * @rsvd378:	Reserved
+ * @seb:	Supported Events Bitmap
  */
 struct nvme_persistent_event_log {
 	__u8	lid;
@@ -3184,15 +3184,15 @@ struct nvme_persistent_event_log {
 
 /**
  * struct nvme_persistent_event_entry -
- * @etype:
- * @etype_rev:
- * @ehl:
- * @rsvd3:
- * @cntlid:
- * @ets:
- * @rsvd14:
- * @vsil:
- * @el:
+ * @etype:	Event Type
+ * @etype_rev:	Event Type Revision
+ * @ehl:	Event Header Length
+ * @rsvd3:	Reserved
+ * @cntlid:	Controller Identifier
+ * @ets:	Event Timestamp
+ * @rsvd14:	Reserved
+ * @vsil:	Vendor Specific Information Length
+ * @el:		Event Length
  */
 struct nvme_persistent_event_entry {
 	__u8	etype;
@@ -3240,13 +3240,13 @@ enum nvme_persistent_event_types {
 
 /**
  * struct nvme_fw_commit_event -
- * @old_fw_rev:
- * @new_fw_rev:
- * @fw_commit_action:
- * @fw_slot:
- * @sct_fw:
- * @sc_fw:
- * @vndr_assign_fw_commit_rc:
+ * @old_fw_rev:			Old Firmware Revision
+ * @new_fw_rev:			New Firmware Revision
+ * @fw_commit_action:		Firmware Commit Action
+ * @fw_slot:			Firmware Slot
+ * @sct_fw:			Status Code Type for Firmware Commit Command
+ * @sc_fw:			Status Returned for Firmware Commit Command
+ * @vndr_assign_fw_commit_rc:	Vendor Assigned Firmware Commit Result Code
  */
 struct nvme_fw_commit_event {
 	__le64	old_fw_rev;
@@ -3260,8 +3260,8 @@ struct nvme_fw_commit_event {
 
 /**
  * struct nvme_time_stamp_change_event -
- * @previous_timestamp:
- * @ml_secs_since_reset:
+ * @previous_timestamp:		Previous Timestamp
+ * @ml_secs_since_reset:	Milliseconds Since Reset
  */
 struct nvme_time_stamp_change_event {
 	__le64 	previous_timestamp;
@@ -3270,13 +3270,13 @@ struct nvme_time_stamp_change_event {
 
 /**
  * struct nvme_power_on_reset_info_list -
- * @cid:
- * @fw_act:
- * @op_in_prog:
- * @rsvd4:
- * @ctrl_power_cycle:
- * @power_on_ml_seconds:
- * @ctrl_time_stamp:
+ * @cid:			Controller ID
+ * @fw_act:			Firmware Activation
+ * @op_in_prog:			Operation in Progress
+ * @rsvd4:			Reserved
+ * @ctrl_power_cycle:		Controller Power Cycle
+ * @power_on_ml_seconds:	Power on milliseconds
+ * @ctrl_time_stamp:		Controller Timestamp
  */
 struct nvme_power_on_reset_info_list {
 	__le16   cid;
@@ -3290,9 +3290,9 @@ struct nvme_power_on_reset_info_list {
 
 /**
  * struct nvme_nss_hw_err_event -
- * @nss_hw_err_event_code:
- * @rsvd2:
- * @add_hw_err_info:
+ * @nss_hw_err_event_code:	NVM Subsystem Hardware Error Event Code
+ * @rsvd2:			Reserved
+ * @add_hw_err_info:		Additional Hardware Error Information
  */
 struct nvme_nss_hw_err_event {
 	__le16 	nss_hw_err_event_code;
@@ -3302,19 +3302,19 @@ struct nvme_nss_hw_err_event {
 
 /**
  * struct nvme_change_ns_event -
- * @nsmgt_cdw10:
- * @rsvd4:
- * @nsze:
- * @rsvd16:
- * @nscap:
- * @flbas:
- * @dps:
- * @nmic:
- * @rsvd35:
- * @ana_grp_id:
- * @nvmset_id:
- * @rsvd42:
- * @nsid:
+ * @nsmgt_cdw10:	Namespace Management CDW10
+ * @rsvd4:		Reserved
+ * @nsze:		Namespace Size
+ * @rsvd16:		Reserved
+ * @nscap:		Namespace Capacity
+ * @flbas:		Formatted LBA Size
+ * @dps:		End-to-end Data Protection Type Settings
+ * @nmic:		Namespace Multi-path I/O and Namespace Sharing Capabilities
+ * @rsvd35:		Reserved
+ * @ana_grp_id:		ANA Group Identifier
+ * @nvmset_id:		NVM Set Identifier
+ * @rsvd42:		Reserved
+ * @nsid:		Namespace ID
  */
 struct nvme_change_ns_event {
 	__le32	nsmgt_cdw10;
@@ -3334,10 +3334,10 @@ struct nvme_change_ns_event {
 
 /**
  * struct nvme_format_nvm_start_event -
- * @nsid:
- * @fna:
- * @rsvd5:
- * @format_nvm_cdw10:
+ * @nsid:		Namespace Identifier
+ * @fna:		Format NVM Attributes
+ * @rsvd5:		Reserved
+ * @format_nvm_cdw10:	Format NVM CDW10
  */
 struct nvme_format_nvm_start_event {
 	__le32 	nsid;
@@ -3348,11 +3348,11 @@ struct nvme_format_nvm_start_event {
 
 /**
  * struct nvme_format_nvm_compln_event -
- * @nsid:
- * @smallest_fpi:
- * @format_nvm_status:
- * @compln_info:
- * @status_field:
+ * @nsid:		Namespace Identifier
+ * @smallest_fpi:	Smallest Format Progress Indicator
+ * @format_nvm_status:	Format NVM Status
+ * @compln_info:	Completion Information
+ * @status_field:	Status Field
  */
 struct nvme_format_nvm_compln_event {
 	__le32 	nsid;
@@ -3364,9 +3364,9 @@ struct nvme_format_nvm_compln_event {
 
 /**
  * struct nvme_sanitize_start_event -
- * @sani_cap:
- * @sani_cdw10:
- * @sani_cdw11:
+ * @sani_cap:	SANICAP
+ * @sani_cdw10:	Sanitize CDW10
+ * @sani_cdw11:	Sanitize CDW11
  */
 struct nvme_sanitize_start_event {
 	__le32 	sani_cap;
@@ -3376,10 +3376,10 @@ struct nvme_sanitize_start_event {
 
 /**
  * struct nvme_sanitize_compln_event -
- * @sani_prog:
- * @sani_status:
- * @cmpln_info:
- * @rsvd6:
+ * @sani_prog:		Sanitize Progress
+ * @sani_status:	Sanitize Status
+ * @cmpln_info:		Completion Information
+ * @rsvd6:		Reserved
  */
 struct nvme_sanitize_compln_event {
 	__le16	sani_prog;
@@ -3390,8 +3390,8 @@ struct nvme_sanitize_compln_event {
 
 /**
  * struct nvme_set_feature_event -
- * @layout:
- * @cdw_mem:
+ * @layout:	Set Feature Event Layout
+ * @cdw_mem:	Command Dwords Memory buffer
  */
 struct nvme_set_feature_event {
 	__le32	layout;
@@ -3400,8 +3400,8 @@ struct nvme_set_feature_event {
 
 /**
  * struct nvme_thermal_exc_event -
- * @over_temp:
- * @threshold:
+ * @over_temp:	Over Temperature
+ * @threshold:	temperature threshold
  */
 struct nvme_thermal_exc_event {
     __u8 	over_temp;
@@ -3410,9 +3410,9 @@ struct nvme_thermal_exc_event {
 
 /**
  * struct nvme_lba_rd -
- * @rslba:
- * @rnlb:
- * @rsvd12:
+ * @rslba:	Range Starting LBA
+ * @rnlb:	Range Number of Logical Blocks
+ * @rsvd12:	Reserved
  */
 struct nvme_lba_rd {
 	__le64	rslba;
@@ -3422,11 +3422,11 @@ struct nvme_lba_rd {
 
 /**
  * struct nvme_lbas_ns_element -
- * @neid:
- * @nlrd:
- * @ratype:
- * @rsvd8:
- * @lba_rd:
+ * @neid:	Namespace Element Identifier
+ * @nlrd:	Number of LBA Range Descriptors
+ * @ratype:	Recommended Action Type
+ * @rsvd8:	Reserved
+ * @lba_rd:	LBA Range Descriptor
  */
 struct nvme_lbas_ns_element {
 	__le32	neid;
@@ -3448,12 +3448,12 @@ enum nvme_lba_status_atype {
 
 /**
  * struct nvme_lba_status_log -
- * @lslplen:
- * @nlslne:
- * @estulb:
- * @rsvd12:
- * @lsgc:
- * @elements:
+ * @lslplen:	LBA Status Log Page Length
+ * @nlslne:	Number of LBA Status Log Namespace Elements
+ * @estulb:	Estimate of Unrecoverable Logical Blocks
+ * @rsvd12:	Reserved
+ * @lsgc:	LBA Status Generation Counter
+ * @elements:	LBA Status Log Namespace Element List
  */
 struct nvme_lba_status_log {
 	__le32	lslplen;
@@ -3466,8 +3466,8 @@ struct nvme_lba_status_log {
 
 /**
  * struct nvme_eg_event_aggregate_log -
- * @nr_entries:
- * @egids:
+ * @nr_entries:	Number of Entries
+ * @egids:	Endurance Group Identifier
  */
 struct nvme_eg_event_aggregate_log {
 	__le64	nr_entries;
@@ -3512,7 +3512,7 @@ enum nvme_fid_supported_effects {
 
 /**
  * struct nvme_fid_supported_effects_log -
- * @fid_support:
+ * @fid_support: Feature Identifier Supported
  *
  * Feature Identifiers Supported and Effects (Log Identifier 12h)
  */
@@ -3522,11 +3522,12 @@ struct nvme_fid_supported_effects_log {
 
 /**
  * struct nvme_boot_partition -
- * @lid:
- * @rsvd1:
- * @bpinfo:
- * @rsvd8:
- * @boot_partition_data:
+ * @lid:			Boot Partition Identifier
+ * @rsvd1:			Reserved
+ * @bpinfo:			Boot Partition Information
+ * @rsvd8:			Reserved
+ * @boot_partition_data:	Contains the contents of the
+ * 				specified Boot Partition
  */
 struct nvme_boot_partition {
 	__u8	lid;
@@ -3673,12 +3674,12 @@ struct nvme_supported_cap_config_list_log {
 
 /**
  * struct nvme_resv_notification_log -
- * @lpc:
- * @rnlpt: See &enum nvme_resv_notify_rnlpt.
- * @nalp:
- * @rsvd9:
- * @nsid:
- * @rsvd16:
+ * @lpc:	Log Page Count
+ * @rnlpt:	See &enum nvme_resv_notify_rnlpt.
+ * @nalp:	Number of Available Log Pages
+ * @rsvd9:	Reserved
+ * @nsid:	Namespace ID
+ * @rsvd16:	Reserved
  */
 struct nvme_resv_notification_log {
 	__le64	lpc;
