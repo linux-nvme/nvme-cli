@@ -2168,7 +2168,7 @@ ret:
 
 static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, struct command *cmd)
 {
-	int err, num, fd, list[2048];
+	int err, num, fd, i, list[2048];
 	struct nvme_ctrl_list cntlist;
 	__u16 ctrlist[2048];
 
@@ -2213,6 +2213,9 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 		err = -EINVAL;
 		goto close_fd;
 	}
+
+	for (i = 0; i < num; i++)
+		ctrlist[i] = (__u16)list[i];
 
 	nvme_init_ctrl_list(&cntlist, num, ctrlist);
 
