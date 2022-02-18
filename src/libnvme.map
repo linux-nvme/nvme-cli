@@ -42,6 +42,7 @@ LIBNVME_1_0 {
 		nvme_ctrls_filter;
 		nvme_default_host;
 		nvme_dev_self_test;
+		nvme_dim_send;
 		nvme_directive_recv;
 		nvme_directive_recv_identify_parameters;
 		nvme_directive_recv_stream_allocate;

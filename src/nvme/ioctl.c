@@ -306,6 +306,8 @@ enum nvme_cmd_dword_fields {
 	NVME_ZNS_MGMT_RECV_ZRASF_MASK				= 0xff,
 	NVME_ZNS_MGMT_RECV_ZRAS_FEAT_SHIFT			= 16,
 	NVME_ZNS_MGMT_RECV_ZRAS_FEAT_MASK			= 0x1,
+	NVME_DIM_TAS_SHIFT					= 0,
+	NVME_DIM_TAS_MASK					= 0xF,
 };
 
 enum features {
@@ -1841,4 +1843,24 @@ int nvme_zns_append(struct nvme_zns_append_args *args)
 		return -1;
 	}
 	return nvme_submit_io_passthru64(args->fd, &cmd, args->result);
+}
+
+int nvme_dim_send(struct nvme_dim_args *args)
+{
+	__u32 cdw10 = NVME_SET(args->tas, DIM_TAS);
+
+	struct nvme_passthru_cmd  cmd = {
+		.opcode     = nvme_admin_discovery_info_mgmt,
+		.cdw10      = cdw10,
+		.addr       = (__u64)(uintptr_t)args->data,
+		.data_len   = args->data_len,
+		.timeout_ms = args->timeout,
+	};
+
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
