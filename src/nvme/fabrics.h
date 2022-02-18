@@ -241,4 +241,34 @@ static inline void nvme_chomp(char *s, int l)
 		s[l--] = '\0';
 }
 
+/**
+ * nvmf_is_registration_supported - check whether registration can be performed.
+ * @c:	Controller instance
+ *
+ * Only discovery controllers (DC) that comply with TP8010 support
+ * explicit registration with the DIM PDU. These can be identified by
+ * looking at the value of a dctype in the Identify command
+ * response. A value of 1 (DDC) or 2 (CDC) indicates that the DC
+ * supports explicit registration.
+ *
+ * Return: true if controller supports explicit registration. false
+ * otherwise.
+ */
+bool nvmf_is_registration_supported(nvme_ctrl_t c);
+
+/**
+ * nvmf_register_ctrl() - Perform registration task with a DC
+ * @c:		Controller instance
+ * @tas:	Task field of the Command Dword 10 (cdw10). Indicates whether to
+ *		perform a Registration, Deregistration, or Registration-update.
+ * @result:	The command-specific result returned by the DC upon command
+ *		completion.
+ *
+ * Perform registration task with a Discovery Controller (DC). Three
+ * tasks are supported: register, deregister, and registration update.
+ *
+ * Return: 0 on success; on failure -1 is returned and errno is set
+ */
+int nvmf_register_ctrl(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result);
+
 #endif /* _LIBNVME_FABRICS_H */

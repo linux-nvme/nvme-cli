@@ -20,6 +20,7 @@
 #include <dirent.h>
 #include <inttypes.h>
 
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
@@ -979,4 +980,300 @@ char *nvmf_hostnqn_from_file()
 char *nvmf_hostid_from_file()
 {
 	return nvmf_read_file(nvmf_hostid_file, NVMF_HOSTID_SIZE);
+}
+
+/**
+ * nvmf_get_tel() - Calculate the amount of memory needed for a DIE.
+ * @hostsymname:	Symbolic name (may be NULL)
+ *
+ * Each Discovery Information Entry (DIE) must contain at a minimum an
+ * Extended Attribute for the HostID. The Entry may optionally contain an
+ * Extended Attribute for the Symbolic Name.
+ *
+ * Return: Total Entry Length
+ */
+static __u32 nvmf_get_tel(const char *hostsymname)
+{
+	__u32 tel = sizeof(struct nvmf_ext_die);
+	__u16 len;
+
+	/* Host ID is mandatory */
+	tel += nvmf_exat_size(sizeof(uuid_t));
+
+	/* Symbolic name is optional */
+	len = hostsymname ? strlen(hostsymname) : 0;
+	if (len)
+		tel += nvmf_exat_size(len);
+
+	return tel;
+}
+
+/**
+ * nvmf_fill_die() - Fill a Discovery Information Entry.
+ * @die:	Pointer to Discovery Information Entry to be filled
+ * @h:		Pointer to the host data structure
+ * @tel:	Length of the DIE
+ * @trtype:	Transport type
+ * @adrfam:	Address family
+ * @reg_addr:	Address to register. Setting this to an empty string tells
+ *		the DC to infer address from the source address of the socket.
+ * @tsas:	Transport Specific Address Subtype for the address being
+ *		registered.
+ */
+static void nvmf_fill_die(struct nvmf_ext_die *die, struct nvme_host *h,
+			  __u32 tel, __u8 trtype, __u8 adrfam,
+			  const char *reg_addr, union nvmf_tsas *tsas)
+{
+	__u16 numexat = 0;
+	size_t symname_len;
+	struct nvmf_ext_attr *exat;
+
+	die->tel = cpu_to_le32(tel);
+	die->trtype = trtype;
+	die->adrfam = adrfam;
+
+	memcpy(die->nqn, h->hostnqn, MIN(sizeof(die->nqn), strlen(h->hostnqn)));
+	memcpy(die->traddr, reg_addr, MIN(sizeof(die->traddr), strlen(reg_addr)));
+
+	if (tsas)
+		memcpy(&die->tsas, tsas, sizeof(die->tsas));
+
+	/* Extended Attribute for the HostID (mandatory) */
+	numexat++;
+	exat = die->exat;
+	exat->exattype = cpu_to_le16(NVMF_EXATTYPE_HOSTID);
+	exat->exatlen  = cpu_to_le16(nvmf_exat_len(sizeof(uuid_t)));
+	uuid_parse(h->hostid, exat->exatval);
+
+	/* Extended Attribute for the Symbolic Name (optional) */
+	symname_len = h->hostsymname ? strlen(h->hostsymname) : 0;
+	if (symname_len) {
+		__u16 exatlen = nvmf_exat_len(symname_len);
+
+		numexat++;
+		exat = nvmf_exat_ptr_next(exat);
+		exat->exattype = cpu_to_le16(NVMF_EXATTYPE_SYMNAME);
+		exat->exatlen  = cpu_to_le16(exatlen);
+		memcpy(exat->exatval, h->hostsymname, symname_len);
+		/* Per Base specs, ASCII strings must be padded with spaces */
+		memset(&exat->exatval[symname_len], ' ', exatlen - symname_len);
+	}
+
+	die->numexat = cpu_to_le16(numexat);
+}
+
+/**
+ * nvmf_dim() - Explicit reg, dereg, reg-update issuing DIM
+ * @c:		Host NVMe controller instance maintaining the admin queue used to
+ *		submit the DIM command to the DC.
+ * @tas:	Task field of the Command Dword 10 (cdw10). Indicates whether to
+ *		perform a Registration, Deregistration, or Registration-update.
+ * @trtype:	Transport type (&enum nvmf_trtype - must be NVMF_TRTYPE_TCP)
+ * @adrfam:	Address family (&enum nvmf_addr_family)
+ * @reg_addr:	Address to register. Setting this to an empty string tells
+ *		the DC to infer address from the source address of the socket.
+ * @tsas:	Transport Specific Address Subtype for the address being
+ *		registered.
+ * @result:	Location where to save the command-specific result returned by
+ *		the discovery controller.
+ *
+ * Perform explicit registration, deregistration, or
+ * registration-update (specified by @tas) by sending a Discovery
+ * Information Management (DIM) command to the Discovery Controller
+ * (DC).
+ *
+ * Return: 0 on success; on failure -1 is returned and errno is set
+ */
+static int nvmf_dim(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u8 trtype,
+		    __u8 adrfam, const char *reg_addr, union nvmf_tsas *tsas,
+		    __u32 *result)
+{
+	nvme_root_t r = c->s && c->s->h ? c->s->h->r : NULL;
+	struct nvmf_dim_data *dim;
+	struct nvmf_ext_die  *die;
+	__u32 tdl;
+	__u32 tel;
+	int ret;
+
+	struct nvme_dim_args args = {
+		.args_size = sizeof(args),
+		.fd = nvme_ctrl_get_fd(c),
+		.result = result,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.tas = tas
+	};
+
+	if (!c->s) {
+		nvme_msg(r, LOG_ERR,
+			 "%s: failed to perform DIM. subsystem undefined.\n",
+			 c->name);
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (!c->s->h) {
+		nvme_msg(r, LOG_ERR,
+			 "%s: failed to perform DIM. host undefined.\n",
+			 c->name);
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (!c->s->h->hostid) {
+		nvme_msg(r, LOG_ERR,
+			 "%s: failed to perform DIM. hostid undefined.\n",
+			 c->name);
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (!c->s->h->hostnqn) {
+		nvme_msg(r, LOG_ERR,
+			 "%s: failed to perform DIM. hostnqn undefined.\n",
+			 c->name);
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (strcmp(c->transport, "tcp")) {
+		nvme_msg(r, LOG_ERR,
+			 "%s: DIM only supported for TCP connections.\n",
+			 c->name);
+		errno = EINVAL;
+		return -1;
+	}
+
+	/* Register one Discovery Information Entry (DIE) of size TEL */
+	tel = nvmf_get_tel(c->s->h->hostsymname);
+	tdl = sizeof(struct nvmf_dim_data) + tel;
+
+	dim = (struct nvmf_dim_data *)calloc(1, tdl);
+	if (!dim) {
+		errno = ENOMEM;
+		return -1;
+	}
+
+	dim->tdl    = cpu_to_le32(tdl);
+	dim->nument = cpu_to_le64(1);    /* only one DIE to register */
+	dim->entfmt = cpu_to_le16(NVMF_DIM_ENTFMT_EXTENDED);
+	dim->etype  = cpu_to_le16(NVMF_DIM_ETYPE_HOST);
+	dim->ektype = cpu_to_le16(0x5F); /* must be 0x5F per specs */
+
+	memcpy(dim->eid, c->s->h->hostnqn,
+	       MIN(sizeof(dim->eid), strlen(c->s->h->hostnqn)));
+
+	ret = get_entity_name(dim->ename, sizeof(dim->ename));
+	if (ret <= 0)
+		nvme_msg(r, LOG_INFO, "%s: Failed to retrieve ENAME. %s.\n",
+			 c->name, strerror(errno));
+
+	ret = get_entity_version(dim->ever, sizeof(dim->ever));
+	if (ret <= 0)
+		nvme_msg(r, LOG_INFO, "%s: Failed to retrieve EVER.\n", c->name);
+
+	die = &dim->die->extended;
+	nvmf_fill_die(die, c->s->h, tel, trtype, adrfam, reg_addr, tsas);
+
+	args.data_len = tdl;
+	args.data = dim;
+	ret = nvme_dim_send(&args);
+
+	free(dim);
+
+	return ret;
+}
+
+/**
+ * nvme_get_adrfam() - Get address family for the address we're registering
+ * with the DC.
+ *
+ * We retrieve this info from the socket itself. If we can't get the source
+ * address from the socket, then we'll infer the address family from the
+ * address of the DC since the DC address has the same address family.
+ *
+ * @ctrl: Host NVMe controller instance maintaining the admin queue used to
+ *   submit the DIM command to the DC.
+ *
+ * Return: The address family of the source address associated with the
+ *   socket connected to the DC.
+ */
+static __u8 nvme_get_adrfam(nvme_ctrl_t c)
+{
+	struct sockaddr_storage addr;
+	__u8 adrfam = NVMF_ADDR_FAMILY_IP4;
+	nvme_root_t r = c->s && c->s->h ? c->s->h->r : NULL;
+
+	if (!inet_pton_with_scope(r, AF_UNSPEC, c->traddr, c->trsvcid, &addr)) {
+		if (addr.ss_family == AF_INET6)
+			adrfam = NVMF_ADDR_FAMILY_IP6;
+	}
+
+	return adrfam;
+}
+
+/* These string definitions must match with the kernel */
+static const char *cntrltype_str[] = {
+	[NVME_CTRL_CNTRLTYPE_IO] = "io",
+	[NVME_CTRL_CNTRLTYPE_DISCOVERY] = "discovery",
+	[NVME_CTRL_CNTRLTYPE_ADMIN] = "admin",
+};
+
+static const char *dctype_str[] = {
+	[NVME_CTRL_DCTYPE_NOT_REPORTED] = "none",
+	[NVME_CTRL_DCTYPE_DDC] = "ddc",
+	[NVME_CTRL_DCTYPE_CDC] = "cdc",
+};
+
+/**
+ * nvme_fetch_cntrltype_dctype_from_id - Get cntrltype and dctype from identify command
+ * @c:	Controller instance
+ *
+ * On legacy kernels the cntrltype and dctype are not exposed through the
+ * sysfs. We must get them directly from the controller by performing an
+ * identify command.
+ */
+static void nvme_fetch_cntrltype_dctype_from_id(nvme_ctrl_t c)
+{
+	struct nvme_id_ctrl id = { 0 };
+
+	if (nvme_ctrl_identify(c, &id))
+		return;
+
+	if (!c->cntrltype) {
+		if (id.cntrltype > NVME_CTRL_CNTRLTYPE_ADMIN || !cntrltype_str[id.cntrltype])
+			c->cntrltype = strdup("reserved");
+		else
+			c->cntrltype = strdup(cntrltype_str[id.cntrltype]);
+	}
+
+	if (!c->dctype)	{
+		if (id.dctype > NVME_CTRL_DCTYPE_CDC || !dctype_str[id.dctype])
+			c->dctype = strdup("reserved");
+		else
+			c->dctype = strdup(dctype_str[id.dctype]);
+	}
+}
+
+bool nvmf_is_registration_supported(nvme_ctrl_t c)
+{
+	if (!c->cntrltype || !c->dctype)
+		nvme_fetch_cntrltype_dctype_from_id(c);
+
+	return !strcmp(c->dctype, "ddc") || !strcmp(c->dctype, "cdc");
+}
+
+int nvmf_register_ctrl(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result)
+{
+	if (!nvmf_is_registration_supported(c)) {
+		errno = ENOTSUP;
+		return -1;
+	}
+
+	/* We're registering our source address with the DC. To do
+	 * that, we can simply send an empty string. This tells the DC
+	 * to retrieve the source address from the socket and use that
+	 * as the registration address.
+	 */
+	return nvmf_dim(c, NVMF_DIM_TAS_REGISTER, NVMF_TRTYPE_TCP,
+			nvme_get_adrfam(c), "", NULL, result);
 }

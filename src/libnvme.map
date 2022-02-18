@@ -325,8 +325,10 @@ LIBNVME_1_0 {
 		nvmf_hostid_from_file;
 		nvmf_hostnqn_from_file;
 		nvmf_hostnqn_generate;
+		nvmf_is_registration_supported;
 		nvmf_prtype_str;
 		nvmf_qptype_str;
+		nvmf_register_ctrl;
 		nvmf_sectype_str;
 		nvmf_subtype_str;
 		nvmf_treq_str;
