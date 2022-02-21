@@ -6,7 +6,8 @@
  * Authors: Hannes Reinecke <hare@suse.de>
  */
 
-%module nvme
+%module(docstring="Python bindings for libnvme") nvme
+%feature("autodoc", "1");
 
 %include "exception.i"
 
@@ -280,8 +281,10 @@ struct nvme_root {
 struct nvme_host {
   %immutable hostnqn;
   %immutable hostid;
+  %immutable hostsymname;
   char *hostnqn;
   char *hostid;
+  char *hostsymname;
   char *dhchap_key;
 };
 
@@ -373,6 +376,9 @@ struct nvme_ns {
   void update_config() {
     nvme_update_config($self);
   }
+  void dump_config() {
+    nvme_dump_config($self);
+  }
 }
 
 %extend host_iter {
@@ -393,13 +399,27 @@ struct nvme_ns {
 
 %extend nvme_host {
   nvme_host(struct nvme_root *r, const char *hostnqn = NULL,
-	    const char *hostid = NULL) {
-    if (!hostnqn)
-      return nvme_default_host(r);
-    return nvme_lookup_host(r, hostnqn, hostid);
+	    const char *hostid = NULL, const char *hostsymname = NULL) {
+
+    nvme_host_t h = hostnqn ? nvme_lookup_host(r, hostnqn, hostid) : nvme_default_host(r);
+    if (hostsymname)
+        nvme_host_set_hostsymname(h, hostsymname);
+    return h;
   }
   ~nvme_host() {
     nvme_free_host($self);
+  }
+%define SET_SYMNAME_DOCSTRING
+"@brief Set or Clear Host's Symbolic Name
+
+@param hostsymname: A symbolic name, or None to clear the symbolic name.
+@type hostsymname: str|None
+
+@return: None"
+%enddef
+  %feature("autodoc", SET_SYMNAME_DOCSTRING) set_symname;
+  void set_symname(const char *hostsymname) {
+    nvme_host_set_hostsymname($self, hostsymname);
   }
   char *__str__() {
     static char tmp[2048];
@@ -553,6 +573,29 @@ struct nvme_ns {
   }
   void disconnect() {
     nvme_disconnect_ctrl($self);
+  }
+
+  %feature("autodoc", "@return: True if controller supports explicit registration. False otherwise.") is_registration_supported;
+  bool is_registration_supported() {
+    return nvmf_is_registration_supported($self);
+  }
+
+  %feature("autodoc", "@return None on success or Error string on error.") registration_ctlr;
+  PyObject *registration_ctlr(enum nvmf_dim_tas tas) {
+    __u32 result;
+    int   status;
+
+    status = nvmf_register_ctrl($self, NVMF_DIM_TAS_REGISTER, &result);
+    if (status != NVME_SC_SUCCESS) {
+      /* On error, return an error message */
+      if (status < 0)
+        return PyUnicode_FromFormat("Status:0x%04x - %s", status, nvme_status_to_string(status, false));
+      else
+        return PyUnicode_FromFormat("Result:0x%04x, Status:0x%04x - %s", result, status, nvme_status_to_string(status, false));
+    }
+
+    /* On success, return None */
+    Py_RETURN_NONE;
   }
 
   %newobject discover;

@@ -80,6 +80,8 @@ struct nvme_ctrl {
 	char *traddr;
 	char *trsvcid;
 	char *dhchap_key;
+	char *cntrltype;
+	char *dctype;
 	bool discovery_ctrl;
 	bool discovered;
 	bool persistent;
@@ -109,6 +111,7 @@ struct nvme_host {
 	char *hostnqn;
 	char *hostid;
 	char *dhchap_key;
+	char *hostsymname;
 };
 
 struct nvme_root {

@@ -42,6 +42,7 @@ LIBNVME_1_0 {
 		nvme_ctrls_filter;
 		nvme_default_host;
 		nvme_dev_self_test;
+		nvme_dim_send;
 		nvme_directive_recv;
 		nvme_directive_recv_identify_parameters;
 		nvme_directive_recv_stream_allocate;
@@ -144,8 +145,10 @@ LIBNVME_1_0 {
 		nvme_host_get_dhchap_key;
 		nvme_host_get_hostid;
 		nvme_host_get_hostnqn;
+		nvme_host_get_hostsymname;
 		nvme_host_get_root;
 		nvme_host_set_dhchap_key;
+		nvme_host_set_hostsymname;
 		nvme_identify;
 		nvme_identify_active_ns_list;
 		nvme_identify_allocated_ns;
@@ -322,8 +325,10 @@ LIBNVME_1_0 {
 		nvmf_hostid_from_file;
 		nvmf_hostnqn_from_file;
 		nvmf_hostnqn_generate;
+		nvmf_is_registration_supported;
 		nvmf_prtype_str;
 		nvmf_qptype_str;
+		nvmf_register_ctrl;
 		nvmf_sectype_str;
 		nvmf_subtype_str;
 		nvmf_treq_str;

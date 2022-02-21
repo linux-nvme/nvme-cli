@@ -25,6 +25,10 @@
 		    "description": "NVMe host ID",
 		    "type": "string"
 		},
+		"hostsymname": {
+		    "description": "NVMe host symbolic name",
+		    "type": "string"
+		},
 		"required": [ "hostnqn" ],
 		"subsystems": {
 		    "description": "Array of NVMe subsystem properties",
