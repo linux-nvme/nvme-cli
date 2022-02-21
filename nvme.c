@@ -3256,7 +3256,7 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 		goto ret;
 
 	err = nvme_get_nsid(fd, &nsid);
-	if (err <= 0) {
+	if (err < 0) {
 		fprintf(stderr, "get namespace ID: %s\n", nvme_strerror(errno));
 		err = errno;
 		goto close_fd;
