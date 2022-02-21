@@ -3844,9 +3844,9 @@ enum nvme_sanitize_sstat {
 
 /**
  * struct nvme_zns_changed_zone_log - ZNS Changed Zone List log
- * @nrzid:
- * @rsvd2:
- * @zid:
+ * @nrzid:	Number of Zone Identifiers
+ * @rsvd2:	Reserved
+ * @zid:	Zone Identifier
  */
 struct nvme_zns_changed_zone_log {
 	__le16		nrzid;
@@ -3864,11 +3864,11 @@ enum nvme_zns_zt {
 
 /**
  * enum nvme_zns_za -
- * @NVME_ZNS_ZA_ZFC:
- * @NVME_ZNS_ZA_FZR:
- * @NVME_ZNS_ZA_RZR:
+ * @NVME_ZNS_ZA_ZFC:	Zone Finished by Controller
+ * @NVME_ZNS_ZA_FZR:	Finish Zone Recommended
+ * @NVME_ZNS_ZA_RZR:	Reset Zone Recommended
  * @NVME_ZNS_ZA_ZRWAV:
- * @NVME_ZNS_ZA_ZDEV:
+ * @NVME_ZNS_ZA_ZDEV:	Zone Descriptor Extension Valid
  */
 enum nvme_zns_za {
 	NVME_ZNS_ZA_ZFC			= 1 << 0,
@@ -3880,13 +3880,13 @@ enum nvme_zns_za {
 
 /**
  * enum nvme_zns_zs -
- * @NVME_ZNS_ZS_EMPTY:
- * @NVME_ZNS_ZS_IMPL_OPEN:
- * @NVME_ZNS_ZS_EXPL_OPEN:
- * @NVME_ZNS_ZS_CLOSED:
- * @NVME_ZNS_ZS_READ_ONLY:
- * @NVME_ZNS_ZS_FULL:
- * @NVME_ZNS_ZS_OFFLINE:
+ * @NVME_ZNS_ZS_EMPTY:		Empty state
+ * @NVME_ZNS_ZS_IMPL_OPEN:	Implicitly open state
+ * @NVME_ZNS_ZS_EXPL_OPEN:	Explicitly open state
+ * @NVME_ZNS_ZS_CLOSED:		Closed state
+ * @NVME_ZNS_ZS_READ_ONLY:	Read only state
+ * @NVME_ZNS_ZS_FULL:		Full state
+ * @NVME_ZNS_ZS_OFFLINE:	Offline state
  */
 enum nvme_zns_zs {
 	NVME_ZNS_ZS_EMPTY		= 0x1,
@@ -3900,15 +3900,15 @@ enum nvme_zns_zs {
 
 /**
  * struct nvme_zns_desc -
- * @zt:
- * @zs:
- * @za:
- * @zai:
- * @rsvd4:
- * @zcap:
- * @zslba:
- * @wp:
- * @rsvd32:
+ * @zt:		Zone Type
+ * @zs:		Zone State
+ * @za:		Zone Attributes
+ * @zai:	Zone Attributes Information
+ * @rsvd4:	Reserved
+ * @zcap:	Zone Capacity
+ * @zslba:	Zone Start Logical Block Address
+ * @wp:		Write Pointer
+ * @rsvd32:	Reserved
  */
 struct nvme_zns_desc {
 	__u8	zt;
@@ -3936,11 +3936,11 @@ struct nvme_zone_report {
 
 /**
  * struct nvme_lba_status_desc -
- * @dslba:
- * @nlb:
- * @rsvd12:
- * @status:
- * @rsvd14:
+ * @dslba:	Descriptor Starting LBA
+ * @nlb:	Number of Logical Blocks
+ * @rsvd12:	Reserved
+ * @status:	Additional status about this LBA range
+ * @rsvd14:	Reserved
  */
 struct nvme_lba_status_desc {
 	__le64	dslba;
@@ -3952,10 +3952,10 @@ struct nvme_lba_status_desc {
 
 /**
  * struct nvme_lba_status -
- * @nlsd:
- * @cmpc:
- * @rsvd5:
- * @descs:
+ * @nlsd:	Number of LBA Status Descriptors
+ * @cmpc:	Completion Condition
+ * @rsvd5:	Reserved
+ * @descs:	LBA status descriptor Entry
  */
 struct nvme_lba_status {
 	__le32	nlsd;
