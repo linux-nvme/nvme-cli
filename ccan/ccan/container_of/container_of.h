@@ -8,9 +8,9 @@
 
 /**
  * container_of - get pointer to enclosing structure
- * @member_ptr: pointer to the structure member
- * @containing_type: the type this member is within
- * @member: the name of this member within the structure.
+ * @member_ptr:		pointer to the structure member
+ * @containing_type:	the type this member is within
+ * @member:		the name of this member within the structure.
  *
  * Given a pointer to a member of a structure, this macro does pointer
  * subtraction to return the pointer to the enclosing type.
@@ -39,9 +39,9 @@
 
 /**
  * container_of_or_null - get pointer to enclosing structure, or NULL
- * @member_ptr: pointer to the structure member
- * @containing_type: the type this member is within
- * @member: the name of this member within the structure.
+ * @member_ptr:		pointer to the structure member
+ * @containing_type:	the type this member is within
+ * @member:		the name of this member within the structure.
  *
  * Given a pointer to a member of a structure, this macro does pointer
  * subtraction to return the pointer to the enclosing type, unless it
@@ -74,8 +74,8 @@ static inline char *container_of_or_null_(void *member_ptr, size_t offset)
 
 /**
  * container_off - get offset to enclosing structure
- * @containing_type: the type this member is within
- * @member: the name of this member within the structure.
+ * @containing_type:	the type this member is within
+ * @member:		the name of this member within the structure.
  *
  * Given a pointer to a member of a structure, this macro does
  * typechecking and figures out the offset to the enclosing type.
@@ -101,9 +101,9 @@ static inline char *container_of_or_null_(void *member_ptr, size_t offset)
 
 /**
  * container_of_var - get pointer to enclosing structure using a variable
- * @member_ptr: pointer to the structure member
- * @container_var: a pointer of same type as this member's container
- * @member: the name of this member within the structure.
+ * @member_ptr:		pointer to the structure member
+ * @container_var:	a pointer of same type as this member's container
+ * @member:		the name of this member within the structure.
  *
  * Given a pointer to a member of a structure, this macro does pointer
  * subtraction to return the pointer to the enclosing type.
@@ -126,8 +126,8 @@ static inline char *container_of_or_null_(void *member_ptr, size_t offset)
 
 /**
  * container_off_var - get offset of a field in enclosing structure
- * @container_var: a pointer to a container structure
- * @member: the name of a member within the structure.
+ * @container_var:	a pointer to a container structure
+ * @member:		the name of a member within the structure.
  *
  * Given (any) pointer to a structure and a its member name, this
  * macro does pointer subtraction to return offset of member in a
