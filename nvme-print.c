@@ -7206,8 +7206,8 @@ static void json_simple_list(nvme_root_t r)
 				json_array_add_value_object(jdevices,
 							    json_list_item(n));
 		}
-		json_object_add_value_object(jroot, "devices", jdevices);
 	}
+	json_object_add_value_array(jroot, "devices", jdevices);
 	json_print_object(jroot, NULL);
 	printf("\n");
 	json_free_object(jroot);
