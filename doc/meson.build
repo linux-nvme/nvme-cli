@@ -100,9 +100,10 @@ if want_docs != 'false'
         install: true,
         install_dir: htmldir)
     else
-      if want_docs == 'all' or want_docs == 'html'
-        install_subdir('html', install_dir: htmldir)
-      endif
+      # The HTML doc is not ready yet.
+      # if want_docs == 'all' or want_docs == 'html'
+      #  install_subdir('html', install_dir: htmldir)
+      # endif
     endif
   endif
 endif
