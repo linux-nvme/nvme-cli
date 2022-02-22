@@ -4096,9 +4096,9 @@ enum nvme_ns_metadata_type {
 
 /**
  * struct nvme_timestamp -
- * @timestamp:
- * @attr:
- * @rsvd:
+ * @timestamp:	Timestamp value based on origin and synch field
+ * @attr:	Attribute
+ * @rsvd:	Reserved
  */
 struct nvme_timestamp {
 	__u8 timestamp[6];
@@ -4108,13 +4108,13 @@ struct nvme_timestamp {
 
 /**
  * struct nvme_lba_range_type_entry -
- * @type:
- * @attributes:
- * @rsvd2:
- * @slba:
- * @nlb:
- * @guid:
- * @rsvd48:
+ * @type:	Specifies the Type of the LBA range
+ * @attributes: Specifies attributes of the LBA range
+ * @rsvd2:	Reserved
+ * @slba:	Starting LBA
+ * @nlb:	Number of Logical Blocks
+ * @guid:	Unique Identifier
+ * @rsvd48:	Reserved
  */
 struct nvme_lba_range_type_entry {
 	__u8	type;
@@ -4128,13 +4128,13 @@ struct nvme_lba_range_type_entry {
 
 /**
  * enum nvme_lbart -
- * @NVME_LBART_TYPE_GP:
- * @NVME_LBART_TYPE_FS:
- * @NVME_LBART_TYPE_RAID:
- * @NVME_LBART_TYPE_CACHE:
- * @NVME_LBART_TYPE_SWAP:
- * @NVME_LBART_ATTRIB_TEMP:
- * @NVME_LBART_ATTRIB_HIDE:
+ * @NVME_LBART_TYPE_GP:		General Purpose
+ * @NVME_LBART_TYPE_FS:		Filesystem
+ * @NVME_LBART_TYPE_RAID:	RAID
+ * @NVME_LBART_TYPE_CACHE:	Cache
+ * @NVME_LBART_TYPE_SWAP:	Page / swap file
+ * @NVME_LBART_ATTRIB_TEMP:	Temp
+ * @NVME_LBART_ATTRIB_HIDE:	Hidden
  */
 enum nvme_lbart {
 	NVME_LBART_TYPE_GP	= 0,
@@ -4148,7 +4148,7 @@ enum nvme_lbart {
 
 /**
  * struct nvme_lba_range_type -
- * @entry:
+ * @entry:	LBA range type entry
  */
 struct nvme_lba_range_type {
 	struct nvme_lba_range_type_entry entry[NVME_FEAT_LBA_RANGE_MAX];
@@ -4156,12 +4156,12 @@ struct nvme_lba_range_type {
 
 /**
  * struct nvme_plm_config -
- * @ee:
- * @rsvd2:
- * @dtwinrt:
- * @dtwinwt:
- * @dtwintt:
- * @rsvd56:
+ * @ee:		Enable Event
+ * @rsvd2:	Reserved
+ * @dtwinrt:	DTWIN Reads Threshold
+ * @dtwinwt:	DTWIN Writes Threshold
+ * @dtwintt:	DTWIN Time Threshold
+ * @rsvd56:	Reserved
  */
 struct nvme_plm_config {
 	__le16	ee;
@@ -4174,8 +4174,8 @@ struct nvme_plm_config {
 
 /**
  * struct nvme_feat_host_behavior -
- * @acre:
- * @rsvd1:
+ * @acre:	Advanced Command Retry Enable
+ * @rsvd1:	Reserved
  */
 struct nvme_feat_host_behavior {
 	__u8 acre;
@@ -4184,7 +4184,7 @@ struct nvme_feat_host_behavior {
 
 /**
  * enum nvme_host_behavior_support -
- * @NVME_ENABLE_ACRE:
+ * @NVME_ENABLE_ACRE:	Enable Advanced Command Retry Enable
  */
 enum nvme_host_behavior_support {
 	NVME_ENABLE_ACRE        = 1 << 0,
@@ -4192,9 +4192,9 @@ enum nvme_host_behavior_support {
 
 /**
  * struct nvme_dsm_range -
- * @cattr:
- * @nlb:
- * @slba:
+ * @cattr:	Context Attributes
+ * @nlb:	Length in logical blocks
+ * @slba:	Starting LBA
  */
 struct nvme_dsm_range {
 	__le32	cattr;
@@ -4204,13 +4204,13 @@ struct nvme_dsm_range {
 
 /**
  * struct nvme_copy_range -
- * @rsvd0:
- * @slba:
- * @nlb:
- * @rsvd18:
- * @eilbrt:
- * @elbatm:
- * @elbat:
+ * @rsvd0:	Reserved
+ * @slba:	Starting LBA
+ * @nlb:	Number of Logical Blocks
+ * @rsvd18:	Reserved
+ * @eilbrt:	Expected Initial Logical Block Reference Tag
+ * @elbatm:	Expected Logical Block Application Tag Mask
+ * @elbat:	Expected Logical Block Application Tag
  */
 struct nvme_copy_range {
 	__u8			rsvd0[8];
@@ -4224,11 +4224,11 @@ struct nvme_copy_range {
 
 /**
  * struct nvme_registered_ctrl -
- * @cntlid:
- * @rcsts:
- * @rsvd3:
- * @hostid:
- * @rkey:
+ * @cntlid:	Controller ID
+ * @rcsts:	Reservation Status
+ * @rsvd3:	Reserved
+ * @hostid:	Host Identifier
+ * @rkey:	Reservation Key
  */
 struct nvme_registered_ctrl {
 	__le16	cntlid;
@@ -4240,12 +4240,12 @@ struct nvme_registered_ctrl {
 
 /**
  * struct nvme_registered_ctrl_ext -
- * @cntlid:
- * @rcsts:
- * @rsvd3:
- * @rkey:
- * @hostid:
- * @rsvd32:
+ * @cntlid:	Controller ID
+ * @rcsts:	Reservation Status
+ * @rsvd3:	Reserved
+ * @rkey:	Reservation Key
+ * @hostid:	Host Identifier
+ * @rsvd32:	Reserved
  */
 struct nvme_registered_ctrl_ext {
 	__le16	cntlid;
@@ -4258,15 +4258,15 @@ struct nvme_registered_ctrl_ext {
 
 /**
  * struct nvme_resv_status -
- * @gen:
- * @rtype:
- * @regctl:
- * @rsvd7:
- * @ptpls:
- * @rsvd10:
- * @rsvd24:
- * @regctl_eds:
- * @regctl_ds:
+ * @gen:	Generation
+ * @rtype:	Reservation Type
+ * @regctl:	Number of Registered Controllers
+ * @rsvd7:	Reserved
+ * @ptpls:	Persist Through Power Loss State
+ * @rsvd10:	Reserved
+ * @rsvd24:	Reserved
+ * @regctl_eds: Registered Controller Extended Data Structure
+ * @regctl_ds:	Registered Controller Data Structure
  */
 struct nvme_resv_status {
 	__le32	gen;
@@ -4286,16 +4286,16 @@ struct nvme_resv_status {
 
 /**
  * struct nvme_streams_directive_params -
- * @msl:
- * @nssa:
- * @nsso:
- * @nssc:
- * @rsvd:
- * @sws:
- * @sgs:
- * @nsa:
- * @nso:
- * @rsvd2:
+ * @msl:	Max Streams Limit
+ * @nssa:	NVM Subsystem Streams Available
+ * @nsso:	NVM Subsystem Streams Open
+ * @nssc:	NVM Subsystem Stream Capability
+ * @rsvd:	Reserved
+ * @sws:	Stream Write Size
+ * @sgs:	Stream Granularity Size
+ * @nsa:	Namespace Streams Allocated
+ * @nso:	Namespace Streams Open
+ * @rsvd2:	Reserved
  */
 struct nvme_streams_directive_params {
 	__le16	msl;
@@ -4312,8 +4312,8 @@ struct nvme_streams_directive_params {
 
 /**
  * struct nvme_streams_directive_status -
- * @osc:
- * @sid:
+ * @osc: Open Stream Count
+ * @sid: Stream Identifier
  */
 struct nvme_streams_directive_status {
 	__le16	osc;
@@ -4322,9 +4322,9 @@ struct nvme_streams_directive_status {
 
 /**
  * struct nvme_id_directives -
- * @supported:
- * @enabled:
- * @rsvd64:
+ * @supported:	Identify directive is supported
+ * @enabled:	Identify directive is Enabled
+ * @rsvd64:	Reserved
  */
 struct nvme_id_directives {
 	__u8	supported[32];
@@ -4344,11 +4344,11 @@ enum nvme_directive_types {
 
 /**
  * struct nvme_host_mem_buf_attrs -
- * @hsize:
- * @hmdlal:
- * @hmdlau:
- * @hmdlec:
- * @rsvd16:
+ * @hsize:	Host Memory Buffer Size
+ * @hmdlal:	Host Memory Descriptor List Lower Address
+ * @hmdlau:	Host Memory Descriptor List Upper Address
+ * @hmdlec:	Host Memory Descriptor List Entry Count
+ * @rsvd16:	Reserved
  */
 struct nvme_host_mem_buf_attrs {
 	__le32	hsize;
@@ -4361,11 +4361,11 @@ struct nvme_host_mem_buf_attrs {
 
 /**
  * enum nvme_ae_type -
- * @NVME_AER_ERROR:
- * @NVME_AER_SMART:
- * @NVME_AER_NOTICE:
- * @NVME_AER_CSS:
- * @NVME_AER_VS:
+ * @NVME_AER_ERROR:	Error event
+ * @NVME_AER_SMART:	SMART / Health Status event
+ * @NVME_AER_NOTICE:	Notice event
+ * @NVME_AER_CSS:	NVM Command Set Specific events
+ * @NVME_AER_VS:	Vendor Specific event
  */
 enum nvme_ae_type {
         NVME_AER_ERROR				= 0,
@@ -4377,12 +4377,12 @@ enum nvme_ae_type {
 
 /**
  * enum nvme_ae_info_error -
- * @NVME_AER_ERROR_INVALID_DB_REG:
- * @NVME_AER_ERROR_INVALID_DB_VAL:
- * @NVME_AER_ERROR_DIAG_FAILURE:
- * @NVME_AER_ERROR_PERSISTENT_INTERNAL_ERROR:
- * @NVME_AER_ERROR_TRANSIENT_INTERNAL_ERROR:
- * @NVME_AER_ERROR_FW_IMAGE_LOAD_ERROR:
+ * @NVME_AER_ERROR_INVALID_DB_REG:		Write to Invalid Doorbell Register
+ * @NVME_AER_ERROR_INVALID_DB_VAL:		Invalid Doorbell Write Value
+ * @NVME_AER_ERROR_DIAG_FAILURE:		Diagnostic Failure
+ * @NVME_AER_ERROR_PERSISTENT_INTERNAL_ERROR:	Persistent Internal Error
+ * @NVME_AER_ERROR_TRANSIENT_INTERNAL_ERROR:	Transient Internal Error
+ * @NVME_AER_ERROR_FW_IMAGE_LOAD_ERROR:		Firmware Image Load Error
  */
 enum nvme_ae_info_error {
 	NVME_AER_ERROR_INVALID_DB_REG			= 0x00,
@@ -4395,9 +4395,9 @@ enum nvme_ae_info_error {
 
 /**
  * enum nvme_ae_info_smart -
- * @NVME_AER_SMART_SUBSYSTEM_RELIABILITY:
- * @NVME_AER_SMART_TEMPERATURE_THRESHOLD:
- * @NVME_AER_SMART_SPARE_THRESHOLD:
+ * @NVME_AER_SMART_SUBSYSTEM_RELIABILITY:	NVM subsystem Reliability
+ * @NVME_AER_SMART_TEMPERATURE_THRESHOLD:	Temperature Threshold
+ * @NVME_AER_SMART_SPARE_THRESHOLD:		Spare Below Threshold
  */
 enum nvme_ae_info_smart {
 	NVME_AER_SMART_SUBSYSTEM_RELIABILITY		= 0x00,
@@ -4407,9 +4407,10 @@ enum nvme_ae_info_smart {
 
 /**
  * enum nvme_ae_info_css_nvm -
- * @NVME_AER_CSS_NVM_RESERVATION:
- * @NVME_AER_CSS_NVM_SANITIZE_COMPLETED:
- * @NVME_AER_CSS_NVM_UNEXPECTED_SANITIZE_DEALLOC:
+ * @NVME_AER_CSS_NVM_RESERVATION:			Reservation Log Page Available
+ * @NVME_AER_CSS_NVM_SANITIZE_COMPLETED:		Sanitize Operation Completed
+ * @NVME_AER_CSS_NVM_UNEXPECTED_SANITIZE_DEALLOC:	Sanitize Operation Completed
+ * 							With Unexpected Deallocation
  */
 enum nvme_ae_info_css_nvm {
 	NVME_AER_CSS_NVM_RESERVATION			= 0x00,
@@ -4419,14 +4420,14 @@ enum nvme_ae_info_css_nvm {
 
 /**
  * enum nvme_ae_info_notice -
- * @NVME_AER_NOTICE_NS_CHANGED:
- * @NVME_AER_NOTICE_FW_ACT_STARTING:
- * @NVME_AER_NOTICE_TELEMETRY:
- * @NVME_AER_NOTICE_ANA:
- * @NVME_AER_NOTICE_PL_EVENT:
- * @NVME_AER_NOTICE_LBA_STATUS_ALERT:
- * @NVME_AER_NOTICE_EG_EVENT:
- * @NVME_AER_NOTICE_DISC_CHANGED:
+ * @NVME_AER_NOTICE_NS_CHANGED:		Namespace Attribute Changed
+ * @NVME_AER_NOTICE_FW_ACT_STARTING:	Firmware Activation Starting
+ * @NVME_AER_NOTICE_TELEMETRY:		Telemetry Log Changed
+ * @NVME_AER_NOTICE_ANA:		Asymmetric Namespace Access Change
+ * @NVME_AER_NOTICE_PL_EVENT:		Predictable Latency Event Aggregate Log Change
+ * @NVME_AER_NOTICE_LBA_STATUS_ALERT:	LBA Status Information Alert
+ * @NVME_AER_NOTICE_EG_EVENT:		Endurance Group Event Aggregate Log Page Change
+ * @NVME_AER_NOTICE_DISC_CHANGED:	Discovery Log Page Change
  */
 enum nvme_ae_info_notice {
         NVME_AER_NOTICE_NS_CHANGED			= 0x00,
