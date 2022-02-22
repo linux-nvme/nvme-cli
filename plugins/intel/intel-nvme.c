@@ -656,12 +656,11 @@ static void show_lat_stats_linear(struct intel_lat_stats *stats,
 /*
  * For 4.0-4.5 revision.
  */
+#define LATENCY_STATS_V4_BASE_BITS	6
+#define LATENCY_STATS_V4_BASE_VAL	(1 << LATENCY_STATS_V4_BASE_BITS)
+
 static int lat_stats_log_scale(int i)
 {
-	static const int LATENCY_STATS_V4_BASE_BITS = 6;
-	static const int LATENCY_STATS_V4_BASE_VAL = (
-		1 << LATENCY_STATS_V4_BASE_BITS);
-
 	// if (i < 128)
 	if (i < (LATENCY_STATS_V4_BASE_VAL << 1))
 		return i;
