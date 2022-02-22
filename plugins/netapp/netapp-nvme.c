@@ -449,6 +449,7 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 	}
 
 	memcpy(item->uuid, nsdescs + sizeof(struct nvme_ns_id_desc), sizeof(item->uuid));
+	free(nsdescs);
 
 	err = nvme_get_ontap_c2_log(fd, item->nsid, item->log_data, ONTAP_C2_LOG_SIZE);
 	if (err) {
