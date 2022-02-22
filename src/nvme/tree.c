@@ -922,8 +922,13 @@ void nvme_free_ctrl(nvme_ctrl_t c)
 static void discovery_trsvcid(nvme_ctrl_t c)
 {
 	if (!strcmp(c->transport, "tcp")) {
-		/* Default port for NVMe/TCP discovery controllers */
-		c->trsvcid = strdup(__stringify(NVME_DISC_IP_PORT));
+		if (c->discovery_ctrl) {
+			/* Default port for NVMe/TCP discovery controllers */
+			c->trsvcid = strdup(__stringify(NVME_DISC_IP_PORT));
+		} else {
+			/* Default port for NVMe/TCP io controllers */
+			c->trsvcid = __stringify(NVME_RDMA_IP_PORT);
+		}
 	} else if (!strcmp(c->transport, "rdma")) {
 		/* Default port for NVMe/RDMA controllers */
 		c->trsvcid = strdup(__stringify(NVME_RDMA_IP_PORT));
