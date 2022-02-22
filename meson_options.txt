@@ -3,7 +3,7 @@ option('pkgconfiglibdir', type : 'string', value : '', description : 'directory 
 option('htmldir', type : 'string', value : '', description : 'directory for HTML documentation')
 
 option('docs', type : 'combo', choices : ['false', 'html', 'man', 'all'], description : 'install documentation')
-option('docs-build', type : 'boolean', value : 'false',  description : 'build documentation')
+option('docs-build', type : 'boolean', value : false,  description : 'build documentation')
 
 option('python', type : 'combo', choices : ['auto', 'true', 'false'], description : 'Generate libnvme python bindings')
 option('openssl', type : 'feature', value: 'auto', description : 'OpenSSL support')
