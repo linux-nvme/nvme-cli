@@ -1,30 +1,18 @@
 .TH "nvme_get_log_page" 9 "nvme_get_log_page" "February 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_get_log_page \- 
+nvme_get_log_page \- Get log page data
 .SH SYNOPSIS
 .B "int" nvme_get_log_page
 .BI "(int fd "  ","
-.BI "__u32 nsid "  ","
-.BI "__u8 log_id "  ","
-.BI "bool rae "  ","
 .BI "__u32 xfer_len "  ","
-.BI "__u32 data_len "  ","
-.BI "void *data "  ");"
+.BI "struct nvme_get_log_args *args "  ");"
 .SH ARGUMENTS
 .IP "fd" 12
 File descriptor of nvme device
-.IP "nsid" 12
-Namespace Identifier, if applicable.
-.IP "log_id" 12
-Log Identifier, see \fIenum nvme_cmd_get_log_lid\fP.
-.IP "rae" 12
-Retain asynchronous events
 .IP "xfer_len" 12
 Max log transfer size per request to split the total.
-.IP "data_len" 12
-Total length of the log to transfer.
-.IP "data" 12
-User address of at least \fIdata_len\fP to store the log.
+.IP "args" 12
+\fIstruct nvme_get_log_args\fP argument structure
 .SH "RETURN"
 The nvme command status if a response was received (see
 \fIenum nvme_status_field\fP) or -1 with errno set otherwise.

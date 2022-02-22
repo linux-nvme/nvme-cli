@@ -12,9 +12,13 @@ nvme_directive_send_id_endir \-
 .IP "fd" 12
 File descriptor of nvme device
 .IP "nsid" 12
+Namespace Identifier
 .IP "endir" 12
+Enable Directive
 .IP "dtype" 12
+Directive Type
 .IP "id" 12
+Pointer to structure nvme_id_directives
 .SH "RETURN"
 The nvme command status if a response was received (see
 \fIenum nvme_status_field\fP) or -1 with errno set otherwise.

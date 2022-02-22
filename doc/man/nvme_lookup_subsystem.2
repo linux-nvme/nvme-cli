@@ -8,13 +8,13 @@ nvme_lookup_subsystem \- Lookup nvme_subsystem_t object
 .BI "const char *subsysnqn "  ");"
 .SH ARGUMENTS
 .IP "h" 12
-nvme_host_t object
+\fInvme_host_t\fP object
 .IP "name" 12
 Name of the subsystem (may be NULL)
 .IP "subsysnqn" 12
 Subsystem NQN
 .SH "DESCRIPTION"
-Lookup a nvme_subsystem_t object in \fIh\fP base on \fIname\fP (if present)
+Lookup a \fInvme_subsystem_t\fP object in \fIh\fP base on \fIname\fP (if present)
 and \fIsubsystemnqn\fP or create one if not found.
 .SH "RETURN"
 nvme_subsystme_t object

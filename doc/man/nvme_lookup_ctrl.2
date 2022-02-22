@@ -12,24 +12,24 @@ nvme_lookup_ctrl \- Lookup nvme_ctrl_t object
 .BI "nvme_ctrl_t p "  ");"
 .SH ARGUMENTS
 .IP "s" 12
-nvme_subsystem_t object
+\fInvme_subsystem_t\fP object
 .IP "transport" 12
-transport name
+Transport name
 .IP "traddr" 12
-transport address
+Transport address
 .IP "host_traddr" 12
-host transport address
+Host transport address
 .IP "host_iface" 12
-host interface name
+Host interface name
 .IP "trsvcid" 12
-transport service identifier
+Transport service identifier
 .IP "p" 12
-previous nvme_ctrl_t object
+Previous controller instance
 .SH "DESCRIPTION"
-Lookup a nvme_ctrl_t object in \fIs\fP based on \fItransport\fP, \fItraddr\fP,
+Lookup a controller in \fIs\fP based on \fItransport\fP, \fItraddr\fP,
 \fIhost_traddr\fP, \fIhost_iface\fP, and \fItrsvcid\fP. \fItransport\fP must be specified,
 other fields may be required depending on the transport. A new
 object is created if none is found. If \fIp\fP is specified the lookup
 will start at \fIp\fP instead of the first controller.
 .SH "RETURN"
-nvme_ctrl_t object
+Controller instance

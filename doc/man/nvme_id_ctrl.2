@@ -186,7 +186,9 @@ struct nvme_id_ctrl {
 .br
 .BI "    __le16 ofcs;"
 .br
-.BI "    __u8 rsvd1806[242];"
+.BI "    __u8 dctype;"
+.br
+.BI "    __u8 rsvd1807[241];"
 .br
 .BI "    struct nvme_id_psd      psd[32];"
 .br
@@ -491,7 +493,11 @@ that a host is allowed to place in a capsule. A value of 0h
 indicates no limit.
 .IP "ofcs" 12
 Optional Fabric Commands Support, see \fIenum nvme_id_ctrl_ofcs\fP.
-.IP "rsvd1806" 12
+.IP "dctype" 12
+Discovery Controller Type (DCTYPE). This field indicates what
+type of Discovery controller the controller is (see enum
+nvme_id_ctrl_dctype)
+.IP "rsvd1807" 12
 Reserved
 .IP "psd" 12
 Power State Descriptors, see \fIstruct nvme_id_psd\fP.

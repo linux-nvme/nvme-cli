@@ -13,3 +13,6 @@ File descriptor of the nvme device
 Retain asynchronous events
 .IP "log" 12
 On success, set to the value of the allocated and retreived log.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

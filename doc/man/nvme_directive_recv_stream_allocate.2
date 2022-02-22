@@ -13,7 +13,9 @@ File descriptor of nvme device
 .IP "nsid" 12
 Namespace ID
 .IP "nsr" 12
+Namespace Streams Requested
 .IP "result" 12
+If successful, the CQE dword0 value
 .SH "RETURN"
 The nvme command status if a response was received (see
 \fIenum nvme_status_field\fP) or -1 with errno set otherwise.

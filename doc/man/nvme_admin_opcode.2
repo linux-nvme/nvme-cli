@@ -96,7 +96,23 @@ enum nvme_admin_opcode {
 , 
 .br
 .br
+.BI "    nvme_admin_discovery_info_mgmt"
+, 
+.br
+.br
+.BI "    nvme_admin_fabric_zoning_recv"
+, 
+.br
+.br
 .BI "    nvme_admin_lockdown"
+, 
+.br
+.br
+.BI "    nvme_admin_fabric_zoning_lookup"
+, 
+.br
+.br
+.BI "    nvme_admin_fabric_zoning_send"
 , 
 .br
 .br
@@ -151,7 +167,15 @@ enum nvme_admin_opcode {
 .IP "nvme_admin_nvme_mi_send" 12
 .IP "nvme_admin_nvme_mi_recv" 12
 .IP "nvme_admin_capacity_mgmt" 12
+.IP "nvme_admin_discovery_info_mgmt" 12
+Discovery Information Management (DIM)
+.IP "nvme_admin_fabric_zoning_recv" 12
+Fabric Zoning Receive
 .IP "nvme_admin_lockdown" 12
+.IP "nvme_admin_fabric_zoning_lookup" 12
+Fabric Zoning Lookup
+.IP "nvme_admin_fabric_zoning_send" 12
+Fabric Zoning Send
 .IP "nvme_admin_dbbuf" 12
 .IP "nvme_admin_fabrics" 12
 .IP "nvme_admin_format_nvm" 12

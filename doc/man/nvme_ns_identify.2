@@ -7,9 +7,9 @@ nvme_ns_identify \- Issue an 'identify namespace' command
 .BI "struct nvme_id_ns *ns "  ");"
 .SH ARGUMENTS
 .IP "n" 12
-nvme_ns_t object
+Namespace instance
 .IP "ns" 12
-nvme_id_ns buffer
+\fInvme_id_ns\fP buffer
 .SH "DESCRIPTION"
 Writes the data returned by the 'identify namespace' command
 into \fIns\fP.

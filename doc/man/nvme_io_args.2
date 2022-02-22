@@ -36,9 +36,9 @@ struct nvme_io_args {
 .br
 .BI "    __u16 appmask;"
 .br
-.BI "    __u8 dsm;"
+.BI "    __u16 dspec;"
 .br
-.BI "    __u8 dspec;"
+.BI "    __u8 dsm;"
 .br
 .BI "
 };
@@ -85,7 +85,7 @@ protection information.
 This field specifies the Application Tag expected value. Used
 only if the namespace is formatted to use end-to-end protection
 information.
-.IP "dsm" 12
-Data set management attributes, see \fIenum nvme_io_dsm_flags\fP
 .IP "dspec" 12
 Directive specific value
+.IP "dsm" 12
+Data set management attributes, see \fIenum nvme_io_dsm_flags\fP

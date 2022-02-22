@@ -30,33 +30,7 @@ struct nvmf_disc_log_entry {
 .br
 .BI "    char traddr[NVMF_TRADDR_SIZE];"
 .br
-.BI "    union tsas {"
-.br
-.BI "      char common[NVMF_TSAS_SIZE];"
-.br
-.BI "      struct rdma {"
-.br
-.BI "        __u8 qptype;"
-.br
-.BI "        __u8 prtype;"
-.br
-.BI "        __u8 cms;"
-.br
-.BI "        __u8 rsvd3[5];"
-.br
-.BI "        __u16 pkey;"
-.br
-.BI "        __u8 rsvd10[246];"
-.br
-.BI "      } rdma;"
-.br
-.BI "      struct tcp {"
-.br
-.BI "        __u8 sectype;"
-.br
-.BI "      } tcp;"
-.br
-.BI "    } tsas;"
+.BI "    union nvmf_tsas tsas;"
 .br
 .BI "
 };

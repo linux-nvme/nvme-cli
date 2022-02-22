@@ -376,6 +376,30 @@ enum nvme_status_field {
 , 
 .br
 .br
+.BI "    NVME_SC_INVALID_DISCOVERY_INFO"
+, 
+.br
+.br
+.BI "    NVME_SC_ZONING_DATA_STRUCT_LOCKED"
+, 
+.br
+.br
+.BI "    NVME_SC_ZONING_DATA_STRUCT_NOTFND"
+, 
+.br
+.br
+.BI "    NVME_SC_INSUFFICIENT_DISC_RES"
+, 
+.br
+.br
+.BI "    NVME_SC_REQSTD_FUNCTION_DISABLED"
+, 
+.br
+.br
+.BI "    NVME_SC_ZONEGRP_ORIGINATOR_INVLD"
+, 
+.br
+.br
 .BI "    NVME_SC_BAD_ATTRIBUTES"
 , 
 .br
@@ -932,6 +956,35 @@ I/O Command Set Combination Rejected
 Invalid I/O Command Set
 .IP "NVME_SC_ID_UNAVAILABLE" 12
 Identifier Unavailable
+.IP "NVME_SC_INVALID_DISCOVERY_INFO" 12
+The discovery information provided in
+one or more extended discovery
+information entries is not applicable
+for the type of entity selected in
+the Entity Type (ETYPE) field of the
+Discovery Information Management
+command data portion’s header.
+.IP "NVME_SC_ZONING_DATA_STRUCT_LOCKED" 12
+The requested Zoning data structure
+is locked on the CDC.
+.IP "NVME_SC_ZONING_DATA_STRUCT_NOTFND" 12
+The requested Zoning data structure
+does not exist on the CDC.
+.IP "NVME_SC_INSUFFICIENT_DISC_RES" 12
+The number of discover information
+entries provided in the data portion
+of the Discovery Information
+Management command for a registration
+task (i.e., TAS field cleared to 0h)
+exceeds the available capacity for
+new discovery information entries on
+the CDC or DDC. This may be a
+transient condition.
+.IP "NVME_SC_REQSTD_FUNCTION_DISABLED" 12
+Fabric Zoning is not enabled on the
+CDC
+.IP "NVME_SC_ZONEGRP_ORIGINATOR_INVLD" 12
+-- undescribed --
 .IP "NVME_SC_BAD_ATTRIBUTES" 12
 Conflicting Dataset Management Attributes
 .IP "NVME_SC_INVALID_PI" 12

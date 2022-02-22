@@ -7,9 +7,9 @@ nvme_ns_identify_descs \- Issue an 'identify descriptors' command
 .BI "struct nvme_ns_id_desc *descs "  ");"
 .SH ARGUMENTS
 .IP "n" 12
-nvme_ns_t object
+Namespace instance
 .IP "descs" 12
-list of identify descriptors
+List of identify descriptors
 .SH "DESCRIPTION"
 Writes the data returned by the 'identify descriptors' command
 into \fIdescs\fP.
