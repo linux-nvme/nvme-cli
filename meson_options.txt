@@ -4,4 +4,4 @@ option('systemddir', type : 'string', value : 'lib/systemd/', description : 'dir
 option('htmldir', type : 'string', value : '', description : 'directory for HTML documentation')
 
 option('docs', type : 'combo', choices : ['false', 'html', 'man', 'all'], description : 'install documentation')
-option('docs-build', type : 'boolean', value : 'false',  description : 'build documentation')
+option('docs-build', type : 'boolean', value : false,  description : 'build documentation')
