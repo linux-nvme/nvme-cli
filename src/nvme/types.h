@@ -4905,10 +4905,10 @@ struct nvmf_connect_data {
 
 /**
  * struct nvme_mi_read_nvm_ss_info -
- * @nump:
- * @mjr:
- * @mnr:
- * @rsvd3:
+ * @nump:	Number of Ports
+ * @mjr:	NVMe-MI Major Version Number
+ * @mnr:	NVMe-MI Minor Version Number
+ * @rsvd3:	Reserved
  */
 struct nvme_mi_read_nvm_ss_info {
 	__u8	nump;
@@ -4919,13 +4919,13 @@ struct nvme_mi_read_nvm_ss_info {
 
 /**
  * struct nvme_mi_port_pcie -
- * @mps:
- * @sls:
- * @cls:
- * @mlw:
- * @nlw:
- * @pn:
- * @rsvd14:
+ * @mps:	PCIe Maximum Payload Size
+ * @sls:	PCIe Supported Link Speeds Vector
+ * @cls:	PCIe Current Link Speed
+ * @mlw:	PCIe Maximum Link Width
+ * @nlw:	PCIe Negotiated Link Width
+ * @pn:		PCIe Port Number
+ * @rsvd14:	Reserved
  */
 struct nvme_mi_port_pcie {
 	__u8	mps;
@@ -4939,12 +4939,12 @@ struct nvme_mi_port_pcie {
 
 /**
  * struct nvme_mi_port_smb -
- * @vpd_addr:
- * @mvpd_freq:
- * @mme_addr:
- * @mme_freq:
- * @nvmebm:
- * @rsvd13:
+ * @vpd_addr:	Current VPD SMBus/I2C Address
+ * @mvpd_freq:	Maximum VPD Access SMBus/I2C Frequency
+ * @mme_addr:	Current Management Endpoint SMBus/I2C Address
+ * @mme_freq:	Maximum Management Endpoint SMBus/I2C Frequency
+ * @nvmebm:	NVMe Basic Management
+ * @rsvd13:	Reserved
  */
 struct nvme_mi_port_smb {
 	__u8	vpd_addr;
@@ -4957,12 +4957,12 @@ struct nvme_mi_port_smb {
 
 /**
  * struct nvme_mi_read_port_info -
- * @portt:
- * @rsvd1:
- * @mmctptus:
- * @meb:
- * @pcie:
- * @smb:
+ * @portt:	Port Type
+ * @rsvd1:	Reserved
+ * @mmctptus:	Maximum MCTP Transmission Unit Size
+ * @meb:	Management Endpoint Buffer Size
+ * @pcie:	PCIe Port Specific Data
+ * @smb:	SMBus Port Specific Data
  */
 struct nvme_mi_read_port_info {
 	__u8	portt;
@@ -4977,15 +4977,15 @@ struct nvme_mi_read_port_info {
 
 /**
  * struct nvme_mi_read_ctrl_info -
- * @portid:
- * @rsvd1:
- * @prii:
- * @pri:
- * @vid:
- * @did:
- * @ssvid:
- * @ssid:
- * @rsvd16:
+ * @portid:	Port Identifier
+ * @rsvd1:	Reserved
+ * @prii:	PCIe Routing ID Information
+ * @pri:	PCIe Routing ID
+ * @vid:	PCI Vendor ID
+ * @did:	PCI Device ID
+ * @ssvid:	PCI Subsystem Vendor ID
+ * @ssid:	PCI Subsystem Device ID
+ * @rsvd16:	Reserved
  */
 struct nvme_mi_read_ctrl_info {
 	__u8	portid;
@@ -5001,8 +5001,8 @@ struct nvme_mi_read_ctrl_info {
 
 /**
  * struct nvme_mi_osc -
- * @type:
- * @opc:
+ * @type:	Command Type
+ * @opc:	Opcode
  */
 struct nvme_mi_osc {
 	__u8	type;
@@ -5011,8 +5011,8 @@ struct nvme_mi_osc {
 
 /**
  * struct nvme_mi_read_sc_list -
- * @numcmd:
- * @cmds:
+ * @numcmd:	Number of Commands
+ * @cmds:	MEB supported Command Data Structure
  */
 struct nvme_mi_read_sc_list {
 	__le16	numcmd;
@@ -5021,12 +5021,12 @@ struct nvme_mi_read_sc_list {
 
 /**
  * struct nvme_mi_nvm_ss_health_status -
- * @nss:
- * @sw:
- * @ctemp:
- * @pdlu:
- * @ccs:
- * @rsvd8:
+ * @nss:	NVM Subsystem Status
+ * @sw:		Smart Warnings
+ * @ctemp:	Composite Temperature
+ * @pdlu:	Percentage Drive Life Used
+ * @ccs:	Composite Controller Status
+ * @rsvd8:	Reserved
  */
 struct nvme_mi_nvm_ss_health_status {
 	__u8	nss;
@@ -5039,18 +5039,18 @@ struct nvme_mi_nvm_ss_health_status {
 
 /**
  * enum nvme_mi_css -
- * @NVME_MI_CCS_RDY:
- * @NVME_MI_CSS_CFS:
- * @NVME_MI_CSS_SHST:
- * @NVME_MI_CSS_NSSRO:
- * @NVME_MI_CSS_CECO:
- * @NVME_MI_CSS_NAC:
- * @NVME_MI_CSS_FA:
- * @NVME_MI_CSS_CSTS:
- * @NVME_MI_CSS_CTEMP:
- * @NVME_MI_CSS_PDLU:
- * @NVME_MI_CSS_SPARE:
- * @NVME_MI_CSS_CCWARN:
+ * @NVME_MI_CCS_RDY:	Ready
+ * @NVME_MI_CSS_CFS:	Controller Fatal Status
+ * @NVME_MI_CSS_SHST:	Shutdown Status
+ * @NVME_MI_CSS_NSSRO:	NVM Subsystem Reset Occurred
+ * @NVME_MI_CSS_CECO:	Controller Enable Change Occurred
+ * @NVME_MI_CSS_NAC:	Namespace Attribute Changed
+ * @NVME_MI_CSS_FA:	Firmware Activated
+ * @NVME_MI_CSS_CSTS:	Controller Status Change
+ * @NVME_MI_CSS_CTEMP:	Composite Temperature Change
+ * @NVME_MI_CSS_PDLU:	Percentage Used
+ * @NVME_MI_CSS_SPARE:	Available Spare
+ * @NVME_MI_CSS_CCWARN:	Critical Warning
  */
 enum nvme_mi_css {
 	NVME_MI_CCS_RDY		= 1 << 0,
@@ -5069,13 +5069,13 @@ enum nvme_mi_css {
 
 /**
  * struct nvme_mi_ctrl_health_status -
- * @ctlid:
- * @csts:
- * @ctemp:
- * @pdlu:
- * @spare:
- * @cwarn:
- * @rsvd9:
+ * @ctlid:	Controller Identifier
+ * @csts:	Controller Status
+ * @ctemp:	Composite Temperature
+ * @pdlu:	Percentage Used
+ * @spare:	Available Spare
+ * @cwarn:	Critical Warning
+ * @rsvd9:	Reserved
  */
 struct nvme_mi_ctrl_health_status {
 	__le16	ctlid;
@@ -5089,13 +5089,13 @@ struct nvme_mi_ctrl_health_status {
 
 /**
  * enum nvme_mi_csts -
- * @NVME_MI_CSTS_RDY:
- * @NVME_MI_CSTS_CFS:
- * @NVME_MI_CSTS_SHST:
- * @NVME_MI_CSTS_NSSRO:
- * @NVME_MI_CSTS_CECO:
- * @NVME_MI_CSTS_NAC:
- * @NVME_MI_CSTS_FA:
+ * @NVME_MI_CSTS_RDY:	Ready
+ * @NVME_MI_CSTS_CFS:	Controller Fatal Status
+ * @NVME_MI_CSTS_SHST:	Shutdown Status
+ * @NVME_MI_CSTS_NSSRO:	NVM Subsystem Reset Occurred
+ * @NVME_MI_CSTS_CECO:	Controller Enable Change Occurred
+ * @NVME_MI_CSTS_NAC:	Namespace Attribute Changed
+ * @NVME_MI_CSTS_FA:	Firmware Activated
  */
 enum nvme_mi_csts {
 	NVME_MI_CSTS_RDY	= 1 << 0,
@@ -5109,11 +5109,11 @@ enum nvme_mi_csts {
 
 /**
  * enum nvme_mi_cwarn -
- * @NVME_MI_CWARN_ST:
- * @NVME_MI_CWARN_TAUT:
- * @NVME_MI_CWARN_RD:
- * @NVME_MI_CWARN_RO:
- * @NVME_MI_CWARN_VMBF:
+ * @NVME_MI_CWARN_ST:	Spare Threshold
+ * @NVME_MI_CWARN_TAUT:	Temperature Above or Under Threshold
+ * @NVME_MI_CWARN_RD:	Reliability Degraded
+ * @NVME_MI_CWARN_RO:	Read Only
+ * @NVME_MI_CWARN_VMBF:	Volatile Memory Backup Failed
  */
 enum nvme_mi_cwarn {
 	NVME_MI_CWARN_ST	= 1 << 0,
@@ -5125,22 +5125,22 @@ enum nvme_mi_cwarn {
 
 /**
  * struct nvme_mi_vpd_mra -
- * @nmravn:
- * @ff:
- * @rsvd7:
- * @i18vpwr:
- * @m18vpwr:
- * @i33vpwr:
- * @m33vpwr:
- * @rsvd17:
- * @m33vapsr:
- * @i5vapsr:
- * @m5vapsr:
- * @i12vapsr:
- * @m12vapsr:
- * @mtl:
- * @tnvmcap:
- * @rsvd37:
+ * @nmravn:	NVMe MultiRecord Area Version Number
+ * @ff:		Form Factor
+ * @rsvd7:	Reserved
+ * @i18vpwr:	Initial 1.8 V Power Supply Requirements
+ * @m18vpwr:	Maximum 1.8 V Power Supply Requirements
+ * @i33vpwr:	Initial 3.3 V Power Supply Requirements
+ * @m33vpwr:	Maximum 3.3 V Power Supply Requirements
+ * @rsvd17:	Reserved
+ * @m33vapsr:	Maximum 3.3 V aux Power Supply Requirements
+ * @i5vapsr:	Initial 5 V Power Supply Requirements
+ * @m5vapsr:	Maximum 5 V Power Supply Requirements
+ * @i12vapsr:	Initial 12 V Power Supply Requirements
+ * @m12vapsr:	Maximum 12 V Power Supply Requirements
+ * @mtl:	Maximum Thermal Load
+ * @tnvmcap:	Total NVM Capacity
+ * @rsvd37:	Reserved
  */
 struct nvme_mi_vpd_mra {
 	__u8	nmravn;
@@ -5163,15 +5163,15 @@ struct nvme_mi_vpd_mra {
 
 /**
  * struct nvme_mi_vpd_ppmra -
- * @nppmravn:
- * @pn:
- * @ppi:
- * @ls:
- * @mlw:
- * @mctp:
- * @refccap:
- * @pi:
- * @rsvd13:
+ * @nppmravn:	NVMe PCIe Port MultiRecord Area Version Number
+ * @pn:		PCIe Port Number
+ * @ppi:	Port Information
+ * @ls:		PCIe Link Speed
+ * @mlw:	PCIe Maximum Link Width
+ * @mctp:	MCTP Support
+ * @refccap:	Ref Clk Capability
+ * @pi:		Port Identifier
+ * @rsvd13:	Reserved
  */
 struct nvme_mi_vpd_ppmra {
 	__u8	nppmravn;
@@ -5187,10 +5187,11 @@ struct nvme_mi_vpd_ppmra {
 
 /**
  * struct nvme_mi_vpd_telem -
- * @type:
- * @rev:
- * @len:
- * @data:
+ * @type:	Type of the Element Descriptor
+ * @rev:	Revision of the Element Descriptor
+ * @len:	Number of bytes in the Element Descriptor
+ * @data:	Type-specific information associated with
+ * 		the Element Descriptor
  */
 struct nvme_mi_vpd_telem {
 	__u8	type;
@@ -5201,13 +5202,13 @@ struct nvme_mi_vpd_telem {
 
 /**
  * enum nvme_mi_elem -
- * @NVME_MI_ELEM_EED:
- * @NVME_MI_ELEM_USCE:
- * @NVME_MI_ELEM_ECED:
- * @NVME_MI_ELEM_LED:
- * @NVME_MI_ELEM_SMBMED:
- * @NVME_MI_ELEM_PCIESED:
- * @NVME_MI_ELEM_NVMED:
+ * @NVME_MI_ELEM_EED:		Extended Element Descriptor
+ * @NVME_MI_ELEM_USCE:		Upstream Connector Element Descriptor
+ * @NVME_MI_ELEM_ECED:		Expansion Connector Element Descriptor
+ * @NVME_MI_ELEM_LED:		Label Element Descriptor
+ * @NVME_MI_ELEM_SMBMED:	SMBus/I2C Mux Element Descriptor
+ * @NVME_MI_ELEM_PCIESED:	PCIe Switch Element Descriptor
+ * @NVME_MI_ELEM_NVMED:		NVM Subsystem Element Descriptor
  */
 enum nvme_mi_elem {
 	NVME_MI_ELEM_EED	= 1,
@@ -5221,10 +5222,10 @@ enum nvme_mi_elem {
 
 /**
  * struct nvme_mi_vpd_tra -
- * @vn:
- * @rsvd6:
- * @ec:
- * @elems:
+ * @vn:		Version Number
+ * @rsvd6:	Reserved
+ * @ec:		Element Count
+ * @elems:	Element Descriptor
  */
 struct nvme_mi_vpd_tra {
 	__u8	vn;
@@ -5235,14 +5236,14 @@ struct nvme_mi_vpd_tra {
 
 /**
  * struct nvme_mi_vpd_mr_common -
- * @type:
- * @rf:
- * @rlen:
- * @rchksum:
- * @hchksum:
- * @nmra:
- * @ppmra:
- * @tmra:
+ * @type:	NVMe Record Type ID
+ * @rf:		Record Format
+ * @rlen:	Record Length
+ * @rchksum:	Record Checksum
+ * @hchksum:	Header Checksum
+ * @nmra:	NVMe MultiRecord Area
+ * @ppmra:	NVMe PCIe Port MultiRecord Area
+ * @tmra:	Topology MultiRecord Area
  */
 struct nvme_mi_vpd_mr_common {
 	__u8	type;
@@ -5260,15 +5261,15 @@ struct nvme_mi_vpd_mr_common {
 
 /**
  * struct nvme_mi_vpd_hdr -
- * @ipmiver:
- * @iuaoff:
- * @ciaoff:
- * @biaoff:
- * @piaoff:
- * @mrioff:
- * @rsvd6:
- * @chchk:
- * @vpd:
+ * @ipmiver:	IPMI Format Version Number
+ * @iuaoff:	Internal Use Area Starting Offset
+ * @ciaoff:	Chassis Info Area Starting Offset
+ * @biaoff:	Board Info Area Starting Offset
+ * @piaoff:	Product Info Area Starting Offset
+ * @mrioff:	MultiRecord Info Area Starting Offset
+ * @rsvd6:	Reserved
+ * @chchk:	Common Header Checksum
+ * @vpd:	Vital Product Data
  */
 struct nvme_mi_vpd_hdr {
 	__u8	ipmiver;
