@@ -5939,41 +5939,41 @@ static inline __u16 nvme_status_code(__u16 status_field)
 
 /**
  * enum nvme_admin_opcode - Known NVMe admin opcodes
- * @nvme_admin_delete_sq:
- * @nvme_admin_create_sq:
- * @nvme_admin_get_log_page:
- * @nvme_admin_delete_cq:
- * @nvme_admin_create_cq:
- * @nvme_admin_identify:
- * @nvme_admin_abort_cmd:
- * @nvme_admin_set_features:
- * @nvme_admin_get_features:
- * @nvme_admin_async_event:
- * @nvme_admin_ns_mgmt:
- * @nvme_admin_fw_activate:
- * @nvme_admin_fw_commit:
- * @nvme_admin_fw_download:
- * @nvme_admin_dev_self_test:
- * @nvme_admin_ns_attach:
- * @nvme_admin_keep_alive:
- * @nvme_admin_directive_send:
- * @nvme_admin_directive_recv:
- * @nvme_admin_virtual_mgmt:
- * @nvme_admin_nvme_mi_send:
- * @nvme_admin_nvme_mi_recv:
- * @nvme_admin_capacity_mgmt:
- * @nvme_admin_discovery_info_mgmt:  Discovery Information Management (DIM)
- * @nvme_admin_fabric_zoning_recv:   Fabric Zoning Receive
- * @nvme_admin_lockdown:
- * @nvme_admin_fabric_zoning_lookup: Fabric Zoning Lookup
- * @nvme_admin_fabric_zoning_send:   Fabric Zoning Send
- * @nvme_admin_dbbuf:
- * @nvme_admin_fabrics:
- * @nvme_admin_format_nvm:
- * @nvme_admin_security_send:
- * @nvme_admin_security_recv:
- * @nvme_admin_sanitize_nvm:
- * @nvme_admin_get_lba_status:
+ * @nvme_admin_delete_sq:		Delete I/O Submission Queue
+ * @nvme_admin_create_sq:		Create I/O Submission Queue
+ * @nvme_admin_get_log_page:		Get Log Page
+ * @nvme_admin_delete_cq:		Delete I/O Completion Queue
+ * @nvme_admin_create_cq:		Create I/O Completion Queue
+ * @nvme_admin_identify:		Identify
+ * @nvme_admin_abort_cmd:		Abort
+ * @nvme_admin_set_features:		Set Features
+ * @nvme_admin_get_features:		Get Features
+ * @nvme_admin_async_event:		Asynchronous Event Request
+ * @nvme_admin_ns_mgmt:			Namespace Management
+ * @nvme_admin_fw_activate:		Firmware Commit
+ * @nvme_admin_fw_commit:		Firmware Commit
+ * @nvme_admin_fw_download:		Firmware Image Download
+ * @nvme_admin_dev_self_test:		Device Self-test
+ * @nvme_admin_ns_attach:		Namespace Attachment
+ * @nvme_admin_keep_alive:		Keep Alive
+ * @nvme_admin_directive_send:		Directive Send
+ * @nvme_admin_directive_recv:		Directive Receive
+ * @nvme_admin_virtual_mgmt:		Virtualization Management
+ * @nvme_admin_nvme_mi_send:		NVMe-MI Send
+ * @nvme_admin_nvme_mi_recv:		NVMe-MI Receive
+ * @nvme_admin_capacity_mgmt:		Capacity Management
+ * @nvme_admin_discovery_info_mgmt:	Discovery Information Management (DIM)
+ * @nvme_admin_fabric_zoning_recv:	Fabric Zoning Receive
+ * @nvme_admin_lockdown:		Lockdown
+ * @nvme_admin_fabric_zoning_lookup:	Fabric Zoning Lookup
+ * @nvme_admin_fabric_zoning_send:	Fabric Zoning Send
+ * @nvme_admin_dbbuf:			Doorbell Buffer Config
+ * @nvme_admin_fabrics:			Fabrics Commands
+ * @nvme_admin_format_nvm:		Format NVM
+ * @nvme_admin_security_send:		Security Send
+ * @nvme_admin_security_recv:		Security Receive
+ * @nvme_admin_sanitize_nvm:		Sanitize
+ * @nvme_admin_get_lba_status:		Get LBA Status
  */
 enum nvme_admin_opcode {
 	nvme_admin_delete_sq		= 0x00,
@@ -6015,27 +6015,38 @@ enum nvme_admin_opcode {
 
 /**
  * enum nvme_identify_cns -
- * @NVME_IDENTIFY_CNS_NS:
- * @NVME_IDENTIFY_CNS_CTRL:
- * @NVME_IDENTIFY_CNS_NS_ACTIVE_LIST:
- * @NVME_IDENTIFY_CNS_NS_DESC_LIST:
- * @NVME_IDENTIFY_CNS_NVMSET_LIST:
- * @NVME_IDENTIFY_CNS_CSI_NS:
- * @NVME_IDENTIFY_CNS_CSI_CTRL:
- * @NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST:
- * @NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS:
- * @NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST:
- * @NVME_IDENTIFY_CNS_ALLOCATED_NS:
- * @NVME_IDENTIFY_CNS_NS_CTRL_LIST:
- * @NVME_IDENTIFY_CNS_CTRL_LIST:
- * @NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP:
- * @NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST:
- * @NVME_IDENTIFY_CNS_NS_GRANULARITY:
- * @NVME_IDENTIFY_CNS_UUID_LIST:
- * @NVME_IDENTIFY_CNS_DOMAIN_LIST:
- * @NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID:
- * @NVME_IDENTIFY_CNS_CSS_ALLOCATED_NS_LIST:
- * @NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE: Base Specification 2.0a section 5.17.2.21
+ * @NVME_IDENTIFY_CNS_NS:			Identify Namespace data structure
+ * @NVME_IDENTIFY_CNS_CTRL:			Identify Controller data structur
+ * @NVME_IDENTIFY_CNS_NS_ACTIVE_LIST:		Active Namespace ID list
+ * @NVME_IDENTIFY_CNS_NS_DESC_LIST:		Namespace Identification Descriptor list
+ * @NVME_IDENTIFY_CNS_NVMSET_LIST:		NVM Set List
+ * @NVME_IDENTIFY_CNS_CSI_NS:			I/O Command Set specific Identify
+ * 						Namespace data structure
+ * @NVME_IDENTIFY_CNS_CSI_CTRL:			I/O Command Set specific Identify
+ * 						Controller data structure
+ * @NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST:	Active Namespace ID list associated
+ * 						with the specified I/O Command Set
+ * @NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS:	I/O Command Set Independent Identify
+ * 						Namespace data structure
+ * @NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST:	Allocated Namespace ID list
+ * @NVME_IDENTIFY_CNS_ALLOCATED_NS:		Identify Namespace data structure for
+ * 						the specified allocated NSID
+ * @NVME_IDENTIFY_CNS_NS_CTRL_LIST:		Controller List of controllers attached
+ * 						to the specified NSID
+ * @NVME_IDENTIFY_CNS_CTRL_LIST:		Controller List of controllers that exist
+ * 						in the NVM subsystem
+ * @NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP:		Primary Controller Capabilities data
+ * 						structure for the specified primary controller
+ * @NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST:	Secondary Controller list of controllers
+ * 						associated with the primary controller
+ * 						processing the command
+ * @NVME_IDENTIFY_CNS_NS_GRANULARITY:		A Namespace Granularity Lis
+ * @NVME_IDENTIFY_CNS_UUID_LIST:		A UUID List
+ * @NVME_IDENTIFY_CNS_DOMAIN_LIST:		Domain List
+ * @NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID:	Endurance Group List
+ * @NVME_IDENTIFY_CNS_CSS_ALLOCATED_NS_LIST:	I/O Command Set specific Allocated Namespace
+ * 						ID list
+ * @NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE:	Base Specification 2.0a section 5.17.2.21
  */
 enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_NS					= 0x00,
@@ -6065,30 +6076,30 @@ enum nvme_identify_cns {
 
 /**
  * enum nvme_cmd_get_log_lid -
- * @NVME_LOG_LID_SUPPORTED_LOG_PAGES:
- * @NVME_LOG_LID_ERROR:
- * @NVME_LOG_LID_SMART:
- * @NVME_LOG_LID_FW_SLOT:
- * @NVME_LOG_LID_CHANGED_NS:
- * @NVME_LOG_LID_CMD_EFFECTS:
- * @NVME_LOG_LID_DEVICE_SELF_TEST:
- * @NVME_LOG_LID_TELEMETRY_HOST:
- * @NVME_LOG_LID_TELEMETRY_CTRL:
- * @NVME_LOG_LID_ENDURANCE_GROUP:
- * @NVME_LOG_LID_PREDICTABLE_LAT_NVMSET:
- * @NVME_LOG_LID_PREDICTABLE_LAT_AGG:
- * @NVME_LOG_LID_ANA:
- * @NVME_LOG_LID_PERSISTENT_EVENT:
- * @NVME_LOG_LID_LBA_STATUS:
- * @NVME_LOG_LID_ENDURANCE_GRP_EVT:
- * @NVME_LOG_LID_MEDIA_UNIT_STATUS:
- * @NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST:
- * @NVME_LOG_LID_FID_SUPPORTED_EFFECTS:
- * @NVME_LOG_LID_BOOT_PARTITION:
- * @NVME_LOG_LID_DISCOVER:
- * @NVME_LOG_LID_RESERVATION:
- * @NVME_LOG_LID_SANITIZE:
- * @NVME_LOG_LID_ZNS_CHANGED_ZONES:
+ * @NVME_LOG_LID_SUPPORTED_LOG_PAGES:		Supported Log Pages
+ * @NVME_LOG_LID_ERROR:				Error Information
+ * @NVME_LOG_LID_SMART:				SMART / Health Information
+ * @NVME_LOG_LID_FW_SLOT:			Firmware Slot Information
+ * @NVME_LOG_LID_CHANGED_NS:			Changed Namespace List
+ * @NVME_LOG_LID_CMD_EFFECTS:			Commands Supported and Effects
+ * @NVME_LOG_LID_DEVICE_SELF_TEST:		Device Self-test
+ * @NVME_LOG_LID_TELEMETRY_HOST:		Telemetry Host-Initiated
+ * @NVME_LOG_LID_TELEMETRY_CTRL:		Telemetry Controller-Initiated
+ * @NVME_LOG_LID_ENDURANCE_GROUP:		Endurance Group Information
+ * @NVME_LOG_LID_PREDICTABLE_LAT_NVMSET:	Predictable Latency Per NVM Set
+ * @NVME_LOG_LID_PREDICTABLE_LAT_AGG:		Predictable Latency Event Aggregate
+ * @NVME_LOG_LID_ANA:				Asymmetric Namespace Access
+ * @NVME_LOG_LID_PERSISTENT_EVENT:		Persistent Event Log
+ * @NVME_LOG_LID_LBA_STATUS:			LBA Status Information
+ * @NVME_LOG_LID_ENDURANCE_GRP_EVT:		Endurance Group Event Aggregate
+ * @NVME_LOG_LID_MEDIA_UNIT_STATUS:		Media Unit Status
+ * @NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST:	Supported Capacity Configuration Lis
+ * @NVME_LOG_LID_FID_SUPPORTED_EFFECTS:		Feature Identifiers Supported and Effects
+ * @NVME_LOG_LID_BOOT_PARTITION:		Boot Partition
+ * @NVME_LOG_LID_DISCOVER:			Discovery
+ * @NVME_LOG_LID_RESERVATION:			Reservation Notification
+ * @NVME_LOG_LID_SANITIZE:			Sanitize Status
+ * @NVME_LOG_LID_ZNS_CHANGED_ZONES:		Changed Zone List
  */
 enum nvme_cmd_get_log_lid {
 	NVME_LOG_LID_SUPPORTED_LOG_PAGES			= 0x00,
@@ -6119,40 +6130,40 @@ enum nvme_cmd_get_log_lid {
 
 /**
  * enum nvme_features_id -
- * @NVME_FEAT_FID_ARBITRATION:
- * @NVME_FEAT_FID_POWER_MGMT:
- * @NVME_FEAT_FID_LBA_RANGE:
- * @NVME_FEAT_FID_TEMP_THRESH:
- * @NVME_FEAT_FID_ERR_RECOVERY:
- * @NVME_FEAT_FID_VOLATILE_WC:
- * @NVME_FEAT_FID_NUM_QUEUES:
- * @NVME_FEAT_FID_IRQ_COALESCE:
- * @NVME_FEAT_FID_IRQ_CONFIG:
- * @NVME_FEAT_FID_WRITE_ATOMIC:
- * @NVME_FEAT_FID_ASYNC_EVENT:
- * @NVME_FEAT_FID_AUTO_PST:
- * @NVME_FEAT_FID_HOST_MEM_BUF:
- * @NVME_FEAT_FID_TIMESTAMP:
- * @NVME_FEAT_FID_KATO:
- * @NVME_FEAT_FID_HCTM:
- * @NVME_FEAT_FID_NOPSC:
- * @NVME_FEAT_FID_RRL:
- * @NVME_FEAT_FID_PLM_CONFIG:
- * @NVME_FEAT_FID_PLM_WINDOW:
- * @NVME_FEAT_FID_LBA_STS_INTERVAL:
- * @NVME_FEAT_FID_HOST_BEHAVIOR:
- * @NVME_FEAT_FID_SANITIZE:
- * @NVME_FEAT_FID_ENDURANCE_EVT_CFG:
- * @NVME_FEAT_FID_IOCS_PROFILE:
- * @NVME_FEAT_FID_SPINUP_CONTROL:
+ * @NVME_FEAT_FID_ARBITRATION:		Arbitration
+ * @NVME_FEAT_FID_POWER_MGMT:		Power Management
+ * @NVME_FEAT_FID_LBA_RANGE:		LBA Range Type
+ * @NVME_FEAT_FID_TEMP_THRESH:		Temperature Threshold
+ * @NVME_FEAT_FID_ERR_RECOVERY:		Error Recovery
+ * @NVME_FEAT_FID_VOLATILE_WC:		Volatile Write Cache
+ * @NVME_FEAT_FID_NUM_QUEUES:		Number of Queues
+ * @NVME_FEAT_FID_IRQ_COALESCE:		Interrupt Coalescing
+ * @NVME_FEAT_FID_IRQ_CONFIG:		Interrupt Vector Configuration
+ * @NVME_FEAT_FID_WRITE_ATOMIC:		Write Atomicity Normal
+ * @NVME_FEAT_FID_ASYNC_EVENT:		Asynchronous Event Configuration
+ * @NVME_FEAT_FID_AUTO_PST:		Autonomous Power State Transition
+ * @NVME_FEAT_FID_HOST_MEM_BUF:		Host Memory Buffer
+ * @NVME_FEAT_FID_TIMESTAMP:		Timestamp
+ * @NVME_FEAT_FID_KATO:			Keep Alive Timer
+ * @NVME_FEAT_FID_HCTM:			Host Controlled Thermal Management
+ * @NVME_FEAT_FID_NOPSC:		Non-Operational Power State Config
+ * @NVME_FEAT_FID_RRL:			Read Recovery Level Config
+ * @NVME_FEAT_FID_PLM_CONFIG:		Predictable Latency Mode Config
+ * @NVME_FEAT_FID_PLM_WINDOW:		Predictable Latency Mode Window
+ * @NVME_FEAT_FID_LBA_STS_INTERVAL:	LBA Status Information Report Interval
+ * @NVME_FEAT_FID_HOST_BEHAVIOR:	Host Behavior Support
+ * @NVME_FEAT_FID_SANITIZE:		Endurance Group Event Configuration
+ * @NVME_FEAT_FID_ENDURANCE_EVT_CFG:	Endurance Group Event Configuration
+ * @NVME_FEAT_FID_IOCS_PROFILE:		I/O Command Set Profile
+ * @NVME_FEAT_FID_SPINUP_CONTROL:	Spinup Control
  * @NVME_FEAT_FID_ENH_CTRL_METADATA:	Enhanced Controller Metadata
  * @NVME_FEAT_FID_CTRL_METADATA:	Controller Metadata
  * @NVME_FEAT_FID_NS_METADATA:		Namespace Metadata
- * @NVME_FEAT_FID_SW_PROGRESS:
- * @NVME_FEAT_FID_HOST_ID:
- * @NVME_FEAT_FID_RESV_MASK:
- * @NVME_FEAT_FID_RESV_PERSIST:
- * @NVME_FEAT_FID_WRITE_PROTECT:
+ * @NVME_FEAT_FID_SW_PROGRESS:		Software Progress Marker
+ * @NVME_FEAT_FID_HOST_ID:		Host Identifier
+ * @NVME_FEAT_FID_RESV_MASK:		Reservation Notification Mask
+ * @NVME_FEAT_FID_RESV_PERSIST:		Reservation Persistence
+ * @NVME_FEAT_FID_WRITE_PROTECT:	Namespace Write Protection Config
  */
 enum nvme_features_id {
 	NVME_FEAT_FID_ARBITRATION				= 0x01,
