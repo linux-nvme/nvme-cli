@@ -47,6 +47,8 @@
 #define MAX_DISC_ARGS		32
 #define MAX_DISC_RETRIES	10
 
+#define NVMF_DEF_DISC_TMO	30
+
 /* Name of file to output log pages in their raw format */
 static char *raw;
 static bool persistent;
@@ -111,6 +113,16 @@ static void space_strip_len(int max, char *str)
 		else
 			str[i] = '\0';
 	}
+}
+
+static void set_discovery_kato(struct nvme_fabrics_config *cfg)
+{
+	/* Set kato to NVMF_DEF_DISC_TMO for persistent controllers */
+	if (persistent && !cfg->keep_alive_tmo)
+		cfg->keep_alive_tmo = NVMF_DEF_DISC_TMO;
+	/* Set kato to zero for non-persistent controllers */
+	else if (!persistent && (cfg->keep_alive_tmo > 0))
+		cfg->keep_alive_tmo = 0;
 }
 
 static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
@@ -384,10 +396,10 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		ret = argconfig_parse(argc, argv, desc, opts);
 		if (ret)
 			goto next;
-		if (persistent && !cfg.keep_alive_tmo)
-			cfg.keep_alive_tmo = 30;
 		if (!transport && !traddr)
 			goto next;
+
+		set_discovery_kato(&cfg);
 
 		c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
 				     cfg.host_traddr, cfg.host_iface, trsvcid);
@@ -468,8 +480,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		return ret;
 	}
 
-	if (persistent && !cfg.keep_alive_tmo)
-		cfg.keep_alive_tmo = 30;
+	set_discovery_kato(&cfg);
+
 	if (!hostnqn)
 		hostnqn = hnqn = nvmf_hostnqn_from_file();
 	if (!hostid)
