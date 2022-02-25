@@ -6406,10 +6406,10 @@ enum nvme_feat {
 
 /**
  * enum nvme_get_features_sel -
- * @NVME_GET_FEATURES_SEL_CURRENT:
- * @NVME_GET_FEATURES_SEL_DEFAULT:
- * @NVME_GET_FEATURES_SEL_SAVED:
- * @NVME_GET_FEATURES_SEL_SUPPORTED:
+ * @NVME_GET_FEATURES_SEL_CURRENT:	Current value
+ * @NVME_GET_FEATURES_SEL_DEFAULT:	Default value
+ * @NVME_GET_FEATURES_SEL_SAVED:	Saved value
+ * @NVME_GET_FEATURES_SEL_SUPPORTED:	Supported capabilities
  */
 enum nvme_get_features_sel {
 	NVME_GET_FEATURES_SEL_CURRENT				= 0,
@@ -6479,8 +6479,8 @@ enum nvme_cmd_format_ses {
 
 /**
  * enum nvme_ns_mgmt_sel -
- * @NVME_NS_MGMT_SEL_CREATE:
- * @NVME_NS_MGMT_SEL_DELETE:
+ * @NVME_NS_MGMT_SEL_CREATE:	Namespace Create selection
+ * @NVME_NS_MGMT_SEL_DELETE:	Namespace Delete selection
  */
 enum nvme_ns_mgmt_sel {
 	NVME_NS_MGMT_SEL_CREATE					= 0,
@@ -6489,8 +6489,8 @@ enum nvme_ns_mgmt_sel {
 
 /**
  * enum nvme_ns_attach_sel -
- * @NVME_NS_ATTACH_SEL_CTRL_ATTACH:
- * @NVME_NS_ATTACH_SEL_CTRL_DEATTACH:
+ * @NVME_NS_ATTACH_SEL_CTRL_ATTACH:	Namespace attach selection
+ * @NVME_NS_ATTACH_SEL_CTRL_DEATTACH:	Namespace detach selection
  */
 enum nvme_ns_attach_sel {
 	NVME_NS_ATTACH_SEL_CTRL_ATTACH				= 0,
@@ -6499,12 +6499,29 @@ enum nvme_ns_attach_sel {
 
 /**
  * enum nvme_fw_commit_ca -
- * @NVME_FW_COMMIT_CA_REPLACE:
- * @NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE:
- * @NVME_FW_COMMIT_CA_SET_ACTIVE:
- * @NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE_IMMEDIATE:
- * @NVME_FW_COMMIT_CA_REPLACE_BOOT_PARTITION:
- * @NVME_FW_COMMIT_CA_ACTIVATE_BOOT_PARTITION:
+ * @NVME_FW_COMMIT_CA_REPLACE:				Downloaded image replaces the existing
+ * 							image, if any, in the specified Firmware
+ * 							Slot. The newly placed image is not
+ * 							activated.
+ * @NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE:		Downloaded image replaces the existing
+ * 							image, if any, in the specified Firmware
+ * 							Slot. The newly placed image is activated
+ * 							at the next Controller Level Reset.
+ * @NVME_FW_COMMIT_CA_SET_ACTIVE:			The existing image in the specified
+ * 							Firmware Slot is activated at the
+ * 							next Controller Level Reset.
+ * @NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE_IMMEDIATE:	Downloaded image replaces the existing
+ * 							image, if any, in the specified Firmware
+ * 							Slot and is then activated immediately.
+ * 							If there is not a newly downloaded image,
+ * 							then the existing image in the specified
+ * 							firmware slot is activated immediately.
+ * @NVME_FW_COMMIT_CA_REPLACE_BOOT_PARTITION:		Downloaded image replaces the Boot
+ * 							Partition specified by the Boot
+ * 							Partition ID field.
+ * @NVME_FW_COMMIT_CA_ACTIVATE_BOOT_PARTITION:		Mark the Boot Partition specified in
+ * 							the BPID field as active and update 
+ * 							BPINFO.ABPID.
  */
 enum nvme_fw_commit_ca {
 	NVME_FW_COMMIT_CA_REPLACE				= 0,
@@ -6517,8 +6534,8 @@ enum nvme_fw_commit_ca {
 
 /**
  * enum nvme_directive_dtype -
- * @NVME_DIRECTIVE_DTYPE_IDENTIFY:
- * @NVME_DIRECTIVE_DTYPE_STREAMS:
+ * @NVME_DIRECTIVE_DTYPE_IDENTIFY:	Identify directive type
+ * @NVME_DIRECTIVE_DTYPE_STREAMS:	Streams directive type
  */
 enum nvme_directive_dtype {
 	NVME_DIRECTIVE_DTYPE_IDENTIFY				= 0,
@@ -6591,10 +6608,11 @@ enum nvme_dst_stc {
 
 /**
  * enum nvme_virt_mgmt_act -
- * @NVME_VIRT_MGMT_ACT_PRIM_CTRL_FLEX_ALLOC:
- * @NVME_VIRT_MGMT_ACT_OFFLINE_SEC_CTRL:
- * @NVME_VIRT_MGMT_ACT_ASSIGN_SEC_CTRL:
- * @NVME_VIRT_MGMT_ACT_ONLINE_SEC_CTRL:
+ * @NVME_VIRT_MGMT_ACT_PRIM_CTRL_FLEX_ALLOC:	Primary Controller Flexible
+ * 						Allocation
+ * @NVME_VIRT_MGMT_ACT_OFFLINE_SEC_CTRL:	Secondary Controller Offline
+ * @NVME_VIRT_MGMT_ACT_ASSIGN_SEC_CTRL:		Secondary Controller Assign
+ * @NVME_VIRT_MGMT_ACT_ONLINE_SEC_CTRL:		Secondary Controller Online
  */
 enum nvme_virt_mgmt_act {
 	NVME_VIRT_MGMT_ACT_PRIM_CTRL_FLEX_ALLOC			= 1,
@@ -6605,8 +6623,8 @@ enum nvme_virt_mgmt_act {
 
 /**
  * enum nvme_virt_mgmt_rt -
- * @NVME_VIRT_MGMT_RT_VQ_RESOURCE:
- * @NVME_VIRT_MGMT_RT_VI_RESOURCE:
+ * @NVME_VIRT_MGMT_RT_VQ_RESOURCE:	VQ Resources
+ * @NVME_VIRT_MGMT_RT_VI_RESOURCE:	VI Resources
  */
 enum nvme_virt_mgmt_rt {
 	NVME_VIRT_MGMT_RT_VQ_RESOURCE				= 0,
@@ -6615,10 +6633,10 @@ enum nvme_virt_mgmt_rt {
 
 /**
  * enum nvme_ns_write_protect_cfg -
- * @NVME_NS_WP_CFG_NONE:
- * @NVME_NS_WP_CFG_PROTECT:
- * @NVME_NS_WP_CFG_PROTECT_POWER_CYCLE:
- * @NVME_NS_WP_CFG_PROTECT_PERMANENT:
+ * @NVME_NS_WP_CFG_NONE:		No Write Protect
+ * @NVME_NS_WP_CFG_PROTECT:		Write Protect
+ * @NVME_NS_WP_CFG_PROTECT_POWER_CYCLE:	Write Protect Until Power Cycle
+ * @NVME_NS_WP_CFG_PROTECT_PERMANENT:	Permanent Write Protect
  */
 enum nvme_ns_write_protect_cfg {
 	NVME_NS_WP_CFG_NONE					= 0,
@@ -6639,9 +6657,9 @@ enum nvme_log_ana_lsp {
 
 /**
  * enum nvme_pevent_log_action -
- * @NVME_PEVENT_LOG_READ:
- * @NVME_PEVENT_LOG_EST_CTX_AND_READ:
- * @NVME_PEVENT_LOG_RELEASE_CTX:
+ * @NVME_PEVENT_LOG_READ:		Read Log Data
+ * @NVME_PEVENT_LOG_EST_CTX_AND_READ:	Establish Context and Read Log Data
+ * @NVME_PEVENT_LOG_RELEASE_CTX:	Release Context
  */
 enum nvme_pevent_log_action {
 	NVME_PEVENT_LOG_READ			= 0x0,
@@ -6651,8 +6669,8 @@ enum nvme_pevent_log_action {
 
 /**
  * enum nvme_feat_tmpthresh_thsel -
- * @NVME_FEATURE_TEMPTHRESH_THSEL_OVER:
- * @NVME_FEATURE_TEMPTHRESH_THSEL_UNDER:
+ * @NVME_FEATURE_TEMPTHRESH_THSEL_OVER:		Over temperature threshold select
+ * @NVME_FEATURE_TEMPTHRESH_THSEL_UNDER:	Under temperature threshold select
  */
 enum nvme_feat_tmpthresh_thsel {
 	NVME_FEATURE_TEMPTHRESH_THSEL_OVER			= 0,
@@ -6695,8 +6713,8 @@ enum nvme_features_async_event_config_flags {
 
 /**
  * enum nvme_feat_plm_window_select -
- * @NVME_FEATURE_PLM_DTWIN:
- * @NVME_FEATURE_PLM_NDWIN:
+ * @NVME_FEATURE_PLM_DTWIN:	Deterministic Window select
+ * @NVME_FEATURE_PLM_NDWIN:	Non-Deterministic Window select
  */
 enum nvme_feat_plm_window_select {
 	NVME_FEATURE_PLM_DTWIN					= 1,
@@ -6705,9 +6723,9 @@ enum nvme_feat_plm_window_select {
 
 /**
  * enum nvme_feat_resv_notify_flags -
- * @NVME_FEAT_RESV_NOTIFY_REGPRE:
- * @NVME_FEAT_RESV_NOTIFY_RESREL:
- * @NVME_FEAT_RESV_NOTIFY_RESPRE:
+ * @NVME_FEAT_RESV_NOTIFY_REGPRE:	Mask Registration Preempted Notification
+ * @NVME_FEAT_RESV_NOTIFY_RESREL:	Mask Reservation Released Notification
+ * @NVME_FEAT_RESV_NOTIFY_RESPRE:	Mask Reservation Preempted Notification
  */
 enum nvme_feat_resv_notify_flags {
 	NVME_FEAT_RESV_NOTIFY_REGPRE		= 1 << 1,
@@ -6717,10 +6735,10 @@ enum nvme_feat_resv_notify_flags {
 
 /**
  * enum nvme_feat_nswpcfg_state -
- * @NVME_FEAT_NS_NO_WRITE_PROTECT:
- * @NVME_FEAT_NS_WRITE_PROTECT:
- * @NVME_FEAT_NS_WRITE_PROTECT_PWR_CYCLE:
- * @NVME_FEAT_NS_WRITE_PROTECT_PERMANENT:
+ * @NVME_FEAT_NS_NO_WRITE_PROTECT:		No Write Protect
+ * @NVME_FEAT_NS_WRITE_PROTECT:			Write Protect
+ * @NVME_FEAT_NS_WRITE_PROTECT_PWR_CYCLE:	Write Protect Until Power Cycle
+ * @NVME_FEAT_NS_WRITE_PROTECT_PERMANENT:	Permanent Write Protect
  */
 enum nvme_feat_nswpcfg_state {
 	NVME_FEAT_NS_NO_WRITE_PROTECT 		= 0,
