@@ -10,7 +10,6 @@
 #define _LIBNVME_UTIL_H
 
 #include "types.h"
-#include <ccan/endian/endian.h>
 
 /**
  * DOC: util.h
@@ -548,10 +547,6 @@ static inline __u16 nvmf_exat_size(size_t val_len)
  *
  * Return: Pointer to the next element in the array.
  */
-static inline struct nvmf_ext_attr *nvmf_exat_ptr_next(struct nvmf_ext_attr *p)
-{
-	return (struct nvmf_ext_attr *)
-		((uintptr_t)p + (ptrdiff_t)nvmf_exat_size(le16_to_cpu(p->exatlen)));
-}
+struct nvmf_ext_attr *nvmf_exat_ptr_next(struct nvmf_ext_attr *p);
 
 #endif /* _LIBNVME_UTIL_H */
