@@ -759,3 +759,9 @@ size_t get_entity_version(char *buffer, size_t bufsz)
 
 	return num_bytes;
 }
+
+struct nvmf_ext_attr *nvmf_exat_ptr_next(struct nvmf_ext_attr *p)
+{
+	return (struct nvmf_ext_attr *)
+		((uintptr_t)p + (ptrdiff_t)nvmf_exat_size(le16_to_cpu(p->exatlen)));
+}
