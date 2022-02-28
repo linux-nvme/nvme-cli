@@ -6749,12 +6749,12 @@ enum nvme_feat_nswpcfg_state {
 
 /**
  * enum nvme_fctype -
- * @nvme_fabrics_type_property_set:
- * @nvme_fabrics_type_connect:
- * @nvme_fabrics_type_property_get:
- * @nvme_fabrics_type_auth_send:
- * @nvme_fabrics_type_auth_receive:
- * @nvme_fabrics_type_disconnect:
+ * @nvme_fabrics_type_property_set:	Property set
+ * @nvme_fabrics_type_connect:		Connect
+ * @nvme_fabrics_type_property_get:	Property Get
+ * @nvme_fabrics_type_auth_send:	Authentication Send
+ * @nvme_fabrics_type_auth_receive:	Authentication Receive
+ * @nvme_fabrics_type_disconnect:	Disconnect
  */
 enum nvme_fctype {
 	nvme_fabrics_type_property_set		= 0x00,
@@ -6767,22 +6767,22 @@ enum nvme_fctype {
 
 /**
  * enum nvme_io_opcode -
- * @nvme_cmd_flush:
- * @nvme_cmd_write:
- * @nvme_cmd_read:
- * @nvme_cmd_write_uncor:
- * @nvme_cmd_compare:
- * @nvme_cmd_write_zeroes:
- * @nvme_cmd_dsm:
- * @nvme_cmd_verify:
- * @nvme_cmd_resv_register:
- * @nvme_cmd_resv_report:
- * @nvme_cmd_resv_acquire:
- * @nvme_cmd_resv_release:
- * @nvme_cmd_copy:
- * @nvme_zns_cmd_mgmt_send:
- * @nvme_zns_cmd_mgmt_recv:
- * @nvme_zns_cmd_append:
+ * @nvme_cmd_flush:		Flush
+ * @nvme_cmd_write:		Write
+ * @nvme_cmd_read:		Read
+ * @nvme_cmd_write_uncor:	Write Uncorrectable
+ * @nvme_cmd_compare:		Compare
+ * @nvme_cmd_write_zeroes:	write Zeros
+ * @nvme_cmd_dsm:		Dataset Management
+ * @nvme_cmd_verify:		Verify
+ * @nvme_cmd_resv_register:	Reservation Register
+ * @nvme_cmd_resv_report:	Reservation Report
+ * @nvme_cmd_resv_acquire:	Reservation Acquire
+ * @nvme_cmd_resv_release:	Reservation Release
+ * @nvme_cmd_copy:		Copy
+ * @nvme_zns_cmd_mgmt_send:	Zone Management Send
+ * @nvme_zns_cmd_mgmt_recv:	Zone Management Receive
+ * @nvme_zns_cmd_append:	Zone Append
  */
 enum nvme_io_opcode {
 	nvme_cmd_flush		= 0x00,
@@ -6805,15 +6805,15 @@ enum nvme_io_opcode {
 
 /**
  * enum nvme_io_control_flags -
- * @NVME_IO_DTYPE_STREAMS:
- * @NVME_IO_DEAC:
- * @NVME_IO_ZNS_APPEND_PIREMAP:
- * @NVME_IO_PRINFO_PRCHK_REF:
- * @NVME_IO_PRINFO_PRCHK_APP:
- * @NVME_IO_PRINFO_PRCHK_GUARD:
- * @NVME_IO_PRINFO_PRACT:
- * @NVME_IO_FUA:
- * @NVME_IO_LR:
+ * @NVME_IO_DTYPE_STREAMS:	Directive Type Streams
+ * @NVME_IO_DEAC:		Deallocate
+ * @NVME_IO_ZNS_APPEND_PIREMAP:	Protection Information Remap
+ * @NVME_IO_PRINFO_PRCHK_REF:	Protection Information Check Reference Tag
+ * @NVME_IO_PRINFO_PRCHK_APP:	Protection Information Check Application Tag
+ * @NVME_IO_PRINFO_PRCHK_GUARD: Protection Information Check Guard field
+ * @NVME_IO_PRINFO_PRACT:	Protection Information Action
+ * @NVME_IO_FUA:		Force Unit Access
+ * @NVME_IO_LR:			Limited Retry
  */
 enum nvme_io_control_flags {
 	NVME_IO_DTYPE_STREAMS		= 1 << 4,
@@ -6829,19 +6829,24 @@ enum nvme_io_control_flags {
 
 /**
  * enum nvme_io_dsm_flags -
- * @NVME_IO_DSM_FREQ_UNSPEC:
- * @NVME_IO_DSM_FREQ_TYPICAL:
- * @NVME_IO_DSM_FREQ_RARE:
- * @NVME_IO_DSM_FREQ_READS:
- * @NVME_IO_DSM_FREQ_WRITES:
- * @NVME_IO_DSM_FREQ_RW:
+ * @NVME_IO_DSM_FREQ_UNSPEC:	No frequency information provided
+ * @NVME_IO_DSM_FREQ_TYPICAL:	Typical number of reads and writes
+ * 				expected for this LBA range
+ * @NVME_IO_DSM_FREQ_RARE:	Infrequent writes and infrequent
+ * 				reads to the LBA range indicated
+ * @NVME_IO_DSM_FREQ_READS:	Infrequent writes and frequent
+ * 				reads to the LBA range indicated
+ * @NVME_IO_DSM_FREQ_WRITES:	Frequent writes and infrequent
+ * 				reads to the LBA range indicated
+ * @NVME_IO_DSM_FREQ_RW:	Frequent writes and frequent reads
+ * 				to the LBA range indicated
  * @NVME_IO_DSM_FREQ_ONCE:
  * @NVME_IO_DSM_FREQ_PREFETCH:
  * @NVME_IO_DSM_FREQ_TEMP:
- * @NVME_IO_DSM_LATENCY_NONE:
- * @NVME_IO_DSM_LATENCY_IDLE:
- * @NVME_IO_DSM_LATENCY_NORM:
- * @NVME_IO_DSM_LATENCY_LOW:
+ * @NVME_IO_DSM_LATENCY_NONE:	No latency information provided
+ * @NVME_IO_DSM_LATENCY_IDLE:	Longer latency acceptable
+ * @NVME_IO_DSM_LATENCY_NORM:	Typical latency
+ * @NVME_IO_DSM_LATENCY_LOW:	Smallest possible latency
  * @NVME_IO_DSM_SEQ_REQ:
  * @NVME_IO_DSM_COMPRESSED:
  */
@@ -6865,9 +6870,9 @@ enum nvme_io_dsm_flags {
 
 /**
  * enum nvme_dsm_attributes -
- * @NVME_DSMGMT_IDR:
- * @NVME_DSMGMT_IDW:
- * @NVME_DSMGMT_AD:
+ * @NVME_DSMGMT_IDR:	Attribute – Integral Dataset for Read
+ * @NVME_DSMGMT_IDW:	Attribute – Integral Dataset for Write
+ * @NVME_DSMGMT_AD:	Attribute – Deallocate
  */
 enum nvme_dsm_attributes {
 	NVME_DSMGMT_IDR			= 1 << 0,
@@ -6877,12 +6882,12 @@ enum nvme_dsm_attributes {
 
 /**
  * enum nvme_resv_rtype -
- * @NVME_RESERVATION_RTYPE_WE:
- * @NVME_RESERVATION_RTYPE_EA:
- * @NVME_RESERVATION_RTYPE_WERO:
- * @NVME_RESERVATION_RTYPE_EARO:
- * @NVME_RESERVATION_RTYPE_WEAR:
- * @NVME_RESERVATION_RTYPE_EAAR:
+ * @NVME_RESERVATION_RTYPE_WE:		Write Exclusive Reservation
+ * @NVME_RESERVATION_RTYPE_EA:		Exclusive Access Reservation
+ * @NVME_RESERVATION_RTYPE_WERO:	Write Exclusive - Registrants Only Reservation
+ * @NVME_RESERVATION_RTYPE_EARO:	Exclusive Access - Registrants Only Reservation
+ * @NVME_RESERVATION_RTYPE_WEAR:	Write Exclusive - All Registrants Reservation
+ * @NVME_RESERVATION_RTYPE_EAAR:	Exclusive Access - All Registrants Reservation
  */
 enum nvme_resv_rtype {
 	NVME_RESERVATION_RTYPE_WE	= 1,
@@ -6895,9 +6900,9 @@ enum nvme_resv_rtype {
 
 /**
  * enum nvme_resv_racqa -
- * @NVME_RESERVATION_RACQA_ACQUIRE:
- * @NVME_RESERVATION_RACQA_PREEMPT:
- * @NVME_RESERVATION_RACQA_PREEMPT_AND_ABORT:
+ * @NVME_RESERVATION_RACQA_ACQUIRE:		Acquire
+ * @NVME_RESERVATION_RACQA_PREEMPT:		Preempt
+ * @NVME_RESERVATION_RACQA_PREEMPT_AND_ABORT:	Preempt and Abort
  */
 enum nvme_resv_racqa {
 	NVME_RESERVATION_RACQA_ACQUIRE			= 0,
@@ -6907,9 +6912,9 @@ enum nvme_resv_racqa {
 
 /**
  * enum nvme_resv_rrega -
- * @NVME_RESERVATION_RREGA_REGISTER_KEY:
- * @NVME_RESERVATION_RREGA_UNREGISTER_KEY:
- * @NVME_RESERVATION_RREGA_REPLACE_KEY:
+ * @NVME_RESERVATION_RREGA_REGISTER_KEY:	Register Reservation Key
+ * @NVME_RESERVATION_RREGA_UNREGISTER_KEY:	Unregister Reservation Key
+ * @NVME_RESERVATION_RREGA_REPLACE_KEY:		Replace Reservation Key
  */
 enum nvme_resv_rrega {
 	NVME_RESERVATION_RREGA_REGISTER_KEY		= 0,
@@ -6919,9 +6924,11 @@ enum nvme_resv_rrega {
 
 /**
  * enum nvme_resv_cptpl -
- * @NVME_RESERVATION_CPTPL_NO_CHANGE:
- * @NVME_RESERVATION_CPTPL_CLEAR:
- * @NVME_RESERVATION_CPTPL_PERSIST:
+ * @NVME_RESERVATION_CPTPL_NO_CHANGE:	No change to PTPL state
+ * @NVME_RESERVATION_CPTPL_CLEAR:	Reservations are released and
+ * 					registrants are cleared on a power on
+ * @NVME_RESERVATION_CPTPL_PERSIST:	Reservations and registrants persist
+ * 					across a power loss
  */
 enum nvme_resv_cptpl {
 	NVME_RESERVATION_CPTPL_NO_CHANGE		= 0,
@@ -6931,8 +6938,8 @@ enum nvme_resv_cptpl {
 
 /**
  * enum nvme_resv_rrela -
- * @NVME_RESERVATION_RRELA_RELEASE:
- * @NVME_RESERVATION_RRELA_CLEAR:
+ * @NVME_RESERVATION_RRELA_RELEASE:	Release
+ * @NVME_RESERVATION_RRELA_CLEAR:	Clear
  */
 enum nvme_resv_rrela {
 	NVME_RESERVATION_RRELA_RELEASE			= 0,
@@ -6941,13 +6948,13 @@ enum nvme_resv_rrela {
 
 /**
  * enum nvme_zns_send_action -
- * @NVME_ZNS_ZSA_CLOSE:
- * @NVME_ZNS_ZSA_FINISH:
- * @NVME_ZNS_ZSA_OPEN:
- * @NVME_ZNS_ZSA_RESET:
- * @NVME_ZNS_ZSA_OFFLINE:
- * @NVME_ZNS_ZSA_SET_DESC_EXT:
- * @NVME_ZNS_ZSA_ZRWA_FLUSH:
+ * @NVME_ZNS_ZSA_CLOSE:		Close Zone
+ * @NVME_ZNS_ZSA_FINISH:	Finish Zone
+ * @NVME_ZNS_ZSA_OPEN:		Open Zone
+ * @NVME_ZNS_ZSA_RESET:		Reset Zone
+ * @NVME_ZNS_ZSA_OFFLINE:	Offline Zone
+ * @NVME_ZNS_ZSA_SET_DESC_EXT:	Set Zone Descriptor Extension
+ * @NVME_ZNS_ZSA_ZRWA_FLUSH:	Flush
  */
 enum nvme_zns_send_action {
 	NVME_ZNS_ZSA_CLOSE		= 0x1,
@@ -6961,8 +6968,8 @@ enum nvme_zns_send_action {
 
 /**
  * enum nvme_zns_recv_action -
- * @NVME_ZNS_ZRA_REPORT_ZONES:
- * @NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES:
+ * @NVME_ZNS_ZRA_REPORT_ZONES:		Report Zones
+ * @NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES:	Extended Report Zones
  */
 enum nvme_zns_recv_action {
 	NVME_ZNS_ZRA_REPORT_ZONES		= 0x0,
@@ -6971,14 +6978,14 @@ enum nvme_zns_recv_action {
 
 /**
  * enum nvme_zns_report_options -
- * @NVME_ZNS_ZRAS_REPORT_ALL:
- * @NVME_ZNS_ZRAS_REPORT_EMPTY:
- * @NVME_ZNS_ZRAS_REPORT_IMPL_OPENED:
- * @NVME_ZNS_ZRAS_REPORT_EXPL_OPENED:
- * @NVME_ZNS_ZRAS_REPORT_CLOSED:
- * @NVME_ZNS_ZRAS_REPORT_FULL:
- * @NVME_ZNS_ZRAS_REPORT_READ_ONLY:
- * @NVME_ZNS_ZRAS_REPORT_OFFLINE:
+ * @NVME_ZNS_ZRAS_REPORT_ALL:		List all zones
+ * @NVME_ZNS_ZRAS_REPORT_EMPTY:		List the zones in the ZSE:Empty state
+ * @NVME_ZNS_ZRAS_REPORT_IMPL_OPENED:	List the zones in the ZSIO:Implicitly Opened state
+ * @NVME_ZNS_ZRAS_REPORT_EXPL_OPENED:	List the zones in the ZSEO:Explicitly Opened state
+ * @NVME_ZNS_ZRAS_REPORT_CLOSED:	List the zones in the ZSC:Closed state
+ * @NVME_ZNS_ZRAS_REPORT_FULL:		List the zones in the ZSF:Full state
+ * @NVME_ZNS_ZRAS_REPORT_READ_ONLY:	List the zones in the ZSRO:Read Only state
+ * @NVME_ZNS_ZRAS_REPORT_OFFLINE:	List the zones in the ZSO:Offline state
  */
 enum nvme_zns_report_options {
 	NVME_ZNS_ZRAS_REPORT_ALL		= 0x0,
