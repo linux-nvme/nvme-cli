@@ -35,6 +35,8 @@ static inline __u8 nvme_generic_status_to_errno(__u16 status)
 	case NVME_SC_SGL_INVALID_METADATA:
 	case NVME_SC_SGL_INVALID_TYPE:
 	case NVME_SC_SGL_INVALID_OFFSET:
+	case NVME_SC_PRP_INVALID_OFFSET:
+	case NVME_SC_CMB_INVALID_USE:
 		return EINVAL;
 	case NVME_SC_CMDID_CONFLICT:
 		return EADDRINUSE;
