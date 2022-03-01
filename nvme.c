@@ -482,7 +482,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 		fprintf(stderr, "Failed to open output file %s: %s!\n",
 				cfg.file_name, strerror(errno));
 		err = output;
-		goto free_mem;
+		goto close_fd;
 	}
 
 	if (cfg.ctrl_init)
@@ -526,10 +526,10 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 		return -1;
 	}
 
+	free(log);
+
 close_output:
 	close(output);
-free_mem:
-	free(log);
 close_fd:
 	close(fd);
 ret:
