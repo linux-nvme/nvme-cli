@@ -868,45 +868,38 @@ static int uuid_from_dmi_entries(char *system_uuid)
  * uuid_from_product_uuid() - Get system UUID from product_uuid
  * @system_uuid: Where to save the system UUID.
  *
- * Get system UUID from /sys/class/dmi/id/product_uuid and fix
- * endianess.
- *
  * Return: 0 on success, -ENXIO otherwise.
  */
 static int uuid_from_product_uuid(char *system_uuid)
 {
-	FILE *stream = NULL;
-	int   ret    = -ENXIO;
+	FILE *stream;
+	ssize_t nread;
+	int ret;
+	char *line = NULL;
+	size_t len = 0;
 
+	stream = fopen(PATH_DMI_PROD_UUID, "re");
+	if (!stream)
+		return -ENXIO;
 	system_uuid[0] = '\0';
 
-	if ((stream = fopen(PATH_DMI_PROD_UUID, "re")) != NULL) {
-		char    *line  = NULL;
-		size_t   len   = 0;
-		ssize_t  nread = getline(&line, &len, stream);
-
-		if (nread == UUID_SIZE) {
-			/* Per "DMTF SMBIOS 3.0 Section 7.2.1 System UUID", the
-			 * UUID retrieved from the DMI has the wrong endianess.
-			 * The following copies "line" to "system_uuid" while
-			 * swapping from little-endian to network-endian. */
-			static const int swaptbl[] = {
-				6,7,4,5,2,3,0,1,8,11,12,9,10,13,16,17,14,15,18,19,
-				20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,
-				-1 /* sentinel */
-			};
-			int i;
-
-			for (i = 0; swaptbl[i] != -1; i++)
-				system_uuid[i] = line[swaptbl[i]];
-			system_uuid[UUID_SIZE-1] = '\0';
-
-			ret = 0;
-		}
-
-		free(line);
-		fclose(stream);
+	nread = getline(&line, &len, stream);
+	if (nread != UUID_SIZE) {
+		ret = -ENXIO;
+		goto out;
 	}
+
+	/* The kernel is handling the byte swapping according DMTF
+	 * SMBIOS 3.0 Section 7.2.1 System UUID */
+
+	memcpy(system_uuid, line, UUID_SIZE - 1);
+	system_uuid[UUID_SIZE - 1] = '\0';
+
+	ret = 0;
+
+out:
+	free(line);
+	fclose(stream);
 
 	return ret;
 }
