@@ -9,9 +9,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  meson-build:
+  build-disto:
     runs-on: ubuntu-latest
-
     steps:
       - name: install libraries
         run: sudo apt-get install libjson-c-dev
@@ -28,3 +27,23 @@ jobs:
         with:
           name: Linux_Meson_Testlog
           path: build/meson-logs/testlog.txt
+
+  build-fallback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install libraries
+        run: sudo apt-get remove -y libssl-dev
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+      - uses: BSFishy/meson-build@v1.0.3
+        with:
+          setup-options: --werror
+          options: --verbose
+          action: test
+          meson-version: 0.61.2
+      # Preserve meson's log file on failure
+      - uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: Linux_Meson_log
+          path: build/meson-logs/meson-log.txt
