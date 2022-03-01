@@ -5729,12 +5729,12 @@ enum nvme_status_field {
 	/*
 	 * Status Code Type indicators
 	 */
-	NVME_SCT_GENERIC		= 0x000,
-	NVME_SCT_CMD_SPECIFIC		= 0x100,
-	NVME_SCT_MEDIA			= 0x200,
-	NVME_SCT_PATH			= 0x300,
-	NVME_SCT_VS			= 0x700,
-	NVME_SCT_MASK			= 0x700,
+	NVME_SCT_GENERIC		= 0x0,
+	NVME_SCT_CMD_SPECIFIC		= 0x1,
+	NVME_SCT_MEDIA			= 0x2,
+	NVME_SCT_PATH			= 0x3,
+	NVME_SCT_VS			= 0x7,
+	NVME_SCT_MASK			= 0x7,
 
 	/*
 	 * Status Code inidicators
