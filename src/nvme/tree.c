@@ -1029,7 +1029,7 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 		if (strcmp(c->transport, transport))
 			continue;
 		if (traddr && c->traddr &&
-		    strcmp(c->traddr, traddr))
+		    strcasecmp(c->traddr, traddr))
 			continue;
 		if (host_traddr && c->cfg.host_traddr &&
 		    strcmp(c->cfg.host_traddr, host_traddr))
