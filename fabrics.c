@@ -511,7 +511,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 			/* Check if device matches command-line options */
 			if (strcmp(nvme_ctrl_get_subsysnqn(c), subsysnqn) ||
 			    strcmp(nvme_ctrl_get_transport(c), transport) ||
-			    strcmp(nvme_ctrl_get_traddr(c), traddr) ||
+			    strcasecmp(nvme_ctrl_get_traddr(c), traddr) ||
 			    (cfg.host_traddr && nvme_ctrl_get_host_traddr(c) &&
 			     strcmp(nvme_ctrl_get_host_traddr(c),
 				    cfg.host_traddr)) ||
