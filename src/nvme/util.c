@@ -83,6 +83,14 @@ static inline __u8 nvme_cmd_specific_status_to_errno(__u16 status)
 	case NVME_SC_CTRL_LIST_INVALID:
 	case NVME_SC_BAD_ATTRIBUTES:
 	case NVME_SC_INVALID_PI:
+	case NVME_SC_INVALID_CTRL_ID:
+	case NVME_SC_INVALID_SEC_CTRL_STATE:
+	case NVME_SC_INVALID_CTRL_RESOURCES:
+	case NVME_SC_INVALID_RESOURCE_ID:
+	case NVME_SC_ANA_GROUP_ID_INVALID:
+	case NVME_SC_INSUFFICIENT_CAP:
+	case NVME_SC_INVALID_IOCS:
+	case NVME_SC_ID_UNAVAILABLE:
 		return EINVAL;
 	case NVME_SC_ABORT_LIMIT:
 	case NVME_SC_ASYNC_LIMIT:
@@ -117,6 +125,7 @@ static inline __u8 nvme_fabrics_status_to_errno(__u16 status)
 	switch (status) {
 	case NVME_SC_CONNECT_FORMAT:
 	case NVME_SC_CONNECT_INVALID_PARAM:
+	case NVME_SC_DISCONNECT_INVALID_QTYPE:
 		return EINVAL;
 	case NVME_SC_CONNECT_CTRL_BUSY:
 		return EBUSY;
