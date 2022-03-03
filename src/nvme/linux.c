@@ -32,6 +32,7 @@
 
 #include "linux.h"
 #include "tree.h"
+#include "log.h"
 #include "private.h"
 
 static int __nvme_open(const char *name)
