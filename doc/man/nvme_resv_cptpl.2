@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_resv_cptpl" "February 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_resv_cptpl" "March 2022" "API Manual" LINUX
 .SH NAME
 enum nvme_resv_cptpl \- 
 .SH SYNOPSIS
@@ -17,5 +17,10 @@ enum nvme_resv_cptpl {
 };
 .SH Constants
 .IP "NVME_RESERVATION_CPTPL_NO_CHANGE" 12
+No change to PTPL state
 .IP "NVME_RESERVATION_CPTPL_CLEAR" 12
+Reservations are released and
+registrants are cleared on a power on
 .IP "NVME_RESERVATION_CPTPL_PERSIST" 12
+Reservations and registrants persist
+across a power loss

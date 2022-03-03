@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_io_dsm_flags" "February 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_io_dsm_flags" "March 2022" "API Manual" LINUX
 .SH NAME
 enum nvme_io_dsm_flags \- 
 .SH SYNOPSIS
@@ -65,17 +65,32 @@ enum nvme_io_dsm_flags {
 };
 .SH Constants
 .IP "NVME_IO_DSM_FREQ_UNSPEC" 12
+No frequency information provided
 .IP "NVME_IO_DSM_FREQ_TYPICAL" 12
+Typical number of reads and writes
+expected for this LBA range
 .IP "NVME_IO_DSM_FREQ_RARE" 12
+Infrequent writes and infrequent
+reads to the LBA range indicated
 .IP "NVME_IO_DSM_FREQ_READS" 12
+Infrequent writes and frequent
+reads to the LBA range indicated
 .IP "NVME_IO_DSM_FREQ_WRITES" 12
+Frequent writes and infrequent
+reads to the LBA range indicated
 .IP "NVME_IO_DSM_FREQ_RW" 12
+Frequent writes and frequent reads
+to the LBA range indicated
 .IP "NVME_IO_DSM_FREQ_ONCE" 12
 .IP "NVME_IO_DSM_FREQ_PREFETCH" 12
 .IP "NVME_IO_DSM_FREQ_TEMP" 12
 .IP "NVME_IO_DSM_LATENCY_NONE" 12
+No latency information provided
 .IP "NVME_IO_DSM_LATENCY_IDLE" 12
+Longer latency acceptable
 .IP "NVME_IO_DSM_LATENCY_NORM" 12
+Typical latency
 .IP "NVME_IO_DSM_LATENCY_LOW" 12
+Smallest possible latency
 .IP "NVME_IO_DSM_SEQ_REQ" 12
 .IP "NVME_IO_DSM_COMPRESSED" 12

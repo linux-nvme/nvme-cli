@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_mi_vpd_hdr" "February 2022" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_mi_vpd_hdr" "March 2022" "API Manual" LINUX
 .SH NAME
 struct nvme_mi_vpd_hdr \- 
 .SH SYNOPSIS
@@ -28,11 +28,20 @@ struct nvme_mi_vpd_hdr {
 
 .SH Members
 .IP "ipmiver" 12
+IPMI Format Version Number
 .IP "iuaoff" 12
+Internal Use Area Starting Offset
 .IP "ciaoff" 12
+Chassis Info Area Starting Offset
 .IP "biaoff" 12
+Board Info Area Starting Offset
 .IP "piaoff" 12
+Product Info Area Starting Offset
 .IP "mrioff" 12
+MultiRecord Info Area Starting Offset
 .IP "rsvd6" 12
+Reserved
 .IP "chchk" 12
+Common Header Checksum
 .IP "vpd" 12
+Vital Product Data

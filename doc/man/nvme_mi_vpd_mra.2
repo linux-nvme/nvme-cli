@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_mi_vpd_mra" "February 2022" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_mi_vpd_mra" "March 2022" "API Manual" LINUX
 .SH NAME
 struct nvme_mi_vpd_mra \- 
 .SH SYNOPSIS
@@ -42,18 +42,34 @@ struct nvme_mi_vpd_mra {
 
 .SH Members
 .IP "nmravn" 12
+NVMe MultiRecord Area Version Number
 .IP "ff" 12
+Form Factor
 .IP "rsvd7" 12
+Reserved
 .IP "i18vpwr" 12
+Initial 1.8 V Power Supply Requirements
 .IP "m18vpwr" 12
+Maximum 1.8 V Power Supply Requirements
 .IP "i33vpwr" 12
+Initial 3.3 V Power Supply Requirements
 .IP "m33vpwr" 12
+Maximum 3.3 V Power Supply Requirements
 .IP "rsvd17" 12
+Reserved
 .IP "m33vapsr" 12
+Maximum 3.3 V aux Power Supply Requirements
 .IP "i5vapsr" 12
+Initial 5 V Power Supply Requirements
 .IP "m5vapsr" 12
+Maximum 5 V Power Supply Requirements
 .IP "i12vapsr" 12
+Initial 12 V Power Supply Requirements
 .IP "m12vapsr" 12
+Maximum 12 V Power Supply Requirements
 .IP "mtl" 12
+Maximum Thermal Load
 .IP "tnvmcap" 12
+Total NVM Capacity
 .IP "rsvd37" 12
+Reserved

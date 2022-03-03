@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_mi_vpd_mr_common" "February 2022" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_mi_vpd_mr_common" "March 2022" "API Manual" LINUX
 .SH NAME
 struct nvme_mi_vpd_mr_common \- 
 .SH SYNOPSIS
@@ -30,12 +30,20 @@ struct nvme_mi_vpd_mr_common {
 
 .SH Members
 .IP "type" 12
+NVMe Record Type ID
 .IP "rf" 12
+Record Format
 .IP "rlen" 12
+Record Length
 .IP "rchksum" 12
+Record Checksum
 .IP "hchksum" 12
+Header Checksum
 .IP "{unnamed_union}" 12
 anonymous
 .IP "nmra" 12
+NVMe MultiRecord Area
 .IP "ppmra" 12
+NVMe PCIe Port MultiRecord Area
 .IP "tmra" 12
+Topology MultiRecord Area

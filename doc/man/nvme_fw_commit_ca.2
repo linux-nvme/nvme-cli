@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_fw_commit_ca" "February 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_fw_commit_ca" "March 2022" "API Manual" LINUX
 .SH NAME
 enum nvme_fw_commit_ca \- 
 .SH SYNOPSIS
@@ -29,8 +29,31 @@ enum nvme_fw_commit_ca {
 };
 .SH Constants
 .IP "NVME_FW_COMMIT_CA_REPLACE" 12
+Downloaded image replaces the existing
+image, if any, in the specified Firmware
+Slot. The newly placed image is not
+activated.
 .IP "NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE" 12
+Downloaded image replaces the existing
+image, if any, in the specified Firmware
+Slot. The newly placed image is activated
+at the next Controller Level Reset.
 .IP "NVME_FW_COMMIT_CA_SET_ACTIVE" 12
+The existing image in the specified
+Firmware Slot is activated at the
+next Controller Level Reset.
 .IP "NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE_IMMEDIATE" 12
+Downloaded image replaces the existing
+image, if any, in the specified Firmware
+Slot and is then activated immediately.
+If there is not a newly downloaded image,
+then the existing image in the specified
+firmware slot is activated immediately.
 .IP "NVME_FW_COMMIT_CA_REPLACE_BOOT_PARTITION" 12
+Downloaded image replaces the Boot
+Partition specified by the Boot
+Partition ID field.
 .IP "NVME_FW_COMMIT_CA_ACTIVATE_BOOT_PARTITION" 12
+Mark the Boot Partition specified in
+the BPID field as active and update 
+BPINFO.ABPID.

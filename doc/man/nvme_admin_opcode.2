@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_admin_opcode" "February 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_admin_opcode" "March 2022" "API Manual" LINUX
 .SH NAME
 enum nvme_admin_opcode \- Known NVMe admin opcodes
 .SH SYNOPSIS
@@ -145,41 +145,72 @@ enum nvme_admin_opcode {
 };
 .SH Constants
 .IP "nvme_admin_delete_sq" 12
+Delete I/O Submission Queue
 .IP "nvme_admin_create_sq" 12
+Create I/O Submission Queue
 .IP "nvme_admin_get_log_page" 12
+Get Log Page
 .IP "nvme_admin_delete_cq" 12
+Delete I/O Completion Queue
 .IP "nvme_admin_create_cq" 12
+Create I/O Completion Queue
 .IP "nvme_admin_identify" 12
+Identify
 .IP "nvme_admin_abort_cmd" 12
+Abort
 .IP "nvme_admin_set_features" 12
+Set Features
 .IP "nvme_admin_get_features" 12
+Get Features
 .IP "nvme_admin_async_event" 12
+Asynchronous Event Request
 .IP "nvme_admin_ns_mgmt" 12
+Namespace Management
 .IP "nvme_admin_fw_commit" 12
+Firmware Commit
 .IP "nvme_admin_fw_activate" 12
+Firmware Commit
 .IP "nvme_admin_fw_download" 12
+Firmware Image Download
 .IP "nvme_admin_dev_self_test" 12
+Device Self-test
 .IP "nvme_admin_ns_attach" 12
+Namespace Attachment
 .IP "nvme_admin_keep_alive" 12
+Keep Alive
 .IP "nvme_admin_directive_send" 12
+Directive Send
 .IP "nvme_admin_directive_recv" 12
+Directive Receive
 .IP "nvme_admin_virtual_mgmt" 12
+Virtualization Management
 .IP "nvme_admin_nvme_mi_send" 12
+NVMe-MI Send
 .IP "nvme_admin_nvme_mi_recv" 12
+NVMe-MI Receive
 .IP "nvme_admin_capacity_mgmt" 12
+Capacity Management
 .IP "nvme_admin_discovery_info_mgmt" 12
 Discovery Information Management (DIM)
 .IP "nvme_admin_fabric_zoning_recv" 12
 Fabric Zoning Receive
 .IP "nvme_admin_lockdown" 12
+Lockdown
 .IP "nvme_admin_fabric_zoning_lookup" 12
 Fabric Zoning Lookup
 .IP "nvme_admin_fabric_zoning_send" 12
 Fabric Zoning Send
 .IP "nvme_admin_dbbuf" 12
+Doorbell Buffer Config
 .IP "nvme_admin_fabrics" 12
+Fabrics Commands
 .IP "nvme_admin_format_nvm" 12
+Format NVM
 .IP "nvme_admin_security_send" 12
+Security Send
 .IP "nvme_admin_security_recv" 12
+Security Receive
 .IP "nvme_admin_sanitize_nvm" 12
+Sanitize
 .IP "nvme_admin_get_lba_status" 12
+Get LBA Status

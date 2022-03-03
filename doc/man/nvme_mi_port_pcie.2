@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_mi_port_pcie" "February 2022" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_mi_port_pcie" "March 2022" "API Manual" LINUX
 .SH NAME
 struct nvme_mi_port_pcie \- 
 .SH SYNOPSIS
@@ -24,9 +24,16 @@ struct nvme_mi_port_pcie {
 
 .SH Members
 .IP "mps" 12
+PCIe Maximum Payload Size
 .IP "sls" 12
+PCIe Supported Link Speeds Vector
 .IP "cls" 12
+PCIe Current Link Speed
 .IP "mlw" 12
+PCIe Maximum Link Width
 .IP "nlw" 12
+PCIe Negotiated Link Width
 .IP "pn" 12
+PCIe Port Number
 .IP "rsvd14" 12
+Reserved

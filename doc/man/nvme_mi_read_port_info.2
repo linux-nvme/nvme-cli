@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_mi_read_port_info" "February 2022" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_mi_read_port_info" "March 2022" "API Manual" LINUX
 .SH NAME
 struct nvme_mi_read_port_info \- 
 .SH SYNOPSIS
@@ -26,10 +26,16 @@ struct nvme_mi_read_port_info {
 
 .SH Members
 .IP "portt" 12
+Port Type
 .IP "rsvd1" 12
+Reserved
 .IP "mmctptus" 12
+Maximum MCTP Transmission Unit Size
 .IP "meb" 12
+Management Endpoint Buffer Size
 .IP "{unnamed_union}" 12
 anonymous
 .IP "pcie" 12
+PCIe Port Specific Data
 .IP "smb" 12
+SMBus Port Specific Data
