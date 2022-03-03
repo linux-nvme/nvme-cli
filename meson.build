@@ -148,6 +148,11 @@ configure_file(
 )
 
 ################################################################################
+libtype = get_option('default_library')
+if libtype == 'static'
+  requires = ''
+endif
+
 substs = configuration_data()
 substs.set('NAME',    meson.project_name())
 substs.set('VERSION', meson.project_version())
