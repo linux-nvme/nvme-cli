@@ -7122,7 +7122,7 @@ static int passthru(int argc, char **argv, bool admin,
 	flags = cfg.opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
 	dfd = mfd = cfg.opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
 	if (strlen(cfg.input_file)) {
-		mfd = open(cfg.input_file, flags, mode);
+		dfd = open(cfg.input_file, flags, mode);
 		if (dfd < 0) {
 			perror(cfg.input_file);
 			err = -EINVAL;
@@ -7135,7 +7135,7 @@ static int passthru(int argc, char **argv, bool admin,
 		if (mfd < 0) {
 			perror(cfg.metadata);
 			err = -EINVAL;
-			goto close_fd;
+			goto close_dfd;
 		}
 	}
 
@@ -7143,14 +7143,14 @@ static int passthru(int argc, char **argv, bool admin,
 		mdata = malloc(cfg.metadata_len);
 		if (!mdata) {
 			err = -ENOMEM;
-			goto close_wfd;
+			goto close_mfd;
 		}
 
 		if (cfg.write) {
 			if (read(mfd, mdata, cfg.metadata_len) < 0) {
 				err = -errno;
 				perror("failed to read metadata write buffer");
-				goto free_data;
+				goto free_metadata;
 			}
 		} else
 			memset(mdata, cfg.prefill, cfg.metadata_len);
@@ -7252,13 +7252,16 @@ static int passthru(int argc, char **argv, bool admin,
 		} else if (data && cfg.read)
 			d_raw((unsigned char *)data, cfg.data_len);
 	}
-free_data:
-	nvme_free(data, huge);
 free_metadata:
 	free(mdata);
-close_wfd:
+free_data:
+	nvme_free(data, huge);
+close_dfd:
 	if (strlen(cfg.input_file))
 		close(dfd);
+close_mfd:
+	if (strlen(cfg.metadata))
+		close(mfd);
 close_fd:
 	close(fd);
 ret:
