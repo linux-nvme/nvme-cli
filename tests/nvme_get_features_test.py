@@ -33,6 +33,7 @@ Test the Mandatory features with get features command:-
 """
 
 import subprocess
+
 from nose.tools import assert_equal
 from nvme_test import TestNVMe
 

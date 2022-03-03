@@ -35,8 +35,9 @@ Namespace Format testcase :-
            - Delete Namespace.
 """
 
-import time
 import subprocess
+import time
+
 from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
@@ -130,8 +131,8 @@ class TestNVMeFormatCmd(TestNVMe):
 
         # iterate through all supported format
         for i in range(0, len(self.lba_format_list)):
-            print("\nlba format " + str(self.lba_format_list[i]) + \
-                  " lbad       " + str(self.lbads_list[i]) + \
+            print("\nlba format " + str(self.lba_format_list[i]) +
+                  " lbad       " + str(self.lbads_list[i]) +
                   " ms         " + str(self.ms_list[i]))
             metadata_size = 1 if self.ms_list[i] == '8' else 0
             err = self.create_and_validate_ns(self.default_nsid,

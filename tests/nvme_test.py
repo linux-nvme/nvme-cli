@@ -20,15 +20,16 @@
 """ Base class for all the testcases
 """
 
-import re
-import os
-import sys
 import json
 import mmap
-import stat
-import time
+import os
+import re
 import shutil
+import stat
 import subprocess
+import sys
+import time
+
 from nose import tools
 from nose.tools import assert_equal
 from nvme_test_logger import TestNVMeLogger

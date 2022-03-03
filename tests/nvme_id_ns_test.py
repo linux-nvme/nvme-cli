@@ -26,6 +26,7 @@ NVme Identify Namespace Testcase:-
 """
 
 import subprocess
+
 from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
@@ -78,7 +79,7 @@ class TestNVMeIdentifyNamespace(TestNVMe):
                 - 0 on success, error code on failure.
         """
         err = 0
-        for namespace  in self.ns_list:
+        for namespace in self.ns_list:
             err = self.get_id_ns(str(namespace))
         return err
 
