@@ -6191,7 +6191,6 @@ static int submit_io(int opcode, char *command, const char *desc,
 			err = -EINVAL;
 			goto close_fd;
 		}
-		mfd = dfd;
 	}
 
 	if (strlen(cfg.metadata)) {
