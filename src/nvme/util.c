@@ -37,6 +37,7 @@ static inline __u8 nvme_generic_status_to_errno(__u16 status)
 	case NVME_SC_SGL_INVALID_OFFSET:
 	case NVME_SC_PRP_INVALID_OFFSET:
 	case NVME_SC_CMB_INVALID_USE:
+	case NVME_SC_KAT_INVALID:
 		return EINVAL;
 	case NVME_SC_CMDID_CONFLICT:
 		return EADDRINUSE;
@@ -53,14 +54,18 @@ static inline __u8 nvme_generic_status_to_errno(__u16 status)
 	case NVME_SC_CMD_SEQ_ERROR:
 		return EILSEQ;
 	case NVME_SC_SANITIZE_IN_PROGRESS:
+	case NVME_SC_FORMAT_IN_PROGRESS:
 		return EINPROGRESS;
 	case NVME_SC_NS_WRITE_PROTECTED:
 	case NVME_SC_NS_NOT_READY:
 	case NVME_SC_RESERVATION_CONFLICT:
+	case NVME_SC_OP_DENIED:
+	case NVME_SC_ADMIN_CMD_MEDIA_NOT_READY:
 		return EACCES;
 	case NVME_SC_LBA_RANGE:
 		return EREMOTEIO;
 	case NVME_SC_CAP_EXCEEDED:
+	case NVME_SC_AWU_EXCEEDED:
 		return ENOSPC;
 	}
 	return EIO;
@@ -94,10 +99,12 @@ static inline __u8 nvme_cmd_specific_status_to_errno(__u16 status)
 		return EINVAL;
 	case NVME_SC_ABORT_LIMIT:
 	case NVME_SC_ASYNC_LIMIT:
+	case NVME_SC_NS_ATTACHMENT_LIMIT_EXCEEDED:
 		return EDQUOT;
 	case NVME_SC_FW_NEEDS_CONV_RESET:
 	case NVME_SC_FW_NEEDS_SUBSYS_RESET:
 	case NVME_SC_FW_NEEDS_MAX_TIME:
+	case NVME_SC_FW_NEEDS_RESET:
 		return ERESTART;
 	case NVME_SC_FEATURE_NOT_SAVEABLE:
 	case NVME_SC_FEATURE_NOT_CHANGEABLE:
@@ -114,7 +121,12 @@ static inline __u8 nvme_cmd_specific_status_to_errno(__u16 status)
 	case NVME_SC_NS_ALREADY_ATTACHED:
 		return EALREADY;
 	case NVME_SC_THIN_PROV_NOT_SUPP:
+	case NVME_SC_PROHIBIT_CMD_EXEC_NOT_SUPPORTED:
 		return EOPNOTSUPP;
+	case NVME_SC_ABORT_MISSING:
+		return EWOULDBLOCK;
+	case NVME_SC_SELF_TEST_IN_PROGRESS:
+		return EINPROGRESS;
 	}
 
 	return EIO;
