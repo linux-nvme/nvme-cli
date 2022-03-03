@@ -20,6 +20,7 @@
 """ Inherit TestNVMeIO for nvme read/write operations """
 
 import os
+
 from nose import tools
 from nvme_test import TestNVMe
 

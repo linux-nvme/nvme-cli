@@ -11,18 +11,16 @@ nvmetests
 1. Common Package Dependencies
 ------------------------------
 
-    1. Python(>= 2.7.5 or >= 3.3)
-    2. nose(http://nose.readthedocs.io/en/latest/)
-    3. nose2(Installation guide http://nose2.readthedocs.io/)
-    4. pep8(https://pypi.python.org/pypi/setuptools-pep8)
-    5. flake8(https://pypi.python.org/pypi/flake8)
-    6. pylint(https://www.pylint.org/)
-    7. Epydoc(http://epydoc.sourceforge.net/)
-    8. nvme-cli(https://github.com/linux-nvme/nvme-cli.git)
+    1. Python(>= 3.3)
+    2. nose2 (Installation guide http://nose2.readthedocs.io/)
+    3. flake8 (https://pypi.python.org/pypi/flake8)
+    4. mypy (https://pypi.org/project/mypy/)
+    5. autopep8 (https://pypi.org/project/autopep8/)
+    6. isort (https://pypi.org/project/isort/)
 
     Python package management system pip can be used to install most of the
     listed packages(https://pip.pypa.io/en/stable/installing/) :-
-    $ pip install nose nose2 pep8 flake8 pylint epydoc
+    $ pip install nose2 flake8 mypy autopep8 isort
 
 2. Overview
 -----------
@@ -76,12 +74,12 @@ nvmetests
     6. Before writing a new function have a look into TestNVMe to see if it
        can be reused.
     7. Once testcase is ready make sure :-
-           a. Run pep8, flake8, pylint on the testcase and fix errors/warnings.
-              -Example "$ make static_check" will run pep8, flake8 and pylint on
-              all the python files in current directory.
-           b. Execute make doc to generate the documentation.
-              -Example "$ make doc" will create and update existing
-              documentation.
+           a. Run flake8, mypy, autopep8 and isort on the testcase and fix
+	      errors/warnings.
+               - Example "$ ninja -C .build lint-python" will run flake8 and
+	         mypy on all the python files in current directory.
+	       - Example "$ ninja -C .build fomrat-python" will run autopep8 and
+	         isort on all the python files in the current directory.
 
 4. Running testcases with framework
 -----------------------------------
@@ -89,5 +87,5 @@ nvmetests
        $ nose2 --verbose nvme_writezeros_test
        $ nose2 --verbose nvme_read_write_test
 
-    2. Running all the testcases with Makefile :-
-       $ make run
+    2. Running all the testcases with ninja :-
+       $ ninja test -C .build

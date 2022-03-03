@@ -28,6 +28,7 @@ NVMe Write Zeros:-
 """
 
 import filecmp
+
 from nose.tools import assert_equal
 from nvme_test_io import TestNVMeIO
 
@@ -44,6 +45,7 @@ class TestNVMeWriteZeros(TestNVMeIO):
               - block_count: Number of blocks to use in IO.
               - test_log_dir : directory for logs, temp files.
     """
+
     def __init__(self):
         """ Pre Section for TestNVMeWriteZeros """
         TestNVMeIO.__init__(self)

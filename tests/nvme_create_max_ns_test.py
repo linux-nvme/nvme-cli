@@ -28,6 +28,7 @@ NVMe Namespace Management Testcase:-
 """
 
 import time
+
 from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
@@ -50,7 +51,8 @@ class TestNVMeCreateMaxNS(TestNVMe):
         TestNVMe.__init__(self)
         self.dps = 0
         self.flbas = 0
-        self.nsze = int(self.get_ncap() / self.get_format() / self.get_max_ns())
+        self.nsze = int(self.get_ncap() /
+                        self.get_format() / self.get_max_ns())
         self.ncap = self.nsze
         self.setup_log_dir(self.__class__.__name__)
         self.max_ns = self.get_max_ns()

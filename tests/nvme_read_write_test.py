@@ -27,6 +27,7 @@ NVMe Read/Write Testcae:-
 """
 
 import filecmp
+
 from nose.tools import assert_equal
 from nvme_test_io import TestNVMeIO
 
@@ -41,6 +42,7 @@ class TestNVMeReadWriteTest(TestNVMeIO):
               - compare_file : data file to use in nvme compare command.
               - test_log_dir : directory for logs, temp files.
     """
+
     def __init__(self):
         """ Pre Section for TestNVMeReadWriteTest """
         TestNVMeIO.__init__(self)
