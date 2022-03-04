@@ -1,0 +1,17 @@
+linknvme:nvme-intel-id-ctrl[1]::
+	Intel - NVMe Identify Controller
+
+linknvme:nvme-intel-internal-log[1]::
+	Retrieve Intel device's internal log and save to file
+
+linknvme:nvme-intel-lat-stats[1]::
+	Retrieve NVMe Identify Controller, return result and structure
+
+linknvme:nvme-intel-market-name[1]::
+	Intel vendor specific marketing name log page
+
+linknvme:nvme-intel-smart-log-add[1]::
+	NVMe Intel Additional SMART log page
+
+linknvme:nvme-intel-temp-stats[1]::
+	NVMe Intel Additional SMART log page for temp stats
