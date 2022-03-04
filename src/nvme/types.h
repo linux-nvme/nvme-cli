@@ -5735,11 +5735,13 @@ enum nvme_status_field {
 	NVME_SCT_PATH			= 0x3,
 	NVME_SCT_VS			= 0x7,
 	NVME_SCT_MASK			= 0x7,
+	NVME_SCT_SHIFT			= 0x8,
 
 	/*
 	 * Status Code inidicators
 	 */
 	NVME_SC_MASK			= 0xff,
+	NVME_SC_SHIFT			= 0x0,
 
 	/*
 	 * Generic Command Status Codes:
@@ -5923,7 +5925,7 @@ enum nvme_status_field {
  */
 static inline __u16 nvme_status_code_type(__u16 status_field)
 {
-	return status_field & NVME_SCT_MASK;
+	return NVME_GET(status_field, SCT);
 }
 
 /**
@@ -5934,7 +5936,7 @@ static inline __u16 nvme_status_code_type(__u16 status_field)
  */
 static inline __u16 nvme_status_code(__u16 status_field)
 {
-	return status_field & NVME_SC_MASK;
+	return NVME_GET(status_field, SC);
 }
 
 /**
