@@ -40,6 +40,11 @@ Main commands
 
 include::cmds-main.txt[]
 
+Plugins/Vendor extension commands
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+include::cmd-plugins.txt[]
+
 FURTHER DOCUMENTATION
 ---------------------
 See the freely available references on the http://nvmexpress.org[Official
