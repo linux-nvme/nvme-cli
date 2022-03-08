@@ -125,10 +125,12 @@ enum nvme_constants {
 /**
  * enum nvme_csi - Defined command set indicators
  * @NVME_CSI_NVM:	NVM Command Set Indicator
+ * @NVME_CSI_KV:	Key Value Command Set
  * @NVME_CSI_ZNS:	Zoned Namespace Command Set
  */
 enum nvme_csi {
 	NVME_CSI_NVM			= 0,
+	NVME_CSI_KV			= 1,
 	NVME_CSI_ZNS			= 2,
 };
 
@@ -6046,7 +6048,7 @@ enum nvme_admin_opcode {
  * @NVME_IDENTIFY_CNS_UUID_LIST:		A UUID List
  * @NVME_IDENTIFY_CNS_DOMAIN_LIST:		Domain List
  * @NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID:	Endurance Group List
- * @NVME_IDENTIFY_CNS_CSS_ALLOCATED_NS_LIST:	I/O Command Set specific Allocated Namespace
+ * @NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST:	I/O Command Set specific Allocated Namespace
  * 						ID list
  * @NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE:	Base Specification 2.0a section 5.17.2.21
  */
@@ -6072,7 +6074,7 @@ enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_UUID_LIST				= 0x17,
 	NVME_IDENTIFY_CNS_DOMAIN_LIST				= 0x18,
 	NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID			= 0x19,
-	NVME_IDENTIFY_CNS_CSS_ALLOCATED_NS_LIST			= 0x1A,
+	NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST			= 0x1A,
 	NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE			= 0x1C,
 };
 
