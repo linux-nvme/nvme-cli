@@ -7102,7 +7102,14 @@ static int passthru(int argc, char **argv, bool admin,
 		.cdw14        = 0,
 		.cdw15        = 0,
 		.input_file   = "",
+		.metadata     = "",
+		.raw_binary   = 0,
+		.show_command = 0,
+		.dry_run      = 0,
+		.read         = 0,
+		.write        = 0,
 		.prefill      = 0,
+		.latency      = 0,
 	};
 
 	OPT_ARGS(opts) = {
