@@ -6137,17 +6137,23 @@ static int submit_io(int opcode, char *command, const char *desc,
 		if (fd < 0)
 			goto ret;
 	} else {
+		err = argconfig_parse(argc, argv, desc, opts);
+		if (err)
+			goto ret;
 		err = fd = open_exclusive(argc, argv, cfg.force);
-		if (errno == EBUSY) {
-			fprintf(stderr, "Failed to open %s.\n",
-		                basename(argv[optind]));
-			fprintf(stderr,
-				"Namespace is currently busy.\n");
-			if (!cfg.force)
+		if (err < 0) {
+			if (errno == EBUSY) {
+				fprintf(stderr, "Failed to open %s.\n",
+					basename(argv[optind]));
 				fprintf(stderr,
-				"Use the force [--force] option to ignore that.\n");
-		} else {
-			argconfig_print_help(desc, opts);
+					"Namespace is currently busy.\n");
+				if (!cfg.force)
+					fprintf(stderr,
+					"Use the force [--force] option to ignore that.\n");
+			} else {
+				argconfig_print_help(desc, opts);
+			}
+			goto ret;
 		}
 	}
 
