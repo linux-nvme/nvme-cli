@@ -316,15 +316,17 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	int err = -1, fd;
 
 	struct config {
-		__u32 namespace_id;
-		int   raw_binary;
-		char *output_format;
-		int   human_readable;
+		__u32	namespace_id;
+		char	*output_format;
+		int	raw_binary;
+		int	human_readable;
 	};
 
 	struct config cfg = {
-		.namespace_id = NVME_NSID_ALL,
-		.output_format = "normal",
+		.namespace_id	= NVME_NSID_ALL,
+		.output_format	= "normal",
+		.raw_binary	= 0,
+		.human_readable	= 0,
 	};
 
 
@@ -376,7 +378,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 	enum nvme_log_ana_lsp lsp;
 
 	struct config {
-		char *output_format;
+		char	*output_format;
 	};
 
 	struct config cfg = {
@@ -446,16 +448,16 @@ static int get_telemetry_log(int argc, char **argv, struct command *cmd,
 	int data_written = 0, data_remaining = 0;
 
 	struct config {
-		char *file_name;
-		__u32 host_gen;
-		int ctrl_init;
-		int data_area;
+		char	*file_name;
+		__u32	host_gen;
+		int	ctrl_init;
+		int	data_area;
 	};
 	struct config cfg = {
-		.file_name = NULL,
-		.host_gen = 1,
-		.ctrl_init = 0,
-		.data_area = 3,
+		.file_name	= NULL,
+		.host_gen	= 1,
+		.ctrl_init	= 0,
+		.data_area	= 3,
 	};
 
 	OPT_ARGS(opts) = {
@@ -545,13 +547,13 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
 	int err, fd;
 
 	struct config {
-		char *output_format;
-		__u16 group_id;
+		char	*output_format;
+		__u16	group_id;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
-		.group_id = 0,
+		.output_format	= "normal",
+		.group_id	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -617,15 +619,17 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	enum nvme_print_flags flags;
 
 	struct config {
-		int      raw_binary;
-		int      human_readable;
-		char    *output_format;
-		int      csi;
+		char	*output_format;
+		int	human_readable;
+		int	raw_binary;
+		int	csi;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
-		.csi = -1,
+		.output_format	= "normal",
+		.human_readable	= 0,
+		.raw_binary	= 0,
+		.csi		= -1,
 	};
 
 	OPT_ARGS(opts) = {
@@ -707,12 +711,13 @@ static int get_supported_log_pages(int argc, char **argv, struct command *cmd,
 	enum nvme_print_flags flags;
 
 	struct config {
-		int   verbose;
-		char *output_format;
+		char	*output_format;
+		int	verbose;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
+		.output_format	= "normal",
+		.verbose	= 0
 	};
 
 	OPT_ARGS(opts) = {
@@ -760,14 +765,15 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 	int err = -1, fd;
 
 	struct config {
-		__u32 log_entries;
-		int   raw_binary;
-		char *output_format;
+		__u32	log_entries;
+		char	*output_format;
+		int	raw_binary;
 	};
 
 	struct config cfg = {
-		.log_entries  = 64,
-		.output_format = "normal",
+		.log_entries	= 64,
+		.output_format	= "normal",
+		.raw_binary	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -834,12 +840,13 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 	int err, fd;
 
 	struct config {
-		int raw_binary;
-		char *output_format;
+		char	*output_format;
+		int	raw_binary;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
+		.output_format	= "normal",
+		.raw_binary	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -882,12 +889,13 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 	int err, fd;
 
 	struct config {
-		int   raw_binary;
-		char *output_format;
+		char	*output_format;
+		int	raw_binary;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
+		.output_format	= "normal",
+		.raw_binary	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -934,20 +942,21 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 	int err, fd;
 
 	struct config {
-		__u16 nvmset_id;
-		char *output_format;
-		int raw_binary;
+		__u16	nvmset_id;
+		char	*output_format;
+		int	raw_binary;
 	};
 
 	struct config cfg = {
-		.nvmset_id = 1,
-		.output_format = "normal",
+		.nvmset_id	= 1,
+		.output_format	= "normal",
+		.raw_binary	= 0,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_SHRT("nvmset-id", 	 'i', &cfg.nvmset_id,     nvmset_id),
+		OPT_SHRT("nvmset-id",	 'i', &cfg.nvmset_id,     nvmset_id),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary, 	  raw),
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,	  raw),
 		OPT_END()
 	};
 
@@ -995,16 +1004,17 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 	int err, fd;
 
 	struct config {
-		__u64 log_entries;
-		bool rae;
-		char *output_format;
-		int raw_binary;
+		__u64	log_entries;
+		bool	rae;
+		char	*output_format;
+		int	raw_binary;
 	};
 
 	struct config cfg = {
-		.log_entries = 2044,
-		.rae = false,
-		.output_format = "normal",
+		.log_entries	= 2044,
+		.rae		= false,
+		.output_format	= "normal",
+		.raw_binary	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -1083,21 +1093,22 @@ static int get_persistent_event_log(int argc, char **argv,
 	bool huge;
 
 	struct config {
-		__u8 action;
-		__u32 log_len;
-		int raw_binary;
-		char *output_format;
+		__u8	action;
+		__u32	log_len;
+		char	*output_format;
+		int	raw_binary;
 	};
 
 	struct config cfg = {
-		.action = 0xff,
-		.log_len = 0,
-		.output_format = "normal",
+		.action		= 0xff,
+		.log_len	= 0,
+		.output_format	= "normal",
+		.raw_binary	= 0,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_BYTE("action",       'a', &cfg.action,        action),
-		OPT_UINT("log_len", 	 'l', &cfg.log_len,  	  log_len),
+		OPT_UINT("log_len",	 'l', &cfg.log_len,	  log_len),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
 		OPT_END()
@@ -1213,16 +1224,17 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 	__u32 log_size;
 
 	struct config {
-		__u64 log_entries;
-		bool rae;
-		char *output_format;
-		int raw_binary;
+		__u64	log_entries;
+		bool	rae;
+		char	*output_format;
+		int	raw_binary;
 	};
 
 	struct config cfg = {
-		.log_entries = 2044,
-		.rae = false,
-		.output_format = "normal",
+		.log_entries	= 2044,
+		.rae		= false,
+		.output_format	= "normal",
+		.raw_binary	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -1298,13 +1310,13 @@ static int get_lba_status_log(int argc, char **argv,
 	__u32 lslplen;
 
 	struct config {
-		bool rae;
-		char *output_format;
+		bool	rae;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.rae = false,
-		.output_format = "normal",
+		.rae		= false,
+		.output_format	= "normal",
 	};
 
 	OPT_ARGS(opts) = {
@@ -1366,11 +1378,11 @@ static int get_resv_notif_log(int argc, char **argv,
 	int err, fd;
 
 	struct config {
-		char *output_format;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
+		.output_format	= "normal",
 	};
 
 	OPT_ARGS(opts) = {
@@ -1417,15 +1429,15 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 	__u32 bpsz = 0;
 
 	struct config {
-		__u8 lsp;
-		char *output_format;
-		char *file_name;
+		__u8	lsp;
+		char	*file_name;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.lsp = 0,
-		.file_name = NULL,
-		.output_format = "normal",
+		.lsp		= 0,
+		.output_format	= "normal",
+		.file_name	= NULL,
 	};
 
 	OPT_ARGS(opts) = {
@@ -1522,20 +1534,21 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *cmd,
 	enum nvme_print_flags flags;
 
 	struct config {
-		int   raw_binary;
-		char *output_format;
 		__u16	domainid;
+		char	*output_format;
+		int	raw_binary;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
-		.domainid = 0
+		.domainid	= 0,
+		.output_format	= "normal",
+		.raw_binary	= 0,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("domain-id",  'd', &cfg.domainid,  domainid),
-		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
-		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw),
+		OPT_UINT("domain-id",     'd', &cfg.domainid, domainid),
+		OPT_FMT("output-format",  'o', &cfg.output_format, output_format),
+		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary, raw),
 		OPT_END()
 	};
 
@@ -1577,14 +1590,15 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *cmd,
 	enum nvme_print_flags flags;
 
 	struct config {
-		int raw_binary;
-		char *output_format;
-		__u16 domainid;
+		__u16	domainid;
+		char	*output_format;
+		int	raw_binary;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
-		.domainid = 0
+		.domainid	= 0,
+		.output_format	= "normal",
+		.raw_binary	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -1640,31 +1654,33 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	unsigned char *log;
 
 	struct config {
-		__u16 lsi;
-		__u32 namespace_id;
-		__u8  log_id;
-		__u32 log_len;
-		__u32 aen;
-		__u64 lpo;
-		__u8  lsp;
-		__u8  uuid_index;
-		__u8  csi;
-		int   ot;
-		int   rae;
-		int   raw_binary;
+		__u32	namespace_id;
+		__u8	log_id;
+		__u32	log_len;
+		__u32	aen;
+		__u64	lpo;
+		__u8	lsp;
+		__u16	lsi;
+		int	rae;
+		__u8	uuid_index;
+		int	raw_binary;
+		__u8	csi;
+		int	ot;
 	};
 
 	struct config cfg = {
-		.namespace_id = NVME_NSID_ALL,
-		.log_id       = 0xff,
-		.log_len      = 0,
-		.lpo          = NVME_LOG_LPO_NONE,
-		.lsp          = NVME_LOG_LSP_NONE,
-		.lsi          = NVME_LOG_LSI_NONE,
-		.rae          = 0,
-		.uuid_index   = 0,
-		.csi          = NVME_CSI_NVM,
-		.ot           = 0,
+		.namespace_id	= NVME_NSID_ALL,
+		.log_id		= 0xff,
+		.log_len	= 0,
+		.aen		= 0,
+		.lpo		= NVME_LOG_LPO_NONE,
+		.lsp		= NVME_LOG_LSP_NONE,
+		.lsi		= NVME_LOG_LSI_NONE,
+		.rae		= 0,
+		.uuid_index	= NVME_UUID_NONE,
+		.raw_binary	= 0,
+		.csi		= NVME_CSI_NVM,
+		.ot		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -1766,15 +1782,17 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 	int fd, err;
 
 	struct config {
-		bool  rae;
-		int   raw_binary;
-		int   human_readable;
-		char *output_format;
+		bool	rae;
+		char	*output_format;
+		int	human_readable;
+		int	raw_binary;
 	};
 
 	struct config cfg = {
-		.rae = false,
-		.output_format = "normal",
+		.rae		= false,
+		.output_format	= "normal",
+		.human_readable	= 0,
+		.raw_binary	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -1821,12 +1839,13 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *cm
 	int fd, err = -1;
 
 	struct config {
-		int   human_readable;
-		char *output_format;
+		char	*output_format;
+		int	human_readable;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
+		.output_format	= "normal",
+		.human_readable	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -1870,15 +1889,15 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 	enum nvme_print_flags flags;
 
 	struct config {
-		__u16 cntid;
-		__u32 namespace_id;
-		char *output_format;
+		__u16	cntid;
+		__u32	namespace_id;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.cntid = 0,
-		.namespace_id = NVME_NSID_NONE,
-		.output_format = "normal",
+		.cntid		= 0,
+		.namespace_id	= NVME_NSID_NONE,
+		.output_format	= "normal",
 	};
 
 	OPT_ARGS(opts) = {
@@ -1934,16 +1953,17 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	enum nvme_print_flags flags;
 
 	struct config {
-		__u32 namespace_id;
-		int  all;
-		int csi;
-		char *output_format;
+		__u32	namespace_id;
+		int	all;
+		int	csi;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.namespace_id = 1,
+		.namespace_id	= 1,
+		.csi		= -1,
+		.all		= 0,
 		.output_format = "normal",
-		.csi = -1,
 	};
 
 	OPT_ARGS(opts) = {
@@ -2016,17 +2036,17 @@ static int id_ns_lba_format(int argc, char **argv, struct command *cmd, struct p
 	int err = -1, fd;
 
 	struct config {
-		__u16 lba_format_index;
-		__u8  uuid_index;
-		int verbose;
-		char *output_format;
+		__u16	lba_format_index;
+		__u8	uuid_index;
+		int	verbose;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.lba_format_index = 0,
-		.uuid_index = NVME_UUID_NONE,
-		.verbose = 0,
-		.output_format = "normal",
+		.lba_format_index	= 0,
+		.uuid_index		= NVME_UUID_NONE,
+		.verbose		= 0,
+		.output_format		= "normal",
 	};
 
 	OPT_ARGS(opts) = {
@@ -2073,13 +2093,13 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *cmd,
 	enum nvme_print_flags flags;
 
 	struct config {
-		__u16 endgrp_id;
-		char *output_format;
+		__u16	endgrp_id;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.endgrp_id = 0,
-		.output_format = "normal",
+		.endgrp_id	= 0,
+		.output_format	= "normal",
 	};
 
 	OPT_ARGS(opts) = {
@@ -2188,13 +2208,13 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	const char *cont = "optional comma-sep controller id list";
 
 	struct config {
-		char  *cntlist;
-		__u32 namespace_id;
+		__u32	namespace_id;
+		char	*cntlist;
 	};
 
 	struct config cfg = {
-		.cntlist = "",
-		.namespace_id = 0,
+		.namespace_id	= 0,
+		.cntlist	= "",
 	};
 
 	OPT_ARGS(opts) = {
@@ -2302,15 +2322,20 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		__u16	nvmsetid;
 		__u64	bs;
 		__u32	timeout;
-		__u8  	csi;
+		__u8	csi;
 	};
 
 	struct config cfg = {
+		.nsze		= 0,
+		.ncap		= 0,
 		.flbas		= 0xff,
+		.dps		= 0,
+		.nmic		= 0,
 		.anagrpid	= 0,
 		.nvmsetid	= 0,
 		.bs		= 0x00,
 		.timeout	= 120000,
+		.csi		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -2421,13 +2446,13 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	int err;
 
 	struct config {
-		char *output_format;
-		int verbose;
+		char	*output_format;
+		int	verbose;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
-		.verbose = 0,
+		.output_format	= "normal",
+		.verbose	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -2492,13 +2517,13 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	int err = 0;
 
 	struct config {
-		char *output_format;
-		int verbose;
+		char	*output_format;
+		int	verbose;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
-		.verbose = 0,
+		.output_format	= "normal",
+		.verbose	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -2556,14 +2581,17 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	int err, fd;
 
 	struct config {
-		int vendor_specific;
-		int raw_binary;
-		int human_readable;
-		char *output_format;
+		int	vendor_specific;
+		char	*output_format;
+		int	raw_binary;
+		int	human_readable;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
+		.vendor_specific	= 0,
+		.output_format		= "normal",
+		.raw_binary		= 0,
+		.human_readable		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -2617,11 +2645,11 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *cmd,
 	int fd, err = -1;
 
 	struct config {
-		char *output_format;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
+		.output_format	= "normal",
 	};
 
 	OPT_ARGS(opts) = {
@@ -2665,17 +2693,17 @@ static int nvm_id_ns(int argc, char **argv, struct command *cmd,
 	int fd, err = -1;
 
 	struct config {
-		__u32 namespace_id;
-		__u8  uuid_index;
-		char *output_format;
-		int verbose;
+		__u32	namespace_id;
+		__u8	uuid_index;
+		char	*output_format;
+		int	verbose;
 	};
 
 	struct config cfg = {
-		.namespace_id = 0,
-		.uuid_index = NVME_UUID_NONE,
-		.output_format = "normal",
-		.verbose = 0,
+		.namespace_id	= 0,
+		.uuid_index	= NVME_UUID_NONE,
+		.output_format	= "normal",
+		.verbose	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -2741,17 +2769,17 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *cmd, stru
 	int err = -1, fd;
 
 	struct config {
-		__u16 lba_format_index;
-		__u8  uuid_index;
-		int verbose;
-		char *output_format;
+		__u16	lba_format_index;
+		__u8	uuid_index;
+		int	verbose;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.lba_format_index = 0,
-		.uuid_index = NVME_UUID_NONE,
-		.verbose = 0,
-		.output_format = "normal",
+		.lba_format_index	= 0,
+		.uuid_index		= NVME_UUID_NONE,
+		.verbose		= 0,
+		.output_format		= "normal",
 	};
 
 	OPT_ARGS(opts) = {
@@ -2805,14 +2833,15 @@ static int ns_descs(int argc, char **argv, struct command *cmd, struct plugin *p
 	void *nsdescs;
 
 	struct config {
-		__u32 namespace_id;
-		int raw_binary;
-		char *output_format;
+		__u32	namespace_id;
+		char	*output_format;
+		int	raw_binary;
 	};
 
 	struct config cfg = {
-		.namespace_id = 0,
-		.output_format = "normal",
+		.namespace_id	= 0,
+		.output_format	= "normal",
+		.raw_binary	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -2876,17 +2905,21 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	int err, fd;
 
 	struct config {
-		__u32 namespace_id;
-		int   vendor_specific;
-		int   raw_binary;
-		int   human_readable;
-		int   force;
-		char *output_format;
+		__u32	namespace_id;
+		int	force;
+		int	vendor_specific;
+		int	raw_binary;
+		char	*output_format;
+		int	human_readable;
 	};
 
 	struct config cfg = {
-		.namespace_id    = 0,
-		.output_format = "normal",
+		.namespace_id		= 0,
+		.force			= 0,
+		.vendor_specific	= 0,
+		.raw_binary		= 0,
+		.output_format		= "normal",
+		.human_readable		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -2953,15 +2986,17 @@ static int cmd_set_independent_id_ns(int argc, char **argv,
 	int err = -1, fd;
 
 	struct config {
-		__u32 namespace_id;
-		int   raw_binary;
-		int   human_readable;
-		char *output_format;
+		__u32	namespace_id;
+		int	raw_binary;
+		char	*output_format;
+		int	human_readable;
 	};
 
 	struct config cfg = {
-		.namespace_id    = 0,
-		.output_format = "normal",
+		.namespace_id	= 0,
+		.raw_binary	= 0,
+		.output_format	= "normal",
+		.human_readable	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -3016,11 +3051,11 @@ static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct 
 	int err, fd;
 
 	struct config {
-		char *output_format;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
+		.output_format	= "normal",
 	};
 
 	OPT_ARGS(opts) = {
@@ -3069,13 +3104,13 @@ static int id_nvmset(int argc, char **argv, struct command *cmd, struct plugin *
 	int err, fd;
 
 	struct config {
-		__u16 nvmset_id;
-		char *output_format;
+		__u16	nvmset_id;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.nvmset_id = 0,
-		.output_format = "normal",
+		.nvmset_id	= 0,
+		.output_format	= "normal",
 	};
 
 	OPT_ARGS(opts) = {
@@ -3119,13 +3154,15 @@ static int id_uuid(int argc, char **argv, struct command *cmd, struct plugin *pl
 	int err, fd;
 
 	struct config {
-		int   raw_binary;
-		int   human_readable;
-		char *output_format;
+		char	*output_format;
+		int	raw_binary;
+		int	human_readable;
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
+		.output_format	= "normal",
+		.raw_binary	= 0,
+		.human_readable	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -3170,11 +3207,11 @@ static int id_iocs(int argc, char **argv, struct command *cmd, struct plugin *pl
 	int err, fd;
 
 	struct config {
-		__u16 cntid;
+		__u16	cntid;
 	};
 
 	struct config cfg = {
-		.cntid = 0xffff,
+		.cntid	= 0xffff,
 	};
 
 	OPT_ARGS(opts) = {
@@ -3212,13 +3249,13 @@ static int id_domain(int argc, char **argv, struct command *cmd, struct plugin *
 	int err, fd;
 
 	struct config {
-		__u16 dom_id;
-		char *output_format;
+		__u16	dom_id;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.dom_id = 0xffff,
-		.output_format = "normal",
+		.dom_id		= 0xffff,
+		.output_format	= "normal",
 	};
 
 	OPT_ARGS(opts) = {
@@ -3303,17 +3340,17 @@ static int virtual_mgmt(int argc, char **argv, struct command *cmd, struct plugi
 	__u32 result;
 
 	struct config {
-		__u16   cntlid;
-		__u8    rt;
-		__u8    act;
-		__u16   nr;
+		__u16	cntlid;
+		__u8	rt;
+		__u8	act;
+		__u16	nr;
 	};
 
 	struct config cfg = {
-		.cntlid	  = 0,
-		.rt	  = 0,
-		.act	  = 0,
-		.nr	  = 0,
+		.cntlid	= 0,
+		.rt	= 0,
+		.act	= 0,
+		.nr	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -3365,14 +3402,15 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *cmd, struct 
 	enum nvme_print_flags flags;
 
 	struct config {
-		__u16 cntlid;
-		char *output_format;
-		int human_readable;
+		__u16	cntlid;
+		char	*output_format;
+		int	human_readable;
 	};
 
 	struct config cfg = {
-		.cntlid = 0,
-		.output_format = "normal",
+		.cntlid		= 0,
+		.output_format	= "normal",
+		.human_readable	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -3418,17 +3456,17 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *cmd, struc
 	int err, fd;
 
 	struct config {
-		__u16 cntid;
-		__u32 num_entries;
-		__u32 namespace_id;
-		char *output_format;
+		__u16	cntid;
+		__u32	namespace_id;
+		__u32	num_entries;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.cntid = 0,
-		.namespace_id = 0,
-		.output_format = "normal",
-		.num_entries = ARRAY_SIZE(sc_list->sc_entry),
+		.cntid		= 0,
+		.namespace_id	= 0,
+		.num_entries	= ARRAY_SIZE(sc_list->sc_entry),
+		.output_format	= "normal",
 	};
 
 	OPT_ARGS(opts) = {
@@ -3489,13 +3527,13 @@ static int device_self_test(int argc, char **argv, struct command *cmd, struct p
 	int fd, err;
 
 	struct config {
-		__u32 namespace_id;
-		__u8 stc;
+		__u32	namespace_id;
+		__u8	stc;
 	};
 
 	struct config cfg = {
-		.namespace_id  = NVME_NSID_ALL,
-		.stc = 0,
+		.namespace_id	= NVME_NSID_ALL,
+		.stc		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -3548,14 +3586,15 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	int err, fd;
 
 	struct config {
-		__u8 dst_entries;
-		char *output_format;
-		int verbose;
+		__u8	dst_entries;
+		char	*output_format;
+		int	verbose;
 	};
 
 	struct config cfg = {
-		.dst_entries = NVME_LOG_ST_MAX_RESULTS,
-		.output_format = "normal",
+		.dst_entries	= NVME_LOG_ST_MAX_RESULTS,
+		.output_format	= "normal",
+		.verbose	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -3737,12 +3776,14 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 	int fd;
 
 	struct feat_cfg cfg = {
-		.feature_id   = 0,
-		.namespace_id = 0,
-		.sel          = 0,
-		.cdw11        = 0,
-		.uuid_index   = 0,
-		.data_len     = 0,
+		.feature_id	= 0,
+		.namespace_id	= 0,
+		.sel		= 0,
+		.data_len	= 0,
+		.raw_binary	= 0,
+		.cdw11		= 0,
+		.uuid_index	= 0,
+		.human_readable	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -3813,15 +3854,15 @@ static int fw_download(int argc, char **argv, struct command *cmd, struct plugin
 	bool huge;
 
 	struct config {
-		char  *fw;
-		__u32 xfer;
-		__u32 offset;
+		char	*fw;
+		__u32	xfer;
+		__u32	offset;
 	};
 
 	struct config cfg = {
-		.fw     = "",
-		.xfer   = 4096,
-		.offset = 0,
+		.fw	= "",
+		.xfer	= 4096,
+		.offset	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -3938,15 +3979,15 @@ static int fw_commit(int argc, char **argv, struct command *cmd, struct plugin *
 	__u32 result;
 
 	struct config {
-		__u8 slot;
-		__u8 action;
-		__u8 bpid;
+		__u8	slot;
+		__u8	action;
+		__u8	bpid;
 	};
 
 	struct config cfg = {
-		.slot   = 0,
-		.action = 0,
-		.bpid   = 0,
+		.slot	= 0,
+		.action	= 0,
+		.bpid	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -4110,21 +4151,21 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 	int fd, err;
 
 	struct config {
-		int    no_dealloc;
-		int    oipbp;
-		__u8   owpass;
-		int    ause;
-		__u8   sanact;
-		__u32  ovrpat;
+		int	no_dealloc;
+		int	oipbp;
+		__u8	owpass;
+		int	ause;
+		__u8	sanact;
+		__u32	ovrpat;
 	};
 
 	struct config cfg = {
-		.no_dealloc = 0,
-		.oipbp = 0,
-		.owpass = 0,
-		.ause = 0,
-		.sanact = 0,
-		.ovrpat = 0,
+		.no_dealloc	= 0,
+		.oipbp		= 0,
+		.owpass		= 0,
+		.ause		= 0,
+		.sanact		= 0,
+		.ovrpat		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -4296,13 +4337,13 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	void *bar;
 
 	struct config {
-		int human_readable;
-		char *output_format;
+		char	*output_format;
+		int	human_readable;
 	};
 
 	struct config cfg = {
-		.human_readable = 0,
-		.output_format = "normal",
+		.output_format	= "normal",
+		.human_readable	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -4356,13 +4397,13 @@ static int get_property(int argc, char **argv, struct command *cmd, struct plugi
 	__u64 value;
 
 	struct config {
-		int offset;
-		int human_readable;
+		int	offset;
+		int	human_readable;
 	};
 
 	struct config cfg = {
-		.offset = -1,
-		.human_readable = 0,
+		.offset		= -1,
+		.human_readable	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -4412,13 +4453,13 @@ static int set_property(int argc, char **argv, struct command *cmd, struct plugi
 	int fd, err;
 
 	struct config {
-		int offset;
-		int value;
+		int	offset;
+		int	value;
 	};
 
 	struct config cfg = {
-		.offset = -1,
-		.value = -1,
+		.offset	= -1,
+		.value	= -1,
 	};
 
 	OPT_ARGS(opts) = {
@@ -4489,27 +4530,29 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	__u8 prev_lbaf = 0;
 
 	struct config {
-		__u32 namespace_id;
-		__u32 timeout;
-		__u8  lbaf;
-		__u8  ses;
-		__u8  pi;
-		__u8  pil;
-		__u8  ms;
-		__u64 bs;
-		int reset;
-		int force;
+		__u32	namespace_id;
+		__u32	timeout;
+		__u8	lbaf;
+		__u8	ses;
+		__u8	pi;
+		__u8	pil;
+		__u8	ms;
+		int	reset;
+		int	force;
+		__u64	bs;
 	};
 
 	struct config cfg = {
-		.namespace_id = 0,
-		.timeout      = 600000,
-		.lbaf         = 0xff,
-		.ses          = 0,
-		.pi           = 0,
-		.reset        = 0,
-		.force        = 0,
-		.bs           = 0,
+		.namespace_id	= 0,
+		.timeout	= 600000,
+		.lbaf		= 0xff,
+		.ses		= 0,
+		.pi		= 0,
+		.pil		= 0,
+		.ms		= 0,
+		.reset		= 0,
+		.force		= 0,
+		.bs		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -4755,24 +4798,24 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 	int fd, ffd = STDIN_FILENO;
 
 	struct config {
-		char *file;
-		__u32 namespace_id;
-		__u8  feature_id;
-		__u64 value;
-		__u32 cdw12;
-		__u8  uuid_index;
-		__u32 data_len;
-		int   save;
+		__u32	namespace_id;
+		__u8	feature_id;
+		__u64	value;
+		__u32	cdw12;
+		__u8	uuid_index;
+		__u32	data_len;
+		char	*file;
+		int	save;
 	};
 
 	struct config cfg = {
-		.file         = "",
-		.namespace_id = 0,
-		.feature_id   = 0,
-		.value        = 0,
-		.uuid_index   = 0,
-		.data_len     = 0,
-		.save         = 0,
+		.namespace_id	= 0,
+		.feature_id	= 0,
+		.value		= 0,
+		.uuid_index	= 0,
+		.data_len	= 0,
+		.file		= "",
+		.save		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -4924,19 +4967,21 @@ static int sec_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	unsigned int sec_size;
 
 	struct config {
-		__u32 namespace_id;
-		char  *file;
-		__u8  nssf;
-		__u8  secp;
-		__u16 spsp;
-		__u32 tl;
+		__u32	namespace_id;
+		char	*file;
+		__u8	nssf;
+		__u8	secp;
+		__u16	spsp;
+		__u32	tl;
 	};
 
 	struct config cfg = {
-		.file = NULL,
-		.secp = 0,
-		.spsp = 0,
-		.tl   = 0,
+		.namespace_id	= 0,
+		.file		= "",
+		.nssf		= 0,
+		.secp		= 0,
+		.spsp		= 0,
+		.tl		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -5043,6 +5088,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	const char *endir = "directive enable";
 	const char *ttype = "target directive type to be enabled/disabled";
 	const char *human_readable = "show directive in readable format";
+	const char *input = "write/send file (default stdin)";
 	int err, fd;
 	__u32 result;
 	__u32 dw12 = 0;
@@ -5050,27 +5096,29 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 	int ffd = STDIN_FILENO;
 
 	struct config {
-		char *file;
-		__u32 namespace_id;
-		__u32 data_len;
-		__u16 dspec;
-		__u8  dtype;
-		__u8  doper;
-		__u16 endir;
-		__u8  ttype;
-		int  raw_binary;
-		int  human_readable;
+		__u32	namespace_id;
+		__u32	data_len;
+		__u8	dtype;
+		__u8	ttype;
+		__u16	dspec;
+		__u8	doper;
+		__u16	endir;
+		int	human_readable;
+		int	raw_binary;
+		char	*file;
 	};
 
 	struct config cfg = {
-		.file         = "",
-		.namespace_id = 1,
-		.data_len     = 0,
-		.dspec        = 0,
-		.dtype        = 0,
-		.ttype        = 0,
-		.doper        = 0,
-		.endir        = 1,
+		.namespace_id	= 1,
+		.data_len	= 0,
+		.dtype		= 0,
+		.ttype		= 0,
+		.dspec		= 0,
+		.doper		= 0,
+		.endir		= 1,
+		.human_readable	= 0,
+		.raw_binary	= 0,
+		.file		= "",
 	};
 
 	OPT_ARGS(opts) = {
@@ -5083,6 +5131,7 @@ static int dir_send(int argc, char **argv, struct command *cmd, struct plugin *p
 		OPT_SHRT("endir",         'e', &cfg.endir,          endir),
 		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
 		OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw),
+		OPT_FILE("input-file",    'i', &cfg.file,	    input),
 		OPT_END()
 	};
 
@@ -5202,15 +5251,15 @@ static int write_uncor(int argc, char **argv, struct command *cmd, struct plugin
 	const char *block_count = "number of blocks (zeroes based) on device to access";
 
 	struct config {
-		__u64 start_block;
-		__u32 namespace_id;
-		__u16 block_count;
+		__u32	namespace_id;
+		__u64	start_block;
+		__u16	block_count;
 	};
 
 	struct config cfg = {
-		.start_block     = 0,
-		.namespace_id    = 0,
-		.block_count     = 0,
+		.namespace_id	= 0,
+		.start_block	= 0,
+		.block_count	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -5277,29 +5326,32 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		"part of end-to-end data protection processing";
 
 	struct config {
-		__u64 start_block;
-		__u32 namespace_id;
-		__u32 ref_tag;
-		__u16 app_tag;
-		__u16 app_tag_mask;
-		__u16 block_count;
-		__u8  prinfo;
-		__u64 storage_tag;
-		int   deac;
-		int   limited_retry;
-		int   force_unit_access;
-		int   storage_tag_check;
+		__u32	namespace_id;
+		__u64	start_block;
+		__u16	block_count;
+		int	deac;
+		int	limited_retry;
+		int	force_unit_access;
+		__u8	prinfo;
+		__u32	ref_tag;
+		__u16	app_tag_mask;
+		__u16	app_tag;
+		__u64	storage_tag;
+		int	storage_tag_check;
 	};
 
 	struct config cfg = {
-		.start_block     	= 0,
-		.block_count     	= 0,
-		.prinfo          	= 0,
-		.ref_tag         	= 0,
-		.app_tag_mask    	= 0,
-		.app_tag         	= 0,
-		.storage_tag	 	= 0,
-		.storage_tag_check 	= 0,
+		.namespace_id		= 0,
+		.start_block		= 0,
+		.block_count		= 0,
+		.deac			= 0,
+		.limited_retry		= 0,
+		.prinfo			= 0,
+		.ref_tag		= 0,
+		.app_tag_mask		= 0,
+		.app_tag		= 0,
+		.storage_tag		= 0,
+		.storage_tag_check	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -5395,35 +5447,35 @@ static int dsm(int argc, char **argv, struct command *cmd, struct plugin *plugin
 	struct nvme_dsm_range dsm[256];
 
 	struct config {
-		char  *ctx_attrs;
-		char  *blocks;
-		char  *slbas;
-		int   ad;
-		int   idw;
-		int   idr;
-		__u32 cdw11;
-		__u32 namespace_id;
+		__u32	namespace_id;
+		char	*ctx_attrs;
+		char	*blocks;
+		char	*slbas;
+		int	ad;
+		int	idw;
+		int	idr;
+		__u32	cdw11;
 	};
 
 	struct config cfg = {
-		.ctx_attrs = "",
-		.blocks = "",
-		.slbas = "",
-		.namespace_id = 0,
-		.ad = 0,
-		.idw = 0,
-		.idr = 0,
-		.cdw11 = 0,
+		.namespace_id	= 0,
+		.ctx_attrs	= "",
+		.blocks		= "",
+		.slbas		= "",
+		.ad		= 0,
+		.idw		= 0,
+		.idr		= 0,
+		.cdw11		= 0,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
 		OPT_LIST("ctx-attrs",    'a', &cfg.ctx_attrs,    context_attrs),
-		OPT_LIST("blocks", 	 'b', &cfg.blocks,       blocks),
-		OPT_LIST("slbs", 	 's', &cfg.slbas,        starting_blocks),
-		OPT_FLAG("ad", 	         'd', &cfg.ad,           ad),
-		OPT_FLAG("idw", 	 'w', &cfg.idw,          idw),
-		OPT_FLAG("idr", 	 'r', &cfg.idr,          idr),
+		OPT_LIST("blocks",	 'b', &cfg.blocks,       blocks),
+		OPT_LIST("slbs",	 's', &cfg.slbas,        starting_blocks),
+		OPT_FLAG("ad",	         'd', &cfg.ad,           ad),
+		OPT_FLAG("idw",		 'w', &cfg.idw,          idw),
+		OPT_FLAG("idr",		 'r', &cfg.idr,          idr),
 		OPT_UINT("cdw11",        'c', &cfg.cdw11,        cdw11),
 		OPT_END()
 	};
@@ -5512,52 +5564,63 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	struct nvme_copy_range copy[128];
 
 	struct config {
-		__u32 namespace_id;
-		__u64 sdlba;
-		char  *nlbs;
-		char  *slbas;
-		__u32 ilbrt;
-		char  *eilbrts;
-		__u16 lbatm;
-		char  *elbatms;
-		__u16 lbat;
-		char  *elbats;
-		__u8  prinfow;
-		__u8  prinfor;
-		int   lr;
-		int   fua;
-		__u8  dtype;
-		__u16 dspec;
-		__u8  format;
+		__u32	namespace_id;
+		__u64	sdlba;
+		char	*slbas;
+		char	*nlbs;
+		int	lr;
+		int	fua;
+		__u8	prinfow;
+		__u8	prinfor;
+		__u32	ilbrt;
+		char	*eilbrts;
+		__u16	lbat;
+		char	*elbatms;
+		__u16	lbatm;
+		char	*elbats;
+		__u8	dtype;
+		__u16	dspec;
+		__u8	format;
 	};
 
 	struct config cfg = {
-		.namespace_id = 0,
-		.nlbs    = "",
-		.slbas   = "",
-		.eilbrts = "",
-		.elbatms = "",
-		.elbats  = "",
+		.namespace_id	= 0,
+		.sdlba		= 0,
+		.slbas		= "",
+		.nlbs		= "",
+		.lr		= 0,
+		.fua		= 0,
+		.prinfow	= 0,
+		.prinfor	= 0,
+		.ilbrt		= 0,
+		.eilbrts	= "",
+		.lbat		= 0,
+		.elbats		= "",
+		.lbatm		= 0,
+		.elbatms	= "",
+		.dtype		= 0,
+		.dspec		= 0,
+		.format		= 0,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",	   'n', &cfg.namespace_id, 	d_nsid),
-		OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,   		d_sdlba),
-		OPT_LIST("slbs",                   's', &cfg.slbas,   		d_slbas),
-		OPT_LIST("blocks",                 'b', &cfg.nlbs,    		d_nlbs),
-		OPT_FLAG("limited-retry",          'l', &cfg.lr,      		d_lr),
-		OPT_FLAG("force-unit-access",      'f', &cfg.fua,     		d_fua),
-		OPT_BYTE("prinfow",                'p', &cfg.prinfow, 		d_prinfow),
-		OPT_BYTE("prinfor",                'P', &cfg.prinfor, 		d_prinfor),
-		OPT_UINT("ref-tag",                'r', &cfg.ilbrt,   		d_ilbrt),
-		OPT_LIST("expected-ref-tags",      'R', &cfg.eilbrts, 		d_eilbrts),
-		OPT_SHRT("app-tag",                'a', &cfg.lbat,    		d_lbat),
-		OPT_LIST("expected-app-tags",      'A', &cfg.elbats,  		d_elbats),
-		OPT_SHRT("app-tag-mask",           'm', &cfg.lbatm,   		d_lbatm),
-		OPT_LIST("expected-app-tag-masks", 'M', &cfg.elbatms, 		d_elbatms),
-		OPT_BYTE("dir-type",               'T', &cfg.dtype,   		d_dtype),
-		OPT_SHRT("dir-spec",               'S', &cfg.dspec,   		d_dspec),
-		OPT_BYTE("format",                 'F', &cfg.format,  		d_format),
+		OPT_UINT("namespace-id",	   'n', &cfg.namespace_id,	d_nsid),
+		OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,		d_sdlba),
+		OPT_LIST("slbs",                   's', &cfg.slbas,		d_slbas),
+		OPT_LIST("blocks",                 'b', &cfg.nlbs,		d_nlbs),
+		OPT_FLAG("limited-retry",          'l', &cfg.lr,		d_lr),
+		OPT_FLAG("force-unit-access",      'f', &cfg.fua,		d_fua),
+		OPT_BYTE("prinfow",                'p', &cfg.prinfow,		d_prinfow),
+		OPT_BYTE("prinfor",                'P', &cfg.prinfor,		d_prinfor),
+		OPT_UINT("ref-tag",                'r', &cfg.ilbrt,		d_ilbrt),
+		OPT_LIST("expected-ref-tags",      'R', &cfg.eilbrts,		d_eilbrts),
+		OPT_SHRT("app-tag",                'a', &cfg.lbat,		d_lbat),
+		OPT_LIST("expected-app-tags",      'A', &cfg.elbats,		d_elbats),
+		OPT_SHRT("app-tag-mask",           'm', &cfg.lbatm,		d_lbatm),
+		OPT_LIST("expected-app-tag-masks", 'M', &cfg.elbatms,		d_elbatms),
+		OPT_BYTE("dir-type",               'T', &cfg.dtype,		d_dtype),
+		OPT_SHRT("dir-spec",               'S', &cfg.dspec,		d_dspec),
+		OPT_BYTE("format",                 'F', &cfg.format,		d_format),
 		OPT_END()
 	};
 
@@ -5634,11 +5697,11 @@ static int flush(int argc, char **argv, struct command *cmd, struct plugin *plug
 	int err, fd;
 
 	struct config {
-		__u32 namespace_id;
+		__u32	namespace_id;
 	};
 
 	struct config cfg = {
-		.namespace_id = 0,
+		.namespace_id	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -5688,20 +5751,21 @@ static int resv_acquire(int argc, char **argv, struct command *cmd, struct plugi
 	int err, fd;
 
 	struct config {
-		__u32 namespace_id;
-		__u64 crkey;
-		__u64 prkey;
-		__u8  rtype;
-		__u8  racqa;
-		int   iekey;
+		__u32	namespace_id;
+		__u64	crkey;
+		__u64	prkey;
+		__u8	rtype;
+		__u8	racqa;
+		int	iekey;
 	};
 
 	struct config cfg = {
-		.namespace_id = 0,
-		.crkey        = 0,
-		.prkey        = 0,
-		.rtype        = 0,
-		.racqa        = 0,
+		.namespace_id	= 0,
+		.crkey		= 0,
+		.prkey		= 0,
+		.rtype		= 0,
+		.racqa		= 0,
+		.iekey		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -5771,20 +5835,20 @@ static int resv_register(int argc, char **argv, struct command *cmd, struct plug
 	int err, fd;
 
 	struct config {
-		__u32 namespace_id;
-		__u64 crkey;
-		__u64 nrkey;
-		__u8  rrega;
-		__u8  cptpl;
-		int   iekey;
+		__u32	namespace_id;
+		__u64	crkey;
+		__u64	nrkey;
+		__u8	rrega;
+		__u8	cptpl;
+		int	iekey;
 	};
 
 	struct config cfg = {
-		.namespace_id = 0,
-		.crkey        = 0,
-		.nrkey        = 0,
-		.rrega        = 0,
-		.cptpl        = 0,
+		.namespace_id	= 0,
+		.crkey		= 0,
+		.nrkey		= 0,
+		.rrega		= 0,
+		.cptpl		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -5864,19 +5928,19 @@ static int resv_release(int argc, char **argv, struct command *cmd, struct plugi
 	int err, fd;
 
 	struct config {
-		__u32 namespace_id;
-		__u64 crkey;
-		__u8  rtype;
-		__u8  rrela;
-		__u8  iekey;
+		__u32	namespace_id;
+		__u64	crkey;
+		__u8	rtype;
+		__u8	rrela;
+		__u8	iekey;
 	};
 
 	struct config cfg = {
-		.namespace_id = 0,
-		.crkey        = 0,
-		.rtype        = 0,
-		.rrela        = 0,
-		.iekey        = 0,
+		.namespace_id	= 0,
+		.crkey		= 0,
+		.rtype		= 0,
+		.rrela		= 0,
+		.iekey		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -5947,18 +6011,19 @@ static int resv_report(int argc, char **argv, struct command *cmd, struct plugin
 	int err, fd, size;
 
 	struct config {
-		__u32 namespace_id;
-		__u32 numd;
-		__u8  eds;
-		int   raw_binary;
-		char *output_format;
+		__u32	namespace_id;
+		__u32	numd;
+		__u8	eds;
+		char	*output_format;
+		int	raw_binary;
 	};
 
 	struct config cfg = {
-		.namespace_id = 0,
-		.numd         = 0,
-		.eds	      = 0,
-		.output_format = "normal",
+		.namespace_id	= 0,
+		.numd		= 0,
+		.eds		= 0,
+		.output_format	= "normal",
+		.raw_binary	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -6077,28 +6142,28 @@ static int submit_io(int opcode, char *command, const char *desc,
 	const char *force = "The \"I know what I'm doing\" flag, do not enforce exclusive access for write";
 
 	struct config {
-		__u32 namespace_id;
-		__u64 start_block;
-		__u16 block_count;
-		__u64 data_size;
-		__u64 metadata_size;
-		__u32 ref_tag;
-		char  *data;
-		char  *metadata;
-		__u8  prinfo;
-		__u8  dtype;
-		__u16 dspec;
-		__u8  dsmgmt;
-		__u16 app_tag_mask;
-		__u16 app_tag;
-		__u64 storage_tag;
-		int   limited_retry;
-		int   force_unit_access;
-		int   storage_tag_check;
-		int   show;
-		int   dry_run;
-		int   latency;
-		int   force;
+		__u32	namespace_id;
+		__u64	start_block;
+		__u16	block_count;
+		__u64	data_size;
+		__u64	metadata_size;
+		__u32	ref_tag;
+		char	*data;
+		char	*metadata;
+		__u8	prinfo;
+		__u16	app_tag_mask;
+		__u16	app_tag;
+		__u64	storage_tag;
+		int	limited_retry;
+		int	force_unit_access;
+		int	storage_tag_check;
+		__u8	dtype;
+		__u16	dspec;
+		__u8	dsmgmt;
+		int	show;
+		int	dry_run;
+		int	latency;
+		int	force;
 	};
 
 	struct config cfg = {
@@ -6113,8 +6178,16 @@ static int submit_io(int opcode, char *command, const char *desc,
 		.prinfo			= 0,
 		.app_tag_mask		= 0,
 		.app_tag		= 0,
-		.storage_tag_check	= 0,
 		.storage_tag		= 0,
+		.limited_retry		= 0,
+		.force_unit_access	= 0,
+		.storage_tag_check	= 0,
+		.dtype			= 0,
+		.dspec			= 0,
+		.dsmgmt			= 0,
+		.show			= 0,
+		.dry_run		= 0,
+		.latency		= 0,
 		.force			= 0,
 	};
 
@@ -6414,31 +6487,31 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		"be checked as part of Verify operation";
 
 	struct config {
-		__u64 start_block;
-		__u32 namespace_id;
-		__u32 ref_tag;
-		__u16 app_tag;
-		__u16 app_tag_mask;
-		__u16 block_count;
-		__u8  prinfo;
-		__u64 storage_tag;
-		int   storage_tag_check;
-		int   limited_retry;
-		int   force_unit_access;
+		__u32	namespace_id;
+		__u64	start_block;
+		__u16	block_count;
+		int	limited_retry;
+		int	force_unit_access;
+		__u8	prinfo;
+		__u32	ref_tag;
+		__u16	app_tag;
+		__u16	app_tag_mask;
+		__u64	storage_tag;
+		int	storage_tag_check;
 	};
 
 	struct config cfg = {
-		.namespace_id      = 0,
-		.start_block       = 0,
-		.block_count       = 0,
-		.prinfo            = 0,
-		.ref_tag           = 0,
-		.app_tag           = 0,
-		.app_tag_mask      = 0,
-		.limited_retry     = 0,
-		.force_unit_access = 0,
-		.storage_tag	   = 0,
-		.storage_tag_check = 0,
+		.namespace_id		= 0,
+		.start_block		= 0,
+		.block_count		= 0,
+		.limited_retry		= 0,
+		.force_unit_access	= 0,
+		.prinfo			= 0,
+		.ref_tag		= 0,
+		.app_tag		= 0,
+		.app_tag_mask		= 0,
+		.storage_tag		= 0,
+		.storage_tag_check	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -6528,20 +6601,23 @@ static int sec_recv(int argc, char **argv, struct command *cmd, struct plugin *p
 	void *sec_buf = NULL;
 
 	struct config {
-		__u32 namespace_id;
-		__u32 size;
-		__u8  secp;
-		__u8  nssf;
-		__u16 spsp;
-		__u32 al;
-		int   raw_binary;
+		__u32	namespace_id;
+		__u32	size;
+		__u8	nssf;
+		__u8	secp;
+		__u16	spsp;
+		__u32	al;
+		int	raw_binary;
 	};
 
 	struct config cfg = {
-		.size = 0,
-		.secp = 0,
-		.spsp = 0,
-		.al   = 0,
+		.namespace_id	= 0,
+		.size		= 0,
+		.nssf		= 0,
+		.secp		= 0,
+		.spsp		= 0,
+		.al		= 0,
+		.raw_binary	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -6625,23 +6701,23 @@ static int get_lba_status(int argc, char **argv, struct command *cmd,
 	void *buf;
 
 	struct config {
-		__u32 namespace_id;
-		__u64 slba;
-		__u32 mndw;
-		__u8 atype;
-		__u16 rl;
-		__u32 timeout;
-		char *output_format;
+		__u32	namespace_id;
+		__u64	slba;
+		__u32	mndw;
+		__u8	atype;
+		__u16	rl;
+		__u32	timeout;
+		char	*output_format;
 	};
 
 	struct config cfg = {
-		.namespace_id = 0,
-		.slba = 0,
-		.mndw = 0,
-		.atype = 0,
-		.rl = 0,
-		.timeout      = 0,
-		.output_format = "normal",
+		.namespace_id	= 0,
+		.slba		= 0,
+		.mndw		= 0,
+		.atype		= 0,
+		.rl		= 0,
+		.timeout	= 0,
+		.output_format	= "normal",
 	};
 
 	OPT_ARGS(opts) = {
@@ -6719,23 +6795,23 @@ static int capacity_mgmt(int argc, char **argv, struct command *cmd, struct plug
 	__u32 result;
 
 	struct config {
-		__u8  operation;
-		__u16 element_id;
-		__u32 dw11;
-		__u32 dw12;
+		__u8	operation;
+		__u16	element_id;
+		__u32	dw11;
+		__u32	dw12;
 	};
 
 	struct config cfg = {
-		.operation  = 0xff,
-		.element_id = 0xffff,
-		.dw11       = 0,
-		.dw12       = 0,
+		.operation	= 0xff,
+		.element_id	= 0xffff,
+		.dw11		= 0,
+		.dw12		= 0,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_BYTE("operation",   'o', &cfg.operation,    operation),
 		OPT_SHRT("element-id",  'i', &cfg.element_id,   element_id),
-		OPT_UINT("cap-lower",   'l', &cfg.dw11,     	cap_lower),
+		OPT_UINT("cap-lower",   'l', &cfg.dw11,		cap_lower),
 		OPT_UINT("cap-upper",   'u', &cfg.dw12,         cap_upper),
 		OPT_END()
 	};
@@ -6799,23 +6875,25 @@ static int dir_receive(int argc, char **argv, struct command *cmd, struct plugin
 	void *buf = NULL;
 
 	struct config {
-		__u32 namespace_id;
-		__u32 data_len;
-		__u16 dspec;
-		__u8  dtype;
-		__u8  doper;
-		__u16 nsr; /* dw12 for NVME_DIR_ST_RCVOP_STATUS */
-		int  raw_binary;
-		int  human_readable;
+		__u32	namespace_id;
+		__u32	data_len;
+		int	raw_binary;
+		__u8	dtype;
+		__u16	dspec;
+		__u8	doper;
+		__u16	nsr; /* dw12 for NVME_DIR_ST_RCVOP_STATUS */
+		int	human_readable;
 	};
 
 	struct config cfg = {
-		.namespace_id = 1,
-		.data_len     = 0,
-		.dspec        = 0,
-		.dtype        = 0,
-		.doper        = 0,
-		.nsr          = 0,
+		.namespace_id	= 1,
+		.data_len	= 0,
+		.raw_binary	= 0,
+		.dtype		= 0,
+		.dspec		= 0,
+		.doper		= 0,
+		.nsr		= 0,
+		.human_readable	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -6946,23 +7024,23 @@ static int lockdown_cmd(int argc, char **argv, struct command *cmd, struct plugi
 	int fd, err = -1;
 
 	struct config {
-		__u8    ofi;
-		__u8    ifc;
-		__u8    prhbt;
-		__u8    scp;
-		__u8    uuid;
+		__u8	ofi;
+		__u8	ifc;
+		__u8	prhbt;
+		__u8	scp;
+		__u8	uuid;
 	};
 
 	struct config cfg = {
-		.ofi = 0,
-		.ifc = 0,
-		.prhbt = 0,
-		.scp = 0,
-		.uuid = 0,
+		.ofi	= 0,
+		.ifc	= 0,
+		.prhbt	= 0,
+		.scp	= 0,
+		.uuid	= 0,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_BYTE("ofi",		'o', &cfg.ofi, 		ofi_desc),
+		OPT_BYTE("ofi",		'o', &cfg.ofi,      ofi_desc),
 		OPT_BYTE("ifc",		'f', &cfg.ifc,      ifc_desc),
 		OPT_BYTE("prhbt",	'p', &cfg.prhbt,    prhbt_desc),
 		OPT_BYTE("scp",		's', &cfg.scp,      scp_desc),
@@ -7059,57 +7137,57 @@ static int passthru(int argc, char **argv, bool admin,
 	struct timeval start_time, end_time;
 
 	struct config {
-		__u8  opcode;
-		__u8  flags;
-		__u16 rsvd;
-		__u32 namespace_id;
-		__u32 data_len;
-		__u32 metadata_len;
-		__u32 timeout;
-		__u32 cdw2;
-		__u32 cdw3;
-		__u32 cdw10;
-		__u32 cdw11;
-		__u32 cdw12;
-		__u32 cdw13;
-		__u32 cdw14;
-		__u32 cdw15;
-		char  *input_file;
-		char  *metadata;
-		int   raw_binary;
-		int   show_command;
-		int   dry_run;
-		int   read;
-		int   write;
-		__u8  prefill;
-		int   latency;
+		__u8	opcode;
+		__u8	flags;
+		__u16	rsvd;
+		__u32	namespace_id;
+		__u32	data_len;
+		__u32	metadata_len;
+		__u32	timeout;
+		__u32	cdw2;
+		__u32	cdw3;
+		__u32	cdw10;
+		__u32	cdw11;
+		__u32	cdw12;
+		__u32	cdw13;
+		__u32	cdw14;
+		__u32	cdw15;
+		char	*input_file;
+		char	*metadata;
+		int	raw_binary;
+		int	show_command;
+		int	dry_run;
+		int	read;
+		int	write;
+		__u8	prefill;
+		int	latency;
 	};
 
 	struct config cfg = {
-		.opcode       = 0,
-		.flags        = 0,
-		.rsvd         = 0,
-		.namespace_id = 0,
-		.data_len     = 0,
-		.metadata_len = 0,
-		.timeout      = 0,
-		.cdw2         = 0,
-		.cdw3         = 0,
-		.cdw10        = 0,
-		.cdw11        = 0,
-		.cdw12        = 0,
-		.cdw13        = 0,
-		.cdw14        = 0,
-		.cdw15        = 0,
-		.input_file   = "",
-		.metadata     = "",
-		.raw_binary   = 0,
-		.show_command = 0,
-		.dry_run      = 0,
-		.read         = 0,
-		.write        = 0,
-		.prefill      = 0,
-		.latency      = 0,
+		.opcode		= 0,
+		.flags		= 0,
+		.prefill	= 0,
+		.rsvd		= 0,
+		.namespace_id	= 0,
+		.data_len	= 0,
+		.metadata_len	= 0,
+		.timeout	= 0,
+		.cdw2		= 0,
+		.cdw3		= 0,
+		.cdw10		= 0,
+		.cdw11		= 0,
+		.cdw12		= 0,
+		.cdw13		= 0,
+		.cdw14		= 0,
+		.cdw15		= 0,
+		.input_file	= "",
+		.metadata	= "",
+		.raw_binary	= 0,
+		.show_command	= 0,
+		.dry_run	= 0,
+		.read		= 0,
+		.write		= 0,
+		.latency	= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -7361,24 +7439,24 @@ static int gen_dhchap_key(int argc, char **argv, struct command *command, struct
 	int err = 0;
 
 	struct config {
-		char *secret;
-		unsigned int key_len;
-		char *nqn;
-		unsigned int hmac;
+		char		*secret;
+		unsigned int	key_len;
+		char		*nqn;
+		unsigned int	hmac;
 	};
 
 	struct config cfg = {
-		.secret = NULL,
-		.key_len = 0,
-		.nqn = NULL,
-		.hmac = 0,
+		.secret		= NULL,
+		.key_len	= 0,
+		.nqn		= NULL,
+		.hmac		= 0,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_STR("secret", 's', &cfg.secret, secret),
-		OPT_UINT("key-length", 'l', &cfg.key_len, key_len),
-		OPT_STR("nqn", 'n', &cfg.nqn, nqn),
-		OPT_UINT("hmac", 'm', &cfg.hmac, hmac),
+		OPT_STR("secret",	's', &cfg.secret,	secret),
+		OPT_UINT("key-length",	'l', &cfg.key_len,	key_len),
+		OPT_STR("nqn",		'n', &cfg.nqn,		nqn),
+		OPT_UINT("hmac",	'm', &cfg.hmac,		hmac),
 		OPT_END()
 	};
 
@@ -7492,11 +7570,11 @@ static int check_dhchap_key(int argc, char **argv, struct command *command, stru
 	u_int32_t key_crc;
 	int err = 0, hmac;
 	struct config {
-		char *key;
+		char	*key;
 	};
 
 	struct config cfg = {
-		.key = NULL,
+		.key	= NULL,
 	};
 
 	OPT_ARGS(opts) = {
@@ -7592,18 +7670,18 @@ static int gen_tls_key(int argc, char **argv, struct command *command, struct pl
 	int err = 0;
 
 	struct config {
-		char *secret;
-		unsigned int hmac;
+		char		*secret;
+		unsigned int	hmac;
 	};
 
 	struct config cfg = {
-		.secret = NULL,
-		.hmac = 1,
+		.secret		= NULL,
+		.hmac		= 1,
 	};
 
 	OPT_ARGS(opts) = {
-		OPT_STR("secret", 's', &cfg.secret, secret),
-		OPT_UINT("hmac", 'm', &cfg.hmac, hmac),
+		OPT_STR("secret",	's', &cfg.secret,	secret),
+		OPT_UINT("hmac",	'm', &cfg.hmac,		hmac),
 		OPT_END()
 	};
 
@@ -7673,11 +7751,11 @@ static int check_tls_key(int argc, char **argv, struct command *command, struct 
 	u_int32_t key_crc;
 	int err = 0, hmac;
 	struct config {
-		char *key;
+		char	*key;
 	};
 
 	struct config cfg = {
-		.key = NULL,
+		.key	= NULL,
 	};
 
 	OPT_ARGS(opts) = {
