@@ -1936,18 +1936,19 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	struct config {
 		__u32 namespace_id;
 		int  all;
-		__u8 csi;
+		int csi;
 		char *output_format;
 	};
 
 	struct config cfg = {
 		.namespace_id = 1,
 		.output_format = "normal",
+		.csi = -1,
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
-		OPT_BYTE("csi",          'y', &cfg.csi,           csi),
+		OPT_INT("csi",           'y', &cfg.csi,           csi),
 		OPT_FLAG("all",          'a', &cfg.all,           all),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format_no_binary),
 		OPT_END()
@@ -1971,12 +1972,23 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto close_fd;
 	}
 
-	if (cfg.all)
-		err = nvme_identify_allocated_ns_list(fd, cfg.namespace_id - 1,
-						      &ns_list);
-	else
-		err = nvme_identify_active_ns_list(fd, cfg.namespace_id - 1,
-						   &ns_list);
+	if (cfg.csi < 0) {
+		if (cfg.all)
+			err = nvme_identify_allocated_ns_list(fd,
+				cfg.namespace_id - 1, &ns_list);
+		else
+			err = nvme_identify_active_ns_list(fd,
+				cfg.namespace_id - 1, &ns_list);
+
+	} else {
+		if (cfg.all)
+			err = nvme_identify_allocated_ns_list_csi(fd,
+				cfg.namespace_id - 1, cfg.csi, &ns_list);
+		else
+			err = nvme_identify_active_ns_list_csi(fd,
+				cfg.namespace_id - 1, cfg.csi, &ns_list);
+	}
+
 	if (!err)
 		nvme_show_list_ns(&ns_list, flags);
 	else if (err > 0)
