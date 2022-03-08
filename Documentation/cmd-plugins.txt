@@ -15,3 +15,9 @@ linknvme:nvme-intel-smart-log-add[1]::
 
 linknvme:nvme-intel-temp-stats[1]::
 	NVMe Intel Additional SMART log page for temp stats
+
+linknvme:nvme-huawei-id-ctrl[1]::
+	NVMe huawei Identify Controller
+
+linknvme:nvme-huawei-list[1]::
+	List all recognized Huawei NVMe devices
