@@ -40,7 +40,7 @@
  * @value: The value to be set in its completed position
  * @name: The name of the sub-field within an nvme value
  *
- * Returns: The 
+ * Returns: The 'name' field from 'value'
  */
 #define NVME_SET(value, name) \
 	(((value) & NVME_##name##_MASK) << NVME_##name##_SHIFT)
