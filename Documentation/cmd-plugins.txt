@@ -45,3 +45,18 @@ linknvme:nvme-micron-smart-add-log[1]::
 
 linknvme:nvme-micron-temperature-stats[1]::
 	Retrieves temperature information of given micron device
+
+linknvme:nvme-netapp-ontapdevices[1]::
+	Display information about ONTAP devices
+
+linknvme:nvme-netapp-smdevices[1]::
+	Display information for each NVMe path to an E-Series volume
+
+linknvme:nvme-toshiba-clear-pcie-correctable-errors[1]::
+	Reset the PCIe correctable errors count to zero
+
+linknvme:nvme-toshiba-vs-internal-log[1]::
+	Retrieve a Toshiba device's vendor specific internal log
+
+linknvme:nvme-toshiba-vs-smart-add-log[1]::
+	Retrieve a Toshiba device's vendor specific extended SMART log page
