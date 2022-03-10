@@ -78,7 +78,7 @@ nvmetests
 	      errors/warnings.
                - Example "$ ninja -C .build lint-python" will run flake8 and
 	         mypy on all the python files in current directory.
-	       - Example "$ ninja -C .build fomrat-python" will run autopep8 and
+	       - Example "$ ninja -C .build format-python" will run autopep8 and
 	         isort on all the python files in the current directory.
 
 4. Running testcases with framework
