@@ -248,7 +248,7 @@ executable(
                   libhugetlbfs_dep ],
   include_directories: incdir,
   install: true,
-  install_dir: get_option('sbindir')
+  install_dir: sbindir
 )
 
 ################################################################################
