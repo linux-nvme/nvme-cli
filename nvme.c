@@ -2294,11 +2294,16 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	};
 
 	struct config cfg = {
+		.nsze		= 0,
+		.ncap		= 0,
 		.flbas		= 0xff,
+		.dps		= 0,
+		.nmic		= 0,
 		.anagrpid	= 0,
 		.nvmsetid	= 0,
 		.bs		= 0x00,
 		.timeout	= 120000,
+		.csi		= 0,
 	};
 
 	OPT_ARGS(opts) = {
