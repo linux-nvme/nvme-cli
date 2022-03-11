@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc" />
 <title>nvme(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -819,7 +819,7 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-dms.html">nvme-dms(1)</a>
+<a href="nvme-dsm.html">nvme-dsm(1)</a>
 </dt>
 <dd>
 <p>
@@ -1242,6 +1242,443 @@ available, run "nvme help".</p></div>
         Reads and shows NVMe-over-Fabrics controller property
 </p>
 </dd>
+<dt class="hdlist1">
+<a href="nvme-media-unit-stat-log.html">nvme-media-unit-stat-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve and show the configuration and wear of media units
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-supported-cap-config-log.html">nvme-supported-cap-config-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve and show the list of Supported Capacity Configuration Descriptors
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-boot-part-log.html">nvme-boot-part-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Boot Partition Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-capacity-mgmt.html">nvme-capacity-mgmt(1)</a>
+</dt>
+<dd>
+<p>
+        Capacity Management Command
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-check-dhchap-key.html">nvme-check-dhchap-key(1)</a>
+</dt>
+<dd>
+<p>
+        Generate NVMeoF DH-HMAC-CHAP host key
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-check-tls-key.html">nvme-check-tls-key(1)</a>
+</dt>
+<dd>
+<p>
+        Validate NVMeoF TLS PSK
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-cmdset-ind-id-ns.html">nvme-cmdset-ind-id-ns(1)</a>
+</dt>
+<dd>
+<p>
+        I/O Command Set Independent Identify Namespace
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-endurance-event-agg-log.html">nvme-endurance-event-agg-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Endurance Group Event Aggregate Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-fid-support-effects-log.html">nvme-fid-support-effects-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve FID Support and Effects log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-gen-dhchap-key.html">nvme-gen-dhchap-key(1)</a>
+</dt>
+<dd>
+<p>
+        Generate NVMeoF DH-HMAC-CHAP host key
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-gen-hostnqn.html">nvme-gen-hostnqn(1)</a>
+</dt>
+<dd>
+<p>
+        Generate NVMeoF host NQN
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-gen-tls-key.html">nvme-gen-tls-key(1)</a>
+</dt>
+<dd>
+<p>
+        Generate NVMeoF TLS PSK
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-get-lba-status.html">nvme-get-lba-status(1)</a>
+</dt>
+<dd>
+<p>
+        Get LBA Status command
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-domain.html">nvme-id-domain(1)</a>
+</dt>
+<dd>
+<p>
+        NVMe Identify Domain List
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-id-ns-lba-format.html">nvme-id-ns-lba-format(1)</a>
+</dt>
+<dd>
+<p>
+        NVMe Identify Namespace for the specified LBA Format index
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-lba-status-log.html">nvme-lba-status-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve LBA Status Information Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-list-endgrp.html">nvme-list-endgrp(1)</a>
+</dt>
+<dd>
+<p>
+        NVMe Identify Endurance Group List
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-ns-rescan.html">nvme-ns-rescan(1)</a>
+</dt>
+<dd>
+<p>
+        Rescans the NVME namespaces
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-nvm-id-ctrl.html">nvme-nvm-id-ctrl(1)</a>
+</dt>
+<dd>
+<p>
+        NVMe Identify Controller NVM Command Set
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-nvm-id-ns.html">nvme-nvm-id-ns(1)</a>
+</dt>
+<dd>
+<p>
+        NVMe Identify Namespace NVM Command Set
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-nvm-id-ns-lba-format.html">nvme-nvm-id-ns-lba-format(1)</a>
+</dt>
+<dd>
+<p>
+        NVMe Identify Namespace NVM Command Set for the specified LBA Format index
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-persistent-event-log.html">nvme-persistent-event-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Presistent Event Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-predictable-lat-log.html">nvme-predictable-lat-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Predictable Latency per Nvmset Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-pred-lat-event-agg-log.html">nvme-pred-lat-event-agg-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Predictable Latency Event Aggregate Log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-primary-ctrl-caps.html">nvme-primary-ctrl-caps(1)</a>
+</dt>
+<dd>
+<p>
+        NVMe Identify Primary Controller Capabilities
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-reset.html">nvme-reset(1)</a>
+</dt>
+<dd>
+<p>
+        Resets the controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-rpmb.html">nvme-rpmb(1)</a>
+</dt>
+<dd>
+<p>
+        Replay Protection Memory Block commands
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-sanitize-log.html">nvme-sanitize-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve sanitize log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-set-property.html">nvme-set-property(1)</a>
+</dt>
+<dd>
+<p>
+        Set a property and show the resulting value
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-show-hostnqn.html">nvme-show-hostnqn(1)</a>
+</dt>
+<dd>
+<p>
+        Show NVMeoF host NQN
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-subsystem-reset.html">nvme-subsystem-reset(1)</a>
+</dt>
+<dd>
+<p>
+        Resets the subsystem
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-supported-log-pages.html">nvme-supported-log-pages(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve the Supported Log pages details
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-verify.html">nvme-verify(1)</a>
+</dt>
+<dd>
+<p>
+        verify command
+</p>
+</dd>
+</dl></div>
+</div>
+<div class="sect2">
+<h3 id="_plugins_vendor_extension_commands">Plugins/Vendor extension commands</h3>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<a href="nvme-intel-id-ctrl.html">nvme-intel-id-ctrl(1)</a>
+</dt>
+<dd>
+<p>
+        Intel - NVMe Identify Controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-intel-internal-log.html">nvme-intel-internal-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Intel device&#8217;s internal log and save to file
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-intel-lat-stats.html">nvme-intel-lat-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve NVMe Identify Controller, return result and structure
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-intel-market-name.html">nvme-intel-market-name(1)</a>
+</dt>
+<dd>
+<p>
+        Intel vendor specific marketing name log page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-intel-smart-log-add.html">nvme-intel-smart-log-add(1)</a>
+</dt>
+<dd>
+<p>
+        NVMe Intel Additional SMART log page
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-intel-temp-stats.html">nvme-intel-temp-stats(1)</a>
+</dt>
+<dd>
+<p>
+        NVMe Intel Additional SMART log page for temp stats
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-huawei-id-ctrl.html">nvme-huawei-id-ctrl(1)</a>
+</dt>
+<dd>
+<p>
+        NVMe huawei Identify Controller
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-huawei-list.html">nvme-huawei-list(1)</a>
+</dt>
+<dd>
+<p>
+        List all recognized Huawei NVMe devices
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-dera-stat.html">nvme-dera-stat(1)</a>
+</dt>
+<dd>
+<p>
+        NVMe Dera Device status and Additional SMART log page request
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-clear-pcie-errors.html">nvme-micron-clear-pcie-errors(1)</a>
+</dt>
+<dd>
+<p>
+        Clears correctable PCIe correctable errors of given Micron device
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-internal-log.html">nvme-micron-internal-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve Micron device&#8217;s internal logs and save to given zip file
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-nand-stats.html">nvme-micron-nand-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieves NAND statistics of given micron device
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-pcie-stats.html">nvme-micron-pcie-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieves pcie error statistics for given micron device
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-selective-download.html">nvme-micron-selective-download(1)</a>
+</dt>
+<dd>
+<p>
+        Performs selective firmware download
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-smart-add-log.html">nvme-micron-smart-add-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieves NAND statistics
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-micron-temperature-stats.html">nvme-micron-temperature-stats(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieves temperature information of given micron device
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-netapp-ontapdevices.html">nvme-netapp-ontapdevices(1)</a>
+</dt>
+<dd>
+<p>
+        Display information about ONTAP devices
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-netapp-smdevices.html">nvme-netapp-smdevices(1)</a>
+</dt>
+<dd>
+<p>
+        Display information for each NVMe path to an E-Series volume
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-toshiba-clear-pcie-correctable-errors.html">nvme-toshiba-clear-pcie-correctable-errors(1)</a>
+</dt>
+<dd>
+<p>
+        Reset the PCIe correctable errors count to zero
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-toshiba-vs-internal-log.html">nvme-toshiba-vs-internal-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve a Toshiba device&#8217;s vendor specific internal log
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-toshiba-vs-smart-add-log.html">nvme-toshiba-vs-smart-add-log(1)</a>
+</dt>
+<dd>
+<p>
+        Retrieve a Toshiba device&#8217;s vendor specific extended SMART log page
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1278,7 +1715,7 @@ NVM-Express Site</a>.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2020-07-11 13:12:07 KST
+ 2022-03-11 17:18:53 CET
 </div>
 </div>
 </body>

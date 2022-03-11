@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc" />
 <title>nvme-capacity-mgmt(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -760,10 +760,11 @@ nvme-capacity-mgmt(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends a capacity management command to configure/create/delete
-the Endurance Groups or NVM Sets with the requested operation and element_id. On success,
-if the Operation is Create Endurance group or NVM Set, CQE CDW0 contains Created element
-identifier else CQE CDW0 is reserved.</p></div>
+<div class="paragraph"><p>For the NVMe device given, sends a capacity management command to
+configure/create/delete the Endurance Groups or NVM Sets with the requested
+operation and element_id. On success, if the Operation is Create Endurance
+group or NVM Set, CQE CDW0 contains Created element identifier else CQE CDW0 is
+reserved.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
 </div>
@@ -838,7 +839,7 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2021-07-02 09:55:05 IST
+ 2022-02-15 15:01:44 CET
 </div>
 </div>
 </body>

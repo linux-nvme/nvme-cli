@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 12/01/2020
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 03/11/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "12/01/2020" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "03/11/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -73,7 +73,7 @@ Retrieve error logs
 Submit flush
 .RE
 .PP
-\fBnvme-dms\fR(1)
+\fBnvme-dsm\fR(1)
 .RS 4
 Submit Data Set Management
 .RE
@@ -336,6 +336,277 @@ Disconnect from all NVMe\-over\-Fabrics subsystems
 \fBnvme-get-property\fR(1)
 .RS 4
 Reads and shows NVMe\-over\-Fabrics controller property
+.RE
+.PP
+\fBnvme-media-unit-stat-log\fR(1)
+.RS 4
+Retrieve and show the configuration and wear of media units
+.RE
+.PP
+\fBnvme-supported-cap-config-log\fR(1)
+.RS 4
+Retrieve and show the list of Supported Capacity Configuration Descriptors
+.RE
+.PP
+\fBnvme-boot-part-log\fR(1)
+.RS 4
+Retrieve Boot Partition Log
+.RE
+.PP
+\fBnvme-capacity-mgmt\fR(1)
+.RS 4
+Capacity Management Command
+.RE
+.PP
+\fBnvme-check-dhchap-key\fR(1)
+.RS 4
+Generate NVMeoF DH\-HMAC\-CHAP host key
+.RE
+.PP
+\fBnvme-check-tls-key\fR(1)
+.RS 4
+Validate NVMeoF TLS PSK
+.RE
+.PP
+\fBnvme-cmdset-ind-id-ns\fR(1)
+.RS 4
+I/O Command Set Independent Identify Namespace
+.RE
+.PP
+\fBnvme-endurance-event-agg-log\fR(1)
+.RS 4
+Retrieve Endurance Group Event Aggregate Log
+.RE
+.PP
+\fBnvme-fid-support-effects-log\fR(1)
+.RS 4
+Retrieve FID Support and Effects log
+.RE
+.PP
+\fBnvme-gen-dhchap-key\fR(1)
+.RS 4
+Generate NVMeoF DH\-HMAC\-CHAP host key
+.RE
+.PP
+\fBnvme-gen-hostnqn\fR(1)
+.RS 4
+Generate NVMeoF host NQN
+.RE
+.PP
+\fBnvme-gen-tls-key\fR(1)
+.RS 4
+Generate NVMeoF TLS PSK
+.RE
+.PP
+\fBnvme-get-lba-status\fR(1)
+.RS 4
+Get LBA Status command
+.RE
+.PP
+\fBnvme-id-domain\fR(1)
+.RS 4
+NVMe Identify Domain List
+.RE
+.PP
+\fBnvme-id-ns-lba-format\fR(1)
+.RS 4
+NVMe Identify Namespace for the specified LBA Format index
+.RE
+.PP
+\fBnvme-lba-status-log\fR(1)
+.RS 4
+Retrieve LBA Status Information Log
+.RE
+.PP
+\fBnvme-list-endgrp\fR(1)
+.RS 4
+NVMe Identify Endurance Group List
+.RE
+.PP
+\fBnvme-ns-rescan\fR(1)
+.RS 4
+Rescans the NVME namespaces
+.RE
+.PP
+\fBnvme-nvm-id-ctrl\fR(1)
+.RS 4
+NVMe Identify Controller NVM Command Set
+.RE
+.PP
+\fBnvme-nvm-id-ns\fR(1)
+.RS 4
+NVMe Identify Namespace NVM Command Set
+.RE
+.PP
+\fBnvme-nvm-id-ns-lba-format\fR(1)
+.RS 4
+NVMe Identify Namespace NVM Command Set for the specified LBA Format index
+.RE
+.PP
+\fBnvme-persistent-event-log\fR(1)
+.RS 4
+Retrieve Presistent Event Log
+.RE
+.PP
+\fBnvme-predictable-lat-log\fR(1)
+.RS 4
+Retrieve Predictable Latency per Nvmset Log
+.RE
+.PP
+\fBnvme-pred-lat-event-agg-log\fR(1)
+.RS 4
+Retrieve Predictable Latency Event Aggregate Log
+.RE
+.PP
+\fBnvme-primary-ctrl-caps\fR(1)
+.RS 4
+NVMe Identify Primary Controller Capabilities
+.RE
+.PP
+\fBnvme-reset\fR(1)
+.RS 4
+Resets the controller
+.RE
+.PP
+\fBnvme-rpmb\fR(1)
+.RS 4
+Replay Protection Memory Block commands
+.RE
+.PP
+\fBnvme-sanitize-log\fR(1)
+.RS 4
+Retrieve sanitize log
+.RE
+.PP
+\fBnvme-set-property\fR(1)
+.RS 4
+Set a property and show the resulting value
+.RE
+.PP
+\fBnvme-show-hostnqn\fR(1)
+.RS 4
+Show NVMeoF host NQN
+.RE
+.PP
+\fBnvme-subsystem-reset\fR(1)
+.RS 4
+Resets the subsystem
+.RE
+.PP
+\fBnvme-supported-log-pages\fR(1)
+.RS 4
+Retrieve the Supported Log pages details
+.RE
+.PP
+\fBnvme-verify\fR(1)
+.RS 4
+verify command
+.RE
+.SS "Plugins/Vendor extension commands"
+.PP
+\fBnvme-intel-id-ctrl\fR(1)
+.RS 4
+Intel \- NVMe Identify Controller
+.RE
+.PP
+\fBnvme-intel-internal-log\fR(1)
+.RS 4
+Retrieve Intel device\(cqs internal log and save to file
+.RE
+.PP
+\fBnvme-intel-lat-stats\fR(1)
+.RS 4
+Retrieve NVMe Identify Controller, return result and structure
+.RE
+.PP
+\fBnvme-intel-market-name\fR(1)
+.RS 4
+Intel vendor specific marketing name log page
+.RE
+.PP
+\fBnvme-intel-smart-log-add\fR(1)
+.RS 4
+NVMe Intel Additional SMART log page
+.RE
+.PP
+\fBnvme-intel-temp-stats\fR(1)
+.RS 4
+NVMe Intel Additional SMART log page for temp stats
+.RE
+.PP
+\fBnvme-huawei-id-ctrl\fR(1)
+.RS 4
+NVMe huawei Identify Controller
+.RE
+.PP
+\fBnvme-huawei-list\fR(1)
+.RS 4
+List all recognized Huawei NVMe devices
+.RE
+.PP
+\fBnvme-dera-stat\fR(1)
+.RS 4
+NVMe Dera Device status and Additional SMART log page request
+.RE
+.PP
+\fBnvme-micron-clear-pcie-errors\fR(1)
+.RS 4
+Clears correctable PCIe correctable errors of given Micron device
+.RE
+.PP
+\fBnvme-micron-internal-log\fR(1)
+.RS 4
+Retrieve Micron device\(cqs internal logs and save to given zip file
+.RE
+.PP
+\fBnvme-micron-nand-stats\fR(1)
+.RS 4
+Retrieves NAND statistics of given micron device
+.RE
+.PP
+\fBnvme-micron-pcie-stats\fR(1)
+.RS 4
+Retrieves pcie error statistics for given micron device
+.RE
+.PP
+\fBnvme-micron-selective-download\fR(1)
+.RS 4
+Performs selective firmware download
+.RE
+.PP
+\fBnvme-micron-smart-add-log\fR(1)
+.RS 4
+Retrieves NAND statistics
+.RE
+.PP
+\fBnvme-micron-temperature-stats\fR(1)
+.RS 4
+Retrieves temperature information of given micron device
+.RE
+.PP
+\fBnvme-netapp-ontapdevices\fR(1)
+.RS 4
+Display information about ONTAP devices
+.RE
+.PP
+\fBnvme-netapp-smdevices\fR(1)
+.RS 4
+Display information for each NVMe path to an E\-Series volume
+.RE
+.PP
+\fBnvme-toshiba-clear-pcie-correctable-errors\fR(1)
+.RS 4
+Reset the PCIe correctable errors count to zero
+.RE
+.PP
+\fBnvme-toshiba-vs-internal-log\fR(1)
+.RS 4
+Retrieve a Toshiba device\(cqs vendor specific internal log
+.RE
+.PP
+\fBnvme-toshiba-vs-smart-add-log\fR(1)
+.RS 4
+Retrieve a Toshiba device\(cqs vendor specific extended SMART log page
 .RE
 .SH "FURTHER DOCUMENTATION"
 .sp

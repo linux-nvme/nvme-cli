@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: nvme-io-passthru
-.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/04/2021
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 03/11/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-IO\-PASSTHRU" "1" "06/04/2021" "NVMe" "NVMe Manual"
+.TH "NVME\-IO\-PASSTHRU" "1" "03/11/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,6 +42,7 @@ nvme-io-passthru \- Submit an arbitrary io command, return results
                 [\-\-metadata\-len=<len> | \-m <len>]
                 [\-\-read | \-r ] [\-\-write | \-w]
                 [\-\-input\-file=<file> | \-i <file>]
+                [\-\-metadata=<file> | \-M <file>]
                 [\-\-timeout=<to> | \-t <to>]
                 [\-\-show\-command | \-s]
                 [\-\-dry\-run | \-d]
@@ -91,7 +92,12 @@ Used for the data\-direction for the command and required for commands sending/r
 .PP
 \-i <file>, \-\-input\-file=<file>
 .RS 4
-If the command is a data\-out (write) command, use this file to fill the buffer sent to the device\&. If no file is given, assumed to use STDIN\&.
+If the command is a data\-out (write) command, use this file to fill the buffer sent to the device\&. If no file is given, assumed to use STDIN\&. If the command is a data\-in (read) command, the data returned from the device will be saved here\&.
+.RE
+.PP
+\-M <file>, \-\-metadata=<file>
+.RS 4
+If the command is a data\-out (write) command, use this file to fill the metadata buffer sent to the device\&. If no file is given, assumed to use STDIN\&. If the command is a data\-in (read) command, the metadata returned from the device will be saved here\&.
 .RE
 .PP
 \-l <data\-len>, \-\-data\-len=<data\-len>

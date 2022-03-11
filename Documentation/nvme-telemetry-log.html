@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc" />
 <title>nvme-telemetry-log(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -803,9 +803,9 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 </dt>
 <dd>
 <p>
-        Retrieves the specific data area requested. Valid inputs are 1,2,3. If
-        this option is not specified, the default value is 3, since that will
-        always give the user all three data areas.
+        Retrieves the specific data area requested. Valid inputs are 1,2,3,4. If
+        this option is not specified, the default value is 3, since data area
+        4 may not be supported.
 </p>
 </dd>
 </dl></div>
@@ -838,7 +838,7 @@ Retrieve Telemetry Host-Initiated data to telemetry_log.bin
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2020-03-18 00:47:34 JST
+ 2022-02-15 15:01:45 CET
 </div>
 </div>
 </body>

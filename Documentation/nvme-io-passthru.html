@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.10" />
+<meta name="generator" content="AsciiDoc" />
 <title>nvme-io-passthru(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -436,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -759,6 +759,7 @@ nvme-io-passthru(1) Manual Page
                 [--metadata-len=&lt;len&gt; | -m &lt;len&gt;]
                 [--read | -r ] [--write | -w]
                 [--input-file=&lt;file&gt; | -i &lt;file&gt;]
+                [--metadata=&lt;file&gt; | -M &lt;file&gt;]
                 [--timeout=&lt;to&gt; | -t &lt;to&gt;]
                 [--show-command | -s]
                 [--dry-run | -d]
@@ -869,8 +870,23 @@ printed to stdout for another program to parse.</p></div>
 <dd>
 <p>
         If the command is a data-out (write) command, use this file
-        to fill the buffer sent to the device. If no file is given,
-        assumed to use STDIN.
+        to fill the buffer sent to the device. If no file is given, assumed to
+        use STDIN. If the command is a data-in (read) command, the data
+        returned from the device will be saved here.
+</p>
+</dd>
+<dt class="hdlist1">
+-M &lt;file&gt;
+</dt>
+<dt class="hdlist1">
+--metadata=&lt;file&gt;
+</dt>
+<dd>
+<p>
+        If the command is a data-out (write) command, use this file
+        to fill the metadata buffer sent to the device. If no file is given,
+        assumed to use STDIN. If the command is a data-in (read) command, the
+        metadata returned from the device will be saved here.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -977,7 +993,7 @@ printed to stdout for another program to parse.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2021-06-04 10:59:48 IST
+ 2022-02-16 08:42:10 CET
 </div>
 </div>
 </body>

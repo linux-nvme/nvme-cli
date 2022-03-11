@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc" />
 <title>nvme-connect-all(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -433,7 +436,7 @@ thead, p.table.header {
 p.table {
   margin-top: 0;
 }
-/* Because the table frame attribute is overriden by CSS in most browsers. */
+/* Because the table frame attribute is overridden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -766,7 +769,6 @@ nvme-connect-all(1) Manual Page
                 [--nr-write-queues=&lt;#&gt;    | -W &lt;#&gt;]
                 [--nr-poll-queues=&lt;#&gt;     | -P &lt;#&gt;]
                 [--queue-size=&lt;#&gt;         | -Q &lt;#&gt;]
-                [--matching               | -m]
                 [--persistent             | -p]
                 [--quiet                  | -S]
                 [--dump-config            | -O]</pre>
@@ -1064,19 +1066,6 @@ cellspacing="0" cellpadding="4">
 </p>
 </dd>
 <dt class="hdlist1">
--m
-</dt>
-<dt class="hdlist1">
---matching
-</dt>
-<dd>
-<p>
-        If a traddr was specified on the command line or in the configuration
-        file, only create controllers for discovery records that match the
-        given traddr, rather than for all entries in the discovery log page.
-</p>
-</dd>
-<dt class="hdlist1">
 -p
 </dt>
 <dt class="hdlist1">
@@ -1166,7 +1155,8 @@ nvme-connect(1)</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-11-25 14:00:47 KST
+Last updated
+ 2022-02-16 08:42:10 CET
 </div>
 </div>
 </body>
