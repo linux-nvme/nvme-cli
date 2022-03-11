@@ -2416,25 +2416,6 @@ ret:
 	return err;
 }
 
-static bool nvme_match_device_filter(nvme_subsystem_t s)
-{
-	nvme_ctrl_t c;
-	nvme_ns_t n;
-
-	if (!devicename || !strlen(devicename))
-		return true;
-
-	nvme_subsystem_for_each_ctrl(s, c)
-		if (!strcmp(devicename, nvme_ctrl_get_name(c)))
-			return true;
-
-	nvme_subsystem_for_each_ns(s, n)
-		if (!strcmp(devicename, nvme_ns_get_name(n)))
-			return true;
-
-	return false;
-}
-
 static int list_subsys(int argc, char **argv, struct command *cmd,
 		struct plugin *plugin)
 {
@@ -2442,7 +2423,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	enum nvme_print_flags flags;
 	const char *desc = "Retrieve information for subsystems";
 	const char *verbose = "Increase output verbosity";
-	nvme_scan_filter_t filter = NULL;
+	__u32 nsid = NVME_NSID_ALL;
 	int err;
 
 	struct config {
@@ -2491,17 +2472,31 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		goto ret;
 	}
 
-	if (devicename)
-		filter = nvme_match_device_filter;
+	if (devicename) {
+		char *n, *eptr = NULL;
 
-	err = nvme_scan_topology(r, filter);
+		n = strrchr(devicename, 'n');
+		if (!n) {
+			fprintf(stderr, "Invalid device name %s\n", devicename);
+			err = -EINVAL;
+			goto ret;
+		}
+		nsid = strtoul(n + 1, &eptr, 10);
+		if (eptr == n + 1) {
+			fprintf(stderr, "Invalid device nsid %s\n", devicename);
+			err = -EINVAL;
+			goto ret;
+		}
+	}
+
+	err = nvme_scan_topology(r, NULL);
 	if (err) {
 		fprintf(stderr, "Failed to scan topology: %s\n",
 			nvme_strerror(errno));
 		goto ret;
 	}
 
-	nvme_show_subsystem_list(r, flags);
+	nvme_show_subsystem_list(r, nsid, flags);
 	nvme_free_tree(r);
 
 ret:
