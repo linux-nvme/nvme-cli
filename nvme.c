@@ -2473,7 +2473,8 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	}
 
 	if (devicename) {
-		char *n, *eptr = NULL;
+		const char *n;
+		char *eptr = NULL;
 
 		n = strrchr(devicename, 'n');
 		if (!n) {
