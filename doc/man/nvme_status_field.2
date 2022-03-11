@@ -28,7 +28,15 @@ enum nvme_status_field {
 , 
 .br
 .br
+.BI "    NVME_SCT_SHIFT"
+, 
+.br
+.br
 .BI "    NVME_SC_MASK"
+, 
+.br
+.br
+.BI "    NVME_SC_SHIFT"
 , 
 .br
 .br
@@ -576,8 +584,12 @@ Errors associated with the paths connection
 Vendor specific errors
 .IP "NVME_SCT_MASK" 12
 Mask to get the value of the Status Code Type
+.IP "NVME_SCT_SHIFT" 12
+-- undescribed --
 .IP "NVME_SC_MASK" 12
 Mask to get the value of the status code.
+.IP "NVME_SC_SHIFT" 12
+-- undescribed --
 .IP "NVME_SC_SUCCESS" 12
 Successful Completion: The command
 completed without error.
