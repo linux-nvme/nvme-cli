@@ -2275,7 +2275,7 @@ void nvme_show_supported_cap_config_log(
 	}
 }
 
-static void nvme_show_subsystem(nvme_root_t r)
+static void nvme_show_subsystem(nvme_root_t r, unsigned int nsid)
 {
 	nvme_host_t h;
 
@@ -2290,17 +2290,20 @@ static void nvme_show_subsystem(nvme_root_t r)
 			printf("\\\n");
 
 			nvme_subsystem_for_each_ctrl(s, c) {
-				printf(" +- %s %s %s %s\n",
+				const char *ana_state =
+					nvme_ctrl_get_ana_state(c, nsid);
+				printf(" +- %s %s %s %s %s\n",
 				       nvme_ctrl_get_name(c),
 				       nvme_ctrl_get_transport(c),
 				       nvme_ctrl_get_address(c),
-				       nvme_ctrl_get_state(c));
+				       nvme_ctrl_get_state(c),
+				       ana_state ? : "");
 			}
 		}
 	}
 }
 
-static void json_print_nvme_subsystem_list(nvme_root_t r)
+static void json_print_nvme_subsystem_list(nvme_root_t r, unsigned int nsid)
 {
 	struct json_object *host_attrs, *subsystem_attrs, *path_attrs;
 	struct json_object *subsystems, *paths;
@@ -2340,6 +2343,13 @@ static void json_print_nvme_subsystem_list(nvme_root_t r)
 							     nvme_ctrl_get_address(c));
 				json_object_add_value_string(path_attrs, "State",
 							     nvme_ctrl_get_state(c));
+				if (nsid != NVME_NSID_ALL) {
+					const char *ana_state =
+						nvme_ctrl_get_ana_state(c, nsid);
+					if (ana_state)
+						json_object_add_value_string(path_attrs,
+									     "ANAState", ana_state);
+				}
 				json_array_add_value_object(paths, path_attrs);
 			}
 			json_object_add_value_array(subsystem_attrs, "Paths",
@@ -2353,11 +2363,12 @@ static void json_print_nvme_subsystem_list(nvme_root_t r)
 	json_free_object(root);
 }
 
-void nvme_show_subsystem_list(nvme_root_t r, enum nvme_print_flags flags)
+void nvme_show_subsystem_list(nvme_root_t r, unsigned int nsid,
+			      enum nvme_print_flags flags)
 {
 	if (flags & JSON)
-		return json_print_nvme_subsystem_list(r);
-	nvme_show_subsystem(r);
+		return json_print_nvme_subsystem_list(r, nsid);
+	nvme_show_subsystem(r, nsid);
 }
 
 static void nvme_show_registers_cap(struct nvme_bar_cap *cap)
