@@ -12,6 +12,7 @@ LIBNVME_1_0 {
 		nvme_ctrl_first_ns;
 		nvme_ctrl_first_path;
 		nvme_ctrl_get_address;
+		nvme_ctrl_get_ana_state;
 		nvme_ctrl_get_dhchap_key;
 		nvme_ctrl_get_discovery_ctrl;
 		nvme_ctrl_get_fd;

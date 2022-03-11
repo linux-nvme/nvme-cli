@@ -768,6 +768,19 @@ const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c)
 	return c->cfg.host_iface;
 }
 
+const char *nvme_ctrl_get_ana_state(nvme_ctrl_t c, __u32 nsid)
+{
+	if (nsid != NVME_NSID_ALL) {
+		nvme_path_t p;
+
+		nvme_ctrl_for_each_path(c, p) {
+			if (p->n && p->n->nsid == nsid)
+				return p->ana_state;
+		}
+	}
+	return NULL;
+}
+
 struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
 {
 	return &c->cfg;
