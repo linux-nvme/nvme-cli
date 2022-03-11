@@ -462,7 +462,8 @@ static int nvme_subsystem_scan_namespaces(nvme_root_t r, nvme_subsystem_t s)
 	}
 
 	for (i = 0; i < num_ns; i++) {
-	  ret = nvme_subsystem_scan_namespace(r, s, namespaces[i]->d_name);
+		ret = nvme_subsystem_scan_namespace(r, s,
+						    namespaces[i]->d_name);
 		if (ret < 0)
 			nvme_msg(r, LOG_DEBUG,
 				 "failed to scan namespace %s: %s\n",
@@ -1367,6 +1368,7 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 		errno = ENOMEM;
 		return NULL;
 	}
+
 	c = nvme_ctrl_alloc(r, s, path, name);
 	if (!c) {
 		free(path);
@@ -1827,6 +1829,32 @@ static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
 	return 0;
 }
 
+static void nvme_subsystem_set_ns_path(nvme_subsystem_t s, nvme_ns_t n)
+{
+	nvme_ctrl_t c;
+	nvme_path_t p;
+	int ns_ctrl, ns_nsid, ret;
+
+	ret = sscanf(nvme_ns_get_name(n), "nvme%dn%d", &ns_ctrl, &ns_nsid);
+	if (ret != 2)
+		return;
+
+	nvme_subsystem_for_each_ctrl(s, c) {
+		nvme_ctrl_for_each_path(c, p) {
+			int p_subsys, p_ctrl, p_nsid;
+
+			ret = sscanf(nvme_path_get_name(p), "nvme%dc%dn%d",
+				     &p_subsys, &p_ctrl, &p_nsid);
+			if (ret != 3)
+				continue;
+			if (ns_ctrl == p_subsys && ns_nsid == p_nsid) {
+				list_add(&n->paths, &p->nentry);
+				p->n = n;
+			}
+		}
+	}
+}
+
 static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
 					 char *name)
 {
@@ -1840,6 +1868,7 @@ static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
 
 	n->s = s;
 	list_add(&s->namespaces, &n->entry);
+	nvme_subsystem_set_ns_path(s, n);
 	return 0;
 }
 
