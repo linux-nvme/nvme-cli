@@ -3,7 +3,7 @@
 BUILDDIR="$(mktemp -d)"
 trap 'rm -rf -- $BUILDDIR' EXIT
 
-meson $BUILDDIR -Ddocs=all
+meson $BUILDDIR -Ddocs=all -Ddocs-build=true
 ninja -C $BUILDDIR
 find $BUILDDIR/Documentation -maxdepth 1 \
      \( -name '*.1' -o -name '*.html' \) \
