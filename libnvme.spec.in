@@ -2,10 +2,14 @@ Name: @NAME@
 Version: @VERSION@
 Release: 0
 Summary: Linux-native nvme device management library
+
 License: @LICENSE@
 Source: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-root
 URL: http://github.com/linux-nvme/libnvme
+
+BuildRequires: libuuid-devel
+BuildRequires: meson
 BuildRequires: gcc
 
 %description
