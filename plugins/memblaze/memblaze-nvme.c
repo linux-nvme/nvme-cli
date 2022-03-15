@@ -1051,8 +1051,8 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, st
 #define FID        0x68
 static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int err, fd;
-	char *desc = "Clear Memblaze devices error log.";
+    int err, fd;
+    char *desc = "Clear Memblaze devices error log.";
 
     //const char *value = "new value of feature (required)";
     //const char *save = "specifies that the controller shall save the attribute";
@@ -1100,7 +1100,7 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, 
     if (!err) {
         printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id, mb_feature_to_string(cfg.feature_id), cfg.value);
     } else if (err > 0)
-	nvme_show_status(err);
+        nvme_show_status(err);
 
 /*
 	struct nvme_admin_cmd admin_cmd = {
@@ -1116,7 +1116,7 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, 
 		printf("NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
 	};
 */
-	return err;
+    return err;
 }
 
 static int mb_set_lat_stats(int argc, char **argv,
