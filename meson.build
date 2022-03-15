@@ -21,6 +21,7 @@ includedir = join_paths(prefixdir, get_option('includedir'))
 datadir    = join_paths(prefixdir, get_option('datadir'))
 mandir     = join_paths(prefixdir, get_option('mandir'))
 bindir     = join_paths(prefixdir, get_option('bindir'))
+sbindir    = join_paths(prefixdir, get_option('sbindir'))
 sysconfdir = join_paths(prefixdir, get_option('sysconfdir'))
 
 udevrulesdir   = join_paths(prefixdir, get_option('udevrulesdir'))
@@ -30,6 +31,8 @@ systemddir     = join_paths(prefixdir, get_option('systemddir'))
 ###############################################################################
 conf = configuration_data()
 requires = ''
+
+conf.set('SYSCONFDIR', sysconfdir)
 
 libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
 

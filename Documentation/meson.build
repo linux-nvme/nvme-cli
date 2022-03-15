@@ -178,9 +178,13 @@ if want_docs != 'false'
       if xmlto.found()
         foreach adoc : adoc_sources
           input = adoc + '.txt'
+          subst = configure_file(
+            input: adoc + '.txt',
+            output: adoc + '.msubst',
+            configuration: substs)
           xml = custom_target(
             adoc.underscorify() + '_xml',
-            input: adoc + '.txt',
+            input: subst,
             output: '@BASENAME@.xml',
             command: [asciidoctor,
                       '-f', files('asciidoc.conf'),
@@ -209,9 +213,13 @@ if want_docs != 'false'
     if want_docs == 'all' or want_docs == 'html'
       foreach adoc : adoc_sources
         input = adoc + '.txt'
+        subst = configure_file(
+          input: adoc + '.txt',
+          output: adoc + '.hsubst',
+         configuration: substs)
         custom_target(
           adoc.underscorify() + '_html',
-          input: adoc + '.txt',
+          input: subst,
           output: '@BASENAME@.html',
           command: [asciidoctor,
                     '-f', files('asciidoc.conf'),
