@@ -150,6 +150,11 @@ adoc_sources = [
   'nvme-zns-zone-mgmt-send',
 ]
 
+adoc_includes = [
+  'cmd-plugins.txt',
+  'cmds-main.txt',
+]
+
 want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
 if want_docs != 'false'
@@ -159,6 +164,13 @@ if want_docs != 'false'
   asciidoctor = find_program('asciidoc', required : false)
   if want_docs_build and asciidoctor.found()
     # Build documentation before installing
+
+    foreach file : adoc_includes
+      configure_file(
+        input: file,
+        output: file,
+        copy: true)
+    endforeach
 
     # man pages
     if want_docs == 'all' or want_docs == 'man'
