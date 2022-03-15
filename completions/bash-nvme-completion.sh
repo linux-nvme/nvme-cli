@@ -457,7 +457,7 @@ nvme_list_opts () {
 			;;
 		"discover")
 		opts+=" --transport= -t -traddr= -a -trsvcid= -s \
-			--host-traddr= -w --hsot-iface= -f \
+			--host-traddr= -w --host-iface= -f \
 			--hostnqn= -q --hostid -I --raw= -r \
 			--raw= -r --device= -d --keep-alive-tmo= -k \
 			--ctrl-loss-tmo= -l --fast-io-fail-tmo= -f \
@@ -469,7 +469,7 @@ nvme_list_opts () {
 			;;
 		"connect-all")
 		opts+=" --transport= -t -traddr= -a -trsvcid= -s \
-			--host-traddr= -w --hsot-iface= -f \
+			--host-traddr= -w --host-iface= -f \
 			--hostnqn= -q --hostid -I --raw= -r \
 			--raw= -r --device= -d --keep-alive-tmo= -k \
 			--ctrl-loss-tmo= -l --fast-io-fail-tmo= -f \
