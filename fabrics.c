@@ -688,6 +688,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 		fprintf(stderr, "no controller found: %s\n",
 			nvme_strerror(errno));
 	else {
+		errno = 0;
 		if (flags == NORMAL)
 			print_connect_msg(c);
 		else if (flags == JSON)
