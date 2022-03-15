@@ -1707,11 +1707,12 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 	}
 
 	hdr_ptr = (struct wdc_c2_log_page_header *)data;
+	length = le32_to_cpu(hdr_ptr->length);
 
-	if (le32_to_cpu(hdr_ptr->length) > WDC_C2_LOG_BUF_LEN) {
+	if (length > WDC_C2_LOG_BUF_LEN) {
 		/* Log Page buffer too small, free and reallocate the necessary size */
 		free(data);
-		data = calloc(le32_to_cpu(hdr_ptr->length), sizeof(__u8));
+		data = calloc(length, sizeof(__u8));
 		if (data == NULL) {
 			fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
 			return false;
@@ -1731,7 +1732,7 @@ static bool get_dev_mgment_cbs_data(nvme_root_t r, int fd, __u8 log_id, void **c
 		.uuidx		= uuid_ix,
 		.csi		= NVME_CSI_NVM,
 		.ot		= false,
-		.len		= le32_to_cpu(hdr_ptr->length),
+		.len		= length,
 		.log		= data,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
