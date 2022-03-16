@@ -203,7 +203,7 @@ char *nvmf_hostnqn_generate();
 
 /**
  * nvmf_hostnqn_from_file() - Reads the host nvm qualified name from the config
- * 			      default location in /etc/nvme/
+ * 			      default location in @SYSCONFDIR@/nvme/
  * Return: The host nqn, or NULL if unsuccessful. If found, the caller
  * is responsible to free the string.
  */
@@ -211,7 +211,7 @@ char *nvmf_hostnqn_from_file();
 
 /**
  * nvmf_hostid_from_file() - Reads the host identifier from the config default
- * 			     location in /etc/nvme/.
+ * 			     location in @SYSCONFDIR@/nvme/.
  * Return: The host identifier, or NULL if unsuccessful. If found, the caller
  * 	   is responsible to free the string.
  */

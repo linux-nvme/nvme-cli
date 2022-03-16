@@ -29,11 +29,14 @@ includedir = join_paths(prefixdir, get_option('includedir'))
 datadir    = join_paths(prefixdir, get_option('datadir'))
 mandir     = join_paths(prefixdir, get_option('mandir'))
 bindir     = join_paths(prefixdir, get_option('bindir'))
+sysconfdir = join_paths(prefixdir, get_option('sysconfdir'))
 
 pkgconfiglibdir = get_option('pkgconfiglibdir') == '' ? join_paths(libdir, 'pkgconfig') : get_option('pkgconfiglibdir')
 
 ################################################################################
 conf = configuration_data()
+
+conf.set('SYSCONFDIR', sysconfdir)
 
 # Check for libuuid availability
 libuuid_dep = dependency('uuid', required: true)

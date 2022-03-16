@@ -35,23 +35,28 @@ if want_docs != 'false'
     list_man_pages = find_program('list-man-pages.sh')
     if want_docs_build
       foreach apif : api_files
-        afile = files('../src/nvme/' + apif)
-        c = run_command(list_man_pages, afile)
-        man_pages = c.stdout().split()
-        foreach page : man_pages
-          custom_target(
-            page.underscorify() + '_man',
-            input: afile,
-            output: page + '.2',
-            capture: true,
-            command: [kernel_doc,
-                      '-module', 'libnvme',
-                      '-man',
-                      '-function',
-                      page,
-                      afile],
-            install: true,
-            install_dir: mandir)
+        foreach file : files('../src/nvme/' + apif)
+          subst = configure_file(
+              input: file,
+              output: '@BASENAME@.msubst',
+              configuration: conf)
+          c = run_command(list_man_pages, subst)
+          man_pages = c.stdout().split()
+          foreach page : man_pages
+            custom_target(
+              page.underscorify() + '_man',
+              input: subst,
+              output: page + '.2',
+              capture: true,
+              command: [kernel_doc,
+                        '-module', 'libnvme',
+                        '-man',
+                        '-function',
+                        page,
+                        subst],
+              install: true,
+              install_dir: mandir)
+          endforeach
         endforeach
       endforeach
     else
@@ -69,9 +74,13 @@ if want_docs != 'false'
       rsts = []
       foreach apif : api_files
         afile = files('../src/nvme/' + apif)
+        subst = configure_file(
+            input: afile,
+            output: '@BASENAME@.hsubst',
+            configuration: conf)
         rst = custom_target(
           apif.underscorify() + '_rst',
-          input: afile,
+          input: subst,
           output: '@BASENAME@._rst',
           capture: true,
           command: [kernel_doc,

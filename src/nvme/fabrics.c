@@ -41,9 +41,10 @@
 #define NVMF_HOSTID_SIZE	37
 #define UUID_SIZE		37  /* 1b4e28ba-2fa1-11d2-883f-0016d3cca427 + \0 */
 
+#define NVMF_HOSTNQN_FILE	"SYSCONFDIR/nvme/hostnqn"
+#define NVMF_HOSTID_FILE	"SYSCONFDIR/nvme/hostid"
+
 const char *nvmf_dev = "/dev/nvme-fabrics";
-const char *nvmf_hostnqn_file = "/etc/nvme/hostnqn";
-const char *nvmf_hostid_file = "/etc/nvme/hostid";
 
 const char *arg_str(const char * const *strings,
 		size_t array_size, size_t idx)
@@ -967,12 +968,12 @@ static char *nvmf_read_file(const char *f, int len)
 
 char *nvmf_hostnqn_from_file()
 {
-	return nvmf_read_file(nvmf_hostnqn_file, NVMF_NQN_SIZE);
+	return nvmf_read_file(NVMF_HOSTNQN_FILE, NVMF_NQN_SIZE);
 }
 
 char *nvmf_hostid_from_file()
 {
-	return nvmf_read_file(nvmf_hostid_file, NVMF_HOSTID_SIZE);
+	return nvmf_read_file(NVMF_HOSTID_FILE, NVMF_HOSTID_SIZE);
 }
 
 /**
