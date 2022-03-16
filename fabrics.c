@@ -509,7 +509,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		c = nvme_scan_ctrl(r, device);
 		if (c) {
 			/* Check if device matches command-line options */
-			if (strcmp(nvme_ctrl_get_subsysnqn(c), subsysnqn) ||
+			if (!nvme_ctrl_is_discovery_ctrl(c) ||
 			    strcmp(nvme_ctrl_get_transport(c), transport) ||
 			    strcasecmp(nvme_ctrl_get_traddr(c), traddr) ||
 			    (cfg.host_traddr && nvme_ctrl_get_host_traddr(c) &&
