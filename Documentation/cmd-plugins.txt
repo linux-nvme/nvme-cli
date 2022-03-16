@@ -60,3 +60,15 @@ linknvme:nvme-toshiba-vs-internal-log[1]::
 
 linknvme:nvme-toshiba-vs-smart-add-log[1]::
 	Retrieve a Toshiba device's vendor specific extended SMART log page
+
+linknvme:nvme-transcend-badblock[1]::
+	Retrieve Transcend NVMe device's bad blocks
+
+linknvme:nvme-transcend-healthvalue[1]::
+	Use NVMe SMART table to analyse the health value of Transcend device
+
+linknvme:nvme-virtium-show-identify[1]::
+	Show a complete detail of identify device information in json format
+
+linknvme:nvme-virtium-save-smart-to-vtview-log[1]::
+	Periodically save smart attributes into a log file
