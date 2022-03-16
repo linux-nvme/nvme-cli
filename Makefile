@@ -37,3 +37,7 @@ install dist: ${BUILD-DIR}
 .PHONY: test
 test: ${BUILD-DIR}
 	ninja -C ${BUILD-DIR} $@
+
+.PHONY: rpm
+rpm: dist
+	rpmbuild -ba ${BUILD-DIR}/libnvme.spec
