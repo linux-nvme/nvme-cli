@@ -166,6 +166,7 @@ substs.set('REQUIRES', requires)
 substs.set('BINDIR', bindir)
 substs.set('SBINDIR', sbindir)
 substs.set('SYSCONFDIR', sysconfdir)
+substs.set('SYSTEMCTL', get_option('systemctl'))
 
 configure_file(
   input:         'nvme.spec.in',
