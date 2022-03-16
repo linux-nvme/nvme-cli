@@ -941,7 +941,7 @@ static void discovery_trsvcid(nvme_ctrl_t c)
 			c->trsvcid = strdup(__stringify(NVME_DISC_IP_PORT));
 		} else {
 			/* Default port for NVMe/TCP io controllers */
-			c->trsvcid = __stringify(NVME_RDMA_IP_PORT);
+			c->trsvcid = strdup(__stringify(NVME_RDMA_IP_PORT));
 		}
 	} else if (!strcmp(c->transport, "rdma")) {
 		/* Default port for NVMe/RDMA controllers */
