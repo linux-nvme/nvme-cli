@@ -1,4 +1,5 @@
 adoc_sources = [
+  'nvme',
   'nvme-admin-passthru',
   'nvme-ana-log',
   'nvme-attach-ns',
@@ -7,8 +8,8 @@ adoc_sources = [
   'nvme-changed-ns-list-log',
   'nvme-cmdset-ind-id-ns',
   'nvme-compare',
-  'nvme-connect-all',
   'nvme-connect',
+  'nvme-connect-all',
   'nvme-copy',
   'nvme-create-ns',
   'nvme-delete-ns',
@@ -17,8 +18,8 @@ adoc_sources = [
   'nvme-device-self-test',
   'nvme-dir-receive',
   'nvme-dir-send',
-  'nvme-disconnect-all',
   'nvme-disconnect',
+  'nvme-disconnect-all',
   'nvme-discover',
   'nvme-dsm',
   'nvme-effects-log',
@@ -53,11 +54,11 @@ adoc_sources = [
   'nvme-intel-temp-stats',
   'nvme-io-passthru',
   'nvme-lba-status-log',
+  'nvme-list',
   'nvme-list-ctrl',
   'nvme-list-endgrp',
   'nvme-list-ns',
   'nvme-list-subsys',
-  'nvme-list',
   'nvme-lockdown',
   'nvme-micron-clear-pcie-errors',
   'nvme-micron-internal-log',
@@ -72,8 +73,8 @@ adoc_sources = [
   'nvme-ns-rescan',
   'nvme-nvm-id-ctrl',
   'nvme-persistent-event-log',
-  'nvme-predictable-lat-log',
   'nvme-pred-lat-event-agg-log',
+  'nvme-predictable-lat-log',
   'nvme-primary-ctrl-caps',
   'nvme-read',
   'nvme-reset',
@@ -83,8 +84,8 @@ adoc_sources = [
   'nvme-resv-release',
   'nvme-resv-report',
   'nvme-rpmb',
-  'nvme-sanitize-log',
   'nvme-sanitize',
+  'nvme-sanitize-log',
   'nvme-security-recv',
   'nvme-security-send',
   'nvme-self-test-log',
@@ -101,12 +102,11 @@ adoc_sources = [
   'nvme-toshiba-vs-smart-add-log',
   'nvme-transcend-badblock',
   'nvme-transcend-healthvalue',
-  'nvme',
   'nvme-verify',
   'nvme-virtium-save-smart-to-vtview-log',
   'nvme-virtium-show-identify',
-  'nvme-wdc-capabilities',
   'nvme-wdc-cap-diag',
+  'nvme-wdc-capabilities',
   'nvme-wdc-clear-assert-dump',
   'nvme-wdc-clear-fw-activate-history',
   'nvme-wdc-clear-pcie-correctable-errors',
@@ -122,8 +122,8 @@ adoc_sources = [
   'nvme-wdc-id-ctrl',
   'nvme-wdc-log-page-directory',
   'nvme-wdc-namespace-resize',
-  'nvme-wdc-purge-monitor',
   'nvme-wdc-purge',
+  'nvme-wdc-purge-monitor',
   'nvme-wdc-vs-drive-info',
   'nvme-wdc-vs-error-reason-identifier',
   'nvme-wdc-vs-fw-activate-history',
@@ -150,6 +150,11 @@ adoc_sources = [
   'nvme-zns-zone-mgmt-send',
 ]
 
+adoc_includes = [
+  'cmd-plugins.txt',
+  'cmds-main.txt',
+]
+
 want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
 if want_docs != 'false'
@@ -160,15 +165,26 @@ if want_docs != 'false'
   if want_docs_build and asciidoctor.found()
     # Build documentation before installing
 
+    foreach file : adoc_includes
+      configure_file(
+        input: file,
+        output: file,
+        copy: true)
+    endforeach
+
     # man pages
     if want_docs == 'all' or want_docs == 'man'
       xmlto = find_program('xmlto', required: false)
       if xmlto.found()
         foreach adoc : adoc_sources
           input = adoc + '.txt'
+          subst = configure_file(
+            input: adoc + '.txt',
+            output: adoc + '.msubst',
+            configuration: substs)
           xml = custom_target(
             adoc.underscorify() + '_xml',
-            input: adoc + '.txt',
+            input: subst,
             output: '@BASENAME@.xml',
             command: [asciidoctor,
                       '-f', files('asciidoc.conf'),
@@ -197,9 +213,13 @@ if want_docs != 'false'
     if want_docs == 'all' or want_docs == 'html'
       foreach adoc : adoc_sources
         input = adoc + '.txt'
+        subst = configure_file(
+          input: adoc + '.txt',
+          output: adoc + '.hsubst',
+         configuration: substs)
         custom_target(
           adoc.underscorify() + '_html',
-          input: adoc + '.txt',
+          input: subst,
           output: '@BASENAME@.html',
           command: [asciidoctor,
                     '-f', files('asciidoc.conf'),

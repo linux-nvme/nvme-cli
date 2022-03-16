@@ -2,6 +2,7 @@ option('udevrulesdir', type : 'string', value : 'etc/udev/rules.d', description 
 option('dracutrulesdir', type : 'string', value : 'lib/dracut/dracut.conf.d/', description : 'directory for dracut rules files')
 option('systemddir', type : 'string', value : 'lib/systemd/', description : 'directory for systemd files')
 option('htmldir', type : 'string', value : '', description : 'directory for HTML documentation')
+option('systemctl', type : 'string', value : '/usr/bin/systemctl', description : 'path to systemctl binary')
 
 option('docs', type : 'combo', choices : ['false', 'html', 'man', 'all'], description : 'install documentation')
 option('docs-build', type : 'boolean', value : false,  description : 'build documentation')

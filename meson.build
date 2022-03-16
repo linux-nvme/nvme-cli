@@ -21,6 +21,7 @@ includedir = join_paths(prefixdir, get_option('includedir'))
 datadir    = join_paths(prefixdir, get_option('datadir'))
 mandir     = join_paths(prefixdir, get_option('mandir'))
 bindir     = join_paths(prefixdir, get_option('bindir'))
+sbindir    = join_paths(prefixdir, get_option('sbindir'))
 sysconfdir = join_paths(prefixdir, get_option('sysconfdir'))
 
 udevrulesdir   = join_paths(prefixdir, get_option('udevrulesdir'))
@@ -30,6 +31,8 @@ systemddir     = join_paths(prefixdir, get_option('systemddir'))
 ###############################################################################
 conf = configuration_data()
 requires = ''
+
+conf.set('SYSCONFDIR', sysconfdir)
 
 libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
 
@@ -160,22 +163,62 @@ substs.set('LICENSE', meson.project_license()[0])
 substs.set('UDEVRULESDIR', udevrulesdir)
 substs.set('DRACUTRILESDIR', dracutrulesdir)
 substs.set('REQUIRES', requires)
+substs.set('BINDIR', bindir)
+substs.set('SBINDIR', sbindir)
+substs.set('SYSCONFDIR', sysconfdir)
+substs.set('SYSTEMCTL', get_option('systemctl'))
 
 configure_file(
   input:         'nvme.spec.in',
   output:        'nvme.spec',
   configuration: substs,
 )
-configure_file(
-  input: 'nvmf-autoconnect/dracut-conf/70-nvmf-autoconnect.conf.in',
-  output: '70-nvmf-autoconnect.conf',
-  configuration: substs,
-)
+
 disc = configure_file(
   input: 'etc/discovery.conf.in',
   output: 'discovery.conf',
   configuration: substs,
 )
+
+dracut_files = [
+  '70-nvmf-autoconnect.conf',
+]
+
+foreach file : dracut_files
+  configure_file(
+    input: 'nvmf-autoconnect/dracut-conf/' + file + '.in',
+    output: file,
+    configuration: substs,
+  )
+endforeach
+
+systemd_files = [
+  'nvmefc-boot-connections.service',
+  'nvmf-autoconnect.service',
+  'nvmf-connect.target',
+  'nvmf-connect@.service',
+]
+
+foreach file : systemd_files
+  configure_file(
+    input: 'nvmf-autoconnect/systemd/' + file + '.in',
+    output: file,
+    configuration: substs,
+  )
+endforeach
+
+udev_files = [
+  '70-nvmf-autoconnect.rules',
+  '71-nvmf-iopolicy-netapp.rules',
+]
+
+foreach file : udev_files
+  configure_file(
+    input: 'nvmf-autoconnect/udev-rules/' + file + '.in',
+    output: file,
+    configuration: substs,
+  )
+endforeach
 
 ################################################################################
 add_project_arguments(['-fomit-frame-pointer', '-D_GNU_SOURCE',
@@ -209,22 +252,25 @@ executable(
 )
 
 ################################################################################
-install_data(meson.current_build_dir() + '/70-nvmf-autoconnect.conf',
-             install_dir: dracutrulesdir)
-
 install_data('completions/bash-nvme-completion.sh',
              install_dir: datadir + '/bash-completion/completions/nvme')
 install_data('completions/_nvme',
              install_dir: datadir + '/zsh/site-functions')
 
-install_data(['nvmf-autoconnect/systemd/nvmefc-boot-connections.service',
-              'nvmf-autoconnect/systemd/nvmf-autoconnect.service',
-              'nvmf-autoconnect/systemd/nvmf-connect@.service',
-              'nvmf-autoconnect/systemd/nvmf-connect.target'],
-             install_dir: systemddir)
+foreach file : dracut_files
+  install_data(meson.current_build_dir() + '/' + file,
+               install_dir: dracutrulesdir)
+endforeach
 
-install_data(['nvmf-autoconnect/udev-rules/70-nvmf-autoconnect.rules',
-              'nvmf-autoconnect/udev-rules/71-nvmf-iopolicy-netapp.rules'],
-             install_dir: udevrulesdir)
+foreach file : systemd_files
+  install_data(meson.current_build_dir() + '/' + file,
+               install_dir: systemddir)
+endforeach
+
+foreach file : udev_files
+  install_data(meson.current_build_dir() + '/' + file,
+               install_dir: udevrulesdir)
+endforeach
+
 install_data(disc,
              install_dir: join_paths(sysconfdir, 'nvme'))

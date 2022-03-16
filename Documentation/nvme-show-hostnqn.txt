@@ -12,7 +12,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Show the host NQN configured for the system.  If /etc/nvme/hostnqn is
+Show the host NQN configured for the system.  If @SYSCONFDIR@/nvme/hostnqn is
 not present and systemd application-specific machine IDs are available,
 this will show the systemd-generated host NQN for the system.
 
