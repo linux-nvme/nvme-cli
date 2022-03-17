@@ -6909,9 +6909,51 @@ void nvme_show_lba_status(struct nvme_lba_status *list, unsigned long len,
 	}
 }
 
+static void nvme_dev_full_path(nvme_ns_t n, char *path, size_t len)
+{
+	struct stat st;
+
+	snprintf(path, len, "/dev/%s", nvme_ns_get_name(n));
+	if (stat(path, &st) == 0)
+		return;
+
+	snprintf(path, len, "/dev/spdk/%s", nvme_ns_get_name(n));
+	if (stat(path, &st) == 0)
+		return;
+
+	/*
+	 * We could start trying to search for it but let's make
+	 * it simple and just don't show the path at all.
+	 */
+	snprintf(path, len, "%s", nvme_ns_get_name(n));
+}
+
+static void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len)
+{
+	int head_instance;
+	int instance;
+	struct stat st;
+
+	sscanf(nvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance);
+	snprintf(path, len, "/dev/ng%dn%d", instance, head_instance);
+
+	if (stat(path, &st) == 0)
+		return;
+
+	snprintf(path, len, "/dev/spkd/ng%dn%d", instance, head_instance);
+	if (stat(path, &st) == 0)
+		return;
+	/*
+	 * We could start trying to search for it but let's make
+	 * it simple and just don't show the path at all.
+	 */
+	snprintf(path, len, "ng%dn%d", instance, head_instance);
+}
+
 void nvme_show_list_item(nvme_ns_t n)
 {
 	char usage[128] = { 0 }, format[128] = { 0 };
+	char devname[128] = { 0 }; char genname[128] = { 0 };
 
 	long long lba = nvme_ns_get_lba_size(n);
 	double nsze = nvme_ns_get_lba_count(n) * lba;
@@ -6926,8 +6968,11 @@ void nvme_show_list_item(nvme_ns_t n)
 	snprintf(format, sizeof(format), "%3.0f %2sB + %2d B", (double)lba,
 		l_suffix, nvme_ns_get_meta_size(n));
 
+	nvme_dev_full_path(n, devname, sizeof(devname));
+	nvme_generic_full_path(n, genname, sizeof(genname));
+
 	printf("%-21s %-21s %-20s %-40s %-9d %-26s %-16s %-8s\n",
-		nvme_ns_get_name(n), nvme_ns_get_generic_name(n), nvme_ns_get_serial(n),
+		devname, genname, nvme_ns_get_serial(n),
 		nvme_ns_get_model(n), nvme_ns_get_nsid(n), usage, format,
 		nvme_ns_get_firmware(n));
 }
@@ -6958,13 +7003,12 @@ static void nvme_show_simple_list(nvme_root_t r)
 
 static void nvme_show_ns_details(nvme_ns_t n)
 {
-	char usage[128] = { 0 }, format[128] = { 0 }, generic[128] = { 0 };
+	char usage[128] = { 0 }, format[128] = { 0 };
+	char devname[128] = { 0 }, genname[128] = { 0 };
 
 	long long lba = nvme_ns_get_lba_size(n);
 	double nsze = nvme_ns_get_lba_count(n) * lba;
 	double nuse = nvme_ns_get_lba_util(n) * lba;
-	int instance;
-	int head_instance;
 
 	const char *s_suffix = suffix_si_get(&nsze);
 	const char *u_suffix = suffix_si_get(&nuse);
@@ -6974,11 +7018,11 @@ static void nvme_show_ns_details(nvme_ns_t n)
 	sprintf(format,"%3.0f %2sB + %2d B", (double)lba, l_suffix,
 		nvme_ns_get_meta_size(n));
 
-	sscanf(nvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance);
-	sprintf(generic, "ng%dn%d", instance, head_instance);
+	nvme_dev_full_path(n, devname, sizeof(devname));
+	nvme_generic_full_path(n, genname, sizeof(genname));
 
-	printf("%-12s %-12s %-8x %-26s %-16s ", nvme_ns_get_name(n),
-		generic, nvme_ns_get_nsid(n), usage, format);
+	printf("%-12s %-12s %-8x %-26s %-16s ", devname,
+		genname, nvme_ns_get_nsid(n), usage, format);
 }
 
 static void nvme_show_detailed_list(nvme_root_t r)
@@ -7178,13 +7222,16 @@ static void json_detail_list(nvme_root_t r)
 static struct json_object *json_list_item(nvme_ns_t n)
 {
 	struct json_object *jdevice = json_create_object();
+	char devname[128] = { 0 };
 
 	long long lba = nvme_ns_get_lba_size(n);
 	double nsze = nvme_ns_get_lba_count(n) * lba;
 	double nuse = nvme_ns_get_lba_util(n) * lba;
 
+	nvme_dev_full_path(n, devname, sizeof(devname));
+
 	json_object_add_value_int(jdevice, "NameSpace", nvme_ns_get_nsid(n));
-	json_object_add_value_string(jdevice, "DevicePath", nvme_ns_get_name(n));
+	json_object_add_value_string(jdevice, "DevicePath", devname);
 	json_object_add_value_string(jdevice, "Firmware", nvme_ns_get_firmware(n));
 	json_object_add_value_string(jdevice, "ModelNumber", nvme_ns_get_model(n));
 	json_object_add_value_string(jdevice, "SerialNumber", nvme_ns_get_serial(n));
