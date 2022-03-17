@@ -72,3 +72,87 @@ linknvme:nvme-virtium-show-identify[1]::
 
 linknvme:nvme-virtium-save-smart-to-vtview-log[1]::
 	Periodically save smart attributes into a log file
+
+linknvme:nvme-wdc-cap-diag[1]::
+	Retrieve WDC device's diagnostic log and save to file
+
+linknvme:nvme-wdc-capabilities[1]::
+	Display WDC plugin command capabilities
+
+linknvme:nvme-wdc-clear-assert-dump[1]::
+	Clears the assert dump (if present)
+
+linknvme:nvme-wdc-clear-fw-activate-history[1]::
+	Clears the firmware activate history table
+
+linknvme:nvme-wdc-clear-pcie-corr[1]::
+	Clears the pcie correctable errors field
+
+linknvme:nvme-wdc-clear-pcie-correctable-errors[1]::
+	Clears the pcie correctable errors returned in the smart-log-add command
+
+linknvme:nvme-wdc-cloud-SSD-plugin-version[1]::
+	Display WDC plugin Cloud SSD Plugin Version
+
+linknvme:nvme-wdc-drive-essentials[1]::
+	Retrieve WDC device's drive essentials bin files
+
+linknvme:nvme-wdc-drive-log[1]::
+	Retrieve WDC device's drive log and save to file
+
+linknvme:nvme-wdc-drive-resize[1]::
+	Send NVMe WDC Resize Vendor Unique Command
+
+linknvme:nvme-wdc-enc-get-log[1]::
+	Send NVMe WDC enc-get-log Vendor Unique Command
+
+linknvme:nvme-wdc-get-crash-dump[1]::
+	Retrieve WDC device's crash dump
+
+linknvme:nvme-wdc-get-drive-status[1]::
+	Send the NVMe WDC get-drive-status command
+
+linknvme:nvme-wdc-get-latency-monitor-log[1]::
+	Display latency monitor log page data in human readable format
+
+linknvme:nvme-wdc-get-pfail-dump[1]::
+	Retrieve WDC device's pfail crash dump
+
+linknvme:nvme-wdc-id-ctrl[1]::
+	Send NVMe Identify Controller, return result and structure
+
+linknvme:nvme-wdc-log-page-directory[1]::
+	Retrieves the list of Log IDs supported by the drive
+
+linknvme:nvme-wdc-namespace-resize[1]::
+	Resizes the device's namespace
+
+linknvme:nvme-wdc-purge-monitor[1]::
+	Send NVMe WDC Purge-Monitor Vendor Unique Command
+
+linknvme:nvme-wdc-purge[1]::
+	Send NVMe WDC Purge Vendor Unique Command
+
+linknvme:nvme-wdc-smart-add-log[1]::
+	Send NVMe WDC smart add log Vendor Unique Command
+
+linknvme:nvme-wdc-vs-drive-info[1]::
+	Send the NVMe WDC vs-drive-info command
+
+linknvme:nvme-wdc-vs-error-reason-identifier[1]::
+	Retrieve WDC device's telemetry log error reason identifier field
+
+linknvme:nvme-wdc-vs-fw-activate-history[1]::
+	Execute NVMe WDC vs-fw-activate-history Vendor Unique Command
+
+linknvme:nvme-wdc-vs-internal-log[1]::
+	Retrieve WDC device's internal firmware log and save to file
+
+linknvme:nvme-wdc-vs-nand-stats[1]::
+	Send NVMe WDC vs-nand-stats Vendor Unique Command
+
+linknvme:nvme-wdc-vs-telemetry-controller-option[1]::
+	Disable/Enable the controller initiated option of the telemetry log page
+
+linknvme:nvme-wdc-vs-temperature-stats[1]::
+	Display temperature-related statistics
