@@ -16,11 +16,8 @@ project(
 cc = meson.get_compiler('c')
 
 prefixdir  = get_option('prefix')
-libdir     = join_paths(prefixdir, get_option('libdir'))
-includedir = join_paths(prefixdir, get_option('includedir'))
 datadir    = join_paths(prefixdir, get_option('datadir'))
 mandir     = join_paths(prefixdir, get_option('mandir'))
-bindir     = join_paths(prefixdir, get_option('bindir'))
 sbindir    = join_paths(prefixdir, get_option('sbindir'))
 sysconfdir = join_paths(prefixdir, get_option('sysconfdir'))
 
@@ -163,9 +160,11 @@ substs.set('LICENSE', meson.project_license()[0])
 substs.set('UDEVRULESDIR', udevrulesdir)
 substs.set('DRACUTRILESDIR', dracutrulesdir)
 substs.set('REQUIRES', requires)
-substs.set('BINDIR', bindir)
+substs.set('DATADIR', datadir)
+substs.set('MANDIR', mandir)
 substs.set('SBINDIR', sbindir)
 substs.set('SYSCONFDIR', sysconfdir)
+substs.set('SYSTEMDDIR', systemddir)
 substs.set('SYSTEMCTL', get_option('systemctl'))
 
 configure_file(
