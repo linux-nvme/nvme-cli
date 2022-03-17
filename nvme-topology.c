@@ -384,8 +384,9 @@ static int scan_subsystem(struct nvme_subsystem *s, __u32 ns_instance, int nsid)
 			n->name = strdup(ns[i]->d_name);
 			for (j = 0; j < s->nr_ctrls; j++) {
 				n->ctrl = &s->ctrls[j];
-				if (!strcmp(n->ctrl->state, "live") &&
-						!scan_namespace(n))
+				if (n->ctrl->state &&
+				    !strcmp(n->ctrl->state, "live") &&
+				    !scan_namespace(n))
 					break;
 			}
 		}
