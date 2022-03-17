@@ -6926,8 +6926,8 @@ void nvme_show_list_item(nvme_ns_t n)
 	snprintf(format, sizeof(format), "%3.0f %2sB + %2d B", (double)lba,
 		l_suffix, nvme_ns_get_meta_size(n));
 
-	printf("%-21s %-20s %-40s %-9d %-26s %-16s %-8s\n",
-		nvme_ns_get_name(n), nvme_ns_get_serial(n),
+	printf("%-21s %-21s %-20s %-40s %-9d %-26s %-16s %-8s\n",
+		nvme_ns_get_name(n), nvme_ns_get_generic_name(n), nvme_ns_get_serial(n),
 		nvme_ns_get_model(n), nvme_ns_get_nsid(n), usage, format,
 		nvme_ns_get_firmware(n));
 }
@@ -6939,10 +6939,10 @@ static void nvme_show_simple_list(nvme_root_t r)
 	nvme_ctrl_t c;
 	nvme_ns_t n;
 
-	printf("%-21s %-20s %-40s %-9s %-26s %-16s %-8s\n",
-	    "Node", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
-	printf("%-.21s %-.20s %-.40s %-.9s %-.26s %-.16s %-.8s\n", dash, dash,
-		dash, dash, dash, dash, dash);
+	printf("%-21s %-21s %-20s %-40s %-9s %-26s %-16s %-8s\n",
+	    "Node", "Generic", "SN", "Model", "Namespace", "Usage", "Format", "FW Rev");
+	printf("%-.21s %-.21s %-.20s %-.40s %-.9s %-.26s %-.16s %-.8s\n",
+		dash, dash, dash, dash, dash, dash, dash, dash);
 
 	nvme_for_each_host(r, h) {
 		nvme_for_each_subsystem(h, s) {
