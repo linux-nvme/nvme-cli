@@ -248,12 +248,13 @@ executable(
                   libhugetlbfs_dep ],
   include_directories: incdir,
   install: true,
-  install_dir: get_option('sbindir')
+  install_dir: sbindir
 )
 
 ################################################################################
 install_data('completions/bash-nvme-completion.sh',
-             install_dir: datadir + '/bash-completion/completions/nvme')
+             rename: 'nvme',
+             install_dir: datadir + '/bash-completion/completions')
 install_data('completions/_nvme',
              install_dir: datadir + '/zsh/site-functions')
 

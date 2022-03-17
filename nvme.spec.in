@@ -16,8 +16,8 @@ cli rpm installs core management tools with minimal dependencies.
 
 %install
 meson install --destdir %{buildroot} --skip-subprojects
-touch %{buildroot}/%{_sysconfdir}/nvme/hostnqn
-touch %{buildroot}/%{_sysconfdir}/nvme/hostid
+touch %{buildroot}%{_prefix}%{_sysconfdir}/nvme/hostnqn
+touch %{buildroot}%{_prefix}%{_sysconfdir}/nvme/hostid
 
 %files
 %defattr(-,root,root)
@@ -25,11 +25,11 @@ touch %{buildroot}/%{_sysconfdir}/nvme/hostid
 %{_mandir}/man1/nvme*.1*
 %{_datadir}/bash-completion/completions/nvme
 %{_datadir}/zsh/site-functions/_nvme
-%dir %{_sysconfdir}/nvme
-%{_sysconfdir}/nvme/hostnqn
-%{_sysconfdir}/nvme/hostid
-%{_sysconfdir}/nvme/discovery.conf
-%ghost %{_sysconfdir}/nvme/config.json
+%dir %{_prefix}%{_sysconfdir}/nvme
+%{_prefix}%{_sysconfdir}/nvme/hostnqn
+%{_prefix}%{_sysconfdir}/nvme/hostid
+%{_prefix}%{_sysconfdir}/nvme/discovery.conf
+%ghost %{_prefix}%{_sysconfdir}/nvme/config.json
 %{_udevrulesdir}/70-nvmf-autoconnect.rules
 %{_udevrulesdir}/71-nvmf-iopolicy-netapp.rules
 @DRACUTRILESDIR@/70-nvmf-autoconnect.conf
@@ -43,11 +43,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %post
 if [ $1 -eq 1 ]; then # 1 : This package is being installed for the first time
-	if [ ! -s %{_sysconfdir}/nvme/hostnqn ]; then
-		echo $(%{_sbindir}/nvme gen-hostnqn) > %{_sysconfdir}/nvme/hostnqn
+	if [ ! -s %{_prefix}%{_sysconfdir}/nvme/hostnqn ]; then
+		echo $(%{_sbindir}/nvme gen-hostnqn) > %{_prefix}%{_sysconfdir}/nvme/hostnqn
         fi
-        if [ ! -s %{_sysconfdir}/nvme/hostid ]; then
-                uuidgen > %{_sysconfdir}/nvme/hostid
+        if [ ! -s %{_prefix}%{_sysconfdir}/nvme/hostid ]; then
+                uuidgen > %{_prefix}%{_sysconfdir}/nvme/hostid
         fi
 
 	# apply udev and systemd changes that we did
