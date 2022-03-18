@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/11/2022
+.\"      Date: 03/18/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "03/11/2022" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "03/18/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -607,6 +607,236 @@ Retrieve a Toshiba device\(cqs vendor specific internal log
 \fBnvme-toshiba-vs-smart-add-log\fR(1)
 .RS 4
 Retrieve a Toshiba device\(cqs vendor specific extended SMART log page
+.RE
+.PP
+\fBnvme-transcend-badblock\fR(1)
+.RS 4
+Retrieve Transcend NVMe device\(cqs bad blocks
+.RE
+.PP
+\fBnvme-transcend-healthvalue\fR(1)
+.RS 4
+Use NVMe SMART table to analyse the health value of Transcend device
+.RE
+.PP
+\fBnvme-virtium-show-identify\fR(1)
+.RS 4
+Show a complete detail of identify device information in json format
+.RE
+.PP
+\fBnvme-virtium-save-smart-to-vtview-log\fR(1)
+.RS 4
+Periodically save smart attributes into a log file
+.RE
+.PP
+\fBnvme-wdc-cap-diag\fR(1)
+.RS 4
+Retrieve WDC device\(cqs diagnostic log and save to file
+.RE
+.PP
+\fBnvme-wdc-capabilities\fR(1)
+.RS 4
+Display WDC plugin command capabilities
+.RE
+.PP
+\fBnvme-wdc-clear-assert-dump\fR(1)
+.RS 4
+Clears the assert dump (if present)
+.RE
+.PP
+\fBnvme-wdc-clear-fw-activate-history\fR(1)
+.RS 4
+Clears the firmware activate history table
+.RE
+.PP
+\fBnvme-wdc-clear-pcie-corr\fR(1)
+.RS 4
+Clears the pcie correctable errors field
+.RE
+.PP
+\fBnvme-wdc-clear-pcie-correctable-errors\fR(1)
+.RS 4
+Clears the pcie correctable errors returned in the smart\-log\-add command
+.RE
+.PP
+\fBnvme-wdc-cloud-SSD-plugin-version\fR(1)
+.RS 4
+Display WDC plugin Cloud SSD Plugin Version
+.RE
+.PP
+\fBnvme-wdc-drive-essentials\fR(1)
+.RS 4
+Retrieve WDC device\(cqs drive essentials bin files
+.RE
+.PP
+\fBnvme-wdc-drive-log\fR(1)
+.RS 4
+Retrieve WDC device\(cqs drive log and save to file
+.RE
+.PP
+\fBnvme-wdc-drive-resize\fR(1)
+.RS 4
+Send NVMe WDC Resize Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-enc-get-log\fR(1)
+.RS 4
+Send NVMe WDC enc\-get\-log Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-get-crash-dump\fR(1)
+.RS 4
+Retrieve WDC device\(cqs crash dump
+.RE
+.PP
+\fBnvme-wdc-get-drive-status\fR(1)
+.RS 4
+Send the NVMe WDC get\-drive\-status command
+.RE
+.PP
+\fBnvme-wdc-get-latency-monitor-log\fR(1)
+.RS 4
+Display latency monitor log page data in human readable format
+.RE
+.PP
+\fBnvme-wdc-get-pfail-dump\fR(1)
+.RS 4
+Retrieve WDC device\(cqs pfail crash dump
+.RE
+.PP
+\fBnvme-wdc-id-ctrl\fR(1)
+.RS 4
+Send NVMe Identify Controller, return result and structure
+.RE
+.PP
+\fBnvme-wdc-log-page-directory\fR(1)
+.RS 4
+Retrieves the list of Log IDs supported by the drive
+.RE
+.PP
+\fBnvme-wdc-namespace-resize\fR(1)
+.RS 4
+Resizes the device\(cqs namespace
+.RE
+.PP
+\fBnvme-wdc-purge-monitor\fR(1)
+.RS 4
+Send NVMe WDC Purge\-Monitor Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-purge\fR(1)
+.RS 4
+Send NVMe WDC Purge Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-smart-add-log\fR(1)
+.RS 4
+Send NVMe WDC smart add log Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-vs-drive-info\fR(1)
+.RS 4
+Send the NVMe WDC vs\-drive\-info command
+.RE
+.PP
+\fBnvme-wdc-vs-error-reason-identifier\fR(1)
+.RS 4
+Retrieve WDC device\(cqs telemetry log error reason identifier field
+.RE
+.PP
+\fBnvme-wdc-vs-fw-activate-history\fR(1)
+.RS 4
+Execute NVMe WDC vs\-fw\-activate\-history Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-vs-internal-log\fR(1)
+.RS 4
+Retrieve WDC device\(cqs internal firmware log and save to file
+.RE
+.PP
+\fBnvme-wdc-vs-nand-stats\fR(1)
+.RS 4
+Send NVMe WDC vs\-nand\-stats Vendor Unique Command
+.RE
+.PP
+\fBnvme-wdc-vs-telemetry-controller-option\fR(1)
+.RS 4
+Disable/Enable the controller initiated option of the telemetry log page
+.RE
+.PP
+\fBnvme-wdc-vs-temperature-stats\fR(1)
+.RS 4
+Display temperature\-related statistics
+.RE
+.PP
+\fBnvme-zns-changed-zone-list\fR(1)
+.RS 4
+Retrieve Changed Zone log for the given device
+.RE
+.PP
+\fBnvme-zns-close-zone\fR(1)
+.RS 4
+Closes one or all zones
+.RE
+.PP
+\fBnvme-zns-finish-zone\fR(1)
+.RS 4
+Finishes one or all zones
+.RE
+.PP
+\fBnvme-zns-id-ctrl\fR(1)
+.RS 4
+Send NVMe Zoned Command Set Identify Controller
+.RE
+.PP
+\fBnvme-zns-id-ns\fR(1)
+.RS 4
+Send NVMe Zoned Command Set Identify Namespace
+.RE
+.PP
+\fBnvme-zns-offline-zone\fR(1)
+.RS 4
+Offlines one or all zones
+.RE
+.PP
+\fBnvme-zns-open-zone\fR(1)
+.RS 4
+Opens one or all zones
+.RE
+.PP
+\fBnvme-zns-report-zones\fR(1)
+.RS 4
+Retrieve and display the Report Zones data structure
+.RE
+.PP
+\fBnvme-zns-reset-zone\fR(1)
+.RS 4
+Resets one or all zones
+.RE
+.PP
+\fBnvme-zns-set-zone-desc\fR(1)
+.RS 4
+Set extended descriptor data for a zone
+.RE
+.PP
+\fBnvme-zns-zone-append\fR(1)
+.RS 4
+Send an NVMe write command, provide results
+.RE
+.PP
+\fBnvme-zns-zone-mgmt-recv\fR(1)
+.RS 4
+Zone Management Receive command
+.RE
+.PP
+\fBnvme-zns-zone-mgmt-send\fR(1)
+.RS 4
+Zone Management Send command
+.RE
+.PP
+\fBnvme-zns-zrwa-flush-zone\fR(1)
+.RS 4
+Flush LBAs associated with a ZRWA to a zone
 .RE
 .SH "FURTHER DOCUMENTATION"
 .sp
