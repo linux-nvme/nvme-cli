@@ -156,3 +156,45 @@ linknvme:nvme-wdc-vs-telemetry-controller-option[1]::
 
 linknvme:nvme-wdc-vs-temperature-stats[1]::
 	Display temperature-related statistics
+
+linknvme:nvme-zns-changed-zone-list[1]::
+	Retrieve Changed Zone log for the given device
+
+linknvme:nvme-zns-close-zone[1]::
+	Closes one or all zones
+
+linknvme:nvme-zns-finish-zone[1]::
+	Finishes one or all zones
+
+linknvme:nvme-zns-id-ctrl[1]::
+	Send NVMe Zoned Command Set Identify Controller
+
+linknvme:nvme-zns-id-ns[1]::
+	Send NVMe Zoned Command Set Identify Namespace
+
+linknvme:nvme-zns-offline-zone[1]::
+	Offlines one or all zones
+
+linknvme:nvme-zns-open-zone[1]::
+	Opens one or all zones
+
+linknvme:nvme-zns-report-zones[1]::
+	Retrieve and display the Report Zones data structure
+
+linknvme:nvme-zns-reset-zone[1]::
+	Resets one or all zones
+
+linknvme:nvme-zns-set-zone-desc[1]::
+	Set extended descriptor data for a zone
+
+linknvme:nvme-zns-zone-append[1]::
+	Send an NVMe write command, provide results
+
+linknvme:nvme-zns-zone-mgmt-recv[1]::
+	Zone Management Receive command
+
+linknvme:nvme-zns-zone-mgmt-send[1]::
+	Zone Management Send command
+
+linknvme:nvme-zns-zrwa-flush-zone[1]::
+	Flush LBAs associated with a ZRWA to a zone

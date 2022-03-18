@@ -3,7 +3,7 @@ nvme-zns-id-ns(1)
 
 NAME
 ----
-nvme-zns-id-ns - Send NVMe Zoned Command Set Identify Controller, return
+nvme-zns-id-ns - Send NVMe Zoned Command Set Identify namespace, return
                    result and structure
 
 SYNOPSIS
