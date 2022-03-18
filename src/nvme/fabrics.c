@@ -593,6 +593,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 			errno = EINVAL;
 			return NULL;
 		}
+		break;
 	case NVMF_TRTYPE_LOOP:
 		nvme_chomp(e->traddr, NVMF_TRADDR_SIZE);
 		traddr = strlen(e->traddr) ? e->traddr : NULL;
