@@ -791,9 +791,7 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 				return errno;
 			}
 			ret = nvme_disconnect_ctrl(c);
-			if (!ret)
-				printf("Disconnected %s\n", p);
-			else
+			if (ret)
 				fprintf(stderr,
 					"Failed to disconnect %s: %s\n",
 					p, nvme_strerror(errno));
