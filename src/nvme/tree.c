@@ -933,7 +933,7 @@ void nvme_free_ctrl(nvme_ctrl_t c)
 #define ____stringify(x...) #x
 #define __stringify(x...) ____stringify(x)
 
-static void discovery_trsvcid(nvme_ctrl_t c)
+static void set_default_trsvcid(nvme_ctrl_t c)
 {
 	if (!strcmp(c->transport, "tcp")) {
 		if (c->discovery_ctrl) {
@@ -970,7 +970,6 @@ struct nvme_ctrl *nvme_create_ctrl(nvme_root_t r,
 				   const char *host_iface, const char *trsvcid)
 {
 	struct nvme_ctrl *c;
-	bool discovery = false;
 
 	if (!transport) {
 		nvme_msg(r, LOG_ERR, "No transport specified\n");
@@ -988,8 +987,7 @@ struct nvme_ctrl *nvme_create_ctrl(nvme_root_t r,
 		nvme_msg(r, LOG_ERR, "No subsystem NQN specified\n");
 		errno = EINVAL;
 		return NULL;
-	} else if (!strcmp(subsysnqn, NVME_DISC_SUBSYS_NAME))
-		discovery = true;
+	}
 	c = calloc(1, sizeof(*c));
 	if (!c) {
 		errno = ENOMEM;
@@ -1014,16 +1012,8 @@ struct nvme_ctrl *nvme_create_ctrl(nvme_root_t r,
 		c->cfg.host_iface = strdup(host_iface);
 	if (trsvcid)
 		c->trsvcid = strdup(trsvcid);
-	else if (discovery)
-		discovery_trsvcid(c);
-	else if (!strncmp(transport, "rdma", 4) ||
-		 !strncmp(transport, "tcp", 3)) {
-		nvme_msg(r, LOG_ERR, "No trsvcid specified for '%s'\n",
-			 transport);
-		errno = EINVAL;
-		__nvme_free_ctrl(c);
-		c = NULL;
-	}
+	else
+		set_default_trsvcid(c);
 
 	return c;
 }
