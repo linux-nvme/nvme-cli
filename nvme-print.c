@@ -4797,12 +4797,14 @@ static void json_nvme_nvm_id_ns(struct nvme_nvm_id_ns *nvm_ns,
 
 static void nvme_show_nvm_id_ns_pic(__u8 pic)
 {
-	__u8 rsvd = (pic & 0xFC) >> 2;
+	__u8 rsvd = (pic & 0xF8) >> 3;
+	__u8 stcrs = (pic & 0x3) >> 2;
 	__u8 pic_16bpistm = (pic & 0x2) >> 1;
 	__u8 pic_16bpists = pic & 0x1;
 
 	if (rsvd)
-		printf("  [7:2] : %#x\tReserved\n", rsvd);
+		printf("  [7:3] : %#x\tReserved\n", rsvd);
+	printf("  [2:2] : %#x\tStorage Tag Check Read Support\n", stcrs);
 	printf("  [1:1] : %#x\t16b Guard Protection Information Storage Tag Mask\n",
 		pic_16bpistm);
 	printf("  [0:0] : %#x\t16b Guard Protection Information Storage Tag Support\n",
