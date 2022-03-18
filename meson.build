@@ -36,7 +36,7 @@ pkgconfiglibdir = get_option('pkgconfiglibdir') == '' ? join_paths(libdir, 'pkgc
 ################################################################################
 conf = configuration_data()
 
-conf.set('SYSCONFDIR', sysconfdir)
+conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 
 # Check for libuuid availability
 libuuid_dep = dependency('uuid', required: true)
