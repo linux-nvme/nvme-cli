@@ -639,6 +639,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 	}
 
 	if (nvme_ctrl_is_discovered(c)) {
+		nvme_free_ctrl(c);
 		errno = EAGAIN;
 		return NULL;
 	}
