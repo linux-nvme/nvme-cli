@@ -41,8 +41,8 @@
 #define NVMF_HOSTID_SIZE	37
 #define UUID_SIZE		37  /* 1b4e28ba-2fa1-11d2-883f-0016d3cca427 + \0 */
 
-#define NVMF_HOSTNQN_FILE	"SYSCONFDIR/nvme/hostnqn"
-#define NVMF_HOSTID_FILE	"SYSCONFDIR/nvme/hostid"
+#define NVMF_HOSTNQN_FILE	SYSCONFDIR "/nvme/hostnqn"
+#define NVMF_HOSTID_FILE	SYSCONFDIR "/nvme/hostid"
 
 const char *nvmf_dev = "/dev/nvme-fabrics";
 
