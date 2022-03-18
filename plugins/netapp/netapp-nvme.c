@@ -258,7 +258,7 @@ static void netapp_smdevices_print(struct smdevice_info *devices, int count, int
 	else if (format == NJSON) {
 		/* prepare for json output */
 		root = json_create_object();
-		json_devices = json_create_object();
+		json_devices = json_create_array();
 	}
 
 	for (i = 0; i < count; i++) {
@@ -290,6 +290,8 @@ static void netapp_smdevices_print(struct smdevice_info *devices, int count, int
 		/* complete the json output */
 		json_object_add_value_array(root, "SMdevices", json_devices);
 		json_print_object(root, NULL);
+		printf("\n");
+		json_free_object(root);
 	}
 }
 
