@@ -30,6 +30,9 @@ want_docs_build = get_option('docs-build')
 if want_docs != 'false'
   kernel_doc = find_program('kernel-doc')
 
+  conf = configuration_data()
+  conf.set('SYSCONFDIR', sysconfdir)
+
   if want_docs == 'all' or want_docs == 'man'
     mandir = join_paths(get_option('mandir'), 'man2')
     list_man_pages = find_program('list-man-pages.sh')
