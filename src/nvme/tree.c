@@ -1888,9 +1888,9 @@ struct nvme_ns *nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
 	if (ret < 0)
 		return NULL;
 	n = __nvme_scan_namespace(s->sysfs_dir, name);
+	free(name);
 	if (!n) {
 		nvme_msg(r, LOG_DEBUG, "failed to scan namespace %d\n", nsid);
-		free(name);
 		return NULL;
 	}
 
