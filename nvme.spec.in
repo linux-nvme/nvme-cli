@@ -16,38 +16,38 @@ cli rpm installs core management tools with minimal dependencies.
 
 %install
 meson install --destdir %{buildroot} --skip-subprojects
-touch %{buildroot}%{_prefix}%{_sysconfdir}/nvme/hostnqn
-touch %{buildroot}%{_prefix}%{_sysconfdir}/nvme/hostid
+touch %{buildroot}@SYSCONFDIR@/nvme/hostnqn
+touch %{buildroot}@SYSCONFDIR@/nvme/hostid
 
 %files
 %defattr(-,root,root)
-%{_sbindir}/nvme
-%{_mandir}/man1/nvme*.1*
-%{_datadir}/bash-completion/completions/nvme
-%{_datadir}/zsh/site-functions/_nvme
-%dir %{_prefix}%{_sysconfdir}/nvme
-%{_prefix}%{_sysconfdir}/nvme/hostnqn
-%{_prefix}%{_sysconfdir}/nvme/hostid
-%{_prefix}%{_sysconfdir}/nvme/discovery.conf
-%ghost %{_prefix}%{_sysconfdir}/nvme/config.json
-%{_udevrulesdir}/70-nvmf-autoconnect.rules
-%{_udevrulesdir}/71-nvmf-iopolicy-netapp.rules
+@SBINDIR@/nvme
+@MANDIR@/man1/nvme*.1*
+@DATADIR@/bash-completion/completions/nvme
+@DATADIR@/zsh/site-functions/_nvme
+%dir @SYSCONFDIR@/nvme
+@SYSCONFDIR@/nvme/hostnqn
+@SYSCONFDIR@/nvme/hostid
+@SYSCONFDIR@/nvme/discovery.conf
+%ghost @SYSCONFDIR@/nvme/config.json
+@UDEVRULESDIR@/70-nvmf-autoconnect.rules
+@UDEVRULESDIR@/71-nvmf-iopolicy-netapp.rules
 @DRACUTRILESDIR@/70-nvmf-autoconnect.conf
-%{_unitdir}/nvmf-connect@.service
-%{_unitdir}/nvmefc-boot-connections.service
-%{_unitdir}/nvmf-connect.target
-%{_unitdir}/nvmf-autoconnect.service
+@SYSTEMDDIR@/nvmf-connect@.service
+@SYSTEMDDIR@/nvmefc-boot-connections.service
+@SYSTEMDDIR@/nvmf-connect.target
+@SYSTEMDDIR@/nvmf-autoconnect.service
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %post
 if [ $1 -eq 1 ]; then # 1 : This package is being installed for the first time
-	if [ ! -s %{_prefix}%{_sysconfdir}/nvme/hostnqn ]; then
-		echo $(%{_sbindir}/nvme gen-hostnqn) > %{_prefix}%{_sysconfdir}/nvme/hostnqn
+	if [ ! -s @SYSCONFDIR@/nvme/hostnqn ]; then
+		echo $(@SBINDIR@/nvme gen-hostnqn) > @SYSCONFDIR@/nvme/hostnqn
         fi
-        if [ ! -s %{_prefix}%{_sysconfdir}/nvme/hostid ]; then
-                uuidgen > %{_prefix}%{_sysconfdir}/nvme/hostid
+        if [ ! -s @SYSCONFDIR@/nvme/hostid ]; then
+                uuidgen > @SYSCONFDIR@/nvme/hostid
         fi
 
 	# apply udev and systemd changes that we did
