@@ -1118,7 +1118,8 @@ int nvme_dump_tree(nvme_root_t r);
  * @d:		sysfs directory
  * @attr:	sysfs attribute name
  *
- * Return: String with the contents of @attr
+ * Return: String with the contents of @attr or %NULL in case of an empty value
+ * 	   or in case of an error (indicated by non-zero errno code).
  */
 char *nvme_get_attr(const char *d, const char *attr);
 
@@ -1127,7 +1128,8 @@ char *nvme_get_attr(const char *d, const char *attr);
  * @s:		nvme_subsystem_t object
  * @attr:	sysfs attribute name
  *
- * Return: String with the contents of @attr
+ * Return: String with the contents of @attr or %NULL in case of an empty value
+ * 	   or in case of an error (indicated by non-zero errno code).
  */
 char *nvme_get_subsys_attr(nvme_subsystem_t s, const char *attr);
 
@@ -1136,7 +1138,8 @@ char *nvme_get_subsys_attr(nvme_subsystem_t s, const char *attr);
  * @c:		Controller instance
  * @attr:	sysfs attribute name
  *
- * Return: String with the contents of @attr
+ * Return: String with the contents of @attr or %NULL in case of an empty value
+ * 	   or in case of an error (indicated by non-zero errno code).
  */
 char *nvme_get_ctrl_attr(nvme_ctrl_t c, const char *attr);
 
@@ -1145,7 +1148,8 @@ char *nvme_get_ctrl_attr(nvme_ctrl_t c, const char *attr);
  * @n:		nvme_ns_t object
  * @attr:	sysfs attribute name
  *
- * Return: String with the contents of @attr
+ * Return: String with the contents of @attr or %NULL in case of an empty value
+ * 	   or in case of an error (indicated by non-zero errno code).
  */
 char *nvme_get_ns_attr(nvme_ns_t n, const char *attr);
 
@@ -1164,7 +1168,8 @@ nvme_ns_t nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
  * @p:		nvme_path_t object
  * @attr:	sysfs attribute name
  *
- * Return:  String with the contents of @attr
+ * Return: String with the contents of @attr or %NULL in case of an empty value
+ * 	   or in case of an error (indicated by non-zero errno code).
  */
 char *nvme_get_path_attr(nvme_path_t p, const char *attr);
 

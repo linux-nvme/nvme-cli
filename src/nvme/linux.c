@@ -433,21 +433,22 @@ static char *__nvme_get_attr(const char *path)
 {
 	char value[4096] = { 0 };
 	int ret, fd;
+	int saved_errno;
 
 	fd = open(path, O_RDONLY);
-	if (fd < 0) {
-#if 0
-		nvme_msg(LOG_DEBUG, "Failed to open %s: %s\n", path,
-			 strerror(errno));
-#endif
+	if (fd < 0)
 		return NULL;
-	}
 
 	ret = read(fd, value, sizeof(value) - 1);
+	saved_errno = errno;
 	close(fd);
-	if (ret < 0 || !strlen(value)) {
+	if (ret < 0) {
+		errno = saved_errno;
 		return NULL;
 	}
+	errno = 0;
+	if (!strlen(value))
+		return NULL;
 
 	if (value[strlen(value) - 1] == '\n')
 		value[strlen(value) - 1] = '\0';
@@ -463,8 +464,10 @@ char *nvme_get_attr(const char *dir, const char *attr)
 	int ret;
 
 	ret = asprintf(&path, "%s/%s", dir, attr);
-	if (ret < 0)
+	if (ret < 0) {
+		errno = ENOMEM;
 		return NULL;
+	}
 
 	value = __nvme_get_attr(path);
 	free(path);
