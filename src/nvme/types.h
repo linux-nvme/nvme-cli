@@ -1832,6 +1832,18 @@ enum nvme_id_ns_flbas {
 };
 
 /**
+ * enum nvme_nvm_id_ns_elbaf - This field indicates the extended LBA format
+ * @NVME_NVM_ELBAF_STS_MASK:	Mask to get the storage tag size used to determine
+ *				the variable-sized storage tag/reference tag fields
+ * @NVME_NVM_ELBAF_PIF_MASK:	Mask to get the protection information format for
+ *				the extended LBA format.
+ */
+enum nvme_nvm_id_ns_elbaf {
+	NVME_NVM_ELBAF_STS_MASK		= 127 << 0,
+	NVME_NVM_ELBAF_PIF_MASK		= 3 << 7,
+};
+
+/**
  * enum nvme_id_ns_mc - This field indicates the capabilities for metadata.
  * @NVME_NS_MC_EXTENDED: If set, indicates the namespace supports the metadata
  * 			 being transferred as part of a separate buffer that is
@@ -4291,7 +4303,8 @@ struct nvme_dsm_range {
  * @slba:	Starting LBA
  * @nlb:	Number of Logical Blocks
  * @rsvd18:	Reserved
- * @eilbrt:	Expected Initial Logical Block Reference Tag
+ * @eilbrt:	Expected Initial Logical Block Reference Tag /
+ *		Expected Logical Block Storage Tag
  * @elbatm:	Expected Logical Block Application Tag Mask
  * @elbat:	Expected Logical Block Application Tag
  */
@@ -4301,6 +4314,27 @@ struct nvme_copy_range {
 	__le16			nlb;
 	__u8			rsvd18[6];
 	__le32			eilbrt;
+	__le16			elbatm;
+	__le16			elbat;
+};
+
+/**
+ * struct nvme_copy_range_f1 -
+ * @rsvd0:	Reserved
+ * @slba:	Starting LBA
+ * @nlb:	Number of Logical Blocks
+ * @rsvd18:	Reserved
+ * @elbt:	Expected Initial Logical Block Reference Tag /
+ * 		Expected Logical Block Storage Tag 
+ * @elbatm:	Expected Logical Block Application Tag Mask
+ * @elbat:	Expected Logical Block Application Tag
+ */
+struct nvme_copy_range_f1 {
+	__u8			rsvd0[8];
+	__le64			slba;
+	__le16			nlb;
+	__u8			rsvd18[8];
+	__u8			elbt[10];
 	__le16			elbatm;
 	__le16			elbat;
 };

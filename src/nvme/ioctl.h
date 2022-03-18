@@ -133,6 +133,17 @@ struct nvme_passthru_cmd64 {
 #endif /* _LINUX_NVME_IOCTL_H */
 
 /**
+ * Helper function used to determine structure sizes
+ */
+#define sizeof_args(type, member, align)					\
+  ({										\
+	  type s;								\
+	  size_t t = offsetof(type, member) + sizeof(s.member);			\
+	  size_t p = (sizeof(align) - (t % sizeof(align))) % sizeof(align);	\
+	  t + p;								\
+  })
+
+/**
  * nvme_submit_admin_passthru64() - Submit a 64-bit nvme passthrough admin
  * 				    command
  * @fd:		File descriptor of nvme device
@@ -2905,7 +2916,8 @@ int nvme_get_features_iocs_profile(int fd, enum nvme_get_features_sel sel,
  * @pi:		Protection information type
  * @pil:	Protection information location (beginning or end), true if end
  * @ses:	Secure erase settings
- * @lbaf:	Logical block address format
+ * @lbaf:	Logical block address format least significant 4 bits
+ * @lbafu:	Logical block address format most significant 2 bits
  */
 struct nvme_format_nvm_args {
 	__u32 *result;
@@ -2918,6 +2930,8 @@ struct nvme_format_nvm_args {
 	enum nvme_cmd_format_pil pil;
 	enum nvme_cmd_format_ses ses;
 	__u8 lbaf;
+	__u8 rsvd1[7];
+	__u8 lbafu;
 };
 
 /**
@@ -3836,8 +3850,7 @@ static inline int nvme_flush(int fd, __u32 nsid) {
  * struct nvme_io_args - Arguments for NVMe I/O commands
  * @slba:	Starting logical block
  * @storage_tag: This filed specifies Variable Sized Expected Logical Block
- *		Storage Tag (ELBST) and Expected Logical Block Reference
- *		Tag (ELBRT)
+ *		Storage Tag (ELBST) or Logical Block Storage Tag (LBST)
  * @result:	The command completion result from CQE dword0
  * @data:	Pointer to user address of the data buffer
  * @metadata:	Pointer to user address of the metadata buffer
@@ -3855,11 +3868,21 @@ static inline int nvme_flush(int fd, __u32 nsid) {
  * @appmask:	This field specifies the Application Tag expected value. Used
  *		only if the namespace is formatted to use end-to-end protection
  *		information.
- * @reftag:	This field specifies the Initial Logical Block Reference Tag
- *		expected value. Used only if the namespace is formatted to use
- *		end-to-end protection information.
+ * @reftag:	This field specifies the variable sized Expected Initial
+ * 		Logical Block Reference Tag (EILBRT) or Initial Logical Block
+ * 		Reference Tag (ILBRT). Used only if the namespace is formatted
+ * 		to use end-to-end protection information.
  * @dspec:	Directive specific value
  * @dsm:	Data set management attributes, see &enum nvme_io_dsm_flags
+ * @reftag_u64:	This field specifies the variable sized Expected Initial
+ * 		Logical Block Reference Tag (EILBRT) or Initial Logical Block
+ * 		Reference Tag (ILBRT). It is the 8 byte version required for
+ * 		enhanced protection information.  Used only if the namespace is
+ * 		formatted to use end-to-end protection information.
+ * @sts:	Storage tag size in bits, set by namespace Extended LBA Format
+ * @pif:	Protection information format, determines how variable sized
+ * 		storage_tag and reftag are put into dwords 2, 3, and 14. Set by
+ * 		namespace Extended LBA Format.
  */
 struct nvme_io_args {
 	__u64 slba;
@@ -3880,6 +3903,10 @@ struct nvme_io_args {
 	__u16 appmask;
 	__u16 dspec;
 	__u8 dsm;
+	__u8 rsvd1[1];
+	__u64 reftag_u64;
+	__u8 sts;
+	__u8 pif;
 };
 
 /**
@@ -4035,6 +4062,8 @@ int nvme_dsm(struct nvme_dsm_args *args);
  * @prinfow:	Protection information field for write
  * @dtype:	Directive type
  * @format:	Descriptor format
+ * @ilbrt_u64:	Initial logical block reference tag - 8 byte
+ *              version required for enhanced protection info
  */
 struct nvme_copy_args {
 	__u64 sdlba;
@@ -4055,6 +4084,7 @@ struct nvme_copy_args {
 	__u8 prinfow;
 	__u8 dtype;
 	__u8 format;
+ 	__u64 ilbrt_u64;
 };
 
 /**
@@ -4347,6 +4377,9 @@ static inline int nvme_zns_report_zones(int fd, __u32 nsid, __u64 slba,
  * @control:
  * @lbat:	Logical block application tag
  * @lbatm:	Logical block application tag mask
+ * @ilbrt_u64:	Initial logical block reference tag - 8 byte
+ *              version required for enhanced protection info
+ *
  */
 struct nvme_zns_append_args {
 	__u64 zslba;
@@ -4364,6 +4397,8 @@ struct nvme_zns_append_args {
 	__u16 control;
 	__u16 lbat;
 	__u16 lbatm;
+	__u8  rsvd1[4];
+	__u64 ilbrt_u64;
 };
 
 /**

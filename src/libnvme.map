@@ -1,6 +1,7 @@
 LIBNVME_1_1 {
 	global:
 		nvme_get_version;
+		nvme_init_copy_range_f1;
 };
 
 LIBNVME_1_0 {

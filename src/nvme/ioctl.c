@@ -267,11 +267,13 @@ enum nvme_cmd_dword_fields {
 	NVME_FORMAT_CDW10_PI_SHIFT				= 5,
 	NVME_FORMAT_CDW10_PIL_SHIFT				= 8,
 	NVME_FORMAT_CDW10_SES_SHIFT				= 9,
+	NVME_FORMAT_CDW10_LBAFU_SHIFT				= 12,
 	NVME_FORMAT_CDW10_LBAF_MASK				= 0xf,
 	NVME_FORMAT_CDW10_MSET_MASK				= 0x1,
 	NVME_FORMAT_CDW10_PI_MASK				= 0x7,
 	NVME_FORMAT_CDW10_PIL_MASK				= 0x1,
 	NVME_FORMAT_CDW10_SES_MASK				= 0x7,
+	NVME_FORMAT_CDW10_LBAFU_MASK				= 0x3,
 	NVME_SANITIZE_CDW10_SANACT_SHIFT			= 0,
 	NVME_SANITIZE_CDW10_AUSE_SHIFT				= 3,
 	NVME_SANITIZE_CDW10_OWPASS_SHIFT			= 4,
@@ -1159,11 +1161,25 @@ int nvme_get_features_iocs_profile(int fd, enum nvme_get_features_sel sel,
 
 int nvme_format_nvm(struct nvme_format_nvm_args *args)
 {
-	__u32 cdw10 = NVME_SET(args->lbaf, FORMAT_CDW10_LBAF) |
-			NVME_SET(args->mset, FORMAT_CDW10_MSET) |
-			NVME_SET(args->pi, FORMAT_CDW10_PI) |
-			NVME_SET(args->pil, FORMAT_CDW10_PIL) |
-			NVME_SET(args->ses, FORMAT_CDW10_SES);
+	const size_t size_v1 = sizeof_args(struct nvme_format_nvm_args, lbaf, __u64);
+	const size_t size_v2 = sizeof_args(struct nvme_format_nvm_args, lbafu, __u64);
+	__u32 cdw10;
+
+	if (args->args_size < size_v1 || args->args_size > size_v2) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	cdw10 = NVME_SET(args->lbaf, FORMAT_CDW10_LBAF) |
+		NVME_SET(args->mset, FORMAT_CDW10_MSET) |
+		NVME_SET(args->pi, FORMAT_CDW10_PI) |
+		NVME_SET(args->pil, FORMAT_CDW10_PIL) |
+		NVME_SET(args->ses, FORMAT_CDW10_SES);
+
+	if (args->args_size == size_v2) {
+		/* set lbafu extension */
+		cdw10 |= NVME_SET(args->lbafu, FORMAT_CDW10_LBAFU);
+	}
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_format_nvm,
@@ -1172,10 +1188,6 @@ int nvme_format_nvm(struct nvme_format_nvm_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args)) {
-		errno = EINVAL;
-		return -1;
-	}
 	return nvme_submit_admin_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1588,16 +1600,81 @@ int nvme_io_passthru(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 			     timeout_ms, result);
 }
 
+static int nvme_set_var_size_tags(__u32 *cmd_dw2, __u32 *cmd_dw3, __u32 *cmd_dw14,
+		__u8 pif, __u8 sts, __u64 reftag, __u64 storage_tag)
+{
+	__u32 cdw2 = 0, cdw3 = 0, cdw14;
+
+	switch (pif) {
+	/* 16b Protection Information */
+	case 0:
+		cdw14 = reftag & 0xffffffff;
+		cdw14 |= ((storage_tag << (32 - sts)) & 0xffffffff);
+		break;
+	/* 32b Protection Information */
+	case 1:
+		cdw14 = reftag & 0xffffffff;
+		cdw3 = reftag >> 32;
+		cdw14 |= ((storage_tag << (80 - sts)) & 0xffff0000);
+		if (sts >= 48)
+			cdw3 |= ((storage_tag >> (sts - 48)) & 0xffffffff);
+		else
+			cdw3 |= ((storage_tag << (48 - sts)) & 0xffffffff);
+		cdw2 = (storage_tag >> (sts - 16)) & 0xffff;
+		break;
+	/* 64b Protection Information */
+	case 2:
+		cdw14 = reftag & 0xffffffff;
+		cdw3 = (reftag >> 32) & 0xffff;
+		cdw14 |= ((storage_tag << (48 - sts)) & 0xffffffff);
+		if (sts >= 16)
+			cdw3 |= ((storage_tag >> (sts - 16)) & 0xffff);
+		else
+			cdw3 |= ((storage_tag << (16 - sts)) & 0xffff);
+		break;
+	default:
+		perror("Unsupported Protection Information Format");
+		errno = EINVAL;
+		return -1;
+	}
+
+	*cmd_dw2 = cdw2;
+	*cmd_dw3 = cdw3;
+	*cmd_dw14 = cdw14;
+	return 0;
+}
+
 int nvme_io(struct nvme_io_args *args, __u8 opcode)
 {
-	__u32 cdw2  = args->storage_tag & 0xffffffff;
-	__u32 cdw3  = (args->storage_tag >> 32) & 0xffff;
-	__u32 cdw10 = args->slba & 0xffffffff;
-	__u32 cdw11 = args->slba >> 32;
-	__u32 cdw12 = args->nlb | (args->control << 16);
-	__u32 cdw13 = args->dsm | (args->dspec << 16);
-	__u32 cdw14 = args->reftag;
-	__u32 cdw15 = args->apptag | (args->appmask << 16);
+	const size_t size_v1 = sizeof_args(struct nvme_io_args, dsm, __u64);
+	const size_t size_v2 = sizeof_args(struct nvme_io_args, pif, __u64);
+	__u32 cdw2, cdw3, cdw10, cdw11, cdw12, cdw13, cdw14, cdw15;
+
+	if (args->args_size < size_v1 || args->args_size > size_v2) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	cdw10 = args->slba & 0xffffffff;
+	cdw11 = args->slba >> 32;
+	cdw12 = args->nlb | (args->control << 16);
+	cdw13 = args->dsm | (args->dspec << 16);
+	cdw15 = args->apptag | (args->appmask << 16);
+
+	if (args->args_size == size_v1) {
+		cdw2 = (args->storage_tag >> 32) & 0xffff;
+		cdw3 = args->storage_tag & 0xffffffff;
+		cdw14 = args->reftag;
+	} else {
+		if (nvme_set_var_size_tags(&cdw2, &cdw3, &cdw14,
+				args->pif,
+				args->sts,
+				args->reftag_u64,
+				args->storage_tag)) {
+			errno = EINVAL;
+			return -1;
+		}
+	}
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode		= opcode,
@@ -1617,10 +1694,6 @@ int nvme_io(struct nvme_io_args *args, __u8 opcode)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args)) {
-		errno = EINVAL;
-		return -1;
-	}
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1645,29 +1718,48 @@ int nvme_dsm(struct nvme_dsm_args *args)
 
 int nvme_copy(struct nvme_copy_args *args)
 {
-	__u32 cdw12 = ((args->nr - 1) & 0xff) | ((args->format & 0xf) <<  8) |
+	const size_t size_v1 = sizeof_args(struct nvme_copy_args, format, __u64);
+	const size_t size_v2 = sizeof_args(struct nvme_copy_args, ilbrt_u64, __u64);
+	__u32 cdw3, cdw12, cdw14, data_len;
+
+	if (args->args_size < size_v1 || args->args_size > size_v2) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	cdw12 = ((args->nr - 1) & 0xff) | ((args->format & 0xf) <<  8) |
 		((args->prinfor & 0xf) << 12) | ((args->dtype & 0xf) << 20) |
 		((args->prinfow & 0xf) << 26) | ((args->fua & 0x1) << 30) |
 		((args->lr & 0x1) << 31);
+
+	if (args->args_size == size_v1) {
+		cdw3 = 0;
+		cdw14 = args->ilbrt;
+	} else {
+		cdw3 = (args->ilbrt_u64 >> 32) & 0xffffffff;
+		cdw14 = args->ilbrt_u64 & 0xffffffff;
+	}
+
+	if (args->format == 1)
+		data_len = args->nr * sizeof(struct nvme_copy_range_f1);
+	else
+		data_len = args->nr * sizeof(struct nvme_copy_range);
 
 	struct nvme_passthru_cmd cmd = {
 		.opcode         = nvme_cmd_copy,
 		.nsid           = args->nsid,
 		.addr           = (__u64)(uintptr_t)args->copy,
-		.data_len       = args->nr * sizeof(*args->copy),
+		.data_len       = data_len,
+		.cdw3           = cdw3,
 		.cdw10          = args->sdlba & 0xffffffff,
 		.cdw11          = args->sdlba >> 32,
 		.cdw12          = cdw12,
 		.cdw13		= (args->dspec & 0xffff) << 16,
-		.cdw14		= args->ilbrt,
+		.cdw14          = cdw14,
 		.cdw15		= (args->lbatm << 16) | args->lbat,
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args)) {
-		errno = EINVAL;
-		return -1;
-	}
 	return nvme_submit_io_passthru(args->fd, &cmd, args->result);
 }
 
@@ -1821,15 +1913,32 @@ int nvme_zns_mgmt_recv(struct nvme_zns_mgmt_recv_args *args)
 
 int nvme_zns_append(struct nvme_zns_append_args *args)
 {
-	__u32 cdw10 = args->zslba & 0xffffffff;
-	__u32 cdw11 = args->zslba >> 32;
-	__u32 cdw12 = args->nlb | (args->control << 16);
-	__u32 cdw14 = args->ilbrt;
-	__u32 cdw15 = args->lbat | (args->lbatm << 16);
+	const size_t size_v1 = sizeof_args(struct nvme_zns_append_args, lbatm, __u64);
+	const size_t size_v2 = sizeof_args(struct nvme_zns_append_args, ilbrt_u64, __u64);
+	__u32 cdw3, cdw10, cdw11, cdw12, cdw14, cdw15;
+
+	if (args->args_size < size_v1 || args->args_size > size_v2) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	cdw10 = args->zslba & 0xffffffff;
+	cdw11 = args->zslba >> 32;
+	cdw12 = args->nlb | (args->control << 16);
+	cdw15 = args->lbat | (args->lbatm << 16);
+
+	if (args->args_size == size_v1) {
+		cdw3 = 0;
+		cdw14 = args->ilbrt;
+	} else {
+		cdw3 = (args->ilbrt_u64 >> 32) & 0xffffffff;
+		cdw14 = args->ilbrt_u64 & 0xffffffff;
+	}
 
 	struct nvme_passthru_cmd64 cmd = {
 		.opcode		= nvme_zns_cmd_append,
 		.nsid		= args->nsid,
+		.cdw3		= cdw3,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
 		.cdw12		= cdw12,
@@ -1842,10 +1951,6 @@ int nvme_zns_append(struct nvme_zns_append_args *args)
 		.timeout_ms	= args->timeout,
 	};
 
-	if (args->args_size < sizeof(*args)) {
-		errno = EINVAL;
-		return -1;
-	}
 	return nvme_submit_io_passthru64(args->fd, &cmd, args->result);
 }
 
