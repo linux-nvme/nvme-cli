@@ -119,7 +119,7 @@ int nvme_fw_download_seq(int fd, __u32 size, __u32 xfer, __u32 offset,
 
 int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 {
-	__u64 offset = 0, xfer;
+	__u64 offset = 0, xfer, data_len = args->len;
 	bool retain = true;
 	void *ptr = args->log;
 	int ret;
@@ -129,7 +129,7 @@ int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 	 * avoids having to check the MDTS value of the controller.
 	 */
 	do {
-		xfer = args->len - offset;
+		xfer = data_len - offset;
 		if (xfer > xfer_len)
 			xfer  = xfer_len;
 
@@ -138,7 +138,7 @@ int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 		 * last portion of this log page so the data remains latched
 		 * during the fetch sequence.
 		 */
-		if (offset + xfer == args->len)
+		if (offset + xfer == data_len)
 			retain = args->rae;
 
 		args->lpo = offset;
@@ -151,7 +151,7 @@ int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args)
 
 		offset += xfer;
 		ptr += xfer;
-	} while (offset < args->len);
+	} while (offset < data_len);
 
 	return 0;
 }
