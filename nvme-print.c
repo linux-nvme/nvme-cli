@@ -6772,6 +6772,8 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		printf("\tDisable Normal (DN): %s\n", (result & 0x00000001) ? "True":"False");
 		break;
 	case NVME_FEAT_FID_ASYNC_EVENT:
+		printf("\tDiscovery Log Page Change Notices: %s\n",
+			((result & 0x80000000) >> 31) ? "Send async event":"Do not send async event");
 		printf("\tEndurance Group Event Aggregate Log Change Notices: %s\n",
 			((result & 0x00004000) >> 14) ? "Send async event":"Do not send async event");
 		printf("\tLBA Status Information Notices  : %s\n",
