@@ -455,7 +455,7 @@ int nvme_set_features(struct nvme_set_features_args *args)
 }
 
 static int __nvme_set_features(int fd, __u8 fid, __u32 cdw11, bool save,
-	__u32 *result)
+			       __u32 *result)
 {
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
@@ -476,7 +476,7 @@ static int __nvme_set_features(int fd, __u8 fid, __u32 cdw11, bool save,
 }
 
 int nvme_set_features_arbitration(int fd, __u8 ab, __u8 lpw, __u8 mpw,
-	__u8 hpw, bool save, __u32 *result)
+				  __u8 hpw, bool save, __u32 *result)
 {
 	__u32 value = NVME_SET(ab, FEAT_ARBITRATION_BURST) |
 			NVME_SET(lpw, FEAT_ARBITRATION_LPW) |
@@ -488,7 +488,7 @@ int nvme_set_features_arbitration(int fd, __u8 ab, __u8 lpw, __u8 mpw,
 }
 
 int nvme_set_features_power_mgmt(int fd, __u8 ps, __u8 wh, bool save,
-	__u32 *result)
+				 __u32 *result)
 {
 	__u32 value = NVME_SET(ps, FEAT_PWRMGMT_PS) |
 			NVME_SET(wh, FEAT_PWRMGMT_PS);
@@ -504,7 +504,8 @@ int nvme_set_features_lba_range(int fd, __u32 nsid, __u32 nr_ranges, bool save,
 }
 
 int nvme_set_features_temp_thresh(int fd, __u16 tmpth, __u8 tmpsel,
-	enum nvme_feat_tmpthresh_thsel thsel, bool save, __u32 *result)
+				  enum nvme_feat_tmpthresh_thsel thsel,
+				  bool save, __u32 *result)
 {
 	__u32 value = NVME_SET(tmpth, FEAT_TT_TMPTH) |
 			NVME_SET(tmpsel, FEAT_TT_TMPSEL) |
@@ -515,7 +516,7 @@ int nvme_set_features_temp_thresh(int fd, __u16 tmpth, __u8 tmpsel,
 }
 
 int nvme_set_features_err_recovery(int fd, __u32 nsid, __u16 tler, bool dulbe,
-	bool save, __u32 *result)
+				   bool save, __u32 *result)
 {
 	__u32 value = NVME_SET(tler, FEAT_ERROR_RECOVERY_TLER) |
 			NVME_SET(!!dulbe, FEAT_ERROR_RECOVERY_DULBE);
@@ -533,7 +534,7 @@ int nvme_set_features_volatile_wc(int fd, bool wce, bool save, __u32 *result)
 }
 
 int nvme_set_features_irq_coalesce(int fd, __u8 thr, __u8 time, bool save,
-	__u32 *result)
+				   __u32 *result)
 {
 	__u32 value = NVME_SET(thr, FEAT_IRQC_TIME) |
 			NVME_SET(time, FEAT_IRQC_THR);
@@ -543,7 +544,7 @@ int nvme_set_features_irq_coalesce(int fd, __u8 thr, __u8 time, bool save,
 }
 
 int nvme_set_features_irq_config(int fd, __u16 iv, bool cd, bool save,
-	__u32 *result)
+				 __u32 *result)
 {
 	__u32 value = NVME_SET(iv, FEAT_ICFG_IV) |
 			NVME_SET(!!cd, FEAT_ICFG_CD);
@@ -561,14 +562,14 @@ int nvme_set_features_write_atomic(int fd, bool dn, bool save, __u32 *result)
 }
 
 int nvme_set_features_async_event(int fd, __u32 events,
-	bool save, __u32 *result)
+				  bool save, __u32 *result)
 {
 	return __nvme_set_features(fd, NVME_FEAT_FID_ASYNC_EVENT, events, save,
 				   result);
 }
 
 int nvme_set_features_auto_pst(int fd, bool apste, bool save,
-	struct nvme_feat_auto_pst *apst, __u32 *result)
+			       struct nvme_feat_auto_pst *apst, __u32 *result)
 {
 	__u32 value = NVME_SET(!!apste, FEAT_APST_APSTE);
 
@@ -600,7 +601,7 @@ int nvme_set_features_timestamp(int fd, bool save, __u64 timestamp)
 }
 
 int nvme_set_features_hctm(int fd, __u16 tmt2, __u16 tmt1,
-	bool save, __u32 *result)
+			   bool save, __u32 *result)
 {
 	__u32 value = NVME_SET(tmt2, FEAT_HCTM_TMT2) |
 			NVME_SET(tmt1, FEAT_HCTM_TMT1);
@@ -618,7 +619,7 @@ int nvme_set_features_nopsc(int fd, bool noppme, bool save, __u32 *result)
 }
 
 int nvme_set_features_rrl(int fd, __u8 rrl, __u16 nvmsetid,
-	bool save, __u32 *result)
+			  bool save, __u32 *result)
 {
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
@@ -640,7 +641,7 @@ int nvme_set_features_rrl(int fd, __u8 rrl, __u16 nvmsetid,
 }
 
 int nvme_set_features_plm_config(int fd, bool plm, __u16 nvmsetid, bool save,
-	struct nvme_plm_config *data, __u32 *result)
+				 struct nvme_plm_config *data, __u32 *result)
 {
 	struct nvme_set_features_args args = {
 		.args_size = sizeof(args),
@@ -662,7 +663,7 @@ int nvme_set_features_plm_config(int fd, bool plm, __u16 nvmsetid, bool save,
 }
 
 int nvme_set_features_plm_window(int fd, enum nvme_feat_plm_window_select sel,
-	__u16 nvmsetid, bool save, __u32 *result)
+				 __u16 nvmsetid, bool save, __u32 *result)
 {
 	__u32 cdw12 = NVME_SET(sel, FEAT_PLMW_WS);
 	struct nvme_set_features_args args = {
@@ -685,7 +686,7 @@ int nvme_set_features_plm_window(int fd, enum nvme_feat_plm_window_select sel,
 }
 
 int nvme_set_features_lba_sts_interval(int fd, __u16 lsiri, __u16 lsipi,
-	bool save, __u32 *result)
+				       bool save, __u32 *result)
 {
 	__u32 value = NVME_SET(lsiri, FEAT_LBAS_LSIRI) |
 			NVME_SET(lsipi, FEAT_LBAS_LSIPI);
@@ -839,7 +840,7 @@ int nvme_get_features_arbitration(int fd, enum nvme_get_features_sel sel,
 }
 
 int nvme_get_features_power_mgmt(int fd, enum nvme_get_features_sel sel,
-				__u32 *result)
+				 __u32 *result)
 {
 	return __nvme_get_features(fd, NVME_FEAT_FID_POWER_MGMT, sel, result);
 }
@@ -898,7 +899,7 @@ int nvme_get_features_irq_coalesce(int fd, enum nvme_get_features_sel sel,
 }
 
 int nvme_get_features_irq_config(int fd, enum nvme_get_features_sel sel,
-				__u16 iv, __u32 *result)
+				 __u16 iv, __u32 *result)
 {
 	struct nvme_get_features_args args = {
 		.args_size = sizeof(args),
@@ -956,8 +957,8 @@ int nvme_get_features_host_mem_buf(int fd, enum nvme_get_features_sel sel,
 	return __nvme_get_features(fd, NVME_FEAT_FID_HOST_MEM_BUF, sel, result);
 }
 
-int nvme_get_features_timestamp(int fd,
-	enum nvme_get_features_sel sel, struct nvme_timestamp *ts)
+int nvme_get_features_timestamp(int fd, enum nvme_get_features_sel sel,
+				struct nvme_timestamp *ts)
 {
 	struct nvme_get_features_args args = {
 		.args_size = sizeof(args),
@@ -997,7 +998,8 @@ int nvme_get_features_rrl(int fd, enum nvme_get_features_sel sel, __u32 *result)
 }
 
 int nvme_get_features_plm_config(int fd, enum nvme_get_features_sel sel,
-	__u16 nvmsetid, struct nvme_plm_config *data, __u32 *result)
+				 __u16 nvmsetid, struct nvme_plm_config *data,
+				 __u32 *result)
 {
 	struct nvme_get_features_args args = {
 		.args_size = sizeof(args),
@@ -1017,7 +1019,7 @@ int nvme_get_features_plm_config(int fd, enum nvme_get_features_sel sel,
 }
 
 int nvme_get_features_plm_window(int fd, enum nvme_get_features_sel sel,
-	__u16 nvmsetid, __u32 *result)
+				 __u16 nvmsetid, __u32 *result)
 {
 	struct nvme_get_features_args args = {
 		.args_size = sizeof(args),
@@ -1558,14 +1560,15 @@ int nvme_submit_io_passthru64(int fd, struct nvme_passthru_cmd64 *cmd,
 }
 
 int nvme_io_passthru64(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
-		__u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11,
-		__u32 cdw12, __u32 cdw13, __u32 cdw14, __u32 cdw15,
-		__u32 data_len, void *data, __u32 metadata_len, void *metadata,
-		__u32 timeout_ms, __u64 *result)
+		       __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10,
+		       __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14,
+		       __u32 cdw15, __u32 data_len, void *data, __u32 metadata_len,
+		       void *metadata, __u32 timeout_ms, __u64 *result)
 {
 	return nvme_passthru64(fd, NVME_IOCTL_IO64_CMD, opcode, flags, rsvd,
-		nsid, cdw2, cdw3, cdw10, cdw11, cdw12, cdw13, cdw14, cdw15,
-		data_len, data, metadata_len, metadata, timeout_ms, result);
+			       nsid, cdw2, cdw3, cdw10, cdw11, cdw12, cdw13,
+			       cdw14, cdw15, data_len, data, metadata_len, metadata,
+			       timeout_ms, result);
 }
 
 int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd, __u32 *result)
@@ -1574,14 +1577,15 @@ int nvme_submit_io_passthru(int fd, struct nvme_passthru_cmd *cmd, __u32 *result
 }
 
 int nvme_io_passthru(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
-		__u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10, __u32 cdw11,
-		__u32 cdw12, __u32 cdw13, __u32 cdw14, __u32 cdw15,
-		__u32 data_len, void *data, __u32 metadata_len, void *metadata,
-		__u32 timeout_ms, __u32 *result)
+		     __u32 nsid, __u32 cdw2, __u32 cdw3, __u32 cdw10,
+		     __u32 cdw11, __u32 cdw12, __u32 cdw13, __u32 cdw14,
+		     __u32 cdw15, __u32 data_len, void *data, __u32 metadata_len,
+		     void *metadata, __u32 timeout_ms, __u32 *result)
 {
 	return nvme_passthru(fd, NVME_IOCTL_IO_CMD, opcode, flags, rsvd, nsid,
-		cdw2, cdw3, cdw10, cdw11, cdw12, cdw13, cdw14, cdw15, data_len,
-		data, metadata_len, metadata, timeout_ms, result);
+			     cdw2, cdw3, cdw10, cdw11, cdw12, cdw13, cdw14,
+			     cdw15, data_len, data, metadata_len, metadata,
+			     timeout_ms, result);
 }
 
 int nvme_io(struct nvme_io_args *args, __u8 opcode)

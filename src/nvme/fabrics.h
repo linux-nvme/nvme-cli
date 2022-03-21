@@ -170,9 +170,9 @@ void nvmf_default_config(struct nvme_fabrics_config *cfg);
 
 /**
  * nvmf_add_ctrl() - Connect a controller and update topology
- * @h: Host to which the controller should be attached
- * @c: Controller to be connected
- * @cfg: Default configuration for the controller
+ * @h:		Host to which the controller should be attached
+ * @c:		Controller to be connected
+ * @cfg:	Default configuration for the controller
  *
  * Issues a 'connect' command to the NVMe-oF controller and inserts @c
  * into the topology using @h as parent.
@@ -185,9 +185,9 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 
 /**
  * nvmf_get_discovery_log() - Return the discovery log page
- * @c: Discover controller to use 
- * @logp: Pointer to the log page to be returned
- * @max_retries: maximum number of log page entries to be returned
+ * @c:			Discover controller to use 
+ * @logp:		Pointer to the log page to be returned
+ * @max_retries:	maximum number of log page entries to be returned
  *
  * Return: 0 on success; on failure -1 is returned and errno is set
  */
@@ -219,10 +219,10 @@ char *nvmf_hostid_from_file();
 
 /**
  * nvmf_connect_disc_entry() - Connect controller based on the discovery log page entry
- * @h: Host to which the controller should be connected
- * @e: Discovery log page entry
- * @defcfg: Default configurationn to be used for the new controller
- * @discover: Set to 'true' if the new controller is a discovery controller
+ * @h:		Host to which the controller should be connected
+ * @e:		Discovery log page entry
+ * @defcfg:	Default configurationn to be used for the new controller
+ * @discover:	Set to 'true' if the new controller is a discovery controller
  *
  * Return: Pointer to the new controller
  */
