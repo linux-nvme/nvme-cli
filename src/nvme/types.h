@@ -3209,10 +3209,11 @@ struct nvme_persistent_event_log {
  * @etype:	Event Type
  * @etype_rev:	Event Type Revision
  * @ehl:	Event Header Length
- * @rsvd3:	Reserved
+ * @ehai:	Event Header Additional Info
  * @cntlid:	Controller Identifier
  * @ets:	Event Timestamp
- * @rsvd14:	Reserved
+ * @pelpid:	Port Identifier
+ * @rsvd16:	Reserved
  * @vsil:	Vendor Specific Information Length
  * @el:		Event Length
  */
@@ -3220,10 +3221,11 @@ struct nvme_persistent_event_entry {
 	__u8	etype;
 	__u8	etype_rev;
 	__u8	ehl;
-	__u8	rsvd3;
+	__u8	ehai;
 	__le16	cntlid;
 	__le64	ets;
-	__u8	rsvd14[6];
+	__le16	pelpid;
+	__u8	rsvd16[4];
 	__le16	vsil;
 	__le16	el;
 } __attribute__((packed));
