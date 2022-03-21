@@ -6056,6 +6056,8 @@ enum nvme_admin_opcode {
  * @NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID:	Endurance Group List
  * @NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST:	I/O Command Set specific Allocated Namespace
  * 						ID list
+ * @NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE:	I/O Command Set specific ID Namespace
+ * 						Data Structure for Allocated Namespace ID
  * @NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE:	Base Specification 2.0a section 5.17.2.21
  */
 enum nvme_identify_cns {
@@ -6081,6 +6083,7 @@ enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_DOMAIN_LIST				= 0x18,
 	NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID			= 0x19,
 	NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST			= 0x1A,
+	NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE		= 0x1B,
 	NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE			= 0x1C,
 };
 
