@@ -1023,11 +1023,12 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			     const char *host_iface, const char *trsvcid,
 			     nvme_ctrl_t p)
 {
-	nvme_root_t r = s->h ? s->h->r : NULL;
+	nvme_root_t r;
 	struct nvme_ctrl *c;
 
 	if (!s || !transport)
 		return NULL;
+	r = s->h ? s->h->r : NULL;
 	c = p ? nvme_subsystem_next_ctrl(s, p) : nvme_subsystem_first_ctrl(s);
 	for (; c != NULL; c = nvme_subsystem_next_ctrl(s, c)) {
 		if (strcmp(c->transport, transport))
@@ -1887,9 +1888,9 @@ struct nvme_ns *nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
 	if (ret < 0)
 		return NULL;
 	n = __nvme_scan_namespace(s->sysfs_dir, name);
+	free(name);
 	if (!n) {
 		nvme_msg(r, LOG_DEBUG, "failed to scan namespace %d\n", nsid);
-		free(name);
 		return NULL;
 	}
 
