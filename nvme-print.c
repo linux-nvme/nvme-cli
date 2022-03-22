@@ -2318,8 +2318,9 @@ static void json_print_nvme_subsystem_list(nvme_root_t r, unsigned int nsid)
 		host_attrs = json_create_object();
 		json_object_add_value_string(host_attrs, "HostNQN",
 					     nvme_host_get_hostnqn(h));
-		json_object_add_value_string(host_attrs, "HostID",
-					     nvme_host_get_hostid(h));
+		if (nvme_host_get_hostid(h))
+			json_object_add_value_string(host_attrs, "HostID",
+						     nvme_host_get_hostid(h));
 		subsystems = json_create_array();
 		nvme_for_each_subsystem(h, s) {
 			nvme_ctrl_t c;
@@ -2337,12 +2338,15 @@ static void json_print_nvme_subsystem_list(nvme_root_t r, unsigned int nsid)
 				path_attrs = json_create_object();
 				json_object_add_value_string(path_attrs, "Name",
 							     nvme_ctrl_get_name(c));
-				json_object_add_value_string(path_attrs, "Transport",
-							     nvme_ctrl_get_transport(c));
-				json_object_add_value_string(path_attrs, "Address",
-							     nvme_ctrl_get_address(c));
-				json_object_add_value_string(path_attrs, "State",
-							     nvme_ctrl_get_state(c));
+				if (nvme_ctrl_get_transport(c))
+					json_object_add_value_string(path_attrs, "Transport",
+								     nvme_ctrl_get_transport(c));
+				if (nvme_ctrl_get_address(c))
+					json_object_add_value_string(path_attrs, "Address",
+								     nvme_ctrl_get_address(c));
+				if (nvme_ctrl_get_state(c))
+					json_object_add_value_string(path_attrs, "State",
+								     nvme_ctrl_get_state(c));
 				if (nsid != NVME_NSID_ALL) {
 					const char *ana_state =
 						nvme_ctrl_get_ana_state(c, nsid);
@@ -7138,7 +7142,8 @@ static void json_detail_list(nvme_root_t r)
 		struct json_object *hss = json_create_object();
 
 		json_object_add_value_string(hss, "HostNQN", nvme_host_get_hostnqn(h));
-		json_object_add_value_string(hss, "HostID", nvme_host_get_hostid(h));
+		if (nvme_host_get_hostid(h))
+			json_object_add_value_string(hss, "HostID", nvme_host_get_hostid(h));
 
 		nvme_for_each_subsystem(h , s) {
 			struct json_object *jss = json_create_object();
@@ -7153,12 +7158,17 @@ static void json_detail_list(nvme_root_t r)
 				struct json_object *jnss = json_create_array();
 				struct json_object *jpaths = json_create_array();
 
-				json_object_add_value_string(jctrl, "Controller", nvme_ctrl_get_name(c));
+				if (nvme_ctrl_get_name(c))
+					json_object_add_value_string(jctrl, "Controller", nvme_ctrl_get_name(c));
 				json_object_add_value_string(jctrl, "SerialNumber", nvme_ctrl_get_serial(c));
 				json_object_add_value_string(jctrl, "ModelNumber", nvme_ctrl_get_model(c));
 				json_object_add_value_string(jctrl, "Firmware", nvme_ctrl_get_firmware(c));
-				json_object_add_value_string(jctrl, "Transport", nvme_ctrl_get_transport(c));
-				json_object_add_value_string(jctrl, "Address", nvme_ctrl_get_address(c));
+				if (nvme_ctrl_get_transport(c))
+					json_object_add_value_string(jctrl, "Transport", nvme_ctrl_get_transport(c));
+				if (nvme_ctrl_get_address(c))
+					json_object_add_value_string(jctrl, "Address", nvme_ctrl_get_address(c));
+				if (nvme_ctrl_get_state(c))
+					json_object_add_value_string(jctrl, "State", nvme_ctrl_get_state(c));
 
 				nvme_ctrl_for_each_ns(c, n) {
 					struct json_object *jns = json_create_object();
