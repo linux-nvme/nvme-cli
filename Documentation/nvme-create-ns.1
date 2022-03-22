@@ -40,6 +40,7 @@ nvme-create-ns \- Send NVMe Namespace management command to create namespace, re
                         [\-\-anagrp\-id=<anagrpid> | \-a <anagrpid>]
                         [\-\-nvmset\-id=<nvmsetid> | \-i <nvmsetid>]
                         [\-\-csi=<command_set_identifier> | \-y <command_set_identifier>]
+                        [\-\-lbstm=<lbstm> | \-l <lbstm>]
                         [\-\-block\-size=<block\-size> | \-b <block\-size>]
                         [\-\-timeout=<timeout> | \-t <timeout>]
 DESCRIPTION
@@ -94,6 +95,11 @@ This field specifies the identifier of the NVM Set\&.
 \-y <command_set_identifier>, \-\-csi=<command_set_identifier>
 .RS 4
 This field specifies the identifier of command set\&. if not issued, NVM Command Set will be selected\&.
+.RE
+.PP
+\-l <lbstm>, \-\-lbstm=<lbstm>
+.RS 4
+Logical Block Storage Tag Mask for end-to-end protection\&.
 .RE
 .PP
 \-b, \-\-block\-size
