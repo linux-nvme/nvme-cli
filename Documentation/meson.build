@@ -27,6 +27,7 @@ adoc_sources = [
   'nvme-endurance-log',
   'nvme-error-log',
   'nvme-fid-support-effects-log',
+  'nvme-mi-cmd-support-effects-log',
   'nvme-flush',
   'nvme-format',
   'nvme-fw-commit',
