@@ -1737,6 +1737,22 @@ static inline int nvme_get_log_fid_supported_effects(int fd, bool rae,
 }
 
 /**
+ * nvme_get_log_mi_cmd_supported_effects() - displays the MI Commands Supported byt the controller
+ * @fd:     File descriptor of nvme device
+ * @rae:    Retain asynchronous events
+ * @log:    MI Command Supported and Effects data structure
+ *
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field) or -1 with errno set otherwise
+ */
+static inline int nvme_get_log_mi_cmd_supported_effects(int fd, bool rae,
+			struct nvme_mi_cmd_supported_effects_log *log)
+{
+	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS,
+				 NVME_NSID_NONE, sizeof(*log), log);
+}
+
+/**
  * nvme_get_log_boot_partition() -
  * @fd:		File descriptor of nvme device
  * @rae:	Retain asynchronous events
