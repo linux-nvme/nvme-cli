@@ -1232,10 +1232,14 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			pevent_entry_head->etype_rev);
 		json_object_add_value_uint(valid_attrs, "event_header_len",
 			pevent_entry_head->ehl);
+		json_object_add_value_uint(valid_attrs, "event_header_additional_info",
+			pevent_entry_head->ehai);
 		json_object_add_value_uint(valid_attrs, "ctrl_id",
 			le16_to_cpu(pevent_entry_head->cntlid));
 		json_object_add_value_uint64(valid_attrs, "event_time_stamp",
 			le64_to_cpu(pevent_entry_head->ets));
+		json_object_add_value_uint(valid_attrs, "port_id",
+			le16_to_cpu(pevent_entry_head->pelpid));
 		json_object_add_value_uint(valid_attrs, "vu_info_len",
 			le16_to_cpu(pevent_entry_head->vsil));
 		json_object_add_value_uint(valid_attrs, "event_len",
@@ -1477,6 +1481,19 @@ static void nvme_show_persistent_event_log_rci(__le32 pel_header_rci)
 	printf("\tReporting Context Port Identifier (RCPID): %#x\n\n", rcpid);
 }
 
+static void nvme_show_persistent_event_entry_ehai(__u8 ehai)
+{
+	__u8 rsvd1 = (ehai & 0xfc) >> 2;
+	__u8 pit = ehai & 0x03;
+
+	printf("  [7:2] : %#x\tReserved\n", rsvd1);
+	printf("\tPort Identifier Type (PIT): %u(%s)\n", pit,
+		(pit == 0x00) ? "PIT not reported and PELPID does not apply" :
+		(pit == 0x01) ? "NVM subsystem port" :
+		(pit == 0x10) ? "NVMe-MI port" :
+		(pit == 0x11) ? "Event not associated with any port and PELPID does not apply" : "Reserved");
+}
+
 void nvme_show_persistent_event_log(void *pevent_log_info,
 	__u8 action, __u32 size, const char *devname,
 	enum nvme_print_flags flags)
@@ -1569,10 +1586,15 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 		printf("Event Type: %s\n", nvme_pel_event_to_string(pevent_entry_head->etype));
 		printf("Event Type Revision: %u\n", pevent_entry_head->etype_rev);
 		printf("Event Header Length: %u\n", pevent_entry_head->ehl);
+		printf("Event Header Additional Info: %u\n", pevent_entry_head->ehai);
+		if (human)
+			nvme_show_persistent_event_entry_ehai(pevent_entry_head->ehai);
 		printf("Controller Identifier: %u\n",
 			le16_to_cpu(pevent_entry_head->cntlid));
 		printf("Event Timestamp: %"PRIu64"\n",
 			le64_to_cpu(pevent_entry_head->ets));
+		printf("Port Identifier: %u\n",
+			le16_to_cpu(pevent_entry_head->pelpid));
 		printf("Vendor Specific Information Length: %u\n",
 			le16_to_cpu(pevent_entry_head->vsil));
 		printf("Event Length: %u\n", le16_to_cpu(pevent_entry_head->el));
