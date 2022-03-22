@@ -7237,7 +7237,6 @@ static void json_detail_list(nvme_root_t r)
 {
 	struct json_object *jroot = json_create_object();
 	struct json_object *jdev = json_create_array();
-	struct json_object *jsslist = json_create_array();
 
 	nvme_host_t h;
 	nvme_subsystem_t s;
@@ -7247,6 +7246,7 @@ static void json_detail_list(nvme_root_t r)
 
 	nvme_for_each_host(r, h) {
 		struct json_object *hss = json_create_object();
+		struct json_object *jsslist = json_create_array();
 
 		json_object_add_value_string(hss, "HostNQN", nvme_host_get_hostnqn(h));
 		json_object_add_value_string(hss, "HostID", nvme_host_get_hostid(h));
