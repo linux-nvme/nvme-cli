@@ -4014,6 +4014,17 @@ static void nvme_show_id_ns_fpi(__u8 fpi)
 	printf("\n");
 }
 
+static void nvme_show_id_ns_nsattr(__u8 nsattr)
+{
+	__u8 rsvd = (nsattr & 0xFE) >> 1;
+	__u8 write_protected = nsattr & 0x1;
+	if (rsvd)
+		printf("  [7:1] : %#x\tReserved\n", rsvd);
+	printf("  [0:0] : %#x\tNamespace %sWrite Protected\n",
+			write_protected, write_protected ? "" : "Not ");
+	printf("\n");
+}
+
 static void nvme_show_id_ns_dlfeat(__u8 dlfeat)
 {
 	__u8 rsvd = (dlfeat & 0xE0) >> 5;
@@ -4223,6 +4234,8 @@ void nvme_show_cmd_set_independent_id_ns(
 		nvme_show_id_ns_fpi(ns->fpi);
 	printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
 	printf("nsattr	: %u\n", ns->nsattr);
+	if (human)
+		nvme_show_id_ns_nsattr(ns->nsattr);
 	printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
 	printf("endgid  : %d\n", le16_to_cpu(ns->endgid));
 
