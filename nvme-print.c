@@ -2023,6 +2023,82 @@ void nvme_show_fid_support_effects_log(struct nvme_fid_supported_effects_log *fi
 	}
 }
 
+static void json_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effects_log *mi_cmd_log)
+{
+	struct json_object *root;
+	struct json_object *mi_cmds;
+	struct json_object *mi_cmds_list;
+	unsigned int mi_cmd;
+	char key[128];
+	__u32 mi_cmd_support;
+
+	root = json_create_object();
+	mi_cmds_list = json_create_array();
+	for (mi_cmd = 0; mi_cmd < 256; mi_cmd++) {
+		mi_cmd_support = le32_to_cpu(mi_cmd_log->mi_cmd_support[mi_cmd]);
+		if (mi_cmd_support & NVME_MI_CMD_SUPPORTED_EFFECTS_CSUPP) {
+			mi_cmds = json_create_object();
+			sprintf(key, "mi_cmd_%u", mi_cmd);
+			json_object_add_value_uint(mi_cmds, key, mi_cmd_support);
+			json_array_add_value_object(mi_cmds_list, mi_cmds);
+		}
+	}
+
+	json_object_add_value_object(root, "mi_command_support", mi_cmds_list);
+	json_print_object(root, NULL);
+	printf("\n");
+
+	json_free_object(root);
+}
+
+static void nvme_show_mi_cmd_support_effects_log_human(__u32 mi_cmd_support)
+{
+	const char *set = "+";
+	const char *clr = "-";
+	__u16 csp;
+
+	printf("  CSUPP+");
+	printf("  UDCC%s", (mi_cmd_support & NVME_MI_CMD_SUPPORTED_EFFECTS_UDCC) ? set : clr);
+	printf("  NCC%s", (mi_cmd_support & NVME_MI_CMD_SUPPORTED_EFFECTS_NCC) ? set : clr);
+	printf("  NIC%s", (mi_cmd_support & NVME_MI_CMD_SUPPORTED_EFFECTS_NIC) ? set : clr);
+	printf("  CCC%s", (mi_cmd_support & NVME_MI_CMD_SUPPORTED_EFFECTS_CCC) ? set : clr);
+
+	csp = (mi_cmd_support >> NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_SHIFT) & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_MASK;
+
+	printf("  NAMESPACE SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NS) ? set : clr);
+	printf("  CONTROLLER SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_CTRL) ? set : clr);
+	printf("  NVM SET SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NVM_SET) ? set : clr);
+	printf("  ENDURANCE GROUP SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_ENDGRP) ? set : clr);
+	printf("  DOMAIN SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_DOMAIN) ? set : clr);
+	printf("  NVM Subsystem SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NSS) ? set : clr);
+}
+
+void nvme_show_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effects_log *mi_cmd_log,
+	const char *devname, enum nvme_print_flags flags)
+{
+	__u32 mi_cmd_effect;
+	int i, human = flags & VERBOSE;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)mi_cmd_log, sizeof(*mi_cmd_log));
+	if (flags & JSON)
+		return json_mi_cmd_support_effects_log(mi_cmd_log);
+
+	printf("MI Commands Support Effects Log for device: %s\n", devname);
+	printf("Admin Command Set\n");
+	for (i = 0; i < NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX; i++) {
+		mi_cmd_effect = le32_to_cpu(mi_cmd_log->mi_cmd_support[i]);
+		if (mi_cmd_effect & NVME_MI_CMD_SUPPORTED_EFFECTS_CSUPP) {
+			printf("MI CMD %02x -> Support Effects Log: %08x", i,
+					mi_cmd_effect);
+			if (human)
+				nvme_show_mi_cmd_support_effects_log_human(mi_cmd_effect);
+			else
+				printf("\n");
+		}
+	}
+}
+
 static void json_boot_part_log(void *bp_log)
 {
 	struct nvme_boot_partition *hdr;
