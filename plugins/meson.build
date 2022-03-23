@@ -19,6 +19,7 @@ if json_c_dep.found()
     'plugins/seagate/seagate-nvme.c',
     'plugins/shannon/shannon-nvme.c',
     'plugins/solidigm/solidigm-nvme.c',
+    'plugins/spdk/spdk-nvme.c',
     'plugins/toshiba/toshiba-nvme.c',
     'plugins/transcend/transcend-nvme.c',
     'plugins/virtium/virtium-nvme.c',
