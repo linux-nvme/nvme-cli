@@ -1367,7 +1367,7 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 	free(subsysnqn);
 
 	ret = 0;
-	if (s && !s->name)
+	if (s && !s->name && subsysname)
 		ret = nvme_init_subsystem(s, subsysname);
 	free(subsysname);
 	if (!s || ret < 0) {
