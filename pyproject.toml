@@ -1,5 +1,5 @@
 [build-system]
-requires = ["mesonpep517", "wheel", "meson", "ninja"] # PEP 508 specifications.
+requires = ["mesonpep517", "wheel", "meson==0.61.2", "ninja"] # PEP 508 specifications.
 build-backend = "mesonpep517.buildapi"
 
 [tool.mesonpep517.metadata]
