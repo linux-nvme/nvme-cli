@@ -83,6 +83,10 @@
  * 				device self test log
  * @NVME_LOG_FID_SUPPORTED_EFFECTS_MAX:	The largest possible FID index in the 
  *				feature	identifiers effects log.
+ * @NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX:	The largest possible MI Command index
+ *				in the MI Command effects log.
+ * @NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_RESERVED:	The reserved space in the MI Command
+ *				effects log.
  * @NVME_LOG_TELEM_BLOCK_SIZE:	Specification defined size of Telemetry Data Blocks
  * @NVME_DSM_MAX_RANGES:	The largest possible range index in a data-set
  * 				management command
@@ -115,6 +119,8 @@ enum nvme_constants {
 	NVME_LOG_ST_MAX_RESULTS			= 20,
 	NVME_LOG_TELEM_BLOCK_SIZE		= 512,
 	NVME_LOG_FID_SUPPORTED_EFFECTS_MAX	= 256,
+	NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX	= 256,
+	NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_RESERVED = 768,
 	NVME_DSM_MAX_RANGES			= 256,
 	NVME_NQN_LENGTH				= 256,
 	NVMF_TRADDR_SIZE			= 256,
@@ -2944,6 +2950,9 @@ enum nvme_cmd_get_log_telemetry_host_lsp {
  * @dalb4:     Telemetry Controller-Initiated Data Area 4 Last Block is
  * 	       the value of the last block in this area.
  * @rsvd20:    Reserved
+ * @hostdgn:   Telemetry Host-Initiated Data Generation Number is a
+ * 	       value that is incremented each time the host initiates a
+ * 	       capture of its internal controller state in the controller .
  * @ctrlavail: Telemetry Controller-Initiated Data Available, if cleared,
  * 	       then the controller telemetry log does not contain saved
  * 	       internal controller state. If this field is set to 1h, the
@@ -2971,7 +2980,8 @@ struct nvme_telemetry_log {
 	__le16	dalb3;
 	__u8    rsvd14[2];
 	__le32  dalb4;
-	__u8    rsvd20[362];
+	__u8    rsvd20[361];
+	__u8	hostdgn;
 	__u8	ctrlavail;
 	__u8	ctrldgn;
 	__u8	rsnident[128];
@@ -3205,10 +3215,11 @@ struct nvme_persistent_event_log {
  * @etype:	Event Type
  * @etype_rev:	Event Type Revision
  * @ehl:	Event Header Length
- * @rsvd3:	Reserved
+ * @ehai:	Event Header Additional Info
  * @cntlid:	Controller Identifier
  * @ets:	Event Timestamp
- * @rsvd14:	Reserved
+ * @pelpid:	Port Identifier
+ * @rsvd16:	Reserved
  * @vsil:	Vendor Specific Information Length
  * @el:		Event Length
  */
@@ -3216,10 +3227,11 @@ struct nvme_persistent_event_entry {
 	__u8	etype;
 	__u8	etype_rev;
 	__u8	ehl;
-	__u8	rsvd3;
+	__u8	ehai;
 	__le16	cntlid;
 	__le64	ets;
-	__u8	rsvd14[6];
+	__le16	pelpid;
+	__u8	rsvd16[4];
 	__le16	vsil;
 	__le16	el;
 } __attribute__((packed));
@@ -3536,6 +3548,51 @@ enum nvme_fid_supported_effects {
  */
 struct nvme_fid_supported_effects_log {
 	__le32	fid_support[NVME_LOG_FID_SUPPORTED_EFFECTS_MAX];
+};
+
+/**
+ * enum nvme_mi_cmd_supported_effects - bit field definitions
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_CSUPP:	Command Supported
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_UDCC:		User Data Conttent Change
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_NCC:		Namespace Capability Change
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_NIC:		Namespace Inventory Change
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_CCC:		Controller Capability Change
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_SHIFT:	20 bit shift
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_MASK:	12 bit mask - 0xfff
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NS:	Namespace Scope
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_CTRL:	Controller Scope
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NVM_SET: NVM Set Scope
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_ENDGRP:	Endurance Group Scope
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_DOMAIN:	Domain Scope
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NSS:	NVM Subsystem Scope
+ *
+ * MI Command Supported and Effects Data Structure definitions
+ */
+enum nvme_mi_cmd_supported_effects {
+	NVME_MI_CMD_SUPPORTED_EFFECTS_CSUPP         = 1 << 0,
+	NVME_MI_CMD_SUPPORTED_EFFECTS_UDCC          = 1 << 1,
+	NVME_MI_CMD_SUPPORTED_EFFECTS_NCC           = 1 << 2,
+	NVME_MI_CMD_SUPPORTED_EFFECTS_NIC           = 1 << 3,
+	NVME_MI_CMD_SUPPORTED_EFFECTS_CCC           = 1 << 4,
+	NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_SHIFT   = 20,
+	NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_MASK    = 0xfff,
+	NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NS      = 1 << 0,
+	NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_CTRL    = 1 << 1,
+	NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NVM_SET = 1 << 2,
+	NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_ENDGRP  = 1 << 3,
+	NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_DOMAIN  = 1 << 4,
+	NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NSS     = 1 << 5,
+};
+
+/**
+ * struct nvme_mi_cmd_supported_effects_log -
+ * @mi_cmd_support: NVMe-MI Commands Supported
+ *
+ * NVMe-MI Commands Supported and Effects (Log Identifier 13h)
+ */
+struct nvme_mi_cmd_supported_effects_log {
+	__le32	mi_cmd_support[NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX];
+	__le32	reserved1[NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_RESERVED];
 };
 
 /**
@@ -6050,6 +6107,8 @@ enum nvme_admin_opcode {
  * @NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID:	Endurance Group List
  * @NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST:	I/O Command Set specific Allocated Namespace
  * 						ID list
+ * @NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE:	I/O Command Set specific ID Namespace
+ * 						Data Structure for Allocated Namespace ID
  * @NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE:	Base Specification 2.0a section 5.17.2.21
  */
 enum nvme_identify_cns {
@@ -6075,6 +6134,7 @@ enum nvme_identify_cns {
 	NVME_IDENTIFY_CNS_DOMAIN_LIST				= 0x18,
 	NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID			= 0x19,
 	NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST			= 0x1A,
+	NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE		= 0x1B,
 	NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE			= 0x1C,
 };
 
@@ -6099,6 +6159,7 @@ enum nvme_identify_cns {
  * @NVME_LOG_LID_MEDIA_UNIT_STATUS:		Media Unit Status
  * @NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST:	Supported Capacity Configuration Lis
  * @NVME_LOG_LID_FID_SUPPORTED_EFFECTS:		Feature Identifiers Supported and Effects
+ * @NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS:	NVMe-MI Commands Supported and Effects
  * @NVME_LOG_LID_BOOT_PARTITION:		Boot Partition
  * @NVME_LOG_LID_DISCOVER:			Discovery
  * @NVME_LOG_LID_RESERVATION:			Reservation Notification
@@ -6125,6 +6186,7 @@ enum nvme_cmd_get_log_lid {
 	NVME_LOG_LID_MEDIA_UNIT_STATUS				= 0x10,
 	NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST			= 0x11,
 	NVME_LOG_LID_FID_SUPPORTED_EFFECTS			= 0x12,
+	NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS			= 0x13,
 	NVME_LOG_LID_BOOT_PARTITION				= 0x15,
 	NVME_LOG_LID_DISCOVER					= 0x70,
 	NVME_LOG_LID_RESERVATION				= 0x80,
