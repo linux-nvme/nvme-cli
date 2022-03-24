@@ -93,6 +93,14 @@ libnvme_mi_dep = declare_dependency(
     link_with: libnvme_mi,
 )
 
+pkg.generate(libnvme_mi,
+    filebase: 'libnvme-mi',
+    name: 'libnvme-mi',
+    version: meson.project_version(),
+    description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express) over Management Interface',
+    url: 'http://github.com/linux-nvme/libnvme/',
+)
+
 mode = ['rw-r--r--', 0, 0]
 install_headers('libnvme.h', install_mode: mode)
 install_headers([
