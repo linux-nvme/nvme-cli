@@ -46,6 +46,17 @@
 
 const char *nvmf_dev = "/dev/nvme-fabrics";
 
+/**
+ * strchomp() - Strip trailing white space
+ * @s: String to strip
+ * @l: Maximum length of string
+ */
+static void strchomp(char *s, int l)
+{
+	while (l && (s[l] == '\0' || s[l] == ' '))
+		s[l--] = '\0';
+}
+
 const char *arg_str(const char * const *strings,
 		size_t array_size, size_t idx)
 {
@@ -567,8 +578,8 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_IP4:
 		case NVMF_ADDR_FAMILY_IP6:
-			nvme_chomp(e->traddr, NVMF_TRADDR_SIZE);
-			nvme_chomp(e->trsvcid, NVMF_TRSVCID_SIZE);
+			strchomp(e->traddr, NVMF_TRADDR_SIZE - 1);
+			strchomp(e->trsvcid, NVMF_TRSVCID_SIZE - 1);
 			traddr = e->traddr;
 			trsvcid = e->trsvcid;
 			break;
@@ -583,7 +594,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
         case NVMF_TRTYPE_FC:
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_FC:
-			nvme_chomp(e->traddr, NVMF_TRADDR_SIZE);
+			strchomp(e->traddr, NVMF_TRADDR_SIZE - 1);
 			traddr = e->traddr;
 			break;
 		default:
@@ -595,7 +606,7 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 		}
 		break;
 	case NVMF_TRTYPE_LOOP:
-		nvme_chomp(e->traddr, NVMF_TRADDR_SIZE);
+		strchomp(e->traddr, NVMF_TRADDR_SIZE - 1);
 		traddr = strlen(e->traddr) ? e->traddr : NULL;
 		break;
 	default:
