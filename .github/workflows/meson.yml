@@ -47,3 +47,23 @@ jobs:
         with:
           name: Linux_Meson_log
           path: build/meson-logs/meson-log.txt
+
+  code-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install libraries
+        run: sudo apt-get install libjson-c-dev lcov
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+      - uses: BSFishy/meson-build@v1.0.3
+        with:
+          setup-options: -Db_coverage=true --werror
+          options: --verbose
+          # Can't use 'coverage' here, see https://github.com/BSFishy/meson-build/issues/4
+          action: test
+      - name: Generate Coverage Report
+        # Can't use meson here, see https://github.com/mesonbuild/meson/issues/7895
+        run: ninja -C build coverage --verbose
+      - uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: false
