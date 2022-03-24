@@ -175,7 +175,6 @@ LIBNVME_1_0 {
 		nvme_init_ctrl_list;
 		nvme_init_dsm_range;
 		nvme_init_logging;
-		nvme_init_id_ns;
 		nvme_io;
 		nvme_io_passthru64;
 		nvme_io_passthru;
