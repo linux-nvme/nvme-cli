@@ -536,15 +536,15 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	cfg = merge_config(c, cfg);
 	nvme_ctrl_set_discovered(c, true);
 	if (traddr_is_hostname(h->r, c)) {
-		const char *traddr = c->traddr;
+		char *traddr = c->traddr;
 
 		c->traddr = hostname2traddr(h->r, traddr);
 		if (!c->traddr) {
-			c->traddr = (char *)traddr;
+			c->traddr = traddr;
 			errno = ENVME_CONNECT_TRADDR;
 			return -1;
 		}
-		free(c->traddr);
+		free(traddr);
 	}
 
 	ret = build_options(h, c, &argstr);
