@@ -1,5 +1,13 @@
 # libnvme
 
+![MesonBuild](https://github.com/linux-nvme/libnvme/actions/workflows/meson.yml/badge.svg)
+![PyBuild](https://github.com/linux-nvme/libnvme/actions/workflows/python-publish.yml/badge.svg)
+[![PyPI](https://img.shields.io/pypi/v/libnvme)](https://pypi.org/project/libnvme/)
+[![PyPI - Wheel](https://img.shields.io/pypi/wheel/libnvme)](https://pypi.org/project/libnvme/)
+![GitHub](https://img.shields.io/github/license/linux-nvme/libnvme)
+[![codecov](https://codecov.io/gh/linux-nvme/libnvme/branch/master/graph/badge.svg)](https://codecov.io/gh/linux-nvme/libnvme)
+[![Read the Docs](https://img.shields.io/readthedocs/libnvme)](https://libnvme.readthedocs.io/en/latest/)
+
 This is the libnvme development C library. libnvme provides type
 definitions for NVMe specification structures, enumerations, and bit
 fields, helper functions to construct, dispatch, and decode commands
