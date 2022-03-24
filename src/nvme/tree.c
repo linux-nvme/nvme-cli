@@ -1144,6 +1144,7 @@ static int nvme_configure_ctrl(nvme_root_t r, nvme_ctrl_t c, const char *path,
 	c->cntrltype = nvme_get_ctrl_attr(c, "cntrltype");
 	c->dctype = nvme_get_ctrl_attr(c, "dctype");
 
+	errno = 0; /* cleanup after nvme_get_ctrl_attr() */
 	return 0;
 }
 
