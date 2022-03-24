@@ -334,6 +334,68 @@ static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
 	return 0;
 }
 
+/*
+ * Compare two C strings and handle NULL pointers gracefully.
+ * If either of the two strings is NULL, return 0
+ * to let caller ignore the compare.
+ */
+static inline int strcmp0(const char *s1, const char *s2)
+{
+	if (!s1 || !s2)
+		return 0;
+	return strcmp(s1, s2);
+}
+
+/*
+ * Compare two C strings and handle NULL pointers gracefully.
+ * If either of the two strings is NULL, return 0
+ * to let caller ignore the compare.
+ */
+static inline int strcasecmp0(const char *s1, const char *s2)
+{
+	if (!s1 || !s2)
+		return 0;
+	return strcasecmp(s1, s2);
+}
+
+static bool ctrl_config_match(nvme_ctrl_t c, char *transport,
+			      char *traddr, char *host_traddr,
+			      char *host_iface, char *trsvcid)
+{
+	if (!strcmp0(nvme_ctrl_get_transport(c), transport) &&
+	    !strcasecmp0(nvme_ctrl_get_traddr(c), traddr) &&
+	    !strcmp0(nvme_ctrl_get_trsvcid(c), trsvcid) &&
+	    !strcmp0(nvme_ctrl_get_host_traddr(c), host_traddr) &&
+	    !strcmp0(nvme_ctrl_get_host_iface(c), host_iface))
+		return true;
+
+	return false;
+}
+
+static nvme_ctrl_t lookup_discover_ctrl(nvme_root_t r, char *transport,
+					char *traddr, char *host_traddr,
+					char *host_iface, char *trsvcid)
+{
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c;
+
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			nvme_subsystem_for_each_ctrl(s, c) {
+				if (!nvme_ctrl_is_discovery_ctrl(c))
+					continue;
+				if (ctrl_config_match(c, transport, traddr,
+						      host_traddr, host_iface,
+						      trsvcid))
+					return c;
+			}
+		}
+	}
+
+	return NULL;
+}
+
 static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 				   const char *desc, bool connect,
 				   const struct nvme_fabrics_config *defcfg)
@@ -348,6 +410,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 	enum nvme_print_flags flags;
 	char *format = "normal";
 	struct nvme_fabrics_config cfg;
+	bool force = false;
 
 	OPT_ARGS(opts) = {
 		NVMF_OPTS(cfg),
@@ -356,6 +419,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		OPT_FLAG("persistent",   'p', &persistent,    "persistent discovery connection"),
 		OPT_FLAG("quiet",        'S', &quiet,         "suppress already connected errors"),
 		OPT_INCR("verbose",      'v', &verbose,       "Increase logging verbosity"),
+		OPT_FLAG("force",          0, &force,         "Force persistent discovery controller creation"),
 		OPT_END()
 	};
 
@@ -401,6 +465,17 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 
 		set_discovery_kato(&cfg);
 
+		if (!force) {
+			c = lookup_discover_ctrl(r, transport, traddr,
+						 cfg.host_traddr, cfg.host_iface,
+						 trsvcid);
+			if (c) {
+				__discover(c, &cfg, raw, connect,
+					   true, flags);
+				goto next;
+			}
+		}
+
 		c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
 				     cfg.host_traddr, cfg.host_iface, trsvcid);
 		if (!c)
@@ -440,6 +515,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	char *format = "normal";
 	struct nvme_fabrics_config cfg;
 	char *device = NULL;
+	bool force = false;
 
 	OPT_ARGS(opts) = {
 		OPT_STRING("device",   'd', "DEV", &device, "use existing discovery controller device"),
@@ -451,6 +527,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
 		OPT_INCR("verbose",      'v', &verbose,       "Increase logging verbosity"),
 		OPT_FLAG("dump-config",  'O', &dump_config,   "Dump configuration file to stdout"),
+		OPT_FLAG("force",          0, &force,         "Force persistent discovery controller creation"),
 		OPT_END()
 	};
 
@@ -505,25 +582,25 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		goto out_free;
 	}
 
-	if (device) {
+	if (device && !force) {
 		c = nvme_scan_ctrl(r, device);
 		if (c) {
 			/* Check if device matches command-line options */
-			if (!nvme_ctrl_is_discovery_ctrl(c) ||
-			    strcmp(nvme_ctrl_get_transport(c), transport) ||
-			    strcasecmp(nvme_ctrl_get_traddr(c), traddr) ||
-			    (cfg.host_traddr && nvme_ctrl_get_host_traddr(c) &&
-			     strcmp(nvme_ctrl_get_host_traddr(c),
-				    cfg.host_traddr)) ||
-			    (cfg.host_iface && nvme_ctrl_get_host_iface(c) &&
-			     strcmp(nvme_ctrl_get_host_iface(c),
-				    cfg.host_iface)) ||
-			    (trsvcid && nvme_ctrl_get_trsvcid(c) &&
-			     strcmp(nvme_ctrl_get_trsvcid(c), trsvcid))) {
+			if (!ctrl_config_match(c, transport, traddr,
+					       cfg.host_traddr, cfg.host_iface,
+					       trsvcid)) {
 				fprintf(stderr,
-					"ignoring ctrl device %s, "
-					"command-line options do not match\n",
+					"ctrl device %s found, ignoring "
+					"non matching command-line options\n",
 					device);
+			}
+
+			if (!nvme_ctrl_is_discovery_ctrl(c)) {
+				fprintf(stderr,
+					"ctrl device %s found, ignoring "
+					"non discovery controller\n",
+					device);
+
 				nvme_free_ctrl(c);
 				c = NULL;
 				persistent = false;
@@ -545,6 +622,13 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 				persistent ? ", ignoring --persistent" : "");
 			persistent = false;
 		}
+	}
+	if (!c && !force) {
+		c = lookup_discover_ctrl(r, transport, traddr,
+					 cfg.host_traddr, cfg.host_iface,
+					 trsvcid);
+		if (c)
+			persistent = true;
 	}
 	if (!c) {
 		/* No device or non-matching device, create a new controller */
