@@ -2304,6 +2304,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 	const char *anagrpid = "ANA Group Identifier (ANAGRPID)";
 	const char *nvmsetid = "NVM Set Identifier (NVMSETID)";
 	const char *csi = "command set identifier (CSI)";
+	const char *lbstm = "logical block storage tag mask (LBSTM)";
 	const char *timeout = "timeout value, in milliseconds";
 	const char *bs = "target block size, specify only if \'FLBAS\' "\
 		"value not entered";
@@ -2323,6 +2324,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		__u64	bs;
 		__u32	timeout;
 		__u8	csi;
+		__u64	lbstm;
 	};
 
 	struct config cfg = {
@@ -2336,6 +2338,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.bs		= 0x00,
 		.timeout	= 120000,
 		.csi		= 0,
+		.lbstm		= 0,
 	};
 
 	OPT_ARGS(opts) = {
@@ -2349,6 +2352,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		OPT_SUFFIX("block-size", 'b', &cfg.bs,       bs),
 		OPT_UINT("timeout",      't', &cfg.timeout,  timeout),
 		OPT_BYTE("csi",          'y', &cfg.csi,      csi),
+		OPT_SUFFIX("lbstm",      'l', &cfg.lbstm,    lbstm),
 		OPT_END()
 	};
 
@@ -2400,9 +2404,18 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		goto close_fd;
 	}
 
-	nvme_init_id_ns(&ns, cfg.nsze, cfg.ncap, cfg.flbas, cfg.dps, cfg.nmic,
-			 cfg.anagrpid, cfg.nvmsetid);
-	err = nvme_ns_mgmt_create(fd, &ns, &nsid, cfg.timeout, cfg.csi);
+	struct nvme_id_ns ns2 = {
+		.nsze = cpu_to_le64(cfg.nsze),
+		.ncap = cpu_to_le64(cfg.ncap),
+		.flbas = cfg.flbas,
+		.dps = cfg.dps,
+		.nmic = cfg.nmic,
+		.anagrpid = cpu_to_le32(cfg.anagrpid),
+		.nvmsetid = cpu_to_le16(cfg.nvmsetid),
+		.lbstm = cpu_to_le64(cfg.lbstm),
+	};
+
+	err = nvme_ns_mgmt_create(fd, &ns2, &nsid, cfg.timeout, cfg.csi);
 	if (!err)
 		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
 	else if (err > 0)

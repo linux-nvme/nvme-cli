@@ -757,6 +757,7 @@ nvme-create-ns(1) Manual Page
                         [--anagrp-id=&lt;anagrpid&gt; | -a &lt;anagrpid&gt;]
                         [--nvmset-id=&lt;nvmsetid&gt; | -i &lt;nvmsetid&gt;]
                         [--csi=&lt;command_set_identifier&gt; | -y &lt;command_set_identifier&gt;]
+                        [--lbstm=&lt;lbstm&gt; | -l &lt;lbstm&gt;]
                         [--block-size=&lt;block-size&gt; | -b &lt;block-size&gt;]
                         [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]
 DESCRIPTION</pre>
@@ -863,6 +864,17 @@ OPTIONS</code></pre>
 <p>
         This field specifies the identifier of command set.
         if not issued, NVM Command Set will be selected.
+</p>
+</dd>
+<dt class="hdlist1">
+-l &lt;lbstm&gt;
+</dt>
+<dt class="hdlist1">
+--lbstm=&lt;lbstm&gt;
+</dt>
+<dd>
+<p>
+        Logical Block Storage Tag Mask for end-to-end protection.
 </p>
 </dd>
 <dt class="hdlist1">
