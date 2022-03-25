@@ -401,19 +401,6 @@ void nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
 	}
 }
 
-void nvme_init_id_ns(struct nvme_id_ns *ns, __u64 nsze, __u64 ncap, __u8 flbas,
-		__u8 dps, __u8 nmic, __u32 anagrpid, __u16 nvmsetid)
-{
-	memset(ns, 0, sizeof(*ns));
-	ns->nsze = cpu_to_le64(nsze);
-	ns->ncap = cpu_to_le64(ncap);
-	ns->flbas = flbas;
-	ns->dps = dps;
-	ns->nmic = nmic;
-	ns->anagrpid = cpu_to_le32(anagrpid);
-	ns->nvmsetid = cpu_to_le16(nvmsetid);
-}
-
 void nvme_init_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
 			  __u16 *ctrlist)
 {

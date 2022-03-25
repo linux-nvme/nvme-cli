@@ -76,23 +76,6 @@ const char *nvme_status_to_string(int status, bool fabrics);
 const char *nvme_errno_to_string(int err);
 
 /**
- * nvme_init_id_ns() - Initialize an Identify Namepsace structure for creation.
- * @ns:	      Address of the Identify Namespace structure to initialize
- * @nsze:     Namespace size
- * @ncap:     namespace capacity
- * @flbas:    formatted logical block size settings
- * @dps:      Data protection settings
- * @nmic:     Namespace sharing capabilities
- * @anagrpid: ANA group identifier
- * @nvmsetid: NVM Set identifer
- *
- * This is intended to be used with a namespace management "create", see
- * nvme_ns_mgmt_create().
- */
-void nvme_init_id_ns(struct nvme_id_ns *ns, __u64 nsze, __u64 ncap, __u8 flbas,
-		     __u8 dps, __u8 nmic, __u32 anagrpid, __u16 nvmsetid);
-
-/**
  * nvme_init_ctrl_list() - Initialize an nvme_ctrl_list structure from an array.
  * @cntlist:   The controller list structure to initialize
  * @num_ctrls: The number of controllers in the array, &ctrlist.
