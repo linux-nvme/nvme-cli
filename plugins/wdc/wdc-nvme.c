@@ -132,7 +132,10 @@
 #define WDC_DRIVE_CAP_DUI_DATA				0x0000000200000000
 #define WDC_SN730B_CAP_VUC_LOG				0x0000000400000000
 #define WDC_DRIVE_CAP_DUI    				0x0000000800000000
-#define WDC_DRIVE_CAP_PURGE				0x0000001000000000
+#define WDC_DRIVE_CAP_PURGE  				0x0000001000000000
+#define WDC_DRIVE_CAP_OCP_C1_LOG_PAGE		0x0000002000000000
+#define WDC_DRIVE_CAP_OCP_C4_LOG_PAGE		0x0000004000000000
+#define WDC_DRIVE_CAP_OCP_C5_LOG_PAGE		0x0000008000000000
 #define WDC_DRIVE_CAP_SMART_LOG_MASK	(WDC_DRIVE_CAP_C0_LOG_PAGE | WDC_DRIVE_CAP_C1_LOG_PAGE | \
                                          WDC_DRIVE_CAP_CA_LOG_PAGE | WDC_DRIVE_CAP_D0_LOG_PAGE)
 #define WDC_DRIVE_CAP_CLEAR_PCIE_MASK       (WDC_DRIVE_CAP_CLEAR_PCIE | \
@@ -327,6 +330,7 @@
 #define WDC_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID   0xC2
 #define WDC_FW_ACT_HISTORY_C2_LOG_BUF_LEN       0x1000
 #define WDC_MAX_NUM_ACT_HIST_ENTRIES            20
+#define WDC_C2_GUID_LENGTH                      16
 
 /* C3 Latency Monitor Log Page */
 #define WDC_LATENCY_MON_LOG_BUF_LEN             0x200
@@ -521,9 +525,9 @@ typedef enum
     SCAO_LPG                = 496,	/* Log page GUID */
 } SMART_CLOUD_ATTRIBUTE_OFFSETS;
 
-#define WDC_C2_GUID_LENGTH              16
+#define WDC_C0_GUID_LENGTH              16
 
-static __u8 scao_guid[WDC_C2_GUID_LENGTH]    = { 0xC5, 0xAF, 0x10, 0x28, 0xEA, 0xBF, 0xF2, 0xA4,
+static __u8 scao_guid[WDC_C0_GUID_LENGTH]    = { 0xC5, 0xAF, 0x10, 0x28, 0xEA, 0xBF, 0xF2, 0xA4,
 		0x9C, 0x4F, 0x6F, 0x7C, 0xC9, 0x14, 0xD5, 0xAF };
 
 typedef enum
@@ -907,6 +911,32 @@ struct __attribute__((__packed__)) wdc_ssd_d0_smart_log {
     __u8    rsvd[408];                             /* 0x68 - 408 Reserved bytes                          */
 };
 
+#define WDC_OCP_C1_GUID_LENGTH              16
+#define WDC_ERROR_REC_LOG_BUF_LEN          512
+#define WDC_ERROR_REC_LOG_ID              0xC1
+#define WDC_ERROR_REC_LOG_VERSION         0002
+
+struct __attribute__((__packed__)) wdc_ocp_c1_error_recovery_log {
+    __le16  panic_reset_wait_time;                  /* 000 - Panic Reset Wait Time              */
+    __u8    panic_reset_action;                     /* 002 - Panic Reset Action                 */
+    __u8    dev_recovery_action1;                   /* 003 - Device Recovery Action 1           */
+    __le64  panic_id;                               /* 004 - Panic ID                           */
+    __le32  dev_capabilities;                       /* 012 - Device Capabilities                */
+    __u8    vs_recovery_opc;                        /* 016 - Vendor Specific Recovery Opcode    */
+    __u8    rsvd1[3];                               /* 017 - 3 Reserved Bytes                   */
+    __le32  vs_cmd_cdw12;                           /* 020 - Vendor Specific Command CDW12      */
+    __le32  vs_cmd_cdw13;                           /* 024 - Vendor Specific Command CDW13      */
+    __u8    vs_cmd_to;                              /* 028 - Vendor Specific Command Timeout    */
+    __u8    dev_recovery_action2;                   /* 029 - Device Recovery Action 2           */
+    __u8    dev_recovery_action2_to;                /* 030 - Device Recovery Action 2 Timeout   */
+    __u8    rsvd2[463];                             /* 031 - 463 Reserved Bytes                 */
+    __le16  log_page_version;                       /* 494 - Log Page Version                   */
+    __u8    log_page_guid[WDC_OCP_C1_GUID_LENGTH];  /* 496 - Log Page GUID                      */
+};
+
+static __u8 wdc_ocp_c1_guid[WDC_OCP_C1_GUID_LENGTH]    = { 0x44, 0xD9, 0x31, 0x21, 0xFE, 0x30, 0x34, 0xAE,
+		0xAB, 0x4D, 0xFD, 0x3D, 0xBA, 0x83, 0x19, 0x5A };
+
 /* NAND Stats */
 struct __attribute__((__packed__)) wdc_nand_stats {
 	__u8		nand_write_tlc[16];
@@ -1017,6 +1047,49 @@ struct __attribute__((__packed__)) wdc_fw_act_history_log_format_c2 {
 	__le16 		log_page_version;
 	__u8 		log_page_guid[WDC_C2_GUID_LENGTH];
 };
+
+#define WDC_OCP_C4_GUID_LENGTH              16
+#define WDC_DEV_CAP_LOG_BUF_LEN           4096
+#define WDC_DEV_CAP_LOG_ID                0xC4
+#define WDC_DEV_CAP_LOG_VERSION           0001
+#define WDC_OCP_C4_NUM_PS_DESCR            127
+
+struct __attribute__((__packed__)) wdc_ocp_C4_dev_cap_log {
+    __le16  num_pcie_ports;                        /* 0000 - Number of PCI Express Ports           */
+    __le16  oob_mgmt_support;                      /* 0002 - OOB Management Interfaces Supported   */
+    __le16  wrt_zeros_support;                     /* 0004 - Write Zeros Commmand Support          */
+    __le16  sanitize_support;                      /* 0006 - Sanitize Command Support              */
+    __le16  dsm_support;                           /* 0008 - Dataset Management Command Support    */
+    __le16  wrt_uncor_support;                     /* 0010 - Write Uncorrectable Command Support   */
+    __le16  fused_support;                         /* 0012 - Fused Operation Support               */
+    __le16  min_dssd_ps;                           /* 0014 - Minimum Valid DSSD Power State        */
+    __u8    rsvd1;                                 /* 0016 - Reserved must be cleared to zero      */
+    __u8    dssd_ps_descr[WDC_OCP_C4_NUM_PS_DESCR];/* 0017 - DSSD Power State Descriptors          */
+    __u8    rsvd2[3934];                           /* 0144 - Reserved must be cleared to zero      */
+    __le16  log_page_version;                      /* 4078 - Log Page Version                      */
+    __u8    log_page_guid[WDC_OCP_C4_GUID_LENGTH]; /* 4080 - Log Page GUID                         */
+};
+
+static __u8 wdc_ocp_c4_guid[WDC_OCP_C4_GUID_LENGTH]    = { 0x97, 0x42, 0x05, 0x0D, 0xD1, 0xE1, 0xC9, 0x98,
+		0x5D, 0x49, 0x58, 0x4B, 0x91, 0x3C, 0x05, 0xB7 };
+
+#define WDC_OCP_C5_GUID_LENGTH              16
+#define WDC_UNSUPPORTED_REQS_LOG_BUF_LEN  4096
+#define WDC_UNSUPPORTED_REQS_LOG_ID       0xC5
+#define WDC_UNSUPPORTED_REQS_LOG_VERSION  0001
+#define WDC_NUM_UNSUPPORTED_REQ_ENTRIES    253
+
+struct __attribute__((__packed__)) wdc_ocp_C5_unsupported_reqs {
+    __le16  unsupported_count;                     /* 0000 - Number of Unsupported Requirement IDs */
+    __u8    rsvd1[14];                             /* 0002 - Reserved must be cleared to zero      */
+    __u8    unsupported_req_list[WDC_NUM_UNSUPPORTED_REQ_ENTRIES][16];  /* 0016 - Unsupported Requirements List */
+    __u8    rsvd2[14];                             /* 4064 - Reserved must be cleared to zero      */
+    __le16  log_page_version;                      /* 4078 - Log Page Version                      */
+    __u8    log_page_guid[WDC_OCP_C5_GUID_LENGTH]; /* 4080 - Log Page GUID                         */
+};
+
+static __u8 wdc_ocp_c5_guid[WDC_OCP_C5_GUID_LENGTH]    = { 0x2F, 0x72, 0x9C, 0x0E, 0x99, 0x23, 0x2C, 0xBB,
+		0x63, 0x48, 0x32, 0xD0, 0xB7, 0x98, 0xBB, 0xC7 };
 
 #define WDC_REASON_INDEX_MAX                    16
 #define WDC_REASON_ID_ENTRY_LEN                128
@@ -1286,9 +1359,21 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG | WDC_DRIVE_CAP_REASON_ID |
 					WDC_DRIVE_CAP_LOG_PAGE_DIR);
 
-			/* verify the 0xC3 log page is supported */
+			/* verify the 0xC1 (OCP Error Recovery) log page is supported */
+			if (wdc_nvme_check_supported_log_page(r, fd, WDC_ERROR_REC_LOG_ID) == true)
+				capabilities |= WDC_DRIVE_CAP_OCP_C1_LOG_PAGE;
+
+			/* verify the 0xC3 (OCP Latency Monitor) log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_LATENCY_MON_OPCODE) == true)
 				capabilities |= WDC_DRIVE_CAP_C3_LOG_PAGE;
+
+			/* verify the 0xC4 (OCP Device Capabilities) log page is supported */
+			if (wdc_nvme_check_supported_log_page(r, fd, WDC_DEV_CAP_LOG_ID) == true)
+				capabilities |= WDC_DRIVE_CAP_OCP_C4_LOG_PAGE;
+
+			/* verify the 0xC5 (OCP Unsupported Requirments) log page is supported */
+			if (wdc_nvme_check_supported_log_page(r, fd, WDC_UNSUPPORTED_REQS_LOG_ID) == true)
+				capabilities |= WDC_DRIVE_CAP_OCP_C5_LOG_PAGE;
 
 			/* verify the 0xCA log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE) == true)
@@ -3854,6 +3939,168 @@ static void wdc_print_latency_monitor_log_json(struct wdc_ssd_latency_monitor_lo
 	json_free_object(root);
 }
 
+static void wdc_print_error_rec_log_normal(int fd, struct wdc_ocp_c1_error_recovery_log *log_data)
+{
+	int j;
+	printf("Error Recovery/C1 Log Page Data \n");
+
+	printf("  Panic Reset Wait Time             : 0x%x \n", le16_to_cpu(log_data->panic_reset_wait_time));
+	printf("  Panic Reset Action                : 0x%x \n", log_data->panic_reset_action);
+	printf("  Device Recovery Action 1          : 0x%x \n", log_data->dev_recovery_action1);
+	printf("  Panic ID                          : 0x%lx \n", le64_to_cpu(log_data->panic_id));
+	printf("  Device Capabilities               : 0x%x \n", le32_to_cpu(log_data->dev_capabilities));
+	printf("  Vendor Specific Recovery Opcode   : 0x%x \n", log_data->vs_recovery_opc);
+	printf("  Vendor Specific Command CDW12     : 0x%x \n", le32_to_cpu(log_data->vs_cmd_cdw12));
+	printf("  Vendor Specific Command CDW13     : 0x%x \n", le32_to_cpu(log_data->vs_cmd_cdw13));
+	printf("  Vendor Specific Command Timeout   : 0x%x \n", log_data->vs_cmd_to);
+	printf("  Device Recovery Action 2          : 0x%x \n", log_data->dev_recovery_action2);
+	printf("  Device Recovery Action 2 Timeout  : 0x%x \n", log_data->dev_recovery_action2_to);
+	printf("  Log Page Version                  : 0x%x \n", le16_to_cpu(log_data->log_page_version));
+	printf("  Log page GUID			    : 0x");
+	for (j = 0; j < WDC_OCP_C1_GUID_LENGTH; j++) {
+		printf("%x", log_data->log_page_guid[j]);
+	}
+	printf("\n");
+}
+
+static void wdc_print_error_rec_log_json(struct wdc_ocp_c1_error_recovery_log *log_data)
+{
+	struct json_object *root;
+	root = json_create_object();
+
+	json_object_add_value_int(root, "Panic Reset Wait Time", le16_to_cpu(log_data->panic_reset_wait_time));
+	json_object_add_value_int(root, "Panic Reset Action", log_data->panic_reset_wait_time);
+	json_object_add_value_int(root, "Device Recovery Action 1", log_data->dev_recovery_action1);
+	json_object_add_value_int(root, "Panic ID", le64_to_cpu(log_data->panic_id));
+	json_object_add_value_int(root, "Device Capabilities", le32_to_cpu(log_data->dev_capabilities));
+	json_object_add_value_int(root, "Vendor Specific Recovery Opcode", log_data->vs_recovery_opc);
+	json_object_add_value_int(root, "Vendor Specific Command CDW12", le32_to_cpu(log_data->vs_cmd_cdw12));
+	json_object_add_value_int(root, "Vendor Specific Command CDW13", le32_to_cpu(log_data->vs_cmd_cdw13));
+	json_object_add_value_int(root, "Vendor Specific Command Timeout", log_data->vs_cmd_to);
+	json_object_add_value_int(root, "Device Recovery Action 2", log_data->dev_recovery_action2);
+	json_object_add_value_int(root, "Device Recovery Action 2 Timeout", log_data->dev_recovery_action2_to);
+	json_object_add_value_int(root, "Log Page Version", le16_to_cpu(log_data->log_page_version));
+
+	char guid[40];
+	memset((void*)guid, 0, 40);
+	sprintf((char*)guid, "0x%"PRIx64"%"PRIx64"",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	json_object_add_value_string(root, "Log page GUID", guid);
+
+	json_print_object(root, NULL);
+	printf("\n");
+
+	json_free_object(root);
+}
+
+static void wdc_print_dev_cap_log_normal(int fd, struct wdc_ocp_C4_dev_cap_log *log_data)
+{
+	int j;
+	printf("Device Capabilities/C4 Log Page Data \n");
+
+	printf("  Number PCIE Ports                 	: 0x%x \n", le16_to_cpu(log_data->num_pcie_ports));
+	printf("  Number OOB Management Interfaces  	: 0x%x \n", le16_to_cpu(log_data->oob_mgmt_support));
+	printf("  Write Zeros Command Support       	: 0x%x \n", le16_to_cpu(log_data->wrt_zeros_support));
+	printf("  Sanitize Command Support          	: 0x%x \n", le16_to_cpu(log_data->sanitize_support));
+	printf("  DSM Command Support               	: 0x%x \n", le16_to_cpu(log_data->dsm_support));
+	printf("  Write Uncorr Command Support      	: 0x%x \n", le16_to_cpu(log_data->wrt_uncor_support));
+	printf("  Fused Command Support             	: 0x%x \n", le16_to_cpu(log_data->fused_support));
+	printf("  Minimum DSSD Power State          	: 0x%x \n", le16_to_cpu(log_data->min_dssd_ps));
+
+	for (j = 0; j < WDC_OCP_C4_NUM_PS_DESCR; j++) {
+		printf("  DSSD Power State %d Desriptor  	: 0x%x \n", j, log_data->dssd_ps_descr[j]);
+	}
+
+	printf("  Log Page Version			: 0x%x \n", le16_to_cpu(log_data->log_page_version));
+	printf("  Log page GUID				: 0x");
+	for (j = 0; j < WDC_OCP_C4_GUID_LENGTH; j++) {
+		printf("%x", log_data->log_page_guid[j]);
+	}
+	printf("\n");
+}
+
+static void wdc_print_dev_cap_log_json(struct wdc_ocp_C4_dev_cap_log *log_data)
+{
+	int j;
+	struct json_object *root;
+	root = json_create_object();
+
+	json_object_add_value_int(root, "Number PCIE Ports", le16_to_cpu(log_data->num_pcie_ports));
+	json_object_add_value_int(root, "Number OOB Management Interfaces", le16_to_cpu(log_data->num_pcie_ports));
+	json_object_add_value_int(root, "Write Zeros Command Support", le16_to_cpu(log_data->num_pcie_ports));
+	json_object_add_value_int(root, "Sanitize Command Support", le16_to_cpu(log_data->num_pcie_ports));
+	json_object_add_value_int(root, "DSM Command Support", le16_to_cpu(log_data->num_pcie_ports));
+	json_object_add_value_int(root, "Write Uncorr Command Support", le16_to_cpu(log_data->num_pcie_ports));
+	json_object_add_value_int(root, "Fused Command Support", le16_to_cpu(log_data->num_pcie_ports));
+	json_object_add_value_int(root, "Minimum DSSD Power State", le16_to_cpu(log_data->num_pcie_ports));
+
+	char dssd_descr_str[40];
+	memset((void *)dssd_descr_str, 0, 40);
+	for (j = 0; j < WDC_OCP_C4_NUM_PS_DESCR; j++) {
+		sprintf((char *)dssd_descr_str, "DSSD Power State %d Descriptor", j);
+		json_object_add_value_int(root, dssd_descr_str, log_data->dssd_ps_descr[j]);
+	}
+
+	json_object_add_value_int(root, "Log Page Version", le16_to_cpu(log_data->log_page_version));
+	char guid[40];
+	memset((void*)guid, 0, 40);
+	sprintf((char*)guid, "0x%"PRIx64"%"PRIx64"",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	json_object_add_value_string(root, "Log page GUID", guid);
+
+	json_print_object(root, NULL);
+	printf("\n");
+
+	json_free_object(root);
+}
+
+static void wdc_print_unsupported_reqs_log_normal(int fd, struct wdc_ocp_C5_unsupported_reqs *log_data)
+{
+	int j;
+	printf("Unsupported Requirements/C5 Log Page Data \n");
+
+	printf("  Number Unsupported Req IDs		: 0x%x \n", le16_to_cpu(log_data->unsupported_count));
+
+	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++) {
+		printf("  Unsupported Requirement List %d	: %s \n", j, log_data->unsupported_req_list[j]);
+	}
+
+	printf("  Log Page Version			: 0x%x \n", le16_to_cpu(log_data->log_page_version));
+	printf("  Log page GUID				: 0x");
+	for (j = 0; j < WDC_OCP_C5_GUID_LENGTH; j++) {
+		printf("%x", log_data->log_page_guid[j]);
+	}
+	printf("\n");
+}
+
+static void wdc_print_unsupported_reqs_log_json(struct wdc_ocp_C5_unsupported_reqs *log_data)
+{
+	int j;
+	struct json_object *root;
+	root = json_create_object();
+
+	json_object_add_value_int(root, "Number Unsupported Req IDs", le16_to_cpu(log_data->unsupported_count));
+
+	char unsup_req_list_str[40];
+	memset((void *)unsup_req_list_str, 0, 40);
+	for (j = 0; j < le16_to_cpu(log_data->unsupported_count); j++) {
+		sprintf((char *)unsup_req_list_str, "Unsupported Requirement List %d", j);
+		json_object_add_value_string(root, unsup_req_list_str, (char *)log_data->unsupported_req_list[j]);
+	}
+
+	json_object_add_value_int(root, "Log Page Version", le16_to_cpu(log_data->log_page_version));
+	char guid[40];
+	memset((void*)guid, 0, 40);
+	sprintf((char*)guid, "0x%"PRIx64"%"PRIx64"",(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[8]),
+		(uint64_t)le64_to_cpu(*(uint64_t *)&log_data->log_page_guid[0]));
+	json_object_add_value_string(root, "Log page GUID", guid);
+
+	json_print_object(root, NULL);
+	printf("\n");
+
+	json_free_object(root);
+}
+
 static void wdc_print_fb_ca_log_normal(struct wdc_ssd_ca_perf_stats *perf)
 {
 	uint64_t converted = 0;
@@ -5208,6 +5455,57 @@ static int wdc_print_latency_monitor_log(int fd, struct wdc_ssd_latency_monitor_
 	return 0;
 }
 
+static int wdc_print_error_rec_log(int fd, struct wdc_ocp_c1_error_recovery_log *log_data, int fmt)
+{
+	if (!log_data) {
+		fprintf(stderr, "ERROR : WDC : Invalid C1 log data buffer\n");
+		return -1;
+	}
+	switch (fmt) {
+	case NORMAL:
+		wdc_print_error_rec_log_normal(fd, log_data);
+		break;
+	case JSON:
+		wdc_print_error_rec_log_json(log_data);
+		break;
+	}
+	return 0;
+}
+
+static int wdc_print_dev_cap_log(int fd, struct wdc_ocp_C4_dev_cap_log *log_data, int fmt)
+{
+	if (!log_data) {
+		fprintf(stderr, "ERROR : WDC : Invalid C4 log data buffer\n");
+		return -1;
+	}
+	switch (fmt) {
+	case NORMAL:
+		wdc_print_dev_cap_log_normal(fd, log_data);
+		break;
+	case JSON:
+		wdc_print_dev_cap_log_json(log_data);
+		break;
+	}
+	return 0;
+}
+
+static int wdc_print_unsupported_reqs_log(int fd, struct wdc_ocp_C5_unsupported_reqs *log_data, int fmt)
+{
+	if (!log_data) {
+		fprintf(stderr, "ERROR : WDC : Invalid C5 log data buffer\n");
+		return -1;
+	}
+	switch (fmt) {
+	case NORMAL:
+		wdc_print_unsupported_reqs_log_normal(fd, log_data);
+		break;
+	case JSON:
+		wdc_print_unsupported_reqs_log_json(log_data);
+		break;
+	}
+	return 0;
+}
+
 static int wdc_print_fb_ca_log(struct wdc_ssd_ca_perf_stats *perf, int fmt)
 {
 	if (!perf) {
@@ -5532,7 +5830,7 @@ static int wdc_get_c3_log_page(nvme_root_t r, int fd, char *format)
 			}
 		}
 
-	/* parse the data */
+		/* parse the data */
 		wdc_print_latency_monitor_log(fd, log_data, fmt);
 	} else {
 		fprintf(stderr, "ERROR : WDC : Unable to read C3 data from buffer\n");
@@ -5542,6 +5840,213 @@ out:
 	free(data);
 	return ret;
 
+}
+
+static int wdc_get_ocp_c1_log_page(nvme_root_t r, int fd, char *format)
+{
+	int ret = 0;
+	int fmt = -1;
+	__u8 *data;
+	int i;
+	struct wdc_ocp_c1_error_recovery_log *log_data;
+
+	if (!wdc_check_device(r, fd))
+		return -1;
+	fmt = validate_output_format(format);
+	if (fmt < 0) {
+		fprintf(stderr, "ERROR : WDC : invalid output format\n");
+		return fmt;
+	}
+
+	if ((data = (__u8 *) malloc(sizeof(__u8) * WDC_ERROR_REC_LOG_BUF_LEN)) == NULL) {
+		fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
+		return -1;
+	}
+	memset(data, 0, sizeof (__u8) * WDC_ERROR_REC_LOG_BUF_LEN);
+
+	ret = nvme_get_log_simple(fd, WDC_ERROR_REC_LOG_ID,
+			WDC_ERROR_REC_LOG_BUF_LEN, data);
+
+	if (strcmp(format, "json"))
+		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret, false), ret);
+
+	if (ret == 0) {
+		log_data = (struct wdc_ocp_c1_error_recovery_log *)data;
+
+		/* check log page version */
+		if (log_data->log_page_version != WDC_ERROR_REC_LOG_VERSION) {
+			fprintf(stderr, "ERROR : WDC : invalid error recovery log version - %d\n", log_data->log_page_version);
+			ret = -1;
+			goto out;
+		}
+
+		/* Verify GUID matches */
+		for (i=0; i < WDC_OCP_C1_GUID_LENGTH; i++) {
+			if (wdc_ocp_c1_guid[i] != log_data->log_page_guid[i])	{
+				fprintf(stderr, "ERROR : WDC : Unknown GUID in C1 Log Page data\n");
+				int j;
+				fprintf(stderr, "ERROR : WDC : Expected GUID:  0x");
+				for (j = 0; j<16; j++) {
+					fprintf(stderr, "%x", wdc_ocp_c1_guid[j]);
+				}
+				fprintf(stderr, "\nERROR : WDC : Actual GUID:    0x");
+				for (j = 0; j<16; j++) {
+					fprintf(stderr, "%x", log_data->log_page_guid[j]);
+				}
+				fprintf(stderr, "\n");
+
+				ret = -1;
+				goto out;
+			}
+		}
+
+		/* parse the data */
+		wdc_print_error_rec_log(fd, log_data, fmt);
+	} else {
+		fprintf(stderr, "ERROR : WDC : Unable to read error recovery (C1) data from buffer\n");
+	}
+
+out:
+	free(data);
+	return ret;
+}
+
+static int wdc_get_ocp_c4_log_page(nvme_root_t r, int fd, char *format)
+{
+	int ret = 0;
+	int fmt = -1;
+	__u8 *data;
+	int i;
+	struct wdc_ocp_C4_dev_cap_log *log_data;
+
+	if (!wdc_check_device(r, fd))
+		return -1;
+	fmt = validate_output_format(format);
+	if (fmt < 0) {
+		fprintf(stderr, "ERROR : WDC : invalid output format\n");
+		return fmt;
+	}
+
+	if ((data = (__u8 *) malloc(sizeof(__u8) * WDC_DEV_CAP_LOG_BUF_LEN)) == NULL) {
+		fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
+		return -1;
+	}
+	memset(data, 0, sizeof (__u8) * WDC_DEV_CAP_LOG_BUF_LEN);
+
+	ret = nvme_get_log_simple(fd, WDC_DEV_CAP_LOG_ID,
+		WDC_DEV_CAP_LOG_BUF_LEN, data);
+
+	if (strcmp(format, "json"))
+		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret, false), ret);
+
+	if (ret == 0) {
+		log_data = (struct wdc_ocp_C4_dev_cap_log *)data;
+
+		/* check log page version */
+		if (log_data->log_page_version != WDC_DEV_CAP_LOG_VERSION) {
+			fprintf(stderr, "ERROR : WDC : invalid device capabilities log version - %d\n", log_data->log_page_version);
+			ret = -1;
+			goto out;
+		}
+
+		/* Verify GUID matches */
+		for (i=0; i < WDC_OCP_C4_GUID_LENGTH; i++) {
+			if (wdc_ocp_c4_guid[i] != log_data->log_page_guid[i])	{
+				fprintf(stderr, "ERROR : WDC : Unknown GUID in C4 Log Page data\n");
+				int j;
+				fprintf(stderr, "ERROR : WDC : Expected GUID:  0x");
+				for (j = 0; j<16; j++) {
+					fprintf(stderr, "%x", wdc_ocp_c1_guid[j]);
+				}
+				fprintf(stderr, "\nERROR : WDC : Actual GUID:    0x");
+				for (j = 0; j<16; j++) {
+					fprintf(stderr, "%x", log_data->log_page_guid[j]);
+				}
+				fprintf(stderr, "\n");
+
+				ret = -1;
+				goto out;
+			}
+		}
+
+		/* parse the data */
+		wdc_print_dev_cap_log(fd, log_data, fmt);
+	} else {
+		fprintf(stderr, "ERROR : WDC : Unable to read device capabilities (C4) data from buffer\n");
+	}
+
+out:
+	free(data);
+	return ret;
+}
+
+static int wdc_get_ocp_c5_log_page(nvme_root_t r, int fd, char *format)
+{
+	int ret = 0;
+	int fmt = -1;
+	__u8 *data;
+	int i;
+	struct wdc_ocp_C5_unsupported_reqs *log_data;
+
+	if (!wdc_check_device(r, fd))
+		return -1;
+	fmt = validate_output_format(format);
+	if (fmt < 0) {
+		fprintf(stderr, "ERROR : WDC : invalid output format\n");
+		return fmt;
+	}
+
+	if ((data = (__u8 *) malloc(sizeof(__u8) * WDC_UNSUPPORTED_REQS_LOG_BUF_LEN)) == NULL) {
+		fprintf(stderr, "ERROR : WDC : malloc : %s\n", strerror(errno));
+		return -1;
+	}
+	memset(data, 0, sizeof (__u8) * WDC_UNSUPPORTED_REQS_LOG_BUF_LEN);
+
+	ret = nvme_get_log_simple(fd, WDC_UNSUPPORTED_REQS_LOG_ID,
+		WDC_UNSUPPORTED_REQS_LOG_BUF_LEN, data);
+
+	if (strcmp(format, "json"))
+		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret, false), ret);
+
+	if (ret == 0) {
+		log_data = (struct wdc_ocp_C5_unsupported_reqs *)data;
+
+		/* check log page version */
+		if (log_data->log_page_version != WDC_UNSUPPORTED_REQS_LOG_VERSION) {
+			fprintf(stderr, "ERROR : WDC : invalid unsupported requirements log version - %d\n", log_data->log_page_version);
+			ret = -1;
+			goto out;
+		}
+
+		/* Verify GUID matches */
+		for (i=0; i < WDC_OCP_C5_GUID_LENGTH; i++) {
+			if (wdc_ocp_c5_guid[i] != log_data->log_page_guid[i])	{
+				fprintf(stderr, "ERROR : WDC : Unknown GUID in C5 Log Page data\n");
+				int j;
+				fprintf(stderr, "ERROR : WDC : Expected GUID:  0x");
+				for (j = 0; j<16; j++) {
+					fprintf(stderr, "%x", wdc_ocp_c1_guid[j]);
+				}
+				fprintf(stderr, "\nERROR : WDC : Actual GUID:    0x");
+				for (j = 0; j<16; j++) {
+					fprintf(stderr, "%x", log_data->log_page_guid[j]);
+				}
+				fprintf(stderr, "\n");
+
+				ret = -1;
+				goto out;
+			}
+		}
+
+		/* parse the data */
+		wdc_print_unsupported_reqs_log(fd, log_data, fmt);
+	} else {
+		fprintf(stderr, "ERROR : WDC : Unable to read unsupported requirements (C5) data from buffer\n");
+	}
+
+out:
+	free(data);
+	return ret;
 }
 
 static int wdc_get_d0_log_page(nvme_root_t r, int fd, char *format)
@@ -5758,10 +6263,138 @@ static int wdc_get_latency_monitor_log(int argc, char **argv, struct command *co
 
 	ret = wdc_get_c3_log_page(r, fd, cfg.output_format);
 	if (ret)
-		fprintf(stderr, "ERROR : WDC : Failure reading the C3 Log Page, ret = %d\n", ret);
+		fprintf(stderr, "ERROR : WDC : Failure reading the Latency Monitor (C3) Log Page, ret = %d\n", ret);
 
 out:
+	return ret;
+}
 
+static int wdc_get_error_recovery_log(int argc, char **argv, struct command *command,
+		struct plugin *plugin)
+{
+	const char *desc = "Retrieve error recovery log data.";
+	nvme_root_t r;
+	int fd;
+	int ret = 0;
+	__u64 capabilities = 0;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format",      'o', &cfg.output_format,    "Output Format: normal|json"),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	r = nvme_scan(NULL);
+	capabilities = wdc_get_drive_capabilities(r, fd);
+
+	if ((capabilities & WDC_DRIVE_CAP_OCP_C1_LOG_PAGE) == 0) {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+		goto out;
+	}
+
+	ret = wdc_get_ocp_c1_log_page(r, fd, cfg.output_format);
+	if (ret)
+		fprintf(stderr, "ERROR : WDC : Failure reading the Error Recovery (C1) Log Page, ret = 0x%x\n", ret);
+
+out:
+	return ret;
+}
+
+static int wdc_get_dev_capabilities_log(int argc, char **argv, struct command *command,
+		struct plugin *plugin)
+{
+	const char *desc = "Retrieve device capabilities log data.";
+	nvme_root_t r;
+	int fd;
+	int ret = 0;
+	__u64 capabilities = 0;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format",      'o', &cfg.output_format,    "Output Format: normal|json"),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	r = nvme_scan(NULL);
+	capabilities = wdc_get_drive_capabilities(r, fd);
+
+	if ((capabilities & WDC_DRIVE_CAP_OCP_C4_LOG_PAGE) == 0) {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+		goto out;
+	}
+
+	ret = wdc_get_ocp_c4_log_page(r, fd, cfg.output_format);
+	if (ret)
+		fprintf(stderr, "ERROR : WDC : Failure reading the Device Capabilities (C4) Log Page, ret = 0x%x\n", ret);
+
+out:
+	return ret;
+}
+
+static int wdc_get_unsupported_reqs_log(int argc, char **argv, struct command *command,
+		struct plugin *plugin)
+{
+	const char *desc = "Retrieve unsupported requirements log data.";
+	nvme_root_t r;
+	int fd;
+	int ret = 0;
+	__u64 capabilities = 0;
+
+	struct config {
+		char *output_format;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format",      'o', &cfg.output_format,    "Output Format: normal|json"),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	r = nvme_scan(NULL);
+	capabilities = wdc_get_drive_capabilities(r, fd);
+
+	if ((capabilities & WDC_DRIVE_CAP_OCP_C5_LOG_PAGE) == 0) {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+		goto out;
+	}
+
+	ret = wdc_get_ocp_c5_log_page(r, fd, cfg.output_format);
+	if (ret)
+		fprintf(stderr, "ERROR : WDC : Failure reading the Unsupported Requirements (C5) Log Page, ret = 0x%x\n", ret);
+
+out:
 	return ret;
 }
 
