@@ -83,4 +83,6 @@ class TestNVMeSmartLogCmd(TestNVMe):
     def test_smart_log(self):
         """ Testcase main """
         assert_equal(self.get_smart_log_ctrl(), 0)
-        assert_equal(self.get_smart_log_all_ns(), 0)
+        smlp = self.supp_check_id_ctrl("lpa")
+        if smlp & 0x1 == True:
+            assert_equal(self.get_smart_log_all_ns(), 0)
