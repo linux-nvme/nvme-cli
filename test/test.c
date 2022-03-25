@@ -62,59 +62,67 @@ static int test_ctrl(nvme_ctrl_t c)
 		printf("ERROR: no identify for:%s\n", nvme_ctrl_get_name(c));
 		return ret;
 	}
+	else {
+		printf("PASSED: Identify controller\n");
+	}
 
 	ret = nvme_get_log_smart(fd, NVME_NSID_ALL, true, &smart);
 	if (ret) {
-		printf("ERROR: no smart log for:%s %x\n", nvme_ctrl_get_name(c), ret);
+		printf("ERROR: no smart log for:%s %#x\n", nvme_ctrl_get_name(c), ret);
 		return ret;
+	}
+	else {
+		printf("PASSED: smart log\n");
 	}
 
 	temp = ((smart.temperature[1] << 8) | smart.temperature[0]) - 273;
 	printf("Controller:%s\n", nvme_ctrl_get_name(c));
 	printf("\nIdentify:\n");
-	printf("  vid:%04x ssvid:%04x oacs:%x lpa%x\n",
-		le16_to_cpu(id.vid), le16_to_cpu(id.ssvid),
-		id.oacs, id.lpa);
-	printf("  sn:%-.20s model:%-.40s\n", id.sn, id.mn);
+	printf("  vid:%#04x\n", le16_to_cpu(id.vid));
+	printf("  ssvid:%#04x\n", le16_to_cpu(id.ssvid));
+	printf("  oacs:%#x\n", id.oacs);
+	printf("  lpa:%#x\n", id.lpa);
+	printf("  sn:%-.20s\n", id.sn);
+	printf("  model:%-.40s\n", id.mn);
 
 	ret = nvme_identify_allocated_ns_list(fd, 0, &ns_list);
 	if (!ret)
-		printf("  Allocated NS List:\n");
+		printf("  PASSED: Allocated NS List\n");
 	else
 		printf("  ERROR: Allocated NS List:%x\n", ret);
 	ret = nvme_identify_active_ns_list(fd, 0, &ns_list);
 	if (!ret)
-		printf("  Active NS List:\n");
+		printf("  PASSED: Active NS List\n");
 	else
 		printf("  ERROR: Active NS List:%x\n", ret);
 	ret = nvme_identify_ctrl_list(fd, 0, &ctrlist);
 	if (!ret)
-		printf("  Ctrl List:\n");
+		printf("  PASSED: Ctrl List\n");
 	else
 		printf("  ERROR: CtrlList:%x\n", ret);
 	ret = nvme_identify_nsid_ctrl_list(fd, 1, 0, &ctrlist);
 	if (!ret)
-		printf("  NSID Ctrl List:\n");
+		printf("  PASSED: NSID Ctrl List\n");
 	else
 		printf("  ERROR: NSID CtrlList:%x\n", ret);
 	ret = nvme_identify_primary_ctrl(fd, 0, &prim);
 	if (!ret)
-		printf("  Identify Primary:\n");
+		printf("  PASSED: Identify Primary\n");
 	else
 		printf("  ERROR: Identify Primary:%x\n", ret);
 	ret = nvme_identify_secondary_ctrl_list(fd, 1, 0, &sec);
 	if (!ret)
-		printf("  Identify Secondary:\n");
+		printf("  PASSED: Identify Secondary\n");
 	else
 		printf("  ERROR: Identify Secondary:%x\n", ret);
 	ret = nvme_identify_ns_granularity(fd, &gran);
 	if (!ret)
-		printf("  Identify NS granularity:\n");
+		printf("  PASSED: Identify NS granularity\n");
 	else
 		printf("  ERROR: Identify NS granularity:%x\n", ret);
 	ret = nvme_identify_uuid(fd, &uuid);
 	if (!ret)
-		printf("  Identify UUID List:\n");
+		printf("  PASSED: Identify UUID List\n");
 	else
 		printf("  ERROR: Identify UUID List:%x\n", ret);
 
