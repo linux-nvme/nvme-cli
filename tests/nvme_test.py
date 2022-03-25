@@ -478,3 +478,26 @@ class TestNVMe(object):
                                   encoding='utf-8')
         run_io_result = run_io.communicate()[1]
         assert_equal(run_io_result, None)
+
+    def supp_check_id_ctrl(self, key):
+        """ Wrapper for support check.
+            - Args:
+                - key : search key.
+            - Returns:
+                - value for key requested.
+        """
+        id_ctrl = "nvme id-ctrl " + self.ctrl
+        print("\n" + id_ctrl)
+        proc = subprocess.Popen(id_ctrl,
+                                shell=True,
+                                stdout=subprocess.PIPE,
+                                encoding='utf-8')
+        err = proc.wait()
+        assert_equal(err, 0, "ERROR : nvme Identify controller Data \
+                     structure failed")
+        for line in proc.stdout:
+            if key in line:
+                key = line.replace(",", "", 1)
+        print(key)
+        val = (key.split(':'))[1].strip()
+        return int(val, 16)
