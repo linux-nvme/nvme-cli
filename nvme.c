@@ -5670,6 +5670,7 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		.sdlba		= cfg.sdlba,
 		.nr		= nr,
 		.prinfor	= cfg.prinfor,
+		.prinfow	= cfg.prinfow,
 		.dtype		= cfg.dtype,
 		.dspec		= cfg.dspec,
 		.format		= cfg.format,
