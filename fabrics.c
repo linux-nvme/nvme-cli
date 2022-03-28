@@ -524,6 +524,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 					"ignoring ctrl device %s, "
 					"command-line options do not match\n",
 					device);
+				nvme_free_ctrl(c);
 				c = NULL;
 				persistent = false;
 			} else {
