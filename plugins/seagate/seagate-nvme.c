@@ -1025,7 +1025,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 	__u32 result;
 
 	struct config {
-		int   save;
+		bool   save;
 	};
 
 	struct config cfg = {
@@ -1068,7 +1068,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 	struct config {
 		__u32 namespace_id;
 		__u32 log_id;
-		int   raw_binary;
+		bool  raw_binary;
 	};
 
 	struct config cfg = {
@@ -1182,7 +1182,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 
 	struct config {
 		__u32 namespace_id;
-		int   raw_binary;
+		bool  raw_binary;
 	};
 
 	struct config cfg = {

@@ -338,8 +338,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	const char *json= "Dump output in json format";
 	struct config {
 		__u32 namespace_id;
-		int   raw_binary;
-		int   json;
+		bool  raw_binary;
+		bool  json;
 	};
 
 	struct config cfg = {
@@ -422,8 +422,8 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	const char *raw = "dump output in binary format";
 	const char *write = "Get write statistics (read default)";
 	struct config {
-		int  raw_binary;
-		int  write;
+		bool raw_binary;
+		bool write;
 	};
 
 	struct config cfg = {
@@ -607,8 +607,8 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 	const char *raw = "dump output in binary format";
 	const char *json= "Dump output in json format";
 	struct config {
-		int   raw_binary;
-		int   json;
+		bool  raw_binary;
+		bool  json;
 	};
 	struct config cfg;
 
@@ -736,9 +736,9 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 	struct config {
 		__u64 cap_in_byte;
 		__u32 capacity_in_gb;
-		int   raw_binary;
-		int   json;
-		int   force;
+		bool  raw_binary;
+		bool  json;
+		bool  force;
 	};
 
 	struct config cfg = {
@@ -853,7 +853,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 		__u32 namespace_id;
 		__u32 feature_id;
 		__u32 value;
-		__u32 force;
+		bool  force;
 	};
 	struct config cfg = {
 		.namespace_id = 1,

@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stdbool.h>
 
 static argconfig_help_func *help_funcs[MAX_HELP_FUNC] = { NULL };
 
@@ -176,17 +177,8 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		if (s->option && strlen(s->option)) {
 			long_opts[option_index].name = s->option;
 			long_opts[option_index].has_arg = s->argument_type;
-
-			if (s->argument_type == no_argument
-			    && s->default_value != NULL) {
-				value_addr = (void *)(char *)s->default_value;
-
-				long_opts[option_index].flag = value_addr;
-				long_opts[option_index].val = 1;
-			} else {
-				long_opts[option_index].flag = NULL;
-				long_opts[option_index].val = 0;
-			}
+			long_opts[option_index].flag = NULL;
+			long_opts[option_index].val = 0;
 		}
 		option_index++;
 	}
@@ -219,11 +211,6 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			}
 			if (option_index == options_count)
 				continue;
-			if (long_opts[option_index].flag &&
-	                    options[option_index].config_type == CFG_NONE) {
-				*(uint8_t *)(long_opts[option_index].flag) = 1;
-				continue;
-			}
 		}
 
 		s = &options[option_index];
@@ -283,20 +270,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			}
 			*((uint32_t *) value_addr) = tmp;
 		} else if (s->config_type == CFG_INCREMENT) {
-			/*
-			 * Extreme getopt_long fiddling.
-			 *
-			 * As per man page:
-			 * If flag is non-NULL, getopt_long() returns 0,
-			 * and flag  points to a variable which is set to
-			 * val if the option is found.
-			 *
-			 * So we need to increase 'val', not 'value_addr'.
-			 */
-			if (!c)
-				long_opts[option_index].val++;
-			else
-				*((int *)value_addr) += 1;
+			*((int *)value_addr) += 1;
 		} else if (s->config_type == CFG_LONG) {
 			*((unsigned long *)value_addr) = strtoul(optarg, &endptr, 0);
 			if (errno || optarg == endptr) {
@@ -377,6 +351,8 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				goto out;
 			}
 			*((FILE **) value_addr) = f;
+		} else if (s->config_type == CFG_FLAG) {
+			*((bool *)value_addr) = true;
 		}
 	}
 	free(short_opts);
