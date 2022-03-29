@@ -20,6 +20,13 @@ executable(
 )
 
 executable(
+    'display-tree',
+    ['display-tree.c'],
+    link_with: libnvme,
+    include_directories: [incdir, internal_incdir]
+)
+
+executable(
     'discover-loop',
     ['discover-loop.c'],
     link_with: libnvme,
