@@ -171,8 +171,8 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	struct config {
 		char *output_format;
 		__u32 namespace_id;
-		int human_readable;
-		int vendor_specific;
+		bool human_readable;
+		bool vendor_specific;
 	};
 
 	struct config cfg = {
@@ -350,7 +350,7 @@ static int zone_mgmt_send(int argc, char **argv, struct command *cmd, struct plu
 	struct config {
 		__u64	zslba;
 		__u32	namespace_id;
-		__u8	zsaso;
+		bool	zsaso;
 		bool	select_all;
 		__u8	zsa;
 		int   	data_len;
@@ -857,7 +857,7 @@ static int report_zones(int argc, char **argv, struct command *cmd, struct plugi
 		__u32 namespace_id;
 		int   num_descs;
 		int   state;
-		int   verbose;
+		bool  verbose;
 		bool  extended;
 		bool  partial;
 	};
@@ -1041,15 +1041,15 @@ static int zone_append(int argc, char **argv, struct command *cmd, struct plugin
 		__u64  zslba;
 		__u64  data_size;
 		__u64  metadata_size;
-		int    limited_retry;
-		int    fua;
+		bool   limited_retry;
+		bool   fua;
 		__u32  namespace_id;
 		__u32  ref_tag;
 		__u16  lbat;
 		__u16  lbatm;
 		__u8   prinfo;
-		int    piremap;
-		int   latency;
+		bool   piremap;
+		bool   latency;
 	};
 
 	struct config cfg = {};

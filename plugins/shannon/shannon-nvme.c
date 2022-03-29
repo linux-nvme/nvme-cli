@@ -123,7 +123,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	const char *raw = "dump output in binary format";
 	struct config {
 		__u32 namespace_id;
-		int   raw_binary;
+		bool  raw_binary;
 	};
 
 	struct config cfg = {
@@ -180,8 +180,8 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 		__u8  sel;
 		__u32 cdw11;
 		__u32 data_len;
-		int  raw_binary;
-		int  human_readable;
+		bool  raw_binary;
+		bool  human_readable;
 	};
 
 	struct config cfg = {
@@ -293,7 +293,7 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 		__u32 feature_id;
 		__u32 value;
 		__u32 data_len;
-		int   save;
+		bool  save;
 	};
 
 	struct config cfg = {

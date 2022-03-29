@@ -2975,7 +2975,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		__u64 file_size;
 		__u64 offset;
 		char *type;
-		int verbose;
+		bool verbose;
 	};
 
 	struct config cfg = {
@@ -2985,7 +2985,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *command
 		.file_size = 0,
 		.offset = 0,
 		.type = NULL,
-		.verbose = 0,
+		.verbose = false,
 	};
 
 	OPT_ARGS(opts) = {
@@ -6338,15 +6338,15 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 
 
 	struct config {
-		int disable;
-		int enable;
-		int status;
+		bool disable;
+		bool enable;
+		bool status;
 	};
 
 	struct config cfg = {
-		.disable = 0,
-		.enable = 0,
-		.status = 0,
+		.disable = false,
+		.enable = false,
+		.status = false,
 	};
 
 	OPT_ARGS(opts) = {

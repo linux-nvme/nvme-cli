@@ -439,7 +439,7 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *cm
 	const char *raw = "dump output in binary format";
 	struct config {
 		__u32 namespace_id;
-		int   raw_binary;
+		bool  raw_binary;
 	};
 
 	struct config cfg = {
@@ -531,7 +531,7 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
     struct config {
         __u32 feature_id;
         __u32 value;
-        int   save;
+        bool  save;
     };
 
     struct config cfg = {
@@ -1022,7 +1022,7 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, st
     const char *write = "Get write statistics (read default)";
 
     struct config {
-        int  write;
+        bool  write;
     };
     struct config cfg = {
         .write = 0,

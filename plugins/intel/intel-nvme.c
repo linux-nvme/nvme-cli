@@ -347,8 +347,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 
 	struct config {
 		__u32 namespace_id;
-		int   raw_binary;
-		int   json;
+		bool  raw_binary;
+		bool  json;
 	};
 
 	struct config cfg = {
@@ -389,7 +389,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 	int err, fd;
 
 	struct config {
-		int  raw_binary;
+		bool  raw_binary;
 	};
 
 	struct config cfg = {
@@ -449,7 +449,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 	const char *desc = "Get Temperature Statistics log and show it.";
 	const char *raw = "dump output in binary format";
 	struct config {
-		int  raw_binary;
+		bool  raw_binary;
 	};
 
 	struct config cfg = {
@@ -1032,9 +1032,9 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	const char *write = "Get write statistics (read default)";
 
 	struct config {
-		int  raw_binary;
-		int json;
-		int  write;
+		bool raw_binary;
+		bool json;
+		bool write;
 	};
 
 	struct config cfg = {
@@ -1637,12 +1637,12 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 	__u32 result;
 
 	struct config {
-		int write;
+		bool write;
 		char *bucket_thresholds;
 	};
 
 	struct config cfg = {
-		.write = 0,
+		.write = false,
 		.bucket_thresholds = "",
 	};
 
