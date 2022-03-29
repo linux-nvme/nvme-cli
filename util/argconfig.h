@@ -38,7 +38,7 @@
 #include <stdarg.h>
 
 enum argconfig_types {
-	CFG_NONE,
+	CFG_FLAG,
 	CFG_STRING,
 	CFG_INT,
 	CFG_SIZE,
@@ -65,7 +65,7 @@ enum argconfig_types {
 #define OPT_END() { NULL }
 
 #define OPT_FLAG(l, s, v, d) \
-	{l, s, NULL, CFG_NONE, v, no_argument, d}
+	{l, s, NULL, CFG_FLAG, v, no_argument, d}
 
 #define OPT_SUFFIX(l, s, v, d) \
 	{l, s, "IONUM", CFG_LONG_SUFFIX, v, required_argument, d}

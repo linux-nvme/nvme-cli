@@ -1537,8 +1537,8 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	};
 
 	const struct argconfig_commandline_options command_line_options[] = {
-		{"enable", 'e', "", CFG_NONE, &cfg.enable, no_argument, enable_desc},
-		{"disable", 'd', "", CFG_NONE, &cfg.disable, no_argument, disable_desc},
+		{"enable", 'e', "", CFG_FLAG, &cfg.enable, no_argument, enable_desc},
+		{"disable", 'd', "", CFG_FLAG, &cfg.disable, no_argument, disable_desc},
 		{NULL}
 	};
 

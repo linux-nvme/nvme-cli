@@ -351,7 +351,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				goto out;
 			}
 			*((FILE **) value_addr) = f;
-		} else if (s->config_type == CFG_NONE) {
+		} else if (s->config_type == CFG_FLAG) {
 			*((bool *)value_addr) = true;
 		}
 	}
