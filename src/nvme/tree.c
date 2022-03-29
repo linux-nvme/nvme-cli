@@ -44,7 +44,7 @@ static int nvme_scan_subsystem(nvme_root_t r, const char *name,
 			       nvme_scan_filter_t f);
 static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
 				    char *name);
-static int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name);
+static int nvme_ctrl_scan_path(nvme_root_t r, struct nvme_ctrl *c, char *name);
 
 static inline void nvme_free_dirents(struct dirent **d, int i)
 {
@@ -97,6 +97,8 @@ int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 			continue;
 		}
 		if ((f) && !f(c->s)) {
+			nvme_msg(r, LOG_DEBUG, "filter out controller %s\n",
+				 ctrls[i]->d_name);
 			nvme_free_ctrl(c);
 		}
 	}
@@ -508,6 +510,7 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 	nvme_host_t h = NULL;
 	int ret;
 
+	nvme_msg(r, LOG_DEBUG, "scan subsystem %s\n", name);
 	ret = asprintf(&path, "%s/%s", nvme_subsys_sysfs_dir, name);
 	if (ret < 0)
 		return ret;
@@ -557,6 +560,7 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 	nvme_subsystem_scan_namespaces(r, s);
 
 	if (f && !f(s)) {
+		nvme_msg(r, LOG_DEBUG, "filter out subsystem %s\n", name);
 		__nvme_free_subsystem(s);
 		return -1;
 	}
@@ -618,12 +622,14 @@ static void nvme_subsystem_set_path_ns(nvme_subsystem_t s, nvme_path_t p)
 	}
 }
 
-static int nvme_ctrl_scan_path(struct nvme_ctrl *c, char *name)
+static int nvme_ctrl_scan_path(nvme_root_t r, struct nvme_ctrl *c, char *name)
 {
 	struct nvme_path *p;
 	char *path, *grpid;
 	int ret;
 
+	nvme_msg(r, LOG_DEBUG, "scan controller %s path %s\n",
+		 c->name, name);
 	if (!c->s) {
 		errno = ENXIO;
 		return -1;
@@ -1067,7 +1073,7 @@ static int nvme_ctrl_scan_paths(nvme_root_t r, struct nvme_ctrl *c)
 		return ret;
 
 	for (i = 0; i < ret; i++)
-		nvme_ctrl_scan_path(c, paths[i]->d_name);
+		nvme_ctrl_scan_path(r, c, paths[i]->d_name);
 
 	nvme_free_dirents(paths, i);
 	return 0;
@@ -1325,6 +1331,7 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 	char *hostnqn, *hostid, *subsysnqn, *subsysname;
 	int ret;
 
+	nvme_msg(r, LOG_DEBUG, "scan controller %s\n", name);
 	ret = asprintf(&path, "%s/%s", nvme_ctrl_sysfs_dir, name);
 	if (ret < 0) {
 		errno = ENOMEM;
@@ -1820,6 +1827,8 @@ static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
 {
 	struct nvme_ns *n;
 
+	nvme_msg(r, LOG_DEBUG, "scan controller %s namespace %s\n",
+		 c->name, name);
 	if (!c->s) {
 		nvme_msg(r, LOG_DEBUG, "no subsystem for %s\n", name);
 		errno = EINVAL;
@@ -1868,6 +1877,8 @@ static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
 {
 	struct nvme_ns *n;
 
+	nvme_msg(r, LOG_DEBUG, "scan subsystem %s namespace %s\n",
+		 s->name, name);
 	n = __nvme_scan_namespace(s->sysfs_dir, name);
 	if (!n) {
 		nvme_msg(r, LOG_DEBUG, "failed to scan namespace %s\n", name);
