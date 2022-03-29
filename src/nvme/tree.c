@@ -562,7 +562,6 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 	if (f && !f(s)) {
 		nvme_msg(r, LOG_DEBUG, "filter out subsystem %s\n", name);
 		__nvme_free_subsystem(s);
-		return -1;
 	}
 
 	return 0;
