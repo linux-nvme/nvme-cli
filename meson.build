@@ -29,7 +29,7 @@ systemddir     = join_paths(prefixdir, get_option('systemddir'))
 conf = configuration_data()
 requires = ''
 
-conf.set('SYSCONFDIR', sysconfdir)
+conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 
 libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
 
