@@ -40,6 +40,7 @@ static void __nvme_free_host(nvme_host_t h);
 static void __nvme_free_ctrl(nvme_ctrl_t c);
 static int nvme_subsystem_scan_namespace(nvme_root_t r,
 					 struct nvme_subsystem *s, char *name);
+static int nvme_init_subsystem(nvme_subsystem_t s, const char *name);
 static int nvme_scan_subsystem(nvme_root_t r, const char *name,
 			       nvme_scan_filter_t f);
 static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
@@ -370,6 +371,28 @@ void nvme_free_subsystem(nvme_subsystem_t s)
 {
 }
 
+struct nvme_subsystem *nvme_alloc_subsystem(struct nvme_host *h,
+					    const char *name,
+					    const char *subsysnqn)
+{
+	struct nvme_subsystem *s;
+
+	s = calloc(1, sizeof(*s));
+	if (!s)
+		return NULL;
+
+	s->h = h;
+	s->subsysnqn = strdup(subsysnqn);
+	if (name)
+		nvme_init_subsystem(s, name);
+	list_head_init(&s->ctrls);
+	list_head_init(&s->namespaces);
+	list_node_init(&s->entry);
+	list_add(&h->subsystems, &s->entry);
+	h->r->modified = true;
+	return s;
+}
+
 struct nvme_subsystem *nvme_lookup_subsystem(struct nvme_host *h,
 					     const char *name,
 					     const char *subsysnqn)
@@ -384,18 +407,7 @@ struct nvme_subsystem *nvme_lookup_subsystem(struct nvme_host *h,
 			continue;
 		return s;
 	}
-	s = calloc(1, sizeof(*s));
-	if (!s)
-		return NULL;
-
-	s->h = h;
-	s->subsysnqn = strdup(subsysnqn);
-	list_head_init(&s->ctrls);
-	list_head_init(&s->namespaces);
-	list_node_init(&s->entry);
-	list_add(&h->subsystems, &s->entry);
-	h->r->modified = true;
-	return s;
+	return nvme_alloc_subsystem(h, name, subsysnqn);
 }
 
 static void __nvme_free_host(struct nvme_host *h)
@@ -551,12 +563,6 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 		errno = ENOMEM;
 		return -1;
 	}
-	if (!s->name) {
-		ret = nvme_init_subsystem(s, name);
-		if (ret < 0)
-			return -1;
-	}
-
 	nvme_subsystem_scan_namespaces(r, s);
 
 	if (f && !f(s)) {
@@ -1199,14 +1205,6 @@ int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 		ret = -1;
 		goto out_free_subsys;
 	}
-	if (!s->name) {
-		ret = nvme_init_subsystem(s, subsys_name);
-		if (ret < 0) {
-			nvme_msg(h->r, LOG_ERR, "Failed to init subsystem %s\n",
-				 subsys_name);
-			goto out_free_subsys;
-		}
-	}
 	if (s->subsystype && !strcmp(s->subsystype, "discovery"))
 		c->discovery_ctrl = true;
 	c->s = s;
@@ -1372,12 +1370,9 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 	/* subsysname might be NULL here */
 	s = nvme_lookup_subsystem(h, subsysname, subsysnqn);
 	free(subsysnqn);
-
-	ret = 0;
-	if (s && !s->name && subsysname)
-		ret = nvme_init_subsystem(s, subsysname);
 	free(subsysname);
-	if (!s || ret < 0) {
+
+	if (!s) {
 		free(path);
 		errno = ENOMEM;
 		return NULL;
