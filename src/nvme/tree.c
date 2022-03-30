@@ -1367,7 +1367,14 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 		return NULL;
 	}
 	subsysname = nvme_ctrl_lookup_subsystem_name(r, name);
-	/* subsysname might be NULL here */
+	if (!subsysname) {
+		nvme_msg(r, LOG_ERR,
+			 "failed to lookup subsystem for controller %s\n",
+			 name);
+		free(path);
+		errno = ENXIO;
+		return NULL;
+	}
 	s = nvme_lookup_subsystem(h, subsysname, subsysnqn);
 	free(subsysnqn);
 	free(subsysname);
