@@ -179,6 +179,7 @@ LIBNVME_1_0 {
 		nvme_io_passthru64;
 		nvme_io_passthru;
 		nvme_lockdown;
+		nvme_lookup_ctrl;
 		nvme_lookup_host;
 		nvme_lookup_subsystem;
 		nvme_namespace_attach_ctrls;
