@@ -42,8 +42,8 @@
 #include "libnvme.h"
 #include "nvme-print.h"
 
-#define PATH_NVMF_DISC		"SYSCONFDIR/nvme/discovery.conf"
-#define PATH_NVMF_CONFIG	"SYSCONFDIR/nvme/config.json"
+#define PATH_NVMF_DISC		SYSCONFDIR "/nvme/discovery.conf"
+#define PATH_NVMF_CONFIG	SYSCONFDIR "/nvme/config.json"
 #define MAX_DISC_ARGS		32
 #define MAX_DISC_RETRIES	10
 
