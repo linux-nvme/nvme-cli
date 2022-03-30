@@ -169,6 +169,16 @@ const char *nvmf_cms_str(__u8 cms);
 void nvmf_default_config(struct nvme_fabrics_config *cfg);
 
 /**
+ * nvmf_update_config() - Update fabrics configuration values
+ * @c:          Controller to be modified
+ * @cfg:        Updated configuration values
+ *
+ * Updates the values from @c with the configuration values from @cfg;
+ * all non-default values from @cfg will overwrite the values in @c.
+ */
+void nvmf_update_config(nvme_ctrl_t c, const struct nvme_fabrics_config *cfg);
+
+/**
  * nvmf_add_ctrl() - Connect a controller and update topology
  * @h:		Host to which the controller should be attached
  * @c:		Controller to be connected
