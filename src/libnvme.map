@@ -333,6 +333,7 @@ LIBNVME_1_0 {
 		nvmf_subtype_str;
 		nvmf_treq_str;
 		nvmf_trtype_str;
+		nvmf_update_config;
 	local:
 		*;
 };
