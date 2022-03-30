@@ -516,9 +516,8 @@ static int nvme_init_subsystem(nvme_subsystem_t s, const char *name)
 static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 			       nvme_scan_filter_t f)
 {
-	struct nvme_subsystem *s;
+	struct nvme_subsystem *s = NULL, *_s;
 	char *path, *subsysnqn;
-	char *hostnqn, *hostid = NULL;
 	nvme_host_t h = NULL;
 	int ret;
 
@@ -527,42 +526,50 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 	if (ret < 0)
 		return ret;
 
-	hostnqn = nvme_get_attr(path, "hostnqn");
-	if (hostnqn) {
-		hostid = nvme_get_attr(path, "hostid");
-		h = nvme_lookup_host(r, hostnqn, hostid);
-		free(hostnqn);
-		if (hostid)
-			free(hostid);
-		if (h) {
-			if (h->dhchap_key)
-				free(h->dhchap_key);
-			h->dhchap_key = nvme_get_attr(path, "dhchap_secret");
-			if (h->dhchap_key && !strcmp(h->dhchap_key, "none")) {
-				free(h->dhchap_key);
-				h->dhchap_key = NULL;
-			}
-		}
-	}
-	if (!h)
-		h = nvme_default_host(r);
-	if (!h) {
-		free(path);
-		errno = ENOMEM;
-		return -1;
-	}
 	subsysnqn = nvme_get_attr(path, "subsysnqn");
 	free(path);
 	if (!subsysnqn) {
 		errno = ENODEV;
 		return -1;
 	}
-	s = nvme_lookup_subsystem(h, name, subsysnqn);
-	free(subsysnqn);
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, _s) {
+			/*
+			 * We are always called after nvme_scan_ctrl(),
+			 * so any subsystem we're interested at _must_
+			 * have a name.
+			 */
+			if (!_s->name)
+				continue;
+			if (strcmp(_s->name, name))
+				continue;
+			s = _s;
+		}
+	}
 	if (!s) {
-		errno = ENOMEM;
+		/*
+		 * Subsystem with non-matching controller. odd.
+		 * Create a subsystem with the default host
+		 * and hope for the best.
+		 */
+		nvme_msg(r, LOG_DEBUG, "creating detached subsystem '%s'\n",
+			 name);
+		h = nvme_default_host(r);
+		s = nvme_alloc_subsystem(h, name, subsysnqn);
+		if (!s) {
+			errno = ENOMEM;
+		}
+	} else if (strcmp(s->subsysnqn, subsysnqn)) {
+		nvme_msg(r, LOG_WARNING, "NQN mismatch for subsystem '%s'\n",
+			 name);
+		s = NULL;
+		errno = EINVAL;
 		return -1;
 	}
+	free(subsysnqn);
+	if (!s)
+		return -1;
+
 	nvme_subsystem_scan_namespaces(r, s);
 
 	if (f && !f(s)) {
