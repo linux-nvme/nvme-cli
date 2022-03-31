@@ -61,7 +61,7 @@ int nvme_scan_subsystems(struct dirent ***subsys);
 /**
  * nvme_scan_subsystem_namespaces() - Scan for namespaces in a subsystem
  * @s: Subsystem to scan
- * @n: Pointer to array of dirents
+ * @ns: Pointer to array of dirents
  *
  * Return: number of entries in @ns
  */
