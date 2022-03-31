@@ -7882,6 +7882,12 @@ int disconnect_all_cmd(int argc, char **argv, struct command *command,
 	return nvmf_disconnect_all(desc, argc, argv);
 }
 
+static int config_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Configuration of NVMeoF subsystems";
+	return nvmf_config(desc, argc, argv);
+}
+
 void register_extension(struct plugin *plugin)
 {
 	plugin->parent = &nvme;

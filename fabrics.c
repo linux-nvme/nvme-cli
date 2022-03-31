@@ -861,3 +861,104 @@ int nvmf_disconnect_all(const char *desc, int argc, char **argv)
 
 	return 0;
 }
+
+int nvmf_config(const char *desc, int argc, char **argv)
+{
+	char *subsysnqn = NULL;
+	char *transport = NULL, *traddr = NULL;
+	char *trsvcid = NULL, *hostnqn = NULL, *hostid = NULL;
+	char *hnqn = NULL, *hid = NULL;
+	char *hostkey = NULL, *ctrlkey = NULL;
+	char *config_file = PATH_NVMF_CONFIG;
+	unsigned int verbose = 0;
+	nvme_root_t r;
+	int ret;
+	struct nvme_fabrics_config cfg;
+	bool scan_tree = false, modify_config = false, update_config = false;
+
+	OPT_ARGS(opts) = {
+		NVMF_OPTS(cfg),
+		OPT_STRING("config", 'J', "FILE", &config_file, nvmf_config_file),
+		OPT_INCR("verbose", 'v', &verbose, "Increase logging verbosity"),
+		OPT_FLAG("scan", 'R', &scan_tree, "Scan current NVMeoF topology"),
+		OPT_FLAG("modify", 'M', &modify_config, "Modify JSON configuration file"),
+		OPT_FLAG("dump", 'O', &dump_config, "Dump JSON configuration to stdout"),
+		OPT_FLAG("update", 'U', &update_config, "Update JSON configuration file"),
+		OPT_END()
+	};
+
+	nvmf_default_config(&cfg);
+
+	ret = argconfig_parse(argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	if (!strcmp(config_file, "none"))
+		config_file = NULL;
+
+	r = nvme_create_root(stderr, map_log_level(verbose, quiet));
+	if (!r) {
+		fprintf(stderr, "Failed to create topology root: %s\n",
+			nvme_strerror(errno));
+		return -errno;
+	}
+	if (scan_tree) {
+		ret = nvme_scan_topology(r, NULL);
+		if (ret < 0) {
+			fprintf(stderr, "Failed to scan topoplogy: %s\n",
+				nvme_strerror(errno));
+			return ret;
+		}
+	}
+	nvme_read_config(r, config_file);
+
+	if (modify_config) {
+		nvme_host_t h;
+		nvme_subsystem_t s;
+		nvme_ctrl_t c;
+
+		if (!hostnqn)
+			hostnqn = hnqn = nvmf_hostnqn_from_file();
+		if (!hostid && hnqn)
+			hostid = hid = nvmf_hostid_from_file();
+		h = nvme_lookup_host(r, hostnqn, hostid);
+		if (!h) {
+			fprintf(stderr, "Failed to lookup host '%s': %s\n",
+				hostnqn, nvme_strerror(errno));
+			goto out;
+		}
+		if (hostkey)
+			nvme_host_set_dhchap_key(h, hostkey);
+		s = nvme_lookup_subsystem(h, NULL, subsysnqn);
+		if (!s) {
+			fprintf(stderr, "Failed to lookup subsystem '%s': %s\n",
+				subsysnqn, nvme_strerror(errno));
+			goto out;
+		}
+		c = nvme_lookup_ctrl(s, transport, traddr,
+				     cfg.host_traddr, cfg.host_iface,
+				     trsvcid, NULL);
+		if (!c) {
+			fprintf(stderr, "Failed to lookup controller: %s\n",
+				nvme_strerror(errno));
+			goto out;
+		}
+		nvmf_update_config(c, &cfg);
+		if (ctrlkey)
+			nvme_ctrl_set_dhchap_key(c, ctrlkey);
+	}
+
+	if (update_config)
+		nvme_update_config(r);
+
+	if (dump_config)
+		nvme_dump_config(r);
+
+out:
+	if (hid)
+		free(hid);
+	if (hnqn)
+		free(hnqn);
+	nvme_free_tree(r);
+	return errno;
+}
