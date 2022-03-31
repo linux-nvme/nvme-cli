@@ -34,7 +34,7 @@
 #define NVME_DEFAULT_IOCTL_TIMEOUT 0
 
 /**
- * struct nvme_passthru_cmd -
+ * struct nvme_passthru_cmd - nvme passthrough command structure
  * @opcode:	Operation code, see &enum nvme_io_opcodes and &enum nvme_admin_opcodes
  * @flags:	Not supported: intended for command flags (eg: SGL, FUSE)
  * @rsvd1:	Reserved for future use
@@ -76,7 +76,7 @@ struct nvme_passthru_cmd {
 };
 
 /**
- * struct nvme_passthru_cmd64 -
+ * struct nvme_passthru_cmd64 - 64-bit nvme passthrough command structure
  * @opcode:	Operation code, see &enum nvme_io_opcodes and &enum nvme_admin_opcodes
  * @flags:	Not supported: intended for command flags (eg: SGL, FUSE)
  * @rsvd1:	Reserved for future use
@@ -148,7 +148,7 @@ int nvme_submit_admin_passthru64(int fd, struct nvme_passthru_cmd64 *cmd,
 				 __u64 *result);
 
 /**
- * nvme_admin_passthru64() - Submit an nvme passthrough command
+ * nvme_admin_passthru64() - Submit a 64-bit nvme passthrough command
  * @fd:		File descriptor of nvme device
  * @opcode:	The nvme io command to send
  * @flags:	NVMe command flags (not used)
@@ -579,15 +579,15 @@ static inline int nvme_identify_ctrl_list(int fd, __u16 cntid,
 }
 
 /**
- * nvme_identify_nsid_ctrl_list() -
+ * nvme_identify_nsid_ctrl_list() - Retrieves controller list attached to an nsid
  * @fd:		File descriptor of nvme device
  * @nsid:	Return controllers that are attached to this nsid
  * @cntid:	Starting CNTLID to return in the list
  * @cntlist:	User space destination address to transfer the data
  *
- * Up to 2047 controller identifiers is returned containing a controller
+ * Up to 2047 controller identifiers are returned containing a controller
  * identifier greater than or equal to the controller identifier  specified in
- * @cntid.
+ * @cntid attached to @nsid.
  *
  * See &struct nvme_ctrl_list for a definition of the structure returned.
  *
@@ -787,12 +787,15 @@ static inline int nvme_identify_uuid(int fd, struct nvme_id_uuid_list *uuid_list
 }
 
 /**
- * nvme_identify_ns_csi() -
+ * nvme_identify_ns_csi() - I/O command set specific identify namespace data
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace to identify
  * @uuidx:	UUID Index for differentiating vendor specific encoding
  * @csi:	Command Set Identifier
  * @data:	User space destination address to transfer the data
+ *
+ * An I/O Command Set specific Identify Namespace data structre is returned
+ * for the namespace specified in @nsid.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -818,10 +821,14 @@ static inline int nvme_identify_ns_csi(int fd, __u32 nsid, __u8 uuidx,
 }
 
 /**
- * nvme_identify_ctrl_csi() -
+ * nvme_identify_ctrl_csi() - I/O command set specific Identify Controller data
  * @fd:		File descriptor of nvme device
  * @csi:	Command Set Identifier
  * @data:	User space destination address to transfer the data
+ *
+ * An I/O Command Set specific Identify Controller data structure is returned
+ * to the host for the controller processing the command. The specific Identify
+ * Controller data structure to be returned is specified by @csi.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -846,7 +853,7 @@ static inline int nvme_identify_ctrl_csi(int fd, enum nvme_csi csi, void *data)
 }
 
 /**
- * nvme_identify_active_ns_list_csi() -
+ * nvme_identify_active_ns_list_csi() - Active namespace ID list associated with a specified I/O command set 
  * @fd:		File descriptor of nvme device
  * @nsid:	Return namespaces greater than this identifier
  * @csi:	Command Set Identifier
@@ -883,7 +890,7 @@ static inline int nvme_identify_active_ns_list_csi(int fd, __u32 nsid,
 }
 
 /**
- * nvme_identify_allocated_ns_list_csi() -
+ * nvme_identify_allocated_ns_list_csi() - Allocated namespace ID list associated with a specified I/O command set
  * @fd:		File descriptor of nvme device
  * @nsid:	Return namespaces greater than this identifier
  * @csi:	Command Set Identifier
@@ -920,11 +927,14 @@ static inline int nvme_identify_allocated_ns_list_csi(int fd, __u32 nsid,
 }
 
 /**
- * nvme_identify_independent_identify_ns() -
+ * nvme_identify_independent_identify_ns() - I/O command set independent Identify namespace data
  * @fd:		File descriptor of nvme device
  * @nsid:	Return namespaces greater than this identifier
  * @ns:		I/O Command Set Independent Identify Namespace data
  *		structure
+ *
+ * The I/O command set independent Identify namespace data structure for
+ * the namespace identified with @ns is returned to the host.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -1019,9 +1029,12 @@ static inline int nvme_identify_iocs_ns_csi_user_data_format(int fd,
 }
 
 /**
- * nvme_nvm_identify_ctrl() -
+ * nvme_nvm_identify_ctrl() - Identify controller data
  * @fd:	File descriptor of nvme device
  * @id:	User space destination address to transfer the data
+ *
+ * Return an identify controller data structure to the host of
+ * processing controller.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -1032,7 +1045,7 @@ static inline int nvme_nvm_identify_ctrl(int fd, struct nvme_id_ctrl_nvm *id)
 }
 
 /**
- * nvme_identify_domain_list() -
+ * nvme_identify_domain_list() - Domain list data
  * @fd:		File descriptor of nvme device
  * @domid:	Domain ID
  * @list:	User space destiantion address to transfer data
@@ -1068,7 +1081,7 @@ static inline int nvme_identify_domain_list(int fd, __u16 domid,
 }
 
 /**
- * nvme_identify_endurance_group_list() -
+ * nvme_identify_endurance_group_list() - Endurance group list data
  * @fd:		File descriptor of nvme device
  * @endgrp_id:	Endurance group identifier
  * @list:	Array of endurance group identifiers
@@ -1097,7 +1110,7 @@ static inline int nvme_identify_endurance_group_list(int fd, __u16 endgrp_id,
 }
 
 /**
- * nvme_identify_iocs() -
+ * nvme_identify_iocs() - I/O command set data structure
  * @fd:		File descriptor of nvme device
  * @cntlid:	Controller ID
  * @iocs:	User space destination address to transfer the data
@@ -1129,7 +1142,7 @@ static inline int nvme_identify_iocs(int fd, __u16 cntlid,
 }
 
 /**
- * nvme_zns_identify_ns() -
+ * nvme_zns_identify_ns() - ZNS identify namespace data
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace to identify
  * @data:	User space destination address to transfer the data
@@ -1157,7 +1170,7 @@ static inline int nvme_zns_identify_ns(int fd, __u32 nsid,
 }
 
 /**
- * nvme_zns_identify_ctrl() -
+ * nvme_zns_identify_ctrl() - ZNS identify controller data
  * @fd:	File descriptor of nvme device
  * @id:	User space destination address to transfer the data
  *
