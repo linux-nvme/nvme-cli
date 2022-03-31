@@ -9,14 +9,15 @@
 #
 
 api_files = [
+  'fabrics.h',
   'filters.h',
   'ioctl.h',
   'linux.h',
   'log.h',
   'mi.h',
+  'nbft.h',
   'tree.h',
   'types.h',
-  'fabrics.h',
   'util.h'
 ]
 

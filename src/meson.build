@@ -7,6 +7,7 @@
 #
 sources = [
     'nvme/cleanup.c',
+    'nvme/nbft.c',
     'nvme/fabrics.c',
     'nvme/filters.c',
     'nvme/ioctl.c',
@@ -125,6 +126,7 @@ install_headers([
         'nvme/ioctl.h',
         'nvme/linux.h',
         'nvme/log.h',
+        'nvme/nbft.h',
         'nvme/tree.h',
         'nvme/types.h',
         'nvme/util.h',
