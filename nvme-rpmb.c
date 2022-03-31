@@ -962,11 +962,11 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 			if (cfg.msgfile == 0) {
 				struct rpmb_config_block_t *cfg =
 						(struct rpmb_config_block_t *)msg_buf;
-				printf("Boot Parition Protection is %s\n",
+				printf("Boot Partition Protection is %s\n",
 					((cfg->bp_enable & 0x1)  ? "Enabled" : "Disabled"));
-				printf("Boot Parition 1 is %s\n",
+				printf("Boot Partition 1 is %s\n",
 					((cfg->bp_lock & 0x2) ? "Locked" : "Unlocked"));
-				printf("Boot Parition 0 is %s\n",
+				printf("Boot Partition 0 is %s\n",
 					((cfg->bp_lock & 0x1) ? "Locked" : "Unlocked"));
 			} else {
 				printf("Saving received config data to %s file\n", cfg.msgfile);
