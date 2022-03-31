@@ -2438,7 +2438,8 @@ static bool nvme_match_device_filter(nvme_subsystem_t s)
 		return true;
 
 	nvme_subsystem_for_each_ctrl(s, c) {
-		if (strcmp(devicename, nvme_ctrl_get_name(c)) >= 0)
+		if (!strncmp(devicename, nvme_ctrl_get_name(c),
+			     strlen(nvme_ctrl_get_name(c))))
 			return true;
 	}
 
