@@ -1306,6 +1306,5 @@ int nvmf_register_ctrl(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result)
 	 * to retrieve the source address from the socket and use that
 	 * as the registration address.
 	 */
-	return nvmf_dim(c, NVMF_DIM_TAS_REGISTER, NVMF_TRTYPE_TCP,
-			nvme_get_adrfam(c), "", NULL, result);
+	return nvmf_dim(c, tas, NVMF_TRTYPE_TCP, nvme_get_adrfam(c), "", NULL, result);
 }
