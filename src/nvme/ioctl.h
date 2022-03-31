@@ -405,7 +405,7 @@ struct nvme_identify_args {
 	__u16 cntid;
 	__u16 cns_specific_id;
 	__u8 uuidx;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_identify() - Send the NVMe Identify command
@@ -1219,7 +1219,7 @@ struct nvme_get_log_args {
 	__u8 uuidx;
 	bool rae;
 	bool ot;
-} __attribute__((packed, aligned(__alignof__(__u64))));
+};
 
 /**
  * nvme_get_log() - NVMe Admin Get Log command
@@ -2029,7 +2029,7 @@ struct nvme_set_features_args {
 	bool save;
 	__u8 uuidx;
 	__u8 fid;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_set_features() - Set a feature attribute
@@ -2469,7 +2469,7 @@ struct nvme_get_features_args {
 	__u32 data_len;
 	__u8 fid;
 	__u8 uuidx;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_get_features() - Retrieve a feature attribute
@@ -2918,7 +2918,7 @@ struct nvme_format_nvm_args {
 	enum nvme_cmd_format_pil pil;
 	enum nvme_cmd_format_ses ses;
 	__u8 lbaf;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_format_nvm() - Format nvme namespace(s)
@@ -2954,7 +2954,7 @@ struct nvme_ns_mgmt_args {
 	__u32 nsid;
 	enum nvme_ns_mgmt_sel sel;
 	__u8 csi;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_ns_mgmt() - Issue a Namespace management command
@@ -3041,7 +3041,7 @@ struct nvme_ns_attach_args {
 	__u32 timeout;
 	__u32 nsid;
 	enum nvme_ns_attach_sel sel;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_ns_attach() - Attach or detach namespace to controller(s)
@@ -3111,7 +3111,7 @@ struct nvme_fw_download_args {
 	__u32 timeout;
 	__u32 offset;
 	__u32 data_len;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_fw_download() - Download part or all of a firmware image to the
@@ -3154,7 +3154,7 @@ struct nvme_fw_commit_args {
 	enum nvme_fw_commit_ca action;
 	__u8 slot;
 	bool bpid;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_fw_commit() - Commit firmware using the specified action
@@ -3197,7 +3197,7 @@ struct nvme_security_send_args {
 	__u8 spsp0;
 	__u8 spsp1;
 	__u8 secp;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_security_send() -
@@ -3245,7 +3245,7 @@ struct nvme_security_receive_args {
 	__u8 spsp0;
 	__u8 spsp1;
 	__u8 secp;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_security_receive() -
@@ -3281,7 +3281,7 @@ struct nvme_get_lba_status_args {
 	__u32 mndw;
 	enum nvme_lba_status_atype atype;
 	__u16 rl;
-} __attribute__((packed, aligned(__alignof__(__u64))));
+};
 
 /**
  * nvme_get_lba_status() - Retrieve information on possibly unrecoverable LBAs
@@ -3321,7 +3321,7 @@ struct nvme_directive_send_args {
 	__u32 cdw12;
 	__u32 data_len;
 	__u16 dspec;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_directive_send() - Send directive command
@@ -3435,7 +3435,7 @@ struct nvme_directive_recv_args {
 	__u32 cdw12;
 	__u32 data_len;
 	__u16 dspec;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_directive_recv() - Receive directive specific data
@@ -3587,7 +3587,7 @@ struct nvme_capacity_mgmt_args {
 	__u32 cdw12;
 	__u16 element_id;
 	__u8 op;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_capacity_mgmt() -
@@ -3620,7 +3620,7 @@ struct nvme_lockdown_args {
 	__u8 ifc;
 	__u8 ofi;
 	__u8 uuidx;
-} __attribute__((__packed__));
+};
 
 /**
  * nvme_lockdown() - Issue lockdown command
@@ -3647,7 +3647,7 @@ struct nvme_set_property_args {
 	int fd;
 	__u32 timeout;
 	int offset;
-} __attribute__((packed, aligned(__alignof__(__u64))));
+};
 
 /**
  * nvme_set_property() - Set controller property
@@ -3675,7 +3675,7 @@ struct nvme_get_property_args {
 	int fd;
 	__u32 timeout;
 	int offset;
-} __attribute__((packed, aligned(__alignof__(__u64*))));
+};
 
 /**
  * nvme_get_property() - Get a controller property
@@ -3713,7 +3713,7 @@ struct nvme_sanitize_nvm_args {
 	__u8 owpass;
 	bool oipbp;
 	bool nodas;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_sanitize_nvm() - Start a sanitize operation
@@ -3750,7 +3750,7 @@ struct nvme_dev_self_test_args {
 	__u32 timeout;
 	__u32 nsid;
 	enum nvme_dst_stc stc;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_dev_self_test() - Start or abort a self test
@@ -3793,7 +3793,7 @@ struct nvme_virtual_mgmt_args {
 	enum nvme_virt_mgmt_rt rt;
 	__u16 cntlid;
 	__u16 nr;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_virtual_mgmt() - Virtualization resource management
@@ -3880,7 +3880,7 @@ struct nvme_io_args {
 	__u16 appmask;
 	__u16 dspec;
 	__u8 dsm;
-} __attribute__((__packed__, aligned(__alignof__(__u64))));
+};
 
 /**
  * nvme_io() - Submit an nvme user I/O command
@@ -3998,7 +3998,7 @@ struct nvme_dsm_args {
 	__u32 nsid;
 	__u32 attrs;
 	__u16 nr_ranges;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_dsm() - Send an nvme data set management command
@@ -4055,7 +4055,7 @@ struct nvme_copy_args {
 	__u8 prinfow;
 	__u8 dtype;
 	__u8 format;
-} __attribute__((packed, aligned(__alignof__(__u64))));
+};
 
 /**
  * nvme_copy() -
@@ -4092,7 +4092,7 @@ struct nvme_resv_acquire_args {
 	enum nvme_resv_rtype rtype;
 	enum nvme_resv_racqa racqa;
 	bool iekey;
-} __attribute__((packed, aligned(__alignof__(__u64))));
+};
 
 /**
  * nvme_resv_acquire() - Send an nvme reservation acquire
@@ -4132,7 +4132,7 @@ struct nvme_resv_register_args {
 	enum nvme_resv_rrega rrega;
 	enum nvme_resv_cptpl cptpl;
 	bool iekey;
-} __attribute__((packed, aligned(__alignof__(__u64))));
+};
 
 /**
  * nvme_resv_register() - Send an nvme reservation register
@@ -4168,7 +4168,7 @@ struct nvme_resv_release_args {
 	enum nvme_resv_rtype rtype;
 	enum nvme_resv_rrela rrela;
 	bool iekey;
-} __attribute__((packed, aligned(__alignof__(__u64))));
+};
 
 /**
  * nvme_resv_release() - Send an nvme reservation release
@@ -4200,7 +4200,7 @@ struct nvme_resv_report_args {
 	__u32 nsid;
 	__u32 len;
 	bool eds;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_resv_report() - Send an nvme reservation report
@@ -4241,7 +4241,7 @@ struct nvme_zns_mgmt_send_args {
 	__u32 data_len;
 	bool select_all;
 	__u8 zsaso;
-} __attribute__((packed, aligned(__alignof__(__u64))));
+};
 
 /**
  * nvme_zns_mgmt_send() -
@@ -4279,7 +4279,7 @@ struct nvme_zns_mgmt_recv_args {
 	__u32 data_len;
 	__u16 zrasf;
 	bool zras_feat;
-} __attribute__((packed, aligned(__alignof__(__u64))));
+};
 
 /**
  * nvme_zns_mgmt_recv() -
@@ -4364,7 +4364,7 @@ struct nvme_zns_append_args {
 	__u16 control;
 	__u16 lbat;
 	__u16 lbatm;
-} __attribute__((packed, aligned(__alignof__(__u64))));
+};
 
 /**
  * nvme_zns_append() - Append data to a zone
@@ -4393,7 +4393,7 @@ struct nvme_dim_args {
 	__u32	timeout;
 	__u32	data_len;
 	__u8	tas;
-} __attribute__((packed, aligned(__alignof__(__u32*))));
+};
 
 /**
  * nvme_dim_send - Send a Discovery Information Management (DIM) command
