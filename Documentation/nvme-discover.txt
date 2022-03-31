@@ -33,6 +33,7 @@ SYNOPSIS
 		[--quiet                  | -S]
 		[--dump-config            | -O]
 		[--output-format=<fmt>    | -o <fmt>]
+		[--force]
 
 DESCRIPTION
 -----------
@@ -207,6 +208,11 @@ OPTIONS
 --output-format=<format>::
               Set the reporting format to 'normal', 'json', or
               'binary'. Only one output format can be used at a time.
+
+--force::
+	Disable the built-in persitent discover connection rules.
+	Combined with --persistent flag, always create new
+	persistent discovery connection.
 
 EXAMPLES
 --------
