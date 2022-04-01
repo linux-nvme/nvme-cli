@@ -185,6 +185,8 @@ LIBNVME_1_0 {
 		nvme_namespace_attach_ctrls;
 		nvme_namespace_detach_ctrls;
 		nvme_namespace_filter;
+		nvme_namespace_first_path;
+		nvme_namespace_next_path;
 		nvme_next_host;
 		nvme_next_subsystem;
 		nvme_ns_attach;

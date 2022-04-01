@@ -217,6 +217,23 @@ nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s);
 nvme_ctrl_t nvme_subsystem_next_ctrl(nvme_subsystem_t s, nvme_ctrl_t c);
 
 /**
+ * nvme_namespace_first_path() - Start path iterator
+ * @ns:	Namespace instance
+ *
+ * Return: First &nvme_path_t object of an @ns iterator
+ */
+nvme_path_t nvme_namespace_first_path(nvme_ns_t ns);
+
+/**
+ * nvme_namespace_next_path() - Next path iterator
+ * @ns:	Namespace instance
+ * @p:	Previous &nvme_path_t object of an @ns iterator
+ *
+ * Return: Next &nvme_path_t object of an @ns iterator
+ */
+nvme_path_t nvme_namespace_next_path(nvme_ns_t c, nvme_path_t p);
+
+/**
  * nvme_lookup_ctrl() - Lookup nvme_ctrl_t object
  * @s:			&nvme_subsystem_t object
  * @transport:		Transport name
@@ -402,6 +419,27 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 #define nvme_subsystem_for_each_ns(s, n)			\
 	for (n = nvme_subsystem_first_ns(s); n != NULL;		\
 		n = nvme_subsystem_next_ns(s, n))
+
+/**
+ * nvme_namespace_for_each_path_safe() - Traverse paths
+ * @ns:	Namespace instance
+ * @p:	&nvme_path_t object
+ * @_p:	A &nvme_path_t_node to use as temporary storage
+ */
+#define nvme_namespace_for_each_path_safe(n, p, _p)		\
+	for (p = nvme_namespace_first_path(n),			\
+	     _p = nvme_namespace_next_path(n, p);		\
+             p != NULL;						\
+	     p = _p, _p = nvme_namespace_next_path(n, p))
+
+/**
+ * nvme_namespace_for_each_path() - Traverse paths
+ * @ns:	Namespace instance
+ * @p:	&nvme_path_t object
+ */
+#define nvme_namespace_for_each_path(c, p)			\
+	for (p = nvme_namespace_first_path(c); p != NULL;	\
+		p = nvme_namespace_next_path(c, p))
 
 /**
  * nvme_ns_get_fd() - Get associated filedescriptor

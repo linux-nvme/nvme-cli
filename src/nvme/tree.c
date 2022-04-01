@@ -325,6 +325,16 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n)
 	return n ? list_next(&s->namespaces, n, entry) : NULL;
 }
 
+nvme_path_t nvme_namespace_first_path(nvme_ns_t ns)
+{
+	return list_top(&ns->paths, struct nvme_path, nentry);
+}
+
+nvme_path_t nvme_namespace_next_path(nvme_ns_t ns, nvme_path_t p)
+{
+	return p ? list_next(&ns->paths, p, nentry) : NULL;
+}
+
 static void __nvme_free_ns(struct nvme_ns *n)
 {
 	list_del_init(&n->entry);
