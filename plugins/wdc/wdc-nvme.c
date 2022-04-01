@@ -9172,6 +9172,12 @@ static int wdc_capabilities(int argc, char **argv,
             capabilities & WDC_DRIVE_CAP_CLOUD_SSD_VERSION ? "Supported" : "Not Supported");
     printf("vs-pcie-stats                 : %s\n",
             capabilities & WDC_DRIVE_CAP_PCIE_STATS ? "Supported" : "Not Supported");
+    printf("get-error-recovery-log        : %s\n",
+            capabilities & WDC_DRIVE_CAP_OCP_C1_LOG_PAGE ? "Supported" : "Not Supported");
+    printf("get-dev-capabilities-log      : %s\n",
+            capabilities & WDC_DRIVE_CAP_OCP_C4_LOG_PAGE ? "Supported" : "Not Supported");
+    printf("get-unsupported-reqs-log      : %s\n",
+            capabilities & WDC_DRIVE_CAP_OCP_C5_LOG_PAGE ? "Supported" : "Not Supported");
     printf("capabilities                  : Supported\n");
     nvme_free_tree(r);
     return 0;
