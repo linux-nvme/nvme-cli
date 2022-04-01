@@ -962,3 +962,131 @@ out:
 	nvme_free_tree(r);
 	return errno;
 }
+
+static void dim_operation(nvme_ctrl_t c, enum nvmf_dim_tas tas, const char * name)
+{
+	static const char * const task[] = {
+		[NVMF_DIM_TAS_REGISTER]   = "register",
+		[NVMF_DIM_TAS_DEREGISTER] = "deregister",
+	};
+	const char * t;
+	int status;
+	__u32 result;
+
+	t = (tas > NVMF_DIM_TAS_DEREGISTER || !task[tas]) ? "reserved" : task[tas];
+	status = nvmf_register_ctrl(c, tas, &result);
+	if (status == NVME_SC_SUCCESS) {
+		printf("%s DIM %s command success\n", name, t);
+	} else if (status < NVME_SC_SUCCESS) {
+		fprintf(stderr, "%s DIM %s command error. Status:0x%04x - %s\n",
+			name, t, status, nvme_status_to_string(status, false));
+	} else {
+		fprintf(stderr, "%s DIM %s command error. Result:0x%04x, Status:0x%04x - %s\n",
+			name, t, result, status, nvme_status_to_string(status, false));
+	}
+}
+
+int nvmf_dim(const char *desc, int argc, char **argv)
+{
+	enum nvmf_dim_tas tas;
+	nvme_root_t r;
+	nvme_ctrl_t c;
+	char *p;
+	int ret;
+
+	struct {
+		char *nqn;
+		char *device;
+		char *tas;
+		unsigned int verbose;
+	} cfg = { 0 };
+
+	OPT_ARGS(opts) = {
+		OPT_STRING("nqn",    'n', "NAME", &cfg.nqn,    "Comma-separated list of DC nqn"),
+		OPT_STRING("device", 'd', "DEV",  &cfg.device, "Comma-separated list of DC nvme device handle."),
+		OPT_STRING("task",   't', "TASK", &cfg.tas,    "[register|deregister]"),
+		OPT_INCR("verbose",  'v', &cfg.verbose, "Increase logging verbosity"),
+		OPT_END()
+	};
+
+	ret = argconfig_parse(argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	if (!cfg.nqn && !cfg.device) {
+		fprintf(stderr,
+			"Neither device name [--device | -d] nor NQN [--nqn | -n] provided\n");
+		return EINVAL;
+	}
+
+	if (!cfg.tas) {
+		fprintf(stderr,
+			"Task [--task | -t] must be specified\n");
+		return EINVAL;
+	}
+
+	/* Allow partial name (e.g. "reg" for "register" */
+	if (strstarts("register", cfg.tas)) {
+		tas = NVMF_DIM_TAS_REGISTER;
+	} else if (strstarts("deregister", cfg.tas)) {
+		tas = NVMF_DIM_TAS_DEREGISTER;
+	} else {
+		fprintf(stderr, "Invalid --task: %s\n", cfg.tas);
+		return EINVAL;
+	}
+
+	r = nvme_create_root(stderr, map_log_level(cfg.verbose, false));
+	if (!r) {
+		fprintf(stderr, "Failed to create topology root: %s\n",
+			nvme_strerror(errno));
+		return -errno;
+	}
+	ret = nvme_scan_topology(r, NULL);
+	if (ret < 0) {
+		fprintf(stderr, "Failed to scan topoplogy: %s\n",
+			 nvme_strerror(errno));
+		return ret;
+	}
+
+	if (cfg.nqn) {
+		nvme_host_t h;
+		nvme_subsystem_t s;
+		char *n = cfg.nqn;
+
+		while ((p = strsep(&n, ",")) != NULL) {
+			if (!strlen(p))
+				continue;
+			nvme_for_each_host(r, h) {
+				nvme_for_each_subsystem(h, s) {
+					if (strcmp(nvme_subsystem_get_nqn(s), p))
+						continue;
+					nvme_subsystem_for_each_ctrl(s, c) {
+						dim_operation(c, tas, p);
+					}
+				}
+			}
+		}
+	}
+
+	if (cfg.device) {
+		char *d = cfg.device;
+
+		while ((p = strsep(&d, ",")) != NULL) {
+			if (!strncmp(p, "/dev/", 5))
+				p += 5;
+			c = nvme_scan_ctrl(r, p);
+			if (!c) {
+				fprintf(stderr,
+					"Did not find device %s: %s\n",
+					p, nvme_strerror(errno));
+				nvme_free_tree(r);
+				return errno;
+			}
+			dim_operation(c, tas, p);
+		}
+	}
+
+	nvme_free_tree(r);
+
+	return 0;
+}

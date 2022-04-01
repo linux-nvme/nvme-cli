@@ -7889,6 +7889,12 @@ static int config_cmd(int argc, char **argv, struct command *command, struct plu
 	return nvmf_config(desc, argc, argv);
 }
 
+static int dim_cmd(int argc, char **argv, struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Send Discovery Information Management command to a Discovery Controller (DC)";
+	return nvmf_dim(desc, argc, argv);
+}
+
 void register_extension(struct plugin *plugin)
 {
 	plugin->parent = &nvme;

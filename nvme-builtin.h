@@ -103,6 +103,7 @@ COMMAND_LIST(
 	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller ", virtual_mgmt)
 	ENTRY("rpmb", "Replay Protection Memory Block commands", rpmb_cmd)
 	ENTRY("lockdown", "Submit a Lockdown command,return result", lockdown_cmd)
+	ENTRY("dim", "Send Discovery Information Management command to a Discovery Controller", dim_cmd)
 );
 
 #endif

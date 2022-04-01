@@ -100,7 +100,7 @@ _cmds="list list-subsys id-ctrl id-ns \
 	show-hostnqn dir-receive dir-send virt-mgmt \
 	rpmb boot-part-log fid-support-effects-log \
 	supported-log-pages lockdown media-unit-stat-log \
-	supported-cap-config-log"
+	supported-cap-config-log dim"
 
 # Add plugins:
 for plugin in "${!_plugin_subcmds[@]}"; do
@@ -487,6 +487,9 @@ nvme_list_opts () {
 			--ctrl-loss-tmo= -l --fast-io-fail-tmo= -f \
 			--tos= -T --duplicate-connect -D --disable-sqflow -d\
 			--hdr-digest -g --data-digest -G --output-format= -o"
+			;;
+		"dim")
+		opts+=" --task -t --nqn -n --device -d"
 			;;
 		"disconnect")
 		opts+=" --nqn -n --device -d"
