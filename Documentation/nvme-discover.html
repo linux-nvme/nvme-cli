@@ -773,7 +773,8 @@ nvme-discover(1) Manual Page
                 [--persistent             | -p]
                 [--quiet                  | -S]
                 [--dump-config            | -O]
-                [--output-format=&lt;fmt&gt;    | -o &lt;fmt&gt;]</pre>
+                [--output-format=&lt;fmt&gt;    | -o &lt;fmt&gt;]
+                [--force]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -1144,6 +1145,16 @@ cellspacing="0" cellpadding="4">
               <em>binary</em>. Only one output format can be used at a time.
 </p>
 </dd>
+<dt class="hdlist1">
+--force
+</dt>
+<dd>
+<p>
+        Disable the built-in persitent discover connection rules.
+        Combined with --persistent flag, always create new
+        persistent discovery connection.
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -1207,7 +1218,7 @@ nvme-connect-all(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-03-18 17:56:05 CET
+ 2022-04-01 15:09:01 CEST
 </div>
 </div>
 </body>

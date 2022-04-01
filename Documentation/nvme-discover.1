@@ -2,12 +2,12 @@
 .\"     Title: nvme-discover
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/18/2022
+.\"      Date: 04/01/2022
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCOVER" "1" "03/18/2022" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCOVER" "1" "04/01/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -57,6 +57,7 @@ nvme-discover \- Send Get Log Page request to Discovery Controller\&.
                 [\-\-quiet                  | \-S]
                 [\-\-dump\-config            | \-O]
                 [\-\-output\-format=<fmt>    | \-o <fmt>]
+                [\-\-force]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -237,6 +238,11 @@ Set the reporting format to
 \fInormal\fR,
 \fIjson\fR, or
 \fIbinary\fR\&. Only one output format can be used at a time\&.
+.RE
+.PP
+\-\-force
+.RS 4
+Disable the built\-in persitent discover connection rules\&. Combined with \-\-persistent flag, always create new persistent discovery connection\&.
 .RE
 .SH "EXAMPLES"
 .sp
