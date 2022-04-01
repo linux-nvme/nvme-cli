@@ -21,6 +21,7 @@ tests = [
   'nvme_dsm_test',
   'nvme_verify_test',
   'nvme_lba_status_log_test',
+  'nvme_get_lba_status_test',
 ]
 
 runtests = find_program('nose2', required : false)
