@@ -1878,6 +1878,55 @@ ret:
 	return err;
 }
 
+static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command *cmd,
+	struct plugin *plugin)
+{
+	const char *desc = "Retrieve NVMe-MI Command Support and Effects log and show it.";
+	const char *human_readable = "show log in readable format";
+	struct nvme_mi_cmd_supported_effects_log mi_cmd_support_log;
+	enum nvme_print_flags flags;
+	int fd, err = -1;
+
+	struct config {
+		char	*output_format;
+		bool	human_readable;
+	};
+
+	struct config cfg = {
+		.output_format	= "normal",
+		.human_readable	= false,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
+		OPT_FLAG("human-readable",'H', &cfg.human_readable, human_readable),
+		OPT_END()
+	};
+
+	err = fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		goto ret;
+
+	err = flags = validate_output_format(cfg.output_format);
+	if (flags < 0)
+		goto close_fd;
+	if (cfg.human_readable)
+		flags |= VERBOSE;
+
+	err = nvme_get_log_mi_cmd_supported_effects(fd, false, &mi_cmd_support_log);
+	if (!err)
+		nvme_show_mi_cmd_support_effects_log(&mi_cmd_support_log, devicename, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		fprintf(stderr, "mi command support effects log: %s\n",
+			nvme_strerror(errno));
+close_fd:
+	close(fd);
+ret:
+	return err;
+}
+
 static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Show controller list information for the subsystem the "\

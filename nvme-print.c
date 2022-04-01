@@ -1232,10 +1232,14 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			pevent_entry_head->etype_rev);
 		json_object_add_value_uint(valid_attrs, "event_header_len",
 			pevent_entry_head->ehl);
+		json_object_add_value_uint(valid_attrs, "event_header_additional_info",
+			pevent_entry_head->ehai);
 		json_object_add_value_uint(valid_attrs, "ctrl_id",
 			le16_to_cpu(pevent_entry_head->cntlid));
 		json_object_add_value_uint64(valid_attrs, "event_time_stamp",
 			le64_to_cpu(pevent_entry_head->ets));
+		json_object_add_value_uint(valid_attrs, "port_id",
+			le16_to_cpu(pevent_entry_head->pelpid));
 		json_object_add_value_uint(valid_attrs, "vu_info_len",
 			le16_to_cpu(pevent_entry_head->vsil));
 		json_object_add_value_uint(valid_attrs, "event_len",
@@ -1477,6 +1481,19 @@ static void nvme_show_persistent_event_log_rci(__le32 pel_header_rci)
 	printf("\tReporting Context Port Identifier (RCPID): %#x\n\n", rcpid);
 }
 
+static void nvme_show_persistent_event_entry_ehai(__u8 ehai)
+{
+	__u8 rsvd1 = (ehai & 0xfc) >> 2;
+	__u8 pit = ehai & 0x03;
+
+	printf("  [7:2] : %#x\tReserved\n", rsvd1);
+	printf("\tPort Identifier Type (PIT): %u(%s)\n", pit,
+		(pit == 0x00) ? "PIT not reported and PELPID does not apply" :
+		(pit == 0x01) ? "NVM subsystem port" :
+		(pit == 0x10) ? "NVMe-MI port" :
+		(pit == 0x11) ? "Event not associated with any port and PELPID does not apply" : "Reserved");
+}
+
 void nvme_show_persistent_event_log(void *pevent_log_info,
 	__u8 action, __u32 size, const char *devname,
 	enum nvme_print_flags flags)
@@ -1569,10 +1586,15 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 		printf("Event Type: %s\n", nvme_pel_event_to_string(pevent_entry_head->etype));
 		printf("Event Type Revision: %u\n", pevent_entry_head->etype_rev);
 		printf("Event Header Length: %u\n", pevent_entry_head->ehl);
+		printf("Event Header Additional Info: %u\n", pevent_entry_head->ehai);
+		if (human)
+			nvme_show_persistent_event_entry_ehai(pevent_entry_head->ehai);
 		printf("Controller Identifier: %u\n",
 			le16_to_cpu(pevent_entry_head->cntlid));
 		printf("Event Timestamp: %"PRIu64"\n",
 			le64_to_cpu(pevent_entry_head->ets));
+		printf("Port Identifier: %u\n",
+			le16_to_cpu(pevent_entry_head->pelpid));
 		printf("Vendor Specific Information Length: %u\n",
 			le16_to_cpu(pevent_entry_head->vsil));
 		printf("Event Length: %u\n", le16_to_cpu(pevent_entry_head->el));
@@ -2017,6 +2039,82 @@ void nvme_show_fid_support_effects_log(struct nvme_fid_supported_effects_log *fi
 				fid_effect);
 			if (human)
 				nvme_show_fid_support_effects_log_human(fid_effect);
+			else
+				printf("\n");
+		}
+	}
+}
+
+static void json_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effects_log *mi_cmd_log)
+{
+	struct json_object *root;
+	struct json_object *mi_cmds;
+	struct json_object *mi_cmds_list;
+	unsigned int mi_cmd;
+	char key[128];
+	__u32 mi_cmd_support;
+
+	root = json_create_object();
+	mi_cmds_list = json_create_array();
+	for (mi_cmd = 0; mi_cmd < 256; mi_cmd++) {
+		mi_cmd_support = le32_to_cpu(mi_cmd_log->mi_cmd_support[mi_cmd]);
+		if (mi_cmd_support & NVME_MI_CMD_SUPPORTED_EFFECTS_CSUPP) {
+			mi_cmds = json_create_object();
+			sprintf(key, "mi_cmd_%u", mi_cmd);
+			json_object_add_value_uint(mi_cmds, key, mi_cmd_support);
+			json_array_add_value_object(mi_cmds_list, mi_cmds);
+		}
+	}
+
+	json_object_add_value_object(root, "mi_command_support", mi_cmds_list);
+	json_print_object(root, NULL);
+	printf("\n");
+
+	json_free_object(root);
+}
+
+static void nvme_show_mi_cmd_support_effects_log_human(__u32 mi_cmd_support)
+{
+	const char *set = "+";
+	const char *clr = "-";
+	__u16 csp;
+
+	printf("  CSUPP+");
+	printf("  UDCC%s", (mi_cmd_support & NVME_MI_CMD_SUPPORTED_EFFECTS_UDCC) ? set : clr);
+	printf("  NCC%s", (mi_cmd_support & NVME_MI_CMD_SUPPORTED_EFFECTS_NCC) ? set : clr);
+	printf("  NIC%s", (mi_cmd_support & NVME_MI_CMD_SUPPORTED_EFFECTS_NIC) ? set : clr);
+	printf("  CCC%s", (mi_cmd_support & NVME_MI_CMD_SUPPORTED_EFFECTS_CCC) ? set : clr);
+
+	csp = (mi_cmd_support >> NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_SHIFT) & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_MASK;
+
+	printf("  NAMESPACE SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NS) ? set : clr);
+	printf("  CONTROLLER SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_CTRL) ? set : clr);
+	printf("  NVM SET SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NVM_SET) ? set : clr);
+	printf("  ENDURANCE GROUP SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_ENDGRP) ? set : clr);
+	printf("  DOMAIN SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_DOMAIN) ? set : clr);
+	printf("  NVM Subsystem SCOPE%s", (csp & NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NSS) ? set : clr);
+}
+
+void nvme_show_mi_cmd_support_effects_log(struct nvme_mi_cmd_supported_effects_log *mi_cmd_log,
+	const char *devname, enum nvme_print_flags flags)
+{
+	__u32 mi_cmd_effect;
+	int i, human = flags & VERBOSE;
+
+	if (flags & BINARY)
+		return d_raw((unsigned char *)mi_cmd_log, sizeof(*mi_cmd_log));
+	if (flags & JSON)
+		return json_mi_cmd_support_effects_log(mi_cmd_log);
+
+	printf("MI Commands Support Effects Log for device: %s\n", devname);
+	printf("Admin Command Set\n");
+	for (i = 0; i < NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX; i++) {
+		mi_cmd_effect = le32_to_cpu(mi_cmd_log->mi_cmd_support[i]);
+		if (mi_cmd_effect & NVME_MI_CMD_SUPPORTED_EFFECTS_CSUPP) {
+			printf("MI CMD %02x -> Support Effects Log: %08x", i,
+					mi_cmd_effect);
+			if (human)
+				nvme_show_mi_cmd_support_effects_log_human(mi_cmd_effect);
 			else
 				printf("\n");
 		}
@@ -3916,6 +4014,17 @@ static void nvme_show_id_ns_fpi(__u8 fpi)
 	printf("\n");
 }
 
+static void nvme_show_id_ns_nsattr(__u8 nsattr)
+{
+	__u8 rsvd = (nsattr & 0xFE) >> 1;
+	__u8 write_protected = nsattr & 0x1;
+	if (rsvd)
+		printf("  [7:1] : %#x\tReserved\n", rsvd);
+	printf("  [0:0] : %#x\tNamespace %sWrite Protected\n",
+			write_protected, write_protected ? "" : "Not ");
+	printf("\n");
+}
+
 static void nvme_show_id_ns_dlfeat(__u8 dlfeat)
 {
 	__u8 rsvd = (dlfeat & 0xE0) >> 5;
@@ -4125,6 +4234,8 @@ void nvme_show_cmd_set_independent_id_ns(
 		nvme_show_id_ns_fpi(ns->fpi);
 	printf("anagrpid: %u\n", le32_to_cpu(ns->anagrpid));
 	printf("nsattr	: %u\n", ns->nsattr);
+	if (human)
+		nvme_show_id_ns_nsattr(ns->nsattr);
 	printf("nvmsetid: %d\n", le16_to_cpu(ns->nvmsetid));
 	printf("endgid  : %d\n", le16_to_cpu(ns->endgid));
 
