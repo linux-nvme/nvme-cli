@@ -33,7 +33,8 @@ typedef struct nvme_subsystem *nvme_subsystem_t;
 typedef struct nvme_host *nvme_host_t;
 typedef struct nvme_root *nvme_root_t;
 
-typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t);
+typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t, nvme_ctrl_t,
+				   nvme_ns_t, void *);
 
 /**
  * nvme_create_root() - Initialize root object
@@ -215,6 +216,23 @@ nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s);
  * Return: Next controller of an @s iterator
  */
 nvme_ctrl_t nvme_subsystem_next_ctrl(nvme_subsystem_t s, nvme_ctrl_t c);
+
+/**
+ * nvme_namespace_first_path() - Start path iterator
+ * @ns:	Namespace instance
+ *
+ * Return: First &nvme_path_t object of an @ns iterator
+ */
+nvme_path_t nvme_namespace_first_path(nvme_ns_t ns);
+
+/**
+ * nvme_namespace_next_path() - Next path iterator
+ * @ns:	Namespace instance
+ * @p:	Previous &nvme_path_t object of an @ns iterator
+ *
+ * Return: Next &nvme_path_t object of an @ns iterator
+ */
+nvme_path_t nvme_namespace_next_path(nvme_ns_t c, nvme_path_t p);
 
 /**
  * nvme_lookup_ctrl() - Lookup nvme_ctrl_t object
@@ -402,6 +420,27 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 #define nvme_subsystem_for_each_ns(s, n)			\
 	for (n = nvme_subsystem_first_ns(s); n != NULL;		\
 		n = nvme_subsystem_next_ns(s, n))
+
+/**
+ * nvme_namespace_for_each_path_safe() - Traverse paths
+ * @ns:	Namespace instance
+ * @p:	&nvme_path_t object
+ * @_p:	A &nvme_path_t_node to use as temporary storage
+ */
+#define nvme_namespace_for_each_path_safe(n, p, _p)		\
+	for (p = nvme_namespace_first_path(n),			\
+	     _p = nvme_namespace_next_path(n, p);		\
+             p != NULL;						\
+	     p = _p, _p = nvme_namespace_next_path(n, p))
+
+/**
+ * nvme_namespace_for_each_path() - Traverse paths
+ * @ns:	Namespace instance
+ * @p:	&nvme_path_t object
+ */
+#define nvme_namespace_for_each_path(c, p)			\
+	for (p = nvme_namespace_first_path(c); p != NULL;	\
+		p = nvme_namespace_next_path(c, p))
 
 /**
  * nvme_ns_get_fd() - Get associated filedescriptor
@@ -837,15 +876,6 @@ const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c);
 const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_ana_state() - ANA state of a controller path
- * @c:		Constroller instance
- * @nsid:	Namespace ID to evaluate
- *
- * Return: ANA state of the namespace @nsid on controller @c.
- */
-const char *nvme_ctrl_get_ana_state(nvme_ctrl_t c, __u32 nsid);
-
-/**
  * nvme_ctrl_get_dhchap_key() - Return controller key
  * @c:	Controller for which the key should be set
  *
@@ -1021,15 +1051,16 @@ const char *nvme_subsystem_get_type(nvme_subsystem_t s);
 
 /**
  * nvme_scan_topology() - Scan NVMe topology and apply filter
- * @r:	nvme_root_t object
- * @f:	filter to apply
+ * @r:	    nvme_root_t object
+ * @f:	    filter to apply
+ * @f_args: user-specified argument to @f
  *
  * Scans the NVMe topology and filters out the resulting elements
  * by applying @f.
  *
  * Return: Number of elements scanned
  */
-int nvme_scan_topology(nvme_root_t r, nvme_scan_filter_t f);
+int nvme_scan_topology(nvme_root_t r, nvme_scan_filter_t f, void *f_args);
 
 /**
  * nvme_host_get_hostnqn() - Host NQN of an nvme_host_t object
