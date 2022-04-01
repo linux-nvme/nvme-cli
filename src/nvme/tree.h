@@ -33,7 +33,8 @@ typedef struct nvme_subsystem *nvme_subsystem_t;
 typedef struct nvme_host *nvme_host_t;
 typedef struct nvme_root *nvme_root_t;
 
-typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t, nvme_ctrl_t, nvme_ns_t);
+typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t, nvme_ctrl_t,
+				   nvme_ns_t, void *);
 
 /**
  * nvme_create_root() - Initialize root object
@@ -1050,15 +1051,16 @@ const char *nvme_subsystem_get_type(nvme_subsystem_t s);
 
 /**
  * nvme_scan_topology() - Scan NVMe topology and apply filter
- * @r:	nvme_root_t object
- * @f:	filter to apply
+ * @r:	    nvme_root_t object
+ * @f:	    filter to apply
+ * @f_args: user-specified argument to @f
  *
  * Scans the NVMe topology and filters out the resulting elements
  * by applying @f.
  *
  * Return: Number of elements scanned
  */
-int nvme_scan_topology(nvme_root_t r, nvme_scan_filter_t f);
+int nvme_scan_topology(nvme_root_t r, nvme_scan_filter_t f, void *f_args);
 
 /**
  * nvme_host_get_hostnqn() - Host NQN of an nvme_host_t object

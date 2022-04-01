@@ -24,11 +24,11 @@
 
 #include <ccan/endian/endian.h>
 
-static char *nqn_match;
-
 static bool nvme_match_subsysnqn_filter(nvme_subsystem_t s,
-		nvme_ctrl_t c, nvme_ns_t ns)
+		nvme_ctrl_t c, nvme_ns_t ns, void *f_args)
 {
+	char *nqn_match = f_args;
+
 	if (s)
 		return strcmp(nvme_subsystem_get_nqn(s), nqn_match) == 0;
 	return true;
@@ -324,13 +324,13 @@ int main(int argc, char **argv)
 	nvme_path_t p;
 	nvme_ns_t n;
 	const char *ctrl = "nvme4";
+	const char *nqn_match = "testnqn";
 
 	printf("Test filter for common loop back target\n");
-	nqn_match = "testnqn";
 	r = nvme_create_root(NULL, DEFAULT_LOGLEVEL);
 	if (!r)
 		return 1;
-	nvme_scan_topology(r, nvme_match_subsysnqn_filter);
+	nvme_scan_topology(r, nvme_match_subsysnqn_filter, (void *)nqn_match);
 	nvme_for_each_host(r, h) {
 		nvme_for_each_subsystem(h, s) {
 			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),

@@ -39,10 +39,11 @@ static struct nvme_host *default_host;
 static void __nvme_free_host(nvme_host_t h);
 static void __nvme_free_ctrl(nvme_ctrl_t c);
 static int nvme_subsystem_scan_namespace(nvme_root_t r,
-		struct nvme_subsystem *s, char *name, nvme_scan_filter_t f);
+		struct nvme_subsystem *s, char *name,
+		nvme_scan_filter_t f, void *f_args);
 static int nvme_init_subsystem(nvme_subsystem_t s, const char *name);
 static int nvme_scan_subsystem(nvme_root_t r, const char *name,
-			       nvme_scan_filter_t f);
+			       nvme_scan_filter_t f, void *f_args);
 static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
 				    char *name);
 static int nvme_ctrl_scan_path(nvme_root_t r, struct nvme_ctrl *c, char *name);
@@ -75,7 +76,7 @@ nvme_host_t nvme_default_host(nvme_root_t r)
 	return h;
 }
 
-int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
+int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f, void *f_args)
 {
 	struct dirent **subsys, **ctrls;
 	int i, num_subsys, num_ctrls, ret;
@@ -97,7 +98,7 @@ int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 				 ctrls[i]->d_name, strerror(errno));
 			continue;
 		}
-		if ((f) && !f(NULL, c, NULL)) {
+		if ((f) && !f(NULL, c, NULL, f_args)) {
 			nvme_msg(r, LOG_DEBUG, "filter out controller %s\n",
 				 ctrls[i]->d_name);
 			nvme_free_ctrl(c);
@@ -114,7 +115,7 @@ int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 	}
 
 	for (i = 0; i < num_subsys; i++) {
-		ret = nvme_scan_subsystem(r, subsys[i]->d_name, f);
+		ret = nvme_scan_subsystem(r, subsys[i]->d_name, f, f_args);
 		if (ret < 0) {
 			nvme_msg(r, LOG_DEBUG,
 				 "failed to scan subsystem %s: %s\n",
@@ -172,7 +173,7 @@ nvme_root_t nvme_scan(const char *config_file)
 {
 	nvme_root_t r = nvme_create_root(NULL, DEFAULT_LOGLEVEL);
 
-	nvme_scan_topology(r, NULL);
+	nvme_scan_topology(r, NULL, NULL);
 	nvme_read_config(r, config_file);
 	return r;
 }
@@ -266,7 +267,7 @@ void nvme_refresh_topology(nvme_root_t r)
 
 	nvme_for_each_host_safe(r, h, _h)
 		__nvme_free_host(h);
-	nvme_scan_topology(r, NULL);
+	nvme_scan_topology(r, NULL, NULL);
 }
 
 void nvme_free_tree(nvme_root_t r)
@@ -476,7 +477,7 @@ struct nvme_host *nvme_lookup_host(nvme_root_t r, const char *hostnqn,
 }
 
 static int nvme_subsystem_scan_namespaces(nvme_root_t r, nvme_subsystem_t s,
-		nvme_scan_filter_t f)
+		nvme_scan_filter_t f, void *f_args)
 {
 	struct dirent **namespaces;
 	int i, num_ns, ret;
@@ -491,7 +492,7 @@ static int nvme_subsystem_scan_namespaces(nvme_root_t r, nvme_subsystem_t s,
 
 	for (i = 0; i < num_ns; i++) {
 		ret = nvme_subsystem_scan_namespace(r, s,
-						    namespaces[i]->d_name, f);
+				namespaces[i]->d_name, f, f_args);
 		if (ret < 0)
 			nvme_msg(r, LOG_DEBUG,
 				 "failed to scan namespace %s: %s\n",
@@ -528,7 +529,7 @@ static int nvme_init_subsystem(nvme_subsystem_t s, const char *name)
 }
 
 static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
-			       nvme_scan_filter_t f)
+		nvme_scan_filter_t f, void *f_args)
 {
 	struct nvme_subsystem *s = NULL, *_s;
 	char *path, *subsysnqn;
@@ -584,13 +585,13 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 	if (!s)
 		return -1;
 
-	if (f && !f(s, NULL, NULL)) {
+	if (f && !f(s, NULL, NULL, f_args)) {
 		nvme_msg(r, LOG_DEBUG, "filter out subsystem %s\n", name);
 		__nvme_free_subsystem(s);
 		return 0;
 	}
 
-	nvme_subsystem_scan_namespaces(r, s, f);
+	nvme_subsystem_scan_namespaces(r, s, f, f_args);
 
 	return 0;
 }
@@ -1410,9 +1411,9 @@ void nvme_rescan_ctrl(struct nvme_ctrl *c)
 	nvme_root_t r = c->s && c->s->h ? c->s->h->r : NULL;
 	if (!c->s)
 		return;
-	nvme_subsystem_scan_namespaces(r, c->s, NULL);
 	nvme_ctrl_scan_namespaces(r, c);
 	nvme_ctrl_scan_paths(r, c);
+	nvme_subsystem_scan_namespaces(r, c->s, NULL, NULL);
 }
 
 static int nvme_bytes_to_lba(nvme_ns_t n, off_t offset, size_t count,
@@ -1883,7 +1884,7 @@ static void nvme_subsystem_set_ns_path(nvme_subsystem_t s, nvme_ns_t n)
 }
 
 static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
-		char *name, nvme_scan_filter_t f)
+		char *name, nvme_scan_filter_t f, void *f_args)
 {
 	struct nvme_ns *n;
 
@@ -1894,7 +1895,7 @@ static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
 		nvme_msg(r, LOG_DEBUG, "failed to scan namespace %s\n", name);
 		return -1;
 	}
-	if (f && !f(NULL, NULL, n)) {
+	if (f && !f(NULL, NULL, n, f_args)) {
 		nvme_msg(r, LOG_DEBUG, "filter out namespace %s\n", name);
 		__nvme_free_ns(n);
 		return 0;
