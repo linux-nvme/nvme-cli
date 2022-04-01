@@ -152,9 +152,12 @@ int nvme_read_config(nvme_root_t r, const char *config_file)
 		return err;
 	}
 
+	r->config_file = strdup(config_file);
+	if (!r->config_file) {
+		errno = ENOMEM;
+		return err;
+	}
 	err = json_read_config(r, config_file);
-	if (!err)
-		r->config_file = strdup(config_file);
 	/*
 	 * The json configuration file is optional,
 	 * so ignore errors when opening the file.
