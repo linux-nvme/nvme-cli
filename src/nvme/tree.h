@@ -33,7 +33,7 @@ typedef struct nvme_subsystem *nvme_subsystem_t;
 typedef struct nvme_host *nvme_host_t;
 typedef struct nvme_root *nvme_root_t;
 
-typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t);
+typedef bool (*nvme_scan_filter_t)(nvme_subsystem_t, nvme_ctrl_t, nvme_ns_t);
 
 /**
  * nvme_create_root() - Initialize root object

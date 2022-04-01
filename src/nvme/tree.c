@@ -97,7 +97,7 @@ int nvme_scan_topology(struct nvme_root *r, nvme_scan_filter_t f)
 				 ctrls[i]->d_name, strerror(errno));
 			continue;
 		}
-		if ((f) && !f(c->s)) {
+		if ((f) && !f(NULL, c, NULL)) {
 			nvme_msg(r, LOG_DEBUG, "filter out controller %s\n",
 				 ctrls[i]->d_name);
 			nvme_free_ctrl(c);
@@ -575,7 +575,7 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 
 	nvme_subsystem_scan_namespaces(r, s);
 
-	if (f && !f(s)) {
+	if (f && !f(s, NULL, NULL)) {
 		nvme_msg(r, LOG_DEBUG, "filter out subsystem %s\n", name);
 		__nvme_free_subsystem(s);
 	}

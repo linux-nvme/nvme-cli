@@ -26,9 +26,12 @@
 
 static char *nqn_match;
 
-static bool nvme_match_subsysnqn_filter(nvme_subsystem_t s)
+static bool nvme_match_subsysnqn_filter(nvme_subsystem_t s,
+		nvme_ctrl_t c, nvme_ns_t ns)
 {
-	return strcmp(nvme_subsystem_get_nqn(s), nqn_match) == 0;
+	if (s)
+		return strcmp(nvme_subsystem_get_nqn(s), nqn_match) == 0;
+	return true;
 }
 
 static int test_ctrl(nvme_ctrl_t c)
