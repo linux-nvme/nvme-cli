@@ -875,15 +875,6 @@ const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c);
 const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_ana_state() - ANA state of a controller path
- * @c:		Constroller instance
- * @nsid:	Namespace ID to evaluate
- *
- * Return: ANA state of the namespace @nsid on controller @c.
- */
-const char *nvme_ctrl_get_ana_state(nvme_ctrl_t c, __u32 nsid);
-
-/**
  * nvme_ctrl_get_dhchap_key() - Return controller key
  * @c:	Controller for which the key should be set
  *
