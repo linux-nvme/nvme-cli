@@ -16,6 +16,7 @@ adoc_sources = [
   'nvme-dera-stat',
   'nvme-detach-ns',
   'nvme-device-self-test',
+  'nvme-dim',
   'nvme-dir-receive',
   'nvme-dir-send',
   'nvme-disconnect',

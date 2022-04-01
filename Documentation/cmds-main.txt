@@ -160,6 +160,9 @@ linknvme:nvme-connect-all[1]::
 linknvme:nvme-connect[1]::
 	Connect to an NVMe-over-Fabrics subsystem
 
+linknvme:nvme-dim[1]::
+	Send Discovery Information Management command to a Discovery Controller
+
 linknvme:nvme-disconnect[1]::
 	Disconnect from an NVMe-over-Fabrics subsystem
 

@@ -6,5 +6,6 @@ extern int nvmf_connect(const char *desc, int argc, char **argv);
 extern int nvmf_disconnect(const char *desc, int argc, char **argv);
 extern int nvmf_disconnect_all(const char *desc, int argc, char **argv);
 extern int nvmf_config(const char *desc, int argc, char **argv);
+extern int nvmf_dim(const char *desc, int argc, char **argv);
 
 #endif
