@@ -1,6 +1,6 @@
-.TH "nvme_nvm_identify_ctrl" 9 "nvme_nvm_identify_ctrl" "March 2022" "libnvme API manual" LINUX
+.TH "nvme_nvm_identify_ctrl" 9 "nvme_nvm_identify_ctrl" "April 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_nvm_identify_ctrl \- 
+nvme_nvm_identify_ctrl \- Identify controller data
 .SH SYNOPSIS
 .B "int" nvme_nvm_identify_ctrl
 .BI "(int fd "  ","
@@ -10,6 +10,9 @@ nvme_nvm_identify_ctrl \-
 File descriptor of nvme device
 .IP "id" 12
 User space destination address to transfer the data
+.SH "DESCRIPTION"
+Return an identify controller data structure to the host of
+processing controller.
 .SH "RETURN"
 The nvme command status if a response was received (see
 \fIenum nvme_status_field\fP) or -1 with errno set otherwise.

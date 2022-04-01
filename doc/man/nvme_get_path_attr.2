@@ -1,4 +1,4 @@
-.TH "nvme_get_path_attr" 9 "nvme_get_path_attr" "March 2022" "libnvme API manual" LINUX
+.TH "nvme_get_path_attr" 9 "nvme_get_path_attr" "April 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_get_path_attr \- Read path sysfs attribute
 .SH SYNOPSIS
@@ -11,4 +11,5 @@ nvme_path_t object
 .IP "attr" 12
 sysfs attribute name
 .SH "RETURN"
-String with the contents of \fIattr\fP
+String with the contents of \fIattr\fP or NULL in case of an empty value
+or in case of an error (indicated by non-zero errno code).

@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_telemetry_log" "March 2022" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_telemetry_log" "April 2022" "API Manual" LINUX
 .SH NAME
 struct nvme_telemetry_log \- Retrieve internal data specific to the manufacturer.
 .SH SYNOPSIS
@@ -20,7 +20,9 @@ struct nvme_telemetry_log {
 .br
 .BI "    __le32 dalb4;"
 .br
-.BI "    __u8 rsvd20[362];"
+.BI "    __u8 rsvd20[361];"
+.br
+.BI "    __u8 hostdgn;"
 .br
 .BI "    __u8 ctrlavail;"
 .br
@@ -59,6 +61,10 @@ Telemetry Controller-Initiated Data Area 4 Last Block is
 the value of the last block in this area.
 .IP "rsvd20" 12
 Reserved
+.IP "hostdgn" 12
+Telemetry Host-Initiated Data Generation Number is a
+value that is incremented each time the host initiates a
+capture of its internal controller state in the controller .
 .IP "ctrlavail" 12
 Telemetry Controller-Initiated Data Available, if cleared,
 then the controller telemetry log does not contain saved

@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_cmd_get_log_lid" "March 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_cmd_get_log_lid" "April 2022" "API Manual" LINUX
 .SH NAME
 enum nvme_cmd_get_log_lid \- 
 .SH SYNOPSIS
@@ -80,6 +80,10 @@ enum nvme_cmd_get_log_lid {
 , 
 .br
 .br
+.BI "    NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS"
+, 
+.br
+.br
 .BI "    NVME_LOG_LID_BOOT_PARTITION"
 , 
 .br
@@ -138,6 +142,8 @@ Media Unit Status
 Supported Capacity Configuration Lis
 .IP "NVME_LOG_LID_FID_SUPPORTED_EFFECTS" 12
 Feature Identifiers Supported and Effects
+.IP "NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS" 12
+NVMe-MI Commands Supported and Effects
 .IP "NVME_LOG_LID_BOOT_PARTITION" 12
 Boot Partition
 .IP "NVME_LOG_LID_DISCOVER" 12

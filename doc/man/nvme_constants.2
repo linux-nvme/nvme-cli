@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_constants" "March 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_constants" "April 2022" "API Manual" LINUX
 .SH NAME
 enum nvme_constants \- A place to stash various constant nvme values
 .SH SYNOPSIS
@@ -92,6 +92,14 @@ enum nvme_constants {
 , 
 .br
 .br
+.BI "    NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX"
+, 
+.br
+.br
+.BI "    NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_RESERVED"
+, 
+.br
+.br
 .BI "    NVME_DSM_MAX_RANGES"
 , 
 .br
@@ -171,6 +179,12 @@ Specification defined size of Telemetry Data Blocks
 .IP "NVME_LOG_FID_SUPPORTED_EFFECTS_MAX" 12
 The largest possible FID index in the 
 feature identifiers effects log.
+.IP "NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX" 12
+The largest possible MI Command index
+in the MI Command effects log.
+.IP "NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_RESERVED" 12
+The reserved space in the MI Command
+effects log.
 .IP "NVME_DSM_MAX_RANGES" 12
 The largest possible range index in a data-set
 management command
