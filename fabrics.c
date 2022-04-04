@@ -312,8 +312,7 @@ static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
 			if (child) {
 				if (discover)
 					__discover(child, defcfg, raw,
-						   persistent,
-						   true, flags);
+						   true, persistent, flags);
 				if (e->subtype != NVME_NQN_NVME &&
 				    !persistent) {
 					nvme_disconnect_ctrl(child);
