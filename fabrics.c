@@ -396,6 +396,25 @@ static nvme_ctrl_t lookup_discover_ctrl(nvme_root_t r, char *transport,
 	return NULL;
 }
 
+static char *get_default_trsvcid(const char *transport,
+			         bool discovery_ctrl)
+{
+	if (!strcmp(transport, "tcp")) {
+		if (discovery_ctrl) {
+			/* Default port for NVMe/TCP discovery controllers */
+			return stringify(NVME_DISC_IP_PORT);
+		} else {
+			/* Default port for NVMe/TCP io controllers */
+			return stringify(NVME_RDMA_IP_PORT);
+		}
+	} else if (!strcmp(transport, "rdma")) {
+		/* Default port for NVMe/RDMA controllers */
+		return stringify(NVME_RDMA_IP_PORT);
+	}
+
+	return NULL;
+}
+
 static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 				   const char *desc, bool connect,
 				   const struct nvme_fabrics_config *defcfg)
@@ -476,6 +495,8 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 			}
 		}
 
+		if (!trsvcid)
+			trsvcid = get_default_trsvcid(transport, true);
 		c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
 				     cfg.host_traddr, cfg.host_iface, trsvcid);
 		if (!c)
@@ -633,6 +654,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	}
 	if (!c) {
 		/* No device or non-matching device, create a new controller */
+		if (!trsvcid)
+			trsvcid = get_default_trsvcid(transport, true);
 		c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
 				     cfg.host_traddr, cfg.host_iface, trsvcid);
 		if (!c) {
@@ -758,6 +781,8 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	}
 	if (hostkey)
 		nvme_host_set_dhchap_key(h, hostkey);
+	if (!trsvcid)
+		trsvcid = get_default_trsvcid(transport, false);
 	c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
 			     cfg.host_traddr, cfg.host_iface, trsvcid);
 	if (!c) {
