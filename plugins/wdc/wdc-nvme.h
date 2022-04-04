@@ -4,7 +4,7 @@
 #if !defined(WDC_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define WDC_NVME
 
-#define WDC_PLUGIN_VERSION   "1.16.3"
+#define WDC_PLUGIN_VERSION   "1.16.4"
 #include "cmd.h"
 
 PLUGIN(NAME("wdc", "Western Digital vendor specific extensions", WDC_PLUGIN_VERSION),
@@ -37,6 +37,9 @@ PLUGIN(NAME("wdc", "Western Digital vendor specific extensions", WDC_PLUGIN_VERS
 		ENTRY("cloud-SSD-plugin-version", "WDC Cloud SSD Plugin Version", wdc_cloud_ssd_plugin_version)
 		ENTRY("vs-pcie-stats", "WDC VS PCIE Statistics", wdc_vs_pcie_stats)
 		ENTRY("get-latency-monitor-log", "WDC Get Latency Monitor Log Page", wdc_get_latency_monitor_log)
+		ENTRY("get-error-recovery-log", "WDC Get Error Recovery Log Page", wdc_get_error_recovery_log)
+		ENTRY("get-dev-capabilities-log", "WDC Get Device Capabilities Log Page", wdc_get_dev_capabilities_log)
+		ENTRY("get-unsupported-reqs-log", "WDC Get Unsupported Requirements Log Page", wdc_get_unsupported_reqs_log)
 	)
 );
 
