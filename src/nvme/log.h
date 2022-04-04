@@ -8,6 +8,9 @@
 #include <stdbool.h>
 #include <syslog.h>
 
+/* for nvme_root_t */
+#include "tree.h"
+
 #ifndef MAX_LOGLEVEL
 #  define MAX_LOGLEVEL LOG_DEBUG
 #endif
