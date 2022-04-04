@@ -504,7 +504,6 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	char *subsysnqn = NVME_DISC_SUBSYS_NAME;
 	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL, *ctrlkey = NULL;
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
-	char *hnqn = NULL, *hid = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
 	enum nvme_print_flags flags;
 	nvme_root_t r;
@@ -560,9 +559,11 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	set_discovery_kato(&cfg);
 
 	if (!hostnqn)
-		hostnqn = hnqn = nvmf_hostnqn_from_file();
+		hostnqn = nvmf_hostnqn_from_file();
+	if (!hostnqn)
+		hostnqn = nvmf_hostnqn_generate();
 	if (!hostid)
-		hostid = hid = nvmf_hostid_from_file();
+		hostid = nvmf_hostid_from_file();
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	if (!h) {
 		ret = ENOMEM;
@@ -657,10 +658,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 out_free_ctrl:
 	nvme_free_ctrl(c);
 out_free:
-	if (hnqn)
-		free(hnqn);
-	if (hid)
-		free(hid);
+	free(hostnqn);
+	free(hostid);
 	if (dump_config)
 		nvme_dump_config(r);
 	nvme_free_tree(r);
@@ -670,7 +669,6 @@ out_free:
 
 int nvmf_connect(const char *desc, int argc, char **argv)
 {
-	char *hnqn = NULL, *hid = NULL;
 	char *subsysnqn = NULL;
 	char *transport = NULL, *traddr = NULL;
 	char *trsvcid = NULL, *hostnqn = NULL, *hostid = NULL;
@@ -748,9 +746,11 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	nvme_read_config(r, config_file);
 
 	if (!hostnqn)
-		hostnqn = hnqn = nvmf_hostnqn_from_file();
+		hostnqn = nvmf_hostnqn_from_file();
+	if (!hostnqn)
+		hostnqn = nvmf_hostnqn_generate();
 	if (!hostid)
-		hostid = hid = nvmf_hostid_from_file();
+		hostid = nvmf_hostid_from_file();
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	if (!h) {
 		errno = ENOMEM;
@@ -781,10 +781,8 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	}
 
 out_free:
-	if (hnqn)
-		free(hnqn);
-	if (hid)
-		free(hid);
+	free(hostnqn);
+	free(hostid);
 	if (dump_config)
 		nvme_dump_config(r);
 	nvme_free_tree(r);
