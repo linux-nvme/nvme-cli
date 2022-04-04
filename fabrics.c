@@ -505,6 +505,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL, *ctrlkey = NULL;
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
+	char *hnqn = NULL, *hid = NULL;
 	enum nvme_print_flags flags;
 	nvme_root_t r;
 	nvme_host_t h;
@@ -559,11 +560,11 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	set_discovery_kato(&cfg);
 
 	if (!hostnqn)
-		hostnqn = nvmf_hostnqn_from_file();
+		hostnqn = hnqn = nvmf_hostnqn_from_file();
 	if (!hostnqn)
-		hostnqn = nvmf_hostnqn_generate();
+		hostnqn = hnqn = nvmf_hostnqn_generate();
 	if (!hostid)
-		hostid = nvmf_hostid_from_file();
+		hostid = hid = nvmf_hostid_from_file();
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	if (!h) {
 		ret = ENOMEM;
@@ -658,8 +659,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 out_free_ctrl:
 	nvme_free_ctrl(c);
 out_free:
-	free(hostnqn);
-	free(hostid);
+	free(hnqn);
+	free(hid);
 	if (dump_config)
 		nvme_dump_config(r);
 	nvme_free_tree(r);
@@ -673,6 +674,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	char *transport = NULL, *traddr = NULL;
 	char *trsvcid = NULL, *hostnqn = NULL, *hostid = NULL;
 	char *hostkey = NULL, *ctrlkey = NULL;
+	char *hnqn = NULL, *hid = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
 	unsigned int verbose = 0;
 	nvme_root_t r;
@@ -746,11 +748,11 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	nvme_read_config(r, config_file);
 
 	if (!hostnqn)
-		hostnqn = nvmf_hostnqn_from_file();
+		hostnqn = hnqn = nvmf_hostnqn_from_file();
 	if (!hostnqn)
-		hostnqn = nvmf_hostnqn_generate();
+		hostnqn = hnqn = nvmf_hostnqn_generate();
 	if (!hostid)
-		hostid = nvmf_hostid_from_file();
+		hostid = hid = nvmf_hostid_from_file();
 	h = nvme_lookup_host(r, hostnqn, hostid);
 	if (!h) {
 		errno = ENOMEM;
@@ -781,8 +783,8 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	}
 
 out_free:
-	free(hostnqn);
-	free(hostid);
+	free(hnqn);
+	free(hid);
 	if (dump_config)
 		nvme_dump_config(r);
 	nvme_free_tree(r);
