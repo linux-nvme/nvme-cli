@@ -4,7 +4,11 @@
 # Copyright (c) 2021 Dell Inc.
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
-#
+
+# These tests all require interaction with a real NVMe device, so we don't
+# define as meson unit-tests, and therefore get run as part of the 'test'
+# target. However, they're available for developer use, when hardware is
+# available.
 main = executable(
     'main-test',
     ['test.c'],
@@ -33,9 +37,3 @@ zns = executable(
     link_with: libnvme,
     include_directories: [incdir, internal_incdir]
 )
-
-test('main', main)
-test('main', main, args: ['nvme10'])
-test('cpp', main)
-test('register', main, args: ['nvme10'])
-test('zns', main)
