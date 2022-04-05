@@ -63,7 +63,7 @@ struct nvme_mi_ctrl *nvme_mi_init_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id)
 	return ctrl;
 }
 
-static __u32 nvme_mi_crc32_update(__u32 crc, void *data, size_t len)
+__u32 nvme_mi_crc32_update(__u32 crc, void *data, size_t len)
 {
 	int i;
 

@@ -195,4 +195,7 @@ struct nvme_mi_ctrl {
 
 struct nvme_mi_ep *nvme_mi_init_ep(struct nvme_root *root);
 
+/* for tests, we need to calculate the correct MICs */
+__u32 nvme_mi_crc32_update(__u32 crc, void *data, size_t len);
+
 #endif /* _LIBNVME_PRIVATE_H */
