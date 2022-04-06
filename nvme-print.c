@@ -2373,6 +2373,24 @@ void nvme_show_supported_cap_config_log(
 	}
 }
 
+static const char *nvme_ctrl_get_ana_state(nvme_ctrl_t c, __u32 nsid)
+{
+        nvme_path_t p;
+	nvme_ns_t n;
+
+        if (nsid == NVME_NSID_ALL)
+		return NULL;
+
+	nvme_ctrl_for_each_path(c, p) {
+		n = nvme_path_get_ns(p);
+		if (!n || nvme_ns_get_nsid(n) != nsid)
+			continue;
+		return nvme_path_get_ana_state(p);
+	}
+
+	return NULL;
+}
+
 static void nvme_show_subsystem(nvme_root_t r, unsigned int nsid)
 {
 	nvme_host_t h;

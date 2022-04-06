@@ -2478,11 +2478,9 @@ ret:
 	return err;
 }
 
-static bool nvme_match_device_filter(nvme_subsystem_t s)
+static bool nvme_match_device_filter(nvme_subsystem_t s, nvme_ctrl_t c,
+				     nvme_ns_t n, void *arg_f)
 {
-	nvme_ctrl_t c;
-	nvme_ns_t n;
-
 	if (!devicename || !strlen(devicename))
 		return true;
 
@@ -2569,7 +2567,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		filter = nvme_match_device_filter;
 	}
 
-	err = nvme_scan_topology(r, filter);
+	err = nvme_scan_topology(r, filter, NULL);
 	if (err) {
 		fprintf(stderr, "Failed to scan topology: %s\n",
 			nvme_strerror(errno));
@@ -2627,7 +2625,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 			nvme_strerror(errno));
 		return -errno;
 	}
-	err = nvme_scan_topology(r, NULL);
+	err = nvme_scan_topology(r, NULL, NULL);
 	if (err < 0) {
 		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
