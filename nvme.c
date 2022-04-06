@@ -2478,22 +2478,35 @@ ret:
 	return err;
 }
 
-static bool nvme_match_device_filter(nvme_subsystem_t s)
+static bool nvme_match_device_filter(nvme_subsystem_t s,
+		nvme_ctrl_t c, nvme_ns_t ns, void *f_args)
 {
-	nvme_ctrl_t c;
-	nvme_ns_t n;
+	int ret, instance, nsid, s_num;
+	char *devname = f_args;
 
-	if (!devicename || !strlen(devicename))
+	if (!devname || !strlen(devname))
 		return true;
 
-	nvme_subsystem_for_each_ctrl(s, c) {
-		if (!strncmp(devicename, nvme_ctrl_get_name(c),
-			     strlen(nvme_ctrl_get_name(c))))
+	ret = sscanf(devname, "nvme%dn%d", &instance, &nsid);
+	if (ret != 2)
+		return true;
+
+	if (s) {
+		ret = sscanf(nvme_subsystem_get_name(s), "nvme-subsys%d",
+			     &s_num);
+		if (ret == 1 && s_num == instance)
 			return true;
 	}
+	if (c) {
+		s = nvme_ctrl_get_subsystem(c);
 
-	nvme_subsystem_for_each_ns(s, n) {
-		if (!strcmp(devicename, nvme_ns_get_name(n)))
+		ret = sscanf(nvme_subsystem_get_name(s), "nvme-subsys%d",
+			     &s_num);
+		if (ret == 1 && s_num == instance)
+			return true;
+	}
+	if (ns) {
+		if (!strcmp(devname, nvme_ns_get_name(ns)))
 			return true;
 	}
 
@@ -2508,7 +2521,6 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	const char *desc = "Retrieve information for subsystems";
 	const char *verbose = "Increase output verbosity";
 	nvme_scan_filter_t filter = NULL;
-	__u32 nsid = NVME_NSID_ALL;
 	int err;
 
 	struct config {
@@ -2558,7 +2570,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	}
 
 	if (devicename) {
-		int subsys_num;
+		int subsys_num, nsid;
 
 		if (sscanf(devicename,"nvme%dn%d",
 			   &subsys_num, &nsid) != 2) {
@@ -2569,14 +2581,14 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		filter = nvme_match_device_filter;
 	}
 
-	err = nvme_scan_topology(r, filter);
+	err = nvme_scan_topology(r, filter, (void *)devicename);
 	if (err) {
 		fprintf(stderr, "Failed to scan topology: %s\n",
 			nvme_strerror(errno));
 		goto ret;
 	}
 
-	nvme_show_subsystem_list(r, nsid, flags);
+	nvme_show_subsystem_list(r, devicename ? true : false, flags);
 	nvme_free_tree(r);
 
 ret:
@@ -2627,7 +2639,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 			nvme_strerror(errno));
 		return -errno;
 	}
-	err = nvme_scan_topology(r, NULL);
+	err = nvme_scan_topology(r, NULL, NULL);
 	if (err < 0) {
 		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
