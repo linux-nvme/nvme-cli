@@ -710,8 +710,7 @@ static void json_add_bucket(struct intel_lat_stats *stats,
 
 	init_buffer(buffer, BUFSIZE);
 
-	json_object_add_value_object(bucket_list,
-		"bucket", bucket);
+	json_object_array_add(bucket_list, bucket);
 	json_object_add_value_int(bucket, "id", id);
 
 	set_unit_string(buffer, lower_us,
@@ -734,8 +733,7 @@ static void json_add_bucket_optane(struct json_object *bucket_list, __u32 id,
 
 	init_buffer(buffer, BUFSIZE);
 
-	json_object_add_value_object(bucket_list,
-		"bucket", bucket);
+	json_object_array_add(bucket_list, bucket);
 	json_object_add_value_int(bucket, "id", id);
 
 	set_unit_string(buffer, lower_us,
@@ -770,7 +768,7 @@ static void json_lat_stats_3_0(struct intel_lat_stats *stats,
 	int write)
 {
 	struct json_object *root = json_create_object();
-	struct json_object *bucket_list = json_create_object();
+	struct json_object *bucket_list = json_object_new_array();
 
 	lat_stats_make_json_root(root, bucket_list, write);
 
@@ -789,7 +787,7 @@ static void json_lat_stats_4_0(struct intel_lat_stats *stats,
 	int write)
 {
 	struct json_object *root = json_create_object();
-	struct json_object *bucket_list = json_create_object();
+	struct json_object *bucket_list = json_object_new_array();
 
 	lat_stats_make_json_root(root, bucket_list, write);
 
@@ -846,7 +844,7 @@ static void json_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 {
 	int i;
 	struct json_object *root = json_create_object();
-	struct json_object *bucket_list = json_create_object();
+	struct json_object *bucket_list = json_object_new_array();
 
 	lat_stats_make_json_root(root, bucket_list, write);
 
