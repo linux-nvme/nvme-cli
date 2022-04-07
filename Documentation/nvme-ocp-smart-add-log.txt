@@ -1,0 +1,43 @@
+nvme-ocp-smart-add-log(1)
+============================
+
+NAME
+----
+nvme-ocp-smart-add-log - Retrieves Extended SMART information of given OCP compliant device
+
+SYNOPSIS
+--------
+[verse]
+'nvme ocp smart-add-log' <device> [--output-format=<normal|json> -o <normal|json>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, send a smart-add-log command and
+provide the additional smart log.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+This will only work on OCP compliant devices supporting this feature.
+Results for any other device are undefined.
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-o <format>::
+--output-format=<format>::
+	Set the reporting format to 'normal' or 'json'. Only one output format
+	can be used at a time. The default is normal.
+
+EXAMPLES
+--------
+* Has the program issue a smart-add-log command to retrieve the 0xC0 log page.
++
+------------
+# nvme ocp smart-add-log /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.
