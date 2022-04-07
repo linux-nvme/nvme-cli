@@ -571,7 +571,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 			nvme_strerror(errno));
 		return -errno;
 	}
-	ret = nvme_scan_topology(r, NULL);
+	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
@@ -763,7 +763,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 			nvme_strerror(errno));
 		return -errno;
 	}
-	ret = nvme_scan_topology(r, NULL);
+	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
@@ -859,7 +859,7 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 			nvme_strerror(errno));
 		return -errno;
 	}
-	ret = nvme_scan_topology(r, NULL);
+	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
@@ -946,7 +946,7 @@ int nvmf_disconnect_all(const char *desc, int argc, char **argv)
 			nvme_strerror(errno));
 		return -errno;
 	}
-	ret = nvme_scan_topology(r, NULL);
+	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
@@ -1017,7 +1017,7 @@ int nvmf_config(const char *desc, int argc, char **argv)
 		return -errno;
 	}
 	if (scan_tree) {
-		ret = nvme_scan_topology(r, NULL);
+		ret = nvme_scan_topology(r, NULL, NULL);
 		if (ret < 0) {
 			fprintf(stderr, "Failed to scan topoplogy: %s\n",
 				nvme_strerror(errno));
@@ -1156,7 +1156,7 @@ int nvmf_dim(const char *desc, int argc, char **argv)
 			nvme_strerror(errno));
 		return -errno;
 	}
-	ret = nvme_scan_topology(r, NULL);
+	ret = nvme_scan_topology(r, NULL, NULL);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
