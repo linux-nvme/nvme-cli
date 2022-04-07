@@ -241,12 +241,14 @@ ENTRY, then append the object file name to the meson.build "sources".
 
 ## meson tips
 
-In case meson doesn't find libnvme header files (via pkg-config) it
-will fallback using subprojects. meson checks out libnvme in
-subprojects directory as git tree once and will not modify libnvme
-unless explicitly told. That means the current branch is updated via
-git, the subprojects/libnvme branch will not updated accordingly. So
-either update it via normal git operations or
+In case meson doesn't find libnvme header files (via pkg-config) it 
+will fallback using subprojects.  meson checks out libnvme in 
+subprojects directory as git tree once to the commit level specified 
+in the libnvme.wrap file revision parm.  After this initial checkout,
+the libnvme code level will not change unless explicitly told.  That 
+means if the current branch is updated via git, the subprojects/libnvme
+branch will not updated accordingly.  To update it, either use the 
+normal git operations or the command: 
 
     $ meson subprojects update
 
