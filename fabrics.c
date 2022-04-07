@@ -575,6 +575,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
+		nvme_free_tree(r);
 		return ret;
 	}
 
@@ -766,6 +767,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
+		nvme_free_tree(r);
 		return ret;
 	}
 	nvme_read_config(r, config_file);
@@ -861,6 +863,7 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
+		nvme_free_tree(r);
 		return ret;
 	}
 
@@ -947,6 +950,7 @@ int nvmf_disconnect_all(const char *desc, int argc, char **argv)
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
+		nvme_free_tree(r);
 		return ret;
 	}
 
@@ -1017,6 +1021,7 @@ int nvmf_config(const char *desc, int argc, char **argv)
 		if (ret < 0) {
 			fprintf(stderr, "Failed to scan topoplogy: %s\n",
 				nvme_strerror(errno));
+			nvme_free_tree(r);
 			return ret;
 		}
 	}
@@ -1155,6 +1160,7 @@ int nvmf_dim(const char *desc, int argc, char **argv)
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
+		nvme_free_tree(r);
 		return ret;
 	}
 

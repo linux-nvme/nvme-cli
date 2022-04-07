@@ -2503,7 +2503,7 @@ static bool nvme_match_device_filter(nvme_subsystem_t s)
 static int list_subsys(int argc, char **argv, struct command *cmd,
 		struct plugin *plugin)
 {
-	nvme_root_t r;
+	nvme_root_t r = NULL;
 	enum nvme_print_flags flags;
 	const char *desc = "Retrieve information for subsystems";
 	const char *verbose = "Increase output verbosity";
@@ -2577,9 +2577,9 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	}
 
 	nvme_show_subsystem_list(r, nsid, flags);
-	nvme_free_tree(r);
-
 ret:
+	if (r)
+		nvme_free_tree(r);
 	return err;
 }
 
@@ -2631,6 +2631,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	if (err < 0) {
 		fprintf(stderr, "Failed to scan topoplogy: %s\n",
 			 nvme_strerror(errno));
+		nvme_free_tree(r);
 		return err;
 	}
 
