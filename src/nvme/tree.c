@@ -951,25 +951,6 @@ void nvme_free_ctrl(nvme_ctrl_t c)
 	__nvme_free_ctrl(c);
 }
 
-#define ____stringify(x...) #x
-#define __stringify(x...) ____stringify(x)
-
-static void set_default_trsvcid(nvme_ctrl_t c)
-{
-	if (!strcmp(c->transport, "tcp")) {
-		if (c->discovery_ctrl) {
-			/* Default port for NVMe/TCP discovery controllers */
-			c->trsvcid = strdup(__stringify(NVME_DISC_IP_PORT));
-		} else {
-			/* Default port for NVMe/TCP io controllers */
-			c->trsvcid = strdup(__stringify(NVME_RDMA_IP_PORT));
-		}
-	} else if (!strcmp(c->transport, "rdma")) {
-		/* Default port for NVMe/RDMA controllers */
-		c->trsvcid = strdup(__stringify(NVME_RDMA_IP_PORT));
-	}
-}
-
 static bool traddr_is_hostname(const char *transport, const char *traddr)
 {
 	char addrstr[NVMF_TRADDR_SIZE];
@@ -1033,8 +1014,6 @@ struct nvme_ctrl *nvme_create_ctrl(nvme_root_t r,
 		c->cfg.host_iface = strdup(host_iface);
 	if (trsvcid)
 		c->trsvcid = strdup(trsvcid);
-	else
-		set_default_trsvcid(c);
 
 	return c;
 }
