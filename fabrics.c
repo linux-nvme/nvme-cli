@@ -288,7 +288,7 @@ static void json_connect_msg(nvme_ctrl_t c)
 	json_free_object(root);
 }
 
-static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
+static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 		      char *raw, bool connect, bool persistent,
 		      enum nvme_print_flags flags)
 {
@@ -324,10 +324,17 @@ static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
 			struct nvmf_disc_log_entry *e = &log->entries[i];
 			bool discover = false;
 			nvme_ctrl_t child;
+			int tmo = defcfg->keep_alive_tmo;
+
+			if (e->subtype == NVME_NQN_DISC)
+				set_discovery_kato(defcfg);
 
 			errno = 0;
 			child = nvmf_connect_disc_entry(h, e, defcfg,
 							&discover);
+
+			defcfg->keep_alive_tmo = tmo;
+
 			if (child) {
 				if (discover)
 					__discover(child, defcfg, raw,
