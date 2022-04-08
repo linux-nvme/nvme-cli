@@ -104,6 +104,7 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 	OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest)	\
 
 struct tr_config {
+	char *subsysnqn;
 	char *transport;
 	char *traddr;
 	char *host_traddr;
@@ -137,10 +138,18 @@ static int set_discovery_kato(struct nvme_fabrics_config *cfg)
 	return tmo;
 }
 
-static int add_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c,
-			      struct nvme_fabrics_config *cfg)
+static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
+					struct nvme_fabrics_config *cfg,
+					struct tr_config *trcfg)
 {
+	nvme_ctrl_t c;
 	int tmo, ret;
+
+	c = nvme_create_ctrl(r, trcfg->subsysnqn, trcfg->transport,
+			     trcfg->traddr, trcfg->host_traddr,
+			     trcfg->host_iface, trcfg->trsvcid);
+	if (!c)
+		return NULL;
 
 	nvme_ctrl_set_discovery_ctrl(c, true);
 	tmo = set_discovery_kato(cfg);
@@ -149,7 +158,13 @@ static int add_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	ret = nvmf_add_ctrl(h, c, cfg);
 
 	cfg->keep_alive_tmo = tmo;
-	return ret;
+	if (ret) {
+		errno = ret;
+		nvme_free_ctrl(c);
+		return NULL;
+	}
+
+	return c;
 }
 
 static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
@@ -513,6 +528,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 			trsvcid = get_default_trsvcid(transport, true);
 
 		struct tr_config trcfg = {
+			.subsysnqn	= subsysnqn,
 			.transport	= transport,
 			.traddr		= traddr,
 			.host_traddr	= cfg.host_traddr,
@@ -529,17 +545,15 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 			}
 		}
 
-		c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
-				     cfg.host_traddr, cfg.host_iface, trsvcid);
+		c = create_discover_ctrl(r, h, &cfg, &trcfg);
 		if (!c)
 			goto next;
-		if (!add_discovery_ctrl(h, c, &cfg)) {
-			__discover(c, &cfg, raw, connect,
-				   persistent, flags);
-			if (!persistent)
-				ret = nvme_disconnect_ctrl(c);
-			nvme_free_ctrl(c);
-		}
+
+		__discover(c, &cfg, raw, connect, persistent, flags);
+		if (!persistent)
+			ret = nvme_disconnect_ctrl(c);
+		nvme_free_ctrl(c);
+
 next:
 		memset(&cfg, 0, sizeof(cfg));
 	}
@@ -637,6 +651,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		trsvcid = get_default_trsvcid(transport, true);
 
 	struct tr_config trcfg = {
+		.subsysnqn	= subsysnqn,
 		.transport	= transport,
 		.traddr		= traddr,
 		.host_traddr	= cfg.host_traddr,
@@ -690,18 +705,13 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	}
 	if (!c) {
 		/* No device or non-matching device, create a new controller */
-		c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
-				     cfg.host_traddr, cfg.host_iface, trsvcid);
-		if (!c) {
-			ret = errno;
-			goto out_free;
-		}
-		if (add_discovery_ctrl(h, c, &cfg)) {
+		c = create_discover_ctrl(r, h, &cfg, &trcfg);
+	        if (!c) {
 			fprintf(stderr,
 				"failed to add controller, error %s\n",
 				nvme_strerror(errno));
 			ret = errno;
-			goto out_free_ctrl;
+			goto out_free;
 		}
 	}
 
@@ -709,9 +719,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 			 persistent, flags);
 	if (!persistent)
 		nvme_disconnect_ctrl(c);
-
-out_free_ctrl:
 	nvme_free_ctrl(c);
+
 out_free:
 	free(hnqn);
 	free(hid);
