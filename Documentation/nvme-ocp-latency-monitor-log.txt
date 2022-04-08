@@ -1,14 +1,15 @@
 nvme-ocp-latency-monitor-log(1)
-===================================
+===============================
 
 NAME
 ----
-nvme-ocp-latency-monitor-log - Display latency monitor log page data in human readable format
+nvme-ocp-latency-monitor-log - Display latency monitor log page data in human
+readable format
 
 SYNOPSIS
 --------
 [verse]
-'nvme ocp latency-monitor-log' <device> [--output-format=<normal|json> -o <normal|json>]
+'nvme ocp latency-monitor-log' <device> [--output-format=<fmt> | -o <fmt>]
 
 DESCRIPTION
 -----------

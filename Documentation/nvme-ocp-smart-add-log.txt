@@ -1,14 +1,15 @@
 nvme-ocp-smart-add-log(1)
-============================
+=========================
 
 NAME
 ----
-nvme-ocp-smart-add-log - Retrieves Extended SMART information of given OCP compliant device
+nvme-ocp-smart-add-log - Retrieves Extended SMART information of given OCP
+compliant device
 
 SYNOPSIS
 --------
 [verse]
-'nvme ocp smart-add-log' <device> [--output-format=<normal|json> -o <normal|json>]
+'nvme ocp smart-add-log' <device> [--output-format=<fmt> | -o <fmt>]
 
 DESCRIPTION
 -----------
