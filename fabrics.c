@@ -115,24 +115,33 @@ static void space_strip_len(int max, char *str)
 	}
 }
 
-static void set_discovery_kato(struct nvme_fabrics_config *cfg)
+static int set_discovery_kato(struct nvme_fabrics_config *cfg)
 {
+	int tmo = cfg->keep_alive_tmo;
+
 	/* Set kato to NVMF_DEF_DISC_TMO for persistent controllers */
 	if (persistent && !cfg->keep_alive_tmo)
 		cfg->keep_alive_tmo = NVMF_DEF_DISC_TMO;
 	/* Set kato to zero for non-persistent controllers */
 	else if (!persistent && (cfg->keep_alive_tmo > 0))
 		cfg->keep_alive_tmo = 0;
+
+	return tmo;
 }
 
 static int add_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c,
 			      struct nvme_fabrics_config *cfg)
 {
+	int tmo, ret;
+
 	nvme_ctrl_set_discovery_ctrl(c, true);
-	set_discovery_kato(cfg);
+	tmo = set_discovery_kato(cfg);
 
 	errno = 0;
-	return nvmf_add_ctrl(h, c, cfg);
+	ret = nvmf_add_ctrl(h, c, cfg);
+
+	cfg->keep_alive_tmo = tmo;
+	return ret;
 }
 
 static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
@@ -492,8 +501,6 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		if (!transport && !traddr)
 			goto next;
 
-		set_discovery_kato(&cfg);
-
 		if (!force) {
 			c = lookup_discover_ctrl(r, transport, traddr,
 						 cfg.host_traddr, cfg.host_iface,
@@ -585,8 +592,6 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		nvme_free_tree(r);
 		return ret;
 	}
-
-	set_discovery_kato(&cfg);
 
 	if (!hostnqn)
 		hostnqn = hnqn = nvmf_hostnqn_from_file();
