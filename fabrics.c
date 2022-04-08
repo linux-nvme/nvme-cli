@@ -138,9 +138,9 @@ static int set_discovery_kato(struct nvme_fabrics_config *cfg)
 	return tmo;
 }
 
-static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
-					struct nvme_fabrics_config *cfg,
-					struct tr_config *trcfg)
+static nvme_ctrl_t __create_discover_ctrl(nvme_root_t r, nvme_host_t h,
+					  struct nvme_fabrics_config *cfg,
+					  struct tr_config *trcfg)
 {
 	nvme_ctrl_t c;
 	int tmo, ret;
@@ -165,6 +165,40 @@ static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 	}
 
 	return c;
+}
+
+static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
+					struct nvme_fabrics_config *cfg,
+					struct tr_config *trcfg)
+{
+	nvme_ctrl_t c;
+
+	c = __create_discover_ctrl(r, h, cfg, trcfg);
+	if (!persistent)
+		return c;
+
+	/* Find out the name of discovery controller */
+	struct nvme_id_ctrl id = { 0 };
+	if (nvme_ctrl_identify(c, &id)) {
+		fprintf(stderr,	"failed to identify controller, error %s\n",
+			nvme_strerror(errno));
+		nvme_disconnect_ctrl(c);
+		nvme_free_ctrl(c);
+		return NULL;
+	}
+
+	if (!strcmp(id.subnqn, NVME_DISC_SUBSYS_NAME))
+		return c;
+
+	/*
+	 * The subsysnqn is not the well-known name. Prefer the unique
+	 * subsysnqn over the well-known one.
+	 */
+	nvme_disconnect_ctrl(c);
+	nvme_free_ctrl(c);
+
+	trcfg->subsysnqn = id.subnqn;
+	return __create_discover_ctrl(r, h, cfg, trcfg);
 }
 
 static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
