@@ -125,6 +125,16 @@ static void set_discovery_kato(struct nvme_fabrics_config *cfg)
 		cfg->keep_alive_tmo = 0;
 }
 
+static int add_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c,
+			      struct nvme_fabrics_config *cfg)
+{
+	nvme_ctrl_set_discovery_ctrl(c, true);
+	set_discovery_kato(cfg);
+
+	errno = 0;
+	return nvmf_add_ctrl(h, c, cfg);
+}
+
 static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
 {
 	int i;
@@ -501,10 +511,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 				     cfg.host_traddr, cfg.host_iface, trsvcid);
 		if (!c)
 			goto next;
-		nvme_ctrl_set_discovery_ctrl(c, true);
-		errno = 0;
-		ret = nvmf_add_ctrl(h, c, &cfg);
-		if (!ret) {
+		if (!add_discovery_ctrl(h, c, &cfg)) {
 			__discover(c, &cfg, raw, connect,
 				   persistent, flags);
 			if (!persistent)
@@ -664,9 +671,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 			ret = errno;
 			goto out_free;
 		}
-		nvme_ctrl_set_discovery_ctrl(c, true);
-		ret = nvmf_add_ctrl(h, c, &cfg);
-		if (ret) {
+		if (add_discovery_ctrl(h, c, &cfg)) {
 			fprintf(stderr,
 				"failed to add controller, error %s\n",
 				nvme_strerror(errno));
