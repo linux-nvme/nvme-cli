@@ -103,6 +103,15 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 	OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),	\
 	OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest)	\
 
+struct tr_config {
+	char *subsysnqn;
+	char *transport;
+	char *traddr;
+	char *host_traddr;
+	char *host_iface;
+	char *trsvcid;
+};
+
 static void space_strip_len(int max, char *str)
 {
 	int i;
@@ -129,10 +138,18 @@ static int set_discovery_kato(struct nvme_fabrics_config *cfg)
 	return tmo;
 }
 
-static int add_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c,
-			      struct nvme_fabrics_config *cfg)
+static nvme_ctrl_t __create_discover_ctrl(nvme_root_t r, nvme_host_t h,
+					  struct nvme_fabrics_config *cfg,
+					  struct tr_config *trcfg)
 {
+	nvme_ctrl_t c;
 	int tmo, ret;
+
+	c = nvme_create_ctrl(r, trcfg->subsysnqn, trcfg->transport,
+			     trcfg->traddr, trcfg->host_traddr,
+			     trcfg->host_iface, trcfg->trsvcid);
+	if (!c)
+		return NULL;
 
 	nvme_ctrl_set_discovery_ctrl(c, true);
 	tmo = set_discovery_kato(cfg);
@@ -141,7 +158,47 @@ static int add_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	ret = nvmf_add_ctrl(h, c, cfg);
 
 	cfg->keep_alive_tmo = tmo;
-	return ret;
+	if (ret) {
+		errno = ret;
+		nvme_free_ctrl(c);
+		return NULL;
+	}
+
+	return c;
+}
+
+static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
+					struct nvme_fabrics_config *cfg,
+					struct tr_config *trcfg)
+{
+	nvme_ctrl_t c;
+
+	c = __create_discover_ctrl(r, h, cfg, trcfg);
+	if (!persistent)
+		return c;
+
+	/* Find out the name of discovery controller */
+	struct nvme_id_ctrl id = { 0 };
+	if (nvme_ctrl_identify(c, &id)) {
+		fprintf(stderr,	"failed to identify controller, error %s\n",
+			nvme_strerror(errno));
+		nvme_disconnect_ctrl(c);
+		nvme_free_ctrl(c);
+		return NULL;
+	}
+
+	if (!strcmp(id.subnqn, NVME_DISC_SUBSYS_NAME))
+		return c;
+
+	/*
+	 * The subsysnqn is not the well-known name. Prefer the unique
+	 * subsysnqn over the well-known one.
+	 */
+	nvme_disconnect_ctrl(c);
+	nvme_free_ctrl(c);
+
+	trcfg->subsysnqn = id.subnqn;
+	return __create_discover_ctrl(r, h, cfg, trcfg);
 }
 
 static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
@@ -383,23 +440,19 @@ static inline int strcasecmp0(const char *s1, const char *s2)
 	return strcasecmp(s1, s2);
 }
 
-static bool ctrl_config_match(nvme_ctrl_t c, char *transport,
-			      char *traddr, char *host_traddr,
-			      char *host_iface, char *trsvcid)
+static bool ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
 {
-	if (!strcmp0(nvme_ctrl_get_transport(c), transport) &&
-	    !strcasecmp0(nvme_ctrl_get_traddr(c), traddr) &&
-	    !strcmp0(nvme_ctrl_get_trsvcid(c), trsvcid) &&
-	    !strcmp0(nvme_ctrl_get_host_traddr(c), host_traddr) &&
-	    !strcmp0(nvme_ctrl_get_host_iface(c), host_iface))
+	if (!strcmp0(nvme_ctrl_get_transport(c), trcfg->transport) &&
+	    !strcasecmp0(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
+	    !strcmp0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
+	    !strcmp0(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
+	    !strcmp0(nvme_ctrl_get_host_iface(c), trcfg->host_iface))
 		return true;
 
 	return false;
 }
 
-static nvme_ctrl_t lookup_discover_ctrl(nvme_root_t r, char *transport,
-					char *traddr, char *host_traddr,
-					char *host_iface, char *trsvcid)
+static nvme_ctrl_t lookup_discover_ctrl(nvme_root_t r, struct tr_config *trcfg)
 {
 	nvme_host_t h;
 	nvme_subsystem_t s;
@@ -410,9 +463,7 @@ static nvme_ctrl_t lookup_discover_ctrl(nvme_root_t r, char *transport,
 			nvme_subsystem_for_each_ctrl(s, c) {
 				if (!nvme_ctrl_is_discovery_ctrl(c))
 					continue;
-				if (ctrl_config_match(c, transport, traddr,
-						      host_traddr, host_iface,
-						      trsvcid))
+				if (ctrl_config_match(c, trcfg))
 					return c;
 			}
 		}
@@ -507,10 +558,20 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		if (!transport && !traddr)
 			goto next;
 
+		if (!trsvcid)
+			trsvcid = get_default_trsvcid(transport, true);
+
+		struct tr_config trcfg = {
+			.subsysnqn	= subsysnqn,
+			.transport	= transport,
+			.traddr		= traddr,
+			.host_traddr	= cfg.host_traddr,
+			.host_iface	= cfg.host_iface,
+			.trsvcid	= trsvcid,
+		};
+
 		if (!force) {
-			c = lookup_discover_ctrl(r, transport, traddr,
-						 cfg.host_traddr, cfg.host_iface,
-						 trsvcid);
+			c = lookup_discover_ctrl(r, &trcfg);
 			if (c) {
 				__discover(c, &cfg, raw, connect,
 					   true, flags);
@@ -518,19 +579,15 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 			}
 		}
 
-		if (!trsvcid)
-			trsvcid = get_default_trsvcid(transport, true);
-		c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
-				     cfg.host_traddr, cfg.host_iface, trsvcid);
+		c = create_discover_ctrl(r, h, &cfg, &trcfg);
 		if (!c)
 			goto next;
-		if (!add_discovery_ctrl(h, c, &cfg)) {
-			__discover(c, &cfg, raw, connect,
-				   persistent, flags);
-			if (!persistent)
-				ret = nvme_disconnect_ctrl(c);
-			nvme_free_ctrl(c);
-		}
+
+		__discover(c, &cfg, raw, connect, persistent, flags);
+		if (!persistent)
+			ret = nvme_disconnect_ctrl(c);
+		nvme_free_ctrl(c);
+
 next:
 		memset(&cfg, 0, sizeof(cfg));
 	}
@@ -624,13 +681,23 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		goto out_free;
 	}
 
+	if (!trsvcid)
+		trsvcid = get_default_trsvcid(transport, true);
+
+	struct tr_config trcfg = {
+		.subsysnqn	= subsysnqn,
+		.transport	= transport,
+		.traddr		= traddr,
+		.host_traddr	= cfg.host_traddr,
+		.host_iface	= cfg.host_iface,
+		.trsvcid	= trsvcid,
+	};
+
 	if (device && !force) {
 		c = nvme_scan_ctrl(r, device);
 		if (c) {
 			/* Check if device matches command-line options */
-			if (!ctrl_config_match(c, transport, traddr,
-					       cfg.host_traddr, cfg.host_iface,
-					       trsvcid)) {
+			if (!ctrl_config_match(c, &trcfg)) {
 				fprintf(stderr,
 					"ctrl device %s found, ignoring "
 					"non matching command-line options\n",
@@ -666,28 +733,19 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		}
 	}
 	if (!c && !force) {
-		c = lookup_discover_ctrl(r, transport, traddr,
-					 cfg.host_traddr, cfg.host_iface,
-					 trsvcid);
+		c = lookup_discover_ctrl(r, &trcfg);
 		if (c)
 			persistent = true;
 	}
 	if (!c) {
 		/* No device or non-matching device, create a new controller */
-		if (!trsvcid)
-			trsvcid = get_default_trsvcid(transport, true);
-		c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
-				     cfg.host_traddr, cfg.host_iface, trsvcid);
-		if (!c) {
-			ret = errno;
-			goto out_free;
-		}
-		if (add_discovery_ctrl(h, c, &cfg)) {
+		c = create_discover_ctrl(r, h, &cfg, &trcfg);
+	        if (!c) {
 			fprintf(stderr,
 				"failed to add controller, error %s\n",
 				nvme_strerror(errno));
 			ret = errno;
-			goto out_free_ctrl;
+			goto out_free;
 		}
 	}
 
@@ -695,9 +753,8 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 			 persistent, flags);
 	if (!persistent)
 		nvme_disconnect_ctrl(c);
-
-out_free_ctrl:
 	nvme_free_ctrl(c);
+
 out_free:
 	free(hnqn);
 	free(hid);
