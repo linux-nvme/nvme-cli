@@ -115,14 +115,33 @@ static void space_strip_len(int max, char *str)
 	}
 }
 
-static void set_discovery_kato(struct nvme_fabrics_config *cfg)
+static int set_discovery_kato(struct nvme_fabrics_config *cfg)
 {
+	int tmo = cfg->keep_alive_tmo;
+
 	/* Set kato to NVMF_DEF_DISC_TMO for persistent controllers */
 	if (persistent && !cfg->keep_alive_tmo)
 		cfg->keep_alive_tmo = NVMF_DEF_DISC_TMO;
 	/* Set kato to zero for non-persistent controllers */
 	else if (!persistent && (cfg->keep_alive_tmo > 0))
 		cfg->keep_alive_tmo = 0;
+
+	return tmo;
+}
+
+static int add_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c,
+			      struct nvme_fabrics_config *cfg)
+{
+	int tmo, ret;
+
+	nvme_ctrl_set_discovery_ctrl(c, true);
+	tmo = set_discovery_kato(cfg);
+
+	errno = 0;
+	ret = nvmf_add_ctrl(h, c, cfg);
+
+	cfg->keep_alive_tmo = tmo;
+	return ret;
 }
 
 static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
@@ -269,7 +288,7 @@ static void json_connect_msg(nvme_ctrl_t c)
 	json_free_object(root);
 }
 
-static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
+static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 		      char *raw, bool connect, bool persistent,
 		      enum nvme_print_flags flags)
 {
@@ -305,10 +324,17 @@ static int __discover(nvme_ctrl_t c, const struct nvme_fabrics_config *defcfg,
 			struct nvmf_disc_log_entry *e = &log->entries[i];
 			bool discover = false;
 			nvme_ctrl_t child;
+			int tmo = defcfg->keep_alive_tmo;
+
+			if (e->subtype == NVME_NQN_DISC)
+				set_discovery_kato(defcfg);
 
 			errno = 0;
 			child = nvmf_connect_disc_entry(h, e, defcfg,
 							&discover);
+
+			defcfg->keep_alive_tmo = tmo;
+
 			if (child) {
 				if (discover)
 					__discover(child, defcfg, raw,
@@ -481,8 +507,6 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		if (!transport && !traddr)
 			goto next;
 
-		set_discovery_kato(&cfg);
-
 		if (!force) {
 			c = lookup_discover_ctrl(r, transport, traddr,
 						 cfg.host_traddr, cfg.host_iface,
@@ -500,10 +524,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 				     cfg.host_traddr, cfg.host_iface, trsvcid);
 		if (!c)
 			goto next;
-		nvme_ctrl_set_discovery_ctrl(c, true);
-		errno = 0;
-		ret = nvmf_add_ctrl(h, c, &cfg);
-		if (!ret) {
+		if (!add_discovery_ctrl(h, c, &cfg)) {
 			__discover(c, &cfg, raw, connect,
 				   persistent, flags);
 			if (!persistent)
@@ -577,8 +598,6 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		nvme_free_tree(r);
 		return ret;
 	}
-
-	set_discovery_kato(&cfg);
 
 	if (!hostnqn)
 		hostnqn = hnqn = nvmf_hostnqn_from_file();
@@ -663,9 +682,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 			ret = errno;
 			goto out_free;
 		}
-		nvme_ctrl_set_discovery_ctrl(c, true);
-		ret = nvmf_add_ctrl(h, c, &cfg);
-		if (ret) {
+		if (add_discovery_ctrl(h, c, &cfg)) {
 			fprintf(stderr,
 				"failed to add controller, error %s\n",
 				nvme_strerror(errno));
