@@ -103,6 +103,14 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 	OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),	\
 	OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest)	\
 
+struct tr_config {
+	char *transport;
+	char *traddr;
+	char *host_traddr;
+	char *host_iface;
+	char *trsvcid;
+};
+
 static void space_strip_len(int max, char *str)
 {
 	int i;
@@ -383,23 +391,19 @@ static inline int strcasecmp0(const char *s1, const char *s2)
 	return strcasecmp(s1, s2);
 }
 
-static bool ctrl_config_match(nvme_ctrl_t c, char *transport,
-			      char *traddr, char *host_traddr,
-			      char *host_iface, char *trsvcid)
+static bool ctrl_config_match(nvme_ctrl_t c, struct tr_config *trcfg)
 {
-	if (!strcmp0(nvme_ctrl_get_transport(c), transport) &&
-	    !strcasecmp0(nvme_ctrl_get_traddr(c), traddr) &&
-	    !strcmp0(nvme_ctrl_get_trsvcid(c), trsvcid) &&
-	    !strcmp0(nvme_ctrl_get_host_traddr(c), host_traddr) &&
-	    !strcmp0(nvme_ctrl_get_host_iface(c), host_iface))
+	if (!strcmp0(nvme_ctrl_get_transport(c), trcfg->transport) &&
+	    !strcasecmp0(nvme_ctrl_get_traddr(c), trcfg->traddr) &&
+	    !strcmp0(nvme_ctrl_get_trsvcid(c), trcfg->trsvcid) &&
+	    !strcmp0(nvme_ctrl_get_host_traddr(c), trcfg->host_traddr) &&
+	    !strcmp0(nvme_ctrl_get_host_iface(c), trcfg->host_iface))
 		return true;
 
 	return false;
 }
 
-static nvme_ctrl_t lookup_discover_ctrl(nvme_root_t r, char *transport,
-					char *traddr, char *host_traddr,
-					char *host_iface, char *trsvcid)
+static nvme_ctrl_t lookup_discover_ctrl(nvme_root_t r, struct tr_config *trcfg)
 {
 	nvme_host_t h;
 	nvme_subsystem_t s;
@@ -410,9 +414,7 @@ static nvme_ctrl_t lookup_discover_ctrl(nvme_root_t r, char *transport,
 			nvme_subsystem_for_each_ctrl(s, c) {
 				if (!nvme_ctrl_is_discovery_ctrl(c))
 					continue;
-				if (ctrl_config_match(c, transport, traddr,
-						      host_traddr, host_iface,
-						      trsvcid))
+				if (ctrl_config_match(c, trcfg))
 					return c;
 			}
 		}
@@ -510,10 +512,16 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		if (!trsvcid)
 			trsvcid = get_default_trsvcid(transport, true);
 
+		struct tr_config trcfg = {
+			.transport	= transport,
+			.traddr		= traddr,
+			.host_traddr	= cfg.host_traddr,
+			.host_iface	= cfg.host_iface,
+			.trsvcid	= trsvcid,
+		};
+
 		if (!force) {
-			c = lookup_discover_ctrl(r, transport, traddr,
-						 cfg.host_traddr, cfg.host_iface,
-						 trsvcid);
+			c = lookup_discover_ctrl(r, &trcfg);
 			if (c) {
 				__discover(c, &cfg, raw, connect,
 					   true, flags);
@@ -628,13 +636,19 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	if (!trsvcid)
 		trsvcid = get_default_trsvcid(transport, true);
 
+	struct tr_config trcfg = {
+		.transport	= transport,
+		.traddr		= traddr,
+		.host_traddr	= cfg.host_traddr,
+		.host_iface	= cfg.host_iface,
+		.trsvcid	= trsvcid,
+	};
+
 	if (device && !force) {
 		c = nvme_scan_ctrl(r, device);
 		if (c) {
 			/* Check if device matches command-line options */
-			if (!ctrl_config_match(c, transport, traddr,
-					       cfg.host_traddr, cfg.host_iface,
-					       trsvcid)) {
+			if (!ctrl_config_match(c, &trcfg)) {
 				fprintf(stderr,
 					"ctrl device %s found, ignoring "
 					"non matching command-line options\n",
@@ -670,9 +684,7 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		}
 	}
 	if (!c && !force) {
-		c = lookup_discover_ctrl(r, transport, traddr,
-					 cfg.host_traddr, cfg.host_iface,
-					 trsvcid);
+		c = lookup_discover_ctrl(r, &trcfg);
 		if (c)
 			persistent = true;
 	}
