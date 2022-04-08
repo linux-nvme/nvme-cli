@@ -505,6 +505,31 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		errno = 0;
 		ret = nvmf_add_ctrl(h, c, &cfg);
 		if (!ret) {
+			if (persistent) {
+				struct nvme_id_ctrl id = { 0 };
+				ret = nvme_ctrl_identify(c, &id);
+				if (ret)
+					goto next;
+				/* Recreate the controller using the
+				 * unique subsystem nqn, if supported
+				 */
+				if (strcmp(id.subnqn, NVME_DISC_SUBSYS_NAME)) {
+					subsysnqn = id.subnqn;
+					nvme_disconnect_ctrl(c);
+					c = nvme_create_ctrl(r, subsysnqn,
+							transport, traddr,
+							cfg.host_traddr,
+							cfg.host_iface,
+							trsvcid);
+					if (!c)
+						goto next;
+					nvme_ctrl_set_discovery_ctrl(c, true);
+					errno = 0;
+					ret = nvmf_add_ctrl(h, c, &cfg);
+					if (ret)
+						goto next;
+				}
+			}
 			__discover(c, &cfg, raw, connect,
 				   persistent, flags);
 			if (!persistent)
@@ -672,6 +697,39 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 				nvme_strerror(errno));
 			ret = errno;
 			goto out_free_ctrl;
+		}
+		if (persistent) {
+			struct nvme_id_ctrl id = { 0 };
+			if (nvme_ctrl_identify(c, &id)) {
+				fprintf(stderr,
+					"failed to identify controller, error %s\n",
+					nvme_strerror(errno));
+				ret = errno;
+				goto out_free;
+			}
+			/* Recreate the controller using the
+			 * unique subsystem nqn, if supported
+			 */
+			if (strcmp(id.subnqn, NVME_DISC_SUBSYS_NAME)) {
+				subsysnqn = id.subnqn;
+				nvme_disconnect_ctrl(c);
+				c = nvme_create_ctrl(r, subsysnqn, transport,
+						traddr, cfg.host_traddr,
+						cfg.host_iface, trsvcid);
+				if (!c) {
+					ret = errno;
+					goto out_free;
+				}
+				nvme_ctrl_set_discovery_ctrl(c, true);
+				ret = nvmf_add_ctrl(h, c, &cfg);
+				if (ret) {
+					fprintf(stderr,
+						"failed to add controller, error %s\n",
+						nvme_strerror(errno));
+					ret = errno;
+					goto out_free_ctrl;
+				}
+			}
 		}
 	}
 
