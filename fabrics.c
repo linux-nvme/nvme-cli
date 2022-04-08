@@ -507,6 +507,9 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 		if (!transport && !traddr)
 			goto next;
 
+		if (!trsvcid)
+			trsvcid = get_default_trsvcid(transport, true);
+
 		if (!force) {
 			c = lookup_discover_ctrl(r, transport, traddr,
 						 cfg.host_traddr, cfg.host_iface,
@@ -518,8 +521,6 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 			}
 		}
 
-		if (!trsvcid)
-			trsvcid = get_default_trsvcid(transport, true);
 		c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
 				     cfg.host_traddr, cfg.host_iface, trsvcid);
 		if (!c)
@@ -624,6 +625,9 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 		goto out_free;
 	}
 
+	if (!trsvcid)
+		trsvcid = get_default_trsvcid(transport, true);
+
 	if (device && !force) {
 		c = nvme_scan_ctrl(r, device);
 		if (c) {
@@ -674,8 +678,6 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 	}
 	if (!c) {
 		/* No device or non-matching device, create a new controller */
-		if (!trsvcid)
-			trsvcid = get_default_trsvcid(transport, true);
 		c = nvme_create_ctrl(r, subsysnqn, transport, traddr,
 				     cfg.host_traddr, cfg.host_iface, trsvcid);
 		if (!c) {
