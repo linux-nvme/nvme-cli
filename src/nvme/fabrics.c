@@ -325,7 +325,7 @@ static int inet6_pton(nvme_root_t r, const char *src, uint16_t port,
 		nvme_msg(r, LOG_ERR, "cannot copy: %s\n", src);
 
 	const char *scope = NULL;
-	char *p = strchr(tmp, SCOPE_DELIMITER);
+	char *p = strchr(tmp, '%');
 	if (p) {
 		*p = '\0';
 		scope = src + (p - tmp) + 1;
