@@ -1,4 +1,4 @@
-option('udevrulesdir', type : 'string', value : 'etc/udev/rules.d', description : 'directory for udev rules files')
+option('udevrulesdir', type : 'string', value : 'lib/udev/rules.d', description : 'directory for udev rules files')
 option('dracutrulesdir', type : 'string', value : 'lib/dracut/dracut.conf.d/', description : 'directory for dracut rules files')
 option('systemddir', type : 'string', value : 'lib/systemd/', description : 'directory for systemd files')
 option('htmldir', type : 'string', value : '', description : 'directory for HTML documentation')
