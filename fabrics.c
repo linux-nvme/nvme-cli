@@ -526,6 +526,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 
 	f = fopen(PATH_NVMF_DISC, "r");
 	if (f == NULL) {
+		fprintf(stderr, "No params given and no %s\n", PATH_NVMF_DISC);
 		errno = ENOENT;
 		return -1;
 	}
