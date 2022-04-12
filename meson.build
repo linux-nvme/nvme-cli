@@ -29,6 +29,17 @@ systemddir     = join_paths(prefixdir, get_option('systemddir'))
 conf = configuration_data()
 requires = ''
 
+version_tag = get_option('version-tag')
+if version_tag != ''
+        conf.set('GIT_VERSION', '"@0@"'.format(version_tag))
+else
+    r = run_command('meson-vcs-tag.sh',
+                    meson.current_source_dir(),
+                    meson.project_version(),
+                    check: true)
+    conf.set('GIT_VERSION', '"@0@"'.format(r.stdout().strip()))
+endif
+
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 
 libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])

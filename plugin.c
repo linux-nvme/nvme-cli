@@ -10,10 +10,13 @@ static int version(struct plugin *plugin)
 {
 	struct program *prog = plugin->parent;
 
-	if (plugin->name)
-		printf("%s %s version %s\n", prog->name, plugin->name, plugin->version);
-	else
-		printf("%s version %s\n", prog->name, prog->version);
+	if (plugin->name) {
+		printf("%s %s version %s (git %s)\n",
+			prog->name, plugin->name, plugin->version, GIT_VERSION);
+	} else {
+		printf("%s version %s (git %s)\n",
+		       prog->name, prog->version, GIT_VERSION);
+	}
 	return 0;
 }
 
