@@ -25,6 +25,15 @@ sphinx_sources = [
     'config-schema.json'
 ]
 
+static_sources = []
+foreach file : sphinx_sources
+  static_sources += configure_file(input: file + '.in',
+                                   output: file,
+                                   configuration: substs)
+endforeach
+
+subdir('rst')
+
 want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
 if want_docs != 'false'
@@ -41,7 +50,7 @@ if want_docs != 'false'
         foreach file : files('../src/nvme/' + apif)
           subst = configure_file(
               input: file,
-              output: '@BASENAME@.msubst',
+              output: '@BASENAME@.subst',
               configuration: conf)
           c = run_command(list_man_pages, subst)
           man_pages = c.stdout().split()
@@ -73,37 +82,9 @@ if want_docs != 'false'
     htmldir = join_paths(get_option('htmldir'), 'nvme')
     sphinx_build = find_program('sphinx-build-3', 'sphinx-build')
     if sphinx_build.found() and want_docs_build
-      cat = find_program('cat')
-      rsts = []
-      foreach apif : api_files
-        afile = files('../src/nvme/' + apif)
-        subst = configure_file(
-            input: afile,
-            output: '@BASENAME@.hsubst',
-            configuration: conf)
-        rst = custom_target(
-          apif.underscorify() + '_rst',
-          input: subst,
-          output: '@BASENAME@._rst',
-          capture: true,
-          command: [kernel_doc,
-                    '-rst',
-                    '@INPUT@'])
-        rsts += rst
-      endforeach
-      libnvme = custom_target(
-	'libnvme',
-        command: [ cat, '@INPUT@' ],
-        capture: true,
-        input: rsts,
-        output: 'libnvme.rst')
-      static_sources = []
-      foreach file : sphinx_sources
-	static_sources += configure_file(input: file, output: file, copy: true)
-      endforeach
       custom_target(
         'generate_doc_html',
-        input: [static_sources, libnvme],
+        input: [static_sources, rst],
         output: 'html',
         command: [sphinx_build,
                   '-b', 'html',

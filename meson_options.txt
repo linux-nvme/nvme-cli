@@ -1,8 +1,9 @@
 # -*- mode: meson -*-
 option('pkgconfiglibdir', type : 'string', value : '', description : 'directory for standard pkg-config files')
 option('htmldir', type : 'string', value : '', description : 'directory for HTML documentation')
+option('rstdir', type : 'string', value : '', description : 'directory for ReST documentation')
 
-option('docs', type : 'combo', choices : ['false', 'html', 'man', 'all'], description : 'install documentation')
+option('docs', type : 'combo', choices : ['false', 'html', 'man', 'rst', 'all'], description : 'install documentation')
 option('docs-build', type : 'boolean', value : false,  description : 'build documentation')
 
 option('python', type : 'combo', choices : ['auto', 'true', 'false'], description : 'Generate libnvme python bindings')
