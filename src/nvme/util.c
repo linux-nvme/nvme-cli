@@ -23,6 +23,9 @@
 #include "util.h"
 #include "log.h"
 
+/* Source Code Control System, query version of binary with 'what' */
+const char sccsid[] = "@(#)libnvme " GIT_VERSION;
+
 static inline __u8 nvme_generic_status_to_errno(__u16 status)
 {
 	switch (status) {
