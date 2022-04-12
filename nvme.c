@@ -7313,8 +7313,22 @@ static int passthru(int argc, char **argv, bool admin,
 	if (fd < 0)
 		goto ret;
 
-	flags = cfg.opcode & 1 ? O_RDONLY : O_WRONLY | O_CREAT;
-	dfd = mfd = cfg.opcode & 1 ? STDIN_FILENO : STDOUT_FILENO;
+	if (cfg.opcode & 0x01)
+		cfg.write = true;
+
+	if (cfg.opcode & 0x02)
+		cfg.read = true;
+
+	if (cfg.write) {
+		flags = O_RDONLY;
+		dfd = mfd = STDIN_FILENO;
+	}
+
+	if (cfg.read) {
+		flags = O_WRONLY | O_CREAT;
+		dfd = mfd = STDOUT_FILENO;
+	}
+
 	if (strlen(cfg.input_file)) {
 		dfd = open(cfg.input_file, flags, mode);
 		if (dfd < 0) {
@@ -7355,14 +7369,6 @@ static int passthru(int argc, char **argv, bool admin,
 		if (!data) {
 			err = -ENOMEM;
 			goto free_metadata;
-		}
-
-		if (cfg.write && !(cfg.opcode & 0x01)) {
-			fprintf(stderr, "warning: write flag set but write direction bit is not set in the opcode\n");
-		}
-
-		if (cfg.read && !(cfg.opcode & 0x02)) {
-			fprintf(stderr, "warning: read flag set but read direction bit is not set in the opcode\n");
 		}
 
 		memset(data, cfg.prefill, cfg.data_len);
