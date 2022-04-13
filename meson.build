@@ -46,6 +46,7 @@ else
                     check: true)
     conf.set('GIT_VERSION', '"@0@"'.format(r.stdout().strip()))
 endif
+conf.set('PROJECT_VERSION', '"@0@"'.format(meson.project_version()))
 
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 
