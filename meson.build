@@ -243,6 +243,7 @@ sources = [
   'nvme-print.c',
   'nvme-rpmb.c',
   'plugin.c',
+  'wrapper.c',
 ]
 
 subdir('ccan')
@@ -256,6 +257,7 @@ executable(
   sources,
   dependencies: [ libnvme_dep, libuuid_dep, json_c_dep, libz_dep,
                   libhugetlbfs_dep ],
+  link_args: '-ldl',
   include_directories: incdir,
   install: true,
   install_dir: sbindir

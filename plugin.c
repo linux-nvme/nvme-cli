@@ -6,6 +6,8 @@
 #include "plugin.h"
 #include "util/argconfig.h"
 
+#include <libnvme.h>
+
 static int version(struct plugin *plugin)
 {
 	struct program *prog = plugin->parent;
@@ -17,6 +19,9 @@ static int version(struct plugin *plugin)
 		printf("%s version %s (git %s)\n",
 		       prog->name, prog->version, GIT_VERSION);
 	}
+	printf("libnvme version %s (git %s)\n",
+		nvme_get_version(NVME_VERSION_PROJECT),
+		nvme_get_version(NVME_VERSION_GIT));
 	return 0;
 }
 
