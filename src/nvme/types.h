@@ -161,6 +161,7 @@ enum nvme_csi {
  * @NVME_REG_BPMBL:	Boot Partition Memory Buffer Location
  * @NVME_REG_CMBMSC:	Controller Memory Buffer Memory Space Control
  * @NVME_REG_CMBSTS:	Controller Memory Buffer Status
+ * @NVME_REG_CRTO:  	Controller Ready Timeouts
  * @NVME_REG_PMRCAP:	Persistent Memory Capabilities
  * @NVME_REG_PMRCTL:	Persistent Memory Region Control
  * @NVME_REG_PMRSTS:	Persistent Memory Region Status
@@ -187,6 +188,7 @@ enum nvme_register_offsets {
 	NVME_REG_BPMBL			= 0x0048,
 	NVME_REG_CMBMSC			= 0x0050,
 	NVME_REG_CMBSTS			= 0x0058,
+	NVME_REG_CRTO			= 0x0068,
 	NVME_REG_PMRCAP 		= 0x0e00,
 	NVME_REG_PMRCTL 		= 0x0e04,
 	NVME_REG_PMRSTS 		= 0x0e08,
@@ -235,6 +237,7 @@ enum nvme_cap {
 	NVME_CAP_MPSMAX_SHIFT		= 52,
 	NVME_CAP_PMRS_SHIFT		= 56,
 	NVME_CAP_CMBS_SHIFT		= 57,
+	NVME_CAP_CRMS_SHIFT		= 59,
 	NVME_CAP_MQES_MASK		= 0xffff,
 	NVME_CAP_CQR_MASK		= 0x1,
 	NVME_CAP_AMS_MASK		= 0x3,
@@ -247,11 +250,14 @@ enum nvme_cap {
 	NVME_CAP_MPSMAX_MASK		= 0xf,
 	NVME_CAP_PMRS_MASK		= 0x1,
 	NVME_CAP_CMBS_MASK		= 0x1,
+	NVME_CAP_CRMS_MASK		= 0x3,
 	NVME_CAP_AMS_WRR		= 1 << 0,
 	NVME_CAP_AMS_VS			= 1 << 1,
 	NVME_CAP_CSS_NVM		= 1 << 0,
 	NVME_CAP_CSS_CSI		= 1 << 6,
 	NVME_CAP_CSS_ADMIN		= 1 << 7,
+	NVME_CAP_CRWMS   		= 1 << 0,
+	NVME_CAP_CRIMS  		= 1 << 1,
 };
 
 #define NVME_CAP_MQES(cap)	NVME_GET(cap, CAP_MQES)
@@ -264,8 +270,9 @@ enum nvme_cap {
 #define NVME_CAP_BPS(cap)	NVME_GET(cap, CAP_BPS)
 #define NVME_CAP_MPSMIN(cap)	NVME_GET(cap, CAP_MPSMIN)
 #define NVME_CAP_MPSMAX(cap)	NVME_GET(cap, CAP_MPSMAX)
-#define NVME_CAP_CMBS(cap)	NVME_GET(cap, CAP_CMBS)
 #define NVME_CAP_PMRS(cap)	NVME_GET(cap, CAP_PMRS)
+#define NVME_CAP_CMBS(cap)	NVME_GET(cap, CAP_CMBS)
+#define NVME_CAP_CRMS(cap)	NVME_GET(cap, CAP_CRMS)
 
 enum nvme_vs {
 	NVME_VS_TER_SHIFT		= 0,
@@ -292,11 +299,13 @@ enum nvme_cc {
 	NVME_CC_SHN_SHIFT	= 14,
 	NVME_CC_IOSQES_SHIFT	= 16,
 	NVME_CC_IOCQES_SHIFT	= 20,
+	NVME_CC_CRIME_SHIFT	= 24,
 	NVME_CC_EN_MASK		= 0x1,
 	NVME_CC_CSS_MASK	= 0x7,
 	NVME_CC_MPS_MASK	= 0xf,
 	NVME_CC_AMS_MASK	= 0x7,
 	NVME_CC_SHN_MASK	= 0x3,
+	NVME_CC_CRIME_MASK	= 0x1,
 	NVME_CC_IOSQES_MASK	= 0xf,
 	NVME_CC_IOCQES_MASK	= 0xf,
 	NVME_CC_CSS_NVM		= 0,
@@ -308,6 +317,8 @@ enum nvme_cc {
 	NVME_CC_SHN_NONE	= 0,
 	NVME_CC_SHN_NORMAL	= 1,
 	NVME_CC_SHN_ABRUPT	= 2,
+	NVME_CC_CRWME		= 0,
+	NVME_CC_CRIME		= 1,
 };
 
 #define NVME_CC_EN(cc)		NVME_GET(cc, CC_EN)
@@ -317,6 +328,7 @@ enum nvme_cc {
 #define NVME_CC_SHN(cc)		NVME_GET(cc, CC_SHN)
 #define NVME_CC_IOSQES(cc)	NVME_GET(cc, CC_IOSQES)
 #define NVME_CC_IOCQES(cc)	NVME_GET(cc, CC_IOCQES)
+#define NVME_CC_CRIME(cc)	NVME_GET(cc, CC_CRIME)
 
 enum nvme_csts {
 	NVME_CSTS_RDY_SHIFT	= 0,
@@ -472,6 +484,16 @@ enum nvme_cmbsts {
 };
 
 #define NVME_CMBSTS_CBAI(cmbsts)	NVME_GET(cmbsts, CMBSTS_CBAI)
+
+enum nvme_crto {
+	NVME_CRTO_CRIMT_SHIFT	= 16,
+	NVME_CRTO_CRIMT_MASK	= 0xffff0000,
+	NVME_CRTO_CRWMT_SHIFT	= 0,
+	NVME_CRTO_CRWMT_MASK	= 0x0000ffff,
+};
+
+#define NVME_CRTO_CRIMT(crto)	NVME_GET(crto, CRTO_CRIMT)
+#define NVME_CRTO_CRWMT(crto)	NVME_GET(crto, CRTO_CRWMT)
 
 enum nvme_pmrcap {
 	NVME_PMRCAP_RDS_SHIFT		= 3,
