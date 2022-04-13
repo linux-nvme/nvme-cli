@@ -15,7 +15,7 @@ jobs:
       - name: install libraries
         run: sudo apt-get install libjson-c-dev
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
           setup-options: --werror
@@ -34,7 +34,7 @@ jobs:
       - name: install libraries
         run: sudo apt-get remove -y libssl-dev
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
           setup-options: --werror
@@ -54,7 +54,7 @@ jobs:
       - name: install libraries
         run: sudo apt-get install libjson-c-dev lcov
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
           setup-options: -Db_coverage=true --werror
