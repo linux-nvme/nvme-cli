@@ -64,6 +64,6 @@ jobs:
       - name: Generate Coverage Report
         # Can't use meson here, see https://github.com/mesonbuild/meson/issues/7895
         run: ninja -C build coverage --verbose
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: false
