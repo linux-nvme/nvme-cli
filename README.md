@@ -18,13 +18,13 @@ The public specification is the authority to resolve any protocol
 discrepencies with this library. For more info on NVM Express, please
 see:
 
-  http://nvmexpress.org
+  https://nvmexpress.org
 
 Subscribe to linux-nvme@lists.infradead.org for linux-nvme related
 discussions and development for both kernel and userspace. The list is
 archived here:
 
-  http://lists.infradead.org/mailman/listinfo/linux-nvme
+  https://lists.infradead.org/mailman/listinfo/linux-nvme
 
 # License
 
