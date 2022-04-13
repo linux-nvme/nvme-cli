@@ -22,7 +22,7 @@ jobs:
           options: --verbose
           action: test
       # Preserve meson's log file on failure
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: Linux_Meson_Testlog
@@ -42,7 +42,7 @@ jobs:
           action: test
           meson-version: 0.61.2
       # Preserve meson's log file on failure
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: Linux_Meson_log
