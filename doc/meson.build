@@ -21,7 +21,10 @@ api_files = [
 
 sphinx_sources = [
     'conf.py',
+    'api.rst',
     'index.rst',
+    'quickstart.rst',
+    'installation.rst',
     'config-schema.json'
 ]
 
