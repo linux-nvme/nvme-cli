@@ -174,6 +174,9 @@ static nvme_ctrl_t create_discover_ctrl(nvme_root_t r, nvme_host_t h,
 	nvme_ctrl_t c;
 
 	c = __create_discover_ctrl(r, h, cfg, trcfg);
+	if (!c)
+		return NULL;
+
 	if (!persistent)
 		return c;
 
