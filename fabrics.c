@@ -386,6 +386,10 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 			nvme_ctrl_t child;
 			int tmo = defcfg->keep_alive_tmo;
 
+			/* Skip connect if the transport types don't match */
+			if (strcmp(nvme_ctrl_get_transport(c), nvmf_trtype_str(e->trtype)))
+				continue;
+
 			if (e->subtype == NVME_NQN_DISC)
 				set_discovery_kato(defcfg);
 
