@@ -51,7 +51,7 @@ conf.set('PROJECT_VERSION', '"@0@"'.format(meson.project_version()))
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 
 # Check for libuuid availability
-libuuid_dep = dependency('uuid', required: true)
+libuuid_dep = dependency('uuid', required: true, fallback : ['uuid', 'uuid_dep'])
 conf.set('CONFIG_LIBUUID', libuuid_dep.found(), description: 'Is libuuid required?')
 
 # Check for json-c availability

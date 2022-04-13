@@ -1,0 +1,6 @@
+[wrap-git]
+url = https://github.com/util-linux/util-linux.git
+revision = eefff5aac7bce6979c950e3931a578efe03acbac
+
+[provide]
+dependency_names = uuid
