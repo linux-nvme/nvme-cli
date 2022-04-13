@@ -4,7 +4,7 @@
 #if !defined(WDC_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define WDC_NVME
 
-#define WDC_PLUGIN_VERSION   "1.16.4"
+#define WDC_PLUGIN_VERSION   "1.16.5"
 #include "cmd.h"
 
 PLUGIN(NAME("wdc", "Western Digital vendor specific extensions", WDC_PLUGIN_VERSION),
@@ -40,6 +40,9 @@ PLUGIN(NAME("wdc", "Western Digital vendor specific extensions", WDC_PLUGIN_VERS
 		ENTRY("get-error-recovery-log", "WDC Get Error Recovery Log Page", wdc_get_error_recovery_log)
 		ENTRY("get-dev-capabilities-log", "WDC Get Device Capabilities Log Page", wdc_get_dev_capabilities_log)
 		ENTRY("get-unsupported-reqs-log", "WDC Get Unsupported Requirements Log Page", wdc_get_unsupported_reqs_log)
+		ENTRY("cloud-boot-SSD-version", "WDC Get the Cloud Boot SSD Version", wdc_cloud_boot_SSD_version)
+		ENTRY("vs-cloud-log", "WDC Get the Cloud Log Page", wdc_vs_cloud_log)
+		ENTRY("vs-hw-rev-log", "WDC Get the Hardware Revision Log Page", wdc_vs_hw_rev_log)
 	)
 );
 
