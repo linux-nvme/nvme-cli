@@ -1,3 +1,8 @@
+LIBNVME_1_1 {
+	global:
+		nvme_get_version;
+};
+
 LIBNVME_1_0 {
 	global:
 		nvme_admin_passthru64;

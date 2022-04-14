@@ -532,4 +532,23 @@ static inline __u16 nvmf_exat_size(size_t val_len)
  */
 struct nvmf_ext_attr *nvmf_exat_ptr_next(struct nvmf_ext_attr *p);
 
+/**
+ * enum nvme_version - Selector for version to be returned by @nvme_get_version
+ *
+ * NVME_VERSION_PROJECT:	Project release version
+ * NVME_VERSION_GIT:		Git reference
+ */
+enum nvme_version {
+	NVME_VERSION_PROJECT	= 0,
+	NVME_VERSION_GIT	= 1,
+};
+
+/**
+ * nvme_get_version - Return version libnvme string
+ * @type:	Selects which version type (see @struct nvme_version)
+ *
+ * Return: Returns version string for known types or else "n/a"
+ */
+const char *nvme_get_version(enum nvme_version type);
+
 #endif /* _LIBNVME_UTIL_H */

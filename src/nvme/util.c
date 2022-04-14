@@ -23,6 +23,9 @@
 #include "util.h"
 #include "log.h"
 
+/* Source Code Control System, query version of binary with 'what' */
+const char sccsid[] = "@(#)libnvme " GIT_VERSION;
+
 static inline __u8 nvme_generic_status_to_errno(__u16 status)
 {
 	switch (status) {
@@ -774,4 +777,16 @@ struct nvmf_ext_attr *nvmf_exat_ptr_next(struct nvmf_ext_attr *p)
 {
 	return (struct nvmf_ext_attr *)
 		((uintptr_t)p + (ptrdiff_t)nvmf_exat_size(le16_to_cpu(p->exatlen)));
+}
+
+const char *nvme_get_version(enum nvme_version type)
+{
+	switch(type) {
+	case NVME_VERSION_PROJECT:
+		return PROJECT_VERSION;
+	case NVME_VERSION_GIT:
+		return GIT_VERSION;
+	default:
+		return "n/a";
+	}
 }

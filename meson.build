@@ -36,6 +36,18 @@ pkgconfiglibdir = get_option('pkgconfiglibdir') == '' ? join_paths(libdir, 'pkgc
 ################################################################################
 conf = configuration_data()
 
+version_tag = get_option('version-tag')
+if version_tag != ''
+        conf.set('GIT_VERSION', '"@0@"'.format(version_tag))
+else
+    r = run_command('meson-vcs-tag.sh',
+                    meson.current_source_dir(),
+                    meson.project_version(),
+                    check: true)
+    conf.set('GIT_VERSION', '"@0@"'.format(r.stdout().strip()))
+endif
+conf.set('PROJECT_VERSION', '"@0@"'.format(meson.project_version()))
+
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 
 # Check for libuuid availability

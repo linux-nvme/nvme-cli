@@ -1,4 +1,5 @@
 # -*- mode: meson -*-
+option('version-tag', type : 'string', description : 'override the git version string')
 option('pkgconfiglibdir', type : 'string', value : '', description : 'directory for standard pkg-config files')
 option('htmldir', type : 'string', value : '', description : 'directory for HTML documentation')
 option('rstdir', type : 'string', value : '', description : 'directory for ReST documentation')
