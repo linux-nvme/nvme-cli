@@ -521,7 +521,7 @@ static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
 		 (int)strcspn(argstr,"\n"), argstr);
 	ret = write(fd, argstr, len);
 	if (ret != len) {
-		nvme_msg(r, LOG_ERR, "Failed to write to %s: %s\n",
+		nvme_msg(r, LOG_NOTICE, "Failed to write to %s: %s\n",
 			 nvmf_dev, strerror(errno));
 		ret = -ENVME_CONNECT_WRITE;
 		goto out_close;
