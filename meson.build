@@ -29,6 +29,17 @@ systemddir     = join_paths(prefixdir, get_option('systemddir'))
 conf = configuration_data()
 requires = ''
 
+version_tag = get_option('version-tag')
+if version_tag != ''
+        conf.set('GIT_VERSION', '"@0@"'.format(version_tag))
+else
+    r = run_command('meson-vcs-tag.sh',
+                    meson.current_source_dir(),
+                    meson.project_version(),
+                    check: true)
+    conf.set('GIT_VERSION', '"@0@"'.format(r.stdout().strip()))
+endif
+
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 
 libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
@@ -232,6 +243,7 @@ sources = [
   'nvme-print.c',
   'nvme-rpmb.c',
   'plugin.c',
+  'wrapper.c',
 ]
 
 subdir('ccan')
@@ -245,6 +257,7 @@ executable(
   sources,
   dependencies: [ libnvme_dep, libuuid_dep, json_c_dep, libz_dep,
                   libhugetlbfs_dep ],
+  link_args: '-ldl',
   include_directories: incdir,
   install: true,
   install_dir: sbindir
