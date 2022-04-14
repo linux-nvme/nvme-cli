@@ -702,8 +702,6 @@ nvme_ctrl_t nvmf_connect_disc_entry(nvme_host_t h,
 		if (!ret)
 			return c;
 	}
-	nvme_msg(h->r, LOG_ERR, "failed to connect controller, error %d\n",
-		 errno);
 	nvme_free_ctrl(c);
 	return NULL;
 }
