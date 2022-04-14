@@ -536,6 +536,11 @@ static const char * const libnvme_status[] = {
 	[ENVME_CONNECT_INVAL_TR] = "invalid transport type",
 	[ENVME_CONNECT_LOOKUP_SUBSYS_NAME] = "failed to lookup subsystem name",
 	[ENVME_CONNECT_LOOKUP_SUBSYS] = "failed to lookup subsystem",
+	[ENVME_CONNECT_ALREADY] = "already connnected",
+	[ENVME_CONNECT_INVAL] = "invalid arguments/configuration",
+	[ENVME_CONNECT_ADDRINUSE] = "hostnqn already in use",
+	[ENVME_CONNECT_NODEV] = "invalid interface",
+	[ENVME_CONNECT_OPNOTSUPP] ="not supported",
 };
 
 const char *nvme_errno_to_string(int status)

@@ -31,6 +31,11 @@
  * @ENVME_CONNECT_INVAL_TR:	invalid transport type
  * @ENVME_CONNECT_LOOKUP_SUBSYS_NAME:	failed to lookup subsystem name
  * @ENVME_CONNECT_LOOKUP_SUBSYS: failed to lookup subsystem
+ * @ENVME_CONNECT_ALREADY:	the connect attempt failed, already connected
+ * @ENVME_CONNECT_INVAL:	invalid arguments/configuration
+ * @ENVME_CONNECT_ADDRINUSE:	hostnqn already in use
+ * @ENVME_CONNECT_NODEV:	invalid interface
+ * @ENVME_CONNECT_OPNOTSUPP:	not supported
  */
 enum nvme_connect_err {
 	ENVME_CONNECT_RESOLVE	= 1000,
@@ -45,6 +50,11 @@ enum nvme_connect_err {
 	ENVME_CONNECT_INVAL_TR,
 	ENVME_CONNECT_LOOKUP_SUBSYS_NAME,
 	ENVME_CONNECT_LOOKUP_SUBSYS,
+	ENVME_CONNECT_ALREADY,
+	ENVME_CONNECT_INVAL,
+	ENVME_CONNECT_ADDRINUSE,
+	ENVME_CONNECT_NODEV,
+	ENVME_CONNECT_OPNOTSUPP,
 };
 
 /**
