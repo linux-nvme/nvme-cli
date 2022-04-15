@@ -13,7 +13,7 @@
 
 #include "fabrics.h"
 
-#include <uuid/uuid.h>
+#include <uuid.h>
 
 
 extern const char *nvme_ctrl_sysfs_dir;

@@ -15,7 +15,7 @@
 #include <stddef.h>
 
 #include <sys/types.h>
-#include <uuid/uuid.h>
+#include <uuid.h>
 
 #include "ioctl.h"
 #include "util.h"

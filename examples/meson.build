@@ -8,27 +8,27 @@
 executable(
     'telemetry-listen',
     ['telemetry-listen.c'],
-    link_with: libnvme,
+    dependencies: libnvme_dep,
     include_directories: [incdir, internal_incdir]
 )
 
 executable(
     'display-columnar',
     ['display-columnar.c'],
-    link_with: libnvme,
+    dependencies: libnvme_dep,
     include_directories: [incdir, internal_incdir]
 )
 
 executable(
     'display-tree',
     ['display-tree.c'],
-    link_with: libnvme,
+    dependencies: libnvme_dep,
     include_directories: [incdir, internal_incdir]
 )
 
 executable(
     'discover-loop',
     ['discover-loop.c'],
-    link_with: libnvme,
+    dependencies: libnvme_dep,
     include_directories: [incdir, internal_incdir]
 )
