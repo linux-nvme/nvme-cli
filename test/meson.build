@@ -12,7 +12,7 @@
 main = executable(
     'main-test',
     ['test.c'],
-    dependencies: libnvme_dep,
+    dependencies: [libnvme_dep, libuuid_dep],
     include_directories: [incdir, internal_incdir]
 )
 
