@@ -66,25 +66,26 @@ struct nvme_capacity_info {
 	__u64 used_space;
 	__u64 free_space;
 };
-struct	__attribute__((packed)) nvme_additional_smart_log_item {
-	uint8_t			   key;
-	uint8_t			   _kp[2];
-	uint8_t			   norm;
-	uint8_t			   _np;
-	union {
-		uint8_t		   raw[6];
-		struct wear_level {
-			uint16_t	min;
-			uint16_t	max;
-			uint16_t	avg;
-		} wear_level ;
-		struct thermal_throttle {
-			uint8_t    pct;
-			uint32_t	count;
+
+struct  __attribute__((packed)) nvme_additional_smart_log_item {
+	__u8			key;
+	__u8			_kp[2];
+	__u8			norm;
+	__u8			_np;
+	union __attribute__((packed)) {
+		__u8		raw[6];
+		struct __attribute__((packed))  wear_level {
+			__le16	min;
+			__le16	max;
+			__le16	avg;
+		} wear_level;
+		struct __attribute__((packed)) thermal_throttle {
+			__u8	pct;
+			__u32	count;
 		} thermal_throttle;
-	};
-	uint8_t			   _rp;
-};
+	} ;
+	__u8			_rp;
+} ;
 
 struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	 program_fail_cnt;
@@ -105,6 +106,11 @@ struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	 erase_timeout_cnt;
 	struct nvme_additional_smart_log_item	 read_timeout_cnt;
 	struct nvme_additional_smart_log_item	 read_ecc_cnt;//retry cnt
+	struct nvme_additional_smart_log_item    non_media_crc_err_cnt;
+	struct nvme_additional_smart_log_item    compression_path_err_cnt;
+	struct nvme_additional_smart_log_item    out_of_space_flag;
+	struct nvme_additional_smart_log_item    physical_usage_ratio;
+	struct nvme_additional_smart_log_item    grown_bb; //grown bad block
 };
 
 int nvme_change_cap(int fd, __u32 nsid, __u64 capacity)
