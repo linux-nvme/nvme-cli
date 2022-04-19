@@ -482,6 +482,8 @@ static nvme_ctrl_t lookup_discover_ctrl(nvme_root_t r, struct tr_config *trcfg)
 static char *get_default_trsvcid(const char *transport,
 			         bool discovery_ctrl)
 {
+	if (!transport)
+		return NULL;
 	if (!strcmp(transport, "tcp")) {
 		if (discovery_ctrl) {
 			/* Default port for NVMe/TCP discovery controllers */
