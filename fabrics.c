@@ -831,7 +831,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 	if (strcmp(transport, "loop")) {
 		if (!traddr) {
 			fprintf(stderr,
-				"required argument [--address | -a] not specified for transport %s\n",
+				"required argument [--traddr | -a] not specified for transport %s\n",
 				transport);
 			return EINVAL;
 		}
