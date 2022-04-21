@@ -53,7 +53,10 @@ pkg.generate(libnvme,
 
 libnvme_dep = declare_dependency(
     include_directories: ['.'],
-    dependencies: deps,
+    dependencies: [
+      libuuid_dep.partial_dependency(compile_args: true, includes: true),
+      json_c_dep.partial_dependency(compile_args: true, includes: true),
+    ],
     link_with: libnvme,
 )
 

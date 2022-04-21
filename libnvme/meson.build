@@ -29,9 +29,9 @@ if have_python_support
     pynvme_clib = python3.extension_module(
         '_nvme',
         pymod_swig[1],
-        dependencies : py3_dep,
+        dependencies : [libnvme_dep, py3_dep],
         include_directories: [incdir, internal_incdir],
-        link_with: [libnvme, libccan],
+        link_with: [libccan],
         install: true,
         subdir: 'libnvme',
     )

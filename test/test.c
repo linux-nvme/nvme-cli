@@ -19,7 +19,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <inttypes.h>
-#include <uuid/uuid.h>
+#include <uuid.h>
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
