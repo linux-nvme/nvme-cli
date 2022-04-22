@@ -578,6 +578,7 @@ static int nvme_scan_subsystem(struct nvme_root *r, const char *name,
 		nvme_msg(r, LOG_WARNING, "NQN mismatch for subsystem '%s'\n",
 			 name);
 		s = NULL;
+		free(subsysnqn);
 		errno = EINVAL;
 		return -1;
 	}
@@ -1092,20 +1093,26 @@ static char *nvme_ctrl_lookup_subsystem_name(nvme_root_t r,
 	struct dirent **subsys;
 	char *subsys_name = NULL;
 	int ret, i;
-	char path[PATH_MAX];
 
 	ret = nvme_scan_subsystems(&subsys);
 	if (ret < 0)
 		return NULL;
 	for (i = 0; i < ret; i++) {
 		struct stat st;
+		char *path;
 
-		sprintf(path, "%s/%s/%s", nvme_subsys_sysfs_dir,
-			subsys[i]->d_name, ctrl_name);
+		if (asprintf(&path, "%s/%s/%s", nvme_subsys_sysfs_dir,
+			     subsys[i]->d_name, ctrl_name) < 0) {
+			errno = ENOMEM;
+			return NULL;
+		}
 		nvme_msg(r, LOG_DEBUG, "lookup subsystem %s\n", path);
-		if (stat(path, &st) < 0)
+		if (stat(path, &st) < 0) {
+			free(path);
 			continue;
+		}
 		subsys_name = strdup(subsys[i]->d_name);
+		free(path);
 		break;
 	}
 	nvme_free_dirents(subsys, ret);
@@ -1293,12 +1300,10 @@ skip_address:
 	free(transport);
 	if (address)
 		free(address);
-	if (!c) {
-		if (!p) {
-			nvme_msg(r, LOG_ERR, "failed to lookup ctrl\n");
-			errno = ENODEV;
-		} else
-			errno = ENOMEM;
+	if (!c && !p) {
+		nvme_msg(r, LOG_ERR, "failed to lookup ctrl\n");
+		errno = ENODEV;
+		free(addr);
 		return NULL;
 	}
 	c->address = addr;
@@ -1360,6 +1365,7 @@ nvme_ctrl_t nvme_scan_ctrl(nvme_root_t r, const char *name)
 		nvme_msg(r, LOG_ERR,
 			 "failed to lookup subsystem for controller %s\n",
 			 name);
+		free(subsysnqn);
 		free(path);
 		errno = ENXIO;
 		return NULL;
