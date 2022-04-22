@@ -135,7 +135,7 @@ void argconfig_print_help(const char *program_desc,
 		return;
 
 	printf("\n\033[1mOptions:\033[0m\n");
-	for (s = options; (s->option != NULL) && (s != NULL); s++)
+	for (s = options; (s != NULL) && (s->option != NULL); s++)
 		show_option(s);
 }
 
@@ -528,7 +528,8 @@ void argconfig_register_help_func(argconfig_help_func * f)
 	for (i = 0; i < MAX_HELP_FUNC; i++) {
 		if (help_funcs[i] == NULL) {
 			help_funcs[i] = f;
-			help_funcs[i + 1] = NULL;
+			if (i < MAX_HELP_FUNC - 1)
+				help_funcs[i + 1] = NULL;
 			break;
 		}
 	}
