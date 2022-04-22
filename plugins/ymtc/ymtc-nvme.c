@@ -30,9 +30,21 @@ static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
     u8 *nm = malloc(NM_SIZE * sizeof(u8));
     u8 *raw = malloc(RAW_SIZE * sizeof(u8));
 
+    if (!nm) {
+        if (raw)
+            free(raw);
+        return -1;
+    }
+    if (!raw) {
+        free(nm);
+        return -1;
+    }
     err = nvme_identify_ctrl(fd, &ctrl);
-    if (err)
+    if (err) {
+        free(nm);
+        free(raw);
         return err;
+    }
 
     snprintf(fw_ver, sizeof(fw_ver), "%c.%c%c.%c%c%c%c",
         ctrl.fr[0], ctrl.fr[1], ctrl.fr[2], ctrl.fr[3],
