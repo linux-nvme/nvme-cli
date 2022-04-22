@@ -161,6 +161,15 @@ static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s,
     u8 *nm = malloc(NM_SIZE * sizeof(u8));
     u8 *raw = malloc(RAW_SIZE * sizeof(u8));
 
+    if (!nm) {
+        if (raw)
+            free(raw);
+        return;
+    }
+    if (!raw) {
+        free(nm);
+        return;
+    }
     /* Table Title */
     printf("%s:%s %s:%x\n", STRN2_01, devname, STRN2_02, nsid);
     /* Clumn Name*/
@@ -242,11 +251,11 @@ static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s,
 static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
     unsigned int nsid, const char *devname, const char *fw_ver)
 {
-    char fw_ver_local[STR_VER_SIZE];
+    char fw_ver_local[STR_VER_SIZE + 1];
     struct nvme_memblaze_smart_log_item *item;
 
     strncpy(fw_ver_local, fw_ver, STR_VER_SIZE);
-    *(fw_ver_local + STR_VER_SIZE - 1) = '\0';
+    *(fw_ver_local + STR_VER_SIZE) = '\0';
 
     printf("Additional Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
 
@@ -342,6 +351,15 @@ static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
         u8 *nm = malloc(NM_SIZE * sizeof(u8));
         u8 *raw = malloc(RAW_SIZE * sizeof(u8));
 
+	if (!nm) {
+            if (raw)
+                free(raw);
+            return;
+	}
+	if (!raw) {
+            free(nm);
+            return;
+	}
         /* 00 RAISIN_SI_VD_PROGRAM_FAIL */
         get_memblaze_new_smart_info(s, PROGRAM_FAIL, nm, raw);
         printf("%-32s                                : %3d%%       %"PRIu64"\n",
@@ -407,11 +425,13 @@ int parse_params(char *str, int number, ...)
         c = strtok(str, ",");
         if ( c == NULL) {
             printf("No enough parameters. abort...\n");
-            exit(EINVAL);
+            va_end(argp);
+            return 1;
         }
 
         if (isalnum((int)*c) == 0) {
             printf("%s is not a valid number\n", c);
+            va_end(argp);
             return 1;
         }
         value = atoi(c);
@@ -732,9 +752,14 @@ static int glp_high_latency(FILE *fdi, char *buf, int buflen, int print)
                      1900 + t->tm_year, 1 + t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, millisec);
         }
 
-        fprintf(fdi, "%-32s %-7x %-6x %-6x %-8x %4x%08x  %-8x %-d\n",
-                string, logEntry->opcode, logEntry->sqe, logEntry->cid, logEntry->nsid,
-                (__u32)(logEntry->sLBA >> 32), (__u32)logEntry->sLBA, logEntry->numLBA, logEntry->latency);
+	if (fdi) {
+		fprintf(fdi, "%-32s %-7x %-6x %-6x %-8x %4x%08x  %-8x %-d\n",
+			string, logEntry->opcode, logEntry->sqe,
+			logEntry->cid, logEntry->nsid,
+			(__u32)(logEntry->sLBA >> 32),
+			(__u32)logEntry->sLBA, logEntry->numLBA,
+			logEntry->latency);
+	}
         if (print)
         {
             printf("%-32s %-7x %-6x %-6x %-8x %4x%08x  %-8x %-d\n",
@@ -752,13 +777,14 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *cmd,
     char buf[LOG_PAGE_SIZE];
     FILE *fdi = NULL;
 
-    fdi = fopen(FID_C3_LOG_FILENAME, "w+");
     OPT_ARGS(opts) = {
         OPT_END()
     };
 
     fd = parse_and_open(argc, argv, desc, opts);
     if (fd < 0) return fd;
+
+    fdi = fopen(FID_C3_LOG_FILENAME, "w+");
 
     glp_high_latency_show_bar(fdi, DO_PRINT_FLAG);
     err = nvme_get_log_simple(fd, GLP_ID_VU_GET_HIGH_LATENCY_LOG, sizeof(buf), &buf);
@@ -927,22 +953,17 @@ static void ioLatencyHistogramOutput(FILE *fd, int index, int start, int end, ch
     int len;
     char string[64], subString0[12], subString1[12];
 
-    len = snprintf(subString0, sizeof(subString0), "%d%s", start, unit0);
+    snprintf(subString0, sizeof(subString0), "%d%s", start, unit0);
     if (end != 0x7FFFFFFF)
-    {
-        len = snprintf(subString1, sizeof(subString1), "%d%s", end, unit1);
-    }
+        snprintf(subString1, sizeof(subString1), "%d%s", end, unit1);
     else
-    {
-        len = snprintf(subString1, sizeof(subString1), "%s", "+INF");
-    }
-    len = snprintf(string, sizeof(string), "%-11d %-11s %-11s %-11u\n", index, subString0, subString1,
+        snprintf(subString1, sizeof(subString1), "%s", "+INF");
+    len = snprintf(string, sizeof(string), "%-11d %-11s %-11s %-11u\n",
+		   index, subString0, subString1,
                    pHistogram[index]);
     fwrite(string, 1, len, fd);
     if (print)
-    {
         printf("%s", string);
-    }
 }
 
 int io_latency_histogram(char *file, char *buf, int print, int logid)
