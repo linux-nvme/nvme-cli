@@ -717,12 +717,12 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
  */
 static int sfx_confirm_change(const char *str)
 {
-	char confirm;
+	unsigned char confirm;
 	fprintf(stderr, "WARNING: %s.\n"
 			"Use the force [--force] option to suppress this warning.\n", str);
 
 	fprintf(stderr, "Confirm Y/y, Others cancel:\n");
-	confirm = fgetc(stdin);
+	confirm = (unsigned char)fgetc(stdin);
 	if (confirm != 'y' && confirm != 'Y') {
 		fprintf(stderr, "Cancled.\n");
 		return 0;
