@@ -40,6 +40,7 @@ static void show_zns_properties(nvme_ns_t n)
 
 	if (nvme_zns_identify_ctrl(nvme_ns_get_fd(n), &zns_ctrl)) {
 		fprintf(stderr, "failed to identify zns ctrl\n");;
+		free(zr);
 		return;
 	}
 
@@ -51,6 +52,7 @@ static void show_zns_properties(nvme_ns_t n)
 				  NVME_DEFAULT_IOCTL_TIMEOUT, &result)) {
 		fprintf(stderr, "failed to report zones, result %x\n",
 			le32_to_cpu(result));
+		free(zr);
 		return;
 	}
 
