@@ -369,23 +369,26 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 {
 	const char *desc = "Retrieve ANA log for the given device in " \
 			    "decoded format (default), json or binary.";
+	const char *groups = "Return ANA groups only.";
 	void *ana_log;
 	int err = -1, fd;
-	int groups = 0; /* Right now get all the per ANA group NSIDS */
 	size_t ana_log_len;
 	struct nvme_id_ctrl ctrl;
 	enum nvme_print_flags flags;
 	enum nvme_log_ana_lsp lsp;
 
 	struct config {
+		bool	groups;
 		char	*output_format;
 	};
 
 	struct config cfg = {
+		.groups = false,
 		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
+		OPT_FLAG("groups", 'g', &cfg.groups, groups),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_END()
 	};
@@ -416,8 +419,8 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 		goto close_fd;
 	}
 
-	lsp = groups ? NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY :
-			NVME_LOG_ANA_LSP_RGO_NAMESPACES;
+	lsp = cfg.groups ? NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY :
+		NVME_LOG_ANA_LSP_RGO_NAMESPACES;
 
 	err = nvme_get_log_ana(fd, lsp, true, 0, ana_log_len, ana_log);
 	if (!err) {
