@@ -380,11 +380,6 @@ static int get_c0_log_page(int fd, char *format)
                 }
 
                 /* print the data */
-                if (!data) {
-                        fprintf(stderr, "ERROR : OCP : Invalid buffer to read 0xC0 log\n");
-                        ret = -1;
-                        goto out;
-                }
                 switch (fmt) {
                 case NORMAL:
                         ocp_print_C0_log_normal(data);
@@ -728,13 +723,6 @@ static int get_c3_log_page(int fd, char *format)
                         }
                 }
 
-                /* print the data */
-                if (!log_data) {
-                        fprintf(stderr,
-                                "ERROR : OCP : Invalid C3 log data buffer\n");
-                        ret = -1;
-                        goto out;
-                }
                 switch (fmt) {
                 case NORMAL:
                         ocp_print_C3_log_normal(fd, log_data);
