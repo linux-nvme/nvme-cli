@@ -498,14 +498,13 @@ static int micron_selective_download(int argc, char **argv,
     };
 
     fd = parse_and_open(argc, argv, desc, opts);
-
     if (fd < 0)
         return fd;
 
     if (strlen(cfg.select) != 3) {
         fprintf(stderr, "Invalid select flag\n");
-        err = EINVAL;
-        goto out;
+        close(fd);
+        return EINVAL;
     }
 
     for (int i = 0; i < 3; i++) {
@@ -520,21 +519,22 @@ static int micron_selective_download(int argc, char **argv,
         selectNo = 26;
     } else {
         fprintf(stderr, "Invalid select flag\n");
-        err = EINVAL;
-        goto out;
+        close(fd);
+        return EINVAL;
     }
 
     fw_fd = open(cfg.fw, O_RDONLY);
     if (fw_fd < 0) {
         fprintf(stderr, "no firmware file provided\n");
-        err = EINVAL;
-        goto out;
+        close(fd);
+        return EINVAL;
     }
 
     err = fstat(fw_fd, &sb);
     if (err < 0) {
         perror("fstat");
         err = errno;
+        goto out;
     }
 
     fw_size = sb.st_size;
@@ -550,8 +550,10 @@ static int micron_selective_download(int argc, char **argv,
         goto out;
     }
 
-    if (read(fw_fd, fw_buf, fw_size) != ((ssize_t) (fw_size)))
-        return EIO;
+    if (read(fw_fd, fw_buf, fw_size) != ((ssize_t) (fw_size))) {
+	err = errno;
+	goto out_free;
+    }
 
     while (fw_size > 0) {
         xfer = min(xfer, fw_size);
@@ -568,10 +570,10 @@ static int micron_selective_download(int argc, char **argv,
         err = nvme_fw_download(&args);
         if (err < 0) {
             perror("fw-download");
-            goto out;
+            goto out_free;
         } else if (err != 0) {
 	    nvme_show_status(err);
-            goto out;
+            goto out_free;
         }
         fw_buf += xfer;
         fw_size -= xfer;
@@ -586,7 +588,11 @@ static int micron_selective_download(int argc, char **argv,
                 "Update successful! Power cycle for changes to take effect\n");
     }
 
+out_free:
+    free(fw_buf);
 out:
+    close(fw_fd);
+    close(fd);
     return err;
 }
 
@@ -754,6 +760,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *cmd,
             }
         }
     }
+    close(fd);
     return err;
 }
 
@@ -823,7 +830,6 @@ static int micron_pcie_stats(int argc, char **argv,
     sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx);
     if ((eModel = GetDriveModel(ctrlIdx)) == UNKNOWN_MODEL) {
         printf ("Unsupported drive model for vs-pcie-stats command\n");
-        close(fd);
         goto out;
     }
 
@@ -868,6 +874,7 @@ static int micron_pcie_stats(int argc, char **argv,
     res = fgets(correctable, sizeof(correctable), fp);
     if (res == NULL) {
         printf("Failed to retrieve error count\n");
+        pclose(fp);
         goto out;
     }
     pclose(fp);
@@ -882,6 +889,7 @@ static int micron_pcie_stats(int argc, char **argv,
     res = fgets(uncorrectable, sizeof(uncorrectable), fp);
     if (res == NULL) {
         printf("Failed to retrieve error count\n");
+        pclose(fp);
         goto out;
     }
     pclose(fp);
@@ -924,6 +932,7 @@ static int micron_pcie_stats(int argc, char **argv,
     }
 
 out:
+    close(fd);
     return err;
 }
 
@@ -1019,6 +1028,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
     res = fgets(correctable, sizeof(correctable), fp);
     if (res == NULL) {
         printf("Failed to retrieve error count\n");
+        pclose(fp);
         goto out;
     }
     pclose(fp);
@@ -1026,8 +1036,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
     printf("Device correctable errors detected: %s\n", correctable);
     err = 0;
 out:
-    if (fd > 0)
-        close(fd);
+    close(fd);
     return err;
 }
 
@@ -1929,6 +1938,7 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
 
     if (model == UNKNOWN_MODEL) {
         fprintf(stderr, "ERROR : Unsupported drive for vs-drive-info cmd");
+        close(fd);
         return -1;
     }
 
@@ -1943,12 +1953,14 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
         err = nvme_submit_admin_passthru(fd, &admin_cmd, NULL);
         if (err) {
             fprintf(stderr, "ERROR : drive-info opcode failed with 0x%x\n", err);
+            close(fd);
             return -1;
         }
     } else {
         err = nvme_identify_ctrl(fd, &ctrl);
         if (err) {
             fprintf(stderr, "ERROR : identify_ctrl() failed with 0x%x\n", err);
+            close(fd);
             return -1;
         }
         dinfo.hw_ver_major = ctrl.vs[820];
@@ -1991,6 +2003,7 @@ static int micron_drive_info(int argc, char **argv, struct command *cmd,
         }
     }
 
+    close(fd);
     return 0;
 }
 
@@ -2200,8 +2213,7 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *c
         }
     }
 out:
-    if (fd > 0)
-        close(fd);
+    close(fd);
     return err;
 }
 
@@ -2254,6 +2266,7 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *cmd
         enable = 0;
     } else if (strcmp(opt.option, "status")) {
         printf("Invalid control option %s specified\n", opt.option);
+        close(fd);
         return -1;
     }
 
@@ -2274,6 +2287,7 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *cmd
     err = nvme_get_features(&g_args);
     if (err != 0) {
         printf("Failed to retrieve latency monitoring feature status\n");
+        close(fd);
 	return err;
     }
 
@@ -2298,6 +2312,7 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *cmd
         } else if (result == 0) {
 		printf("\n");
         }
+        close(fd);
         return err;
     }
 
@@ -2305,11 +2320,13 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *cmd
     if (enable == 1) {
         if (opt.threshold > 2550) {
             printf("The maximum threshold value cannot be more than 2550 ms\n");
+            close(fd);
             return -1;
         }
 	/* timing mask is in terms of 10ms units, so min allowed is 10ms */
 	else if ((opt.threshold % 10) != 0) {
             printf("The threshold value should be multiple of 10 ms\n");
+            close(fd);
             return -1;
 	}
 	opt.threshold /= 10;
@@ -2328,6 +2345,7 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *cmd
     } else if (strcmp(opt.command, "all")) {
         printf("Invalid command %s specified for option %s\n",
 		opt.command, opt.option);
+        close(fd);
         return -1;
     }
 
@@ -2411,6 +2429,7 @@ static int micron_latency_stats_logs(int argc, char **argv, struct command *cmd,
     if (err) {
         if (err < 0)
             printf("Unable to retrieve latency stats log the drive\n");
+        close(fd);
         return err;
     }
     /* print header and each log entry */
@@ -2424,6 +2443,7 @@ static int micron_latency_stats_logs(int argc, char **argv, struct command *cmd,
 	       log[i].deac, log[i].prinfo, log[i].fua, log[i].lr);
     }
     printf("\n");
+    close(fd);
     return err;
 }
 
@@ -2489,6 +2509,7 @@ static int micron_latency_stats_info(int argc, char **argv, struct command *cmd,
 	cmd_str = "Trim";
     } else if (strcmp(opt.command, "all")) {
         printf("Invalid command option %s to display latency stats\n", opt.command);
+	close(fd);
 	return -1;
     }
 
@@ -2497,6 +2518,7 @@ static int micron_latency_stats_info(int argc, char **argv, struct command *cmd,
     if (err) {
         if (err < 0)
             printf("Unable to retrieve latency stats log the drive\n");
+        close(fd);
         return err;
     }
     printf("Micron IO %s Command Latency Statistics\n"
@@ -2518,6 +2540,7 @@ static int micron_latency_stats_info(int argc, char **argv, struct command *cmd,
        printf("%2d   %8s    %8s    %8"PRIu64"\n",
               bucket, start, end, cmd_stats[b]);
     }
+    close(fd);
     return err;
 }
 
@@ -2615,6 +2638,7 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
 
     err = nvme_set_features_simple(fd, fid, 1, 0, 0, &result);
     if (err == 0) err = (int)result;
+    close(fd);
     return err;
 }
 
@@ -2824,7 +2848,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
     fd = parse_and_open(argc, argv, desc, opts);
 
     if (fd < 0)
-        goto out;
+        return fd;
 
     /* if telemetry type is specified, check for data area */
     if (strlen(cfg.type) != 0) {
@@ -2832,19 +2856,16 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
             cfg.log = 0x08;
         } else if (strcmp(cfg.type, "host")) {
             printf ("telemetry type (host or controller) should be specified i.e. -t=host\n");
-            close(fd);
             goto out;
         }
 
         if (cfg.data_area <= 0 || cfg.data_area > 3) {
             printf ("data area must be selected using -d option ie --d=1,2,3\n");
-            close(fd);
             goto out;
         }
         telemetry_option = 1;
     } else if (cfg.data_area > 0) {
         printf ("data area option is valid only for telemetry option (i.e --type=host|controller)\n");
-        close(fd);
         goto out;
     }
 
@@ -2860,7 +2881,6 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
     sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx);
     if ((eModel = GetDriveModel(ctrlIdx)) == UNKNOWN_MODEL) {
         printf ("Unsupported drive model for vs-internal-log collection\n");
-        close(fd);
         goto out;
     }
 
@@ -2882,7 +2902,6 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
             WriteData(buffer, logSize, dir, cfg.package, msg);
             free(buffer);
         }
-        close(fd);
         goto out;
     }
 
@@ -3002,5 +3021,6 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
 
     err = ZipAndRemoveDir(strMainDirName, cfg.package);
 out:
+    close(fd);
     return err;
 }

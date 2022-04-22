@@ -137,6 +137,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
 	err = nvme_get_nsid_log(fd, false, 0xca, cfg.namespace_id,
 		   sizeof(smart_log), &smart_log);
 	if (!err) {
@@ -147,6 +149,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	}
 	else if (err > 0)
 		nvme_show_status(err);
+	close(fd);
 	return err;
 }
 

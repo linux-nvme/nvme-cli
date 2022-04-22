@@ -140,5 +140,6 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
     if (err > 0)
         nvme_show_status(err);
 
+    close(fd);
     return err;
 }

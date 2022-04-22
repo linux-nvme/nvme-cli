@@ -204,6 +204,7 @@ exit:
 	if (err > 0)
 		nvme_show_status(err);
 
+	close(fd);
 	return err;
 }
 

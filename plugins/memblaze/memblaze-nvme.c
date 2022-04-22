@@ -467,6 +467,7 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *cm
 	if (err > 0)
 		nvme_show_status(err);
 
+	close(fd);
 	return err;
 }
 
@@ -517,6 +518,7 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd
             nvme_select_to_string(0), result);
     } else if (err > 0)
 	    nvme_show_status(err);
+    close(fd);
     return err;
 }
 
@@ -574,6 +576,7 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
     } else if (err > 0)
 	nvme_show_status(err);
 
+    close(fd);
     return err;
 }
 
@@ -613,11 +616,13 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, s
 
     if (parse_params(cfg.param, 2, &param1, &param2)) {
         printf("setfeature: invalid formats %s\n", cfg.param);
-        exit(EINVAL);
+        close(fd);
+        return EINVAL;
     }
     if ((param1 == 1) && (param2 < P2MIN || param2 > P2MAX)) {
         printf("setfeature: invalid high io latency threshold %d\n", param2);
-        exit(EINVAL);
+        close(fd);
+        return EINVAL;
     }
     cfg.value = (param1 << MB_FEAT_HIGH_LATENCY_VALUE_SHIFT) | param2;
 
@@ -646,6 +651,7 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, s
     } else if (err > 0)
 	nvme_show_status(err);
 
+    close(fd);
     return err;
 }
 
@@ -767,6 +773,7 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *cmd,
     }
 
     if (NULL != fdi) fclose(fdi);
+    close(fd);
     return err;
 }
 
@@ -852,23 +859,26 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 	if (err < 0) {
 		perror("fstat");
 		err = errno;
+		goto out_close;
 	}
 
 	fw_size = sb.st_size;
 	if (fw_size & 0x3) {
 		fprintf(stderr, "Invalid size:%d for f/w image\n", fw_size);
 		err = EINVAL;
-		goto out;
+		goto out_close;
 	}
 
 	if (posix_memalign(&fw_buf, getpagesize(), fw_size)) {
 		fprintf(stderr, "No memory for f/w size:%d\n", fw_size);
 		err = ENOMEM;
-		goto out;
+		goto out_close;
 	}
 
-	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size)))
-		return EIO;
+	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size))) {
+		err = errno;
+		goto out_free;
+	}
 
 	while (fw_size > 0) {
 		xfer = min(xfer, fw_size);
@@ -885,10 +895,10 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 		err = nvme_fw_download(&args);
 		if (err < 0) {
 			perror("fw-download");
-			goto out;
+			goto out_free;
 		} else if (err != 0) {
 			nvme_show_status(err);
-			goto out;
+			goto out_free;
 		}
 		fw_buf     += xfer;
 		fw_size    -= xfer;
@@ -902,7 +912,12 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 		fprintf(stderr, "Update successful! Please power cycle for changes to take effect\n");
 	}
 
+out_free:
+	free(fw_buf);
+out_close:
+	close(fw_fd);
 out:
+	close(fd);
 	return err;
 }
 
@@ -1006,7 +1021,8 @@ int io_latency_histogram(char *file, char *buf, int print, int logid)
         fPRINT_PARAM1("Unsupported io latency histogram revision\n");
     }
 
-    fclose(fdi);
+    if (fdi)
+	    fclose(fdi);
     return 1;
 }
 
@@ -1116,6 +1132,7 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, 
 		printf("NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
 	};
 */
+    close(fd);
     return err;
 }
 
@@ -1208,6 +1225,7 @@ static int mb_set_lat_stats(int argc, char **argv,
 				fid, result);
 		} else {
 			printf("Could not read feature id 0xE2.\n");
+			close(fd);
 			return err;
 		}
 		break;
@@ -1226,8 +1244,9 @@ static int mb_set_lat_stats(int argc, char **argv,
 		break;
 	default:
 		printf("%d not supported.\n", option);
-		return EINVAL;
+		err = EINVAL;
 	}
-	return fd;
+	close(fd);
+	return err;
 }
 

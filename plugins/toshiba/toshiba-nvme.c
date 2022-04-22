@@ -474,6 +474,7 @@ static int vendor_log(int argc, char **argv, struct command *cmd, struct plugin 
 end:
 	if (err > 0)
 		nvme_show_status(err);
+	close(fd);
 	return err;
 }
 
@@ -517,6 +518,7 @@ static int internal_log(int argc, char **argv, struct command *cmd, struct plugi
 	if (err > 0)
 		nvme_show_status(err);
 
+	close(fd);
 	return err;
 }
 
@@ -569,5 +571,6 @@ static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 end:
 	if (err > 0)
 		nvme_show_status(err);
+	close(fd);
 	return err;
 }

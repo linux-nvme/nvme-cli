@@ -430,7 +430,7 @@ static int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
         if (ret)
                 fprintf(stderr, "ERROR : OCP : Failure reading the C0 Log Page, ret = %d\n",
                         ret);
-
+        close(fd);
         return ret;
 }
 
@@ -783,6 +783,6 @@ static int ocp_latency_monitor_log(int argc, char **argv, struct command *comman
                 fprintf(stderr,
                         "ERROR : OCP : Failure reading the C3 Log Page, ret = %d\n",
                         ret);
-
+        close(fd);
         return ret;
 }

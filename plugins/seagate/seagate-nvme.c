@@ -174,6 +174,8 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
 	err = nvme_get_log_simple(fd, 0xc5, sizeof(logPageMap), &logPageMap);
 	if (!err) {
 		if (strcmp(cfg.output_format,"json")) {
@@ -199,6 +201,7 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 
 	if (err > 0)
 		nvme_show_status(err);
+	close(fd);
 	return err;
 }
 
@@ -732,6 +735,11 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		printf ("\nDevice not found \n");
+		return -1;
+	}
+
 	if (strcmp(cfg.output_format,"json"))
 		printf("Seagate Extended SMART Information :\n");
 
@@ -774,6 +782,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	} else if (err > 0)
 		nvme_show_status(err);
 
+	close(fd);
 	return err;
 }
 
@@ -889,6 +898,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	if(!strcmp(cfg.output_format,"json"))
 		json_temp_stats(temperature, PcbTemp, SocTemp, maxTemperature, MaxSocTemp, cf_err, scCurrentTemp, scMaxTemp);
 
+	close(fd);
 	return err;
 }
 /* EOF Temperature Stats information */
@@ -1000,6 +1010,11 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		printf ("\nDevice not found \n");;
+		return -1;
+	}
+
 	if(strcmp(cfg.output_format,"json"))
 		printf("Seagate PCIe error counters Information :\n");
 
@@ -1013,6 +1028,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 	} else if (err > 0)
 		nvme_show_status(err);
 
+	close(fd);
 	return err;
 }
 /* EOF PCIE error-log information */
@@ -1038,14 +1054,18 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		printf ("\nDevice not found \n");;
+		return -1;
+	}
 
 	err = nvme_set_features_simple(fd, 0xE1, 0, 0xCB, cfg.save, &result);
 
 	if (err < 0) {
 		perror("set-feature");
-		return errno;
 	}
 
+	close(fd);
 	return err;
 
 }
@@ -1164,6 +1184,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		free(log);
 	}
 
+	close(fd);
 	return err;
 }
 
@@ -1275,8 +1296,9 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		free(log);
 	}
-	return err;
 
+	close(fd);
+	return err;
 }
 
 void seaget_d_raw(unsigned char *buf, int len, int fd)
@@ -1334,6 +1356,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 		dump_fd = open(cfg.file, flags, mode);
 		if (dump_fd < 0) {
 			perror(cfg.file);
+			close(fd);
 			return EINVAL;
 		}
 	}
@@ -1405,10 +1428,11 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 
 		free(log);
 	}
-
+out:
 	if(strlen(cfg.file))
 		close(dump_fd);
 
+	close(fd);
 	return err;
 }
 

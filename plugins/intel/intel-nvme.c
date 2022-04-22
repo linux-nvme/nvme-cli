@@ -377,6 +377,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	}
 	else if (err > 0)
 		nvme_show_status(err);
+	close(fd);
 	return err;
 }
 
@@ -412,6 +413,7 @@ static int get_market_log(int argc, char **argv, struct command *cmd, struct plu
 			d_raw((unsigned char *)&log, sizeof(log));
 	} else if (err > 0)
 		nvme_show_status(err);
+	close(fd);
 	return err;
 }
 
@@ -472,6 +474,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *cmd, struct
 			d_raw((unsigned char *)&stats, sizeof(stats));
 	} else if (err > 0)
 		nvme_show_status(err);
+	close(fd);
 	return err;
 }
 
@@ -1502,7 +1505,10 @@ static int get_internal_log(int argc, char **argv, struct command *command,
 		err = EIO;
 	} else
 		printf("Successfully wrote log to %s\n", cfg.file);
+	close(output);
+out_free:
 	free(intel);
+	close(fd);
 	return err;
 }
 
@@ -1597,6 +1603,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 				fid, result);
 		} else {
 			printf("Could not read feature id 0xE2.\n");
+			close(fd);
 			return err;
 		}
 		break;
@@ -1617,6 +1624,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 		printf("%d not supported.\n", option);
 		return EINVAL;
 	}
+	close(fd);
 	return fd;
 }
 
