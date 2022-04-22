@@ -1477,7 +1477,7 @@ static void nvme_show_persistent_event_log_rci(__le32 pel_header_rci)
 	printf("\tReporting Context Port Identifier Type (RCPIT): %u(%s)\n", rcpit,
 		(rcpit == 0x00) ? "Does not already exist" :
 		(rcpit == 0x01) ? "NVM subsystem port" :
-		(rcpit == 0x10) ? "NVMe-MI port" : "Reserved");
+		(rcpit == 0x02) ? "NVMe-MI port" : "Reserved");
 	printf("\tReporting Context Port Identifier (RCPID): %#x\n\n", rcpid);
 }
 
@@ -1490,8 +1490,8 @@ static void nvme_show_persistent_event_entry_ehai(__u8 ehai)
 	printf("\tPort Identifier Type (PIT): %u(%s)\n", pit,
 		(pit == 0x00) ? "PIT not reported and PELPID does not apply" :
 		(pit == 0x01) ? "NVM subsystem port" :
-		(pit == 0x10) ? "NVMe-MI port" :
-		(pit == 0x11) ? "Event not associated with any port and PELPID does not apply" : "Reserved");
+		(pit == 0x02) ? "NVMe-MI port" :
+		"Event not associated with any port and PELPID does not apply");
 }
 
 void nvme_show_persistent_event_log(void *pevent_log_info,
@@ -1737,13 +1737,12 @@ void nvme_show_persistent_event_log(void *pevent_log_info,
 			fid = le32_to_cpu(set_feat_event->cdw_mem[0]) & 0x000f;
 			cdw11 = le32_to_cpu(set_feat_event->cdw_mem[1]);
 
-			if (((set_feat_event->layout & 0xff) >> 2) != 0)
-				mem_buf = (unsigned char *)(set_feat_event + 4 + dword_cnt * 4);
-
 			printf("Set Feature ID  :%#02x (%s),  value:%#08x\n", fid,
 				nvme_feature_to_string(fid), cdw11);
-
-			nvme_feature_show_fields(fid, cdw11, mem_buf);
+			if (((set_feat_event->layout & 0xff) >> 2) != 0) {
+				mem_buf = (unsigned char *)(set_feat_event + 4 + dword_cnt * 4);
+				nvme_feature_show_fields(fid, cdw11, mem_buf);
+			}
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
 			d(pevent_log_info + offset, 512, 16, 1);
@@ -4362,7 +4361,7 @@ static void json_nvme_id_ns_descs(void *data)
 
 		case NVME_NIDT_CSI:
 			memcpy(&desc.csi, data + off, sizeof(desc.csi));
-			json_str_p += sprintf(json_str_p, "%#x", desc.csi);
+			sprintf(json_str_p, "%#x", desc.csi);
 			len += sizeof(desc.csi);
 			nidt_name = "csi";
 			break;

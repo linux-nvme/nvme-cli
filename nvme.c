@@ -3173,7 +3173,7 @@ static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct 
 		nvme_show_status(err);
 	else
 		fprintf(stderr, "identify namespace granularity: %s\n", nvme_strerror(errno));
-
+	free(granularity_list);
 close_fd:
 	close(fd);
 ret:
@@ -3766,7 +3766,7 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 			       result);
 			if (cfg.sel == 3)
 				nvme_show_select_result(result);
-			else if (cfg.human_readable)
+			else if (cfg.human_readable && buf)
 				nvme_feature_show_fields(cfg.feature_id, result,
 							 buf);
 			else if (buf)
@@ -5028,7 +5028,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		nvme_show_status(err);
 
 close_ffd:
-	close(ffd);
+	if (ffd != STDIN_FILENO)
+		close(ffd);
 free:
 	free(buf);
 close_fd:
@@ -6202,7 +6203,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	__u16 control = 0;
 	__u32 dsmgmt = 0;
 	int logical_block_size = 0;
-	long long buffer_size = 0, mbuffer_size = 0;
+	unsigned long long buffer_size = 0, mbuffer_size = 0;
 	bool huge;
 	struct nvme_id_ns ns;
 	__u8 lba_index, ms = 0;
@@ -6394,7 +6395,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 					&logical_block_size) < 0)
 			goto close_mfd;
 
-	buffer_size = (cfg.block_count + 1) * logical_block_size;
+	buffer_size = ((long long)cfg.block_count + 1) * logical_block_size;
 	if (cfg.data_size < buffer_size) {
 		fprintf(stderr, "Rounding data size to fit block count (%lld bytes)\n",
 				buffer_size);
@@ -6410,7 +6411,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 
 	if (cfg.metadata_size) {
 		err = nvme_identify_ns(fd, cfg.namespace_id, &ns);
-		if (err) {
+		if (err > 0) {
 			nvme_show_status(err);
 			goto free_buffer;
 		} else if (err < 0) {
@@ -6419,7 +6420,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		}
 		nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &lba_index);
 		ms = ns.lbaf[lba_index].ms;
-		mbuffer_size = (cfg.block_count + 1) * ms;
+		mbuffer_size = ((unsigned long long)cfg.block_count + 1) * ms;
 		if (ms && cfg.metadata_size < mbuffer_size) {
 			fprintf(stderr, "Rounding metadata size to fit block count (%lld bytes)\n",
 					mbuffer_size);
@@ -7434,7 +7435,7 @@ static int passthru(int argc, char **argv, bool admin,
 				admin ? "Admin": "IO",
 				strcmp(cmd_name, "Unknown") ? cmd_name: "Vendor Specific",
 				result);
-		if (cfg.read && cfg.input_file) {
+		if (cfg.read && strlen(cfg.input_file)) {
 			if (write(dfd, (void *)data, cfg.data_len) < 0)
 				perror("failed to write data buffer");
 			if (cfg.metadata_len && cfg.metadata)
