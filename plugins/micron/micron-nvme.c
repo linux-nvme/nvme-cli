@@ -87,13 +87,15 @@ static int ReadSysFile(const char *file, unsigned short *id)
     char idstr[32] = { '\0' };
     int fd = open(file, O_RDONLY);
 
-    if (fd > 0) {
-        ret = read(fd, idstr, sizeof(idstr));
-        close(fd);
+    if (fd < 0) {
+        perror(file);
+        return fd;
     }
 
-    if (fd < 0 || ret < 0)
-        perror(file);
+    ret = read(fd, idstr, sizeof(idstr));
+    close(fd);
+    if (ret < 0)
+        perror("read");
     else
         *id = strtol(idstr, NULL, 16);
 
@@ -249,6 +251,7 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 
             if (':' == fileLocation[length - 1]) {
                 if ((strTemp = (char *)malloc(length + 2)) == NULL) {
+                    free(fileLocation);
                     goto exit_status;
                 }
                 strcpy(strTemp, fileLocation);
@@ -257,6 +260,7 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 
                 length = (int)strlen(strTemp);
                 if ((fileLocation = (char *)malloc(length + 1)) == NULL) {
+                    free(strTemp);
                     goto exit_status;
                 }
 
@@ -290,17 +294,27 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
         j++;
     }
 
-    mkdir(strMainDirName, 0777);
+    if (mkdir(strMainDirName, 0777) < 0) {
+        err = -1;
+        goto exit_status;
+    }
 
     if (strOSDirName != NULL) {
         sprintf(strOSDirName, "%s/%s", strMainDirName, "OS");
-        mkdir(strOSDirName, 0777);
-
+        if (mkdir(strOSDirName, 0777) < 0) {
+            rmdir(strMainDirName);
+            err = -1;
+            goto exit_status;
+	}
     }
     if (strCtrlDirName != NULL) {
         sprintf(strCtrlDirName, "%s/%s", strMainDirName, "Controller");
-        mkdir(strCtrlDirName, 0777);
-
+        if (mkdir(strCtrlDirName, 0777) < 0) {
+            if (strOSDirName != NULL)
+                rmdir(strOSDirName);
+            rmdir(strMainDirName);
+            err = -1;
+	}
     }
 
 exit_status:
@@ -402,8 +416,10 @@ static int NVMEResetLog(int nFD, unsigned char ucLogID, int nBufferSize,
 
     while (err == 0 && llMaxSize > 0) {
         err = NVMEGetLogPage(nFD, ucLogID, (unsigned char *)pBuffer, nBufferSize);
-        if (err)
+        if (err) {
+            free(pBuffer);
             return err;
+	}
 
         if (pBuffer[0] == 0xdeadbeef)
             break;
@@ -847,7 +863,8 @@ static int micron_pcie_stats(int argc, char **argv,
         goto out;
     }
     sprintf(strTempFile, "/sys/block/%s/device", devicename);
-    sLinkSize = readlink(strTempFile, strTempFile2, 1024);
+    memset(strTempFile2, 0x0, 1024);
+    sLinkSize = readlink(strTempFile, strTempFile2, 1023);
     if (sLinkSize < 0) {
         err = -errno;
         printf("Failed to read device\n");
@@ -855,7 +872,8 @@ static int micron_pcie_stats(int argc, char **argv,
     }
     if (strstr(strTempFile2, "../../nvme")) {
         sprintf(strTempFile, "/sys/block/%s/device/device", devicename);
-        sLinkSize = readlink(strTempFile, strTempFile2, 1024);
+        memset(strTempFile2, 0x0, 1024);
+        sLinkSize = readlink(strTempFile, strTempFile2, 1023);
         if (sLinkSize < 0) {
             err = -errno;
             printf("Failed to read device\n");
@@ -988,7 +1006,8 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
     if (err < 0)
         goto out;
 
-    sLinkSize = readlink(strTempFile, strTempFile2, 1024);
+    memset(strTempFile2, 0x0, 1024);
+    sLinkSize = readlink(strTempFile, strTempFile2, 1023);
     if (sLinkSize < 0) {
         err = -errno;
         printf("Failed to read device\n");
@@ -999,7 +1018,8 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
                        "/sys/block/%s/device/device", devicename);
         if (err < 0)
             goto out;
-        sLinkSize = readlink(strTempFile, strTempFile2, 1024);
+        memset(strTempFile2, 0x0, 1024);
+        sLinkSize = readlink(strTempFile, strTempFile2, 1023);
         if (sLinkSize < 0) {
             err = -errno;
             printf("Failed to read device\n");
@@ -1713,7 +1733,7 @@ static void GetNSIDDInfo(int fd, const char *dir, int nsid)
 static void GetOSConfig(const char *strOSDirName)
 {
     FILE *fpOSConfig = NULL;
-    char strBuffer[1024], strTemp[1024];
+    char strBuffer[1024];
     char strFileName[PATH_MAX];
     int i;
 
@@ -1736,15 +1756,15 @@ static void GetOSConfig(const char *strOSDirName)
 
     for (i = 0; i < 7; i++) {
         fpOSConfig = fopen(strFileName, "a+");
-        fprintf(fpOSConfig,
+        if (NULL != fpOSConfig) {
+            fprintf(fpOSConfig,
                 "\n\n\n\n%s\n-----------------------------------------------\n",
                 cmdArray[i].strcmdHeader);
-        if (NULL != fpOSConfig) {
             fclose(fpOSConfig);
             fpOSConfig = NULL;
         }
-        strcpy(strTemp, cmdArray[i].strCommand);
-        sprintf(strBuffer, strTemp, strFileName);
+        snprintf(strBuffer, sizeof(strBuffer) - 1,
+                 cmdArray[i].strCommand, strFileName);
         if (system(strBuffer))
             fprintf(stderr, "Failed to send \"%s\"\n", strBuffer);
     }
@@ -1830,10 +1850,11 @@ static int GetTelemetryData(int fd, const char *dir)
         if (err == 0 && logSize > 0 && buffer != NULL) {
             sprintf(msg, "telemetry log: 0x%X", tmap[i].log);
             WriteData(buffer, logSize, dir, tmap[i].file, msg);
-            if (buffer != NULL)
-                free(buffer);
         }
-        buffer = NULL;
+        if (buffer) {
+            free(buffer);
+            buffer = NULL;
+        }
         logSize = 0;
     }
     return err;
@@ -2509,7 +2530,7 @@ static int micron_latency_stats_info(int argc, char **argv, struct command *cmd,
 	cmd_str = "Trim";
     } else if (strcmp(opt.command, "all")) {
         printf("Invalid command option %s to display latency stats\n", opt.command);
-	close(fd);
+        close(fd);
 	return -1;
     }
 
@@ -2949,7 +2970,9 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
         err = -1;
         switch (aVendorLogs[i].ucLogPage) {
         case 0xC1:
+            /* fallthrough */
         case 0xC2:
+            /* fallthrough */
         case 0xC4:
             err = GetLogPageSize(fd, aVendorLogs[i].ucLogPage, &bSize);
             if (err == 0 && bSize > 0)
@@ -2957,6 +2980,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
             break;
 
         case 0xE6:
+            /* fallthrough */
         case 0xE7:
             puiIDDBuf = (unsigned int *)&ctrl;
             uiMask = puiIDDBuf[1015];
@@ -2980,12 +3004,17 @@ static int micron_internal_logs(int argc, char **argv, struct command *cmd,
             break;
 
         case 0xF7:
+            /* fallthrough */
         case 0xF9:
+            /* fallthrough */
         case 0xFC:
+            /* fallthrough */
         case 0xFD:
-            if (eModel == M51BX)
+            if (eModel == M51BX) {
                 (void)NVMEResetLog(fd, aVendorLogs[i].ucLogPage,
                                    aVendorLogs[i].nLogSize, aVendorLogs[i].nMaxSize);
+            }
+            /* fallthrough */
         default:
             bSize = aVendorLogs[i].nLogSize;
             dataBuffer = (unsigned char *)malloc(bSize);
