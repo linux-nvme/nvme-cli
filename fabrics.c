@@ -221,7 +221,7 @@ static void print_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		printf("=====Discovery Log Entry %d======\n", i);
 		printf("trtype:  %s\n", nvmf_trtype_str(e->trtype));
 		printf("adrfam:  %s\n",
-			e->traddr && strlen(e->traddr) ?
+			strlen(e->traddr) ?
 			nvmf_adrfam_str(e->adrfam): "");
 		printf("subtype: %s\n", nvmf_subtype_str(e->subtype));
 		printf("treq:    %s\n", nvmf_treq_str(e->treq));

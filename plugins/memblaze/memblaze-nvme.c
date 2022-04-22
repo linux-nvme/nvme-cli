@@ -161,6 +161,15 @@ static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s,
     u8 *nm = malloc(NM_SIZE * sizeof(u8));
     u8 *raw = malloc(RAW_SIZE * sizeof(u8));
 
+    if (!nm) {
+        if (raw)
+            free(raw);
+        return;
+    }
+    if (!raw) {
+        free(nm);
+        return;
+    }
     /* Table Title */
     printf("%s:%s %s:%x\n", STRN2_01, devname, STRN2_02, nsid);
     /* Clumn Name*/
@@ -242,11 +251,11 @@ static void show_memblaze_smart_log_new(struct nvme_memblaze_smart_log *s,
 static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
     unsigned int nsid, const char *devname, const char *fw_ver)
 {
-    char fw_ver_local[STR_VER_SIZE];
+    char fw_ver_local[STR_VER_SIZE + 1];
     struct nvme_memblaze_smart_log_item *item;
 
     strncpy(fw_ver_local, fw_ver, STR_VER_SIZE);
-    *(fw_ver_local + STR_VER_SIZE - 1) = '\0';
+    *(fw_ver_local + STR_VER_SIZE) = '\0';
 
     printf("Additional Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
 
@@ -342,6 +351,15 @@ static void show_memblaze_smart_log_old(struct nvme_memblaze_smart_log *smart,
         u8 *nm = malloc(NM_SIZE * sizeof(u8));
         u8 *raw = malloc(RAW_SIZE * sizeof(u8));
 
+	if (!nm) {
+            if (raw)
+                free(raw);
+            return;
+	}
+	if (!raw) {
+            free(nm);
+            return;
+	}
         /* 00 RAISIN_SI_VD_PROGRAM_FAIL */
         get_memblaze_new_smart_info(s, PROGRAM_FAIL, nm, raw);
         printf("%-32s                                : %3d%%       %"PRIu64"\n",
@@ -407,11 +425,13 @@ int parse_params(char *str, int number, ...)
         c = strtok(str, ",");
         if ( c == NULL) {
             printf("No enough parameters. abort...\n");
-            exit(EINVAL);
+            va_end(argp);
+            return 1;
         }
 
         if (isalnum((int)*c) == 0) {
             printf("%s is not a valid number\n", c);
+            va_end(argp);
             return 1;
         }
         value = atoi(c);
@@ -467,6 +487,7 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *cm
 	if (err > 0)
 		nvme_show_status(err);
 
+	close(fd);
 	return err;
 }
 
@@ -517,6 +538,7 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd
             nvme_select_to_string(0), result);
     } else if (err > 0)
 	    nvme_show_status(err);
+    close(fd);
     return err;
 }
 
@@ -574,6 +596,7 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
     } else if (err > 0)
 	nvme_show_status(err);
 
+    close(fd);
     return err;
 }
 
@@ -613,11 +636,13 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, s
 
     if (parse_params(cfg.param, 2, &param1, &param2)) {
         printf("setfeature: invalid formats %s\n", cfg.param);
-        exit(EINVAL);
+        close(fd);
+        return EINVAL;
     }
     if ((param1 == 1) && (param2 < P2MIN || param2 > P2MAX)) {
         printf("setfeature: invalid high io latency threshold %d\n", param2);
-        exit(EINVAL);
+        close(fd);
+        return EINVAL;
     }
     cfg.value = (param1 << MB_FEAT_HIGH_LATENCY_VALUE_SHIFT) | param2;
 
@@ -646,6 +671,7 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, s
     } else if (err > 0)
 	nvme_show_status(err);
 
+    close(fd);
     return err;
 }
 
@@ -726,9 +752,14 @@ static int glp_high_latency(FILE *fdi, char *buf, int buflen, int print)
                      1900 + t->tm_year, 1 + t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, millisec);
         }
 
-        fprintf(fdi, "%-32s %-7x %-6x %-6x %-8x %4x%08x  %-8x %-d\n",
-                string, logEntry->opcode, logEntry->sqe, logEntry->cid, logEntry->nsid,
-                (__u32)(logEntry->sLBA >> 32), (__u32)logEntry->sLBA, logEntry->numLBA, logEntry->latency);
+	if (fdi) {
+		fprintf(fdi, "%-32s %-7x %-6x %-6x %-8x %4x%08x  %-8x %-d\n",
+			string, logEntry->opcode, logEntry->sqe,
+			logEntry->cid, logEntry->nsid,
+			(__u32)(logEntry->sLBA >> 32),
+			(__u32)logEntry->sLBA, logEntry->numLBA,
+			logEntry->latency);
+	}
         if (print)
         {
             printf("%-32s %-7x %-6x %-6x %-8x %4x%08x  %-8x %-d\n",
@@ -746,13 +777,14 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *cmd,
     char buf[LOG_PAGE_SIZE];
     FILE *fdi = NULL;
 
-    fdi = fopen(FID_C3_LOG_FILENAME, "w+");
     OPT_ARGS(opts) = {
         OPT_END()
     };
 
     fd = parse_and_open(argc, argv, desc, opts);
     if (fd < 0) return fd;
+
+    fdi = fopen(FID_C3_LOG_FILENAME, "w+");
 
     glp_high_latency_show_bar(fdi, DO_PRINT_FLAG);
     err = nvme_get_log_simple(fd, GLP_ID_VU_GET_HIGH_LATENCY_LOG, sizeof(buf), &buf);
@@ -767,6 +799,7 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *cmd,
     }
 
     if (NULL != fdi) fclose(fdi);
+    close(fd);
     return err;
 }
 
@@ -852,23 +885,26 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 	if (err < 0) {
 		perror("fstat");
 		err = errno;
+		goto out_close;
 	}
 
 	fw_size = sb.st_size;
 	if (fw_size & 0x3) {
 		fprintf(stderr, "Invalid size:%d for f/w image\n", fw_size);
 		err = EINVAL;
-		goto out;
+		goto out_close;
 	}
 
 	if (posix_memalign(&fw_buf, getpagesize(), fw_size)) {
 		fprintf(stderr, "No memory for f/w size:%d\n", fw_size);
 		err = ENOMEM;
-		goto out;
+		goto out_close;
 	}
 
-	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size)))
-		return EIO;
+	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size))) {
+		err = errno;
+		goto out_free;
+	}
 
 	while (fw_size > 0) {
 		xfer = min(xfer, fw_size);
@@ -885,10 +921,10 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 		err = nvme_fw_download(&args);
 		if (err < 0) {
 			perror("fw-download");
-			goto out;
+			goto out_free;
 		} else if (err != 0) {
 			nvme_show_status(err);
-			goto out;
+			goto out_free;
 		}
 		fw_buf     += xfer;
 		fw_size    -= xfer;
@@ -902,7 +938,12 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 		fprintf(stderr, "Update successful! Please power cycle for changes to take effect\n");
 	}
 
+out_free:
+	free(fw_buf);
+out_close:
+	close(fw_fd);
 out:
+	close(fd);
 	return err;
 }
 
@@ -912,22 +953,17 @@ static void ioLatencyHistogramOutput(FILE *fd, int index, int start, int end, ch
     int len;
     char string[64], subString0[12], subString1[12];
 
-    len = snprintf(subString0, sizeof(subString0), "%d%s", start, unit0);
+    snprintf(subString0, sizeof(subString0), "%d%s", start, unit0);
     if (end != 0x7FFFFFFF)
-    {
-        len = snprintf(subString1, sizeof(subString1), "%d%s", end, unit1);
-    }
+        snprintf(subString1, sizeof(subString1), "%d%s", end, unit1);
     else
-    {
-        len = snprintf(subString1, sizeof(subString1), "%s", "+INF");
-    }
-    len = snprintf(string, sizeof(string), "%-11d %-11s %-11s %-11u\n", index, subString0, subString1,
+        snprintf(subString1, sizeof(subString1), "%s", "+INF");
+    len = snprintf(string, sizeof(string), "%-11d %-11s %-11s %-11u\n",
+		   index, subString0, subString1,
                    pHistogram[index]);
     fwrite(string, 1, len, fd);
     if (print)
-    {
         printf("%s", string);
-    }
 }
 
 int io_latency_histogram(char *file, char *buf, int print, int logid)
@@ -1006,7 +1042,8 @@ int io_latency_histogram(char *file, char *buf, int print, int logid)
         fPRINT_PARAM1("Unsupported io latency histogram revision\n");
     }
 
-    fclose(fdi);
+    if (fdi)
+	    fclose(fdi);
     return 1;
 }
 
@@ -1116,6 +1153,7 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, 
 		printf("NVMe Status:%s(%x)\n", nvme_status_to_string(err), err);
 	};
 */
+    close(fd);
     return err;
 }
 
@@ -1208,6 +1246,7 @@ static int mb_set_lat_stats(int argc, char **argv,
 				fid, result);
 		} else {
 			printf("Could not read feature id 0xE2.\n");
+			close(fd);
 			return err;
 		}
 		break;
@@ -1226,8 +1265,9 @@ static int mb_set_lat_stats(int argc, char **argv,
 		break;
 	default:
 		printf("%d not supported.\n", option);
-		return EINVAL;
+		err = EINVAL;
 	}
-	return fd;
+	close(fd);
+	return err;
 }
 

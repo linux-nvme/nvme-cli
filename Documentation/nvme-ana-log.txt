@@ -24,6 +24,10 @@ printed to stdout for another program to parse.
 
 OPTIONS
 -------
+-g::
+--groups::
+              Return the list of ANA groups without the namespace listing.
+
 -o <format>::
 --output-format=<format>::
               Set the reporting format to 'normal', 'json', or

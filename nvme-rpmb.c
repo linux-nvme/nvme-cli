@@ -67,6 +67,10 @@ unsigned char *create_hash(const char *algo,
 	};
 
 	/* copy algorith name */
+	if (strlen(algo) > sizeof(provider_sa.salg_name)) {
+		fprintf(stderr, "%s: algorithm name overflow", __func__);
+		return hash;
+	}
 	memcpy(provider_sa.salg_name, algo, strlen(algo));
 
     	/* open netlink socket connection to algorigm provider and bind */
@@ -78,7 +82,7 @@ unsigned char *create_hash(const char *algo,
     	error = bind(infd, (struct sockaddr *)&provider_sa, sizeof(provider_sa));
 	if (error < 0) {
 		perror("bind");
-		goto out;
+		goto out_close_infd;
 	}
 
 	/* if algorithm requires key, set it first - empty keys not accepted !*/
@@ -86,27 +90,27 @@ unsigned char *create_hash(const char *algo,
         	error = setsockopt(infd, SOL_ALG, ALG_SET_KEY, key, keylen);
 		if (error < 0) {
 			perror("setsockopt");
-			goto out;
+			goto out_close_infd;
 		}
 	}
-		
+
     	/* now send data to hash */
     	outfd = accept(infd, NULL, 0);
 	if (outfd < 0) {
 		perror("accept");
-		goto out;
+		goto out_close_infd;
 	}
     	error = send(outfd, data, datalen, 0);
 	if (error < 0) {
 		perror("send");
-		goto out;
+		goto out_close_outfd;
 	}
 
 	/* read computed hash */
     	hash = (unsigned char *)calloc(hash_size, 1);
 	if (hash == NULL) {
         	perror("calloc");
-		goto out;
+		goto out_close_outfd;
     	}
 
     	error = read(outfd, hash, hash_size);
@@ -115,11 +119,12 @@ unsigned char *create_hash(const char *algo,
         	free(hash);
         	hash = NULL;
     	}
-out:
-    if (outfd > 0) close(outfd);
-    if (infd > 0)  close(infd);
+out_close_outfd:
+	close(outfd);
+out_close_infd:
+	close(infd);
 
-    return hash;
+	return hash;
 }
 
 /* Function that computes hmac-sha256 hash of given data and key pair. Returns
@@ -187,9 +192,9 @@ static int read_file(const char *file, unsigned char **data, unsigned int *len)
 		free(buf);
 		goto out;
 	}
-	err -= size;
 	*data = buf; 
-	*len = size;
+	*len = err;
+	err = 0;
 out:
 	close(fd);
 	return err;
@@ -321,10 +326,14 @@ static void rpmb_nonce_init(struct rpmb_data_frame_t *req)
 static unsigned char *read_rpmb_key(char *keystr, char *keyfile, unsigned int *keysize)
 {
 	unsigned char *keybuf = NULL;
+	int err;
 	
 	if (keystr == NULL) {
-		if (keyfile != NULL)
-			read_file(keyfile, &keybuf, keysize);
+		if (keyfile != NULL) {
+			err = read_file(keyfile, &keybuf, keysize);
+			if (err < 0)
+				return NULL;
+		}
 	} else if ((keybuf = (unsigned char *)malloc(strlen(keystr))) != NULL) {
 		*keysize = strlen(keystr);
 		memcpy(keybuf, keystr, *keysize);
@@ -495,10 +504,12 @@ static unsigned int rpmb_read_config_block(int fd, unsigned char **config_buf)
 	/* initialize request with nonce, no data on input */
 	req = rpmb_request_init(req_size, RPMB_REQ_AUTH_DCB_READ, 0, 1, 0, 1,
 				0, 0, 0);
-	if ((req == NULL) ||
-	    (rsp = rpmb_read_request(fd, req, req_size, rsp_size)) == NULL)
+	if (!req)
+		return 0;
+	if ((rsp = rpmb_read_request(fd, req, req_size, rsp_size)) == NULL)
 	{
-		goto out;
+		free(req);
+		return 0;
 	}	
 
 	/* copy configuration data to be sent back to caller */
@@ -515,7 +526,6 @@ static unsigned int rpmb_read_config_block(int fd, unsigned char **config_buf)
 out:
 	free(req);
 	free(rsp);
-	free(cfg);
 	return retval;
 }
 
@@ -544,12 +554,13 @@ static int rpmb_auth_data_read(int fd, unsigned char target,
 		rsp_size = req_size + xfer * 512;
 		req = rpmb_request_init(req_size, RPMB_REQ_AUTH_DATA_READ,
 					target, 1, offset, xfer, 0, 0, 0);
-		if (req == NULL) break;
+		if (req == NULL)
+			break;
 		if ((rsp = rpmb_read_request(fd, req, req_size, rsp_size)) == NULL)
 		{
 			fprintf(stderr, "read_request failed\n");
-			free(rsp);
-			goto out;
+			free(req);
+			break;
 		}
 
 		data_size = rsp->sectors * 512;
@@ -874,7 +885,7 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 	} regs;
 	
 	if ((fd = parse_and_open(argc, argv, desc, opts)) < 0)
-		goto out;
+		return fd;
 	
 	/* before parsing  commands, check if controller supports any RPMB targets */
 	err = nvme_identify_ctrl(fd, &ctrl);
@@ -1031,7 +1042,7 @@ out:
 	free(msg_buf);
 	
 	/* close file descriptor */
-	if (fd > 0) close(fd);
+	close(fd);
 	
 	return err;
 }

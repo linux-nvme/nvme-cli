@@ -148,6 +148,7 @@ static int nvme_sct_command_transfer_log(int fd, bool current)
 	memcpy(data + 2, &function_code, sizeof(function_code));
 
 	err = nvme_sct_op(fd, OP_SCT_COMMAND_TRANSFER, DW10_SCT_COMMAND_TRANSFER, DW11_SCT_COMMAND_TRANSFER, data, data_len);
+	free(data);
 	return err;
 }
 
@@ -474,6 +475,7 @@ static int vendor_log(int argc, char **argv, struct command *cmd, struct plugin 
 end:
 	if (err > 0)
 		nvme_show_status(err);
+	close(fd);
 	return err;
 }
 
@@ -517,6 +519,7 @@ static int internal_log(int argc, char **argv, struct command *cmd, struct plugi
 	if (err > 0)
 		nvme_show_status(err);
 
+	close(fd);
 	return err;
 }
 
@@ -569,5 +572,6 @@ static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 end:
 	if (err > 0)
 		nvme_show_status(err);
+	close(fd);
 	return err;
 }
