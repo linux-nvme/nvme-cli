@@ -316,16 +316,19 @@ static int inet6_pton(nvme_root_t r, const char *src, uint16_t port,
 {
 	int ret = -EINVAL;
 	struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)addr;
+	const char *scope = NULL;
+	char *p;
 
 	if (strlen(src) > INET6_ADDRSTRLEN)
 		return -EINVAL;
 
 	char  *tmp = strdup(src);
-	if (!tmp)
+	if (!tmp) {
 		nvme_msg(r, LOG_ERR, "cannot copy: %s\n", src);
+		return -ENOMEM;
+	}
 
-	const char *scope = NULL;
-	char *p = strchr(tmp, '%');
+	p = strchr(tmp, '%');
 	if (p) {
 		*p = '\0';
 		scope = src + (p - tmp) + 1;
@@ -527,7 +530,8 @@ static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
 		goto out_close;
 	}
 
-	len = read(fd, buf, sizeof(buf));
+	memset(buf, 0x0, sizeof(buf));
+	len = read(fd, buf, sizeof(buf) - 1);
 	if (len < 0) {
 		nvme_msg(r, LOG_ERR, "Failed to read from %s: %s\n",
 			 nvmf_dev, strerror(errno));
@@ -1262,12 +1266,14 @@ static const char *dctype_str[] = {
  * sysfs. We must get them directly from the controller by performing an
  * identify command.
  */
-static void nvme_fetch_cntrltype_dctype_from_id(nvme_ctrl_t c)
+static int nvme_fetch_cntrltype_dctype_from_id(nvme_ctrl_t c)
 {
 	struct nvme_id_ctrl id = { 0 };
+	int ret;
 
-	if (nvme_ctrl_identify(c, &id))
-		return;
+	ret = nvme_ctrl_identify(c, &id);
+	if (ret)
+		return ret;
 
 	if (!c->cntrltype) {
 		if (id.cntrltype > NVME_CTRL_CNTRLTYPE_ADMIN || !cntrltype_str[id.cntrltype])
@@ -1282,12 +1288,14 @@ static void nvme_fetch_cntrltype_dctype_from_id(nvme_ctrl_t c)
 		else
 			c->dctype = strdup(dctype_str[id.dctype]);
 	}
+	return 0;
 }
 
 bool nvmf_is_registration_supported(nvme_ctrl_t c)
 {
 	if (!c->cntrltype || !c->dctype)
-		nvme_fetch_cntrltype_dctype_from_id(c);
+		if (nvme_fetch_cntrltype_dctype_from_id(c))
+			return false;
 
 	return !strcmp(c->dctype, "ddc") || !strcmp(c->dctype, "cdc");
 }
