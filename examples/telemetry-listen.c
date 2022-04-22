@@ -55,7 +55,6 @@ static void save_telemetry(nvme_ctrl_t c)
 		free(log);
 		return;
 	}
-	log_size = (le16_to_cpu(log->dalb3) + 1) * NVME_LOG_TELEM_BLOCK_SIZE;
 
 	fd = open(buf, O_CREAT|O_WRONLY, S_IRUSR|S_IRGRP);
 	if (fd < 0) {
@@ -77,8 +76,10 @@ static void check_telemetry(nvme_ctrl_t c, int ufd)
 {
 	char buf[0x1000] = { 0 };
 	char *p, *ptr;
+	int len;
 
-	if (read(ufd, buf, sizeof(buf)) < 0)
+	len = read(ufd, buf, sizeof(buf) - 1);
+	if (len < 0)
 		return;
 
 	ptr = buf;
@@ -140,7 +141,7 @@ int main()
 			nvme_subsystem_for_each_ctrl(s, c)
 				i++;
 
-	e = calloc(i, sizeof(e));
+	e = calloc(i, sizeof(struct events));
 	FD_ZERO(&fds);
 	i = 0;
 
