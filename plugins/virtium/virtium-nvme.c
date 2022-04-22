@@ -132,7 +132,7 @@ static void vt_convert_smart_data_to_human_readable_format(struct vtview_smart_l
 
 	setlocale(LC_ALL, "C");
 
-	long long int lba = 1 << smart->raw_ns.lbaf[lba_index].ds;
+	unsigned long long int lba = 1ULL << smart->raw_ns.lbaf[lba_index].ds;
 	capacity = le64_to_cpu(smart->raw_ns.nsze) * lba;
 
 	snprintf(tempbuff, sizeof(tempbuff), "log;%s;%lu;%s;%s;%-.*s;", smart->raw_ctrl.sn, smart->time_stamp, smart->path,
@@ -270,16 +270,16 @@ static void vt_process_string(char *str, const size_t size)
 static int vt_add_entry_to_log(const int fd, const char *path, const struct vtview_save_log_settings *cfg)
 {
 	struct vtview_smart_log_entry smart;
-	char filename[256] = "";
+	const char *filename;
 	int ret = 0;
 	unsigned nsid = 0;
 
 	memset(smart.path, 0, sizeof(smart.path));
-	strcpy(smart.path, path);
+	strncpy(smart.path, path, sizeof(smart.path) - 1);
 	if(NULL == cfg->output_file)
-		strcpy(filename, vt_default_log_file_name);
+		filename = vt_default_log_file_name;
 	else
-		strcpy(filename, cfg->output_file);
+		filename = cfg->output_file;
 
 	smart.time_stamp = time(NULL);
 	ret = nvme_get_nsid(fd, &nsid);
@@ -317,21 +317,32 @@ static int vt_add_entry_to_log(const int fd, const char *path, const struct vtvi
 static int vt_update_vtview_log_header(const int fd, const char *path, const struct vtview_save_log_settings *cfg)
 {
 	struct vtview_log_header header;
-	char filename[256] = "";
+	const char *filename;
 	int ret = 0;
 
 	vt_initialize_header_buffer(&header);
+	if (strlen(path) > sizeof(header.path)) {
+		printf("filename too long\n");
+		errno = EINVAL;
+		return -1;
+	}
 	strcpy(header.path, path);
 
 	if (NULL == cfg->test_name)
 		strcpy(header.test_name, DEFAULT_TEST_NAME);
-	else
+	else {
+		if (strlen(cfg->test_name) > sizeof(header.test_name)) {
+			printf("test name too long\n");
+			errno = EINVAL;
+			return -1;
+		}
 		strcpy(header.test_name, cfg->test_name);
+	}
 
 	if(NULL == cfg->output_file)
-		strcpy(filename, vt_default_log_file_name);
+		filename = vt_default_log_file_name;
 	else
-		strcpy(filename, cfg->output_file);
+		filename = cfg->output_file;
 
 	printf("Log file: %s\n", filename);
 	header.time_stamp = time(NULL);
@@ -955,8 +966,13 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 
 	vt_generate_vtview_log_file_name(vt_default_log_file_name);
 
-	if (argc >= 2)
+	if (argc >= 2) {
+		if (strlen(argv[1]) > sizeof(path) - 1) {
+			printf("Filename too long\n");
+			return -1;
+		}
 		strcpy(path, argv[1]);
+	}
 
 	fd = parse_and_open(argc, argv, desc, opts);
 	if (fd < 0) {
