@@ -261,6 +261,31 @@ static void show_sfx_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	json_object_add_value_int(entry_stats, "raw",	  int48_to_long(smart->read_ecc_cnt.raw));
 	json_object_add_value_object(dev_stats, "read_ecc_cnt", entry_stats);
 
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->non_media_crc_err_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->non_media_crc_err_cnt.raw));
+	json_object_add_value_object(dev_stats, "non_media_crc_err_cnt", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->compression_path_err_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->compression_path_err_cnt.raw));
+	json_object_add_value_object(dev_stats, "compression_path_err_cnt", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->out_of_space_flag.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->out_of_space_flag.raw));
+	json_object_add_value_object(dev_stats, "out_of_space_flag", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->physical_usage_ratio.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->physical_usage_ratio.raw));
+	json_object_add_value_object(dev_stats, "physical_usage_ratio", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->grown_bb.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->grown_bb.raw));
+	json_object_add_value_object(dev_stats, "grown_bb", entry_stats);
+
 	json_object_add_value_object(root, "Device stats", dev_stats);
 
 	json_print_object(root, NULL);
@@ -331,6 +356,22 @@ static void show_sfx_smart_log(struct nvme_additional_smart_log *smart,
 	printf("read_timeout_cnt                : %3d%%       %"PRIu64"\n",
 			smart->read_timeout_cnt.norm,
 			int48_to_long(smart->read_timeout_cnt.raw));
+	printf("non_media_crc_err_cnt           : %3d%%       %" PRIu64 "\n",
+	       smart->non_media_crc_err_cnt.norm,
+	       int48_to_long(smart->non_media_crc_err_cnt.raw));
+	printf("compression_path_err_cnt        : %3d%%       %" PRIu64 "\n",
+	       smart->compression_path_err_cnt.norm,
+	       int48_to_long(smart->compression_path_err_cnt.raw));
+	printf("out_of_space_flag               : %3d%%       %" PRIu64 "\n",
+	       smart->out_of_space_flag.norm,
+	       int48_to_long(smart->out_of_space_flag.raw));
+	printf("phy_capacity_used_ratio         : %3d%%       %" PRIu64 "\n",
+	       smart->physical_usage_ratio.norm,
+	       int48_to_long(smart->physical_usage_ratio.raw));
+	printf("grown_bb_count                  : %3d%%       %" PRIu64 "\n",
+	       smart->grown_bb.norm, int48_to_long(smart->grown_bb.raw));
+
+
 }
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
