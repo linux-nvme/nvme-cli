@@ -147,6 +147,7 @@ static void json_log_pages_supp(log_page_map *logPageMap)
 	}
 	json_print_object(root, NULL);
 	printf("\n");
+	json_free_object(root);
 }
 
 static int log_pages_supp(int argc, char **argv, struct command *cmd,
@@ -174,6 +175,8 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
 	err = nvme_get_log_simple(fd, 0xc5, sizeof(logPageMap), &logPageMap);
 	if (!err) {
 		if (strcmp(cfg.output_format,"json")) {
@@ -199,6 +202,7 @@ static int log_pages_supp(int argc, char **argv, struct command *cmd,
 
 	if (err > 0)
 		nvme_show_status(err);
+	close(fd);
 	return err;
 }
 
@@ -732,6 +736,11 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		printf ("\nDevice not found \n");
+		return -1;
+	}
+
 	if (strcmp(cfg.output_format,"json"))
 		printf("Seagate Extended SMART Information :\n");
 
@@ -774,6 +783,7 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	} else if (err > 0)
 		nvme_show_status(err);
 
+	close(fd);
 	return err;
 }
 
@@ -889,6 +899,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	if(!strcmp(cfg.output_format,"json"))
 		json_temp_stats(temperature, PcbTemp, SocTemp, maxTemperature, MaxSocTemp, cf_err, scCurrentTemp, scMaxTemp);
 
+	close(fd);
 	return err;
 }
 /* EOF Temperature Stats information */
@@ -1000,6 +1011,11 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		printf ("\nDevice not found \n");;
+		return -1;
+	}
+
 	if(strcmp(cfg.output_format,"json"))
 		printf("Seagate PCIe error counters Information :\n");
 
@@ -1013,6 +1029,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *cmd, struct 
 	} else if (err > 0)
 		nvme_show_status(err);
 
+	close(fd);
 	return err;
 }
 /* EOF PCIE error-log information */
@@ -1038,14 +1055,18 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 	};
 
 	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		printf ("\nDevice not found \n");;
+		return -1;
+	}
 
 	err = nvme_set_features_simple(fd, 0xE1, 0, 0xCB, cfg.save, &result);
 
 	if (err < 0) {
 		perror("set-feature");
-		return errno;
 	}
 
+	close(fd);
 	return err;
 
 }
@@ -1113,19 +1134,25 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 	blkCnt = 0;
 
 	while(blkCnt < maxBlk) {
+		unsigned long long bytesToGet;
+
 		blksToGet = ((maxBlk - blkCnt) >= TELEMETRY_BLOCKS_TO_READ) ? TELEMETRY_BLOCKS_TO_READ : (maxBlk - blkCnt);
 
-		if(blksToGet == 0)
+		if(blksToGet == 0) {
+			close(fd);
 			return err;
+		}
 
-		log = malloc(blksToGet * 512);
+		bytesToGet = (unsigned long long)blksToGet * 512;
+		log = malloc(bytesToGet);
 
 		if (!log) {
 			fprintf(stderr, "could not alloc buffer for log\n");
+			close(fd);
 			return EINVAL;
 		}
 
-		memset(log, 0, blksToGet * 512);
+		memset(log, 0, bytesToGet);
 
 		struct nvme_get_log_args args = {
 			.args_size	= sizeof(args),
@@ -1139,21 +1166,21 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 			.uuidx		= 0,
 			.csi		= NVME_CSI_NVM,
 			.ot		= false,
-			.len		= blksToGet * 512,
+			.len		= bytesToGet,
 			.log		= (void *)log,
 			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 			.result		= NULL,
 		};
 		err = nvme_get_log(&args);
 		if (!err) {
-			offset += blksToGet * 512;
+			offset += (__le64)bytesToGet;
 
 			if (!cfg.raw_binary) {
 				printf("\nBlock # :%d to %d\n", blkCnt + 1, blkCnt + blksToGet);
 
-				d((unsigned char *)log, blksToGet * 512, 16, 1);
+				d((unsigned char *)log, bytesToGet, 16, 1);
 			} else
-				seaget_d_raw((unsigned char *)log, blksToGet * 512, dump_fd);
+				seaget_d_raw((unsigned char *)log, bytesToGet, dump_fd);
 		} else if (err > 0)
 			nvme_show_status(err);
 		else
@@ -1164,6 +1191,7 @@ static int get_host_tele(int argc, char **argv, struct command *cmd, struct plug
 		free(log);
 	}
 
+	close(fd);
 	return err;
 }
 
@@ -1225,19 +1253,22 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 	blkCnt = 0;
 
 	while(blkCnt < maxBlk) {
+		unsigned long long bytesToGet;
+
 		blksToGet = ((maxBlk - blkCnt) >= TELEMETRY_BLOCKS_TO_READ) ? TELEMETRY_BLOCKS_TO_READ : (maxBlk - blkCnt);
 
 		if(blksToGet == 0)
 			return err;
 
-		log = malloc(blksToGet * 512);
+		bytesToGet = (unsigned long long)blksToGet * 512;
+		log = malloc(bytesToGet);
 
 		if (!log) {
 			fprintf(stderr, "could not alloc buffer for log\n");
 			return EINVAL;
 		}
 
-		memset(log, 0, blksToGet * 512);
+		memset(log, 0, bytesToGet);
 
 		struct nvme_get_log_args args = {
 			.args_size	= sizeof(args),
@@ -1251,21 +1282,21 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 			.uuidx		= 0,
 			.csi		= NVME_CSI_NVM,
 			.ot		= false,
-			.len		= blksToGet * 512,
+			.len		= bytesToGet,
 			.log		= (void *)log,
 			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 			.result		= NULL,
 		};
 		err = nvme_get_log(&args);
 		if (!err) {
-			offset += blksToGet * 512;
+			offset += (__le64)bytesToGet;
 
 			if (!cfg.raw_binary) {
 				printf("\nBlock # :%d to %d\n", blkCnt + 1, blkCnt + blksToGet);
 
-				d((unsigned char *)log, blksToGet * 512, 16, 1);
+				d((unsigned char *)log, bytesToGet, 16, 1);
 			} else
-				seaget_d_raw((unsigned char *)log, blksToGet * 512, dump_fd);
+				seaget_d_raw((unsigned char *)log, bytesToGet, dump_fd);
 		} else if (err > 0)
 			nvme_show_status(err);
 		else
@@ -1275,8 +1306,9 @@ static int get_ctrl_tele(int argc, char **argv, struct command *cmd, struct plug
 
 		free(log);
 	}
-	return err;
 
+	close(fd);
+	return err;
 }
 
 void seaget_d_raw(unsigned char *buf, int len, int fd)
@@ -1334,6 +1366,7 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 		dump_fd = open(cfg.file, flags, mode);
 		if (dump_fd < 0) {
 			perror(cfg.file);
+			close(fd);
 			return EINVAL;
 		}
 	}
@@ -1358,20 +1391,24 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 	blkCnt = 0;
 
 	while(blkCnt < maxBlk) {
+		unsigned long long bytesToGet;
+
 		blksToGet = ((maxBlk - blkCnt) >= TELEMETRY_BLOCKS_TO_READ) ? TELEMETRY_BLOCKS_TO_READ : (maxBlk - blkCnt);
 
 		if(blksToGet == 0) {
-			return err;
+			goto out;
 		}
 
-		log = malloc(blksToGet * 512);
+		bytesToGet = (unsigned long long)blksToGet * 512;
+		log = malloc(bytesToGet);
 
 		if (!log) {
 			fprintf(stderr, "could not alloc buffer for log\n");
-			return EINVAL;
+			err = EINVAL;
+			goto out;
 		}
 
-		memset(log, 0, blksToGet * 512);
+		memset(log, 0, bytesToGet);
 
 		struct nvme_get_log_args args = {
 			.args_size	= sizeof(args),
@@ -1385,16 +1422,16 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 			.uuidx		= 0,
 			.csi		= NVME_CSI_NVM,
 			.ot		= false,
-			.len		= blksToGet * 512,
+			.len		= bytesToGet,
 			.log		= (void *)log,
 			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 			.result		= NULL,
 		};
 		err = nvme_get_log(&args);
 		if (!err) {
-			offset += blksToGet * 512;
+			offset += (__le64)bytesToGet;
 
-			seaget_d_raw((unsigned char *)log, blksToGet * 512, dump_fd);
+			seaget_d_raw((unsigned char *)log, bytesToGet, dump_fd);
 
 		} else if (err > 0)
 			nvme_show_status(err);
@@ -1405,10 +1442,11 @@ static int vs_internal_log(int argc, char **argv, struct command *cmd, struct pl
 
 		free(log);
 	}
-
+out:
 	if(strlen(cfg.file))
 		close(dump_fd);
 
+	close(fd);
 	return err;
 }
 

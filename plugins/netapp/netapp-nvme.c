@@ -103,12 +103,12 @@ static void netapp_nguid_to_str(char *str, __u8 *nguid)
 		str += sprintf(str, "%02x", nguid[i]);
 }
 
-static void netapp_get_ns_size(char *size, long long *lba,
+static void netapp_get_ns_size(char *size, unsigned long long *lba,
 		struct nvme_id_ns *ns)
 {
 	__u8 lba_index;
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
-	*lba = 1 << ns->lbaf[lba_index].ds;
+	*lba = 1ULL << ns->lbaf[lba_index].ds;
 	double nsze = le64_to_cpu(ns->nsze) * (*lba);
 	const char *s_suffix = suffix_si_get(&nsze);
 
@@ -263,7 +263,7 @@ static void netapp_smdevices_print(struct smdevice_info *devices, int count, int
 
 	for (i = 0; i < count; i++) {
 		nvme_id_ns_flbas_to_lbaf_inuse(devices[i].ns.flbas, &lba_index);
-		long long int lba = 1 << devices[i].ns.lbaf[lba_index].ds;
+		unsigned long long int lba = 1ULL << devices[i].ns.lbaf[lba_index].ds;
 		double nsze = le64_to_cpu(devices[i].ns.nsze) * lba;
 		const char *s_suffix = suffix_si_get(&nsze);
 		char size[128];
@@ -302,7 +302,7 @@ static void netapp_ontapdevices_print(struct ontapdevice_info *devices,
 	struct json_object *json_devices = NULL;
 	char vsname[ONTAP_LABEL_LEN] = " ";
 	char nspath[ONTAP_NS_PATHLEN] = " ";
-	long long lba;
+	unsigned long long lba;
 	char size[128];
 	char uuid_str[37] = " ";
 	int i;
@@ -392,8 +392,10 @@ static int netapp_smdevices_get_info(int fd, struct smdevice_info *item,
 
 	err = nvme_identify_ctrl(fd, &item->ctrl);
 	if (err) {
-		fprintf(stderr, "Identify Controller failed to %s (%s)\n", dev,
-			strerror(err));
+		fprintf(stderr,
+			"Identify Controller failed to %s (%s)\n", dev,
+			err < 0 ? strerror(-err) :
+			nvme_status_to_string(err, false));
 		return 0;
 	}
 
@@ -403,11 +405,13 @@ static int netapp_smdevices_get_info(int fd, struct smdevice_info *item,
 	err = nvme_get_nsid(fd, &item->nsid);
 	err = nvme_identify_ns(fd, item->nsid, &item->ns);
 	if (err) {
-		fprintf(stderr, "Unable to identify namespace for %s (%s)\n",
-			dev, strerror(err));
+		fprintf(stderr,
+			"Unable to identify namespace for %s (%s)\n",
+			dev, err < 0 ? strerror(-err) :
+			nvme_status_to_string(err, false));
 		return 0;
 	}
-	strncpy(item->dev, dev, sizeof(item->dev));
+	strncpy(item->dev, dev, sizeof(item->dev) - 1);
 
 	return 1;
 }
@@ -421,7 +425,8 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 	err = nvme_identify_ctrl(fd, &item->ctrl);
 	if (err) {
 		fprintf(stderr, "Identify Controller failed to %s (%s)\n",
-				dev, strerror(err));
+			dev, err < 0 ? strerror(-err) :
+			nvme_status_to_string(err, false));
 		return 0;
 	}
 
@@ -434,7 +439,8 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 	err = nvme_identify_ns(fd, item->nsid, &item->ns);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace for %s (%s)\n",
-				dev, strerror(err));
+			dev, err < 0 ? strerror(-err) :
+			nvme_status_to_string(err, false));
 		return 0;
 	}
 
@@ -446,7 +452,9 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 	err = nvme_identify_ns_descs(fd, item->nsid, nsdescs);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace descriptor for %s (%s)\n",
-				dev, strerror(err));
+			dev, err < 0 ? strerror(-err) :
+			nvme_status_to_string(err, false));
+		free(nsdescs);
 		return 0;
 	}
 
@@ -456,11 +464,12 @@ static int netapp_ontapdevices_get_info(int fd, struct ontapdevice_info *item,
 	err = nvme_get_ontap_c2_log(fd, item->nsid, item->log_data, ONTAP_C2_LOG_SIZE);
 	if (err) {
 		fprintf(stderr, "Unable to get log page data for %s (%s)\n",
-				dev, strerror(err));
+			dev, err < 0 ? strerror(-err):
+			nvme_status_to_string(err, false));
 		return 0;
 	}
 
-	strncpy(item->dev, dev, sizeof(item->dev));
+	strncpy(item->dev, dev, sizeof(item->dev) - 1);
 
 	return 1;
 }

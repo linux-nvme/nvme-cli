@@ -369,23 +369,26 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 {
 	const char *desc = "Retrieve ANA log for the given device in " \
 			    "decoded format (default), json or binary.";
+	const char *groups = "Return ANA groups only.";
 	void *ana_log;
 	int err = -1, fd;
-	int groups = 0; /* Right now get all the per ANA group NSIDS */
 	size_t ana_log_len;
 	struct nvme_id_ctrl ctrl;
 	enum nvme_print_flags flags;
 	enum nvme_log_ana_lsp lsp;
 
 	struct config {
+		bool	groups;
 		char	*output_format;
 	};
 
 	struct config cfg = {
+		.groups = false,
 		.output_format = "normal",
 	};
 
 	OPT_ARGS(opts) = {
+		OPT_FLAG("groups", 'g', &cfg.groups, groups),
 		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
 		OPT_END()
 	};
@@ -416,8 +419,8 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 		goto close_fd;
 	}
 
-	lsp = groups ? NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY :
-			NVME_LOG_ANA_LSP_RGO_NAMESPACES;
+	lsp = cfg.groups ? NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY :
+		NVME_LOG_ANA_LSP_RGO_NAMESPACES;
 
 	err = nvme_get_log_ana(fd, lsp, true, 0, ana_log_len, ana_log);
 	if (!err) {
@@ -3173,7 +3176,7 @@ static int id_ns_granularity(int argc, char **argv, struct command *cmd, struct 
 		nvme_show_status(err);
 	else
 		fprintf(stderr, "identify namespace granularity: %s\n", nvme_strerror(errno));
-
+	free(granularity_list);
 close_fd:
 	close(fd);
 ret:
@@ -3766,7 +3769,7 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 			       result);
 			if (cfg.sel == 3)
 				nvme_show_select_result(result);
-			else if (cfg.human_readable)
+			else if (cfg.human_readable && buf)
 				nvme_feature_show_fields(cfg.feature_id, result,
 							 buf);
 			else if (buf)
@@ -5028,7 +5031,8 @@ static int set_feature(int argc, char **argv, struct command *cmd, struct plugin
 		nvme_show_status(err);
 
 close_ffd:
-	close(ffd);
+	if (ffd != STDIN_FILENO)
+		close(ffd);
 free:
 	free(buf);
 close_fd:
@@ -6202,7 +6206,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	__u16 control = 0;
 	__u32 dsmgmt = 0;
 	int logical_block_size = 0;
-	long long buffer_size = 0, mbuffer_size = 0;
+	unsigned long long buffer_size = 0, mbuffer_size = 0;
 	bool huge;
 	struct nvme_id_ns ns;
 	__u8 lba_index, ms = 0;
@@ -6394,7 +6398,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 					&logical_block_size) < 0)
 			goto close_mfd;
 
-	buffer_size = (cfg.block_count + 1) * logical_block_size;
+	buffer_size = ((long long)cfg.block_count + 1) * logical_block_size;
 	if (cfg.data_size < buffer_size) {
 		fprintf(stderr, "Rounding data size to fit block count (%lld bytes)\n",
 				buffer_size);
@@ -6410,7 +6414,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 
 	if (cfg.metadata_size) {
 		err = nvme_identify_ns(fd, cfg.namespace_id, &ns);
-		if (err) {
+		if (err > 0) {
 			nvme_show_status(err);
 			goto free_buffer;
 		} else if (err < 0) {
@@ -6419,7 +6423,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		}
 		nvme_id_ns_flbas_to_lbaf_inuse(ns.flbas, &lba_index);
 		ms = ns.lbaf[lba_index].ms;
-		mbuffer_size = (cfg.block_count + 1) * ms;
+		mbuffer_size = ((unsigned long long)cfg.block_count + 1) * ms;
 		if (ms && cfg.metadata_size < mbuffer_size) {
 			fprintf(stderr, "Rounding metadata size to fit block count (%lld bytes)\n",
 					mbuffer_size);
@@ -7434,7 +7438,7 @@ static int passthru(int argc, char **argv, bool admin,
 				admin ? "Admin": "IO",
 				strcmp(cmd_name, "Unknown") ? cmd_name: "Vendor Specific",
 				result);
-		if (cfg.read && cfg.input_file) {
+		if (cfg.read && strlen(cfg.input_file)) {
 			if (write(dfd, (void *)data, cfg.data_len) < 0)
 				perror("failed to write data buffer");
 			if (cfg.metadata_len && cfg.metadata)

@@ -49,7 +49,7 @@ static int getHealthValue(int argc, char **argv, struct command *cmd, struct plu
 		}
 			 
 	}
-
+	close(fd);
 	return result;
 }
 
@@ -83,6 +83,6 @@ static int getBadblock(int argc, char **argv, struct command *cmd, struct plugin
 		int badblock  = data[0];
 		printf("Transcend NVME badblock count: %d\n",badblock);
 	}
-
+	close(fd);
 	return result;
 }
