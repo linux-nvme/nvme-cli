@@ -32,12 +32,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: install libraries
-        run: sudo apt-get remove -y libssl-dev
+        run: sudo apt-get install -y libpam-dev libcap-ng-dev
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          setup-options: --werror
+          setup-options: --werror --wrap-mode=forcefallback
           options: --verbose
           action: test
           meson-version: 0.61.2
