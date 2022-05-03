@@ -133,6 +133,7 @@ adoc_sources = [
   'nvme-wdc-purge',
   'nvme-wdc-purge-monitor',
   'nvme-wdc-vs-cloud-log',
+  'nvme-wdc-vs-device-waf',
   'nvme-wdc-vs-drive-info',
   'nvme-wdc-vs-error-reason-identifier',
   'nvme-wdc-vs-fw-activate-history',
