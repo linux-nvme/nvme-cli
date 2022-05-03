@@ -139,6 +139,7 @@
 #define WDC_DRIVE_CAP_OCP_C1_LOG_PAGE		0x0000002000000000
 #define WDC_DRIVE_CAP_OCP_C4_LOG_PAGE		0x0000004000000000
 #define WDC_DRIVE_CAP_OCP_C5_LOG_PAGE		0x0000008000000000
+#define WDC_DRIVE_CAP_DEVICE_WAF            0x0000010000000000
 #define WDC_DRIVE_CAP_SMART_LOG_MASK	(WDC_DRIVE_CAP_C0_LOG_PAGE | WDC_DRIVE_CAP_C1_LOG_PAGE | \
                                          WDC_DRIVE_CAP_CA_LOG_PAGE | WDC_DRIVE_CAP_D0_LOG_PAGE)
 #define WDC_DRIVE_CAP_CLEAR_PCIE_MASK       (WDC_DRIVE_CAP_CLEAR_PCIE | \
@@ -1584,7 +1585,8 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_CLOUD_BOOT_SSD_VERSION |
 				WDC_DRIVE_CAP_CLOUD_LOG_PAGE | WDC_DRIVE_CAP_C0_LOG_PAGE |
 				WDC_DRIVE_CAP_HW_REV_LOG_PAGE | WDC_DRIVE_CAP_INFO |
-				WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE | WDC_DRIVE_CAP_NAND_STATS;
+				WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE | WDC_DRIVE_CAP_NAND_STATS |
+					WDC_DRIVE_CAP_DEVICE_WAF;
 			break;
 		case WDC_NVME_SN720_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_NAND_STATS | WDC_DRIVE_CAP_NS_RESIZE;
@@ -7278,6 +7280,128 @@ out:
 	return ret;
 }
 
+static int wdc_vs_device_waf(int argc, char **argv, struct command *command,
+		struct plugin *plugin)
+{
+	const char *desc = "Retrieve Device Write Amplication Factor";
+	const char *namespace_id = "desired namespace id";
+	struct nvme_smart_log smart_log;
+	__u8 *data;
+	int fd;
+	nvme_root_t r;
+	int ret = 0;
+	int fmt = -1;
+	__u64 capabilities = 0;
+	long double  data_units_written = 0,
+			phys_media_units_written_tlc = 0,
+			phys_media_units_written_slc = 0;
+	struct json_object *root = NULL;
+	char tlc_waf_str[32] = { 0 },
+			slc_waf_str[32] = { 0 };
+
+	struct config {
+		char *output_format;
+		__u32 namespace_id;
+	};
+
+	struct config cfg = {
+		.output_format = "normal",
+		.namespace_id = NVME_NSID_ALL,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FMT("output-format",      'o', &cfg.output_format,    "Output Format: normal|json"),
+		OPT_UINT("namespace-id",      'n', &cfg.namespace_id,     namespace_id),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0)
+		return fd;
+
+	r = nvme_scan(NULL);
+
+	capabilities = wdc_get_drive_capabilities(r, fd);
+
+	if ((capabilities & WDC_DRIVE_CAP_DEVICE_WAF) == 0) {
+		fprintf(stderr, "ERROR : WDC: unsupported device for this command\n");
+		ret = -1;
+		goto out;
+	}
+
+	/* get data units written from the smart log page */
+	ret = nvme_get_log_smart(fd, cfg.namespace_id, true, &smart_log);
+	if (!ret) {
+		data_units_written = int128_to_double(smart_log.data_units_written);
+	}
+	else if (ret > 0) {
+		nvme_show_status(ret);
+		ret = -1;
+		goto out;
+	} else {
+		fprintf(stderr, "smart log: %s\n", nvme_strerror(errno));
+		ret = -1;
+		goto out;
+	}
+
+	/* get Physical Media Units Written from C0 log page */
+	data = NULL;
+	ret = nvme_get_smart_cloud_v1_log(fd, &data, 0, cfg.namespace_id);
+
+	if (ret == 0) {
+		phys_media_units_written_tlc = int128_to_double(&data[SCAO_V1_PMUWT]);
+		phys_media_units_written_slc = int128_to_double(&data[SCAO_V1_PMUWS]);
+
+		if (data)
+			free(data);
+	} else {
+		fprintf(stderr, "ERROR : WDC %s: get smart cloud log failure\n", __func__);
+		ret = -1;
+		goto out;
+	}
+
+	if (strcmp(cfg.output_format, "json"))
+		nvme_show_status(ret);
+
+	fmt = validate_output_format(cfg.output_format);
+	if (fmt < 0) {
+		fprintf(stderr, "ERROR : WDC %s: invalid output format\n", __func__);
+		ret = fmt;
+		goto out;
+	}
+
+	if (data_units_written == 0) {
+		fprintf(stderr, "ERROR : WDC %s: 0 data units written\n", __func__);
+		ret = -1;
+		goto out;
+	}
+
+	if (fmt == NORMAL) {
+		printf("Device Write Amplification Factor TLC : %4.2Lf\n",
+				(phys_media_units_written_tlc/data_units_written));
+		printf("Device Write Amplification Factor SLC : %4.2Lf\n",
+				(phys_media_units_written_slc/data_units_written));
+	}
+	else if (fmt == JSON) {
+   		root = json_create_object();
+   		sprintf(tlc_waf_str, "%4.2Lf", (phys_media_units_written_tlc/data_units_written));
+   		sprintf(slc_waf_str, "%4.2Lf", (phys_media_units_written_slc/data_units_written));
+
+		json_object_add_value_string(root, "Device Write Amplification Factor TLC", tlc_waf_str);
+		json_object_add_value_string(root, "Device Write Amplification Factor SLC", slc_waf_str);
+
+		json_print_object(root, NULL);
+		printf("\n");
+
+		json_free_object(root);
+	}
+
+out:
+	nvme_free_tree(r);
+	close(fd);
+	return ret;
+}
+
 static int wdc_get_latency_monitor_log(int argc, char **argv, struct command *command,
 		struct plugin *plugin)
 {
@@ -10426,6 +10550,8 @@ static int wdc_capabilities(int argc, char **argv,
             capabilities & WDC_DRIVE_CAP_CLOUD_LOG_PAGE ? "Supported" : "Not Supported");
     printf("vs-hw-rev-log                 : %s\n",
             capabilities & WDC_DRIVE_CAP_HW_REV_LOG_PAGE ? "Supported" : "Not Supported");
+    printf("vs-vs-device_waf              : %s\n",
+			capabilities & WDC_DRIVE_CAP_DEVICE_WAF ? "Supported" : "Not Supported");
    printf("capabilities                  : Supported\n");
     nvme_free_tree(r);
     close(fd);
