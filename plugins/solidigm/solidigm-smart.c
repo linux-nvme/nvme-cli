@@ -1,22 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*
  * Copyright (c) 2022 Solidigm.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- * MA  02110-1301, USA.
- *
- *   Author: leonardo.da.cunha@solidigm.com
+ * Author: leonardo.da.cunha@solidigm.com
  */
 
 #include <fcntl.h>
@@ -25,6 +11,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <endian.h>
 
 #include "common.h"
 #include "nvme.h"
@@ -33,8 +20,7 @@
 #include "linux/types.h"
 #include "nvme-print.h"
 
-#define CREATE_CMD
-#include "solidigm-nvme.h"
+#include "solidigm-smart.h"
 
 struct  __attribute__((packed)) nvme_additional_smart_log_item {
 	__u8			id;
@@ -208,7 +194,7 @@ static void vu_smart_log_show(vu_smart_log_t *payload, unsigned int nsid, const 
 	}
 }
 
-static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Get Solidigm vendor specific smart log (optionally, "\
 		      "for the specified namespace), and show it.";
