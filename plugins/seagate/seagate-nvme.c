@@ -17,6 +17,10 @@
  *
  * \file seagate-nvme.c
  * \brief This file defines the functions and macros to make building a nvme-cli seagate plug-in.
+ * 
+ * 
+ * 
+ *   Author: Debabrata Bardhan <debabrata.bardhan@seagate.com>
  */
 
 
@@ -24,6 +28,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <inttypes.h>
 #include <sys/stat.h>
@@ -123,6 +128,20 @@ static char *log_pages_supp_print(__u32 pageID)
 		return "UNKNOWN";
 		break;
 	}
+}
+
+static int stx_is_jag_pan(char *devMN)
+{
+    int match_found = 1; /* found = 0, not_found = 1 */
+
+    for (int i = 0; i < STX_NUM_LEGACY_DRV; i++) 
+    {
+        match_found = strncmp(devMN, stx_jag_pan_mn[i], strlen(stx_jag_pan_mn[i]));
+        if (match_found == 0)
+            break;
+    }
+
+    return match_found;
 }
 
 
@@ -710,8 +729,202 @@ static void json_print_smart_log_CF(struct json_object *root,
 	*/
 }
 
+
+static void print_stx_smart_log_C0(STX_EXT_SMART_LOG_PAGE_C0 *pLogPageC0)
+{
+	
+	printf("\n\nSeagate SMART Health Attributes :\n");
+	printf("%-39s %-19s \n", "Description", "Health Attributes");
+
+	printf("%-40s", "Physical Media Units Written");
+	printf(" 0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->phyMediaUnitsWrt.MS__u64),
+	       le64_to_cpu(pLogPageC0->phyMediaUnitsWrt.LS__u64));
+	printf("\n");
+
+    printf("%-40s", "Physical Media Units Read");
+	printf(" 0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->phyMediaUnitsRd.MS__u64),
+	       le64_to_cpu(pLogPageC0->phyMediaUnitsRd.LS__u64));
+	printf("\n");
+
+	printf("%-40s", "Bad User NAND Blocks");
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->badUsrNandBlocks));
+	printf("\n");
+
+    printf("%-40s", "Bad System NAND Blocks");
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->badSysNandBlocks));
+	printf("\n");
+
+    printf("%-40s", "XOR Recovery Count");
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->xorRecoveryCnt));
+	printf("\n");
+
+    printf("%-40s", "Uncorrectable Read Error Count");
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->ucRdEc));
+	printf("\n");
+
+    printf("%-40s", "Soft ECC Error Count");
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->softEccEc));
+	printf("\n");
+
+    printf("%-40s", "End to End Correction Counts");
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->etoeCrrCnt));
+	printf("\n");
+
+    printf("%-40s", "System Data Used in Parcent");
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->sysDataUsed));
+	printf("\n");
+
+    printf("%-40s", "Refresh Counts");
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->refreshCount));
+	printf("\n");
+
+    printf("%-40s", "User Data Erase Counts");
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->usrDataEraseCnt));
+	printf("\n");
+
+    printf("%-40s", "Thermal Throttling Status and Count");
+	printf(" 0x%04x", le16_to_cpu(pLogPageC0->thermalThrottling));
+	printf("\n");
+
+    printf("%-40s", "DSSD Specification Version");
+	printf(" %d.%d.%d.%d", pLogPageC0->dssdSpecVerMajor, 
+                           le16_to_cpu(pLogPageC0->dssdSpecVerMinor), 
+                           le16_to_cpu(pLogPageC0->dssdSpecVerPoint),
+                           pLogPageC0->dssdSpecVerErrata);
+	printf("\n");
+
+    printf("%-40s", "PCIe Correctable Error Count");
+	printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->pcieCorrEc));
+	printf("\n");
+
+    printf("%-40s", "Incomplete Shutdowns");
+	printf(" 0x%08x", le32_to_cpu(pLogPageC0->incompleteShutdowns));
+	printf("\n");
+
+    printf("%-40s", "Free Blocks in Percent");
+	printf(" %d", pLogPageC0->freeBlocks);
+	printf("\n");
+
+    printf("%-40s", "Capacitor Health");
+	printf(" 0x%04x", le16_to_cpu(pLogPageC0->capHealth));
+	printf("\n");
+
+    printf("%-40s", "NVMe Errata Version");
+	printf(" %c", pLogPageC0->nvmeErrataVer);
+	printf("\n");
+
+	printf("%-40s", "Unaligned IO");
+    printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->unalignedIO));
+	printf("\n");
+
+    printf("%-40s", "Security Version Number");
+    printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->secVerNum));
+	printf("\n");
+
+    printf("%-40s", "Total Namespace Utilization");
+    printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->totalNUSE));
+	printf("\n");
+
+    printf("%-40s", "PLP Start Count");
+    printf(" 0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->plpStartCnt.MS__u64),
+           le64_to_cpu(pLogPageC0->plpStartCnt.LS__u64));
+	printf("\n");
+
+    printf("%-40s", "Endurance Estimate");
+    printf(" 0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->enduranceEstimate.MS__u64),
+           le64_to_cpu(pLogPageC0->enduranceEstimate.LS__u64));
+	printf("\n");
+
+    printf("%-40s", "PCIe Link Retraining Count");
+    printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->pcieLinkRetCnt));
+	printf("\n");
+
+    printf("%-40s", "Power State Change Count");
+    printf(" 0x%016"PRIx64"", le64_to_cpu(pLogPageC0->powStateChangeCnt));
+	printf("\n");
+
+    printf("%-40s", "Log Page Version");
+    printf(" 0x%04x", le16_to_cpu(pLogPageC0->logPageVer));
+	printf("\n");
+
+    printf("%-40s", "Log Page GUID");
+    printf(" 0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->logPageGUID.MS__u64),
+           le64_to_cpu(pLogPageC0->logPageGUID.LS__u64));
+	printf("\n");
+
+}
+
+static void json_print_stx_smart_log_C0(struct json_object *root,
+				    STX_EXT_SMART_LOG_PAGE_C0 *pLogPageC0)
+{
+	/*struct json_object *root;*/
+	struct json_object *logPages;
+	unsigned int currentTemp, maxTemp;
+	char buf[40];
+
+	/*root = json_create_object(); */
+
+	logPages = json_create_array();
+	json_object_add_value_array(root, "Seagate SMART Health Attributes", logPages);
+	struct json_object *lbaf = json_create_object();
+
+	#if 0
+	/*currentTemp = currentTemp ? currentTemp - 273 : 0;*/
+	json_object_add_value_string(lbaf, "attribute_name", "Super-cap current temperature");
+	json_object_add_value_int(lbaf, "attribute_value", currentTemp);
+	json_array_add_value_object(logPages, lbaf);
+
+	lbaf = json_create_object();
+	maxTemp = pLogPageCF->AttrCF.SuperCapMaximumTemperature;
+	/*maxTemp = maxTemp ? maxTemp - 273 : 0;*/
+	json_object_add_value_string(lbaf, "attribute_name", "Super-cap maximum temperature");
+	json_object_add_value_int(lbaf, "attribute_value", maxTemp);
+	json_array_add_value_object(logPages, lbaf);
+
+	lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Super-cap status");
+	json_object_add_value_int(lbaf, "attribute_value", pLogPageCF->AttrCF.SuperCapStatus);
+	json_array_add_value_object(logPages, lbaf);
+
+	lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Data units read to DRAM namespace");
+	memset(buf, 0, sizeof(buf));
+	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.MS__u64),
+		le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.LS__u64));
+	json_object_add_value_string(lbaf, "attribute_value", buf);
+	json_array_add_value_object(logPages, lbaf);
+
+	lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Data units written to DRAM namespace");
+	memset(buf, 0, sizeof(buf));
+	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.MS__u64),
+		le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.LS__u64));
+	json_object_add_value_string(lbaf, "attribute_value", buf);
+	json_array_add_value_object(logPages, lbaf);
+
+	lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "DRAM correctable error count");
+	json_object_add_value_int(lbaf, "attribute_value", pLogPageCF->AttrCF.DramCorrectableErrorCount);
+	json_array_add_value_object(logPages, lbaf);
+
+	lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "DRAM uncorrectable error count");
+	json_object_add_value_int(lbaf, "attribute_value", pLogPageCF->AttrCF.DramUncorrectableErrorCount);
+	json_array_add_value_object(logPages, lbaf);
+
+    #endif
+	/*
+	  json_print_object(root, NULL);
+	  printf("\n");
+	*/
+}
+
+
 static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
+    struct nvme_id_ctrl     ctrl;
+    char                    modelNo[40];
+    STX_EXT_SMART_LOG_PAGE_C0   ehExtSmart;
 	EXTENDED_SMART_INFO_T   ExtdSMARTInfo;
 	vendor_log_page_CF      logPageCF;
 	int fd;
@@ -744,46 +957,80 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 	if (strcmp(cfg.output_format,"json"))
 		printf("Seagate Extended SMART Information :\n");
 
-	err = nvme_get_log_simple(fd, 0xC4, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
-	if (!err) {
-		if (strcmp(cfg.output_format,"json")) {
-			printf("%-39s %-15s %-19s \n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
-			for(index=0; index<80; index++)
-				printf("-");
-			printf("\n");
-			for(index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++)
-				print_smart_log(ExtdSMARTInfo.Version, ExtdSMARTInfo.vendorData[index], index == (NUMBER_EXTENDED_SMART_ATTRIBUTES - 1));
+    /**
+     * Here we should identify if the drive is a Panthor or Jaguar. 
+     * Here we need to extract the model no from ctrl-id abd use it 
+     * to deternine drive family.  
+     */
 
-		} else {
-			lbafs_ExtSmart = json_create_object();
-			json_print_smart_log(lbafs_ExtSmart, &ExtdSMARTInfo);
+    err = nvme_identify_ctrl(fd, &ctrl);
+	if (!err){
+		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
+    } else{
+        nvme_show_status(err);
+        return err;
+    }
 
-			json_object_add_value_array(root, "SMART-Attributes", lbafs);
-			json_array_add_value_object(lbafs, lbafs_ExtSmart);
-		}
+    if (stx_is_jag_pan(modelNo) == 0) {
 
-		/**
-		 * Next get Log Page 0xCF
-		 */
+    	err = nvme_get_log_simple(fd, 0xC4, sizeof(ExtdSMARTInfo), &ExtdSMARTInfo);
+    	if (!err) {
+    		if (strcmp(cfg.output_format,"json")) {
+    			printf("%-39s %-15s %-19s \n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
+    			for(index=0; index<80; index++)
+    				printf("-");
+    			printf("\n");
+    			for(index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++)
+    				print_smart_log(ExtdSMARTInfo.Version, ExtdSMARTInfo.vendorData[index], index == (NUMBER_EXTENDED_SMART_ATTRIBUTES - 1));
 
-		err = nvme_get_log_simple(fd, 0xCF, sizeof(logPageCF), &logPageCF);
-		if (!err) {
-			if(strcmp(cfg.output_format,"json")) {
-				/*printf("Seagate DRAM Supercap SMART Attributes :\n");*/
+    		} else {
+    			lbafs_ExtSmart = json_create_object();
+    			json_print_smart_log(lbafs_ExtSmart, &ExtdSMARTInfo);
 
-				print_smart_log_CF(&logPageCF);
-			} else {
-				lbafs_DramSmart = json_create_object();
-				json_print_smart_log_CF(lbafs_DramSmart, &logPageCF);
-				json_array_add_value_object(lbafs, lbafs_DramSmart);
-				json_print_object(root, NULL);
-			}
-		} else if (!strcmp(cfg.output_format, "json"))
-			json_print_object(root, NULL);
-	} else if (err > 0)
-		nvme_show_status(err);
+    			json_object_add_value_array(root, "SMART-Attributes", lbafs);
+    			json_array_add_value_object(lbafs, lbafs_ExtSmart);
+    		}
 
-	close(fd);
+    		/**
+    		 * Next get Log Page 0xCF
+    		 */
+
+    		err = nvme_get_log_simple(fd, 0xCF, sizeof(logPageCF), &logPageCF);
+    		if (!err) {
+    			if(strcmp(cfg.output_format,"json")) {
+    				/*printf("Seagate DRAM Supercap SMART Attributes :\n");*/
+
+    				print_smart_log_CF(&logPageCF);
+    			} else {
+    				lbafs_DramSmart = json_create_object();
+    				json_print_smart_log_CF(lbafs_DramSmart, &logPageCF);
+    				json_array_add_value_object(lbafs, lbafs_DramSmart);
+    				json_print_object(root, NULL);
+    			}
+    		} else if (!strcmp(cfg.output_format, "json"))
+    			json_print_object(root, NULL);
+    	} else if (err > 0)
+    		nvme_show_status(err);
+    } else {
+        err = nvme_get_log_simple(fd, 0xC0, sizeof(ehExtSmart), &ehExtSmart);
+
+        if (!err) {
+    		if (strcmp(cfg.output_format,"json")) {
+    			print_stx_smart_log_C0(&ehExtSmart);
+
+    		} else {
+    			lbafs_ExtSmart = json_create_object();
+    			json_print_stx_smart_log_C0(lbafs_ExtSmart, &ehExtSmart);
+
+    			json_object_add_value_array(root, "SMART-Attributes", lbafs);
+    			json_array_add_value_object(lbafs, lbafs_ExtSmart);
+    		}
+        }
+
+        if (err > 0)
+    		nvme_show_status(err);
+    }
+
 	return err;
 }
 
@@ -1064,6 +1311,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 
 	if (err < 0) {
 		perror("set-feature");
+		return errno;
 	}
 
 	close(fd);
