@@ -1641,7 +1641,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 				WDC_DRIVE_CAP_CLOUD_LOG_PAGE | WDC_DRIVE_CAP_C0_LOG_PAGE |
 				WDC_DRIVE_CAP_HW_REV_LOG_PAGE | WDC_DRIVE_CAP_INFO |
 				WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE | WDC_DRIVE_CAP_NAND_STATS |
-					WDC_DRIVE_CAP_DEVICE_WAF;
+					WDC_DRIVE_CAP_DEVICE_WAF | WDC_DRIVE_CAP_TEMP_STATS;
 			break;
 		case WDC_NVME_SN720_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_NAND_STATS | WDC_DRIVE_CAP_NS_RESIZE;
@@ -10589,7 +10589,7 @@ static int wdc_capabilities(int argc, char **argv,
             capabilities & WDC_DRIVE_CAP_CLOUD_LOG_PAGE ? "Supported" : "Not Supported");
     printf("vs-hw-rev-log                 : %s\n",
             capabilities & WDC_DRIVE_CAP_HW_REV_LOG_PAGE ? "Supported" : "Not Supported");
-    printf("vs-vs-device_waf              : %s\n",
+    printf("vs-device_waf                 : %s\n",
 			capabilities & WDC_DRIVE_CAP_DEVICE_WAF ? "Supported" : "Not Supported");
    printf("capabilities                  : Supported\n");
     nvme_free_tree(r);
