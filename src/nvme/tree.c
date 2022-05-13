@@ -414,7 +414,8 @@ struct nvme_subsystem *nvme_lookup_subsystem(struct nvme_host *h,
 	struct nvme_subsystem *s;
 
 	nvme_for_each_subsystem(h, s) {
-		if (strcmp(s->subsysnqn, subsysnqn))
+		if (subsysnqn && s->subsysnqn &&
+		    strcmp(s->subsysnqn, subsysnqn))
 			continue;
 		if (name && s->name &&
 		    strcmp(s->name, name))
