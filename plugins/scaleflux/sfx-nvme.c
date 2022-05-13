@@ -58,6 +58,7 @@ struct sfx_freespace_ctx
 	__u64 user_space;	/* user required space, in unit of sector*/
 	__u64 hw_used;		/* hw space used in 4K */
 	__u64 app_written;	/* app data written in 4K */
+	__u64 out_of_space;
 };
 
 struct nvme_capacity_info {
@@ -66,25 +67,26 @@ struct nvme_capacity_info {
 	__u64 used_space;
 	__u64 free_space;
 };
-struct	__attribute__((packed)) nvme_additional_smart_log_item {
-	uint8_t			   key;
-	uint8_t			   _kp[2];
-	uint8_t			   norm;
-	uint8_t			   _np;
-	union {
-		uint8_t		   raw[6];
-		struct wear_level {
-			uint16_t	min;
-			uint16_t	max;
-			uint16_t	avg;
-		} wear_level ;
-		struct thermal_throttle {
-			uint8_t    pct;
-			uint32_t	count;
+
+struct  __attribute__((packed)) nvme_additional_smart_log_item {
+	__u8			key;
+	__u8			_kp[2];
+	__u8			norm;
+	__u8			_np;
+	union __attribute__((packed)) {
+		__u8		raw[6];
+		struct __attribute__((packed))  wear_level {
+			__le16	min;
+			__le16	max;
+			__le16	avg;
+		} wear_level;
+		struct __attribute__((packed)) thermal_throttle {
+			__u8	pct;
+			__u32	count;
 		} thermal_throttle;
-	};
-	uint8_t			   _rp;
-};
+	} ;
+	__u8			_rp;
+} ;
 
 struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	 program_fail_cnt;
@@ -105,8 +107,26 @@ struct nvme_additional_smart_log {
 	struct nvme_additional_smart_log_item	 erase_timeout_cnt;
 	struct nvme_additional_smart_log_item	 read_timeout_cnt;
 	struct nvme_additional_smart_log_item	 read_ecc_cnt;//retry cnt
+	struct nvme_additional_smart_log_item    non_media_crc_err_cnt;
+	struct nvme_additional_smart_log_item    compression_path_err_cnt;
+	struct nvme_additional_smart_log_item    out_of_space_flag;
+	struct nvme_additional_smart_log_item    physical_usage_ratio;
+	struct nvme_additional_smart_log_item    grown_bb; //grown bad block
 };
 
+int nvme_query_cap(int fd, __u32 nsid, __u32 data_len, void *data)
+{
+	 int rc = 0;
+	 struct nvme_passthru_cmd cmd = {
+        .opcode          = nvme_admin_query_cap_info,
+        .nsid            = nsid,
+        .addr            = (__u64)(uintptr_t) data,
+        .data_len        = data_len,
+        };
+
+	 rc = ioctl(fd, SFX_GET_FREESPACE, data);
+	 return rc == 0 ? 0 : nvme_submit_admin_passthru(fd, &cmd, NULL);
+}
 int nvme_change_cap(int fd, __u32 nsid, __u64 capacity)
 {
 	struct nvme_passthru_cmd cmd = {
@@ -255,6 +275,31 @@ static void show_sfx_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	json_object_add_value_int(entry_stats, "raw",	  int48_to_long(smart->read_ecc_cnt.raw));
 	json_object_add_value_object(dev_stats, "read_ecc_cnt", entry_stats);
 
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->non_media_crc_err_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->non_media_crc_err_cnt.raw));
+	json_object_add_value_object(dev_stats, "non_media_crc_err_cnt", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->compression_path_err_cnt.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->compression_path_err_cnt.raw));
+	json_object_add_value_object(dev_stats, "compression_path_err_cnt", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->out_of_space_flag.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->out_of_space_flag.raw));
+	json_object_add_value_object(dev_stats, "out_of_space_flag", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->physical_usage_ratio.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->physical_usage_ratio.raw));
+	json_object_add_value_object(dev_stats, "physical_usage_ratio", entry_stats);
+
+	entry_stats = json_create_object();
+	json_object_add_value_int(entry_stats, "normalized", smart->grown_bb.norm);
+	json_object_add_value_int(entry_stats, "raw", int48_to_long(smart->grown_bb.raw));
+	json_object_add_value_object(dev_stats, "grown_bb", entry_stats);
+
 	json_object_add_value_object(root, "Device stats", dev_stats);
 
 	json_print_object(root, NULL);
@@ -325,6 +370,22 @@ static void show_sfx_smart_log(struct nvme_additional_smart_log *smart,
 	printf("read_timeout_cnt                : %3d%%       %"PRIu64"\n",
 			smart->read_timeout_cnt.norm,
 			int48_to_long(smart->read_timeout_cnt.raw));
+	printf("non_media_crc_err_cnt           : %3d%%       %" PRIu64 "\n",
+	       smart->non_media_crc_err_cnt.norm,
+	       int48_to_long(smart->non_media_crc_err_cnt.raw));
+	printf("compression_path_err_cnt        : %3d%%       %" PRIu64 "\n",
+	       smart->compression_path_err_cnt.norm,
+	       int48_to_long(smart->compression_path_err_cnt.raw));
+	printf("out_of_space_flag               : %3d%%       %" PRIu64 "\n",
+	       smart->out_of_space_flag.norm,
+	       int48_to_long(smart->out_of_space_flag.raw));
+	printf("phy_capacity_used_ratio         : %3d%%       %" PRIu64 "\n",
+	       smart->physical_usage_ratio.norm,
+	       int48_to_long(smart->physical_usage_ratio.raw));
+	printf("grown_bb_count                  : %3d%%       %" PRIu64 "\n",
+	       smart->grown_bb.norm, int48_to_long(smart->grown_bb.raw));
+
+
 }
 
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -612,7 +673,7 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 {
 	struct sfx_freespace_ctx ctx = { 0 };
 	int err = 0, fd;
-	char *desc = "query current capacity info of vanda";
+	char *desc = "query current capacity info";
 	const char *raw = "dump output in binary format";
 	const char *json= "Dump output in json format";
 	struct config {
@@ -632,10 +693,9 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 		return fd;
 	}
 
-	if (ioctl(fd, SFX_GET_FREESPACE, &ctx)) {
-		fprintf(stderr, "vu ioctl fail, errno %d\r\n", errno);
-		close(fd);
-		return -1;
+	if (nvme_query_cap(fd, 0xffffffff, sizeof(ctx), &ctx)) {
+	    perror("sfx-query-cap");
+	    return -1;
 	}
 
 	show_cap_info(&ctx);
@@ -650,14 +710,10 @@ static int change_sanity_check(int fd, __u64 trg_in_4k, int *shrink)
 	__u64 mem_need = 0;
 	__u64 cur_in_4k = 0;
 	__u64 provisoned_cap_4k = 0;
-	__u32 cnt_ms = 0;
 	int extend = 0;
 
-	while (ioctl(fd, SFX_GET_FREESPACE, &freespace_ctx)) {
-		if (cnt_ms++ > 600) {//1min
-			return -1;
-		}
-		usleep(100000);
+	if (nvme_query_cap(fd, 0xffffffff, sizeof(freespace_ctx), &freespace_ctx)) {
+	    return -1;
 	}
 
 	/*
@@ -734,7 +790,7 @@ static int sfx_confirm_change(const char *str)
 static int change_cap(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	int err = -1, fd;
-	char *desc = "query current capacity info of vanda";
+	char *desc = "dynamic change capacity";
 	const char *raw = "dump output in binary format";
 	const char *json= "Dump output in json format";
 	const char *cap_gb = "cap size in GB";
