@@ -435,6 +435,9 @@ int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len)
 	case NVME_FEAT_FID_HOST_ID:
 		*len = (cdw11 & 0x1) ? 16 : 8;
 		break;
+	case NVME_FEAT_FID_HOST_MEM_BUF:
+		*len = sizeof(struct nvme_host_mem_buf_attrs);
+		break;
 	case NVME_FEAT_FID_ARBITRATION:
 	case NVME_FEAT_FID_POWER_MGMT:
 	case NVME_FEAT_FID_TEMP_THRESH:
@@ -445,7 +448,6 @@ int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len)
 	case NVME_FEAT_FID_IRQ_CONFIG:
 	case NVME_FEAT_FID_WRITE_ATOMIC:
 	case NVME_FEAT_FID_ASYNC_EVENT:
-	case NVME_FEAT_FID_HOST_MEM_BUF:
 	case NVME_FEAT_FID_KATO:
 	case NVME_FEAT_FID_HCTM:
 	case NVME_FEAT_FID_NOPSC:
