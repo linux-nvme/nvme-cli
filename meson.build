@@ -45,7 +45,7 @@ conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
 
 # Check for libuuid availability
-libuuid_dep = dependency('uuid', required: true)
+libuuid_dep = dependency('uuid', required: true, fallback : ['uuid', 'uuid_dep'])
 conf.set('CONFIG_LIBUUID', libuuid_dep.found(), description: 'Is libuuid available?')
 
 # Check for libjson-c availability
