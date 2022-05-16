@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (C) 2016 Intel Corporation. All rights reserved.
  * Copyright (c) 2016 HGST, a Western Digital Company.

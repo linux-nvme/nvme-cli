@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #ifndef NVME_PRINT_H
 #define NVME_PRINT_H
 

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 sources += [
   'plugins/amzn/amzn-nvme.c',
   'plugins/dera/dera-nvme.c',
