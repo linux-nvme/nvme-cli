@@ -29,7 +29,8 @@ archived here:
 # License
 
 Except where otherwise stated, all software contained within this repo
-is currently licensed LGPL, see COPYING for more information.
+is currently licensed LGPL-2.1-or-later, see COPYING for more
+information.
 
 Keith Busch 2020-02-06
 

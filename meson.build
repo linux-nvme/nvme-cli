@@ -9,7 +9,7 @@ project(
     'libnvme', ['c', 'cpp'],
     meson_version: '>= 0.47.0',
     version: '1.0',
-    license: 'LGPLv2+',
+    license: 'LGPL-2.1-or-later',
     default_options: [
         'c_std=gnu99',
         'warning_level=1',
