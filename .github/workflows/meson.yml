@@ -35,7 +35,7 @@ jobs:
       - uses: actions/setup-python@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          setup-options: --werror --wrap-mode=forcefallback
+          setup-options: --werror -Duuid:werror=false --wrap-mode=forcefallback
           options: --verbose
           action: build
 
@@ -48,6 +48,6 @@ jobs:
       - uses: actions/setup-python@v3
       - uses: BSFishy/meson-build@v1.0.3
         with:
-          setup-options: --werror --wrap-mode=forcefallback --default-library=static
+          setup-options: --werror -Duuid:werror=false --wrap-mode=forcefallback --default-library=static
           options: --verbose
           action: build
