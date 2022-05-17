@@ -38,6 +38,7 @@ jobs:
           setup-options: --werror -Duuid:werror=false --wrap-mode=forcefallback
           options: --verbose
           action: build
+          meson-version: 0.61.2
 
   build-static:
     runs-on: ubuntu-latest
@@ -51,3 +52,4 @@ jobs:
           setup-options: --werror -Duuid:werror=false --wrap-mode=forcefallback --default-library=static
           options: --verbose
           action: build
+          meson-version: 0.61.2
