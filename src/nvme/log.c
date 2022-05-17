@@ -1,16 +1,9 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /*
+ * This file is part of libnvme.
  * Copyright (C) 2021 SUSE LLC
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License version
- * 2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Authors: Hannes Reinecke <hare@suse.de>
  *
  * This file implements basic logging functionality.
  */
