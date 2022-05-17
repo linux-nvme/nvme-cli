@@ -1,0 +1,54 @@
+nvme-seagate-get-ctrl-tele(1)
+=============================
+
+NAME
+----
+nvme-seagate-get-ctrl-tele - Retrieve Seagate Controller-Initiated Telemetry in
+either hex-dump (default) or binary format
+
+SYNOPSIS
+--------
+[verse]
+'nvme seagate get-ctrl-tele <device> [OPTIONS]'
+
+DESCRIPTION
+-----------
+This command will only work on Seagate devices supporting this feature.  Not
+all commands work across all product families.
+
+OPTIONS
+-------
+-n <NUM>::
+--namespace-id=<NUM>::
+        Desired namespace
+
+-b::
+--raw-binary::
+        Output in raw format
+
+EXAMPLES
+--------
+* Usage: nvme seagate get-ctrl-tele [<device>] [OPTIONS]
+
+The '<device>' may be either an NVMe character device (ex: /dev/nvme0) or an
+nvme block device (ex: /dev/nvme0n1).
+
++
+------------
+# nvme seagate get-ctrl-tele /dev/nvme0
+Output:
+Device:nvme1 log-id:7 namespace-id:0xffffffff
+Data Block 1 Last Block:0 Data Block 2 Last Block:0 Data Block 3 Last Block:0
+       0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+0000: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "................"
+0010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "................"
+0020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "................"
+0030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "................"
+etc...
+------------
+
+TBD closing note
+
+NVME
+----
+Part of the nvme-user suite

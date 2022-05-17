@@ -1,0 +1,100 @@
+'\" t
+.\"     Title: nvme-seagate-vs-pcie-stats
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 03/27/2019
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-SEAGATE\-VS\-P" "1" "03/27/2019" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-seagate-vs-pcie-stats \- Retrieve Seagate vendor specific PCIe error statistics
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme seagate vs\-pcie\-stats <device> [OPTIONS]\fR
+.fi
+.SH "DESCRIPTION"
+.sp
+This command will only work on Seagate devices supporting this feature\&. Not all commands work across all product families\&.
+.SH "OPTIONS"
+.PP
+\-o <FMT>, \-\-output\-format=<FMT>
+.RS 4
+Output in binary format
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Usage: nvme seagate <command> [<device>] [OPTIONS]
+.RE
+.sp
+The \fI<device>\fR may be either an NVMe character device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1)\&.
+.sp
++
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme seagate vs\-pcie\-stats /dev/nvme0
+Output:
+Seagate PCIe error counters Information :
+PCIe Correctable Error Count                  : 0
+PCIe Un\-Correctable Error Count               : 21
+Unsupported Request Error Status (URES)       : 21
+ECRC Error Status (ECRCES)                    : 0
+Malformed TLP Status (MTS)                    : 0
+Receiver Overflow Status (ROS)                : 0
+Unexpected Completion Status(UCS)             : 0
+Completion Timeout Status (CTS)               : 0
+Flow Control Protocol Error Status (FCPES)    : 0
+Poisoned TLP Status (PTS)                     : 0
+Data Link Protocol Error Status(DLPES)        : 0
+Replay Timer Timeout Status(RTS)              : 0
+Replay_NUM Rollover Status(RRS)               : 0
+Bad DLLP Status (BDS)                         : 0
+Bad TLP Status (BTS)                          : 0
+Receiver Error Status (RES)                   : 0
+Cpl TLP Unsupported Request Error Count       : 0
+Cpl TLP Completion Abort Error Count          : 0
+Cpl TLP Poisoned Error Count                  : 0
+Request Completion Abort Error Count          : 0
+Advisory Non\-Fatal Error Status(ANFES)        : Not Supported
+Completer Abort Status (CAS)                  : Not Supported
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+TBD closing note
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

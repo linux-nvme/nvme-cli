@@ -1,0 +1,65 @@
+nvme-seagate-vs-pcie-stats(1)
+=============================
+
+NAME
+----
+nvme-seagate-vs-pcie-stats - Retrieve Seagate vendor specific PCIe error
+statistics
+
+SYNOPSIS
+--------
+[verse]
+'nvme seagate vs-pcie-stats <device> [OPTIONS]'
+
+DESCRIPTION
+-----------
+This command will only work on Seagate devices supporting this feature.  Not
+all commands work across all product families.
+
+OPTIONS
+-------
+-o <FMT>::
+--output-format=<FMT>::
+        Output in binary format
+
+EXAMPLES
+--------
+* Usage: nvme seagate <command> [<device>] [OPTIONS]
+
+The '<device>' may be either an NVMe character device (ex: /dev/nvme0) or an
+nvme block device (ex: /dev/nvme0n1).
+
++
+------------
+# nvme seagate vs-pcie-stats /dev/nvme0
+Output:
+Seagate PCIe error counters Information :
+PCIe Correctable Error Count                  : 0
+PCIe Un-Correctable Error Count               : 21
+Unsupported Request Error Status (URES)       : 21
+ECRC Error Status (ECRCES)                    : 0
+Malformed TLP Status (MTS)                    : 0
+Receiver Overflow Status (ROS)                : 0
+Unexpected Completion Status(UCS)             : 0
+Completion Timeout Status (CTS)               : 0
+Flow Control Protocol Error Status (FCPES)    : 0
+Poisoned TLP Status (PTS)                     : 0
+Data Link Protocol Error Status(DLPES)        : 0
+Replay Timer Timeout Status(RTS)              : 0
+Replay_NUM Rollover Status(RRS)               : 0
+Bad DLLP Status (BDS)                         : 0
+Bad TLP Status (BTS)                          : 0
+Receiver Error Status (RES)                   : 0
+Cpl TLP Unsupported Request Error Count       : 0
+Cpl TLP Completion Abort Error Count          : 0
+Cpl TLP Poisoned Error Count                  : 0
+Request Completion Abort Error Count          : 0
+Advisory Non-Fatal Error Status(ANFES)        : Not Supported
+Completer Abort Status (CAS)                  : Not Supported
+------------
+
+TBD closing note
+
+NVME
+----
+Part of the nvme-user suite

@@ -1,0 +1,48 @@
+nvme-seagate-vs-temperature-stats(1)
+====================================
+
+NAME
+----
+nvme-seagate-vs-temperature-stats - Retrieve Seagate vendor specific
+temperature statistics
+
+SYNOPSIS
+--------
+[verse]
+'nvme seagate vs-temperature-stats <device> [OPTIONS]'
+
+DESCRIPTION
+-----------
+This command will only work on Seagate devices supporting this feature.  Not
+all commands work across all product families.
+
+OPTIONS
+-------
+-o <FMT>::
+--output-format=<FMT>::
+        Output in binary format
+
+EXAMPLES
+--------
+* Usage: nvme seagate vs-temperature-stats [<device>] [OPTIONS]
+
+The '<device>' may be either an NVMe character device (ex: /dev/nvme0) or an
+nvme block device (ex: /dev/nvme0n1).
+
+
+------------
+# nvme seagate vs-temperature-stats /dev/nvme0
+Output:
+Seagate Temperature Stats Information :
+Current Temperature  : 34 C
+Current PCB Temperature : 31 C
+Current SOC Temperature : 56 C
+Highest Temperature  : -195 C
+Max SOC Temperature  : 67 C
+------------
+
+TBD closing note
+
+NVME
+----
+Part of the nvme-user suite
