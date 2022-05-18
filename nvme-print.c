@@ -4568,7 +4568,7 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 		nvme_show_id_ctrl_vwci(ctrl->vwci);
 	printf("mec       : %u\n", ctrl->mec);
 	if (human)
-		nvme_show_id_ctrl_mec(ctrl->vwci);
+		nvme_show_id_ctrl_mec(ctrl->mec);
 
 	printf("oacs      : %#x\n", le16_to_cpu(ctrl->oacs));
 	if (human)
