@@ -7,7 +7,11 @@ Contributions and new ideas are most welcome!
 
 **NOTE: If you do decide to implement code changes and contribute them,
 please make sure you agree your contribution can be made available
-under the [GPLv2-style License used for the NVMe CLI](https://github.com/linux-nvme/nvme-cli/blob/master/LICENSE).**
+under the [GPLv2-style License used for the NVMe CLI](https://github.com/linux-nvme/nvme-cli/blob/master/LICENSE).
+(SPDX-License-Identifier: GPL-2.0-or-later)**
+
+Because there are a few files licensed under GPL-2.0-only, the whole
+project is tagged as GPL-2.0-only and not as GPL-2.0-or-later.
 
 ### Code Contributions
 

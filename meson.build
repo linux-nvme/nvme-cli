@@ -3,7 +3,7 @@
 project(
     'nvme-cli', ['c', 'cpp'],
     meson_version: '>= 0.47.0',
-    license: 'LGPLv2+',
+    license: 'GPL-2.0-only',
     version: '2.0',
     default_options: [
       'c_std=gnu99',
