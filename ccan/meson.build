@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 sources += files([
     'ccan/list/list.c',
     'ccan/str/debug.c',

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 option('version-tag', type : 'string', description : 'override the git version string')
 option('udevrulesdir', type : 'string', value : 'lib/udev/rules.d', description : 'directory for udev rules files')
 option('dracutrulesdir', type : 'string', value : 'lib/dracut/dracut.conf.d/', description : 'directory for dracut rules files')

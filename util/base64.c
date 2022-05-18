@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*
  * base64.c - RFC4648-compliant base64 encoding
  *

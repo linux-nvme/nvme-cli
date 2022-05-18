@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 tests = [
   'nvme_attach_detach_ns_test',
   'nvme_compare_test',
