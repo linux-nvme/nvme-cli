@@ -859,64 +859,175 @@ static void json_print_stx_smart_log_C0(struct json_object *root,
 {
 	/*struct json_object *root;*/
 	struct json_object *logPages;
-	unsigned int currentTemp, maxTemp;
 	char buf[40];
 
 	/*root = json_create_object(); */
 
 	logPages = json_create_array();
 	json_object_add_value_array(root, "Seagate SMART Health Attributes", logPages);
+
 	struct json_object *lbaf = json_create_object();
 
-	#if 0
-	/*currentTemp = currentTemp ? currentTemp - 273 : 0;*/
-	json_object_add_value_string(lbaf, "attribute_name", "Super-cap current temperature");
-	json_object_add_value_int(lbaf, "attribute_value", currentTemp);
-	json_array_add_value_object(logPages, lbaf);
-
-	lbaf = json_create_object();
-	maxTemp = pLogPageCF->AttrCF.SuperCapMaximumTemperature;
-	/*maxTemp = maxTemp ? maxTemp - 273 : 0;*/
-	json_object_add_value_string(lbaf, "attribute_name", "Super-cap maximum temperature");
-	json_object_add_value_int(lbaf, "attribute_value", maxTemp);
-	json_array_add_value_object(logPages, lbaf);
-
-	lbaf = json_create_object();
-	json_object_add_value_string(lbaf, "attribute_name", "Super-cap status");
-	json_object_add_value_int(lbaf, "attribute_value", pLogPageCF->AttrCF.SuperCapStatus);
-	json_array_add_value_object(logPages, lbaf);
-
-	lbaf = json_create_object();
-	json_object_add_value_string(lbaf, "attribute_name", "Data units read to DRAM namespace");
-	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.MS__u64),
-		le64_to_cpu(pLogPageCF->AttrCF.DataUnitsReadToDramNamespace.LS__u64));
+    json_object_add_value_string(lbaf, "attribute_name", "Physical Media Units Written");
+    memset(buf, 0, sizeof(buf));
+	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->phyMediaUnitsWrt.MS__u64),
+		le64_to_cpu(pLogPageC0->phyMediaUnitsWrt.LS__u64));
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 
-	lbaf = json_create_object();
-	json_object_add_value_string(lbaf, "attribute_name", "Data units written to DRAM namespace");
-	memset(buf, 0, sizeof(buf));
-	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.MS__u64),
-		le64_to_cpu(pLogPageCF->AttrCF.DataUnitsWrittenToDramNamespace.LS__u64));
+
+    lbaf = json_create_object();
+    json_object_add_value_string(lbaf, "attribute_name", "Physical Media Units Read");
+    memset(buf, 0, sizeof(buf));
+	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->phyMediaUnitsRd.MS__u64),
+		le64_to_cpu(pLogPageC0->phyMediaUnitsRd.LS__u64));
 	json_object_add_value_string(lbaf, "attribute_value", buf);
 	json_array_add_value_object(logPages, lbaf);
 
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Bad User NAND Blocks");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->badUsrNandBlocks));
+	json_array_add_value_object(logPages, lbaf);
+
+
 	lbaf = json_create_object();
-	json_object_add_value_string(lbaf, "attribute_name", "DRAM correctable error count");
-	json_object_add_value_int(lbaf, "attribute_value", pLogPageCF->AttrCF.DramCorrectableErrorCount);
+	json_object_add_value_string(lbaf, "attribute_name", "Bad System NAND Blocks");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->badSysNandBlocks));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "XOR Recovery Count");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->xorRecoveryCnt));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Uncorrectable Read Error Count");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->ucRdEc));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Soft ECC Error Count");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->softEccEc));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "End to End Correction Counts");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->etoeCrrCnt));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "System Data Used in Parcent");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->sysDataUsed));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Refresh Counts");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->refreshCount));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "User Data Erase Counts");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->usrDataEraseCnt));
+	json_array_add_value_object(logPages, lbaf);
+
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Thermal Throttling Status and Count");
+	json_object_add_value_int(lbaf, "attribute_value", le16_to_cpu(pLogPageC0->thermalThrottling));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+    json_object_add_value_string(lbaf, "attribute_name", "DSSD Specification Version");
+    memset(buf, 0, sizeof(buf));
+	sprintf(buf, "%d.%d.%d.%d", pLogPageC0->dssdSpecVerMajor, 
+                           le16_to_cpu(pLogPageC0->dssdSpecVerMinor), 
+                           le16_to_cpu(pLogPageC0->dssdSpecVerPoint),
+                           pLogPageC0->dssdSpecVerErrata);
+	json_object_add_value_string(lbaf, "attribute_value", buf);
+	json_array_add_value_object(logPages, lbaf);
+
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "PCIe Correctable Error Count");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->pcieCorrEc));
+	json_array_add_value_object(logPages, lbaf);
+
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Incomplete Shutdowns");
+	json_object_add_value_int(lbaf, "attribute_value", le32_to_cpu(pLogPageC0->incompleteShutdowns));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Free Blocks in Percent");
+	json_object_add_value_int(lbaf, "attribute_value", pLogPageC0->freeBlocks);
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Capacitor Health");
+	json_object_add_value_int(lbaf, "attribute_value", le16_to_cpu(pLogPageC0->capHealth));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "NVMe Errata Version");
+	json_object_add_value_int(lbaf, "attribute_value", pLogPageC0->nvmeErrataVer);
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Unaligned IO");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->unalignedIO));
 	json_array_add_value_object(logPages, lbaf);
 
 	lbaf = json_create_object();
-	json_object_add_value_string(lbaf, "attribute_name", "DRAM uncorrectable error count");
-	json_object_add_value_int(lbaf, "attribute_value", pLogPageCF->AttrCF.DramUncorrectableErrorCount);
+	json_object_add_value_string(lbaf, "attribute_name", "Security Version Number");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->secVerNum));
 	json_array_add_value_object(logPages, lbaf);
 
-    #endif
-	/*
-	  json_print_object(root, NULL);
-	  printf("\n");
-	*/
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Total Namespace Utilization");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->totalNUSE));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+    json_object_add_value_string(lbaf, "attribute_name", "PLP Start Count");
+    memset(buf, 0, sizeof(buf));
+	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->plpStartCnt.MS__u64),
+		le64_to_cpu(pLogPageC0->plpStartCnt.LS__u64));
+	json_object_add_value_string(lbaf, "attribute_value", buf);
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+    json_object_add_value_string(lbaf, "attribute_name", "Endurance Estimate");
+    memset(buf, 0, sizeof(buf));
+	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->enduranceEstimate.MS__u64),
+		le64_to_cpu(pLogPageC0->enduranceEstimate.LS__u64));
+	json_object_add_value_string(lbaf, "attribute_value", buf);
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "PCIe Link Retraining Count");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->pcieLinkRetCnt));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Power State Change Count");
+	json_object_add_value_int(lbaf, "attribute_value", le64_to_cpu(pLogPageC0->powStateChangeCnt));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+	json_object_add_value_string(lbaf, "attribute_name", "Log Page Version");
+	json_object_add_value_int(lbaf, "attribute_value", le16_to_cpu(pLogPageC0->logPageVer));
+	json_array_add_value_object(logPages, lbaf);
+
+    lbaf = json_create_object();
+    json_object_add_value_string(lbaf, "attribute_name", "Log Page GUID");
+    memset(buf, 0, sizeof(buf));
+	sprintf(buf, "0x%016"PRIx64"%016"PRIx64"", le64_to_cpu(pLogPageC0->logPageGUID.MS__u64),
+		le64_to_cpu(pLogPageC0->logPageGUID.LS__u64));
+	json_object_add_value_string(lbaf, "attribute_value", buf);
+	json_array_add_value_object(logPages, lbaf);
+
 }
 
 
@@ -1007,8 +1118,12 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
     				json_array_add_value_object(lbafs, lbafs_DramSmart);
     				json_print_object(root, NULL);
     			}
-    		} else if (!strcmp(cfg.output_format, "json"))
+    		} else if (!strcmp(cfg.output_format, "json")){
     			json_print_object(root, NULL);
+
+                printf("\n");
+            	json_free_object(root);
+            }
     	} else if (err > 0)
     		nvme_show_status(err);
     } else {
@@ -1024,6 +1139,10 @@ static int vs_smart_log(int argc, char **argv, struct command *cmd, struct plugi
 
     			json_object_add_value_array(root, "SMART-Attributes", lbafs);
     			json_array_add_value_object(lbafs, lbafs_ExtSmart);
+
+                json_print_object(root, NULL);
+            	printf("\n");
+            	json_free_object(root);
     		}
         }
 
