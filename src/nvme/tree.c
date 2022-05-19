@@ -1020,17 +1020,14 @@ struct nvme_ctrl *nvme_create_ctrl(nvme_root_t r,
 	return c;
 }
 
-nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
-			     const char *traddr, const char *host_traddr,
-			     const char *host_iface, const char *trsvcid,
-			     nvme_ctrl_t p)
+nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
+			       const char *traddr, const char *host_traddr,
+			       const char *host_iface, const char *trsvcid,
+			       nvme_ctrl_t p)
+
 {
-	nvme_root_t r;
 	struct nvme_ctrl *c;
 
-	if (!s || !transport)
-		return NULL;
-	r = s->h ? s->h->r : NULL;
 	c = p ? nvme_subsystem_next_ctrl(s, p) : nvme_subsystem_first_ctrl(s);
 	for (; c != NULL; c = nvme_subsystem_next_ctrl(s, c)) {
 		if (strcmp(c->transport, transport))
@@ -1049,6 +1046,27 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			continue;
 		return c;
 	}
+
+	return NULL;
+}
+
+nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
+			     const char *traddr, const char *host_traddr,
+			     const char *host_iface, const char *trsvcid,
+			     nvme_ctrl_t p)
+{
+	nvme_root_t r;
+	struct nvme_ctrl *c;
+
+	if (!s || !transport)
+		return NULL;
+
+	c = __nvme_lookup_ctrl(s, transport, traddr, host_traddr,
+			       host_iface, trsvcid, p);
+	if (c)
+		return c;
+
+	r = s->h ? s->h->r : NULL;
 	c = nvme_create_ctrl(r, s->subsysnqn, transport, traddr,
 			     host_traddr, host_iface, trsvcid);
 	if (c) {
