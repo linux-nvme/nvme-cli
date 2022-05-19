@@ -559,10 +559,28 @@ out_close:
 int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		  const struct nvme_fabrics_config *cfg)
 {
+	nvme_subsystem_t s;
 	char *argstr;
 	int ret;
 
+	/* highest prio have configs from command line */
 	cfg = merge_config(c, cfg);
+
+	/* apply configuration from config file (JSON) */
+	s = nvme_lookup_subsystem(h, NULL, nvme_ctrl_get_subsysnqn(c));
+	if (s) {
+		nvme_ctrl_t fc;
+
+		fc = __nvme_lookup_ctrl(s, nvme_ctrl_get_transport(c),
+					nvme_ctrl_get_traddr(c),
+					nvme_ctrl_get_host_traddr(c),
+					nvme_ctrl_get_host_iface(c),
+					nvme_ctrl_get_trsvcid(c),
+					NULL);
+		if (fc)
+			cfg = merge_config(c, nvme_ctrl_get_config(fc));
+	}
+
 	nvme_ctrl_set_discovered(c, true);
 	if (traddr_is_hostname(h->r, c)) {
 		char *traddr = c->traddr;
