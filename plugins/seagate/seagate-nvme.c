@@ -1405,6 +1405,8 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 	const char *desc = "Clear Seagate PCIe Correctable counters for the given device ";
 	const char *save = "specifies that the controller shall save the attribute";
 	int err, fd;
+    struct nvme_id_ctrl ctrl;
+    char modelNo[40];
 	__u32 result;
 
 	struct config {
@@ -1426,7 +1428,39 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
 		return -1;
 	}
 
+    err = nvme_identify_ctrl(fd, &ctrl);
+	if (!err){
+		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
+    } else{
+        nvme_show_status(err);
+        return err;
+    }
+
+    if (stx_is_jag_pan(modelNo) == 0) {
 	err = nvme_set_features_simple(fd, 0xE1, 0, 0xCB, cfg.save, &result);
+    } else{
+
+        struct nvme_set_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		    = fd,
+		.fid		= 0xC3,
+		.nsid		= 0,
+		.cdw11		= 0x80000000,
+		.cdw12		= 0,
+		.save		= 0,
+		.uuidx		= 0,
+		.cdw15		= 0,
+		.data_len	= 0,
+		.data		= NULL,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+	err = nvme_set_features(&args);
+	if (err)
+		fprintf(stderr, "%s: couldn't clear PCIe correctable errors \n",
+			__func__);
+        
+    }
 
 	if (err < 0) {
 		perror("set-feature");
