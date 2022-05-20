@@ -1,5 +1,5 @@
-nvme-zeroes(1)
-==============
+nvme-write-zeroes(1)
+====================
 
 NAME
 ----
@@ -81,9 +81,8 @@ metadata is passes.
 	Namespace ID use in the command.
 
 --storage-tag=<storage-tag>::
--n <storage-tag>::
-	Variable Sized Expected Logical Block Storage Tag(ELBST) and Expected Logical
-	Block Reference Tag (ELBRT), CDW2 and CDW3 (00:47) bits.
+-S <storage-tag>::
+	Variable Sized Logical Block Storage Tag(LBST).
 
 --storage-tag-check=<storage-tag-check>::
 -C <storage-tag-check>::

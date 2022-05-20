@@ -77,8 +77,7 @@ metadata is passes.
 
 --storage-tag=<storage-tag>::
 -S <storage-tag>::
-	Variable Sized Expected Logical Block Storage Tag(ELBST) and Expected Logical
-	Block Reference Tag (ELBRT), CDW2 and CDW3 (00:47) bits.
+	Variable Sized Expected Logical Block Storage Tag(ELBST).
 
 --storage-tag-check=<storage-tag-check>::
 -C <storage-tag-check>::
