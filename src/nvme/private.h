@@ -132,6 +132,11 @@ int json_update_config(nvme_root_t r, const char *config_file);
 
 int json_dump_tree(nvme_root_t r);
 
+nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
+			       const char *traddr, const char *host_traddr,
+			       const char *host_iface, const char *trsvcid,
+			       nvme_ctrl_t p);
+
 #if (LOG_FUNCNAME == 1)
 #define __nvme_log_func __func__
 #else
