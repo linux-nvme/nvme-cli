@@ -2376,22 +2376,23 @@ void nvme_show_supported_cap_config_log(
 static unsigned int nvme_show_subsystem_multipath(nvme_subsystem_t s)
 {
 	nvme_ns_t n;
+	nvme_path_t p;
 	unsigned int i = 0;
 
-	nvme_subsystem_for_each_ns(s, n) {
-		nvme_path_t p;
+	n = nvme_subsystem_first_ns(s);
+	if (!n)
+		return 0;
 
-		nvme_namespace_for_each_path(n, p) {
-			nvme_ctrl_t c = nvme_path_get_ctrl(p);
+	nvme_namespace_for_each_path(n, p) {
+		nvme_ctrl_t c = nvme_path_get_ctrl(p);
 
-			printf(" +- %s %s %s %s %s\n",
-			       nvme_ctrl_get_name(c),
-			       nvme_ctrl_get_transport(c),
-			       nvme_ctrl_get_address(c),
-			       nvme_ctrl_get_state(c),
-			       nvme_path_get_ana_state(p));
-			i++;
-		}
+		printf(" +- %s %s %s %s %s\n",
+		       nvme_ctrl_get_name(c),
+		       nvme_ctrl_get_transport(c),
+		       nvme_ctrl_get_address(c),
+		       nvme_ctrl_get_state(c),
+		       nvme_path_get_ana_state(p));
+		i++;
 	}
 
 	return i;
