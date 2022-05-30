@@ -208,10 +208,12 @@ __u32 nvme_mi_crc32_update(__u32 crc, void *data, size_t len);
 /* we have a facility to mock MCTP socket operations in the mi-mctp transport,
  * using this ops type. This should only be used for test, and isn't exposed
  * in the shared lib */;
+struct mctp_ioc_tag_ctl;
 struct __mi_mctp_socket_ops {
 	int (*socket)(int, int, int);
 	ssize_t (*sendmsg)(int, const struct msghdr *, int);
 	ssize_t (*recvmsg)(int, struct msghdr *, int);
+	int (*ioctl_tag)(int, unsigned long, struct mctp_ioc_tag_ctl *);
 };
 void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops);
 

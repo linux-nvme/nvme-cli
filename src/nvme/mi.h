@@ -107,6 +107,28 @@ enum nvme_mi_ror {
 };
 
 /**
+ * enum nvme_mi_resp_status - values for the response status field
+ * @NVME_MI_RESP_SUCCESS: success
+ * @NVME_MI_RESP_MPR: More Processing Required
+ * @NVME_MI_RESP_INTERNAL_ERR: Internal Error
+ * @NVME_MI_RESP_INVALID_OPCODE: Invalid command opcode
+ * @NVME_MI_RESP_INVALID_PARAM: Invalid command parameter
+ * @NVME_MI_RESP_INVALID_CMD_SIZE: Invalid command size
+ * @NVME_MI_RESP_INVALID_INPUT_SIZE: Invalid command input data size
+ * @NVME_MI_RESP_ACCESS_DENIED: Access Denied
+ */
+enum nvme_mi_resp_status {
+	NVME_MI_RESP_SUCCESS = 0x00,
+	NVME_MI_RESP_MPR = 0x01,
+	NVME_MI_RESP_INTERNAL_ERR = 0x02,
+	NVME_MI_RESP_INVALID_OPCODE = 0x03,
+	NVME_MI_RESP_INVALID_PARAM = 0x04,
+	NVME_MI_RESP_INVALID_CMD_SIZE = 0x05,
+	NVME_MI_RESP_INVALID_INPUT_SIZE = 0x06,
+	NVME_MI_RESP_ACCESS_DENIED = 0x07,
+};
+
+/**
  * struct nvme_mi_msg_hdr - General MI message header.
  * @type: MCTP message type, will always be NVME_MI_MSGTYPE_NVME
  * @nmp: NVMe-MI message parameters (including MI message type)
@@ -122,6 +144,21 @@ struct nvme_mi_msg_hdr {
 	__u8	meb;
 	__u8	rsvd0;
 } __attribute__((packed));
+
+/**
+ * struct nvme_mi_msg_resp - Generic response type.
+ * @hdr: the general request/response message header
+ * @status: response status value (see &enum nvme_mi_resp_status)
+ * @rsvd0: reserved data, may be defined by specific response
+ *
+ * Every response will start with one of these; command-specific responses
+ * will define parts of the reserved data, and may add further fields.
+ */
+struct nvme_mi_msg_resp {
+	struct nvme_mi_msg_hdr hdr;
+	__u8	status;
+	__u8	rsvd0[3];
+};
 
 /**
  * enum nvme_mi_mi_opcode - Operation code for supported NVMe-MI commands.

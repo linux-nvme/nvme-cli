@@ -153,10 +153,37 @@ ssize_t __wrap_recvmsg(int sd, struct msghdr *hdr, int flags)
 	return test_peer.tx_rc ?: (pos - 1);
 }
 
+struct mctp_ioc_tag_ctl;
+
+#ifdef SIOCMCTPALLOCTAG
+int test_ioctl_tag(int sd, unsigned long req, struct mctp_ioc_tag_ctl *ctl)
+{
+	assert(sd == test_peer.sd);
+
+	switch (req) {
+	case SIOCMCTPALLOCTAG:
+		ctl->tag = 1 | MCTP_TAG_PREALLOC | MCTP_TAG_OWNER;
+		break;
+	case SIOCMCTPDROPTAG:
+		assert(tag == 1 | MCTP_TAG_PREALLOC | MCTP_TAG_OWNER);
+		break;
+	};
+
+	return 0;
+}
+#else
+int test_ioctl_tag(int sd, unsigned long req, struct mctp_ioc_tag_ctl *ctl)
+{
+	assert(sd == test_peer.sd);
+	return 0;
+}
+#endif
+
 static struct __mi_mctp_socket_ops ops = {
 	__wrap_socket,
 	__wrap_sendmsg,
 	__wrap_recvmsg,
+	test_ioctl_tag,
 };
 
 /* tests */
@@ -304,6 +331,78 @@ static void test_admin_resp_sizes_unaligned(nvme_mi_ep_t ep, struct test_peer *p
 	nvme_mi_close_ctrl(ctrl);
 }
 
+/* test: send a More Processing Required response, then the actual response */
+struct mpr_tx_info {
+	int msg_no;
+	size_t final_len;
+};
+
+static int tx_mpr(struct test_peer *peer, void *buf, size_t len)
+{
+	struct mpr_tx_info *tx_info = peer->tx_data;
+
+	memset(peer->tx_buf, 0, sizeof(peer->tx_buf));
+	peer->tx_buf[0] = NVME_MI_MSGTYPE_NVME;
+	peer->tx_buf[1] = test_peer.rx_buf[1] | (NVME_MI_ROR_RSP << 7);
+
+	switch (tx_info->msg_no) {
+	case 1:
+		peer->tx_buf[4] = NVME_MI_RESP_MPR;
+		peer->tx_buf_len = 8;
+		break;
+	case 2:
+		peer->tx_buf[4] = NVME_MI_RESP_SUCCESS;
+		peer->tx_buf_len = tx_info->final_len;
+		break;
+	default:
+		assert(0);
+	}
+
+	test_set_tx_mic(peer);
+
+	tx_info->msg_no++;
+
+	return 0;
+}
+
+static void test_mpr_mi(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	struct mpr_tx_info tx_info;
+	int rc;
+
+	tx_info.msg_no = 1;
+	tx_info.final_len = sizeof(struct nvme_mi_mi_resp_hdr) + sizeof(ss_info);
+
+	peer->tx_fn = tx_mpr;
+	peer->tx_data = &tx_info;
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc == 0);
+}
+
+static void test_mpr_admin(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct mpr_tx_info tx_info;
+	struct nvme_id_ctrl id;
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	tx_info.msg_no = 1;
+	tx_info.final_len = sizeof(struct nvme_mi_admin_resp_hdr) + sizeof(id);
+
+	peer->tx_fn = tx_mpr;
+	peer->tx_data = &tx_info;
+
+	ctrl = nvme_mi_init_ctrl(ep, 1);
+
+	rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+	assert(rc == 0);
+
+	nvme_mi_close_ctrl(ctrl);
+}
+
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -318,6 +417,8 @@ struct test {
 	DEFINE_TEST(admin_resp_err),
 	DEFINE_TEST(admin_resp_sizes),
 	DEFINE_TEST(admin_resp_sizes_unaligned),
+	DEFINE_TEST(mpr_mi),
+	DEFINE_TEST(mpr_admin),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep,
