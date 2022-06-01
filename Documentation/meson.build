@@ -174,7 +174,7 @@ if want_docs != 'false'
   mandir = join_paths(get_option('mandir'), 'man1')
   htmldir = join_paths(get_option('htmldir'), 'nvme')
 
-  asciidoctor = find_program(['asciidoc', 'asciidoctor'], required : false)
+  asciidoctor = find_program('asciidoc', required: get_option('docs-build'))
   if want_docs_build and asciidoctor.found()
     # Build documentation before installing
 
