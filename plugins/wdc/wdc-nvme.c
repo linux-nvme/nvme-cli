@@ -80,6 +80,8 @@
 #define WDC_NVME_SN560_DEV_ID_1             0x2712
 #define WDC_NVME_SN560_DEV_ID_2             0x2713
 #define WDC_NVME_SN560_DEV_ID_3             0x2714
+#define WDC_NVME_SN860_DEV_ID               0x2730
+#define WDC_NVME_SN550_DEV_ID               0x2708
 #define WDC_NVME_SXSLCL_DEV_ID				0x2001
 #define WDC_NVME_SN520_DEV_ID				0x5003
 #define WDC_NVME_SN520_DEV_ID_1				0x5004
@@ -97,7 +99,7 @@
 #define WDC_NVME_ZN350_DEV_ID				0x5010
 #define WDC_NVME_ZN350_DEV_ID_1 			0x5018
 #define WDC_NVME_SN810_DEV_ID				0x5011
-#define WDC_NVME_SN810_DEV_ID_2		        0x5037
+#define WDC_NVME_SN820CL_DEV_ID		        0x5037
 
 #define WDC_DRIVE_CAP_CAP_DIAG				0x0000000000000001
 #define WDC_DRIVE_CAP_INTERNAL_LOG			0x0000000000000002
@@ -1567,6 +1569,8 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 		case WDC_NVME_SN840_DEV_ID:
 		/* FALLTHRU */
 		case WDC_NVME_SN840_DEV_ID_1:
+		/* FALLTHRU */
+		case WDC_NVME_SN860_DEV_ID:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
@@ -1600,6 +1604,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 		case WDC_NVME_SN560_DEV_ID_1:
 		case WDC_NVME_SN560_DEV_ID_2:
 		case WDC_NVME_SN560_DEV_ID_3:
+		case WDC_NVME_SN550_DEV_ID:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
@@ -1637,7 +1642,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 		case WDC_NVME_SN810_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA;
 			break;
-		case WDC_NVME_SN810_DEV_ID_2:
+		case WDC_NVME_SN820CL_DEV_ID:
 			capabilities = WDC_DRIVE_CAP_DUI_DATA | WDC_DRIVE_CAP_CLOUD_BOOT_SSD_VERSION |
 				WDC_DRIVE_CAP_CLOUD_LOG_PAGE | WDC_DRIVE_CAP_C0_LOG_PAGE |
 				WDC_DRIVE_CAP_HW_REV_LOG_PAGE | WDC_DRIVE_CAP_INFO |
@@ -6164,6 +6169,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 	case WDC_NVME_SN640_DEV_ID_3:
 	case WDC_NVME_SN840_DEV_ID:
 	case WDC_NVME_SN840_DEV_ID_1:
+	case WDC_NVME_SN860_DEV_ID:
 	case WDC_NVME_SN650_DEV_ID:
 	case WDC_NVME_SN650_DEV_ID_1:
 	case WDC_NVME_SN650_DEV_ID_2:
@@ -6342,7 +6348,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 		free(data);
 		break;
 
-	case WDC_NVME_SN810_DEV_ID_2:
+	case WDC_NVME_SN820CL_DEV_ID:
 		/* Get the 0xC0 Extended Smart Cloud Attribute log data */
 		data = NULL;
 		ret = nvme_get_ext_smart_cloud_log(fd, &data, uuid_index, namespace_id);
@@ -6583,7 +6589,7 @@ static int wdc_get_ca_log_page(nvme_root_t r, int fd, char *format)
 	case WDC_NVME_SN640_DEV_ID_3:
 	case WDC_NVME_SN840_DEV_ID:
 	case WDC_NVME_SN840_DEV_ID_1:
-
+	case WDC_NVME_SN860_DEV_ID:
 		if (cust_id == WDC_CUSTOMER_ID_0x1005) {
 
 			if ((data = (__u8*) malloc(sizeof (__u8) * WDC_FB_CA_LOG_BUF_LEN)) == NULL) {
@@ -10047,7 +10053,7 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *command,
 		}
 
 		switch (read_device_id) {
-		case WDC_NVME_SN810_DEV_ID_2:
+		case WDC_NVME_SN820CL_DEV_ID:
 			ret = wdc_do_vs_nand_stats_sn810_2(fd, cfg.output_format);
 			break;
 		default:
@@ -10241,6 +10247,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 		case WDC_NVME_SN560_DEV_ID_1:
 		case WDC_NVME_SN560_DEV_ID_2:
 		case WDC_NVME_SN560_DEV_ID_3:
+		case WDC_NVME_SN550_DEV_ID:
 		case WDC_NVME_ZN350_DEV_ID:
 		case WDC_NVME_ZN350_DEV_ID_1:
 			ret = wdc_do_drive_info(fd, &result);
@@ -10293,7 +10300,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 				json_free_object(root);
 			}
 			break;
-		case WDC_NVME_SN810_DEV_ID_2:
+		case WDC_NVME_SN820CL_DEV_ID:
 			/* Get the Drive HW Rev from the C6 Log page */
 			ret = nvme_get_hw_rev_log(fd, &data, 0, NVME_NSID_ALL);
 			if (ret == 0) {
