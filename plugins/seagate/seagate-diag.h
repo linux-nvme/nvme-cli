@@ -208,7 +208,7 @@ typedef struct _STX_EXT_SMART_LOG_PAGE_C0
     __u64           powStateChangeCnt;          /* 200-207 */
     __u8            rsvd_208_493[286];          /* 208-493 */
     __u16           logPageVer;                 /* 494-495 */
-    U128            logPageGUID                 /* 496-511 */
+    U128            logPageGUID;                /* 496-511 */
 } STX_EXT_SMART_LOG_PAGE_C0;
 
 #pragma pack()
@@ -241,6 +241,43 @@ typedef struct pcie_error_log_page
    __u32   MemRdTlpPoisonedErrCnt;
 } pcie_error_log_page;
 /*EOF PCIE ERROR INFORMATION */
+
+/**************************************
+* FW Activation History Log INFORMATION
+***************************************/
+#pragma pack(1)
+
+typedef struct _stx_fw_activ_his_ele
+{
+    __u8    entryVerNum;
+    __u8    entryLen;
+    __u16   rev02_03;
+    __u16   fwActivCnt;
+    __u64   timeStamp;
+    __u64   rev14_21;
+    __u64   powCycleCnt;
+    __u8    previousFW[8];
+    __u8    newFW[8];
+    __u8    slotNum;
+    __u8    commitActionType;
+    __u16   result;
+    __u8    rev50_63[14];
+}stx_fw_activ_his_ele;
+
+typedef struct _stx_fw_activ_history_log_page
+{
+   __u8                     logID;
+   __u8                     rev01_03[3];
+   __u32                    numValidFwActHisEnt;
+   stx_fw_activ_his_ele     fwActHisEnt[20];
+   __u8                     rev1288_4077[2790];
+   __u16                    logPageVer;
+   __u8                     logPageGUID[16];
+} stx_fw_activ_history_log_page;
+
+#pragma pack()
+/* FW Activation History Log INFORMATION */
+
 
 typedef enum
 {

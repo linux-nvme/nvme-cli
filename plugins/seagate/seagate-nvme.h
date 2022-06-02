@@ -41,7 +41,7 @@ PLUGIN(NAME("seagate", "Seagate vendor specific extensions", NVME_VERSION),
 		ENTRY("get-host-tele",                  "Retrieve Seagate Host-Initiated Telemetry ",           get_host_tele)
 		ENTRY("get-ctrl-tele",                  "Retrieve Seagate Controller-Initiated Telemetry ",     get_ctrl_tele)
 		ENTRY("vs-internal-log",                "Retrieve Seagate Controller-Initiated Telemetry in binary format",  vs_internal_log)
-        //ENTRY("vs-fw-activate-history",         "Outputs the Firmware Activation History",              vs_fw_activate_history)
+        ENTRY("vs-fw-activate-history",         "Retrieve the Firmware Activation History",             stx_vs_fw_activate_history)
         //ENTRY("vs-drive-info",                  "Outputs Seagate specific drive info",                  vs_drive_info)
         //ENTRY("clear-fw-activate-history",      "Clear Firmware Activation History",                    clear_fw_activate_history)
         //ENTRY("log-page-directory",             "Lists all the log pages",                              log_page_directory)
