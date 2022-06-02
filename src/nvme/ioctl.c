@@ -195,7 +195,7 @@ int nvme_admin_passthru(int fd, __u8 opcode, __u8 flags, __u16 rsvd,
 
 enum nvme_cmd_dword_fields {
 	NVME_DEVICE_SELF_TEST_CDW10_STC_SHIFT			= 0,
-	NVME_DEVICE_SELF_TEST_CDW10_STC_MASK			= 0x7,
+	NVME_DEVICE_SELF_TEST_CDW10_STC_MASK			= 0xf,
 	NVME_DIRECTIVE_CDW11_DOPER_SHIFT			= 0,
 	NVME_DIRECTIVE_CDW11_DTYPE_SHIFT			= 8,
 	NVME_DIRECTIVE_CDW11_DPSEC_SHIFT			= 16,
