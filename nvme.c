@@ -2526,6 +2526,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	const char *verbose = "Increase output verbosity";
 	nvme_scan_filter_t filter = NULL;
 	int err;
+	int nsid = NVME_NSID_ALL;
 
 	struct config {
 		char	*output_format;
@@ -2574,7 +2575,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 	}
 
 	if (devicename) {
-		int subsys_num, nsid;
+		int subsys_num;
 
 		if (sscanf(devicename,"nvme%dn%d",
 			   &subsys_num, &nsid) != 2) {
@@ -2592,7 +2593,7 @@ static int list_subsys(int argc, char **argv, struct command *cmd,
 		goto ret;
 	}
 
-	nvme_show_subsystem_list(r, flags);
+	nvme_show_subsystem_list(r, nsid != NVME_NSID_ALL, flags);
 
 ret:
 	if (r)
