@@ -409,7 +409,7 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 					nvme_disconnect_ctrl(child);
 					nvme_free_ctrl(child);
 				}
-			} else if (errno == EALREADY && !quiet) {
+			} else if (errno == ENVME_CONNECT_ALREADY && !quiet) {
 				char *traddr = log->entries[i].traddr;
 
 				space_strip_len(NVMF_TRADDR_SIZE, traddr);
