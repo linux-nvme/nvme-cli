@@ -3361,10 +3361,10 @@ static void nvme_show_id_ctrl_ctratt(__le32 ctrl_ctratt)
 	__u32 rrl = (ctratt & NVME_CTRL_CTRATT_READ_RECV_LVLS) >> 3;
 	__u32 eg = (ctratt & NVME_CTRL_CTRATT_ENDURANCE_GROUPS) >> 4;
 	__u32 iod = (ctratt & NVME_CTRL_CTRATT_PREDICTABLE_LAT) >> 5;
+	__u32 tbkas = (ctratt & NVME_CTRL_CTRATT_TBKAS) >> 6;
 	__u32 ng = (ctratt & NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY) >> 7;
+	__u32 sqa = (ctratt & NVME_CTRL_CTRATT_SQ_ASSOCIATIONS) >> 8;
 	__u32 uuidlist = (ctratt & NVME_CTRL_CTRATT_UUID_LIST) >> 9;
-	__u32 rsvd6 = (ctratt & 0x00000040) >> 6;
-	__u32 rsvd8 = (ctratt & 0x00000100) >> 8;
 
 	if (rsvd)
 		printf(" [31:16] : %#x\tReserved\n", rsvd);
@@ -3382,12 +3382,12 @@ static void nvme_show_id_ctrl_ctratt(__le32 ctrl_ctratt)
 		mds, mds ? "" : "Not ");
 	printf("  [9:9] : %#x\tUUID List %sSupported\n",
 		uuidlist, uuidlist ? "" : "Not ");
-	if (rsvd8)
-		printf(" [8:8] : %#x\tReserved\n", rsvd8);
+	printf("  [8:8] : %#x\tSQ Associations %sSupported\n",
+		sqa, sqa ? "" : "Not ");
 	printf("  [7:7] : %#x\tNamespace Granularity %sSupported\n",
 		ng, ng ? "" : "Not ");
-	if (rsvd6)
-		printf(" [6:6] : %#x\tReserved\n", rsvd6);
+	printf("  [6:6] : %#x\tTraffic Based Keep Alive %sSupported\n",
+		tbkas, tbkas ? "" : "Not ");
 	printf("  [5:5] : %#x\tPredictable Latency Mode %sSupported\n",
 		iod, iod ? "" : "Not ");
 	printf("  [4:4] : %#x\tEndurance Groups %sSupported\n",
@@ -3802,7 +3802,7 @@ static void nvme_show_id_ctrl_fna(__u8 fna)
 	__u8 fmns = fna & 0x1;
 	if (rsvd)
 		printf("  [7:4] : %#x\tReserved\n", rsvd);
-	printf("  [3:3] : %#x\tFormatNVM Broadcast NSID (FFFFFFFFh) %sSupported\n",
+	printf("  [3:3] : %#x\tFormat NVM Broadcast NSID (FFFFFFFFh) %sSupported\n",
 		bcnsid, bcnsid ? "Not " : "");
 	printf("  [2:2] : %#x\tCrypto Erase %sSupported as part of Secure Erase\n",
 		cese, cese ? "" : "Not ");
@@ -4692,7 +4692,7 @@ void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, enum nvme_print_flags flags,
 		nvme_show_id_ctrl_vwc(ctrl->vwc);
 	printf("awun      : %d\n", le16_to_cpu(ctrl->awun));
 	printf("awupf     : %d\n", le16_to_cpu(ctrl->awupf));
-	printf("icsvscc     : %d\n", ctrl->icsvscc);
+	printf("icsvscc   : %d\n", ctrl->icsvscc);
 	if (human)
 		nvme_show_id_ctrl_icsvscc(ctrl->icsvscc);
 	printf("nwpc      : %d\n", ctrl->nwpc);
