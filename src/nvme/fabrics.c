@@ -526,7 +526,26 @@ static int __nvmf_add_ctrl(nvme_root_t r, const char *argstr)
 	if (ret != len) {
 		nvme_msg(r, LOG_NOTICE, "Failed to write to %s: %s\n",
 			 nvmf_dev, strerror(errno));
-		ret = -ENVME_CONNECT_WRITE;
+		switch (errno) {
+		case EALREADY:
+			ret = -ENVME_CONNECT_ALREADY;
+			break;
+		case EINVAL:
+			ret = -ENVME_CONNECT_INVAL;
+			break;
+		case EADDRINUSE:
+			ret = -ENVME_CONNECT_ADDRINUSE;
+			break;
+		case ENODEV:
+			ret = -ENVME_CONNECT_NODEV;
+			break;
+		case EOPNOTSUPP:
+			ret = -ENVME_CONNECT_OPNOTSUPP;
+			break;
+		default:
+			ret = -ENVME_CONNECT_WRITE;
+			break;
+		}
 		goto out_close;
 	}
 
