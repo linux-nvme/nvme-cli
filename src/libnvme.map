@@ -253,6 +253,7 @@ LIBNVME_1_0 {
 		nvme_sanitize_nvm;
 		nvme_scan;
 		nvme_scan_ctrl;
+		nvme_scan_ctrls;
 		nvme_scan_ctrl_namespace_paths;
 		nvme_scan_ctrl_namespaces;
 		nvme_scan_topology;
