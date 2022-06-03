@@ -105,8 +105,6 @@ static struct program nvme = {
 const char *output_format = "Output format: normal|json|binary";
 static const char *output_format_no_binary = "Output format: normal|json";
 
-static void *mmap_registers(nvme_root_t r, const char *dev);
-
 static void *__nvme_alloc(size_t len, bool *huge) {
 	void *p;
 
@@ -659,19 +657,16 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 	list_head_init(&log_pages);
 
 	if (cfg.csi < 0) {
-		nvme_root_t nvme_root;
 		uint64_t cap;
 		int nvme_command_set_supported;
 		int other_command_sets_supported;
-		nvme_root = nvme_scan(NULL);
-		bar = mmap_registers(nvme_root, devicename);
-		nvme_free_tree(nvme_root);
-
+		bool fabrics;
+		bar = nvme_get_registers(fd, devicename, &fabrics);
 		if (!bar) {
 			goto close_fd;
 		}
 		cap = mmio_read64(bar + NVME_REG_CAP);
-		munmap(bar, getpagesize());
+		nvme_free_registers(bar, fabrics);
 
 		nvme_command_set_supported = NVME_CAP_CSS(cap) & NVME_CAP_CSS_NVM;
 		other_command_sets_supported = NVME_CAP_CSS(cap) & NVME_CAP_CSS_CSI;
@@ -4334,89 +4329,6 @@ ret:
 	return err;
 }
 
-static int nvme_get_properties(int fd, void **pbar)
-{
-	int offset, err, size = getpagesize();
-	__u64 value;
-
-	*pbar = malloc(size);
-	if (!*pbar) {
-		fprintf(stderr, "malloc: %s\n", strerror(errno));
-		return -1;
-	}
-
-	memset(*pbar, 0xff, size);
-	for (offset = NVME_REG_CAP; offset <= NVME_REG_CMBSZ;) {
-		struct nvme_get_property_args args = {
-			.args_size	= sizeof(args),
-			.fd		= fd,
-			.offset		= offset,
-			.value		= &value,
-			.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
-		};
-		err = nvme_get_property(&args);
-		if (err > 0 && (err & 0xff) == NVME_SC_INVALID_FIELD) {
-			err = 0;
-			value = -1;
-		} else if (err) {
-			free(*pbar);
-			break;
-		}
-		if (nvme_is_64bit_reg(offset)) {
-			*(uint64_t *)(*pbar + offset) = value;
-			offset += 8;
-		} else {
-			*(uint32_t *)(*pbar + offset) = value;
-			offset += 4;
-		}
-	}
-
-	return err;
-}
-
-static void *mmap_registers(nvme_root_t r, const char *dev)
-{
-	nvme_ctrl_t c = NULL;
-	nvme_ns_t n = NULL;
-
-	char path[512];
-	void *membase;
-	int fd;
-
-	c = nvme_scan_ctrl(r, devicename);
-	if (c) {
-		snprintf(path, sizeof(path), "%s/device/resource0",
-			nvme_ctrl_get_sysfs_dir(c));
-		nvme_free_ctrl(c);
-	} else {
-		n = nvme_scan_namespace(devicename);
-		if (!n) {
-			fprintf(stderr, "Unable to find %s\n", devicename);
-			return NULL;
-		}
-		snprintf(path, sizeof(path), "%s/device/device/resource0",
-			nvme_ns_get_sysfs_dir(n));
-		nvme_free_ns(n);
-	}
-
-	fd = open(path, O_RDONLY);
-	if (fd < 0) {
-		fprintf(stderr, "%s did not find a pci resource, open failed %s\n",
-				devicename, strerror(errno));
-		return NULL;
-	}
-
-	membase = mmap(NULL, getpagesize(), PROT_READ, MAP_SHARED, fd, 0);
-	if (membase == MAP_FAILED) {
-		fprintf(stderr, "%s failed to map. ", devicename);
-		fprintf(stderr, "Did your kernel enable CONFIG_IO_STRICT_DEVMEM?\n");
-		membase = NULL;
-	}
-
-	close(fd);
-	return membase;
-}
-
 static int show_registers(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Reads and shows the defined NVMe controller registers "\
@@ -4425,7 +4337,6 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 					"output_format == normal";
 
 	enum nvme_print_flags flags;
-	nvme_root_t r;
 	bool fabrics = true;
 	int fd, err;
 	void *bar;
@@ -4450,31 +4361,21 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 	if (fd < 0)
 		goto ret;
 
-	r = nvme_scan(NULL);
 	err = flags = validate_output_format(cfg.output_format);
 	if (flags < 0)
 		goto close_fd;
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
-	err = nvme_get_properties(fd, &bar);
-	if (err) {
-		bar = mmap_registers(r, devicename);
-		fabrics = false;
-		if (bar)
-			err = 0;
-	}
+	bar = nvme_get_registers(fd, devicename, &fabrics);
 	if (!bar)
 		goto close_fd;
 
 	nvme_show_ctrl_registers(bar, fabrics, flags);
-	if (fabrics)
-		free(bar);
-	else
-		munmap(bar, getpagesize());
+	nvme_free_registers(bar, fabrics);
+
 close_fd:
 	close(fd);
-	nvme_free_tree(r);
 ret:
 	return err;
 }
