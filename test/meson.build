@@ -16,12 +16,14 @@ main = executable(
     include_directories: [incdir, internal_incdir]
 )
 
-cpp = executable(
-    'test-cpp',
-    ['cpp.cc'],
-    dependencies: libnvme_dep,
-    include_directories: [incdir, internal_incdir]
-)
+if cxx_available
+    cpp = executable(
+        'test-cpp',
+        ['cpp.cc'],
+        dependencies: libnvme_dep,
+        include_directories: [incdir, internal_incdir]
+    )
+endif
 
 register = executable(
     'test-register',
