@@ -1139,5 +1139,92 @@ int nvme_mi_admin_security_send(nvme_mi_ctrl_t ctrl,
 int nvme_mi_admin_security_recv(nvme_mi_ctrl_t ctrl,
 				struct nvme_security_receive_args *args);
 
+/**
+ * nvme_mi_admin_get_features - Perform a Get Feature command on a controller
+ * @ctrl: Controller to send command to
+ * @args: Get Features command arguments
+ *
+ * Performs a Get Features Admin command as specified by @args. Returned
+ * feature data will be stored in @args->result and @args->data, depending
+ * on the specification of the feature itself; most features do not return
+ * additional data. See section 5.27.1 of the NVMe spec (v2.0b) for
+ * feature-specific information.
+ *
+ * On success, @args->data_len will be updated with the actual data length
+ * received.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+int nvme_mi_admin_get_features(nvme_mi_ctrl_t ctrl,
+			       struct nvme_get_features_args *args);
+
+/**
+ * nvme_mi_admin_get_features_data() - Helper function for &nvme_mi_admin_get_features()
+ * @ctrl: Controller to send command to
+ * @fid: Feature identifier
+ * @nsid: Namespace ID, if applicable for @fid
+ * @data_len: Length of feature data, if applicable for @fid, in bytes
+ * @data: User address of feature data, if applicable
+ * @result: The command completion result from CQE dword0
+ *
+ * Helper for optionally features that optionally return data, using the
+ * SEL_CURRENT selector value.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_features_data(nvme_mi_ctrl_t ctrl,
+						  enum nvme_features_id fid,
+						  __u32 nsid, __u32 data_len,
+						  void *data, __u32 *result)
+{
+	struct nvme_get_features_args args = {
+		.result = result,
+		.data = data,
+		.args_size = sizeof(args),
+		.nsid = nsid,
+		.sel = NVME_GET_FEATURES_SEL_CURRENT,
+		.cdw11 = 0,
+		.data_len = data_len,
+		.fid = (__u8)fid,
+		.uuidx = NVME_UUID_NONE,
+	};
+
+	return nvme_mi_admin_get_features(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_features_simple - Get a simple feature value with no data
+ * @ctrl: Controller to send command to
+ * @fid: Feature identifier
+ * @nsid: Namespace id, if required by @fid
+ * @result: output feature data
+ */
+static inline int nvme_mi_admin_get_features_simple(nvme_mi_ctrl_t ctrl,
+						    enum nvme_features_id fid,
+						    __u32 nsid,
+						    __u32 *result)
+{
+	return nvme_mi_admin_get_features_data(ctrl, fid, nsid,
+					       0, NULL, result);
+}
+
+/**
+ * nvme_mi_admin_set_features - Perform a Set Features command on a controller
+ * @ctrl: Controller to send command to
+ * @args: Set Features command arguments
+ *
+ * Performs a Set Features Admin command as specified by @args. Result
+ * data will be stored in @args->result.
+ * on the specification of the feature itself; most features do not return
+ * additional data. See section 5.27.1 of the NVMe spec (v2.0b) for
+ * feature-specific information.
+ *
+ * On success, @args->data_len will be updated with the actual data length
+ * received.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+int nvme_mi_admin_set_features(nvme_mi_ctrl_t ctrl,
+			       struct nvme_set_features_args *args);
 
 #endif /* _LIBNVME_MI_MI_H */

@@ -747,6 +747,213 @@ static void test_mi_config_set_freq_invalid(nvme_mi_ep_t ep)
 	assert(rc == 4);
 }
 
+/* Get Features callback, implementing Arbitration (which doesn't return
+ * additional data) and Timestamp (which does).
+ */
+static int test_admin_get_features_cb(struct nvme_mi_ep *ep,
+			    struct nvme_mi_req *req,
+			    struct nvme_mi_resp *resp,
+			    void *data)
+{
+	__u8 sel, fid, ror, mt, *rq_hdr, *rs_hdr, *rs_data;
+	__u16 ctrl_id;
+	int i;
+
+	assert(req->hdr->type == NVME_MI_MSGTYPE_NVME);
+
+	ror = req->hdr->nmp >> 7;
+	mt = req->hdr->nmp >> 3 & 0x7;
+	assert(ror == NVME_MI_ROR_REQ);
+	assert(mt == NVME_MI_MT_ADMIN);
+
+	/* do we have enough for a mi header? */
+	assert(req->hdr_len == sizeof(struct nvme_mi_admin_req_hdr));
+
+	/* inspect response as raw bytes */
+	rq_hdr = (__u8 *)req->hdr;
+
+	/* opcode */
+	assert(rq_hdr[4] == nvme_admin_get_features);
+
+	/* controller */
+	ctrl_id = rq_hdr[7] << 8 | rq_hdr[6];
+	assert(ctrl_id == 0x5); /* controller id */
+
+	/* sel & fid from lower bytes of cdw10 */
+	fid = rq_hdr[44];
+	sel = rq_hdr[45] & 0x7;
+
+	/* reserved fields */
+	assert(!(rq_hdr[46] || rq_hdr[47] || rq_hdr[45] & 0xf8));
+
+	assert(sel == 0x00);
+
+	rs_hdr = (__u8 *)resp->hdr;
+	rs_hdr[4] = 0x00; /* status: success */
+	rs_data = resp->data;
+
+	/* feature-id specific checks, and response generation */
+	switch (fid) {
+	case NVME_FEAT_FID_ARBITRATION:
+		/* arbitrary (hah!) arbitration value in cdw0 of response */
+		rs_hdr[8] = 1;
+		rs_hdr[9] = 2;
+		rs_hdr[10] = 3;
+		rs_hdr[11] = 4;
+		resp->data_len = 0;
+		break;
+
+	case NVME_FEAT_FID_TIMESTAMP:
+		resp->data_len = 8;
+		for (i = 0; i < 6; i++)
+			rs_data[i] = i;
+		rs_data[6] = 1;
+		break;
+
+	default:
+		assert(0);
+	}
+
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+static void test_get_features_nodata(nvme_mi_ep_t ep)
+{
+	struct nvme_get_features_args args = { 0 };
+	nvme_mi_ctrl_t ctrl;
+	uint32_t res;
+	int rc;
+
+	test_set_transport_callback(ep, test_admin_get_features_cb, NULL);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	args.args_size = sizeof(args);
+	args.fid = NVME_FEAT_FID_ARBITRATION;
+	args.sel = 0;
+	args.result = &res;
+
+	rc = nvme_mi_admin_get_features(ctrl, &args);
+	assert(rc == 0);
+	assert(args.data_len == 0);
+	assert(res == 0x04030201);
+}
+
+static void test_get_features_data(nvme_mi_ep_t ep)
+{
+	struct nvme_get_features_args args = { 0 };
+	struct nvme_timestamp tstamp;
+	nvme_mi_ctrl_t ctrl;
+	uint8_t exp[6];
+	uint32_t res;
+	int rc, i;
+
+	test_set_transport_callback(ep, test_admin_get_features_cb, NULL);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	args.args_size = sizeof(args);
+	args.fid = NVME_FEAT_FID_TIMESTAMP;
+	args.sel = 0;
+	args.result = &res;
+	args.data = &tstamp;
+	args.data_len = sizeof(tstamp);
+
+	/* expected timestamp value */
+	for (i = 0; i < sizeof(tstamp.timestamp); i++)
+		exp[i] = i;
+
+	rc = nvme_mi_admin_get_features(ctrl, &args);
+	assert(rc == 0);
+	assert(args.data_len == sizeof(tstamp));
+	assert(tstamp.attr == 1);
+	assert(!memcmp(tstamp.timestamp, exp, sizeof(tstamp.timestamp)));
+}
+
+/* Set Features callback for timestamp */
+static int test_admin_set_features_cb(struct nvme_mi_ep *ep,
+			    struct nvme_mi_req *req,
+			    struct nvme_mi_resp *resp,
+			    void *data)
+{
+	__u8 save, fid, ror, mt, *rq_hdr, *rq_data, *rs_hdr;
+	__u16 ctrl_id;
+	uint8_t ts[6];
+	int i;
+
+	assert(req->hdr->type == NVME_MI_MSGTYPE_NVME);
+
+	ror = req->hdr->nmp >> 7;
+	mt = req->hdr->nmp >> 3 & 0x7;
+	assert(ror == NVME_MI_ROR_REQ);
+	assert(mt == NVME_MI_MT_ADMIN);
+	assert(req->hdr_len == sizeof(struct nvme_mi_admin_req_hdr));
+	assert(req->data_len == 8);
+
+	rq_hdr = (__u8 *)req->hdr;
+	rq_data = req->data;
+
+	/* opcode */
+	assert(rq_hdr[4] == nvme_admin_set_features);
+
+	/* controller */
+	ctrl_id = rq_hdr[7] << 8 | rq_hdr[6];
+	assert(ctrl_id == 0x5); /* controller id */
+
+	/* fid from lower bytes of cdw10, save from top bit */
+	fid = rq_hdr[44];
+	save = rq_hdr[47] & 0x80;
+
+	/* reserved fields */
+	assert(!(rq_hdr[45] || rq_hdr[46]));
+
+	assert(fid == NVME_FEAT_FID_TIMESTAMP);
+	assert(save == 0x80);
+
+	for (i = 0; i < sizeof(ts); i++)
+		ts[i] = i;
+	assert(!memcmp(ts, rq_data, sizeof(ts)));
+
+	rs_hdr = (__u8 *)resp->hdr;
+	rs_hdr[4] = 0x00;
+
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+static void test_set_features(nvme_mi_ep_t ep)
+{
+	struct nvme_set_features_args args = { 0 };
+	struct nvme_timestamp tstamp;
+	nvme_mi_ctrl_t ctrl;
+	uint32_t res;
+	int rc, i;
+
+	test_set_transport_callback(ep, test_admin_set_features_cb, NULL);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	for (i = 0; i < sizeof(tstamp.timestamp); i++)
+		tstamp.timestamp[i] = i;
+
+	args.args_size = sizeof(args);
+	args.fid = NVME_FEAT_FID_TIMESTAMP;
+	args.save = 1;
+	args.result = &res;
+	args.data = &tstamp;
+	args.data_len = sizeof(tstamp);
+
+	rc = nvme_mi_admin_set_features(ctrl, &args);
+	assert(rc == 0);
+	assert(args.data_len == 0);
+}
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -769,6 +976,9 @@ struct test {
 	DEFINE_TEST(mi_config_get_mtu),
 	DEFINE_TEST(mi_config_set_freq),
 	DEFINE_TEST(mi_config_set_freq_invalid),
+	DEFINE_TEST(get_features_nodata),
+	DEFINE_TEST(get_features_data),
+	DEFINE_TEST(set_features),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)
