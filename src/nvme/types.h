@@ -918,7 +918,7 @@ struct nvme_id_psd {
  * 	       and Write fused operation. This field is specified in logical
  * 	       blocks and is a 0’s based value.
  * @ocfs:      Optional Copy Formats Supported, each bit n means controller
- *         supports Copy Format n.
+ *             supports Copy Format n.
  * @sgls:      SGL Support, see &enum nvme_id_ctrl_sgls
  * @mnan:      Maximum Number of Allowed Namespaces indicates the maximum
  * 	       number of namespaces supported by the NVM subsystem.
@@ -1483,6 +1483,8 @@ enum nvme_id_ctrl_cqes {
  * 					the Timestamp feature.
  * @NVME_CTRL_ONCS_VERIFY:		If set, then the controller supports
  * 					the Verify command.
+ * @NVME_CTRL_ONCS_COPY:		If set, then the controller supports
+ * 					the copy command.
  */
 enum nvme_id_ctrl_oncs {
 	NVME_CTRL_ONCS_COMPARE			= 1 << 0,
@@ -1493,6 +1495,7 @@ enum nvme_id_ctrl_oncs {
 	NVME_CTRL_ONCS_RESERVATIONS		= 1 << 5,
 	NVME_CTRL_ONCS_TIMESTAMP		= 1 << 6,
 	NVME_CTRL_ONCS_VERIFY			= 1 << 7,
+	NVME_CTRL_ONCS_COPY			= 1 << 8,
 };
 
 /**
