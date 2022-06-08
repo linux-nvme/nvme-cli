@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include <ccan/array_size/array_size.h>
+#include <ccan/endian/endian.h>
 
 /* we define a custom transport, so need the internal headers */
 #include "nvme/private.h"
@@ -954,6 +955,99 @@ static void test_set_features(nvme_mi_ep_t ep)
 	assert(args.data_len == 0);
 }
 
+enum ns_type {
+	NS_ACTIVE,
+	NS_ALLOC,
+};
+
+static int test_admin_id_ns_list_cb(struct nvme_mi_ep *ep,
+				    struct nvme_mi_req *req,
+				    struct nvme_mi_resp *resp,
+				    void *data)
+{
+	struct nvme_ns_list *list;
+	enum ns_type type;
+	int offset;
+	__u8 *hdr;
+	__u16 cns;
+
+	hdr = (__u8 *)req->hdr;
+	assert(hdr[4] == nvme_admin_identify);
+
+	assert(req->data_len == 0);
+
+	cns = hdr[45] << 8 | hdr[44];
+
+	/* NSID */
+	assert(hdr[8] == 1 && !hdr[9] && !hdr[10] && !hdr[11]);
+
+	type = *(enum ns_type *)data;
+	resp->data_len = sizeof(*list);
+	list = resp->data;
+
+	switch (type) {
+	case NS_ALLOC:
+		assert(cns == NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST);
+		offset = 2;
+		break;
+	case NS_ACTIVE:
+		assert(cns == NVME_IDENTIFY_CNS_NS_ACTIVE_LIST);
+		offset = 4;
+		break;
+	default:
+		assert(0);
+	}
+
+	list->ns[0] = cpu_to_le32(offset);
+	list->ns[1] = cpu_to_le32(offset + 1);
+
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+static void test_admin_id_alloc_ns_list(struct nvme_mi_ep *ep)
+{
+	struct nvme_ns_list list;
+	nvme_mi_ctrl_t ctrl;
+	enum ns_type type;
+	int rc;
+
+	type = NS_ALLOC;
+	test_set_transport_callback(ep, test_admin_id_ns_list_cb, &type);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	rc = nvme_mi_admin_identify_allocated_ns_list(ctrl, 1, &list);
+	assert(!rc);
+
+	assert(le32_to_cpu(list.ns[0]) == 2);
+	assert(le32_to_cpu(list.ns[1]) == 3);
+	assert(le32_to_cpu(list.ns[2]) == 0);
+}
+
+static void test_admin_id_active_ns_list(struct nvme_mi_ep *ep)
+{
+	struct nvme_ns_list list;
+	nvme_mi_ctrl_t ctrl;
+	enum ns_type type;
+	int rc;
+
+	type = NS_ACTIVE;
+	test_set_transport_callback(ep, test_admin_id_ns_list_cb, &type);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	rc = nvme_mi_admin_identify_active_ns_list(ctrl, 1, &list);
+	assert(!rc);
+
+	assert(le32_to_cpu(list.ns[0]) == 4);
+	assert(le32_to_cpu(list.ns[1]) == 5);
+	assert(le32_to_cpu(list.ns[2]) == 0);
+}
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -979,6 +1073,8 @@ struct test {
 	DEFINE_TEST(get_features_nodata),
 	DEFINE_TEST(get_features_data),
 	DEFINE_TEST(set_features),
+	DEFINE_TEST(admin_id_alloc_ns_list),
+	DEFINE_TEST(admin_id_active_ns_list),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)
