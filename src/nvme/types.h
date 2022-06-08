@@ -1245,6 +1245,8 @@ enum nvme_id_ctrl_mec {
  * 			       Doorbell Buffer Config command.
  * @NVME_CTRL_OACS_LBA_STATUS: If set, then the controller supports the Get LBA
  * 			       Status capability.
+ * @NVME_CTRL_OACS_CMD_FEAT_LD: If set, then the controller supports the command
+ * 				and feature lockdown capability.
  */
 enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_SECURITY			= 1 << 0,
@@ -1257,6 +1259,7 @@ enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_VIRT_MGMT		= 1 << 7,
 	NVME_CTRL_OACS_DBBUF_CFG		= 1 << 8,
 	NVME_CTRL_OACS_LBA_STATUS		= 1 << 9,
+	NVME_CTRL_OACS_CMD_FEAT_LD		= 1 << 10,
 };
 
 /**
