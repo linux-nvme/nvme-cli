@@ -1379,4 +1379,67 @@ static inline int nvme_mi_admin_get_features_simple(nvme_mi_ctrl_t ctrl,
 int nvme_mi_admin_set_features(nvme_mi_ctrl_t ctrl,
 			       struct nvme_set_features_args *args);
 
+/**
+ * nvme_mi_admin_ns_mgmt - Issue a Namespace Management command
+ * @ctrl: Controller to send command to
+ * @args: Namespace management command arguments
+ *
+ * Issues a Namespace Management command to @ctrl, with arguments specified
+ * from @args.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+int nvme_mi_admin_ns_mgmt(nvme_mi_ctrl_t ctrl,
+			  struct nvme_ns_mgmt_args *args);
+
+/**
+ * nvme_mi_admin_ns_mgmt_create - Helper for Namespace Management Create command
+ * @ctrl: Controller to send command to
+ * @ns: New namespace parameters
+ * @csi: Command Set Identifier for new NS
+ * @nsid: Set to new namespace ID on create
+ *
+ * Issues a Namespace Management (Create) command to @ctrl, to create a
+ * new namespace specified by @ns, using command set @csi. On success,
+ * the new namespace ID will be written to @nsid.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_ns_mgmt_create(nvme_mi_ctrl_t ctrl,
+					       struct nvme_id_ns *ns,
+					       __u8 csi, __u32 *nsid)
+{
+	struct nvme_ns_mgmt_args args = {
+		.args_size = sizeof(args),
+		.csi = csi,
+		.nsid = NVME_NSID_NONE,
+		.sel = NVME_NS_MGMT_SEL_CREATE,
+		.ns = ns,
+		.result = nsid,
+	};
+
+	return nvme_mi_admin_ns_mgmt(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_ns_mgmt_delete - Helper for Namespace Management Delete command
+ * @ctrl: Controller to send command to
+ * @nsid: Namespace ID to delete
+ *
+ * Issues a Namespace Management (Delete) command to @ctrl, to delete the
+ * namespace with id @nsid.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_ns_mgmt_delete(nvme_mi_ctrl_t ctrl, __u32 nsid)
+{
+	struct nvme_ns_mgmt_args args = {
+		.args_size = sizeof(args),
+		.nsid = nsid,
+		.sel = NVME_NS_MGMT_SEL_DELETE,
+	};
+
+	return nvme_mi_admin_ns_mgmt(ctrl, &args);
+}
+
 #endif /* _LIBNVME_MI_MI_H */

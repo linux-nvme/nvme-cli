@@ -1170,6 +1170,96 @@ static void test_admin_id_nsid_ctrl_list(struct nvme_mi_ep *ep)
 	assert(!rc);
 }
 
+static int test_admin_ns_mgmt_cb(struct nvme_mi_ep *ep,
+				 struct nvme_mi_req *req,
+				 struct nvme_mi_resp *resp,
+				 void *data)
+{
+	__u8 *rq_hdr, *rs_hdr, sel, csi;
+	struct nvme_id_ns *id;
+	__u32 nsid;
+
+	rq_hdr = (__u8 *)req->hdr;
+	assert(rq_hdr[4] == nvme_admin_ns_mgmt);
+
+	sel = rq_hdr[44];
+	csi = rq_hdr[45];
+	nsid = rq_hdr[11] << 24 | rq_hdr[10] << 16 | rq_hdr[9] << 8 | rq_hdr[8];
+
+	rs_hdr = (__u8 *)resp->hdr;
+
+	switch (sel) {
+	case NVME_NS_MGMT_SEL_CREATE:
+		assert(req->data_len == sizeof(struct nvme_id_ns));
+		id = req->data;
+
+		/* No NSID on created namespaces */
+		assert(nsid == 0);
+		assert(csi == 0);
+
+		/* allow operations on nsze == 42, reject others */
+		if (le64_to_cpu(id->nsze) != 42) {
+			rs_hdr[4] = 0;
+			/* response cdw0 is created NSID */
+			rs_hdr[8] = 0x04;
+			rs_hdr[9] = 0x03;
+			rs_hdr[10] = 0x02;
+			rs_hdr[11] = 0x01;
+		} else {
+			rs_hdr[4] = NVME_MI_RESP_INVALID_PARAM;
+		}
+		break;
+
+	case NVME_NS_MGMT_SEL_DELETE:
+		assert(req->data_len == 0);
+		/* NSID required on delete */
+		assert(nsid == 0x05060708);
+		break;
+
+	default:
+		assert(0);
+	}
+
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+static void test_admin_ns_mgmt_create(struct nvme_mi_ep *ep)
+{
+	struct nvme_id_ns nsid;
+	nvme_mi_ctrl_t ctrl;
+	__u32 ns;
+	int rc;
+
+	test_set_transport_callback(ep, test_admin_ns_mgmt_cb, NULL);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	rc = nvme_mi_admin_ns_mgmt_create(ctrl, &nsid, 0, &ns);
+	assert(!rc);
+	assert(ns == 0x01020304);
+
+	nsid.nsze = 42;
+	rc = nvme_mi_admin_ns_mgmt_create(ctrl, &nsid, 0, &ns);
+	assert(rc);
+}
+
+static void test_admin_ns_mgmt_delete(struct nvme_mi_ep *ep)
+{
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	test_set_transport_callback(ep, test_admin_ns_mgmt_cb, NULL);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	rc = nvme_mi_admin_ns_mgmt_delete(ctrl, 0x05060708);
+	assert(!rc);
+}
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -1200,6 +1290,8 @@ struct test {
 	DEFINE_TEST(admin_id_alloc_ns),
 	DEFINE_TEST(admin_id_active_ns),
 	DEFINE_TEST(admin_id_nsid_ctrl_list),
+	DEFINE_TEST(admin_ns_mgmt_create),
+	DEFINE_TEST(admin_ns_mgmt_delete),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)
