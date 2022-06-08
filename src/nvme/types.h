@@ -1270,11 +1270,15 @@ enum nvme_id_ctrl_oacs {
  * 				    firmware slots that the controller supports.
  * @NVME_CTRL_FRMW_FW_ACT_NO_RESET: If set, the controller supports firmware
  * 				    activation without a reset.
+ * @NVME_CTRL_FRMW_FW_MP_UP_DETECTION: If set, the controller is able to detect
+ * 				       overlapping firmware/boot partition
+ * 				       image update.
  */
 enum nvme_id_ctrl_frmw {
 	NVME_CTRL_FRMW_1ST_RO			= 1 << 0,
 	NVME_CTRL_FRMW_NR_SLOTS			= 3 << 1,
 	NVME_CTRL_FRMW_FW_ACT_NO_RESET		= 1 << 4,
+	NVME_CTRL_FRMW_MP_UP_DETECTION		= 1 << 5,
 };
 
 /**
