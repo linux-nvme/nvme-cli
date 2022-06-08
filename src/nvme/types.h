@@ -1284,11 +1284,30 @@ enum nvme_id_ctrl_frmw {
 /**
  * enum nvme_id_ctrl_lpa - Flags indicating optional attributes for log pages
  * 			   that are accessed via the Get Log Page command.
- * @NVME_CTRL_LPA_SMART_PER_NS:
- * @NVME_CTRL_LPA_CMD_EFFECTS:
- * @NVME_CTRL_LPA_EXTENDED:
- * @NVME_CTRL_LPA_TELEMETRY:
- * @NVME_CTRL_LPA_PERSETENT_EVENT:
+ * @NVME_CTRL_LPA_SMART_PER_NS: If set, controller supports SMART/Health log
+ * 				page on a per namespace basis.
+ * @NVME_CTRL_LPA_CMD_EFFECTS:	If Set, the controller supports the commands
+ * 				supported and effects log page.
+ * @NVME_CTRL_LPA_EXTENDED:	If set, the controller supports extended data
+ * 				for log page command including extended number
+ * 				of dwords and log page offset fields.
+ * @NVME_CTRL_LPA_TELEMETRY:	If set, the controller supports the telemetry
+ * 				host-initiated and telemetry controller-initiated
+ * 				log pages and sending telemetry log notices.
+ * @NVME_CTRL_LPA_PERSETENT_EVENT:	If set, the controller supports
+ * 					persistent event log.
+ * @NVME_CTRL_LPA_LI0_LI5_LI12_LI13:	If set, the controller supports
+ * 					- log pages log page.
+ * 					- returning scope of each command in
+ * 					  commands supported and effects log
+ * 					  page.
+ * 					- feature identifiers supported and
+ * 					  effects log page.
+ * 					- NVMe-MI commands supported and
+ * 					  effects log page.
+ * @NVME_CTRL_LPA_DA4_TELEMETRY:	If set, the controller supports data
+ * 					area 4 for telemetry host-initiated and
+ * 					telemetry.
  */
 enum nvme_id_ctrl_lpa {
 	NVME_CTRL_LPA_SMART_PER_NS		= 1 << 0,
@@ -1296,6 +1315,8 @@ enum nvme_id_ctrl_lpa {
 	NVME_CTRL_LPA_EXTENDED			= 1 << 2,
 	NVME_CTRL_LPA_TELEMETRY			= 1 << 3,
 	NVME_CTRL_LPA_PERSETENT_EVENT		= 1 << 4,
+	NVME_CTRL_LPA_LI0_LI5_LI12_LI13		= 1 << 5,
+	NVME_CTRL_LPA_DA4_TELEMETRY		= 1 << 6,
 };
 
 /**
