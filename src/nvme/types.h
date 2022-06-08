@@ -633,10 +633,12 @@ enum nvme_psd_flags {
  * enum nvme_psd_ps - Known values for &struct nvme_psd %ips and %aps. Use with
  * 		      nvme_psd_power_scale() to extract the power scale field
  * 		      to match this enum.
+ * @NVME_PSD_PS_NOT_REPORTED:	Not reported
  * @NVME_PSD_PS_100_MICRO_WATT: 0.0001 watt scale
  * @NVME_PSD_PS_10_MILLI_WATT:	0.01 watt scale
  */
 enum nvme_psd_ps {
+	 NVME_PSD_PS_NOT_REPORTED	= 0,
 	 NVME_PSD_PS_100_MICRO_WATT	= 1,
 	 NVME_PSD_PS_10_MILLI_WATT	= 2,
 };
@@ -655,6 +657,7 @@ static inline unsigned int nvme_psd_power_scale(__u8 ps)
  * 			    Feature (see &struct nvme_psd.apw) to inform the
  * 			    NVM subsystem or indicate the conditions for the
  * 			    active power level.
+ * @NVME_PSD_WORKLOAD_NP: The workload is unkown or not provided.
  * @NVME_PSD_WORKLOAD_1: Extended Idle Period with a Burst of Random Write
  * 			 consists of five minutes of idle followed by
  * 			 thirty-two random write commands of size 1 MiB
@@ -670,6 +673,7 @@ static inline unsigned int nvme_psd_power_scale(__u8 ps)
  *			 times during the workload.
  */
 enum nvme_psd_workload {
+	 NVME_PSD_WORKLOAD_NP	= 0,
 	 NVME_PSD_WORKLOAD_1	= 1,
 	 NVME_PSD_WORKLOAD_2	= 2,
 };
