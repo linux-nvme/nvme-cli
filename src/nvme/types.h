@@ -1529,11 +1529,16 @@ enum nvme_id_ctrl_fuses {
  * @NVME_CTRL_FNA_CRYPTO_ERASE:       If set, then cryptographic erase is
  * 				      supported. If cleared, then cryptographic
  * 				      erase is not supported.
+ * @NVME_CTRL_FNA_NSID_FFFFFFFF:      If set, then format does not support
+ * 				      nsid value set to FFFFFFFFh. If cleared,
+ * 				      format supports nsid value set to
+ * 				      FFFFFFFFh.
  */
 enum nvme_id_ctrl_fna {
 	NVME_CTRL_FNA_FMT_ALL_NAMESPACES	= 1 << 0,
 	NVME_CTRL_FNA_SEC_ALL_NAMESPACES	= 1 << 1,
 	NVME_CTRL_FNA_CRYPTO_ERASE		= 1 << 2,
+	NVME_CTRL_FNA_NSID_FFFFFFFF		= 1 << 3,
 };
 
 /**
