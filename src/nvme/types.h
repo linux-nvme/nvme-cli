@@ -633,10 +633,12 @@ enum nvme_psd_flags {
  * enum nvme_psd_ps - Known values for &struct nvme_psd %ips and %aps. Use with
  * 		      nvme_psd_power_scale() to extract the power scale field
  * 		      to match this enum.
+ * @NVME_PSD_PS_NOT_REPORTED:	Not reported
  * @NVME_PSD_PS_100_MICRO_WATT: 0.0001 watt scale
  * @NVME_PSD_PS_10_MILLI_WATT:	0.01 watt scale
  */
 enum nvme_psd_ps {
+	 NVME_PSD_PS_NOT_REPORTED	= 0,
 	 NVME_PSD_PS_100_MICRO_WATT	= 1,
 	 NVME_PSD_PS_10_MILLI_WATT	= 2,
 };
@@ -655,6 +657,7 @@ static inline unsigned int nvme_psd_power_scale(__u8 ps)
  * 			    Feature (see &struct nvme_psd.apw) to inform the
  * 			    NVM subsystem or indicate the conditions for the
  * 			    active power level.
+ * @NVME_PSD_WORKLOAD_NP: The workload is unkown or not provided.
  * @NVME_PSD_WORKLOAD_1: Extended Idle Period with a Burst of Random Write
  * 			 consists of five minutes of idle followed by
  * 			 thirty-two random write commands of size 1 MiB
@@ -670,6 +673,7 @@ static inline unsigned int nvme_psd_power_scale(__u8 ps)
  *			 times during the workload.
  */
 enum nvme_psd_workload {
+	 NVME_PSD_WORKLOAD_NP	= 0,
 	 NVME_PSD_WORKLOAD_1	= 1,
 	 NVME_PSD_WORKLOAD_2	= 2,
 };
@@ -914,7 +918,7 @@ struct nvme_id_psd {
  * 	       and Write fused operation. This field is specified in logical
  * 	       blocks and is a 0’s based value.
  * @ocfs:      Optional Copy Formats Supported, each bit n means controller
- *         supports Copy Format n.
+ *             supports Copy Format n.
  * @sgls:      SGL Support, see &enum nvme_id_ctrl_sgls
  * @mnan:      Maximum Number of Allowed Namespaces indicates the maximum
  * 	       number of namespaces supported by the NVM subsystem.
@@ -1241,6 +1245,8 @@ enum nvme_id_ctrl_mec {
  * 			       Doorbell Buffer Config command.
  * @NVME_CTRL_OACS_LBA_STATUS: If set, then the controller supports the Get LBA
  * 			       Status capability.
+ * @NVME_CTRL_OACS_CMD_FEAT_LD: If set, then the controller supports the command
+ * 				and feature lockdown capability.
  */
 enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_SECURITY			= 1 << 0,
@@ -1253,6 +1259,7 @@ enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_VIRT_MGMT		= 1 << 7,
 	NVME_CTRL_OACS_DBBUF_CFG		= 1 << 8,
 	NVME_CTRL_OACS_LBA_STATUS		= 1 << 9,
+	NVME_CTRL_OACS_CMD_FEAT_LD		= 1 << 10,
 };
 
 /**
@@ -1263,21 +1270,44 @@ enum nvme_id_ctrl_oacs {
  * 				    firmware slots that the controller supports.
  * @NVME_CTRL_FRMW_FW_ACT_NO_RESET: If set, the controller supports firmware
  * 				    activation without a reset.
+ * @NVME_CTRL_FRMW_FW_MP_UP_DETECTION: If set, the controller is able to detect
+ * 				       overlapping firmware/boot partition
+ * 				       image update.
  */
 enum nvme_id_ctrl_frmw {
 	NVME_CTRL_FRMW_1ST_RO			= 1 << 0,
 	NVME_CTRL_FRMW_NR_SLOTS			= 3 << 1,
 	NVME_CTRL_FRMW_FW_ACT_NO_RESET		= 1 << 4,
+	NVME_CTRL_FRMW_MP_UP_DETECTION		= 1 << 5,
 };
 
 /**
  * enum nvme_id_ctrl_lpa - Flags indicating optional attributes for log pages
  * 			   that are accessed via the Get Log Page command.
- * @NVME_CTRL_LPA_SMART_PER_NS:
- * @NVME_CTRL_LPA_CMD_EFFECTS:
- * @NVME_CTRL_LPA_EXTENDED:
- * @NVME_CTRL_LPA_TELEMETRY:
- * @NVME_CTRL_LPA_PERSETENT_EVENT:
+ * @NVME_CTRL_LPA_SMART_PER_NS: If set, controller supports SMART/Health log
+ * 				page on a per namespace basis.
+ * @NVME_CTRL_LPA_CMD_EFFECTS:	If Set, the controller supports the commands
+ * 				supported and effects log page.
+ * @NVME_CTRL_LPA_EXTENDED:	If set, the controller supports extended data
+ * 				for log page command including extended number
+ * 				of dwords and log page offset fields.
+ * @NVME_CTRL_LPA_TELEMETRY:	If set, the controller supports the telemetry
+ * 				host-initiated and telemetry controller-initiated
+ * 				log pages and sending telemetry log notices.
+ * @NVME_CTRL_LPA_PERSETENT_EVENT:	If set, the controller supports
+ * 					persistent event log.
+ * @NVME_CTRL_LPA_LI0_LI5_LI12_LI13:	If set, the controller supports
+ * 					- log pages log page.
+ * 					- returning scope of each command in
+ * 					  commands supported and effects log
+ * 					  page.
+ * 					- feature identifiers supported and
+ * 					  effects log page.
+ * 					- NVMe-MI commands supported and
+ * 					  effects log page.
+ * @NVME_CTRL_LPA_DA4_TELEMETRY:	If set, the controller supports data
+ * 					area 4 for telemetry host-initiated and
+ * 					telemetry.
  */
 enum nvme_id_ctrl_lpa {
 	NVME_CTRL_LPA_SMART_PER_NS		= 1 << 0,
@@ -1285,6 +1315,8 @@ enum nvme_id_ctrl_lpa {
 	NVME_CTRL_LPA_EXTENDED			= 1 << 2,
 	NVME_CTRL_LPA_TELEMETRY			= 1 << 3,
 	NVME_CTRL_LPA_PERSETENT_EVENT		= 1 << 4,
+	NVME_CTRL_LPA_LI0_LI5_LI12_LI13		= 1 << 5,
+	NVME_CTRL_LPA_DA4_TELEMETRY		= 1 << 6,
 };
 
 /**
@@ -1451,6 +1483,8 @@ enum nvme_id_ctrl_cqes {
  * 					the Timestamp feature.
  * @NVME_CTRL_ONCS_VERIFY:		If set, then the controller supports
  * 					the Verify command.
+ * @NVME_CTRL_ONCS_COPY:		If set, then the controller supports
+ * 					the copy command.
  */
 enum nvme_id_ctrl_oncs {
 	NVME_CTRL_ONCS_COMPARE			= 1 << 0,
@@ -1461,6 +1495,7 @@ enum nvme_id_ctrl_oncs {
 	NVME_CTRL_ONCS_RESERVATIONS		= 1 << 5,
 	NVME_CTRL_ONCS_TIMESTAMP		= 1 << 6,
 	NVME_CTRL_ONCS_VERIFY			= 1 << 7,
+	NVME_CTRL_ONCS_COPY			= 1 << 8,
 };
 
 /**
@@ -1494,11 +1529,16 @@ enum nvme_id_ctrl_fuses {
  * @NVME_CTRL_FNA_CRYPTO_ERASE:       If set, then cryptographic erase is
  * 				      supported. If cleared, then cryptographic
  * 				      erase is not supported.
+ * @NVME_CTRL_FNA_NSID_FFFFFFFF:      If set, then format does not support
+ * 				      nsid value set to FFFFFFFFh. If cleared,
+ * 				      format supports nsid value set to
+ * 				      FFFFFFFFh.
  */
 enum nvme_id_ctrl_fna {
 	NVME_CTRL_FNA_FMT_ALL_NAMESPACES	= 1 << 0,
 	NVME_CTRL_FNA_SEC_ALL_NAMESPACES	= 1 << 1,
 	NVME_CTRL_FNA_CRYPTO_ERASE		= 1 << 2,
+	NVME_CTRL_FNA_NSID_FFFFFFFF		= 1 << 3,
 };
 
 /**
