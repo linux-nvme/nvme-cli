@@ -6,7 +6,7 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 project(
-    'libnvme', ['c', 'cpp'],
+    'libnvme', ['c'],
     meson_version: '>= 0.47.0',
     version: '1.0',
     license: 'LGPL-2.1-or-later',
@@ -22,6 +22,7 @@ library_version = meson.project_version() + '.0'
 
 ################################################################################
 cc = meson.get_compiler('c')
+cxx_available = add_languages('cpp', required: false)
 
 prefixdir  = get_option('prefix')
 libdir     = join_paths(prefixdir, get_option('libdir'))
