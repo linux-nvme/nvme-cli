@@ -66,7 +66,7 @@ static void save_telemetry(nvme_ctrl_t c)
 	if (ret < 0)
 		printf("failed to write telemetry log\n");
 	else
-		printf("telemetry log save as %s, wrote:%d size:%ld\n", buf,
+		printf("telemetry log save as %s, wrote:%d size:%zd\n", buf,
 			ret, log_size);
 	close(fd);
 	free(log);
