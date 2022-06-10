@@ -1890,7 +1890,7 @@ static void nvme_subsystem_set_ns_path(nvme_subsystem_t s, nvme_ns_t n)
 static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
 		char *name, nvme_scan_filter_t f, void *f_args)
 {
-	struct nvme_ns *n;
+	struct nvme_ns *n, *_n, *__n;
 
 	nvme_msg(r, LOG_DEBUG, "scan subsystem %s namespace %s\n",
 		 s->name, name);
@@ -1903,6 +1903,19 @@ static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
 		nvme_msg(r, LOG_DEBUG, "filter out namespace %s\n", name);
 		__nvme_free_ns(n);
 		return 0;
+	}
+	nvme_subsystem_for_each_ns_safe(s, _n, __n) {
+		struct nvme_path *p, *_p;
+
+		if (strcmp(n->name, _n->name))
+			continue;
+		/* Detach paths */
+		nvme_namespace_for_each_path_safe(_n, p, _p) {
+			list_del_init(&p->nentry);
+			p->n = NULL;
+		}
+		list_head_init(&_n->paths);
+		__nvme_free_ns(_n);
 	}
 	n->s = s;
 	list_add(&s->namespaces, &n->entry);
