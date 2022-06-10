@@ -7,6 +7,10 @@
 #undef NDEBUG
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+
+#include <ccan/array_size/array_size.h>
 
 /* we define a custom transport, so need the internal headers */
 #include "nvme/private.h"
@@ -189,21 +193,81 @@ static void test_invalid_crc(nvme_mi_ep_t ep)
 	assert(rc != 0);
 }
 
+#define DEFINE_TEST(name) { #name, test_ ## name }
+struct test {
+	const char *name;
+	void (*fn)(nvme_mi_ep_t);
+} tests[] = {
+	DEFINE_TEST(read_mi_data),
+	DEFINE_TEST(transport_fail),
+	DEFINE_TEST(invalid_crc),
+};
+
+static void print_log_buf(FILE *logfd)
+{
+	char buf[4096];
+	int rc;
+
+	if (!ftell(logfd))
+		return;
+
+	rewind(logfd);
+
+	printf("--- begin test output\n");
+
+	while (!feof(logfd) && !ferror(logfd)) {
+		size_t rlen, wlen, wpos;
+
+		rlen = fread(buf, 1, sizeof(buf), logfd);
+		if (rlen <= 0)
+			break;
+
+		for (wpos = 0; wpos < rlen;) {
+			wlen = fwrite(buf + wpos, 1, rlen - wpos, stdout);
+			if (wlen == 0)
+				break;
+			wpos += wlen;
+		}
+
+		if (feof(logfd) || ferror((logfd)))
+			break;
+	}
+
+	printf("--- end test output\n");
+	rewind(logfd);
+	rc = ftruncate(fileno(logfd), 0);
+	assert(!rc);
+}
+
+static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)
+{
+	printf("Running test %s...", test->name);
+	fflush(stdout);
+	test->fn(ep);
+	/* tests will assert on failure; if we're here, we're OK */
+	printf("  OK\n");
+	print_log_buf(logfd);
+}
 
 int main(void)
 {
 	nvme_root_t root;
 	nvme_mi_ep_t ep;
+	unsigned int i;
+	FILE *fd;
 
-	root = nvme_mi_create_root(NULL, DEFAULT_LOGLEVEL);
+	fd = tmpfile();
+	assert(fd);
+
+	root = nvme_mi_create_root(fd, DEFAULT_LOGLEVEL);
 	assert(root);
 
 	ep = nvme_mi_open_test(root);
 	assert(ep);
 
-	test_read_mi_data(ep);
-	test_transport_fail(ep);
-	test_invalid_crc(ep);
+	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+		run_test(&tests[i], fd, ep);
+	}
 
 	nvme_mi_close(ep);
 	nvme_mi_free_root(root);
