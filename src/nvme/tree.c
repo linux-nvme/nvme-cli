@@ -1913,22 +1913,11 @@ static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
 struct nvme_ns *nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
 						__u32 nsid)
 {
-	nvme_root_t r = s->h ? s->h->r : NULL;
 	struct nvme_ns *n;
-	char *name;
-	int ret;
 
-	ret = asprintf(&name, "%sn%u", s->name, nsid);
-	if (ret < 0)
-		return NULL;
-	n = __nvme_scan_namespace(s->sysfs_dir, name);
-	free(name);
-	if (!n) {
-		nvme_msg(r, LOG_DEBUG, "failed to scan namespace %d\n", nsid);
-		return NULL;
+	nvme_subsystem_for_each_ns(s, n) {
+		if (nvme_ns_get_nsid(n) == nsid)
+			return n;
 	}
-
-	n->s = s;
-	list_add(&s->namespaces, &n->entry);
-	return n;
+	return NULL;
 }
