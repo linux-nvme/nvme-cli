@@ -1840,7 +1840,7 @@ nvme_ns_t nvme_scan_namespace(const char *name)
 static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
 				    char *name)
 {
-	struct nvme_ns *n;
+	struct nvme_ns *n, *_n, *__n;
 
 	nvme_msg(r, LOG_DEBUG, "scan controller %s namespace %s\n",
 		 c->name, name);
@@ -1854,7 +1854,11 @@ static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
 		nvme_msg(r, LOG_DEBUG, "failed to scan namespace %s\n", name);
 		return -1;
 	}
-
+	nvme_ctrl_for_each_ns_safe(c, _n, __n) {
+		if (strcmp(n->name, _n->name))
+			continue;
+		__nvme_free_ns(_n);
+	}
 	n->s = c->s;
 	n->c = c;
 	list_add(&c->namespaces, &n->entry);
