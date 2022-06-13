@@ -57,6 +57,11 @@ please consult the following sites:
 
 **meson repo**: https://github.com/mesonbuild/meson
 
+## Dependency
+
+libnvme depends on minimum Linux kernel version v4.15, which
+introduced the /sys/class/nvme-subsystem.
+
 ## Prerequisite
 
 First, install meson.
