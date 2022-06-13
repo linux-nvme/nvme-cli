@@ -1840,7 +1840,7 @@ nvme_ns_t nvme_scan_namespace(const char *name)
 static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
 				    char *name)
 {
-	struct nvme_ns *n;
+	struct nvme_ns *n, *_n, *__n;
 
 	nvme_msg(r, LOG_DEBUG, "scan controller %s namespace %s\n",
 		 c->name, name);
@@ -1854,7 +1854,11 @@ static int nvme_ctrl_scan_namespace(nvme_root_t r, struct nvme_ctrl *c,
 		nvme_msg(r, LOG_DEBUG, "failed to scan namespace %s\n", name);
 		return -1;
 	}
-
+	nvme_ctrl_for_each_ns_safe(c, _n, __n) {
+		if (strcmp(n->name, _n->name))
+			continue;
+		__nvme_free_ns(_n);
+	}
 	n->s = c->s;
 	n->c = c;
 	list_add(&c->namespaces, &n->entry);
@@ -1890,7 +1894,7 @@ static void nvme_subsystem_set_ns_path(nvme_subsystem_t s, nvme_ns_t n)
 static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
 		char *name, nvme_scan_filter_t f, void *f_args)
 {
-	struct nvme_ns *n;
+	struct nvme_ns *n, *_n, *__n;
 
 	nvme_msg(r, LOG_DEBUG, "scan subsystem %s namespace %s\n",
 		 s->name, name);
@@ -1904,6 +1908,19 @@ static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
 		__nvme_free_ns(n);
 		return 0;
 	}
+	nvme_subsystem_for_each_ns_safe(s, _n, __n) {
+		struct nvme_path *p, *_p;
+
+		if (strcmp(n->name, _n->name))
+			continue;
+		/* Detach paths */
+		nvme_namespace_for_each_path_safe(_n, p, _p) {
+			list_del_init(&p->nentry);
+			p->n = NULL;
+		}
+		list_head_init(&_n->paths);
+		__nvme_free_ns(_n);
+	}
 	n->s = s;
 	list_add(&s->namespaces, &n->entry);
 	nvme_subsystem_set_ns_path(s, n);
@@ -1913,22 +1930,11 @@ static int nvme_subsystem_scan_namespace(nvme_root_t r, nvme_subsystem_t s,
 struct nvme_ns *nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
 						__u32 nsid)
 {
-	nvme_root_t r = s->h ? s->h->r : NULL;
 	struct nvme_ns *n;
-	char *name;
-	int ret;
 
-	ret = asprintf(&name, "%sn%u", s->name, nsid);
-	if (ret < 0)
-		return NULL;
-	n = __nvme_scan_namespace(s->sysfs_dir, name);
-	free(name);
-	if (!n) {
-		nvme_msg(r, LOG_DEBUG, "failed to scan namespace %d\n", nsid);
-		return NULL;
+	nvme_subsystem_for_each_ns(s, n) {
+		if (nvme_ns_get_nsid(n) == nsid)
+			return n;
 	}
-
-	n->s = s;
-	list_add(&s->namespaces, &n->entry);
-	return n;
+	return NULL;
 }
