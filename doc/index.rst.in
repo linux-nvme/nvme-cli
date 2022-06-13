@@ -1,19 +1,18 @@
 Welcome to libnvme's documentation!
 ===================================
 
+This is the libnvme development C library. libnvme provides type definitions for
+NVMe specification structures, enumerations, and bit fields,
+helper functions to construct, dispatch, and decode commands and payloads,
+and utilities to connect, scan, and manage nvme devices on a Linux system.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-.. include::   rst/types.rst
-.. include::   rst/ioctl.rst
-.. include::   rst/fabrics.rst
-.. include::   rst/linux.rst
-.. include::   rst/tree.rst
-.. include::   rst/filters.rst
-.. include::   rst/util.rst
-.. include::   rst/log.rst
-
+   installation.rst
+   quickstart.rst
+   api.rst
 
 Indices and tables
 ==================
