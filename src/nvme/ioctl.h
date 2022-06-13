@@ -476,8 +476,8 @@ struct nvme_identify_args {
  */
 int nvme_identify(struct nvme_identify_args *args);
 
-static int nvme_identify_cns_nsid(int fd, enum nvme_identify_cns cns,
-			__u32 nsid, void *data)
+static inline int nvme_identify_cns_nsid(int fd, enum nvme_identify_cns cns,
+					 __u32 nsid, void *data)
 {
 	struct nvme_identify_args args = {
 		.result = NULL,
@@ -1689,8 +1689,8 @@ static inline int nvme_get_log_predictable_lat_event(int fd, bool rae,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-static int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae,
-			__u64 offset, __u32 len, void *log)
+static inline int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae,
+			           __u64 offset, __u32 len, void *log)
 {
 	struct nvme_get_log_args args = {
 		.lpo = offset,
