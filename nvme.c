@@ -6602,7 +6602,9 @@ static int submit_io(int opcode, char *command, const char *desc,
 		.result		= NULL,
 	};
 	gettimeofday(&start_time, NULL);
-	if (opcode & 1)
+	if (opcode == nvme_cmd_compare)
+		err = nvme_compare(&args);
+	else if (opcode & 1)
 		err = nvme_write(&args);
 	else
 		err = nvme_read(&args);
