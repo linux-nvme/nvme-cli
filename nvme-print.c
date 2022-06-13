@@ -375,10 +375,12 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 		json_object_add_value_int(psd, "idle_power",
 			le16_to_cpu(ctrl->psd[i].idlp));
 		json_object_add_value_int(psd, "idle_scale",
-			ctrl->psd[i].ips);
+			nvme_psd_power_scale(ctrl->psd[i].ips));
 		json_object_add_value_int(psd, "active_power",
 			le16_to_cpu(ctrl->psd[i].actp));
-		json_object_add_value_int(psd, "active_work_scale",
+		json_object_add_value_int(psd, "active_power_work",
+			ctrl->psd[i].apws & 0x7);
+		json_object_add_value_int(psd, "active_scale",
 			nvme_psd_power_scale(ctrl->psd[i].apws));
 
 		json_array_add_value_object(psds, psd);
@@ -4500,22 +4502,45 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 	}
 }
 
+static void print_psd_workload(__u8 apw)
+{
+	switch (apw & 0x7) {
+	case NVME_PSD_WORKLOAD_NP:
+		/* Unkown or not provided */
+		printf("-");
+		break;
+
+	case 1:
+		/* Extended idle period with burst of random write */
+		printf("1MiB 32 RW, 30s idle");
+		break;
+
+	case 2:
+		/* Heavy sequential writes */
+		printf("80K 128KiB SW");
+		break;
+
+	default:
+		printf("reserved");
+	}
+}
+
 static void print_ps_power_and_scale(__le16 ctr_power, __u8 scale)
 {
 	__u16 power = le16_to_cpu(ctr_power);
 
 	switch (scale & 0x3) {
-	case 0:
+	case NVME_PSD_PS_NOT_REPORTED:
 		/* Not reported for this power state */
 		printf("-");
 		break;
 
-	case 1:
+	case NVME_PSD_PS_100_MICRO_WATT:
 		/* Units of 0.0001W */
 		printf("%01u.%04uW", power / 10000, power % 10000);
 		break;
 
-	case 2:
+	case NVME_PSD_PS_10_MILLI_WATT:
 		/* Units of 0.01W */
 		printf("%01u.%02uW", power / 100, power % 100);
 		break;
@@ -4532,7 +4557,7 @@ static void nvme_show_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 	for (i = 0; i <= ctrl->npss; i++) {
 		__u16 max_power = le16_to_cpu(ctrl->psd[i].mp);
 
-		printf("ps %4d : mp:", i);
+		printf("ps   %4d : mp:", i);
 
 		if (ctrl->psd[i].flags & NVME_PSD_FLAGS_MXPS)
 			printf("%01u.%04uW ", max_power / 10000, max_power % 10000);
@@ -4543,7 +4568,7 @@ static void nvme_show_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 			printf("non-");
 
 		printf("operational enlat:%d exlat:%d rrt:%d rrl:%d\n"
-			"          rwt:%d rwl:%d idle_power:",
+			"            rwt:%d rwl:%d idle_power:",
 			le32_to_cpu(ctrl->psd[i].enlat),
 			le32_to_cpu(ctrl->psd[i].exlat),
 			ctrl->psd[i].rrt, ctrl->psd[i].rrl,
@@ -4553,6 +4578,8 @@ static void nvme_show_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 		printf(" active_power:");
 		print_ps_power_and_scale(ctrl->psd[i].actp,
 				 nvme_psd_power_scale(ctrl->psd[i].apws));
+		printf("\n            active_power_workload:");
+		print_psd_workload(ctrl->psd[i].apws);
 		printf("\n");
 
 	}
