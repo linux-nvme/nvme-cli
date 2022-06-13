@@ -156,6 +156,14 @@ conf.set10(
     ),
     description: 'Is isblank() available?'
 )
+conf.set10(
+    'HAVE_LINUX_MCTP_H',
+    cc.compiles(
+        '''#include <linux/mctp.h>''',
+        name: 'linux/mctp.h'
+    ),
+    description: 'Is linux/mctp.h include-able?'
+)
 
 ################################################################################
 substs = configuration_data()

@@ -32,3 +32,10 @@ executable(
     dependencies: libnvme_dep,
     include_directories: [incdir, internal_incdir]
 )
+
+executable(
+    'mi-mctp',
+    ['mi-mctp.c'],
+    dependencies: libnvme_mi_dep,
+    include_directories: [incdir, internal_incdir]
+)

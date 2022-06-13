@@ -16,6 +16,13 @@ sources = [
     'nvme/util.c',
 ]
 
+mi_sources = [
+    'nvme/cleanup.c',
+    'nvme/log.c',
+    'nvme/mi.c',
+    'nvme/mi-mctp.c',
+]
+
 if conf.get('CONFIG_JSONC')
     sources += 'nvme/json.c'
 endif
@@ -26,9 +33,15 @@ deps = [
     openssl_dep,
 ]
 
+mi_deps = [
+    libuuid_dep,
+]
+
 source_dir = meson.current_source_dir()
 mapfile = 'libnvme.map'
 version_script_arg = join_paths(source_dir, mapfile)
+mi_mapfile = 'libnvme-mi.map'
+mi_version_script_arg = join_paths(source_dir, mi_mapfile)
 
 libnvme = library(
     'nvme', # produces libnvme.so
@@ -60,6 +73,34 @@ libnvme_dep = declare_dependency(
     link_with: libnvme,
 )
 
+libnvme_mi = library(
+    'nvme-mi', # produces libnvme-mi.so
+    mi_sources,
+    version: library_version,
+    link_args: ['-Wl,--version-script=' + mi_version_script_arg],
+    dependencies: mi_deps,
+    link_depends: mi_mapfile,
+    include_directories: [incdir, internal_incdir],
+    install: true,
+    link_with: libccan,
+)
+
+libnvme_mi_dep = declare_dependency(
+    include_directories: ['.'],
+    dependencies: [
+      libuuid_dep.partial_dependency(compile_args: true, includes: true),
+    ],
+    link_with: libnvme_mi,
+)
+
+pkg.generate(libnvme_mi,
+    filebase: 'libnvme-mi',
+    name: 'libnvme-mi',
+    version: meson.project_version(),
+    description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express) over Management Interface',
+    url: 'http://github.com/linux-nvme/libnvme/',
+)
+
 mode = ['rw-r--r--', 0, 0]
 install_headers('libnvme.h', install_mode: mode)
 install_headers([
@@ -71,6 +112,7 @@ install_headers([
         'nvme/tree.h',
         'nvme/types.h',
         'nvme/util.h',
+        'nvme/mi.h',
     ],
     subdir: 'nvme',
     install_mode: mode,
