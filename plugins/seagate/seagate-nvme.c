@@ -1409,19 +1409,19 @@ static void print_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwAct
     __u32 i;
     if (fwActivHis.numValidFwActHisEnt > 0) {
         printf("\n\nSeagate FW Activation Histry :\n");
-            printf("%-9s %-19s %-7s %-13s %-9s %-5s %-15s %-9s\n", "Counter ", "Timestamp    ", "PCC ", "Previous FW ", "New FW ", "Slot", "Commit Action", "Result");
+        printf("%-9s %-19s %-7s %-13s %-9s %-5s %-15s %-9s\n", "Counter ", "Timestamp    ", "PCC ", "Previous FW ", "New FW ", "Slot", "Commit Action", "Result");
 
-            for (i = 0; i < fwActivHis.numValidFwActHisEnt; i++) {
-                printf("%-7d   ", fwActivHis.fwActHisEnt[i].fwActivCnt);
-                printf("%-17lld   ", fwActivHis.fwActHisEnt[i].timeStamp);
-                printf("%-5lld   ", fwActivHis.fwActHisEnt[i].powCycleCnt);
-                printf("%-11s   ", fwActivHis.fwActHisEnt[i].previousFW);
-                printf("%-8s  ", fwActivHis.fwActHisEnt[i].newFW);
-                printf("%-4d  ", fwActivHis.fwActHisEnt[i].slotNum);
-                printf("      0x%02x      ", fwActivHis.fwActHisEnt[i].commitActionType);
-                printf("  0x%02x   ", fwActivHis.fwActHisEnt[i].result);
-                printf("\n");
-            }
+        for (i = 0; i < fwActivHis.numValidFwActHisEnt; i++) {
+            printf("%-7d   ", fwActivHis.fwActHisEnt[i].fwActivCnt);
+            printf("%-17lld   ", fwActivHis.fwActHisEnt[i].timeStamp);
+            printf("%-5lld   ", fwActivHis.fwActHisEnt[i].powCycleCnt);
+            printf("%-11s   ", fwActivHis.fwActHisEnt[i].previousFW);
+            printf("%-8s  ", fwActivHis.fwActHisEnt[i].newFW);
+            printf("%-4d  ", fwActivHis.fwActHisEnt[i].slotNum);
+            printf("      0x%02x      ", fwActivHis.fwActHisEnt[i].commitActionType);
+            printf("  0x%02x   ", fwActivHis.fwActHisEnt[i].result);
+            printf("\n");
+        }
     }
     else{
         printf("%s\n", "Do not have valid FW Activation History");
@@ -1432,44 +1432,44 @@ static void json_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActi
 {
 	struct json_object *root;
 	root = json_create_object();
-    #if 0
-	__u32 correctPcieEc = 0;
-	__u32 uncorrectPcieEc = 0;
-	correctPcieEc = pcieErrorLog.BadDllpErrCnt + pcieErrorLog.BadTlpErrCnt
-		+ pcieErrorLog.RcvrErrCnt + pcieErrorLog.ReplayTOErrCnt
-		+ pcieErrorLog.ReplayNumRolloverErrCnt;
+    __u32 i;
+    //char buf[40];
 
-	uncorrectPcieEc = pcieErrorLog.FCProtocolErrCnt + pcieErrorLog.DllpProtocolErrCnt
-		+ pcieErrorLog.CmpltnTOErrCnt + pcieErrorLog.RcvrQOverflowErrCnt
-		+ pcieErrorLog.UnexpectedCplTlpErrCnt + pcieErrorLog.CplTlpURErrCnt
-		+ pcieErrorLog.CplTlpCAErrCnt + pcieErrorLog.ReqCAErrCnt
-		+ pcieErrorLog.ReqURErrCnt + pcieErrorLog.EcrcErrCnt
-		+ pcieErrorLog.MalformedTlpErrCnt + pcieErrorLog.CplTlpPoisonedErrCnt
-		+ pcieErrorLog.MemRdTlpPoisonedErrCnt;
+	struct json_object *historyLogPage;
+	
 
-	json_object_add_value_int(root, "PCIe Correctable Error Count", correctPcieEc);
-	json_object_add_value_int(root, "PCIe Un-Correctable Error Count", uncorrectPcieEc);
-	json_object_add_value_int(root, "Unsupported Request Error Status (URES)", pcieErrorLog.ReqURErrCnt);
-	json_object_add_value_int(root, "ECRC Error Status (ECRCES)", pcieErrorLog.EcrcErrCnt);
-	json_object_add_value_int(root, "Malformed TLP Status (MTS)", pcieErrorLog.MalformedTlpErrCnt);
-	json_object_add_value_int(root, "Receiver Overflow Status (ROS)", pcieErrorLog.RcvrQOverflowErrCnt);
-	json_object_add_value_int(root, "Unexpected Completion Status(UCS)", pcieErrorLog.UnexpectedCplTlpErrCnt);
-	json_object_add_value_int(root, "Completion Timeout Status (CTS)", pcieErrorLog.CmpltnTOErrCnt);
-	json_object_add_value_int(root, "Flow Control Protocol Error Status (FCPES)", pcieErrorLog.FCProtocolErrCnt);
-	json_object_add_value_int(root, "Poisoned TLP Status (PTS)", pcieErrorLog.MemRdTlpPoisonedErrCnt);
-	json_object_add_value_int(root, "Data Link Protocol Error Status(DLPES)", pcieErrorLog.DllpProtocolErrCnt);
-	json_object_add_value_int(root, "Replay Timer Timeout Status(RTS)", pcieErrorLog.ReplayTOErrCnt);
-	json_object_add_value_int(root, "Replay_NUM Rollover Status(RRS)", pcieErrorLog.ReplayNumRolloverErrCnt);
-	json_object_add_value_int(root, "Bad DLLP Status (BDS)", pcieErrorLog.BadDllpErrCnt);
-	json_object_add_value_int(root, "Bad TLP Status (BTS)", pcieErrorLog.BadTlpErrCnt);
-	json_object_add_value_int(root, "Receiver Error Status (RES)", pcieErrorLog.RcvrErrCnt);
-	json_object_add_value_int(root, "Cpl TLP Unsupported Request Error Count", pcieErrorLog.CplTlpURErrCnt);
-	json_object_add_value_int(root, "Cpl TLP Completion Abort Error Count", pcieErrorLog.CplTlpCAErrCnt);
-	json_object_add_value_int(root, "Cpl TLP Poisoned Error Count", pcieErrorLog.CplTlpPoisonedErrCnt);
-	json_object_add_value_int(root, "Request Completion Abort Error Count", pcieErrorLog.ReqCAErrCnt);
-	json_print_object(root, NULL);
-	printf("\n");
-    #endif
+	/*root = json_create_object(); */
+
+	historyLogPage = json_create_array();
+	json_object_add_value_array(root, "Seagate FW Activation History", historyLogPage);
+
+    if (fwActivHis.numValidFwActHisEnt > 0) {
+        
+        for (i = 0; i < fwActivHis.numValidFwActHisEnt; i++) {
+            struct json_object *lbaf = json_create_object();
+
+            json_object_add_value_int(lbaf, "Counter", fwActivHis.fwActHisEnt[i].fwActivCnt);
+            json_object_add_value_int(lbaf, "Timestamp", fwActivHis.fwActHisEnt[i].timeStamp);
+            json_object_add_value_int(lbaf, "PCC", fwActivHis.fwActHisEnt[i].powCycleCnt);
+            //memset(buf, 0, sizeof(buf));
+            //memcpy()
+            json_object_add_value_string(lbaf, "Previous_FW", fwActivHis.fwActHisEnt[i].previousFW);
+            json_object_add_value_string(lbaf, "New_FW", fwActivHis.fwActHisEnt[i].newFW);
+            json_object_add_value_int(lbaf, "Slot", fwActivHis.fwActHisEnt[i].slotNum);
+            json_object_add_value_int(lbaf, "Commit_Action", fwActivHis.fwActHisEnt[i].commitActionType);
+            json_object_add_value_int(lbaf, "Result", fwActivHis.fwActHisEnt[i].result);
+            
+            json_array_add_value_object(historyLogPage, lbaf);
+        }
+    }
+    else{
+        printf("%s\n", "Do not have valid FW Activation History");
+    }
+
+    json_print_object(root, NULL);
+
+    json_free_object(root);
+
 }
 
 static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -1518,6 +1518,79 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 /* EOF FW Activation History log information */
 
 
+static int clear_fw_activate_history(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+    const char *desc = "Clear FW Activation History for the given Seagate device ";
+	const char *save = "specifies that the controller shall save the attribute";
+	int err, fd;
+    struct nvme_id_ctrl ctrl;
+    char modelNo[40];
+	__u32 result;
+
+	struct config {
+		bool   save;
+	};
+
+	struct config cfg = {
+		.save         = 0,
+	};
+
+	OPT_ARGS(opts) = {
+		OPT_FLAG("save", 's', &cfg.save, save),
+		OPT_END()
+	};
+
+	fd = parse_and_open(argc, argv, desc, opts);
+	if (fd < 0) {
+		printf ("\nDevice not found \n");
+		return -1;
+	}
+
+    err = nvme_identify_ctrl(fd, &ctrl);
+	if (!err){
+		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
+    } else{
+        nvme_show_status(err);
+        return err;
+    }
+
+    if (stx_is_jag_pan(modelNo) == 0) {
+        printf ("\nDevice does not support Clear FW Activation History \n");
+    } else{
+
+        struct nvme_set_features_args args = {
+		.args_size	= sizeof(args),
+		.fd		    = fd,
+		.fid		= 0xC1,
+		.nsid		= 0,
+		.cdw11		= 0x80000000,
+		.cdw12		= 0,
+		.save		= 0,
+		.uuidx		= 0,
+		.cdw15		= 0,
+		.data_len	= 0,
+		.data		= NULL,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.result		= &result,
+	};
+	err = nvme_set_features(&args);
+	if (err)
+		fprintf(stderr, "%s: couldn't clear PCIe correctable errors \n",
+			__func__);
+        
+    }
+
+	if (err < 0) {
+		perror("set-feature");
+		return errno;
+	}
+
+	close(fd);
+	return err;
+
+}
+
+
 static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Clear Seagate PCIe Correctable counters for the given device ";
@@ -1555,7 +1628,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *c
     }
 
     if (stx_is_jag_pan(modelNo) == 0) {
-	err = nvme_set_features_simple(fd, 0xE1, 0, 0xCB, cfg.save, &result);
+        err = nvme_set_features_simple(fd, 0xE1, 0, 0xCB, cfg.save, &result);
     } else{
 
         struct nvme_set_features_args args = {
@@ -1979,3 +2052,14 @@ static int seagate_plugin_version(int argc, char **argv, struct command *cmd,
 	return 0;
 }
 /*EOF SEAGATE-PLUGIN Version */
+
+/*OCP SEAGATE-PLUGIN Version */
+static int stx_ocp_plugin_version(int argc, char **argv, struct command *cmd,
+			   struct plugin *plugin)
+{
+	printf("Seagate-OCP-Plugin version : %d.%d \n",
+		SEAGATE_OCP_PLUGIN_VERSION_MAJOR,
+		SEAGATE_OCP_PLUGIN_VERSION_MINOR);
+	return 0;
+}
+/*EOF OCP SEAGATE-PLUGIN Version */

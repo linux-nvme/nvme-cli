@@ -43,9 +43,10 @@ PLUGIN(NAME("seagate", "Seagate vendor specific extensions", NVME_VERSION),
 		ENTRY("vs-internal-log",                "Retrieve Seagate Controller-Initiated Telemetry in binary format",  vs_internal_log)
         ENTRY("vs-fw-activate-history",         "Retrieve the Firmware Activation History",             stx_vs_fw_activate_history)
         //ENTRY("vs-drive-info",                  "Outputs Seagate specific drive info",                  vs_drive_info)
-        //ENTRY("clear-fw-activate-history",      "Clear Firmware Activation History",                    clear_fw_activate_history)
+        ENTRY("clear-fw-activate-history",      "Clear Firmware Activation History",                    clear_fw_activate_history)
         //ENTRY("log-page-directory",             "Lists all the log pages",                              log_page_directory)
 		ENTRY("plugin-version",                 "Shows Seagate plugin's version information ",          seagate_plugin_version)
+        ENTRY("cloud-SSD-plugin-version",       "Shows OCP Seagate plugin's version information ",      stx_ocp_plugin_version)
 	)
 );
 
