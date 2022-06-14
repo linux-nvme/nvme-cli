@@ -6970,6 +6970,7 @@ enum nvme_io_opcode {
 /**
  * enum nvme_io_control_flags -
  * @NVME_IO_DTYPE_STREAMS:	Directive Type Streams
+ * @NVME_IO_STC:		Storage Tag Check
  * @NVME_IO_DEAC:		Deallocate
  * @NVME_IO_ZNS_APPEND_PIREMAP:	Protection Information Remap
  * @NVME_IO_PRINFO_PRCHK_REF:	Protection Information Check Reference Tag
@@ -6981,6 +6982,7 @@ enum nvme_io_opcode {
  */
 enum nvme_io_control_flags {
 	NVME_IO_DTYPE_STREAMS		= 1 << 4,
+	NVME_IO_STC 	    		= 1 << 8,
 	NVME_IO_DEAC			= 1 << 9,
 	NVME_IO_ZNS_APPEND_PIREMAP	= 1 << 9,
 	NVME_IO_PRINFO_PRCHK_REF	= 1 << 10,
