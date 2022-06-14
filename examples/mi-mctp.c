@@ -177,6 +177,7 @@ static const char *__copy_id_str(const void *field, size_t size,
 
 int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 {
+	struct nvme_identify_args id_args = { 0 };
 	struct nvme_mi_ctrl *ctrl;
 	struct nvme_id_ctrl id;
 	uint16_t ctrl_id;
@@ -202,9 +203,16 @@ int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 		return -1;
 	}
 
+	id_args.data = &id;
+	id_args.args_size = sizeof(id_args);
+	id_args.cns = NVME_IDENTIFY_CNS_CTRL;
+	id_args.nsid = NVME_NSID_NONE;
+	id_args.cntid = ctrl_id;
+	id_args.csi = NVME_CSI_NVM;
+
 	/* we only use the fields before rab; just request partial ID data */
-	rc = nvme_mi_admin_identify_ctrl_partial(ctrl, &id, 0,
-					 offsetof(struct nvme_id_ctrl, rab));
+	rc = nvme_mi_admin_identify_partial(ctrl, &id_args, 0,
+					    offsetof(struct nvme_id_ctrl, rab));
 	if (rc) {
 		warn("can't perform Admin Identify command");
 		return -1;

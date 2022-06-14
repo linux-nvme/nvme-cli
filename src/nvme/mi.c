@@ -146,10 +146,9 @@ static void nvme_mi_admin_init_resp(struct nvme_mi_resp *resp,
 	resp->hdr_len = sizeof(*hdr);
 }
 
-static int nvme_mi_admin_identify(nvme_mi_ctrl_t ctrl,
-				  enum nvme_identify_cns cns,
-				  __u16 cid, __u16 nsid, void *id,
-				  off_t offset, size_t size)
+int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
+				   struct nvme_identify_args *args,
+				   off_t offset, size_t size)
 {
 	struct nvme_mi_admin_resp_hdr resp_hdr;
 	struct nvme_mi_admin_req_hdr req_hdr;
@@ -157,12 +156,16 @@ static int nvme_mi_admin_identify(nvme_mi_ctrl_t ctrl,
 	struct nvme_mi_req req;
 	int rc;
 
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+
 	if (!size || size > 0xffffffff)
 		return -EINVAL;
 
 	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id, nvme_admin_identify);
-	req_hdr.cdw10 = cpu_to_le16(cid) << 16 | cpu_to_le16(cns);
-	req_hdr.cdw11 = cpu_to_le16(nsid);
+	req_hdr.cdw10 = cpu_to_le16(args->cntid) << 16 | cpu_to_le16(args->cns);
+	req_hdr.cdw11 = cpu_to_le16(args->nsid);
+	req_hdr.cdw14 = args->uuidx & 0xff;
 	req_hdr.dlen = cpu_to_le32(size & 0xffffffff);
 	req_hdr.flags = 0x1;
 	if (offset) {
@@ -173,14 +176,20 @@ static int nvme_mi_admin_identify(nvme_mi_ctrl_t ctrl,
 	nvme_mi_calc_req_mic(&req);
 
 	nvme_mi_admin_init_resp(&resp, &resp_hdr);
-	resp.data = id;
+	resp.data = args->data;
 	resp.data_len = size;
 
 	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
 	if (rc)
 		return rc;
 
-	/* check status, map to return value */
+	if (args->result)
+		*args->result = le32_to_cpu(resp_hdr.cdw0);
+
+	/* callers will expect a full response; if the data buffer isn't
+	 * fully valid, return an error */
+	if (resp.data_len != size)
+		return -EPROTO;
 
 	return 0;
 }
@@ -188,35 +197,15 @@ static int nvme_mi_admin_identify(nvme_mi_ctrl_t ctrl,
 int nvme_mi_admin_identify_ctrl(nvme_mi_ctrl_t ctrl,
 				struct nvme_id_ctrl *id)
 {
-	return nvme_mi_admin_identify(ctrl, NVME_IDENTIFY_CNS_CTRL,
-				      0, 0, id, 0, sizeof(*id));
-}
+	struct nvme_identify_args id_args = {
+		.args_size = sizeof(id_args),
+		.data = id,
+		.cns = NVME_IDENTIFY_CNS_CTRL,
+		.nsid = NVME_NSID_NONE,
+		.cntid = ctrl->id,
+	};
 
-int nvme_mi_admin_identify_ctrl_partial(nvme_mi_ctrl_t ctrl,
-					struct nvme_id_ctrl *id,
-					off_t offset, size_t size)
-{
-	void *buf;
-
-	if (offset > sizeof(*id))
-		return -EINVAL;
-	if (size > sizeof(*id))
-		return -EINVAL;
-	if (offset + size > sizeof(*id))
-		return -EINVAL;
-
-	buf = id;
-	buf += offset;
-
-	return nvme_mi_admin_identify(ctrl, NVME_IDENTIFY_CNS_CTRL,
-				      0, 0, buf, offset, size);
-}
-
-int nvme_mi_admin_identify_ctrl_list(nvme_mi_ctrl_t ctrl,
-				     struct nvme_ctrl_list *ctrllist)
-{
-	return nvme_mi_admin_identify(ctrl, NVME_IDENTIFY_CNS_CTRL_LIST,
-					 0, 0, ctrllist, 0, sizeof(*ctrllist));
+	return nvme_mi_admin_identify(ctrl, &id_args);
 }
 
 static int nvme_mi_read_data(nvme_mi_ep_t ep, __u32 cdw0,
