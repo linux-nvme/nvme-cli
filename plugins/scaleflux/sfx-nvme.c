@@ -822,16 +822,13 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 	int err = 0, fd;
 	char *desc = "query current capacity info";
 	const char *raw = "dump output in binary format";
-	const char *json= "Dump output in json format";
 	struct config {
 		bool  raw_binary;
-		bool  json;
 	};
 	struct config cfg;
 
 	OPT_ARGS(opts) = {
 		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
-		OPT_FLAG("json",	   'j', &cfg.json,		 json),
 		OPT_END()
 	};
 
@@ -841,11 +838,17 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 	}
 
 	if (nvme_query_cap(fd, 0xffffffff, sizeof(ctx), &ctx)) {
-	    perror("sfx-query-cap");
-	    return -1;
+		perror("sfx-query-cap");
+		err = -1;
 	}
 
-	show_cap_info(&ctx);
+	if (!err) {
+		if (!cfg.raw_binary) {
+			show_cap_info(&ctx);
+		} else {
+			d_raw((unsigned char *)&ctx, sizeof(ctx));
+		}
+	}
 	close(fd);
 	return err;
 }
@@ -938,8 +941,6 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 {
 	int err = -1, fd;
 	char *desc = "dynamic change capacity";
-	const char *raw = "dump output in binary format";
-	const char *json= "Dump output in json format";
 	const char *cap_gb = "cap size in GB";
 	const char *cap_byte = "cap size in byte";
 	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
@@ -950,8 +951,6 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 	struct config {
 		__u64 cap_in_byte;
 		__u32 capacity_in_gb;
-		bool  raw_binary;
-		bool  json;
 		bool  force;
 	};
 
@@ -965,8 +964,6 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 		OPT_UINT("cap",			'c',	&cfg.capacity_in_gb,	cap_gb),
 		OPT_SUFFIX("cap-byte",	'z',	&cfg.cap_in_byte,		cap_byte),
 		OPT_FLAG("force",		'f',	&cfg.force,				force),
-		OPT_FLAG("raw-binary",	'b',	&cfg.raw_binary,		raw),
-		OPT_FLAG("json",		'j',	&cfg.json,				json),
 		OPT_END()
 	};
 
