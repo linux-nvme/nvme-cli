@@ -241,6 +241,7 @@ incdir = include_directories(['ccan'])
 
 ################################################################################
 sources = [
+  'nbft.c',
   'fabrics.c',
   'nvme.c',
   'nvme-models.c',

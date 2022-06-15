@@ -37,6 +37,9 @@ SYNOPSIS
 		[--dump-config            | -O]
 		[--output-format=<fmt>    | -o <fmt>]
 		[--force]
+                [--nbft]
+                [--no-nbft]
+                [--nbft-path=<STR>]
 
 DESCRIPTION
 -----------
@@ -68,7 +71,7 @@ Note that the base NVMe specification defines the NQN (NVMe Qualified
 Name) format which an NVMe endpoint (device, subsystem, etc) must
 follow to guarantee a unique name under the NVMe standard.
 In particular, the Host NQN uniquely identifies the NVMe Host, and
-may be used by the the Discovery Controller to control what NVMe Target
+may be used by the Discovery Controller to control what NVMe Target
 resources are allocated to the NVMe Host for a connection.
 
 A Discovery Controller has it's own NQN defined in the NVMe-over-Fabrics
@@ -229,6 +232,16 @@ OPTIONS
 	Combined with --persistent flag, always create new
 	persistent discovery connection.
 
+--nbft::
+        Only look at NBFT tables
+
+--no-nbft::
+        Do not look at NBFT tables
+
+--nbft-path=<STR>::
+        Use a user-defined path to the NBFT tables
+
+
 EXAMPLES
 --------
 * Query the Discover Controller with IP4 address 192.168.1.3 for all
@@ -238,6 +251,18 @@ Port 4420 is used by default:
 ------------
 # nvme discover --transport=rdma --traddr=192.168.1.3 \
 --hostnqn=host1-rogue-nqn
+------------
++
+* Issue a 'nvme discover' command using the default system defined NBFT tables:
++
+-----------
+# nvme discover --nbft
+------------
++
+* Issue a 'nvme discover' command with a user-defined path for the NBFT table:
++
+-----------
+# nvme discover --nbft-path=/sys/firmware/acpi/tables/NBFT1
 ------------
 +
 * Issue a 'nvme discover' command using a @SYSCONFDIR@/nvme/discovery.conf file:
