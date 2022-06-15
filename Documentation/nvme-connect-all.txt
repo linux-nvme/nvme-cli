@@ -35,6 +35,9 @@ SYNOPSIS
 		[--tls                        ]
 		[--quiet                  | -S]
 		[--dump-config            | -O]
+                [--nbft]
+                [--no-nbft]
+                [--nbft-path=<STR>]
 
 DESCRIPTION
 -----------
@@ -198,6 +201,16 @@ OPTIONS
 --dump-config::
 	Print out resulting JSON configuration file to stdout.
 
+--nbft::
+        Only look at NBFT tables
+
+--no-nbft::
+        Do not look at NBFT tables
+
+--nbft-path=<STR>::
+        Use a user-defined path to the NBFT tables
+
+
 
 EXAMPLES
 --------
@@ -208,6 +221,18 @@ the RDMA network. Port 4420 is used by default:
 ------------
 # nvme connect-all --transport=rdma --traddr=192.168.1.3 \
 --hostnqn=host1-rogue-nqn
+------------
++
+* Issue a 'nvme connect-all' command using the default system defined NBFT tables:
++
+-----------
+# nvme connect-all --nbft
+------------
++
+* Issue a 'nvme connect-all' command with a user-defined path for the NBFT table:
++
+-----------
+# nvme connet-all --nbft-path=/sys/firmware/acpi/tables/NBFT1
 ------------
 +
 * Issue a 'nvme connect-all' command using a @SYSCONFDIR@/nvme/discovery.conf file:
