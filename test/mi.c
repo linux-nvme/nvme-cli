@@ -260,6 +260,60 @@ static void test_admin_id(nvme_mi_ep_t ep)
 	assert(rc == 0);
 }
 
+/* test: simple NVMe error response */
+static int test_admin_err_resp_cb(struct nvme_mi_ep *ep,
+				  struct nvme_mi_req *req,
+				  struct nvme_mi_resp *resp,
+				  void *data)
+{
+	__u8 ror, mt, *hdr;
+
+	assert(req->hdr->type == NVME_MI_MSGTYPE_NVME);
+
+	ror = req->hdr->nmp >> 7;
+	mt = req->hdr->nmp >> 3 & 0x7;
+	assert(ror == NVME_MI_ROR_REQ);
+	assert(mt == NVME_MI_MT_ADMIN);
+
+	/* do we have enough for a mi header? */
+	assert(req->hdr_len == sizeof(struct nvme_mi_admin_req_hdr));
+
+	/* inspect response as raw bytes */
+	hdr = (__u8 *)req->hdr;
+	assert(hdr[4] == nvme_admin_identify);
+
+	/* we need at least 8 bytes for error information */
+	assert(resp->hdr_len >= 8);
+
+	/* create error response */
+	hdr = (__u8 *)resp->hdr;
+	hdr[4] = 0x02; /* status: internal error */
+	hdr[5] = 0;
+	hdr[6] = 0;
+	hdr[7] = 0;
+	resp->hdr_len = 8;
+	resp->data_len = 0;
+
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+static void test_admin_err_resp(nvme_mi_ep_t ep)
+{
+	struct nvme_id_ctrl id;
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	test_set_transport_callback(ep, test_admin_err_resp_cb, NULL);
+
+	ctrl = nvme_mi_init_ctrl(ep, 1);
+	assert(ctrl);
+
+	rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+	assert(rc != 0);
+}
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -269,6 +323,7 @@ struct test {
 	DEFINE_TEST(transport_fail),
 	DEFINE_TEST(invalid_crc),
 	DEFINE_TEST(admin_id),
+	DEFINE_TEST(admin_err_resp),
 };
 
 static void print_log_buf(FILE *logfd)
