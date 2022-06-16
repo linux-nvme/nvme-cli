@@ -80,6 +80,17 @@ struct nvme_mi_transport_mctp {
 	int	sd;
 };
 
+static struct __mi_mctp_socket_ops ops = {
+	socket,
+	sendmsg,
+	recvmsg,
+};
+
+void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops)
+{
+	ops = *newops;
+}
+
 #define MCTP_DBUS_PATH "/xyz/openbmc_project/mctp"
 #define MCTP_DBUS_IFACE "xyz.openbmc_project.MCTP"
 #define MCTP_DBUS_IFACE_ENDPOINT "xyz.openbmc_project.MCTP.Endpoint"
@@ -133,7 +144,7 @@ static int nvme_mi_mctp_submit(struct nvme_mi_ep *ep,
 	req_msg.msg_iov = req_iov;
 	req_msg.msg_iovlen = i;
 
-	len = sendmsg(mctp->sd, &req_msg, 0);
+	len = ops.sendmsg(mctp->sd, &req_msg, 0);
 	if (len < 0) {
 		nvme_msg(ep->root, LOG_ERR,
 			 "Failure sending MCTP message: %m\n");
@@ -159,7 +170,7 @@ static int nvme_mi_mctp_submit(struct nvme_mi_ep *ep,
 	resp_msg.msg_iov = resp_iov;
 	resp_msg.msg_iovlen = 2;
 
-	len = recvmsg(mctp->sd, &resp_msg, 0);
+	len = ops.recvmsg(mctp->sd, &resp_msg, 0);
 
 	if (len < 0) {
 		nvme_msg(ep->root, LOG_ERR,
@@ -242,7 +253,7 @@ nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, __u8 eid)
 	mctp->net = netid;
 	mctp->eid = eid;
 
-	mctp->sd = socket(AF_MCTP, SOCK_DGRAM, 0);
+	mctp->sd = ops.socket(AF_MCTP, SOCK_DGRAM, 0);
 	if (mctp->sd < 0)
 		goto err_free_ep;
 

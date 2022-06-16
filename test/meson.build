@@ -47,3 +47,12 @@ mi = executable(
 )
 
 test('mi', mi)
+
+mi_mctp = executable(
+    'test-mi-mctp',
+    ['mi-mctp.c', 'utils.c'],
+    dependencies: libnvme_mi_test_dep,
+    include_directories: [incdir, internal_incdir],
+)
+
+test('mi-mctp', mi_mctp)

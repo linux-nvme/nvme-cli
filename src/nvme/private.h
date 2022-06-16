@@ -10,6 +10,7 @@
 #define _LIBNVME_PRIVATE_H
 
 #include <ccan/list/list.h>
+#include <sys/socket.h>
 
 #include "fabrics.h"
 #include "mi.h"
@@ -203,5 +204,15 @@ struct nvme_mi_ep *nvme_mi_init_ep(struct nvme_root *root);
 
 /* for tests, we need to calculate the correct MICs */
 __u32 nvme_mi_crc32_update(__u32 crc, void *data, size_t len);
+
+/* we have a facility to mock MCTP socket operations in the mi-mctp transport,
+ * using this ops type. This should only be used for test, and isn't exposed
+ * in the shared lib */;
+struct __mi_mctp_socket_ops {
+	int (*socket)(int, int, int);
+	ssize_t (*sendmsg)(int, const struct msghdr *, int);
+	ssize_t (*recvmsg)(int, struct msghdr *, int);
+};
+void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops);
 
 #endif /* _LIBNVME_PRIVATE_H */
