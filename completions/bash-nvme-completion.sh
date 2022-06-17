@@ -940,7 +940,7 @@ plugin_micron_opts () {
 	return 0
 }
 
-lugin_seagate_opts () {
+plugin_seagate_opts () {
     local opts=""
 	local compargs=""
 
