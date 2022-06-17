@@ -5,7 +5,8 @@
 # Kelly Kaoudis kelly.n.kaoudis at intel.com, Aug. 2015
 
 # Constant to indicate command has no options
-readonly NO_OPTS=""
+NO_OPTS=""
+readonly NO_OPTS
 
 # Associative array of plugins and associated subcommands
 # Order here is same as PLUGIN_OBJS in Makefile
