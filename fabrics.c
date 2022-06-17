@@ -108,6 +108,24 @@ static const match_table_t opt_tokens = {
 	{ OPT_ERR,		NULL		},
 };
 
+
+static inline void strchomp(char *s, int l)
+{
+	int j;
+
+	/*
+	 * make sure the string is not longer than l and
+	 * the last char is a '\0'.
+	 */
+	j = strnlen(s, l);
+	s[j] = '\0';
+
+	/* remove trailing whitespaces before the '\0'. */
+	l = j - 1;
+        while (l && s[l] == ' ')
+                s[l--] = '\0';
+}
+
 const char *arg_str(const char * const *strings,
 		size_t array_size, size_t idx)
 {
@@ -681,17 +699,6 @@ out:
 	return error;
 }
 
-static int space_strip_len(int max, const char *str)
-{
-	int i;
-
-	for (i = max - 1; i >= 0; i--)
-		if (str[i] != '\0' && str[i] != ' ')
-			break;
-
-	return i + 1;
-}
-
 static void strtolower(char *str)
 {
 	for ( ; *str; str++)
@@ -721,13 +728,9 @@ static void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec,
 		printf("subtype: %s\n", subtype_str(e->subtype));
 		printf("treq:    %s\n", treq_str(e->treq));
 		printf("portid:  %d\n", e->portid);
-		printf("trsvcid: %.*s\n",
-		       space_strip_len(NVMF_TRSVCID_SIZE, e->trsvcid),
-		       e->trsvcid);
+		printf("trsvcid: %.*s\n", NVMF_TRSVCID_SIZE - 1, e->trsvcid);
 		printf("subnqn:  %s\n", e->subnqn);
-		printf("traddr:  %.*s\n",
-		       space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
-		       e->traddr);
+		printf("traddr:  %.*s\n", NVMF_TRADDR_SIZE - 1, e->traddr);
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
@@ -769,9 +772,9 @@ static void json_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec,
 		struct nvmf_disc_rsp_page_entry *e = &log->entries[i];
 		struct json_object *entry = json_create_object();
 
-		nvme_strip_spaces(e->trsvcid, NVMF_TRSVCID_SIZE);
-		nvme_strip_spaces(e->subnqn, NVMF_NQN_SIZE);
-		nvme_strip_spaces(e->traddr, NVMF_TRADDR_SIZE);
+		strchomp(e->trsvcid, NVMF_TRSVCID_SIZE - 1);
+		strchomp(e->subnqn, NVMF_NQN_SIZE - 1);
+		strchomp(e->traddr, NVMF_TRADDR_SIZE - 1);
 
 		json_object_add_value_string(entry, "trtype",
 					     trtype_str(e->trtype));
@@ -1313,15 +1316,13 @@ retry:
 		case NVMF_ADDR_FAMILY_IP6:
 			/* FALLTHRU */
 			len = sprintf(p, ",traddr=%.*s",
-				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
-				      e->traddr);
+				      NVMF_TRADDR_SIZE - 1, e->traddr);
 			if (len < 0)
 				return -EINVAL;
 			p += len;
 
 			len = sprintf(p, ",trsvcid=%.*s",
-				      space_strip_len(NVMF_TRSVCID_SIZE, e->trsvcid),
-				      e->trsvcid);
+				      NVMF_TRSVCID_SIZE - 1, e->trsvcid);
 			if (len < 0)
 				return -EINVAL;
 			p += len;
@@ -1335,8 +1336,7 @@ retry:
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_FC:
 			len = sprintf(p, ",traddr=%.*s",
-				      space_strip_len(NVMF_TRADDR_SIZE, e->traddr),
-				      e->traddr);
+				      NVMF_TRADDR_SIZE - 1, e->traddr);
 			if (len < 0)
 				return -EINVAL;
 			p += len;
@@ -1417,7 +1417,8 @@ static bool should_connect(struct nvmf_disc_rsp_page_entry *entry)
 	if (!fabrics_cfg.matching_only || !fabrics_cfg.traddr)
 		return true;
 
-	len = space_strip_len(NVMF_TRADDR_SIZE, entry->traddr);
+	strchomp(entry->traddr, NVME_TRADDR_SIZE - 1);
+	len = strlen(entry->traddr);
 
 	dctrl_traddr = strdup(fabrics_cfg.traddr);
 	log_traddr = strndup(entry->traddr, len);
@@ -1457,9 +1458,7 @@ static int connect_ctrls(struct nvmf_disc_rsp_page_hdr *log, int numrec)
 			const char *traddr = log->entries[i].traddr;
 
 			msg(LOG_NOTICE, "traddr=%.*s is already connected\n",
-					space_strip_len(NVMF_TRADDR_SIZE,
-							traddr),
-					traddr);
+			    NVMF_TRADDR_SIZE - 1, traddr);
 			continue;
 		}
 
