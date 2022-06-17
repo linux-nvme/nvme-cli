@@ -177,13 +177,15 @@ static const char *__copy_id_str(const void *field, size_t size,
 
 int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 {
+	struct nvme_identify_args id_args = { 0 };
 	struct nvme_mi_ctrl *ctrl;
 	struct nvme_id_ctrl id;
 	uint16_t ctrl_id;
 	char buf[41];
+	bool partial;
 	int rc, tmp;
 
-	if (argc != 2) {
+	if (argc < 2) {
 		fprintf(stderr, "no controller ID specified\n");
 		return -1;
 	}
@@ -196,15 +198,33 @@ int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 
 	ctrl_id = tmp & 0xffff;
 
+	partial = argc > 2 && !strcmp(argv[2], "--partial");
+
 	ctrl = nvme_mi_init_ctrl(ep, tmp);
 	if (!ctrl) {
 		warn("can't create controller");
 		return -1;
 	}
 
-	/* we only use the fields before rab; just request partial ID data */
-	rc = nvme_mi_admin_identify_ctrl_partial(ctrl, &id, 0,
-					 offsetof(struct nvme_id_ctrl, rab));
+	id_args.data = &id;
+	id_args.args_size = sizeof(id_args);
+	id_args.cns = NVME_IDENTIFY_CNS_CTRL;
+	id_args.nsid = NVME_NSID_NONE;
+	id_args.cntid = ctrl_id;
+	id_args.csi = NVME_CSI_NVM;
+
+	/* for this example code, we can either do a full or partial identify;
+	 * since we're only printing the fields before the 'rab' member,
+	 * these will be equivalent, aside from the size of the MI
+	 * response.
+	 */
+	if (partial) {
+		rc = nvme_mi_admin_identify_partial(ctrl, &id_args, 0,
+					    offsetof(struct nvme_id_ctrl, rab));
+	} else {
+		rc = nvme_mi_admin_identify(ctrl, &id_args);
+	}
+
 	if (rc) {
 		warn("can't perform Admin Identify command");
 		return -1;
@@ -241,7 +261,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "where action is:\n"
 			"  info\n"
 			"  controllers\n"
-			"  identify <controller-id>\n");
+			"  identify <controller-id> [--partial]\n");
 		return EXIT_FAILURE;
 	}
 

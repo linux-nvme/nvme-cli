@@ -124,12 +124,60 @@ int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 					    struct nvme_mi_nvm_ss_health_status *nshds);
 
 /* Admin channel functions */
-int nvme_mi_admin_identify_ctrl(nvme_mi_ctrl_t ctrl,
-				struct nvme_id_ctrl *id);
-int nvme_mi_admin_identify_ctrl_partial(nvme_mi_ctrl_t ctrl,
-					struct nvme_id_ctrl *id,
-					off_t offset, size_t size);
-int nvme_mi_admin_identify_ctrl_list(nvme_mi_ctrl_t ctrl,
-				     struct nvme_ctrl_list *ctrllist);
+int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
+				   struct nvme_identify_args *args,
+				   off_t offset, size_t size);
+
+/* Helpers for identify commands */
+static inline int nvme_mi_admin_identify(nvme_mi_ctrl_t ctrl,
+					 struct nvme_identify_args *args)
+{
+	return nvme_mi_admin_identify_partial(ctrl, args,
+					      0, NVME_IDENTIFY_DATA_SIZE);
+}
+
+static inline int nvme_mi_admin_identify_cns_nsid(nvme_mi_ctrl_t ctrl,
+						  enum nvme_identify_cns cns,
+						  __u32 nsid, void *data)
+{
+	struct nvme_identify_args args = {
+		.result = NULL,
+		.data = data,
+		.args_size = sizeof(args),
+		.cns = cns,
+		.csi = NVME_CSI_NVM,
+		.nsid = nsid,
+		.cntid = NVME_CNTLID_NONE,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
+		.uuidx = NVME_UUID_NONE,
+	};
+
+	return nvme_mi_admin_identify(ctrl, &args);
+}
+
+static inline int nvme_mi_identify_ctrl(nvme_mi_ctrl_t ctrl,
+					struct nvme_id_ctrl *id)
+{
+	return nvme_mi_admin_identify_cns_nsid(ctrl, NVME_IDENTIFY_CNS_CTRL,
+					       NVME_NSID_NONE, id);
+}
+
+static inline int nvme_mi_identify_ctrl_list(nvme_mi_ctrl_t ctrl, __u16 cntid,
+					     struct nvme_ctrl_list *list)
+{
+	struct nvme_identify_args args = {
+		.result = NULL,
+		.data = list,
+		.args_size = sizeof(args),
+		.cns = NVME_IDENTIFY_CNS_CTRL_LIST,
+		.csi = NVME_CSI_NVM,
+		.nsid = NVME_NSID_NONE,
+		.cntid = cntid,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
+		.uuidx = NVME_UUID_NONE,
+	};
+
+	return nvme_mi_admin_identify(ctrl, &args);
+}
 
 #endif /* _LIBNVME_MI_MI_H */
