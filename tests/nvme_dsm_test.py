@@ -13,7 +13,6 @@ NVMe DSM Testcase:-
 
 """
 
-from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
 
@@ -27,17 +26,17 @@ class TestNVMeDsm(TestNVMe):
               - test_log_dir :  directory for logs, temp files.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeDsm """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.start_block = 0
         self.range = 0
         self.namespace = 1
         self.setup_log_dir(self.__class__.__name__)
 
-    def __del__(self):
+    def tearDown(self):
         """ Post Section for TestNVMeDsm """
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def dsm(self):
         """ Wrapper for nvme verify
@@ -54,4 +53,4 @@ class TestNVMeDsm(TestNVMe):
 
     def test_dsm(self):
         """ Testcase main """
-        assert_equal(self.dsm(), 0)
+        self.assertEqual(self.dsm(), 0)
