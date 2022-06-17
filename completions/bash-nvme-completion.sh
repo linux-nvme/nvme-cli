@@ -55,6 +55,7 @@ typeset -Ar _plugin_subcmds=(
 	[nvidia]="id-ctrl"
 	[ymtc]="smart-log-add"
 )
+readonly _plugin_subcmds
 
 # Associative array mapping plugins to coresponding option completions
 typeset -Ar _plugin_funcs=(
@@ -75,6 +76,7 @@ typeset -Ar _plugin_funcs=(
 	[nvidia]="plugin_nvidia_opts"
 	[ymtc]="plugin_ymtc_opts"
 )
+readonly _plugin_funcs
 
 # Top level commands
 _cmds="list list-subsys id-ctrl id-ns \
