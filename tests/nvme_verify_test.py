@@ -13,7 +13,6 @@ NVMe Verify Testcase:-
 
 """
 
-from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
 
@@ -26,17 +25,17 @@ class TestNVMeVerify(TestNVMe):
               - test_log_dir : directory for logs, temp files.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeVerify """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.start_block = 0
         self.block_count = 0
         self.namespace = 1
         self.setup_log_dir(self.__class__.__name__)
 
-    def __del__(self):
+    def tearDown(self):
         """ Post Section for TestNVMeVerify """
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def verify(self):
         """ Wrapper for nvme verify
@@ -53,4 +52,4 @@ class TestNVMeVerify(TestNVMe):
 
     def test_verify(self):
         """ Testcase main """
-        assert_equal(self.verify(), 0)
+        self.assertEqual(self.verify(), 0)

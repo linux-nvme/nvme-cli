@@ -14,7 +14,6 @@ NVMe LBA Status Log Testcase :-
 
 import subprocess
 
-from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
 
@@ -24,9 +23,9 @@ class TestNVMeGetLbaStatusCmd(TestNVMe):
     Represents Get LBA Status test.
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeGetLbaStatusCmd. """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.start_lba = 0
         self.block_count = 0
         self.namespace = 1
@@ -35,13 +34,13 @@ class TestNVMeGetLbaStatusCmd(TestNVMe):
         self.range_len = 1
         self.setup_log_dir(self.__class__.__name__)
 
-    def __del__(self):
+    def tearDown(self):
         """
         Post Section for TestNVMeGetLbaStatusCmd.
 
             - Call super class's destructor.
         """
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def get_lba_status(self):
         """ Wrapper for executing nvme get-lba-status.
@@ -68,4 +67,4 @@ class TestNVMeGetLbaStatusCmd(TestNVMe):
 
     def test_get_lba_status(self):
         """ Testcase main """
-        assert_equal(self.get_lba_status(), 0)
+        self.assertEqual(self.get_lba_status(), 0)
