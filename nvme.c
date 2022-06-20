@@ -5520,7 +5520,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 	if (cfg.deac)
 		control |= NVME_IO_DEAC;
 	if (cfg.storage_tag_check)
-		control |= NVME_SC_STORAGE_TAG_CHECK;
+		control |= NVME_IO_STC;
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(fd, &cfg.namespace_id);
 		if (err < 0) {
@@ -6445,7 +6445,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	if (cfg.force_unit_access)
 		control |= NVME_IO_FUA;
 	if (cfg.storage_tag_check)
-		control |= NVME_SC_STORAGE_TAG_CHECK;
+		control |= NVME_IO_STC;
 	if (cfg.dtype) {
 		if (cfg.dtype > 0xf) {
 			fprintf(stderr, "Invalid directive type, %x\n",
@@ -6748,7 +6748,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 	if (cfg.force_unit_access)
 		control |= NVME_IO_FUA;
 	if (cfg.storage_tag_check)
-		control |= NVME_SC_STORAGE_TAG_CHECK;
+		control |= NVME_IO_STC;
 
 	if (!cfg.namespace_id) {
 		err = nvme_get_nsid(fd, &cfg.namespace_id);

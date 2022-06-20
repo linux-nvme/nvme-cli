@@ -357,6 +357,7 @@ static __u8 wdc_lat_mon_guid[WDC_C3_GUID_LENGTH]    = { 0x92, 0x7a, 0xc0, 0x8c, 
 #define WDC_LOG_ID_C0                           0xC0
 #define WDC_LOG_ID_C1                           0xC1
 #define WDC_LOG_ID_C2                           WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_OPCODE
+#define WDC_LOG_ID_C3                           0xC3
 #define WDC_LOG_ID_C4                           0xC4
 #define WDC_LOG_ID_C5                           0xC5
 #define WDC_LOG_ID_C6                           0xC6
@@ -1517,6 +1518,12 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 		case WDC_NVME_SN640_DEV_ID_2:
 		/* FALLTHRU */
         case WDC_NVME_SN640_DEV_ID_3:
+        /* FALLTHRU */
+        case WDC_NVME_SN560_DEV_ID_1:
+        /* FALLTHRU */
+        case WDC_NVME_SN560_DEV_ID_2:
+        /* FALLTHRU */
+        case WDC_NVME_SN560_DEV_ID_3:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
@@ -1601,9 +1608,6 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, int fd) {
 		case WDC_NVME_SN650_DEV_ID_3:
 		case WDC_NVME_SN650_DEV_ID_4:
 		case WDC_NVME_SN655_DEV_ID:
-		case WDC_NVME_SN560_DEV_ID_1:
-		case WDC_NVME_SN560_DEV_ID_2:
-		case WDC_NVME_SN560_DEV_ID_3:
 		case WDC_NVME_SN550_DEV_ID:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, fd, WDC_NVME_GET_EOL_STATUS_LOG_OPCODE) == true) {
@@ -6176,6 +6180,9 @@ static int wdc_get_c0_log_page(nvme_root_t r, int fd, char *format,
 	case WDC_NVME_SN650_DEV_ID_3:
 	case WDC_NVME_SN650_DEV_ID_4:
 	case WDC_NVME_SN655_DEV_ID:
+	case WDC_NVME_SN560_DEV_ID_1:
+	case WDC_NVME_SN560_DEV_ID_2:
+	case WDC_NVME_SN560_DEV_ID_3:
 		cust_id = wdc_get_fw_cust_id(r, fd);
 		if (cust_id == WDC_INVALID_CUSTOMER_ID) {
 			fprintf(stderr, "%s: ERROR : WDC : invalid customer id\n", __func__);
@@ -9306,6 +9313,7 @@ static const char *nvme_log_id_to_string(__u8 log_id)
 		case WDC_LOG_ID_C0:             return "WDC Vendor Unique Log ID C0";
 		case WDC_LOG_ID_C1:             return "WDC Vendor Unique Log ID C1";
 		case WDC_LOG_ID_C2:             return "WDC Vendor Unique Log ID C2";
+		case WDC_LOG_ID_C3:             return "WDC Vendor Unique Log ID C3";
 		case WDC_LOG_ID_C4:             return "WDC Vendor Unique Log ID C4";
 		case WDC_LOG_ID_C5:             return "WDC Vendor Unique Log ID C5";
 		case WDC_LOG_ID_C6:             return "WDC Vendor Unique Log ID C6";

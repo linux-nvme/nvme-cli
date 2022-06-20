@@ -26,7 +26,7 @@ Logger for NVMe Test Framwwork:-
 import sys
 
 
-class TestNVMeLogger(object):
+class TestNVMeLogger():
     """ Represents Logger for NVMe Testframework.  """
 
     def __init__(self, log_file_path):

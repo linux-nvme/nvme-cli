@@ -27,7 +27,6 @@ NVMe Smart Log Verification Testcase:-
 
 """
 
-from nose.tools import assert_equal
 from nvme_test import TestNVMe
 
 
@@ -39,18 +38,18 @@ class TestNVMeSmartLogCmd(TestNVMe):
         - Attributes:
     """
 
-    def __init__(self):
+    def setUp(self):
         """ Pre Section for TestNVMeSmartLogCmd """
-        TestNVMe.__init__(self)
+        super().setUp()
         self.setup_log_dir(self.__class__.__name__)
 
-    def __del__(self):
+    def tearDown(self):
         """
         Post Section for TestNVMeSmartLogCmd
 
             - Call super class's destructor.
         """
-        TestNVMe.__del__(self)
+        super().tearDown()
 
     def get_smart_log_ctrl(self):
         """ Wrapper for executing smart-log on controller.
@@ -84,7 +83,7 @@ class TestNVMeSmartLogCmd(TestNVMe):
 
     def test_smart_log(self):
         """ Testcase main """
-        assert_equal(self.get_smart_log_ctrl(), 0)
+        self.assertEqual(self.get_smart_log_ctrl(), 0)
         smlp = self.supp_check_id_ctrl("lpa")
         if smlp & 0x1 == True:
-            assert_equal(self.get_smart_log_all_ns(), 0)
+            self.assertEqual(self.get_smart_log_all_ns(), 0)

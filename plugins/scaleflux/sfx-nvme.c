@@ -30,8 +30,8 @@
 #define IDEMA_CAP(exp_GB)			(((__u64)exp_GB - 50ULL) * 1953504ULL + 97696368ULL)
 #define IDEMA_CAP2GB(exp_sector)		(((__u64)exp_sector - 97696368ULL) / 1953504ULL + 50ULL)
 
-#define VANDA_MAJOR_IDX			0
-#define VANDA_MINOR_IDX			0
+#define VANDA_MAJOR_IDX		0
+#define VANDA_MINOR_IDX		0
 
 #define MYRTLE_MAJOR_IDX        4
 #define MYRTLE_MINOR_IDX        1
@@ -838,7 +838,7 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 	}
 
 	if (nvme_query_cap(fd, 0xffffffff, sizeof(ctx), &ctx)) {
-	    perror("sfx-query-cap");
+		perror("sfx-query-cap");
 		err = -1;
 	}
 

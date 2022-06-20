@@ -5,7 +5,8 @@
 # Kelly Kaoudis kelly.n.kaoudis at intel.com, Aug. 2015
 
 # Constant to indicate command has no options
-readonly NO_OPTS=""
+NO_OPTS=""
+readonly NO_OPTS
 
 # Associative array of plugins and associated subcommands
 # Order here is same as PLUGIN_OBJS in Makefile
@@ -54,6 +55,7 @@ typeset -Ar _plugin_subcmds=(
 	[nvidia]="id-ctrl"
 	[ymtc]="smart-log-add"
 )
+readonly _plugin_subcmds
 
 # Associative array mapping plugins to coresponding option completions
 typeset -Ar _plugin_funcs=(
@@ -74,6 +76,7 @@ typeset -Ar _plugin_funcs=(
 	[nvidia]="plugin_nvidia_opts"
 	[ymtc]="plugin_ymtc_opts"
 )
+readonly _plugin_funcs
 
 # Top level commands
 _cmds="list list-subsys id-ctrl id-ns \
@@ -939,7 +942,7 @@ plugin_micron_opts () {
 	return 0
 }
 
-lugin_seagate_opts () {
+plugin_seagate_opts () {
     local opts=""
 	local compargs=""
 
