@@ -163,14 +163,16 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 		return -EINVAL;
 
 	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id, nvme_admin_identify);
-	req_hdr.cdw10 = cpu_to_le16(args->cntid) << 16 | cpu_to_le16(args->cns);
-	req_hdr.cdw11 = cpu_to_le16(args->nsid);
-	req_hdr.cdw14 = args->uuidx & 0xff;
+	req_hdr.cdw1 = cpu_to_le32(args->nsid);
+	req_hdr.cdw10 = cpu_to_le32(args->cntid << 16 | args->cns);
+	req_hdr.cdw11 = cpu_to_le32((args->csi & 0xff) << 24 |
+				    args->cns_specific_id);
+	req_hdr.cdw14 = cpu_to_le32(args->uuidx);
 	req_hdr.dlen = cpu_to_le32(size & 0xffffffff);
 	req_hdr.flags = 0x1;
 	if (offset) {
 		req_hdr.flags |= 0x2;
-		req_hdr.doff = offset;
+		req_hdr.doff = cpu_to_le32(offset);
 	}
 
 	nvme_mi_calc_req_mic(&req);
