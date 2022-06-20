@@ -155,15 +155,16 @@ static inline int nvme_mi_admin_identify_cns_nsid(nvme_mi_ctrl_t ctrl,
 	return nvme_mi_admin_identify(ctrl, &args);
 }
 
-static inline int nvme_mi_identify_ctrl(nvme_mi_ctrl_t ctrl,
-					struct nvme_id_ctrl *id)
+static inline int nvme_mi_admin_identify_ctrl(nvme_mi_ctrl_t ctrl,
+					      struct nvme_id_ctrl *id)
 {
 	return nvme_mi_admin_identify_cns_nsid(ctrl, NVME_IDENTIFY_CNS_CTRL,
 					       NVME_NSID_NONE, id);
 }
 
-static inline int nvme_mi_identify_ctrl_list(nvme_mi_ctrl_t ctrl, __u16 cntid,
-					     struct nvme_ctrl_list *list)
+static inline int nvme_mi_admin_identify_ctrl_list(nvme_mi_ctrl_t ctrl,
+						   __u16 cntid,
+						   struct nvme_ctrl_list *list)
 {
 	struct nvme_identify_args args = {
 		.result = NULL,

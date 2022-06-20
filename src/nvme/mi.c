@@ -163,14 +163,16 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 		return -EINVAL;
 
 	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id, nvme_admin_identify);
-	req_hdr.cdw10 = cpu_to_le16(args->cntid) << 16 | cpu_to_le16(args->cns);
-	req_hdr.cdw11 = cpu_to_le16(args->nsid);
-	req_hdr.cdw14 = args->uuidx & 0xff;
+	req_hdr.cdw1 = cpu_to_le32(args->nsid);
+	req_hdr.cdw10 = cpu_to_le32(args->cntid << 16 | args->cns);
+	req_hdr.cdw11 = cpu_to_le32((args->csi & 0xff) << 24 |
+				    args->cns_specific_id);
+	req_hdr.cdw14 = cpu_to_le32(args->uuidx);
 	req_hdr.dlen = cpu_to_le32(size & 0xffffffff);
 	req_hdr.flags = 0x1;
 	if (offset) {
 		req_hdr.flags |= 0x2;
-		req_hdr.doff = offset;
+		req_hdr.doff = cpu_to_le32(offset);
 	}
 
 	nvme_mi_calc_req_mic(&req);
@@ -192,20 +194,6 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 		return -EPROTO;
 
 	return 0;
-}
-
-int nvme_mi_admin_identify_ctrl(nvme_mi_ctrl_t ctrl,
-				struct nvme_id_ctrl *id)
-{
-	struct nvme_identify_args id_args = {
-		.args_size = sizeof(id_args),
-		.data = id,
-		.cns = NVME_IDENTIFY_CNS_CTRL,
-		.nsid = NVME_NSID_NONE,
-		.cntid = ctrl->id,
-	};
-
-	return nvme_mi_admin_identify(ctrl, &id_args);
 }
 
 static int nvme_mi_read_data(nvme_mi_ep_t ep, __u32 cdw0,
