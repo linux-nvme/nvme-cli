@@ -194,20 +194,6 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 	return 0;
 }
 
-int nvme_mi_admin_identify_ctrl(nvme_mi_ctrl_t ctrl,
-				struct nvme_id_ctrl *id)
-{
-	struct nvme_identify_args id_args = {
-		.args_size = sizeof(id_args),
-		.data = id,
-		.cns = NVME_IDENTIFY_CNS_CTRL,
-		.nsid = NVME_NSID_NONE,
-		.cntid = ctrl->id,
-	};
-
-	return nvme_mi_admin_identify(ctrl, &id_args);
-}
-
 static int nvme_mi_read_data(nvme_mi_ep_t ep, __u32 cdw0,
 			     void *data, size_t *data_len)
 {
