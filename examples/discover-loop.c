@@ -12,6 +12,8 @@
  * system (no existing connection required). The output will look more
  * interesting with more targets.
  */
+#define __SANE_USERSPACE_TYPES__
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

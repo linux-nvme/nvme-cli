@@ -11,6 +11,8 @@
  * for your pci device found in /sys/class/nvme/nvmeX/device/resource0
  */
 
+#define __SANE_USERSPACE_TYPES__
+
 #include <fcntl.h>
 #include <inttypes.h>
 #include <libnvme.h>
