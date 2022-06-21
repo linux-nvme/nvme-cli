@@ -194,11 +194,26 @@ static void nvme_mi_mctp_close(struct nvme_mi_ep *ep)
 	free(ep->transport_data);
 }
 
+static int nvme_mi_mctp_desc_ep(struct nvme_mi_ep *ep, char *buf, size_t len)
+{
+	struct nvme_mi_transport_mctp *mctp;
+
+	if (ep->transport != &nvme_mi_transport_mctp)
+		return -1;
+
+	mctp = ep->transport_data;
+
+	snprintf(buf, len, "net %d eid %d", mctp->net, mctp->eid);
+
+	return 0;
+}
+
 static const struct nvme_mi_transport nvme_mi_transport_mctp = {
 	.name = "mctp",
 	.mic_enabled = true,
 	.submit = nvme_mi_mctp_submit,
 	.close = nvme_mi_mctp_close,
+	.desc_ep = nvme_mi_mctp_desc_ep,
 };
 
 nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, __u8 eid)

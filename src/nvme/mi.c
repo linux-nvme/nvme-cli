@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <ccan/endian/endian.h>
 
@@ -615,4 +616,34 @@ void nvme_mi_close(nvme_mi_ep_t ep)
 void nvme_mi_close_ctrl(nvme_mi_ctrl_t ctrl)
 {
 	free(ctrl);
+}
+
+char *nvme_mi_endpoint_desc(nvme_mi_ep_t ep)
+{
+	char tsbuf[101], *s = NULL;
+	size_t tslen;
+	int rc;
+
+	rc = -1;
+	memset(tsbuf, 0, sizeof(tsbuf));
+	if (ep->transport->desc_ep)
+		rc = ep->transport->desc_ep(ep, tsbuf, sizeof(tsbuf) - 1);
+
+	if (!rc) {
+		/* don't overflow if the transport gives us an invalid string */
+		tsbuf[sizeof(tsbuf)-1] = '\0';
+		tslen = strlen(tsbuf);
+	} else {
+		tslen = 0;
+	}
+
+	if (tslen)
+		rc = asprintf(&s, "%s: %s", ep->transport->name, tsbuf);
+	else
+		rc = asprintf(&s, "%s endpoint", ep->transport->name);
+
+	if (rc < 0)
+		return NULL;
+
+	return s;
 }

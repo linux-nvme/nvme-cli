@@ -15,6 +15,7 @@ LIBNVME_MI_1_1 {
 		nvme_mi_admin_xfer;
 		nvme_mi_admin_security_send;
 		nvme_mi_admin_security_recv;
+		nvme_mi_endpoint_desc;
 		nvme_mi_open_mctp;
 	local:
 		*;

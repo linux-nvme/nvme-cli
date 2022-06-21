@@ -337,6 +337,19 @@ nvme_mi_ctrl_t nvme_mi_init_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id);
  */
 void nvme_mi_close_ctrl(nvme_mi_ctrl_t ctrl);
 
+/**
+ * nvme_mi_endpoint_desc - Get a string describing a MI endpoint.
+ * @ep: endpoint to describe
+ *
+ * Generates a human-readable string describing the endpoint, with possibly
+ * transport-specific data. The string is allocated during the call, and the
+ * caller is responsible for free()-ing the string.
+ *
+ * Return: a newly-allocated string containing the endpoint description, or
+ *         NULL on failure.
+ */
+char *nvme_mi_endpoint_desc(nvme_mi_ep_t ep);
+
 /* MI Command API: nvme_mi_mi_ prefix */
 
 /**

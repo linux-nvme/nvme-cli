@@ -24,6 +24,7 @@ typedef int (*test_submit_cb)(struct nvme_mi_ep *ep,
 
 struct test_transport_data {
 	unsigned int	magic;
+	bool		named;
 	test_submit_cb	submit_cb;
 	void		*submit_cb_data;
 };
@@ -55,6 +56,21 @@ static void test_transport_close(struct nvme_mi_ep *ep)
 	free(tpd);
 }
 
+static int test_transport_desc_ep(struct nvme_mi_ep *ep,
+				    char *buf, size_t len)
+{
+	struct test_transport_data *tpd = ep->transport_data;
+
+	assert(tpd->magic == test_transport_magic);
+
+	if (!tpd->named)
+		return -1;
+
+	snprintf(buf, len, "test endpoint 0x%x", tpd->magic);
+
+	return 0;
+}
+
 /* internal test helper to generate correct response crc */
 static void test_transport_resp_calc_mic(struct nvme_mi_resp *resp)
 {
@@ -72,6 +88,7 @@ static const struct nvme_mi_transport test_transport = {
 	.mic_enabled = true,
 	.submit = test_transport_submit,
 	.close = test_transport_close,
+	.desc_ep = test_transport_desc_ep,
 };
 
 static void test_set_transport_callback(nvme_mi_ep_t ep, test_submit_cb cb,
@@ -96,6 +113,7 @@ nvme_mi_ep_t nvme_mi_open_test(nvme_root_t root)
 	assert(tpd);
 
 	tpd->magic = test_transport_magic;
+	tpd->named = true;
 
 	ep->transport = &test_transport;
 	ep->transport_data = tpd;
@@ -171,6 +189,26 @@ static void test_transport_fail(nvme_mi_ep_t ep)
 	test_set_transport_callback(ep, test_transport_fail_cb, NULL);
 	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
 	assert(rc != 0);
+}
+
+static void test_transport_describe(nvme_mi_ep_t ep)
+{
+	struct test_transport_data *tpd;
+	char *str;
+
+	tpd = (struct test_transport_data *)ep->transport_data;
+
+	tpd->named = false;
+	str = nvme_mi_endpoint_desc(ep);
+	assert(str);
+	assert(!strcmp(str, "test-mi endpoint"));
+	free(str);
+
+	tpd->named = true;
+	str = nvme_mi_endpoint_desc(ep);
+	assert(str);
+	assert(!strcmp(str, "test-mi: test endpoint 0x74657374"));
+	free(str);
 }
 
 /* test: invalid crc */
@@ -321,6 +359,7 @@ struct test {
 } tests[] = {
 	DEFINE_TEST(read_mi_data),
 	DEFINE_TEST(transport_fail),
+	DEFINE_TEST(transport_describe),
 	DEFINE_TEST(invalid_crc),
 	DEFINE_TEST(admin_id),
 	DEFINE_TEST(admin_err_resp),

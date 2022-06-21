@@ -180,6 +180,7 @@ struct nvme_mi_transport {
 		      struct nvme_mi_req *req,
 		      struct nvme_mi_resp *resp);
 	void (*close)(struct nvme_mi_ep *ep);
+	int (*desc_ep)(struct nvme_mi_ep *ep, char *buf, size_t len);
 };
 
 struct nvme_mi_ep {
