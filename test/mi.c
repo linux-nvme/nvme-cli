@@ -121,6 +121,37 @@ nvme_mi_ep_t nvme_mi_open_test(nvme_root_t root)
 	return ep;
 }
 
+unsigned int count_root_eps(nvme_root_t root)
+{
+	unsigned int i = 0;
+	nvme_mi_ep_t ep;
+
+	nvme_mi_for_each_endpoint(root, ep)
+		i++;
+
+	return i;
+}
+
+/* test that the root->endpoints list is updated on endpoint
+ * creation/destruction */
+static void test_endpoint_lifetime(nvme_mi_ep_t ep)
+{
+	nvme_root_t root = ep->root;
+	unsigned int count;
+	nvme_mi_ep_t ep2;
+
+	count = count_root_eps(root);
+	assert(count == 1);
+
+	ep2 = nvme_mi_open_test(root);
+	count = count_root_eps(root);
+	assert(count == 2);
+
+	nvme_mi_close(ep2);
+	count = count_root_eps(root);
+	assert(count == 1);
+}
+
 /* test: basic read MI datastructure command */
 static int test_read_mi_data_cb(struct nvme_mi_ep *ep,
 				 struct nvme_mi_req *req,
@@ -357,6 +388,7 @@ struct test {
 	const char *name;
 	void (*fn)(nvme_mi_ep_t);
 } tests[] = {
+	DEFINE_TEST(endpoint_lifetime),
 	DEFINE_TEST(read_mi_data),
 	DEFINE_TEST(transport_fail),
 	DEFINE_TEST(transport_describe),

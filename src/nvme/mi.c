@@ -39,6 +39,11 @@ nvme_root_t nvme_mi_create_root(FILE *fp, int log_level)
 
 void nvme_mi_free_root(nvme_root_t root)
 {
+	nvme_mi_ep_t ep, tmp;
+
+	nvme_mi_for_each_endpoint_safe(root, ep, tmp)
+		nvme_mi_close(ep);
+
 	free(root);
 }
 
@@ -49,6 +54,8 @@ struct nvme_mi_ep *nvme_mi_init_ep(nvme_root_t root)
 	ep = calloc(1, sizeof(*ep));
 	list_node_init(&ep->root_entry);
 	ep->root = root;
+
+	list_add(&root->endpoints, &ep->root_entry);
 
 	return ep;
 }

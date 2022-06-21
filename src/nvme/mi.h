@@ -317,6 +317,18 @@ nvme_mi_ep_t nvme_mi_next_endpoint(nvme_root_t m, nvme_mi_ep_t e);
 	for (e = nvme_mi_first_endpoint(m); e != NULL;	\
 	     e = nvme_mi_next_endpoint(m, e))
 
+/**
+ * nvme_mi_for_each_endpoint_safe - Iterator for NVMe-MI endpoints, allowing
+ * deletion during traversal
+ * @m: &nvme_root_t containing endpoints
+ * @e: &nvme_mi_ep_t object, set on each iteration
+ * @_e: &nvme_mi_ep_t object used as temporary storage
+ */
+#define nvme_mi_for_each_endpoint_safe(m, e, _e)			      \
+	for (e = nvme_mi_first_endpoint(m), _e = nvme_mi_next_endpoint(m, e); \
+	     e != NULL;							      \
+	     e = _e, _e = nvme_mi_next_endpoint(m, e))
+
 struct nvme_mi_ctrl;
 
 /**
