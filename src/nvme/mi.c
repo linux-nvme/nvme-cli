@@ -146,6 +146,53 @@ static void nvme_mi_admin_init_resp(struct nvme_mi_resp *resp,
 	resp->hdr_len = sizeof(*hdr);
 }
 
+int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
+		       struct nvme_mi_admin_req_hdr *admin_req,
+		       size_t req_data_size,
+		       struct nvme_mi_admin_resp_hdr *admin_resp,
+		       off_t resp_data_offset,
+		       size_t *resp_data_size)
+{
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+
+	if (*resp_data_size > 0xffffffff)
+		return -EINVAL;
+	if (resp_data_offset > 0xffffffff)
+		return -EINVAL;
+
+	admin_req->hdr.type = NVME_MI_MSGTYPE_NVME;
+	admin_req->hdr.nmp = (NVME_MI_ROR_REQ << 7) |
+				(NVME_MI_MT_ADMIN << 3);
+	memset(&req, 0, sizeof(req));
+	req.hdr = &admin_req->hdr;
+	req.hdr_len = sizeof(*admin_req);
+	req.data = admin_req + 1;
+	req.data_len = req_data_size;
+
+	nvme_mi_calc_req_mic(&req);
+
+	memset(&resp, 0, sizeof(resp));
+	resp.hdr = &admin_resp->hdr;
+	resp.hdr_len = sizeof(*admin_resp);
+	resp.data = admin_resp + 1;
+	resp.data_len = *resp_data_size;
+
+	/* limit the response size, specify offset */
+	admin_req->flags = 0x3;
+	admin_req->dlen = cpu_to_le32(resp.data_len & 0xffffffff);
+	admin_req->doff = cpu_to_le32(resp_data_offset & 0xffffffff);
+
+	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	*resp_data_size = resp.data_len;
+
+	return 0;
+}
+
 int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 				   struct nvme_identify_args *args,
 				   off_t offset, size_t size)
@@ -192,6 +239,206 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 	 * fully valid, return an error */
 	if (resp.data_len != size)
 		return -EPROTO;
+
+	return 0;
+}
+
+/* retrieves a MCTP-messsage-sized chunk of log page data. offset and len are
+ * specified within the args->data area */
+static int __nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
+					const struct nvme_get_log_args *args,
+					off_t offset, size_t *lenp, bool final)
+{
+	struct nvme_mi_admin_resp_hdr resp_hdr;
+	struct nvme_mi_admin_req_hdr req_hdr;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	size_t len;
+	__u32 ndw;
+	int rc;
+
+	/* MI spec requires that the data length field is less than or equal
+	 * to 4096 */
+	len = *lenp;
+	if (!len || len > 4096 || len < 4)
+		return -EINVAL;
+
+	if (offset < 0 || offset >= len)
+		return -EINVAL;
+
+	ndw = (len >> 2) - 1;
+
+	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id, nvme_admin_get_log_page);
+	req_hdr.cdw1 = cpu_to_le32(args->nsid);
+	req_hdr.cdw10 = cpu_to_le32((ndw & 0xffff) << 16 |
+				    ((!final || args->rae) ? 1 : 0) << 15 |
+				    args->lsp << 8 |
+				    (args->lid & 0xff));
+	req_hdr.cdw11 = cpu_to_le32(args->lsi << 16 |
+				    ndw >> 16);
+	req_hdr.cdw12 = cpu_to_le32(args->lpo & 0xffffffff);
+	req_hdr.cdw13 = cpu_to_le32(args->lpo >> 32);
+	req_hdr.cdw14 = cpu_to_le32(args->csi << 24 |
+				    (args->ot ? 1 : 0) << 23 |
+				    args->uuidx);
+	req_hdr.flags = 0x1;
+	req_hdr.dlen = cpu_to_le32(len & 0xffffffff);
+	if (offset) {
+		req_hdr.flags |= 0x2;
+		req_hdr.doff = cpu_to_le32(offset);
+	}
+
+	nvme_mi_calc_req_mic(&req);
+
+	nvme_mi_admin_init_resp(&resp, &resp_hdr);
+	resp.data = args->log + offset;
+	resp.data_len = len;
+
+	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
+	*lenp = resp.data_len;
+
+	return 0;
+}
+
+int nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
+			       struct nvme_get_log_args *args)
+{
+	const size_t xfer_size = 4096;
+	off_t xfer_offset;
+	int rc = 0;
+
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+
+	for (xfer_offset = 0; xfer_offset < args->len;) {
+		size_t tmp, cur_xfer_size = xfer_size;
+		bool final;
+
+		if (xfer_offset + cur_xfer_size > args->len)
+			cur_xfer_size = args->len - xfer_offset;
+
+		tmp = cur_xfer_size;
+
+		final = xfer_offset + cur_xfer_size >= args->len;
+
+		rc = __nvme_mi_admin_get_log_page(ctrl, args, xfer_offset,
+						  &tmp, final);
+		if (rc)
+			break;
+
+		xfer_offset += tmp;
+		/* if we returned less data than expected, consider that
+		 * the end of the log page */
+		if (tmp != cur_xfer_size)
+			break;
+	}
+
+	if (!rc)
+		args->len = xfer_offset;
+
+	return rc;
+}
+
+int nvme_mi_admin_security_send(nvme_mi_ctrl_t ctrl,
+				struct nvme_security_send_args *args)
+{
+
+	struct nvme_mi_admin_resp_hdr resp_hdr;
+	struct nvme_mi_admin_req_hdr req_hdr;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+
+	if (args->data_len > 4096)
+		return -EINVAL;
+
+	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id,
+			       nvme_admin_security_send);
+
+	req_hdr.cdw10 = cpu_to_le32(args->secp << 24 |
+				    args->spsp0 << 16 |
+				    args->spsp1 << 8 |
+				    args->nssf);
+
+	req_hdr.cdw11 = cpu_to_le32(args->data_len & 0xffffffff);
+
+	req_hdr.flags = 0x1;
+	req_hdr.dlen = cpu_to_le32(args->data_len & 0xffffffff);
+	req.data = args->data;
+	req.data_len = args->data_len;
+
+	nvme_mi_calc_req_mic(&req);
+
+	nvme_mi_admin_init_resp(&resp, &resp_hdr);
+
+	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
+	if (args->result)
+		*args->result = le32_to_cpu(resp_hdr.cdw0);
+
+	return 0;
+}
+
+int nvme_mi_admin_security_recv(nvme_mi_ctrl_t ctrl,
+				struct nvme_security_receive_args *args)
+{
+
+	struct nvme_mi_admin_resp_hdr resp_hdr;
+	struct nvme_mi_admin_req_hdr req_hdr;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+
+	if (args->data_len > 4096)
+		return -EINVAL;
+
+	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id,
+			       nvme_admin_security_recv);
+
+	req_hdr.cdw10 = cpu_to_le32(args->secp << 24 |
+				    args->spsp0 << 16 |
+				    args->spsp1 << 8 |
+				    args->nssf);
+
+	req_hdr.cdw11 = cpu_to_le32(args->data_len & 0xffffffff);
+
+	req_hdr.flags = 0x1;
+	req_hdr.dlen = cpu_to_le32(args->data_len & 0xffffffff);
+
+	nvme_mi_calc_req_mic(&req);
+
+	nvme_mi_admin_init_resp(&resp, &resp_hdr);
+	resp.data = args->data;
+	resp.data_len = args->data_len;
+
+	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
+	if (args->result)
+		*args->result = resp_hdr.cdw0;
+
+	args->data_len = resp.data_len;
 
 	return 0;
 }

@@ -124,6 +124,18 @@ int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 					    struct nvme_mi_nvm_ss_health_status *nshds);
 
 /* Admin channel functions */
+
+/* "raw" admin transfer. req_data_size and resp_data_size are the sizes of
+ * the data portion of the payload, so do not include the length of
+ * the header, and start at 0 for no payload.
+ */
+int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
+		       struct nvme_mi_admin_req_hdr *admin_req,
+		       size_t req_data_size,
+		       struct nvme_mi_admin_resp_hdr *admin_resp,
+		       off_t resp_data_offset,
+		       size_t *resp_data_size);
+
 int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 				   struct nvme_identify_args *args,
 				   off_t offset, size_t size);
@@ -180,5 +192,25 @@ static inline int nvme_mi_admin_identify_ctrl_list(nvme_mi_ctrl_t ctrl,
 
 	return nvme_mi_admin_identify(ctrl, &args);
 }
+
+/**
+ * Retreives log page data as specified by @args. On return, @args->len is
+ * updated to the amount of log data written to @args->log.
+ *
+ * This request may be implemented as multiple log page commands, in order
+ * to fit within MI message-size limits.
+ *
+ * @ctrl:	MI controller
+ * @args:	Log page request parameters
+ */
+int nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
+			       struct nvme_get_log_args *args);
+
+int nvme_mi_admin_security_send(nvme_mi_ctrl_t ctrl,
+				struct nvme_security_send_args *args);
+
+int nvme_mi_admin_security_recv(nvme_mi_ctrl_t ctrl,
+				struct nvme_security_receive_args *args);
+
 
 #endif /* _LIBNVME_MI_MI_H */

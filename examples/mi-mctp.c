@@ -11,6 +11,7 @@
  */
 
 #include <assert.h>
+#include <ctype.h>
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -240,10 +241,280 @@ int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 	return 0;
 }
 
+void fhexdump(FILE *fp, const unsigned char *buf, int len)
+{
+	const int row_len = 16;
+	int i, j;
+
+	for (i = 0; i < len; i += row_len) {
+		char hbuf[row_len * strlen("00 ") + 1];
+		char cbuf[row_len + strlen("|") + 1];
+
+		for (j = 0; (j < row_len) && ((i+j) < len); j++) {
+			unsigned char c = buf[i + j];
+
+			sprintf(hbuf + j * 3, "%02x ", c);
+
+			if (!isprint(c))
+				c = '.';
+
+			sprintf(cbuf + j, "%c", c);
+		}
+
+		strcat(cbuf, "|");
+
+		fprintf(fp, "%08x  %*s |%s\n", i,
+				0 - (int)sizeof(hbuf) + 1, hbuf, cbuf);
+	}
+}
+
+void hexdump(const unsigned char *buf, int len)
+{
+	fhexdump(stdout, buf, len);
+}
+
+int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
+{
+	struct nvme_get_log_args args = { 0 };
+	struct nvme_mi_ctrl *ctrl;
+	uint8_t buf[512];
+	uint16_t ctrl_id;
+	int rc, tmp;
+
+	if (argc < 2) {
+		fprintf(stderr, "no controller ID specified\n");
+		return -1;
+	}
+
+	tmp = atoi(argv[1]);
+	if (tmp < 0 || tmp > 0xffff) {
+		fprintf(stderr, "invalid controller ID\n");
+		return -1;
+	}
+
+	ctrl_id = tmp & 0xffff;
+
+	args.args_size = sizeof(args);
+	args.log = buf;
+	args.len = sizeof(buf);
+
+	if (argc > 2) {
+		tmp = atoi(argv[2]);
+		args.lid = tmp & 0xff;
+	} else {
+		args.lid = 0x1;
+	}
+
+	ctrl = nvme_mi_init_ctrl(ep, ctrl_id);
+	if (!ctrl) {
+		warn("can't create controller");
+		return -1;
+	}
+
+	rc = nvme_mi_admin_get_log_page(ctrl, &args);
+	if (rc) {
+		warn("can't perform Get Log page command");
+		return -1;
+	}
+
+	printf("Get log page (log id = 0x%02x) data:\n", args.lid);
+	hexdump(buf, args.len);
+
+	return 0;
+}
+
+int do_admin_raw(nvme_mi_ep_t ep, int argc, char **argv)
+{
+	struct nvme_mi_admin_req_hdr req;
+	struct nvme_mi_admin_resp_hdr *resp;
+	struct nvme_mi_ctrl *ctrl;
+	size_t resp_data_len;
+	unsigned long tmp;
+	uint8_t buf[512];
+	uint16_t ctrl_id;
+	uint8_t opcode;
+	__le32 *cdw;
+	int i, rc;
+
+	if (argc < 2) {
+		fprintf(stderr, "no controller ID specified\n");
+		return -1;
+	}
+
+	if (argc < 3) {
+		fprintf(stderr, "no opcode specified\n");
+		return -1;
+	}
+
+	tmp = atoi(argv[1]);
+	if (tmp < 0 || tmp > 0xffff) {
+		fprintf(stderr, "invalid controller ID\n");
+		return -1;
+	}
+	ctrl_id = tmp & 0xffff;
+
+	tmp = atoi(argv[2]);
+	if (tmp < 0 || tmp > 0xff) {
+		fprintf(stderr, "invalid opcode\n");
+		return -1;
+	}
+	opcode = tmp & 0xff;
+
+	memset(&req, 0, sizeof(req));
+	req.opcode = opcode;
+	req.ctrl_id = cpu_to_le16(ctrl_id);
+
+	/* The cdw10 - cdw16 fields are contiguous in req; set from argv. */
+	cdw = (void *)&req + offsetof(typeof(req), cdw10);
+	for (i = 0; i < 6; i++) {
+		if (argc >= 4 + i)
+			tmp = strtoul(argv[3 + i], NULL, 0);
+		else
+			tmp = 0;
+		*cdw = cpu_to_le32(tmp & 0xffffffff);
+		cdw++;
+	}
+
+	printf("Admin request:\n");
+	printf(" opcode: 0x%02x\n", req.opcode);
+	printf(" ctrl:   0x%04x\n", le16_to_cpu(req.ctrl_id));
+	printf(" cdw10:   0x%08x\n", le32_to_cpu(req.cdw10));
+	printf(" cdw11:   0x%08x\n", le32_to_cpu(req.cdw11));
+	printf(" cdw12:   0x%08x\n", le32_to_cpu(req.cdw12));
+	printf(" cdw13:   0x%08x\n", le32_to_cpu(req.cdw13));
+	printf(" cdw14:   0x%08x\n", le32_to_cpu(req.cdw14));
+	printf(" cdw15:   0x%08x\n", le32_to_cpu(req.cdw15));
+	printf(" raw:\n");
+	hexdump((void *)&req, sizeof(req));
+
+	memset(buf, 0, sizeof(buf));
+	resp = (void *)buf;
+
+	ctrl = nvme_mi_init_ctrl(ep, ctrl_id);
+	if (!ctrl) {
+		warn("can't create controller");
+		return -1;
+	}
+
+	resp_data_len = sizeof(buf) - sizeof(*resp);
+
+	rc = nvme_mi_admin_xfer(ctrl, &req, 0, resp, 0, &resp_data_len);
+	if (rc) {
+		warn("nvme_admin_xfer failed: %d", rc);
+		return -1;
+	}
+
+	printf("Admin response:\n");
+	printf(" Status: 0x%02x\n", resp->status);
+	printf(" cdw0:   0x%08x\n", le32_to_cpu(resp->cdw0));
+	printf(" cdw1:   0x%08x\n", le32_to_cpu(resp->cdw1));
+	printf(" cdw3:   0x%08x\n", le32_to_cpu(resp->cdw3));
+	printf(" data [%zd bytes]\n", resp_data_len);
+
+	hexdump(buf + sizeof(*resp), resp_data_len);
+	return 0;
+}
+
+static struct {
+	uint8_t id;
+	const char *name;
+} sec_protos[] = {
+	{ 0x00, "Security protocol information" },
+	{ 0xea, "NVMe" },
+	{ 0xec, "JEDEC Universal Flash Storage" },
+	{ 0xed, "SDCard TrustedFlash Security" },
+	{ 0xee, "IEEE 1667" },
+	{ 0xef, "ATA Device Server Password Security" },
+};
+
+static const char *sec_proto_description(uint8_t id)
+{
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(sec_protos); i++) {
+		if (sec_protos[i].id == id)
+			return sec_protos[i].name;
+	}
+
+	if (id >= 0xf0)
+		return "Vendor specific";
+
+	return "unknown";
+}
+
+int do_security_info(nvme_mi_ep_t ep, int argc, char **argv)
+{
+	struct nvme_security_receive_args args = { 0 };
+	nvme_mi_ctrl_t ctrl;
+	int i, rc, n_proto;
+	unsigned long tmp;
+	uint16_t ctrl_id;
+	struct {
+		uint8_t		rsvd[6];
+		uint16_t	len;
+		uint8_t		protocols[256];
+	} proto_info;
+
+	if (argc != 2) {
+		fprintf(stderr, "no controller ID specified\n");
+		return -1;
+	}
+
+	tmp = atoi(argv[1]);
+	if (tmp < 0 || tmp > 0xffff) {
+		fprintf(stderr, "invalid controller ID\n");
+		return -1;
+	}
+
+	ctrl_id = tmp & 0xffff;
+
+	ctrl = nvme_mi_init_ctrl(ep, ctrl_id);
+	if (!ctrl) {
+		warn("can't create controller");
+		return -1;
+	}
+
+	/* protocol 0x00, spsp 0x0000: retrieve supported protocols */
+	args.args_size = sizeof(args);
+	args.data = &proto_info;
+	args.data_len = sizeof(proto_info);
+
+	rc = nvme_mi_admin_security_recv(ctrl, &args);
+	if (rc) {
+		warnx("can't perform Security Receive command: rc %d", rc);
+		return -1;
+	}
+
+	if (args.data_len < 6) {
+		warnx("Short response in security receive command (%d bytes)",
+		      args.data_len);
+		return -1;
+	}
+
+	n_proto = be16_to_cpu(proto_info.len);
+	if (args.data_len < 6 + n_proto) {
+		warnx("Short response in security receive command (%d bytes), "
+		      "for %d protocols", args.data_len, n_proto);
+		return -1;
+	}
+
+	printf("Supported protocols:\n");
+	for (i = 0; i < n_proto; i++) {
+		uint8_t id = proto_info.protocols[i];
+		printf("  0x%02x: %s\n", id, sec_proto_description(id));
+	}
+
+	return 0;
+}
+
+
 enum action {
 	ACTION_INFO,
 	ACTION_CONTROLLERS,
 	ACTION_IDENTIFY,
+	ACTION_GET_LOG_PAGE,
+	ACTION_ADMIN_RAW,
+	ACTION_SECURITY_INFO,
 };
 
 int main(int argc, char **argv)
@@ -261,7 +532,11 @@ int main(int argc, char **argv)
 		fprintf(stderr, "where action is:\n"
 			"  info\n"
 			"  controllers\n"
-			"  identify <controller-id> [--partial]\n");
+			"  identify <controller-id> [--partial]\n"
+			"  get-log-page <controller-id> [<log-id>]\n"
+			"  admin <controller-id> <opcode> [<cdw10>, <cdw11>, ...]\n"
+			"  security-info <controller-id>\n"
+			);
 		return EXIT_FAILURE;
 	}
 
@@ -283,6 +558,12 @@ int main(int argc, char **argv)
 			action = ACTION_CONTROLLERS;
 		} else if (!strcmp(action_str, "identify")) {
 			action = ACTION_IDENTIFY;
+		} else if (!strcmp(action_str, "get-log-page")) {
+			action = ACTION_GET_LOG_PAGE;
+		} else if (!strcmp(action_str, "admin")) {
+			action = ACTION_ADMIN_RAW;
+		} else if (!strcmp(action_str, "security-info")) {
+			action = ACTION_SECURITY_INFO;
 		} else {
 			fprintf(stderr, "invalid action '%s'\n", action_str);
 			return EXIT_FAILURE;
@@ -306,6 +587,15 @@ int main(int argc, char **argv)
 		break;
 	case ACTION_IDENTIFY:
 		rc = do_identify(ep, argc, argv);
+		break;
+	case ACTION_GET_LOG_PAGE:
+		rc = do_get_log_page(ep, argc, argv);
+		break;
+	case ACTION_ADMIN_RAW:
+		rc = do_admin_raw(ep, argc, argv);
+		break;
+	case ACTION_SECURITY_INFO:
+		rc = do_security_info(ep, argc, argv);
 		break;
 	}
 
