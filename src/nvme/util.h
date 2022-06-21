@@ -156,7 +156,7 @@ void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 int nvme_get_feature_length(int fid, __u32 cdw11, __u32 *len);
 
 /**
- * nvme_get_directive_receive_length() -
+ * nvme_get_directive_receive_length() - Get directive receive length
  * @dtype: Directive type, see &enum nvme_directive_dtype
  * @doper: Directive receive operation, see &enum nvme_directive_receive_doper
  * @len:   On success, set to this directives payload length in bytes.
@@ -559,8 +559,8 @@ struct nvmf_ext_attr *nvmf_exat_ptr_next(struct nvmf_ext_attr *p);
 /**
  * enum nvme_version - Selector for version to be returned by @nvme_get_version
  *
- * NVME_VERSION_PROJECT:	Project release version
- * NVME_VERSION_GIT:		Git reference
+ * @NVME_VERSION_PROJECT:	Project release version
+ * @NVME_VERSION_GIT:		Git reference
  */
 enum nvme_version {
 	NVME_VERSION_PROJECT	= 0,

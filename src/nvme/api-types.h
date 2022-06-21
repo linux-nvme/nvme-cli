@@ -102,6 +102,7 @@ struct nvme_get_log_args {
  * @nsid:	Namespace ID, if applicable
  * @cdw11:	Value to set the feature to
  * @cdw12:	Feature specific command dword12 field
+ * @cdw13:	Feature specific command dword13 field
  * @cdw15:	Feature specific command dword15 field
  * @data_len:	Length of feature data, if applicable, in bytes
  * @save:	Save value across power states
@@ -167,6 +168,7 @@ struct nvme_get_features_args {
  * @pil:	Protection information location (beginning or end), true if end
  * @ses:	Secure erase settings
  * @lbaf:	Logical block address format least significant 4 bits
+ * @rsvd1:	Reserved
  * @lbafu:	Logical block address format most significant 2 bits
  */
 struct nvme_format_nvm_args {
@@ -586,6 +588,7 @@ struct nvme_virtual_mgmt_args {
  *		to use end-to-end protection information.
  * @dspec:	Directive specific value
  * @dsm:	Data set management attributes, see &enum nvme_io_dsm_flags
+ * @rsvd1:	Reserved
  * @reftag_u64:	This field specifies the variable sized Expected Initial
  *		Logical Block Reference Tag (EILBRT) or Initial Logical Block
  *		Reference Tag (ILBRT). It is the 8 byte version required for
@@ -862,6 +865,7 @@ struct nvme_zns_mgmt_recv_args {
  * @control:
  * @lbat:	Logical block application tag
  * @lbatm:	Logical block application tag mask
+ * @rsvd1:	Reserved
  * @ilbrt_u64:	Initial logical block reference tag - 8 byte
  *              version required for enhanced protection info
  *

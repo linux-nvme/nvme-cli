@@ -232,7 +232,7 @@ nvme_path_t nvme_namespace_first_path(nvme_ns_t ns);
  *
  * Return: Next &nvme_path_t object of an @ns iterator
  */
-nvme_path_t nvme_namespace_next_path(nvme_ns_t c, nvme_path_t p);
+nvme_path_t nvme_namespace_next_path(nvme_ns_t ns, nvme_path_t p);
 
 /**
  * nvme_lookup_ctrl() - Lookup nvme_ctrl_t object
@@ -423,7 +423,7 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 
 /**
  * nvme_namespace_for_each_path_safe() - Traverse paths
- * @ns:	Namespace instance
+ * @n:	Namespace instance
  * @p:	&nvme_path_t object
  * @_p:	A &nvme_path_t_node to use as temporary storage
  */
@@ -435,12 +435,12 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 
 /**
  * nvme_namespace_for_each_path() - Traverse paths
- * @ns:	Namespace instance
+ * @n:	Namespace instance
  * @p:	&nvme_path_t object
  */
-#define nvme_namespace_for_each_path(c, p)			\
-	for (p = nvme_namespace_first_path(c); p != NULL;	\
-		p = nvme_namespace_next_path(c, p))
+#define nvme_namespace_for_each_path(n, p)			\
+	for (p = nvme_namespace_first_path(n); p != NULL;	\
+		p = nvme_namespace_next_path(n, p))
 
 /**
  * nvme_ns_get_fd() - Get associated filedescriptor

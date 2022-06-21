@@ -208,7 +208,7 @@ enum nvme_register_offsets {
  * specific transport. For example, BPMBL(Boot Partition Memory Buffer
  * Location) register is not supported by fabrics, but it can be checked here.
  *
- * Returns true if given offset is 64bit register, otherwise it returns false.
+ * Returns: true if given offset is 64bit register, otherwise it returns false.
  */
 static inline bool nvme_is_64bit_reg(__u32 offset)
 {
@@ -427,7 +427,7 @@ enum nvme_cmbsz {
  * nvme_cmb_size() - Calculate size of the controller memory buffer
  * @cmbsz:	Value from controller register %NVME_REG_CMBSZ
  *
- * Returns size of controller memory buffer in bytes
+ * Returns: size of controller memory buffer in bytes
  */
 static inline __u64 nvme_cmb_size(__u32 cmbsz)
 {
@@ -567,7 +567,7 @@ enum nvme_pmrebs {
  * 		     buffer
  * @pmrebs:	Value from controller register %NVME_REG_PMREBS
  *
- * Returns size of controller persistent memory buffer in bytes
+ * Returns: size of controller persistent memory buffer in bytes
  */
 static inline __u64 nvme_pmr_size(__u32 pmrebs)
 {
@@ -593,7 +593,7 @@ enum nvme_pmrswtp {
  * nvme_pmr_throughput() - Calculate throughput of persistent memory buffer
  * @pmrswtp:	Value from controller register %NVME_REG_PMRSWTP
  *
- * Returns throughput of controller persistent memory buffer in bytes/second
+ * Returns: throughput of controller persistent memory buffer in bytes/second
  */
 static inline __u64 nvme_pmr_throughput(__u32 pmrswtp)
 {
@@ -646,6 +646,8 @@ enum nvme_psd_ps {
 /**
  * nvme_psd_power_scale() - power scale occupies the upper 3 bits
  * @ps: power scale value
+ *
+ * Returns: power scale value
  */
 static inline unsigned int nvme_psd_power_scale(__u8 ps)
 {
@@ -679,7 +681,7 @@ enum nvme_psd_workload {
 };
 
 /**
- * struct nvme_id_psd -
+ * struct nvme_id_psd - Power Managmenet data structure
  * @mp:	   Maximum Power indicates the sustained maximum power consumed by the
  * 	   NVM subsystem in this power state. The power in Watts is equal to
  * 	   the value in this field multiplied by the scale specified in the Max
@@ -1270,9 +1272,9 @@ enum nvme_id_ctrl_oacs {
  * 				    firmware slots that the controller supports.
  * @NVME_CTRL_FRMW_FW_ACT_NO_RESET: If set, the controller supports firmware
  * 				    activation without a reset.
- * @NVME_CTRL_FRMW_FW_MP_UP_DETECTION: If set, the controller is able to detect
- * 				       overlapping firmware/boot partition
- * 				       image update.
+ * @NVME_CTRL_FRMW_MP_UP_DETECTION: If set, the controller is able to detect
+ * 				    overlapping firmware/boot partition
+ * 				    image update.
  */
 enum nvme_id_ctrl_frmw {
 	NVME_CTRL_FRMW_1ST_RO			= 1 << 0,
@@ -1542,7 +1544,7 @@ enum nvme_id_ctrl_fna {
 };
 
 /**
- * enum nvme_id_ctrl_vwc -
+ * enum nvme_id_ctrl_vwc - Volatile write cache
  * @NVME_CTRL_VWC_PRESENT: If set, indicates a volatile write cache is present.
  * 			   If a volatile write cache is present, then the host
  * 			   controls whether the volatile write cache is enabled
@@ -2034,7 +2036,7 @@ enum nvme_id_ns_attr {
 };
 
 /**
- * struct nvme_ns_id_desc -
+ * struct nvme_ns_id_desc - Namespace identifier type descriptor
  * @nidt: Namespace Identifier Type, see &enum nvme_ns_id_desc_nidt
  * @nidl: Namespace Identifier Length contains the length in bytes of the
  * 	  &struct nvme_id_ns.nid.
@@ -2100,7 +2102,7 @@ struct nvme_nvmset_attr {
 };
 
 /**
- * struct nvme_id_nvmset_list -
+ * struct nvme_id_nvmset_list - NVM set list
  * @nid:	Nvmset id
  * @rsvd1:	Reserved
  * @ent:	nvmset id list
@@ -2112,7 +2114,7 @@ struct nvme_id_nvmset_list {
 };
 
 /**
- * struct nvme_id_independent_id_ns -
+ * struct nvme_id_independent_id_ns - Identify - I/O Command Set Independent Identify Namespace Data Structure
  * @nsfeat:	common namespace features
  * @nmic:	Namespace Multi-path I/O and Namespace
  * 		Sharing Capabilities
@@ -2141,7 +2143,7 @@ struct nvme_id_independent_id_ns {
 };
 
 /**
- * struct nvme_id_ns_granularity_desc -
+ * struct nvme_id_ns_granularity_desc -  Namespace Granularity Descriptor
  * @nszegran:	Namespace Size Granularity
  * @ncapgran:	Namespace Capacity Granularity
  */
@@ -2151,7 +2153,7 @@ struct nvme_id_ns_granularity_desc {
 };
 
 /**
- * struct nvme_id_ns_granularity_list -
+ * struct nvme_id_ns_granularity_list - Namespace Granularity List
  * @attributes:		Namespace Granularity Attributes
  * @num_descriptors:	Number of Descriptors
  * @rsvd5:		reserved
@@ -2167,7 +2169,7 @@ struct nvme_id_ns_granularity_list {
 };
 
 /**
- * struct nvme_id_uuid_list_entry -
+ * struct nvme_id_uuid_list_entry - UUID List Entry
  * @header:	UUID Lists Entry Header
  * @rsvd1:	reserved
  * @uuid:	128-bit Universally Unique Identifier
@@ -2179,7 +2181,7 @@ struct nvme_id_uuid_list_entry {
 };
 
 /**
- * enum nvme_id_uuid -
+ * enum nvme_id_uuid - Identifier Association
  * @NVME_ID_UUID_HDR_ASSOCIATION_MASK:
  * @NVME_ID_UUID_ASSOCIATION_NONE:
  * @NVME_ID_UUID_ASSOCIATION_VENDOR:
@@ -2193,7 +2195,7 @@ enum nvme_id_uuid {
 };
 
 /**
- * struct nvme_id_uuid_list -
+ * struct nvme_id_uuid_list - UUID list
  * @rsvd0:	reserved
  * @entry:	UUID list entry
  */
@@ -2203,7 +2205,7 @@ struct nvme_id_uuid_list {
 };
 
 /**
- * struct nvme_ctrl_list -
+ * struct nvme_ctrl_list - Controller List
  * @num:	Number of Identifiers
  * @identifier:	NVM subsystem unique controller identifier
  */
@@ -2213,7 +2215,7 @@ struct nvme_ctrl_list {
 };
 
 /**
- * struct nvme_ns_list -
+ * struct nvme_ns_list - Namespace List
  * @ns:	Namespace Identifier
  */
 struct nvme_ns_list {
@@ -2221,7 +2223,7 @@ struct nvme_ns_list {
 };
 
 /**
- * struct nvme_id_ctrl_nvm -
+ * struct nvme_id_ctrl_nvm - I/O Command Set Specific Identify Controller data structure
  * @vsl:	Verify Size Limit
  * @wzsl:	Write Zeroes Size Limit
  * @wusl:	Write Uncorrectable Size Limit
@@ -2241,7 +2243,7 @@ struct nvme_id_ctrl_nvm {
 };
 
 /**
- * struct nvme_nvm_id_ns -
+ * struct nvme_nvm_id_ns - NVME Command Set I/O Command Set Specific Identify Namespace Data Structure
  * @lbstm:	Logical Block Storage Tag Mask
  * @pic:	Protection Information Capabilities
  * @rsvd9:	Reserved
@@ -2257,7 +2259,7 @@ struct nvme_nvm_id_ns {
 };
 
 /**
- * struct nvme_zns_lbafe -
+ * struct nvme_zns_lbafe - LBA Format Extension Data Structure
  * @zsze:	Zone Size
  * @zdes:	Zone Descriptor Extension Size
  * @rsvd9:	reserved
@@ -2269,8 +2271,7 @@ struct nvme_zns_lbafe {
 };
 
 /**
- * struct nvme_zns_id_ns -  Zoned Namespace Command Set Specific
- *			    Identify Namespace Data Structure
+ * struct nvme_zns_id_ns -  Zoned Namespace Command Set Specific  Identify Namespace Data Structure
  * @zoc:     Zone Operation Characteristics
  * @ozcs:    Optional Zoned Command Support
  * @mar:     Maximum Active Resources
@@ -2314,9 +2315,9 @@ struct nvme_zns_id_ns {
 };
 
 /**
- * struct nvme_zns_id_ctrl -
- * @zasl:
- * @rsvd1: Reserved
+ * struct nvme_zns_id_ctrl -  I/O Command Set Specific Identify Controller Data Structure for the Zoned Namespace Command Set
+ * @zasl:	Zone Append Size Limit
+ * @rsvd1:	Reserved
  */
 struct nvme_zns_id_ctrl {
 	__u8	zasl;
@@ -2324,7 +2325,7 @@ struct nvme_zns_id_ctrl {
 };
 
 /**
- * struct nvme_primary_ctrl_cap -
+ * struct nvme_primary_ctrl_cap -  Identify - Controller Capabilities Structure
  * @cntlid:	Controller Identifier
  * @portid:	Port Identifier
  * @crt:	Controller Resource Types
@@ -2366,7 +2367,7 @@ struct nvme_primary_ctrl_cap {
 };
 
 /**
- * struct nvme_secondary_ctrl -
+ * struct nvme_secondary_ctrl -  Secondary Controller Entry
  * @scid:	Secondary Controller Identifier
  * @pcid:	Primary Controller Identifier
  * @scs:	Secondary Controller State
@@ -2388,7 +2389,7 @@ struct nvme_secondary_ctrl {
 };
 
 /**
- * struct nvme_secondary_ctrl_list -
+ * struct nvme_secondary_ctrl_list - Secondary Controller List
  * @num:	Number of Identifiers
  * @rsvd:	Reserved
  * @sc_entry:	Secondary Controller Entry
@@ -2426,7 +2427,7 @@ struct nvme_id_domain_attr {
 };
 
 /**
- * struct nvme_id_domain_list -
+ * struct nvme_id_domain_list - Domain List
  * @num:		Number of domain attributes
  * @rsvd:		Reserved
  * @domain_attr:	List of domain attributes
@@ -2438,7 +2439,7 @@ struct nvme_id_domain_list {
 };
 
 /**
- * struct nvme_id_endurance_group_list -
+ * struct nvme_id_endurance_group_list - Endurance Group List
  * @num:	Number of Identifiers
  * @identifier: Endurance Group Identifier
  */
@@ -2448,7 +2449,7 @@ struct nvme_id_endurance_group_list {
 };
 
 /**
- * struct nvme_supported_log_pages -
+ * struct nvme_supported_log_pages - Supported Log Pages - Log
  * @lid_support: Log Page Identifier Supported
  *
  * Supported Log Pages (Log Identifier 00h)
@@ -2535,11 +2536,6 @@ struct nvme_error_log_page {
 	__u8	rsvd2[22];
 };
 
-/**
- * enum nvme_err_pel -
- * @NVME_ERR_PEL_BYTE_MASK:
- * @NVME_ERR_PEL_BIT_MASK:
- */
 enum nvme_err_pel {
 	NVME_ERR_PEL_BYTE_MASK	= 0xf,
 	NVME_ERR_PEL_BIT_MASK	= 0x70,
@@ -2775,7 +2771,7 @@ enum nvme_smart_egcw {
 };
 
 /**
- * struct nvme_firmware_slot -
+ * struct nvme_firmware_slot - Firmware Slot Information Log
  * @afi:	Active Firmware Info
  * @rsvd1:	Reserved
  * @frs:	Firmware Revision for Slot
@@ -2789,7 +2785,7 @@ struct nvme_firmware_slot {
 };
 
 /**
- * struct nvme_cmd_effects_log -
+ * struct nvme_cmd_effects_log - Commands Supported and Effects Log
  * @acs:	Admin Command Supported
  * @iocs:	I/O Command Supported
  * @rsvd:	Reserved
@@ -2801,7 +2797,7 @@ struct nvme_cmd_effects_log {
 };
 
 /**
- * enum nvme_cmd_effects -
+ * enum nvme_cmd_effects - Commands Supported and Effects
  * @NVME_CMD_EFFECTS_CSUPP:	Command Supported
  * @NVME_CMD_EFFECTS_LBCC:	Logical Block Content Change
  * @NVME_CMD_EFFECTS_NCC:	Namespace Capability Change
@@ -2999,9 +2995,9 @@ struct nvme_self_test_log {
 } __attribute__((packed));
 
 /**
- * enum nvme_cmd_get_log_telemetry_host_lsp -
- * @NVME_LOG_TELEM_HOST_LSP_RETAIN:
- * @NVME_LOG_TELEM_HOST_LSP_CREATE:
+ * enum nvme_cmd_get_log_telemetry_host_lsp - Telemetry Host-Initiated Log log specific field
+ * @NVME_LOG_TELEM_HOST_LSP_RETAIN:	Get Telemetry Data Blocks
+ * @NVME_LOG_TELEM_HOST_LSP_CREATE:	Create Telemetry Data Blocks
  */
 enum nvme_cmd_get_log_telemetry_host_lsp {
 	NVME_LOG_TELEM_HOST_LSP_RETAIN			= 0,
@@ -3065,7 +3061,7 @@ struct nvme_telemetry_log {
 };
 
 /**
- * struct nvme_endurance_group_log -
+ * struct nvme_endurance_group_log -  Endurance Group Information Log
  * @critical_warning:		Critical Warning
  * @rsvd1:			Reserved
  * @avl_spare:			Available Spare
@@ -3101,10 +3097,12 @@ struct nvme_endurance_group_log {
 };
 
 /**
- * enum nvme_eg_critical_warning_flags -
- * @NVME_EG_CRITICAL_WARNING_SPARE:
- * @NVME_EG_CRITICAL_WARNING_DEGRADED:
- * @NVME_EG_CRITICAL_WARNING_READ_ONLY:
+ * enum nvme_eg_critical_warning_flags - Endurance Group Information Log - Critical Warning
+ * @NVME_EG_CRITICAL_WARNING_SPARE:	Available spare capacity of the Endurance Group
+ *					has fallen below the threshold
+ * @NVME_EG_CRITICAL_WARNING_DEGRADED:	Endurance Group reliability has been degraded
+ * @NVME_EG_CRITICAL_WARNING_READ_ONLY:	Endurance Group have been placed in read only
+ *					mode
  */
 enum nvme_eg_critical_warning_flags {
 	NVME_EG_CRITICAL_WARNING_SPARE		= 1 << 0,
@@ -3113,7 +3111,7 @@ enum nvme_eg_critical_warning_flags {
 };
 
 /**
- * struct nvme_aggregate_endurance_group_event - 
+ * struct nvme_aggregate_endurance_group_event -  Endurance Group Event Aggregate
  * @num_entries:	Number or entries
  * @entries:		List of entries
  */
@@ -3123,7 +3121,7 @@ struct nvme_aggregate_endurance_group_event {
 };
 
 /**
- * struct nvme_nvmset_predictable_lat_log -
+ * struct nvme_nvmset_predictable_lat_log - Predictable Latency Mode - Deterministic Threshold Configuration Data
  * @status:		Status
  * @rsvd1:		Reserved
  * @event_type:		Event Type
@@ -3157,10 +3155,10 @@ struct nvme_nvmset_predictable_lat_log {
 };
 
 /**
- * enum nvme_nvmeset_pl_status -
- * @NVME_NVMSET_PL_STATUS_DISABLED:
- * @NVME_NVMSET_PL_STATUS_DTWIN:
- * @NVME_NVMSET_PL_STATUS_NDWIN:
+ * enum nvme_nvmeset_pl_status -  Predictable Latency Per NVM Set Log - Status
+ * @NVME_NVMSET_PL_STATUS_DISABLED:	Not used (Predictable Latency Mode not enabled)
+ * @NVME_NVMSET_PL_STATUS_DTWIN:	Deterministic Window (DTWIN)
+ * @NVME_NVMSET_PL_STATUS_NDWIN:	Non-Deterministic Window (NDWIN)
  */
 enum nvme_nvmeset_pl_status {
 	NVME_NVMSET_PL_STATUS_DISABLED	= 0,
@@ -3169,12 +3167,16 @@ enum nvme_nvmeset_pl_status {
 };
 
 /**
- * enum nvme_nvmset_pl_events -
- * @NVME_NVMSET_PL_EVENT_DTWIN_READ_WARN:
- * @NVME_NVMSET_PL_EVENT_DTWIN_WRITE_WARN:
- * @NVME_NVMSET_PL_EVENT_DTWIN_TIME_WARN:
- * @NVME_NVMSET_PL_EVENT_DTWIN_EXCEEDED:
- * @NVME_NVMSET_PL_EVENT_DTWIN_EXCURSION:
+ * enum nvme_nvmset_pl_events - Predictable Latency Per NVM Set Log - Event Type
+ * @NVME_NVMSET_PL_EVENT_DTWIN_READ_WARN:	DTWIN Reads Warning
+ * @NVME_NVMSET_PL_EVENT_DTWIN_WRITE_WARN:	DTWIN Writes Warning
+ * @NVME_NVMSET_PL_EVENT_DTWIN_TIME_WARN:	DTWIN Time Warning
+ * @NVME_NVMSET_PL_EVENT_DTWIN_EXCEEDED:	Autonomous transition from DTWIN
+ *						to NDWIN due to typical or
+ *						maximum value exceeded
+ * @NVME_NVMSET_PL_EVENT_DTWIN_EXCURSION:	Autonomous transition from DTWIN
+ *						to NDWIN due to Deterministic
+ *						Excursion
  */
 enum nvme_nvmset_pl_events {
 	NVME_NVMSET_PL_EVENT_DTWIN_READ_WARN	= 1 << 0,
@@ -3185,7 +3187,7 @@ enum nvme_nvmset_pl_events {
 };
 
 /**
- * struct nvme_aggregate_predictable_lat_event -
+ * struct nvme_aggregate_predictable_lat_event - Predictable Latency Event Aggregate Log Page
  * @num_entries:	Number of entries
  * @entries:		Entry list
  */
@@ -3195,7 +3197,7 @@ struct nvme_aggregate_predictable_lat_event {
 };
 
 /**
- * struct nvme_ana_group_desc -
+ * struct nvme_ana_group_desc - ANA Group Descriptor
  * @grpid:	ANA group id
  * @nnsids:	Number of namespaces in @nsids
  * @chgcnt:	Change counter
@@ -3213,12 +3215,12 @@ struct nvme_ana_group_desc {
 };
 
 /**
- * enum nvme_ana_state -
- * @NVME_ANA_STATE_OPTIMIZED:
- * @NVME_ANA_STATE_NONOPTIMIZED:
- * @NVME_ANA_STATE_INACCESSIBLE:
- * @NVME_ANA_STATE_PERSISTENT_LOSS:
- * @NVME_ANA_STATE_CHANGE:
+ * enum nvme_ana_state - ANA Group Descriptor - Asymmetric Namespace Access State
+ * @NVME_ANA_STATE_OPTIMIZED:		ANA Optimized state
+ * @NVME_ANA_STATE_NONOPTIMIZED:	ANA Non-Optimized state
+ * @NVME_ANA_STATE_INACCESSIBLE:	ANA Inaccessible state
+ * @NVME_ANA_STATE_PERSISTENT_LOSS:	ANA Persistent Loss state
+ * @NVME_ANA_STATE_CHANGE:		ANA Change state
  */
 enum nvme_ana_state {
 	NVME_ANA_STATE_OPTIMIZED	= 0x1,
@@ -3229,7 +3231,7 @@ enum nvme_ana_state {
 };
 
 /**
- * struct nvme_ana_log -
+ * struct nvme_ana_log -  Asymmetric Namespace Access Log
  * @chgcnt:	Change Count
  * @ngrps:	Number of ANA Group Descriptors
  * @rsvd10:	Reserved
@@ -3243,7 +3245,7 @@ struct nvme_ana_log {
 };
 
 /**
- * struct nvme_persistent_event_log -
+ * struct nvme_persistent_event_log - Persistent Event Log
  * @lid:	Log Identifier
  * @rsvd1:	Reserved
  * @tnev:	Total Number of Events
@@ -3287,7 +3289,7 @@ struct nvme_persistent_event_log {
 } __attribute__((packed));
 
 /**
- * struct nvme_persistent_event_entry -
+ * struct nvme_persistent_event_entry - Persistent Event
  * @etype:	Event Type
  * @etype_rev:	Event Type Revision
  * @ehl:	Event Header Length
@@ -3313,20 +3315,20 @@ struct nvme_persistent_event_entry {
 } __attribute__((packed));
 
 /**
- * enum nvme_persistent_event_types -
- * @NVME_PEL_SMART_HEALTH_EVENT:
- * @NVME_PEL_FW_COMMIT_EVENT:
- * @NVME_PEL_TIMESTAMP_EVENT:
- * @NVME_PEL_POWER_ON_RESET_EVENT:
- * @NVME_PEL_NSS_HW_ERROR_EVENT:
- * @NVME_PEL_CHANGE_NS_EVENT:
- * @NVME_PEL_FORMAT_START_EVENT:
- * @NVME_PEL_FORMAT_COMPLETION_EVENT:
- * @NVME_PEL_SANITIZE_START_EVENT:
- * @NVME_PEL_SANITIZE_COMPLETION_EVENT:
- * @NVME_PEL_SET_FEATURE_EVENT:
- * @NVME_PEL_TELEMETRY_CRT:
- * @NVME_PEL_THERMAL_EXCURSION_EVENT:
+ * enum nvme_persistent_event_types - Persistent event log events
+ * @NVME_PEL_SMART_HEALTH_EVENT:	SMART / Health Log Snapshot Event
+ * @NVME_PEL_FW_COMMIT_EVENT:		Firmware Commit Event
+ * @NVME_PEL_TIMESTAMP_EVENT:		Timestamp Change Event
+ * @NVME_PEL_POWER_ON_RESET_EVENT:	Power-on or Reset Event
+ * @NVME_PEL_NSS_HW_ERROR_EVENT:	NVM Subsystem Hardware Error Event
+ * @NVME_PEL_CHANGE_NS_EVENT:		Change Namespace Event
+ * @NVME_PEL_FORMAT_START_EVENT:	Format NVM Start Event
+ * @NVME_PEL_FORMAT_COMPLETION_EVENT:	Format NVM Completion Event
+ * @NVME_PEL_SANITIZE_START_EVENT:	Sanitize Start Event
+ * @NVME_PEL_SANITIZE_COMPLETION_EVENT:	Sanitize Completion Event
+ * @NVME_PEL_SET_FEATURE_EVENT:		Set Feature Event
+ * @NVME_PEL_TELEMETRY_CRT:		Telemetry Log Create Event
+ * @NVME_PEL_THERMAL_EXCURSION_EVENT:	Thermal Excursion Event
  */
 enum nvme_persistent_event_types {
     NVME_PEL_SMART_HEALTH_EVENT		= 0x01,
@@ -3345,7 +3347,7 @@ enum nvme_persistent_event_types {
 };
 
 /**
- * struct nvme_fw_commit_event -
+ * struct nvme_fw_commit_event - Firmware Commit Event Data
  * @old_fw_rev:			Old Firmware Revision
  * @new_fw_rev:			New Firmware Revision
  * @fw_commit_action:		Firmware Commit Action
@@ -3365,7 +3367,7 @@ struct nvme_fw_commit_event {
 } __attribute__((packed));
 
 /**
- * struct nvme_time_stamp_change_event -
+ * struct nvme_time_stamp_change_event - Timestamp Change Event
  * @previous_timestamp:		Previous Timestamp
  * @ml_secs_since_reset:	Milliseconds Since Reset
  */
@@ -3375,7 +3377,7 @@ struct nvme_time_stamp_change_event {
 };
 
 /**
- * struct nvme_power_on_reset_info_list -
+ * struct nvme_power_on_reset_info_list - Controller Reset Information
  * @cid:			Controller ID
  * @fw_act:			Firmware Activation
  * @op_in_prog:			Operation in Progress
@@ -3395,7 +3397,7 @@ struct nvme_power_on_reset_info_list {
 } __attribute__((packed));
 
 /**
- * struct nvme_nss_hw_err_event -
+ * struct nvme_nss_hw_err_event -  NVM Subsystem Hardware Error Event
  * @nss_hw_err_event_code:	NVM Subsystem Hardware Error Event Code
  * @rsvd2:			Reserved
  * @add_hw_err_info:		Additional Hardware Error Information
@@ -3407,7 +3409,7 @@ struct nvme_nss_hw_err_event {
 };
 
 /**
- * struct nvme_change_ns_event -
+ * struct nvme_change_ns_event - Change Namespace Event Data
  * @nsmgt_cdw10:	Namespace Management CDW10
  * @rsvd4:		Reserved
  * @nsze:		Namespace Size
@@ -3439,7 +3441,7 @@ struct nvme_change_ns_event {
 };
 
 /**
- * struct nvme_format_nvm_start_event -
+ * struct nvme_format_nvm_start_event - Format NVM Start Event Data
  * @nsid:		Namespace Identifier
  * @fna:		Format NVM Attributes
  * @rsvd5:		Reserved
@@ -3453,7 +3455,7 @@ struct nvme_format_nvm_start_event {
 };
 
 /**
- * struct nvme_format_nvm_compln_event -
+ * struct nvme_format_nvm_compln_event - Format NVM Completion Event Data
  * @nsid:		Namespace Identifier
  * @smallest_fpi:	Smallest Format Progress Indicator
  * @format_nvm_status:	Format NVM Status
@@ -3469,7 +3471,7 @@ struct nvme_format_nvm_compln_event {
 };
 
 /**
- * struct nvme_sanitize_start_event -
+ * struct nvme_sanitize_start_event - Sanitize Start Event Data
  * @sani_cap:	SANICAP
  * @sani_cdw10:	Sanitize CDW10
  * @sani_cdw11:	Sanitize CDW11
@@ -3481,7 +3483,7 @@ struct nvme_sanitize_start_event {
 };
 
 /**
- * struct nvme_sanitize_compln_event -
+ * struct nvme_sanitize_compln_event - Sanitize Completion Event Data
  * @sani_prog:		Sanitize Progress
  * @sani_status:	Sanitize Status
  * @cmpln_info:		Completion Information
@@ -3495,7 +3497,7 @@ struct nvme_sanitize_compln_event {
 };
 
 /**
- * struct nvme_set_feature_event -
+ * struct nvme_set_feature_event - Set Feature Event Data
  * @layout:	Set Feature Event Layout
  * @cdw_mem:	Command Dwords Memory buffer
  */
@@ -3505,7 +3507,7 @@ struct nvme_set_feature_event {
 };
 
 /**
- * struct nvme_thermal_exc_event -
+ * struct nvme_thermal_exc_event -  Thermal Excursion Event Data
  * @over_temp:	Over Temperature
  * @threshold:	temperature threshold
  */
@@ -3515,7 +3517,7 @@ struct nvme_thermal_exc_event {
 };
 
 /**
- * struct nvme_lba_rd -
+ * struct nvme_lba_rd - LBA Range Descriptor
  * @rslba:	Range Starting LBA
  * @rnlb:	Range Number of Logical Blocks
  * @rsvd12:	Reserved
@@ -3527,10 +3529,10 @@ struct nvme_lba_rd {
 };
 
 /**
- * struct nvme_lbas_ns_element -
+ * struct nvme_lbas_ns_element - LBA Status Log Namespace Element
  * @neid:	Namespace Element Identifier
  * @nlrd:	Number of LBA Range Descriptors
- * @ratype:	Recommended Action Type
+ * @ratype:	Recommended Action Type. see @enum nvme_lba_status_atype
  * @rsvd8:	Reserved
  * @lba_rd:	LBA Range Descriptor
  */
@@ -3543,9 +3545,10 @@ struct nvme_lbas_ns_element {
 };
 
 /**
- * enum nvme_lba_status_atype -
- * @NVME_LBA_STATUS_ATYPE_SCAN_UNTRACKED:
- * @NVME_LBA_STATUS_ATYPE_SCAN_TRACKED:
+ * enum nvme_lba_status_atype - Potentially Unrecoverable LBAs
+ * @NVME_LBA_STATUS_ATYPE_SCAN_UNTRACKED:	Potentially Unrecoverable LBAs
+ * @NVME_LBA_STATUS_ATYPE_SCAN_TRACKED:		Potentially Unrecoverable LBAs
+ *						associated with physical storage
  */
 enum nvme_lba_status_atype {
 	NVME_LBA_STATUS_ATYPE_SCAN_UNTRACKED			= 0x10,
@@ -3553,7 +3556,7 @@ enum nvme_lba_status_atype {
 };
 
 /**
- * struct nvme_lba_status_log -
+ * struct nvme_lba_status_log - LBA Status Information Log
  * @lslplen:	LBA Status Log Page Length
  * @nlslne:	Number of LBA Status Log Namespace Elements
  * @estulb:	Estimate of Unrecoverable Logical Blocks
@@ -3571,7 +3574,7 @@ struct nvme_lba_status_log {
 };
 
 /**
- * struct nvme_eg_event_aggregate_log -
+ * struct nvme_eg_event_aggregate_log - Endurance Group Event Aggregate
  * @nr_entries:	Number of Entries
  * @egids:	Endurance Group Identifier
  */
@@ -3581,23 +3584,21 @@ struct nvme_eg_event_aggregate_log {
 };
 
 /**
- * enum nvme_fid_supported_effects -
- * @NVME_FID_SUPPORTED_EFFECTS_FSUPP:
- * @NVME_FID_SUPPORTED_EFFECTS_UDCC:
- * @NVME_FID_SUPPORTED_EFFECTS_NCC:
- * @NVME_FID_SUPPORTED_EFFECTS_NIC:
- * @NVME_FID_SUPPORTED_EFFECTS_CCC:
- * @NVME_FID_SUPPORTED_EFFECTS_UUID_SEL:
- * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_SHIFT:
- * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_MASK:
- * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_NS:
- * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_CTRL:
- * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_NVM_SET:
- * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_ENDGRP:
- * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_DOMAIN:
- * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_NSS:
- *
- * FID Supported and Effects Data Structure definitions
+ * enum nvme_fid_supported_effects - FID Supported and Effects Data Structure definitions
+ * @NVME_FID_SUPPORTED_EFFECTS_FSUPP:		FID Supported
+ * @NVME_FID_SUPPORTED_EFFECTS_UDCC:		User Data Content Change
+ * @NVME_FID_SUPPORTED_EFFECTS_NCC:		Namespace Capability Change
+ * @NVME_FID_SUPPORTED_EFFECTS_NIC:		Namespace Inventory Change
+ * @NVME_FID_SUPPORTED_EFFECTS_CCC:		Controller Capability Change
+ * @NVME_FID_SUPPORTED_EFFECTS_UUID_SEL:	UUID Selection Supported
+ * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_SHIFT:	FID Scope Shift
+ * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_MASK:	FID Scope Mask
+ * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_NS:	Namespace Scope
+ * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_CTRL:	Controller Scope
+ * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_NVM_SET:	NVM Set Scope
+ * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_ENDGRP:	Endurance Group Scope
+ * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_DOMAIN:	Domain Scope
+ * @NVME_FID_SUPPORTED_EFFECTS_SCOPE_NSS:	NVM Subsystem Scope
  */
 enum nvme_fid_supported_effects {
 	NVME_FID_SUPPORTED_EFFECTS_FSUPP	= 1 << 0,
@@ -3617,17 +3618,16 @@ enum nvme_fid_supported_effects {
 };
 
 /**
- * struct nvme_fid_supported_effects_log -
+ * struct nvme_fid_supported_effects_log - Feature Identifiers Supported and Effects
  * @fid_support: Feature Identifier Supported
  *
- * Feature Identifiers Supported and Effects (Log Identifier 12h)
  */
 struct nvme_fid_supported_effects_log {
 	__le32	fid_support[NVME_LOG_FID_SUPPORTED_EFFECTS_MAX];
 };
 
 /**
- * enum nvme_mi_cmd_supported_effects - bit field definitions
+ * enum nvme_mi_cmd_supported_effects - MI Command Supported and Effects Data Structure
  * @NVME_MI_CMD_SUPPORTED_EFFECTS_CSUPP:	Command Supported
  * @NVME_MI_CMD_SUPPORTED_EFFECTS_UDCC:		User Data Conttent Change
  * @NVME_MI_CMD_SUPPORTED_EFFECTS_NCC:		Namespace Capability Change
@@ -3641,8 +3641,6 @@ struct nvme_fid_supported_effects_log {
  * @NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_ENDGRP:	Endurance Group Scope
  * @NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_DOMAIN:	Domain Scope
  * @NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NSS:	NVM Subsystem Scope
- *
- * MI Command Supported and Effects Data Structure definitions
  */
 enum nvme_mi_cmd_supported_effects {
 	NVME_MI_CMD_SUPPORTED_EFFECTS_CSUPP         = 1 << 0,
@@ -3661,10 +3659,9 @@ enum nvme_mi_cmd_supported_effects {
 };
 
 /**
- * struct nvme_mi_cmd_supported_effects_log -
- * @mi_cmd_support: NVMe-MI Commands Supported
- *
- * NVMe-MI Commands Supported and Effects (Log Identifier 13h)
+ * struct nvme_mi_cmd_supported_effects_log - NVMe-MI Commands Supported and Effects Log
+ * @mi_cmd_support:	NVMe-MI Commands Supported
+ * @reserved1:		Reserved
  */
 struct nvme_mi_cmd_supported_effects_log {
 	__le32	mi_cmd_support[NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX];
@@ -3672,7 +3669,7 @@ struct nvme_mi_cmd_supported_effects_log {
 };
 
 /**
- * struct nvme_boot_partition -
+ * struct nvme_boot_partition - Boot Partition Log
  * @lid:			Boot Partition Identifier
  * @rsvd1:			Reserved
  * @bpinfo:			Boot Partition Information
@@ -3689,7 +3686,7 @@ struct nvme_boot_partition {
 };
 
 /**
- * struct nvme_media_unit_stat_desc -
+ * struct nvme_media_unit_stat_desc - Media Unit Status Descriptor
  * @muid:         Media Unit Identifier
  * @domainid:     Domain Identifier
  * @endgid:       Endurance Group Identifier
@@ -3713,7 +3710,7 @@ struct nvme_media_unit_stat_desc {
 };
 
 /**
- * struct nvme_media_unit_stat_log -
+ * struct nvme_media_unit_stat_log - Media Unit Status
  * @nmu:        Number unit status descriptor
  * @cchans:     Number of Channels
  * @sel_config: Selected Configuration
@@ -3729,12 +3726,10 @@ struct nvme_media_unit_stat_log {
 };
 
 /**
- * struct nvme_media_unit_config_desc -
- * @muid: Media Unit Identifier
- * @mudl: Media Unit Descriptor Length
- *
- * Media Unit Configuration Descriptor
- * Structure Definitions
+ * struct nvme_media_unit_config_desc - Media Unit Configuration Descriptor
+ * @muid:	Media Unit Identifier
+ * @rsvd2:	Reserved
+ * @mudl:	Media Unit Descriptor Length
  */
 struct nvme_media_unit_config_desc {
 	__le16	muid;
@@ -3743,12 +3738,11 @@ struct nvme_media_unit_config_desc {
 };
 
 /**
- * struct nvme_channel_config_desc -
- * @chanid:	Channel Identifier
- * @chmus:	Number Channel Media Units
- *
- * Channel Configuration Descriptor
- * Structure Definitions
+ * struct nvme_channel_config_desc - Channel Configuration Descriptor
+ * @chanid:		Channel Identifier
+ * @chmus:		Number Channel Media Units
+ * @mu_config_desc:	Channel Unit config descriptors.
+ *			See @struct nvme_media_unit_config_desc
  */
 struct nvme_channel_config_desc {
 	__le16	chanid;
@@ -3757,11 +3751,10 @@ struct nvme_channel_config_desc {
 };
 
 /**
- * struct nvme_end_grp_chan_desc -
- * @egchans:	Number of Channels
- *
- * Endurance group Channel Configuration Descriptor
- * Structure Definitions
+ * struct nvme_end_grp_chan_desc - Endurance Group Channel Configuration Descriptor
+ * @egchans:		Number of Channels
+ * @chan_config_desc:	Channel config descriptors.
+ *			See @struct nvme_channel_config_desc
  */
 struct nvme_end_grp_chan_desc {
 	__le16	egchans;
@@ -3769,17 +3762,16 @@ struct nvme_end_grp_chan_desc {
 };
 
 /**
- * struct nvme_end_grp_config_desc -
+ * struct nvme_end_grp_config_desc -  Endurance Group Configuration Descriptor
  * @endgid:		Endurance Group Identifier
  * @cap_adj_factor:	Capacity Adjustment Factor
+ * @rsvd4:		Reserved
  * @tegcap:		Total Endurance Group Capacity
  * @segcap:		Spare Endurance Group Capacity
  * @end_est:		Endurance Estimate
  * @egsets:		Number of NVM Sets
+ * @rsvd64:		Reserved
  * @nvmsetid:		NVM Set Identifier
- *
- * Endurance Group Configuration Descriptor
- * Structure Definitions
  */
 struct nvme_end_grp_config_desc {
 	__le16	endgid;
@@ -3794,13 +3786,14 @@ struct nvme_end_grp_config_desc {
 };
 
 /**
- * struct nvme_cap_config_desc -
+ * struct nvme_capacity_config_desc - Capacity Configuration structure definitions
  * @cap_config_id:	Capacity Configuration Identifier
  * @domainid:		Domain Identifier
  * @egcn:		Number Endurance Group Configuration
  *			Descriptors
- *
- * Capacity Configuration structure definitions
+ * @rsvd6:		Reserved
+ * @egcd:		Endurance Group Config descriptors.
+ *			See @struct nvme_end_grp_config_desc
  */
 struct nvme_capacity_config_desc {
 	__le16	cap_config_id;
@@ -3811,11 +3804,11 @@ struct nvme_capacity_config_desc {
 };
 
 /**
- * struct nvme_supported_cap_config_list_log -
- * @sccn: number of capacity configuration
- *
- * Supported Capacity Configuration list log page
- * structure definitions
+ * struct nvme_supported_cap_config_list_log - Supported Capacity Configuration list log page
+ * @sccn:		Number of capacity configuration
+ * @rsvd1:		Reserved
+ * @cap_config_desc:	Capacity configuration desriptor.
+ *			See @struct nvme_capacity_config_desc
  */
 struct nvme_supported_cap_config_list_log {
 	__u8	sccn;
@@ -3824,7 +3817,7 @@ struct nvme_supported_cap_config_list_log {
 };
 
 /**
- * struct nvme_resv_notification_log -
+ * struct nvme_resv_notification_log - Reservation Notification Log
  * @lpc:	Log Page Count
  * @rnlpt:	See &enum nvme_resv_notify_rnlpt.
  * @nalp:	Number of Available Log Pages
@@ -3842,11 +3835,11 @@ struct nvme_resv_notification_log {
 };
 
 /**
- * enum nvme_resv_notify_rnlpt -
- * @NVME_RESV_NOTIFY_RNLPT_EMPTY:
- * @NVME_RESV_NOTIFY_RNLPT_REGISTRATION_PREEMPTED:
- * @NVME_RESV_NOTIFY_RNLPT_RESERVATION_RELEASED:
- * @NVME_RESV_NOTIFY_RNLPT_RESERVATION_PREEMPTED:
+ * enum nvme_resv_notify_rnlpt -  Reservation Notification Log - Reservation Notification Log Page Type
+ * @NVME_RESV_NOTIFY_RNLPT_EMPTY:			Empty Log Page
+ * @NVME_RESV_NOTIFY_RNLPT_REGISTRATION_PREEMPTED:	Registration Preempted
+ * @NVME_RESV_NOTIFY_RNLPT_RESERVATION_RELEASED:	Reservation Released
+ * @NVME_RESV_NOTIFY_RNLPT_RESERVATION_PREEMPTED:	Reservation Preempted
  */
 enum nvme_resv_notify_rnlpt {
 	NVME_RESV_NOTIFY_RNLPT_EMPTY			= 0,
@@ -4006,15 +3999,15 @@ struct nvme_zns_changed_zone_log {
 };
 
 /**
- * enum nvme_zns_zt -
- * @NVME_ZONE_TYPE_SEQWRITE_REQ:
+ * enum nvme_zns_zt - Zone Descriptor Data Structure - Zone Type
+ * @NVME_ZONE_TYPE_SEQWRITE_REQ:	Sequential Write Required
  */
 enum nvme_zns_zt {
 	NVME_ZONE_TYPE_SEQWRITE_REQ	= 0x2,
 };
 
 /**
- * enum nvme_zns_za -
+ * enum nvme_zns_za - Zone Descriptor Data Structure
  * @NVME_ZNS_ZA_ZFC:	Zone Finished by Controller
  * @NVME_ZNS_ZA_FZR:	Finish Zone Recommended
  * @NVME_ZNS_ZA_RZR:	Reset Zone Recommended
@@ -4030,7 +4023,7 @@ enum nvme_zns_za {
 };
 
 /**
- * enum nvme_zns_zs -
+ * enum nvme_zns_zs - Zone Descriptor Data Structure - Zone State
  * @NVME_ZNS_ZS_EMPTY:		Empty state
  * @NVME_ZNS_ZS_IMPL_OPEN:	Implicitly open state
  * @NVME_ZNS_ZS_EXPL_OPEN:	Explicitly open state
@@ -4050,7 +4043,7 @@ enum nvme_zns_zs {
 };
 
 /**
- * struct nvme_zns_desc -
+ * struct nvme_zns_desc - Zone Descriptor Data Structure
  * @zt:		Zone Type
  * @zs:		Zone State
  * @za:		Zone Attributes
@@ -4074,7 +4067,7 @@ struct nvme_zns_desc {
 };
 
 /**
- * struct nvme_zone_report -
+ * struct nvme_zone_report - Report Zones Data Structure
  * @nr_zones: Number of descriptors in @entries
  * @rsvd8:    Reserved
  * @entries:  Zoned namespace descriptors
@@ -4086,7 +4079,7 @@ struct nvme_zone_report {
 };
 
 /**
- * struct nvme_lba_status_desc -
+ * struct nvme_lba_status_desc - LBA Status Descriptor Entry
  * @dslba:	Descriptor Starting LBA
  * @nlb:	Number of Logical Blocks
  * @rsvd12:	Reserved
@@ -4102,7 +4095,7 @@ struct nvme_lba_status_desc {
 };
 
 /**
- * struct nvme_lba_status -
+ * struct nvme_lba_status - LBA Status Descriptor List
  * @nlsd:	Number of LBA Status Descriptors
  * @cmpc:	Completion Condition
  * @rsvd5:	Reserved
@@ -4116,7 +4109,7 @@ struct nvme_lba_status {
 };
 
 /**
- * struct nvme_feat_auto_pst -
+ * struct nvme_feat_auto_pst - Autonomous Power State Transition
  * @apst_entry: See &enum nvme_apst_entry
  */
 struct nvme_feat_auto_pst {
@@ -4124,11 +4117,11 @@ struct nvme_feat_auto_pst {
 };
 
 /**
- * enum nvme_apst_entry -
- * @NVME_APST_ENTRY_ITPS_SHIFT:
- * @NVME_APST_ENTRY_ITPT_SHIFT:
- * @NVME_APST_ENTRY_ITPS_MASK:
- * @NVME_APST_ENTRY_ITPT_MASK:
+ * enum nvme_apst_entry - Autonomous Power State Transition
+ * @NVME_APST_ENTRY_ITPS_SHIFT:	Idle Transition Power State Shift
+ * @NVME_APST_ENTRY_ITPT_SHIFT:	Idle Time Prior to Transition Shift
+ * @NVME_APST_ENTRY_ITPS_MASK:	Idle Transition Power State Mask
+ * @NVME_APST_ENTRY_ITPT_MASK:	Idle Time Prior to Transition Mask
  */
 enum nvme_apst_entry {
 	NVME_APST_ENTRY_ITPS_SHIFT = 3,
@@ -4230,7 +4223,7 @@ enum nvme_ns_metadata_type {
 };
 
 /**
- * struct nvme_timestamp -
+ * struct nvme_timestamp - Timestamp - Data Structure for Get Features
  * @timestamp:	Timestamp value based on origin and synch field
  * @attr:	Attribute
  * @rsvd:	Reserved
@@ -4242,7 +4235,7 @@ struct nvme_timestamp {
 };
 
 /**
- * struct nvme_lba_range_type_entry -
+ * struct nvme_lba_range_type_entry - LBA Range Type - Data Structure Entry
  * @type:	Specifies the Type of the LBA range
  * @attributes: Specifies attributes of the LBA range
  * @rsvd2:	Reserved
@@ -4262,7 +4255,7 @@ struct nvme_lba_range_type_entry {
 };
 
 /**
- * enum nvme_lbart -
+ * enum nvme_lbart - LBA Range Type - Data Structure Entry
  * @NVME_LBART_TYPE_GP:		General Purpose
  * @NVME_LBART_TYPE_FS:		Filesystem
  * @NVME_LBART_TYPE_RAID:	RAID
@@ -4282,15 +4275,15 @@ enum nvme_lbart {
 };
 
 /**
- * struct nvme_lba_range_type -
- * @entry:	LBA range type entry
+ * struct nvme_lba_range_type - LBA Range Type
+ * @entry:	LBA range type entry. See @struct nvme_lba_range_type_entry
  */
 struct nvme_lba_range_type {
 	struct nvme_lba_range_type_entry entry[NVME_FEAT_LBA_RANGE_MAX];
 };
 
 /**
- * struct nvme_plm_config -
+ * struct nvme_plm_config - Predictable Latency Mode - Deterministic Threshold Configuration Data Structure
  * @ee:		Enable Event
  * @rsvd2:	Reserved
  * @dtwinrt:	DTWIN Reads Threshold
@@ -4308,7 +4301,7 @@ struct nvme_plm_config {
 };
 
 /**
- * struct nvme_feat_host_behavior -
+ * struct nvme_feat_host_behavior - Host Behavior Support - Data Structure
  * @acre:	Advanced Command Retry Enable
  * @rsvd1:	Reserved
  */
@@ -4318,7 +4311,7 @@ struct nvme_feat_host_behavior {
 };
 
 /**
- * enum nvme_host_behavior_support -
+ * enum nvme_host_behavior_support - Enable Advanced Command
  * @NVME_ENABLE_ACRE:	Enable Advanced Command Retry Enable
  */
 enum nvme_host_behavior_support {
@@ -4326,7 +4319,7 @@ enum nvme_host_behavior_support {
 };
 
 /**
- * struct nvme_dsm_range -
+ * struct nvme_dsm_range - Dataset Management - Range Definition
  * @cattr:	Context Attributes
  * @nlb:	Length in logical blocks
  * @slba:	Starting LBA
@@ -4338,7 +4331,7 @@ struct nvme_dsm_range {
 };
 
 /**
- * struct nvme_copy_range -
+ * struct nvme_copy_range - Copy - Source Range Entries Descriptor Format
  * @rsvd0:	Reserved
  * @slba:	Starting LBA
  * @nlb:	Number of Logical Blocks
@@ -4359,7 +4352,7 @@ struct nvme_copy_range {
 };
 
 /**
- * struct nvme_copy_range_f1 -
+ * struct nvme_copy_range_f1 - Copy - Source Range Entries Descriptor Format 1h
  * @rsvd0:	Reserved
  * @slba:	Starting LBA
  * @nlb:	Number of Logical Blocks
@@ -4380,7 +4373,7 @@ struct nvme_copy_range_f1 {
 };
 
 /**
- * struct nvme_registered_ctrl -
+ * struct nvme_registered_ctrl - Registered Controller Data Structure
  * @cntlid:	Controller ID
  * @rcsts:	Reservation Status
  * @rsvd3:	Reserved
@@ -4396,7 +4389,7 @@ struct nvme_registered_ctrl {
 };
 
 /**
- * struct nvme_registered_ctrl_ext -
+ * struct nvme_registered_ctrl_ext - Registered Controller Extended Data Structure
  * @cntlid:	Controller ID
  * @rcsts:	Reservation Status
  * @rsvd3:	Reserved
@@ -4414,7 +4407,7 @@ struct nvme_registered_ctrl_ext {
 };
 
 /**
- * struct nvme_resv_status -
+ * struct nvme_resv_status - Reservation Status Data Structure
  * @gen:	Generation
  * @rtype:	Reservation Type
  * @regctl:	Number of Registered Controllers
@@ -4442,7 +4435,7 @@ struct nvme_resv_status {
 };
 
 /**
- * struct nvme_streams_directive_params -
+ * struct nvme_streams_directive_params -  Streams Directive - Return Parameters Data Structure
  * @msl:	Max Streams Limit
  * @nssa:	NVM Subsystem Streams Available
  * @nsso:	NVM Subsystem Streams Open
@@ -4468,7 +4461,7 @@ struct nvme_streams_directive_params {
 };
 
 /**
- * struct nvme_streams_directive_status -
+ * struct nvme_streams_directive_status - Streams Directive - Get Status Data Structure
  * @osc: Open Stream Count
  * @sid: Stream Identifier
  */
@@ -4478,7 +4471,7 @@ struct nvme_streams_directive_status {
 };
 
 /**
- * struct nvme_id_directives -
+ * struct nvme_id_directives -  Identify Directive - Return Parameters Data Structure
  * @supported:	Identify directive is supported
  * @enabled:	Identify directive is Enabled
  * @rsvd64:	Reserved
@@ -4490,7 +4483,7 @@ struct nvme_id_directives {
 };
 
 /**
- * enum nvme_directive_types -
+ * enum nvme_directive_types - Directives Supported or Enabled
  * @NVME_ID_DIR_ID_BIT: Identify directive is supported
  * @NVME_ID_DIR_SD_BIT: Streams directive is supported
  */
@@ -4500,7 +4493,7 @@ enum nvme_directive_types {
 };
 
 /**
- * struct nvme_host_mem_buf_attrs -
+ * struct nvme_host_mem_buf_attrs - Host Memory Buffer - Attributes Data Structure
  * @hsize:	Host Memory Buffer Size
  * @hmdlal:	Host Memory Descriptor List Lower Address
  * @hmdlau:	Host Memory Descriptor List Upper Address
@@ -4517,7 +4510,7 @@ struct nvme_host_mem_buf_attrs {
 };
 
 /**
- * enum nvme_ae_type -
+ * enum nvme_ae_type - Asynchronous Event Type
  * @NVME_AER_ERROR:	Error event
  * @NVME_AER_SMART:	SMART / Health Status event
  * @NVME_AER_NOTICE:	Notice event
@@ -4533,7 +4526,7 @@ enum nvme_ae_type {
 };
 
 /**
- * enum nvme_ae_info_error -
+ * enum nvme_ae_info_error - Asynchronous Event Information - Error Status
  * @NVME_AER_ERROR_INVALID_DB_REG:		Write to Invalid Doorbell Register
  * @NVME_AER_ERROR_INVALID_DB_VAL:		Invalid Doorbell Write Value
  * @NVME_AER_ERROR_DIAG_FAILURE:		Diagnostic Failure
@@ -4551,7 +4544,7 @@ enum nvme_ae_info_error {
 };
 
 /**
- * enum nvme_ae_info_smart -
+ * enum nvme_ae_info_smart - Asynchronous Event Information - SMART / Health Status
  * @NVME_AER_SMART_SUBSYSTEM_RELIABILITY:	NVM subsystem Reliability
  * @NVME_AER_SMART_TEMPERATURE_THRESHOLD:	Temperature Threshold
  * @NVME_AER_SMART_SPARE_THRESHOLD:		Spare Below Threshold
@@ -4563,7 +4556,7 @@ enum nvme_ae_info_smart {
 };
 
 /**
- * enum nvme_ae_info_css_nvm -
+ * enum nvme_ae_info_css_nvm - Asynchronous Event Information - I/O Command Specific Status
  * @NVME_AER_CSS_NVM_RESERVATION:			Reservation Log Page Available
  * @NVME_AER_CSS_NVM_SANITIZE_COMPLETED:		Sanitize Operation Completed
  * @NVME_AER_CSS_NVM_UNEXPECTED_SANITIZE_DEALLOC:	Sanitize Operation Completed
@@ -4576,7 +4569,7 @@ enum nvme_ae_info_css_nvm {
 };
 
 /**
- * enum nvme_ae_info_notice -
+ * enum nvme_ae_info_notice - Asynchronous Event Information - Notice
  * @NVME_AER_NOTICE_NS_CHANGED:		Namespace Attribute Changed
  * @NVME_AER_NOTICE_FW_ACT_STARTING:	Firmware Activation Starting
  * @NVME_AER_NOTICE_TELEMETRY:		Telemetry Log Changed
@@ -5061,7 +5054,7 @@ struct nvmf_connect_data {
 };
 
 /**
- * struct nvme_mi_read_nvm_ss_info -
+ * struct nvme_mi_read_nvm_ss_info - NVM Subsystem Information Data Structure
  * @nump:	Number of Ports
  * @mjr:	NVMe-MI Major Version Number
  * @mnr:	NVMe-MI Minor Version Number
@@ -5075,7 +5068,7 @@ struct nvme_mi_read_nvm_ss_info {
 };
 
 /**
- * struct nvme_mi_port_pcie -
+ * struct nvme_mi_port_pcie - PCIe Port Specific Data
  * @mps:	PCIe Maximum Payload Size
  * @sls:	PCIe Supported Link Speeds Vector
  * @cls:	PCIe Current Link Speed
@@ -5095,7 +5088,7 @@ struct nvme_mi_port_pcie {
 };
 
 /**
- * struct nvme_mi_port_smb -
+ * struct nvme_mi_port_smb - SMBus Port Specific Data
  * @vpd_addr:	Current VPD SMBus/I2C Address
  * @mvpd_freq:	Maximum VPD Access SMBus/I2C Frequency
  * @mme_addr:	Current Management Endpoint SMBus/I2C Address
@@ -5113,7 +5106,7 @@ struct nvme_mi_port_smb {
 };
 
 /**
- * struct nvme_mi_read_port_info -
+ * struct nvme_mi_read_port_info - Port Information Data Structure
  * @portt:	Port Type
  * @rsvd1:	Reserved
  * @mmctptus:	Maximum MCTP Transmission Unit Size
@@ -5133,7 +5126,7 @@ struct nvme_mi_read_port_info {
 };
 
 /**
- * struct nvme_mi_read_ctrl_info -
+ * struct nvme_mi_read_ctrl_info - Controller Information Data Structure
  * @portid:	Port Identifier
  * @rsvd1:	Reserved
  * @prii:	PCIe Routing ID Information
@@ -5157,7 +5150,7 @@ struct nvme_mi_read_ctrl_info {
 };
 
 /**
- * struct nvme_mi_osc -
+ * struct nvme_mi_osc - Optionally Supported Command Data Structure
  * @type:	Command Type
  * @opc:	Opcode
  */
@@ -5167,9 +5160,10 @@ struct nvme_mi_osc {
 };
 
 /**
- * struct nvme_mi_read_sc_list -
+ * struct nvme_mi_read_sc_list -  Management Endpoint Buffer Supported Command List Data Structure
  * @numcmd:	Number of Commands
- * @cmds:	MEB supported Command Data Structure
+ * @cmds:	MEB supported Command Data Structure.
+ *		See @struct nvme_mi_osc
  */
 struct nvme_mi_read_sc_list {
 	__le16	numcmd;
@@ -5177,7 +5171,7 @@ struct nvme_mi_read_sc_list {
 };
 
 /**
- * struct nvme_mi_nvm_ss_health_status -
+ * struct nvme_mi_nvm_ss_health_status - Subsystem Management Data Structure
  * @nss:	NVM Subsystem Status
  * @sw:		Smart Warnings
  * @ctemp:	Composite Temperature
@@ -5195,7 +5189,7 @@ struct nvme_mi_nvm_ss_health_status {
 };
 
 /**
- * enum nvme_mi_css -
+ * enum nvme_mi_css - Get State Control Primitive Success Response Fields - Control Primitive Specific Response
  * @NVME_MI_CCS_RDY:	Ready
  * @NVME_MI_CSS_CFS:	Controller Fatal Status
  * @NVME_MI_CSS_SHST:	Shutdown Status
@@ -5225,7 +5219,7 @@ enum nvme_mi_css {
 };
 
 /**
- * struct nvme_mi_ctrl_health_status -
+ * struct nvme_mi_ctrl_health_status - Controller Health Data Structure (CHDS)
  * @ctlid:	Controller Identifier
  * @csts:	Controller Status
  * @ctemp:	Composite Temperature
@@ -5245,7 +5239,7 @@ struct nvme_mi_ctrl_health_status {
 };
 
 /**
- * enum nvme_mi_csts -
+ * enum nvme_mi_csts - Controller Health Data Structure (CHDS) - Controller Status (CSTS)
  * @NVME_MI_CSTS_RDY:	Ready
  * @NVME_MI_CSTS_CFS:	Controller Fatal Status
  * @NVME_MI_CSTS_SHST:	Shutdown Status
@@ -5265,7 +5259,7 @@ enum nvme_mi_csts {
 };
 
 /**
- * enum nvme_mi_cwarn -
+ * enum nvme_mi_cwarn - Controller Health Data Structure (CHDS) - Critical Warning (CWARN)
  * @NVME_MI_CWARN_ST:	Spare Threshold
  * @NVME_MI_CWARN_TAUT:	Temperature Above or Under Threshold
  * @NVME_MI_CWARN_RD:	Reliability Degraded
@@ -5281,7 +5275,7 @@ enum nvme_mi_cwarn {
 };
 
 /**
- * struct nvme_mi_vpd_mra -
+ * struct nvme_mi_vpd_mra - NVMe MultiRecord Area
  * @nmravn:	NVMe MultiRecord Area Version Number
  * @ff:		Form Factor
  * @rsvd7:	Reserved
@@ -5290,7 +5284,7 @@ enum nvme_mi_cwarn {
  * @i33vpwr:	Initial 3.3 V Power Supply Requirements
  * @m33vpwr:	Maximum 3.3 V Power Supply Requirements
  * @rsvd17:	Reserved
- * @m33vapsr:	Maximum 3.3 V aux Power Supply Requirements
+ * @m33vapsr:	Maximum 3.3 Vi aux Power Supply Requirements
  * @i5vapsr:	Initial 5 V Power Supply Requirements
  * @m5vapsr:	Maximum 5 V Power Supply Requirements
  * @i12vapsr:	Initial 12 V Power Supply Requirements
@@ -5319,7 +5313,7 @@ struct nvme_mi_vpd_mra {
 };
 
 /**
- * struct nvme_mi_vpd_ppmra -
+ * struct nvme_mi_vpd_ppmra -  NVMe PCIe Port MultiRecord Area
  * @nppmravn:	NVMe PCIe Port MultiRecord Area Version Number
  * @pn:		PCIe Port Number
  * @ppi:	Port Information
@@ -5343,7 +5337,7 @@ struct nvme_mi_vpd_ppmra {
 };
 
 /**
- * struct nvme_mi_vpd_telem -
+ * struct nvme_mi_vpd_telem - Vital Product Data Element Descriptor
  * @type:	Type of the Element Descriptor
  * @rev:	Revision of the Element Descriptor
  * @len:	Number of bytes in the Element Descriptor
@@ -5358,7 +5352,7 @@ struct nvme_mi_vpd_telem {
 };
 
 /**
- * enum nvme_mi_elem -
+ * enum nvme_mi_elem - Element Descriptor Types
  * @NVME_MI_ELEM_EED:		Extended Element Descriptor
  * @NVME_MI_ELEM_USCE:		Upstream Connector Element Descriptor
  * @NVME_MI_ELEM_ECED:		Expansion Connector Element Descriptor
@@ -5378,7 +5372,7 @@ enum nvme_mi_elem {
 };
 
 /**
- * struct nvme_mi_vpd_tra -
+ * struct nvme_mi_vpd_tra - Vital Product Data Topology MultiRecord
  * @vn:		Version Number
  * @rsvd6:	Reserved
  * @ec:		Element Count
@@ -5392,7 +5386,7 @@ struct nvme_mi_vpd_tra {
 };
 
 /**
- * struct nvme_mi_vpd_mr_common -
+ * struct nvme_mi_vpd_mr_common -  NVMe MultiRecord Area
  * @type:	NVMe Record Type ID
  * @rf:		Record Format
  * @rlen:	Record Length
@@ -5417,7 +5411,7 @@ struct nvme_mi_vpd_mr_common {
 };
 
 /**
- * struct nvme_mi_vpd_hdr -
+ * struct nvme_mi_vpd_hdr - Vital Product Data Common Header
  * @ipmiver:	IPMI Format Version Number
  * @iuaoff:	Internal Use Area Starting Offset
  * @ciaoff:	Chassis Info Area Starting Offset
@@ -5449,7 +5443,11 @@ struct nvme_mi_vpd_hdr {
  * @NVME_SCT_PATH:		      Errors associated with the paths connection
  * @NVME_SCT_VS:		      Vendor specific errors
  * @NVME_SCT_MASK:		      Mask to get the value of the Status Code Type
+ * @NVME_SCT_SHIFT:                   Shift value to get the value of the Status
+ *                                    Code Type
  * @NVME_SC_MASK:		      Mask to get the value of the status code.
+ * @NVME_SC_SHIFT:                    Shift value to get the value of the status
+ *                                    code.
  * @NVME_SC_SUCCESS:		      Successful Completion: The command
  * 				      completed without error.
  * @NVME_SC_INVALID_OPCODE:	      Invalid Command Opcode: A reserved coded
@@ -5764,7 +5762,7 @@ struct nvme_mi_vpd_hdr {
  *				      transient condition.
  * @NVME_SC_REQSTD_FUNCTION_DISABLED: Fabric Zoning is not enabled on the
  *				      CDC
- * @NVME_SC_ZONEGRP_ORIGINATOR_INVL:  The NQN contained in the ZoneGroup
+ * @NVME_SC_ZONEGRP_ORIGINATOR_INVLD:  The NQN contained in the ZoneGroup
  *				      Originator field does not match the
  *				      Host NQN used by the DDC to connect
  *				      to the CDC.
@@ -6076,9 +6074,10 @@ enum nvme_status_field {
 
 /**
  * nvme_status_code_type() - Returns the NVMe Status Code Type
- * @status_field: The NVMe Completion Queue Entry's Status Field
+ * @status_field:	The NVMe Completion Queue Entry's Status Field
+ *			See &enum nvme_status_field
  *
- * See &enum nvme_status_field
+ * Returns: status code type
  */
 static inline __u16 nvme_status_code_type(__u16 status_field)
 {
@@ -6087,9 +6086,10 @@ static inline __u16 nvme_status_code_type(__u16 status_field)
 
 /**
  * nvme_status_code() - Returns the NVMe Status Code
- * @status_field: The NVMe Completion Queue Entry's Status Field
+ * @status_field:	The NVMe Completion Queue Entry's Status Field
+ *			See &enum nvme_status_field
  *
- * See &enum nvme_status_field
+ * Returns: status code
  */
 static inline __u16 nvme_status_code(__u16 status_field)
 {
@@ -6173,7 +6173,7 @@ enum nvme_admin_opcode {
 };
 
 /**
- * enum nvme_identify_cns -
+ * enum nvme_identify_cns -			Identify - CNS Values
  * @NVME_IDENTIFY_CNS_NS:			Identify Namespace data structure
  * @NVME_IDENTIFY_CNS_CTRL:			Identify Controller data structur
  * @NVME_IDENTIFY_CNS_NS_ACTIVE_LIST:		Active Namespace ID list
@@ -6186,6 +6186,9 @@ enum nvme_admin_opcode {
  * @NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST:	Active Namespace ID list associated
  * 						with the specified I/O Command Set
  * @NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS:	I/O Command Set Independent Identify
+ * @NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT:	Namespace user data format
+ * @NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT:	I/O Command Set specific user data
+ *						format
  * 						Namespace data structure
  * @NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST:	Allocated Namespace ID list
  * @NVME_IDENTIFY_CNS_ALLOCATED_NS:		Identify Namespace data structure for
@@ -6237,7 +6240,7 @@ enum nvme_identify_cns {
 };
 
 /**
- * enum nvme_cmd_get_log_lid -
+ * enum nvme_cmd_get_log_lid -			Get Log Page -Log Page Identifiers
  * @NVME_LOG_LID_SUPPORTED_LOG_PAGES:		Supported Log Pages
  * @NVME_LOG_LID_ERROR:				Error Information
  * @NVME_LOG_LID_SMART:				SMART / Health Information
@@ -6293,7 +6296,7 @@ enum nvme_cmd_get_log_lid {
 };
 
 /**
- * enum nvme_features_id -
+ * enum nvme_features_id -		Features - Feature Identifiers
  * @NVME_FEAT_FID_ARBITRATION:		Arbitration
  * @NVME_FEAT_FID_POWER_MGMT:		Power Management
  * @NVME_FEAT_FID_LBA_RANGE:		LBA Range Type
@@ -6367,7 +6370,7 @@ enum nvme_features_id {
 };
 
 /**
- * enum nvme_feat -
+ * enum nvme_feat - Features Access Shifts/Masks values
  * @NVME_FEAT_ARBITRATION_BURST_SHIFT:
  * @NVME_FEAT_ARBITRATION_BURST_MASK:
  * @NVME_FEAT_ARBITRATION_LPW_SHIFT:
@@ -6569,7 +6572,7 @@ enum nvme_feat {
 };
 
 /**
- * enum nvme_get_features_sel -
+ * enum nvme_get_features_sel - Get Features - Select
  * @NVME_GET_FEATURES_SEL_CURRENT:	Current value
  * @NVME_GET_FEATURES_SEL_DEFAULT:	Default value
  * @NVME_GET_FEATURES_SEL_SAVED:	Saved value
@@ -6642,7 +6645,7 @@ enum nvme_cmd_format_ses {
 };
 
 /**
- * enum nvme_ns_mgmt_sel -
+ * enum nvme_ns_mgmt_sel - Namespace Management - Select
  * @NVME_NS_MGMT_SEL_CREATE:	Namespace Create selection
  * @NVME_NS_MGMT_SEL_DELETE:	Namespace Delete selection
  */
@@ -6652,7 +6655,7 @@ enum nvme_ns_mgmt_sel {
 };
 
 /**
- * enum nvme_ns_attach_sel -
+ * enum nvme_ns_attach_sel - Namespace Attachment - Select
  * @NVME_NS_ATTACH_SEL_CTRL_ATTACH:	Namespace attach selection
  * @NVME_NS_ATTACH_SEL_CTRL_DEATTACH:	Namespace detach selection
  */
@@ -6662,7 +6665,7 @@ enum nvme_ns_attach_sel {
 };
 
 /**
- * enum nvme_fw_commit_ca -
+ * enum nvme_fw_commit_ca - Firmware Commit - Commit Action
  * @NVME_FW_COMMIT_CA_REPLACE:				Downloaded image replaces the existing
  * 							image, if any, in the specified Firmware
  * 							Slot. The newly placed image is not
@@ -6697,7 +6700,7 @@ enum nvme_fw_commit_ca {
 };
 
 /**
- * enum nvme_directive_dtype -
+ * enum nvme_directive_dtype - Directive Types
  * @NVME_DIRECTIVE_DTYPE_IDENTIFY:	Identify directive type
  * @NVME_DIRECTIVE_DTYPE_STREAMS:	Streams directive type
  */
@@ -6707,7 +6710,7 @@ enum nvme_directive_dtype {
 };
 
 /**
- * enum nvme_directive_receive_doper -
+ * enum nvme_directive_receive_doper - Directive Receive Directive Operation
  * @NVME_DIRECTIVE_RECEIVE_IDENTIFY_DOPER_PARAM:
  * @NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_PARAM:
  * @NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_STATUS:
@@ -6721,7 +6724,7 @@ enum nvme_directive_receive_doper {
 };
 
 /**
- * enum nvme_directive_send_doper -
+ * enum nvme_directive_send_doper - Directive Send Directive Operation
  * @NVME_DIRECTIVE_SEND_IDENTIFY_DOPER_ENDIR:
  * @NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_IDENTIFIER:
  * @NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE:
@@ -6733,7 +6736,7 @@ enum nvme_directive_send_doper {
 };
 
 /**
- * enum nvme_directive_send_identify_endir -
+ * enum nvme_directive_send_identify_endir - Enable Directive
  * @NVME_DIRECTIVE_SEND_IDENTIFY_ENDIR_DISABLE:
  * @NVME_DIRECTIVE_SEND_IDENTIFY_ENDIR_ENABLE:
  */
@@ -6771,7 +6774,7 @@ enum nvme_dst_stc {
 };
 
 /**
- * enum nvme_virt_mgmt_act -
+ * enum nvme_virt_mgmt_act - Virtualization Management - Action
  * @NVME_VIRT_MGMT_ACT_PRIM_CTRL_FLEX_ALLOC:	Primary Controller Flexible
  * 						Allocation
  * @NVME_VIRT_MGMT_ACT_OFFLINE_SEC_CTRL:	Secondary Controller Offline
@@ -6786,7 +6789,7 @@ enum nvme_virt_mgmt_act {
 };
 
 /**
- * enum nvme_virt_mgmt_rt -
+ * enum nvme_virt_mgmt_rt - Virtualization Management - Resource Type
  * @NVME_VIRT_MGMT_RT_VQ_RESOURCE:	VQ Resources
  * @NVME_VIRT_MGMT_RT_VI_RESOURCE:	VI Resources
  */
@@ -6796,7 +6799,7 @@ enum nvme_virt_mgmt_rt {
 };
 
 /**
- * enum nvme_ns_write_protect_cfg -
+ * enum nvme_ns_write_protect_cfg - Write Protection - Write Protection State
  * @NVME_NS_WP_CFG_NONE:		No Write Protect
  * @NVME_NS_WP_CFG_PROTECT:		Write Protect
  * @NVME_NS_WP_CFG_PROTECT_POWER_CYCLE:	Write Protect Until Power Cycle
@@ -6810,7 +6813,7 @@ enum nvme_ns_write_protect_cfg {
 };
 
 /**
- * enum nvme_log_ana_lsp -
+ * enum nvme_log_ana_lsp - Asymmetric Namespace Access - Return Groups Only
  * @NVME_LOG_ANA_LSP_RGO_NAMESPACES:
  * @NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY:
  */
@@ -6820,7 +6823,7 @@ enum nvme_log_ana_lsp {
 };
 
 /**
- * enum nvme_pevent_log_action -
+ * enum nvme_pevent_log_action - Persistent Event Log - Action
  * @NVME_PEVENT_LOG_READ:		Read Log Data
  * @NVME_PEVENT_LOG_EST_CTX_AND_READ:	Establish Context and Read Log Data
  * @NVME_PEVENT_LOG_RELEASE_CTX:	Release Context
@@ -6832,7 +6835,7 @@ enum nvme_pevent_log_action {
 };
 
 /**
- * enum nvme_feat_tmpthresh_thsel -
+ * enum nvme_feat_tmpthresh_thsel - Temperature Threshold - Threshold Type Select
  * @NVME_FEATURE_TEMPTHRESH_THSEL_OVER:		Over temperature threshold select
  * @NVME_FEATURE_TEMPTHRESH_THSEL_UNDER:	Under temperature threshold select
  */
@@ -6842,7 +6845,7 @@ enum nvme_feat_tmpthresh_thsel {
 };
 
 /**
- * enum nvme_features_async_event_config_flags -
+ * enum nvme_features_async_event_config_flags - Asynchronous Event Configuration configuration flags
  * @NVME_FEATURE_AENCFG_SMART_CRIT_SPARE:
  * @NVME_FEATURE_AENCFG_SMART_CRIT_TEMPERATURE:
  * @NVME_FEATURE_AENCFG_SMART_CRIT_DEGRADED:
@@ -6876,7 +6879,7 @@ enum nvme_features_async_event_config_flags {
 };
 
 /**
- * enum nvme_feat_plm_window_select -
+ * enum nvme_feat_plm_window_select - Predictable Latency Per NVM Set Log
  * @NVME_FEATURE_PLM_DTWIN:	Deterministic Window select
  * @NVME_FEATURE_PLM_NDWIN:	Non-Deterministic Window select
  */
@@ -6886,7 +6889,7 @@ enum nvme_feat_plm_window_select {
 };
 
 /**
- * enum nvme_feat_resv_notify_flags -
+ * enum nvme_feat_resv_notify_flags - Reservation Notification Configuration
  * @NVME_FEAT_RESV_NOTIFY_REGPRE:	Mask Registration Preempted Notification
  * @NVME_FEAT_RESV_NOTIFY_RESREL:	Mask Reservation Released Notification
  * @NVME_FEAT_RESV_NOTIFY_RESPRE:	Mask Reservation Preempted Notification
@@ -6898,7 +6901,7 @@ enum nvme_feat_resv_notify_flags {
 };
 
 /**
- * enum nvme_feat_nswpcfg_state -
+ * enum nvme_feat_nswpcfg_state - Write Protection - Write Protection State
  * @NVME_FEAT_NS_NO_WRITE_PROTECT:		No Write Protect
  * @NVME_FEAT_NS_WRITE_PROTECT:			Write Protect
  * @NVME_FEAT_NS_WRITE_PROTECT_PWR_CYCLE:	Write Protect Until Power Cycle
@@ -6912,7 +6915,7 @@ enum nvme_feat_nswpcfg_state {
 };
 
 /**
- * enum nvme_fctype -
+ * enum nvme_fctype - Fabrics Command Types
  * @nvme_fabrics_type_property_set:	Property set
  * @nvme_fabrics_type_connect:		Connect
  * @nvme_fabrics_type_property_get:	Property Get
@@ -6930,7 +6933,7 @@ enum nvme_fctype {
 };
 
 /**
- * enum nvme_io_opcode -
+ * enum nvme_io_opcode - Opcodes for I/O Commands
  * @nvme_cmd_flush:		Flush
  * @nvme_cmd_write:		Write
  * @nvme_cmd_read:		Read
@@ -6968,7 +6971,7 @@ enum nvme_io_opcode {
 };
 
 /**
- * enum nvme_io_control_flags -
+ * enum nvme_io_control_flags - I/O control flags
  * @NVME_IO_DTYPE_STREAMS:	Directive Type Streams
  * @NVME_IO_STC:		Storage Tag Check
  * @NVME_IO_DEAC:		Deallocate
@@ -6994,7 +6997,7 @@ enum nvme_io_control_flags {
 };
 
 /**
- * enum nvme_io_dsm_flags -
+ * enum nvme_io_dsm_flags -  Dataset Management flags
  * @NVME_IO_DSM_FREQ_UNSPEC:	No frequency information provided
  * @NVME_IO_DSM_FREQ_TYPICAL:	Typical number of reads and writes
  * 				expected for this LBA range
@@ -7035,10 +7038,10 @@ enum nvme_io_dsm_flags {
 };
 
 /**
- * enum nvme_dsm_attributes -
- * @NVME_DSMGMT_IDR:	Attribute – Integral Dataset for Read
- * @NVME_DSMGMT_IDW:	Attribute – Integral Dataset for Write
- * @NVME_DSMGMT_AD:	Attribute – Deallocate
+ * enum nvme_dsm_attributes - Dataset Management attributes
+ * @NVME_DSMGMT_IDR:	Attribute -Integral Dataset for Read
+ * @NVME_DSMGMT_IDW:	Attribute - Integral Dataset for Write
+ * @NVME_DSMGMT_AD:	Attribute - Deallocate
  */
 enum nvme_dsm_attributes {
 	NVME_DSMGMT_IDR			= 1 << 0,
@@ -7047,7 +7050,7 @@ enum nvme_dsm_attributes {
 };
 
 /**
- * enum nvme_resv_rtype -
+ * enum nvme_resv_rtype - Reservation Type Encoding
  * @NVME_RESERVATION_RTYPE_WE:		Write Exclusive Reservation
  * @NVME_RESERVATION_RTYPE_EA:		Exclusive Access Reservation
  * @NVME_RESERVATION_RTYPE_WERO:	Write Exclusive - Registrants Only Reservation
@@ -7065,7 +7068,7 @@ enum nvme_resv_rtype {
 };
 
 /**
- * enum nvme_resv_racqa -
+ * enum nvme_resv_racqa - Reservation Acquire - Reservation Acquire Action
  * @NVME_RESERVATION_RACQA_ACQUIRE:		Acquire
  * @NVME_RESERVATION_RACQA_PREEMPT:		Preempt
  * @NVME_RESERVATION_RACQA_PREEMPT_AND_ABORT:	Preempt and Abort
@@ -7077,7 +7080,7 @@ enum nvme_resv_racqa {
 };
 
 /**
- * enum nvme_resv_rrega -
+ * enum nvme_resv_rrega - Reservation Register - Reservation Register Action
  * @NVME_RESERVATION_RREGA_REGISTER_KEY:	Register Reservation Key
  * @NVME_RESERVATION_RREGA_UNREGISTER_KEY:	Unregister Reservation Key
  * @NVME_RESERVATION_RREGA_REPLACE_KEY:		Replace Reservation Key
@@ -7089,7 +7092,7 @@ enum nvme_resv_rrega {
 };
 
 /**
- * enum nvme_resv_cptpl -
+ * enum nvme_resv_cptpl - Reservation Register - Change Persist Through Power Loss State
  * @NVME_RESERVATION_CPTPL_NO_CHANGE:	No change to PTPL state
  * @NVME_RESERVATION_CPTPL_CLEAR:	Reservations are released and
  * 					registrants are cleared on a power on
@@ -7103,7 +7106,7 @@ enum nvme_resv_cptpl {
 };
 
 /**
- * enum nvme_resv_rrela -
+ * enum nvme_resv_rrela - Reservation Release - Reservation Release Action
  * @NVME_RESERVATION_RRELA_RELEASE:	Release
  * @NVME_RESERVATION_RRELA_CLEAR:	Clear
  */
@@ -7113,7 +7116,7 @@ enum nvme_resv_rrela {
 };
 
 /**
- * enum nvme_zns_send_action -
+ * enum nvme_zns_send_action - Zone Management Send - Zone Send Action
  * @NVME_ZNS_ZSA_CLOSE:		Close Zone
  * @NVME_ZNS_ZSA_FINISH:	Finish Zone
  * @NVME_ZNS_ZSA_OPEN:		Open Zone
@@ -7133,7 +7136,7 @@ enum nvme_zns_send_action {
 };
 
 /**
- * enum nvme_zns_recv_action -
+ * enum nvme_zns_recv_action - Zone Management Receive - Zone Receive Action Specific Features
  * @NVME_ZNS_ZRA_REPORT_ZONES:		Report Zones
  * @NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES:	Extended Report Zones
  */
@@ -7143,7 +7146,7 @@ enum nvme_zns_recv_action {
 };
 
 /**
- * enum nvme_zns_report_options -
+ * enum nvme_zns_report_options - Zone Management Receive - Zone Receive Action Specific Field
  * @NVME_ZNS_ZRAS_REPORT_ALL:		List all zones
  * @NVME_ZNS_ZRAS_REPORT_EMPTY:		List the zones in the ZSE:Empty state
  * @NVME_ZNS_ZRAS_REPORT_IMPL_OPENED:	List the zones in the ZSIO:Implicitly Opened state
