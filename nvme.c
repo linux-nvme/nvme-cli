@@ -2438,7 +2438,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 			}
 			goto close_fd;
 		}
-		for (i = 0; i < ns.nlbaf; ++i) {
+		for (i = 0; i <= ns.nlbaf; ++i) {
 			if ((1 << ns.lbaf[i].ds) == cfg.bs && ns.lbaf[i].ms == 0) {
 				cfg.flbas = i;
 				break;
