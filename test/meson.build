@@ -39,17 +39,9 @@ zns = executable(
     include_directories: [incdir, internal_incdir]
 )
 
-# The management interface tests don't require hardware, we have a small
-# test-mi endpoint instead.
-mi_sources = [
-    '../src/nvme/mi.c',
-    '../src/nvme/log.c',
-    '../src/nvme/cleanup.c',
-]
-
 mi = executable(
     'test-mi',
-    ['mi.c'] + mi_sources,
+    ['mi.c'],
     dependencies: libnvme_mi_dep,
     include_directories: [incdir, internal_incdir]
 )
