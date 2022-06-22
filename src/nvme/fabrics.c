@@ -596,8 +596,17 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 					nvme_ctrl_get_host_iface(c),
 					nvme_ctrl_get_trsvcid(c),
 					NULL);
-		if (fc)
+		if (fc) {
 			cfg = merge_config(c, nvme_ctrl_get_config(fc));
+			/*
+			 * An authentication key might already been set
+			 * in @cfg, so ensure to update @c with the correct
+			 * controller key.
+			 */
+			if (fc->dhchap_key)
+				nvme_ctrl_set_dhchap_key(c, fc->dhchap_key);
+		}
+
 	}
 
 	nvme_ctrl_set_discovered(c, true);
