@@ -30,6 +30,18 @@ struct test_transport_data {
 
 static const int test_transport_magic = 0x74657374;
 
+static __u32 crc32_update(__u32 crc, void *data, size_t len)
+{
+	int i;
+
+	while (len--) {
+		crc ^= *(unsigned char *)(data++);
+		for (i = 0; i < 8; i++)
+			crc = (crc >> 1) ^ ((crc & 1) ? 0x82F63B78 : 0);
+	}
+	return crc;
+}
+
 static int test_transport_submit(struct nvme_mi_ep *ep,
 				 struct nvme_mi_req *req,
 				 struct nvme_mi_resp *resp)
@@ -58,11 +70,11 @@ static void test_transport_close(struct nvme_mi_ep *ep)
 /* internal test helper to generate correct response crc */
 static void test_transport_resp_calc_mic(struct nvme_mi_resp *resp)
 {
-	extern __u32 nvme_mi_crc32_update(__u32 crc, void *data, size_t len);
+	extern __u32 crc32_update(__u32 crc, void *data, size_t len);
 	__u32 crc = 0xffffffff;
 
-	crc = nvme_mi_crc32_update(crc, resp->hdr, resp->hdr_len);
-	crc = nvme_mi_crc32_update(crc, resp->data, resp->data_len);
+	crc = crc32_update(crc, resp->hdr, resp->hdr_len);
+	crc = crc32_update(crc, resp->data, resp->data_len);
 
 	resp->mic = ~crc;
 }
@@ -89,8 +101,9 @@ nvme_mi_ep_t nvme_mi_open_test(nvme_root_t root)
 	struct test_transport_data *tpd;
 	struct nvme_mi_ep *ep;
 
-	ep = nvme_mi_init_ep(root);
+	ep = malloc(sizeof(*ep));
 	assert(ep);
+	ep->root = root;
 
 	tpd = malloc(sizeof(*tpd));
 	assert(tpd);
