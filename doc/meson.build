@@ -13,6 +13,7 @@ api_files = [
   'ioctl.h',
   'linux.h',
   'log.h',
+  'mi.h',
   'tree.h',
   'types.h',
   'fabrics.h',
@@ -25,6 +26,7 @@ sphinx_sources = [
     'index.rst',
     'quickstart.rst',
     'installation.rst',
+    'mi.rst',
     'config-schema.json'
 ]
 

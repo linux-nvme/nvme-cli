@@ -12,6 +12,7 @@ and utilities to connect, scan, and manage nvme devices on a Linux system.
 
    installation.rst
    quickstart.rst
+   mi.rst
    api.rst
 
 Indices and tables
