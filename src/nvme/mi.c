@@ -526,14 +526,14 @@ int nvme_mi_mi_read_mi_data_port(nvme_mi_ep_t ep, __u8 portid,
 	return 0;
 }
 
-int nvme_mi_mi_read_mi_data_ctrl_list(nvme_mi_ep_t ep, __u8 start_portid,
+int nvme_mi_mi_read_mi_data_ctrl_list(nvme_mi_ep_t ep, __u8 start_ctrlid,
 				       struct nvme_ctrl_list *list)
 {
 	size_t len;
 	__u32 cdw0;
 	int rc;
 
-	cdw0 = ((__u8)nvme_mi_dtyp_ctrl_list << 24) | (start_portid << 16);
+	cdw0 = ((__u8)nvme_mi_dtyp_ctrl_list << 24) | (start_ctrlid << 16);
 	len = sizeof(*list);
 
 	rc = nvme_mi_read_data(ep, cdw0, list, &len);
