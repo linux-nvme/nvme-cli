@@ -27,3 +27,17 @@ each have a unique ``unsigned int`` as their ID.
 
 The default Network ID is 1; unless you have configured otherwise, MCTP
 endpoints will appear on this network.
+
+If compiled with D-Bus support, ``libnvme-mi`` can query the system MCTP daemon
+("``mctpd``") to find attached NVMe devices, via the ``nvme_mi_scan_mctp()``
+function. Calling this will establish a ``nvme_root_t`` object, populated
+with the results of that scan. Use the ``nvme_mi_for_each_endpoint`` macro
+to iterate through the scanned endpoints.
+
+Note that the MCTP daemon is provided separately, as part of the MCTP userspace
+tools, at https://github.com/CodeConstruct/mctp . ``mctpd`` is responsible for
+discovery and enumeration for MCTP endpoints on the system, and will query
+each for its protocol capabilities during enumeration. Consequently, NVMe-MI
+endpoints will need to report support for NVMe-MI-over-MCTP (protocol 0x4) in
+their supported protocols list (ie., as returned by the MCTP Get Message Type
+Support command) in order to be discovered.
