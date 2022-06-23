@@ -13,6 +13,7 @@ api_files = [
   'ioctl.h',
   'linux.h',
   'log.h',
+  'mi.h',
   'tree.h',
   'types.h',
   'fabrics.h',

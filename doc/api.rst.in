@@ -11,6 +11,7 @@ functions.
 .. include::   rst/ioctl.rst
 .. include::   rst/fabrics.rst
 .. include::   rst/linux.rst
+.. include::   rst/mi.rst
 .. include::   rst/tree.rst
 .. include::   rst/filters.rst
 .. include::   rst/util.rst
