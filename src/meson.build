@@ -93,6 +93,25 @@ libnvme_mi_dep = declare_dependency(
     link_with: libnvme_mi,
 )
 
+# test library with all symbols visible, to use for MI unit tests. Should
+# match libnvme_mi above, but with no version script, and install: false.
+libnvme_mi_test = library(
+    'nvme-mi-test', # produces libnvme-mi-test.so
+    mi_sources,
+    dependencies: mi_deps,
+    include_directories: [incdir, internal_incdir],
+    install: false,
+    link_with: libccan,
+)
+
+libnvme_mi_test_dep = declare_dependency(
+    include_directories: ['.'],
+    dependencies: [
+      libuuid_dep.partial_dependency(compile_args: true, includes: true),
+    ],
+    link_with: libnvme_mi_test,
+)
+
 pkg.generate(libnvme_mi,
     filebase: 'libnvme-mi',
     name: 'libnvme-mi',

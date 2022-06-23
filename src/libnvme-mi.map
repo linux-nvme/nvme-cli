@@ -19,11 +19,3 @@ LIBNVME_MI_1_1 {
 	local:
 		*;
 };
-# API exported only for libnvme-mi internal test functions. These should
-# not be used other than through the in-tree tests, and cannot be considered
-# at all stable.
-LIBNVME_MI_TEST {
-	global:
-		nvme_mi_init_ep;
-		nvme_mi_crc32_update;
-};
