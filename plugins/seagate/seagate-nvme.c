@@ -1477,7 +1477,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *cmd
 	stx_fw_activ_history_log_page fwActivHis;
 	int fd;
 
-	const char *desc = "Retrieve Seagate PCIe error counters for the given device ";
+	const char *desc = "Retrieve FW Activate History for Seagate device ";
 	const char *output_format = "output in binary format";
 	int err;
 	struct config {
