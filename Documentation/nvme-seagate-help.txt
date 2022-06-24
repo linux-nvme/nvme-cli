@@ -20,10 +20,7 @@ No Options
 
 EXAMPLES
 --------
-* Usage: nvme seagate <command> [<device>] [<args>]
-
-The '<device>' may be either an NVMe character device (ex: /dev/nvme0) or an
-nvme block device (ex: /dev/nvme0n1).
+Get help information for specific seagate sub-commands.
 
 Seagate vendor specific extensions::
 
@@ -42,11 +39,9 @@ The following are all implemented sub-commands:
         help                            Display this help
 
 See 'nvme seagate help <command>' for more information on a specific command
-+
+
 ------------
 # nvme seagate help
-Output:
-(see above)
 ------------
 
 Not much to it

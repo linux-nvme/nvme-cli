@@ -20,15 +20,13 @@ No Options
 
 EXAMPLES
 --------
-* Usage: nvme seagate plugin-version
-+
+Get the plugin version of the specific nvme device.
+
 ------------
 # nvme seagate plugin-version
-Output:
+
 # Seagate-Plugin version : 1.1 (actual output will change with versions)
 ------------
-
-Not much to it
 
 NVME
 ----

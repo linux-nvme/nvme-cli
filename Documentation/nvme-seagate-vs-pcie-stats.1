@@ -65,36 +65,11 @@ The \fI<device>\fR may be either an NVMe character device (ex: /dev/nvme0) or an
 .\}
 .nf
 # nvme seagate vs\-pcie\-stats /dev/nvme0
-Output:
-Seagate PCIe error counters Information :
-PCIe Correctable Error Count                  : 0
-PCIe Un\-Correctable Error Count               : 21
-Unsupported Request Error Status (URES)       : 21
-ECRC Error Status (ECRCES)                    : 0
-Malformed TLP Status (MTS)                    : 0
-Receiver Overflow Status (ROS)                : 0
-Unexpected Completion Status(UCS)             : 0
-Completion Timeout Status (CTS)               : 0
-Flow Control Protocol Error Status (FCPES)    : 0
-Poisoned TLP Status (PTS)                     : 0
-Data Link Protocol Error Status(DLPES)        : 0
-Replay Timer Timeout Status(RTS)              : 0
-Replay_NUM Rollover Status(RRS)               : 0
-Bad DLLP Status (BDS)                         : 0
-Bad TLP Status (BTS)                          : 0
-Receiver Error Status (RES)                   : 0
-Cpl TLP Unsupported Request Error Count       : 0
-Cpl TLP Completion Abort Error Count          : 0
-Cpl TLP Poisoned Error Count                  : 0
-Request Completion Abort Error Count          : 0
-Advisory Non\-Fatal Error Status(ANFES)        : Not Supported
-Completer Abort Status (CAS)                  : Not Supported
 .fi
 .if n \{\
 .RE
 .\}
 .sp
-TBD closing note
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

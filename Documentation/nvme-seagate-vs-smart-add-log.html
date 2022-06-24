@@ -815,43 +815,14 @@ all commands work across all product families.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Usage: nvme seagate vs-smart-add-log [&lt;device&gt;] [OPTIONS]
+Get the vendor specific extended SMART information for the specified device.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>The <em>&lt;device&gt;</em> may be either an NVMe character device (ex: /dev/nvme0) or an
-nvme block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>+</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><code># nvme seagate vs-smart-add-log /dev/nvme0
-Output:
-Seagate Extended SMART Information :
-Description                             Ext-Smart-Id    Ext-Smart-Value
-
-Soft ECC error count                    1               0x0000000000000000
-Bad NAND block count                    5               0x0000000000001238
-Power On Hours                          9               0x0000000000001393
-Device Power Cycle Count                12              0x00000000000000a8
-Retired block count                     170             0x0000000000001238
-Program fail count                      171             0x0000000000000000
-Erase Fail Count                        172             0x0000000000000000
-Unexpected power loss count             174             0x0000000000000019
-Wear range delta                        177             0x0000000000000000
-Max lifetime temperature                194             0x000000000000004e
-Uncorrectable read error count          198             0x0000000000000000
-Remaining SSD life                      231             0x0000000000000064
-OP percentage                           252             0x0000000000000007
-RAIS_ECC_CORRECT_ERR_COUNT              195             0x0000000000002732
-Uncorrectable Read Error Count          188             0x0000000000000000
-Max lifetime SOC temperature            253             0x0000000000000154
-Flash GB erased                         25956           0x00000000000000000000000009d186c8
-Physical (NAND) bytes written           60137           0x000000000000000000000000000454bc
-Physical (HOST) bytes written           62193           0x00000000000067e600000000000000f6
-Physical (NAND) bytes read              62707           0x00000000000000000000000000000000
-Trim count                              64506           0x00000000000000000000000000000000</code></pre>
 </div></div>
-<div class="paragraph"><p>TBD closing note</p></div>
 </div>
 </div>
 <div class="sect1">

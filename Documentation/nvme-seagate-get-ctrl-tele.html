@@ -759,6 +759,9 @@ nvme-seagate-get-ctrl-tele(1) Manual Page
 <div class="sectionbody">
 <div class="paragraph"><p>This command will only work on Seagate devices supporting this feature.  Not
 all commands work across all product families.</p></div>
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe
+character device (ex: /dev/nvme0), or a namespace block device (ex:
+/dev/nvme0n1).</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -795,28 +798,15 @@ all commands work across all product families.</p></div>
 <div class="sectionbody">
 <div class="ulist"><ul>
 <li>
-<p>
-Usage: nvme seagate get-ctrl-tele [&lt;device&gt;] [OPTIONS]
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>The <em>&lt;device&gt;</em> may be either an NVMe character device (ex: /dev/nvme0) or an
-nvme block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>+</p></div>
+<p> Get the controller initiated telemetry log in hexdump or binary format for the specified device. </p>
 <div class="listingblock">
 <div class="content">
 <pre><code># nvme seagate get-ctrl-tele /dev/nvme0
-Output:
-Device:nvme1 log-id:7 namespace-id:0xffffffff
-Data Block 1 Last Block:0 Data Block 2 Last Block:0 Data Block 3 Last Block:0
-       0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
-0000: 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "................"
-0010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "................"
-0020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "................"
-0030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "................"
-etc...</code></pre>
+</code></pre>
 </div></div>
-<div class="paragraph"><p>TBD closing note</p></div>
+</li>
+</ul>
+</div>
 </div>
 </div>
 <div class="sect1">

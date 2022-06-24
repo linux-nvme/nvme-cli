@@ -772,23 +772,17 @@ nvme-seagate-help(1) Manual Page
 <div class="ulist"><ul>
 <li>
 <p>
-Usage: nvme seagate &lt;command&gt; [&lt;device&gt;] [&lt;args&gt;]
+Get help information for specific seagate sub-commands.
 </p>
-</li>
-</ul></div>
-<div class="paragraph"><p>The <em>&lt;device&gt;</em> may be either an NVMe character device (ex: /dev/nvme0) or an
-nvme block device (ex: /dev/nvme0n1).</p></div>
 <div class="dlist"><dl>
-<dt class="hdlist1">
-Seagate vendor specific extensions
-</dt>
+<dt class="hdlist1"><p>
+The following are all implemented Seagate vendor specificsub-commands:
+</p></dt>
 <dd>
-<p>
-The following are all implemented sub-commands:
-</p>
 <div class="literalblock">
 <div class="content">
-<pre><code>vs-temperature-stats            Retrieve Seagate temperature statistics
+<pre><code>
+vs-temperature-stats            Retrieve Seagate temperature statistics
 vs-log-page-sup                 Retrieve Seagate Supported Log-pages Information
 vs-smart-add-log                Retrieve Seagate extended-SMART Information
 vs-pcie-stats                   Retrieve Seagate PCIe error statistics
@@ -803,14 +797,13 @@ help                            Display this help</code></pre>
 </dd>
 </dl></div>
 <div class="paragraph"><p>See <em>nvme seagate help &lt;command&gt;</em> for more information on a specific command</p></div>
-<div class="paragraph"><p>+</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><code># nvme seagate help
-Output:
-(see above)</code></pre>
+</code></pre>
 </div></div>
-<div class="paragraph"><p>Not much to it</p></div>
+</li>
+</ul></div>
 </div>
 </div>
 <div class="sect1">
