@@ -35,7 +35,10 @@ OPTIONS
 --namespace-id=<nsid>::
 	Retrieve the identify namespace structure for the given nsid. This
 	is required for the character devices, or overrides the block nsid
-	if given.
+	if given. If the controller supports namespace management capability
+	and 0xFFFFFFFF is given, then the controller returns the identify
+	namespace structure that specifies common capabilities across
+	namespaces for the controller.
 
 --force::
 	Request controller return the identify namespace structure even
