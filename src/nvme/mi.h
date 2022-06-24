@@ -285,6 +285,50 @@ struct nvme_mi_ep;
  */
 typedef struct nvme_mi_ep * nvme_mi_ep_t;
 
+/**
+ * nvme_mi_first_endpoint - Start endpoint iterator
+ * @m: &nvme_root_t object
+ *
+ * Return: first MI endpoint object under this root, or NULL if no endpoints
+ *         are present.
+ *
+ * See: &nvme_mi_next_endpoint, &nvme_mi_for_each_endpoint
+ */
+nvme_mi_ep_t nvme_mi_first_endpoint(nvme_root_t m);
+
+/**
+ * nvme_mi_next_endpoint - Continue endpoint iterator
+ * @m: &nvme_root_t object
+ * @e: &nvme_mi_ep_t current position of iterator
+ *
+ * Return: next endpoint MI endpoint object after @e under this root, or NULL
+ *         if no further endpoints are present.
+ *
+ * See: &nvme_mi_first_endpoint, &nvme_mi_for_each_endpoint
+ */
+nvme_mi_ep_t nvme_mi_next_endpoint(nvme_root_t m, nvme_mi_ep_t e);
+
+/**
+ * nvme_mi_for_each_endpoint - Iterator for NVMe-MI endpoints.
+ * @m: &nvme_root_t containing endpoints
+ * @e: &nvme_mi_ep_t object, set on each iteration
+ */
+#define nvme_mi_for_each_endpoint(m, e)			\
+	for (e = nvme_mi_first_endpoint(m); e != NULL;	\
+	     e = nvme_mi_next_endpoint(m, e))
+
+/**
+ * nvme_mi_for_each_endpoint_safe - Iterator for NVMe-MI endpoints, allowing
+ * deletion during traversal
+ * @m: &nvme_root_t containing endpoints
+ * @e: &nvme_mi_ep_t object, set on each iteration
+ * @_e: &nvme_mi_ep_t object used as temporary storage
+ */
+#define nvme_mi_for_each_endpoint_safe(m, e, _e)			      \
+	for (e = nvme_mi_first_endpoint(m), _e = nvme_mi_next_endpoint(m, e); \
+	     e != NULL;							      \
+	     e = _e, _e = nvme_mi_next_endpoint(m, e))
+
 struct nvme_mi_ctrl;
 
 /**
@@ -317,6 +361,20 @@ nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, uint8_t eid
 void nvme_mi_close(nvme_mi_ep_t ep);
 
 /**
+ * nvme_mi_scan_mctp - look for MCTP-connected NVMe-MI endpoints.
+ *
+ * This function queries the system mctp daemon ("mctpd") over dbus, to find
+ * MCTP endpoints that report support for NVMe-MI over MCTP.
+ *
+ * This requires libvnme-mi to be compiled with D-Bus support; if not, this
+ * will return NULL.
+ *
+ * Return: A @nvme_root_t populated with a set of MCTP-connected endpoints,
+ *         or NULL on failure
+ */
+nvme_root_t nvme_mi_scan_mctp(void);
+
+/**
  * nvme_mi_init_ctrl() - initialise a NVMe controller.
  * @ep: Endpoint to create under
  * @ctrl_id: ID of controller to initialise.
@@ -336,6 +394,19 @@ nvme_mi_ctrl_t nvme_mi_init_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id);
  * @ctrl: controller to free
  */
 void nvme_mi_close_ctrl(nvme_mi_ctrl_t ctrl);
+
+/**
+ * nvme_mi_endpoint_desc - Get a string describing a MI endpoint.
+ * @ep: endpoint to describe
+ *
+ * Generates a human-readable string describing the endpoint, with possibly
+ * transport-specific data. The string is allocated during the call, and the
+ * caller is responsible for free()-ing the string.
+ *
+ * Return: a newly-allocated string containing the endpoint description, or
+ *         NULL on failure.
+ */
+char *nvme_mi_endpoint_desc(nvme_mi_ep_t ep);
 
 /* MI Command API: nvme_mi_mi_ prefix */
 

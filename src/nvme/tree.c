@@ -141,6 +141,7 @@ nvme_root_t nvme_create_root(FILE *fp, int log_level)
 	if (fp)
 		r->fp = fp;
 	list_head_init(&r->hosts);
+	list_head_init(&r->endpoints);
 	return r;
 }
 
