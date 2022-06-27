@@ -189,11 +189,14 @@ struct nvme_mi_ep {
 	const struct nvme_mi_transport *transport;
 	void *transport_data;
 	struct list_node root_entry;
+	struct list_head controllers;
+	bool controllers_scanned;
 };
 
 struct nvme_mi_ctrl {
 	struct nvme_mi_ep	*ep;
 	__u16			id;
+	struct list_node	ep_entry;
 };
 
 struct nvme_mi_ep *nvme_mi_init_ep(struct nvme_root *root);

@@ -152,6 +152,47 @@ static void test_endpoint_lifetime(nvme_mi_ep_t ep)
 	assert(count == 1);
 }
 
+unsigned int count_ep_controllers(nvme_mi_ep_t ep)
+{
+	unsigned int i = 0;
+	nvme_mi_ctrl_t ctrl;
+
+	nvme_mi_for_each_ctrl(ep, ctrl)
+		i++;
+
+	return i;
+}
+
+/* test that the ep->controllers list is updated on controller
+ * creation/destruction */
+static void test_ctrl_lifetime(nvme_mi_ep_t ep)
+{
+	nvme_mi_ctrl_t c1, c2;
+	int count;
+
+	ep->controllers_scanned = true;
+
+	count = count_ep_controllers(ep);
+	assert(count == 0);
+
+	c1 = nvme_mi_init_ctrl(ep, 1);
+	count = count_ep_controllers(ep);
+	assert(count == 1);
+
+	c2 = nvme_mi_init_ctrl(ep, 2);
+	count = count_ep_controllers(ep);
+	assert(count == 2);
+
+	nvme_mi_close_ctrl(c1);
+	count = count_ep_controllers(ep);
+	assert(count == 1);
+
+	nvme_mi_close_ctrl(c2);
+	count = count_ep_controllers(ep);
+	assert(count == 0);
+}
+
+
 /* test: basic read MI datastructure command */
 static int test_read_mi_data_cb(struct nvme_mi_ep *ep,
 				 struct nvme_mi_req *req,
@@ -260,6 +301,75 @@ static void test_invalid_crc(nvme_mi_ep_t ep)
 	test_set_transport_callback(ep, test_invalid_crc_cb, NULL);
 	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
 	assert(rc != 0);
+}
+
+/* test: test that the controller list populates the endpoint's list of
+ * controllers */
+static int test_scan_ctrl_list_cb(struct nvme_mi_ep *ep,
+				  struct nvme_mi_req *req,
+				  struct nvme_mi_resp *resp,
+				  void *data)
+{
+	__u8 ror, mt, *hdr, *buf;
+
+	assert(req->hdr->type == NVME_MI_MSGTYPE_NVME);
+
+	ror = req->hdr->nmp >> 7;
+	mt = req->hdr->nmp >> 3 & 0x7;
+	assert(ror == NVME_MI_ROR_REQ);
+	assert(mt == NVME_MI_MT_MI);
+
+	/* do we have enough for a mi header? */
+	assert(req->hdr_len == sizeof(struct nvme_mi_mi_req_hdr));
+
+	/* inspect response as raw bytes */
+	hdr = (__u8 *)req->hdr;
+	assert(hdr[4] == nvme_mi_mi_opcode_mi_data_read);
+	assert(hdr[11] == nvme_mi_dtyp_ctrl_list);
+
+	/* create basic response */
+	assert(resp->hdr_len >= sizeof(struct nvme_mi_mi_resp_hdr));
+	assert(resp->data_len >= 4);
+
+	hdr = (__u8 *)resp->hdr;
+	hdr[4] = 0; /* status */
+
+	buf = (__u8 *)resp->data;
+	memset(buf, 0, resp->data_len);
+	buf[0] = 3; buf[1] = 0; /* num controllers */
+	buf[2] = 1; buf[3] = 0; /* id 1 */
+	buf[4] = 4; buf[5] = 0; /* id 4 */
+	buf[6] = 5; buf[7] = 0; /* id 5 */
+
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+static void test_scan_ctrl_list(nvme_mi_ep_t ep)
+{
+	struct nvme_mi_ctrl *ctrl;
+
+	ep->controllers_scanned = false;
+
+	test_set_transport_callback(ep, test_scan_ctrl_list_cb, NULL);
+
+	nvme_mi_scan_ep(ep, false);
+
+	ctrl = nvme_mi_first_ctrl(ep);
+	assert(ctrl);
+	assert(ctrl->id == 1);
+
+	ctrl = nvme_mi_next_ctrl(ep, ctrl);
+	assert(ctrl);
+	assert(ctrl->id == 4);
+
+	ctrl = nvme_mi_next_ctrl(ep, ctrl);
+	assert(ctrl);
+	assert(ctrl->id == 5);
+
+	ctrl = nvme_mi_next_ctrl(ep, ctrl);
+	assert(ctrl == NULL);
 }
 
 /* test: simple NVMe admin request/response */
@@ -389,9 +499,11 @@ struct test {
 	void (*fn)(nvme_mi_ep_t);
 } tests[] = {
 	DEFINE_TEST(endpoint_lifetime),
+	DEFINE_TEST(ctrl_lifetime),
 	DEFINE_TEST(read_mi_data),
 	DEFINE_TEST(transport_fail),
 	DEFINE_TEST(transport_describe),
+	DEFINE_TEST(scan_ctrl_list),
 	DEFINE_TEST(invalid_crc),
 	DEFINE_TEST(admin_id),
 	DEFINE_TEST(admin_err_resp),

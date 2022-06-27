@@ -339,6 +339,63 @@ struct nvme_mi_ctrl;
 typedef struct nvme_mi_ctrl * nvme_mi_ctrl_t;
 
 /**
+ * nvme_mi_first_ctrl - Start controller iterator
+ * @ep: &nvme_mi_ep_t object
+ *
+ * Return: first MI controller object under this root, or NULL if no controllers
+ *         are present.
+ *
+ * See: &nvme_mi_next_ctrl, &nvme_mi_for_each_ctrl
+ */
+nvme_mi_ctrl_t nvme_mi_first_ctrl(nvme_mi_ep_t ep);
+
+/**
+ * nvme_mi_next_ctrl - Continue ctrl iterator
+ * @ep: &nvme_mi_ep_t object
+ * @c: &nvme_mi_ctrl_t current position of iterator
+ *
+ * Return: next MI controller object after @c under this endpoint, or NULL
+ *         if no further controllers are present.
+ *
+ * See: &nvme_mi_first_ctrl, &nvme_mi_for_each_ctrl
+ */
+nvme_mi_ctrl_t nvme_mi_next_ctrl(nvme_mi_ep_t ep, nvme_mi_ctrl_t c);
+
+/**
+ * nvme_mi_for_each_ctrl - Iterator for NVMe-MI controllers.
+ * @ep: &nvme_mi_ep_t containing endpoints
+ * @c: &nvme_mi_ctrl_t object, set on each iteration
+ *
+ * Allows iteration of the list of controllers behind an endpoint. Unless the
+ * controllers have already been created explicitly, you'll probably want to
+ * call &nvme_mi_scan_ep() to scan for the controllers first.
+ *
+ * See: &nvme_mi_scan_ep()
+ */
+#define nvme_mi_for_each_ctrl(ep, c)			\
+	for (c = nvme_mi_first_ctrl(ep); c != NULL;	\
+	     c = nvme_mi_next_ctrl(ep, c))
+
+/**
+ * nvme_mi_for_each_ctrl_safe - Iterator for NVMe-MI controllers, allowing
+ * deletion during traversal
+ * @ep: &nvme_mi_ep_t containing controllers
+ * @c: &nvme_mi_ctrl_t object, set on each iteration
+ * @_c: &nvme_mi_ctrl_t object used as temporary storage
+ *
+ * Allows iteration of the list of controllers behind an endpoint, safe against
+ * deletion during iteration. Unless the controllers have already been created
+ * explicitly (or you're just iterating to destroy controllers) you'll probably
+ * want to call &nvme_mi_scan_ep() to scan for the controllers first.
+ *
+ * See: &nvme_mi_scan_ep()
+ */
+#define nvme_mi_for_each_ctrl_safe(ep, c, _c)			      \
+	for (c = nvme_mi_first_ctrl(ep), _c = nvme_mi_next_ctrl(ep, c);	      \
+	     c != NULL;							      \
+	     c = _c, _c = nvme_mi_next_ctrl(ep, c))
+
+/**
  * nvme_mi_open_mctp() - Create an endpoint using a MCTP connection.
  * @root: root object to create under
  * @netid: MCTP network ID on this system
@@ -354,7 +411,8 @@ typedef struct nvme_mi_ctrl * nvme_mi_ctrl_t;
 nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, uint8_t eid);
 
 /**
- * nvme_mi_close() - Close an endpoint connection and release resources
+ * nvme_mi_close() - Close an endpoint connection and release resources,
+ * including controller objects.
  *
  * @ep: Endpoint object to close
  */
@@ -373,6 +431,26 @@ void nvme_mi_close(nvme_mi_ep_t ep);
  *         or NULL on failure
  */
 nvme_root_t nvme_mi_scan_mctp(void);
+
+/**
+ * nvme_mi_scan_ep - query an endpoint for its NVMe controllers.
+ * @ep: Endpoint to scan
+ * @force_rescan: close existing controllers and rescan
+ *
+ * This function queries an MI endpoint for the controllers available, by
+ * performing an MI Read MI Data Structure command (requesting the
+ * controller list). The controllers are stored in the endpoint's internal
+ * list, and can be iterated with nvme_mi_for_each_ctrl.
+ *
+ * This will only scan the endpoint once, unless @force_rescan is set. If
+ * so, all existing controller objects will be freed - the caller must not
+ * hold a reference to those across this call.
+ *
+ * Return: 0 on success, non-zero on failure
+ *
+ * See: &nvme_mi_for_each_ctrl
+ */
+int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan);
 
 /**
  * nvme_mi_init_ctrl() - initialise a NVMe controller.
