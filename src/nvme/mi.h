@@ -363,8 +363,8 @@ void nvme_mi_close(nvme_mi_ep_t ep);
 /**
  * nvme_mi_scan_mctp - look for MCTP-connected NVMe-MI endpoints.
  *
- * This function queries the system mctp daemon ("mctpd") over dbus, to find
- * MCTP endpoints that report support for NVMe-MI over MCTP.
+ * Description: This function queries the system mctp daemon ("mctpd") over
+ * dbus, to find MCTP endpoints that report support for NVMe-MI over MCTP.
  *
  * This requires libvnme-mi to be compiled with D-Bus support; if not, this
  * will return NULL.
