@@ -54,6 +54,8 @@ struct nvme_mi_ep *nvme_mi_init_ep(nvme_root_t root)
 	ep = calloc(1, sizeof(*ep));
 	list_node_init(&ep->root_entry);
 	ep->root = root;
+	ep->controllers_scanned = false;
+	list_head_init(&ep->controllers);
 
 	list_add(&root->endpoints, &ep->root_entry);
 
@@ -71,7 +73,50 @@ struct nvme_mi_ctrl *nvme_mi_init_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id)
 	ctrl->ep = ep;
 	ctrl->id = ctrl_id;
 
+	list_add_tail(&ep->controllers, &ctrl->ep_entry);
+
 	return ctrl;
+}
+
+int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan)
+{
+	struct nvme_ctrl_list list;
+	unsigned int i, n_ctrl;
+	int rc;
+
+	if (ep->controllers_scanned) {
+		if (force_rescan) {
+			struct nvme_mi_ctrl *ctrl, *tmp;
+			nvme_mi_for_each_ctrl_safe(ep, ctrl, tmp)
+				nvme_mi_close_ctrl(ctrl);
+		} else {
+			return 0;
+		}
+	}
+
+	rc = nvme_mi_mi_read_mi_data_ctrl_list(ep, 0, &list);
+	if (rc)
+		return -1;
+
+	n_ctrl = le16_to_cpu(list.num);
+	if (n_ctrl > NVME_ID_CTRL_LIST_MAX)
+		return -1;
+
+	for (i = 0; i < n_ctrl; i++) {
+		struct nvme_mi_ctrl *ctrl;
+		__u16 id;
+
+		id = le32_to_cpu(list.identifier[i]);
+		if (!id)
+			continue;
+
+		ctrl = nvme_mi_init_ctrl(ep, id);
+		if (!ctrl)
+			break;
+	}
+
+	ep->controllers_scanned = true;
+	return 0;
 }
 
 __u32 nvme_mi_crc32_update(__u32 crc, void *data, size_t len)
@@ -618,6 +663,14 @@ int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 
 void nvme_mi_close(nvme_mi_ep_t ep)
 {
+	struct nvme_mi_ctrl *ctrl, *tmp;
+
+	/* don't look for controllers during destruction */
+	ep->controllers_scanned = true;
+
+	nvme_mi_for_each_ctrl_safe(ep, ctrl, tmp)
+		nvme_mi_close_ctrl(ctrl);
+
 	if (ep->transport->close)
 		ep->transport->close(ep);
 	list_del(&ep->root_entry);
@@ -626,6 +679,7 @@ void nvme_mi_close(nvme_mi_ep_t ep)
 
 void nvme_mi_close_ctrl(nvme_mi_ctrl_t ctrl)
 {
+	list_del(&ctrl->ep_entry);
 	free(ctrl);
 }
 
@@ -667,4 +721,14 @@ nvme_mi_ep_t nvme_mi_first_endpoint(nvme_root_t m)
 nvme_mi_ep_t nvme_mi_next_endpoint(nvme_root_t m, nvme_mi_ep_t ep)
 {
 	return ep ? list_next(&m->endpoints, ep, root_entry) : NULL;
+}
+
+nvme_mi_ctrl_t nvme_mi_first_ctrl(nvme_mi_ep_t ep)
+{
+	return list_top(&ep->controllers, struct nvme_mi_ctrl, ep_entry);
+}
+
+nvme_mi_ctrl_t nvme_mi_next_ctrl(nvme_mi_ep_t ep, nvme_mi_ctrl_t c)
+{
+	return c ? list_next(&ep->controllers, c, ep_entry) : NULL;
 }
