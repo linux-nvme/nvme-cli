@@ -960,6 +960,8 @@ static bool traddr_is_hostname(const char *transport, const char *traddr)
 
 	if (!traddr || !transport)
 		return false;
+	if (!strcmp(traddr, "none"))
+		return false;
 	if (strcmp(transport, "tcp") &&
 	    strcmp(transport, "rdma"))
 		return false;
