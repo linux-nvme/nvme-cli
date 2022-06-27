@@ -123,6 +123,7 @@ pkg.generate(libnvme_mi,
 
 mode = ['rw-r--r--', 0, 0]
 install_headers('libnvme.h', install_mode: mode)
+install_headers('libnvme-mi.h', install_mode: mode)
 install_headers([
         'nvme/api-types.h',
         'nvme/fabrics.h',
