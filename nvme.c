@@ -7449,11 +7449,14 @@ static int passthru(int argc, char **argv, bool admin,
 	if (fd < 0)
 		goto ret;
 
-	if (cfg.opcode & 0x01)
-		cfg.write = true;
+	/*for bidirectonal opcode, should explicitly specific the direction by -r or -w*/
+	if ((cfg.opcode & 0x3) != 0x3) {
+		if (cfg.opcode & 0x01)
+			cfg.write = true;
 
-	if (cfg.opcode & 0x02)
-		cfg.read = true;
+		if (cfg.opcode & 0x02)
+			cfg.read = true;
+	}
 
 	if (cfg.write) {
 		flags = O_RDONLY;
