@@ -66,17 +66,14 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 
 	struct config {
 		char	*output_format;
-		int	raw_binary;
 	};
 
 	struct config cfg = {
 		.output_format	= "normal",
-		.raw_binary	= 0
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     "Dump output in binary format"),
 		OPT_END()
 	};
 
@@ -90,10 +87,6 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
 		close(fd);
 		return fd;
-	}
-	
-	if (cfg.raw_binary)	{
-		flags = BINARY;
 	}
 
 	garbage_control_collection_log_t gc_log;

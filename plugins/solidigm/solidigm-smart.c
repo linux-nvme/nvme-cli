@@ -206,19 +206,16 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 	struct config {
 		__u32	namespace_id;
 		char	*output_format;
-		int	raw_binary;
 	};
 
 	struct config cfg = {
 		.namespace_id	= NVME_NSID_ALL,
 		.output_format	= "normal",
-		.raw_binary	= 0
 	};
 
 	OPT_ARGS(opts) = {
 		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   "(optional) desired namespace"),
 		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     "Dump output in binary format"),
 		OPT_END()
 	};
 
@@ -232,9 +229,6 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
 		close(fd);
 		return fd;
-	}
-	if (cfg.raw_binary)	{
-		flags = BINARY;
 	}
 
 	err = nvme_get_log_simple(fd, solidigm_vu_smart_log_id, sizeof(smart_log_payload), &smart_log_payload);
