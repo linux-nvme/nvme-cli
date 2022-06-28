@@ -41,7 +41,7 @@ zns = executable(
 
 mi = executable(
     'test-mi',
-    ['mi.c'],
+    ['mi.c', 'utils.c'],
     dependencies: libnvme_mi_test_dep,
     include_directories: [incdir, internal_incdir]
 )
