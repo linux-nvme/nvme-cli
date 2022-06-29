@@ -112,10 +112,18 @@ ssize_t __wrap_sendmsg(int sd, const struct msghdr *hdr, int flags)
 
 	test_peer.rx_buf_len = pos;
 
-	if (test_peer.rx_fn)
+
+	if (test_peer.rx_fn) {
 		test_peer.rx_res = test_peer.rx_fn(&test_peer,
 						   test_peer.rx_buf,
 						   test_peer.rx_buf_len);
+	} else {
+		/* set up a few default response fields; caller may have
+		 * initialised the rest of the response */
+		test_peer.tx_buf[0] = NVME_MI_MSGTYPE_NVME;
+		test_peer.tx_buf[1] = test_peer.rx_buf[1] | (NVME_MI_ROR_RSP << 7);
+		test_set_tx_mic(&test_peer);
+	}
 
 	errno = test_peer.rx_errno;
 
@@ -191,9 +199,8 @@ static void test_read_mi_data(nvme_mi_ep_t ep, struct test_peer *peer)
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	int rc;
 
-	/* empty response data, but with correct MIC */
+	/* empty response data */
 	peer->tx_buf_len = 8 + 32;
-	test_set_tx_mic(peer);
 
 	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
 	assert(rc == 0);

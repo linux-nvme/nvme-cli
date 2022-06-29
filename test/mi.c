@@ -41,9 +41,11 @@ static int test_transport_submit(struct nvme_mi_ep *ep,
 
 	assert(tpd->magic == test_transport_magic);
 
-	/* start from a zeroed response */
+	/* start from a minimal response: zeroed data, nmp to match request */
 	memset(resp->hdr, 0, resp->hdr_len);
 	memset(resp->data, 0, resp->data_len);
+	resp->hdr->type = NVME_MI_MSGTYPE_NVME;
+	resp->hdr->nmp = req->hdr->nmp | (NVME_MI_ROR_RSP << 7);
 
 	if (tpd->submit_cb)
 		return tpd->submit_cb(ep, req, resp, tpd->submit_cb_data);
@@ -417,8 +419,6 @@ static int test_admin_id_cb(struct nvme_mi_ep *ep,
 
 	/* create valid (but somewhat empty) response */
 	hdr = (__u8 *)resp->hdr;
-	memset(resp->hdr, 0, resp->hdr_len);
-	memset(resp->data, 0, resp->data_len);
 	hdr[4] = 0x00; /* status: success */
 
 	test_transport_resp_calc_mic(resp);
@@ -555,6 +555,94 @@ static void test_admin_invalid_formats(nvme_mi_ep_t ep)
 	assert(rc != 0);
 }
 
+/* test: header length too small */
+static int test_resp_hdr_small_cb(struct nvme_mi_ep *ep,
+				  struct nvme_mi_req *req,
+				  struct nvme_mi_resp *resp,
+				  void *data)
+{
+	resp->hdr_len = 2;
+	test_transport_resp_calc_mic(resp);
+	return 0;
+}
+
+static void test_resp_hdr_small(nvme_mi_ep_t ep)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	int rc;
+
+	test_set_transport_callback(ep, test_resp_hdr_small_cb, NULL);
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc != 0);
+}
+
+/* test: respond with a request message */
+static int test_resp_req_cb(struct nvme_mi_ep *ep,
+			    struct nvme_mi_req *req,
+			    struct nvme_mi_resp *resp,
+			    void *data)
+{
+	resp->hdr->nmp &= ~(NVME_MI_ROR_RSP << 7);
+	test_transport_resp_calc_mic(resp);
+	return 0;
+}
+
+static void test_resp_req(nvme_mi_ep_t ep)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	int rc;
+
+	test_set_transport_callback(ep, test_resp_req_cb, NULL);
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc != 0);
+}
+
+/* test: invalid MCTP type in response */
+static int test_resp_invalid_type_cb(struct nvme_mi_ep *ep,
+				     struct nvme_mi_req *req,
+				     struct nvme_mi_resp *resp,
+				     void *data)
+{
+	resp->hdr->type = 0x3;
+	test_transport_resp_calc_mic(resp);
+	return 0;
+}
+
+static void test_resp_invalid_type(nvme_mi_ep_t ep)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	int rc;
+
+	test_set_transport_callback(ep, test_resp_invalid_type_cb, NULL);
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc != 0);
+}
+
+/* test: response with mis-matching command slot */
+static int test_resp_csi_cb(struct nvme_mi_ep *ep,
+			    struct nvme_mi_req *req,
+			    struct nvme_mi_resp *resp,
+			    void *data)
+{
+	resp->hdr->nmp ^= 0x1;
+	test_transport_resp_calc_mic(resp);
+	return 0;
+}
+
+static void test_resp_csi(nvme_mi_ep_t ep)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	int rc;
+
+	test_set_transport_callback(ep, test_resp_csi_cb, NULL);
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc != 0);
+}
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -570,6 +658,10 @@ struct test {
 	DEFINE_TEST(admin_id),
 	DEFINE_TEST(admin_err_resp),
 	DEFINE_TEST(admin_invalid_formats),
+	DEFINE_TEST(resp_req),
+	DEFINE_TEST(resp_hdr_small),
+	DEFINE_TEST(resp_invalid_type),
+	DEFINE_TEST(resp_csi),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)

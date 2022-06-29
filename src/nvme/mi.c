@@ -192,6 +192,33 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 		}
 	}
 
+	/* basic response checks */
+	if (resp->hdr_len < sizeof(struct nvme_mi_msg_hdr)) {
+		nvme_msg(ep->root, LOG_DEBUG,
+			 "Bad response header len: %zd\n", resp->hdr_len);
+		return -EIO;
+	}
+
+	if (resp->hdr->type != NVME_MI_MSGTYPE_NVME) {
+		nvme_msg(ep->root, LOG_DEBUG,
+			 "Invalid message type 0x%02x\n", resp->hdr->type);
+		return -EPROTO;
+	}
+
+	if (!(resp->hdr->nmp & (NVME_MI_ROR_RSP << 7))) {
+		nvme_msg(ep->root, LOG_DEBUG,
+			 "ROR value in response indicates a request\n");
+		return -EIO;
+	}
+
+	if ((resp->hdr->nmp & 0x1) != (req->hdr->nmp & 0x1)) {
+		nvme_msg(ep->root, LOG_WARNING,
+			 "Command slot mismatch: req %d, resp %d\n",
+			 req->hdr->nmp & 0x1,
+			 resp->hdr->nmp & 0x1);
+		return -EIO;
+	}
+
 	return 0;
 }
 
