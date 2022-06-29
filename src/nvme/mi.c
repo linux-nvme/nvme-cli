@@ -157,6 +157,24 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 {
 	int rc;
 
+	if (req->hdr_len < sizeof(struct nvme_mi_msg_hdr))
+		return -EINVAL;
+
+	if (req->hdr_len & 0x3)
+		return -EINVAL;
+
+	if (req->data_len & 0x3)
+		return -EINVAL;
+
+	if (resp->hdr_len < sizeof(struct nvme_mi_msg_hdr))
+		return -EINVAL;
+
+	if (resp->hdr_len & 0x3)
+		return -EINVAL;
+
+	if (resp->data_len & 0x3)
+		return -EINVAL;
+
 	if (ep->transport->mic_enabled)
 		nvme_mi_calc_req_mic(req);
 
@@ -213,9 +231,28 @@ int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
 	struct nvme_mi_req req;
 	int rc;
 
-	if (*resp_data_size > 0xffffffff)
+	/* length/offset checks. The common _submit() API will do further
+	 * checking on the message lengths too, so these are kept specific
+	 * to the requirements of the Admin command set
+	 */
+
+	/* NVMe-MI v1.2 imposes a limit of 4096 bytes on the dlen field */
+	if (*resp_data_size > 4096)
 		return -EINVAL;
+
+	/* we only have 32 bits of offset */
 	if (resp_data_offset > 0xffffffff)
+		return -EINVAL;
+
+	/* must be aligned */
+	if (resp_data_offset & 0x3)
+		return -EINVAL;
+
+	/* bidirectional not permitted (see DLEN definition) */
+	if (req_data_size && *resp_data_size)
+		return -EINVAL;
+
+	if (!*resp_data_size && resp_data_offset)
 		return -EINVAL;
 
 	admin_req->hdr.type = NVME_MI_MSGTYPE_NVME;

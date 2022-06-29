@@ -495,6 +495,66 @@ static void test_admin_err_resp(nvme_mi_ep_t ep)
 	assert(rc != 0);
 }
 
+/* invalid Admin command transfers */
+static int test_admin_invalid_formats_cb(struct nvme_mi_ep *ep,
+					 struct nvme_mi_req *req,
+					 struct nvme_mi_resp *resp,
+					 void *data)
+{
+	/* none of the tests should result in message transfer */
+	assert(0);
+	return -1;
+}
+
+static void test_admin_invalid_formats(nvme_mi_ep_t ep)
+{
+	struct nvme_mi_admin_resp_hdr resp = { 0 };
+	struct nvme_mi_admin_req_hdr req = { 0 };
+	nvme_mi_ctrl_t ctrl;
+	size_t len;
+	int rc;
+
+	test_set_transport_callback(ep, test_admin_invalid_formats_cb, NULL);
+
+	ctrl = nvme_mi_init_ctrl(ep, 1);
+	assert(ctrl);
+
+	/* unaligned req size */
+	len = 0;
+	rc = nvme_mi_admin_xfer(ctrl, &req, 1, &resp, 0, &len);
+	assert(rc != 0);
+
+	/* unaligned resp size */
+	len = 1;
+	rc = nvme_mi_admin_xfer(ctrl, &req, 0, &resp, 0, &len);
+	assert(rc != 0);
+
+	/* unaligned resp offset */
+	len = 4;
+	rc = nvme_mi_admin_xfer(ctrl, &req, 0, &resp, 1, &len);
+	assert(rc != 0);
+
+	/* resp too large */
+	len = 4096 + 4;
+	rc = nvme_mi_admin_xfer(ctrl, &req, 0, &resp, 0, &len);
+	assert(rc != 0);
+
+	/* resp offset too large */
+	len = 4;
+	rc = nvme_mi_admin_xfer(ctrl, &req, 0, &resp, (off_t)1 << 32, &len);
+	assert(rc != 0);
+
+	/* resp offset with no len */
+	len = 0;
+	rc = nvme_mi_admin_xfer(ctrl, &req, 0, &resp, 4, &len);
+	assert(rc != 0);
+
+	/* req and resp payloads */
+	len = 4;
+	rc = nvme_mi_admin_xfer(ctrl, &req, 4, &resp, 0, &len);
+	assert(rc != 0);
+}
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -509,6 +569,7 @@ struct test {
 	DEFINE_TEST(invalid_crc),
 	DEFINE_TEST(admin_id),
 	DEFINE_TEST(admin_err_resp),
+	DEFINE_TEST(admin_invalid_formats),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)
