@@ -101,10 +101,9 @@ static int nvme_mi_mctp_submit(struct nvme_mi_ep *ep,
 			       struct nvme_mi_resp *resp)
 {
 	struct nvme_mi_transport_mctp *mctp;
-	struct iovec req_iov[3], resp_iov[2];
+	struct iovec req_iov[3], resp_iov[3];
 	struct msghdr req_msg, resp_msg;
 	struct sockaddr_mctp addr;
-	unsigned char *rspbuf;
 	ssize_t len;
 	__le32 mic;
 	int i;
@@ -153,49 +152,77 @@ static int nvme_mi_mctp_submit(struct nvme_mi_ep *ep,
 	resp_iov[0].iov_base = ((__u8 *)resp->hdr) + 1;
 	resp_iov[0].iov_len = resp->hdr_len - 1;
 
-	/* we use a temporary buffer to receive the response, and then
-	 * split into data & mic. This avoids having to re-arrange response
-	 * data on a recv that was shorter than expected */
-	rspbuf = malloc(resp->data_len + sizeof(mic));
-	if (!rspbuf)
-		return -ENOMEM;
+	resp_iov[1].iov_base = ((__u8 *)resp->data);
+	resp_iov[1].iov_len = resp->data_len;
 
-	resp_iov[1].iov_base = rspbuf;
-	resp_iov[1].iov_len = resp->data_len + sizeof(mic);
+	resp_iov[2].iov_base = &mic;
+	resp_iov[2].iov_len = sizeof(mic);
 
 	memset(&resp_msg, 0, sizeof(resp_msg));
 	resp_msg.msg_name = &addr;
 	resp_msg.msg_namelen = sizeof(addr);
 	resp_msg.msg_iov = resp_iov;
-	resp_msg.msg_iovlen = 2;
+	resp_msg.msg_iovlen = 3;
 
 	len = ops.recvmsg(mctp->sd, &resp_msg, 0);
 
 	if (len < 0) {
 		nvme_msg(ep->root, LOG_ERR,
 			 "Failure receiving MCTP message: %m\n");
-		free(rspbuf);
 		return len;
 	}
 
-	if (len < resp->hdr_len + sizeof(mic) - 1) {
+	if (len == 0) {
+		nvme_msg(ep->root, LOG_WARNING, "No data from MCTP endpoint\n");
+		return -1;
+	}
+
+	/* Re-add the type byte, so we can work on aligned lengths from here */
+	resp->hdr->type = MCTP_TYPE_NVME | MCTP_TYPE_MIC;
+	len += 1;
+
+	/* The smallest response data is 8 bytes: generic 4-byte message header
+	 * plus four bytes of error data (excluding MIC). Ensure we have enough.
+	 */
+	if (len < 8 + sizeof(mic)) {
 		nvme_msg(ep->root, LOG_ERR,
 			 "Invalid MCTP response: too short (%zd bytes, needed %zd)\n",
-			 len, resp->hdr_len + sizeof(mic) - 1);
-		free(rspbuf);
+			 len, 8 + sizeof(mic));
 		return -EIO;
 	}
-	resp->hdr->type = MCTP_TYPE_NVME | MCTP_TYPE_MIC;
 
-	len -= resp->hdr_len - 1;
+	/* We can't have header/payload data that isn't a multiple of 4 bytes */
+	if (len & 0x3) {
+		nvme_msg(ep->root, LOG_WARNING,
+			 "Response message has unaligned length (%zd)!\n",
+			 len);
+		return -EIO;
+	}
 
-	memcpy(&mic, rspbuf + len - sizeof(mic), sizeof(mic));
-	len -= sizeof(mic);
+	/* If we have a shorter than expected response, we need to find the
+	 * MIC and the correct split between header & data. We know that the
+	 * split is 4-byte aligned, so the MIC will be entirely within one
+	 * of the iovecs.
+	 */
+	if (len == resp->hdr_len + resp->data_len + sizeof(mic)) {
+		/* Common case: expected data length. Header, data and MIC
+		 * are already laid-out correctly. Nothing to do. */
 
-	memcpy(resp->data, rspbuf, len);
-	resp->data_len = len;
+	} else if (len < resp->hdr_len + sizeof(mic)) {
+		/* Response is smaller than the expected header. MIC is
+		 * somewhere in the header buf */
+		resp->hdr_len = len - sizeof(mic);
+		resp->data_len = 0;
+		memcpy(&mic, ((uint8_t *)resp->hdr) + resp->hdr_len,
+		       sizeof(mic));
 
-	free(rspbuf);
+	} else {
+		/* We have a full header, but data is truncated - possibly
+		 * zero bytes. MIC is somewhere in the data buf */
+		resp->data_len = len - resp->hdr_len - sizeof(mic);
+		memcpy(&mic, ((uint8_t *)resp->data) + resp->data_len,
+		       sizeof(mic));
+	}
 
 	resp->mic = le32_to_cpu(mic);
 

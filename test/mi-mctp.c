@@ -172,6 +172,23 @@ static void test_rx_err(nvme_mi_ep_t ep, struct test_peer *peer)
 	assert(rc != 0);
 }
 
+static int tx_none(struct test_peer *peer, void *buf, size_t len)
+{
+	return 0;
+}
+
+static void test_tx_none(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	int rc;
+
+	peer->tx_buf_len = 0;
+	peer->rx_fn = tx_none;
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc != 0);
+}
+
 static void test_tx_err(nvme_mi_ep_t ep, struct test_peer *peer)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
@@ -206,15 +223,102 @@ static void test_read_mi_data(nvme_mi_ep_t ep, struct test_peer *peer)
 	assert(rc == 0);
 }
 
+static void test_mi_resp_err(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	int rc;
+
+	/* simple error response */
+	peer->tx_buf[4] = 0x02; /* internal error */
+	peer->tx_buf_len = 8;
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc == 0x2);
+}
+
+static void test_admin_resp_err(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_id_ctrl id;
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	ctrl = nvme_mi_init_ctrl(ep, 1);
+	assert(ctrl);
+
+	/* Simple error response, will be shorter than the expected Admin
+	 * command response header. */
+	peer->tx_buf[4] = 0x02; /* internal error */
+	peer->tx_buf_len = 8;
+
+	rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+	assert(rc == 0x2);
+}
+
+/* test: all 4-byte aligned response sizes - should be decoded into the
+ * response status value. We use an admin command here as the header size will
+ * be larger than the minimum header size (it contains the completion
+ * doublewords), and we need to ensure that an error response is correctly
+ * interpreted, including having the MIC extracted from the message.
+ */
+static void test_admin_resp_sizes(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_id_ctrl id;
+	nvme_mi_ctrl_t ctrl;
+	unsigned int i;
+	int rc;
+
+	ctrl = nvme_mi_init_ctrl(ep, 1);
+	assert(ctrl);
+
+	peer->tx_buf[4] = 0x02; /* internal error */
+
+	for (i = 8; i <= 4096 + 8; i+=4) {
+		peer->tx_buf_len = i;
+		rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+		assert(rc == 2);
+	}
+
+	nvme_mi_close_ctrl(ctrl);
+}
+
+/* test: unaligned response sizes - should always report a transport error */
+static void test_admin_resp_sizes_unaligned(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_id_ctrl id;
+	nvme_mi_ctrl_t ctrl;
+	unsigned int i;
+	int rc;
+
+	ctrl = nvme_mi_init_ctrl(ep, 1);
+	assert(ctrl);
+
+	peer->tx_buf[4] = 0x02; /* internal error */
+
+	for (i = 8; i <= 4096 + 8; i++) {
+		peer->tx_buf_len = i;
+		if (!(i & 0x3))
+			continue;
+		rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+		assert(rc < 0);
+	}
+
+	nvme_mi_close_ctrl(ctrl);
+}
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
 	void (*fn)(nvme_mi_ep_t, struct test_peer *);
 } tests[] = {
 	DEFINE_TEST(rx_err),
+	DEFINE_TEST(tx_none),
 	DEFINE_TEST(tx_err),
 	DEFINE_TEST(tx_short),
 	DEFINE_TEST(read_mi_data),
+	DEFINE_TEST(mi_resp_err),
+	DEFINE_TEST(admin_resp_err),
+	DEFINE_TEST(admin_resp_sizes),
+	DEFINE_TEST(admin_resp_sizes_unaligned),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep,
