@@ -352,6 +352,9 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 	if (rc)
 		return rc;
 
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
 	if (args->result)
 		*args->result = le32_to_cpu(resp_hdr.cdw0);
 
@@ -593,9 +596,11 @@ static int nvme_mi_read_data(nvme_mi_ep_t ep, __u32 cdw0,
 	if (rc)
 		return rc;
 
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
 	*data_len = resp.data_len;
 
-	/* check status, map to return value */
 	return 0;
 }
 
@@ -713,6 +718,9 @@ int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 	if (rc)
 		return rc;
 
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
 	if (resp.data_len != sizeof(*sshs)) {
 		nvme_msg(ep->root, LOG_WARNING,
 			 "MI Subsystem Health Status length mismatch: "
@@ -721,7 +729,6 @@ int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 		return -EIO;
 	}
 
-	/* check status, map to return value */
 	return 0;
 }
 
