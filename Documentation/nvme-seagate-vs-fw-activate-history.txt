@@ -1,15 +1,15 @@
-nvme-seagate-fw-activation-history (1)
-======================================
+nvme-seagate-vs-fw-activate-history (1)
+=======================================
 
 NAME
 ----
-nvme-seagate-fw-activation-history - Retrieve Seagate vendor specific
+nvme-seagate-vs-fw-activate-history - Retrieve Seagate vendor specific
 Controller-Initiated Telemetry in binary
 
 SYNOPSIS
 --------
 [verse]
-'nvme seagate vs-internal-log <device> [OPTIONS]'
+'nvme seagate vs-fw-activate-history <device> [OPTIONS]'
 
 DESCRIPTION
 -----------
@@ -34,7 +34,7 @@ EXAMPLES
 Get the Seagate vendor specific Controller-Initiated telemetry log for the specified device.
 
 ------------
-# nvme seagate vs-internal-log /dev/nvme0
+# nvme seagate vs-fw-activate-history /dev/nvme0
 ------------
 
 NVME

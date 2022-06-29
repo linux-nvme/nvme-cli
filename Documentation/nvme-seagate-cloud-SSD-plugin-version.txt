@@ -1,9 +1,9 @@
-nvme-seagate-cloud-SSD-plugin-version(1)
-========================================
+nvme-seagate-cloud-SSD-plugin-version (1)
+=========================================
 
 NAME
 ----
-nvme-seagate-plugin-version - Shows OCP Seagate plugin's version information 
+nvme-seagate-cloud-SSD-plugin-version - Shows OCP Seagate plugin's version information 
 
 SYNOPSIS
 --------
