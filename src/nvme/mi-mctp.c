@@ -25,6 +25,10 @@
 #include <systemd/sd-event.h>
 #include <systemd/sd-bus.h>
 #include <systemd/sd-id128.h>
+
+#define MCTP_DBUS_PATH "/xyz/openbmc_project/mctp"
+#define MCTP_DBUS_IFACE "xyz.openbmc_project.MCTP"
+#define MCTP_DBUS_IFACE_ENDPOINT "xyz.openbmc_project.MCTP.Endpoint"
 #endif
 
 #include "private.h"
@@ -80,9 +84,6 @@ struct nvme_mi_transport_mctp {
 	int	sd;
 };
 
-#define MCTP_DBUS_PATH "/xyz/openbmc_project/mctp"
-#define MCTP_DBUS_IFACE "xyz.openbmc_project.MCTP"
-#define MCTP_DBUS_IFACE_ENDPOINT "xyz.openbmc_project.MCTP.Endpoint"
 
 static const struct nvme_mi_transport nvme_mi_transport_mctp;
 
