@@ -52,11 +52,11 @@ static struct test_peer {
 	ssize_t		tx_rc; /* if zero, return the recvmsg len */
 	int		tx_errno;
 
-	/* Optional, called after RX, may set tx_buf according to request.
-	 * Return value stored in rx_res, may be used by test */
-	rx_test_fn	rx_fn;
-	void		*rx_data;
-	int		rx_res;
+	/* Optional, called before TX, may set tx_buf according to request.
+	 * Return value stored in tx_res, may be used by test */
+	rx_test_fn	tx_fn;
+	void		*tx_data;
+	int		tx_fn_res;
 
 	/* store sd from socket() setup */
 	int		sd;
@@ -112,19 +112,6 @@ ssize_t __wrap_sendmsg(int sd, const struct msghdr *hdr, int flags)
 
 	test_peer.rx_buf_len = pos;
 
-
-	if (test_peer.rx_fn) {
-		test_peer.rx_res = test_peer.rx_fn(&test_peer,
-						   test_peer.rx_buf,
-						   test_peer.rx_buf_len);
-	} else {
-		/* set up a few default response fields; caller may have
-		 * initialised the rest of the response */
-		test_peer.tx_buf[0] = NVME_MI_MSGTYPE_NVME;
-		test_peer.tx_buf[1] = test_peer.rx_buf[1] | (NVME_MI_ROR_RSP << 7);
-		test_set_tx_mic(&test_peer);
-	}
-
 	errno = test_peer.rx_errno;
 
 	return test_peer.rx_rc ?: (pos - 1);
@@ -135,6 +122,18 @@ ssize_t __wrap_recvmsg(int sd, struct msghdr *hdr, int flags)
 	size_t i, pos, len;
 
 	assert(sd == test_peer.sd);
+
+	if (test_peer.tx_fn) {
+		test_peer.tx_fn_res = test_peer.tx_fn(&test_peer,
+						   test_peer.rx_buf,
+						   test_peer.rx_buf_len);
+	} else {
+		/* set up a few default response fields; caller may have
+		 * initialised the rest of the response */
+		test_peer.tx_buf[0] = NVME_MI_MSGTYPE_NVME;
+		test_peer.tx_buf[1] = test_peer.rx_buf[1] | (NVME_MI_ROR_RSP << 7);
+		test_set_tx_mic(&test_peer);
+	}
 
 	/* scatter buf into iovec */
 	for (i = 0, pos = 1; i < hdr->msg_iovlen && pos < test_peer.tx_buf_len;
@@ -183,7 +182,7 @@ static void test_tx_none(nvme_mi_ep_t ep, struct test_peer *peer)
 	int rc;
 
 	peer->tx_buf_len = 0;
-	peer->rx_fn = tx_none;
+	peer->tx_fn = tx_none;
 
 	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
 	assert(rc != 0);
