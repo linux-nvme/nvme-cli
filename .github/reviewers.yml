@@ -1,9 +1,8 @@
+---
 reviewers:
-  # The default reviewers
   defaults:
-    - default-reviewers # group
+    - default-reviewers
 
-  # Reviewer groups each of which has a list of GitHub usernames
   groups:
     default-reviewers:
       - igaw
@@ -11,9 +10,9 @@ reviewers:
     ocp-reviewers:
       - arthurshau
 
+  per_author:
+
 files:
-  # Keys are glob expressions.
-  # You can assign groups defined above as well as GitHub usernames.
   '**':
     - default-reviewers
   'plugins/ocp/**':
