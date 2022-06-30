@@ -28,6 +28,7 @@ struct latency_statistics {
 	__u16 version_major;
 	__u16 version_minor;
 	__u32 data[BUCKET_LIST_SIZE_4_1];
+	__u64 average_latency;
 };
 
 struct config {
@@ -47,6 +48,7 @@ struct latency_tracker {
 	struct json_object *bucket_list;
 	__u32 bucket_list_size;
 	__u8 base_range_bits;
+	bool has_average_latency_field;
 };
 
 /* COL_WIDTH controls width of columns in NORMAL output. */
@@ -87,6 +89,7 @@ static void latency_tracker_bucket_parse(const struct latency_tracker *lt, int i
 					 __u32 lower_us, __u32 upper_us, bool upper_bounded)
 {
 	char buffer[BUCKET_LABEL_MAX_SIZE] = "";
+	__u32 bucket_data = le32_to_cpu(lt->stats.data[id]);
 
 	if (lt->print_flags == NORMAL) {
 
@@ -98,7 +101,7 @@ static void latency_tracker_bucket_parse(const struct latency_tracker *lt, int i
 		get_time_unit_label(buffer, upper_us, upper_bounded);
 		printf("%-*s", COL_WIDTH, buffer);
 
-		printf("%-*d\n", COL_WIDTH, lt->stats.data[id]);
+		printf("%-*d\n", COL_WIDTH, bucket_data);
 	}
 
 	if (lt->print_flags == JSON) {
@@ -123,7 +126,7 @@ static void latency_tracker_bucket_parse(const struct latency_tracker *lt, int i
 		get_time_unit_label(buffer, upper_us, upper_bounded);
 		json_object_add_value_string(bucket, "end", buffer);
 
-		json_object_add_value_int(bucket, "value", lt->stats.data[id]);
+		json_object_add_value_int(bucket, "value", bucket_data);
 	}
 }
 
@@ -165,15 +168,17 @@ static int latency_tracker_bucket_pos2us(const struct latency_tracker *lt, int i
  *     "type" : "write" or "read",
  *     "values" : {
  */
-static void lat_stats_make_json_root(struct json_object *root,
-				     struct json_object *bucket_list,
-				     int write)
+static void latency_tracker_populate_json_root(const struct latency_tracker *lt,
+                                               struct json_object *root)
 {
 	struct json_object *subroot = json_create_object();
 
 	json_object_add_value_object(root, "latstats", subroot);
-	json_object_add_value_string(subroot, "type", write ? "write" : "read");
-	json_object_add_value_object(subroot, "values", bucket_list);
+	json_object_add_value_string(subroot, "type", lt->cfg.write ? "write" : "read");
+	if (lt->has_average_latency_field) {
+		json_object_add_value_uint64(subroot, "average_latency", le64_to_cpu(lt->stats.average_latency));
+	}
+	json_object_add_value_object(subroot, "values", lt->bucket_list);
 }
 
 static void latency_tracker_parse_3_0(const struct latency_tracker *lt)
@@ -208,8 +213,11 @@ static void latency_tracker_pre_parse(struct latency_tracker *lt)
 	if (lt->print_flags == NORMAL) {
 		printf("Solidigm IO %s Command Latency Tracking Statistics type %d\n",
 			lt->cfg.write ? "Write" : "Read", lt->cfg.type);
-		printf("Major Revision : %u\nMinor Revision : %u\n",
-			lt->stats.version_major, lt->stats.version_minor);
+		printf("Major Revision: %u\nMinor Revision: %u\n",
+			le16_to_cpu(lt->stats.version_major), le16_to_cpu(lt->stats.version_minor));
+		if (lt->has_average_latency_field) {
+			printf("Average Latency: %lu\n", le64_to_cpu(lt->stats.average_latency));
+		}
 		print_dash_separator();
 		printf("%-12s%-12s%-12s%-20s\n", "Bucket", "Start", "End", "Value");
 		print_dash_separator();
@@ -224,7 +232,7 @@ static void latency_tracker_post_parse(struct latency_tracker *lt)
 	if (lt->print_flags == JSON) {
 		struct json_object *root = json_create_object();
 
-		lat_stats_make_json_root(root, lt->bucket_list, lt->cfg.write);
+		latency_tracker_populate_json_root(lt, root);
 		json_print_object(root, NULL);
 		json_free_object(root);
 		printf("\n");
@@ -233,14 +241,20 @@ static void latency_tracker_post_parse(struct latency_tracker *lt)
 
 static void latency_tracker_parse(struct latency_tracker *lt)
 {
-	latency_tracker_pre_parse(lt);
+	__u16 version_major = le16_to_cpu(lt->stats.version_major);
+	__u16 version_minor = le16_to_cpu(lt->stats.version_minor);
 
-	switch (lt->stats.version_major) {
+	switch (version_major) {
 	case 3:
+		latency_tracker_pre_parse(lt);
 		latency_tracker_parse_3_0(lt);
 		break;
 	case 4:
-		if (lt->stats.version_minor == 0){
+		if (version_minor >= 8){
+			lt->has_average_latency_field = true;
+		}
+		latency_tracker_pre_parse(lt);
+		if (version_minor == 0){
 			lt->base_range_bits = BASE_RANGE_BITS_4_0;
 			lt->bucket_list_size = BUCKET_LIST_SIZE_4_0;
 		}
@@ -248,7 +262,7 @@ static void latency_tracker_parse(struct latency_tracker *lt)
 		break;
 	default:
 		printf("Unsupported revision (%u.%u)\n",
-		       lt->stats.version_major, lt->stats.version_minor);
+		       version_major, version_minor);
 		break;
 	}
 
@@ -380,6 +394,7 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 		},
 		.base_range_bits = BASE_RANGE_BITS_4_1,
 		.bucket_list_size = BUCKET_LIST_SIZE_4_1,
+		.has_average_latency_field = false,
 	};
 
 	OPT_ARGS(opts) = {
