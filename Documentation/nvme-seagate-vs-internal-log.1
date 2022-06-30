@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SEAGATE\-VS\-I" "1" "03/27/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-SEAGATE\-VS\-I" "1" "06/30/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,6 +37,8 @@ nvme-seagate-vs-internal-log \- Retrieve Seagate vendor specific Controller\-Ini
 .SH "DESCRIPTION"
 .sp
 This command will only work on Seagate devices supporting this feature\&. Not all commands work across all product families\&.
+.sp
+The <device> parameter is mandatory and may be either an NVMe character device(ex: /dev/nvme0), or an NVMe block device(ex: /dev/nvme0n1).\&
 .SH "OPTIONS"
 .PP
 \-n <NUM>, \-\-namespace\-id=<NUM>
@@ -58,10 +60,8 @@ Dump file
 .sp -1
 .IP \(bu 2.3
 .\}
-Usage: nvme seagate vs\-internal\-log [<device>] [OPTIONS]
+Get the Seagate vendor specific Controller-Initiated telemetry log for the specified device.
 .RE
-.sp
-The \fI<device>\fR may be either an NVMe character device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1)\&.
 .sp
 .if n \{\
 .RS 4

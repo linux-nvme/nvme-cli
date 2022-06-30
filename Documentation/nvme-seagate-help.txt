@@ -44,8 +44,6 @@ See 'nvme seagate help <command>' for more information on a specific command
 # nvme seagate help
 ------------
 
-Not much to it
-
 NVME
 ----
 Part of the nvme-user suite

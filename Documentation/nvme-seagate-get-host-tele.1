@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SEAGATE\-GET\-" "1" "03/27/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-SEAGATE\-GET\-" "1" "06/30/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,6 +37,9 @@ nvme-seagate-get-host-tele \- Retrieve Seagate Host\-Initiated Telemetry in eith
 .SH "DESCRIPTION"
 .sp
 This will only work on Seagate devices supporting this feature\&. Not all commands work across all product families\&.
+.sp
+The <device> parameter is mandatory and may be either an NVMe character device(ex: /dev/nvme0), or an nvme block device(ex: /dev/nvme0n1).
+.sp
 .SH "OPTIONS"
 .PP
 \-n <NUM>, \-\-namespace\-id=<NUM>
@@ -63,10 +66,8 @@ output in raw format
 .sp -1
 .IP \(bu 2.3
 .\}
-Usage: nvme seagate get\-host\-tele [<device>] [OPTIONS]
+Get the host initiated telemetry log in hexdump or binary format for the specified device.
 .RE
-.sp
-The \fI<device>\fR may be either an NVMe character device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1)\&.
 .if n \{\
 .RS 4
 .\}

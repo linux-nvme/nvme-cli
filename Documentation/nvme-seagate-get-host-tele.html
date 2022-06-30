@@ -759,8 +759,8 @@ nvme-seagate-get-host-tele(1) Manual Page
 <div class="sectionbody">
 <div class="paragraph"><p>This will only work on Seagate devices supporting this feature.  Not all
 commands work across all product families.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe
-character device (ex: /dev/nvme0), or a namespace block device (ex:
+<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either an NVMe
+character device (ex: /dev/nvme0), or an nvme block device (ex:
 /dev/nvme0n1).</p></div>
 </div>
 </div>
@@ -788,6 +788,8 @@ character device (ex: /dev/nvme0), or a namespace block device (ex:
 <dd>
 <p>
         1 - controller shall capture Data representing the internal state of the controller at the time the command is processed.
+</p>
+<p>
         0 - controller shall not update the Telemetry Host Initiated Data.
 </p>
 </dd>

@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SEAGATE\-HELP" "1" "03/27/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-SEAGATE\-HELP" "1" "06/30/2019" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -50,14 +50,9 @@ No Options
 .sp -1
 .IP \(bu 2.3
 .\}
-Usage: nvme seagate <command> [<device>] [<args>]
-.RE
-.sp
-The \fI<device>\fR may be either an NVMe character device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1)\&.
+Get the help information for specific Seagate sub-commands.
 .PP
-Seagate vendor specific extensions
-.RS 4
-The following are all implemented sub\-commands:
+The following are all implemented Seagate vendor specific sub\-commands:
 .sp
 .if n \{\
 .RS 4
@@ -75,6 +70,7 @@ plugin\-version                  Shows Seagate plugin\*(Aqs version information
 version                         Shows the program version
 help                            Display this help
 .fi
+Usage: nvme seagate help
 .if n \{\
 .RE
 .\}
@@ -91,7 +87,6 @@ See \fInvme seagate help <command>\fR for more information on a specific command
 .RE
 .\}
 .sp
-Not much to it
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

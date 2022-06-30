@@ -24,8 +24,6 @@ Get the plugin version of the specific nvme device.
 
 ------------
 # nvme seagate plugin-version
-
-# Seagate-Plugin version : 1.1 (actual output will change with versions)
 ------------
 
 NVME

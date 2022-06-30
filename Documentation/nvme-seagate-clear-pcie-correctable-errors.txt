@@ -16,7 +16,7 @@ DESCRIPTION
 This command will only work on Seagate devices supporting this feature.  Not
 all commands work across all product families.
 
-The '<device>' may be either an NVMe character device (ex: /dev/nvme0) or an
+The '<device>' parameter is mandatory and may be either an NVMe character device (ex: /dev/nvme0), or an
 nvme block device (ex: /dev/nvme0n1).
 
 OPTIONS
@@ -27,7 +27,7 @@ OPTIONS
 
 EXAMPLES
 --------
-Clears the PCIe error statistics from the device test.
+Clears the PCIe error statistics from the device.
 
 ------------
 # nvme seagate clear-pcie-correctable-errors /dev/nvme0

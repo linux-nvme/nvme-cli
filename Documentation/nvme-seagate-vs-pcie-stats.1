@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SEAGATE\-VS\-P" "1" "03/27/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-SEAGATE\-VS\-P" "1" "06/30/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,6 +37,8 @@ nvme-seagate-vs-pcie-stats \- Retrieve Seagate vendor specific PCIe error statis
 .SH "DESCRIPTION"
 .sp
 This command will only work on Seagate devices supporting this feature\&. Not all commands work across all product families\&.
+.sp
+The <device> parameter is mandatory and it may be either an NVMe character device (ex: /dev/nvme0) or an NVMe block device (ex: /dev/nvme0n1)\&.
 .SH "OPTIONS"
 .PP
 \-o <FMT>, \-\-output\-format=<FMT>
@@ -53,12 +55,8 @@ Output in binary format
 .sp -1
 .IP \(bu 2.3
 .\}
-Usage: nvme seagate <command> [<device>] [OPTIONS]
+Get the vendor specific PCIe error statistics for the specified device.
 .RE
-.sp
-The \fI<device>\fR may be either an NVMe character device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1)\&.
-.sp
-+
 .sp
 .if n \{\
 .RS 4

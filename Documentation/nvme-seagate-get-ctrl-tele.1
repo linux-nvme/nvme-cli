@@ -7,7 +7,7 @@
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SEAGATE\-GET\-" "1" "03/27/2019" "NVMe" "NVMe Manual"
+.TH "NVME\-SEAGATE\-GET\-" "1" "06/30/2022" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,6 +37,9 @@ nvme-seagate-get-ctrl-tele \- Retrieve Seagate Controller\-Initiated Telemetry i
 .SH "DESCRIPTION"
 .sp
 This command will only work on Seagate devices supporting this feature\&. Not all commands work across all product families\&.
+.sp
+The <device> parameter is mandatory and may be either an NVMe character device(ex: /dev/nvme0), or an nvme block device(ex: /dev/nvme0n1)\&
+.sp
 .SH "OPTIONS"
 .PP
 \-n <NUM>, \-\-namespace\-id=<NUM>
@@ -58,11 +61,8 @@ Output in raw format
 .sp -1
 .IP \(bu 2.3
 .\}
-Usage: nvme seagate get\-ctrl\-tele [<device>] [OPTIONS]
+Get the controller initiated telemetry log in hexdump or binary format for the specified device.
 .RE
-.sp
-The \fI<device>\fR may be either an NVMe character device (ex: /dev/nvme0) or an nvme block device (ex: /dev/nvme0n1)\&.
-.sp
 .if n \{\
 .RS 4
 .\}
