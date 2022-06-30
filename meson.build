@@ -79,8 +79,8 @@ if openssl_dep.found()
 endif
 
 # Check for libsystemd availability. Optional, only required for MCTP dbus scan
-libsystemd_dep = dependency('libsystemd', required: false)
-conf.set('CONFIG_LIBSYSTEMD', libsystemd_dep.found(), description: 'Is libsystemd available?')
+libsystemd_dep = dependency('libsystemd', version: '>219', required: false)
+conf.set('CONFIG_LIBSYSTEMD', libsystemd_dep.found(), description: 'Is libsystemd(>219) available?')
 
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
