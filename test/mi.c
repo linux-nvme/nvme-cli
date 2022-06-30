@@ -17,6 +17,8 @@
 
 #include "libnvme-mi.h"
 
+#include "utils.h"
+
 typedef int (*test_submit_cb)(struct nvme_mi_ep *ep,
 			      struct nvme_mi_req *req,
 			      struct nvme_mi_resp *resp,
@@ -509,42 +511,6 @@ struct test {
 	DEFINE_TEST(admin_err_resp),
 };
 
-static void print_log_buf(FILE *logfd)
-{
-	char buf[4096];
-	int rc;
-
-	if (!ftell(logfd))
-		return;
-
-	rewind(logfd);
-
-	printf("--- begin test output\n");
-
-	while (!feof(logfd) && !ferror(logfd)) {
-		size_t rlen, wlen, wpos;
-
-		rlen = fread(buf, 1, sizeof(buf), logfd);
-		if (rlen <= 0)
-			break;
-
-		for (wpos = 0; wpos < rlen;) {
-			wlen = fwrite(buf + wpos, 1, rlen - wpos, stdout);
-			if (wlen == 0)
-				break;
-			wpos += wlen;
-		}
-
-		if (feof(logfd) || ferror((logfd)))
-			break;
-	}
-
-	printf("--- end test output\n");
-	rewind(logfd);
-	rc = ftruncate(fileno(logfd), 0);
-	assert(!rc);
-}
-
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)
 {
 	printf("Running test %s...", test->name);
@@ -552,7 +518,7 @@ static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)
 	test->fn(ep);
 	/* tests will assert on failure; if we're here, we're OK */
 	printf("  OK\n");
-	print_log_buf(logfd);
+	test_print_log_buf(logfd);
 }
 
 int main(void)
@@ -562,8 +528,7 @@ int main(void)
 	unsigned int i;
 	FILE *fd;
 
-	fd = tmpfile();
-	assert(fd);
+	fd = test_setup_log();
 
 	root = nvme_mi_create_root(fd, DEFAULT_LOGLEVEL);
 	assert(root);
@@ -577,6 +542,8 @@ int main(void)
 
 	nvme_mi_close(ep);
 	nvme_mi_free_root(root);
+
+	test_close_log(fd);
 
 	return EXIT_SUCCESS;
 }
