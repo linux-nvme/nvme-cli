@@ -43,5 +43,5 @@ rpm:
 	meson ${BUILD-DIR} \
 		-Dudevrulesdir=$(shell rpm --eval '%{_udevrulesdir}') \
 		-Dsystemddir=$(shell rpm --eval '%{_unitdir}') \
-		-Ddocs=man
+		-Ddocs=man -Ddocs-build=true
 	rpmbuild -ba ${BUILD-DIR}/nvme.spec --define "_builddir ${BUILD-DIR}" -v
