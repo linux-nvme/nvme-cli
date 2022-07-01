@@ -7,6 +7,7 @@
  */
 
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -84,10 +85,16 @@ struct nvme_mi_transport_mctp {
 	int	sd;
 };
 
+static int ioctl_tag(int sd, unsigned long req, struct mctp_ioc_tag_ctl *ctl)
+{
+	return ioctl(sd, req, ctl);
+}
+
 static struct __mi_mctp_socket_ops ops = {
 	socket,
 	sendmsg,
 	recvmsg,
+	ioctl_tag,
 };
 
 void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops)
@@ -96,30 +103,134 @@ void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops)
 }
 static const struct nvme_mi_transport nvme_mi_transport_mctp;
 
+#ifdef SIOCMCTPALLOCTAG
+static __u8 nvme_mi_mctp_tag_alloc(struct nvme_mi_ep *ep)
+{
+	struct nvme_mi_transport_mctp *mctp;
+	struct mctp_ioc_tag_ctl ctl = { 0 };
+	static bool logged;
+	int rc;
+
+	mctp = ep->transport_data;
+
+	ctl.peer_addr = mctp->eid;
+
+	errno = 0;
+	rc = ops.ioctl_tag(mctp->sd, SIOCMCTPALLOCTAG, &ctl);
+	if (rc) {
+		if (!logged) {
+			/* not necessarily fatal, just means we can't handle
+			 * "more processing required" messages */
+			nvme_msg(ep->root, LOG_INFO,
+				 "System does not support explicit tag allocation\n");
+			logged = true;
+		}
+		return MCTP_TAG_OWNER;
+	}
+
+	return ctl.tag;
+}
+
+static void nvme_mi_mctp_tag_drop(struct nvme_mi_ep *ep, __u8 tag)
+{
+	struct nvme_mi_transport_mctp *mctp;
+	struct mctp_ioc_tag_ctl ctl = { 0 };
+
+	mctp = ep->transport_data;
+
+	if (!(tag & MCTP_TAG_PREALLOC))
+		return;
+
+	ctl.peer_addr = mctp->eid;
+	ctl.tag = tag;
+
+	ops.ioctl_tag(mctp->sd, SIOCMCTPDROPTAG, &ctl);
+}
+
+#else /*  !defined SIOMCTPTAGALLOC */
+
+static __u8 nvme_mi_mctp_tag_alloc(struct nvme_mi_ep *ep)
+{
+	static bool logged;
+	if (!logged) {
+		nvme_msg(ep->root, LOG_INFO,
+			 "Build does not support explicit tag allocation\n");
+		logged = true;
+	}
+	return MCTP_TAG_OWNER;
+}
+
+static void nvme_mi_mctp_tag_drop(struct nvme_mi_ep *ep, __u8 tag)
+{
+}
+
+#endif /* !defined SIOMCTPTAGALLOC */
+
+static bool nvme_mi_mctp_resp_is_mpr(struct nvme_mi_resp *resp, size_t len)
+{
+	struct nvme_mi_msg_resp *msg;
+	__le32 mic;
+	__u32 crc;
+
+	if (len != sizeof(*msg) + sizeof(mic))
+		return false;
+
+	msg = (struct nvme_mi_msg_resp *)resp->hdr;
+
+	if (msg->status != NVME_MI_RESP_MPR)
+		return false;
+
+	/* We can't use verify_resp_mic here, as the response structure has
+	 * not been laid-out properly in resp yet (this is deferred until
+	 * we have the actual response).
+	 *
+	 * We know the data is a fixed size, and linear in the hdr buf, so
+	 * calculation is fairly simple. We do need to find the MIC data
+	 * though, which could either be in the header buf (if the original
+	 * header was larger than the minimal header message), or the start of
+	 * the data buf (otherwise).
+	 */
+	if (resp->hdr_len > sizeof(*msg))
+		mic = *(__le32 *)(msg + 1);
+	else
+		mic = *(__le32 *)(resp->data);
+
+	crc = ~nvme_mi_crc32_update(0xffffffff, msg, sizeof(*msg));
+	if (le32_to_cpu(mic) != crc)
+		return false;
+
+	return true;
+}
+
 static int nvme_mi_mctp_submit(struct nvme_mi_ep *ep,
 			       struct nvme_mi_req *req,
 			       struct nvme_mi_resp *resp)
 {
 	struct nvme_mi_transport_mctp *mctp;
-	struct iovec req_iov[3], resp_iov[2];
+	struct iovec req_iov[3], resp_iov[3];
 	struct msghdr req_msg, resp_msg;
 	struct sockaddr_mctp addr;
-	unsigned char *rspbuf;
 	ssize_t len;
 	__le32 mic;
-	int i;
+	int i, rc;
+	__u8 tag;
 
 	if (ep->transport != &nvme_mi_transport_mctp)
 		return -EINVAL;
 
+	/* we need enough space for at least a generic (/error) response */
+	if (resp->hdr_len < sizeof(struct nvme_mi_msg_resp))
+		return -EINVAL;
+
 	mctp = ep->transport_data;
+	tag = nvme_mi_mctp_tag_alloc(ep);
 
 	memset(&addr, 0, sizeof(addr));
 	addr.smctp_family = AF_MCTP;
 	addr.smctp_network = mctp->net;
 	addr.smctp_addr.s_addr = mctp->eid;
 	addr.smctp_type = MCTP_TYPE_NVME | MCTP_TYPE_MIC;
-	addr.smctp_tag = MCTP_TAG_OWNER;
+	addr.smctp_tag = tag;
 
 	i = 0;
 	req_iov[i].iov_base = ((__u8 *)req->hdr) + 1;
@@ -147,59 +258,109 @@ static int nvme_mi_mctp_submit(struct nvme_mi_ep *ep,
 	if (len < 0) {
 		nvme_msg(ep->root, LOG_ERR,
 			 "Failure sending MCTP message: %m\n");
-		return len;
+		rc = len;
+		goto out;
 	}
 
 	resp_iov[0].iov_base = ((__u8 *)resp->hdr) + 1;
 	resp_iov[0].iov_len = resp->hdr_len - 1;
 
-	/* we use a temporary buffer to receive the response, and then
-	 * split into data & mic. This avoids having to re-arrange response
-	 * data on a recv that was shorter than expected */
-	rspbuf = malloc(resp->data_len + sizeof(mic));
-	if (!rspbuf)
-		return -ENOMEM;
+	resp_iov[1].iov_base = ((__u8 *)resp->data);
+	resp_iov[1].iov_len = resp->data_len;
 
-	resp_iov[1].iov_base = rspbuf;
-	resp_iov[1].iov_len = resp->data_len + sizeof(mic);
+	resp_iov[2].iov_base = &mic;
+	resp_iov[2].iov_len = sizeof(mic);
 
 	memset(&resp_msg, 0, sizeof(resp_msg));
 	resp_msg.msg_name = &addr;
 	resp_msg.msg_namelen = sizeof(addr);
 	resp_msg.msg_iov = resp_iov;
-	resp_msg.msg_iovlen = 2;
+	resp_msg.msg_iovlen = 3;
 
+retry:
+	rc = -1;
 	len = ops.recvmsg(mctp->sd, &resp_msg, 0);
 
 	if (len < 0) {
 		nvme_msg(ep->root, LOG_ERR,
 			 "Failure receiving MCTP message: %m\n");
-		free(rspbuf);
-		return len;
+		goto out;
 	}
 
-	if (len < resp->hdr_len + sizeof(mic) - 1) {
+
+	if (len == 0) {
+		nvme_msg(ep->root, LOG_WARNING, "No data from MCTP endpoint\n");
+		goto out;
+	}
+
+	/* Re-add the type byte, so we can work on aligned lengths from here */
+	resp->hdr->type = MCTP_TYPE_NVME | MCTP_TYPE_MIC;
+	len += 1;
+
+	/* The smallest response data is 8 bytes: generic 4-byte message header
+	 * plus four bytes of error data (excluding MIC). Ensure we have enough.
+	 */
+	if (len < 8 + sizeof(mic)) {
 		nvme_msg(ep->root, LOG_ERR,
 			 "Invalid MCTP response: too short (%zd bytes, needed %zd)\n",
-			 len, resp->hdr_len + sizeof(mic) - 1);
-		free(rspbuf);
-		return -EIO;
+			 len, 8 + sizeof(mic));
+		goto out;
 	}
-	resp->hdr->type = MCTP_TYPE_NVME | MCTP_TYPE_MIC;
 
-	len -= resp->hdr_len - 1;
+	/* We can't have header/payload data that isn't a multiple of 4 bytes */
+	if (len & 0x3) {
+		nvme_msg(ep->root, LOG_WARNING,
+			 "Response message has unaligned length (%zd)!\n",
+			 len);
+		goto out;
+	}
 
-	memcpy(&mic, rspbuf + len - sizeof(mic), sizeof(mic));
-	len -= sizeof(mic);
+	/* Check for a More Processing Required response. This is a slight
+	 * layering violation, as we're pre-checking the MIC and inspecting
+	 * header fields. However, we need to do this in the transport in order
+	 * to keep the tag allocated and retry the recvmsg
+	 */
+	if (nvme_mi_mctp_resp_is_mpr(resp, len)) {
+		nvme_msg(ep->root, LOG_DEBUG,
+			 "Received More Processing Required, waiting for response\n");
+		/* TODO: when we implement timeouts, inspect the MPR response
+		 * for the estimated completion time. */
+		goto retry;
+	}
 
-	memcpy(resp->data, rspbuf, len);
-	resp->data_len = len;
+	/* If we have a shorter than expected response, we need to find the
+	 * MIC and the correct split between header & data. We know that the
+	 * split is 4-byte aligned, so the MIC will be entirely within one
+	 * of the iovecs.
+	 */
+	if (len == resp->hdr_len + resp->data_len + sizeof(mic)) {
+		/* Common case: expected data length. Header, data and MIC
+		 * are already laid-out correctly. Nothing to do. */
 
-	free(rspbuf);
+	} else if (len < resp->hdr_len + sizeof(mic)) {
+		/* Response is smaller than the expected header. MIC is
+		 * somewhere in the header buf */
+		resp->hdr_len = len - sizeof(mic);
+		resp->data_len = 0;
+		memcpy(&mic, ((uint8_t *)resp->hdr) + resp->hdr_len,
+		       sizeof(mic));
+
+	} else {
+		/* We have a full header, but data is truncated - possibly
+		 * zero bytes. MIC is somewhere in the data buf */
+		resp->data_len = len - resp->hdr_len - sizeof(mic);
+		memcpy(&mic, ((uint8_t *)resp->data) + resp->data_len,
+		       sizeof(mic));
+	}
 
 	resp->mic = le32_to_cpu(mic);
 
-	return 0;
+	rc = 0;
+
+out:
+	nvme_mi_mctp_tag_drop(ep, tag);
+
+	return rc;
 }
 
 static void nvme_mi_mctp_close(struct nvme_mi_ep *ep)

@@ -157,6 +157,24 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 {
 	int rc;
 
+	if (req->hdr_len < sizeof(struct nvme_mi_msg_hdr))
+		return -EINVAL;
+
+	if (req->hdr_len & 0x3)
+		return -EINVAL;
+
+	if (req->data_len & 0x3)
+		return -EINVAL;
+
+	if (resp->hdr_len < sizeof(struct nvme_mi_msg_hdr))
+		return -EINVAL;
+
+	if (resp->hdr_len & 0x3)
+		return -EINVAL;
+
+	if (resp->data_len & 0x3)
+		return -EINVAL;
+
 	if (ep->transport->mic_enabled)
 		nvme_mi_calc_req_mic(req);
 
@@ -172,6 +190,33 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 			nvme_msg(ep->root, LOG_WARNING, "crc mismatch\n");
 			return rc;
 		}
+	}
+
+	/* basic response checks */
+	if (resp->hdr_len < sizeof(struct nvme_mi_msg_hdr)) {
+		nvme_msg(ep->root, LOG_DEBUG,
+			 "Bad response header len: %zd\n", resp->hdr_len);
+		return -EIO;
+	}
+
+	if (resp->hdr->type != NVME_MI_MSGTYPE_NVME) {
+		nvme_msg(ep->root, LOG_DEBUG,
+			 "Invalid message type 0x%02x\n", resp->hdr->type);
+		return -EPROTO;
+	}
+
+	if (!(resp->hdr->nmp & (NVME_MI_ROR_RSP << 7))) {
+		nvme_msg(ep->root, LOG_DEBUG,
+			 "ROR value in response indicates a request\n");
+		return -EIO;
+	}
+
+	if ((resp->hdr->nmp & 0x1) != (req->hdr->nmp & 0x1)) {
+		nvme_msg(ep->root, LOG_WARNING,
+			 "Command slot mismatch: req %d, resp %d\n",
+			 req->hdr->nmp & 0x1,
+			 resp->hdr->nmp & 0x1);
+		return -EIO;
 	}
 
 	return 0;
@@ -213,9 +258,28 @@ int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
 	struct nvme_mi_req req;
 	int rc;
 
-	if (*resp_data_size > 0xffffffff)
+	/* length/offset checks. The common _submit() API will do further
+	 * checking on the message lengths too, so these are kept specific
+	 * to the requirements of the Admin command set
+	 */
+
+	/* NVMe-MI v1.2 imposes a limit of 4096 bytes on the dlen field */
+	if (*resp_data_size > 4096)
 		return -EINVAL;
+
+	/* we only have 32 bits of offset */
 	if (resp_data_offset > 0xffffffff)
+		return -EINVAL;
+
+	/* must be aligned */
+	if (resp_data_offset & 0x3)
+		return -EINVAL;
+
+	/* bidirectional not permitted (see DLEN definition) */
+	if (req_data_size && *resp_data_size)
+		return -EINVAL;
+
+	if (!*resp_data_size && resp_data_offset)
 		return -EINVAL;
 
 	admin_req->hdr.type = NVME_MI_MSGTYPE_NVME;
@@ -287,6 +351,9 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
 	if (rc)
 		return rc;
+
+	if (resp_hdr.status)
+		return resp_hdr.status;
 
 	if (args->result)
 		*args->result = le32_to_cpu(resp_hdr.cdw0);
@@ -529,9 +596,11 @@ static int nvme_mi_read_data(nvme_mi_ep_t ep, __u32 cdw0,
 	if (rc)
 		return rc;
 
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
 	*data_len = resp.data_len;
 
-	/* check status, map to return value */
 	return 0;
 }
 
@@ -649,6 +718,9 @@ int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 	if (rc)
 		return rc;
 
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
 	if (resp.data_len != sizeof(*sshs)) {
 		nvme_msg(ep->root, LOG_WARNING,
 			 "MI Subsystem Health Status length mismatch: "
@@ -657,7 +729,6 @@ int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 		return -EIO;
 	}
 
-	/* check status, map to return value */
 	return 0;
 }
 

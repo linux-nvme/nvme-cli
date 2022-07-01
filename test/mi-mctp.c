@@ -52,11 +52,11 @@ static struct test_peer {
 	ssize_t		tx_rc; /* if zero, return the recvmsg len */
 	int		tx_errno;
 
-	/* Optional, called after RX, may set tx_buf according to request.
-	 * Return value stored in rx_res, may be used by test */
-	rx_test_fn	rx_fn;
-	void		*rx_data;
-	int		rx_res;
+	/* Optional, called before TX, may set tx_buf according to request.
+	 * Return value stored in tx_res, may be used by test */
+	rx_test_fn	tx_fn;
+	void		*tx_data;
+	int		tx_fn_res;
 
 	/* store sd from socket() setup */
 	int		sd;
@@ -112,11 +112,6 @@ ssize_t __wrap_sendmsg(int sd, const struct msghdr *hdr, int flags)
 
 	test_peer.rx_buf_len = pos;
 
-	if (test_peer.rx_fn)
-		test_peer.rx_res = test_peer.rx_fn(&test_peer,
-						   test_peer.rx_buf,
-						   test_peer.rx_buf_len);
-
 	errno = test_peer.rx_errno;
 
 	return test_peer.rx_rc ?: (pos - 1);
@@ -127,6 +122,18 @@ ssize_t __wrap_recvmsg(int sd, struct msghdr *hdr, int flags)
 	size_t i, pos, len;
 
 	assert(sd == test_peer.sd);
+
+	if (test_peer.tx_fn) {
+		test_peer.tx_fn_res = test_peer.tx_fn(&test_peer,
+						   test_peer.rx_buf,
+						   test_peer.rx_buf_len);
+	} else {
+		/* set up a few default response fields; caller may have
+		 * initialised the rest of the response */
+		test_peer.tx_buf[0] = NVME_MI_MSGTYPE_NVME;
+		test_peer.tx_buf[1] = test_peer.rx_buf[1] | (NVME_MI_ROR_RSP << 7);
+		test_set_tx_mic(&test_peer);
+	}
 
 	/* scatter buf into iovec */
 	for (i = 0, pos = 1; i < hdr->msg_iovlen && pos < test_peer.tx_buf_len;
@@ -146,10 +153,37 @@ ssize_t __wrap_recvmsg(int sd, struct msghdr *hdr, int flags)
 	return test_peer.tx_rc ?: (pos - 1);
 }
 
+struct mctp_ioc_tag_ctl;
+
+#ifdef SIOCMCTPALLOCTAG
+int test_ioctl_tag(int sd, unsigned long req, struct mctp_ioc_tag_ctl *ctl)
+{
+	assert(sd == test_peer.sd);
+
+	switch (req) {
+	case SIOCMCTPALLOCTAG:
+		ctl->tag = 1 | MCTP_TAG_PREALLOC | MCTP_TAG_OWNER;
+		break;
+	case SIOCMCTPDROPTAG:
+		assert(tag == 1 | MCTP_TAG_PREALLOC | MCTP_TAG_OWNER);
+		break;
+	};
+
+	return 0;
+}
+#else
+int test_ioctl_tag(int sd, unsigned long req, struct mctp_ioc_tag_ctl *ctl)
+{
+	assert(sd == test_peer.sd);
+	return 0;
+}
+#endif
+
 static struct __mi_mctp_socket_ops ops = {
 	__wrap_socket,
 	__wrap_sendmsg,
 	__wrap_recvmsg,
+	test_ioctl_tag,
 };
 
 /* tests */
@@ -159,6 +193,23 @@ static void test_rx_err(nvme_mi_ep_t ep, struct test_peer *peer)
 	int rc;
 
 	peer->rx_rc = -1;
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc != 0);
+}
+
+static int tx_none(struct test_peer *peer, void *buf, size_t len)
+{
+	return 0;
+}
+
+static void test_tx_none(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	int rc;
+
+	peer->tx_buf_len = 0;
+	peer->tx_fn = tx_none;
 
 	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
 	assert(rc != 0);
@@ -191,13 +242,166 @@ static void test_read_mi_data(nvme_mi_ep_t ep, struct test_peer *peer)
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	int rc;
 
-	/* empty response data, but with correct MIC */
+	/* empty response data */
 	peer->tx_buf_len = 8 + 32;
-	test_set_tx_mic(peer);
 
 	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
 	assert(rc == 0);
 }
+
+static void test_mi_resp_err(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	int rc;
+
+	/* simple error response */
+	peer->tx_buf[4] = 0x02; /* internal error */
+	peer->tx_buf_len = 8;
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc == 0x2);
+}
+
+static void test_admin_resp_err(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_id_ctrl id;
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	ctrl = nvme_mi_init_ctrl(ep, 1);
+	assert(ctrl);
+
+	/* Simple error response, will be shorter than the expected Admin
+	 * command response header. */
+	peer->tx_buf[4] = 0x02; /* internal error */
+	peer->tx_buf_len = 8;
+
+	rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+	assert(rc == 0x2);
+}
+
+/* test: all 4-byte aligned response sizes - should be decoded into the
+ * response status value. We use an admin command here as the header size will
+ * be larger than the minimum header size (it contains the completion
+ * doublewords), and we need to ensure that an error response is correctly
+ * interpreted, including having the MIC extracted from the message.
+ */
+static void test_admin_resp_sizes(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_id_ctrl id;
+	nvme_mi_ctrl_t ctrl;
+	unsigned int i;
+	int rc;
+
+	ctrl = nvme_mi_init_ctrl(ep, 1);
+	assert(ctrl);
+
+	peer->tx_buf[4] = 0x02; /* internal error */
+
+	for (i = 8; i <= 4096 + 8; i+=4) {
+		peer->tx_buf_len = i;
+		rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+		assert(rc == 2);
+	}
+
+	nvme_mi_close_ctrl(ctrl);
+}
+
+/* test: unaligned response sizes - should always report a transport error */
+static void test_admin_resp_sizes_unaligned(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_id_ctrl id;
+	nvme_mi_ctrl_t ctrl;
+	unsigned int i;
+	int rc;
+
+	ctrl = nvme_mi_init_ctrl(ep, 1);
+	assert(ctrl);
+
+	peer->tx_buf[4] = 0x02; /* internal error */
+
+	for (i = 8; i <= 4096 + 8; i++) {
+		peer->tx_buf_len = i;
+		if (!(i & 0x3))
+			continue;
+		rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+		assert(rc < 0);
+	}
+
+	nvme_mi_close_ctrl(ctrl);
+}
+
+/* test: send a More Processing Required response, then the actual response */
+struct mpr_tx_info {
+	int msg_no;
+	size_t final_len;
+};
+
+static int tx_mpr(struct test_peer *peer, void *buf, size_t len)
+{
+	struct mpr_tx_info *tx_info = peer->tx_data;
+
+	memset(peer->tx_buf, 0, sizeof(peer->tx_buf));
+	peer->tx_buf[0] = NVME_MI_MSGTYPE_NVME;
+	peer->tx_buf[1] = test_peer.rx_buf[1] | (NVME_MI_ROR_RSP << 7);
+
+	switch (tx_info->msg_no) {
+	case 1:
+		peer->tx_buf[4] = NVME_MI_RESP_MPR;
+		peer->tx_buf_len = 8;
+		break;
+	case 2:
+		peer->tx_buf[4] = NVME_MI_RESP_SUCCESS;
+		peer->tx_buf_len = tx_info->final_len;
+		break;
+	default:
+		assert(0);
+	}
+
+	test_set_tx_mic(peer);
+
+	tx_info->msg_no++;
+
+	return 0;
+}
+
+static void test_mpr_mi(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	struct mpr_tx_info tx_info;
+	int rc;
+
+	tx_info.msg_no = 1;
+	tx_info.final_len = sizeof(struct nvme_mi_mi_resp_hdr) + sizeof(ss_info);
+
+	peer->tx_fn = tx_mpr;
+	peer->tx_data = &tx_info;
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc == 0);
+}
+
+static void test_mpr_admin(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct mpr_tx_info tx_info;
+	struct nvme_id_ctrl id;
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	tx_info.msg_no = 1;
+	tx_info.final_len = sizeof(struct nvme_mi_admin_resp_hdr) + sizeof(id);
+
+	peer->tx_fn = tx_mpr;
+	peer->tx_data = &tx_info;
+
+	ctrl = nvme_mi_init_ctrl(ep, 1);
+
+	rc = nvme_mi_admin_identify_ctrl(ctrl, &id);
+	assert(rc == 0);
+
+	nvme_mi_close_ctrl(ctrl);
+}
+
 
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
@@ -205,9 +409,16 @@ struct test {
 	void (*fn)(nvme_mi_ep_t, struct test_peer *);
 } tests[] = {
 	DEFINE_TEST(rx_err),
+	DEFINE_TEST(tx_none),
 	DEFINE_TEST(tx_err),
 	DEFINE_TEST(tx_short),
 	DEFINE_TEST(read_mi_data),
+	DEFINE_TEST(mi_resp_err),
+	DEFINE_TEST(admin_resp_err),
+	DEFINE_TEST(admin_resp_sizes),
+	DEFINE_TEST(admin_resp_sizes_unaligned),
+	DEFINE_TEST(mpr_mi),
+	DEFINE_TEST(mpr_admin),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep,
