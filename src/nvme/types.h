@@ -5189,34 +5189,48 @@ struct nvme_mi_nvm_ss_health_status {
 };
 
 /**
- * enum nvme_mi_css - Get State Control Primitive Success Response Fields - Control Primitive Specific Response
+ * enum nvme_mi_ccs - Get State Control Primitive Success Response Fields - Control Primitive Specific Response
  * @NVME_MI_CCS_RDY:	Ready
- * @NVME_MI_CSS_CFS:	Controller Fatal Status
- * @NVME_MI_CSS_SHST:	Shutdown Status
- * @NVME_MI_CSS_NSSRO:	NVM Subsystem Reset Occurred
- * @NVME_MI_CSS_CECO:	Controller Enable Change Occurred
- * @NVME_MI_CSS_NAC:	Namespace Attribute Changed
- * @NVME_MI_CSS_FA:	Firmware Activated
- * @NVME_MI_CSS_CSTS:	Controller Status Change
- * @NVME_MI_CSS_CTEMP:	Composite Temperature Change
- * @NVME_MI_CSS_PDLU:	Percentage Used
- * @NVME_MI_CSS_SPARE:	Available Spare
- * @NVME_MI_CSS_CCWARN:	Critical Warning
+ * @NVME_MI_CCS_CFS:	Controller Fatal Status
+ * @NVME_MI_CCS_SHST:	Shutdown Status
+ * @NVME_MI_CCS_NSSRO:	NVM Subsystem Reset Occurred
+ * @NVME_MI_CCS_CECO:	Controller Enable Change Occurred
+ * @NVME_MI_CCS_NAC:	Namespace Attribute Changed
+ * @NVME_MI_CCS_FA:	Firmware Activated
+ * @NVME_MI_CCS_CSTS:	Controller Status Change
+ * @NVME_MI_CCS_CTEMP:	Composite Temperature Change
+ * @NVME_MI_CCS_PDLU:	Percentage Used
+ * @NVME_MI_CCS_SPARE:	Available Spare
+ * @NVME_MI_CCS_CCWARN:	Critical Warning
  */
-enum nvme_mi_css {
+enum nvme_mi_ccs {
 	NVME_MI_CCS_RDY		= 1 << 0,
-	NVME_MI_CSS_CFS		= 1 << 1,
-	NVME_MI_CSS_SHST	= 1 << 2,
-	NVME_MI_CSS_NSSRO	= 1 << 4,
-	NVME_MI_CSS_CECO	= 1 << 5,
-	NVME_MI_CSS_NAC		= 1 << 6,
-	NVME_MI_CSS_FA		= 1 << 7,
-	NVME_MI_CSS_CSTS	= 1 << 8,
-	NVME_MI_CSS_CTEMP	= 1 << 9,
-	NVME_MI_CSS_PDLU	= 1 << 10,
-	NVME_MI_CSS_SPARE	= 1 << 11,
-	NVME_MI_CSS_CCWARN	= 1 << 12,
+	NVME_MI_CCS_CFS		= 1 << 1,
+	NVME_MI_CCS_SHST	= 1 << 2,
+	NVME_MI_CCS_NSSRO	= 1 << 4,
+	NVME_MI_CCS_CECO	= 1 << 5,
+	NVME_MI_CCS_NAC		= 1 << 6,
+	NVME_MI_CCS_FA		= 1 << 7,
+	NVME_MI_CCS_CSTS	= 1 << 8,
+	NVME_MI_CCS_CTEMP	= 1 << 9,
+	NVME_MI_CCS_PDLU	= 1 << 10,
+	NVME_MI_CCS_SPARE	= 1 << 11,
+	NVME_MI_CCS_CCWARN	= 1 << 12,
 };
+
+/* backwards compat for old "CCS" definitions */
+#define nvme_mi_css		nvme_mi_ccs
+#define NVME_MI_CSS_CFS		NVME_MI_CCS_CFS
+#define NVME_MI_CSS_SHST	NVME_MI_CCS_SHST
+#define NVME_MI_CSS_NSSRO	NVME_MI_CCS_NSSRO
+#define NVME_MI_CSS_CECO	NVME_MI_CCS_CECO
+#define NVME_MI_CSS_NAC		NVME_MI_CCS_NAC
+#define NVME_MI_CSS_FA		NVME_MI_CCS_FA
+#define NVME_MI_CSS_CSTS	NVME_MI_CCS_CSTS
+#define NVME_MI_CSS_CTEMP	NVME_MI_CCS_CTEMP
+#define NVME_MI_CSS_PDLU	NVME_MI_CCS_PDLU
+#define NVME_MI_CSS_SPARE	NVME_MI_CCS_SPARE
+#define NVME_MI_CSS_CCWARN	NVME_MI_CCS_CCWARN
 
 /**
  * struct nvme_mi_ctrl_health_status - Controller Health Data Structure (CHDS)
