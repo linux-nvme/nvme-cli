@@ -1,3 +1,4 @@
+---
 name: Auto Request Review
 
 on:
@@ -8,9 +9,11 @@ jobs:
   auto-request-review:
     name: Auto Request Review
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Request review based on files changes and/or groups the author belongs to
         uses: necojackarc/auto-request-review@v0.7.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          config: .github/reviewers.yml # Config file location override
+          config: .github/reviewers.yml  # Config file location override
