@@ -8117,6 +8117,7 @@ int main(int argc, char **argv)
 		general_help(&builtin);
 		return 0;
 	}
+	/* XXX sure about this? *?
 	setlocale(LC_ALL, "");
 
 	err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
