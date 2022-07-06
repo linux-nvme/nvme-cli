@@ -1,0 +1,10 @@
+#!/bin/bash
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+kernel_doc=$(dirname $0)/kernel-doc
+
+"$kernel_doc" -none "$@" 2>&1 |
+  grep '\(warning\|error\)'
+
+# check that kernel-doc succeeded, but the grep failed
+[ ${PIPESTATUS[0]} -eq 0 -a ${PIPESTATUS[1]} -eq 1 ]

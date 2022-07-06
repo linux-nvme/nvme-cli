@@ -46,8 +46,12 @@ subdir('rst')
 
 want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
+kernel_doc = find_program('kernel-doc')
+kernel_doc_check = find_program('kernel-doc-check')
+
+test('kdoc', kernel_doc_check, args: api_paths)
+
 if want_docs != 'false'
-  kernel_doc = find_program('kernel-doc')
 
   conf = configuration_data()
   conf.set('SYSCONFDIR', sysconfdir)
