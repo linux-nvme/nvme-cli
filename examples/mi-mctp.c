@@ -507,6 +507,119 @@ int do_security_info(nvme_mi_ep_t ep, int argc, char **argv)
 	return 0;
 }
 
+struct {
+	enum nvme_mi_config_smbus_freq id;
+	const char *str;
+} smbus_freqs[] = {
+	{ NVME_MI_CONFIG_SMBUS_FREQ_100kHz, "100k" },
+	{ NVME_MI_CONFIG_SMBUS_FREQ_400kHz, "400k" },
+	{ NVME_MI_CONFIG_SMBUS_FREQ_1MHz,   "1M" },
+};
+
+static const char *smbus_freq_str(enum nvme_mi_config_smbus_freq freq)
+{
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(smbus_freqs); i++) {
+		if (smbus_freqs[i].id == freq)
+			return smbus_freqs[i].str;
+	}
+
+	return NULL;
+}
+
+static int smbus_freq_val(const char *str, enum nvme_mi_config_smbus_freq *freq)
+{
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(smbus_freqs); i++) {
+		if (!strcmp(smbus_freqs[i].str, str)) {
+			*freq = smbus_freqs[i].id;
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+int do_config_get(nvme_mi_ep_t ep, int argc, char **argv)
+{
+	enum nvme_mi_config_smbus_freq freq;
+	uint16_t mtu;
+	uint8_t port;
+	int rc;
+
+	if (argc > 1)
+		port = atoi(argv[1]) & 0xff;
+	else
+		port = 0;
+
+	rc = nvme_mi_mi_config_get_smbus_freq(ep, port, &freq);
+	if (rc) {
+		warn("can't query SMBus freq for port %d\n", port);
+	} else {
+		const char *fstr = smbus_freq_str(freq);
+		printf("SMBus access frequency (port %d): %s [0x%x]\n", port,
+		       fstr ?: "unknown", freq);
+	}
+
+	rc = nvme_mi_mi_config_get_mctp_mtu(ep, port, &mtu);
+	if (rc)
+		warn("can't query MCTP MTU for port %d\n", port);
+	else
+		printf("MCTP MTU (port %d): %d\n", port, mtu);
+
+	return 0;
+}
+
+int do_config_set(nvme_mi_ep_t ep, int argc, char **argv)
+{
+	const char *name, *val;
+	uint8_t port;
+	int rc;
+
+	if (argc != 4) {
+		fprintf(stderr, "config set requires <port> <type> <val>\n");
+		return -1;
+	}
+
+	port = atoi(argv[1]) & 0xff;
+	name = argv[2];
+	val = argv[3];
+
+	if (!strcmp(name, "freq")) {
+		enum nvme_mi_config_smbus_freq freq;
+		rc = smbus_freq_val(val, &freq);
+		if (rc) {
+			fprintf(stderr, "unknown SMBus freq %s. "
+				"Try 100k, 400k or 1M\n", val);
+			return -1;
+		}
+		rc = nvme_mi_mi_config_set_smbus_freq(ep, port, freq);
+
+	} else if (!strcmp(name, "mtu")) {
+		uint16_t mtu;
+		mtu = atoi(val) & 0xffff;
+		/* controllers should reject this, but prevent the potential
+		 * footgun of disabling futher comunication with the device
+		 */
+		if (mtu < 64) {
+			fprintf(stderr, "MTU value too small\n");
+			return -1;
+		}
+		rc = nvme_mi_mi_config_set_mctp_mtu(ep, port, mtu);
+
+	} else {
+		fprintf(stderr, "Invalid configuration '%s', "
+			"try freq or mtu\n", name);
+		return -1;
+	}
+
+	if (rc)
+		fprintf(stderr, "config set failed with status %d\n", rc);
+
+	return rc;
+}
 
 enum action {
 	ACTION_INFO,
@@ -515,6 +628,8 @@ enum action {
 	ACTION_GET_LOG_PAGE,
 	ACTION_ADMIN_RAW,
 	ACTION_SECURITY_INFO,
+	ACTION_CONFIG_GET,
+	ACTION_CONFIG_SET,
 };
 
 static int do_action_endpoint(enum action action, nvme_mi_ep_t ep, int argc, char** argv)
@@ -539,6 +654,12 @@ static int do_action_endpoint(enum action action, nvme_mi_ep_t ep, int argc, cha
 		break;
 	case ACTION_SECURITY_INFO:
 		rc = do_security_info(ep, argc, argv);
+		break;
+	case ACTION_CONFIG_GET:
+		rc = do_config_get(ep, argc, argv);
+		break;
+	case ACTION_CONFIG_SET:
+		rc = do_config_set(ep, argc, argv);
 		break;
 	}
 	return rc;
@@ -578,6 +699,8 @@ int main(int argc, char **argv)
 			"  get-log-page <controller-id> [<log-id>]\n"
 			"  admin <controller-id> <opcode> [<cdw10>, <cdw11>, ...]\n"
 			"  security-info <controller-id>\n"
+			"  get-config [port]\n"
+			"  set-config <port> <type> <val>\n"
 			"\n"
 			"  'dbus' target will query D-Bus for known MCTP endpoints\n"
 			);
@@ -603,6 +726,10 @@ int main(int argc, char **argv)
 			action = ACTION_ADMIN_RAW;
 		} else if (!strcmp(action_str, "security-info")) {
 			action = ACTION_SECURITY_INFO;
+		} else if (!strcmp(action_str, "get-config")) {
+			action = ACTION_CONFIG_GET;
+		} else if (!strcmp(action_str, "set-config")) {
+			action = ACTION_CONFIG_SET;
 		} else {
 			fprintf(stderr, "invalid action '%s'\n", action_str);
 			return EXIT_FAILURE;

@@ -164,10 +164,14 @@ struct nvme_mi_msg_resp {
  * enum nvme_mi_mi_opcode - Operation code for supported NVMe-MI commands.
  * @nvme_mi_mi_opcode_mi_data_read: Read NVMe-MI Data Structure
  * @nvme_mi_mi_opcode_subsys_health_status_poll: Subsystem Health Status Poll
+ * @nvme_mi_mi_opcode_configuration_set: MI Configuration Set
+ * @nvme_mi_mi_opcode_configuration_get: MI Configuration Get
  */
 enum nvme_mi_mi_opcode {
 	nvme_mi_mi_opcode_mi_data_read = 0x00,
 	nvme_mi_mi_opcode_subsys_health_status_poll = 0x01,
+	nvme_mi_mi_opcode_configuration_set = 0x03,
+	nvme_mi_mi_opcode_configuration_get = 0x04,
 };
 
 /**
@@ -220,6 +224,40 @@ enum nvme_mi_dtyp {
 	nvme_mi_dtyp_ctrl_info = 0x03,
 	nvme_mi_dtyp_opt_cmd_support = 0x04,
 	nvme_mi_dtyp_meb_support = 0x05,
+};
+
+/**
+ * enum nvme_mi_config_id - NVMe-MI Configuration identifier.
+ * @NVME_MI_CONFIG_SMBUS_FREQ: Current SMBus/I2C frequency
+ * @NVME_MI_CONFIG_HEALTH_STATUS_CHANGE: Health Status change - used to clear
+ *                                       health status bits in CCS bits of
+ *                                       status poll. Only for Set ops.
+ * @NVME_MI_CONFIG_MCTP_MTU: MCTP maximum transmission unit size of port
+ *                           specified in dw 0
+ *
+ * Configuration parameters for the MI Get/Set Configuration commands.
+ *
+ * See &nvme_mi_mi_config_get() and &nvme_mi_config_set().
+ */
+enum nvme_mi_config_id {
+	NVME_MI_CONFIG_SMBUS_FREQ = 0x1,
+	NVME_MI_CONFIG_HEALTH_STATUS_CHANGE = 0x2,
+	NVME_MI_CONFIG_MCTP_MTU = 0x3,
+};
+
+/**
+ * enum nvme_mi_config_smbus_freq - SMBus/I2C frequency values
+ * @NVME_MI_CONFIG_SMBUS_FREQ_100kHz: 100kHz
+ * @NVME_MI_CONFIG_SMBUS_FREQ_400kHz: 400kHz
+ * @NVME_MI_CONFIG_SMBUS_FREQ_1MHz: 1MHz
+ *
+ * Values used in the SMBus Frequency device configuration. See
+ * &nvme_mi_mi_config_get_smbus_freq() and &nvme_mi_mi_config_set_smbus_freq().
+ */
+enum nvme_mi_config_smbus_freq {
+	NVME_MI_CONFIG_SMBUS_FREQ_100kHz = 0x1,
+	NVME_MI_CONFIG_SMBUS_FREQ_400kHz = 0x2,
+	NVME_MI_CONFIG_SMBUS_FREQ_1MHz = 0x3,
 };
 
 /* Admin command definitions */
@@ -608,6 +646,171 @@ int nvme_mi_mi_read_mi_data_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id,
  */
 int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 					    struct nvme_mi_nvm_ss_health_status *nshds);
+
+/**
+ * nvme_mi_mi_config_get - query a configuration parameter
+ * @ep: endpoint for MI communication
+ * @dw0: management doubleword 0, containing configuration identifier, plus
+ *       config-specific fields
+ * @dw1: management doubleword 0, config-specific.
+ * @nmresp: set to queried configuration data in NMRESP field of response.
+ *
+ * Performs a MI Configuration Get command, with the configuration identifier
+ * as the LSB of @dw0. Other @dw0 and @dw1 data is configuration-identifier
+ * specific.
+ *
+ * On a sucessful Configuration Get, the @nmresp pointer will be populated with
+ * the bytes from the 3-byte NMRESP field, converted to native endian.
+ *
+ * See &enum nvme_mi_config_id for identifiers.
+ *
+ * Return: 0 on success, non-zero on failure.
+ */
+int nvme_mi_mi_config_get(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1,
+			  __u32 *nmresp);
+
+/**
+ * nvme_mi_mi_config_set - set a configuration parameter
+ * @ep: endpoint for MI communication
+ * @dw0: management doubleword 0, containing configuration identifier, plus
+ *       config-specific fields
+ * @dw1: management doubleword 0, config-specific.
+ *
+ * Performs a MI Configuration Set command, with the command as the LSB of
+ * @dw0. Other @dw0 and @dw1 data is configuration-identifier specific.
+ *
+ * See &enum nvme_mi_config_id for identifiers.
+ *
+ * Return: 0 on success, non-zero on failure.
+ */
+int nvme_mi_mi_config_set(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1);
+
+/**
+ * nvme_mi_mi_config_get_smbus_freq - get configuraton: SMBus port frequency
+ * @ep: endpoint for MI communication
+ * @port: port ID to query
+ * @freq: output value for current frequency configuration
+ *
+ * Performs a MI Configuration Get, to query the current SMBus frequency of
+ * the port specified in @port. On success, populates @freq with the port
+ * frequency
+ *
+ * Return: 0 on success, non-zero on failure.
+ */
+static inline int nvme_mi_mi_config_get_smbus_freq(nvme_mi_ep_t ep, __u8 port,
+						   enum nvme_mi_config_smbus_freq *freq)
+{
+	__u32 tmp, dw0;
+	int rc;
+
+	dw0 = port << 24 | NVME_MI_CONFIG_SMBUS_FREQ;
+
+	rc = nvme_mi_mi_config_get(ep, dw0, 0, &tmp);
+	if (!rc)
+		*freq = tmp & 0x3;
+	return rc;
+}
+
+/**
+ * nvme_mi_mi_config_set_smbus_freq - set configuraton: SMBus port frequency
+ * @ep: endpoint for MI communication
+ * @port: port ID to set
+ * @freq: new frequency configuration
+ *
+ * Performs a MI Configuration Set, to update the current SMBus frequency of
+ * the port specified in @port.
+ *
+ * See &struct nvme_mi_read_port_info for the maximum supported SMBus frequency
+ * for the port.
+ *
+ * Return: 0 on success, non-zero on failure.
+ */
+static inline int nvme_mi_mi_config_set_smbus_freq(nvme_mi_ep_t ep, __u8 port,
+						   enum nvme_mi_config_smbus_freq freq)
+{
+	__u32 dw0 = port << 24 |
+		(freq & 0x3) << 8 |
+		NVME_MI_CONFIG_SMBUS_FREQ;
+
+	return nvme_mi_mi_config_set(ep, dw0, 0);
+}
+
+/**
+ * nvme_mi_mi_config_set_health_status_change - clear CCS bits in health status
+ * @ep: endpoint for MI communication
+ * @mask: bitmask to clear
+ *
+ * Performs a MI Configuration Set, to update the current health status poll
+ * values of the Composite Controller Status bits. Bits set in @mask will
+ * be cleared from future health status poll data, and may be re-triggered by
+ * a future health change event.
+ *
+ * See &nvme_mi_mi_subsystem_health_status_poll(), &enum nvme_mi_ccs for
+ * values in @mask.
+ *
+ * Return: 0 on success, non-zero on failure.
+ */
+static inline int nvme_mi_mi_config_set_health_status_change(nvme_mi_ep_t ep,
+							     __u32 mask)
+{
+	return nvme_mi_mi_config_set(ep, NVME_MI_CONFIG_HEALTH_STATUS_CHANGE,
+				     mask);
+}
+
+/**
+ * nvme_mi_mi_config_get_mctp_mtu - get configuraton: MCTP MTU
+ * @ep: endpoint for MI communication
+ * @port: port ID to query
+ * @mtu: output value for current MCTP MTU configuration
+ *
+ * Performs a MI Configuration Get, to query the current MCTP Maximum
+ * Transmission Unit size (MTU) of the port specified in @port. On success,
+ * populates @mtu with the MTU.
+ *
+ * The default reset value is 64, corresponding to the MCTP baseline MTU.
+ *
+ * Some controllers may also use this as the maximum receive unit size, and
+ * may not accept MCTP messages larger than the configured MTU.
+ *
+ * Return: 0 on success, non-zero on failure.
+ */
+static inline int nvme_mi_mi_config_get_mctp_mtu(nvme_mi_ep_t ep, __u8 port,
+						 __u16 *mtu)
+{
+	__u32 tmp, dw0;
+	int rc;
+
+	dw0 = port << 24 | NVME_MI_CONFIG_MCTP_MTU;
+
+	rc = nvme_mi_mi_config_get(ep, dw0, 0, &tmp);
+	if (!rc)
+		*mtu = tmp & 0xffff;
+	return rc;
+}
+
+/**
+ * nvme_mi_mi_config_set_mctp_mtu - set configuraton: MCTP MTU
+ * @ep: endpoint for MI communication
+ * @port: port ID to set
+ * @mtu: new MTU configuration
+ *
+ * Performs a MI Configuration Set, to update the current MCTP MTU value for
+ * the port specified in @port.
+ *
+ * Some controllers may also use this as the maximum receive unit size, and
+ * may not accept MCTP messages larger than the configured MTU. When setting
+ * this value, you will likely need to change the MTU of the local MCTP
+ * interface(s) to match.
+ *
+ * Return: 0 on success, non-zero on failure.
+ */
+static inline int nvme_mi_mi_config_set_mctp_mtu(nvme_mi_ep_t ep, __u8 port,
+						 __u16 mtu)
+{
+	__u32 dw0 = port << 24 | NVME_MI_CONFIG_MCTP_MTU;
+
+	return nvme_mi_mi_config_set(ep, dw0, mtu);
+}
 
 /* Admin channel functions */
 
