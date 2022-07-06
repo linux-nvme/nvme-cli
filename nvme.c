@@ -6602,12 +6602,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 		.result		= NULL,
 	};
 	gettimeofday(&start_time, NULL);
-	if (opcode == nvme_cmd_compare)
-		err = nvme_compare(&args);
-	else if (opcode & 1)
-		err = nvme_write(&args);
-	else
-		err = nvme_read(&args);
+	err = nvme_io(&args, opcode);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: %s: %llu us\n",
