@@ -43,6 +43,28 @@
  *    &nvme_mi_mi_subsystem_health_status_poll, which is apparently amusing
  *    for our German-speaking readers]
  *
+ * For return values: unless specified in the per-function documentation,
+ * all functions:
+ *
+ *  - return 0 on success
+ *
+ *  - return -1, with errno set, for errors communicating with the MI device,
+ *    either in request or response data
+ *
+ *  - return >1 on MI status errors. This value is the 8-bit MI status
+ *    value, represented by &enum nvme_mi_resp_status. Note that the
+ *    status values may be vendor-defined above 0xe0.
+ *
+ * For the second case, we have a few conventions for errno values:
+ *
+ *  - EPROTO: response data violated the MI protocol, and libnvme cannot
+ *    validly interpret the response
+ *
+ *  - EIO: Other I/O error communicating with device (eg., valid but
+ *    unexpected response data)
+ *
+ *  - EINVAL: invalid input arguments for a command
+ *
  * In line with the core NVMe API, the Admin command functions take an
  * `_args` structure to provide the command-specific parameters. However,
  * for the MI interface, the fd and timeout members of these _args structs
@@ -116,6 +138,17 @@ enum nvme_mi_ror {
  * @NVME_MI_RESP_INVALID_CMD_SIZE: Invalid command size
  * @NVME_MI_RESP_INVALID_INPUT_SIZE: Invalid command input data size
  * @NVME_MI_RESP_ACCESS_DENIED: Access Denied
+ * @NVME_MI_RESP_VPD_UPDATES_EXCEEDED: More VPD updates than allowed
+ * @NVME_MI_RESP_PCIE_INACCESSIBLE: PCIe functionality currently unavailable
+ * @NVME_MI_RESP_MEB_SANITIZED: MEB has been cleared due to sanitize
+ * @NVME_MI_RESP_ENC_SERV_FAILURE: Enclosure services process failed
+ * @NVME_MI_RESP_ENC_SERV_XFER_FAILURE: Transfer with enclosure services failed
+ * @NVME_MI_RESP_ENC_FAILURE: Unreoverable enclosure failure
+ * @NVME_MI_RESP_ENC_XFER_REFUSED: Enclosure services transfer refused
+ * @NVME_MI_RESP_ENC_FUNC_UNSUP: Unsupported enclosure services function
+ * @NVME_MI_RESP_ENC_SERV_UNAVAIL: Enclosure services unavailable
+ * @NVME_MI_RESP_ENC_DEGRADED: Noncriticial failure detected by enc. services
+ * @NVME_MI_RESP_SANITIZE_IN_PROGRESS: Command prohibited during sanitize
  */
 enum nvme_mi_resp_status {
 	NVME_MI_RESP_SUCCESS = 0x00,
@@ -126,6 +159,20 @@ enum nvme_mi_resp_status {
 	NVME_MI_RESP_INVALID_CMD_SIZE = 0x05,
 	NVME_MI_RESP_INVALID_INPUT_SIZE = 0x06,
 	NVME_MI_RESP_ACCESS_DENIED = 0x07,
+	/* 0x08 - 0x1f: reserved */
+	NVME_MI_RESP_VPD_UPDATES_EXCEEDED = 0x20,
+	NVME_MI_RESP_PCIE_INACCESSIBLE = 0x21,
+	NVME_MI_RESP_MEB_SANITIZED = 0x22,
+	NVME_MI_RESP_ENC_SERV_FAILURE = 0x23,
+	NVME_MI_RESP_ENC_SERV_XFER_FAILURE = 0x24,
+	NVME_MI_RESP_ENC_FAILURE = 0x25,
+	NVME_MI_RESP_ENC_XFER_REFUSED = 0x26,
+	NVME_MI_RESP_ENC_FUNC_UNSUP = 0x27,
+	NVME_MI_RESP_ENC_SERV_UNAVAIL = 0x28,
+	NVME_MI_RESP_ENC_DEGRADED = 0x29,
+	NVME_MI_RESP_SANITIZE_IN_PROGRESS = 0x2a,
+	/* 0x2b - 0xdf: reserved */
+	/* 0xe0 - 0xff: vendor specific */
 };
 
 /**

@@ -25,7 +25,6 @@ nvme_root_t nvme_mi_create_root(FILE *fp, int log_level)
 	struct nvme_root *r = calloc(1, sizeof(*r));
 
 	if (!r) {
-		errno = ENOMEM;
 		return NULL;
 	}
 	r->log_level = log_level;
@@ -52,6 +51,9 @@ struct nvme_mi_ep *nvme_mi_init_ep(nvme_root_t root)
 	struct nvme_mi_ep *ep;
 
 	ep = calloc(1, sizeof(*ep));
+	if (!ep)
+		return NULL;
+
 	list_node_init(&ep->root_entry);
 	ep->root = root;
 	ep->controllers_scanned = false;
@@ -99,8 +101,10 @@ int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan)
 		return -1;
 
 	n_ctrl = le16_to_cpu(list.num);
-	if (n_ctrl > NVME_ID_CTRL_LIST_MAX)
+	if (n_ctrl > NVME_ID_CTRL_LIST_MAX) {
+		errno = EPROTO;
 		return -1;
+	}
 
 	for (i = 0; i < n_ctrl; i++) {
 		struct nvme_mi_ctrl *ctrl;
@@ -157,23 +161,35 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 {
 	int rc;
 
-	if (req->hdr_len < sizeof(struct nvme_mi_msg_hdr))
-		return -EINVAL;
+	if (req->hdr_len < sizeof(struct nvme_mi_msg_hdr)) {
+		errno = EINVAL;
+		return -1;
+	}
 
-	if (req->hdr_len & 0x3)
-		return -EINVAL;
+	if (req->hdr_len & 0x3) {
+		errno = EINVAL;
+		return -1;
+	}
 
-	if (req->data_len & 0x3)
-		return -EINVAL;
+	if (req->data_len & 0x3) {
+		errno = EINVAL;
+		return -1;
+	}
 
-	if (resp->hdr_len < sizeof(struct nvme_mi_msg_hdr))
-		return -EINVAL;
+	if (resp->hdr_len < sizeof(struct nvme_mi_msg_hdr)) {
+		errno = EINVAL;
+		return -1;
+	}
 
-	if (resp->hdr_len & 0x3)
-		return -EINVAL;
+	if (resp->hdr_len & 0x3) {
+		errno = EINVAL;
+		return -1;
+	}
 
-	if (resp->data_len & 0x3)
-		return -EINVAL;
+	if (resp->data_len & 0x3) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	if (ep->transport->mic_enabled)
 		nvme_mi_calc_req_mic(req);
@@ -196,19 +212,22 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 	if (resp->hdr_len < sizeof(struct nvme_mi_msg_hdr)) {
 		nvme_msg(ep->root, LOG_DEBUG,
 			 "Bad response header len: %zd\n", resp->hdr_len);
-		return -EIO;
+		errno = EPROTO;
+		return -1;
 	}
 
 	if (resp->hdr->type != NVME_MI_MSGTYPE_NVME) {
 		nvme_msg(ep->root, LOG_DEBUG,
 			 "Invalid message type 0x%02x\n", resp->hdr->type);
-		return -EPROTO;
+		errno = EPROTO;
+		return -1;
 	}
 
 	if (!(resp->hdr->nmp & (NVME_MI_ROR_RSP << 7))) {
 		nvme_msg(ep->root, LOG_DEBUG,
 			 "ROR value in response indicates a request\n");
-		return -EIO;
+		errno = EIO;
+		return -1;
 	}
 
 	if ((resp->hdr->nmp & 0x1) != (req->hdr->nmp & 0x1)) {
@@ -216,7 +235,8 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 			 "Command slot mismatch: req %d, resp %d\n",
 			 req->hdr->nmp & 0x1,
 			 resp->hdr->nmp & 0x1);
-		return -EIO;
+		errno = EIO;
+		return -1;
 	}
 
 	return 0;
@@ -264,23 +284,33 @@ int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
 	 */
 
 	/* NVMe-MI v1.2 imposes a limit of 4096 bytes on the dlen field */
-	if (*resp_data_size > 4096)
-		return -EINVAL;
+	if (*resp_data_size > 4096) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	/* we only have 32 bits of offset */
-	if (resp_data_offset > 0xffffffff)
-		return -EINVAL;
+	if (resp_data_offset > 0xffffffff) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	/* must be aligned */
-	if (resp_data_offset & 0x3)
-		return -EINVAL;
+	if (resp_data_offset & 0x3) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	/* bidirectional not permitted (see DLEN definition) */
-	if (req_data_size && *resp_data_size)
-		return -EINVAL;
+	if (req_data_size && *resp_data_size) {
+		errno = EINVAL;
+		return -1;
+	}
 
-	if (!*resp_data_size && resp_data_offset)
-		return -EINVAL;
+	if (!*resp_data_size && resp_data_offset) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	admin_req->hdr.type = NVME_MI_MSGTYPE_NVME;
 	admin_req->hdr.nmp = (NVME_MI_ROR_REQ << 7) |
@@ -323,11 +353,15 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 	struct nvme_mi_req req;
 	int rc;
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 
-	if (!size || size > 0xffffffff)
-		return -EINVAL;
+	if (!size || size > 0xffffffff) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id, nvme_admin_identify);
 	req_hdr.cdw1 = cpu_to_le32(args->nsid);
@@ -360,8 +394,10 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 
 	/* callers will expect a full response; if the data buffer isn't
 	 * fully valid, return an error */
-	if (resp.data_len != size)
-		return -EPROTO;
+	if (resp.data_len != size) {
+		errno = EPROTO;
+		return -1;
+	}
 
 	return 0;
 }
@@ -383,11 +419,15 @@ static int __nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
 	/* MI spec requires that the data length field is less than or equal
 	 * to 4096 */
 	len = *lenp;
-	if (!len || len > 4096 || len < 4)
-		return -EINVAL;
+	if (!len || len > 4096 || len < 4) {
+		errno = EINVAL;
+		return -1;
+	}
 
-	if (offset < 0 || offset >= len)
-		return -EINVAL;
+	if (offset < 0 || offset >= len) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	ndw = (len >> 2) - 1;
 
@@ -436,8 +476,10 @@ int nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
 	off_t xfer_offset;
 	int rc = 0;
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	for (xfer_offset = 0; xfer_offset < args->len;) {
 		size_t tmp, cur_xfer_size = xfer_size;
@@ -478,11 +520,15 @@ int nvme_mi_admin_security_send(nvme_mi_ctrl_t ctrl,
 	struct nvme_mi_req req;
 	int rc;
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 
-	if (args->data_len > 4096)
-		return -EINVAL;
+	if (args->data_len > 4096) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id,
 			       nvme_admin_security_send);
@@ -526,11 +572,15 @@ int nvme_mi_admin_security_recv(nvme_mi_ctrl_t ctrl,
 	struct nvme_mi_req req;
 	int rc;
 
-	if (args->args_size < sizeof(*args))
-		return -EINVAL;
+	if (args->args_size < sizeof(*args)) {
+		errno = EINVAL;
+		return -1;
+	}
 
-	if (args->data_len > 4096)
-		return -EINVAL;
+	if (args->data_len > 4096) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id,
 			       nvme_admin_security_recv);
@@ -623,7 +673,8 @@ int nvme_mi_mi_read_mi_data_subsys(nvme_mi_ep_t ep,
 			 "MI read data length mismatch: "
 			 "got %zd bytes, expected %zd\n",
 			 len, sizeof(*s));
-		return -EPROTO;
+		errno = EPROTO;
+		return -1;
 	}
 
 	return 0;
@@ -644,8 +695,8 @@ int nvme_mi_mi_read_mi_data_port(nvme_mi_ep_t ep, __u8 portid,
 		return rc;
 
 	if (len != sizeof(*p)) {
-		/* log? */
-		return -EPROTO;
+		errno = EPROTO;
+		return -1;
 	}
 
 	return 0;
@@ -682,8 +733,10 @@ int nvme_mi_mi_read_mi_data_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id,
 	if (rc)
 		return rc;
 
-	if (len != sizeof(*ctrl))
-		return -EPROTO;
+	if (len != sizeof(*ctrl)) {
+		errno = EPROTO;
+		return -1;
+	}
 
 	return 0;
 }
@@ -726,7 +779,8 @@ int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 			 "MI Subsystem Health Status length mismatch: "
 			 "got %zd bytes, expected %zd\n",
 			 resp.data_len, sizeof(*sshs));
-		return -EIO;
+		errno = EPROTO;
+		return -1;
 	}
 
 	return 0;

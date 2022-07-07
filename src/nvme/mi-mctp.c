@@ -210,17 +210,21 @@ static int nvme_mi_mctp_submit(struct nvme_mi_ep *ep,
 	struct iovec req_iov[3], resp_iov[3];
 	struct msghdr req_msg, resp_msg;
 	struct sockaddr_mctp addr;
+	int i, rc, errno_save;
 	ssize_t len;
 	__le32 mic;
-	int i, rc;
 	__u8 tag;
 
-	if (ep->transport != &nvme_mi_transport_mctp)
-		return -EINVAL;
+	if (ep->transport != &nvme_mi_transport_mctp) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	/* we need enough space for at least a generic (/error) response */
-	if (resp->hdr_len < sizeof(struct nvme_mi_msg_resp))
-		return -EINVAL;
+	if (resp->hdr_len < sizeof(struct nvme_mi_msg_resp)) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	mctp = ep->transport_data;
 	tag = nvme_mi_mctp_tag_alloc(ep);
@@ -256,9 +260,11 @@ static int nvme_mi_mctp_submit(struct nvme_mi_ep *ep,
 
 	len = ops.sendmsg(mctp->sd, &req_msg, 0);
 	if (len < 0) {
+		errno_save = errno;
 		nvme_msg(ep->root, LOG_ERR,
 			 "Failure sending MCTP message: %m\n");
-		rc = len;
+		errno = errno_save;
+		rc = -1;
 		goto out;
 	}
 
@@ -282,14 +288,17 @@ retry:
 	len = ops.recvmsg(mctp->sd, &resp_msg, 0);
 
 	if (len < 0) {
+		errno_save = errno;
 		nvme_msg(ep->root, LOG_ERR,
 			 "Failure receiving MCTP message: %m\n");
+		errno = errno_save;
 		goto out;
 	}
 
 
 	if (len == 0) {
 		nvme_msg(ep->root, LOG_WARNING, "No data from MCTP endpoint\n");
+		errno = EIO;
 		goto out;
 	}
 
@@ -304,6 +313,7 @@ retry:
 		nvme_msg(ep->root, LOG_ERR,
 			 "Invalid MCTP response: too short (%zd bytes, needed %zd)\n",
 			 len, 8 + sizeof(mic));
+		errno = EPROTO;
 		goto out;
 	}
 
@@ -312,6 +322,7 @@ retry:
 		nvme_msg(ep->root, LOG_WARNING,
 			 "Response message has unaligned length (%zd)!\n",
 			 len);
+		errno = EPROTO;
 		goto out;
 	}
 
@@ -379,8 +390,10 @@ static int nvme_mi_mctp_desc_ep(struct nvme_mi_ep *ep, char *buf, size_t len)
 {
 	struct nvme_mi_transport_mctp *mctp;
 
-	if (ep->transport != &nvme_mi_transport_mctp)
+	if (ep->transport != &nvme_mi_transport_mctp) {
+		errno = EINVAL;
 		return -1;
+	}
 
 	mctp = ep->transport_data;
 
@@ -401,6 +414,7 @@ nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, __u8 eid)
 {
 	struct nvme_mi_transport_mctp *mctp;
 	struct nvme_mi_ep *ep;
+	int errno_save;
 
 	ep = nvme_mi_init_ep(root);
 	if (!ep)
@@ -423,39 +437,44 @@ nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, __u8 eid)
 	return ep;
 
 err_free_ep:
+	errno_save = errno;
 	free(ep);
+	errno = errno_save;
 	return NULL;
 }
 
 #ifdef CONFIG_LIBSYSTEMD
 
-static void _dbus_err(nvme_root_t root, int rc, int line) {
+/* helper for handling dbus errors: D-Bus API returns a negtive errno on
+ * failure; set errno and log.
+ */
+static void _dbus_err(nvme_root_t root, int rc, int line)
+{
 	nvme_msg(root, LOG_ERR, "MCTP D-Bus failed line %d: %s %d\n",
 		line, strerror(-rc), rc);
+	errno = -rc;
 }
 
 #define dbus_err(r, rc) _dbus_err(r, rc, __LINE__)
 
-/* Returns -EEXISTS on duplicate */
 static int nvme_mi_mctp_add(nvme_root_t root, unsigned int netid, __u8 eid)
 {
 	nvme_mi_ep_t ep = NULL;
 
-	/* ensure we don't already have an endpoint with the same net/eid */
+	/* ensure we don't already have an endpoint with the same net/eid. if
+	 * we do, just skip, no need to re-add. */
 	list_for_each(&root->endpoints, ep, root_entry) {
 		if (ep->transport != &nvme_mi_transport_mctp) {
 			continue;
 		}
 		const struct nvme_mi_transport_mctp *t = ep->transport_data;
-		if (t->eid == eid && t->net == netid) {
-			return -EEXIST;
-		}
+		if (t->eid == eid && t->net == netid)
+			return 0;
 	}
 
 	ep = nvme_mi_open_mctp(root, netid, eid);
-	if (!ep) {
-		return -ENOMEM;
-	}
+	if (!ep)
+		return -1;
 
 	return 0;
 }
@@ -481,7 +500,7 @@ static int handle_mctp_endpoint(nvme_root_t root, const char* objpath,
 		rc = sd_bus_message_enter_container(m, 'a', "{sv}");
 		if (rc < 0) {
 			dbus_err(root, rc);
-			return rc;
+			return -1;
 		}
 
 		while (!container_end(m)) {
@@ -492,13 +511,13 @@ static int handle_mctp_endpoint(nvme_root_t root, const char* objpath,
 			rc = sd_bus_message_enter_container(m, 'e', "sv");
 			if (rc < 0) {
 				dbus_err(root, rc);
-				return rc;
+				return -1;
 			}
 
 			rc = sd_bus_message_read(m, "s", &propname);
 			if (rc < 0) {
 				dbus_err(root, rc);
-				return rc;
+				return -1;
 			}
 
 			if (strcmp(propname, "EID") == 0) {
@@ -521,14 +540,14 @@ static int handle_mctp_endpoint(nvme_root_t root, const char* objpath,
 
 			if (rc < 0) {
 				dbus_err(root, rc);
-				return rc;
+				return -1;
 			}
 
 			/* Exit prop item */
 			rc = sd_bus_message_exit_container(m);
 			if (rc < 0) {
 				dbus_err(root, rc);
-				return rc;
+				return -1;
 			}
 		}
 
@@ -536,7 +555,7 @@ static int handle_mctp_endpoint(nvme_root_t root, const char* objpath,
 		rc = sd_bus_message_exit_container(m);
 		if (rc < 0) {
 			dbus_err(root, rc);
-			return rc;
+			return -1;
 		}
 	}
 
@@ -544,13 +563,15 @@ static int handle_mctp_endpoint(nvme_root_t root, const char* objpath,
 		if (!(have_eid && have_net)) {
 			nvme_msg(root, LOG_ERR,
 				 "Missing property for %s\n", objpath);
-			return -ENOENT;
+			errno = ENOENT;
+			return -1;
 		}
 		rc = nvme_mi_mctp_add(root, net, eid);
 		if (rc < 0) {
+			int errno_save = errno;
 			nvme_msg(root, LOG_ERR,
-				 "Error adding net %d eid %d: %s\n",
-				net, eid, strerror(-rc));
+				 "Error adding net %d eid %d: %m\n", net, eid);
+			errno = errno_save;
 		}
 	} else {
 		/* Ignore other endpoints */
@@ -568,7 +589,7 @@ static int handle_mctp_obj(nvme_root_t root, sd_bus_message *m)
 	rc = sd_bus_message_read(m, "o", &objpath);
 	if (rc < 0) {
 		dbus_err(root, rc);
-		return rc;
+		return -1;
 	}
 
 	/* Enter response object: our array of (string, property dict)
@@ -576,7 +597,7 @@ static int handle_mctp_obj(nvme_root_t root, sd_bus_message *m)
 	rc = sd_bus_message_enter_container(m, 'a', "{sa{sv}}");
 	if (rc < 0) {
 		dbus_err(root, rc);
-		return rc;
+		return -1;
 	}
 
 
@@ -586,13 +607,13 @@ static int handle_mctp_obj(nvme_root_t root, sd_bus_message *m)
 		rc = sd_bus_message_enter_container(m, 'e', "sa{sv}");
 		if (rc < 0) {
 			dbus_err(root, rc);
-			return rc;
+			return -1;
 		}
 
 		rc = sd_bus_message_read(m, "s", &ifname);
 		if (rc < 0) {
 			dbus_err(root, rc);
-			return rc;
+			return -1;
 		}
 
 		if (!strcmp(ifname, MCTP_DBUS_IFACE_ENDPOINT)) {
@@ -606,7 +627,7 @@ static int handle_mctp_obj(nvme_root_t root, sd_bus_message *m)
 			rc = sd_bus_message_skip(m, "a{sv}");
 			if (rc < 0) {
 				dbus_err(root, rc);
-				return rc;
+				return -1;
 			}
 		}
 
@@ -614,7 +635,7 @@ static int handle_mctp_obj(nvme_root_t root, sd_bus_message *m)
 		rc = sd_bus_message_exit_container(m);
 		if (rc < 0) {
 			dbus_err(root, rc);
-			return rc;
+			return -1;
 		}
 	}
 
@@ -622,7 +643,7 @@ static int handle_mctp_obj(nvme_root_t root, sd_bus_message *m)
 	rc = sd_bus_message_exit_container(m);
 	if (rc < 0) {
 		dbus_err(root, rc);
-		return rc;
+		return -1;
 	}
 
 	return 0;
@@ -633,12 +654,13 @@ nvme_root_t nvme_mi_scan_mctp(void)
 	sd_bus *bus = NULL;
 	sd_bus_message *resp = NULL;
 	sd_bus_error berr = SD_BUS_ERROR_NULL;
+	int rc, errno_save;
 	nvme_root_t root;
-	int rc;
 
 	root = nvme_mi_create_root(NULL, DEFAULT_LOGLEVEL);
 	if (!root) {
-		rc = -ENOMEM;
+		errno = ENOMEM;
+		rc = -1;
 		goto out;
 	}
 
@@ -646,6 +668,8 @@ nvme_root_t nvme_mi_scan_mctp(void)
 	if (rc < 0) {
 		nvme_msg(root, LOG_ERR, "Failed opening D-Bus: %s\n",
 			 strerror(-rc));
+		errno = -rc;
+		rc = -1;
 		goto out;
 	}
 
@@ -660,6 +684,8 @@ nvme_root_t nvme_mi_scan_mctp(void)
 	if (rc < 0) {
 		nvme_msg(root, LOG_ERR, "Failed querying MCTP D-Bus: %s (%s)\n",
 			 berr.message, berr.name);
+		errno = -rc;
+		rc = -1;
 		goto out;
 	}
 
@@ -667,7 +693,8 @@ nvme_root_t nvme_mi_scan_mctp(void)
 	if (rc != 1) {
 		dbus_err(root, rc);
 		if (rc == 0)
-			rc = -EPROTO;
+			errno = EPROTO;
+		rc = -1;
 		goto out;
 	}
 
@@ -676,6 +703,7 @@ nvme_root_t nvme_mi_scan_mctp(void)
 		rc = sd_bus_message_enter_container(resp, 'e', "oa{sa{sv}}");
 		if (rc < 0) {
 			dbus_err(root, rc);
+			rc = -1;
 			goto out;
 		}
 
@@ -684,6 +712,7 @@ nvme_root_t nvme_mi_scan_mctp(void)
 		rc = sd_bus_message_exit_container(resp);
 		if (rc < 0) {
 			dbus_err(root, rc);
+			rc = -1;
 			goto out;
 		}
 	}
@@ -691,11 +720,13 @@ nvme_root_t nvme_mi_scan_mctp(void)
 	rc = sd_bus_message_exit_container(resp);
 	if (rc < 0) {
 		dbus_err(root, rc);
+		rc = -1;
 		goto out;
 	}
 	rc = 0;
 
 out:
+	errno_save = errno;
 	sd_bus_error_free(&berr);
 	sd_bus_message_unref(resp);
 	sd_bus_unref(bus);
@@ -704,6 +735,7 @@ out:
 		if (root) {
 			nvme_mi_free_root(root);
 		}
+		errno = errno_save;
 		root = NULL;
 	}
 	return root;
