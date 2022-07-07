@@ -4,7 +4,7 @@
  * Copyright (c) 2020 Western Digital Corporation or its affiliates.
  *
  * Authors: Keith Busch <keith.busch@wdc.com>
- * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+ *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 #ifndef _LIBNVME_UTIL_H
 #define _LIBNVME_UTIL_H
@@ -144,10 +144,10 @@ void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 
 /**
  * nvme_get_feature_length() - Retreive the command payload length for a
- * 			       specific feature identifier
+ *			       specific feature identifier
  * @fid:   Feature identifier, see &enum nvme_features_id.
  * @cdw11: The cdw11 value may affect the transfer (only known fid is
- * 	   %NVME_FEAT_FID_HOST_ID)
+ *	   %NVME_FEAT_FID_HOST_ID)
  * @len:   On success, set to this features payload length in bytes.
  *
  * Return: 0 on success, -1 with errno set to EINVAL if the function did not

@@ -4,7 +4,7 @@
  * Copyright (c) 2020 Western Digital Corporation or its affiliates.
  *
  * Authors: Keith Busch <keith.busch@wdc.com>
- * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+ *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 
 #ifndef _LIBNVME_TYPES_H
@@ -48,12 +48,12 @@
 /**
  * enum nvme_constants - A place to stash various constant nvme values
  * @NVME_NSID_ALL:		A broadcast value that is used to specify all
- * 				namespaces
+ *				namespaces
  * @NVME_NSID_NONE:		The invalid namespace id, for when the nsid
- * 				parameter is not used in a command
+ *				parameter is not used in a command
  * @NVME_UUID_NONE:		Use to omit a uuid command parameter
  * @NVME_CNTLID_NONE:		Use to omit a cntlid command parameter
- * @NVME_CNSSPECID_NONE: 	Use to omit a cns_specific_id command parameter
+ * @NVME_CNSSPECID_NONE:	Use to omit a cns_specific_id command parameter
  * @NVME_LOG_LSP_NONE:		Use to omit a log lsp command parameter
  * @NVME_LOG_LSI_NONE:		Use to omit a log lsi command parameter
  * @NVME_LOG_LPO_NONE:		Use to omit a log lpo command parameter
@@ -61,15 +61,15 @@
  * @NVME_LOG_SUPPORTED_LOG_PAGES_MAX: The largest possible index in the supported
  *				log pages log.
  * @NVME_ID_NVMSET_LIST_MAX:	The largest possible nvmset index in identify
- * 				nvmeset
+ *				nvmeset
  * @NVME_ID_UUID_LIST_MAX:	The largest possible uuid index in identify
- * 				uuid list
+ *				uuid list
  * @NVME_ID_CTRL_LIST_MAX:	The largest possible controller index in
- * 				identify controller list
+ *				identify controller list
  * @NVME_ID_NS_LIST_MAX:	The largest possible namespace index in
- * 				identify namespace list
+ *				identify namespace list
  * @NVME_ID_SECONDARY_CTRL_MAX:	The largest possible secondary controller index
- * 				in identify secondary controller
+ *				in identify secondary controller
  * @NVME_ID_DOMAIN_LIST_MAX:	The largest possible domain index in the
  *				in domain list
  * @NVME_ID_ENDURANCE_GROUP_LIST_MAX: The largest possible endurance group
@@ -78,10 +78,10 @@
  *				index in the namespace granularity descriptor
  *				list
  * @NVME_FEAT_LBA_RANGE_MAX:	The largest possible LBA range index in feature
- * 				lba range type
+ *				lba range type
  * @NVME_LOG_ST_MAX_RESULTS:	The largest possible self test result index in the
- * 				device self test log
- * @NVME_LOG_FID_SUPPORTED_EFFECTS_MAX:	The largest possible FID index in the 
+ *				device self test log
+ * @NVME_LOG_FID_SUPPORTED_EFFECTS_MAX:	The largest possible FID index in the
  *				feature	identifiers effects log.
  * @NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX:	The largest possible MI Command index
  *				in the MI Command effects log.
@@ -89,7 +89,7 @@
  *				effects log.
  * @NVME_LOG_TELEM_BLOCK_SIZE:	Specification defined size of Telemetry Data Blocks
  * @NVME_DSM_MAX_RANGES:	The largest possible range index in a data-set
- * 				management command
+ *				management command
  * @NVME_NQN_LENGTH:		Max length for NVMe Qualified Name
  * @NVMF_TRADDR_SIZE:		Max Transport Address size
  * @NVMF_TSAS_SIZE:		Max Transport Specific Address Subtype size
@@ -142,8 +142,8 @@ enum nvme_csi {
 
 /**
  * enum nvme_register_offsets - controller registers for all transports. This
- * 				is the layout of BAR0/1 for PCIe, and
- * 				properties for fabrics.
+ *				is the layout of BAR0/1 for PCIe, and
+ *				properties for fabrics.
  * @NVME_REG_CAP:	Controller Capabilities
  * @NVME_REG_VS:	Version
  * @NVME_REG_INTMS:	Interrupt Mask Set
@@ -161,7 +161,7 @@ enum nvme_csi {
  * @NVME_REG_BPMBL:	Boot Partition Memory Buffer Location
  * @NVME_REG_CMBMSC:	Controller Memory Buffer Memory Space Control
  * @NVME_REG_CMBSTS:	Controller Memory Buffer Status
- * @NVME_REG_CRTO:  	Controller Ready Timeouts
+ * @NVME_REG_CRTO:	Controller Ready Timeouts
  * @NVME_REG_PMRCAP:	Persistent Memory Capabilities
  * @NVME_REG_PMRCTL:	Persistent Memory Region Control
  * @NVME_REG_PMRSTS:	Persistent Memory Region Status
@@ -181,7 +181,7 @@ enum nvme_register_offsets {
 	NVME_REG_AQA			= 0x0024,
 	NVME_REG_ASQ			= 0x0028,
 	NVME_REG_ACQ			= 0x0030,
-	NVME_REG_CMBLOC 		= 0x0038,
+	NVME_REG_CMBLOC			= 0x0038,
 	NVME_REG_CMBSZ			= 0x003c,
 	NVME_REG_BPINFO			= 0x0040,
 	NVME_REG_BPRSEL			= 0x0044,
@@ -189,18 +189,18 @@ enum nvme_register_offsets {
 	NVME_REG_CMBMSC			= 0x0050,
 	NVME_REG_CMBSTS			= 0x0058,
 	NVME_REG_CRTO			= 0x0068,
-	NVME_REG_PMRCAP 		= 0x0e00,
-	NVME_REG_PMRCTL 		= 0x0e04,
-	NVME_REG_PMRSTS 		= 0x0e08,
-	NVME_REG_PMREBS 		= 0x0e0c,
+	NVME_REG_PMRCAP			= 0x0e00,
+	NVME_REG_PMRCTL			= 0x0e04,
+	NVME_REG_PMRSTS			= 0x0e08,
+	NVME_REG_PMREBS			= 0x0e0c,
 	NVME_REG_PMRSWTP		= 0x0e10,
-	NVME_REG_PMRMSCL 		= 0x0e14,
-	NVME_REG_PMRMSCU 		= 0x0e18,
+	NVME_REG_PMRMSCL		= 0x0e14,
+	NVME_REG_PMRMSCU		= 0x0e18,
 };
 
 /**
  * nvme_is_64bit_reg() - Checks if offset of the controller register is a know
- * 			 64bit value.
+ *			 64bit value.
  * @offset:	Offset of controller register field in bytes
  *
  * This function does not care about transport so that the offset is not going
@@ -256,8 +256,8 @@ enum nvme_cap {
 	NVME_CAP_CSS_NVM		= 1 << 0,
 	NVME_CAP_CSS_CSI		= 1 << 6,
 	NVME_CAP_CSS_ADMIN		= 1 << 7,
-	NVME_CAP_CRWMS   		= 1 << 0,
-	NVME_CAP_CRIMS  		= 1 << 1,
+	NVME_CAP_CRWMS			= 1 << 0,
+	NVME_CAP_CRIMS			= 1 << 1,
 };
 
 #define NVME_CAP_MQES(cap)	NVME_GET(cap, CAP_MQES)
@@ -564,7 +564,7 @@ enum nvme_pmrebs {
 
 /**
  * nvme_pmr_size() - Calculate size of persistent memory region elasticity
- * 		     buffer
+ *		     buffer
  * @pmrebs:	Value from controller register %NVME_REG_PMREBS
  *
  * Returns: size of controller persistent memory buffer in bytes
@@ -614,15 +614,15 @@ static const __u64 NVME_PMRMSC_CBA_MASK = 0xfffffffffffffull;
 /**
  * enum nvme_psd_flags - Possible flag values in nvme power state descriptor
  * @NVME_PSD_FLAGS_MXPS: Indicates the scale for the Maximum Power
- * 			 field. If this bit is cleared, then the scale of the
- * 			 Maximum Power field is in 0.01 Watts. If this bit is
- * 			 set, then the scale of the Maximum Power field is in
- * 			 0.0001 Watts.
+ *			 field. If this bit is cleared, then the scale of the
+ *			 Maximum Power field is in 0.01 Watts. If this bit is
+ *			 set, then the scale of the Maximum Power field is in
+ *			 0.0001 Watts.
  * @NVME_PSD_FLAGS_NOPS: Indicates whether the controller processes I/O
- * 			 commands in this power state. If this bit is cleared,
- * 			 then the controller processes I/O commands in this
- * 			 power state. If this bit is set, then the controller
- * 			 does not process I/O commands in this power state.
+ *			 commands in this power state. If this bit is cleared,
+ *			 then the controller processes I/O commands in this
+ *			 power state. If this bit is set, then the controller
+ *			 does not process I/O commands in this power state.
  */
 enum nvme_psd_flags {
 	 NVME_PSD_FLAGS_MXPS		= 1 << 0,
@@ -631,8 +631,8 @@ enum nvme_psd_flags {
 
 /**
  * enum nvme_psd_ps - Known values for &struct nvme_psd %ips and %aps. Use with
- * 		      nvme_psd_power_scale() to extract the power scale field
- * 		      to match this enum.
+ *		      nvme_psd_power_scale() to extract the power scale field
+ *		      to match this enum.
  * @NVME_PSD_PS_NOT_REPORTED:	Not reported
  * @NVME_PSD_PS_100_MICRO_WATT: 0.0001 watt scale
  * @NVME_PSD_PS_10_MILLI_WATT:	0.01 watt scale
@@ -656,16 +656,16 @@ static inline unsigned int nvme_psd_power_scale(__u8 ps)
 
 /**
  * enum nvme_psd_workload - Specifies a workload hint in the Power Management
- * 			    Feature (see &struct nvme_psd.apw) to inform the
- * 			    NVM subsystem or indicate the conditions for the
- * 			    active power level.
+ *			    Feature (see &struct nvme_psd.apw) to inform the
+ *			    NVM subsystem or indicate the conditions for the
+ *			    active power level.
  * @NVME_PSD_WORKLOAD_NP: The workload is unknown or not provided.
  * @NVME_PSD_WORKLOAD_1: Extended Idle Period with a Burst of Random Write
- * 			 consists of five minutes of idle followed by
- * 			 thirty-two random write commands of size 1 MiB
- * 			 submitted to a single controller while all other
- * 			 controllers in the NVM subsystem are idle, and then
- * 			 thirty (30) seconds of idle.
+ *			 consists of five minutes of idle followed by
+ *			 thirty-two random write commands of size 1 MiB
+ *			 submitted to a single controller while all other
+ *			 controllers in the NVM subsystem are idle, and then
+ *			 thirty (30) seconds of idle.
  * @NVME_PSD_WORKLOAD_2: Heavy Sequential Writes consists of 80,000
  *			 sequential write commands of size 128 KiB submitted to
  *			 a single controller while all other controllers in the
@@ -683,43 +683,43 @@ enum nvme_psd_workload {
 /**
  * struct nvme_id_psd - Power Management data structure
  * @mp:	   Maximum Power indicates the sustained maximum power consumed by the
- * 	   NVM subsystem in this power state. The power in Watts is equal to
- * 	   the value in this field multiplied by the scale specified in the Max
- * 	   Power Scale bit (see &enum nvme_psd_flags). A value of 0 indicates
- * 	   Maximum Power is not reported.
+ *	   NVM subsystem in this power state. The power in Watts is equal to
+ *	   the value in this field multiplied by the scale specified in the Max
+ *	   Power Scale bit (see &enum nvme_psd_flags). A value of 0 indicates
+ *	   Maximum Power is not reported.
  * @rsvd2: Reserved
  * @flags: Additional decoding flags, see &enum nvme_psd_flags.
  * @enlat: Entry Latency indicates the maximum latency in microseconds
- * 	   associated with entering this power state. A value of 0 indicates
- * 	   Entry Latency is not reported.
+ *	   associated with entering this power state. A value of 0 indicates
+ *	   Entry Latency is not reported.
  * @exlat: Exit Latency indicates the maximum latency in microseconds
- * 	   associated with exiting this power state. A value of 0 indicates
- * 	   Exit Latency is not reported.
+ *	   associated with exiting this power state. A value of 0 indicates
+ *	   Exit Latency is not reported.
  * @rrt:   Relative Read Throughput indicates the read throughput rank
- * 	   associated with this power state relative to others. The value in
- * 	   this is less than the number of supported power states.
+ *	   associated with this power state relative to others. The value in
+ *	   this is less than the number of supported power states.
  * @rrl:   Relative Read Latency indicates the read latency rank associated
- * 	   with this power state relative to others. The value in this field is
- * 	   less than the number of supported power states.
+ *	   with this power state relative to others. The value in this field is
+ *	   less than the number of supported power states.
  * @rwt:   Relative Write Throughput indicates write throughput rank associated
- * 	   with this power state relative to others. The value in this field is
- * 	   less than the number of supported power states
+ *	   with this power state relative to others. The value in this field is
+ *	   less than the number of supported power states
  * @rwl:   Relative Write Latency indicates the write latency rank associated
- * 	   with this power state relative to others. The value in this field is
- * 	   less than the number of supported power states
+ *	   with this power state relative to others. The value in this field is
+ *	   less than the number of supported power states
  * @idlp:  Idle Power indicates the typical power consumed by the NVM
- * 	   subsystem over 30 seconds in this power state when idle.
+ *	   subsystem over 30 seconds in this power state when idle.
  * @ips:   Idle Power Scale indicates the scale for &struct nvme_id_psd.idlp,
- * 	   see &enum nvme_psd_ps for decoding this field.
+ *	   see &enum nvme_psd_ps for decoding this field.
  * @rsvd19: Reserved
  * @actp:  Active Power indicates the largest average power consumed by the
- * 	   NVM subsystem over a 10 second period in this power state with
- * 	   the workload indicated in the Active Power Workload field.
+ *	   NVM subsystem over a 10 second period in this power state with
+ *	   the workload indicated in the Active Power Workload field.
  * @apws:  Bits 7-6: Active Power Scale(APS) indicates the scale for the &struct
- * 	   nvme_id_psd.actp, see &enum nvme_psd_ps for decoding this value.
- * 	   Bits 2-0: Active Power Workload(APW) indicates the workload
- * 	   used to calculate maximum power for this power state.
- * 	   See &enum nvme_psd_workload for decoding this field.
+ *	   nvme_id_psd.actp, see &enum nvme_psd_ps for decoding this value.
+ *	   Bits 2-0: Active Power Workload(APW) indicates the workload
+ *	   used to calculate maximum power for this power state.
+ *	   See &enum nvme_psd_workload for decoding this field.
  * @rsvd23: Reserved
  */
 struct nvme_id_psd {
@@ -743,144 +743,144 @@ struct nvme_id_psd {
 /**
  * struct nvme_id_ctrl - Identify Controller data structure
  * @vid:       PCI Vendor ID, the company vendor identifier that is assigned by
- * 	       the PCI SIG.
+ *	       the PCI SIG.
  * @ssvid:     PCI Subsystem Vendor ID, the company vendor identifier that is
- * 	       assigned by the PCI SIG for the subsystem.
+ *	       assigned by the PCI SIG for the subsystem.
  * @sn:        Serial Number in ASCII
  * @mn:        Model Number in ASCII
  * @fr:        Firmware Revision in ASCII, the currently active firmware
- * 	       revision for the NVM subsystem
+ *	       revision for the NVM subsystem
  * @rab:       Recommended Arbitration Burst, reported as a power of two
  * @ieee:      IEEE assigned Organization Unique Identifier
  * @cmic:      Controller Multipath IO and Namespace Sharing  Capabilities of
- * 	       the controller and NVM subsystem. See &enum nvme_id_ctrl_cmic.
+ *	       the controller and NVM subsystem. See &enum nvme_id_ctrl_cmic.
  * @mdts:      Max Data Transfer Size is the largest data transfer size. The
- * 	       host should not submit a command that exceeds this maximum data
- * 	       transfer size. The value is in units of the minimum memory page
- * 	       size (CAP.MPSMIN) and is reported as a power of two
+ *	       host should not submit a command that exceeds this maximum data
+ *	       transfer size. The value is in units of the minimum memory page
+ *	       size (CAP.MPSMIN) and is reported as a power of two
  * @cntlid:    Controller ID, the NVM subsystem unique controller identifier
- * 	       associated with the controller.
+ *	       associated with the controller.
  * @ver:       Version, this field contains the value reported in the Version
- * 	       register, or property (see &enum nvme_registers %NVME_REG_VS).
+ *	       register, or property (see &enum nvme_registers %NVME_REG_VS).
  * @rtd3r:     RTD3 Resume Latency, the expected latency in microseconds to resume
- * 	       from Runtime D3
+ *	       from Runtime D3
  * @rtd3e:     RTD3 Exit Latency, the typical latency in microseconds to enter
- * 	       Runtime D3.
+ *	       Runtime D3.
  * @oaes:      Optional Async Events Supported, see @enum nvme_id_ctrl_oaes.
  * @ctratt:    Controller Attributes, see @enum nvme_id_ctrl_ctratt.
  * @rrls:      Read Recovery Levels. If a bit is set, then the corresponding
- * 	       Read Recovery Level is supported. If a bit is cleared, then the
- * 	       corresponding Read Recovery Level is not supported.
+ *	       Read Recovery Level is supported. If a bit is cleared, then the
+ *	       corresponding Read Recovery Level is not supported.
  * @rsvd102:    Reserved
  * @cntrltype: Controller Type, see &enum nvme_id_ctrl_cntrltype
  * @fguid:     FRU GUID, a 128-bit value that is globally unique for a given
- * 	       Field Replaceable Unit
+ *	       Field Replaceable Unit
  * @crdt1:     Controller Retry Delay time in 100 millisecond units if CQE CRD
  *	       field is 1
  * @crdt2:     Controller Retry Delay time in 100 millisecond units if CQE CRD
- * 	       field is 2
+ *	       field is 2
  * @crdt3:     Controller Retry Delay time in 100 millisecond units if CQE CRD
- * 	       field is 3
+ *	       field is 3
  * @rsvd134:   Reserved
  * @nvmsr:     NVM Subsystem Report, see &enum nvme_id_ctrl_nvmsr
  * @vwci:      VPD Write Cycle Information, see &enum nvme_id_ctrl_vwci
  * @mec:       Management Endpoint Capabilities, see &enum nvme_id_ctrl_mec
  * @oacs:      Optional Admin Command Support,the optional Admin commands and
- * 	       features supported by the controller, see &enum nvme_id_ctrl_oacs.
+ *	       features supported by the controller, see &enum nvme_id_ctrl_oacs.
  * @acl:       Abort Command Limit, the maximum number of concurrently
- * 	       executing Abort commands supported by the controller. This is a
- * 	       0's based value.
+ *	       executing Abort commands supported by the controller. This is a
+ *	       0's based value.
  * @aerl:      Async Event Request Limit, the maximum number of concurrently
- * 	       outstanding Asynchronous Event Request commands supported by the
- * 	       controller This is a 0's based value.
+ *	       outstanding Asynchronous Event Request commands supported by the
+ *	       controller This is a 0's based value.
  * @frmw:      Firmware Updates indicates capabilities regarding firmware
- * 	       updates. See &enum nvme_id_ctrl_frmw.
+ *	       updates. See &enum nvme_id_ctrl_frmw.
  * @lpa:       Log Page Attributes, see &enum nvme_id_ctrl_lpa.
  * @elpe:      Error Log Page Entries, the maximum number of Error Information
- * 	       log entries that are stored by the controller. This field is a
- * 	       0's based value.
+ *	       log entries that are stored by the controller. This field is a
+ *	       0's based value.
  * @npss:      Number of Power States Supported, the number of NVM Express
- * 	       power states supported by the controller, indicating the number
- * 	       of valid entries in &struct nvme_id_ctrl.psd. This is a 0's
- * 	       based value.
+ *	       power states supported by the controller, indicating the number
+ *	       of valid entries in &struct nvme_id_ctrl.psd. This is a 0's
+ *	       based value.
  * @avscc:     Admin Vendor Specific Command Configuration, see
- * 	       &enum nvme_id_ctrl_avscc.
+ *	       &enum nvme_id_ctrl_avscc.
  * @apsta:     Autonomous Power State Transition Attributes, see
- * 	       &enum nvme_id_ctrl_apsta.
+ *	       &enum nvme_id_ctrl_apsta.
  * @wctemp:    Warning Composite Temperature Threshold indicates
- * 	       the minimum Composite Temperature field value (see &struct
- * 	       nvme_smart_log.critical_comp_time) that indicates an overheating
- * 	       condition during which controller operation continues.
+ *	       the minimum Composite Temperature field value (see &struct
+ *	       nvme_smart_log.critical_comp_time) that indicates an overheating
+ *	       condition during which controller operation continues.
  * @cctemp:    Critical Composite Temperature Threshold, field indicates the
- * 	       minimum Composite Temperature field value (see &struct
- * 	       nvme_smart_log.critical_comp_time) that indicates a critical
- * 	       overheating condition.
+ *	       minimum Composite Temperature field value (see &struct
+ *	       nvme_smart_log.critical_comp_time) that indicates a critical
+ *	       overheating condition.
  * @mtfa:      Maximum Time for Firmware Activation indicates the maximum time
- * 	       the controller temporarily stops processing commands to activate
- * 	       the firmware image, specified in 100 millisecond units. This
- * 	       field is always valid if the controller supports firmware
- * 	       activation without a reset.
+ *	       the controller temporarily stops processing commands to activate
+ *	       the firmware image, specified in 100 millisecond units. This
+ *	       field is always valid if the controller supports firmware
+ *	       activation without a reset.
  * @hmpre:     Host Memory Buffer Preferred Size indicates the preferred size
- * 	       that the host is requested to allocate for the Host Memory
- * 	       Buffer feature in 4 KiB units.
+ *	       that the host is requested to allocate for the Host Memory
+ *	       Buffer feature in 4 KiB units.
  * @hmmin:     Host Memory Buffer Minimum Size indicates the minimum size that
- * 	       the host is requested to allocate for the Host Memory Buffer
- * 	       feature in 4 KiB units.
+ *	       the host is requested to allocate for the Host Memory Buffer
+ *	       feature in 4 KiB units.
  * @tnvmcap:   Total NVM Capacity, the total NVM capacity in the NVM subsystem.
- * 	       The value is in bytes.
+ *	       The value is in bytes.
  * @unvmcap:   Unallocated NVM Capacity, the unallocated NVM capacity in the
- * 	       NVM subsystem. The value is in bytes.
+ *	       NVM subsystem. The value is in bytes.
  * @rpmbs:      Replay Protected Memory Block Support, see
- * 	       &enum nvme_id_ctrl_rpmbs.
+ *	       &enum nvme_id_ctrl_rpmbs.
  * @edstt:      Extended Device Self-test Time, if Device Self-test command is
- * 	       supported (see &struct nvme_id_ctrl.oacs, %NVME_CTRL_OACS_SELF_TEST),
- * 	       then this field indicates the nominal amount of time in one
- * 	       minute units that the controller takes to complete an extended
- * 	       device self-test operation when in power state 0.
+ *	       supported (see &struct nvme_id_ctrl.oacs, %NVME_CTRL_OACS_SELF_TEST),
+ *	       then this field indicates the nominal amount of time in one
+ *	       minute units that the controller takes to complete an extended
+ *	       device self-test operation when in power state 0.
  * @dsto:      Device Self-test Options, see &enum nvme_id_ctrl_dsto.
  * @fwug:      Firmware Update Granularity indicates the granularity and
- * 	       alignment requirement of the firmware image being updated by the
- * 	       Firmware Image Download command. The value is reported in 4 KiB
- * 	       units. A value of 0h indicates no information on granularity is
- * 	       provided. A value of FFh indicates no restriction
+ *	       alignment requirement of the firmware image being updated by the
+ *	       Firmware Image Download command. The value is reported in 4 KiB
+ *	       units. A value of 0h indicates no information on granularity is
+ *	       provided. A value of FFh indicates no restriction
  * @kas:       Keep Alive Support indicates the granularity of the Keep Alive
- * 	       Timer in 100 millisecond units.
+ *	       Timer in 100 millisecond units.
  * @hctma:     Host Controlled Thermal Management Attributes, see
  *             &enum nvme_id_ctrl_hctm.
  * @mntmt:     Minimum Thermal Management Temperature indicates the minimum
- * 	       temperature, in degrees Kelvin, that the host may request in the
- * 	       Thermal Management Temperature 1 field and Thermal Management
- * 	       Temperature 2 field of a Set Features command with the Feature
- * 	       Identifier field set to %NVME_FEAT_FID_HCTM.
+ *	       temperature, in degrees Kelvin, that the host may request in the
+ *	       Thermal Management Temperature 1 field and Thermal Management
+ *	       Temperature 2 field of a Set Features command with the Feature
+ *	       Identifier field set to %NVME_FEAT_FID_HCTM.
  * @mxtmt:     Maximum Thermal Management Temperature indicates the maximum
- * 	       temperature, in degrees Kelvin, that the host may request in the
- * 	       Thermal Management Temperature 1 field and Thermal Management
- * 	       Temperature 2 field of the Set Features command with the Feature
- * 	       Identifier set to %NVME_FEAT_FID_HCTM.
+ *	       temperature, in degrees Kelvin, that the host may request in the
+ *	       Thermal Management Temperature 1 field and Thermal Management
+ *	       Temperature 2 field of the Set Features command with the Feature
+ *	       Identifier set to %NVME_FEAT_FID_HCTM.
  * @sanicap:   Sanitize Capabilities, see &enum nvme_id_ctrl_sanicap
  * @hmminds:   Host Memory Buffer Minimum Descriptor Entry Size indicates the
- * 	       minimum usable size of a Host Memory Buffer Descriptor Entry in
- * 	       4 KiB units.
+ *	       minimum usable size of a Host Memory Buffer Descriptor Entry in
+ *	       4 KiB units.
  * @hmmaxd:    Host Memory Maximum Descriptors Entries indicates the number of
- * 	       usable Host Memory Buffer Descriptor Entries.
+ *	       usable Host Memory Buffer Descriptor Entries.
  * @nsetidmax: NVM Set Identifier Maximum, defines the maximum value of a valid
- * 	       NVM Set Identifier for any controller in the NVM subsystem.
+ *	       NVM Set Identifier for any controller in the NVM subsystem.
  * @endgidmax: Endurance Group Identifier Maximum, defines the maximum value of
- * 	       a valid Endurance Group Identifier for any controller in the NVM
- * 	       subsystem.
+ *	       a valid Endurance Group Identifier for any controller in the NVM
+ *	       subsystem.
  * @anatt:     ANA Transition Time indicates the maximum amount of time, in
- * 	       seconds, for a transition between ANA states or the maximum
- * 	       amount of time, in seconds, that the controller reports the ANA
- * 	       change state.
+ *	       seconds, for a transition between ANA states or the maximum
+ *	       amount of time, in seconds, that the controller reports the ANA
+ *	       change state.
  * @anacap:    Asymmetric Namespace Access Capabilities, see
- * 	       &enum nvme_id_ctrl_anacap.
+ *	       &enum nvme_id_ctrl_anacap.
  * @anagrpmax: ANA Group Identifier Maximum indicates the maximum value of a
- * 	       valid ANA Group Identifier for any controller in the NVM
- * 	       subsystem.
+ *	       valid ANA Group Identifier for any controller in the NVM
+ *	       subsystem.
  * @nanagrpid: Number of ANA Group Identifiers indicates the number of ANA
- * 	       groups supported by this controller.
+ *	       groups supported by this controller.
  * @pels:      Persistent Event Log Size indicates the maximum reportable size
- * 	       for the Persistent Event Log.
+ *	       for the Persistent Event Log.
  * @domainid:  Domain Identifier indicates the identifier of the domain
  *             that contains this controller.
  * @rsvd358:   Reserved
@@ -890,8 +890,8 @@ struct nvme_id_psd {
  * @sqes:      Submission Queue Entry Size, see &enum nvme_id_ctrl_sqes.
  * @cqes:      Completion Queue Entry Size, see &enum nvme_id_ctrl_cqes.
  * @maxcmd:    Maximum Outstanding Commands indicates the maximum number of
- * 	       commands that the controller processes at one time for a
- * 	       particular queue.
+ *	       commands that the controller processes at one time for a
+ *	       particular queue.
  * @nn:	       Number of Namespaces indicates the maximum value of a valid
  *	       nsid for the NVM subsystem. If the MNAN (&struct nvme_id_ctrl.mnan
  *	       field is cleared to 0h, then this field also indicates the
@@ -901,29 +901,29 @@ struct nvme_id_psd {
  * @fna:       Format NVM Attributes, see &enum nvme_id_ctrl_fna.
  * @vwc:       Volatile Write Cache, see &enum nvme_id_ctrl_vwc.
  * @awun:      Atomic Write Unit Normal indicates the size of the write
- * 	       operation guaranteed to be written atomically to the NVM across
- * 	       all namespaces with any supported namespace format during normal
- * 	       operation. This field is specified in logical blocks and is a
- * 	       0's based value.
+ *	       operation guaranteed to be written atomically to the NVM across
+ *	       all namespaces with any supported namespace format during normal
+ *	       operation. This field is specified in logical blocks and is a
+ *	       0's based value.
  * @awupf:     Atomic Write Unit Power Fail indicates the size of the write
- * 	       operation guaranteed to be written atomically to the NVM across
- * 	       all namespaces with any supported namespace format during a
- * 	       power fail or error condition. This field is specified in
- * 	       logical blocks and is a 0’s based value.
+ *	       operation guaranteed to be written atomically to the NVM across
+ *	       all namespaces with any supported namespace format during a
+ *	       power fail or error condition. This field is specified in
+ *	       logical blocks and is a 0’s based value.
  * @icsvscc:   NVM Vendor Specific Command Configuration, see
- * 	       &enum nvme_id_ctrl_nvscc.
+ *	       &enum nvme_id_ctrl_nvscc.
  * @nwpc:      Namespace Write Protection Capabilities, see
- * 	       &enum nvme_id_ctrl_nwpc.
+ *	       &enum nvme_id_ctrl_nwpc.
  * @acwu:      Atomic Compare & Write Unit indicates the size of the write
- * 	       operation guaranteed to be written atomically to the NVM across
- * 	       all namespaces with any supported namespace format for a Compare
- * 	       and Write fused operation. This field is specified in logical
- * 	       blocks and is a 0’s based value.
+ *	       operation guaranteed to be written atomically to the NVM across
+ *	       all namespaces with any supported namespace format for a Compare
+ *	       and Write fused operation. This field is specified in logical
+ *	       blocks and is a 0’s based value.
  * @ocfs:      Optional Copy Formats Supported, each bit n means controller
  *             supports Copy Format n.
  * @sgls:      SGL Support, see &enum nvme_id_ctrl_sgls
  * @mnan:      Maximum Number of Allowed Namespaces indicates the maximum
- * 	       number of namespaces supported by the NVM subsystem.
+ *	       number of namespaces supported by the NVM subsystem.
  * @maxdna:    Maximum Domain Namespace Attachments indicates the maximum
  *             of the sum of the number of namespaces attached to each I/O
  *             controller in the Domain.
@@ -934,16 +934,16 @@ struct nvme_id_psd {
  * @subnqn:    NVM Subsystem NVMe Qualified Name, UTF-8 null terminated string
  * @rsvd1024:  Reserved
  * @ioccsz:    I/O Queue Command Capsule Supported Size, defines the maximum
- * 	       I/O command capsule size in 16 byte units.
+ *	       I/O command capsule size in 16 byte units.
  * @iorcsz:    I/O Queue Response Capsule Supported Size, defines the maximum
- * 	       I/O response capsule size in 16 byte units.
+ *	       I/O response capsule size in 16 byte units.
  * @icdoff:    In Capsule Data Offset, defines the offset where data starts
- * 	       within a capsule. This value is applicable to I/O Queues only.
+ *	       within a capsule. This value is applicable to I/O Queues only.
  * @fcatt:     Fabrics Controller Attributes, see &enum nvme_id_ctrl_fcatt.
  * @msdbd:     Maximum SGL Data Block Descriptors indicates the maximum
- * 	       number of SGL Data Block or Keyed SGL Data Block descriptors
- * 	       that a host is allowed to place in a capsule. A value of 0h
- * 	       indicates no limit.
+ *	       number of SGL Data Block or Keyed SGL Data Block descriptors
+ *	       that a host is allowed to place in a capsule. A value of 0h
+ *	       indicates no limit.
  * @ofcs:      Optional Fabric Commands Support, see &enum nvme_id_ctrl_ofcs.
  * @dctype:    Discovery Controller Type (DCTYPE). This field indicates what
  *             type of Discovery controller the controller is (see enum
@@ -1055,24 +1055,24 @@ struct nvme_id_ctrl {
 
 /**
  * enum nvme_id_ctrl_cmic - Controller Multipath IO and Namespace Sharing
- * 			    Capabilities of the controller and NVM subsystem.
+ *			    Capabilities of the controller and NVM subsystem.
  * @NVME_CTRL_CMIC_MULTI_PORT:          If set, then the NVM subsystem may contain
- * 				        more than one NVM subsystem port, otherwise
- * 				        the NVM subsystem contains only a single
- * 				        NVM subsystem port.
+ *				        more than one NVM subsystem port, otherwise
+ *				        the NVM subsystem contains only a single
+ *				        NVM subsystem port.
  * @NVME_CTRL_CMIC_MULTI_CTRL:          If set, then the NVM subsystem may contain
- * 				        two or more controllers, otherwise the
- * 				        NVM subsystem contains only a single
- * 				        controller. An NVM subsystem that contains
- * 				        multiple controllers may be used by
- * 				        multiple hosts, or may provide multiple
- * 				        paths for a single host.
+ *				        two or more controllers, otherwise the
+ *				        NVM subsystem contains only a single
+ *				        controller. An NVM subsystem that contains
+ *				        multiple controllers may be used by
+ *				        multiple hosts, or may provide multiple
+ *				        paths for a single host.
  * @NVME_CTRL_CMIC_MULTI_SRIOV:         If set, then the controller is associated
- * 				        with an SR-IOV Virtual Function, otherwise
- * 				        it is associated with a PCI Function
- * 				        or a Fabrics connection.
+ *				        with an SR-IOV Virtual Function, otherwise
+ *				        it is associated with a PCI Function
+ *				        or a Fabrics connection.
  * @NVME_CTRL_CMIC_MULTI_ANA_REPORTING: If set, then the NVM subsystem supports
- * 				        Asymmetric Namespace Access Reporting.
+ *				        Asymmetric Namespace Access Reporting.
  */
 enum nvme_id_ctrl_cmic {
 	NVME_CTRL_CMIC_MULTI_PORT		= 1 << 0,
@@ -1173,10 +1173,10 @@ enum nvme_id_ctrl_dctype {
 
 /**
  * enum nvme_id_ctrl_nvmsr - This field reports information associated with the
- * 			     NVM Subsystem, see &struct nvme_id_ctrl.nvmsr.
+ *			     NVM Subsystem, see &struct nvme_id_ctrl.nvmsr.
  * @NVME_CTRL_NVMSR_NVMESD: If set, then the NVM Subsystem is part of an NVMe
- * 			    Storage Device; if cleared, then the NVM Subsystem
- * 			    is not part of an NVMe Storage Device.
+ *			    Storage Device; if cleared, then the NVM Subsystem
+ *			    is not part of an NVMe Storage Device.
  * @NVME_CTRL_NVMSR_NVMEE:  If set’, then the NVM Subsystem is part of an NVMe
  *			    Enclosure; if cleared, then the NVM Subsystem is
  *			    not part of an NVMe Enclosure.
@@ -1188,21 +1188,21 @@ enum nvme_id_ctrl_nvmsr {
 
 /**
  * enum nvme_id_ctrl_vwci - This field indicates information about remaining
- * 			    number of times that VPD contents are able to be
- * 			    updated using the VPD Write command, see &struct
- * 			    nvme_id_ctrl.vwci.
+ *			    number of times that VPD contents are able to be
+ *			    updated using the VPD Write command, see &struct
+ *			    nvme_id_ctrl.vwci.
  * @NVME_CTRL_VWCI_VWCR:  Mask to get value of VPD Write Cycles Remaining. If
- * 			  the VPD Write Cycle Remaining Valid bit is set, then
- * 			  this field contains a value indicating the remaining
- * 			  number of times that VPD contents are able to be
- * 			  updated using the VPD Write command. If this field is
- * 			  set to 7Fh, then the remaining number of times that
- * 			  VPD contents are able to be updated using the VPD
- * 			  Write command is greater than or equal to 7Fh.
+ *			  the VPD Write Cycle Remaining Valid bit is set, then
+ *			  this field contains a value indicating the remaining
+ *			  number of times that VPD contents are able to be
+ *			  updated using the VPD Write command. If this field is
+ *			  set to 7Fh, then the remaining number of times that
+ *			  VPD contents are able to be updated using the VPD
+ *			  Write command is greater than or equal to 7Fh.
  * @NVME_CTRL_VWCI_VWCRV: VPD Write Cycle Remaining Valid. If this bit is set,
- * 			  then the VPD Write Cycle Remaining field is valid. If
- * 			  this bit is cleared, then the VPD Write Cycles
- * 			  Remaining field is invalid and cleared to 0h.
+ *			  then the VPD Write Cycle Remaining field is valid. If
+ *			  this bit is cleared, then the VPD Write Cycles
+ *			  Remaining field is invalid and cleared to 0h.
  */
 enum nvme_id_ctrl_vwci {
 	NVME_CTRL_VWCI_VWCR			= 0x7f << 0,
@@ -1211,11 +1211,11 @@ enum nvme_id_ctrl_vwci {
 
 /**
  * enum nvme_id_ctrl_mec - Flags indicating the capabilities of the Management
- * 			   Endpoint in the Controller, &struct nvme_id_ctrl.mec.
+ *			   Endpoint in the Controller, &struct nvme_id_ctrl.mec.
  * @NVME_CTRL_MEC_SMBUSME: If set, then the NVM Subsystem contains a Management
- * 			   Endpoint on an SMBus/I2C port.
+ *			   Endpoint on an SMBus/I2C port.
  * @NVME_CTRL_MEC_PCIEME:  If set, then the NVM Subsystem contains a Management
- * 			   Endpoint on a PCIe port.
+ *			   Endpoint on a PCIe port.
  */
 enum nvme_id_ctrl_mec {
 	NVME_CTRL_MEC_SMBUSME			= 1 << 0,
@@ -1224,31 +1224,31 @@ enum nvme_id_ctrl_mec {
 
 /**
  * enum nvme_id_ctrl_oacs - Flags indicating the optional Admin commands and
- * 			    features supported by the controller, see
- * 			    &struct nvme_id_ctrl.oacs.
+ *			    features supported by the controller, see
+ *			    &struct nvme_id_ctrl.oacs.
  * @NVME_CTRL_OACS_SECURITY:   If set, then the controller supports the
- * 			       Security Send and Security Receive commands.
+ *			       Security Send and Security Receive commands.
  * @NVME_CTRL_OACS_FORMAT:     If set then the controller supports the Format
- * 			       NVM command.
+ *			       NVM command.
  * @NVME_CTRL_OACS_FW:	       If set, then the controller supports the
- * 			       Firmware Commit and Firmware Image Download commands.
+ *			       Firmware Commit and Firmware Image Download commands.
  * @NVME_CTRL_OACS_NS_MGMT:    If set, then the controller supports the
- * 			       Namespace Management capability
+ *			       Namespace Management capability
  * @NVME_CTRL_OACS_SELF_TEST:  If set, then the controller supports the Device
- * 			       Self-test command.
+ *			       Self-test command.
  * @NVME_CTRL_OACS_DIRECTIVES: If set, then the controller supports Directives
  *			       and the Directive Send and Directive Receive
  *			       commands.
  * @NVME_CTRL_OACS_NVME_MI:    If set, then the controller supports the NVMe-MI
- * 			       Send and NVMe-MI Receive commands.
+ *			       Send and NVMe-MI Receive commands.
  * @NVME_CTRL_OACS_VIRT_MGMT:  If set, then the controller supports the
- * 			       Virtualization Management command.
+ *			       Virtualization Management command.
  * @NVME_CTRL_OACS_DBBUF_CFG:  If set, then the controller supports the
- * 			       Doorbell Buffer Config command.
+ *			       Doorbell Buffer Config command.
  * @NVME_CTRL_OACS_LBA_STATUS: If set, then the controller supports the Get LBA
- * 			       Status capability.
+ *			       Status capability.
  * @NVME_CTRL_OACS_CMD_FEAT_LD: If set, then the controller supports the command
- * 				and feature lockdown capability.
+ *				and feature lockdown capability.
  */
 enum nvme_id_ctrl_oacs {
 	NVME_CTRL_OACS_SECURITY			= 1 << 0,
@@ -1266,15 +1266,15 @@ enum nvme_id_ctrl_oacs {
 
 /**
  * enum nvme_id_ctrl_frmw - Flags and values indicates capabilities regarding
- * 			    firmware updates from &struct nvme_id_ctrl.frmw.
+ *			    firmware updates from &struct nvme_id_ctrl.frmw.
  * @NVME_CTRL_FRMW_1ST_RO:	    If set, the first firmware slot is readonly
  * @NVME_CTRL_FRMW_NR_SLOTS:	    Mask to get the value of the number of
- * 				    firmware slots that the controller supports.
+ *				    firmware slots that the controller supports.
  * @NVME_CTRL_FRMW_FW_ACT_NO_RESET: If set, the controller supports firmware
- * 				    activation without a reset.
+ *				    activation without a reset.
  * @NVME_CTRL_FRMW_MP_UP_DETECTION: If set, the controller is able to detect
- * 				    overlapping firmware/boot partition
- * 				    image update.
+ *				    overlapping firmware/boot partition
+ *				    image update.
  */
 enum nvme_id_ctrl_frmw {
 	NVME_CTRL_FRMW_1ST_RO			= 1 << 0,
@@ -1285,31 +1285,31 @@ enum nvme_id_ctrl_frmw {
 
 /**
  * enum nvme_id_ctrl_lpa - Flags indicating optional attributes for log pages
- * 			   that are accessed via the Get Log Page command.
+ *			   that are accessed via the Get Log Page command.
  * @NVME_CTRL_LPA_SMART_PER_NS: If set, controller supports SMART/Health log
- * 				page on a per namespace basis.
+ *				page on a per namespace basis.
  * @NVME_CTRL_LPA_CMD_EFFECTS:	If Set, the controller supports the commands
- * 				supported and effects log page.
+ *				supported and effects log page.
  * @NVME_CTRL_LPA_EXTENDED:	If set, the controller supports extended data
- * 				for log page command including extended number
- * 				of dwords and log page offset fields.
+ *				for log page command including extended number
+ *				of dwords and log page offset fields.
  * @NVME_CTRL_LPA_TELEMETRY:	If set, the controller supports the telemetry
- * 				host-initiated and telemetry controller-initiated
- * 				log pages and sending telemetry log notices.
+ *				host-initiated and telemetry controller-initiated
+ *				log pages and sending telemetry log notices.
  * @NVME_CTRL_LPA_PERSETENT_EVENT:	If set, the controller supports
- * 					persistent event log.
+ *					persistent event log.
  * @NVME_CTRL_LPA_LI0_LI5_LI12_LI13:	If set, the controller supports
- * 					- log pages log page.
- * 					- returning scope of each command in
- * 					  commands supported and effects log
- * 					  page.
- * 					- feature identifiers supported and
- * 					  effects log page.
- * 					- NVMe-MI commands supported and
- * 					  effects log page.
+ *					- log pages log page.
+ *					- returning scope of each command in
+ *					  commands supported and effects log
+ *					  page.
+ *					- feature identifiers supported and
+ *					  effects log page.
+ *					- NVMe-MI commands supported and
+ *					  effects log page.
  * @NVME_CTRL_LPA_DA4_TELEMETRY:	If set, the controller supports data
- * 					area 4 for telemetry host-initiated and
- * 					telemetry.
+ *					area 4 for telemetry host-initiated and
+ *					telemetry.
  */
 enum nvme_id_ctrl_lpa {
 	NVME_CTRL_LPA_SMART_PER_NS		= 1 << 0,
@@ -1323,10 +1323,10 @@ enum nvme_id_ctrl_lpa {
 
 /**
  * enum nvme_id_ctrl_avscc - Flags indicating the configuration settings for
- * 			     Admin Vendor Specific command handling.
+ *			     Admin Vendor Specific command handling.
  * @NVME_CTRL_AVSCC_AVS: If set, all Admin Vendor Specific Commands use the
- * 			 optional vendor specific command format with NDT and
- * 			 NDM fields.
+ *			 optional vendor specific command format with NDT and
+ *			 NDM fields.
  */
 enum nvme_id_ctrl_avscc {
 	NVME_CTRL_AVSCC_AVS			= 1 << 0,
@@ -1334,9 +1334,9 @@ enum nvme_id_ctrl_avscc {
 
 /**
  * enum nvme_id_ctrl_apsta - Flags indicating the attributes of the autonomous
- * 			     power state transition feature.
+ *			     power state transition feature.
  * @NVME_CTRL_APSTA_APST: If set, then the controller supports autonomous power
- * 			  state transitions.
+ *			  state transitions.
  */
 enum nvme_id_ctrl_apsta {
 	NVME_CTRL_APSTA_APST			= 1 << 0,
@@ -1344,8 +1344,8 @@ enum nvme_id_ctrl_apsta {
 
 /**
  * enum nvme_id_ctrl_rpmbs - This field indicates if the controller supports
- * 			     one or more Replay Protected Memory Blocks, from
- * 			     &struct nvme_id_ctrl.rpmbs.
+ *			     one or more Replay Protected Memory Blocks, from
+ *			     &struct nvme_id_ctrl.rpmbs.
  * @NVME_CTRL_RPMBS_NR_UNITS:	 Mask to get the value of the Number of RPMB Units
  * @NVME_CTRL_RPMBS_AUTH_METHOD: Mask to get the value of the Authentication Method
  * @NVME_CTRL_RPMBS_TOTAL_SIZE:  Mask to get the value of Total Size
@@ -1360,10 +1360,10 @@ enum nvme_id_ctrl_rpmbs {
 
 /**
  * enum nvme_id_ctrl_dsto - Flags indicating the optional Device Self-test
- * 			    command or operation behaviors supported by the
- * 			    controller or NVM subsystem.
+ *			    command or operation behaviors supported by the
+ *			    controller or NVM subsystem.
  * @NVME_CTRL_DSTO_ONE_DST: If set,  then the NVM subsystem supports only one
- * 			    device self-test operation in progress at a time.
+ *			    device self-test operation in progress at a time.
  */
 enum nvme_id_ctrl_dsto {
 	NVME_CTRL_DSTO_ONE_DST			= 1 << 0,
@@ -1371,11 +1371,11 @@ enum nvme_id_ctrl_dsto {
 
 /**
  * enum nvme_id_ctrl_hctm - Flags indicate the attributes of the host
- * 			    controlled thermal management feature
+ *			    controlled thermal management feature
  * @NVME_CTRL_HCTMA_HCTM: then the controller supports host controlled thermal
- * 			  management, and the Set Features command and Get
- * 			  Features command with the Feature Identifier field
- * 			  set to %NVME_FEAT_FID_HCTM.
+ *			  management, and the Set Features command and Get
+ *			  Features command with the Feature Identifier field
+ *			  set to %NVME_FEAT_FID_HCTM.
  */
 enum nvme_id_ctrl_hctm {
 	NVME_CTRL_HCTMA_HCTM			= 1 << 0,
@@ -1384,18 +1384,18 @@ enum nvme_id_ctrl_hctm {
 /**
  * enum nvme_id_ctrl_sanicap - Indicates attributes for sanitize operations.
  * @NVME_CTRL_SANICAP_CES:     Crypto Erase Support. If set, then the
- * 			       controller supports the Crypto Erase sanitize operation.
+ *			       controller supports the Crypto Erase sanitize operation.
  * @NVME_CTRL_SANICAP_BES:     Block Erase Support. If set, then the controller
- * 			       supports the Block Erase sanitize operation.
+ *			       supports the Block Erase sanitize operation.
  * @NVME_CTRL_SANICAP_OWS:     Overwrite Support. If set, then the controller
- * 			       supports the Overwrite sanitize operation.
+ *			       supports the Overwrite sanitize operation.
  * @NVME_CTRL_SANICAP_NDI:     No-Deallocate Inhibited. If set and the No-
- * 			       Deallocate Response Mode bit is set, then the
- * 			       controller deallocates after the sanitize
- * 			       operation even if the No-Deallocate After
- * 			       Sanitize bit is set in a Sanitize command.
+ *			       Deallocate Response Mode bit is set, then the
+ *			       controller deallocates after the sanitize
+ *			       operation even if the No-Deallocate After
+ *			       Sanitize bit is set in a Sanitize command.
  * @NVME_CTRL_SANICAP_NODMMAS: No-Deallocate Modifies Media After Sanitize,
- * 			       mask to extract value.
+ *			       mask to extract value.
  */
 enum nvme_id_ctrl_sanicap {
 	NVME_CTRL_SANICAP_CES			= 1 << 0,
@@ -1407,25 +1407,25 @@ enum nvme_id_ctrl_sanicap {
 
 /**
  * enum nvme_id_ctrl_anacap - This field indicates the capabilities associated
- * 			      with Asymmetric Namespace Access Reporting.
+ *			      with Asymmetric Namespace Access Reporting.
  * @NVME_CTRL_ANACAP_OPT:             If set, then the controller is able to
- * 				      report ANA Optimized state.
+ *				      report ANA Optimized state.
  * @NVME_CTRL_ANACAP_NON_OPT:         If set, then the controller is able to
- * 				      report ANA Non-Optimized state.
+ *				      report ANA Non-Optimized state.
  * @NVME_CTRL_ANACAP_INACCESSIBLE:    If set, then the controller is able to
- * 				      report ANA Inaccessible state.
+ *				      report ANA Inaccessible state.
  * @NVME_CTRL_ANACAP_PERSISTENT_LOSS: If set, then the controller is able to
- * 				      report ANA Persistent Loss state.
+ *				      report ANA Persistent Loss state.
  * @NVME_CTRL_ANACAP_CHANGE:          If set, then the controller is able to
- * 				      report ANA Change state.
+ *				      report ANA Change state.
  * @NVME_CTRL_ANACAP_GRPID_NO_CHG:    If set, then the ANAGRPID field in the
- * 				      Identify Namespace data structure
- * 				      (&struct nvme_id_ns.anagrpid), does not
- * 				      change while the namespace is attached to
- * 				      any controller.
+ *				      Identify Namespace data structure
+ *				      (&struct nvme_id_ns.anagrpid), does not
+ *				      change while the namespace is attached to
+ *				      any controller.
  * @NVME_CTRL_ANACAP_GRPID_MGMT:      If set, then the controller supports a
- * 				      non-zero value in the ANAGRPID field of
- * 				      the Namespace Management command.
+ *				      non-zero value in the ANAGRPID field of
+ *				      the Namespace Management command.
  */
 enum nvme_id_ctrl_anacap {
 	NVME_CTRL_ANACAP_OPT			= 1 << 0,
@@ -1439,11 +1439,11 @@ enum nvme_id_ctrl_anacap {
 
 /**
  * enum nvme_id_ctrl_sqes - Defines the required and maximum Submission Queue
- * 			    entry size when using the NVM Command Set.
+ *			    entry size when using the NVM Command Set.
  * @NVME_CTRL_SQES_MIN: Mask to get the value of the required Submission Queue
- * 			Entry size when using the NVM Command Set.
+ *			Entry size when using the NVM Command Set.
  * @NVME_CTRL_SQES_MAX: Mask to get the value of the maximum Submission Queue
- * 			entry size when using the NVM Command Set.
+ *			entry size when using the NVM Command Set.
  */
 enum nvme_id_ctrl_sqes {
 	NVME_CTRL_SQES_MIN			= 0xf << 0,
@@ -1452,11 +1452,11 @@ enum nvme_id_ctrl_sqes {
 
 /**
  * enum nvme_id_ctrl_cqes - Defines the required and maximum Completion Queue
- * 			    entry size when using the NVM Command Set.
+ *			    entry size when using the NVM Command Set.
  * @NVME_CTRL_CQES_MIN: Mask to get the value of the required Completion Queue
- * 			Entry size when using the NVM Command Set.
+ *			Entry size when using the NVM Command Set.
  * @NVME_CTRL_CQES_MAX: Mask to get the value of the maximum Completion Queue
- * 			entry size when using the NVM Command Set.
+ *			entry size when using the NVM Command Set.
  */
 enum nvme_id_ctrl_cqes {
 	NVME_CTRL_CQES_MIN			= 0xf << 0,
@@ -1465,28 +1465,28 @@ enum nvme_id_ctrl_cqes {
 
 /**
  * enum nvme_id_ctrl_oncs - This field indicates the optional NVM commands and
- * 			    features supported by the controller.
+ *			    features supported by the controller.
  * @NVME_CTRL_ONCS_COMPARE:		If set, then the controller supports
- * 					the Compare command.
+ *					the Compare command.
  * @NVME_CTRL_ONCS_WRITE_UNCORRECTABLE:	If set, then the controller supports
- * 					the Write Uncorrectable command.
+ *					the Write Uncorrectable command.
  * @NVME_CTRL_ONCS_DSM:			If set, then the controller supports
- * 					the Dataset Management command.
+ *					the Dataset Management command.
  * @NVME_CTRL_ONCS_WRITE_ZEROES:	If set, then the controller supports
- * 					the Write Zeroes command.
+ *					the Write Zeroes command.
  * @NVME_CTRL_ONCS_SAVE_FEATURES:	If set, then the controller supports
- * 					the Save field set to a non-zero value
- * 					in the Set Features command and the
- * 					Select field set to a non-zero value in
- * 					the Get Features command.
+ *					the Save field set to a non-zero value
+ *					in the Set Features command and the
+ *					Select field set to a non-zero value in
+ *					the Get Features command.
  * @NVME_CTRL_ONCS_RESERVATIONS:	If set, then the controller supports
- * 					reservations.
+ *					reservations.
  * @NVME_CTRL_ONCS_TIMESTAMP:		If set, then the controller supports
- * 					the Timestamp feature.
+ *					the Timestamp feature.
  * @NVME_CTRL_ONCS_VERIFY:		If set, then the controller supports
- * 					the Verify command.
+ *					the Verify command.
  * @NVME_CTRL_ONCS_COPY:		If set, then the controller supports
- * 					the copy command.
+ *					the copy command.
  */
 enum nvme_id_ctrl_oncs {
 	NVME_CTRL_ONCS_COMPARE			= 1 << 0,
@@ -1502,9 +1502,9 @@ enum nvme_id_ctrl_oncs {
 
 /**
  * enum nvme_id_ctrl_fuses - This field indicates the fused operations that the
- * 			     controller supports.
+ *			     controller supports.
  * @NVME_CTRL_FUSES_COMPARE_AND_WRITE: If set, then the controller supports the
- * 				       Compare and Write fused operation.
+ *				       Compare and Write fused operation.
  */
 enum nvme_id_ctrl_fuses {
 	NVME_CTRL_FUSES_COMPARE_AND_WRITE	= 1 << 0,
@@ -1512,29 +1512,29 @@ enum nvme_id_ctrl_fuses {
 
 /**
  * enum nvme_id_ctrl_fna - This field indicates attributes for the Format NVM
- * 			   command.
+ *			   command.
  * @NVME_CTRL_FNA_FMT_ALL_NAMESPACES: If set, then all namespaces in an NVM
- * 				      subsystem shall be configured with the
- * 				      same attributes and a format (excluding
- * 				      secure erase) of any namespace results in
- * 				      a format of all namespaces in an NVM
- * 				      subsystem. If cleared, then the
- * 				      controller supports format on a per
- * 				      namespace basis.
+ *				      subsystem shall be configured with the
+ *				      same attributes and a format (excluding
+ *				      secure erase) of any namespace results in
+ *				      a format of all namespaces in an NVM
+ *				      subsystem. If cleared, then the
+ *				      controller supports format on a per
+ *				      namespace basis.
  * @NVME_CTRL_FNA_SEC_ALL_NAMESPACES: If set, then any secure erase performed
- * 				      as part of a format operation results in
- * 				      a secure erase of all namespaces in the
- * 				      NVM subsystem. If cleared, then any
- * 				      secure erase performed as part of a
- * 				      format results in a secure erase of the
- * 				      particular namespace specified.
+ *				      as part of a format operation results in
+ *				      a secure erase of all namespaces in the
+ *				      NVM subsystem. If cleared, then any
+ *				      secure erase performed as part of a
+ *				      format results in a secure erase of the
+ *				      particular namespace specified.
  * @NVME_CTRL_FNA_CRYPTO_ERASE:       If set, then cryptographic erase is
- * 				      supported. If cleared, then cryptographic
- * 				      erase is not supported.
+ *				      supported. If cleared, then cryptographic
+ *				      erase is not supported.
  * @NVME_CTRL_FNA_NSID_FFFFFFFF:      If set, then format does not support
- * 				      nsid value set to FFFFFFFFh. If cleared,
- * 				      format supports nsid value set to
- * 				      FFFFFFFFh.
+ *				      nsid value set to FFFFFFFFh. If cleared,
+ *				      format supports nsid value set to
+ *				      FFFFFFFFh.
  */
 enum nvme_id_ctrl_fna {
 	NVME_CTRL_FNA_FMT_ALL_NAMESPACES	= 1 << 0,
@@ -1546,10 +1546,10 @@ enum nvme_id_ctrl_fna {
 /**
  * enum nvme_id_ctrl_vwc - Volatile write cache
  * @NVME_CTRL_VWC_PRESENT: If set, indicates a volatile write cache is present.
- * 			   If a volatile write cache is present, then the host
- * 			   controls whether the volatile write cache is enabled
- * 			   with a Set Features command specifying the value
- * 			   %NVME_FEAT_FID_VOLATILE_WC.
+ *			   If a volatile write cache is present, then the host
+ *			   controls whether the volatile write cache is enabled
+ *			   with a Set Features command specifying the value
+ *			   %NVME_FEAT_FID_VOLATILE_WC.
  * @NVME_CTRL_VWC_FLUSH:   Mask to get the value of the flush command behavior.
  */
 enum nvme_id_ctrl_vwc {
@@ -1559,9 +1559,9 @@ enum nvme_id_ctrl_vwc {
 
 /**
  * enum nvme_id_ctrl_nvscc - This field indicates the configuration settings
- * 			     for NVM Vendor Specific command handling.
+ *			     for NVM Vendor Specific command handling.
  * @NVME_CTRL_NVSCC_FMT: If set, all NVM Vendor Specific Commands use the
- * 			 format format with NDT and NDM fields.
+ *			 format format with NDT and NDM fields.
  */
 enum nvme_id_ctrl_nvscc {
 	NVME_CTRL_NVSCC_FMT			= 1 << 0,
@@ -1569,22 +1569,22 @@ enum nvme_id_ctrl_nvscc {
 
 /**
  * enum nvme_id_ctrl_nwpc - This field indicates the optional namespace write
- * 			    protection capabilities supported by the
- * 			    controller.
+ *			    protection capabilities supported by the
+ *			    controller.
  * @NVME_CTRL_NWPC_WRITE_PROTECT:	     If set, then the controller shall
- * 					      support the No Write Protect and
- * 					      Write Protect namespace write
- * 					      protection states and may support
- * 					      the Write Protect Until Power
- * 					      Cycle state and Permanent Write
- * 					      Protect namespace write
- * 					      protection states.
+ *					      support the No Write Protect and
+ *					      Write Protect namespace write
+ *					      protection states and may support
+ *					      the Write Protect Until Power
+ *					      Cycle state and Permanent Write
+ *					      Protect namespace write
+ *					      protection states.
  * @NVME_CTRL_NWPC_WRITE_PROTECT_POWER_CYCLE: If set, then the controller
- * 					      supports the Write Protect Until
- * 					      Power Cycle state.
+ *					      supports the Write Protect Until
+ *					      Power Cycle state.
  * @NVME_CTRL_NWPC_WRITE_PROTECT_PERMANENT:   If set, then the controller
- * 					      supports the Permanent Write
- * 					      Protect state.
+ *					      supports the Permanent Write
+ *					      Protect state.
  */
 enum nvme_id_ctrl_nwpc {
 	NVME_CTRL_NWPC_WRITE_PROTECT		= 1 << 0,
@@ -1594,7 +1594,7 @@ enum nvme_id_ctrl_nwpc {
 
 /**
  * enum nvme_id_ctrl_sgls - This field indicates if SGLs are supported for the
- * 			    NVM Command Set and the particular SGL types supported.
+ *			    NVM Command Set and the particular SGL types supported.
  * @NVME_CTRL_SGLS_SUPPORTED:
  * @NVME_CTRL_SGLS_KEYED:
  * @NVME_CTRL_SGLS_BIT_BUCKET:
@@ -1617,10 +1617,10 @@ enum nvme_id_ctrl_sgls {
 
 /**
  * enum nvme_id_ctrl_fcatt - This field indicates attributes of the controller
- * 			     that are specific to NVMe over Fabrics.
+ *			     that are specific to NVMe over Fabrics.
  * @NVME_CTRL_FCATT_DYNAMIC: If cleared, then the NVM subsystem uses a dynamic
- * 			     controller model. If set, then the NVM subsystem
- * 			     uses a static controller model.
+ *			     controller model. If set, then the NVM subsystem
+ *			     uses a static controller model.
  */
 enum nvme_id_ctrl_fcatt {
 	NVME_CTRL_FCATT_DYNAMIC			= 1 << 0,
@@ -1628,10 +1628,10 @@ enum nvme_id_ctrl_fcatt {
 
 /**
  * enum nvme_id_ctrl_ofcs - Indicate whether the controller supports optional
- * 			    fabric commands.
+ *			    fabric commands.
  * @NVME_CTRL_OFCS_DISCONNECT: If set, then the controller supports the
- * 			       Disconnect command and deletion of individual
- * 			       I/O Queues.
+ *			       Disconnect command and deletion of individual
+ *			       I/O Queues.
  */
 enum nvme_id_ctrl_ofcs {
 	NVME_CTRL_OFCS_DISCONNECT		= 1 << 0,
@@ -1640,9 +1640,9 @@ enum nvme_id_ctrl_ofcs {
 /**
  * struct nvme_lbaf - LBA Format Data Structure
  * @ms: Metadata Size indicates the number of metadata bytes provided per LBA
- * 	based on the LBA Data Size indicated.
+ *	based on the LBA Data Size indicated.
  * @ds:	LBA Data Size indicates the LBA data size supported, reported as a
- * 	power of two.
+ *	power of two.
  * @rp:	Relative Performance, see &enum nvme_lbaf_rp.
  */
 struct nvme_lbaf {
@@ -1653,14 +1653,14 @@ struct nvme_lbaf {
 
 /**
  * enum nvme_lbaf_rp - This field indicates the relative performance of the LBA
- * 		       format indicated relative to other LBA formats supported
- * 		       by the controller.
+ *		       format indicated relative to other LBA formats supported
+ *		       by the controller.
  * @NVME_LBAF_RP_BEST:	   Best performance
  * @NVME_LBAF_RP_BETTER:   Better performance
  * @NVME_LBAF_RP_GOOD:	   Good performance
  * @NVME_LBAF_RP_DEGRADED: Degraded performance
  * @NVME_LBAF_RP_MASK:	   Mask to get the relative performance value from the
- * 			   field
+ *			   field
  */
 enum nvme_lbaf_rp {
 	NVME_LBAF_RP_BEST	= 0,
@@ -1673,70 +1673,70 @@ enum nvme_lbaf_rp {
 /**
  * struct nvme_id_ns - Identify Namespace data structure
  * @nsze:     Namespace Size indicates the total size of the namespace in
- * 	      logical blocks. The number of logical blocks is based on the
- * 	      formatted LBA size.
+ *	      logical blocks. The number of logical blocks is based on the
+ *	      formatted LBA size.
  * @ncap:     Namespace Capacity indicates the maximum number of logical blocks
- * 	      that may be allocated in the namespace at any point in time. The
- * 	      number of logical blocks is based on the formatted LBA size.
+ *	      that may be allocated in the namespace at any point in time. The
+ *	      number of logical blocks is based on the formatted LBA size.
  * @nuse:     Namespace Utilization indicates the current number of logical
- * 	      blocks allocated in the namespace. This field is smaller than or
- * 	      equal to the Namespace Capacity. The number of logical blocks is
- * 	      based on the formatted LBA size.
+ *	      blocks allocated in the namespace. This field is smaller than or
+ *	      equal to the Namespace Capacity. The number of logical blocks is
+ *	      based on the formatted LBA size.
  * @nsfeat:   Namespace Features, see &enum nvme_id_nsfeat.
  * @nlbaf:    Number of LBA Formats defines the number of supported LBA data
- * 	      size and metadata size combinations supported by the namespace
- * 	      and the highest possible index to &struct nvme_id_ns.lbaf.
+ *	      size and metadata size combinations supported by the namespace
+ *	      and the highest possible index to &struct nvme_id_ns.lbaf.
  * @flbas:    Formatted LBA Size, see &enum nvme_id_ns_flbas.
  * @mc:       Metadata Capabilities, see &enum nvme_id_ns_mc.
  * @dpc:      End-to-end Data Protection Capabilities, see
- * 	      &enum nvme_id_ns_dpc.
+ *	      &enum nvme_id_ns_dpc.
  * @dps:      End-to-end Data Protection Type Settings, see
- * 	      &enum nvme_id_ns_dps.
+ *	      &enum nvme_id_ns_dps.
  * @nmic:     Namespace Multi-path I/O and Namespace Sharing Capabilities, see
- * 	      &enum nvme_id_ns_nmic.
+ *	      &enum nvme_id_ns_nmic.
  * @rescap:   Reservation Capabilities, see &enum nvme_id_ns_rescap.
  * @fpi:      Format Progress Indicator, see &enum nvme_nd_ns_fpi.
  * @dlfeat:   Deallocate Logical Block Features, see &enum nvme_id_ns_dlfeat.
  * @nawun:    Namespace Atomic Write Unit Normal indicates the
- * 	      namespace specific size of the write operation guaranteed to be
- * 	      written atomically to the NVM during normal operation.
+ *	      namespace specific size of the write operation guaranteed to be
+ *	      written atomically to the NVM during normal operation.
  * @nawupf:   Namespace Atomic Write Unit Power Fail indicates the
- * 	      namespace specific size of the write operation guaranteed to be
- * 	      written atomically to the NVM during a power fail or error
- * 	      condition.
+ *	      namespace specific size of the write operation guaranteed to be
+ *	      written atomically to the NVM during a power fail or error
+ *	      condition.
  * @nacwu:    Namespace Atomic Compare & Write Unit indicates the namespace
- * 	      specific size of the write operation guaranteed to be written
- * 	      atomically to the NVM for a Compare and Write fused command.
+ *	      specific size of the write operation guaranteed to be written
+ *	      atomically to the NVM for a Compare and Write fused command.
  * @nabsn:    Namespace Atomic Boundary Size Normal indicates the atomic
- * 	      boundary size for this namespace for the NAWUN value. This field
- * 	      is specified in logical blocks.
+ *	      boundary size for this namespace for the NAWUN value. This field
+ *	      is specified in logical blocks.
  * @nabo:     Namespace Atomic Boundary Offset indicates the LBA on this
- * 	      namespace where the first atomic boundary starts.
+ *	      namespace where the first atomic boundary starts.
  * @nabspf:   Namespace Atomic Boundary Size Power Fail indicates the atomic
- * 	      boundary size for this namespace specific to the Namespace Atomic
- * 	      Write Unit Power Fail value. This field is specified in logical
- * 	      blocks.
+ *	      boundary size for this namespace specific to the Namespace Atomic
+ *	      Write Unit Power Fail value. This field is specified in logical
+ *	      blocks.
  * @noiob:    Namespace Optimal I/O Boundary indicates the optimal I/O boundary
- * 	      for this namespace. This field is specified in logical blocks.
- * 	      The host should construct Read and Write commands that do not
- * 	      cross the I/O boundary to achieve optimal performance.
+ *	      for this namespace. This field is specified in logical blocks.
+ *	      The host should construct Read and Write commands that do not
+ *	      cross the I/O boundary to achieve optimal performance.
  * @nvmcap:   NVM Capacity indicates the total size of the NVM allocated to
- * 	      this namespace. The value is in bytes.
+ *	      this namespace. The value is in bytes.
  * @npwg:     Namespace Preferred Write Granularity indicates the smallest
- * 	      recommended write granularity in logical blocks for this
- * 	      namespace. This is a 0's based value.
+ *	      recommended write granularity in logical blocks for this
+ *	      namespace. This is a 0's based value.
  * @npwa:     Namespace Preferred Write Alignment indicates the recommended
- * 	      write alignment in logical blocks for this namespace. This is a
- * 	      0's based value.
+ *	      write alignment in logical blocks for this namespace. This is a
+ *	      0's based value.
  * @npdg:     Namespace Preferred Deallocate Granularity indicates the
- * 	      recommended granularity in logical blocks for the Dataset
- * 	      Management command with the Attribute - Deallocate bit.
+ *	      recommended granularity in logical blocks for the Dataset
+ *	      Management command with the Attribute - Deallocate bit.
  * @npda:     Namespace Preferred Deallocate Alignment indicates the
- * 	      recommended alignment in logical blocks for the Dataset
- * 	      Management command with the Attribute - Deallocate bit
+ *	      recommended alignment in logical blocks for the Dataset
+ *	      Management command with the Attribute - Deallocate bit
  * @nows:     Namespace Optimal Write Size indicates the size in logical blocks
- * 	      for optimal write performance for this namespace. This is a 0's
- * 	      based value.
+ *	      for optimal write performance for this namespace. This is a 0's
+ *	      based value.
  * @mssrl:    Maximum Single Source Range Length indicates the maximum number
  *        of logical blocks that may be specified in each valid Source Range
  *        field of a Copy command.
@@ -1752,18 +1752,18 @@ enum nvme_lbaf_rp {
  *        formats shall be allocated in order and packed sequentially.
  * @rsvd83:   Reserved
  * @anagrpid: ANA Group Identifier indicates the ANA Group Identifier of the
- * 	      ANA group of which the namespace is a member.
+ *	      ANA group of which the namespace is a member.
  * @rsvd96:   Reserved
  * @nsattr:   Namespace Attributes, see &enum nvme_id_ns_attr.
  * @nvmsetid: NVM Set Identifier indicates the NVM Set with which this
- * 	      namespace is associated.
+ *	      namespace is associated.
  * @endgid:   Endurance Group Identifier indicates the Endurance Group with
- * 	      which this namespace is associated.
+ *	      which this namespace is associated.
  * @nguid:    Namespace Globally Unique Identifier contains a 128-bit value
- * 	      that is globally unique and assigned to the namespace when the
- * 	      namespace is created. This field remains fixed throughout the
- * 	      life of the namespace and is preserved across namespace and
- * 	      controller operations
+ *	      that is globally unique and assigned to the namespace when the
+ *	      namespace is created. This field remains fixed throughout the
+ *	      life of the namespace and is preserved across namespace and
+ *	      controller operations
  * @eui64:    IEEE Extended Unique Identifier contains a 64-bit IEEE Extended
  *	      Unique Identifier (EUI-64) that is globally unique and assigned
  *	      to the namespace when the namespace is created. This field
@@ -1821,24 +1821,24 @@ struct nvme_id_ns {
 /**
  * enum nvme_id_nsfeat - This field defines features of the namespace.
  * @NVME_NS_FEAT_THIN:	   If set, indicates that the namespace supports thin
- * 			   provisioning. Specifically, the Namespace Capacity
- * 			   reported may be less than the Namespace Size.
+ *			   provisioning. Specifically, the Namespace Capacity
+ *			   reported may be less than the Namespace Size.
  * @NVME_NS_FEAT_NATOMIC:  If set, indicates that the fields NAWUN, NAWUPF, and
- * 			   NACWU are defined for this namespace and should be
- * 			   used by the host for this namespace instead of the
- * 			   AWUN, AWUPF, and ACWU fields in the Identify
- * 			   Controller data structure.
+ *			   NACWU are defined for this namespace and should be
+ *			   used by the host for this namespace instead of the
+ *			   AWUN, AWUPF, and ACWU fields in the Identify
+ *			   Controller data structure.
  * @NVME_NS_FEAT_DULBE:	   If set, indicates that the controller supports the
- * 			   Deallocated or Unwritten Logical Block error for
- * 			   this namespace.
+ *			   Deallocated or Unwritten Logical Block error for
+ *			   this namespace.
  * @NVME_NS_FEAT_ID_REUSE: If set, indicates that the value in the NGUID field
- * 			   for this namespace, if non- zero, is never reused by
- * 			   the controller and that the value in the EUI64 field
- * 			   for this namespace, if non-zero, is never reused by
- * 			   the controller.
+ *			   for this namespace, if non- zero, is never reused by
+ *			   the controller and that the value in the EUI64 field
+ *			   for this namespace, if non-zero, is never reused by
+ *			   the controller.
  * @NVME_NS_FEAT_IO_OPT:   If set, indicates that the fields NPWG, NPWA, NPDG,
- * 			   NPDA, and NOWS are defined for this namespace and
- * 			   should be used by the host for I/O optimization
+ *			   NPDA, and NOWS are defined for this namespace and
+ *			   should be used by the host for I/O optimization
  */
 enum nvme_id_nsfeat {
 	NVME_NS_FEAT_THIN		= 1 << 0,
@@ -1850,8 +1850,8 @@ enum nvme_id_nsfeat {
 
 /**
  * enum nvme_id_ns_flbas - This field indicates the LBA data size & metadata
- * 			   size combination that the namespace has been
- * 			   formatted with
+ *			   size combination that the namespace has been
+ *			   formatted with
  * @NVME_NS_FLBAS_LOWER_MASK:	Mask to get the index of one of the supported
  *				LBA Formats's least significant
  *				4bits indicated in
@@ -1888,10 +1888,10 @@ enum nvme_nvm_id_ns_elbaf {
 /**
  * enum nvme_id_ns_mc - This field indicates the capabilities for metadata.
  * @NVME_NS_MC_EXTENDED: If set, indicates the namespace supports the metadata
- * 			 being transferred as part of a separate buffer that is
- * 			 specified in the Metadata Pointer.
+ *			 being transferred as part of a separate buffer that is
+ *			 specified in the Metadata Pointer.
  * @NVME_NS_MC_SEPARATE: If set, indicates that the namespace supports the
- * 			 metadata being transferred as part of an extended data LBA.
+ *			 metadata being transferred as part of an extended data LBA.
  */
 enum nvme_id_ns_mc {
 	NVME_NS_MC_EXTENDED		= 1 << 0,
@@ -1900,19 +1900,19 @@ enum nvme_id_ns_mc {
 
 /**
  * enum nvme_id_ns_dpc - This field indicates the capabilities for the
- * 			 end-to-end data protection feature.
+ *			 end-to-end data protection feature.
  * @NVME_NS_DPC_PI_TYPE1: If set, indicates that the namespace supports
- * 			  Protection Information Type 1.
+ *			  Protection Information Type 1.
  * @NVME_NS_DPC_PI_TYPE2: If set, indicates that the namespace supports
- * 			  Protection Information Type 2.
+ *			  Protection Information Type 2.
  * @NVME_NS_DPC_PI_TYPE3: If set, indicates that the namespace supports
- * 			  Protection Information Type 3.
+ *			  Protection Information Type 3.
  * @NVME_NS_DPC_PI_FIRST: If set, indicates that the namespace supports
- * 			  protection information transferred as the first eight
- * 			  bytes of metadata.
+ *			  protection information transferred as the first eight
+ *			  bytes of metadata.
  * @NVME_NS_DPC_PI_LAST:  If set, indicates that the namespace supports
- * 			  protection information transferred as the last eight
- * 			  bytes of metadata.
+ *			  protection information transferred as the last eight
+ *			  bytes of metadata.
  */
 enum nvme_id_ns_dpc {
 	NVME_NS_DPC_PI_TYPE1		= 1 << 0,
@@ -1924,15 +1924,15 @@ enum nvme_id_ns_dpc {
 
 /**
  * enum nvme_id_ns_dps - This field indicates the Type settings for the
- * 			 end-to-end data protection feature.
+ *			 end-to-end data protection feature.
  * @NVME_NS_DPS_PI_NONE:  Protection information is not enabled
  * @NVME_NS_DPS_PI_TYPE1: Protection information is enabled, Type 1
  * @NVME_NS_DPS_PI_TYPE2: Protection information is enabled, Type 2
  * @NVME_NS_DPS_PI_TYPE3: Protection information is enabled, Type 3
  * @NVME_NS_DPS_PI_MASK:  Mask to get the value of the PI type
  * @NVME_NS_DPS_PI_FIRST: If set, indicates that the protection information, if
- * 			  enabled, is transferred as the first eight bytes of
- * 			  metadata.
+ *			  enabled, is transferred as the first eight bytes of
+ *			  metadata.
  */
 enum nvme_id_ns_dps {
 	NVME_NS_DPS_PI_NONE		= 0,
@@ -1945,9 +1945,9 @@ enum nvme_id_ns_dps {
 
 /**
  * enum nvme_id_ns_nmic - This field specifies multi-path I/O and namespace
- * 			  sharing capabilities of the namespace.
+ *			  sharing capabilities of the namespace.
  * @NVME_NS_NMIC_SHARED: If set, then the namespace may be attached to two or
- * 			 more controllers in the NVM subsystem concurrently
+ *			 more controllers in the NVM subsystem concurrently
  */
 enum nvme_id_ns_nmic {
 	NVME_NS_NMIC_SHARED		= 1 << 0,
@@ -1955,23 +1955,23 @@ enum nvme_id_ns_nmic {
 
 /**
  * enum nvme_id_ns_rescap - This field indicates the reservation capabilities
- * 			    of the namespace.
+ *			    of the namespace.
  * @NVME_NS_RESCAP_PTPL:   If set, indicates that the namespace supports the
- * 			   Persist Through Power Loss capability.
+ *			   Persist Through Power Loss capability.
  * @NVME_NS_RESCAP_WE:     If set, indicates that the namespace supports the
- * 			   Write Exclusive reservation type.
+ *			   Write Exclusive reservation type.
  * @NVME_NS_RESCAP_EA:     If set, indicates that the namespace supports the
- * 			   Exclusive Access reservation type.
+ *			   Exclusive Access reservation type.
  * @NVME_NS_RESCAP_WERO:   If set, indicates that the namespace supports the
- * 			   Write Exclusive - Registrants Only reservation type.
+ *			   Write Exclusive - Registrants Only reservation type.
  * @NVME_NS_RESCAP_EARO:   If set, indicates that the namespace supports the
- * 			   Exclusive Access - Registrants Only reservation type.
+ *			   Exclusive Access - Registrants Only reservation type.
  * @NVME_NS_RESCAP_WEAR:   If set, indicates that the namespace supports the
- * 			   Write Exclusive - All Registrants reservation type.
+ *			   Write Exclusive - All Registrants reservation type.
  * @NVME_NS_RESCAP_EAAR:   If set, indicates that the namespace supports the
- * 			   Exclusive Access - All Registrants reservation type.
+ *			   Exclusive Access - All Registrants reservation type.
  * @NVME_NS_RESCAP_IEK_13: If set, indicates that Ignore Existing Key is used
- * 			   as defined in revision 1.3 or later of this specification.
+ *			   as defined in revision 1.3 or later of this specification.
  */
 enum nvme_id_ns_rescap {
 	NVME_NS_RESCAP_PTPL		= 1 << 0,
@@ -1986,11 +1986,11 @@ enum nvme_id_ns_rescap {
 
 /**
  * enum nvme_nd_ns_fpi - If a format operation is in progress, this field
- * 			 indicates the percentage of the namespace that remains
- * 			 to be formatted.
+ *			 indicates the percentage of the namespace that remains
+ *			 to be formatted.
  * @NVME_NS_FPI_REMAINING: Mask to get the format percent remaining value
  * @NVME_NS_FPI_SUPPORTED: If set, indicates that the namespace supports the
- * 			   Format Progress Indicator defined for the field.
+ *			   Format Progress Indicator defined for the field.
  */
 enum nvme_nd_ns_fpi {
 	NVME_NS_FPI_REMAINING		= 0x7f << 0,
@@ -1999,22 +1999,22 @@ enum nvme_nd_ns_fpi {
 
 /**
  * enum nvme_id_ns_dlfeat - This field indicates information about features
- * 			    that affect deallocating logical blocks for this
- * 			    namespace.
+ *			    that affect deallocating logical blocks for this
+ *			    namespace.
  * @NVME_NS_DLFEAT_RB:           Mask to get the value of the read behavior
  * @NVME_NS_DLFEAT_RB_NR:        Read behvaior is not reported
  * @NVME_NS_DLFEAT_RB_ALL_0S:    A deallocated logical block returns all bytes
  * cleared to 0h.
  * @NVME_NS_DLFEAT_RB_ALL_FS:    A deallocated logical block returns all bytes
- * 				 set to FFh.
+ *				 set to FFh.
  * @NVME_NS_DLFEAT_WRITE_ZEROES: If set, indicates that the controller supports
- * 				 the Deallocate bit in the Write Zeroes command
- * 				 for this namespace.
+ *				 the Deallocate bit in the Write Zeroes command
+ *				 for this namespace.
  * @NVME_NS_DLFEAT_CRC_GUARD:    If set, indicates that the Guard field for
- * 				 deallocated logical blocks that contain
- * 				 protection information is set to the CRC for
- * 				 the value read from the deallocated logical
- * 				 block and its metadata
+ *				 deallocated logical blocks that contain
+ *				 protection information is set to the CRC for
+ *				 the value read from the deallocated logical
+ *				 block and its metadata
  */
 enum nvme_id_ns_dlfeat {
 	NVME_NS_DLFEAT_RB		= 7 << 0,
@@ -2028,8 +2028,8 @@ enum nvme_id_ns_dlfeat {
 /**
  * enum nvme_id_ns_attr - Specifies attributes of the namespace.
  * @NVME_NS_NSATTR_WRITE_PROTECTED: If set, then the namespace is currently
- * 				    write protected and all write access to the
- * 				    namespace shall fail.
+ *				    write protected and all write access to the
+ *				    namespace shall fail.
  */
 enum nvme_id_ns_attr {
 	NVME_NS_NSATTR_WRITE_PROTECTED	= 1 << 0
@@ -2039,11 +2039,11 @@ enum nvme_id_ns_attr {
  * struct nvme_ns_id_desc - Namespace identifier type descriptor
  * @nidt: Namespace Identifier Type, see &enum nvme_ns_id_desc_nidt
  * @nidl: Namespace Identifier Length contains the length in bytes of the
- * 	  &struct nvme_id_ns.nid.
+ *	  &struct nvme_id_ns.nid.
  * @rsvd: Reserved
  * @nid:  Namespace Identifier contains a value that is globally unique and
- * 	  assigned to the namespace when the namespace is created. The length
- * 	  is defined in &struct nvme_id_ns.nidl.
+ *	  assigned to the namespace when the namespace is created. The length
+ *	  is defined in &struct nvme_id_ns.nidl.
  */
 struct nvme_ns_id_desc {
 	__u8	nidt;
@@ -2055,11 +2055,11 @@ struct nvme_ns_id_desc {
 /**
  * enum nvme_ns_id_desc_nidt - Known namespace identifier types
  * @NVME_NIDT_EUI64: IEEE Extended Unique Identifier, the NID field contains a
- * 		     copy of the EUI64 field in the struct nvme_id_ns.eui64.
+ *		     copy of the EUI64 field in the struct nvme_id_ns.eui64.
  * @NVME_NIDT_NGUID: Namespace Globally Unique Identifier, the NID field
- * 		     contains a copy of the NGUID field in struct nvme_id_ns.nguid.
+ *		     contains a copy of the NGUID field in struct nvme_id_ns.nguid.
  * @NVME_NIDT_UUID:  The NID field contains a 128-bit Universally Unique
- * 		     Identifier (UUID) as specified in RFC 4122.
+ *		     Identifier (UUID) as specified in RFC 4122.
  * @NVME_NIDT_CSI:   The NID field contains the command set identifier.
  */
 enum nvme_ns_id_desc_nidt {
@@ -2117,7 +2117,7 @@ struct nvme_id_nvmset_list {
  * struct nvme_id_independent_id_ns - Identify - I/O Command Set Independent Identify Namespace Data Structure
  * @nsfeat:	common namespace features
  * @nmic:	Namespace Multi-path I/O and Namespace
- * 		Sharing Capabilities
+ *		Sharing Capabilities
  * @rescap:	Reservation Capabilities
  * @fpi:	Format Progress Indicator
  * @anagrpid:	ANA Group Identifier
@@ -2461,62 +2461,62 @@ struct nvme_supported_log_pages {
 /**
  * struct nvme_error_log_page - Error Information Log Entry (Log Identifier 01h)
  * @error_count:	 Error Count: a 64-bit incrementing error count,
- * 			 indicating a unique identifier for this error. The error
- * 			 count starts at %1h, is incremented for each unique error
- * 			 log entry, and is retained across power off conditions.
- * 			 A value of %0h indicates an invalid entry; this value
- * 			 is used when there are lost entries or when there are
- * 			 fewer errors than the maximum number of entries the
- * 			 controller supports. If the value of this field is
- * 			 %FFFFFFFFh, then the field shall be set to 1h when
- * 			 incremented (i.e., rolls over to %1h). Prior to NVMe
- * 			 1.4, processing of incrementing beyond %FFFFFFFFh is
- * 			 unspecified.
+ *			 indicating a unique identifier for this error. The error
+ *			 count starts at %1h, is incremented for each unique error
+ *			 log entry, and is retained across power off conditions.
+ *			 A value of %0h indicates an invalid entry; this value
+ *			 is used when there are lost entries or when there are
+ *			 fewer errors than the maximum number of entries the
+ *			 controller supports. If the value of this field is
+ *			 %FFFFFFFFh, then the field shall be set to 1h when
+ *			 incremented (i.e., rolls over to %1h). Prior to NVMe
+ *			 1.4, processing of incrementing beyond %FFFFFFFFh is
+ *			 unspecified.
  * @sqid:		 Submission Queue ID: indicates the Submission Queue
- * 			 Identifier of the command that the error information is
- * 			 associated with. If the error is not specific to
- * 			 a particular command, then this field shall be set to
- * 			 %FFFFh.
+ *			 Identifier of the command that the error information is
+ *			 associated with. If the error is not specific to
+ *			 a particular command, then this field shall be set to
+ *			 %FFFFh.
  * @cmdid:		 Command ID: indicates the Command Identifier of the
- * 			 command that the error is associated with. If the error
- * 			 is not specific to a particular command, then this field
- * 			 shall be set to %FFFFh.
+ *			 command that the error is associated with. If the error
+ *			 is not specific to a particular command, then this field
+ *			 shall be set to %FFFFh.
  * @status_field:	 Bits 15-1: Status Field: indicates the Status Field for
- * 			 the command that completed. If the error is not specific
- * 			 to a particular command, then this field reports the most
- * 			 applicable status value.
- * 			 Bit 0: Phase Tag: may indicate the Phase Tag posted for
- * 			 the command.
+ *			 the command that completed. If the error is not specific
+ *			 to a particular command, then this field reports the most
+ *			 applicable status value.
+ *			 Bit 0: Phase Tag: may indicate the Phase Tag posted for
+ *			 the command.
  * @parm_error_location: Parameter Error Location: indicates the byte and bit of
- * 			 the command parameter that the error is associated with,
- * 			 if applicable. If the parameter spans multiple bytes or
- * 			 bits, then the location indicates the first byte and bit
- * 			 of the parameter.
- * 			 Bits 10-8: Bit in command that contained the error.
- * 			 Valid values are 0 to 7.
+ *			 the command parameter that the error is associated with,
+ *			 if applicable. If the parameter spans multiple bytes or
+ *			 bits, then the location indicates the first byte and bit
+ *			 of the parameter.
+ *			 Bits 10-8: Bit in command that contained the error.
+ *			 Valid values are 0 to 7.
  *			 Bits 7-0: Byte in command that contained the error.
- * 			 Valid values are 0 to 63.
+ *			 Valid values are 0 to 63.
  * @lba:		 LBA: This field indicates the first LBA that experienced
- * 			 the error condition, if applicable.
+ *			 the error condition, if applicable.
  * @nsid:		 Namespace: This field indicates the NSID of the namespace
- * 			 that the error is associated with, if applicable.
+ *			 that the error is associated with, if applicable.
  * @vs:			 Vendor Specific Information Available: If there is
- * 			 additional vendor specific error information available,
- * 			 this field provides the log page identifier associated
- * 			 with that page. A value of %0h indicates that no additional
- * 			 information is available. Valid values are in the range
- * 			 of %80h to %FFh.
+ *			 additional vendor specific error information available,
+ *			 this field provides the log page identifier associated
+ *			 with that page. A value of %0h indicates that no additional
+ *			 information is available. Valid values are in the range
+ *			 of %80h to %FFh.
  * @trtype:		 Transport Type (TRTYPE): indicates the Transport Type of
- * 			 the transport associated with the error. The values in
- * 			 this field are the same as the TRTYPE values in the
- * 			 Discovery Log Page Entry. If the error is not transport
- * 			 related, this field shall be cleared to %0h. If the error
- * 			 is transport related, this field shall be set to the type
- * 			 of the transport - see &enum nvme_trtype.
+ *			 the transport associated with the error. The values in
+ *			 this field are the same as the TRTYPE values in the
+ *			 Discovery Log Page Entry. If the error is not transport
+ *			 related, this field shall be cleared to %0h. If the error
+ *			 is transport related, this field shall be set to the type
+ *			 of the transport - see &enum nvme_trtype.
  * @rsvd:		 Reserved
  * @cs:			 Command Specific Information: This field contains command
- * 			 specific information. If used, the command definition
- * 			 specifies the information returned.
+ *			 specific information. If used, the command definition
+ *			 specifies the information returned.
  * @trtype_spec_info:	 Transport Type Specific Information
  * @rsvd2:		 Reserved
  */
@@ -2543,153 +2543,153 @@ enum nvme_err_pel {
 
 /**
  * struct nvme_smart_log - SMART / Health Information Log (Log Identifier 02h)
- * @critical_warning: 	   This field indicates critical warnings for the state
- * 			   of the controller. Critical warnings may result in an
- * 			   asynchronous event notification to the host. Bits in
- * 			   this field represent the current associated state and
- * 			   are not persistent (see &enum nvme_smart_crit).
+ * @critical_warning:	   This field indicates critical warnings for the state
+ *			   of the controller. Critical warnings may result in an
+ *			   asynchronous event notification to the host. Bits in
+ *			   this field represent the current associated state and
+ *			   are not persistent (see &enum nvme_smart_crit).
  * @temperature:	   Composite Temperature: Contains a value corresponding
- * 			   to a temperature in Kelvins that represents the current
- * 			   composite temperature of the controller and namespace(s)
- * 			   associated with that controller. The manner in which
- * 			   this value is computed is implementation specific and
- * 			   may not represent the actual temperature of any physical
- * 			   point in the NVM subsystem. Warning and critical
- * 			   overheating composite temperature threshold values are
- * 			   reported by the WCTEMP and CCTEMP fields in the Identify
- * 			   Controller data structure.
+ *			   to a temperature in Kelvins that represents the current
+ *			   composite temperature of the controller and namespace(s)
+ *			   associated with that controller. The manner in which
+ *			   this value is computed is implementation specific and
+ *			   may not represent the actual temperature of any physical
+ *			   point in the NVM subsystem. Warning and critical
+ *			   overheating composite temperature threshold values are
+ *			   reported by the WCTEMP and CCTEMP fields in the Identify
+ *			   Controller data structure.
  * @avail_spare:	   Available Spare: Contains a normalized percentage (0%
- * 			   to 100%) of the remaining spare capacity available.
+ *			   to 100%) of the remaining spare capacity available.
  * @spare_thresh:	   Available Spare Threshold: When the Available Spare
- * 			   falls below the threshold indicated in this field, an
- * 			   asynchronous event completion may occur. The value is
- * 			   indicated as a normalized percentage (0% to 100%).
- * 			   The values 101 to 255 are reserved.
+ *			   falls below the threshold indicated in this field, an
+ *			   asynchronous event completion may occur. The value is
+ *			   indicated as a normalized percentage (0% to 100%).
+ *			   The values 101 to 255 are reserved.
  * @percent_used:	   Percentage Used: Contains a vendor specific estimate
- * 			   of the percentage of NVM subsystem life used based on
- * 			   the actual usage and the manufacturer's prediction of
- * 			   NVM life. A value of 100 indicates that the estimated
- * 			   endurance of the NVM in the NVM subsystem has been
- * 			   consumed, but may not indicate an NVM subsystem failure.
- * 			   The value is allowed to exceed 100. Percentages greater
- * 			   than 254 shall be represented as 255. This value shall
- * 			   be updated once per power-on hour (when the controller
- * 			   is not in a sleep state).
+ *			   of the percentage of NVM subsystem life used based on
+ *			   the actual usage and the manufacturer's prediction of
+ *			   NVM life. A value of 100 indicates that the estimated
+ *			   endurance of the NVM in the NVM subsystem has been
+ *			   consumed, but may not indicate an NVM subsystem failure.
+ *			   The value is allowed to exceed 100. Percentages greater
+ *			   than 254 shall be represented as 255. This value shall
+ *			   be updated once per power-on hour (when the controller
+ *			   is not in a sleep state).
  * @endu_grp_crit_warn_sumry: Endurance Group Critical Warning Summary: This field
- * 			   indicates critical warnings for the state of Endurance
- * 			   Groups. Bits in this field represent the current associated
- * 			   state and are not persistent (see &enum nvme_smart_egcw).
+ *			   indicates critical warnings for the state of Endurance
+ *			   Groups. Bits in this field represent the current associated
+ *			   state and are not persistent (see &enum nvme_smart_egcw).
  * @rsvd7:		   Reserved
  * @data_units_read:	   Data Units Read: Contains the number of 512 byte data
- * 			   units the host has read from the controller; this value
- * 			   does not include metadata. This value is reported in
- * 			   thousands (i.e., a value of 1 corresponds to 1000
- * 			   units of 512 bytes read) and is rounded up (e.g., one
- * 			   indicates the that number of 512 byte data units read
- * 			   is from 1 to 1000, three indicates that the number of
- * 			   512 byte data units read is from 2001 to 3000). When
- * 			   the LBA size is a value other than 512 bytes, the
- * 			   controller shall convert the amount of data read to
- * 			   512 byte units. For the NVM command set, logical blocks
- * 			   read as part of Compare, Read, and Verify operations
- * 			   shall be included in this value. A value of %0h in
- * 			   this field indicates that the number of Data Units Read
- * 			   is not reported.
+ *			   units the host has read from the controller; this value
+ *			   does not include metadata. This value is reported in
+ *			   thousands (i.e., a value of 1 corresponds to 1000
+ *			   units of 512 bytes read) and is rounded up (e.g., one
+ *			   indicates the that number of 512 byte data units read
+ *			   is from 1 to 1000, three indicates that the number of
+ *			   512 byte data units read is from 2001 to 3000). When
+ *			   the LBA size is a value other than 512 bytes, the
+ *			   controller shall convert the amount of data read to
+ *			   512 byte units. For the NVM command set, logical blocks
+ *			   read as part of Compare, Read, and Verify operations
+ *			   shall be included in this value. A value of %0h in
+ *			   this field indicates that the number of Data Units Read
+ *			   is not reported.
  * @data_units_written:    Data Units Written: Contains the number of 512 byte
- * 			   data units the host has written to the controller;
- * 			   this value does not include metadata. This value is
- * 			   reported in thousands (i.e., a value of 1 corresponds
- * 			   to 1000 units of 512 bytes written) and is rounded up
- * 			   (e.g., one indicates that the number of 512 byte data
- * 			   units written is from 1 to 1,000, three indicates that
- * 			   the number of 512 byte data units written is from 2001
- * 			   to 3000). When the LBA size is a value other than 512
- * 			   bytes, the controller shall convert the amount of data
- * 			   written to 512 byte units. For the NVM command set,
- * 			   logical blocks written as part of Write operations shall
- * 			   be included in this value. Write Uncorrectable commands
- * 			   and Write Zeroes commands shall not impact this value.
- * 			   A value of %0h in this field indicates that the number
- * 			   of Data Units Written is not reported.
+ *			   data units the host has written to the controller;
+ *			   this value does not include metadata. This value is
+ *			   reported in thousands (i.e., a value of 1 corresponds
+ *			   to 1000 units of 512 bytes written) and is rounded up
+ *			   (e.g., one indicates that the number of 512 byte data
+ *			   units written is from 1 to 1,000, three indicates that
+ *			   the number of 512 byte data units written is from 2001
+ *			   to 3000). When the LBA size is a value other than 512
+ *			   bytes, the controller shall convert the amount of data
+ *			   written to 512 byte units. For the NVM command set,
+ *			   logical blocks written as part of Write operations shall
+ *			   be included in this value. Write Uncorrectable commands
+ *			   and Write Zeroes commands shall not impact this value.
+ *			   A value of %0h in this field indicates that the number
+ *			   of Data Units Written is not reported.
  * @host_reads:		   Host Read Commands: Contains the number of read commands
- * 			   completed by the controller. For the NVM command set,
- * 			   this value is the sum of the number of Compare commands
- * 			   and the number of Read commands.
+ *			   completed by the controller. For the NVM command set,
+ *			   this value is the sum of the number of Compare commands
+ *			   and the number of Read commands.
  * @host_writes:	   Host Write Commands: Contains the number of write
- * 			   commands completed by the controller. For the NVM
- * 			   command set, this is the number of Write commands.
+ *			   commands completed by the controller. For the NVM
+ *			   command set, this is the number of Write commands.
  * @ctrl_busy_time:	   Controller Busy Time: Contains the amount of time the
- * 			   controller is busy with I/O commands. The controller
- * 			   is busy when there is a command outstanding to an I/O
- * 			   Queue (specifically, a command was issued via an I/O
- * 			   Submission Queue Tail doorbell write and the corresponding
- * 			   completion queue entry has not been posted yet to the
- * 			   associated I/O Completion Queue). This value is
- * 			   reported in minutes.
+ *			   controller is busy with I/O commands. The controller
+ *			   is busy when there is a command outstanding to an I/O
+ *			   Queue (specifically, a command was issued via an I/O
+ *			   Submission Queue Tail doorbell write and the corresponding
+ *			   completion queue entry has not been posted yet to the
+ *			   associated I/O Completion Queue). This value is
+ *			   reported in minutes.
  * @power_cycles:	   Power Cycles: Contains the number of power cycles.
  * @power_on_hours:	   Power On Hours: Contains the number of power-on hours.
- * 			   This may not include time that the controller was
- * 			   powered and in a non-operational power state.
+ *			   This may not include time that the controller was
+ *			   powered and in a non-operational power state.
  * @unsafe_shutdowns:	   Unsafe Shutdowns: Contains the number of unsafe
- * 			   shutdowns. This count is incremented when a Shutdown
- * 			   Notification (CC.SHN) is not received prior to loss of power.
+ *			   shutdowns. This count is incremented when a Shutdown
+ *			   Notification (CC.SHN) is not received prior to loss of power.
  * @media_errors:	   Media and Data Integrity Errors: Contains the number
- * 			   of occurrences where the controller detected an
- * 			   unrecovered data integrity error. Errors such as
- * 			   uncorrectable ECC, CRC checksum failure, or LBA tag
- * 			   mismatch are included in this field. Errors introduced
- * 			   as a result of a Write Uncorrectable command may or
- * 			   may not be included in this field.
+ *			   of occurrences where the controller detected an
+ *			   unrecovered data integrity error. Errors such as
+ *			   uncorrectable ECC, CRC checksum failure, or LBA tag
+ *			   mismatch are included in this field. Errors introduced
+ *			   as a result of a Write Uncorrectable command may or
+ *			   may not be included in this field.
  * @num_err_log_entries:   Number of Error Information Log Entries: Contains the
- * 			   number of Error Information log entries over the life
- * 			   of the controller.
+ *			   number of Error Information log entries over the life
+ *			   of the controller.
  * @warning_temp_time:     Warning Composite Temperature Time: Contains the amount
- * 			   of time in minutes that the controller is operational
- * 			   and the Composite Temperature is greater than or equal
- * 			   to the Warning Composite Temperature Threshold (WCTEMP)
- * 			   field and less than the Critical Composite Temperature
- * 			   Threshold (CCTEMP) field in the Identify Controller
- * 			   data structure. If the value of the WCTEMP or CCTEMP
- * 			   field is %0h, then this field is always cleared to %0h
- * 			   regardless of the Composite Temperature value.
+ *			   of time in minutes that the controller is operational
+ *			   and the Composite Temperature is greater than or equal
+ *			   to the Warning Composite Temperature Threshold (WCTEMP)
+ *			   field and less than the Critical Composite Temperature
+ *			   Threshold (CCTEMP) field in the Identify Controller
+ *			   data structure. If the value of the WCTEMP or CCTEMP
+ *			   field is %0h, then this field is always cleared to %0h
+ *			   regardless of the Composite Temperature value.
  * @critical_comp_time:    Critical Composite Temperature Time: Contains the amount
- * 			   of time in minutes that the controller is operational
- * 			   and the Composite Temperature is greater than or equal
- * 			   to the Critical Composite Temperature Threshold (CCTEMP)
- * 			   field in the Identify Controller data structure. If
- * 			   the value of the CCTEMP field is %0h, then this field
- * 			   is always cleared to 0h regardless of the Composite
- * 			   Temperature value.
+ *			   of time in minutes that the controller is operational
+ *			   and the Composite Temperature is greater than or equal
+ *			   to the Critical Composite Temperature Threshold (CCTEMP)
+ *			   field in the Identify Controller data structure. If
+ *			   the value of the CCTEMP field is %0h, then this field
+ *			   is always cleared to 0h regardless of the Composite
+ *			   Temperature value.
  * @temp_sensor:	   Temperature Sensor 1-8: Contains the current temperature
- * 			   in degrees Kelvin reported by temperature sensors 1-8.
- * 			   The physical point in the NVM subsystem whose temperature
- * 			   is reported by the temperature sensor and the temperature
- * 			   accuracy is implementation specific. An implementation
- * 			   that does not implement the temperature sensor reports
- * 			   a value of %0h.
+ *			   in degrees Kelvin reported by temperature sensors 1-8.
+ *			   The physical point in the NVM subsystem whose temperature
+ *			   is reported by the temperature sensor and the temperature
+ *			   accuracy is implementation specific. An implementation
+ *			   that does not implement the temperature sensor reports
+ *			   a value of %0h.
  * @thm_temp1_trans_count: Thermal Management Temperature 1 Transition Count:
- * 			   Contains the number of times the controller transitioned
- * 			   to lower power active power states or performed vendor
- * 			   specific thermal management actions while minimizing
- * 			   the impact on performance in order to attempt to reduce
- * 			   the Composite Temperature because of the host controlled
- * 			   thermal management feature (i.e., the Composite
- * 			   Temperature rose above the Thermal Management
- * 			   Temperature 1). This counter shall not wrap once the
- * 			   value %FFFFFFFFh is reached. A value of %0h, indicates
- * 			   that this transition has never occurred or this field
- * 			   is not implemented.
+ *			   Contains the number of times the controller transitioned
+ *			   to lower power active power states or performed vendor
+ *			   specific thermal management actions while minimizing
+ *			   the impact on performance in order to attempt to reduce
+ *			   the Composite Temperature because of the host controlled
+ *			   thermal management feature (i.e., the Composite
+ *			   Temperature rose above the Thermal Management
+ *			   Temperature 1). This counter shall not wrap once the
+ *			   value %FFFFFFFFh is reached. A value of %0h, indicates
+ *			   that this transition has never occurred or this field
+ *			   is not implemented.
  * @thm_temp2_trans_count: Thermal Management Temperature 2 Transition Count
  * @thm_temp1_total_time:  Total Time For Thermal Management Temperature 1:
- * 			   Contains the number of seconds that the controller
- * 			   had transitioned to lower power active power states or
- * 			   performed vendor specific thermal management actions
- * 			   while minimizing the impact on performance in order to
- * 			   attempt to reduce the Composite Temperature because of
- * 			   the host controlled thermal management feature. This
- * 			   counter shall not wrap once the value %FFFFFFFFh is
- * 			   reached. A value of %0h, indicates that this transition
- * 			   has never occurred or this field is not implemented.
+ *			   Contains the number of seconds that the controller
+ *			   had transitioned to lower power active power states or
+ *			   performed vendor specific thermal management actions
+ *			   while minimizing the impact on performance in order to
+ *			   attempt to reduce the Composite Temperature because of
+ *			   the host controlled thermal management feature. This
+ *			   counter shall not wrap once the value %FFFFFFFFh is
+ *			   reached. A value of %0h, indicates that this transition
+ *			   has never occurred or this field is not implemented.
  * @thm_temp2_total_time:  Total Time For Thermal Management Temperature 2
  * @rsvd232:		   Reserved
  */
@@ -2724,23 +2724,23 @@ struct nvme_smart_log {
 /**
  * enum nvme_smart_crit - Critical Warning
  * @NVME_SMART_CRIT_SPARE: If set, then the available spare capacity has fallen
- * 			   below the threshold.
+ *			   below the threshold.
  * @NVME_SMART_CRIT_TEMPERATURE: If set, then a temperature is either greater
- * 			   than or equal to an over temperature threshold; or
- * 			   less than or equal to an under temperature threshold.
+ *			   than or equal to an over temperature threshold; or
+ *			   less than or equal to an under temperature threshold.
  * @NVME_SMART_CRIT_DEGRADED: If set, then the NVM subsystem reliability has
- * 			   been degraded due to significant media related errors
- * 			   or any internal error that degrades NVM subsystem
- * 			   reliability.
+ *			   been degraded due to significant media related errors
+ *			   or any internal error that degrades NVM subsystem
+ *			   reliability.
  * @NVME_SMART_CRIT_MEDIA: If set, then all of the media has been placed in read
- * 			   only mode. The controller shall not set this bit if
- * 			   the read-only condition on the media is a result of
- * 			   a change in the write protection state of a namespace.
+ *			   only mode. The controller shall not set this bit if
+ *			   the read-only condition on the media is a result of
+ *			   a change in the write protection state of a namespace.
  * @NVME_SMART_CRIT_VOLATILE_MEMORY: If set, then the volatile memory backup
- * 			   device has failed. This field is only valid if the
- * 			   controller has a volatile memory backup solution.
+ *			   device has failed. This field is only valid if the
+ *			   controller has a volatile memory backup solution.
  * @NVME_SMART_CRIT_PMR_RO: If set, then the Persistent Memory Region has become
- * 			   read-only or unreliable.
+ *			   read-only or unreliable.
  */
 enum nvme_smart_crit {
 	NVME_SMART_CRIT_SPARE		= 1 << 0,
@@ -2754,15 +2754,15 @@ enum nvme_smart_crit {
 /**
  * enum nvme_smart_egcw - Endurance Group Critical Warning Summary
  * @NVME_SMART_EGCW_SPARE:    If set, then the available spare capacity of one or
- * 			      more Endurance Groups has fallen below the threshold.
+ *			      more Endurance Groups has fallen below the threshold.
  * @NVME_SMART_EGCW_DEGRADED: If set, then the reliability of one or more
- * 			      Endurance Groups has been degraded due to significant
- * 			      media related errors or any internal error that
- * 			      degrades NVM subsystem reliability.
+ *			      Endurance Groups has been degraded due to significant
+ *			      media related errors or any internal error that
+ *			      degrades NVM subsystem reliability.
  * @NVME_SMART_EGCW_RO:       If set, then the namespaces in one or more Endurance
- * 			      Groups have been placed in read only mode not as
- * 			      a result of a change in the write protection state
- * 			      of a namespace.
+ *			      Groups have been placed in read only mode not as
+ *			      a result of a change in the write protection state
+ *			      of a namespace.
  */
 enum nvme_smart_egcw {
 	NVME_SMART_EGCW_SPARE		= 1 << 0,
@@ -2819,44 +2819,44 @@ enum nvme_cmd_effects {
 /**
  * struct nvme_st_result - Self-test Result
  * @dsts:  Device Self-test Status: Indicates the device self-test code and the
- * 	   status of the operation (see &enum nvme_status_result and &enum nvme_st_code).
+ *	   status of the operation (see &enum nvme_status_result and &enum nvme_st_code).
  * @seg:   Segment Number: Iindicates the segment number where the first self-test
- * 	   failure occurred. If Device Self-test Status (@dsts) is not set to
- * 	   #NVME_ST_RESULT_KNOWN_SEG_FAIL, then this field should be ignored.
+ *	   failure occurred. If Device Self-test Status (@dsts) is not set to
+ *	   #NVME_ST_RESULT_KNOWN_SEG_FAIL, then this field should be ignored.
  * @vdi:   Valid Diagnostic Information: Indicates the diagnostic failure
- * 	   information that is reported. See &enum nvme_st_valid_diag_info.
+ *	   information that is reported. See &enum nvme_st_valid_diag_info.
  * @rsvd:  Reserved
  * @poh:   Power On Hours (POH): Indicates the number of power-on hours at the
- * 	   time the device self-test operation was completed or aborted. This
- * 	   does not include time that the controller was powered and in a low
- * 	   power state condition.
+ *	   time the device self-test operation was completed or aborted. This
+ *	   does not include time that the controller was powered and in a low
+ *	   power state condition.
  * @nsid:  Namespace Identifier (NSID): Indicates the namespace that the Failing
- * 	   LBA occurred on. Valid only when the NSID Valid bit
- * 	   (#NVME_ST_VALID_DIAG_INFO_NSID) is set in the Valid Diagnostic
- * 	   Information (@vdi) field.
+ *	   LBA occurred on. Valid only when the NSID Valid bit
+ *	   (#NVME_ST_VALID_DIAG_INFO_NSID) is set in the Valid Diagnostic
+ *	   Information (@vdi) field.
  * @flba:  Failing LBA: indicates the LBA of the logical block that caused the
- * 	   test to fail. If the device encountered more than one failed logical
- * 	   block during the test, then this field only indicates one of those
- * 	   failed logical blocks. Valid only when the NSID Valid bit
- * 	   (#NVME_ST_VALID_DIAG_INFO_FLBA) is set in the Valid Diagnostic
- * 	   Information (@vdi) field.
+ *	   test to fail. If the device encountered more than one failed logical
+ *	   block during the test, then this field only indicates one of those
+ *	   failed logical blocks. Valid only when the NSID Valid bit
+ *	   (#NVME_ST_VALID_DIAG_INFO_FLBA) is set in the Valid Diagnostic
+ *	   Information (@vdi) field.
  * @sct:   Status Code Type: This field may contain additional information related
- * 	   to errors or conditions. Bits 2:0 may contain additional information
- * 	   relating to errors or conditions that occurred during the device
- * 	   self-test operation represented in the same format used in the Status
- * 	   Code Type field of the completion queue entry (refer to &enum nvme_status_field).
- * 	   Valid only when the NSID Valid bit (#NVME_ST_VALID_DIAG_INFO_SCT) is
- * 	   set in the Valid Diagnostic Information (@vdi) field.
+ *	   to errors or conditions. Bits 2:0 may contain additional information
+ *	   relating to errors or conditions that occurred during the device
+ *	   self-test operation represented in the same format used in the Status
+ *	   Code Type field of the completion queue entry (refer to &enum nvme_status_field).
+ *	   Valid only when the NSID Valid bit (#NVME_ST_VALID_DIAG_INFO_SCT) is
+ *	   set in the Valid Diagnostic Information (@vdi) field.
  * @sc:	   Status Code: This field may contain additional information relating
- * 	   to errors or conditions that occurred during the device self-test
- * 	   operation represented in the same format used in the Status Code field
- * 	   of the completion queue entry. Valid only when the SCT Valid bit
- * 	   (#NVME_ST_VALID_DIAG_INFO_SC) is set in the Valid Diagnostic
- * 	   Information (@vdi) field.
+ *	   to errors or conditions that occurred during the device self-test
+ *	   operation represented in the same format used in the Status Code field
+ *	   of the completion queue entry. Valid only when the SCT Valid bit
+ *	   (#NVME_ST_VALID_DIAG_INFO_SC) is set in the Valid Diagnostic
+ *	   Information (@vdi) field.
  * @vs:	   Vendor Specific.
  */
 struct nvme_st_result {
-	__u8 			dsts;
+	__u8			dsts;
 	__u8			seg;
 	__u8			vdi;
 	__u8			rsvd;
@@ -2874,23 +2874,23 @@ struct nvme_st_result {
  * @NVME_ST_RESULT_ABORTED:	     Operation was aborted by a Device Self-test command.
  * @NVME_ST_RESULT_CLR:		     Operation was aborted by a Controller Level Reset.
  * @NVME_ST_RESULT_NS_REMOVED:	     Operation was aborted due to a removal of
- * 				     a namespace from the namespace inventory.
+ *				     a namespace from the namespace inventory.
  * @NVME_ST_RESULT_ABORTED_FORMAT:   Operation was aborted due to the processing
- * 				     of a Format NVM command.
+ *				     of a Format NVM command.
  * @NVME_ST_RESULT_FATAL_ERR:	     A fatal error or unknown test error occurred
- * 				     while the controller was executing the device
- * 				     self-test operation and the operation did
- * 				     not complete.
+ *				     while the controller was executing the device
+ *				     self-test operation and the operation did
+ *				     not complete.
  * @NVME_ST_RESULT_UNKNOWN_SEG_FAIL: Operation completed with a segment that failed
- * 				     and the segment that failed is not known.
+ *				     and the segment that failed is not known.
  * @NVME_ST_RESULT_KNOWN_SEG_FAIL:   Operation completed with one or more failed
- * 				     segments and the first segment that failed
- * 				     is indicated in the Segment Number field.
+ *				     segments and the first segment that failed
+ *				     is indicated in the Segment Number field.
  * @NVME_ST_RESULT_ABORTED_UNKNOWN:  Operation was aborted for unknown reason.
  * @NVME_ST_RESULT_ABORTED_SANITIZE: Operation was aborted due to a sanitize operation.
  * @NVME_ST_RESULT_NOT_USED:	     Entry not used (does not contain a test result).
  * @NVME_ST_RESULT_MASK:	     Mask to get the status result value from
- * 				     the &struct nvme_st_result.dsts field.
+ *				     the &struct nvme_st_result.dsts field.
  */
 enum nvme_status_result {
 	NVME_ST_RESULT_NO_ERR		= 0x0,
@@ -2914,7 +2914,7 @@ enum nvme_status_result {
  * @NVME_ST_CODE_EXTENDED: Extended device self-test operation.
  * @NVME_ST_CODE_VS:	   Vendor specific.
  * @NVME_ST_CODE_SHIFT:	   Shift amount to get the code value from the
- * 			   &struct nvme_st_result.dsts field.
+ *			   &struct nvme_st_result.dsts field.
  */
 enum nvme_st_code {
 	NVME_ST_CODE_RESERVED		= 0x0,
@@ -2932,9 +2932,9 @@ enum nvme_st_code {
  * @NVME_ST_CURR_OP_VS:		 Vendor specific.
  * @NVME_ST_CURR_OP_RESERVED:	 Reserved.
  * @NVME_ST_CURR_OP_MASK:	 Mask to get the current operation value from the
- * 				 &struct nvme_self_test_log.current_operation field.
+ *				 &struct nvme_self_test_log.current_operation field.
  * @NVME_ST_CURR_OP_CMPL_MASK:	 Mask to get the current operation completion value
- * 				 from the &struct nvme_self_test_log.completion field.
+ *				 from the &struct nvme_self_test_log.completion field.
  */
 enum nvme_st_curr_op {
 	NVME_ST_CURR_OP_NOT_RUNNING	= 0x0,
@@ -2949,13 +2949,13 @@ enum nvme_st_curr_op {
 /**
  * enum nvme_st_valid_diag_info - Valid Diagnostic Information
  * @NVME_ST_VALID_DIAG_INFO_NSID:  NSID Valid: if set, then the contents of
- * 				   the Namespace Identifier field are valid.
+ *				   the Namespace Identifier field are valid.
  * @NVME_ST_VALID_DIAG_INFO_FLBA:  FLBA Valid: if set, then the contents of
- * 				   the Failing LBA field are valid.
+ *				   the Failing LBA field are valid.
  * @NVME_ST_VALID_DIAG_INFO_SCT:   SCT Valid: if set, then the contents of
- * 				   the Status Code Type field are valid.
+ *				   the Status Code Type field are valid.
  * @NVME_ST_VALID_DIAG_INFO_SC:    SC Valid: if set, then the contents of
- * 				   the Status Code field are valid.
+ *				   the Status Code field are valid.
  */
 enum nvme_st_valid_diag_info {
 	NVME_ST_VALID_DIAG_INFO_NSID		= 1 << 0,
@@ -2967,23 +2967,23 @@ enum nvme_st_valid_diag_info {
 /**
  * struct nvme_self_test_log - Device Self-test (Log Identifier 06h)
  * @current_operation: Current Device Self-Test Operation: indicates the status
- * 		       of the current device self-test operation. If a device
- * 		       self-test operation is in process (i.e., this field is set
- * 		       to #NVME_ST_CURR_OP_SHORT or #NVME_ST_CURR_OP_EXTENDED),
- * 		       then the controller shall not set this field to
- * 		       #NVME_ST_CURR_OP_NOT_RUNNING until a new Self-test Result
- * 		       Data Structure is created (i.e., if a device self-test
- * 		       operation completes or is aborted, then the controller
- * 		       shall create a Self-test Result Data Structure prior to
- * 		       setting this field to #NVME_ST_CURR_OP_NOT_RUNNING).
- * 		       See &enum nvme_st_curr_op.
+ *		       of the current device self-test operation. If a device
+ *		       self-test operation is in process (i.e., this field is set
+ *		       to #NVME_ST_CURR_OP_SHORT or #NVME_ST_CURR_OP_EXTENDED),
+ *		       then the controller shall not set this field to
+ *		       #NVME_ST_CURR_OP_NOT_RUNNING until a new Self-test Result
+ *		       Data Structure is created (i.e., if a device self-test
+ *		       operation completes or is aborted, then the controller
+ *		       shall create a Self-test Result Data Structure prior to
+ *		       setting this field to #NVME_ST_CURR_OP_NOT_RUNNING).
+ *		       See &enum nvme_st_curr_op.
  * @completion:	       Current Device Self-Test Completion: indicates the percentage
- * 		       of the device self-test operation that is complete (e.g.,
- * 		       a value of 25 indicates that 25% of the device self-test
- * 		       operation is complete and 75% remains to be tested).
- * 		       If the @current_operation field is cleared to
- * 		       #NVME_ST_CURR_OP_NOT_RUNNING (indicating there is no device
- * 		       self-test operation in progress), then this field is ignored.
+ *		       of the device self-test operation that is complete (e.g.,
+ *		       a value of 25 indicates that 25% of the device self-test
+ *		       operation is complete and 75% remains to be tested).
+ *		       If the @current_operation field is cleared to
+ *		       #NVME_ST_CURR_OP_NOT_RUNNING (indicating there is no device
+ *		       self-test operation in progress), then this field is ignored.
  * @rsvd:	       Reserved
  * @result:	       Self-test Result Data Structures, see &struct nvme_st_result.
  */
@@ -3006,37 +3006,37 @@ enum nvme_cmd_get_log_telemetry_host_lsp {
 
 /**
  * struct nvme_telemetry_log - Retrieve internal data specific to the
- * 			       manufacturer.
+ *			       manufacturer.
  * @lpi:       Log Identifier, either %NVME_LOG_LID_TELEMETRY_HOST or
- * 	       %NVME_LOG_LID_TELEMETRY_CTRL
+ *	       %NVME_LOG_LID_TELEMETRY_CTRL
  * @rsvd1:     Reserved
  * @ieee:      IEEE OUI Identifier is the Organization Unique Identifier (OUI)
- * 	       for the controller vendor that is able to interpret the data.
+ *	       for the controller vendor that is able to interpret the data.
  * @dalb1:     Telemetry Controller-Initiated Data Area 1 Last Block is
- * 	       the value of the last block in this area.
+ *	       the value of the last block in this area.
  * @dalb2:     Telemetry Controller-Initiated Data Area 1 Last Block is
- * 	       the value of the last block in this area.
+ *	       the value of the last block in this area.
  * @dalb3:     Telemetry Controller-Initiated Data Area 1 Last Block is
- * 	       the value of the last block in this area.
+ *	       the value of the last block in this area.
  * @rsvd14:    Reserved
  * @dalb4:     Telemetry Controller-Initiated Data Area 4 Last Block is
- * 	       the value of the last block in this area.
+ *	       the value of the last block in this area.
  * @rsvd20:    Reserved
  * @hostdgn:   Telemetry Host-Initiated Data Generation Number is a
- * 	       value that is incremented each time the host initiates a
- * 	       capture of its internal controller state in the controller .
+ *	       value that is incremented each time the host initiates a
+ *	       capture of its internal controller state in the controller .
  * @ctrlavail: Telemetry Controller-Initiated Data Available, if cleared,
- * 	       then the controller telemetry log does not contain saved
- * 	       internal controller state. If this field is set to 1h, the
- * 	       controller log contains saved internal controller state. If
- * 	       this field is set to 1h, the data will be latched until the
- * 	       host releases it by reading the log with RAE cleared.
+ *	       then the controller telemetry log does not contain saved
+ *	       internal controller state. If this field is set to 1h, the
+ *	       controller log contains saved internal controller state. If
+ *	       this field is set to 1h, the data will be latched until the
+ *	       host releases it by reading the log with RAE cleared.
  * @ctrldgn:   Telemetry Controller-Initiated Data Generation Number is
- * 	       a value that is incremented each time the controller initiates a
- * 	       capture of its internal controller state in the controller .
+ *	       a value that is incremented each time the controller initiates a
+ *	       capture of its internal controller state in the controller .
  * @rsnident:  Reason Identifiers a vendor specific identifier that describes
- * 	       the operating conditions of the controller at the time of
- * 	       capture.
+ *	       the operating conditions of the controller at the time of
+ *	       capture.
  * @data_area: Telemetry data blocks, vendor specific information data.
  *
  * This log consists of a header describing the log and zero or more Telemetry
@@ -3358,12 +3358,12 @@ enum nvme_persistent_event_types {
  */
 struct nvme_fw_commit_event {
 	__le64	old_fw_rev;
-	__le64 	new_fw_rev;
-	__u8 	fw_commit_action;
-	__u8 	fw_slot;
-	__u8 	sct_fw;
-	__u8 	sc_fw;
-	__le16 	vndr_assign_fw_commit_rc;
+	__le64	new_fw_rev;
+	__u8	fw_commit_action;
+	__u8	fw_slot;
+	__u8	sct_fw;
+	__u8	sc_fw;
+	__le16	vndr_assign_fw_commit_rc;
 } __attribute__((packed));
 
 /**
@@ -3372,8 +3372,8 @@ struct nvme_fw_commit_event {
  * @ml_secs_since_reset:	Milliseconds Since Reset
  */
 struct nvme_time_stamp_change_event {
-	__le64 	previous_timestamp;
-	__le64 	ml_secs_since_reset;
+	__le64	previous_timestamp;
+	__le64	ml_secs_since_reset;
 };
 
 /**
@@ -3403,9 +3403,9 @@ struct nvme_power_on_reset_info_list {
  * @add_hw_err_info:		Additional Hardware Error Information
  */
 struct nvme_nss_hw_err_event {
-	__le16 	nss_hw_err_event_code;
-	__u8 	rsvd2[2];
-	__u8 	*add_hw_err_info;
+	__le16	nss_hw_err_event_code;
+	__u8	rsvd2[2];
+	__u8	*add_hw_err_info;
 };
 
 /**
@@ -3448,10 +3448,10 @@ struct nvme_change_ns_event {
  * @format_nvm_cdw10:	Format NVM CDW10
  */
 struct nvme_format_nvm_start_event {
-	__le32 	nsid;
-	__u8 	fna;
-	__u8 	rsvd5[3];
-	__le32 	format_nvm_cdw10;
+	__le32	nsid;
+	__u8	fna;
+	__u8	rsvd5[3];
+	__le32	format_nvm_cdw10;
 };
 
 /**
@@ -3463,11 +3463,11 @@ struct nvme_format_nvm_start_event {
  * @status_field:	Status Field
  */
 struct nvme_format_nvm_compln_event {
-	__le32 	nsid;
-	__u8 	smallest_fpi;
-	__u8 	format_nvm_status;
-	__le16 	compln_info;
-	__le32 	status_field;
+	__le32	nsid;
+	__u8	smallest_fpi;
+	__u8	format_nvm_status;
+	__le16	compln_info;
+	__le32	status_field;
 };
 
 /**
@@ -3477,9 +3477,9 @@ struct nvme_format_nvm_compln_event {
  * @sani_cdw11:	Sanitize CDW11
  */
 struct nvme_sanitize_start_event {
-	__le32 	sani_cap;
-	__le32 	sani_cdw10;
-	__le32 	sani_cdw11;
+	__le32	sani_cap;
+	__le32	sani_cdw10;
+	__le32	sani_cdw11;
 };
 
 /**
@@ -3512,8 +3512,8 @@ struct nvme_set_feature_event {
  * @threshold:	temperature threshold
  */
 struct nvme_thermal_exc_event {
-    __u8 	over_temp;
-    __u8 	threshold;
+    __u8	over_temp;
+    __u8	threshold;
 };
 
 /**
@@ -3675,7 +3675,7 @@ struct nvme_mi_cmd_supported_effects_log {
  * @bpinfo:			Boot Partition Information
  * @rsvd8:			Reserved
  * @boot_partition_data:	Contains the contents of the
- * 				specified Boot Partition
+ *				specified Boot Partition
  */
 struct nvme_boot_partition {
 	__u8	lid;
@@ -3851,69 +3851,69 @@ enum nvme_resv_notify_rnlpt {
 /**
  * struct nvme_sanitize_log_page - Sanitize Status (Log Identifier 81h)
  * @sprog:	Sanitize Progress (SPROG): indicates the fraction complete of the
- * 		sanitize operation. The value is a numerator of the fraction
- * 		complete that has 65,536 (10000h) as its denominator. This value
- * 		shall be set to FFFFh if the @sstat field is not set to
- * 		%NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS.
+ *		sanitize operation. The value is a numerator of the fraction
+ *		complete that has 65,536 (10000h) as its denominator. This value
+ *		shall be set to FFFFh if the @sstat field is not set to
+ *		%NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS.
  * @sstat:	Sanitize Status (SSTAT): indicates the status associated with
- * 		the most recent sanitize operation. See &enum nvme_sanitize_sstat.
+ *		the most recent sanitize operation. See &enum nvme_sanitize_sstat.
  * @scdw10:	Sanitize Command Dword 10 Information (SCDW10): contains the value
- * 		of the Command Dword 10 field of the Sanitize command that started
- * 		the sanitize operation.
+ *		of the Command Dword 10 field of the Sanitize command that started
+ *		the sanitize operation.
  * @eto:	Estimated Time For Overwrite: indicates the number of seconds required
- * 		to complete an Overwrite sanitize operation with 16 passes in
- * 		the background when the No-Deallocate Modifies Media After Sanitize
- * 		field is not set to 10b. A value of 0h indicates that the sanitize
- * 		operation is expected to be completed in the background when the
- * 		Sanitize command that started that operation is completed. A value
- * 		of FFFFFFFFh indicates that no time period is reported.
+ *		to complete an Overwrite sanitize operation with 16 passes in
+ *		the background when the No-Deallocate Modifies Media After Sanitize
+ *		field is not set to 10b. A value of 0h indicates that the sanitize
+ *		operation is expected to be completed in the background when the
+ *		Sanitize command that started that operation is completed. A value
+ *		of FFFFFFFFh indicates that no time period is reported.
  * @etbe:	Estimated Time For Block Erase: indicates the number of seconds
- * 		required to complete a Block Erase sanitize operation in the
- * 		background when the No-Deallocate Modifies Media After Sanitize
- * 		field is not set to 10b. A value of 0h indicates that the sanitize
- * 		operation is expected to be completed in the background when the
- * 		Sanitize command that started that operation is completed.
- * 		A value of FFFFFFFFh indicates that no time period is reported.
+ *		required to complete a Block Erase sanitize operation in the
+ *		background when the No-Deallocate Modifies Media After Sanitize
+ *		field is not set to 10b. A value of 0h indicates that the sanitize
+ *		operation is expected to be completed in the background when the
+ *		Sanitize command that started that operation is completed.
+ *		A value of FFFFFFFFh indicates that no time period is reported.
  * @etce:	Estimated Time For Crypto Erase: indicates the number of seconds
- * 		required to complete a Crypto Erase sanitize operation in the
- * 		background when the No-Deallocate Modifies Media After Sanitize
- * 		field is not set to 10b. A value of 0h indicates that the sanitize
- * 		operation is expected to be completed in the background when the
- * 		Sanitize command that started that operation is completed.
- * 		A value of FFFFFFFFh indicates that no time period is reported.
+ *		required to complete a Crypto Erase sanitize operation in the
+ *		background when the No-Deallocate Modifies Media After Sanitize
+ *		field is not set to 10b. A value of 0h indicates that the sanitize
+ *		operation is expected to be completed in the background when the
+ *		Sanitize command that started that operation is completed.
+ *		A value of FFFFFFFFh indicates that no time period is reported.
  * @etond:	Estimated Time For Overwrite With No-Deallocate Media Modification:
- * 		indicates the number of seconds required to complete an Overwrite
- * 		sanitize operation and the associated additional media modification
- * 		after the Overwrite sanitize operation in the background when
- * 		the No-Deallocate After Sanitize bit was set to 1 in the Sanitize
- * 		command that requested the Overwrite sanitize operation; and
- * 		the No-Deallocate Modifies Media After Sanitize field is set to 10b.
- * 		A value of 0h indicates that the sanitize operation is expected
- * 		to be completed in the background when the Sanitize command that
- * 		started that operation is completed. A value of FFFFFFFFh indicates
- * 		that no time period is reported.
+ *		indicates the number of seconds required to complete an Overwrite
+ *		sanitize operation and the associated additional media modification
+ *		after the Overwrite sanitize operation in the background when
+ *		the No-Deallocate After Sanitize bit was set to 1 in the Sanitize
+ *		command that requested the Overwrite sanitize operation; and
+ *		the No-Deallocate Modifies Media After Sanitize field is set to 10b.
+ *		A value of 0h indicates that the sanitize operation is expected
+ *		to be completed in the background when the Sanitize command that
+ *		started that operation is completed. A value of FFFFFFFFh indicates
+ *		that no time period is reported.
  * @etbend:	Estimated Time For Block Erase With No-Deallocate Media Modification:
- * 		indicates the number of seconds required to complete a Block Erase
- * 		sanitize operation and the associated additional media modification
- * 		after the Block Erase sanitize operation in the background when
- * 		the No-Deallocate After Sanitize bit was set to 1 in the Sanitize
- * 		command that requested the Overwrite sanitize operation; and
- * 		the No-Deallocate Modifies Media After Sanitize field is set to 10b.
- * 		A value of 0h indicates that the sanitize operation is expected
- * 		to be completed in the background when the Sanitize command that
- * 		started that operation is completed. A value of FFFFFFFFh indicates
- * 		that no time period is reported.
+ *		indicates the number of seconds required to complete a Block Erase
+ *		sanitize operation and the associated additional media modification
+ *		after the Block Erase sanitize operation in the background when
+ *		the No-Deallocate After Sanitize bit was set to 1 in the Sanitize
+ *		command that requested the Overwrite sanitize operation; and
+ *		the No-Deallocate Modifies Media After Sanitize field is set to 10b.
+ *		A value of 0h indicates that the sanitize operation is expected
+ *		to be completed in the background when the Sanitize command that
+ *		started that operation is completed. A value of FFFFFFFFh indicates
+ *		that no time period is reported.
  * @etcend:	Estimated Time For Crypto Erase With No-Deallocate Media Modification:
- * 		indicates the number of seconds required to complete a Crypto Erase
- * 		sanitize operation and the associated additional media modification
- * 		after the Crypto Erase sanitize operation in the background when
- * 		the No-Deallocate After Sanitize bit was set to 1 in the Sanitize
- * 		command that requested the Overwrite sanitize operation; and
- * 		the No-Deallocate Modifies Media After Sanitize field is set to 10b.
- * 		A value of 0h indicates that the sanitize operation is expected
- * 		to be completed in the background when the Sanitize command that
- * 		started that operation is completed. A value of FFFFFFFFh indicates
- * 		that no time period is reported.
+ *		indicates the number of seconds required to complete a Crypto Erase
+ *		sanitize operation and the associated additional media modification
+ *		after the Crypto Erase sanitize operation in the background when
+ *		the No-Deallocate After Sanitize bit was set to 1 in the Sanitize
+ *		command that requested the Overwrite sanitize operation; and
+ *		the No-Deallocate Modifies Media After Sanitize field is set to 10b.
+ *		A value of 0h indicates that the sanitize operation is expected
+ *		to be completed in the background when the Sanitize command that
+ *		started that operation is completed. A value of FFFFFFFFh indicates
+ *		that no time period is reported.
  * @rsvd32:     Reserved
  */
 struct nvme_sanitize_log_page {
@@ -3932,44 +3932,44 @@ struct nvme_sanitize_log_page {
 /**
  * enum nvme_sanitize_sstat - Sanitize Status (SSTAT)
  * @NVME_SANITIZE_SSTAT_STATUS_SHIFT:	 Shift amount to get the status value of
- * 					 the most recent sanitize operation from
- * 					 the &struct nvme_sanitize_log_page.sstat
- * 					 field.
+ *					 the most recent sanitize operation from
+ *					 the &struct nvme_sanitize_log_page.sstat
+ *					 field.
  * @NVME_SANITIZE_SSTAT_STATUS_MASK:	 Mask to get the status value of the most
- * 					 recent sanitize operation.
+ *					 recent sanitize operation.
  * @NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED: The NVM subsystem has never been
- * 					 sanitized.
+ *					 sanitized.
  * @NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS: The most recent sanitize operation
- * 					 completed successfully including any
- * 					 additional media modification.
+ *					 completed successfully including any
+ *					 additional media modification.
  * @NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS: A sanitize operation is currently in progress.
  * @NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED: The most recent sanitize operation
- * 					 failed.
+ *					 failed.
  * @NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS: The most recent sanitize operation
- * 					 for which No-Deallocate After Sanitize was
- * 					 requested has completed successfully with
- * 					 deallocation of all user data.
+ *					 for which No-Deallocate After Sanitize was
+ *					 requested has completed successfully with
+ *					 deallocation of all user data.
  * @NVME_SANITIZE_SSTAT_COMPLETED_PASSES_SHIFT: Shift amount to get the number
- * 					 of completed passes if the most recent
- * 					 sanitize operation was an Overwrite. This
- * 					 value shall be cleared to 0h if the most
- * 					 recent sanitize operation was not
- * 					 an Overwrite.
+ *					 of completed passes if the most recent
+ *					 sanitize operation was an Overwrite. This
+ *					 value shall be cleared to 0h if the most
+ *					 recent sanitize operation was not
+ *					 an Overwrite.
  * @NVME_SANITIZE_SSTAT_COMPLETED_PASSES_MASK: Mask to get the number of completed
- * 					 passes.
+ *					 passes.
  * @NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_SHIFT: Shift amount to get the Global
- * 					 Data Erased value from the
- * 					 &struct nvme_sanitize_log_page.sstat field.
+ *					 Data Erased value from the
+ *					 &struct nvme_sanitize_log_page.sstat field.
  * @NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED_MASK: Mask to get the Global Data Erased
- * 					 value.
+ *					 value.
  * @NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED: Global Data Erased: if set, then no
- * 					 namespace user data in the NVM subsystem
- * 					 has been written to and no Persistent
- * 					 Memory Region in the NVM subsystem has
- * 					 been enabled since being manufactured and
- * 					 the NVM subsystem has never been sanitized;
- * 					 or since the most recent successful sanitize
- * 					 operation.
+ *					 namespace user data in the NVM subsystem
+ *					 has been written to and no Persistent
+ *					 Memory Region in the NVM subsystem has
+ *					 been enabled since being manufactured and
+ *					 the NVM subsystem has never been sanitized;
+ *					 or since the most recent successful sanitize
+ *					 operation.
  */
 enum nvme_sanitize_sstat {
 	NVME_SANITIZE_SSTAT_STATUS_SHIFT		= 0,
@@ -4358,7 +4358,7 @@ struct nvme_copy_range {
  * @nlb:	Number of Logical Blocks
  * @rsvd18:	Reserved
  * @elbt:	Expected Initial Logical Block Reference Tag /
- * 		Expected Logical Block Storage Tag 
+ *		Expected Logical Block Storage Tag
  * @elbatm:	Expected Logical Block Application Tag Mask
  * @elbat:	Expected Logical Block Application Tag
  */
@@ -4560,7 +4560,7 @@ enum nvme_ae_info_smart {
  * @NVME_AER_CSS_NVM_RESERVATION:			Reservation Log Page Available
  * @NVME_AER_CSS_NVM_SANITIZE_COMPLETED:		Sanitize Operation Completed
  * @NVME_AER_CSS_NVM_UNEXPECTED_SANITIZE_DEALLOC:	Sanitize Operation Completed
- * 							With Unexpected Deallocation
+ *							With Unexpected Deallocation
  */
 enum nvme_ae_info_css_nvm {
 	NVME_AER_CSS_NVM_RESERVATION			= 0x00,
@@ -4593,21 +4593,21 @@ enum nvme_ae_info_notice {
 /**
  * enum nvme_subsys_type - Type of the NVM subsystem.
  * @NVME_NQN_DISC: Discovery type target subsystem. Describes a referral to another
- * 		   Discovery Service composed of Discovery controllers that provide
- * 		   additional discovery records. Multiple Referral entries may
- * 		   be reported for each Discovery Service (if that Discovery Service
- * 		   has multiple NVM subsystem ports or supports multiple protocols).
+ *		   Discovery Service composed of Discovery controllers that provide
+ *		   additional discovery records. Multiple Referral entries may
+ *		   be reported for each Discovery Service (if that Discovery Service
+ *		   has multiple NVM subsystem ports or supports multiple protocols).
  * @NVME_NQN_NVME: NVME type target subsystem. Describes an NVM subsystem whose
- * 		   controllers may have attached namespaces (an NVM subsystem
- * 		   that is not composed of Discovery controllers). Multiple NVM
- * 		   Subsystem entries may be reported for each NVM subsystem if
- * 		   that NVM subsystem has multiple NVM subsystem ports.
+ *		   controllers may have attached namespaces (an NVM subsystem
+ *		   that is not composed of Discovery controllers). Multiple NVM
+ *		   Subsystem entries may be reported for each NVM subsystem if
+ *		   that NVM subsystem has multiple NVM subsystem ports.
  * @NVME_NQN_CURR: Current Discovery type target subsystem. Describes this Discovery
- * 		   subsystem (the Discovery Service that contains the controller
- * 		   processing the Get Log Page command). Multiple Current Discovery
- * 		   Subsystem entries may be reported for this Discovery subsystem
- * 		   if the current Discovery subsystem has multiple NVM subsystem
- * 		   ports.
+ *		   subsystem (the Discovery Service that contains the controller
+ *		   processing the Get Log Page command). Multiple Current Discovery
+ *		   Subsystem entries may be reported for this Discovery subsystem
+ *		   if the current Discovery subsystem has multiple NVM subsystem
+ *		   ports.
  */
 enum nvme_subsys_type {
 	NVME_NQN_DISC	= 1,
@@ -4626,18 +4626,18 @@ enum nvme_subsys_type {
 /**
  * enum nvmf_disc_eflags - Discovery Log Page entry flags.
  * @NVMF_DISC_EFLAGS_NONE:	 Indicates that none of the DUPRETINFO or EPCSD
- * 				 features are supported.
+ *				 features are supported.
  * @NVMF_DISC_EFLAGS_DUPRETINFO: Duplicate Returned Information (DUPRETINFO):
- * 				 Indicates that using the content of this entry
- * 				 to access this Discovery Service returns the same
- * 				 information that is returned by using the content
- * 				 of other entries in this log page that also have
- * 				 this flag set.
+ *				 Indicates that using the content of this entry
+ *				 to access this Discovery Service returns the same
+ *				 information that is returned by using the content
+ *				 of other entries in this log page that also have
+ *				 this flag set.
  * @NVMF_DISC_EFLAGS_EPCSD:	 Explicit Persistent Connection Support for Discovery (EPCSD):
- * 				 Indicates that Explicit Persistent Connections are
- * 				 supported for the Discovery controller.
+ *				 Indicates that Explicit Persistent Connections are
+ *				 supported for the Discovery controller.
  * @NVMF_DISC_EFLAGS_BOTH:	 Indicates that both the DUPRETINFO and EPCSD
- * 				 features are supported.
+ *				 features are supported.
  */
 enum nvmf_disc_eflags {
 	NVMF_DISC_EFLAGS_NONE		= 0,
@@ -4681,47 +4681,47 @@ union nvmf_tsas {
 /**
  * struct nvmf_disc_log_entry - Discovery Log Page entry
  * @trtype:  Transport Type (TRTYPE): Specifies the NVMe Transport type.
- * 	     See &enum nvmf_trtype.
+ *	     See &enum nvmf_trtype.
  * @adrfam:  Address Family (ADRFAM): Specifies the address family.
- * 	     See &enum nvmf_addr_family.
+ *	     See &enum nvmf_addr_family.
  * @subtype: Subsystem Type (SUBTYPE): Specifies the type of the NVM subsystem
- * 	     that is indicated in this entry. See &enum nvme_subsys_type.
+ *	     that is indicated in this entry. See &enum nvme_subsys_type.
  * @treq:    Transport Requirements (TREQ): Indicates requirements for the NVMe
- * 	     Transport. See &enum nvmf_treq.
+ *	     Transport. See &enum nvmf_treq.
  * @portid:  Port ID (PORTID): Specifies a particular NVM subsystem port.
- * 	     Different NVMe Transports or address families may utilize the same
- * 	     Port ID value (e.g. a Port ID may support both iWARP and RoCE).
+ *	     Different NVMe Transports or address families may utilize the same
+ *	     Port ID value (e.g. a Port ID may support both iWARP and RoCE).
  * @cntlid:  Controller ID (CNTLID): Specifies the controller ID. If the NVM
- * 	     subsystem uses a dynamic controller model, then this field shall
- * 	     be set to FFFFh. If the NVM subsystem uses a static controller model,
- * 	     then this field may be set to a specific controller ID (values 0h
- * 	     to FFEFh are valid). If the NVM subsystem uses a static controller
- * 	     model and the value indicated is FFFEh, then the host should remember
- * 	     the Controller ID returned as part of the Fabrics Connect command
- * 	     in order to re-establish an association in the future with the same
- * 	     controller.
+ *	     subsystem uses a dynamic controller model, then this field shall
+ *	     be set to FFFFh. If the NVM subsystem uses a static controller model,
+ *	     then this field may be set to a specific controller ID (values 0h
+ *	     to FFEFh are valid). If the NVM subsystem uses a static controller
+ *	     model and the value indicated is FFFEh, then the host should remember
+ *	     the Controller ID returned as part of the Fabrics Connect command
+ *	     in order to re-establish an association in the future with the same
+ *	     controller.
  * @asqsz:   Admin Max SQ Size (ASQSZ): Specifies the maximum size of an Admin
- * 	     Submission Queue. This applies to all controllers in the NVM
- * 	     subsystem. The value shall be a minimum of 32 entries.
+ *	     Submission Queue. This applies to all controllers in the NVM
+ *	     subsystem. The value shall be a minimum of 32 entries.
  * @eflags:  Entry Flags (EFLAGS): Indicates additional information related to
- * 	     the current entry. See &enum nvmf_disc_eflags.
+ *	     the current entry. See &enum nvmf_disc_eflags.
  * @rsvd12:  Reserved
  * @trsvcid: Transport Service Identifier (TRSVCID): Specifies the NVMe Transport
- * 	     service identifier as an ASCII string. The NVMe Transport service
- * 	     identifier is specified by the associated NVMe Transport binding
- * 	     specification.
+ *	     service identifier as an ASCII string. The NVMe Transport service
+ *	     identifier is specified by the associated NVMe Transport binding
+ *	     specification.
  * @rsvd64:  Reserved
  * @subnqn:  NVM Subsystem Qualified Name (SUBNQN): NVMe Qualified Name (NQN)
- * 	     that uniquely identifies the NVM subsystem. For a subsystem, if that
- * 	     Discovery subsystem has a unique NQN (i.e., the NVM Subsystem NVMe
- * 	     Qualified Name (SUBNQN) field in that Discovery subsystem's Identify
- * 	     Controller data structure contains a unique NQN value), then the
- * 	     value returned shall be that unique NQN. If the Discovery subsystem
- * 	     does not have a unique NQN, then the value returned shall be the
- * 	     well-known Discovery Service NQN (nqn.2014-08.org.nvmexpress.discovery).
+ *	     that uniquely identifies the NVM subsystem. For a subsystem, if that
+ *	     Discovery subsystem has a unique NQN (i.e., the NVM Subsystem NVMe
+ *	     Qualified Name (SUBNQN) field in that Discovery subsystem's Identify
+ *	     Controller data structure contains a unique NQN value), then the
+ *	     value returned shall be that unique NQN. If the Discovery subsystem
+ *	     does not have a unique NQN, then the value returned shall be the
+ *	     well-known Discovery Service NQN (nqn.2014-08.org.nvmexpress.discovery).
  * @traddr:  Transport Address (TRADDR): Specifies the address of the NVM subsystem
- * 	     that may be used for a Connect command as an ASCII string. The
- * 	     Address Family field describes the reference for parsing this field.
+ *	     that may be used for a Connect command as an ASCII string. The
+ *	     Address Family field describes the reference for parsing this field.
  * @tsas:    Transport specific attribute settings
  */
 struct nvmf_disc_log_entry {
@@ -4748,7 +4748,7 @@ struct nvmf_disc_log_entry {
  * @NVMF_TRTYPE_FC:		Fibre Channel
  * @NVMF_TRTYPE_TCP:		TCP
  * @NVMF_TRTYPE_LOOP:		Intra-host Transport (i.e., loopback), reserved
- * 				for host usage.
+ *				for host usage.
  * @NVMF_TRTYPE_MAX:		Maximum value for &enum nvmf_trtype
  */
 enum nvmf_trtype {
@@ -4768,7 +4768,7 @@ enum nvmf_trtype {
  * @NVMF_ADDR_FAMILY_IB:	AF_IB: InfiniBand address family.
  * @NVMF_ADDR_FAMILY_FC:	Fibre Channel address family.
  * @NVMF_ADDR_FAMILY_LOOP:	Intra-host Transport (i.e., loopback), reserved
- * 				for host usage.
+ *				for host usage.
  */
 enum nvmf_addr_family {
 	NVMF_ADDR_FAMILY_PCI	= 0,
@@ -4806,7 +4806,7 @@ enum nvmf_rdma_qptype {
 
 /**
  * enum nvmf_rdma_prtype - RDMA Provider Type codes for Discovery Log Page
- * 	  entry TSAS RDMA_PRTYPE field
+ *	  entry TSAS RDMA_PRTYPE field
  * @NVMF_RDMA_PRTYPE_NOT_SPECIFIED: No Provider Specified
  * @NVMF_RDMA_PRTYPE_IB:	    InfiniBand
  * @NVMF_RDMA_PRTYPE_ROCE:	    InfiniBand RoCE
@@ -4823,7 +4823,7 @@ enum nvmf_rdma_prtype {
 
 /**
  * enum nvmf_rdma_cms - RDMA Connection Management Service Type codes for
- * 	  Discovery Log Page entry TSAS RDMA_CMS field
+ *	  Discovery Log Page entry TSAS RDMA_CMS field
  * @NVMF_RDMA_CMS_RDMA_CM: Sockets based endpoint addressing
  *
  */
@@ -4833,12 +4833,12 @@ enum nvmf_rdma_cms {
 
 /**
  * enum nvmf_tcp_sectype - Transport Specific Address Subtype Definition for
- * 	  NVMe/TCP Transport
+ *	  NVMe/TCP Transport
  * @NVMF_TCP_SECTYPE_NONE:  No Security
  * @NVMF_TCP_SECTYPE_TLS:   Transport Layer Security version 1.2
  * @NVMF_TCP_SECTYPE_TLS13: Transport Layer Security version 1.3 or a subsequent
- * 			    version. The TLS protocol negotiates the version and
- * 			    cipher suite for each TCP connection.
+ *			    version. The TLS protocol negotiates the version and
+ *			    cipher suite for each TCP connection.
  */
 enum nvmf_tcp_sectype {
 	NVMF_TCP_SECTYPE_NONE	= 0,
@@ -4849,15 +4849,15 @@ enum nvmf_tcp_sectype {
 /**
  * struct nvmf_discovery_log - Discovery Log Page (Log Identifier 70h)
  * @genctr:  Generation Counter (GENCTR): Indicates the version of the discovery
- * 	     information, starting at a value of 0h. For each change in the
- * 	     Discovery Log Page, this counter is incremented by one. If the value
- * 	     of this field is FFFFFFFF_FFFFFFFFh, then the field shall be cleared
- * 	     to 0h when incremented (i.e., rolls over to 0h).
+ *	     information, starting at a value of 0h. For each change in the
+ *	     Discovery Log Page, this counter is incremented by one. If the value
+ *	     of this field is FFFFFFFF_FFFFFFFFh, then the field shall be cleared
+ *	     to 0h when incremented (i.e., rolls over to 0h).
  * @numrec:  Number of Records (NUMREC): Indicates the number of records
- * 	     contained in the log.
+ *	     contained in the log.
  * @recfmt:  Record Format (RECFMT): Specifies the format of the Discovery Log
- * 	     Page. If a new format is defined, this value is incremented by one.
- * 	     The format of the record specified in this definition shall be 0h.
+ *	     Page. If a new format is defined, this value is incremented by one.
+ *	     The format of the record specified in this definition shall be 0h.
  * @rsvd14:  Reserved
  * @entries: Discovery Log Page Entries - see &struct nvmf_disc_log_entry.
  */
@@ -5356,7 +5356,7 @@ struct nvme_mi_vpd_ppmra {
  * @rev:	Revision of the Element Descriptor
  * @len:	Number of bytes in the Element Descriptor
  * @data:	Type-specific information associated with
- * 		the Element Descriptor
+ *		the Element Descriptor
  */
 struct nvme_mi_vpd_telem {
 	__u8	type;
@@ -5450,7 +5450,7 @@ struct nvme_mi_vpd_hdr {
 
 /**
  * enum nvme_status_field - Defines all parts of the nvme status field: status
- * 			    code, status code type, and additional flags.
+ *			    code, status code type, and additional flags.
  * @NVME_SCT_GENERIC:		      Generic errors applicable to multiple opcodes
  * @NVME_SCT_CMD_SPECIFIC:	      Errors associated to a specific opcode
  * @NVME_SCT_MEDIA:		      Errors associated with media and data integrity
@@ -5463,169 +5463,169 @@ struct nvme_mi_vpd_hdr {
  * @NVME_SC_SHIFT:                    Shift value to get the value of the status
  *                                    code.
  * @NVME_SC_SUCCESS:		      Successful Completion: The command
- * 				      completed without error.
+ *				      completed without error.
  * @NVME_SC_INVALID_OPCODE:	      Invalid Command Opcode: A reserved coded
- * 				      value or an unsupported value in the
- * 				      command opcode field.
+ *				      value or an unsupported value in the
+ *				      command opcode field.
  * @NVME_SC_INVALID_FIELD:	      Invalid Field in Command: A reserved
- * 				      coded value or an unsupported value in a
- * 				      defined field.
+ *				      coded value or an unsupported value in a
+ *				      defined field.
  * @NVME_SC_CMDID_CONFLICT:	      Command ID Conflict: The command
- * 				      identifier is already in use.
+ *				      identifier is already in use.
  * @NVME_SC_DATA_XFER_ERROR:	      Data Transfer Error: Transferring the
- * 				      data or metadata associated with a
- * 				      command experienced an error.
+ *				      data or metadata associated with a
+ *				      command experienced an error.
  * @NVME_SC_POWER_LOSS:		      Commands Aborted due to Power Loss
- * 				      Notification: Indicates that the command
- * 				      was aborted due to a power loss
- * 				      notification.
+ *				      Notification: Indicates that the command
+ *				      was aborted due to a power loss
+ *				      notification.
  * @NVME_SC_INTERNAL:		      Internal Error: The command was not
- * 				      completed successfully due to an internal error.
+ *				      completed successfully due to an internal error.
  * @NVME_SC_ABORT_REQ:		      Command Abort Requested: The command was
- * 				      aborted due to an Abort command being
- * 				      received that specified the Submission
- * 				      Queue Identifier and Command Identifier
- * 				      of this command.
+ *				      aborted due to an Abort command being
+ *				      received that specified the Submission
+ *				      Queue Identifier and Command Identifier
+ *				      of this command.
  * @NVME_SC_ABORT_QUEUE:	      Command Aborted due to SQ Deletion: The
- * 				      command was aborted due to a Delete I/O
- * 				      Submission Queue request received for the
- * 				      Submission Queue to which the command was
- * 				      submitted.
+ *				      command was aborted due to a Delete I/O
+ *				      Submission Queue request received for the
+ *				      Submission Queue to which the command was
+ *				      submitted.
  * @NVME_SC_FUSED_FAIL:		      Command Aborted due to Failed Fused Command:
- * 				      The command was aborted due to the other
- * 				      command in a fused operation failing.
+ *				      The command was aborted due to the other
+ *				      command in a fused operation failing.
  * @NVME_SC_FUSED_MISSING:	      Aborted due to Missing Fused Command: The
- * 				      fused command was aborted due to the
- * 				      adjacent submission queue entry not
- * 				      containing a fused command that is the
- * 				      other command.
+ *				      fused command was aborted due to the
+ *				      adjacent submission queue entry not
+ *				      containing a fused command that is the
+ *				      other command.
  * @NVME_SC_INVALID_NS:		      Invalid Namespace or Format: The
- * 				      namespace or the format of that namespace
- * 				      is invalid.
+ *				      namespace or the format of that namespace
+ *				      is invalid.
  * @NVME_SC_CMD_SEQ_ERROR:	      Command Sequence Error: The command was
- * 				      aborted due to a protocol violation in a
- * 				      multi-command sequence.
+ *				      aborted due to a protocol violation in a
+ *				      multi-command sequence.
  * @NVME_SC_SGL_INVALID_LAST:	      Invalid SGL Segment Descriptor: The
- * 				      command includes an invalid SGL Last
- * 				      Segment or SGL Segment descriptor.
+ *				      command includes an invalid SGL Last
+ *				      Segment or SGL Segment descriptor.
  * @NVME_SC_SGL_INVALID_COUNT:	      Invalid Number of SGL Descriptors: There
- * 				      is an SGL Last Segment descriptor or an
- * 				      SGL Segment descriptor in a location
- * 				      other than the last descriptor of a
- * 				      segment based on the length indicated.
+ *				      is an SGL Last Segment descriptor or an
+ *				      SGL Segment descriptor in a location
+ *				      other than the last descriptor of a
+ *				      segment based on the length indicated.
  * @NVME_SC_SGL_INVALID_DATA:	      Data SGL Length Invalid: This may occur
- * 				      if the length of a Data SGL is too short.
- * 				      This may occur if the length of a Data
- * 				      SGL is too long and the controller does
- * 				      not support SGL transfers longer than the
- * 				      amount of data to be transferred as
- * 				      indicated in the SGL Support field of the
- * 				      Identify Controller data structure.
+ *				      if the length of a Data SGL is too short.
+ *				      This may occur if the length of a Data
+ *				      SGL is too long and the controller does
+ *				      not support SGL transfers longer than the
+ *				      amount of data to be transferred as
+ *				      indicated in the SGL Support field of the
+ *				      Identify Controller data structure.
  * @NVME_SC_SGL_INVALID_METADATA:     Metadata SGL Length Invalid: This may
- * 				      occur if the length of a Metadata SGL is
- * 				      too short. This may occur if the length
- * 				      of a Metadata SGL is too long and the
- * 				      controller does not support SGL transfers
- * 				      longer than the amount of data to be
- * 				      transferred as indicated in the SGL
- * 				      Support field of the Identify Controller
- * 				      data structure.
+ *				      occur if the length of a Metadata SGL is
+ *				      too short. This may occur if the length
+ *				      of a Metadata SGL is too long and the
+ *				      controller does not support SGL transfers
+ *				      longer than the amount of data to be
+ *				      transferred as indicated in the SGL
+ *				      Support field of the Identify Controller
+ *				      data structure.
  * @NVME_SC_SGL_INVALID_TYPE:	      SGL Descriptor Type Invalid: The type of
- * 				      an SGL Descriptor is a type that is not
- * 				      supported by the controller.
+ *				      an SGL Descriptor is a type that is not
+ *				      supported by the controller.
  * @NVME_SC_CMB_INVALID_USE:	      Invalid Use of Controller Memory Buffer:
- * 				      The attempted use of the Controller
- * 				      Memory Buffer is not supported by the
- * 				      controller.
+ *				      The attempted use of the Controller
+ *				      Memory Buffer is not supported by the
+ *				      controller.
  * @NVME_SC_PRP_INVALID_OFFSET:       PRP Offset Invalid: The Offset field for
- * 				      a PRP entry is invalid.
+ *				      a PRP entry is invalid.
  * @NVME_SC_AWU_EXCEEDED:	      Atomic Write Unit Exceeded: The length
- * 				      specified exceeds the atomic write unit size.
+ *				      specified exceeds the atomic write unit size.
  * @NVME_SC_OP_DENIED:		      Operation Denied: The command was denied
- * 				      due to lack of access rights. Refer to
- * 				      the appropriate security specification.
+ *				      due to lack of access rights. Refer to
+ *				      the appropriate security specification.
  * @NVME_SC_SGL_INVALID_OFFSET:	      SGL Offset Invalid: The offset specified
- * 				      in a descriptor is invalid. This may
- * 				      occur when using capsules for data
- * 				      transfers in NVMe over Fabrics
- * 				      implementations and an invalid offset in
- * 				      the capsule is specified.
+ *				      in a descriptor is invalid. This may
+ *				      occur when using capsules for data
+ *				      transfers in NVMe over Fabrics
+ *				      implementations and an invalid offset in
+ *				      the capsule is specified.
  * @NVME_SC_HOSTID_FORMAT:	      Host Identifier Inconsistent Format: The
- * 				      NVM subsystem detected the simultaneous
- * 				      use of 64- bit and 128-bit Host
- * 				      Identifier values on different
- * 				      controllers.
+ *				      NVM subsystem detected the simultaneous
+ *				      use of 64- bit and 128-bit Host
+ *				      Identifier values on different
+ *				      controllers.
  * @NVME_SC_KAT_EXPIRED:	      Keep Alive Timer Expired: The Keep Alive
- * 				      Timer expired.
+ *				      Timer expired.
  * @NVME_SC_KAT_INVALID:	      Keep Alive Timeout Invalid: The Keep
- * 				      Alive Timeout value specified is invalid.
+ *				      Alive Timeout value specified is invalid.
  * @NVME_SC_CMD_ABORTED_PREMEPT:      Command Aborted due to Preempt and Abort:
- * 				      The command was aborted due to a
- * 				      Reservation Acquire command.
+ *				      The command was aborted due to a
+ *				      Reservation Acquire command.
  * @NVME_SC_SANITIZE_FAILED:	      Sanitize Failed: The most recent sanitize
- * 				      operation failed and no recovery action
- * 				      has been successfully completed.
+ *				      operation failed and no recovery action
+ *				      has been successfully completed.
  * @NVME_SC_SANITIZE_IN_PROGRESS:     Sanitize In Progress: The requested
- * 				      function (e.g., command) is prohibited
- * 				      while a sanitize operation is in
- * 				      progress.
+ *				      function (e.g., command) is prohibited
+ *				      while a sanitize operation is in
+ *				      progress.
  * @NVME_SC_SGL_INVALID_GRANULARITY:  SGL Data Block Granularity Invalid: The
- * 				      Address alignment or Length granularity
- * 				      for an SGL Data Block descriptor is
- * 				      invalid.
+ *				      Address alignment or Length granularity
+ *				      for an SGL Data Block descriptor is
+ *				      invalid.
  * @NVME_SC_CMD_IN_CMBQ_NOT_SUPP:     Command Not Supported for Queue in CMB:
- * 				      The implementation does not support
- * 				      submission of the command to a Submission
- * 				      Queue in the Controller Memory Buffer or
- * 				      command completion to a Completion Queue
- * 				      in the Controller Memory Buffer.
+ *				      The implementation does not support
+ *				      submission of the command to a Submission
+ *				      Queue in the Controller Memory Buffer or
+ *				      command completion to a Completion Queue
+ *				      in the Controller Memory Buffer.
  * @NVME_SC_NS_WRITE_PROTECTED:	      Namespace is Write Protected: The command
- * 				      is prohibited while the namespace is
- * 				      write protected as a result of a change
- * 				      in the namespace write protection state
- * 				      as defined by the Namespace Write
- * 				      Protection State Machine.
+ *				      is prohibited while the namespace is
+ *				      write protected as a result of a change
+ *				      in the namespace write protection state
+ *				      as defined by the Namespace Write
+ *				      Protection State Machine.
  * @NVME_SC_CMD_INTERRUPTED:	      Command Interrupted: Command processing
- * 				      was interrupted and the controller is
- * 				      unable to successfully complete the
- * 				      command. The host should retry the
- * 				      command.
+ *				      was interrupted and the controller is
+ *				      unable to successfully complete the
+ *				      command. The host should retry the
+ *				      command.
  * @NVME_SC_TRAN_TPORT_ERROR:	      Transient Transport Error: A transient
- * 				      transport error was detected. If the
- * 				      command is retried on the same
- * 				      controller, the command is likely to
- * 				      succeed. A command that fails with a
- * 				      transient transport error four or more
- * 				      times should be treated as a persistent
- * 				      transport error that is not likely to
- * 				      succeed if retried on the same
- * 				      controller.
+ *				      transport error was detected. If the
+ *				      command is retried on the same
+ *				      controller, the command is likely to
+ *				      succeed. A command that fails with a
+ *				      transient transport error four or more
+ *				      times should be treated as a persistent
+ *				      transport error that is not likely to
+ *				      succeed if retried on the same
+ *				      controller.
  * @NVME_SC_PROHIBITED_BY_CMD_AND_FEAT: Command Prohibited by Command and Feature
- * 				      Lockdown: The command was aborted due to
- * 				      command execution being prohibited by
- * 				      the Command and Feature Lockdown.
+ *				      Lockdown: The command was aborted due to
+ *				      command execution being prohibited by
+ *				      the Command and Feature Lockdown.
  * @NVME_SC_ADMIN_CMD_MEDIA_NOT_READY: Admin Command Media Not Ready: The Admin
- * 				      command requires access to media and
- * 				      the media is not ready.
+ *				      command requires access to media and
+ *				      the media is not ready.
  * @NVME_SC_LBA_RANGE:		      LBA Out of Range: The command references
- * 				      an LBA that exceeds the size of the namespace.
+ *				      an LBA that exceeds the size of the namespace.
  * @NVME_SC_CAP_EXCEEDED:	      Capacity Exceeded: Execution of the
- * 				      command has caused the capacity of the
- * 				      namespace to be exceeded.
+ *				      command has caused the capacity of the
+ *				      namespace to be exceeded.
  * @NVME_SC_NS_NOT_READY:	      Namespace Not Ready: The namespace is not
- * 				      ready to be accessed as a result of a
- * 				      condition other than a condition that is
- * 				      reported as an Asymmetric Namespace
- * 				      Access condition.
+ *				      ready to be accessed as a result of a
+ *				      condition other than a condition that is
+ *				      reported as an Asymmetric Namespace
+ *				      Access condition.
  * @NVME_SC_RESERVATION_CONFLICT:     Reservation Conflict: The command was
- * 				      aborted due to a conflict with a
- * 				      reservation held on the accessed
- * 				      namespace.
+ *				      aborted due to a conflict with a
+ *				      reservation held on the accessed
+ *				      namespace.
  * @NVME_SC_FORMAT_IN_PROGRESS:	      Format In Progress: A Format NVM command
- * 				      is in progress on the namespace.
+ *				      is in progress on the namespace.
  * @NVME_SC_CQ_INVALID:		      Completion Queue Invalid: The Completion
- * 				      Queue identifier specified in the command
- * 				      does not exist.
+ *				      Queue identifier specified in the command
+ *				      does not exist.
  * @NVME_SC_QID_INVALID:	      Invalid Queue Identifier: The creation of
  *				      the I/O Completion Queue failed due to an
  *				      invalid queue identifier specified as
@@ -5634,121 +5634,121 @@ struct nvme_mi_vpd_hdr {
  *				      use or one that is outside the range
  *				      supported by the controller.
  * @NVME_SC_QUEUE_SIZE:		      Invalid Queue Size: The host attempted to
- * 				      create an I/O Completion Queue with an
- * 				      invalid number of entries.
+ *				      create an I/O Completion Queue with an
+ *				      invalid number of entries.
  * @NVME_SC_ABORT_LIMIT:	      Abort Command Limit Exceeded: The number
- * 				      of concurrently outstanding Abort commands
- * 				      has exceeded the limit indicated in the
- * 				      Identify Controller data structure.
+ *				      of concurrently outstanding Abort commands
+ *				      has exceeded the limit indicated in the
+ *				      Identify Controller data structure.
  * @NVME_SC_ABORT_MISSING:	      Abort Command is missing: The abort
- * 				      command is missing.
+ *				      command is missing.
  * @NVME_SC_ASYNC_LIMIT:	      Asynchronous Event Request Limit
- * 				      Exceeded: The number of concurrently
- * 				      outstanding Asynchronous Event Request
- * 				      commands has been exceeded.
+ *				      Exceeded: The number of concurrently
+ *				      outstanding Asynchronous Event Request
+ *				      commands has been exceeded.
  * @NVME_SC_FIRMWARE_SLOT:	      Invalid Firmware Slot: The firmware slot
- * 				      indicated is invalid or read only. This
- * 				      error is indicated if the firmware slot
- * 				      exceeds the number supported.
+ *				      indicated is invalid or read only. This
+ *				      error is indicated if the firmware slot
+ *				      exceeds the number supported.
  * @NVME_SC_FIRMWARE_IMAGE:	      Invalid Firmware Image: The firmware
- * 				      image specified for activation is invalid
- * 				      and not loaded by the controller.
+ *				      image specified for activation is invalid
+ *				      and not loaded by the controller.
  * @NVME_SC_INVALID_VECTOR:	      Invalid Interrupt Vector: The creation of
- * 				      the I/O Completion Queue failed due to an
- * 				      invalid interrupt vector specified as
- * 				      part of the command.
+ *				      the I/O Completion Queue failed due to an
+ *				      invalid interrupt vector specified as
+ *				      part of the command.
  * @NVME_SC_INVALID_LOG_PAGE:	      Invalid Log Page: The log page indicated
- * 				      is invalid. This error condition is also
- * 				      returned if a reserved log page is
- * 				      requested.
+ *				      is invalid. This error condition is also
+ *				      returned if a reserved log page is
+ *				      requested.
  * @NVME_SC_INVALID_FORMAT:	      Invalid Format: The LBA Format specified
- * 				      is not supported.
+ *				      is not supported.
  * @NVME_SC_FW_NEEDS_CONV_RESET:      Firmware Activation Requires Conventional Reset:
- * 				      The firmware commit was successful,
- * 				      however, activation of the firmware image
- * 				      requires a conventional reset.
+ *				      The firmware commit was successful,
+ *				      however, activation of the firmware image
+ *				      requires a conventional reset.
  * @NVME_SC_INVALID_QUEUE:	      Invalid Queue Deletion: Invalid I/O
- * 				      Completion Queue specified to delete.
+ *				      Completion Queue specified to delete.
  * @NVME_SC_FEATURE_NOT_SAVEABLE:     Feature Identifier Not Saveable: The
- * 				      Feature Identifier specified does not
- * 				      support a saveable value.
+ *				      Feature Identifier specified does not
+ *				      support a saveable value.
  * @NVME_SC_FEATURE_NOT_CHANGEABLE:   Feature Not Changeable: The Feature
- * 				      Identifier is not able to be changed.
+ *				      Identifier is not able to be changed.
  * @NVME_SC_FEATURE_NOT_PER_NS:	      Feature Not Namespace Specific: The
- * 				      Feature Identifier specified is not
- * 				      namespace specific. The Feature
- * 				      Identifier settings apply across all
- * 				      namespaces.
+ *				      Feature Identifier specified is not
+ *				      namespace specific. The Feature
+ *				      Identifier settings apply across all
+ *				      namespaces.
  * @NVME_SC_FW_NEEDS_SUBSYS_RESET:    Firmware Activation Requires NVM
- * 				      Subsystem Reset: The firmware commit was
- * 				      successful, however, activation of the
- * 				      firmware image requires an NVM Subsystem.
+ *				      Subsystem Reset: The firmware commit was
+ *				      successful, however, activation of the
+ *				      firmware image requires an NVM Subsystem.
  * @NVME_SC_FW_NEEDS_RESET:	      Firmware Activation Requires Controller
- * 				      Level Reset: The firmware commit was
- * 				      successful; however, the image specified
- * 				      does not support being activated without
- * 				      a reset.
+ *				      Level Reset: The firmware commit was
+ *				      successful; however, the image specified
+ *				      does not support being activated without
+ *				      a reset.
  * @NVME_SC_FW_NEEDS_MAX_TIME:	      Firmware Activation Requires Maximum Time
- * 				      Violation: The image specified if
- * 				      activated immediately would exceed the
- * 				      Maximum Time for Firmware Activation
- * 				      (MTFA) value reported in Identify
- * 				      Controller.
+ *				      Violation: The image specified if
+ *				      activated immediately would exceed the
+ *				      Maximum Time for Firmware Activation
+ *				      (MTFA) value reported in Identify
+ *				      Controller.
  * @NVME_SC_FW_ACTIVATE_PROHIBITED:   Firmware Activation Prohibited: The image
- * 				      specified is being prohibited from
- * 				      activation by the controller for vendor
- * 				      specific reasons.
+ *				      specified is being prohibited from
+ *				      activation by the controller for vendor
+ *				      specific reasons.
  * @NVME_SC_OVERLAPPING_RANGE:	      Overlapping Range: The downloaded
- * 				      firmware image has overlapping ranges.
+ *				      firmware image has overlapping ranges.
  * @NVME_SC_NS_INSUFFICIENT_CAP:      Namespace Insufficient Capacity: Creating
- * 				      the namespace requires more free space
- * 				      than is currently available.
+ *				      the namespace requires more free space
+ *				      than is currently available.
  * @NVME_SC_NS_ID_UNAVAILABLE:	      Namespace Identifier Unavailable: The
- * 				      number of namespaces supported has been
- * 				      exceeded.
+ *				      number of namespaces supported has been
+ *				      exceeded.
  * @NVME_SC_NS_ALREADY_ATTACHED:      Namespace Already Attached: The
- * 				      controller is already attached to the
- * 				      namespace specified.
+ *				      controller is already attached to the
+ *				      namespace specified.
  * @NVME_SC_NS_IS_PRIVATE:	      Namespace Is Private: The namespace is
- * 				      private and is already attached to one
- * 				      controller.
+ *				      private and is already attached to one
+ *				      controller.
  * @NVME_SC_NS_NOT_ATTACHED:	      Namespace Not Attached: The request to
- * 				      detach the controller could not be
- * 				      completed because the controller is not
- * 				      attached to the namespace.
+ *				      detach the controller could not be
+ *				      completed because the controller is not
+ *				      attached to the namespace.
  * @NVME_SC_THIN_PROV_NOT_SUPP:	      Thin Provisioning Not Supported: Thin
- * 				      provisioning is not supported by the
- * 				      controller.
+ *				      provisioning is not supported by the
+ *				      controller.
  * @NVME_SC_CTRL_LIST_INVALID:	      Controller List Invalid: The controller
- * 				      list provided contains invalid controller
- * 				      ids.
+ *				      list provided contains invalid controller
+ *				      ids.
  * @NVME_SC_SELF_TEST_IN_PROGRESS:    Device Self-test In Progress: The controller
- * 				      or NVM subsystem already has a device
- * 				      self-test operation in process.
+ *				      or NVM subsystem already has a device
+ *				      self-test operation in process.
  * @NVME_SC_BP_WRITE_PROHIBITED:      Boot Partition Write Prohibited: The
- * 				      command is trying to modify a locked Boot
- * 				      Partition.
+ *				      command is trying to modify a locked Boot
+ *				      Partition.
  * @NVME_SC_INVALID_CTRL_ID:	      Invalid Controller Identifier:
  * @NVME_SC_INVALID_SEC_CTRL_STATE:   Invalid Secondary Controller State
  * @NVME_SC_INVALID_CTRL_RESOURCES:   Invalid Number of Controller Resources
  * @NVME_SC_INVALID_RESOURCE_ID:      Invalid Resource Identifier
  * @NVME_SC_PMR_SAN_PROHIBITED:	      Sanitize Prohibited While Persistent
- * 				      Memory Region is Enabled
+ *				      Memory Region is Enabled
  * @NVME_SC_ANA_GROUP_ID_INVALID:     ANA Group Identifier Invalid: The specified
- * 				      ANA Group Identifier (ANAGRPID) is not
- * 				      supported in the submitted command.
+ *				      ANA Group Identifier (ANAGRPID) is not
+ *				      supported in the submitted command.
  * @NVME_SC_ANA_ATTACH_FAILED:	      ANA Attach Failed: The controller is not
- * 				      attached to the namespace as a result
- * 				      of an ANA condition.
+ *				      attached to the namespace as a result
+ *				      of an ANA condition.
  * @NVME_SC_INSUFFICIENT_CAP:	      Insufficient Capacity: Requested operation
- * 				      requires more free space than is currently
- * 				      available.
+ *				      requires more free space than is currently
+ *				      available.
  * @NVME_SC_NS_ATTACHMENT_LIMIT_EXCEEDED: Namespace Attachment Limit Exceeded:
- * 				      Attaching the ns to a controller causes
- * 				      max number of ns attachments allowed
- * 				      to be exceeded.
+ *				      Attaching the ns to a controller causes
+ *				      max number of ns attachments allowed
+ *				      to be exceeded.
  * @NVME_SC_PROHIBIT_CMD_EXEC_NOT_SUPPORTED: Prohibition of Command Execution
- * 				      Not Supported
+ *				      Not Supported
  * @NVME_SC_IOCS_NOT_SUPPORTED:	      I/O Command Set Not Supported
  * @NVME_SC_IOCS_NOT_ENABLED:	      I/O Command Set Not Enabled
  * @NVME_SC_IOCS_COMBINATION_REJECTED:	I/O Command Set Combination Rejected
@@ -5785,114 +5785,114 @@ struct nvme_mi_vpd_hdr {
  * @NVME_SC_READ_ONLY:		      Attempted Write to Read Only Range
  * @NVME_SC_CMD_SIZE_LIMIT_EXCEEDED:  Command Size Limit Exceeded
  * @NVME_SC_CONNECT_FORMAT:	      Incompatible Format: The NVM subsystem
- * 				      does not support the record format
- * 				      specified by the host.
+ *				      does not support the record format
+ *				      specified by the host.
  * @NVME_SC_CONNECT_CTRL_BUSY:	      Controller Busy: The controller is
- * 				      already associated with a host.
+ *				      already associated with a host.
  * @NVME_SC_CONNECT_INVALID_PARAM:    Connect Invalid Parameters: One or more
- * 				      of the command parameters.
+ *				      of the command parameters.
  * @NVME_SC_CONNECT_RESTART_DISC:     Connect Restart Discovery: The NVM
- * 				      subsystem requested is not available.
+ *				      subsystem requested is not available.
  * @NVME_SC_CONNECT_INVALID_HOST:     Connect Invalid Host: The host is either
- * 				      not allowed to establish an association
- * 				      to any controller in the NVM subsystem or
- * 				      the host is not allowed to establish an
- * 				      association to the specified controller
+ *				      not allowed to establish an association
+ *				      to any controller in the NVM subsystem or
+ *				      the host is not allowed to establish an
+ *				      association to the specified controller
  * @NVME_SC_DISCONNECT_INVALID_QTYPE: Invalid Queue Type: The command was sent
- * 				      on the wrong queue type.
+ *				      on the wrong queue type.
  * @NVME_SC_DISCOVERY_RESTART:	      Discover Restart: The snapshot of the
- * 				      records is now invalid or out of date.
+ *				      records is now invalid or out of date.
  * @NVME_SC_AUTH_REQUIRED:	      Authentication Required: NVMe in-band
- * 				      authentication is required and the queue
- * 				      has not yet been authenticated.
+ *				      authentication is required and the queue
+ *				      has not yet been authenticated.
  * @NVME_SC_WRITE_FAULT:	      Write Fault: The write data could not be
- * 				      committed to the media.
+ *				      committed to the media.
  * @NVME_SC_READ_ERROR:		      Unrecovered Read Error: The read data
- * 				      could not be recovered from the media.
+ *				      could not be recovered from the media.
  * @NVME_SC_GUARD_CHECK:	      End-to-end Guard Check Error: The command
- * 				      was aborted due to an end-to-end guard
- * 				      check failure.
+ *				      was aborted due to an end-to-end guard
+ *				      check failure.
  * @NVME_SC_APPTAG_CHECK:	      End-to-end Application Tag Check Error:
- * 				      The command was aborted due to an
- * 				      end-to-end application tag check failure.
+ *				      The command was aborted due to an
+ *				      end-to-end application tag check failure.
  * @NVME_SC_REFTAG_CHECK:	      End-to-end Reference Tag Check Error: The
- * 				      command was aborted due to an end-to-end
- * 				      reference tag check failure.
+ *				      command was aborted due to an end-to-end
+ *				      reference tag check failure.
  * @NVME_SC_COMPARE_FAILED:	      Compare Failure: The command failed due
- * 				      to a miscompare during a Compare command.
+ *				      to a miscompare during a Compare command.
  * @NVME_SC_ACCESS_DENIED:	      Access Denied: Access to the namespace
- * 				      and/or LBA range is denied due to lack of
- * 				      access rights.
+ *				      and/or LBA range is denied due to lack of
+ *				      access rights.
  * @NVME_SC_UNWRITTEN_BLOCK:	      Deallocated or Unwritten Logical Block:
- * 				      The command failed due to an attempt to
- * 				      read from or verify an LBA range
- * 				      containing a deallocated or unwritten
- * 				      logical block.
+ *				      The command failed due to an attempt to
+ *				      read from or verify an LBA range
+ *				      containing a deallocated or unwritten
+ *				      logical block.
  * @NVME_SC_STORAGE_TAG_CHECK:	      End-to-End Storage Tag Check Error: The
- * 				      command was aborted due to an end-to-end
- * 				      storage tag check failure.
+ *				      command was aborted due to an end-to-end
+ *				      storage tag check failure.
  * @NVME_SC_ANA_INTERNAL_PATH_ERROR:  Internal Path Error: The command was not
- * 				      completed as the result of a controller
- * 				      internal error that is specific to the
- * 				      controller processing the command.
+ *				      completed as the result of a controller
+ *				      internal error that is specific to the
+ *				      controller processing the command.
  * @NVME_SC_ANA_PERSISTENT_LOSS:      Asymmetric Access Persistent Loss: The
- * 				      requested function (e.g., command) is not
- * 				      able to be performed as a result of the
- * 				      relationship between the controller and
- * 				      the namespace being in the ANA Persistent
- * 				      Loss state.
+ *				      requested function (e.g., command) is not
+ *				      able to be performed as a result of the
+ *				      relationship between the controller and
+ *				      the namespace being in the ANA Persistent
+ *				      Loss state.
  * @NVME_SC_ANA_INACCESSIBLE:	      Asymmetric Access Inaccessible: The
- * 				      requested function (e.g., command) is not
- * 				      able to be performed as a result of the
- * 				      relationship between the controller and
- * 				      the namespace being in the ANA
- * 				      Inaccessible state.
+ *				      requested function (e.g., command) is not
+ *				      able to be performed as a result of the
+ *				      relationship between the controller and
+ *				      the namespace being in the ANA
+ *				      Inaccessible state.
  * @NVME_SC_ANA_TRANSITION:	      Asymmetric Access Transition: The
- * 				      requested function (e.g., command) is not
- * 				      able to be performed as a result of the
- * 				      relationship between the controller and
- * 				      the namespace transitioning between
- * 				      Asymmetric Namespace Access states.
+ *				      requested function (e.g., command) is not
+ *				      able to be performed as a result of the
+ *				      relationship between the controller and
+ *				      the namespace transitioning between
+ *				      Asymmetric Namespace Access states.
  * @NVME_SC_CTRL_PATH_ERROR:	      Controller Pathing Error: A pathing error
- * 				      was detected by the controller.
+ *				      was detected by the controller.
  * @NVME_SC_HOST_PATH_ERROR:	      Host Pathing Error: A pathing error was
- * 				      detected by the host.
+ *				      detected by the host.
  * @NVME_SC_CMD_ABORTED_BY_HOST:      Command Aborted By Host: The command was
- * 				      aborted as a result of host action.
+ *				      aborted as a result of host action.
  * @NVME_SC_CRD:		      Mask to get value of Command Retry Delay
- * 				      index
+ *				      index
  * @NVME_SC_MORE:		      More bit. If set, more status information
- * 				      for this command as part of the Error
- * 				      Information log that may be retrieved with
- * 				      the Get Log Page command.
+ *				      for this command as part of the Error
+ *				      Information log that may be retrieved with
+ *				      the Get Log Page command.
  * @NVME_SC_DNR:		      Do Not Retry bit. If set, if the same
- * 				      command is re-submitted to any controller
- * 				      in the NVM subsystem, then that
- * 				      re-submitted command is expected to fail.
+ *				      command is re-submitted to any controller
+ *				      in the NVM subsystem, then that
+ *				      re-submitted command is expected to fail.
  * @NVME_SC_ZNS_INVALID_OP_REQUEST:	Invalid Zone Operation Request:
- * 				      The operation requested is invalid. This may be due to
- * 				      various conditions, including: attempting to allocate a
- * 				      ZRWA when a zone is not in the ZSE:Empty state; or
- * 				      invalid Flush Explicit ZRWA Range Send Zone Action
- * 				      operation.
+ *				      The operation requested is invalid. This may be due to
+ *				      various conditions, including: attempting to allocate a
+ *				      ZRWA when a zone is not in the ZSE:Empty state; or
+ *				      invalid Flush Explicit ZRWA Range Send Zone Action
+ *				      operation.
  * @NVME_SC_ZNS_ZRWA_RESOURCES_UNAVAILABLE: ZRWA Resources Unavailable:
- * 				      No ZRWAs are available.
+ *				      No ZRWAs are available.
  * @NVME_SC_ZNS_BOUNDARY_ERROR:	      Zone Boundary Error: The command specifies
- * 				      logical blocks in more than one zone.
+ *				      logical blocks in more than one zone.
  * @NVME_SC_ZNS_FULL:		      Zone Is Full: The accessed zone is in the
- * 				      ZSF:Full state.
+ *				      ZSF:Full state.
  * @NVME_SC_ZNS_READ_ONLY:	      Zone Is Read Only: The accessed zone is
- * 				      in the ZSRO:Read Only state.
+ *				      in the ZSRO:Read Only state.
  * @NVME_SC_ZNS_OFFLINE:	      Zone Is Offline: The accessed zone is
- * 				      in the ZSO:Offline state.
+ *				      in the ZSO:Offline state.
  * @NVME_SC_ZNS_INVALID_WRITE:	      Zone Invalid Write: The write to a zone
- * 				      was not at the write pointer.
+ *				      was not at the write pointer.
  * @NVME_SC_ZNS_TOO_MANY_ACTIVE:      Too Many Active Zones: The controller
- * 				      does not allow additional active zones.
+ *				      does not allow additional active zones.
  * @NVME_SC_ZNS_TOO_MANY_OPENS:       Too Many Open Zones: The controller does
- * 				      not allow additional open zones.
+ *				      not allow additional open zones.
  * @NVME_SC_ZNS_INVAL_TRANSITION:     Invalid Zone State Transition: The request
- * 				      is not a valid zone state transition.
+ *				      is not a valid zone state transition.
  */
 enum nvme_status_field {
 	/*
@@ -6194,36 +6194,36 @@ enum nvme_admin_opcode {
  * @NVME_IDENTIFY_CNS_NS_DESC_LIST:		Namespace Identification Descriptor list
  * @NVME_IDENTIFY_CNS_NVMSET_LIST:		NVM Set List
  * @NVME_IDENTIFY_CNS_CSI_NS:			I/O Command Set specific Identify
- * 						Namespace data structure
+ *						Namespace data structure
  * @NVME_IDENTIFY_CNS_CSI_CTRL:			I/O Command Set specific Identify
- * 						Controller data structure
+ *						Controller data structure
  * @NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST:	Active Namespace ID list associated
- * 						with the specified I/O Command Set
+ *						with the specified I/O Command Set
  * @NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS:	I/O Command Set Independent Identify
  * @NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT:	Namespace user data format
  * @NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT:	I/O Command Set specific user data
  *						format
- * 						Namespace data structure
+ *						Namespace data structure
  * @NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST:	Allocated Namespace ID list
  * @NVME_IDENTIFY_CNS_ALLOCATED_NS:		Identify Namespace data structure for
- * 						the specified allocated NSID
+ *						the specified allocated NSID
  * @NVME_IDENTIFY_CNS_NS_CTRL_LIST:		Controller List of controllers attached
- * 						to the specified NSID
+ *						to the specified NSID
  * @NVME_IDENTIFY_CNS_CTRL_LIST:		Controller List of controllers that exist
- * 						in the NVM subsystem
+ *						in the NVM subsystem
  * @NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP:		Primary Controller Capabilities data
- * 						structure for the specified primary controller
+ *						structure for the specified primary controller
  * @NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST:	Secondary Controller list of controllers
- * 						associated with the primary controller
- * 						processing the command
+ *						associated with the primary controller
+ *						processing the command
  * @NVME_IDENTIFY_CNS_NS_GRANULARITY:		A Namespace Granularity List
  * @NVME_IDENTIFY_CNS_UUID_LIST:		A UUID List
  * @NVME_IDENTIFY_CNS_DOMAIN_LIST:		Domain List
  * @NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID:	Endurance Group List
  * @NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST:	I/O Command Set specific Allocated Namespace
- * 						ID list
+ *						ID list
  * @NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE:	I/O Command Set specific ID Namespace
- * 						Data Structure for Allocated Namespace ID
+ *						Data Structure for Allocated Namespace ID
  * @NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE:	Base Specification 2.0a section 5.17.2.21
  */
 enum nvme_identify_cns {
@@ -6602,9 +6602,9 @@ enum nvme_get_features_sel {
 /**
  * enum nvme_cmd_format_mset - Format NVM - Metadata Settings
  * @NVME_FORMAT_MSET_SEPARATE:	indicates that the metadata is transferred
- * 				as part of a separate buffer.
+ *				as part of a separate buffer.
  * @NVME_FORMAT_MSET_EXTENDED:	indicates that the metadata is transferred
- * 				as part of an extended data LBA.
+ *				as part of an extended data LBA.
  */
 enum nvme_cmd_format_mset {
 	NVME_FORMAT_MSET_SEPARATE				= 0,
@@ -6628,9 +6628,9 @@ enum nvme_cmd_format_pi {
 /**
  * enum nvme_cmd_format_pil - Format NVM - Protection Information Location
  * @NVME_FORMAT_PIL_LAST:  Protection information is transferred as the last
- * 			   bytes of metadata.
+ *			   bytes of metadata.
  * @NVME_FORMAT_PIL_FIRST: Protection information is transferred as the first
- * 			   bytes of metadata.
+ *			   bytes of metadata.
  */
 enum nvme_cmd_format_pil {
 	NVME_FORMAT_PIL_LAST					= 0,
@@ -6641,16 +6641,16 @@ enum nvme_cmd_format_pil {
  * enum nvme_cmd_format_ses - Format NVM - Secure Erase Settings
  * @NVME_FORMAT_SES_NONE:	     No secure erase operation requested.
  * @NVME_FORMAT_SES_USER_DATA_ERASE: User Data Erase: All user data shall be erased,
- * 				     contents of the user data after the erase is
- * 				     indeterminate (e.g. the user data may be zero
- * 				     filled, one filled, etc.). If a User Data Erase
- * 				     is requested and all affected user data is
- * 				     encrypted, then the controller is allowed
- * 				     to use a cryptographic erase to perform
- * 				     the requested User Data Erase.
+ *				     contents of the user data after the erase is
+ *				     indeterminate (e.g. the user data may be zero
+ *				     filled, one filled, etc.). If a User Data Erase
+ *				     is requested and all affected user data is
+ *				     encrypted, then the controller is allowed
+ *				     to use a cryptographic erase to perform
+ *				     the requested User Data Erase.
  * @NVME_FORMAT_SES_CRYPTO_ERASE:    Cryptographic Erase: All user data shall
- * 				     be erased cryptographically. This is
- * 				     accomplished by deleting the encryption key.
+ *				     be erased cryptographically. This is
+ *				     accomplished by deleting the encryption key.
  */
 enum nvme_cmd_format_ses {
 	NVME_FORMAT_SES_NONE					= 0,
@@ -6681,28 +6681,28 @@ enum nvme_ns_attach_sel {
 /**
  * enum nvme_fw_commit_ca - Firmware Commit - Commit Action
  * @NVME_FW_COMMIT_CA_REPLACE:				Downloaded image replaces the existing
- * 							image, if any, in the specified Firmware
- * 							Slot. The newly placed image is not
- * 							activated.
+ *							image, if any, in the specified Firmware
+ *							Slot. The newly placed image is not
+ *							activated.
  * @NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE:		Downloaded image replaces the existing
- * 							image, if any, in the specified Firmware
- * 							Slot. The newly placed image is activated
- * 							at the next Controller Level Reset.
+ *							image, if any, in the specified Firmware
+ *							Slot. The newly placed image is activated
+ *							at the next Controller Level Reset.
  * @NVME_FW_COMMIT_CA_SET_ACTIVE:			The existing image in the specified
- * 							Firmware Slot is activated at the
- * 							next Controller Level Reset.
+ *							Firmware Slot is activated at the
+ *							next Controller Level Reset.
  * @NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE_IMMEDIATE:	Downloaded image replaces the existing
- * 							image, if any, in the specified Firmware
- * 							Slot and is then activated immediately.
- * 							If there is not a newly downloaded image,
- * 							then the existing image in the specified
- * 							firmware slot is activated immediately.
+ *							image, if any, in the specified Firmware
+ *							Slot and is then activated immediately.
+ *							If there is not a newly downloaded image,
+ *							then the existing image in the specified
+ *							firmware slot is activated immediately.
  * @NVME_FW_COMMIT_CA_REPLACE_BOOT_PARTITION:		Downloaded image replaces the Boot
- * 							Partition specified by the Boot
- * 							Partition ID field.
+ *							Partition specified by the Boot
+ *							Partition ID field.
  * @NVME_FW_COMMIT_CA_ACTIVATE_BOOT_PARTITION:		Mark the Boot Partition specified in
- * 							the BPID field as active and update 
- * 							BPINFO.ABPID.
+ *							the BPID field as active and update
+ *							BPINFO.ABPID.
  */
 enum nvme_fw_commit_ca {
 	NVME_FW_COMMIT_CA_REPLACE				= 0,
@@ -6790,7 +6790,7 @@ enum nvme_dst_stc {
 /**
  * enum nvme_virt_mgmt_act - Virtualization Management - Action
  * @NVME_VIRT_MGMT_ACT_PRIM_CTRL_FLEX_ALLOC:	Primary Controller Flexible
- * 						Allocation
+ *						Allocation
  * @NVME_VIRT_MGMT_ACT_OFFLINE_SEC_CTRL:	Secondary Controller Offline
  * @NVME_VIRT_MGMT_ACT_ASSIGN_SEC_CTRL:		Secondary Controller Assign
  * @NVME_VIRT_MGMT_ACT_ONLINE_SEC_CTRL:		Secondary Controller Online
@@ -6922,7 +6922,7 @@ enum nvme_feat_resv_notify_flags {
  * @NVME_FEAT_NS_WRITE_PROTECT_PERMANENT:	Permanent Write Protect
  */
 enum nvme_feat_nswpcfg_state {
-	NVME_FEAT_NS_NO_WRITE_PROTECT 		= 0,
+	NVME_FEAT_NS_NO_WRITE_PROTECT		= 0,
 	NVME_FEAT_NS_WRITE_PROTECT		= 1,
 	NVME_FEAT_NS_WRITE_PROTECT_PWR_CYCLE	= 2,
 	NVME_FEAT_NS_WRITE_PROTECT_PERMANENT	= 3,
@@ -6999,7 +6999,7 @@ enum nvme_io_opcode {
  */
 enum nvme_io_control_flags {
 	NVME_IO_DTYPE_STREAMS		= 1 << 4,
-	NVME_IO_STC 	    		= 1 << 8,
+	NVME_IO_STC			= 1 << 8,
 	NVME_IO_DEAC			= 1 << 9,
 	NVME_IO_ZNS_APPEND_PIREMAP	= 1 << 9,
 	NVME_IO_PRINFO_PRCHK_REF	= 1 << 10,
@@ -7014,15 +7014,15 @@ enum nvme_io_control_flags {
  * enum nvme_io_dsm_flags -  Dataset Management flags
  * @NVME_IO_DSM_FREQ_UNSPEC:	No frequency information provided
  * @NVME_IO_DSM_FREQ_TYPICAL:	Typical number of reads and writes
- * 				expected for this LBA range
+ *				expected for this LBA range
  * @NVME_IO_DSM_FREQ_RARE:	Infrequent writes and infrequent
- * 				reads to the LBA range indicated
+ *				reads to the LBA range indicated
  * @NVME_IO_DSM_FREQ_READS:	Infrequent writes and frequent
- * 				reads to the LBA range indicated
+ *				reads to the LBA range indicated
  * @NVME_IO_DSM_FREQ_WRITES:	Frequent writes and infrequent
- * 				reads to the LBA range indicated
+ *				reads to the LBA range indicated
  * @NVME_IO_DSM_FREQ_RW:	Frequent writes and frequent reads
- * 				to the LBA range indicated
+ *				to the LBA range indicated
  * @NVME_IO_DSM_FREQ_ONCE:
  * @NVME_IO_DSM_FREQ_PREFETCH:
  * @NVME_IO_DSM_FREQ_TEMP:
@@ -7109,9 +7109,9 @@ enum nvme_resv_rrega {
  * enum nvme_resv_cptpl - Reservation Register - Change Persist Through Power Loss State
  * @NVME_RESERVATION_CPTPL_NO_CHANGE:	No change to PTPL state
  * @NVME_RESERVATION_CPTPL_CLEAR:	Reservations are released and
- * 					registrants are cleared on a power on
+ *					registrants are cleared on a power on
  * @NVME_RESERVATION_CPTPL_PERSIST:	Reservations and registrants persist
- * 					across a power loss
+ *					across a power loss
  */
 enum nvme_resv_cptpl {
 	NVME_RESERVATION_CPTPL_NO_CHANGE		= 0,

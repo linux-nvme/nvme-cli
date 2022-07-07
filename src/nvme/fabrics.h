@@ -4,7 +4,7 @@
  * Copyright (c) 2020 Western Digital Corporation or its affiliates.
  *
  * Authors: Keith Busch <keith.busch@wdc.com>
- * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+ *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 #ifndef _LIBNVME_FABRICS_H
 #define _LIBNVME_FABRICS_H
@@ -195,7 +195,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 
 /**
  * nvmf_get_discovery_log() - Return the discovery log page
- * @c:			Discover controller to use 
+ * @c:			Discover controller to use
  * @logp:		Pointer to the log page to be returned
  * @max_retries:	maximum number of log page entries to be returned
  *
@@ -213,7 +213,7 @@ char *nvmf_hostnqn_generate();
 
 /**
  * nvmf_hostnqn_from_file() - Reads the host nvm qualified name from the config
- * 			      default location in @SYSCONFDIR@/nvme/
+ *			      default location in @SYSCONFDIR@/nvme/
  * Return: The host nqn, or NULL if unsuccessful. If found, the caller
  * is responsible to free the string.
  */
@@ -221,9 +221,9 @@ char *nvmf_hostnqn_from_file();
 
 /**
  * nvmf_hostid_from_file() - Reads the host identifier from the config default
- * 			     location in @SYSCONFDIR@/nvme/.
+ *			     location in @SYSCONFDIR@/nvme/.
  * Return: The host identifier, or NULL if unsuccessful. If found, the caller
- * 	   is responsible to free the string.
+ *	   is responsible to free the string.
  */
 char *nvmf_hostid_from_file();
 

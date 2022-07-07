@@ -4,7 +4,7 @@
  * Copyright (c) 2020 Western Digital Corporation or its affiliates.
  *
  * Authors: Keith Busch <keith.busch@wdc.com>
- * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+ *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 
 #ifndef _LIBNVME_IOCTL_H
@@ -195,7 +195,7 @@ struct nvme_uring_cmd {
 
 /**
  * nvme_submit_admin_passthru64() - Submit a 64-bit nvme passthrough admin
- * 				    command
+ *				    command
  * @fd:		File descriptor of nvme device
  * @cmd:	The nvme admin command to send
  * @result:	Optional field to return the result from the CQE DW0-1
@@ -517,7 +517,7 @@ static inline int nvme_identify_ns(int fd, __u32 nsid, struct nvme_id_ns *ns)
 
 /**
  * nvme_identify_allocated_ns() - Same as nvme_identify_ns, but only for
- * 				  allocated namespaces
+ *				  allocated namespaces
  * @fd:		File descriptor of nvme device
  * @nsid:	Namespace to identify
  * @ns:		User space destination address to transfer the data
@@ -709,7 +709,7 @@ static inline int nvme_identify_nvmset_list(int fd, __u16 nvmsetid,
 
 /**
  * nvme_identify_primary_ctrl() - Retrieve NVMe Primary Controller
- * 				  identification
+ *				  identification
  * @fd:		File descriptor of nvme device
  * @cntid:	Return controllers starting at this identifier
  * @cap:	User space destination buffer address to transfer the data
@@ -779,7 +779,7 @@ static inline int nvme_identify_secondary_ctrl_list(int fd, __u32 nsid,
 
 /**
  * nvme_identify_ns_granularity() - Retrieves namespace granularity
- * 				    identification
+ *				    identification
  * @fd:		File descriptor of nvme device
  * @gr_list:	User space destination address to transfer the data
  *
@@ -886,7 +886,7 @@ static inline int nvme_identify_ctrl_csi(int fd, enum nvme_csi csi, void *data)
 }
 
 /**
- * nvme_identify_active_ns_list_csi() - Active namespace ID list associated with a specified I/O command set 
+ * nvme_identify_active_ns_list_csi() - Active namespace ID list associated with a specified I/O command set
  * @fd:		File descriptor of nvme device
  * @nsid:	Return namespaces greater than this identifier
  * @csi:	Command Set Identifier
