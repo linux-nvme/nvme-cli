@@ -43,6 +43,28 @@
  *    &nvme_mi_mi_subsystem_health_status_poll, which is apparently amusing
  *    for our German-speaking readers]
  *
+ * For return values: unless specified in the per-function documentation,
+ * all functions:
+ *
+ *  - return 0 on success
+ *
+ *  - return -1, with errno set, for errors communicating with the MI device,
+ *    either in request or response data
+ *
+ *  - return >1 on MI status errors. This value is the 8-bit MI status
+ *    value, represented by &enum nvme_mi_resp_status. Note that the
+ *    status values may be vendor-defined above 0xe0.
+ *
+ * For the second case, we have a few conventions for errno values:
+ *
+ *  - EPROTO: response data violated the MI protocol, and libnvme cannot
+ *    validly interpret the response
+ *
+ *  - EIO: Other I/O error communicating with device (eg., valid but
+ *    unexpected response data)
+ *
+ *  - EINVAL: invalid input arguments for a command
+ *
  * In line with the core NVMe API, the Admin command functions take an
  * `_args` structure to provide the command-specific parameters. However,
  * for the MI interface, the fd and timeout members of these _args structs
