@@ -134,7 +134,7 @@ int nvme_get_logical_block_size(int fd, __u32 nsid, int *blksize);
  * @fd:		File descriptor of the nvme device
  * @rae:	Retain asynchronous events
  * @log:	On success, set to the value of the allocated and retrieved log.
-  *
+ *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */

@@ -424,8 +424,8 @@ static inline void nvme_feature_decode_namespace_write_protect(__u32 value,
 
 static inline void nvme_id_ns_flbas_to_lbaf_inuse(__u8 flbas, __u8 *lbaf_inuse)
 {
-	*lbaf_inuse = (((flbas & NVME_NS_FLBAS_HIGHER_MASK) >> 1) \
-		| (flbas & NVME_NS_FLBAS_LOWER_MASK));
+	*lbaf_inuse = (((flbas & NVME_NS_FLBAS_HIGHER_MASK) >> 1) |
+			(flbas & NVME_NS_FLBAS_LOWER_MASK));
 }
 
 struct nvme_root;
@@ -497,7 +497,7 @@ char *kv_keymatch(const char *kv, const char *key);
  * Return: If @s starts with @prefix, then return a pointer within @s at
  * the first character after the matched @prefix. NULL otherwise.
  */
-char* startswith(const char *s, const char *prefix);
+char *startswith(const char *s, const char *prefix);
 
 #define __round_mask(val, mult) ((__typeof__(val))((mult)-1))
 

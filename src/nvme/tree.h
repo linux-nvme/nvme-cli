@@ -304,7 +304,7 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 #define nvme_for_each_host_safe(r, h, _h)		\
 	for (h = nvme_first_host(r),			\
 	     _h = nvme_next_host(r, h);			\
-             h != NULL;					\
+	     h != NULL;					\
 	     h = _h, _h = nvme_next_host(r, h))
 
 /**
@@ -324,8 +324,8 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
  */
 #define nvme_for_each_subsystem_safe(h, s, _s)			\
 	for (s = nvme_first_subsystem(h),			\
-             _s = nvme_next_subsystem(h, s);			\
-             s != NULL;						\
+	     _s = nvme_next_subsystem(h, s);			\
+	     s != NULL;						\
 	     s = _s, _s = nvme_next_subsystem(h, s))
 
 /**
@@ -345,8 +345,8 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
  */
 #define nvme_subsystem_for_each_ctrl_safe(s, c, _c)		\
 	for (c = nvme_subsystem_first_ctrl(s),			\
-             _c = nvme_subsystem_next_ctrl(s, c);		\
-             c != NULL;						\
+	     _c = nvme_subsystem_next_ctrl(s, c);		\
+	     c != NULL;						\
 	     c = _c, _c = nvme_subsystem_next_ctrl(s, c))
 
 /**
@@ -366,8 +366,8 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
  */
 #define nvme_ctrl_for_each_ns_safe(c, n, _n)			\
 	for (n = nvme_ctrl_first_ns(c),				\
-             _n = nvme_ctrl_next_ns(c, n);			\
-             n != NULL;						\
+	     _n = nvme_ctrl_next_ns(c, n);			\
+	     n != NULL;						\
 	     n = _n, _n = nvme_ctrl_next_ns(c, n))
 
 /**
@@ -387,8 +387,8 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
  */
 #define nvme_ctrl_for_each_path_safe(c, p, _p)			\
 	for (p = nvme_ctrl_first_path(c),			\
-             _p = nvme_ctrl_next_path(c, p);			\
-             p != NULL;						\
+	     _p = nvme_ctrl_next_path(c, p);			\
+	     p != NULL;						\
 	     p = _p, _p = nvme_ctrl_next_path(c, p))
 
 /**
@@ -408,8 +408,8 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
  */
 #define nvme_subsystem_for_each_ns_safe(s, n, _n)		\
 	for (n = nvme_subsystem_first_ns(s),			\
-             _n = nvme_subsystem_next_ns(s, n);			\
-             n != NULL;						\
+	     _n = nvme_subsystem_next_ns(s, n);			\
+	     n != NULL;						\
 	     n = _n, _n = nvme_subsystem_next_ns(s, n))
 
 /**
@@ -430,7 +430,7 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 #define nvme_namespace_for_each_path_safe(n, p, _p)		\
 	for (p = nvme_namespace_first_path(n),			\
 	     _p = nvme_namespace_next_path(n, p);		\
-             p != NULL;						\
+	     p != NULL;						\
 	     p = _p, _p = nvme_namespace_next_path(n, p))
 
 /**

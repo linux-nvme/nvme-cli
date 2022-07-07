@@ -99,25 +99,25 @@ struct nvme_passthru_cmd {
  * @result:	Set on completion to the command's CQE DWORD 0-1 controller response
  */
 struct nvme_passthru_cmd64 {
-        __u8    opcode;
-        __u8    flags;
-        __u16   rsvd1;
-        __u32   nsid;
-        __u32   cdw2;
-        __u32   cdw3;
-        __u64   metadata;
-        __u64   addr;
-        __u32   metadata_len;
-        __u32   data_len;
-        __u32   cdw10;
-        __u32   cdw11;
-        __u32   cdw12;
-        __u32   cdw13;
-        __u32   cdw14;
-        __u32   cdw15;
-        __u32   timeout_ms;
-        __u32   rsvd2;
-        __u64   result;
+	__u8    opcode;
+	__u8    flags;
+	__u16   rsvd1;
+	__u32   nsid;
+	__u32   cdw2;
+	__u32   cdw3;
+	__u64   metadata;
+	__u64   addr;
+	__u32   metadata_len;
+	__u32   data_len;
+	__u32   cdw10;
+	__u32   cdw11;
+	__u32   cdw12;
+	__u32   cdw13;
+	__u32   cdw14;
+	__u32   cdw15;
+	__u32   timeout_ms;
+	__u32   rsvd2;
+	__u64   result;
 };
 
 /**
@@ -186,12 +186,12 @@ struct nvme_uring_cmd {
  * @align:	Alignment information
  */
 #define sizeof_args(type, member, align)					\
-  ({										\
-	  type s;								\
-	  size_t t = offsetof(type, member) + sizeof(s.member);			\
-	  size_t p = (sizeof(align) - (t % sizeof(align))) % sizeof(align);	\
-	  t + p;								\
-  })
+({										\
+	type s;									\
+	size_t t = offsetof(type, member) + sizeof(s.member);			\
+	size_t p = (sizeof(align) - (t % sizeof(align))) % sizeof(align);	\
+	t + p;									\
+})
 
 /**
  * nvme_submit_admin_passthru64() - Submit a 64-bit nvme passthrough admin
@@ -1287,8 +1287,8 @@ static inline int nvme_get_log_supported_log_pages(int fd, bool rae,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-static inline int nvme_get_log_error(int fd, unsigned nr_entries, bool rae,
-		       struct nvme_error_log_page *err_log)
+static inline int nvme_get_log_error(int fd, unsigned int nr_entries, bool rae,
+				     struct nvme_error_log_page *err_log)
 {
 	return nvme_get_nsid_log(fd, rae, NVME_LOG_LID_ERROR,
 				 NVME_NSID_ALL, sizeof(*err_log) * nr_entries,
@@ -1641,7 +1641,7 @@ static inline int nvme_get_log_predictable_lat_event(int fd, bool rae,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_get_log_ana(int fd, enum nvme_log_ana_lsp lsp, bool rae,
-			           __u64 offset, __u32 len, void *log)
+				   __u64 offset, __u32 len, void *log)
 {
 	struct nvme_get_log_args args = {
 		.lpo = offset,
@@ -2249,7 +2249,7 @@ int nvme_set_features_auto_pst(int fd, bool apste, bool save,
  * nvme_set_features_timestamp() - Set timestamp feature
  * @fd:		File descriptor of nvme device
  * @save:	Save value across power states
- * @timestamp:	The current timestamp value to assign to this this feature
+ * @timestamp:	The current timestamp value to assign to this feature
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
@@ -2310,7 +2310,7 @@ int nvme_set_features_rrl(int fd, __u8 rrl, __u16 nvmsetid, bool save,
  */
 int nvme_set_features_plm_config(int fd, bool enable, __u16 nvmsetid,
 				 bool save, struct nvme_plm_config *data,
-				 __u32*result);
+				 __u32 *result);
 
 /**
  * nvme_set_features_plm_window() - Set window select feature
@@ -3250,7 +3250,7 @@ static inline int nvme_directive_recv_stream_parameters(int fd, __u32 nsid,
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
 static inline int nvme_directive_recv_stream_status(int fd, __u32 nsid,
-			unsigned nr_entries,
+			unsigned int nr_entries,
 			struct nvme_streams_directive_status *id)
 {
 	struct nvme_directive_recv_args args = {
@@ -3409,7 +3409,8 @@ int nvme_virtual_mgmt(struct nvme_virtual_mgmt_args *args);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-static inline int nvme_flush(int fd, __u32 nsid) {
+static inline int nvme_flush(int fd, __u32 nsid)
+{
 	struct nvme_passthru_cmd cmd = {};
 
 	cmd.opcode = nvme_cmd_flush;
