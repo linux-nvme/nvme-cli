@@ -436,20 +436,19 @@ static void _dbus_err(nvme_root_t root, int rc, int line) {
 
 #define dbus_err(r, rc) _dbus_err(r, rc, __LINE__)
 
-/* Returns -EEXISTS on duplicate */
 static int nvme_mi_mctp_add(nvme_root_t root, unsigned int netid, __u8 eid)
 {
 	nvme_mi_ep_t ep = NULL;
 
-	/* ensure we don't already have an endpoint with the same net/eid */
+	/* ensure we don't already have an endpoint with the same net/eid. if
+	 * we do, just skip, no need to re-add. */
 	list_for_each(&root->endpoints, ep, root_entry) {
 		if (ep->transport != &nvme_mi_transport_mctp) {
 			continue;
 		}
 		const struct nvme_mi_transport_mctp *t = ep->transport_data;
-		if (t->eid == eid && t->net == netid) {
-			return -EEXIST;
-		}
+		if (t->eid == eid && t->net == netid)
+			return 0;
 	}
 
 	ep = nvme_mi_open_mctp(root, netid, eid);
