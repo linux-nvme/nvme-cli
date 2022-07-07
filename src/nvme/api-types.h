@@ -189,7 +189,7 @@ struct nvme_format_nvm_args {
 /**
  * struct nvme_ns_mgmt_args - Arguments for NVMe Namespace Management command
  * @result:	NVMe command result
- * @ns:		Namespace identication descriptors
+ * @ns:		Namespace identification descriptors
  * @args_size:	Size of &struct nvme_ns_mgmt_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
@@ -338,7 +338,7 @@ struct nvme_security_receive_args {
  * @timeout:	Timeout in ms
  * @nsid:	Namespace ID to retrieve LBA status
  * @mndw:	Maximum number of dwords to return
- * @atype:	Action type mechanism to determine LBA status desctriptors to
+ * @atype:	Action type mechanism to determine LBA status descriptors to
  *		return, see &enum nvme_lba_status_atype
  * @rl:		Range length from slba to perform the action
  */
@@ -358,7 +358,7 @@ struct nvme_get_lba_status_args {
 /**
  * struct nvme_directive_send_args - Arguments for the NVMe Directive Send command
  * @result:	If successful, the CQE dword0 value
- * @data:	Data payload to to be send
+ * @data:	Data payload to be send
  * @args_size:	Size of &struct nvme_directive_send_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
@@ -386,7 +386,7 @@ struct nvme_directive_send_args {
 /**
  * struct nvme_directive_recv_args - Arguments for the NVMe Directive Receive command
  * @result:	If successful, the CQE dword0 value
- * @data:	Usespace address of data payload
+ * @data:	Userspace address of data payload
  * @args_size:	Size of &struct nvme_directive_recv_args
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
@@ -501,7 +501,7 @@ struct nvme_get_property_args {
  * @timeout:	Timeout in ms
  * @ovrpat:	Overwrite pattern
  * @sanact:	Sanitize action, see &enum nvme_sanitize_sanact
- * @ause:	Set to allow unrestriced sanitize exit
+ * @ause:	Set to allow unrestricted sanitize exit
  * @owpass:	Overwrite pass count
  * @oipbp:	Set to overwrite invert pattern between passes
  * @nodas:	Set to not deallocate blocks after sanitizing
@@ -650,7 +650,7 @@ struct nvme_dsm_args {
  * struct nvme_copy_args - Arguments for the NVMe Copy command
  * @sdlba:	Start destination LBA
  * @result:	The command completion result from CQE dword0
- * @copy:	Range descriptior
+ * @copy:	Range description
  * @args_size:	Size of &struct nvme_copy_args
  * @fd:		File descriptor of the nvme device
  * @timeout:	Timeout in ms
@@ -692,7 +692,7 @@ struct nvme_copy_args {
 };
 
 /**
- * struct nvme_resv_acquire_args - Arguments for the NVMe Reservation Acquire Comand
+ * struct nvme_resv_acquire_args - Arguments for the NVMe Reservation Acquire Command
  * @nrkey:	The reservation key to be unregistered from the namespace if
  *		the action is preempt
  * @iekey:	Set to ignore the existing key
@@ -754,7 +754,7 @@ struct nvme_resv_register_args {
  * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
  * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
- * @rrela:	Reservation releast action, see &enum nvme_resv_rrela
+ * @rrela:	Reservation release action, see &enum nvme_resv_rrela
  * @iekey:	Set to ignore the existing key
  */
 struct nvme_resv_release_args {
@@ -778,7 +778,7 @@ struct nvme_resv_release_args {
  * @fd:		File descriptor of nvme device
  * @timeout:	Timeout in ms
  * @nsid:	Namespace identifier
- * @len:	Number of bytes to request transfered with this command
+ * @len:	Number of bytes to request transferred with this command
  * @eds:	Request extended Data Structure
  */
 struct nvme_resv_report_args {

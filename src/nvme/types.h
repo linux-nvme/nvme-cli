@@ -58,7 +58,7 @@
  * @NVME_LOG_LSI_NONE:		Use to omit a log lsi command parameter
  * @NVME_LOG_LPO_NONE:		Use to omit a log lpo command parameter
  * @NVME_IDENTIFY_DATA_SIZE:	The transfer size for nvme identify commands
- * @NVME_LOG_SUPPORTED_LOG_PAGES_MAX: The lagest possible index in the supported
+ * @NVME_LOG_SUPPORTED_LOG_PAGES_MAX: The largest possible index in the supported
  *				log pages log.
  * @NVME_ID_NVMSET_LIST_MAX:	The largest possible nvmset index in identify
  * 				nvmeset
@@ -659,7 +659,7 @@ static inline unsigned int nvme_psd_power_scale(__u8 ps)
  * 			    Feature (see &struct nvme_psd.apw) to inform the
  * 			    NVM subsystem or indicate the conditions for the
  * 			    active power level.
- * @NVME_PSD_WORKLOAD_NP: The workload is unkown or not provided.
+ * @NVME_PSD_WORKLOAD_NP: The workload is unknown or not provided.
  * @NVME_PSD_WORKLOAD_1: Extended Idle Period with a Burst of Random Write
  * 			 consists of five minutes of idle followed by
  * 			 thirty-two random write commands of size 1 MiB
@@ -681,7 +681,7 @@ enum nvme_psd_workload {
 };
 
 /**
- * struct nvme_id_psd - Power Managmenet data structure
+ * struct nvme_id_psd - Power Management data structure
  * @mp:	   Maximum Power indicates the sustained maximum power consumed by the
  * 	   NVM subsystem in this power state. The power in Watts is equal to
  * 	   the value in this field multiplied by the scale specified in the Max
@@ -698,7 +698,7 @@ enum nvme_psd_workload {
  * @rrt:   Relative Read Throughput indicates the read throughput rank
  * 	   associated with this power state relative to others. The value in
  * 	   this is less than the number of supported power states.
- * @rrl:   Relative Reade Latency indicates the read latency rank associated
+ * @rrl:   Relative Read Latency indicates the read latency rank associated
  * 	   with this power state relative to others. The value in this field is
  * 	   less than the number of supported power states.
  * @rwt:   Relative Write Throughput indicates write throughput rank associated
@@ -746,9 +746,9 @@ struct nvme_id_psd {
  * 	       the PCI SIG.
  * @ssvid:     PCI Subsystem Vendor ID, the company vendor identifier that is
  * 	       assigned by the PCI SIG for the subsystem.
- * @sn:        Serial Number in ascii
- * @mn:        Model Number in ascii
- * @fr:        Firmware Revision in ascii, the currently active firmware
+ * @sn:        Serial Number in ASCII
+ * @mn:        Model Number in ASCII
+ * @fr:        Firmware Revision in ASCII, the currently active firmware
  * 	       revision for the NVM subsystem
  * @rab:       Recommended Arbitration Burst, reported as a power of two
  * @ieee:      IEEE assigned Organization Unique Identifier
@@ -775,11 +775,11 @@ struct nvme_id_psd {
  * @cntrltype: Controller Type, see &enum nvme_id_ctrl_cntrltype
  * @fguid:     FRU GUID, a 128-bit value that is globally unique for a given
  * 	       Field Replaceable Unit
- * @crdt1:     Controller Retry Delay time in 100 millisecod units if CQE CRD
+ * @crdt1:     Controller Retry Delay time in 100 millisecond units if CQE CRD
  *	       field is 1
- * @crdt2:     Controller Retry Delay time in 100 millisecod units if CQE CRD
+ * @crdt2:     Controller Retry Delay time in 100 millisecond units if CQE CRD
  * 	       field is 2
- * @crdt3:     Controller Retry Delay time in 100 millisecod units if CQE CRD
+ * @crdt3:     Controller Retry Delay time in 100 millisecond units if CQE CRD
  * 	       field is 3
  * @rsvd134:   Reserved
  * @nvmsr:     NVM Subsystem Report, see &enum nvme_id_ctrl_nvmsr
@@ -925,7 +925,7 @@ struct nvme_id_psd {
  * @mnan:      Maximum Number of Allowed Namespaces indicates the maximum
  * 	       number of namespaces supported by the NVM subsystem.
  * @maxdna:    Maximum Domain Namespace Attachments indicates the maximum
- *             of the sum of the numver of namespaces attached to each I/O
+ *             of the sum of the number of namespaces attached to each I/O
  *             controller in the Domain.
  * @maxcna:    Maximum I/O Controller Namespace Attachments indicates the
  *             maximum number of namespaces that are allowed to be attached to
@@ -1123,7 +1123,7 @@ enum nvme_id_ctrl_oaes {
  * @NVME_CTRL_CTRATT_UUID_LIST: UUID List reporting supported
  * @NVME_CTRL_CTRATT_MDS: Multi-Domain Subsystem supported
  * @NVME_CTRL_CTRATT_FIXED_CAP: Fixed Capacity Management  supported
- * @NVME_CTRL_CTRATT_VARIABLE_CAP: Variable Capacity Managment supported
+ * @NVME_CTRL_CTRATT_VARIABLE_CAP: Variable Capacity Management supported
  * @NVME_CTRL_CTRATT_DEL_ENDURANCE_GROUPS: Delete Endurance Groups supported
  * @NVME_CTRL_CTRATT_DEL_NVM_SETS: Delete NVM Sets supported
  * @NVME_CTRL_CTRATT_ELBAS: Extended LBA Formats supported
@@ -1210,7 +1210,7 @@ enum nvme_id_ctrl_vwci {
 };
 
 /**
- * enum nvme_id_ctrl_mec - Flags indicatings the capabilities of the Management
+ * enum nvme_id_ctrl_mec - Flags indicating the capabilities of the Management
  * 			   Endpoint in the Controller, &struct nvme_id_ctrl.mec.
  * @NVME_CTRL_MEC_SMBUSME: If set, then the NVM Subsystem contains a Management
  * 			   Endpoint on an SMBus/I2C port.
@@ -2060,7 +2060,7 @@ struct nvme_ns_id_desc {
  * 		     contains a copy of the NGUID field in struct nvme_id_ns.nguid.
  * @NVME_NIDT_UUID:  The NID field contains a 128-bit Universally Unique
  * 		     Identifier (UUID) as specified in RFC 4122.
- * @NVME_NIDT_CSI:   The NID field contains the command set indentifier.
+ * @NVME_NIDT_CSI:   The NID field contains the command set identifier.
  */
 enum nvme_ns_id_desc_nidt {
 	NVME_NIDT_EUI64		= 1,
@@ -3034,7 +3034,7 @@ enum nvme_cmd_get_log_telemetry_host_lsp {
  * @ctrldgn:   Telemetry Controller-Initiated Data Generation Number is
  * 	       a value that is incremented each time the controller initiates a
  * 	       capture of its internal controller state in the controller .
- * @rsnident:  Reason Identifieris a vendor specific identifier that describes
+ * @rsnident:  Reason Identifiers a vendor specific identifier that describes
  * 	       the operating conditions of the controller at the time of
  * 	       capture.
  * @data_area: Telemetry data blocks, vendor specific information data.
@@ -3629,7 +3629,7 @@ struct nvme_fid_supported_effects_log {
 /**
  * enum nvme_mi_cmd_supported_effects - MI Command Supported and Effects Data Structure
  * @NVME_MI_CMD_SUPPORTED_EFFECTS_CSUPP:	Command Supported
- * @NVME_MI_CMD_SUPPORTED_EFFECTS_UDCC:		User Data Conttent Change
+ * @NVME_MI_CMD_SUPPORTED_EFFECTS_UDCC:		User Data Content Change
  * @NVME_MI_CMD_SUPPORTED_EFFECTS_NCC:		Namespace Capability Change
  * @NVME_MI_CMD_SUPPORTED_EFFECTS_NIC:		Namespace Inventory Change
  * @NVME_MI_CMD_SUPPORTED_EFFECTS_CCC:		Controller Capability Change
@@ -3807,7 +3807,7 @@ struct nvme_capacity_config_desc {
  * struct nvme_supported_cap_config_list_log - Supported Capacity Configuration list log page
  * @sccn:		Number of capacity configuration
  * @rsvd1:		Reserved
- * @cap_config_desc:	Capacity configuration desriptor.
+ * @cap_config_desc:	Capacity configuration descriptor.
  *			See @struct nvme_capacity_config_desc
  */
 struct nvme_supported_cap_config_list_log {
@@ -4176,7 +4176,7 @@ struct nvme_host_metadata {
  *						pre-boot environment.
  * @NVME_CTRL_METADATA_SYS_PROC_MODEL:		Model of the processor.
  * @NVME_CTRL_METADATA_CHIPSET_DRV_NAME:	Chipset driver name.
- * @NVME_CTRL_METADATA_CHIPSET_DRV_VERSION:	Chipsset driver version.
+ * @NVME_CTRL_METADATA_CHIPSET_DRV_VERSION:	Chipset driver version.
  * @NVME_CTRL_METADATA_OS_NAME_AND_BUILD:	Operating system name and build.
  * @NVME_CTRL_METADATA_SYS_PROD_NAME:		System product name.
  * @NVME_CTRL_METADATA_FIRMWARE_VERSION:        Host firmware (e.g UEFI) version.
@@ -4955,7 +4955,7 @@ struct nvmf_ext_attr
  * @tel:      Total Entry Length
  * @numexat:  Number of Extended Attributes
  * @resv1030: Reserved
- * @exat:     Extented Attributes 0 (&struct nvmf_ext_attr)
+ * @exat:     Extended Attributes 0 (&struct nvmf_ext_attr)
  */
 struct nvmf_ext_die
 {
@@ -4993,7 +4993,7 @@ struct nvmf_ext_die
  * through the list. To move to the next entry, one simply adds the
  * current entry's length (TEL) to the "walk" pointer. The number of
  * entries in the list is specified by NUMENT.  Although extended
- * entries are of a variable lengths (TEL), TEL is always a mutiple of
+ * entries are of a variable lengths (TEL), TEL is always a multiple of
  * 4 bytes.
  */
 union nvmf_die
@@ -6189,7 +6189,7 @@ enum nvme_admin_opcode {
 /**
  * enum nvme_identify_cns -			Identify - CNS Values
  * @NVME_IDENTIFY_CNS_NS:			Identify Namespace data structure
- * @NVME_IDENTIFY_CNS_CTRL:			Identify Controller data structur
+ * @NVME_IDENTIFY_CNS_CTRL:			Identify Controller data structure
  * @NVME_IDENTIFY_CNS_NS_ACTIVE_LIST:		Active Namespace ID list
  * @NVME_IDENTIFY_CNS_NS_DESC_LIST:		Namespace Identification Descriptor list
  * @NVME_IDENTIFY_CNS_NVMSET_LIST:		NVM Set List
@@ -6216,7 +6216,7 @@ enum nvme_admin_opcode {
  * @NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST:	Secondary Controller list of controllers
  * 						associated with the primary controller
  * 						processing the command
- * @NVME_IDENTIFY_CNS_NS_GRANULARITY:		A Namespace Granularity Lis
+ * @NVME_IDENTIFY_CNS_NS_GRANULARITY:		A Namespace Granularity List
  * @NVME_IDENTIFY_CNS_UUID_LIST:		A UUID List
  * @NVME_IDENTIFY_CNS_DOMAIN_LIST:		Domain List
  * @NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID:	Endurance Group List

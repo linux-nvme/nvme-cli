@@ -142,9 +142,9 @@ nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s);
  * @subsysnqn:	Subsystem NQN
  *
  * Lookup a &nvme_subsystem_t object in @h base on @name (if present)
- * and @subsystemnqn or create one if not found.
+ * and @subsysnqn or create one if not found.
  *
- * Return: nvme_subsystme_t object
+ * Return: nvme_subsystem_t object
  */
 nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,
 				       const char *name,
@@ -443,7 +443,7 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 		p = nvme_namespace_next_path(n, p))
 
 /**
- * nvme_ns_get_fd() - Get associated filedescriptor
+ * nvme_ns_get_fd() - Get associated file descriptor
  * @n:	Namespace instance
  *
  * Return: File descriptor associated with @n or -1
@@ -483,10 +483,10 @@ int nvme_ns_get_meta_size(nvme_ns_t n);
 uint64_t nvme_ns_get_lba_count(nvme_ns_t n);
 
 /**
- * nvme_ns_get_lba_util() - LBA utilisation of a namespace
+ * nvme_ns_get_lba_util() - LBA utilization of a namespace
  * @n:	Namespace instance
  *
- * Return: LBA utilisation of @n
+ * Return: LBA utilization of @n
  */
 uint64_t nvme_ns_get_lba_util(nvme_ns_t n);
 
@@ -805,7 +805,7 @@ const char *nvme_ctrl_get_queue_count(nvme_ctrl_t c);
 
 /**
  * nvme_ctrl_get_serial() - Serial number of a controller
- * @c:	Conroller instance
+ * @c:	Controller instance
  *
  * Return: Serial number string of @c
  */
@@ -1019,7 +1019,7 @@ void nvme_unlink_ctrl(struct nvme_ctrl *c);
  * nvme_subsystem_get_nqn() - Retrieve NQN from subsystem
  * @s:	nvme_subsystem_t object
  *
- * Return: NQN of systemstem
+ * Return: NQN of subsystem
  */
 const char *nvme_subsystem_get_nqn(nvme_subsystem_t s);
 

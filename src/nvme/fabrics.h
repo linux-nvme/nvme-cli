@@ -231,7 +231,7 @@ char *nvmf_hostid_from_file();
  * nvmf_connect_disc_entry() - Connect controller based on the discovery log page entry
  * @h:		Host to which the controller should be connected
  * @e:		Discovery log page entry
- * @defcfg:	Default configurationn to be used for the new controller
+ * @defcfg:	Default configuration to be used for the new controller
  * @discover:	Set to 'true' if the new controller is a discovery controller
  *
  * Return: Pointer to the new controller

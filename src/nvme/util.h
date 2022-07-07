@@ -59,7 +59,7 @@ enum nvme_connect_err {
 
 /**
  * nvme_status_to_errno() - Converts nvme return status to errno
- * @status:  Return status from an nvme passthrough commmand
+ * @status:  Return status from an nvme passthrough command
  * @fabrics: Set to true if &status is to a fabrics target.
  *
  * Return: An errno representing the nvme status if it is an nvme status field,
@@ -69,7 +69,7 @@ __u8 nvme_status_to_errno(int status, bool fabrics);
 
 /**
  * nvme_status_to_string() - Returns string describing nvme return status.
- * @status:  Return status from an nvme passthrough commmand
+ * @status:  Return status from an nvme passthrough command
  * @fabrics: Set to true if &status is to a fabrics target.
  *
  * Return: String representation of the nvme status if it is an nvme status field,
@@ -526,7 +526,7 @@ static inline __u16 nvmf_exat_len(size_t val_len)
 }
 
 /**
- * nvmf_exat_size - Return min algined size to hold value
+ * nvmf_exat_size - Return min aligned size to hold value
  * @val_len: This is the length of the data to be copied to the "exatval"
  *           field of a "struct nvmf_ext_attr".
  *

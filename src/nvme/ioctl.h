@@ -3067,7 +3067,7 @@ int nvme_security_send(struct nvme_security_send_args *args);
 
 /**
  * nvme_security_receive() - Security Receive command
- * @args:	&struct nvme_security_recevice argument structure
+ * @args:	&struct nvme_security_receive argument structure
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.

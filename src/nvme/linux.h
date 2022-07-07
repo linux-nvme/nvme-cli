@@ -25,7 +25,7 @@
  * @fd:		File descriptor of nvme device
  * @size:	Total size of the firmware image to transfer
  * @xfer:	Maximum size to send with each partial transfer
- * @offset:	Starting offset to send with this firmware downlaod
+ * @offset:	Starting offset to send with this firmware download
  * @buf:	Address of buffer containing all or part of the firmware image.
  *
  * Return: The nvme command status if a response was received (see
@@ -109,7 +109,7 @@ int nvme_get_new_host_telemetry(int fd,  struct nvme_telemetry_log **log,
 int nvme_get_log_page(int fd, __u32 xfer_len, struct nvme_get_log_args *args);
 
 /**
- * nvme_get_ana_log_len() - Retreive size of the current ANA log
+ * nvme_get_ana_log_len() - Retrieve size of the current ANA log
  * @fd:		File descriptor of nvme device
  * @analen:	Pointer to where the length will be set on success
  *
@@ -130,10 +130,10 @@ int nvme_get_ana_log_len(int fd, size_t *analen);
 int nvme_get_logical_block_size(int fd, __u32 nsid, int *blksize);
 
 /**
- * nvme_get_lba_status_log() - Retreive the LBA Status log page
+ * nvme_get_lba_status_log() - Retrieve the LBA Status log page
  * @fd:		File descriptor of the nvme device
  * @rae:	Retain asynchronous events
- * @log:	On success, set to the value of the allocated and retreived log.
+ * @log:	On success, set to the value of the allocated and retrieved log.
   *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.

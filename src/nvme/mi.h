@@ -147,7 +147,7 @@ enum nvme_mi_ror {
  * @NVME_MI_RESP_ENC_XFER_REFUSED: Enclosure services transfer refused
  * @NVME_MI_RESP_ENC_FUNC_UNSUP: Unsupported enclosure services function
  * @NVME_MI_RESP_ENC_SERV_UNAVAIL: Enclosure services unavailable
- * @NVME_MI_RESP_ENC_DEGRADED: Noncriticial failure detected by enc. services
+ * @NVME_MI_RESP_ENC_DEGRADED: Noncritical failure detected by enc. services
  * @NVME_MI_RESP_SANITIZE_IN_PROGRESS: Command prohibited during sanitize
  */
 enum nvme_mi_resp_status {
@@ -523,7 +523,7 @@ nvme_mi_ctrl_t nvme_mi_next_ctrl(nvme_mi_ep_t ep, nvme_mi_ctrl_t c);
  * @netid: MCTP network ID on this system
  * @eid: MCTP endpoint ID
  *
- * Transport-specific endpoint initialisation for MI-connected endpoints. Once
+ * Transport-specific endpoint initialization for MI-connected endpoints. Once
  * an endpoint is created, the rest of the API is transport-independent.
  *
  * Return: New endpoint object for @netid & @eid, or NULL on failure.
@@ -543,8 +543,8 @@ void nvme_mi_close(nvme_mi_ep_t ep);
 /**
  * nvme_mi_scan_mctp - look for MCTP-connected NVMe-MI endpoints.
  *
- * Description: This function queries the system mctp daemon ("mctpd") over
- * dbus, to find MCTP endpoints that report support for NVMe-MI over MCTP.
+ * Description: This function queries the system MCTP daemon ("mctpd") over
+ * D-Bus, to find MCTP endpoints that report support for NVMe-MI over MCTP.
  *
  * This requires libvnme-mi to be compiled with D-Bus support; if not, this
  * will return NULL.
@@ -577,7 +577,7 @@ int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan);
 /**
  * nvme_mi_init_ctrl() - initialise a NVMe controller.
  * @ep: Endpoint to create under
- * @ctrl_id: ID of controller to initialise.
+ * @ctrl_id: ID of controller to initialize.
  *
  * Create a connection to a controller behind the endpoint specified in @ep.
  * Controller IDs may be queried from the endpoint through
@@ -706,7 +706,7 @@ int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
  * as the LSB of @dw0. Other @dw0 and @dw1 data is configuration-identifier
  * specific.
  *
- * On a sucessful Configuration Get, the @nmresp pointer will be populated with
+ * On a successful Configuration Get, the @nmresp pointer will be populated with
  * the bytes from the 3-byte NMRESP field, converted to native endian.
  *
  * See &enum nvme_mi_config_id for identifiers.
@@ -733,7 +733,7 @@ int nvme_mi_mi_config_get(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1,
 int nvme_mi_mi_config_set(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1);
 
 /**
- * nvme_mi_mi_config_get_smbus_freq - get configuraton: SMBus port frequency
+ * nvme_mi_mi_config_get_smbus_freq - get configuration: SMBus port frequency
  * @ep: endpoint for MI communication
  * @port: port ID to query
  * @freq: output value for current frequency configuration
@@ -759,7 +759,7 @@ static inline int nvme_mi_mi_config_get_smbus_freq(nvme_mi_ep_t ep, __u8 port,
 }
 
 /**
- * nvme_mi_mi_config_set_smbus_freq - set configuraton: SMBus port frequency
+ * nvme_mi_mi_config_set_smbus_freq - set configuration: SMBus port frequency
  * @ep: endpoint for MI communication
  * @port: port ID to set
  * @freq: new frequency configuration
@@ -805,7 +805,7 @@ static inline int nvme_mi_mi_config_set_health_status_change(nvme_mi_ep_t ep,
 }
 
 /**
- * nvme_mi_mi_config_get_mctp_mtu - get configuraton: MCTP MTU
+ * nvme_mi_mi_config_get_mctp_mtu - get configuration: MCTP MTU
  * @ep: endpoint for MI communication
  * @port: port ID to query
  * @mtu: output value for current MCTP MTU configuration
@@ -836,7 +836,7 @@ static inline int nvme_mi_mi_config_get_mctp_mtu(nvme_mi_ep_t ep, __u8 port,
 }
 
 /**
- * nvme_mi_mi_config_set_mctp_mtu - set configuraton: MCTP MTU
+ * nvme_mi_mi_config_set_mctp_mtu - set configuration: MCTP MTU
  * @ep: endpoint for MI communication
  * @port: port ID to set
  * @mtu: new MTU configuration
@@ -913,7 +913,7 @@ int nvme_mi_admin_xfer(nvme_mi_ctrl_t ctrl,
  * Unless you're performing a vendor-unique identify command, You'll probably
  * want to use one of the identify helpers (nvme_mi_admin_identify,
  * nvme_mi_admin_identify_cns_nsid, or nvme_mi_admin_identify_<type>) instead
- * of this. If the type of your identify command is standardised but not
+ * of this. If the type of your identify command is standardized but not
  * yet supported by libnvme-mi, please contact the maintainers.
  *
  * Return: 0 on success, non-zero on failure
@@ -995,7 +995,7 @@ static inline int nvme_mi_admin_identify_cns_nsid(nvme_mi_ctrl_t ctrl,
  *
  * Will return an error if the length of the response data (from the
  * controller) is not a full &NVME_IDENTIFY_DATA_SIZE, so @id will be
- * be fully populated on success.
+ * fully populated on success.
  *
  * Return: 0 on success, non-zero on failure
  *
@@ -1020,7 +1020,7 @@ static inline int nvme_mi_admin_identify_ctrl(nvme_mi_ctrl_t ctrl,
  *
  * Will return an error if the length of the response data (from the
  * controller) is not a full &NVME_IDENTIFY_DATA_SIZE, so @id will be
- * be fully populated on success.
+ * fully populated on success.
  *
  * Return: 0 on success, non-zero on failure
  *
