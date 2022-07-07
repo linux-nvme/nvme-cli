@@ -45,6 +45,11 @@ Plugins/Vendor extension commands
 
 include::cmd-plugins.txt[]
 
+RETURNS
+-------
+All commands will behave the same, they will return 0 on success and 1 on
+failure.
+
 FURTHER DOCUMENTATION
 ---------------------
 See the freely available references on the http://nvmexpress.org[Official
