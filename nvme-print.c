@@ -6705,14 +6705,14 @@ static void nvme_show_auto_pst(struct nvme_feat_auto_pst *apst)
 static void nvme_show_timestamp(struct nvme_timestamp *ts)
 {
 	struct tm *tm;
-	char buffer[32];
+	char buffer[320];
 	time_t timestamp = int48_to_long(ts->timestamp) / 1000;
 
 	tm = localtime(&timestamp);
-	strftime(buffer, sizeof(buffer), "%c %Z", tm);
 
 	printf("\tThe timestamp is : %"PRIu64" (%s)\n",
-		int48_to_long(ts->timestamp), buffer);
+		int48_to_long(ts->timestamp),
+		strftime(buffer, sizeof(buffer), "%c %Z", tm) ? buffer : "-");
 	printf("\t%s\n", (ts->attr & 2) ?
 		"The Timestamp field was initialized with a "\
 			"Timestamp value using a Set Features command." :
