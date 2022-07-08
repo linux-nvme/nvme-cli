@@ -160,7 +160,7 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 		"specified controller. Operating parameters are grouped "\
 		"and identified by Feature Identifiers; each Feature "\
 		"Identifier contains one or more attributes that may affect "\
-		"behaviour of the feature. Each Feature has three possible "\
+		"behavior of the feature. Each Feature has three possible "\
 		"settings: default, saveable, and current. If a Feature is "\
 		"saveable, it may be modified by set-feature. Default values "\
 		"are vendor-specific and not changeable. Use set-feature to "\
