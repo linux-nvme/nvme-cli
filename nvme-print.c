@@ -6710,7 +6710,7 @@ static void nvme_show_timestamp(struct nvme_timestamp *ts)
 
 	tm = localtime(&timestamp);
 
-	printf("\tThe timestamp is : %"PRIu64" (%s)\n",
+	printf("\tThe timestamp is : %'"PRIu64" (%s)\n",
 		int48_to_long(ts->timestamp),
 		strftime(buffer, sizeof(buffer), "%c %Z", tm) ? buffer : "-");
 	printf("\t%s\n", (ts->attr & 2) ?
