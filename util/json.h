@@ -25,6 +25,8 @@
 	} else								\
 		json_object_object_add(o, k, json_object_new_int(v))
 #endif
+#define json_object_add_value_double(o, k, v) \
+	json_object_object_add(o, k, util_json_object_new_double(v))
 #define json_object_add_value_float(o, k, v) \
 	json_object_object_add(o, k, json_object_new_double(v))
 #define json_object_add_value_string(o, k, v) \
@@ -41,4 +43,7 @@
 	printf("%s", json_object_to_json_string_ext(o,			\
 		JSON_C_TO_STRING_PRETTY |				\
 		JSON_C_TO_STRING_NOSLASHESCAPE))
+
+struct json_object *util_json_object_new_double(long double d);
+
 #endif
