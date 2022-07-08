@@ -4,7 +4,7 @@
  * Copyright (c) 2020 Western Digital Corporation or its affiliates.
  *
  * Authors: Keith Busch <keith.busch@wdc.com>
- * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+ *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 #ifndef _LIBNVME_UTIL_H
 #define _LIBNVME_UTIL_H
@@ -59,7 +59,7 @@ enum nvme_connect_err {
 
 /**
  * nvme_status_to_errno() - Converts nvme return status to errno
- * @status:  Return status from an nvme passthrough commmand
+ * @status:  Return status from an nvme passthrough command
  * @fabrics: Set to true if &status is to a fabrics target.
  *
  * Return: An errno representing the nvme status if it is an nvme status field,
@@ -69,7 +69,7 @@ __u8 nvme_status_to_errno(int status, bool fabrics);
 
 /**
  * nvme_status_to_string() - Returns string describing nvme return status.
- * @status:  Return status from an nvme passthrough commmand
+ * @status:  Return status from an nvme passthrough command
  * @fabrics: Set to true if &status is to a fabrics target.
  *
  * Return: String representation of the nvme status if it is an nvme status field,
@@ -144,10 +144,10 @@ void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 
 /**
  * nvme_get_feature_length() - Retreive the command payload length for a
- * 			       specific feature identifier
+ *			       specific feature identifier
  * @fid:   Feature identifier, see &enum nvme_features_id.
  * @cdw11: The cdw11 value may affect the transfer (only known fid is
- * 	   %NVME_FEAT_FID_HOST_ID)
+ *	   %NVME_FEAT_FID_HOST_ID)
  * @len:   On success, set to this features payload length in bytes.
  *
  * Return: 0 on success, -1 with errno set to EINVAL if the function did not
@@ -424,8 +424,8 @@ static inline void nvme_feature_decode_namespace_write_protect(__u32 value,
 
 static inline void nvme_id_ns_flbas_to_lbaf_inuse(__u8 flbas, __u8 *lbaf_inuse)
 {
-	*lbaf_inuse = (((flbas & NVME_NS_FLBAS_HIGHER_MASK) >> 1) \
-		| (flbas & NVME_NS_FLBAS_LOWER_MASK));
+	*lbaf_inuse = (((flbas & NVME_NS_FLBAS_HIGHER_MASK) >> 1) |
+			(flbas & NVME_NS_FLBAS_LOWER_MASK));
 }
 
 struct nvme_root;
@@ -497,7 +497,7 @@ char *kv_keymatch(const char *kv, const char *key);
  * Return: If @s starts with @prefix, then return a pointer within @s at
  * the first character after the matched @prefix. NULL otherwise.
  */
-char* startswith(const char *s, const char *prefix);
+char *startswith(const char *s, const char *prefix);
 
 #define __round_mask(val, mult) ((__typeof__(val))((mult)-1))
 
@@ -526,7 +526,7 @@ static inline __u16 nvmf_exat_len(size_t val_len)
 }
 
 /**
- * nvmf_exat_size - Return min algined size to hold value
+ * nvmf_exat_size - Return min aligned size to hold value
  * @val_len: This is the length of the data to be copied to the "exatval"
  *           field of a "struct nvmf_ext_attr".
  *

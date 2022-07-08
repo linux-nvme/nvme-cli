@@ -142,9 +142,9 @@ nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s);
  * @subsysnqn:	Subsystem NQN
  *
  * Lookup a &nvme_subsystem_t object in @h base on @name (if present)
- * and @subsystemnqn or create one if not found.
+ * and @subsysnqn or create one if not found.
  *
- * Return: nvme_subsystme_t object
+ * Return: nvme_subsystem_t object
  */
 nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,
 				       const char *name,
@@ -304,7 +304,7 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 #define nvme_for_each_host_safe(r, h, _h)		\
 	for (h = nvme_first_host(r),			\
 	     _h = nvme_next_host(r, h);			\
-             h != NULL;					\
+	     h != NULL;					\
 	     h = _h, _h = nvme_next_host(r, h))
 
 /**
@@ -324,8 +324,8 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
  */
 #define nvme_for_each_subsystem_safe(h, s, _s)			\
 	for (s = nvme_first_subsystem(h),			\
-             _s = nvme_next_subsystem(h, s);			\
-             s != NULL;						\
+	     _s = nvme_next_subsystem(h, s);			\
+	     s != NULL;						\
 	     s = _s, _s = nvme_next_subsystem(h, s))
 
 /**
@@ -345,8 +345,8 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
  */
 #define nvme_subsystem_for_each_ctrl_safe(s, c, _c)		\
 	for (c = nvme_subsystem_first_ctrl(s),			\
-             _c = nvme_subsystem_next_ctrl(s, c);		\
-             c != NULL;						\
+	     _c = nvme_subsystem_next_ctrl(s, c);		\
+	     c != NULL;						\
 	     c = _c, _c = nvme_subsystem_next_ctrl(s, c))
 
 /**
@@ -366,8 +366,8 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
  */
 #define nvme_ctrl_for_each_ns_safe(c, n, _n)			\
 	for (n = nvme_ctrl_first_ns(c),				\
-             _n = nvme_ctrl_next_ns(c, n);			\
-             n != NULL;						\
+	     _n = nvme_ctrl_next_ns(c, n);			\
+	     n != NULL;						\
 	     n = _n, _n = nvme_ctrl_next_ns(c, n))
 
 /**
@@ -387,8 +387,8 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
  */
 #define nvme_ctrl_for_each_path_safe(c, p, _p)			\
 	for (p = nvme_ctrl_first_path(c),			\
-             _p = nvme_ctrl_next_path(c, p);			\
-             p != NULL;						\
+	     _p = nvme_ctrl_next_path(c, p);			\
+	     p != NULL;						\
 	     p = _p, _p = nvme_ctrl_next_path(c, p))
 
 /**
@@ -408,8 +408,8 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
  */
 #define nvme_subsystem_for_each_ns_safe(s, n, _n)		\
 	for (n = nvme_subsystem_first_ns(s),			\
-             _n = nvme_subsystem_next_ns(s, n);			\
-             n != NULL;						\
+	     _n = nvme_subsystem_next_ns(s, n);			\
+	     n != NULL;						\
 	     n = _n, _n = nvme_subsystem_next_ns(s, n))
 
 /**
@@ -430,7 +430,7 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 #define nvme_namespace_for_each_path_safe(n, p, _p)		\
 	for (p = nvme_namespace_first_path(n),			\
 	     _p = nvme_namespace_next_path(n, p);		\
-             p != NULL;						\
+	     p != NULL;						\
 	     p = _p, _p = nvme_namespace_next_path(n, p))
 
 /**
@@ -443,7 +443,7 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 		p = nvme_namespace_next_path(n, p))
 
 /**
- * nvme_ns_get_fd() - Get associated filedescriptor
+ * nvme_ns_get_fd() - Get associated file descriptor
  * @n:	Namespace instance
  *
  * Return: File descriptor associated with @n or -1
@@ -483,10 +483,10 @@ int nvme_ns_get_meta_size(nvme_ns_t n);
 uint64_t nvme_ns_get_lba_count(nvme_ns_t n);
 
 /**
- * nvme_ns_get_lba_util() - LBA utilisation of a namespace
+ * nvme_ns_get_lba_util() - LBA utilization of a namespace
  * @n:	Namespace instance
  *
- * Return: LBA utilisation of @n
+ * Return: LBA utilization of @n
  */
 uint64_t nvme_ns_get_lba_util(nvme_ns_t n);
 
@@ -805,7 +805,7 @@ const char *nvme_ctrl_get_queue_count(nvme_ctrl_t c);
 
 /**
  * nvme_ctrl_get_serial() - Serial number of a controller
- * @c:	Conroller instance
+ * @c:	Controller instance
  *
  * Return: Serial number string of @c
  */
@@ -1019,7 +1019,7 @@ void nvme_unlink_ctrl(struct nvme_ctrl *c);
  * nvme_subsystem_get_nqn() - Retrieve NQN from subsystem
  * @s:	nvme_subsystem_t object
  *
- * Return: NQN of systemstem
+ * Return: NQN of subsystem
  */
 const char *nvme_subsystem_get_nqn(nvme_subsystem_t s);
 
@@ -1150,7 +1150,7 @@ int nvme_dump_tree(nvme_root_t r);
  * @attr:	sysfs attribute name
  *
  * Return: String with the contents of @attr or %NULL in case of an empty value
- * 	   or in case of an error (indicated by non-zero errno code).
+ *	   or in case of an error (indicated by non-zero errno code).
  */
 char *nvme_get_attr(const char *d, const char *attr);
 
@@ -1160,7 +1160,7 @@ char *nvme_get_attr(const char *d, const char *attr);
  * @attr:	sysfs attribute name
  *
  * Return: String with the contents of @attr or %NULL in case of an empty value
- * 	   or in case of an error (indicated by non-zero errno code).
+ *	   or in case of an error (indicated by non-zero errno code).
  */
 char *nvme_get_subsys_attr(nvme_subsystem_t s, const char *attr);
 
@@ -1170,7 +1170,7 @@ char *nvme_get_subsys_attr(nvme_subsystem_t s, const char *attr);
  * @attr:	sysfs attribute name
  *
  * Return: String with the contents of @attr or %NULL in case of an empty value
- * 	   or in case of an error (indicated by non-zero errno code).
+ *	   or in case of an error (indicated by non-zero errno code).
  */
 char *nvme_get_ctrl_attr(nvme_ctrl_t c, const char *attr);
 
@@ -1180,7 +1180,7 @@ char *nvme_get_ctrl_attr(nvme_ctrl_t c, const char *attr);
  * @attr:	sysfs attribute name
  *
  * Return: String with the contents of @attr or %NULL in case of an empty value
- * 	   or in case of an error (indicated by non-zero errno code).
+ *	   or in case of an error (indicated by non-zero errno code).
  */
 char *nvme_get_ns_attr(nvme_ns_t n, const char *attr);
 
@@ -1200,7 +1200,7 @@ nvme_ns_t nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
  * @attr:	sysfs attribute name
  *
  * Return: String with the contents of @attr or %NULL in case of an empty value
- * 	   or in case of an error (indicated by non-zero errno code).
+ *	   or in case of an error (indicated by non-zero errno code).
  */
 char *nvme_get_path_attr(nvme_path_t p, const char *attr);
 
