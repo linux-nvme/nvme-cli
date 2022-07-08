@@ -87,8 +87,8 @@ const char *nvme_cmd_to_string(int admin, __u8 opcode)
 		case nvme_admin_directive_send:	return "Directive Send";
 		case nvme_admin_directive_recv:	return "Directive Receive";
 		case nvme_admin_virtual_mgmt:	return "Virtualization Management";
-		case nvme_admin_nvme_mi_send:	return "NVMEe-MI Send";
-		case nvme_admin_nvme_mi_recv:	return "NVMEe-MI Receive";
+		case nvme_admin_nvme_mi_send:	return "NVMe-MI Send";
+		case nvme_admin_nvme_mi_recv:	return "NVMe-MI Receive";
 		case nvme_admin_dbbuf:		return "Doorbell Buffer Config";
 		case nvme_admin_format_nvm:	return "Format NVM";
 		case nvme_admin_security_send:	return "Security Send";
@@ -4321,7 +4321,7 @@ void nvme_show_cmd_set_independent_id_ns(
 	if (flags & JSON)
 		return json_nvme_cmd_set_independent_id_ns(ns);
 
-	printf("NVME Identify Command Set Idependent Namespace %d:\n", nsid);
+	printf("NVME Identify Command Set Independent Namespace %d:\n", nsid);
 	printf("nsfeat  : %#x\n", ns->nsfeat);
 	if (human)
 		nvme_show_cmd_set_independent_id_ns_nsfeat(ns->nsfeat);
@@ -4408,7 +4408,7 @@ static void json_nvme_id_ns_descs(void *data)
 			nidt_name = "csi";
 			break;
 		default:
-			/* Skip unnkown types */
+			/* Skip unknown types */
 			len = cur->nidl;
 			break;
 		}
@@ -4493,7 +4493,7 @@ void nvme_show_id_ns_descs(void *data, unsigned nsid, enum nvme_print_flags flag
 			len += sizeof(csi);
 			break;
 		default:
-			/* Skip unnkown types */
+			/* Skip unknown types */
 			len = cur->nidl;
 			break;
 		}
@@ -4506,7 +4506,7 @@ static void print_psd_workload(__u8 apw)
 {
 	switch (apw & 0x7) {
 	case NVME_PSD_WORKLOAD_NP:
-		/* Unkown or not provided */
+		/* Unknown or not provided */
 		printf("-");
 		break;
 
@@ -4985,14 +4985,14 @@ static void show_nvme_id_ns_zoned_ozcs(__le16 ns_ozcs)
 				zrwasup ? "Yes" : "No");
 }
 
-static void nvme_show_zns_id_ns_recommandeded_limit(__le32 ns_rl, int human, 
+static void nvme_show_zns_id_ns_recommended_limit(__le32 ns_rl, int human,
 	const char *target_limit)
 {
-	unsigned int recommandeded_limit = le32_to_cpu(ns_rl);
-	if (!recommandeded_limit && human)
+	unsigned int recommended_limit = le32_to_cpu(ns_rl);
+	if (!recommended_limit && human)
 		printf("%s    : Not Reported\n", target_limit);
 	else
-		printf("%s    : %u\n", target_limit, recommandeded_limit);	
+		printf("%s    : %u\n", target_limit, recommended_limit);
 }
 
 static void nvme_show_zns_id_ns_zrwacap(__u8 zrwacap)
@@ -5056,14 +5056,14 @@ void nvme_show_zns_id_ns(struct nvme_zns_id_ns *ns,
 		printf("mor     : %#x\n", le32_to_cpu(ns->mor));
 	}
 
-	nvme_show_zns_id_ns_recommandeded_limit(ns->rrl,  human, "rrl ");
-	nvme_show_zns_id_ns_recommandeded_limit(ns->frl,  human, "frl ");
-	nvme_show_zns_id_ns_recommandeded_limit(ns->rrl1, human, "rrl1");
-	nvme_show_zns_id_ns_recommandeded_limit(ns->rrl2, human, "rrl2");
-	nvme_show_zns_id_ns_recommandeded_limit(ns->rrl3, human, "rrl3");
-	nvme_show_zns_id_ns_recommandeded_limit(ns->frl,  human, "frl1");
-	nvme_show_zns_id_ns_recommandeded_limit(ns->frl,  human, "frl2");
-	nvme_show_zns_id_ns_recommandeded_limit(ns->frl,  human, "frl3");
+	nvme_show_zns_id_ns_recommended_limit(ns->rrl,  human, "rrl ");
+	nvme_show_zns_id_ns_recommended_limit(ns->frl,  human, "frl ");
+	nvme_show_zns_id_ns_recommended_limit(ns->rrl1, human, "rrl1");
+	nvme_show_zns_id_ns_recommended_limit(ns->rrl2, human, "rrl2");
+	nvme_show_zns_id_ns_recommended_limit(ns->rrl3, human, "rrl3");
+	nvme_show_zns_id_ns_recommended_limit(ns->frl,  human, "frl1");
+	nvme_show_zns_id_ns_recommended_limit(ns->frl,  human, "frl2");
+	nvme_show_zns_id_ns_recommended_limit(ns->frl,  human, "frl3");
 
 	printf("numzrwa : %#x\n", le32_to_cpu(ns->numzrwa));
 	printf("zrwafg  : %u\n", le16_to_cpu(ns->zrwafg));
@@ -5240,16 +5240,16 @@ static void json_nvme_zns_report_zones(void *report, __u32 descs,
 
 static void nvme_show_zns_report_zone_attributes(__u8 za, __u8 zai)
 {
-	const char *const recommanded_limit[4] = {"","1","2","3"};
+	const char *const recommended_limit[4] = {"","1","2","3"};
 	printf("Attrs: Zone Descriptor Extension is %sVaild\n", 
 		(za & NVME_ZNS_ZA_ZDEV)? "" : "Not ");
 	if(za & NVME_ZNS_ZA_RZR) {
 		printf("       Reset Zone Recommended with Reset Recommended Limit%s\n",
-			recommanded_limit[(zai&0xd)>>2]);
+			recommended_limit[(zai&0xd)>>2]);
 	}
 	if (za & NVME_ZNS_ZA_FZR) {
 		printf("       Finish Zone Recommended with Finish Recommended Limit%s\n",
-			recommanded_limit[zai&0x3]);
+			recommended_limit[zai&0x3]);
 	}
 	if (za & NVME_ZNS_ZA_ZFC) {
 		printf("       Zone Finished by Controller\n");
@@ -5738,7 +5738,7 @@ void nvme_show_id_domain_list(struct nvme_id_domain_list *id_dom,
 	else if (flags & JSON)
 		return json_id_domain_list(id_dom);
 
-	printf("Number of Domain Entires: %u\n", id_dom->num);
+	printf("Number of Domain Entries: %u\n", id_dom->num);
 	for (i = 0; i < id_dom->num; i++) {
 		printf("Domain Id for Attr Entry[%u]: %u\n", i,
 			le16_to_cpu(id_dom->domain_attr[i].dom_id));
@@ -5746,7 +5746,7 @@ void nvme_show_id_domain_list(struct nvme_id_domain_list *id_dom,
 			int128_to_double(id_dom->domain_attr[i].dom_cap));
 		printf("Unallocated Domain Capacity for Attr Entry[%u]: %.0Lf\n", i,
 			int128_to_double(id_dom->domain_attr[i].unalloc_dom_cap));
-		printf("Max Endurange Group Domain Capacity for Attr Entry[%u]: %.0Lf\n", i,
+		printf("Max Endurance Group Domain Capacity for Attr Entry[%u]: %.0Lf\n", i,
 			int128_to_double(id_dom->domain_attr[i].max_egrp_dom_cap));
 	}
 }
@@ -6161,7 +6161,7 @@ void nvme_show_supported_log(struct nvme_supported_log_pages *support_log,
 	else if (flags & JSON)
 		return json_support_log(support_log);
 
-	printf("Support Log Pages Deatils for %s:\n", devname);
+	printf("Support Log Pages Details for %s:\n", devname);
 	for (lid = 0; lid < 256; lid++) {
 		support = le32_to_cpu(support_log->lid_support[lid]);
 		if (support & 0x1) {
@@ -6541,12 +6541,12 @@ const char *nvme_feature_to_string(enum nvme_features_id feature)
 	case NVME_FEAT_FID_HCTM:	return "Host Controlled Thermal Management";
 	case NVME_FEAT_FID_NOPSC:	return "Non-Operational Power State Config";
 	case NVME_FEAT_FID_RRL:		return "Read Recovery Level";
-	case NVME_FEAT_FID_PLM_CONFIG:	return "Predicatable Latency Mode Config";
-	case NVME_FEAT_FID_PLM_WINDOW:	return "Predicatable Latency Mode Window";
+	case NVME_FEAT_FID_PLM_CONFIG:	return "Predictable Latency Mode Config";
+	case NVME_FEAT_FID_PLM_WINDOW:	return "Predictable Latency Mode Window";
 	case NVME_FEAT_FID_LBA_STS_INTERVAL:	return "LBA Status Interval";
 	case NVME_FEAT_FID_HOST_BEHAVIOR:	return "Host Behavior";
 	case NVME_FEAT_FID_SANITIZE:	return "Sanitize";
-	case NVME_FEAT_FID_ENDURANCE_EVT_CFG:	return "Enduarance Event Group Configuration";
+	case NVME_FEAT_FID_ENDURANCE_EVT_CFG:	return "Endurance Event Group Configuration";
 	case NVME_FEAT_FID_IOCS_PROFILE:	return "I/O Command Set Profile";
 	case NVME_FEAT_FID_SPINUP_CONTROL:	return "Spinup Control";
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:	return "Enhanced Controller Metadata";
@@ -6556,7 +6556,7 @@ const char *nvme_feature_to_string(enum nvme_features_id feature)
 	case NVME_FEAT_FID_HOST_ID:	return "Host Identifier";
 	case NVME_FEAT_FID_RESV_MASK:	return "Reservation Notification Mask";
 	case NVME_FEAT_FID_RESV_PERSIST:return "Reservation Persistence";
-	case NVME_FEAT_FID_WRITE_PROTECT:	return "Namespce Write Protect";
+	case NVME_FEAT_FID_WRITE_PROTECT:	return "Namespace Write Protect";
 	}
 	/*
 	 * We don't use the "default:" statement to let the compiler warning if
@@ -6794,7 +6794,7 @@ static void nvme_directive_show_fields(__u8 dtype, __u8 doper,
 				*(__u32 *) (field + 16));
 			printf("\tStream Granularity Size (in unit of SWS)   (SGS): %u\n",
 				*(__u16 *) (field + 20));
-			printf("\tNamespece Streams Allocated                (NSA): %u\n",
+			printf("\tNamespace Streams Allocated                (NSA): %u\n",
 				*(__u16 *) (field + 22));
 			printf("\tNamespace Streams Open                     (NSO): %u\n",
 				*(__u16 *) (field + 24));
