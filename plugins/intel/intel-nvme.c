@@ -180,7 +180,7 @@ static void show_intel_smart_log_jsn(struct nvme_additional_smart_log *smart,
 
 	entry_stats = json_create_object();
 	json_object_add_value_int(entry_stats, "normalized", smart->timed_workload_media_wear.norm);
-	json_object_add_value_float(entry_stats, "raw", ((long double)int48_to_long(smart->timed_workload_media_wear.raw)) / 1024);
+	json_object_add_value_double(entry_stats, "raw", ((long double)int48_to_long(smart->timed_workload_media_wear.raw)) / 1024);
 	json_object_add_value_object(dev_stats, "timed_workload_media_wear", entry_stats);
 
 	entry_stats = json_create_object();
