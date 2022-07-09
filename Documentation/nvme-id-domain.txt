@@ -13,7 +13,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-For the NVMe device given, send an identify command and return the domian list
+For the NVMe device given, send an identify command and return the domain list
 data structure.
 
 The <device> parameter is mandatory and may be either the NVMe character

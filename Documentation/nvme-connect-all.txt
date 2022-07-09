@@ -43,7 +43,7 @@ connect-all commands to run. If no @SYSCONFDIR@/nvme/discovery.conf file
 exists, the command will quit with an error.
 
 Otherwise a specific Discovery Controller should be specified using the
---transport, --traddr and if necessary the --trsvcid and a Diѕcovery
+--transport, --traddr and if necessary the --trsvcid and a Discovery
 request will be sent to the specified Discovery Controller.
 
 See the documentation for the nvme-discover(1) command for further

@@ -65,7 +65,7 @@ linknvme:nvme-transcend-badblock[1]::
 	Retrieve Transcend NVMe device's bad blocks
 
 linknvme:nvme-transcend-healthvalue[1]::
-	Use NVMe SMART table to analyse the health value of Transcend device
+	Use NVMe SMART table to analyze the health value of Transcend device
 
 linknvme:nvme-virtium-show-identify[1]::
 	Show a complete detail of identify device information in json format

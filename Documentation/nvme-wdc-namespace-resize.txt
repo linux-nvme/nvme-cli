@@ -40,12 +40,12 @@ OPTIONS
 
 EXAMPLES
 --------
-* Resizes namespace 1 to 50% of the orginal TNVMCAP reported value:
+* Resizes namespace 1 to 50% of the original TNVMCAP reported value:
 +
 ------------
 # nvme wdc namespace-resize /dev/nvme0 -n 1 -o 3
 ------------
-* Resizes namespace 2 to 7% of the orginal TNVMCAP reported value:
+* Resizes namespace 2 to 7% of the original TNVMCAP reported value:
 +
 ------------
 # nvme wdc namespace-resize /dev/nvme0 --namespace-id=2 --op-option=1

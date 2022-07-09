@@ -44,7 +44,7 @@ linknvme:nvme-smart-log[1]::
 	Retrieve Smart Log
 
 linknvme:nvme-ana-log[1]::
-	Retreive ANA(Asymmetric Namespace Access) Log
+	Retrieve ANA(Asymmetric Namespace Access) Log
 
 linknvme:nvme-endurance-log[1]::
 	Retrieve endurance Log
@@ -236,7 +236,7 @@ linknvme:nvme-nvm-id-ns-lba-format[1]::
 	NVMe Identify Namespace NVM Command Set for the specified LBA Format index
 
 linknvme:nvme-persistent-event-log[1]::
-	Retrieve Presistent Event Log
+	Retrieve Persistent Event Log
 
 linknvme:nvme-predictable-lat-log[1]::
 	Retrieve Predictable Latency per Nvmset Log

@@ -28,7 +28,7 @@ On success it returns 0, error code otherwise.
 OPTIONS
 -------
 -d::
---no-delloc::
+--no-dealloc::
     No Deallocate After Sanitize:
     If set, then the controller shall not deallocate any logical
     blocks as a result of successfully completing the sanitize
@@ -80,7 +80,7 @@ OPTIONS
     sanitize operation.
 
 --force::
-    Ignore namespace is currently busy and perfome the operation
+    Ignore namespace is currently busy and performed the operation
     even though.
 
 EXAMPLES

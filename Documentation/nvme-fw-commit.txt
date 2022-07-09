@@ -72,7 +72,7 @@ BPINFO.ABPID.
 
 --bpid=<boot-partid>::
 -b <boot-partid>::
-	Specifiies the Boot partition that shall be used for the Commit Action,
+	Specifies the Boot partition that shall be used for the Commit Action,
 	if applicable (default: 0)
 
 EXAMPLES

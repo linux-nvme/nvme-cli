@@ -45,7 +45,7 @@ EXAMPLES
 fields in a human readable format:
 +
 ------------
-# nvme primary-ctrl-caps /dev/nvme0 --human-readbale
+# nvme primary-ctrl-caps /dev/nvme0 --human-readable
 # nvme primary-ctrl-caps /dev/nvme0 -H
 ------------
 NVME
