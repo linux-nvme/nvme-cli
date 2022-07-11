@@ -1158,7 +1158,7 @@ static int get_persistent_event_log(int argc, char **argv,
 	}
 
 	/*
-	 * if header aleady read with context establish action 0x1,
+	 * if header already read with context establish action 0x1,
 	 * action shall not be 0x1 again in the subsequent request,
 	 * until the current context is released by issuing action
 	 * with 0x2, otherwise throws command sequence error, make
@@ -1188,7 +1188,7 @@ static int get_persistent_event_log(int argc, char **argv,
 		pevent_collected = pevent_log_info;
 		if (pevent_collected->gen_number != pevent->gen_number) {
 			printf("Collected Persistent Event Log may be invalid, "\
-				"Re-read the log is reiquired\n");
+				"Re-read the log is required\n");
 			goto free;
 		}
 
@@ -2647,7 +2647,7 @@ static int list(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	}
 	err = nvme_scan_topology(r, NULL, NULL);
 	if (err < 0) {
-		fprintf(stderr, "Failed to scan topoplogy: %s\n",
+		fprintf(stderr, "Failed to scan topology: %s\n",
 			 nvme_strerror(errno));
 		nvme_free_tree(r);
 		return err;
@@ -2988,7 +2988,7 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 		"given device, returns properties of the specified namespace "\
 		"in either human-readable or binary format. Can also return "\
 		"binary vendor-specific namespace attributes.";
-	const char *force = "Return this namespace, even if not attaced (1.2 devices only)";
+	const char *force = "Return this namespace, even if not attached (1.2 devices only)";
 	const char *vendor_specific = "dump binary vendor fields";
 	const char *raw = "show identify in binary format";
 	const char *human_readable = "show identify in readable format";
@@ -3853,7 +3853,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 		"specified controller. Operating parameters are grouped "\
 		"and identified by Feature Identifiers; each Feature "\
 		"Identifier contains one or more attributes that may affect "\
-		"behaviour of the feature. Each Feature has three possible "\
+		"behavior of the feature. Each Feature has three possible "\
 		"settings: default, saveable, and current. If a Feature is "\
 		"saveable, it may be modified by set-feature. Default values "\
 		"are vendor-specific and not changeable. Use set-feature to "\
@@ -4541,7 +4541,7 @@ ret:
 static int set_property(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Writes and shows the defined NVMe controller property "\
-			   "for NVMe ove Fabric";
+			   "for NVMe over Fabric";
 	const char *offset = "the offset of the property";
 	const char *value = "the value of the property to be set";
 	int fd, err;
@@ -7274,7 +7274,7 @@ static int lockdown_cmd(int argc, char **argv, struct command *cmd, struct plugi
 	if (fd < 0)
 		goto ret;
 
-	/* check for input arguement limit */
+	/* check for input argument limit */
 	if (cfg.ifc > 3) {
 		fprintf(stderr, "invalid interface settings:%d\n", cfg.ifc);
 		err = -1;

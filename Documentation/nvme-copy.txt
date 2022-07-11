@@ -88,8 +88,8 @@ OPTIONS
 -T <type>::
 	Optional directive type. The nvme-cli only enforces the value
 	be in the defined range for the directive type, though the NVMe
-	specifcation (1.3a) defines only one directive, 01h, for write
-	stream idenfiers.
+	specification (1.3a) defines only one directive, 01h, for write
+	stream identifiers.
 
 --dir-spec=<spec>::
 -S <spec>::

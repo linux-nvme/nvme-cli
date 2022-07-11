@@ -3,12 +3,12 @@ nvme-transcend-healthvalue(1)
 
 NAME
 ----
-nvme-transcend-healthvalue - Use NVMe SMART table to analyse the health value of Transcend device.
+nvme-transcend-healthvalue - Use NVMe SMART table to analyze the health value of Transcend device.
 
 SYNOPSIS
 --------
 [verse]
-'nvme transcned healthvalue' <device> 
+'nvme transcend healthvalue' <device>
 
 DESCRIPTION
 -----------
@@ -29,7 +29,7 @@ EXAMPLES
 * Print the Transcend Device health value in a human readable format:
 +
 ------------
-# nvme transcned healthvalue /dev/nvme0
+# nvme transcend healthvalue /dev/nvme0
 ------------
 
 NVME

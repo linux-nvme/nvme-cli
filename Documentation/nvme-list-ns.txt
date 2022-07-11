@@ -34,7 +34,7 @@ OPTIONS
 -y <command_set_identifier>::
 --csi=<command_set_identifier>::
 	If this value is given, retrieve the identify list structure associated
-	with the speicified I/O command set.
+	with the specified I/O command set.
 
 -a::
 --all::

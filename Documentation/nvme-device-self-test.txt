@@ -24,7 +24,7 @@ OPTIONS
 -------
 -n <NUM>::
 --namespace-id=<NUM>::
-	Indicate the namespace in which the device self-test has to becarried out
+	Indicate the namespace in which the device self-test has to be carried out
 
 -s <NUM>::
 --self-test-code=<NUM>::
