@@ -118,8 +118,21 @@ static const char * const eflags_strings[] = {
 	[NVMF_DISC_EFLAGS_NONE]		= "not specified",
 	[NVMF_DISC_EFLAGS_EPCSD]	= "explicit discovery connections",
 	[NVMF_DISC_EFLAGS_DUPRETINFO]	= "duplicate discovery information",
-	[NVMF_DISC_EFLAGS_BOTH]		= "explicit discovery connections, "
+	[NVMF_DISC_EFLAGS_EPCSD |
+	 NVMF_DISC_EFLAGS_DUPRETINFO]	= "explicit discovery connections, "
 					  "duplicate discovery information",
+	[NVMF_DISC_EFLAGS_NCC]		= "no cdc connectivity",
+	[NVMF_DISC_EFLAGS_EPCSD |
+	 NVMF_DISC_EFLAGS_NCC]		= "explicit discovery connections, "
+					  "no cdc connectivity",
+	[NVMF_DISC_EFLAGS_DUPRETINFO |
+	 NVMF_DISC_EFLAGS_NCC]		= "duplicate discovery information, "
+					  "no cdc connectivity",
+	[NVMF_DISC_EFLAGS_EPCSD |
+	 NVMF_DISC_EFLAGS_DUPRETINFO |
+	 NVMF_DISC_EFLAGS_NCC]		= "explicit discovery connections, "
+					  "duplicate discovery information, "
+					  "no cdc connectivity",
 };
 
 const char *nvmf_eflags_str(__u16 eflags)

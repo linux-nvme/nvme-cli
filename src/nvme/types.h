@@ -4635,16 +4635,26 @@ enum nvme_subsys_type {
  *				 this flag set.
  * @NVMF_DISC_EFLAGS_EPCSD:	 Explicit Persistent Connection Support for Discovery (EPCSD):
  *				 Indicates that Explicit Persistent Connections are
- *				 supported for the Discovery controller.
- * @NVMF_DISC_EFLAGS_BOTH:	 Indicates that both the DUPRETINFO and EPCSD
- *				 features are supported.
+ *      			 supported for the Discovery controller.
+ * @NVMF_DISC_EFLAGS_NCC:	 No CDC Connectivity (NCC): If set to
+ *      			 '1', then no DDC that describes this entry
+ *      			 is currently connected to the CDC. If
+ *      			 cleared to '0', then at least one DDC that
+ *      			 describes this entry is currently
+ *      			 connected to the CDC. If the Discovery
+ *      			 controller returning this log page is not
+ *      			 a CDC, then this bit shall be cleared to
+ *      			 '0' and should be ignored by the host.
  */
 enum nvmf_disc_eflags {
 	NVMF_DISC_EFLAGS_NONE		= 0,
-	NVMF_DISC_EFLAGS_DUPRETINFO	= 1,
-	NVMF_DISC_EFLAGS_EPCSD		= 2,
-	NVMF_DISC_EFLAGS_BOTH		= 3,
+	NVMF_DISC_EFLAGS_DUPRETINFO	= 1 << 0,
+	NVMF_DISC_EFLAGS_EPCSD		= 1 << 1,
+	NVMF_DISC_EFLAGS_NCC		= 1 << 2,
 };
+
+/* Backwards compatibility. Will be removed with next major release */
+#define NVMF_DISC_EFLAGS_BOTH (NVMF_DISC_EFLAGS_DUPRETINFO | NVMF_DISC_EFLAGS_EPCSD)
 
 /**
  * union nvmf_tsas - Transport Specific Address Subtype
