@@ -20,6 +20,11 @@ api_files = [
   'util.h'
 ]
 
+api_paths = []
+foreach f: api_files
+  api_paths += files('../src/nvme/' + f)
+endforeach
+
 sphinx_sources = [
     'conf.py',
     'api.rst',
@@ -51,29 +56,27 @@ if want_docs != 'false'
     mandir = join_paths(get_option('mandir'), 'man2')
     list_man_pages = find_program('list-man-pages.sh')
     if want_docs_build
-      foreach apif : api_files
-        foreach file : files('../src/nvme/' + apif)
-          subst = configure_file(
-              input: file,
-              output: '@BASENAME@.subst',
-              configuration: conf)
-          c = run_command(list_man_pages, subst)
-          man_pages = c.stdout().split()
-          foreach page : man_pages
-            custom_target(
-              page.underscorify() + '_man',
-              input: subst,
-              output: page + '.2',
-              capture: true,
-              command: [kernel_doc,
-                        '-module', 'libnvme',
-                        '-man',
-                        '-function',
-                        page,
-                        subst],
-              install: true,
-              install_dir: mandir)
-          endforeach
+      foreach apif : api_paths
+        subst = configure_file(
+            input: file,
+            output: '@BASENAME@.subst',
+            configuration: conf)
+        c = run_command(list_man_pages, subst)
+        man_pages = c.stdout().split()
+        foreach page : man_pages
+          custom_target(
+            page.underscorify() + '_man',
+            input: subst,
+            output: page + '.2',
+            capture: true,
+            command: [kernel_doc,
+                      '-module', 'libnvme',
+                      '-man',
+                      '-function',
+                      page,
+                      subst],
+            install: true,
+            install_dir: mandir)
         endforeach
       endforeach
     else
