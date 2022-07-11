@@ -269,6 +269,8 @@ static void PyDict_SetItemStringDecRef(PyObject *p, const char *key, PyObject *v
     PyDict_SetItemStringDecRef(entry, "cntlid", val);
     val = PyLong_FromLong(e->asqsz);
     PyDict_SetItemStringDecRef(entry, "asqsz", val);
+    val = PyLong_FromLong(e->eflags);
+    PyDict_SetItemStringDecRef(entry, "eflags", val);
     PyList_SetItem(obj, i, entry); /* steals ref. to entry */
   }
   $result = obj;
