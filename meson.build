@@ -55,14 +55,11 @@ conf.set('CONFIG_LIBUUID', libuuid_dep.found(), description: 'Is libuuid availab
 # Check for libjson-c availability
 json_c_dep = dependency('json-c', required: true, version: '>=0.13',
                         fallback : ['json-c', 'json_c_dep'])
-if json_c_dep.found()
-  conf.set('CONFIG_JSONC', true, description: 'Is json-c available?')
-  if json_c_dep.version().version_compare('>=0.14')
-    conf.set('CONFIG_JSONC_14', true, description: 'Is json-c at least 0.14?')
-    requires = 'Requires: json-c >= 0.14'
-  else
-    requires = 'Requires: json-c >= 0.13'
-  endif
+if json_c_dep.version().version_compare('>=0.14')
+  conf.set('CONFIG_JSONC_14', true, description: 'Is json-c at least 0.14?')
+  requires = 'Requires: json-c >= 0.14'
+else
+  requires = 'Requires: json-c >= 0.13'
 endif
 
 # Check for zlib availability
