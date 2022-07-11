@@ -46,7 +46,7 @@ if have_python_support
     configure_file(
         input:  '__init__.py', 
         output: '__init__.py',
-        copy: true,
+        configuration: conf,
         install_dir: python3.get_install_dir(pure: false, subdir: 'libnvme'),
     )
 
