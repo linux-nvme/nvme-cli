@@ -4650,7 +4650,7 @@ static void wdc_print_bd_ca_log_json(void *data)
 		raw = (__u64*)&bd_data->raw_value[0];
 		json_object_add_value_int(root, "timed_workload_media_wear normalized",
 				bd_data->normalized_value);
-		json_object_add_value_float(root, "timed_workload_media_wear raw",
+		json_object_add_value_double(root, "timed_workload_media_wear raw",
 				safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 1024.0));
 	} else {
 		goto invalid_id;
@@ -4711,7 +4711,7 @@ static void wdc_print_bd_ca_log_json(void *data)
 		raw = (__u64*)&bd_data->raw_value[0];
 		json_object_add_value_int(root, "nand_bytes_written normalized",
 				bd_data->normalized_value);
-		json_object_add_value_float(root, "nand_bytes_written raw",
+		json_object_add_value_double(root, "nand_bytes_written raw",
 				safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
 	} else {
 		goto invalid_id;
@@ -4721,7 +4721,7 @@ static void wdc_print_bd_ca_log_json(void *data)
 		raw = (__u64*)&bd_data->raw_value[0];
 		json_object_add_value_int(root, "host_bytes_written normalized",
 				bd_data->normalized_value);
-		json_object_add_value_float(root, "host_bytes_written raw",
+		json_object_add_value_double(root, "host_bytes_written raw",
 				safe_div_fp((*raw & 0x00FFFFFFFFFFFFFF), 0xFFFF));
 	} else {
 		goto invalid_id;
@@ -5756,9 +5756,9 @@ static void wdc_print_ext_smart_cloud_log_json(void *data, int mask)
 	struct json_object *root;
 
 	root = json_create_object();
-	json_object_add_value_float(root, "physical_media_units_bytes_tlc",
+	json_object_add_value_double(root, "physical_media_units_bytes_tlc",
 		int128_to_double(ext_smart_log_ptr->ext_smart_pmuwt));
-	json_object_add_value_float(root, "physical_media_units_bytes_slc",
+	json_object_add_value_double(root, "physical_media_units_bytes_slc",
 		int128_to_double(ext_smart_log_ptr->ext_smart_pmuws));
 	json_object_add_value_uint(root, "bad_user_blocks_normalized",
 		le16_to_cpu(*(uint16_t *)ext_smart_log_ptr->ext_smart_bunbc));
@@ -5807,7 +5807,7 @@ static void wdc_print_ext_smart_cloud_log_json(void *data, int mask)
 			le64_to_cpu(ext_smart_log_ptr->ext_smart_svn));
 		json_object_add_value_uint(root, "pct_free_blocks_system",
 			(__u8)ext_smart_log_ptr->ext_smart_pfbs);
-		json_object_add_value_float(root, "num_of_trim_commands",
+		json_object_add_value_double(root, "num_of_trim_commands",
 			int128_to_double(ext_smart_log_ptr->ext_smart_dcc));
 		json_object_add_value_uint64(root, "total_nuse_bytes",
 			le64_to_cpu(ext_smart_log_ptr->ext_smart_tnu));
@@ -5826,7 +5826,7 @@ static void wdc_print_ext_smart_cloud_log_json(void *data, int mask)
 		le16_to_cpu(*(uint16_t *)ext_smart_log_ptr->ext_smart_bsnbc));
 	json_object_add_value_uint64(root, "bad_system_block_raw",
 		le64_to_cpu(*(uint64_t *)ext_smart_log_ptr->ext_smart_bsnbc & 0xFFFFFFFFFFFF0000));
-	json_object_add_value_float(root, "endurance_est_bytes",
+	json_object_add_value_double(root, "endurance_est_bytes",
 		int128_to_double(ext_smart_log_ptr->ext_smart_eest));
 	if (mask == WDC_SCA_V1_ALL) {
 		json_object_add_value_uint(root, "num_throttling_events",
@@ -5834,7 +5834,7 @@ static void wdc_print_ext_smart_cloud_log_json(void *data, int mask)
 		json_object_add_value_uint64(root, "total_unaligned_io",
 			le64_to_cpu(ext_smart_log_ptr->ext_smart_uio));
 	}
-	json_object_add_value_float(root, "physical_media_units_read_bytes",
+	json_object_add_value_double(root, "physical_media_units_read_bytes",
 			int128_to_double(ext_smart_log_ptr->ext_smart_pmur));
 	if (mask == WDC_SCA_V1_ALL) {
 		json_object_add_value_uint(root, "num_read_timeouts",
@@ -5961,9 +5961,9 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 	uint16_t smart_log_ver = 0;
 
 	root = json_create_object();
-	json_object_add_value_float(root, "Physical media units written",
+	json_object_add_value_double(root, "Physical media units written",
 			int128_to_double(&log_data[SCAO_PMUW]));
-	json_object_add_value_float(root, "Physical media units read",
+	json_object_add_value_double(root, "Physical media units read",
 			int128_to_double(&log_data[SCAO_PMUR]));
 	json_object_add_value_uint64(root, "Bad user nand blocks - Raw",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_BUNBR] & 0x0000FFFFFFFFFFFF));
@@ -6009,9 +6009,9 @@ static void wdc_print_smart_cloud_attr_C0_json(void *data)
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_SVN]));
 	json_object_add_value_uint64(root, "NUSE - Namespace utilization",
 			(uint64_t)le64_to_cpu(*(uint64_t *)&log_data[SCAO_NUSE]));
-	json_object_add_value_float(root, "PLP start count",
+	json_object_add_value_double(root, "PLP start count",
 			int128_to_double(&log_data[SCAO_PSC]));
-	json_object_add_value_float(root, "Endurance estimate",
+	json_object_add_value_double(root, "Endurance estimate",
 			int128_to_double(&log_data[SCAO_EEST]));
 	smart_log_ver = (uint16_t)le16_to_cpu(*(uint16_t *)&log_data[SCAO_LPV]);
 	json_object_add_value_uint(root, "Log page version", smart_log_ver);
@@ -9732,9 +9732,9 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 
 	case 0:
 
-		json_object_add_value_float(root, "NAND Writes TLC (Bytes)",
+		json_object_add_value_double(root, "NAND Writes TLC (Bytes)",
 				int128_to_double(nand_stats->nand_write_tlc));
-		json_object_add_value_float(root, "NAND Writes SLC (Bytes)",
+		json_object_add_value_double(root, "NAND Writes SLC (Bytes)",
 				int128_to_double(nand_stats->nand_write_slc));
 		json_object_add_value_uint(root, "NAND Program Failures",
 				le32_to_cpu(nand_stats->nand_prog_failure));
@@ -9755,9 +9755,9 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 
 	case 3:
 
-		json_object_add_value_float(root, "NAND Writes TLC (Bytes)",
+		json_object_add_value_double(root, "NAND Writes TLC (Bytes)",
 				int128_to_double(nand_stats_v3->nand_write_tlc));
-		json_object_add_value_float(root, "NAND Writes SLC (Bytes)",
+		json_object_add_value_double(root, "NAND Writes SLC (Bytes)",
 				int128_to_double(nand_stats_v3->nand_write_slc));
 		temp_ptr = (__u64 *)nand_stats_v3->bad_nand_block_count;
 		temp_norm = (__u16)(*temp_ptr & 0x000000000000FFFF);
@@ -9808,7 +9808,7 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				le64_to_cpu(nand_stats_v3->security_version_number));
 		json_object_add_value_uint(root, "% Free Blocks (System)",
 				nand_stats_v3->percent_free_blocks_system);
-		json_object_add_value_float(root, "Data Set Management Commands",
+		json_object_add_value_double(root, "Data Set Management Commands",
 				int128_to_double(nand_stats_v3->trim_completions));
 		json_object_add_value_uint64(root, "Estimate of Incomplete Trim Data",
 				le64_to_cpu(nand_stats_v3->trim_completions[16]));
@@ -9827,7 +9827,7 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				le16_to_cpu(temp_norm));
 		json_object_add_value_uint64(root, "Bad System Nand Block Count - Raw",
 				le64_to_cpu(temp_raw));
-		json_object_add_value_float(root, "Endurance Estimate",
+		json_object_add_value_double(root, "Endurance Estimate",
 				int128_to_double(nand_stats_v3->endurance_estimate));
 		json_object_add_value_uint(root, "Thermal Throttling Status",
 				nand_stats_v3->thermal_throttling_st_ct[0]);
@@ -9835,7 +9835,7 @@ static void wdc_print_nand_stats_json(__u16 version, void *data)
 				nand_stats_v3->thermal_throttling_st_ct[1]);
 		json_object_add_value_uint64(root, "Unaligned I/O",
 				le64_to_cpu(nand_stats_v3->unaligned_IO));
-		json_object_add_value_float(root, "Physical Media Units Read",
+		json_object_add_value_double(root, "Physical Media Units Read",
 				int128_to_double(nand_stats_v3->physical_media_units));
 		json_object_add_value_uint(root, "log page version",
 				le16_to_cpu(nand_stats_v3->log_page_version));

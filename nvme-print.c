@@ -186,7 +186,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, bool cap_only)
 		json_object_add_value_int(root, "nabo", le16_to_cpu(ns->nabo));
 		json_object_add_value_int(root, "nabspf", le16_to_cpu(ns->nabspf));
 		json_object_add_value_int(root, "noiob", le16_to_cpu(ns->noiob));
-		json_object_add_value_float(root, "nvmcap", nvmcap);
+		json_object_add_value_double(root, "nvmcap", nvmcap);
 		json_object_add_value_int(root, "nsattr", ns->nsattr);
 		json_object_add_value_int(root, "nvmsetid", le16_to_cpu(ns->nvmsetid));
 
@@ -299,8 +299,8 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "mtfa", le16_to_cpu(ctrl->mtfa));
 	json_object_add_value_uint(root, "hmpre", le32_to_cpu(ctrl->hmpre));
 	json_object_add_value_uint(root, "hmmin", le32_to_cpu(ctrl->hmmin));
-	json_object_add_value_float(root, "tnvmcap", tnvmcap);
-	json_object_add_value_float(root, "unvmcap", unvmcap);
+	json_object_add_value_double(root, "tnvmcap", tnvmcap);
+	json_object_add_value_double(root, "unvmcap", unvmcap);
 	json_object_add_value_uint(root, "rpmbs", le32_to_cpu(ctrl->rpmbs));
 	json_object_add_value_int(root, "edstt", le16_to_cpu(ctrl->edstt));
 	json_object_add_value_int(root, "dsto", ctrl->dsto);
@@ -322,7 +322,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "nanagrpid",
 		le32_to_cpu(ctrl->nanagrpid));
 	json_object_add_value_int(root, "domainid", le16_to_cpu(ctrl->domainid));
-	json_object_add_value_float(root, "megcap", megcap);
+	json_object_add_value_double(root, "megcap", megcap);
 	json_object_add_value_int(root, "sqes", ctrl->sqes);
 	json_object_add_value_int(root, "cqes", ctrl->cqes);
 	json_object_add_value_int(root, "maxcmd", le16_to_cpu(ctrl->maxcmd));
@@ -338,7 +338,7 @@ static void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	json_object_add_value_int(root, "acwu", le16_to_cpu(ctrl->acwu));
 	json_object_add_value_int(root, "ocfs", le16_to_cpu(ctrl->ocfs));
 	json_object_add_value_int(root, "sgls", le32_to_cpu(ctrl->sgls));
-	json_object_add_value_float(root, "maxdna", maxdna);
+	json_object_add_value_double(root, "maxdna", maxdna);
 	json_object_add_value_int(root, "maxcna", le32_to_cpu(ctrl->maxcna));
 
 	if (strlen(subnqn))
@@ -612,18 +612,18 @@ static void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 		endurance_group->avl_spare_threshold);
 	json_object_add_value_int(root, "percent_used",
 		endurance_group->percent_used);
-	json_object_add_value_float(root, "endurance_estimate",
+	json_object_add_value_double(root, "endurance_estimate",
 		endurance_estimate);
-	json_object_add_value_float(root, "data_units_read", data_units_read);
-	json_object_add_value_float(root, "data_units_written",
+	json_object_add_value_double(root, "data_units_read", data_units_read);
+	json_object_add_value_double(root, "data_units_written",
 		data_units_written);
-	json_object_add_value_float(root, "mediate_write_commands",
+	json_object_add_value_double(root, "mediate_write_commands",
 		media_units_written);
-	json_object_add_value_float(root, "host_read_cmds", host_read_cmds);
-	json_object_add_value_float(root, "host_write_cmds", host_write_cmds);
-	json_object_add_value_float(root, "media_data_integrity_err",
+	json_object_add_value_double(root, "host_read_cmds", host_read_cmds);
+	json_object_add_value_double(root, "host_write_cmds", host_write_cmds);
+	json_object_add_value_double(root, "media_data_integrity_err",
 		media_data_integrity_err);
-	json_object_add_value_float(root, "num_err_info_log_entries",
+	json_object_add_value_double(root, "num_err_info_log_entries",
 		num_err_info_log_entries);
 
 	json_print_object(root, NULL);
@@ -676,20 +676,20 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	json_object_add_value_int(root, "percent_used", smart->percent_used);
 	json_object_add_value_int(root, "endurance_grp_critical_warning_summary",
 		smart->endu_grp_crit_warn_sumry);
-	json_object_add_value_float(root, "data_units_read", data_units_read);
-	json_object_add_value_float(root, "data_units_written",
+	json_object_add_value_double(root, "data_units_read", data_units_read);
+	json_object_add_value_double(root, "data_units_written",
 		data_units_written);
-	json_object_add_value_float(root, "host_read_commands",
+	json_object_add_value_double(root, "host_read_commands",
 		host_read_commands);
-	json_object_add_value_float(root, "host_write_commands",
+	json_object_add_value_double(root, "host_write_commands",
 		host_write_commands);
-	json_object_add_value_float(root, "controller_busy_time",
+	json_object_add_value_double(root, "controller_busy_time",
 		controller_busy_time);
-	json_object_add_value_float(root, "power_cycles", power_cycles);
-	json_object_add_value_float(root, "power_on_hours", power_on_hours);
-	json_object_add_value_float(root, "unsafe_shutdowns", unsafe_shutdowns);
-	json_object_add_value_float(root, "media_errors", media_errors);
-	json_object_add_value_float(root, "num_err_log_entries",
+	json_object_add_value_double(root, "power_cycles", power_cycles);
+	json_object_add_value_double(root, "power_on_hours", power_on_hours);
+	json_object_add_value_double(root, "unsafe_shutdowns", unsafe_shutdowns);
+	json_object_add_value_double(root, "media_errors", media_errors);
+	json_object_add_value_double(root, "num_err_log_entries",
 		num_err_log_entries);
 	json_object_add_value_uint(root, "warning_temp_time",
 			le32_to_cpu(smart->warning_temp_time));
@@ -1191,7 +1191,7 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			le16_to_cpu(pevent_log_head->lhl));
 		json_object_add_value_uint64(root, "timestamp",
 			le64_to_cpu(pevent_log_head->ts));
-		json_object_add_value_float(root, "power_on_hours",
+		json_object_add_value_double(root, "power_on_hours",
 			int128_to_double(pevent_log_head->poh));
 		json_object_add_value_uint64(root, "power_cycle_count",
 			le64_to_cpu(pevent_log_head->pcc));
@@ -1280,25 +1280,25 @@ static void json_persistent_event_log(void *pevent_log_info, __u32 size)
 			json_object_add_value_int(valid_attrs,
 				"endurance_grp_critical_warning_summary",
 				smart_event->endu_grp_crit_warn_sumry);
-			json_object_add_value_float(valid_attrs, "data_units_read",
+			json_object_add_value_double(valid_attrs, "data_units_read",
 				data_units_read);
-			json_object_add_value_float(valid_attrs, "data_units_written",
+			json_object_add_value_double(valid_attrs, "data_units_written",
 				data_units_written);
-			json_object_add_value_float(valid_attrs, "host_read_commands",
+			json_object_add_value_double(valid_attrs, "host_read_commands",
 				host_read_commands);
-			json_object_add_value_float(valid_attrs, "host_write_commands",
+			json_object_add_value_double(valid_attrs, "host_write_commands",
 				host_write_commands);
-			json_object_add_value_float(valid_attrs, "controller_busy_time",
+			json_object_add_value_double(valid_attrs, "controller_busy_time",
 				controller_busy_time);
-			json_object_add_value_float(valid_attrs, "power_cycles",
+			json_object_add_value_double(valid_attrs, "power_cycles",
 				power_cycles);
-			json_object_add_value_float(valid_attrs, "power_on_hours",
+			json_object_add_value_double(valid_attrs, "power_on_hours",
 				power_on_hours);
-			json_object_add_value_float(valid_attrs, "unsafe_shutdowns",
+			json_object_add_value_double(valid_attrs, "unsafe_shutdowns",
 				unsafe_shutdowns);
-			json_object_add_value_float(valid_attrs, "media_errors",
+			json_object_add_value_double(valid_attrs, "media_errors",
 				media_errors);
-			json_object_add_value_float(valid_attrs, "num_err_log_entries",
+			json_object_add_value_double(valid_attrs, "num_err_log_entries",
 				num_err_log_entries);
 			json_object_add_value_uint(valid_attrs, "warning_temp_time",
 					le32_to_cpu(smart_event->warning_temp_time));
@@ -2263,9 +2263,9 @@ static void json_supported_cap_config_log(
 				le16_to_cpu(cap_log->cap_config_desc[i].egcd[j].endgid));
 			json_object_add_value_uint(endurance, "cap_adj_factor",
 				le16_to_cpu(cap_log->cap_config_desc[i].egcd[j].cap_adj_factor));
-			json_object_add_value_float(endurance, "tegcap",
+			json_object_add_value_double(endurance, "tegcap",
 				int128_to_double(cap_log->cap_config_desc[i].egcd[j].tegcap));
-			json_object_add_value_float(endurance, "segcap",
+			json_object_add_value_double(endurance, "segcap",
 				int128_to_double(cap_log->cap_config_desc[i].egcd[j].segcap));
 			json_object_add_value_uint(endurance, "egsets",
 				le16_to_cpu(cap_log->cap_config_desc[i].egcd[j].egsets));
@@ -5366,9 +5366,9 @@ static void json_nvme_id_nvmset(struct nvme_id_nvmset_list *nvmset)
 			  le32_to_cpu(nvmset->ent[i].rr4kt));
 		json_object_add_value_int(entry, "optimal_write_size",
 			  le32_to_cpu(nvmset->ent[i].ows));
-		json_object_add_value_float(entry, "total_nvmset_cap",
+		json_object_add_value_double(entry, "total_nvmset_cap",
 			    int128_to_double(nvmset->ent[i].tnvmsetcap));
-		json_object_add_value_float(entry, "unalloc_nvmset_cap",
+		json_object_add_value_double(entry, "unalloc_nvmset_cap",
 			    int128_to_double(nvmset->ent[i].unvmsetcap));
 		json_array_add_value_object(entries, entry);
 	}
@@ -5716,9 +5716,9 @@ static void json_id_domain_list(struct nvme_id_domain_list *id_dom)
 		max_egrp_dom_cap = int128_to_double(id_dom->domain_attr[i].max_egrp_dom_cap);
 
 		json_object_add_value_uint(entry, "dom_id", le16_to_cpu(id_dom->domain_attr[i].dom_id));
-		json_object_add_value_float(entry, "dom_cap", dom_cap);
-		json_object_add_value_float(entry, "unalloc_dom_cap", unalloc_dom_cap);
-		json_object_add_value_float(entry, "max_egrp_dom_cap", max_egrp_dom_cap);
+		json_object_add_value_double(entry, "dom_cap", dom_cap);
+		json_object_add_value_double(entry, "unalloc_dom_cap", unalloc_dom_cap);
+		json_object_add_value_double(entry, "max_egrp_dom_cap", max_egrp_dom_cap);
 
 		json_array_add_value_object(entries, entry);
 	}
