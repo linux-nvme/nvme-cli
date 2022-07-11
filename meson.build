@@ -43,14 +43,18 @@ endif
 
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 
-libnvme_dep = dependency('libnvme', fallback : ['libnvme', 'libnvme_dep'])
+# Check for libnvme availability
+libnvme_dep = dependency('libnvme', required: true,
+                         fallback : ['libnvme', 'libnvme_dep'])
 
 # Check for libuuid availability
-libuuid_dep = dependency('uuid', required: true, fallback : ['uuid', 'uuid_dep'])
+libuuid_dep = dependency('uuid', required: true,
+                         fallback : ['uuid', 'uuid_dep'])
 conf.set('CONFIG_LIBUUID', libuuid_dep.found(), description: 'Is libuuid available?')
 
 # Check for libjson-c availability
-json_c_dep = dependency('json-c', version: '>=0.13', fallback : ['json-c', 'json_c_dep'])
+json_c_dep = dependency('json-c', required: true, version: '>=0.13',
+                        fallback : ['json-c', 'json_c_dep'])
 if json_c_dep.found()
   conf.set('CONFIG_JSONC', true, description: 'Is json-c available?')
   if json_c_dep.version().version_compare('>=0.14')
@@ -61,7 +65,11 @@ if json_c_dep.found()
   endif
 endif
 
-# Check for libhugetlbfs availability
+# Check for zlib availability
+libz_dep = dependency('zlib', required: true,
+                      fallback : ['zlib', 'zlib_dep'])
+
+# Check for libhugetlbfs availability (optional)
 if cc.has_header('hugetlbfs.h')
   libhugetlbfs_dep = cc.find_library('hugetlbfs',
                                      required : false)
@@ -71,9 +79,6 @@ else
   have_libhugetlbfs = false
 endif
 conf.set('CONFIG_LIBHUGETLBFS', have_libhugetlbfs, description: 'Is libhugetlbfs available?')
-
-# Check for zlib availability
-libz_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'])
 
 # Set the nvme-cli version
 conf.set('NVME_VERSION', '"' + meson.project_version() + '"')
