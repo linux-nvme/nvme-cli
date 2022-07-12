@@ -4481,7 +4481,7 @@ static void wdc_print_fb_ca_log_json(struct wdc_ssd_ca_perf_stats *perf)
 	json_free_object(root);
 }
 
-static void wdc_print_bd_ca_log_normal(void *data)
+static void wdc_print_bd_ca_log_normal(struct nvme_dev *dev, void *data)
 {
 	struct wdc_bd_ca_log_format *bd_data = (struct wdc_bd_ca_log_format *)data;
 	__u64 *raw;
@@ -4492,7 +4492,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	if (bd_data->field_id == 0x00) {
 		raw = (__u64*)&bd_data->raw_value[0];
 		printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
-			nvme_dev->name, WDC_DE_GLOBAL_NSID);
+			dev->name, WDC_DE_GLOBAL_NSID);
 		printf("key                               normalized raw\n");
         printf("program_fail_count              : %3"PRIu8"%%       %"PRIu64"\n",
 				bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
@@ -6501,7 +6501,7 @@ static int wdc_print_fb_ca_log(struct wdc_ssd_ca_perf_stats *perf, int fmt)
 	return 0;
 }
 
-static int wdc_print_bd_ca_log(void *bd_data, int fmt)
+static int wdc_print_bd_ca_log(struct nvme_dev *dev, void *bd_data, int fmt)
 {
 	if (!bd_data) {
 		fprintf(stderr, "ERROR : WDC : Invalid buffer to read data\n");
@@ -6509,7 +6509,7 @@ static int wdc_print_bd_ca_log(void *bd_data, int fmt)
 	}
 	switch (fmt) {
 	case NORMAL:
-		wdc_print_bd_ca_log_normal(bd_data);
+		wdc_print_bd_ca_log_normal(dev, bd_data);
 		break;
 	case JSON:
 		wdc_print_bd_ca_log_json(bd_data);
@@ -6665,7 +6665,7 @@ static int wdc_get_ca_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 
 			if (ret == 0) {
 				/* parse the data */
-				ret = wdc_print_bd_ca_log(data, fmt);
+				ret = wdc_print_bd_ca_log(dev, data, fmt);
 			} else {
 				fprintf(stderr, "ERROR : WDC : Unable to read CA Log Page data\n");
 				ret = -1;
