@@ -361,11 +361,11 @@ struct nvme_xdn_smart_log_c0 {
 	__u8 resv[512 - NR_SMART_ITEMS_C0];
 };
 
-static void default_show_vendor_log_c0(int fd, __u32 nsid, const char *devname,
+static void default_show_vendor_log_c0(struct nvme_dev *dev, __u32 nsid,
 		struct nvme_xdn_smart_log_c0 *smart)
 {
 	printf("Vendor Log Page Directory 0xC0 for NVME device:%s namespace-id:%x\n",
-		devname, nsid);
+		dev->name, nsid);
 	printf("Error Log          : %u \n", smart->items[ERROR_LOG_C0]);
 	printf("SMART Health Log   : %u \n", smart->items[SMART_HEALTH_LOG_C0]);
 	printf("Firmware Slot Info : %u \n", smart->items[FIRMWARE_SLOT_INFO_C0]);
@@ -375,8 +375,8 @@ static void default_show_vendor_log_c0(int fd, __u32 nsid, const char *devname,
 	printf("SMART Attributes   : %u \n", smart->items[SMART_ATTRIBUTES_C0]);
 }
 
-static int nvme_get_vendor_log(int fd, __u32 namespace_id, int log_page,
-				const char* const filename)
+static int nvme_get_vendor_log(struct nvme_dev *dev, __u32 namespace_id,
+			       int log_page, const char* const filename)
 {
 	int err;
 	void* log = NULL;
@@ -388,11 +388,11 @@ static int nvme_get_vendor_log(int fd, __u32 namespace_id, int log_page,
 	}
 
 	/* Check device supported */
-	err = nvme_get_sct_status(fd, MASK_0 | MASK_1);
+	err = nvme_get_sct_status(dev->fd, MASK_0 | MASK_1);
 	if (err) {
 		goto end;
 	}
-	err = nvme_get_nsid_log(fd, false, log_page, namespace_id, log_len, log);
+	err = nvme_get_nsid_log(dev->fd, false, log_page, namespace_id, log_len, log);
 	if (err) {
 		fprintf(stderr, "%s: couldn't get log 0x%x\n", __func__,
 			log_page);
@@ -419,9 +419,7 @@ static int nvme_get_vendor_log(int fd, __u32 namespace_id, int log_page,
 		}
 	} else {
 		if (log_page == 0xc0)
-			default_show_vendor_log_c0(fd, namespace_id,
-						   nvme_dev->name,
-						   (struct nvme_xdn_smart_log_c0 *)log);
+			default_show_vendor_log_c0(dev, namespace_id, log);
 		else
 			d(log, log_len,16,1);
 	}
@@ -472,7 +470,7 @@ static int vendor_log(int argc, char **argv, struct command *cmd, struct plugin 
 		goto end;
 	}
 
-	err = nvme_get_vendor_log(dev->fd, cfg.namespace_id, cfg.log,
+	err = nvme_get_vendor_log(dev, cfg.namespace_id, cfg.log,
 				  cfg.output_file);
 	if (err)
 		fprintf(stderr, "%s: couldn't get vendor log 0x%x\n", __func__, cfg.log);
