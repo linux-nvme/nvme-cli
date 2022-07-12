@@ -20,6 +20,11 @@ api_files = [
   'util.h'
 ]
 
+api_paths = []
+foreach f: api_files
+  api_paths += files('../src/nvme/' + f)
+endforeach
+
 sphinx_sources = [
     'conf.py',
     'api.rst',
@@ -41,8 +46,12 @@ subdir('rst')
 
 want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
+kernel_doc = find_program('kernel-doc')
+kernel_doc_check = find_program('kernel-doc-check')
+
+test('kdoc', kernel_doc_check, args: api_paths)
+
 if want_docs != 'false'
-  kernel_doc = find_program('kernel-doc')
 
   conf = configuration_data()
   conf.set('SYSCONFDIR', sysconfdir)
@@ -51,29 +60,27 @@ if want_docs != 'false'
     mandir = join_paths(get_option('mandir'), 'man2')
     list_man_pages = find_program('list-man-pages.sh')
     if want_docs_build
-      foreach apif : api_files
-        foreach file : files('../src/nvme/' + apif)
-          subst = configure_file(
-              input: file,
-              output: '@BASENAME@.subst',
-              configuration: conf)
-          c = run_command(list_man_pages, subst)
-          man_pages = c.stdout().split()
-          foreach page : man_pages
-            custom_target(
-              page.underscorify() + '_man',
-              input: subst,
-              output: page + '.2',
-              capture: true,
-              command: [kernel_doc,
-                        '-module', 'libnvme',
-                        '-man',
-                        '-function',
-                        page,
-                        subst],
-              install: true,
-              install_dir: mandir)
-          endforeach
+      foreach apif : api_paths
+        subst = configure_file(
+            input: file,
+            output: '@BASENAME@.subst',
+            configuration: conf)
+        c = run_command(list_man_pages, subst)
+        man_pages = c.stdout().split()
+        foreach page : man_pages
+          custom_target(
+            page.underscorify() + '_man',
+            input: subst,
+            output: page + '.2',
+            capture: true,
+            command: [kernel_doc,
+                      '-module', 'libnvme',
+                      '-man',
+                      '-function',
+                      page,
+                      subst],
+            install: true,
+            install_dir: mandir)
         endforeach
       endforeach
     else
