@@ -401,7 +401,7 @@ static int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
                 struct plugin *plugin)
 {
         const char *desc = "Retrieve latency monitor log data.";
-        int fd;
+	struct nvme_dev *dev;
         int ret = 0;
 
         struct config {
@@ -417,15 +417,15 @@ static int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
                 OPT_END()
         };
 
-        fd = parse_and_open(argc, argv, desc, opts);
-        if (fd < 0)
-                return fd;
+        ret = parse_and_open(&dev, argc, argv, desc, opts);
+        if (ret < 0)
+                return ret;
 
-        ret = get_c0_log_page(fd, cfg.output_format);
+        ret = get_c0_log_page(dev->fd, cfg.output_format);
         if (ret)
                 fprintf(stderr, "ERROR : OCP : Failure reading the C0 Log Page, ret = %d\n",
                         ret);
-        close(fd);
+        dev_close(dev);
         return ret;
 }
 
@@ -745,7 +745,7 @@ static int ocp_latency_monitor_log(int argc, char **argv, struct command *comman
                 struct plugin *plugin)
 {
         const char *desc = "Retrieve latency monitor log data.";
-        int fd;
+	struct nvme_dev *dev;
         int ret = 0;
 
         struct config {
@@ -762,15 +762,15 @@ static int ocp_latency_monitor_log(int argc, char **argv, struct command *comman
                 OPT_END()
         };
 
-        fd = parse_and_open(argc, argv, desc, opts);
-        if (fd < 0)
-                return fd;
+        ret = parse_and_open(&dev, argc, argv, desc, opts);
+        if (ret < 0)
+                return ret;
 
-        ret = get_c3_log_page(fd, cfg.output_format);
+        ret = get_c3_log_page(dev->fd, cfg.output_format);
         if (ret)
                 fprintf(stderr,
                         "ERROR : OCP : Failure reading the C3 Log Page, ret = %d\n",
                         ret);
-        close(fd);
+        dev_close(dev);
         return ret;
 }

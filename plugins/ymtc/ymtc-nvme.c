@@ -119,15 +119,16 @@ static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
     struct nvme_ymtc_smart_log smart_log;
-    int err, fd;
     char *desc = "Get Ymtc vendor specific additional smart log (optionally, "\
               "for the specified namespace), and show it.";
     const char *namespace = "(optional) desired namespace";
     const char *raw = "dump output in binary format";
+    struct nvme_dev *dev;
     struct config {
         __u32 namespace_id;
         bool  raw_binary;
     };
+    int err;
 
     struct config cfg = {
         .namespace_id = NVME_NSID_ALL,
@@ -139,21 +140,21 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
         OPT_END()
     };
 
-    fd = parse_and_open(argc, argv, desc, opts);
-    if (fd < 0)
-        return fd;
+    err = parse_and_open(&dev, argc, argv, desc, opts);
+    if (err < 0)
+        return err;
 
-    err = nvme_get_nsid_log(fd, false, 0xca, cfg.namespace_id,
+    err = nvme_get_nsid_log(dev->fd, false, 0xca, cfg.namespace_id,
 			    sizeof(smart_log), &smart_log);
     if (!err) {
         if (!cfg.raw_binary)
-            err = show_ymtc_smart_log(fd, cfg.namespace_id, nvme_dev->name, &smart_log);
+            err = show_ymtc_smart_log(dev->fd, cfg.namespace_id, nvme_dev->name, &smart_log);
         else
             d_raw((unsigned char *)&smart_log, sizeof(smart_log));
     }
     if (err > 0)
         nvme_show_status(err);
 
-    close(fd);
+    dev_close(dev);
     return err;
 }
