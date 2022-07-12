@@ -228,7 +228,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 	if (flags == -EINVAL) {
 		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
 		close(fd);
-		return fd;
+		return flags;
 	}
 
 	err = nvme_get_log_simple(fd, solidigm_vu_smart_log_id, sizeof(smart_log_payload), &smart_log_payload);
