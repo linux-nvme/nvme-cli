@@ -6975,7 +6975,8 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 	case NVME_FEAT_FID_LBA_RANGE:
 		field = result & 0x0000003f;
 		printf("\tNumber of LBA Ranges (NUM): %u\n", field + 1);
-		nvme_show_lba_range((struct nvme_lba_range_type *)buf, field);
+		if (buf)
+			nvme_show_lba_range((struct nvme_lba_range_type *)buf, field);
 		break;
 	case NVME_FEAT_FID_TEMP_THRESH:
 		field = (result & 0x00300000) >> 20;
@@ -7034,14 +7035,17 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 	case NVME_FEAT_FID_AUTO_PST:
 		printf("\tAutonomous Power State Transition Enable (APSTE): %s\n",
 			(result & 0x00000001) ? "Enabled":"Disabled");
-		nvme_show_auto_pst((struct nvme_feat_auto_pst *)buf);
+		if (buf)
+			nvme_show_auto_pst((struct nvme_feat_auto_pst *)buf);
 		break;
 	case NVME_FEAT_FID_HOST_MEM_BUF:
 		printf("\tEnable Host Memory (EHM): %s\n", (result & 0x00000001) ? "Enabled":"Disabled");
-		nvme_show_host_mem_buffer((struct nvme_host_mem_buf_attrs *)buf);
+		if (buf)
+			nvme_show_host_mem_buffer((struct nvme_host_mem_buf_attrs *)buf);
 		break;
 	case NVME_FEAT_FID_TIMESTAMP:
-		nvme_show_timestamp((struct nvme_timestamp *)buf);
+		if (buf)
+			nvme_show_timestamp((struct nvme_timestamp *)buf);
 		break;
 	case NVME_FEAT_FID_KATO:
 		printf("\tKeep Alive Timeout (KATO) in milliseconds: %u\n", result);
@@ -7061,7 +7065,8 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		break;
 	case NVME_FEAT_FID_PLM_CONFIG:
 		printf("\tPredictable Latency Window Enabled: %s\n", result & 0x1 ? "True":"False");
-		nvme_show_plm_config((struct nvme_plm_config *)buf);
+		if (buf)
+			nvme_show_plm_config((struct nvme_plm_config *)buf);
 		break;
 	case NVME_FEAT_FID_PLM_WINDOW:
 		printf("\tWindow Select: %s", nvme_plm_window(result));
@@ -7070,7 +7075,8 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		nvme_show_lba_status_info(result);
 		break;
 	case NVME_FEAT_FID_HOST_BEHAVIOR:
-		printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
+		if (buf)
+			printf("\tHost Behavior Support: %s\n", (buf[0] & 0x1) ? "True" : "False");
 		break;
 	case NVME_FEAT_FID_SANITIZE:
 		printf("\tNo-Deallocate Response Mode (NODRM) : %u\n", result & 0x1);
@@ -7088,16 +7094,19 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:
 	case NVME_FEAT_FID_CTRL_METADATA:
 	case NVME_FEAT_FID_NS_METADATA:
-		nvme_show_host_metadata(fid, (struct nvme_host_metadata *)buf);
+		if (buf)
+			nvme_show_host_metadata(fid, (struct nvme_host_metadata *)buf);
 		break;
 	case NVME_FEAT_FID_SW_PROGRESS:
 		printf("\tPre-boot Software Load Count (PBSLC): %u\n", result & 0x000000ff);
 		break;
 	case NVME_FEAT_FID_HOST_ID:
-		ull =  buf[7]; ull <<= 8; ull |= buf[6]; ull <<= 8; ull |= buf[5]; ull <<= 8;
-		ull |= buf[4]; ull <<= 8; ull |= buf[3]; ull <<= 8; ull |= buf[2]; ull <<= 8;
-		ull |= buf[1]; ull <<= 8; ull |= buf[0];
-		printf("\tHost Identifier (HOSTID):  %" PRIu64 "\n", ull);
+		if (buf) {
+			ull =  buf[7]; ull <<= 8; ull |= buf[6]; ull <<= 8; ull |= buf[5]; ull <<= 8;
+			ull |= buf[4]; ull <<= 8; ull |= buf[3]; ull <<= 8; ull |= buf[2]; ull <<= 8;
+			ull |= buf[1]; ull <<= 8; ull |= buf[0];
+			printf("\tHost Identifier (HOSTID):  %" PRIu64 "\n", ull);
+		}
 		break;
 	case NVME_FEAT_FID_RESV_MASK:
 		printf("\tMask Reservation Preempted Notification  (RESPRE): %s\n",

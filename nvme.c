@@ -3771,7 +3771,7 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 			       result);
 			if (cfg.sel == 3)
 				nvme_show_select_result(result);
-			else if (cfg.human_readable && buf)
+			else if (cfg.human_readable)
 				nvme_feature_show_fields(cfg.feature_id, result,
 							 buf);
 			else if (buf)
