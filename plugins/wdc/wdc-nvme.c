@@ -10507,7 +10507,7 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
    	if (fmt == NORMAL) {
 		/* print the temperature stats */
 		printf("Temperature Stats for NVME device:%s namespace-id:%x\n",
-					nvme_dev->name, WDC_DE_GLOBAL_NSID);
+					dev->name, WDC_DE_GLOBAL_NSID);
 
 		printf("Current Composite Temperature           : %d °C\n", temperature);
 		printf("WCTEMP                                  : %"PRIu16" °C\n", id_ctrl.wctemp - 273);
@@ -10582,7 +10582,7 @@ static int wdc_capabilities(int argc, char **argv,
     capabilities = wdc_get_drive_capabilities(r, dev);
 
     /* print command and supported status */
-    printf("WDC Plugin Capabilities for NVME device:%s\n", nvme_dev->name);
+    printf("WDC Plugin Capabilities for NVME device:%s\n", dev->name);
     printf("cap-diag                      : %s\n", 
             capabilities & WDC_DRIVE_CAP_CAP_DIAG ? "Supported" : "Not Supported");
     printf("drive-log                     : %s\n", 
