@@ -105,7 +105,7 @@ static struct program nvme = {
 const char *output_format = "Output format: normal|json|binary";
 static const char *output_format_no_binary = "Output format: normal|json";
 
-static void *mmap_registers(nvme_root_t r, const char *dev);
+static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev);
 
 static void *__nvme_alloc(size_t len, bool *huge) {
 	void *p;
@@ -688,7 +688,7 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 		int nvme_command_set_supported;
 		int other_command_sets_supported;
 		nvme_root = nvme_scan(NULL);
-		bar = mmap_registers(nvme_root, nvme_dev->name);
+		bar = mmap_registers(nvme_root, dev);
 		nvme_free_tree(nvme_root);
 
 		if (!bar) {
@@ -4448,7 +4448,7 @@ static int nvme_get_properties(int fd, void **pbar)
 	return err;
 }
 
-static void *mmap_registers(nvme_root_t r, const char *dev)
+static void *mmap_registers(nvme_root_t r, struct nvme_dev *dev)
 {
 	nvme_ctrl_t c = NULL;
 	nvme_ns_t n = NULL;
@@ -4457,15 +4457,15 @@ static void *mmap_registers(nvme_root_t r, const char *dev)
 	void *membase;
 	int fd;
 
-	c = nvme_scan_ctrl(r, nvme_dev->name);
+	c = nvme_scan_ctrl(r, dev->name);
 	if (c) {
 		snprintf(path, sizeof(path), "%s/device/resource0",
 			nvme_ctrl_get_sysfs_dir(c));
 		nvme_free_ctrl(c);
 	} else {
-		n = nvme_scan_namespace(nvme_dev->name);
+		n = nvme_scan_namespace(dev->name);
 		if (!n) {
-			fprintf(stderr, "Unable to find %s\n", nvme_dev->name);
+			fprintf(stderr, "Unable to find %s\n", dev->name);
 			return NULL;
 		}
 		snprintf(path, sizeof(path), "%s/device/device/resource0",
@@ -4476,13 +4476,13 @@ static void *mmap_registers(nvme_root_t r, const char *dev)
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		fprintf(stderr, "%s did not find a pci resource, open failed %s\n",
-				nvme_dev->name, strerror(errno));
+				dev->name, strerror(errno));
 		return NULL;
 	}
 
 	membase = mmap(NULL, getpagesize(), PROT_READ, MAP_SHARED, fd, 0);
 	if (membase == MAP_FAILED) {
-		fprintf(stderr, "%s failed to map. ", nvme_dev->name);
+		fprintf(stderr, "%s failed to map. ", dev->name);
 		fprintf(stderr, "Did your kernel enable CONFIG_IO_STRICT_DEVMEM?\n");
 		membase = NULL;
 	}
@@ -4534,7 +4534,7 @@ static int show_registers(int argc, char **argv, struct command *cmd, struct plu
 
 	err = nvme_get_properties(dev->fd, &bar);
 	if (err) {
-		bar = mmap_registers(r, nvme_dev->name);
+		bar = mmap_registers(r, dev);
 		fabrics = false;
 		if (bar)
 			err = 0;
