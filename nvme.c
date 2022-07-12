@@ -587,18 +587,22 @@ ret:
 	return err;
 }
 
-void collect_effects_log(int fd, enum nvme_csi csi, struct list_head *list, int flags)
+static int collect_effects_log(int fd, enum nvme_csi csi,
+			       struct list_head *list, int flags)
 {
+	nvme_effects_log_node_t *node;
 	int err;
-	nvme_effects_log_node_t *node = malloc(sizeof(nvme_effects_log_node_t));
+
+	node = malloc(sizeof(nvme_effects_log_node_t));
 	if (!node)
-		return;
+		return -ENOMEM;
+
 	node->csi = csi;
 
 	err = nvme_get_log_cmd_effects(fd, csi, &node->effects);
 	if (!err) {
 		list_add(list, &node->node);
-		return;
+		return err;
 	}
 	else if (err > 0)
 		nvme_show_status(err);
@@ -606,6 +610,7 @@ void collect_effects_log(int fd, enum nvme_csi csi, struct list_head *list, int 
 		fprintf(stderr, "effects log page: %s\n", nvme_strerror(errno));
 
 	free(node);
+	return err;
 }
 
 static int get_effects_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -676,29 +681,28 @@ static int get_effects_log(int argc, char **argv, struct command *cmd, struct pl
 		nvme_command_set_supported = NVME_CAP_CSS(cap) & NVME_CAP_CSS_NVM;
 		other_command_sets_supported = NVME_CAP_CSS(cap) & NVME_CAP_CSS_CSI;
 
+		if (nvme_command_set_supported)
+			err = collect_effects_log(fd, NVME_CSI_NVM,
+						  &log_pages, flags);
 
-		if (nvme_command_set_supported) {
-			collect_effects_log(fd, NVME_CSI_NVM, &log_pages, flags);
-		}
+		if (!err && other_command_sets_supported)
+			err = collect_effects_log(fd, NVME_CSI_ZNS,
+						  &log_pages, flags);
 
-		if (other_command_sets_supported) {
-			collect_effects_log(fd, NVME_CSI_ZNS, &log_pages, flags);
-		}
-
-		nvme_print_effects_log_pages(&log_pages, flags);
-
-	}
-	else {
-		collect_effects_log(fd, cfg.csi, &log_pages, flags);
-		nvme_print_effects_log_pages(&log_pages, flags);
+	} else {
+		err = collect_effects_log(fd, cfg.csi, &log_pages, flags);
 	}
 
+	if (!err)
+		nvme_print_effects_log_pages(&log_pages, flags);
+	else if (err > 0)
+		nvme_show_status(err);
+	else
+		perror("effects log page");
 
 close_fd:
-	while ((node = list_pop(&log_pages, nvme_effects_log_node_t, node))) {
+	while ((node = list_pop(&log_pages, nvme_effects_log_node_t, node)))
 		free(node);
-	}
-
 	close(fd);
 ret:
 	return err;
