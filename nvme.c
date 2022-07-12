@@ -79,9 +79,6 @@ struct feat_cfg {
 	bool  human_readable;
 };
 
-static struct nvme_dev _nvme_dev;
-static struct nvme_dev *nvme_dev = &_nvme_dev;
-
 static const char nvme_version_string[] = NVME_VERSION;
 
 static struct plugin builtin = {
@@ -208,18 +205,21 @@ static ssize_t getrandom_bytes(void *buf, size_t buflen)
 #endif
 }
 
-static bool is_chardev(void)
+static bool is_chardev(struct nvme_dev *dev)
 {
-	return S_ISCHR(nvme_dev->stat.st_mode);
+	return S_ISCHR(dev->stat.st_mode);
 }
 
-static bool is_blkdev(void)
+static bool is_blkdev(struct nvme_dev *dev)
 {
-	return S_ISBLK(nvme_dev->stat.st_mode);
+	return S_ISBLK(dev->stat.st_mode);
 }
 
 static int open_dev(struct nvme_dev **devp, char *dev, int flags)
 {
+	static struct nvme_dev _nvme_dev;
+	static struct nvme_dev *nvme_dev = &_nvme_dev;
+
 	int err, fd;
 
         /* Temporary: we use the global nvme_dev pointer for the nvme device.
@@ -239,7 +239,7 @@ static int open_dev(struct nvme_dev **devp, char *dev, int flags)
 		close(fd);
 		goto perror;
 	}
-	if (!is_chardev() && !is_blkdev()) {
+	if (!is_chardev(nvme_dev) && !is_blkdev(nvme_dev)) {
 		fprintf(stderr, "%s is not a block or character device\n", dev);
 		close(fd);
 		return -ENODEV;
@@ -369,7 +369,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	err = nvme_get_log_smart(dev->fd, cfg.namespace_id, false, &smart_log);
 	if (!err)
 		nvme_show_smart_log(&smart_log, cfg.namespace_id,
-                                    nvme_dev->name, flags);
+                                    dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -441,7 +441,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 
 	err = nvme_get_log_ana(dev->fd, lsp, true, 0, ana_log_len, ana_log);
 	if (!err) {
-		nvme_show_ana_log(ana_log, nvme_dev->name, flags, ana_log_len);
+		nvme_show_ana_log(ana_log, dev->name, flags, ana_log_len);
 	} else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -599,7 +599,7 @@ static int get_endurance_log(int argc, char **argv, struct command *cmd, struct 
                                            &endurance_log);
 	if (!err)
 		nvme_show_endurance_log(&endurance_log, cfg.group_id,
-                                        nvme_dev->name, flags);
+                                        dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -768,7 +768,7 @@ static int get_supported_log_pages(int argc, char **argv, struct command *cmd,
 
 	err = nvme_get_log_supported_log_pages(dev->fd, false, &supports);
 	if (!err)
-		nvme_show_supported_log(&supports, nvme_dev->name, flags);
+		nvme_show_supported_log(&supports, dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -849,7 +849,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 	err = nvme_get_log_error(dev->fd, cfg.log_entries, false, err_log);
 	if (!err)
 		nvme_show_error_log(err_log, cfg.log_entries,
-                                    nvme_dev->name, flags);
+                                    dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -899,7 +899,7 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 
 	err = nvme_get_log_fw_slot(dev->fd, false, &fw_log);
 	if (!err)
-		nvme_show_fw_log(&fw_log, nvme_dev->name, flags);
+		nvme_show_fw_log(&fw_log, dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -950,7 +950,7 @@ static int get_changed_ns_list_log(int argc, char **argv, struct command *cmd, s
 	err = nvme_get_log_changed_ns_list(dev->fd, true, &changed_ns_list_log);
 	if (!err)
 		nvme_show_changed_ns_list_log(&changed_ns_list_log,
-                                              nvme_dev->name, flags);
+                                              dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -1008,7 +1008,7 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
                                                   &plpns_log);
 	if (!err)
 		nvme_show_predictable_latency_per_nvmset(&plpns_log,
-			cfg.nvmset_id, nvme_dev->name, flags);
+			cfg.nvmset_id, dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -1099,7 +1099,7 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
                                                  pea_log);
 	if (!err)
 		nvme_show_predictable_latency_event_agg_log(pea_log, cfg.log_entries,
-			log_size, nvme_dev->name, flags);
+			log_size, dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -1227,7 +1227,7 @@ static int get_persistent_event_log(int argc, char **argv,
 		}
 
 		nvme_show_persistent_event_log(pevent_log_info, cfg.action,
-			cfg.log_len, nvme_dev->name, flags);
+			cfg.log_len, dev->name, flags);
 	} else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -1323,7 +1323,7 @@ static int get_endurance_event_agg_log(int argc, char **argv,
                                              endurance_log);
 	if (!err)
 		nvme_show_endurance_group_event_agg_log(endurance_log, cfg.log_entries,
-			log_size, nvme_dev->name, flags);
+			log_size, dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -1392,7 +1392,7 @@ static int get_lba_status_log(int argc, char **argv,
 
 	err = nvme_get_log_lba_status(dev->fd, cfg.rae, 0, lslplen, lab_status);
 	if (!err)
-		nvme_show_lba_status_log(lab_status, lslplen, nvme_dev->name, flags);
+		nvme_show_lba_status_log(lab_status, lslplen, dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -1442,7 +1442,7 @@ static int get_resv_notif_log(int argc, char **argv,
 
 	err = nvme_get_log_reservation(dev->fd, false, &resv);
 	if (!err)
-		nvme_show_resv_notif_log(&resv, nvme_dev->name, flags);
+		nvme_show_resv_notif_log(&resv, dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -1540,7 +1540,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *cmd, struct 
 					  sizeof(boot) + bpsz,
 					  (struct nvme_boot_partition *)bp_log);
 	if (!err)
-		nvme_show_boot_part_log(&bp_log, nvme_dev->name, flags,
+		nvme_show_boot_part_log(&bp_log, dev->name, flags,
                                         sizeof(boot) + bpsz);
 	else if (err > 0)
 		nvme_show_status(err);
@@ -1799,7 +1799,7 @@ static int get_log(int argc, char **argv, struct command *cmd, struct plugin *pl
 	if (!err) {
 		if (!cfg.raw_binary) {
 			printf("Device:%s log-id:%d namespace-id:%#x\n",
-				nvme_dev->name, cfg.log_id,
+				dev->name, cfg.log_id,
 				cfg.namespace_id);
 			d(log, cfg.log_len, 16, 1);
 		} else
@@ -1863,7 +1863,7 @@ static int sanitize_log(int argc, char **argv, struct command *command, struct p
 
 	err = nvme_get_log_sanitize(dev->fd, cfg.rae, &sanitize_log);
 	if (!err)
-		nvme_show_sanitize_log(&sanitize_log, nvme_dev->name, flags);
+		nvme_show_sanitize_log(&sanitize_log, dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -1914,7 +1914,7 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *cm
 	err = nvme_get_log_fid_supported_effects(dev->fd, false, &fid_support_log);
 	if (!err)
 		nvme_show_fid_support_effects_log(&fid_support_log,
-                                                  nvme_dev->name, flags);
+                                                  dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -1965,7 +1965,7 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 	err = nvme_get_log_mi_cmd_supported_effects(dev->fd, false, &mi_cmd_support_log);
 	if (!err)
 		nvme_show_mi_cmd_support_effects_log(&mi_cmd_support_log,
-                                                     nvme_dev->name, flags);
+                                                     dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -3468,7 +3468,7 @@ static int get_ns_id(int argc, char **argv, struct command *cmd, struct plugin *
 		goto close_fd;
 	}
 	err = 0;
-	printf("%s: namespace-id:%d\n", nvme_dev->name, nsid);
+	printf("%s: namespace-id:%d\n", dev->name, nsid);
 
 close_fd:
 	dev_close(dev);
@@ -3779,7 +3779,7 @@ static int self_test_log(int argc, char **argv, struct command *cmd, struct plug
 	err = nvme_get_log_device_self_test(dev->fd, &log);
 	if (!err)
 		nvme_show_self_test_log(&log, cfg.dst_entries, 0,
-                                        nvme_dev->name, flags);
+                                        dev->name, flags);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -4872,9 +4872,9 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 
 	if (!cfg.force) {
 		fprintf(stderr, "You are about to format %s, namespace %#x%s.\n",
-			nvme_dev->name, cfg.namespace_id,
+			dev->name, cfg.namespace_id,
 			cfg.namespace_id == NVME_NSID_ALL ? "(ALL namespaces)" : "");
-		nvme_show_relatives(nvme_dev->name);
+		nvme_show_relatives(dev->name);
 		fprintf(stderr, "WARNING: Format may irrevocably delete this device's data.\n"
 			"You have 10 seconds to press Ctrl-C to cancel this operation.\n\n"
 			"Use the force [--force] option to suppress this warning.\n");
@@ -4903,7 +4903,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	else {
 		printf("Success formatting namespace:%x\n", cfg.namespace_id);
 		if (cfg.lbaf != prev_lbaf){
-			if (is_chardev()) {
+			if (is_chardev(dev)) {
 				if(ioctl(dev->fd, NVME_IOCTL_RESCAN) < 0){
 					fprintf(stderr, "failed to rescan namespaces\n");
 					err = -errno;
@@ -4933,7 +4933,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 				}
 			}
 		}
-		if (cfg.reset && is_chardev())
+		if (cfg.reset && is_chardev(dev))
 			nvme_ctrl_reset(dev->fd);
 	}
 
