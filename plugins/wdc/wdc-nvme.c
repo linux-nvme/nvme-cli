@@ -3498,8 +3498,7 @@ static int wdc_crash_dump(int fd, char *file, int type)
 	if (ret)
 		fprintf(stderr, "ERROR : WDC : failed to generate file name\n");
 	else
-		ret = wdc_do_crash_dump(fd, f, type);	\
-	close(fd);
+		ret = wdc_do_crash_dump(fd, f, type);
 	return ret;
 }
 
