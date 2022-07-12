@@ -215,39 +215,41 @@ static bool is_blkdev(struct nvme_dev *dev)
 	return S_ISBLK(dev->stat.st_mode);
 }
 
-static int open_dev(struct nvme_dev **devp, char *dev, int flags)
+static int open_dev(struct nvme_dev **devp, char *devstr, int flags)
 {
-	static struct nvme_dev _nvme_dev;
-	static struct nvme_dev *nvme_dev = &_nvme_dev;
+	struct nvme_dev *dev;
+	int err;
 
-	int err, fd;
+        dev = calloc(1, sizeof(*dev));
+	if (!dev)
+		return -1;
 
-        /* Temporary: we use the global nvme_dev pointer for the nvme device.
-         * This keeps the global in sync with the returned device. Later, we'll
-         * remove the global entirely and allocate here instead.
-         */
-        *devp = nvme_dev;
-
-	nvme_dev->name = basename(dev);
-	err = open(dev, flags);
-	if (err < 0)
-		goto perror;
-	fd = err;
-
-	err = fstat(fd, &nvme_dev->stat);
+	dev->name = basename(devstr);
+	err = open(devstr, flags);
 	if (err < 0) {
-		close(fd);
-		goto perror;
+		perror(devstr);
+		goto err_free;
 	}
-	if (!is_chardev(nvme_dev) && !is_blkdev(nvme_dev)) {
-		fprintf(stderr, "%s is not a block or character device\n", dev);
-		close(fd);
-		return -ENODEV;
+	dev->fd = err;
+
+	err = fstat(dev->fd, &dev->stat);
+	if (err < 0) {
+		perror(devstr);
+		goto err_close;
 	}
-        nvme_dev->fd = fd;
+	if (!is_chardev(dev) && !is_blkdev(dev)) {
+		fprintf(stderr, "%s is not a block or character device\n",
+			devstr);
+		err = -ENODEV;
+		goto err_close;
+	}
+        *devp = dev;
 	return 0;
-perror:
-	perror(dev);
+
+err_close:
+	close(dev->fd);
+err_free:
+	free(dev);
 	return err;
 }
 
@@ -316,6 +318,7 @@ enum nvme_print_flags validate_output_format(const char *format)
 void dev_close(struct nvme_dev *dev)
 {
 	close(dev->fd);
+	free(dev);
 }
 
 static int get_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
