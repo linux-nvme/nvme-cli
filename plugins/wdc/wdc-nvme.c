@@ -2454,9 +2454,10 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 	else
 		err = nvme_get_host_telemetry(fd, &log, data_area, &full_size);
 
-	if (err < 0)
+	if (err < 0) {
 		perror("get-telemetry-log");
-	else if (err > 0) {
+		goto close_output;
+	} else if (err > 0) {
 		nvme_show_status(err);
 		fprintf(stderr, "%s: Failed to acquire telemetry header!\n", __func__);
 		goto close_output;
