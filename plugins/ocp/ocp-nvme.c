@@ -429,7 +429,7 @@ static int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
         return ret;
 }
 
-static int ocp_print_C3_log_normal(int fd, struct ssd_latency_monitor_log *log_data)
+static int ocp_print_C3_log_normal(struct ssd_latency_monitor_log *log_data)
 {
         printf("-Latency Monitor/C3 Log Page Data- \n");
         printf("  Controller   :  %s\n", devicename);
@@ -725,7 +725,7 @@ static int get_c3_log_page(int fd, char *format)
 
                 switch (fmt) {
                 case NORMAL:
-                        ocp_print_C3_log_normal(fd, log_data);
+                        ocp_print_C3_log_normal(log_data);
                         break;
                 case JSON:
                         ocp_print_C3_log_json(log_data);
