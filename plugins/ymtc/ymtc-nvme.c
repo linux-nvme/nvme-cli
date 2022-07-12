@@ -64,17 +64,17 @@ static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
     /* 02 SI_VD_WEARLEVELING_COUNT */
     get_ymtc_smart_info(smart, SI_VD_WEARLEVELING_COUNT, nm, raw);
     printf("wear_leveling                   : %3d%%       min: %u, max: %u, avg: %u\n", *nm,
-        *raw, *(raw+2), *(raw+4));
+        *(uint16_t *)raw, *(uint16_t *)(raw+2), *(uint16_t *)(raw+4));
     /* 03 SI_VD_E2E_DECTECTION_COUNT */
     get_ymtc_smart_info(smart, SI_VD_E2E_DECTECTION_COUNT, nm, raw);
     printf("end_to_end_error_detection_count: %3d%%       %"PRIu64"\n", *nm, int48_to_long(raw));
     /* 04 SI_VD_PCIE_CRC_ERR_COUNT */
     get_ymtc_smart_info(smart, SI_VD_PCIE_CRC_ERR_COUNT, nm, raw);
-    printf("crc_error_count                 : %3d%%       %"PRIu64"\n", *nm, int48_to_long(raw));
+    printf("crc_error_count                 : %3d%%       %"PRIu32"\n", *nm, *(uint32_t *)raw);
     /* 08 SI_VD_THERMAL_THROTTLE_STATUS */
     get_ymtc_smart_info(smart, SI_VD_THERMAL_THROTTLE_STATUS, nm, raw);
-    printf("thermal_throttle_status         : %3d%%       %"PRIu64"%%, cnt: %"PRIu64"\n", *nm,
-        int48_to_long(raw), int48_to_long(raw+1));
+    printf("thermal_throttle_status         : %3d%%       %d%%, cnt: %"PRIu32"\n", *nm,
+        *raw, *(uint32_t *)(raw+1));
     /* 11 SI_VD_TOTAL_WRITE */
     get_ymtc_smart_info(smart, SI_VD_TOTAL_WRITE, nm, raw);
     printf("nand_bytes_written              : %3d%%       sectors: %"PRIu64"\n", *nm, int48_to_long(raw));
@@ -87,15 +87,15 @@ static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
     /* 15 SI_VD_TEMPT_SINCE_BORN */
     get_ymtc_smart_info(smart, SI_VD_TEMPT_SINCE_BORN, nm, raw);
     printf("tempt_since_born                : %3d%%       max: %u, min: %u, curr: %u\n",  *nm,
-        *raw, *(raw+2), *(raw+4));
+        *(uint16_t *)raw-273, *(uint16_t *)(raw+2)-273, *(int16_t *)(raw+4)-273);
     /* 16 SI_VD_POWER_CONSUMPTION */
     get_ymtc_smart_info(smart, SI_VD_POWER_CONSUMPTION, nm, raw);
     printf("power_consumption               : %3d%%       max: %u, min: %u, curr: %u\n",  *nm,
-        *raw, *(raw+2), *(raw+4));
+        *(uint16_t *)raw, *(uint16_t *)(raw+2), *(uint16_t *)(raw+4));
     /* 17 SI_VD_TEMPT_SINCE_BOOTUP */
     get_ymtc_smart_info(smart, SI_VD_TEMPT_SINCE_BOOTUP, nm, raw);
-    printf("tempt_since_bootup              : %3d%%       max: %u, min: %u, curr: %u\n",  *nm, *raw,
-        *(raw+2), *(raw+4));
+    printf("tempt_since_bootup              : %3d%%       max: %u, min: %u, curr: %u\n",  *nm,
+        *(uint16_t *)raw-273, *(uint16_t *)(raw+2)-273, *(uint16_t *)(raw+4)-273);
     /* 18 SI_VD_POWER_LOSS_PROTECTION */
     get_ymtc_smart_info(smart, SI_VD_POWER_LOSS_PROTECTION, nm, raw);
     printf("power_loss_protection           : %3d%%       %"PRIu64"\n", *nm, int48_to_long(raw));
@@ -104,7 +104,8 @@ static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
     printf("read_fail                       : %3d%%       %"PRIu64"\n", *nm, int48_to_long(raw));
     /* 20 SI_VD_THERMAL_THROTTLE_TIME */
     get_ymtc_smart_info(smart, SI_VD_THERMAL_THROTTLE_TIME, nm, raw);
-    printf("thermal_throttle_time           : %3d%%       %"PRIu64"\n", *nm, int48_to_long(raw));
+    printf("thermal_throttle_time           : %3d%%       %u, time: %"PRIu32"\n", *nm,
+		*raw, *(uint32_t *)(raw+1));
     /* 21 SI_VD_FLASH_MEDIA_ERROR */
     get_ymtc_smart_info(smart, SI_VD_FLASH_MEDIA_ERROR, nm, raw);
     printf("flash_error_media_count         : %3d%%       %"PRIu64"\n", *nm, int48_to_long(raw));
