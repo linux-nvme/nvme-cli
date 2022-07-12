@@ -63,6 +63,8 @@ static void vu_gc_log_show(garbage_control_collection_log_t *payload, const char
 int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	const char *desc = "Get and parse Solidigm vendor specific garbage collection event log.";
+	struct nvme_dev *dev;
+	int err;
 
 	struct config {
 		char	*output_format;
@@ -77,22 +79,22 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 		OPT_END()
 	};
 
-	int fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)	{
-		return fd;
-	}
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
 	enum nvme_print_flags flags = validate_output_format(cfg.output_format);
 	if (flags == -EINVAL) {
 		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
-		close(fd);
+		dev_close(dev);
 		return flags;
 	}
 
 	garbage_control_collection_log_t gc_log;
 	const int solidigm_vu_gc_log_id = 0xfd;
 
-	int err = nvme_get_log_simple(fd, solidigm_vu_gc_log_id, sizeof(gc_log), &gc_log);
+	err = nvme_get_log_simple(dev->fd, solidigm_vu_gc_log_id,
+				  sizeof(gc_log), &gc_log);
 	if (!err) {
 		if (flags & BINARY)	{
 			d_raw((unsigned char *)&gc_log, sizeof(gc_log));
@@ -105,7 +107,7 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 	else if (err > 0) {
 		nvme_show_status(err);
 	}
-	
-	close(fd);
+
+	dev_close(dev);
 	return err;
 }

@@ -117,15 +117,16 @@ static void show_shannon_smart_log(struct nvme_shannon_smart_log *smart,
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_shannon_smart_log smart_log;
-	int err, fd;
 	char *desc = "Get Shannon vendor specific additional smart log (optionally, "\
 		      "for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
+	struct nvme_dev *dev;
 	struct config {
 		__u32 namespace_id;
 		bool  raw_binary;
 	};
+	int err;
 
 	struct config cfg = {
 		.namespace_id = NVME_NSID_ALL,
@@ -137,10 +138,10 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)
-		return fd;
-	err = nvme_get_nsid_log(fd, false, 0xca, cfg.namespace_id,
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
+	err = nvme_get_nsid_log(dev->fd, false, 0xca, cfg.namespace_id,
 		   sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
@@ -151,7 +152,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	}
 	else if (err > 0)
 		nvme_show_status(err);
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 
@@ -175,9 +176,10 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 	const char *data_len = "buffer len (if) data is returned";
 	const char *cdw11 = "dword 11 for interrupt vector config";
 	const char *human_readable = "show infos in readable format";
-	int err, fd;
-	__u32 result;
+	struct nvme_dev *dev;
 	void *buf = NULL;
+	__u32 result;
+	int err;
 
 	struct config {
 		__u32 namespace_id;
@@ -208,24 +210,24 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)
-		return fd;
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
 	if (cfg.sel > 7) {
 		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
-		close(fd);
+		dev_close(dev);
 		return EINVAL;
 	}
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
-		close(fd);
+		dev_close(dev);
 		return EINVAL;
 	}
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len))
 		{
-			close(fd);
+			dev_close(dev);
 			exit(ENOMEM);
 		}
 		memset(buf, 0, cfg.data_len);
@@ -233,7 +235,7 @@ static int get_additional_feature(int argc, char **argv, struct command *cmd, st
 
 	struct nvme_get_features_args args = {
 		.args_size	= sizeof(args),
-		.fd		= fd,
+		.fd		= dev->fd,
 		.fid		= cfg.feature_id,
 		.nsid		= cfg.namespace_id,
 		.sel		= cfg.sel,
@@ -287,10 +289,11 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 	const char *data = "optional file for feature data (default stdin)";
 	const char *value = "new value of feature (required)";
 	const char *save = "specifies that the controller shall save the attribute";
-	int err, fd;
-	__u32 result;
-	void *buf = NULL;
 	int ffd = STDIN_FILENO;
+	struct nvme_dev *dev;
+	void *buf = NULL;
+	__u32 result;
+	int err;
 
 	struct config {
 		char *file;
@@ -320,20 +323,20 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)
-		return fd;
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
-		close(fd);
+		dev_close(dev);
 		return EINVAL;
 	}
 
 	if (cfg.data_len) {
 		if (posix_memalign(&buf, getpagesize(), cfg.data_len)){
 			fprintf(stderr, "can not allocate feature payload\n");
-			close(fd);
+			dev_close(dev);
 			return ENOMEM;
 		}
 		memset(buf, 0, cfg.data_len);
@@ -358,7 +361,7 @@ static int set_additional_feature(int argc, char **argv, struct command *cmd, st
 
 	struct nvme_set_features_args args = {
 		.args_size	= sizeof(args),
-		.fd		= fd,
+		.fd		= dev->fd,
 		.fid		= cfg.feature_id,
 		.nsid		= cfg.namespace_id,
 		.cdw11		= cfg.value,

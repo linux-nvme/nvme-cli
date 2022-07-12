@@ -201,7 +201,8 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 	const int solidigm_vu_smart_log_id = 0xCA;
 	vu_smart_log_t smart_log_payload;
 	enum nvme_print_flags flags;
-	int fd, err;
+	struct nvme_dev *dev;
+	int err;
 
 	struct config {
 		__u32	namespace_id;
@@ -219,19 +220,19 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
-		return fd;
-	}
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
 	flags = validate_output_format(cfg.output_format);
 	if (flags == -EINVAL) {
 		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
-		close(fd);
+		dev_close(dev);
 		return flags;
 	}
 
-	err = nvme_get_log_simple(fd, solidigm_vu_smart_log_id, sizeof(smart_log_payload), &smart_log_payload);
+	err = nvme_get_log_simple(dev->fd, solidigm_vu_smart_log_id,
+				  sizeof(smart_log_payload), &smart_log_payload);
 	if (!err) {
 		if (flags & JSON) {
 			vu_smart_log_show_json(&smart_log_payload,
@@ -247,7 +248,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 		nvme_show_status(err);
 	}
 
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 

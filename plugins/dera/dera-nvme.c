@@ -117,20 +117,21 @@ static int nvme_dera_get_device_status(int fd, enum dera_device_status *result)
 
 static int get_status(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int fd, err;
 	struct nvme_dera_smart_info_log log;
 	enum dera_device_status state = DEVICE_STATUS_FATAL_ERROR;
 	char *desc = "Get the Dera device status";
+	struct nvme_dev *dev;
+	int err;
 
 	OPT_ARGS(opts) = {
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0)
-		return fd;
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 	
-	err = nvme_get_log_simple(fd, 0xc0, sizeof(log), &log);
+	err = nvme_get_log_simple(dev->fd, 0xc0, sizeof(log), &log);
 	if (err) {
 		goto exit;
 	}
@@ -153,7 +154,7 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 		"Runtime Low",
 	};
 
-	err = nvme_dera_get_device_status(fd, &state);
+	err = nvme_dera_get_device_status(dev->fd, &state);
 	if (!err){
 		if (state > 0 && state < 4){
 			printf("device_status                       : %s %d%% completed\n", dev_status[state], log.rebuild_percent);
@@ -205,7 +206,7 @@ exit:
 	if (err > 0)
 		nvme_show_status(err);
 
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 

@@ -872,8 +872,9 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 	unsigned char *msg_buf = NULL;
 	unsigned int msg_size = 0;
 	unsigned int key_size = 0;
-	int fd = -1, err = -1;
 	struct nvme_id_ctrl ctrl;
+	struct nvme_dev *dev;
+	int err = -1;
 
 	union ctrl_rpmbs_reg {
 		struct {
@@ -886,11 +887,11 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 		unsigned int rpmbs;
 	} regs;
 	
-	if ((fd = parse_and_open(argc, argv, desc, opts)) < 0)
-		return fd;
+	if ((err = parse_and_open(&dev, argc, argv, desc, opts)) < 0)
+		return err;
 	
 	/* before parsing  commands, check if controller supports any RPMB targets */
-	err = nvme_identify_ctrl(fd, &ctrl);
+	err = nvme_identify_ctrl(dev->fd, &ctrl);
 	if (err)
 		goto out;
 	
@@ -959,13 +960,14 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 	
 	switch (cfg.opt) {
 		case RPMB_REQ_READ_WRITE_CNTR:
-			err = rpmb_read_write_counter(fd, cfg.target, &write_cntr);
+			err = rpmb_read_write_counter(dev->fd, cfg.target,
+						      &write_cntr);
 			if (err == 0)
 				printf("Write Counter is: %u\n", write_cntr);
 			break;
 	
 		case RPMB_REQ_AUTH_DCB_READ:
-			write_cntr = rpmb_read_config_block(fd, &msg_buf);
+			write_cntr = rpmb_read_config_block(dev->fd, &msg_buf);
 			if (msg_buf == NULL) {
 				fprintf(stderr, "failed read config blk\n");
 				goto out;
@@ -997,8 +999,9 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 					msg_size);
 				break;
 			}
-			err = rpmb_auth_data_read(fd, cfg.target, cfg.address,
-						  &msg_buf, cfg.blocks,
+			err = rpmb_auth_data_read(dev->fd, cfg.target,
+						  cfg.address, &msg_buf,
+						  cfg.blocks,
 						  (regs.access_size + 1));
 			if (err > 0 && msg_buf != NULL) {
 				printf("Writting %d bytes to file %s\n",
@@ -1017,7 +1020,8 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 			} else if ((cfg.blocks * 512) < msg_size) {
 				msg_size = cfg.blocks * 512;
 			}
-			err = rpmb_auth_data_write(fd, cfg.target, cfg.address,
+			err = rpmb_auth_data_write(dev->fd, cfg.target,
+						   cfg.address,
 						  ((regs.access_size + 1) * 512),
 						   msg_buf, msg_size,
 						   key_buf, key_size);
@@ -1028,11 +1032,13 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 			break;
 
 		case RPMB_REQ_AUTH_DCB_WRITE:
-			err = rpmb_write_config_block(fd, msg_buf, key_buf, key_size);
+			err = rpmb_write_config_block(dev->fd, msg_buf,
+						      key_buf, key_size);
 			break;
 	
 		case RPMB_REQ_AUTH_KEY_PROGRAM:
-			err = rpmb_program_auth_key(fd, cfg.target, key_buf, key_size);
+			err = rpmb_program_auth_key(dev->fd, cfg.target,
+						    key_buf, key_size);
 			break;
 		default:
 			break;
@@ -1043,8 +1049,8 @@ out:
 	free(key_buf);
 	free(msg_buf);
 	
-	/* close file descriptor */
-	close(fd);
+	/* close device */
+	dev_close(dev);
 	
 	return err;
 }

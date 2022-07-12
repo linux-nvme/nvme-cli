@@ -385,6 +385,7 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 				      struct plugin *plugin)
 {
 	const char *desc = "Get and Parse Solidigm Latency Tracking Statistics log.";
+	struct nvme_dev *dev;
 	__u32 enabled;
 	int err;
 
@@ -407,43 +408,45 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 		OPT_END()
 	};
 
-	lt.fd = parse_and_open(argc, argv, desc, opts);
-	if (lt.fd < 0)
-		return lt.fd;
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
+
+	lt.fd = dev->fd;
 
 	lt.print_flags = validate_output_format(lt.cfg.output_format);
 	if (lt.print_flags == -EINVAL) {
 		fprintf(stderr, "Invalid output format '%s'\n", lt.cfg.output_format);
-		close(lt.fd);
+		dev_close(dev);
 		return EINVAL;
 	}
 
 	if (lt.cfg.type > 0xf) {
 		fprintf(stderr, "Invalid Log type value '%d'\n", lt.cfg.type);
-		close(lt.fd);
+		dev_close(dev);
 		return EINVAL;
 	}
 
 	if (lt.cfg.type && !(lt.cfg.read || lt.cfg.write)) {
 		fprintf(stderr, "Log type option valid only when retrieving statistics\n");
-		close(lt.fd);
+		dev_close(dev);
 		return EINVAL;
 	}
 
 	err = latency_tracking_enable(&lt);
 	if (err){
-		close(lt.fd);
+		dev_close(dev);
 		return err;
 	}
 
 	err = latency_tracker_get_log(&lt);
 	if (err){
-		close(lt.fd);
+		dev_close(dev);
 		return err;
 	}
 
 	if ((lt.cfg.read || lt.cfg.write || lt.cfg.enable || lt.cfg.disable)) {
-		close(lt.fd);
+		dev_close(dev);
 		return 0;
 	}
 
@@ -465,6 +468,6 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 	} else {
 		fprintf(stderr, "Could not read feature id 0xE2.\n");
 	}
-	close(lt.fd);
+	dev_close(dev);
 	return err;
 }

@@ -398,17 +398,18 @@ static void show_sfx_smart_log(struct nvme_additional_smart_log *smart,
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct nvme_additional_smart_log smart_log;
-	int err, fd;
 	char *desc = "Get ScaleFlux vendor specific additional smart log (optionally, "\
 			  "for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
 	const char *json= "Dump output in json format";
+	struct nvme_dev *dev;
 	struct config {
 		__u32 namespace_id;
 		bool  raw_binary;
 		bool  json;
 	};
+	int err;
 
 	struct config cfg = {
 		.namespace_id = 0xffffffff,
@@ -422,12 +423,11 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	};
 
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
-		return fd;
-	}
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
-	err = nvme_get_nsid_log(fd, false, 0xca, cfg.namespace_id,
+	err = nvme_get_nsid_log(dev->fd, false, 0xca, cfg.namespace_id,
 		sizeof(smart_log), (void *)&smart_log);
 	if (!err) {
 		if (cfg.json)
@@ -441,7 +441,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	}
 	else if (err > 0)
 		nvme_show_status(err);
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 
@@ -618,15 +618,15 @@ static void show_lat_stats_myrtle(struct sfx_lat_stats_myrtle *stats, int write)
 static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct sfx_lat_stats stats;
-	int err, fd;
-
 	char *desc = "Get ScaleFlux Latency Statistics log and show it.";
 	const char *raw = "dump output in binary format";
 	const char *write = "Get write statistics (read default)";
+	struct nvme_dev *dev;
 	struct config {
 		bool raw_binary;
 		bool write;
 	};
+	int err;
 
 	struct config cfg = {
 	};
@@ -637,12 +637,12 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
-		return fd;
-	}
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
-	err = nvme_get_log_simple(fd, cfg.write ? 0xc3 : 0xc1, sizeof(stats), (void *)&stats);
+	err = nvme_get_log_simple(dev->fd, cfg.write ? 0xc3 : 0xc1,
+				  sizeof(stats), (void *)&stats);
 	if (!err) {
 		if ((stats.ver.maj == VANDA_MAJOR_IDX) && (stats.ver.min == VANDA_MINOR_IDX)) {
 			if (!cfg.raw_binary) {
@@ -662,7 +662,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 		}
 	} else if (err > 0)
 		nvme_show_status(err);
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 
@@ -766,9 +766,9 @@ static void bd_table_show(unsigned char *bd_table, __u64 table_size)
  */
 static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int fd;
-	unsigned char *data_buf;
 	const __u64 buf_size = 256*4096*sizeof(unsigned char);
+	unsigned char *data_buf;
+	struct nvme_dev *dev;
 	int err = 0;
 
 	char *desc = "Get bad block table of sfx block device.";
@@ -777,19 +777,18 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
-		return fd;
-	}
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
 	data_buf = malloc(buf_size);
 	if (!data_buf) {
 		fprintf(stderr, "malloc fail, errno %d\r\n", errno);
-		close(fd);
+		dev_close(dev);
 		return -1;
 	}
 
-	err = get_bb_table(fd, 0xffffffff, data_buf, buf_size);
+	err = get_bb_table(dev->fd, 0xffffffff, data_buf, buf_size);
 	if (err < 0) {
 		perror("get-bad-block");
 	} else if (err != 0) {
@@ -800,7 +799,7 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct 
 	}
 
 	free(data_buf);
-	close(fd);
+	dev_close(dev);
 	return 0;
 }
 
@@ -821,25 +820,25 @@ static void show_cap_info(struct sfx_freespace_ctx *ctx)
 static int query_cap_info(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
 	struct sfx_freespace_ctx ctx = { 0 };
-	int err = 0, fd;
 	char *desc = "query current capacity info";
 	const char *raw = "dump output in binary format";
+	struct nvme_dev *dev;
 	struct config {
 		bool  raw_binary;
 	};
 	struct config cfg;
+	int err = 0;
 
 	OPT_ARGS(opts) = {
 		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
-		return fd;
-	}
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
-	if (nvme_query_cap(fd, 0xffffffff, sizeof(ctx), &ctx)) {
+	if (nvme_query_cap(dev->fd, 0xffffffff, sizeof(ctx), &ctx)) {
 		perror("sfx-query-cap");
 		err = -1;
 	}
@@ -851,7 +850,7 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 			d_raw((unsigned char *)&ctx, sizeof(ctx));
 		}
 	}
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 
@@ -941,14 +940,15 @@ static int sfx_confirm_change(const char *str)
 
 static int change_cap(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int err = -1, fd;
 	char *desc = "dynamic change capacity";
 	const char *cap_gb = "cap size in GB";
 	const char *cap_byte = "cap size in byte";
 	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
+	struct nvme_dev *dev;
 	__u64 cap_in_4k = 0;
 	__u64 cap_in_sec = 0;
 	int shrink = 0;
+	int err = -1;
 
 	struct config {
 		__u64 cap_in_byte;
@@ -969,10 +969,9 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
-		return fd;
-	}
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
 	cap_in_sec = IDEMA_CAP(cfg.capacity_in_gb);
 	cap_in_4k = cap_in_sec >> 3;
@@ -981,27 +980,27 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 	printf("%dG %"PRIu64"B %"PRIu64" 4K\n",
 		cfg.capacity_in_gb, (uint64_t)cfg.cap_in_byte, (uint64_t)cap_in_4k);
 
-	if (change_sanity_check(fd, cap_in_4k, &shrink)) {
+	if (change_sanity_check(dev->fd, cap_in_4k, &shrink)) {
 		printf("ScaleFlux change-capacity: fail\n");
-		close(fd);
+		dev_close(dev);
 		return err;
 	}
 
 	if (!cfg.force && shrink && !sfx_confirm_change("Changing Cap may irrevocably delete this device's data")) {
-		close(fd);
+		dev_close(dev);
 		return 0;
 	}
 
-	err = nvme_change_cap(fd, 0xffffffff, cap_in_4k);
+	err = nvme_change_cap(dev->fd, 0xffffffff, cap_in_4k);
 	if (err < 0)
 		perror("sfx-change-cap");
 	else if (err != 0)
 		nvme_show_status(err);
 	else {
 		printf("ScaleFlux change-capacity: success\n");
-		ioctl(fd, BLKRRPART);
+		ioctl(dev->fd, BLKRRPART);
 	}
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 
@@ -1053,7 +1052,6 @@ char *sfx_feature_to_string(int feature)
 
 static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int err = 0, fd;
 	char *desc = "ScaleFlux internal set features\n"
 				 "feature id 1: ATOMIC\n"
 				 "value 0: Disable atomic write\n"
@@ -1062,8 +1060,9 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 	const char *feature_id = "hex feature name (required)";
 	const char *namespace_id = "desired namespace";
 	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
-
+	struct nvme_dev *dev;
 	struct nvme_id_ns ns;
+	int err = 0;
 
 	struct config {
 		__u32 namespace_id;
@@ -1086,37 +1085,36 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
-		return fd;
-	}
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
-		close(fd);
+		dev_close(dev);
 		return EINVAL;
 	}
 
 	if (cfg.feature_id == SFX_FEAT_CLR_CARD) {
 		/*Warning for clean card*/
 		if (!cfg.force && !sfx_confirm_change("Going to clean device's data, confirm umount fs and try again")) {
-			close(fd);
+			dev_close(dev);
 			return 0;
 		} else {
-			return sfx_clean_card(fd);
+			return sfx_clean_card(dev->fd);
 		}
 
 	}
 
 	if (cfg.feature_id == SFX_FEAT_ATOMIC && cfg.value != 0) {
 		if (cfg.namespace_id != 0xffffffff) {
-			err = nvme_identify_ns(fd, cfg.namespace_id, &ns);
+			err = nvme_identify_ns(dev->fd, cfg.namespace_id, &ns);
 			if (err) {
 				if (err < 0)
 					perror("identify-namespace");
 				else
 					nvme_show_status(err);
-				close(fd);
+				dev_close(dev);
 				return err;
 			}
 			/*
@@ -1124,29 +1122,30 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 			 */
 			if ((ns.flbas & 0xf) != 1) {
 				printf("Please change-sector size to 4K, then retry\n");
-				close(fd);
+				dev_close(dev);
 				return EFAULT;
 			}
 		}
 	} else if (cfg.feature_id == SFX_FEAT_UP_P_CAP) {
 		if (cfg.value <= 0) {
 			fprintf(stderr, "Invalid Param\n");
-			close(fd);
+			dev_close(dev);
 			return EINVAL;
 		}
 
 		/*Warning for change pacp by GB*/
 		if (!cfg.force && !sfx_confirm_change("Changing physical capacity may irrevocably delete this device's data")) {
-			close(fd);
+			dev_close(dev);
 			return 0;
 		}
 	}
 
-	err = nvme_sfx_set_features(fd, cfg.namespace_id, cfg.feature_id, cfg.value);
+	err = nvme_sfx_set_features(dev->fd, cfg.namespace_id, cfg.feature_id,
+				    cfg.value);
 
 	if (err < 0) {
 		perror("ScaleFlux-set-feature");
-		close(fd);
+		dev_close(dev);
 		return errno;
 	} else if (!err) {
 		printf("ScaleFlux set-feature:%#02x (%s), value:%d\n", cfg.feature_id,
@@ -1154,18 +1153,19 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 	} else if (err > 0)
 		nvme_show_status(err);
 
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 
 static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int err = 0, fd;
 	char *desc = "ScaleFlux internal set features\n"
 				 "feature id 1: ATOMIC";
 	const char *feature_id = "hex feature name (required)";
 	const char *namespace_id = "desired namespace";
+	struct nvme_dev *dev;
 	__u32 result = 0;
+	int err = 0;
 
 	struct config {
 		__u32 namespace_id;
@@ -1182,21 +1182,20 @@ static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct pl
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
-		return fd;
-	}
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0)
+		return err;
 
 	if (!cfg.feature_id) {
 		fprintf(stderr, "feature-id required param\n");
-		close(fd);
+		dev_close(dev);
 		return EINVAL;
 	}
 
-	err = nvme_sfx_get_features(fd, cfg.namespace_id, cfg.feature_id, &result);
+	err = nvme_sfx_get_features(dev->fd, cfg.namespace_id, cfg.feature_id, &result);
 	if (err < 0) {
 		perror("ScaleFlux-get-feature");
-		close(fd);
+		dev_close(dev);
 		return errno;
 	} else if (!err) {
 		printf("ScaleFlux get-feature:%02x (%s), value:%d\n", cfg.feature_id,
@@ -1204,7 +1203,7 @@ static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct pl
 	} else if (err > 0)
 		nvme_show_status(err);
 
-	close(fd);
+	dev_close(dev);
 	return err;
 
 }

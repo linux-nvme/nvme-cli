@@ -37,14 +37,21 @@ enum nvme_print_flags {
 
 #define SYS_NVME "/sys/class/nvme"
 
-void register_extension(struct plugin *plugin);
-int parse_and_open(int argc, char **argv, const char *desc,
-	const struct argconfig_commandline_options *clo);
-
 struct nvme_dev {
+	int fd;
 	struct stat stat;
 	const char *name;
 };
+
+void register_extension(struct plugin *plugin);
+
+/*
+ * parse_and_open - parses arguments and opens the NVMe device, populating @dev
+ */
+int parse_and_open(struct nvme_dev **dev, int argc, char **argv, const char *desc,
+	const struct argconfig_commandline_options *clo);
+
+void dev_close(struct nvme_dev *dev);
 
 extern struct nvme_dev *nvme_dev;
 extern const char *output_format;
