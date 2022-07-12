@@ -2390,13 +2390,12 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 	if (err) {
 		fprintf(stderr, "ERROR : WDC : nvme_identify_ctrl() failed "
 				"0x%x\n", err);
-		goto close_fd;
+		return err;
 	}
 
 	if (!(ctrl.lpa & 0x8)) {
 		fprintf(stderr, "Telemetry Host-Initiated and Telemetry Controller-Initiated log pages not supported\n");
-		err = -EINVAL;
-		goto close_fd;
+		return -EINVAL;
 	}
 
 	r = nvme_scan(NULL);
@@ -2418,15 +2417,13 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 				}
 				else {
 					fprintf(stderr, "%s: Controller initiated option telemetry log page disabled\n", __func__);
-					err = -EINVAL;
-					goto close_fd;
+					return -EINVAL;
 				}
 			}
 			else {
 				fprintf(stderr, "ERROR : WDC: Get telemetry option feature failed.");
 				nvme_show_status(err);
-				err = -EPERM;
-				goto close_fd;
+				return -EPERM;
 			}
 		}
 		else {
@@ -2435,22 +2432,19 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 		}
 	} else {
 		fprintf(stderr, "%s: Invalid type parameter; type = %d\n", __func__, type);
-		err = -EINVAL;
-		goto close_fd;
+		return -EINVAL;
 	}
 
 	if (!file) {
 		fprintf(stderr, "%s: Please provide an output file!\n", __func__);
-		err = -EINVAL;
-		goto close_fd;
+		return -EINVAL;
 	}
 
 	output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
 				__func__, file, strerror(errno));
-		err = output;
-		goto close_fd;
+		return output;
 	}
 
 	if (ctrl_init)
@@ -2501,11 +2495,7 @@ static int wdc_do_cap_telemetry_log(int fd, char *file, __u32 bs, int type, int 
 	free(log);
 close_output:
 	close(output);
-close_fd:
-	close(fd);
-
 	return err;
-
 }
 
 static int wdc_do_cap_diag(nvme_root_t r, int fd, char *file,
