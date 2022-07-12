@@ -4156,7 +4156,7 @@ static void wdc_print_latency_monitor_log_json(struct wdc_ssd_latency_monitor_lo
 	json_free_object(root);
 }
 
-static void wdc_print_error_rec_log_normal(int fd, struct wdc_ocp_c1_error_recovery_log *log_data)
+static void wdc_print_error_rec_log_normal(struct wdc_ocp_c1_error_recovery_log *log_data)
 {
 	int j;
 	printf("Error Recovery/C1 Log Page Data \n");
@@ -4210,7 +4210,7 @@ static void wdc_print_error_rec_log_json(struct wdc_ocp_c1_error_recovery_log *l
 	json_free_object(root);
 }
 
-static void wdc_print_dev_cap_log_normal(int fd, struct wdc_ocp_C4_dev_cap_log *log_data)
+static void wdc_print_dev_cap_log_normal(struct wdc_ocp_C4_dev_cap_log *log_data)
 {
 	int j;
 	printf("Device Capabilities/C4 Log Page Data \n");
@@ -4271,7 +4271,7 @@ static void wdc_print_dev_cap_log_json(struct wdc_ocp_C4_dev_cap_log *log_data)
 	json_free_object(root);
 }
 
-static void wdc_print_unsupported_reqs_log_normal(int fd, struct wdc_ocp_C5_unsupported_reqs *log_data)
+static void wdc_print_unsupported_reqs_log_normal(struct wdc_ocp_C5_unsupported_reqs *log_data)
 {
 	int j;
 	printf("Unsupported Requirements/C5 Log Page Data \n");
@@ -6392,7 +6392,7 @@ static int wdc_print_latency_monitor_log(int fd, struct wdc_ssd_latency_monitor_
 	return 0;
 }
 
-static int wdc_print_error_rec_log(int fd, struct wdc_ocp_c1_error_recovery_log *log_data, int fmt)
+static int wdc_print_error_rec_log(struct wdc_ocp_c1_error_recovery_log *log_data, int fmt)
 {
 	if (!log_data) {
 		fprintf(stderr, "ERROR : WDC : Invalid C1 log data buffer\n");
@@ -6400,7 +6400,7 @@ static int wdc_print_error_rec_log(int fd, struct wdc_ocp_c1_error_recovery_log 
 	}
 	switch (fmt) {
 	case NORMAL:
-		wdc_print_error_rec_log_normal(fd, log_data);
+		wdc_print_error_rec_log_normal(log_data);
 		break;
 	case JSON:
 		wdc_print_error_rec_log_json(log_data);
@@ -6409,7 +6409,7 @@ static int wdc_print_error_rec_log(int fd, struct wdc_ocp_c1_error_recovery_log 
 	return 0;
 }
 
-static int wdc_print_dev_cap_log(int fd, struct wdc_ocp_C4_dev_cap_log *log_data, int fmt)
+static int wdc_print_dev_cap_log(struct wdc_ocp_C4_dev_cap_log *log_data, int fmt)
 {
 	if (!log_data) {
 		fprintf(stderr, "ERROR : WDC : Invalid C4 log data buffer\n");
@@ -6417,7 +6417,7 @@ static int wdc_print_dev_cap_log(int fd, struct wdc_ocp_C4_dev_cap_log *log_data
 	}
 	switch (fmt) {
 	case NORMAL:
-		wdc_print_dev_cap_log_normal(fd, log_data);
+		wdc_print_dev_cap_log_normal(log_data);
 		break;
 	case JSON:
 		wdc_print_dev_cap_log_json(log_data);
@@ -6426,7 +6426,7 @@ static int wdc_print_dev_cap_log(int fd, struct wdc_ocp_C4_dev_cap_log *log_data
 	return 0;
 }
 
-static int wdc_print_unsupported_reqs_log(int fd, struct wdc_ocp_C5_unsupported_reqs *log_data, int fmt)
+static int wdc_print_unsupported_reqs_log(struct wdc_ocp_C5_unsupported_reqs *log_data, int fmt)
 {
 	if (!log_data) {
 		fprintf(stderr, "ERROR : WDC : Invalid C5 log data buffer\n");
@@ -6434,7 +6434,7 @@ static int wdc_print_unsupported_reqs_log(int fd, struct wdc_ocp_C5_unsupported_
 	}
 	switch (fmt) {
 	case NORMAL:
-		wdc_print_unsupported_reqs_log_normal(fd, log_data);
+		wdc_print_unsupported_reqs_log_normal(log_data);
 		break;
 	case JSON:
 		wdc_print_unsupported_reqs_log_json(log_data);
@@ -6838,7 +6838,7 @@ static int wdc_get_ocp_c1_log_page(nvme_root_t r, int fd, char *format)
 		}
 
 		/* parse the data */
-		wdc_print_error_rec_log(fd, log_data, fmt);
+		wdc_print_error_rec_log(log_data, fmt);
 	} else {
 		fprintf(stderr, "ERROR : WDC : Unable to read error recovery (C1) data from buffer\n");
 	}
@@ -6907,7 +6907,7 @@ static int wdc_get_ocp_c4_log_page(nvme_root_t r, int fd, char *format)
 		}
 
 		/* parse the data */
-		wdc_print_dev_cap_log(fd, log_data, fmt);
+		wdc_print_dev_cap_log(log_data, fmt);
 	} else {
 		fprintf(stderr, "ERROR : WDC : Unable to read device capabilities (C4) data from buffer\n");
 	}
@@ -6976,7 +6976,7 @@ static int wdc_get_ocp_c5_log_page(nvme_root_t r, int fd, char *format)
 		}
 
 		/* parse the data */
-		wdc_print_unsupported_reqs_log(fd, log_data, fmt);
+		wdc_print_unsupported_reqs_log(log_data, fmt);
 	} else {
 		fprintf(stderr, "ERROR : WDC : Unable to read unsupported requirements (C5) data from buffer\n");
 	}
