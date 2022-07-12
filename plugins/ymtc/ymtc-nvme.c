@@ -21,8 +21,8 @@ static void get_ymtc_smart_info(struct nvme_ymtc_smart_log *smart, int index, u8
     memcpy(raw_val, smart->itemArr[index].rawVal, RAW_SIZE);
 }
 
-static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
-    struct nvme_ymtc_smart_log *smart)
+static int show_ymtc_smart_log(struct nvme_dev *dev, __u32 nsid,
+			       struct nvme_ymtc_smart_log *smart)
 {
     struct nvme_id_ctrl ctrl;
     char fw_ver[10];
@@ -40,7 +40,7 @@ static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
         free(nm);
         return -1;
     }
-    err = nvme_identify_ctrl(fd, &ctrl);
+    err = nvme_identify_ctrl(dev->fd, &ctrl);
     if (err) {
         free(nm);
         free(raw);
@@ -52,7 +52,8 @@ static int show_ymtc_smart_log(int fd, __u32 nsid, const char *devname,
         ctrl.fr[4], ctrl.fr[5], ctrl.fr[6]);
 
     /* Table Title */
-    printf("Additional Smart Log for NVME device:%s namespace-id:%x\n", devname, nsid);
+    printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
+	   dev->name, nsid);
     /* Clumn Name*/
     printf("key                               normalized raw\n");
     /* 00 SI_VD_PROGRAM_FAIL */
@@ -148,7 +149,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 			    sizeof(smart_log), &smart_log);
     if (!err) {
         if (!cfg.raw_binary)
-            err = show_ymtc_smart_log(dev->fd, cfg.namespace_id, nvme_dev->name, &smart_log);
+            err = show_ymtc_smart_log(dev, cfg.namespace_id, &smart_log);
         else
             d_raw((unsigned char *)&smart_log, sizeof(smart_log));
     }
