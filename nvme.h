@@ -53,7 +53,6 @@ int parse_and_open(struct nvme_dev **dev, int argc, char **argv, const char *des
 
 void dev_close(struct nvme_dev *dev);
 
-extern struct nvme_dev *nvme_dev;
 extern const char *output_format;
 
 enum nvme_print_flags validate_output_format(const char *format);

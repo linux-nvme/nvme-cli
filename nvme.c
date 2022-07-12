@@ -79,8 +79,8 @@ struct feat_cfg {
 	bool  human_readable;
 };
 
-struct nvme_dev _nvme_dev;
-struct nvme_dev *nvme_dev = &_nvme_dev;
+static struct nvme_dev _nvme_dev;
+static struct nvme_dev *nvme_dev = &_nvme_dev;
 
 static const char nvme_version_string[] = NVME_VERSION;
 
