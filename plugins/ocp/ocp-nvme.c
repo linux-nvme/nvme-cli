@@ -432,7 +432,7 @@ static int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
 static int ocp_print_C3_log_normal(struct ssd_latency_monitor_log *log_data)
 {
         printf("-Latency Monitor/C3 Log Page Data- \n");
-        printf("  Controller   :  %s\n", devicename);
+        printf("  Controller   :  %s\n", nvme_dev->name);
         int i, j;
         int pos = 0;
         char       ts_buf[128];

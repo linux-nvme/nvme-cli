@@ -144,7 +144,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 		   sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
-			show_shannon_smart_log(&smart_log, cfg.namespace_id, devicename);
+			show_shannon_smart_log(&smart_log, cfg.namespace_id,
+					       nvme_dev->name);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}

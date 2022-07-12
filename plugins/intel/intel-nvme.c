@@ -370,9 +370,11 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	err = nvme_get_log_simple(fd, 0xca, sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (cfg.json)
-			show_intel_smart_log_jsn(&smart_log, cfg.namespace_id, devicename);
+			show_intel_smart_log_jsn(&smart_log, cfg.namespace_id,
+						 nvme_dev->name);
 		else if (!cfg.raw_binary)
-			show_intel_smart_log(&smart_log, cfg.namespace_id, devicename);
+			show_intel_smart_log(&smart_log, cfg.namespace_id,
+					     nvme_dev->name);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}
