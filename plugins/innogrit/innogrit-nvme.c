@@ -44,8 +44,7 @@ static int innogrit_smart_log_additional(int argc, char **argv,
 		return err;
 
 	nvme_get_log_smart(dev->fd, cfg.namespace_id, false, &smart_log);
-	nvme_show_smart_log(&smart_log, cfg.namespace_id,
-			    nvme_dev->name, NORMAL);
+	nvme_show_smart_log(&smart_log, cfg.namespace_id, dev->name, NORMAL);
 
 	printf("DW0[0-1]  Defect Cnt                    : %u\n", pvsc_smart->defect_cnt);
 	printf("DW0[2-3]  Slc Spb Cnt                   : %u\n", pvsc_smart->slc_spb_cnt);

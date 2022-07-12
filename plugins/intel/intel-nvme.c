@@ -372,10 +372,10 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	if (!err) {
 		if (cfg.json)
 			show_intel_smart_log_jsn(&smart_log, cfg.namespace_id,
-						 nvme_dev->name);
+						 dev->name);
 		else if (!cfg.raw_binary)
 			show_intel_smart_log(&smart_log, cfg.namespace_id,
-					     nvme_dev->name);
+					     dev->name);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}
