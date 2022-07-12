@@ -1297,7 +1297,7 @@ static int wdc_get_pci_ids(nvme_root_t r, uint32_t *device_id,
 	nvme_ns_t n = NULL;
 	int fd, ret;
 
-	c = nvme_scan_ctrl(r, devicename);
+	c = nvme_scan_ctrl(r, nvme_dev->name);
 	if (c) {
 		snprintf(vid, sizeof(vid), "%s/device/vendor",
 			nvme_ctrl_get_sysfs_dir(c));
@@ -1305,9 +1305,9 @@ static int wdc_get_pci_ids(nvme_root_t r, uint32_t *device_id,
 			nvme_ctrl_get_sysfs_dir(c));
 		nvme_free_ctrl(c);
 	} else {
-		n = nvme_scan_namespace(devicename);
+		n = nvme_scan_namespace(nvme_dev->name);
 		if (!n) {
-			fprintf(stderr, "Unable to find %s\n", devicename);
+			fprintf(stderr, "Unable to find %s\n", nvme_dev->name);
 			return -1;
 		}
 
@@ -4012,7 +4012,7 @@ static int wdc_convert_ts(time_t time, char *ts_buf)
 static int wdc_print_latency_monitor_log_normal(int fd, struct wdc_ssd_latency_monitor_log *log_data)
 {
 	printf("Latency Monitor/C3 Log Page Data \n");
-	printf("  Controller   :  %s\n", devicename);
+	printf("  Controller   :  %s\n", nvme_dev->name);
 	int err = -1, i, j;
 	struct nvme_id_ctrl ctrl;
 	char       ts_buf[128];
@@ -4453,7 +4453,7 @@ static void wdc_print_bd_ca_log_normal(void *data)
 	if (bd_data->field_id == 0x00) {
 		raw = (__u64*)&bd_data->raw_value[0];
 		printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
-			devicename, WDC_DE_GLOBAL_NSID);
+			nvme_dev->name, WDC_DE_GLOBAL_NSID);
 		printf("key                               normalized raw\n");
         printf("program_fail_count              : %3"PRIu8"%%       %"PRIu64"\n",
 				bd_data->normalized_value, le64_to_cpu(*raw & 0x00FFFFFFFFFFFFFF));
@@ -10446,7 +10446,7 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
    	if (fmt == NORMAL) {
 		/* print the temperature stats */
 		printf("Temperature Stats for NVME device:%s namespace-id:%x\n",
-					devicename, WDC_DE_GLOBAL_NSID);
+					nvme_dev->name, WDC_DE_GLOBAL_NSID);
 
 		printf("Current Composite Temperature           : %d °C\n", temperature);
 		printf("WCTEMP                                  : %"PRIu16" °C\n", id_ctrl.wctemp - 273);
@@ -10520,7 +10520,7 @@ static int wdc_capabilities(int argc, char **argv,
     capabilities = wdc_get_drive_capabilities(r, fd);
 
     /* print command and supported status */
-    printf("WDC Plugin Capabilities for NVME device:%s\n", devicename);
+    printf("WDC Plugin Capabilities for NVME device:%s\n", nvme_dev->name);
     printf("cap-diag                      : %s\n", 
             capabilities & WDC_DRIVE_CAP_CAP_DIAG ? "Supported" : "Not Supported");
     printf("drive-log                     : %s\n", 

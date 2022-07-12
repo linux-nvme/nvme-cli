@@ -97,9 +97,9 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 		if (flags & BINARY)	{
 			d_raw((unsigned char *)&gc_log, sizeof(gc_log));
 		} else if (flags & JSON) {
-			vu_gc_log_show_json(&gc_log, devicename);
+			vu_gc_log_show_json(&gc_log, nvme_dev->name);
 		} else {
-			vu_gc_log_show(&gc_log, devicename);
+			vu_gc_log_show(&gc_log, nvme_dev->name);
 		}
 	}
 	else if (err > 0) {

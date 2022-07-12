@@ -419,7 +419,8 @@ static int nvme_get_vendor_log(int fd, __u32 namespace_id, int log_page,
 		}
 	} else {
 		if (log_page == 0xc0)
-			default_show_vendor_log_c0(fd, namespace_id, devicename,
+			default_show_vendor_log_c0(fd, namespace_id,
+                                                   nvme_dev->name,
 					(struct nvme_xdn_smart_log_c0 *)log);
 		else
 			d(log, log_len,16,1);
