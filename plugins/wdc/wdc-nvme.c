@@ -8731,7 +8731,6 @@ static int wdc_do_drive_essentials(nvme_root_t r, int fd, char *dir, char *key)
 	memset(tarFiles,0,sizeof(tarFiles));
 	memset(tarCmd,0,sizeof(tarCmd));
 	memset(&timeInfo,0,sizeof(timeInfo));
-	memset(&vuLogInput, 0, sizeof(vuLogInput));
 
 	if (wdc_get_serial_and_fw_rev(fd, (char *)idSerialNo, (char *)idFwRev))
 	{
