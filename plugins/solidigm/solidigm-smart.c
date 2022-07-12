@@ -234,11 +234,14 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 	err = nvme_get_log_simple(fd, solidigm_vu_smart_log_id, sizeof(smart_log_payload), &smart_log_payload);
 	if (!err) {
 		if (flags & JSON) {
-			vu_smart_log_show_json(&smart_log_payload, cfg.namespace_id, devicename);
+			vu_smart_log_show_json(&smart_log_payload,
+					       cfg.namespace_id,
+					       nvme_dev->name);
 		} else if (flags & BINARY) {
 			d_raw((unsigned char *)&smart_log_payload, sizeof(smart_log_payload));
 		} else {
-			vu_smart_log_show(&smart_log_payload, cfg.namespace_id, devicename);
+			vu_smart_log_show(&smart_log_payload, cfg.namespace_id,
+					  nvme_dev->name);
 		}
 	} else if (err > 0) {
 		nvme_show_status(err);

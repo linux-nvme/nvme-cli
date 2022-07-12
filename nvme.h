@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <endian.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 
 #include "plugin.h"
 #include "util/json.h"
@@ -40,7 +41,12 @@ void register_extension(struct plugin *plugin);
 int parse_and_open(int argc, char **argv, const char *desc,
 	const struct argconfig_commandline_options *clo);
 
-extern const char *devicename;
+struct nvme_dev {
+	struct stat stat;
+	const char *name;
+};
+
+extern struct nvme_dev *nvme_dev;
 extern const char *output_format;
 
 enum nvme_print_flags validate_output_format(const char *format);

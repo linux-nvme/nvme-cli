@@ -481,7 +481,9 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *cm
 		sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
-			err = show_memblaze_smart_log(fd, cfg.namespace_id, devicename, &smart_log);
+			err = show_memblaze_smart_log(fd, cfg.namespace_id,
+						      nvme_dev->name,
+						      &smart_log);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	}
