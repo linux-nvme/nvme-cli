@@ -927,8 +927,7 @@ static void vt_parse_detail_identify(const struct nvme_id_ctrl *ctrl)
 
 static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int err = 0;
-	int fd, ret;
+	int ret, err = 0;
 	long int total_time = 0;
 	long int freq_time = 0;
 	long int cur_time = 0;
@@ -949,6 +948,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 	const char *freq = "(optional) How often you want to log SMART data (0.25 = 15' , 0.5 = 30' , 1 = 1 hour, 2 = 2 hours, etc.). Default = 10 hours.";
 	const char *output_file = "(optional) Name of the log file (give it a name that easy for you to remember what the test is). You can leave it blank too, we will take care it for you.";
 	const char *test_name = "(optional) Name of the test you are doing. We use this as part of the name of the log file.";
+	struct nvme_dev *dev;
 
 	struct vtview_save_log_settings cfg = {
 		.run_time_hrs = 20,
@@ -975,10 +975,10 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 		strcpy(path, argv[1]);
 	}
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
-		printf("Error parse and open (fd = %d)\n", fd);
-		return (fd);
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0) {
+		printf("Error parse and open (err = %d)\n", err);
+		return err;
 	}
 
 	printf("Running...\n");
@@ -986,10 +986,10 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 	printf("Running for %lf hour(s)\n", cfg.run_time_hrs);
 	printf("Logging SMART data for every %lf hour(s)\n", cfg.log_record_frequency_hrs);
 
-	ret = vt_update_vtview_log_header(fd, path, &cfg);
+	ret = vt_update_vtview_log_header(dev->fd, path, &cfg);
 	if (ret) {
 		err = EINVAL;
-		close(fd);
+		dev_close(dev);
 		return (err);
 	}
 
@@ -1009,7 +1009,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 		if(cur_time >= end_time)
 			break;
 
-		ret = vt_add_entry_to_log(fd, path, &cfg);
+		ret = vt_add_entry_to_log(dev->fd, path, &cfg);
 		if (ret) {
 			printf("Cannot update driver log\n");
 			break;
@@ -1021,15 +1021,15 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 		fflush(stdout);
 	}
 
-	close (fd);
+	dev_close(dev);
 	return (err);
 }
 
 static int vt_show_identify(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int err = 0;
-	int fd ,ret;
+	int ret, err = 0;
 	struct nvme_id_ctrl ctrl;
+	struct nvme_dev *dev;
 	char *desc = "Parse identify data to json format\n\n"
 		"Typical usages:\n\n"
 		"virtium show-identify /dev/yourDevice\n";
@@ -1038,16 +1038,16 @@ static int vt_show_identify(int argc, char **argv, struct command *cmd, struct p
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
-		printf("Error parse and open (fd = %d)\n", fd);
-		return (fd);
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0) {
+		printf("Error parse and open (err = %d)\n", err);
+		return err;
 	}
 
-	ret = nvme_identify_ctrl(fd, &ctrl);
+	ret = nvme_identify_ctrl(dev->fd, &ctrl);
 	if (ret) {
 		printf("Cannot read identify device\n");
-		close (fd);
+		dev_close(dev);
 		return (-1);
 	}
 
@@ -1055,6 +1055,6 @@ static int vt_show_identify(int argc, char **argv, struct command *cmd, struct p
 	vt_process_string(ctrl.mn, sizeof(ctrl.mn));
 	vt_parse_detail_identify(&ctrl);
 
-	close(fd);
+	dev_close(dev);
 	return (err);
 }

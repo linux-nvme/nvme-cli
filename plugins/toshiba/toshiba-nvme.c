@@ -434,11 +434,12 @@ end:
 
 static int vendor_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int err, fd;
 	char *desc = "Get extended SMART information and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *output_file = "(optional) binary output filename";
 	const char *log = "(optional) log ID (0xC0, or 0xCA), default 0xCA";
+	struct nvme_dev *dev;
+	int err;
 
 	struct config {
 		__u32 namespace_id;
@@ -459,8 +460,8 @@ static int vendor_log(int argc, char **argv, struct command *cmd, struct plugin 
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0) {
 		fprintf(stderr,"%s: failed to parse arguments\n", __func__);
 		return EINVAL;
 	}
@@ -471,22 +472,24 @@ static int vendor_log(int argc, char **argv, struct command *cmd, struct plugin 
 		goto end;
 	}
 
-	err = nvme_get_vendor_log(fd, cfg.namespace_id, cfg.log, cfg.output_file);
+	err = nvme_get_vendor_log(dev->fd, cfg.namespace_id, cfg.log,
+				  cfg.output_file);
 	if (err)
 		fprintf(stderr, "%s: couldn't get vendor log 0x%x\n", __func__, cfg.log);
 end:
 	if (err > 0)
 		nvme_show_status(err);
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 
 static int internal_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	int err, fd;
 	char *desc = "Get internal status log and show it.";
 	const char *output_file = "(optional) binary output filename";
 	const char *prev_log = "(optional) use previous log. Otherwise uses current log.";
+	struct nvme_dev *dev;
+	int err;
 
 	struct config {
 		const char* output_file;
@@ -504,8 +507,8 @@ static int internal_log(int argc, char **argv, struct command *cmd, struct plugi
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0) {
 		fprintf(stderr,"%s: failed to parse arguments\n", __func__);
 		return EINVAL;
 	}
@@ -515,46 +518,48 @@ static int internal_log(int argc, char **argv, struct command *cmd, struct plugi
 	else
 		printf("Getting current log\n");
 
-	err = nvme_get_internal_log_file(fd, cfg.output_file, !cfg.prev_log);
+	err = nvme_get_internal_log_file(dev->fd, cfg.output_file,
+					 !cfg.prev_log);
 	if (err < 0)
 		fprintf(stderr, "%s: couldn't get fw log \n", __func__);
 	if (err > 0)
 		nvme_show_status(err);
 
-	close(fd);
+	dev_close(dev);
 	return err;
 }
 
 static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 				struct plugin *plugin)
 {
-	int err, fd;
 	char *desc = "Clear PCIe correctable error count.";
 	const __u32 namespace_id = 0xFFFFFFFF;
 	const __u32 feature_id = 0xCA;
 	const __u32 value = 1; /* Bit0 - reset clear PCIe correctable count */
 	const __u32 cdw12 = 0;
 	const bool save = false;
+	struct nvme_dev *dev;
 	__u32 result;
+	int err;
 
 	OPT_ARGS(opts) = {
 		OPT_END()
 	};
 
-	fd = parse_and_open(argc, argv, desc, opts);
-	if (fd < 0) {
+	err = parse_and_open(&dev, argc, argv, desc, opts);
+	if (err < 0) {
 		fprintf(stderr,"%s: failed to parse arguments\n", __func__);
 		return EINVAL;
 	}
 
 	/* Check device supported */
-	err = nvme_get_sct_status(fd, MASK_0 | MASK_1);
+	err = nvme_get_sct_status(dev->fd, MASK_0 | MASK_1);
 	if (err)
 		goto end;
 
 	struct nvme_set_features_args args = {
 		.args_size	= sizeof(args),
-		.fd		= fd,
+		.fd		= dev->fd,
 		.fid		= feature_id,
 		.nsid		= namespace_id,
 		.cdw11		= value,
@@ -574,6 +579,6 @@ static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 end:
 	if (err > 0)
 		nvme_show_status(err);
-	close(fd);
+	dev_close(dev);
 	return err;
 }
