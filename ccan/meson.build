@@ -7,6 +7,6 @@ sources += files([
 ])
 
 if get_option('buildtype') == 'debug'
-    add_project_arguments('-DCCAN_LIST_DEBUG=1',  language : ['c', 'cpp'])
-    add_project_arguments('-DCCAN_STR_DEBUG=1',  language : ['c', 'cpp'])
+    add_project_arguments('-DCCAN_LIST_DEBUG=1',  language : ['c'])
+    add_project_arguments('-DCCAN_STR_DEBUG=1',  language : ['c'])
 endif

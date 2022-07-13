@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 ################################################################################
 project(
-    'nvme-cli', ['c', 'cpp'],
+    'nvme-cli', ['c'],
     meson_version: '>= 0.47.0',
     license: 'GPL-2.0-only',
     version: '2.1.1',
