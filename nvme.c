@@ -207,12 +207,12 @@ static ssize_t getrandom_bytes(void *buf, size_t buflen)
 
 static bool is_chardev(struct nvme_dev *dev)
 {
-	return S_ISCHR(dev->stat.st_mode);
+	return S_ISCHR(dev->direct.stat.st_mode);
 }
 
 static bool is_blkdev(struct nvme_dev *dev)
 {
-	return S_ISBLK(dev->stat.st_mode);
+	return S_ISBLK(dev->direct.stat.st_mode);
 }
 
 static int open_dev(struct nvme_dev **devp, char *devstr, int flags)
@@ -223,15 +223,17 @@ static int open_dev(struct nvme_dev **devp, char *devstr, int flags)
 	dev = calloc(1, sizeof(*dev));
 	if (!dev)
 		return -1;
+
+	dev->type = NVME_DEV_DIRECT;
 	dev->name = basename(devstr);
 	err = open(devstr, flags);
 	if (err < 0) {
 		perror(devstr);
 		goto err_free;
 	}
-	dev->fd = err;
+	dev->direct.fd = err;
 
-	err = fstat(dev_fd(dev), &dev->stat);
+	err = fstat(dev_fd(dev), &dev->direct.stat);
 	if (err < 0) {
 		perror(devstr);
 		goto err_close;
