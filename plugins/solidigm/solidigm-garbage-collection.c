@@ -93,7 +93,7 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *c
 	garbage_control_collection_log_t gc_log;
 	const int solidigm_vu_gc_log_id = 0xfd;
 
-	err = nvme_get_log_simple(dev->fd, solidigm_vu_gc_log_id,
+	err = nvme_get_log_simple(dev_fd(dev), solidigm_vu_gc_log_id,
 				  sizeof(gc_log), &gc_log);
 	if (!err) {
 		if (flags & BINARY)	{

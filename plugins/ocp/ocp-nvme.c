@@ -421,7 +421,7 @@ static int ocp_smart_add_log(int argc, char **argv, struct command *cmd,
         if (ret < 0)
                 return ret;
 
-        ret = get_c0_log_page(dev->fd, cfg.output_format);
+        ret = get_c0_log_page(dev_fd(dev), cfg.output_format);
         if (ret)
                 fprintf(stderr, "ERROR : OCP : Failure reading the C0 Log Page, ret = %d\n",
                         ret);
@@ -683,8 +683,8 @@ static int get_c3_log_page(struct nvme_dev *dev, char *format)
         }
         memset(data, 0, sizeof (__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
 
-        ret = nvme_get_log_simple(dev->fd, C3_LATENCY_MON_OPCODE,
-                        C3_LATENCY_MON_LOG_BUF_LEN, data);
+        ret = nvme_get_log_simple(dev_fd(dev), C3_LATENCY_MON_OPCODE,
+                                  C3_LATENCY_MON_LOG_BUF_LEN, data);
 
         if (strcmp(format, "json"))
                 fprintf(stderr,

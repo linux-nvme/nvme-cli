@@ -478,11 +478,12 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *cm
 	if (err < 0)
 		return err;
 
-	err = nvme_get_nsid_log(dev->fd, false, 0xca, cfg.namespace_id,
-		sizeof(smart_log), &smart_log);
+	err = nvme_get_nsid_log(dev_fd(dev), false, 0xca, cfg.namespace_id,
+				sizeof(smart_log), &smart_log);
 	if (!err) {
 		if (!cfg.raw_binary)
-			err = show_memblaze_smart_log(dev->fd, cfg.namespace_id,
+			err = show_memblaze_smart_log(dev_fd(dev),
+						      cfg.namespace_id,
 						      dev->name, &smart_log);
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
@@ -522,7 +523,7 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *cmd
 
     struct nvme_get_features_args args = {
 	    .args_size		= sizeof(args),
-	    .fd			= dev->fd,
+	    .fd			= dev_fd(dev),
 	    .fid		= feature_id,
 	    .nsid		= 0,
 	    .sel		= 0,
@@ -580,7 +581,7 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *cmd
 
     struct nvme_set_features_args args = {
 	    .args_size		= sizeof(args),
-	    .fd			= dev->fd,
+	    .fd			= dev_fd(dev),
 	    .fid		= cfg.feature_id,
 	    .nsid		= 0,
 	    .cdw11		= cfg.value,
@@ -657,7 +658,7 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *cmd, s
 
     struct nvme_set_features_args args = {
 	    .args_size		= sizeof(args),
-	    .fd			= dev->fd,
+	    .fd			= dev_fd(dev),
 	    .fid		= cfg.feature_id,
 	    .nsid		= 0,
 	    .cdw11		= cfg.value,
@@ -798,12 +799,12 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *cmd,
     fdi = fopen(FID_C3_LOG_FILENAME, "w+");
 
     glp_high_latency_show_bar(fdi, DO_PRINT_FLAG);
-    err = nvme_get_log_simple(dev->fd, GLP_ID_VU_GET_HIGH_LATENCY_LOG,
+    err = nvme_get_log_simple(dev_fd(dev), GLP_ID_VU_GET_HIGH_LATENCY_LOG,
 			      sizeof(buf), &buf);
 
     while (1) {
         if (!glp_high_latency(fdi, buf, LOG_PAGE_SIZE, DO_PRINT_FLAG)) break;
-        err = nvme_get_log_simple(dev->fd, GLP_ID_VU_GET_HIGH_LATENCY_LOG,
+        err = nvme_get_log_simple(dev_fd(dev), GLP_ID_VU_GET_HIGH_LATENCY_LOG,
 				  sizeof(buf), &buf);
         if ( err) {
 	    nvme_show_status(err);
@@ -925,7 +926,7 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 
 		struct nvme_fw_download_args args = {
 			.args_size	= sizeof(args),
-			.fd		= dev->fd,
+			.fd		= dev_fd(dev),
 			.offset		= offset,
 			.data_len	= xfer,
 			.data		= fw_buf,
@@ -945,7 +946,7 @@ static int mb_selective_download(int argc, char **argv, struct command *cmd, str
 		offset += xfer;
 	}
 
-	err = memblaze_fw_commit(dev->fd, selectNo);
+	err = memblaze_fw_commit(dev_fd(dev), selectNo);
 
 	if(err == 0x10B || err == 0x20B) {
 		err = 0;
@@ -1088,7 +1089,7 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *cmd, st
     if (err < 0)
 	    return err;
 
-    err = nvme_get_log_simple(dev->fd, cfg.write ? 0xc2 : 0xc1,
+    err = nvme_get_log_simple(dev_fd(dev), cfg.write ? 0xc2 : 0xc1,
 			      sizeof(stats), &stats);
     if (!err)
         io_latency_histogram(cfg.write ? f2 : f1, stats, DO_PRINT_FLAG,
@@ -1134,7 +1135,7 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *cmd, 
 
     struct nvme_set_features_args args = {
         .args_size      = sizeof(args),
-        .fd             = dev->fd,
+        .fd             = dev_fd(dev),
         .fid            = cfg.feature_id,
         .nsid           = 0,
         .cdw11          = cfg.value,
@@ -1225,7 +1226,7 @@ static int mb_set_lat_stats(int argc, char **argv,
 
 	struct nvme_get_features_args args_get = {
 		.args_size	= sizeof(args_get),
-		.fd		= dev->fd,
+		.fd		= dev_fd(dev),
 		.fid		= fid,
 		.nsid		= nsid,
 		.sel		= sel,
@@ -1239,7 +1240,7 @@ static int mb_set_lat_stats(int argc, char **argv,
 
 	struct nvme_set_features_args args_set = {
 		.args_size	= sizeof(args_set),
-		.fd		= dev->fd,
+		.fd		= dev_fd(dev),
 		.fid		= fid,
 		.nsid		= nsid,
 		.cdw11		= option,

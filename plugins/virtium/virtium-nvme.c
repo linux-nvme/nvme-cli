@@ -986,7 +986,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 	printf("Running for %lf hour(s)\n", cfg.run_time_hrs);
 	printf("Logging SMART data for every %lf hour(s)\n", cfg.log_record_frequency_hrs);
 
-	ret = vt_update_vtview_log_header(dev->fd, path, &cfg);
+	ret = vt_update_vtview_log_header(dev_fd(dev), path, &cfg);
 	if (ret) {
 		err = EINVAL;
 		dev_close(dev);
@@ -1009,7 +1009,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv, struct command *cm
 		if(cur_time >= end_time)
 			break;
 
-		ret = vt_add_entry_to_log(dev->fd, path, &cfg);
+		ret = vt_add_entry_to_log(dev_fd(dev), path, &cfg);
 		if (ret) {
 			printf("Cannot update driver log\n");
 			break;
@@ -1044,7 +1044,7 @@ static int vt_show_identify(int argc, char **argv, struct command *cmd, struct p
 		return err;
 	}
 
-	ret = nvme_identify_ctrl(dev->fd, &ctrl);
+	ret = nvme_identify_ctrl(dev_fd(dev), &ctrl);
 	if (ret) {
 		printf("Cannot read identify device\n");
 		dev_close(dev);

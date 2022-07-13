@@ -891,7 +891,7 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 		return err;
 	
 	/* before parsing  commands, check if controller supports any RPMB targets */
-	err = nvme_identify_ctrl(dev->fd, &ctrl);
+	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
 	if (err)
 		goto out;
 	
@@ -960,14 +960,15 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 	
 	switch (cfg.opt) {
 		case RPMB_REQ_READ_WRITE_CNTR:
-			err = rpmb_read_write_counter(dev->fd, cfg.target,
+			err = rpmb_read_write_counter(dev_fd(dev), cfg.target,
 						      &write_cntr);
 			if (err == 0)
 				printf("Write Counter is: %u\n", write_cntr);
 			break;
 	
 		case RPMB_REQ_AUTH_DCB_READ:
-			write_cntr = rpmb_read_config_block(dev->fd, &msg_buf);
+			write_cntr = rpmb_read_config_block(dev_fd(dev),
+							    &msg_buf);
 			if (msg_buf == NULL) {
 				fprintf(stderr, "failed read config blk\n");
 				goto out;
@@ -999,7 +1000,7 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 					msg_size);
 				break;
 			}
-			err = rpmb_auth_data_read(dev->fd, cfg.target,
+			err = rpmb_auth_data_read(dev_fd(dev), cfg.target,
 						  cfg.address, &msg_buf,
 						  cfg.blocks,
 						  (regs.access_size + 1));
@@ -1020,7 +1021,7 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 			} else if ((cfg.blocks * 512) < msg_size) {
 				msg_size = cfg.blocks * 512;
 			}
-			err = rpmb_auth_data_write(dev->fd, cfg.target,
+			err = rpmb_auth_data_write(dev_fd(dev), cfg.target,
 						   cfg.address,
 						  ((regs.access_size + 1) * 512),
 						   msg_buf, msg_size,
@@ -1032,12 +1033,12 @@ int rpmb_cmd_option(int argc, char **argv, struct command *cmd, struct plugin *p
 			break;
 
 		case RPMB_REQ_AUTH_DCB_WRITE:
-			err = rpmb_write_config_block(dev->fd, msg_buf,
+			err = rpmb_write_config_block(dev_fd(dev), msg_buf,
 						      key_buf, key_size);
 			break;
 	
 		case RPMB_REQ_AUTH_KEY_PROGRAM:
-			err = rpmb_program_auth_key(dev->fd, cfg.target,
+			err = rpmb_program_auth_key(dev_fd(dev), cfg.target,
 						    key_buf, key_size);
 			break;
 		default:

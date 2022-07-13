@@ -43,7 +43,7 @@ static int innogrit_smart_log_additional(int argc, char **argv,
 	if (err < 0)
 		return err;
 
-	nvme_get_log_smart(dev->fd, cfg.namespace_id, false, &smart_log);
+	nvme_get_log_smart(dev_fd(dev), cfg.namespace_id, false, &smart_log);
 	nvme_show_smart_log(&smart_log, cfg.namespace_id, dev->name, NORMAL);
 
 	printf("DW0[0-1]  Defect Cnt                    : %u\n", pvsc_smart->defect_cnt);
@@ -213,7 +213,7 @@ static int innogrit_vsc_geteventlog(int argc, char **argv,
 		icount++;
 
 		memset(data, 0, 4096);
-		ret = nvme_vucmd(dev->fd, NVME_VSC_GET_EVENT_LOG, 0, 0,
+		ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET_EVENT_LOG, 0, 0,
 				 (SRB_SIGNATURE >> 32),
 				 (SRB_SIGNATURE & 0xFFFFFFFF),
 				 (char *)data, 4096);
@@ -281,8 +281,9 @@ static int innogrit_vsc_geteventlog(int argc, char **argv,
 
 	if (cfg.clean_flg == 1) {
 		printf("Clean eventlog\n");
-		nvme_vucmd(dev->fd, NVME_VSC_CLEAN_EVENT_LOG, 0, 0, (SRB_SIGNATURE >> 32),
-			(SRB_SIGNATURE & 0xFFFFFFFF), (char *)NULL, 0);
+		nvme_vucmd(dev_fd(dev), NVME_VSC_CLEAN_EVENT_LOG, 0, 0,
+			   (SRB_SIGNATURE >> 32),
+			   (SRB_SIGNATURE & 0xFFFFFFFF), (char *)NULL, 0);
 	}
 
 	dev_close(dev);
@@ -322,7 +323,7 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 
 	ipackindex = 0;
 	memset(data, 0, 4096);
-	if (nvme_vucmd(dev->fd, NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
+	if (nvme_vucmd(dev_fd(dev), NVME_VSC_GET, VSC_FN_GET_CDUMP, 0x00,
 		       (SRB_SIGNATURE >> 32), (SRB_SIGNATURE & 0xFFFFFFFF),
 		       (char *)data, 4096) == 0) {
 		memcpy(&cdumpinfo, &data[3072], sizeof(cdumpinfo));
@@ -345,7 +346,8 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 
 	if (busevsc == false) {
 		memset(data, 0, 4096);
-		ret = nvme_get_nsid_log(dev->fd, true, 0x07, NVME_NSID_ALL,
+		ret = nvme_get_nsid_log(dev_fd(dev), true, 0x07,
+					NVME_NSID_ALL,
 					4096, data);
 		if (ret != 0)
 			return ret;
@@ -369,13 +371,14 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 		for (icur = 0; icur < itotal; icur += 4096) {
 			memset(data, 0, 4096);
 			if (busevsc)
-				ret = nvme_vucmd(dev->fd, NVME_VSC_GET,
+				ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET,
 						 VSC_FN_GET_CDUMP, 0x00,
 						 (SRB_SIGNATURE >> 32),
 						 (SRB_SIGNATURE & 0xFFFFFFFF),
 						 (char *)data, 4096);
 			else
-				ret = nvme_get_nsid_log(dev->fd, true, 0x07,
+				ret = nvme_get_nsid_log(dev_fd(dev), true,
+							0x07,
 							NVME_NSID_ALL, 4096, data);
 			if (ret != 0)
 				return ret;
@@ -392,13 +395,14 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *command,
 		if (ipackindex != ipackcount) {
 			memset(data, 0, 4096);
 			if (busevsc)
-				ret = nvme_vucmd(dev->fd, NVME_VSC_GET,
+				ret = nvme_vucmd(dev_fd(dev), NVME_VSC_GET,
 						 VSC_FN_GET_CDUMP, 0x00,
 						 (SRB_SIGNATURE >> 32),
 						 (SRB_SIGNATURE & 0xFFFFFFFF),
 						 (char *)data, 4096);
 			else
-				ret = nvme_get_nsid_log(dev->fd, true, 0x07,
+				ret = nvme_get_nsid_log(dev_fd(dev), true,
+							0x07,
 							NVME_NSID_ALL, 4096,
 							data);
 			if (ret != 0)

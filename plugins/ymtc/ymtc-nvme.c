@@ -40,7 +40,7 @@ static int show_ymtc_smart_log(struct nvme_dev *dev, __u32 nsid,
         free(nm);
         return -1;
     }
-    err = nvme_identify_ctrl(dev->fd, &ctrl);
+    err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
     if (err) {
         free(nm);
         free(raw);
@@ -145,7 +145,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
     if (err < 0)
         return err;
 
-    err = nvme_get_nsid_log(dev->fd, false, 0xca, cfg.namespace_id,
+    err = nvme_get_nsid_log(dev_fd(dev), false, 0xca, cfg.namespace_id,
 			    sizeof(smart_log), &smart_log);
     if (!err) {
         if (!cfg.raw_binary)

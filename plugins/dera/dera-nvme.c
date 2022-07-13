@@ -131,7 +131,7 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 	if (err < 0)
 		return err;
 	
-	err = nvme_get_log_simple(dev->fd, 0xc0, sizeof(log), &log);
+	err = nvme_get_log_simple(dev_fd(dev), 0xc0, sizeof(log), &log);
 	if (err) {
 		goto exit;
 	}
@@ -154,7 +154,7 @@ static int get_status(int argc, char **argv, struct command *cmd, struct plugin 
 		"Runtime Low",
 	};
 
-	err = nvme_dera_get_device_status(dev->fd, &state);
+	err = nvme_dera_get_device_status(dev_fd(dev), &state);
 	if (!err){
 		if (state > 0 && state < 4){
 			printf("device_status                       : %s %d%% completed\n", dev_status[state], log.rebuild_percent);
