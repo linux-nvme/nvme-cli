@@ -19,6 +19,7 @@
 #include <dirent.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <endian.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -37,15 +38,33 @@ enum nvme_print_flags {
 
 #define SYS_NVME "/sys/class/nvme"
 
+enum nvme_dev_type {
+	NVME_DEV_DIRECT,
+};
+
 struct nvme_dev {
-	int fd;
-	struct stat stat;
+	enum nvme_dev_type type;
+	union {
+		struct {
+			int fd;
+			struct stat stat;
+		} direct;
+	};
+
 	const char *name;
 };
 
-static inline int dev_fd(struct nvme_dev *dev)
+#define dev_fd(d) __dev_fd(d, __func__, __LINE__)
+
+static inline int __dev_fd(struct nvme_dev *dev, const char *func, int line)
 {
-	return dev->fd;
+	if (dev->type != NVME_DEV_DIRECT) {
+		fprintf(stderr,
+			"warning: %s:%d not a direct transport!\n",
+			func, line);
+		return -1;
+	}
+	return dev->direct.fd;
 }
 
 void register_extension(struct plugin *plugin);
