@@ -34,7 +34,7 @@ static int getHealthValue(int argc, char **argv, struct command *cmd, struct plu
 		printf("\nDevice not found \n");;
 		return -1;
 	}
-	result = nvme_get_log_smart(dev->fd, 0xffffffff, false, &smart_log);
+	result = nvme_get_log_smart(dev_fd(dev), 0xffffffff, false, &smart_log);
 	if (!result) {
 		printf("Transcend NVME heath value: ");
 		percent_used =smart_log.percent_used;
@@ -80,7 +80,7 @@ static int getBadblock(int argc, char **argv, struct command *cmd, struct plugin
 	nvmecmd.cdw12=DW12_BAD_BLOCK;
 	nvmecmd.addr = (__u64)(uintptr_t)data;
 	nvmecmd.data_len = 0x1;
-	result = nvme_submit_admin_passthru(dev->fd, &nvmecmd, NULL);
+	result = nvme_submit_admin_passthru(dev_fd(dev), &nvmecmd, NULL);
 	if(!result) {
 		int badblock  = data[0];
 		printf("Transcend NVME badblock count: %d\n",badblock);

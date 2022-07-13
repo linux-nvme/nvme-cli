@@ -43,6 +43,11 @@ struct nvme_dev {
 	const char *name;
 };
 
+static inline int dev_fd(struct nvme_dev *dev)
+{
+	return dev->fd;
+}
+
 void register_extension(struct plugin *plugin);
 
 /*

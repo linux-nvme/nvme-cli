@@ -231,7 +231,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *cmd
 		return flags;
 	}
 
-	err = nvme_get_log_simple(dev->fd, solidigm_vu_smart_log_id,
+	err = nvme_get_log_simple(dev_fd(dev), solidigm_vu_smart_log_id,
 				  sizeof(smart_log_payload), &smart_log_payload);
 	if (!err) {
 		if (flags & JSON) {

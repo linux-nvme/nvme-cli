@@ -427,8 +427,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *cmd, 
 	if (err < 0)
 		return err;
 
-	err = nvme_get_nsid_log(dev->fd, false, 0xca, cfg.namespace_id,
-		sizeof(smart_log), (void *)&smart_log);
+	err = nvme_get_nsid_log(dev_fd(dev), false, 0xca, cfg.namespace_id,
+				sizeof(smart_log), (void *)&smart_log);
 	if (!err) {
 		if (cfg.json)
 			show_sfx_smart_log_jsn(&smart_log, cfg.namespace_id,
@@ -641,7 +641,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *cmd, struct 
 	if (err < 0)
 		return err;
 
-	err = nvme_get_log_simple(dev->fd, cfg.write ? 0xc3 : 0xc1,
+	err = nvme_get_log_simple(dev_fd(dev), cfg.write ? 0xc3 : 0xc1,
 				  sizeof(stats), (void *)&stats);
 	if (!err) {
 		if ((stats.ver.maj == VANDA_MAJOR_IDX) && (stats.ver.min == VANDA_MINOR_IDX)) {
@@ -788,7 +788,7 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *cmd, struct 
 		return -1;
 	}
 
-	err = get_bb_table(dev->fd, 0xffffffff, data_buf, buf_size);
+	err = get_bb_table(dev_fd(dev), 0xffffffff, data_buf, buf_size);
 	if (err < 0) {
 		perror("get-bad-block");
 	} else if (err != 0) {
@@ -838,7 +838,7 @@ static int query_cap_info(int argc, char **argv, struct command *cmd, struct plu
 	if (err < 0)
 		return err;
 
-	if (nvme_query_cap(dev->fd, 0xffffffff, sizeof(ctx), &ctx)) {
+	if (nvme_query_cap(dev_fd(dev), 0xffffffff, sizeof(ctx), &ctx)) {
 		perror("sfx-query-cap");
 		err = -1;
 	}
@@ -980,7 +980,7 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 	printf("%dG %"PRIu64"B %"PRIu64" 4K\n",
 		cfg.capacity_in_gb, (uint64_t)cfg.cap_in_byte, (uint64_t)cap_in_4k);
 
-	if (change_sanity_check(dev->fd, cap_in_4k, &shrink)) {
+	if (change_sanity_check(dev_fd(dev), cap_in_4k, &shrink)) {
 		printf("ScaleFlux change-capacity: fail\n");
 		dev_close(dev);
 		return err;
@@ -991,14 +991,14 @@ static int change_cap(int argc, char **argv, struct command *cmd, struct plugin 
 		return 0;
 	}
 
-	err = nvme_change_cap(dev->fd, 0xffffffff, cap_in_4k);
+	err = nvme_change_cap(dev_fd(dev), 0xffffffff, cap_in_4k);
 	if (err < 0)
 		perror("sfx-change-cap");
 	else if (err != 0)
 		nvme_show_status(err);
 	else {
 		printf("ScaleFlux change-capacity: success\n");
-		ioctl(dev->fd, BLKRRPART);
+		ioctl(dev_fd(dev), BLKRRPART);
 	}
 	dev_close(dev);
 	return err;
@@ -1101,14 +1101,15 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 			dev_close(dev);
 			return 0;
 		} else {
-			return sfx_clean_card(dev->fd);
+			return sfx_clean_card(dev_fd(dev));
 		}
 
 	}
 
 	if (cfg.feature_id == SFX_FEAT_ATOMIC && cfg.value != 0) {
 		if (cfg.namespace_id != 0xffffffff) {
-			err = nvme_identify_ns(dev->fd, cfg.namespace_id, &ns);
+			err = nvme_identify_ns(dev_fd(dev), cfg.namespace_id,
+					       &ns);
 			if (err) {
 				if (err < 0)
 					perror("identify-namespace");
@@ -1140,7 +1141,8 @@ static int sfx_set_feature(int argc, char **argv, struct command *cmd, struct pl
 		}
 	}
 
-	err = nvme_sfx_set_features(dev->fd, cfg.namespace_id, cfg.feature_id,
+	err = nvme_sfx_set_features(dev_fd(dev), cfg.namespace_id,
+				    cfg.feature_id,
 				    cfg.value);
 
 	if (err < 0) {
@@ -1192,7 +1194,8 @@ static int sfx_get_feature(int argc, char **argv, struct command *cmd, struct pl
 		return EINVAL;
 	}
 
-	err = nvme_sfx_get_features(dev->fd, cfg.namespace_id, cfg.feature_id, &result);
+	err = nvme_sfx_get_features(dev_fd(dev), cfg.namespace_id,
+				    cfg.feature_id, &result);
 	if (err < 0) {
 		perror("ScaleFlux-get-feature");
 		dev_close(dev);

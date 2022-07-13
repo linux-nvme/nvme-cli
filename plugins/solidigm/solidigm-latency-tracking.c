@@ -412,7 +412,7 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *cmd
 	if (err < 0)
 		return err;
 
-	lt.fd = dev->fd;
+	lt.fd = dev_fd(dev);
 
 	lt.print_flags = validate_output_format(lt.cfg.output_format);
 	if (lt.print_flags == -EINVAL) {

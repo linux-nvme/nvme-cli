@@ -388,11 +388,12 @@ static int nvme_get_vendor_log(struct nvme_dev *dev, __u32 namespace_id,
 	}
 
 	/* Check device supported */
-	err = nvme_get_sct_status(dev->fd, MASK_0 | MASK_1);
+	err = nvme_get_sct_status(dev_fd(dev), MASK_0 | MASK_1);
 	if (err) {
 		goto end;
 	}
-	err = nvme_get_nsid_log(dev->fd, false, log_page, namespace_id, log_len, log);
+	err = nvme_get_nsid_log(dev_fd(dev), false, log_page, namespace_id,
+				log_len, log);
 	if (err) {
 		fprintf(stderr, "%s: couldn't get log 0x%x\n", __func__,
 			log_page);
@@ -516,7 +517,7 @@ static int internal_log(int argc, char **argv, struct command *cmd, struct plugi
 	else
 		printf("Getting current log\n");
 
-	err = nvme_get_internal_log_file(dev->fd, cfg.output_file,
+	err = nvme_get_internal_log_file(dev_fd(dev), cfg.output_file,
 					 !cfg.prev_log);
 	if (err < 0)
 		fprintf(stderr, "%s: couldn't get fw log \n", __func__);
@@ -551,13 +552,13 @@ static int clear_correctable_errors(int argc, char **argv, struct command *cmd,
 	}
 
 	/* Check device supported */
-	err = nvme_get_sct_status(dev->fd, MASK_0 | MASK_1);
+	err = nvme_get_sct_status(dev_fd(dev), MASK_0 | MASK_1);
 	if (err)
 		goto end;
 
 	struct nvme_set_features_args args = {
 		.args_size	= sizeof(args),
-		.fd		= dev->fd,
+		.fd		= dev_fd(dev),
 		.fid		= feature_id,
 		.nsid		= namespace_id,
 		.cdw11		= value,
