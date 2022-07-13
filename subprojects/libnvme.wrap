@@ -4,3 +4,4 @@ revision = 47e3562a7d9b4bb871f374058c52c654fb4735e9
 
 [provide]
 libnvme = libnvme_dep
+libnvme-mi = libnvme_mi_dep

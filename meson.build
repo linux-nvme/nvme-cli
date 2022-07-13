@@ -46,6 +46,8 @@ conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 # Check for libnvme availability
 libnvme_dep = dependency('libnvme', version: '>=1.1', required: true,
                          fallback : ['libnvme', 'libnvme_dep'])
+libnvme_mi_dep = dependency('libnvme-mi', required: true,
+                         fallback : ['libnvme', 'libnvme_mi_dep'])
 
 # Check for libuuid availability
 libuuid_dep = dependency('uuid', required: true,
@@ -258,7 +260,7 @@ subdir('Documentation')
 executable(
   'nvme',
   sources,
-  dependencies: [ libnvme_dep, libuuid_dep, json_c_dep, libz_dep,
+  dependencies: [ libnvme_dep, libnvme_mi_dep, libuuid_dep, json_c_dep, libz_dep,
                   libhugetlbfs_dep ],
   link_args: '-ldl',
   include_directories: incdir,
