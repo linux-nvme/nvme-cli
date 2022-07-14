@@ -88,3 +88,24 @@ int nvme_cli_get_features(struct nvme_dev *dev,
 	return do_admin_args_op(get_features, dev, args);
 }
 
+int nvme_cli_ns_mgmt_delete(struct nvme_dev *dev, __u32 nsid)
+{
+	return do_admin_op(ns_mgmt_delete, dev, nsid);
+}
+
+
+/* The MI & direct interfaces don't have an exactly-matching API for
+ * ns_mgmt_create, as we don't support a timeout for MI.
+ */
+int nvme_cli_ns_mgmt_create(struct nvme_dev *dev, struct nvme_id_ns *ns,
+			__u32 *nsid, __u32 timeout, __u8 csi)
+{
+	if (dev->type == NVME_DEV_DIRECT)
+		return nvme_ns_mgmt_create(dev_fd(dev), ns, nsid, timeout, csi);
+	if (dev->type == NVME_DEV_MI)
+		return nvme_mi_admin_ns_mgmt_create(dev->mi.ctrl, ns,
+						    csi, nsid);
+
+	return -ENODEV;
+}
+

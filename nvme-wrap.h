@@ -20,6 +20,10 @@ int nvme_cli_identify_active_ns_list(struct nvme_dev *dev, __u32 nsid,
 int nvme_cli_identify_allocated_ns_list(struct nvme_dev *dev, __u32 nsid,
 					struct nvme_ns_list *list);
 
+int nvme_cli_ns_mgmt_delete(struct nvme_dev *dev, __u32 nsid);
+int nvme_cli_ns_mgmt_create(struct nvme_dev *dev, struct nvme_id_ns *ns,
+			__u32 *nsid, __u32 timeout, __u8 csi);
+
 int nvme_cli_get_features(struct nvme_dev *dev,
 			  struct nvme_get_features_args *args);
 

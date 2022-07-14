@@ -2386,7 +2386,7 @@ static int delete_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		}
 	}
 
-	err = nvme_ns_mgmt_delete(dev_fd(dev), cfg.namespace_id);
+	err = nvme_cli_ns_mgmt_delete(dev, cfg.namespace_id);
 	if (!err)
 		printf("%s: Success, deleted nsid:%d\n", cmd->name,
 								cfg.namespace_id);
@@ -2622,8 +2622,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 		.lbstm = cpu_to_le64(cfg.lbstm),
 	};
 
-	err = nvme_ns_mgmt_create(dev_fd(dev), &ns2, &nsid, cfg.timeout,
-				  cfg.csi);
+	err = nvme_cli_ns_mgmt_create(dev, &ns2, &nsid, cfg.timeout, cfg.csi);
 	if (!err)
 		printf("%s: Success, created nsid:%d\n", cmd->name, nsid);
 	else if (err > 0)
