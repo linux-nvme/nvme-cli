@@ -770,8 +770,10 @@ int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 out_free:
 	free(hnqn);
 	free(hid);
-	if (dump_config)
+	if (dump_config) {
 		nvme_dump_config(r);
+		printf("\n");
+	}
 	nvme_free_tree(r);
 
 	return ret;
@@ -897,8 +899,10 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 out_free:
 	free(hnqn);
 	free(hid);
-	if (dump_config)
+	if (dump_config) {
 		nvme_dump_config(r);
+		printf("\n");
+	}
 	nvme_free_tree(r);
 	return errno;
 }
@@ -1151,8 +1155,10 @@ int nvmf_config(const char *desc, int argc, char **argv)
 	if (update_config)
 		nvme_update_config(r);
 
-	if (dump_config)
+	if (dump_config) {
 		nvme_dump_config(r);
+		printf("\n");
+	}
 
 out:
 	if (hid)
