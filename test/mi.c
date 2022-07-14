@@ -1048,6 +1048,84 @@ static void test_admin_id_active_ns_list(struct nvme_mi_ep *ep)
 	assert(le32_to_cpu(list.ns[2]) == 0);
 }
 
+static int test_admin_id_ns_cb(struct nvme_mi_ep *ep,
+			       struct nvme_mi_req *req,
+			       struct nvme_mi_resp *resp,
+			       void *data)
+{
+	struct nvme_id_ns *id;
+	enum ns_type type;
+	__u16 nsid, cns;
+	__u8 *hdr;
+
+	hdr = (__u8 *)req->hdr;
+	assert(hdr[4] == nvme_admin_identify);
+
+	assert(req->data_len == 0);
+
+	cns = hdr[45] << 8 | hdr[44];
+
+	/* NSID */
+	nsid = hdr[8];
+	assert(!hdr[9] && !hdr[10] && !hdr[11]);
+
+	type = *(enum ns_type *)data;
+	resp->data_len = sizeof(*id);
+	id = resp->data;
+	id->nsze = cpu_to_le64(nsid);
+
+	switch (type) {
+	case NS_ALLOC:
+		assert(cns == NVME_IDENTIFY_CNS_ALLOCATED_NS);
+		break;
+	case NS_ACTIVE:
+		assert(cns == NVME_IDENTIFY_CNS_NS);
+		break;
+	default:
+		assert(0);
+	}
+
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+static void test_admin_id_alloc_ns(struct nvme_mi_ep *ep)
+{
+	struct nvme_id_ns id;
+	nvme_mi_ctrl_t ctrl;
+	enum ns_type type;
+	int rc;
+
+	type = NS_ALLOC;
+	test_set_transport_callback(ep, test_admin_id_ns_cb, &type);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	rc = nvme_mi_admin_identify_allocated_ns(ctrl, 1, &id);
+	assert(!rc);
+	assert(le64_to_cpu(id.nsze) == 1);
+}
+
+static void test_admin_id_active_ns(struct nvme_mi_ep *ep)
+{
+	struct nvme_id_ns id;
+	nvme_mi_ctrl_t ctrl;
+	enum ns_type type;
+	int rc;
+
+	type = NS_ACTIVE;
+	test_set_transport_callback(ep, test_admin_id_ns_cb, &type);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	rc = nvme_mi_admin_identify_ns(ctrl, 1, &id);
+	assert(!rc);
+	assert(le64_to_cpu(id.nsze) == 1);
+}
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -1075,6 +1153,8 @@ struct test {
 	DEFINE_TEST(set_features),
 	DEFINE_TEST(admin_id_alloc_ns_list),
 	DEFINE_TEST(admin_id_active_ns_list),
+	DEFINE_TEST(admin_id_alloc_ns),
+	DEFINE_TEST(admin_id_active_ns),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)

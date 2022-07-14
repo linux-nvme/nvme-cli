@@ -1019,6 +1019,46 @@ static inline int nvme_mi_admin_identify_cns_nsid(nvme_mi_ctrl_t ctrl,
 }
 
 /**
+ * nvme_mi_admin_identify_ns() - Perform an Admin identify command for a
+ * namespace
+ * @ctrl: Controller to process identify command
+ * @nsid: namespace ID
+ * @ns: Namespace identification to populate
+ *
+ * Perform an Identify (namespace) command, setting the namespace id data
+ * in @ns. The namespace is expected to active and allocated.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_identify_ns(nvme_mi_ctrl_t ctrl, __u32 nsid,
+					    struct nvme_id_ns *ns)
+{
+	return nvme_mi_admin_identify_cns_nsid(ctrl, NVME_IDENTIFY_CNS_NS,
+					       nsid, ns);
+}
+
+/**
+ * nvme_mi_admin_identify_allocated_ns() - Perform an Admin identify command
+ * for an allocated namespace
+ * @ctrl: Controller to process identify command
+ * @nsid: namespace ID
+ * @ns: Namespace identification to populate
+ *
+ * Perform an Identify (namespace) command, setting the namespace id data
+ * in @ns.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_identify_allocated_ns(nvme_mi_ctrl_t ctrl,
+						      __u32 nsid,
+						      struct nvme_id_ns *ns)
+{
+	return nvme_mi_admin_identify_cns_nsid(ctrl,
+					       NVME_IDENTIFY_CNS_ALLOCATED_NS,
+					       nsid, ns);
+}
+
+/**
  * nvme_mi_admin_identify_ctrl() - Perform an Admin identify for a controller
  * @ctrl: Controller to process identify command
  * @id: Controller identify data to populate
