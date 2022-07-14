@@ -12,4 +12,7 @@
 int nvme_cli_identify(struct nvme_dev *dev, struct nvme_identify_args *args);
 int nvme_cli_identify_ctrl(struct nvme_dev *dev, struct nvme_id_ctrl *ctrl);
 
+int nvme_cli_get_features(struct nvme_dev *dev,
+			  struct nvme_get_features_args *args);
+
 #endif /* _NVME_WRAP_H */

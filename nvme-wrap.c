@@ -58,3 +58,9 @@ int nvme_cli_identify_ctrl(struct nvme_dev *dev, struct nvme_id_ctrl *ctrl)
 	return do_admin_op(identify_ctrl, dev, ctrl);
 }
 
+int nvme_cli_get_features(struct nvme_dev *dev,
+			  struct nvme_get_features_args *args)
+{
+	return do_admin_args_op(get_features, dev, args);
+}
+

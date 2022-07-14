@@ -3896,8 +3896,8 @@ ret:
 	return err;
 }
 
-static int get_feature_id(int fd, struct feat_cfg *cfg, void **buf,
-			  __u32 *result)
+static int get_feature_id(struct nvme_dev *dev, struct feat_cfg *cfg,
+			  void **buf, __u32 *result)
 {
 	if (!cfg->data_len)
 		nvme_get_feature_length(cfg->feature_id, cfg->cdw11,
@@ -3919,7 +3919,6 @@ static int get_feature_id(int fd, struct feat_cfg *cfg, void **buf,
 
 	struct nvme_get_features_args args = {
 		.args_size	= sizeof(args),
-		.fd		= fd,
 		.fid		= cfg->feature_id,
 		.nsid		= cfg->namespace_id,
 		.sel		= cfg->sel,
@@ -3930,7 +3929,7 @@ static int get_feature_id(int fd, struct feat_cfg *cfg, void **buf,
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= result,
 	};
-	return nvme_get_features(&args);
+	return nvme_cli_get_features(dev, &args);
 }
 
 static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
@@ -3961,7 +3960,8 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u32 result,
 	}
 }
 
-static int get_feature_id_changed(int fd, struct feat_cfg cfg, bool changed)
+static int get_feature_id_changed(struct nvme_dev *dev, struct feat_cfg cfg,
+				  bool changed)
 {
 	int err;
 	int err_def = 0;
@@ -3973,11 +3973,11 @@ static int get_feature_id_changed(int fd, struct feat_cfg cfg, bool changed)
 	if (changed)
 		cfg.sel = 0;
 
-	err = get_feature_id(fd, &cfg, &buf, &result);
+	err = get_feature_id(dev, &cfg, &buf, &result);
 
 	if (!err && changed) {
 		cfg.sel = 1;
-		err_def = get_feature_id(fd, &cfg, &buf_def, &result_def);
+		err_def = get_feature_id(dev, &cfg, &buf_def, &result_def);
 	}
 
 	if (changed)
@@ -3993,7 +3993,7 @@ static int get_feature_id_changed(int fd, struct feat_cfg cfg, bool changed)
 	return err;
 }
 
-static int get_feature_ids(int fd, struct feat_cfg cfg)
+static int get_feature_ids(struct nvme_dev *dev, struct feat_cfg cfg)
 {
 	int err = 0;
 	int i;
@@ -4009,7 +4009,7 @@ static int get_feature_ids(int fd, struct feat_cfg cfg)
 
 	for (i = cfg.feature_id; i < feat_max; i++, feat_num++) {
 		cfg.feature_id = i;
-		err = get_feature_id_changed(fd, cfg, changed);
+		err = get_feature_id_changed(dev, cfg, changed);
 		if (err && err != NVME_SC_INVALID_FIELD)
 			break;
 	}
@@ -4093,7 +4093,7 @@ static int get_feature(int argc, char **argv, struct command *cmd,
 		goto close_dev;
 	}
 
-	err = get_feature_ids(dev_fd(dev), cfg);
+	err = get_feature_ids(dev, cfg);
 
 close_dev:
 	dev_close(dev);
