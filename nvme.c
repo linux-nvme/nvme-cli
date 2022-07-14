@@ -2044,22 +2044,23 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto close_fd;
 	}
 
+	struct nvme_identify_args args = {
+		.args_size	= sizeof(args),
+		.fd		= fd,
+		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
+		.data		= &ns_list,
+		.nsid		= cfg.namespace_id - 1.
+	};
 	if (cfg.csi < 0) {
-		if (cfg.all)
-			err = nvme_identify_allocated_ns_list(fd,
-				cfg.namespace_id - 1, &ns_list);
-		else
-			err = nvme_identify_active_ns_list(fd,
-				cfg.namespace_id - 1, &ns_list);
-
+		args.cns = cfg.all ? NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST :
+			NVME_IDENTIFY_CNS_NS_ACTIVE_LIST;
 	} else {
-		if (cfg.all)
-			err = nvme_identify_allocated_ns_list_csi(fd,
-				cfg.namespace_id - 1, cfg.csi, &ns_list);
-		else
-			err = nvme_identify_active_ns_list_csi(fd,
-				cfg.namespace_id - 1, cfg.csi, &ns_list);
+		args.cns = cfg.all ? NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST :
+			NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST;
+		args.csi = cfg.csi;
 	}
+
+	err = nvme_identify(&args);
 
 	if (!err)
 		nvme_show_list_ns(&ns_list, flags);
