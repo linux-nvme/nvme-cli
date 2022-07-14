@@ -2000,6 +2000,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 	const char *namespace_id = "first nsid returned list should start from";
 	const char *csi = "I/O command set identifier";
 	const char *all = "show all namespaces in the subsystem, whether attached or inactive";
+	struct nvme_identify_args args = { 0 };
 	int err, fd;
 	struct nvme_ns_list ns_list;
 	enum nvme_print_flags flags;
@@ -2044,22 +2045,21 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		goto close_fd;
 	}
 
+	args.args_size = sizeof(args);
+	args.fd = fd;
+	args.timeout = NVME_DEFAULT_IOCTL_TIMEOUT;
+	args.data = &ns_list;
+	args.nsid = cfg.namespace_id - 1;
 	if (cfg.csi < 0) {
-		if (cfg.all)
-			err = nvme_identify_allocated_ns_list(fd,
-				cfg.namespace_id - 1, &ns_list);
-		else
-			err = nvme_identify_active_ns_list(fd,
-				cfg.namespace_id - 1, &ns_list);
-
+		args.cns = cfg.all ? NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST :
+			NVME_IDENTIFY_CNS_NS_ACTIVE_LIST;
 	} else {
-		if (cfg.all)
-			err = nvme_identify_allocated_ns_list_csi(fd,
-				cfg.namespace_id - 1, cfg.csi, &ns_list);
-		else
-			err = nvme_identify_active_ns_list_csi(fd,
-				cfg.namespace_id - 1, cfg.csi, &ns_list);
+		args.cns = cfg.all ? NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST :
+			NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST;
+		args.csi = cfg.csi;
 	}
+
+	err = nvme_identify(&args);
 
 	if (!err)
 		nvme_show_list_ns(&ns_list, flags);
