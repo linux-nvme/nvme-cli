@@ -65,7 +65,7 @@ if want_docs != 'false'
             input: apif,
             output: '@BASENAME@.subst',
             configuration: conf)
-        c = run_command(list_man_pages, subst)
+        c = run_command(list_man_pages, subst, check: true)
         man_pages = c.stdout().split()
         foreach page : man_pages
           custom_target(
