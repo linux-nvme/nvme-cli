@@ -62,7 +62,7 @@ if want_docs != 'false'
     if want_docs_build
       foreach apif : api_paths
         subst = configure_file(
-            input: file,
+            input: apif,
             output: '@BASENAME@.subst',
             configuration: conf)
         c = run_command(list_man_pages, subst)
