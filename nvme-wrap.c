@@ -58,6 +58,30 @@ int nvme_cli_identify_ctrl(struct nvme_dev *dev, struct nvme_id_ctrl *ctrl)
 	return do_admin_op(identify_ctrl, dev, ctrl);
 }
 
+int nvme_cli_identify_ns(struct nvme_dev *dev, __u32 nsid,
+			 struct nvme_id_ns *ns)
+{
+	return do_admin_op(identify_ns, dev, nsid, ns);
+}
+
+int nvme_cli_identify_allocated_ns(struct nvme_dev *dev, __u32 nsid,
+			 struct nvme_id_ns *ns)
+{
+	return do_admin_op(identify_allocated_ns, dev, nsid, ns);
+}
+
+int nvme_cli_identify_active_ns_list(struct nvme_dev *dev, __u32 nsid,
+				     struct nvme_ns_list *list)
+{
+	return do_admin_op(identify_active_ns_list, dev, nsid, list);
+}
+
+int nvme_cli_identify_allocated_ns_list(struct nvme_dev *dev, __u32 nsid,
+					struct nvme_ns_list *list)
+{
+	return do_admin_op(identify_allocated_ns_list, dev, nsid, list);
+}
+
 int nvme_cli_get_features(struct nvme_dev *dev,
 			  struct nvme_get_features_args *args)
 {

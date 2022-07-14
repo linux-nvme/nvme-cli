@@ -2581,7 +2581,7 @@ static int create_ns(int argc, char **argv, struct command *cmd, struct plugin *
 			err = -EINVAL;
 			goto close_dev;
 		}
-		err = nvme_identify_ns(dev_fd(dev), NVME_NSID_ALL, &ns);
+		err = nvme_cli_identify_ns(dev, NVME_NSID_ALL, &ns);
 		if (err) {
 			if (err < 0)
 				fprintf(stderr, "identify-namespace: %s",
@@ -2985,7 +2985,7 @@ static int nvm_id_ns(int argc, char **argv, struct command *cmd,
 		}
 	}
 
-	err = nvme_identify_ns(dev_fd(dev), cfg.namespace_id, &ns);
+	err = nvme_cli_identify_ns(dev, cfg.namespace_id, &ns);
 	if (err) {
 		nvme_show_status(err);
 		goto close_dev;
@@ -3055,7 +3055,7 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *cmd, stru
 	if (cfg.verbose)
 		flags |= VERBOSE;
 
-	err = nvme_identify_ns(dev_fd(dev), NVME_NSID_ALL, &ns);
+	err = nvme_cli_identify_ns(dev, NVME_NSID_ALL, &ns);
 	if (err) {
 		ns.nlbaf = NVME_FEAT_LBA_RANGE_MAX - 1;
 		ns.nulbaf = 0;
@@ -3212,10 +3212,10 @@ static int id_ns(int argc, char **argv, struct command *cmd, struct plugin *plug
 	}
 
 	if (cfg.force)
-		err = nvme_identify_allocated_ns(dev_fd(dev),
-						 cfg.namespace_id, &ns);
+		err = nvme_cli_identify_allocated_ns(dev,
+						     cfg.namespace_id, &ns);
 	else
-		err = nvme_identify_ns(dev_fd(dev), cfg.namespace_id, &ns);
+		err = nvme_cli_identify_ns(dev, cfg.namespace_id, &ns);
 
 	if (!err)
 		nvme_show_id_ns(&ns, cfg.namespace_id, 0, false, flags);
@@ -4914,7 +4914,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 	}
 
 	if (cfg.namespace_id != NVME_NSID_ALL) {
-		err = nvme_identify_ns(dev_fd(dev), cfg.namespace_id, &ns);
+		err = nvme_cli_identify_ns(dev, cfg.namespace_id, &ns);
 		if (err) {
 			if (err < 0)
 				fprintf(stderr, "identify-namespace: %s\n", nvme_strerror(errno));
@@ -5718,7 +5718,7 @@ static int write_zeroes(int argc, char **argv, struct command *cmd, struct plugi
 		}
 	}
 
-	err = nvme_identify_ns(dev_fd(dev), cfg.namespace_id, &ns);
+	err = nvme_cli_identify_ns(dev, cfg.namespace_id, &ns);
 	if (err) {
 		nvme_show_status(err);
 		goto close_dev;
@@ -6695,7 +6695,7 @@ static int submit_io(int opcode, char *command, const char *desc,
 	}
 
 	if (cfg.metadata_size) {
-		err = nvme_identify_ns(dev_fd(dev), cfg.namespace_id, &ns);
+		err = nvme_cli_identify_ns(dev, cfg.namespace_id, &ns);
 		if (err > 0) {
 			nvme_show_status(err);
 			goto free_buffer;
@@ -6950,7 +6950,7 @@ static int verify_cmd(int argc, char **argv, struct command *cmd, struct plugin 
 		}
 	}
 
-	err = nvme_identify_ns(dev_fd(dev), cfg.namespace_id, &ns);
+	err = nvme_cli_identify_ns(dev, cfg.namespace_id, &ns);
 	if (err) {
 		nvme_show_status(err);
 		goto close_dev;
