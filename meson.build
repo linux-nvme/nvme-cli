@@ -247,6 +247,7 @@ sources = [
   'nvme-models.c',
   'nvme-print.c',
   'nvme-rpmb.c',
+  'nvme-wrap.c',
   'plugin.c',
   'wrapper.c',
 ]

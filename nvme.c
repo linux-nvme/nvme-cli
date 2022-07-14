@@ -61,6 +61,7 @@
 #include "nvme-print.h"
 #include "plugin.h"
 #include "util/base64.h"
+#include "nvme-wrap.h"
 
 #include "util/argconfig.h"
 #include "fabrics.h"
@@ -504,7 +505,7 @@ static int get_ana_log(int argc, char **argv, struct command *cmd,
 	if (flags < 0)
 		goto close_fd;
 
-	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	err = nvme_cli_identify_ctrl(dev, &ctrl);
 	if (err) {
 		fprintf(stderr, "ERROR : nvme_identify_ctrl() failed: %s\n",
 			nvme_strerror(errno));
@@ -917,7 +918,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		goto close_dev;
 	}
 
-	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	err = nvme_cli_identify_ctrl(dev, &ctrl);
 	if (err < 0) {
 		perror("identify controller");
 		goto close_dev;
@@ -1166,7 +1167,7 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 		goto close_dev;
 	}
 
-	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	err = nvme_cli_identify_ctrl(dev, &ctrl);
 	if (err < 0) {
 		fprintf(stderr, "identify controller: %s\n",
 			nvme_strerror(errno));
@@ -1389,7 +1390,7 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 		goto close_dev;
 	}
 
-	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	err = nvme_cli_identify_ctrl(dev, &ctrl);
 	if (err < 0) {
 		fprintf(stderr, "identify controller: %s\n",
 			nvme_strerror(errno));
@@ -2191,7 +2192,6 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 
 	struct nvme_identify_args args = {
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.data		= &ns_list,
 		.nsid		= cfg.namespace_id - 1.
@@ -2205,7 +2205,7 @@ static int list_ns(int argc, char **argv, struct command *cmd, struct plugin *pl
 		args.csi = cfg.csi;
 	}
 
-	err = nvme_identify(&args);
+	err = nvme_cli_identify(dev, &args);
 
 	if (!err)
 		nvme_show_list_ns(&ns_list, flags);
@@ -2866,7 +2866,7 @@ int __id_ctrl(int argc, char **argv, struct command *cmd, struct plugin *plugin,
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
-	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	err = nvme_cli_identify_ctrl(dev, &ctrl);
 	if (!err)
 		nvme_show_id_ctrl(&ctrl, flags, vs);
 	else if (err > 0)
@@ -4883,7 +4883,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		}
 	}
 
-	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	err = nvme_cli_identify_ctrl(dev, &ctrl);
 	if (err) {
 		fprintf(stderr, "identify-ctrl: %s\n", nvme_strerror(errno));
 		goto close_dev;
