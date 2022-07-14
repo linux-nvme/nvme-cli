@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_fna" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_fna" "July 2022" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_fna \- This field indicates attributes for the Format NVM command.
 .SH SYNOPSIS
@@ -13,6 +13,10 @@ enum nvme_id_ctrl_fna {
 .br
 .br
 .BI "    NVME_CTRL_FNA_CRYPTO_ERASE"
+, 
+.br
+.br
+.BI "    NVME_CTRL_FNA_NSID_FFFFFFFF"
 
 };
 .SH Constants
@@ -37,3 +41,8 @@ particular namespace specified.
 If set, then cryptographic erase is
 supported. If cleared, then cryptographic
 erase is not supported.
+.IP "NVME_CTRL_FNA_NSID_FFFFFFFF" 12
+If set, then format does not support
+nsid value set to FFFFFFFFh. If cleared,
+format supports nsid value set to
+FFFFFFFFh.

@@ -1,6 +1,6 @@
-.TH "libnvme" 9 "struct nvme_id_psd" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_id_psd" "July 2022" "API Manual" LINUX
 .SH NAME
-struct nvme_id_psd \- 
+struct nvme_id_psd \- Power Management data structure
 .SH SYNOPSIS
 struct nvme_id_psd {
 .br
@@ -62,7 +62,7 @@ Relative Read Throughput indicates the read throughput rank
 associated with this power state relative to others. The value in
 this is less than the number of supported power states.
 .IP "rrl" 12
-Relative Reade Latency indicates the read latency rank associated
+Relative Read Latency indicates the read latency rank associated
 with this power state relative to others. The value in this field is
 less than the number of supported power states.
 .IP "rwt" 12

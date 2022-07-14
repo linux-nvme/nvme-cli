@@ -1,4 +1,4 @@
-.TH "nvme_lookup_subsystem" 9 "nvme_lookup_subsystem" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_lookup_subsystem" 9 "nvme_lookup_subsystem" "July 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_lookup_subsystem \- Lookup nvme_subsystem_t object
 .SH SYNOPSIS
@@ -15,6 +15,6 @@ Name of the subsystem (may be NULL)
 Subsystem NQN
 .SH "DESCRIPTION"
 Lookup a \fInvme_subsystem_t\fP object in \fIh\fP base on \fIname\fP (if present)
-and \fIsubsystemnqn\fP or create one if not found.
+and \fIsubsysnqn\fP or create one if not found.
 .SH "RETURN"
-nvme_subsystme_t object
+nvme_subsystem_t object

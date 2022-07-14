@@ -1,6 +1,6 @@
-.TH "nvme_get_log_telemetry_host" 9 "nvme_get_log_telemetry_host" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_get_log_telemetry_host" 9 "nvme_get_log_telemetry_host" "July 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_get_log_telemetry_host \- 
+nvme_get_log_telemetry_host \- Get Telemetry Host-Initiated log page
 .SH SYNOPSIS
 .B "int" nvme_get_log_telemetry_host
 .BI "(int fd "  ","
@@ -17,7 +17,7 @@ Length of provided user buffer to hold the log data in bytes
 .IP "log" 12
 User address for log page data
 .SH "DESCRIPTION"
-Retreives the Telemetry Host-Initiated log page at the requested offset
+Retrieves the Telemetry Host-Initiated log page at the requested offset
 using the previously existing capture.
 .SH "RETURN"
 The nvme command status if a response was received (see

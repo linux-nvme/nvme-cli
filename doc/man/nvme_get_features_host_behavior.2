@@ -1,6 +1,6 @@
-.TH "nvme_get_features_host_behavior" 9 "nvme_get_features_host_behavior" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_get_features_host_behavior" 9 "nvme_get_features_host_behavior" "July 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_get_features_host_behavior \- 
+nvme_get_features_host_behavior \- Get host behavior feature
 .SH SYNOPSIS
 .B "int" nvme_get_features_host_behavior
 .BI "(int fd "  ","
@@ -13,7 +13,7 @@ File descriptor of nvme device
 .IP "sel" 12
 Select which type of attribute to return, see \fIenum nvme_get_features_sel\fP
 .IP "data" 12
-Poniter to structure nvme_feat_host_behavior
+Pointer to structure nvme_feat_host_behavior
 .IP "result" 12
 The command completion result from CQE dword0
 .SH "RETURN"

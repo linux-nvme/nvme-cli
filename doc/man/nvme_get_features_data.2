@@ -1,4 +1,4 @@
-.TH "nvme_get_features_data" 9 "nvme_get_features_data" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_get_features_data" 9 "nvme_get_features_data" "July 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_get_features_data \- Helper function for @nvme_get_features()
 .SH SYNOPSIS
@@ -22,3 +22,6 @@ Length of feature data, if applicable, in bytes
 User address of feature data, if applicable
 .IP "result" 12
 The command completion result from CQE dword0
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

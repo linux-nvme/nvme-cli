@@ -1,6 +1,6 @@
-.TH "nvme_get_log_persistent_event" 9 "nvme_get_log_persistent_event" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_get_log_persistent_event" 9 "nvme_get_log_persistent_event" "July 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_get_log_persistent_event \- 
+nvme_get_log_persistent_event \- Retrieve Persistent Event Log
 .SH SYNOPSIS
 .B "int" nvme_get_log_persistent_event
 .BI "(int fd "  ","
@@ -16,3 +16,6 @@ Action the controller should take during processing this command
 Size of \fIpevent_log\fP
 .IP "pevent_log" 12
 User address to store the persistent event log
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

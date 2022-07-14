@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_status_field" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_status_field" "July 2022" "API Manual" LINUX
 .SH NAME
 enum nvme_status_field \- Defines all parts of the nvme status field: status code, status code type, and additional flags.
 .SH SYNOPSIS
@@ -585,11 +585,13 @@ Vendor specific errors
 .IP "NVME_SCT_MASK" 12
 Mask to get the value of the Status Code Type
 .IP "NVME_SCT_SHIFT" 12
--- undescribed --
+Shift value to get the value of the Status
+Code Type
 .IP "NVME_SC_MASK" 12
 Mask to get the value of the status code.
 .IP "NVME_SC_SHIFT" 12
--- undescribed --
+Shift value to get the value of the status
+code.
 .IP "NVME_SC_SUCCESS" 12
 Successful Completion: The command
 completed without error.
@@ -996,7 +998,10 @@ transient condition.
 Fabric Zoning is not enabled on the
 CDC
 .IP "NVME_SC_ZONEGRP_ORIGINATOR_INVLD" 12
--- undescribed --
+The NQN contained in the ZoneGroup
+Originator field does not match the
+Host NQN used by the DDC to connect
+to the CDC.
 .IP "NVME_SC_BAD_ATTRIBUTES" 12
 Conflicting Dataset Management Attributes
 .IP "NVME_SC_INVALID_PI" 12

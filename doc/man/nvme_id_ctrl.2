@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_id_ctrl" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_id_ctrl" "July 2022" "API Manual" LINUX
 .SH NAME
 struct nvme_id_ctrl \- Identify Controller data structure
 .SH SYNOPSIS
@@ -206,11 +206,11 @@ the PCI SIG.
 PCI Subsystem Vendor ID, the company vendor identifier that is
 assigned by the PCI SIG for the subsystem.
 .IP "sn" 12
-Serial Number in ascii
+Serial Number in ASCII
 .IP "mn" 12
-Model Number in ascii
+Model Number in ASCII
 .IP "fr" 12
-Firmware Revision in ascii, the currently active firmware
+Firmware Revision in ASCII, the currently active firmware
 revision for the NVM subsystem
 .IP "rab" 12
 Recommended Arbitration Burst, reported as a power of two
@@ -252,13 +252,13 @@ Controller Type, see \fIenum nvme_id_ctrl_cntrltype\fP
 FRU GUID, a 128-bit value that is globally unique for a given
 Field Replaceable Unit
 .IP "crdt1" 12
-Controller Retry Delay time in 100 millisecod units if CQE CRD
+Controller Retry Delay time in 100 millisecond units if CQE CRD
 field is 1
 .IP "crdt2" 12
-Controller Retry Delay time in 100 millisecod units if CQE CRD
+Controller Retry Delay time in 100 millisecond units if CQE CRD
 field is 2
 .IP "crdt3" 12
-Controller Retry Delay time in 100 millisecod units if CQE CRD
+Controller Retry Delay time in 100 millisecond units if CQE CRD
 field is 3
 .IP "rsvd134" 12
 Reserved
@@ -463,7 +463,7 @@ Maximum Number of Allowed Namespaces indicates the maximum
 number of namespaces supported by the NVM subsystem.
 .IP "maxdna" 12
 Maximum Domain Namespace Attachments indicates the maximum
-of the sum of the numver of namespaces attached to each I/O
+of the sum of the number of namespaces attached to each I/O
 controller in the Domain.
 .IP "maxcna" 12
 Maximum I/O Controller Namespace Attachments indicates the

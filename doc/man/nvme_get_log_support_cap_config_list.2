@@ -1,6 +1,6 @@
-.TH "nvme_get_log_support_cap_config_list" 9 "nvme_get_log_support_cap_config_list" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_get_log_support_cap_config_list" 9 "nvme_get_log_support_cap_config_list" "July 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_get_log_support_cap_config_list \- 
+nvme_get_log_support_cap_config_list \- Retrieve Supported Capacity Configuration List
 .SH SYNOPSIS
 .B "int" nvme_get_log_support_cap_config_list
 .BI "(int fd "  ","
@@ -12,7 +12,7 @@ File descriptor of nvme device
 .IP "domid" 12
 Domain Identifier selection, if supported
 .IP "cap" 12
--- undescribed --
+User address to store supported capabilities config list
 .SH "RETURN"
 The nvme command status if a response was received (see
 \fIenum nvme_status_field\fP) or -1 with errno set otherwise

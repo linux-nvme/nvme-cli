@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_id_ctrl_oacs" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_id_ctrl_oacs" "July 2022" "API Manual" LINUX
 .SH NAME
 enum nvme_id_ctrl_oacs \- Flags indicating the optional Admin commands and features supported by the controller, see &struct nvme_id_ctrl.oacs.
 .SH SYNOPSIS
@@ -41,6 +41,10 @@ enum nvme_id_ctrl_oacs {
 .br
 .br
 .BI "    NVME_CTRL_OACS_LBA_STATUS"
+, 
+.br
+.br
+.BI "    NVME_CTRL_OACS_CMD_FEAT_LD"
 
 };
 .SH Constants
@@ -75,3 +79,6 @@ Doorbell Buffer Config command.
 .IP "NVME_CTRL_OACS_LBA_STATUS" 12
 If set, then the controller supports the Get LBA
 Status capability.
+.IP "NVME_CTRL_OACS_CMD_FEAT_LD" 12
+If set, then the controller supports the command
+and feature lockdown capability.

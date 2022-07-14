@@ -1,6 +1,6 @@
-.TH "libnvme" 9 "struct nvme_supported_cap_config_list_log" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_supported_cap_config_list_log" "July 2022" "API Manual" LINUX
 .SH NAME
-struct nvme_supported_cap_config_list_log \- 
+struct nvme_supported_cap_config_list_log \- Supported Capacity Configuration list log page
 .SH SYNOPSIS
 struct nvme_supported_cap_config_list_log {
 .br
@@ -16,7 +16,9 @@ struct nvme_supported_cap_config_list_log {
 
 .SH Members
 .IP "sccn" 12
-number of capacity configuration
-.SH "Description"
-Supported Capacity Configuration list log page
-structure definitions
+Number of capacity configuration
+.IP "rsvd1" 12
+Reserved
+.IP "cap_config_desc" 12
+Capacity configuration descriptor.
+See \fIstruct\fP nvme_capacity_config_desc

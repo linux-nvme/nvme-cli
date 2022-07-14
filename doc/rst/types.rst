@@ -87,7 +87,7 @@ The 'name' field from 'value'
   The transfer size for nvme identify commands
 
 ``NVME_LOG_SUPPORTED_LOG_PAGES_MAX``
-  The lagest possible index in the supported
+  The largest possible index in the supported
   log pages log.
 
 ``NVME_ID_NVMSET_LIST_MAX``
@@ -135,7 +135,7 @@ The 'name' field from 'value'
   Specification defined size of Telemetry Data Blocks
 
 ``NVME_LOG_FID_SUPPORTED_EFFECTS_MAX``
-  The largest possible FID index in the 
+  The largest possible FID index in the
   feature identifiers effects log.
 
 ``NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX``
@@ -241,6 +241,9 @@ The 'name' field from 'value'
 ``NVME_REG_CMBSTS``
   Controller Memory Buffer Status
 
+``NVME_REG_CRTO``
+  Controller Ready Timeouts
+
 ``NVME_REG_PMRCAP``
   Persistent Memory Capabilities
 
@@ -279,7 +282,9 @@ to be checked inside of this function for the unsupported fields in a
 specific transport. For example, BPMBL(Boot Partition Memory Buffer
 Location) register is not supported by fabrics, but it can be checked here.
 
-Returns true if given offset is 64bit register, otherwise it returns false.
+**Return**
+
+true if given offset is 64bit register, otherwise it returns false.
 
 
 .. c:function:: __u64 nvme_cmb_size (__u32 cmbsz)
@@ -291,9 +296,9 @@ Returns true if given offset is 64bit register, otherwise it returns false.
 ``__u32 cmbsz``
   Value from controller register ``NVME_REG_CMBSZ``
 
-**Description**
+**Return**
 
-Returns size of controller memory buffer in bytes
+size of controller memory buffer in bytes
 
 
 .. c:function:: __u64 nvme_pmr_size (__u32 pmrebs)
@@ -305,9 +310,9 @@ Returns size of controller memory buffer in bytes
 ``__u32 pmrebs``
   Value from controller register ``NVME_REG_PMREBS``
 
-**Description**
+**Return**
 
-Returns size of controller persistent memory buffer in bytes
+size of controller persistent memory buffer in bytes
 
 
 .. c:function:: __u64 nvme_pmr_throughput (__u32 pmrswtp)
@@ -319,9 +324,9 @@ Returns size of controller persistent memory buffer in bytes
 ``__u32 pmrswtp``
   Value from controller register ``NVME_REG_PMRSWTP``
 
-**Description**
+**Return**
 
-Returns throughput of controller persistent memory buffer in bytes/second
+throughput of controller persistent memory buffer in bytes/second
 
 
 
@@ -355,6 +360,9 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 **Constants**
 
+``NVME_PSD_PS_NOT_REPORTED``
+  Not reported
+
 ``NVME_PSD_PS_100_MICRO_WATT``
   0.0001 watt scale
 
@@ -371,6 +379,10 @@ Returns throughput of controller persistent memory buffer in bytes/second
 ``__u8 ps``
   power scale value
 
+**Return**
+
+power scale value
+
 
 
 
@@ -379,6 +391,9 @@ Returns throughput of controller persistent memory buffer in bytes/second
    Specifies a workload hint in the Power Management Feature (see :c:type:`struct nvme_psd <nvme_psd>`.apw) to inform the NVM subsystem or indicate the conditions for the active power level.
 
 **Constants**
+
+``NVME_PSD_WORKLOAD_NP``
+  The workload is unknown or not provided.
 
 ``NVME_PSD_WORKLOAD_1``
   Extended Idle Period with a Burst of Random Write
@@ -402,6 +417,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_id_psd
 
+   Power Management data structure
 
 **Definition**
 
@@ -456,7 +472,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
   this is less than the number of supported power states.
 
 ``rrl``
-  Relative Reade Latency indicates the read latency rank associated
+  Relative Read Latency indicates the read latency rank associated
   with this power state relative to others. The value in this field is
   less than the number of supported power states.
 
@@ -617,13 +633,13 @@ Returns throughput of controller persistent memory buffer in bytes/second
   assigned by the PCI SIG for the subsystem.
 
 ``sn``
-  Serial Number in ascii
+  Serial Number in ASCII
 
 ``mn``
-  Model Number in ascii
+  Model Number in ASCII
 
 ``fr``
-  Firmware Revision in ascii, the currently active firmware
+  Firmware Revision in ASCII, the currently active firmware
   revision for the NVM subsystem
 
 ``rab``
@@ -680,15 +696,15 @@ Returns throughput of controller persistent memory buffer in bytes/second
   Field Replaceable Unit
 
 ``crdt1``
-  Controller Retry Delay time in 100 millisecod units if CQE CRD
+  Controller Retry Delay time in 100 millisecond units if CQE CRD
   field is 1
 
 ``crdt2``
-  Controller Retry Delay time in 100 millisecod units if CQE CRD
+  Controller Retry Delay time in 100 millisecond units if CQE CRD
   field is 2
 
 ``crdt3``
-  Controller Retry Delay time in 100 millisecod units if CQE CRD
+  Controller Retry Delay time in 100 millisecond units if CQE CRD
   field is 3
 
 ``rsvd134``
@@ -952,7 +968,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 ``maxdna``
   Maximum Domain Namespace Attachments indicates the maximum
-  of the sum of the numver of namespaces attached to each I/O
+  of the sum of the number of namespaces attached to each I/O
   controller in the Domain.
 
 ``maxcna``
@@ -1128,7 +1144,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
   Fixed Capacity Management  supported
 
 ``NVME_CTRL_CTRATT_VARIABLE_CAP``
-  Variable Capacity Managment supported
+  Variable Capacity Management supported
 
 ``NVME_CTRL_CTRATT_DEL_ENDURANCE_GROUPS``
   Delete Endurance Groups supported
@@ -1224,7 +1240,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:enum:: nvme_id_ctrl_mec
 
-   Flags indicatings the capabilities of the Management Endpoint in the Controller, :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.mec.
+   Flags indicating the capabilities of the Management Endpoint in the Controller, :c:type:`struct nvme_id_ctrl <nvme_id_ctrl>`.mec.
 
 **Constants**
 
@@ -1286,6 +1302,10 @@ Returns throughput of controller persistent memory buffer in bytes/second
   If set, then the controller supports the Get LBA
   Status capability.
 
+``NVME_CTRL_OACS_CMD_FEAT_LD``
+  If set, then the controller supports the command
+  and feature lockdown capability.
+
 
 
 
@@ -1306,6 +1326,11 @@ Returns throughput of controller persistent memory buffer in bytes/second
   If set, the controller supports firmware
   activation without a reset.
 
+``NVME_CTRL_FRMW_MP_UP_DETECTION``
+  If set, the controller is able to detect
+  overlapping firmware/boot partition
+  image update.
+
 
 
 
@@ -1316,14 +1341,42 @@ Returns throughput of controller persistent memory buffer in bytes/second
 **Constants**
 
 ``NVME_CTRL_LPA_SMART_PER_NS``
+  If set, controller supports SMART/Health log
+  page on a per namespace basis.
 
 ``NVME_CTRL_LPA_CMD_EFFECTS``
+  If Set, the controller supports the commands
+  supported and effects log page.
 
 ``NVME_CTRL_LPA_EXTENDED``
+  If set, the controller supports extended data
+  for log page command including extended number
+  of dwords and log page offset fields.
 
 ``NVME_CTRL_LPA_TELEMETRY``
+  If set, the controller supports the telemetry
+  host-initiated and telemetry controller-initiated
+  log pages and sending telemetry log notices.
 
 ``NVME_CTRL_LPA_PERSETENT_EVENT``
+  If set, the controller supports
+  persistent event log.
+
+``NVME_CTRL_LPA_LI0_LI5_LI12_LI13``
+  If set, the controller supports
+  - log pages log page.
+  - returning scope of each command in
+    commands supported and effects log
+    page.
+  - feature identifiers supported and
+    effects log page.
+  - NVMe-MI commands supported and
+    effects log page.
+
+``NVME_CTRL_LPA_DA4_TELEMETRY``
+  If set, the controller supports data
+  area 4 for telemetry host-initiated and
+  telemetry.
 
 
 
@@ -1552,6 +1605,10 @@ Returns throughput of controller persistent memory buffer in bytes/second
   If set, then the controller supports
   the Verify command.
 
+``NVME_CTRL_ONCS_COPY``
+  If set, then the controller supports
+  the copy command.
+
 
 
 
@@ -1598,11 +1655,18 @@ Returns throughput of controller persistent memory buffer in bytes/second
   supported. If cleared, then cryptographic
   erase is not supported.
 
+``NVME_CTRL_FNA_NSID_FFFFFFFF``
+  If set, then format does not support
+  nsid value set to FFFFFFFFh. If cleared,
+  format supports nsid value set to
+  FFFFFFFFh.
+
 
 
 
 .. c:enum:: nvme_id_ctrl_vwc
 
+   Volatile write cache
 
 **Constants**
 
@@ -1627,7 +1691,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 ``NVME_CTRL_NVSCC_FMT``
   If set, all NVM Vendor Specific Commands use the
-  format format with NDT and NDM fields.
+  format with NDT and NDM fields.
 
 
 
@@ -2080,6 +2144,23 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 
 
+.. c:enum:: nvme_nvm_id_ns_elbaf
+
+   This field indicates the extended LBA format
+
+**Constants**
+
+``NVME_NVM_ELBAF_STS_MASK``
+  Mask to get the storage tag size used to determine
+  the variable-sized storage tag/reference tag fields
+
+``NVME_NVM_ELBAF_PIF_MASK``
+  Mask to get the protection information format for
+  the extended LBA format.
+
+
+
+
 .. c:enum:: nvme_id_ns_mc
 
    This field indicates the capabilities for metadata.
@@ -2279,6 +2360,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_ns_id_desc
 
+   Namespace identifier type descriptor
 
 **Definition**
 
@@ -2331,7 +2413,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
   Identifier (UUID) as specified in RFC 4122.
 
 ``NVME_NIDT_CSI``
-  The NID field contains the command set indentifier.
+  The NID field contains the command set identifier.
 
 
 
@@ -2390,6 +2472,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_id_nvmset_list
 
+   NVM set list
 
 **Definition**
 
@@ -2418,6 +2501,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_id_independent_id_ns
 
+   Identify - I/O Command Set Independent Identify Namespace Data Structure
 
 **Definition**
 
@@ -2479,6 +2563,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_id_ns_granularity_desc
 
+   Namespace Granularity Descriptor
 
 **Definition**
 
@@ -2503,6 +2588,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_id_ns_granularity_list
 
+   Namespace Granularity List
 
 **Definition**
 
@@ -2539,6 +2625,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_id_uuid_list_entry
 
+   UUID List Entry
 
 **Definition**
 
@@ -2567,6 +2654,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:enum:: nvme_id_uuid
 
+   Identifier Association
 
 **Constants**
 
@@ -2583,6 +2671,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_id_uuid_list
 
+   UUID list
 
 **Definition**
 
@@ -2607,6 +2696,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_ctrl_list
 
+   Controller List
 
 **Definition**
 
@@ -2631,6 +2721,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_ns_list
 
+   Namespace List
 
 **Definition**
 
@@ -2651,6 +2742,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_id_ctrl_nvm
 
+   I/O Command Set Specific Identify Controller data structure
 
 **Definition**
 
@@ -2695,6 +2787,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_nvm_id_ns
 
+   NVME Command Set I/O Command Set Specific Identify Namespace Data Structure
 
 **Definition**
 
@@ -2731,6 +2824,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_zns_lbafe
 
+   LBA Format Extension Data Structure
 
 **Definition**
 
@@ -2852,6 +2946,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_zns_id_ctrl
 
+   I/O Command Set Specific Identify Controller Data Structure for the Zoned Namespace Command Set
 
 **Definition**
 
@@ -2865,6 +2960,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 **Members**
 
 ``zasl``
+  Zone Append Size Limit
 
 ``rsvd1``
   Reserved
@@ -2875,6 +2971,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_primary_ctrl_cap
 
+   Identify - Controller Capabilities Structure
 
 **Definition**
 
@@ -2963,6 +3060,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_secondary_ctrl
 
+   Secondary Controller Entry
 
 **Definition**
 
@@ -3011,6 +3109,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_secondary_ctrl_list
 
+   Secondary Controller List
 
 **Definition**
 
@@ -3101,6 +3200,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_id_domain_list
 
+   Domain List
 
 **Definition**
 
@@ -3129,6 +3229,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_id_endurance_group_list
 
+   Endurance Group List
 
 **Definition**
 
@@ -3153,6 +3254,7 @@ Returns throughput of controller persistent memory buffer in bytes/second
 
 .. c:struct:: nvme_supported_log_pages
 
+   Supported Log Pages - Log
 
 **Definition**
 
@@ -3286,18 +3388,6 @@ Supported Log Pages (Log Identifier 00h)
 ``rsvd2``
   Reserved
 
-
-
-
-
-.. c:enum:: nvme_err_pel
-
-
-**Constants**
-
-``NVME_ERR_PEL_BYTE_MASK``
-
-``NVME_ERR_PEL_BIT_MASK``
 
 
 
@@ -3609,6 +3699,7 @@ Supported Log Pages (Log Identifier 00h)
 
 .. c:struct:: nvme_firmware_slot
 
+   Firmware Slot Information Log
 
 **Definition**
 
@@ -3641,6 +3732,7 @@ Supported Log Pages (Log Identifier 00h)
 
 .. c:struct:: nvme_cmd_effects_log
 
+   Commands Supported and Effects Log
 
 **Definition**
 
@@ -3669,6 +3761,7 @@ Supported Log Pages (Log Identifier 00h)
 
 .. c:enum:: nvme_cmd_effects
 
+   Commands Supported and Effects
 
 **Constants**
 
@@ -3966,12 +4059,15 @@ Supported Log Pages (Log Identifier 00h)
 
 .. c:enum:: nvme_cmd_get_log_telemetry_host_lsp
 
+   Telemetry Host-Initiated log specific field
 
 **Constants**
 
 ``NVME_LOG_TELEM_HOST_LSP_RETAIN``
+  Get Telemetry Data Blocks
 
 ``NVME_LOG_TELEM_HOST_LSP_CREATE``
+  Create Telemetry Data Blocks
 
 
 
@@ -4055,7 +4151,7 @@ Supported Log Pages (Log Identifier 00h)
   capture of its internal controller state in the controller .
 
 ``rsnident``
-  Reason Identifieris a vendor specific identifier that describes
+  Reason Identifiers a vendor specific identifier that describes
   the operating conditions of the controller at the time of
   capture.
 
@@ -4074,6 +4170,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_endurance_group_log
 
+   Endurance Group Information Log
 
 **Definition**
 
@@ -4150,20 +4247,27 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:enum:: nvme_eg_critical_warning_flags
 
+   Endurance Group Information Log - Critical Warning
 
 **Constants**
 
 ``NVME_EG_CRITICAL_WARNING_SPARE``
+  Available spare capacity of the Endurance Group
+  has fallen below the threshold
 
 ``NVME_EG_CRITICAL_WARNING_DEGRADED``
+  Endurance Group reliability has been degraded
 
 ``NVME_EG_CRITICAL_WARNING_READ_ONLY``
+  Endurance Group have been placed in read only
+  mode
 
 
 
 
 .. c:struct:: nvme_aggregate_endurance_group_event
 
+   Endurance Group Event Aggregate
 
 **Definition**
 
@@ -4188,6 +4292,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_nvmset_predictable_lat_log
 
+   Predictable Latency Mode - Deterministic Threshold Configuration Data
 
 **Definition**
 
@@ -4260,38 +4365,53 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:enum:: nvme_nvmeset_pl_status
 
+   Predictable Latency Per NVM Set Log - Status
 
 **Constants**
 
 ``NVME_NVMSET_PL_STATUS_DISABLED``
+  Not used (Predictable Latency Mode not enabled)
 
 ``NVME_NVMSET_PL_STATUS_DTWIN``
+  Deterministic Window (DTWIN)
 
 ``NVME_NVMSET_PL_STATUS_NDWIN``
+  Non-Deterministic Window (NDWIN)
 
 
 
 
 .. c:enum:: nvme_nvmset_pl_events
 
+   Predictable Latency Per NVM Set Log - Event Type
 
 **Constants**
 
 ``NVME_NVMSET_PL_EVENT_DTWIN_READ_WARN``
+  DTWIN Reads Warning
 
 ``NVME_NVMSET_PL_EVENT_DTWIN_WRITE_WARN``
+  DTWIN Writes Warning
 
 ``NVME_NVMSET_PL_EVENT_DTWIN_TIME_WARN``
+  DTWIN Time Warning
 
 ``NVME_NVMSET_PL_EVENT_DTWIN_EXCEEDED``
+  Autonomous transition from DTWIN
+  to NDWIN due to typical or
+  maximum value exceeded
 
 ``NVME_NVMSET_PL_EVENT_DTWIN_EXCURSION``
+  Autonomous transition from DTWIN
+  to NDWIN due to Deterministic
+  Excursion
 
 
 
 
 .. c:struct:: nvme_aggregate_predictable_lat_event
 
+   Predictable Latency Event Aggregate Log Page
 
 **Definition**
 
@@ -4316,6 +4436,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_ana_group_desc
 
+   ANA Group Descriptor
 
 **Definition**
 
@@ -4356,24 +4477,31 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:enum:: nvme_ana_state
 
+   ANA Group Descriptor - Asymmetric Namespace Access State
 
 **Constants**
 
 ``NVME_ANA_STATE_OPTIMIZED``
+  ANA Optimized state
 
 ``NVME_ANA_STATE_NONOPTIMIZED``
+  ANA Non-Optimized state
 
 ``NVME_ANA_STATE_INACCESSIBLE``
+  ANA Inaccessible state
 
 ``NVME_ANA_STATE_PERSISTENT_LOSS``
+  ANA Persistent Loss state
 
 ``NVME_ANA_STATE_CHANGE``
+  ANA Change state
 
 
 
 
 .. c:struct:: nvme_ana_log
 
+   Asymmetric Namespace Access Log
 
 **Definition**
 
@@ -4406,6 +4534,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_persistent_event_log
 
+   Persistent Event Log
 
 **Definition**
 
@@ -4498,6 +4627,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_persistent_event_entry
 
+   Persistent Event
 
 **Definition**
 
@@ -4554,40 +4684,55 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:enum:: nvme_persistent_event_types
 
+   Persistent event log events
 
 **Constants**
 
 ``NVME_PEL_SMART_HEALTH_EVENT``
+  SMART / Health Log Snapshot Event
 
 ``NVME_PEL_FW_COMMIT_EVENT``
+  Firmware Commit Event
 
 ``NVME_PEL_TIMESTAMP_EVENT``
+  Timestamp Change Event
 
 ``NVME_PEL_POWER_ON_RESET_EVENT``
+  Power-on or Reset Event
 
 ``NVME_PEL_NSS_HW_ERROR_EVENT``
+  NVM Subsystem Hardware Error Event
 
 ``NVME_PEL_CHANGE_NS_EVENT``
+  Change Namespace Event
 
 ``NVME_PEL_FORMAT_START_EVENT``
+  Format NVM Start Event
 
 ``NVME_PEL_FORMAT_COMPLETION_EVENT``
+  Format NVM Completion Event
 
 ``NVME_PEL_SANITIZE_START_EVENT``
+  Sanitize Start Event
 
 ``NVME_PEL_SANITIZE_COMPLETION_EVENT``
+  Sanitize Completion Event
 
 ``NVME_PEL_SET_FEATURE_EVENT``
+  Set Feature Event
 
 ``NVME_PEL_TELEMETRY_CRT``
+  Telemetry Log Create Event
 
 ``NVME_PEL_THERMAL_EXCURSION_EVENT``
+  Thermal Excursion Event
 
 
 
 
 .. c:struct:: nvme_fw_commit_event
 
+   Firmware Commit Event Data
 
 **Definition**
 
@@ -4632,6 +4777,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_time_stamp_change_event
 
+   Timestamp Change Event
 
 **Definition**
 
@@ -4656,6 +4802,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_power_on_reset_info_list
 
+   Controller Reset Information
 
 **Definition**
 
@@ -4700,6 +4847,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_nss_hw_err_event
 
+   NVM Subsystem Hardware Error Event
 
 **Definition**
 
@@ -4728,6 +4876,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_change_ns_event
 
+   Change Namespace Event Data
 
 **Definition**
 
@@ -4796,6 +4945,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_format_nvm_start_event
 
+   Format NVM Start Event Data
 
 **Definition**
 
@@ -4828,6 +4978,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_format_nvm_compln_event
 
+   Format NVM Completion Event Data
 
 **Definition**
 
@@ -4864,6 +5015,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_sanitize_start_event
 
+   Sanitize Start Event Data
 
 **Definition**
 
@@ -4892,6 +5044,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_sanitize_compln_event
 
+   Sanitize Completion Event Data
 
 **Definition**
 
@@ -4924,6 +5077,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_set_feature_event
 
+   Set Feature Event Data
 
 **Definition**
 
@@ -4948,6 +5102,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_thermal_exc_event
 
+   Thermal Excursion Event Data
 
 **Definition**
 
@@ -4972,6 +5127,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_lba_rd
 
+   LBA Range Descriptor
 
 **Definition**
 
@@ -5000,6 +5156,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_lbas_ns_element
 
+   LBA Status Log Namespace Element
 
 **Definition**
 
@@ -5022,7 +5179,7 @@ bytes, in size. This log captures the controller’s internal state.
   Number of LBA Range Descriptors
 
 ``ratype``
-  Recommended Action Type
+  Recommended Action Type. see **enum** nvme_lba_status_atype
 
 ``rsvd8``
   Reserved
@@ -5036,18 +5193,23 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:enum:: nvme_lba_status_atype
 
+   Potentially Unrecoverable LBAs
 
 **Constants**
 
 ``NVME_LBA_STATUS_ATYPE_SCAN_UNTRACKED``
+  Potentially Unrecoverable LBAs
 
 ``NVME_LBA_STATUS_ATYPE_SCAN_TRACKED``
+  Potentially Unrecoverable LBAs
+  associated with physical storage
 
 
 
 
 .. c:struct:: nvme_lba_status_log
 
+   LBA Status Information Log
 
 **Definition**
 
@@ -5088,6 +5250,7 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:struct:: nvme_eg_event_aggregate_log
 
+   Endurance Group Event Aggregate
 
 **Definition**
 
@@ -5112,46 +5275,58 @@ bytes, in size. This log captures the controller’s internal state.
 
 .. c:enum:: nvme_fid_supported_effects
 
+   FID Supported and Effects Data Structure definitions
 
 **Constants**
 
 ``NVME_FID_SUPPORTED_EFFECTS_FSUPP``
+  FID Supported
 
 ``NVME_FID_SUPPORTED_EFFECTS_UDCC``
+  User Data Content Change
 
 ``NVME_FID_SUPPORTED_EFFECTS_NCC``
+  Namespace Capability Change
 
 ``NVME_FID_SUPPORTED_EFFECTS_NIC``
+  Namespace Inventory Change
 
 ``NVME_FID_SUPPORTED_EFFECTS_CCC``
+  Controller Capability Change
 
 ``NVME_FID_SUPPORTED_EFFECTS_UUID_SEL``
+  UUID Selection Supported
 
 ``NVME_FID_SUPPORTED_EFFECTS_SCOPE_SHIFT``
+  FID Scope Shift
 
 ``NVME_FID_SUPPORTED_EFFECTS_SCOPE_MASK``
+  FID Scope Mask
 
 ``NVME_FID_SUPPORTED_EFFECTS_SCOPE_NS``
+  Namespace Scope
 
 ``NVME_FID_SUPPORTED_EFFECTS_SCOPE_CTRL``
+  Controller Scope
 
 ``NVME_FID_SUPPORTED_EFFECTS_SCOPE_NVM_SET``
+  NVM Set Scope
 
 ``NVME_FID_SUPPORTED_EFFECTS_SCOPE_ENDGRP``
+  Endurance Group Scope
 
 ``NVME_FID_SUPPORTED_EFFECTS_SCOPE_DOMAIN``
+  Domain Scope
 
 ``NVME_FID_SUPPORTED_EFFECTS_SCOPE_NSS``
-
-**Description**
-
-FID Supported and Effects Data Structure definitions
+  NVM Subsystem Scope
 
 
 
 
 .. c:struct:: nvme_fid_supported_effects_log
 
+   Feature Identifiers Supported and Effects
 
 **Definition**
 
@@ -5167,16 +5342,12 @@ FID Supported and Effects Data Structure definitions
   Feature Identifier Supported
 
 
-**Description**
-
-Feature Identifiers Supported and Effects (Log Identifier 12h)
-
 
 
 
 .. c:enum:: nvme_mi_cmd_supported_effects
 
-   bit field definitions
+   MI Command Supported and Effects Data Structure
 
 **Constants**
 
@@ -5184,7 +5355,7 @@ Feature Identifiers Supported and Effects (Log Identifier 12h)
   Command Supported
 
 ``NVME_MI_CMD_SUPPORTED_EFFECTS_UDCC``
-  User Data Conttent Change
+  User Data Content Change
 
 ``NVME_MI_CMD_SUPPORTED_EFFECTS_NCC``
   Namespace Capability Change
@@ -5219,15 +5390,12 @@ Feature Identifiers Supported and Effects (Log Identifier 12h)
 ``NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NSS``
   NVM Subsystem Scope
 
-**Description**
-
-MI Command Supported and Effects Data Structure definitions
-
 
 
 
 .. c:struct:: nvme_mi_cmd_supported_effects_log
 
+   NVMe-MI Commands Supported and Effects Log
 
 **Definition**
 
@@ -5243,16 +5411,16 @@ MI Command Supported and Effects Data Structure definitions
 ``mi_cmd_support``
   NVMe-MI Commands Supported
 
+``reserved1``
+  Reserved
 
-**Description**
-
-NVMe-MI Commands Supported and Effects (Log Identifier 13h)
 
 
 
 
 .. c:struct:: nvme_boot_partition
 
+   Boot Partition Log
 
 **Definition**
 
@@ -5290,6 +5458,7 @@ NVMe-MI Commands Supported and Effects (Log Identifier 13h)
 
 .. c:struct:: nvme_media_unit_stat_desc
 
+   Media Unit Status Descriptor
 
 **Definition**
 
@@ -5342,6 +5511,7 @@ NVMe-MI Commands Supported and Effects (Log Identifier 13h)
 
 .. c:struct:: nvme_media_unit_stat_log
 
+   Media Unit Status
 
 **Definition**
 
@@ -5378,6 +5548,7 @@ NVMe-MI Commands Supported and Effects (Log Identifier 13h)
 
 .. c:struct:: nvme_media_unit_config_desc
 
+   Media Unit Configuration Descriptor
 
 **Definition**
 
@@ -5394,20 +5565,19 @@ NVMe-MI Commands Supported and Effects (Log Identifier 13h)
 ``muid``
   Media Unit Identifier
 
+``rsvd2``
+  Reserved
+
 ``mudl``
   Media Unit Descriptor Length
 
-
-**Description**
-
-Media Unit Configuration Descriptor
-Structure Definitions
 
 
 
 
 .. c:struct:: nvme_channel_config_desc
 
+   Channel Configuration Descriptor
 
 **Definition**
 
@@ -5427,17 +5597,17 @@ Structure Definitions
 ``chmus``
   Number Channel Media Units
 
+``mu_config_desc``
+  Channel Unit config descriptors.
+  See **struct** nvme_media_unit_config_desc
 
-**Description**
-
-Channel Configuration Descriptor
-Structure Definitions
 
 
 
 
 .. c:struct:: nvme_end_grp_chan_desc
 
+   Endurance Group Channel Configuration Descriptor
 
 **Definition**
 
@@ -5453,17 +5623,17 @@ Structure Definitions
 ``egchans``
   Number of Channels
 
+``chan_config_desc``
+  Channel config descriptors.
+  See **struct** nvme_channel_config_desc
 
-**Description**
-
-Endurance group Channel Configuration Descriptor
-Structure Definitions
 
 
 
 
 .. c:struct:: nvme_end_grp_config_desc
 
+   Endurance Group Configuration Descriptor
 
 **Definition**
 
@@ -5489,6 +5659,9 @@ Structure Definitions
 ``cap_adj_factor``
   Capacity Adjustment Factor
 
+``rsvd4``
+  Reserved
+
 ``tegcap``
   Total Endurance Group Capacity
 
@@ -5498,6 +5671,9 @@ Structure Definitions
 ``end_est``
   Endurance Estimate
 
+``rsvd64``
+  Reserved
+
 ``egsets``
   Number of NVM Sets
 
@@ -5505,16 +5681,51 @@ Structure Definitions
   NVM Set Identifier
 
 
-**Description**
 
-Endurance Group Configuration Descriptor
-Structure Definitions
+
+
+.. c:struct:: nvme_capacity_config_desc
+
+   Capacity Configuration structure definitions
+
+**Definition**
+
+::
+
+  struct nvme_capacity_config_desc {
+    __le16 cap_config_id;
+    __le16 domainid;
+    __le16 egcn;
+    __u8 rsvd6[26];
+    struct nvme_end_grp_config_desc egcd[];
+  };
+
+**Members**
+
+``cap_config_id``
+  Capacity Configuration Identifier
+
+``domainid``
+  Domain Identifier
+
+``egcn``
+  Number Endurance Group Configuration
+  Descriptors
+
+``rsvd6``
+  Reserved
+
+``egcd``
+  Endurance Group Config descriptors.
+  See **struct** nvme_end_grp_config_desc
+
 
 
 
 
 .. c:struct:: nvme_supported_cap_config_list_log
 
+   Supported Capacity Configuration list log page
 
 **Definition**
 
@@ -5529,19 +5740,22 @@ Structure Definitions
 **Members**
 
 ``sccn``
-  number of capacity configuration
+  Number of capacity configuration
 
+``rsvd1``
+  Reserved
 
-**Description**
+``cap_config_desc``
+  Capacity configuration descriptor.
+  See **struct** nvme_capacity_config_desc
 
-Supported Capacity Configuration list log page
-structure definitions
 
 
 
 
 .. c:struct:: nvme_resv_notification_log
 
+   Reservation Notification Log
 
 **Definition**
 
@@ -5582,16 +5796,21 @@ structure definitions
 
 .. c:enum:: nvme_resv_notify_rnlpt
 
+   Reservation Notification Log - Reservation Notification Log Page Type
 
 **Constants**
 
 ``NVME_RESV_NOTIFY_RNLPT_EMPTY``
+  Empty Log Page
 
 ``NVME_RESV_NOTIFY_RNLPT_REGISTRATION_PREEMPTED``
+  Registration Preempted
 
 ``NVME_RESV_NOTIFY_RNLPT_RESERVATION_RELEASED``
+  Reservation Released
 
 ``NVME_RESV_NOTIFY_RNLPT_RESERVATION_PREEMPTED``
+  Reservation Preempted
 
 
 
@@ -5811,16 +6030,19 @@ structure definitions
 
 .. c:enum:: nvme_zns_zt
 
+   Zone Descriptor Data Structure - Zone Type
 
 **Constants**
 
 ``NVME_ZONE_TYPE_SEQWRITE_REQ``
+  Sequential Write Required
 
 
 
 
 .. c:enum:: nvme_zns_za
 
+   Zone Descriptor Data Structure
 
 **Constants**
 
@@ -5843,6 +6065,7 @@ structure definitions
 
 .. c:enum:: nvme_zns_zs
 
+   Zone Descriptor Data Structure - Zone State
 
 **Constants**
 
@@ -5872,6 +6095,7 @@ structure definitions
 
 .. c:struct:: nvme_zns_desc
 
+   Zone Descriptor Data Structure
 
 **Definition**
 
@@ -5924,6 +6148,7 @@ structure definitions
 
 .. c:struct:: nvme_zone_report
 
+   Report Zones Data Structure
 
 **Definition**
 
@@ -5952,6 +6177,7 @@ structure definitions
 
 .. c:struct:: nvme_lba_status_desc
 
+   LBA Status Descriptor Entry
 
 **Definition**
 
@@ -5988,6 +6214,7 @@ structure definitions
 
 .. c:struct:: nvme_lba_status
 
+   LBA Status Descriptor List
 
 **Definition**
 
@@ -6020,6 +6247,7 @@ structure definitions
 
 .. c:struct:: nvme_feat_auto_pst
 
+   Autonomous Power State Transition
 
 **Definition**
 
@@ -6040,16 +6268,21 @@ structure definitions
 
 .. c:enum:: nvme_apst_entry
 
+   Autonomous Power State Transition
 
 **Constants**
 
 ``NVME_APST_ENTRY_ITPS_SHIFT``
+  Idle Transition Power State Shift
 
 ``NVME_APST_ENTRY_ITPT_SHIFT``
+  Idle Time Prior to Transition Shift
 
 ``NVME_APST_ENTRY_ITPS_MASK``
+  Idle Transition Power State Mask
 
 ``NVME_APST_ENTRY_ITPT_MASK``
+  Idle Time Prior to Transition Mask
 
 
 
@@ -6162,7 +6395,7 @@ structure definitions
   Chipset driver name.
 
 ``NVME_CTRL_METADATA_CHIPSET_DRV_VERSION``
-  Chipsset driver version.
+  Chipset driver version.
 
 ``NVME_CTRL_METADATA_OS_NAME_AND_BUILD``
   Operating system name and build.
@@ -6195,7 +6428,7 @@ structure definitions
 **Constants**
 
 ``NVME_NS_METADATA_OS_NS_NAME``
-  Name of the namespace in the the
+  Name of the namespace in the
   operating system
 
 ``NVME_NS_METADATA_PRE_BOOT_NS_NAME``
@@ -6215,6 +6448,7 @@ structure definitions
 
 .. c:struct:: nvme_timestamp
 
+   Timestamp - Data Structure for Get Features
 
 **Definition**
 
@@ -6243,6 +6477,7 @@ structure definitions
 
 .. c:struct:: nvme_lba_range_type_entry
 
+   LBA Range Type - Data Structure Entry
 
 **Definition**
 
@@ -6287,6 +6522,7 @@ structure definitions
 
 .. c:enum:: nvme_lbart
 
+   LBA Range Type - Data Structure Entry
 
 **Constants**
 
@@ -6316,6 +6552,7 @@ structure definitions
 
 .. c:struct:: nvme_lba_range_type
 
+   LBA Range Type
 
 **Definition**
 
@@ -6328,7 +6565,7 @@ structure definitions
 **Members**
 
 ``entry``
-  LBA range type entry
+  LBA range type entry. See **struct** nvme_lba_range_type_entry
 
 
 
@@ -6336,6 +6573,7 @@ structure definitions
 
 .. c:struct:: nvme_plm_config
 
+   Predictable Latency Mode - Deterministic Threshold Configuration Data Structure
 
 **Definition**
 
@@ -6376,6 +6614,7 @@ structure definitions
 
 .. c:struct:: nvme_feat_host_behavior
 
+   Host Behavior Support - Data Structure
 
 **Definition**
 
@@ -6400,6 +6639,7 @@ structure definitions
 
 .. c:enum:: nvme_host_behavior_support
 
+   Enable Advanced Command
 
 **Constants**
 
@@ -6411,6 +6651,7 @@ structure definitions
 
 .. c:struct:: nvme_dsm_range
 
+   Dataset Management - Range Definition
 
 **Definition**
 
@@ -6439,6 +6680,7 @@ structure definitions
 
 .. c:struct:: nvme_copy_range
 
+   Copy - Source Range Entries Descriptor Format
 
 **Definition**
 
@@ -6469,7 +6711,54 @@ structure definitions
   Reserved
 
 ``eilbrt``
-  Expected Initial Logical Block Reference Tag
+  Expected Initial Logical Block Reference Tag /
+  Expected Logical Block Storage Tag
+
+``elbatm``
+  Expected Logical Block Application Tag Mask
+
+``elbat``
+  Expected Logical Block Application Tag
+
+
+
+
+
+.. c:struct:: nvme_copy_range_f1
+
+   Copy - Source Range Entries Descriptor Format 1h
+
+**Definition**
+
+::
+
+  struct nvme_copy_range_f1 {
+    __u8 rsvd0[8];
+    __le64 slba;
+    __le16 nlb;
+    __u8 rsvd18[8];
+    __u8 elbt[10];
+    __le16 elbatm;
+    __le16 elbat;
+  };
+
+**Members**
+
+``rsvd0``
+  Reserved
+
+``slba``
+  Starting LBA
+
+``nlb``
+  Number of Logical Blocks
+
+``rsvd18``
+  Reserved
+
+``elbt``
+  Expected Initial Logical Block Reference Tag /
+  Expected Logical Block Storage Tag
 
 ``elbatm``
   Expected Logical Block Application Tag Mask
@@ -6483,6 +6772,7 @@ structure definitions
 
 .. c:struct:: nvme_registered_ctrl
 
+   Registered Controller Data Structure
 
 **Definition**
 
@@ -6519,6 +6809,7 @@ structure definitions
 
 .. c:struct:: nvme_registered_ctrl_ext
 
+   Registered Controller Extended Data Structure
 
 **Definition**
 
@@ -6559,6 +6850,7 @@ structure definitions
 
 .. c:struct:: nvme_resv_status
 
+   Reservation Status Data Structure
 
 **Definition**
 
@@ -6621,6 +6913,7 @@ structure definitions
 
 .. c:struct:: nvme_streams_directive_params
 
+   Streams Directive - Return Parameters Data Structure
 
 **Definition**
 
@@ -6677,6 +6970,7 @@ structure definitions
 
 .. c:struct:: nvme_streams_directive_status
 
+   Streams Directive - Get Status Data Structure
 
 **Definition**
 
@@ -6701,6 +6995,7 @@ structure definitions
 
 .. c:struct:: nvme_id_directives
 
+   Identify Directive - Return Parameters Data Structure
 
 **Definition**
 
@@ -6729,6 +7024,7 @@ structure definitions
 
 .. c:enum:: nvme_directive_types
 
+   Directives Supported or Enabled
 
 **Constants**
 
@@ -6743,6 +7039,7 @@ structure definitions
 
 .. c:struct:: nvme_host_mem_buf_attrs
 
+   Host Memory Buffer - Attributes Data Structure
 
 **Definition**
 
@@ -6779,6 +7076,7 @@ structure definitions
 
 .. c:enum:: nvme_ae_type
 
+   Asynchronous Event Type
 
 **Constants**
 
@@ -6802,6 +7100,7 @@ structure definitions
 
 .. c:enum:: nvme_ae_info_error
 
+   Asynchronous Event Information - Error Status
 
 **Constants**
 
@@ -6828,6 +7127,7 @@ structure definitions
 
 .. c:enum:: nvme_ae_info_smart
 
+   Asynchronous Event Information - SMART / Health Status
 
 **Constants**
 
@@ -6845,6 +7145,7 @@ structure definitions
 
 .. c:enum:: nvme_ae_info_css_nvm
 
+   Asynchronous Event Information - I/O Command Specific Status
 
 **Constants**
 
@@ -6863,6 +7164,7 @@ structure definitions
 
 .. c:enum:: nvme_ae_info_notice
 
+   Asynchronous Event Information - Notice
 
 **Constants**
 
@@ -6947,9 +7249,16 @@ structure definitions
   Indicates that Explicit Persistent Connections are
   supported for the Discovery controller.
 
-``NVMF_DISC_EFLAGS_BOTH``
-  Indicates that both the DUPRETINFO and EPCSD
-  features are supported.
+``NVMF_DISC_EFLAGS_NCC``
+  No CDC Connectivity (NCC): If set to
+  '1', then no DDC that describes this entry
+  is currently connected to the CDC. If
+  cleared to '0', then at least one DDC that
+  describes this entry is currently
+  connected to the CDC. If the Discovery
+  controller returning this log page is not
+  a CDC, then this bit shall be cleared to
+  '0' and should be ignored by the host.
 
 
 
@@ -7461,7 +7770,7 @@ structure definitions
   Reserved
 
 ``exat``
-  Extented Attributes 0 (:c:type:`struct nvmf_ext_attr <nvmf_ext_attr>`)
+  Extended Attributes 0 (:c:type:`struct nvmf_ext_attr <nvmf_ext_attr>`)
 
 
 
@@ -7501,7 +7810,7 @@ defined below cannot be accessed as a C array. Instead, the
 through the list. To move to the next entry, one simply adds the
 current entry's length (TEL) to the "walk" pointer. The number of
 entries in the list is specified by NUMENT.  Although extended
-entries are of a variable lengths (TEL), TEL is always a mutiple of
+entries are of a variable lengths (TEL), TEL is always a multiple of
 4 bytes.
 
 
@@ -7619,6 +7928,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_read_nvm_ss_info
 
+   NVM Subsystem Information Data Structure
 
 **Definition**
 
@@ -7651,6 +7961,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_port_pcie
 
+   PCIe Port Specific Data
 
 **Definition**
 
@@ -7695,6 +8006,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_port_smb
 
+   SMBus Port Specific Data
 
 **Definition**
 
@@ -7735,6 +8047,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_read_port_info
 
+   Port Information Data Structure
 
 **Definition**
 
@@ -7780,6 +8093,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_read_ctrl_info
 
+   Controller Information Data Structure
 
 **Definition**
 
@@ -7832,6 +8146,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_osc
 
+   Optionally Supported Command Data Structure
 
 **Definition**
 
@@ -7856,6 +8171,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_read_sc_list
 
+   Management Endpoint Buffer Supported Command List Data Structure
 
 **Definition**
 
@@ -7872,7 +8188,8 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
   Number of Commands
 
 ``cmds``
-  MEB supported Command Data Structure
+  MEB supported Command Data Structure.
+  See **struct** nvme_mi_osc
 
 
 
@@ -7880,6 +8197,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_nvm_ss_health_status
 
+   Subsystem Management Data Structure
 
 **Definition**
 
@@ -7918,45 +8236,46 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 
 
-.. c:enum:: nvme_mi_css
+.. c:enum:: nvme_mi_ccs
 
+   Get State Control Primitive Success Response Fields - Control Primitive Specific Response
 
 **Constants**
 
 ``NVME_MI_CCS_RDY``
   Ready
 
-``NVME_MI_CSS_CFS``
+``NVME_MI_CCS_CFS``
   Controller Fatal Status
 
-``NVME_MI_CSS_SHST``
+``NVME_MI_CCS_SHST``
   Shutdown Status
 
-``NVME_MI_CSS_NSSRO``
+``NVME_MI_CCS_NSSRO``
   NVM Subsystem Reset Occurred
 
-``NVME_MI_CSS_CECO``
+``NVME_MI_CCS_CECO``
   Controller Enable Change Occurred
 
-``NVME_MI_CSS_NAC``
+``NVME_MI_CCS_NAC``
   Namespace Attribute Changed
 
-``NVME_MI_CSS_FA``
+``NVME_MI_CCS_FA``
   Firmware Activated
 
-``NVME_MI_CSS_CSTS``
+``NVME_MI_CCS_CSTS``
   Controller Status Change
 
-``NVME_MI_CSS_CTEMP``
+``NVME_MI_CCS_CTEMP``
   Composite Temperature Change
 
-``NVME_MI_CSS_PDLU``
+``NVME_MI_CCS_PDLU``
   Percentage Used
 
-``NVME_MI_CSS_SPARE``
+``NVME_MI_CCS_SPARE``
   Available Spare
 
-``NVME_MI_CSS_CCWARN``
+``NVME_MI_CCS_CCWARN``
   Critical Warning
 
 
@@ -7964,6 +8283,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_ctrl_health_status
 
+   Controller Health Data Structure (CHDS)
 
 **Definition**
 
@@ -8008,6 +8328,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:enum:: nvme_mi_csts
 
+   Controller Health Data Structure (CHDS) - Controller Status (CSTS)
 
 **Constants**
 
@@ -8037,6 +8358,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:enum:: nvme_mi_cwarn
 
+   Controller Health Data Structure (CHDS) - Critical Warning (CWARN)
 
 **Constants**
 
@@ -8060,6 +8382,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_vpd_mra
 
+   NVMe MultiRecord Area
 
 **Definition**
 
@@ -8111,7 +8434,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
   Reserved
 
 ``m33vapsr``
-  Maximum 3.3 V aux Power Supply Requirements
+  Maximum 3.3 Vi aux Power Supply Requirements
 
 ``i5vapsr``
   Initial 5 V Power Supply Requirements
@@ -8140,6 +8463,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_vpd_ppmra
 
+   NVMe PCIe Port MultiRecord Area
 
 **Definition**
 
@@ -8192,6 +8516,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_vpd_telem
 
+   Vital Product Data Element Descriptor
 
 **Definition**
 
@@ -8225,6 +8550,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:enum:: nvme_mi_elem
 
+   Element Descriptor Types
 
 **Constants**
 
@@ -8254,6 +8580,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_vpd_tra
 
+   Vital Product Data Topology MultiRecord
 
 **Definition**
 
@@ -8286,6 +8613,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_vpd_mr_common
 
+   NVMe MultiRecord Area
 
 **Definition**
 
@@ -8339,6 +8667,7 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 .. c:struct:: nvme_mi_vpd_hdr
 
+   Vital Product Data Common Header
 
 **Definition**
 
@@ -8414,13 +8743,15 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
   Mask to get the value of the Status Code Type
 
 ``NVME_SCT_SHIFT``
-  *undescribed*
+  Shift value to get the value of the Status
+  Code Type
 
 ``NVME_SC_MASK``
   Mask to get the value of the status code.
 
 ``NVME_SC_SHIFT``
-  *undescribed*
+  Shift value to get the value of the status
+  code.
 
 ``NVME_SC_SUCCESS``
   Successful Completion: The command
@@ -8919,7 +9250,10 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
   CDC
 
 ``NVME_SC_ZONEGRP_ORIGINATOR_INVLD``
-  *undescribed*
+  The NQN contained in the ZoneGroup
+  Originator field does not match the
+  Host NQN used by the DDC to connect
+  to the CDC.
 
 ``NVME_SC_BAD_ATTRIBUTES``
   Conflicting Dataset Management Attributes
@@ -9125,10 +9459,11 @@ entries are of a variable lengths (TEL), TEL is always a mutiple of
 
 ``__u16 status_field``
   The NVMe Completion Queue Entry's Status Field
+  See :c:type:`enum nvme_status_field <nvme_status_field>`
 
-**Description**
+**Return**
 
-See :c:type:`enum nvme_status_field <nvme_status_field>`
+status code type
 
 
 .. c:function:: __u16 nvme_status_code (__u16 status_field)
@@ -9139,10 +9474,11 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 ``__u16 status_field``
   The NVMe Completion Queue Entry's Status Field
+  See :c:type:`enum nvme_status_field <nvme_status_field>`
 
-**Description**
+**Return**
 
-See :c:type:`enum nvme_status_field <nvme_status_field>`
+status code
 
 
 
@@ -9263,6 +9599,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_identify_cns
 
+   Identify - CNS Values
 
 **Constants**
 
@@ -9270,7 +9607,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
   Identify Namespace data structure
 
 ``NVME_IDENTIFY_CNS_CTRL``
-  Identify Controller data structur
+  Identify Controller data structure
 
 ``NVME_IDENTIFY_CNS_NS_ACTIVE_LIST``
   Active Namespace ID list
@@ -9295,13 +9632,14 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 ``NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS``
   I/O Command Set Independent Identify
-  Namespace data structure
 
 ``NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT``
-  *undescribed*
+  Namespace user data format
 
 ``NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT``
-  *undescribed*
+  I/O Command Set specific user data
+  format
+  Namespace data structure
 
 ``NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST``
   Allocated Namespace ID list
@@ -9328,7 +9666,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
   processing the command
 
 ``NVME_IDENTIFY_CNS_NS_GRANULARITY``
-  A Namespace Granularity Lis
+  A Namespace Granularity List
 
 ``NVME_IDENTIFY_CNS_UUID_LIST``
   A UUID List
@@ -9355,6 +9693,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_cmd_get_log_lid
 
+   Get Log Page -Log Page Identifiers
 
 **Constants**
 
@@ -9438,6 +9777,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_features_id
 
+   Features - Feature Identifiers
 
 **Constants**
 
@@ -9548,6 +9888,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_feat
 
+   Features Access Shifts/Masks values
 
 **Constants**
 
@@ -9752,6 +10093,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_get_features_sel
 
+   Get Features - Select
 
 **Constants**
 
@@ -9854,6 +10196,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_ns_mgmt_sel
 
+   Namespace Management - Select
 
 **Constants**
 
@@ -9868,6 +10211,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_ns_attach_sel
 
+   Namespace Attachment - Select
 
 **Constants**
 
@@ -9882,6 +10226,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_fw_commit_ca
 
+   Firmware Commit - Commit Action
 
 **Constants**
 
@@ -9917,7 +10262,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 ``NVME_FW_COMMIT_CA_ACTIVATE_BOOT_PARTITION``
   Mark the Boot Partition specified in
-  the BPID field as active and update 
+  the BPID field as active and update
   BPINFO.ABPID.
 
 
@@ -9925,6 +10270,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_directive_dtype
 
+   Directive Types
 
 **Constants**
 
@@ -9939,6 +10285,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_directive_receive_doper
 
+   Directive Receive Directive Operation
 
 **Constants**
 
@@ -9955,6 +10302,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_directive_send_doper
 
+   Directive Send Directive Operation
 
 **Constants**
 
@@ -9969,6 +10317,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_directive_send_identify_endir
 
+   Enable Directive
 
 **Constants**
 
@@ -10023,6 +10372,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_virt_mgmt_act
 
+   Virtualization Management - Action
 
 **Constants**
 
@@ -10044,6 +10394,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_virt_mgmt_rt
 
+   Virtualization Management - Resource Type
 
 **Constants**
 
@@ -10058,6 +10409,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_ns_write_protect_cfg
 
+   Write Protection - Write Protection State
 
 **Constants**
 
@@ -10078,6 +10430,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_log_ana_lsp
 
+   Asymmetric Namespace Access - Return Groups Only
 
 **Constants**
 
@@ -10090,6 +10443,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_pevent_log_action
 
+   Persistent Event Log - Action
 
 **Constants**
 
@@ -10107,6 +10461,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_feat_tmpthresh_thsel
 
+   Temperature Threshold - Threshold Type Select
 
 **Constants**
 
@@ -10121,6 +10476,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_features_async_event_config_flags
 
+   Asynchronous Event Configuration configuration flags
 
 **Constants**
 
@@ -10157,6 +10513,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_feat_plm_window_select
 
+   Predictable Latency Per NVM Set Log
 
 **Constants**
 
@@ -10171,6 +10528,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_feat_resv_notify_flags
 
+   Reservation Notification Configuration
 
 **Constants**
 
@@ -10188,6 +10546,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_feat_nswpcfg_state
 
+   Write Protection - Write Protection State
 
 **Constants**
 
@@ -10208,6 +10567,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_fctype
 
+   Fabrics Command Types
 
 **Constants**
 
@@ -10234,6 +10594,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_io_opcode
 
+   Opcodes for I/O Commands
 
 **Constants**
 
@@ -10290,11 +10651,15 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_io_control_flags
 
+   I/O control flags
 
 **Constants**
 
 ``NVME_IO_DTYPE_STREAMS``
   Directive Type Streams
+
+``NVME_IO_STC``
+  Storage Tag Check
 
 ``NVME_IO_DEAC``
   Deallocate
@@ -10325,6 +10690,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_io_dsm_flags
 
+   Dataset Management flags
 
 **Constants**
 
@@ -10378,23 +10744,25 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_dsm_attributes
 
+   Dataset Management attributes
 
 **Constants**
 
 ``NVME_DSMGMT_IDR``
-  Attribute – Integral Dataset for Read
+  Attribute -Integral Dataset for Read
 
 ``NVME_DSMGMT_IDW``
-  Attribute – Integral Dataset for Write
+  Attribute - Integral Dataset for Write
 
 ``NVME_DSMGMT_AD``
-  Attribute – Deallocate
+  Attribute - Deallocate
 
 
 
 
 .. c:enum:: nvme_resv_rtype
 
+   Reservation Type Encoding
 
 **Constants**
 
@@ -10421,6 +10789,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_resv_racqa
 
+   Reservation Acquire - Reservation Acquire Action
 
 **Constants**
 
@@ -10438,6 +10807,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_resv_rrega
 
+   Reservation Register - Reservation Register Action
 
 **Constants**
 
@@ -10455,6 +10825,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_resv_cptpl
 
+   Reservation Register - Change Persist Through Power Loss State
 
 **Constants**
 
@@ -10474,6 +10845,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_resv_rrela
 
+   Reservation Release - Reservation Release Action
 
 **Constants**
 
@@ -10488,6 +10860,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_zns_send_action
 
+   Zone Management Send - Zone Send Action
 
 **Constants**
 
@@ -10517,6 +10890,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_zns_recv_action
 
+   Zone Management Receive - Zone Receive Action Specific Features
 
 **Constants**
 
@@ -10531,6 +10905,7 @@ See :c:type:`enum nvme_status_field <nvme_status_field>`
 
 .. c:enum:: nvme_zns_report_options
 
+   Zone Management Receive - Zone Receive Action Specific Field
 
 **Constants**
 

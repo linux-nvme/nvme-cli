@@ -180,11 +180,118 @@ Linux NVMe ioctl interface functions
   If non-zero, overrides system default timeout in milliseconds
 
 ``rsvd2``
-  Reserved for future use (and fills an impicit struct pad
+  Reserved for future use (and fills an implicit struct pad
 
 ``result``
   Set on completion to the command's CQE DWORD 0-1 controller response
 
+
+
+
+
+.. c:struct:: nvme_uring_cmd
+
+   nvme uring command structure
+
+**Definition**
+
+::
+
+  struct nvme_uring_cmd {
+    __u8 opcode;
+    __u8 flags;
+    __u16 rsvd1;
+    __u32 nsid;
+    __u32 cdw2;
+    __u32 cdw3;
+    __u64 metadata;
+    __u64 addr;
+    __u32 metadata_len;
+    __u32 data_len;
+    __u32 cdw10;
+    __u32 cdw11;
+    __u32 cdw12;
+    __u32 cdw13;
+    __u32 cdw14;
+    __u32 cdw15;
+    __u32 timeout_ms;
+    __u32 rsvd2;
+  };
+
+**Members**
+
+``opcode``
+  Operation code, see :c:type:`enum nvme_io_opcodes <nvme_io_opcodes>` and :c:type:`enum nvme_admin_opcodes <nvme_admin_opcodes>`
+
+``flags``
+  Not supported: intended for command flags (eg: SGL, FUSE)
+
+``rsvd1``
+  Reserved for future use
+
+``nsid``
+  Namespace Identifier, or Fabrics type
+
+``cdw2``
+  Command Dword 2 (no spec defined use)
+
+``cdw3``
+  Command Dword 3 (no spec defined use)
+
+``metadata``
+  User space address to metadata buffer (NULL if not used)
+
+``addr``
+  User space address to data buffer (NULL if not used)
+
+``metadata_len``
+  Metadata buffer transfer length
+
+``data_len``
+  Data buffer transfer length
+
+``cdw10``
+  Command Dword 10 (command specific)
+
+``cdw11``
+  Command Dword 11 (command specific)
+
+``cdw12``
+  Command Dword 12 (command specific)
+
+``cdw13``
+  Command Dword 13 (command specific)
+
+``cdw14``
+  Command Dword 14 (command specific)
+
+``cdw15``
+  Command Dword 15 (command specific)
+
+``timeout_ms``
+  If non-zero, overrides system default timeout in milliseconds
+
+``rsvd2``
+  Reserved for future use (and fills an implicit struct pad
+
+
+
+.. c:macro:: sizeof_args
+
+``sizeof_args (type, member, align)``
+
+   Helper function used to determine structure sizes
+
+**Parameters**
+
+``type``
+  Argument structure type
+
+``member``
+  Member inside the type
+
+``align``
+  Alignment information
 
 
 .. c:function:: int nvme_submit_admin_passthru64 (int fd, struct nvme_passthru_cmd64 *cmd, __u64 *result)
@@ -228,7 +335,7 @@ The nvme command status if a response was received (see
   NVMe command flags (not used)
 
 ``__u16 rsvd``
-  Reserevd for future use
+  Reserved for future use
 
 ``__u32 nsid``
   Namespace identifier
@@ -258,13 +365,13 @@ The nvme command status if a response was received (see
   Command dword 15
 
 ``__u32 data_len``
-  Length of the data transfered in this command in bytes
+  Length of the data transferred in this command in bytes
 
 ``void *data``
   Pointer to user address of the data buffer
 
 ``__u32 metadata_len``
-  Length of metadata transfered in this command
+  Length of metadata transferred in this command
 
 ``void *metadata``
   Pointer to user address of the metadata buffer
@@ -329,7 +436,7 @@ The nvme command status if a response was received (see
   NVMe command flags (not used)
 
 ``__u16 rsvd``
-  Reserevd for future use
+  Reserved for future use
 
 ``__u32 nsid``
   Namespace identifier
@@ -359,13 +466,13 @@ The nvme command status if a response was received (see
   Command dword 15
 
 ``__u32 data_len``
-  Length of the data transfered in this command in bytes
+  Length of the data transferred in this command in bytes
 
 ``void *data``
   Pointer to user address of the data buffer
 
 ``__u32 metadata_len``
-  Length of metadata transfered in this command
+  Length of metadata transferred in this command
 
 ``void *metadata``
   Pointer to user address of the metadata buffer
@@ -430,7 +537,7 @@ The nvme command status if a response was received (see
   NVMe command flags (not used)
 
 ``__u16 rsvd``
-  Reserevd for future use
+  Reserved for future use
 
 ``__u32 nsid``
   Namespace identifier
@@ -460,13 +567,13 @@ The nvme command status if a response was received (see
   Command dword 15
 
 ``__u32 data_len``
-  Length of the data transfered in this command in bytes
+  Length of the data transferred in this command in bytes
 
 ``void *data``
   Pointer to user address of the data buffer
 
 ``__u32 metadata_len``
-  Length of metadata transfered in this command
+  Length of metadata transferred in this command
 
 ``void *metadata``
   Pointer to user address of the metadata buffer
@@ -531,7 +638,7 @@ The nvme command status if a response was received (see
   NVMe command flags (not used)
 
 ``__u16 rsvd``
-  Reserevd for future use
+  Reserved for future use
 
 ``__u32 nsid``
   Namespace identifier
@@ -561,13 +668,13 @@ The nvme command status if a response was received (see
   Command dword 15
 
 ``__u32 data_len``
-  Length of the data transfered in this command in bytes
+  Length of the data transferred in this command in bytes
 
 ``void *data``
   Pointer to user address of the data buffer
 
 ``__u32 metadata_len``
-  Length of metadata transfered in this command
+  Length of metadata transferred in this command
 
 ``void *metadata``
   Pointer to user address of the metadata buffer
@@ -668,67 +775,6 @@ namespace id > 0x80000000 from a negative error number.
 **Return**
 
 0 if **nsid** was set successfully or -1 with errno set otherwise.
-
-
-
-
-.. c:struct:: nvme_identify_args
-
-   Arguments for the NVMe Identify command
-
-**Definition**
-
-::
-
-  struct nvme_identify_args {
-    __u32 *result;
-    void *data;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    enum nvme_identify_cns cns;
-    enum nvme_csi csi;
-    __u32 nsid;
-    __u16 cntid;
-    __u16 cns_specific_id;
-    __u8 uuidx;
-  };
-
-**Members**
-
-``result``
-  The command completion result from CQE dword0
-
-``data``
-  User space destination address to transfer the data
-
-``args_size``
-  Size of :c:type:`struct nvme_identify_args <nvme_identify_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms (0 for default timeout)
-
-``cns``
-  The Controller or Namespace structure, see **enum** nvme_identify_cns
-
-``csi``
-  Command Set Identifier
-
-``nsid``
-  Namespace identifier, if applicable
-
-``cntid``
-  The Controller Identifier, if applicable
-
-``cns_specific_id``
-  Identifier that is required for a particular CNS value
-
-``uuidx``
-  UUID Index if controller supports this id selection method
-
 
 
 .. c:function:: int nvme_identify (struct nvme_identify_args *args)
@@ -840,7 +886,7 @@ The nvme command status if a response was received (see
   File descriptor of nvme device
 
 ``__u32 nsid``
-  Return namespaces greater than this identifer
+  Return namespaces greater than this identifier
 
 ``struct nvme_ns_list *list``
   User space destination address to transfer the data
@@ -869,7 +915,7 @@ The nvme command status if a response was received (see
   File descriptor of nvme device
 
 ``__u32 nsid``
-  Return namespaces greater than this identifer
+  Return namespaces greater than this identifier
 
 ``struct nvme_ns_list *list``
   User space destination address to transfer the data
@@ -959,7 +1005,7 @@ The nvme command status if a response was received (see
   File descriptor of nvme device
 
 ``__u32 nsid``
-  The namespace id to retrieve destriptors
+  The namespace id to retrieve descriptors
 
 ``struct nvme_ns_id_desc *descs``
   User space destination address to transfer the data
@@ -970,7 +1016,7 @@ A list of Namespace Identification Descriptor structures is returned to the
 host for the namespace specified in the Namespace Identifier (NSID) field if
 it is an active NSID.
 
-The data returned is in the form of an arrray of 'struct nvme_ns_id_desc'.
+The data returned is in the form of an array of 'struct nvme_ns_id_desc'.
 
 See :c:type:`struct nvme_ns_id_desc <nvme_ns_id_desc>` for the definition of the returned structure.
 
@@ -1002,7 +1048,7 @@ is an ordered list by NVM Set Identifier, starting with the first NVM Set
 Identifier supported by the NVM subsystem that is equal to or greater than
 the NVM Set Identifier.
 
-See :c:type:`struct nvme_id_nvmset_list <nvme_id_nvmset_list>` for the defintion of the returned structure.
+See :c:type:`struct nvme_id_nvmset_list <nvme_id_nvmset_list>` for the definition of the returned structure.
 
 **Return**
 
@@ -1027,7 +1073,7 @@ The nvme command status if a response was received (see
 
 **Description**
 
-See :c:type:`struct nvme_primary_ctrl_cap <nvme_primary_ctrl_cap>` for the defintion of the returned structure, **cap**.
+See :c:type:`struct nvme_primary_ctrl_cap <nvme_primary_ctrl_cap>` for the definition of the returned structure, **cap**.
 
 **Return**
 
@@ -1060,7 +1106,7 @@ controllers associated with the primary controller processing this command.
 The list contains entries for controller identifiers greater than or equal
 to the value specified in the Controller Identifier (cntid).
 
-See :c:type:`struct nvme_secondary_ctrls_list <nvme_secondary_ctrls_list>` for a defintion of the returned
+See :c:type:`struct nvme_secondary_ctrls_list <nvme_secondary_ctrls_list>` for a definition of the returned
 structure.
 
 **Return**
@@ -1144,7 +1190,7 @@ The nvme command status if a response was received (see
 
 **Description**
 
-An I/O Command Set specific Identify Namespace data structre is returned
+An I/O Command Set specific Identify Namespace data structure is returned
 for the namespace specified in **nsid**.
 
 **Return**
@@ -1275,6 +1321,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_identify_ns_csi_user_data_format (int fd, __u16 user_data_format, __u8 uuidx, enum nvme_csi csi, void *data)
 
+   Identify namespace user data format
 
 **Parameters**
 
@@ -1291,7 +1338,7 @@ The nvme command status if a response was received (see
   Command Set Identifier
 
 ``void *data``
-  *undescribed*
+  User space destination address to transfer the data
 
 **Description**
 
@@ -1306,6 +1353,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_identify_iocs_ns_csi_user_data_format (int fd, __u16 user_data_format, __u8 uuidx, enum nvme_csi csi, void *data)
 
+   Identify I/O command set namespace data structure
 
 **Parameters**
 
@@ -1322,7 +1370,7 @@ The nvme command status if a response was received (see
   Command Set Identifier
 
 ``void *data``
-  *undescribed*
+  User space destination address to transfer the data
 
 **Description**
 
@@ -1372,7 +1420,7 @@ The nvme command status if a response was received (see
   Domain ID
 
 ``struct nvme_id_domain_list *list``
-  User space destiantion address to transfer data
+  User space destination address to transfer data
 
 **Description**
 
@@ -1475,86 +1523,6 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_get_log_args
-
-   Arguments for the NVMe Admin Get Log command
-
-**Definition**
-
-::
-
-  struct nvme_get_log_args {
-    __u64 lpo;
-    __u32 *result;
-    void *log;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    enum nvme_cmd_get_log_lid lid;
-    __u32 len;
-    __u32 nsid;
-    enum nvme_csi csi;
-    __u16 lsi;
-    __u8 lsp;
-    __u8 uuidx;
-    bool rae;
-    bool ot;
-  };
-
-**Members**
-
-``lpo``
-  Log page offset for partial log transfers
-
-``result``
-  The command completion result from CQE dword0
-
-``log``
-  User space destination address to transfer the data
-
-``args_size``
-  Length of the structure
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``lid``
-  Log page identifier, see :c:type:`enum nvme_cmd_get_log_lid <nvme_cmd_get_log_lid>` for known
-  values
-
-``len``
-  Length of provided user buffer to hold the log data in bytes
-
-``nsid``
-  Namespace identifier, if applicable
-
-``csi``
-  Command set identifier, see :c:type:`enum nvme_csi <nvme_csi>` for known values
-
-``lsi``
-  Log Specific Identifier
-
-``lsp``
-  Log specific field
-
-``uuidx``
-  UUID selection, if supported
-
-``rae``
-  Retain asynchronous events
-
-``ot``
-  Offset Type; if set **lpo** specifies the index into the list
-  of data structures, otherwise **lpo** specifies the byte offset
-  into the log page.
-
-
-
 .. c:function:: int nvme_get_log (struct nvme_get_log_args *args)
 
    NVMe Admin Get Log command
@@ -1591,7 +1559,7 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-.. c:function:: int nvme_get_log_error (int fd, unsigned nr_entries, bool rae, struct nvme_error_log_page *err_log)
+.. c:function:: int nvme_get_log_error (int fd, unsigned int nr_entries, bool rae, struct nvme_error_log_page *err_log)
 
    Retrieve nvme error log
 
@@ -1600,7 +1568,7 @@ The nvme command status if a response was received (see
 ``int fd``
   File descriptor of nvme device
 
-``unsigned nr_entries``
+``unsigned int nr_entries``
   Number of error log entries allocated
 
 ``bool rae``
@@ -1770,9 +1738,15 @@ The nvme command status if a response was received (see
 ``struct nvme_telemetry_log *log``
   Userspace address of the log payload
 
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
 
 .. c:function:: int nvme_get_log_telemetry_host (int fd, __u64 offset, __u32 len, void *log)
 
+   Get Telemetry Host-Initiated log page
 
 **Parameters**
 
@@ -1790,7 +1764,7 @@ The nvme command status if a response was received (see
 
 **Description**
 
-Retreives the Telemetry Host-Initiated log page at the requested offset
+Retrieves the Telemetry Host-Initiated log page at the requested offset
 using the previously existing capture.
 
 **Return**
@@ -1801,6 +1775,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_log_telemetry_ctrl (int fd, bool rae, __u64 offset, __u32 len, void *log)
 
+   Get Telemetry Controller-Initiated log page
 
 **Parameters**
 
@@ -1819,9 +1794,20 @@ The nvme command status if a response was received (see
 ``void *log``
   User address for log page data
 
+**Description**
+
+Retrieves the Telemetry Controller-Initiated log page at the requested offset
+using the previously existing capture.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
 
 .. c:function:: int nvme_get_log_endurance_group (int fd, __u16 endgid, struct nvme_endurance_group_log *log)
 
+   Get Endurance Group log
 
 **Parameters**
 
@@ -1851,6 +1837,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_log_predictable_lat_nvmset (int fd, __u16 nvmsetid, struct nvme_nvmset_predictable_lat_log *log)
 
+   Predictable Latency Per NVM Set
 
 **Parameters**
 
@@ -1871,6 +1858,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_log_predictable_lat_event (int fd, bool rae, __u32 offset, __u32 len, void *log)
 
+   Retrieve Predictable Latency Event Aggregate Log Page
 
 **Parameters**
 
@@ -1889,9 +1877,15 @@ The nvme command status if a response was received (see
 ``void *log``
   User address for log page data
 
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
 
 .. c:function:: int nvme_get_log_ana (int fd, enum nvme_log_ana_lsp lsp, bool rae, __u64 offset, __u32 len, void *log)
 
+   Retrieve Asymmetric Namespace Access log page
 
 **Parameters**
 
@@ -1919,7 +1913,7 @@ This log consists of a header describing the log and descriptors containing
 the asymmetric namespace access information for ANA Groups that contain
 namespaces that are attached to the controller processing the command.
 
-See :c:type:`struct nvme_ana_rsp_hdr <nvme_ana_rsp_hdr>` for the defintion of the returned structure.
+See :c:type:`struct nvme_ana_rsp_hdr <nvme_ana_rsp_hdr>` for the definition of the returned structure.
 
 **Return**
 
@@ -1929,6 +1923,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_log_ana_groups (int fd, bool rae, __u32 len, struct nvme_ana_group_desc *log)
 
+   Retrieve Asymmetric Namespace Access groups only log page
 
 **Parameters**
 
@@ -1946,11 +1941,17 @@ The nvme command status if a response was received (see
 
 **Description**
 
-See :c:type:`struct nvme_ana_group_desc <nvme_ana_group_desc>` for the defintion of the returned structure.
+See :c:type:`struct nvme_ana_group_desc <nvme_ana_group_desc>` for the definition of the returned structure.
+
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
 .. c:function:: int nvme_get_log_lba_status (int fd, bool rae, __u64 offset, __u32 len, void *log)
 
+   Retrieve LBA Status
 
 **Parameters**
 
@@ -1969,9 +1970,15 @@ See :c:type:`struct nvme_ana_group_desc <nvme_ana_group_desc>` for the defintion
 ``void *log``
   User address to store the log page
 
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
 
 .. c:function:: int nvme_get_log_endurance_grp_evt (int fd, bool rae, __u32 offset, __u32 len, void *log)
 
+   Retrieve Rotational Media Information
 
 **Parameters**
 
@@ -1990,9 +1997,15 @@ See :c:type:`struct nvme_ana_group_desc <nvme_ana_group_desc>` for the defintion
 ``void *log``
   User address to store the log page
 
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
 
 .. c:function:: int nvme_get_log_fid_supported_effects (int fd, bool rae, struct nvme_fid_supported_effects_log *log)
 
+   Retrieve Feature Identifiers Supported and Effects
 
 **Parameters**
 
@@ -2013,7 +2026,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_log_mi_cmd_supported_effects (int fd, bool rae, struct nvme_mi_cmd_supported_effects_log *log)
 
-   displays the MI Commands Supported byt the controller
+   displays the MI Commands Supported by the controller
 
 **Parameters**
 
@@ -2034,6 +2047,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_log_boot_partition (int fd, bool rae, __u8 lsp, __u32 len, struct nvme_boot_partition *part)
 
+   Retrieve Boot Partition
 
 **Parameters**
 
@@ -2061,6 +2075,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_log_discovery (int fd, bool rae, __u32 offset, __u32 len, void *log)
 
+   Retrieve Discovery log page
 
 **Parameters**
 
@@ -2092,6 +2107,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_log_media_unit_stat (int fd, __u16 domid, struct nvme_media_unit_stat_log *mus)
 
+   Retrieve Media Unit Status
 
 **Parameters**
 
@@ -2112,6 +2128,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_log_support_cap_config_list (int fd, __u16 domid, struct nvme_supported_cap_config_list_log *cap)
 
+   Retrieve Supported Capacity Configuration List
 
 **Parameters**
 
@@ -2122,7 +2139,7 @@ The nvme command status if a response was received (see
   Domain Identifier selection, if supported
 
 ``struct nvme_supported_cap_config_list_log *cap``
-  *undescribed*
+  User address to store supported capabilities config list
 
 **Return**
 
@@ -2132,6 +2149,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_log_reservation (int fd, bool rae, struct nvme_resv_notification_log *log)
 
+   Retrieve Reservation Notification
 
 **Parameters**
 
@@ -2144,9 +2162,15 @@ The nvme command status if a response was received (see
 ``struct nvme_resv_notification_log *log``
   User address to store the reservation log
 
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise
+
 
 .. c:function:: int nvme_get_log_sanitize (int fd, bool rae, struct nvme_sanitize_log_page *log)
 
+   Retrieve Sanitize Status
 
 **Parameters**
 
@@ -2172,6 +2196,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_log_zns_changed_zones (int fd, __u32 nsid, bool rae, struct nvme_zns_changed_zone_log *log)
 
+   Retrieve list of zones that have changed
 
 **Parameters**
 
@@ -2199,6 +2224,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_log_persistent_event (int fd, enum nvme_pevent_log_action action, __u32 size, void *pevent_log)
 
+   Retrieve Persistent Event Log
 
 **Parameters**
 
@@ -2214,75 +2240,10 @@ The nvme command status if a response was received (see
 ``void *pevent_log``
   User address to store the persistent event log
 
+**Return**
 
-
-
-.. c:struct:: nvme_set_features_args
-
-   Arguments for the NVMe Admin Set Feature command
-
-**Definition**
-
-::
-
-  struct nvme_set_features_args {
-    __u32 *result;
-    void *data;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    __u32 cdw11;
-    __u32 cdw12;
-    __u32 cdw13;
-    __u32 cdw15;
-    __u32 data_len;
-    bool save;
-    __u8 uuidx;
-    __u8 fid;
-  };
-
-**Members**
-
-``result``
-  The command completion result from CQE dword0
-
-``data``
-  User address of feature data, if applicable
-
-``args_size``
-  Size of :c:type:`struct nvme_set_features_args <nvme_set_features_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace ID, if applicable
-
-``cdw11``
-  Value to set the feature to
-
-``cdw12``
-  Feature specific command dword12 field
-
-``cdw15``
-  Feature specific command dword15 field
-
-``data_len``
-  Length of feature data, if applicable, in bytes
-
-``save``
-  Save value across power states
-
-``uuidx``
-  UUID Index for differentiating vendor specific encoding
-
-``fid``
-  Feature identifier
-
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
 .. c:function:: int nvme_set_features (struct nvme_set_features_args *args)
@@ -2330,10 +2291,15 @@ The nvme command status if a response was received (see
 ``__u32 *result``
   The command completion result from CQE dword0
 
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
 
 .. c:function:: int nvme_set_features_simple (int fd, __u8 fid, __u32 nsid, __u32 cdw11, bool save, __u32 *result)
 
-   Helper functionn for **nvme_set_features\(\)**
+   Helper function for **nvme_set_features\(\)**
 
 **Parameters**
 
@@ -2355,9 +2321,15 @@ The nvme command status if a response was received (see
 ``__u32 *result``
   The command completion result from CQE dword0
 
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
 
 .. c:function:: int nvme_set_features_arbitration (int fd, __u8 ab, __u8 lpw, __u8 mpw, __u8 hpw, bool save, __u32 *result)
 
+   Set arbitration features
 
 **Parameters**
 
@@ -2390,6 +2362,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_power_mgmt (int fd, __u8 ps, __u8 wh, bool save, __u32 *result)
 
+   Set power management feature
 
 **Parameters**
 
@@ -2416,6 +2389,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_lba_range (int fd, __u32 nsid, __u32 nr_ranges, bool save, struct nvme_lba_range_type *data, __u32 *result)
 
+   Set LBA range feature
 
 **Parameters**
 
@@ -2445,6 +2419,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_temp_thresh (int fd, __u16 tmpth, __u8 tmpsel, enum nvme_feat_tmpthresh_thsel thsel, bool save, __u32 *result)
 
+   Set temperature threshold feature
 
 **Parameters**
 
@@ -2474,6 +2449,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_err_recovery (int fd, __u32 nsid, __u16 tler, bool dulbe, bool save, __u32 *result)
 
+   Set error recovery feature
 
 **Parameters**
 
@@ -2503,6 +2479,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_volatile_wc (int fd, bool wce, bool save, __u32 *result)
 
+   Set volatile write cache feature
 
 **Parameters**
 
@@ -2526,6 +2503,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_irq_coalesce (int fd, __u8 thr, __u8 time, bool save, __u32 *result)
 
+   Set IRQ coalesce feature
 
 **Parameters**
 
@@ -2552,6 +2530,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_irq_config (int fd, __u16 iv, bool cd, bool save, __u32 *result)
 
+   Set IRQ config feature
 
 **Parameters**
 
@@ -2578,6 +2557,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_write_atomic (int fd, bool dn, bool save, __u32 *result)
 
+   Set write atomic feature
 
 **Parameters**
 
@@ -2601,6 +2581,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_async_event (int fd, __u32 events, bool save, __u32 *result)
 
+   Set asynchronous event feature
 
 **Parameters**
 
@@ -2624,6 +2605,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_auto_pst (int fd, bool apste, bool save, struct nvme_feat_auto_pst *apst, __u32 *result)
 
+   Set autonomous power state feature
 
 **Parameters**
 
@@ -2650,6 +2632,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_timestamp (int fd, bool save, __u64 timestamp)
 
+   Set timestamp feature
 
 **Parameters**
 
@@ -2660,7 +2643,7 @@ The nvme command status if a response was received (see
   Save value across power states
 
 ``__u64 timestamp``
-  The current timestamp value to assign to this this feature
+  The current timestamp value to assign to this feature
 
 **Return**
 
@@ -2670,6 +2653,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_hctm (int fd, __u16 tmt2, __u16 tmt1, bool save, __u32 *result)
 
+   Set thermal management feature
 
 **Parameters**
 
@@ -2696,6 +2680,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_nopsc (int fd, bool noppme, bool save, __u32 *result)
 
+   Set non-operational power state feature
 
 **Parameters**
 
@@ -2719,6 +2704,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_rrl (int fd, __u8 rrl, __u16 nvmsetid, bool save, __u32 *result)
 
+   Set read recovery level feature
 
 **Parameters**
 
@@ -2743,8 +2729,9 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-.. c:function:: int nvme_set_features_plm_config (int fd, bool enable, __u16 nvmsetid, bool save, struct nvme_plm_config *data, __u32*result)
+.. c:function:: int nvme_set_features_plm_config (int fd, bool enable, __u16 nvmsetid, bool save, struct nvme_plm_config *data, __u32 *result)
 
+   Set predictable latency feature
 
 **Parameters**
 
@@ -2763,7 +2750,7 @@ The nvme command status if a response was received (see
 ``struct nvme_plm_config *data``
   Pointer to structure nvme_plm_config
 
-``__u32*result``
+``__u32 *result``
   The command completion result from CQE dword0
 
 **Return**
@@ -2774,6 +2761,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_plm_window (int fd, enum nvme_feat_plm_window_select sel, __u16 nvmsetid, bool save, __u32 *result)
 
+   Set window select feature
 
 **Parameters**
 
@@ -2800,6 +2788,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_lba_sts_interval (int fd, __u16 lsiri, __u16 lsipi, bool save, __u32 *result)
 
+   Set LBA status information feature
 
 **Parameters**
 
@@ -2826,6 +2815,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_host_behavior (int fd, bool save, struct nvme_feat_host_behavior *data)
 
+   Set host behavior feature
 
 **Parameters**
 
@@ -2846,6 +2836,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_sanitize (int fd, bool nodrm, bool save, __u32 *result)
 
+   Set sanitize feature
 
 **Parameters**
 
@@ -2869,6 +2860,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_endurance_evt_cfg (int fd, __u16 endgid, __u8 egwarn, bool save, __u32 *result)
 
+   Set endurance event config feature
 
 **Parameters**
 
@@ -2895,6 +2887,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_sw_progress (int fd, __u8 pbslc, bool save, __u32 *result)
 
+   Set pre-boot software load count feature
 
 **Parameters**
 
@@ -2918,6 +2911,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_host_id (int fd, bool exhid, bool save, __u8 *hostid)
 
+   Set enable extended host identifers feature
 
 **Parameters**
 
@@ -2941,6 +2935,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_resv_mask (int fd, __u32 mask, bool save, __u32 *result)
 
+   Set reservation notification mask feature
 
 **Parameters**
 
@@ -2964,6 +2959,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_resv_persist (int fd, bool ptpl, bool save, __u32 *result)
 
+   Set persist through power loss feature
 
 **Parameters**
 
@@ -2987,6 +2983,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_set_features_write_protect (int fd, enum nvme_feat_nswpcfg_state state, bool save, __u32 *result)
 
+   Set write protect feature
 
 **Parameters**
 
@@ -3006,68 +3003,6 @@ The nvme command status if a response was received (see
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
-
-
-
-
-.. c:struct:: nvme_get_features_args
-
-   Arguments for the NVMe Admin Get Feature command
-
-**Definition**
-
-::
-
-  struct nvme_get_features_args {
-    __u32 *result;
-    void *data;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    enum nvme_get_features_sel sel;
-    __u32 cdw11;
-    __u32 data_len;
-    __u8 fid;
-    __u8 uuidx;
-  };
-
-**Members**
-
-``result``
-  The command completion result from CQE dword0
-
-``data``
-  User address of feature data, if applicable
-
-``args_size``
-  Size of :c:type:`struct nvme_get_features_args <nvme_get_features_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace ID, if applicable
-
-``sel``
-  Select which type of attribute to return,
-  see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
-
-``cdw11``
-  Feature specific command dword11 field
-
-``data_len``
-  Length of feature data, if applicable, in bytes
-
-``fid``
-  Feature identifier, see :c:type:`enum nvme_features_id <nvme_features_id>`
-
-``uuidx``
-  UUID Index for differentiating vendor specific encoding
-
 
 
 .. c:function:: int nvme_get_features (struct nvme_get_features_args *args)
@@ -3109,6 +3044,11 @@ The nvme command status if a response was received (see
 ``__u32 *result``
   The command completion result from CQE dword0
 
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
 
 .. c:function:: int nvme_get_features_simple (int fd, enum nvme_features_id fid, __u32 nsid, __u32 *result)
 
@@ -3128,9 +3068,15 @@ The nvme command status if a response was received (see
 ``__u32 *result``
   The command completion result from CQE dword0
 
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
 
 .. c:function:: int nvme_get_features_arbitration (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get arbitration feature
 
 **Parameters**
 
@@ -3151,6 +3097,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_power_mgmt (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get power management feature
 
 **Parameters**
 
@@ -3171,6 +3118,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_lba_range (int fd, enum nvme_get_features_sel sel, struct nvme_lba_range_type *data, __u32 *result)
 
+   Get LBA range feature
 
 **Parameters**
 
@@ -3194,6 +3142,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_temp_thresh (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get temperature threshold feature
 
 **Parameters**
 
@@ -3214,6 +3163,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_err_recovery (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get error recovery feature
 
 **Parameters**
 
@@ -3234,6 +3184,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_volatile_wc (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get volatile write cache feature
 
 **Parameters**
 
@@ -3254,6 +3205,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_num_queues (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get number of queues feature
 
 **Parameters**
 
@@ -3274,6 +3226,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_irq_coalesce (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get IRQ coalesce feature
 
 **Parameters**
 
@@ -3294,6 +3247,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_irq_config (int fd, enum nvme_get_features_sel sel, __u16 iv, __u32 *result)
 
+   Get IRQ config feature
 
 **Parameters**
 
@@ -3316,6 +3270,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_write_atomic (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get write atomic feature
 
 **Parameters**
 
@@ -3336,6 +3291,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_async_event (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get asynchronous event feature
 
 **Parameters**
 
@@ -3356,6 +3312,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_auto_pst (int fd, enum nvme_get_features_sel sel, struct nvme_feat_auto_pst *apst, __u32 *result)
 
+   Get autonomous power state feature
 
 **Parameters**
 
@@ -3378,6 +3335,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_host_mem_buf (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get host memory buffer feature
 
 **Parameters**
 
@@ -3398,6 +3356,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_timestamp (int fd, enum nvme_get_features_sel sel, struct nvme_timestamp *ts)
 
+   Get timestamp feature
 
 **Parameters**
 
@@ -3418,6 +3377,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_kato (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get keep alive timeout feature
 
 **Parameters**
 
@@ -3438,6 +3398,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_hctm (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get thermal management feature
 
 **Parameters**
 
@@ -3458,6 +3419,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_nopsc (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get non-operational power state feature
 
 **Parameters**
 
@@ -3478,6 +3440,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_rrl (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get read recovery level feature
 
 **Parameters**
 
@@ -3498,6 +3461,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_plm_config (int fd, enum nvme_get_features_sel sel, __u16 nvmsetid, struct nvme_plm_config *data, __u32 *result)
 
+   Get predictable latency feature
 
 **Parameters**
 
@@ -3523,6 +3487,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_plm_window (int fd, enum nvme_get_features_sel sel, __u16 nvmsetid, __u32 *result)
 
+   Get window select feature
 
 **Parameters**
 
@@ -3546,6 +3511,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_lba_sts_interval (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get LBA status information feature
 
 **Parameters**
 
@@ -3566,6 +3532,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_host_behavior (int fd, enum nvme_get_features_sel sel, struct nvme_feat_host_behavior *data, __u32 *result)
 
+   Get host behavior feature
 
 **Parameters**
 
@@ -3576,7 +3543,7 @@ The nvme command status if a response was received (see
   Select which type of attribute to return, see :c:type:`enum nvme_get_features_sel <nvme_get_features_sel>`
 
 ``struct nvme_feat_host_behavior *data``
-  Poniter to structure nvme_feat_host_behavior
+  Pointer to structure nvme_feat_host_behavior
 
 ``__u32 *result``
   The command completion result from CQE dword0
@@ -3589,6 +3556,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_sanitize (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get sanitize feature
 
 **Parameters**
 
@@ -3609,6 +3577,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_endurance_event_cfg (int fd, enum nvme_get_features_sel sel, __u16 endgid, __u32 *result)
 
+   Get endurance event config feature
 
 **Parameters**
 
@@ -3632,6 +3601,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_sw_progress (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get software progress feature
 
 **Parameters**
 
@@ -3652,6 +3622,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_host_id (int fd, enum nvme_get_features_sel sel, bool exhid, __u32 len, __u8 *hostid)
 
+   Get host id feature
 
 **Parameters**
 
@@ -3678,6 +3649,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_resv_mask (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get reservation mask feature
 
 **Parameters**
 
@@ -3698,6 +3670,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_resv_persist (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get reservation persist feature
 
 **Parameters**
 
@@ -3718,6 +3691,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_write_protect (int fd, __u32 nsid, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get write protect feature
 
 **Parameters**
 
@@ -3741,6 +3715,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_features_iocs_profile (int fd, enum nvme_get_features_sel sel, __u32 *result)
 
+   Get IOCS profile feature
 
 **Parameters**
 
@@ -3757,64 +3732,6 @@ The nvme command status if a response was received (see
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
-
-
-
-
-.. c:struct:: nvme_format_nvm_args
-
-   Arguments for the Format Nvme Namespace command
-
-**Definition**
-
-::
-
-  struct nvme_format_nvm_args {
-    __u32 *result;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    enum nvme_cmd_format_mset mset;
-    enum nvme_cmd_format_pi pi;
-    enum nvme_cmd_format_pil pil;
-    enum nvme_cmd_format_ses ses;
-    __u8 lbaf;
-  };
-
-**Members**
-
-``result``
-  The command completion result from CQE dword0
-
-``args_size``
-  Size of :c:type:`struct nvme_format_nvm_args <nvme_format_nvm_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Set to override default timeout to this value in milliseconds;
-  useful for long running formats. 0 will use system default.
-
-``nsid``
-  Namespace ID to format
-
-``mset``
-  Metadata settings (extended or separated), true if extended
-
-``pi``
-  Protection information type
-
-``pil``
-  Protection information location (beginning or end), true if end
-
-``ses``
-  Secure erase settings
-
-``lbaf``
-  Logical block address format
-
 
 
 .. c:function:: int nvme_format_nvm (struct nvme_format_nvm_args *args)
@@ -3839,55 +3756,6 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_ns_mgmt_args
-
-   Arguments for NVMe Namespace Management command
-
-**Definition**
-
-::
-
-  struct nvme_ns_mgmt_args {
-    __u32 *result;
-    struct nvme_id_ns *ns;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    enum nvme_ns_mgmt_sel sel;
-    __u8 csi;
-  };
-
-**Members**
-
-``result``
-  NVMe command result
-
-``ns``
-  Namespace identication descriptors
-
-``args_size``
-  Size of :c:type:`struct nvme_ns_mgmt_args <nvme_ns_mgmt_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace identifier
-
-``sel``
-  Type of management operation to perform
-
-``csi``
-  Command Set Identifier
-
-
-
 .. c:function:: int nvme_ns_mgmt (struct nvme_ns_mgmt_args *args)
 
    Issue a Namespace management command
@@ -3897,9 +3765,15 @@ The nvme command status if a response was received (see
 ``struct nvme_ns_mgmt_args *args``
   :c:type:`struct nvme_ns_mgmt_args <nvme_ns_mgmt_args>` Argument structure
 
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
 
 .. c:function:: int nvme_ns_mgmt_create (int fd, struct nvme_id_ns *ns, __u32 *nsid, __u32 timeout, __u8 csi)
 
+   Create a non attached namespace
 
 **Parameters**
 
@@ -3913,7 +3787,7 @@ The nvme command status if a response was received (see
   On success, set to the namespace id that was created
 
 ``__u32 timeout``
-  Overide the default timeout to this value in milliseconds;
+  Override the default timeout to this value in milliseconds;
   set to 0 to use the system default.
 
 ``__u8 csi``
@@ -3933,6 +3807,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_ns_mgmt_delete (int fd, __u32 nsid)
 
+   Delete a non attached namespace
 
 **Parameters**
 
@@ -3954,51 +3829,6 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_ns_attach_args
-
-   Arguments for Nvme Namespace Management command
-
-**Definition**
-
-::
-
-  struct nvme_ns_attach_args {
-    __u32 *result;
-    struct nvme_ctrl_list *ctrlist;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    enum nvme_ns_attach_sel sel;
-  };
-
-**Members**
-
-``result``
-  NVMe command result
-
-``ctrlist``
-  Controller list to modify attachment state of nsid
-
-``args_size``
-  Size of :c:type:`struct nvme_ns_attach_args <nvme_ns_attach_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace ID to execute attach selection
-
-``sel``
-  Attachment selection, see :c:type:`enum nvme_ns_attach_sel <nvme_ns_attach_sel>`
-
-
-
 .. c:function:: int nvme_ns_attach (struct nvme_ns_attach_args *args)
 
    Attach or detach namespace to controller(s)
@@ -4008,9 +3838,15 @@ The nvme command status if a response was received (see
 ``struct nvme_ns_attach_args *args``
   :c:type:`struct nvme_ns_attach_args <nvme_ns_attach_args>` Argument structure
 
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
 
 .. c:function:: int nvme_ns_attach_ctrls (int fd, __u32 nsid, struct nvme_ctrl_list *ctrlist)
 
+   Attach namespace to controllers
 
 **Parameters**
 
@@ -4023,9 +3859,15 @@ The nvme command status if a response was received (see
 ``struct nvme_ctrl_list *ctrlist``
   Controller list to modify attachment state of nsid
 
+**Return**
+
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
+
 
 .. c:function:: int nvme_ns_detach_ctrls (int fd, __u32 nsid, struct nvme_ctrl_list *ctrlist)
 
+   Detach namespace from controllers
 
 **Parameters**
 
@@ -4038,50 +3880,10 @@ The nvme command status if a response was received (see
 ``struct nvme_ctrl_list *ctrlist``
   Controller list to modify attachment state of nsid
 
+**Return**
 
-
-
-.. c:struct:: nvme_fw_download_args
-
-   Arguments for the NVMe Firmware Download command
-
-**Definition**
-
-::
-
-  struct nvme_fw_download_args {
-    __u32 *result;
-    void *data;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 offset;
-    __u32 data_len;
-  };
-
-**Members**
-
-``result``
-  The command completion result from CQE dword0
-
-``data``
-  Userspace address of the firmware data
-
-``args_size``
-  Size of :c:type:`struct nvme_fw_download_args <nvme_fw_download_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``offset``
-  Offset in the firmware data
-
-``data_len``
-  Length of data in this command in bytes
-
+The nvme command status if a response was received (see
+:c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
 .. c:function:: int nvme_fw_download (struct nvme_fw_download_args *args)
@@ -4114,51 +3916,6 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_fw_commit_args
-
-   Arguments for the NVMe Firmware Commit command
-
-**Definition**
-
-::
-
-  struct nvme_fw_commit_args {
-    __u32 *result;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    enum nvme_fw_commit_ca action;
-    __u8 slot;
-    bool bpid;
-  };
-
-**Members**
-
-``result``
-  The command completion result from CQE dword0
-
-``args_size``
-  Size of :c:type:`struct nvme_fw_commit_args <nvme_fw_commit_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``action``
-  Action to use for the firmware image, see :c:type:`enum nvme_fw_commit_ca <nvme_fw_commit_ca>`
-
-``slot``
-  Firmware slot to commit the downloaded image
-
-``bpid``
-  Set to true to select the boot partition id
-
-
-
 .. c:function:: int nvme_fw_commit (struct nvme_fw_commit_args *args)
 
    Commit firmware using the specified action
@@ -4180,73 +3937,9 @@ status response may specify additional reset actions required to complete
 the commit process.
 
 
-
-
-.. c:struct:: nvme_security_send_args
-
-   Arguments for the NVMe Security Send command
-
-**Definition**
-
-::
-
-  struct nvme_security_send_args {
-    __u32 *result;
-    void *data;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    __u32 tl;
-    __u32 data_len;
-    __u8 nssf;
-    __u8 spsp0;
-    __u8 spsp1;
-    __u8 secp;
-  };
-
-**Members**
-
-``result``
-  The command completion result from CQE dword0
-
-``data``
-  Security data payload to send
-
-``args_size``
-  Size of :c:type:`struct nvme_security_send_args <nvme_security_send_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace ID to issue security command on
-
-``tl``
-  Protocol specific transfer length
-
-``data_len``
-  Data length of the payload in bytes
-
-``nssf``
-  NVMe Security Specific field
-
-``spsp0``
-  Security Protocol Specific field
-
-``spsp1``
-  Security Protocol Specific field
-
-``secp``
-  Security Protocol
-
-
-
 .. c:function:: int nvme_security_send (struct nvme_security_send_args *args)
 
+   Security Send command
 
 **Parameters**
 
@@ -4270,141 +3963,19 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_security_receive_args
-
-   Arguments for the NVMe Security Receive command
-
-**Definition**
-
-::
-
-  struct nvme_security_receive_args {
-    __u32 *result;
-    void *data;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    __u32 al;
-    __u32 data_len;
-    __u8 nssf;
-    __u8 spsp0;
-    __u8 spsp1;
-    __u8 secp;
-  };
-
-**Members**
-
-``result``
-  The command completion result from CQE dword0
-
-``data``
-  Security data payload to send
-
-``args_size``
-  Size of :c:type:`struct nvme_security_receive_args <nvme_security_receive_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace ID to issue security command on
-
-``al``
-  Protocol specific allocation length
-
-``data_len``
-  Data length of the payload in bytes
-
-``nssf``
-  NVMe Security Specific field
-
-``spsp0``
-  Security Protocol Specific field
-
-``spsp1``
-  Security Protocol Specific field
-
-``secp``
-  Security Protocol
-
-
-
 .. c:function:: int nvme_security_receive (struct nvme_security_receive_args *args)
 
+   Security Receive command
 
 **Parameters**
 
 ``struct nvme_security_receive_args *args``
-  :c:type:`struct nvme_security_recevice <nvme_security_recevice>` argument structure
+  :c:type:`struct nvme_security_receive <nvme_security_receive>` argument structure
 
 **Return**
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
-
-
-
-
-.. c:struct:: nvme_get_lba_status_args
-
-   Arguments for the NVMe Get LBA Status command
-
-**Definition**
-
-::
-
-  struct nvme_get_lba_status_args {
-    __u64 slba;
-    __u32 *result;
-    struct nvme_lba_status *lbas;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    __u32 mndw;
-    enum nvme_lba_status_atype atype;
-    __u16 rl;
-  };
-
-**Members**
-
-``slba``
-  Starting logical block address to check statuses
-
-``result``
-  The command completion result from CQE dword0
-
-``lbas``
-  Data payload to return status descriptors
-
-``args_size``
-  Size of :c:type:`struct nvme_get_lba_status_args <nvme_get_lba_status_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace ID to retrieve LBA status
-
-``mndw``
-  Maximum number of dwords to return
-
-``atype``
-  Action type mechanism to determine LBA status desctriptors to
-  return, see :c:type:`enum nvme_lba_status_atype <nvme_lba_status_atype>`
-
-``rl``
-  Range length from slba to perform the action
-
 
 
 .. c:function:: int nvme_get_lba_status (struct nvme_get_lba_status_args *args)
@@ -4425,67 +3996,6 @@ Unrecoverable LBAs. Refer to the specification for action type descriptions.
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
-
-
-
-
-.. c:struct:: nvme_directive_send_args
-
-   Arguments for the NVMe Directive Send command
-
-**Definition**
-
-::
-
-  struct nvme_directive_send_args {
-    __u32 *result;
-    void *data;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    enum nvme_directive_send_doper doper;
-    enum nvme_directive_dtype dtype;
-    __u32 cdw12;
-    __u32 data_len;
-    __u16 dspec;
-  };
-
-**Members**
-
-``result``
-  If successful, the CQE dword0 value
-
-``data``
-  Data payload to to be send
-
-``args_size``
-  Size of :c:type:`struct nvme_directive_send_args <nvme_directive_send_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace ID, if applicable
-
-``doper``
-  Directive send operation, see :c:type:`enum nvme_directive_send_doper <nvme_directive_send_doper>`
-
-``dtype``
-  Directive type, see :c:type:`enum nvme_directive_dtype <nvme_directive_dtype>`
-
-``cdw12``
-  Directive specific command dword12
-
-``data_len``
-  Length of data payload in bytes
-
-``dspec``
-  Directive specific field
-
 
 
 .. c:function:: int nvme_directive_send (struct nvme_directive_send_args *args)
@@ -4513,6 +4023,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_directive_send_id_endir (int fd, __u32 nsid, bool endir, enum nvme_directive_dtype dtype, struct nvme_id_directives *id)
 
+   Directive Send Enable Directive
 
 **Parameters**
 
@@ -4539,6 +4050,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_directive_send_stream_release_identifier (int fd, __u32 nsid, __u16 stream_id)
 
+   Directive Send Stream release
 
 **Parameters**
 
@@ -4559,6 +4071,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_directive_send_stream_release_resource (int fd, __u32 nsid)
 
+   Directive Send Stream release resources
 
 **Parameters**
 
@@ -4572,67 +4085,6 @@ The nvme command status if a response was received (see
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
-
-
-
-
-.. c:struct:: nvme_directive_recv_args
-
-   Arguments for the NVMe Directive Receive command
-
-**Definition**
-
-::
-
-  struct nvme_directive_recv_args {
-    __u32 *result;
-    void *data;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    enum nvme_directive_receive_doper doper;
-    enum nvme_directive_dtype dtype;
-    __u32 cdw12;
-    __u32 data_len;
-    __u16 dspec;
-  };
-
-**Members**
-
-``result``
-  If successful, the CQE dword0 value
-
-``data``
-  Usespace address of data payload
-
-``args_size``
-  Size of :c:type:`struct nvme_directive_recv_args <nvme_directive_recv_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace ID, if applicable
-
-``doper``
-  Directive send operation, see :c:type:`enum nvme_directive_send_doper <nvme_directive_send_doper>`
-
-``dtype``
-  Directive type, see :c:type:`enum nvme_directive_dtype <nvme_directive_dtype>`
-
-``cdw12``
-  Directive specific command dword12
-
-``data_len``
-  Length of data payload in bytes
-
-``dspec``
-  Directive specific field
-
 
 
 .. c:function:: int nvme_directive_recv (struct nvme_directive_recv_args *args)
@@ -4652,6 +4104,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_directive_recv_identify_parameters (int fd, __u32 nsid, struct nvme_id_directives *id)
 
+   Directive receive identifier parameters
 
 **Parameters**
 
@@ -4672,6 +4125,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_directive_recv_stream_parameters (int fd, __u32 nsid, struct nvme_streams_directive_params *parms)
 
+   Directive receive stream parameters
 
 **Parameters**
 
@@ -4690,8 +4144,9 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-.. c:function:: int nvme_directive_recv_stream_status (int fd, __u32 nsid, unsigned nr_entries, struct nvme_streams_directive_status *id)
+.. c:function:: int nvme_directive_recv_stream_status (int fd, __u32 nsid, unsigned int nr_entries, struct nvme_streams_directive_status *id)
 
+   Directive receive stream status
 
 **Parameters**
 
@@ -4701,7 +4156,7 @@ The nvme command status if a response was received (see
 ``__u32 nsid``
   Namespace ID
 
-``unsigned nr_entries``
+``unsigned int nr_entries``
   Number of streams to receive
 
 ``struct nvme_streams_directive_status *id``
@@ -4715,6 +4170,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_directive_recv_stream_allocate (int fd, __u32 nsid, __u16 nsr, __u32 *result)
 
+   Directive receive stream allocate
 
 **Parameters**
 
@@ -4736,59 +4192,9 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_capacity_mgmt_args
-
-   Arguments for the NVMe Capacity Management command
-
-**Definition**
-
-::
-
-  struct nvme_capacity_mgmt_args {
-    __u32 *result;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 cdw11;
-    __u32 cdw12;
-    __u16 element_id;
-    __u8 op;
-  };
-
-**Members**
-
-``result``
-  If successful, the CQE dword0 value
-
-``args_size``
-  Size of :c:type:`struct nvme_capacity_mgmt_args <nvme_capacity_mgmt_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``cdw11``
-  Least significant 32 bits of the capacity in bytes of the
-  Endurance Group or NVM Set to be created
-
-``cdw12``
-  Most significant 32 bits of the capacity in bytes of the
-  Endurance Group or NVM Set to be created
-
-``element_id``
-  Value specific to the value of the Operation field
-
-``op``
-  Operation to be performed by the controller
-
-
-
 .. c:function:: int nvme_capacity_mgmt (struct nvme_capacity_mgmt_args *args)
 
+   Capacity management command
 
 **Parameters**
 
@@ -4799,59 +4205,6 @@ The nvme command status if a response was received (see
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
-
-
-
-
-.. c:struct:: nvme_lockdown_args
-
-   Arguments for the NVME Lockdown command
-
-**Definition**
-
-::
-
-  struct nvme_lockdown_args {
-    __u32 *result;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u8 scp;
-    __u8 prhbt;
-    __u8 ifc;
-    __u8 ofi;
-    __u8 uuidx;
-  };
-
-**Members**
-
-``result``
-  The command completion result from CQE dword0
-
-``args_size``
-  Size of :c:type:`struct nvme_lockdown_args <nvme_lockdown_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms (0 for default timeout)
-
-``scp``
-  Scope of the command
-
-``prhbt``
-  Prohibit or allow the command opcode or Set Features command
-
-``ifc``
-  Affected interface
-
-``ofi``
-  Opcode or Feature Identifier
-
-``uuidx``
-  UUID Index if controller supports this id selection method
-
 
 
 .. c:function:: int nvme_lockdown (struct nvme_lockdown_args *args)
@@ -4867,47 +4220,6 @@ The nvme command status if a response was received (see
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
-
-
-
-
-.. c:struct:: nvme_set_property_args
-
-   Arguments for NVMe Set Property command
-
-**Definition**
-
-::
-
-  struct nvme_set_property_args {
-    __u64 value;
-    __u32 *result;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    int offset;
-  };
-
-**Members**
-
-``value``
-  The value to set the property
-
-``result``
-  The command completion result from CQE dword0
-
-``args_size``
-  Size of :c:type:`struct nvme_set_property_args <nvme_set_property_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``offset``
-  Property offset from the base to set
-
 
 
 .. c:function:: int nvme_set_property (struct nvme_set_property_args *args)
@@ -4930,43 +4242,6 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_get_property_args
-
-   Arguments for NVMe Get Property command
-
-**Definition**
-
-::
-
-  struct nvme_get_property_args {
-    __u64 *value;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    int offset;
-  };
-
-**Members**
-
-``value``
-  Where the property's value will be stored on success
-
-``args_size``
-  Size of :c:type:`struct nvme_get_property_args <nvme_get_property_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``offset``
-  Property offset from the base to retrieve
-
-
-
 .. c:function:: int nvme_get_property (struct nvme_get_property_args *args)
 
    Get a controller property
@@ -4985,63 +4260,6 @@ properties align to the PCI MMIO controller registers.
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
-
-
-
-
-.. c:struct:: nvme_sanitize_nvm_args
-
-   Arguments for the NVMe Sanitize NVM command
-
-**Definition**
-
-::
-
-  struct nvme_sanitize_nvm_args {
-    __u32 *result;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    enum nvme_sanitize_sanact sanact;
-    __u32 ovrpat;
-    bool ause;
-    __u8 owpass;
-    bool oipbp;
-    bool nodas;
-  };
-
-**Members**
-
-``result``
-  The command completion result from CQE dword0
-
-``args_size``
-  Size of :c:type:`struct nvme_sanitize_nvm_args <nvme_sanitize_nvm_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``sanact``
-  Sanitize action, see :c:type:`enum nvme_sanitize_sanact <nvme_sanitize_sanact>`
-
-``ovrpat``
-  Overwrite pattern
-
-``ause``
-  Set to allow unrestriced sanitize exit
-
-``owpass``
-  Overwrite pass count
-
-``oipbp``
-  Set to overwrite invert pattern between passes
-
-``nodas``
-  Set to not deallocate blocks after sanitizing
-
 
 
 .. c:function:: int nvme_sanitize_nvm (struct nvme_sanitize_nvm_args *args)
@@ -5071,47 +4289,6 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_dev_self_test_args
-
-   Arguments for the NVMe Device Self Test command
-
-**Definition**
-
-::
-
-  struct nvme_dev_self_test_args {
-    __u32 *result;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    enum nvme_dst_stc stc;
-  };
-
-**Members**
-
-``result``
-  The command completion result from CQE dword0
-
-``args_size``
-  Size of :c:type:`struct nvme_dev_self_test_args <nvme_dev_self_test_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace ID to test
-
-``stc``
-  Self test code, see :c:type:`enum nvme_dst_stc <nvme_dst_stc>`
-
-
-
 .. c:function:: int nvme_dev_self_test (struct nvme_dev_self_test_args *args)
 
    Start or abort a self test
@@ -5138,55 +4315,6 @@ namespace, if present.
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
-
-
-
-
-.. c:struct:: nvme_virtual_mgmt_args
-
-   Arguments for the NVMe Virtualization resource management command
-
-**Definition**
-
-::
-
-  struct nvme_virtual_mgmt_args {
-    __u32 *result;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    enum nvme_virt_mgmt_act act;
-    enum nvme_virt_mgmt_rt rt;
-    __u16 cntlid;
-    __u16 nr;
-  };
-
-**Members**
-
-``result``
-  If successful, the CQE dword0
-
-``args_size``
-  Size of :c:type:`struct nvme_virtual_mgmt_args <nvme_virtual_mgmt_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``act``
-  Virtual resource action, see :c:type:`enum nvme_virt_mgmt_act <nvme_virt_mgmt_act>`
-
-``rt``
-  Resource type to modify, see :c:type:`enum nvme_virt_mgmt_rt <nvme_virt_mgmt_rt>`
-
-``cntlid``
-  Controller id for which resources are bing modified
-
-``nr``
-  Number of resources being allocated or assigned
-
 
 
 .. c:function:: int nvme_virtual_mgmt (struct nvme_virtual_mgmt_args *args)
@@ -5235,103 +4363,6 @@ non-volatile.
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
-
-
-
-
-.. c:struct:: nvme_io_args
-
-   Arguments for NVMe I/O commands
-
-**Definition**
-
-::
-
-  struct nvme_io_args {
-    __u64 slba;
-    __u64 storage_tag;
-    __u32 *result;
-    void *data;
-    void *metadata;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    __u32 reftag;
-    __u32 data_len;
-    __u32 metadata_len;
-    __u16 nlb;
-    __u16 control;
-    __u16 apptag;
-    __u16 appmask;
-    __u16 dspec;
-    __u8 dsm;
-  };
-
-**Members**
-
-``slba``
-  Starting logical block
-
-``storage_tag``
-  This filed specifies Variable Sized Expected Logical Block
-  Storage Tag (ELBST) and Expected Logical Block Reference
-  Tag (ELBRT)
-
-``result``
-  The command completion result from CQE dword0
-
-``data``
-  Pointer to user address of the data buffer
-
-``metadata``
-  Pointer to user address of the metadata buffer
-
-``args_size``
-  Size of :c:type:`struct nvme_io_args <nvme_io_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace ID
-
-``reftag``
-  This field specifies the Initial Logical Block Reference Tag
-  expected value. Used only if the namespace is formatted to use
-  end-to-end protection information.
-
-``data_len``
-  Length of user buffer, **data**, in bytes
-
-``metadata_len``
-  Length of user buffer, **metadata**, in bytes
-
-``nlb``
-  Number of logical blocks to send (0's based value)
-
-``control``
-  Command control flags, see :c:type:`enum nvme_io_control_flags <nvme_io_control_flags>`.
-
-``apptag``
-  This field specifies the Application Tag Mask expected value.
-  Used only if the namespace is formatted to use end-to-end
-  protection information.
-
-``appmask``
-  This field specifies the Application Tag expected value. Used
-  only if the namespace is formatted to use end-to-end protection
-  information.
-
-``dspec``
-  Directive specific value
-
-``dsm``
-  Data set management attributes, see :c:type:`enum nvme_io_dsm_flags <nvme_io_dsm_flags>`
-
 
 
 .. c:function:: int nvme_io (struct nvme_io_args *args, __u8 opcode)
@@ -5462,55 +4493,6 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_dsm_args
-
-   Arguments for the NVMe Dataset Management command
-
-**Definition**
-
-::
-
-  struct nvme_dsm_args {
-    __u32 *result;
-    struct nvme_dsm_range *dsm;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    __u32 attrs;
-    __u16 nr_ranges;
-  };
-
-**Members**
-
-``result``
-  The command completion result from CQE dword0
-
-``dsm``
-  The data set management attributes
-
-``args_size``
-  Size of :c:type:`struct nvme_dsm_args <nvme_dsm_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace identifier
-
-``attrs``
-  DSM attributes, see :c:type:`enum nvme_dsm_attributes <nvme_dsm_attributes>`
-
-``nr_ranges``
-  Number of block ranges in the data set management attributes
-
-
-
 .. c:function:: int nvme_dsm (struct nvme_dsm_args *args)
 
    Send an nvme data set management command
@@ -5534,97 +4516,9 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_copy_args
-
-   Arguments for the NVMe Copy command
-
-**Definition**
-
-::
-
-  struct nvme_copy_args {
-    __u64 sdlba;
-    __u32 *result;
-    struct nvme_copy_range *copy;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    __u32 ilbrt;
-    int lr;
-    int fua;
-    __u16 nr;
-    __u16 dspec;
-    __u16 lbatm;
-    __u16 lbat;
-    __u8 prinfor;
-    __u8 prinfow;
-    __u8 dtype;
-    __u8 format;
-  };
-
-**Members**
-
-``sdlba``
-  Start destination LBA
-
-``result``
-  The command completion result from CQE dword0
-
-``copy``
-  Range descriptior
-
-``args_size``
-  Size of :c:type:`struct nvme_copy_args <nvme_copy_args>`
-
-``fd``
-  File descriptor of the nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace identifier
-
-``ilbrt``
-  Initial logical block reference tag
-
-``lr``
-  Limited retry
-
-``fua``
-  Force unit access
-
-``nr``
-  Number of ranges
-
-``dspec``
-  Directive specific value
-
-``lbatm``
-  Logical block application tag mask
-
-``lbat``
-  Logical block application tag
-
-``prinfor``
-  Protection information field for read
-
-``prinfow``
-  Protection information field for write
-
-``dtype``
-  Directive type
-
-``format``
-  Descriptor format
-
-
-
 .. c:function:: int nvme_copy (struct nvme_copy_args *args)
 
+   Copy command
 
 **Parameters**
 
@@ -5635,64 +4529,6 @@ The nvme command status if a response was received (see
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
-
-
-
-
-.. c:struct:: nvme_resv_acquire_args
-
-   Arguments for the NVMe Reservation Acquire Comand
-
-**Definition**
-
-::
-
-  struct nvme_resv_acquire_args {
-    __u64 crkey;
-    __u64 nrkey;
-    __u32 *result;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    enum nvme_resv_rtype rtype;
-    enum nvme_resv_racqa racqa;
-    bool iekey;
-  };
-
-**Members**
-
-``crkey``
-  The current reservation key associated with the host
-
-``nrkey``
-  The reservation key to be unregistered from the namespace if
-  the action is preempt
-
-``result``
-  The command completion result from CQE dword0
-
-``args_size``
-  Size of :c:type:`struct nvme_resv_acquire_args <nvme_resv_acquire_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace identifier
-
-``rtype``
-  The type of reservation to be create, see :c:type:`enum nvme_resv_rtype <nvme_resv_rtype>`
-
-``racqa``
-  The action that is performed by the command, see :c:type:`enum nvme_resv_racqa <nvme_resv_racqa>`
-
-``iekey``
-  Set to ignore the existing key
-
 
 
 .. c:function:: int nvme_resv_acquire (struct nvme_resv_acquire_args *args)
@@ -5716,64 +4552,6 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_resv_register_args
-
-   Arguments for the NVMe Reservation Register command
-
-**Definition**
-
-::
-
-  struct nvme_resv_register_args {
-    __u64 crkey;
-    __u64 nrkey;
-    __u32 *result;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    enum nvme_resv_rrega rrega;
-    enum nvme_resv_cptpl cptpl;
-    bool iekey;
-  };
-
-**Members**
-
-``crkey``
-  The current reservation key associated with the host
-
-``nrkey``
-  The new reservation key to be register if action is register or
-  replace
-
-``result``
-  The command completion result from CQE dword0
-
-``args_size``
-  Size of :c:type:`struct nvme_resv_register_args <nvme_resv_register_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace identifier
-
-``rrega``
-  The registration action, see :c:type:`enum nvme_resv_rrega <nvme_resv_rrega>`
-
-``cptpl``
-  Change persist through power loss, see :c:type:`enum nvme_resv_cptpl <nvme_resv_cptpl>`
-
-``iekey``
-  Set to ignore the existing key
-
-
-
 .. c:function:: int nvme_resv_register (struct nvme_resv_register_args *args)
 
    Send an nvme reservation register
@@ -5794,59 +4572,6 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_resv_release_args
-
-   Arguments for the NVMe Reservation Release Command
-
-**Definition**
-
-::
-
-  struct nvme_resv_release_args {
-    __u64 crkey;
-    __u32 *result;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    enum nvme_resv_rtype rtype;
-    enum nvme_resv_rrela rrela;
-    bool iekey;
-  };
-
-**Members**
-
-``crkey``
-  The current reservation key to release
-
-``result``
-  The command completion result from CQE dword0
-
-``args_size``
-  Size of :c:type:`struct nvme_resv_release_args <nvme_resv_release_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace identifier
-
-``rtype``
-  The type of reservation to be create, see :c:type:`enum nvme_resv_rtype <nvme_resv_rtype>`
-
-``rrela``
-  Reservation releast action, see :c:type:`enum nvme_resv_rrela <nvme_resv_rrela>`
-
-``iekey``
-  Set to ignore the existing key
-
-
-
 .. c:function:: int nvme_resv_release (struct nvme_resv_release_args *args)
 
    Send an nvme reservation release
@@ -5862,56 +4587,6 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_resv_report_args
-
-   Arguments for the NVMe Reservation Report command
-
-**Definition**
-
-::
-
-  struct nvme_resv_report_args {
-    __u32 *result;
-    struct nvme_resv_status *report;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    __u32 len;
-    bool eds;
-  };
-
-**Members**
-
-``result``
-  The command completion result from CQE dword0
-
-``report``
-  The user space destination address to store the reservation
-  report
-
-``args_size``
-  Size of :c:type:`struct nvme_resv_report_args <nvme_resv_report_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace identifier
-
-``len``
-  Number of bytes to request transfered with this command
-
-``eds``
-  Request extended Data Structure
-
-
-
 .. c:function:: int nvme_resv_report (struct nvme_resv_report_args *args)
 
    Send an nvme reservation report
@@ -5924,7 +4599,7 @@ The nvme command status if a response was received (see
 **Description**
 
 Returns a Reservation Status data structure to memory that describes the
-registration and reservation status of a namespace. See the defintion for
+registration and reservation status of a namespace. See the definition for
 the returned structure, :c:type:`struct nvme_reservation_status <nvme_reservation_status>`, for more details.
 
 **Return**
@@ -5933,69 +4608,9 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_zns_mgmt_send_args
-
-   Arguments for the NVMe ZNS Management Send command
-
-**Definition**
-
-::
-
-  struct nvme_zns_mgmt_send_args {
-    __u64 slba;
-    __u32 *result;
-    void *data;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    enum nvme_zns_send_action zsa;
-    __u32 data_len;
-    bool select_all;
-    __u8 zsaso;
-  };
-
-**Members**
-
-``slba``
-  Starting logical block address
-
-``result``
-  The command completion result from CQE dword0
-
-``data``
-  Userspace address of the data
-
-``args_size``
-  Size of :c:type:`struct nvme_zns_mgmt_send_args <nvme_zns_mgmt_send_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  timeout in ms
-
-``nsid``
-  Namespace ID
-
-``zsa``
-  Zone send action
-
-``data_len``
-  Length of **data**
-
-``select_all``
-  Select all flag
-
-``zsaso``
-  Zone Send Action Specific Option
-
-
-
 .. c:function:: int nvme_zns_mgmt_send (struct nvme_zns_mgmt_send_args *args)
 
+   ZNS management send command
 
 **Parameters**
 
@@ -6008,69 +4623,9 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_zns_mgmt_recv_args
-
-   Arguments for the NVMe ZNS Management Receive command
-
-**Definition**
-
-::
-
-  struct nvme_zns_mgmt_recv_args {
-    __u64 slba;
-    __u32 *result;
-    void *data;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    enum nvme_zns_recv_action zra;
-    __u32 data_len;
-    __u16 zrasf;
-    bool zras_feat;
-  };
-
-**Members**
-
-``slba``
-  Starting logical block address
-
-``result``
-  The command completion result from CQE dword0
-
-``data``
-  Userspace address of the data
-
-``args_size``
-  Size of :c:type:`struct nvme_zns_mgmt_recv_args <nvme_zns_mgmt_recv_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  timeout in ms
-
-``nsid``
-  Namespace ID
-
-``zra``
-  zone receive action
-
-``data_len``
-  Length of **data**
-
-``zrasf``
-  Zone receive action specific field
-
-``zras_feat``
-  Zone receive action specific features
-
-
-
 .. c:function:: int nvme_zns_mgmt_recv (struct nvme_zns_mgmt_recv_args *args)
 
+   ZNS management receive command
 
 **Parameters**
 
@@ -6125,82 +4680,6 @@ The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
 
 
-
-
-.. c:struct:: nvme_zns_append_args
-
-   Arguments for the NVMe ZNS Append command
-
-**Definition**
-
-::
-
-  struct nvme_zns_append_args {
-    __u64 zslba;
-    __u64 *result;
-    void *data;
-    void *metadata;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 nsid;
-    __u32 ilbrt;
-    __u32 data_len;
-    __u32 metadata_len;
-    __u16 nlb;
-    __u16 control;
-    __u16 lbat;
-    __u16 lbatm;
-  };
-
-**Members**
-
-``zslba``
-  Zone start logical block address
-
-``result``
-  The command completion result from CQE dword0
-
-``data``
-  Userspace address of the data
-
-``metadata``
-  Userspace address of the metadata
-
-``args_size``
-  Size of :c:type:`struct nvme_zns_append_args <nvme_zns_append_args>`
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``nsid``
-  Namespace ID
-
-``ilbrt``
-  Initial logical block reference tag
-
-``data_len``
-  Length of **data**
-
-``metadata_len``
-  Length of **metadata**
-
-``nlb``
-  Number of logical blocks
-
-``control``
-
-``lbat``
-  Logical block application tag
-
-``lbatm``
-  Logical block application tag mask
-
-
-
 .. c:function:: int nvme_zns_append (struct nvme_zns_append_args *args)
 
    Append data to a zone
@@ -6214,51 +4693,6 @@ The nvme command status if a response was received (see
 
 The nvme command status if a response was received (see
 :c:type:`enum nvme_status_field <nvme_status_field>`) or -1 with errno set otherwise.
-
-
-
-
-.. c:struct:: nvme_dim_args
-
-   Arguments for the Discovery Information Management (DIM) command
-
-**Definition**
-
-::
-
-  struct nvme_dim_args {
-    __u32 *result;
-    void *data;
-    int args_size;
-    int fd;
-    __u32 timeout;
-    __u32 data_len;
-    __u8 tas;
-  };
-
-**Members**
-
-``result``
-  Set on completion to the command's CQE DWORD 0 controller response.
-
-``data``
-  Pointer to the DIM data
-
-``args_size``
-  Length of the structure
-
-``fd``
-  File descriptor of nvme device
-
-``timeout``
-  Timeout in ms
-
-``data_len``
-  Length of **data**
-
-``tas``
-  Task field of the Command Dword 10 (cdw10)
-
 
 
 .. c:function:: int nvme_dim_send (struct nvme_dim_args *args)

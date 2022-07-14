@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_connect_err" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_connect_err" "July 2022" "API Manual" LINUX
 .SH NAME
 enum nvme_connect_err \- nvme connect error codes
 .SH SYNOPSIS
@@ -49,6 +49,26 @@ enum nvme_connect_err {
 .br
 .br
 .BI "    ENVME_CONNECT_LOOKUP_SUBSYS"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_ALREADY"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_INVAL"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_ADDRINUSE"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_NODEV"
+, 
+.br
+.br
+.BI "    ENVME_CONNECT_OPNOTSUPP"
 
 };
 .SH Constants
@@ -76,3 +96,13 @@ invalid transport type
 failed to lookup subsystem name
 .IP "ENVME_CONNECT_LOOKUP_SUBSYS" 12
 failed to lookup subsystem
+.IP "ENVME_CONNECT_ALREADY" 12
+the connect attempt failed, already connected
+.IP "ENVME_CONNECT_INVAL" 12
+invalid arguments/configuration
+.IP "ENVME_CONNECT_ADDRINUSE" 12
+hostnqn already in use
+.IP "ENVME_CONNECT_NODEV" 12
+invalid interface
+.IP "ENVME_CONNECT_OPNOTSUPP" 12
+not supported

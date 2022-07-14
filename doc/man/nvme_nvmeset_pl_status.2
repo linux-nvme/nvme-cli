@@ -1,6 +1,6 @@
-.TH "libnvme" 9 "enum nvme_nvmeset_pl_status" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_nvmeset_pl_status" "July 2022" "API Manual" LINUX
 .SH NAME
-enum nvme_nvmeset_pl_status \- 
+enum nvme_nvmeset_pl_status \- Predictable Latency Per NVM Set Log - Status
 .SH SYNOPSIS
 enum nvme_nvmeset_pl_status {
 .br
@@ -17,5 +17,8 @@ enum nvme_nvmeset_pl_status {
 };
 .SH Constants
 .IP "NVME_NVMSET_PL_STATUS_DISABLED" 12
+Not used (Predictable Latency Mode not enabled)
 .IP "NVME_NVMSET_PL_STATUS_DTWIN" 12
+Deterministic Window (DTWIN)
 .IP "NVME_NVMSET_PL_STATUS_NDWIN" 12
+Non-Deterministic Window (NDWIN)

@@ -1,4 +1,4 @@
-.TH "nvme_identify_nvmset_list" 9 "nvme_identify_nvmset_list" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_identify_nvmset_list" 9 "nvme_identify_nvmset_list" "July 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_identify_nvmset_list \- Retrieves NVM Set List
 .SH SYNOPSIS
@@ -19,7 +19,7 @@ is an ordered list by NVM Set Identifier, starting with the first NVM Set
 Identifier supported by the NVM subsystem that is equal to or greater than
 the NVM Set Identifier.
 
-See \fIstruct nvme_id_nvmset_list\fP for the defintion of the returned structure.
+See \fIstruct nvme_id_nvmset_list\fP for the definition of the returned structure.
 .SH "RETURN"
 The nvme command status if a response was received (see
 \fIenum nvme_status_field\fP) or -1 with errno set otherwise.

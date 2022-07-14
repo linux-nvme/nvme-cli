@@ -49,6 +49,21 @@ libnvme utility functions
 ``ENVME_CONNECT_LOOKUP_SUBSYS``
   failed to lookup subsystem
 
+``ENVME_CONNECT_ALREADY``
+  the connect attempt failed, already connected
+
+``ENVME_CONNECT_INVAL``
+  invalid arguments/configuration
+
+``ENVME_CONNECT_ADDRINUSE``
+  hostnqn already in use
+
+``ENVME_CONNECT_NODEV``
+  invalid interface
+
+``ENVME_CONNECT_OPNOTSUPP``
+  not supported
+
 
 .. c:function:: __u8 nvme_status_to_errno (int status, bool fabrics)
 
@@ -57,7 +72,7 @@ libnvme utility functions
 **Parameters**
 
 ``int status``
-  Return status from an nvme passthrough commmand
+  Return status from an nvme passthrough command
 
 ``bool fabrics``
   Set to true if :c:type:`status` is to a fabrics target.
@@ -75,7 +90,7 @@ or unchanged status is < 0 since errno is already set.
 **Parameters**
 
 ``int status``
-  Return status from an nvme passthrough commmand
+  Return status from an nvme passthrough command
 
 ``bool fabrics``
   Set to true if :c:type:`status` is to a fabrics target.
@@ -181,9 +196,9 @@ otherwise.
   Number of descriptors to construct
 
 
-.. c:function:: void nvme_init_copy_range_fl (struct nvme_copy_range_f1 *copy, __u16 *nlbs, __u64 *slbas, __u64 *eilbrts, __u32 *elbatms, __u32 *elbats, __u16 nr)
+.. c:function:: void nvme_init_copy_range_f1 (struct nvme_copy_range_f1 *copy, __u16 *nlbs, __u64 *slbas, __u64 *eilbrts, __u32 *elbatms, __u32 *elbats, __u16 nr)
 
-   Constructs a copy range formate 1 structure
+   Constructs a copy range f1 structure
 
 **Parameters**
 
@@ -233,6 +248,7 @@ recognize :c:type:`fid`.
 
 .. c:function:: int nvme_get_directive_receive_length (enum nvme_directive_dtype dtype, enum nvme_directive_receive_doper doper, __u32 *len)
 
+   Get directive receive length
 
 **Parameters**
 
@@ -346,7 +362,7 @@ A pointer to the first character of "value" if a match is found.
 NULL otherwise.
 
 
-.. c:function:: char* startswith (const char *s, const char *prefix)
+.. c:function:: char * startswith (const char *s, const char *prefix)
 
    Checks that a string starts with a given prefix.
 
@@ -405,7 +421,7 @@ Lenght rounded up by 4
 
 .. c:function:: __u16 nvmf_exat_size (size_t val_len)
 
-   Return min algined size to hold value
+   Return min aligned size to hold value
 
 **Parameters**
 
@@ -445,5 +461,34 @@ element.
 **Return**
 
 Pointer to the next element in the array.
+
+
+
+
+.. c:enum:: nvme_version
+
+   Selector for version to be returned by **nvme_get_version**
+
+**Constants**
+
+``NVME_VERSION_PROJECT``
+  Project release version
+
+``NVME_VERSION_GIT``
+  Git reference
+
+
+.. c:function:: const char * nvme_get_version (enum nvme_version type)
+
+   Return version libnvme string
+
+**Parameters**
+
+``enum nvme_version type``
+  Selects which version type (see **struct** nvme_version)
+
+**Return**
+
+Returns version string for known types or else "n/a"
 
 

@@ -1,6 +1,6 @@
-.TH "nvme_ns_mgmt_create" 9 "nvme_ns_mgmt_create" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_ns_mgmt_create" 9 "nvme_ns_mgmt_create" "July 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_ns_mgmt_create \- 
+nvme_ns_mgmt_create \- Create a non attached namespace
 .SH SYNOPSIS
 .B "int" nvme_ns_mgmt_create
 .BI "(int fd "  ","
@@ -16,7 +16,7 @@ Namespace identification that defines ns creation parameters
 .IP "nsid" 12
 On success, set to the namespace id that was created
 .IP "timeout" 12
-Overide the default timeout to this value in milliseconds;
+Override the default timeout to this value in milliseconds;
 set to 0 to use the system default.
 .IP "csi" 12
 Command Set Identifier

@@ -1,6 +1,6 @@
-.TH "libnvme" 9 "struct nvme_copy_range" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_copy_range" "July 2022" "API Manual" LINUX
 .SH NAME
-struct nvme_copy_range \- 
+struct nvme_copy_range \- Copy - Source Range Entries Descriptor Format
 .SH SYNOPSIS
 struct nvme_copy_range {
 .br
@@ -32,7 +32,8 @@ Number of Logical Blocks
 .IP "rsvd18" 12
 Reserved
 .IP "eilbrt" 12
-Expected Initial Logical Block Reference Tag
+Expected Initial Logical Block Reference Tag /
+Expected Logical Block Storage Tag
 .IP "elbatm" 12
 Expected Logical Block Application Tag Mask
 .IP "elbat" 12

@@ -1,6 +1,6 @@
-.TH "libnvme" 9 "struct nvme_lbas_ns_element" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_lbas_ns_element" "July 2022" "API Manual" LINUX
 .SH NAME
-struct nvme_lbas_ns_element \- 
+struct nvme_lbas_ns_element \- LBA Status Log Namespace Element
 .SH SYNOPSIS
 struct nvme_lbas_ns_element {
 .br
@@ -24,7 +24,7 @@ Namespace Element Identifier
 .IP "nlrd" 12
 Number of LBA Range Descriptors
 .IP "ratype" 12
-Recommended Action Type
+Recommended Action Type. see \fIenum\fP nvme_lba_status_atype
 .IP "rsvd8" 12
 Reserved
 .IP "lba_rd" 12

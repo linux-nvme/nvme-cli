@@ -1,6 +1,6 @@
-.TH "libnvme" 9 "enum nvme_identify_cns" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_identify_cns" "July 2022" "API Manual" LINUX
 .SH NAME
-enum nvme_identify_cns \- 
+enum nvme_identify_cns \- Identify - CNS Values
 .SH SYNOPSIS
 enum nvme_identify_cns {
 .br
@@ -103,7 +103,7 @@ enum nvme_identify_cns {
 .IP "NVME_IDENTIFY_CNS_NS" 12
 Identify Namespace data structure
 .IP "NVME_IDENTIFY_CNS_CTRL" 12
-Identify Controller data structur
+Identify Controller data structure
 .IP "NVME_IDENTIFY_CNS_NS_ACTIVE_LIST" 12
 Active Namespace ID list
 .IP "NVME_IDENTIFY_CNS_NS_DESC_LIST" 12
@@ -121,11 +121,12 @@ Active Namespace ID list associated
 with the specified I/O Command Set
 .IP "NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS" 12
 I/O Command Set Independent Identify
-Namespace data structure
 .IP "NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT" 12
--- undescribed --
+Namespace user data format
 .IP "NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT" 12
--- undescribed --
+I/O Command Set specific user data
+format
+Namespace data structure
 .IP "NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST" 12
 Allocated Namespace ID list
 .IP "NVME_IDENTIFY_CNS_ALLOCATED_NS" 12
@@ -145,7 +146,7 @@ Secondary Controller list of controllers
 associated with the primary controller
 processing the command
 .IP "NVME_IDENTIFY_CNS_NS_GRANULARITY" 12
-A Namespace Granularity Lis
+A Namespace Granularity List
 .IP "NVME_IDENTIFY_CNS_UUID_LIST" 12
 A UUID List
 .IP "NVME_IDENTIFY_CNS_DOMAIN_LIST" 12

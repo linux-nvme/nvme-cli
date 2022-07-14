@@ -1,6 +1,6 @@
-.TH "libnvme" 9 "enum nvme_lba_status_atype" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_lba_status_atype" "July 2022" "API Manual" LINUX
 .SH NAME
-enum nvme_lba_status_atype \- 
+enum nvme_lba_status_atype \- Potentially Unrecoverable LBAs
 .SH SYNOPSIS
 enum nvme_lba_status_atype {
 .br
@@ -13,4 +13,7 @@ enum nvme_lba_status_atype {
 };
 .SH Constants
 .IP "NVME_LBA_STATUS_ATYPE_SCAN_UNTRACKED" 12
+Potentially Unrecoverable LBAs
 .IP "NVME_LBA_STATUS_ATYPE_SCAN_TRACKED" 12
+Potentially Unrecoverable LBAs
+associated with physical storage

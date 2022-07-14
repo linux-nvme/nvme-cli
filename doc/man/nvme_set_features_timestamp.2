@@ -1,6 +1,6 @@
-.TH "nvme_set_features_timestamp" 9 "nvme_set_features_timestamp" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_set_features_timestamp" 9 "nvme_set_features_timestamp" "July 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_set_features_timestamp \- 
+nvme_set_features_timestamp \- Set timestamp feature
 .SH SYNOPSIS
 .B "int" nvme_set_features_timestamp
 .BI "(int fd "  ","
@@ -12,7 +12,7 @@ File descriptor of nvme device
 .IP "save" 12
 Save value across power states
 .IP "timestamp" 12
-The current timestamp value to assign to this this feature
+The current timestamp value to assign to this feature
 .SH "RETURN"
 The nvme command status if a response was received (see
 \fIenum nvme_status_field\fP) or -1 with errno set otherwise.

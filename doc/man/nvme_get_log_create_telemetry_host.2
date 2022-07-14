@@ -1,4 +1,4 @@
-.TH "nvme_get_log_create_telemetry_host" 9 "nvme_get_log_create_telemetry_host" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_get_log_create_telemetry_host" 9 "nvme_get_log_create_telemetry_host" "July 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_get_log_create_telemetry_host \- Create host telemetry log
 .SH SYNOPSIS
@@ -10,3 +10,6 @@ nvme_get_log_create_telemetry_host \- Create host telemetry log
 File descriptor of nvme device
 .IP "log" 12
 Userspace address of the log payload
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

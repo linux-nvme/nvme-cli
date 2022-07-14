@@ -21,7 +21,7 @@ linux-specific utility functions
   Maximum size to send with each partial transfer
 
 ``__u32 offset``
-  Starting offset to send with this firmware downlaod
+  Starting offset to send with this firmware download
 
 ``void *buf``
   Address of buffer containing all or part of the firmware image.
@@ -166,7 +166,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_ana_log_len (int fd, size_t *analen)
 
-   Retreive size of the current ANA log
+   Retrieve size of the current ANA log
 
 **Parameters**
 
@@ -205,7 +205,7 @@ The nvme command status if a response was received (see
 
 .. c:function:: int nvme_get_lba_status_log (int fd, bool rae, struct nvme_lba_status_log **log)
 
-   Retreive the LBA Status log page
+   Retrieve the LBA Status log page
 
 **Parameters**
 
@@ -216,7 +216,7 @@ The nvme command status if a response was received (see
   Retain asynchronous events
 
 ``struct nvme_lba_status_log **log``
-  On success, set to the value of the allocated and retreived log.
+  On success, set to the value of the allocated and retrieved log.
 
 **Return**
 

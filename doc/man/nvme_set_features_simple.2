@@ -1,6 +1,6 @@
-.TH "nvme_set_features_simple" 9 "nvme_set_features_simple" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_set_features_simple" 9 "nvme_set_features_simple" "July 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_set_features_simple \- Helper functionn for @nvme_set_features()
+nvme_set_features_simple \- Helper function for @nvme_set_features()
 .SH SYNOPSIS
 .B "int" nvme_set_features_simple
 .BI "(int fd "  ","
@@ -22,3 +22,6 @@ Value to set the feature to
 Save value across power states
 .IP "result" 12
 The command completion result from CQE dword0
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

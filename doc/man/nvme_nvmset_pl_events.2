@@ -1,6 +1,6 @@
-.TH "libnvme" 9 "enum nvme_nvmset_pl_events" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_nvmset_pl_events" "July 2022" "API Manual" LINUX
 .SH NAME
-enum nvme_nvmset_pl_events \- 
+enum nvme_nvmset_pl_events \- Predictable Latency Per NVM Set Log - Event Type
 .SH SYNOPSIS
 enum nvme_nvmset_pl_events {
 .br
@@ -25,7 +25,16 @@ enum nvme_nvmset_pl_events {
 };
 .SH Constants
 .IP "NVME_NVMSET_PL_EVENT_DTWIN_READ_WARN" 12
+DTWIN Reads Warning
 .IP "NVME_NVMSET_PL_EVENT_DTWIN_WRITE_WARN" 12
+DTWIN Writes Warning
 .IP "NVME_NVMSET_PL_EVENT_DTWIN_TIME_WARN" 12
+DTWIN Time Warning
 .IP "NVME_NVMSET_PL_EVENT_DTWIN_EXCEEDED" 12
+Autonomous transition from DTWIN
+to NDWIN due to typical or
+maximum value exceeded
 .IP "NVME_NVMSET_PL_EVENT_DTWIN_EXCURSION" 12
+Autonomous transition from DTWIN
+to NDWIN due to Deterministic
+Excursion

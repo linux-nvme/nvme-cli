@@ -322,7 +322,7 @@ into the topology using **h** as parent.
 **Parameters**
 
 ``nvme_ctrl_t c``
-  Discover controller to use 
+  Discover controller to use
 
 ``struct nvmf_discovery_log **logp``
   Pointer to the log page to be returned
@@ -384,7 +384,7 @@ The host identifier, or NULL if unsuccessful. If found, the caller
   Discovery log page entry
 
 ``const struct nvme_fabrics_config *defcfg``
-  Default configurationn to be used for the new controller
+  Default configuration to be used for the new controller
 
 ``bool *discover``
   Set to 'true' if the new controller is a discovery controller

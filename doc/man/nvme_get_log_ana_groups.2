@@ -1,6 +1,6 @@
-.TH "nvme_get_log_ana_groups" 9 "nvme_get_log_ana_groups" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_get_log_ana_groups" 9 "nvme_get_log_ana_groups" "July 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_get_log_ana_groups \- 
+nvme_get_log_ana_groups \- Retrieve Asymmetric Namespace Access groups only log page
 .SH SYNOPSIS
 .B "int" nvme_get_log_ana_groups
 .BI "(int fd "  ","
@@ -17,4 +17,7 @@ The allocated length of the log page
 .IP "log" 12
 User address to store the ana group log
 .SH "DESCRIPTION"
-See \fIstruct nvme_ana_group_desc\fP for the defintion of the returned structure.
+See \fIstruct nvme_ana_group_desc\fP for the definition of the returned structure.
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

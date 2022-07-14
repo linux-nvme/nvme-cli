@@ -201,11 +201,11 @@ next :c:type:`nvme_subsystem_t` object in an iterator
 **Description**
 
 Lookup a :c:type:`nvme_subsystem_t` object in **h** base on **name** (if present)
-and **subsystemnqn** or create one if not found.
+and **subsysnqn** or create one if not found.
 
 **Return**
 
-nvme_subsystme_t object
+nvme_subsystem_t object
 
 
 .. c:function:: void nvme_free_subsystem (struct nvme_subsystem *s)
@@ -343,14 +343,14 @@ Next controller of an **s** iterator
 First :c:type:`nvme_path_t` object of an **ns** iterator
 
 
-.. c:function:: nvme_path_t nvme_namespace_next_path (nvme_ns_t c, nvme_path_t p)
+.. c:function:: nvme_path_t nvme_namespace_next_path (nvme_ns_t ns, nvme_path_t p)
 
    Next path iterator
 
 **Parameters**
 
-``nvme_ns_t c``
-  *undescribed*
+``nvme_ns_t ns``
+  Namespace instance
 
 ``nvme_path_t p``
   Previous :c:type:`nvme_path_t` object of an **ns** iterator
@@ -674,7 +674,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
 **Parameters**
 
 ``n``
-  *undescribed*
+  Namespace instance
 
 ``p``
   :c:type:`nvme_path_t` object
@@ -685,14 +685,14 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
 
 .. c:macro:: nvme_namespace_for_each_path
 
-``nvme_namespace_for_each_path (c, p)``
+``nvme_namespace_for_each_path (n, p)``
 
    Traverse paths
 
 **Parameters**
 
-``c``
-  *undescribed*
+``n``
+  Namespace instance
 
 ``p``
   :c:type:`nvme_path_t` object
@@ -700,7 +700,7 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
 
 .. c:function:: int nvme_ns_get_fd (nvme_ns_t n)
 
-   Get associated filedescriptor
+   Get associated file descriptor
 
 **Parameters**
 
@@ -770,7 +770,7 @@ LBA count of **n**
 
 .. c:function:: uint64_t nvme_ns_get_lba_util (nvme_ns_t n)
 
-   LBA utilisation of a namespace
+   LBA utilization of a namespace
 
 **Parameters**
 
@@ -779,7 +779,7 @@ LBA count of **n**
 
 **Return**
 
-LBA utilisation of **n**
+LBA utilization of **n**
 
 
 .. c:function:: enum nvme_csi nvme_ns_get_csi (nvme_ns_t n)
@@ -1358,7 +1358,7 @@ Queue count of **c**
 **Parameters**
 
 ``nvme_ctrl_t c``
-  Conroller instance
+  Controller instance
 
 **Return**
 
@@ -1739,7 +1739,7 @@ The ioctl() return code. Typically 0 on success.
 
 **Return**
 
-NQN of systemstem
+NQN of subsystem
 
 
 .. c:function:: const char * nvme_subsystem_get_sysfs_dir (nvme_subsystem_t s)

@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_register_offsets" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_register_offsets" "July 2022" "API Manual" LINUX
 .SH NAME
 enum nvme_register_offsets \- controller registers for all transports. This is the layout of BAR0/1 for PCIe, and properties for fabrics.
 .SH SYNOPSIS
@@ -72,6 +72,10 @@ enum nvme_register_offsets {
 , 
 .br
 .br
+.BI "    NVME_REG_CRTO"
+, 
+.br
+.br
 .BI "    NVME_REG_PMRCAP"
 , 
 .br
@@ -134,6 +138,8 @@ Boot Partition Memory Buffer Location
 Controller Memory Buffer Memory Space Control
 .IP "NVME_REG_CMBSTS" 12
 Controller Memory Buffer Status
+.IP "NVME_REG_CRTO" 12
+Controller Ready Timeouts
 .IP "NVME_REG_PMRCAP" 12
 Persistent Memory Capabilities
 .IP "NVME_REG_PMRCTL" 12

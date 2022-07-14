@@ -1,6 +1,6 @@
-.TH "nvme_get_log_lba_status" 9 "nvme_get_log_lba_status" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_get_log_lba_status" 9 "nvme_get_log_lba_status" "July 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_get_log_lba_status \- 
+nvme_get_log_lba_status \- Retrieve LBA Status
 .SH SYNOPSIS
 .B "int" nvme_get_log_lba_status
 .BI "(int fd "  ","
@@ -19,3 +19,6 @@ Offset to the start of the log page
 The allocated length of the log page
 .IP "log" 12
 User address to store the log page
+.SH "RETURN"
+The nvme command status if a response was received (see
+\fIenum nvme_status_field\fP) or -1 with errno set otherwise.

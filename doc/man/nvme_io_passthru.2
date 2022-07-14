@@ -1,4 +1,4 @@
-.TH "nvme_io_passthru" 9 "nvme_io_passthru" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_io_passthru" 9 "nvme_io_passthru" "July 2022" "libnvme API manual" LINUX
 .SH NAME
 nvme_io_passthru \- Submit an nvme io passthrough command
 .SH SYNOPSIS
@@ -30,7 +30,7 @@ The nvme io command to send
 .IP "flags" 12
 NVMe command flags (not used)
 .IP "rsvd" 12
-Reserevd for future use
+Reserved for future use
 .IP "nsid" 12
 Namespace identifier
 .IP "cdw2" 12
@@ -50,11 +50,11 @@ Command dword 14
 .IP "cdw15" 12
 Command dword 15
 .IP "data_len" 12
-Length of the data transfered in this command in bytes
+Length of the data transferred in this command in bytes
 .IP "data" 12
 Pointer to user address of the data buffer
 .IP "metadata_len" 12
-Length of metadata transfered in this command
+Length of metadata transferred in this command
 .IP "metadata" 12
 Pointer to user address of the metadata buffer
 .IP "timeout_ms" 12

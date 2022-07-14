@@ -1,12 +1,12 @@
-.TH "nvme_security_receive" 9 "nvme_security_receive" "April 2022" "libnvme API manual" LINUX
+.TH "nvme_security_receive" 9 "nvme_security_receive" "July 2022" "libnvme API manual" LINUX
 .SH NAME
-nvme_security_receive \- 
+nvme_security_receive \- Security Receive command
 .SH SYNOPSIS
 .B "int" nvme_security_receive
 .BI "(struct nvme_security_receive_args *args "  ");"
 .SH ARGUMENTS
 .IP "args" 12
-\fIstruct nvme_security_recevice\fP argument structure
+\fIstruct nvme_security_receive\fP argument structure
 .SH "RETURN"
 The nvme command status if a response was received (see
 \fIenum nvme_status_field\fP) or -1 with errno set otherwise.

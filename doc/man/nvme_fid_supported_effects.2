@@ -1,6 +1,6 @@
-.TH "libnvme" 9 "enum nvme_fid_supported_effects" "April 2022" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_fid_supported_effects" "July 2022" "API Manual" LINUX
 .SH NAME
-enum nvme_fid_supported_effects \- 
+enum nvme_fid_supported_effects \- FID Supported and Effects Data Structure definitions
 .SH SYNOPSIS
 enum nvme_fid_supported_effects {
 .br
@@ -61,18 +61,30 @@ enum nvme_fid_supported_effects {
 };
 .SH Constants
 .IP "NVME_FID_SUPPORTED_EFFECTS_FSUPP" 12
+FID Supported
 .IP "NVME_FID_SUPPORTED_EFFECTS_UDCC" 12
+User Data Content Change
 .IP "NVME_FID_SUPPORTED_EFFECTS_NCC" 12
+Namespace Capability Change
 .IP "NVME_FID_SUPPORTED_EFFECTS_NIC" 12
+Namespace Inventory Change
 .IP "NVME_FID_SUPPORTED_EFFECTS_CCC" 12
+Controller Capability Change
 .IP "NVME_FID_SUPPORTED_EFFECTS_UUID_SEL" 12
+UUID Selection Supported
 .IP "NVME_FID_SUPPORTED_EFFECTS_SCOPE_SHIFT" 12
+FID Scope Shift
 .IP "NVME_FID_SUPPORTED_EFFECTS_SCOPE_MASK" 12
+FID Scope Mask
 .IP "NVME_FID_SUPPORTED_EFFECTS_SCOPE_NS" 12
+Namespace Scope
 .IP "NVME_FID_SUPPORTED_EFFECTS_SCOPE_CTRL" 12
+Controller Scope
 .IP "NVME_FID_SUPPORTED_EFFECTS_SCOPE_NVM_SET" 12
+NVM Set Scope
 .IP "NVME_FID_SUPPORTED_EFFECTS_SCOPE_ENDGRP" 12
+Endurance Group Scope
 .IP "NVME_FID_SUPPORTED_EFFECTS_SCOPE_DOMAIN" 12
+Domain Scope
 .IP "NVME_FID_SUPPORTED_EFFECTS_SCOPE_NSS" 12
-.SH "Description"
-FID Supported and Effects Data Structure definitions
+NVM Subsystem Scope
