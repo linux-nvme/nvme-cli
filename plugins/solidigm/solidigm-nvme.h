@@ -13,13 +13,14 @@
 
 #include "cmd.h"
 
-#define SOLIDIGM_PLUGIN_VERSION "0.4"
+#define SOLIDIGM_PLUGIN_VERSION "0.5"
 
 PLUGIN(NAME("solidigm", "Solidigm vendor specific extensions", SOLIDIGM_PLUGIN_VERSION),
 	COMMAND_LIST(
 		ENTRY("smart-log-add", "Retrieve Solidigm SMART Log", get_additional_smart_log)
 		ENTRY("garbage-collect-log", "Retrieve Garbage Collection Log", get_garbage_collection_log)
 		ENTRY("latency-tracking-log", "Enable/Retrieve Latency tracking Log", get_latency_tracking_log)
+		ENTRY("parse-telemetry-log", "Parse Telemetry Log binary", get_telemetry_log)
 	)
 );
 
