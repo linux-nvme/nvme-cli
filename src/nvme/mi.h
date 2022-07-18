@@ -451,6 +451,21 @@ nvme_mi_ep_t nvme_mi_next_endpoint(nvme_root_t m, nvme_mi_ep_t e);
 	     e != NULL;							      \
 	     e = _e, _e = nvme_mi_next_endpoint(m, e))
 
+/**
+ * nvme_mi_ep_set_timeout - set a timeout for NVMe-MI responses
+ * @ep: MI endpoint object
+ * @timeout_ms: Timeout for MI responses, given in milliseconds
+ */
+int nvme_mi_ep_set_timeout(nvme_mi_ep_t ep, unsigned int timeout_ms);
+
+/**
+ * nvme_mi_ep_get_timeout - get the current timeout value for NVMe-MI responses
+ * @ep: MI endpoint object
+ *
+ * Returns the current timeout value, in milliseconds, for this endpoint.
+ */
+unsigned int nvme_mi_ep_get_timeout(nvme_mi_ep_t ep);
+
 struct nvme_mi_ctrl;
 
 /**

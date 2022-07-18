@@ -183,6 +183,7 @@ struct nvme_mi_transport {
 		      struct nvme_mi_resp *resp);
 	void (*close)(struct nvme_mi_ep *ep);
 	int (*desc_ep)(struct nvme_mi_ep *ep, char *buf, size_t len);
+	int (*check_timeout)(struct nvme_mi_ep *ep, unsigned int timeout);
 };
 
 struct nvme_mi_ep {
@@ -192,6 +193,7 @@ struct nvme_mi_ep {
 	struct list_node root_entry;
 	struct list_head controllers;
 	bool controllers_scanned;
+	unsigned int timeout;
 };
 
 struct nvme_mi_ctrl {
