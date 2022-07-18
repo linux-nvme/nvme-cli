@@ -18,7 +18,8 @@ project(
     ]
 )
 
-library_version = meson.project_version() + '.0'
+maj_min = meson.project_version().split('-rc')[0]
+library_version =  maj_min + '.0'
 
 ################################################################################
 cc = meson.get_compiler('c')
