@@ -17,6 +17,9 @@
 #include "mi.h"
 #include "private.h"
 
+static const int default_timeout = 1000; /* milliseconds; endpoints may
+					    override */
+
 /* MI-equivalent of nvme_create_root, but avoids clashing symbol names
  * when linking against both libnvme and libnvme-mi.
  */
@@ -57,11 +60,36 @@ struct nvme_mi_ep *nvme_mi_init_ep(nvme_root_t root)
 	list_node_init(&ep->root_entry);
 	ep->root = root;
 	ep->controllers_scanned = false;
+	ep->timeout = default_timeout;
+	ep->mprt_max = 0;
 	list_head_init(&ep->controllers);
 
 	list_add(&root->endpoints, &ep->root_entry);
 
 	return ep;
+}
+
+int nvme_mi_ep_set_timeout(nvme_mi_ep_t ep, unsigned int timeout_ms)
+{
+	if (ep->transport->check_timeout) {
+		int rc;
+		rc = ep->transport->check_timeout(ep, timeout_ms);
+		if (rc)
+			return rc;
+	}
+
+	ep->timeout = timeout_ms;
+	return 0;
+}
+
+void nvme_mi_ep_set_mprt_max(nvme_mi_ep_t ep, unsigned int mprt_max_ms)
+{
+	ep->mprt_max = mprt_max_ms;
+}
+
+unsigned int nvme_mi_ep_get_timeout(nvme_mi_ep_t ep)
+{
+	return ep->timeout;
 }
 
 struct nvme_mi_ctrl *nvme_mi_init_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id)
