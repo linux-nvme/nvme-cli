@@ -459,6 +459,24 @@ nvme_mi_ep_t nvme_mi_next_endpoint(nvme_root_t m, nvme_mi_ep_t e);
 int nvme_mi_ep_set_timeout(nvme_mi_ep_t ep, unsigned int timeout_ms);
 
 /**
+ * nvme_mi_ep_set_mprt_max - set the maximum wait time for a More Processing
+ * Required response
+ * @ep: MI endpoint object
+ * @mprt_max_ms: Maximum more processing required wait time
+ *
+ * NVMe-MI endpoints may respond to a request with a "More Processing Required"
+ * response; this also includes a hint on the worst-case processing time for
+ * the eventual response data, with a specification-defined maximum of 65.535
+ * seconds.
+ *
+ * This function provides a way to limit the maximum time we're prepared to
+ * wait for the final response. Specify zero in @mprt_max_ms for no limit.
+ * This should be larger than the command/response timeout set in
+ * &nvme_mi_ep_set_timeout().
+ */
+void nvme_mi_ep_set_mprt_max(nvme_mi_ep_t ep, unsigned int mprt_max_ms);
+
+/**
  * nvme_mi_ep_get_timeout - get the current timeout value for NVMe-MI responses
  * @ep: MI endpoint object
  *

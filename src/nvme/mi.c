@@ -61,6 +61,7 @@ struct nvme_mi_ep *nvme_mi_init_ep(nvme_root_t root)
 	ep->root = root;
 	ep->controllers_scanned = false;
 	ep->timeout = default_timeout;
+	ep->mprt_max = 0;
 	list_head_init(&ep->controllers);
 
 	list_add(&root->endpoints, &ep->root_entry);
@@ -79,6 +80,11 @@ int nvme_mi_ep_set_timeout(nvme_mi_ep_t ep, unsigned int timeout_ms)
 
 	ep->timeout = timeout_ms;
 	return 0;
+}
+
+void nvme_mi_ep_set_mprt_max(nvme_mi_ep_t ep, unsigned int mprt_max_ms)
+{
+	ep->mprt_max = mprt_max_ms;
 }
 
 unsigned int nvme_mi_ep_get_timeout(nvme_mi_ep_t ep)

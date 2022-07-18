@@ -194,6 +194,7 @@ struct nvme_mi_ep {
 	struct list_head controllers;
 	bool controllers_scanned;
 	unsigned int timeout;
+	unsigned int mprt_max;
 };
 
 struct nvme_mi_ctrl {
