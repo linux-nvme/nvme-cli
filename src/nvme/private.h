@@ -10,7 +10,7 @@
 #define _LIBNVME_PRIVATE_H
 
 #include <ccan/list/list.h>
-#include <sys/poll.h>
+#include <poll.h>
 #include <sys/socket.h>
 
 #include "fabrics.h"
