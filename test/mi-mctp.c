@@ -28,6 +28,8 @@
 struct test_peer;
 
 typedef int (*rx_test_fn)(struct test_peer *peer, void *buf, size_t len);
+typedef int (*poll_test_fn)(struct test_peer *peer,
+			    struct pollfd *fds, nfds_t nfds, int timeout);
 
 /* Our fake MCTP "peer".
  *
@@ -57,6 +59,9 @@ static struct test_peer {
 	rx_test_fn	tx_fn;
 	void		*tx_data;
 	int		tx_fn_res;
+
+	poll_test_fn	poll_fn;
+	void		*poll_data;
 
 	/* store sd from socket() setup */
 	int		sd;
@@ -153,6 +158,14 @@ ssize_t __wrap_recvmsg(int sd, struct msghdr *hdr, int flags)
 	return test_peer.tx_rc ?: (pos - 1);
 }
 
+int __wrap_poll(struct pollfd *fds, nfds_t nfds, int timeout)
+{
+	if (!test_peer.poll_fn)
+		return 1;
+
+	return test_peer.poll_fn(&test_peer, fds, nfds, timeout);
+}
+
 struct mctp_ioc_tag_ctl;
 
 #ifdef SIOCMCTPALLOCTAG
@@ -183,6 +196,7 @@ static struct __mi_mctp_socket_ops ops = {
 	__wrap_socket,
 	__wrap_sendmsg,
 	__wrap_recvmsg,
+	__wrap_poll,
 	test_ioctl_tag,
 };
 
@@ -232,6 +246,23 @@ static void test_tx_short(nvme_mi_ep_t ep, struct test_peer *peer)
 	int rc;
 
 	peer->tx_buf_len = 11;
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc != 0);
+}
+
+static int poll_fn_err(struct test_peer *peer, struct pollfd *fds,
+				 nfds_t nfds, int timeout)
+{
+	return -1;
+}
+
+static void test_poll_err(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	int rc;
+
+	peer->poll_fn = poll_fn_err;
 
 	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
 	assert(rc != 0);
@@ -331,6 +362,48 @@ static void test_admin_resp_sizes_unaligned(nvme_mi_ep_t ep, struct test_peer *p
 	nvme_mi_close_ctrl(ctrl);
 }
 
+/* test: timeout value passed to poll */
+static int poll_fn_timeout_value(struct test_peer *peer, struct pollfd *fds,
+				 nfds_t nfds, int timeout)
+{
+	assert(timeout == 3141);
+	return 1;
+}
+
+static void test_poll_timeout_value(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	int rc;
+
+	/* empty response data */
+	peer->tx_buf_len = 8 + 32;
+
+	peer->poll_fn = poll_fn_timeout_value;
+	nvme_mi_ep_set_timeout(ep, 3141);
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc == 0);
+}
+
+/* test: poll timeout expiry */
+static int poll_fn_timeout(struct test_peer *peer, struct pollfd *fds,
+			   nfds_t nfds, int timeout)
+{
+	return 0;
+}
+
+static void test_poll_timeout(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	int rc;
+
+	peer->poll_fn = poll_fn_timeout;
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc != 0);
+	assert(errno == ETIMEDOUT);
+}
+
 /* test: send a More Processing Required response, then the actual response */
 struct mpr_tx_info {
 	int msg_no;
@@ -402,6 +475,149 @@ static void test_mpr_admin(nvme_mi_ep_t ep, struct test_peer *peer)
 	nvme_mi_close_ctrl(ctrl);
 }
 
+/* helpers for the MPR + poll tests */
+struct mpr_poll_info {
+	int poll_no;
+	uint16_t mprt;
+	unsigned int timeouts[2];
+};
+
+static int poll_fn_mpr_poll(struct test_peer *peer, struct pollfd *fds,
+			       nfds_t nfds, int timeout)
+{
+	struct mpr_poll_info *info = peer->poll_data;
+
+	switch (info->poll_no) {
+	case 1:
+	case 2:
+		assert(timeout == info->timeouts[info->poll_no - 1]);
+		break;
+	default:
+		assert(0);
+	}
+
+	info->poll_no++;
+	return 1;
+}
+
+static int tx_fn_mpr_poll(struct test_peer *peer, void *buf, size_t len)
+{
+	struct mpr_tx_info *tx_info = peer->tx_data;
+	struct mpr_poll_info *poll_info = peer->poll_data;
+	unsigned int mprt;
+
+	memset(peer->tx_buf, 0, sizeof(peer->tx_buf));
+	peer->tx_buf[0] = NVME_MI_MSGTYPE_NVME;
+	peer->tx_buf[1] = test_peer.rx_buf[1] | (NVME_MI_ROR_RSP << 7);
+
+	switch (tx_info->msg_no) {
+	case 1:
+		peer->tx_buf[4] = NVME_MI_RESP_MPR;
+		peer->tx_buf_len = 8;
+		mprt = poll_info->mprt;
+		peer->tx_buf[7] = mprt >> 8;
+		peer->tx_buf[6] = mprt & 0xff;
+		break;
+	case 2:
+		peer->tx_buf[4] = NVME_MI_RESP_SUCCESS;
+		peer->tx_buf_len = tx_info->final_len;
+		break;
+	default:
+		assert(0);
+	}
+
+	test_set_tx_mic(peer);
+
+	tx_info->msg_no++;
+
+	return 0;
+}
+
+/* test: correct timeout value used from MPR response */
+static void test_mpr_timeouts(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	struct mpr_poll_info poll_info;
+	struct mpr_tx_info tx_info;
+	int rc;
+
+	nvme_mi_ep_set_timeout(ep, 3141);
+
+	tx_info.msg_no = 1;
+	tx_info.final_len = sizeof(struct nvme_mi_mi_resp_hdr) + sizeof(ss_info);
+
+	poll_info.poll_no = 1;
+	poll_info.mprt = 1234;
+	poll_info.timeouts[0] = 3141;
+	poll_info.timeouts[1] = 1234 * 100;
+
+	peer->tx_fn = tx_fn_mpr_poll;
+	peer->tx_data = &tx_info;
+
+	peer->poll_fn = poll_fn_mpr_poll;
+	peer->poll_data = &poll_info;
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc == 0);
+}
+
+/* test: MPR value is limited to the max mpr */
+static void test_mpr_timeout_clamp(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	struct mpr_poll_info poll_info;
+	struct mpr_tx_info tx_info;
+	int rc;
+
+	nvme_mi_ep_set_timeout(ep, 3141);
+	nvme_mi_ep_set_mprt_max(ep, 123400);
+
+	tx_info.msg_no = 1;
+	tx_info.final_len = sizeof(struct nvme_mi_mi_resp_hdr) + sizeof(ss_info);
+
+	poll_info.poll_no = 1;
+	poll_info.mprt = 1235;
+	poll_info.timeouts[0] = 3141;
+	poll_info.timeouts[1] = 1234 * 100;
+
+	peer->tx_fn = tx_fn_mpr_poll;
+	peer->tx_data = &tx_info;
+
+	peer->poll_fn = poll_fn_mpr_poll;
+	peer->poll_data = &poll_info;
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc == 0);
+}
+
+/* test: MPR value of zero doesn't result in poll with zero timeout */
+static void test_mpr_mprt_zero(nvme_mi_ep_t ep, struct test_peer *peer)
+{
+	struct nvme_mi_read_nvm_ss_info ss_info;
+	struct mpr_poll_info poll_info;
+	struct mpr_tx_info tx_info;
+	int rc;
+
+	nvme_mi_ep_set_timeout(ep, 3141);
+	nvme_mi_ep_set_mprt_max(ep, 123400);
+
+	tx_info.msg_no = 1;
+	tx_info.final_len = sizeof(struct nvme_mi_mi_resp_hdr) + sizeof(ss_info);
+
+	poll_info.poll_no = 1;
+	poll_info.mprt = 0;
+	poll_info.timeouts[0] = 3141;
+	poll_info.timeouts[1] = 3141;
+
+	peer->tx_fn = tx_fn_mpr_poll;
+	peer->tx_data = &tx_info;
+
+	peer->poll_fn = poll_fn_mpr_poll;
+	peer->poll_data = &poll_info;
+
+	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	assert(rc == 0);
+}
 
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
@@ -413,12 +629,18 @@ struct test {
 	DEFINE_TEST(tx_err),
 	DEFINE_TEST(tx_short),
 	DEFINE_TEST(read_mi_data),
+	DEFINE_TEST(poll_err),
 	DEFINE_TEST(mi_resp_err),
 	DEFINE_TEST(admin_resp_err),
 	DEFINE_TEST(admin_resp_sizes),
 	DEFINE_TEST(admin_resp_sizes_unaligned),
+	DEFINE_TEST(poll_timeout_value),
+	DEFINE_TEST(poll_timeout),
 	DEFINE_TEST(mpr_mi),
 	DEFINE_TEST(mpr_admin),
+	DEFINE_TEST(mpr_timeouts),
+	DEFINE_TEST(mpr_timeout_clamp),
+	DEFINE_TEST(mpr_mprt_zero),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep,

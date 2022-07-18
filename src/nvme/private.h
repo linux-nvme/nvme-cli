@@ -10,6 +10,7 @@
 #define _LIBNVME_PRIVATE_H
 
 #include <ccan/list/list.h>
+#include <sys/poll.h>
 #include <sys/socket.h>
 
 #include "fabrics.h"
@@ -216,6 +217,7 @@ struct __mi_mctp_socket_ops {
 	int (*socket)(int, int, int);
 	ssize_t (*sendmsg)(int, const struct msghdr *, int);
 	ssize_t (*recvmsg)(int, struct msghdr *, int);
+	int (*poll)(struct pollfd *, nfds_t, int);
 	int (*ioctl_tag)(int, unsigned long, struct mctp_ioc_tag_ctl *);
 };
 void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops);

@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/uio.h>
@@ -94,6 +95,7 @@ static struct __mi_mctp_socket_ops ops = {
 	socket,
 	sendmsg,
 	recvmsg,
+	poll,
 	ioctl_tag,
 };
 
@@ -166,16 +168,27 @@ static void nvme_mi_mctp_tag_drop(struct nvme_mi_ep *ep, __u8 tag)
 
 #endif /* !defined SIOMCTPTAGALLOC */
 
-static bool nvme_mi_mctp_resp_is_mpr(struct nvme_mi_resp *resp, size_t len)
+struct nvme_mi_msg_resp_mpr {
+	struct nvme_mi_msg_hdr hdr;
+	__u8	status;
+	__u8	rsvd0;
+	__u16	mprt;
+};
+
+/* Check if this response was a More Processing Required response; if so,
+ * populate the worst-case expected processing time, given in milliseconds.
+ */
+static bool nvme_mi_mctp_resp_is_mpr(struct nvme_mi_resp *resp, size_t len,
+				     unsigned int *mpr_time)
 {
-	struct nvme_mi_msg_resp *msg;
+	struct nvme_mi_msg_resp_mpr *msg;
 	__le32 mic;
 	__u32 crc;
 
 	if (len != sizeof(*msg) + sizeof(mic))
 		return false;
 
-	msg = (struct nvme_mi_msg_resp *)resp->hdr;
+	msg = (struct nvme_mi_msg_resp_mpr *)resp->hdr;
 
 	if (msg->status != NVME_MI_RESP_MPR)
 		return false;
@@ -199,6 +212,9 @@ static bool nvme_mi_mctp_resp_is_mpr(struct nvme_mi_resp *resp, size_t len)
 	if (le32_to_cpu(mic) != crc)
 		return false;
 
+	if (mpr_time)
+		*mpr_time = cpu_to_le16(msg->mprt) * 100;
+
 	return true;
 }
 
@@ -209,8 +225,10 @@ static int nvme_mi_mctp_submit(struct nvme_mi_ep *ep,
 	struct nvme_mi_transport_mctp *mctp;
 	struct iovec req_iov[3], resp_iov[3];
 	struct msghdr req_msg, resp_msg;
+	int i, rc, errno_save, timeout;
 	struct sockaddr_mctp addr;
-	int i, rc, errno_save;
+	struct pollfd pollfds[1];
+	unsigned int mpr_time;
 	ssize_t len;
 	__le32 mic;
 	__u8 tag;
@@ -283,9 +301,29 @@ static int nvme_mi_mctp_submit(struct nvme_mi_ep *ep,
 	resp_msg.msg_iov = resp_iov;
 	resp_msg.msg_iovlen = 3;
 
+	pollfds[0].fd = mctp->sd;
+	pollfds[0].events = POLLIN;
+	timeout = ep->timeout ?: -1;
 retry:
+	rc = ops.poll(pollfds, 1, timeout);
+	if (rc < 0) {
+		if (errno == EINTR)
+			goto retry;
+		errno_save = errno;
+		nvme_msg(ep->root, LOG_ERR,
+			 "Failed polling on MCTP socket: %m");
+		errno = errno_save;
+		return -1;
+	}
+
+	if (rc == 0) {
+		nvme_msg(ep->root, LOG_DEBUG, "Timeout on MCTP socket");
+		errno = ETIMEDOUT;
+		return -1;
+	}
+
 	rc = -1;
-	len = ops.recvmsg(mctp->sd, &resp_msg, 0);
+	len = ops.recvmsg(mctp->sd, &resp_msg, MSG_DONTWAIT);
 
 	if (len < 0) {
 		errno_save = errno;
@@ -331,11 +369,20 @@ retry:
 	 * header fields. However, we need to do this in the transport in order
 	 * to keep the tag allocated and retry the recvmsg
 	 */
-	if (nvme_mi_mctp_resp_is_mpr(resp, len)) {
+	if (nvme_mi_mctp_resp_is_mpr(resp, len, &mpr_time)) {
 		nvme_msg(ep->root, LOG_DEBUG,
 			 "Received More Processing Required, waiting for response\n");
-		/* TODO: when we implement timeouts, inspect the MPR response
-		 * for the estimated completion time. */
+
+		/* if the controller hasn't set MPRT, fall back to our command/
+		 * response timeout, or the largest possible MPRT if none set */
+		if (!mpr_time)
+			mpr_time = ep->timeout ?: 0xffff;
+
+		/* clamp to the endpoint max */
+		if (ep->mprt_max && mpr_time > ep->mprt_max)
+			mpr_time = ep->mprt_max;
+
+		timeout = mpr_time;
 		goto retry;
 	}
 
@@ -433,6 +480,13 @@ nvme_mi_ep_t nvme_mi_open_mctp(nvme_root_t root, unsigned int netid, __u8 eid)
 
 	ep->transport = &nvme_mi_transport_mctp;
 	ep->transport_data = mctp;
+
+	/* Assuming an i2c transport at 100kHz, smallest MTU (64+4). Given
+	 * a worst-case clock stretch, and largest-sized packets, we can
+	 * expect up to 1.6s per command/response pair. Allowing for a
+	 * retry or two (handled by lower layers), 5s is a reasonable timeout.
+	 */
+	ep->timeout = 5000;
 
 	return ep;
 
