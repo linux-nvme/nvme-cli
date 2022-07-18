@@ -54,16 +54,16 @@ else
     exit 1
 fi
 
-./$doc_dir/update-docs.sh
-git add $doc_dir
-git commit -s -m "Regenerate all documentation" \
-              -m "Regenerate documentation for $VERSION release"
-
 # update meson.build
 sed -i -e "0,/[ \t]version: /s/\([ \t]version: \).*/\1\'$ver\',/" meson.build
 git add meson.build
+git commit -s -m "build: Update version to $VERSION"
 
-git commit -s -m "Release $VERSION"
+# update documentation
+./$doc_dir/update-docs.sh
+git add $doc_dir
+git commit -s -m "doc: Regenerate all docs for $VERSION"
+
 git tag -s -m "Release $VERSION" "$VERSION"
 git push --dry-run origin "$VERSION"^{}:master tag "$VERSION"
 
