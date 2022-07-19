@@ -106,6 +106,22 @@ int nvme_cli_ns_mgmt_delete(struct nvme_dev *dev, __u32 nsid)
 	return do_admin_op(ns_mgmt_delete, dev, nsid);
 }
 
+int nvme_cli_ns_attach(struct nvme_dev *dev, struct nvme_ns_attach_args *args)
+{
+	return do_admin_args_op(ns_attach, dev, args);
+}
+
+int nvme_cli_ns_attach_ctrls(struct nvme_dev *dev, __u32 nsid,
+			     struct nvme_ctrl_list *ctrlist)
+{
+	return do_admin_op(ns_attach_ctrls, dev, nsid, ctrlist);
+}
+
+int nvme_cli_ns_detach_ctrls(struct nvme_dev *dev, __u32 nsid,
+			     struct nvme_ctrl_list *ctrlist)
+{
+	return do_admin_op(ns_detach_ctrls, dev, nsid, ctrlist);
+}
 
 /* The MI & direct interfaces don't have an exactly-matching API for
  * ns_mgmt_create, as we don't support a timeout for MI.

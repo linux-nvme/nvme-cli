@@ -29,6 +29,13 @@ int nvme_cli_ns_mgmt_delete(struct nvme_dev *dev, __u32 nsid);
 int nvme_cli_ns_mgmt_create(struct nvme_dev *dev, struct nvme_id_ns *ns,
 			__u32 *nsid, __u32 timeout, __u8 csi);
 
+int nvme_cli_ns_attach(struct nvme_dev *dev, struct nvme_ns_attach_args *args);
+
+int nvme_cli_ns_attach_ctrls(struct nvme_dev *dev, __u32 nsid,
+			     struct nvme_ctrl_list *ctrlist);
+int nvme_cli_ns_detach_ctrls(struct nvme_dev *dev, __u32 nsid,
+			     struct nvme_ctrl_list *ctrlist);
+
 int nvme_cli_get_features(struct nvme_dev *dev,
 			  struct nvme_get_features_args *args);
 

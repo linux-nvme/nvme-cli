@@ -2454,11 +2454,11 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	nvme_init_ctrl_list(&cntlist, num, ctrlist);
 
 	if (attach)
-		err = nvme_ns_attach_ctrls(dev_fd(dev), cfg.namespace_id,
-					   &cntlist);
+		err = nvme_cli_ns_attach_ctrls(dev, cfg.namespace_id,
+					       &cntlist);
 	else
-		err = nvme_ns_detach_ctrls(dev_fd(dev), cfg.namespace_id,
-					   &cntlist);
+		err = nvme_cli_ns_detach_ctrls(dev, cfg.namespace_id,
+					       &cntlist);
 
 	if (!err)
 		printf("%s: Success, nsid:%d\n", cmd->name, cfg.namespace_id);
