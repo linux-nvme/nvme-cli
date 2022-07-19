@@ -1119,6 +1119,44 @@ static inline int nvme_mi_admin_identify_ctrl_list(nvme_mi_ctrl_t ctrl,
 }
 
 /**
+ * nvme_mi_admin_identify_nsid_ctrl_list() - Perform an Admin identify for a
+ * controller list with specific namespace ID
+ * @ctrl: Controller to process identify command
+ * @nsid: Namespace identifier
+ * @cntid: Controller ID to specify list start
+ * @list: List data to populate
+ *
+ * Perform an Identify command, for the controller list for @nsid, starting
+ * with IDs greater than or equal to @cntid.
+ *
+ * Will return an error if the length of the response data (from the
+ * controller) is not a full &NVME_IDENTIFY_DATA_SIZE, so @id will be
+ * fully populated on success.
+ *
+ * Return: 0 on success, non-zero on failure
+ *
+ * See: &struct nvme_ctrl_list
+ */
+static inline int nvme_mi_admin_identify_nsid_ctrl_list(nvme_mi_ctrl_t ctrl,
+							__u32 nsid, __u16 cntid,
+							struct nvme_ctrl_list *list)
+{
+	struct nvme_identify_args args = {
+		.result = NULL,
+		.data = list,
+		.args_size = sizeof(args),
+		.cns = NVME_IDENTIFY_CNS_CTRL_LIST,
+		.csi = NVME_CSI_NVM,
+		.nsid = nsid,
+		.cntid = cntid,
+		.cns_specific_id = NVME_CNSSPECID_NONE,
+		.uuidx = NVME_UUID_NONE,
+	};
+
+	return nvme_mi_admin_identify(ctrl, &args);
+}
+
+/**
  * nvme_mi_admin_identify_allocated_ns_list() - Perform an Admin identify for
  * an allocated namespace list
  * @ctrl: Controller to process identify command
