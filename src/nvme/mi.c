@@ -771,6 +771,45 @@ int nvme_mi_admin_ns_mgmt(nvme_mi_ctrl_t ctrl,
 	return 0;
 }
 
+int nvme_mi_admin_ns_attach(nvme_mi_ctrl_t ctrl,
+			    struct nvme_ns_attach_args *args)
+{
+	struct nvme_mi_admin_resp_hdr resp_hdr;
+	struct nvme_mi_admin_req_hdr req_hdr;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+
+	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id,
+			       nvme_admin_ns_attach);
+
+	req_hdr.cdw1 = cpu_to_le32(args->nsid);
+	req_hdr.cdw10 = cpu_to_le32(args->sel & 0xf);
+	req.data = args->ctrlist;
+	req.data_len = sizeof(*args->ctrlist);
+	req_hdr.dlen = cpu_to_le32(sizeof(*args->ctrlist));
+	req_hdr.flags = 0x1;
+
+	nvme_mi_calc_req_mic(&req);
+
+	nvme_mi_admin_init_resp(&resp, &resp_hdr);
+
+	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
+	if (args->result)
+		*args->result = le32_to_cpu(resp_hdr.cdw0);
+
+	return 0;
+}
+
 static int nvme_mi_read_data(nvme_mi_ep_t ep, __u32 cdw0,
 			     void *data, size_t *data_len)
 {

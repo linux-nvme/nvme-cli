@@ -1260,6 +1260,97 @@ static void test_admin_ns_mgmt_delete(struct nvme_mi_ep *ep)
 	assert(!rc);
 }
 
+struct attach_op {
+	enum {
+		NS_ATTACH,
+		NS_DETACH,
+	} op;
+	struct nvme_ctrl_list *list;
+};
+
+static int test_admin_ns_attach_cb(struct nvme_mi_ep *ep,
+				   struct nvme_mi_req *req,
+				   struct nvme_mi_resp *resp,
+				   void *data)
+{
+	struct attach_op *op = data;
+	__u8 *rq_hdr, sel;
+	__u32 nsid;
+
+	rq_hdr = (__u8 *)req->hdr;
+	assert(rq_hdr[4] == nvme_admin_ns_attach);
+
+	sel = rq_hdr[44];
+	nsid = rq_hdr[11] << 24 | rq_hdr[10] << 16 | rq_hdr[9] << 8 | rq_hdr[8];
+
+	assert(req->data_len == sizeof(*op->list));
+
+	assert(nsid == 0x02030405);
+	switch (op->op) {
+	case NS_ATTACH:
+		assert(sel == NVME_NS_ATTACH_SEL_CTRL_ATTACH);
+		break;
+	case NS_DETACH:
+		assert(sel == NVME_NS_ATTACH_SEL_CTRL_DEATTACH);
+		break;
+	default:
+		assert(0);
+	}
+
+	assert(!memcmp(req->data, op->list, sizeof(*op->list)));
+
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+static void test_admin_ns_attach(struct nvme_mi_ep *ep)
+{
+	struct nvme_ctrl_list list = { 0 };
+	struct attach_op aop;
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	list.num = cpu_to_le16(2);
+	list.identifier[0] = 4;
+	list.identifier[1] = 5;
+
+	aop.op = NS_ATTACH;
+	aop.list = &list;
+
+	test_set_transport_callback(ep, test_admin_ns_attach_cb, &aop);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	rc = nvme_mi_admin_ns_attach_ctrls(ctrl, 0x02030405, &list);
+	assert(!rc);
+}
+
+static void test_admin_ns_detach(struct nvme_mi_ep *ep)
+{
+	struct nvme_ctrl_list list = { 0 };
+	struct attach_op aop;
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	list.num = cpu_to_le16(2);
+	list.identifier[0] = 6;
+	list.identifier[1] = 7;
+
+	aop.op = NS_DETACH;
+	aop.list = &list;
+
+	test_set_transport_callback(ep, test_admin_ns_attach_cb, &aop);
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	rc = nvme_mi_admin_ns_detach_ctrls(ctrl, 0x02030405, &list);
+	assert(!rc);
+}
+
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -1292,6 +1383,8 @@ struct test {
 	DEFINE_TEST(admin_id_nsid_ctrl_list),
 	DEFINE_TEST(admin_ns_mgmt_create),
 	DEFINE_TEST(admin_ns_mgmt_delete),
+	DEFINE_TEST(admin_ns_attach),
+	DEFINE_TEST(admin_ns_detach),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)

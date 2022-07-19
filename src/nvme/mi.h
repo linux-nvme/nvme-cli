@@ -1442,4 +1442,58 @@ static inline int nvme_mi_admin_ns_mgmt_delete(nvme_mi_ctrl_t ctrl, __u32 nsid)
 	return nvme_mi_admin_ns_mgmt(ctrl, &args);
 }
 
+/**
+ * nvme_mi_admin_ns_attach() - Attach or detach namespace to controller(s)
+ * @ctrl: Controller to send command to
+ * @args: Namespace Attach command arguments
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+int nvme_mi_admin_ns_attach(nvme_mi_ctrl_t ctrl,
+			    struct nvme_ns_attach_args *args);
+
+/**
+ * nvme_mi_admin_ns_attach_ctrls() - Attach namespace to controllers
+ * @ctrl: Controller to send command to
+ * @nsid: Namespace ID to attach
+ * @ctrlist: Controller list to modify attachment state of nsid
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_ns_attach_ctrls(nvme_mi_ctrl_t ctrl, __u32 nsid,
+						struct nvme_ctrl_list *ctrlist)
+{
+	struct nvme_ns_attach_args args = {
+		.result = NULL,
+		.ctrlist = ctrlist,
+		.args_size = sizeof(args),
+		.nsid = nsid,
+		.sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH,
+	};
+
+	return nvme_mi_admin_ns_attach(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_ns_detach_ctrls() - Detach namespace from controllers
+ * @ctrl: Controller to send command to
+ * @nsid: Namespace ID to detach
+ * @ctrlist: Controller list to modify attachment state of nsid
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_ns_detach_ctrls(nvme_mi_ctrl_t ctrl, __u32 nsid,
+						struct nvme_ctrl_list *ctrlist)
+{
+	struct nvme_ns_attach_args args = {
+		.result = NULL,
+		.ctrlist = ctrlist,
+		.args_size = sizeof(args),
+		.nsid = nsid,
+		.sel = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
+	};
+
+	return nvme_mi_admin_ns_attach(ctrl, &args);
+}
+
 #endif /* _LIBNVME_MI_MI_H */
