@@ -11,6 +11,11 @@
 
 int nvme_cli_identify(struct nvme_dev *dev, struct nvme_identify_args *args);
 int nvme_cli_identify_ctrl(struct nvme_dev *dev, struct nvme_id_ctrl *ctrl);
+int nvme_cli_identify_ctrl_list(struct nvme_dev *dev, __u16 ctrl_id,
+				struct nvme_ctrl_list *list);
+int nvme_cli_identify_nsid_ctrl_list(struct nvme_dev *dev, __u32 nsid,
+				     __u16 ctrl_id,
+				     struct nvme_ctrl_list *list);
 int nvme_cli_identify_ns(struct nvme_dev *dev, __u32 nsid,
 			 struct nvme_id_ns *ns);
 int nvme_cli_identify_allocated_ns(struct nvme_dev *dev, __u32 nsid,

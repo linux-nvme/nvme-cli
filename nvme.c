@@ -2117,12 +2117,10 @@ static int list_ctrl(int argc, char **argv, struct command *cmd, struct plugin *
 	}
 
 	if (cfg.namespace_id == NVME_NSID_NONE)
-		err = nvme_identify_ctrl_list(dev_fd(dev), cfg.cntid,
-					      cntlist);
+		err = nvme_cli_identify_ctrl_list(dev, cfg.cntid, cntlist);
 	else
-		err = nvme_identify_nsid_ctrl_list(dev_fd(dev),
-						   cfg.namespace_id,
-						   cfg.cntid, cntlist);
+		err = nvme_cli_identify_nsid_ctrl_list(dev, cfg.namespace_id,
+							cfg.cntid, cntlist);
 	if (!err)
 		nvme_show_list_ctrl(cntlist, flags);
 	else if (err > 0)

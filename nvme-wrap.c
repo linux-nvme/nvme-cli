@@ -58,6 +58,19 @@ int nvme_cli_identify_ctrl(struct nvme_dev *dev, struct nvme_id_ctrl *ctrl)
 	return do_admin_op(identify_ctrl, dev, ctrl);
 }
 
+int nvme_cli_identify_ctrl_list(struct nvme_dev *dev, __u16 ctrl_id,
+				struct nvme_ctrl_list *list)
+{
+	return do_admin_op(identify_ctrl_list, dev, ctrl_id, list);
+}
+
+int nvme_cli_identify_nsid_ctrl_list(struct nvme_dev *dev, __u32 nsid,
+				     __u16 ctrl_id,
+				     struct nvme_ctrl_list *list)
+{
+	return do_admin_op(identify_nsid_ctrl_list, dev, nsid, ctrl_id, list);
+}
+
 int nvme_cli_identify_ns(struct nvme_dev *dev, __u32 nsid,
 			 struct nvme_id_ns *ns)
 {
