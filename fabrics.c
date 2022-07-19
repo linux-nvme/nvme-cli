@@ -903,6 +903,23 @@ out_free:
 	return errno;
 }
 
+static nvme_ctrl_t lookup_nvme_ctrl(nvme_root_t r, const char *name)
+{
+	nvme_host_t h;
+	nvme_subsystem_t s;
+	nvme_ctrl_t c;
+
+	nvme_for_each_host(r, h) {
+		nvme_for_each_subsystem(h, s) {
+			nvme_subsystem_for_each_ctrl(s, c) {
+				if (!strcmp(nvme_ctrl_get_name(c), name))
+					return c;
+			}
+		}
+	}
+	return NULL;
+}
+
 int nvmf_disconnect(const char *desc, int argc, char **argv)
 {
 	const char *device = "nvme device handle";
@@ -980,11 +997,10 @@ int nvmf_disconnect(const char *desc, int argc, char **argv)
 		while ((p = strsep(&d, ",")) != NULL) {
 			if (!strncmp(p, "/dev/", 5))
 				p += 5;
-			c = nvme_scan_ctrl(r, p);
+			c = lookup_nvme_ctrl(r, p);
 			if (!c) {
 				fprintf(stderr,
-					"Did not find device %s: %s\n",
-					p, nvme_strerror(errno));
+					"Did not find device %s\n", p);
 				nvme_free_tree(r);
 				return errno;
 			}
