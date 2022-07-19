@@ -18,6 +18,7 @@ LIBNVME_MI_1_1 {
 		nvme_mi_admin_set_features;
 		nvme_mi_admin_ns_mgmt;
 		nvme_mi_admin_ns_attach;
+		nvme_mi_admin_format_nvm;
 		nvme_mi_admin_xfer;
 		nvme_mi_admin_security_send;
 		nvme_mi_admin_security_recv;

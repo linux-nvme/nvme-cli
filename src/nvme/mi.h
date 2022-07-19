@@ -1496,4 +1496,17 @@ static inline int nvme_mi_admin_ns_detach_ctrls(nvme_mi_ctrl_t ctrl, __u32 nsid,
 	return nvme_mi_admin_ns_attach(ctrl, &args);
 }
 
+/**
+ * nvme_mi_admin_format_nvm() - Format NVMe namespace
+ * @ctrl: Controller to send command to
+ * @args: Format NVM command arguments
+ *
+ * Perform a low-level format to set the LBA data & metadata size. May destroy
+ * data & metadata on the specified namespaces
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+int nvme_mi_admin_format_nvm(nvme_mi_ctrl_t ctrl,
+			     struct nvme_format_nvm_args *args);
+
 #endif /* _LIBNVME_MI_MI_H */

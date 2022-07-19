@@ -1350,6 +1350,83 @@ static void test_admin_ns_detach(struct nvme_mi_ep *ep)
 	assert(!rc);
 }
 
+struct format_data {
+	__u32 nsid;
+	__u8 lbafu;
+	__u8 ses;
+	__u8 pil;
+	__u8 pi;
+	__u8 mset;
+	__u8 lbafl;
+};
+
+static int test_admin_format_nvm_cb(struct nvme_mi_ep *ep,
+				    struct nvme_mi_req *req,
+				    struct nvme_mi_resp *resp,
+				    void *data)
+{
+	struct nvme_format_nvm_args *args = data;
+	__u8 *rq_hdr;
+	__u32 nsid;
+
+	assert(req->data_len == 0);
+
+	rq_hdr = (__u8 *)req->hdr;
+
+	assert(rq_hdr[4] == nvme_admin_format_nvm);
+
+	nsid = rq_hdr[11] << 24 | rq_hdr[10] << 16 | rq_hdr[9] << 8 | rq_hdr[8];
+	assert(nsid == args->nsid);
+
+	assert(((rq_hdr[44] >> 0) & 0xf) == args->lbaf);
+	assert(((rq_hdr[44] >> 4) & 0x1) == args->mset);
+	assert(((rq_hdr[44] >> 5) & 0x7) == args->pi);
+
+	assert(((rq_hdr[45] >> 0) & 0x1) == args->pil);
+	assert(((rq_hdr[45] >> 1) & 0x7) == args->ses);
+	assert(((rq_hdr[45] >> 4) & 0x3) == args->lbafu);
+
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+static void test_admin_format_nvm(struct nvme_mi_ep *ep)
+{
+	struct nvme_format_nvm_args args = { 0 };
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	test_set_transport_callback(ep, test_admin_format_nvm_cb, &args);
+
+	/* ensure we have the cdw0 bit field encoding correct, by testing twice
+	 * with inverted bit values */
+	args.args_size = sizeof(args);
+	args.nsid = 0x04030201;
+	args.lbafu = 0x3;
+	args.ses = 0x0;
+	args.pil = 0x1;
+	args.pi = 0x0;
+	args.mset = 0x1;
+	args.lbaf = 0x0;
+
+	rc = nvme_mi_admin_format_nvm(ctrl, &args);
+	assert(!rc);
+
+	args.nsid = ~args.nsid;
+	args.lbafu = 0;
+	args.ses = 0x7;
+	args.pil = 0x0;
+	args.pi = 0x7;
+	args.mset = 0x0;
+	args.lbaf = 0xf;
+
+	rc = nvme_mi_admin_format_nvm(ctrl, &args);
+	assert(!rc);
+}
 
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
@@ -1385,6 +1462,7 @@ struct test {
 	DEFINE_TEST(admin_ns_mgmt_delete),
 	DEFINE_TEST(admin_ns_attach),
 	DEFINE_TEST(admin_ns_detach),
+	DEFINE_TEST(admin_format_nvm),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)
