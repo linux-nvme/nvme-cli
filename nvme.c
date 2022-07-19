@@ -4987,7 +4987,6 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 
 	struct nvme_format_nvm_args args = {
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.nsid		= cfg.namespace_id,
 		.lbafu		= (cfg.lbaf & NVME_NS_FLBAS_HIGHER_MASK) >> 4,
 		.lbaf		= cfg.lbaf & NVME_NS_FLBAS_LOWER_MASK,
@@ -4998,14 +4997,14 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 		.timeout	= cfg.timeout,
 		.result		= NULL,
 	};
-	err = nvme_format_nvm(&args);
+	err = nvme_cli_format_nvm(dev, &args);
 	if (err < 0)
 		fprintf(stderr, "format: %s\n", nvme_strerror(errno));
 	else if (err != 0)
 		nvme_show_status(err);
 	else {
 		printf("Success formatting namespace:%x\n", cfg.namespace_id);
-		if (cfg.lbaf != prev_lbaf){
+		if (dev->type == NVME_DEV_DIRECT && cfg.lbaf != prev_lbaf){
 			if (is_chardev(dev)) {
 				if (ioctl(dev_fd(dev), NVME_IOCTL_RESCAN) < 0) {
 					fprintf(stderr, "failed to rescan namespaces\n");
@@ -5036,7 +5035,7 @@ static int format(int argc, char **argv, struct command *cmd, struct plugin *plu
 				}
 			}
 		}
-		if (cfg.reset && is_chardev(dev))
+		if (dev->type == NVME_DEV_DIRECT && cfg.reset && is_chardev(dev))
 			nvme_ctrl_reset(dev_fd(dev));
 	}
 

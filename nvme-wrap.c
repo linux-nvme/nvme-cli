@@ -123,6 +123,11 @@ int nvme_cli_ns_detach_ctrls(struct nvme_dev *dev, __u32 nsid,
 	return do_admin_op(ns_detach_ctrls, dev, nsid, ctrlist);
 }
 
+int nvme_cli_format_nvm(struct nvme_dev *dev, struct nvme_format_nvm_args *args)
+{
+	return do_admin_args_op(format_nvm, dev, args);
+}
+
 /* The MI & direct interfaces don't have an exactly-matching API for
  * ns_mgmt_create, as we don't support a timeout for MI.
  */
