@@ -1509,4 +1509,24 @@ static inline int nvme_mi_admin_ns_detach_ctrls(nvme_mi_ctrl_t ctrl, __u32 nsid,
 int nvme_mi_admin_format_nvm(nvme_mi_ctrl_t ctrl,
 			     struct nvme_format_nvm_args *args);
 
+/**
+ * nvme_mi_admin_sanitize_nvm() - Start a subsystem Sanitize operation
+ * @ctrl: Controller to send command to
+ * @args: Sanitize command arguments
+ *
+ * A sanitize operation alters all user data in the NVM subsystem such that
+ * recovery of any previous user data from any cache, the non-volatile media,
+ * or any Controller Memory Buffer is not possible.
+ *
+ * The Sanitize command starts a sanitize operation or to recover from a
+ * previously failed sanitize operation. The sanitize operation types that may
+ * be supported are Block Erase, Crypto Erase, and Overwrite. All sanitize
+ * operations are processed in the background, i.e., completion of the sanitize
+ * command does not indicate completion of the sanitize operation.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+int nvme_mi_admin_sanitize_nvm(nvme_mi_ctrl_t ctrl,
+			       struct nvme_sanitize_nvm_args *args);
+
 #endif /* _LIBNVME_MI_MI_H */

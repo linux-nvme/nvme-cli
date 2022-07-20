@@ -1428,6 +1428,70 @@ static void test_admin_format_nvm(struct nvme_mi_ep *ep)
 	assert(!rc);
 }
 
+static int test_admin_sanitize_nvm_cb(struct nvme_mi_ep *ep,
+				      struct nvme_mi_req *req,
+				      struct nvme_mi_resp *resp,
+				      void *data)
+{
+	struct nvme_sanitize_nvm_args *args = data;
+	__u8 *rq_hdr;
+	__u32 ovrpat;
+
+	assert(req->data_len == 0);
+
+	rq_hdr = (__u8 *)req->hdr;
+
+	assert(rq_hdr[4] == nvme_admin_sanitize_nvm);
+
+	assert(((rq_hdr[44] >> 0) & 0x7) == args->sanact);
+	assert(((rq_hdr[44] >> 3) & 0x1) == args->ause);
+	assert(((rq_hdr[44] >> 4) & 0xf) == args->owpass);
+
+	assert(((rq_hdr[45] >> 0) & 0x1) == args->oipbp);
+	assert(((rq_hdr[45] >> 1) & 0x1) == args->nodas);
+
+	ovrpat = rq_hdr[51] << 24 | rq_hdr[50] << 16 |
+		rq_hdr[49] << 8 | rq_hdr[48];
+	assert(ovrpat == args->ovrpat);
+
+	test_transport_resp_calc_mic(resp);
+
+	return 0;
+}
+
+static void test_admin_sanitize_nvm(struct nvme_mi_ep *ep)
+{
+	struct nvme_sanitize_nvm_args args = { 0 };
+	nvme_mi_ctrl_t ctrl;
+	int rc;
+
+	ctrl = nvme_mi_init_ctrl(ep, 5);
+	assert(ctrl);
+
+	test_set_transport_callback(ep, test_admin_sanitize_nvm_cb, &args);
+
+	args.args_size = sizeof(args);
+	args.sanact = 0x7;
+	args.ause = 0x0;
+	args.owpass = 0xf;
+	args.oipbp = 0x0;
+	args.nodas = 0x1;
+	args.ovrpat = ~0x04030201;
+
+	rc = nvme_mi_admin_sanitize_nvm(ctrl, &args);
+	assert(!rc);
+
+	args.sanact = 0x0;
+	args.ause = 0x1;
+	args.owpass = 0x0;
+	args.oipbp = 0x1;
+	args.nodas = 0x0;
+	args.ovrpat = 0x04030201;
+
+	rc = nvme_mi_admin_sanitize_nvm(ctrl, &args);
+	assert(!rc);
+}
+
 #define DEFINE_TEST(name) { #name, test_ ## name }
 struct test {
 	const char *name;
@@ -1463,6 +1527,7 @@ struct test {
 	DEFINE_TEST(admin_ns_attach),
 	DEFINE_TEST(admin_ns_detach),
 	DEFINE_TEST(admin_format_nvm),
+	DEFINE_TEST(admin_sanitize_nvm),
 };
 
 static void run_test(struct test *test, FILE *logfd, nvme_mi_ep_t ep)

@@ -850,6 +850,45 @@ int nvme_mi_admin_format_nvm(nvme_mi_ctrl_t ctrl,
 	return 0;
 }
 
+int nvme_mi_admin_sanitize_nvm(nvme_mi_ctrl_t ctrl,
+			       struct nvme_sanitize_nvm_args *args)
+{
+	struct nvme_mi_admin_resp_hdr resp_hdr;
+	struct nvme_mi_admin_req_hdr req_hdr;
+	struct nvme_mi_resp resp;
+	struct nvme_mi_req req;
+	int rc;
+
+	if (args->args_size < sizeof(*args))
+		return -EINVAL;
+
+	nvme_mi_admin_init_req(&req, &req_hdr, ctrl->id,
+			       nvme_admin_sanitize_nvm);
+
+	req_hdr.cdw10 = cpu_to_le32(((args->nodas ? 1 : 0) << 9)
+				    | ((args->oipbp ? 1 : 0) << 8)
+				    | ((args->owpass & 0xf) << 4)
+				    | ((args->ause ? 1 : 0) << 3)
+				    | ((args->sanact & 0x7) << 0));
+	req_hdr.cdw11 = cpu_to_le32(args->ovrpat);
+
+	nvme_mi_calc_req_mic(&req);
+
+	nvme_mi_admin_init_resp(&resp, &resp_hdr);
+
+	rc = nvme_mi_submit(ctrl->ep, &req, &resp);
+	if (rc)
+		return rc;
+
+	if (resp_hdr.status)
+		return resp_hdr.status;
+
+	if (args->result)
+		*args->result = le32_to_cpu(resp_hdr.cdw0);
+
+	return 0;
+}
+
 static int nvme_mi_read_data(nvme_mi_ep_t ep, __u32 cdw0,
 			     void *data, size_t *data_len)
 {
