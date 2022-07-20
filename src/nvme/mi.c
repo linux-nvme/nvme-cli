@@ -432,9 +432,9 @@ int nvme_mi_admin_identify_partial(nvme_mi_ctrl_t ctrl,
 
 /* retrieves a MCTP-messsage-sized chunk of log page data. offset and len are
  * specified within the args->data area */
-static int __nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
-					const struct nvme_get_log_args *args,
-					off_t offset, size_t *lenp, bool final)
+static int __nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl,
+				   const struct nvme_get_log_args *args,
+				   off_t offset, size_t *lenp, bool final)
 {
 	struct nvme_mi_admin_resp_hdr resp_hdr;
 	struct nvme_mi_admin_req_hdr req_hdr;
@@ -497,8 +497,7 @@ static int __nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
 	return 0;
 }
 
-int nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
-			       struct nvme_get_log_args *args)
+int nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args)
 {
 	const size_t xfer_size = 4096;
 	off_t xfer_offset;
@@ -520,8 +519,8 @@ int nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
 
 		final = xfer_offset + cur_xfer_size >= args->len;
 
-		rc = __nvme_mi_admin_get_log_page(ctrl, args, xfer_offset,
-						  &tmp, final);
+		rc = __nvme_mi_admin_get_log(ctrl, args, xfer_offset,
+					     &tmp, final);
 		if (rc)
 			break;
 

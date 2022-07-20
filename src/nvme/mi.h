@@ -1079,7 +1079,7 @@ static inline int nvme_mi_admin_identify_ctrl_list(nvme_mi_ctrl_t ctrl,
 }
 
 /**
- * nvme_mi_admin_get_log_page() - Retrieve log page data from controller
+ * nvme_mi_admin_get_log() - Retrieve log page data from controller
  * @ctrl: Controller to query
  * @args: Get Log Page command arguments
  *
@@ -1095,8 +1095,7 @@ static inline int nvme_mi_admin_identify_ctrl_list(nvme_mi_ctrl_t ctrl,
  *
  * See: &struct nvme_get_log_args
  */
-int nvme_mi_admin_get_log_page(nvme_mi_ctrl_t ctrl,
-			       struct nvme_get_log_args *args);
+int nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args);
 
 /**
  * nvme_mi_admin_security_send() - Perform a Security Send command on a
