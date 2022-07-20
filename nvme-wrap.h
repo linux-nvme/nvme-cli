@@ -43,4 +43,73 @@ int nvme_cli_sanitize_nvm(struct nvme_dev *dev,
 int nvme_cli_get_features(struct nvme_dev *dev,
 			  struct nvme_get_features_args *args);
 
+
+int nvme_cli_get_log(struct nvme_dev *dev, struct nvme_get_log_args *args);
+
+int nvme_cli_get_nsid_log(struct nvme_dev *dev, bool rae,
+			  enum nvme_cmd_get_log_lid lid,
+			  __u32 nsid, __u32 len, void *log);
+int nvme_cli_get_log_simple(struct nvme_dev *dev,
+			    enum nvme_cmd_get_log_lid lid,
+			    __u32 len, void *log);
+int nvme_cli_get_log_supported_log_pages(struct nvme_dev *dev, bool rae,
+					 struct nvme_supported_log_pages *log);
+int nvme_cli_get_log_error(struct nvme_dev *dev, unsigned int nr_entries,
+			   bool rae, struct nvme_error_log_page *err_log);
+int nvme_cli_get_log_smart(struct nvme_dev *dev, __u32 nsid, bool rae,
+			   struct nvme_smart_log *smart_log);
+int nvme_cli_get_log_fw_slot(struct nvme_dev *dev, bool rae,
+			     struct nvme_firmware_slot *fw_log);
+int nvme_cli_get_log_changed_ns_list(struct nvme_dev *dev, bool rae,
+				     struct nvme_ns_list *ns_log);
+int nvme_cli_get_log_cmd_effects(struct nvme_dev *dev, enum nvme_csi csi,
+				 struct nvme_cmd_effects_log *effects_log);
+int nvme_cli_get_log_device_self_test(struct nvme_dev *dev,
+				      struct nvme_self_test_log *log);
+int nvme_cli_get_log_create_telemetry_host(struct nvme_dev *dev,
+					   struct nvme_telemetry_log *log);
+int nvme_cli_get_log_telemetry_host(struct nvme_dev *dev, __u64 offset,
+				    __u32 len, void *log);
+int nvme_cli_get_log_telemetry_ctrl(struct nvme_dev *dev, bool rae,
+				    __u64 offset, __u32 len, void *log);
+int nvme_cli_get_log_endurance_group(struct nvme_dev *dev, __u16 endgid,
+				     struct nvme_endurance_group_log *log);
+int nvme_cli_get_log_predictable_lat_nvmset(struct nvme_dev *dev,
+					    __u16 nvmsetid,
+					    struct nvme_nvmset_predictable_lat_log *log);
+int nvme_cli_get_log_predictable_lat_event(struct nvme_dev *dev, bool rae,
+					   __u32 offset, __u32 len, void *log);
+int nvme_cli_get_log_ana(struct nvme_dev *dev,
+			 enum nvme_log_ana_lsp lsp, bool rae,
+			 __u64 offset, __u32 len, void *log);
+int nvme_cli_get_log_ana_groups(struct nvme_dev *dev, bool rae, __u32 len,
+				struct nvme_ana_group_desc *log);
+int nvme_cli_get_log_lba_status(struct nvme_dev *dev, bool rae,
+				__u64 offset, __u32 len, void *log);
+int nvme_cli_get_log_endurance_grp_evt(struct nvme_dev *dev, bool rae,
+				       __u32 offset, __u32 len, void *log);
+int nvme_cli_get_log_fid_supported_effects(struct nvme_dev *dev, bool rae,
+					   struct nvme_fid_supported_effects_log *log);
+int nvme_cli_get_log_mi_cmd_supported_effects(struct nvme_dev *dev, bool rae,
+					      struct nvme_mi_cmd_supported_effects_log *log);
+int nvme_cli_get_log_boot_partition(struct nvme_dev *dev, bool rae, __u8 lsp,
+				    __u32 len,
+				    struct nvme_boot_partition *part);
+int nvme_cli_get_log_discovery(struct nvme_dev *dev, bool rae,
+			       __u32 offset, __u32 len, void *log);
+int nvme_cli_get_log_media_unit_stat(struct nvme_dev *dev, __u16 domid,
+				     struct nvme_media_unit_stat_log *mus);
+int nvme_cli_get_log_support_cap_config_list(struct nvme_dev *dev,
+					     __u16 domid,
+					     struct nvme_supported_cap_config_list_log *cap);
+int nvme_cli_get_log_reservation(struct nvme_dev *dev, bool rae,
+				 struct nvme_resv_notification_log *log);
+int nvme_cli_get_log_sanitize(struct nvme_dev *dev, bool rae,
+			      struct nvme_sanitize_log_page *log);
+int nvme_cli_get_log_zns_changed_zones(struct nvme_dev *dev, __u32 nsid,
+				       bool rae,
+				       struct nvme_zns_changed_zone_log *log);
+int nvme_cli_get_log_persistent_event(struct nvme_dev *dev,
+				      enum nvme_pevent_log_action action,
+				      __u32 size, void *pevent_log);
 #endif /* _NVME_WRAP_H */
