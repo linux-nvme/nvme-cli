@@ -4489,17 +4489,15 @@ static int sanitize(int argc, char **argv, struct command *cmd, struct plugin *p
 
 	struct nvme_sanitize_nvm_args args = {
 		.args_size	= sizeof(args),
-		.fd		= dev_fd(dev),
 		.sanact		= cfg.sanact,
 		.ause		= cfg.ause,
 		.owpass		= cfg.owpass,
 		.oipbp		= cfg.oipbp,
 		.nodas		= cfg.no_dealloc,
 		.ovrpat		= cfg.ovrpat,
-		.timeout	= NVME_DEFAULT_IOCTL_TIMEOUT,
 		.result		= NULL,
 	};
-	err = nvme_sanitize_nvm(&args);
+	err = nvme_cli_sanitize_nvm(dev, &args);
 	if (err < 0)
 		fprintf(stderr, "sanitize: %s\n", nvme_strerror(errno));
 	else if (err > 0)

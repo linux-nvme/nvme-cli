@@ -128,6 +128,11 @@ int nvme_cli_format_nvm(struct nvme_dev *dev, struct nvme_format_nvm_args *args)
 	return do_admin_args_op(format_nvm, dev, args);
 }
 
+int nvme_cli_sanitize_nvm(struct nvme_dev *dev, struct nvme_sanitize_nvm_args *args)
+{
+	return do_admin_args_op(sanitize_nvm, dev, args);
+}
+
 /* The MI & direct interfaces don't have an exactly-matching API for
  * ns_mgmt_create, as we don't support a timeout for MI.
  */
