@@ -1250,6 +1250,814 @@ static inline int nvme_mi_admin_identify_active_ns_list(nvme_mi_ctrl_t ctrl,
 int nvme_mi_admin_get_log(nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args);
 
 /**
+ * nvme_mi_admin_get_nsid_log() - Helper for Get Log Page functions
+ * @ctrl: Controller to query
+ * @rae: Retain Asynchronous Events
+ * @lid: Log identifier
+ * @nsid: Namespace ID
+ * @len: length of log buffer
+ * @log: pointer for resulting log data
+ *
+ * Performs a Get Log Page Admin command for a specific log ID @lid and
+ * namespace ID @nsid. Log data is expected to be @len bytes, and is stored
+ * in @log on success. The @rae flag is passed as-is to the Get Log Page
+ * command, and is specific to the Log Page requested.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_nsid_log(nvme_mi_ctrl_t ctrl, bool rae,
+					     enum nvme_cmd_get_log_lid lid,
+					     __u32 nsid, __u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.lid = lid,
+		.len = len,
+		.nsid = nsid,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
+		.ot = false,
+	};
+
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_simple() - Helper for Get Log Page functions with no
+ * NSID or RAE requirements
+ * @ctrl: Controller to query
+ * @lid: Log identifier
+ * @len: length of log buffer
+ * @log: pointer for resulting log data
+ *
+ * Performs a Get Log Page Admin command for a specific log ID @lid, using
+ * NVME_NSID_ALL for the namespace identifier, and rae set to false.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_simple(nvme_mi_ctrl_t ctrl,
+					       enum nvme_cmd_get_log_lid lid,
+					       __u32 len, void *log)
+{
+	return nvme_mi_admin_get_nsid_log(ctrl, false, lid, NVME_NSID_ALL,
+					  len, log);
+}
+
+/**
+ * nvme_mi_admin_get_log_supported_log_pages() - Retrieve nmve supported log
+ * pages
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @log: Array of LID supported and Effects data structures
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_supported_log_pages(nvme_mi_ctrl_t ctrl,
+							    bool rae,
+							    struct nvme_supported_log_pages *log)
+{
+	return nvme_mi_admin_get_nsid_log(ctrl, rae,
+					  NVME_LOG_LID_SUPPORTED_LOG_PAGES,
+					  NVME_NSID_ALL, sizeof(*log), log);
+}
+
+/**
+ * nvme_mi_admin_get_log_error() - Retrieve nvme error log
+ * @ctrl: Controller to query
+ * @nr_entries: Number of error log entries allocated
+ * @rae: Retain asynchronous events
+ * @err_log: Array of error logs of size 'entries'
+ *
+ * This log page describes extended error information for a command that
+ * completed with error, or may report an error that is not specific to a
+ * particular command.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_error(nvme_mi_ctrl_t ctrl,
+					      unsigned int nr_entries, bool rae,
+					      struct nvme_error_log_page *err_log)
+{
+	return nvme_mi_admin_get_nsid_log(ctrl, rae, NVME_LOG_LID_ERROR,
+				 NVME_NSID_ALL, sizeof(*err_log) * nr_entries,
+				 err_log);
+}
+
+/**
+ * nvme_mi_admin_get_log_smart() - Retrieve nvme smart log
+ * @ctrl: Controller to query
+ * @nsid: Optional namespace identifier
+ * @rae: Retain asynchronous events
+ * @smart_log: User address to store the smart log
+ *
+ * This log page provides SMART and general health information. The information
+ * provided is over the life of the controller and is retained across power
+ * cycles. To request the controller log page, the namespace identifier
+ * specified is FFFFFFFFh. The controller may also support requesting the log
+ * page on a per namespace basis, as indicated by bit 0 of the LPA field in the
+ * Identify Controller data structure.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_smart(nvme_mi_ctrl_t ctrl, __u32 nsid,
+					      bool rae,
+					      struct nvme_smart_log *smart_log)
+{
+	return nvme_mi_admin_get_nsid_log(ctrl, rae, NVME_LOG_LID_SMART,
+				 nsid, sizeof(*smart_log), smart_log);
+}
+
+/**
+ * nvme_mi_admin_get_log_fw_slot() - Retrieves the controller firmware log
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @fw_log: User address to store the log page
+ *
+ * This log page describes the firmware revision stored in each firmware slot
+ * supported. The firmware revision is indicated as an ASCII string. The log
+ * page also indicates the active slot number.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_fw_slot(nvme_mi_ctrl_t ctrl, bool rae,
+			struct nvme_firmware_slot *fw_log)
+{
+	return nvme_mi_admin_get_nsid_log(ctrl, rae, NVME_LOG_LID_FW_SLOT,
+				 NVME_NSID_ALL, sizeof(*fw_log), fw_log);
+}
+
+/**
+ * nvme_mi_admin_get_log_changed_ns_list() - Retrieve namespace changed list
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @ns_log: User address to store the log page
+ *
+ * This log page describes namespaces attached to this controller that have
+ * changed since the last time the namespace was identified, been added, or
+ * deleted.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_changed_ns_list(nvme_mi_ctrl_t ctrl,
+							bool rae,
+							struct nvme_ns_list *ns_log)
+{
+	return nvme_mi_admin_get_nsid_log(ctrl, rae, NVME_LOG_LID_CHANGED_NS,
+				 NVME_NSID_ALL, sizeof(*ns_log), ns_log);
+}
+
+/**
+ * nvme_mi_admin_get_log_cmd_effects() - Retrieve nvme command effects log
+ * @ctrl: Controller to query
+ * @csi: Command Set Identifier
+ * @effects_log: User address to store the effects log
+ *
+ * This log page describes the commands that the controller supports and the
+ * effects of those commands on the state of the NVM subsystem.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_cmd_effects(nvme_mi_ctrl_t ctrl,
+						    enum nvme_csi csi,
+						    struct nvme_cmd_effects_log *effects_log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = effects_log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_CMD_EFFECTS,
+		.len = sizeof(*effects_log),
+		.nsid = NVME_NSID_ALL,
+		.csi = csi,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_device_self_test() - Retrieve the device self test log
+ * @ctrl: Controller to query
+ * @log: Userspace address of the log payload
+ *
+ * The log page indicates the status of an in progress self test and the
+ * percent complete of that operation, and the results of the previous 20
+ * self-test operations.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_device_self_test(nvme_mi_ctrl_t ctrl,
+							 struct nvme_self_test_log *log)
+{
+	return nvme_mi_admin_get_nsid_log(ctrl, false,
+					  NVME_LOG_LID_DEVICE_SELF_TEST,
+					  NVME_NSID_ALL, sizeof(*log), log);
+}
+
+/**
+ * nvme_mi_admin_get_log_create_telemetry_host() - Create host telemetry log
+ * @ctrl: Controller to query
+ * @log: Userspace address of the log payload
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_create_telemetry_host(nvme_mi_ctrl_t ctrl,
+							      struct nvme_telemetry_log *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_TELEMETRY_HOST,
+		.len = sizeof(*log),
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_TELEM_HOST_LSP_CREATE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_telemetry_host() - Get Telemetry Host-Initiated log
+ * page
+ * @ctrl: Controller to query
+ * @offset: Offset into the telemetry data
+ * @len: Length of provided user buffer to hold the log data in bytes
+ * @log: User address for log page data
+ *
+ * Retrieves the Telemetry Host-Initiated log page at the requested offset
+ * using the previously existing capture.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_telemetry_host(nvme_mi_ctrl_t ctrl,
+						       __u64 offset, __u32 len,
+						       void *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_TELEMETRY_HOST,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_TELEM_HOST_LSP_RETAIN,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_telemetry_ctrl() - Get Telemetry Controller-Initiated
+ * log page
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @offset: Offset into the telemetry data
+ * @len: Length of provided user buffer to hold the log data in bytes
+ * @log: User address for log page data
+ *
+ * Retrieves the Telemetry Controller-Initiated log page at the requested offset
+ * using the previously existing capture.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_telemetry_ctrl(nvme_mi_ctrl_t ctrl,
+						       bool rae,
+						       __u64 offset, __u32 len,
+						       void *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = offset,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_TELEMETRY_CTRL,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_endurance_group() - Get Endurance Group log
+ * @ctrl: Controller to query
+ * @endgid: Starting group identifier to return in the list
+ * @log: User address to store the endurance log
+ *
+ * This log page indicates if an Endurance Group Event has occurred for a
+ * particular Endurance Group. If an Endurance Group Event has occurred, the
+ * details of the particular event are included in the Endurance Group
+ * Information log page for that Endurance Group. An asynchronous event is
+ * generated when an entry for an Endurance Group is newly added to this log
+ * page.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_endurance_group(nvme_mi_ctrl_t ctrl,
+							__u16 endgid,
+							struct nvme_endurance_group_log *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_ENDURANCE_GROUP,
+		.len = sizeof(*log),
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = endgid,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_predictable_lat_nvmset() - Predictable Latency Per NVM
+ * Set
+ * @ctrl: Controller to query
+ * @nvmsetid: NVM set id
+ * @log: User address to store the predictable latency log
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_predictable_lat_nvmset(nvme_mi_ctrl_t ctrl,
+							       __u16 nvmsetid,
+							       struct nvme_nvmset_predictable_lat_log *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_PREDICTABLE_LAT_NVMSET,
+		.len = sizeof(*log),
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = nvmsetid,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_predictable_lat_event() - Retrieve Predictable Latency
+ * Event Aggregate Log Page
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @offset: Offset into the predictable latency event
+ * @len: Length of provided user buffer to hold the log data in bytes
+ * @log: User address for log page data
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_predictable_lat_event(nvme_mi_ctrl_t ctrl,
+							      bool rae,
+							      __u32 offset,
+							      __u32 len,
+							      void *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = offset,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_PREDICTABLE_LAT_AGG,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_ana() - Retrieve Asymmetric Namespace Access log page
+ * @ctrl: Controller to query
+ * @lsp: Log specific, see &enum nvme_get_log_ana_lsp
+ * @rae: Retain asynchronous events
+ * @offset: Offset to the start of the log page
+ * @len: The allocated length of the log page
+ * @log: User address to store the ana log
+ *
+ * This log consists of a header describing the log and descriptors containing
+ * the asymmetric namespace access information for ANA Groups that contain
+ * namespaces that are attached to the controller processing the command.
+ *
+ * See &struct nvme_ana_rsp_hdr for the definition of the returned structure.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_ana(nvme_mi_ctrl_t ctrl,
+					    enum nvme_log_ana_lsp lsp, bool rae,
+					    __u64 offset, __u32 len, void *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = offset,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_ANA,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = (__u8)lsp,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_ana_groups() - Retrieve Asymmetric Namespace Access
+ * groups only log page
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @len: The allocated length of the log page
+ * @log: User address to store the ana group log
+ *
+ * See &struct nvme_ana_group_desc for the definition of the returned structure.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_ana_groups(nvme_mi_ctrl_t ctrl,
+						   bool rae, __u32 len,
+						   struct nvme_ana_group_desc *log)
+{
+	return nvme_mi_admin_get_log_ana(ctrl, NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY, rae, 0,
+				len, log);
+}
+
+/**
+ * nvme_mi_admin_get_log_lba_status() - Retrieve LBA Status
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @offset: Offset to the start of the log page
+ * @len: The allocated length of the log page
+ * @log: User address to store the log page
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_lba_status(nvme_mi_ctrl_t ctrl, bool rae,
+						   __u64 offset, __u32 len,
+						   void *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = offset,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_LBA_STATUS,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_endurance_grp_evt() - Retrieve Rotational Media
+ * Information
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @offset: Offset to the start of the log page
+ * @len: The allocated length of the log page
+ * @log: User address to store the log page
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_endurance_grp_evt(nvme_mi_ctrl_t ctrl,
+							  bool rae,
+							  __u32 offset,
+							  __u32 len,
+							  void *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = offset,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_ENDURANCE_GRP_EVT,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_fid_supported_effects() - Retrieve Feature Identifiers
+ * Supported and Effects
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @log: FID Supported and Effects data structure
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_fid_supported_effects(nvme_mi_ctrl_t ctrl,
+							      bool rae,
+							      struct nvme_fid_supported_effects_log *log)
+{
+	return nvme_mi_admin_get_nsid_log(ctrl, rae,
+					  NVME_LOG_LID_FID_SUPPORTED_EFFECTS,
+					  NVME_NSID_NONE, sizeof(*log), log);
+}
+
+/**
+ * nvme_mi_admin_get_log_mi_cmd_supported_effects() - displays the MI Commands
+ * Supported by the controller
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @log: MI Command Supported and Effects data structure
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_mi_cmd_supported_effects(nvme_mi_ctrl_t ctrl,
+								 bool rae,
+								 struct nvme_mi_cmd_supported_effects_log *log)
+{
+	return nvme_mi_admin_get_nsid_log(ctrl, rae, NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS,
+				 NVME_NSID_NONE, sizeof(*log), log);
+}
+
+/**
+ * nvme_mi_admin_get_log_boot_partition() - Retrieve Boot Partition
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @lsp: The log specified field of LID
+ * @len: The allocated size, minimum
+ *		struct nvme_boot_partition
+ * @part: User address to store the log page
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_boot_partition(nvme_mi_ctrl_t ctrl,
+						       bool rae, __u8 lsp,
+						       __u32 len,
+						       struct nvme_boot_partition *part)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = part,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_BOOT_PARTITION,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_discovery() - Retrieve Discovery log page
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @offset: Offset of this log to retrieve
+ * @len: The allocated size for this portion of the log
+ * @log: User address to store the discovery log
+ *
+ * Supported only by fabrics discovery controllers, returning discovery
+ * records.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_discovery(nvme_mi_ctrl_t ctrl, bool rae,
+						  __u32 offset, __u32 len,
+						  void *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = offset,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_DISCOVER,
+		.len = len,
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_media_unit_stat() - Retrieve Media Unit Status
+ * @ctrl: Controller to query
+ * @domid: Domain Identifier selection, if supported
+ * @mus: User address to store the Media Unit statistics log
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_media_unit_stat(nvme_mi_ctrl_t ctrl,
+							__u16 domid,
+							struct nvme_media_unit_stat_log *mus)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = mus,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_MEDIA_UNIT_STATUS,
+		.len = sizeof(*mus),
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = domid,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_support_cap_config_list() - Retrieve Supported
+ * Capacity Configuration List
+ * @ctrl: Controller to query
+ * @domid: Domain Identifier selection, if supported
+ * @cap: User address to store supported capabilities config list
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_support_cap_config_list(nvme_mi_ctrl_t ctrl,
+								__u16 domid,
+								struct nvme_supported_cap_config_list_log *cap)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = cap,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST,
+		.len = sizeof(*cap),
+		.nsid = NVME_NSID_NONE,
+		.csi = NVME_CSI_NVM,
+		.lsi = domid,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_reservation() - Retrieve Reservation Notification
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @log: User address to store the reservation log
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_reservation(nvme_mi_ctrl_t ctrl,
+						    bool rae,
+						    struct nvme_resv_notification_log *log)
+{
+	return nvme_mi_admin_get_nsid_log(ctrl, rae, NVME_LOG_LID_RESERVATION,
+					  NVME_NSID_ALL, sizeof(*log), log);
+}
+
+/**
+ * nvme_mi_admin_get_log_sanitize() - Retrieve Sanitize Status
+ * @ctrl: Controller to query
+ * @rae: Retain asynchronous events
+ * @log: User address to store the sanitize log
+ *
+ * The Sanitize Status log page reports sanitize operation time estimates and
+ * information about the most recent sanitize operation.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_sanitize(nvme_mi_ctrl_t ctrl, bool rae,
+			struct nvme_sanitize_log_page *log)
+{
+	return nvme_mi_admin_get_nsid_log(ctrl, rae, NVME_LOG_LID_SANITIZE,
+					  NVME_NSID_ALL, sizeof(*log), log);
+}
+
+/**
+ * nvme_mi_admin_get_log_zns_changed_zones() - Retrieve list of zones that have
+ * changed
+ * @ctrl: Controller to query
+ * @nsid: Namespace ID
+ * @rae: Retain asynchronous events
+ * @log: User address to store the changed zone log
+ *
+ * The list of zones that have changed state due to an exceptional event.
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_zns_changed_zones(nvme_mi_ctrl_t ctrl,
+							  __u32 nsid, bool rae,
+							  struct nvme_zns_changed_zone_log *log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_ZNS_CHANGED_ZONES,
+		.len = sizeof(*log),
+		.nsid = nsid,
+		.csi = NVME_CSI_ZNS,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = NVME_LOG_LSP_NONE,
+		.uuidx = NVME_UUID_NONE,
+		.rae = rae,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
+ * nvme_mi_admin_get_log_persistent_event() - Retrieve Persistent Event Log
+ * @ctrl: Controller to query
+ * @action: Action the controller should take during processing this command
+ * @size: Size of @pevent_log
+ * @pevent_log: User address to store the persistent event log
+ *
+ * Return: 0 on success, non-zero on failure
+ */
+static inline int nvme_mi_admin_get_log_persistent_event(nvme_mi_ctrl_t ctrl,
+							 enum nvme_pevent_log_action action,
+							 __u32 size, void *pevent_log)
+{
+	struct nvme_get_log_args args = {
+		.lpo = 0,
+		.result = NULL,
+		.log = pevent_log,
+		.args_size = sizeof(args),
+		.lid = NVME_LOG_LID_PERSISTENT_EVENT,
+		.len = size,
+		.nsid = NVME_NSID_ALL,
+		.csi = NVME_CSI_NVM,
+		.lsi = NVME_LOG_LSI_NONE,
+		.lsp = (__u8)action,
+		.uuidx = NVME_UUID_NONE,
+		.rae = false,
+		.ot = false,
+	};
+	return nvme_mi_admin_get_log(ctrl, &args);
+}
+
+/**
  * nvme_mi_admin_security_send() - Perform a Security Send command on a
  * controller.
  * @ctrl: Controller to send command to
