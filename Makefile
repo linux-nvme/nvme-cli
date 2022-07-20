@@ -39,5 +39,8 @@ test: ${BUILD-DIR}
 	ninja -C ${BUILD-DIR} $@
 
 .PHONY: rpm
-rpm: dist
-	rpmbuild -ba ${BUILD-DIR}/libnvme.spec
+rpm: ${BUILD-DIR}
+	git archive --format=tar HEAD > libnvme.tar
+	tar rf libnvme.tar ${BUILD-DIR}/libnvme.spec
+	gzip -f -9 libnvme.tar
+	rpmbuild -ta libnvme.tar.gz -v

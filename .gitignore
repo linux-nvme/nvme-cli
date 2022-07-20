@@ -6,7 +6,7 @@ a.out
 *.swp
 *.a
 *.so.*
-
+*.tar.gz
 cscope.*
 
 .build
