@@ -302,10 +302,7 @@ struct nvme_subsystem {
 };
 
 struct nvme_ctrl {
-  %immutable transport;
-  %immutable subsysnqn;
-  %immutable traddr;
-  %immutable trsvcid;
+  %immutable sysfs_dir;
   %immutable address;
   %immutable firmware;
   %immutable model;
@@ -313,13 +310,17 @@ struct nvme_ctrl {
   %immutable queue_count;
   %immutable serial;
   %immutable sqsize;
-  %immutable persistent;
+  %immutable transport;
+  %immutable subsysnqn;
+  %immutable traddr;
+  %immutable trsvcid;
+  %immutable dhchap_key;
+  %immutable cntrltype;
+  %immutable dctype;
   %immutable discovery_ctrl;
-  char *transport;
-  char *subsysnqn;
-  char *traddr;
-  char *trsvcid;
-  char *dhchap_key;
+  %immutable discovered;
+  %immutable persistent;
+  char *sysfs_dir;
   char *address;
   char *firmware;
   char *model;
@@ -327,8 +328,16 @@ struct nvme_ctrl {
   char *queue_count;
   char *serial;
   char *sqsize;
-  bool persistent;
+  char *transport;
+  char *subsysnqn;
+  char *traddr;
+  char *trsvcid;
+  char *dhchap_key;
+  char *cntrltype;
+  char *dctype;
   bool discovery_ctrl;
+  bool discovered;
+  bool persistent;
 };
 
 struct nvme_ns {
