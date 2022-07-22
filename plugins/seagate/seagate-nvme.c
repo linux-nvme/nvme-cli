@@ -848,7 +848,7 @@ static int temp_stats(int argc, char **argv, struct command *cmd, struct plugin 
 	if(strcmp(cfg.output_format,"json"))
 		printf("Seagate Temperature Stats Information :\n");
 	/*STEP-1 : Get Current Temperature from SMART */
-	err = nvme_get_log_smart(fd, 0xffffffff, true, &smart_log);
+	err = nvme_get_log_smart(fd, 0xffffffff, false, &smart_log);
 	if (!err) {
 		temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]);
 		temperature = temperature ? temperature - 273 : 0;
