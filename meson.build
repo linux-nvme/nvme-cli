@@ -81,11 +81,9 @@ if openssl_dep.found()
     # Test for LibreSSL v3.x with incomplete OpenSSL v3 APIs
     is_libressl = cc.has_header_symbol('openssl/opensslv.h',
                                        'LIBRESSL_VERSION_NUMBER',
-                                       dependencies: openssl_dep,
-                                       args: '-nostdinc')
+                                       dependencies: openssl_dep)
     has_header = cc.has_header('openssl/core_names.h',
-                               dependencies: openssl_dep,
-                               args: '-nostdinc')
+                               dependencies: openssl_dep)
     if is_libressl and not has_header
       api_version = 1
     endif
