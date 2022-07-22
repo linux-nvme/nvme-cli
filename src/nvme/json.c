@@ -318,9 +318,10 @@ int json_update_config(nvme_root_t r, const char *config_file)
 			json_object_put(subsys_array);
 		json_object_array_add(json_root, host_obj);
 	}
-	if (!config_file)
+	if (!config_file) {
 		ret = json_object_to_fd(1, json_root, JSON_C_TO_STRING_PRETTY);
-	else
+		printf("\n");
+	} else
 		ret = json_object_to_file_ext(config_file, json_root,
 					      JSON_C_TO_STRING_PRETTY);
 	if (ret < 0) {
