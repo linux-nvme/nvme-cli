@@ -5851,7 +5851,6 @@ static int copy(int argc, char **argv, struct command *cmd, struct plugin *plugi
 		.format		= cfg.format,
 		.lr		= cfg.lr,
 		.fua		= cfg.fua,
-		.prinfow	= cfg.prinfow,
 		.ilbrt_u64	= cfg.ilbrt,
 		.lbatm		= cfg.lbatm,
 		.lbat		= cfg.lbat,
