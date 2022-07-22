@@ -68,14 +68,32 @@ openssl_dep = dependency('openssl',
                          required: get_option('openssl'),
                          fallback : ['openssl', 'libssl_dep'])
 if openssl_dep.found()
-  conf.set('CONFIG_OPENSSL', true, description: 'Is OpenSSL available?')
-  conf.set('CONFIG_OPENSSL_1',
-           openssl_dep.version().version_compare('<2.0.0') and
-           openssl_dep.version().version_compare('>=1.1.0'),
-           description: 'OpenSSL version 1.x')
-  conf.set('CONFIG_OPENSSL_3',
-           openssl_dep.version().version_compare('>=3.0.0'),
-           description: 'OpenSSL version 3.x')
+  conf.set('CONFIG_OPENSSL', true,
+           description: 'Is OpenSSL/LibreSSL available?')
+
+  if openssl_dep.version().version_compare('<2.0.0')
+    api_version = 1
+  endif
+
+  if openssl_dep.version().version_compare('>=3.0.0')
+    api_version = 3
+
+    # Test for LibreSSL v3.x with incomplete OpenSSL v3 APIs
+    is_libressl = cc.has_header_symbol('openssl/opensslv.h',
+                                       'LIBRESSL_VERSION_NUMBER',
+                                       dependencies: openssl_dep,
+                                       args: '-nostdinc')
+    has_header = cc.has_header('openssl/core_names.h',
+                               dependencies: openssl_dep,
+                               args: '-nostdinc')
+    if is_libressl and not has_header
+      api_version = 1
+    endif
+
+  endif
+
+  conf.set('CONFIG_OPENSSL_@0@'.format(api_version), true,
+           description: 'OpenSSL/LibreSSL API version @0@'.format(api_version))
 endif
 
 # Check for libsystemd availability. Optional, only required for MCTP dbus scan
