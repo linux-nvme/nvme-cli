@@ -1244,7 +1244,7 @@ static inline int nvme_get_nsid_log(int fd, bool rae,
 		.lsi = NVME_LOG_LSI_NONE,
 		.lsp = NVME_LOG_LSP_NONE,
 		.uuidx = NVME_UUID_NONE,
-		.rae = false,
+		.rae = rae,
 		.ot = false,
 	};
 
