@@ -7370,7 +7370,7 @@ static int wdc_vs_device_waf(int argc, char **argv, struct command *command,
 	}
 
 	/* get data units written from the smart log page */
-	ret = nvme_get_log_smart(fd, cfg.namespace_id, true, &smart_log);
+	ret = nvme_get_log_smart(fd, cfg.namespace_id, false, &smart_log);
 	if (!ret) {
 		data_units_written = int128_to_double(smart_log.data_units_written);
 	}
@@ -8838,7 +8838,7 @@ static int wdc_do_drive_essentials(nvme_root_t r, int fd, char *dir, char *key)
 
 	/* Get FW Slot log page  */
 	memset(&fw_log, 0, sizeof (struct nvme_firmware_slot));
-	ret = nvme_get_log_fw_slot(fd, true, &fw_log);
+	ret = nvme_get_log_fw_slot(fd, false, &fw_log);
 	if (ret) {
 		fprintf(stderr, "ERROR : WDC : nvme_fw_log() failed, ret = %d\n", ret);
 	} else {

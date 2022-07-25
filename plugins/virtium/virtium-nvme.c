@@ -302,7 +302,7 @@ static int vt_add_entry_to_log(const int fd, const char *path, const struct vtvi
 		return -1;
 	}
 
-	ret = nvme_get_log_smart(fd, NVME_NSID_ALL, true, &smart.raw_smart);
+	ret = nvme_get_log_smart(fd, NVME_NSID_ALL, false, &smart.raw_smart);
 	if (ret) {
 		printf("Cannot read device SMART log\n");
 		return -1;
@@ -354,7 +354,7 @@ static int vt_update_vtview_log_header(const int fd, const char *path, const str
 		return -1;
 	}
 
-	ret = nvme_get_log_fw_slot(fd, true, &header.raw_fw);
+	ret = nvme_get_log_fw_slot(fd, false, &header.raw_fw);
 	if (ret) {
 		printf("Cannot read device firmware log\n");
 		return -1;

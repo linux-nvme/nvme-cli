@@ -1759,7 +1759,7 @@ static void GetGenericLogs(int fd, const char *dir)
     }
 
     /* get fw slot info log */
-    if (nvme_get_log_fw_slot(fd, 1, &fw_log) == 0) {
+    if (nvme_get_log_fw_slot(fd, false, &fw_log) == 0) {
         WriteData((__u8*)&fw_log, sizeof(fw_log), dir,
                   "firmware_slot_info_log.bin", "firmware log");
     }

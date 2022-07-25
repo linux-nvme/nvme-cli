@@ -351,7 +351,7 @@ static int get_smart_log(int argc, char **argv, struct command *cmd, struct plug
 	if (cfg.human_readable)
 		flags |= VERBOSE;
 
-	err = nvme_get_log_smart(fd, cfg.namespace_id, true, &smart_log);
+	err = nvme_get_log_smart(fd, cfg.namespace_id, false, &smart_log);
 	if (!err)
 		nvme_show_smart_log(&smart_log, cfg.namespace_id, devicename,
 				    flags);
@@ -824,7 +824,7 @@ static int get_error_log(int argc, char **argv, struct command *cmd, struct plug
 		goto close_fd;
 	}
 
-	err = nvme_get_log_error(fd, cfg.log_entries, true, err_log);
+	err = nvme_get_log_error(fd, cfg.log_entries, false, err_log);
 	if (!err)
 		nvme_show_error_log(err_log, cfg.log_entries, devicename, flags);
 	else if (err > 0)
@@ -873,7 +873,7 @@ static int get_fw_log(int argc, char **argv, struct command *cmd, struct plugin 
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	err = nvme_get_log_fw_slot(fd, true, &fw_log);
+	err = nvme_get_log_fw_slot(fd, false, &fw_log);
 	if (!err)
 		nvme_show_fw_log(&fw_log, devicename, flags);
 	else if (err > 0)
@@ -1406,7 +1406,7 @@ static int get_resv_notif_log(int argc, char **argv,
 	if (flags < 0)
 		goto close_fd;
 
-	err = nvme_get_log_reservation(fd, true, &resv);
+	err = nvme_get_log_reservation(fd, false, &resv);
 	if (!err)
 		nvme_show_resv_notif_log(&resv, devicename, flags);
 	else if (err > 0)

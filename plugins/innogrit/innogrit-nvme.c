@@ -42,7 +42,7 @@ static int innogrit_smart_log_additional(int argc, char **argv,
 	if (fd < 0)
 		return fd;
 
-	nvme_get_log_smart(fd, cfg.namespace_id, true, &smart_log);
+	nvme_get_log_smart(fd, cfg.namespace_id, false, &smart_log);
 	nvme_show_smart_log(&smart_log, cfg.namespace_id, devicename, NORMAL);
 
 	printf("DW0[0-1]  Defect Cnt                    : %u\n", pvsc_smart->defect_cnt);
