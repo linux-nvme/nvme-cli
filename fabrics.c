@@ -395,8 +395,13 @@ static int __discover(nvme_ctrl_t c, struct nvme_fabrics_config *defcfg,
 				set_discovery_kato(defcfg);
 
 			errno = 0;
-			child = nvmf_connect_disc_entry(h, e, defcfg,
-							&discover);
+			struct nvmf_connect_disc_entry2_args args = {
+				.args_size		= sizeof(args),
+				.defcfg			= defcfg,
+				.discover		= &discover,
+				.dhchap_ctrl_key	= nvmf_ctrlkey,
+			};
+			child = nvmf_connect_disc_entry2(h, e, &args);
 
 			defcfg->keep_alive_tmo = tmo;
 
