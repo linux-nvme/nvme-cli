@@ -287,7 +287,9 @@ struct nvme_host {
   char *hostnqn;
   char *hostid;
   char *hostsymname;
-  char *dhchap_key;
+  %extend {
+    char *dhchap_key;
+  }
 };
 
 struct nvme_subsystem {
@@ -332,7 +334,9 @@ struct nvme_ctrl {
   char *subsysnqn;
   char *traddr;
   char *trsvcid;
-  char *dhchap_key;
+  %extend {
+    char *dhchap_key;
+  }
   char *cntrltype;
   char *dctype;
   bool discovery_ctrl;
@@ -447,6 +451,15 @@ struct nvme_ns {
     return nvme_first_subsystem($self);
   }
 }
+
+%{
+  const char *nvme_host_dhchap_key_get(struct nvme_host *h) {
+    return nvme_host_get_dhchap_key(h);
+  }
+  void nvme_host_dhchap_key_set(struct nvme_host *h, char *key) {
+    nvme_host_set_dhchap_key(h, key);
+  }
+%};
 
 %extend subsystem_iter {
   struct subsystem_iter *__iter__() {
@@ -655,6 +668,9 @@ struct nvme_ns {
   }
   const char *nvme_ctrl_state_get(struct nvme_ctrl *c) {
     return nvme_ctrl_get_state(c);
+  }
+  const char *nvme_ctrl_dhchap_key_get(struct nvme_ctrl *c) {
+    return nvme_ctrl_get_dhchap_key(c);
   }
 %};
 
