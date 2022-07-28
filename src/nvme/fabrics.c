@@ -619,8 +619,8 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 			 * in @cfg, so ensure to update @c with the correct
 			 * controller key.
 			 */
-			if (fc->dhchap_key)
-				nvme_ctrl_set_dhchap_key(c, fc->dhchap_key);
+			if (fc->dhchap_ctrl_key)
+				nvme_ctrl_set_dhchap_key(c, fc->dhchap_ctrl_key);
 		}
 
 	}
