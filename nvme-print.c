@@ -7013,23 +7013,23 @@ void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, un
 		printf("\tDisable Normal (DN): %s\n", (result & 0x00000001) ? "True":"False");
 		break;
 	case NVME_FEAT_FID_ASYNC_EVENT:
-		printf("\tDiscovery Log Page Change Notices: %s\n",
+		printf("\tDiscovery Log Page Change Notices                         : %s\n",
 			((result & 0x80000000) >> 31) ? "Send async event":"Do not send async event");
-		printf("\tEndurance Group Event Aggregate Log Change Notices: %s\n",
+		printf("\tEndurance Group Event Aggregate Log Change Notices        : %s\n",
 			((result & 0x00004000) >> 14) ? "Send async event":"Do not send async event");
-		printf("\tLBA Status Information Notices  : %s\n",
+		printf("\tLBA Status Information Notices                            : %s\n",
 			((result & 0x00002000) >> 13) ? "Send async event":"Do not send async event");
-		printf("\tPredictable Latency Event Aggregate Log Change Notices: %s\n",
+		printf("\tPredictable Latency Event Aggregate Log Change Notices    : %s\n",
 			((result & 0x00001000) >> 12) ? "Send async event":"Do not send async event");
-		printf("\tAsymmetric Namespace Access Change Notices: %s\n",
+		printf("\tAsymmetric Namespace Access Change Notices                : %s\n",
 			((result & 0x00000800) >> 11) ? "Send async event":"Do not send async event");
-		printf("\tTelemetry Log Notices           : %s\n",
+		printf("\tTelemetry Log Notices                                     : %s\n",
 			((result & 0x00000400) >> 10) ? "Send async event":"Do not send async event");
-		printf("\tFirmware Activation Notices     : %s\n",
+		printf("\tFirmware Activation Notices                               : %s\n",
 			((result & 0x00000200) >> 9) ? "Send async event":"Do not send async event");
-		printf("\tNamespace Attribute Notices     : %s\n",
+		printf("\tNamespace Attribute Notices                               : %s\n",
 			((result & 0x00000100) >> 8) ? "Send async event":"Do not send async event");
-		printf("\tSMART / Health Critical Warnings: %s\n",
+		printf("\tSMART / Health Critical Warnings                          : %s\n",
 			(result & 0x000000ff) ? "Send async event":"Do not send async event");
 		break;
 	case NVME_FEAT_FID_AUTO_PST:
