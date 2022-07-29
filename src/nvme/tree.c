@@ -897,6 +897,7 @@ void nvme_deconfigure_ctrl(nvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->queue_count);
 	FREE_CTRL_ATTR(c->serial);
 	FREE_CTRL_ATTR(c->sqsize);
+	FREE_CTRL_ATTR(c->dhchap_key);
 	FREE_CTRL_ATTR(c->address);
 	FREE_CTRL_ATTR(c->dctype);
 	FREE_CTRL_ATTR(c->cntrltype);
