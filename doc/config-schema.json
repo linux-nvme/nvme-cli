@@ -25,6 +25,10 @@
 		    "description": "NVMe host ID",
 		    "type": "string"
 		},
+		"dhchap_key": {
+		    "description": "Host DH-HMAC-CHAP key",
+		    "type": "string"
+		},
 		"hostsymname": {
 		    "description": "NVMe host symbolic name",
 		    "type": "string"
@@ -76,10 +80,6 @@
 		},
 		"trsvcid": {
 		    "description": "Transport service identifier",
-		    "type": "string"
-		},
-		"dhchap_key": {
-		    "description": "Host DH-HMAC-CHAP key",
 		    "type": "string"
 		},
 		"dhchap_ctrl_key": {

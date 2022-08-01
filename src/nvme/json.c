@@ -95,7 +95,7 @@ static void json_parse_port(nvme_subsystem_t s, struct json_object *port_obj)
 	if (!c)
 		return;
 	json_update_attributes(c, port_obj);
-	attr_obj = json_object_object_get(port_obj, "dhchap_key");
+	attr_obj = json_object_object_get(port_obj, "dhchap_ctrl_key");
 	if (attr_obj)
 		nvme_ctrl_set_dhchap_key(c, json_object_get_string(attr_obj));
 }
@@ -224,7 +224,7 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 				       json_object_new_string(value));
 	value = nvme_ctrl_get_dhchap_key(c);
 	if (value)
-		json_object_object_add(port_obj, "dhchap_key",
+		json_object_object_add(port_obj, "dhchap_ctrl_key",
 				       json_object_new_string(value));
 	JSON_INT_OPTION(cfg, port_obj, nr_io_queues, 0);
 	JSON_INT_OPTION(cfg, port_obj, nr_write_queues, 0);
@@ -367,7 +367,7 @@ static void json_dump_ctrl(struct json_object *ctrl_array, nvme_ctrl_t c)
 				       json_object_new_string(value));
 	value = nvme_ctrl_get_dhchap_key(c);
 	if (value)
-		json_object_object_add(ctrl_obj, "dhchap_key",
+		json_object_object_add(ctrl_obj, "dhchap_ctrl_key",
 				       json_object_new_string(value));
 	JSON_INT_OPTION(cfg, ctrl_obj, nr_io_queues, 0);
 	JSON_INT_OPTION(cfg, ctrl_obj, nr_write_queues, 0);
