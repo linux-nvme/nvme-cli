@@ -20,3 +20,10 @@ const char * __attribute__((weak)) nvme_get_version(enum nvme_version type)
 
 	return "n/a";
 }
+
+void __attribute__((weak))
+nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
+		        __u64 *slbas, __u64 *eilbrts, __u32 *elbatms,
+			__u32 *elbats, __u16 nr)
+{
+}
