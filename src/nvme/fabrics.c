@@ -438,20 +438,23 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 
 	if (!transport) {
 		nvme_msg(h->r, LOG_ERR, "need a transport (-t) argument\n");
-		return -ENVME_CONNECT_TARG;
+		errno = ENVME_CONNECT_TARG;
+		return -1;
 	}
 
 	if (strncmp(transport, "loop", 4)) {
 		if (!nvme_ctrl_get_traddr(c)) {
 			nvme_msg(h->r, LOG_ERR, "need a address (-a) argument\n");
-			return -ENVME_CONNECT_AARG;
+			errno = ENVME_CONNECT_AARG;
+			return -1;
 		}
 	}
 
 	/* always specify nqn as first arg - this will init the string */
 	if (asprintf(argstr, "nqn=%s",
 		     nvme_ctrl_get_subsysnqn(c)) < 0) {
-		return -ENOMEM;
+		errno = ENOMEM;
+		return -1;
 	}
 	if (!strcmp(nvme_ctrl_get_subsysnqn(c), NVME_DISC_SUBSYS_NAME)) {
 		nvme_ctrl_set_discovery_ctrl(c, true);
