@@ -707,6 +707,58 @@ See: :c:type:`nvme_mi_first_endpoint`, :c:type:`nvme_mi_for_each_endpoint`
   :c:type:`nvme_mi_ep_t` object used as temporary storage
 
 
+.. c:function:: int nvme_mi_ep_set_timeout (nvme_mi_ep_t ep, unsigned int timeout_ms)
+
+   set a timeout for NVMe-MI responses
+
+**Parameters**
+
+``nvme_mi_ep_t ep``
+  MI endpoint object
+
+``unsigned int timeout_ms``
+  Timeout for MI responses, given in milliseconds
+
+
+.. c:function:: void nvme_mi_ep_set_mprt_max (nvme_mi_ep_t ep, unsigned int mprt_max_ms)
+
+   set the maximum wait time for a More Processing Required response
+
+**Parameters**
+
+``nvme_mi_ep_t ep``
+  MI endpoint object
+
+``unsigned int mprt_max_ms``
+  Maximum more processing required wait time
+
+**Description**
+
+NVMe-MI endpoints may respond to a request with a "More Processing Required"
+response; this also includes a hint on the worst-case processing time for
+the eventual response data, with a specification-defined maximum of 65.535
+seconds.
+
+This function provides a way to limit the maximum time we're prepared to
+wait for the final response. Specify zero in **mprt_max_ms** for no limit.
+This should be larger than the command/response timeout set in
+:c:type:`nvme_mi_ep_set_timeout`().
+
+
+.. c:function:: unsigned int nvme_mi_ep_get_timeout (nvme_mi_ep_t ep)
+
+   get the current timeout value for NVMe-MI responses
+
+**Parameters**
+
+``nvme_mi_ep_t ep``
+  MI endpoint object
+
+**Description**
+
+Returns the current timeout value, in milliseconds, for this endpoint.
+
+
 
 
 .. c:type:: nvme_mi_ctrl_t
@@ -1501,7 +1553,7 @@ See: :c:type:`struct nvme_ctrl_list <nvme_ctrl_list>`
 0 on success, non-zero on failure
 
 
-.. c:function:: int nvme_mi_admin_get_log_page (nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args)
+.. c:function:: int nvme_mi_admin_get_log (nvme_mi_ctrl_t ctrl, struct nvme_get_log_args *args)
 
    Retrieve log page data from controller
 
