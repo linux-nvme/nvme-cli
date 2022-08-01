@@ -90,7 +90,6 @@ static const char *nvmf_config_file	= "Use specified JSON configuration file or 
 	OPT_STRING("hostid",          'I', "STR", &hostid,	nvmf_hostid), \
 	OPT_STRING("nqn",             'n', "STR", &subsysnqn,	nvmf_nqn), \
 	OPT_STRING("dhchap-secret",   'S', "STR", &hostkey,     nvmf_hostkey), \
-	OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &ctrlkey,  nvmf_ctrlkey), \
 	OPT_INT("nr-io-queues",       'i', &c.nr_io_queues,       nvmf_nr_io_queues),	\
 	OPT_INT("nr-write-queues",    'W', &c.nr_write_queues,    nvmf_nr_write_queues),\
 	OPT_INT("nr-poll-queues",     'P', &c.nr_poll_queues,     nvmf_nr_poll_queues),	\
@@ -506,7 +505,7 @@ static int discover_from_conf_file(nvme_root_t r, nvme_host_t h,
 				   const struct nvme_fabrics_config *defcfg)
 {
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
-	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL, *ctrlkey = NULL;
+	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL;
 	char *subsysnqn = NULL;
 	char *ptr, **argv, *p, line[4096];
 	int argc, ret = 0;
@@ -611,7 +610,7 @@ out:
 int nvmf_discover(const char *desc, int argc, char **argv, bool connect)
 {
 	char *subsysnqn = NVME_DISC_SUBSYS_NAME;
-	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL, *ctrlkey = NULL;
+	char *hostnqn = NULL, *hostid = NULL, *hostkey = NULL;
 	char *transport = NULL, *traddr = NULL, *trsvcid = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
 	char *hnqn = NULL, *hid = NULL;
@@ -796,6 +795,7 @@ int nvmf_connect(const char *desc, int argc, char **argv)
 
 	OPT_ARGS(opts) = {
 		NVMF_OPTS(cfg),
+		OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &ctrlkey,  nvmf_ctrlkey),
 		OPT_STRING("config", 'J', "FILE", &config_file, nvmf_config_file),
 		OPT_INCR("verbose", 'v', &verbose, "Increase logging verbosity"),
 		OPT_FLAG("dump-config", 'O', &dump_config, "Dump JSON configuration to stdout"),
@@ -1093,6 +1093,7 @@ int nvmf_config(const char *desc, int argc, char **argv)
 
 	OPT_ARGS(opts) = {
 		NVMF_OPTS(cfg),
+		OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &ctrlkey,  nvmf_ctrlkey),
 		OPT_STRING("config", 'J', "FILE", &config_file, nvmf_config_file),
 		OPT_INCR("verbose", 'v', &verbose, "Increase logging verbosity"),
 		OPT_FLAG("scan", 'R', &scan_tree, "Scan current NVMeoF topology"),
