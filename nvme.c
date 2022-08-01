@@ -600,17 +600,12 @@ static int collect_effects_log(int fd, enum nvme_csi csi,
 	node->csi = csi;
 
 	err = nvme_get_log_cmd_effects(fd, csi, &node->effects);
-	if (!err) {
-		list_add(list, &node->node);
+	if (err) {
+		free(node);
 		return err;
 	}
-	else if (err > 0)
-		nvme_show_status(err);
-	else
-		fprintf(stderr, "effects log page: %s\n", nvme_strerror(errno));
-
-	free(node);
-	return err;
+	list_add(list, &node->node);
+	return 0;
 }
 
 static int get_effects_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
