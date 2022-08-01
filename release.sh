@@ -9,10 +9,8 @@ usage() {
     echo "      '^v[\d]+.[\d]+(-rc[0-9]+)?$'"
     echo ""
     echo "example:"
-    echo "  release.sh v2.1-rc0     # v2.1 release candidate 0 -> sets the project "
-    echo "                          # version to '1.1' and sets the tag"
-    echo "  release.sh v2.1-rc1     # v2.1 release canditate 1 -> only sets the tag"
-    echo "  release.sh v2.1         # v2.1 release -> sets the final tag"
+    echo "  release.sh v2.1-rc0     # v2.1 release candidate 0"
+    echo "  release.sh v2.1         # v2.1 release"
 }
 
 VERSION=$1
@@ -22,14 +20,12 @@ if [ -z "$VERSION" ] ; then
     exit 1
 fi
 
-new_ver=""
-rc=""
+ver=""
 
 re='^v([0-9]+\.[0-9]+)(-rc[0-9]+)?$'
 if [[ "$VERSION" =~ $re ]]; then
     echo "Valid version $VERSION string"
-    new_ver=${BASH_REMATCH[1]}
-    rc=${BASH_REMATCH[2]}
+    ver=${BASH_REMATCH[1]}${BASH_REMATCH[2]}
 else
     echo "Invalid version string $VERSION"
     echo ""
@@ -58,22 +54,16 @@ else
     exit 1
 fi
 
+# update meson.build
+sed -i -e "0,/[ \t]version: /s/\([ \t]version: \).*/\1\'$ver\',/" meson.build
+git add meson.build
+git commit -s -m "build: Update version to $VERSION"
+
+# update documentation
 ./$doc_dir/update-docs.sh
 git add $doc_dir
-git commit -s -m "Regenerate all documentation" \
-              -m "Regenerate documentation for $VERSION release"
+git commit -s -m "doc: Regenerate all docs for $VERSION"
 
-# update meson.build
-old_ver=$(sed -n "0,/[ \t]\+version: /s/[ \t]\+version: '\([0-9]\+.[0-9]\+\)',$/\1/p" meson.build)
-if [ "$old_ver" != "$new_ver" ]; then
-    # Only update project version once, that is either
-    # - for the first RC phase or
-    # - for the release when there was no RC
-    sed -i -e "0,/[ \t]version: /s/\([ \t]version: \).*/\1\'$new_ver\',/" meson.build
-    git add meson.build
-fi
-
-git commit -s -m "Release $VERSION"
 git tag -s -m "Release $VERSION" "$VERSION"
 git push --dry-run origin "$VERSION"^{}:master tag "$VERSION"
 
