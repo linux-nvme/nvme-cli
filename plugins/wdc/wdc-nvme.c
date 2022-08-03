@@ -327,7 +327,7 @@
 #define WDC_NVME_SMART_CLOUD_ATTR_LEN			0x200
 
 /* C0 SMART Cloud Attributes Log Page*/
-#define WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_OPCODE   0xC0
+#define WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID    0xC0
 
 /* CB - FW Activate History Log Page */
 #define WDC_NVME_GET_FW_ACT_HISTORY_LOG_ID      0xCB
@@ -341,7 +341,7 @@
 
 /* C3 Latency Monitor Log Page */
 #define WDC_LATENCY_MON_LOG_BUF_LEN             0x200
-#define WDC_LATENCY_MON_OPCODE                  0xC3
+#define WDC_LATENCY_MON_LOG_ID                  0xC3
 #define WDC_LATENCY_MON_VERSION                 0x0001
 
 #define WDC_C3_GUID_LENGTH                      16
@@ -1090,7 +1090,8 @@ struct __attribute__((__packed__)) wdc_ssd_d0_smart_log {
 #define WDC_OCP_C1_GUID_LENGTH              16
 #define WDC_ERROR_REC_LOG_BUF_LEN          512
 #define WDC_ERROR_REC_LOG_ID              0xC1
-#define WDC_ERROR_REC_LOG_VERSION         0002
+#define WDC_ERROR_REC_LOG_VERSION1        0001
+#define WDC_ERROR_REC_LOG_VERSION2        0002
 
 struct __attribute__((__packed__)) wdc_ocp_c1_error_recovery_log {
     __le16  panic_reset_wait_time;                  /* 000 - Panic Reset Wait Time              */
@@ -1102,9 +1103,9 @@ struct __attribute__((__packed__)) wdc_ocp_c1_error_recovery_log {
     __u8    rsvd1[3];                               /* 017 - 3 Reserved Bytes                   */
     __le32  vs_cmd_cdw12;                           /* 020 - Vendor Specific Command CDW12      */
     __le32  vs_cmd_cdw13;                           /* 024 - Vendor Specific Command CDW13      */
-    __u8    vs_cmd_to;                              /* 028 - Vendor Specific Command Timeout    */
-    __u8    dev_recovery_action2;                   /* 029 - Device Recovery Action 2           */
-    __u8    dev_recovery_action2_to;                /* 030 - Device Recovery Action 2 Timeout   */
+    __u8    vs_cmd_to;                              /* 028 - Vendor Specific Command Timeout V2 */
+    __u8    dev_recovery_action2;                   /* 029 - Device Recovery Action 2 V2        */
+    __u8    dev_recovery_action2_to;                /* 030 - Device Recovery Action 2 Timeout V2*/
     __u8    rsvd2[463];                             /* 031 - 463 Reserved Bytes                 */
     __le16  log_page_version;                       /* 494 - Log Page Version                   */
     __u8    log_page_guid[WDC_OCP_C1_GUID_LENGTH];  /* 496 - Log Page GUID                      */
@@ -1538,7 +1539,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
         case WDC_NVME_SN560_DEV_ID_3:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_NVME_GET_EOL_STATUS_LOG_OPCODE)
+							      WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID)
 			    == true) {
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
 			}
@@ -1556,7 +1557,7 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 
 			/* verify the 0xC3 (OCP Latency Monitor) log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_LATENCY_MON_OPCODE))
+							      WDC_LATENCY_MON_LOG_ID))
 				capabilities |= WDC_DRIVE_CAP_C3_LOG_PAGE;
 
 			/* verify the 0xC4 (OCP Device Capabilities) log page is supported */
@@ -1633,16 +1634,43 @@ static __u64 wdc_get_drive_capabilities(nvme_root_t r, struct nvme_dev *dev)
 		case WDC_NVME_SN550_DEV_ID:
 			/* verify the 0xC0 log page is supported */
 			if (wdc_nvme_check_supported_log_page(r, dev,
-							      WDC_NVME_GET_EOL_STATUS_LOG_OPCODE))
+							      WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID))
 				capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
+
+			/* verify the 0xC1 (OCP Error Recovery) log page is supported */
+			if (wdc_nvme_check_supported_log_page(r, dev, WDC_ERROR_REC_LOG_ID))
+				capabilities |= WDC_DRIVE_CAP_OCP_C1_LOG_PAGE;
+
+			/* verify the 0xC3 (OCP Latency Monitor) log page is supported */
+			if (wdc_nvme_check_supported_log_page(r, dev, WDC_LATENCY_MON_LOG_ID))
+				capabilities |= WDC_DRIVE_CAP_C3_LOG_PAGE;
+
+			/* verify the 0xC4 (OCP Device Capabilities) log page is supported */
+			if (wdc_nvme_check_supported_log_page(r, dev, WDC_DEV_CAP_LOG_ID))
+				capabilities |= WDC_DRIVE_CAP_OCP_C4_LOG_PAGE;
+
+			/* verify the 0xC5 (OCP Unsupported Requirments) log page is supported */
+			if (wdc_nvme_check_supported_log_page(r, dev, WDC_UNSUPPORTED_REQS_LOG_ID))
+				capabilities |= WDC_DRIVE_CAP_OCP_C5_LOG_PAGE;
 
 			capabilities |= (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
 					WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
-					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_CLEAR_PCIE |
-					WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY | WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY |
+					WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY |
 					WDC_DRVIE_CAP_DISABLE_CTLR_TELE_LOG | WDC_DRIVE_CAP_REASON_ID |
-					WDC_DRIVE_CAP_LOG_PAGE_DIR | WDC_DRIVE_CAP_INFO |
-					WDC_DRIVE_CAP_CLOUD_SSD_VERSION);
+					WDC_DRIVE_CAP_LOG_PAGE_DIR);
+
+			cust_id = wdc_get_fw_cust_id(r, dev);
+			if (cust_id == WDC_INVALID_CUSTOMER_ID) {
+				fprintf(stderr, "%s: ERROR : WDC : invalid customer id\n", __func__);
+				return -1;
+			}
+
+			if ((cust_id == WDC_CUSTOMER_ID_0x1004) || (cust_id == WDC_CUSTOMER_ID_0x1008) ||
+					(cust_id == WDC_CUSTOMER_ID_0x1005) || (cust_id == WDC_CUSTOMER_ID_0x1304))
+				capabilities |= (WDC_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE |
+						WDC_DRIVE_CAP_INFO | WDC_DRIVE_CAP_CLOUD_SSD_VERSION);
+			else
+				capabilities |= (WDC_DRIVE_CAP_CLEAR_FW_ACT_HISTORY | WDC_DRIVE_CAP_CLEAR_PCIE);
 
 			break;
 		case WDC_NVME_SN730B_DEV_ID:
@@ -1738,7 +1766,7 @@ static __u64 wdc_get_enc_drive_capabilities(nvme_root_t r,
 				WDC_DRIVE_CAP_RESIZE);
 
 			/* verify the 0xC3 log page is supported */
-			if (wdc_nvme_check_supported_log_page(r, dev, WDC_LATENCY_MON_OPCODE) == true)
+			if (wdc_nvme_check_supported_log_page(r, dev, WDC_LATENCY_MON_LOG_ID) == true)
 				capabilities |= WDC_DRIVE_CAP_C3_LOG_PAGE;
 
 			/* verify the 0xCB log page is supported */
@@ -4218,9 +4246,11 @@ static void wdc_print_error_rec_log_normal(struct wdc_ocp_c1_error_recovery_log 
 	printf("  Vendor Specific Recovery Opcode   : 0x%x \n", log_data->vs_recovery_opc);
 	printf("  Vendor Specific Command CDW12     : 0x%x \n", le32_to_cpu(log_data->vs_cmd_cdw12));
 	printf("  Vendor Specific Command CDW13     : 0x%x \n", le32_to_cpu(log_data->vs_cmd_cdw13));
-	printf("  Vendor Specific Command Timeout   : 0x%x \n", log_data->vs_cmd_to);
-	printf("  Device Recovery Action 2          : 0x%x \n", log_data->dev_recovery_action2);
-	printf("  Device Recovery Action 2 Timeout  : 0x%x \n", log_data->dev_recovery_action2_to);
+	if (le16_to_cpu(log_data->log_page_version) == WDC_ERROR_REC_LOG_VERSION2) {
+		printf("  Vendor Specific Command Timeout   : 0x%x \n", log_data->vs_cmd_to);
+		printf("  Device Recovery Action 2          : 0x%x \n", log_data->dev_recovery_action2);
+		printf("  Device Recovery Action 2 Timeout  : 0x%x \n", log_data->dev_recovery_action2_to);
+	}
 	printf("  Log Page Version                  : 0x%x \n", le16_to_cpu(log_data->log_page_version));
 	printf("  Log page GUID			    : 0x");
 	for (j = 0; j < WDC_OCP_C1_GUID_LENGTH; j++) {
@@ -4242,9 +4272,11 @@ static void wdc_print_error_rec_log_json(struct wdc_ocp_c1_error_recovery_log *l
 	json_object_add_value_int(root, "Vendor Specific Recovery Opcode", log_data->vs_recovery_opc);
 	json_object_add_value_int(root, "Vendor Specific Command CDW12", le32_to_cpu(log_data->vs_cmd_cdw12));
 	json_object_add_value_int(root, "Vendor Specific Command CDW13", le32_to_cpu(log_data->vs_cmd_cdw13));
-	json_object_add_value_int(root, "Vendor Specific Command Timeout", log_data->vs_cmd_to);
-	json_object_add_value_int(root, "Device Recovery Action 2", log_data->dev_recovery_action2);
-	json_object_add_value_int(root, "Device Recovery Action 2 Timeout", log_data->dev_recovery_action2_to);
+	if (le16_to_cpu(log_data->log_page_version) == WDC_ERROR_REC_LOG_VERSION2) {
+		json_object_add_value_int(root, "Vendor Specific Command Timeout", log_data->vs_cmd_to);
+		json_object_add_value_int(root, "Device Recovery Action 2", log_data->dev_recovery_action2);
+		json_object_add_value_int(root, "Device Recovery Action 2 Timeout", log_data->dev_recovery_action2_to);
+	}
 	json_object_add_value_int(root, "Log Page Version", le16_to_cpu(log_data->log_page_version));
 
 	char guid[40];
@@ -5105,7 +5137,7 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries, __u32
 
 	root = json_create_object();
 
-	if(data[0] == WDC_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID) {
+	if (data[0] == WDC_NVME_GET_FW_ACT_HISTORY_C2_LOG_ID) {
 		struct wdc_fw_act_history_log_format_c2 *fw_act_history_entry = (struct wdc_fw_act_history_log_format_c2 *)(data);
 
 		oldestEntryIdx = WDC_MAX_NUM_ACT_HIST_ENTRIES;
@@ -5149,7 +5181,7 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries, __u32
 				json_object_add_value_string(root, "Power on Hour", time_str);
 			} else {
 				uint64_t timestamp = (0x0000FFFFFFFFFFFF & le64_to_cpu(fw_act_history_entry->entry[entryIdx].timestamp));
-				json_object_add_value_int(root, "Timestamp", timestamp);
+				json_object_add_value_uint64(root, "Timestamp", timestamp);
 			}
 
 			json_object_add_value_int(root, "Power Cycle Count",
@@ -5170,6 +5202,9 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries, __u32
 				sprintf((char *)fail_str, "fail #%d", (int)(le16_to_cpu(fw_act_history_entry->entry[entryIdx].result)));
 				json_object_add_value_string(root, "Result", fail_str);
 			}
+
+			json_print_object(root, NULL);
+			printf("\n");
 
 			entryIdx++;
 			if (entryIdx >= WDC_MAX_NUM_ACT_HIST_ENTRIES)
@@ -5228,14 +5263,14 @@ static void wdc_print_fw_act_history_log_json(__u8 *data, int num_entries, __u32
 				json_object_add_value_string(root, "Result", fail_str);
 			}
 
+			json_print_object(root, NULL);
+			printf("\n");
+
 			entryIdx++;
 			if (entryIdx >= WDC_MAX_NUM_ACT_HIST_ENTRIES)
 				entryIdx = 0;
 		}
 	}
-
-	json_print_object(root, NULL);
-	printf("\n");
 
 	json_free_object(root);
 }
@@ -5254,7 +5289,7 @@ static int nvme_get_ext_smart_cloud_log(int fd, __u8 **data, int uuid_index, __u
 	struct nvme_get_log_args args = {
 		.args_size	= sizeof(args),
 		.fd			= fd,
-		.lid		= WDC_NVME_GET_EOL_STATUS_LOG_OPCODE,
+		.lid		= WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID,
 		.nsid		= namespace_id,
 		.lpo		= 0,
 		.lsp		= NVME_LOG_LSP_NONE,
@@ -6222,6 +6257,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 	case WDC_NVME_SN560_DEV_ID_1:
 	case WDC_NVME_SN560_DEV_ID_2:
 	case WDC_NVME_SN560_DEV_ID_3:
+	case WDC_NVME_SN550_DEV_ID:
 		cust_id = wdc_get_fw_cust_id(r, dev);
 		if (cust_id == WDC_INVALID_CUSTOMER_ID) {
 			fprintf(stderr, "%s: ERROR : WDC : invalid customer id\n", __func__);
@@ -6249,7 +6285,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 				struct nvme_get_log_args args = {
 					.args_size	= sizeof(args),
 					.fd		= dev_fd(dev),
-					.lid		= WDC_NVME_GET_EOL_STATUS_LOG_OPCODE,
+					.lid		= WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID,
 					.nsid		= namespace_id,
 					.lpo		= 0,
 					.lsp		= NVME_LOG_LSP_NONE,
@@ -6381,7 +6417,7 @@ static int wdc_get_c0_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 
 		/* Get the 0xC0 log data */
 		ret = nvme_get_log_simple(dev_fd(dev),
-					  WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_OPCODE,
+					  WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID,
 					  WDC_NVME_SMART_CLOUD_ATTR_LEN, data);
 
 		if (strcmp(format, "json"))
@@ -6789,7 +6825,7 @@ static int wdc_get_c3_log_page(nvme_root_t r, struct nvme_dev *dev, char *format
 	}
 	memset(data, 0, sizeof (__u8) * WDC_LATENCY_MON_LOG_BUF_LEN);
 
-	ret = nvme_get_log_simple(dev_fd(dev), WDC_LATENCY_MON_OPCODE,
+	ret = nvme_get_log_simple(dev_fd(dev), WDC_LATENCY_MON_LOG_ID,
 				  WDC_LATENCY_MON_LOG_BUF_LEN, data);
 
 	if (strcmp(format, "json"))
@@ -6870,7 +6906,8 @@ static int wdc_get_ocp_c1_log_page(nvme_root_t r, struct nvme_dev *dev, char *fo
 		log_data = (struct wdc_ocp_c1_error_recovery_log *)data;
 
 		/* check log page version */
-		if (log_data->log_page_version != WDC_ERROR_REC_LOG_VERSION) {
+		if ((log_data->log_page_version != WDC_ERROR_REC_LOG_VERSION1) &&
+			(log_data->log_page_version != WDC_ERROR_REC_LOG_VERSION2))	{
 			fprintf(stderr, "ERROR : WDC : invalid error recovery log version - %d\n", log_data->log_page_version);
 			ret = -1;
 			goto out;
@@ -6952,7 +6989,7 @@ static int wdc_get_ocp_c4_log_page(nvme_root_t r, struct nvme_dev *dev, char *fo
 				int j;
 				fprintf(stderr, "ERROR : WDC : Expected GUID:  0x");
 				for (j = 0; j<16; j++) {
-					fprintf(stderr, "%x", wdc_ocp_c1_guid[j]);
+					fprintf(stderr, "%x", wdc_ocp_c4_guid[j]);
 				}
 				fprintf(stderr, "\nERROR : WDC : Actual GUID:    0x");
 				for (j = 0; j<16; j++) {
@@ -7021,7 +7058,7 @@ static int wdc_get_ocp_c5_log_page(nvme_root_t r, struct nvme_dev *dev, char *fo
 				int j;
 				fprintf(stderr, "ERROR : WDC : Expected GUID:  0x");
 				for (j = 0; j<16; j++) {
-					fprintf(stderr, "%x", wdc_ocp_c1_guid[j]);
+					fprintf(stderr, "%x", wdc_ocp_c5_guid[j]);
 				}
 				fprintf(stderr, "\nERROR : WDC : Actual GUID:    0x");
 				for (j = 0; j<16; j++) {
@@ -8137,7 +8174,7 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *com
 		struct nvme_get_log_args args = {
 			.args_size	= sizeof(args),
 			.fd		= dev_fd(dev),
-			.lid		= WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_OPCODE,
+			.lid		= WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID,
 			.nsid		= 0xFFFFFFFF,
 			.lpo		= 0,
 			.lsp		= NVME_LOG_LSP_NONE,
