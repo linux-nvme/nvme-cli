@@ -23,6 +23,11 @@
 #include "util.h"
 #include "log.h"
 
+/* The bionic libc implementation doesn't define LINE_MAX */
+#ifndef LINE_MAX
+#define LINE_MAX 2048
+#endif
+
 /* Source Code Control System, query version of binary with 'what' */
 const char sccsid[] = "@(#)libnvme " GIT_VERSION;
 
