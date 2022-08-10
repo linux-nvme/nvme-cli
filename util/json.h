@@ -16,14 +16,14 @@
 	json_object_object_add(o, k, json_object_new_int(v))
 #ifdef CONFIG_JSONC_14
 #define json_object_add_value_uint64(o, k, v) \
-	json_object_object_add(o, k, json_object_new_uint64(v))
+	json_object_object_add(o, k, json_object_new_int64(v))
 #else
 #define json_object_add_value_uint64(o, k, v) \
-	if ((v) > UINT_MAX) {						\
-		fprintf(stderr, "Value overflow in %s", k);		\
-		json_object_object_add(o, k, json_object_new_int(-1));	\
-	} else								\
-		json_object_object_add(o, k, json_object_new_int(v))
+	if ((v) > ULONG_MAX) { \
+		fprintf(stderr, "\nValue overflow in %s, v = %ld\n", k, (long)v); \
+		json_object_object_add(o, k, json_object_new_int64(-1)); \
+	} else \
+		json_object_object_add(o, k, json_object_new_int64(v))
 #endif
 #define json_object_add_value_double(o, k, v) \
 	json_object_object_add(o, k, util_json_object_new_double(v))
