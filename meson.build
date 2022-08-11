@@ -4,7 +4,7 @@ project(
     'nvme-cli', ['c'],
     meson_version: '>= 0.47.0',
     license: 'GPL-2.0-only',
-    version: '2.1.1',
+    version: '2.1.2',
     default_options: [
       'c_std=gnu99',
       'buildtype=release',
