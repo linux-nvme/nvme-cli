@@ -22,7 +22,7 @@ sources += [
   'plugins/wdc/wdc-nvme.c',
   'plugins/ymtc/ymtc-nvme.c',
   'plugins/zns/zns.c',
-  'plugins/ocp/ocp-nvme.c',
   'plugins/inspur/inspur-nvme.c',
 ]
 subdir('solidigm')
+subdir('ocp')

@@ -13,7 +13,7 @@
 
 #include "cmd.h"
 
-#define SOLIDIGM_PLUGIN_VERSION "0.6"
+#define SOLIDIGM_PLUGIN_VERSION "0.7"
 
 PLUGIN(NAME("solidigm", "Solidigm vendor specific extensions", SOLIDIGM_PLUGIN_VERSION),
 	COMMAND_LIST(
@@ -21,6 +21,9 @@ PLUGIN(NAME("solidigm", "Solidigm vendor specific extensions", SOLIDIGM_PLUGIN_V
 		ENTRY("garbage-collect-log", "Retrieve Garbage Collection Log", get_garbage_collection_log)
 		ENTRY("latency-tracking-log", "Enable/Retrieve Latency tracking Log", get_latency_tracking_log)
 		ENTRY("parse-telemetry-log", "Parse Telemetry Log binary", get_telemetry_log)
+		ENTRY("clear-fw-activate-history",
+		      "Clear firmware update history log (redirects to ocp plug-in)",
+		      clear_fw_update_history)
 	)
 );
 
