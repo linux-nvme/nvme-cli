@@ -488,6 +488,51 @@ int argconfig_parse_comma_sep_array(char *string, int *val,
 	}
 }
 
+int argconfig_parse_comma_sep_array_short(char *string, unsigned short *val,
+					  unsigned max_length)
+{
+	int ret = 0;
+	unsigned long v;
+	char *tmp;
+	char *p;
+
+	if (!string || !strlen(string))
+		return 0;
+
+	tmp = strtok(string, ",");
+	if (!tmp)
+		return 0;
+
+	v = strtoul(tmp, &p, 0);
+	if (*p != 0)
+		return -1;
+	if (v > UINT16_MAX) {
+		fprintf(stderr, "%s out of range\n", tmp);
+		return -1;
+	}
+	val[ret] = v;
+	ret++;
+
+	while (1) {
+		tmp = strtok(NULL, ",");
+		if (tmp == NULL)
+			return ret;
+
+		if (ret >= max_length)
+			return -1;
+
+		v = strtoul(tmp, &p, 0);
+		if (*p != 0)
+			return -1;
+		if (v > UINT16_MAX) {
+			fprintf(stderr, "%s out of range\n", tmp);
+			return -1;
+		}
+		val[ret] = v;
+		ret++;
+	}
+}
+
 int argconfig_parse_comma_sep_array_long(char *string,
 					      unsigned long long *val,
 					      unsigned max_length)
